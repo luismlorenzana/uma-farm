@@ -12,7 +12,7 @@
 
 ## Phase 1: the repo, the cloud and the hello app
 
-Packet ids continue from F4; decision numbers from D4.
+Packet ids continue from F7 (F4–F6 are the plan's); decision numbers from D4.
 
 | Id | What | Who | Size | Needs | State |
 |---|---|---|---|---|---|
