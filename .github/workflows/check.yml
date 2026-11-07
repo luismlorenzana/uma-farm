@@ -1,0 +1,29 @@
+name: Check
+
+# The first workflow: the private-content guard runs from the first commit (cloud plan IN14). The workspace packet
+# (Q1 in uma-quest, F1 in uma-farm) replaces it with lint, test and build.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    name: Private-content guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: No original-game content is tracked
+        run: node --test scripts/*.test.mjs

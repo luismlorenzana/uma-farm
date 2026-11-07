@@ -1,0 +1,16 @@
+# Decisions Log — uma-farm
+
+Game decisions for uma-farm. Cross-game decisions (`P#`) are in uma-platform `docs/decisions.md`. Newest entries at the
+bottom. To reverse a decision, add a new entry that supersedes it instead of editing history. Fetch `main` before taking a
+number.
+
+**The starting calls keep their ids where they were made** (D1):
+- FM1–FM26 in [the plan](design/plan.md);
+- IN1–IN26 for the cloud, in uma-rpg's
+  [cloud plan](https://github.com/luismlorenzana/uma-rpg/blob/main/docs/design/cloud/plan.md).
+
+| # | Date | Decision | Why / Notes |
+|---|---|---|---|
+| D1 | 2026-11-07 | **The repo starts, and adopts the starting calls.** `luismlorenzana/uma-farm` is created **private**, with uma-rpg's settings: issues on, wiki off, every merge style allowed, read-only workflow token. It goes public (FM1, IN14) on the owner's word, since publishing a new repo is the owner's call. The plan's FM1–FM26 and the cloud plan's IN1–IN26 (40ad3a4) are adopted with their ids. The private-content guard runs in CI from the first commit (IN14) | The owner asked for the repos and a plan inside each, so a session here starts from this repo alone. A private repo spends Actions minutes from the free 2,000 a month, which the guard alone barely touches |
+| D2 | 2026-11-07 | **The plan is written from the 2026-11-06 chat.** It covers: copying uma-rpg's Wilds rather than cutting them; the Forge's minigame; one-way parcels, with the flow from that chat (an outbox, a parcel written only from an accepted save, a server-to-server fetch, claims confirmed after save); `uma-post`; what each game takes; and the timing. The calls that chat left open are taken here as starting calls, each revisited in Phase 3: every outfit works from day one (FM6); the trade comes from the calling's running-style rule (FM7); the making places make uma-rpg's five made kinds as the base items (FM8); each game caps what it takes (FM14); Home is the Wilds map (FM19) | The owner prefers no open questions. Each call is the smallest one that lets the copy run unchanged; the design spec measures them against play |
+| D3 | 2026-11-07 | **Phase 1 is three packets: F1, F2 and F3.** **F1**, the workspace: pnpm and turbo; `@farm/web`, `@farm/api` and `@farm/domain` as placeholders installing all five platform packages; `/api/post/ping` checking the caller's Google token, with tests; the checks; `.claude/launch.json` on 8101 and 5194. **F2**, the cloud plan's Steps 3 and 4 for uma-farm: `infra/bootstrap.sh`'s nine pieces with the push pieces created paused, the deploy workflow and the site check, `POST_CALLERS`, and the isolation matrix's uma-farm rows. It waits on uma-rpg's H169 and the owner's go for cloud resources. **F3**, the hello app: uma-rpg's stack, Google sign-in, save v1 synced, the update prompt and the Home Screen install. The Wilds follow as F4–F6 | The cloud plan made the repo and cloud steps infrastructure only and moved the hello app to the bootstrap. The ping lands with the farm, since it's the farm that checks tokens |

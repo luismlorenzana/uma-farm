@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>uma-farm Plan</title>
+<!-- uma-farm's plan (docs/design/plan.md): the loop, the phases by who does them, how a parcel travels, every call and
+     the bill. Self-contained, uma-kit's tokens, light and dark. No character art and no master-data names. -->
+<style>
+  :root {
+    --page: #edf1f6; --panel: #ffffff; --raised: #f3f6fa; --sunken: #e4eaf2;
+    --ink: #101a24; --ink-soft: #5a6b84; --ink-faint: #8a98ac;
+    --accent: #d39a2b; --accent-wash: #fbf1dd; --info: #2f6fe0; --info-wash: #e3ecfc; --success: #2f7a4f;
+    --success-wash: #e1f1e7; --danger: #c23b33;
+    --hairline: rgb(16 26 36 / 0.08); --hairline-strong: rgb(16 26 36 / 0.16);
+    --radius: 12px; color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page: #0f1620; --panel: #17202b; --raised: #1f2a37; --sunken: #0b1118;
+      --ink: #e9eef4; --ink-soft: #a6b3c2; --ink-faint: #6f7d8e;
+      --accent: #d6a23e; --accent-wash: #2b2312; --info: #5b8def; --info-wash: #16233a; --success: #4fb37a;
+      --success-wash: #13261b; --danger: #e0645c;
+      --hairline: rgb(255 255 255 / 0.08); --hairline-strong: rgb(255 255 255 / 0.16); color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --page: #0f1620; --panel: #17202b; --raised: #1f2a37; --sunken: #0b1118;
+    --ink: #e9eef4; --ink-soft: #a6b3c2; --ink-faint: #6f7d8e;
+    --accent: #d6a23e; --accent-wash: #2b2312; --info: #5b8def; --info-wash: #16233a; --success: #4fb37a;
+    --success-wash: #13261b; --danger: #e0645c;
+    --hairline: rgb(255 255 255 / 0.08); --hairline-strong: rgb(255 255 255 / 0.16); color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, 'Inter', sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font: 700 24px/1.2 ui-rounded, 'SF Pro Rounded', system-ui, sans-serif; margin: 0 0 6px; }
+  h2 { font: 700 17px/1.25 ui-rounded, system-ui, sans-serif; margin: 0 0 8px; }
+  p, li { color: var(--ink-soft); max-width: 82ch; }
+  a { color: var(--info); }
+  nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 20px; }
+  nav a { font: 600 12px system-ui; padding: 6px 12px; border-radius: 999px; background: var(--sunken); color: var(--ink-soft); text-decoration: none; }
+  .card { background: var(--panel); border-radius: var(--radius); padding: 16px; box-shadow: 0 1px 0 var(--hairline-strong); margin-bottom: 16px; }
+  svg { display: block; width: 100%; height: auto; }
+  .scroll { overflow-x: auto; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--ink-soft); margin-top: 10px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 5px; }
+  .note { font-size: 12px; color: var(--ink-faint); }
+
+  /* Phases by track */
+  .gantt { display: grid; grid-template-columns: 92px repeat(6, minmax(132px, 1fr)); gap: 6px; min-width: 900px; }
+  .gantt .head { font: 700 12px system-ui; color: var(--ink); padding: 8px; background: var(--raised); border-radius: 8px; }
+  .gantt .head span { display: block; font-weight: 500; color: var(--ink-faint); }
+  .gantt .track { font: 700 12px system-ui; color: var(--ink-soft); padding: 8px 0; align-self: start; }
+  .gantt .cell { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
+  .chip { border-radius: 8px; padding: 7px 9px; font-size: 12px; line-height: 1.3; border: 1px solid var(--hairline-strong); background: var(--raised); color: var(--ink); }
+  .chip b { font: 700 11px ui-monospace, SFMono-Regular, Menlo, monospace; margin-right: 4px; }
+  .chip small { display: block; color: var(--ink-faint); font-size: 11px; margin-top: 2px; }
+  .chip.claude { background: var(--info-wash); border-color: color-mix(in srgb, var(--info) 35%, transparent); }
+  .chip.art { background: var(--accent-wash); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+  .chip.you { background: var(--success-wash); border-color: color-mix(in srgb, var(--success) 40%, transparent); }
+  .chip.exit { background: transparent; border-style: dashed; color: var(--ink-soft); }
+
+  /* Phase 1 steps */
+  ol.steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  ol.steps li { display: grid; grid-template-columns: 34px 82px minmax(0, 1fr); gap: 10px; align-items: start; max-width: none;
+    background: var(--raised); border-radius: 10px; padding: 10px 12px; color: var(--ink); }
+  ol.steps .n { font: 700 13px ui-monospace, Menlo, monospace; color: var(--ink-faint); }
+  .who { display: inline-block; font: 700 11px system-ui; padding: 2px 8px; border-radius: 999px; text-align: center; }
+  .who.claude { background: var(--info-wash); color: var(--info); }
+  .who.you { background: var(--success-wash); color: var(--success); }
+  ol.steps small { display: block; color: var(--ink-soft); font-size: 12px; margin-top: 2px; }
+  @media (max-width: 560px) { ol.steps li { grid-template-columns: 28px minmax(0, 1fr); } ol.steps li .who { grid-column: 2; justify-self: start; } ol.steps li > div { grid-column: 2; } }
+
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { padding: 7px 8px; border-bottom: 1px solid var(--hairline); text-align: left; vertical-align: top; }
+  th { color: var(--ink-soft); font-weight: 600; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 16px 0; }
+  .tile { background: var(--panel); border-radius: var(--radius); padding: 12px 14px; box-shadow: 0 1px 0 var(--hairline-strong); }
+  .tile b { display: block; font: 700 22px/1.1 ui-rounded, system-ui, sans-serif; color: var(--ink); }
+  .tile span { font-size: 12px; color: var(--ink-soft); }
+  td.id { font: 700 12px ui-monospace, Menlo, monospace; white-space: nowrap; color: var(--ink); }
+  td { color: var(--ink-soft); } td b { color: var(--ink); }
+</style>
+</head>
+<body>
+<main>
+  <h1>uma-farm: the plan</h1>
+  <p>uma-rpg's Wilds copied into their own app, with a <b>Forge</b> at the end whose minigame turns base items into the other
+    games' items, sent as one-way <b>parcels</b>. The doc with every call is <a href="../plan.md">plan.md</a>; the queue is
+    <a href="../../handoff/README.md">the handoff</a>. The cloud of all three apps is uma-rpg's cloud plan
+    (<a href="https://github.com/luismlorenzana/uma-rpg/blob/main/docs/design/cloud/plan.md">plan.md</a>,
+    <a href="https://github.com/luismlorenzana/uma-rpg/blob/main/docs/design/cloud/previews/plan.html">page</a>).
+    <b>2026-11-07:</b> the repo exists; F1 is ready.</p>
+  <nav>
+    <a href="#loop">The loop</a>
+    <a href="#phases">Phases by who</a>
+    <a href="#parcel">How a parcel travels</a>
+    <a href="#calls">The calls</a>
+    <a href="#cost">The bill</a>
+  </nav>
+
+  <div class="tiles">
+    <div class="tile"><b>5 lines</b><span>Metal, Vegetables, Wood, Fish, Stone; ten grades each</span></div>
+    <div class="tile"><b>15 + 1</b><span>places copied from uma-rpg, plus the Forge</span></div>
+    <div class="tile"><b>60 slots</b><span>4 a place; every outfit can work (FM6)</span></div>
+    <div class="tile"><b>3 games</b><span>receive parcels: quest first, then rpg, then racer</span></div>
+    <div class="tile"><b>26 calls</b><span>FM1–FM26, plus the cloud's IN1–IN26</span></div>
+    <div class="tile"><b>Cents</b><span>a month: the <code>farm</code> database; the rest is free tier</span></div>
+  </div>
+
+  <section class="card" id="loop">
+    <h2>The loop</h2>
+    <p>Each line is a row of three places, as in uma-rpg: gather raw items, process them into refined ones, make a made
+      item. The made items are the farm's base items (FM8). The Forge turns them into a chosen game's item (FM9), and the
+      Post sends it.</p>
+    <div class="scroll"><svg id="loopsvg" viewBox="0 0 1000 420" role="img" aria-label="Five lines of gather, process and make feeding the Forge, then the Post, then three games"></svg></div>
+    <div class="legend">
+      <span><i style="background:var(--raised);border:1px solid var(--hairline-strong)"></i>Copied from uma-rpg (FM3)</span>
+      <span><i style="background:var(--accent-wash);border:1px solid var(--accent)"></i>New in the farm</span>
+      <span><i style="background:var(--info-wash);border:1px solid var(--info)"></i>A game that receives</span>
+    </div>
+  </section>
+
+  <section class="card" id="phases">
+    <h2>Phases by who does them</h2>
+    <p>Phase 1 is the three packets in the handoff; later phases get their packets when they start.</p>
+    <div class="scroll"><div class="gantt" id="gantt"></div></div>
+  </section>
+
+  <section class="card" id="parcel">
+    <h2>How a parcel travels</h2>
+    <p>A save is only ever written by its own app; a parcel lives in the farm's <code>parcels</code>; every step is safe to
+      repeat, and an id is never claimed twice (FM10, FM11).</p>
+    <div class="scroll"><svg id="seqsvg" viewBox="0 0 1000 520" role="img" aria-label="The eight steps of a parcel between the farm app, farm-api, a game's API and the game's app"></svg></div>
+  </section>
+
+  <section class="card" id="calls">
+    <h2>The calls</h2>
+    <div class="scroll"><table><thead><tr><th>Id</th><th>Call</th></tr></thead><tbody id="callrows"></tbody></table></div>
+  </section>
+
+  <section class="card" id="cost">
+    <h2>What it adds to the bill</h2>
+    <table>
+      <thead><tr><th>Added to the uma-rpg project</th><th>Free tier</th><th>At one player</th></tr></thead>
+      <tbody id="costrows"></tbody>
+    </table>
+    <p class="note">The cloud plan's bill covers all three apps: under $1 a month added, most likely under 25 cents.</p>
+  </section>
+</main>
+<script>
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+  const sv = (parent, tag, attrs, text) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (text != null) e.textContent = text; parent.append(e); return e; };
+  const box = (g, x, y, w, h, fill, stroke, t, s) => {
+    sv(g, 'rect', { x, y, width: w, height: h, rx: 9, fill, stroke, 'stroke-width': 1.2 });
+    sv(g, 'text', { x: x + 10, y: y + (s ? 17 : h / 2 + 4.5), style: 'font:600 12.5px system-ui;fill:var(--ink)' }, t);
+    if (s) sv(g, 'text', { x: x + 10, y: y + 32, style: 'font:11.5px system-ui;fill:var(--ink-soft)' }, s);
+  };
+  const arrow = (g, x1, y1, x2, y2) => sv(g, 'line', { x1, y1, x2, y2, stroke: 'var(--ink-faint)', 'stroke-width': 1.5, 'marker-end': 'url(#ah)' });
+  const defs = svg => { const d = sv(svg, 'defs', {}); const m = sv(d, 'marker', { id: 'ah', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }); sv(m, 'path', { d: 'M0,0 L10,5 L0,10 z', fill: 'var(--ink-faint)' }); };
+
+  // The loop
+  {
+    const svg = document.getElementById('loopsvg'); defs(svg);
+    const LINES = [
+      ['Metal', 'Mine', 'Mine Workbench', 'Weapon Forge', 'Arms Gems'],
+      ['Vegetables', 'Fields', 'Fields Workbench', 'Tome Forge', 'Tome Ink'],
+      ['Wood', 'Forest', 'Forest Workbench', 'Armorer', 'Armor Fittings'],
+      ['Fish', 'Fishery', 'Fishery Workbench', 'Charm Forge', 'Accessory Settings'],
+      ['Stone', 'Monster Den', 'Den Workbench', 'Lapidary', 'Planet and Moon Jewels'],
+    ];
+    const C = ['var(--raised)', 'var(--hairline-strong)'];
+    sv(svg, 'text', { x: 20, y: 22, style: 'font:700 12px system-ui;fill:var(--ink-soft)' }, 'Gather');
+    sv(svg, 'text', { x: 200, y: 22, style: 'font:700 12px system-ui;fill:var(--ink-soft)' }, 'Process');
+    sv(svg, 'text', { x: 380, y: 22, style: 'font:700 12px system-ui;fill:var(--ink-soft)' }, 'Make (base items)');
+    LINES.forEach(([line, g1, p1, m1, item], i) => {
+      const y = 34 + i * 74;
+      box(svg, 20, y, 150, 50, ...C, g1, line + ' · raw G1–G10');
+      box(svg, 200, y, 150, 50, ...C, p1, 'refined, one for one');
+      box(svg, 380, y, 170, 50, ...C, m1, item);
+      arrow(svg, 170, y + 25, 198, y + 25); arrow(svg, 350, y + 25, 378, y + 25);
+      arrow(svg, 550, y + 25, 583, 205);
+    });
+    box(svg, 585, 170, 140, 70, 'var(--accent-wash)', 'var(--accent)', 'The Forge', 'a short minigame');
+    arrow(svg, 725, 205, 748, 205);
+    box(svg, 750, 170, 92, 70, 'var(--accent-wash)', 'var(--accent)', 'The Post', 'the outbox');
+    const games = [['uma-quest', 'consumables · first'], ['uma-rpg', 'made items · later'], ['uma-racer', 'flair · last']];
+    games.forEach(([n, s], i) => { const y = 60 + i * 110; box(svg, 866, y, 128, 60, 'var(--info-wash)', 'var(--info)', n, s); arrow(svg, 842, 205, 864, y + 30); });
+    sv(svg, 'text', { x: 585, y: 268, style: 'font:11.5px system-ui;fill:var(--ink-soft)' }, 'A game chosen first; never loses inputs; better play makes more (FM9)');
+    sv(svg, 'text', { x: 585, y: 286, style: 'font:11.5px system-ui;fill:var(--ink-soft)' }, 'Each game caps what it takes a day (FM14)');
+  }
+
+  // Phases by who
+  {
+    const PHASES = [['Phase 0', 'The logs · done'], ['Phase 1', 'Repo, cloud, hello app'], ['Phase 2', 'The Wilds copied'],
+      ['Phase 3', 'The design spec'], ['Phase 4', 'The Forge'], ['Phase 5', 'Parcels']];
+    const CHIPS = [
+      ['Claude', 0, 'claude', '', 'P88, P89 in uma-platform; uma-rpg D308; D1–D3', 'Done'],
+      ['Claude', 1, 'claude', 'F1', 'The workspace, the ping\'s token check, CI', 'Ports 8101 and 5194'],
+      ['Claude', 1, 'claude', 'F2', 'The cloud in project uma-rpg, push paused, the deploy', 'After uma-rpg H169'],
+      ['Claude', 1, 'claude', 'F3', 'The hello app: sign-in, save v1, update prompt', 'On the Home Screen'],
+      ['Claude', 2, 'claude', 'F4', 'The Wilds\' rules copied, save v2', 'A recorded uma-rpg commit'],
+      ['Claude', 2, 'claude', 'F5', 'The Wilds map and place pages on uma-kit/work', ''],
+      ['Claude', 2, 'claude', 'F6', 'Push live: the tick resumed', ''],
+      ['Claude', 3, 'claude', '', 'Who works, the economy, the Forge, accept lists and caps, the Post', 'Beside Phase 2'],
+      ['Claude', 4, 'claude', '', 'The Forge\'s place and minigame', ''],
+      ['Claude', 5, 'claude', '', 'uma-post in uma-platform; the sender here', ''],
+      ['Claude', 5, 'claude', '', 'Receivers: uma-quest, then uma-rpg, then uma-racer', 'A packet in each repo'],
+      ['ChatGPT', 2, 'art', '', 'Any missing Wilds building', 'Only if the map needs it'],
+      ['ChatGPT', 4, 'art', '', 'The Forge\'s building and its pieces', 'uma-art release'],
+      ['You', 0, 'you', '', 'Public or private', 'One word'],
+      ['You', 1, 'you', '', 'Five package-access entries; the go for the cloud; two sign-in entries', ''],
+      ['You', 1, 'you', 'F3', 'The phone check', ''],
+      ['You', 3, 'you', '', 'Read the design spec', ''],
+      ['You', 4, 'you', '', 'Play the Forge', 'Before parcels depend on it'],
+      ['You', 5, 'you', '', 'The go for uma-rpg\'s receiver', 'uma-rpg will be frozen'],
+    ];
+    const g = document.getElementById('gantt');
+    g.append(el('div'));
+    PHASES.forEach(([p, s]) => g.append(el('div', 'head', `${p}<span>${s}</span>`)));
+    for (const track of ['Claude', 'ChatGPT', 'You']) {
+      g.append(el('div', 'track', track));
+      for (let i = 0; i < PHASES.length; i++) {
+        const cell = el('div', 'cell');
+        CHIPS.filter(c => c[0] === track && c[1] === i).forEach(([, , cls, id, text, small]) =>
+          cell.append(el('div', `chip ${cls}`, `${id ? `<b>${id}</b>` : ''}${text}${small ? `<small>${small}</small>` : ''}`)));
+        g.append(cell);
+      }
+    }
+  }
+
+  // How a parcel travels
+  {
+    const svg = document.getElementById('seqsvg'); defs(svg);
+    const LANES = [['The farm\'s app', 'its save, the outbox', 'var(--accent-wash)', 'var(--accent)'], ['farm-api', 'parcels/{id}', 'var(--accent-wash)', 'var(--accent)'],
+      ['A game\'s API', 'its own token', 'var(--info-wash)', 'var(--info)'], ['The game\'s app', 'its save, claimed ids', 'var(--info-wash)', 'var(--info)']];
+    const X = i => 40 + i * 250, W = 200;
+    LANES.forEach(([t, s, f, st], i) => { box(svg, X(i), 10, W, 46, f, st, t, s); sv(svg, 'line', { x1: X(i) + W / 2, y1: 56, x2: X(i) + W / 2, y2: 510, stroke: 'var(--hairline-strong)', 'stroke-dasharray': '4 4' }); });
+    const STEPS = [
+      [0, 0, '1. The Forge\'s result goes into the outbox; the save syncs'],
+      [0, 1, '2. Save accepted → each new outbox parcel written as sent'],
+      [2, 1, '3. Fetch my parcels in state sent, with a Google ID token'],
+      [1, 2, '4. Token checked: signed, audience, POST_CALLERS, its game'],
+      [2, 3, '5. App adds the items within caps, records each id, syncs'],
+      [3, 2, '6. Save accepted → the new ids seen'],
+      [2, 1, '7. Confirm: parcels marked claimed; a repeat is a no-op'],
+      [1, 0, '8. The Post shows it claimed at the next sync'],
+    ];
+    STEPS.forEach(([a, b, t], i) => {
+      const y = 92 + i * 52, xa = X(a) + W / 2, xb = X(b) + W / 2;
+      if (a === b) { sv(svg, 'rect', { x: xa - 6, y: y - 8, width: 12, height: 16, rx: 3, fill: 'var(--accent)' }); }
+      else arrow(svg, xa, y, xb + (xb > xa ? -4 : 4), y);
+      const tx = Math.min(xa, xb) + (a === b ? 14 : 8);
+      sv(svg, 'text', { x: tx, y: y - 8, style: 'font:12px system-ui;fill:var(--ink)' }, t);
+    });
+  }
+
+  // The calls
+  const CALLS = [
+    ['FM1', 'The name is <b>uma-farm</b>; repo <code>luismlorenzana/uma-farm</code>, private on 2026-11-07, public on the owner\'s word (IN14, D1)'],
+    ['FM2', '<b>Copy, don\'t cut:</b> uma-rpg\'s Wilds copied at a recorded commit with their tests; uma-rpg keeps its own'],
+    ['FM3', 'Copied: five lines and ten grades, fifteen places, Craft Level, step times and sizes, queues, Recall, Repeat, the Warehouse'],
+    ['FM4', 'Left behind: fights, classes, gear, Extra Stats, Laurels, the Exchange, Speed Tickets, Uma Tickets, tiers; targets wait for Phase 3'],
+    ['FM5', 'One engine: <code>uma-work</code> and <code>uma-kit/work</code>, changed only by a platform release'],
+    ['FM6', 'Every outfit on the release works from day one, no tickets or gacha; 60 slots are the limit; revisited in Phase 3'],
+    ['FM7', 'Her trade comes from her calling, read from her best running styles as in uma-rpg (CV19); the open shop carries over'],
+    ['FM8', 'The making places make uma-rpg\'s five made kinds, with its ids and recipes: the farm\'s base items'],
+    ['FM9', '<b>The Forge:</b> a short minigame turns base items into one game\'s item, the game chosen first; never loses inputs; better play makes more'],
+    ['FM10', 'Parcels are one-way; no game\'s save reaches the farm; no server writes into any save'],
+    ['FM11', 'The flow: outbox → parcel written from an accepted save → server-to-server fetch → app adds and records → claim confirmed after save'],
+    ['FM12', '<code>@luismlorenzana/uma-post</code> in uma-platform: the parcel format and each game\'s accept list'],
+    ['FM13', 'What each game takes: uma-rpg its made items as they are; uma-quest DN14\'s consumables; uma-racer flair only'],
+    ['FM14', 'Each game caps what it takes, a ceiling a day for each item, set by the game'],
+    ['FM15', 'Receivers in order: uma-quest, then uma-rpg (on the owner\'s go), then uma-racer (its account joins POST_CALLERS)'],
+    ['FM16', 'A fresh save v1, local first in Dexie, synced through uma-server; nothing carries over (P4)'],
+    ['FM17', 'Push from Phase 2: farm-vapid, farm-push-scheduler, farm-push-tick, created paused in F2 (IN17)'],
+    ['FM18', 'Portrait, phone first, on uma-kit\'s shell unchanged'],
+    ['FM19', 'Home is the Wilds map: fifteen places in five rows of three, the Forge and the Post beside them'],
+    ['FM20', 'Main JS ≤ 180 KB gzip'],
+    ['FM21', 'Local ports 8101 and 5194 (IN22)'],
+    ['FM22', 'Every push to main checks and deploys, from F2'],
+    ['FM23', 'Packets F1, F2 …; decisions from D1'],
+    ['FM24', 'The order: cloud and hello app, the Wilds copy, the design spec beside it, the Forge, then parcels'],
+    ['FM25', 'The cloud: database farm (saves, saveRescues, parcels, push), farm-api, farm-api-runtime, farm-deploy, provider and site uma-farm, push paused, no bucket'],
+    ['FM26', 'uma-platform P89 records the farm and its parcels, amending P3'],
+  ];
+  const tb = document.getElementById('callrows');
+  CALLS.forEach(([id, t]) => { const tr = el('tr'); tr.append(el('td', 'id', id)); tr.append(el('td', '', t)); tb.append(tr); });
+
+  const COST = [
+    ['Firestore farm, with recovery', 'None: the free quota covers only (default)', 'A few cents a month'],
+    ['Cloud Run farm-api', '2M requests, 180k vCPU-seconds a month, shared across the billing account', '$0'],
+    ['Hosting site uma-farm', '10 GB stored and 360 MB a day, shared by the project\'s sites', '$0'],
+    ['Images farm', '0.5 GB, shared', '$0'],
+    ['farm-push-tick', '3 jobs free a billing account; uma-rpg\'s is 1', '$0'],
+    ['farm-vapid', '6 secret versions free; uma-rpg\'s is 1', '$0'],
+    ['Parcel calls', 'Inside Cloud Run\'s free requests', '$0'],
+  ];
+  const cb = document.getElementById('costrows');
+  COST.forEach(r => { const tr = el('tr'); r.forEach(c => tr.append(el('td', '', c))); cb.append(tr); });
+</script>
+</body>
+</html>
