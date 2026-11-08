@@ -8,8 +8,9 @@
 > - **Drafted whole:** targets (§2), the economy (§3), the Forge (§4), the Post (§6) and the queue (§7).
 > - **Finished after the play:** who works (§1), measured from the save after the owner's few days; and §3's surplus
 >   trigger, which reads §1's numbers.
-> - **Waits on uma-quest's Q17:** uma-quest's accept list (§5.2), proposed here. uma-rpg's and uma-racer's lists are
->   proposed for their own sessions (§5.3, §5.4).
+> - **uma-quest's list ships interim (D19, uma-platform P107):** `uma-post` 0.1.0 carries §5.2's proposal as version 1 once
+>   uma-quest's session agrees, and its Q17 confirms or changes it in a minor. uma-rpg's and uma-racer's lists ship empty
+>   (version 0) and are proposed for their own sessions (§5.3, §5.4).
 >
 > The brief is [first-playable.md](first-playable.md) (F7, M3); the plan's calls are FM1–FM26 in [plan.md](plan.md).
 > Every number comes from the copied rules in `packages/domain/src` (`economy/pacing.ts`, `economy/places-v4.ts`,
@@ -43,9 +44,9 @@
 | [2. Targets become orders](#2-targets-become-orders-fs4fs7) | Drafted whole | The owner's answers |
 | [3. The farm's economy](#3-the-farms-economy-fs8fs11) | Drafted whole; the surplus trigger (FS11) reads §1 | The owner's answers; §1's numbers for FS11 |
 | [4. The Forge](#4-the-forge-fs12fs21) | Drafted whole | The owner's answers; then the owner's play of it in M4 |
-| [5. Accept lists and caps](#5-accept-lists-and-caps-fs22fs27) | The rules and `uma-post`'s shape drafted; the three lists proposed | **uma-quest's Q17** (its list); uma-rpg's session after the owner's go (FM15); uma-racer's session |
+| [5. Accept lists and caps](#5-accept-lists-and-caps-fs22fs27) | The rules and `uma-post`'s shape drafted; the three lists proposed | The owner's answers; uma-quest's session agreeing to §5.2 as an interim list (Q17 settles it later, D19); uma-rpg's session after the owner's go (FM15); uma-racer's session |
 | [6. The Post](#6-the-post-fs28fs31) | Drafted whole | The owner's answers |
-| [7. The queue](#7-the-queue-fs32) | Scoped | The owner's answers; F8–F10 are written as packets after them, PO1 is requested once Q17's list exists |
+| [7. The queue](#7-the-queue-fs32) | Scoped | The owner's answers; F8–F10 are written as packets after them, and PO1 (written ahead by uma-platform, P107) is built from them |
 
 ## 0. At a glance
 
@@ -607,7 +608,7 @@ What bounds it is the outbox's week (FS10): an item at a week's worth greys out 
   one day, and it can claim several days' parcels at once.
 - **Ids are the game's own;** the farm maps its Forge items to them.
 
-### 5.2 uma-quest (FS24) — waits on uma-quest's Q17
+### 5.2 uma-quest (FS24) — interim until uma-quest's Q17
 
 **Proposed for Q17 to settle.** uma-quest's D4 moved its jobs to the farm and its DN14 names three field items from the
 farm's surplus: a tonic, a party meal and a revive, no MP item. Q17 (its design spec, not yet written) settles its
@@ -709,8 +710,9 @@ export interface ClaimsRequest { claimed: string[]; refused?: { id: string; reas
 export interface ClaimsReply { claimed: string[]; refused: string[]; unknown: string[] }   // repeats are no-ops
 ```
 
-- **0.1.0 carries uma-quest's list** (from Q17). uma-rpg's and uma-racer's arrive as minors when their sessions settle
-  them; the farm offers only what's on a list.
+- **0.1.0 carries uma-quest's list** as §5.2 proposes it, interim (version 1), once uma-quest's session agrees; Q17 confirms
+  or changes it in a minor (P107, D19). uma-rpg's and uma-racer's ship empty (version 0) and arrive as minors when their
+  sessions settle them; the farm offers only what's on a list.
 - **Tests with synthetic parcels, no network:** every refusal, caps across lines of one group, `repeated-day` given the
   days already claimed.
 
@@ -832,7 +834,7 @@ this section and the calls.
 | **F8** | The Forge, orders and tickets | Claude | L | R11, N1, N5, N8, N9; FS4–FS7, FS9, FS10, FS12–FS21 | F7 answered; F9 for art (placeholders until then) |
 | **F9** | Art: the Forge, its game and the Post (uma-art) | ChatGPT | M | R11; FS19, FS20, FS28 | F7 answered |
 | **F10** | The Post and the sender | Claude | L | R12, N5, N7; FS22, FS23, FS28–FS31; FW9, FW10 | F8, PO1 |
-| **PO1** | `uma-post` 0.1.0 *(uma-platform)* | Claude | M | uma-platform's R9; FS22–FS27 | F7 answered, uma-quest's Q17 |
+| **PO1** | `uma-post` 0.1.0 *(uma-platform)* | Claude | M | uma-platform's R9; FS22–FS27 | F7 answered (P107, D19) |
 
 **F8, the Forge.** The Forge place opens on the map (no slots; its quick look shows the orders). Its page, the Phaser
 scene loaded on demand, and the pure rules in `@farm/domain/forge`: the four recipes and their yields by rank and tier,
@@ -860,8 +862,8 @@ F8's proposed lists for `uma-post`'s, with a test that every Forge item is on a 
 nothing.
 
 **PO1, `uma-post` 0.1.0 (uma-platform).** `packages/post` with §5.5's types, `parseParcel`, `checkParcel`, `capsLeft`,
-the API shapes and uma-quest's list from its Q17; tests with synthetic parcels, no network; released through
-Changesets. **Requested** through uma-platform's change protocol once Q17's list exists (F7's Do step 4).
+the API shapes and uma-quest's interim list (§5.2); tests with synthetic parcels, no network; released through
+Changesets. **Written ahead** by uma-platform ([PO1](https://github.com/luismlorenzana/uma-platform/blob/main/docs/handoff/tasks/PO1-uma-post.md), [P107](https://github.com/luismlorenzana/uma-platform/blob/main/docs/decisions.md)); its first step re-reads §5 after the owner's answers, which F7's finish sends it.
 
 **After them:** uma-quest's receiver (a Q-packet after F10), then uma-rpg's (an H-packet on the owner's go), then
 uma-racer's, each adding its list to `uma-post` if 0.1.0 didn't carry it, and flipping the farm's `post/receivers.ts`.
@@ -870,7 +872,7 @@ uma-racer's, each adding its list to `uma-post` if 0.1.0 didn't carry it, and fl
 ```
  F7 answered ──┬──► F9 (art, ChatGPT) ──────────┐
                ├──► F8 (Forge, orders, tickets) ┴──► the owner plays the Forge
-               └──► PO1 (uma-platform) ◄── uma-quest Q17
+               └──► PO1 (uma-platform; uma-quest's list interim, Q17 later)
                                │
                     F8 + PO1 ──► F10 (Post, sender) ──► uma-quest's receiver ──► uma-rpg's (your go) ──► uma-racer's
 ```
@@ -916,7 +918,7 @@ interface ForgePlay { item: string; game: PostGame; grade: number; inputs: { ite
 | **FS21** What it costs | Its inputs only: no fee, no cooldown, no Uma; bounded by the outbox's week | A fee; a cooldown | Nothing taxes the fun part |
 | **FS22** Who owns the lists | Each game, in `uma-post`; the farm offers only what a list holds; both sides run `checkParcel` | The farm sets caps | FM13, FM14 |
 | **FS23** Caps and days | A ceiling a day per cap group; the day is the farm's local date stamped on the parcel; one parcel a game a day; several days may be claimed at once | Sums per day across parcels; UTC days | The receiver's check is one id list and one day list |
-| **FS24** uma-quest's list | **Waits on Q17.** Proposed: `tonic` 10, `party-meal` 5, `revive` 3 a day, unranked, by percentage (+30% one, +15% all, up at 25%) | Ranked by band | DN14's three; a supplement to its shop |
+| **FS24** uma-quest's list | **Interim until Q17** (D19). Proposed: `tonic` 10, `party-meal` 5, `revive` 3 a day, unranked, by percentage (+30% one, +15% all, up at 25%) | Ranked by band | DN14's three; a supplement to its shop |
 | **FS25** uma-rpg's list | **For its session, after the owner's go.** Its 50 made ids as they are; caps by kind: Arms Gems 3, Tome Ink 3, Armor Fittings 5, Accessory Settings 3, jewels 2 (one Uma's grade step a day); its active world's Warehouse | Caps per id; a party's step a day | FM13; a tenth of its own Wilds' line |
 | **FS26** uma-racer's list | **For its session.** Flair only: `farm-rosette-1`–`5` (Bronze → Rainbow), one a day | Per-Uma flair | FM13; its badges never pay tickets |
 | **FS27** `uma-post` 0.1.0 | §5.5: `Parcel` (v, id, to, day, items, packedAt), `AcceptList` with cap groups, `parseParcel`, `checkParcel`, `capsLeft`, the fetch and claim shapes; uma-quest's list first | Only the type and parser | One check on both sides; the API shapes shared |

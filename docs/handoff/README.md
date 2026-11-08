@@ -34,8 +34,8 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 ## Across the repos
 
 - **uma-rpg:** H169 (its project hardened) is done (uma-rpg D311). Its receiver is a packet there, after the owner's go (FM15).
-- **uma-quest:** its Q2 calls the ping (live with its Q14); its Q17, the design spec, names the consumables it takes (its D4), which opens M5.
-- **uma-platform:** P88 and P89 are logged. `uma-post` (FM12) is its PO1, built before M5 ([its new-apps doc](https://github.com/luismlorenzana/uma-platform/blob/main/docs/new-apps/README.md)), and any `uma-work` or
+- **uma-quest:** its Q2 calls the ping, live since 2026-11-08 (D17). Its accept list ships interim from our FS24 once its session agrees, and its Q17 settles it later (D19).
+- **uma-platform:** P88 and P89 are logged. `uma-post` (FM12) is its [PO1](https://github.com/luismlorenzana/uma-platform/blob/main/docs/handoff/tasks/PO1-uma-post.md), written ahead from our spec's §5 ([P107](https://github.com/luismlorenzana/uma-platform/blob/main/docs/decisions.md)) and built once F7 is answered (D19), before M5 ([its new-apps doc](https://github.com/luismlorenzana/uma-platform/blob/main/docs/new-apps/README.md)), and any `uma-work` or
   `uma-kit/work` change is a platform release (FM5).
 - **uma-racer:** its receiver comes last, flair only (FM13), with `racer-api-runtime` added to `POST_CALLERS`.
 

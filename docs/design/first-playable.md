@@ -156,7 +156,7 @@ The Forge's items reach uma-quest: sent from the outbox, fetched and confirmed b
 
 | Id | Task | Who | Size | Needs | State |
 |---|---|---|---|---|---|
-| PO1 | **`uma-post` 0.1.0** *(uma-platform)*: The parcel type, its parser, each game's accept list and caps, and their tests (FM12). | Claude | M | F7, uma-quest's Q17 | Later |
+| PO1 | **`uma-post` 0.1.0** *(uma-platform)*: The parcel type, its parser, each game's accept list and caps, and their tests (FM12). Written ahead: [PO1](https://github.com/luismlorenzana/uma-platform/blob/main/docs/handoff/tasks/PO1-uma-post.md) | Claude | M | F7 answered (P107, D19) | Later |
 | [F10](#f10) | **Parcels, the sender**: The outbox in the save; `farm-api`'s `parcels` collection written only from an accepted save; `/api/post/parcels` and `/api/post/claims`, checked by token. | Claude | M | F8, PO1 | Later |
 | Q-receiver | **uma-quest's receiver** *(uma-quest)*: A uma-quest packet after its slice: fetch, add within caps, record the ids in its save, confirm. | Claude | M | F10, PO1 | Later |
 | H-receiver | **uma-rpg's receiver** *(uma-rpg)*: An H-packet in uma-rpg after your go, since it's frozen (FM15). uma-racer's follows, in its own project. | Claude | M | Q-receiver, your go | Later |
@@ -344,8 +344,8 @@ The packet exists: [tasks/F3-hello-app.md](../handoff/tasks/F3-hello-app.md). It
 | uma-platform | `uma-work` and `uma-kit/work` unchanged | F4, F5 | In place |
 | uma-platform (uma-art) | The Hub's buildings for the fifteen places | F5 | In place |
 | uma-platform (uma-art) | The release for F9: the Forge, the Post and the minigame's pieces | F8 | After F7 |
-| uma-platform | **PO1:** `uma-post` 0.1.0, the parcel format and accept lists | F10 | After F7 and uma-quest's Q17 |
-| uma-quest | Its accept list (DN14's tonic, party meal and revive) and caps | F7, PO1 | After its Q17 |
+| uma-platform | **PO1:** `uma-post` 0.1.0, the parcel format and accept lists | F10 | Packet written (P107); built after F7's answers |
+| uma-quest | Its accept list (DN14's tonic, party meal and revive) and caps | F7, PO1 | Interim from the spec's FS24 once its session agrees; its Q17 settles it later (D19) |
 | uma-quest | Its receiver packet | M5 | After F10 |
 
 uma-platform's side is in its [new-apps doc](https://github.com/luismlorenzana/uma-platform/blob/main/docs/new-apps/README.md), and uma-quest's in its
@@ -360,7 +360,7 @@ M2  F5 ◄── F3 + F4    │
      F6 ◄── F5        │
 M3  F7 (started beside F4) ◄── your play after F6
 M4  F9 (art) ◄── F7     F8 ◄── F7 (+ F9)
-M5  PO1 (uma-platform) ◄── F7 + uma-quest Q17
+M5  PO1 (uma-platform) ◄── F7 answered   (uma-quest's list interim; Q17 later, D19)
      F10 ◄── F8 + PO1   →   uma-quest's receiver   →   uma-rpg's (your go)   →   uma-racer's
 ```
 
@@ -397,7 +397,7 @@ M5  PO1 (uma-platform) ◄── F7 + uma-quest Q17
   revise a written packet when an earlier one changes its inputs.
 - **Art is ChatGPT's:** F9 is written here and ships in uma-art. The first uma-farm packet that uses it pins it.
 - **Decisions** go in [decisions.md](../decisions.md) from D8 (fetch `main` first).
-- **Across repos:** PO1 is a uma-platform task. Ask for it from F7 once uma-quest's accept list exists.
+- **Across repos:** PO1 is a uma-platform task, written ahead (P107); it's built once F7 is answered (D19).
 
 ## Calls
 
@@ -414,7 +414,7 @@ The farm's calls for this stretch. They join FM1–FM26, and D6 logs them.
 | FW7 | Every outfit on the release can work, with 60 slots (FM6); the worker picker is uma-kit's album; F7 revisits the crew |
 | FW8 | Push resumes in F6: the paused `farm-push-tick`, the `farm-vapid` secret, and a "work done" notification copied from uma-rpg's `push/` |
 | FW9 | No new cloud resources until parcels: the `parcels` collection arrives with F10, in the `farm` database |
-| FW10 | Parcels wait for uma-quest's accept list (its Q17) and `uma-post` 0.1.0 (uma-platform's PO1); uma-quest receives first, then uma-rpg on your go, then uma-racer (FM15) |
+| FW10 | Parcels wait for uma-quest's accept list (its Q17) and `uma-post` 0.1.0 (uma-platform's PO1); uma-quest receives first, then uma-rpg on your go, then uma-racer (FM15). **Amended by D19:** PO1 waits only on F7's answers, with uma-quest's list interim until Q17 |
 | FW11 | `uma-work` and `uma-kit/work` stay shared and unchanged; anything they lack is a "Both apps" platform release (FM5) |
 | FW12 | The design spec (F7) meets uma-rpg's class-progression.md standard and settles who works, targets, the farm's economy, the Forge, accept lists and caps, the Post and the M4–M5 queue |
 | FW13 | The manual's `materials.md` and `loops.md` are generated from the code (F4), as uma-rpg's are |
