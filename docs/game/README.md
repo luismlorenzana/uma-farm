@@ -8,8 +8,7 @@ updates its page in the same commit.
 | [architecture.md](architecture.md) | The app, the API, the save and its sync, deploy and local setup (F3) |
 | [loops.md](loops.md) | The Wilds' loop: who works, the fifteen places, Craft Level, a job, the Warehouse, the save (F4) |
 | [materials.md](materials.md) | The five lines, their fifty raw and refined pairs, and the made items with their recipes (F4) |
-
-The Wilds' screens arrive with F5; until then the rules run in the domain and its tests only.
+| [wilds.md](wilds.md) | The Wilds' screens: the map, a place's page and its job sheet, the worker picker, the Warehouse, settling (F5) |
 
 Specs and intent live in [docs/design/](../design/). Where they differ from this manual, the manual and the code win.
 

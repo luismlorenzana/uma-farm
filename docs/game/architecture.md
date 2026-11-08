@@ -1,6 +1,6 @@
 # Architecture and technical setup
 
-How uma-farm is built and run, as of F4: save v2, with the Wilds' rules in the domain and no screens for them yet (F5). Values come from the code and
+How uma-farm is built and run, as of F5: save v2, the Wilds' rules in the domain and their screens on the phone ([wilds.md](wilds.md)). Values come from the code and
 [infrastructure.md](../technical/infrastructure.md), which holds every production value and is the place to change them.
 
 ## The pieces
@@ -8,7 +8,8 @@ How uma-farm is built and run, as of F4: save v2, with the Wilds' rules in the d
 ```
  iPhone (Home Screen PWA)
    └─ apps/web  React 19 + Vite 7 + Tailwind 4 + Zustand + Dexie; uma-kit for the theme, shell, sign-in,
-                content loading and the update prompt
+                content loading, the update prompt, the Hub map (Phaser, on demand), the album and the work
+                screens (F5)
         │  /api/*  (Firebase Hosting rewrites to Cloud Run)
         ▼
    apps/api  NestJS 11 on Cloud Run `farm-api`, behind uma-server's owner guard
@@ -30,17 +31,21 @@ How uma-farm is built and run, as of F4: save v2, with the Wilds' rules in the d
 
 | Piece | Where | What |
 |---|---|---|
-| Entry | `src/main.tsx` | The kit's keys (`farm.`), appearance, uma-art's bar art, sign-in, content client and the router |
+| Entry | `src/main.tsx` | The kit's keys (`farm.`), appearance, uma-art's bar and map art, sign-in, content client, the album's outfit art and the work screens' item icons, and the router |
 | Gates | `src/app/Root.tsx` | The kit's `BootGates`: splash → Google sign-in → boot → the app; the kit's **Update ready · Restart** |
-| Pages | `src/app/router.tsx` | `/` Home and `/account`, inside the shell; anything else goes Home |
-| Shell | `src/shell/` | The kit's `AppFrame` unchanged (FM18): the account bar with the sync chip, the bottom bar (Home, Menu), the menu sheet (`?sheet=menu`) with the build id, and the sync warning |
-| Home | `src/home/HomePage.tsx` | The farm's name, who is signed in, the save's state, master data's release. F5 replaces it with the Wilds |
-| Account | `src/home/AccountView.tsx` | The kit's Account page: appearance, sign-in, save state, last sync, build, safety copies, sign out |
-| Save | `src/save/` | The device save in Dexie, the store and its sync engine (below) |
-| Master data | `src/master/master.ts` | The release's manifest through `/api/master`, cached by hash on the device |
+| Pages | `src/app/router.tsx` | `/` the Wilds (`?peek=<place>` a quick look), `/wilds/<place>` a place's page, `/warehouse` and `/account`, inside the shell; `/wilds` and anything else go to `/`. The Wilds, the place pages and the Warehouse load on demand ([wilds.md](wilds.md)) |
+| Shell | `src/shell/` | The kit's `AppFrame` unchanged (FM18): the account bar with the sync chip, the bottom bar (Wilds with its Ready count, Warehouse, Menu), the menu sheet (`?sheet=menu`: every place with its Ready count, the Warehouse, Account and the build id), and the sync warning |
+| The Wilds | `src/wilds/` | The Hub map on uma-kit (`HubMap`), the quick looks, Collect all, the help, the Forge and the Post as placeholders, the Ready counts |
+| Places | `src/places/` | A place's page on uma-kit/work (`work/`: the farm's provider, the slot rows, the job sheet, the What step) and the Warehouse (`warehouse/`) |
+| Picker | `src/album/rows.ts` | Every outfit as a row of uma-kit's album: Craft Level, free or busy, and the Trade, rarity and aptitude facets |
+| Items | `src/items/` | uma-art's item icons placed from the ids (`frames.ts`), and the items' words |
+| Account | `src/home/AccountView.tsx` | The kit's Account page: appearance, sign-in, save state, last sync, build, master data's release, safety copies, sign out |
+| Save | `src/save/` | The device save in Dexie, the store and its sync engine (below), the work actions (`edit`) and the trade words |
+| Master data | `src/master/` | The release's manifest, characters, outfits and art through `/api/master`, cached by hash on the device; the roster (`farmRoster`) and the album's rows; the album art adapter |
 | PWA | `vite.config.ts` | Portrait, standalone, the icons from `scripts/draw-icons.mjs`; Workbox precaches the app and keeps master data's files for good |
 
-Main JS is 137 KB gzip against the 180 KB budget (FM20); Firebase loads on demand.
+Main JS is 153 KB gzip against the 180 KB budget (FM20). Firebase, the Wilds' screens and the Hub map's Phaser scene
+(`createHubGame`, 377 KB gzip) load on demand; `scripts/check-size.mjs`'s `LAZY_MODULES` refuses them in the initial JS.
 
 ## API
 
