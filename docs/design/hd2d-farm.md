@@ -319,6 +319,21 @@ game's scoring). Everything that draws on the stage waits for the package.
 | A minigame copies a real game | Each is an original game in a genre, with its own rules, art and names (FR20) |
 | The farm kit doesn't fit uma-quest's format | Its three openings are in FR1's request (FR15) |
 
+## Notes from drawing the page (D23)
+
+Drawing [the page](previews/hd2d-farm.html) to scale turned up eight gaps. Each is settled here, or names where it will be:
+
+| # | Gap | Settled |
+|---|---|---|
+| 1 | Three places × 3 tiles fill all 9 tiles, leaving no path up between columns | Each column keeps a narrow lane on its edge, as the page draws it; F11 sets the exact tiles |
+| 2 | A storey's front (256 texels) hides about 3.5 tiles behind it at 35°, more than a 3-deep row | Slots stand on the near (south) side of their place, and line buildings are one storey, so no slot is ever hidden |
+| 3 | At true scale (about 73 px a tile deep) a 27-tile farm is about one screen | FR6's pan matters as the farm grows (core-loop FC28) and while a sheet is open; it stays |
+| 4 | The Kitchen's recipes are open; FS13's made items don't read as ingredients | Settled by [core-loop.md](core-loop.md) FC14: dishes from the farm's own crops, products and fish; F7's rewrite gives the recipes |
+| 5 | The "well fed" boost has no tier rule or base | Settled by core-loop FC15: it's the Kitchen's staff meal, ×1.25 for 4 h at Rough, longer by tier; F7 sets the ladder (the page's sketch uses 2 h, as an illustration) |
+| 6 | FR24's order puts F9 late, though it needs only F16's contract; F10 would wait on F8's scene | F9 follows F16 straight away, before the stage. F10 is parked anyway (core-loop FC31, D22) |
+| 7 | Two Forges: the Weapon Forge (a making place) and the workshop Forge | The making places are renamed with the farm's own goods (core-loop FC7, FC31); the workshop keeps "Forge" |
+| 8 | Which Uma works a workshop, and whether she leaves her slot | A workshop has one **assistant post**: you pick the Uma when you start a play, and she holds no other slot meanwhile; her rank in that workshop lifts the yield (core-loop §4's "Assist") |
+
 ## Calls
 
 | Id | Call |
