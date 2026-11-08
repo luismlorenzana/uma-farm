@@ -1,5 +1,7 @@
 # uma-farm: the design spec
 
+> **Refocused, 2026-11-08 (D20):** [hd2d-farm.md](hd2d-farm.md) moves the farm to the HD-2D engine and replaces §4 (the Forge's smithing game, FS12–FS21) with workshops and genre minigames, and FS32's queue with FR24's. §1–§3, §5 and §6 stand until F7 is rewritten.
+>
 > **Status: draft, 2026-11-08 (D16). Nothing here is built.** The spec F7 owes (R10, FW12): what the farm becomes beyond
 > its copy of uma-rpg's Wilds. Calls are **FS1–FS32**, each with a recommendation; there are no open questions, only
 > [questions for the owner](#questions-for-the-owner) phrased as decisions with an answer ready. Visual page:

@@ -253,7 +253,7 @@ The packet exists: [tasks/F3-hello-app.md](../handoff/tasks/F3-hello-app.md). It
 
 **The design spec** · Claude · L · Needs: F4 (to start), F6 play (to finish) · Waiting
 
-**Drafted (D16):** [spec.md](spec.md) (FS1–FS32) and its page [previews/spec.html](previews/spec.html); it waits on your play and uma-quest's Q17.
+**Drafted (D16):** [spec.md](spec.md) (FS1–FS32) and its page [previews/spec.html](previews/spec.html). **Refocused (D20):** [hd2d-farm.md](hd2d-farm.md) (FR1–FR24) moves the farm to the HD-2D engine and replaces §4's Forge with workshops and genre minigames; F7 is rewritten once the owner has reviewed it.
 
 **Delivers:**
 
