@@ -4,8 +4,8 @@ A personal, never-distributed farm inspired by *Umamusume: Pretty Derby*, played
 web app. Umas gather, process and make across five lines, as in uma-rpg's Wilds. A Forge minigame then turns those base
 items into the other Uma games' items, sent as one-way parcels to uma-quest, uma-rpg and uma-racer.
 
-**Status (2026-11-08):** the workspace and its checks are in (F1): a placeholder web page, an API behind the owner
-guard, and the domain package, installing all five platform packages. Next is F2, the cloud.
+**Status (2026-11-08):** the workspace and the cloud are live at https://uma-farm.web.app (F1, F2). The current
+initiative is [the first playable farm](docs/design/first-playable.md); F3, the hello app, is next.
 
 ## Layout
 
