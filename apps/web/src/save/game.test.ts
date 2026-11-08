@@ -1,6 +1,6 @@
 // The store against an in-memory server with the API's revision rules, and a fake IndexedDB. Invented data only.
 import 'fake-indexeddb/auto'
-import { newSave, touched, type Save, type SaveEnvelope } from '@farm/domain'
+import { newSave, SAVE_VERSION, touched, type Save, type SaveEnvelope } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const server: { envelope: SaveEnvelope; puts: number; down: boolean } = { envelope: { revision: 0, save: null }, puts: 0, down: false }
@@ -44,7 +44,7 @@ beforeEach(async () => {
 describe('the store', () => {
   it('starts a new account on a fresh device when the server has none, and syncs it', async () => {
     await boot('u1')
-    expect(useGame.getState()).toMatchObject({ status: 'ready', dirty: true, save: { version: 1, account: { uid: 'u1' } } })
+    expect(useGame.getState()).toMatchObject({ status: 'ready', dirty: true, save: { version: SAVE_VERSION, account: { uid: 'u1' } } })
     await syncNow()
     expect(useGame.getState()).toMatchObject({ dirty: false, revision: 1, sync: 'synced' })
     expect(server.envelope.save?.account.uid).toBe('u1')
