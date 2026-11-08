@@ -67,6 +67,8 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+          // "Work done" notifications (F6, uma-rpg's D63): the handlers live in public/push-sw.js.
+          importScripts: ['push-sw.js'],
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
           navigateFallback: '/index.html',
           // /__/ is Firebase Hosting's reserved space (the redirect sign-in handler): never answer it with the app shell.
