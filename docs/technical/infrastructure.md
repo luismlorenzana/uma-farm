@@ -1,6 +1,7 @@
 # Infrastructure
 
-> **Status: live since 2026-11-08 (F2, D5).** Every value below exists and was checked. The plan for all three
+> **Status: live since 2026-11-08 (F2, D5).** Every value below exists and was checked. F6 (D14) ships the push routes;
+> `farm-push-tick` stays paused until the main session resumes it after F6's deploy. The plan for all three
 > apps in the project is uma-rpg's
 > [cloud plan](https://github.com/luismlorenzana/uma-rpg/blob/main/docs/design/cloud/plan.md) (IN1–IN26).
 
@@ -34,11 +35,11 @@ Never run `gcloud config set …`, and never touch uma-rpg's or uma-quest's piec
 | API URL | `https://farm-api-dadzqf3ula-uc.a.run.app` (also the parcel ping's audience) |
 | API | Cloud Run `farm-api`, `us-central1`, min 0, max 1, 512 MiB, 1 CPU, public at the edge. The owner guard covers every route except `/api/health`, and `/api/post/*` and `/api/push/tick`, which check their own tokens |
 | Runtime account | `farm-api-runtime`: `datastore.user` only on `projects/uma-rpg/databases/farm`; reader of the master bucket; accessor of `farm-vapid` |
-| Database | Firestore `farm`, Native, `us-central1`, delete protection and point-in-time recovery on. In use from F3: `saves/{uid}` (`{ revision, save }`, the save as JSON text), `saveRescues/{uid}` (a refused upload, newest only) and `saveBackups/{uid}-v{n}` (the stored document before a newer save version first replaces it). Later: `push/{uid}` (F6), `parcels/{id}` (F10) |
+| Database | Firestore `farm`, Native, `us-central1`, delete protection and point-in-time recovery on. In use from F3: `saves/{uid}` (`{ revision, save }`, the save as JSON text), `saveRescues/{uid}` (a refused upload, newest only) and `saveBackups/{uid}-v{n}` (the stored document before a newer save version first replaces it). From F6: `push/{uid}` (the devices' subscriptions, the app's schedule, `checkedAt`; [the fields](../game/architecture.md#pushuid)). Later: `parcels/{id}` (F10) |
 | Images | Artifact Registry `farm`, keeping the last 3 |
 | Deployer | `farm-deploy`: writer on `farm` images, admin of `farm-api`, user of `farm-api-runtime`, Hosting admin (project-wide, so the workflow names its site and CI checks it, IN7) |
 | Deploy sign-in | Provider `uma-farm` in pool `github-actions`, `main` of `luismlorenzana/uma-farm` only |
-| Push (IN17) | Secret `farm-vapid`; account `farm-push-scheduler` with `run.invoker` on `farm-api` only; Cloud Scheduler `farm-push-tick` every five minutes, **paused** until F6 |
+| Push (IN17) | Secret `farm-vapid`, mounted on `farm-api` as `VAPID_KEYS`; account `farm-push-scheduler` with `run.invoker` on `farm-api` only; Cloud Scheduler `farm-push-tick`, `*/5 * * * *` UTC, `POST {API URL}/api/push/tick` with an OIDC token for `farm-push-scheduler`, audience `PUSH_AUDIENCE` (the API URL). **The route ships with F6** (D14): `/api/push/tick` answers 401 unsigned and 403 to any other account, and `PUSH_SCHEDULER_EMAIL` is unset, so the code's default, `farm-push-scheduler@uma-rpg.iam.gserviceaccount.com`, is the caller. **The job stays paused** until the main session resumes it after F6's deploy, once production refuses an unsigned tick |
 | Parcels (IN18) | Sender: `/api/post/*` accepts a Google ID token whose audience is `FARM_API_URL` and whose account is on `POST_CALLERS` (`quest-api-runtime` first; `rpg-api-runtime` and `racer-api-runtime@uma-racer` when they receive). No IAM grant, no keys |
 | Private content | None (IN16): its art is uma-art's, its Umas come through master data |
 | Label | `app=farm` |
@@ -63,7 +64,10 @@ own database) and the troubleshooter's project-level answer, which is only condi
 ## Re-run and rollback
 
 - **Re-run:** `CLOUDSDK_ACTIVE_CONFIG_NAME=default bash infra/bootstrap.sh` describes each piece before creating it and
-  re-applies the grants as they are, then prints the repository variables. It changes nothing on a second run.
+  re-applies the grants as they are, then prints the repository variables. It changes nothing on a second run, except
+  one: step 8 pauses `farm-push-tick` whenever it isn't paused (F2's "paused until F6"). Once the tick is resumed, a
+  re-run would pause it again, so step 8 must stop pausing an existing job before the script is next run (a change to
+  `infra/`, which F6's branch leaves to the main session).
 - **Rollback,** in this order: delete the scheduler job and the provider; then the
   service, the deployer and the two accounts, and the secret. The
   database keeps its delete protection, so removing it is a separate, deliberate step.

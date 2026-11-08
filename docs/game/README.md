@@ -5,7 +5,7 @@ updates its page in the same commit.
 
 | Page | What |
 |---|---|
-| [architecture.md](architecture.md) | The app, the API, the save and its sync, deploy and local setup (F3) |
+| [architecture.md](architecture.md) | The app, the API, the save and its sync, "work done" notifications, deploy and local setup (F3, F6) |
 | [loops.md](loops.md) | The Wilds' loop: who works, the fifteen places, Craft Level, a job, the Warehouse, the save (F4) |
 | [materials.md](materials.md) | The five lines, their fifty raw and refined pairs, and the made items with their recipes (F4) |
 | [wilds.md](wilds.md) | The Wilds' screens: the map, a place's page and its job sheet, the worker picker, the Warehouse, settling (F5) |
