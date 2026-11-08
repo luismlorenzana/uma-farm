@@ -1,6 +1,6 @@
 # Handoff: open work
 
-> **Status: 2026-11-08, after D6.** Phase 1's cloud is live at https://uma-farm.web.app (F1, F2). **The current
+> **Status: 2026-11-08, after D8.** M1–M3's packets are written (F4–F7, D8); F3 and F4 are next, side by side. Phase 1's cloud is live at https://uma-farm.web.app (F1, F2). **The current
 > initiative is [the first playable farm](../design/first-playable.md)** (FW1–FW13,
 > [page](../design/previews/first-playable.html)): its requirements and every planned task, from the hello app (F3) to the
 > Wilds playing, the design spec, then the Forge and parcels.
@@ -21,10 +21,10 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 | Milestone | Id | What | Who | Size | Needs | State |
 |---|---|---|---|---|---|---|
 | M1, stood up | F3 | [The hello app](tasks/F3-hello-app.md): uma-rpg's stack, Google sign-in, save v1 synced, the update prompt, the Home Screen | Claude | M | F2 ✓, the sign-in entries ✓ | **Ready** |
-| M2, the Wilds play | F4 | The rules copied at a recorded commit; save v2; the manual's generated pages | Claude | M | F1 ✓ | **Ready** (no packet yet) |
-| | F5 | The screens: the Wilds map, each place's page, the Warehouse, the worker picker | Claude | M | F3, F4 | To write |
-| | F6 | Push: the route, `farm-push-tick` resumed, "work done" | Claude | S | F5 | To write |
-| M3, the design spec | F7 | Who works, targets, the farm's economy, the Forge, accept lists and caps, the Post; the M4–M5 queue | Claude | L | F4 (to start), your play (to finish) | To write |
+| M2, the Wilds play | F4 | [The rules](tasks/F4-rules.md): uma-rpg's Wilds rules copied at `30a322a` with their tests; save v2; the manual's generated pages | Claude | M | F1 ✓ | **Ready** (beside F3) |
+| | F5 | [The screens](tasks/F5-screens.md): the Wilds map, each place's page, the Warehouse, the worker picker | Claude | M | F3, F4 | Written |
+| | F6 | [Push](tasks/F6-push.md): the route, `farm-push-tick` resumed, "work done" | Claude | S | F5 | Written |
+| M3, the design spec | F7 | [The design spec](tasks/F7-design-spec.md): who works, targets, the farm's economy, the Forge, accept lists and caps, the Post; the M4–M5 queue | Claude | L | F4 (to start), your play (to finish) | Written |
 | M4, the Forge | F8 | The Forge's place and minigame, results into the outbox | Claude | M | F7 | After F7 |
 | | F9 | Art: the Forge and the Post (ChatGPT, uma-art) | ChatGPT | M | F7 | After F7 |
 | M5, parcels | F10 | The sender: the outbox, `parcels`, `/api/post/parcels` and `/api/post/claims` | Claude | M | F8, uma-platform PO1 | After F7 |
