@@ -330,11 +330,13 @@ export function restartStopped(save: Save, outfitId: string, now: string, contex
   return withWorld(save, next, now)
 }
 
-/** Forgets a queue that stopped. */
+/** Forgets a queue that stopped. It settles first (F5): a queue stops when its turn comes, which a screen sees by settling,
+ * so the stored save may not hold the stop yet. */
 export function dismissStopped(save: Save, outfitId: string, now: string): Save {
-  const row = save.work[outfitId]
+  const world = settle(save, msOf(now), envOf()).state
+  const row = world.work[outfitId]
   if (!row?.dropped) return save
-  return withWorld(save, withRow(save, { ...row, dropped: null }), now)
+  return withWorld(save, withRow(world, { ...row, dropped: null }), now)
 }
 
 // --- Small derived readings used outside the shared work screens ------------------------------------------------------
