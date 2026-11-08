@@ -1,6 +1,6 @@
 # Architecture and technical setup
 
-How uma-farm is built and run, as of F3: save v1, no rules yet. Values come from the code and
+How uma-farm is built and run, as of F4: save v2, with the Wilds' rules in the domain and no screens for them yet (F5). Values come from the code and
 [infrastructure.md](../technical/infrastructure.md), which holds every production value and is the place to change them.
 
 ## The pieces
@@ -16,7 +16,7 @@ How uma-farm is built and run, as of F3: save v1, no rules yet. Values come from
         ├─ master data ────► gs://uma-platform-master-data (local: ../uma-platform/content/release)
         └─ the parcel ping ► /api/post/ping, checked by its own Google ID token (IN18)
 
-   packages/domain  @farm/domain: the save and, from F4, every rule; pure TypeScript, shared by web and API
+   packages/domain  @farm/domain: the save and the Wilds' rules (copied from uma-rpg, F4); pure TypeScript, shared by web and API
 ```
 
 **The rules of the codebase:**
@@ -59,15 +59,23 @@ Main JS is 137 KB gzip against the 180 KB budget (FM20); Firebase loads on deman
 | Version | Packet | What changed |
 |---|---|---|
 | 1 | F3 | The account: `{ version: 1, account: { uid, createdAt, updatedAt } }` |
+| 2 | F4 | The Wilds' world beside it: `umas` (each Uma's Craft Level, from her first job), `items` (the Warehouse), `work` (uma-work's rows) and `buildings` (always `{}`). v1 migrates with all four empty, `updatedAt` unchanged |
 
 ### The shape
 
 ```ts
-interface SaveV1 {
-  version: 1
+interface SaveV2 {
+  version: 2
   account: { uid: string; createdAt: string; updatedAt: string }
+  umas: Record<string, { craft: { level: number; exp: number } }>  // by outfit id
+  items: Record<string, number>                                     // the Warehouse: line and made items
+  buildings: {}                                                     // places have no levels
+  work: Record<string, WorkRow<FarmWorkRequest>>                    // uma-work's rows, by outfit id
 }
 ```
+
+The rules that change it, and every number they use, are in [loops.md](loops.md) and [materials.md](materials.md); the copy
+from uma-rpg is listed file by file in [wilds-copy.md](../technical/wilds-copy.md).
 
 `parseSave` reads every version the farm has written and returns the current one; a newer version than the app knows is
 refused, and unknown keys are refused, so an old client can never half-write a newer save.

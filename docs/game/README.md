@@ -6,8 +6,10 @@ updates its page in the same commit.
 | Page | What |
 |---|---|
 | [architecture.md](architecture.md) | The app, the API, the save and its sync, deploy and local setup (F3) |
+| [loops.md](loops.md) | The Wilds' loop: who works, the fifteen places, Craft Level, a job, the Warehouse, the save (F4) |
+| [materials.md](materials.md) | The five lines, their fifty raw and refined pairs, and the made items with their recipes (F4) |
 
-F4 adds the Wilds' pages, `materials.md` and `loops.md`, generated from the code.
+The Wilds' screens arrive with F5; until then the rules run in the domain and its tests only.
 
 Specs and intent live in [docs/design/](../design/). Where they differ from this manual, the manual and the code win.
 

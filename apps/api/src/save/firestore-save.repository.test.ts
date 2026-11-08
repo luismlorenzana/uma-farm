@@ -1,5 +1,5 @@
 // The production store against an in-memory Firestore: the `farm` database by name, revisions checked in a transaction,
-// the save stored as text, and rescues. The backup before a newer version first replaces a stored one is tested from save v2 on. Invented data only.
+// the save stored as text, the backup before a newer version first replaces a stored one, and rescues. Invented data only.
 import { newSave, SAVE_VERSION as V } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { FirestoreSaveRepository } from './firestore-save.repository'
@@ -44,6 +44,21 @@ describe('the Firestore save store', () => {
     expect(await repo.load('u')).toEqual({ revision: 1, save })
     await expect(repo.put('u', 0, save, V)).rejects.toBeInstanceOf(RevisionConflict)
     await expect(repo.put('u', 1, save, V - 1)).rejects.toBeInstanceOf(RevisionConflict)
+    expect(store.has('saveBackups/u-v1')).toBe(false)
+  })
+
+  it('backs up a stored v1 document whole before the first v2 write, and only then', async () => {
+    const repo = new FirestoreSaveRepository('farm')
+    const v1 = { version: 1, account: { uid: 'u', createdAt: NOW, updatedAt: NOW } }
+    const original = { revision: 3, save: JSON.stringify(v1), updatedAt: 'kept' }
+    store.set('saves/u', structuredClone(original))
+    const loaded = await repo.load('u')
+    expect(loaded.save).toMatchObject({ version: 2, account: { updatedAt: NOW }, umas: {}, items: {}, work: {} })
+    expect(store.get('saves/u')).toEqual(original)
+    await repo.put('u', 3, loaded.save!, V)
+    expect(store.get('saveBackups/u-v1')).toEqual({ ...original, backedUpAt: SERVER_TIME })
+    store.delete('saveBackups/u-v1')
+    await repo.put('u', 4, loaded.save!, V)
     expect(store.has('saveBackups/u-v1')).toBe(false)
   })
 
