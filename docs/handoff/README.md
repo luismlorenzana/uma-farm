@@ -1,6 +1,6 @@
 # Handoff: open work
 
-> **Status: 2026-11-08, after D4.** The workspace and its checks are in (F1). Next is F2, the cloud.
+> **Status: 2026-11-08, after D5.** The workspace and the cloud are live at https://uma-farm.web.app (F1, F2). Next is F3, the hello app.
 > **The current phase is Phase 1: the repo, the cloud and the hello app** ([the plan](../design/plan.md#phase-1-the-repo-the-cloud-and-the-hello-app-claude-s--m--m)).
 >
 > - **The manual of the game as built** will be [docs/game/](../game/README.md). It starts with F3.
@@ -12,15 +12,13 @@
 
 ## Phase 1: the repo, the cloud and the hello app
 
-Packet ids continue from F7 (F4–F6 are the plan's); decision numbers from D5.
+Packet ids continue from F7 (F4–F6 are the plan's); decision numbers from D6.
 
 | Id | What | Who | Size | Needs | State |
 |---|---|---|---|---|---|
-| F2 | [The cloud, the pipeline and the ping](tasks/F2-cloud.md): `infra/bootstrap.sh`'s nine pieces in the `uma-rpg` project, push paused, the deploy, the site check, `POST_CALLERS`, the isolation rows | Claude | M | F1; uma-rpg's H169; the owner's go | Waiting on H169 |
-| F3 | [The hello app](tasks/F3-hello-app.md): uma-rpg's stack, Google sign-in, save v1 synced, the update prompt, the Home Screen | Claude | M | F2; the owner's two sign-in entries | After F2 |
+| F3 | [The hello app](tasks/F3-hello-app.md): uma-rpg's stack, Google sign-in, save v1 synced, the update prompt, the Home Screen | Claude | M | F2 ✓; the owner's two sign-in entries | **Ready** once the entries are in |
 
-**Order:** F1 can start now, in parallel with uma-rpg's H169 and uma-quest's Q1. F2 follows H169; uma-quest's Q2 then
-calls its ping. F3 follows F2.
+**Order:** F1 and F2 are done (D4, D5), after uma-rpg's H169 and beside uma-quest's Q1 and Q2. F3 is next.
 
 ## Later phases
 
@@ -37,7 +35,7 @@ Each phase's packets are written when it starts, from [the plan](../design/plan.
 
 ## Across the repos
 
-- **uma-rpg:** H169 (its project hardened) comes before F2. Its receiver is a packet there, after the owner's go (FM15).
+- **uma-rpg:** H169 (its project hardened) is done (uma-rpg D311). Its receiver is a packet there, after the owner's go (FM15).
 - **uma-quest:** its Q2 calls the ping; its Phase 4 names the consumables it takes (its D4), which opens Phase 5.
 - **uma-platform:** P88 and P89 are logged. `uma-post` (FM12) is built there before Phase 5, and any `uma-work` or
   `uma-kit/work` change is a platform release (FM5).
@@ -49,7 +47,7 @@ Each phase's packets are written when it starts, from [the plan](../design/plan.
 |---|---|
 | ~~Now~~ Done 2026-11-08 | **Kept private** (the owner's word; D-decision below). One word: make the repo public (FM1, IN14, free Actions minutes) or keep it private |
 | ~~For F1's CI~~ Done 2026-11-08 | On GitHub, for `uma-data`, `uma-kit`, `uma-work`, `uma-server` and `uma-art`: Package settings → **Manage Actions access** → add `uma-farm` with **Read** |
-| F2 | The go for the cloud; then the two sign-in entries for `uma-farm.web.app` in the Cloud console |
+| ~~F2~~ Go given 2026-11-08 | ~~The go for the cloud~~; **still yours:** the two sign-in entries for `uma-farm.web.app` in the Cloud console |
 | F3 | The phone check: install, sign in, see the save sync |
 
 ## Done
@@ -58,6 +56,7 @@ Packets finished go here, newest first.
 
 | Id | Task | Commit |
 |---|---|---|
+| F2 | The cloud, the pipeline and the ping (D5): `infra/bootstrap.sh` made every piece (database `farm`, `farm-api-runtime`, images `farm`, `farm-api`, `farm-deploy`, provider `uma-farm`, site `uma-farm`, web app, authorized domain, `farm-vapid`, `farm-push-scheduler` and `farm-push-tick`, paused). [The first deploy](https://github.com/luismlorenzana/uma-farm/actions/runs/42498869774) passed every check: health 200 with the commit directly and through the site, `/api/save` 401, the shell `no-cache`, uma-rpg still answering. Every isolation cell came back as planned ([infrastructure.md](../technical/infrastructure.md)). `/api/post/ping` answers 401 without a token and for the owner's own token (not on `POST_CALLERS`); its success is uma-quest's Q2 calling it, which landed second and waits on Q14's sign-in for its live call. The budget still lists the project | `cddd6e7` |
 | F1 | The workspace and its checks (D4): pnpm 10.33.0 and turbo; `@farm/web`, `@farm/api` and `@farm/domain`, installing uma-data 1.4.0, uma-kit 0.17.0, uma-work 0.1.0, uma-server 0.2.0 and uma-art 2.21.0; lint, tests, build, the 180 KB size check (69.4 KB) and the private-content guard; CI's verify job. Locally with the guard on: health 200, save 401, ping 401, the page and its proxied health on :5194 | `this commit` |
 
 ## How a packet reads

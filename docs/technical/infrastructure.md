@@ -1,13 +1,13 @@
 # Infrastructure
 
-> **Status: 2026-11-07, planned. Nothing in the cloud exists yet.** F2 creates it and replaces "planned" with live values.
-> The plan for all three apps in the project is uma-rpg's
+> **Status: live since 2026-11-08 (F2, D5).** Every value below exists and was checked. The plan for all three
+> apps in the project is uma-rpg's
 > [cloud plan](https://github.com/luismlorenzana/uma-rpg/blob/main/docs/design/cloud/plan.md) (IN1–IN26).
 
 ## The shared project
 
 uma-farm lives in GCP project **`uma-rpg`** (number 727687479415, billing account `0101E5-D99B49-A8B713`), beside
-uma-rpg (live) and uma-quest (planned). Each app has its own pieces, and none can reach another's (IN2, IN5, IN6). Four
+uma-rpg and uma-quest, all live. Each app has its own pieces, and none can reach another's (IN2, IN5, IN6). Four
 things are shared (IN3):
 - Firebase Auth: Google sign-in and the one allowed email;
 - the `github-actions` Workload Identity pool;
@@ -24,13 +24,14 @@ Never run `gcloud config set …`, and never touch uma-rpg's or uma-quest's piec
 `quest-*`, `github-deployer`, `quest-deploy`, `gs://uma-rpg-content`, `gs://uma-quest-content`, and the `uma-rpg` and
 `uma-quest` sites.
 
-## uma-farm's pieces (planned, F2)
+## uma-farm's pieces (live, 2026-11-08)
 
 | Piece | Value |
 |---|---|
-| Repo | `luismlorenzana/uma-farm`, private until the owner's word, then public (D1) |
+| Repo | `luismlorenzana/uma-farm`, **private** (the owner, 2026-11-08; D4) |
 | Site | `https://uma-farm.web.app`, Hosting site `uma-farm` (`uma-farm-lm` if taken), 20 versions kept |
 | Firebase web app | Uma Farm web; its public config goes in `apps/web/.env.production` |
+| API URL | `https://farm-api-dadzqf3ula-uc.a.run.app` (also the parcel ping's audience) |
 | API | Cloud Run `farm-api`, `us-central1`, min 0, max 1, 512 MiB, 1 CPU, public at the edge. The owner guard covers every route except `/api/health`, and `/api/post/*` and `/api/push/tick`, which check their own tokens |
 | Runtime account | `farm-api-runtime`: `datastore.user` only on `projects/uma-rpg/databases/farm`; reader of the master bucket; accessor of `farm-vapid` |
 | Database | Firestore `farm`, Native, `us-central1`, delete protection and point-in-time recovery on: `saves/{uid}`, `saveRescues/{uid}`, `parcels/{id}`, `push/{uid}` |
@@ -45,6 +46,27 @@ Never run `gcloud config set …`, and never touch uma-rpg's or uma-quest's piec
 
 **Repository variables (F2):** `GCP_PROJECT_ID=uma-rpg`, `WIF_PROVIDER`, `DEPLOY_SA`, `ALLOWED_EMAIL`, `MASTER_BUCKET`,
 `FIRESTORE_DATABASE=farm`, `HOSTING_SITE=uma-farm`, `PUSH_AUDIENCE`, `POST_CALLERS`, `DEPLOY_ENABLED`.
+
+## Isolation, checked 2026-11-08 (IN21)
+
+Policy Troubleshooter (`gcloud policy-troubleshoot iam`) for Cloud Run, images and secrets. It doesn't accept Firestore
+database names, so the database cells come from each grant's condition (one `datastore.user` per runtime account, on its
+own database) and the troubleshooter's project-level answer, which is only conditional.
+
+| Account | Own pieces | Every other app's |
+|---|---|---|
+| `farm-api-runtime` | `farm` database (`resource.name == "projects/uma-rpg/databases/farm"`); `farm-vapid`; reads master data | No grant on `(default)` or `quest`; `rpg-vapid` refused |
+| `farm-deploy` | Deploys `farm-api`, pushes to `farm`: granted | `rpg-api`, `quest-api`, `rpg`, `quest`: refused |
+| `github-deployer`, `quest-deploy` | — | `farm-api` and `farm`: refused |
+| `farm-push-scheduler` | `run.invoker` on `farm-api` | Its only grant. All three APIs are public at the edge (`allUsers` invoker), so the troubleshooter shows it can call any of them; each API checks the tick's OIDC token itself |
+
+## Re-run and rollback
+
+- **Re-run:** `CLOUDSDK_ACTIVE_CONFIG_NAME=default bash infra/bootstrap.sh` describes each piece before creating it and
+  re-applies the grants as they are, then prints the repository variables. It changes nothing on a second run.
+- **Rollback,** in this order: delete the scheduler job and the provider; then the
+  service, the deployer and the two accounts, and the secret. The
+  database keeps its delete protection, so removing it is a separate, deliberate step.
 
 ## What it costs
 
