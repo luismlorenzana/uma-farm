@@ -1,6 +1,6 @@
 # Handoff: open work
 
-> **Status: 2026-11-08, after D9.** F3, the hello app, is live (D9): [uma-farm.web.app](https://uma-farm.web.app) signs in and syncs its save. F4 is in review; F5 follows it. Phase 1's cloud is live at https://uma-farm.web.app (F1, F2). **The current
+> **Status: 2026-11-08, after D9.** F3, the hello app, is live (D9): [uma-farm.web.app](https://uma-farm.web.app) signs in and syncs its save. F4, the Wilds' rules, is done (D10): copied from uma-rpg at `30a322a` with save v2. F5, the screens, is next. Phase 1's cloud is live at https://uma-farm.web.app (F1, F2). **The current
 > initiative is [the first playable farm](../design/first-playable.md)** (FW1–FW13,
 > [page](../design/previews/first-playable.html)): its requirements and every planned task, from the hello app (F3) to the
 > Wilds playing, the design spec, then the Forge and parcels.
@@ -21,8 +21,8 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 | Milestone | Id | What | Who | Size | Needs | State |
 |---|---|---|---|---|---|---|
 | M1, stood up | F3 | The hello app: uma-rpg's stack, Google sign-in, save v1 synced, the update prompt, the Home Screen | Claude | M | F2 ✓, the sign-in entries ✓ | **Done** (D9); your phone check waits |
-| M2, the Wilds play | F4 | [The rules](tasks/F4-rules.md): uma-rpg's Wilds rules copied at `30a322a` with their tests; save v2; the manual's generated pages | Claude | M | F1 ✓ | **Ready** (beside F3) |
-| | F5 | [The screens](tasks/F5-screens.md): the Wilds map, each place's page, the Warehouse, the worker picker | Claude | M | F3, F4 | Written |
+| M2, the Wilds play | F4 | The rules: uma-rpg's Wilds rules copied at `30a322a` with their tests; save v2; the manual's generated pages | Claude | M | F1 ✓ | **Done** (D10) |
+| | F5 | [The screens](tasks/F5-screens.md): the Wilds map, each place's page, the Warehouse, the worker picker | Claude | M | F3 ✓, F4 ✓ | **Ready** |
 | | F6 | [Push](tasks/F6-push.md): the route, `farm-push-tick` resumed, "work done" | Claude | S | F5 | Written |
 | M3, the design spec | F7 | [The design spec](tasks/F7-design-spec.md): who works, targets, the farm's economy, the Forge, accept lists and caps, the Post; the M4–M5 queue | Claude | L | F4 (to start), your play (to finish) | Written |
 | M4, the Forge | F8 | The Forge's place and minigame, results into the outbox | Claude | M | F7 | After F7 |
@@ -57,6 +57,7 @@ Packets finished go here, newest first.
 
 | Id | Task | Commit |
 |---|---|---|
+| F4 | The rules (D10): uma-rpg's Wilds copied at `30a322a` into `@farm/domain`, the live generation only, every cut in [wilds-copy.md](../technical/wilds-copy.md); the copied tests green in their own commit (43) before the farm's changes. Save v2 (`umas`, `items`, `buildings`, `work`) migrates v1 without moving `account.updatedAt`; every outfit on the release may work, her trade from her best running styles; the work operations take the save and stamp each change. A domain test runs every line G1 → G10. The manual's [materials.md](../game/materials.md) and [loops.md](../game/loops.md) are generated (`pnpm docs:update`). 62 domain tests. [Pull request](https://github.com/luismlorenzana/uma-farm/pulls?q=head%3Afeat%2Ff4-rules) | `feat/f4-rules` |
 | F3 | The hello app (D9): uma-kit's gates, shell and Account; save v1 local first in Dexie and synced through `GET`/`PUT /api/save` on the `farm` database with uma-rpg's revisions, conflict rule, safety copies, `saveRescues` and `saveBackups`; master data through uma-server's proxy; the PWA (portrait, standalone, a pixel F icon) with the kit's update prompt; main JS 137 KB gzip. [The deploy](https://github.com/luismlorenzana/uma-farm/actions/runs/42506978543) passed every check. The manual starts: [architecture.md](../game/architecture.md). Waiting on the owner's phone check | `3ca2387` |
 | F2 | The cloud, the pipeline and the ping (D5): `infra/bootstrap.sh` made every piece (database `farm`, `farm-api-runtime`, images `farm`, `farm-api`, `farm-deploy`, provider `uma-farm`, site `uma-farm`, web app, authorized domain, `farm-vapid`, `farm-push-scheduler` and `farm-push-tick`, paused). [The first deploy](https://github.com/luismlorenzana/uma-farm/actions/runs/42498869774) passed every check: health 200 with the commit directly and through the site, `/api/save` 401, the shell `no-cache`, uma-rpg still answering. Every isolation cell came back as planned ([infrastructure.md](../technical/infrastructure.md)). `/api/post/ping` answers 401 without a token and for the owner's own token (not on `POST_CALLERS`); its success is uma-quest's Q2 calling it, which landed second and waits on Q14's sign-in for its live call. The budget still lists the project | `cddd6e7` |
 | F1 | The workspace and its checks (D4): pnpm 10.33.0 and turbo; `@farm/web`, `@farm/api` and `@farm/domain`, installing uma-data 1.4.0, uma-kit 0.17.0, uma-work 0.1.0, uma-server 0.2.0 and uma-art 2.21.0; lint, tests, build, the 180 KB size check (69.4 KB) and the private-content guard; CI's verify job. Locally with the guard on: health 200, save 401, ping 401, the page and its proxied health on :5194 | `this commit` |
