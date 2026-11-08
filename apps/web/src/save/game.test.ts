@@ -1,9 +1,11 @@
 // The store against an in-memory server with the API's revision rules, and a fake IndexedDB. Invented data only.
 import 'fake-indexeddb/auto'
-import { newSave, SAVE_VERSION, touched, type Save, type SaveEnvelope } from '@farm/domain'
+import { newSave, SAVE_VERSION, startJob, touched, type PushEntry, type Save, type SaveEnvelope } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const server: { envelope: SaveEnvelope; puts: number; down: boolean } = { envelope: { revision: 0, save: null }, puts: 0, down: false }
+const server: { envelope: SaveEnvelope; puts: number; down: boolean; schedules: PushEntry[][]; refuseSchedule: boolean } = {
+  envelope: { revision: 0, save: null }, puts: 0, down: false, schedules: [], refuseSchedule: false,
+}
 
 vi.mock('../api/client', async () => {
   const actual = await vi.importActual<typeof import('../api/client')>('../api/client')
@@ -22,6 +24,13 @@ vi.mock('../api/client', async () => {
         return structuredClone(server.envelope)
       }),
     },
+    pushApi: {
+      schedule: vi.fn(async (entries: PushEntry[]) => {
+        if (server.down || server.refuseSchedule) throw new TypeError('Failed to fetch')
+        server.schedules.push(structuredClone(entries))
+        return null
+      }),
+    },
   }
 })
 
@@ -37,6 +46,8 @@ beforeEach(async () => {
   server.envelope = { revision: 0, save: null }
   server.puts = 0
   server.down = false
+  server.schedules = []
+  server.refuseSchedule = false
   await db.save.clear()
   await db.safety.clear()
 })
@@ -109,5 +120,28 @@ describe('the store', () => {
     server.down = true
     await syncNow()
     expect(useGame.getState()).toMatchObject({ sync: 'error', dirty: true })
+  })
+})
+
+describe('the push schedule (F6)', () => {
+  it('goes with every sync, once per save, and again after a failed send', async () => {
+    await boot('u1')
+    await syncNow()
+    await vi.waitFor(() => expect(server.schedules).toEqual([[]]))
+    await syncNow()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(server.schedules).toHaveLength(1)
+    const now = new Date().toISOString()
+    await commit(startJob(useGame.getState().save!, 'mine', 0, { outfitId: '101' }, 'copper-ore', 1, now))
+    server.refuseSchedule = true
+    await syncNow()
+    expect(useGame.getState().sync).toBe('synced')
+    await new Promise((r) => setTimeout(r, 0))
+    server.refuseSchedule = false
+    await syncNow()
+    await vi.waitFor(() => expect(server.schedules).toHaveLength(2))
+    await new Promise((r) => setTimeout(r, 0))
+    expect(server.schedules).toHaveLength(2)
+    expect(server.schedules[1]).toEqual([{ at: expect.any(Number) as number, place: 'mine', badge: 1 }])
   })
 })

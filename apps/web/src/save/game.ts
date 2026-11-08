@@ -1,6 +1,7 @@
 // The farm's store and its sync engine (copied from uma-rpg at 30a322a; its D32, D260): the save lives on the device
 // (Dexie) and in a Zustand store; every change writes both and schedules a background sync. Play never waits on the
-// network once a device save exists. F4's rules commit through `commit`; F5's work actions through `edit`.
+// network once a device save exists. F4's rules commit through `commit`; F5's work actions through `edit`. Every sync
+// also sends the push schedule (F6), and so does the app going to the background.
 import {
   collectAll, collectWorker, dismissStopped, editWorkerQueue, newSave, parseSave, recallWorker, repeatJob, restartStopped, rosterContext,
   startJob, touched, type Collected, type FarmOutfit, type FarmQueueInput, type Save, type WorkContext,
@@ -8,6 +9,7 @@ import {
 import { create } from 'zustand'
 import { conflictEnvelope, saveApi } from '../api/client'
 import { masterRoster } from '../master/master'
+import { resetSchedule, sendSchedule } from '../push/push'
 import { addSafetyCopy, readSafetyCopy, readSaveRow, removeSafetyCopy, writeSaveRow } from './db'
 import { reconcile } from './reconcile'
 
@@ -72,6 +74,7 @@ export async function boot(uid: string): Promise<void> {
 
 export function resetGame(): void {
   useGame.setState(INITIAL)
+  resetSchedule()
 }
 
 /** Every change goes through here: on screen, on the device, then to the server. */
@@ -210,6 +213,7 @@ async function syncPass(): Promise<void> {
     if (dirty && !again) throw new Error('changes left unsent')
     useGame.setState({ sync: 'synced', ...(dirty ? {} : { lastSyncedAt: nowIso() }) })
     if (!dirty) await persist()
+    void sendSchedule(useGame.getState().save)
   } catch {
     useGame.setState({ sync: typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'error' })
   }
@@ -243,10 +247,12 @@ export function seeReplaced(): void {
   useGame.setState({ replacedAt: null })
 }
 
-/** Syncs when the app comes back to the foreground or the network returns. Returns a stop function. */
+/** Syncs when the app comes back to the foreground or the network returns, and sends the push schedule as it goes to the
+ * background. Returns a stop function. */
 export function startSyncTriggers(): () => void {
   const onVisible = () => {
     if (document.visibilityState === 'visible') void syncNow()
+    else void sendSchedule(useGame.getState().save)
   }
   const onOnline = () => void syncNow()
   document.addEventListener('visibilitychange', onVisible)

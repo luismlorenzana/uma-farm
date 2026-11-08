@@ -1,10 +1,11 @@
 // Account (uma-kit's AccountPage): who is signed in, the save's sync, its safety copies, the appearance, the build and
-// sign-out, and master data's release (Home's row until F5).
+// sign-out, master data's release (Home's row until F5), and the notification switch (F6).
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { AccountPage } from '@luismlorenzana/uma-kit/places'
 import { Button, Panel } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useState } from 'react'
 import { APP_BUILD_ID } from '../app/build'
+import { NotificationsCard } from '../push/NotificationsCard'
 import { useMaster } from '../master/master'
 import { safetyCopies, type SafetyCopy } from '../save/db'
 import { restoreSafetyCopy, seeReplaced, useGame } from '../save/game'
@@ -50,6 +51,7 @@ export function AccountView() {
         { label: 'Build', value: APP_BUILD_ID },
         { label: 'Master data', value: release },
       ]}
+      notifications={<NotificationsCard />}
       sections={<SafetyCopies />}
       onSignOut={auth.authRequired ? () => auth.signOut() : undefined}
     />
