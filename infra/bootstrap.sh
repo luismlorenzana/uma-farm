@@ -153,7 +153,8 @@ else
   say "authorized domain ${NEW_DOMAIN}"
 fi
 
-# --- 8. Push, paused (IN17): the VAPID secret, the scheduler's account and its job, paused until F6 -----------------
+# --- 8. Push (IN17): the VAPID secret, the scheduler's account and its job. A new job is created paused (F2); a job that
+# exists keeps its state, so a re-run never pauses the tick F6 resumed (D15) ---------------------------------------------
 gcloud services enable secretmanager.googleapis.com cloudscheduler.googleapis.com >/dev/null
 if gcloud secrets describe "${SECRET}" >/dev/null 2>&1; then say "secret ${SECRET} exists"
 else
@@ -174,12 +175,10 @@ if gcloud scheduler jobs describe "${JOB}" --location="${REGION}" >/dev/null 2>&
   say "job ${JOB} exists"
 else
   gcloud scheduler jobs create http "${JOB}" "${JOB_ARGS[@]}" >/dev/null
-  say "created job ${JOB}"
-fi
-if [[ "$(gcloud scheduler jobs describe "${JOB}" --location="${REGION}" --format='value(state)')" != "PAUSED" ]]; then
   gcloud scheduler jobs pause "${JOB}" --location="${REGION}" >/dev/null
-  say "paused job ${JOB} (F6 resumes it)"
+  say "created job ${JOB}, paused (resume it once /api/push/tick is deployed)"
 fi
+say "job ${JOB} is $(gcloud scheduler jobs describe "${JOB}" --location="${REGION}" --format='value(state)')"
 
 # --- 9. The repository variables ------------------------------------------------------------------------------------
 ALLOWED_EMAIL="$(gh variable get ALLOWED_EMAIL -R luismlorenzana/uma-rpg 2>/dev/null || echo '<copy uma-rpg ALLOWED_EMAIL>')"
