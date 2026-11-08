@@ -253,6 +253,8 @@ The packet exists: [tasks/F3-hello-app.md](../handoff/tasks/F3-hello-app.md). It
 
 **The design spec** · Claude · L · Needs: F4 (to start), F6 play (to finish) · Waiting
 
+**Drafted (D16):** [spec.md](spec.md) (FS1–FS32) and its page [previews/spec.html](previews/spec.html); it waits on your play and uma-quest's Q17.
+
 **Delivers:**
 
 - The spec in `docs/design/` at uma-rpg's class-progression.md standard, with preview pages
