@@ -1,10 +1,11 @@
 // Account (uma-kit's AccountPage): who is signed in, the save's sync, its safety copies, the appearance, the build and
-// sign-out.
+// sign-out, and master data's release (Home's row until F5).
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { AccountPage } from '@luismlorenzana/uma-kit/places'
 import { Button, Panel } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useState } from 'react'
 import { APP_BUILD_ID } from '../app/build'
+import { useMaster } from '../master/master'
 import { safetyCopies, type SafetyCopy } from '../save/db'
 import { restoreSafetyCopy, seeReplaced, useGame } from '../save/game'
 import { dateWords } from '../shell/SyncWarning'
@@ -37,6 +38,8 @@ function SafetyCopies() {
 export function AccountView() {
   const auth = useAuth()
   const state = useGame()
+  const master = useMaster()
+  const release = master.status === 'ready' ? master.view.manifest.version : master.status === 'error' ? (master.offline ? 'Offline' : 'Unavailable') : 'Loading…'
   useEffect(() => seeReplaced(), [])
   return (
     <AccountPage
@@ -45,6 +48,7 @@ export function AccountView() {
         { label: 'Save', value: syncWords(state) },
         { label: 'Last synced', value: state.lastSyncedAt ? dateWords(state.lastSyncedAt) : '—' },
         { label: 'Build', value: APP_BUILD_ID },
+        { label: 'Master data', value: release },
       ]}
       sections={<SafetyCopies />}
       onSignOut={auth.authRequired ? () => auth.signOut() : undefined}
