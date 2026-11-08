@@ -7,5 +7,6 @@ export { openShop, tradeBlock, ANOTHER_TRADE, TRADE_REFUSAL } from './kinds-v3/t
 
 export { PLACE_SLOTS_V3, PLACE_SPEED_V3 } from '../economy/professions'
 
-/** What the caller knows beyond the save: each Uma's trade (from her template's calling), for the trade gate. */
-export interface WorkContext { tradeOf?: TradeOf }
+/** What the caller knows beyond the save: each Uma's trade (from her calling), for the trade gate, and the roster's
+ * outfit ids, who may work and whose trades decide an open shop (FM6: every outfit on the release is the farm's). */
+export interface WorkContext { tradeOf?: TradeOf; roster?: ReadonlySet<string> }

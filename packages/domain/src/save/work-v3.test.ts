@@ -6,7 +6,7 @@ import { jobExp, stepMinutes } from '../economy/pacing'
 import { tradeOfCalling } from '../economy/professions'
 import type { UmaCallingClass } from '../roster/template'
 import { ECONOMY_V3_NOW, gradedUma, gradedWorld } from '../work/world.fixture'
-import type { FarmWorld } from '../work/world'
+import type { Save } from './save'
 import { availableWorkers, checkRestartStopped, collectJob, planJob, queueJob, readyWork, repeatJob, slotJobOf, startJob } from './work'
 
 const T0 = Date.parse(ECONOMY_V3_NOW)
@@ -14,8 +14,9 @@ const at = (ms: number) => new Date(T0 + ms).toISOString()
 /** One Craft Lv 1 step in a slot: 24 minutes ÷ 1.25. */
 const GATHER_MS = Math.round((stepMinutes(1) * 60) / 1.25) * 1000
 
-function worldOf(umas: Record<string, number>, items: Record<string, number> = {}): FarmWorld {
-  return gradedWorld({ items, umas: Object.fromEntries(Object.entries(umas).map(([id, level]) => [id, gradedUma({ craft: { level, exp: 0 } })])) })
+function worldOf(umas: Record<string, number>, items: Record<string, number> = {}): Save {
+  const world = gradedWorld({ items, umas: Object.fromEntries(Object.entries(umas).map(([id, level]) => [id, gradedUma({ craft: { level, exp: 0 } })])) })
+  return { version: 2, account: { uid: 'u1', createdAt: ECONOMY_V3_NOW, updatedAt: ECONOMY_V3_NOW }, ...world }
 }
 const tradesOf = (callings: Record<string, UmaCallingClass>) => ({ tradeOf: (id: string) => (callings[id] ? tradeOfCalling(callings[id]!) : null) })
 
@@ -32,7 +33,7 @@ describe('the Wilds\' places over the save', () => {
     const world = startJob(worldOf({ 101: 1 }), 'mine', 0, { outfitId: '101' }, 'copper-ore', 2, at(0))
     expect(slotJobOf(world, '101', at(GATHER_MS))?.finished).toBe(1)
     expect([...readyWork(world, at(2 * GATHER_MS))]).toEqual([['mine', 1]])
-    const { world: after, got } = collectJob(world, 'mine', 0, at(2 * GATHER_MS))
+    const { save: after, got } = collectJob(world, 'mine', 0, at(2 * GATHER_MS))
     expect(got).toEqual({ items: 2, exp: 2 * jobExp(stepMinutes(1)), levelsUp: 0, done: true })
     expect(after.items).toEqual({ 'copper-ore': 2 })
     expect(after.umas['101']!.craft).toEqual({ level: 1, exp: 96 })
@@ -43,7 +44,7 @@ describe('the Wilds\' places over the save', () => {
     let world = worldOf({ 101: 1 }, { 'copper-ingot': 11, 'pine-plank': 3 })
     world = startJob(world, 'weapon-forge', 0, { outfitId: '101' }, 'weapon-gem-g1', 1, at(0))
     expect(world.items).toEqual({ 'copper-ingot': 1, 'pine-plank': 3 })
-    const done = collectJob(world, 'weapon-forge', 0, at(10 * GATHER_MS)).world
+    const done = collectJob(world, 'weapon-forge', 0, at(10 * GATHER_MS)).save
     expect(done.items).toEqual({ 'copper-ingot': 1, 'pine-plank': 3, 'weapon-gem-g1': 1 })
   })
 
@@ -71,7 +72,7 @@ describe('the Wilds\' places over the save', () => {
     // Settled with no context, the queued job starts when the first ends.
     expect(slotJobOf(running, '102', at(GATHER_MS + 1000))?.output).toBe('copper-ore')
     // Repeat keeps the gate: the Mage can't repeat at a place her trade lost.
-    const done = collectJob(running, 'fields-workbench', 0, at(GATHER_MS)).world
+    const done = collectJob(running, 'fields-workbench', 0, at(GATHER_MS)).save
     const withHealer = { ...done, umas: { ...done.umas, '103': gradedUma() } }
     const healer = tradesOf({ 101: 'apprentice', 102: 'recruit', 103: 'acolyte' })
     expect(() => repeatJob(withHealer, '101', at(GATHER_MS), healer)).toThrow('Another trade')

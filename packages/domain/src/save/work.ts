@@ -22,6 +22,7 @@ import { farmWorkEnv } from '../work/env-v4'
 import type { FarmWorkRequest } from '../work/request'
 import type { FarmWorld } from '../work/world'
 import { SaveRuleError, type SaveRuleReason } from './rules'
+import { withWorld, type Save } from './save'
 
 export { grantProfessionExp, MAX_QUEUE }
 export type { FarmWorkRequest, WorkContext }
@@ -113,7 +114,7 @@ function outputOf(id: string): { id: string; name: string; grade: number } | und
 export function planJob(world: FarmWorld, placeId: string, outfit: WorkOutfit, output: string, count = 1, context?: WorkContext): JobPlan | null {
   const jobKind = kindAt(placeId, output)
   const made = outputOf(output)
-  if (!jobKind || !made || !world.umas[outfit.outfitId]) return null
+  if (!jobKind || !made) return null
   const env = envOf(context)
   const request = requestFor(placeId, output, 1)
   const plan = { slot: slotRef(placeId, 0), speed: env.buildings.speed(placeId, facilityLevel(world, placeId)), earlier: [] }
@@ -137,29 +138,48 @@ export function inputsBlock(world: FarmWorld, inputs: Record<string, number>, co
   return null
 }
 
-/** Free workers at this time. Settle once for the whole album; finished work frees its Uma (D119). */
-export function availableWorkers(world: FarmWorld, now: string): ReadonlySet<string> {
+/** Free workers at this time, among `outfitIds` (the roster's; by default every Uma who has worked). Settle once for the
+ * whole album; finished work frees its Uma (D119). */
+export function availableWorkers(world: FarmWorld, now: string, outfitIds: Iterable<string> = Object.keys(world.umas)): ReadonlySet<string> {
   const ms = msOf(now)
   const settled = settle(world, ms, envOf()).state
-  return new Set(Object.keys(world.umas).filter(id => statusOf(settled.work[id], ms) !== 'working'))
+  return new Set([...outfitIds].filter(id => statusOf(settled.work[id], ms) !== 'working'))
 }
 
-/** Why this Uma can't take a job now, or null: she works one job at a time; a finished one is collected as she starts. */
+/** Why this Uma can't take a job now, or null: she works one job at a time; a finished one is collected as she starts.
+ * Every outfit may work (FM6). */
 export function availabilityBlock(world: FarmWorld, outfitId: string, now: string): string | null {
-  if (!world.umas[outfitId]) return 'Not unlocked'
   const settled = settle(world, msOf(now), envOf()).state
   return statusOf(settled.work[outfitId], msOf(now)) === 'working' ? 'Already working' : null
 }
 
-// --- Operations ----------------------------------------------------------------------------------------------------
+// --- Operations: each takes the save and gives it back with the change stamped (`withWorld`) ---------------------------
+
+/** Her row, from her first job (FM6: every outfit may work; she is Craft Lv 1 until she collects). */
+function withUma(world: FarmWorld, outfitId: string): FarmWorld {
+  return world.umas[outfitId] ? world : { ...world, umas: { ...world.umas, [outfitId]: { craft: { level: 1, exp: 0 } } } }
+}
+
+/** Settles the save's work at `now`: queued jobs whose turn came start, a queue short of inputs stops. A reading, not a
+ * change: every device settles the same, so `account.updatedAt` stays. */
+export function settleWork(save: Save, now: string): Save {
+  const { state } = settle(save, msOf(now), envOf())
+  return { ...save, umas: state.umas, items: state.items, buildings: state.buildings, work: state.work }
+}
 
 /** Starts a job in a free slot: `count` items, made one after another; its inputs are reserved now. A Ready Uma's
  * finished work is collected first. */
-export function startJob(world: FarmWorld, placeId: string, slot: number, outfit: WorkOutfit, output: string, count: number, now: string,
+export function startJob(save: Save, placeId: string, slot: number, outfit: WorkOutfit, output: string, count: number, now: string,
+  context?: WorkContext): Save {
+  return withWorld(save, startIn(save, placeId, slot, outfit, output, count, now, context), now)
+}
+
+function startIn(world: FarmWorld, placeId: string, slot: number, outfit: WorkOutfit, output: string, count: number, now: string,
   context?: WorkContext): FarmWorld {
   const env = envOf(context)
   if (!slotsOf(world, placeId, env.buildings).some((s) => s.slot === slot)) throw new SaveRuleError('bad-slot', `slot ${slot} doesn't exist`)
-  return done(start(world, { outfitId: outfit.outfitId, slot: slotRef(placeId, slot), request: requestFor(placeId, output, count) }, msOf(now), env), msOf(now)).state
+  const { state } = done(start(world, { outfitId: outfit.outfitId, slot: slotRef(placeId, slot), request: requestFor(placeId, output, count) }, msOf(now), env), msOf(now))
+  return withUma(state, outfit.outfitId)
 }
 
 export interface Collected { items: number; exp: number; levelsUp: number; done: boolean }
@@ -172,37 +192,44 @@ function collectFrom(world: FarmWorld, outfitId: string, now: number, env: WorkE
 
 /** Collects everything the slot's Uma has finished, with her Craft EXP; when she's done, the slot frees. A queue keeps
  * going on its own: each entry started the moment the one before ended. */
-export function collectJob(world: FarmWorld, placeId: string, slot: number, now: string): { world: FarmWorld; got: Collected } {
+export function collectJob(save: Save, placeId: string, slot: number, now: string): { save: Save; got: Collected } {
   const env = envOf()
-  const settled = settle(world, msOf(now), env).state
-  return collectFrom(settled, holderOf(settled, placeId, slot), msOf(now), env)
+  const world = settle(save, msOf(now), env).state
+  const { world: next, got } = collectFrom(world, holderOf(world, placeId, slot), msOf(now), env)
+  return { save: withWorld(save, next, now), got }
 }
 
 /** Collects one Uma's ready work. The shared work screen addresses rows by Uma, not by a duplicated slot view. */
-export function collectWorker(world: FarmWorld, outfitId: string, now: string): { world: FarmWorld; got: Collected } {
+export function collectWorker(save: Save, outfitId: string, now: string): { save: Save; got: Collected } {
   const env = envOf()
-  return collectFrom(settle(world, msOf(now), env).state, outfitId, msOf(now), env)
+  const { world: next, got } = collectFrom(settle(save, msOf(now), env).state, outfitId, msOf(now), env)
+  return { save: withWorld(save, next, now), got }
 }
 
 /** Collects every Uma with something finished, on the given places (all by default). */
-export function collectAll(world: FarmWorld, now: string, placeIds?: readonly string[]): { world: FarmWorld; items: number; levelsUp: number } {
+export function collectAll(save: Save, now: string, placeIds?: readonly string[]): { save: Save; items: number; levelsUp: number } {
   const env = envOf()
-  let next = settle(world, msOf(now), env).state
+  let world: FarmWorld = settle(save, msOf(now), env).state
   let items = 0
   let levelsUp = 0
-  for (const row of Object.values(next.work)) {
+  for (const row of Object.values(world.work)) {
     if (!row.slot || (placeIds && !placeIds.includes(row.slot.building)) || readyItems(row, msOf(now)) === 0) continue
-    const r = collectFrom(next, row.outfitId, msOf(now), env)
-    next = r.world
+    const r = collectFrom(world, row.outfitId, msOf(now), env)
+    world = r.world
     items += r.got.items
     levelsUp += r.got.levelsUp
   }
-  return { world: next, items, levelsUp }
+  return { save: withWorld(save, world, now), items, levelsUp }
 }
 
 /** Queues another job behind the slot's running one, for the same Uma at the same place; it takes its inputs when it
  * starts, the moment the one before ends. */
-export function queueJob(world: FarmWorld, placeId: string, slot: number, outfit: WorkOutfit, output: string, count: number, now: string,
+export function queueJob(save: Save, placeId: string, slot: number, outfit: WorkOutfit, output: string, count: number, now: string,
+  context?: WorkContext): Save {
+  return withWorld(save, queueIn(save, placeId, slot, outfit, output, count, now, context), now)
+}
+
+function queueIn(world: FarmWorld, placeId: string, slot: number, outfit: WorkOutfit, output: string, count: number, now: string,
   context?: WorkContext): FarmWorld {
   const env = envOf(context)
   const settled = settle(world, msOf(now), env).state
@@ -211,33 +238,33 @@ export function queueJob(world: FarmWorld, placeId: string, slot: number, outfit
   return done(queue(settled, { outfitId: outfit.outfitId, add }, msOf(now), env), msOf(now)).state
 }
 
-export function unqueueJob(world: FarmWorld, placeId: string, slot: number, index: number, now: string): FarmWorld {
+export function unqueueJob(save: Save, placeId: string, slot: number, index: number, now: string): Save {
   const env = envOf()
-  const settled = settle(world, msOf(now), env).state
-  const outfitId = holderOf(settled, placeId, slot)
-  if (!settled.work[outfitId]?.queue[index]) throw new SaveRuleError('bad-slot', 'nothing queued there')
-  return done(queue(settled, { outfitId, remove: index }, msOf(now), env), msOf(now)).state
+  const world = settle(save, msOf(now), env).state
+  const outfitId = holderOf(world, placeId, slot)
+  if (!world.work[outfitId]?.queue[index]) throw new SaveRuleError('bad-slot', 'nothing queued there')
+  return withWorld(save, done(queue(world, { outfitId, remove: index }, msOf(now), env), msOf(now)).state, now)
 }
 
 /** Applies the kit's add, remove or move queue edit without translating it through a screen-specific card model. */
-export function editWorkerQueue(world: FarmWorld, input: QueueInput<FarmWorkRequest>, now: string, context?: WorkContext): FarmWorld {
+export function editWorkerQueue(save: Save, input: QueueInput<FarmWorkRequest>, now: string, context?: WorkContext): Save {
   const env = envOf(context)
-  const settled = settle(world, msOf(now), env).state
-  return done(queue(settled, input, msOf(now), env), msOf(now)).state
+  const world = settle(save, msOf(now), env).state
+  return withWorld(save, done(queue(world, input, msOf(now), env), msOf(now)).state, now)
 }
 
 /** Ends her work early: collects what's made; inputs for items never made come back; the item in progress is lost; her
  * queue drops and Repeat forgets her last job. */
-export function recallJob(world: FarmWorld, placeId: string, slot: number, now: string): FarmWorld {
+export function recallJob(save: Save, placeId: string, slot: number, now: string): Save {
   const env = envOf()
-  const settled = settle(world, msOf(now), env).state
-  return recall(settled, { outfitId: holderOf(settled, placeId, slot) }, msOf(now), env).state
+  const world = settle(save, msOf(now), env).state
+  return withWorld(save, recall(world, { outfitId: holderOf(world, placeId, slot) }, msOf(now), env).state, now)
 }
 
 /** Recalls one Uma's work. */
-export function recallWorker(world: FarmWorld, outfitId: string, now: string): FarmWorld {
+export function recallWorker(save: Save, outfitId: string, now: string): Save {
   const env = envOf()
-  return recall(settle(world, msOf(now), env).state, { outfitId }, msOf(now), env).state
+  return withWorld(save, recall(settle(save, msOf(now), env).state, { outfitId }, msOf(now), env).state, now)
 }
 
 /** The first free slot of a place, or null. */
@@ -275,39 +302,39 @@ export function checkRestartStopped(world: FarmWorld, outfitId: string, now: num
 
 /** Starts her last finished job again where she did it (another free slot there if hers is taken). A Ready Uma's own
  * finished entry counts as her last job: Collect and Repeat in one step. */
-export function repeatJob(world: FarmWorld, outfitId: string, now: string, context?: WorkContext): FarmWorld {
+export function repeatJob(save: Save, outfitId: string, now: string, context?: WorkContext): Save {
   const env = envOf(context)
-  const settled = settle(world, msOf(now), env).state
-  const row = settled.work[outfitId]
+  const world = settle(save, msOf(now), env).state
+  const row = world.work[outfitId]
   const finished = row && statusOf(row, msOf(now)) === 'ready' ? row.entries.at(-1) : undefined
   const job = finished && row?.slot ? { slot: row.slot, request: finished.request } : row?.last
   if (!job) throw new SaveRuleError('bad-job', 'nothing to repeat')
-  const slot = slotFor(settled, outfitId, job.slot, env)
+  const slot = slotFor(world, outfitId, job.slot, env)
   if (slot === null) throw new SaveRuleError('bad-slot', 'no free slot there')
-  return startJob(settled, job.slot.building, slot, { outfitId }, job.request.item, job.request.count, now, context)
+  return withWorld(save, startIn(world, job.slot.building, slot, { outfitId }, job.request.item, job.request.count, now, context), now)
 }
 
 /** Restarts a queue that stopped: its first job starts now where it would have (another free slot there if that one is
  * taken), and the rest queue behind it. */
-export function restartStopped(world: FarmWorld, outfitId: string, now: string, context?: WorkContext): FarmWorld {
+export function restartStopped(save: Save, outfitId: string, now: string, context?: WorkContext): Save {
   const env = envOf(context)
-  const settled = settle(world, msOf(now), env).state
-  const dropped = settled.work[outfitId]?.dropped
+  const world = settle(save, msOf(now), env).state
+  const dropped = world.work[outfitId]?.dropped
   if (!dropped) throw new SaveRuleError('bad-job', 'nothing stopped')
   const [first, ...rest] = dropped.requests
   const place = dropped.slot.building
-  const slot = slotFor(settled, outfitId, dropped.slot, env)
+  const slot = slotFor(world, outfitId, dropped.slot, env)
   if (slot === null) throw new SaveRuleError('bad-slot', 'no free slot there')
-  let next = startJob(settled, place, slot, { outfitId }, first!.item, first!.count, now, context)
-  for (const request of rest) next = queueJob(next, place, slot, { outfitId }, request.item, request.count, now, context)
-  return next
+  let next = startIn(world, place, slot, { outfitId }, first!.item, first!.count, now, context)
+  for (const request of rest) next = queueIn(next, place, slot, { outfitId }, request.item, request.count, now, context)
+  return withWorld(save, next, now)
 }
 
 /** Forgets a queue that stopped. */
-export function dismissStopped(world: FarmWorld, outfitId: string): FarmWorld {
-  const row = world.work[outfitId]
-  if (!row?.dropped) return world
-  return withRow(world, { ...row, dropped: null })
+export function dismissStopped(save: Save, outfitId: string, now: string): Save {
+  const row = save.work[outfitId]
+  if (!row?.dropped) return save
+  return withWorld(save, withRow(save, { ...row, dropped: null }), now)
 }
 
 // --- Small derived readings used outside the shared work screens ------------------------------------------------------

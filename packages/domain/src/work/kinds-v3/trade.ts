@@ -13,11 +13,11 @@ export const TRADE_REFUSAL = 'trade'
 export const ANOTHER_TRADE = 'Another trade'
 
 /** Whether a place is an open shop in this world: no owned Uma (by `tradeOf`) has a trade with its profession. An Uma
- * whose trade the caller can't say counts for none. */
-export function openShop(world: Pick<FarmWorld, 'umas'>, placeId: string, tradeOf: TradeOf): boolean {
+ * whose trade the caller can't say counts for none. The farm's Umas are its whole roster when the caller has it (FM6). */
+export function openShop(world: Pick<FarmWorld, 'umas'>, placeId: string, tradeOf: TradeOf, roster?: ReadonlySet<string>): boolean {
   const profession = placeSpecV4(placeId)?.profession
   if (!profession) return false
-  return !Object.keys(world.umas).some((id) => {
+  return ![...(roster ?? Object.keys(world.umas))].some((id) => {
     const trade = tradeOf(id)
     return trade !== null && tradeProfessions(trade).includes(profession)
   })
@@ -25,10 +25,10 @@ export function openShop(world: Pick<FarmWorld, 'umas'>, placeId: string, tradeO
 
 /** Why she can't work at this place, or null: her trade's places and an open shop take her, and so does every place when
  * the caller can't say her trade. */
-export function tradeBlock(world: Pick<FarmWorld, 'umas'>, outfitId: string, placeId: string, tradeOf?: TradeOf): Refusal | null {
+export function tradeBlock(world: Pick<FarmWorld, 'umas'>, outfitId: string, placeId: string, tradeOf?: TradeOf, roster?: ReadonlySet<string>): Refusal | null {
   const trade = tradeOf?.(outfitId) ?? null
   if (!tradeOf || trade === null) return null
   const profession = placeSpecV4(placeId)?.profession
-  if (!profession || tradeProfessions(trade).includes(profession) || openShop(world, placeId, tradeOf)) return null
+  if (!profession || tradeProfessions(trade).includes(profession) || openShop(world, placeId, tradeOf, roster)) return null
   return refuse(TRADE_REFUSAL, ANOTHER_TRADE)
 }

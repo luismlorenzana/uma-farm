@@ -13,11 +13,13 @@ import type { FarmWorld } from './world'
 /** The fifteen places as buildings, in the Wilds' order (the engine's tie-break order). */
 export const FARM_BUILDINGS = buildingTable(Object.fromEntries(PLACES_V4.map((p) => [p.id, { slots: [PLACE_SLOTS_V3], speed: [PLACE_SPEED_V3], upgrades: [] }])))
 
-/** The farm's env, with the caller's context (her trade, for the gate). */
+/** The farm's env, with the caller's context: her trade, for the gate, and the roster, who may work. */
 export function farmWorkEnv(context: WorkContext = {}): WorkEnv<FarmWorld> {
-  const setup = { ...(context.tradeOf ? { tradeOf: context.tradeOf } : {}) }
+  const setup = { ...(context.tradeOf ? { tradeOf: context.tradeOf } : {}), ...(context.roster ? { roster: context.roster } : {}) }
+  const roster = context.roster
   return {
     ...FARM_WORK_BASE,
+    ...(roster ? { isWorker: (_world: FarmWorld, outfitId: string) => roster.has(outfitId) } : {}),
     kinds: { gather: materialKindV4('gather', setup), refine: materialKindV4('refine', setup), craft: makeV4('craft', setup), cut: makeV4('cut', setup) },
     buildings: FARM_BUILDINGS,
   }

@@ -14,7 +14,7 @@ import { craftLevel, many, secondsAt } from '../kinds/shared'
 import type { KindSetup } from '../kinds-v3/setup'
 import { tradeBlock } from '../kinds-v3/trade'
 
-export function materialKindV4(kind: 'gather' | 'refine', { tradeOf }: KindSetup): WorkKindRules<FarmWorld> {
+export function materialKindV4(kind: 'gather' | 'refine', { tradeOf, roster }: KindSetup): WorkKindRules<FarmWorld> {
   const gather = kind === 'gather'
   return {
     maxItems: maxJobCount(kind),
@@ -22,7 +22,7 @@ export function materialKindV4(kind: 'gather' | 'refine', { tradeOf }: KindSetup
       const place = placeSpecV4(slot.building)
       const m = lineItem(request.item)
       if (request.kind !== kind || !place?.kinds.includes(kind) || !m || m.refined === gather || m.line !== place.line) return workRefusal('not-here')
-      const trade = tradeBlock(world, outfitId, slot.building, tradeOf)
+      const trade = tradeBlock(world, outfitId, slot.building, tradeOf, roster)
       if (trade) return trade
       if (!env.exp.gradeOpen(world, outfitId, kind, m.grade)) return workRefusal('grade', { level: gradeUnlockLevel(m.grade) })
       const level = craftLevel(world, outfitId)
