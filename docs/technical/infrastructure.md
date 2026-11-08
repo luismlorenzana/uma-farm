@@ -34,7 +34,7 @@ Never run `gcloud config set …`, and never touch uma-rpg's or uma-quest's piec
 | API URL | `https://farm-api-dadzqf3ula-uc.a.run.app` (also the parcel ping's audience) |
 | API | Cloud Run `farm-api`, `us-central1`, min 0, max 1, 512 MiB, 1 CPU, public at the edge. The owner guard covers every route except `/api/health`, and `/api/post/*` and `/api/push/tick`, which check their own tokens |
 | Runtime account | `farm-api-runtime`: `datastore.user` only on `projects/uma-rpg/databases/farm`; reader of the master bucket; accessor of `farm-vapid` |
-| Database | Firestore `farm`, Native, `us-central1`, delete protection and point-in-time recovery on: `saves/{uid}`, `saveRescues/{uid}`, `parcels/{id}`, `push/{uid}` |
+| Database | Firestore `farm`, Native, `us-central1`, delete protection and point-in-time recovery on. In use from F3: `saves/{uid}` (`{ revision, save }`, the save as JSON text), `saveRescues/{uid}` (a refused upload, newest only) and `saveBackups/{uid}-v{n}` (the stored document before a newer save version first replaces it). Later: `push/{uid}` (F6), `parcels/{id}` (F10) |
 | Images | Artifact Registry `farm`, keeping the last 3 |
 | Deployer | `farm-deploy`: writer on `farm` images, admin of `farm-api`, user of `farm-api-runtime`, Hosting admin (project-wide, so the workflow names its site and CI checks it, IN7) |
 | Deploy sign-in | Provider `uma-farm` in pool `github-actions`, `main` of `luismlorenzana/uma-farm` only |
@@ -75,7 +75,7 @@ Firestore quota covers only `(default)`). The site, `farm-api`, the images, the 
 scheduler jobs) and `farm-vapid` (the second of six free secret versions) stay inside the free tiers they share with
 uma-rpg and uma-quest. The full table is in [the plan](../design/plan.md#what-it-costs).
 
-## Production saves (from F3)
+## Production saves (live from F3)
 
 uma-rpg's rules, from its 2026-10-30 incident, where a hand grant wiped unsynced progress:
 - never move `save.account.updatedAt`;

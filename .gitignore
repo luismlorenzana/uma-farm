@@ -27,3 +27,6 @@ dev-dist/
 apps/api/.data/
 .firebase/
 firebase-debug.log
+
+# agent worktrees (Claude Code)
+.claude/worktrees/

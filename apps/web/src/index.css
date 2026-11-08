@@ -1,3 +1,24 @@
 @import 'tailwindcss';
+
+/* The shared theme (uma-kit, uma-platform P48): the "Paddock" tokens in light and dark, base styles and utilities.
+   Tailwind also reads the kit's own classes. */
 @import '@luismlorenzana/uma-kit/theme.css';
+
 @source '../node_modules/@luismlorenzana/uma-kit/dist';
+
+/* Latin-only variable faces, loaded from the workspace; the kit's theme names them. */
+@font-face {
+  font-family: 'Outfit Variable';
+  src: url('../node_modules/@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter Variable';
+  src: url('../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}

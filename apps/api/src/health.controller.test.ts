@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { HealthController } from './health.controller'
-import { SaveController } from './save.controller'
 
 describe('health', () => {
   afterEach(() => { delete process.env.BUILD_ID })
@@ -9,5 +8,4 @@ describe('health', () => {
     expect(new HealthController().health()).toEqual({ ok: true, build: 'abc123' })
   })
   it('says local without a build id', () => expect(new HealthController().health().build).toBe('local'))
-  it('has no save yet', () => expect(() => new SaveController().load()).toThrow(/No save yet/))
 })
