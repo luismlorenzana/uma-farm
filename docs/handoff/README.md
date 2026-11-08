@@ -1,6 +1,6 @@
 # Handoff: open work
 
-> **Status: 2026-11-08, after D16.** M1 is met (D13), and M2's three packets are live: the Wilds play at [uma-farm.web.app](https://uma-farm.web.app) (F4, F5), and `farm-push-tick` sends "Work done" since 19:15 UTC (F6, D15). M2's exit waits on the owner's notifications and a few days of play. F7, the design spec, is drafted (D16: [spec.md](../design/spec.md), [its page](../design/previews/spec.html)) and is finished after the play and uma-quest's Q17. Phase 1's cloud is live at https://uma-farm.web.app (F1, F2). **The current
+> **Status: 2026-11-08, after D18.** M1 is met (D13). M2 is live: the Wilds play at [uma-farm.web.app](https://uma-farm.web.app) (F4, F5) and push is deployed (F6), with notifications off by the owner's choice (D18). **Next: the owner answers F7's draft spec** ([spec.md](../design/spec.md), [page](../design/previews/spec.html)), whose Forge, economy, accept-list and Post calls unblock M4's and M5's packets (F8–F10); who works (FS1–FS3) is settled later from the play.
 > initiative is [the first playable farm](../design/first-playable.md)** (FW1–FW13,
 > [page](../design/previews/first-playable.html)): its requirements and every planned task, from the hello app (F3) to the
 > Wilds playing, the design spec, then the Forge and parcels.
@@ -48,8 +48,8 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 | ~~F2~~ Done 2026-11-08 | The go for the cloud, and the two sign-in entries for `uma-farm.web.app` (added by the owner) |
 | ~~F3~~ Done 2026-11-08 | The phone check: installed from Safari, signed in inside the Home Screen app, the save synced (D13) |
 | ~~F5~~ Done 2026-11-08 | The Wilds on the phone: the owner's word, "Wilds work" (D15) |
-| **F6, now** | **Notifications on the phone:** open the Home Screen app, Account → Notifications on, allow them; tap **Send a test**; then start a short job, close the app, and see "Work done" (the tick runs every five minutes). Then play a few days |
-| F7 | Read and answer the design spec: [spec.md](../design/spec.md) and [its page](../design/previews/spec.html), after a few days of play |
+| ~~F6~~ Declined 2026-11-08 | Notifications: not now, the owner's choice (D18). The tick stays deployed and sends nothing while no phone subscribes |
+| **F7, now** | **Read and answer the design spec:** [spec.md](../design/spec.md) and [its page](../design/previews/spec.html). Its questions 2–13 (the Forge, orders, the economy, accept lists, the Post) can be answered now; question 1 (who works) waits for a few days of play |
 | M4, M5 | The Forge's look and a play; your go for uma-rpg's receiver |
 
 ## Done
