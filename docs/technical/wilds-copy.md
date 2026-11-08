@@ -72,6 +72,30 @@ Each landed after the copy's commit, in F4:
 | `roster/roster.ts` | New: `farmRoster(release)` (every outfit, her trade and its line), `rosterContext(roster)`, `isOutfitId` | R3, FM6, FM7 |
 | `save/notify.ts`, `notify.test.ts` | Copied from uma-rpg, cut to one world: `finishesBetween`, `finishNotice`, `workNotice`, `readySlots`, and the new `nextIdleAt` for F6's schedule | R8 |
 | `save/wilds-chain.test.ts`, `roster/roster.test.ts` | New: every line G1 → G10, and the roster's gate | R2, R3, R4 |
+| `save/work.ts` (F5) | `dismissStopped` settles first: a queue stops at its turn, which the screens see by settling, so Dismiss on a stop no change has stored yet was a no-op (uma-rpg has the same gap; it's frozen, so it's a note there, not a fix). `save/stopped.test.ts` covers it | F5's play |
 
 **Not copied:** `economy/grades.ts` (gear's grades, FM4; the farm's grade gate is `gradeUnlockLevel`), and every file
 the copied ones no longer read: fights, classes, gear, gems, Extra Stats, the Exchange, the Rift, worlds and tiers.
+
+## The screens' copy (F5)
+
+F5 copied uma-rpg's web screens at the same commit into `apps/web/src/`, each file naming its source on its first line.
+They import nothing from uma-rpg.
+
+| Farm file | uma-rpg source (`apps/web/src/`) | Cuts |
+|---|---|---|
+| `wilds/WildsScreen.tsx` | `hub/HubScreen.tsx` | Every page but the Wilds (no swipe between pages), the plaza and its crowd, tiers, locks, halls, the fight prefetch; the map scrolls on a short screen; the Forge and the Post as placeholders |
+| `wilds/ready.ts` | `hub/ready.ts` | Tiers and pages: one count for the Wilds |
+| `wilds/buildings.test.ts` | `hub/buildings.test.ts` | Other generations and pages; the placeholders' frames |
+| `places/PlacePage.tsx` | `places/PlacePage.tsx`, `hub/HubScreen.tsx`'s `PlaceRoute` | The registry, counters, sub-routes and old-link redirects |
+| `places/work/FarmWork.tsx` | `places/work/FacilityPage.tsx`'s provider | Speed Tickets (speed-up, finish), upgrades, Laurels |
+| `places/work/PlaceBody.tsx` | `places/work/PlaceV3.tsx` | Finish all, targets, the profile door, tiers |
+| `places/work/What.tsx` | `places/work/PlaceV4.tsx` | uma-rpg's uses for made items; the grade chips run five a row, for 44 pt targets |
+| `places/work/place-view.ts` and its test | `places/work/place-view-v4.ts` and its test | The switch and the Branch Gem |
+| `save/trade.ts` and its test | `save/trade.ts`, `places/work/place-view.ts` (`whoAt`) | The world-scoped resolver and the classes' words: the trade comes from the roster |
+| `places/warehouse/` | `places/warehouse/` (v4 shelves and their test) | Selling and prices, the Branch Gem |
+| `album/rows.ts`, `album/testing.ts`, `album/trade-facet.test.ts` | the same | Ownership, classes, templates, upgrades, tiers; every outfit is a row at Craft Lv 1 until her first job |
+| `items/ItemIcon.tsx`, `items/frames.ts` and its test | the same | Gear, Star Gems, v1 items, the Branch Gem and the kind badges |
+| `items/words.ts` | `items/v3-words.ts` | Made items' uses ("Raises a weapon…"): they say their line and grade |
+| `master/master.ts`, `master/album-art.tsx`, `master/MasterGate.tsx` | `master/master.ts`, `master/album-art.tsx`, `places/MasterGate.tsx` | Scenarios, chapters and skills |
+| `save/game.ts` (the work actions) | `save/game.ts`'s `edit` and work actions | Tiers and lazy rule imports; Speed Tickets, upgrades, Finish all |
