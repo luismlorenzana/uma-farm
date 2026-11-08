@@ -11,6 +11,9 @@
 > the order of work, with the calls FM1–FM26. Phase 1 is in [the handoff](../handoff/README.md): **F1** is ready now.
 > Visual page: [previews/plan.html](previews/plan.html).
 
+> **2026-11-08 (D6):** Phases 2–5 are now planned task by task in [first-playable.md](first-playable.md): F4–F6 as
+> below, Phase 3's spec as F7, the Forge as F8 with its art F9, and the sender as F10.
+
 ## The short answer
 
 - **The farm is uma-rpg's Wilds, copied into its own app,** with a new **Forge** at the end. Umas work the five lines:

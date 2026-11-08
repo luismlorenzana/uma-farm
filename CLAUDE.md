@@ -2,9 +2,11 @@
 
 - Before working here, read the cross-game plan in the sibling repo: `../uma-platform/docs/architecture.md`,
   `roadmap.md` and `decisions.md` (also on GitHub at `luismlorenzana/uma-platform`).
+- **The current initiative is [the first playable farm](docs/design/first-playable.md):** its requirements and every
+  planned task. Packets are written from it, one per task, keeping its ids.
 - **Start with [docs/handoff/README.md](docs/handoff/README.md):** the current phase, the packet queue and the owner's
   steps. The plan is [docs/design/plan.md](docs/design/plan.md); its calls keep their ids (FM, and IN for the cloud).
-  New decisions go in `docs/decisions.md` from D6 (fetch `main` first). Packets F4–F6 are the plan's; new ones are F-numbered from F7.
+  New decisions go in `docs/decisions.md` from D7 (fetch `main` first). Packets F3–F10 are the first playable farm's; new ones are F-numbered from F11.
 - **`docs/game/` is the manual of the game as built.** It starts with F3. Every rule change keeps it in step.
 - This game stands alone: its own save, rules and economy. It reads master data from uma-platform by stable IDs only,
   and never imports from uma-rpg, uma-racer or uma-quest at runtime.

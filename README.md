@@ -22,6 +22,7 @@ guard, and the domain package, installing all five platform packages. Next is F2
 | Path | What |
 |---|---|
 | [docs/handoff/README.md](docs/handoff/README.md) | **Start here:** the current phase, its packets and the owner's steps |
+| [docs/design/first-playable.md](docs/design/first-playable.md) | **The current initiative:** the first playable farm's requirements and planned tasks, FW1–FW13 ([page](docs/design/previews/first-playable.html)) |
 | [docs/design/plan.md](docs/design/plan.md) | The plan: Phases 0–5, the calls FM1–FM26, how a parcel travels ([page](docs/design/previews/plan.html)) |
 | [docs/decisions.md](docs/decisions.md) | The decision log, from D1 |
 | [docs/technical/infrastructure.md](docs/technical/infrastructure.md) | Every cloud value (planned until F2) |

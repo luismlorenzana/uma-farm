@@ -1,7 +1,9 @@
 # Handoff: open work
 
-> **Status: 2026-11-08, after D5.** The workspace and the cloud are live at https://uma-farm.web.app (F1, F2). Next is F3, the hello app.
-> **The current phase is Phase 1: the repo, the cloud and the hello app** ([the plan](../design/plan.md#phase-1-the-repo-the-cloud-and-the-hello-app-claude-s--m--m)).
+> **Status: 2026-11-08, after D6.** Phase 1's cloud is live at https://uma-farm.web.app (F1, F2). **The current
+> initiative is [the first playable farm](../design/first-playable.md)** (FW1–FW13,
+> [page](../design/previews/first-playable.html)): its requirements and every planned task, from the hello app (F3) to the
+> Wilds playing, the design spec, then the Forge and parcels.
 >
 > - **The manual of the game as built** will be [docs/game/](../game/README.md). It starts with F3.
 > - Each task is a self-contained packet in [tasks/](tasks/). Start a worker, Claude or ChatGPT, with uma-platform's
@@ -10,34 +12,30 @@
 > - Workers decide what a packet leaves open, record it, and flag their own packets done: delete the packet and add a
 >   Done row below. Claude merges and deploys its own finished packets; ChatGPT merges its own.
 
-## Phase 1: the repo, the cloud and the hello app
+## The first playable farm
 
-Packet ids continue from F7 (F4–F6 are the plan's); decision numbers from D6.
+Each task becomes a packet in [tasks/](tasks/), written by a uma-farm session from
+[first-playable.md](../design/first-playable.md), which has every task's deliverables and checks. Packet ids continue
+from F11 (F3–F10 are the doc's); decision numbers from D7.
 
-| Id | What | Who | Size | Needs | State |
-|---|---|---|---|---|---|
-| F3 | [The hello app](tasks/F3-hello-app.md): uma-rpg's stack, Google sign-in, save v1 synced, the update prompt, the Home Screen | Claude | M | F2 ✓; the owner's two sign-in entries | **Ready** once the entries are in |
+| Milestone | Id | What | Who | Size | Needs | State |
+|---|---|---|---|---|---|---|
+| M1, stood up | F3 | [The hello app](tasks/F3-hello-app.md): uma-rpg's stack, Google sign-in, save v1 synced, the update prompt, the Home Screen | Claude | M | F2 ✓, the sign-in entries ✓ | **Ready** |
+| M2, the Wilds play | F4 | The rules copied at a recorded commit; save v2; the manual's generated pages | Claude | M | F1 ✓ | **Ready** (no packet yet) |
+| | F5 | The screens: the Wilds map, each place's page, the Warehouse, the worker picker | Claude | M | F3, F4 | To write |
+| | F6 | Push: the route, `farm-push-tick` resumed, "work done" | Claude | S | F5 | To write |
+| M3, the design spec | F7 | Who works, targets, the farm's economy, the Forge, accept lists and caps, the Post; the M4–M5 queue | Claude | L | F4 (to start), your play (to finish) | To write |
+| M4, the Forge | F8 | The Forge's place and minigame, results into the outbox | Claude | M | F7 | After F7 |
+| | F9 | Art: the Forge and the Post (ChatGPT, uma-art) | ChatGPT | M | F7 | After F7 |
+| M5, parcels | F10 | The sender: the outbox, `parcels`, `/api/post/parcels` and `/api/post/claims` | Claude | M | F8, uma-platform PO1 | After F7 |
 
-**Order:** F1 and F2 are done (D4, D5), after uma-rpg's H169 and beside uma-quest's Q1 and Q2. F3 is next.
-
-## Later phases
-
-Each phase's packets are written when it starts, from [the plan](../design/plan.md):
-
-| Id | What | Who | Needs |
-|---|---|---|---|
-| F4 | The Wilds' rules copied from uma-rpg at a recorded commit: lines, grades, items, places, trades, Craft Level, jobs on `uma-work`, the Warehouse; save v2 | Claude | F3 |
-| F5 | The Wilds' screens: Home as the Wilds map, each place's page on `uma-kit/work`, the Warehouse | Claude | F4 |
-| F6 | Push: the route, `farm-push-tick` resumed, "work done" | Claude | F5 |
-| — | Phase 3, the design spec: who works, targets, the farm's economy, the Forge, each game's accept list and caps, the Post | Claude, docs | Beside F4–F6 |
-| — | Phase 4, the Forge; its art | Claude; ChatGPT | Phase 3 |
-| — | Phase 5, parcels: `uma-post` in uma-platform, the sender here, then each game's receiver | Claude across repos | Phase 4; uma-quest's item list |
+**Order:** F3 first, and F4 beside it. The full order is in [the doc](../design/first-playable.md#the-order).
 
 ## Across the repos
 
 - **uma-rpg:** H169 (its project hardened) is done (uma-rpg D311). Its receiver is a packet there, after the owner's go (FM15).
-- **uma-quest:** its Q2 calls the ping; its Phase 4 names the consumables it takes (its D4), which opens Phase 5.
-- **uma-platform:** P88 and P89 are logged. `uma-post` (FM12) is built there before Phase 5, and any `uma-work` or
+- **uma-quest:** its Q2 calls the ping (live with its Q14); its Q17, the design spec, names the consumables it takes (its D4), which opens M5.
+- **uma-platform:** P88 and P89 are logged. `uma-post` (FM12) is its PO1, built before M5 ([its new-apps doc](https://github.com/luismlorenzana/uma-platform/blob/main/docs/new-apps/README.md)), and any `uma-work` or
   `uma-kit/work` change is a platform release (FM5).
 - **uma-racer:** its receiver comes last, flair only (FM13), with `racer-api-runtime` added to `POST_CALLERS`.
 
@@ -47,8 +45,11 @@ Each phase's packets are written when it starts, from [the plan](../design/plan.
 |---|---|
 | ~~Now~~ Done 2026-11-08 | **Kept private** (the owner's word; D-decision below). One word: make the repo public (FM1, IN14, free Actions minutes) or keep it private |
 | ~~For F1's CI~~ Done 2026-11-08 | On GitHub, for `uma-data`, `uma-kit`, `uma-work`, `uma-server` and `uma-art`: Package settings → **Manage Actions access** → add `uma-farm` with **Read** |
-| ~~F2~~ Go given 2026-11-08 | ~~The go for the cloud~~; **still yours:** the two sign-in entries for `uma-farm.web.app` in the Cloud console |
+| ~~F2~~ Done 2026-11-08 | The go for the cloud, and the two sign-in entries for `uma-farm.web.app` (added by the owner) |
 | F3 | The phone check: install, sign in, see the save sync |
+| F6 | Allow notifications when asked; play a few days |
+| F7 | Read and answer the design spec |
+| M4, M5 | The Forge's look and a play; your go for uma-rpg's receiver |
 
 ## Done
 
