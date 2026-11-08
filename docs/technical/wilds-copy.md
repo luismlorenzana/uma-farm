@@ -59,5 +59,19 @@
   parts and each Uma's Craft Level;
 - `work/world.fixture.ts`: the tests' constructors, in place of `save/economy-v3.fixture.ts`.
 
+## The farm's changes since the copy
+
+Each landed after the copy's commit, in F4:
+
+| Where | Change | Why |
+|---|---|---|
+| `save/save.ts` | Save v2: `{ version, account, umas, items, buildings, work }`, parsed strictly with uma-rpg's v31 work-row rules (fifteen places, four slots); v1 migrates by `toV2`, which keeps `account.updatedAt` | R5, FW5, N5 |
+| `save/work.ts` | The operations take the save and stamp the change (`withWorld`, uma-rpg's); `settleWork` settles without stamping; her row arrives with her first job; `planJob`, `availableWorkers` and `availabilityBlock` take any outfit | FM6, the production-save rules |
+| `work/env.ts` | Craft EXP creates her row if an old save lacks it; `isWorker` takes any well-formed outfit id | FM6 |
+| `work/env-v3.ts`, `env-v4.ts`, `kinds-v3/`, `kinds-v4/` | `WorkContext.roster`: who may work, and whose trades decide an open shop (the whole roster, not only who has worked) | FM6, FW7 |
+| `roster/roster.ts` | New: `farmRoster(release)` (every outfit, her trade and its line), `rosterContext(roster)`, `isOutfitId` | R3, FM6, FM7 |
+| `save/notify.ts`, `notify.test.ts` | Copied from uma-rpg, cut to one world: `finishesBetween`, `finishNotice`, `workNotice`, `readySlots`, and the new `nextIdleAt` for F6's schedule | R8 |
+| `save/wilds-chain.test.ts`, `roster/roster.test.ts` | New: every line G1 → G10, and the roster's gate | R2, R3, R4 |
+
 **Not copied:** `economy/grades.ts` (gear's grades, FM4; the farm's grade gate is `gradeUnlockLevel`), and every file
 the copied ones no longer read: fights, classes, gear, gems, Extra Stats, the Exchange, the Rift, worlds and tiers.

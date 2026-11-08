@@ -14,13 +14,13 @@ import { craftLevel, many, secondsAt } from '../kinds/shared'
 import type { KindSetup } from '../kinds-v3/setup'
 import { tradeBlock } from '../kinds-v3/trade'
 
-export function makeV4(kind: Extract<JobKind, 'craft' | 'cut'>, { tradeOf }: KindSetup): WorkKindRules<FarmWorld> {
+export function makeV4(kind: Extract<JobKind, 'craft' | 'cut'>, { tradeOf, roster }: KindSetup): WorkKindRules<FarmWorld> {
   return {
     plan(world, outfitId, request, _now, { slot, speed, env }) {
       const place = placeSpecV4(slot.building)
       const made = madeIdentity(request.item)
       if (request.kind !== kind || !place?.kinds.includes(kind) || !made || !place.made.includes(made.line)) return workRefusal('not-here')
-      const trade = tradeBlock(world, outfitId, slot.building, tradeOf)
+      const trade = tradeBlock(world, outfitId, slot.building, tradeOf, roster)
       if (trade) return trade
       if (!env.exp.gradeOpen(world, outfitId, kind, made.grade)) return workRefusal('grade', { level: gradeUnlockLevel(made.grade) })
       const recipe = Object.entries(madeRecipeV4(made.id))
