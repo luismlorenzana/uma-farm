@@ -9,7 +9,7 @@ import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { HubMap, PALETTES, type HubMapPlace, type PageGround, type PipModel } from '@luismlorenzana/uma-kit/hub'
 import { FloatingPill, navState, PeekPanel, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { HelpButton, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
-import { workView } from '@luismlorenzana/uma-kit/work'
+import { workView, type WorkView } from '@luismlorenzana/uma-kit/work'
 import { lazy, Suspense, useState } from 'react'
 import { Navigate, useLocation, useSearchParams } from 'react-router'
 import { collectEverything, useGame } from '../save/game'
@@ -37,10 +37,10 @@ export default function WildsRoute() {
 }
 
 /** A place's slot pips over its building in a half arch: workers' faces ringed by their job's progress, each with her
- * Craft Level, or free dots. */
-function pipsOf(place: Place, world: FarmWorld | null, now: number): PipModel[] {
-  if (!world) return Array.from({ length: place.slots }, (): PipModel => ({ state: 'free' }))
-  return workView(world, now, ENV).cards(place.id).map((card): PipModel => {
+ * Craft Level, or free dots. `work` is the save's work settled once at the clock, for every place. */
+function pipsOf(place: Place, world: FarmWorld | null, work: WorkView | null): PipModel[] {
+  if (!world || !work) return Array.from({ length: place.slots }, (): PipModel => ({ state: 'free' }))
+  return work.cards(place.id).map((card): PipModel => {
     if (card.kind === 'free') return { state: 'free' }
     const craft = world.umas[card.outfitId]?.craft.level
     return {
@@ -95,6 +95,7 @@ function WildsScreen({ peek }: { peek: Place | SoonPlace | undefined }) {
   const leave = useLeave()
   const reducedMotion = useReducedMotionSetting()
   const ready = readySlots(save, now)
+  const work = save ? workView(save, now, ENV) : null
   const places: HubMapPlace[] = [
     ...wildsPlaces().map((place): HubMapPlace => {
       const slots = ready.get(place.id) ?? 0
@@ -103,7 +104,7 @@ function WildsScreen({ peek }: { peek: Place | SoonPlace | undefined }) {
         to: withParam({ pathname: '/', search: '' }, 'peek', place.id),
         label: slots > 0 ? `${place.name}, ready to collect` : place.name,
         ready: slots > 0 ? 'Ready' : undefined,
-        pips: pipsOf(place, save, now), pipsAt: 'arch',
+        pips: pipsOf(place, save, work), pipsAt: 'arch',
       }
     }),
     ...SOON_PLACES.map((place): HubMapPlace => ({
