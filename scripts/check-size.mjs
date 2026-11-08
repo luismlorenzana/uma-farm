@@ -7,8 +7,16 @@ import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
 
 export const MAIN_JS_BUDGET = 180_000
-/** Modules that must load on demand. Empty until the first big one arrives. */
-export const LAZY_MODULES = []
+/** Modules that must load on demand (F5): the Hub map's Phaser scene, which uma-kit imports only when a map mounts, and the
+ * Wilds' screens, which the router loads with React.lazy. Paths match a module id exactly or as its suffix. */
+export const LAZY_MODULES = [
+  'phaser/dist/phaser.esm.js',
+  '@luismlorenzana/uma-kit/dist/hub/scene/createHubGame.js',
+  '@luismlorenzana/uma-kit/dist/hub/scene/HubScene.js',
+  'src/wilds/WildsScreen.tsx',
+  'src/places/work/WorkPage.tsx',
+  'src/places/warehouse/WarehousePage.tsx',
+]
 
 export function entrySrc(html) {
   const scripts = [...html.matchAll(/<script\b[^>]*>/gi)].filter(([tag]) => /\btype\s*=\s*["']module["']/i.test(tag))

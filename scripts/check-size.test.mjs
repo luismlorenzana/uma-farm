@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 import test from 'node:test'
-import { checkSize, entrySrc, lazyInInitial, MAIN_JS_BUDGET } from './check-size.mjs'
+import { checkSize, entrySrc, LAZY_MODULES, lazyInInitial, MAIN_JS_BUDGET } from './check-size.mjs'
 
 async function fixture(fn, { mainBytes = 1_000, chunks = { 'assets/main.js': ['src/main.tsx'] }, lazyFile = false } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'size-test-'))
@@ -41,6 +41,12 @@ test('a missing chunk map fails', () => fixture(async (root) => {
 test('a lazy module rendered in the initial JS fails', () => {
   assert.deepEqual(lazyInInitial({ 'assets/main.js': ['src/scene/engine.ts'] }, ['assets/main.js'], ['src/scene/engine.ts']),
     ['src/scene/engine.ts (assets/main.js)'])
+})
+
+test('the Hub scene and its Phaser load on demand, by suffix through pnpm\'s store (F5)', () => {
+  const scene = '../../node_modules/.pnpm/@luismlorenzana+uma-kit@0.17.0_x/node_modules/@luismlorenzana/uma-kit/dist/hub/scene/createHubGame.js'
+  const phaser = '../../node_modules/.pnpm/phaser@4.2.1/node_modules/phaser/dist/phaser.esm.js'
+  assert.equal(lazyInInitial({ 'assets/main.js': [scene, phaser, 'src/wilds/WildsScreen.tsx', 'src/main.tsx'] }, ['assets/main.js'], LAZY_MODULES).length, 3)
 })
 
 test('the HTML must have exactly one module entry', () => {

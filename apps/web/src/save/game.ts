@@ -1,9 +1,13 @@
 // The farm's store and its sync engine (copied from uma-rpg at 30a322a; its D32, D260): the save lives on the device
 // (Dexie) and in a Zustand store; every change writes both and schedules a background sync. Play never waits on the
-// network once a device save exists. F4's rules commit through `commit`.
-import { newSave, parseSave, touched, type Save } from '@farm/domain'
+// network once a device save exists. F4's rules commit through `commit`; F5's work actions through `edit`.
+import {
+  collectAll, collectWorker, dismissStopped, editWorkerQueue, newSave, parseSave, recallWorker, repeatJob, restartStopped, rosterContext,
+  startJob, touched, type Collected, type FarmOutfit, type FarmQueueInput, type Save, type WorkContext,
+} from '@farm/domain'
 import { create } from 'zustand'
 import { conflictEnvelope, saveApi } from '../api/client'
+import { masterRoster } from '../master/master'
 import { addSafetyCopy, readSafetyCopy, readSaveRow, removeSafetyCopy, writeSaveRow } from './db'
 import { reconcile } from './reconcile'
 
@@ -75,6 +79,58 @@ export async function commit(save: Save): Promise<void> {
   useGame.setState({ save, dirty: true })
   await persist()
   scheduleSync()
+}
+
+// --- The Wilds' work (F5) -----------------------------------------------------------------------------------------
+
+let context: { roster: readonly FarmOutfit[]; value: WorkContext } | null = null
+
+/** What the work rules ask of the caller: each Uma's trade and who may work, from master data's roster (FM6, FM7). Before
+ * it loads the gate is open, as for a settle; the API's parse accepts any well-formed outfit id either way. */
+export function workContext(roster: readonly FarmOutfit[] | null = masterRoster()): WorkContext {
+  if (!roster) return {}
+  if (context?.roster !== roster) context = { roster, value: rosterContext(roster) }
+  return context.value
+}
+
+/** Every work action, as uma-rpg's `edit`: the save is read right before the rule runs, so two quick taps each apply to
+ * the other's result instead of one overwriting the other. A rule's refusal throws (`SaveRuleError`) and changes nothing. */
+async function edit(change: (save: Save, now: string, context: WorkContext) => Save): Promise<void> {
+  const { save } = useGame.getState()
+  if (!save) return
+  const next = change(save, nowIso(), workContext())
+  if (next !== save) await commit(next)
+}
+
+/** Puts an Uma in a free slot: `count` items, made one after another; the inputs leave the Warehouse now. */
+export const startWork = (placeId: string, slot: number, outfitId: string, output: string, count: number) =>
+  edit((s, now, c) => startJob(s, placeId, slot, { outfitId }, output, count, now, c))
+/** Adds, removes or moves a job in her queue (the kit's queue input). */
+export const editWorkQueue = (input: FarmQueueInput) => edit((s, now, c) => editWorkerQueue(s, input, now, c))
+/** Ends her work early: what's made is collected, unfinished inputs come back, her queue drops. */
+export const recallWork = (outfitId: string) => edit((s, now) => recallWorker(s, outfitId, now))
+/** Starts her last job again where she did it, collecting first when she's done. */
+export const repeatWork = (outfitId: string) => edit((s, now, c) => repeatJob(s, outfitId, now, c))
+/** A queue that stopped: start it again now, or forget it. */
+export const restartWork = (outfitId: string) => edit((s, now, c) => restartStopped(s, outfitId, now, c))
+export const dismissWork = (outfitId: string) => edit((s, now) => dismissStopped(s, outfitId, now))
+
+/** Collects one Uma's finished items, with her Craft EXP. */
+export async function collectWork(outfitId: string): Promise<Collected> {
+  const { save } = useGame.getState()
+  if (!save) return { items: 0, exp: 0, levelsUp: 0, done: false }
+  const r = collectWorker(save, outfitId, nowIso())
+  await commit(r.save)
+  return r.got
+}
+
+/** Collects every finished job, on these places or everywhere. Nothing ready changes nothing. */
+export async function collectEverything(placeIds?: readonly string[]): Promise<{ items: number; levelsUp: number }> {
+  const { save } = useGame.getState()
+  if (!save) return { items: 0, levelsUp: 0 }
+  const r = collectAll(save, nowIso(), placeIds)
+  if (r.items > 0) await commit(r.save)
+  return { items: r.items, levelsUp: r.levelsUp }
 }
 
 // --- Sync -------------------------------------------------------------------------------------------------------

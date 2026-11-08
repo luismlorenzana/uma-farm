@@ -1,12 +1,25 @@
-// Master data, as far as F3 needs it: the release's version, which proves the path from uma-platform's bucket through the
-// API's proxy. F4 and F5 build the roster on it. Copied in shape from uma-rpg's `master/master.ts` (30a322a).
-import type { ReleaseManifest } from '@luismlorenzana/uma-data'
+// Master data (F3, F5): the release's manifest, characters, outfits and art through the API's proxy, cached by hash on the
+// device. The farm's view of it is every outfit as a worker (`farmRoster`, FM6) and the album's neutral rows (names and
+// art keys, from the release at runtime only). Copied in shape from uma-rpg's `master/master.ts` (30a322a), cut to the sets
+// the farm reads.
+import { farmRoster, type FarmOutfit } from '@farm/domain'
+import type { ArtIndex, Character, Outfit, ReleaseManifest } from '@luismlorenzana/uma-data'
+import { outfitRowBase, type OutfitRowBase } from '@luismlorenzana/uma-kit/roster'
 import { useSyncExternalStore } from 'react'
 import { CONTENT } from '../content/client'
 
+export interface MasterView {
+  manifest: ReleaseManifest
+  /** Every outfit on the release, each with her trade (FM6, FM7). */
+  roster: FarmOutfit[]
+  /** The album's rows by outfit id: name, title, rarity, release date, aptitudes and art keys. */
+  album: ReadonlyMap<string, OutfitRowBase>
+  art: ArtIndex | null
+}
+
 export type MasterState =
   | { status: 'idle' | 'loading' }
-  | { status: 'ready'; manifest: ReleaseManifest }
+  | { status: 'ready'; view: MasterView }
   | { status: 'error'; offline: boolean; message: string }
 
 let state: MasterState = { status: 'idle' }
@@ -17,13 +30,32 @@ function set(next: MasterState): void {
   for (const listener of listeners) listener()
 }
 
+/** The farm's view of a release's sets: only outfits the roster takes, each with her album row. */
+export function masterView(manifest: ReleaseManifest, characters: readonly Character[], outfits: readonly Outfit[], art: ArtIndex | null): MasterView {
+  const byCharacter = new Map(characters.map((c) => [c.id, c]))
+  const roster = farmRoster({ outfits })
+  const kept = new Set(roster.map((o) => o.outfitId))
+  const album = new Map(outfits.filter((o) => kept.has(String(o.id))).map((o) => [String(o.id), outfitRowBase(o, byCharacter.get(o.characterId))]))
+  return { manifest, roster, album, art }
+}
+
 function loadMaster(): void {
   if (state.status === 'loading' || state.status === 'ready') return
   set({ status: 'loading' })
-  CONTENT.manifest().then(
-    (manifest) => set({ status: 'ready', manifest }),
-    (err: unknown) => set({ status: 'error', offline: typeof navigator !== 'undefined' && navigator.onLine === false, message: err instanceof Error ? err.message : String(err) }),
-  )
+  void (async () => {
+    try {
+      const [client, manifest] = await Promise.all([CONTENT.release(), CONTENT.manifest()])
+      const [characters, outfits, art] = await Promise.all([client.set(manifest, 'characters'), client.set(manifest, 'outfits'), client.art(manifest)])
+      set({ status: 'ready', view: masterView(manifest, characters, outfits, art) })
+    } catch (err) {
+      set({ status: 'error', offline: typeof navigator !== 'undefined' && navigator.onLine === false, message: err instanceof Error ? err.message : String(err) })
+    }
+  })()
+}
+
+/** The roster once it has loaded, else null: for the work actions, which read it outside React (the trade gate). */
+export function masterRoster(): readonly FarmOutfit[] | null {
+  return state.status === 'ready' ? state.view.roster : null
 }
 
 export function useMaster(): MasterState {
