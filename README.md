@@ -4,8 +4,18 @@ A personal, never-distributed farm inspired by *Umamusume: Pretty Derby*, played
 web app. Umas gather, process and make across five lines, as in uma-rpg's Wilds. A Forge minigame then turns those base
 items into the other Uma games' items, sent as one-way parcels to uma-quest, uma-rpg and uma-racer.
 
-**Status (2026-11-07):** the repo, its plan and its private-content guard exist; there's no code yet. Phase 1 is
-current: F1, the workspace, is ready.
+**Status (2026-11-08):** the workspace and its checks are in (F1): a placeholder web page, an API behind the owner
+guard, and the domain package, installing all five platform packages. Next is F2, the cloud.
+
+## Layout
+
+| Path | What |
+|---|---|
+| `apps/web` | `@farm/web`: Vite, React 19 and uma-kit's theme. A placeholder page until F3 |
+| `apps/api` | `@farm/api`: NestJS 11 behind uma-server's owner guard: `/api/health`, `/api/save` and `/api/post/ping` (its own token check) |
+| `packages/domain` | `@farm/domain`: the game's rules, pure, no I/O |
+| `scripts/` | The 180 KB size check and the private-content guard, each with tests |
+| `.github/workflows/deploy.yml` | Verify on every push and pull request; the deploy job comes with F2 |
 
 ## Where things are
 

@@ -1,0 +1,25 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "farm-api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@farm/api",
+        "dev"
+      ],
+      "port": 8101
+    },
+    {
+      "name": "farm-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@farm/web",
+        "dev"
+      ],
+      "port": 5194
+    }
+  ]
+}

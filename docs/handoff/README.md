@@ -1,6 +1,6 @@
 # Handoff: open work
 
-> **Status: 2026-11-07, after D3.** The repo exists with its plan and its private-content guard. There is no code yet.
+> **Status: 2026-11-08, after D4.** The workspace and its checks are in (F1). Next is F2, the cloud.
 > **The current phase is Phase 1: the repo, the cloud and the hello app** ([the plan](../design/plan.md#phase-1-the-repo-the-cloud-and-the-hello-app-claude-s--m--m)).
 >
 > - **The manual of the game as built** will be [docs/game/](../game/README.md). It starts with F3.
@@ -12,11 +12,10 @@
 
 ## Phase 1: the repo, the cloud and the hello app
 
-Packet ids continue from F7 (F4–F6 are the plan's); decision numbers from D4.
+Packet ids continue from F7 (F4–F6 are the plan's); decision numbers from D5.
 
 | Id | What | Who | Size | Needs | State |
 |---|---|---|---|---|---|
-| F1 | [The workspace and its checks](tasks/F1-workspace.md): placeholders installing all five platform packages, `/api/post/ping`'s token check, CI, ports 8101 and 5194 | Claude | S | The owner's five package-access entries, for CI | **Ready** |
 | F2 | [The cloud, the pipeline and the ping](tasks/F2-cloud.md): `infra/bootstrap.sh`'s nine pieces in the `uma-rpg` project, push paused, the deploy, the site check, `POST_CALLERS`, the isolation rows | Claude | M | F1; uma-rpg's H169; the owner's go | Waiting on H169 |
 | F3 | [The hello app](tasks/F3-hello-app.md): uma-rpg's stack, Google sign-in, save v1 synced, the update prompt, the Home Screen | Claude | M | F2; the owner's two sign-in entries | After F2 |
 
@@ -48,8 +47,8 @@ Each phase's packets are written when it starts, from [the plan](../design/plan.
 
 | When | What |
 |---|---|
-| Now | One word: make the repo public (FM1, IN14, free Actions minutes) or keep it private |
-| For F1's CI | On GitHub, for `uma-data`, `uma-kit`, `uma-work`, `uma-server` and `uma-art`: Package settings → **Manage Actions access** → add `uma-farm` with **Read** |
+| ~~Now~~ Done 2026-11-08 | **Kept private** (the owner's word; D-decision below). One word: make the repo public (FM1, IN14, free Actions minutes) or keep it private |
+| ~~For F1's CI~~ Done 2026-11-08 | On GitHub, for `uma-data`, `uma-kit`, `uma-work`, `uma-server` and `uma-art`: Package settings → **Manage Actions access** → add `uma-farm` with **Read** |
 | F2 | The go for the cloud; then the two sign-in entries for `uma-farm.web.app` in the Cloud console |
 | F3 | The phone check: install, sign in, see the save sync |
 
@@ -59,6 +58,7 @@ Packets finished go here, newest first.
 
 | Id | Task | Commit |
 |---|---|---|
+| F1 | The workspace and its checks (D4): pnpm 10.33.0 and turbo; `@farm/web`, `@farm/api` and `@farm/domain`, installing uma-data 1.4.0, uma-kit 0.17.0, uma-work 0.1.0, uma-server 0.2.0 and uma-art 2.21.0; lint, tests, build, the 180 KB size check (69.4 KB) and the private-content guard; CI's verify job. Locally with the guard on: health 200, save 401, ping 401, the page and its proxied health on :5194 | `this commit` |
 
 ## How a packet reads
 
