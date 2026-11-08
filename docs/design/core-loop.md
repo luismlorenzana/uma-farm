@@ -227,9 +227,10 @@ something you build.
 **FC17: talents from her stats.** Each Uma has a **talent grade (S to G) in each activity**, read from her master-data
 stats by one rule, the same for everyone. It's data, so no names are in git:
 - Power → mining and the Forge;
-- Stamina → farming and the ranch;
-- Wit → cooking, fishing and serving;
-- Speed → foraging;
+- Stamina → farming;
+- Guts → the ranch;
+- Wit → cooking and fishing;
+- Speed → foraging and serving;
 - all five → expeditions.
 
 A talent speeds her work and lifts quality. Her running-style **calling** (FM7, built in F4) stays as her favourite: she
@@ -272,7 +273,7 @@ scores are set by the season and your Farm Rank, so they stay a match:
 | Summer | **Fishing Derby** | Anglers sent for the derby's 2 hours | The biggest catch |
 | Autumn | **Cooking Contest** | A dish cooked live in the Kitchen's game | The dish's quality × the play's score |
 | Winter | **Animal Show** | Your best animal | Affection and product quality |
-| Every 4th week | **Harvest Cup** | A team of 3 Umas in a short race, run by their stats and bonds | A light race, played back on the stage |
+| Week 4, Sunday | **Harvest Cup**, the year's finale | A team of 3 Umas in a short race, run by their stats and bonds | A light race, played back on the stage |
 
 Prizes are gold, decorations, a trophy for the Diary, and often a recruit. The Harvest Cup is a light nod to who the
 Umas are; uma-racer stays the racing game.
@@ -340,8 +341,9 @@ to stay (FC16). It's Friends of Mineral Town's hearts, aimed at the crew.
 It scrolls up and down as FR6 says. The **calendar and the Farm Rank** sit in the account bar.
 
 **FC29: one tap away.** The bottom bar is Farm · Roster · Diary · Menu:
-- the board, the shop and the calendar open from the yard;
-- expeditions open from the expedition post.
+- the bin and the board open from the yard;
+- the shop, the festival ground and the expedition post open from the town edge;
+- the calendar opens from the account bar.
 
 **FC30: the help is short.** Each place has a help button; chapter goals teach the rest. There's no tutorial wall.
 
@@ -381,6 +383,28 @@ are refunded as gold at their price.
 6. **Later, the other games:** parcels (F10, PO1), when the owner says so.
 
 The minigames' rules (FR22) and the farm kit's contract (FR16) can start in M4.
+
+## Notes from drawing the page (D24)
+
+Drawing [the page](previews/core-loop.html) turned up fourteen gaps. Each is settled here, and the calls above read with
+these:
+
+| # | Gap | Settled |
+|---|---|---|
+| 1 | The Harvest Cup's "every 4th week" lands on Winter's Saturday, the Animal Show | The Cup runs on **week 4's Sunday**, the year's finale (FC22 amended) |
+| 2 | Chapters 2–8 come in M6, but the activities they open come in M5 | **Each milestone ships the chapters that open its activities:** chapter 1 in M4, chapters 2–5 in M5, chapters 6–8 in M6. A goal that needs a later feature (chapter 4's first festival) waits for it |
+| 3 | The Harvest Cup "plays back on the stage", but festivals are M6 and the stage is M7 | Until M7 the Cup shows as a results card with a simple race bar; from M7 it plays back on the stage |
+| 4 | Chapters, the Farm's Rank and upgrades all open things | **A chapter opens what's new** (an activity, a building); **the Farm's Rank opens more of what's open** (land, capacity, higher regions); **upgrades are bought within what's open** (the boat, after chapter 7) |
+| 5 | The shop sits on the town edge (FC28) but opens from the yard (FC29); the calendar is in two places | FC29 amended: the shop opens from the town edge, the calendar from the account bar |
+| 6 | Only three line stations were named | One per gathering place: **Fields → Mill** (flour, preserves), **Mine → Smelter** (ingots), **Quarry → Cutter** (cut gems), **Forest → Sawmill** (planks), **Fishery → Smokehouse** (smoked fish) |
+| 7 | The Monster Den carries over but has no activity, and its stone overlaps mining | **The Monster Den becomes the Quarry:** stone and gems, part of mining. The Mine gives ore, the Quarry stone and gems |
+| 8 | "Seven activities", yet talents and ranks run over nine | **Seven kinds of work, nine ranks:** farming, the ranch, mining, fishing, foraging, cooking, serving, forging, expeditions |
+| 9 | Craft Level "becomes her calling's rank" needs today's lines mapped | **Metal and Stone → mining, Wood → foraging, Fish → fishing, Vegetables → farming** |
+| 10 | FC17 named four stats | FC17 amended: **Guts → the ranch**; Stamina farming; Speed foraging and serving |
+| 11 | The Dorm tops out at 60 beds, yet every outfit can join | **The roster can reach all 272; beds cap who lives and works on the farm at once (60, today's slot count).** The rest are on their off-season; the Dorm swaps who stays |
+| 12 | "+25% a star" was open: compounded or not | **Not compounded:** 1★ the base price, then ×1.25, ×1.5, ×1.75, ×2 for 5★ |
+| 13 | How workshop assistants are picked; the ranch's slots | One **assistant post** per workshop, picked when a play starts (hd2d-farm D23 #8); **every place keeps four slots,** the Coop and Barn too. F7 sets how many animals each holds |
+| 14 | Today's materials "refunded as gold at their price", but they leave the game | F7 sets a refund per grade. The owner's save holds no materials today, so in practice nothing is refunded |
 
 ## Questions for the owner
 
@@ -423,19 +447,19 @@ Each has a recommended answer; accepting it or changing it is enough.
 | FC14 | The Kitchen cooks for selling, supplies, contests and the staff meal; the Restaurant's game earns gold (amends FR19) |
 | FC15 | The staff meal gives "well fed": ×1.25 work speed for 4 h, more for higher tiers |
 | FC16 | Umas join over time: 3 to start, more through beds, chapters, festivals, requests and affinity (amends FM6) |
-| FC17 | Talents S–G per activity from her stats by one rule; her calling becomes her favourite line |
+| FC17 | Talents S–G per activity from her stats by one rule (Power mining and the Forge, Stamina farming, Guts the ranch, Wit cooking and fishing, Speed foraging and serving, all five expeditions); her calling becomes her favourite line |
 | FC18 | Six ranks per activity per Uma (Novice to Legend), by work and a challenge; Craft Level becomes her calling's rank |
 | FC19 | The roster is uma-kit's album with talents, ranks, bonds and affinity |
 | FC20 | A requests board: 3–5 open, daily, for gold, recruits, recipes or animals (replaces FS4–FS7) |
 | FC21 | The Farm Diary: collections, milestones, records, with rewards |
-| FC22 | A festival every Saturday: Flower Show, Fishing Derby, Cooking Contest, Animal Show, and the Harvest Cup every fourth week |
+| FC22 | A festival every Saturday: Flower Show, Fishing Derby, Cooking Contest, Animal Show; the Harvest Cup on week 4's Sunday |
 | FC23 | The Farm's Rank opens land, buildings and expedition regions |
 | FC24 | Eight light chapters with goal lists; an original town cast; Umas in roles filled at runtime |
 | FC25 | Bonds grow when Umas work, travel or eat together; five hearts; side-by-side speed and duo moves |
 | FC26 | Your affinity with each Uma from chats, gifts and praise; it opens her story beats and recruits visitors |
 | FC27 | Conversations come from templates chosen by place, bond level and temperament, names filled in at runtime |
 | FC28 | The farm map grows: gathering rows, the ranch, workshops, the yard, the town edge |
-| FC29 | The bottom bar is Farm, Roster, Diary, Menu |
+| FC29 | The bottom bar is Farm, Roster, Diary, Menu; the shop and festival ground from the town edge, the calendar from the account bar |
 | FC30 | Short help per place; chapter goals teach |
 | FC31 | The save and rules carry over; the content is re-authored; parcels are parked |
 | FC32 | The order: M3 the spec, M4 the loop on today's map, M5 more activities, M6 the life around it, M7 HD-2D, then parcels |

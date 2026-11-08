@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>uma-farm: the farm's own loop</title>
+<!-- The desktop page of docs/design/core-loop.md (FC1–FC32): the farm day as a loop, the three references, time, the
+     activities, the roster, goals, relationships, the map, what changes and the order, every call and the 14 questions.
+     Self-contained, light and dark. No Uma art and no original-game content: figures are abstract shapes (a capsule body
+     and a round head), and the reference games appear by title and general mechanics only. -->
+<style>
+:root{--page:#edf1f6;--panel:#fff;--raised:#f3f6fa;--sunken:#e4eaf2;--ink:#101a24;--ink-soft:#5a6b84;--ink-faint:#8a98ac;
+--accent:#d39a2b;--accent-wash:#fbf1dd;--info:#2f6fe0;--info-wash:#e3ecfc;--success:#2f7a4f;--success-wash:#e1f1e7;
+--danger:#c23b33;--danger-wash:#fbe7e5;--hairline:rgb(16 26 36/.08);--hairline-strong:rgb(16 26 36/.16);--radius:12px;
+--real:#7d5ba6;--real-wash:#efe8f7;--heart:#d64d6a;--head:#f4e6d4;--shadow:rgb(0 0 0/.16);--device:#1d2632;--screen:#f6f8fb;
+--spring:#4f9a5b;--summer:#d08a1e;--autumn:#c4613a;--winter:#3f7fc4;--track:rgb(16 26 36/.08);
+color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#0f1620;--panel:#17202b;--raised:#1f2a37;--sunken:#0b1118;
+--ink:#e9eef4;--ink-soft:#a6b3c2;--ink-faint:#6f7d8e;--accent:#d6a23e;--accent-wash:#2b2312;--info:#5b8def;--info-wash:#16233a;
+--success:#4fb37a;--success-wash:#13261b;--danger:#e0645c;--danger-wash:#2c1513;--hairline:rgb(255 255 255/.08);
+--hairline-strong:rgb(255 255 255/.16);--real:#a58bd6;--real-wash:#221a30;--heart:#ef7a8f;--head:#d9c7b1;--shadow:rgb(0 0 0/.34);
+--device:#05080c;--screen:#121a24;--spring:#6cbf79;--summer:#e2a748;--autumn:#e07e57;--winter:#6b9fe0;--track:rgb(255 255 255/.09);
+color-scheme:dark}}
+:root[data-theme="dark"]{--page:#0f1620;--panel:#17202b;--raised:#1f2a37;--sunken:#0b1118;--ink:#e9eef4;--ink-soft:#a6b3c2;--ink-faint:#6f7d8e;
+--accent:#d6a23e;--accent-wash:#2b2312;--info:#5b8def;--info-wash:#16233a;--success:#4fb37a;--success-wash:#13261b;--danger:#e0645c;
+--danger-wash:#2c1513;--hairline:rgb(255 255 255/.08);--hairline-strong:rgb(255 255 255/.16);--real:#a58bd6;--real-wash:#221a30;
+--heart:#ef7a8f;--head:#d9c7b1;--shadow:rgb(0 0 0/.34);--device:#05080c;--screen:#121a24;--spring:#6cbf79;--summer:#e2a748;
+--autumn:#e07e57;--winter:#6b9fe0;--track:rgb(255 255 255/.09);color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font:14px/1.45 system-ui,-apple-system,'Inter',sans-serif}
+main{max-width:1280px;margin:0 auto;padding:24px 16px 56px}h1{font:700 24px/1.2 ui-rounded,'SF Pro Rounded',system-ui,sans-serif;margin:0 0 6px}
+h2{font:700 17px/1.25 ui-rounded,system-ui,sans-serif;margin:0 0 10px}h3{font:600 14px/1.3 system-ui;margin:14px 0 6px}
+p,li{color:var(--ink-soft);max-width:92ch}a{color:var(--info)}b,strong{color:var(--ink)}p,li,td,dd{overflow-wrap:anywhere}
+code{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--sunken);padding:1px 4px;border-radius:4px}
+.card{background:var(--panel);border:1px solid var(--hairline);border-radius:var(--radius);padding:16px;margin:14px 0;min-width:0}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}nav a{text-decoration:none;font-size:12px;padding:4px 10px;border-radius:999px;background:var(--raised);border:1px solid var(--hairline);color:var(--ink)}
+.backlink{margin:0 0 8px;font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px}.tile{background:var(--raised);border:1px solid var(--hairline);border-radius:10px;padding:10px 12px}
+.tile b{display:block;font-size:20px}.tile span{color:var(--ink-soft);font-size:12px}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--hairline);vertical-align:top}
+th{color:var(--ink-soft);font-weight:600;background:var(--raised)}td.id{white-space:nowrap;font-weight:700}
+td:first-child,th:first-child{padding-left:10px}
+.scroll{overflow-x:auto;max-width:100%}.scroll table{min-width:640px}.scroll table.slim{min-width:0}
+svg{display:block;width:100%;height:auto}
+.pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;background:var(--sunken);color:var(--ink-soft);margin-right:4px;white-space:nowrap}
+.pill.wait{background:var(--accent-wash);color:var(--ink);border:1px solid color-mix(in srgb,var(--accent) 50%,transparent)}
+.pill.ok{background:var(--success-wash);color:var(--ink);border:1px solid color-mix(in srgb,var(--success) 45%,transparent)}
+.pill.q{background:var(--info-wash);color:var(--ink);border:1px solid color-mix(in srgb,var(--info) 45%,transparent)}
+.pill.no{background:var(--danger-wash);color:var(--ink);border:1px solid color-mix(in srgb,var(--danger) 45%,transparent)}
+.pill.rt{background:var(--real-wash);color:var(--ink);border:1px solid color-mix(in srgb,var(--real) 45%,transparent)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:960px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
+.sub{background:var(--raised);border:1px solid var(--hairline);border-radius:10px;padding:12px;min-width:0}
+.sub h3{margin-top:0}.sub ul,.sub ol{margin:4px 0 0;padding-left:18px}.sub li{margin:2px 0}.sub p{margin:4px 0}.note{font-size:12px;color:var(--ink-faint)}
+.callout{border-left:3px solid var(--accent);background:var(--accent-wash);padding:10px 12px;border-radius:0 10px 10px 0;margin:10px 0}
+.callout p,.callout li{margin:4px 0;color:var(--ink)}.callout ul{margin:4px 0;padding-left:18px}
+.callout.info{border-left-color:var(--info);background:var(--info-wash)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--ink-soft);margin-top:8px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+.rec{display:inline-block;background:var(--accent-wash);border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);border-radius:8px;padding:2px 8px;font-weight:700;color:var(--ink)}
+/* call tags */
+a.fc{display:inline-block;font:700 10.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:0 6px;border-radius:6px;background:var(--sunken);color:var(--ink-soft);text-decoration:none;border:1px solid var(--hairline);white-space:nowrap;vertical-align:1px}
+a.fc:hover{color:var(--info);border-color:color-mix(in srgb,var(--info) 50%,transparent)}
+h2 a.fc,h3 a.fc{margin-left:4px}
+tr:target td{background:var(--accent-wash)}
+/* hero */
+.hero-w{display:block}.hero-n{display:none}
+@media(max-width:700px){.hero-w{display:none}.hero-n{display:block}}
+.dayflow{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0}
+.dayflow li{max-width:none;border-radius:10px;padding:8px 12px;border:1px solid var(--hairline);background:var(--raised);font-size:12.5px;color:var(--ink-soft);position:relative;margin-bottom:22px}
+.dayflow li::after{content:'↓';position:absolute;left:50%;bottom:-20px;transform:translateX(-50%);color:var(--ink-faint);font-size:15px}
+.dayflow li:last-child::after{content:'↺ back to Spend';white-space:nowrap;font-size:12px}
+.dayflow li b{color:var(--ink);font-size:14px}.dayflow li .kl{font-size:11px;font-weight:600;margin-left:6px}
+.k-tap{background:var(--info-wash)!important;border-color:color-mix(in srgb,var(--info) 45%,transparent)!important}.k-tap .kl{color:var(--info)}
+.k-real{background:var(--real-wash)!important;border-color:color-mix(in srgb,var(--real) 45%,transparent)!important}.k-real .kl{color:var(--real)}
+.k-gold{background:var(--accent-wash)!important;border-color:color-mix(in srgb,var(--accent) 55%,transparent)!important}.k-gold .kl{color:var(--accent)}
+.k-grow{background:var(--success-wash)!important;border-color:color-mix(in srgb,var(--success) 45%,transparent)!important}.k-grow .kl{color:var(--success)}
+/* pipelines */
+.pipe{display:flex;align-items:stretch;gap:8px}
+.pipe>.col{display:flex;flex-direction:column;gap:6px;flex:1 1 0;min-width:0;justify-content:center}
+.pipe>.ar{align-self:center;color:var(--ink-faint);font-size:20px;flex:0 0 auto;line-height:1}
+.box{background:var(--raised);border:1px solid var(--hairline);border-radius:10px;padding:8px 10px;font-size:12.5px;color:var(--ink-soft);min-width:0}
+.box b{display:block;color:var(--ink);font-size:13px}.box .note{display:block;margin-top:2px}
+.box.big{text-align:center;font-size:13px}.box.big b{font-size:16px}
+@media(max-width:760px){.pipe{flex-direction:column}.pipe>.ar{transform:rotate(90deg)}}
+.pipe.v{flex-direction:column}.pipe.v>.ar{transform:rotate(90deg)}
+/* take / change / leave */
+.tcl{display:grid;grid-template-columns:170px repeat(3,minmax(0,1fr));gap:8px}
+.tcl .hd{font-size:12px;font-weight:700;padding:6px 10px;border-radius:8px;color:var(--ink)}
+.tcl .from{font-weight:700;padding:10px;background:var(--raised);border:1px solid var(--hairline);border-radius:10px;font-size:13px}
+.tcl .from small{display:block;font-weight:400;color:var(--ink-soft);font-size:11.5px;margin-top:2px}
+.tcl ul{margin:0;padding:8px 10px 8px 26px;border-radius:10px;font-size:12.5px;border:1px solid var(--hairline);min-width:0}
+.tcl li{margin:2px 0}.tcl .tk{background:var(--success-wash);border-color:color-mix(in srgb,var(--success) 40%,transparent)}
+.tcl .tk li::marker{content:'✓  ';color:var(--success);font-weight:700}
+.tcl .ch{background:var(--accent-wash);border-color:color-mix(in srgb,var(--accent) 50%,transparent)}
+.tcl .ch li::marker{content:'↻  ';color:var(--accent);font-weight:700}
+.tcl .lv{background:var(--raised)}.tcl .lv li{color:var(--ink-faint)}.tcl .lv li::marker{content:'–  ';color:var(--ink-faint)}
+.tcl .ch li{color:var(--ink)}.tcl .tk li{color:var(--ink)}
+.tcl .hd.tk{background:var(--success-wash)}.tcl .hd.ch{background:var(--accent-wash)}.tcl .hd.lv{background:var(--raised)}
+.tcl .lab{display:none;font-size:11px;font-weight:700;margin:4px 0 -2px}
+@media(max-width:860px){.tcl{grid-template-columns:minmax(0,1fr)}.tcl .hd{display:none}.tcl .lab{display:block}.tcl .from{margin-top:10px}}
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media(max-width:900px){.cal{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.cal{grid-template-columns:minmax(0,1fr)}}
+.wk{border-radius:12px;border:1px solid color-mix(in srgb,var(--sc) 50%,transparent);background:color-mix(in srgb,var(--sc) 10%,var(--panel));padding:10px 12px;min-width:0}
+.wk h3{margin:0;display:flex;align-items:center;gap:6px}.wk h3 i{width:10px;height:10px;border-radius:50%;background:var(--sc);display:inline-block}
+.wk .wn{font-size:11.5px;color:var(--ink-soft)}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;margin:8px 0}
+.days span{font-size:11px;text-align:center;padding:5px 0;border-radius:6px;background:var(--panel);color:var(--ink-soft);border:1px solid var(--hairline)}
+.days span.sat{border:2px solid var(--sc);color:var(--ink);font-weight:800}
+.fest{font-size:12.5px;color:var(--ink)}.fest small{display:block;color:var(--ink-soft);font-size:11.5px}
+.cup{margin-top:8px;border:1px dashed var(--accent);background:var(--accent-wash);border-radius:8px;padding:6px 8px;font-size:12px;color:var(--ink)}
+.decides{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
+/* the day bar */
+.daybar{position:relative;height:196px;margin:8px 4px 4px}
+.daybar .axis{position:absolute;left:0;right:0;top:166px;border-top:2px solid var(--hairline-strong)}
+.daybar .tick{position:absolute;top:172px;font-size:11px;color:var(--ink-faint);transform:translateX(-50%)}.daybar .tick:first-of-type{transform:none}.daybar .tick.end{transform:translateX(-100%)}
+.daybar .bar{position:absolute;height:16px;border-radius:8px}
+.daybar .bl{position:absolute;font-size:11.5px;color:var(--ink);white-space:nowrap}
+.daybar .tap{position:absolute;top:159px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--info);border:2px solid var(--panel)}
+.daybar .pay{position:absolute;top:0;bottom:28px;border-left:2px dashed var(--accent)}
+.daybar .pay span{position:absolute;top:0;left:6px;font-size:11.5px;font-weight:700;color:var(--ink);white-space:nowrap;background:var(--accent-wash);border-radius:6px;padding:1px 6px}
+@media(max-width:520px){.daybar .pay span{left:auto;right:6px}}
+/* activities */
+.acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.act .wbody{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}@media(max-width:760px){.act .wbody{grid-template-columns:minmax(0,1fr)}}
+.act{background:var(--raised);border:1px solid var(--hairline);border-top:4px solid var(--ac);border-radius:12px;padding:12px;min-width:0}
+.act.wide{grid-column:1/-1}
+.act header{display:flex;align-items:center;gap:10px;margin-bottom:6px}.act header svg{width:34px;height:34px;flex:0 0 34px}
+.act header h3{margin:0;font-size:15px}.act header .pl{font-size:12px;color:var(--ink-soft)}
+.act dl{display:grid;grid-template-columns:78px minmax(0,1fr);gap:4px 8px;margin:6px 0;font-size:12.5px}
+.act dt{font-weight:700;color:var(--ink-faint);font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;padding-top:1px}
+.act dd{margin:0;color:var(--ink)}.act ul{margin:6px 0 0;padding-left:18px;font-size:12.5px}.act .fcs{margin-top:8px}
+.wsg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:8px}@media(max-width:860px){.wsg{grid-template-columns:minmax(0,1fr)}}
+.stars{color:var(--accent);letter-spacing:2px;font-size:20px}
+.mult{display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:26px}
+.mult div{flex:1 1 0;background:color-mix(in srgb,var(--accent) 70%,transparent);border-radius:6px 6px 0 0;position:relative;min-width:0}
+.mult div span{position:absolute;top:-17px;left:0;right:0;text-align:center;font-size:11px;color:var(--ink);font-weight:700}
+.mult-l{display:flex;gap:6px}.mult-l span{flex:1 1 0;text-align:center;font-size:11px;color:var(--ink-soft)}
+.grades{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0}
+.grades span{min-width:30px;text-align:center;font:800 13px ui-rounded,system-ui;padding:4px 0;border-radius:6px;color:var(--ink);border:1px solid var(--hairline)}
+/* talent grid */
+.tg td,.tg th{text-align:center}.tg td:first-child,.tg th:first-child{text-align:left}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--info)}.dot.all{background:var(--real)}
+.dot.no{background:transparent;border:1px solid var(--hairline-strong);width:8px;height:8px}
+/* ladder */
+.ladder{display:flex;align-items:flex-end;gap:6px;height:230px;margin:28px 0 4px}
+.rung{flex:1 1 0;min-width:0;border-radius:8px 8px 0 0;background:color-mix(in srgb,var(--info) calc(18% + var(--i) * 12%),var(--panel));border:1px solid color-mix(in srgb,var(--info) 50%,transparent);border-bottom:0;padding:6px 4px;text-align:center;position:relative}
+.rung b{display:block;font-size:12.5px}.rung small{display:block;font-size:10.5px;color:var(--ink-soft)}
+.rung .flag{position:absolute;top:-20px;left:0;right:0;font-size:10.5px;color:var(--ink-soft);white-space:nowrap}@media(max-width:600px){.rung .flag .t{display:none}.rung .flag{font-size:13px}}
+.ladder-base{border-top:2px solid var(--hairline-strong);font-size:11.5px;color:var(--ink-soft);padding-top:4px}
+/* roster card */
+.ucard{display:flex;gap:14px;align-items:flex-start;background:var(--raised);border:1px solid var(--hairline);border-radius:12px;padding:12px}
+.ucard svg{width:70px;flex:0 0 70px}.ucard .rows{flex:1;min-width:0;font-size:12.5px}
+.ucard .rows>div{display:flex;gap:8px;padding:3px 0;border-bottom:1px solid var(--hairline)}.ucard .rows>div:last-child{border-bottom:0}
+.ucard .rows>div>span:first-child{flex:0 0 92px;color:var(--ink-faint);font-weight:600;font-size:11.5px;text-transform:uppercase}
+.ucard .rows>div>span:last-child{color:var(--ink);min-width:0}.ucard .rows>div>span.hearts{color:var(--heart)}
+.hearts{color:var(--heart);letter-spacing:1px;overflow-wrap:anywhere;word-break:break-all}.hearts .off{color:var(--hairline-strong)}
+/* board, diary */
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding:12px;border-radius:12px;background:color-mix(in srgb,var(--summer) 16%,var(--panel));border:1px solid color-mix(in srgb,var(--summer) 40%,transparent)}
+.notecard{background:var(--panel);border:1px solid var(--hairline-strong);border-radius:8px;padding:10px;font-size:12.5px;box-shadow:0 2px 6px rgb(0 0 0/.08);position:relative}
+.notecard::before{content:'';position:absolute;top:-5px;left:50%;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--danger)}
+.notecard b{display:block;color:var(--ink)}.notecard .rw{margin-top:6px;font-size:11.5px;color:var(--ink-soft)}
+.bar{height:8px;border-radius:4px;background:var(--sunken);overflow:hidden;margin:6px 0 2px}.bar i{display:block;height:100%;background:var(--success)}
+/* chapters, milestones */
+.strip{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:8px}
+@media(max-width:1000px){.strip{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:560px){.strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.chap{border-radius:10px;padding:10px;background:var(--raised);border:1px solid var(--hairline);position:relative;min-width:0}
+.chap .no{font:800 22px ui-rounded,system-ui;color:var(--accent)}.chap b{display:block;font-size:13px}.chap .tags{margin-top:6px}
+.ms{display:flex;gap:8px;align-items:stretch}
+.ms .m{flex:1 1 0;min-width:0;border-radius:10px;padding:10px;background:var(--raised);border:1px solid var(--hairline);font-size:12.5px}
+.ms .m h3{margin:0 0 4px;font-size:14px}.ms .m ul{margin:0;padding-left:16px}.ms .m li{margin:2px 0}
+.ms .m.now{background:var(--accent-wash);border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.ms .m.later{border-style:dashed;opacity:.85}
+.ms .ar{align-self:center;color:var(--ink-faint);font-size:18px}
+@media(max-width:1000px){.ms{flex-direction:column}.ms .ar{transform:rotate(90deg)}}
+/* questions */
+.qs{display:flex;flex-direction:column;gap:8px}
+.qc{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:start;background:var(--raised);border:1px solid var(--hairline);border-radius:10px;padding:10px 12px}
+.qc .qn{font:800 18px ui-rounded,system-ui;color:var(--ink-faint);text-align:center}
+.qc p{margin:0 0 6px;color:var(--ink)}.qc .qr{font-size:12.5px;color:var(--ink-soft)}
+.qc .qa{display:flex;gap:6px}.qc button,.qtools button{min-height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--hairline-strong);background:var(--panel);color:var(--ink);font:600 13px system-ui;cursor:pointer}
+.qc button.on[data-v="accept"]{background:var(--success);border-color:var(--success);color:#fff}
+.qc button.on[data-v="change"]{background:var(--accent);border-color:var(--accent);color:#1b1305}
+.qc textarea{grid-column:2/-1;width:100%;min-height:52px;border-radius:8px;border:1px solid var(--hairline-strong);background:var(--panel);color:var(--ink);font:13px system-ui;padding:6px 8px}
+.qc.done{border-color:color-mix(in srgb,var(--success) 45%,transparent)}
+@media(max-width:600px){.qc{grid-template-columns:28px minmax(0,1fr)}.qc .qa{grid-column:2}}
+.qtools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.qtools .main{background:var(--accent);border-color:var(--accent);color:#1b1305;font-weight:700}
+#qout{width:100%;min-height:150px;border-radius:10px;border:1px solid var(--hairline-strong);background:var(--sunken);color:var(--ink);font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:8px 10px}
+.mapgrid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:860px){.mapgrid{grid-template-columns:minmax(0,1fr)}.mapgrid>div:first-child{max-width:360px;margin:0 auto;width:100%}}
+@media(max-width:520px){.ucard{gap:8px}.ucard svg{width:44px;flex:0 0 44px}.ucard .rows>div{flex-direction:column;gap:0}.ucard .rows>div>span:first-child{flex:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>uma-farm: the farm's own loop</h1>
+<p class="backlink"><a href="../core-loop.md">← The doc this page draws: core-loop.md</a> (the source of truth for every call, number and question) · related: <a href="hd2d-farm.html">the HD-2D farm (hd2d-farm.html)</a></p>
+<p>Your rework: the farm comes first with <b>its own loop</b>, and sending items to the other games waits until later. The loop is defined against three references, <i>Harvest Moon: Friends of Mineral Town</i>, <i>Rune Factory 4</i> and <i>Fantasy Life</i>, and changes one thing on purpose: <b>no active exploration or real-time combat; a wide roster of Umas dispatched on jobs</b> instead. The calls are <b>FC1–FC32</b>, each with a recommendation; each tag like <a class="fc" href="#c-FC1">FC1</a> jumps to its row in the calls table. <span class="pill wait">Draft · D22 · 2026-11-08</span> <span class="pill">Nothing is built or requested before you answer</span></p>
+<nav><a href="#short">Short answer</a><a href="#loop">The loop</a><a href="#refs">The references</a><a href="#time">Time</a><a href="#activities">Activities</a><a href="#roster">The roster</a><a href="#goals">Goals</a><a href="#rel">Relationships</a><a href="#map">The map</a><a href="#changes">What changes</a><a href="#order">The order</a><a href="#calls">Calls</a><a href="#questions">Questions for you</a></nav>
+
+<section class="card"><div class="tiles">
+<div class="tile"><b>32</b><span>Calls, FC1–FC32</span></div>
+<div class="tile"><b>~5 min</b><span>Of taps a day, then hours of work (FC1)</span></div>
+<div class="tile"><b>17:00</b><span>The bin pays, local time (FC3)</span></div>
+<div class="tile"><b>1 week</b><span>A season; a year is four (FC5)</span></div>
+<div class="tile"><b>7</b><span>Activities, none real-time</span></div>
+<div class="tile"><b>3 → 60</b><span>Umas, as the Dorm's beds grow (FC16)</span></div>
+<div class="tile"><b>6 ranks</b><span>Per Uma, per activity (FC18)</span></div>
+<div class="tile"><b>5 · 8</b><span>Festivals · story chapters</span></div>
+<div class="tile"><b>14</b><span>Questions for you, each with an answer ready</span></div>
+</div></section>
+
+<!-- SHORT ANSWER -->
+<section class="card" id="short"><h2>The short answer</h2>
+<div class="grid2">
+<div class="sub"><h3>The loop is a farm day <a class="fc" href="#c-FC1">FC1</a></h3><ol>
+<li>plant, tend and assign;</li><li>the Umas work while you're away;</li><li>collect and ship;</li><li>the bin pays at 17:00;</li>
+<li>spend the gold on seeds, animals, upgrades, land and beds;</li><li>the farm grows, Umas rank up, chapters and festivals come round.</li></ol></div>
+<div class="sub"><h3>Seven activities, all dispatched, none real-time</h3><ul>
+<li>farming, the ranch, mining, fishing and foraging;</li>
+<li>the <b>workshops</b>: the Kitchen (cooking), the Restaurant (serving) and the Forge (merge);</li>
+<li><b>expeditions:</b> parties of three or four Umas sent to a region for hours, resolved by their numbers, with a story log.</li></ul></div>
+<div class="sub"><h3>Many things to rank up</h3><ul>
+<li>the farm's Rank;</li><li>each Uma's rank in each activity, with talents from her own stats;</li><li>tools and buildings;</li>
+<li>crop and product quality;</li><li>animals' affection;</li><li>bonds between Umas, and your affinity with each Uma.</li></ul></div>
+<div class="sub"><h3>Something always to aim for</h3><ul>
+<li>a requests board;</li><li>a Farm Diary of collections and milestones;</li>
+<li>a festival every season: crop show, cooking contest, animal show, fishing derby, and a race cup;</li>
+<li>eight light story chapters, each a short goal list.</li></ul></div>
+<div class="sub"><h3>Relationships grow by working together</h3><p>Umas who share a place, a party or a festival team build a bond, and each level opens a short conversation between them. You build your own affinity with each Uma by chatting, gifting and praising her work.</p></div>
+<div class="sub"><h3>The order</h3><p>The loop's rules and screens on today's map first, so it plays soon; the HD-2D farm when the shared stage exists (FR2); the other games later.</p></div>
+</div>
+<div class="callout"><p><b>It builds on <a href="../hd2d-farm.md">hd2d-farm.md</a></b> (FR1–FR24), which you accepted whole (D21): the HD-2D engine, Umas walking as sprites, taps to assign work, and workshops with genre minigames. <b>It changes:</b></p><ul>
+<li><a href="../plan.md">plan.md</a>: FM6, FM8, and FM9–FM15 (parcels, now later);</li>
+<li><a href="../spec.md">spec.md</a>: FS4–FS11 (orders and no currency become selling and gold);</li>
+<li>FR19: the Restaurant earns gold, and the crew's boost moves to the Kitchen.</li></ul>
+<p class="note" style="color:var(--ink-soft)">The other pages: <a href="hd2d-farm.html">hd2d-farm.html</a> · <a href="spec.html">spec.html</a> · <a href="first-playable.html">first-playable.html</a> · <a href="plan.html">plan.html</a>.</p></div>
+</section>
+
+<!-- THE LOOP -->
+<section class="card" id="loop"><h2>2 · The loop: a farm day <a class="fc" href="#c-FC1">FC1</a><a class="fc" href="#c-FC2">FC2</a><a class="fc" href="#c-FC3">FC3</a><a class="fc" href="#c-FC4">FC4</a></h2>
+<p>About five minutes of taps, then hours of the Umas' work. Read it clockwise from <b>Spend</b>. What you collect is shipped or kept; the bin pays once, at 17:00; the gold buys the next day's plan. <b>Grow</b> branches off the loop and feeds back into it by opening land, buildings, places, regions and visitors.</p>
+<div class="hero-w"><svg id="hero" viewBox="0 0 1060 630" role="img" aria-label="The farm day as a clockwise loop: Spend, Plan with taps, Work in real time while the app is closed, Collect with taps, Ship to the bin, the 17:00 payout, Gold, and back to Spend. Grow branches off: Farm Rank, Uma ranks, chapters, the Diary, festivals, bonds and conversations; it opens land, buildings, places, regions and visitors."></svg></div>
+<div class="hero-n"><ol class="dayflow" id="heroN"></ol>
+<div class="box k-grow" style="margin-top:30px"><b>Grow, branching off <span class="kl">the long game</span></b>Farm Rank · Uma ranks · chapters · the Diary · festivals · bonds and conversations. It opens land, buildings, places, regions and visitors.</div></div>
+<div class="legend"><span><i class="k-tap" style="border:1px solid"></i>Taps: you, about five minutes</span><span><i class="k-real" style="border:1px solid"></i>Real time: the Umas, app closed</span><span><i class="k-gold" style="border:1px solid"></i>Selling and gold</span><span><i class="k-grow" style="border:1px solid"></i>Grow: ranks, goals, bonds</span></div>
+
+<div class="grid3" style="margin-top:14px">
+<div class="sub"><h3>Gold is the farm's currency <a class="fc" href="#c-FC2">FC2</a></h3>
+<p>It <b>reverses FS8</b> ("no currency"), since selling is now the loop.</p>
+<div class="pipe v" style="margin-top:8px"><div class="col"><div class="box"><b>Comes from</b>the shipping bin (FC3) · the requests board (FC20) · the Restaurant (FC14) · festival prizes (FC22)</div></div><div class="ar">→</div>
+<div class="col"><div class="box k-gold big"><b>Gold</b></div></div><div class="ar">→</div>
+<div class="col"><div class="box"><b>Goes to</b>seeds, feed and animals · upgrades · land · beds for new Umas · recipes · decorations</div></div></div>
+<p class="note">No premium currencies or purchases.</p></div>
+<div class="sub"><h3>The shipping bin <a class="fc" href="#c-FC3">FC3</a></h3>
+<ul><li>Drop anything sellable <b>at any time</b>.</li><li>It pays <b>once a day at 17:00 local</b>, with a summary of the day's shipments (Friends of Mineral Town's daily rhythm).</li>
+<li>Each item: <b>base price × quality</b> (FC10) <b>× the season's demand</b> (this week's season, FC5, lifts some prices).</li></ul></div>
+<div class="sub"><h3>Always something to tap <a class="fc" href="#c-FC4">FC4</a></h3>
+<p>Planting and harvesting, Ready bubbles, chats with Umas (FC26), the bin and the board are all taps, as you asked (FR9).</p></div>
+</div>
+</section>
+
+<!-- REFERENCES -->
+<section class="card" id="refs"><h2>1 · The three references</h2>
+<p>What each does, and what Uma Farm takes, changes or leaves. The games appear here by title and general mechanics only.</p>
+<h3>1.1 Their cores side by side</h3>
+<div class="scroll"><table id="pillars"><tr><th style="width:130px">Pillar</th><th>Friends of Mineral Town</th><th>Rune Factory 4</th><th>Fantasy Life</th></tr></table></div>
+<h3>1.2 What Uma Farm takes, changes and leaves</h3>
+<div class="tcl" id="tcl"><div></div><div class="hd tk">✓ Uma Farm takes</div><div class="hd ch">↻ Changes</div><div class="hd lv">– Leaves</div></div>
+<p class="note" style="margin-top:8px">Green is kept as the reference has it; amber is the farm's own turn on it; grey is left out.</p>
+</section>
+
+<!-- TIME -->
+<section class="card" id="time"><h2>3 · Time <a class="fc" href="#c-FC5">FC5</a><a class="fc" href="#c-FC6">FC6</a></h2>
+<p><b>One season per real week, a four-week year.</b> Spring, Summer, Autumn and Winter each last one week. A real week gives a phone game a rhythm you can follow without daily pressure. Each Saturday is that season's festival <a class="fc" href="#c-FC22">FC22</a>; the Harvest Cup comes every fourth week.</p>
+<div class="cal" id="cal"></div>
+<div class="decides" id="decides"></div>
+<div class="callout"><p><b>Drawn here, not settled by the doc:</b> a four-week year makes "every 4th week" once a year, in Winter's week, which already holds the Animal Show on its Saturday. Which day the Harvest Cup runs, or whether it replaces that Saturday's show, isn't said.</p></div>
+<h3>A day in real time <a class="fc" href="#c-FC6">FC6</a><a class="fc" href="#c-FC3">FC3</a></h3>
+<p>Jobs run on real time, as <code>uma-work</code> does today: minutes to hours, finished while the app is closed, collected on opening. Crops grow over hours, not farm days; a tended plot grows faster (FC8). The farm's calendar shows today, the season and the next festival.</p>
+<div class="sub"><div class="daybar" id="daybar"></div><p class="note" style="margin:0"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--info);vertical-align:-1px"></span> your taps. Illustrative: the times of your taps and the jobs' lengths are examples. Fixed by the doc: the 17:00 payout, expeditions of 2–8 hours (FC12), "well fed" lasting 4 hours (FC15).</p></div>
+</section>
+
+<!-- ACTIVITIES -->
+<section class="card" id="activities"><h2>4 · The activities <a class="fc" href="#c-FC7">FC7</a>–<a class="fc" href="#c-FC15">FC15</a></h2>
+<p>Every activity is a place on the farm (FR5's map grows into it) with slots for Umas, except planting, the workshops and expeditions, which are played or sent.</p>
+<div class="scroll"><table id="acttable"><tr><th>Activity</th><th>Place</th><th>You do</th><th>Umas do</th><th>Comes out</th><th>Reference</th></tr></table></div>
+
+<h3>What carries over from today's Wilds <a class="fc" href="#c-FC7">FC7</a></h3>
+<div class="pipe"><div class="col"><div class="box"><b>Today (F4, F5)</b>Fifteen places in five lines, gather → process → make: each gathering place, its workbench, and a making place; uma-rpg's materials and made items</div></div><div class="ar">→</div>
+<div class="col"><div class="box k-grow"><b>Kept: the five gathering places</b>Mine, Fields, Forest, Fishery and Monster Den. Each keeps four slots, a timed job and its queue, Recall and Repeat on <code>uma-work</code></div></div><div class="ar">+</div>
+<div class="col"><div class="box k-gold"><b>Changed: their content</b>The farm's own goods replace uma-rpg's materials and made items (FC31). The workbench places become the <b>workshops</b> and each line's <b>station</b>: a mill for flour, a smokehouse for fish, a smelter for ore</div></div></div>
+
+<h3>One card per activity</h3>
+<div class="acts" id="acts"></div>
+
+<div class="grid2" style="margin-top:14px">
+<div class="sub" id="quality"><h3>Quality is stars, 1 to 5 <a class="fc" href="#c-FC10">FC10</a></h3>
+<p>On every crop, product, catch and dish.</p>
+<div class="pipe" style="margin-top:8px"><div class="col">
+<div class="box"><b>The Uma's talent and rank</b><span class="note">FC17, FC18</span></div><div class="box"><b>Care or tending</b><span class="note">animal affection FC9, a tended block FC8</span></div>
+<div class="box"><b>The crop's level</b><span class="note">replanting your own seeds, FC8</span></div><div class="box"><b>The "well fed" boost</b><span class="note">the staff meal, FC15</span></div></div>
+<div class="ar">→</div><div class="col"><div class="box k-gold big"><span class="stars">★★★★★</span><b>1 to 5 stars</b></div></div><div class="ar">→</div>
+<div class="col"><div class="box"><b>The price</b>about +25% a star</div><div class="box"><b>The score</b>at shows and contests (FC22)</div></div></div>
+<h3>The price by stars</h3>
+<div class="mult" id="mult"></div><div class="mult-l" id="multl"></div>
+<p class="note">Read as 1★ = the base price and +25% of it per star above. The doc says "about +25% each" without saying whether 1★ is the base or whether the steps compound (compounded, 5★ would be ×2.44).</p></div>
+
+<div class="sub" id="expedition"><h3>An expedition's power <a class="fc" href="#c-FC12">FC12</a></h3>
+<p>A party of <b>3–4 Umas</b> sent to a region for <b>2–8 hours</b>; the numbers decide.</p>
+<div class="pipe" style="margin-top:8px"><div class="col">
+<div class="box k-tap"><b>The party's expedition ranks</b><span class="note">FC18</span></div><div class="box k-tap"><b>Their stats</b><span class="note">all five feed expeditions, FC17</span></div>
+<div class="box k-tap"><b>Supplies</b><span class="note">dishes from the Kitchen, FC14</span></div><div class="box k-tap"><b>Duo bonds</b><span class="note">a 5-heart pair's duo move, FC25</span></div></div>
+<div class="ar">→</div><div class="col"><div class="box k-real big"><b>Power</b>against the region's level<span class="note">regions open with the Farm's Rank, FC23</span></div></div><div class="ar">→</div>
+<div class="col"><div class="box k-gold big"><b>A success grade</b><span class="note">its steps are for M3's numbers</span></div></div><div class="ar">→</div>
+<div class="col"><div class="box k-grow"><b>Loot</b>monster materials for the Forge, rare seeds, new animals, story items</div><div class="box k-grow"><b>A log</b>a short story of what happened, from templates, the Umas' names filled in at runtime</div></div></div>
+<div class="callout info" style="margin-bottom:0"><p><b>Failure</b> brings the party home early with a little loot and <b>nothing lost</b>. A fight scene can come later (the shared stage could play one back); the numbers decide.</p></div></div>
+</div>
+</section>
+
+<!-- ROSTER -->
+<section class="card" id="roster"><h2>5 · The roster <a class="fc" href="#c-FC16">FC16</a>–<a class="fc" href="#c-FC19">FC19</a></h2>
+<div class="grid2">
+<div class="sub" id="recruit"><h3>Umas join the farm over time <a class="fc" href="#c-FC16">FC16</a></h3>
+<svg id="growth" viewBox="0 0 560 305" role="img" aria-label="An illustrative growth curve: beds step up from 3 at the start to 60 as the Dorm is upgraded, and the roster climbs under them as visitors ask to stay"></svg>
+<div class="legend"><span><i style="background:var(--accent)"></i>Beds: the Dorm's upgrades</span><span><i style="background:var(--info)"></i>Umas on the farm</span><span><i style="background:var(--success);border-radius:50%"></i>A visitor asks to stay</span></div>
+<p class="note">Illustrative: the doc sets only the start (3) and the beds' top (60); the steps and their timing are for M3.</p></div>
+<div class="sub"><h3>How an Uma comes to stay</h3>
+<div class="pipe" style="flex-direction:column"><div class="col">
+<div class="box k-tap"><b>The start</b>you pick 3 from a short list</div></div><div class="ar" style="transform:none">↓</div>
+<div class="col"><div class="box"><b>A visitor arrives</b>chapters, festivals and requests each bring one (FC24, FC22, FC20); Diary milestones now and then (FC21)</div></div><div class="ar" style="transform:none">↓</div>
+<div class="col"><div class="box k-grow"><b>Your affinity with her</b>chat with her and she asks to stay (FC26)</div></div><div class="ar" style="transform:none">↓</div>
+<div class="col"><div class="box k-gold"><b>A free bed</b>the Dorm's upgrades raise how many can live on the farm, 3 → 60</div></div></div>
+<p style="margin-top:8px">Every outfit on the release can join in the end. A bigger crew runs more places and more expeditions, so growing it is part of the progression, as the harvest sprites and Rune Factory's monsters were. <b>This changes FM6</b> ("every outfit from day one").</p>
+<p class="note">The alternative is FM6 as it stands: all 272 at once, with only slots as the limit. It's easier, but the roster stops being something you build.</p></div>
+</div>
+
+<div class="grid2" style="margin-top:14px">
+<div class="sub" id="talents"><h3>Talents from her stats <a class="fc" href="#c-FC17">FC17</a></h3>
+<p>Each Uma has a <b>talent grade, S to G, in each activity</b>, read from her master-data stats by one rule, the same for everyone. It's data, so no names are in git. A talent speeds her work and lifts quality.</p>
+<div class="grades" id="grades"></div>
+<div class="scroll"><table class="tg slim" id="tgrid"></table></div>
+<p class="note">The doc names four stats and gives expeditions "all five"; the fifth stat feeds expeditions only.</p>
+<p>Her running-style <b>calling</b> (FM7, built in F4) stays as her <b>favourite</b>: she works that line a little happier, bonding faster. It's no longer her only line.</p></div>
+<div class="sub" id="ranks"><h3>Six ranks per activity, earned by doing <a class="fc" href="#c-FC18">FC18</a></h3>
+<p>Fantasy Life's idea, with the farm's own names, held by each Uma rather than the player.</p>
+<div class="ladder" id="ladder"></div><div class="ladder-base">Each Uma climbs this ladder <b>in each activity</b>. ⚑ a challenge clears each rank-up.</div>
+<ul>
+<li><b>Work raises it:</b> each job adds rank points, as Craft Level does today.</li>
+<li><b>A challenge clears it:</b> each rank-up asks for one, for example ship 20 crops of 3 stars; reach Mine floor 10; win a contest entry.</li>
+<li><b>It pays:</b> faster work, better quality and deeper places (FC11).</li>
+<li>Today's single <b>Craft Level becomes her rank in her calling's line</b>, so the save carries over (FC31).</li></ul></div>
+</div>
+
+<div class="grid2" style="margin-top:14px">
+<div class="sub" id="ucard-s"><h3>The roster screens are uma-kit's album <a class="fc" href="#c-FC19">FC19</a></h3>
+<p>With talents and ranks as filters and sorts. Each Uma's card shows:</p>
+<div class="ucard"><svg viewBox="0 0 70 96" id="ufig" role="img" aria-label="An abstract Uma figure: a capsule body and a round head"></svg>
+<div class="rows">
+<div><span>Name</span><span>from master data, at runtime</span></div>
+<div><span>Ranks</span><span>Farming · Skilled; Ranch · Hand; Mining · Novice …</span></div>
+<div><span>Talents</span><span>Farming A · Ranch A · Cooking C · Mining D …</span></div>
+<div><span>Bonds</span><span>three pairs: <span class="hearts">♥♥♥<span class="off">♥♥</span></span> · <span class="hearts">♥♥<span class="off">♥♥♥</span></span> · <span class="hearts">♥<span class="off">♥♥♥♥</span></span></span></div>
+<div><span>Affinity</span><span class="hearts">♥♥♥♥♥♥<span class="off">♥♥♥♥</span></span></div>
+<div><span>Favourite</span><span>her calling's line</span></div></div></div>
+<p class="note">Values are examples.</p></div>
+<div class="sub"><h3>Why a roster you build</h3><ul>
+<li>A <b>wider crew</b> runs more places at once and more expeditions.</li>
+<li>Talents make <b>who goes where</b> a choice: a Stamina-strong Uma tends crops, a Power-strong one digs.</li>
+<li>Ranks make <b>keeping her on a line</b> pay, while switching stays free (Fantasy Life's free switching).</li>
+<li>Bonds make <b>who works beside whom</b> matter (FC25).</li></ul></div>
+</div>
+</section>
+
+<!-- GOALS -->
+<section class="card" id="goals"><h2>6 · Goals <a class="fc" href="#c-FC20">FC20</a>–<a class="fc" href="#c-FC24">FC24</a></h2>
+<div class="grid2">
+<div class="sub" id="board"><h3>The requests board <a class="fc" href="#c-FC20">FC20</a></h3>
+<p>Townsfolk post requests at a premium in gold, sometimes with a recruit, a recipe or an animal. <b>Three to five are open</b> at a time, refreshed daily. This <b>replaces the spec's game orders (FS4–FS7)</b>: the same "something to aim at", from inside the farm.</p>
+<div class="board">
+<div class="notecard"><b>10 eggs, 2 stars or better</b>by Sunday<div class="rw">gold, at a premium</div></div>
+<div class="notecard"><b>6 river fish</b>by Friday<div class="rw">gold · a recipe</div></div>
+<div class="notecard"><b>3 dishes, 3 stars or better</b>by Saturday<div class="rw">gold · a recruit</div></div>
+<div class="notecard"><b>20 ore</b>by Thursday<div class="rw">gold · an animal</div></div></div>
+<p class="note">The first is the doc's example; the others show the reward kinds.</p></div>
+<div class="sub" id="diary"><h3>The Farm Diary is the achievements <a class="fc" href="#c-FC21">FC21</a></h3>
+<div class="grid3" style="gap:8px">
+<div class="box"><b>Collections</b>every crop, product, fish, ore, dish and good, each shipped once<div class="bar"><i style="width:38%"></i></div><span class="note">e.g. 38%</span></div>
+<div class="box"><b>Milestones</b>gold shipped, Umas recruited, ranks reached, contests won</div>
+<div class="box"><b>Records</b>the biggest fish, the best dish score</div></div>
+<p style="margin-top:8px">Milestones pay <b>gold, decorations, and now and then a recruit</b>. The Diary also keeps festival trophies (FC22) and the pairs' conversations to reread (FC27).</p></div>
+</div>
+
+<h3 id="festivals">One festival a week, on Saturday <a class="fc" href="#c-FC22">FC22</a></h3>
+<p>Each season's own, with your entries scored against <b>two rival farms</b>. Rivals' scores are set by the season and your Farm Rank, so they stay a match. Prizes are gold, decorations, a trophy for the Diary, and often a recruit. The Harvest Cup is a light nod to who the Umas are; uma-racer stays the racing game.</p>
+<div class="scroll"><table id="festt"><tr><th>Season</th><th>Festival</th><th>Your entry</th><th>Scored by</th></tr></table></div>
+
+<div class="grid2" style="margin-top:14px">
+<div class="sub" id="farmrank"><h3>The Farm's Rank <a class="fc" href="#c-FC23">FC23</a></h3>
+<div class="pipe"><div class="col"><div class="box">gold shipped</div><div class="box">the Diary</div><div class="box">festivals</div><div class="box">chapters</div></div><div class="ar">→</div>
+<div class="col"><div class="box k-grow big"><b>Farm Rank</b>the farm's own level, in the account bar</div></div><div class="ar">→</div>
+<div class="col"><div class="box"><b>Land</b>new plot blocks and new places</div><div class="box"><b>Buildings</b>the Coop, the Barn, the Dorm's rooms, the Restaurant</div><div class="box"><b>Regions</b>higher-level regions for expeditions</div></div></div></div>
+<div class="sub"><h3>The story, light and present <a class="fc" href="#c-FC24">FC24</a></h3>
+<ul><li><b>The premise:</b> the trainer takes over an overgrown countryside farm where Umas spend their off-season, and brings it back to life with them.</li>
+<li><b>Eight chapters</b>, each a short <b>goal list</b> of 3–6 goals with a scene at its start and end.</li>
+<li><b>The town's cast is original:</b> the mayor, the shopkeepers, the rival farmers. They aren't Umas, so their lines can live in git.</li>
+<li><b>Umas appear in roles filled at runtime:</b> "your first hand", "your best cook", "the Uma you're closest to". Their names come from master data and never from git.</li></ul></div>
+</div>
+
+<h3 id="chapters">The eight chapters, and what each opens <a class="fc" href="#c-FC24">FC24</a></h3>
+<div class="strip" id="chapstrip" style="--n:8"></div>
+<div class="callout"><p><b>Drawn here, not settled by the doc:</b> the pills are FC32's milestones. Chapters 2–8 arrive in M6, but the ranch, mining, the Kitchen and expeditions they open arrive in M5, so in M5 those are open without their chapter. The ranch's buildings and the Restaurant are also opened by the Farm's Rank (FC23), and the sea by a boat upgrade and by rank (FC11): which gate wins isn't said.</p></div>
+</section>
+
+<!-- RELATIONSHIPS -->
+<section class="card" id="rel"><h2>7 · Relationships <a class="fc" href="#c-FC25">FC25</a>–<a class="fc" href="#c-FC27">FC27</a></h2>
+<div class="sub" id="bonds"><h3>Bonds grow by working together <a class="fc" href="#c-FC25">FC25</a></h3>
+<div class="grid2" style="align-items:center">
+<svg id="bondsvg" viewBox="0 0 520 210" role="img" aria-label="Two abstract Umas with five hearts between them; each heart opens a conversation; at three hearts they work 10% faster side by side; at five they have a duo move on expeditions"></svg>
+<div><p><b>What grows a bond:</b> two Umas earn bond points when they</p>
+<div class="grid2" style="gap:6px"><div class="box">work the same place at the same time</div><div class="box">share an expedition party</div><div class="box">share a festival team</div><div class="box">eat the same staff meal</div></div>
+<p style="margin-top:8px"><b>A pair climbs five hearts.</b> Each level opens a short conversation (FC27).</p>
+<ul><li><b>3 hearts or more:</b> the pair works <b>10% faster</b> side by side.</li><li><b>5 hearts:</b> on an expedition, a <b>duo move</b> lifts the party's power (FC12).</li></ul></div></div></div>
+
+<div class="grid2" style="margin-top:14px">
+<div class="sub" id="affinity"><h3>Your affinity with each Uma <a class="fc" href="#c-FC26">FC26</a></h3>
+<p>Zero to ten hearts, from three things. It's Friends of Mineral Town's hearts, aimed at the crew.</p>
+<div class="pipe"><div class="col">
+<div class="box k-tap"><b>A daily chat</b>tap her, and she says a line</div><div class="box k-tap"><b>A gift</b>her favourite things follow her talents and calling</div><div class="box k-tap"><b>Praise</b>after a good job</div></div>
+<div class="ar">→</div><div class="col"><div class="box big"><b>Affinity</b><span class="hearts" style="font-size:15px">♥♥♥♥♥♥<span class="off">♥♥♥♥</span></span><span class="note">0 to 10</span></div></div><div class="ar">→</div>
+<div class="col"><div class="box k-grow"><b>Her story beats</b>a few short personal scenes, written from templates</div><div class="box k-gold"><b>A visitor asks to stay</b>it decides when (FC16)</div></div></div></div>
+<div class="sub" id="talk"><h3>How a conversation is chosen <a class="fc" href="#c-FC27">FC27</a></h3>
+<div class="pipe"><div class="col"><div class="box"><b>The place</b>lines about the mine at the Mine</div><div class="box"><b>The bond level</b>1 to 5 hearts</div><div class="box"><b>Each Uma's temperament</b>from her master data: her calling, best distance and top stat</div></div>
+<div class="ar">→</div><div class="col"><div class="box k-real"><b>A template</b>3–6 lines, with slots for the two Umas</div><div class="box" style="font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace">{A}: Another seam. You first?<br>{B}: You found it. You take it.<br>{A}: Together, then.</div></div>
+<div class="ar">→</div><div class="col"><div class="box k-grow"><b>Names filled at runtime</b>from master data, never from git</div><div class="box"><b>Shown</b>as a chat bubble over them while they work; kept in the Diary to reread</div></div></div>
+<p class="note">The template lines are an example. Scale: this covers every pair, 272 outfits make 36,856, and keeps the rule that no outfit or character names go in git. <b>Later, optional:</b> hand-written scenes for particular pairs would be private content, authored in uma-platform's private <code>content/</code> like the sprites.</p></div>
+</div>
+</section>
+
+<!-- MAP -->
+<section class="card" id="map"><h2>8 · How the screens hold it <a class="fc" href="#c-FC28">FC28</a><a class="fc" href="#c-FC29">FC29</a><a class="fc" href="#c-FC30">FC30</a></h2>
+<div class="mapgrid">
+<div><svg id="mapsvg" viewBox="0 0 330 600" role="img" aria-label="A portrait schematic of the farm map: the account bar with the calendar and the Farm Rank; the gathering rows, each place with its station; the ranch; the workshops; the yard; the town edge; and the bottom bar Farm, Roster, Diary, Menu"></svg>
+<p class="note" style="text-align:center">A schematic, not the art. Rows top to bottom in the doc's table order.</p></div>
+<div>
+<h3 style="margin-top:0">The farm map grows from FR5's rows <a class="fc" href="#c-FC28">FC28</a></h3>
+<div class="scroll"><table class="slim"><tr><th>Row</th><th>Places</th></tr>
+<tr><td class="id">Gathering</td><td>Fields, Mine, Forest, Fishery, Monster Den, each with its station</td></tr>
+<tr><td class="id">The ranch</td><td>Coop, Barn</td></tr>
+<tr><td class="id">Workshops</td><td>Kitchen, Restaurant, Forge</td></tr>
+<tr><td class="id">The yard</td><td>The shipping bin, the board, the Dorm, the Warehouse, the Gate</td></tr>
+<tr><td class="id">The town edge</td><td>The shop, the festival ground, the expedition post</td></tr></table></div>
+<p>It scrolls up and down as FR6 says. The <b>calendar and the Farm Rank</b> sit in the account bar.</p>
+<h3>One tap away <a class="fc" href="#c-FC29">FC29</a></h3>
+<p>The bottom bar is <b>Farm · Roster · Diary · Menu</b>.</p>
+<ul><li>the board, the shop and the calendar open from the yard;</li><li>expeditions open from the expedition post.</li></ul>
+<h3>The help is short <a class="fc" href="#c-FC30">FC30</a></h3>
+<p>Each place has a help button; chapter goals teach the rest. There's no tutorial wall.</p>
+<div class="callout"><p><b>Drawn here, not settled by the doc:</b></p><ul>
+<li>Stations: the doc names three (a mill for Fields, a smelter for the Mine, a smokehouse for the Fishery). The Forest's and the Monster Den's are drawn dashed.</li>
+<li>The shop: FC28 puts it on the town edge, FC29 says it opens from the yard. The calendar sits in the account bar (FC28) and also opens from the yard (FC29).</li></ul></div>
+</div></div>
+</section>
+
+<!-- WHAT CHANGES -->
+<section class="card" id="changes"><h2>9 · What changes in what's built and planned <a class="fc" href="#c-FC31">FC31</a><a class="fc" href="#c-FC32">FC32</a></h2>
+<p><b>The save and rules carry over; the content is re-authored.</b></p>
+<div class="scroll"><table id="chgt"><tr><th>Piece</th><th>Kept</th><th>Changed</th><th></th></tr></table></div>
+<div class="callout info"><p><b>The save:</b> a save version with its migration carries today's saves over. Craft Levels become ranks, and the Warehouse's materials are refunded as gold at their price. The production-save rules hold.</p></div>
+
+<h3 id="order" style="font-size:15px;margin-top:20px">The order <a class="fc" href="#c-FC32">FC32</a></h3>
+<p>Each step is playable before the next.</p>
+<div class="ms" id="msstrip"></div>
+<p class="note" style="margin-top:8px">The minigames' rules (FR22) and the farm kit's contract (FR16) can start in M4.</p>
+</section>
+
+<!-- CALLS -->
+<section class="card" id="calls"><h2>Calls</h2><div class="scroll"><table id="callt"><tr><th>Id</th><th>Call</th><th>On this page</th></tr></table></div></section>
+
+<!-- QUESTIONS -->
+<section class="card" id="questions"><h2>Questions for you</h2>
+<p>Each has a recommended answer; accepting it or changing it is enough. Tap <b>Accept</b> or <b>Change</b> on each (or accept them all), then copy your answers.</p>
+<div class="qtools"><button class="main" id="qall">Accept all recommended</button><button id="qclear">Clear</button><span class="note" id="qcount"></span></div>
+<div class="qs" id="qs"></div>
+<h3>Your answers, ready to paste</h3>
+<textarea id="qout" readonly></textarea>
+<div class="qtools"><button class="main" id="qcopy">Copy answers</button><span class="note" id="qcopied"></span></div>
+</section>
+</main>
+
+<script>
+'use strict';
+const $ = (s) => document.querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent, text) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; }
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+const fc = (id) => `<a class="fc" href="#c-${id}">${id}</a>`;
+const fcs = (ids) => ids.map(fc).join(' ');
+const txt = (g, x, y, s, a = {}) => el('text', Object.assign({ x, y, fill: 'var(--ink)', 'font-family': 'system-ui', 'font-size': 12 }, a), g, s);
+// Invented body colours for abstract figures (no character art).
+const HUES = ['#e07a5f', '#3d9a8b', '#7d5ba6', '#d9a034', '#4a8fd0', '#c2577f'];
+// A figure: a coloured capsule body and a round head. Foot at (x, y).
+function figure(g, x, y, color, o = {}) {
+  const s = o.s || 1, f = el('g', { transform: `translate(${x},${y}) scale(${(o.dir || 1) * s},${s})` }, g);
+  el('ellipse', { cx: 0, cy: 0, rx: 8, ry: 2.8, fill: 'var(--shadow)' }, f);
+  el('rect', { x: -4, y: -6, width: 3.4, height: 6, rx: 1.5, fill: 'var(--ink-soft)' }, f);
+  el('rect', { x: 0.6, y: -6, width: 3.4, height: 6, rx: 1.5, fill: 'var(--ink-soft)' }, f);
+  el('rect', { x: -6, y: -22, width: 12, height: 18, rx: 6, fill: color }, f);
+  el('circle', { cx: 0, cy: -27.5, r: 6.2, fill: 'var(--head)', stroke: color, 'stroke-width': 1.6 }, f);
+  return f;
+}
+const HEART = 'M0,7 C-13,-2 -9,-13 0,-5 C9,-13 13,-2 0,7 Z';
+
+// ---------- 1 · the hero loop ----------
+const KIND = { tap: ['var(--info-wash)', 'var(--info)'], real: ['var(--real-wash)', 'var(--real)'], gold: ['var(--accent-wash)', 'var(--accent)'], grow: ['var(--success-wash)', 'var(--success)'] };
+const NODES = [
+  { t: 'Spend', k: 'tap', n: "seeds, feed, animals, tool and building upgrades, land, beds for new Umas, recipes, decorations", kl: 'taps · you', f: 'FC2', d: ['seeds · feed · animals', 'tool and building upgrades', 'land · beds for new Umas', 'recipes · decorations'] },
+  { t: 'Plan', k: 'tap', n: "plant plots; assign Umas to tend, ranch, mine, fish, forage, cook; send a party; play a workshop", kl: 'taps · you', f: 'FC4 · FC8', d: ['plant plots', 'assign Umas: tend, ranch,', 'mine, fish, forage, cook', 'send a party · play a workshop'] },
+  { t: 'Work', k: 'real', n: "Umas walk to their jobs, minutes to hours; pairs build bonds; ranks grow", kl: 'real time · app closed', f: 'FC6', d: ['Umas walk to their jobs', 'minutes to hours', 'pairs build bonds', 'ranks grow'] },
+  { t: 'Collect', k: 'tap', n: "Ready bubbles, harvests, products, catches, ore, expedition loot", kl: 'taps · you', f: 'FC4', d: ['Ready bubbles · harvests', 'products · catches · ore', 'expedition loot'] },
+  { t: 'Ship', k: 'gold', n: "drop anything sellable, or keep it for cooking, requests and festivals", kl: 'the bin · any time', f: 'FC3', d: ['drop anything sellable', 'or keep it for cooking,', 'requests and festivals'] },
+  { t: '17:00 payout', k: 'gold', n: "base price × quality × the season's demand, with the day's summary", kl: 'once a day · local', f: 'FC3 · FC10', d: ['base price × quality', '× the season\'s demand', 'with the day\'s summary'] },
+  { t: 'Gold', k: 'gold', n: "also from the board, the Restaurant and festival prizes; no premium currency", kl: 'the farm\'s currency', f: 'FC2', d: ['also: the board, the', 'Restaurant, festival prizes', 'no premium currency'] },
+];
+(() => {
+  const s = $('#hero');
+  const defs = el('defs', {}, s);
+  const mk = (id, c) => { const m = el('marker', { id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs); el('path', { d: 'M0,0 L10,5 L0,10 z', fill: c }, m); };
+  mk('arG', 'var(--success)');
+  const cx = 420, cy = 318, rx = 300, ry = 246, W = 214, H = 112, N = NODES.length;
+  el('ellipse', { cx, cy, rx, ry, fill: 'none', stroke: 'var(--track)', 'stroke-width': 18 }, s);
+  // chevrons, clockwise, at the middle of each visible stretch of track between two nodes
+  const at = (deg) => { const a = deg * Math.PI / 180; return { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a), a }; };
+  const centres = NODES.map((_, i) => at(-90 + i * 360 / N));
+  const hidden = (p) => centres.some((c) => Math.abs(p.x - c.x) < W / 2 + 4 && Math.abs(p.y - c.y) < H / 2 + 4);
+  const pos = [];
+  NODES.forEach((n, i) => {
+    const a = (-90 + i * 360 / N) * Math.PI / 180, x = cx + rx * Math.cos(a), y = cy + ry * Math.sin(a);
+    pos.push({ x, y });
+    const g = el('g', { transform: `translate(${(x - W / 2).toFixed(1)},${(y - H / 2).toFixed(1)})` }, s);
+    el('title', {}, g, `${n.t}: ${n.d.join(' ')}`);
+    el('rect', { x: 0, y: 0, width: W, height: H, rx: 12, fill: KIND[n.k][0], stroke: KIND[n.k][1], 'stroke-width': 1.6 }, g);
+    txt(g, 12, 22, n.t, { 'font-size': 16, 'font-weight': 700 });
+    txt(g, W - 10, 21, n.f, { 'font-size': 10.5, 'text-anchor': 'end', fill: 'var(--ink-faint)', 'font-family': 'ui-monospace,Menlo,monospace', 'font-weight': 700 });
+    txt(g, 12, 39, n.kl, { 'font-size': 11.5, 'font-weight': 700, fill: KIND[n.k][1] });
+    n.d.forEach((l, j) => txt(g, 12, 58 + j * 15, l, { 'font-size': 12, fill: 'var(--ink-soft)' }));
+  });
+  const chevrons = () => {
+  for (let i = 0; i < N; i++) {
+    const a0 = -90 + i * 360 / N, a1 = a0 + 360 / N, free = [];
+    for (let d = a0; d <= a1; d += 0.5) if (!hidden(at(d))) free.push(d);
+    if (!free.length) continue;
+    const p = at((free[0] + free[free.length - 1]) / 2);
+    const rot = Math.atan2(ry * Math.cos(p.a), -rx * Math.sin(p.a)) * 180 / Math.PI;
+    el('path', { d: 'M-6,-8 L5,0 L-6,8', fill: 'none', stroke: 'var(--ink-soft)', 'stroke-width': 3.2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', transform: `translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) rotate(${rot.toFixed(1)})` }, s);
+  }
+  };
+  chevrons();
+  // centre
+  txt(s, cx, cy - 46, 'FC1', { 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 700, fill: 'var(--ink-faint)', 'font-family': 'ui-monospace,Menlo,monospace' });
+  txt(s, cx, cy - 16, 'A farm day', { 'text-anchor': 'middle', 'font-size': 28, 'font-weight': 800 });
+  txt(s, cx, cy + 12, 'about five minutes of taps,', { 'text-anchor': 'middle', 'font-size': 14, fill: 'var(--ink-soft)' });
+  txt(s, cx, cy + 32, 'then hours of the Umas\' work', { 'text-anchor': 'middle', 'font-size': 14, fill: 'var(--ink-soft)' });
+  txt(s, cx, cy + 62, 'one payout a day, at 17:00', { 'text-anchor': 'middle', 'font-size': 12, fill: 'var(--ink-faint)' });
+  // grow
+  const gx = 858, gy = 128, gw = 196, gh = 384;
+  el('rect', { x: gx, y: gy, width: gw, height: gh, rx: 14, fill: KIND.grow[0], stroke: KIND.grow[1], 'stroke-width': 1.6 }, s);
+  txt(s, gx + 14, gy + 26, 'Grow', { 'font-size': 18, 'font-weight': 800 });
+  txt(s, gx + 14, gy + 44, 'branches off the loop', { 'font-size': 11.5, 'font-weight': 700, fill: 'var(--success)' });
+  [['Farm Rank', 'FC23'], ['Uma ranks', 'FC18'], ['chapters', 'FC24'], ['the Diary', 'FC21'], ['festivals', 'FC22'], ['bonds and conversations', 'FC25–FC27']].forEach(([a, b], j) => {
+    const y = gy + 72 + j * 40;
+    el('circle', { cx: gx + 18, cy: y - 4, r: 4, fill: 'var(--success)' }, s);
+    txt(s, gx + 30, y, a, { 'font-size': 13, 'font-weight': 700 });
+    txt(s, gx + 30, y + 15, b, { 'font-size': 10.5, fill: 'var(--ink-faint)', 'font-family': 'ui-monospace,Menlo,monospace', 'font-weight': 700 });
+  });
+  txt(s, gx + 14, gy + gh - 34, 'It opens land, buildings,', { 'font-size': 11.5, fill: 'var(--ink-soft)' });
+  txt(s, gx + 14, gy + gh - 18, 'places, regions, visitors', { 'font-size': 11.5, fill: 'var(--ink-soft)' });
+  // branches into Grow: from Work and from Collect
+  const work = pos[2], col = pos[3], plan = pos[1];
+  el('path', { d: `M${work.x + W / 2 + 2},${work.y} L${gx - 3},${work.y}`, stroke: 'var(--success)', 'stroke-width': 2.2, 'stroke-dasharray': '6 5', fill: 'none', 'marker-end': 'url(#arG)' }, s);
+  el('path', { d: `M${col.x + W / 2 + 2},${col.y + 20} C ${gx - 60},${col.y + 20} ${gx - 60},${gy + gh - 40} ${gx - 3},${gy + gh - 40}`, stroke: 'var(--success)', 'stroke-width': 2.2, 'stroke-dasharray': '6 5', fill: 'none', 'marker-end': 'url(#arG)' }, s);
+  // Grow opens back into the plan
+  el('path', { d: `M${gx - 2},${plan.y + 10} L${plan.x + W / 2 + 3},${plan.y + 10}`, stroke: 'var(--success)', 'stroke-width': 2.4, fill: 'none', 'marker-end': 'url(#arG)' }, s);
+  txt(s, (gx + plan.x + W / 2) / 2, plan.y + 2, 'opens', { 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: 'var(--success)' });
+  // narrow version
+  $('#heroN').innerHTML = NODES.map((n) => `<li class="k-${n.k}"><b>${esc(n.t)}</b><span class="kl">${esc(n.kl)}</span><br>${esc(n.n)} <span class="note">${esc(n.f)}</span></li>`).join('');
+})();
+
+// ---------- 2 · references ----------
+const PILLARS = [
+  ['Core loop', 'Grow crops and raise animals, ship them for gold at the day\'s end, upgrade tools and the house', 'The same farm loop, plus dungeons that feed forging, cooking and crafting', 'Pick a "Life" (a class), do its work, rank it up, switch Lives freely'],
+  ['Activities', 'Farming, animals, a mine, fishing, foraging, cooking', 'Farming, monster barns, dungeons with real-time combat, mining, fishing, forging, crafting, cooking, chemistry', 'Twelve Lives: four fighting, three gathering (mine, wood, fish), five crafting'],
+  ['Time', 'A day clock and four 30-day seasons; crops and fish by season', 'Days and seasons; seasonal festivals', 'A day-night clock; little seasonal structure'],
+  ['Progression', 'Tool tiers (from ore), house upgrades, the shipping log, stamina items', 'Dozens of skills that each level by being done, crop levels from replanting, town development bought with points', 'Each Life climbs eight ranks through its masters\' challenges; "Bliss" points unlock comforts'],
+  ['Helpers', 'The harvest sprites: befriend them, then send them to water, harvest or tend the animals', 'Tamed monsters in barns produce items and help on the farm', 'Friends join your party; no dispatch'],
+  ['Goals', 'Few given; self-set targets, the shipping list, the seasons\' festivals', 'Story chapters, a requests board, town orders', 'Story chapters, Life challenges, requests'],
+  ['Competitions', 'A festival calendar: crop and animal shows, a cooking festival, races', 'Contests at festivals (cooking, fishing, monster shows)', 'Little'],
+  ['Relationships', 'Heart levels with villagers, from talking and gifts; heart events', 'Friendship from talking, gifts and requests; dates and events', 'Townsfolk become friends; light'],
+  ['Story', 'Minimal: restore the farm', 'A light main plot in chapters', 'A light, comic plot in chapters'],
+];
+(() => {
+  const t = $('#pillars');
+  PILLARS.forEach((r) => { const tr = document.createElement('tr'); tr.innerHTML = `<td class="id">${esc(r[0])}</td>${r.slice(1).map((c) => `<td>${esc(c)}</td>`).join('')}`; t.appendChild(tr); });
+  const TCL = [
+    ['Friends of Mineral Town', 'the farm and its day',
+      ['The daily shipping bin and its payout', 'The season calendar', 'Festivals with shows and contests', 'Helpers sent to do farm chores', 'Animal affection lifting product quality', 'Tool and building upgrades'],
+      ['The helpers are the whole roster of Umas', 'The player plants and harvests by tapping instead of walking the field'],
+      ['Stamina', 'Walking the farm in real time']],
+    ['Rune Factory 4', 'skills, quality, requests',
+      ['Many skills that level by doing', 'Crop quality that grows', 'A requests board', 'Contests at festivals', 'A light chaptered story'],
+      ['Dungeons and combat become expeditions: parties dispatched for hours and resolved by numbers'],
+      ['Real-time combat', 'Dungeon exploration']],
+    ['Fantasy Life', 'ranks per job',
+      ['Ranks per job, earned through challenges', 'Switching freely between jobs', 'Crafting as hands-on play (here, the workshops\' minigames, FR17)'],
+      ['Each Uma, not the player, holds the ranks: a roster of specialists instead of one hero'],
+      ['The player-character Lives', 'Party fights']],
+  ];
+  const g = $('#tcl');
+  TCL.forEach(([from, sm, tk, ch, lv]) => {
+    g.insertAdjacentHTML('beforeend', `<div class="from">${esc(from)}<small>${esc(sm)}</small></div>
+      <div><div class="lab" style="color:var(--success)">✓ Takes</div><ul class="tk">${tk.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>
+      <div><div class="lab" style="color:var(--accent)">↻ Changes</div><ul class="ch">${ch.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>
+      <div><div class="lab" style="color:var(--ink-faint)">– Leaves</div><ul class="lv">${lv.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>`);
+  });
+})();
+
+// ---------- 3 · time ----------
+const SEASONS = [
+  ['Spring', 'var(--spring)', 'Flower Show', 'your best crop of the season'],
+  ['Summer', 'var(--summer)', 'Fishing Derby', 'anglers sent for its 2 hours'],
+  ['Autumn', 'var(--autumn)', 'Cooking Contest', 'a dish cooked live in the Kitchen\'s game'],
+  ['Winter', 'var(--winter)', 'Animal Show', 'your best animal'],
+];
+(() => {
+  const D = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  $('#cal').innerHTML = SEASONS.map(([s, c, f, e], i) => `<div class="wk" style="--sc:${c}"><h3><i></i>${s}</h3><span class="wn">Week ${i + 1} of the year · one real week</span>
+    <div class="days">${D.map((d, j) => `<span class="${j === 5 ? 'sat' : ''}" title="${j === 5 ? f : ''}">${j === 5 ? '★' : d}</span>`).join('')}</div>
+    <div class="fest"><b>Sat · ${f}</b><small>${e}</small></div>
+    ${i === 3 ? '<div class="cup"><b>+ the Harvest Cup</b>, every 4th week: a team of 3 Umas in a short race. Its day isn\'t set.</div>' : ''}</div>`).join('');
+  $('#decides').innerHTML = [['Which seeds grow', 'FC8'], ['Which fish bite', 'FC11'], ['Which festival comes round', 'FC22'], ['Which goods are in demand', 'FC3']]
+    .map(([a, b]) => `<div class="box"><span class="note">A season decides</span><b>${a}</b>${fc(b)}</div>`).join('');
+  // the day bar
+  const pct = (h) => `${(h / 24 * 100).toFixed(2)}%`;
+  let h = '<div class="axis"></div>';
+  [0, 6, 12, 18, 24].forEach((t) => { h += `<span class="tick${t === 24 ? ' end' : ''}" style="left:${pct(t)}">${String(t).padStart(2, '0')}:00</span>`; });
+  const bar = (top, a, b, color, label) => `<span class="bl" style="top:${top - 17}px;left:${pct(a)}">${label}</span><span class="bar" style="top:${top}px;left:${pct(a)};width:${pct(b - a)};background:${color}"></span>`;
+  h += bar(50, 8, 14, 'color-mix(in srgb,var(--real) 55%,transparent)', 'an expedition, 6 h (2–8 h)');
+  h += bar(90, 8.2, 12.2, 'color-mix(in srgb,var(--spring) 60%,transparent)', 'a tended block grows, hours');
+  h += bar(130, 12.6, 16.6, 'color-mix(in srgb,var(--accent) 55%,transparent)', '"well fed", 4 h');
+  [8, 12.5, 21].forEach((t) => { h += `<span class="tap" style="left:${pct(t)}" title="taps"></span>`; });
+  h += `<div class="pay" style="left:${pct(17)}"><span>17:00 · the bin pays</span></div>`;
+  $('#daybar').innerHTML = h;
+})();
+
+// ---------- 4 · activities ----------
+const ACTROWS = [
+  ['Farming', 'Fields: plots in blocks', 'Buy seeds, tap to plant, tap to harvest', 'Tend: speed growth, lift quality', 'Crops, seeds back', 'Harvest sprites; crop levels'],
+  ['The ranch', 'Coop, Barn', 'Buy animals and feed', 'Care for them daily: affection', 'Eggs, milk, wool, by quality', 'Animal affection'],
+  ['Mining', 'The Mine, floor by floor', 'Pick the floor', 'Dig: a timed job', 'Ore, stone, gems', 'The mine\'s floors; the Miner Life'],
+  ['Fishing', 'Pond, River, then the Sea', 'Pick the spot', 'Fish: a timed job', 'Fish by spot and season', 'The angler; the fishing derby'],
+  ['Foraging', 'Forest, Hills', 'Pick the area', 'Gather: a timed job', 'Lumber, herbs, mushrooms, fruit', 'Foraging; the Woodcutter Life'],
+  ['Workshops', 'Kitchen, Restaurant, Forge', 'Play the minigame (FR17–FR21)', 'Assist: their rank lifts the yield', 'Dishes, gold, tools and goods', 'Cooking and forging, hands-on'],
+  ['Expeditions', 'Regions on a map', 'Pick a region and a party, pack supplies', 'Go for hours; numbers decide', 'Monster materials, rare seeds, animals, story items', 'Dungeons and fighting Lives, as dispatch'],
+];
+(() => {
+  const t = $('#acttable');
+  ACTROWS.forEach((r) => { const tr = document.createElement('tr'); tr.innerHTML = `<td class="id">${esc(r[0])}</td>${r.slice(1).map((c, i) => `<td>${i === 1 && r[0] === 'Workshops' ? '<b>' + esc(c) + '</b>' : esc(c)}</td>`).join('')}`; t.appendChild(tr); });
+})();
+// small glyphs, abstract
+const GLYPH = {
+  farm: '<rect x="4" y="24" width="26" height="6" rx="2" fill="var(--soil,#b98b5b)"/><path d="M17 24 V12" stroke="var(--spring)" stroke-width="2.4" stroke-linecap="round"/><ellipse cx="11.5" cy="13" rx="6" ry="3.4" fill="var(--spring)" transform="rotate(-25 11.5 13)"/><ellipse cx="22.5" cy="10" rx="6" ry="3.4" fill="var(--spring)" transform="rotate(25 22.5 10)"/>',
+  ranch: '<path d="M5 16 L17 6 L29 16 V30 H5 Z" fill="var(--autumn)"/><rect x="13" y="19" width="8" height="11" fill="var(--panel)"/><ellipse cx="26" cy="27" rx="4" ry="5" fill="var(--head)" stroke="var(--ink-faint)"/>',
+  mine: '<path d="M6 12 Q17 2 28 12" stroke="var(--ink-soft)" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M17 7 L17 31" stroke="var(--summer)" stroke-width="3" stroke-linecap="round"/><path d="M24 26 l3 -4 l3 4 l-3 4 z" fill="var(--info)"/>',
+  fish: '<ellipse cx="15" cy="17" rx="10" ry="6" fill="var(--winter)"/><path d="M24 17 L32 11 V23 Z" fill="var(--winter)"/><circle cx="10" cy="15.5" r="1.5" fill="var(--panel)"/><path d="M3 28 Q9 25 15 28 T27 28" stroke="var(--winter)" stroke-width="1.6" fill="none" opacity=".6"/>',
+  forage: '<path d="M6 19 Q17 2 28 19 Z" fill="var(--autumn)"/><rect x="14" y="19" width="6" height="10" rx="2" fill="var(--head)" stroke="var(--ink-faint)"/><circle cx="12" cy="13" r="1.8" fill="var(--panel)"/><circle cx="20" cy="11" r="1.6" fill="var(--panel)"/>',
+  work: '<path d="M6 14 H28 L25 28 H9 Z" fill="var(--ink-soft)"/><path d="M28 16 H32" stroke="var(--ink-soft)" stroke-width="2.4" stroke-linecap="round"/><path d="M12 10 Q14 6 12 3 M17 10 Q19 6 17 3 M22 10 Q24 6 22 3" stroke="var(--danger)" stroke-width="1.6" fill="none"/>',
+  exp: '<path d="M9 31 V4" stroke="var(--ink-soft)" stroke-width="2.4" stroke-linecap="round"/><path d="M10 5 H28 L23 11 L28 17 H10 Z" fill="var(--real)"/><path d="M3 31 H22" stroke="var(--ink-faint)" stroke-width="2" stroke-linecap="round"/>',
+};
+const ACTS = [
+  { id: 'act-farming', n: 'Farming', g: 'farm', c: 'var(--spring)', pl: 'the Fields: plots in blocks · station: a mill for flour', you: 'Buy seeds, tap a plot to plant, tap it to harvest', umas: 'An Uma assigned to a block of plots tends it: it grows faster, and its quality rises with her talent and rank', out: 'Crops, and sometimes seeds back',
+    more: ['Replanting your own seeds raises that crop\'s level over time (Rune Factory\'s idea), so a line of crops gets better the longer you keep it'], f: ['FC7', 'FC8', 'FC10'] },
+  { id: 'act-ranch', n: 'The ranch', g: 'ranch', c: 'var(--autumn)', pl: 'the Coop, the Barn', you: 'Buy chickens, cows and sheep, and their feed', umas: 'An Uma on the ranch is their carer for the day', out: 'Eggs, milk and wool, by quality',
+    more: ['Her talent and rank, and days in a row with the same carer, lift each animal\'s affection from 0 to 10 hearts', 'Affection sets the product\'s quality', 'Animals with 10 hearts can enter the Animal Show (FC22)', 'Friends of Mineral Town\'s care loop, run by the roster'], f: ['FC9', 'FC10'] },
+  { id: 'act-mining', n: 'Mining', g: 'mine', c: 'var(--ink-faint)', pl: 'the Mine, floor by floor · station: a smelter for ore', you: 'Pick the floor', umas: 'Dig: a timed job', out: 'Ore, stone, gems',
+    more: ['New floors open by the place\'s best Uma\'s rank or by a chapter', 'Deeper means rarer: gems on low floors'], f: ['FC7', 'FC11'] },
+  { id: 'act-fishing', n: 'Fishing', g: 'fish', c: 'var(--winter)', pl: 'the Fishery: Pond, River, then the Sea · station: a smokehouse for fish', you: 'Pick the spot', umas: 'Fish: a timed job', out: 'Fish by spot and season',
+    more: ['New spots open by rank or by a chapter', 'Sea fish come from a boat (an upgrade)', 'The Fishing Derby is Summer\'s festival'], f: ['FC7', 'FC11'] },
+  { id: 'act-foraging', n: 'Foraging', g: 'forage', c: 'var(--summer)', pl: 'the Forest, the Hills', you: 'Pick the area', umas: 'Gather: a timed job', out: 'Lumber, herbs, mushrooms, fruit',
+    more: ['New areas open by rank or by a chapter'], f: ['FC7', 'FC11'] },
+  { id: 'act-expeditions', n: 'Expeditions', g: 'exp', c: 'var(--real)', pl: 'regions on a map: a ruined fort, a cave, an old racetrack in the hills', you: 'Pick a region and a party of 3–4, pack supplies', umas: 'Go for 2–8 hours; their numbers decide', out: 'Monster materials for the Forge, rare seeds, new animals, story items',
+    more: ['A success grade with loot and a short log (see the power, below)', 'Failure: home early, a little loot, nothing lost', 'Higher-level regions open with the Farm\'s Rank (FC23)'], f: ['FC12'] },
+];
+(() => {
+  const g = $('#acts');
+  const card = (a, wide) => `<article class="act${wide ? ' wide' : ''}" id="${a.id}" style="--ac:${a.c}"><header><svg viewBox="0 0 34 34" aria-hidden="true">${GLYPH[a.g]}</svg><div><h3>${esc(a.n)}</h3><span class="pl">${esc(a.pl)}</span></div></header>
+    <div class="${wide ? 'wbody' : ''}"><dl><dt>You do</dt><dd>${esc(a.you)}</dd><dt>Umas do</dt><dd>${esc(a.umas)}</dd><dt>Comes out</dt><dd>${esc(a.out)}</dd></dl>
+    <ul>${a.more.map((m) => `<li>${esc(m)}</li>`).join('')}</ul></div><div class="fcs">${fcs(a.f)}</div></article>`;
+  g.innerHTML = ACTS.slice(0, 5).map((a) => card(a)).join('') +
+  `<article class="act wide" id="act-workshops" style="--ac:var(--accent)"><header><svg viewBox="0 0 34 34" aria-hidden="true">${GLYPH.work}</svg><div><h3>Workshops</h3><span class="pl">the Kitchen, the Restaurant, the Forge · you play them; Umas assist</span></div></header>
+    <dl><dt>You do</dt><dd><b>Play the minigame</b> (FR17–FR21)</dd><dt>Umas do</dt><dd>Assist: their rank lifts the yield</dd><dt>Comes out</dt><dd>Dishes, gold, tools and goods</dd></dl>
+    <div class="wsg">
+      <div class="box"><b>The Kitchen · cooking ${fc('FC14')}</b>Its cooking game turns crops, products and fish into dishes: to sell; to pack as expedition supplies; to enter in the Cooking Contest; and the <b style="display:inline">staff meal</b>.</div>
+      <div class="box"><b>The Restaurant · serving ${fc('FC14')}</b>Its serving game <b style="display:inline">earns gold</b> from guests for the dishes you serve them. It's the best price for a dish, and its tips are its score. <span class="pill wait">Amends FR19</span> the crew's boost moves to the staff meal, because selling is now the loop's spine.</div>
+      <div class="box"><b>The Forge · merge ${fc('FC13')}</b>The merge game (FR20, your answer) turns ore, gems and monster materials into <b style="display:inline">tool upgrades</b> (a better hoe or watering can for planting; a pick, rod or axe set for each place, lifting all its jobs) and <b style="display:inline">goods</b> (jewellery and fittings that sell well). Fantasy Life's Blacksmith, played as merge.</div>
+    </div>
+    <div class="pipe" style="margin-top:10px"><div class="col"><div class="box k-tap"><b>Cook in the Kitchen</b>one play</div></div><div class="ar">→</div><div class="col"><div class="box"><b>Serve the crew a meal</b>one tap</div></div><div class="ar">→</div><div class="col"><div class="box k-gold"><b>"Well fed" ${fc('FC15')}</b>×1.25 work speed for 4 hours; more for higher tiers (FR21). FR19's boost, kept.</div></div><div class="ar">→</div><div class="col"><div class="box"><b>Shared meals build bonds</b>Umas who eat the same staff meal earn bond points (FC25)</div></div></div>
+    <div class="fcs">${fcs(['FC13', 'FC14', 'FC15'])}</div></article>` + card(ACTS[5], true);
+  // star prices
+  const m = [1, 1.25, 1.5, 1.75, 2];
+  $('#mult').innerHTML = m.map((v) => `<div style="height:${(v / 2 * 100).toFixed(0)}%"><span>×${v.toFixed(2)}</span></div>`).join('');
+  $('#multl').innerHTML = m.map((_, i) => `<span>${'★'.repeat(i + 1)}</span>`).join('');
+})();
+
+// ---------- 5 · roster ----------
+(() => {
+  // growth curve, illustrative
+  const s = $('#growth'), X0 = 62, X1 = 540, Y0 = 250, Y1 = 46, VMAX = 64;
+  const x = (c) => X0 + (c / 8) * (X1 - X0), y = (v) => Y0 - v / VMAX * (Y0 - Y1);
+  el('line', { x1: X0, y1: Y0, x2: X1, y2: Y0, stroke: 'var(--hairline-strong)', 'stroke-width': 2 }, s);
+  el('line', { x1: X0, y1: Y0, x2: X0, y2: Y1, stroke: 'var(--hairline-strong)', 'stroke-width': 2 }, s);
+  [3, 60].forEach((v) => { el('line', { x1: X0 - 5, y1: y(v), x2: X1, y2: y(v), stroke: 'var(--hairline)', 'stroke-dasharray': '3 4' }, s); txt(s, X0 - 9, y(v) + 6, String(v), { 'text-anchor': 'end', 'font-size': 18, 'font-weight': 700 }); });
+  for (let c = 1; c <= 8; c++) txt(s, x(c - 0.5), Y0 + 22, String(c), { 'text-anchor': 'middle', 'font-size': 17, fill: 'var(--ink-soft)' });
+  txt(s, (X0 + X1) / 2, Y0 + 45, 'chapters, as the farm grows →', { 'text-anchor': 'middle', 'font-size': 17, fill: 'var(--ink-soft)' });
+  txt(s, 10, 20, 'Umas on the farm', { 'font-size': 17, fill: 'var(--ink-soft)' });
+  const BEDS = [3, 6, 10, 16, 24, 34, 46, 60];
+  let d = `M${x(0)},${y(BEDS[0])}`;
+  BEDS.forEach((b, i) => { d += ` L${x(i)},${y(b)} L${x(i + 1)},${y(b)}`; });
+  el('path', { d, fill: 'none', stroke: 'var(--accent)', 'stroke-width': 3 }, s);
+  // the roster climbs under the beds as visitors ask to stay (two shown a chapter)
+  const pts = [[0, 3]], joins = [];
+  BEDS.forEach((b, i) => { const prev = i ? BEDS[i - 1] : 3; if (i === 0) { pts.push([0.9, 3]); return; }
+    pts.push([i + 0.1, prev]); [0.4, 0.8].forEach((f, k) => { const v = prev + (b - prev) * (k + 1) / 2; pts.push([i + f, v]); joins.push([i + f, v]); }); pts.push([i + 0.95, b]); });
+  el('path', { d: 'M' + pts.map(([c, v]) => `${x(c).toFixed(1)},${y(v).toFixed(1)}`).join(' L'), fill: 'none', stroke: 'var(--info)', 'stroke-width': 3, 'stroke-linejoin': 'round' }, s);
+  joins.forEach(([c, v]) => el('circle', { cx: x(c), cy: y(v), r: 4.5, fill: 'var(--success)', stroke: 'var(--panel)', 'stroke-width': 1.5 }, s));
+  txt(s, x(0) + 8, y(3) - 26, 'you pick 3', { 'font-size': 17, 'font-weight': 700 });
+  txt(s, x(0) + 8, y(60) - 10, 'the Dorm\'s top: 60 beds', { 'font-size': 17, 'font-weight': 700 });
+  // talents
+  const GR = 'SABCDEFG'.split('');
+  $('#grades').innerHTML = GR.map((g, i) => `<span style="background:color-mix(in srgb,var(--info) ${Math.round(70 - i * 8.5)}%,var(--panel))">${g}</span>`).join('') + '<span style="border:0;font:12px system-ui;color:var(--ink-soft);padding-top:6px">best → least</span>';
+  const ST = ['Power', 'Stamina', 'Wit', 'Speed', 'The fifth stat'];
+  const MAP = [['Farming', [1]], ['The ranch', [1]], ['Mining', [0]], ['The Forge', [0]], ['Cooking (the Kitchen)', [2]], ['Fishing', [2]], ['Serving (the Restaurant)', [2]], ['Foraging', [3]], ['Expeditions', [0, 1, 2, 3, 4]]];
+  $('#tgrid').innerHTML = `<tr><th>Activity</th>${ST.map((x) => `<th>${x}</th>`).join('')}</tr>` + MAP.map(([a, on]) => `<tr><td class="id">${a}</td>${ST.map((_, i) => `<td>${on.includes(i) ? `<span class="dot${on.length > 1 ? ' all' : ''}" title="${ST[i]} → ${a}"></span>` : '<span class="dot no"></span>'}</td>`).join('')}</tr>`).join('');
+  // ranks ladder
+  const R = ['Novice', 'Hand', 'Skilled', 'Expert', 'Master', 'Legend'];
+  $('#ladder').innerHTML = R.map((r, i) => `<div class="rung" style="--i:${i};height:${28 + i * 14}%">${i ? '<span class="flag">⚑<span class="t"> challenge</span></span>' : ''}<b>${r}</b><small>${i + 1}</small></div>`).join('');
+  // roster card figure
+  figure($('#ufig'), 35, 90, HUES[1], { s: 2.4 });
+})();
+
+// ---------- 6 · goals ----------
+const FESTS = [
+  ['Spring', 'var(--spring)', 'Flower Show', 'Your best crop of the season', 'Its quality and level'],
+  ['Summer', 'var(--summer)', 'Fishing Derby', 'Anglers sent for the derby\'s 2 hours', 'The biggest catch'],
+  ['Autumn', 'var(--autumn)', 'Cooking Contest', 'A dish cooked live in the Kitchen\'s game', 'The dish\'s quality × the play\'s score'],
+  ['Winter', 'var(--winter)', 'Animal Show', 'Your best animal', 'Affection and product quality'],
+  ['Every 4th week', 'var(--accent)', 'Harvest Cup', 'A team of 3 Umas in a short race, run by their stats and bonds', 'A light race, played back on the stage'],
+];
+const CHAPS = [
+  ['The fields and the bin', ['farming', 'the bin']],
+  ['The ranch', ['the Coop, the Barn']],
+  ['The mine', ['mining']],
+  ['The Kitchen and the first festival', ['cooking', 'festivals']],
+  ['Expeditions', ['regions']],
+  ['The Restaurant', ['serving']],
+  ['The Forge and the sea', ['merge', 'sea fish']],
+  ['The Harvest Cup final', ['the race cup']],
+];
+(() => {
+  const t = $('#festt');
+  FESTS.forEach(([s, c, f, e, sc]) => { const tr = document.createElement('tr'); tr.innerHTML = `<td class="id"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c};margin-right:6px"></span>${esc(s)}</td><td><b>${esc(f)}</b></td><td>${esc(e)}</td><td>${esc(sc)}</td>`; t.appendChild(tr); });
+  $('#chapstrip').innerHTML = CHAPS.map(([o, tags], i) => `<div class="chap"><span class="no">${i + 1}</span><b>${esc(o)}</b><div class="tags">${tags.map((x) => `<span class="pill">${esc(x)}</span>`).join('')}</div><span class="note">3–6 goals · a scene at start and end</span> <span class="pill ${i ? 'rt' : 'q'}">${i ? 'M6' : 'M4'}</span></div>`).join('');
+})();
+
+// ---------- 7 · bonds ----------
+(() => {
+  const s = $('#bondsvg');
+  figure(s, 52, 178, HUES[0], { s: 2.6 });
+  figure(s, 468, 178, HUES[2], { s: 2.6, dir: -1 });
+  txt(s, 52, 203, 'an Uma', { 'text-anchor': 'middle', 'font-size': 15, fill: 'var(--ink-soft)' });
+  txt(s, 468, 203, 'an Uma', { 'text-anchor': 'middle', 'font-size': 15, fill: 'var(--ink-soft)' });
+  el('path', { d: 'M100,118 Q260,70 420,118', fill: 'none', stroke: 'var(--hairline-strong)', 'stroke-width': 2, 'stroke-dasharray': '4 5' }, s);
+  for (let i = 0; i < 5; i++) {
+    const hx = 140 + i * 60, t = (hx - 100) / 320, hy = (1 - t) * (1 - t) * 118 + 2 * (1 - t) * t * 70 + t * t * 118;
+    el('path', { d: HEART, fill: 'var(--heart)', opacity: 0.45 + i * 0.13, transform: `translate(${hx},${hy}) scale(1.6)` }, s);
+    txt(s, hx, hy + 32, String(i + 1), { 'text-anchor': 'middle', 'font-size': 17, 'font-weight': 700 });
+    // a conversation bubble at each level
+    const by = hy - 40;
+    el('rect', { x: hx - 15, y: by - 11, width: 30, height: 18, rx: 8, fill: 'var(--panel)', stroke: 'var(--ink-faint)', 'stroke-width': 1.2 }, s);
+    el('path', { d: `M${hx - 4},${by + 7} L${hx},${by + 13} L${hx + 3},${by + 7}`, fill: 'var(--panel)', stroke: 'var(--ink-faint)', 'stroke-width': 1.2 }, s);
+    txt(s, hx, by + 3, '…', { 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 700, fill: 'var(--ink-soft)' });
+  }
+  const tag = (x0, y0, w, label, fill) => { el('rect', { x: x0 - w / 2, y: y0 - 16, width: w, height: 25, rx: 12, fill, stroke: 'none' }, s); txt(s, x0, y0 + 2, label, { 'text-anchor': 'middle', 'font-size': 15, 'font-weight': 800, fill: '#1b1305' }); };
+  tag(240, 176, 142, '3+ · 10% faster', 'color-mix(in srgb,var(--success) 55%,var(--panel))');
+  tag(382, 176, 116, '5 · duo move', 'color-mix(in srgb,var(--accent) 70%,var(--panel))');
+  txt(s, 260, 20, 'each heart opens a conversation', { 'text-anchor': 'middle', 'font-size': 16, fill: 'var(--ink-soft)' });
+})();
+
+// ---------- 8 · the map ----------
+(() => {
+  const s = $('#mapsvg');
+  el('rect', { x: 4, y: 4, width: 322, height: 592, rx: 28, fill: 'var(--screen)', stroke: 'var(--device)', 'stroke-width': 7 }, s);
+  // account bar
+  el('rect', { x: 14, y: 16, width: 302, height: 40, rx: 12, fill: 'var(--panel)', stroke: 'var(--hairline-strong)' }, s);
+  el('rect', { x: 20, y: 21, width: 178, height: 30, rx: 8, fill: 'color-mix(in srgb,var(--spring) 18%,var(--panel))', stroke: 'var(--spring)' }, s);
+  txt(s, 28, 33, 'Spring · Wed', { 'font-size': 11, 'font-weight': 700 });
+  txt(s, 28, 46, 'Flower Show on Saturday', { 'font-size': 9.5, fill: 'var(--ink-soft)' });
+  el('rect', { x: 206, y: 21, width: 104, height: 30, rx: 8, fill: 'var(--success-wash)', stroke: 'var(--success)' }, s);
+  txt(s, 258, 40, 'Farm Rank 4', { 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 700 });
+  const G = [
+    ['Gathering, each with its station', 'var(--spring)', [['Fields', 'a mill'], ['Mine', 'a smelter'], ['Forest', 'station ?'], ['Fishery', 'a smokehouse'], ['Monster Den', 'station ?']]],
+    ['The ranch', 'var(--autumn)', [['Coop', 'Barn']]],
+    ['Workshops', 'var(--accent)', [['Kitchen', 'Restaurant', 'Forge']]],
+    ['The yard', 'var(--info)', [['Bin', 'Board', 'Dorm', 'Warehouse', 'Gate']]],
+    ['The town edge', 'var(--real)', [['Shop', 'Festival ground', 'Expedition post']]],
+  ];
+  let yy = 64;
+  G.forEach(([label, c, rows]) => {
+    yy += 16; txt(s, 18, yy, label, { 'font-size': 10.5, 'font-weight': 800, fill: 'var(--ink-soft)', 'letter-spacing': '.04em' });
+    yy += 5;
+    rows.forEach((r) => {
+      const gather = label.startsWith('Gathering');
+      const widths = gather ? [168, 126] : r.map(() => (296 - (r.length - 1) * 4) / r.length);
+      let xx = 17;
+      r.forEach((p, i) => {
+        const w = widths[i], dashed = p.includes('?');
+        el('rect', { x: xx, y: yy, width: w, height: 30, rx: 7, fill: i && gather ? 'var(--panel)' : `color-mix(in srgb,${c} 20%,var(--panel))`, stroke: c, 'stroke-width': 1.3, 'stroke-dasharray': dashed ? '4 3' : 'none' }, s);
+        const fs = r.length >= 5 ? 9.5 : 11.5;
+        txt(s, xx + w / 2, yy + 19, p, { 'text-anchor': 'middle', 'font-size': fs, 'font-weight': i && gather ? 500 : 700, fill: i && gather ? 'var(--ink-soft)' : 'var(--ink)' });
+        xx += w + 4;
+      });
+      yy += 36;
+    });
+  });
+  // scroll hint
+  el('rect', { x: 318, y: 90, width: 3, height: 120, rx: 1.5, fill: 'var(--ink-faint)', opacity: 0.6 }, s);
+  // bottom bar
+  const by = 540;
+  el('rect', { x: 14, y: by, width: 302, height: 44, rx: 12, fill: 'var(--panel)', stroke: 'var(--hairline-strong)' }, s);
+  ['Farm', 'Roster', 'Diary', 'Menu'].forEach((t, i) => {
+    const cx = 14 + 302 / 8 + i * 302 / 4;
+    if (i === 0) el('rect', { x: cx - 32, y: by + 6, width: 64, height: 32, rx: 9, fill: 'var(--accent-wash)', stroke: 'var(--accent)' }, s);
+    txt(s, cx, by + 27, t, { 'text-anchor': 'middle', 'font-size': 12, 'font-weight': i === 0 ? 800 : 600, fill: i === 0 ? 'var(--ink)' : 'var(--ink-soft)' });
+  });
+})();
+
+// ---------- 9 · changes and the order ----------
+const CHG = [
+  ['<code>uma-work</code>, slots, queues, Recall, Repeat (F4)', 'Yes', '—', ['ok', 'Kept']],
+  ['Save sync, revisions, safety copies (F3)', 'Yes', '—', ['ok', 'Kept']],
+  ['The places and the work screens (F5)', 'Yes', 'The places\' content and names (FC7)', ['ok', 'Kept, re-dressed']],
+  ['uma-rpg\'s materials and made items (F4, FM8)', 'Their engine', 'Replaced by the farm\'s own goods; uma-rpg\'s made items return only if parcels do', ['no', 'Replaced']],
+  ['Craft Level (F4)', 'Her progress', 'Becomes her rank in her calling\'s line (FC18)', ['wait', 'Becomes a rank']],
+  ['The calling rule (FM7)', 'Yes', 'Her favourite line, not her only one (FC17)', ['wait', 'Softened']],
+  ['Every outfit from day one (FM6)', '—', 'Recruitment over time (FC16)', ['no', 'Replaced']],
+  ['No currency (FS8)', '—', 'Gold (FC2)', ['no', 'Reversed']],
+  ['Orders for the games (FS4–FS7)', 'The idea', 'The requests board (FC20)', ['no', 'Replaced']],
+  ['Parcels to the games (FM9–FM15, FR23, F10, PO1)', 'The design, parked', '<b>Later</b>, once the farm\'s own loop stands', ['q', 'Parked']],
+  ['The HD-2D farm (FR1–FR24)', 'Yes, whole', 'FR19\'s boost moves to the staff meal (FC14, FC15)', ['ok', 'Kept, one amend']],
+];
+const MS = [
+  ['M3', 'The spec', ['this doc answered', 'then F7 rewritten as the core spec with its numbers: prices, times, ranks and rewards, worked as the class-progression bar asks'], 'now'],
+  ['M4', 'The loop, on today\'s map', ['fields and planting', 'the bin and gold', 'the shop', 'ranks and talents', 'the first recruits', 'chapter 1', 'can start: the minigames\' rules (FR22), the farm kit\'s contract (FR16)'], ''],
+  ['M5', 'More to do', ['the ranch', 'mining floors', 'fishing spots', 'foraging', 'the Kitchen\'s game and the staff meal', 'expeditions'], ''],
+  ['M6', 'The life around it', ['the board', 'the Diary', 'festivals', 'bonds and conversations', 'affinity', 'chapters 2–8', 'the Restaurant and the Forge\'s games'], ''],
+  ['M7', 'The HD-2D farm', ['FR1–FR16, once uma-platform\'s shared stage exists (FR2)', 'the rules and screens of M4–M6 carry over'], ''],
+  ['Later', 'The other games', ['parcels (F10, PO1)', 'when you say so'], 'later'],
+];
+(() => {
+  const t = $('#chgt');
+  CHG.forEach(([p, k, c, [cls, lab]]) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${p}</td><td>${esc(k)}</td><td>${c}</td><td><span class="pill ${cls}">${lab}</span></td>`; t.appendChild(tr); });
+  $('#msstrip').innerHTML = MS.map(([id, h, items, cls], i) => `${i ? '<div class="ar">→</div>' : ''}<div class="m ${cls}"><h3>${id} · ${esc(h)}</h3><ul>${items.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('');
+})();
+
+// ---------- calls and questions ----------
+const CALLS = [
+  ['FC1', 'The loop is a farm day: plan with taps, Umas work in real time, collect, ship, spend, grow', 'loop'],
+  ['FC2', 'Gold is the farm\'s currency (reverses FS8); no premium currency', 'loop'],
+  ['FC3', 'The shipping bin pays once a day at 17:00 local, by price × quality × the season\'s demand', 'loop'],
+  ['FC4', 'Every step is a tap: planting, harvests, bubbles, chats, the bin, the board', 'loop'],
+  ['FC5', 'One season per real week, a four-week year; seasons set seeds, fish, festivals and demand', 'time'],
+  ['FC6', 'Jobs run on real time, as `uma-work` does; tending speeds crops', 'time'],
+  ['FC7', 'The five gathering places carry over with the farm\'s own goods; workbenches become line stations', 'activities'],
+  ['FC8', 'You plant and harvest by tapping; tending Umas speed growth and lift quality; replanting raises a crop\'s level', 'act-farming'],
+  ['FC9', 'The ranch: animals bought, a carer each day, affection 0–10 hearts sets product quality', 'act-ranch'],
+  ['FC10', 'Quality is 1–5 stars on everything, from talent, rank, care, crop level and boosts', 'quality'],
+  ['FC11', 'Mine floors, fishing spots and forest areas open with rank and chapters', 'act-mining'],
+  ['FC12', 'Expeditions: parties of 3–4 sent for 2–8 h, resolved by power, with a templated log; nothing lost on failure', 'expedition'],
+  ['FC13', 'The Forge\'s merge game makes tool upgrades and goods', 'act-workshops'],
+  ['FC14', 'The Kitchen cooks for selling, supplies, contests and the staff meal; the Restaurant\'s game earns gold (amends FR19)', 'act-workshops'],
+  ['FC15', 'The staff meal gives "well fed": ×1.25 work speed for 4 h, more for higher tiers', 'act-workshops'],
+  ['FC16', 'Umas join over time: 3 to start, more through beds, chapters, festivals, requests and affinity (amends FM6)', 'recruit'],
+  ['FC17', 'Talents S–G per activity from her stats by one rule; her calling becomes her favourite line', 'talents'],
+  ['FC18', 'Six ranks per activity per Uma (Novice to Legend), by work and a challenge; Craft Level becomes her calling\'s rank', 'ranks'],
+  ['FC19', 'The roster is uma-kit\'s album with talents, ranks, bonds and affinity', 'ucard-s'],
+  ['FC20', 'A requests board: 3–5 open, daily, for gold, recruits, recipes or animals (replaces FS4–FS7)', 'board'],
+  ['FC21', 'The Farm Diary: collections, milestones, records, with rewards', 'diary'],
+  ['FC22', 'A festival every Saturday: Flower Show, Fishing Derby, Cooking Contest, Animal Show, and the Harvest Cup every fourth week', 'festivals'],
+  ['FC23', 'The Farm\'s Rank opens land, buildings and expedition regions', 'farmrank'],
+  ['FC24', 'Eight light chapters with goal lists; an original town cast; Umas in roles filled at runtime', 'chapters'],
+  ['FC25', 'Bonds grow when Umas work, travel or eat together; five hearts; side-by-side speed and duo moves', 'bonds'],
+  ['FC26', 'Your affinity with each Uma from chats, gifts and praise; it opens her story beats and recruits visitors', 'affinity'],
+  ['FC27', 'Conversations come from templates chosen by place, bond level and temperament, names filled in at runtime', 'talk'],
+  ['FC28', 'The farm map grows: gathering rows, the ranch, workshops, the yard, the town edge', 'map'],
+  ['FC29', 'The bottom bar is Farm, Roster, Diary, Menu', 'map'],
+  ['FC30', 'Short help per place; chapter goals teach', 'map'],
+  ['FC31', 'The save and rules carry over; the content is re-authored; parcels are parked', 'changes'],
+  ['FC32', 'The order: M3 the spec, M4 the loop on today\'s map, M5 more activities, M6 the life around it, M7 HD-2D, then parcels', 'order'],
+];
+const SECTION = { loop: 'The loop', time: 'Time', activities: 'The activities', 'act-farming': 'Farming', 'act-ranch': 'The ranch', quality: 'Quality stars', 'act-mining': 'Mining, fishing, foraging', expedition: 'Expedition power', 'act-workshops': 'Workshops', recruit: 'Recruitment', talents: 'Talents', ranks: 'Ranks', 'ucard-s': 'The roster card', board: 'The board', diary: 'The Diary', festivals: 'Festivals', farmrank: 'The Farm\'s Rank', chapters: 'Chapters', bonds: 'Bonds', affinity: 'Affinity', talk: 'Conversations', map: 'The map', changes: 'What changes', order: 'The order' };
+const ASK = [
+  ['1', 'Umas join over time (start with 3; beds, chapters, festivals and affinity bring more), instead of all 272 from day one?', 'Yes, recruit over time', ['FC16']],
+  ['2', 'One season per real week, a four-week year, a festival every Saturday?', 'Yes', ['FC5', 'FC22']],
+  ['3', 'A shipping bin that pays daily at 17:00, plus a requests board?', 'Yes', ['FC3', 'FC20']],
+  ['4', 'You plant and harvest by tapping; Umas tend, care, dig, fish and forage?', 'Yes', ['FC8']],
+  ['5', 'Expeditions are dispatched parties resolved by numbers, with a log, and no real-time combat?', 'Yes', ['FC12']],
+  ['6', 'Each Uma has talents from her stats and six ranks in each activity, earned by doing and a challenge?', 'Yes', ['FC17', 'FC18']],
+  ['7', 'Bonds from working together, with conversations written from templates and names filled in at runtime?', 'Yes', ['FC25', 'FC27']],
+  ['8', 'Your own affinity with each Uma, from chats, gifts and praise?', 'Yes', ['FC26']],
+  ['9', 'Eight light chapters, an original town cast, and Umas in roles?', 'Yes', ['FC24']],
+  ['10', 'The five festivals: Flower Show, Fishing Derby, Cooking Contest, Animal Show, Harvest Cup?', 'Yes', ['FC22']],
+  ['11', 'The Restaurant earns gold, and the crew\'s boost becomes the Kitchen\'s staff meal?', 'Yes', ['FC14', 'FC15']],
+  ['12', 'The Forge\'s merge game makes tool upgrades and goods to sell?', 'Yes', ['FC13']],
+  ['13', 'Build the loop on today\'s map first, then move to HD-2D?', 'Yes', ['FC32']],
+  ['14', 'Park parcels to the other games until the farm\'s own loop stands?', 'Yes', ['FC31']],
+];
+(() => {
+  const t = $('#callt');
+  CALLS.forEach(([id, c, at]) => { const tr = document.createElement('tr'); tr.id = `c-${id}`; tr.innerHTML = `<td class="id">${id}</td><td>${esc(c).replace(/`([^`]+)`/g, '<code>$1</code>')}</td><td><a href="#${at}">${esc(SECTION[at])}</a></td>`; t.appendChild(tr); });
+  // questions, with a light answer sheet kept in this browser
+  const KEY = 'uma-farm/core-loop/answers';
+  let A = {};
+  try { A = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { A = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(A)); } catch (e) { /* no storage: answers live on this page only */ } };
+  const qs = $('#qs');
+  qs.innerHTML = ASK.map(([n, q, rec, calls]) => `<div class="qc" data-n="${n}"><div class="qn">${n}</div>
+    <div><p>${esc(q)}</p><div class="qr">Recommended: <span class="rec">${esc(rec)}</span> ${fcs(calls)}</div></div>
+    <div class="qa"><button data-v="accept" aria-pressed="false">Accept</button><button data-v="change" aria-pressed="false">Change</button></div>
+    <textarea placeholder="Your change to question ${n}" hidden></textarea></div>`).join('');
+  const render = () => {
+    let done = 0;
+    qs.querySelectorAll('.qc').forEach((c) => {
+      const n = c.dataset.n, a = A[n] || {}, ta = c.querySelector('textarea');
+      c.querySelectorAll('button').forEach((b) => { const on = a.v === b.dataset.v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+      ta.hidden = a.v !== 'change'; if (document.activeElement !== ta) ta.value = a.note || '';
+      const ok = a.v === 'accept' || (a.v === 'change' && (a.note || '').trim());
+      c.classList.toggle('done', !!ok); if (ok) done++;
+    });
+    $('#qcount').textContent = `${done} of ${ASK.length} answered`;
+    $('#qout').value = 'core-loop.md: answers to the questions (D22)\n' + ASK.map(([n, , rec, calls]) => {
+      const a = A[n] || {};
+      const v = a.v === 'accept' ? `accepted: ${rec}` : a.v === 'change' ? `changed: ${(a.note || '').trim() || '(say how)'}` : 'not answered yet';
+      return `${n}. ${v} (${calls.join(', ')})`;
+    }).join('\n');
+  };
+  qs.addEventListener('click', (e) => { const b = e.target.closest('button[data-v]'); if (!b) return; const n = b.closest('.qc').dataset.n; A[n] = Object.assign({}, A[n], { v: b.dataset.v }); save(); render(); if (b.dataset.v === 'change') b.closest('.qc').querySelector('textarea').focus(); });
+  qs.addEventListener('input', (e) => { if (e.target.tagName !== 'TEXTAREA') return; const n = e.target.closest('.qc').dataset.n; A[n] = Object.assign({}, A[n], { note: e.target.value }); save(); render(); });
+  $('#qall').addEventListener('click', () => { ASK.forEach(([n]) => { if (!A[n] || A[n].v !== 'change') A[n] = { v: 'accept' }; }); save(); render(); });
+  $('#qclear').addEventListener('click', () => { A = {}; save(); render(); });
+  $('#qcopy').addEventListener('click', async () => {
+    const out = $('#qout');
+    try { await navigator.clipboard.writeText(out.value); $('#qcopied').textContent = 'Copied.'; }
+    catch (e) { out.select(); try { document.execCommand('copy'); $('#qcopied').textContent = 'Copied.'; } catch (e2) { $('#qcopied').textContent = 'Select the text and copy it.'; } }
+  });
+  render();
+})();
+</script>
+</body>
+</html>
