@@ -5,7 +5,7 @@
 import { endsAt, settle } from '@luismlorenzana/uma-work'
 import type { JobKind } from '../economy/jobs'
 import { stockName } from '../economy/stock'
-import { placeById } from '../hub/places'
+import { placeById, PLACES } from '../hub/places'
 import { farmWorkEnv } from '../work/env-v4'
 import type { FarmWorld } from '../work/world'
 import { readyWork } from './work'
@@ -38,12 +38,16 @@ export function finishesBetween(world: FarmWorld, from: number, to: number): Fin
   return out.sort((a, b) => a.at - b.at)
 }
 
-/** The next moment a slot goes idle after `from`, or null when nothing is running: what the app sends the push schedule. */
-export function nextIdleAt(world: FarmWorld, from: number): number | null {
+/** Every slot going idle after `from`, oldest first. */
+function idleAfter(world: FarmWorld, from: number): Finish[] {
   // Every entry has ended by its last end: settle far enough ahead to see each queue through.
   const horizon = Object.values(world.work).reduce((most, row) => Math.max(most, ...row.entries.map((e) => endsAt(e))), from)
-  const idle = finishesBetween(world, from, horizon + 4 * 24 * 3_600_000).filter((f) => f.idle)
-  return idle[0]?.at ?? null
+  return finishesBetween(world, from, horizon + 4 * 24 * 3_600_000).filter((f) => f.idle)
+}
+
+/** The next moment a slot goes idle after `from`, or null when nothing is running. */
+export function nextIdleAt(world: FarmWorld, from: number): number | null {
+  return idleAfter(world, from)[0]?.at ?? null
 }
 
 /** Slots with something to collect at `now`: the app badge. */
@@ -72,4 +76,38 @@ export function finishNotice(all: readonly Finish[]): Notice | null {
 /** The notice for what finished in (from, to], or null. */
 export function workNotice(world: FarmWorld, from: number, to: number): Notice | null {
   return finishNotice(finishesBetween(world, from, to))
+}
+
+// --- The farm's push schedule (F6) ------------------------------------------------------------------------------------
+// The server never reads a save (FM10): on every sync the app sends when each slot goes idle, and Cloud Scheduler's tick
+// sends what came due. The words name places, never an Uma.
+
+/** One moment a slot goes idle, as the app sends it: when, which place, and the app badge then (slots ready to collect,
+ * if nothing is collected before). */
+export interface PushEntry { at: number; place: string; badge: number }
+
+/** The most entries a schedule holds: one per slot in the Wilds (fifteen places of four). */
+export const PUSH_SCHEDULE_MAX = PLACES.reduce((n, p) => n + p.slots, 0)
+
+/** Every slot going idle after `from`, oldest first, with the badge at that moment: what the app sends on every sync. */
+export function pushSchedule(world: FarmWorld, from: number): PushEntry[] {
+  return idleAfter(world, from).slice(0, PUSH_SCHEDULE_MAX)
+    .map((f) => ({ at: f.at, place: f.placeId, badge: readySlots(world, new Date(f.at).toISOString()) }))
+}
+
+/** A push: the notice and the app badge. */
+export interface PushNotice extends Notice { badge: number }
+
+/** The one notification for everything due in a tick: "Work done", a line per place in the order they finished ("Mine: 2
+ * jobs done"), four at most, and the badge of the latest. One place links its page; several, the Wilds. */
+export function scheduleNotice(due: readonly PushEntry[]): PushNotice | null {
+  if (due.length === 0) return null
+  const sorted = [...due].sort((a, b) => a.at - b.at)
+  const jobs = new Map<string, number>()
+  for (const e of sorted) jobs.set(e.place, (jobs.get(e.place) ?? 0) + 1)
+  const line = ([id, n]: [string, number]) => `${placeById(id)?.name ?? id}: ${n} ${n === 1 ? 'job' : 'jobs'} done`
+  const lines = [...jobs].map(line)
+  const body = lines.length > 4 ? [...lines.slice(0, 4), `and ${lines.length - 4} more places`].join('\n') : lines.join('\n')
+  const only = jobs.size === 1 ? placeById(sorted[0]!.place) : undefined
+  return { title: 'Work done', body, tag: only ? `work-${only.id}` : 'work', url: only ? `/${only.page}/${only.id}` : '/', badge: sorted.at(-1)!.badge }
 }
