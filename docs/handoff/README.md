@@ -16,7 +16,7 @@
 
 Each task becomes a packet in [tasks/](tasks/), written by a uma-farm session from
 [first-playable.md](../design/first-playable.md), which has every task's deliverables and checks. Packet ids continue
-from F11 (F3–F10 are the doc's); decision numbers from D7.
+from F11 (F3–F10 are the doc's); decision numbers from D8.
 
 | Milestone | Id | What | Who | Size | Needs | State |
 |---|---|---|---|---|---|---|

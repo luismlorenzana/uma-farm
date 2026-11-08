@@ -7,6 +7,7 @@ parcels. Read this before changing anything.
 ## Read first
 
 1. `docs/handoff/README.md`: the current phase and its queue. Your task is a packet in `docs/handoff/tasks/`.
+   The current initiative's brief is `docs/design/first-playable.md`: every planned task, its requirements and its checks.
 2. `docs/game/`: the manual of the game as built. It is empty until F3; after that, look up any rule or screen there first.
 3. `docs/design/`: the plan, its specs and intent. When a design changes a rule, update the manual in the
    same change.

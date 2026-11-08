@@ -6,7 +6,7 @@
   planned task. Packets are written from it, one per task, keeping its ids.
 - **Start with [docs/handoff/README.md](docs/handoff/README.md):** the current phase, the packet queue and the owner's
   steps. The plan is [docs/design/plan.md](docs/design/plan.md); its calls keep their ids (FM, and IN for the cloud).
-  New decisions go in `docs/decisions.md` from D7 (fetch `main` first). Packets F3–F10 are the first playable farm's; new ones are F-numbered from F11.
+  New decisions go in `docs/decisions.md` from D8 (fetch `main` first). Packets F3–F10 are the first playable farm's; new ones are F-numbered from F11.
 - **`docs/game/` is the manual of the game as built.** It starts with F3. Every rule change keeps it in step.
 - This game stands alone: its own save, rules and economy. It reads master data from uma-platform by stable IDs only,
   and never imports from uma-rpg, uma-racer or uma-quest at runtime.
@@ -26,14 +26,39 @@
   uma-art release. The uma-farm packet that first uses the art pins it. Claude never publishes uma-art. If a ChatGPT
   code packet blocks a release, Claude takes it; art stays ChatGPT's.
 
+## Autonomy: what you do without asking
+
+The owner gave every session full autonomy to commit, publish and deploy (2026-11-08). Do the work end to end:
+- **Commit and push to `main`** (Conventional Commits; `git status` first). Every push to `main` checks and deploys
+  production at https://uma-farm.web.app. Watch the run with `gh run watch <id> -R luismlorenzana/uma-farm --exit-status`,
+  and fix forward if it fails.
+- **Write packets ahead:** a milestone's packets before it starts, from the current initiative's brief. Then work them in
+  order, flag each done (delete it, add a Done row) and log its D-decision.
+- **Merge your own pull requests,** and review ChatGPT's with must-fixes only. Take a ChatGPT code packet that blocks you.
+- **Read the cloud freely** with the scoped gcloud (logs, describes, the troubleshooter), and re-run `infra/bootstrap.sh`,
+  which changes nothing once in place.
+- **Sibling repos** sit beside this one in `~/workspace/` (uma-platform, uma-rpg, uma-quest). Read them freely. Change one
+  only for a step a packet names (for example uma-rpg's freeze notes, or a "Both apps" request to uma-platform),
+  following that repo's CLAUDE.md. If this session can't reach it, say in one line which session should take it.
+
+**Ask in one line, then do it yourself:**
+- creating or deleting cloud resources, or changing IAM, beyond what a packet already lists, with a free-tier cost
+  table;
+- making anything public: a repo, a bucket, a URL to private data;
+- editing production data by hand, saves above all (see the production-save rules below);
+- any change to uma-rpg beyond its freeze notes or a packet the owner approved, since it's frozen from uma-quest's Q4; the parcel receivers in uma-rpg and uma-racer need it too.
+
+**Never:** change the active gcloud account, type credentials into a sign-in page, or commit original-game content.
+
 ## How the owner works
 
 - **No open questions:** decide with a recommendation when a sensible default exists, and log it.
 - **Plain answers:** answer the literal question first. Prefer the smallest fix over a redesign, and use a task table
   when work spreads.
 - **Scope:** build the owner's spec literally, with no inherited filters. Deferred topics are discussion only.
-- **The owner runs nothing:** never hand them a command. Ask a one-line go-ahead before a production publish, then run it
-  yourself. Creating cloud resources, changing IAM and anything public need their go.
+- **The owner runs nothing:** never hand them a command. Their steps are only what needs their hands: a phone check, a
+  review, a play, or a console entry with no API. Ask for one in one line, with the link.
+- **Packets ahead:** keep the queue written ahead of the work, so a session can always pick up the next one.
 - **Reviews and status messages:**
   - list every HTML page and doc as a clickable link;
   - present every call (its id and one line), not highlights.
@@ -50,15 +75,16 @@
 
 ## Building and running
 
-Nothing runs yet. F1 adds the workspace and its commands (in `AGENTS.md`), and `.claude/launch.json` with `farm-api`
-(:8101) and `farm-web` (:5194). The preview pane can't screenshot WebGL: open the Hub with `?canvas`, as in uma-rpg, once
-the Wilds map arrives (F5).
+`AGENTS.md` has the commands (`NODE_AUTH_TOKEN=$(gh auth token) pnpm install`, then `pnpm lint`, `pnpm test`,
+`pnpm build`). `.claude/launch.json` starts `farm-api` (:8101, auth off) and `farm-web` (:5194, `/api` proxied). To try
+the owner guard locally, run the built API with `ALLOWED_EMAIL` set and no `AUTH_MODE`. The preview pane can't screenshot
+WebGL: open the Hub with `?canvas`, as in uma-rpg, once the Wilds map arrives (F5).
 
-## Production (from F2)
+## Production (live since 2026-11-08)
 
 [docs/technical/infrastructure.md](docs/technical/infrastructure.md) has every value. The cloud lives in GCP project
 `uma-rpg`, beside uma-rpg and uma-quest, each app isolated: site https://uma-farm.web.app, Cloud Run `farm-api`, and
-Firestore database `farm`. From F2, every push to `main` verifies and deploys; watch it with
+Firestore database `farm`. Every push to `main` verifies and deploys; watch it with
 `gh run watch <id> -R luismlorenzana/uma-farm --exit-status`.
 
 **Never change the active gcloud account.** Scope commands with

@@ -394,7 +394,7 @@ M5  PO1 (uma-platform) ◄── F7 + uma-quest Q17
 - **M1–M3's packets now; M4 and M5's once F7 settles their rules** (FW1). Write each milestone's before it starts, and
   revise a written packet when an earlier one changes its inputs.
 - **Art is ChatGPT's:** F9 is written here and ships in uma-art. The first uma-farm packet that uses it pins it.
-- **Decisions** go in [decisions.md](../decisions.md) from D7 (fetch `main` first).
+- **Decisions** go in [decisions.md](../decisions.md) from D8 (fetch `main` first).
 - **Across repos:** PO1 is a uma-platform task. Ask for it from F7 once uma-quest's accept list exists.
 
 ## Calls
