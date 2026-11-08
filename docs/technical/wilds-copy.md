@@ -70,7 +70,7 @@ Each landed after the copy's commit, in F4:
 | `work/env.ts` | Craft EXP creates her row if an old save lacks it; `isWorker` takes any well-formed outfit id | FM6 |
 | `work/env-v3.ts`, `env-v4.ts`, `kinds-v3/`, `kinds-v4/` | `WorkContext.roster`: who may work, and whose trades decide an open shop (the whole roster, not only who has worked) | FM6, FW7 |
 | `roster/roster.ts` | New: `farmRoster(release)` (every outfit, her trade and its line), `rosterContext(roster)`, `isOutfitId` | R3, FM6, FM7 |
-| `save/notify.ts`, `notify.test.ts` | Copied from uma-rpg, cut to one world: `finishesBetween`, `finishNotice`, `workNotice`, `readySlots`, and the new `nextIdleAt` for F6's schedule | R8 |
+| `save/notify.ts`, `notify.test.ts` | Copied from uma-rpg, cut to one world: `finishesBetween`, `finishNotice`, `workNotice`, `readySlots`, and the new `nextIdleAt`. F6 adds the farm's own `pushSchedule` (every slot going idle, with the badge then), `scheduleNotice` (one "Work done" by place) and `PUSH_SCHEDULE_MAX`, below the copied code | R8 |
 | `save/wilds-chain.test.ts`, `roster/roster.test.ts` | New: every line G1 → G10, and the roster's gate | R2, R3, R4 |
 | `save/work.ts` (F5) | `dismissStopped` settles first: a queue stops at its turn, which the screens see by settling, so Dismiss on a stop no change has stored yet was a no-op (uma-rpg has the same gap; it's frozen, so it's a note there, not a fix). `save/stopped.test.ts` covers it | F5's play |
 

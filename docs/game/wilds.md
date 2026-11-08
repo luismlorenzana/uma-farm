@@ -15,7 +15,7 @@ and cut (FM2): no tiers, Speed Tickets, Laurels, targets, Exchange, fights or up
  │   /             the Wilds    │  Home: the map, ?peek=<place> a quick look
  │   /wilds/<place> a place     │  its slots, the job sheet, queues, Recall, Repeat
  │   /warehouse    the Warehouse│  what's held, by line and grade
- │   /account      Account      │  sign-in, save, safety copies, build, master data
+ │   /account      Account      │  notifications, sign-in, save, safety copies, build
  │                              │
  ├──────────────────────────────┤
  │  Wilds (n)   Warehouse  Menu │  the bottom bar; (n) slots ready to collect
@@ -27,7 +27,7 @@ and cut (FM2): no tiers, Speed Tickets, Laurels, targets, Exchange, fights or up
 | The Wilds | `/`, `wilds/WildsScreen.tsx` (loads on demand) | uma-kit's Hub map: the fifteen places and two placeholders, the Collect all pill, the help button. `?peek=<place>` opens a place's quick look in the side panel |
 | A place | `/wilds/<place>`, `places/PlacePage.tsx` and `places/work/` (loads on demand) | uma-kit's place header over its work page: four slot rows, the job sheet, stopped queues |
 | The Warehouse | `/warehouse`, `places/warehouse/` (loads on demand) | uma-kit's shelf view of every held item |
-| Account | `/account`, `home/AccountView.tsx` | F3's Account, now also showing master data's release (Home's row before F5) |
+| Account | `/account`, `home/AccountView.tsx` | F3's Account, now also showing master data's release (Home's row before F5), and the Notifications switch (F6, [architecture](architecture.md#notifications-f6)) |
 | The menu | `?sheet=menu` on any page, `shell/MenuSheet.tsx` | "Every place": the fifteen with their Ready counts, the Forge and the Post (locked), the Warehouse, Account, the build |
 
 `/wilds` goes to `/`; an unknown place or a placeholder's page goes to its quick look; anything else goes to `/`.
