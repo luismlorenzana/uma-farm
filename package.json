@@ -14,7 +14,8 @@
     "test": "node --test scripts/check-size.test.mjs scripts/check-private-content.test.mjs scripts/check-hosting-site.test.mjs && turbo run test",
     "test:ci": "node --test scripts/check-size.test.mjs scripts/check-private-content.test.mjs scripts/check-hosting-site.test.mjs && turbo run test --concurrency=1",
     "web": "pnpm --filter @farm/web dev",
-    "api": "pnpm --filter @farm/api dev"
+    "api": "pnpm --filter @farm/api dev",
+    "docs:update": "pnpm --filter @farm/domain run docs:update"
   },
   "devDependencies": {
     "turbo": "^2.10.13"
