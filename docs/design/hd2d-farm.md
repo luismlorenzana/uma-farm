@@ -1,6 +1,8 @@
 # uma-farm: the HD-2D farm
 
-> **Status: 2026-11-08, a draft for the owner's review (D20).** On 2026-11-08 the owner refocused the farm. It moves to the
+> **Status: 2026-11-08, accepted whole by the owner (D21):** every question answered as recommended, the Forge's genre merge. [core-loop.md](core-loop.md) (D22) then refocused the loop on the farm's own economy: it amends FR19 (the Restaurant earns gold; the crew's boost moves to the Kitchen's staff meal) and parks FR23's parcels.
+>
+> **Drafted 2026-11-08 for the owner's review (D20).** On 2026-11-08 the owner refocused the farm. It moves to the
 > HD-2D engine being built for uma-quest, with lots of taps to put Umas to work. The Umas walk to their slots as
 > uma-quest's sprites, and the farm's buildings and plots are built for that engine. Instead of one themed smithing game,
 > the loop ends in **several workshops, each with a fun minigame in a popular mobile genre**: a cooking game and a

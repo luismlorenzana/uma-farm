@@ -253,7 +253,7 @@ The packet exists: [tasks/F3-hello-app.md](../handoff/tasks/F3-hello-app.md). It
 
 **The design spec** · Claude · L · Needs: F4 (to start), F6 play (to finish) · Waiting
 
-**Drafted (D16):** [spec.md](spec.md) (FS1–FS32) and its page [previews/spec.html](previews/spec.html). **Refocused (D20):** [hd2d-farm.md](hd2d-farm.md) (FR1–FR24) moves the farm to the HD-2D engine and replaces §4's Forge with workshops and genre minigames; F7 is rewritten once the owner has reviewed it.
+**Drafted (D16):** [spec.md](spec.md) (FS1–FS32) and its page [previews/spec.html](previews/spec.html). **Farm first (D22):** [core-loop.md](core-loop.md) (FC1–FC32) defines the farm's own loop against three farm-life references; parcels wait. **Refocused (D20, accepted D21):** [hd2d-farm.md](hd2d-farm.md) (FR1–FR24) moves the farm to the HD-2D engine and replaces §4's Forge with workshops and genre minigames; F7 is rewritten once the owner has reviewed it.
 
 **Delivers:**
 

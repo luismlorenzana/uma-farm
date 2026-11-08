@@ -1,6 +1,6 @@
 # Handoff: open work
 
-> **Status: 2026-11-08, after D20.** M1 is met (D13) and M2 is live (F4–F6; notifications off by the owner's choice, D18). **The farm is refocused (D20):** it moves to the HD-2D engine uma-quest is building, with Umas walking as sprites and workshops with genre minigames. The draft is [hd2d-farm.md](../design/hd2d-farm.md) ([page](../design/previews/hd2d-farm.html)), FR1–FR24, waiting for the owner's review. **F7's Forge section (§4) and the M4 packets are on hold until then;** parcels (F10, PO1) are unchanged.
+> **Status: 2026-11-08, after D22.** M1 is met (D13) and M2 is live (F4–F6). **The farm is reworked to come first with its own loop** ([core-loop.md](../design/core-loop.md), FC1–FC32, D22, [page](../design/previews/core-loop.html)): farming into selling into progression, seven dispatched activities, ranks, festivals, a light story and bonds, against three farm-life references. It builds on the HD-2D refocus the owner accepted whole ([hd2d-farm.md](../design/hd2d-farm.md), D21). **Parcels (F10, PO1) are parked.** Next: the owner answers core-loop.md; then F7 is rewritten as the core spec, and M4's packets follow.
 > initiative is [the first playable farm](../design/first-playable.md)** (FW1–FW13,
 > [page](../design/previews/first-playable.html)): its requirements and every planned task, from the hello app (F3) to the
 > Wilds playing, the design spec, then the Forge and parcels.
@@ -27,7 +27,7 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 | M3, the design spec | F7 | [The design spec](tasks/F7-design-spec.md): who works, targets, the farm's economy, the Forge, accept lists and caps, the Post; the M4–M5 queue. The draft: [spec.md](../design/spec.md) (FS1–FS32), [its page](../design/previews/spec.html) | Claude | L | F4 (to start), your play (to finish) | **Drafted** (D16), waits on the owner's play and uma-quest's Q17 |
 | M4, the Forge | F8 | ~~The Forge's place and minigame~~ **On hold (D20):** re-scoped by [hd2d-farm.md](../design/hd2d-farm.md) FR24 to the minigame contract and the Kitchen | Claude | M | F7, the owner's review of the refocus | On hold |
 | | F9 | ~~Art: the Forge and the Post~~ **On hold (D20):** re-scoped to `kit-farm` (FR16, FR24) | ChatGPT | M | F16's contract, the owner's look | On hold |
-| M5, parcels | F10 | The sender: the outbox, `parcels`, `/api/post/parcels` and `/api/post/claims` | Claude | M | F8, uma-platform PO1 | After F7 |
+| M5, parcels | F10 | The sender: the outbox, `parcels`, `/api/post/parcels` and `/api/post/claims` | Claude | M | F8, uma-platform PO1 | **Parked (D22):** later, once the farm's own loop stands |
 
 **Order:** F3 first, and F4 beside it. The full order is in [the doc](../design/first-playable.md#the-order).
 
@@ -50,7 +50,8 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 | ~~F5~~ Done 2026-11-08 | The Wilds on the phone: the owner's word, "Wilds work" (D15) |
 | ~~F6~~ Declined 2026-11-08 | Notifications: not now, the owner's choice (D18). The tick stays deployed and sends nothing while no phone subscribes |
 | **F7, now** | **Read and answer the design spec:** [spec.md](../design/spec.md) and [its page](../design/previews/spec.html). Its questions 2–13 (the Forge, orders, the economy, accept lists, the Post) can be answered now; question 1 (who works) waits for a few days of play |
-| **Refocus, now** | **Review [hd2d-farm.md](../design/hd2d-farm.md)** and [its page](../design/previews/hd2d-farm.html): play the Kitchen and Restaurant sketches, and answer its 10 questions (the Forge's genre among them) |
+| ~~Refocus~~ Done 2026-11-08 | The HD-2D refocus: accepted whole, the Forge's genre merge (D21) |
+| **Farm first, now** | **Answer [core-loop.md](../design/core-loop.md)** ([page](../design/previews/core-loop.html)): its 14 questions, each with a recommendation |
 | M4, M5 | The workshops' look and a play; your go for uma-rpg's receiver |
 
 ## Done
