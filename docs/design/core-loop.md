@@ -13,7 +13,7 @@
 > - relationships that grow as characters work together.
 >
 > It changes one thing on purpose: **no active exploration or real-time combat; a wide roster of Umas dispatched on
-> jobs** instead. Calls are **FC1–FC32**, each with a recommendation. Visual page:
+> jobs** instead. Calls are **FC1–FC34**, each with a recommendation. Visual page:
 > [previews/core-loop.html](previews/core-loop.html).
 >
 > **It builds on [hd2d-farm.md](hd2d-farm.md)** (FR1–FR24), which the owner accepted whole (D21): the HD-2D engine, Umas
@@ -169,17 +169,19 @@ expeditions, which are played or sent.
 |---|---|---|---|---|---|
 | **Farming** | Fields: plots in blocks | Buy seeds, tap to plant, tap to harvest | Tend: speed growth, lift quality | Crops, seeds back | Harvest sprites; crop levels |
 | **The ranch** | Coop, Barn | Buy animals and feed | Care for them daily: affection | Eggs, milk, wool, by quality | Animal affection |
-| **Mining** | The Mine, floor by floor | Pick the floor | Dig: a timed job | Ore, stone, gems | The mine's floors; the Miner Life |
-| **Fishing** | Pond, River, then the Sea | Pick the spot | Fish: a timed job | Fish by spot and season | The angler; the fishing derby |
-| **Foraging** | Forest, Hills | Pick the area | Gather: a timed job | Lumber, herbs, mushrooms, fruit | Foraging; the Woodcutter Life |
+| **Mining** | The Mine and the Quarry, floor by floor | Pick the floor | Dig: a job of days | Ore from the Mine; stone and gems from the Quarry | The mine's floors; the Miner Life |
+| **Fishing** | Pond, River, then the Sea | Pick the spot | Fish: a job of days | Fish by spot and season | The angler; the fishing derby |
+| **Foraging** | Forest, Hills | Pick the area | Gather: a job of days | Lumber, herbs, mushrooms, fruit | Foraging; the Woodcutter Life |
 | **Workshops** | Kitchen, Restaurant, Forge | **Play the minigame** (FR17–FR21) | Assist: their rank lifts the yield | Dishes, gold, tools and goods | Cooking and forging, hands-on |
 | **Expeditions** | Regions on a map | Pick a region and a party, pack supplies | Go for 2–5 days; numbers decide | Monster materials, rare seeds, animals, story items | Dungeons and fighting Lives, as dispatch |
 
-**FC7: the five gathering places carry over** from the copy (F4): Mine, Fields, Forest, Fishery and Monster Den. Each
-keeps four slots, a timed job and its queue, Recall and Repeat on `uma-work`. What changes is their content:
+**FC7: the five gathering places carry over** from the copy (F4): Mine, Fields, Forest, Fishery, and the Monster Den,
+which becomes the **Quarry** (stone and gems, part of mining; D24). Each keeps four slots, a job counted in days and its
+queue, Recall and Repeat on `uma-work`. What changes is their content:
 - **the farm's own goods** replace uma-rpg's materials and made items (FC31);
-- the workbench places become the **workshops** and the stations of each line: a mill for flour, a smokehouse for fish, a
-  smelter for ore.
+- the workbench places become the **workshops** and one **station** per line: the Fields' Mill (flour, preserves), the
+  Mine's Smelter (ingots), the Quarry's Cutter (cut gems), the Forest's Sawmill (planks) and the Fishery's Smokehouse
+  (smoked fish).
 
 **FC8: farming is hands-on.**
 - You tap a plot to plant (a seed from the shop) and tap it to harvest.
@@ -205,7 +207,8 @@ A star raises the price (about +25% each) and the score at shows and contests.
 
 **FC11: mining, fishing and foraging go deeper with rank.**
 - The Mine has floors, the Fishery new spots and the forest new areas, each opened by its best Uma's rank or by a chapter.
-- Deeper means rarer: gems on low floors, sea fish from a boat (an upgrade).
+- Deeper means rarer: rarer ore on the Mine's deep floors, rarer gems deep in the Quarry, sea fish from a boat (an
+  upgrade).
 
 **FC12: expeditions are the combat, without real-time play.**
 - You send a party of 3–4 Umas to a region (a ruined fort, a cave, an old racetrack in the hills) for 2–5 days.
@@ -361,7 +364,7 @@ to stay (FC16). It's Friends of Mineral Town's hearts, aimed at the crew.
 
 | Row | Places |
 |---|---|
-| Gathering | Fields, Mine, Forest, Fishery, Monster Den, each with its station |
+| Gathering | Fields, Mine, Quarry, Forest, Fishery, each with its station (Mill, Smelter, Cutter, Sawmill, Smokehouse) |
 | The ranch | Coop, Barn |
 | Workshops | Kitchen, Restaurant, Forge |
 | The yard | The shipping bin, the board, the Dorm, the Warehouse, the Gate |
@@ -369,7 +372,7 @@ to stay (FC16). It's Friends of Mineral Town's hearts, aimed at the crew.
 
 It scrolls up and down as FR6 says. The **calendar and the Farm Rank** sit in the account bar.
 
-**FC29: one tap away.** The bottom bar is Farm · Roster · Diary · Menu:
+**FC29: one tap away.** The bottom bar is Farm · Roster · **End the day** (the raised centre button, FC33) · Diary · Menu:
 - the bin and the board open from the yard;
 - the shop, the festival ground and the expedition post open from the town edge;
 - the calendar opens from the account bar.
@@ -404,9 +407,9 @@ are refunded as gold at their price.
    rewards, worked as the class-progression bar asks.
 2. **M4, the loop, on today's map:** the calendar and End the day, fields and planting, the bin and gold, the shop, ranks and talents, the first
    recruits, chapter 1.
-3. **M5, more to do:** the ranch, mining floors, fishing spots, foraging, the Kitchen's game and the staff meal,
-   expeditions.
-4. **M6, the life around it:** the board, the Diary, festivals, bonds and conversations, affinity, chapters 2–8, the
+3. **M5, more to do:** the ranch, mining floors and the Quarry, fishing spots, foraging, the Kitchen's game and the
+   staff meal, expeditions, and chapters 2–5, which open them (D24).
+4. **M6, the life around it:** the board, the Diary, festivals, bonds and conversations, affinity, chapters 6–8, the
    Restaurant and the Forge's games.
 5. **M7, the HD-2D farm** (FR1–FR16), once uma-platform's shared stage exists (FR2). The rules and screens of M4–M6 carry
    over.
@@ -472,10 +475,10 @@ Each has a recommended answer; accepting it or changing it is enough.
 | FC9 | The ranch: animals bought, a carer each day, affection 0–10 hearts sets product quality |
 | FC10 | Quality is 1–5 stars on everything, from talent, rank, care, crop level and boosts |
 | FC11 | Mine floors, fishing spots and forest areas open with rank and chapters |
-| FC12 | Expeditions: parties of 3–4 sent for 2–8 h, resolved by power, with a templated log; nothing lost on failure |
+| FC12 | Expeditions: parties of 3–4 sent for 2–5 days, resolved by power, with a templated log; nothing lost on failure |
 | FC13 | The Forge's merge game makes tool upgrades and goods |
 | FC14 | The Kitchen cooks for selling, supplies, contests and the staff meal; the Restaurant's game earns gold (amends FR19) |
-| FC15 | The staff meal gives "well fed": ×1.25 work speed for 4 h, more for higher tiers |
+| FC15 | The staff meal gives "well fed": work a quarter faster, for one day at Rough or Good, two at Fine, three at Masterwork |
 | FC16 | Umas join over time: 3 to start, more through beds, chapters, festivals, requests and affinity (amends FM6) |
 | FC17 | Talents S–G per activity from her stats by one rule (Power mining and the Forge, Stamina farming, Guts the ranch, Wit cooking and fishing, Speed foraging and serving, all five expeditions); her calling becomes her favourite line |
 | FC18 | Six ranks per activity per Uma (Novice to Legend), by work and a challenge; Craft Level becomes her calling's rank |
@@ -488,10 +491,10 @@ Each has a recommended answer; accepting it or changing it is enough.
 | FC25 | Bonds grow when Umas work, travel or eat together; five hearts; side-by-side speed and duo moves |
 | FC26 | Your affinity with each Uma from chats, gifts and praise; it opens her story beats and recruits visitors |
 | FC27 | Conversations come from templates chosen by place, bond level and temperament, names filled in at runtime |
-| FC28 | The farm map grows: gathering rows, the ranch, workshops, the yard, the town edge |
-| FC29 | The bottom bar is Farm, Roster, Diary, Menu; the shop and festival ground from the town edge, the calendar from the account bar |
+| FC28 | The farm map grows: gathering rows (the Monster Den now the Quarry), the ranch, workshops, the yard, the town edge |
+| FC29 | The bottom bar is Farm, Roster, End the day (raised), Diary, Menu; the shop and festival ground from the town edge, the calendar from the account bar |
 | FC30 | Short help per place; chapter goals teach |
 | FC31 | The save and rules carry over; the content is re-authored; parcels are parked |
-| FC32 | The order: M3 the spec, M4 the loop on today's map, M5 more activities, M6 the life around it, M7 HD-2D, then parcels |
+| FC32 | The order: M3 the spec; M4 the calendar and the loop on today's map, chapter 1; M5 more activities, chapters 2–5; M6 the life around it, chapters 6–8; M7 HD-2D; then parcels |
 | FC33 | End the day settles the night: the bin pays, crops grow, jobs and expeditions move, bonds and ranks tick; a morning summary; a nudge when nothing's left; a festival day is the festival |
 | FC34 | Each workshop opens once a day: one play, with its assistant |
