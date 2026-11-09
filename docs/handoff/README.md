@@ -34,7 +34,15 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 ## Across the repos
 
 - **uma-rpg:** H169 (its project hardened) is done (uma-rpg D311). Its receiver is a packet there, after the owner's go (FM15).
-- **uma-quest:** its Q2 calls the ping, live since 2026-11-08 (D17). Its accept list ships interim from our FS24 once its session agrees, and its Q17 settles it later (D19).
+- **uma-quest:** its Q2 calls the ping, live since 2026-11-08 (D17). **Its accept list for `uma-post` is final** (uma-quest's Q17 and D26, [its spec's part 5](https://github.com/luismlorenzana/uma-quest/blob/main/docs/design/spec/05-accept-list.md)): it confirms the interim list (D19) and sets the effects, replacing FS24's proposed ones. The session finishing F7 puts it in the spec's §5.2:
+
+  | Id | Effect (uma-quest's) | Cap group | Cap a day |
+  |---|---|---|---|
+  | `tonic` | One standing Uma: +50% of her max HP | `tonic` | 10 |
+  | `party-meal` | Everyone standing: +30% of max HP | `party-meal` | 5 |
+  | `revive` | One fallen Uma: back up at 50% of her max HP | `revive` | 3 |
+
+  Nothing else comes to uma-quest: no materials, gold, gear or MP items. It ships as uma-quest's list version 1, final, in `uma-post` 0.1.0 whenever PO1 is built (parked with F10, D22).
 - **uma-platform:** P88 and P89 are logged. `uma-post` (FM12) is its [PO1](https://github.com/luismlorenzana/uma-platform/blob/main/docs/handoff/tasks/PO1-uma-post.md), written ahead from our spec's §5 ([P107](https://github.com/luismlorenzana/uma-platform/blob/main/docs/decisions.md)) and built once F7 is answered (D19), before M5 ([its new-apps doc](https://github.com/luismlorenzana/uma-platform/blob/main/docs/new-apps/README.md)), and any `uma-work` or
   `uma-kit/work` change is a platform release (FM5).
 - **uma-racer:** its receiver comes last, flair only (FM13), with `racer-api-runtime` added to `POST_CALLERS`.
