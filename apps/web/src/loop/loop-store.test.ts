@@ -66,7 +66,7 @@ describe('the loop boots a v2 into v3 once', () => {
     await boot('u1')
     expect(v3()).toMatchObject({ version: 3, calendar: { day: 1 }, gold: 500 + 450, account: { updatedAt: T1, createdAt: T0 } })
     expect(v3().roster['1001']?.ranks.mining).toEqual({ points: 160, rank: 2, challenge: 0 })
-    expect(Object.keys(v3().roster)).toHaveLength(3) // the picks fill the gap
+    expect(Object.keys(v3().roster)).toEqual(['1001', '1002']) // one to pick on the start's sheet (F23)
     expect(useGame.getState().dirty).toBe(true)
     // The device holds the v3, so a reload doesn't migrate again.
     const row = await readSaveRow('u1')
@@ -89,10 +89,10 @@ describe('the loop boots a v2 into v3 once', () => {
     expect(useGame.getState()).toMatchObject({ revision: 6, dirty: false })
   })
 
-  it('starts a new account on day 1 with 9 Carrot seeds and three Umas from the picks', async () => {
+  it('starts a new account on day 1 with 9 Carrot seeds and nobody yet, the start\'s sheet to pick from (F23)', async () => {
     await boot('u1')
-    expect(v3()).toMatchObject({ version: 3, calendar: { day: 1 }, gold: 500, items: { 'seed-carrot': [9, 0, 0, 0, 0] } })
-    expect(v3().dorm.home).toHaveLength(3)
+    expect(v3()).toMatchObject({ version: 3, calendar: { day: 1 }, gold: 500, roster: {}, items: { 'seed-carrot': [9, 0, 0, 0, 0] } })
+    expect(v3().dorm.home).toEqual([])
     await syncNow()
     expect(server.envelope.save?.version).toBe(3)
   })

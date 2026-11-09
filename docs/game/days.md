@@ -12,7 +12,7 @@ night, the morning summary, the nudge, the farm map and the bars, as built. The 
  ├──────────────────────────────────┤
  │                                  │
  │   /          the farm map        │  eight rows of three; ?peek=<place> a quick look
- │   /roster    the Umas home       │  talents and ranks (F21); the Dorm in F23
+ │   /roster    the whole roster    │  talents and ranks (F21); home or away, hearts (F23)
  │   /diary     the chapter         │  its goals come with F24
  │   /account   Account             │  Notifications: "Off: days are turns"
  │                                  │
@@ -115,7 +115,9 @@ time. A step whose packet hasn't landed passes the night on unchanged, and each 
 | 6 | `countWellFed` | The well-fed days count down | F18 |
 | 7 | `witherCrops` | On a season’s last night, crops still growing that don’t grow in the next season wither; Ready crops wait | F20 |
 | 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the day’s chats and gifts clear | F18 |
-| 8 | `checkGoals` | Visitors come and go; chapter goals, Diary milestones and the Farm Rank | F23, F24 |
+| 8 | `settleDorm` | The Dorm’s level bought takes effect; swaps arrive, each Uma away coming home in the place of one leaving | F23 |
+| 8 | `gateVisitors` | A visitor who has waited 6 days leaves; every 4th morning one comes to the Gate while a bed is free and none waits | F23 |
+| 8 | `checkGoals` | Chapter goals, Diary milestones, the Farm Rank and a chapter’s recruit | F24 |
 | 9 | `buildSummary` | The morning summary, from what changed | F18 |
 <!-- /live -->
 
@@ -158,7 +160,7 @@ night."
 | Work done | `{ kind: 'jobs', place, jobs, items }`; `{ kind: 'crops', block, plots }`; `{ kind: 'withered', block, crop, plots }` | "Forest · 2 jobs done · 9 items", "Block A · 9 crops ready", "Block A · 3 Onion withered" | the place's quick look; the Fields | F18; F20 ([fields.md](fields.md#the-night-cs7-steps-2-and-7-cs4s-last-night)) |
 | Ranks | `{ kind: 'rank-up', outfitId, activity, rank }`; `{ kind: 'full', outfitId, activity, rank, challenge }` (points filled tonight, the challenge to meet) | "Aster · Farming Hand" (Rank up), "Beryl · Fishing · Catch 30 fish · 12/30" (Points full) | her sheet on the roster | F21 ([ranks.md](ranks.md#the-morning-summary-cs5-cs7)) |
 | Bonds | new hearts | — | — | M6 |
-| New today | `{ kind: 'season', season }`, `{ kind: 'festival', festival, when }` | "Summer begins", "Flower Show tomorrow" | the calendar; the festival ground | F18 (visitors F23, scenes and milestones F24) |
+| New today | `{ kind: 'season', season }`, `{ kind: 'festival', festival, when }`; F23's `{ kind: 'dorm', level }`, `{ kind: 'home', umas }`, `{ kind: 'joined', outfitId, home }`, `{ kind: 'gate', outfitId }`, `{ kind: 'left', outfitId }` | "Summer begins", "Flower Show tomorrow", "Dorm level 2 · 5 beds", "Aster is home", "Fable joined · away", "Ember is at the Gate", "Ember left the Gate" | the calendar; the festival ground; the Dorm; her sheet; the Gate | F18; F23 ([roster.md](roster.md#the-night-step-8-and-the-morning)); scenes and milestones F24 |
 | Today | `{ kind: 'idle', umas }`; `{ kind: 'seeds', plots }` (empty plots the seeds held could fill today) | "2 Umas idle", "9 plots to plant" | the roster; the Fields | F18; F20 |
 
 While v3 is unreleased (until F24) each packet extends the shape in place, with parse tests. The parse is strict: unknown
@@ -224,7 +226,9 @@ stay put.
   `/fields` ([fields.md](fields.md#the-screens-decision-11)). F22 opened the Forest, the Fishery and the three
   stations: a tap opens their quick look (`/?peek=forest` …), whose slot rows and Open lead to their pages; a station is
   locked until built ("Not built"), its quick look offering Build once what opens it has
-  ([gathering.md](gathering.md#the-screens-decisions-5-and-8)). Every other place keeps its plain quick look.
+  ([gathering.md](gathering.md#the-screens-decisions-5-and-8)). F23 opened the Dorm (`/dorm`) and the Gate (its quick
+  look, `/?peek=gate`, with the visitor's face as its pip; [roster.md](roster.md#the-screens)). Every other place keeps
+  its plain quick look.
 - **Borrowed buildings:** the Coop, the bin, the Dorm, the board and the expedition post stand on unused uma-art buildings
   until their own ship (F25, F29, F38).
 - **Pips** hang over a work place's building in a half arch (FR7): each working Uma's face ringed by her job's progress,
@@ -245,8 +249,9 @@ stay put.
   "stopped yesterday" ([gathering.md](gathering.md#the-screens-decisions-5-and-8)).
 - **The account bar:** the initial (Account), the date chip, F19's gold chip (it opens the bin,
   [goods.md](goods.md#gold-and-the-account-bar-decision-10)), the sync chip.
-- **Roster** (`/roster`) is the album of the Umas home with F21's talents and ranks, filters and sorts, and her sheet
-  ([ranks.md](ranks.md#the-screens-decision-7)), and how many are away, until F23's Dorm. **Diary** (`/diary`) holds the chapter until F24 gives it its goals.
+- **Roster** (`/roster`) is the album of everyone on the roster, home or away, with F21's talents and ranks, filters and
+  sorts, and her sheet ([ranks.md](ranks.md#the-screens-decision-7)); F23 adds where she is, your hearts with her, and
+  Chat and Gift ([roster.md](roster.md#the-screens)). **Diary** (`/diary`) holds the chapter until F24 gives it its goals.
 - **The Menu** lists the 23 places by FC28's rows (gathering, stations, the ranch, workshops, the yard, the town), each
   opening its quick look, locked ones marked; then Account, the switch and the build.
 

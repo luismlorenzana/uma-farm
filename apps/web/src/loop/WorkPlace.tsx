@@ -4,7 +4,7 @@
 // talents, the What step (areas and spots, or what the Warehouse holds for a station), the sizes in days, its words and
 // its actions. A station is locked until built: its quick look and page show Build · 1,500g. Loaded on demand.
 import {
-  ACTIVITY_NAMES, farmEnvV3, farmPlace, goodName, isStation, loopKinds, loopRefusalText, loopWorld, PLACE_ACTIVITY, parseStockKey, STATION_RULES, stationBuilt,
+  ACTIVITY_NAMES, farmEnvV3, farmPlace, goodName, isStation, leaving, loopKinds, loopRefusalText, loopWorld, PLACE_ACTIVITY, parseStockKey, STATION_RULES, stationBuilt,
   stationLock, tendedBlock, workNow, type GatherPlace, type LoopPlaceId, type LoopWorkRequest, type SaveV3, type StationId, type TalentOf,
 } from '@farm/domain'
 import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
@@ -124,6 +124,8 @@ function WorkPlacePage({ save, place }: { save: SaveV3; place: WorkPlaceId }) {
 interface JobRow extends LoopUmaRow {
   note: string
   tends: string | null
+  /** A swap takes her away tomorrow (F23): she can't take a job. */
+  leaving: boolean
 }
 
 function PlaceBody({ save, place, say }: { save: SaveV3; place: WorkPlaceId; say: Say }) {
@@ -145,7 +147,8 @@ function PlaceBody({ save, place, say }: { save: SaveV3; place: WorkPlaceId; say
   const [sheetUma, setSheetUma] = useState<string | null>(null)
   const rows = useMemo((): JobRow[] => umaRows(save, save.dorm.home, view?.album ?? new Map(), talents.table, view?.roster ?? []).map((row) => {
     const tends = tendedBlock(save, row.id)
-    return { ...row, level: row.ranks[activity].rank, note: tends ? `Tends Block ${tends}` : rankTalent(row, activity), tends }
+    const away = leaving(save, row.id)
+    return { ...row, level: row.ranks[activity].rank, note: tends ? `Tends Block ${tends}` : away ? 'Leaves tomorrow' : rankTalent(row, activity), tends, leaving: away }
   }), [save, view, talents.table, activity])
   const sorts = useMemo(() => pickerSorts<JobRow>(activity), [activity])
   const byActivity = useMemo(() => activityOrder(activity), [activity])
@@ -187,7 +190,7 @@ function PlaceBody({ save, place, say }: { save: SaveV3; place: WorkPlaceId; say
         request={(job, count) => (gather ? gatherRequest(place, job, count, sizes) : stationRequest(job, count))}
         initialJob={(outfitId) => (gather ? initialWhere(save, place, outfitId, talents.of) : stationGroups(save, place as StationId).flatMap((g) => g.options)[0]?.item ?? null)}
         sizeRule={(job) => (job === null ? undefined : gather ? gatherSizeRule(sizes) : stationSizeRule(save, job, sheetUma, talents.of))}
-        disabled={(row) => (row.tends ? `Tends Block ${row.tends}` : null)}
+        disabled={(row) => (row.tends ? `Tends Block ${row.tends}` : row.leaving ? 'Leaves tomorrow' : null)}
         picker={{
           facets: UMA_FACETS,
           sorts,

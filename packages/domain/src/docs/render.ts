@@ -43,6 +43,9 @@ import { FISH_SIZES, FISHERY, FOREST, HAUL_BASE, STATION_JOB_RULES, STATION_RULE
 import { farmPlace } from '../farm/places'
 import { starShares } from '../goods/stars'
 import { BLOCK_IDS } from '../save/v3'
+import { DORM_LEVELS } from '../farm/dorm'
+import { CHAT_POINTS, GATE_EVERY, GIFT_POINTS, giftTaste, STAY_AFFINITY, TASTES, VISITOR_DAYS } from '../farm/visitors'
+import { START_NEEDS, START_SHEET } from '../farm/start'
 
 type Cell = string | number
 /** A Markdown table; pipes in cells are escaped. */
@@ -507,12 +510,59 @@ function stationRecipes(): string {
   }).join('\n\n')
 }
 
+// --- The roster (F23) -----------------------------------------------------------------------------------------------
+
+/** CS34: the Dorm's ten levels, their beds, costs and Farm Ranks. */
+function dormLevels(): string {
+  let total = 0
+  return table(['Level', 'Beds', 'Costs', 'Farm Rank', 'Cumulative'], DORM_LEVELS.map((l) => {
+    total += l.cost
+    return [l.level, l.beds, l.cost ? g(l.cost) : '—', l.farmRank || '—', g(total)]
+  }))
+}
+/** CS35: the ways an Uma joins, as built (decisions 5, 6, 10). */
+function rosterWays(): string {
+  const days = [1, 2, 3].map((n) => n * GATE_EVERY).join(', ')
+  return table(['Way', 'Who', 'When she joins'], [
+    ['The start (CS2)', `${START_SHEET} candidates, a C or better in ${START_NEEDS.map((a) => ACTIVITY_NAMES[a].toLowerCase()).join(', ')} among them; one free redraw`, 'You pick 3 (3 − the Umas a migrated save brings)'],
+    ['The Gate', `While a bed is free and no visitor waits, one stops by every ${GATE_EVERY}th morning (days ${days} …), drawn from the release's outfits not on the roster and not waiting`,
+      `At ${STAY_AFFINITY} affinity (2 hearts), the moment a chat or a gift reaches it. She waits ${VISITOR_DAYS} days, then leaves; she may come again`],
+    ['Chapters', 'Each chapter\'s end: drawn C or better in the open activity whose best rank on the roster is lowest, then whose best talent is', 'At once (F24 calls it)'],
+    ['Festivals, requests, expeditions', 'M5 and M6', '—'],
+  ])
+}
+/** CS45: affinity's acts and their limits. */
+function affinityActs(): string {
+  return table(['Act', 'Points', 'Limit'], [
+    ['Chat (tap her)', `+${CHAT_POINTS}`, 'Once a day each'],
+    ['Gift (one good, its stars your choice)', TASTES.map((t) => `${cap(t)} ${signed(GIFT_POINTS[t])}`).join(', '), 'One a day each'],
+    ['Praise', '+20', 'M6 (F34)'],
+  ])
+}
+const LINES: readonly MaterialLine[] = ['metal', 'stone', 'wood', 'fish', 'vegetables']
+/** Decision 8: what each favourite line likes and dislikes as a gift, counted from the rule over the goods. */
+function giftLikes(): string {
+  const byFamily = (line: MaterialLine, taste: 'liked' | 'disliked') => {
+    const counts = new Map<GoodFamily, { raw: number; refined: number }>()
+    for (const good of GOODS) {
+      if (giftTaste(good.id, line) !== taste) continue
+      const c = counts.get(good.family) ?? { raw: 0, refined: 0 }
+      if (good.refined) c.refined++
+      else c.raw++
+      counts.set(good.family, c)
+    }
+    return [...counts].map(([f, c]) => `${FAMILY_NAMES[f]} (${c.raw && c.refined ? `${c.raw} raw, ${c.refined} refined` : c.raw ? `${c.raw} raw` : `${c.refined} refined`})`).join('; ') || '—'
+  }
+  return table(['Favourite line', 'Likes (+30)', 'Dislikes (−20)'], LINES.map((line) => [LINE_NAME[line], byFamily(line, 'liked'), byFamily(line, 'disliked')]))
+}
+
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { families, items, made, facilities, callings, jobs, levels, 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
     calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
     crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,
     'place-activity': placeActivity, 'forest-areas': forestAreas, 'fishing-spots': fishingSpots, 'fish-sizes': fishSizes, 'size-skill': sizeSkills,
-    'haul-day': haulDay, 'haul-factors': haulFactors, 'gather-quality': gatherQualities, stations, 'station-day': stationDay, 'station-recipes': stationRecipes }
+    'haul-day': haulDay, 'haul-factors': haulFactors, 'gather-quality': gatherQualities, stations, 'station-day': stationDay, 'station-recipes': stationRecipes,
+    'dorm-levels': dormLevels, 'roster-ways': rosterWays, 'affinity-acts': affinityActs, 'gift-likes': giftLikes }
   return blocks_[key]?.() ?? null
 }

@@ -1,11 +1,12 @@
 // The loop's actions on the day (F18): End the day, dismiss the morning, Collect all; F19's goods: ship, Ship all, take
-// back and buy; F20's Fields: plant, Plant all, harvest, Harvest all, a tender and a block; and F22's work: a job, a
-// queue, Collect, Recall, Repeat, a stopped queue and building a station. Each reads the save right
+// back and buy; F20's Fields: plant, Plant all, harvest, Harvest all, a tender and a block; F22's work: a job, a
+// queue, Collect, Recall, Repeat, a stopped queue and building a station; and F23's roster: the start's picks and its
+// redraw, the Dorm's levels and swaps, chats and gifts. Each reads the save right
 // before its rule runs (as `edit`), commits it to the store and the device, and syncs; a refused rule throws its words.
 // The night and the harvests read F21's talents from master data, so they wait for it. Loaded on demand with the loop's
 // screens, so the night's code stays out of the initial JS.
 import {
-  BLOCK_IDS, buildStation, buy, buyBlock, collectLoopAll, collectLoopWorker, dismissLoopStopped, editLoopQueue, endDay, harvest, harvestAll, loopKinds, plant,
+  BLOCK_IDS, buildStation, buyDorm, cancelSwap, chat, gift, pickStart, redrawStart, swapDorm, type AffinityResult, type Taste, buy, buyBlock, collectLoopAll, collectLoopWorker, dismissLoopStopped, editLoopQueue, endDay, harvest, harvestAll, loopKinds, plant,
   plantAll, recallLoopWorker, receiptItems, repeatLoopJob, restartLoopStopped, SaveRuleError, setTender, ship, shipAll, shopLines, startLoopJob, takeBack,
   touched, type BlockId, type CropId, type FarmingTalentOf, type HarvestReceipt, type LoopCollected, type LoopJobInput, type LoopKinds, type LoopPlaceId,
   type LoopWorkRequest, type SaveV3, type ShopLine, type StationId,
@@ -177,3 +178,46 @@ export async function collectAt(place: LoopPlaceId): Promise<LoopCollected> {
 
 /** Builds a station for its gold (decision 6). */
 export const buildPlace = (station: StationId) => change((s) => buildStation(s, station))
+
+// --- The roster (F23) ----------------------------------------------------------------------------------------------
+
+/** Picks the start's Umas from the sheet (decision 2): the sheet is drawn again from master data's release and talents,
+ * so it waits for master data. */
+export async function pickFirstHands(ids: readonly string[]): Promise<void> {
+  const view = await masterReady()
+  await change((s) => pickStart(s, ids, view.roster.map((o) => o.outfitId), talentsFor(view)))
+}
+/** The start's one free redraw. */
+export const redrawFirstHands = () => change(redrawStart)
+
+/** Buys the Dorm's next level (decision 3): the gold now, the beds tomorrow. */
+export const buyDormLevel = () => change(buyDorm)
+/** Swaps an idle Uma home for one away, arriving tomorrow (decision 4). */
+export async function swapUmas(out: string, into: string): Promise<void> {
+  const kinds = await workKinds()
+  await change((s) => swapDorm(s, out, into, kinds))
+}
+/** Calls off a swap: she stays. */
+export const cancelDormSwap = (out: string) => change((s) => cancelSwap(s, out))
+
+/** What a chat or a gift did, for the screen to say: her affinity before and after, whom it brought onto the roster,
+ * and a gift's taste. */
+export type AffinityNote = Omit<AffinityResult<SaveV3>, 'save'> & { taste?: Taste }
+
+async function affinity(rule: (save: SaveV3) => AffinityResult<SaveV3> & { taste?: Taste }): Promise<AffinityNote> {
+  let note: AffinityNote | null = null
+  await change((s) => {
+    const { save, ...rest } = rule(s)
+    note = rest
+    return save
+  })
+  return note!
+}
+/** A chat with an Uma on the roster or a visitor (decision 9): +15, once a day. */
+export const chatWith = (outfitId: string) => affinity((s) => chat(s, outfitId))
+/** A gift of one good at its stars (decision 8): what she thinks of it reads her favourite line from master data. */
+export async function giveGift(outfitId: string, item: string, stars: number): Promise<AffinityNote> {
+  const view = await masterReady()
+  const line = view.roster.find((o) => o.outfitId === outfitId)?.line ?? null
+  return affinity((s) => gift(s, outfitId, item, stars, line))
+}

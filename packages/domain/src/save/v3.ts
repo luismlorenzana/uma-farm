@@ -214,6 +214,15 @@ export const readyPlots = (save: Pick<SaveV3, 'fields'>): number => save.fields.
 export const tendedBlock = (save: Pick<SaveV3, 'fields'>, outfitId: OutfitId): BlockId | null =>
   save.fields.blocks.find((b) => b.tender === outfitId)?.id ?? null
 
+/** The start's three (CS2; F23). */
+export const START_PICKS = 3
+/** Picks still to make (F23 decision 2): the start's sheet shows while the roster holds fewer than three. */
+export const picksLeft = (save: Pick<SaveV3, 'roster'>): number => Math.max(0, START_PICKS - Object.keys(save.roster).length)
+/** She leaves the farm tomorrow: a swap at the Dorm takes her out (F23 decision 4). */
+export const leaving = (save: Pick<SaveV3, 'dorm'>, outfitId: OutfitId): boolean => save.dorm.swaps.some((s) => s.out === outfitId)
+/** She's home and staying (F23): who may take a job or tend a block. An Uma leaving tomorrow may do neither. */
+export const onFarm = (save: Pick<SaveV3, 'dorm'>, outfitId: OutfitId): boolean => save.dorm.home.includes(outfitId) && !leaving(save, outfitId)
+
 /** A new Uma on the roster: joined today, Novice at 0 points in all nine activities. */
 export function newRosterUma(day: number): RosterUma {
   return { joined: day, ranks: Object.fromEntries(ACTIVITIES.map((a) => [a, { points: 0, rank: 0, challenge: 0 }])) as Record<Activity, RankState>, affinity: 0, wellFed: 0 }
@@ -225,7 +234,7 @@ export function pairKey(a: OutfitId, b: OutfitId): string {
 }
 
 /** Day 1 (CS3): 500g, 9 Carrot seeds, Block A of 9 tilled plots, the Dorm at level 1 (3 beds), chapter 1, everything else
- * empty. The start's picks (CS2) are F23's; nobody is on the roster yet. */
+ * empty. Nobody is on the roster yet: the start's sheet (CS2, F23) is the first tap. */
 export function newSave(uid: string, now: string): SaveV3 {
   return {
     version: 3,

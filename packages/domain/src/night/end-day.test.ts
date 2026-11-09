@@ -39,7 +39,7 @@ describe('the night (CS7)', () => {
   it('runs nine steps in order, each a named function', () => {
     expect(NIGHT_STEPS.map((s) => `${s.step} ${s.name}`)).toEqual([
       '1 payTheBin', '2 growCrops', '3 tendAnimals', '4 moveJobs', '4 countHauls', '5 resetWorkshops', '6 tickRanks', '6 tickBonds', '6 countWellFed',
-      '7 witherCrops', '7 turnCalendar', '8 checkGoals', '9 buildSummary',
+      '7 witherCrops', '7 turnCalendar', '8 settleDorm', '8 gateVisitors', '8 checkGoals', '9 buildSummary',
     ])
   })
 

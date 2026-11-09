@@ -5,7 +5,8 @@ import type { PlaceAt } from '@luismlorenzana/uma-kit/hub'
 
 /** The places whose screens have landed (decision 5), each with where a tap on it goes: F19's bin and shop (their sheets
  * over the farm) and Warehouse; F20's Fields (their quick look, which opens `/fields`); F22's forest, Fishery and three
- * stations (their quick looks, which open their pages); F23 adds the Dorm. Until then a place shows "Soon". */
+ * stations (their quick looks, which open their pages); F23's Dorm (its page) and Gate (its quick look, the visitor
+ * waiting). Until then a place shows "Soon". */
 export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlaceId, string>([
   ['fields', '/?peek=fields'],
   ['forest', '/?peek=forest'],
@@ -16,6 +17,8 @@ export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlace
   ['bin', '/?sheet=bin'],
   ['shop', '/?sheet=shop'],
   ['warehouse', '/warehouse'],
+  ['dorm', '/dorm'],
+  ['gate', '/?peek=gate'],
 ])
 
 /** Where a tap on a place goes: its screen once it's open and landed, else its quick look. */

@@ -20,7 +20,7 @@ import { loopWorking } from '../save/loop-work'
 import { LOOP_KINDS } from '../gathering/kinds'
 import type { LoopKinds } from '../save/parse-v3'
 import { SaveRuleError } from '../save/rules'
-import { BLOCK_IDS, emptyPlot, newBlock, tendedBlock, type Block, type BlockId, type OutfitId, type Plot, type SaveV3 } from '../save/v3'
+import { BLOCK_IDS, emptyPlot, leaving, newBlock, tendedBlock, type Block, type BlockId, type OutfitId, type Plot, type SaveV3 } from '../save/v3'
 import { addGoods, goodCount, takeGoods } from '../save/warehouse'
 import { CROPS, GROWTH_SLACK, growsIn, readyAt, SHOP_SEEDS } from './crops'
 
@@ -125,6 +125,7 @@ export function setTender<S extends SaveV3>(save: S, id: BlockId, outfitId: Outf
   if (!blockOf(save, id)) throw new SaveRuleError('bad-slot', `No Block ${id} yet.`)
   if (outfitId !== null) {
     if (!save.dorm.home.includes(outfitId) || !save.roster[outfitId]) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
+    if (leaving(save, outfitId)) throw new SaveRuleError('busy', 'She leaves tomorrow.')
     if (loopWorking(save, kinds).has(outfitId)) throw new SaveRuleError('busy', 'She’s working.')
   }
   const blocks = save.fields.blocks.map((b): Block => {

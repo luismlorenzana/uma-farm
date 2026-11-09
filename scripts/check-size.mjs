@@ -10,9 +10,10 @@ export const MAIN_JS_BUDGET = 180_000
 /** Modules that must load on demand (F5): the Hub map's Phaser scene, which uma-kit imports only when a map mounts, and the
  * Wilds' screens, which the router loads with React.lazy; the loop's boot with its migration (F17); the loop's pages,
  * its sheets, its actions and the night (F18); the Fields' page, rules and crop table, and the morning's words (F20); and
- * the talents, the rank rules and their table, the roster's rows and the Umas' marks (F21); and the work operations and
- * their env, the forest's, the Fishery's and the stations' tables, kinds and build rule, and their screens (F22). Paths
- * match a module id exactly or as its suffix. */
+ * the talents, the rank rules and their table, the roster's rows and the Umas' marks (F21); the work operations and
+ * their env, the forest's, the Fishery's and the stations' tables, kinds and build rule, and their screens (F22); and the
+ * roster's rules (the start's sheet, the Dorm, visitors and affinity) with the start's cards, the Dorm's page, the
+ * Gate's quick look and the chat and gift controls (F23). Paths match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
   'phaser/dist/phaser.esm.js',
   '@luismlorenzana/uma-kit/dist/hub/scene/createHubGame.js',
@@ -44,6 +45,13 @@ export const LAZY_MODULES = [
   'domain/src/gathering/stations.ts',
   'src/loop/WorkPlace.tsx',
   'src/loop/work-view.ts',
+  'domain/src/farm/start.ts',
+  'domain/src/farm/dorm.ts',
+  'domain/src/farm/visitors.ts',
+  'src/loop/StartPicks.tsx',
+  'src/loop/DormPage.tsx',
+  'src/loop/GatePeek.tsx',
+  'src/loop/Affinity.tsx',
 ]
 
 export function entrySrc(html) {

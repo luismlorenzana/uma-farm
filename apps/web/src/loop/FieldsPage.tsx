@@ -5,7 +5,7 @@
 // do a block, and the tender comes from uma-kit's picker over the Umas home (`?tend=A`), with F21's talents and ranks:
 // "Hand · B" in farming on each card, opening by farming. Each sheet is a search parameter, so Back closes it. Loaded on
 // demand, loop's build only.
-import { CROPS, isBusy, itemNameOf, receiptItems, tendedBlock, type BlockId, type FarmingTalentOf, type HarvestReceipt, type SaveV3 } from '@farm/domain'
+import { CROPS, isBusy, itemNameOf, leaving, receiptItems, tendedBlock, type BlockId, type FarmingTalentOf, type HarvestReceipt, type SaveV3 } from '@farm/domain'
 import { FaceTile, UmaPicker } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -282,6 +282,8 @@ interface TenderRow extends LoopUmaRow {
   /** "Tends Block A", or her farming rank and talent. */
   note: string
   working: boolean
+  /** A swap takes her away tomorrow (F23): she can't tend. */
+  leaving: boolean
 }
 
 /** The tender's picker (F20; F21 decision 7): uma-kit's picker over the Umas home, each card her farming rank and talent
@@ -292,7 +294,8 @@ function TenderPicker({ save, block, master, talents, onClose, onError }: {
 }) {
   const rows = useMemo((): TenderRow[] => umaRows(save, save.dorm.home, master?.album ?? new Map(), talents, master?.roster ?? []).map((row) => {
     const tends = tendedBlock(save, row.id)
-    return { ...row, note: tends ? `Tends Block ${tends}` : rankTalent(row, 'farming'), working: tends === null && isBusy(save, row.id) }
+    const away = leaving(save, row.id)
+    return { ...row, note: tends ? `Tends Block ${tends}` : away ? 'Leaves tomorrow' : rankTalent(row, 'farming'), working: tends === null && isBusy(save, row.id), leaving: away }
   }), [save, master, talents])
   const sorts = useMemo(() => pickerSorts<TenderRow>('farming'), [])
   const byFarming = useMemo(() => activityOrder('farming'), [])
@@ -306,7 +309,7 @@ function TenderPicker({ save, block, master, talents, onClose, onError }: {
       sorts={sorts}
       selectedIds={current ? [current] : []}
       order={(a, b) => Number(a.working) - Number(b.working) || byFarming(a, b)}
-      disabled={(row) => (row.working ? 'Working' : null)}
+      disabled={(row) => (row.working ? 'Working' : row.leaving ? 'Leaves tomorrow' : null)}
       describe={(row) => row.note}
       renderBadges={umaBadges}
       words={{ level: 'Farming rank' }}

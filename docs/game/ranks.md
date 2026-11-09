@@ -234,7 +234,8 @@ roster:
 
 ## The screens (decision 7)
 
-- **`/roster`** is uma-kit's album chrome over the Umas home: search, sort and filters, a three-column grid of cards.
+- **`/roster`** is uma-kit's album chrome over the roster (the Umas home until F23, everyone since, with a Where filter,
+  hearts, and Chat and Gift on her sheet; [roster.md](roster.md#the-screens)): search, sort and filters, a three-column grid of cards.
   - **Her face** carries her **favourite line's mark** (top left: a Carrot farming, a Pine Log foraging, a Carp fishing,
     Copper Ore mining, from uma-art's items atlas on a light disc) and her **best talent's grade** (bottom right, on a
     chip: S gold, A coral, B blue, C green, D and below grey).
@@ -271,5 +272,5 @@ harvests (`harvestPlot`, `harvestBlock`, `harvestFields`, `collectFarm`, which w
   met tonight ranks her up tonight ([gathering.md](gathering.md#the-night-hauls-count-cs7-step-4-cs30-decision-7)).
 - **A job's talent:** a kind's plan reads it through `loopKinds(talentOf)` (F22): the night passes `NightContext.talentOf`,
   the app `talentsFor(view)`.
-- **The roster and the start's cards (F23):** `talentTable(view)`, `talentsOf`, `favouriteActivity`, `umaRows`,
-  `UMA_FACETS`, `umaBadges`, `TalentChip`, `FavouriteMark`. **Hello lines (F24):** `temperament`.
+- **The roster and the start's cards (F23, done: [roster.md](roster.md)):** `talentTable(view)`, `talentsOf`,
+  `favouriteActivity`, `umaRows`, `UMA_FACETS`, `umaBadges`, `TalentChip`, `FavouriteMark`. **Hello lines (F24):** `temperament`.

@@ -99,3 +99,24 @@ describe('the morning\'s ranks (F21)', () => {
     expect(summaryParts(summary)[0]!.lines[0]!.text).toBe('An Uma · Farming Hand')
   })
 })
+
+describe('the morning\'s roster news (F23 decision 11)', () => {
+  it('says the Dorm\'s new beds, who\'s home, who joined, who\'s at the Gate and who left, each a tap', () => {
+    const names: Readonly<Record<string, string>> = { 101: 'Aster', 202: 'Beryl', 303: 'Cinder', 404: 'Dune' }
+    const summary: MorningSummary = {
+      day: 8, bin: [], work: [], ranks: [], bonds: [], nudges: [],
+      news: [
+        { kind: 'dorm', level: 2 }, { kind: 'home', umas: ['101'] }, { kind: 'joined', outfitId: '202', home: false }, { kind: 'gate', outfitId: '303' },
+        { kind: 'left', outfitId: '404' },
+      ],
+    }
+    expect(summaryParts(summary, (id) => names[id] ?? 'An Uma')).toEqual([{ section: 'news', title: 'New today', lines: [
+      { key: 'dorm', text: 'Dorm level 2 · 5 beds', to: '/dorm' },
+      { key: 'home', text: 'Aster is home', to: '/dorm' },
+      { key: 'joined:202', text: 'Beryl joined · away', to: '/roster?uma=202', tag: 'New' },
+      { key: 'gate:303', text: 'Cinder is at the Gate', to: '/?peek=gate' },
+      { key: 'left:404', text: 'Dune left the Gate', to: '/?peek=gate' },
+    ] }])
+    expect(summaryParts({ ...summary, news: [{ kind: 'home', umas: ['101', '202'] }] })[0]!.lines[0]!.text).toBe('2 Umas are home')
+  })
+})

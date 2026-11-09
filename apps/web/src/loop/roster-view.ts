@@ -1,9 +1,11 @@
 // The roster's cards (F18; F21 decision 7; FC19): the Umas on the farm as album rows with their talents and ranks, the
 // filters (talent and rank in each activity, favourite line) and the sorts (talent score and rank points in an activity,
 // joined, name), the words on a card, and one Uma's nine activities for her sheet. `/roster` and every Uma picker (the
-// Fields' tender now, F22's jobs next) read these. Pure, so the pages and the tests read the same.
+// Fields' tender, F22's jobs, F23's swaps) read these. F23 adds everyone on the roster, home or away, and your affinity
+// with her. Pure, so the pages and the tests read the same.
 import {
-  ACTIVITIES, ACTIVITY_NAMES, activityScore, challengeFor, challengeMet, favouriteActivity, FAVOURITE_ACTIVITIES, pointsFull, RANK_POINTS, RANKS, TALENT_D, TALENT_GRADES,
+  ACTIVITIES, ACTIVITY_NAMES, activityScore, challengeFor, challengeMet, favouriteActivity, FAVOURITE_ACTIVITIES, HEART_POINTS, heartsOf, MAX_AFFINITY,
+  pointsFull, RANK_POINTS, RANKS, TALENT_D, TALENT_GRADES,
   type Activity, type FarmOutfit, type RosterUma, type SaveV3, type Talents, type TalentStep,
 } from '@farm/domain'
 import type { UmaPickerRow, UmaPickerSort } from '@luismlorenzana/uma-kit/album'
@@ -54,6 +56,10 @@ export interface LoopUmaRow extends UmaPickerRow {
   /** Her favourite activity (CS33), from her calling's line. */
   favourite: Activity | null
   joined: number
+  /** On the farm, or away on her off-season (F23). */
+  home: boolean
+  /** Your affinity with her, 0–1,000 (CS45). */
+  affinity: number
 }
 
 /** Her step in an activity: master data's, or D. */
@@ -77,6 +83,13 @@ export const UMA_FACETS: readonly FacetDef[] = [
   ...ACTIVITIES.map((a): FacetDef => ({ key: rankFacet(a), label: `${ACTIVITY_NAMES[a]} rank`, group: 'Rank', kind: 'enum', options: RANKS.map((label, r) => ({ value: String(r), label })) })),
 ]
 
+/** Where she is (F23): on the farm or away. The roster's filter; pickers list only the Umas home. */
+export const WHERE_FACET: FacetDef = {
+  key: 'where', label: 'Where', group: 'Where', kind: 'enum', options: [{ value: 'home', label: 'On the farm' }, { value: 'away', label: 'Away' }],
+}
+/** The roster's filters: where she is, then the pickers'. */
+export const ROSTER_FACETS: readonly FacetDef[] = [WHERE_FACET, ...UMA_FACETS]
+
 /** The Umas `ids` (on the roster) as rows, with master data's names and talents; `favourites` from master data's roster. */
 export function umaRows(save: SaveV3, ids: readonly string[], names: ReadonlyMap<string, { name: string; releasedAt: string }>, talents: ReadonlyMap<string, Talents> | null,
   roster: readonly FarmOutfit[]): LoopUmaRow[] {
@@ -90,9 +103,9 @@ export function umaRows(save: SaveV3, ids: readonly string[], names: ReadonlyMap
     const favourite = outfit ? favouriteActivity(outfit) : null
     const row: LoopUmaRow = {
       id, name, releasedAt: base?.releasedAt ?? '', level: null, search: name.toLowerCase(), facets: {}, sorts: {},
-      talents: talents?.get(id) ?? null, ranks: uma.ranks, favourite, joined: uma.joined,
+      talents: talents?.get(id) ?? null, ranks: uma.ranks, favourite, joined: uma.joined, home: save.dorm.home.includes(id), affinity: uma.affinity,
     }
-    const facets: Record<string, readonly string[]> = { favourite: favourite ? [favourite] : [] }
+    const facets: Record<string, readonly string[]> = { favourite: favourite ? [favourite] : [], where: [row.home ? 'home' : 'away'] }
     for (const a of ACTIVITIES) {
       facets[talentFacet(a)] = TALENT_BANDS.filter((band) => stepIn(row, a) >= band.step).map((band) => band.value)
       facets[rankFacet(a)] = [String(uma.ranks[a].rank)]
@@ -183,4 +196,13 @@ export function activityLines(row: LoopUmaRow): ActivityLine[] {
       tonight: pointsFull(state) && challengeMet(activity, state), favourite: row.favourite === activity,
     }
   })
+}
+
+// --- Affinity (F23; CS45) --------------------------------------------------------------------------------------------
+
+/** "♥ 2 · 45/100": her whole hearts and her points toward the next; "♥ 10" at the top. */
+export function heartsWords(affinity: number): string {
+  const hearts = heartsOf(affinity)
+  if (affinity >= MAX_AFFINITY) return '♥ 10'
+  return `♥ ${hearts} · ${Math.floor(affinity - hearts * HEART_POINTS)}/${HEART_POINTS}`
 }
