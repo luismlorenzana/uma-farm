@@ -1,5 +1,11 @@
 # uma-farm: the design spec
 
+> **Superseded by [core-spec.md](core-spec.md) (D27), 2026-11-08.** F7's rewrite turns the accepted loop
+> ([core-loop.md](core-loop.md), D26) into numbers: CS1–CS55 replace FS1–FS32. Gold, the requests board and the
+> workshops replace this doc's orders, its no-currency economy and its smithing Forge. Its economy analysis (§3) and
+> minigame contract carried into the core spec's §3, §4 and §11. The parcel design (§5, §6) stays here, parked with F10
+> and PO1 until the owner says so; uma-quest's final accept list is in the handoff. Read this doc as history.
+>
 > **Reworked again, 2026-11-08 (D22):** [core-loop.md](core-loop.md) puts the farm's own loop first. Gold replaces FS8's no-currency, a requests board replaces the game orders (FS4–FS7), and parcels (§5, §6) are parked until later. F7 is rewritten from core-loop.md once the owner answers it.
 >
 > **Refocused, 2026-11-08 (D20):** [hd2d-farm.md](hd2d-farm.md) moves the farm to the HD-2D engine and replaces §4 (the Forge's smithing game, FS12–FS21) with workshops and genre minigames, and FS32's queue with FR24's. §1–§3, §5 and §6 stand until F7 is rewritten.
