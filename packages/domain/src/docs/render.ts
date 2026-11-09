@@ -2,22 +2,11 @@
 // The live docs' generated blocks (docs/game/, D92): every list in the manual is rendered here from the rules, so it can't
 // drift from the game. A doc marks a block with `<!-- live:<key> -->` … `<!-- /live -->`; `pnpm docs:update` rewrites
 // them, and `docs.test.ts` fails when one is stale. Pure: no I/O (the test reads and writes the files). uma-rpg's blocks
-// for fights, classes, gear, Extra Stats, Laurels, prices, worlds, the Rift and achievements stay behind.
-import { MAX_QUEUE } from '@luismlorenzana/uma-work'
-import {
-  EXP_PER_MINUTE, JOB_SIZES, JOB_STEPS_MOST, jobSizes, makeMinutesV4, PROFESSION_MAX_LEVEL, professionExpToNext, STEP_MINUTES, stepMinutes,
-} from '../economy/pacing'
-import { isMakingPlaceV4, isProcessingPlaceV4, PLACES_V4 } from '../economy/places-v4'
-import { PLACE_SLOTS_V3, PLACE_SPEED_V3, professionById, tradeOfCalling, TRADES } from '../economy/professions'
-import { stockName } from '../economy/stock'
-import { placeById } from '../hub/places'
-import { gradeUnlockLevel } from '../items/catalog'
+// for fights, classes, gear, Extra Stats, Laurels, prices, worlds, the Rift and achievements stay behind; the Wilds' own
+// (their lines, items, made items, places, callings, jobs and Craft Levels) left with their pages in F24.
 import { lineItems, MATERIAL_LINES, type MaterialLine } from '../items/lines'
-import { madeName } from '../items/made'
 import { MADE_IDENTITIES, MADE_LINES, type MadeLine } from '../items/made-id'
-import { madeRecipeV4, RECIPE_V4 } from '../items/made-v4'
-import { tradeLine } from '../roster/roster'
-import { UMA_ROW_CALLING_V3, type UmaCallingRowV3 } from '../roster/template'
+import { madeRecipeV4 } from '../items/made-v4'
 import { BEDS, FARM_RANK_POINTS } from '../farm/farm'
 import { ACTIVITIES, ACTIVITY_NAMES, CRAFT_BANDS, craftRank, LINE_ACTIVITY, RANK_POINTS, RANKS, type Rank } from '../farm/ranks'
 import { CROP_IDS, FAMILY_NAMES, GOOD_FAMILIES, GOODS, goodOf, isGoodId, refinedOf, type GoodFamily } from '../goods/ids'
@@ -31,13 +20,13 @@ import { NIGHT_STEPS } from '../night/end-day'
 import { CROPS, nightsToReady, SHOP_SEEDS } from '../fields/crops'
 import { BLOCK_RULES, cropLevelStart, harvestQuality, MAX_CROP_LEVEL, seedsBackChance, tendedGrowth, UNTENDED_GROWTH } from '../fields/fields'
 import {
-  ACTIVITY_STAT, EXPEDITION_CUTOFFS, STAT_CUTOFFS, STAT_TEMPERAMENT, TALENT_D, TALENT_GRADES, TALENT_RANK_POINTS, TALENT_STATS, TALENT_YIELD, talentAffection,
+  ACTIVITY_STAT, EXPEDITION_CUTOFFS, STAT_CUTOFFS, STAT_TEMPERAMENT, TALENT_D, TALENT_GRADES, TEMPERAMENTS, TALENT_RANK_POINTS, TALENT_STATS, TALENT_YIELD, talentAffection,
   talentGrowth, talentPower, talentQuality, type TalentStep,
 } from '../farm/talents'
 import {
   CHALLENGES, daysToRank, PLACE_ACTIVITY, RANK_BENEFITS, rankPointsForDay,
 } from '../farm/rank-rules'
-import { AREA_NAMES, FISHING_SPOTS, FOREST_AREAS, SPOT_NAMES, STATION_JOB_IDS, STATION_JOBS, stationJobOf, STATIONS, type StationId } from '../gathering/ids'
+import { AREA_NAMES, FISHING_SPOTS, FOREST_AREAS, SPOT_NAMES, STATION_JOB_IDS, STATION_JOBS, stationJobOf, STATIONS, type FishingSpotId, type ForestAreaId, type StationId } from '../gathering/ids'
 import { gatherQuality, haulCount, sizeSkill, stationRate, type GatherPlace, type WorkTerms } from '../gathering/kinds'
 import { FISH_SIZES, FISHERY, FOREST, HAUL_BASE, STATION_JOB_RULES, STATION_RULES, TOOL_YIELD, WELL_FED_YIELD } from '../gathering/tables'
 import { farmPlace } from '../farm/places'
@@ -46,6 +35,11 @@ import { BLOCK_IDS } from '../save/v3'
 import { DORM_LEVELS } from '../farm/dorm'
 import { CHAT_POINTS, GATE_EVERY, GIFT_POINTS, giftTaste, STAY_AFFINITY, TASTES, VISITOR_DAYS } from '../farm/visitors'
 import { START_NEEDS, START_SHEET } from '../farm/start'
+import { farmRankOpens } from '../farm/diary'
+import { CHAPTER_POINTS, DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, ROW_GOLD, type Milestone } from '../farm/milestones'
+import { CAST, CAST_IDS } from '../story/cast'
+import { CHAPTER_1_GOALS, CHAPTERS } from '../story/chapters'
+import { CLOSING_SCENE, HELLO_LINES, OPENING_SCENE, type Beat } from '../story/chapter-1'
 
 type Cell = string | number
 /** A Markdown table; pipes in cells are escaped. */
@@ -54,108 +48,12 @@ function table(head: readonly string[], rows: readonly (readonly Cell[])[]): str
   return [`| ${head.join(' | ')} |`, `|${head.map(() => '---').join('|')}|`, ...rows.map((r) => `| ${r.map(cell).join(' | ')} |`)].join('\n')
 }
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
-const itemName = (id: string) => stockName(id)
-const inputs = (list: Record<string, number>) => Object.entries(list).map(([id, n]) => `${n > 1 ? `${n}× ` : ''}${itemName(id)}`).join(', ')
 
-// --- The lines and their items --------------------------------------------------------------------------------------
+// --- The lines' names (the migration's refunds and the gifts' likes) ------------------------------------------------
 
 const LINE_NAME: Readonly<Record<MaterialLine, string>> = { metal: 'Metal', wood: 'Wood', vegetables: 'Vegetables', fish: 'Fish', stone: 'Stone' }
 const MADE_LINE_NAME: Readonly<Record<MadeLine, string>> = { 'weapon-gem': 'Arms Gems', 'tome-ink': 'Tome Ink', 'armor-fittings': 'Armor Fittings',
   'accessory-setting': 'Accessory Settings', 'jewel-planet': 'Planet Jewels', 'jewel-moon': 'Moon Jewels' }
-/** A line's three places (FL31): gathering, processing and making, and what the last makes. */
-function lineHome(line: MaterialLine): { profession: string; place: string; processor: string; maker: string; makes: string } {
-  const gather = PLACES_V4.find((p) => p.line === line && p.kinds.includes('gather'))!
-  const process = PLACES_V4.find((p) => p.line === line && isProcessingPlaceV4(p))!
-  const make = PLACES_V4.find((p) => p.line === line && isMakingPlaceV4(p))!
-  return {
-    profession: professionById(gather.profession)!.name, place: placeById(gather.id)?.name ?? gather.id,
-    processor: `the ${placeById(process.id)?.name ?? process.id} (${professionById(process.profession)!.name})`,
-    maker: `the ${placeById(make.id)?.name ?? make.id} (${professionById(make.profession)!.name})`,
-    makes: make.made.map((m) => MADE_LINE_NAME[m]).join(' and '),
-  }
-}
-
-/** The five lines (FL1, FL5): who gathers each, where it's processed and made, and its ten raw items. */
-function families(): string {
-  return table(['Line', 'Gathered by', 'Processed at', 'Made at', 'Makes', 'Raw, G1 → G10'], MATERIAL_LINES.map((line) => {
-    const home = lineHome(line)
-    return [LINE_NAME[line], `${home.profession}, the ${home.place}`, home.processor, home.maker, home.makes, lineItems(line, false).map((m) => m.name).join(', ')]
-  }))
-}
-/** Every item, raw and refined, by line and grade (FL5, FL6): grade g opens at Craft Lv 5g − 4. */
-function items(): string {
-  const out: string[] = []
-  for (const line of MATERIAL_LINES) {
-    const home = lineHome(line)
-    out.push(`### ${LINE_NAME[line]} (${home.profession}, the ${home.place}; ${home.processor}; ${home.maker})`, '')
-    const refined = lineItems(line, true)
-    out.push(table(['Grade', 'Raw', 'Refined', 'Opens at Craft Lv'], lineItems(line, false).map((m, i) => [
-      `G${m.grade}`, `${m.name} (\`${m.id}\`)`, `${refined[i]!.name} (\`${refined[i]!.id}\`)`, gradeUnlockLevel(m.grade),
-    ])), '')
-  }
-  return out.join('\n').trimEnd()
-}
-/** The made items (FM8, R4): uma-rpg's five kinds with its ids and recipes, by line, each a line's refined items of its grade. */
-function made(): string {
-  return table(['Made item', 'Id', 'Grade', 'Opens at Craft Lv', 'Made at', 'Recipe'], MADE_LINES.flatMap((line) =>
-    MADE_IDENTITIES.filter((m) => m.line === line).map((m) => {
-      const place = PLACES_V4.find((p) => p.made.includes(line))!
-      return [madeName(m.id)!, `\`${m.id}\``, m.grade, gradeUnlockLevel(m.grade), placeById(place.id)?.name ?? place.id, inputs(madeRecipeV4(m.id))]
-    })))
-}
-
-// --- The places and the trades --------------------------------------------------------------------------------------
-
-/** The fifteen places (FL31) and the trades: who works each, and its one job. */
-function facilities(): string {
-  const trade = (profession: string) => TRADES.find((t) => t.gathering === profession || t.processing === profession || t.crafting === profession)!
-  const does = (id: string): string => {
-    const spec = PLACES_V4.find((p) => p.id === id)!
-    if (spec.kinds.includes('gather')) return `Gathers ${LINE_NAME[spec.line].toLowerCase()}, G1–G10`
-    if (isProcessingPlaceV4(spec)) return `Processes ${LINE_NAME[spec.line].toLowerCase()} raw into refined, one for one`
-    return `Makes ${spec.made.map((m) => MADE_LINE_NAME[m]).join(' and ')}`
-  }
-  return table(['Place', 'Id', 'Profession', 'Job', 'What it does', 'Its trade'], PLACES_V4.map((p) => {
-    const profession = professionById(p.profession)!
-    return [placeById(p.id)?.name ?? p.id, `\`${p.id}\``, profession.name, cap(profession.kind), does(p.id), LINE_NAME[tradeLine(trade(p.profession).id)]]
-  })) + `\n\nEvery place has ${PLACE_SLOTS_V3} slots at ×${PLACE_SPEED_V3} from day one, and nothing to upgrade. An Uma works her trade's three places; a place whose trade has no Uma on the roster is an open shop, taking everyone.`
-}
-
-/** The calling rule's rows (CV19), in the farm's words: her best running styles name her line. */
-const CALLING_ROW: Readonly<Record<UmaCallingRowV3, string>> = {
-  1: 'Front among them', 2: 'Pace alone', 3: 'Pace with Late or End', 4: 'End among them (End, or Late and End)', 5: 'Late alone',
-}
-/** Her trade by her best running styles (FM7): the first row that fits. */
-function callings(): string {
-  return table(['Row', 'Her best running styles', 'Her trade\'s line', 'Her places'], (Object.keys(CALLING_ROW).map(Number) as UmaCallingRowV3[]).map((row) => {
-    const trade = tradeOfCalling(UMA_ROW_CALLING_V3[row])
-    const places = PLACES_V4.filter((p) => p.line === tradeLine(trade)).map((p) => placeById(p.id)?.name ?? p.id).join(', ')
-    return [row, CALLING_ROW[row], LINE_NAME[tradeLine(trade)], places]
-  })) + '\n\nHer best running styles are every style at her top grade. Distance, Power and Wit don\'t count.'
-}
-
-// --- Jobs and Craft Level -------------------------------------------------------------------------------------------
-
-const hours = (m: number): string => `${Number((m / 60).toFixed(1))} h`
-function jobs(): string {
-  return table(['Setting', 'Value'], [
-    ['One step', `gather one raw or process one raw into one refined: ${STEP_MINUTES.atFirst} min at Craft Lv1, falling evenly to ${STEP_MINUTES.atMax} min at Lv${PROFESSION_MAX_LEVEL} (ten in ${hours(10 * stepMinutes(1))} and ${hours(10 * stepMinutes(PROFESSION_MAX_LEVEL))})`],
-    ['Make one item', `one step for each refined item in it: an Arms Gem or Tome Ink ${RECIPE_V4['weapon-gem'].qty}, Armor Fittings ${RECIPE_V4['armor-fittings'].qty}, an Accessory Setting ${RECIPE_V4['accessory-setting'].qty}, a Planet Jewel ${RECIPE_V4['jewel-planet'].qty}, a Moon Jewel ${RECIPE_V4['jewel-moon'].qty} (an Arms Gem ${hours(makeMinutesV4(1, RECIPE_V4['weapon-gem'].qty))} at Lv1, ${hours(makeMinutesV4(PROFESSION_MAX_LEVEL, RECIPE_V4['weapon-gem'].qty))} at Lv${PROFESSION_MAX_LEVEL})`],
-    ['Opens', 'grade g at Craft Lv 5g − 4, to gather, to process and to make'],
-    ['Craft EXP', `${EXP_PER_MINUTE} per minute of the job at her level, before the place's speed`],
-    ['Sizes', `${JOB_SIZES.map((n) => `×${n}`).join(', ')} to gather or process; a make up to about ${JOB_STEPS_MOST} steps (${hours((JOB_STEPS_MOST * stepMinutes(25)) / PLACE_SPEED_V3)} at Craft Lv25): Armor Fittings ×${jobSizes(RECIPE_V4['armor-fittings'].qty).at(-1)}, a Moon Jewel ×${jobSizes(RECIPE_V4['jewel-moon'].qty).at(-1)}, an Arms Gem or Tome Ink ×${jobSizes(RECIPE_V4['weapon-gem'].qty).at(-1)}, an Accessory Setting or a Planet Jewel ×${jobSizes(RECIPE_V4['accessory-setting'].qty).at(-1)}`],
-    ['Jobs queued after it', String(MAX_QUEUE)],
-    ['Places', `${PLACE_SLOTS_V3} Uma slots each, speed ×${PLACE_SPEED_V3}, from day one; no upgrades`],
-  ])
-}
-function levels(): string {
-  const rows: Cell[][] = []
-  for (let lv = 1; lv < PROFESSION_MAX_LEVEL; lv += 7) rows.push([lv, professionExpToNext(lv).toLocaleString('en-US')])
-  return table(['Craft Level', 'Craft EXP to next'], rows) +
-    `\n\nCraft EXP to next: ${professionExpToNext(0).toLocaleString('en-US')} + ${professionExpToNext(1) - professionExpToNext(0)} × level, up to Lv ${PROFESSION_MAX_LEVEL}; jobs pay ${EXP_PER_MINUTE} EXP per base minute of work, so a level takes ${professionExpToNext(1) / EXP_PER_MINUTE / 60} base hours at Lv1 and ${professionExpToNext(PROFESSION_MAX_LEVEL - 1) / EXP_PER_MINUTE / 60} at Lv${PROFESSION_MAX_LEVEL - 1}.`
-}
-
-/** Every block a doc may embed, by key. */
 // --- Save v3 and the migration (F17) --------------------------------------------------------------------------------
 
 /** CS32: Craft Level → her rank in her calling's activity, with the points it starts at. */
@@ -556,13 +454,86 @@ function giftLikes(): string {
   return table(['Favourite line', 'Likes (+30)', 'Dislikes (−20)'], LINES.map((line) => [LINE_NAME[line], byFamily(line, 'liked'), byFamily(line, 'disliked')]))
 }
 
+// --- Farm Rank and chapter 1 (F24) ----------------------------------------------------------------------------------
+
+/** CS39's point values (decision 1). */
+function farmRankPoints(): string {
+  return table(['Source', 'Points', 'In M4'], [
+    ['Gold shipped at the bin', `1 per ${GOLD_PER_POINT}g`, 'Yes: `farm.counts[\'gold-shipped\']`'],
+    ['A Diary entry: a good shipped once', ENTRY_POINTS, 'Yes: `diary.shipped`'],
+    ['A milestone', MILESTONE_POINTS, 'Yes: `diary.milestones`'],
+    ['A chapter done', CHAPTER_POINTS, 'Yes: `farm.chapter` − 1'],
+    ['A festival\'s 1st / 2nd / 3rd', '150 / 75 / 25', 'M6'],
+    ['Decorations', '1 per 100g', 'M6'],
+  ])
+}
+/** Each Farm Rank's threshold and what it opens in the game as built (decision 8), from the rules that gate on it. */
+function farmRankOpensBlock(): string {
+  return table(['Farm Rank', 'Points', 'Opens'], FARM_RANK_POINTS.map((points, i) => [i + 1, points.toLocaleString('en-US'), i === 0 ? 'Block A, tier-1 seeds (the start); Dorm level 2' : farmRankOpens(i + 1).join(', ')]))
+}
+const milestoneWhat = (m: Milestone): string => {
+  switch (m.kind) {
+    case 'shipped': return `${g(m.at)} shipped at the bin`
+    case 'recruited': return `${m.at} Umas on the roster (the starters count)`
+    case 'rank': return `The first Uma at ${RANKS[m.rank]}, in any activity`
+    case 'depth': return `The first haul from ${m.place === 'forest' ? AREA_NAMES[m.area as ForestAreaId] : SPOT_NAMES[m.area as FishingSpotId]}`
+    case 'crop-level': return `The first crop at level ${m.level}`
+  }
+}
+/** CS38's milestones as built (decision 2). */
+function milestonesBlock(): string {
+  return table(['Milestone', 'Id', 'Gold', 'Points'], MILESTONES.map((m) => [milestoneWhat(m), `\`${m.id}\``, g(m.gold), MILESTONE_POINTS]))
+}
+/** The collection rows (decision 3). */
+function diaryRows(): string {
+  return table(['Row', 'Id', 'Its ten goods', 'Gold'], DIARY_ROWS.map((r) => [`${FAMILY_NAMES[r.family]}${r.refined ? ', refined' : ''}`, `\`${r.id}\``, r.goods.map((id) => itemNameOf(id)).join(', '), g(ROW_GOLD)]))
+}
+/** Chapter 1's six goals (CS42, decision 4). */
+function chapterOne(): string {
+  const reads: Readonly<Record<string, string>> = {
+    harvest: '`farm.counts[\'plots-harvested\']` since the chapter opened', ship: '`farm.counts[\'gold-shipped\']` since the chapter opened',
+    'bring-home': '`farm.counts[\'home:forest\']` + `[\'home:fishery\']` since the chapter opened', 'second-crop': 'Kinds planted: entries in `crops`',
+    'rank-hand': 'Any Uma at Hand or above, in any activity', 'farm-rank': 'The Farm Rank from `farm.points`',
+  }
+  return table(['#', 'Goal', 'Done at', 'Read from', 'Teaches'], CHAPTER_1_GOALS.map((goal, i) => [i + 1, goal.text, goal.id === 'ship' ? g(goal.need) : goal.need, reads[goal.id] ?? '', goal.teaches]))
+}
+/** The chapters as built. */
+function chaptersBlock(): string {
+  return table(['Chapter', 'Title', 'Opens with', 'Goals', 'Reward'], CHAPTERS.map((c) => [
+    c.chapter, c.title, c.opens, c.goals ? c.goals.length : 'Soon (M5)',
+    c.reward ? [`${g(c.reward.gold)}`, ...c.reward.plans.map((b) => `the ${cap(b)}'s plans (\`buildings.${b} = 0\`)`), ...(c.reward.recruit ? ['a recruit'] : []), `${CHAPTER_POINTS} Farm Rank points`].join(', ') : '—',
+  ]))
+}
+/** The town's cast (CS41). */
+function castBlock(): string {
+  return table(['Who', 'Is', 'From chapter', 'Bust (F25)'], CAST_IDS.map((id) => [CAST[id].name, CAST[id].is, CAST[id].from, `\`${CAST[id].art}\``]))
+}
+const speakerWords = (beat: Beat): string => {
+  switch (beat.speaker.kind) {
+    case 'cast': return CAST[beat.speaker.id].name
+    case 'first-hand': return `Your first hand #${beat.speaker.index + 1} (her hello)`
+    case 'newest-hand': return 'Your newest hand'
+    case 'narrator': return '(narration)'
+  }
+}
+/** The two scenes, beat by beat (decision 6). */
+function scenesBlock(): string {
+  return [OPENING_SCENE, CLOSING_SCENE].map((scene) => `**${scene.title}** (\`${scene.id}\`)\n\n${table(['#', 'Who', 'Line'], scene.beats.map((b, i) => [i + 1, speakerWords(b), b.line || '—']))}`).join('\n\n')
+}
+/** The hello lines (decision 7). */
+function helloLines(): string {
+  return table(['Temperament', 'Her hello'], TEMPERAMENTS.map((t) => [cap(t), HELLO_LINES[t]]))
+}
+
 export function renderBlock(key: string): string | null {
-  const blocks_: Record<string, () => string> = { families, items, made, facilities, callings, jobs, levels, 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
+  const blocks_: Record<string, () => string> = { 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
     calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
     crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,
     'place-activity': placeActivity, 'forest-areas': forestAreas, 'fishing-spots': fishingSpots, 'fish-sizes': fishSizes, 'size-skill': sizeSkills,
     'haul-day': haulDay, 'haul-factors': haulFactors, 'gather-quality': gatherQualities, stations, 'station-day': stationDay, 'station-recipes': stationRecipes,
-    'dorm-levels': dormLevels, 'roster-ways': rosterWays, 'affinity-acts': affinityActs, 'gift-likes': giftLikes }
+    'dorm-levels': dormLevels, 'roster-ways': rosterWays, 'affinity-acts': affinityActs, 'gift-likes': giftLikes,
+    'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, 'chapter-1': chapterOne,
+    chapters: chaptersBlock, cast: castBlock, scenes: scenesBlock, 'hello-lines': helloLines }
   return blocks_[key]?.() ?? null
 }

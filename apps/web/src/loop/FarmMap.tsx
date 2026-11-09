@@ -1,8 +1,8 @@
-// The farm (F18 decision 5; FC28, FR5–FR9): `/` in the loop's build. uma-kit's Hub map in eight rows of three, the core
+// The farm (F18 decision 5; FC28, FR5–FR9): `/`. uma-kit's Hub map in eight rows of three, the core
 // loop's rows, on uma-art's buildings; taller than a phone's screen, it scrolls, with the help button and the Collect all
 // pill fixed. A place's quick look opens in the side panel (`/?peek=<place>`): what it is, and what opens it while it's
 // locked; the Gate's is the visitor waiting, with Chat and Gift (F23). After a night the morning summary opens over the
-// map until the player starts the day. Loaded on demand, and only in the loop's build.
+// map until the player starts the day. Loaded on demand.
 import {
   farmEnvV3, FARM_PLACES, farmPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, STAY_AFFINITY, workNow, type FarmPlace, type LoopPlaceId,
   type SaveV3,

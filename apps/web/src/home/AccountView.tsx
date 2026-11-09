@@ -1,13 +1,11 @@
 // Account (uma-kit's AccountPage): who is signed in, the save's sync, its safety copies, the appearance, the build and
-// sign-out, master data's release (Home's row until F5), and the notification switch (F6). In the loop's build the
-// Notifications card says they're off (F18 decision 12): with days as turns, nothing finishes while the app is closed.
+// sign-out, and master data's release. The Notifications card says they're off (F18 decision 12): with days as turns,
+// nothing finishes while the app is closed. F6's switch went with the Wilds (F24); the server's push is untouched.
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { AccountPage } from '@luismlorenzana/uma-kit/places'
 import { Button, Panel } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useState } from 'react'
 import { APP_BUILD_ID } from '../app/build'
-import { loopOn } from '../app/loop'
-import { NotificationsCard } from '../push/NotificationsCard'
 import { useMaster } from '../master/master'
 import { safetyCopies, type SafetyCopy } from '../save/db'
 import { restoreSafetyCopy, seeReplaced, useGame } from '../save/game'
@@ -63,7 +61,7 @@ export function AccountView() {
         { label: 'Build', value: APP_BUILD_ID },
         { label: 'Master data', value: release },
       ]}
-      notifications={loopOn() ? <NotificationsOff /> : <NotificationsCard />}
+      notifications={<NotificationsOff />}
       sections={<SafetyCopies />}
       onSignOut={auth.authRequired ? () => auth.signOut() : undefined}
     />

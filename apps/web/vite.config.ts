@@ -103,8 +103,7 @@ export default defineConfig(({ mode }) => {
     },
     preview: { port: 5194 },
     build: { target: 'es2022', manifest: true },
-    // Vitest plays the loop (F17, D29); the Wilds' tests turn it off with `vi.stubEnv`. uma-kit is transformed with the app,
-    // so its links share the app's router (F18's bar test renders them).
-    test: { environment: 'jsdom', maxWorkers: 2, env: { VITE_FARM_LOOP: '1' }, server: { deps: { inline: [/@luismlorenzana\/uma-kit/] } } },
+    // uma-kit is transformed with the app, so its links share the app's router (F18's bar test renders them).
+    test: { environment: 'jsdom', maxWorkers: 2, server: { deps: { inline: [/@luismlorenzana\/uma-kit/] } } },
   }
 })

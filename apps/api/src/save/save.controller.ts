@@ -4,8 +4,9 @@ import { CurrentUid } from '@luismlorenzana/uma-server/auth'
 import { RevisionConflict, SAVE_REPOSITORY, type SaveRepository } from './save.repository'
 
 // GET and PUT /api/save, behind the owner guard (copied from uma-rpg at 30a322a, F3). The server stores what the app sent
-// and never edits a save (FM10). While M4 is dark it takes v2 and v3 as sent (F17, D29); an upload older than what's stored
-// (a Wilds client after the loop's v3) is refused with a 409 and kept in `saveRescues`.
+// and never edits a save (FM10). It takes v2 and v3 as sent (F17): the live app writes v3 from F24, carrying a stored v2
+// over on the phone. An upload older than what's stored (an old cached Wilds build after the v3) is refused with a 409 and
+// kept in `saveRescues`.
 @Controller('save')
 export class SaveController {
   private readonly logger = new Logger(SaveController.name)

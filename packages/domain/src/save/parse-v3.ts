@@ -2,7 +2,8 @@
 // in v2: the API has no master data, and an outfit a later release drops still parses.
 import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkKindRules, WorkOutput, WorkRow } from '@luismlorenzana/uma-work'
 import { FESTIVAL_IDS, SEASONS } from '../farm/calendar'
-import { bedsAt, DORM_MAX_LEVEL } from '../farm/farm'
+import { bedsAt, DORM_MAX_LEVEL, FARM_RANK_POINTS } from '../farm/farm'
+import { DIARY_ROWS, isDiaryPaidId, MILESTONES } from '../farm/milestones'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import { GOOD_IDS, goodOf, isCropId, isGoodId, isSeedId, isWarehouseId, type CropId } from '../goods/ids'
 import type { BinSale, MorningSummary, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
@@ -58,6 +59,10 @@ const MAX_ENTRIES = MAX_QUEUED + 1
 const MAX_ENTRY_ITEMS = 200
 /** The most recruits, visitors or departures one morning can name. */
 const MAX_ROSTER_NEWS = 60
+/** The most goal lines one morning can hold (F24): a chapter, every Farm Rank, every milestone and row. */
+const MAX_GOAL_NEWS = 1 + FARM_RANK_POINTS.length + MILESTONES.length + DIARY_ROWS.length
+/** The chapter a save may be in: 1–9 (CS43's eight, then the story's end). */
+const MAX_CHAPTER = 9
 /** Ids the save names itself (requests, milestones, animals, records): short kebab words, colons allowed. */
 const KEY = /^[a-z0-9][a-z0-9:._-]{0,63}$/
 
@@ -416,7 +421,7 @@ function parseFarm(value: unknown, path: string): SaveV3['farm'] {
     return { id: key(f.id, `${at}.id`), day: day(f.day, `${at}.day`), score: amount(f.score, `${at}.score`), place: int(f.place, `${at}.place`, 1, 3) as 1 | 2 | 3 }
   })
   return {
-    points: count(o.points, `${path}.points`), chapter: int(o.chapter, `${path}.chapter`, 1, 9),
+    points: count(o.points, `${path}.points`), chapter: int(o.chapter, `${path}.chapter`, 1, MAX_CHAPTER),
     goals: counts(o.goals, `${path}.goals`, (k) => KEY.test(k), 'expected an id'), festivals,
     counts: counts(o.counts, `${path}.counts`, (k) => KEY.test(k), 'expected an id'),
   }
@@ -474,10 +479,17 @@ function parseSummary(value: unknown, path: string, today: number, roster: Reado
   const bonds = none(o.bonds, `${path}.bonds`)
   // F23: the Dorm's new level, Umas home from a swap, recruits who joined (on the roster), a visitor at the Gate and those
   // who left (outfit ids by form: she may since have joined, or gone).
-  const news = unique(list(o.news, `${path}.news`, 0, 8 + 3 * MAX_ROSTER_NEWS).map((v, i): NewsLine => {
+  const news = unique(list(o.news, `${path}.news`, 0, 8 + 3 * MAX_ROSTER_NEWS + MAX_GOAL_NEWS).map((v, i): NewsLine => {
     const at = `${path}.news.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['season', 'festival', 'dorm', 'home', 'joined', 'gate', 'left'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['season', 'festival', 'chapter', 'farm-rank', 'milestone', 'dorm', 'home', 'joined', 'gate', 'left'] as const)
     switch (kind) {
+      // F24: the chapter completed tonight (one of the story's), a Farm Rank reached (2–10), a Diary milestone or row paid.
+      case 'chapter': return { kind, chapter: int(object(v, at, ['kind', 'chapter']).chapter, `${at}.chapter`, 1, MAX_CHAPTER - 1) }
+      case 'farm-rank': return { kind, rank: int(object(v, at, ['kind', 'rank']).rank, `${at}.rank`, 2, FARM_RANK_POINTS.length) }
+      case 'milestone': {
+        const id = object(v, at, ['kind', 'id']).id
+        return { kind, id: typeof id === 'string' && isDiaryPaidId(id) ? id : fail(`${at}.id`, 'unknown milestone') }
+      }
       case 'season': return { kind, season: oneOf(object(v, at, ['kind', 'season']).season, `${at}.season`, SEASONS) }
       case 'festival': {
         const f = object(v, at, ['kind', 'festival', 'when'])
@@ -494,7 +506,8 @@ function parseSummary(value: unknown, path: string, today: number, roster: Reado
       }
       case 'gate': case 'left': return { kind, outfitId: outfit(object(v, at, ['kind', 'outfitId']).outfitId, `${at}.outfitId`) }
     }
-  }), `${path}.news`, (n) => (n.kind === 'season' || n.kind === 'dorm' || n.kind === 'home' ? n.kind : n.kind === 'festival' ? `festival:${n.when}` : `${n.kind}:${n.outfitId}`))
+  }), `${path}.news`, (n) => (n.kind === 'season' || n.kind === 'dorm' || n.kind === 'home' || n.kind === 'chapter' ? n.kind : n.kind === 'festival' ? `festival:${n.when}`
+    : n.kind === 'farm-rank' ? `farm-rank:${n.rank}` : n.kind === 'milestone' ? `milestone:${n.id}` : `${n.kind}:${n.outfitId}`))
   const nudges = unique(list(o.nudges, `${path}.nudges`, 0, 4).map((v, i): Nudge => {
     const at = `${path}.nudges.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, ['idle', 'seeds'] as const)

@@ -1,6 +1,6 @@
 # The roster
 
-**Built in F23, live from F24** (dark until then: the loop plays only with `VITE_FARM_LOOP=1`, D29). Umas join the farm
+**Built in F23, live from F24.** Umas join the farm
 over time: you start with **three you pick from six**, the **Dorm's beds** cap who lives and works on the farm at once,
 and **visitors** come to the Gate and stay once you've won them over with chats and gifts. A chapter's end brings a
 recruit for the farm's weakest activity. The roster can grow past the beds: everyone beyond them is **away on her
@@ -18,14 +18,15 @@ CS34–CS36 and CS45; the calls are D37.
  roster > beds ──► the rest away (off-season)    │                                        ▼ 200 points (2 ♥)
  swap: one idle home ⇄ one away ── night ──► she's home                       "She'd like to stay" ──► roster
                                                                               (home if a bed is free, else away)
- a chapter's end (F24) ──► recruitFor: the weakest open activity ──► joins at once
+ a chapter's end ──► recruitFor: the weakest open activity ──► joins at once (goals.md)
 ```
 
 ## The start (CS2)
 
 The first boot shows **six candidates**, each a face card with her three day-1 talents (farming, foraging, fishing) and
 her favourite line's mark. You **pick any three**; **one free redraw** replaces all six. Picking is the first tap of the
-game: until the roster holds three, the start's sheet covers the farm (F24's opening scene will come before it).
+game: until the roster holds three, the start's sheet covers the farm; then the opening scene plays
+([goals.md](goals.md#the-scenes-cs41-cs42-decisions-6-and-7)).
 
 - **The six** (decision 1, `startSheet`): the release's outfits not on the roster, in the order a seeded Fisher–Yates
   shuffle gives them (`draw(uid, 0, 'start:<redraws>', n)`), taken in turn, except that **a card which would leave too few
@@ -106,7 +107,7 @@ on the roster and every visitor.
   from day 1, the ranch with chapter 2, mining 3, cooking 4, expeditions 5, serving 6, forging 7) whose best rank on the
   roster is lowest, then whose best talent is lowest (`weakestActivity`), then an outfit not on the roster and not
   waiting with **C or better** in it, drawn by `draw(uid, day, 'recruit:<chapter>', 0)`. F24 calls it for chapter 1's
-  reward and joins her with `joinRoster`; a recruit who joined in the night shows in the morning as "Fable joined", with
+  reward ([goals.md](goals.md)) and joins her with `joinRoster`; a recruit who joined in the night shows in the morning as "Fable joined", with
   "· away" when no bed was free.
 
 ## Affinity (CS45)
@@ -155,7 +156,7 @@ lines each (`CHAT_LINES`), original text with her name filled in by the app (`{n
 ## The night (step 8) and the morning
 
 Night step 8 runs `settleDorm` (the level bought takes effect, swaps arrive), then `gateVisitors` (leaving, then
-arriving), then F24's `checkGoals`. The morning's **New today** lists, after the season and festivals (CS5): the Dorm's
+arriving), then F24's `checkGoals` ([goals.md](goals.md#the-nights-step-8-checkgoals)). The morning's **New today** lists, after the season and festivals (CS5): the Dorm's
 new level and beds, who a swap brought home (one by name, or "3 Umas are home"), each recruit who joined in the night
 (anyone on the roster who wasn't last evening), a visitor at the Gate, and one who left. Each line opens the Dorm, her
 sheet or the Gate. The summary's parse refuses a Dorm level below 2, Umas home or recruits off the roster, an id that

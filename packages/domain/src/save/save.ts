@@ -4,9 +4,9 @@
 // `account.updatedAt`.
 //
 // v1 (F3): the account. v2 (F4, FW5): the Wilds' world beside it: each Uma's Craft Level, the Warehouse and the work rows.
-// v3 (F17, CS53): the farm's own loop (`v3.ts`). M4 is dark-launched (D29): production plays the Wilds on v2 until F24, so
-// `parseSave` returns what's stored, v2 or v3 (a v1 still becomes v2), and the loop's boot migrates a v2 with master data
-// (`migrate-v3.ts`), which the API's parse doesn't have.
+// v3 (F17, CS53): the farm's own loop (`v3.ts`), live from F24. `parseSave` returns what's stored, v2 or v3 (a v1 still
+// becomes v2), and the app's boot migrates a v2 with master data (`migrate-v3.ts`), which the API's parse doesn't have: the
+// owner's production save was v2 when the loop went live.
 import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkOutput, WorkRow } from '@luismlorenzana/uma-work'
 import type { JobKind } from '../economy/jobs'
 import { maxJobCount, PROFESSION_MAX_LEVEL } from '../economy/pacing'
@@ -22,8 +22,8 @@ import type { SaveV3 } from './v3'
 
 export { SaveParseError }
 
-/** The Wilds' save version: what production writes until F24 turns the loop on (D29). */
-export const SAVE_VERSION = 2
+/** The version the app writes: v3, the farm's own loop, live from F24 (the Wilds wrote v2 until then). */
+export const SAVE_VERSION = 3
 /** The newest version this app reads: v3, built in F17 and live from F24. */
 export const NEWEST_SAVE_VERSION = 3
 
@@ -46,10 +46,10 @@ export interface SaveV2 extends FarmWorld {
   account: Account
 }
 
-/** The Wilds' save, which their code plays: v2 until F24 retires the Wilds. The loop's is `SaveV3`. */
+/** The Wilds' save, v2: their rules (kept for the migration, which finishes its jobs) take it. The farm's is `SaveV3`. */
 export type Save = SaveV2
 
-/** A save as stored and synced while M4 is dark: the Wilds' v2 or the loop's v3 (D29). */
+/** A save as stored: the Wilds' v2 (read once, to migrate) or the farm's v3. */
 export type StoredSave = SaveV2 | SaveV3
 
 /** What the API stores and returns: the save and its revision (0: nothing stored yet). */

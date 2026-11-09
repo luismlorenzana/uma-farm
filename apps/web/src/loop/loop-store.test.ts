@@ -1,9 +1,9 @@
-// The store in the loop's build (F17 decisions 1 and 2): every v2 it meets (on the device, on the server, in a 409, in a
-// safety copy) becomes v3 once, committed without moving `updatedAt`; the Wilds' build stops at a v3. An in-memory server
-// with the API's revision and version rules, and a fake IndexedDB. Invented outfit ids only.
+// The store (F17 decisions 1 and 2; live from F24): every v2 it meets (on the device, on the server, in a 409, in a safety
+// copy) becomes v3 once, committed without moving `updatedAt`. An in-memory server with the API's revision and version
+// rules, and a fake IndexedDB. Invented outfit ids only. The owner's own first open is `owner-save.test.tsx`.
 import 'fake-indexeddb/auto'
-import { newSave, newSaveV2, versionOf, type SaveEnvelope, type SaveV2, type SaveV3, type StoredSave } from '@farm/domain'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { newSaveV2, versionOf, type SaveEnvelope, type SaveV2, type SaveV3, type StoredSave } from '@farm/domain'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const RELEASE = ['1001', '1002', '1003', '1004']
 vi.mock('../master/master', () => ({
@@ -32,11 +32,10 @@ vi.mock('../api/client', async () => {
         return structuredClone(server.envelope)
       }),
     },
-    pushApi: { schedule: vi.fn(async () => null) },
   }
 })
 
-const { boot, commit, LOOP_SAVE_WORDS, resetGame, restoreSafetyCopy, syncNow, useGame } = await import('../save/game')
+const { boot, commit, resetGame, restoreSafetyCopy, syncNow, useGame } = await import('../save/game')
 const { addSafetyCopy, db, readSaveRow, safetyCopies } = await import('../save/db')
 
 const T0 = '2026-11-08T12:00:00.000Z'
@@ -57,7 +56,6 @@ beforeEach(async () => {
   await db.save.clear()
   await db.safety.clear()
 })
-afterEach(() => vi.unstubAllEnvs())
 
 describe('the loop boots a v2 into v3 once', () => {
   it('from the device: Spring 1, 500g plus its refunds, its Umas ranked, updatedAt where it was', async () => {
@@ -127,22 +125,5 @@ describe('the loop boots a v2 into v3 once', () => {
     expect(await restoreSafetyCopy(copy!.id!)).toBe(true)
     expect(v3()).toMatchObject({ version: 3, gold: 950 })
     expect(Object.keys(v3().roster).slice(0, 2)).toEqual(['1001', '1002'])
-  })
-})
-
-describe("the Wilds' build", () => {
-  it('stops at a loop save instead of playing or overwriting it', async () => {
-    vi.stubEnv('VITE_FARM_LOOP', '0')
-    server.envelope = { revision: 2, save: newSave('u1', T0) }
-    await expect(boot('u1')).rejects.toThrow(LOOP_SAVE_WORDS)
-    expect(useGame.getState().status).toBe('idle')
-    expect(server.puts).toBe(0)
-  })
-
-  it('still plays a v2 as v2', async () => {
-    vi.stubEnv('VITE_FARM_LOOP', '0')
-    server.envelope = { revision: 2, save: wilds() }
-    await boot('u1')
-    expect(useGame.getState().save).toEqual(wilds())
   })
 })

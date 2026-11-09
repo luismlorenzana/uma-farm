@@ -1,21 +1,13 @@
 // The farm's store and its sync engine (copied from uma-rpg at 30a322a; its D32, D260): the save lives on the device
 // (Dexie) and in a Zustand store; every change writes both and schedules a background sync. Play never waits on the
-// network once a device save exists. F4's rules commit through `commit`; F5's work actions through `edit`. Every sync
-// also sends the push schedule (F6), and so does the app going to the background.
+// network once a device save exists.
 //
-// While M4 is dark (F17, D29) the store holds what's stored, the Wilds' v2 or the loop's v3. The Wilds' build plays v2 and
-// stops at a v3; the loop's build carries every v2 it meets into v3 (`loop/boot.ts`), on boot, on sync and on a restore,
-// and commits it without moving `updatedAt`.
-import {
-  collectAll, collectWorker, dismissStopped, editWorkerQueue, newSaveV2, parseSave, recallWorker, repeatJob, restartStopped, rosterContext,
-  startJob, touched, type Collected, type FarmOutfit, type FarmQueueInput, type Save, type SaveEnvelope, type SaveV3, type StoredSave,
-  type WorkContext,
-} from '@farm/domain'
+// The store holds save v3, the farm's own loop (F24: the loop is the app). Every v2 it meets (the Wilds' save, on the
+// device, from the server, in a 409 or from a safety copy) migrates once master data has loaded (`loop/boot.ts`), and the
+// migration is committed without moving `updatedAt`, so it uploads and the next boot reads v3.
+import { parseSave, touched, type SaveEnvelope, type SaveV3, type StoredSave } from '@farm/domain'
 import { create } from 'zustand'
 import { conflictEnvelope, saveApi } from '../api/client'
-import { loopOn } from '../app/loop'
-import { masterRoster } from '../master/master'
-import { resetSchedule, sendSchedule } from '../push/push'
 import { addSafetyCopy, readSafetyCopy, readSaveRow, removeSafetyCopy, writeSaveRow } from './db'
 import { reconcile } from './reconcile'
 
@@ -25,8 +17,8 @@ export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'offline' | 'error'
 export interface GameState {
   uid: string | null
   status: GameStatus
-  /** The Wilds' v2 or the loop's v3 (F17): `useWildsSave` and `useLoopSave` read the one their screens play. */
-  save: StoredSave | null
+  /** The save, v3: a v2 is migrated before it gets here. */
+  save: SaveV3 | null
   /** The server revision the save is based on (0: never synced). */
   revision: number
   dirty: boolean
@@ -40,36 +32,26 @@ const INITIAL: GameState = { uid: null, status: 'idle', save: null, revision: 0,
 
 export const useGame = create<GameState>(() => INITIAL)
 
-/** The Wilds' save, or null while the loop plays. */
-export const wildsSave = (save: StoredSave | null): Save | null => (save?.version === 2 ? save : null)
-export const useWildsSave = (): Save | null => useGame((s) => wildsSave(s.save))
-/** The loop's save, or null in the Wilds' build. */
-export const useLoopSave = (): SaveV3 | null => useGame((s) => (s.save?.version === 3 ? s.save : null))
+/** The save once booted, or null. */
+export const useLoopSave = (): SaveV3 | null => useGame((s) => s.save)
 
-/** The Wilds' build meeting a loop save: it can't play it, and nothing writes over it. */
-export const LOOP_SAVE_WORDS = 'This save is from a newer version of the farm.'
-
-/** A stored save as this build plays it: the Wilds' v2 as it is (a v3 stops them), or the loop's v3, migrating a v2 and
- * filling the start once master data has loaded. The same object comes back when nothing changed. */
-async function playable(save: StoredSave): Promise<StoredSave> {
-  if (!loopOn()) {
-    if (save.version !== 2) throw new Error(LOOP_SAVE_WORDS)
-    return save
-  }
+/** A stored save as the farm plays it: a v3 as it is, a v2 migrated once master data has loaded (`loop/boot.ts`). The same
+ * object comes back when nothing changed. */
+async function playable(save: StoredSave): Promise<SaveV3> {
+  if (save.version === 3) return save
   const { toLoopSave } = await import('../loop/boot')
   return toLoopSave(save)
 }
 
-/** A server envelope as this build plays it, and whether its save changed on the way (a v2 the loop migrated). */
-async function playableEnvelope(envelope: SaveEnvelope): Promise<SaveEnvelope & { migrated: boolean }> {
-  if (!envelope.save) return { ...envelope, migrated: false }
+/** A server envelope as the farm plays it, and whether its save changed on the way (a v2 migrated). */
+async function playableEnvelope(envelope: SaveEnvelope): Promise<{ revision: number; save: SaveV3 | null; migrated: boolean }> {
+  if (!envelope.save) return { revision: envelope.revision, save: null, migrated: false }
   const save = await playable(envelope.save)
   return { revision: envelope.revision, save, migrated: save !== envelope.save }
 }
 
-/** A new account: the Wilds' empty v2, or the loop's day 1. */
-async function freshSave(uid: string): Promise<StoredSave> {
-  if (!loopOn()) return newSaveV2(uid, nowIso())
+/** A new account: day 1 (CS3), nobody on the roster yet; the start's sheet is the first tap. */
+async function freshSave(uid: string): Promise<SaveV3> {
   const { newLoopSave } = await import('../loop/boot')
   return newLoopSave(uid, nowIso())
 }
@@ -118,67 +100,14 @@ export async function boot(uid: string): Promise<void> {
 
 export function resetGame(): void {
   useGame.setState(INITIAL)
-  resetSchedule()
 }
 
 /** Every change goes through here: on screen, on the device, then to the server. It never stamps `updatedAt`: a player's
  * change arrives stamped by its rule. */
-export async function commit(save: StoredSave): Promise<void> {
+export async function commit(save: SaveV3): Promise<void> {
   useGame.setState({ save, dirty: true })
   await persist()
   scheduleSync()
-}
-
-// --- The Wilds' work (F5) -----------------------------------------------------------------------------------------
-
-let context: { roster: readonly FarmOutfit[]; value: WorkContext } | null = null
-
-/** What the work rules ask of the caller: each Uma's trade and who may work, from master data's roster (FM6, FM7). Before
- * it loads the gate is open, as for a settle; the API's parse accepts any well-formed outfit id either way. */
-export function workContext(roster: readonly FarmOutfit[] | null = masterRoster()): WorkContext {
-  if (!roster) return {}
-  if (context?.roster !== roster) context = { roster, value: rosterContext(roster) }
-  return context.value
-}
-
-/** Every work action, as uma-rpg's `edit`: the save is read right before the rule runs, so two quick taps each apply to
- * the other's result instead of one overwriting the other. A rule's refusal throws (`SaveRuleError`) and changes nothing. */
-async function edit(change: (save: Save, now: string, context: WorkContext) => Save): Promise<void> {
-  const save = wildsSave(useGame.getState().save)
-  if (!save) return
-  const next = change(save, nowIso(), workContext())
-  if (next !== save) await commit(next)
-}
-
-/** Puts an Uma in a free slot: `count` items, made one after another; the inputs leave the Warehouse now. */
-export const startWork = (placeId: string, slot: number, outfitId: string, output: string, count: number) =>
-  edit((s, now, c) => startJob(s, placeId, slot, { outfitId }, output, count, now, c))
-/** Adds, removes or moves a job in her queue (the kit's queue input). */
-export const editWorkQueue = (input: FarmQueueInput) => edit((s, now, c) => editWorkerQueue(s, input, now, c))
-/** Ends her work early: what's made is collected, unfinished inputs come back, her queue drops. */
-export const recallWork = (outfitId: string) => edit((s, now) => recallWorker(s, outfitId, now))
-/** Starts her last job again where she did it, collecting first when she's done. */
-export const repeatWork = (outfitId: string) => edit((s, now, c) => repeatJob(s, outfitId, now, c))
-/** A queue that stopped: start it again now, or forget it. */
-export const restartWork = (outfitId: string) => edit((s, now, c) => restartStopped(s, outfitId, now, c))
-export const dismissWork = (outfitId: string) => edit((s, now) => dismissStopped(s, outfitId, now))
-
-/** Collects one Uma's finished items, with her Craft EXP. */
-export async function collectWork(outfitId: string): Promise<Collected> {
-  const save = wildsSave(useGame.getState().save)
-  if (!save) return { items: 0, exp: 0, levelsUp: 0, done: false }
-  const r = collectWorker(save, outfitId, nowIso())
-  await commit(r.save)
-  return r.got
-}
-
-/** Collects every finished job, on these places or everywhere. Nothing ready changes nothing. */
-export async function collectEverything(placeIds?: readonly string[]): Promise<{ items: number; levelsUp: number }> {
-  const save = wildsSave(useGame.getState().save)
-  if (!save) return { items: 0, levelsUp: 0 }
-  const r = collectAll(save, nowIso(), placeIds)
-  if (r.items > 0) await commit(r.save)
-  return { items: r.items, levelsUp: r.levelsUp }
 }
 
 // --- Sync -------------------------------------------------------------------------------------------------------
@@ -260,7 +189,6 @@ async function syncPass(): Promise<void> {
     if (dirty && !again) throw new Error('changes left unsent')
     useGame.setState({ sync: 'synced', ...(dirty ? {} : { lastSyncedAt: nowIso() }) })
     if (!dirty) await persist()
-    void sendSchedule(useGame.getState().save)
   } catch {
     useGame.setState({ sync: typeof navigator !== 'undefined' && navigator.onLine === false ? 'offline' : 'error' })
   }
@@ -276,7 +204,7 @@ export async function restoreSafetyCopy(id: number): Promise<boolean> {
   if (!uid || !save) return false
   const copy = await readSafetyCopy(id)
   if (copy?.uid !== uid) return false
-  let restored: StoredSave
+  let restored: SaveV3
   try {
     restored = await playable(parseSave(copy.save))
   } catch {
@@ -294,12 +222,11 @@ export function seeReplaced(): void {
   useGame.setState({ replacedAt: null })
 }
 
-/** Syncs when the app comes back to the foreground or the network returns, and sends the push schedule as it goes to the
- * background. Returns a stop function. */
+/** Syncs when the app comes back to the foreground or the network returns. Returns a stop function. (The Wilds' push
+ * schedule went with them in F24: days are turns, so nothing finishes while the app is closed.) */
 export function startSyncTriggers(): () => void {
   const onVisible = () => {
     if (document.visibilityState === 'visible') void syncNow()
-    else void sendSchedule(useGame.getState().save)
   }
   const onOnline = () => void syncNow()
   document.addEventListener('visibilitychange', onVisible)

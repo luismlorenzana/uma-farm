@@ -7,20 +7,18 @@ import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
 
 export const MAIN_JS_BUDGET = 180_000
-/** Modules that must load on demand (F5): the Hub map's Phaser scene, which uma-kit imports only when a map mounts, and the
- * Wilds' screens, which the router loads with React.lazy; the loop's boot with its migration (F17); the loop's pages,
- * its sheets, its actions and the night (F18); the Fields' page, rules and crop table, and the morning's words (F20); and
- * the talents, the rank rules and their table, the roster's rows and the Umas' marks (F21); the work operations and
- * their env, the forest's, the Fishery's and the stations' tables, kinds and build rule, and their screens (F22); and the
- * roster's rules (the start's sheet, the Dorm, visitors and affinity) with the start's cards, the Dorm's page, the
- * Gate's quick look and the chat and gift controls (F23). Paths match a module id exactly or as its suffix. */
+/** Modules that must load on demand: the Hub map's Phaser scene, which uma-kit imports only when a map mounts (F5); the
+ * loop's boot with its migration (F17); the farm's pages, its sheets, its actions and the night (F18); the Fields' page,
+ * rules and crop table, and the morning's words (F20); the talents, the rank rules and their table, the roster's rows and
+ * the Umas' marks (F21); the work operations and their env, the forest's, the Fishery's and the stations' tables, kinds
+ * and build rule, and their screens (F22); the roster's rules (the start's sheet, the Dorm, visitors and affinity) with
+ * the start's cards, the Dorm's page, the Gate's quick look and the chat and gift controls (F23); and the Diary's counts,
+ * the chapters, the scenes' lines, the scene player and the goals' words (F24). The Wilds' screens left in F24. Paths
+ * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
   'phaser/dist/phaser.esm.js',
   '@luismlorenzana/uma-kit/dist/hub/scene/createHubGame.js',
   '@luismlorenzana/uma-kit/dist/hub/scene/HubScene.js',
-  'src/wilds/WildsScreen.tsx',
-  'src/places/work/WorkPage.tsx',
-  'src/places/warehouse/WarehousePage.tsx',
   'src/loop/boot.ts',
   'domain/src/save/migrate-v3.ts',
   'src/loop/FarmMap.tsx',
@@ -52,6 +50,12 @@ export const LAZY_MODULES = [
   'src/loop/DormPage.tsx',
   'src/loop/GatePeek.tsx',
   'src/loop/Affinity.tsx',
+  'domain/src/farm/diary.ts',
+  'domain/src/story/chapters.ts',
+  'domain/src/story/chapter-1.ts',
+  'domain/src/story/cast.ts',
+  'src/loop/ScenePlayer.tsx',
+  'src/loop/goal-words.ts',
 ]
 
 export function entrySrc(html) {

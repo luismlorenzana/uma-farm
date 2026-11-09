@@ -1,5 +1,5 @@
 // uma-farm's rules: pure, no I/O. F3 brought save v1; F4 the Wilds' rules, copied from uma-rpg at 30a322a (FM2,
-// docs/technical/wilds-copy.md), and save v2; F17 the loop's units, goods and save v3 with its migration.
+// docs/technical/wilds-copy.md), and save v2; F17 the loop's units, goods and save v3 with its migration; F24 turned the loop on.
 export const GAME = 'uma-farm' as const
 
 // The lines, their items and the made items (R2, R4).
@@ -36,7 +36,7 @@ export * from './save/work'
 export * from './save/notify'
 
 // The loop (F17, core spec CS1, CS3, CS32, CS53, CS54): the units, the goods' ids, save v3, its Warehouse by stars and
-// the migration from v2. Dark until F24 (D29).
+// the migration from v2.
 export * from './farm/calendar'
 export * from './farm/draw'
 export * from './farm/round'
@@ -50,7 +50,7 @@ export * from './save/gold'
 export * from './save/migrate-v3'
 
 // The day (F18, core spec CS4–CS8): the farm map's places, uma-work on the day clock, End the day's nine steps, the nudge
-// and the morning summary. Dark until F24 (D29).
+// and the morning summary.
 export * from './farm/places'
 export * from './work/loop-env'
 export * from './save/loop-work'
@@ -59,7 +59,7 @@ export * from './night/summary'
 export * from './night/nudge'
 export * from './night/end-day'
 
-// Goods (F19, core spec CS9, CS10, CS26): the price rule, stars, the bin and the shop. Dark until F24 (D29).
+// Goods (F19, core spec CS9, CS10, CS26): the price rule, stars, the bin and the shop.
 export * from './goods/rule'
 export * from './goods/prices'
 export * from './goods/stars'
@@ -67,25 +67,35 @@ export * from './save/bin'
 export * from './save/shop'
 
 // The Fields (F20, core spec CS11, CS12): the crops, the blocks, planting, tending, harvesting, crop levels, growth and
-// withering at night, and the shop's seeds. Dark until F24 (D29).
+// withering at night, and the shop's seeds.
 export * from './fields/crops'
 export * from './fields/fields'
 
 // Talents and ranks (F21, core spec CS26–CS33, CS46): talents from master data's stats, rank points, the challenges, what
-// a rank gives, the favourite line, temperament, and the night's step 6. Dark until F24 (D29).
+// a rank gives, the favourite line, temperament, and the night's step 6.
 export * from './farm/talents'
 export * from './farm/rank-rules'
 
 // The forest, the Fishery and three stations (F22, core spec CS15–CS18): the areas, the spots and the stations' jobs by
 // id (with the save's parse), their tables, the work kinds with master data's talents, building a station, the catch's
-// sizes and the night's hauls. Dark until F24 (D29).
+// sizes and the night's hauls.
 export * from './gathering/ids'
 export * from './gathering/tables'
 export * from './gathering/kinds'
 export * from './gathering/stations'
 
 // The roster (F23, core spec CS2, CS34–CS36, CS45): the start's six and three picks, the Dorm's levels, beds and swaps,
-// visitors at the Gate, chats and gifts, and chapter recruits. Dark until F24 (D29).
+// visitors at the Gate, chats and gifts, and chapter recruits.
 export * from './farm/dorm'
 export * from './farm/visitors'
 export * from './farm/start'
+
+// Farm Rank and chapter 1 (F24, core spec CS38, CS39, CS41, CS42): the Diary's milestones and rows, the Farm Rank's
+// points and what each rank opens, the town's cast, chapter 1's goals and reward, the night's step 8, and the two scenes
+// with the roles Umas fill at runtime.
+export * from './farm/milestones'
+export * from './farm/diary'
+export * from './story/cast'
+export * from './story/chapters'
+export * from './story/scenes'
+export * from './story/chapter-1'

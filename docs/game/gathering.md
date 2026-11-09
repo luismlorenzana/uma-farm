@@ -1,6 +1,6 @@
 # Gathering: the forest, the Fishery and the stations
 
-**Built in F22, live from F24** (dark until then: the loop plays only with `VITE_FARM_LOOP=1`, D29). Day 1 sends one Uma
+**Built in F22, live from F24.** Day 1 sends one Uma
 to the Woods and one to the Pond (CS3). Foraging and fishing are the loop's first jobs: an Uma goes for a number of
 days, brings home a haul each day, and her rank opens deeper places. The Mill, the Sawmill and the Smokehouse turn what
 comes home into goods worth half again as much. This page is gathering as built. The rules are in `@farm/domain`
@@ -130,7 +130,7 @@ Nothing sets well fed in M4 but tests; the staff meal is M5's.
 - **Collect** (a slot's arrow, **Collect here** on the page, Collect all on the map) adds the starred goods to the
   Warehouse through F17's bridge (`pine-log@2` → `items['pine-log'][1]`), and says what came home: "+5 · ★1 × 4, ★2 × 1".
 - **`farm.counts['home:forest']` and `farm.counts['home:fishery']`** rise by the items collected: chapter 1's goal 3,
-  "bring home 10 things from the Woods or the Pond" (F24).
+  "bring home 10 things from the Woods or the Pond" ([goals.md](goals.md)).
 - **Each fish is measured when it's collected.** Its size is `min + (max − min) × u^(8/k)`, with
   `k = 1 + 0.25 × rank + 0.1 × talent step + 0.05 × Rod tier` at the collect, and `u` drawn from the account, the
   collect's day, the Uma and the fish's place in the farm's catches (`farm.counts['home:fishery']` before it), so the same
@@ -182,7 +182,7 @@ Better anglers land bigger fish: `u^(8/k)` leans small, less so as *k* grows.
 
 A station turns one raw good into its refined form, one for one, **keeping its stars**; the output sells at ×1.5. An
 Uma processes **`round(8 × rank × talent × well fed)` items a day** with the rank and talent of the station's place's
-activity. A station is locked until built: the Mill needs its plans (`buildings.mill` 0, chapter 1's reward, F24), the
+activity. A station is locked until built: the Mill needs its plans (`buildings.mill` 0, chapter 1's reward, [goals.md](goals.md)), the
 Sawmill and the Smokehouse Farm Rank 3 (CS39 leaves them out of FR3's list; CS18 is followed). Building sets
 `buildings.<station>` to 1 for its gold.
 

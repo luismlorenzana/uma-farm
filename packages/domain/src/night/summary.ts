@@ -1,8 +1,8 @@
 // The morning summary (F18 decision 11; core spec CS5): data, never sentences. The night's last step builds it from what
 // changed and the app words it, each line a tap to its place. It's replaced each night and set to null when the player
-// dismisses it. CS5's six sections, in order; an empty one is hidden. Each packet fills its own lines and extends this
-// shape in place while v3 is unreleased (until F24): F19 the bin, F20 crops and seeds, F21 ranks, F23 the Dorm, swaps
-// and visitors, F24 scenes and milestones; bonds come in M6.
+// dismisses it. CS5's six sections, in order; an empty one is hidden. Each M4 packet filled its own lines in place while
+// v3 was unreleased: F19 the bin, F20 crops and seeds, F21 ranks, F23 the Dorm, swaps and visitors, F24 the chapter,
+// the Farm Rank and the Diary's milestones. v3 is live from F24, so a new line is a new save version; bonds come in M6.
 import type { FestivalId, Season } from '../farm/calendar'
 import type { Activity, Rank } from '../farm/ranks'
 import type { CropId } from '../goods/ids'
@@ -78,12 +78,16 @@ export interface PointsFull {
 /** §3's lines: rank-ups, then points full (F21). */
 export type RankLine = RankUp | PointsFull
 
-/** §5 New today: the season's first day, or a festival today or tomorrow (F18); and the roster's news (F23): the
- * Dorm's new level in effect, Umas a swap brought home, a recruit who joined tonight (home or away; F24's chapter
- * recruits), a visitor at the Gate, and one who left. */
+/** §5 New today: the season's first day, or a festival today or tomorrow (F18); the goals' news (F24): the chapter
+ * completed tonight, a Farm Rank reached, a Diary milestone or row paid; and the roster's news (F23): the Dorm's new
+ * level in effect, Umas a swap brought home, a recruit who joined tonight (home or away; F24's chapter recruits), a
+ * visitor at the Gate, and one who left. */
 export type NewsLine =
   | { kind: 'season'; season: Season }
   | { kind: 'festival'; festival: FestivalId; when: 'today' | 'tomorrow' }
+  | { kind: 'chapter'; chapter: number }
+  | { kind: 'farm-rank'; rank: number }
+  | { kind: 'milestone'; id: string }
   | { kind: 'dorm'; level: number }
   | { kind: 'home'; umas: OutfitId[] }
   | { kind: 'joined'; outfitId: OutfitId; home: boolean }
@@ -116,7 +120,7 @@ export interface MorningSummary {
   ranks: RankLine[]
   /** §4 Bonds and affinity: new hearts (M6). */
   bonds: []
-  /** §5 New today: the season and festivals (F18), then the roster's news (F23). */
+  /** §5 New today: the season and festivals (F18), the goals' news (F24), then the roster's news (F23). */
   news: NewsLine[]
   /** §6 Today's nudges: idle Umas (F18), plots to plant (F20). */
   nudges: Nudge[]

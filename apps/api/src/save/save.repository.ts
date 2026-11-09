@@ -12,7 +12,7 @@ export class RevisionConflict extends Error {
 }
 
 // One snapshot document per account. A local JSON file in dev, Firestore's `farm` database in production. Copied from
-// uma-rpg's `apps/api/src/save` at 30a322a (F3). It stores the version sent, v2 or v3, while M4 is dark (F17, D29).
+// uma-rpg's `apps/api/src/save` at 30a322a (F3). It stores the version sent, v2 or v3 (F17); the app writes v3 from F24.
 export interface SaveRepository {
   load(uid: string): Promise<SaveEnvelope>
   /** Stores `save` as `baseRevision + 1` when the stored revision equals `baseRevision` and the client's save version isn't

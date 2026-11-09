@@ -1,6 +1,6 @@
 # Talents and ranks
 
-**Built in F21, live from F24** (dark until then: the loop plays only with `VITE_FARM_LOOP=1`, D29). Every Uma is a
+**Built in F21, live from F24.** Every Uma is a
 specialist: she has a **talent**, G to S, in each of the nine activities, read from her own stats by one rule, and she
 climbs **six ranks** in each by working and meeting a challenge. Talents are why one Uma suits the Fields and another the
 Pond; ranks are how the farm goes deeper and better. Her calling's line is her **favourite**, where she ranks up a little
@@ -76,7 +76,7 @@ than 5 points.
 ## Temperament (CS46; decision 4)
 
 Her temperament is her **top score's stat**: Speed **breezy**, Stamina **steady**, Power **bold**, Guts **gritty**, Wit
-**clever**; a tie goes Speed, Stamina, Power, Guts, Wit (`temperament(scores)`). F24's hello lines and M6's
+**clever**; a tie goes Speed, Stamina, Power, Guts, Wit (`temperament(scores)`). F24's hello lines ([goals.md](goals.md#the-scenes-cs41-cs42-decisions-6-and-7)) and M6's
 conversations read it. On the release: Bold 76, Breezy 69, Steady 54, Clever 42, Gritty 31 (the local check, matching
 CS46).
 
@@ -216,11 +216,11 @@ CS26's rank term is `rankQuality(rank)`. The forest's areas and the Fishery's sp
 
 ## Her favourite line (CS33; decision 6)
 
-Her calling (her best running styles, the Wilds' rule as copied, [loops.md](loops.md#who-works)) names her line, and
+Her calling (her best running styles, the Wilds' rule as copied, `farmRoster` in `roster/roster.ts`) names her line, and
 the line her favourite activity (`favouriteActivity`): **Metal and Stone mining, Wood foraging, Fish fishing,
 Vegetables farming**. She earns ×1.2 rank points there, and a pair sharing it will earn ×1.5 bond points (M6). The
 ranch, the workshops and expeditions are nobody's favourite. **She can work anywhere:** the Wilds' trade gate ("Another
-trade") and the open shop stay with the Wilds' code until F24, and the loop's work and tending never read them.
+trade") left with their screens in F24, and the farm's work and tending never read it.
 
 ## The morning summary (CS5, CS7)
 
@@ -260,7 +260,7 @@ keeps the table with that release's view (one view a release hash). The night (`
 harvests (`harvestPlot`, `harvestBlock`, `harvestFields`, `collectFarm`, which wait for master data) and the screens
 (`useTalents`) all read it. The API never needs talents.
 
-## For F23–F24
+## For later packets
 
 - **A job's points:** add the job's place to `PLACE_ACTIVITY` if it's new; step 6 pays every running job's Uma from
   `notes.worked`. Nothing else is needed.
@@ -273,4 +273,5 @@ harvests (`harvestPlot`, `harvestBlock`, `harvestFields`, `collectFarm`, which w
 - **A job's talent:** a kind's plan reads it through `loopKinds(talentOf)` (F22): the night passes `NightContext.talentOf`,
   the app `talentsFor(view)`.
 - **The roster and the start's cards (F23, done: [roster.md](roster.md)):** `talentTable(view)`, `talentsOf`,
-  `favouriteActivity`, `umaRows`, `UMA_FACETS`, `umaBadges`, `TalentChip`, `FavouriteMark`. **Hello lines (F24):** `temperament`.
+  `favouriteActivity`, `umaRows`, `UMA_FACETS`, `umaBadges`, `TalentChip`, `FavouriteMark`. **Hello lines (F24, done:
+  [goals.md](goals.md)):** `temperament`.

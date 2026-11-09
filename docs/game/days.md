@@ -1,6 +1,6 @@
 # The days: the calendar, End the day and the farm map
 
-**Built in F18, live from F24** (dark until then: the loop plays only with `VITE_FARM_LOOP=1`, D29). Time is turns
+**Built in F18, live from F24.** Time is turns
 (D25): nothing on the farm moves until the player ends the day. This page is the calendar, End the day and its nine-step
 night, the morning summary, the nudge, the farm map and the bars, as built. The rules are in `@farm/domain`
 (`farm/calendar.ts`, `farm/places.ts`, `work/loop-env.ts`, `save/loop-work.ts`, `night/`); the screens in
@@ -8,16 +8,17 @@ night, the morning summary, the nudge, the farm map and the bars, as built. The 
 
 ```
  ┌──────────────────────────────────┐
- │ (L)                    ● 3  sync │  the account bar: the date chip (season, day) opens the calendar
+ │ (L)        ● 3   g 500  FR 1 sync │  the account bar: the date (the calendar), gold (the bin), the Farm Rank
  ├──────────────────────────────────┤
  │                                  │
  │   /          the farm map        │  eight rows of three; ?peek=<place> a quick look
  │   /roster    the whole roster    │  talents and ranks (F21); home or away, hearts (F23)
- │   /diary     the chapter         │  its goals come with F24
+ │   /diary     the chapter         │  its goals and the Farm Rank (F24)
  │   /account   Account             │  Notifications: "Off: days are turns"
  │                                  │
  │   ?sheet=end       End the day   │  over any page
  │   ?sheet=calendar  the calendar  │
+ │   ?sheet=rank      the Farm Rank │  F24
  │   ?sheet=menu      Every place   │  with "Ask before ending the day"
  ├──────────────────────────────────┤
  │ Farm  Roster  (End day)  Diary  Menu │  End the day is the raised centre
@@ -117,7 +118,7 @@ time. A step whose packet hasn't landed passes the night on unchanged, and each 
 | 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the day’s chats and gifts clear | F18 |
 | 8 | `settleDorm` | The Dorm’s level bought takes effect; swaps arrive, each Uma away coming home in the place of one leaving | F23 |
 | 8 | `gateVisitors` | A visitor who has waited 6 days leaves; every 4th morning one comes to the Gate while a bed is free and none waits | F23 |
-| 8 | `checkGoals` | Chapter goals, Diary milestones, the Farm Rank and a chapter’s recruit | F24 |
+| 8 | `checkGoals` | The Diary pays its milestones and rows, the Farm Rank is recomputed, and a chapter whose goals are met completes: its gold, plans and recruit | F24 |
 | 9 | `buildSummary` | The morning summary, from what changed | F18 |
 <!-- /live -->
 
@@ -160,10 +161,10 @@ night."
 | Work done | `{ kind: 'jobs', place, jobs, items }`; `{ kind: 'crops', block, plots }`; `{ kind: 'withered', block, crop, plots }` | "Forest · 2 jobs done · 9 items", "Block A · 9 crops ready", "Block A · 3 Onion withered" | the place's quick look; the Fields | F18; F20 ([fields.md](fields.md#the-night-cs7-steps-2-and-7-cs4s-last-night)) |
 | Ranks | `{ kind: 'rank-up', outfitId, activity, rank }`; `{ kind: 'full', outfitId, activity, rank, challenge }` (points filled tonight, the challenge to meet) | "Aster · Farming Hand" (Rank up), "Beryl · Fishing · Catch 30 fish · 12/30" (Points full) | her sheet on the roster | F21 ([ranks.md](ranks.md#the-morning-summary-cs5-cs7)) |
 | Bonds | new hearts | — | — | M6 |
-| New today | `{ kind: 'season', season }`, `{ kind: 'festival', festival, when }`; F23's `{ kind: 'dorm', level }`, `{ kind: 'home', umas }`, `{ kind: 'joined', outfitId, home }`, `{ kind: 'gate', outfitId }`, `{ kind: 'left', outfitId }` | "Summer begins", "Flower Show tomorrow", "Dorm level 2 · 5 beds", "Aster is home", "Fable joined · away", "Ember is at the Gate", "Ember left the Gate" | the calendar; the festival ground; the Dorm; her sheet; the Gate | F18; F23 ([roster.md](roster.md#the-night-step-8-and-the-morning)); scenes and milestones F24 |
+| New today | `{ kind: 'season', season }`, `{ kind: 'festival', festival, when }`; F23's `{ kind: 'dorm', level }`, `{ kind: 'home', umas }`, `{ kind: 'joined', outfitId, home }`, `{ kind: 'gate', outfitId }`, `{ kind: 'left', outfitId }` | "Summer begins", "Flower Show tomorrow", "Dorm level 2 · 5 beds", "Aster is home", "Fable joined · away", "Ember is at the Gate", "Ember left the Gate" | the calendar; the festival ground; the Dorm; her sheet; the Gate; the Diary; the rank's sheet | F18; F23 ([roster.md](roster.md#the-night-step-8-and-the-morning)); F24's `{ kind: 'chapter', chapter }`, `{ kind: 'farm-rank', rank }`, `{ kind: 'milestone', id }` ([goals.md](goals.md#the-nights-step-8-checkgoals)) |
 | Today | `{ kind: 'idle', umas }`; `{ kind: 'seeds', plots }` (empty plots the seeds held could fill today) | "2 Umas idle", "9 plots to plant" | the roster; the Fields | F18; F20 |
 
-While v3 is unreleased (until F24) each packet extends the shape in place, with parse tests. The parse is strict: unknown
+M4's packets extended the shape in place while v3 was unreleased; from F24, v3 is live and a new line is v4. The parse is strict: unknown
 keys, a line in words, a place without work slots, a place twice, an unknown festival, an Uma off the roster, a section
 before its packet, a plot count outside 1–9, an unknown block or crop, a rank outside Hand–Legend, an unknown activity,
 or a summary of another day are each refused with their path. The lines' words are `loop/summary-words.ts`, loaded with the farm map, so they stay out of the initial JS.
@@ -248,15 +249,16 @@ stay put.
   kit's rows, sheets and chips do too, through uma-kit 0.19.0's `formatDuration`: "Tomorrow", "In 2 days", "1 day",
   "stopped yesterday" ([gathering.md](gathering.md#the-screens-decisions-5-and-8)).
 - **The account bar:** the initial (Account), the date chip, F19's gold chip (it opens the bin,
-  [goods.md](goods.md#gold-and-the-account-bar-decision-10)), the sync chip.
+  [goods.md](goods.md#gold-and-the-account-bar-decision-10)), F24's Farm Rank chip (it opens the rank's sheet,
+  [goals.md](goals.md#the-farm-rank-cs39-decisions-1-and-8)), the sync chip.
 - **Roster** (`/roster`) is the album of everyone on the roster, home or away, with F21's talents and ranks, filters and
   sorts, and her sheet ([ranks.md](ranks.md#the-screens-decision-7)); F23 adds where she is, your hearts with her, and
-  Chat and Gift ([roster.md](roster.md#the-screens)). **Diary** (`/diary`) holds the chapter until F24 gives it its goals.
+  Chat and Gift ([roster.md](roster.md#the-screens)). **Diary** (`/diary`) holds the chapter's card, its goals and their counts, the Farm Rank and the milestones paid ([goals.md](goals.md#the-screens)).
 - **The Menu** lists the 23 places by FC28's rows (gathering, stations, the ranch, workshops, the yard, the town), each
   opening its quick look, locked ones marked; then Account, the switch and the build.
 
 ## Notifications (decision 12)
 
-With days as turns nothing finishes while the app is closed, so the loop never sends a push schedule, and Account's
-Notifications card says **"Off: days are turns"**. `farm-push-tick` stays paused (D25), and the server's push code is
-untouched: the Wilds keep theirs until F24.
+With days as turns nothing finishes while the app is closed, so the app sends no push schedule, and Account's
+Notifications card says **"Off: days are turns"**. The Wilds' switch and schedule left with them in F24; the server's push
+code and `farm-push-tick` are untouched ([architecture.md](architecture.md#notifications-f6)).

@@ -1,4 +1,4 @@
-// `/roster` in the loop's build (F18; F21 decision 7; F23 decision 11; FC19): everyone on the roster, home or away, as
+// `/roster` (F18; F21 decision 7; F23 decision 11; FC19): everyone on the roster, home or away, as
 // album cards on uma-kit's album chrome. Each card has her favourite line's mark and her best talent on her face, your
 // hearts with her in its corner, and her best rank (or her rank and talent in the activity sorted by); away, it says so.
 // The filters are where she is, her talent and rank in each activity and her favourite line; the sorts her talent score
