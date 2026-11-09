@@ -1,6 +1,6 @@
 # Handoff: open work
 
-> **Status: 2026-11-09, after D38.** M1 is met (D13) and M2 is live (F4–F6). The current initiative is [the farm's own loop](../design/core-loop.md) (accepted, D26) on the [HD-2D farm](../design/hd2d-farm.md) (accepted, D21). **F7 is written: [the core spec](../design/core-spec.md)** (CS1–CS55, [page](../design/previews/core-spec.html), D27), every number worked and checked by a sim of the first year. M4's packets (F17–F25) are written (D29), and **M4 is being built** on the owner's go (2026-11-09): F17 is done (D30, [pull request #5](https://github.com/luismlorenzana/uma-farm/pull/5)), F18 is done (D31, [days.md](../game/days.md)), F19 is done (D32, [goods.md](../game/goods.md)), uma-kit 0.19.0 is pinned (D33), F20 is done (D34, [fields.md](../game/fields.md)), F21 is done (D35, [ranks.md](../game/ranks.md), [pull request #9](https://github.com/luismlorenzana/uma-farm/pull/9)), F22 is done (D36, [gathering.md](../game/gathering.md), [pull request #10](https://github.com/luismlorenzana/uma-farm/pull/10)) F23 is done (D37, [roster.md](../game/roster.md)) and F24 is done (D38, [goals.md](../game/goals.md)): **M4 is built and the loop is the app** (the switch and the Wilds' screens are gone; the owner's v2 migrates on its first open). **M4's phone check is the owner's next step.** F25's art isn't released, so the farm runs on stand-ins until it's pinned. Time is turns (D25); parcels are parked.
+> **Status: 2026-11-09, after D39. Paused at the owner's word after M4:** nothing new is built until the owner's next round of validations. M4 is live at [uma-farm.web.app](https://uma-farm.web.app): the farm's own loop (F17–F24, D30–D38), the Wilds retired. M5's packets are written (F27, F26, F8, F39, F28, F29; D39) and wait. The owner's save upgrades from v2 on its first open; the read-only check of that upgrade runs when the owner reports back. The current initiative is [the farm's own loop](../design/core-loop.md) (accepted, D26) on the [HD-2D farm](../design/hd2d-farm.md) (accepted, D21); time is turns (D25); parcels are parked.
 > initiative is [the first playable farm](../design/first-playable.md)** (FW1–FW13,
 > [page](../design/previews/first-playable.html)): its requirements and every planned task, from the hello app (F3) to the
 > Wilds playing, the design spec, then the Forge and parcels.
@@ -34,11 +34,20 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 | | F23 | The roster: the start's picks, the Dorm, visitors (CS2, CS34–CS36) | Claude | M | F21 ✓ | **Done** (D37) |
 | | F24 | Farm Rank and chapter 1, then the owner's phone check (CS39, CS41–CS42) | Claude | M | F18 ✓, F19 ✓, F20 ✓, F21 ✓, F22 ✓, F23 ✓ | **Done** (D38): M4 built; the owner's phone check pending |
 | | F25 | Art for M4 (ChatGPT): the Dorm and the shipping bin, a seed-packet badge, nine UI marks, three cast busts (CS19) | ChatGPT | M | F7 read | [Written](tasks/F25-art-m4.md) |
-| M4, the Forge | F8 | ~~The Forge's place and minigame~~ **On hold (D20):** re-scoped by [hd2d-farm.md](../design/hd2d-farm.md) FR24 to the minigame contract and the Kitchen | Claude | M | F7, the owner's review of the refocus | On hold |
-| | F9 | ~~Art: the Forge and the Post~~ **On hold (D20):** re-scoped to `kit-farm` (FR16, FR24) | ChatGPT | M | F16's contract, the owner's look | On hold |
-| M5, parcels | F10 | The sender: the outbox, `parcels`, `/api/post/parcels` and `/api/post/claims` | Claude | M | F8, uma-platform PO1 | **Parked (D22):** later, once the farm's own loop stands |
+| M5, more to do | F27 | The ranch: the Coop and the Barn, animals, feed, carers and affection, products, cloth at the Mill, chapter 2; save v4 (CS13, CS18, CS43) | Claude | L | F24 ✓ | [Written](tasks/F27-ranch.md) |
+| | F26 | The Mine and the Quarry: 30 floors, the stairs, the Smelter and the Cutter, chapter 3; save v5 (CS14, CS17, CS18, CS43) | Claude | M | F27 | [Written](tasks/F26-mine-quarry.md) |
+| | F8 | ~~The Forge's place and minigame~~ Re-scoped (D20, [hd2d-farm.md](../design/hd2d-farm.md) FR24): the minigame contract and the Kitchen: FR21's rules, the cooking game on a flat scene, recipes, the staff meal and well fed, chapter 4; save v6 (CS20–CS22, CS43) | Claude | L | F26, F27; its rules may start beside them (FR22) | [Written](tasks/F8-kitchen.md) |
+| | F39 | The Cooking Contest, chapter 4's last goal, pulled forward from M6's F32 so chapter 5 can open in M5 (CS40) | Claude | S | F8 | [Written](tasks/F39-cooking-contest.md) |
+| | F28 | Expeditions: regions, parties, power, results, loot, the log, chapter 5; save v7; then M5's phone check (CS48–CS50, CS43) | Claude | L | F8, F39 | [Written](tasks/F28-expeditions.md) |
+| | F29 | Art for M5 (ChatGPT): eggs and milk, two feeds, seven animals, the Coop and the expedition post, four cast busts, four story items, the tools' tints (CS19) | ChatGPT | M | F25 (or one release with it) | [Written](tasks/F29-art-m5.md) |
+| M7, the HD-2D farm | F9 | ~~Art: the Forge and the Post~~ **On hold (D20):** re-scoped to `kit-farm` (FR16, FR24) | ChatGPT | M | F16's contract, the owner's look | On hold |
+| Later, parcels | F10 | The sender: the outbox, `parcels`, `/api/post/parcels` and `/api/post/claims` | Claude | M | F8, uma-platform PO1 | **Parked (D22):** later, once the farm's own loop stands |
 
 **Order:** F3 first, and F4 beside it. The full order is in [the doc](../design/first-playable.md#the-order).
+
+**M5's order:** F27, F26, F8 (its contract's and cooking game's rules may start beside F27 and F26), F39, F28; F29 any
+time, after F25 or in one release with it. Each Claude packet that changes the save takes the next version (v4–v7, F27's
+pattern).
 
 ## Across the repos
 
