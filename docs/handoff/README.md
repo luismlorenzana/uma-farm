@@ -1,6 +1,6 @@
 # Handoff: open work
 
-> **Status: 2026-11-08, after D28.** M1 is met (D13) and M2 is live (F4–F6). The current initiative is [the farm's own loop](../design/core-loop.md) (accepted, D26) on the [HD-2D farm](../design/hd2d-farm.md) (accepted, D21). **F7 is written: [the core spec](../design/core-spec.md)** (CS1–CS55, [page](../design/previews/core-spec.html), D27), every number worked and checked by a sim of the first year. **Next:** the owner reads it (F7's last check); M4's packets (F17–F25) are written meanwhile, and building starts after the read. Time is turns (D25); parcels are parked.
+> **Status: 2026-11-08, after D29.** M1 is met (D13) and M2 is live (F4–F6). The current initiative is [the farm's own loop](../design/core-loop.md) (accepted, D26) on the [HD-2D farm](../design/hd2d-farm.md) (accepted, D21). **F7 is written: [the core spec](../design/core-spec.md)** (CS1–CS55, [page](../design/previews/core-spec.html), D27), every number worked and checked by a sim of the first year. **Next:** the owner reads it (F7's last check); M4's packets (F17–F25) are written (D29); building starts after the read. Time is turns (D25); parcels are parked.
 > initiative is [the first playable farm](../design/first-playable.md)** (FW1–FW13,
 > [page](../design/previews/first-playable.html)): its requirements and every planned task, from the hello app (F3) to the
 > Wilds playing, the design spec, then the Forge and parcels.
@@ -25,15 +25,15 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 | | F5 | The screens: the Wilds map, each place's page, the Warehouse, the worker picker | Claude | M | F3 ✓, F4 ✓ | **Done** (D12) |
 | | F6 | Push: the route, `farm-push-tick` resumed, "work done" | Claude | S | F5 ✓ | **Done** (D14); the tick runs (D15) |
 | M3, the design spec | F7 | [The design spec](tasks/F7-design-spec.md), rewritten as [the core spec](../design/core-spec.md) (CS1–CS55) | Claude | L | — | **Written (D27);** your read waits |
-| M4, the loop on today's map | F17 | Save v3 and the migration from v2 (CS53, CS54) | Claude | M | F7 read | To write |
-| | F18 | The calendar and End the day (CS4–CS8) | Claude | M | F17 | To write |
-| | F19 | Goods, prices, the bin and gold (CS9, CS10, CS19) | Claude | M | F17 | To write |
-| | F20 | The Fields: plots, seeds, tending, crop levels (CS11, CS12) | Claude | M | F18, F19 | To write |
-| | F21 | Talents and ranks (CS26–CS33) | Claude | M | F17 | To write |
-| | F22 | The forest, the Fishery, and the Mill, Sawmill and Smokehouse (CS15–CS18) | Claude | M | F19, F21 | To write |
-| | F23 | The roster: the start's picks, the Dorm, visitors (CS2, CS34–CS36) | Claude | M | F21 | To write |
-| | F24 | Farm Rank and chapter 1, then the owner's phone check (CS39, CS41–CS42) | Claude | M | F18–F23 | To write |
-| | F25 | Art for M4 (ChatGPT): eggs and milk, feed, hub buildings, three cast busts, tool tints (CS19) | ChatGPT | M | F7 read | To write |
+| M4, the loop on today's map | F17 | Save v3 and the migration from v2 (CS53, CS54) | Claude | M | F7 read | [Written](tasks/F17-save-v3.md) |
+| | F18 | The calendar and End the day (CS4–CS8) | Claude | M | F17 | [Written](tasks/F18-calendar.md) |
+| | F19 | Goods, prices, the bin and gold (CS9, CS10, CS19) | Claude | M | F17 | [Written](tasks/F19-goods.md) |
+| | F20 | The Fields: plots, seeds, tending, crop levels (CS11, CS12) | Claude | M | F18, F19 | [Written](tasks/F20-fields.md) |
+| | F21 | Talents and ranks (CS26–CS33) | Claude | M | F17 | [Written](tasks/F21-talents-ranks.md) |
+| | F22 | The forest, the Fishery, and the Mill, Sawmill and Smokehouse (CS15–CS18) | Claude | M | F19, F21 | [Written](tasks/F22-forest-fishery.md) |
+| | F23 | The roster: the start's picks, the Dorm, visitors (CS2, CS34–CS36) | Claude | M | F21 | [Written](tasks/F23-roster.md) |
+| | F24 | Farm Rank and chapter 1, then the owner's phone check (CS39, CS41–CS42) | Claude | M | F18–F23 | [Written](tasks/F24-farm-rank-chapter-1.md) |
+| | F25 | Art for M4 (ChatGPT): the Dorm and the shipping bin, a seed-packet badge, nine UI marks, three cast busts (CS19) | ChatGPT | M | F7 read | [Written](tasks/F25-art-m4.md) |
 | M4, the Forge | F8 | ~~The Forge's place and minigame~~ **On hold (D20):** re-scoped by [hd2d-farm.md](../design/hd2d-farm.md) FR24 to the minigame contract and the Kitchen | Claude | M | F7, the owner's review of the refocus | On hold |
 | | F9 | ~~Art: the Forge and the Post~~ **On hold (D20):** re-scoped to `kit-farm` (FR16, FR24) | ChatGPT | M | F16's contract, the owner's look | On hold |
 | M5, parcels | F10 | The sender: the outbox, `parcels`, `/api/post/parcels` and `/api/post/claims` | Claude | M | F8, uma-platform PO1 | **Parked (D22):** later, once the farm's own loop stands |
