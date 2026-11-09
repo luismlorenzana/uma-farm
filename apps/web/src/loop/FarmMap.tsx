@@ -4,7 +4,7 @@
 // locked. After a night the morning summary opens over the map until the player starts the day. Loaded on demand, and
 // only in the loop's build.
 import {
-  farmEnvV3, FARM_PLACES, farmPlace, LOOP_WORK_PLACES, loopReadyWork, loopWorld, workNow, type FarmPlace, type LoopPlaceId, type SaveV3,
+  farmEnvV3, FARM_PLACES, farmPlace, LOOP_WORK_PLACES, loopReadyWork, loopWorld, readyPlots, workNow, type FarmPlace, type LoopPlaceId, type SaveV3,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { ART_TILE, artScale, HubMap, hubDpr, PALETTES, type HubMapPlace, type PageGround, type PipModel } from '@luismlorenzana/uma-kit/hub'
@@ -17,7 +17,9 @@ import { masterReady } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { collectFarm, dismissSummary } from './actions'
 import { FARM_MAP_TILES, lockOf, placeAt, placeLink } from './farm-map'
-import { shortDate, summaryParts } from './words'
+import { FieldsPeek, fieldsPips } from './FieldsPeek'
+import { summaryParts } from './summary-words'
+import { shortDate } from './words'
 
 const GROUND: PageGround = { id: 'farm', tiles: 'farmlands', palette: PALETTES.farmlands! }
 const ENV = farmEnvV3()
@@ -44,7 +46,7 @@ function pipsOf(place: FarmPlace, work: WorkView): PipModel[] | undefined {
   })
 }
 
-/** One tap collects every finished job on the farm. */
+/** One tap collects every finished job on the farm and harvests every Ready plot (F20). */
 function CollectAll({ ready }: { ready: number }) {
   const [note, setNote] = useState<string | null>(null)
   if (ready === 0 && !note) return null
@@ -69,7 +71,7 @@ function FarmHelp() {
       <div className="rounded-full border border-hairline-strong bg-panel/95 shadow-3" data-farm-help>
         <HelpButton title="The farm" label="How the farm works">
           <p>A day is a turn: nothing moves until you end it, even with the app closed.</p>
-          <p>Put your Umas to work, then tap End the day. Jobs take whole days.</p>
+          <p>Plant the Fields, put your Umas to work, then tap End the day. Jobs and crops take whole days.</p>
           <p>The night settles everything at once, and the morning shows what it brought.</p>
           <p>Places open with chapters and the Farm Rank. The rows run gathering, its station, then the ranch or a workshop; the yard and the town are below.</p>
           <p>Tap the date for the calendar: a festival on each season’s 10th day.</p>
@@ -89,11 +91,12 @@ function FarmScreen({ save, peek }: { save: SaveV3; peek: FarmPlace | undefined 
   const reducedMotion = useReducedMotionSetting()
   const tile = ART_TILE * artScale(hubDpr())
   const ready = useMemo(() => loopReadyWork(save), [save])
+  const plots = readyPlots(save)
   const work = useMemo(() => workView(loopWorld(save), workNow(save), ENV), [save])
   const places: HubMapPlace[] = FARM_PLACES.map((place): HubMapPlace => {
     const lock = lockOf(save, place)
-    const slots = ready.get(place.id as LoopPlaceId) ?? 0
-    const pips = pipsOf(place, work)
+    const slots = place.id === 'fields' ? plots : ready.get(place.id as LoopPlaceId) ?? 0
+    const pips = place.id === 'fields' ? fieldsPips(save) : pipsOf(place, work)
     const busy = pips?.some((p) => p.state !== 'free') ?? false
     return {
       id: place.id, name: place.name, frame: place.frame, at: placeAt(place),
@@ -104,7 +107,7 @@ function FarmScreen({ save, peek }: { save: SaveV3; peek: FarmPlace | undefined 
     }
   })
   const covered = peek !== undefined || params.get('sheet') !== null
-  const total = [...ready.values()].reduce((a, b) => a + b, 0)
+  const total = [...ready.values()].reduce((a, b) => a + b, plots)
   return (
     <>
       <div className="absolute inset-0 overflow-y-auto overscroll-contain" data-farm-scroll>
@@ -134,7 +137,7 @@ function FarmScreen({ save, peek }: { save: SaveV3; peek: FarmPlace | undefined 
           words={{ close: 'Close', about: `About the ${peek.name}`, backTo: 'Back to the farm' }}
           focusKey={`[data-place="${peek.id}"]`}
         >
-          <PlacePeek save={save} place={peek} />
+          {peek.id === 'fields' && lockOf(save, peek) === null ? <FieldsPeek save={save} /> : <PlacePeek save={save} place={peek} />}
         </PeekPanel>
       )}
       <Morning save={save} open={!covered} />

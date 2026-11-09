@@ -1,6 +1,8 @@
 // The shop (F19 decision 7; core spec CS3, CS4): lines of things to buy, each with a price and an optional gate, bought
-// with gold into the Warehouse at ★1. F19 is the frame: `shopLines` sells nothing until F20 adds the season's seeds by
-// tier; land, beds and stations are bought at their own places. Like `spendGold`, `buy` doesn't stamp `updatedAt`.
+// with gold into the Warehouse at ★1. F19 made the frame and F20 the season's seeds by tier: the first three from Farm
+// Rank 1, the next two from FR2, the last from FR4. The list changes on a season's first day and never runs out (F20
+// decision 8); land, beds and stations are bought at their own places. Like `spendGold`, `buy` doesn't stamp `updatedAt`.
+import { seedLines } from '../fields/fields'
 import { opened, type PlaceOpens } from '../farm/places'
 import { spendGold } from './gold'
 import { SaveRuleError } from './rules'
@@ -18,10 +20,10 @@ export interface ShopLine {
   opens: PlaceOpens
 }
 
-/** What the shop sells on this save, in its order. F20 adds the season's seeds by tier; until then, nothing. */
+/** What the shop sells on this save, in its order: the season's six seeds (F20), each at its tier's Farm Rank. A line
+ * shut by its rank still shows, with its gate. */
 export function shopLines(save: Pick<SaveV3, 'calendar' | 'farm'>): ShopLine[] {
-  void save
-  return []
+  return seedLines(save)
 }
 
 /** Whether a line can be bought on this save yet. */

@@ -81,7 +81,7 @@ each open workshop has been played or lacks inputs (`daySetState`):
 
 | Counts as | Rule |
 |---|---|
-| Has work | She holds a running job, or tends a block with a growing plot (later a carer or an assistant) |
+| Has work | She holds a running job, or tends a block with a growing plot (F20; later a carer or an assistant) |
 | Idle | An Uma home with no work. A Ready Uma is idle too until she has work again |
 | To collect | Each Uma with finished items, and each Ready plot |
 | The badge | Idle Umas plus things to collect |
@@ -105,14 +105,15 @@ time. A step whose packet hasn't landed passes the night on unchanged, and each 
 | Step | Function | What happens | Filled by |
 |---|---|---|---|
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand | F19 |
-| 2 | `growCrops` | Crops grow; plots that reach their days turn Ready | F20 |
+| 2 | `growCrops` | Crops grow: 1 a night untended, the tender’s rate tended; plots that reach their days − 0.5 turn Ready | F20 |
 | 3 | `tendAnimals` | Animals are fed, affection moves, products are laid | M5 (F27) |
 | 4 | `moveJobs` | Jobs move a day on: a quarter day for the well fed, then what finishes by the morning is read | F18 |
 | 5 | `resetWorkshops` | Each workshop may be played again tomorrow | M5 (F8) |
 | 6 | `tickRanks` | Rank points for every Uma who worked; rank-ups | F21 |
 | 6 | `tickBonds` | Bond points for pairs who shared a place | M6 (F33) |
 | 6 | `countWellFed` | The well-fed days count down | F18 |
-| 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the day’s chats and gifts clear; on a season’s last night, crops out of season wither (F20) | F18 |
+| 7 | `witherCrops` | On a season’s last night, crops still growing that don’t grow in the next season wither; Ready crops wait | F20 |
+| 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the day’s chats and gifts clear | F18 |
 | 8 | `checkGoals` | Visitors come and go; chapter goals, Diary milestones and the Farm Rank | F23, F24 |
 | 9 | `buildSummary` | The morning summary, from what changed | F18 |
 <!-- /live -->
@@ -136,9 +137,11 @@ time. A step whose packet hasn't landed passes the night on unchanged, and each 
 - **One stamp a night:** no step moves `account.updatedAt`; `endDay` stamps it once, after step 9.
 - **What the night passes along:** `notes.sold` (step 1's sales, by good and star: the summary's bin section, F19),
   `notes.worked` (who held a running job at the day's start, and where: F21 pays rank points from it) and
-  `notes.finished` (each job finished by the morning, with its items). Later packets add their own notes (F20 what
-  withered).
-- `NightContext` is what the night reads beyond the save: master data's roster (F21 adds talents).
+  `notes.finished` (each job finished by the morning, with its items); F20's `notes.tended` (tenders whose block had a
+  growing plot: F21 pays farming's points from it), `notes.ripened` (plots that turned Ready, by block) and
+  `notes.withered` (by block and crop), [fields.md](fields.md#the-night-cs7-steps-2-and-7-cs4s-last-night).
+- `NightContext` is what the night reads beyond the save: master data's roster, and each tender's farming talent
+  (`farmingTalent`, D for everyone until F21).
 
 ## The morning summary (CS5, decision 11)
 
@@ -150,15 +153,16 @@ night."
 | Section | Lines (as built) | Words | A tap goes to | Filled by |
 |---|---|---|---|---|
 | The bin | `{ kind: 'sold', id, stars, count, gold, demand }`, then the total | "Salmon ★2 × 3 · 495g" (In demand), "Total · 545g" | the bin | F19 ([goods.md](goods.md#the-shipping-bin-cs10-cs7-step-1-decisions-46)) |
-| Work done | `{ kind: 'jobs', place, jobs, items }` | "Forest · 2 jobs done · 9 items" | the place's quick look | F18 (crops by block: F20) |
+| Work done | `{ kind: 'jobs', place, jobs, items }`; `{ kind: 'crops', block, plots }`; `{ kind: 'withered', block, crop, plots }` | "Forest · 2 jobs done · 9 items", "Block A · 9 crops ready", "Block A · 3 Onion withered" | the place's quick look; the Fields | F18; F20 ([fields.md](fields.md#the-night-cs7-steps-2-and-7-cs4s-last-night)) |
 | Ranks | rank-ups, full points | — | — | F21 |
 | Bonds | new hearts | — | — | M6 |
 | New today | `{ kind: 'season', season }`, `{ kind: 'festival', festival, when }` | "Summer begins", "Flower Show tomorrow" | the calendar; the festival ground | F18 (visitors F23, scenes and milestones F24) |
-| Today | `{ kind: 'idle', umas }` | "2 Umas idle" | the roster | F18 (seeds waiting F20) |
+| Today | `{ kind: 'idle', umas }`; `{ kind: 'seeds', plots }` (empty plots the seeds held could fill today) | "2 Umas idle", "9 plots to plant" | the roster; the Fields | F18; F20 |
 
 While v3 is unreleased (until F24) each packet extends the shape in place, with parse tests. The parse is strict: unknown
 keys, a line in words, a place without work slots, a place twice, an unknown festival, an Uma off the roster, a section
-before its packet, or a summary of another day are each refused with their path.
+before its packet, a plot count outside 1–9, an unknown block or crop, or a summary of another day are each refused with
+their path. The lines' words are `loop/summary-words.ts`, loaded with the farm map, so they stay out of the initial JS.
 
 The card is a sheet over the farm. It shows on `/` whenever a summary is held and no quick look or other sheet is open,
 so a tap on a line opens its place and Back brings the card back.
@@ -214,13 +218,15 @@ stay put.
   Farm Rank once reached). A place CS3 opens on day 1 whose screen hasn't landed says "Opens soon"; F19, F20, F22 and F23
   wire theirs up (`PLACE_SCREENS`, each with where a tap goes). F19 opened the shipping bin (`?sheet=bin`), the
   Warehouse (`/warehouse`) and the shop (`?sheet=shop`): a tap on the map or in the Menu goes straight there
-  ([goods.md](goods.md#the-screens)); every other place keeps its quick look.
+  ([goods.md](goods.md#the-screens)). F20 opened the Fields: a tap opens their quick look (`/?peek=fields`), which opens
+  `/fields` ([fields.md](fields.md#the-screens-decision-11)); every other place keeps its plain quick look.
 - **Borrowed buildings:** the Coop, the bin, the Dorm, the board and the expedition post stand on unused uma-art buildings
   until their own ship (F25, F29, F38).
 - **Pips** hang over a work place's building in a half arch (FR7): each working Uma's face ringed by her job's progress,
   or a free dot. A locked place with no one working shows none.
 - **Ready badges and Collect all** stay (FR7): a place with finished work says Ready, and the pill collects every
-  finished job on the farm (`collectLoopAll`). Ready plots join with F20.
+  finished job on the farm (`collectLoopAll`). F20 adds Ready plots: the Fields say Ready while one is, Collect all
+  counts them and harvests every block, and the Fields' pips are their blocks' tenders.
 - **The help button** says how the farm works in five short lines.
 
 ## The bars (FC29, decisions 6 and 8)

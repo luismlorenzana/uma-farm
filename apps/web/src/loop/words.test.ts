@@ -1,7 +1,8 @@
 // The loop's words for the day (F18): dates, festivals, the nudge's line, and the morning summary in CS5's order.
 import type { MorningSummary } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
-import { dateLabel, dateWords, dayCount, festivalWords, nudgeWords, shortDate, summaryParts } from './words'
+import { summaryParts } from './summary-words'
+import { dateLabel, dateWords, dayCount, festivalWords, nudgeWords, shortDate } from './words'
 
 describe('the date (decision 8)', () => {
   it('names the day, the season, the year and the next festival', () => {
@@ -60,3 +61,21 @@ describe('the morning\'s bin (F19 decision 6)', () => {
   })
 })
 
+
+describe('the morning\'s Fields (F20)', () => {
+  it('lists crops ready by block, what withered, and plots to plant, each opening the Fields', () => {
+    const summary: MorningSummary = {
+      day: 25, bin: [], ranks: [], bonds: [], news: [],
+      work: [{ kind: 'crops', block: 'A', plots: 9 }, { kind: 'crops', block: 'B', plots: 1 }, { kind: 'withered', block: 'A', crop: 'tomato', plots: 3 }],
+      nudges: [{ kind: 'seeds', plots: 4 }],
+    }
+    expect(summaryParts(summary)).toEqual([
+      { section: 'work', title: 'Work done', lines: [
+        { key: 'crops:A', text: 'Block A · 9 crops ready', to: '/fields' },
+        { key: 'crops:B', text: 'Block B · 1 crop ready', to: '/fields' },
+        { key: 'withered:A:tomato', text: 'Block A · 3 Tomato withered', to: '/fields' },
+      ] },
+      { section: 'nudges', title: 'Today', lines: [{ key: 'seeds', text: '4 plots to plant', to: '/fields' }] },
+    ])
+  })
+})

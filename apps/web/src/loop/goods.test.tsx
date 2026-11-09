@@ -2,7 +2,7 @@
 // pick mode and from a good's sheet; Ship all; Take back in the bin's sheet; the night paying it into the morning; and
 // the shop's frame buying with gold. Master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { farmDay, newSave, type SaveV3, type ShopLine } from '@farm/domain'
+import { farmDay, newSave, shopLines, type SaveV3, type ShopLine } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -20,7 +20,7 @@ const { FarmAccountBar } = await import('../shell/Bars')
 const { default: LoopSheets } = await import('./LoopSheets')
 const { default: WarehousePage } = await import('./WarehousePage')
 const { ShopList } = await import('./GoodsSheets')
-const { endTheDay } = await import('./actions')
+const { buyLine, endTheDay } = await import('./actions')
 
 const AT = '2026-11-09T10:00:00.000Z'
 const SUMMER_3 = farmDay({ year: 1, season: 'summer', day: 3 })
@@ -139,21 +139,25 @@ describe('shipping (decisions 4, 8 and 9)', () => {
   })
 })
 
-describe('the shop (decision 7)', () => {
-  const CARROT: ShopLine = { id: 'seed-carrot', price: 20, opens: { by: 'start' } }
-  const ONION: ShopLine = { id: 'seed-onion', price: 30, opens: { by: 'farm-rank', rank: 2 } }
+describe('the shop (decision 7, F20)', () => {
+  const SPRING = () => newSave('u1', AT)
 
-  it('says when there\'s nothing for sale (until F20)', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: stocked() })
+  it('sells the season\'s seeds, a shut tier showing its Farm Rank', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: SPRING() })
     await render(<LoopSheets sheet="shop" />, '/?sheet=shop')
-    expect($('[data-shop-empty]')?.textContent).toBe('Nothing for sale yet.')
-  })
-
-  it('buys a line with gold, refuses short gold, and shows a shut line\'s gate', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: stocked() })
-    await render(<ShopList save={save()} lines={[CARROT, ONION]} />)
+    expect($('[data-shop-empty]')).toBeNull()
+    expect([...document.body.querySelectorAll('[data-row]')].map((b) => b.getAttribute('data-row'))).toEqual([
+      'seed-carrot', 'seed-potato', 'seed-mint', 'seed-onion', 'seed-cabbage', 'seed-asparagus',
+    ])
     expect(($('[data-row="seed-onion"]') as HTMLButtonElement).disabled).toBe(true)
     expect($('[data-row="seed-onion"]')?.textContent).toContain('From Farm Rank 2')
+    expect($('[data-row="seed-asparagus"]')?.textContent).toContain('From Farm Rank 4')
+    expect(($('[data-row="seed-potato"]') as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it('buys a line with gold and refuses short gold', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: SPRING() })
+    await render(<ShopList save={save()} lines={shopLines(save())} />)
     await click('[data-row="seed-carrot"]')
     const buy = () => [...document.body.querySelectorAll('[data-kit="buy-sheet"]')].at(-1)!.closest('[role="dialog"]')!.querySelectorAll('button')
     const chip = (n: number) => [...buy()].find((b) => b.textContent === `×${n}`)!
@@ -164,5 +168,12 @@ describe('the shop (decision 7)', () => {
     await settle()
     expect(save().gold).toBe(0)
     expect(save().items['seed-carrot']).toEqual([34, 0, 0, 0, 0])
+  })
+
+  it('won\'t buy last season\'s seeds from a sheet left open', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: stocked() })
+    const line: ShopLine = { id: 'seed-carrot', price: 20, opens: { by: 'start' } }
+    await expect(buyLine(line, 1)).rejects.toThrow('Not in the shop this season.')
+    expect(save().gold).toBe(500)
   })
 })

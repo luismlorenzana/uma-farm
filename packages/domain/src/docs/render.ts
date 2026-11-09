@@ -28,6 +28,13 @@ import { refundOf } from '../save/migrate-v3'
 import { DAYS_PER_SEASON, farmDay, FESTIVALS, SEASON_NAMES, SEASONS } from '../farm/calendar'
 import { FARM_MAP_ROWS, FARM_PLACES, type PlaceOpens } from '../farm/places'
 import { NIGHT_STEPS } from '../night/end-day'
+import { CROPS, nightsToReady, SHOP_SEEDS } from '../fields/crops'
+import {
+  BLOCK_RULES, cropLevelStart, FARMING_CHALLENGES, harvestQuality, MAX_CROP_LEVEL, seedsBackChance, TALENT_D, tendedGrowth, UNTENDED_GROWTH, type TalentStep,
+} from '../fields/fields'
+import { starShares } from '../goods/stars'
+import { BLOCK_IDS } from '../save/v3'
+import type { Rank } from '../farm/ranks'
 
 type Cell = string | number
 /** A Markdown table; pipes in cells are escaped. */
@@ -271,8 +278,71 @@ function starPrices(): string {
   ]))
 }
 
+// --- The Fields (F20) -----------------------------------------------------------------------------------------------
+
+const STATION_NAME = { mill: 'Mill', sawmill: 'Sawmill' } as const
+const seasonsOf = (seasons: readonly (typeof SEASONS)[number][]) => seasons.map((season) => SEASON_NAMES[season]).join(', ')
+const tierWords = (tier: number | 'rare') => (tier === 'rare' ? 'Rare' : `FR${tier}`)
+const per = (n: number) => Number(n.toFixed(4)).toString()
+const pct = (n: number) => `${Math.round(n * 100)}%`
+
+/** CS11: every crop, its seasons, its shop tier and seed price, its days untended · Novice · Expert (derived by CS12's
+ * rule), its yield, regrowth, price ★1 and its station. */
+function crops(): string {
+  return table(['Crop', 'Id', 'Seasons', 'Shop', 'Seed', 'Days: untended · Novice · Expert', 'Yield', 'Regrows', 'Price ★1', 'Refined at'],
+    Object.values(CROPS).map((c) => {
+      const days = [UNTENDED_GROWTH, tendedGrowth(0, TALENT_D), tendedGrowth(3, TALENT_D)].map((g) => nightsToReady(c.id, g)).join(' · ')
+      const into = refinedOf(c.id)
+      return [itemNameOf(c.id), `\`${c.id}\``, seasonsOf(c.seasons), tierWords(c.tier), c.seed === null ? '—' : g(c.seed), days, c.yield,
+        c.regrows === null ? '—' : `every ${c.regrows}`, g(goodOf(c.id)!.price), into && c.station ? `${itemNameOf(into)} (${STATION_NAME[c.station]})` : '—']
+    }))
+}
+
+/** CS4: the shop's seeds by season and tier, with their prices. */
+function shopSeeds(): string {
+  const tiers = [1, 2, 4] as const
+  return table(['Season', ...tiers.map((t) => `Farm Rank ${t}`)], SEASONS.map((season) => [SEASON_NAMES[season],
+    ...tiers.map((t) => SHOP_SEEDS[season].filter((id) => CROPS[id].tier === t).map((id) => `${itemNameOf(id)} ${g(CROPS[id].seed!)}`).join(', '))]))
+}
+
+/** CS12: the four blocks. */
+function blocks(): string {
+  return table(['Block', 'Plots', 'Opens at', 'Costs'], BLOCK_IDS.map((id) => {
+    const rule = BLOCK_RULES[id]
+    return [id, 9, rule.opens.by === 'farm-rank' ? `Farm Rank ${rule.opens.rank}` : 'Day 1', rule.cost === 0 ? '—' : g(rule.cost)]
+  }))
+}
+
+/** CS12, CS26, CS28, CS31: a block's growth a night, its harvest's quality and stars, and seeds back, untended and by
+ * the tender's rank and talent (Basic tools, not well fed, crop level 1). */
+function tending(): string {
+  const talents: readonly [string, TalentStep][] = [['G', 0], ['D', 3], ['C', 4], ['B', 5], ['A', 6], ['S', 7]]
+  const stars = (q: number) => starShares(q).flatMap((share, i) => (share > 0 ? [`★${i + 1} ${pct(share)}`] : [])).join(', ')
+  const rows = [
+    ['Untended', ...talents.map(() => per(UNTENDED_GROWTH)), stars(harvestQuality(null, 1)), pct(seedsBackChance(null))],
+    ...RANKS.map((name, r) => [name, ...talents.map(([, step]) => per(tendedGrowth(r as Rank, step))),
+      stars(harvestQuality({ rank: r as Rank, talent: TALENT_D, wellFed: false }, 1)), pct(seedsBackChance(r as Rank))]),
+  ]
+  return table(['Tender', ...talents.map(([grade]) => `Growth, ${grade}`), 'Stars, a D tender', 'Seeds back'], rows)
+}
+
+/** CS11: crop levels, the points each starts at, and what it adds. */
+function cropLevels(): string {
+  const levels = Array.from({ length: MAX_CROP_LEVEL }, (_, i) => i + 1)
+  return table(['Level', ...levels.map(String)], [
+    ['Points', ...levels.map((l) => cropLevelStart(l).toLocaleString('en-US'))],
+    ['Quality', ...levels.map((l) => `+${per(0.1 * (l - 1))}`)],
+  ])
+}
+
+/** CS30: farming's challenges, toward each rank. */
+function farmingChallenges(): string {
+  return table(['Toward', 'Challenge', 'Counted'], FARMING_CHALLENGES.map((c) => [RANKS[c.rank], c.what, c.rank === 5 ? 'M6 (F32)' : 'At harvest, for the tender (F20)']))
+}
+
 export function renderBlock(key: string): string | null {
-  const blocks: Record<string, () => string> = { families, items, made, facilities, callings, jobs, levels, 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
-    calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices }
-  return blocks[key]?.() ?? null
+  const blocks_: Record<string, () => string> = { families, items, made, facilities, callings, jobs, levels, 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
+    calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
+    crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges }
+  return blocks_[key]?.() ?? null
 }

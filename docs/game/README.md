@@ -7,6 +7,7 @@ updates its page in the same commit.
 |---|---|
 | [architecture.md](architecture.md) | The app, the API, the save and its sync, "work done" notifications, deploy and local setup (F3, F6); save v3, the dark launch and the v2 → v3 migration (F17, live from F24) |
 | [days.md](days.md) | The calendar and its festivals, work in days, End the day and the night's nine steps, the nudge, the morning summary, the farm map and the bars (F18, live from F24) |
+| [fields.md](fields.md) | The Fields: the 27 crops, the shop's seeds by season and tier, the four blocks, planting and harvesting, tending and growth by rank and talent, seeds back, crop levels, farming's challenges, the night's growth and withering, the Fields' screens (F20, live from F24) |
 | [goods.md](goods.md) | Goods: the one price rule and every family's prices, stars (CS26), demand by season, the shipping bin and its night, gold, the shop's frame and the Warehouse by stars (F19, live from F24) |
 | [loops.md](loops.md) | The Wilds' loop: who works, the fifteen places, Craft Level, a job, the Warehouse, the save (F4) |
 | [materials.md](materials.md) | The five lines, their fifty raw and refined pairs, and the made items with their recipes (F4) |

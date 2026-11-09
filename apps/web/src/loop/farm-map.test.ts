@@ -4,7 +4,7 @@ import atlas from '@luismlorenzana/uma-art/buildings/atlas.json'
 import { FARM_PLACES, farmPlace, newSave } from '@farm/domain'
 import { placeCell } from '@luismlorenzana/uma-kit/hub'
 import { describe, expect, it } from 'vitest'
-import { FARM_MAP_TILES, lockOf, placeAt } from './farm-map'
+import { FARM_MAP_TILES, lockOf, placeAt, placeLink } from './farm-map'
 
 const frames: Readonly<Record<string, { w: number; h: number }>> = atlas.frames
 const day1 = newSave('u1', '2026-11-09T10:00:00.000Z')
@@ -24,9 +24,11 @@ describe('the farm map', () => {
 
   it('says what opens a locked place, and "Soon" for one whose screens haven\'t landed', () => {
     const lock = (id: string, save = day1) => lockOf(save, farmPlace(id)!)
-    expect([lock('mine'), lock('sawmill'), lock('mill'), lock('coop'), lock('board'), lock('fields')]).toEqual([
-      'Chapter 3', 'Farm Rank 3', 'Chapter 1’s reward', 'Chapter 2', 'Soon', 'Soon',
+    expect([lock('mine'), lock('sawmill'), lock('mill'), lock('coop'), lock('board'), lock('forest'), lock('fields')]).toEqual([
+      'Chapter 3', 'Farm Rank 3', 'Chapter 1’s reward', 'Chapter 2', 'Soon', 'Soon', null,
     ])
-    expect(lockOf(day1, farmPlace('fields')!, new Set(['fields']))).toBeNull()
+    expect(lockOf(day1, farmPlace('forest')!, new Set(['forest']))).toBeNull()
+    // F20: the Fields open their quick look, which leads to their page.
+    expect(placeLink(day1, farmPlace('fields')!)).toBe('/?peek=fields')
   })
 })

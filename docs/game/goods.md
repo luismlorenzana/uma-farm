@@ -106,7 +106,7 @@ The 260 goods of `goods/ids.ts` carry their family, grade, raw or refined, price
 seeds", "Carrot seeds (own)"), and icons from uma-art 2.21.0's items atlas, a family's raw row with its refined row
 below. Only crops, forest goods, freshwater fish and the three stations' forms can be had in M4; the rest are priced so a
 migrated Warehouse can sell them. The ranch's goods, the dishes and the Forge's are priced by F27, F8 and F36. Seeds
-have no price: a seed shows its crop's icon until F25's seed-packet badge.
+have no price: a seed shows its crop's icon with a plain corner tag (F20: brown from the shop, green for own seeds) until F25's seed-packet badge.
 
 ### The crops' own prices (CS11)
 
@@ -391,7 +391,8 @@ always ★5.
 
 - `quality(sources)` adds a good's sources, each already in points (`{ rank, talent, care, cropLevel, inputs, tool,
   boost }`), to a millionth; `drawStars(q, u)` draws; `starShares(q)` gives the odds of each star. F21 gives the rank
-  and talent terms; F20 and F22 add them up for their goods.
+  and talent terms; F20 adds them up for crops (`harvestQuality`, [fields.md](fields.md#tending-cs12-cs28-cs31-decisions-1-and-2))
+  and F22 for its goods.
 - A tool's tier runs 1 (Basic) to 5 (Mythril), so Basic adds nothing and a Copper Pick +0.25.
 
 | Worked (CS26) | Q | Stars |
@@ -453,10 +454,11 @@ Gold is whole and never negative (`spendGold`, `earnGold`, F17). The account bar
   on the first tab holding something that sells.
 - **The shop's sheet** (`?sheet=shop`, from the shop on the map): uma-kit's `ExchangeRows`, each line its icon, name,
   price and gate ("From Farm Rank 2"), and a buy sheet with ×1, ×5, ×10, ×25 or a typed count and **Buy 9 · 180g**,
-  off with "Need 30g more" when gold is short. It's a frame: `shopLines(save)` sells nothing until F20 adds the season's
-  seeds by tier, so it says "Nothing for sale yet." `buy(save, line, count)` spends through `spendGold` and puts the
-  goods in the Warehouse at ★1; it refuses a shut line (`locked`), a count outside 1–99 and short gold. Land, beds and
-  stations are bought at their own places.
+  off with "Need 30g more" when gold is short. F20 fills it with the season's six seeds by tier
+  ([fields.md](fields.md#the-shops-seeds-cs4-decision-8)); with no lines it would say "Nothing for sale yet."
+  `buy(save, line, count)` spends through `spendGold` and puts the goods in the Warehouse at ★1; it refuses a shut line
+  (`locked`), a count outside 1–99 and short gold. Land, beds and stations are bought at their own places (F20's blocks
+  on the Fields' page).
 - **The farm map and the Menu** open the bin, the shop and the Warehouse straight to their screens (`PLACE_SCREENS`);
   every other place keeps its quick look until its packet lands.
 

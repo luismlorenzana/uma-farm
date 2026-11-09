@@ -208,6 +208,11 @@ export interface SaveV3 {
 export const emptyPlot = (): Plot => ({ crop: null, growth: 0, ready: false, regrowing: false, own: false })
 /** A block of nine empty plots. */
 export const newBlock = (id: BlockId): Block => ({ id, tender: null, plots: Array.from({ length: PLOTS_PER_BLOCK }, emptyPlot) })
+/** Ready plots on the farm, every block (F20): the map's badge, Collect all and the nudge's "to collect". */
+export const readyPlots = (save: Pick<SaveV3, 'fields'>): number => save.fields.blocks.reduce((n, b) => n + b.plots.filter((p) => p.ready).length, 0)
+/** The block an Uma tends, or null (F20 decision 1): a tender is busy, so she can't take an uma-work job. */
+export const tendedBlock = (save: Pick<SaveV3, 'fields'>, outfitId: OutfitId): BlockId | null =>
+  save.fields.blocks.find((b) => b.tender === outfitId)?.id ?? null
 
 /** A new Uma on the roster: joined today, Novice at 0 points in all nine activities. */
 export function newRosterUma(day: number): RosterUma {

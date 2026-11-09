@@ -5,7 +5,7 @@ import { settle, statusOf } from '@luismlorenzana/uma-work'
 import { workNow } from '../farm/calendar'
 import { loopReadyItems } from '../save/loop-work'
 import { LOOP_KINDS, type LoopKinds } from '../save/parse-v3'
-import type { OutfitId, SaveV3 } from '../save/v3'
+import { readyPlots, type OutfitId, type SaveV3 } from '../save/v3'
 import { farmEnvV3, loopWorld } from '../work/loop-env'
 
 export interface DaySet {
@@ -30,7 +30,6 @@ export function daySetState(save: SaveV3, kinds: LoopKinds = LOOP_KINDS): DaySet
   const tending = new Set(save.fields.blocks.filter((b) => b.tender !== null && b.plots.some((p) => p.crop !== null && !p.ready)).map((b) => b.tender!))
   const idle = save.dorm.home.filter((id) => statusOf(world.work[id], now) !== 'working' && !tending.has(id))
   const umas = Object.values(world.work).filter((row) => loopReadyItems(row, now) > 0).length
-  const plots = save.fields.blocks.reduce((n, b) => n + b.plots.filter((p) => p.ready).length, 0)
-  const collect = umas + plots
+  const collect = umas + readyPlots(save)
   return { allSet: idle.length === 0 && collect === 0, idle, collect, badge: idle.length + collect }
 }

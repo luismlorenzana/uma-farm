@@ -8,7 +8,7 @@ import { GOLD_SHIPPED, ship, takeBack } from '../save/bin'
 import { collectLoopAll, editLoopQueue, loopReadyWork, loopWorking, settleLoopWork, startLoopJob } from '../save/loop-work'
 import { parseSaveV3, SAVE_V3_KEYS } from '../save/parse-v3'
 import { newRosterUma, newSave, type SaveV3 } from '../save/v3'
-import { endDay, NIGHT_STEPS, runNight, tickRanks, type NightContext, type NightStep } from './end-day'
+import { emptyNotes, endDay, NIGHT_STEPS, runNight, tickRanks, type NightContext, type NightStep } from './end-day'
 import { TEST_KINDS } from './kinds.fixture'
 import { summarySections } from './summary'
 
@@ -38,7 +38,7 @@ describe('the night (CS7)', () => {
   it('runs nine steps in order, each a named function', () => {
     expect(NIGHT_STEPS.map((s) => `${s.step} ${s.name}`)).toEqual([
       '1 payTheBin', '2 growCrops', '3 tendAnimals', '4 moveJobs', '5 resetWorkshops', '6 tickRanks', '6 tickBonds', '6 countWellFed',
-      '7 turnCalendar', '8 checkGoals', '9 buildSummary',
+      '7 witherCrops', '7 turnCalendar', '8 checkGoals', '9 buildSummary',
     ])
   })
 
@@ -56,7 +56,7 @@ describe('the night (CS7)', () => {
   it('stamps updatedAt once, with real time, after the ninth step', () => {
     const save = start(farm(), '101', gather())
     for (const step of NIGHT_STEPS) {
-      const after = step.run({ before: save, save, context: CONTEXT, notes: { sold: [], worked: [], finished: [] } })
+      const after = step.run({ before: save, save, context: CONTEXT, notes: emptyNotes() })
       expect(after.save.account, step.name).toEqual(save.account)
     }
     expect(runNight(save, CONTEXT).account).toEqual(save.account)
@@ -182,7 +182,7 @@ describe('the morning summary (CS5, decision 11)', () => {
 
   it('is replaced each night, and has no nudge when everyone works', () => {
     const save = editLoopQueue(start(farm(3), '101', gather()), { outfitId: '101', add: { request: gather(), building: 'forest' } }, AT, TEST_KINDS)
-    const busy: SaveV3 = { ...save, dorm: { ...save.dorm, home: ['101'] } }
+    const busy: SaveV3 = { ...save, dorm: { ...save.dorm, home: ['101'] }, items: { wheat: [5, 0, 0, 0, 0] } }
     const morning = night(busy)
     expect(morning.summary).toMatchObject({ day: 4, work: [{ place: 'forest', jobs: 1 }], nudges: [] })
     expect(night(morning).summary).toMatchObject({ day: 5, work: [{ place: 'forest', jobs: 1 }], nudges: [{ kind: 'idle', umas: ['101'] }] })

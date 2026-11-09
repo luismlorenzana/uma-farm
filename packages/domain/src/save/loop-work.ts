@@ -12,7 +12,7 @@ import { farmEnvV3, loopWorld, withLoopWorld, type LoopWorld } from '../work/loo
 import { LOOP_KINDS, LOOP_WORK_PLACES, type LoopKinds, type LoopPlaceId } from './parse-v3'
 import { SaveRuleError, type SaveRuleReason } from './rules'
 import { touched } from './save'
-import type { LoopWorkRequest, OutfitId, SaveV3 } from './v3'
+import { tendedBlock, type LoopWorkRequest, type OutfitId, type SaveV3 } from './v3'
 import { parseStockKey } from './warehouse'
 
 const REASON: Readonly<Record<string, SaveRuleReason>> = {
@@ -96,6 +96,12 @@ export function loopReadyWork(save: SaveV3, kinds: LoopKinds = LOOP_KINDS): Map<
 
 // --- The player's operations: each runs at the day's start and is stamped with real time ----------------------------
 
+/** A tender is busy (F20 decision 1): she can't start a job until she's moved off her block. */
+function notTending(save: SaveV3, outfitId: OutfitId): void {
+  const block = tendedBlock(save, outfitId)
+  if (block !== null) throw new SaveRuleError('busy', `She tends Block ${block}.`)
+}
+
 export interface LoopJobInput {
   outfitId: OutfitId
   place: LoopPlaceId
@@ -106,6 +112,7 @@ export interface LoopJobInput {
 /** Starts a job in a free slot this morning; its inputs leave the Warehouse now. A Ready Uma's finished work is collected
  * first. */
 export function startLoopJob(save: SaveV3, input: LoopJobInput, stamp: string, kinds: LoopKinds = LOOP_KINDS): SaveV3 {
+  notTending(save, input.outfitId)
   const { world, env, now } = opened(save, kinds)
   const slot: SlotRef = { building: input.place, slot: input.slot }
   if (!slotsOf(world, input.place, env.buildings).some((s) => s.slot === input.slot)) throw new SaveRuleError('bad-slot', `slot ${input.slot} doesn't exist`)
@@ -114,6 +121,7 @@ export function startLoopJob(save: SaveV3, input: LoopJobInput, stamp: string, k
 
 /** Adds, removes or moves a job in her queue (uma-kit's queue input): a queued job takes its inputs when it starts. */
 export function editLoopQueue(save: SaveV3, input: QueueInput<LoopWorkRequest>, stamp: string, kinds: LoopKinds = LOOP_KINDS): SaveV3 {
+  if ('add' in input) notTending(save, input.outfitId)
   const { world, env, now } = opened(save, kinds)
   return changed(save, done(queue(world, input, now, env), now).state, stamp)
 }
@@ -148,6 +156,7 @@ export function recallLoopWorker(save: SaveV3, outfitId: OutfitId, stamp: string
 /** Starts her last job again where she did it (another free slot there if hers is taken): a Ready Uma's finished entry
  * counts, so Collect and Repeat are one step, and the job starts this morning. */
 export function repeatLoopJob(save: SaveV3, outfitId: OutfitId, stamp: string, kinds: LoopKinds = LOOP_KINDS): SaveV3 {
+  notTending(save, outfitId)
   const { world, env, now } = opened(save, kinds)
   const row = world.work[outfitId]
   const finished = row?.slot && statusOf(row, now) === 'ready' ? row.entries.at(-1) : undefined
@@ -161,6 +170,7 @@ export function repeatLoopJob(save: SaveV3, outfitId: OutfitId, stamp: string, k
 /** Restarts a queue that stopped: its first job starts this morning where it would have (another free slot there if
  * that one is taken), and the rest queue behind it. */
 export function restartLoopStopped(save: SaveV3, outfitId: OutfitId, stamp: string, kinds: LoopKinds = LOOP_KINDS): SaveV3 {
+  notTending(save, outfitId)
   const { world, env, now } = opened(save, kinds)
   const dropped = world.work[outfitId]?.dropped
   if (!dropped) throw new SaveRuleError('bad-job', 'nothing stopped')
