@@ -85,7 +85,7 @@ describe('End the day (CS6)', () => {
     expect(save().calendar.day).toBe(1)
     await act(async () => (document.body.querySelector('[data-action="end-anyway"]') as HTMLButtonElement).click())
     await settle()
-    expect(save()).toMatchObject({ calendar: { day: 2 }, account: { updatedAt: '2026-11-09T20:00:00.000Z' }, summary: { day: 2, nudges: [{ kind: 'idle' }] } })
+    expect(save()).toMatchObject({ calendar: { day: 2 }, account: { updatedAt: '2026-11-09T20:00:00.000Z' }, summary: { day: 2, nudges: [{ kind: 'idle' }, { kind: 'seeds', plots: 9 }] } })
     expect(path).toBe('/')
   })
 

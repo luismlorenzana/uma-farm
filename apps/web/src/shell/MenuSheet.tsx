@@ -3,7 +3,7 @@
 // Account, and the build at the foot. The loop's build (F18): the farm's 23 places by FC28's rows, locked ones marked,
 // Account, and the switch "Ask before ending the day" (decision 10). `?sheet=menu` on the route it opens over, so Back
 // closes it.
-import { FARM_PLACES, loopReadyWork, wildsPlaces, type FarmPlaceGroup, type LoopPlaceId, type SaveV3 } from '@farm/domain'
+import { FARM_PLACES, loopReadyWork, readyPlots, wildsPlaces, type FarmPlaceGroup, type LoopPlaceId, type SaveV3 } from '@farm/domain'
 import { PlaceMenu, type MenuGroup } from '@luismlorenzana/uma-kit/shell'
 import { Sheet } from '@luismlorenzana/uma-kit/ui'
 import { APP_BUILD_ID } from '../app/build'
@@ -42,14 +42,15 @@ const GROUPS: readonly { group: FarmPlaceGroup; label: string }[] = [
   { group: 'workshop', label: 'Workshops' }, { group: 'yard', label: 'The yard' }, { group: 'town', label: 'The town' },
 ]
 
-/** The farm's places by FC28's rows, each opening its screen once it's landed (F19: the bin, the Warehouse, the shop), else
- * its quick look on the map. */
+/** The farm's places by FC28's rows, each opening its screen once it's landed (F19: the bin, the Warehouse, the shop; F20:
+ * the Fields' quick look), else its quick look on the map. The Fields count their Ready plots. */
 export function loopMenuGroups(save: SaveV3 | null): MenuGroup[] {
-  const ready = save ? loopReadyWork(save) : new Map<LoopPlaceId, number>()
+  const ready: Map<string, number> = save ? loopReadyWork(save) : new Map<LoopPlaceId, number>()
+  if (save) ready.set('fields', readyPlots(save))
   return GROUPS.map(({ group, label }) => ({
     key: group, label,
     places: FARM_PLACES.filter((p) => p.group === group).map((p) => ({
-      key: p.id, name: p.name, to: save ? placeLink(save, p) : `/?peek=${p.id}`, count: ready.get(p.id as LoopPlaceId) ?? 0, locked: !save || lockOf(save, p) !== null,
+      key: p.id, name: p.name, to: save ? placeLink(save, p) : `/?peek=${p.id}`, count: ready.get(p.id) ?? 0, locked: !save || lockOf(save, p) !== null,
     })),
   }))
 }

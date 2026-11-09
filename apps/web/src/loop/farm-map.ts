@@ -4,8 +4,10 @@ import { FARM_MAP_ROWS, placeOpen, type FarmPlace, type FarmPlaceId, type PlaceO
 import type { PlaceAt } from '@luismlorenzana/uma-kit/hub'
 
 /** The places whose screens have landed (decision 5), each with where a tap on it goes: F19's bin and shop (their sheets
- * over the farm) and Warehouse; F20, F22 and F23 add theirs. Until then a place shows "Soon". */
+ * over the farm) and Warehouse; F20's Fields (their quick look, which opens `/fields`); F22 and F23 add theirs. Until
+ * then a place shows "Soon". */
 export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlaceId, string>([
+  ['fields', '/?peek=fields'],
   ['bin', '/?sheet=bin'],
   ['shop', '/?sheet=shop'],
   ['warehouse', '/warehouse'],

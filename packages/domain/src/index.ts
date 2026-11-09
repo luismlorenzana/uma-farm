@@ -64,3 +64,8 @@ export * from './goods/prices'
 export * from './goods/stars'
 export * from './save/bin'
 export * from './save/shop'
+
+// The Fields (F20, core spec CS11, CS12): the crops, the blocks, planting, tending, harvesting, crop levels, growth and
+// withering at night, and the shop's seeds. Dark until F24 (D29).
+export * from './fields/crops'
+export * from './fields/fields'

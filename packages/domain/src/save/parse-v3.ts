@@ -5,7 +5,7 @@ import { FESTIVAL_IDS, SEASONS } from '../farm/calendar'
 import { bedsAt, DORM_MAX_LEVEL } from '../farm/farm'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import { GOOD_IDS, isCropId, isGoodId, isSeedId, isWarehouseId, type CropId } from '../goods/ids'
-import type { BinSale, IdleNudge, JobsDone, MorningSummary, NewsLine } from '../night/summary'
+import type { BinSale, MorningSummary, NewsLine, Nudge, WorkLine } from '../night/summary'
 import { isOutfitId } from '../roster/roster'
 import type { LoopWorld } from '../work/loop-env'
 import {
@@ -433,12 +433,23 @@ function parseSummary(value: unknown, path: string, today: number, roster: Reado
       demand: bool(b.demand, `${at}.demand`),
     }
   }), `${path}.bin`, (b) => `${b.id}@${b.stars}`)
-  const work = unique(list(o.work, `${path}.work`, 0, LOOP_WORK_PLACES.length).map((v, i): JobsDone => {
+  // Work done: jobs by place (F18); crops ready by block and what withered, by block and crop (F20). A plot count is 1–9.
+  const plots = (value: unknown, at: string) => int(value, at, 1, PLOTS_PER_BLOCK)
+  const work = unique(list(o.work, `${path}.work`, 0, LOOP_WORK_PLACES.length + BLOCK_IDS.length * (1 + PLOTS_PER_BLOCK)).map((v, i): WorkLine => {
     const at = `${path}.work.${i}`
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['jobs', 'crops', 'withered'] as const)
+    if (kind === 'crops') {
+      const c = object(v, at, ['kind', 'block', 'plots'])
+      return { kind, block: oneOf(c.block, `${at}.block`, BLOCK_IDS), plots: plots(c.plots, `${at}.plots`) }
+    }
+    if (kind === 'withered') {
+      const c = object(v, at, ['kind', 'block', 'crop', 'plots'])
+      const crop = typeof c.crop === 'string' && isCropId(c.crop) ? c.crop : fail(`${at}.crop`, 'unknown crop')
+      return { kind, block: oneOf(c.block, `${at}.block`, BLOCK_IDS), crop, plots: plots(c.plots, `${at}.plots`) }
+    }
     const w = object(v, at, ['kind', 'place', 'jobs', 'items'])
-    oneOf(w.kind, `${at}.kind`, ['jobs'] as const)
-    return { kind: 'jobs', place: oneOf(w.place, `${at}.place`, LOOP_WORK_PLACES), jobs: int(w.jobs, `${at}.jobs`, 1, 4 * 60), items: count(w.items, `${at}.items`) }
-  }), `${path}.work`, (w) => w.place)
+    return { kind, place: oneOf(w.place, `${at}.place`, LOOP_WORK_PLACES), jobs: int(w.jobs, `${at}.jobs`, 1, 4 * 60), items: count(w.items, `${at}.items`) }
+  }), `${path}.work`, (w) => (w.kind === 'jobs' ? `jobs:${w.place}` : w.kind === 'crops' ? `crops:${w.block}` : `withered:${w.block}:${w.crop}`))
   const ranks = none(o.ranks, `${path}.ranks`)
   const bonds = none(o.bonds, `${path}.bonds`)
   const news = unique(list(o.news, `${path}.news`, 0, 8).map((v, i): NewsLine => {
@@ -448,11 +459,12 @@ function parseSummary(value: unknown, path: string, today: number, roster: Reado
     const f = object(v, at, ['kind', 'festival', 'when'])
     return { kind, festival: oneOf(f.festival, `${at}.festival`, FESTIVAL_IDS), when: oneOf(f.when, `${at}.when`, ['today', 'tomorrow'] as const) }
   }), `${path}.news`, (n) => (n.kind === 'season' ? 'season' : `festival:${n.when}`))
-  const nudges = unique(list(o.nudges, `${path}.nudges`, 0, 4).map((v, i): IdleNudge => {
+  const nudges = unique(list(o.nudges, `${path}.nudges`, 0, 4).map((v, i): Nudge => {
     const at = `${path}.nudges.${i}`
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['idle', 'seeds'] as const)
+    if (kind === 'seeds') return { kind, plots: int(object(v, at, ['kind', 'plots']).plots, `${at}.plots`, 1, BLOCK_IDS.length * PLOTS_PER_BLOCK) }
     const n = object(v, at, ['kind', 'umas'])
-    oneOf(n.kind, `${at}.kind`, ['idle'] as const)
-    return { kind: 'idle', umas: unique(list(n.umas, `${at}.umas`, 1, roster.size).map((id, j) => member(id, `${at}.umas.${j}`, roster)), `${at}.umas`) }
+    return { kind, umas: unique(list(n.umas, `${at}.umas`, 1, roster.size).map((id, j) => member(id, `${at}.umas.${j}`, roster)), `${at}.umas`) }
   }), `${path}.nudges`, (n) => n.kind)
   return { day: today, bin, work, ranks, bonds, news, nudges }
 }
