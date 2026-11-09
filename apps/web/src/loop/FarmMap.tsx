@@ -13,12 +13,13 @@ import { Button, HelpButton, Sheet, useReducedMotionSetting } from '@luismlorenz
 import { workView, type WorkView } from '@luismlorenzana/uma-kit/work'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
-import { masterReady } from '../master/master'
+import { masterReady, useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { collectFarm, dismissSummary } from './actions'
 import { FARM_MAP_TILES, lockOf, placeAt, placeLink } from './farm-map'
 import { FieldsPeek, fieldsPips } from './FieldsPeek'
 import { summaryParts } from './summary-words'
+import { farmingTalents, useTalents } from './talents'
 import { shortDate } from './words'
 
 const GROUND: PageGround = { id: 'farm', tiles: 'farmlands', palette: PALETTES.farmlands! }
@@ -58,6 +59,9 @@ function CollectAll({ ready }: { ready: number }) {
         void collectFarm().then((items) => {
           setNote(items > 0 ? `+${items} collected` : 'Collected')
           setTimeout(() => setNote(null), 2200)
+        }, () => {
+          setNote('Try again')
+          setTimeout(() => setNote(null), 2200)
         })
       }}
     />
@@ -89,6 +93,8 @@ function FarmScreen({ save, peek }: { save: SaveV3; peek: FarmPlace | undefined 
   const location = useLocation()
   const leave = useLeave()
   const reducedMotion = useReducedMotionSetting()
+  const talents = useTalents()
+  const farming = useMemo(() => farmingTalents(talents.of), [talents.of])
   const tile = ART_TILE * artScale(hubDpr())
   const ready = useMemo(() => loopReadyWork(save), [save])
   const plots = readyPlots(save)
@@ -96,7 +102,7 @@ function FarmScreen({ save, peek }: { save: SaveV3; peek: FarmPlace | undefined 
   const places: HubMapPlace[] = FARM_PLACES.map((place): HubMapPlace => {
     const lock = lockOf(save, place)
     const slots = place.id === 'fields' ? plots : ready.get(place.id as LoopPlaceId) ?? 0
-    const pips = place.id === 'fields' ? fieldsPips(save) : pipsOf(place, work)
+    const pips = place.id === 'fields' ? fieldsPips(save, farming) : pipsOf(place, work)
     const busy = pips?.some((p) => p.state !== 'free') ?? false
     return {
       id: place.id, name: place.name, frame: place.frame, at: placeAt(place),
@@ -137,7 +143,7 @@ function FarmScreen({ save, peek }: { save: SaveV3; peek: FarmPlace | undefined 
           words={{ close: 'Close', about: `About the ${peek.name}`, backTo: 'Back to the farm' }}
           focusKey={`[data-place="${peek.id}"]`}
         >
-          {peek.id === 'fields' && lockOf(save, peek) === null ? <FieldsPeek save={save} /> : <PlacePeek save={save} place={peek} />}
+          {peek.id === 'fields' && lockOf(save, peek) === null ? <FieldsPeek save={save} talentOf={farming} /> : <PlacePeek save={save} place={peek} />}
         </PeekPanel>
       )}
       <Morning save={save} open={!covered} />
@@ -160,7 +166,9 @@ function PlacePeek({ save, place }: { save: SaveV3; place: FarmPlace }) {
  * hidden, each line a tap to its place. "Start the day" puts it away; a tap on a line leaves it for later. */
 function Morning({ save, open }: { save: SaveV3; open: boolean }) {
   const summary = save.summary
-  const parts = useMemo(() => (summary ? summaryParts(summary) : []), [summary])
+  const master = useMaster()
+  const album = master.status === 'ready' ? master.view.album : null
+  const parts = useMemo(() => (summary ? summaryParts(summary, (id) => album?.get(id)?.name ?? 'An Uma') : []), [summary, album])
   if (!summary) return null
   return (
     <Sheet

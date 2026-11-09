@@ -2,10 +2,11 @@
 // Four block cards, A to D: a locked one shows its Farm Rank and cost with Buy · 800g; an owned one its tender's row and
 // a 3 × 3 grid of plots. A plot shows its crop's icon and the nights left, or Ready; a tap on an empty plot plants
 // (`?plant=A.4`), on a growing one shows it (`?plot=A.4`), on a Ready one harvests. Plant all (`?plant=A`) and Harvest all
-// do a block, and the tender comes from uma-kit's picker over the Umas home (`?tend=A`). Each sheet is a search
-// parameter, so Back closes it. Loaded on demand, loop's build only.
-import { CROPS, isBusy, itemNameOf, receiptItems, tendedBlock, type BlockId, type HarvestReceipt, type SaveV3 } from '@farm/domain'
-import { FaceTile, UmaPicker, type UmaPickerRow } from '@luismlorenzana/uma-kit/album'
+// do a block, and the tender comes from uma-kit's picker over the Umas home (`?tend=A`), with F21's talents and ranks:
+// "Hand · B" in farming on each card, opening by farming. Each sheet is a search parameter, so Back closes it. Loaded on
+// demand, loop's build only.
+import { CROPS, isBusy, itemNameOf, receiptItems, tendedBlock, type BlockId, type FarmingTalentOf, type HarvestReceipt, type SaveV3 } from '@farm/domain'
+import { FaceTile, UmaPicker } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
@@ -18,6 +19,9 @@ import {
   cropFacts, fieldsView, growthWords, nightsWords, noSeedsWords, plotKey, seedOptions, tenderRank, type LockedBlock, type OwnedBlock, type PlotView,
 } from './fields-view'
 import { goldWords } from './goods-view'
+import { activityOrder, pickerSorts, rankTalent, UMA_FACETS, umaRows, type LoopUmaRow } from './roster-view'
+import { farmingTalents, useTalents } from './talents'
+import { umaBadges } from './UmaMarks'
 
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
 /** The page's sheets: a plot to plant (or a block, Plant all), a plot to show, a block's tender. */
@@ -52,6 +56,7 @@ function About() {
     <>
       <p>Tap an empty plot to plant a seed, and a Ready plot to harvest. Plant all and Harvest all do a block.</p>
       <p>An Uma who tends a block makes it grow faster (1.25 a night at Novice, 1 untended) and lifts its crops’ stars. She stays until you move her, and can’t take a job meanwhile.</p>
+      <p>Her farming rank and talent (“Hand · B”) make it grow faster and better. Each night her block has a growing crop, she earns farming rank points.</p>
       <p>Harvests sometimes give seeds back. Each harvest raises the crop’s level, twice as fast from your own seeds, and each level lifts its stars.</p>
       <p>On a season’s last night, crops still growing that don’t grow next season wither. Ready crops wait.</p>
     </>
@@ -65,7 +70,9 @@ function Fields({ save }: { save: SaveV3 }) {
   const [params] = useSearchParams()
   const master = useMaster()
   const view = master.status === 'ready' ? master.view : null
-  const blocks = useMemo(() => fieldsView(save), [save])
+  const talents = useTalents()
+  const farming = useMemo(() => farmingTalents(talents.of), [talents.of])
+  const blocks = useMemo(() => fieldsView(save, farming), [save, farming])
   const [note, setNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const open = (key: string, value: string) => navigate(withParam(location, key, value), { state: { back: true } })
@@ -100,6 +107,7 @@ function Fields({ save }: { save: SaveV3 }) {
                 save={save}
                 block={block}
                 master={view}
+                talentOf={farming}
                 onPlot={(plot) => tap(block.id, plot)}
                 onPlantAll={() => open('plant', block.id)}
                 onHarvestAll={() => run(harvestBlock(block.id), (r) => setNote(receiptWords(r as HarvestReceipt, null)))}
@@ -112,16 +120,17 @@ function Fields({ save }: { save: SaveV3 }) {
       </main>
       {plantKey && <PlantSheet save={save} block={plantKey.block} index={plantKey.index} onClose={close} onError={setError} />}
       {plotAt && plotAt.index >= 0 && <PlotSheet save={save} block={plotAt.block} index={plotAt.index} master={view} onClose={close} />}
-      {tendKey && <TenderPicker save={save} block={tendKey.block} master={view} onClose={close} onError={setError} />}
+      {tendKey && <TenderPicker save={save} block={tendKey.block} master={view} talents={talents.table} onClose={close} onError={setError} />}
     </div>
   )
 }
 
 /** An owned block (decision 11): its name and growth, Plant all and Harvest all, its tender's row and its nine plots. */
-function BlockCard({ save, block, master, onPlot, onPlantAll, onHarvestAll, onTend, onStop }: {
+function BlockCard({ save, block, master, talentOf, onPlot, onPlantAll, onHarvestAll, onTend, onStop }: {
   save: SaveV3
   block: OwnedBlock
   master: MasterView | null
+  talentOf: FarmingTalentOf
   onPlot: (plot: PlotView) => void
   onPlantAll: () => void
   onHarvestAll: () => void
@@ -147,7 +156,7 @@ function BlockCard({ save, block, master, onPlot, onPlantAll, onHarvestAll, onTe
           : <span aria-hidden className="grid size-9 place-items-center rounded-full border border-dashed border-hairline-strong text-ink-faint">—</span>}
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[14px] font-semibold">{name ?? 'No tender'}</span>
-          <span className="block text-[12px] text-ink-soft">{block.tender ? `${tenderRank(save, block.tender)} · Farming` : 'Grows 1 a night, at ★1'}</span>
+          <span className="block text-[12px] text-ink-soft">{block.tender ? `${tenderRank(save, block.tender, talentOf)} · Farming` : 'Grows 1 a night, at ★1'}</span>
         </span>
         {block.tender && <Button variant="tertiary" size="sm" onClick={onStop} data-action="stop-tending">Stop</Button>}
         <Button variant="secondary" size="sm" onClick={onTend} data-action="tend">{block.tender ? 'Change' : 'Tend'}</Button>
@@ -269,35 +278,38 @@ function PlotSheet({ save, block, index, master, onClose }: { save: SaveV3; bloc
   )
 }
 
-interface TenderRow extends UmaPickerRow {
-  /** "Tends Block A", or her rank. */
+interface TenderRow extends LoopUmaRow {
+  /** "Tends Block A", or her farming rank and talent. */
   note: string
   working: boolean
 }
 
-/** The tender's picker (left to the worker): uma-kit's picker over the Umas home. A working Uma is shown and can't be
- * picked; a tender of another block moves here. */
-function TenderPicker({ save, block, master, onClose, onError }: { save: SaveV3; block: BlockId; master: MasterView | null; onClose: () => void; onError: (text: string) => void }) {
-  const rows = useMemo((): TenderRow[] => save.dorm.home.flatMap((id) => {
-    const base = master?.album.get(id)
-    const name = base?.name ?? 'Uma'
-    const tends = tendedBlock(save, id)
-    const rank = save.roster[id]?.ranks.farming.rank ?? 0
-    return [{
-      id, name, releasedAt: base?.releasedAt ?? '', level: rank + 1, search: name.toLowerCase(), facets: {}, sorts: { rank },
-      note: tends ? `Tends Block ${tends}` : `${tenderRank(save, id)} · Farming`, working: tends === null && isBusy(save, id),
-    }]
-  }), [save, master])
+/** The tender's picker (F20; F21 decision 7): uma-kit's picker over the Umas home, each card her farming rank and talent
+ * ("Hand · B") with her favourite line and best talent on her face, the filters and sorts of the roster, opening by
+ * farming. A working Uma is shown and can't be picked; a tender of another block moves here. */
+function TenderPicker({ save, block, master, talents, onClose, onError }: {
+  save: SaveV3; block: BlockId; master: MasterView | null; talents: ReturnType<typeof useTalents>['table']; onClose: () => void; onError: (text: string) => void
+}) {
+  const rows = useMemo((): TenderRow[] => umaRows(save, save.dorm.home, master?.album ?? new Map(), talents, master?.roster ?? []).map((row) => {
+    const tends = tendedBlock(save, row.id)
+    return { ...row, note: tends ? `Tends Block ${tends}` : rankTalent(row, 'farming'), working: tends === null && isBusy(save, row.id) }
+  }), [save, master, talents])
+  const sorts = useMemo(() => pickerSorts<TenderRow>('farming'), [])
+  const byFarming = useMemo(() => activityOrder('farming'), [])
   const current = save.fields.blocks.find((b) => b.id === block)?.tender
   return (
     <UmaPicker<TenderRow>
       open
       rows={rows}
       title={`Tend Block ${block}`}
+      facets={UMA_FACETS}
+      sorts={sorts}
       selectedIds={current ? [current] : []}
-      order={(a, b) => Number(a.working) - Number(b.working) || b.level! - a.level! || a.name.localeCompare(b.name)}
+      order={(a, b) => Number(a.working) - Number(b.working) || byFarming(a, b)}
       disabled={(row) => (row.working ? 'Working' : null)}
       describe={(row) => row.note}
+      renderBadges={umaBadges}
+      words={{ level: 'Farming rank' }}
       onPick={(ids) => {
         const id = ids[0]
         if (id && id !== current) tendBlock(block, id).catch((err: unknown) => onError(errorWords(err)))

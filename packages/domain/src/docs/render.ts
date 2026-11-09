@@ -19,7 +19,7 @@ import { madeRecipeV4, RECIPE_V4 } from '../items/made-v4'
 import { tradeLine } from '../roster/roster'
 import { UMA_ROW_CALLING_V3, type UmaCallingRowV3 } from '../roster/template'
 import { BEDS, FARM_RANK_POINTS } from '../farm/farm'
-import { ACTIVITY_NAMES, CRAFT_BANDS, craftRank, LINE_ACTIVITY, RANKS } from '../farm/ranks'
+import { ACTIVITIES, ACTIVITY_NAMES, CRAFT_BANDS, craftRank, LINE_ACTIVITY, RANK_POINTS, RANKS, type Rank } from '../farm/ranks'
 import { CROP_IDS, FAMILY_NAMES, GOOD_FAMILIES, GOODS, goodOf, isGoodId, refinedOf, type GoodFamily } from '../goods/ids'
 import { itemNameOf } from '../items/lines'
 import { inDemand, priceOf, STARS, starFactor, starPrice } from '../goods/prices'
@@ -29,12 +29,17 @@ import { DAYS_PER_SEASON, farmDay, FESTIVALS, SEASON_NAMES, SEASONS } from '../f
 import { FARM_MAP_ROWS, FARM_PLACES, type PlaceOpens } from '../farm/places'
 import { NIGHT_STEPS } from '../night/end-day'
 import { CROPS, nightsToReady, SHOP_SEEDS } from '../fields/crops'
+import { BLOCK_RULES, cropLevelStart, harvestQuality, MAX_CROP_LEVEL, seedsBackChance, tendedGrowth, UNTENDED_GROWTH } from '../fields/fields'
 import {
-  BLOCK_RULES, cropLevelStart, FARMING_CHALLENGES, harvestQuality, MAX_CROP_LEVEL, seedsBackChance, TALENT_D, tendedGrowth, UNTENDED_GROWTH, type TalentStep,
-} from '../fields/fields'
+  ACTIVITY_STAT, EXPEDITION_CUTOFFS, STAT_CUTOFFS, STAT_TEMPERAMENT, TALENT_D, TALENT_GRADES, TALENT_RANK_POINTS, TALENT_STATS, TALENT_YIELD, talentAffection,
+  talentGrowth, talentPower, talentQuality, type TalentStep,
+} from '../farm/talents'
+import {
+  AREA_NAMES, CHALLENGES, daysToRank, PLACE_ACTIVITY, RANK_BENEFITS, rankPointsForDay, SPOT_NAMES,
+} from '../farm/rank-rules'
+import { farmPlace } from '../farm/places'
 import { starShares } from '../goods/stars'
 import { BLOCK_IDS } from '../save/v3'
-import type { Rank } from '../farm/ranks'
 
 type Cell = string | number
 /** A Markdown table; pipes in cells are escaped. */
@@ -335,14 +340,77 @@ function cropLevels(): string {
   ])
 }
 
-/** CS30: farming's challenges, toward each rank. */
+/** CS30: farming's challenges, toward each rank (F21's `CHALLENGES.farming`). */
 function farmingChallenges(): string {
-  return table(['Toward', 'Challenge', 'Counted'], FARMING_CHALLENGES.map((c) => [RANKS[c.rank], c.what, c.rank === 5 ? 'M6 (F32)' : 'At harvest, for the tender (F20)']))
+  return table(['Toward', 'Challenge', 'Counted'], CHALLENGES.farming.map((c) => [RANKS[c.rank], c.what, c.by === 'F20' ? 'At harvest, for the tender (F20)' : c.by]))
+}
+
+// --- Talents and ranks (F21) ----------------------------------------------------------------------------------------
+
+const STAT_NAME = { speed: 'Speed', stamina: 'Stamina', power: 'Power', guts: 'Guts', wit: 'Wit' } as const
+const signed = (n: number) => (n > 0 ? `+${per(n)}` : n < 0 ? `−${per(-n)}` : '0')
+const times = (n: number) => `×${n.toFixed(2)}`
+const STEPS = TALENT_GRADES.map((_, i) => i as TalentStep)
+
+/** CS27: the stat each activity reads, and CS46's temperament from it. */
+function talentStats(): string {
+  const rows = TALENT_STATS.map((stat) => [STAT_NAME[stat], ACTIVITIES.filter((a) => a !== 'expeditions' && ACTIVITY_STAT[a] === stat).map((a) => ACTIVITY_NAMES[a]).join(', '),
+    cap(STAT_TEMPERAMENT[stat])])
+  return table(['Stat', 'Activities', 'Temperament (her top stat)'], [...rows, ['All five: the mean of her three best scores', ACTIVITY_NAMES.expeditions, '—']])
+}
+
+/** CS27: the cut-offs, the same for everyone. */
+function talentCutoffs(): string {
+  const grades = [...TALENT_GRADES].reverse()
+  const row = (cuts: readonly number[]) => grades.map((_, i) => (i === grades.length - 1 ? `< ${cuts[0]}` : `≥ ${cuts[cuts.length - 1 - i]}`))
+  return table(['Grade', ...grades], [['A stat’s score', ...row(STAT_CUTOFFS)], ['Expeditions (mean of best three)', ...row(EXPEDITION_CUTOFFS)]])
+}
+
+/** CS28: what a talent gives. */
+function talentGives(): string {
+  return table(['Talent', ...STEPS.map((s) => TALENT_GRADES[s])], [
+    ['Step', ...STEPS.map(String)],
+    ['Yield (gathering, stations)', ...STEPS.map((s) => times(TALENT_YIELD[s]!))],
+    ['Quality points', ...STEPS.map((s) => signed(talentQuality(s)))],
+    ['Rank points', ...STEPS.map((s) => `×${per(TALENT_RANK_POINTS[s]!)}`)],
+    ['Tended growth', ...STEPS.map((s) => (talentGrowth(s) > 0 ? `+${per(talentGrowth(s))}` : '—'))],
+    ['Affection a day (ranch)', ...STEPS.map((s) => `+${talentAffection(s)}`)],
+    ['Expedition power', ...STEPS.map((s) => `+${talentPower(s)}`)],
+  ])
+}
+
+/** CS29: each rank's points, and the days of work to reach it by talent (in her favourite line in brackets). */
+function rankPoints(): string {
+  const talents: readonly TalentStep[] = [0, 3, 4, 6, 7]
+  const day = (talent: TalentStep, favourite: boolean) => rankPointsForDay({ talent, favourite, wellFed: false, affinity: 0 })
+  return table(['Rank', 'Points', ...talents.map((t) => TALENT_GRADES[t])], RANKS.map((name, r) => [name, RANK_POINTS[r]!.toLocaleString('en-US'),
+    ...talents.map((t) => (r === 0 ? '—' : `${daysToRank(r as Rank, day(t, false))} (${daysToRank(r as Rank, day(t, true))})`))]))
+}
+
+/** CS30: every activity's five challenges. */
+function challenges(): string {
+  const counted = (a: (typeof ACTIVITIES)[number]) => [...new Set(CHALLENGES[a].map((c) => c.by))].join(', ')
+  return table(['Activity', ...RANKS.slice(1), 'Counted by'], ACTIVITIES.map((a) => [ACTIVITY_NAMES[a], ...CHALLENGES[a].map((c) => c.what), counted(a)]))
+}
+
+/** CS31: what each rank gives. */
+function rankGives(): string {
+  return table(['Rank', 'Yield', 'Tended growth', 'Quality', 'Deepest: Mine and Quarry · forest · Fishery', 'Expedition power', 'Seeds back', 'Affection a day', 'Workshop yield'],
+    RANK_BENEFITS.map((b, r) => [RANKS[r]!, `×${per(b.yield)}`, per(b.tendedGrowth), `+${per(b.quality)}`,
+      `Floor ${b.deepest.floor} · ${cap(AREA_NAMES[b.deepest.forest])} · ${cap(SPOT_NAMES[b.deepest.fishery])}`, b.expeditionPower, pct(b.seedsBack), `+${b.affection}`, `×${per(b.workshopYield)}`]))
+}
+
+/** Decision 2: the activity a day at each place pays. */
+function placeActivity(): string {
+  const places = Object.entries(PLACE_ACTIVITY).map(([place, activity]) => [farmPlace(place)?.name ?? place, ACTIVITY_NAMES[activity]])
+  return table(['Where she worked', 'Pays rank points in'], [['The Fields, tending a block with a growing plot', ACTIVITY_NAMES.farming], ...places])
 }
 
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { families, items, made, facilities, callings, jobs, levels, 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
     calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
-    crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges }
+    crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
+    'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,
+    'place-activity': placeActivity }
   return blocks_[key]?.() ?? null
 }

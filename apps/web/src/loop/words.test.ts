@@ -79,3 +79,23 @@ describe('the morning\'s Fields (F20)', () => {
     ])
   })
 })
+
+describe('the morning\'s ranks (F21)', () => {
+  it('names rank-ups, then points full with the challenge in its own words, each opening her sheet', () => {
+    const summary: MorningSummary = {
+      day: 6, bin: [], work: [], bonds: [], news: [], nudges: [],
+      ranks: [
+        { kind: 'rank-up', outfitId: '101', activity: 'farming', rank: 1 },
+        { kind: 'full', outfitId: '202', activity: 'fishing', rank: 1, challenge: 12 },
+        { kind: 'full', outfitId: '101', activity: 'mining', rank: 2, challenge: 0 },
+      ],
+    }
+    const names: Record<string, string> = { 101: 'Aster', 202: 'Beryl' }
+    expect(summaryParts(summary, (id) => names[id]!)).toEqual([{ section: 'ranks', title: 'Ranks', lines: [
+      { key: 'rank-up:101:farming', text: 'Aster · Farming Hand', to: '/roster?uma=101', tag: 'Rank up' },
+      { key: 'full:202:fishing', text: 'Beryl · Fishing · Catch 30 fish · 12/30', to: '/roster?uma=202', tag: 'Points full' },
+      { key: 'full:101:mining', text: 'Aster · Mining · Dig at floor 10', to: '/roster?uma=101', tag: 'Points full' },
+    ] }])
+    expect(summaryParts(summary)[0]!.lines[0]!.text).toBe('An Uma · Farming Hand')
+  })
+})

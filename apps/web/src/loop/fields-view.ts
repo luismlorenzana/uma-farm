@@ -1,9 +1,10 @@
 // The Fields as the screens show them (F20 decision 11): four block cards, a locked one with its Farm Rank and cost, an
 // owned one with its tender and its 3 × 3 plots (a crop's icon, the nights left, or Ready), the seeds that plant today,
-// and the quick look's lines. Pure, so the page, the map and the tests read the same. Loaded with the loop's screens.
+// and the quick look's lines. A block's growth reads its tender's talent (F21), D until master data loads. Pure, so the
+// page, the map and the tests read the same. Loaded with the loop's screens.
 import {
   BLOCK_IDS, BLOCK_RULES, blockGrowth, blockOf, CROPS, dateOf, growsIn, isSeasonEnd, itemNameOf, nightsLeft, opened, RANKS, readyAt, SEASON_NAMES,
-  seedsInSeason, type BlockId, type CropId, type Plot, type SaveV3, type Season,
+  seedsInSeason, TALENT_GRADES, talentD, type BlockId, type CropId, type FarmingTalentOf, type Plot, type SaveV3, type Season,
 } from '@farm/domain'
 
 export type PlotState = 'empty' | 'growing' | 'ready'
@@ -72,7 +73,7 @@ function plotView(plot: Plot, index: number, growth: number, next: Season | null
 }
 
 /** The four blocks, A to D. */
-export function fieldsView(save: SaveV3): BlockView[] {
+export function fieldsView(save: SaveV3, talentOf: FarmingTalentOf = talentD): BlockView[] {
   return BLOCK_IDS.map((id): BlockView => {
     const block = blockOf(save, id)
     if (!block) {
@@ -82,7 +83,7 @@ export function fieldsView(save: SaveV3): BlockView[] {
         short: Math.max(0, rule.cost - save.gold),
       }
     }
-    const growth = blockGrowth(save, id)
+    const growth = blockGrowth(save, id, talentOf)
     const next = lastNight(save.calendar.day)
     const plots = block.plots.map((plot, i) => plotView(plot, i, growth, next))
     return {
@@ -128,8 +129,9 @@ export function cropFacts(crop: CropId): string[] {
   return [`${c.yield} a plot`, ...(c.regrows !== null ? [`Regrows every ${c.regrows} days`] : [])]
 }
 
-/** The tender's rank in farming: "Novice". F21 adds her talent. */
-export const tenderRank = (save: SaveV3, outfitId: string): string => RANKS[save.roster[outfitId]?.ranks.farming.rank ?? 0]
+/** The tender's rank and talent in farming (F21 decision 7): "Hand · B". */
+export const tenderRank = (save: SaveV3, outfitId: string, talentOf: FarmingTalentOf = talentD): string =>
+  `${RANKS[save.roster[outfitId]?.ranks.farming.rank ?? 0]} · ${TALENT_GRADES[talentOf(outfitId)]}`
 
 /** The quick look's line for a block: "9 growing · 3 ready", "Empty", or what opens a locked one. */
 export function blockLine(block: BlockView): string {

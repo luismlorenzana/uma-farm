@@ -1,14 +1,16 @@
 // Stars (F19; core spec CS26): each good adds up quality points Q from its sources, then draws its stars,
 // `1 + ⌊Q + u⌋` clamped to 1–5, with `u` a seeded draw in [0, 1) (CS8). So the expected stars are 1 + Q for Q from 0 to
 // 4, and Q of 4 or more is always ★5. This file holds the formula and the terms of its own rows; F21 gives the rank and
-// talent terms (`0.5 × rank`, G −0.75 … S +1), and F20 and F22 add them up for their goods.
+// talent terms (`rankQuality` in `farm/rank-rules.ts`, CS31's 0.5 a rank; `talentQuality` in `farm/talents.ts`, G −0.75
+// … S +1), and F20 and F22 add them up for their goods.
 
 /** The quality points a good gets from each of its sources (CS26's rows), each already in points. Leave a source out
  * where it doesn't apply. */
 export interface QualitySources {
-  /** Her rank, from F21: 0.5 × rank (Novice 0 … Legend 2.5). The tender's in farming, the assistant's in a workshop. */
+  /** Her rank: `rankQuality(rank)`, 0.5 a rank (Novice 0 … Legend 2.5). The tender's in farming, the assistant's in a
+   * workshop. */
   rank?: number
-  /** Her talent, from F21: G −0.75, F −0.5, E −0.25, D 0, C +0.25, B +0.5, A +0.75, S +1. */
+  /** Her talent: `talentQuality(step)`, G −0.75, F −0.5, E −0.25, D 0, C +0.25, B +0.5, A +0.75, S +1. */
   talent?: number
   /** Care: `TENDED_QUALITY` for a tended crop, `heartsQuality(hearts)` for an animal's product. */
   care?: number

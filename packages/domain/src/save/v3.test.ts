@@ -48,9 +48,10 @@ function farming(): SaveV3 {
   }
 }
 
-/** A morning summary on day 1: every line kind F18 and F19 write. */
+/** A morning summary on day 1: every line kind F18, F19 and F21 write. */
 const SUMMARY: MorningSummary = {
-  day: 1, bin: [{ kind: 'sold', id: 'carp', stars: 2, count: 3, gold: 150, demand: false }, { kind: 'sold', id: 'carp', stars: 1, count: 1, gold: 40, demand: false }], work: [{ kind: 'jobs', place: 'forest', jobs: 1, items: 5 }], ranks: [], bonds: [],
+  day: 1, bin: [{ kind: 'sold', id: 'carp', stars: 2, count: 3, gold: 150, demand: false }, { kind: 'sold', id: 'carp', stars: 1, count: 1, gold: 40, demand: false }], work: [{ kind: 'jobs', place: 'forest', jobs: 1, items: 5 }],
+  ranks: [{ kind: 'rank-up', outfitId: '101', activity: 'farming', rank: 1 }, { kind: 'full', outfitId: '101', activity: 'farming', rank: 2, challenge: 0 }], bonds: [],
   news: [{ kind: 'season', season: 'spring' }, { kind: 'festival', festival: 'flower-show', when: 'tomorrow' }], nudges: [{ kind: 'idle', umas: ['303'] }],
 }
 
@@ -146,6 +147,14 @@ describe('the parse', () => {
     ['jobs at no work place', (s) => { s.summary = { ...SUMMARY, work: [{ kind: 'jobs', place: 'gate', jobs: 1, items: 3 }] } }, 'save.summary.work.0.place: expected one of'],
     ['a place twice in work done', (s) => { s.summary = { ...SUMMARY, work: [SUMMARY.work[0], SUMMARY.work[0]] } }, 'save.summary.work.1: repeated'],
     ['an unknown festival', (s) => { s.summary = { ...SUMMARY, news: [{ kind: 'festival', festival: 'kite-day', when: 'today' }] } }, 'save.summary.news.0.festival: expected one of'],
+    ['a rank-up past Legend', (s) => { s.summary = { ...SUMMARY, ranks: [{ ...SUMMARY.ranks[0], rank: 6 }] } }, 'save.summary.ranks.0.rank: expected 1–5'],
+    ['a rank-up to Novice', (s) => { s.summary = { ...SUMMARY, ranks: [{ ...SUMMARY.ranks[0], rank: 0 }] } }, 'save.summary.ranks.0.rank: expected 1–5'],
+    ['a stranger ranked up', (s) => { s.summary = { ...SUMMARY, ranks: [{ ...SUMMARY.ranks[0], outfitId: '404' }] } }, 'save.summary.ranks.0.outfitId: expected an Uma on the roster'],
+    ['a rank in an unknown activity', (s) => { s.summary = { ...SUMMARY, ranks: [{ ...SUMMARY.ranks[0], activity: 'hunting' }] } }, 'save.summary.ranks.0.activity: expected one of'],
+    ['a rank-up twice', (s) => { s.summary = { ...SUMMARY, ranks: [SUMMARY.ranks[0], SUMMARY.ranks[0]] } }, 'save.summary.ranks.1: repeated'],
+    ['points full with no count', (s) => { s.summary = { ...SUMMARY, ranks: [{ kind: 'full', outfitId: '101', activity: 'farming', rank: 1 }] } }, 'save.summary.ranks.0.challenge: expected a non-negative integer'],
+    ['a rank-up with a count', (s) => { s.summary = { ...SUMMARY, ranks: [{ ...SUMMARY.ranks[0], challenge: 3 }] } }, 'save.summary.ranks.0: unknown keys challenge'],
+    ['a rank line in words', (s) => { s.summary = { ...SUMMARY, ranks: [{ kind: 'promoted', outfitId: '101' }] } }, 'save.summary.ranks.0.kind: expected one of'],
     ['a stranger idle', (s) => { s.summary = { ...SUMMARY, nudges: [{ kind: 'idle', umas: ['404'] }] } }, 'save.summary.nudges.0.umas.0: expected an Uma on the roster'],
     ['a chapter 0', (s) => { s.farm.chapter = 0 }, 'save.farm.chapter: expected 1–9'],
     ['a recipe that is no dish', (s) => { s.workshops.recipes = ['dish-fish-11'] }, 'save.workshops.recipes.0: unknown dish'],

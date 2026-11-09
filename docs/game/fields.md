@@ -13,7 +13,7 @@ CS12, with CS4, CS26, CS28, CS30 and CS31; the calls are D34.
  ┌───────────┐  tap   ┌──────────────────────────────┐  Open  ┌──────────────────────────────────┐
  │  Fields   │ ─────► │ (face) Block A  9 growing · … │ ─────► │ Block A   Tended · 1.25 a night   │
  │ ◔ ◔ Ready │        │  —     Block B  Farm Rank 2 · │        │ [Plant all] [Harvest all · 3]     │
- └───────────┘        │ [Harvest all · 3] [Open the  │        │ (face) Name · Novice · Farming    │
+ └───────────┘        │ [Harvest all · 3] [Open the  │        │ (face) Name · Novice · B · Farming│
   pips: a block's      │                    Fields]   │        │        [Stop] [Change]            │
   tender, ringed by    └──────────────────────────────┘        │ ┌────┐┌────┐┌────┐                │
   its growth                                                    │ │ +  ││ Ca ││ Ca │  empty, growing  │
@@ -137,16 +137,17 @@ across nights.
 - **A tender works a night only when her block has a growing plot (decision 2):** then she's in the night's
   `notes.tended`, for farming's rank points (F21), and has work for "All set" (F18's nudge). Tending an empty or
   all-Ready block is idle.
-- **Her terms:** her farming rank from the save (`ranks.farming.rank`) and her farming talent. **Talents are F21's:**
-  until it lands every Uma is D, and the night and the harvest take a `talentOf` that F21 fills from master data
-  (`NightContext.farmingTalent`).
+- **Her terms:** her farming rank from the save (`ranks.farming.rank`) and her farming talent, master data's Stamina by
+  F21's rule ([ranks.md](ranks.md)). The night reads it through `NightContext.talentOf`, and the app's harvests
+  (`harvestPlot`, `harvestBlock`, `harvestFields`, Collect all) wait for master data and pass it to the rules' `talentOf`
+  hook; the rules default to D, for tests. Her rank's terms come from CS31's table (`rankBenefits`).
 
-**Growth a night (CS12):** untended **1**; tended **(1.25 + 0.1 a rank + the talent's) × (1 + 0.1 a Watering Can tier
+**Growth a night (CS12):** untended **1**; tended **(her rank's 1.25 … 1.75 + the talent's) × (1 + 0.1 a Watering Can tier
 above Basic) × 1.25 well fed**. A crop is **Ready once its growth reaches its days − 0.5**, so tending rounds to the
 nearest night: a 4-day Carrot takes 3 nights tended and 4 untended, a 10-day Asparagus 8 at Novice and 7 at Expert.
 Growth is kept to a millionth with a hair of slack, so 3 × 1.35 reaches 4.05.
 
-**Quality (CS26), farming:** the tender's rank (0.5 a rank), her talent (G −0.75 … S +1), **+0.25 for being tended**,
+**Quality (CS26), farming:** the tender's rank (`rankQuality`, 0.5 a rank), her talent (`talentQuality`, G −0.75 … S +1), **+0.25 for being tended**,
 the crop's level (+0.1 a level above 1), the Hoe (+0.25 a tier above Basic) and well fed (+0.25). Untended, only the
 crop's level and the Hoe count. Stars draw by F19's rule (`drawStars`).
 
@@ -184,8 +185,9 @@ stars use the crop's level before its own points are added.
 
 ## Farming's challenges (CS30)
 
-Counted at harvest for the block's tender, toward her next farming rank, in `ranks.farming.challenge`
-(`farmingChallengeCount`; F21's `countChallenge` takes it over, and F21 makes the rank-ups). "Crops" are crops
+Counted at harvest for the block's tender, toward her next farming rank, in `ranks.farming.challenge`, by F21's
+`countChallenge(save, tender, 'farming', { kind: 'harvest', stars, level })`; the count stops at the target and resets
+at the rank-up, which comes at night ([ranks.md](ranks.md#the-challenges-cs30-decision-1)). "Crops" are crops
 harvested, not plots: a Potato plot counts 2.
 
 <!-- live:farming-challenges -->
@@ -195,7 +197,7 @@ harvested, not plots: a Potato plot counts 2.
 | Skilled | 40 crops of ★3+ she tended | At harvest, for the tender (F20) |
 | Expert | Tend a crop of level 4+ to harvest | At harvest, for the tender (F20) |
 | Master | 30 crops of ★5 | At harvest, for the tender (F20) |
-| Legend | 1st at a Flower Show with a crop she tended (M6) | M6 (F32) |
+| Legend | 1st at a Flower Show with a crop she tended | M6 (F32) |
 <!-- /live -->
 
 ## The night (CS7 steps 2 and 7; CS4's last night)
@@ -231,7 +233,8 @@ count outside 1–9 (1–36 for the nudge), an unknown block or crop, and a line
   Fields**.
 - **The Fields' page** (`/fields`): the farm's own, not uma-kit/work's slot rows. Four block cards, A to D:
   - an owned block: "Block A", "Tended · 1.25 a night" (or "Untended · 1 a night"), **Plant all** while a plot is empty
-    and **Harvest all · 3** while one is Ready; its tender's row (face, name, "Novice · Farming", **Stop** and
+    and **Harvest all · 3** while one is Ready; its tender's row (face, name, "Novice · B · Farming": her farming rank
+    and talent, F21), **Stop** and
     **Change**, or "No tender · Grows 1 a night, at ★1" with **Tend**); and a 3 × 3 grid of plots;
   - a plot: empty (a dashed "+"; a tap plants), growing (the crop's icon, "2 nights" and a growth bar; a tap shows it),
     or Ready (the icon and **Ready**; a tap harvests, and the page says "+2 Potato · 1 seed back"). A green dot marks a
@@ -242,8 +245,10 @@ count outside 1–9 (1–36 for the nudge), an unknown block or crop, and a line
   With none: "No seeds for Spring." and **Shop**.
 - **A growing plot's sheet** (`?plot=A.4`): its crop, "Ready in 2 nights", regrowing and own seeds, who tends it and the
   block's rate, its yield and regrowth.
-- **The tender's picker** (`?tend=A`): uma-kit's `UmaPicker` over the Umas home, each with "Novice · Farming" or "Tends
-  Block B"; a working Uma shows "Working" and can't be picked. Picking a tender of another block moves her.
+- **The tender's picker** (`?tend=A`): uma-kit's `UmaPicker` over the Umas home, each with her farming rank and talent
+  ("Hand · B", F21) or "Tends Block B", her favourite line's mark and best talent on her face, the roster's filters, and
+  farming's sorts; it opens by farming (rank, points, talent). A working Uma shows "Working" and can't be picked.
+  Picking a tender of another block moves her ([ranks.md](ranks.md#the-screens-decision-7)).
 - **Seeds' icons** are their crop's with a plain corner tag (brown from the shop, green for own seeds) until F25's
   seed-packet badge.
 - Every sheet is a search parameter, so Back closes it. The rules sit behind the header's (i). The page, its rules and

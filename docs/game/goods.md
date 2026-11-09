@@ -381,8 +381,8 @@ always ★5.
 
 | Source | Gathering | Farming (tended) | Ranch | Kitchen and Forge | Stations |
 |---|---|---|---|---|---|
-| Her rank (F21) | 0.5 × rank (0 → 2.5) | the tender's | — | the assistant's | — |
-| Her talent (F21) | G −0.75 … S +1 | the tender's | — | the assistant's | — |
+| Her rank (F21, `rankQuality`) | 0.5 × rank (0 → 2.5) | the tender's | — | the assistant's | — |
+| Her talent (F21, `talentQuality`) | G −0.75 … S +1 | the tender's | — | the assistant's | — |
 | Care | — | +0.25 tended (`TENDED_QUALITY`) | hearts ÷ 2.5 (`heartsQuality`) | — | — |
 | Crop level | — | +0.1 × (level − 1) (`cropLevelQuality`) | — | — | — |
 | Inputs | — | — | — | mean input ★ − 1 (`inputsQuality`) | the input's stars carry |
@@ -391,7 +391,7 @@ always ★5.
 
 - `quality(sources)` adds a good's sources, each already in points (`{ rank, talent, care, cropLevel, inputs, tool,
   boost }`), to a millionth; `drawStars(q, u)` draws; `starShares(q)` gives the odds of each star. F21 gives the rank
-  and talent terms; F20 adds them up for crops (`harvestQuality`, [fields.md](fields.md#tending-cs12-cs28-cs31-decisions-1-and-2))
+  and talent terms (`rankQuality` from CS31's table, `talentQuality` from CS28's, [ranks.md](ranks.md)); F20 adds them up for crops (`harvestQuality`, [fields.md](fields.md#tending-cs12-cs28-cs31-decisions-1-and-2))
   and F22 for its goods.
 - A tool's tier runs 1 (Basic) to 5 (Mythril), so Basic adds nothing and a Copper Pick +0.25.
 

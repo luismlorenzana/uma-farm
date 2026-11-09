@@ -69,3 +69,8 @@ export * from './save/shop'
 // withering at night, and the shop's seeds. Dark until F24 (D29).
 export * from './fields/crops'
 export * from './fields/fields'
+
+// Talents and ranks (F21, core spec CS26–CS33, CS46): talents from master data's stats, rank points, the challenges, what
+// a rank gives, the favourite line, temperament, and the night's step 6. Dark until F24 (D29).
+export * from './farm/talents'
+export * from './farm/rank-rules'

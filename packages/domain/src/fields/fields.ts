@@ -3,12 +3,15 @@
 // (`growFields`, `witherFields`); everything else is a player's change. None of these stamp `updatedAt`: the app stamps
 // each tap and the night stamps once. Every star and seed back is a seeded draw (`draw`, CS8).
 //
-// F21's talents and ranks aren't in yet: a tender's farming rank is read from the save (`ranks.farming.rank`), and her
-// talent from `talentOf`, which is D for everyone until F21 passes master data's (decision "left to the worker").
+// A tender's farming rank is read from the save (`ranks.farming.rank`) and her talent from `talentOf`, master data's as
+// F21 reads it (`TalentOf`, passed by the night and the app); the rules default to D for tests. CS31's table
+// (`rankBenefits`) drives tended growth, quality and seeds back, and F21's `countChallenge` counts a harvest.
 import { dateOf, isSeasonEnd, SEASON_NAMES, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { opened, type PlaceOpens } from '../farm/places'
+import { countChallenge, rankBenefits, rankQuality } from '../farm/rank-rules'
 import type { Rank } from '../farm/ranks'
+import { TALENT_D, talentGrowth, talentQuality, type TalentStep } from '../farm/talents'
 import { cropLevelQuality, drawStars, quality, TENDED_QUALITY, toolQuality, WELL_FED_QUALITY } from '../goods/stars'
 import { seedId, seedOf, type CropId } from '../goods/ids'
 import { itemNameOf } from '../items/lines'
@@ -53,42 +56,29 @@ export function buyBlock<S extends SaveV3>(save: S, id: BlockId): S {
 
 // --- Tenders (CS12, CS28, CS31; decisions 1–3) ---------------------------------------------------------------------
 
-/** A talent's step (CS28): G 0, F 1, E 2, D 3, C 4, B 5, A 6, S 7. */
-export type TalentStep = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
-/** D: every Uma's farming talent until F21 reads them from master data. */
-export const TALENT_D: TalentStep = 3
-/** Her farming talent's step. F21 passes master data's; until then `talentD`. */
+/** Her farming talent's step (CS27): F21 passes master data's (`TalentOf` read in farming); `talentD` in tests. */
 export type FarmingTalentOf = (outfitId: OutfitId) => TalentStep
 export const talentD: FarmingTalentOf = () => TALENT_D
 
-/** Quality points from a talent (CS26, CS28): G −0.75, F −0.5, E −0.25, D 0, C +0.25, B +0.5, A +0.75, S +1. */
-export const talentQuality = (step: TalentStep): number => 0.25 * (step - TALENT_D)
-/** Tended growth from a talent (CS28): +0.05 at B, +0.10 at A, +0.15 at S; nothing below B. */
-export const talentGrowth = (step: TalentStep): number => round6(Math.max(0, step - 4) * 0.05)
-
 /** Untended blocks grow 1 a night (CS12). */
 export const UNTENDED_GROWTH = 1
-/** A Novice tender's block grows 1.25 a night, +0.1 a rank: 1.75 at Legend (CS12, CS31). */
-export const NOVICE_GROWTH = 1.25
-export const RANK_GROWTH = 0.1
 /** ×1.25 when the tender is well fed (CS12). */
 export const WELL_FED_GROWTH = 1.25
 /** +10% a Watering Can tier above Basic (CS12). Tools are Basic in M4, so it adds nothing yet. */
 export const canFactor = (tier: number): number => 1 + 0.1 * (tier - 1)
 
-/** A tended block's growth a night: (1.25 + 0.1 a rank + her talent's) × the Watering Can × well fed. */
+/** A tended block's growth a night: (her rank's, CS31: 1.25 at Novice … 1.75 at Legend, + her talent's) × the Watering
+ * Can × well fed. */
 export function tendedGrowth(rank: Rank, talent: TalentStep, canTier = 1, wellFed = false): number {
-  return round6((NOVICE_GROWTH + RANK_GROWTH * rank + talentGrowth(talent)) * canFactor(canTier) * (wellFed ? WELL_FED_GROWTH : 1))
+  return round6((rankBenefits(rank).tendedGrowth + talentGrowth(talent)) * canFactor(canTier) * (wellFed ? WELL_FED_GROWTH : 1))
 }
 
-/** Seeds back (CS11, CS31): 5% untended, a tender's 10% at Novice +5% a rank (35% at Legend), and +5% a Hoe tier above
- * Basic either way. */
+/** Seeds back (CS11, CS31): 5% untended, a tender's by her rank (10% at Novice … 35% at Legend), and +5% a Hoe tier
+ * above Basic either way. */
 export const UNTENDED_SEEDS_BACK = 0.05
-export const NOVICE_SEEDS_BACK = 0.1
-export const RANK_SEEDS_BACK = 0.05
 export const HOE_SEEDS_BACK = 0.05
 export function seedsBackChance(rank: Rank | null, hoeTier = 1): number {
-  return round6((rank === null ? UNTENDED_SEEDS_BACK : NOVICE_SEEDS_BACK + RANK_SEEDS_BACK * rank) + HOE_SEEDS_BACK * (hoeTier - 1))
+  return round6((rank === null ? UNTENDED_SEEDS_BACK : rankBenefits(rank).seedsBack) + HOE_SEEDS_BACK * (hoeTier - 1))
 }
 
 /** What a block's tender brings to it: her farming rank, her talent and whether she's well fed. */
@@ -113,12 +103,13 @@ export function blockGrowth(save: Pick<SaveV3, 'fields' | 'roster' | 'tools'>, i
   return tender ? tendedGrowth(tender.rank, tender.talent, save.tools['watering-can'], tender.wellFed) : UNTENDED_GROWTH
 }
 
-/** A harvest's quality points (CS26, farming): a tender's rank (0.5 a rank), talent, +0.25 for tending and well fed's
- * +0.25; the crop's level and the Hoe whoever tends it. Untended at level 1 with a Basic Hoe is 0: always ★1. */
+/** A harvest's quality points (CS26, farming): a tender's rank (`rankQuality`, 0.5 a rank), talent (`talentQuality`),
+ * +0.25 for tending and well fed's +0.25; the crop's level and the Hoe whoever tends it. Untended at level 1 with a
+ * Basic Hoe is 0: always ★1. */
 export function harvestQuality(tender: Omit<TenderTerms, 'outfitId'> | null, level: number, hoeTier = 1): number {
   const farm = { cropLevel: cropLevelQuality(level), tool: toolQuality(hoeTier) }
   if (!tender) return quality(farm)
-  return quality({ ...farm, rank: 0.5 * tender.rank, talent: talentQuality(tender.talent), care: TENDED_QUALITY, ...(tender.wellFed ? { boost: WELL_FED_QUALITY } : {}) })
+  return quality({ ...farm, rank: rankQuality(tender.rank), talent: talentQuality(tender.talent), care: TENDED_QUALITY, ...(tender.wellFed ? { boost: WELL_FED_QUALITY } : {}) })
 }
 
 /** Whether an Uma is busy (decision 1): she tends a block, or holds a running uma-work job. The Fields' picker, the job
@@ -157,29 +148,6 @@ export function cropLevelOf(points: number): number {
 }
 /** A crop's level on this farm. */
 export const cropLevel = (save: Pick<SaveV3, 'crops'>, crop: CropId): number => cropLevelOf(save.crops[crop] ?? 0)
-
-// --- Farming's challenges (CS30) -------------------------------------------------------------------------------------
-
-/** What a harvest she tended counts toward her next farming rank's challenge (CS30), by her rank now: Hand, every crop;
- * Skilled, crops of ★3+; Expert, a crop of level 4+ (one is enough); Master, crops of ★5. Legend's is the Flower Show
- * (M6), so nothing yet. F21's `countChallenge` takes this over. */
-export function farmingChallengeCount(rank: Rank, stars: readonly number[], level: number): number {
-  switch (rank) {
-    case 0: return stars.length
-    case 1: return stars.filter((s) => s >= 3).length
-    case 2: return level >= 4 ? 1 : 0
-    case 3: return stars.filter((s) => s === 5).length
-    default: return 0
-  }
-}
-/** Each farming challenge's target, toward Hand … Legend (CS30), for the manual and F21. */
-export const FARMING_CHALLENGES: readonly { rank: Rank; target: number; what: string }[] = [
-  { rank: 1, target: 30, what: 'Harvest 30 crops she tended' },
-  { rank: 2, target: 40, what: '40 crops of ★3+ she tended' },
-  { rank: 3, target: 1, what: 'Tend a crop of level 4+ to harvest' },
-  { rank: 4, target: 30, what: '30 crops of ★5' },
-  { rank: 5, target: 1, what: '1st at a Flower Show with a crop she tended (M6)' },
-]
 
 // --- Planting and harvesting (CS12; decisions 3–5, 7, 9, 10) ---------------------------------------------------------
 
@@ -275,13 +243,8 @@ function harvestPlot(save: SaveV3, id: BlockId, index: number, talentOf: Farming
   // plot empties.
   const regrows = crop.regrows !== null && growsIn(crop.id, seasonOf(save))
   const next: Plot = regrows ? { crop: crop.id, growth: 0, ready: false, regrowing: true, own: plot.own } : emptyPlot()
-  let roster = save.roster
-  if (tender) {
-    const uma = roster[tender.outfitId]!
-    const farming = uma.ranks.farming
-    const add = farmingChallengeCount(farming.rank, stars, level)
-    if (add > 0) roster = { ...roster, [tender.outfitId]: { ...uma, ranks: { ...uma.ranks, farming: { ...farming, challenge: farming.challenge + add } } } }
-  }
+  // CS30: the harvest counts toward her next farming rank's challenge.
+  const roster = tender ? countChallenge(save, tender.outfitId, 'farming', { kind: 'harvest', stars, level }).roster : save.roster
   return {
     ...save, items, roster, fields: withPlots(save, id, block.plots.map((p, i) => (i === index ? next : p))),
     crops: { ...save.crops, [crop.id]: points + cropPointsOf(plot.own) }, farm: { ...save.farm, counts: bump(save.farm.counts, PLOTS_HARVESTED, 1) },
@@ -289,7 +252,7 @@ function harvestPlot(save: SaveV3, id: BlockId, index: number, talentOf: Farming
 }
 
 /** Harvests a Ready plot: each crop draws its stars into the Warehouse, a seed may come back, the crop gains its points
- * and the tender her challenge's count, `plots-harvested` rises, and a regrowing crop starts again. */
+ * and the tender her challenge's count (`countChallenge`), `plots-harvested` rises, and a regrowing crop starts again. */
 export function harvest(save: SaveV3, id: BlockId, index: number, talentOf: FarmingTalentOf = talentD): { save: SaveV3; receipt: HarvestReceipt } {
   const receipt = noReceipt()
   return { save: harvestPlot(save, id, index, talentOf, receipt), receipt }
@@ -361,7 +324,7 @@ export interface Withered {
 /**
  * Step 2 (CS7, CS12): every planted plot that isn't Ready grows by its block's rate; a plot whose growth reaches its
  * days − 0.5 turns Ready. A tender works the night only when her block has a growing plot (decision 2): those are
- * `tended`, for F21's rank points. Talents are F21's; until then D.
+ * `tended`, for F21's rank points (night step 6).
  */
 export function growFields(save: SaveV3, talentOf: FarmingTalentOf = talentD): { save: SaveV3; tended: { outfitId: OutfitId; block: BlockId }[]; ripened: Ripened[] } {
   const tended: { outfitId: OutfitId; block: BlockId }[] = []

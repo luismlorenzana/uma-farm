@@ -12,7 +12,7 @@ night, the morning summary, the nudge, the farm map and the bars, as built. The 
  ├──────────────────────────────────┤
  │                                  │
  │   /          the farm map        │  eight rows of three; ?peek=<place> a quick look
- │   /roster    the Umas home       │  a plain album until F21 and F23
+ │   /roster    the Umas home       │  talents and ranks (F21); the Dorm in F23
  │   /diary     the chapter         │  its goals come with F24
  │   /account   Account             │  Notifications: "Off: days are turns"
  │                                  │
@@ -109,7 +109,7 @@ time. A step whose packet hasn't landed passes the night on unchanged, and each 
 | 3 | `tendAnimals` | Animals are fed, affection moves, products are laid | M5 (F27) |
 | 4 | `moveJobs` | Jobs move a day on: a quarter day for the well fed, then what finishes by the morning is read | F18 |
 | 5 | `resetWorkshops` | Each workshop may be played again tomorrow | M5 (F8) |
-| 6 | `tickRanks` | Rank points for every Uma who worked; rank-ups | F21 |
+| 6 | `tickRanks` | Rank points for every Uma who worked, one activity each; rank-ups where points and the challenge are met | F21 |
 | 6 | `tickBonds` | Bond points for pairs who shared a place | M6 (F33) |
 | 6 | `countWellFed` | The well-fed days count down | F18 |
 | 7 | `witherCrops` | On a season’s last night, crops still growing that don’t grow in the next season wither; Ready crops wait | F20 |
@@ -125,7 +125,7 @@ time. A step whose packet hasn't landed passes the night on unchanged, and each 
  ────────────────────┼──────────────────────────────────────────────┼──────────────────
  End the day:        step 4: well fed's quarter day (speedUp here)  │
                      step 4: read what finishes by ─────────────────► (a copy, not stored)
-                     step 6: ranks tick (F21)                       │
+                     step 6: ranks tick (F21, ranks.md)             │
                      step 7: the date turns; the settle is stored ──► queues start here,
                                                                        planned with tonight's ranks
 ```
@@ -136,12 +136,13 @@ time. A step whose packet hasn't landed passes the night on unchanged, and each 
   twice, on two devices, gives the same morning; the save holds no random state.
 - **One stamp a night:** no step moves `account.updatedAt`; `endDay` stamps it once, after step 9.
 - **What the night passes along:** `notes.sold` (step 1's sales, by good and star: the summary's bin section, F19),
-  `notes.worked` (who held a running job at the day's start, and where: F21 pays rank points from it) and
+  `notes.worked` (who held a running job at the day's start, and where: step 6 pays rank points from it) and
   `notes.finished` (each job finished by the morning, with its items); F20's `notes.tended` (tenders whose block had a
-  growing plot: F21 pays farming's points from it), `notes.ripened` (plots that turned Ready, by block) and
-  `notes.withered` (by block and crop), [fields.md](fields.md#the-night-cs7-steps-2-and-7-cs4s-last-night).
-- `NightContext` is what the night reads beyond the save: master data's roster, and each tender's farming talent
-  (`farmingTalent`, D for everyone until F21).
+  growing plot: step 6 pays farming's points from it), `notes.ripened` (plots that turned Ready, by block) and
+  `notes.withered` (by block and crop), [fields.md](fields.md#the-night-cs7-steps-2-and-7-cs4s-last-night); F21's
+  `notes.ranks` (step 6's rank-ups and points full: the summary's ranks section, [ranks.md](ranks.md#the-night-step-6-decisions-2-and-3)).
+- `NightContext` is what the night reads beyond the save: master data's roster (her line, so her favourite) and every
+  Uma's talents (`talentOf`, F21's table from master data; D for everyone when left out, in tests).
 
 ## The morning summary (CS5, decision 11)
 
@@ -154,15 +155,15 @@ night."
 |---|---|---|---|---|
 | The bin | `{ kind: 'sold', id, stars, count, gold, demand }`, then the total | "Salmon ★2 × 3 · 495g" (In demand), "Total · 545g" | the bin | F19 ([goods.md](goods.md#the-shipping-bin-cs10-cs7-step-1-decisions-46)) |
 | Work done | `{ kind: 'jobs', place, jobs, items }`; `{ kind: 'crops', block, plots }`; `{ kind: 'withered', block, crop, plots }` | "Forest · 2 jobs done · 9 items", "Block A · 9 crops ready", "Block A · 3 Onion withered" | the place's quick look; the Fields | F18; F20 ([fields.md](fields.md#the-night-cs7-steps-2-and-7-cs4s-last-night)) |
-| Ranks | rank-ups, full points | — | — | F21 |
+| Ranks | `{ kind: 'rank-up', outfitId, activity, rank }`; `{ kind: 'full', outfitId, activity, rank, challenge }` (points filled tonight, the challenge to meet) | "Aster · Farming Hand" (Rank up), "Beryl · Fishing · Catch 30 fish · 12/30" (Points full) | her sheet on the roster | F21 ([ranks.md](ranks.md#the-morning-summary-cs5-cs7)) |
 | Bonds | new hearts | — | — | M6 |
 | New today | `{ kind: 'season', season }`, `{ kind: 'festival', festival, when }` | "Summer begins", "Flower Show tomorrow" | the calendar; the festival ground | F18 (visitors F23, scenes and milestones F24) |
 | Today | `{ kind: 'idle', umas }`; `{ kind: 'seeds', plots }` (empty plots the seeds held could fill today) | "2 Umas idle", "9 plots to plant" | the roster; the Fields | F18; F20 |
 
 While v3 is unreleased (until F24) each packet extends the shape in place, with parse tests. The parse is strict: unknown
 keys, a line in words, a place without work slots, a place twice, an unknown festival, an Uma off the roster, a section
-before its packet, a plot count outside 1–9, an unknown block or crop, or a summary of another day are each refused with
-their path. The lines' words are `loop/summary-words.ts`, loaded with the farm map, so they stay out of the initial JS.
+before its packet, a plot count outside 1–9, an unknown block or crop, a rank outside Hand–Legend, an unknown activity,
+or a summary of another day are each refused with their path. The lines' words are `loop/summary-words.ts`, loaded with the farm map, so they stay out of the initial JS.
 
 The card is a sheet over the farm. It shows on `/` whenever a summary is held and no quick look or other sheet is open,
 so a tap on a line opens its place and Back brings the card back.
@@ -239,8 +240,8 @@ stay put.
   days", "tomorrow"); the kit's rows follow once its duration option ships.
 - **The account bar:** the initial (Account), the date chip, F19's gold chip (it opens the bin,
   [goods.md](goods.md#gold-and-the-account-bar-decision-10)), the sync chip.
-- **Roster** (`/roster`) is a plain album of the Umas home with their best rank, and how many are away, until F21's ranks
-  and F23's Dorm. **Diary** (`/diary`) holds the chapter until F24 gives it its goals.
+- **Roster** (`/roster`) is the album of the Umas home with F21's talents and ranks, filters and sorts, and her sheet
+  ([ranks.md](ranks.md#the-screens-decision-7)), and how many are away, until F23's Dorm. **Diary** (`/diary`) holds the chapter until F24 gives it its goals.
 - **The Menu** lists the 23 places by FC28's rows (gathering, stations, the ranch, workshops, the yard, the town), each
   opening its quick look, locked ones marked; then Account, the switch and the build.
 

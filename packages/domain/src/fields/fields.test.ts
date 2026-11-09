@@ -4,6 +4,8 @@
 import { describe, expect, it } from 'vitest'
 import { farmDay } from '../farm/calendar'
 import { FARM_RANK_POINTS } from '../farm/farm'
+import { CHALLENGES } from '../farm/rank-rules'
+import { TALENT_D, talentGrowth, talentQuality, type TalentStep } from '../farm/talents'
 import { starShares } from '../goods/stars'
 import { emptyNotes, endDay, growCrops, type NightContext } from '../night/end-day'
 import { TEST_KINDS } from '../night/kinds.fixture'
@@ -13,9 +15,8 @@ import { SaveRuleError } from '../save/rules'
 import { buy, lineOpen, shopLines } from '../save/shop'
 import { newRosterUma, newSave, readyPlots, type BlockId, type Plot, type SaveV3 } from '../save/v3'
 import {
-  blockGrowth, buyBlock, cropLevelOf, cropLevelStart, farmingChallengeCount, harvest, harvestAll, harvestQuality, isBusy, nightsLeft, plant, plantAll,
-  PLOTS_HARVESTED, PLOTS_PLANTED, plotsToPlant, receiptItems, seedsBackChance, seedsInSeason, setTender, tendedGrowth, TALENT_D,
-  talentGrowth, talentQuality, type TalentStep,
+  blockGrowth, buyBlock, cropLevelOf, cropLevelStart, harvest, harvestAll, harvestQuality, isBusy, nightsLeft, plant, plantAll,
+  PLOTS_HARVESTED, PLOTS_PLANTED, plotsToPlant, receiptItems, seedsBackChance, seedsInSeason, setTender, tendedGrowth,
 } from './fields'
 
 const AT = '2026-11-09T10:00:00.000Z'
@@ -256,12 +257,14 @@ describe('harvesting (CS11, CS26; decisions 3–5)', () => {
     const after = harvestAll(save).save
     expect(after.roster['101']!.ranks.farming.challenge).toBe(9)
     expect(harvestAll(ripe(farm(1, {}))).save.roster['101']!.ranks.farming.challenge).toBe(0)
-    expect(farmingChallengeCount(0, [1, 2], 1)).toBe(2)
-    expect(farmingChallengeCount(1, [1, 3, 4, 2], 1)).toBe(2)
-    expect(farmingChallengeCount(2, [1], 3)).toBe(0)
-    expect(farmingChallengeCount(2, [1], 4)).toBe(1)
-    expect(farmingChallengeCount(3, [5, 4, 5], 1)).toBe(2)
-    expect(farmingChallengeCount(4, [5], 10)).toBe(0)
+    // F21's challenge rows read the harvest by her rank now.
+    const count = (rank: 0 | 1 | 2 | 3 | 4, stars: number[], level: number) => CHALLENGES.farming[rank]!.count({ kind: 'harvest', stars, level })
+    expect(count(0, [1, 2], 1)).toBe(2)
+    expect(count(1, [1, 3, 4, 2], 1)).toBe(2)
+    expect(count(2, [1], 3)).toBe(0)
+    expect(count(2, [1], 4)).toBe(1)
+    expect(count(3, [5, 4, 5], 1)).toBe(2)
+    expect(count(4, [5], 10)).toBe(0)
   })
 })
 
