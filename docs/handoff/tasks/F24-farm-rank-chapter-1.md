@@ -112,12 +112,14 @@ dark launch), retires the Wilds' screens, and asks the owner to play it on the p
    isn't Ready by then; goal 5 any Uma at Hand or above in any activity; goal 6 Farm Rank 2. `farm.goals` keeps each
    goal's counter at the chapter's start, so later chapters count from their own start.
 5. **The chapter completes at step 8** of the night its last goal is met: its reward is paid then (500g, `buildings.mill
-   = 0`, F23's `recruitFor(…, 'weakest')`, the chapter's 250 points), the closing scene plays the next morning after the
+   = 0`, the recruit from F23's `recruitFor(save, release, talentOf)` joined with `joinRoster(save, outfitId)`, home or
+   away, which the morning's news names by itself, the chapter's 250 points), the closing scene plays the next morning after the
    summary, and `farm.chapter` becomes 2. Chapter 2's card says "Soon" until M5.
 6. **The scene player** is a full-screen sheet: a bust (a cast member's from F25, or an Uma's from master data through
    uma-kit's `UmaBust`), the speaker's name, one line, tap to go on, and **Skip**. Scenes are data in `@farm/domain`
    (`story/chapter-1.ts`) with role placeholders, never Uma names. Each plays once: its id goes in `diary.read`
-   (`scene:1:open`, `scene:1:close`). The order on a new farm is the start's picks, then the opening scene, then day 1.
+   (`scene:1:open`, `scene:1:close`). The order on a new farm is the start's picks (F23's `StartPicks`, shown by the
+   shell while `picksLeft(save) > 0`), then the opening scene, then day 1.
    A migrated save, already on day 1 with its Umas, sees the opening scene once too.
 7. **The hello lines** for the opening scene: one per temperament (F21's breezy, steady, bold, gritty, clever),
    original and short, with `{name}` filled at runtime.
