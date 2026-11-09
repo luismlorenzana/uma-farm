@@ -1,22 +1,25 @@
 // The loop's work on the day clock (F18 decision 1; core spec CS7, FC6): F5's operations over a v3 save. Every one runs at
 // `workNow(save)`, the start of the save's day, and never reads the device's clock, so reopening the app moves nothing;
 // a player's change is stamped with real time (`stamp`). Readings settle and store nothing. `kinds` is the work registry
-// (`LOOP_KINDS`; tests pass their own). The screens that call these are F22's, on uma-kit/work.
+// (`LOOP_KINDS`; the app passes `loopKinds(talentOf)` so plans read master data's talents, and tests their own). The
+// screens that call these are F22's, on uma-kit/work.
 import {
-  collect, finishedCount, isRefusal, queue, recall, settle, slotHolder, slotsOf, start, statusOf, withRow, type OpResult, type QueueInput, type Refusal,
-  type SlotRef, type WorkEnv, type WorkRow,
+  collect, isRefusal, queue, recall, settle, slotHolder, slotsOf, start, statusOf, withRow, type OpResult, type QueueInput, type Refusal,
+  type SlotRef, type WorkEnv, type WorkOutput, type WorkRow,
 } from '@luismlorenzana/uma-work'
 import { DAY_MS, workNow } from '../farm/calendar'
 import { goodName } from '../goods/ids'
 import { farmEnvV3, loopWorld, withLoopWorld, type LoopWorld } from '../work/loop-env'
-import { LOOP_KINDS, LOOP_WORK_PLACES, type LoopKinds, type LoopPlaceId } from './parse-v3'
+import { LOOP_KINDS, type HaulDetail, type Measured } from '../gathering/kinds'
+import { LOOP_WORK_PLACES, type LoopKinds, type LoopPlaceId } from './parse-v3'
 import { SaveRuleError, type SaveRuleReason } from './rules'
 import { touched } from './save'
 import { tendedBlock, type LoopWorkRequest, type OutfitId, type SaveV3 } from './v3'
+import { loopReadyItems } from './work-readings'
 import { parseStockKey } from './warehouse'
 
 const REASON: Readonly<Record<string, SaveRuleReason>> = {
-  'slot-taken': 'bad-slot', busy: 'busy', count: 'bad-count', short: 'no-items', 'queue-full': 'bad-count', 'unknown-worker': 'not-owned',
+  'slot-taken': 'bad-slot', busy: 'busy', count: 'bad-count', short: 'no-items', 'queue-full': 'bad-count', 'unknown-worker': 'not-owned', locked: 'locked',
 }
 
 /** Whole days from now to a moment on the work clock, at least 1. */
@@ -71,27 +74,10 @@ export function settleLoopWork(save: SaveV3, kinds: LoopKinds = LOOP_KINDS): Sav
   return withLoopWorld(save, opened(save, kinds).world)
 }
 
-/** Finished items she hasn't collected, across her entries. */
-export function loopReadyItems(row: WorkRow<LoopWorkRequest> | undefined, now: number): number {
-  return (row?.entries ?? []).reduce((n, e) => n + finishedCount(e, now) - e.collected, 0)
-}
-
 /** Who holds a running job this day. */
 export function loopWorking(save: SaveV3, kinds: LoopKinds = LOOP_KINDS): Set<OutfitId> {
   const { world, now } = opened(save, kinds)
   return new Set(Object.values(world.work).filter((row) => statusOf(row, now) === 'working').map((row) => row.outfitId))
-}
-
-/** Places with something to collect this day, and how many of their slots have it. */
-export function loopReadyWork(save: SaveV3, kinds: LoopKinds = LOOP_KINDS): Map<LoopPlaceId, number> {
-  const { world, now } = opened(save, kinds)
-  const out = new Map<LoopPlaceId, number>()
-  for (const row of Object.values(world.work)) {
-    if (!row.slot || loopReadyItems(row, now) === 0) continue
-    const place = row.slot.building as LoopPlaceId
-    out.set(place, (out.get(place) ?? 0) + 1)
-  }
-  return new Map(LOOP_WORK_PLACES.filter((p) => out.has(p)).map((p) => [p, out.get(p)!]))
 }
 
 // --- The player's operations: each runs at the day's start and is stamped with real time ----------------------------
@@ -126,25 +112,37 @@ export function editLoopQueue(save: SaveV3, input: QueueInput<LoopWorkRequest>, 
   return changed(save, done(queue(world, input, now, env), now).state, stamp)
 }
 
+/** What a collect brought home: the goods (`<id>@<stars>`) and each fish's size (F22). */
+export interface LoopCollected {
+  goods: string[]
+  sizes: Measured[]
+}
+const goodsOf = (outputs: readonly WorkOutput[]): string[] => outputs.flatMap((o) => ('item' in o ? [o.item] : []))
+const sizesOf = (paid: readonly unknown[]): Measured[] => paid.flatMap((d) => (d && typeof d === 'object' && 'sizes' in d ? (d as HaulDetail).sizes : []))
+
 /** Collects what she has finished into the Warehouse; when she's done, her slot frees. */
-export function collectLoopWorker(save: SaveV3, outfitId: OutfitId, stamp: string, kinds: LoopKinds = LOOP_KINDS): { save: SaveV3; items: number; done: boolean } {
+export function collectLoopWorker(save: SaveV3, outfitId: OutfitId, stamp: string, kinds: LoopKinds = LOOP_KINDS): { save: SaveV3; items: number; done: boolean } & LoopCollected {
   const { world, env, now } = opened(save, kinds)
   const { state, receipt } = collect(world, { outfitId }, now, env)
-  return { save: receipt.outputs.length > 0 || receipt.freed ? changed(save, state, stamp) : save, items: receipt.outputs.length, done: receipt.freed }
+  return {
+    save: receipt.outputs.length > 0 || receipt.freed ? changed(save, state, stamp) : save, items: receipt.outputs.length, done: receipt.freed,
+    goods: goodsOf(receipt.outputs), sizes: sizesOf(receipt.paid),
+  }
 }
 
 /** Collects every Uma with something finished, on the given places (all by default). Nothing ready changes nothing. */
-export function collectLoopAll(save: SaveV3, stamp: string, places?: readonly LoopPlaceId[], kinds: LoopKinds = LOOP_KINDS): { save: SaveV3; items: number } {
+export function collectLoopAll(save: SaveV3, stamp: string, places?: readonly LoopPlaceId[], kinds: LoopKinds = LOOP_KINDS): { save: SaveV3; items: number } & LoopCollected {
   const { world: settled, env, now } = opened(save, kinds)
   let world = settled
-  let items = 0
+  const got: LoopCollected = { goods: [], sizes: [] }
   for (const row of Object.values(settled.work)) {
     if (!row.slot || (places && !places.includes(row.slot.building as LoopPlaceId)) || loopReadyItems(row, now) === 0) continue
     const { state, receipt } = collect(world, { outfitId: row.outfitId }, now, env)
     world = state
-    items += receipt.outputs.length
+    got.goods.push(...goodsOf(receipt.outputs))
+    got.sizes.push(...sizesOf(receipt.paid))
   }
-  return { save: items > 0 ? changed(save, world, stamp) : save, items }
+  return { save: got.goods.length > 0 ? changed(save, world, stamp) : save, items: got.goods.length, ...got }
 }
 
 /** Ends her work: what's made is collected, the inputs of what isn't come back, her queue drops. */

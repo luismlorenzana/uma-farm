@@ -44,8 +44,16 @@ export interface CropsWithered {
   plots: number
 }
 
-/** §2's lines: jobs by place, then crops ready by block, then what withered (CS5's order). */
-export type WorkLine = JobsDone | CropsReady | CropsWithered
+/** §2 Work done: the night's best catch, the most valuable fish caught tonight at its stars (F22). Its size is measured
+ * when it's collected. */
+export interface BestCatchLine {
+  kind: 'catch'
+  id: string
+  stars: number
+}
+
+/** §2's lines: jobs by place, the night's best catch, then crops ready by block, then what withered (CS5's order). */
+export type WorkLine = JobsDone | BestCatchLine | CropsReady | CropsWithered
 
 /** §3 Ranks (F21): she reached a rank in an activity tonight. */
 export interface RankUp {
@@ -95,7 +103,7 @@ export interface MorningSummary {
   /** §1 The bin: yesterday's sales by good and star, in the catalogue's order, with the season's demand marked (F19).
    * The total is their gold added up. */
   bin: BinSale[]
-  /** §2 Work done: jobs by place (F18), crops ready by block and what withered (F20). */
+  /** §2 Work done: jobs by place (F18), the night's best catch (F22), crops ready by block and what withered (F20). */
   work: WorkLine[]
   /** §3 Ranks: rank-ups, then Umas whose points filled tonight with their challenge to meet (F21). */
   ranks: RankLine[]

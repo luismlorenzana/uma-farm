@@ -4,7 +4,7 @@ import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkKind
 import { FESTIVAL_IDS, SEASONS } from '../farm/calendar'
 import { bedsAt, DORM_MAX_LEVEL } from '../farm/farm'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
-import { GOOD_IDS, isCropId, isGoodId, isSeedId, isWarehouseId, type CropId } from '../goods/ids'
+import { GOOD_IDS, goodOf, isCropId, isGoodId, isSeedId, isWarehouseId, type CropId } from '../goods/ids'
 import type { BinSale, MorningSummary, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
 import { isOutfitId } from '../roster/roster'
 import type { LoopWorld } from '../work/loop-env'
@@ -18,6 +18,7 @@ import {
   type ToolId, type ToolTier, type Visitor, type Warehouse, type WorkshopId,
 } from './v3'
 import { MAX_STARS, parseStockKey } from './warehouse'
+import { LOOP_REQUESTS } from '../gathering/ids'
 
 export const SAVE_V3_KEYS = [
   'version', 'account', 'calendar', 'gold', 'start', 'today', 'roster', 'dorm', 'visitors', 'items', 'bin', 'work', 'fields', 'crops', 'ranch',
@@ -30,12 +31,18 @@ export const LOOP_WORK_PLACES = ['forest', 'fishery', 'mill', 'sawmill', 'smokeh
 export type LoopPlaceId = typeof LOOP_WORK_PLACES[number]
 export const LOOP_SLOTS = 4
 
-/** A v3 work kind (F17 decision 11, F18): the places it works at, its request's parse (strict keys, its own ids; a
- * `SaveParseError` with the path when wrong), its rules on uma-work's day clock (`farmEnvV3`), and whether it runs for
- * days at a time. F22 fills `LOOP_KINDS`. */
-export interface LoopKind {
+/** A v3 work kind's request (F17 decision 11): the places it works at and its request's parse (strict keys, its own ids;
+ * a `SaveParseError` with the path when wrong). The save's parse reads only this, so it stays in the initial JS. */
+export interface LoopRequestKind {
   readonly places: readonly LoopPlaceId[]
   parseRequest(value: Obj, path: string): LoopWorkRequest
+}
+export type LoopRequestKinds = Readonly<Record<string, LoopRequestKind>>
+
+/** A v3 work kind (F17 decision 11, F18, F22): its request, its rules on uma-work's day clock (`farmEnvV3`), and whether
+ * it runs for days at a time. F22's are `LOOP_KINDS` (`gathering/kinds.ts`, loaded with the screens and the night); the
+ * save's parse reads their requests from `LOOP_REQUESTS` (`gathering/ids.ts`). */
+export interface LoopKind extends LoopRequestKind {
   /** How it plans and pays (uma-work's kind rules), over the loop's world. */
   readonly rules: WorkKindRules<LoopWorld>
   /** A multi-day kind (making; in M4 the Mill's preserves; later expeditions): a well-fed Uma's running entry gains a
@@ -43,8 +50,6 @@ export interface LoopKind {
   readonly multiDay: boolean
 }
 export type LoopKinds = Readonly<Record<string, LoopKind>>
-/** The loop's work kinds, by kind. Empty until F22: a v3 save has no work until then. */
-export const LOOP_KINDS: LoopKinds = {}
 
 /** Up to three requests wait behind the running one (the engine's MAX_QUEUE); four started entries at most. */
 const MAX_QUEUED = 3
@@ -180,7 +185,7 @@ function parseSlot(value: unknown, path: string): SlotRef {
   return { building, slot: int(o.slot, `${path}.slot`, 0, LOOP_SLOTS - 1) }
 }
 
-function parseRequest(value: unknown, path: string, slot: SlotRef, kinds: LoopKinds): LoopWorkRequest {
+function parseRequest(value: unknown, path: string, slot: SlotRef, kinds: LoopRequestKinds): LoopWorkRequest {
   const o = record(value, path)
   const kind = typeof o.kind === 'string' && Object.hasOwn(kinds, o.kind) ? kinds[o.kind]! : fail(`${path}.kind`, 'unknown kind')
   if (!(kind.places as readonly string[]).includes(slot.building)) fail(`${path}.kind`, 'not worked at this place')
@@ -196,7 +201,7 @@ function parseQty(value: unknown, path: string): ItemQty {
 
 const ENTRY_KEYS = ['request', 'seconds', 'inputs', 'outputs', 'exp', 'startedAt', 'acceleratedMs', 'collected', 'speed', 'fromQueue'] as const
 
-function parseEntry(value: unknown, path: string, slot: SlotRef, kinds: LoopKinds): Entry<LoopWorkRequest> {
+function parseEntry(value: unknown, path: string, slot: SlotRef, kinds: LoopRequestKinds): Entry<LoopWorkRequest> {
   const e = object(value, path, ENTRY_KEYS)
   const request = parseRequest(e.request, `${path}.request`, slot, kinds)
   const seconds = list(e.seconds, `${path}.seconds`, 1, MAX_ENTRY_ITEMS).map((v, i) => positive(v, `${path}.seconds.${i}`))
@@ -222,7 +227,7 @@ function parseRefusal(value: unknown, path: string): Refusal | null {
   return { ...base, data: data as Record<string, string | number> }
 }
 
-function parseDropped(value: unknown, path: string, kinds: LoopKinds): DroppedQueue<LoopWorkRequest> | null {
+function parseDropped(value: unknown, path: string, kinds: LoopRequestKinds): DroppedQueue<LoopWorkRequest> | null {
   if (value === null) return null
   const d = object(value, path, ['at', 'slot', 'requests', 'short', 'refused'])
   const slot = parseSlot(d.slot, `${path}.slot`)
@@ -234,14 +239,14 @@ function parseDropped(value: unknown, path: string, kinds: LoopKinds): DroppedQu
   }
 }
 
-function parseLast(value: unknown, path: string, kinds: LoopKinds): LastWork<LoopWorkRequest> | null {
+function parseLast(value: unknown, path: string, kinds: LoopRequestKinds): LastWork<LoopWorkRequest> | null {
   if (value === null) return null
   const l = object(value, path, ['slot', 'request'])
   const slot = parseSlot(l.slot, `${path}.slot`)
   return { slot, request: parseRequest(l.request, `${path}.request`, slot, kinds) }
 }
 
-function parseWork(value: unknown, path: string, roster: ReadonlySet<string>, kinds: LoopKinds): Record<string, WorkRow<LoopWorkRequest>> {
+function parseWork(value: unknown, path: string, roster: ReadonlySet<string>, kinds: LoopRequestKinds): Record<string, WorkRow<LoopWorkRequest>> {
   const out: Record<string, WorkRow<LoopWorkRequest>> = {}
   const held = new Set<string>()
   for (const [id, raw] of Object.entries(record(value, path))) {
@@ -435,9 +440,15 @@ function parseSummary(value: unknown, path: string, today: number, roster: Reado
   }), `${path}.bin`, (b) => `${b.id}@${b.stars}`)
   // Work done: jobs by place (F18); crops ready by block and what withered, by block and crop (F20). A plot count is 1–9.
   const plots = (value: unknown, at: string) => int(value, at, 1, PLOTS_PER_BLOCK)
-  const work = unique(list(o.work, `${path}.work`, 0, LOOP_WORK_PLACES.length + BLOCK_IDS.length * (1 + PLOTS_PER_BLOCK)).map((v, i): WorkLine => {
+  const work = unique(list(o.work, `${path}.work`, 0, LOOP_WORK_PLACES.length + 1 + BLOCK_IDS.length * (1 + PLOTS_PER_BLOCK)).map((v, i): WorkLine => {
     const at = `${path}.work.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['jobs', 'crops', 'withered'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['jobs', 'catch', 'crops', 'withered'] as const)
+    if (kind === 'catch') {
+      // F22: the night's best catch, a fish at its stars.
+      const c = object(v, at, ['kind', 'id', 'stars'])
+      const id = typeof c.id === 'string' && goodOf(c.id)?.family === 'fish' && !goodOf(c.id)!.refined ? c.id : fail(`${at}.id`, 'expected a fish')
+      return { kind, id, stars: int(c.stars, `${at}.stars`, 1, MAX_STARS) }
+    }
     if (kind === 'crops') {
       const c = object(v, at, ['kind', 'block', 'plots'])
       return { kind, block: oneOf(c.block, `${at}.block`, BLOCK_IDS), plots: plots(c.plots, `${at}.plots`) }
@@ -449,7 +460,7 @@ function parseSummary(value: unknown, path: string, today: number, roster: Reado
     }
     const w = object(v, at, ['kind', 'place', 'jobs', 'items'])
     return { kind, place: oneOf(w.place, `${at}.place`, LOOP_WORK_PLACES), jobs: int(w.jobs, `${at}.jobs`, 1, 4 * 60), items: count(w.items, `${at}.items`) }
-  }), `${path}.work`, (w) => (w.kind === 'jobs' ? `jobs:${w.place}` : w.kind === 'crops' ? `crops:${w.block}` : `withered:${w.block}:${w.crop}`))
+  }), `${path}.work`, (w) => (w.kind === 'jobs' ? `jobs:${w.place}` : w.kind === 'catch' ? 'catch' : w.kind === 'crops' ? `crops:${w.block}` : `withered:${w.block}:${w.crop}`))
   // Ranks (F21): rank-ups, then points full, each an Uma on the roster in an activity, a rank Hand–Legend; once each.
   const ranks = unique(list(o.ranks, `${path}.ranks`, 0, 2 * ACTIVITIES.length * roster.size).map((v, i): RankLine => {
     const at = `${path}.ranks.${i}`
@@ -476,8 +487,8 @@ function parseSummary(value: unknown, path: string, today: number, roster: Reado
   return { day: today, bin, work, ranks, bonds, news, nudges }
 }
 
-/** Parses a save v3. `kinds` is the work kinds' registry (`LOOP_KINDS`; tests pass their own). */
-export function parseSaveV3(value: unknown, path = 'save', kinds: LoopKinds = LOOP_KINDS): SaveV3 {
+/** Parses a save v3. `kinds` is the work kinds' requests (`LOOP_REQUESTS`; tests pass their own kinds). */
+export function parseSaveV3(value: unknown, path = 'save', kinds: LoopRequestKinds = LOOP_REQUESTS): SaveV3 {
   const o = object(value, path, SAVE_V3_KEYS)
   if (o.version !== 3) fail(`${path}.version`, 'expected 3')
   const c = object(o.calendar, `${path}.calendar`, ['day'])

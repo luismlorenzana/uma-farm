@@ -1,12 +1,16 @@
 // The loop's actions on the day (F18): End the day, dismiss the morning, Collect all; F19's goods: ship, Ship all, take
-// back and buy; and F20's Fields: plant, Plant all, harvest, Harvest all, a tender and a block. Each reads the save right
+// back and buy; F20's Fields: plant, Plant all, harvest, Harvest all, a tender and a block; and F22's work: a job, a
+// queue, Collect, Recall, Repeat, a stopped queue and building a station. Each reads the save right
 // before its rule runs (as `edit`), commits it to the store and the device, and syncs; a refused rule throws its words.
 // The night and the harvests read F21's talents from master data, so they wait for it. Loaded on demand with the loop's
 // screens, so the night's code stays out of the initial JS.
 import {
-  BLOCK_IDS, buy, buyBlock, collectLoopAll, endDay, harvest, harvestAll, plant, plantAll, receiptItems, SaveRuleError, setTender, ship, shipAll, shopLines,
-  takeBack, touched, type BlockId, type CropId, type FarmingTalentOf, type HarvestReceipt, type SaveV3, type ShopLine,
+  BLOCK_IDS, buildStation, buy, buyBlock, collectLoopAll, collectLoopWorker, dismissLoopStopped, editLoopQueue, endDay, harvest, harvestAll, loopKinds, plant,
+  plantAll, recallLoopWorker, receiptItems, repeatLoopJob, restartLoopStopped, SaveRuleError, setTender, ship, shipAll, shopLines, startLoopJob, takeBack,
+  touched, type BlockId, type CropId, type FarmingTalentOf, type HarvestReceipt, type LoopCollected, type LoopJobInput, type LoopKinds, type LoopPlaceId,
+  type LoopWorkRequest, type SaveV3, type ShopLine, type StationId,
 } from '@farm/domain'
+import type { QueueInput } from '@luismlorenzana/uma-work'
 import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'
 import { farmingTalents, talentsFor } from './talents'
@@ -33,6 +37,10 @@ export async function endTheDay(day: number): Promise<boolean> {
 /** Every tender's farming talent on this release (F21): a harvest's stars read it, so a harvest waits for master data. */
 const farming = async (): Promise<FarmingTalentOf> => farmingTalents(talentsFor(await masterReady()))
 
+/** The loop's work kinds with this release's talents (F22): a job's plan and a catch's size read them, so work waits for
+ * master data. */
+const workKinds = async (): Promise<LoopKinds> => loopKinds(talentsFor(await masterReady()))
+
 /** Puts the morning summary away: a player's change (decision 11). */
 export async function dismissSummary(): Promise<void> {
   const save = loopSave()
@@ -44,10 +52,11 @@ export async function dismissSummary(): Promise<void> {
  * F20). Nothing ready changes nothing. */
 export async function collectFarm(): Promise<number> {
   const talentOf = await farming()
+  const kinds = await workKinds()
   const save = loopSave()
   if (!save) return 0
   const now = nowIso()
-  const jobs = collectLoopAll(save, now)
+  const jobs = collectLoopAll(save, now, undefined, kinds)
   const crops = harvestAll(jobs.save, BLOCK_IDS, talentOf)
   const items = jobs.items + receiptItems(crops.receipt)
   if (jobs.items > 0 || crops.receipt.plots > 0) await commit(touched(crops.save, now))
@@ -119,3 +128,52 @@ export async function harvestFields(): Promise<number> {
   return receiptItems(receipt)
 }
 
+
+// --- Work at the forest, the Fishery and the stations (F22) ------------------------------------------------------------
+
+/** A work operation as a player's change: the loop's operations stamp it themselves. */
+async function work(rule: (save: SaveV3, kinds: LoopKinds, now: string) => SaveV3): Promise<void> {
+  const kinds = await workKinds()
+  const save = loopSave()
+  if (!save) throw new Error('The farm is still loading.')
+  const next = rule(save, kinds, nowIso())
+  if (next !== save) await commit(next)
+}
+
+/** Starts a job in a free slot this morning (decisions 1 and 2). */
+export const startJob = (input: LoopJobInput) => work((s, kinds, now) => startLoopJob(s, input, now, kinds))
+/** Adds, removes or moves a job in her queue. */
+export const editQueue = (input: QueueInput<LoopWorkRequest>) => work((s, kinds, now) => editLoopQueue(s, input, now, kinds))
+/** Ends her work: what's made is collected, the rest's inputs come back. */
+export const recallJob = (outfitId: string) => work((s, kinds, now) => recallLoopWorker(s, outfitId, now, kinds))
+/** Collects and starts her last job again this morning. */
+export const repeatJob = (outfitId: string) => work((s, kinds, now) => repeatLoopJob(s, outfitId, now, kinds))
+/** Restarts a queue that stopped. */
+export const restartJob = (outfitId: string) => work((s, kinds, now) => restartLoopStopped(s, outfitId, now, kinds))
+/** Forgets a queue that stopped. */
+export const dismissJob = (outfitId: string) => work((s, kinds, now) => dismissLoopStopped(s, outfitId, now, kinds))
+
+/** Collects what she has finished into the Warehouse by stars (decision 3): the goods, and each fish's size. */
+export async function collectJob(outfitId: string): Promise<LoopCollected> {
+  let got: LoopCollected = { goods: [], sizes: [] }
+  await work((s, kinds, now) => {
+    const done = collectLoopWorker(s, outfitId, now, kinds)
+    got = done
+    return done.save
+  })
+  return got
+}
+
+/** Collects everything finished at a place ("Collect here"). */
+export async function collectAt(place: LoopPlaceId): Promise<LoopCollected> {
+  let got: LoopCollected = { goods: [], sizes: [] }
+  await work((s, kinds, now) => {
+    const done = collectLoopAll(s, now, [place], kinds)
+    got = done
+    return done.save
+  })
+  return got
+}
+
+/** Builds a station for its gold (decision 6). */
+export const buildPlace = (station: StationId) => change((s) => buildStation(s, station))

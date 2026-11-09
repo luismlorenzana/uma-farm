@@ -5,7 +5,8 @@ import { endsAt } from '@luismlorenzana/uma-work'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DAY_MS } from '../farm/calendar'
 import { GOLD_SHIPPED, ship, takeBack } from '../save/bin'
-import { collectLoopAll, editLoopQueue, loopReadyWork, loopWorking, settleLoopWork, startLoopJob } from '../save/loop-work'
+import { collectLoopAll, editLoopQueue, loopWorking, settleLoopWork, startLoopJob } from '../save/loop-work'
+import { loopReadyWork } from '../save/work-readings'
 import { parseSaveV3, SAVE_V3_KEYS } from '../save/parse-v3'
 import { newRosterUma, newSave, type SaveV3 } from '../save/v3'
 import { emptyNotes, endDay, NIGHT_STEPS, runNight, tickRanks, type NightContext, type NightStep } from './end-day'
@@ -37,7 +38,7 @@ afterEach(() => vi.useRealTimers())
 describe('the night (CS7)', () => {
   it('runs nine steps in order, each a named function', () => {
     expect(NIGHT_STEPS.map((s) => `${s.step} ${s.name}`)).toEqual([
-      '1 payTheBin', '2 growCrops', '3 tendAnimals', '4 moveJobs', '5 resetWorkshops', '6 tickRanks', '6 tickBonds', '6 countWellFed',
+      '1 payTheBin', '2 growCrops', '3 tendAnimals', '4 moveJobs', '4 countHauls', '5 resetWorkshops', '6 tickRanks', '6 tickBonds', '6 countWellFed',
       '7 witherCrops', '7 turnCalendar', '8 checkGoals', '9 buildSummary',
     ])
   })
@@ -68,11 +69,11 @@ describe('jobs in days on the calendar\'s clock (FC6, decision 1)', () => {
   it('makes a 1-day job Ready after one night, and not before', () => {
     const save = start(farm(), '101', gather())
     expect(loopWorking(save, TEST_KINDS)).toEqual(new Set(['101']))
-    expect(loopReadyWork(save, TEST_KINDS).size).toBe(0)
+    expect(loopReadyWork(save).size).toBe(0)
     const morning = night(save)
     expect(morning.calendar.day).toBe(2)
     expect(loopWorking(morning, TEST_KINDS).size).toBe(0)
-    expect([...loopReadyWork(morning, TEST_KINDS)]).toEqual([['forest', 1]])
+    expect([...loopReadyWork(morning)]).toEqual([['forest', 1]])
     expect(collectLoopAll(morning, LATER, undefined, TEST_KINDS)).toMatchObject({ items: 1, save: { items: { 'pine-log': [1, 0, 0, 0, 0] } } })
   })
 
@@ -80,7 +81,7 @@ describe('jobs in days on the calendar\'s clock (FC6, decision 1)', () => {
     const save = start(farm(), '202', make(3))
     expect(save.items.wheat).toEqual([4, 0, 0, 0, 0])
     const after = [1, 2, 3].map((n) => nights(save, n))
-    expect(after.map((s) => loopReadyWork(s, TEST_KINDS).get('mill') ?? 0)).toEqual([0, 0, 1])
+    expect(after.map((s) => loopReadyWork(s).get('mill') ?? 0)).toEqual([0, 0, 1])
     expect(after.map((s) => s.calendar.day)).toEqual([2, 3, 4])
   })
 
@@ -111,7 +112,7 @@ describe('jobs in days on the calendar\'s clock (FC6, decision 1)', () => {
     vi.setSystemTime(new Date('2026-12-25T10:00:00Z'))
     expect(settleLoopWork(save, TEST_KINDS)).toEqual(now)
     expect(now).toEqual(save)
-    expect(loopReadyWork(save, TEST_KINDS).size).toBe(0)
+    expect(loopReadyWork(save).size).toBe(0)
   })
 })
 
@@ -137,7 +138,7 @@ describe('well fed (CS22, decision 4)', () => {
     const late: SaveV3 = { ...save, calendar: { day: 2 }, work: { 202: { ...save.work['202']!, entries: [{ ...entry, seconds: [(DAY_MS + 14_400_000) / 1000] }] } } }
     const morning = night(late)
     expect(morning.work['202']!.entries[0]!.acceleratedMs).toBe(14_400_000)
-    expect(loopReadyWork(morning, TEST_KINDS).get('mill')).toBe(1)
+    expect(loopReadyWork(morning).get('mill')).toBe(1)
   })
 
   it('gives a 1-day job no time: its kind plans more items instead (F22)', () => {

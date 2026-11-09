@@ -54,6 +54,7 @@ export * from './save/migrate-v3'
 export * from './farm/places'
 export * from './work/loop-env'
 export * from './save/loop-work'
+export * from './save/work-readings'
 export * from './night/summary'
 export * from './night/nudge'
 export * from './night/end-day'
@@ -74,3 +75,11 @@ export * from './fields/fields'
 // a rank gives, the favourite line, temperament, and the night's step 6. Dark until F24 (D29).
 export * from './farm/talents'
 export * from './farm/rank-rules'
+
+// The forest, the Fishery and three stations (F22, core spec CS15–CS18): the areas, the spots and the stations' jobs by
+// id (with the save's parse), their tables, the work kinds with master data's talents, building a station, the catch's
+// sizes and the night's hauls. Dark until F24 (D29).
+export * from './gathering/ids'
+export * from './gathering/tables'
+export * from './gathering/kinds'
+export * from './gathering/stations'

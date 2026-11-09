@@ -31,7 +31,7 @@ CS12, with CS4, CS26, CS28, CS30 and CS31; the calls are D34.
 27 crops: 22 from the shop and 5 rare ones (their seeds come from expeditions, requests and prizes, M5–M6). "Days" is
 untended · tended by a Novice · tended by an Expert, derived from the untended days by CS12's rule (a test checks every
 row against CS11's printed columns). Yield is crops a plot, each harvest. Price ★1 is the crop's own (F19,
-[goods.md](goods.md#the-crops-own-prices-cs11)); the refined form is made at a station in F22.
+[goods.md](goods.md#the-crops-own-prices-cs11)); the refined form is made at its station (F22, [gathering.md](gathering.md#the-stations-cs18-decisions-2-and-6)).
 
 <!-- live:crops -->
 | Crop | Id | Seasons | Shop | Seed | Days: untended · Novice · Expert | Yield | Regrows | Price ★1 | Refined at |

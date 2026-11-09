@@ -164,7 +164,9 @@ interface Plot { crop: CropId | null; growth: number; ready: boolean; regrowing:
 - **uma-work's flat stock:** the engine sees the Warehouse as `<id>@<stars>` keys (`carp@2`), through `workStock` and
   `fromWorkStock`; v3 work rows hold those keys. Rows sit at the v3 work places (the forest, the Fishery, the Mill, the
   Sawmill, the Smokehouse; the Mine, the Quarry, the Smelter and the Cutter from M5), four slots each, and each kind
-  checks its own requests through `LOOP_KINDS`, empty until F22. F18 runs them on the day clock ([days.md](days.md#work-in-days-fc6-decisions-1-and-4)).
+  checks its own requests through `LOOP_REQUESTS` (F22: foraging, fishing and the stations' six jobs,
+  [gathering.md](gathering.md#the-save-decisions-1-and-2-f17-decision-11)), which stays in the initial JS while the
+  kinds' rules load with the screens. F18 runs them on the day clock ([days.md](days.md#work-in-days-fc6-decisions-1-and-4)).
 - **The parse** is strict: unknown keys, bad ids (outfits, goods, seeds, crops, buildings, tools, activities, blocks,
   regions, dishes), a block of other than 9 plots, an unsorted bond key, an Uma home off the roster or past the beds are
   each refused with their path.
