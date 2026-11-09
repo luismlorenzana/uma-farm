@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { newSave, parseSave, parseSavePut, resolveConflict, SAVE_VERSION, SaveParseError, toV2, touched, versionOf, type Save } from './save'
+import { newSaveV2, parseSave, parseSavePut, resolveConflict, SAVE_VERSION, SaveParseError, toV2, touched, versionOf, type Save } from './save'
 import { collectWorker, queueJob, startJob } from './work'
 
 const AT = '2026-11-08T10:00:00.000Z'
@@ -8,7 +8,7 @@ const V1 = { version: 1, account: { uid: 'u1', createdAt: AT, updatedAt: LATER }
 
 /** A save mid-play: a gather running with one queued behind it, an Arms Gem being made, items in the Warehouse. */
 function playing(): Save {
-  let save: Save = { ...newSave('u1', AT), items: { 'copper-ingot': 20, 'copper-ore': 3 } }
+  let save: Save = { ...newSaveV2('u1', AT), items: { 'copper-ingot': 20, 'copper-ore': 3 } }
   save = startJob(save, 'mine', 0, { outfitId: '101' }, 'copper-ore', 3, AT)
   save = queueJob(save, 'mine', 0, { outfitId: '101' }, 'copper-ore', 1, AT)
   save = startJob(save, 'weapon-forge', 2, { outfitId: '202' }, 'weapon-gem-g1', 2, AT)
@@ -17,7 +17,7 @@ function playing(): Save {
 
 describe('save v2', () => {
   it('starts an account with the Wilds empty', () => {
-    expect(newSave('u1', AT)).toEqual({ version: 2, account: { uid: 'u1', createdAt: AT, updatedAt: AT }, umas: {}, items: {}, buildings: {}, work: {} })
+    expect(newSaveV2('u1', AT)).toEqual({ version: 2, account: { uid: 'u1', createdAt: AT, updatedAt: AT }, umas: {}, items: {}, buildings: {}, work: {} })
     expect(SAVE_VERSION).toBe(2)
   })
 
@@ -39,19 +39,19 @@ describe('save v2', () => {
   })
 
   it('never moves updatedAt while parsing', () => {
-    expect(parseSave({ ...newSave('u1', AT), account: V1.account }).account.updatedAt).toBe(LATER)
+    expect(parseSave({ ...newSaveV2('u1', AT), account: V1.account }).account.updatedAt).toBe(LATER)
   })
 
   it('moves updatedAt only on a change', () => {
-    expect(touched(newSave('u1', AT), LATER).account).toEqual({ uid: 'u1', createdAt: AT, updatedAt: LATER })
-    const started = startJob(newSave('u1', AT), 'mine', 0, { outfitId: '101' }, 'copper-ore', 1, LATER)
+    expect(touched(newSaveV2('u1', AT), LATER).account).toEqual({ uid: 'u1', createdAt: AT, updatedAt: LATER })
+    const started = startJob(newSaveV2('u1', AT), 'mine', 0, { outfitId: '101' }, 'copper-ore', 1, LATER)
     expect(started.account.updatedAt).toBe(LATER)
     expect(collectWorker(started, '101', '2026-11-08T12:00:00.000Z').save.account.updatedAt).toBe('2026-11-08T12:00:00.000Z')
   })
 
   it('refuses a newer version, unknown keys, bad ids and bad rows, saying where', () => {
-    const save = newSave('u1', AT)
-    expect(() => parseSave({ version: 3, account: {} })).toThrow(/newer than this app/)
+    const save = newSaveV2('u1', AT)
+    expect(() => parseSave({ version: 4, account: {} })).toThrow(/newer than this app/)
     expect(() => parseSave({ ...save, extra: 1 })).toThrow(/unknown keys extra/)
     expect(() => parseSave({ version: 1, account: { uid: 'u1', createdAt: 'soon', updatedAt: AT } })).toThrow(SaveParseError)
     expect(() => parseSave(null)).toThrow(/save.version/)
@@ -73,7 +73,7 @@ describe('save v2', () => {
   })
 
   it('keeps the save changed last, and this device on a tie', () => {
-    const early = newSave('u1', AT)
+    const early = newSaveV2('u1', AT)
     const late = touched(early, LATER)
     expect(resolveConflict(early, late)).toBe(late)
     expect(resolveConflict(late, early)).toBe(late)
@@ -82,7 +82,7 @@ describe('save v2', () => {
   })
 
   it('parses an upload, saying which version was sent', () => {
-    const save = newSave('u1', AT)
+    const save = newSaveV2('u1', AT)
     expect(parseSavePut({ baseRevision: 3, save })).toEqual({ baseRevision: 3, save, sentVersion: 2 })
     expect(parseSavePut({ baseRevision: 0, save: V1 })).toEqual({ baseRevision: 0, save: parseSave(V1), sentVersion: 1 })
     expect(() => parseSavePut({ baseRevision: -1, save })).toThrow(/body.baseRevision/)

@@ -1,17 +1,17 @@
 // What one sync round should do, as a pure decision (copied from uma-rpg at 30a322a; its D32): adopt the server's save,
 // push ours, or nothing.
-import { resolveConflict, type Save, type SaveEnvelope } from '@farm/domain'
+import { resolveConflict, type SaveEnvelope, type StoredSave } from '@farm/domain'
 
 export interface LocalState {
   revision: number
-  save: Save | null
+  save: StoredSave | null
   dirty: boolean
 }
 
 export type SyncStep =
   /** `replacesUnsynced`: this device holds changes the server never got, so a safety copy comes first. */
-  | { kind: 'adopt'; envelope: SaveEnvelope & { save: Save }; replacesUnsynced: boolean }
-  | { kind: 'push'; baseRevision: number; save: Save }
+  | { kind: 'adopt'; envelope: SaveEnvelope & { save: StoredSave }; replacesUnsynced: boolean }
+  | { kind: 'push'; baseRevision: number; save: StoredSave }
   | { kind: 'none' }
 
 export function reconcile(local: LocalState, remote: SaveEnvelope): SyncStep {

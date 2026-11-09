@@ -4,11 +4,11 @@ import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
 import { ShelfView } from '@luismlorenzana/uma-kit/places'
 import { ItemIcon } from '../../items/ItemIcon'
 import { materialPair } from '../../items/words'
-import { useGame } from '../../save/game'
+import { useWildsSave } from '../../save/game'
 import { warehouseView, type Stock } from './warehouse-shelves'
 
 export default function WarehousePage() {
-  const save = useGame((s) => s.save)
+  const save = useWildsSave()
   const leave = useLeave()
   if (!save) return null
   const { shelves, items, header } = warehouseView(save)

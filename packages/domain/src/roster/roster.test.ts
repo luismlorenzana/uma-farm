@@ -3,7 +3,7 @@
 import type { Outfit } from '@luismlorenzana/uma-data'
 import { syntheticMasterData } from '@luismlorenzana/uma-data/testing'
 import { describe, expect, it } from 'vitest'
-import { newSave, type Save } from '../save/save'
+import { newSaveV2, type Save } from '../save/save'
 import { startJob } from '../save/work'
 import { farmRoster, isOutfitId, rosterContext, tradeLine } from './roster'
 
@@ -30,7 +30,7 @@ describe('the roster (FM6, FM7)', () => {
 
   it('keeps each Uma to her trade\'s places, with the whole roster counting for the open shop', () => {
     const context = rosterContext(farmRoster({ outfits: OUTFITS }))
-    const save: Save = { ...newSave('u1', AT), items: { carrot: 1 } }
+    const save: Save = { ...newSaveV2('u1', AT), items: { carrot: 1 } }
     // The Front runner works the Mine, not the Forest.
     expect(startJob(save, 'mine', 0, { outfitId: '900201' }, 'copper-ore', 1, AT, context).work['900201']?.slot).toEqual({ building: 'mine', slot: 0 })
     expect(() => startJob(save, 'forest', 0, { outfitId: '900201' }, 'pine-log', 1, AT, context)).toThrow('Another trade')
@@ -44,7 +44,7 @@ describe('the roster (FM6, FM7)', () => {
 
   it('lets any outfit on the roster work, and no other', () => {
     const context = rosterContext(farmRoster({ outfits: OUTFITS }))
-    const save = newSave('u1', AT)
+    const save = newSaveV2('u1', AT)
     const started = startJob(save, 'mine', 0, { outfitId: '900201' }, 'copper-ore', 1, AT, context)
     expect(started.umas).toEqual({ 900201: { craft: { level: 1, exp: 0 } } })
     expect(() => startJob(save, 'mine', 0, { outfitId: '123456' }, 'copper-ore', 1, AT, context)).toThrow()

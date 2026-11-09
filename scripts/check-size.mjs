@@ -8,7 +8,8 @@ import { gzipSync } from 'node:zlib'
 
 export const MAIN_JS_BUDGET = 180_000
 /** Modules that must load on demand (F5): the Hub map's Phaser scene, which uma-kit imports only when a map mounts, and the
- * Wilds' screens, which the router loads with React.lazy. Paths match a module id exactly or as its suffix. */
+ * Wilds' screens, which the router loads with React.lazy; and the loop's home and boot with its migration (F17). Paths
+ * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
   'phaser/dist/phaser.esm.js',
   '@luismlorenzana/uma-kit/dist/hub/scene/createHubGame.js',
@@ -16,6 +17,9 @@ export const LAZY_MODULES = [
   'src/wilds/WildsScreen.tsx',
   'src/places/work/WorkPage.tsx',
   'src/places/warehouse/WarehousePage.tsx',
+  'src/loop/LoopHome.tsx',
+  'src/loop/boot.ts',
+  'domain/src/save/migrate-v3.ts',
 ]
 
 export function entrySrc(html) {

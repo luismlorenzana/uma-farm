@@ -2,9 +2,12 @@
 // refusal changes nothing; jobs settle from the clock after the app reopens. A fake IndexedDB, a server that's down (the
 // changes stay on the device) and a fake clock. Invented outfit ids only.
 import 'fake-indexeddb/auto'
-import { newSave, SaveRuleError, slotJobOf, type Save } from '@farm/domain'
+import { newSaveV2, SaveRuleError, slotJobOf, type Save } from '@farm/domain'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { albumFixture } from '../album/testing'
+
+// The Wilds' build: the loop is off (F17, D29).
+vi.stubEnv('VITE_FARM_LOOP', '0')
 
 vi.mock('../api/client', async () => {
   const actual = await vi.importActual<typeof import('../api/client')>('../api/client')
@@ -15,7 +18,7 @@ const { boot, collectEverything, collectWork, commit, editWorkQueue, recallWork,
 const { db } = await import('./db')
 
 const T0 = Date.parse('2026-11-08T12:00:00.000Z')
-const save = (): Save => useGame.getState().save!
+const save = (): Save => useGame.getState().save as Save
 const at = (minutes: number) => vi.setSystemTime(T0 + minutes * 60_000)
 
 beforeEach(async () => {
@@ -83,6 +86,6 @@ describe('the work actions', () => {
     expect(workContext(view.roster)).toBe(context)
     expect(context.tradeOf?.('81001')).toBe('physical')
     expect(context.roster?.has('81006')).toBe(true)
-    expect(newSave('u1', new Date(T0).toISOString()).work).toEqual({})
+    expect(newSaveV2('u1', new Date(T0).toISOString()).work).toEqual({})
   })
 })

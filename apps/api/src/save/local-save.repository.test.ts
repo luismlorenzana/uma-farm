@@ -1,7 +1,7 @@
 import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { newSave, touched, SAVE_VERSION as V } from '@farm/domain'
+import { newSave, newSaveV2, touched, SAVE_VERSION as V } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { LocalSaveRepository } from './local-save.repository'
 import { RevisionConflict } from './save.repository'
@@ -14,10 +14,10 @@ describe('the local save store', () => {
   it('starts empty, stores revision 1, then refuses a stale write with what is stored', async () => {
     const repo = new LocalSaveRepository(await file())
     expect(await repo.load('u')).toEqual({ revision: 0, save: null })
-    const first = await repo.put('u', 0, newSave('u', NOW), V)
+    const first = await repo.put('u', 0, newSaveV2('u', NOW), V)
     expect(first.revision).toBe(1)
     await repo.put('u', 1, touched(first.save!, LATER), V)
-    const stale = repo.put('u', 1, newSave('u', NOW), V)
+    const stale = repo.put('u', 1, newSaveV2('u', NOW), V)
     await expect(stale).rejects.toBeInstanceOf(RevisionConflict)
     const error = await stale.then(() => null, (e: unknown) => e)
     if (!(error instanceof RevisionConflict)) throw new Error('expected a RevisionConflict')
@@ -28,9 +28,10 @@ describe('the local save store', () => {
 
   it('refuses a write from an older save version, even at the right revision', async () => {
     const path = await file()
-    await writeFile(path, JSON.stringify({ u: { revision: 1, save: { ...newSave('u', NOW), version: V + 1 } } }))
+    await writeFile(path, JSON.stringify({ u: { revision: 1, save: newSave('u', NOW) } }))
     const repo = new LocalSaveRepository(path)
-    await expect(repo.put('u', 1, newSave('u', NOW), V)).rejects.toThrow()
+    await expect(repo.put('u', 1, newSaveV2('u', NOW), V)).rejects.toBeInstanceOf(RevisionConflict)
+    expect((await repo.load('u')).save).toEqual(newSave('u', NOW))
   })
 
   it('keeps a refused upload beside the file', async () => {

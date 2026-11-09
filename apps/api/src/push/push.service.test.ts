@@ -1,6 +1,6 @@
 // The tick (copied from uma-rpg's push.service.test.ts at 30a322a and cut, F6): it never reads a save, only the schedule
 // the app sent. Due, not due, a dead subscription, and what a tick writes. Invented data only.
-import { newSave, pushSchedule, startJob, type PushEntry } from '@farm/domain'
+import { newSaveV2, pushSchedule, startJob, type PushEntry } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { MemoryPushRepository, type PushRepository, type Subscription } from './push.repository'
 import type { PushSender, SendResult } from './push.sender'
@@ -98,7 +98,7 @@ describe('push tick (uma-rpg D63, the farm F6)', () => {
 
   it("announces the app's own schedule from a real job, when its slot goes idle", async () => {
     // An invented outfit at Craft Lv1 mining one ore: the schedule the app would send on its next sync.
-    const save = startJob(newSave('u', new Date(T0).toISOString()), 'mine', 0, { outfitId: '101' }, 'copper-ore', 1, new Date(T0).toISOString())
+    const save = startJob(newSaveV2('u', new Date(T0).toISOString()), 'mine', 0, { outfitId: '101' }, 'copper-ore', 1, new Date(T0).toISOString())
     const schedule = pushSchedule(save, T0)
     expect(schedule).toHaveLength(1)
     const { push, sent } = setup()

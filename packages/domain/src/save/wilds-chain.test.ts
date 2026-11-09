@@ -6,7 +6,7 @@ import { gradeUnlockLevel } from '../items/catalog'
 import { lineItemId, MATERIAL_LINES, type MaterialLine } from '../items/lines'
 import { MADE_IDENTITIES } from '../items/made-id'
 import { madeRecipeV4 } from '../items/made-v4'
-import { newSave, type Save } from './save'
+import { newSaveV2, type Save } from './save'
 import { collectWorker, startJob } from './work'
 
 const T0 = Date.parse('2026-11-08T00:00:00.000Z')
@@ -23,7 +23,7 @@ const madeAt = (line: MaterialLine, grade: number) =>
   MADE_IDENTITIES.find((m) => places(line).make.made.includes(m.line) && m.grade === grade)!
 
 /** Her at a Craft Level, everything else empty. */
-const at = (level: number): Save => ({ ...newSave('u1', iso(T0)), umas: { [UMA]: { craft: { level, exp: 0 } } } })
+const at = (level: number): Save => ({ ...newSaveV2('u1', iso(T0)), umas: { [UMA]: { craft: { level, exp: 0 } } } })
 
 /** Starts and collects one job a day after it started. */
 function run(save: Save, placeId: string, item: string, count: number, day: number): Save {

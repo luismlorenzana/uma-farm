@@ -1,6 +1,6 @@
 // The production store against an in-memory Firestore: the `farm` database by name, revisions checked in a transaction,
 // the save stored as text, the backup before a newer version first replaces a stored one, and rescues. Invented data only.
-import { newSave, SAVE_VERSION as V } from '@farm/domain'
+import { newSave, newSaveV2, SAVE_VERSION as V } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { FirestoreSaveRepository } from './firestore-save.repository'
 import { RevisionConflict } from './save.repository'
@@ -38,7 +38,7 @@ describe('the Firestore save store', () => {
 
   it('stores revision 1 as text, then refuses a stale write and an older client', async () => {
     const repo = new FirestoreSaveRepository('farm')
-    const save = newSave('u', NOW)
+    const save = newSaveV2('u', NOW)
     expect(await repo.put('u', 0, save, V)).toEqual({ revision: 1, save })
     expect(store.get('saves/u')).toEqual({ revision: 1, save: JSON.stringify(save), updatedAt: SERVER_TIME })
     expect(await repo.load('u')).toEqual({ revision: 1, save })
@@ -60,6 +60,22 @@ describe('the Firestore save store', () => {
     store.delete('saveBackups/u-v1')
     await repo.put('u', 4, loaded.save!, V)
     expect(store.has('saveBackups/u-v1')).toBe(false)
+  })
+
+  it('backs up a stored v2 document whole before the first v3 write (F17), then refuses a v2 over it', async () => {
+    const repo = new FirestoreSaveRepository('farm')
+    const v2 = newSaveV2('u', NOW)
+    await repo.put('u', 0, v2, 2)
+    const stored = structuredClone(store.get('saves/u'))
+    const v3 = newSave('u', NOW)
+    expect(await repo.put('u', 1, v3, 3)).toEqual({ revision: 2, save: v3 })
+    expect(store.get('saveBackups/u-v2')).toEqual({ ...stored, backedUpAt: SERVER_TIME })
+    expect(await repo.load('u')).toEqual({ revision: 2, save: v3 })
+    store.delete('saveBackups/u-v2')
+    await repo.put('u', 2, v3, 3)
+    expect(store.has('saveBackups/u-v2')).toBe(false)
+    await expect(repo.put('u', 3, v2, 2)).rejects.toBeInstanceOf(RevisionConflict)
+    expect((await repo.load('u')).save).toEqual(v3)
   })
 
   it('keeps a refused upload in saveRescues, newest only', async () => {

@@ -1,10 +1,11 @@
 import { BadRequestException, Body, ConflictException, Controller, Get, Inject, Logger, Put } from '@nestjs/common'
-import { parseSavePut, SaveParseError, type SaveEnvelope } from '@farm/domain'
+import { parseSavePut, SaveParseError, versionOf, type SaveEnvelope } from '@farm/domain'
 import { CurrentUid } from '@luismlorenzana/uma-server/auth'
 import { RevisionConflict, SAVE_REPOSITORY, type SaveRepository } from './save.repository'
 
 // GET and PUT /api/save, behind the owner guard (copied from uma-rpg at 30a322a, F3). The server stores what the app sent
-// and never edits a save (FM10).
+// and never edits a save (FM10). While M4 is dark it takes v2 and v3 as sent (F17, D29); an upload older than what's stored
+// (a Wilds client after the loop's v3) is refused with a 409 and kept in `saveRescues`.
 @Controller('save')
 export class SaveController {
   private readonly logger = new Logger(SaveController.name)
@@ -34,7 +35,11 @@ export class SaveController {
     try {
       return await this.saves.put(uid, request.baseRevision, request.save, request.sentVersion)
     } catch (err) {
-      if (err instanceof RevisionConflict) throw new ConflictException({ message: 'revision conflict', current: err.current })
+      if (err instanceof RevisionConflict) {
+        // A stale revision just syncs again; an older version may hold play that can never be uploaded, so it's kept.
+        if (request.sentVersion < versionOf(err.current.save)) await this.keepRefused(uid, body, new Error(`save version ${request.sentVersion} is older than the stored ${versionOf(err.current.save)}`))
+        throw new ConflictException({ message: 'revision conflict', current: err.current })
+      }
       await this.keepRefused(uid, body, err)
       throw err
     }

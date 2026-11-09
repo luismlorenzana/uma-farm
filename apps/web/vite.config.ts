@@ -103,6 +103,7 @@ export default defineConfig(({ mode }) => {
     },
     preview: { port: 5194 },
     build: { target: 'es2022', manifest: true },
-    test: { environment: 'jsdom', maxWorkers: 2 },
+    // Vitest plays the loop (F17, D29); the Wilds' tests turn it off with `vi.stubEnv`.
+    test: { environment: 'jsdom', maxWorkers: 2, env: { VITE_FARM_LOOP: '1' } },
   }
 })

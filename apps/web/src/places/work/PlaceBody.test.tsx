@@ -1,6 +1,6 @@
 // A place's page as rendered (F5): uma-kit's four slot rows over the save, a running job's row, the header's line and
 // help, no speed-up control (no Speed Tickets), and the quick look. Invented outfits and a fake clock.
-import { newSave, rosterContext, startJob, type Save } from '@farm/domain'
+import { newSaveV2, rosterContext, startJob, type Save } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router'
@@ -25,7 +25,7 @@ afterEach(() => vi.unstubAllGlobals())
 
 async function render(placeId: string, peek = false) {
   const { view } = await albumFixture()
-  let save: Save = { ...newSave('u1', NOW), items: { 'copper-ore': 2 } }
+  let save: Save = { ...newSaveV2('u1', NOW), items: { 'copper-ore': 2 } }
   save = startJob(save, 'mine', 0, { outfitId: '81001' }, 'copper-ore', 2, NOW, rosterContext(view.roster))
   const now = Date.parse(NOW) + 5 * 60_000
   return html(
@@ -60,8 +60,8 @@ describe('a place\'s page', () => {
   it('opens a place with no Uma of its trade to everyone', async () => {
     const { view } = await albumFixture([['front'], ['pace']])
     const page = await html(
-      <MemoryRouter><FarmWorkProvider view={view} save={newSave('u1', NOW)} now={Date.parse(NOW)}>
-        <PlaceBody view={view} save={newSave('u1', NOW)} now={Date.parse(NOW)} placeId="lapidary" />
+      <MemoryRouter><FarmWorkProvider view={view} save={newSaveV2('u1', NOW)} now={Date.parse(NOW)}>
+        <PlaceBody view={view} save={newSaveV2('u1', NOW)} now={Date.parse(NOW)} placeId="lapidary" />
       </FarmWorkProvider></MemoryRouter>,
     )
     expect(page).toContain('Open shop: anyone works here')

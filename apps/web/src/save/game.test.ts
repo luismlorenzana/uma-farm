@@ -1,7 +1,10 @@
 // The store against an in-memory server with the API's revision rules, and a fake IndexedDB. Invented data only.
 import 'fake-indexeddb/auto'
-import { newSave, SAVE_VERSION, startJob, touched, type PushEntry, type Save, type SaveEnvelope } from '@farm/domain'
+import { newSaveV2, SAVE_VERSION, startJob, touched, type PushEntry, type Save, type SaveEnvelope } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+// The Wilds' build: the loop is off (F17, D29). loop-boot.test.ts plays the loop's.
+vi.stubEnv('VITE_FARM_LOOP', '0')
 
 const server: { envelope: SaveEnvelope; puts: number; down: boolean; schedules: PushEntry[][]; refuseSchedule: boolean } = {
   envelope: { revision: 0, save: null }, puts: 0, down: false, schedules: [], refuseSchedule: false,
@@ -62,7 +65,7 @@ describe('the store', () => {
   })
 
   it("adopts the server's save on a fresh device, and keeps it on the device", async () => {
-    server.envelope = { revision: 4, save: newSave('u1', T0) }
+    server.envelope = { revision: 4, save: newSaveV2('u1', T0) }
     await boot('u1')
     expect(useGame.getState()).toMatchObject({ status: 'ready', revision: 4, dirty: false })
     resetGame()
@@ -79,7 +82,7 @@ describe('the store', () => {
   })
 
   it("never reads another account's device save", async () => {
-    server.envelope = { revision: 2, save: newSave('u1', T0) }
+    server.envelope = { revision: 2, save: newSaveV2('u1', T0) }
     await boot('u1')
     resetGame()
     server.envelope = { revision: 0, save: null } // the API keys saves by uid: u2 has none
@@ -88,12 +91,12 @@ describe('the store', () => {
   })
 
   it('keeps a safety copy before a newer save replaces unsynced changes', async () => {
-    server.envelope = { revision: 1, save: newSave('u1', T0) }
+    server.envelope = { revision: 1, save: newSaveV2('u1', T0) }
     await boot('u1')
     server.down = true
     await commit(touched(useGame.getState().save!, T1))
     server.down = false
-    server.envelope = { revision: 2, save: touched(newSave('u1', T0), T2) }
+    server.envelope = { revision: 2, save: touched(newSaveV2('u1', T0), T2) }
     await syncNow()
     expect(useGame.getState()).toMatchObject({ revision: 2, dirty: false, save: { account: { updatedAt: T2 } } })
     expect(useGame.getState().replacedAt).not.toBeNull()
@@ -106,9 +109,9 @@ describe('the store', () => {
   })
 
   it('pushes over a server that moved on when this device changed last', async () => {
-    server.envelope = { revision: 1, save: newSave('u1', T0) }
+    server.envelope = { revision: 1, save: newSaveV2('u1', T0) }
     await boot('u1')
-    server.envelope = { revision: 2, save: touched(newSave('u1', T0), T1) }
+    server.envelope = { revision: 2, save: touched(newSaveV2('u1', T0), T1) }
     await commit(touched(useGame.getState().save!, T2))
     await syncNow()
     expect(server.envelope).toMatchObject({ revision: 3, save: { account: { updatedAt: T2 } } })
@@ -132,7 +135,7 @@ describe('the push schedule (F6)', () => {
     await new Promise((r) => setTimeout(r, 0))
     expect(server.schedules).toHaveLength(1)
     const now = new Date().toISOString()
-    await commit(startJob(useGame.getState().save!, 'mine', 0, { outfitId: '101' }, 'copper-ore', 1, now))
+    await commit(startJob(useGame.getState().save as Save, 'mine', 0, { outfitId: '101' }, 'copper-ore', 1, now))
     server.refuseSchedule = true
     await syncNow()
     expect(useGame.getState().sync).toBe('synced')

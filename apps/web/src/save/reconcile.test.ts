@@ -1,11 +1,11 @@
-import { newSave, touched } from '@farm/domain'
+import { newSaveV2, touched } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { reconcile } from './reconcile'
 
 const T0 = '2026-11-08T12:00:00.000Z'
 const T1 = '2026-11-08T13:00:00.000Z'
 const T2 = '2026-11-08T14:00:00.000Z'
-const base = newSave('u1', T0)
+const base = newSaveV2('u1', T0)
 
 describe('one sync round', () => {
   it('pushes a first local save to an empty server', () => {

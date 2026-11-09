@@ -2,13 +2,13 @@
 // provider over the save at the clock, then the place's body. The clock ticks every 15 s and on focus, so jobs settle on
 // open, on return and while the page is open; finished items wait for Collect.
 import { MasterGate } from '../../master/MasterGate'
-import { useGame } from '../../save/game'
+import { useWildsSave } from '../../save/game'
 import { useNow } from '../../shell/useNow'
 import { FarmWorkProvider } from './FarmWork'
 import { PlaceBody, PlacePeek } from './PlaceBody'
 
 export default function WorkPage({ placeId }: { placeId: string }) {
-  const save = useGame((s) => s.save)
+  const save = useWildsSave()
   const now = useNow(15_000)
   return (
     <MasterGate>
@@ -22,7 +22,7 @@ export default function WorkPage({ placeId }: { placeId: string }) {
 }
 
 export function WorkPeek({ placeId }: { placeId: string }) {
-  const save = useGame((s) => s.save)
+  const save = useWildsSave()
   const now = useNow(15_000)
   return (
     <MasterGate>

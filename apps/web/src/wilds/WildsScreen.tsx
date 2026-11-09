@@ -12,7 +12,7 @@ import { HelpButton, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { workView, type WorkView } from '@luismlorenzana/uma-kit/work'
 import { lazy, Suspense, useState } from 'react'
 import { Navigate, useLocation, useSearchParams } from 'react-router'
-import { collectEverything, useGame } from '../save/game'
+import { collectEverything, useWildsSave } from '../save/game'
 import { useNow } from '../shell/useNow'
 import { readySlots } from './ready'
 import { SOON_PLACES, soonPlace, type SoonPlace } from './soon'
@@ -88,7 +88,7 @@ function WildsHelp() {
 }
 
 function WildsScreen({ peek }: { peek: Place | SoonPlace | undefined }) {
-  const save = useGame((s) => s.save)
+  const save = useWildsSave()
   const now = useNow(15_000)
   const [params] = useSearchParams()
   const location = useLocation()
