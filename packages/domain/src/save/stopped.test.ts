@@ -1,7 +1,7 @@
 // A queue that stops (F5): it stops when its turn comes and the Warehouse can't cover it, which the screens see by
 // settling. Dismiss and Restart work on that settled stop even before any change has stored it.
 import { describe, expect, it } from 'vitest'
-import { newSave, type Save } from './save'
+import { newSaveV2, type Save } from './save'
 import { dismissStopped, queueJob, restartStopped, settleWork, startJob } from './work'
 
 const T0 = Date.parse('2026-11-08T12:00:00.000Z')
@@ -10,7 +10,7 @@ const UMA = '101'
 
 /** One Copper Ore left after a ×1 job, then ×2 queued behind it: the queue stops when its turn comes. */
 function stopping(): Save {
-  let save: Save = { ...newSave('u1', iso(T0)), items: { 'copper-ore': 2 } }
+  let save: Save = { ...newSaveV2('u1', iso(T0)), items: { 'copper-ore': 2 } }
   save = startJob(save, 'mine-workbench', 0, { outfitId: UMA }, 'copper-ingot', 1, iso(T0))
   return queueJob(save, 'mine-workbench', 0, { outfitId: UMA }, 'copper-ingot', 2, iso(T0))
 }
@@ -30,7 +30,7 @@ describe('a stopped queue', () => {
     expect(settleWork(dismissed, later).work[UMA]?.dropped ?? null).toBeNull()
     expect(dismissed.account.updatedAt).toBe(later)
     // Nothing stopped: nothing changes.
-    const fresh = newSave('u1', iso(T0))
+    const fresh = newSaveV2('u1', iso(T0))
     expect(dismissStopped(fresh, UMA, later)).toBe(fresh)
   })
 

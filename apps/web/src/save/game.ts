@@ -2,12 +2,18 @@
 // (Dexie) and in a Zustand store; every change writes both and schedules a background sync. Play never waits on the
 // network once a device save exists. F4's rules commit through `commit`; F5's work actions through `edit`. Every sync
 // also sends the push schedule (F6), and so does the app going to the background.
+//
+// While M4 is dark (F17, D29) the store holds what's stored, the Wilds' v2 or the loop's v3. The Wilds' build plays v2 and
+// stops at a v3; the loop's build carries every v2 it meets into v3 (`loop/boot.ts`), on boot, on sync and on a restore,
+// and commits it without moving `updatedAt`.
 import {
-  collectAll, collectWorker, dismissStopped, editWorkerQueue, newSave, parseSave, recallWorker, repeatJob, restartStopped, rosterContext,
-  startJob, touched, type Collected, type FarmOutfit, type FarmQueueInput, type Save, type WorkContext,
+  collectAll, collectWorker, dismissStopped, editWorkerQueue, newSaveV2, parseSave, recallWorker, repeatJob, restartStopped, rosterContext,
+  startJob, touched, type Collected, type FarmOutfit, type FarmQueueInput, type Save, type SaveEnvelope, type SaveV3, type StoredSave,
+  type WorkContext,
 } from '@farm/domain'
 import { create } from 'zustand'
 import { conflictEnvelope, saveApi } from '../api/client'
+import { loopOn } from '../app/loop'
 import { masterRoster } from '../master/master'
 import { resetSchedule, sendSchedule } from '../push/push'
 import { addSafetyCopy, readSafetyCopy, readSaveRow, removeSafetyCopy, writeSaveRow } from './db'
@@ -19,7 +25,8 @@ export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'offline' | 'error'
 export interface GameState {
   uid: string | null
   status: GameStatus
-  save: Save | null
+  /** The Wilds' v2 or the loop's v3 (F17): `useWildsSave` and `useLoopSave` read the one their screens play. */
+  save: StoredSave | null
   /** The server revision the save is based on (0: never synced). */
   revision: number
   dirty: boolean
@@ -32,6 +39,40 @@ export interface GameState {
 const INITIAL: GameState = { uid: null, status: 'idle', save: null, revision: 0, dirty: false, sync: 'idle', lastSyncedAt: null, replacedAt: null }
 
 export const useGame = create<GameState>(() => INITIAL)
+
+/** The Wilds' save, or null while the loop plays. */
+export const wildsSave = (save: StoredSave | null): Save | null => (save?.version === 2 ? save : null)
+export const useWildsSave = (): Save | null => useGame((s) => wildsSave(s.save))
+/** The loop's save, or null in the Wilds' build. */
+export const useLoopSave = (): SaveV3 | null => useGame((s) => (s.save?.version === 3 ? s.save : null))
+
+/** The Wilds' build meeting a loop save: it can't play it, and nothing writes over it. */
+export const LOOP_SAVE_WORDS = 'This save is from a newer version of the farm.'
+
+/** A stored save as this build plays it: the Wilds' v2 as it is (a v3 stops them), or the loop's v3, migrating a v2 and
+ * filling the start once master data has loaded. The same object comes back when nothing changed. */
+async function playable(save: StoredSave): Promise<StoredSave> {
+  if (!loopOn()) {
+    if (save.version !== 2) throw new Error(LOOP_SAVE_WORDS)
+    return save
+  }
+  const { toLoopSave } = await import('../loop/boot')
+  return toLoopSave(save)
+}
+
+/** A server envelope as this build plays it, and whether its save changed on the way (a v2 the loop migrated). */
+async function playableEnvelope(envelope: SaveEnvelope): Promise<SaveEnvelope & { migrated: boolean }> {
+  if (!envelope.save) return { ...envelope, migrated: false }
+  const save = await playable(envelope.save)
+  return { revision: envelope.revision, save, migrated: save !== envelope.save }
+}
+
+/** A new account: the Wilds' empty v2, or the loop's day 1. */
+async function freshSave(uid: string): Promise<StoredSave> {
+  if (!loopOn()) return newSaveV2(uid, nowIso())
+  const { newLoopSave } = await import('../loop/boot')
+  return newLoopSave(uid, nowIso())
+}
 
 const nowIso = () => new Date().toISOString()
 
@@ -50,26 +91,29 @@ export async function boot(uid: string): Promise<void> {
   const state = useGame.getState()
   if (state.uid === uid && state.status !== 'idle') return
   useGame.setState({ ...INITIAL, uid, status: 'booting' })
-  const row = await readSaveRow(uid)
-  if (row) {
-    useGame.setState({ status: 'ready', save: row.save, revision: row.revision, dirty: row.dirty, lastSyncedAt: row.lastSyncedAt ?? null })
-    void syncNow()
-    return
-  }
-  let remote
   try {
-    remote = await saveApi.load()
+    const row = await readSaveRow(uid)
+    if (row) {
+      const save = await playable(row.save)
+      useGame.setState({ status: 'ready', save, revision: row.revision, dirty: row.dirty, lastSyncedAt: row.lastSyncedAt ?? null })
+      // A migration is committed once, as it is: `updatedAt` stays, and the next boot reads the v3.
+      if (save !== row.save) await commit(save)
+      void syncNow()
+      return
+    }
+    const remote = await playableEnvelope(await saveApi.load())
+    if (remote.save) {
+      useGame.setState({ status: 'ready', save: remote.save, revision: remote.revision, dirty: false, sync: 'synced', lastSyncedAt: nowIso() })
+      if (remote.migrated) await commit(remote.save)
+      else await persist()
+      return
+    }
+    useGame.setState({ status: 'ready', revision: remote.revision })
+    await commit(await freshSave(uid))
   } catch (err) {
     useGame.setState({ ...INITIAL })
     throw err
   }
-  if (remote.save) {
-    useGame.setState({ status: 'ready', save: remote.save, revision: remote.revision, dirty: false, sync: 'synced', lastSyncedAt: nowIso() })
-    await persist()
-    return
-  }
-  useGame.setState({ status: 'ready', revision: remote.revision })
-  await commit(newSave(uid, nowIso()))
 }
 
 export function resetGame(): void {
@@ -77,8 +121,9 @@ export function resetGame(): void {
   resetSchedule()
 }
 
-/** Every change goes through here: on screen, on the device, then to the server. */
-export async function commit(save: Save): Promise<void> {
+/** Every change goes through here: on screen, on the device, then to the server. It never stamps `updatedAt`: a player's
+ * change arrives stamped by its rule. */
+export async function commit(save: StoredSave): Promise<void> {
   useGame.setState({ save, dirty: true })
   await persist()
   scheduleSync()
@@ -99,7 +144,7 @@ export function workContext(roster: readonly FarmOutfit[] | null = masterRoster(
 /** Every work action, as uma-rpg's `edit`: the save is read right before the rule runs, so two quick taps each apply to
  * the other's result instead of one overwriting the other. A rule's refusal throws (`SaveRuleError`) and changes nothing. */
 async function edit(change: (save: Save, now: string, context: WorkContext) => Save): Promise<void> {
-  const { save } = useGame.getState()
+  const save = wildsSave(useGame.getState().save)
   if (!save) return
   const next = change(save, nowIso(), workContext())
   if (next !== save) await commit(next)
@@ -120,7 +165,7 @@ export const dismissWork = (outfitId: string) => edit((s, now) => dismissStopped
 
 /** Collects one Uma's finished items, with her Craft EXP. */
 export async function collectWork(outfitId: string): Promise<Collected> {
-  const { save } = useGame.getState()
+  const save = wildsSave(useGame.getState().save)
   if (!save) return { items: 0, exp: 0, levelsUp: 0, done: false }
   const r = collectWorker(save, outfitId, nowIso())
   await commit(r.save)
@@ -129,7 +174,7 @@ export async function collectWork(outfitId: string): Promise<Collected> {
 
 /** Collects every finished job, on these places or everywhere. Nothing ready changes nothing. */
 export async function collectEverything(placeIds?: readonly string[]): Promise<{ items: number; levelsUp: number }> {
-  const { save } = useGame.getState()
+  const save = wildsSave(useGame.getState().save)
   if (!save) return { items: 0, levelsUp: 0 }
   const r = collectAll(save, nowIso(), placeIds)
   if (r.items > 0) await commit(r.save)
@@ -172,7 +217,7 @@ async function syncPass(): Promise<void> {
   if (!start.uid || !start.save) return
   useGame.setState({ sync: 'syncing' })
   try {
-    let remote = await saveApi.load()
+    let remote = await playableEnvelope(await saveApi.load())
     for (let attempt = 0; attempt < 3; attempt++) {
       const local = useGame.getState()
       const step = reconcile(local, remote)
@@ -191,8 +236,10 @@ async function syncPass(): Promise<void> {
             break
           }
         }
-        useGame.setState({ save: step.envelope.save, revision: step.envelope.revision, dirty: false, ...(step.replacesUnsynced ? { replacedAt: nowIso() } : {}) })
+        // A v2 the loop migrated isn't what the server holds: it goes up on the next pass.
+        useGame.setState({ save: step.envelope.save, revision: step.envelope.revision, dirty: remote.migrated, ...(step.replacesUnsynced ? { replacedAt: nowIso() } : {}) })
         await persist()
+        if (remote.migrated) again = true
         break
       }
       try {
@@ -205,7 +252,7 @@ async function syncPass(): Promise<void> {
       } catch (err) {
         const current = conflictEnvelope(err)
         if (!current) throw err
-        remote = current // someone else wrote first: reconcile against what's stored now
+        remote = await playableEnvelope(current) // someone else wrote first: reconcile against what's stored now
       }
     }
     // Changes left unsent (three conflicts in a row) aren't synced; the time says when the server last held everything.
@@ -229,9 +276,9 @@ export async function restoreSafetyCopy(id: number): Promise<boolean> {
   if (!uid || !save) return false
   const copy = await readSafetyCopy(id)
   if (copy?.uid !== uid) return false
-  let restored: Save
+  let restored: StoredSave
   try {
-    restored = parseSave(copy.save)
+    restored = await playable(parseSave(copy.save))
   } catch {
     return false
   }

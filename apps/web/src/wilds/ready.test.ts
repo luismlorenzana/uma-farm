@@ -1,5 +1,5 @@
 // The Ready counts (F5): a place counts each slot with something to collect, finished or partly made; a queue keeps going.
-import { newSave, startJob, type Save } from '@farm/domain'
+import { newSaveV2, startJob, type Save } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { readySlots, readyTotal } from './ready'
 
@@ -8,7 +8,7 @@ const at = (minutes: number) => Date.parse(T0) + minutes * 60_000
 
 describe('the Ready counts', () => {
   it('counts each slot with something to collect, place by place', () => {
-    let save: Save = { ...newSave('u1', T0), items: { 'copper-ore': 2 } }
+    let save: Save = { ...newSaveV2('u1', T0), items: { 'copper-ore': 2 } }
     save = startJob(save, 'mine', 0, { outfitId: '81001' }, 'copper-ore', 2, T0)
     save = startJob(save, 'mine', 1, { outfitId: '81002' }, 'copper-ore', 1, T0)
     save = startJob(save, 'mine-workbench', 0, { outfitId: '81003' }, 'copper-ingot', 2, T0)

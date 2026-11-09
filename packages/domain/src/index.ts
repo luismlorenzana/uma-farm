@@ -1,5 +1,5 @@
 // uma-farm's rules: pure, no I/O. F3 brought save v1; F4 the Wilds' rules, copied from uma-rpg at 30a322a (FM2,
-// docs/technical/wilds-copy.md), and save v2.
+// docs/technical/wilds-copy.md), and save v2; F17 the loop's units, goods and save v3 with its migration.
 export const GAME = 'uma-farm' as const
 
 // The lines, their items and the made items (R2, R4).
@@ -34,3 +34,17 @@ export * from './save/save'
 export * from './save/rules'
 export * from './save/work'
 export * from './save/notify'
+
+// The loop (F17, core spec CS1, CS3, CS32, CS53, CS54): the units, the goods' ids, save v3, its Warehouse by stars and
+// the migration from v2. Dark until F24 (D29).
+export * from './farm/calendar'
+export * from './farm/draw'
+export * from './farm/round'
+export * from './farm/ranks'
+export * from './farm/farm'
+export * from './goods/ids'
+export * from './save/v3'
+export * from './save/parse-v3'
+export * from './save/warehouse'
+export * from './save/gold'
+export * from './save/migrate-v3'

@@ -2,7 +2,7 @@
 // revision and a dirty flag. Safety copies sit beside it: a save kept on this device before anything replaced it, the
 // newest five for each account. Dexie loads only when device I/O starts.
 import type { Dexie, Table } from 'dexie'
-import { parseSave, type Save } from '@farm/domain'
+import { parseSave, type StoredSave } from '@farm/domain'
 
 export interface SaveRow {
   id: 'main'
@@ -10,7 +10,8 @@ export interface SaveRow {
   uid: string
   /** The server revision this save is based on (0: never synced). */
   revision: number
-  save: Save
+  /** As stored: the Wilds' v2 or the loop's v3 (F17). */
+  save: StoredSave
   /** Changed since the last successful sync. */
   dirty: boolean
   /** When the server last held everything here, so "not backed up since" survives a restart. */

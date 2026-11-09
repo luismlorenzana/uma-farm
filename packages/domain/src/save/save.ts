@@ -1,9 +1,12 @@
 // The farm's save (FM16, F3): local first in Dexie, synced through `farm-api`. Nothing carries over from uma-rpg (P4).
 // The shape, its parse and the conflict rule are copied from uma-rpg's `save/save.ts` at 30a322a (D32, D45, D260), cut to
-// the farm's one account. Every change to the shape is a new version with its migration (N5): `parseSave` takes any
-// version the farm ever wrote and returns the current one, and never moves `account.updatedAt`.
+// the farm's one account. Every change to the shape is a new version with its migration (N5), and no migration ever moves
+// `account.updatedAt`.
 //
 // v1 (F3): the account. v2 (F4, FW5): the Wilds' world beside it: each Uma's Craft Level, the Warehouse and the work rows.
+// v3 (F17, CS53): the farm's own loop (`v3.ts`). M4 is dark-launched (D29): production plays the Wilds on v2 until F24, so
+// `parseSave` returns what's stored, v2 or v3 (a v1 still becomes v2), and the loop's boot migrates a v2 with master data
+// (`migrate-v3.ts`), which the API's parse doesn't have.
 import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkOutput, WorkRow } from '@luismlorenzana/uma-work'
 import type { JobKind } from '../economy/jobs'
 import { maxJobCount, PROFESSION_MAX_LEVEL } from '../economy/pacing'
@@ -13,9 +16,16 @@ import { isStockItemId } from '../items/stock-id'
 import { isOutfitId } from '../roster/roster'
 import type { FarmWorkRequest } from '../work/request'
 import type { FarmUma, FarmWorld, ProfessionLevel } from '../work/world'
+import { count, list, object, parseAccount, positive, record, SaveParseError } from './parse'
+import { parseSaveV3 } from './parse-v3'
+import type { SaveV3 } from './v3'
 
-/** The save's version now. */
+export { SaveParseError }
+
+/** The Wilds' save version: what production writes until F24 turns the loop on (D29). */
 export const SAVE_VERSION = 2
+/** The newest version this app reads: v3, built in F17 and live from F24. */
+export const NEWEST_SAVE_VERSION = 3
 
 export interface Account {
   /** The Firebase uid the save belongs to. */
@@ -36,39 +46,33 @@ export interface SaveV2 extends FarmWorld {
   account: Account
 }
 
-/** The save as the app and the API use it: always the current version. */
+/** The Wilds' save, which their code plays: v2 until F24 retires the Wilds. The loop's is `SaveV3`. */
 export type Save = SaveV2
+
+/** A save as stored and synced while M4 is dark: the Wilds' v2 or the loop's v3 (D29). */
+export type StoredSave = SaveV2 | SaveV3
 
 /** What the API stores and returns: the save and its revision (0: nothing stored yet). */
 export interface SaveEnvelope {
   revision: number
-  save: Save | null
+  save: StoredSave | null
 }
 
 /** A save upload: the revision it was based on, the save, and the version the client sent before any migration. */
 export interface SavePut {
   baseRevision: number
-  save: Save
+  save: StoredSave
   /** The API refuses a version older than what it stores (uma-rpg D45). */
   sentVersion: number
 }
 
-export class SaveParseError extends Error {
-  readonly path: string
-  constructor(path: string, message: string) {
-    super(`${path}: ${message}`)
-    this.name = 'SaveParseError'
-    this.path = path
-  }
-}
-
-/** A new account's save: nobody has worked yet, and the Warehouse is empty. */
-export function newSave(uid: string, now: string): Save {
-  return { version: SAVE_VERSION, account: { uid, createdAt: now, updatedAt: now }, umas: {}, items: {}, buildings: {}, work: {} }
+/** A new Wilds account's save: nobody has worked yet, and the Warehouse is empty. The loop's day 1 is `newSave` (v3). */
+export function newSaveV2(uid: string, now: string): SaveV2 {
+  return { version: 2, account: { uid, createdAt: now, updatedAt: now }, umas: {}, items: {}, buildings: {}, work: {} }
 }
 
 /** A save after a player's change at `now`: the only thing that moves `updatedAt`. */
-export const touched = (save: Save, now: string): Save => ({ ...save, account: { ...save.account, updatedAt: now } })
+export const touched = <S extends StoredSave>(save: S, now: string): S => ({ ...save, account: { ...save.account, updatedAt: now } })
 
 /** The world after a player's change, put back in its save at `now` (uma-rpg's `withWorld`). */
 export function withWorld(save: Save, world: FarmWorld, now: string): Save {
@@ -77,7 +81,7 @@ export function withWorld(save: Save, world: FarmWorld, now: string): Save {
 
 /** The conflict rule (uma-rpg D32): when two devices both changed the save, the one changed last wins whole, and a tie
  * keeps this device's. The loser is kept, never dropped: as a safety copy on the device, or in `saveRescues` on the server. */
-export function resolveConflict(local: Save, remote: Save): Save {
+export function resolveConflict<S extends StoredSave>(local: S, remote: S): S {
   return Date.parse(local.account.updatedAt) >= Date.parse(remote.account.updatedAt) ? local : remote
 }
 
@@ -88,42 +92,7 @@ export function toV2(save: SaveV1): SaveV2 {
   return { version: 2, account: save.account, umas: {}, items: {}, buildings: {}, work: {} }
 }
 
-// --- Parsing: explicit, path-reporting, strict on unknown keys so an older client can't half-write a newer save ---------
-
-type Obj = Record<string, unknown>
-
-function object(value: unknown, path: string, keys: readonly string[]): Obj {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new SaveParseError(path, 'expected an object')
-  const extra = Object.keys(value).filter((k) => !keys.includes(k))
-  if (extra.length > 0) throw new SaveParseError(path, `unknown keys ${extra.join(', ')}`)
-  return value as Obj
-}
-
-/** An object whose keys are data (ids), each checked by its caller. */
-function record(value: unknown, path: string): Obj {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new SaveParseError(path, 'expected an object')
-  return value as Obj
-}
-
-function count(value: unknown, path: string): number {
-  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) throw new SaveParseError(path, 'expected a non-negative integer')
-  return value
-}
-
-function timestamp(value: unknown, path: string): string {
-  if (typeof value !== 'string' || Number.isNaN(Date.parse(value))) throw new SaveParseError(path, 'expected an ISO timestamp')
-  return value
-}
-
-function text(value: unknown, path: string): string {
-  if (typeof value !== 'string' || value.length === 0 || value.length > 128) throw new SaveParseError(path, 'expected a non-empty string')
-  return value
-}
-
-function parseAccount(value: unknown, path: string): Account {
-  const o = object(value, path, ['uid', 'createdAt', 'updatedAt'])
-  return { uid: text(o.uid, `${path}.uid`), createdAt: timestamp(o.createdAt, `${path}.createdAt`), updatedAt: timestamp(o.updatedAt, `${path}.updatedAt`) }
-}
+// --- Parsing: explicit, path-reporting, strict on unknown keys (the helpers are `parse.ts`'s) -------------------------
 
 function parseCraft(value: unknown, path: string): ProfessionLevel {
   const v = object(value, path, ['level', 'exp'])
@@ -159,16 +128,6 @@ function parseStock(value: unknown, path: string): Record<string, number> {
 const MAX_QUEUED = 3
 /** The most started entries a row can hold: one running and its queue's finished ones waiting for Collect. */
 const MAX_ENTRIES = MAX_QUEUED + 1
-
-function positive(value: unknown, path: string): number {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) throw new SaveParseError(path, 'expected a positive number')
-  return value
-}
-
-function list(value: unknown, path: string, min: number, max: number): unknown[] {
-  if (!Array.isArray(value) || value.length < min || value.length > max) throw new SaveParseError(path, `expected ${min}–${max} entries`)
-  return value
-}
 
 /** A slot: one of the fifteen places (FL25), four slots each. */
 function parseSlot(value: unknown, path: string): SlotRef {
@@ -303,14 +262,16 @@ function parseV2(value: unknown, path: string): SaveV2 {
   }
 }
 
-/** Parses a save of any version the farm has written and returns the current one: v1 migrates to v2 (`toV2`). A version
- * from a newer app is refused, so an old client can never half-read a newer save. */
-export function parseSave(value: unknown, path = 'save'): Save {
+/** Parses a save of any version the farm has written and returns it at the version stored (D29): v1 still migrates to v2
+ * (`toV2`); v2 stays v2 for the Wilds, and v3 is the loop's. A version from a newer app is refused, so an old client can
+ * never half-read a newer save. */
+export function parseSave(value: unknown, path = 'save'): StoredSave {
   const version = versionOf(value)
-  if (version > SAVE_VERSION) throw new SaveParseError(`${path}.version`, `version ${version} is newer than this app (${SAVE_VERSION})`)
+  if (version > NEWEST_SAVE_VERSION) throw new SaveParseError(`${path}.version`, `version ${version} is newer than this app (${NEWEST_SAVE_VERSION})`)
   if (version === 1) return toV2(parseV1(value, path))
   if (version === 2) return parseV2(value, path)
-  throw new SaveParseError(`${path}.version`, `expected 1–${SAVE_VERSION}`)
+  if (version === 3) return parseSaveV3(value, path)
+  throw new SaveParseError(`${path}.version`, `expected 1–${NEWEST_SAVE_VERSION}`)
 }
 
 /** The body of `PUT /api/save`. */

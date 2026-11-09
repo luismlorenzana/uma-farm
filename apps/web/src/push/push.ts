@@ -1,7 +1,7 @@
 // "Work done" notifications (copied from uma-rpg's apps/web/src/push at 30a322a, its D63; the farm's F6). iOS delivers Web
 // Push only to the Home Screen app (16.4+); the server pushes from Cloud Scheduler's tick, so nothing runs on the phone
 // until a notification arrives. The farm's server never reads the save (FM10): the app sends when each slot goes idle.
-import { pushSchedule, type Save } from '@farm/domain'
+import { pushSchedule, type Save, type StoredSave } from '@farm/domain'
 import { pushApi } from '../api/client'
 
 export type PushState = 'loading' | 'unsupported' | 'install' | 'unavailable' | 'denied' | 'off' | 'on'
@@ -80,9 +80,10 @@ let sentFor: Save | null = null
 
 /** Sends when each slot goes idle (F4's notify rules), once per save: after every sync, and as the app goes to the
  * background, so a job started just before closing the app is announced. Every device sends it, subscribed or not: the
- * newest save is the one that knows what's running. A failure waits for the next sync. */
-export async function sendSchedule(save: Save | null, now = Date.now()): Promise<void> {
-  if (!save || save === sentFor) return
+ * newest save is the one that knows what's running. A failure waits for the next sync. The loop's v3 sends nothing:
+ * with days as turns there is nothing to announce (D25). */
+export async function sendSchedule(save: StoredSave | null, now = Date.now()): Promise<void> {
+  if (!save || save.version !== 2 || save === sentFor) return
   sentFor = save
   try {
     await pushApi.schedule(pushSchedule(save, now))

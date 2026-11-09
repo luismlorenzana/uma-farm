@@ -1,6 +1,6 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { parseSave, versionOf, type Save, type SaveEnvelope } from '@farm/domain'
+import { parseSave, versionOf, type SaveEnvelope, type StoredSave } from '@farm/domain'
 import { EMPTY_ENVELOPE, RevisionConflict, type SaveRepository } from './save.repository'
 
 type FileShape = Record<string, { revision: number; save: unknown }>
@@ -41,7 +41,7 @@ export class LocalSaveRepository implements SaveRepository {
     })
   }
 
-  put(uid: string, baseRevision: number, save: Save, sentVersion: number): Promise<SaveEnvelope> {
+  put(uid: string, baseRevision: number, save: StoredSave, sentVersion: number): Promise<SaveEnvelope> {
     return this.serialize(async () => {
       const data = await this.read()
       const row = data[uid]

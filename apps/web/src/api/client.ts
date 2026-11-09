@@ -1,6 +1,6 @@
 // The API client (copied from uma-rpg at 30a322a): same-origin `/api`, proxied by Vite in dev and rewritten to Cloud Run by
 // Firebase Hosting in production, with the kit's ID token.
-import type { PushEntry, Save, SaveEnvelope } from '@farm/domain'
+import type { PushEntry, SaveEnvelope, StoredSave } from '@farm/domain'
 
 let tokenProvider: () => Promise<string | null> = async () => null
 export function setTokenProvider(fn: () => Promise<string | null>): void {
@@ -34,7 +34,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export const saveApi = {
   load: () => request<SaveEnvelope>('/api/save'),
-  put: (baseRevision: number, save: Save) => request<SaveEnvelope>('/api/save', { method: 'PUT', body: JSON.stringify({ baseRevision, save }) }),
+  put: (baseRevision: number, save: StoredSave) => request<SaveEnvelope>('/api/save', { method: 'PUT', body: JSON.stringify({ baseRevision, save }) }),
 }
 
 /** "Work done" notifications (F6). The schedule is a few dozen bytes, so it may outlive the page (`keepalive`): it's sent as

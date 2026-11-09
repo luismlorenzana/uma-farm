@@ -1,11 +1,11 @@
 // The device's storage: the row, safety copies and an unreadable row. Invented data only.
 import 'fake-indexeddb/auto'
-import { newSave } from '@farm/domain'
+import { newSaveV2 } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { addSafetyCopy, db, readSaveRow, SAFETY_COPIES, safetyCopies } from './db'
 
 const NOW = '2026-11-08T12:00:00.000Z'
-const row = (uid = 'u1') => ({ id: 'main' as const, uid, revision: 4, dirty: true, save: newSave(uid, NOW) })
+const row = (uid = 'u1') => ({ id: 'main' as const, uid, revision: 4, dirty: true, save: newSaveV2(uid, NOW) })
 
 describe('the device save', () => {
   it('reads its own row and no other account’s', async () => {

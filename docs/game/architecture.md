@@ -1,6 +1,6 @@
 # Architecture and technical setup
 
-How uma-farm is built and run, as of F6: save v2, the Wilds' rules in the domain, their screens on the phone ([wilds.md](wilds.md)), and "work done" notifications. Values come from the code and
+How uma-farm is built and run, as of F17: save v2 and the Wilds live, their rules in the domain and their screens on the phone ([wilds.md](wilds.md)), "work done" notifications, and save v3 for the farm's own loop, built and dark until F24 ([the dark launch](#the-dark-launch-f17)). Values come from the code and
 [infrastructure.md](../technical/infrastructure.md), which holds every production value and is the place to change them.
 
 ## The pieces
@@ -21,7 +21,8 @@ How uma-farm is built and run, as of F6: save v2, the Wilds' rules in the domain
         │  POST /api/push/tick every five minutes, with an OIDC token for `farm-push-scheduler`
    Cloud Scheduler `farm-push-tick`
 
-   packages/domain  @farm/domain: the save and the Wilds' rules (copied from uma-rpg, F4); pure TypeScript, shared by web and API
+   packages/domain  @farm/domain: the save (v1–v3) and its migrations, the Wilds' rules (copied from uma-rpg, F4) and the
+                    loop's units and goods (F17); pure TypeScript, shared by web and API
 ```
 
 **The rules of the codebase:**
@@ -37,28 +38,31 @@ How uma-farm is built and run, as of F6: save v2, the Wilds' rules in the domain
 |---|---|---|
 | Entry | `src/main.tsx` | The kit's keys (`farm.`), appearance, uma-art's bar and map art, sign-in, content client, the album's outfit art and the work screens' item icons, and the router |
 | Gates | `src/app/Root.tsx` | The kit's `BootGates`: splash → Google sign-in → boot → the app; the kit's **Update ready · Restart** |
-| Pages | `src/app/router.tsx` | `/` the Wilds (`?peek=<place>` a quick look), `/wilds/<place>` a place's page, `/warehouse` and `/account`, inside the shell; `/wilds` and anything else go to `/`. The Wilds, the place pages and the Warehouse load on demand ([wilds.md](wilds.md)) |
-| Shell | `src/shell/` | The kit's `AppFrame` unchanged (FM18): the account bar with the sync chip, the bottom bar (Wilds with its Ready count, Warehouse, Menu), the menu sheet (`?sheet=menu`: every place with its Ready count, the Warehouse, Account and the build id), and the sync warning |
+| Pages | `src/app/router.tsx` | `/` the Wilds (`?peek=<place>` a quick look), `/wilds/<place>` a place's page, `/warehouse` and `/account`, inside the shell; `/wilds` and anything else go to `/`. The Wilds, the place pages and the Warehouse load on demand ([wilds.md](wilds.md)). The loop's build has `/` (its plain home) and `/account` only |
+| The loop's switch | `src/app/loop.ts` | `loopOn()`: `VITE_FARM_LOOP` is `'1'` (F17). On in the dev server (`.env.development`), Vitest and the `loop` build (`.env.loop`); unset in production. F24 deletes it |
+| The loop | `src/loop/` | Loaded on demand, in the loop's build only: its boot (`toLoopSave`: the migration once master data has loaded, and the temporary picks) and its plain home (the date, the gold, the Umas on the farm with their best rank, the Warehouse's count) until F18's map |
+| Shell | `src/shell/` | The kit's `AppFrame` unchanged (FM18): the account bar with the sync chip, the bottom bar (Wilds with its Ready count, Warehouse, Menu; the loop's build: Farm, Menu), the menu sheet (`?sheet=menu`: every place with its Ready count, the Warehouse, Account and the build id; the loop's build: Account and the build), and the sync warning |
 | The Wilds | `src/wilds/` | The Hub map on uma-kit (`HubMap`), the quick looks, Collect all, the help, the Forge and the Post as placeholders, the Ready counts |
 | Places | `src/places/` | A place's page on uma-kit/work (`work/`: the farm's provider, the slot rows, the job sheet, the What step) and the Warehouse (`warehouse/`) |
 | Picker | `src/album/rows.ts` | Every outfit as a row of uma-kit's album: Craft Level, free or busy, and the Trade, rarity and aptitude facets |
 | Items | `src/items/` | uma-art's item icons placed from the ids (`frames.ts`), and the items' words |
 | Account | `src/home/AccountView.tsx` | The kit's Account page: appearance, the Notifications switch (F6), sign-in, save state, last sync, build, master data's release, safety copies, sign out |
 | Push | `src/push/`, `public/push-sw.js` | The Notifications switch and its "Send a test", the subscription, the schedule sent on every sync, the badge cleared on open; the service worker's push and tap handlers (below) |
-| Save | `src/save/` | The device save in Dexie, the store and its sync engine (below), the work actions (`edit`) and the trade words; every sync sends the push schedule |
-| Master data | `src/master/` | The release's manifest, characters, outfits and art through `/api/master`, cached by hash on the device; the roster (`farmRoster`) and the album's rows; the album art adapter |
+| Save | `src/save/` | The device save in Dexie, the store and its sync engine (below), the work actions (`edit`) and the trade words; every sync sends the push schedule. The store holds the save as stored (`StoredSave`): the Wilds read it through `useWildsSave`, the loop through `useLoopSave` |
+| Master data | `src/master/` | The release's manifest, characters, outfits and art through `/api/master`, cached by hash on the device; the roster (`farmRoster`) and the album's rows; the album art adapter; `masterReady()`, which the loop's boot waits on |
 | PWA | `vite.config.ts` | Portrait, standalone, the icons from `scripts/draw-icons.mjs`; Workbox precaches the app, keeps master data's files for good, and imports `push-sw.js` into the service worker |
 
-Main JS is 155 KB gzip against the 180 KB budget (FM20). Firebase, the Wilds' screens and the Hub map's Phaser scene
-(`createHubGame`, 377 KB gzip) load on demand; `scripts/check-size.mjs`'s `LAZY_MODULES` refuses them in the initial JS.
+Main JS is 161.7 KB gzip against the 180 KB budget (FM20), and 161.9 KB in the loop's build, which `pnpm build` checks
+too. Firebase, the Wilds' screens, the loop's pages and boot, and the Hub map's Phaser scene (`createHubGame`, 377 KB
+gzip) load on demand; `scripts/check-size.mjs`'s `LAZY_MODULES` refuses them in the initial JS.
 
 ## API
 
 | Route | Guard | What |
 |---|---|---|
 | `GET /api/health` | Public | `{ ok, build }`: the deploy's commit |
-| `GET /api/save` | Owner | The stored envelope `{ revision, save }`, or `{ revision: 0, save: null }` |
-| `PUT /api/save` | Owner | `{ baseRevision, save }`: stored as `baseRevision + 1`, or 409 with what's stored |
+| `GET /api/save` | Owner | The stored envelope `{ revision, save }`, or `{ revision: 0, save: null }`; the save at the version stored, v2 or v3 (a v1 reads as v2) |
+| `PUT /api/save` | Owner | `{ baseRevision, save }`, v2 or v3: stored as `baseRevision + 1`, or 409 with what's stored. A save older than the stored one is a 409 too, and kept in `saveRescues` |
 | `GET /api/master/*` | Owner | uma-platform's release: channels, manifests and hash-named files (uma-server's proxy) |
 | `POST /api/post/ping` | Its own token | `{ ok: true }` for a Google ID token on `POST_CALLERS` with the farm's audience |
 | `GET /api/push/key` | Owner | `{ publicKey }`: the VAPID key the app subscribes with; 404 while push is off (no `VAPID_KEYS`, as locally) |
@@ -75,8 +79,9 @@ Main JS is 155 KB gzip against the 180 KB budget (FM20). Firebase, the Wilds' sc
 |---|---|---|
 | 1 | F3 | The account: `{ version: 1, account: { uid, createdAt, updatedAt } }` |
 | 2 | F4 | The Wilds' world beside it: `umas` (each Uma's Craft Level, from her first job), `items` (the Warehouse), `work` (uma-work's rows) and `buildings` (always `{}`). v1 migrates with all four empty, `updatedAt` unchanged |
+| 3 | F17 | **Built in F17; live from F24.** The farm's own loop (core spec CS53): the calendar, gold, the roster and its ranks, the Dorm, the Warehouse by stars, the fields and the rest of the loop. v2 migrates in the loop's app with master data ([below](#v2--v3-f17-cs54)), `updatedAt` unchanged |
 
-### The shape
+### The shape: v2, the Wilds' (live)
 
 ```ts
 interface SaveV2 {
@@ -92,8 +97,140 @@ interface SaveV2 {
 The rules that change it, and every number they use, are in [loops.md](loops.md) and [materials.md](materials.md); the copy
 from uma-rpg is listed file by file in [wilds-copy.md](../technical/wilds-copy.md).
 
-`parseSave` reads every version the farm has written and returns the current one; a newer version than the app knows is
-refused, and unknown keys are refused, so an old client can never half-write a newer save.
+`parseSave` reads every version the farm has written: v1 becomes v2, and v2 and v3 come back at the version stored (the
+dark launch, below). A newer version than the app knows is refused, and unknown keys are refused, so an old client can
+never half-write a newer save.
+
+### The dark launch (F17)
+
+M4 builds the loop without anyone meeting it half-built (D29):
+- **Production plays the Wilds on v2** until F24 turns the loop on. Every push to `main` still deploys, and nothing in
+  M4 changes what production players see.
+- **The loop plays where `VITE_FARM_LOOP` is `'1'`:** the dev server, Vitest, and `vite build --mode loop`, which
+  `pnpm build` size-checks into `dist-loop/` (never deployed). `VITE_FARM_LOOP=0 pnpm web` plays the Wilds locally.
+- **The API stores what it's sent,** v2 or v3, so production's v2 app is unaffected and a v3 upload is accepted once the
+  loop is on. The first v3 write over a stored v2 copies it to `saveBackups/{uid}-v2`. A v2 upload over a stored v3 (a
+  Wilds client after the loop) is a 409 and is kept in `saveRescues/{uid}`; the phone keeps it too.
+- **The Wilds' build stops at a v3** (boot fails with Try again) rather than play or overwrite it.
+- **v3 grows in place until F24:** an M4 packet may extend it, with parse tests. From F24 on, a change is v4.
+
+### The shape: v3, the loop's (built in F17)
+
+`packages/domain/src/save/v3.ts`, CS53 with F17's additions (`start`, `today`, `dorm.swaps`, `farm.counts`):
+
+```ts
+interface SaveV3 {
+  version: 3
+  account: Account                                   // unchanged; only a player's change moves updatedAt
+  calendar: { day: number }                          // 1 = Spring 1, year 1
+  gold: number                                       // whole
+  start: { redraws: number }                         // the start's one free redraw (F23)
+  today: { chats: OutfitId[]; gifts: OutfitId[] }    // once a day each, cleared each night (F23)
+  roster: Record<OutfitId, RosterUma>                // every recruited Uma
+  dorm: { level: number; home: OutfitId[]; swaps: { out: OutfitId; in: OutfitId }[] }
+  visitors: { outfitId; from: 'gate' | 'festival' | 'expedition'; leaves: number; affinity: number }[]
+  items: Record<ItemId, [n, n, n, n, n]>             // the Warehouse: counts by ★1 … ★5
+  bin: Record<ItemId, [n, n, n, n, n]>               // shipped today, paid tonight
+  work: Record<OutfitId, WorkRow<LoopWorkRequest>>   // uma-work's rows; the clock is (day − 1) × 86,400,000 ms
+  fields: { blocks: { id: 'A' | 'B' | 'C' | 'D'; tender: OutfitId | null; plots: Plot[] }[] }
+  crops: Record<CropId, number>                      // crop points
+  ranch: { animals: Animal[] }
+  places: { mine: { deepest; stairs }; quarry: { deepest; stairs } }
+  buildings: Record<BuildingId, number>              // absent locked, 0 plans held, 1+ built; dorm = level bought
+  tools: Record<ToolId, 1 | 2 | 3 | 4 | 5>           // all seven, Basic on day 1
+  workshops: { played: Record<'kitchen' | 'restaurant' | 'forge', number>; current: PlayInProgress | null; recipes: DishId[]; best: Record<string, number> }
+  expeditions: { region; party; supplies; left; back }[]
+  bonds: Record<'idA:idB', number>                   // ids in numeric order (pairKey)
+  board: { id; from; item; count; stars; due; reward; extra }[]
+  diary: { shipped; milestones; records; read }
+  farm: { points; chapter; goals; festivals; counts } // counts: lifetime counters each packet names
+  summary: null                                      // the morning summary: its shape is F18's
+}
+interface RosterUma { joined: number; ranks: Record<Activity, { points; rank: 0–5; challenge }>; affinity: number; wellFed: number }
+interface Plot { crop: CropId | null; growth: number; ready: boolean; regrowing: boolean; own: boolean }
+```
+
+- **Talents aren't saved:** they're read from master data each boot (F21).
+- **The nine activities:** farming, the ranch, mining, fishing, foraging, cooking, serving, forging, expeditions; six
+  ranks each (Novice, Hand, Skilled, Expert, Master, Legend). `challenge` counts toward her next rank's challenge.
+- **The Dorm:** `buildings.dorm` is the level bought, `dorm.level` the level in effect, which catches up overnight.
+  `dorm.home` is who's on the farm, within the roster and the beds; the rest of the roster is away.
+- **The Warehouse's ids** are the 260 goods in `goods/ids.ts` (27 crops and 10 flours, the forest's 113, mining's 60,
+  fishing's 20, expeditions' 30), every one uma-art's own item, plus seeds: `seed-<crop>` from the shop and
+  `seed-<crop>-own` from harvests, ★1 only. The bin takes goods, never seeds.
+- **uma-work's flat stock:** the engine sees the Warehouse as `<id>@<stars>` keys (`carp@2`), through `workStock` and
+  `fromWorkStock`; v3 work rows hold those keys. Rows sit at the v3 work places (the forest, the Fishery, the Mill, the
+  Sawmill, the Smokehouse; the Mine, the Quarry, the Smelter and the Cutter from M5), four slots each, and each kind
+  checks its own requests through `LOOP_KINDS`, empty until F18 and F22.
+- **The parse** is strict: unknown keys, bad ids (outfits, goods, seeds, crops, buildings, tools, activities, blocks,
+  regions, dishes), a block of other than 9 plots, an unsorted bond key, an Uma home off the roster or past the beds are
+  each refused with their path.
+- **Size:** the largest save (60 Umas × 9 ranks, 1,770 bonds, every good at every star, 48 work rows) is about 210 KB,
+  well under Firestore's 1 MiB.
+
+Day 1 (`newSave`, CS3): day 1, 500g, 9 Carrot seeds, Block A of 9 tilled plots, the Dorm at level 1, chapter 1, the
+seven tools at Basic, everything else empty. Until F23's start sheet, the loop's build fills a roster under three from a
+seeded shuffle of the release (`draw(uid, 0, 'start', n)`); a migrated save keeps its Umas and is filled only to three.
+
+The Dorm's beds (CS34):
+
+<!-- live:beds -->
+| Dorm level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Beds | 3 | 5 | 8 | 12 | 16 | 22 | 30 | 40 | 50 | 60 |
+<!-- /live -->
+
+The Farm Rank's thresholds (CS39; read-only until F24):
+
+<!-- live:farm-ranks -->
+| Farm Rank | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Points | 0 | 150 | 500 | 1,200 | 2,400 | 4,000 | 6,500 | 10,000 | 15,000 | 22,000 |
+<!-- /live -->
+
+### v2 → v3 (F17, CS54)
+
+It runs once, in the loop's app, on the first boot after master data's roster has loaded (her calling's line comes from
+it, and the API has no master data). It's pure and deterministic, so two devices carry a save over alike, and it never
+moves `account.updatedAt`, `createdAt` or `uid`. Every v2 the loop meets goes through it: the device's save, the
+server's, a 409's stored save, a safety copy restored. The result is committed without stamping, so it uploads and the
+next boot reads v3.
+
+| Step | What |
+|---|---|
+| 1 | **Running jobs finish:** every started entry completes into the Warehouse as if its last night had come, paying its Craft EXP first, so a level it earns counts in step 3. Queues and stopped queues drop; uma-work reserves nothing for a queued job, so nothing comes back |
+| 2 | **Materials:** what is still a good carries over at ★1; what leaves the game is refunded per grade (below) |
+| 3 | **Craft Level becomes her rank** in her calling's activity (below). An outfit the release no longer has joins at Novice everywhere |
+| 4 | **The roster:** every Uma in `umas` joins on day 1; the Dorm's level is the lowest with a bed for each, bought and in effect, free. Past 60, the 60 with the most mapped points live home (ties by outfit id) and the rest are away |
+| 5 | **The calendar starts:** day 1, 500g plus the refunds, Block A, 9 Carrot seeds, chapter 1 |
+| 6 | Everything else starts empty: Farm Rank 1, the Diary, bonds, the board |
+
+<!-- live:craft-ranks -->
+| Craft Level | Rank | Points set to |
+|---|---|---|
+| 1–5 | Novice | 8 a level above 1 (Lv 5: 32) |
+| 6–15 | Hand | 40 + 12 a level above 6 (Lv 15: 148) |
+| 16–25 | Skilled | 160 + 24 a level above 16 (Lv 25: 376) |
+| 26–35 | Expert | 400 + 50 a level above 26 (Lv 35: 850) |
+| 36–45 | Master | 900 + 110 a level above 36 (Lv 45: 1,890) |
+| 46–50 | Legend | 2,000 |
+
+Her calling's line names the activity: Metal → mining, Wood → foraging, Vegetables → farming, Fish → fishing, Stone → mining. Every challenge up to the rank counts as done; her other eight activities start at Novice, 0 points.
+<!-- /live -->
+
+<!-- live:refunds -->
+| Leaves the game | Refund each, by grade | Rule |
+|---|---|---|
+| Vegetables, refined | 15g · 30g · 45g · 60g · 75g · 90g · 105g · 120g · 135g · 150g | 15g × grade |
+| Arms Gems | 150g · 300g · 450g · 600g · 750g · 900g · 1,050g · 1,200g · 1,350g · 1,500g | 15g × grade × 10 refined |
+| Armor Fittings | 45g · 90g · 135g · 180g · 225g · 270g · 315g · 360g · 405g · 450g | 15g × grade × 3 refined |
+| Accessory Settings | 75g · 150g · 225g · 300g · 375g · 450g · 525g · 600g · 675g · 750g | 15g × grade × 5 refined |
+| Planet Jewels | 75g · 225g · 375g · 525g · 675g | 15g × grade × 5 refined |
+| Moon Jewels | 150g · 300g · 450g · 600g · 750g | 15g × grade × 5 refined |
+| Tome Ink | 150g · 300g · 450g · 600g · 750g · 900g · 1,050g · 1,200g · 1,350g · 1,500g | 15g × grade × 10 refined |
+
+Everything else in a v2 Warehouse (ores and ingots, logs and planks, fish and fillets, crystals and cut crystals, raw vegetables) is still a good, and carries over at ★1.
+<!-- /live -->
 
 ### Sync
 
@@ -165,7 +302,7 @@ or writes one (FM10). The app does the rules and sends only times.
 ## Build and deploy
 
 Every push to `main` that touches code runs [deploy.yml](../../.github/workflows/deploy.yml): lint, tests (one package at
-a time), build with the size check; then the API image to Cloud Run `farm-api`, the web to Hosting site `uma-farm`, and
+a time), build with both size checks (the deployed build, then the loop's into `dist-loop/`); then the API image to Cloud Run `farm-api`, the web to Hosting site `uma-farm`, and
 the checks: health with the commit, `/api/save` 401 without a token, the ping 401, the shell `no-cache`, and uma-rpg's own
 health. Docs-only pushes skip it. `VAPID_KEYS` comes from Secret Manager's `farm-vapid`.
 
@@ -174,7 +311,8 @@ health. Docs-only pushes skip it. `VAPID_KEYS` comes from Secret Manager's `farm
 ```bash
 NODE_AUTH_TOKEN=$(gh auth token) pnpm install
 pnpm api   # :8101, auth off (the local user), saves in apps/api/.data/save.json, push in memory and off
-pnpm web   # :5194, /api proxied to :8101
+pnpm web   # :5194, /api proxied to :8101; plays the loop (VITE_FARM_LOOP=1 in .env.development)
+VITE_FARM_LOOP=0 pnpm web   # the Wilds on v2, as production plays them
 ```
 
 Master data comes from `../uma-platform/content/release` (set `MASTER_DIR` to point elsewhere). The preview pane starts both

@@ -53,6 +53,26 @@ function loadMaster(): void {
   })()
 }
 
+/** Master data once it has loaded, outside React: the loop's boot waits on it to migrate a v2 save and fill the start
+ * (F17). It starts the load if none is under way, and fails as the load does, so the boot gate offers Retry. */
+export function masterReady(): Promise<MasterView> {
+  if (state.status === 'error') retryMaster()
+  else loadMaster()
+  return new Promise((resolve, reject) => {
+    const check = (): boolean => {
+      if (state.status === 'ready') resolve(state.view)
+      else if (state.status === 'error') reject(new Error(state.offline ? 'Connect once to download the game data.' : 'The game data could not be loaded.'))
+      else return false
+      return true
+    }
+    if (check()) return
+    const listener = () => {
+      if (check()) listeners.delete(listener)
+    }
+    listeners.add(listener)
+  })
+}
+
 /** The roster once it has loaded, else null: for the work actions, which read it outside React (the trade gate). */
 export function masterRoster(): readonly FarmOutfit[] | null {
   return state.status === 'ready' ? state.view.roster : null

@@ -18,6 +18,10 @@ import { MADE_IDENTITIES, MADE_LINES, type MadeLine } from '../items/made-id'
 import { madeRecipeV4, RECIPE_V4 } from '../items/made-v4'
 import { tradeLine } from '../roster/roster'
 import { UMA_ROW_CALLING_V3, type UmaCallingRowV3 } from '../roster/template'
+import { BEDS, FARM_RANK_POINTS } from '../farm/farm'
+import { ACTIVITY_NAMES, CRAFT_BANDS, craftRank, LINE_ACTIVITY, RANKS } from '../farm/ranks'
+import { isGoodId } from '../goods/ids'
+import { refundOf } from '../save/migrate-v3'
 
 type Cell = string | number
 /** A Markdown table; pipes in cells are escaped. */
@@ -128,7 +132,44 @@ function levels(): string {
 }
 
 /** Every block a doc may embed, by key. */
+// --- Save v3 and the migration (F17) --------------------------------------------------------------------------------
+
+/** CS32: Craft Level → her rank in her calling's activity, with the points it starts at. */
+function craftRanks(): string {
+  const lines = MATERIAL_LINES.map((line) => `${LINE_NAME[line]} → ${ACTIVITY_NAMES[LINE_ACTIVITY[line]].toLowerCase()}`).join(', ')
+  const rows = CRAFT_BANDS.map((band, i) => {
+    const to = (CRAFT_BANDS[i + 1]?.from ?? 51) - 1
+    const start = band.points === 0 ? '' : `${band.points.toLocaleString('en-US')} + `
+    const points = band.perLevel === 0 ? band.points.toLocaleString('en-US') : `${start}${band.perLevel} a level above ${band.from} (Lv ${to}: ${craftRank(to).points.toLocaleString('en-US')})`
+    return [`${band.from}–${to}`, RANKS[band.rank]!, points]
+  })
+  return `${table(['Craft Level', 'Rank', 'Points set to'], rows)}
+
+Her calling's line names the activity: ${lines}. Every challenge up to the rank counts as done; her other eight activities start at Novice, 0 points.`
+}
+/** D28: what each v2 item that leaves the game is refunded, by kind and grade. */
+function refunds(): string {
+  const leaving = [
+    ...MATERIAL_LINES.flatMap((line) => [false, true].map((refined) => ({ name: `${LINE_NAME[line]}, ${refined ? 'refined' : 'raw'}`, ids: lineItems(line, refined).map((m) => m.id) }))),
+    ...MADE_LINES.map((line) => ({ name: MADE_LINE_NAME[line], ids: MADE_IDENTITIES.filter((m) => m.line === line).sort((a, b) => a.grade - b.grade).map((m) => m.id) })),
+  ].filter((group) => group.ids.every((id) => !isGoodId(id)))
+  return `${table(['Leaves the game', 'Refund each, by grade', 'Rule'], leaving.map((group) => {
+    const made = MADE_IDENTITIES.find((m) => m.id === group.ids[0])
+    const rule = made ? `15g × grade × ${madeRecipeV4(made.id)[Object.keys(madeRecipeV4(made.id))[0]!]} refined` : '15g × grade'
+    return [group.name, group.ids.map((id) => `${refundOf(id).toLocaleString('en-US')}g`).join(' · '), rule]
+  }))}
+
+Everything else in a v2 Warehouse (ores and ingots, logs and planks, fish and fillets, crystals and cut crystals, raw vegetables) is still a good, and carries over at ★1.`
+}
+/** CS34's beds by Dorm level, and CS39's Farm Rank thresholds. */
+function beds(): string {
+  return table(['Dorm level', ...BEDS.map((_, i) => String(i + 1))], [['Beds', ...BEDS]])
+}
+function farmRanks(): string {
+  return table(['Farm Rank', ...FARM_RANK_POINTS.map((_, i) => String(i + 1))], [['Points', ...FARM_RANK_POINTS.map((p) => p.toLocaleString('en-US'))]])
+}
+
 export function renderBlock(key: string): string | null {
-  const blocks: Record<string, () => string> = { families, items, made, facilities, callings, jobs, levels }
+  const blocks: Record<string, () => string> = { families, items, made, facilities, callings, jobs, levels, 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks }
   return blocks[key]?.() ?? null
 }

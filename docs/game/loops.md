@@ -136,3 +136,6 @@ Save v2 (F4) is the account and the Wilds' world, whole: `{ version, account, um
 - `buildings` stays empty, since places have no levels.
 
 A v1 save migrates by adding the empty Wilds and keeps `account.updatedAt` where it was.
+
+Save v3 (F17) is the farm's own loop, built and dark until F24: its shape, the dark launch and the v2 → v3 migration are
+in [architecture.md](architecture.md#the-shape-v3-the-loops-built-in-f17).

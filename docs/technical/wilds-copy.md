@@ -65,7 +65,7 @@ Each landed after the copy's commit, in F4:
 
 | Where | Change | Why |
 |---|---|---|
-| `save/save.ts` | Save v2: `{ version, account, umas, items, buildings, work }`, parsed strictly with uma-rpg's v31 work-row rules (fifteen places, four slots); v1 migrates by `toV2`, which keeps `account.updatedAt` | R5, FW5, N5 |
+| `save/save.ts` | Save v2: `{ version, account, umas, items, buildings, work }`, parsed strictly with uma-rpg's v31 work-row rules (fifteen places, four slots); v1 migrates by `toV2`, which keeps `account.updatedAt`. Since F17 its strict helpers live in `save/parse.ts`, its new-account save is `newSaveV2` (`newSave` is v3's day 1), and `parseSave` returns v2 or v3 as stored | R5, FW5, N5 |
 | `save/work.ts` | The operations take the save and stamp the change (`withWorld`, uma-rpg's); `settleWork` settles without stamping; her row arrives with her first job; `planJob`, `availableWorkers` and `availabilityBlock` take any outfit | FM6, the production-save rules |
 | `work/env.ts` | Craft EXP creates her row if an old save lacks it; `isWorker` takes any well-formed outfit id | FM6 |
 | `work/env-v3.ts`, `env-v4.ts`, `kinds-v3/`, `kinds-v4/` | `WorkContext.roster`: who may work, and whose trades decide an open shop (the whole roster, not only who has worked) | FM6, FW7 |

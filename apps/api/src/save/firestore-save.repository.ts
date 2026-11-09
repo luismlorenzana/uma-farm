@@ -1,6 +1,6 @@
 import { getApps, initializeApp } from 'firebase-admin/app'
 import { FieldValue, getFirestore, type DocumentSnapshot, type Firestore } from 'firebase-admin/firestore'
-import { parseSave, versionOf, type Save, type SaveEnvelope } from '@farm/domain'
+import { parseSave, versionOf, type SaveEnvelope, type StoredSave } from '@farm/domain'
 import { EMPTY_ENVELOPE, RevisionConflict, type SaveRepository } from './save.repository'
 
 // Production persistence in the `farm` database (FIRESTORE_DATABASE; never `(default)`, which is uma-rpg's, IN5):
@@ -27,7 +27,7 @@ export class FirestoreSaveRepository implements SaveRepository {
     return FirestoreSaveRepository.envelope(await this.db().collection('saves').doc(uid).get())
   }
 
-  put(uid: string, baseRevision: number, save: Save, sentVersion: number): Promise<SaveEnvelope> {
+  put(uid: string, baseRevision: number, save: StoredSave, sentVersion: number): Promise<SaveEnvelope> {
     const db = this.db()
     const ref = db.collection('saves').doc(uid)
     return db.runTransaction(async (tx) => {
