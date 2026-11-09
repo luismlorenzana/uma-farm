@@ -28,8 +28,8 @@ night, the morning summary, the nudge, the farm map and the bars, as built. The 
 
 A season is 12 days and a year 48. Day *d* is year ⌈*d*/48⌉, season ⌊((*d*−1) mod 48)/12⌋, day ((*d*−1) mod 12) + 1
 (`dateOf`). The festivals fall on each season's 10th day, and the Harvest Cup on Winter 12, the year's last day. In M4
-they're dates only: the festival ground shows "Soon" (they come in M6, F32). The season's seeds, fish, forest family and
-demand belong to F19, F20 and F22.
+they're dates only: the festival ground shows "Soon" (they come in M6, F32). The season's demand is F19's
+([goods.md](goods.md#demand-by-season-cs4-decision-3)); its seeds, fish and forest family belong to F20 and F22.
 
 <!-- live:calendar -->
 | Season | Days (year 1) | Festival |
@@ -64,7 +64,7 @@ needs. The loop has no 15-second settle ticks.
 | `loopWorld(save)` | uma-work's state over a v3 save: the Warehouse as `<id>@<stars>` keys (F17's bridge), no building levels, the work rows, and the save around them for the kinds to read |
 | The operations | `startLoopJob`, `editLoopQueue`, `collectLoopWorker`, `collectLoopAll`, `recallLoopWorker`, `repeatLoopJob`, `restartLoopStopped`, `dismissLoopStopped`: each at `workNow(save)`, stamped with the time given |
 | The readings | `settleLoopWork`, `loopWorking`, `loopReadyWork`, `loopReadyItems`: no stamp, nothing stored; a settle during the day starts nothing new |
-| Refusals | In the loop's words: "She isn't on the farm.", "She is busy for another 2 days.", "Short 1 wheat." (the goods' names come with F19) |
+| Refusals | In the loop's words: "She isn't on the farm.", "She is busy for another 2 days.", "Short 1 Wheat." (a good's name is F19's `goodName`) |
 
 A queue means "keep at this for N days": each job starts the moment the one before ends, at a night's boundary.
 
@@ -134,9 +134,10 @@ time. A step whose packet hasn't landed passes the night on unchanged, and each 
 - **Seeded and replayable (CS8):** every draw a step makes is `draw(uid, day, what, n)` (F17), so ending the same save
   twice, on two devices, gives the same morning; the save holds no random state.
 - **One stamp a night:** no step moves `account.updatedAt`; `endDay` stamps it once, after step 9.
-- **What the night passes along:** `notes.worked` (who held a running job at the day's start, and where: F21 pays rank
-  points from it) and `notes.finished` (each job finished by the morning, with its items). Later packets add their own
-  notes (F19 the sales, F20 what withered).
+- **What the night passes along:** `notes.sold` (step 1's sales, by good and star: the summary's bin section, F19),
+  `notes.worked` (who held a running job at the day's start, and where: F21 pays rank points from it) and
+  `notes.finished` (each job finished by the morning, with its items). Later packets add their own notes (F20 what
+  withered).
 - `NightContext` is what the night reads beyond the save: master data's roster (F21 adds talents).
 
 ## The morning summary (CS5, decision 11)
@@ -148,7 +149,7 @@ night."
 
 | Section | Lines (as built) | Words | A tap goes to | Filled by |
 |---|---|---|---|---|
-| The bin | yesterday's sales | — | — | F19 |
+| The bin | `{ kind: 'sold', id, stars, count, gold, demand }`, then the total | "Salmon ★2 × 3 · 495g" (In demand), "Total · 545g" | the bin | F19 ([goods.md](goods.md#the-shipping-bin-cs10-cs7-step-1-decisions-46)) |
 | Work done | `{ kind: 'jobs', place, jobs, items }` | "Forest · 2 jobs done · 9 items" | the place's quick look | F18 (crops by block: F20) |
 | Ranks | rank-ups, full points | — | — | F21 |
 | Bonds | new hearts | — | — | M6 |
@@ -211,7 +212,9 @@ stay put.
 - **A locked place** shows the kit's lock, and its quick look says what opens it: "Opens with Chapter 3", "Opens with
   Farm Rank 3", "Opens with Chapter 1's reward" (`placeOpen`: a chapter once it starts, the Mill once chapter 1 is done, a
   Farm Rank once reached). A place CS3 opens on day 1 whose screen hasn't landed says "Opens soon"; F19, F20, F22 and F23
-  wire theirs up (`PLACE_SCREENS`). In F18 every place shows its lock.
+  wire theirs up (`PLACE_SCREENS`, each with where a tap goes). F19 opened the shipping bin (`?sheet=bin`), the
+  Warehouse (`/warehouse`) and the shop (`?sheet=shop`): a tap on the map or in the Menu goes straight there
+  ([goods.md](goods.md#the-screens)); every other place keeps its quick look.
 - **Borrowed buildings:** the Coop, the bin, the Dorm, the board and the expedition post stand on unused uma-art buildings
   until their own ship (F25, F29, F38).
 - **Pips** hang over a work place's building in a half arch (FR7): each working Uma's face ringed by her job's progress,
@@ -229,7 +232,8 @@ stay put.
   badge and glow, and for days on the work screens; each is pinned when released.
 - **Days on the work screens:** uma-kit/work prints "24h" for a day. The farm's own screens say days ("1 day", "in 7
   days", "tomorrow"); the kit's rows follow once its duration option ships.
-- **The account bar:** the initial (Account), the date chip, the sync chip. Gold joins with F19.
+- **The account bar:** the initial (Account), the date chip, F19's gold chip (it opens the bin,
+  [goods.md](goods.md#gold-and-the-account-bar-decision-10)), the sync chip.
 - **Roster** (`/roster`) is a plain album of the Umas home with their best rank, and how many are away, until F21's ranks
   and F23's Dorm. **Diary** (`/diary`) holds the chapter until F24 gives it its goals.
 - **The Menu** lists the 23 places by FC28's rows (gathering, stations, the ranch, workshops, the yard, the town), each

@@ -1,5 +1,6 @@
-// The loop's global sheets (F18 decisions 6 and 8): `?sheet=end`, End the day, and `?sheet=calendar`, the calendar from
-// the account bar's date. Each opens over the page it was tapped on, so Back closes it. Loaded on demand when one opens.
+// The loop's global sheets (F18 decisions 6 and 8, F19 decisions 7 and 8): `?sheet=end`, End the day; `?sheet=calendar`,
+// the calendar from the account bar's date; `?sheet=bin`, the shipping bin from the map or the gold chip; `?sheet=shop`,
+// the shop. Each opens over the page it was tapped on, so Back closes it. Loaded on demand when one opens.
 import { DAYS_PER_SEASON, DAYS_PER_YEAR, daySetState, dateOf, FESTIVALS, nextFestival, SEASON_NAMES, SEASONS } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet, TrophyIcon } from '@luismlorenzana/uma-kit/ui'
@@ -7,11 +8,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { useLoopSave } from '../save/game'
 import { endTheDay } from './actions'
+import { BinSheet, ShopSheet } from './GoodsSheets'
 import { useAskBeforeEnd } from './ask'
 import { nudgeWords, SEASON_COLOR, shortDate, whenWords } from './words'
 
-export default function LoopSheets({ sheet }: { sheet: 'end' | 'calendar' }) {
-  return sheet === 'end' ? <EndDay /> : <CalendarSheet />
+export default function LoopSheets({ sheet }: { sheet: 'end' | 'calendar' | 'bin' | 'shop' }) {
+  const close = useClose()
+  switch (sheet) {
+    case 'end': return <EndDay />
+    case 'calendar': return <CalendarSheet />
+    case 'bin': return <BinSheet onClose={close} />
+    case 'shop': return <ShopSheet onClose={close} />
+  }
 }
 
 function useClose(): () => void {

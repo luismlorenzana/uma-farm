@@ -86,12 +86,15 @@ export const farmPlace = (id: string | null | undefined): FarmPlace | undefined 
 
 /** Whether a place's rule has opened it on this save (CS3): a chapter once it starts, the Mill once chapter 1 is done, a
  * Farm Rank once reached. The board and the festival ground wait for M6. */
-export function placeOpen(save: Pick<SaveV3, 'farm'>, place: FarmPlace): boolean {
-  switch (place.opens.by) {
+export const placeOpen = (save: Pick<SaveV3, 'farm'>, place: FarmPlace): boolean => opened(save, place.opens)
+
+/** Whether what opens something has happened on this save: a place, or a line in the shop (F19). */
+export function opened(save: Pick<SaveV3, 'farm'>, opens: PlaceOpens): boolean {
+  switch (opens.by) {
     case 'start': return true
-    case 'chapter': return save.farm.chapter >= place.opens.chapter
-    case 'reward': return save.farm.chapter > place.opens.chapter
-    case 'farm-rank': return farmRankOf(save.farm.points) >= place.opens.rank
+    case 'chapter': return save.farm.chapter >= opens.chapter
+    case 'reward': return save.farm.chapter > opens.chapter
+    case 'farm-rank': return farmRankOf(save.farm.points) >= opens.rank
     case 'later': return false
   }
 }

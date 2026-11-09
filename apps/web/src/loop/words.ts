@@ -1,7 +1,7 @@
 // The loop's words for the day (F18): dates, festivals, days, the nudge and the morning summary's lines. The save holds
 // ids and counts (decision 11); these say them. Pure, so the screens and the tests read the same.
 import {
-  dateOf, farmPlace, FESTIVALS, nextFestival, SEASON_NAMES, type DaySet, type FarmPlaceId, type FestivalId, type MorningSummary, type Season,
+  dateOf, farmPlace, FESTIVALS, goodName, nextFestival, SEASON_NAMES, type DaySet, type FarmPlaceId, type FestivalId, type MorningSummary, type Season,
   type SummarySection, summarySections,
 } from '@farm/domain'
 
@@ -44,8 +44,10 @@ export function nudgeWords(set: Pick<DaySet, 'idle' | 'collect'>): string {
 export interface SummaryLine {
   key: string
   text: string
-  /** Where its tap goes: the place's quick look, the calendar or the roster. */
+  /** Where its tap goes: the place's quick look or screen, the calendar or the roster. */
   to: string
+  /** A mark after the words: "In demand" on a sale the season lifted (F19). */
+  tag?: string
 }
 export interface SummaryPart {
   section: SummarySection
@@ -63,8 +65,18 @@ export function summaryParts(summary: MorningSummary): SummaryPart[] {
   return summarySections(summary).map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section) }))
 }
 
+const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
+
 function sectionLines(summary: MorningSummary, section: SummarySection): SummaryLine[] {
   switch (section) {
+    case 'bin': {
+      // F19 decision 6: each good and star with its count and gold, the demand marked, then the total.
+      const sold = summary.bin.map((sale): SummaryLine => ({
+        key: `sold:${sale.id}@${sale.stars}`, to: '/?sheet=bin', text: `${goodName(sale.id)} ★${sale.stars} × ${sale.count} · ${gold(sale.gold)}`,
+        ...(sale.demand ? { tag: 'In demand' } : {}),
+      }))
+      return [...sold, { key: 'sold:total', to: '/?sheet=bin', text: `Total · ${gold(summary.bin.reduce((sum, sale) => sum + sale.gold, 0))}` }]
+    }
     case 'work':
       return summary.work.map((line) => ({
         key: `jobs:${line.place}`, to: peek(line.place),
@@ -76,7 +88,6 @@ function sectionLines(summary: MorningSummary, section: SummarySection): Summary
         : { key: `festival:${line.when}`, text: `${festivalName(line.festival)} ${line.when}`, to: peek('festival') })
     case 'nudges':
       return summary.nudges.map((line) => ({ key: 'idle', text: `${plural(line.umas.length, 'Uma')} idle`, to: '/roster' }))
-    case 'bin':
     case 'ranks':
     case 'bonds':
       return []

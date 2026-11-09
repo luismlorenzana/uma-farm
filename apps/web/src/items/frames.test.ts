@@ -2,7 +2,7 @@
 // cut to the line and made items).
 import gems from '@luismlorenzana/uma-art/gems/atlas.json'
 import items from '@luismlorenzana/uma-art/items/atlas.json'
-import { LINE_ITEMS, MADE_IDENTITIES } from '@farm/domain'
+import { GOODS, LINE_ITEMS, MADE_IDENTITIES } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { iconFrame, SHEET_SIZE } from './frames'
 
@@ -35,5 +35,14 @@ describe('icon frames', () => {
     expect(MADE_IDENTITIES).toHaveLength(50)
     expect([items, gems].map((a) => ({ w: a.width, h: a.height }))).toEqual([SHEET_SIZE.items, SHEET_SIZE.gems])
     expect(iconFrame('nothing-here')).toBeNull()
+  })
+
+  it('finds the 260 goods at their own frames, and a seed at its crop\'s (F19)', () => {
+    for (const good of GOODS) {
+      const frame = itemFrame(good.id)
+      expect(iconFrame(good.id), good.id).toEqual({ sheet: 'items', x: frame!.x, y: frame!.y })
+    }
+    expect(iconFrame('seed-carrot')).toEqual(iconFrame('carrot'))
+    expect(iconFrame('seed-wild-rice-own')).toEqual(iconFrame('wild-rice'))
   })
 })

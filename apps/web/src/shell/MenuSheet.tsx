@@ -9,7 +9,7 @@ import { Sheet } from '@luismlorenzana/uma-kit/ui'
 import { APP_BUILD_ID } from '../app/build'
 import { loopOn } from '../app/loop'
 import { setAskBeforeEnd, useAskBeforeEnd } from '../loop/ask'
-import { lockOf } from '../loop/farm-map'
+import { lockOf, placeLink } from '../loop/farm-map'
 import { useLoopSave, useWildsSave } from '../save/game'
 import { readySlots } from '../wilds/ready'
 import { SOON_PLACES } from '../wilds/soon'
@@ -42,13 +42,14 @@ const GROUPS: readonly { group: FarmPlaceGroup; label: string }[] = [
   { group: 'workshop', label: 'Workshops' }, { group: 'yard', label: 'The yard' }, { group: 'town', label: 'The town' },
 ]
 
-/** The farm's places by FC28's rows, each opening its quick look on the map. */
+/** The farm's places by FC28's rows, each opening its screen once it's landed (F19: the bin, the Warehouse, the shop), else
+ * its quick look on the map. */
 export function loopMenuGroups(save: SaveV3 | null): MenuGroup[] {
   const ready = save ? loopReadyWork(save) : new Map<LoopPlaceId, number>()
   return GROUPS.map(({ group, label }) => ({
     key: group, label,
     places: FARM_PLACES.filter((p) => p.group === group).map((p) => ({
-      key: p.id, name: p.name, to: `/?peek=${p.id}`, count: ready.get(p.id as LoopPlaceId) ?? 0, locked: !save || lockOf(save, p) !== null,
+      key: p.id, name: p.name, to: save ? placeLink(save, p) : `/?peek=${p.id}`, count: ready.get(p.id as LoopPlaceId) ?? 0, locked: !save || lockOf(save, p) !== null,
     })),
   }))
 }

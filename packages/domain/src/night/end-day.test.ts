@@ -4,6 +4,7 @@
 import { endsAt } from '@luismlorenzana/uma-work'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DAY_MS } from '../farm/calendar'
+import { GOLD_SHIPPED, ship, takeBack } from '../save/bin'
 import { collectLoopAll, editLoopQueue, loopReadyWork, loopWorking, settleLoopWork, startLoopJob } from '../save/loop-work'
 import { parseSaveV3, SAVE_V3_KEYS } from '../save/parse-v3'
 import { newRosterUma, newSave, type SaveV3 } from '../save/v3'
@@ -55,7 +56,7 @@ describe('the night (CS7)', () => {
   it('stamps updatedAt once, with real time, after the ninth step', () => {
     const save = start(farm(), '101', gather())
     for (const step of NIGHT_STEPS) {
-      const after = step.run({ before: save, save, context: CONTEXT, notes: { worked: [], finished: [] } })
+      const after = step.run({ before: save, save, context: CONTEXT, notes: { sold: [], worked: [], finished: [] } })
       expect(after.save.account, step.name).toEqual(save.account)
     }
     expect(runNight(save, CONTEXT).account).toEqual(save.account)
@@ -187,3 +188,42 @@ describe('the morning summary (CS5, decision 11)', () => {
     expect(night(morning).summary).toMatchObject({ day: 5, work: [{ place: 'forest', jobs: 1 }], nudges: [{ kind: 'idle', umas: ['101'] }] })
   })
 })
+
+describe('the bin pays at night (step 1, F19)', () => {
+  /** Day `day` with salmon at ★1 and ★2 and carrots at ★1. */
+  const stocked = (day: number): SaveV3 => {
+    const save = farm(day)
+    return { ...save, items: { ...save.items, salmon: [2, 2, 0, 0, 0], carrot: [3, 0, 0, 0, 0] } }
+  }
+
+  it('pays two stars shipped, after one is taken back, and lists them in the morning', () => {
+    const shipped = takeBack(ship(ship(stocked(15), 'salmon', 1, 2), 'salmon', 2, 1), 'salmon', 1, 1) // Summer 3: fish in demand
+    const morning = night(shipped)
+    expect(morning.summary!.bin).toEqual([
+      { kind: 'sold', id: 'salmon', stars: 1, count: 1, gold: 130, demand: true },
+      { kind: 'sold', id: 'salmon', stars: 2, count: 1, gold: 165, demand: true },
+    ])
+    expect(summarySections(morning.summary!)[0]).toBe('bin')
+    expect(morning.gold).toBe(shipped.gold + 295)
+    expect(morning.farm.counts[GOLD_SHIPPED]).toBe(295)
+    expect(morning.diary.shipped).toEqual({ salmon: 2 })
+    expect(morning.bin).toEqual({})
+    expect(morning.items.salmon).toEqual([1, 1, 0, 0, 0])
+    expect(parseSaveV3(json(morning), 'save', TEST_KINDS)).toEqual(morning)
+  })
+
+  it('pays at the day it was shipped: a season\'s last night keeps its demand', () => {
+    const lastOfSpring = night(ship(stocked(12), 'carrot', 1, 3))
+    expect(lastOfSpring.calendar.day).toBe(13)
+    expect(lastOfSpring.summary!.bin).toEqual([{ kind: 'sold', id: 'carrot', stars: 1, count: 3, gold: 210, demand: true }])
+    expect(night(ship(stocked(13), 'carrot', 1, 3)).summary!.bin).toEqual([{ kind: 'sold', id: 'carrot', stars: 1, count: 3, gold: 180, demand: false }])
+  })
+
+  it('pays once: the next night\'s bin is empty and its summary has no bin', () => {
+    const morning = night(ship(stocked(15), 'carrot', 1, 1))
+    const next = night(morning)
+    expect(next.gold).toBe(morning.gold)
+    expect(next.summary!.bin).toEqual([])
+  })
+})
+

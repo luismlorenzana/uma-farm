@@ -45,3 +45,18 @@ describe('the morning summary (CS5)', () => {
     expect(summaryParts({ ...summary, work: [], news: [], nudges: [] })).toEqual([])
   })
 })
+
+describe('the morning\'s bin (F19 decision 6)', () => {
+  it('lists each good and star with its count and gold, the demand marked, then the total', () => {
+    const summary: MorningSummary = {
+      day: 16, ranks: [], bonds: [], work: [], news: [], nudges: [],
+      bin: [{ kind: 'sold', id: 'salmon', stars: 2, count: 3, gold: 495, demand: true }, { kind: 'sold', id: 'pine-log', stars: 1, count: 2, gold: 50, demand: false }],
+    }
+    expect(summaryParts(summary)).toEqual([{ section: 'bin', title: 'The bin', lines: [
+      { key: 'sold:salmon@2', text: 'Salmon ★2 × 3 · 495g', to: '/?sheet=bin', tag: 'In demand' },
+      { key: 'sold:pine-log@1', text: 'Pine Log ★1 × 2 · 50g', to: '/?sheet=bin' },
+      { key: 'sold:total', text: 'Total · 545g', to: '/?sheet=bin' },
+    ] }])
+  })
+})
+

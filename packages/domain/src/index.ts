@@ -57,3 +57,10 @@ export * from './save/loop-work'
 export * from './night/summary'
 export * from './night/nudge'
 export * from './night/end-day'
+
+// Goods (F19, core spec CS9, CS10, CS26): the price rule, stars, the bin and the shop. Dark until F24 (D29).
+export * from './goods/rule'
+export * from './goods/prices'
+export * from './goods/stars'
+export * from './save/bin'
+export * from './save/shop'
