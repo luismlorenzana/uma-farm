@@ -1,11 +1,12 @@
 // Save v3 (F17; CS3, CS53): day 1, the strict parse and its paths, and the largest save fitting Firestore's 1 MiB. Invented
 // outfit ids only.
-import type { Entry, WorkRow } from '@luismlorenzana/uma-work'
+import { payItems, type Entry, type WorkRow } from '@luismlorenzana/uma-work'
 import { describe, expect, it } from 'vitest'
 import { ACTIVITIES } from '../farm/ranks'
 import { GOOD_IDS } from '../goods/ids'
 import { count, int, object, oneOf } from './parse'
 import { LOOP_SLOTS, LOOP_WORK_PLACES, parseSaveV3, type LoopKinds } from './parse-v3'
+import type { MorningSummary } from '../night/summary'
 import { newSaveV2, parseSave, SaveParseError } from './save'
 import { newBlock, newRosterUma, newSave, pairKey, type LoopWorkRequest, type SaveV3 } from './v3'
 import { stockKey } from './warehouse'
@@ -13,17 +14,20 @@ import { stockKey } from './warehouse'
 const AT = '2026-11-09T10:00:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
+/** Rules the parse never runs. */
+const RULES = { plan: () => [], pay: payItems }
+
 /** A test kind: gather an item at the forest or the Fishery for 1–30 days. */
 const KINDS: LoopKinds = {
   gather: {
-    places: ['forest', 'fishery'],
+    places: ['forest', 'fishery'], rules: RULES, multiDay: false,
     parseRequest: (o, path) => {
       const r = object(o, path, ['kind', 'item', 'count'])
       return { kind: 'gather', item: oneOf(r.item, `${path}.item`, ['pine-log', 'carp']), count: int(r.count, `${path}.count`, 1, 30) }
     },
   },
   refine: {
-    places: ['mill', 'sawmill', 'smokehouse', 'mine', 'quarry', 'smelter', 'cutter'],
+    places: ['mill', 'sawmill', 'smokehouse', 'mine', 'quarry', 'smelter', 'cutter'], rules: RULES, multiDay: true,
     parseRequest: (o, path) => {
       const r = object(o, path, ['kind', 'item', 'count'])
       return { kind: 'refine', item: oneOf(r.item, `${path}.item`, GOOD_IDS), count: count(r.count, `${path}.count`) }
@@ -42,6 +46,12 @@ function farming(): SaveV3 {
     ...save, roster, dorm: { level: 1, home: ['101', '202', '303'], swaps: [] }, items: { ...save.items, carp: [2, 1, 0, 0, 0] },
     bin: { 'pine-log': [3, 0, 0, 0, 0] }, fields: { blocks: [block] }, crops: { carrot: 4 }, bonds: { [pairKey('303', '101')]: 10 },
   }
+}
+
+/** A morning summary on day 1 (F18): every line kind F18 writes. */
+const SUMMARY: MorningSummary = {
+  day: 1, bin: [], work: [{ kind: 'jobs', place: 'forest', jobs: 1, items: 5 }], ranks: [], bonds: [],
+  news: [{ kind: 'season', season: 'spring' }, { kind: 'festival', festival: 'flower-show', when: 'tomorrow' }], nudges: [{ kind: 'idle', umas: ['303'] }],
 }
 
 /** A started entry of `n` items of `item`, each at its own stars. */
@@ -80,7 +90,7 @@ describe('day 1 (CS3)', () => {
 
 describe('the parse', () => {
   it('round-trips day 1 and a farm in play through JSON', () => {
-    for (const save of [newSave('u1', AT), farming()]) {
+    for (const save of [newSave('u1', AT), farming(), { ...farming(), summary: SUMMARY }]) {
       expect(parseSaveV3(json(save))).toEqual(save)
       expect(parseSave(json(save))).toEqual(save)
     }
@@ -123,7 +133,14 @@ describe('the parse', () => {
     ['a bond out of order', (s) => { s.bonds = { '303:101': 10 } }, 'save.bonds.303:101: expected two roster ids in numeric order, idA:idB'],
     ['a bond with a stranger', (s) => { s.bonds = { '101:404': 10 } }, 'save.bonds.101:404'],
     ['work off the roster', (s) => { s.work['404'] = {} }, 'save.work.404: expected an Uma on the roster'],
-    ['a summary before F18', (s) => { s.summary = {} }, 'save.summary: expected null until F18 gives the summary its shape'],
+    ['a summary missing its sections', (s) => { s.summary = { day: 1 } }, 'save.summary.bin: expected 0–0 entries'],
+    ['a summary of another day', (s) => { s.summary = { ...SUMMARY, day: 2 } }, 'save.summary.day: expected today'],
+    ['bin lines before F19', (s) => { s.summary = { ...SUMMARY, bin: [{ kind: 'sold' }] } }, 'save.summary.bin: expected 0–0 entries'],
+    ['a summary line in words', (s) => { s.summary = { ...SUMMARY, news: [{ kind: 'season', season: 'spring', text: 'Spring!' }] } }, 'save.summary.news.0: unknown keys text'],
+    ['jobs at no work place', (s) => { s.summary = { ...SUMMARY, work: [{ kind: 'jobs', place: 'gate', jobs: 1, items: 3 }] } }, 'save.summary.work.0.place: expected one of'],
+    ['a place twice in work done', (s) => { s.summary = { ...SUMMARY, work: [SUMMARY.work[0], SUMMARY.work[0]] } }, 'save.summary.work.1: repeated'],
+    ['an unknown festival', (s) => { s.summary = { ...SUMMARY, news: [{ kind: 'festival', festival: 'kite-day', when: 'today' }] } }, 'save.summary.news.0.festival: expected one of'],
+    ['a stranger idle', (s) => { s.summary = { ...SUMMARY, nudges: [{ kind: 'idle', umas: ['404'] }] } }, 'save.summary.nudges.0.umas.0: expected an Uma on the roster'],
     ['a chapter 0', (s) => { s.farm.chapter = 0 }, 'save.farm.chapter: expected 1–9'],
     ['a recipe that is no dish', (s) => { s.workshops.recipes = ['dish-fish-11'] }, 'save.workshops.recipes.0: unknown dish'],
     ['a duck in the barn', (s) => { s.ranch.animals = [{ id: 'd1', kind: 'duck', building: 'barn', affection: 0, streak: 0, carer: null, next: 2 }] }, 'save.ranch.animals.0.building: a duck lives in the coop'],

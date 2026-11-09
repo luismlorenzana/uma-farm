@@ -22,6 +22,9 @@ import { BEDS, FARM_RANK_POINTS } from '../farm/farm'
 import { ACTIVITY_NAMES, CRAFT_BANDS, craftRank, LINE_ACTIVITY, RANKS } from '../farm/ranks'
 import { isGoodId } from '../goods/ids'
 import { refundOf } from '../save/migrate-v3'
+import { DAYS_PER_SEASON, farmDay, FESTIVALS, SEASON_NAMES, SEASONS } from '../farm/calendar'
+import { FARM_MAP_ROWS, FARM_PLACES, type PlaceOpens } from '../farm/places'
+import { NIGHT_STEPS } from '../night/end-day'
 
 type Cell = string | number
 /** A Markdown table; pipes in cells are escaped. */
@@ -169,7 +172,35 @@ function farmRanks(): string {
   return table(['Farm Rank', ...FARM_RANK_POINTS.map((_, i) => String(i + 1))], [['Points', ...FARM_RANK_POINTS.map((p) => p.toLocaleString('en-US'))]])
 }
 
+// --- The calendar, the night and the farm map (F18) -----------------------------------------------------------------
+
+/** CS4: the seasons of year 1 and their festivals. */
+function calendar(): string {
+  return table(['Season', 'Days (year 1)', 'Festival'], SEASONS.map((season, i) => [
+    SEASON_NAMES[season], `${i * DAYS_PER_SEASON + 1}–${(i + 1) * DAYS_PER_SEASON}`,
+    FESTIVALS.filter((f) => f.season === season).map((f) => `${f.name}, ${SEASON_NAMES[season]} ${f.day} (day ${farmDay({ year: 1, season, day: f.day })})`).join('; '),
+  ]))
+}
+/** CS7: the night's steps, their functions and who fills them. */
+function night(): string {
+  return table(['Step', 'Function', 'What happens', 'Filled by'], NIGHT_STEPS.map((s) => [s.step, `\`${s.name}\``, s.what, s.by]))
+}
+const opensWords = (opens: PlaceOpens): string =>
+  opens.by === 'start' ? 'Day 1' : opens.by === 'chapter' ? `Chapter ${opens.chapter}` : opens.by === 'reward' ? `Chapter ${opens.chapter}'s reward`
+    : opens.by === 'farm-rank' ? `Farm Rank ${opens.rank}` : 'M6'
+/** FC28: the map's eight rows, and each place's building and what opens it. */
+function farmMap(): string {
+  const rows = Array.from({ length: FARM_MAP_ROWS }, (_, r) => {
+    const row = FARM_PLACES.filter((p) => p.row === r + 1)
+    return [r + 1, ...[0, 1, 2].map((c) => row.find((p) => p.col === c)?.name ?? '—')]
+  })
+  return `${table(['Row', 'Left', 'Centre', 'Right'], rows)}
+
+${table(['Place', 'Building (uma-art)', 'Opens'], FARM_PLACES.map((p) => [p.name, `\`${p.frame}\`${p.borrowed ? ' (borrowed)' : ''}`, opensWords(p.opens)]))}`
+}
+
 export function renderBlock(key: string): string | null {
-  const blocks: Record<string, () => string> = { families, items, made, facilities, callings, jobs, levels, 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks }
+  const blocks: Record<string, () => string> = { families, items, made, facilities, callings, jobs, levels, 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
+    calendar, night, 'farm-map': farmMap }
   return blocks[key]?.() ?? null
 }

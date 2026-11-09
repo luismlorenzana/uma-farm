@@ -48,3 +48,12 @@ export * from './save/parse-v3'
 export * from './save/warehouse'
 export * from './save/gold'
 export * from './save/migrate-v3'
+
+// The day (F18, core spec CS4–CS8): the farm map's places, uma-work on the day clock, End the day's nine steps, the nudge
+// and the morning summary. Dark until F24 (D29).
+export * from './farm/places'
+export * from './work/loop-env'
+export * from './save/loop-work'
+export * from './night/summary'
+export * from './night/nudge'
+export * from './night/end-day'

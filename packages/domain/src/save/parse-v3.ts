@@ -1,10 +1,13 @@
 // Save v3's parse (F17; core spec CS53): strict keys, explicit paths, every id checked. Outfit ids are checked by form, as
 // in v2: the API has no master data, and an outfit a later release drops still parses.
-import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkOutput, WorkRow } from '@luismlorenzana/uma-work'
+import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkKindRules, WorkOutput, WorkRow } from '@luismlorenzana/uma-work'
+import { FESTIVAL_IDS, SEASONS } from '../farm/calendar'
 import { bedsAt, DORM_MAX_LEVEL } from '../farm/farm'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import { isCropId, isGoodId, isSeedId, isWarehouseId, type CropId } from '../goods/ids'
+import type { IdleNudge, JobsDone, MorningSummary, NewsLine } from '../night/summary'
 import { isOutfitId } from '../roster/roster'
+import type { LoopWorld } from '../work/loop-env'
 import {
   amount, bool, count, int, list, object, oneOf, parseAccount, positive, record, SaveParseError, type Obj,
 } from './parse'
@@ -27,14 +30,20 @@ export const LOOP_WORK_PLACES = ['forest', 'fishery', 'mill', 'sawmill', 'smokeh
 export type LoopPlaceId = typeof LOOP_WORK_PLACES[number]
 export const LOOP_SLOTS = 4
 
-/** What a v3 work kind checks of its own requests (decision 11): the places it works at, and its request's parse (strict
- * keys, its own ids; a `SaveParseError` with the path when wrong). F18 and F22 fill `LOOP_KINDS`. */
+/** A v3 work kind (F17 decision 11, F18): the places it works at, its request's parse (strict keys, its own ids; a
+ * `SaveParseError` with the path when wrong), its rules on uma-work's day clock (`farmEnvV3`), and whether it runs for
+ * days at a time. F22 fills `LOOP_KINDS`. */
 export interface LoopKind {
   readonly places: readonly LoopPlaceId[]
   parseRequest(value: Obj, path: string): LoopWorkRequest
+  /** How it plans and pays (uma-work's kind rules), over the loop's world. */
+  readonly rules: WorkKindRules<LoopWorld>
+  /** A multi-day kind (making; in M4 the Mill's preserves; later expeditions): a well-fed Uma's running entry gains a
+   * quarter day a night (CS22, F18 decision 4). A 1-day kind's plan takes ×1.25 items instead (F22). */
+  readonly multiDay: boolean
 }
 export type LoopKinds = Readonly<Record<string, LoopKind>>
-/** The loop's work kinds, by kind. Empty until F18 and F22: a v3 save has no work until then. */
+/** The loop's work kinds, by kind. Empty until F22: a v3 save has no work until then. */
 export const LOOP_KINDS: LoopKinds = {}
 
 /** Up to three requests wait behind the running one (the engine's MAX_QUEUE); four started entries at most. */
@@ -406,6 +415,38 @@ function parseFarm(value: unknown, path: string): SaveV3['farm'] {
   }
 }
 
+// --- The morning summary (F18 decision 11): ids and counts only, the morning it was built for ---------------------
+
+const none = (value: unknown, path: string): [] => list(value, path, 0, 0) as []
+
+function parseSummary(value: unknown, path: string, today: number, roster: ReadonlySet<string>): MorningSummary {
+  const o = object(value, path, ['day', 'bin', 'work', 'ranks', 'bonds', 'news', 'nudges'])
+  if (o.day !== today) fail(`${path}.day`, 'expected today: a summary is the morning it opens on')
+  const bin = none(o.bin, `${path}.bin`)
+  const work = unique(list(o.work, `${path}.work`, 0, LOOP_WORK_PLACES.length).map((v, i): JobsDone => {
+    const at = `${path}.work.${i}`
+    const w = object(v, at, ['kind', 'place', 'jobs', 'items'])
+    oneOf(w.kind, `${at}.kind`, ['jobs'] as const)
+    return { kind: 'jobs', place: oneOf(w.place, `${at}.place`, LOOP_WORK_PLACES), jobs: int(w.jobs, `${at}.jobs`, 1, 4 * 60), items: count(w.items, `${at}.items`) }
+  }), `${path}.work`, (w) => w.place)
+  const ranks = none(o.ranks, `${path}.ranks`)
+  const bonds = none(o.bonds, `${path}.bonds`)
+  const news = unique(list(o.news, `${path}.news`, 0, 8).map((v, i): NewsLine => {
+    const at = `${path}.news.${i}`
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['season', 'festival'] as const)
+    if (kind === 'season') return { kind, season: oneOf(object(v, at, ['kind', 'season']).season, `${at}.season`, SEASONS) }
+    const f = object(v, at, ['kind', 'festival', 'when'])
+    return { kind, festival: oneOf(f.festival, `${at}.festival`, FESTIVAL_IDS), when: oneOf(f.when, `${at}.when`, ['today', 'tomorrow'] as const) }
+  }), `${path}.news`, (n) => (n.kind === 'season' ? 'season' : `festival:${n.when}`))
+  const nudges = unique(list(o.nudges, `${path}.nudges`, 0, 4).map((v, i): IdleNudge => {
+    const at = `${path}.nudges.${i}`
+    const n = object(v, at, ['kind', 'umas'])
+    oneOf(n.kind, `${at}.kind`, ['idle'] as const)
+    return { kind: 'idle', umas: unique(list(n.umas, `${at}.umas`, 1, roster.size).map((id, j) => member(id, `${at}.umas.${j}`, roster)), `${at}.umas`) }
+  }), `${path}.nudges`, (n) => n.kind)
+  return { day: today, bin, work, ranks, bonds, news, nudges }
+}
+
 /** Parses a save v3. `kinds` is the work kinds' registry (`LOOP_KINDS`; tests pass their own). */
 export function parseSaveV3(value: unknown, path = 'save', kinds: LoopKinds = LOOP_KINDS): SaveV3 {
   const o = object(value, path, SAVE_V3_KEYS)
@@ -421,7 +462,6 @@ export function parseSaveV3(value: unknown, path = 'save', kinds: LoopKinds = LO
   const met = new Set([...ids, ...visitors.map((v) => v.outfitId)])
   const talked = (raw: unknown, at: string) => unique(list(raw, at, 0, met.size).map((v, i) => member(v, `${at}.${i}`, met, 'expected an Uma on the roster or a visitor')), at)
   const crops = counts(o.crops, `${path}.crops`, isCropId, 'unknown crop') as Partial<Record<CropId, number>>
-  if (o.summary !== null) fail(`${path}.summary`, 'expected null until F18 gives the summary its shape')
   return {
     version: 3,
     account: parseAccount(o.account, `${path}.account`),
@@ -450,6 +490,6 @@ export function parseSaveV3(value: unknown, path = 'save', kinds: LoopKinds = LO
     board: parseBoard(o.board, `${path}.board`),
     diary: parseDiary(o.diary, `${path}.diary`),
     farm: parseFarm(o.farm, `${path}.farm`),
-    summary: null,
+    summary: o.summary === null ? null : parseSummary(o.summary, `${path}.summary`, today, ids),
   }
 }
