@@ -75,9 +75,11 @@ describe('End the day (CS6)', () => {
   it('counts idle Umas on the raised tab, asks in one line, and ends the day on End anyway', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
     await render(<FarmBottomBar page="farm" />)
-    expect(host.querySelector('[data-end-badge]')?.textContent).toBe('3')
+    const end = host.querySelector('a[aria-label="End the day: 3 Umas idle"]')
+    expect(end?.getAttribute('href')).toBe('/?sheet=end')
+    expect(end?.textContent).toContain('3') // uma-kit 0.19.0 draws the count on the raised disc
+    expect(end?.querySelector('[data-glow]')).toBeNull()
     expect(host.textContent).toContain('End day')
-    expect(host.querySelector('a[aria-label="End the day: 3 Umas idle"]')?.getAttribute('href')).toBe('/?sheet=end')
     await render(<LoopSheets sheet="end" />, '/?sheet=end')
     expect(document.body.querySelector('[data-end-line]')?.textContent).toBe('3 Umas idle')
     expect(save().calendar.day).toBe(1)
@@ -90,8 +92,9 @@ describe('End the day (CS6)', () => {
   it('reads "All set" when every Uma works, and ends at once', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(true) })
     await render(<FarmBottomBar page="farm" />)
-    expect(host.querySelector('[data-end-badge]')).toBeNull()
-    expect(host.querySelector('a[aria-label="All set"]')).not.toBeNull()
+    const end = host.querySelector('a[aria-label="All set"]')
+    expect(end).not.toBeNull()
+    expect(end?.querySelector('[data-glow]')).not.toBeNull() // the kit's halo when nothing waits
     await render(<LoopSheets sheet="end" />, '/?sheet=end')
     await settle()
     expect(document.body.querySelector('[data-end-line]')).toBeNull()

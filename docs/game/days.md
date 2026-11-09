@@ -226,10 +226,9 @@ stay put.
 ## The bars (FC29, decisions 6 and 8)
 
 - **The bottom bar:** Farm · Roster · **End the day** · Diary · Menu. End the day is uma-kit's raised centre disc, with
-  the moon; it reads "All set" when nothing waits, else "End day" with the count. uma-kit's raised disc draws neither a
-  badge nor a glow yet, so the farm lays the count over the disc's corner itself (`data-end-badge`), and the tab's name
-  carries it ("End the day: 2 Umas idle · 3 to collect"). Two "Both apps" requests to uma-platform ask for a raised tab's
-  badge and glow, and for days on the work screens; each is pinned when released.
+  the moon; it reads "All set" and glows when nothing waits, else "End day" with the count on the disc. The badge and the
+  glow are uma-kit 0.19.0's (uma-platform P112, from F18's request), and the tab's name carries the count ("End the day:
+  2 Umas idle · 3 to collect"). The same release lets the work screens print days (F22 uses it).
 - **Days on the work screens:** uma-kit/work prints "24h" for a day. The farm's own screens say days ("1 day", "in 7
   days", "tomorrow"); the kit's rows follow once its duration option ships.
 - **The account bar:** the initial (Account), the date chip, F19's gold chip (it opens the bin,

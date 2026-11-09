@@ -74,9 +74,9 @@ function WildsBottomBar({ page }: { page: BarPage | null }) {
 
 /**
  * The loop's bar (FC29, decision 6): Farm · Roster · End the day · Diary · Menu. End the day is the raised centre; it reads
- * "All set" when nothing waits (CS6), else "End day" with the count of idle Umas and things to collect. It reads the save
- * at its day, never the clock. uma-kit's raised disc draws no badge and no glow yet (a "Both apps" request), so the farm
- * lays the count over the disc's corner itself; the tab's name carries it for VoiceOver.
+ * "All set" and glows when nothing waits (CS6), else "End day" with the count of idle Umas and things to collect on the
+ * disc. It reads the save at its day, never the clock. The badge and the glow are uma-kit 0.19.0's (uma-platform P112,
+ * from F18's request); the tab's name carries the count for VoiceOver.
  */
 function LoopBottomBar({ page }: { page: BarPage | null }) {
   const location = useLocation()
@@ -88,18 +88,9 @@ function LoopBottomBar({ page }: { page: BarPage | null }) {
     { key: 'roster', to: '/roster', label: 'Roster', Icon: CardsIcon, active: page === 'roster' },
     {
       key: 'end', to: withParam(location, 'sheet', 'end'), label: set?.allSet ? 'All set' : 'End day', Icon: MoonIcon, active: false, raised: true,
-      badge, badgeLabel: set ? `End the day: ${nudgeWords(set)}` : undefined,
+      badge, badgeLabel: set ? `End the day: ${nudgeWords(set)}` : undefined, glow: set?.allSet ?? false,
     },
     { key: 'diary', to: '/diary', label: 'Diary', Icon: BookIcon, active: page === 'diary' },
   ]
-  return (
-    <div className="relative z-20 shrink-0" data-end-day={set?.allSet ? 'all-set' : badge}>
-      <BottomBar label="Pages" tabs={tabs} menu={{ to: withParam(location, 'sheet', 'menu'), label: 'Every place', text: 'Menu' }} />
-      {badge > 0 && (
-        <span aria-hidden data-end-badge className="font-display pointer-events-none absolute -top-[22px] left-[calc(50%+14px)] z-30 min-w-5 rounded-full bg-success px-1 text-center text-[11px] leading-5 font-bold text-ink-on-dark ring-2 ring-panel">
-          {badge}
-        </span>
-      )}
-    </div>
-  )
+  return <BottomBar label="Pages" tabs={tabs} menu={{ to: withParam(location, 'sheet', 'menu'), label: 'Every place', text: 'Menu' }} />
 }
