@@ -10,13 +10,14 @@
 import { endsAt, isRefusal, settle, speedUp } from '@luismlorenzana/uma-work'
 import { DAY_MS, festivalOn, isSeasonStart, dateOf, workNow } from '../farm/calendar'
 import type { FarmOutfit } from '../roster/roster'
+import { payBin } from '../save/bin'
 import { settleLoopWork } from '../save/loop-work'
 import { LOOP_KINDS, LOOP_WORK_PLACES, type LoopKinds, type LoopPlaceId } from '../save/parse-v3'
 import { touched } from '../save/save'
 import type { OutfitId, SaveV3 } from '../save/v3'
 import { farmEnvV3, loopWorld, nightEnvV3, WELL_FED_TICKETS, withLoopWorld } from '../work/loop-env'
 import { daySetState } from './nudge'
-import type { JobsDone, MorningSummary, NewsLine } from './summary'
+import type { BinSale, JobsDone, MorningSummary, NewsLine } from './summary'
 
 /** What the night reads beyond the save (decision 2): master data, loaded before End the day runs. F21 adds talents. */
 export interface NightContext {
@@ -28,6 +29,8 @@ export interface NightContext {
 
 /** What the steps saw that a later one needs and the save alone can't show. Each packet adds its own notes. */
 export interface NightNotes {
+  /** Step 1: what the bin sold tonight, by good and star (F19). The summary's bin section. */
+  readonly sold: readonly BinSale[]
   /** Step 4: who worked today, and where (a running job at the day's start). F21 pays rank points from it. */
   readonly worked: readonly { outfitId: OutfitId; place: LoopPlaceId }[]
   /** Step 4: each job that finished by the morning, with the items it made. */
@@ -49,8 +52,12 @@ export type NightStep = (night: Night) => Night
 const kindsOf = (night: Night): LoopKinds => night.context.kinds ?? LOOP_KINDS
 const same: NightStep = (night) => night
 
-/** Step 1, F19: everything shipped today pays at price × stars × demand. */
-export const payTheBin: NightStep = same
+/** Step 1 (F19 decision 6): everything shipped today pays at price × stars × demand on the day it was shipped, before
+ * the date turns. Gold, `farm.counts['gold-shipped']` and `diary.shipped` rise; the bin empties. */
+export const payTheBin: NightStep = (night) => {
+  const { save, sales } = payBin(night.save, night.save.calendar.day)
+  return { ...night, save, notes: { ...night.notes, sold: sales } }
+}
 /** Step 2, F20: each planted plot grows; plots that reach their days turn Ready. */
 export const growCrops: NightStep = same
 /** Step 3, M5 (F27): animals fed, affection, products. */
@@ -134,7 +141,7 @@ export const buildSummary: NightStep = (night) => {
   })
   const { idle } = daySetState(save, kindsOf(night))
   const summary: MorningSummary = {
-    day: save.calendar.day, bin: [], work, ranks: [], bonds: [], news: newsOf(save.calendar.day), nudges: idle.length > 0 ? [{ kind: 'idle', umas: idle }] : [],
+    day: save.calendar.day, bin: [...notes.sold], work, ranks: [], bonds: [], news: newsOf(save.calendar.day), nudges: idle.length > 0 ? [{ kind: 'idle', umas: idle }] : [],
   }
   return { ...night, save: { ...save, summary } }
 }
@@ -165,7 +172,7 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
 
 /** The night's steps over a save, unstamped: `endDay` without its stamp. Tests swap a step to stand in for a later one. */
 export function runNight(save: SaveV3, context: NightContext, steps: readonly { run: NightStep }[] = NIGHT_STEPS): SaveV3 {
-  const start: Night = { before: save, save, context, notes: { worked: [], finished: [] } }
+  const start: Night = { before: save, save, context, notes: { sold: [], worked: [], finished: [] } }
   return steps.reduce((night, step) => step.run(night), start).save
 }
 

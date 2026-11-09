@@ -7,6 +7,18 @@ import type { FestivalId, Season } from '../farm/calendar'
 import type { LoopPlaceId } from '../save/parse-v3'
 import type { OutfitId } from '../save/v3'
 
+/** §1 The bin (F19 decision 6): a good at one star that sold tonight, how many, the gold they made, and whether the
+ * season's demand lifted their price. Its gold is the night's, never checked again: a price changing later can't break
+ * an old morning. */
+export interface BinSale {
+  kind: 'sold'
+  id: string
+  stars: number
+  count: number
+  gold: number
+  demand: boolean
+}
+
 /** §2 Work done: jobs that finished overnight at a place, and the items they made (F18). */
 export interface JobsDone {
   kind: 'jobs'
@@ -29,8 +41,9 @@ export interface IdleNudge {
 export interface MorningSummary {
   /** The morning it opens on: the save's day. */
   day: number
-  /** §1 The bin: yesterday's sales by item, with the season's demand marked (F19). */
-  bin: []
+  /** §1 The bin: yesterday's sales by good and star, in the catalogue's order, with the season's demand marked (F19).
+   * The total is their gold added up. */
+  bin: BinSale[]
   /** §2 Work done: jobs by place (F18), crops ready by block (F20). */
   work: JobsDone[]
   /** §3 Ranks: rank-ups, and Umas whose points are full (F21). */

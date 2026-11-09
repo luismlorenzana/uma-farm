@@ -1,7 +1,7 @@
 // The v3 Warehouse's ids (F17 decision 7; CS19). The web's test checks each good is on uma-art's atlas.
 import { describe, expect, it } from 'vitest'
 import { isLineItemId, LINE_ITEMS } from '../items/lines'
-import { CROP_IDS, GOODS, GOOD_IDS, goodOf, isCropId, isGoodId, isSeedId, isWarehouseId, SEED_IDS, seedId, seedOf } from './ids'
+import { CROP_IDS, GOODS, GOOD_IDS, goodName, goodOf, isCropId, refinedOf, isGoodId, isSeedId, isWarehouseId, SEED_IDS, seedId, seedOf } from './ids'
 
 const of = (families: string[]) => GOODS.filter((g) => families.includes(g.family))
 
@@ -23,8 +23,10 @@ describe('the goods (CS19)', () => {
   })
 
   it('gives each good its family and grade, raw then refined', () => {
-    expect(goodOf('silver-ingot')).toEqual({ id: 'silver-ingot', family: 'ores', grade: 4, refined: true, crop: false })
-    expect(goodOf('sugar-beet')).toEqual({ id: 'sugar-beet', family: 'sweets', grade: 3, refined: false, crop: true })
+    expect(goodOf('silver-ingot')).toEqual({ id: 'silver-ingot', family: 'ores', grade: 4, refined: true, crop: false, price: 100, input: 'silver-ore' })
+    expect(goodOf('sugar-beet')).toEqual({ id: 'sugar-beet', family: 'sweets', grade: 3, refined: false, crop: true, price: 120, input: null })
+    expect(refinedOf('sugar-beet')).toBe('beet-sugar')
+    expect(refinedOf('carrot') ?? refinedOf('dragon-scale') ?? refinedOf('beet-sugar')).toBeNull()
     expect(goodOf('chopped-carrot')).toBeUndefined()
     expect(isCropId('carrot') && !isCropId('chopped-carrot')).toBe(true)
   })
@@ -46,5 +48,11 @@ describe('seeds (decision 6)', () => {
     expect(seedOf('carrot')).toBeUndefined()
     expect(isSeedId('seed-carrot') && !isGoodId('seed-carrot') && isWarehouseId('seed-carrot')).toBe(true)
     expect(isWarehouseId('seed-chopped-carrot')).toBe(false)
+  })
+
+  it('names goods by their ids and seeds by their crops (F19)', () => {
+    expect([goodName('sunflower-seed'), goodName('seed-carrot'), goodName('seed-wild-rice-own'), goodName('cut-philosophers-stone')]).toEqual([
+      'Sunflower Seed', 'Carrot seeds', 'Wild Rice seeds (own)', "Cut Philosopher's Stone",
+    ])
   })
 })

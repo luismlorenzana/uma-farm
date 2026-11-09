@@ -2,7 +2,10 @@
 // Written from uma-art 2.21.0's `items/atlas.json`: every good's id, family and grade are uma-art's own, so names and
 // icons come from ids as today (a web test checks each id is on the atlas). 260 goods: 27 crops and 10 flours, the
 // forest's 113, mining's 60, fishing's 20 and expeditions' 30. The ranch's, the dishes' and the Forge's goods join with
-// their packets (F27, F8, F36). Prices, seasons and stations are F19's, F20's and F22's.
+// their packets (F27, F8, F36). F19 gives each its price ★1 by the one rule (`rule.ts`, CS9) and a refined good its
+// input; seasons and stations are F20's and F22's.
+import { itemNameOf } from '../items/lines'
+import { CROP_PRICES, ladderPrice, refinedPrice, type LadderFamily } from './rule'
 
 /** uma-art's families the v3 goods come from. */
 export const GOOD_FAMILIES = [
@@ -10,6 +13,12 @@ export const GOOD_FAMILIES = [
   'ores', 'stones', 'crystals', 'fish', 'hides-scales', 'bones-horns', 'essences',
 ] as const
 export type GoodFamily = typeof GOOD_FAMILIES[number]
+/** Each family in the player's words. */
+export const FAMILY_NAMES: Readonly<Record<GoodFamily, string>> = {
+  grains: 'Grains', vegetables: 'Vegetables', 'herbs-spices': 'Herbs and spices', 'nuts-seeds': 'Nuts and seeds', sweets: 'Sweets', fruits: 'Fruits',
+  mushrooms: 'Mushrooms', woods: 'Woods', ores: 'Ores', stones: 'Stones', crystals: 'Crystals', fish: 'Fish', 'hides-scales': 'Hides and scales',
+  'bones-horns': 'Bones and horns', essences: 'Essences',
+}
 
 /** Each family's ten raw ids, G1 → G10, and their refined forms where the farm keeps them (the vegetables' refined forms
  * leave the game, D28; the expeditions' loot is raw only). */
@@ -101,25 +110,44 @@ export type CropId = typeof CROP_IDS[number]
 const CROPS: ReadonlySet<string> = new Set(CROP_IDS)
 export const isCropId = (id: string): id is CropId => CROPS.has(id)
 
-/** A good in the v3 Warehouse: uma-art's family and grade, raw or refined, and whether it's a crop. */
+/** A good in the v3 Warehouse: uma-art's family and grade, raw or refined, whether it's a crop, its price ★1 (F19, CS9)
+ * and, for a refined good, the raw good a station makes it from. */
 export interface Good {
   id: string
   family: GoodFamily
   grade: number
   refined: boolean
   crop: boolean
+  /** What one sells for at ★1, out of demand: a crop's own price, else the ladder × its family's factor; refined ×1.5. */
+  price: number
+  /** A refined good's input (its family's raw good of the same grade), or null for a raw one. */
+  input: string | null
+}
+
+/** A raw good's price ★1: a crop's own (CS11), else the ladder's (CS9). Grains and vegetables are all crops. */
+function rawPrice(id: string, family: GoodFamily, grade: number): number {
+  if (CROPS.has(id)) return CROP_PRICES[id as CropId]
+  if (family === 'grains' || family === 'vegetables') throw new RangeError(`${id} is a ${family} good but not a crop`)
+  return ladderPrice(family as LadderFamily, grade)
 }
 
 /** The 260 goods, family by family, raw G1–G10 then refined G1–G10. */
 export const GOODS: readonly Good[] = GOOD_FAMILIES.flatMap((family) => {
   const { raw, refined } = FAMILY_IDS[family]
-  const of = (ids: readonly string[], isRefined: boolean): Good[] =>
-    ids.map((id, i) => ({ id, family, grade: i + 1, refined: isRefined, crop: CROPS.has(id) }))
-  return [...of(raw, false), ...of(refined ?? [], true)]
+  const raws = raw.map((id, i): Good => ({ id, family, grade: i + 1, refined: false, crop: CROPS.has(id), price: rawPrice(id, family, i + 1), input: null }))
+  const refineds = (refined ?? []).map((id, i): Good => {
+    const input = raws[i]!
+    return { id, family, grade: i + 1, refined: true, crop: false, price: refinedPrice(input.price), input: input.id }
+  })
+  return [...raws, ...refineds]
 })
 const GOOD_BY_ID = new Map(GOODS.map((g) => [g.id, g]))
 export const GOOD_IDS: readonly string[] = GOODS.map((g) => g.id)
+/** A good's family, grade, form, price ★1 and input, or undefined for anything else (a seed has no price). */
 export const goodOf = (id: string): Good | undefined => GOOD_BY_ID.get(id)
+const REFINED_OF = new Map(GOODS.flatMap((g) => (g.input ? [[g.input, g.id] as const] : [])))
+/** What a raw good refines into at a station, or null (the vegetables' and the expeditions' have none). */
+export const refinedOf = (id: string): string | null => REFINED_OF.get(id) ?? null
 export const isGoodId = (id: string): boolean => GOOD_BY_ID.has(id)
 
 /** Seeds are Warehouse items with farm ids (F17 decision 6): `seed-<crop>` from the shop and `seed-<crop>-own` from
@@ -133,3 +161,11 @@ export const seedOf = (id: string): { crop: CropId; own: boolean } | undefined =
 
 /** Anything the v3 Warehouse may hold: a good or a seed. */
 export const isWarehouseId = (id: string): boolean => GOOD_BY_ID.has(id) || SEEDS.has(id)
+
+/** A Warehouse item in the player's words (F19): a good by its uma-art id ("Sunflower Seed"), a seed by its crop
+ * ("Carrot seeds", "Carrot seeds (own)"). */
+export function goodName(id: string): string {
+  const seed = SEEDS.get(id)
+  return seed ? `${itemNameOf(seed.crop)} seeds${seed.own ? ' (own)' : ''}` : itemNameOf(id)
+}
+

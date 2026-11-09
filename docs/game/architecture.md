@@ -157,7 +157,9 @@ interface Plot { crop: CropId | null; growth: number; ready: boolean; regrowing:
   `dorm.home` is who's on the farm, within the roster and the beds; the rest of the roster is away.
 - **The Warehouse's ids** are the 260 goods in `goods/ids.ts` (27 crops and 10 flours, the forest's 113, mining's 60,
   fishing's 20, expeditions' 30), every one uma-art's own item, plus seeds: `seed-<crop>` from the shop and
-  `seed-<crop>-own` from harvests, ★1 only. The bin takes goods, never seeds.
+  `seed-<crop>-own` from harvests, ★1 only. The bin takes goods, never seeds. Each good carries its price ★1 and, refined,
+  its input (F19, [goods.md](goods.md)); the night pays the bin into `gold`, `farm.counts['gold-shipped']` and
+  `diary.shipped`, and lists it in `summary.bin`.
 - **uma-work's flat stock:** the engine sees the Warehouse as `<id>@<stars>` keys (`carp@2`), through `workStock` and
   `fromWorkStock`; v3 work rows hold those keys. Rows sit at the v3 work places (the forest, the Fishery, the Mill, the
   Sawmill, the Smokehouse; the Mine, the Quarry, the Smelter and the Cutter from M5), four slots each, and each kind

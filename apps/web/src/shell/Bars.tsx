@@ -1,6 +1,7 @@
 // The farm's top and bottom bars on uma-kit (as uma-rpg's): the account's initial, which opens Account, and the sync chip.
 // The Wilds (F5): no currencies; the bottom bar holds the Wilds, with its Ready count, the Warehouse and the menu. The
-// loop's build (F18): the date chip, which opens the calendar, and Farm · Roster · End the day (raised) · Diary · Menu.
+// loop's build (F18): the date chip, which opens the calendar, and Farm · Roster · End the day (raised) · Diary · Menu;
+// F19's gold chip beside the date, which opens the bin.
 import { dateOf, daySetState, type Season } from '@farm/domain'
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { AccountBar, BottomBar, withParam, type BarTab, type CurrencyChip } from '@luismlorenzana/uma-kit/shell'
@@ -10,6 +11,7 @@ import { loopOn } from '../app/loop'
 import { dateLabel, nudgeWords, SEASON_COLOR } from '../loop/words'
 import { useGame, useLoopSave, useWildsSave } from '../save/game'
 import { readyTotal } from '../wilds/ready'
+import { GoldCoin } from './Gold'
 import { useNow } from './useNow'
 
 export type BarPage = 'wilds' | 'warehouse' | 'farm' | 'roster' | 'diary'
@@ -28,17 +30,26 @@ function dateChip(day: number | null, location: Location): CurrencyChip {
   }
 }
 
+/** Gold (F19 decision 10): uma-art's coin (a plain "g" until F25) and the farm's gold; it opens the bin. */
+function goldChip(gold: number | null, location: Location): CurrencyChip {
+  return {
+    key: 'gold', mark: 'currency/gold', fallback: <GoldCoin />, value: gold, to: withParam(location, 'sheet', 'bin'),
+    label: gold === null ? 'Gold' : `Gold: ${gold.toLocaleString('en-US')}g. The bin`,
+  }
+}
+
 export function FarmAccountBar() {
   const auth = useAuth()
   const location = useLocation()
   const sync = useGame((s) => s.sync)
   const day = useGame((s) => (s.save?.version === 3 ? s.save.calendar.day : null))
+  const gold = useGame((s) => (s.save?.version === 3 ? s.save.gold : null))
   const name = auth.user?.name ?? auth.user?.email ?? 'Farm'
   return (
     <AccountBar
       initial={name.slice(0, 1).toUpperCase()}
       account={{ to: '/account', label: `Account: ${name}` }}
-      chips={loopOn() ? [dateChip(day, location)] : []}
+      chips={loopOn() ? [dateChip(day, location), goldChip(gold, location)] : []}
       sync={sync === 'offline' ? { state: 'offline', text: 'Offline', label: 'Offline: changes sync when you’re back', to: '/account' }
         : sync === 'error' ? { state: 'paused', text: 'Sync paused', label: 'Sync paused', to: '/account' } : undefined}
     />

@@ -1,6 +1,6 @@
 // The shell (uma-kit's AppFrame, unchanged; FM18): the top bar, the page between, the bottom bar in the thumb zone, and the
 // menu sheet (`?sheet=menu`). In the loop's build (F18) also End the day (`?sheet=end`) and the calendar
-// (`?sheet=calendar`), loaded when one opens.
+// (`?sheet=calendar`); F19's bin (`?sheet=bin`) and shop (`?sheet=shop`). Each is loaded when one opens.
 import { AppFrame, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { lazy, Suspense } from 'react'
 import { Outlet, useLocation, useSearchParams } from 'react-router'
@@ -12,6 +12,9 @@ import { SyncWarning } from './SyncWarning'
 const LoopSheets = lazy(() => import('../loop/LoopSheets'))
 
 const LOOP_PAGES: Readonly<Record<string, BarPage>> = { '/': 'farm', '/roster': 'roster', '/diary': 'diary' }
+const LOOP_SHEETS = ['end', 'calendar', 'bin', 'shop'] as const
+type LoopSheet = typeof LOOP_SHEETS[number]
+const isLoopSheet = (sheet: string | null): sheet is LoopSheet => (LOOP_SHEETS as readonly (string | null)[]).includes(sheet)
 
 function pageOf(pathname: string): BarPage | null {
   if (loopOn()) return LOOP_PAGES[pathname] ?? null
@@ -30,7 +33,7 @@ export function Shell() {
       overlays={
         <>
           <MenuSheet open={sheet === 'menu'} onClose={() => leave(withParam(location, 'sheet', null))} />
-          {loopOn() && (sheet === 'end' || sheet === 'calendar') && <Suspense fallback={null}><LoopSheets key={sheet} sheet={sheet} /></Suspense>}
+          {loopOn() && isLoopSheet(sheet) && <Suspense fallback={null}><LoopSheets key={sheet} sheet={sheet} /></Suspense>}
         </>
       }
     >

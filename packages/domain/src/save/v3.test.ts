@@ -48,9 +48,9 @@ function farming(): SaveV3 {
   }
 }
 
-/** A morning summary on day 1 (F18): every line kind F18 writes. */
+/** A morning summary on day 1: every line kind F18 and F19 write. */
 const SUMMARY: MorningSummary = {
-  day: 1, bin: [], work: [{ kind: 'jobs', place: 'forest', jobs: 1, items: 5 }], ranks: [], bonds: [],
+  day: 1, bin: [{ kind: 'sold', id: 'carp', stars: 2, count: 3, gold: 150, demand: false }, { kind: 'sold', id: 'carp', stars: 1, count: 1, gold: 40, demand: false }], work: [{ kind: 'jobs', place: 'forest', jobs: 1, items: 5 }], ranks: [], bonds: [],
   news: [{ kind: 'season', season: 'spring' }, { kind: 'festival', festival: 'flower-show', when: 'tomorrow' }], nudges: [{ kind: 'idle', umas: ['303'] }],
 }
 
@@ -133,9 +133,15 @@ describe('the parse', () => {
     ['a bond out of order', (s) => { s.bonds = { '303:101': 10 } }, 'save.bonds.303:101: expected two roster ids in numeric order, idA:idB'],
     ['a bond with a stranger', (s) => { s.bonds = { '101:404': 10 } }, 'save.bonds.101:404'],
     ['work off the roster', (s) => { s.work['404'] = {} }, 'save.work.404: expected an Uma on the roster'],
-    ['a summary missing its sections', (s) => { s.summary = { day: 1 } }, 'save.summary.bin: expected 0–0 entries'],
+    ['a summary missing its sections', (s) => { s.summary = { day: 1 } }, 'save.summary.bin: expected 0–1300 entries'],
     ['a summary of another day', (s) => { s.summary = { ...SUMMARY, day: 2 } }, 'save.summary.day: expected today'],
-    ['bin lines before F19', (s) => { s.summary = { ...SUMMARY, bin: [{ kind: 'sold' }] } }, 'save.summary.bin: expected 0–0 entries'],
+    ['a seed sold', (s) => { s.summary = { ...SUMMARY, bin: [{ ...SUMMARY.bin[0], id: 'seed-carrot' }] } }, 'save.summary.bin.0.id: unknown good'],
+    ['a sale at ★6', (s) => { s.summary = { ...SUMMARY, bin: [{ ...SUMMARY.bin[0], stars: 6 }] } }, 'save.summary.bin.0.stars: expected 1–5'],
+    ['a sale of none', (s) => { s.summary = { ...SUMMARY, bin: [{ ...SUMMARY.bin[0], count: 0 }] } }, 'save.summary.bin.0.count: expected 1–'],
+    ['a sale of fractional gold', (s) => { s.summary = { ...SUMMARY, bin: [{ ...SUMMARY.bin[0], gold: 97.5 }] } }, 'save.summary.bin.0.gold: expected a non-negative integer'],
+    ['a good at a star sold twice', (s) => { s.summary = { ...SUMMARY, bin: [SUMMARY.bin[0], SUMMARY.bin[0]] } }, 'save.summary.bin.1: repeated'],
+    ['a sale in words', (s) => { s.summary = { ...SUMMARY, bin: [{ ...SUMMARY.bin[0], text: '3 Carp' }] } }, 'save.summary.bin.0: unknown keys text'],
+    ['a sale with no demand mark', (s) => { s.summary = { ...SUMMARY, bin: [{ kind: 'sold', id: 'carp', stars: 2, count: 3, gold: 150 }] } }, 'save.summary.bin.0.demand: expected true or false'],
     ['a summary line in words', (s) => { s.summary = { ...SUMMARY, news: [{ kind: 'season', season: 'spring', text: 'Spring!' }] } }, 'save.summary.news.0: unknown keys text'],
     ['jobs at no work place', (s) => { s.summary = { ...SUMMARY, work: [{ kind: 'jobs', place: 'gate', jobs: 1, items: 3 }] } }, 'save.summary.work.0.place: expected one of'],
     ['a place twice in work done', (s) => { s.summary = { ...SUMMARY, work: [SUMMARY.work[0], SUMMARY.work[0]] } }, 'save.summary.work.1: repeated'],

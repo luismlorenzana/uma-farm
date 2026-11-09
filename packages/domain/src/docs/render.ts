@@ -20,7 +20,10 @@ import { tradeLine } from '../roster/roster'
 import { UMA_ROW_CALLING_V3, type UmaCallingRowV3 } from '../roster/template'
 import { BEDS, FARM_RANK_POINTS } from '../farm/farm'
 import { ACTIVITY_NAMES, CRAFT_BANDS, craftRank, LINE_ACTIVITY, RANKS } from '../farm/ranks'
-import { isGoodId } from '../goods/ids'
+import { CROP_IDS, FAMILY_NAMES, GOOD_FAMILIES, GOODS, goodOf, isGoodId, refinedOf, type GoodFamily } from '../goods/ids'
+import { itemNameOf } from '../items/lines'
+import { inDemand, priceOf, STARS, starFactor, starPrice } from '../goods/prices'
+import { DEMAND, FAMILY_FACTOR, LADDER, REFINED_FACTOR, type LadderFamily } from '../goods/rule'
 import { refundOf } from '../save/migrate-v3'
 import { DAYS_PER_SEASON, farmDay, FESTIVALS, SEASON_NAMES, SEASONS } from '../farm/calendar'
 import { FARM_MAP_ROWS, FARM_PLACES, type PlaceOpens } from '../farm/places'
@@ -199,8 +202,77 @@ function farmMap(): string {
 ${table(['Place', 'Building (uma-art)', 'Opens'], FARM_PLACES.map((p) => [p.name, `\`${p.frame}\`${p.borrowed ? ' (borrowed)' : ''}`, opensWords(p.opens)]))}`
 }
 
+// --- Goods and prices (F19) -----------------------------------------------------------------------------------------
+
+/** Where each family comes from (CS9's table). */
+const FAMILY_FROM: Readonly<Record<GoodFamily, string>> = {
+  grains: 'The Fields', vegetables: 'The Fields', 'herbs-spices': 'The forest, some crops', 'nuts-seeds': 'The forest (Autumn), two crops',
+  sweets: 'The forest (Spring), Sugar Beet', fruits: 'The forest (Summer)', mushrooms: 'The forest', woods: 'The forest', ores: 'The Mine',
+  stones: 'The Quarry', crystals: 'The Quarry', fish: 'The Fishery', 'hides-scales': 'Expeditions', 'bones-horns': 'Expeditions', essences: 'Expeditions',
+}
+const g = (gold: number): string => `${gold.toLocaleString('en-US')}g`
+/** A day of each season, year 1, for the demand columns. */
+const SEASON_DAY = Object.fromEntries(SEASONS.map((season) => [season, farmDay({ year: 1, season, day: 1 })])) as Record<(typeof SEASONS)[number], number>
+
+/** CS9: the ladder, and each family's factor and where it comes from. */
+function priceLadder(): string {
+  return `${table(['Grade', ...LADDER.map((_, i) => `G${i + 1}`)], [['The ladder', ...LADDER.map(g)]])}
+
+${table(['Family', 'Factor', 'Where from', 'Raw G1 → G10, ★1', 'Refined'], GOOD_FAMILIES.map((family) => {
+    const factor = family in FAMILY_FACTOR ? `×${FAMILY_FACTOR[family as LadderFamily].toFixed(1)}` : 'Crops (CS11)'
+    const raw = GOODS.filter((good) => good.family === family && !good.refined).map((good) => good.price)
+    const refined = GOODS.some((good) => good.family === family && good.refined) ? `×${REFINED_FACTOR}` : '—'
+    return [FAMILY_NAMES[family], factor, FAMILY_FROM[family], raw.join(' · '), refined]
+  }))}`
+}
+
+/** Every family's goods, G1 → G10: raw and refined, each at ★1 and ★5, out of demand (in demand, ×1.2 then rounded to
+ * 5g). Crops are marked. */
+function goodsPrices(): string {
+  const name = (id: string) => `${itemNameOf(id)}${goodOf(id)!.crop ? ' (crop)' : ''}`
+  return GOOD_FAMILIES.map((family) => {
+    const raws = GOODS.filter((good) => good.family === family && !good.refined)
+    const hasRefined = raws.some((good) => refinedOf(good.id) !== null)
+    const head = hasRefined ? ['Grade', 'Raw', '★1', '★5', 'Refined', '★1', '★5'] : ['Grade', 'Raw', '★1', '★5']
+    const rows = raws.map((good) => {
+      const raw = [`G${good.grade}`, name(good.id), g(starPrice(good.id, 1)), g(starPrice(good.id, 5))]
+      const into = refinedOf(good.id)
+      if (!hasRefined) return raw
+      return into ? [...raw, itemNameOf(into), g(starPrice(into, 1)), g(starPrice(into, 5))] : [...raw, '—', '—', '—']
+    })
+    return `### ${FAMILY_NAMES[family]}\n\n${table(head, rows)}`
+  }).join('\n\n')
+}
+
+/** CS11: the crops' own prices, their refined forms and the season their family is in demand. */
+function cropPrices(): string {
+  const demanded = (id: string) => SEASONS.filter((season) => inDemand(id, SEASON_DAY[season])).map((season) => SEASON_NAMES[season]).join(', ') || '—'
+  return table(['Crop', 'Id', 'Family', 'Price ★1', 'Refined', 'Its price ★1', 'In demand'], CROP_IDS.map((crop) => {
+    const good = goodOf(crop)!
+    const into = refinedOf(crop)
+    return [itemNameOf(crop), `\`${crop}\``, FAMILY_NAMES[good.family], g(good.price), into ? itemNameOf(into) : '—', into ? g(goodOf(into)!.price) : '—', demanded(crop)]
+  }))
+}
+
+/** CS4: each season's demand, and how many of the catalogue's goods it lifts. */
+function demand(): string {
+  return table(['Season', 'In demand (+20%)', 'Goods lifted'], SEASONS.map((season) => {
+    const lifted = GOODS.filter((good) => inDemand(good.id, SEASON_DAY[season])).length
+    const rules = DEMAND[season].map((rule) => `${rule.name}${rule.refined ? ' (the refined row)' : ''}`).join(', ')
+    return [SEASON_NAMES[season], rules, `${lifted} of ${GOODS.length}`]
+  }))
+}
+
+/** CS9 rule 5: the stars' factors, worked on two goods. */
+function starPrices(): string {
+  const summer = SEASON_DAY.summer
+  return table(['Stars', 'Factor', 'Silver Ingot', 'Salmon, Summer (in demand)', 'Carrot, Summer'], STARS.map((stars) => [
+    `★${stars}`, `×${starFactor(stars)}`, g(priceOf('silver-ingot', stars, summer)), g(priceOf('salmon', stars, summer)), g(priceOf('carrot', stars, summer)),
+  ]))
+}
+
 export function renderBlock(key: string): string | null {
   const blocks: Record<string, () => string> = { families, items, made, facilities, callings, jobs, levels, 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
-    calendar, night, 'farm-map': farmMap }
+    calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices }
   return blocks[key]?.() ?? null
 }

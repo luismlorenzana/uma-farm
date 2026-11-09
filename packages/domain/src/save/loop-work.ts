@@ -7,6 +7,7 @@ import {
   type SlotRef, type WorkEnv, type WorkRow,
 } from '@luismlorenzana/uma-work'
 import { DAY_MS, workNow } from '../farm/calendar'
+import { goodName } from '../goods/ids'
 import { farmEnvV3, loopWorld, withLoopWorld, type LoopWorld } from '../work/loop-env'
 import { LOOP_KINDS, LOOP_WORK_PLACES, type LoopKinds, type LoopPlaceId } from './parse-v3'
 import { SaveRuleError, type SaveRuleReason } from './rules'
@@ -21,14 +22,17 @@ const REASON: Readonly<Record<string, SaveRuleReason>> = {
 /** Whole days from now to a moment on the work clock, at least 1. */
 const daysUntil = (at: number, now: number): number => Math.max(1, Math.ceil((at - now) / DAY_MS))
 
-/** A refusal's sentence on the loop's screens: days for times, a good's id without its stars, and "isn't on the farm" for
- * an Uma who isn't home. The goods' names are F19's. */
+/** A refusal's sentence on the loop's screens: days for times, a good's name without its stars (F19's `goodName`), and
+ * "isn't on the farm" for an Uma who isn't home. */
 export function loopRefusalText(refusal: Refusal, now: number): string {
   if (refusal.code === 'unknown-worker') return 'She isn’t on the farm.'
   const data = refusal.data ?? {}
   return refusal.message.replace(/\{(\w+)\}/g, (_, key: string) => {
     if (key === 'uma') return 'She'
-    if (key === 'item') return parseStockKey(String(data.item))?.id ?? String(data.item)
+    if (key === 'item') {
+      const at = parseStockKey(String(data.item))
+      return at ? goodName(at.id) : String(data.item)
+    }
     if (key === 'time') {
       const days = daysUntil(Number(data.time), now)
       return days === 1 ? '1 day' : `${days} days`

@@ -41,7 +41,7 @@ describe('work on the day clock (decision 1)', () => {
     expect(() => startAt(busy, '101', 'forest', 1)).toThrow('She is busy for another 3 days.')
     expect(() => startAt(busy, '202', 'mill', 0, { ...make })).not.toThrow()
     expect(() => startAt(startAt(busy, '202', 'mill', 0), '202', 'mill', 1)).toThrow(SaveRuleError)
-    expect(() => startAt({ ...save, items: {} }, '202', 'mill', 0)).toThrow('Short 1 wheat.')
+    expect(() => startAt({ ...save, items: {} }, '202', 'mill', 0)).toThrow('Short 1 Wheat.')
   })
 
   it('collects, recalls and repeats at the day\'s start', () => {
@@ -61,7 +61,7 @@ describe('work on the day clock (decision 1)', () => {
     const queued = editLoopQueue(startAt(farm(), '101', 'mill', 0), { outfitId: '101', add: { request: make, building: 'mill' } }, T1, TEST_KINDS)
     const morning = night(queued)
     expect(morning.work['101']!.dropped).toMatchObject({ at: DAY_MS, short: [{ item: 'wheat@1', qty: 1 }] })
-    expect(() => restartLoopStopped(morning, '101', T1, TEST_KINDS)).toThrow('Short 1 wheat.')
+    expect(() => restartLoopStopped(morning, '101', T1, TEST_KINDS)).toThrow('Short 1 Wheat.')
     const stocked: SaveV3 = { ...morning, items: { ...morning.items, wheat: [1, 0, 0, 0, 0] } }
     expect(restartLoopStopped(stocked, '101', T1, TEST_KINDS).work['101']!.entries).toMatchObject([{ startedAt: DAY_MS }])
     expect(dismissLoopStopped(morning, '101', T1, TEST_KINDS).work['101']!.dropped).toBeNull()

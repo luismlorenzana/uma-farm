@@ -16,7 +16,7 @@ import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
 import { masterReady } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { collectFarm, dismissSummary } from './actions'
-import { FARM_MAP_TILES, lockOf, placeAt } from './farm-map'
+import { FARM_MAP_TILES, lockOf, placeAt, placeLink } from './farm-map'
 import { shortDate, summaryParts } from './words'
 
 const GROUND: PageGround = { id: 'farm', tiles: 'farmlands', palette: PALETTES.farmlands! }
@@ -97,7 +97,7 @@ function FarmScreen({ save, peek }: { save: SaveV3; peek: FarmPlace | undefined 
     const busy = pips?.some((p) => p.state !== 'free') ?? false
     return {
       id: place.id, name: place.name, frame: place.frame, at: placeAt(place),
-      to: withParam({ pathname: '/', search: '' }, 'peek', place.id),
+      to: placeLink(save, place),
       label: lock ? `${place.name}, locked: ${lock}` : slots > 0 ? `${place.name}, ready to collect` : place.name,
       locked: lock !== null, ready: slots > 0 ? 'Ready' : undefined,
       ...(pips && (lock === null || busy) ? { pips, pipsAt: 'arch' as const } : {}),
@@ -175,7 +175,10 @@ function Morning({ save, open }: { save: SaveV3; open: boolean }) {
             <ul className="divide-y divide-hairline rounded-md border border-hairline">
               {part.lines.map((line) => (
                 <li key={line.key}>
-                  <Link to={line.to} state={{ back: true }} className="flex min-h-11 items-center px-3 text-[15px]" data-line={line.key}>{line.text}</Link>
+                  <Link to={line.to} state={{ back: true }} className="flex min-h-11 items-center gap-2 px-3 text-[15px]" data-line={line.key}>
+                    <span className="min-w-0 flex-1">{line.text}</span>
+                    {line.tag && <span className="shrink-0 rounded-full bg-success/15 px-1.5 text-[11px] font-semibold text-success" data-tag>{line.tag}</span>}
+                  </Link>
                 </li>
               ))}
             </ul>

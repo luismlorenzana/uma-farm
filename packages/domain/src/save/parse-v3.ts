@@ -4,8 +4,8 @@ import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkKind
 import { FESTIVAL_IDS, SEASONS } from '../farm/calendar'
 import { bedsAt, DORM_MAX_LEVEL } from '../farm/farm'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
-import { isCropId, isGoodId, isSeedId, isWarehouseId, type CropId } from '../goods/ids'
-import type { IdleNudge, JobsDone, MorningSummary, NewsLine } from '../night/summary'
+import { GOOD_IDS, isCropId, isGoodId, isSeedId, isWarehouseId, type CropId } from '../goods/ids'
+import type { BinSale, IdleNudge, JobsDone, MorningSummary, NewsLine } from '../night/summary'
 import { isOutfitId } from '../roster/roster'
 import type { LoopWorld } from '../work/loop-env'
 import {
@@ -422,7 +422,17 @@ const none = (value: unknown, path: string): [] => list(value, path, 0, 0) as []
 function parseSummary(value: unknown, path: string, today: number, roster: ReadonlySet<string>): MorningSummary {
   const o = object(value, path, ['day', 'bin', 'work', 'ranks', 'bonds', 'news', 'nudges'])
   if (o.day !== today) fail(`${path}.day`, 'expected today: a summary is the morning it opens on')
-  const bin = none(o.bin, `${path}.bin`)
+  // The bin (F19): a good at one star once, a whole count and gold; the gold isn't re-priced (a later price can't break it).
+  const bin = unique(list(o.bin, `${path}.bin`, 0, GOOD_IDS.length * MAX_STARS).map((v, i): BinSale => {
+    const at = `${path}.bin.${i}`
+    const b = object(v, at, ['kind', 'id', 'stars', 'count', 'gold', 'demand'])
+    oneOf(b.kind, `${at}.kind`, ['sold'] as const)
+    const id = typeof b.id === 'string' && isGoodId(b.id) ? b.id : fail(`${at}.id`, 'unknown good')
+    return {
+      kind: 'sold', id, stars: int(b.stars, `${at}.stars`, 1, MAX_STARS), count: int(b.count, `${at}.count`, 1, Number.MAX_SAFE_INTEGER), gold: count(b.gold, `${at}.gold`),
+      demand: bool(b.demand, `${at}.demand`),
+    }
+  }), `${path}.bin`, (b) => `${b.id}@${b.stars}`)
   const work = unique(list(o.work, `${path}.work`, 0, LOOP_WORK_PLACES.length).map((v, i): JobsDone => {
     const at = `${path}.work.${i}`
     const w = object(v, at, ['kind', 'place', 'jobs', 'items'])
