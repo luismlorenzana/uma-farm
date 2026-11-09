@@ -4,7 +4,7 @@
 import { statusOf } from '@luismlorenzana/uma-work'
 import { workNow } from '../farm/calendar'
 import { loopReadyItems } from '../save/work-readings'
-import { readyPlots, type OutfitId, type SaveV3 } from '../save/v3'
+import { leaving, readyPlots, type OutfitId, type SaveV3 } from '../save/v3'
 
 export interface DaySet {
   /** Nothing waits: End the day reads "All set" and ends at once (CS6). */
@@ -27,7 +27,7 @@ export interface DaySet {
 export function daySetState(save: SaveV3): DaySet {
   const now = workNow(save)
   const tending = new Set(save.fields.blocks.filter((b) => b.tender !== null && b.plots.some((p) => p.crop !== null && !p.ready)).map((b) => b.tender!))
-  const idle = save.dorm.home.filter((id) => statusOf(save.work[id], now) !== 'working' && !tending.has(id))
+  const idle = save.dorm.home.filter((id) => !leaving(save, id) && statusOf(save.work[id], now) !== 'working' && !tending.has(id))
   const umas = Object.values(save.work).filter((row) => loopReadyItems(row, now) > 0).length
   const collect = umas + readyPlots(save)
   return { allSet: idle.length === 0 && collect === 0, idle, collect, badge: idle.length + collect }

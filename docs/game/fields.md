@@ -133,7 +133,8 @@ across nights.
   `restartLoopStopped` and a queue's add refuse with `busy`, "She tends Block A."), and an Uma with a running job can't
   tend (`setTender` refuses `busy`, "She's working."). One rule reads both: `isBusy(save, id)`, for the Fields' picker,
   F22's job sheet and F23's swaps. A tender of another block moves to the new one.
-- **Who may tend:** an Uma home on the farm (`not-owned` otherwise).
+- **Who may tend:** an Uma home on the farm (`not-owned` otherwise) and not leaving tomorrow on a swap (`busy`, "She
+  leaves tomorrow."; F23, [roster.md](roster.md#the-off-season-and-swaps-cs36)).
 - **A tender works a night only when her block has a growing plot (decision 2):** then she's in the night's
   `notes.tended`, for farming's rank points (F21), and has work for "All set" (F18's nudge). Tending an empty or
   all-Ready block is idle.

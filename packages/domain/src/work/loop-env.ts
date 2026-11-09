@@ -1,7 +1,7 @@
 // The loop's work env (F18 decisions 1 and 4; core spec CS7, FC6, D25): uma-work on the day clock. Day d starts at
 // (d − 1) × DAY_MS (`workNow`) and every work operation runs then, so nothing moves until the night ends the day. The v3
 // work places hold four slots each at speed 1 (a day is a day), with no upgrades and no Speed Tickets; who may work is
-// who's home on the farm; work pays no EXP (ranks tick at night, F21); and the kinds are F22's `LOOP_KINDS`, or
+// who's home on the farm and not leaving tomorrow (F23); work pays no EXP (ranks tick at night, F21); and the kinds are F22's `LOOP_KINDS`, or
 // `loopKinds(talentOf)` with master data's talents. uma-work sees the Warehouse through F17's `<id>@<stars>` bridge.
 import {
   buildingTable, SPEED_TICKET_MS, type BuildingRules, type ExpRules, type TicketRules, type WorkEnv, type WorkRow, type WorkState,
@@ -9,7 +9,7 @@ import {
 import { DAY_MS } from '../farm/calendar'
 import { LOOP_KINDS } from '../gathering/kinds'
 import { LOOP_SLOTS, LOOP_WORK_PLACES, type LoopKinds } from '../save/parse-v3'
-import type { LoopWorkRequest, OutfitId, SaveV3 } from '../save/v3'
+import { onFarm, type LoopWorkRequest, type OutfitId, type SaveV3 } from '../save/v3'
 import { fromWorkStock, workStock } from '../save/warehouse'
 
 /** uma-work's state over a v3 save: the Warehouse as the engine's flat `<id>@<stars>` view, no building levels, the work
@@ -52,7 +52,7 @@ export function farmEnvV3(kinds: LoopKinds = LOOP_KINDS): WorkEnv<LoopWorld> {
     buildings: LOOP_BUILDINGS,
     tickets: NO_TICKETS,
     exp: NO_EXP,
-    isWorker: (world, outfitId) => world.save.dorm.home.includes(outfitId),
+    isWorker: (world, outfitId) => onFarm(world.save, outfitId),
   }
 }
 

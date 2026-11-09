@@ -1,10 +1,10 @@
 // The farm (F18 decision 5; FC28, FR5–FR9): `/` in the loop's build. uma-kit's Hub map in eight rows of three, the core
 // loop's rows, on uma-art's buildings; taller than a phone's screen, it scrolls, with the help button and the Collect all
 // pill fixed. A place's quick look opens in the side panel (`/?peek=<place>`): what it is, and what opens it while it's
-// locked. After a night the morning summary opens over the map until the player starts the day. Loaded on demand, and
-// only in the loop's build.
+// locked; the Gate's is the visitor waiting, with Chat and Gift (F23). After a night the morning summary opens over the
+// map until the player starts the day. Loaded on demand, and only in the loop's build.
 import {
-  farmEnvV3, FARM_PLACES, farmPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, workNow, type FarmPlace, type LoopPlaceId,
+  farmEnvV3, FARM_PLACES, farmPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, STAY_AFFINITY, workNow, type FarmPlace, type LoopPlaceId,
   type SaveV3,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
@@ -19,6 +19,7 @@ import { useLoopSave } from '../save/game'
 import { collectFarm, dismissSummary } from './actions'
 import { FARM_MAP_TILES, lockOf, placeAt, placeLink } from './farm-map'
 import { FieldsPeek, fieldsPips } from './FieldsPeek'
+import { GatePeek } from './GatePeek'
 import { summaryParts } from './summary-words'
 import { farmingTalents, useTalents } from './talents'
 import { shortDate } from './words'
@@ -47,6 +48,12 @@ function pipsOf(place: FarmPlace, work: WorkView): PipModel[] | undefined {
     state: card.running ? 'busy' : 'ready', progress: card.progress, queued: card.queue.length,
     face: <FaceTile outfitId={card.outfitId} size={24} label="Working Uma" round />,
   })
+}
+
+/** The Gate's pip (F23): the visitor waiting, ringed by her way to staying. */
+function gatePips(save: SaveV3): PipModel[] | undefined {
+  const visitor = save.visitors[0]
+  return visitor ? [{ state: 'busy', progress: Math.min(1, visitor.affinity / STAY_AFFINITY), face: <FaceTile outfitId={visitor.outfitId} size={24} label="Visitor" round /> }] : undefined
 }
 
 /** One tap collects every finished job on the farm and harvests every Ready plot (F20). */
@@ -105,7 +112,7 @@ function FarmScreen({ save, peek }: { save: SaveV3; peek: FarmPlace | undefined 
   const places: HubMapPlace[] = FARM_PLACES.map((place): HubMapPlace => {
     const lock = lockOf(save, place)
     const slots = place.id === 'fields' ? plots : ready.get(place.id as LoopPlaceId) ?? 0
-    const pips = place.id === 'fields' ? fieldsPips(save, farming) : pipsOf(place, work)
+    const pips = place.id === 'fields' ? fieldsPips(save, farming) : place.id === 'gate' ? gatePips(save) : pipsOf(place, work)
     const busy = pips?.some((p) => p.state !== 'free') ?? false
     return {
       id: place.id, name: place.name, frame: place.frame, at: placeAt(place),
@@ -147,8 +154,9 @@ function FarmScreen({ save, peek }: { save: SaveV3; peek: FarmPlace | undefined 
           focusKey={`[data-place="${peek.id}"]`}
         >
           {peek.id === 'fields' && lockOf(save, peek) === null ? <FieldsPeek save={save} talentOf={farming} />
-            : isWorkScreen(peek.id) && placeOpen(save, peek) ? <WorkPlacePeek save={save} place={peek.id} />
-              : <PlacePeek save={save} place={peek} />}
+            : peek.id === 'gate' && lockOf(save, peek) === null ? <GatePeek save={save} />
+              : isWorkScreen(peek.id) && placeOpen(save, peek) ? <WorkPlacePeek save={save} place={peek.id} />
+                : <PlacePeek save={save} place={peek} />}
         </PeekPanel>
       )}
       <Morning save={save} open={!covered} />

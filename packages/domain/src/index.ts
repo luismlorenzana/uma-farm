@@ -83,3 +83,9 @@ export * from './gathering/ids'
 export * from './gathering/tables'
 export * from './gathering/kinds'
 export * from './gathering/stations'
+
+// The roster (F23, core spec CS2, CS34–CS36, CS45): the start's six and three picks, the Dorm's levels, beds and swaps,
+// visitors at the Gate, chats and gifts, and chapter recruits. Dark until F24 (D29).
+export * from './farm/dorm'
+export * from './farm/visitors'
+export * from './farm/start'

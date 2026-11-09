@@ -40,7 +40,7 @@ How uma-farm is built and run, as of F18: save v2 and the Wilds live, their rule
 | Gates | `src/app/Root.tsx` | The kit's `BootGates`: splash → Google sign-in → boot → the app; the kit's **Update ready · Restart** |
 | Pages | `src/app/router.tsx` | `/` the Wilds (`?peek=<place>` a quick look), `/wilds/<place>` a place's page, `/warehouse` and `/account`, inside the shell; `/wilds` and anything else go to `/`. The Wilds, the place pages and the Warehouse load on demand ([wilds.md](wilds.md)). The loop's build (F18): `/` the farm map (`?peek=<place>`), `/roster`, `/diary` and `/account`, the first three on demand ([days.md](days.md)) |
 | The loop's switch | `src/app/loop.ts` | `loopOn()`: `VITE_FARM_LOOP` is `'1'` (F17). On in the dev server (`.env.development`), Vitest and the `loop` build (`.env.loop`); unset in production. F24 deletes it |
-| The loop | `src/loop/` | Loaded on demand, in the loop's build only: its boot (`toLoopSave`: the migration once master data has loaded, and the temporary picks), the farm map with its quick looks and the morning summary (`FarmMap.tsx`), the roster and the Diary, End the day and the calendar (`LoopSheets.tsx`) and the day's actions (`actions.ts`: End the day, put the morning away, Collect all). Its words (`words.ts`) and the Menu's switch (`ask.ts`) are small and load with the shell (F18, [days.md](days.md)) |
+| The loop | `src/loop/` | Loaded on demand, in the loop's build only: its boot (`toLoopSave`: the migration once master data has loaded), the farm map with its quick looks and the morning summary (`FarmMap.tsx`), the roster and the Diary, End the day and the calendar (`LoopSheets.tsx`) and the day's actions (`actions.ts`: End the day, put the morning away, Collect all). Its words (`words.ts`) and the Menu's switch (`ask.ts`) are small and load with the shell (F18, [days.md](days.md)) |
 | Shell | `src/shell/` | The kit's `AppFrame` unchanged (FM18): the account bar with the sync chip, the bottom bar (Wilds with its Ready count, Warehouse, Menu), the menu sheet (`?sheet=menu`: every place with its Ready count, the Warehouse, Account and the build id), and the sync warning. The loop's build (F18): the date chip, Farm · Roster · End the day (raised) · Diary · Menu, the menu by the farm's rows with "Ask before ending the day", and `?sheet=end` and `?sheet=calendar` |
 | The Wilds | `src/wilds/` | The Hub map on uma-kit (`HubMap`), the quick looks, Collect all, the help, the Forge and the Post as placeholders, the Ready counts |
 | Places | `src/places/` | A place's page on uma-kit/work (`work/`: the farm's provider, the slot rows, the job sheet, the What step) and the Warehouse (`warehouse/`) |
@@ -174,8 +174,9 @@ interface Plot { crop: CropId | null; growth: number; ready: boolean; regrowing:
   well under Firestore's 1 MiB.
 
 Day 1 (`newSave`, CS3): day 1, 500g, 9 Carrot seeds, Block A of 9 tilled plots, the Dorm at level 1, chapter 1, the
-seven tools at Basic, everything else empty. Until F23's start sheet, the loop's build fills a roster under three from a
-seeded shuffle of the release (`draw(uid, 0, 'start', n)`); a migrated save keeps its Umas and is filled only to three.
+seven tools at Basic, everything else empty, nobody on the roster. While the roster holds fewer than three, the start's
+sheet asks for the picks (F23, [roster.md](roster.md#the-start-cs2)); a migrated save keeps its Umas and picks the rest.
+F17's temporary picks (a seeded fill to three) are gone.
 
 The Dorm's beds (CS34):
 
@@ -207,7 +208,7 @@ next boot reads v3.
 | 2 | **Materials:** what is still a good carries over at ★1; what leaves the game is refunded per grade (below) |
 | 3 | **Craft Level becomes her rank** in her calling's activity (below). An outfit the release no longer has joins at Novice everywhere |
 | 4 | **The roster:** every Uma in `umas` joins on day 1; the Dorm's level is the lowest with a bed for each, bought and in effect, free. Past 60, the 60 with the most mapped points live home (ties by outfit id) and the rest are away |
-| 5 | **The calendar starts:** day 1, 500g plus the refunds, Block A, 9 Carrot seeds, chapter 1 |
+| 5 | **The calendar starts:** day 1, 500g plus the refunds, Block A, 9 Carrot seeds, chapter 1. A roster under three picks the rest on the start's sheet (F23) |
 | 6 | Everything else starts empty: Farm Rank 1, the Diary, bonds, the board |
 
 <!-- live:craft-ranks -->

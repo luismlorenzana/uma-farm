@@ -56,6 +56,8 @@ const MAX_QUEUED = 3
 const MAX_ENTRIES = MAX_QUEUED + 1
 /** The most items one entry makes: well past a Legend's day at the forest (CS17). */
 const MAX_ENTRY_ITEMS = 200
+/** The most recruits, visitors or departures one morning can name. */
+const MAX_ROSTER_NEWS = 60
 /** Ids the save names itself (requests, milestones, animals, records): short kebab words, colons allowed. */
 const KEY = /^[a-z0-9][a-z0-9:._-]{0,63}$/
 
@@ -470,13 +472,29 @@ function parseSummary(value: unknown, path: string, today: number, roster: Reado
     return kind === 'full' ? { kind, ...line, challenge: count(r.challenge, `${at}.challenge`) } : { kind, ...line }
   }), `${path}.ranks`, (r) => `${r.kind}:${r.outfitId}:${r.activity}`)
   const bonds = none(o.bonds, `${path}.bonds`)
-  const news = unique(list(o.news, `${path}.news`, 0, 8).map((v, i): NewsLine => {
+  // F23: the Dorm's new level, Umas home from a swap, recruits who joined (on the roster), a visitor at the Gate and those
+  // who left (outfit ids by form: she may since have joined, or gone).
+  const news = unique(list(o.news, `${path}.news`, 0, 8 + 3 * MAX_ROSTER_NEWS).map((v, i): NewsLine => {
     const at = `${path}.news.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['season', 'festival'] as const)
-    if (kind === 'season') return { kind, season: oneOf(object(v, at, ['kind', 'season']).season, `${at}.season`, SEASONS) }
-    const f = object(v, at, ['kind', 'festival', 'when'])
-    return { kind, festival: oneOf(f.festival, `${at}.festival`, FESTIVAL_IDS), when: oneOf(f.when, `${at}.when`, ['today', 'tomorrow'] as const) }
-  }), `${path}.news`, (n) => (n.kind === 'season' ? 'season' : `festival:${n.when}`))
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['season', 'festival', 'dorm', 'home', 'joined', 'gate', 'left'] as const)
+    switch (kind) {
+      case 'season': return { kind, season: oneOf(object(v, at, ['kind', 'season']).season, `${at}.season`, SEASONS) }
+      case 'festival': {
+        const f = object(v, at, ['kind', 'festival', 'when'])
+        return { kind, festival: oneOf(f.festival, `${at}.festival`, FESTIVAL_IDS), when: oneOf(f.when, `${at}.when`, ['today', 'tomorrow'] as const) }
+      }
+      case 'dorm': return { kind, level: int(object(v, at, ['kind', 'level']).level, `${at}.level`, 2, DORM_MAX_LEVEL) }
+      case 'home': {
+        const h = object(v, at, ['kind', 'umas'])
+        return { kind, umas: unique(list(h.umas, `${at}.umas`, 1, bedsAt(DORM_MAX_LEVEL)).map((id, j) => member(id, `${at}.umas.${j}`, roster)), `${at}.umas`) }
+      }
+      case 'joined': {
+        const j = object(v, at, ['kind', 'outfitId', 'home'])
+        return { kind, outfitId: member(j.outfitId, `${at}.outfitId`, roster), home: bool(j.home, `${at}.home`) }
+      }
+      case 'gate': case 'left': return { kind, outfitId: outfit(object(v, at, ['kind', 'outfitId']).outfitId, `${at}.outfitId`) }
+    }
+  }), `${path}.news`, (n) => (n.kind === 'season' || n.kind === 'dorm' || n.kind === 'home' ? n.kind : n.kind === 'festival' ? `festival:${n.when}` : `${n.kind}:${n.outfitId}`))
   const nudges = unique(list(o.nudges, `${path}.nudges`, 0, 4).map((v, i): Nudge => {
     const at = `${path}.nudges.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, ['idle', 'seeds'] as const)

@@ -2,7 +2,8 @@
 // page, `/warehouse` and `/account`. The Wilds map, the work pages and the Warehouse load on demand; anything else goes
 // to the Wilds. The loop's build (F17, D29) has the bottom bar's pages (F18): `/` the farm (`?peek=<place>` a quick look),
 // `/roster`, `/diary` and `/account`; F19's Warehouse by stars, `/warehouse` (`?pick=bin` to ship from it); F20's
-// Fields, `/fields`; and F22's forest, Fishery and stations, `/forest`, `/fishery`, `/mill`, `/sawmill`, `/smokehouse`.
+// Fields, `/fields`; F22's forest, Fishery and stations, `/forest`, `/fishery`, `/mill`, `/sawmill`, `/smokehouse`; and
+// F23's Dorm, `/dorm`.
 import { lazy, Suspense, type ReactNode } from 'react'
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router'
 import { AccountView } from '../home/AccountView'
@@ -33,6 +34,7 @@ function loopRoutes(): RouteObject[] {
   const LoopWarehouse = lazy(() => import('../loop/WarehousePage'))
   const FieldsPage = lazy(() => import('../loop/FieldsPage'))
   const WorkPlace = lazy(() => import('../loop/WorkPlace'))
+  const DormPage = lazy(() => import('../loop/DormPage'))
   const work = (place: 'forest' | 'fishery' | 'mill' | 'sawmill' | 'smokehouse'): RouteObject => ({ path: place, element: loading(<WorkPlace key={place} place={place} />) })
   return [
     { index: true, element: loading(<FarmMap />) },
@@ -41,6 +43,7 @@ function loopRoutes(): RouteObject[] {
     { path: 'diary', element: loading(<DiaryPage />) },
     { path: 'warehouse', element: loading(<LoopWarehouse />) },
     { path: 'fields', element: loading(<FieldsPage />) },
+    { path: 'dorm', element: loading(<DormPage />) },
     { path: 'account', element: <AccountView /> },
     { path: '*', element: <Navigate to="/" replace /> },
   ]

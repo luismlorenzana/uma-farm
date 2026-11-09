@@ -1,7 +1,7 @@
-// The morning summary's lines (F18 decision 11, F19 decision 6, F20, F21): the save holds ids and counts, and these say
+// The morning summary's lines (F18 decision 11, F19 decision 6, F20, F21, F23): the save holds ids and counts, and these say
 // them, each line a tap to its place. With the farm map, on demand. Pure, so the card and the tests read the same.
 import {
-  ACTIVITY_NAMES, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, SEASON_NAMES, type FarmPlaceId, type FestivalId, type MorningSummary, type SummarySection,
+  ACTIVITY_NAMES, bedsAt, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, SEASON_NAMES, type FarmPlaceId, type FestivalId, type MorningSummary, type SummarySection,
   summarySections,
 } from '@farm/domain'
 import { challengeWords } from './roster-view'
@@ -30,7 +30,10 @@ const peek = (place: FarmPlaceId): string => `/?peek=${place}`
 /** The Fields' page (F20). */
 export const FIELDS = '/fields'
 
-/** An Uma's name from master data, for the ranks section; "An Uma" until it loads. */
+/** The Dorm's page (F23). */
+export const DORM = '/dorm'
+
+/** An Uma's name from master data, for the ranks and news sections; "An Uma" until it loads. */
 export type NameOf = (outfitId: string) => string
 const someone: NameOf = () => 'An Uma'
 
@@ -67,9 +70,20 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
         }
       })
     case 'news':
-      return summary.news.map((line) => line.kind === 'season'
-        ? { key: 'season', text: `${SEASON_NAMES[line.season]} begins`, to: '/?sheet=calendar' }
-        : { key: `festival:${line.when}`, text: `${festivalName(line.festival)} ${line.when}`, to: peek('festival') })
+      // F18: the season and festivals; F23: the Dorm's beds, swaps home, recruits, a visitor at the Gate and one who left.
+      return summary.news.map((line): SummaryLine => {
+        switch (line.kind) {
+          case 'season': return { key: 'season', text: `${SEASON_NAMES[line.season]} begins`, to: '/?sheet=calendar' }
+          case 'festival': return { key: `festival:${line.when}`, text: `${festivalName(line.festival)} ${line.when}`, to: peek('festival') }
+          case 'dorm': return { key: 'dorm', text: `Dorm level ${line.level} · ${bedsAt(line.level)} beds`, to: DORM }
+          case 'home': return {
+            key: 'home', to: DORM, text: line.umas.length === 1 ? `${nameOf(line.umas[0]!)} is home` : `${line.umas.length} Umas are home`,
+          }
+          case 'joined': return { key: `joined:${line.outfitId}`, to: umaSheet(line.outfitId), text: `${nameOf(line.outfitId)} joined${line.home ? '' : ' · away'}`, tag: 'New' }
+          case 'gate': return { key: `gate:${line.outfitId}`, to: peek('gate'), text: `${nameOf(line.outfitId)} is at the Gate` }
+          case 'left': return { key: `left:${line.outfitId}`, to: peek('gate'), text: `${nameOf(line.outfitId)} left the Gate` }
+        }
+      })
     case 'nudges':
       return summary.nudges.map((line) => line.kind === 'idle'
         ? { key: 'idle', text: `${plural(line.umas.length, 'Uma')} idle`, to: '/roster' }
