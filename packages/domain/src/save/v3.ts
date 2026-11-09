@@ -1,6 +1,6 @@
 // Save v3 (F17; core spec CS53, D29): the farm's own loop, written whole from the spec with F17's additions (`start`,
-// `today`, `dorm.swaps`, `farm.counts`). Built in F17 and live from F24: until then production plays the Wilds on v2,
-// and an M4 packet may extend v3 in place with parse tests; from F24 on, a change is v4.
+// `today`, `dorm.swaps`, `farm.counts`). Built in F17, grown in place by M4's packets, and live from F24: any change to
+// its shape now is v4, with its migration.
 import type { ItemRequest, WorkRow } from '@luismlorenzana/uma-work'
 import { START_GOLD, START_SEEDS } from '../farm/farm'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'

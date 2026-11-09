@@ -1,7 +1,7 @@
-// The Dorm's page (F23 decisions 3, 4 and 11; core spec CS34, CS36): `/dorm` in the loop's build. Beds used of beds, the
+// The Dorm's page (F23 decisions 3, 4 and 11; core spec CS34, CS36): `/dorm`. Beds used of beds, the
 // next level with its cost and Farm Rank (**Upgrade · 1,000g**, its beds tomorrow), who's home and who's away on her
 // off-season, and **Swap**: pick one home with nothing to do, then one away; she arrives tomorrow, and a swap can be
-// called off until then. The pickers are uma-kit's, over the roster's rows. Loaded on demand, loop's build only.
+// called off until then. The pickers are uma-kit's, over the roster's rows. Loaded on demand.
 import { arriving, bedsAt, dormBought, freeBeds, leaving, nextDorm, swapBlock, type SaveV3 } from '@farm/domain'
 import { FaceTile, UmaPicker } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'

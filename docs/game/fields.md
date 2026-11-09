@@ -1,6 +1,6 @@
 # The Fields: plots, seeds, tending and crop levels
 
-**Built in F20, live from F24** (dark until then: the loop plays only with `VITE_FARM_LOOP=1`, D29). Farming is
+**Built in F20, live from F24.** Farming is
 hands-on (FC8): you buy seeds at the shop, tap a plot to plant and a Ready plot to harvest, and an Uma who tends a block
 makes it grow faster and better. Harvests give seeds back now and then, and every harvest raises the crop's level on the
 farm. This page is the Fields as built. The rules are in `@farm/domain` (`fields/crops.ts`, `fields/fields.ts`, night
@@ -110,7 +110,7 @@ in A–D order in the save.
 | `harvestAll(save, blocks?)` | Every Ready plot of the given blocks (Harvest all), every block by default (the map's Collect all and the quick look's Harvest all) |
 
 - **What counts (decision 10):** `crops[id]` gets an entry (0 points) the first time a kind is planted, so "a second kind
-  of crop" is two entries (chapter 1's goal 4, F24); `farm.counts['plots-planted']` and `farm.counts['plots-harvested']`
+  of crop" is two entries (chapter 1's goal 4, [goals.md](goals.md)); `farm.counts['plots-planted']` and `farm.counts['plots-harvested']`
   rise a plot at a time (goal 1 reads the second).
 - **Stars (decision 4):** one draw a crop, `draw(uid, day, 'harvest:<block>:<plot>', n)` with the plot's index 0–8 and
   `n` the crop's number in the harvest; seeds back is `draw(uid, day, 'seeds:<block>:<plot>', 0)`. So a harvest replays
@@ -253,4 +253,4 @@ count outside 1–9 (1–36 for the nudge), an unknown block or crop, and a line
 - **Seeds' icons** are their crop's with a plain corner tag (brown from the shop, green for own seeds) until F25's
   seed-packet badge.
 - Every sheet is a search parameter, so Back closes it. The rules sit behind the header's (i). The page, its rules and
-  the crop table load on demand in the loop's build only (`LAZY_MODULES`).
+  the crop table load on demand (`LAZY_MODULES`).

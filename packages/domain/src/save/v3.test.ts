@@ -97,7 +97,7 @@ describe('the parse', () => {
     }
   })
 
-  it('returns a v2 save as v2 and a v1 as v2 (the dark launch)', () => {
+  it('returns a v2 save as v2 and a v1 as v2, for the app to migrate', () => {
     const v2 = newSaveV2('u1', AT)
     expect(parseSave(json(v2))).toEqual(v2)
     expect(parseSave({ version: 1, account: v2.account }).version).toBe(2)

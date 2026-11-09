@@ -43,10 +43,10 @@ test('a lazy module rendered in the initial JS fails', () => {
     ['src/scene/engine.ts (assets/main.js)'])
 })
 
-test('the Hub scene and its Phaser load on demand, by suffix through pnpm\'s store (F5)', () => {
+test('the Hub scene and its Phaser load on demand, by suffix through pnpm\'s store (F5), and the scene player too (F24)', () => {
   const scene = '../../node_modules/.pnpm/@luismlorenzana+uma-kit@0.17.0_x/node_modules/@luismlorenzana/uma-kit/dist/hub/scene/createHubGame.js'
   const phaser = '../../node_modules/.pnpm/phaser@4.2.1/node_modules/phaser/dist/phaser.esm.js'
-  assert.equal(lazyInInitial({ 'assets/main.js': [scene, phaser, 'src/wilds/WildsScreen.tsx', 'src/main.tsx'] }, ['assets/main.js'], LAZY_MODULES).length, 3)
+  assert.equal(lazyInInitial({ 'assets/main.js': [scene, phaser, 'src/loop/ScenePlayer.tsx', 'src/main.tsx'] }, ['assets/main.js'], LAZY_MODULES).length, 3)
 })
 
 test('the HTML must have exactly one module entry', () => {

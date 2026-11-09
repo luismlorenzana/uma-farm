@@ -1,9 +1,10 @@
-// The morning summary's lines (F18 decision 11, F19 decision 6, F20, F21, F23): the save holds ids and counts, and these say
-// them, each line a tap to its place. With the farm map, on demand. Pure, so the card and the tests read the same.
+// The morning summary's lines (F18 decision 11, F19 decision 6, F20, F21, F23, F24): the save holds ids and counts, and
+// these say them, each line a tap to its place. With the farm map, on demand. Pure, so the card and the tests read the same.
 import {
   ACTIVITY_NAMES, bedsAt, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, SEASON_NAMES, type FarmPlaceId, type FestivalId, type MorningSummary, type SummarySection,
   summarySections,
 } from '@farm/domain'
+import { chapterDoneWords, farmRankWords, milestoneWords } from './goal-words'
 import { challengeWords } from './roster-view'
 import { plural } from './words'
 
@@ -14,7 +15,8 @@ export interface SummaryLine {
   text: string
   /** Where its tap goes: the place's quick look or screen, the calendar or the roster. */
   to: string
-  /** A mark after the words: "In demand" on a sale the season lifted (F19); "Rank up" and "Points full" (F21). */
+  /** A mark after the words: "In demand" on a sale the season lifted (F19); "Rank up" and "Points full" (F21); "New"
+   * (F23); "Chapter", "Farm Rank" and "Milestone" (F24). */
   tag?: string
 }
 export interface SummaryPart {
@@ -70,11 +72,15 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
         }
       })
     case 'news':
-      // F18: the season and festivals; F23: the Dorm's beds, swaps home, recruits, a visitor at the Gate and one who left.
+      // F18: the season and festivals; F24: the chapter done, a Farm Rank and what it opens, the Diary's milestones; F23:
+      // the Dorm's beds, swaps home, recruits, a visitor at the Gate and one who left.
       return summary.news.map((line): SummaryLine => {
         switch (line.kind) {
           case 'season': return { key: 'season', text: `${SEASON_NAMES[line.season]} begins`, to: '/?sheet=calendar' }
           case 'festival': return { key: `festival:${line.when}`, text: `${festivalName(line.festival)} ${line.when}`, to: peek('festival') }
+          case 'chapter': return { key: 'chapter', text: chapterDoneWords(line.chapter), to: '/diary', tag: 'Chapter' }
+          case 'farm-rank': return { key: `farm-rank:${line.rank}`, text: farmRankWords(line.rank), to: '/?sheet=rank', tag: 'Farm Rank' }
+          case 'milestone': return { key: `milestone:${line.id}`, text: milestoneWords(line.id), to: '/diary', tag: 'Milestone' }
           case 'dorm': return { key: 'dorm', text: `Dorm level ${line.level} · ${bedsAt(line.level)} beds`, to: DORM }
           case 'home': return {
             key: 'home', to: DORM, text: line.umas.length === 1 ? `${nameOf(line.umas[0]!)} is home` : `${line.umas.length} Umas are home`,

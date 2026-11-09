@@ -3,7 +3,7 @@
 //
 //   1 the bin pays (F19) · 2 crops grow (F20) · 3 animals (M5) · 4 jobs move a day on (F18) and hauls count (F22) ·
 //   5 workshops reset (M5) · 6 ranks (F21), bonds (M6) and well fed (F18) · 7 crops wither (F20) and the calendar turns
-//   (F18) · 8 the Dorm and the Gate (F23), goals (F24) · 9 the morning summary (F18)
+//   (F18) · 8 the Dorm and the Gate (F23), goals, the Diary and the Farm Rank (F24) · 9 the morning summary (F18)
 //
 // Every draw a step makes is `draw(uid, day, what, n)`, so the same save always gives the same morning (CS8). The player's
 // change is stamped once, with real time, after the ninth step.
@@ -22,6 +22,7 @@ import { LOOP_WORK_PLACES, type LoopKinds, type LoopPlaceId } from '../save/pars
 import { touched } from '../save/save'
 import { BLOCK_IDS, type BlockId, type OutfitId, type SaveV3 } from '../save/v3'
 import { farmEnvV3, loopWorld, nightEnvV3, WELL_FED_TICKETS, withLoopWorld } from '../work/loop-env'
+import { checkGoalsNight, type GoalsTonight } from '../story/chapters'
 import { daySetState } from './nudge'
 import type { BinSale, MorningSummary, NewsLine, Nudge, RankLine, WorkLine } from './summary'
 
@@ -65,11 +66,14 @@ export interface NightNotes {
   /** Step 8: a visitor who came to the Gate this morning, and those who left (F23). */
   readonly gate: OutfitId | null
   readonly left: readonly OutfitId[]
+  /** Step 8: the chapter completed tonight, the Diary's milestones and rows paid, and Farm Ranks reached (F24). */
+  readonly goals: GoalsTonight
 }
 
 /** A night's notes before its first step. */
 export const emptyNotes = (): NightNotes => ({
   sold: [], worked: [], finished: [], made: [], best: null, tended: [], ripened: [], withered: [], ranks: [], dorm: null, home: [], gate: null, left: [],
+  goals: { chapter: null, paid: [], ranks: [] },
 })
 
 export interface Night {
@@ -208,8 +212,14 @@ export const gateVisitors: NightStep = (night) => {
   return { ...night, save, notes: { ...night.notes, gate: arrived, left } }
 }
 
-/** Step 8, F24: chapter goals, Diary milestones, the Farm Rank, a chapter's recruit. */
-export const checkGoals: NightStep = same
+/** Step 8 (F24 decisions 1, 2, 4 and 5; CS38, CS39, CS42): the Diary pays the milestones and rows reached (a depth
+ * milestone by tonight's hauls), the Farm Rank's points are recomputed, and the chapter completes the night its last goal
+ * is met, paying 500g, the Mill's plans and a recruit from master data's release (`recruitFor`, `joinRoster`); the next
+ * chapter opens. The closing scene waits for the morning. */
+export const checkGoals: NightStep = (night) => {
+  const { save, tonight } = checkGoalsNight(night.save, night.context.roster.map((o) => o.outfitId), talentsOf(night), night.notes.made)
+  return { ...night, save, notes: { ...night.notes, goals: tonight } }
+}
 
 /** The morning's news (CS5 §5): the season's first day, a festival today or tomorrow. */
 function newsOf(day: number): NewsLine[] {
@@ -220,6 +230,16 @@ function newsOf(day: number): NewsLine[] {
   const tomorrow = festivalOn(day + 1)
   if (tomorrow) news.push({ kind: 'festival', festival: tomorrow.id, when: 'tomorrow' })
   return news
+}
+
+/** The goals' news (F24): the chapter completed, the Farm Ranks reached, then the Diary's milestones and rows paid. */
+function goalNews(notes: NightNotes): NewsLine[] {
+  const { chapter, ranks, paid } = notes.goals
+  return [
+    ...(chapter !== null ? [{ kind: 'chapter' as const, chapter }] : []),
+    ...ranks.map((rank): NewsLine => ({ kind: 'farm-rank', rank })),
+    ...paid.map((id): NewsLine => ({ kind: 'milestone', id })),
+  ]
 }
 
 /** The roster's news (F23): the Dorm's new level, Umas home from a swap, recruits who joined tonight (anyone on the
@@ -254,7 +274,7 @@ export const buildSummary: NightStep = (night) => {
   const nudges: Nudge[] = [...(idle.length > 0 ? [{ kind: 'idle' as const, umas: idle }] : []), ...(plant > 0 ? [{ kind: 'seeds' as const, plots: plant }] : [])]
   const summary: MorningSummary = {
     day: save.calendar.day, bin: [...notes.sold], work: [...jobs, ...best, ...crops, ...withered], ranks: [...notes.ranks], bonds: [],
-    news: [...newsOf(save.calendar.day), ...rosterNews(night)], nudges,
+    news: [...newsOf(save.calendar.day), ...goalNews(notes), ...rosterNews(night)], nudges,
   }
   return { ...night, save: { ...save, summary } }
 }
@@ -283,7 +303,7 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 7, name: 'turnCalendar', run: turnCalendar, what: 'The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the day’s chats and gifts clear', by: 'F18' },
   { step: 8, name: 'settleDorm', run: settleDorm, what: 'The Dorm’s level bought takes effect; swaps arrive, each Uma away coming home in the place of one leaving', by: 'F23' },
   { step: 8, name: 'gateVisitors', run: gateVisitors, what: 'A visitor who has waited 6 days leaves; every 4th morning one comes to the Gate while a bed is free and none waits', by: 'F23' },
-  { step: 8, name: 'checkGoals', run: checkGoals, what: 'Chapter goals, Diary milestones, the Farm Rank and a chapter’s recruit', by: 'F24' },
+  { step: 8, name: 'checkGoals', run: checkGoals, what: 'The Diary pays its milestones and rows, the Farm Rank is recomputed, and a chapter whose goals are met completes: its gold, plans and recruit', by: 'F24' },
   { step: 9, name: 'buildSummary', run: buildSummary, what: 'The morning summary, from what changed', by: 'F18' },
 ]
 

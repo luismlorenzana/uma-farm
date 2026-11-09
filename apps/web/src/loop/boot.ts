@@ -1,5 +1,5 @@
 // The loop's boot (F17 decision 2): every stored save the loop meets becomes v3 once master data's roster has loaded,
-// since her calling's line comes from it. Loaded on demand: only the loop's build reaches it. Nothing here moves
+// since her calling's line comes from it. Loaded on demand: only a v2 or a new account reaches it. Nothing here moves
 // `account.updatedAt`, so two devices carrying the same save over agree, and the conflict rule still sees the player's
 // last change. A roster under three isn't filled here: the start's sheet asks for the picks (F23, CS2), which replaced
 // F17's temporary ones.

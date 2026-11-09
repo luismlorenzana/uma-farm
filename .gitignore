@@ -14,9 +14,6 @@ build
 !.env.example
 # Public Firebase web config (apiKey/authDomain/projectId are public by design); needed by the production build.
 !apps/web/.env.production
-# The loop's switch for the dev server and the loop build (F17, D29): no secrets.
-!apps/web/.env.development
-!apps/web/.env.loop
 
 # ORIGINAL-GAME CONTENT — never commit (uma-platform docs/architecture.md §2.2)
 /content/
@@ -27,7 +24,6 @@ build
 
 # build and tooling output
 dev-dist/
-dist-loop/
 apps/api/.data/
 .firebase/
 firebase-debug.log

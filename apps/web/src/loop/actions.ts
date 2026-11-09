@@ -1,15 +1,15 @@
 // The loop's actions on the day (F18): End the day, dismiss the morning, Collect all; F19's goods: ship, Ship all, take
 // back and buy; F20's Fields: plant, Plant all, harvest, Harvest all, a tender and a block; F22's work: a job, a
-// queue, Collect, Recall, Repeat, a stopped queue and building a station; and F23's roster: the start's picks and its
-// redraw, the Dorm's levels and swaps, chats and gifts. Each reads the save right
+// queue, Collect, Recall, Repeat, a stopped queue and building a station; F23's roster: the start's picks and its
+// redraw, the Dorm's levels and swaps, chats and gifts; and F24's scenes, read once. Each reads the save right
 // before its rule runs (as `edit`), commits it to the store and the device, and syncs; a refused rule throws its words.
 // The night and the harvests read F21's talents from master data, so they wait for it. Loaded on demand with the loop's
 // screens, so the night's code stays out of the initial JS.
 import {
   BLOCK_IDS, buildStation, buyDorm, cancelSwap, chat, gift, pickStart, redrawStart, swapDorm, type AffinityResult, type Taste, buy, buyBlock, collectLoopAll, collectLoopWorker, dismissLoopStopped, editLoopQueue, endDay, harvest, harvestAll, loopKinds, plant,
-  plantAll, recallLoopWorker, receiptItems, repeatLoopJob, restartLoopStopped, SaveRuleError, setTender, ship, shipAll, shopLines, startLoopJob, takeBack,
+  plantAll, readScene, recallLoopWorker, receiptItems, repeatLoopJob, restartLoopStopped, SaveRuleError, setTender, ship, shipAll, shopLines, startLoopJob, takeBack,
   touched, type BlockId, type CropId, type FarmingTalentOf, type HarvestReceipt, type LoopCollected, type LoopJobInput, type LoopKinds, type LoopPlaceId,
-  type LoopWorkRequest, type SaveV3, type ShopLine, type StationId,
+  type LoopWorkRequest, type SaveV3, type SceneId, type ShopLine, type StationId,
 } from '@farm/domain'
 import type { QueueInput } from '@luismlorenzana/uma-work'
 import { masterReady } from '../master/master'
@@ -220,4 +220,13 @@ export async function giveGift(outfitId: string, item: string, stars: number): P
   const view = await masterReady()
   const line = view.roster.find((o) => o.outfitId === outfitId)?.line ?? null
   return affinity((s) => gift(s, outfitId, item, stars, line))
+}
+
+// --- The scenes (F24) -----------------------------------------------------------------------------------------------
+
+/** A scene played through or skipped (decision 6): it goes in `diary.read`, once, a player's change. */
+export async function readSceneOnce(id: SceneId): Promise<void> {
+  const save = loopSave()
+  if (!save || save.diary.read.includes(id)) return
+  await change((s) => readScene(s, id))
 }

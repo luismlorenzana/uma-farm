@@ -1,6 +1,6 @@
 # Goods: prices, stars, the bin and gold
 
-**Built in F19, live from F24** (dark until then: the loop plays only with `VITE_FARM_LOOP=1`, D29). Selling is the
+**Built in F19, live from F24.** Selling is the
 loop's spine: what the farm grows, gathers and refines goes in the shipping bin, the bin pays overnight, and the gold buys
 seeds, land, beds and buildings. This page is the catalogue's prices, stars, the bin, gold, the shop and the Warehouse by
 stars, as built. The rules are in `@farm/domain` (`goods/rule.ts`, `goods/ids.ts`, `goods/prices.ts`,
@@ -463,4 +463,4 @@ Gold is whole and never negative (`spendGold`, `earnGold`, F17). The account bar
   every other place keeps its quick look until its packet lands.
 
 The Warehouse draws its own rows on the kit's `Chip`, `Sheet` and `Button`: the kit's `ShelfView` holds one count and
-one price per item, and a good has five. The bin, the shop and the Warehouse load on demand in the loop's build only.
+one price per item, and a good has five. The bin, the shop and the Warehouse load on demand.

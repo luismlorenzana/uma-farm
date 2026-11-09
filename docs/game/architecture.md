@@ -1,6 +1,7 @@
 # Architecture and technical setup
 
-How uma-farm is built and run, as of F18: save v2 and the Wilds live, their rules in the domain and their screens on the phone ([wilds.md](wilds.md)), "work done" notifications, and save v3 for the farm's own loop with its calendar, End the day and the farm map ([days.md](days.md)), built and dark until F24 ([the dark launch](#the-dark-launch-f17)). Values come from the code and
+How uma-farm is built and run, as of F24: the farm's own loop is the app, on save v3 ([days.md](days.md) and the pages
+after it), and a v2 from the Wilds (F4–F6, retired in F24) migrates on its first open ([the go-live](#the-go-live-f24)). Values come from the code and
 [infrastructure.md](../technical/infrastructure.md), which holds every production value and is the place to change them.
 
 ## The pieces
@@ -14,15 +15,16 @@ How uma-farm is built and run, as of F18: save v2 and the Wilds live, their rule
         ▼
    apps/api  NestJS 11 on Cloud Run `farm-api`, behind uma-server's owner guard
         ├─ saves ──────────► Firestore database `farm`: saves/{uid} (local: apps/api/.data/save.json)
-        ├─ push ───────────► Firestore database `farm`: push/{uid} (local: in memory); Web Push with `farm-vapid` (F6)
+        ├─ push ───────────► Firestore database `farm`: push/{uid} (local: in memory); Web Push with `farm-vapid` (F6;
+        │                    the app sends nothing since F24)
         ├─ master data ────► gs://uma-platform-master-data (local: ../uma-platform/content/release)
         └─ the parcel ping ► /api/post/ping, checked by its own Google ID token (IN18)
         ▲
         │  POST /api/push/tick every five minutes, with an OIDC token for `farm-push-scheduler`
    Cloud Scheduler `farm-push-tick`
 
-   packages/domain  @farm/domain: the save (v1–v3) and its migrations, the Wilds' rules (copied from uma-rpg, F4) and the
-                    loop's units and goods (F17); pure TypeScript, shared by web and API
+   packages/domain  @farm/domain: the save (v1–v3) and its migrations, the farm's rules (F17–F24), and the Wilds' rules
+                    copied from uma-rpg (F4), kept for the v2 → v3 migration; pure TypeScript, shared by web and API
 ```
 
 **The rules of the codebase:**
@@ -38,23 +40,20 @@ How uma-farm is built and run, as of F18: save v2 and the Wilds live, their rule
 |---|---|---|
 | Entry | `src/main.tsx` | The kit's keys (`farm.`), appearance, uma-art's bar and map art, sign-in, content client, the album's outfit art and the work screens' item icons, and the router |
 | Gates | `src/app/Root.tsx` | The kit's `BootGates`: splash → Google sign-in → boot → the app; the kit's **Update ready · Restart** |
-| Pages | `src/app/router.tsx` | `/` the Wilds (`?peek=<place>` a quick look), `/wilds/<place>` a place's page, `/warehouse` and `/account`, inside the shell; `/wilds` and anything else go to `/`. The Wilds, the place pages and the Warehouse load on demand ([wilds.md](wilds.md)). The loop's build (F18): `/` the farm map (`?peek=<place>`), `/roster`, `/diary` and `/account`, the first three on demand ([days.md](days.md)) |
-| The loop's switch | `src/app/loop.ts` | `loopOn()`: `VITE_FARM_LOOP` is `'1'` (F17). On in the dev server (`.env.development`), Vitest and the `loop` build (`.env.loop`); unset in production. F24 deletes it |
-| The loop | `src/loop/` | Loaded on demand, in the loop's build only: its boot (`toLoopSave`: the migration once master data has loaded), the farm map with its quick looks and the morning summary (`FarmMap.tsx`), the roster and the Diary, End the day and the calendar (`LoopSheets.tsx`) and the day's actions (`actions.ts`: End the day, put the morning away, Collect all). Its words (`words.ts`) and the Menu's switch (`ask.ts`) are small and load with the shell (F18, [days.md](days.md)) |
-| Shell | `src/shell/` | The kit's `AppFrame` unchanged (FM18): the account bar with the sync chip, the bottom bar (Wilds with its Ready count, Warehouse, Menu), the menu sheet (`?sheet=menu`: every place with its Ready count, the Warehouse, Account and the build id), and the sync warning. The loop's build (F18): the date chip, Farm · Roster · End the day (raised) · Diary · Menu, the menu by the farm's rows with "Ask before ending the day", and `?sheet=end` and `?sheet=calendar` |
-| The Wilds | `src/wilds/` | The Hub map on uma-kit (`HubMap`), the quick looks, Collect all, the help, the Forge and the Post as placeholders, the Ready counts |
-| Places | `src/places/` | A place's page on uma-kit/work (`work/`: the farm's provider, the slot rows, the job sheet, the What step) and the Warehouse (`warehouse/`) |
-| Picker | `src/album/rows.ts` | Every outfit as a row of uma-kit's album: Craft Level, free or busy, and the Trade, rarity and aptitude facets |
-| Items | `src/items/` | uma-art's item icons placed from the ids (`frames.ts`), and the items' words |
-| Account | `src/home/AccountView.tsx` | The kit's Account page: appearance, the Notifications switch (F6; in the loop's build "Off: days are turns"), sign-in, save state, last sync, build, master data's release, safety copies, sign out |
-| Push | `src/push/`, `public/push-sw.js` | The Notifications switch and its "Send a test", the subscription, the schedule sent on every sync, the badge cleared on open; the service worker's push and tap handlers (below) |
-| Save | `src/save/` | The device save in Dexie, the store and its sync engine (below), the work actions (`edit`) and the trade words; every sync sends the push schedule. The store holds the save as stored (`StoredSave`): the Wilds read it through `useWildsSave`, the loop through `useLoopSave` |
+| Pages | `src/app/router.tsx` | Inside the shell: `/` the farm map (`?peek=<place>` a quick look), `/roster`, `/diary`, `/warehouse` (`?pick=bin`), `/fields`, `/forest`, `/fishery`, `/mill`, `/sawmill`, `/smokehouse`, `/dorm` and `/account`; anything else (the Wilds' old `/wilds/<place>` among them) goes to `/`. Every page but Account loads on demand |
+| The farm | `src/loop/` | Loaded on demand: the boot (`toLoopSave`: the migration once master data has loaded), the farm map with its quick looks and the morning summary (`FarmMap.tsx`), the pages above, the global sheets (`LoopSheets.tsx`: End the day, the calendar, the bin, the shop, the Farm Rank), the start's sheet, the scene player (`ScenePlayer.tsx`), and the actions (`actions.ts`). Its words for the bars (`words.ts`) and the Menu's switch (`ask.ts`) are small and load with the shell ([days.md](days.md) and the pages after it) |
+| Shell | `src/shell/` | The kit's `AppFrame` unchanged (FM18): the account bar (the date, gold and Farm Rank chips, the sync chip), Farm · Roster · End the day (raised) · Diary · Menu, the menu sheet (`?sheet=menu`: the farm's places by its rows, Account, "Ask before ending the day", the build id), the sync warning; over everything, the start's sheet while picks are pending, then a scene due (F24) |
+| Items | `src/items/` | uma-art's item icons placed from the ids (`frames.ts`) |
+| Account | `src/home/AccountView.tsx` | The kit's Account page: appearance, Notifications "Off: days are turns", sign-in, save state, last sync, build, master data's release, safety copies, sign out |
+| Push | `public/push-sw.js` | The service worker's push and tap handlers, kept so the server's push stays deliverable; F6's switch, subscription and schedule left the app with the Wilds (F24) |
+| Save | `src/save/` | The device save in Dexie, the store and its sync engine (below). The store holds save v3 (`useLoopSave`): every v2 it meets migrates first |
 | Master data | `src/master/` | The release's manifest, characters, outfits and art through `/api/master`, cached by hash on the device; the roster (`farmRoster`) and the album's rows; the album art adapter; `masterReady()`, which the loop's boot waits on |
-| PWA | `vite.config.ts` | Portrait, standalone, the icons from `scripts/draw-icons.mjs`; Workbox precaches the app, keeps master data's files for good, and imports `push-sw.js` into the service worker |
+| PWA | `vite.config.ts` | Portrait, standalone, the icons from `scripts/draw-icons.mjs`; Workbox precaches the app, keeps master data's files for good, and imports `push-sw.js` into the service worker. A new build waits for the kit's **Update ready · Restart** |
 
-Main JS is 163.8 KB gzip against the 180 KB budget (FM20), and 166.2 KB in the loop's build, which `pnpm build` checks
-too (F18). Firebase, the Wilds' screens, the loop's pages, sheets, actions, boot and night, and the Hub map's Phaser scene
-(`createHubGame`, 377 KB gzip) load on demand; `scripts/check-size.mjs`'s `LAZY_MODULES` refuses them in the initial JS.
+Main JS is about 163.5 KB gzip against the 180 KB budget (FM20) from F24: one build, size-checked by `pnpm build`.
+Firebase, the farm's pages, sheets, actions, boot and night, the scene player and the goals' rules, and the Hub map's
+Phaser scene (`createHubGame`, 377 KB gzip) load on demand; `scripts/check-size.mjs`'s `LAZY_MODULES` refuses them in
+the initial JS.
 
 ## API
 
@@ -62,7 +61,7 @@ too (F18). Firebase, the Wilds' screens, the loop's pages, sheets, actions, boot
 |---|---|---|
 | `GET /api/health` | Public | `{ ok, build }`: the deploy's commit |
 | `GET /api/save` | Owner | The stored envelope `{ revision, save }`, or `{ revision: 0, save: null }`; the save at the version stored, v2 or v3 (a v1 reads as v2) |
-| `PUT /api/save` | Owner | `{ baseRevision, save }`, v2 or v3: stored as `baseRevision + 1`, or 409 with what's stored. A save older than the stored one is a 409 too, and kept in `saveRescues` |
+| `PUT /api/save` | Owner | `{ baseRevision, save }`, v2 or v3 as sent (the app writes v3 from F24): stored as `baseRevision + 1`, or 409 with what's stored. A save older than the stored one is a 409 too, and kept in `saveRescues`. The first v3 over a stored v2 copies the v2 document to `saveBackups/{uid}-v2` |
 | `GET /api/master/*` | Owner | uma-platform's release: channels, manifests and hash-named files (uma-server's proxy) |
 | `POST /api/post/ping` | Its own token | `{ ok: true }` for a Google ID token on `POST_CALLERS` with the farm's audience |
 | `GET /api/push/key` | Owner | `{ publicKey }`: the VAPID key the app subscribes with; 404 while push is off (no `VAPID_KEYS`, as locally) |
@@ -79,9 +78,9 @@ too (F18). Firebase, the Wilds' screens, the loop's pages, sheets, actions, boot
 |---|---|---|
 | 1 | F3 | The account: `{ version: 1, account: { uid, createdAt, updatedAt } }` |
 | 2 | F4 | The Wilds' world beside it: `umas` (each Uma's Craft Level, from her first job), `items` (the Warehouse), `work` (uma-work's rows) and `buildings` (always `{}`). v1 migrates with all four empty, `updatedAt` unchanged |
-| 3 | F17 | **Built in F17; live from F24.** The farm's own loop (core spec CS53): the calendar, gold, the roster and its ranks, the Dorm, the Warehouse by stars, the fields and the rest of the loop. v2 migrates in the loop's app with master data ([below](#v2--v3-f17-cs54)), `updatedAt` unchanged |
+| 3 | F17 | **Built in F17, grown in place by M4, live from F24.** The farm's own loop (core spec CS53): the calendar, gold, the roster and its ranks, the Dorm, the Warehouse by stars, the fields and the rest of the loop. v2 migrates in the app with master data ([below](#v2--v3-f17-cs54)), `updatedAt` unchanged. Any change from here is v4 |
 
-### The shape: v2, the Wilds' (live)
+### The shape: v2, the Wilds' (read once, to migrate)
 
 ```ts
 interface SaveV2 {
@@ -94,27 +93,31 @@ interface SaveV2 {
 }
 ```
 
-The rules that change it, and every number they use, are in [loops.md](loops.md) and [materials.md](materials.md); the copy
-from uma-rpg is listed file by file in [wilds-copy.md](../technical/wilds-copy.md).
+The Wilds' rules that changed it are copied from uma-rpg, listed file by file in
+[wilds-copy.md](../technical/wilds-copy.md); the migration still runs them to finish a v2's jobs. Their manual pages
+(their loop, materials and screens) were retired with the screens in F24 and are in git's history.
 
-`parseSave` reads every version the farm has written: v1 becomes v2, and v2 and v3 come back at the version stored (the
-dark launch, below). A newer version than the app knows is refused, and unknown keys are refused, so an old client can
-never half-write a newer save.
+`parseSave` reads every version the farm has written: v1 becomes v2, and v2 and v3 come back at the version stored, for
+the app to migrate a v2 (below). A newer version than the app knows is refused, and unknown keys are refused, so an old
+client can never half-write a newer save.
 
-### The dark launch (F17)
+### The go-live (F24)
 
-M4 builds the loop without anyone meeting it half-built (D29):
-- **Production plays the Wilds on v2** until F24 turns the loop on. Every push to `main` still deploys, and nothing in
-  M4 changes what production players see.
-- **The loop plays where `VITE_FARM_LOOP` is `'1'`:** the dev server, Vitest, and `vite build --mode loop`, which
-  `pnpm build` size-checks into `dist-loop/` (never deployed). `VITE_FARM_LOOP=0 pnpm web` plays the Wilds locally.
-- **The API stores what it's sent,** v2 or v3, so production's v2 app is unaffected and a v3 upload is accepted once the
-  loop is on. The first v3 write over a stored v2 copies it to `saveBackups/{uid}-v2`. A v2 upload over a stored v3 (a
-  Wilds client after the loop) is a 409 and is kept in `saveRescues/{uid}`; the phone keeps it too.
-- **The Wilds' build stops at a v3** (boot fails with Try again) rather than play or overwrite it.
-- **v3 grows in place until F24:** an M4 packet may extend it, with parse tests. From F24 on, a change is v4.
+M4 was built behind a switch (F17–F23, D29): production kept the Wilds on v2 while the loop played only in a switched
+build. F24 deleted the switch and the Wilds' screens, so the loop is the app.
+- **The owner's save migrates on its first open.** It's a v2 made with F4 (D17), with no Umas, no items and no jobs.
+  The new build reads it from the phone (or the server), migrates it once master data has loaded (CS54, below), commits
+  it unstamped, and uploads it: the first upload is v3 with `account.updatedAt` where the v2 had it. Then the start's
+  sheet offers three picks, and the opening scene plays.
+- **The server backs the v2 up:** the first v3 write over the stored v2 copies the v2 document to
+  `saveBackups/{uid}-v2` (F3's mechanism, D9/D11), and later writes leave it.
+- **An old cached Wilds build stops at a v3** (D30 e): its boot fails with Try again rather than play it, its sync reads
+  the v3 and stops before any upload, and a v2 it sends anyway is a 409, kept in `saveRescues/{uid}`.
+- **The update prompt** (the kit's **Update ready · Restart**) sits beside the boot gates, not inside them, so an old
+  build that stopped still offers the new one, and Restart takes it.
+- **v3 is live:** any change to its shape (a summary line, a counter the parse checks) is v4, with its migration.
 
-### The shape: v3, the loop's (built in F17)
+### The shape: v3, the farm's (built in F17, live from F24)
 
 `packages/domain/src/save/v3.ts`, CS53 with F17's additions (`start`, `today`, `dorm.swaps`, `farm.counts`):
 
@@ -186,7 +189,7 @@ The Dorm's beds (CS34):
 | Beds | 3 | 5 | 8 | 12 | 16 | 22 | 30 | 40 | 50 | 60 |
 <!-- /live -->
 
-The Farm Rank's thresholds (CS39; read-only until F24):
+The Farm Rank's thresholds (CS39; its points counted each night from F24, [goals.md](goals.md#the-farm-rank-cs39-decisions-1-and-8)):
 
 <!-- live:farm-ranks -->
 | Farm Rank | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
@@ -196,9 +199,9 @@ The Farm Rank's thresholds (CS39; read-only until F24):
 
 ### v2 → v3 (F17, CS54)
 
-It runs once, in the loop's app, on the first boot after master data's roster has loaded (her calling's line comes from
+It runs once, in the app, on the first boot after master data's roster has loaded (her calling's line comes from
 it, and the API has no master data). It's pure and deterministic, so two devices carry a save over alike, and it never
-moves `account.updatedAt`, `createdAt` or `uid`. Every v2 the loop meets goes through it: the device's save, the
+moves `account.updatedAt`, `createdAt` or `uid`. Every v2 the app meets goes through it: the device's save, the
 server's, a 409's stored save, a safety copy restored. The result is committed without stamping, so it uploads and the
 next boot reads v3.
 
@@ -264,6 +267,11 @@ server date means stop and ask the owner.
 Copied from uma-rpg's push at `30a322a` (its D63) and cut: uma-rpg's tick reads each save; the farm's server never reads
 or writes one (FM10). The app does the rules and sends only times.
 
+**Since F24 the app sends nothing:** days are turns, so nothing finishes while it's closed (D25), and the Wilds' switch,
+subscription and schedule left with their screens; Account says "Off: days are turns". The server side below, the
+service worker's handlers and `farm-push-tick` are untouched, so notifications can come back without new plumbing. What
+follows is F6's design as built.
+
 ```
  The phone                                   farm-api                                 Cloud Scheduler
  ─────────                                   ────────                                 ───────────────
@@ -308,7 +316,7 @@ or writes one (FM10). The app does the rules and sends only times.
 ## Build and deploy
 
 Every push to `main` that touches code runs [deploy.yml](../../.github/workflows/deploy.yml): lint, tests (one package at
-a time), build with both size checks (the deployed build, then the loop's into `dist-loop/`); then the API image to Cloud Run `farm-api`, the web to Hosting site `uma-farm`, and
+a time), build with the size check; then the API image to Cloud Run `farm-api`, the web to Hosting site `uma-farm`, and
 the checks: health with the commit, `/api/save` 401 without a token, the ping 401, the shell `no-cache`, and uma-rpg's own
 health. Docs-only pushes skip it. `VAPID_KEYS` comes from Secret Manager's `farm-vapid`.
 
@@ -317,8 +325,7 @@ health. Docs-only pushes skip it. `VAPID_KEYS` comes from Secret Manager's `farm
 ```bash
 NODE_AUTH_TOKEN=$(gh auth token) pnpm install
 pnpm api   # :8101, auth off (the local user), saves in apps/api/.data/save.json, push in memory and off
-pnpm web   # :5194, /api proxied to :8101; plays the loop (VITE_FARM_LOOP=1 in .env.development)
-VITE_FARM_LOOP=0 pnpm web   # the Wilds on v2, as production plays them
+pnpm web   # :5194, /api proxied to :8101
 ```
 
 Master data comes from `../uma-platform/content/release` (set `MASTER_DIR` to point elsewhere). The preview pane starts both

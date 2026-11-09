@@ -1,14 +1,10 @@
-// The store against an in-memory server with the API's revision rules, and a fake IndexedDB. Invented data only.
+// The store against an in-memory server with the API's revision rules, and a fake IndexedDB: the sync engine on save v3
+// (F24: the loop is the app; `loop/loop-store.test.ts` carries every v2 into it). Invented data only.
 import 'fake-indexeddb/auto'
-import { newSaveV2, SAVE_VERSION, startJob, touched, type PushEntry, type Save, type SaveEnvelope } from '@farm/domain'
+import { NEWEST_SAVE_VERSION, newSave, touched, type SaveEnvelope, type SaveV3 } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// The Wilds' build: the loop is off (F17, D29). loop-boot.test.ts plays the loop's.
-vi.stubEnv('VITE_FARM_LOOP', '0')
-
-const server: { envelope: SaveEnvelope; puts: number; down: boolean; schedules: PushEntry[][]; refuseSchedule: boolean } = {
-  envelope: { revision: 0, save: null }, puts: 0, down: false, schedules: [], refuseSchedule: false,
-}
+const server: { envelope: SaveEnvelope; puts: number; down: boolean } = { envelope: { revision: 0, save: null }, puts: 0, down: false }
 
 vi.mock('../api/client', async () => {
   const actual = await vi.importActual<typeof import('../api/client')>('../api/client')
@@ -19,19 +15,12 @@ vi.mock('../api/client', async () => {
         if (server.down) throw new TypeError('Failed to fetch')
         return structuredClone(server.envelope)
       }),
-      put: vi.fn(async (baseRevision: number, save: Save) => {
+      put: vi.fn(async (baseRevision: number, save: SaveV3) => {
         if (server.down) throw new TypeError('Failed to fetch')
         if (baseRevision !== server.envelope.revision) throw new actual.ApiError('/api/save', 409, { current: structuredClone(server.envelope) })
         server.puts++
         server.envelope = { revision: baseRevision + 1, save: structuredClone(save) }
         return structuredClone(server.envelope)
-      }),
-    },
-    pushApi: {
-      schedule: vi.fn(async (entries: PushEntry[]) => {
-        if (server.down || server.refuseSchedule) throw new TypeError('Failed to fetch')
-        server.schedules.push(structuredClone(entries))
-        return null
       }),
     },
   }
@@ -49,8 +38,6 @@ beforeEach(async () => {
   server.envelope = { revision: 0, save: null }
   server.puts = 0
   server.down = false
-  server.schedules = []
-  server.refuseSchedule = false
   await db.save.clear()
   await db.safety.clear()
 })
@@ -58,14 +45,14 @@ beforeEach(async () => {
 describe('the store', () => {
   it('starts a new account on a fresh device when the server has none, and syncs it', async () => {
     await boot('u1')
-    expect(useGame.getState()).toMatchObject({ status: 'ready', dirty: true, save: { version: SAVE_VERSION, account: { uid: 'u1' } } })
+    expect(useGame.getState()).toMatchObject({ status: 'ready', dirty: true, save: { version: NEWEST_SAVE_VERSION, account: { uid: 'u1' } } })
     await syncNow()
     expect(useGame.getState()).toMatchObject({ dirty: false, revision: 1, sync: 'synced' })
     expect(server.envelope.save?.account.uid).toBe('u1')
   })
 
   it("adopts the server's save on a fresh device, and keeps it on the device", async () => {
-    server.envelope = { revision: 4, save: newSaveV2('u1', T0) }
+    server.envelope = { revision: 4, save: newSave('u1', T0) }
     await boot('u1')
     expect(useGame.getState()).toMatchObject({ status: 'ready', revision: 4, dirty: false })
     resetGame()
@@ -82,7 +69,7 @@ describe('the store', () => {
   })
 
   it("never reads another account's device save", async () => {
-    server.envelope = { revision: 2, save: newSaveV2('u1', T0) }
+    server.envelope = { revision: 2, save: newSave('u1', T0) }
     await boot('u1')
     resetGame()
     server.envelope = { revision: 0, save: null } // the API keys saves by uid: u2 has none
@@ -91,12 +78,12 @@ describe('the store', () => {
   })
 
   it('keeps a safety copy before a newer save replaces unsynced changes', async () => {
-    server.envelope = { revision: 1, save: newSaveV2('u1', T0) }
+    server.envelope = { revision: 1, save: newSave('u1', T0) }
     await boot('u1')
     server.down = true
     await commit(touched(useGame.getState().save!, T1))
     server.down = false
-    server.envelope = { revision: 2, save: touched(newSaveV2('u1', T0), T2) }
+    server.envelope = { revision: 2, save: touched(newSave('u1', T0), T2) }
     await syncNow()
     expect(useGame.getState()).toMatchObject({ revision: 2, dirty: false, save: { account: { updatedAt: T2 } } })
     expect(useGame.getState().replacedAt).not.toBeNull()
@@ -109,9 +96,9 @@ describe('the store', () => {
   })
 
   it('pushes over a server that moved on when this device changed last', async () => {
-    server.envelope = { revision: 1, save: newSaveV2('u1', T0) }
+    server.envelope = { revision: 1, save: newSave('u1', T0) }
     await boot('u1')
-    server.envelope = { revision: 2, save: touched(newSaveV2('u1', T0), T1) }
+    server.envelope = { revision: 2, save: touched(newSave('u1', T0), T1) }
     await commit(touched(useGame.getState().save!, T2))
     await syncNow()
     expect(server.envelope).toMatchObject({ revision: 3, save: { account: { updatedAt: T2 } } })
@@ -123,28 +110,5 @@ describe('the store', () => {
     server.down = true
     await syncNow()
     expect(useGame.getState()).toMatchObject({ sync: 'error', dirty: true })
-  })
-})
-
-describe('the push schedule (F6)', () => {
-  it('goes with every sync, once per save, and again after a failed send', async () => {
-    await boot('u1')
-    await syncNow()
-    await vi.waitFor(() => expect(server.schedules).toEqual([[]]))
-    await syncNow()
-    await new Promise((r) => setTimeout(r, 0))
-    expect(server.schedules).toHaveLength(1)
-    const now = new Date().toISOString()
-    await commit(startJob(useGame.getState().save as Save, 'mine', 0, { outfitId: '101' }, 'copper-ore', 1, now))
-    server.refuseSchedule = true
-    await syncNow()
-    expect(useGame.getState().sync).toBe('synced')
-    await new Promise((r) => setTimeout(r, 0))
-    server.refuseSchedule = false
-    await syncNow()
-    await vi.waitFor(() => expect(server.schedules).toHaveLength(2))
-    await new Promise((r) => setTimeout(r, 0))
-    expect(server.schedules).toHaveLength(2)
-    expect(server.schedules[1]).toEqual([{ at: expect.any(Number) as number, place: 'mine', badge: 1 }])
   })
 })

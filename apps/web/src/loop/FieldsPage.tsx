@@ -1,10 +1,10 @@
-// The Fields' page (F20 decision 11): `/fields` in the loop's build, the farm's own page, not uma-kit/work's slot rows.
+// The Fields' page (F20 decision 11): `/fields`, the farm's own page, not uma-kit/work's slot rows.
 // Four block cards, A to D: a locked one shows its Farm Rank and cost with Buy · 800g; an owned one its tender's row and
 // a 3 × 3 grid of plots. A plot shows its crop's icon and the nights left, or Ready; a tap on an empty plot plants
 // (`?plant=A.4`), on a growing one shows it (`?plot=A.4`), on a Ready one harvests. Plant all (`?plant=A`) and Harvest all
 // do a block, and the tender comes from uma-kit's picker over the Umas home (`?tend=A`), with F21's talents and ranks:
 // "Hand · B" in farming on each card, opening by farming. Each sheet is a search parameter, so Back closes it. Loaded on
-// demand, loop's build only.
+// demand.
 import { CROPS, isBusy, itemNameOf, leaving, receiptItems, tendedBlock, type BlockId, type FarmingTalentOf, type HarvestReceipt, type SaveV3 } from '@farm/domain'
 import { FaceTile, UmaPicker } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'

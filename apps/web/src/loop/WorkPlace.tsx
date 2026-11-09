@@ -1,5 +1,5 @@
 // The forest, the Fishery and the stations (F22 decisions 1, 2, 5, 6 and 8): `/forest`, `/fishery`, `/mill`, `/sawmill`
-// and `/smokehouse` in the loop's build, and their quick looks on the farm map. uma-kit/work owns the slot rows, the job
+// and `/smokehouse`, and their quick looks on the farm map. uma-kit/work owns the slot rows, the job
 // sheet, queues, Recall, Repeat and stopped queues; the farm supplies the save at its day, the env with master data's
 // talents, the What step (areas and spots, or what the Warehouse holds for a station), the sizes in days, its words and
 // its actions. A station is locked until built: its quick look and page show Build · 1,500g. Loaded on demand.

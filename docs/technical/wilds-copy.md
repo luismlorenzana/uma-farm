@@ -4,6 +4,24 @@
 > FW3, D8). The farm owns these rules from the copy on (FM2): nothing follows uma-rpg by itself, and a later fix there is
 > copied on purpose by a new F-packet. Nothing imports from uma-rpg.
 
+## What's still used (F24)
+
+F24 turned the farm's own loop on and retired the Wilds' screens. **The domain copy stays whole, with its tests,**
+because save v2's parse and the v2 → v3 migration run on it:
+- **v2's parse** (`save/save.ts`'s `parseV2`, its work rows' rules and `toV2` for a v1) reads the owner's v2 and any v2
+  a safety copy or an old build holds;
+- **the migration** (`save/migrate-v3.ts`) finishes a v2's running jobs with the copied `collectAll` (`save/work.ts`,
+  `work/`, `economy/`), pays their Craft EXP, and refunds per grade what leaves the game (`items/lines.ts`,
+  `items/made-id.ts`, `items/made-v4.ts`);
+- **the roster** (`roster/roster.ts`'s `farmRoster`, `roster/template.ts`'s calling rule) still names each Uma's
+  favourite line (CS33);
+- **push** (`save/notify.ts`'s `scheduleNotice`, `hub/places.ts`'s place names) is the API's, untouched.
+
+**The screens' copy below left in F24:** `wilds/`, `places/`, `album/rows.ts` and its trade facet, `save/trade.ts`,
+`items/words.ts`, the Wilds' work actions in `save/game.ts`, and the push client (`push/`). `items/ItemIcon.tsx` and
+`items/frames.ts` (the goods' icons), `album/testing.ts` (the tests' outfits) and `master/` stay, used by the farm. The
+manual's Wilds pages (their loop, materials and screens) and their live blocks went with them.
+
 ## The rule
 
 - **Only the live generation:** at `30a322a` every `rpgRework(stage)` the Wilds read is on, so that branch alone is copied.
@@ -77,10 +95,11 @@ Each landed after the copy's commit, in F4:
 **Not copied:** `economy/grades.ts` (gear's grades, FM4; the farm's grade gate is `gradeUnlockLevel`), and every file
 the copied ones no longer read: fights, classes, gear, gems, Extra Stats, the Exchange, the Rift, worlds and tiers.
 
-## The screens' copy (F5)
+## The screens' copy (F5; retired in F24)
 
 F5 copied uma-rpg's web screens at the same commit into `apps/web/src/`, each file naming its source on its first line.
-They import nothing from uma-rpg.
+They imported nothing from uma-rpg. **F24 deleted every row of this table but `items/ItemIcon.tsx`, `items/frames.ts`,
+`album/testing.ts` and `master/`** (above); the table stays as the record of what was copied.
 
 | Farm file | uma-rpg source (`apps/web/src/`) | Cuts |
 |---|---|---|

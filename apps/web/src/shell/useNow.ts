@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 /** The time now in ms, refreshed every `everyMs` while the page is visible, and at once when it comes back into view (as
- * uma-rpg's `useNow`): the Wilds' jobs settle from it, on open, on focus and on every tick. */
+ * uma-rpg's `useNow`): the sync warning's clock. The farm's days don't read it: they move only when ended. */
 export function useNow(everyMs = 1000): number {
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {

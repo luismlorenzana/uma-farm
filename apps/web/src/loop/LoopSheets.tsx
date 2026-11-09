@@ -1,9 +1,13 @@
-// The loop's global sheets (F18 decisions 6 and 8, F19 decisions 7 and 8): `?sheet=end`, End the day; `?sheet=calendar`,
-// the calendar from the account bar's date; `?sheet=bin`, the shipping bin from the map or the gold chip; `?sheet=shop`,
-// the shop. Each opens over the page it was tapped on, so Back closes it. Loaded on demand when one opens.
-import { DAYS_PER_SEASON, DAYS_PER_YEAR, daySetState, dateOf, FESTIVALS, nextFestival, SEASON_NAMES, SEASONS } from '@farm/domain'
+// The loop's global sheets (F18 decisions 6 and 8, F19 decisions 7 and 8, F24 decision 8): `?sheet=end`, End the day;
+// `?sheet=calendar`, the calendar from the account bar's date; `?sheet=bin`, the shipping bin from the map or the gold
+// chip; `?sheet=shop`, the shop; `?sheet=rank`, the Farm Rank from its chip. Each opens over the page it was tapped on,
+// so Back closes it. Loaded on demand when one opens.
+import {
+  CHAPTER_POINTS, DAYS_PER_SEASON, DAYS_PER_YEAR, daySetState, dateOf, ENTRY_POINTS, FARM_RANK_POINTS, farmPointsOf, farmRankOf, farmRankOpens, FESTIVALS,
+  GOLD_PER_POINT, MILESTONE_POINTS, nextFarmRank, nextFestival, SEASON_NAMES, SEASONS,
+} from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { Button, Sheet, TrophyIcon } from '@luismlorenzana/uma-kit/ui'
+import { Button, HelpButton, Sheet, TrophyIcon } from '@luismlorenzana/uma-kit/ui'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { useLoopSave } from '../save/game'
@@ -12,13 +16,14 @@ import { BinSheet, ShopSheet } from './GoodsSheets'
 import { useAskBeforeEnd } from './ask'
 import { nudgeWords, SEASON_COLOR, shortDate, whenWords } from './words'
 
-export default function LoopSheets({ sheet }: { sheet: 'end' | 'calendar' | 'bin' | 'shop' }) {
+export default function LoopSheets({ sheet }: { sheet: 'end' | 'calendar' | 'bin' | 'shop' | 'rank' }) {
   const close = useClose()
   switch (sheet) {
     case 'end': return <EndDay />
     case 'calendar': return <CalendarSheet />
     case 'bin': return <BinSheet onClose={close} />
     case 'shop': return <ShopSheet onClose={close} />
+    case 'rank': return <RankSheet />
   }
 }
 
@@ -130,6 +135,66 @@ function CalendarSheet() {
           <p className="font-display text-[17px] font-semibold" data-next-festival>{next.festival.name} · {shortDate(next.day)} · {whenWords(next.inDays)}</p>
         </div>
         <p className="text-[12px] text-ink-faint">Day {((day - 1) % DAYS_PER_YEAR) + 1} of {DAYS_PER_YEAR}. Days move only when you end them.</p>
+      </div>
+    </Sheet>
+  )
+}
+
+/** The Farm Rank (F24 decision 8; CS39): the rank and its points, the way to the next with what it opens, and where the
+ * points come from on this farm. Points are counted each night. */
+function RankSheet() {
+  const save = useLoopSave()
+  const close = useClose()
+  if (!save) return null
+  const rank = farmRankOf(save.farm.points)
+  const next = nextFarmRank(save.farm.points)
+  const from = FARM_RANK_POINTS[rank - 1]!
+  const share = next ? Math.min(1, (save.farm.points - from) / (next.points - from)) : 1
+  const parts = farmPointsOf(save)
+  const rows: [string, string, number][] = [
+    ['Shipping', `1 per ${GOLD_PER_POINT}g`, parts.shipped],
+    ['Diary entries', `${ENTRY_POINTS} each`, parts.entries],
+    ['Milestones', `${MILESTONE_POINTS} each`, parts.milestones],
+    ['Chapters', `${CHAPTER_POINTS} each`, parts.chapters],
+  ]
+  return (
+    <Sheet open onClose={close} title={`Farm Rank ${rank}`} label="Farm Rank">
+      <div className="space-y-4 pb-2" data-rank-sheet={rank}>
+        <div>
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="font-display text-[20px] font-bold" data-points>{save.farm.points.toLocaleString('en-US')} points</p>
+            <HelpButton title="The Farm Rank" label="About the Farm Rank">
+              <p>The farm’s own rank. Points come from shipping, the Diary (each good shipped once, and milestones) and chapters done; festivals and decorations add more later.</p>
+              <p>Points are counted each night. A new rank opens more of what’s open: land, beds, seeds and stations.</p>
+            </HelpButton>
+          </div>
+          <div className="mt-1 h-2 overflow-hidden rounded-full bg-sunken" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(share * 100)}
+            aria-label={next ? `To Farm Rank ${next.rank}` : 'Top rank'}>
+            <div className="h-full rounded-full bg-accent" style={{ width: `${share * 100}%` }} />
+          </div>
+          <p className="pt-1 text-[13px] text-ink-soft" data-next>
+            {next ? `${(next.points - save.farm.points).toLocaleString('en-US')} more for Farm Rank ${next.rank} (${next.points.toLocaleString('en-US')})` : 'The top rank'}
+          </p>
+        </div>
+        {next && (
+          <section aria-label={`Farm Rank ${next.rank} opens`}>
+            <h3 className="text-micro pb-1">Farm Rank {next.rank} opens</h3>
+            <ul className="divide-y divide-hairline rounded-md border border-hairline" data-opens>
+              {farmRankOpens(next.rank).map((what) => <li key={what} className="flex min-h-11 items-center px-3 text-[15px]">{what}</li>)}
+            </ul>
+          </section>
+        )}
+        <section aria-label="Points so far">
+          <h3 className="text-micro pb-1">Points so far</h3>
+          <ul className="divide-y divide-hairline rounded-md border border-hairline">
+            {rows.map(([what, rule, points]) => (
+              <li key={what} className="flex min-h-11 items-center gap-2 px-3 text-[15px]" data-source={what}>
+                <span className="flex-1">{what} <span className="text-[12px] text-ink-faint">· {rule}</span></span>
+                <span className="font-semibold">{points.toLocaleString('en-US')}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </Sheet>
   )

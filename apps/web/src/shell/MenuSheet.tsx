@@ -1,40 +1,23 @@
-// The menu, "Every place" (uma-kit's PlaceMenu, as uma-rpg's). The Wilds (F5): the fifteen places in map order with their
-// Ready counts, each opening its quick look; the Forge and the Post, locked until they open; then the Warehouse and the
-// Account, and the build at the foot. The loop's build (F18): the farm's 23 places by FC28's rows, locked ones marked,
-// Account, and the switch "Ask before ending the day" (decision 10). `?sheet=menu` on the route it opens over, so Back
-// closes it.
-import { FARM_PLACES, loopReadyWork, readyPlots, wildsPlaces, type FarmPlaceGroup, type LoopPlaceId, type SaveV3 } from '@farm/domain'
+// The menu, "Every place" (uma-kit's PlaceMenu, as uma-rpg's; F18): the farm's 23 places by FC28's rows, locked ones
+// marked, each with its Ready count, then Account and the switch "Ask before ending the day" (F18 decision 10), and the
+// build at the foot. `?sheet=menu` on the route it opens over, so Back closes it.
+import { FARM_PLACES, loopReadyWork, readyPlots, type FarmPlaceGroup, type LoopPlaceId, type SaveV3 } from '@farm/domain'
 import { PlaceMenu, type MenuGroup } from '@luismlorenzana/uma-kit/shell'
 import { Sheet } from '@luismlorenzana/uma-kit/ui'
 import { APP_BUILD_ID } from '../app/build'
-import { loopOn } from '../app/loop'
 import { setAskBeforeEnd, useAskBeforeEnd } from '../loop/ask'
 import { lockOf, placeLink } from '../loop/farm-map'
-import { useLoopSave, useWildsSave } from '../save/game'
-import { readySlots } from '../wilds/ready'
-import { SOON_PLACES } from '../wilds/soon'
-import { useNow } from './useNow'
+import { useLoopSave } from '../save/game'
 
 const ACCOUNT = { key: 'account', name: 'Account', to: '/account' }
 
 export function MenuSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Sheet open={open} onClose={onClose} title="Every place">
-      {loopOn() ? <LoopMenu /> : <WildsMenu />}
+      <LoopMenu />
       <p className="mt-4 text-center text-[12px] text-ink-faint">Build {APP_BUILD_ID}</p>
     </Sheet>
   )
-}
-
-function WildsMenu() {
-  const save = useWildsSave()
-  const now = useNow(15_000)
-  const ready = readySlots(save, now)
-  const groups: MenuGroup[] = [
-    { key: 'wilds', label: 'Wilds', places: wildsPlaces().map((p) => ({ key: p.id, name: p.name, to: `/?peek=${p.id}`, count: ready.get(p.id) ?? 0 })) },
-    { key: 'soon', label: 'Soon', places: SOON_PLACES.map((p) => ({ key: p.id, name: p.name, to: `/?peek=${p.id}`, locked: true })) },
-  ]
-  return <PlaceMenu groups={groups} extra={[{ key: 'warehouse', name: 'Warehouse', to: '/warehouse' }, ACCOUNT]} />
 }
 
 const GROUPS: readonly { group: FarmPlaceGroup; label: string }[] = [

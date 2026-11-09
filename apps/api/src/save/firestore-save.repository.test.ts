@@ -1,8 +1,11 @@
 // The production store against an in-memory Firestore: the `farm` database by name, revisions checked in a transaction,
-// the save stored as text, the backup before a newer version first replaces a stored one, and rescues. Invented data only.
-import { newSave, newSaveV2, SAVE_VERSION as V } from '@farm/domain'
+// the save stored as text, the backup before a newer version first replaces a stored one, and rescues; and the owner's
+// first v3 upload through the controller (F24). Invented data only.
+import { ConflictException } from '@nestjs/common'
+import { migrateToV3, newSave, newSaveV2, touched, type SaveV2 } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { FirestoreSaveRepository } from './firestore-save.repository'
+import { SaveController } from './save.controller'
 import { RevisionConflict } from './save.repository'
 
 type Doc = Record<string, unknown>
@@ -39,11 +42,11 @@ describe('the Firestore save store', () => {
   it('stores revision 1 as text, then refuses a stale write and an older client', async () => {
     const repo = new FirestoreSaveRepository('farm')
     const save = newSaveV2('u', NOW)
-    expect(await repo.put('u', 0, save, V)).toEqual({ revision: 1, save })
+    expect(await repo.put('u', 0, save, 2)).toEqual({ revision: 1, save })
     expect(store.get('saves/u')).toEqual({ revision: 1, save: JSON.stringify(save), updatedAt: SERVER_TIME })
     expect(await repo.load('u')).toEqual({ revision: 1, save })
-    await expect(repo.put('u', 0, save, V)).rejects.toBeInstanceOf(RevisionConflict)
-    await expect(repo.put('u', 1, save, V - 1)).rejects.toBeInstanceOf(RevisionConflict)
+    await expect(repo.put('u', 0, save, 2)).rejects.toBeInstanceOf(RevisionConflict)
+    await expect(repo.put('u', 1, save, 1)).rejects.toBeInstanceOf(RevisionConflict)
     expect(store.has('saveBackups/u-v1')).toBe(false)
   })
 
@@ -55,10 +58,10 @@ describe('the Firestore save store', () => {
     const loaded = await repo.load('u')
     expect(loaded.save).toMatchObject({ version: 2, account: { updatedAt: NOW }, umas: {}, items: {}, work: {} })
     expect(store.get('saves/u')).toEqual(original)
-    await repo.put('u', 3, loaded.save!, V)
+    await repo.put('u', 3, loaded.save!, 2)
     expect(store.get('saveBackups/u-v1')).toEqual({ ...original, backedUpAt: SERVER_TIME })
     store.delete('saveBackups/u-v1')
-    await repo.put('u', 4, loaded.save!, V)
+    await repo.put('u', 4, loaded.save!, 2)
     expect(store.has('saveBackups/u-v1')).toBe(false)
   })
 
@@ -83,5 +86,38 @@ describe('the Firestore save store', () => {
     await repo.rescue('u', { a: 1 }, 'first')
     await repo.rescue('u', { a: 2 }, 'second')
     expect(store.get('saveRescues/u')).toEqual({ upload: '{"a":2}', reason: 'second', rescuedAt: SERVER_TIME })
+  })
+})
+
+describe("the owner's first upload of the live loop (F24 decision 9)", () => {
+  beforeEach(() => { store.clear(); databases.length = 0 })
+
+  /** Production's one save as D17 has it: v2 from F4, no Umas, no items, no jobs, at revision 12. */
+  const OWNER = { version: 2, account: { uid: 'owner', createdAt: '2026-11-08T09:12:44.000Z', updatedAt: '2026-11-08T21:40:03.512Z' }, umas: {}, items: {}, buildings: {}, work: {} }
+  const STORED = { revision: 12, save: JSON.stringify(OWNER), updatedAt: 'the server’s time' }
+
+  it('backs up the v2 document before storing the migrated v3, whose updatedAt is the v2\'s; an old build\'s v2 is refused and kept', async () => {
+    store.set('saves/owner', structuredClone(STORED))
+    const controller = new SaveController(new FirestoreSaveRepository('farm'))
+    // What the phone uploads first: the migration itself, unstamped.
+    const loaded = await controller.load('owner')
+    expect(loaded).toMatchObject({ revision: 12, save: { version: 2 } })
+    const v3 = migrateToV3(loaded.save as SaveV2, { lineOf: () => null })
+    expect(v3.account).toEqual(OWNER.account)
+    await expect(controller.put('owner', { baseRevision: 12, save: JSON.parse(JSON.stringify(v3)) })).resolves.toEqual({ revision: 13, save: v3 })
+    expect(store.get('saveBackups/owner-v2')).toEqual({ ...STORED, backedUpAt: SERVER_TIME })
+    const saved = store.get('saves/owner')!
+    expect(saved.revision).toBe(13)
+    const stored = JSON.parse(saved.save as string) as { version: number; account: unknown }
+    expect(stored.version).toBe(3)
+    expect(stored.account).toEqual(JSON.parse(STORED.save).account)
+    // An old cached Wilds build on the phone sends its v2: refused with what's stored, and kept in saveRescues.
+    const old = { baseRevision: 13, save: { ...OWNER, account: { ...OWNER.account, updatedAt: '2026-11-10T08:00:00.000Z' } } }
+    await expect(controller.put('owner', old)).rejects.toBeInstanceOf(ConflictException)
+    expect(store.get('saveRescues/owner')).toEqual({ upload: JSON.stringify(old), reason: 'save version 2 is older than the stored 3', rescuedAt: SERVER_TIME })
+    expect(store.get('saves/owner')).toEqual(saved)
+    // The next v3 writes leave the backup as it was.
+    await controller.put('owner', { baseRevision: 13, save: JSON.parse(JSON.stringify(touched(v3, '2026-11-10T09:00:00.000Z'))) })
+    expect(store.get('saveBackups/owner-v2')).toEqual({ ...STORED, backedUpAt: SERVER_TIME })
   })
 })
