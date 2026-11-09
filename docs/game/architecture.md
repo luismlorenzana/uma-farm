@@ -50,7 +50,7 @@ after it), and a v2 from the Wilds (F4–F6, retired in F24) migrates on its fir
 | Master data | `src/master/` | The release's manifest, characters, outfits and art through `/api/master`, cached by hash on the device; the roster (`farmRoster`) and the album's rows; the album art adapter; `masterReady()`, which the loop's boot waits on |
 | PWA | `vite.config.ts` | Portrait, standalone, the icons from `scripts/draw-icons.mjs`; Workbox precaches the app, keeps master data's files for good, and imports `push-sw.js` into the service worker. A new build waits for the kit's **Update ready · Restart** |
 
-Main JS is about 163.5 KB gzip against the 180 KB budget (FM20) from F24: one build, size-checked by `pnpm build`.
+Main JS is 164.0 KB gzip against the 180 KB budget (FM20) as CI measured F24: one build, size-checked by `pnpm build`.
 Firebase, the farm's pages, sheets, actions, boot and night, the scene player and the goals' rules, and the Hub map's
 Phaser scene (`createHubGame`, 377 KB gzip) load on demand; `scripts/check-size.mjs`'s `LAZY_MODULES` refuses them in
 the initial JS.
