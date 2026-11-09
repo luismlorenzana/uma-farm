@@ -67,7 +67,7 @@ Each requirement has an id, where it comes from, and the task that checks it. A 
 | R4 | The making places make uma-rpg's five made kinds with uma-rpg's ids and recipes | FM8 | F4 |
 | R5 | Save v2: each Uma's Craft Level, the Warehouse and the work rows, migrated from v1 | Plan F4 | F4 |
 | R6 | Home is the Wilds on uma-kit's Hub map (five rows of three) with uma-art's buildings; each place's page on `uma-kit/work` (slot rows, the job sheet, queues, Recall, Repeat, quick looks); the Warehouse; the worker picker on uma-kit's album | FM5, FM19 | F5 |
-| R7 | Jobs progress while the app is closed and settle on opening, as on `uma-work` | FM5 | F4, F5 |
+| R7 | Jobs progress while the app is closed and settle on opening, as on `uma-work`. **Reversed for the reworked loop (D25):** days advance only when the owner ends them | FM5 | F4, F5 |
 | R8 | "Work done" push notifications: the push route, `farm-push-tick` resumed, the VAPID secret, copied from uma-rpg's `push/` | FM17 | F6 |
 | R9 | The manual's `materials.md` and `loops.md`, generated from the code as uma-rpg's are | Plan F4 | F4 |
 | R10 | The design spec settles who works, targets, the farm's own economy, the Forge, each game's accept list and caps, the Post's screens and the Phase 4–5 queue | Plan Phase 3 | F7 |

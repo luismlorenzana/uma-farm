@@ -1,5 +1,8 @@
 # uma-farm: the farm's own loop
 
+> **Time is turns (D25, the owner, 2026-11-08):** there's no real time and no in-game clock. A farm day is a turn you
+> end yourself, and every job, crop and payout moves when you do (FC5, FC6, FC33, FC34).
+>
 > **Status: 2026-11-08, a draft for the owner's review (D22).** The owner's rework: the farm comes first with **its own
 > loop**, and sending items to the other games waits until later. The loop is defined against three references: *Harvest
 > Moon: Friends of Mineral Town*, *Rune Factory 4* and *Fantasy Life*. It keeps what the owner wants:
@@ -23,17 +26,17 @@
 
 ## The short answer
 
-- **The loop is a farm day:**
+- **The loop is a farm day, and a day is a turn.** No clock runs, and nothing happens while the app is closed:
   1. plant, tend and assign;
-  2. the Umas work while you're away;
+  2. **end the day:** the night moves every job, crop and expedition a day on;
   3. collect and ship;
-  4. the bin pays at 17:00;
+  4. the bin pays overnight;
   5. spend the gold on seeds, animals, upgrades, land and beds;
   6. the farm grows, Umas rank up, chapters and festivals come round.
 - **Seven activities, all dispatched, none real-time:**
   - farming, the ranch, mining, fishing and foraging;
   - the **workshops**: the Kitchen (cooking), the Restaurant (serving) and the Forge (merge);
-  - **expeditions:** parties of three or four Umas sent to a region for hours, resolved by their numbers, with a story log.
+  - **expeditions:** parties of three or four Umas sent to a region for a few days, resolved by their numbers, with a story log.
 - **Many things to rank up:**
   - the farm's Rank;
   - each Uma's rank in each activity, with talents from her own stats;
@@ -75,15 +78,15 @@ What each does, and what Uma Farm takes, changes or leaves.
 | From | Uma Farm **takes** | **Changes** | **Leaves** |
 |---|---|---|---|
 | Friends of Mineral Town | The daily shipping bin and its payout; the season calendar; festivals with shows and contests; helpers sent to do farm chores; animal affection lifting product quality; tool and building upgrades | The helpers are the whole roster of Umas, and the player plants and harvests by tapping instead of walking the field | Stamina and walking the farm in real time |
-| Rune Factory 4 | Many skills that level by doing; crop quality that grows; a requests board; contests at festivals; a light chaptered story | Dungeons and combat become **expeditions**: parties dispatched for hours and resolved by numbers | Real-time combat and dungeon exploration |
+| Rune Factory 4 | Many skills that level by doing; crop quality that grows; a requests board; contests at festivals; a light chaptered story | Dungeons and combat become **expeditions**: parties dispatched for days and resolved by numbers | Real-time combat and dungeon exploration |
 | Fantasy Life | Ranks per job, earned through challenges; switching freely between jobs; crafting as hands-on play (here, the workshops' minigames, FR17) | Each Uma, not the player, holds the ranks: a roster of specialists instead of one hero | The player-character Lives and party fights |
 
 ## 2. The loop (FC1–FC4)
 
-**FC1: a farm day,** about five minutes of taps, then hours of the Umas' work:
+**FC1: a farm day is a turn:** a few minutes of taps, then **End the day**, and the night settles it:
 
 ```
-            ┌───────────────────────────── gold ◄── 17:00 payout ◄── the shipping bin ◄──┐
+            ┌──────────────────────────── gold ◄── overnight payout ◄── the shipping bin ◄─┐
             ▼                                                                              │
   SPEND: seeds · feed · animals · tool and building upgrades · land · beds · recipes       │
             │                                                                              │
@@ -92,7 +95,7 @@ What each does, and what Uma Farm takes, changes or leaves.
                an expedition party · play a workshop                                       │
             │                                                                              │
             ▼                                                                              │
-  WORK (real time, app closed): Umas walk to their jobs; pairs build bonds; ranks grow     │
+  END THE DAY: every job, crop and expedition moves a day on; bonds and ranks grow       │
             │                                                                              │
             ▼                                                                              │
   COLLECT (taps): Ready bubbles · harvests · products · catches · ore · expedition loot ───┘
@@ -110,27 +113,52 @@ What each does, and what Uma Farm takes, changes or leaves.
 It goes to seeds, feed and animals, upgrades, land, beds for new Umas, recipes and decorations. There are no premium
 currencies or purchases.
 
-**FC3: the shipping bin.** Drop anything sellable at any time, and the bin pays once a day at **17:00 local** with a
-summary of the day's shipments (Friends of Mineral Town's daily rhythm). Each item has a base price, raised by its
-quality (FC10), with this week's season (FC5) lifting some prices.
+**FC3: the shipping bin.** Drop anything sellable at any time during the day. **It pays overnight, when you end the
+day,** and the morning opens on a summary of what it sold (Friends of Mineral Town's shipping screen). Each item has a
+base price, raised by its quality (FC10), with the season (FC5) lifting some prices.
 
 **FC4: always something to tap.** Planting and harvesting, Ready bubbles, chats with Umas (FC26), the bin and the board
 are all taps, as the owner asked (FR9).
 
-## 3. Time (FC5–FC6)
+## 3. Time: a day is a turn (FC5, FC6, FC33, FC34)
 
-**FC5: one season per real week, a four-week year.** Spring, Summer, Autumn and Winter each last one week. A season
-decides:
+**FC5: the calendar moves only when you end the day.** There's no real time and no in-game clock. A season is **12
+days**, so a year is 48: Spring, Summer, Autumn and Winter. A season decides:
 - which seeds grow;
 - which fish bite;
-- which festival comes round (FC22);
+- which festival comes round, on its 10th day (FC22);
 - which goods are in demand (FC3).
 
-A real week gives a phone game a rhythm you can follow without daily pressure. The farm's calendar shows today, the
-season and the next festival.
+**Days are what you spend.** Festivals fall on fixed dates, requests are due by a date, and crops grow only in their
+season, so ending a day with Umas idle is a day lost. The calendar, in the account bar, shows the date, the season and
+the next festival.
 
-**FC6: jobs run on real time,** as `uma-work` does today: minutes to hours, finished while the app is closed, collected
-on opening. Crops grow over hours, not farm days; a tended plot grows faster (FC8).
+**FC6: work is counted in days.** When you end the day, every job moves one day on:
+
+| Work | Days |
+|---|---|
+| Gathering (mine, quarry, forest, fishery) and processing at a station | 1 |
+| Making | 2–3 |
+| Crops | 3–10, by kind; tending takes a day or more off |
+| Expeditions | 2–5, by region |
+
+- **A queue means "keep at this for N days".** Repeat starts the same job the next morning.
+- **`uma-work` stays.** Its clock becomes the calendar (day n is n whole days), so its rules, queues, Recall and Repeat,
+  and F5's screens carry over; only the lengths change.
+- **Nothing moves while the app is closed.** Push has nothing to send, so `farm-push-tick` is paused (D25).
+
+**FC33: ending the day.** **End the day** sits in the bottom bar. Tapping it settles the night in one go:
+1. the bin pays;
+2. crops grow a day, animals produce;
+3. jobs and expeditions move a day on;
+4. bonds, ranks and affinity tick.
+
+The morning opens on a summary: yesterday's sales, the work that finished, and anything new (a visitor, a request, a
+chapter scene, a festival). The game nudges you to end the day once every Uma is busy and there's nothing left to
+collect or play. A festival day is the festival itself: its event fills the day.
+
+**FC34: each workshop opens once a day.** The Kitchen, the Restaurant and the Forge each have one shift a day, one
+play, with its assistant (D23). Days stay meaningful, and gold can't run away from inputs alone.
 
 ## 4. The activities (FC7–FC15)
 
@@ -145,7 +173,7 @@ expeditions, which are played or sent.
 | **Fishing** | Pond, River, then the Sea | Pick the spot | Fish: a timed job | Fish by spot and season | The angler; the fishing derby |
 | **Foraging** | Forest, Hills | Pick the area | Gather: a timed job | Lumber, herbs, mushrooms, fruit | Foraging; the Woodcutter Life |
 | **Workshops** | Kitchen, Restaurant, Forge | **Play the minigame** (FR17–FR21) | Assist: their rank lifts the yield | Dishes, gold, tools and goods | Cooking and forging, hands-on |
-| **Expeditions** | Regions on a map | Pick a region and a party, pack supplies | Go for hours; numbers decide | Monster materials, rare seeds, animals, story items | Dungeons and fighting Lives, as dispatch |
+| **Expeditions** | Regions on a map | Pick a region and a party, pack supplies | Go for 2–5 days; numbers decide | Monster materials, rare seeds, animals, story items | Dungeons and fighting Lives, as dispatch |
 
 **FC7: the five gathering places carry over** from the copy (F4): Mine, Fields, Forest, Fishery and Monster Den. Each
 keeps four slots, a timed job and its queue, Recall and Repeat on `uma-work`. What changes is their content:
@@ -180,7 +208,7 @@ A star raises the price (about +25% each) and the score at shows and contests.
 - Deeper means rarer: gems on low floors, sea fish from a boat (an upgrade).
 
 **FC12: expeditions are the combat, without real-time play.**
-- You send a party of 3–4 Umas to a region (a ruined fort, a cave, an old racetrack in the hills) for 2–8 hours.
+- You send a party of 3–4 Umas to a region (a ruined fort, a cave, an old racetrack in the hills) for 2–5 days.
 - Its **power** is the party's expedition ranks and their stats against the region's level, plus supplies (dishes from the
   Kitchen, FC14) and duo bonds (FC25).
 - The result is a success grade with loot and a short **log** of what happened, written from templates with the Umas'
@@ -207,8 +235,9 @@ Fantasy Life's Blacksmith, played as merge.
   dish, and the Restaurant's tips are its score. **Amends FR19:** the crew's boost moves to the staff meal, because
   selling is now the loop's spine.
 
-**FC15: the staff meal.** Serving the crew a meal from the Kitchen gives them **"well fed": ×1.25 work speed for 4 hours**
-(more for higher tiers, FR21). This is FR19's boost kept, now one tap after a cook.
+**FC15: the staff meal.** Serving the crew a meal from the Kitchen makes them **"well fed": their work moves a quarter
+faster** (each night counts 1.25 days for them), for the next day at Rough or Good, two days at Fine and three at
+Masterwork (FR21). This is FR19's boost kept, now one tap after a cook.
 
 ## 5. The roster (FC16–FC19)
 
@@ -253,7 +282,7 @@ Today's single **Craft Level becomes her rank in her calling's line**, so the sa
 
 ## 6. Goals (FC20–FC24)
 
-**FC20: the requests board.** Townsfolk post requests ("10 eggs, 2 stars or better, by Sunday") at a premium in gold,
+**FC20: the requests board.** Townsfolk post requests ("10 eggs, 2 stars or better, by Summer 8") at a premium in gold,
 sometimes with a recruit, a recipe or an animal. Three to five are open at a time, refreshed daily. This replaces the
 spec's game orders (FS4–FS7): the same "something to aim at", from inside the farm.
 
@@ -264,16 +293,16 @@ spec's game orders (FS4–FS7): the same "something to aim at", from inside the 
 
 Milestones pay gold, decorations, and now and then a recruit.
 
-**FC22: one festival a week,** on Saturday, each season's own, with your entries scored against two rival farms. Rivals'
+**FC22: one festival a season,** on its 10th day, with your entries scored against two rival farms. Rivals'
 scores are set by the season and your Farm Rank, so they stay a match:
 
 | Season | Festival | Your entry | Scored by |
 |---|---|---|---|
 | Spring | **Flower Show** | Your best crop of the season | Its quality and level |
-| Summer | **Fishing Derby** | Anglers sent for the derby's 2 hours | The biggest catch |
+| Summer | **Fishing Derby** | Anglers sent on the derby's day | The biggest catch |
 | Autumn | **Cooking Contest** | A dish cooked live in the Kitchen's game | The dish's quality × the play's score |
 | Winter | **Animal Show** | Your best animal | Affection and product quality |
-| Week 4, Sunday | **Harvest Cup**, the year's finale | A team of 3 Umas in a short race, run by their stats and bonds | A light race, played back on the stage |
+| Winter, day 12 | **Harvest Cup**, the year's finale | A team of 3 Umas in a short race, run by their stats and bonds | A light race, played back on the stage |
 
 Prizes are gold, decorations, a trophy for the Diary, and often a recruit. The Harvest Cup is a light nod to who the
 Umas are; uma-racer stays the racing game.
@@ -361,6 +390,7 @@ It scrolls up and down as FR6 says. The **calendar and the Farm Rank** sit in th
 | The calling rule (FM7) | Yes | Her favourite line, not her only one (FC17) |
 | Every outfit from day one (FM6) | — | Recruitment over time (FC16) |
 | No currency (FS8) | — | Gold (FC2) |
+| Jobs on real time, finishing while the app is closed (F4–F6, R7) | `uma-work` and its rules | **Days you end yourself** (FC5, FC6, FC33); push paused (D25). A save's running jobs finish on its first night in the new calendar |
 | Orders for the games (FS4–FS7) | The idea | The requests board (FC20) |
 | Parcels to the games (FM9–FM15, FR23, F10, PO1) | The design, parked | **Later**, once the farm's own loop stands |
 | The HD-2D farm (FR1–FR24) | Yes, whole | FR19's boost moves to the staff meal (FC14, FC15) |
@@ -372,7 +402,7 @@ are refunded as gold at their price.
 
 1. **M3, the spec:** this doc answered, then F7 rewritten as the core spec with its numbers: prices, times, ranks and
    rewards, worked as the class-progression bar asks.
-2. **M4, the loop, on today's map:** fields and planting, the bin and gold, the shop, ranks and talents, the first
+2. **M4, the loop, on today's map:** the calendar and End the day, fields and planting, the bin and gold, the shop, ranks and talents, the first
    recruits, chapter 1.
 3. **M5, more to do:** the ranch, mining floors, fishing spots, foraging, the Kitchen's game and the staff meal,
    expeditions.
@@ -391,7 +421,7 @@ these:
 
 | # | Gap | Settled |
 |---|---|---|
-| 1 | The Harvest Cup's "every 4th week" lands on Winter's Saturday, the Animal Show | The Cup runs on **week 4's Sunday**, the year's finale (FC22 amended) |
+| 1 | The Harvest Cup's "every 4th week" lands on Winter's Saturday, the Animal Show | The Cup runs on **Winter's last day (day 12)**, the year's finale (FC22 amended; D25 moved it from week 4's Sunday when days became turns) |
 | 2 | Chapters 2–8 come in M6, but the activities they open come in M5 | **Each milestone ships the chapters that open its activities:** chapter 1 in M4, chapters 2–5 in M5, chapters 6–8 in M6. A goal that needs a later feature (chapter 4's first festival) waits for it |
 | 3 | The Harvest Cup "plays back on the stage", but festivals are M6 and the stage is M7 | Until M7 the Cup shows as a results card with a simple race bar; from M7 it plays back on the stage |
 | 4 | Chapters, the Farm's Rank and upgrades all open things | **A chapter opens what's new** (an activity, a building); **the Farm's Rank opens more of what's open** (land, capacity, higher regions); **upgrades are bought within what's open** (the boat, after chapter 7) |
@@ -413,8 +443,8 @@ Each has a recommended answer; accepting it or changing it is enough.
 | # | Question | Recommended |
 |---|---|---|
 | 1 | Umas join over time (start with 3; beds, chapters, festivals and affinity bring more), instead of all 272 from day one? | **Yes, recruit over time** (FC16) |
-| 2 | One season per real week, a four-week year, a festival every Saturday? | **Yes** (FC5, FC22) |
-| 3 | A shipping bin that pays daily at 17:00, plus a requests board? | **Yes** (FC3, FC20) |
+| 2 | Days advance only when you end them: 12-day seasons, a 48-day year, a festival on each season's 10th day, the Harvest Cup on Winter 12? | **Yes** (FC5, FC22, FC33) |
+| 3 | A shipping bin that pays overnight when you end the day, plus a requests board? | **Yes** (FC3, FC20) |
 | 4 | You plant and harvest by tapping; Umas tend, care, dig, fish and forage? | **Yes** (FC8) |
 | 5 | Expeditions are dispatched parties resolved by numbers, with a log, and no real-time combat? | **Yes** (FC12) |
 | 6 | Each Uma has talents from her stats and six ranks in each activity, earned by doing and a challenge? | **Yes** (FC17, FC18) |
@@ -431,12 +461,12 @@ Each has a recommended answer; accepting it or changing it is enough.
 
 | Id | Call |
 |---|---|
-| FC1 | The loop is a farm day: plan with taps, Umas work in real time, collect, ship, spend, grow |
+| FC1 | The loop is a farm day, a turn: plan with taps, end the day, collect, ship, spend, grow |
 | FC2 | Gold is the farm's currency (reverses FS8); no premium currency |
-| FC3 | The shipping bin pays once a day at 17:00 local, by price × quality × the season's demand |
+| FC3 | The shipping bin pays overnight when you end the day, by price × quality × the season's demand |
 | FC4 | Every step is a tap: planting, harvests, bubbles, chats, the bin, the board |
-| FC5 | One season per real week, a four-week year; seasons set seeds, fish, festivals and demand |
-| FC6 | Jobs run on real time, as `uma-work` does; tending speeds crops |
+| FC5 | The calendar moves only when you end the day; 12-day seasons, a 48-day year; seasons set seeds, fish, festivals and demand |
+| FC6 | Work is counted in days (gathering 1, making 2–3, crops 3–10, expeditions 2–5); `uma-work`'s clock is the calendar; nothing moves while closed |
 | FC7 | The five gathering places carry over with the farm's own goods; workbenches become line stations |
 | FC8 | You plant and harvest by tapping; tending Umas speed growth and lift quality; replanting raises a crop's level |
 | FC9 | The ranch: animals bought, a carer each day, affection 0–10 hearts sets product quality |
@@ -452,7 +482,7 @@ Each has a recommended answer; accepting it or changing it is enough.
 | FC19 | The roster is uma-kit's album with talents, ranks, bonds and affinity |
 | FC20 | A requests board: 3–5 open, daily, for gold, recruits, recipes or animals (replaces FS4–FS7) |
 | FC21 | The Farm Diary: collections, milestones, records, with rewards |
-| FC22 | A festival every Saturday: Flower Show, Fishing Derby, Cooking Contest, Animal Show; the Harvest Cup on week 4's Sunday |
+| FC22 | A festival on each season's 10th day: Flower Show, Fishing Derby, Cooking Contest, Animal Show; the Harvest Cup on Winter 12 |
 | FC23 | The Farm's Rank opens land, buildings and expedition regions |
 | FC24 | Eight light chapters with goal lists; an original town cast; Umas in roles filled at runtime |
 | FC25 | Bonds grow when Umas work, travel or eat together; five hearts; side-by-side speed and duo moves |
@@ -463,3 +493,5 @@ Each has a recommended answer; accepting it or changing it is enough.
 | FC30 | Short help per place; chapter goals teach |
 | FC31 | The save and rules carry over; the content is re-authored; parcels are parked |
 | FC32 | The order: M3 the spec, M4 the loop on today's map, M5 more activities, M6 the life around it, M7 HD-2D, then parcels |
+| FC33 | End the day settles the night: the bin pays, crops grow, jobs and expeditions move, bonds and ranks tick; a morning summary; a nudge when nothing's left; a festival day is the festival |
+| FC34 | Each workshop opens once a day: one play, with its assistant |

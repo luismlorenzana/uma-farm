@@ -1,7 +1,8 @@
 # Infrastructure
 
 > **Status: live since 2026-11-08 (F2, D5).** Every value below exists and was checked. F6 (D14) ships the push routes,
-> and `farm-push-tick` runs since 2026-11-08 19:15 UTC (D15). The plan for all three
+> and `farm-push-tick` ran from 2026-11-08 19:15 UTC (D15) until it was **paused again the same day (D25)**: days became
+> turns the owner ends, so nothing finishes while the app is closed. The plan for all three
 > apps in the project is uma-rpg's
 > [cloud plan](https://github.com/luismlorenzana/uma-rpg/blob/main/docs/design/cloud/plan.md) (IN1–IN26).
 
@@ -39,7 +40,7 @@ Never run `gcloud config set …`, and never touch uma-rpg's or uma-quest's piec
 | Images | Artifact Registry `farm`, keeping the last 3 |
 | Deployer | `farm-deploy`: writer on `farm` images, admin of `farm-api`, user of `farm-api-runtime`, Hosting admin (project-wide, so the workflow names its site and CI checks it, IN7) |
 | Deploy sign-in | Provider `uma-farm` in pool `github-actions`, `main` of `luismlorenzana/uma-farm` only |
-| Push (IN17) | Secret `farm-vapid`, mounted on `farm-api` as `VAPID_KEYS`; account `farm-push-scheduler` with `run.invoker` on `farm-api` only; Cloud Scheduler `farm-push-tick`, `*/5 * * * *` UTC, `POST {API URL}/api/push/tick` with an OIDC token for `farm-push-scheduler`, audience `PUSH_AUDIENCE` (the API URL). **The route ships with F6** (D14): `/api/push/tick` answers 401 unsigned and 403 to any other account, and `PUSH_SCHEDULER_EMAIL` is unset, so the code's default, `farm-push-scheduler@uma-rpg.iam.gserviceaccount.com`, is the caller. **The job runs** since 2026-11-08 19:15 UTC, resumed after the live tick refused unsigned and forged calls (D15) |
+| Push (IN17) | Secret `farm-vapid`, mounted on `farm-api` as `VAPID_KEYS`; account `farm-push-scheduler` with `run.invoker` on `farm-api` only; Cloud Scheduler `farm-push-tick`, `*/5 * * * *` UTC, `POST {API URL}/api/push/tick` with an OIDC token for `farm-push-scheduler`, audience `PUSH_AUDIENCE` (the API URL). **The route ships with F6** (D14): `/api/push/tick` answers 401 unsigned and 403 to any other account, and `PUSH_SCHEDULER_EMAIL` is unset, so the code's default, `farm-push-scheduler@uma-rpg.iam.gserviceaccount.com`, is the caller. **The job is paused** (D25, 2026-11-08): it ran from 19:15 UTC that day (D15), and was paused once days became turns the owner ends, so there's nothing to announce. Resume it with `gcloud scheduler jobs resume farm-push-tick --location=us-central1`, scoped, if real time ever returns |
 | Parcels (IN18) | Sender: `/api/post/*` accepts a Google ID token whose audience is `FARM_API_URL` and whose account is on `POST_CALLERS` (`quest-api-runtime` first; `rpg-api-runtime` and `racer-api-runtime@uma-racer` when they receive). No IAM grant, no keys |
 | Private content | None (IN16): its art is uma-art's, its Umas come through master data |
 | Label | `app=farm` |

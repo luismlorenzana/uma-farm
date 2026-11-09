@@ -1,5 +1,8 @@
 # uma-farm: the HD-2D farm
 
+> **Days are turns (D25):** where this doc says a timer or time left, read the days left. Work moves when the owner
+> ends the day, not while the app is closed (core-loop FC5, FC6, FC33).
+>
 > **Status: 2026-11-08, accepted whole by the owner (D21):** every question answered as recommended, the Forge's genre merge. [core-loop.md](core-loop.md) (D22) then refocused the loop on the farm's own economy: it amends FR19 (the Restaurant earns gold; the crew's boost moves to the Kitchen's staff meal) and parks FR23's parcels.
 >
 > **Drafted 2026-11-08 for the owner's review (D20).** On 2026-11-08 the owner refocused the farm. It moves to the
