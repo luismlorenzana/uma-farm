@@ -4,7 +4,8 @@
 // locked. After a night the morning summary opens over the map until the player starts the day. Loaded on demand, and
 // only in the loop's build.
 import {
-  farmEnvV3, FARM_PLACES, farmPlace, LOOP_WORK_PLACES, loopReadyWork, loopWorld, readyPlots, workNow, type FarmPlace, type LoopPlaceId, type SaveV3,
+  farmEnvV3, FARM_PLACES, farmPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, workNow, type FarmPlace, type LoopPlaceId,
+  type SaveV3,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { ART_TILE, artScale, HubMap, hubDpr, PALETTES, type HubMapPlace, type PageGround, type PipModel } from '@luismlorenzana/uma-kit/hub'
@@ -21,9 +22,10 @@ import { FieldsPeek, fieldsPips } from './FieldsPeek'
 import { summaryParts } from './summary-words'
 import { farmingTalents, useTalents } from './talents'
 import { shortDate } from './words'
+import { WorkPlacePeek } from './WorkPlace'
+import { isWorkScreen } from './work-view'
 
 const GROUND: PageGround = { id: 'farm', tiles: 'farmlands', palette: PALETTES.farmlands! }
-const ENV = farmEnvV3()
 const WORK_PLACES: ReadonlySet<string> = new Set(LOOP_WORK_PLACES)
 
 /** `/`, with an optional `?peek=<place>` quick look. An unknown place drops the panel. */
@@ -98,7 +100,8 @@ function FarmScreen({ save, peek }: { save: SaveV3; peek: FarmPlace | undefined 
   const tile = ART_TILE * artScale(hubDpr())
   const ready = useMemo(() => loopReadyWork(save), [save])
   const plots = readyPlots(save)
-  const work = useMemo(() => workView(loopWorld(save), workNow(save), ENV), [save])
+  const env = useMemo(() => farmEnvV3(loopKinds(talents.of)), [talents.of])
+  const work = useMemo(() => workView(loopWorld(save), workNow(save), env), [save, env])
   const places: HubMapPlace[] = FARM_PLACES.map((place): HubMapPlace => {
     const lock = lockOf(save, place)
     const slots = place.id === 'fields' ? plots : ready.get(place.id as LoopPlaceId) ?? 0
@@ -143,7 +146,9 @@ function FarmScreen({ save, peek }: { save: SaveV3; peek: FarmPlace | undefined 
           words={{ close: 'Close', about: `About the ${peek.name}`, backTo: 'Back to the farm' }}
           focusKey={`[data-place="${peek.id}"]`}
         >
-          {peek.id === 'fields' && lockOf(save, peek) === null ? <FieldsPeek save={save} talentOf={farming} /> : <PlacePeek save={save} place={peek} />}
+          {peek.id === 'fields' && lockOf(save, peek) === null ? <FieldsPeek save={save} talentOf={farming} />
+            : isWorkScreen(peek.id) && placeOpen(save, peek) ? <WorkPlacePeek save={save} place={peek.id} />
+              : <PlacePeek save={save} place={peek} />}
         </PeekPanel>
       )}
       <Morning save={save} open={!covered} />

@@ -392,7 +392,7 @@ always ★5.
 - `quality(sources)` adds a good's sources, each already in points (`{ rank, talent, care, cropLevel, inputs, tool,
   boost }`), to a millionth; `drawStars(q, u)` draws; `starShares(q)` gives the odds of each star. F21 gives the rank
   and talent terms (`rankQuality` from CS31's table, `talentQuality` from CS28's, [ranks.md](ranks.md)); F20 adds them up for crops (`harvestQuality`, [fields.md](fields.md#tending-cs12-cs28-cs31-decisions-1-and-2))
-  and F22 for its goods.
+  and F22 for its goods (`gatherQuality`, [gathering.md](gathering.md#stars-cs26)); a station's output keeps its input's stars.
 - A tool's tier runs 1 (Basic) to 5 (Mythril), so Basic adds nothing and a Copper Pick +0.25.
 
 | Worked (CS26) | Q | Stars |

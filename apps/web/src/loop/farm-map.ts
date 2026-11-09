@@ -1,20 +1,25 @@
 // The farm map as data (F18 decision 5; FC28, FR5–FR7): where each of the 23 places stands, and why one is locked. The
 // map is uma-kit's Hub, eight rows of three laid on its tile grid, taller than a phone's screen, so it scrolls.
-import { FARM_MAP_ROWS, placeOpen, type FarmPlace, type FarmPlaceId, type PlaceOpens, type SaveV3 } from '@farm/domain'
+import { FARM_MAP_ROWS, isStation, placeOpen, type FarmPlace, type FarmPlaceId, type PlaceOpens, type SaveV3 } from '@farm/domain'
 import type { PlaceAt } from '@luismlorenzana/uma-kit/hub'
 
 /** The places whose screens have landed (decision 5), each with where a tap on it goes: F19's bin and shop (their sheets
- * over the farm) and Warehouse; F20's Fields (their quick look, which opens `/fields`); F22 and F23 add theirs. Until
- * then a place shows "Soon". */
+ * over the farm) and Warehouse; F20's Fields (their quick look, which opens `/fields`); F22's forest, Fishery and three
+ * stations (their quick looks, which open their pages); F23 adds the Dorm. Until then a place shows "Soon". */
 export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlaceId, string>([
   ['fields', '/?peek=fields'],
+  ['forest', '/?peek=forest'],
+  ['fishery', '/?peek=fishery'],
+  ['mill', '/?peek=mill'],
+  ['sawmill', '/?peek=sawmill'],
+  ['smokehouse', '/?peek=smokehouse'],
   ['bin', '/?sheet=bin'],
   ['shop', '/?sheet=shop'],
   ['warehouse', '/warehouse'],
 ])
 
 /** Where a tap on a place goes: its screen once it's open and landed, else its quick look. */
-export function placeLink(save: Pick<SaveV3, 'farm'>, place: FarmPlace, screens: ReadonlyMap<FarmPlaceId, string> = PLACE_SCREENS): string {
+export function placeLink(save: Pick<SaveV3, 'farm' | 'buildings'>, place: FarmPlace, screens: ReadonlyMap<FarmPlaceId, string> = PLACE_SCREENS): string {
   return lockOf(save, place, screens) === null ? screens.get(place.id)! : `/?peek=${place.id}`
 }
 
@@ -42,8 +47,10 @@ export function opensWords(opens: PlaceOpens): string {
   }
 }
 
-/** Why a place is locked on this save, or null when it's open: CS3's rule first, then whether its screen has landed. */
-export function lockOf(save: Pick<SaveV3, 'farm'>, place: FarmPlace, screens: ReadonlyMap<FarmPlaceId, unknown> | ReadonlySet<FarmPlaceId> = PLACE_SCREENS): string | null {
+/** Why a place is locked on this save, or null when it's open: CS3's rule first, then a station not built yet (F22
+ * decision 5: its quick look offers Build), then whether its screen has landed. */
+export function lockOf(save: Pick<SaveV3, 'farm' | 'buildings'>, place: FarmPlace, screens: ReadonlyMap<FarmPlaceId, unknown> | ReadonlySet<FarmPlaceId> = PLACE_SCREENS): string | null {
   if (!placeOpen(save, place)) return opensWords(place.opens)
+  if (isStation(place.id) && (save.buildings[place.id] ?? -1) < 1) return 'Not built'
   return screens.has(place.id) ? null : 'Soon'
 }

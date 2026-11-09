@@ -61,6 +61,7 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
             key: `jobs:${line.place}`, to: peek(line.place),
             text: `${farmPlace(line.place)?.name ?? line.place} · ${plural(line.jobs, 'job')} done · ${plural(line.items, 'item')}`,
           }
+          case 'catch': return { key: 'catch', to: peek('fishery'), text: `Best catch · ${goodName(line.id)} ★${line.stars}` }
           case 'crops': return { key: `crops:${line.block}`, to: FIELDS, text: `Block ${line.block} · ${plural(line.plots, 'crop')} ready` }
           case 'withered': return { key: `withered:${line.block}:${line.crop}`, to: FIELDS, text: `Block ${line.block} · ${line.plots} ${itemNameOf(line.crop)} withered` }
         }

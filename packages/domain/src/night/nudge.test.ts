@@ -16,16 +16,16 @@ const gather = (save: SaveV3, outfitId: string, slot: number) =>
 
 describe('the nudge (CS6)', () => {
   it('counts idle Umas, and reads "All set" when everyone works and nothing waits', () => {
-    expect(daySetState(farm(), TEST_KINDS)).toEqual({ allSet: false, idle: ['101', '202', '303'], collect: 0, badge: 3 })
+    expect(daySetState(farm())).toEqual({ allSet: false, idle: ['101', '202', '303'], collect: 0, badge: 3 })
     const two = gather(gather(farm(), '101', 0), '202', 1)
-    expect(daySetState(two, TEST_KINDS)).toEqual({ allSet: false, idle: ['303'], collect: 0, badge: 1 })
+    expect(daySetState(two)).toEqual({ allSet: false, idle: ['303'], collect: 0, badge: 1 })
     const all = gather(two, '303', 2)
-    expect(daySetState(all, TEST_KINDS)).toEqual({ allSet: true, idle: [], collect: 0, badge: 0 })
+    expect(daySetState(all)).toEqual({ allSet: true, idle: [], collect: 0, badge: 0 })
   })
 
   it('counts each Uma with finished work as one to collect, and idle until she has work again', () => {
     const morning = endDay(gather(farm(), '101', 0), { roster: [], kinds: TEST_KINDS }, AT)
-    expect(daySetState(morning, TEST_KINDS)).toEqual({ allSet: false, idle: ['101', '202', '303'], collect: 1, badge: 4 })
+    expect(daySetState(morning)).toEqual({ allSet: false, idle: ['101', '202', '303'], collect: 1, badge: 4 })
   })
 
   it('counts a tender with a growing plot as working, and each Ready plot as one to collect', () => {
@@ -37,6 +37,6 @@ describe('the nudge (CS6)', () => {
     const b = newBlock('B')
     b.tender = '202'
     b.plots[0] = { crop: 'potato', growth: 5, ready: true, regrowing: false, own: false }
-    expect(daySetState({ ...save, fields: { blocks: [a, b] } }, TEST_KINDS)).toEqual({ allSet: false, idle: ['202', '303'], collect: 2, badge: 4 })
+    expect(daySetState({ ...save, fields: { blocks: [a, b] } })).toEqual({ allSet: false, idle: ['202', '303'], collect: 2, badge: 4 })
   })
 })

@@ -1,21 +1,22 @@
 // End the day (F18 decisions 2–4 and 13; core spec CS7, CS8, CS22, FC6, FC33): the night is one pure function, nine
 // steps in a fixed order, one save write. A step whose packet hasn't landed is a no-op, and each packet fills its own:
 //
-//   1 the bin pays (F19) · 2 crops grow (F20) · 3 animals (M5) · 4 jobs move a day on (F18) · 5 workshops reset (M5) ·
-//   6 ranks (F21), bonds (M6) and well fed (F18) · 7 crops wither (F20) and the calendar turns (F18) · 8 goals (F23, F24) ·
-//   9 the morning summary (F18)
+//   1 the bin pays (F19) · 2 crops grow (F20) · 3 animals (M5) · 4 jobs move a day on (F18) and hauls count (F22) ·
+//   5 workshops reset (M5) · 6 ranks (F21), bonds (M6) and well fed (F18) · 7 crops wither (F20) and the calendar turns
+//   (F18) · 8 goals (F23, F24) · 9 the morning summary (F18)
 //
 // Every draw a step makes is `draw(uid, day, what, n)`, so the same save always gives the same morning (CS8). The player's
 // change is stamped once, with real time, after the ninth step.
-import { endsAt, isRefusal, settle, speedUp } from '@luismlorenzana/uma-work'
+import { endsAt, finishedCount, isRefusal, settle, speedUp } from '@luismlorenzana/uma-work'
 import { DAY_MS, festivalOn, isSeasonStart, dateOf, workNow } from '../farm/calendar'
 import { favouriteActivity, PLACE_ACTIVITY, tickRankRules, type WorkedDay } from '../farm/rank-rules'
 import { talentsD, type TalentOf } from '../farm/talents'
 import { growFields, plotsToPlant, witherFields, type Ripened, type Withered } from '../fields/fields'
+import { haulsTonight, loopKinds, type BestCatch, type MadeTonight } from '../gathering/kinds'
 import type { FarmOutfit } from '../roster/roster'
 import { payBin } from '../save/bin'
 import { settleLoopWork } from '../save/loop-work'
-import { LOOP_KINDS, LOOP_WORK_PLACES, type LoopKinds, type LoopPlaceId } from '../save/parse-v3'
+import { LOOP_WORK_PLACES, type LoopKinds, type LoopPlaceId } from '../save/parse-v3'
 import { touched } from '../save/save'
 import { BLOCK_IDS, type BlockId, type OutfitId, type SaveV3 } from '../save/v3'
 import { farmEnvV3, loopWorld, nightEnvV3, WELL_FED_TICKETS, withLoopWorld } from '../work/loop-env'
@@ -27,10 +28,10 @@ import type { BinSale, MorningSummary, NewsLine, Nudge, RankLine, WorkLine } fro
 export interface NightContext {
   /** Master data's roster: every outfit on the release, with her line (her favourite, CS33). */
   readonly roster: readonly FarmOutfit[]
-  /** The work kinds (`LOOP_KINDS`); tests pass their own. */
+  /** The work kinds; tests pass their own. Left out, `loopKinds(talentOf)`: F22's kinds with these talents. */
   readonly kinds?: LoopKinds
-  /** Each Uma's talent in an activity (F21, CS27): tending's growth (step 2) and rank points (step 6). D for everyone
-   * when left out (tests). */
+  /** Each Uma's talent in an activity (F21, CS27): tending's growth (step 2), a queued job's plan when it starts at the
+   * boundary (step 7, F22) and rank points (step 6). D for everyone when left out (tests). */
   readonly talentOf?: TalentOf
 }
 
@@ -42,6 +43,10 @@ export interface NightNotes {
   readonly worked: readonly { outfitId: OutfitId; place: LoopPlaceId }[]
   /** Step 4: each job that finished by the morning, with the items it made. */
   readonly finished: readonly { outfitId: OutfitId; place: LoopPlaceId; items: number }[]
+  /** Step 4: every entry's items that finished tonight, a day's haul or a station's batch, with its request (F22). */
+  readonly made: readonly MadeTonight[]
+  /** Step 4: the night's best catch (F22), for the summary. */
+  readonly best: BestCatch | null
   /** Step 2: each tender whose block had a growing plot, so she worked the night (F20 decision 2). F21 pays her
    * farming's rank points from it. */
   readonly tended: readonly { outfitId: OutfitId; block: BlockId }[]
@@ -54,7 +59,7 @@ export interface NightNotes {
 }
 
 /** A night's notes before its first step. */
-export const emptyNotes = (): NightNotes => ({ sold: [], worked: [], finished: [], tended: [], ripened: [], withered: [], ranks: [] })
+export const emptyNotes = (): NightNotes => ({ sold: [], worked: [], finished: [], made: [], best: null, tended: [], ripened: [], withered: [], ranks: [] })
 
 export interface Night {
   /** The save as the player left the day. */
@@ -68,8 +73,9 @@ export interface Night {
 /** One step of the night: the night so far in, the night after it out. Pure. */
 export type NightStep = (night: Night) => Night
 
-const kindsOf = (night: Night): LoopKinds => night.context.kinds ?? LOOP_KINDS
 const talentsOf = (night: Night): TalentOf => night.context.talentOf ?? talentsD
+/** The kinds tonight plans with: the context's, or F22's with tonight's talents. */
+const kindsOf = (night: Night): LoopKinds => night.context.kinds ?? loopKinds(talentsOf(night))
 const same: NightStep = (night) => night
 
 /** Step 1 (F19 decision 6): everything shipped today pays at price × stars × demand on the day it was shipped, before
@@ -116,7 +122,19 @@ export const moveJobs: NightStep = (night) => {
   const finished = Object.values(byMorning.work).flatMap((row) => (row.slot ? row.entries : [])
     .filter((entry) => endsAt(entry) > evening && endsAt(entry) <= morning)
     .map((entry) => ({ outfitId: row.outfitId, place: row.slot!.building as LoopPlaceId, items: entry.outputs.length })))
-  return { ...night, save, notes: { ...night.notes, worked, finished } }
+  const made = Object.values(byMorning.work).flatMap((row) => (row.slot ? row.entries : []).flatMap((entry): MadeTonight[] => {
+    const items = entry.outputs.slice(finishedCount(entry, evening), finishedCount(entry, morning)).flatMap((o) => ('item' in o ? [o.item] : []))
+    return items.length > 0 ? [{ outfitId: row.outfitId, place: row.slot!.building as LoopPlaceId, request: entry.request, items }] : []
+  }))
+  return { ...night, save, notes: { ...night.notes, worked, finished, made } }
+}
+
+/** Step 4, after the jobs move (F22 decision 7; CS30): tonight's hauls count toward each forager's and angler's next
+ * rank's challenge, items in an area and catches at a spot, before step 6 ranks her up; the night's best catch is noted
+ * for the morning. What came home is counted when it's collected. */
+export const countHauls: NightStep = (night) => {
+  const { save, best } = haulsTonight(night.save, night.notes.made)
+  return { ...night, save, notes: { ...night.notes, best } }
 }
 
 /** Step 5, M5 (F8): each workshop may be played again tomorrow. `workshops.played` holds the day, so nothing moves. */
@@ -186,15 +204,17 @@ export const buildSummary: NightStep = (night) => {
     const done = notes.finished.filter((f) => f.place === place)
     return done.length > 0 ? [{ kind: 'jobs', place, jobs: done.length, items: done.reduce((n, f) => n + f.items, 0) }] : []
   })
+  // F22: the night's best catch, after the jobs.
+  const best: WorkLine[] = notes.best ? [{ kind: 'catch', id: notes.best.id, stars: notes.best.stars }] : []
   // F20: crops ready by block, then what withered, in block order.
   const byBlock = <T extends { block: BlockId }>(lines: readonly T[]): T[] => [...lines].sort((a, b) => BLOCK_IDS.indexOf(a.block) - BLOCK_IDS.indexOf(b.block))
   const crops = byBlock(notes.ripened).map((r): WorkLine => ({ kind: 'crops', block: r.block, plots: r.plots }))
   const withered = byBlock(notes.withered).map((w): WorkLine => ({ kind: 'withered', block: w.block, crop: w.crop, plots: w.plots }))
-  const { idle } = daySetState(save, kindsOf(night))
+  const { idle } = daySetState(save)
   const plant = plotsToPlant(save)
   const nudges: Nudge[] = [...(idle.length > 0 ? [{ kind: 'idle' as const, umas: idle }] : []), ...(plant > 0 ? [{ kind: 'seeds' as const, plots: plant }] : [])]
   const summary: MorningSummary = {
-    day: save.calendar.day, bin: [...notes.sold], work: [...jobs, ...crops, ...withered], ranks: [...notes.ranks], bonds: [], news: newsOf(save.calendar.day), nudges,
+    day: save.calendar.day, bin: [...notes.sold], work: [...jobs, ...best, ...crops, ...withered], ranks: [...notes.ranks], bonds: [], news: newsOf(save.calendar.day), nudges,
   }
   return { ...night, save: { ...save, summary } }
 }
@@ -214,6 +234,7 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 2, name: 'growCrops', run: growCrops, what: 'Crops grow: 1 a night untended, the tender’s rate tended; plots that reach their days − 0.5 turn Ready', by: 'F20' },
   { step: 3, name: 'tendAnimals', run: tendAnimals, what: 'Animals are fed, affection moves, products are laid', by: 'M5 (F27)' },
   { step: 4, name: 'moveJobs', run: moveJobs, what: 'Jobs move a day on: a quarter day for the well fed, then what finishes by the morning is read', by: 'F18' },
+  { step: 4, name: 'countHauls', run: countHauls, what: 'Tonight’s hauls count toward each forager’s and angler’s challenge; the best catch is noted', by: 'F22' },
   { step: 5, name: 'resetWorkshops', run: resetWorkshops, what: 'Each workshop may be played again tomorrow', by: 'M5 (F8)' },
   { step: 6, name: 'tickRanks', run: tickRanks, what: 'Rank points for every Uma who worked, one activity each; rank-ups where points and the challenge are met', by: 'F21' },
   { step: 6, name: 'tickBonds', run: tickBonds, what: 'Bond points for pairs who shared a place', by: 'M6 (F33)' },

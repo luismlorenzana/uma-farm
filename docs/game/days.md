@@ -59,11 +59,11 @@ needs. The loop has no 15-second settle ticks.
 
 | Piece | What |
 |---|---|
-| `farmEnvV3(kinds)` | The v3 work places (the Forest, the Fishery, the Mill, the Sawmill, the Smokehouse; the Mine, the Quarry, the Smelter and the Cutter from M5), four slots each at speed 1, no upgrades, no Speed Tickets; who may work is who's home (`dorm.home`); work pays no EXP (ranks come at night, F21); the kinds are `LOOP_KINDS`, which F22 fills |
-| `LoopKind` | A work kind: its places, its request's parse, its uma-work rules and `multiDay` (a making job, the Mill's preserves, an expedition) |
+| `farmEnvV3(kinds)` | The v3 work places (the Forest, the Fishery, the Mill, the Sawmill, the Smokehouse; the Mine, the Quarry, the Smelter and the Cutter from M5), four slots each at speed 1, no upgrades, no Speed Tickets; who may work is who's home (`dorm.home`); work pays no EXP (ranks come at night, F21); the kinds are F22's `loopKinds(talentOf)`, with master data's talents (`LOOP_KINDS` reads everyone D) |
+| `LoopKind` | A work kind: its request (its places and its parse, `LoopRequestKind`; the save's parse reads `LOOP_REQUESTS`), its uma-work rules and `multiDay` (a making job, the Mill's preserves, an expedition); F22's are foraging, fishing and the stations' six jobs ([gathering.md](gathering.md)) |
 | `loopWorld(save)` | uma-work's state over a v3 save: the Warehouse as `<id>@<stars>` keys (F17's bridge), no building levels, the work rows, and the save around them for the kinds to read |
 | The operations | `startLoopJob`, `editLoopQueue`, `collectLoopWorker`, `collectLoopAll`, `recallLoopWorker`, `repeatLoopJob`, `restartLoopStopped`, `dismissLoopStopped`: each at `workNow(save)`, stamped with the time given |
-| The readings | `settleLoopWork`, `loopWorking`, `loopReadyWork`, `loopReadyItems`: no stamp, nothing stored; a settle during the day starts nothing new |
+| The readings | `settleLoopWork`, `loopWorking`: no stamp, nothing stored; a settle during the day starts nothing new. `loopReadyWork`, `loopReadyItems` and the nudge read the stored rows without settling (F22, `save/work-readings.ts`): every stored save is settled at its day's start, so the bars and the Menu never load the kinds' rules |
 | Refusals | In the loop's words: "She isn't on the farm.", "She is busy for another 2 days.", "Short 1 Wheat." (a good's name is F19's `goodName`) |
 
 A queue means "keep at this for N days": each job starts the moment the one before ends, at a night's boundary.
@@ -108,6 +108,7 @@ time. A step whose packet hasn't landed passes the night on unchanged, and each 
 | 2 | `growCrops` | Crops grow: 1 a night untended, the tender’s rate tended; plots that reach their days − 0.5 turn Ready | F20 |
 | 3 | `tendAnimals` | Animals are fed, affection moves, products are laid | M5 (F27) |
 | 4 | `moveJobs` | Jobs move a day on: a quarter day for the well fed, then what finishes by the morning is read | F18 |
+| 4 | `countHauls` | Tonight’s hauls count toward each forager’s and angler’s challenge; the best catch is noted | F22 |
 | 5 | `resetWorkshops` | Each workshop may be played again tomorrow | M5 (F8) |
 | 6 | `tickRanks` | Rank points for every Uma who worked, one activity each; rank-ups where points and the challenge are met | F21 |
 | 6 | `tickBonds` | Bond points for pairs who shared a place | M6 (F33) |
@@ -220,7 +221,10 @@ stay put.
   wire theirs up (`PLACE_SCREENS`, each with where a tap goes). F19 opened the shipping bin (`?sheet=bin`), the
   Warehouse (`/warehouse`) and the shop (`?sheet=shop`): a tap on the map or in the Menu goes straight there
   ([goods.md](goods.md#the-screens)). F20 opened the Fields: a tap opens their quick look (`/?peek=fields`), which opens
-  `/fields` ([fields.md](fields.md#the-screens-decision-11)); every other place keeps its plain quick look.
+  `/fields` ([fields.md](fields.md#the-screens-decision-11)). F22 opened the Forest, the Fishery and the three
+  stations: a tap opens their quick look (`/?peek=forest` …), whose slot rows and Open lead to their pages; a station is
+  locked until built ("Not built"), its quick look offering Build once what opens it has
+  ([gathering.md](gathering.md#the-screens-decisions-5-and-8)). Every other place keeps its plain quick look.
 - **Borrowed buildings:** the Coop, the bin, the Dorm, the board and the expedition post stand on unused uma-art buildings
   until their own ship (F25, F29, F38).
 - **Pips** hang over a work place's building in a half arch (FR7): each working Uma's face ringed by her job's progress,
@@ -236,8 +240,9 @@ stay put.
   the moon; it reads "All set" and glows when nothing waits, else "End day" with the count on the disc. The badge and the
   glow are uma-kit 0.19.0's (uma-platform P112, from F18's request), and the tab's name carries the count ("End the day:
   2 Umas idle · 3 to collect"). The same release lets the work screens print days (F22 uses it).
-- **Days on the work screens:** uma-kit/work prints "24h" for a day. The farm's own screens say days ("1 day", "in 7
-  days", "tomorrow"); the kit's rows follow once its duration option ships.
+- **Days on the work screens:** the farm's own screens say days ("1 day", "in 7 days", "tomorrow"), and from F22 the
+  kit's rows, sheets and chips do too, through uma-kit 0.19.0's `formatDuration`: "Tomorrow", "In 2 days", "1 day",
+  "stopped yesterday" ([gathering.md](gathering.md#the-screens-decisions-5-and-8)).
 - **The account bar:** the initial (Account), the date chip, F19's gold chip (it opens the bin,
   [goods.md](goods.md#gold-and-the-account-bar-decision-10)), the sync chip.
 - **Roster** (`/roster`) is the album of the Umas home with F21's talents and ranks, filters and sorts, and her sheet

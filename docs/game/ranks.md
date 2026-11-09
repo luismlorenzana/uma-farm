@@ -142,7 +142,7 @@ activity:** her first entry, jobs before tending (one rule, `isBusy`, already ke
 | Cutter | Mining |
 <!-- /live -->
 
-In M4 only the Fields' tenders earn points until F22 fills the forest, the Fishery and the stations (`LOOP_KINDS`).
+In M4 the Fields' tenders and, from F22, every Uma on a job at the forest, the Fishery and the stations earn points ([gathering.md](gathering.md)).
 
 ## The challenges (CS30; decision 1)
 
@@ -210,8 +210,9 @@ job is stored at step 7).
 <!-- /live -->
 
 `rankBenefits(rank)` is the table; the Fields read its growth and seeds back (`tendedGrowth`, `seedsBackChance`) and
-CS26's rank term is `rankQuality(rank)`. The forest's areas and the Fishery's spots have their ids here
-(`FOREST_AREAS`, `FISHING_SPOTS`, `AREA_NAMES`, `SPOT_NAMES`) for F22 to give their goods.
+CS26's rank term is `rankQuality(rank)`. The forest's areas and the Fishery's spots (`FOREST_AREAS`, `FISHING_SPOTS`,
+`AREA_NAMES`, `SPOT_NAMES`) moved to `gathering/ids.ts` in F22, which gives them their goods
+([gathering.md](gathering.md)); `deepest` names the last each rank opens.
 
 ## Her favourite line (CS33; decision 6)
 
@@ -258,7 +259,7 @@ keeps the table with that release's view (one view a release hash). The night (`
 harvests (`harvestPlot`, `harvestBlock`, `harvestFields`, `collectFarm`, which wait for master data) and the screens
 (`useTalents`) all read it. The API never needs talents.
 
-## For F22–F24
+## For F23–F24
 
 - **A job's points:** add the job's place to `PLACE_ACTIVITY` if it's new; step 6 pays every running job's Uma from
   `notes.worked`. Nothing else is needed.
@@ -266,7 +267,9 @@ harvests (`harvestPlot`, `harvestBlock`, `harvestFields`, `collectFarm`, which w
   `NightContext.talentOf` in a kind's `plan`, or the app's `talentsFor(view)`), `rankBenefits(rank).yield`,
   `talentYield(step)`, `rankQuality(rank)` and `talentQuality(step)` into `quality(sources)`, and
   `rankBenefits(rank).deepest` for what her rank opens.
-- **A job's challenge:** `countChallenge(save, id, 'fishing', { kind: 'catch', spot, fish })` or
-  `{ kind: 'gather', area, items }` when the haul is collected.
+- **A job's challenge:** F22 counts catches and items at night, step 4's `countHauls`, as they finish, so a challenge
+  met tonight ranks her up tonight ([gathering.md](gathering.md#the-night-hauls-count-cs7-step-4-cs30-decision-7)).
+- **A job's talent:** a kind's plan reads it through `loopKinds(talentOf)` (F22): the night passes `NightContext.talentOf`,
+  the app `talentsFor(view)`.
 - **The roster and the start's cards (F23):** `talentTable(view)`, `talentsOf`, `favouriteActivity`, `umaRows`,
   `UMA_FACETS`, `umaBadges`, `TalentChip`, `FavouriteMark`. **Hello lines (F24):** `temperament`.

@@ -4,6 +4,7 @@
 // line is her favourite, where she earns ×1.2 points; she can work anywhere. `farm/ranks.ts` holds the ladder the save
 // and the migration need; this file holds the rest, loaded with the loop's screens and the night.
 import type { FestivalId } from './calendar'
+import type { FishingSpotId, ForestAreaId } from '../gathering/ids'
 import type { MaterialLine } from '../items/lines'
 import type { RankLine } from '../night/summary'
 import type { LoopPlaceId } from '../save/parse-v3'
@@ -75,19 +76,6 @@ export const PLACE_ACTIVITY: Readonly<Record<LoopPlaceId, Activity>> = {
 }
 
 // --- What a rank gives (CS31) --------------------------------------------------------------------------------------
-
-/** The forest's areas, deepest last (CS16; F22 gives each its goods). */
-export const FOREST_AREAS = ['woods', 'hills', 'old-forest', 'mountain', 'misty-vale', 'world-tree'] as const
-export type ForestAreaId = typeof FOREST_AREAS[number]
-/** The Fishery's spots (CS15; F22 gives each its fish): the five freshwater ones and the two at sea (chapter 7). */
-export const FISHING_SPOTS = ['pond', 'river', 'lake', 'falls', 'moon-pool', 'sea-pier', 'deep-sea'] as const
-export type FishingSpotId = typeof FISHING_SPOTS[number]
-export const AREA_NAMES: Readonly<Record<ForestAreaId, string>> = {
-  woods: 'the Woods', hills: 'the Hills', 'old-forest': 'the Old Forest', mountain: 'the Mountain', 'misty-vale': 'the Misty Vale', 'world-tree': 'the World Tree',
-}
-export const SPOT_NAMES: Readonly<Record<FishingSpotId, string>> = {
-  pond: 'the Pond', river: 'the River', lake: 'the Lake', falls: 'the Falls', 'moon-pool': 'the Moon Pool', 'sea-pier': 'the Sea Pier', 'deep-sea': 'the Deep Sea',
-}
 
 /** What one rank gives (CS31). */
 export interface RankBenefits {

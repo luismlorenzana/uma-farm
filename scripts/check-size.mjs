@@ -10,8 +10,9 @@ export const MAIN_JS_BUDGET = 180_000
 /** Modules that must load on demand (F5): the Hub map's Phaser scene, which uma-kit imports only when a map mounts, and the
  * Wilds' screens, which the router loads with React.lazy; the loop's boot with its migration (F17); the loop's pages,
  * its sheets, its actions and the night (F18); the Fields' page, rules and crop table, and the morning's words (F20); and
- * the talents, the rank rules and their table, the roster's rows and the Umas' marks (F21). Paths match a module id
- * exactly or as its suffix. */
+ * the talents, the rank rules and their table, the roster's rows and the Umas' marks (F21); and the work operations and
+ * their env, the forest's, the Fishery's and the stations' tables, kinds and build rule, and their screens (F22). Paths
+ * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
   'phaser/dist/phaser.esm.js',
   '@luismlorenzana/uma-kit/dist/hub/scene/createHubGame.js',
@@ -36,6 +37,13 @@ export const LAZY_MODULES = [
   'src/loop/talents.ts',
   'src/loop/roster-view.ts',
   'src/loop/UmaMarks.tsx',
+  'domain/src/save/loop-work.ts',
+  'domain/src/work/loop-env.ts',
+  'domain/src/gathering/tables.ts',
+  'domain/src/gathering/kinds.ts',
+  'domain/src/gathering/stations.ts',
+  'src/loop/WorkPlace.tsx',
+  'src/loop/work-view.ts',
 ]
 
 export function entrySrc(html) {

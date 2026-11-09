@@ -11,10 +11,11 @@ import { parseSaveV3 } from '../save/parse-v3'
 import { newRosterUma, newSave, type Plot, type RankState, type SaveV3 } from '../save/v3'
 import type { FarmOutfit } from '../roster/roster'
 import {
-  affinityPoints, AREA_NAMES, challengeFor, challengeMet, CHALLENGES, countChallenge, daysToRank, FAVOURITE_ACTIVITIES, favouriteActivity, heartsOf,
-  PLACE_ACTIVITY, pointsFull, RANK_BENEFITS, rankBenefits, rankPoints, rankPointsForDay, rankQuality, SPOT_NAMES, tickRankRules, type ChallengeEvent,
+  affinityPoints, challengeFor, challengeMet, CHALLENGES, countChallenge, daysToRank, FAVOURITE_ACTIVITIES, favouriteActivity, heartsOf,
+  PLACE_ACTIVITY, pointsFull, RANK_BENEFITS, rankBenefits, rankPoints, rankPointsForDay, rankQuality, tickRankRules, type ChallengeEvent,
   type TermsOf,
 } from './rank-rules'
+import { AREA_NAMES, SPOT_NAMES } from '../gathering/ids'
 import { ACTIVITIES, RANK_POINTS, type Activity, type Rank } from './ranks'
 import { TALENT_D, talentQuality, type TalentStep } from './talents'
 

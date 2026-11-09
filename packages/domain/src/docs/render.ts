@@ -35,8 +35,11 @@ import {
   talentGrowth, talentPower, talentQuality, type TalentStep,
 } from '../farm/talents'
 import {
-  AREA_NAMES, CHALLENGES, daysToRank, PLACE_ACTIVITY, RANK_BENEFITS, rankPointsForDay, SPOT_NAMES,
+  CHALLENGES, daysToRank, PLACE_ACTIVITY, RANK_BENEFITS, rankPointsForDay,
 } from '../farm/rank-rules'
+import { AREA_NAMES, FISHING_SPOTS, FOREST_AREAS, SPOT_NAMES, STATION_JOB_IDS, STATION_JOBS, stationJobOf, STATIONS, type StationId } from '../gathering/ids'
+import { gatherQuality, haulCount, sizeSkill, stationRate, type GatherPlace, type WorkTerms } from '../gathering/kinds'
+import { FISH_SIZES, FISHERY, FOREST, HAUL_BASE, STATION_JOB_RULES, STATION_RULES, TOOL_YIELD, WELL_FED_YIELD } from '../gathering/tables'
 import { farmPlace } from '../farm/places'
 import { starShares } from '../goods/stars'
 import { BLOCK_IDS } from '../save/v3'
@@ -406,11 +409,110 @@ function placeActivity(): string {
   return table(['Where she worked', 'Pays rank points in'], [['The Fields, tending a block with a growing plot', ACTIVITY_NAMES.farming], ...places])
 }
 
+// --- The forest, the Fishery and the stations (F22) ---------------------------------------------------------------------
+
+const SEASON_COLS = SEASONS.map((s) => SEASON_NAMES[s])
+const shareCell = (shares: readonly (readonly [string, number])[]) => shares.map(([id, p]) => `${itemNameOf(id)} ${p}%`).join(', ')
+const TALENT_COLS: readonly TalentStep[] = [3, 4, 7]
+const basic = (rank: number, talent: TalentStep, wellFed = 0): WorkTerms => ({ rank: rank as Rank, talent, tool: 1, wellFed })
+
+/** CS16: the six areas, what opens each, its grades, and each season's goods with their shares. */
+function forestAreas(): string {
+  return table(['Area', 'Id', 'Opens at', 'Grades', ...SEASON_COLS], FOREST_AREAS.map((id) => {
+    const area = FOREST[id]
+    return [cap(AREA_NAMES[id]), `\`${id}\``, RANKS[area.opens]!, `G${area.grades.join('–G')}`, ...SEASONS.map((s) => shareCell(area.seasons[s]))]
+  }))
+}
+
+/** CS15: the seven spots, what opens each, and each season's fish with their shares. */
+function fishingSpots(): string {
+  return table(['Spot', 'Id', 'Opens at', ...SEASON_COLS], FISHING_SPOTS.map((id) => {
+    const spot = FISHERY[id]
+    const opens = [RANKS[spot.opens]!, ...(spot.chapter ? [`chapter ${spot.chapter}`] : []), ...(spot.boat ? ['the boat'] : [])].join(' + ')
+    return [cap(SPOT_NAMES[id]), `\`${id}\``, opens, ...SEASONS.map((s) => shareCell(spot.seasons[s]))]
+  }))
+}
+
+/** CS15: each fish's size range, its price and its fillet. */
+function fishSizes(): string {
+  return table(['Fish', 'Id', 'Size', 'Price ★1', 'At the Smokehouse', 'Price ★1'], Object.entries(FISH_SIZES).map(([id, [min, max]]) => {
+    const fillet = refinedOf(id)!
+    return [itemNameOf(id), `\`${id}\``, `${min}–${max} cm`, g(starPrice(id, 1)), itemNameOf(fillet), g(starPrice(fillet, 1))]
+  }))
+}
+
+/** CS15: how her skill leans the catch big: k by rank at talents D, C and S with the Basic Rod, and the average share of
+ * the range `1 / (8/k + 1)`. */
+function sizeSkills(): string {
+  return table(['Rank', ...TALENT_COLS.map((t) => `k at ${TALENT_GRADES[t]}`), 'Average at C', 'A Carp at C, on average'], RANKS.map((name, r) => {
+    const k = (t: TalentStep) => sizeSkill(basic(r, t))
+    const mean = 1 / (8 / k(4) + 1)
+    return [name, ...TALENT_COLS.map((t) => per(k(t))), pct(mean), `${(20 + 40 * mean).toFixed(1)} cm`]
+  }))
+}
+
+/** CS17: items a day, Basic tool, by rank at talents D, C and S; well fed ×1.25. */
+function haulDay(): string {
+  const cells = (place: GatherPlace, r: number) => TALENT_COLS.map((t) => haulCount(place, basic(r, t)))
+  return table(['Rank', 'Yield', ...TALENT_COLS.map((t) => `Forest ${TALENT_GRADES[t]}`), ...TALENT_COLS.map((t) => `Fishery ${TALENT_GRADES[t]}`), 'Forest C, well fed'],
+    RANKS.map((name, r) => [name, `×${per(RANK_BENEFITS[r]!.yield)}`, ...cells('forest', r), ...cells('fishery', r), haulCount('forest', basic(r, 4, 1))]))
+}
+
+/** CS17's factors. */
+function haulFactors(): string {
+  return table(['Factor', 'Values'], [
+    ['Base, at Novice', `The forest ${HAUL_BASE.forest}, the Fishery ${HAUL_BASE.fishery}`],
+    ['Rank', RANK_BENEFITS.map((b) => `×${per(b.yield)}`).join(' · ')],
+    ['Talent, G → S', TALENT_YIELD.map((y) => `×${per(y)}`).join(' · ')],
+    ['Tool (the Axe, the Rod), Basic → Mythril', TOOL_YIELD.map((y) => `×${per(y)}`).join(' · ')],
+    ['Well fed', `×${per(WELL_FED_YIELD)}`],
+  ])
+}
+
+/** CS26: a gathered good's quality points by rank at talents D, C and S, Basic tool, and its stars at C. */
+function gatherQualities(): string {
+  const shares = (q: number) => starShares(q).flatMap((s, i) => (s > 0 ? [`★${i + 1} ${pct(s)}`] : [])).join(', ')
+  return table(['Rank', ...TALENT_COLS.map((t) => `Q at ${TALENT_GRADES[t]}`), 'Stars at C', 'Stars at C, well fed'], RANKS.map((name, r) => [
+    name, ...TALENT_COLS.map((t) => per(gatherQuality(basic(r, t), false))), shares(gatherQuality(basic(r, 4), false)), shares(gatherQuality(basic(r, 4), true)),
+  ]))
+}
+
+/** CS18: the three stations M4 opens. */
+function stations(): string {
+  const opens = (s: StationId) => {
+    const rule = STATION_RULES[s].opens
+    return rule.by === 'plans' ? 'Its plans: chapter 1’s reward (F24)' : `Farm Rank ${rule.rank}`
+  }
+  return table(['Station', 'At', 'Rank used', 'Builds for', 'Opens', 'Jobs'], STATIONS.map((s) => {
+    const jobs = STATION_JOB_IDS.filter((j) => STATION_JOBS[j].station === s)
+      .map((j) => `${STATION_JOB_RULES[j].name} (${STATION_JOB_RULES[j].days === 1 ? '1 day' : `${STATION_JOB_RULES[j].days} days`}): ${STATION_JOBS[j].families.map((f) => FAMILY_NAMES[f].toLowerCase()).join(', ')}`)
+    const place = Object.entries(PLACE_ACTIVITY).find(([p]) => p === s)!
+    return [farmPlace(s)!.name, farmPlace({ mill: 'fields', sawmill: 'forest', smokehouse: 'fishery' }[s])!.name, ACTIVITY_NAMES[place[1]], g(STATION_RULES[s].cost), opens(s), jobs.join(' · ')]
+  }))
+}
+
+/** CS18: items a station turns a day, by rank at talents D, C and S; well fed ×1.25 on a 1-day job. */
+function stationDay(): string {
+  return table(['Rank', ...TALENT_COLS.map((t) => `${TALENT_GRADES[t]}`), 'C, well fed'], RANKS.map((name, r) => [
+    name, ...TALENT_COLS.map((t) => stationRate(basic(r, t), 0, false)), stationRate(basic(r, 4, 1), 0, false),
+  ]))
+}
+
+/** CS18: every station job's input → output, with both prices ★1. */
+function stationRecipes(): string {
+  return STATION_JOB_IDS.map((job) => {
+    const rows = GOODS.filter((good) => good.refined && stationJobOf(good.id) === job)
+      .map((good) => [`G${good.grade}`, itemNameOf(good.input!), g(starPrice(good.input!, 1)), itemNameOf(good.id), g(starPrice(good.id, 1))])
+    return `### ${STATION_JOB_RULES[job].name} (${farmPlace(STATION_JOBS[job].station)!.name})\n\n${table(['Grade', 'In', '★1', 'Out', '★1'], rows)}`
+  }).join('\n\n')
+}
+
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { families, items, made, facilities, callings, jobs, levels, 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
     calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
     crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,
-    'place-activity': placeActivity }
+    'place-activity': placeActivity, 'forest-areas': forestAreas, 'fishing-spots': fishingSpots, 'fish-sizes': fishSizes, 'size-skill': sizeSkills,
+    'haul-day': haulDay, 'haul-factors': haulFactors, 'gather-quality': gatherQualities, stations, 'station-day': stationDay, 'station-recipes': stationRecipes }
   return blocks_[key]?.() ?? null
 }

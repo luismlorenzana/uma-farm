@@ -1,19 +1,21 @@
 // The loop's work env (F18 decisions 1 and 4; core spec CS7, FC6, D25): uma-work on the day clock. Day d starts at
 // (d − 1) × DAY_MS (`workNow`) and every work operation runs then, so nothing moves until the night ends the day. The v3
 // work places hold four slots each at speed 1 (a day is a day), with no upgrades and no Speed Tickets; who may work is
-// who's home on the farm; work pays no EXP (ranks tick at night, F21); and the kinds come from `LOOP_KINDS`, which F22
-// fills. uma-work sees the Warehouse through F17's `<id>@<stars>` bridge.
+// who's home on the farm; work pays no EXP (ranks tick at night, F21); and the kinds are F22's `LOOP_KINDS`, or
+// `loopKinds(talentOf)` with master data's talents. uma-work sees the Warehouse through F17's `<id>@<stars>` bridge.
 import {
   buildingTable, SPEED_TICKET_MS, type BuildingRules, type ExpRules, type TicketRules, type WorkEnv, type WorkRow, type WorkState,
 } from '@luismlorenzana/uma-work'
 import { DAY_MS } from '../farm/calendar'
-import { LOOP_KINDS, LOOP_SLOTS, LOOP_WORK_PLACES, type LoopKinds } from '../save/parse-v3'
+import { LOOP_KINDS } from '../gathering/kinds'
+import { LOOP_SLOTS, LOOP_WORK_PLACES, type LoopKinds } from '../save/parse-v3'
 import type { LoopWorkRequest, OutfitId, SaveV3 } from '../save/v3'
 import { fromWorkStock, workStock } from '../save/warehouse'
 
 /** uma-work's state over a v3 save: the Warehouse as the engine's flat `<id>@<stars>` view, no building levels, the work
  * rows, and the save around them for the kinds to read (ranks, well fed, the day, the account). The world's own `items`
- * and `work` are the live ones; `save`'s copies of them are stale while an operation runs. */
+ * and `work` are the live ones; `save`'s copies of them are stale while an operation runs. A kind's pay may move the
+ * save's `farm` and `diary` (F22: what came home, a catch's record), which `withLoopWorld` keeps. */
 export interface LoopWorld extends WorkState<LoopWorkRequest> {
   readonly items: Readonly<Record<string, number>>
   readonly buildings: Readonly<Record<string, { readonly level: number }>>
@@ -24,11 +26,13 @@ export interface LoopWorld extends WorkState<LoopWorkRequest> {
 /** The world a save's work runs in. */
 export const loopWorld = (save: SaveV3): LoopWorld => ({ items: workStock(save.items), buildings: {}, work: save.work, save })
 
-/** The save with the world's Warehouse and work put back. Nothing else changes, `account.updatedAt` included. */
-export const withLoopWorld = (save: SaveV3, world: LoopWorld): SaveV3 => ({ ...save, items: fromWorkStock(world.items), work: { ...world.work } })
+/** The save with the world's Warehouse and work put back, and what its pays moved in `farm` and `diary` (F22). Nothing
+ * else changes, `account.updatedAt` included. */
+export const withLoopWorld = (save: SaveV3, world: LoopWorld): SaveV3 =>
+  ({ ...save, items: fromWorkStock(world.items), work: { ...world.work }, farm: world.save.farm, diary: world.save.diary })
 
 /** The v3 work places as uma-work's buildings: four slots at speed 1, no levels above the first. */
-export const LOOP_BUILDINGS: BuildingRules = buildingTable(Object.fromEntries(LOOP_WORK_PLACES.map((id) => [id, { slots: [LOOP_SLOTS], speed: [1], upgrades: [] }])))
+export const LOOP_BUILDINGS: BuildingRules = /* @__PURE__ */ buildingTable(Object.fromEntries(LOOP_WORK_PLACES.map((id) => [id, { slots: [LOOP_SLOTS], speed: [1], upgrades: [] }])))
 
 /** No Speed Tickets by day (FM4). */
 const NO_TICKETS: TicketRules<LoopWorld> = { balance: () => 0, spend: (state) => state }
@@ -40,7 +44,8 @@ export const WELL_FED_TICKETS = DAY_MS / 4 / SPEED_TICKET_MS
 /** Work pays no EXP: ranks come at night (F21). Grades are each kind's own rule. */
 const NO_EXP: ExpRules<LoopWorld> = { grant: (state) => ({ state }), gradeOpen: () => true }
 
-/** The loop's env: the kinds' rules from the registry (`LOOP_KINDS` unless a test passes its own). */
+/** The loop's env: the kinds' rules from the registry (`LOOP_KINDS` unless the app passes `loopKinds(talentOf)` or a test
+ * its own). */
 export function farmEnvV3(kinds: LoopKinds = LOOP_KINDS): WorkEnv<LoopWorld> {
   return {
     kinds: Object.fromEntries(Object.entries(kinds).map(([id, kind]) => [id, kind.rules])),
