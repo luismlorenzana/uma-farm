@@ -5,6 +5,7 @@ import type { ItemRequest, WorkRow } from '@luismlorenzana/uma-work'
 import { START_GOLD, START_SEEDS } from '../farm/farm'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import { seedId, type CropId } from '../goods/ids'
+import type { MorningSummary } from '../night/summary'
 import type { Account } from './save'
 
 /** A master outfit id (P8). */
@@ -199,8 +200,8 @@ export interface SaveV3 {
   diary: { shipped: Record<string, number>; milestones: string[]; records: Record<string, number>; read: string[] }
   /** Farm Rank points, the chapter, its goals' counts, festivals, and lifetime counters each packet names (decision 4). */
   farm: { points: number; chapter: number; goals: Record<string, number>; festivals: FestivalResult[]; counts: Record<string, number> }
-  /** The last night's morning summary, until dismissed: its shape is F18's. */
-  summary: null
+  /** The last night's morning summary (F18), until the player dismisses it. */
+  summary: MorningSummary | null
 }
 
 /** A plot with nothing planted. */

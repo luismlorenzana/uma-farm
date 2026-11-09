@@ -47,6 +47,7 @@ Node 22+ and pnpm 10. The `@luismlorenzana/*` packages come from GitHub Packages
 | `pnpm build` | Build everything; the web build ends with the 180 KB size check |
 | `pnpm api` | The API on :8101, auth off (`AUTH_MODE=disabled`) |
 | `pnpm web` | The web app on :5194, `/api` proxied to :8101 |
+| `pnpm --filter @farm/web exec vite build --mode loop --outDir dist-loop` | The loop's build alone (`VITE_FARM_LOOP=1`, from `.env.loop`), never deployed; `pnpm build` makes it and size-checks it after the deployed one, and `pnpm web` plays it (`VITE_FARM_LOOP=0 pnpm web` plays the Wilds) |
 
 The preview pane starts both from `.claude/launch.json` (`farm-api`, `farm-web`). To try the guard locally, run the
 built API with `ALLOWED_EMAIL` set and no `AUTH_MODE`.

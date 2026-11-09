@@ -1,6 +1,6 @@
 # Architecture and technical setup
 
-How uma-farm is built and run, as of F17: save v2 and the Wilds live, their rules in the domain and their screens on the phone ([wilds.md](wilds.md)), "work done" notifications, and save v3 for the farm's own loop, built and dark until F24 ([the dark launch](#the-dark-launch-f17)). Values come from the code and
+How uma-farm is built and run, as of F18: save v2 and the Wilds live, their rules in the domain and their screens on the phone ([wilds.md](wilds.md)), "work done" notifications, and save v3 for the farm's own loop with its calendar, End the day and the farm map ([days.md](days.md)), built and dark until F24 ([the dark launch](#the-dark-launch-f17)). Values come from the code and
 [infrastructure.md](../technical/infrastructure.md), which holds every production value and is the place to change them.
 
 ## The pieces
@@ -38,23 +38,23 @@ How uma-farm is built and run, as of F17: save v2 and the Wilds live, their rule
 |---|---|---|
 | Entry | `src/main.tsx` | The kit's keys (`farm.`), appearance, uma-art's bar and map art, sign-in, content client, the album's outfit art and the work screens' item icons, and the router |
 | Gates | `src/app/Root.tsx` | The kit's `BootGates`: splash → Google sign-in → boot → the app; the kit's **Update ready · Restart** |
-| Pages | `src/app/router.tsx` | `/` the Wilds (`?peek=<place>` a quick look), `/wilds/<place>` a place's page, `/warehouse` and `/account`, inside the shell; `/wilds` and anything else go to `/`. The Wilds, the place pages and the Warehouse load on demand ([wilds.md](wilds.md)). The loop's build has `/` (its plain home) and `/account` only |
+| Pages | `src/app/router.tsx` | `/` the Wilds (`?peek=<place>` a quick look), `/wilds/<place>` a place's page, `/warehouse` and `/account`, inside the shell; `/wilds` and anything else go to `/`. The Wilds, the place pages and the Warehouse load on demand ([wilds.md](wilds.md)). The loop's build (F18): `/` the farm map (`?peek=<place>`), `/roster`, `/diary` and `/account`, the first three on demand ([days.md](days.md)) |
 | The loop's switch | `src/app/loop.ts` | `loopOn()`: `VITE_FARM_LOOP` is `'1'` (F17). On in the dev server (`.env.development`), Vitest and the `loop` build (`.env.loop`); unset in production. F24 deletes it |
-| The loop | `src/loop/` | Loaded on demand, in the loop's build only: its boot (`toLoopSave`: the migration once master data has loaded, and the temporary picks) and its plain home (the date, the gold, the Umas on the farm with their best rank, the Warehouse's count) until F18's map |
-| Shell | `src/shell/` | The kit's `AppFrame` unchanged (FM18): the account bar with the sync chip, the bottom bar (Wilds with its Ready count, Warehouse, Menu; the loop's build: Farm, Menu), the menu sheet (`?sheet=menu`: every place with its Ready count, the Warehouse, Account and the build id; the loop's build: Account and the build), and the sync warning |
+| The loop | `src/loop/` | Loaded on demand, in the loop's build only: its boot (`toLoopSave`: the migration once master data has loaded, and the temporary picks), the farm map with its quick looks and the morning summary (`FarmMap.tsx`), the roster and the Diary, End the day and the calendar (`LoopSheets.tsx`) and the day's actions (`actions.ts`: End the day, put the morning away, Collect all). Its words (`words.ts`) and the Menu's switch (`ask.ts`) are small and load with the shell (F18, [days.md](days.md)) |
+| Shell | `src/shell/` | The kit's `AppFrame` unchanged (FM18): the account bar with the sync chip, the bottom bar (Wilds with its Ready count, Warehouse, Menu), the menu sheet (`?sheet=menu`: every place with its Ready count, the Warehouse, Account and the build id), and the sync warning. The loop's build (F18): the date chip, Farm · Roster · End the day (raised) · Diary · Menu, the menu by the farm's rows with "Ask before ending the day", and `?sheet=end` and `?sheet=calendar` |
 | The Wilds | `src/wilds/` | The Hub map on uma-kit (`HubMap`), the quick looks, Collect all, the help, the Forge and the Post as placeholders, the Ready counts |
 | Places | `src/places/` | A place's page on uma-kit/work (`work/`: the farm's provider, the slot rows, the job sheet, the What step) and the Warehouse (`warehouse/`) |
 | Picker | `src/album/rows.ts` | Every outfit as a row of uma-kit's album: Craft Level, free or busy, and the Trade, rarity and aptitude facets |
 | Items | `src/items/` | uma-art's item icons placed from the ids (`frames.ts`), and the items' words |
-| Account | `src/home/AccountView.tsx` | The kit's Account page: appearance, the Notifications switch (F6), sign-in, save state, last sync, build, master data's release, safety copies, sign out |
+| Account | `src/home/AccountView.tsx` | The kit's Account page: appearance, the Notifications switch (F6; in the loop's build "Off: days are turns"), sign-in, save state, last sync, build, master data's release, safety copies, sign out |
 | Push | `src/push/`, `public/push-sw.js` | The Notifications switch and its "Send a test", the subscription, the schedule sent on every sync, the badge cleared on open; the service worker's push and tap handlers (below) |
 | Save | `src/save/` | The device save in Dexie, the store and its sync engine (below), the work actions (`edit`) and the trade words; every sync sends the push schedule. The store holds the save as stored (`StoredSave`): the Wilds read it through `useWildsSave`, the loop through `useLoopSave` |
 | Master data | `src/master/` | The release's manifest, characters, outfits and art through `/api/master`, cached by hash on the device; the roster (`farmRoster`) and the album's rows; the album art adapter; `masterReady()`, which the loop's boot waits on |
 | PWA | `vite.config.ts` | Portrait, standalone, the icons from `scripts/draw-icons.mjs`; Workbox precaches the app, keeps master data's files for good, and imports `push-sw.js` into the service worker |
 
-Main JS is 162.2 KB gzip against the 180 KB budget (FM20), and 162.4 KB in the loop's build, which `pnpm build` checks
-too. Firebase, the Wilds' screens, the loop's pages and boot, and the Hub map's Phaser scene (`createHubGame`, 377 KB
-gzip) load on demand; `scripts/check-size.mjs`'s `LAZY_MODULES` refuses them in the initial JS.
+Main JS is 163.4 KB gzip against the 180 KB budget (FM20), and 165.9 KB in the loop's build, which `pnpm build` checks
+too (F18). Firebase, the Wilds' screens, the loop's pages, sheets, actions, boot and night, and the Hub map's Phaser scene
+(`createHubGame`, 377 KB gzip) load on demand; `scripts/check-size.mjs`'s `LAZY_MODULES` refuses them in the initial JS.
 
 ## API
 
@@ -144,7 +144,7 @@ interface SaveV3 {
   board: { id; from; item; count; stars; due; reward; extra }[]
   diary: { shipped; milestones; records; read }
   farm: { points; chapter; goals; festivals; counts } // counts: lifetime counters each packet names
-  summary: null                                      // the morning summary: its shape is F18's
+  summary: MorningSummary | null                     // the last night's, until put away (F18, days.md)
 }
 interface RosterUma { joined: number; ranks: Record<Activity, { points; rank: 0–5; challenge }>; affinity: number; wellFed: number }
 interface Plot { crop: CropId | null; growth: number; ready: boolean; regrowing: boolean; own: boolean }
@@ -161,7 +161,7 @@ interface Plot { crop: CropId | null; growth: number; ready: boolean; regrowing:
 - **uma-work's flat stock:** the engine sees the Warehouse as `<id>@<stars>` keys (`carp@2`), through `workStock` and
   `fromWorkStock`; v3 work rows hold those keys. Rows sit at the v3 work places (the forest, the Fishery, the Mill, the
   Sawmill, the Smokehouse; the Mine, the Quarry, the Smelter and the Cutter from M5), four slots each, and each kind
-  checks its own requests through `LOOP_KINDS`, empty until F18 and F22.
+  checks its own requests through `LOOP_KINDS`, empty until F22. F18 runs them on the day clock ([days.md](days.md#work-in-days-fc6-decisions-1-and-4)).
 - **The parse** is strict: unknown keys, bad ids (outfits, goods, seeds, crops, buildings, tools, activities, blocks,
   regions, dishes), a block of other than 9 plots, an unsorted bond key, an Uma home off the roster or past the beds are
   each refused with their path.

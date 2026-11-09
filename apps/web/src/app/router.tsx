@@ -1,6 +1,7 @@
 // The pages (F3, F5), inside the shell: `/` the Wilds (`?peek=:placeId` a place's quick look), `/wilds/:placeId` a place's
 // page, `/warehouse` and `/account`. The Wilds map, the work pages and the Warehouse load on demand; anything else goes
-// to the Wilds. The loop's build (F17, D29) has `/`, its plain home until F18's map, and `/account`.
+// to the Wilds. The loop's build (F17, D29) has the bottom bar's pages (F18): `/` the farm (`?peek=<place>` a quick look),
+// `/roster`, `/diary` and `/account`.
 import { lazy, Suspense, type ReactNode } from 'react'
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router'
 import { AccountView } from '../home/AccountView'
@@ -25,9 +26,13 @@ const WILDS: RouteObject[] = [
 
 /** The loop's pages, made only in its build, so the deployed one carries none of them. */
 function loopRoutes(): RouteObject[] {
-  const LoopHome = lazy(() => import('../loop/LoopHome'))
+  const FarmMap = lazy(() => import('../loop/FarmMap'))
+  const RosterPage = lazy(() => import('../loop/RosterPage'))
+  const DiaryPage = lazy(() => import('../loop/DiaryPage'))
   return [
-    { index: true, element: loading(<LoopHome />) },
+    { index: true, element: loading(<FarmMap />) },
+    { path: 'roster', element: loading(<RosterPage />) },
+    { path: 'diary', element: loading(<DiaryPage />) },
     { path: 'account', element: <AccountView /> },
     { path: '*', element: <Navigate to="/" replace /> },
   ]

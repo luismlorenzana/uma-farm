@@ -1,6 +1,6 @@
-// What the loop's plain home shows (F17), as data: the date, the gold, the Umas on the farm with their best rank, and the
-// Warehouse's count. F18's map replaces the page.
-import { ACTIVITIES, ACTIVITY_NAMES, dateOf, RANKS, SEASON_NAMES, stockTotal, type SaveV3 } from '@farm/domain'
+// The roster as `/roster` shows it until F21's ranks and F23's Dorm (F18): the Umas on the farm with their best rank, and
+// how many are away. Pure, so the page and the tests read the same.
+import { ACTIVITIES, ACTIVITY_NAMES, RANKS, type SaveV3 } from '@farm/domain'
 
 export interface LoopUma {
   outfitId: string
@@ -8,17 +8,10 @@ export interface LoopUma {
   rank: string
 }
 
-export interface LoopHomeView {
-  /** "Spring 1". */
-  date: string
-  /** "Year 1". */
-  year: string
-  gold: string
+export interface RosterView {
   home: LoopUma[]
   /** Umas on the roster on their off-season. */
   away: number
-  /** Everything in the Warehouse, every star. */
-  stock: number
 }
 
 /** Her best rank: the highest, then the most points, then the activities' order. */
@@ -32,14 +25,9 @@ export function bestRank(uma: SaveV3['roster'][string]): string {
   return rank === 0 && points === 0 ? RANKS[0] : `${RANKS[rank]} · ${ACTIVITY_NAMES[best]}`
 }
 
-export function loopHomeView(save: SaveV3): LoopHomeView {
-  const { year, season, day } = dateOf(save.calendar.day)
+export function rosterView(save: SaveV3): RosterView {
   return {
-    date: `${SEASON_NAMES[season]} ${day}`,
-    year: `Year ${year}`,
-    gold: `${save.gold.toLocaleString('en-US')}g`,
     home: save.dorm.home.flatMap((id) => (save.roster[id] ? [{ outfitId: id, rank: bestRank(save.roster[id]) }] : [])),
     away: Object.keys(save.roster).length - save.dorm.home.length,
-    stock: stockTotal(save.items),
   }
 }
