@@ -9,7 +9,9 @@
 // change is stamped once, with real time, after the ninth step.
 import { endsAt, isRefusal, settle, speedUp } from '@luismlorenzana/uma-work'
 import { DAY_MS, festivalOn, isSeasonStart, dateOf, workNow } from '../farm/calendar'
-import { growFields, plotsToPlant, talentD, witherFields, type FarmingTalentOf, type Ripened, type Withered } from '../fields/fields'
+import { favouriteActivity, PLACE_ACTIVITY, tickRankRules, type WorkedDay } from '../farm/rank-rules'
+import { talentsD, type TalentOf } from '../farm/talents'
+import { growFields, plotsToPlant, witherFields, type Ripened, type Withered } from '../fields/fields'
 import type { FarmOutfit } from '../roster/roster'
 import { payBin } from '../save/bin'
 import { settleLoopWork } from '../save/loop-work'
@@ -18,16 +20,18 @@ import { touched } from '../save/save'
 import { BLOCK_IDS, type BlockId, type OutfitId, type SaveV3 } from '../save/v3'
 import { farmEnvV3, loopWorld, nightEnvV3, WELL_FED_TICKETS, withLoopWorld } from '../work/loop-env'
 import { daySetState } from './nudge'
-import type { BinSale, MorningSummary, NewsLine, Nudge, WorkLine } from './summary'
+import type { BinSale, MorningSummary, NewsLine, Nudge, RankLine, WorkLine } from './summary'
 
-/** What the night reads beyond the save (decision 2): master data, loaded before End the day runs. F21 adds talents. */
+/** What the night reads beyond the save (decision 2): master data, loaded before End the day runs, and the talents the
+ * app reads from it once a release (F21). */
 export interface NightContext {
-  /** Master data's roster: every outfit on the release, with her line. */
+  /** Master data's roster: every outfit on the release, with her line (her favourite, CS33). */
   readonly roster: readonly FarmOutfit[]
   /** The work kinds (`LOOP_KINDS`); tests pass their own. */
   readonly kinds?: LoopKinds
-  /** Each tender's farming talent (F20): D for everyone until F21 reads master data's. */
-  readonly farmingTalent?: FarmingTalentOf
+  /** Each Uma's talent in an activity (F21, CS27): tending's growth (step 2) and rank points (step 6). D for everyone
+   * when left out (tests). */
+  readonly talentOf?: TalentOf
 }
 
 /** What the steps saw that a later one needs and the save alone can't show. Each packet adds its own notes. */
@@ -45,10 +49,12 @@ export interface NightNotes {
   readonly ripened: readonly Ripened[]
   /** Step 7: crops that withered on a season's last night, by block and crop (F20). */
   readonly withered: readonly Withered[]
+  /** Step 6: rank-ups, and points that filled tonight (F21). The summary's ranks section. */
+  readonly ranks: readonly RankLine[]
 }
 
 /** A night's notes before its first step. */
-export const emptyNotes = (): NightNotes => ({ sold: [], worked: [], finished: [], tended: [], ripened: [], withered: [] })
+export const emptyNotes = (): NightNotes => ({ sold: [], worked: [], finished: [], tended: [], ripened: [], withered: [], ranks: [] })
 
 export interface Night {
   /** The save as the player left the day. */
@@ -63,6 +69,7 @@ export interface Night {
 export type NightStep = (night: Night) => Night
 
 const kindsOf = (night: Night): LoopKinds => night.context.kinds ?? LOOP_KINDS
+const talentsOf = (night: Night): TalentOf => night.context.talentOf ?? talentsD
 const same: NightStep = (night) => night
 
 /** Step 1 (F19 decision 6): everything shipped today pays at price × stars × demand on the day it was shipped, before
@@ -74,7 +81,8 @@ export const payTheBin: NightStep = (night) => {
 /** Step 2 (F20; CS12): each planted plot that isn't Ready grows by its block's rate (1 untended, the tender's rate when
  * tended); a plot whose growth reaches its days − 0.5 turns Ready. Tenders with a growing plot worked the night. */
 export const growCrops: NightStep = (night) => {
-  const { save, tended, ripened } = growFields(night.save, night.context.farmingTalent ?? talentD)
+  const talentOf = talentsOf(night)
+  const { save, tended, ripened } = growFields(night.save, (outfitId) => talentOf(outfitId, 'farming'))
   return { ...night, save, notes: { ...night.notes, tended, ripened } }
 }
 /** Step 3, M5 (F27): animals fed, affection, products. */
@@ -113,8 +121,23 @@ export const moveJobs: NightStep = (night) => {
 
 /** Step 5, M5 (F8): each workshop may be played again tomorrow. `workshops.played` holds the day, so nothing moves. */
 export const resetWorkshops: NightStep = same
-/** Step 6, F21: rank points for every Uma who worked (`notes.worked`), challenges, rank-ups. */
-export const tickRanks: NightStep = same
+/**
+ * Step 6 (F21 decisions 2 and 3; CS29, CS30): rank points for every Uma who worked today, one activity each: a running
+ * job's place (`notes.worked`, `PLACE_ACTIVITY`) or a tended block with a growing plot (`notes.tended`, farming). 10
+ * points × her talent's factor, ×1.2 in her favourite line, ×1.25 well fed, ×1.05 or ×1.10 for your hearts. Then every
+ * Uma ranks up where her points and challenge are both met, one rank a night. Before the stored settle (step 7), so a
+ * queued job starting at tonight's boundary is planned with tonight's ranks.
+ */
+export const tickRanks: NightStep = (night) => {
+  const talentOf = talentsOf(night)
+  const favourites = new Map(night.context.roster.map((o) => [o.outfitId, favouriteActivity(o)]))
+  const worked: WorkedDay[] = [
+    ...night.notes.worked.map((w) => ({ outfitId: w.outfitId, activity: PLACE_ACTIVITY[w.place] })),
+    ...night.notes.tended.map((t) => ({ outfitId: t.outfitId, activity: 'farming' as const })),
+  ]
+  const { save, lines } = tickRankRules(night.save, worked, (outfitId, activity) => ({ talent: talentOf(outfitId, activity), favourite: favourites.get(outfitId) === activity }))
+  return { ...night, save, notes: { ...night.notes, ranks: lines } }
+}
 /** Step 6, M6 (F33): bond points for pairs who shared a place. */
 export const tickBonds: NightStep = same
 
@@ -171,7 +194,7 @@ export const buildSummary: NightStep = (night) => {
   const plant = plotsToPlant(save)
   const nudges: Nudge[] = [...(idle.length > 0 ? [{ kind: 'idle' as const, umas: idle }] : []), ...(plant > 0 ? [{ kind: 'seeds' as const, plots: plant }] : [])]
   const summary: MorningSummary = {
-    day: save.calendar.day, bin: [...notes.sold], work: [...jobs, ...crops, ...withered], ranks: [], bonds: [], news: newsOf(save.calendar.day), nudges,
+    day: save.calendar.day, bin: [...notes.sold], work: [...jobs, ...crops, ...withered], ranks: [...notes.ranks], bonds: [], news: newsOf(save.calendar.day), nudges,
   }
   return { ...night, save: { ...save, summary } }
 }
@@ -192,7 +215,7 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 3, name: 'tendAnimals', run: tendAnimals, what: 'Animals are fed, affection moves, products are laid', by: 'M5 (F27)' },
   { step: 4, name: 'moveJobs', run: moveJobs, what: 'Jobs move a day on: a quarter day for the well fed, then what finishes by the morning is read', by: 'F18' },
   { step: 5, name: 'resetWorkshops', run: resetWorkshops, what: 'Each workshop may be played again tomorrow', by: 'M5 (F8)' },
-  { step: 6, name: 'tickRanks', run: tickRanks, what: 'Rank points for every Uma who worked; rank-ups', by: 'F21' },
+  { step: 6, name: 'tickRanks', run: tickRanks, what: 'Rank points for every Uma who worked, one activity each; rank-ups where points and the challenge are met', by: 'F21' },
   { step: 6, name: 'tickBonds', run: tickBonds, what: 'Bond points for pairs who shared a place', by: 'M6 (F33)' },
   { step: 6, name: 'countWellFed', run: countWellFed, what: 'The well-fed days count down', by: 'F18' },
   { step: 7, name: 'witherCrops', run: witherCrops, what: 'On a season’s last night, crops still growing that don’t grow in the next season wither; Ready crops wait', by: 'F20' },

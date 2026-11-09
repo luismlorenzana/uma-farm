@@ -4,6 +4,7 @@
 // shape in place while v3 is unreleased (until F24): F19 the bin, F20 crops and seeds, F21 ranks, F23 visitors, F24
 // scenes and milestones; bonds come in M6.
 import type { FestivalId, Season } from '../farm/calendar'
+import type { Activity, Rank } from '../farm/ranks'
 import type { CropId } from '../goods/ids'
 import type { LoopPlaceId } from '../save/parse-v3'
 import type { BlockId, OutfitId } from '../save/v3'
@@ -46,6 +47,29 @@ export interface CropsWithered {
 /** §2's lines: jobs by place, then crops ready by block, then what withered (CS5's order). */
 export type WorkLine = JobsDone | CropsReady | CropsWithered
 
+/** §3 Ranks (F21): she reached a rank in an activity tonight. */
+export interface RankUp {
+  kind: 'rank-up'
+  outfitId: OutfitId
+  activity: Activity
+  /** The rank she reached, Hand … Legend. */
+  rank: Rank
+}
+
+/** §3 Ranks (F21): her points for her next rank filled tonight, and its challenge waits; `challenge` is her count
+ * toward it as the night left it. */
+export interface PointsFull {
+  kind: 'full'
+  outfitId: OutfitId
+  activity: Activity
+  /** The rank she waits for, Hand … Legend. */
+  rank: Rank
+  challenge: number
+}
+
+/** §3's lines: rank-ups, then points full (F21). */
+export type RankLine = RankUp | PointsFull
+
 /** §5 New today: the season's first day, or a festival today or tomorrow (F18). */
 export type NewsLine =
   | { kind: 'season'; season: Season }
@@ -73,8 +97,8 @@ export interface MorningSummary {
   bin: BinSale[]
   /** §2 Work done: jobs by place (F18), crops ready by block and what withered (F20). */
   work: WorkLine[]
-  /** §3 Ranks: rank-ups, and Umas whose points are full (F21). */
-  ranks: []
+  /** §3 Ranks: rank-ups, then Umas whose points filled tonight with their challenge to meet (F21). */
+  ranks: RankLine[]
   /** §4 Bonds and affinity: new hearts (M6). */
   bonds: []
   /** §5 New today. */

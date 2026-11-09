@@ -1,8 +1,10 @@
-// The morning summary's lines (F18 decision 11, F19 decision 6, F20): the save holds ids and counts, and these say them,
-// each line a tap to its place. With the farm map, on demand. Pure, so the card and the tests read the same.
+// The morning summary's lines (F18 decision 11, F19 decision 6, F20, F21): the save holds ids and counts, and these say
+// them, each line a tap to its place. With the farm map, on demand. Pure, so the card and the tests read the same.
 import {
-  farmPlace, FESTIVALS, goodName, itemNameOf, SEASON_NAMES, type FarmPlaceId, type FestivalId, type MorningSummary, type SummarySection, summarySections,
+  ACTIVITY_NAMES, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, SEASON_NAMES, type FarmPlaceId, type FestivalId, type MorningSummary, type SummarySection,
+  summarySections,
 } from '@farm/domain'
+import { challengeWords } from './roster-view'
 import { plural } from './words'
 
 const festivalName = (id: FestivalId): string => FESTIVALS.find((f) => f.id === id)!.name
@@ -12,7 +14,7 @@ export interface SummaryLine {
   text: string
   /** Where its tap goes: the place's quick look or screen, the calendar or the roster. */
   to: string
-  /** A mark after the words: "In demand" on a sale the season lifted (F19). */
+  /** A mark after the words: "In demand" on a sale the season lifted (F19); "Rank up" and "Points full" (F21). */
   tag?: string
 }
 export interface SummaryPart {
@@ -28,14 +30,20 @@ const peek = (place: FarmPlaceId): string => `/?peek=${place}`
 /** The Fields' page (F20). */
 export const FIELDS = '/fields'
 
+/** An Uma's name from master data, for the ranks section; "An Uma" until it loads. */
+export type NameOf = (outfitId: string) => string
+const someone: NameOf = () => 'An Uma'
+
 /** The morning summary as the card shows it: CS5's sections in order, empty ones hidden, each line a tap. */
-export function summaryParts(summary: MorningSummary): SummaryPart[] {
-  return summarySections(summary).map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section) }))
+export function summaryParts(summary: MorningSummary, nameOf: NameOf = someone): SummaryPart[] {
+  return summarySections(summary).map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf) }))
 }
+/** Her sheet on the roster. */
+export const umaSheet = (outfitId: string): string => `/roster?uma=${outfitId}`
 
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 
-function sectionLines(summary: MorningSummary, section: SummarySection): SummaryLine[] {
+function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: NameOf): SummaryLine[] {
   switch (section) {
     case 'bin': {
       // F19 decision 6: each good and star with its count and gold, the demand marked, then the total.
@@ -66,6 +74,14 @@ function sectionLines(summary: MorningSummary, section: SummarySection): Summary
         ? { key: 'idle', text: `${plural(line.umas.length, 'Uma')} idle`, to: '/roster' }
         : { key: 'seeds', text: `${plural(line.plots, 'plot')} to plant`, to: FIELDS })
     case 'ranks':
+      // F21: "Name · Farming Hand" for a rank-up; "Name · Farming · Harvest 30 crops she tended · 12/30" when her points
+      // filled and the challenge waits, naming the challenge in its own words with her count. Each opens her sheet.
+      return summary.ranks.map((line): SummaryLine => line.kind === 'rank-up'
+        ? { key: `rank-up:${line.outfitId}:${line.activity}`, to: umaSheet(line.outfitId), text: `${nameOf(line.outfitId)} · ${ACTIVITY_NAMES[line.activity]} ${RANKS[line.rank]}`, tag: 'Rank up' }
+        : {
+          key: `full:${line.outfitId}:${line.activity}`, to: umaSheet(line.outfitId), tag: 'Points full',
+          text: `${nameOf(line.outfitId)} · ${ACTIVITY_NAMES[line.activity]} · ${challengeWords(line.activity, line.rank - 1, line.challenge) ?? RANKS[line.rank]}`,
+        })
     case 'bonds':
       return []
   }

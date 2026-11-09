@@ -8,7 +8,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../master/master', () => ({ masterReady: vi.fn(async () => ({ roster: [] })), masterRoster: () => null }))
+vi.mock('../master/master', () => ({ masterReady: vi.fn(async () => ({ roster: [], stats: new Map() })), masterRoster: () => null }))
 vi.mock('@luismlorenzana/uma-kit/auth', () => ({ useAuth: () => ({ user: { name: 'Tester' } }) }))
 vi.mock('../api/client', async () => {
   const actual = await vi.importActual<typeof import('../api/client')>('../api/client')

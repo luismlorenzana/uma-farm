@@ -1,8 +1,9 @@
 // Master data (F3, F5): the release's manifest, characters, outfits and art through the API's proxy, cached by hash on the
-// device. The farm's view of it is every outfit as a worker (`farmRoster`, FM6) and the album's neutral rows (names and
-// art keys, from the release at runtime only). Copied in shape from uma-rpg's `master/master.ts` (30a322a), cut to the sets
+// device. The farm's view of it is every outfit as a worker (`farmRoster`, FM6), the album's neutral rows (names and
+// art keys, from the release at runtime only) and each outfit's stats for the loop's talents (F21, which reads them on
+// demand, once a release: `loop/talents.ts`). Copied in shape from uma-rpg's `master/master.ts` (30a322a), cut to the sets
 // the farm reads.
-import { farmRoster, type FarmOutfit } from '@farm/domain'
+import { farmRoster, type FarmOutfit, type TalentOutfit } from '@farm/domain'
 import type { ArtIndex, Character, Outfit, ReleaseManifest } from '@luismlorenzana/uma-data'
 import { outfitRowBase, type OutfitRowBase } from '@luismlorenzana/uma-kit/roster'
 import { useSyncExternalStore } from 'react'
@@ -14,6 +15,8 @@ export interface MasterView {
   roster: FarmOutfit[]
   /** The album's rows by outfit id: name, title, rarity, release date, aptitudes and art keys. */
   album: ReadonlyMap<string, OutfitRowBase>
+  /** Each outfit's 5★ stats and growth rates, by outfit id: what the loop's talents read (CS27). */
+  stats: ReadonlyMap<string, TalentOutfit>
   art: ArtIndex | null
 }
 
@@ -35,8 +38,9 @@ export function masterView(manifest: ReleaseManifest, characters: readonly Chara
   const byCharacter = new Map(characters.map((c) => [c.id, c]))
   const roster = farmRoster({ outfits })
   const kept = new Set(roster.map((o) => o.outfitId))
-  const album = new Map(outfits.filter((o) => kept.has(String(o.id))).map((o) => [String(o.id), outfitRowBase(o, byCharacter.get(o.characterId))]))
-  return { manifest, roster, album, art }
+  const ours = outfits.filter((o) => kept.has(String(o.id)))
+  const album = new Map(ours.map((o) => [String(o.id), outfitRowBase(o, byCharacter.get(o.characterId))]))
+  return { manifest, roster, album, stats: new Map(ours.map((o) => [String(o.id), o])), art }
 }
 
 function loadMaster(): void {

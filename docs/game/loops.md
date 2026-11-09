@@ -40,6 +40,9 @@ Her best running styles are every style at her top grade. Distance, Power and Wi
 - Another trade's places refuse her ("Another trade"), unless no Uma on the roster has that trade: then the place is an
   **open shop** and takes everyone.
 - Her trade never changes: it comes from her outfit alone.
+- **In the loop (F21, dark until F24)** the same calling names her **favourite line**, not a gate: Metal and Stone
+  mining, Wood foraging, Fish fishing, Vegetables farming, where she earns ×1.2 rank points; she can work anywhere, and
+  "Another trade" and the open shop stay with the Wilds' code until F24 ([ranks.md](ranks.md#her-favourite-line-cs33-decision-6)).
 
 ## The places
 

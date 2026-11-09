@@ -150,9 +150,10 @@ interface RosterUma { joined: number; ranks: Record<Activity, { points; rank: 0â
 interface Plot { crop: CropId | null; growth: number; ready: boolean; regrowing: boolean; own: boolean }
 ```
 
-- **Talents aren't saved:** they're read from master data each boot (F21).
+- **Talents aren't saved:** the app computes them from master data once a release (F21, [ranks.md](ranks.md)).
 - **The nine activities:** farming, the ranch, mining, fishing, foraging, cooking, serving, forging, expeditions; six
-  ranks each (Novice, Hand, Skilled, Expert, Master, Legend). `challenge` counts toward her next rank's challenge.
+  ranks each (Novice, Hand, Skilled, Expert, Master, Legend). `points` go on past a threshold; `challenge` counts toward
+  her next rank's challenge only, stops at its target and resets at the rank-up (F21, [ranks.md](ranks.md)).
 - **The Dorm:** `buildings.dorm` is the level bought, `dorm.level` the level in effect, which catches up overnight.
   `dorm.home` is who's on the farm, within the roster and the beds; the rest of the roster is away.
 - **The Warehouse's ids** are the 260 goods in `goods/ids.ts` (27 crops and 10 flours, the forest's 113, mining's 60,

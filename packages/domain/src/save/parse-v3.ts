@@ -5,7 +5,7 @@ import { FESTIVAL_IDS, SEASONS } from '../farm/calendar'
 import { bedsAt, DORM_MAX_LEVEL } from '../farm/farm'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import { GOOD_IDS, isCropId, isGoodId, isSeedId, isWarehouseId, type CropId } from '../goods/ids'
-import type { BinSale, MorningSummary, NewsLine, Nudge, WorkLine } from '../night/summary'
+import type { BinSale, MorningSummary, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
 import { isOutfitId } from '../roster/roster'
 import type { LoopWorld } from '../work/loop-env'
 import {
@@ -450,7 +450,14 @@ function parseSummary(value: unknown, path: string, today: number, roster: Reado
     const w = object(v, at, ['kind', 'place', 'jobs', 'items'])
     return { kind, place: oneOf(w.place, `${at}.place`, LOOP_WORK_PLACES), jobs: int(w.jobs, `${at}.jobs`, 1, 4 * 60), items: count(w.items, `${at}.items`) }
   }), `${path}.work`, (w) => (w.kind === 'jobs' ? `jobs:${w.place}` : w.kind === 'crops' ? `crops:${w.block}` : `withered:${w.block}:${w.crop}`))
-  const ranks = none(o.ranks, `${path}.ranks`)
+  // Ranks (F21): rank-ups, then points full, each an Uma on the roster in an activity, a rank Hand–Legend; once each.
+  const ranks = unique(list(o.ranks, `${path}.ranks`, 0, 2 * ACTIVITIES.length * roster.size).map((v, i): RankLine => {
+    const at = `${path}.ranks.${i}`
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['rank-up', 'full'] as const)
+    const r = object(v, at, kind === 'full' ? ['kind', 'outfitId', 'activity', 'rank', 'challenge'] : ['kind', 'outfitId', 'activity', 'rank'])
+    const line = { outfitId: member(r.outfitId, `${at}.outfitId`, roster), activity: oneOf(r.activity, `${at}.activity`, ACTIVITIES), rank: int(r.rank, `${at}.rank`, 1, 5) as Rank }
+    return kind === 'full' ? { kind, ...line, challenge: count(r.challenge, `${at}.challenge`) } : { kind, ...line }
+  }), `${path}.ranks`, (r) => `${r.kind}:${r.outfitId}:${r.activity}`)
   const bonds = none(o.bonds, `${path}.bonds`)
   const news = unique(list(o.news, `${path}.news`, 0, 8).map((v, i): NewsLine => {
     const at = `${path}.news.${i}`

@@ -4,7 +4,8 @@ import { SEASONS } from '../farm/calendar'
 import { CROP_PRICES } from '../goods/rule'
 import { CROP_IDS, refinedOf } from '../goods/ids'
 import { CROPS, growsIn, nightsToReady, readyAt, SHOP_SEEDS } from './crops'
-import { tendedGrowth, TALENT_D, UNTENDED_GROWTH } from './fields'
+import { TALENT_D } from '../farm/talents'
+import { tendedGrowth, UNTENDED_GROWTH } from './fields'
 
 /** CS11's "Days: untended · Novice · Expert" column, as the spec prints it. */
 const CS11_DAYS: Readonly<Record<string, [number, number, number]>> = {
