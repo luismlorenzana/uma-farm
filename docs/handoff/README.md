@@ -1,6 +1,6 @@
 # Handoff: open work
 
-> **Status: 2026-11-08, after D25.** M1 is met (D13) and M2 is live (F4–F6). **The farm is reworked to come first with its own loop** ([core-loop.md](../design/core-loop.md), FC1–FC34, D22, [page](../design/previews/core-loop.html)): farming into selling into progression, seven dispatched activities, ranks, festivals, a light story and bonds. **Time is turns (D25):** the owner ends each day, with no clock, so `farm-push-tick` is paused. It builds on the HD-2D refocus the owner accepted whole ([hd2d-farm.md](../design/hd2d-farm.md), D21). **Parcels (F10, PO1) are parked.** Next: the owner answers core-loop.md; then F7 is rewritten as the core spec, and M4's packets follow.
+> **Status: 2026-11-08, after D26.** M1 is met (D13) and M2 is live (F4–F6). **The current initiative is [the farm's own loop](../design/core-loop.md)** (FC1–FC34, [page](../design/previews/core-loop.html)), accepted whole (D26), on the [HD-2D farm](../design/hd2d-farm.md) (accepted, D21). Time is turns (D25); parcels (F10, PO1) are parked. **Next: F7, rewritten as the core spec with its numbers, then M4's packets** (the calendar and End the day, planting, the bin and gold, the shop, ranks and talents, the first recruits, chapter 1).
 > initiative is [the first playable farm](../design/first-playable.md)** (FW1–FW13,
 > [page](../design/previews/first-playable.html)): its requirements and every planned task, from the hello app (F3) to the
 > Wilds playing, the design spec, then the Forge and parcels.
@@ -59,7 +59,7 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 | ~~F6~~ Declined 2026-11-08 | Notifications: not now, the owner's choice (D18). The tick stays deployed and sends nothing while no phone subscribes |
 | **F7, now** | **Read and answer the design spec:** [spec.md](../design/spec.md) and [its page](../design/previews/spec.html). Its questions 2–13 (the Forge, orders, the economy, accept lists, the Post) can be answered now; question 1 (who works) waits for a few days of play |
 | ~~Refocus~~ Done 2026-11-08 | The HD-2D refocus: accepted whole, the Forge's genre merge (D21) |
-| **Farm first, now** | **Answer [core-loop.md](../design/core-loop.md)** ([page](../design/previews/core-loop.html)): its 14 questions, each with a recommendation |
+| ~~Farm first~~ Done 2026-11-08 | core-loop.md's 14 questions: all accepted as recommended (D26) |
 | M4, M5 | The workshops' look and a play; your go for uma-rpg's receiver |
 
 ## Done

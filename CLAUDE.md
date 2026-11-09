@@ -2,8 +2,10 @@
 
 - Before working here, read the cross-game plan in the sibling repo: `../uma-platform/docs/architecture.md`,
   `roadmap.md` and `decisions.md` (also on GitHub at `luismlorenzana/uma-platform`).
-- **The current initiative is [the first playable farm](docs/design/first-playable.md):** its requirements and every
-  planned task. Packets are written from it, one per task, keeping its ids.
+- **The current initiative is [the farm's own loop](docs/design/core-loop.md) (FC1–FC34, accepted D26),** on the
+  [HD-2D farm](docs/design/hd2d-farm.md) (FR1–FR24, accepted D21). Its milestones are M3 (the core spec, F7) to M7 (the
+  HD-2D farm); parcels to the other games come later. [The first playable farm](docs/design/first-playable.md) (M1, M2) is
+  done and kept as history. Packets are written from these, one per task.
 - **Start with [docs/handoff/README.md](docs/handoff/README.md):** the current phase, the packet queue and the owner's
   steps. The plan is [docs/design/plan.md](docs/design/plan.md); its calls keep their ids (FM, and IN for the cloud).
   New decisions go in `docs/decisions.md` from D8 (fetch `main` first). Packets F3–F10 are the first playable farm's; new ones are F-numbered from F11.

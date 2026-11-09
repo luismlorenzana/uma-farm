@@ -3,7 +3,10 @@
 > **Time is turns (D25, the owner, 2026-11-08):** there's no real time and no in-game clock. A farm day is a turn you
 > end yourself, and every job, crop and payout moves when you do (FC5, FC6, FC33, FC34).
 >
-> **Status: 2026-11-08, a draft for the owner's review (D22).** The owner's rework: the farm comes first with **its own
+> **Accepted whole by the owner, 2026-11-08 (D26):** all 14 questions as recommended. F7 now writes the core spec's
+> numbers from it.
+>
+> **Drafted 2026-11-08 for the owner's review (D22).** The owner's rework: the farm comes first with **its own
 > loop**, and sending items to the other games waits until later. The loop is defined against three references: *Harvest
 > Moon: Friends of Mineral Town*, *Rune Factory 4* and *Fantasy Life*. It keeps what the owner wants:
 > - farming into selling into progression;
