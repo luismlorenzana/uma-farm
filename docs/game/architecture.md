@@ -52,7 +52,7 @@ How uma-farm is built and run, as of F17: save v2 and the Wilds live, their rule
 | Master data | `src/master/` | The release's manifest, characters, outfits and art through `/api/master`, cached by hash on the device; the roster (`farmRoster`) and the album's rows; the album art adapter; `masterReady()`, which the loop's boot waits on |
 | PWA | `vite.config.ts` | Portrait, standalone, the icons from `scripts/draw-icons.mjs`; Workbox precaches the app, keeps master data's files for good, and imports `push-sw.js` into the service worker |
 
-Main JS is 161.7 KB gzip against the 180 KB budget (FM20), and 161.9 KB in the loop's build, which `pnpm build` checks
+Main JS is 162.2 KB gzip against the 180 KB budget (FM20), and 162.4 KB in the loop's build, which `pnpm build` checks
 too. Firebase, the Wilds' screens, the loop's pages and boot, and the Hub map's Phaser scene (`createHubGame`, 377 KB
 gzip) load on demand; `scripts/check-size.mjs`'s `LAZY_MODULES` refuses them in the initial JS.
 
