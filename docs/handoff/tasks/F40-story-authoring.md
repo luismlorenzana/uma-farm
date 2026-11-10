@@ -289,8 +289,8 @@ The validator checks:
 - The owner has read layers 1, 2 and 3, and `reviews.json` holds their verdicts.
 - Git holds only the format, the validator, the stand-in route and any review tool. `pnpm test`, with the private-content
   guard, passes, and `git grep` finds no character name.
-- The content is backed up: in `gs://uma-farm-content` once the owner says yes (D40). Until then, a dated copy goes in
-  uma-platform's backed-up `content/authoring/` (P96), as a stopgap the owner agrees to.
+- The content is backed up as a dated copy in uma-platform's backed-up `content/authoring/` (P96). Delivering it to the
+  game (a private bucket and farm-api's private pack route) is later, the owner's call (D41).
 
 ## Deliver
 
