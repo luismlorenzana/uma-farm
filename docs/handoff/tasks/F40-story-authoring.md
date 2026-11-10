@@ -157,8 +157,8 @@ The owner's direction (D40), and the calls that make it writable. Each has an id
     - the format (types and a validator, with no names);
     - a tiny stand-in route with an invented Uma (a placeholder outfit id such as 9000001, the name "Stand-in") for tests;
     - any local tool that has no names in it.
-  - **Shipping:** the story ships later through a private, versioned bucket (`gs://uma-farm-content`, on the owner's yes,
-    D40) and farm-api's private pack route, as uma-rpg's and uma-quest's stories do.
+  - **Shipping:** how the story reaches the game (a private bucket and farm-api's private pack route, as uma-rpg's and
+    uma-quest's stories do) is decided later (D41). This packet needs no cloud.
 - **RS16, keyed by ids.** Every file keys an Uma by her character id from master data, plus the outfit id her sprite set
   uses where she has one. Inside the private files you may write her name in lines, since they're private. Display names
   in the game still come from master data at runtime.
