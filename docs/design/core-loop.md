@@ -1,5 +1,11 @@
 # uma-farm: the farm's own loop
 
+> **Romance becomes a pillar (D40, the owner, 2026-11-10):** the farmer is the player, a point of view, and can befriend
+> then romance every Uma of the owner's authored SS cast, with each Uma's wedding as the long goal. It will revise FC16
+> (authored arrivals, not random), FC24 (Umas in authored roles, privately), FC26 (affinity becomes the friendship ladder,
+> then a romance ladder) and FC27 (authored pair conversations for the closest ties). The story is authored first
+> ([F40](../handoff/tasks/F40-story-authoring.md)); the romance spec (F41) then turns it into calls.
+>
 > **Time is turns (D25, the owner, 2026-11-08):** there's no real time and no in-game clock. A farm day is a turn you
 > end yourself, and every job, crop and payout moves when you do (FC5, FC6, FC33, FC34).
 >
