@@ -1,8 +1,14 @@
 # F29 — Art for M5
 
-**uma-platform's `packages/art` (uma-art) · ChatGPT · M · Needs: F25 (its `cast` atlas; if F25 still isn't released
-when this starts, one release carries both) · Unblocks: the first M5 packet built after its release pins it · Milestone
-M5, more to do**
+**uma-platform's `packages/art` (uma-art) · Part A: Claude · Part B: ChatGPT (uma-platform P126, uma-farm D45) · M ·
+Needs: part A, F25's part A (the `ui` groups); part B, F25's part B (its `cast` atlas) · Unblocks: the first M5 packet
+built after its release pins it · Milestone M5, more to do**
+
+> **Two parts, two workers (P126, 2026-11-11).** The owner moved ChatGPT onto character art. **Part A, the pixel pieces**
+> (the products and feeds, the seven animal icons, the Coop and the expedition post, the story items and the tools'
+> tints), is code-drawn pixel art, so it's Claude's in a uma-platform session ("Take F29, part A"). **Part B, the four
+> busts**, is character art, so it stays ChatGPT's ("Take F29, part B"). Each part ships its own uma-art minor. M5's
+> packets wait on the romance spec (F41), which may revise this list before either part starts.
 
 ## Why
 
@@ -10,8 +16,8 @@ M5 adds the ranch, mining, the Kitchen and expeditions, and four chapters with f
 show is already in uma-art (the Barn, the Kitchen, the Mine and the Quarry with their workbenches, the 80 dishes, the
 wool and cloths, the ores, stones, crystals and the expeditions' loot). What isn't: four products and two feeds, seven
 animals, two buildings, four cast busts, four chapters' story items, and the farm's seven tools in their five tiers.
-Art is ChatGPT's end to end: this packet is drawn, versioned and published as a uma-art release, and the first uma-farm
-packet that uses it pins it.
+Each part is drawn, versioned and published as a uma-art release by its worker (P126), and the first uma-farm packet that
+uses it pins it.
 
 **F25's status (2026-11-09):** M4's art (the Dorm, the bin, the seed badge, nine marks, three busts) isn't released yet;
 uma-farm still runs on F24's stand-ins and pins uma-art 2.21.0. This packet builds on F25's `cast` atlas.
@@ -110,12 +116,13 @@ uma-farm still runs on F24's stand-ins and pins uma-art 2.21.0. This packet buil
 5. **The `items` and `buildings` sheets grow** for their new frames; the farm reads frames by key.
 6. **The story items** are keepsakes, not goods: the `story-` prefix keeps them apart from anything the farm sells.
    Each chapter's closing scene shows its item, and M6's Diary keeps them.
-7. **Versioning:** a minor after whatever uma-art is current when this lands (after F25's), with a changeset naming the
-   farm's M5 art. If F25 isn't released, one release carries both packets' pieces, each packet's decisions standing.
+7. **Versioning:** each part is a minor after whatever uma-art is current when it lands, with a changeset naming the
+   farm's M5 art and the part. Part A can carry F25's part A in one release if neither is out; part B the same with F25's
+   part B. Each packet's decisions stand.
 8. **Review:** a page in `packages/art/assets/previews/` with every new piece at native size and 2×, on light and dark
    grounds: the animals in a mock pen card of four; the products and feeds in a mock Warehouse row; the Coop and the
-   post beside the Hub's farmlands buildings; each tool's five tints in a row; the story items; the busts in a mock
-   scene box beside F25's three. No owner gate: the owner sees them in play.
+   post beside the Hub's farmlands buildings; each tool's five tints in a row; the story items (part A); the busts in a
+   mock scene box beside F25's three (part B adds them). No owner gate: the owner sees them in play.
 
 ### Rules that hold (every art packet)
 
@@ -129,36 +136,45 @@ uma-farm still runs on F24's stand-ins and pins uma-art 2.21.0. This packet buil
 - `uma-work` and `uma-kit` aren't touched by this packet.
 - The farm's manual changes when the packet that pins the art uses it, not here.
 
-### Left to ChatGPT
+### Left to each part's worker
 
 The drawing itself, within the decisions; the review page's layout; anything the art pipeline needs that the farm
 doesn't see.
 
 ## Do
 
+**Part A, Claude (a uma-platform session):**
+
 1. Draw the pixel pieces in `scripts/pixel-art` (decision 1: the products, feeds, story items and tools in `items`;
-   the animals in the new `animals` atlas; the Coop and the post in `buildings`), exported by `pnpm art:draw`.
-2. Draw the four busts as authored masters with their prompts and provenance, exported by `pnpm art:props` into the
+   the animals in the new `animals` atlas; the Coop and the post in `buildings`), exported by `pnpm art:draw`, with tests
+   like the other pixel families' (sizes, keys, every earlier frame byte-identical).
+2. Update `packages/art/README.md` (the `animals` family, the new `items` and `buildings` frames) and add the changeset.
+3. Build the review page (decision 8, without the busts).
+4. Commit and push to uma-platform's `main` (its CLAUDE.md), then `pnpm version-packages`, push, and read the published
+   release back.
+
+**Part B, ChatGPT:**
+
+1. Draw the four busts as authored masters with their prompts and provenance, exported by `pnpm art:props` into the
    `cast` atlas (decisions 3 and the cast's looks).
-3. Update `packages/art/README.md` (the `animals` family, the new `items` and `buildings` frames, the `cast` atlas's
-   next cells) and add the changeset.
-4. Build the review page (decision 8).
-5. Open a pull request in uma-platform, merge it once its checks pass, version and publish uma-art, and read the
+2. Add the `cast` atlas's next cells to `packages/art/README.md`, the busts to the review page, and the changeset.
+3. Open a pull request in uma-platform, merge it once its checks pass, version and publish uma-art, and read the
    release back.
 
 ## Done when
 
 - uma-art's checks pass, and every frame published before is byte-identical.
-- The release is on GitHub Packages, and its `items`, `animals`, `buildings` and `cast` indexes list every key in
-  decision 1 marked New.
+- The releases are on GitHub Packages, and their `items`, `animals`, `buildings` (part A) and `cast` (part B) indexes
+  list every key in decision 1 marked New.
 - The review page shows every new piece at 1× and 2× on both grounds.
 - The farm side, for whoever pins it: `@luismlorenzana/uma-art` at the new version installs in uma-farm, and its
   `pnpm lint`, `pnpm test` and `pnpm build` pass unchanged.
 
 ## Deliver
 
-In uma-platform: the pull request, merged, and the uma-art release published (ChatGPT's own, per uma-farm's
-[CLAUDE.md](../../../CLAUDE.md)). Then in uma-farm, on a branch and a pull request: delete this packet, add a Done row in
-[the handoff](../README.md) with the release's version, the pull request and the review page, and log the packet's
-D-decision in [decisions.md](../../decisions.md) (fetch `main` first for the number). The first uma-farm packet built
-after the release pins the version and drops the stand-ins its M5 predecessors left.
+Each part: in uma-platform, its uma-art release published by its own worker (P126, uma-farm's
+[CLAUDE.md](../../../CLAUDE.md)) and a P-decision. Then in uma-farm: a Done row in [the handoff](../README.md) for the part
+with the release's version and the review page, and the part's D-decision in [decisions.md](../../decisions.md) (fetch
+`main` first for the number); Claude pushes to `main`, ChatGPT uses a branch and a pull request it merges itself. The
+second part to finish deletes this packet. The first uma-farm packet built after the release pins the version and drops
+the stand-ins its M5 predecessors left.

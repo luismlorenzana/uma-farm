@@ -1,14 +1,19 @@
 # F25 — Art for M4
 
-**uma-platform's `packages/art` (uma-art) · ChatGPT · M · Needs: F7 read · Unblocks: the first M4 packet built after
-its release pins it (F24 at the latest) · Milestone M4, the loop on today's map**
+**uma-platform's `packages/art` (uma-art) · Part A: Claude · Part B: ChatGPT (uma-platform P126, uma-farm D45) · M ·
+Needs: F7 read · Unblocks: the first M4 packet built after its release pins it · Milestone M4, the loop on today's map**
+
+> **Two parts, two workers (P126, 2026-11-11).** The owner moved ChatGPT onto character art. **Part A, the pixel pieces**
+> (the Dorm, the shipping bin, the seed-packet badge and the nine marks), is code-drawn pixel art, so it's Claude's in a
+> uma-platform session ("Take F25, part A"). **Part B, the three busts**, is character art, so it stays ChatGPT's ("Take
+> F25, part B"). Each part ships its own uma-art minor; neither waits on the other.
 
 ## Why
 
 M4's loop needs a little new art and borrows everything else from uma-art 2.21.0 (CS19): two Hub buildings for the
 yard, a badge that turns a crop's icon into its seeds, nine small marks for the account bar and the goods, and busts
-for the three townsfolk who speak in chapter 1's scenes. Art is ChatGPT's end to end: this packet is drawn, versioned
-and published as a uma-art release, and the first uma-farm packet that uses it pins it.
+for the three townsfolk who speak in chapter 1's scenes. Each part is drawn, versioned and published as a uma-art
+release by its worker (P126), and the first uma-farm packet that uses it pins it.
 
 ## Context (read first)
 
@@ -51,20 +56,20 @@ and published as a uma-art release, and the first uma-farm packet that uses it p
 
 1. **The pieces, their sizes and families:**
 
-   | Piece | Key | Size | Family (atlas) | Style |
-   |---|---|---|---|---|
-   | Dorm | `dorm` | 48×48 | `buildings`, page `farmlands`, with `anchorY` (and `smoke` if it has a chimney) | Pixel, the Hub buildings' palette and light |
-   | Shipping bin | `shipping-bin` | 48×48 | `buildings`, page `farmlands`, with `anchorY` | Pixel; a wooden bin with a lid, readable at 48 px |
-   | Seed packet badge | `farm/seed-packet` | 16×16 | `ui` | Pixel; a small paper packet, drawn at the bottom-right of a 32×32 crop icon, readable over any of the 27 |
-   | Gold coin | `currency/gold` | 16×16 | `ui` | Pixel, beside the existing currency marks |
-   | Star | `farm/star` | 16×16 | `ui` | Pixel; a goods' quality star |
-   | Heart, bond | `farm/heart-bond` | 16×16 | `ui` | Pixel; between two Umas, warm red |
-   | Heart, affinity | `farm/heart-affinity` | 16×16 | `ui` | Pixel; yours with one Uma, a different hue from the bond heart |
-   | Farm Rank crest | `farm/rank` | 16×16 | `ui` | Pixel; a farm's crest, distinct from the `tier/*` crests |
-   | Seasons | `season/spring`, `season/summer`, `season/autumn`, `season/winter` | 16×16 each | `ui` | Pixel; a blossom, a sun, a leaf, a snowflake, each in its season's colour |
-   | Mayor Hollis Pryor | `cast/hollis-pryor` | 256×256 | a new `cast` atlas | Authored full colour, UA8's method |
-   | Marta Quill | `cast/marta-quill` | 256×256 | `cast` | Authored full colour |
-   | Old Ben Carver | `cast/ben-carver` | 256×256 | `cast` | Authored full colour |
+   | Piece | Key | Size | Family (atlas) | Style | Part |
+   |---|---|---|---|---|---|
+   | Dorm | `dorm` | 48×48 | `buildings`, page `farmlands`, with `anchorY` (and `smoke` if it has a chimney) | Pixel, the Hub buildings' palette and light | A, Claude |
+   | Shipping bin | `shipping-bin` | 48×48 | `buildings`, page `farmlands`, with `anchorY` | Pixel; a wooden bin with a lid, readable at 48 px | A, Claude |
+   | Seed packet badge | `farm/seed-packet` | 16×16 | `ui` | Pixel; a small paper packet, drawn at the bottom-right of a 32×32 crop icon, readable over any of the 27 | A, Claude |
+   | Gold coin | `currency/gold` | 16×16 | `ui` | Pixel, beside the existing currency marks | A, Claude |
+   | Star | `farm/star` | 16×16 | `ui` | Pixel; a goods' quality star | A, Claude |
+   | Heart, bond | `farm/heart-bond` | 16×16 | `ui` | Pixel; between two Umas, warm red | A, Claude |
+   | Heart, affinity | `farm/heart-affinity` | 16×16 | `ui` | Pixel; yours with one Uma, a different hue from the bond heart | A, Claude |
+   | Farm Rank crest | `farm/rank` | 16×16 | `ui` | Pixel; a farm's crest, distinct from the `tier/*` crests | A, Claude |
+   | Seasons | `season/spring`, `season/summer`, `season/autumn`, `season/winter` | 16×16 each | `ui` | Pixel; a blossom, a sun, a leaf, a snowflake, each in its season's colour | A, Claude |
+   | Mayor Hollis Pryor | `cast/hollis-pryor` | 256×256 | a new `cast` atlas | Authored full colour, UA8's method | B, ChatGPT |
+   | Marta Quill | `cast/marta-quill` | 256×256 | `cast` | Authored full colour | B, ChatGPT |
+   | Old Ben Carver | `cast/ben-carver` | 256×256 | `cast` | Authored full colour | B, ChatGPT |
 2. **The busts are full colour,** since they speak beside Umas' busts from master data (full-colour art); pixel art next
    to them would clash. Head and shoulders, facing three-quarters toward image-right, transparent background, the light
    from the top front-left as in UA8, framed so a 128 pt circle or square crop keeps the face.
@@ -74,11 +79,11 @@ and published as a uma-art release, and the first uma-farm packet that uses it p
 4. **The `ui` sheet grows** for the nine marks and the badge, with new groups `farm` and `season` and the coin in
    `currency`. Positions come from the JSON, never assumed.
 5. **The buildings sheet grows** for its two frames; the farm reads frames by key.
-6. **Versioning:** a minor after whatever uma-art is current when this lands (2.25.0 if nothing comes first), with a
-   changeset naming the farm's M4 art.
+6. **Versioning:** each part is a minor after whatever uma-art is current when it lands (2.25.0 for the first if nothing
+   comes first), with a changeset naming the farm's M4 art and the part.
 7. **Review:** a page in `packages/art/assets/previews/` with every piece at native size and 2×, on light and dark
-   grounds, the badge over five crop icons, the marks in a mock account bar (coin, season and crest chips), and the
-   busts in a mock scene box. No owner gate: the owner sees them at F24's phone check.
+   grounds, the badge over five crop icons, the marks in a mock account bar (coin, season and crest chips) (part A), and
+   the busts in a mock scene box (part B adds them). No owner gate: the owner sees them at the next phone check.
 
 ### Rules that hold (every M4 packet, as they touch art)
 
@@ -92,33 +97,43 @@ and published as a uma-art release, and the first uma-farm packet that uses it p
 - `uma-work` and `uma-kit` aren't touched by this packet.
 - The farm's manual changes when the packet that pins the art uses it, not here.
 
-### Left to ChatGPT
+### Left to each part's worker
 
 The drawing itself, within the decisions; the review page's layout; anything the art pipeline needs that the farm doesn't
 see.
 
 ## Do
 
-1. Draw the pixel pieces in `scripts/pixel-art` (decision 1), exported by `pnpm art:draw`.
-2. Draw the three busts as authored masters with their prompts and provenance, exported by `pnpm art:props` into the new
+**Part A, Claude (a uma-platform session):**
+
+1. Draw the pixel pieces in `scripts/pixel-art` (decision 1), exported by `pnpm art:draw`, with tests like the other
+   pixel families' (sizes, keys, every earlier frame byte-identical).
+2. Update `packages/art/README.md` (the new `ui` groups and the two buildings) and add the changeset.
+3. Build the review page (decision 7, without the busts).
+4. Commit and push to uma-platform's `main` (its CLAUDE.md), then `pnpm version-packages`, push, and read the published
+   release back.
+
+**Part B, ChatGPT:**
+
+1. Draw the three busts as authored masters with their prompts and provenance, exported by `pnpm art:props` into the new
    `cast` atlas (decisions 2, 3).
-3. Update `packages/art/README.md` (the `cast` family, the new `ui` groups, the two buildings) and add the changeset.
-4. Build the review page (decision 7).
-5. Open a pull request in uma-platform, merge it once its checks pass, version and publish uma-art, and read the
+2. Add the `cast` family to `packages/art/README.md`, the busts to the review page, and the changeset.
+3. Open a pull request in uma-platform, merge it once its checks pass, version and publish uma-art, and read the
    release back.
 
 ## Done when
 
 - uma-art's checks pass, and every frame published before is byte-identical.
-- The release is on GitHub Packages, and its `buildings`, `ui` and `cast` indexes list every key in decision 1.
+- The releases are on GitHub Packages, and their `buildings`, `ui` (part A) and `cast` (part B) indexes list every key in
+  decision 1.
 - The review page shows every piece at 1× and 2× on both grounds.
 - The farm side, for whoever pins it: `@luismlorenzana/uma-art` at the new version installs in uma-farm, and its
   `pnpm lint`, `pnpm test` and `pnpm build` pass unchanged.
 
 ## Deliver
 
-In uma-platform: the pull request, merged, and the uma-art release published (ChatGPT's own, per uma-farm's
-[CLAUDE.md](../../../CLAUDE.md)). Then in uma-farm, on a branch and a pull request: delete this packet, add a Done row in
-[the handoff](../README.md) with the release's version, the pull request and the review page, and log the packet's
-D-decision in [decisions.md](../../decisions.md) (fetch `main` first for the number). The first uma-farm packet that
-draws the art pins the version (F24 at the latest).
+Each part: in uma-platform, its uma-art release published by its own worker (P126, uma-farm's
+[CLAUDE.md](../../../CLAUDE.md)) and a P-decision. Then in uma-farm: a Done row in [the handoff](../README.md) for the part
+with the release's version and the review page, and the part's D-decision in [decisions.md](../../decisions.md) (fetch
+`main` first for the number); Claude pushes to `main`, ChatGPT uses a branch and a pull request it merges itself. The
+second part to finish deletes this packet. The first uma-farm packet that draws the art pins the version.
