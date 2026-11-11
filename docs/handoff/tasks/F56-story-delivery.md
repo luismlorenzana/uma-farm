@@ -151,7 +151,11 @@ first open, and the owner's phone check closes the milestone.
     `createdAt` and `updatedAt` unchanged and uploaded unstamped; the API backs the v3 up to `saveBackups/{uid}-v3`
     before storing the v4; the name is the first stamp; an old build's v3 upload over the v4 is refused with a 409 and
     kept in `saveRescues`; a dirty device v3 is kept as a safety copy first; the deployed M4 build at its last commit
-    stops at a v4 with the update prompt.
+    stops at a v4 with the update prompt. **Carried from F46 (D51):** the M4 build refuses a v4 safely (it throws
+    `NEWER_SAVE_WORDS` in `save/game.ts`'s `playable` and writes nothing), but the boot gate shows the kit's generic "The
+    game couldn't open on this phone" instead of those words and the update prompt (F17(e)). Make the gate show
+    `NEWER_SAVE_WORDS` with the kit's update prompt in the last M4 commit before the go-live, so a cached M4 PWA that
+    meets the owner's new v4 says why and updates.
 11. **The production read** (read only, the scoped gcloud): `saves/{uid}` is v4; `saveBackups/{uid}-v3` holds the old
     v3; the v4's `account.uid` and `createdAt` equal the backup's; its `updatedAt` equals the backup's until the name is
     entered, then the name's time; `saveRescues` holds nothing new (or only an old build's refused v3, as designed). A
