@@ -103,6 +103,14 @@ The owner reads each layer before the next is written. The farm's code packets (
 > where present. A beat's `trigger` is now read for Ready: `working` (a running job at a place of that activity, or a
 > tended block for farming), `item` (any stars in the Warehouse), `bond` (CS44's hearts) and `chapter`.
 >
+> **Landed in F52 (D54):** the game reads **`pairs/<a>-<b>.json`** (no new field). The file's name and its `a`, `b` are
+> the two character ids **in numeric order**; it's for **a tie's pair only** (RS12); each level's `hearts` is 1–5 and
+> written **at most once**; the game reads a pair **partial** (any levels written so far: an unwritten level gets the
+> tie's `line`), the sandbox keeps the strict report. Each new bond heart opens that level; the player reads it from the
+> morning, her profile or the Diary. **A choice in a pair's conversation is wording only:** it pays nothing and its
+> flags aren't kept, though the validator still asks one option to carry a gain. A tie's `line` shows in the morning
+> when the pair has no conversation at that heart, so write it as a short phrase ("Old rivals.").
+>
 > F41 also settles what the story wrote around: arrivals are the authored ones only (RM1, RM4); events never wait on a
 > season, festival or hour (RM24); the farmer is never gendered at the wedding (RM30); one ring bench at the Forge opens
 > after the first romance 8 (RM38).
