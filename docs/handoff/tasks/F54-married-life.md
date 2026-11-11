@@ -23,7 +23,7 @@ goes on after it.
   CS22, CS46 (templates by temperament).
 - [decisions.md](../../decisions.md): D31 (g: the map's tiles and rows), D37 (the Dorm, `onFarm`), D43 (the houses, W15,
   W16), D45, D46, D47, and the D-decisions F46–F53 logged.
-- [F55-art-romance.md](F55-art-romance.md), for the pieces this packet pins.
+- F55's pieces, done in uma-art 2.26.0 ([the Done row](../README.md#done), and uma-platform's `packages/art/README.md`, "The romance core's marks and places"), for the pieces this packet pins.
 - The manual: [hearts.md](../../game/hearts.md), [days.md](../../game/days.md) (the map, Tonight, the night),
   [roster.md](../../game/roster.md) (the Dorm, who's on the farm).
 - Code: `farm/places.ts` (`FARM_PLACES`, `FARM_MAP_ROWS`, `PlaceOpens`), `loop/farm-map.ts` (`placeAt`,
