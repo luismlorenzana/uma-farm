@@ -1,5 +1,7 @@
 # uma-farm: the romance spec
 
+> **Accepted whole by the owner, 2026-11-11 (D47).** Every call stands as written; the romance core's packets are written from it.
+>
 > **Status: drafted 2026-11-11 (D46), F41.** The owner said "Write F41" on 2026-11-11. This spec turns the romance
 > direction (D40), full polyamory and the houses (D43), the wipe and priority Umas (D44) and the art split (D45) into
 > calls and numbers that can be built on what's live (M4, F17–F24). Calls are **RM1–RM67**, each decided; there are no

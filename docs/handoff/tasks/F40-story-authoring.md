@@ -67,6 +67,22 @@ The owner reads each layer before the next is written. The farm's code packets (
 
 ## Decisions made
 
+> **Added 2026-11-11 (D47): the romance spec is accepted, and asks seven additions of the story** ([romance-spec.md](../../design/romance-spec.md), RM58).
+> Write to them from layer 2 on. The format and validator gain them in the romance core's packets (F46–F54):
+> - **`arrival`:** one scripted event per route, a 27th scene before friendship 1 (RM4), worth +50 and one choice;
+> - **`chats`** in her bible: about 10 lines a stage (friend, partner, spouse), the F1 perk's chat set (RM31);
+> - **`wishes`** in her bible, optional: `own-house`, `birthday-alone` (RM44);
+> - **`keepsake`** in her bible: a name and a line (RM31);
+> - **`wedding.places`:** the three places her wedding offers (RM30);
+> - **`household.json`:** three household scenes (at 5, 10 and 15 married), house lines, and the finale, the Great
+>   Harvest (RM43, RM45, RM46);
+> - **`birthday`** in the cast file, only where master data has none (RM16).
+>
+> F41 also settles what the story wrote around: arrivals are the authored ones only (RM1, RM4); events never wait on a
+> season, festival or hour (RM24); the farmer is never gendered at the wedding (RM30); one ring bench at the Forge opens
+> after the first romance 8 (RM38).
+
+
 > **Added 2026-11-11 (D44), from the owner:** (1) **the owner's priority Umas come first.** The opening three and the
 > three pilot routes go to them. Take the priority from the SS tier's order on the Studio's Playable Umas board, which the
 > owner sets (the board's order is the authoring order), or from a list the owner gives. Revisit D42's opening three
