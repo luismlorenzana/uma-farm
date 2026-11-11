@@ -67,6 +67,15 @@ The owner reads each layer before the next is written. The farm's code packets (
 
 ## Decisions made
 
+> **Added 2026-11-11 (D44), from the owner:** (1) **the owner's priority Umas come first.** The opening three, the
+> three pilot routes and the first character art go to them. Take the priority from the SS tier's order on the Studio's
+> Playable Umas board, which the owner sets (the board's order is the authoring order), or from a list the owner gives.
+> Revisit D42's opening three against it. (2) **Character art will be authored later**, privately: busts, expressions and
+> event illustrations, priority Umas first. Every scene names where an illustration would sit (`art: <key>` on a beat,
+> optional), and plays with master data's existing art until one exists. (3) **The owner's live save will be wiped**
+> when the romance core ships, so the authored start needs no migration path for an existing farm.
+
+
 The owner's direction (D40), and the calls that make it writable. Each has an id, **RS1–RS20**, for the romance spec.
 
 **The cast**
