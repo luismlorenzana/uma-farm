@@ -1,28 +1,27 @@
-// Her route on her sheet (F47 decision 15; romance spec RM11–RM16, RM24): until F48's profile, the roster's sheet shows
-// her level in words, her bar in the ladder's colour with its points and what's banked, whether her next event is Ready
-// or what it waits for, and Chat +15, Gift (the picker with each good's points for her today, or "?") and Praise +20
-// while earned. What an act paid goes up to the sheet (`onPaid`), which floats it from her face. Loaded on demand, and only
-// for a v4 save, so the M4 build never fetches it.
+// Her acts on her profile (F47 decision 15, moved by F48 decision 6; romance spec RM13, RM15, RM53): Chat +15 (then her
+// line for the day), Gift (the picker with each good's points for her today, or "?") and Praise +20 while earned, 48 pt in
+// the profile's thumb zone. What an act paid goes up to the profile (`onPaid`), which floats it from her face; a note
+// says it ("She likes it. +36"). Loaded on demand with the Hearts tab, so the M4 build never fetches it.
 import {
-  bar, birthdaysOf, canPraise, chatLineV4, DISLIKED_LINE, FAMILY_NAMES, GOOD_FAMILIES, giftPreview, goodName, goodOf, LADDER_COLOURS, ladderOf, levelWords,
-  LOVE_POINTS, readiness, type SaveV4, type Taste, type Temperament,
+  birthdaysOf, canPraise, chatLineV4, DISLIKED_LINE, FAMILY_NAMES, GOOD_FAMILIES, giftPreview, goodName, goodOf, LOVE_POINTS, type SaveV4, type StoryPack,
+  type Taste, type Temperament,
 } from '@farm/domain'
 import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import type { MasterView } from '../master/master'
-import { useStory } from '../story/story'
 import { chatHer, giftHer, praiseHer } from './actions'
-import { gain, readyWords } from './love-words'
+import { gain } from './love-words'
 
 const TASTE_WORDS: Readonly<Record<Taste, string>> = { loved: 'She loves it!', liked: 'She likes it.', neutral: 'Thank you.', disliked: DISLIKED_LINE }
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
 /** A line with its placeholders filled: `{farmer}` (the format's only one) and `{name}` (the temperament lines'). */
 const fill = (line: string, name: string, farmer: string): string => line.split('{farmer}').join(farmer || 'you').split('{name}').join(name)
 
-export default function LoveCard({ save, id, name, temperament, master, onPaid }: {
+/** Chat, Gift and Praise, with today's chat line and the last act's note above them. */
+export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: {
   save: SaveV4
+  pack: Pick<StoryPack, 'bibles' | 'cast'>
   id: string
   name: string
   temperament: Temperament | null
@@ -30,54 +29,32 @@ export default function LoveCard({ save, id, name, temperament, master, onPaid }
   /** What an act paid, for the "+N" over her face. */
   onPaid: (points: number) => void
 }) {
-  const pack = useStory()
   const [note, setNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [giving, setGiving] = useState(false)
-  const birthdays = useMemo(() => (pack ? birthdaysOf(pack, master.birthdays) : new Map<string, number>()), [pack, master])
-  const love = save.love[id]
-  if (!pack || !love) return null
-  const now = bar(love)
-  const state = readiness(save, pack, id)
-  const colour = LADDER_COLOURS[ladderOf(love.stage)]
+  const birthdays = useMemo(() => birthdaysOf(pack, master.birthdays), [pack, master])
+  if (!save.love[id]) return null
   const talked = save.today.chats.includes(id)
   const gave = save.today.gifts.includes(id)
+  const praise = canPraise(save, id)
   const line = talked ? fill(chatLineV4(save, pack, id, temperament ?? 'steady'), name, save.farmer.name) : null
-  const share = now.cost > 0 ? Math.min(1, now.points / now.cost) : now.rung ? 1 : 0
   const paid = (points: number, words: string) => {
     setError(null)
     setNote(words)
     if (points > 0) onPaid(points)
   }
   const fail = (err: unknown) => setError(errorWords(err))
-  const words = readyWords(state, now, (other) => master.album.get(other)?.name ?? 'An Uma')
   return (
-    <div className="space-y-2" data-love={id} data-stage={love.stage} data-level={love.level}>
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[15px] font-semibold text-ink" data-level-words>{levelWords(love)}</p>
-        {state.ready && <span className="rounded-full px-2 py-0.5 text-[12px] font-bold text-white" style={{ background: colour }} data-ready-chip>● Ready</span>}
-      </div>
-      <div className="space-y-1">
-        <span aria-hidden className="block h-2.5 overflow-hidden rounded-full bg-sunken">
-          <span className="block h-full rounded-full" style={{ width: `${Math.round(share * 100)}%`, background: colour }} data-bar-fill={Math.round(share * 100)} />
-        </span>
-        <p className="flex justify-between text-[12px] text-ink-soft tabular-nums" data-bar={`${now.points}/${now.cost}`} data-banked={now.banked}>
-          <span>{now.cost > 0 ? `${now.points.toLocaleString('en-US')} / ${now.cost.toLocaleString('en-US')}` : ''}</span>
-          {now.banked > 0 && <span className="font-semibold" style={{ color: colour }}>+{now.banked.toLocaleString('en-US')} banked</span>}
-        </p>
-      </div>
-      <p className={`text-[13px] ${state.ready ? 'font-semibold text-ink' : 'text-ink-soft'}`} data-ready={state.ready ? 'ready' : state.waits!.kind}>
-        {state.waits?.kind === 'away' ? <Link to="/dorm" className="font-semibold text-accent-strong underline">{words}</Link> : words}
-      </p>
+    <div className="space-y-2" data-love={id}>
       {line && <p className="rounded-md bg-sunken/70 px-3 py-2 text-[14px] italic" data-chat-line>{line}</p>}
       {(note || error) && <p role="status" className={`text-[13px] font-semibold ${error ? 'text-danger' : 'text-success'}`} data-love-note>{error ?? note}</p>}
-      <div className="grid grid-cols-2 gap-2">
-        <Button variant="secondary" disabled={talked} data-action="chat" onClick={() => void chatHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥`), fail)}>
-          {talked ? 'Talked today' : `Chat +${LOVE_POINTS.chat}`}
+      <div className={`grid gap-2 ${praise ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        <Button variant="secondary" size="md" disabled={talked} data-action="chat" onClick={() => void chatHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥`), fail)}>
+          {talked ? (praise ? 'Chat ✓' : 'Talked today') : `Chat +${LOVE_POINTS.chat}`}
         </Button>
-        <Button variant="secondary" disabled={gave} onClick={() => setGiving(true)} data-action="gift">{gave ? 'Gift given' : 'Gift'}</Button>
-        {canPraise(save, id) && (
-          <Button className="col-span-2" data-action="praise" onClick={() => void praiseHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥ Well done!`), fail)}>
+        <Button variant="secondary" size="md" disabled={gave} onClick={() => setGiving(true)} data-action="gift">{gave ? (praise ? 'Gift ✓' : 'Gift given') : 'Gift'}</Button>
+        {praise && (
+          <Button size="md" data-action="praise" onClick={() => void praiseHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥ Well done!`), fail)}>
             Praise +{LOVE_POINTS.praise}
           </Button>
         )}

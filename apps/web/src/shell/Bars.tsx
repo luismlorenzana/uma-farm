@@ -1,16 +1,18 @@
 // The farm's top and bottom bars on uma-kit (as uma-rpg's): the account's initial, which opens Account, and the sync chip;
 // the date chip, which opens the calendar (F18); the gold chip, which opens the bin (F19); and the Farm Rank's chip, which
-// opens its sheet (F24). The bottom bar: Farm · Roster · End the day (raised) · Diary · Menu (F18).
+// opens its sheet (F24). The bottom bar: Farm · Roster · End the day (raised) · Diary · Menu (F18); in the romance build,
+// Farm · Hearts · End the day · Diary · Menu (F48 decision 3; RM51).
 import { dateOf, daySetState, farmRankOf, type Season } from '@farm/domain'
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { AccountBar, BottomBar, withParam, type BarTab, type CurrencyChip } from '@luismlorenzana/uma-kit/shell'
-import { BookIcon, CardsIcon, CarrotIcon, MoonIcon } from '@luismlorenzana/uma-kit/ui'
+import { BookIcon, CardsIcon, CarrotIcon, HeartIcon, MoonIcon } from '@luismlorenzana/uma-kit/ui'
 import { useLocation, type Location } from 'react-router'
+import { romanceOn } from '../app/romance'
 import { dateLabel, nudgeWords, SEASON_COLOR } from '../loop/words'
 import { useGame, useLoopSave } from '../save/game'
 import { GoldCoin } from './Gold'
 
-export type BarPage = 'farm' | 'roster' | 'diary'
+export type BarPage = 'farm' | 'roster' | 'hearts' | 'diary'
 
 /** A season's dot: the date chip's mark until uma-art's season marks ship (F25). */
 function SeasonDot({ season }: { season: Season }) {
@@ -73,7 +75,8 @@ export function FarmAccountBar() {
 }
 
 /**
- * The bar (FC29, F18 decision 6): Farm · Roster · End the day · Diary · Menu. End the day is the raised centre; it reads
+ * The bar (FC29, F18 decision 6): Farm · Roster · End the day · Diary · Menu; the romance build's second tab is Hearts
+ * (`/hearts`, uma-kit's heart, no badge: F48 decision 3, RM57's signals are the morning, her Ready chip and her pip). End the day is the raised centre; it reads
  * "All set" and glows when nothing waits (CS6), else "End day" with the count of idle Umas and things to collect on the
  * disc. It reads the save at its day, never the clock. The badge and the glow are uma-kit 0.19.0's (uma-platform P112,
  * from F18's request); the tab's name carries the count for VoiceOver.
@@ -85,7 +88,9 @@ export function FarmBottomBar({ page }: { page: BarPage | null }) {
   const badge = set?.badge ?? 0
   const tabs: BarTab[] = [
     { key: 'farm', to: '/', label: 'Farm', Icon: CarrotIcon, active: page === 'farm' },
-    { key: 'roster', to: '/roster', label: 'Roster', Icon: CardsIcon, active: page === 'roster' },
+    romanceOn()
+      ? { key: 'hearts', to: '/hearts', label: 'Hearts', Icon: HeartIcon, active: page === 'hearts' }
+      : { key: 'roster', to: '/roster', label: 'Roster', Icon: CardsIcon, active: page === 'roster' },
     {
       key: 'end', to: withParam(location, 'sheet', 'end'), label: set?.allSet ? 'All set' : 'End day', Icon: MoonIcon, active: false, raised: true,
       badge, badgeLabel: set ? `End the day: ${nudgeWords(set)}` : undefined, glow: set?.allSet ?? false,

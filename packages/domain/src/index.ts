@@ -118,6 +118,8 @@ export * from './romance/praise'
 export * from './romance/days'
 export * from './romance/ready'
 export * from './farm/bonds'
+// The perks' words (F48; RM31, RM32, RM36): each level's perk id and its words by her line, for her profile; F51 makes them act.
+export * from './romance/perks'
 export * from './story/pack'
 export * from './story/stand-in'
 export * from './story/opening-v4'

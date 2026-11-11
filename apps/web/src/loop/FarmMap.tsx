@@ -2,7 +2,8 @@
 // loop's rows, on uma-art's buildings; taller than a phone's screen, it scrolls, with the help button and the Collect all
 // pill fixed. A place's quick look opens in the side panel (`/?peek=<place>`): what it is, and what opens it while it's
 // locked; the Gate's is the visitor waiting, with Chat and Gift (F23). After a night the morning summary opens over the
-// map until the player starts the day. Loaded on demand.
+// map until the player starts the day. On save v4 a Ready Uma's pip carries ♥ wherever the map draws her (F48 decision 10)
+// and the morning's Hearts section lists who's Ready (decision 9), both read live. Loaded on demand.
 import {
   farmEnvV3, FARM_PLACES, farmPlace, placeBlurb, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, STAY_AFFINITY, workNow, type FarmPlace, type LoopPlaceId,
   type FarmSave,
@@ -16,10 +17,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
 import { masterReady, useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
+import { useStory } from '../story/story'
 import { collectFarm, dismissSummary } from './actions'
 import { FARM_MAP_TILES, lockOf, placeAt, placeLink } from './farm-map'
 import { FieldsPeek, fieldsPips } from './FieldsPeek'
 import { GatePeek } from './GatePeek'
+import { readyLines } from './hearts-view'
 import { summaryParts } from './summary-words'
 import { farmingTalents, useTalents } from './talents'
 import { shortDate } from './words'
@@ -41,13 +44,19 @@ export default function FarmRoute() {
   return <FarmScreen save={save} peek={peek} />
 }
 
-/** A work place's slot pips: who works there, ringed by her job's progress, or free dots. */
-function pipsOf(place: FarmPlace, work: WorkView): PipModel[] | undefined {
+/** A work place's slot pips: who works there, ringed by her job's progress, or free dots; a Ready Uma's carries ♥. */
+function pipsOf(place: FarmPlace, work: WorkView, hearts: ReadonlySet<string>): PipModel[] | undefined {
   if (!WORK_PLACES.has(place.id)) return undefined
   return work.cards(place.id).map((card): PipModel => card.kind === 'free' ? { state: 'free' } : {
     state: card.running ? 'busy' : 'ready', progress: card.progress, queued: card.queue.length,
-    face: <FaceTile outfitId={card.outfitId} size={24} label="Working Uma" round />,
+    face: <FaceTile outfitId={card.outfitId} size={24} label="Working Uma" round />, ...(hearts.has(card.outfitId) ? { badge: '♥' } : {}),
   })
+}
+
+/** Who's Ready today on a v4 farm (decisions 9 and 10), read live; nobody on v3 or before the pack loads. */
+function useReadyNow(save: FarmSave) {
+  const pack = useStory()
+  return useMemo(() => (save.version === 4 && pack ? readyLines(save, pack) : []), [save, pack])
 }
 
 /** The Gate's pip (F23): the visitor waiting, ringed by her way to staying. */
@@ -106,13 +115,15 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   const farming = useMemo(() => farmingTalents(talents.of), [talents.of])
   const tile = ART_TILE * artScale(hubDpr())
   const ready = useMemo(() => loopReadyWork(save), [save])
+  const readyNow = useReadyNow(save)
+  const hearts = useMemo(() => new Set(readyNow.map((r) => r.id)), [readyNow])
   const plots = readyPlots(save)
   const env = useMemo(() => farmEnvV3(loopKinds(talents.of)), [talents.of])
   const work = useMemo(() => workView(loopWorld(save), workNow(save), env), [save, env])
   const places: HubMapPlace[] = FARM_PLACES.map((place): HubMapPlace => {
     const lock = lockOf(save, place)
     const slots = place.id === 'fields' ? plots : ready.get(place.id as LoopPlaceId) ?? 0
-    const pips = place.id === 'fields' ? fieldsPips(save, farming) : place.id === 'gate' ? gatePips(save) : pipsOf(place, work)
+    const pips = place.id === 'fields' ? fieldsPips(save, farming, hearts) : place.id === 'gate' ? gatePips(save) : pipsOf(place, work, hearts)
     const busy = pips?.some((p) => p.state !== 'free') ?? false
     return {
       id: place.id, name: place.name, frame: place.frame, at: placeAt(place),
@@ -181,7 +192,8 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   const summary = save.summary
   const master = useMaster()
   const album = master.status === 'ready' ? master.view.album : null
-  const parts = useMemo(() => (summary ? summaryParts(summary, (id) => album?.get(id)?.name ?? 'An Uma') : []), [summary, album])
+  const ready = useReadyNow(save)
+  const parts = useMemo(() => (summary ? summaryParts(summary, (id) => album?.get(id)?.name ?? 'An Uma', ready) : []), [summary, album, ready])
   if (!summary) return null
   return (
     <Sheet

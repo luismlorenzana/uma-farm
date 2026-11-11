@@ -22,6 +22,14 @@ ladders, `bar`, `advance`, `addLove`), `romance/acts.ts` (chats, gifts, praise, 
 `romance/days.ts` (birthdays, anniversaries, `lineGood`), `romance/ready.ts` (`readiness`) and `farm/bonds.ts`; her sheet
 is `loop/Love.tsx`. The spec is RM11–RM18, RM23 and RM24; the calls are F47's (D52).
 
+**Built from F48.** **Hearts** is the Umas' tab in place of Roster: a row an Uma with her stage, her ladder's hearts and
+what's Ready, filters for where each stands, and **her profile** with the whole route as one track and the next rung
+spelled out; the roster's album is the tab's **Work** view. The morning's **Hearts** section is in RM57's order, and a
+Ready Uma's pip on the map carries **♥**: the morning, her Ready chip and her pip are the romance's only signals. The
+perks' words are `romance/perks.ts`; the screens `loop/HeartsPage.tsx`, `loop/HeartProfile.tsx`, `loop/hearts-view.ts`,
+`loop/HeartMarks.tsx`, `loop/RosterAlbum.tsx` and `loop/Love.tsx` (the acts). The spec is RM31's words, RM51–RM53 and
+RM57; the calls are F48's (D53).
+
 ```
  a fresh v4 farm (or any v1–v3, wiped)
    │
@@ -375,15 +383,163 @@ A setup is her bible's beat's `trigger` for the rung (none without a bible). Bon
 150, 300, 500 and 750 points). The proposal's ring is any `ring-g1`…`ring-g10` in the Warehouse (F53's goods). Ready
 lines aren't stored in the morning: Ready changes by day, so F48 reads them live.
 
-## Her sheet, for now (decision 15)
+## The Hearts tab (RM51, RM52)
 
-Until F48's profile, her sheet on the roster (`/roster?uma=<id>`, `loop/Love.tsx`, loaded on demand) shows, under her
-face: her level in words; **her bar** in the ladder's colour with "points / cost" toward the next rung and "+N banked";
-her next rung and whether it's **Ready**, or what it waits for ("Friendship 1 · 63 to go", "Swap her home", "tomorrow:
-one event a day", "Her story is still being written", "Opens with chapter 3", "Needs a ring"); **Chat +15** (then her
-line), **Gift** (the picker with points and "?") and **Praise +20** while earned, each a 44 pt button. What an act paid
-floats up from her face as "+N" (still, with reduced motion), and a disliked gift says "She thanks you, a little
-puzzled." F48 moves the sheet into the Hearts tab.
+**Romance build; live from F56** (F48 decisions 2–5 and 8). The bottom bar reads **Farm · Hearts · End the day · Diary ·
+Menu**: Hearts (uma-kit's heart, **no badge**) replaces Roster. The M4 build keeps Roster.
+
+| Route | Shows |
+|---|---|
+| `/hearts` | The Hearts view (the default) |
+| `/hearts?view=work` | The Work view: the roster's album, F21's and F23's whole ([ranks.md](ranks.md#the-screens-decision-7)) |
+| `/hearts?filter=ready` | The Hearts view on a filter (`ready`, `friends`, `partners`, `married`, `away`) |
+| `?uma=<characterId>` on either | Her profile, on the side the view names |
+| `/roster` | Lands on `/hearts?view=work`, her `?uma=` kept |
+
+```
+┌──────────────────────────────────────────┐
+│ Hearts  Married 0/3                  (i) │
+│ [ Hearts ]  Work                         │
+│ [Ready 1] [Friends 3] [Partners] [Married] [Away]
+├──────────────────────────────────────────┤
+│ (face) Stand-in 1                ● Ready │
+│        New friend ♥ ▣□□□□□□□□□  200/200  │  the ladder's hearts, the next filling
+│        +2 banked · Ready · Friendship 1 · the Fields   ✓ chat
+├──────────────────────────────────────────┤
+│ (face) Stand-in 3                        │
+│        New friend ♥ ▣□□□□□□□□□   80/200  │
+│        Her story is still being written  │
+└──────────────────────────────────────────┘
+```
+
+- **A row an Uma** on the roster, home or away, 72 pt: her face (master data), her name and chips (**● Ready** in her
+  stage's colour, **✉** an invitation from F50, **Away**); her level in words, the **filling heart** and **her ladder's
+  hearts as a bar** (ten for friendship and romance, five as a spouse: the levels played full, the next filling by points
+  over its cost, the rest empty) with "points/cost"; then "+N banked", **the most useful line** and today's **✓ chat**
+  and **✓ gift**. A waiting rung shows all ten hearts and its mark, **◆** her confession or **◇** the proposal and the
+  wedding, with "Tomorrow" or "Ready".
+- **The most useful line:** Ready, her rung and where it plays ("Ready · Romance 5 · the Pond at night"); away, "Swap her
+  home to play her events"; her bar short, nothing more (the bar says it); else what her next event waits for, in F47's
+  words ("Friendship 3 · the Fields, when she works there", "Her story is still being written"). F54 adds her house.
+- **The sort:** Ready first, then **the least progress** (her next rung's place on the route, then her points), then the
+  cast's order.
+- **The filters,** one at a time, each with its count: **Ready**; **Friends** (friendship, and her confession's wait);
+  **Partners** (romance, the proposal's and the wedding's waits); **Married** (spouse); **Away**.
+- **The header:** "Married n/N", N the cast's size (20 on the real pack, 3 on the stand-in; RM47's later waves raise it).
+  F50 adds the evening's ○/●.
+- **The (i)** holds five lines: points and bars, Ready, one event a day, gifts and tastes, and her route's stages (F50 puts
+  the evening's line in the last place).
+- **The Work view** is the roster's album moved whole: the same cards, filters and sorts, with **her level in words**
+  ("F7", "R4", "S2") in each face's corner in place of v3's hearts. A card opens her profile on its Work side.
+- **Hearts | Work** sits under the title, beside the (i): the page's foot is under End the day's raised disc. It's one
+  switch with her profile's: the view rides in the URL.
+
+## Her profile (RM53)
+
+**Romance build; live from F56** (F48 decisions 6, 7 and 11). A sheet over the tab at `?uma=<characterId>`, opened from a
+row, a card in the Work view, the morning's lines and the Dorm's list. Each section shows only what exists; nothing says
+"Soon".
+
+```
+┌──────────────────────────────────────────┐
+│ Stand-in 1                             ✕ │
+│ (face) New friend  ● Ready               │  the "+N" floats up from her face
+│        Farming · ★ Spring 4              │  her line, birthday and house
+│ ▣□□□□□□□□□◇□□□□□□□□□□◇◇□□□□□             │  the route as one track
+│ ┌ Next: Friendship 1 ────────────────────┐│
+│ │ Perk · Her loved gift shown; her own chats
+│ │ Event · The Fields, while she works them.
+│ │ ████████████████████  200 / 200  +2 banked
+│ │ Ready                                  ││
+│ └────────────────────────────────────────┘│
+│ Perks   Next · F1 · …     All 25 perks   │
+│ Gifts   Loved ? +60 · Liked ??? +30 · Disliked ?? 0 · Others +10
+│ Ties    Stand-in 2 · Friends ♥♥ · Stand-in 3 · Rivals
+│ Memories 0 of 26                         │
+├──────────────────────────────────────────┤
+│ [ Chat +15 ] [ Gift ] [ Praise +20 ]     │  48 pt, in the thumb zone
+│ [ Hearts ]  Work                         │
+└──────────────────────────────────────────┘
+```
+
+- **Her face, her level in words** in her stage's colour and her **● Ready** chip; under them her favourite line, her
+  birthday as a farm day ("★ Spring 4") and her house once she has one (F54).
+- **The route as one track:** F1–F10, ◆, R1–R10, ◇, ◇, S1–S5 (28 steps with S2 and S4), the played ones filled in their
+  ladder's colour (coral, rose, gold), the next filling by her bar, the rest empty; a waiting rung is a diamond. It wraps
+  to two rows of 14 under 375 pt.
+- **The Next card:** "Next: Romance 5"; its **perk** in her line's words (and "Opens with chapter 3" where her line's
+  place waits); **the event's place and setup**, her bible's `hint` for the rung (D43); the bar with "points / cost" and
+  "+N banked"; and what it waits for: "Ready", "123 to go", "Tomorrow", "Needs a ring", "Swap her home" (a link to the
+  Dorm), "Tomorrow: one event a day", "The Fields, when she works there", "With Carrot in the Warehouse", "Bond 3 with
+  Stand-in 2", "Opens with chapter 3", "Her story is still being written", "She said “Not yet”", "Comes tonight". Once
+  her route is complete: "Her route is complete". F49 adds **Play ›**.
+- **Perks:** the reached ones by ladder ("F1–F10 ✓ · R1–R4 ✓"), the next, and **All 25 perks** on a tap (reached ✓, the
+  next in bold, the rest greyed). F51 makes each do what it says and adds what it does now.
+- **Gifts:** her loved, liked and disliked goods as learnt (RM15: her loved from Friendship 1, any once given, all from
+  Friendship 7; "?" until then), each group's points at ★1, and "Others +10". An Uma without a bible: "Any gift +10".
+- **Ties:** her ties from the pack, strongest first (then the most bond points, then the ties' order: her closest friend
+  first), each with the other Uma's face, its kind ("Friends", "Rivals", "Mentor", "Teammates", "Sisters", "Close") and
+  **bond hearts** (CS44's, from `save.bonds`); a tie whose Uma isn't on the farm yet says "Not here yet". F52 makes the
+  hearts move and adds **Read**.
+- **Memories:** her count, "15 of 26" (F49 adds the album and replay); her **ring** once given ("+6% at her line", F53).
+- **The actions,** 48 pt in the sheet's foot: **Chat +15** (then her line for the day), **Gift** (the picker with each
+  good's points for her today or "?"), and **Praise +20** while she's earned it; what an act pays floats up from her face
+  as "+N" (still, with reduced motion) and a note says it ("She likes it. +36"). F50 adds **Evening ›**.
+- **Hearts | Work:** the Work side is F21's sheet: her favourite line, the day she joined, where she is and her nine
+  activities with talent, rank, points and the next challenge.
+- **The marks are stand-ins** (decision 11): the stage hearts, the bar's segments, the track's diamonds and the Ready,
+  banked and invitation marks are CSS shapes and glyphs in the ladders' colours until the packet that pins F55's uma-art
+  2.26.0 swaps in its `hearts/*` marks (F54 at the latest).
+
+## The perks' words (RM31, RM32, RM36)
+
+**Romance build; live from F56** (F48 decision 7). A perk on every level, 25 in all, **words and ids only**: her profile
+lists them and F49's level-up card names the one an event brings; **F51 makes each do what it says.** They're written
+once as templates by her favourite line (`perksFor(line, chapter)`, `perkLineOf`, `romance/perks.ts`); her signature
+dish, her keepsake and her dream are named generically until F51 reads them from her bible. A perk at her line's place
+says **"Opens with chapter n"** while that place waits for its chapter (RM36: a miner's +10% before chapter 3).
+
+<!-- live:perk-words -->
+| Level | Perk id | Words (a forager’s) | At her line’s place |
+|---|---|---|---|
+| F1 | `tastes-loved` | Her loved gift shown; her own chats |  |
+| F2 | `hangouts` | Hangouts in the evening |  |
+| F3 | `line-10` | +10% at the forest | Yes: “Opens with chapter n” until it opens |
+| F4 | `signature-dish` | Her signature dish’s recipe |  |
+| F5 | `rank-105` | ×1.05 rank points |  |
+| F6 | `night-chore` | One item from the forest each night | Yes: “Opens with chapter n” until it opens |
+| F7 | `tastes-all` | All her tastes shown, and her closest friend’s loved gift |  |
+| F8 | `in-element` | In her element: ×1.2 at the forest beside a 3-heart friend | Yes: “Opens with chapter n” until it opens |
+| F9 | `mentor` | Mentor: +10% rank points for Umas at the forest | Yes: “Opens with chapter n” until it opens |
+| F10 | `keepsake` | Her keepsake; ×1.10 rank points |  |
+| R1 | `dates` | Dates; her pet name for you |  |
+| R2 | `morning-item` | A ★2+ good from the forest every 4th morning |  |
+| R3 | `date-stargazing` | Date: stargazing |  |
+| R4 | `closest-bond` | ×1.5 bond with her closest friend |  |
+| R5 | `line-20` | +10% more at the forest (+20%) | Yes: “Opens with chapter n” until it opens |
+| R6 | `date-dance-boat` | Dates: dance and boat |  |
+| R7 | `night-chore-2` | A second night chore | Yes: “Opens with chapter n” until it opens |
+| R8 | `engraving` | Her ring’s engraving |  |
+| R9 | `date-footrace` | Date: footrace |  |
+| R10 | `proposal` | The proposal |  |
+| S1 | `breakfast` | Breakfast: the crew starts well fed on a morning in her house |  |
+| S2 | `morning-item-2` | A ★3+ good from the forest every 2nd morning, and each morning in her house |  |
+| S3 | `dream` | Her dream; +5% for anyone at the forest | Yes: “Opens with chapter n” until it opens |
+| S4 | `night-chore-3` | A third night chore | Yes: “Opens with chapter n” until it opens |
+| S5 | `vow-renewal` | Vow renewal; her keepsake grows |  |
+
+| Her line | Her place | +10% (F3) | A night chore (F6) | A morning item (R2) | Opens with |
+|---|---|---|---|---|---|
+| Farming | the Fields | +10% at the Fields | +0.25 growth on a block each night | A ★2+ crop of the season | Day 1 |
+| Foraging | the forest | +10% at the forest | One item from the forest each night | A ★2+ good from the forest | Day 1 |
+| Fishing | the Fishery | +10% at the Fishery | One fish from the Fishery each night | A ★2+ fish | Day 1 |
+| Mining (the Mine) | the Mine | +10% at the Mine | One ore from the Mine each night | A ★2+ ore | Chapter 3 |
+| Mining (the Quarry) | the Quarry | +10% at the Quarry | One stone or gem from the Quarry each night | A ★2+ stone or gem | Chapter 3 |
+| Ranch | the ranch | +10% at the ranch | +5 affection to her pen each night | A ★2+ egg, milk or fleece | Chapter 2 |
+| Cooking | the Kitchen | +10% at the Kitchen | One more dish on the Kitchen’s next play | A ★2+ dish | Chapter 4 |
+| Serving | the Restaurant | +10% at the Restaurant | One more cover on the Restaurant’s next shift | A ★2+ dish | Chapter 6 |
+| Forging | the Forge | +10% at the Forge | 5% back on the Forge’s next tool | A ★2+ Fitting | Chapter 7 |
+<!-- /live -->
 
 ## The night and the morning on v4
 
@@ -400,22 +556,35 @@ What a v4 night adds or changes from v3's ([days.md](days.md) lists the rest):
 <!-- /live -->
 
 On v4 `checkGoals`' recruit is the chapter's authored arrival. Step 7 clears v4's whole `today`. The morning's §4 is
-**Hearts**, its stored lines in this order (F48 draws the section, with Ready lines read live):
+**Hearts**, after Ranks, in **RM57's order** (F48 decisions 1 and 9), each line a tap to her profile:
 
-| Line | Words | Filled by |
-|---|---|---|
-| `{ kind: 'birthday', id, when }` | "★ Stand-in 1's birthday today", "★ Tomorrow: Stand-in 1's birthday" | F47 |
-| `{ kind: 'anniversary', id, when, item }` | "♥ Stand-in 1's anniversary · ★5 Carrot left for you" (`item` the good; null the day before), "♥ Tomorrow: Stand-in 1's anniversary" | F47 |
-| `{ kind: 'arrived', id, home }` | "Stand-in 4 arrived · away" | F46 |
+| # | Line | Words | Filled by |
+|---|---|---|---|
+| 1 | **Ready**, read live from `readiness` as the card shows (never stored): up to three, in the tab's order, then "+N more" (the tab filtered on Ready) | "● Ready · Stand-in 1 · Friendship 1 · the Fields", "+2 more" | F48 |
+| 2 | The invitation, with **Yes, tonight / Another day** | — | F50 |
+| 3 | The house's morning: breakfast, +30s, items, night chores | — | F54 |
+| 4 | `{ kind: 'birthday', id, when }` | "★ Stand-in 1's birthday today", "★ Tomorrow: Stand-in 1's birthday" | F47 |
+| 4 | `{ kind: 'anniversary', id, when, item }` | "♥ Stand-in 1's anniversary · ★5 Carrot left for you" (`item` the good; null the day before), "♥ Tomorrow: Stand-in 1's anniversary" | F47 |
+| 5 | Levels reached overnight (S2, S4) | — | F54 |
+| 5 | `{ kind: 'arrived', id, home }` | "Stand-in 4 arrived · away" | F46 |
+| 6 | Bond hearts, with **Read** | — | F52 |
 
-Today's lines come before tomorrow's, birthdays before anniversaries, each Uma in the cast's order; each opens her sheet.
+Within a place the night's order holds: today's lines before tomorrow's, birthdays before anniversaries, each Uma in the
+cast's order. The section shows whenever a stored line or a Ready Uma is there; an Uma who played an event today isn't
+Ready. **There's no pop-up per event:** the morning, her ● Ready chip and **♥ on her pip** wherever the map draws her (a
+tender on the Fields, in place of her block's letter; a worker at a place) are the only signals. Pips stay their places'
+taps.
 The parse refuses an Uma off the roster, a kind twice for one Uma, an anniversary's item the day before (or an unknown
 good on the day), and words. §5 drops v3's `joined`, Gate and `left` lines.
 
 ## For later packets
 
-- **F48** the Hearts tab, her profile (moving F47's sheet) and the morning's Hearts section, from `readiness`, `bar` and
-  `levelWords`; **F49** heart events and Memories
-  (`memories`); **F50** the evening and invitations (`today.evenings`, `today.invites`); **F52** bonds from the ties;
-  **F53** the ring and the wedding; **F54** the homestead (`homestead`, `love.house`).
+- **F49** heart events and Memories (`memories`): the Next card's **Play ›**, her row's ● Ready and the morning's Ready
+  line start one, and her confession's **Ask her**; the level-up card names F48's perk words. **F50** the evening and
+  invitations (`today.evenings`, `today.invites`): **Evening ›**, the header's ○/● and the row's ✉ (`HeartRow.invited`
+  reads `today.invites` already). **F51** the perks' effects over `romance/perks.ts`. **F52** bonds from the ties: the
+  profile's Ties (`tieRows`) move with `save.bonds`. **F53** the ring and the wedding. **F54** the homestead (`homestead`,
+  `love.house`), her house on the row and the profile, the marks from uma-art 2.26.0.
+- **A new §4 line:** add its kind to `HeartLine` (`night/summary.ts`) with its parse, give it RM57's place in
+  `HEARTS_ORDER` and its words in `heartLine` (`loop/summary-words.ts`).
 - Save v4 grows in place until F56; any change after F56 is v5.

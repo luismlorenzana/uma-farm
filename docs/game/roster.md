@@ -209,5 +209,6 @@ isn't an outfit's, and a line twice.
   goods by family and star). With nobody there: when the next one may come, or "Upgrade the Dorm" when no bed is free.
 - **The roster** (`/roster`): everyone on the roster, home or away, with F21's talents and ranks, a heart count on her
   face once she has one, "Away" dimmed; a **Where** filter (on the farm, away). Her sheet (`?uma=`) adds her hearts,
-  **Chat** and **Gift**, and where she is (with a link to swap at the Dorm).
+  **Chat** and **Gift**, and where she is (with a link to swap at the Dorm). On save v4 (romance build; live from F56) it's the Hearts
+  tab's Work view, and the Dorm's rows open her profile ([hearts.md](hearts.md#the-hearts-tab-rm51-rm52)).
 - The job and tender pickers list the Umas home, an Uma leaving tomorrow disabled.

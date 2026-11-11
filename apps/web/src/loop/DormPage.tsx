@@ -15,6 +15,7 @@ import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { buyDormLevel, cancelDormSwap, swapUmas } from './actions'
 import { goldWords } from './goods-view'
+import { umaSheet } from './summary-words'
 import { cardLines, heartsWords, UMA_FACETS, umaRows, type LoopUmaRow } from './roster-view'
 import { useTalents } from './talents'
 import { umaBadges } from './UmaMarks'
@@ -196,7 +197,7 @@ function UmaList({ title, ids, nameOf, status, rows, where, empty, hearts }: {
             const row = rows.get(id)
             return (
               <li key={id}>
-                <Link to={`/roster?uma=${id}`} state={{ back: true }} className="flex min-h-14 items-center gap-2.5 px-3 py-1" data-dorm-uma={id} data-status={status(id)}>
+                <Link to={umaSheet(id, hearts ? 3 : 4)} state={{ back: true }} className="flex min-h-14 items-center gap-2.5 px-3 py-1" data-dorm-uma={id} data-status={status(id)}>
                   <FaceTile outfitId={id} size={40} label={nameOf(id)} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[14px] font-semibold">{nameOf(id)}</span>

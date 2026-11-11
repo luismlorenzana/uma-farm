@@ -19,7 +19,7 @@ const StartPicks = lazy(() => import('../loop/StartPicks'))
 const ScenePlayer = lazy(() => import('../loop/ScenePlayer'))
 const NameSheet = lazy(() => import('../loop/NameSheet'))
 
-const PAGES: Readonly<Record<string, BarPage>> = { '/': 'farm', '/roster': 'roster', '/diary': 'diary' }
+const PAGES: Readonly<Record<string, BarPage>> = { '/': 'farm', '/roster': 'roster', '/hearts': 'hearts', '/diary': 'diary' }
 const SHEETS = ['end', 'calendar', 'bin', 'shop', 'rank'] as const
 type LoopSheet = typeof SHEETS[number]
 const isLoopSheet = (sheet: string | null): sheet is LoopSheet => (SHEETS as readonly (string | null)[]).includes(sheet)

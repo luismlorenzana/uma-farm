@@ -1,8 +1,8 @@
-// Her route on her sheet (F47 decision 15; RM11–RM16, RM24), the switch on: her level and her bar in the ladder's colour
-// with what's banked, Ready or what it waits for, Chat +15 with her line and the "+N" over her face, the gift picker's
-// points and "?" (her loved good from F1, a given good learnt), Praise +20 after a rank-up overnight, and the morning's
-// birthday line. The invented stand-in pack (9000001's birthday is Spring 4 in its cast) and invented outfits; the server
-// is a stub.
+// Her route on her profile (F47 decision 15, moved to the Hearts tab by F48 decision 6; RM11–RM16, RM24, RM53), the
+// switch on: her level and her bar in the ladder's colour with what's banked, Ready or what it waits for, Chat +15 with her
+// line and the "+N" over her face, the gift picker's points and "?" (her loved good from F1, a given good learnt), Praise
+// +20 after a rank-up overnight, and the morning's birthday line. The invented stand-in pack (9000001's birthday is Spring
+// 4 in its cast) and invented outfits; the server is a stub.
 import 'fake-indexeddb/auto'
 import { joinOpening, newSaveV4, readScene, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
@@ -26,7 +26,7 @@ const { albumFixture } = await import('../album/testing')
 const { useGame, resetGame } = await import('../save/game')
 const { storyReady } = await import('../story/story')
 const { castLens } = await import('../story/load')
-const { default: RosterPage } = await import('./RosterPage')
+const { default: HeartsPage } = await import('./HeartsPage')
 const { endTheDay } = await import('./actions')
 const { summaryParts } = await import('./summary-words')
 
@@ -85,28 +85,29 @@ afterEach(async () => {
   vi.unstubAllEnvs()
 })
 
-describe('her sheet on v4 (decision 15)', () => {
+describe('her profile on v4 (F47 decision 15, F48 decision 6)', () => {
   it('shows her level, her bar with what\'s banked, and Ready or what it waits for', async () => {
     useGame.setState({ save: withLove(farm(), ONE, { level: 1, points: 300 }) })
-    await render(<RosterPage />, `/roster?uma=${ONE}`)
+    await render(<HeartsPage />, `/hearts?uma=${ONE}`)
     await find(`[data-love="${ONE}"]`)
-    expect($('[data-level-words]')?.textContent).toBe('Friend · F1')
+    expect($('[data-profile] [data-level-words]')?.textContent).toBe('Friend · F1')
     expect($('[data-bar]')?.dataset.bar).toBe('240/240')
     expect($('[data-banked]')?.textContent).toContain('+60 banked')
-    expect($('[data-ready]')?.textContent).toBe('Friendship 2 · Ready')
-    expect($('[data-ready-chip]')).not.toBeNull()
+    expect($('[data-next] h3')?.textContent).toBe('Next: Friendship 2')
+    expect($('[data-next-words]')?.textContent).toBe('Ready')
+    expect($('[data-profile] [data-ready-chip]')).not.toBeNull()
     // Short of the bar: what's left; 9000002's F1 isn't scripted in the stand-in pack.
     await act(async () => useGame.setState({ save: withLove(farm(), ONE, { level: 1, points: 117 }) }))
     await settle()
-    expect($('[data-ready]')?.textContent).toBe('Friendship 2 · 123 to go')
+    expect($('[data-next-words]')?.textContent).toBe('123 to go')
     expect($('[data-bar-fill]')?.dataset.barFill).toBe('49')
-    await render(<RosterPage />, '/roster?uma=9000002')
+    await render(<HeartsPage />, '/hearts?uma=9000002')
     await find('[data-love="9000002"]')
-    expect($('[data-ready]')?.textContent).toBe('Her story is still being written')
+    expect($('[data-next-words]')?.textContent).toBe('Her story is still being written')
   })
 
   it('chats once a day for +15, with her line and the "+N" over her face', async () => {
-    await render(<RosterPage />, `/roster?uma=${ONE}`)
+    await render(<HeartsPage />, `/hearts?uma=${ONE}`)
     const chat = await find('[data-action="chat"]')
     expect(chat.textContent).toBe('Chat +15')
     await click(chat)
@@ -118,7 +119,7 @@ describe('her sheet on v4 (decision 15)', () => {
 
   it('lists each good\'s points for her in the gift picker, "?" until her taste is known, and learns a given one', async () => {
     useGame.setState({ save: withLove(farm(), ONE, { level: 1 }) })
-    await render(<RosterPage />, `/roster?uma=${ONE}`)
+    await render(<HeartsPage />, `/hearts?uma=${ONE}`)
     await click(await find('[data-action="gift"]'))
     const points = () => Object.fromEntries($$('[data-gift]').map((b) => [b.dataset.gift, b.dataset.giftPoints]))
     // Her loved good shows from F1; the rest wait to be tried.
@@ -138,7 +139,7 @@ describe('her sheet on v4 (decision 15)', () => {
     await act(async () => { await endTheDay(2) })
     await until(() => save().calendar.day === 3)
     expect(save().today.praise).toContain(THREE)
-    await render(<RosterPage />, `/roster?uma=${THREE}`)
+    await render(<HeartsPage />, `/hearts?uma=${THREE}`)
     const praise = await find('[data-action="praise"]')
     expect(praise.textContent).toBe('Praise +20')
     await click(praise)
@@ -154,7 +155,7 @@ describe('the morning\'s Hearts (decision 14)', () => {
     await until(() => save().calendar.day === 3)
     const nameOf = (id: string) => fixture.view!.album.get(id)?.name ?? 'An Uma'
     expect(summaryParts(save().summary!, nameOf).find((p) => p.section === 'hearts')?.lines).toEqual([
-      { key: `birthday:${ONE}`, to: `/roster?uma=${ONE}`, text: '★ Tomorrow: Stand-in 1’s birthday' },
+      { key: `birthday:${ONE}`, to: `/hearts?uma=${ONE}`, text: '★ Tomorrow: Stand-in 1’s birthday' },
     ])
     await act(async () => { await endTheDay(3) })
     await until(() => save().calendar.day === 4)
