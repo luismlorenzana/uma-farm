@@ -34,7 +34,7 @@ const CAST_COLOR: Readonly<Partial<Record<CastId, string>>> = { 'hollis-pryor': 
 const isCast = (id: string): id is CastId => (CAST_IDS as readonly string[]).includes(id)
 
 /** A cast member's bust: F25's art once it ships, a lettered disc until then. */
-function CastBust({ id, size }: { id: CastId; size: number }) {
+export function CastBust({ id, size }: { id: CastId; size: number }) {
   return (
     <span aria-hidden className="font-display flex shrink-0 items-center justify-center rounded-full font-bold text-white shadow-2 ring-4 ring-white/70"
       style={{ width: size, height: size, fontSize: size * 0.42, background: CAST_COLOR[id] ?? '#6f6a63' }} data-cast={id}>

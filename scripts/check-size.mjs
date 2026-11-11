@@ -17,7 +17,9 @@ export const MAIN_JS_BUDGET = 180_000
  * story pack with the stand-in, the format and validator, the re-cut opening, arrivals and her points (F46); and her route
  * on her sheet with its words, the acts, praise, birthdays and anniversaries, Ready and bond hearts (F47); and the Hearts
  * tab, her profile, the shared roster album, the stand-in marks, the tab's view model and the perks' words (F48); and the
- * pair player and the Diary's Conversations (F52, with bonds' rules in `farm/bonds.ts`). The Wilds' screens left in F24.
+ * pair player and the Diary's Conversations (F52, with bonds' rules in `farm/bonds.ts`); and the event player, the five
+ * plays' rules and their sheet, the level-up and stage-up cards, the events' rules and actions, her Memories' album and
+ * the Diary's shelf, with uma-art's emote atlas (F49). The Wilds' screens left in F24.
  * Paths
  * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
@@ -84,6 +86,22 @@ export const LAZY_MODULES = [
   'domain/src/romance/perks.ts',
   'src/loop/PairPlayer.tsx',
   'src/loop/Conversations.tsx',
+  'src/loop/EventPlayer.tsx',
+  'src/loop/PlaySheet.tsx',
+  'src/loop/EventCards.tsx',
+  'src/loop/event-view.ts',
+  'src/loop/event-actions.ts',
+  'src/loop/Memories.tsx',
+  'src/loop/MemoriesShelf.tsx',
+  'domain/src/romance/events.ts',
+  'domain/src/romance/plays/grade.ts',
+  'domain/src/romance/plays/cast.ts',
+  'domain/src/romance/plays/rhythm.ts',
+  'domain/src/romance/plays/pick.ts',
+  'domain/src/romance/plays/walk.ts',
+  'domain/src/romance/plays/choose.ts',
+  'domain/src/romance/plays/which.ts',
+  'uma-art/emote/atlas.json',
 ]
 
 export function entrySrc(html) {

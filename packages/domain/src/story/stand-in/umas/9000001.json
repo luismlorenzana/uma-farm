@@ -66,7 +66,7 @@
         "kind": "work",
         "activity": "farming"
       },
-      "beat": "The stand-in's f1.",
+      "beat": "First rows, side by side.",
       "hint": "The Fields, while she works them."
     },
     {
@@ -81,23 +81,28 @@
         "kind": "work",
         "activity": "farming"
       },
-      "beat": "The stand-in's f2.",
-      "hint": "The Fields, while she works them."
+      "beat": "Rows at dawn.",
+      "hint": "The Fields, while she works them.",
+      "unlock": {
+        "kind": "item",
+        "good": "golden-carrot"
+      }
     },
     {
       "id": "f3",
       "ladder": "friendship",
       "hearts": 3,
       "trigger": {
-        "kind": "hearts"
+        "kind": "working",
+        "activity": "fishing"
       },
-      "place": "fields",
+      "place": "fishery",
       "together": {
         "kind": "work",
-        "activity": "farming"
+        "activity": "fishing"
       },
-      "beat": "The stand-in's f3.",
-      "hint": "The Fields, while she works them."
+      "beat": "A line in the water.",
+      "hint": "The Fishery, when she works it."
     },
     {
       "id": "f4",
@@ -106,13 +111,13 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "dorm-porch",
       "together": {
         "kind": "work",
-        "activity": "farming"
+        "activity": "cooking"
       },
-      "beat": "The stand-in's f4.",
-      "hint": "The Fields, while she works them."
+      "beat": "Her recipe, stirred on the porch.",
+      "hint": "The Dorm porch, any evening."
     },
     {
       "id": "f5",
@@ -121,28 +126,33 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "orchard-bench",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "date",
+        "game": "walk"
       },
-      "beat": "The stand-in's f5.",
-      "hint": "The Fields, while she works them."
+      "beat": "The long way round.",
+      "hint": "The orchard bench, any day.",
+      "unlock": {
+        "kind": "place",
+        "place": "orchard-bench"
+      }
     },
     {
       "id": "f6",
       "ladder": "friendship",
       "hearts": 6,
       "trigger": {
-        "kind": "hearts"
+        "kind": "item",
+        "good": "carrot"
       },
       "place": "fields",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "gift",
+        "good": "carrot"
       },
-      "beat": "The stand-in's f6.",
-      "hint": "The Fields, while she works them."
+      "beat": "A gift picked out together.",
+      "hint": "The Fields, with a Carrot in the Warehouse."
     },
     {
       "id": "f7",
@@ -151,13 +161,12 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "dorm-porch",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "talk"
       },
-      "beat": "The stand-in's f7.",
-      "hint": "The Fields, while she works them."
+      "beat": "Talk on the porch steps.",
+      "hint": "The Dorm porch, any day."
     },
     {
       "id": "f8",
@@ -166,13 +175,13 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "forest",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "help",
+        "with": "9000002"
       },
-      "beat": "The stand-in's f8.",
-      "hint": "The Fields, while she works them."
+      "beat": "Lunch in the woods with an old friend.",
+      "hint": "The forest, any day."
     },
     {
       "id": "f9",
@@ -186,8 +195,8 @@
         "kind": "work",
         "activity": "farming"
       },
-      "beat": "The stand-in's f9.",
-      "hint": "The Fields, while she works them."
+      "beat": "Harvest day.",
+      "hint": "The Fields, any day."
     },
     {
       "id": "f10",
@@ -196,13 +205,13 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "pond-night",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "date",
+        "game": "stargazing"
       },
-      "beat": "The stand-in's f10.",
-      "hint": "The Fields, while she works them."
+      "beat": "Stars on the pond.",
+      "hint": "The Pond at night, any day."
     },
     {
       "id": "confession",
@@ -211,13 +220,12 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "overlook",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "talk"
       },
-      "beat": "The stand-in's confession.",
-      "hint": "The Fields, while she works them."
+      "beat": "What she said at the overlook.",
+      "hint": "The Overlook, the day after Friendship 10."
     },
     {
       "id": "r1",
@@ -226,13 +234,17 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "orchard-bench",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "date",
+        "game": "picnic"
       },
-      "beat": "The stand-in's r1.",
-      "hint": "The Fields, while she works them."
+      "beat": "A picnic for two.",
+      "hint": "The orchard bench, any day.",
+      "unlock": {
+        "kind": "perk",
+        "perk": "She has a name for you now."
+      }
     },
     {
       "id": "r2",
@@ -241,13 +253,13 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "pond-night",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "date",
+        "game": "fishing"
       },
-      "beat": "The stand-in's r2.",
-      "hint": "The Fields, while she works them."
+      "beat": "Night fishing.",
+      "hint": "The Pond at night, any day."
     },
     {
       "id": "r3",
@@ -256,28 +268,30 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "overlook",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "date",
+        "game": "stargazing"
       },
-      "beat": "The stand-in's r3.",
-      "hint": "The Fields, while she works them."
+      "beat": "Her star.",
+      "hint": "The Overlook, any day."
     },
     {
       "id": "r4",
       "ladder": "romance",
       "hearts": 4,
       "trigger": {
-        "kind": "hearts"
+        "kind": "bond",
+        "with": "9000002",
+        "level": 3
       },
-      "place": "fields",
+      "place": "fishery",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "help",
+        "with": "9000003"
       },
-      "beat": "The stand-in's r4.",
-      "hint": "The Fields, while she works them."
+      "beat": "A hand for a rival.",
+      "hint": "The Fishery, once she and her old friend are close (bond 3)."
     },
     {
       "id": "r5",
@@ -286,13 +300,13 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "pond-night",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "date",
+        "game": "boat"
       },
-      "beat": "The stand-in's r5.",
-      "hint": "The Fields, while she works them."
+      "beat": "Rowing out.",
+      "hint": "The Pond at night, any day."
     },
     {
       "id": "r6",
@@ -301,13 +315,13 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "town",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "date",
+        "game": "dance"
       },
-      "beat": "The stand-in's r6.",
-      "hint": "The Fields, while she works them."
+      "beat": "A dance in town.",
+      "hint": "The town, any day."
     },
     {
       "id": "r7",
@@ -316,13 +330,13 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "barn",
       "together": {
         "kind": "work",
-        "activity": "farming"
+        "activity": "ranch"
       },
-      "beat": "The stand-in's r7.",
-      "hint": "The Fields, while she works them."
+      "beat": "Brushing down.",
+      "hint": "The Barn, any day."
     },
     {
       "id": "r8",
@@ -331,13 +345,13 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "town",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "date",
+        "game": "crafting"
       },
-      "beat": "The stand-in's r8.",
-      "hint": "The Fields, while she works them."
+      "beat": "Always the next row.",
+      "hint": "The town, any day."
     },
     {
       "id": "r9",
@@ -346,13 +360,13 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "hilltop-track",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "date",
+        "game": "footrace"
       },
-      "beat": "The stand-in's r9.",
-      "hint": "The Fields, while she works them."
+      "beat": "Race to the top.",
+      "hint": "The hilltop track, any day."
     },
     {
       "id": "r10",
@@ -361,13 +375,13 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "orchard-bench",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "date",
+        "game": "walk"
       },
-      "beat": "The stand-in's r10.",
-      "hint": "The Fields, while she works them."
+      "beat": "The same bench.",
+      "hint": "The orchard bench, any day."
     },
     {
       "id": "proposal",
@@ -376,13 +390,12 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "chapel-bell",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "talk"
       },
-      "beat": "The stand-in's proposal.",
-      "hint": "The Fields, while she works them."
+      "beat": "The question.",
+      "hint": "The chapel bell, with a ring."
     },
     {
       "id": "wedding",
@@ -391,13 +404,12 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "chapel-bell",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "talk"
       },
-      "beat": "The stand-in's wedding.",
-      "hint": "The Fields, while she works them."
+      "beat": "Vows.",
+      "hint": "The chapel bell, the day after."
     },
     {
       "id": "s1",
@@ -411,8 +423,8 @@
         "kind": "work",
         "activity": "farming"
       },
-      "beat": "The stand-in's s1.",
-      "hint": "The Fields, while she works them."
+      "beat": "Home rows.",
+      "hint": "The Fields, any day."
     },
     {
       "id": "s3",
@@ -421,13 +433,13 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "dorm-porch",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "gift",
+        "good": "golden-carrot"
       },
-      "beat": "The stand-in's s3.",
-      "hint": "The Fields, while she works them."
+      "beat": "Her dream, said out loud.",
+      "hint": "The Dorm porch, any day."
     },
     {
       "id": "s5",
@@ -436,13 +448,13 @@
       "trigger": {
         "kind": "hearts"
       },
-      "place": "fields",
+      "place": "overlook",
       "together": {
-        "kind": "work",
-        "activity": "farming"
+        "kind": "date",
+        "game": "stargazing"
       },
-      "beat": "The stand-in's s5.",
-      "hint": "The Fields, while she works them."
+      "beat": "Every season.",
+      "hint": "The Overlook, any day."
     }
   ]
 }

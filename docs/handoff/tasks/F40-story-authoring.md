@@ -111,6 +111,17 @@ The owner reads each layer before the next is written. The farm's code packets (
 > flags aren't kept, though the validator still asks one option to carry a gain. A tie's `line` shows in the morning
 > when the pair has no conversation at that heart, so write it as a short phrase ("Old rivals.").
 >
+> **Landed in F49 (D55):** the format gains, with the validator's rules: **`play.as: 'pick' | 'rhythm'`** on a farming
+> play only (Pick by default); on a choice option **`gives: { good, count: 1–5 }`** (a good that exists; taken at any
+> stars, lowest first, the option greyed "Need 1 Basil" without it) and **`reveals: '<good>'`** (one of her gifts: her
+> loved, liked or disliked), and **`answer: 'yes' | 'not-yet'`** on **the confession's last top-level choice point only**,
+> one of each, with no choice point after it; a step **`{ when: '<flag>', then: Step[], else?: Step[] }`** that plays its
+> steps while the flag is set (flags change wording only). **Per event, on every path:** a heart event has **1–2 choice
+> points** and **at most one play**; the confession, the proposal and the wedding **1–3 choice points** and **up to three
+> plays**. A play's own `friendship` and `romance` are ignored (its grade pays); its `good` steps play after a Great or
+> Perfect, `miss` after a Fine. With no `play` step, the beat's `together` plays at the event's end (help and talk have
+> none). Ask her replays the confession from her line before its answer, so write that line as her question.
+>
 > F41 also settles what the story wrote around: arrivals are the authored ones only (RM1, RM4); events never wait on a
 > season, festival or hour (RM24); the farmer is never gendered at the wedding (RM30); one ring bench at the Forge opens
 > after the first romance 8 (RM38).

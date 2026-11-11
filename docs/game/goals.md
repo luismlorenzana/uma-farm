@@ -297,6 +297,15 @@ The lines are data (`story/chapter-1.ts`), one to a tap, original and short, wit
   **Skip** works without it. The opening scene ends on chapter 1's card, its six goals and reward, and **Plant the
   carrots**, which opens the Fields; the closing scene on "Chapter 1 done", its reward and chapter 2's title, **Soon**,
   and **Start the day**.
+- **The scene player grown: the event player** (romance build; live from F56; F49, RM29): her heart events play in
+  `EventPlayer.tsx`, a full-screen sheet over any page (`?event=`, `?ask=`, `?memory=`): the title with **Auto**, **Skip**
+  and **Log**; a place card with the place's uma-art frame, her bust and an emote bubble; her lines typed out in a bubble
+  (a tap finishes, the next goes on, a hold skips); choices with their gains; a play as a sheet in the middle; and the
+  level-up card, or the confession's stage-up screen. Skip stops at each choice and play. Its rules are
+  [hearts.md](hearts.md#heart-events-rm24-rm28-rm29-rm54)'s; the chapter scenes, arrivals and pairs' conversations keep
+  this player.
+- **The Diary's Memories** (romance build; live from F56; F49 decision 12): one row an Uma on the farm with "n of 26",
+  opening her album ([hearts.md](hearts.md#memories-rm28-rm56)), above Conversations. The M4 build's Diary is unchanged.
 - **The Diary tab** (`/diary`, CS55): the chapter's card, its number, title and "4 of 6", each goal with a check when met
   and its count in its own unit ("4 / 9", "620g / 1,000g", "1 / 2 kinds", "Not yet", "Farm Rank 1 / 2"), and the reward;
   then **Farm Rank · 400 points ›** (the rank's sheet), and the milestones paid with their gold and "12 goods shipped so

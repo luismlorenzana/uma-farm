@@ -120,15 +120,26 @@ export * from './romance/ready'
 export * from './farm/bonds'
 // The perks' words (F48; RM31, RM32, RM36): each level's perk id and its words by her line, for her profile; F51 makes them act.
 export * from './romance/perks'
+// Heart events (F49; RM24–RM30, RM54–RM56): the five plays (Cast, Pick, Rhythm, Walk, Choose) at both lengths with their
+// grades and RM26's map, `playEvent` with its choices, rewards and the level-up card's facts, the confession's Not yet and
+// Ask her, and Memories' replays.
+export * from './romance/plays/grade'
+export * from './romance/plays/cast'
+export * from './romance/plays/rhythm'
+export * from './romance/plays/pick'
+export * from './romance/plays/walk'
+export * from './romance/plays/choose'
+export * from './romance/plays/which'
+export * from './romance/events'
 export * from './story/pack'
 export * from './story/stand-in'
 export * from './story/opening-v4'
 export {
-  ARRIVAL, arrivalIssues, bibleIssues, CALLINGS, castIssues, CHAT_SETS, DATE_GAMES, EMOTES, LADDERS, pairIssues, routeIssues, RUNGS, stepIssues, STORY_PLACES,
-  tiesIssues, TONES, unscriptedBeats,
+  ANSWERS, answerAt, ARRIVAL, arrivalIssues, BIG_EVENTS, bibleIssues, CALLINGS, castIssues, CHAT_SETS, DATE_GAMES, EMOTES, EVENT_LIMITS, eventIssues, FARMING_PLAYS, LADDERS,
+  pairIssues, routeIssues, RUNGS, stepIssues, STORY_PLACES, tiesIssues, TONES, unscriptedBeats,
 } from './story/authored'
 export type {
-  Arrival, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, Emote, Ladder, PairCheck, PairConversations, Play, Route, RouteCheck, Step, StoryContext, StoryPlace, Tie, Ties,
-  Tone, Trigger, UmaBible,
+  Answer, Arrival, Beat as RouteBeat, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, DateGame, Emote, Ladder, OptionGives, PairCheck, PairConversations, Play, Route, RouteCheck,
+  Step, StoryContext, StoryPlace, Tie, Ties, Together, Tone, Trigger, UmaBible, Unlock,
 } from './story/authored'
 

@@ -182,14 +182,39 @@ export function choicePoints(options: readonly Pick<ChoiceOption, 'friendship' |
   return options.map((o) => (authoredGain(o) === top ? CHOICE_BEST : CHOICE_OTHER))
 }
 
-/** A scripted scene as it plays (decision 10): its steps in order, each picked option's `then` spliced in after its
- * choice, up to and including the first choice not yet picked. `picks` are the options chosen, in order. */
-export function sceneSteps(steps: readonly Step[], picks: readonly number[]): Step[] {
+/** What a scene's path depends on besides its picks (F49 decisions 6 and 7): her flags, which choose each `when` step's
+ * branch (flags a `flag` step sets on the way count from there on), and each play's result in order, `true` for a Great or
+ * better (its `good` steps follow) and `false` for a Fine (its `miss`). Without `plays`, a play neither stops the walk nor
+ * splices anything (her arrival and the pairs' conversations have none). */
+export interface SceneState {
+  flags?: readonly string[]
+  plays?: readonly boolean[]
+}
+
+/** A scene's path (decision 10; F49): its steps in order, each picked option's `then` spliced in after its choice and each
+ * `when` replaced by its branch, up to and including the first choice not yet picked (and, with `plays`, the first play not
+ * yet played). `done` is whether it ran to its end. */
+export function walkScene(steps: readonly Step[], picks: readonly number[], state: SceneState = {}): { steps: Step[]; done: boolean } {
   const out: Step[] = []
+  const flags = new Set(state.flags ?? [])
   let next = 0
+  let played = 0
   const walk = (list: readonly Step[]): boolean => {
     for (const step of list) {
+      if ('when' in step) {
+        if (!walk(flags.has(step.when) ? step.then : step.else ?? [])) return false
+        continue
+      }
       out.push(step)
+      if ('flag' in step) flags.add(step.flag)
+      if ('play' in step && state.plays) {
+        const good = state.plays[played]
+        if (good === undefined) return false
+        played++
+        const after = good ? step.play.good : step.play.miss
+        if (after && !walk(after)) return false
+        continue
+      }
       if (!('choice' in step)) continue
       const pick = picks[next]
       if (pick === undefined) return false
@@ -199,9 +224,13 @@ export function sceneSteps(steps: readonly Step[], picks: readonly number[]): St
     }
     return true
   }
-  walk(steps)
-  return out
+  const done = walk(steps)
+  return { steps: out, done }
 }
+
+/** A scripted scene as it plays (decision 10): `walkScene`'s steps, up to and including the first choice not yet picked.
+ * `picks` are the options chosen, in order. */
+export const sceneSteps = (steps: readonly Step[], picks: readonly number[], state: SceneState = {}): Step[] => walkScene(steps, picks, state).steps
 
 /** The flags a played path sets (RM27: wording only). */
 export const pathFlags = (steps: readonly Step[]): string[] => [...new Set(steps.flatMap((s) => ('flag' in s ? [s.flag] : [])))]

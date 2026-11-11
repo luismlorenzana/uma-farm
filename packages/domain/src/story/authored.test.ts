@@ -112,3 +112,76 @@ describe('the scripted steps', () => {
     expect(pairIssues(pair, ctx)).toEqual(['No conversation at bond level 5'])
   })
 })
+
+describe('heart events (F49 decision 14)', () => {
+  const say = (line: string) => ({ say: STAND_IN, line })
+  const choose = (extra: Record<string, unknown> = {}) => ({ choice: [{ text: 'Yes.', tone: 'warm' as const, friendship: 20, ...extra }, { text: 'No.', tone: 'honest' as const, friendship: 10 }] })
+  const play = (game = 'fishing', extra: Record<string, unknown> = {}) => ({ play: { game, prompt: 'Together', ...extra } })
+  const routeWith = (id: string, steps: unknown[]) => {
+    const route = clone(STAND_IN_ROUTE)
+    route.events = route.events.map((e) => (e.id === id ? { id, steps: steps as never } : e))
+    return routeIssues(route, STAND_IN_BIBLE, ctx)
+  }
+
+  it('the stand-in route plays every kind: Cast, Pick, Rhythm (farming and a fallback), Walk, Choose, help, talk, a cost, a taste, a flag, a `when`, and a confession with two plays and Yes and Not yet', () => {
+    const events = new Map(STAND_IN_ROUTE.events.map((e) => [e.id, JSON.stringify(e.steps)]))
+    const together = new Map(STAND_IN_BIBLE.route.map((b) => [b.id, b.together]))
+    expect(events.get('f3')).toContain('"game":"fishing"')
+    expect(events.get('f1')).toContain('"as":"pick"')
+    expect(events.get('f2')).toContain('"as":"rhythm"')
+    expect(together.get('f4')).toEqual({ kind: 'work', activity: 'cooking' })
+    expect(together.get('f5')).toEqual({ kind: 'date', game: 'walk' })
+    expect(together.get('f6')?.kind).toBe('gift')
+    expect(together.get('f7')?.kind).toBe('talk')
+    expect(together.get('f8')?.kind).toBe('help')
+    expect(events.get('f4')).toContain('"gives":{"good":"basil","count":1}')
+    expect(events.get('f7')).toContain('"reveals":"potato"')
+    expect(events.get('f8')).toContain('"flag":"shared-lunch"')
+    expect(events.get('f9')).toContain('"when":"shared-lunch"')
+    expect(events.get('confession')!.match(/"play"/g)).toHaveLength(2)
+    expect(events.get('confession')).toContain('"answer":"not-yet"')
+  })
+
+  it('`play.as` is a farming play\'s, pick or rhythm', () => {
+    expect(stepIssues([play('fishing', { as: 'pick' })], 'E', speakers)).toEqual(['E, step 1: as (pick or rhythm) is a farming play’s only'])
+    expect(stepIssues([play('farming', { as: 'sing' })], 'E', speakers)).toEqual(['E, step 1: as (pick or rhythm) is a farming play’s only'])
+    expect(stepIssues([play('farming', { as: 'rhythm' })], 'E', speakers)).toEqual([])
+  })
+
+  it('an option gives 1–5 of a good, reveals a good (one of her gifts), and only the confession answers', () => {
+    expect(stepIssues([choose({ gives: { good: 'basil', count: 6 } })], 'E', speakers)).toEqual(['E, step 1, option 1: gives is { good, count 1–5 }, a good that exists'])
+    expect(stepIssues([choose({ gives: { good: 'moon-cake', count: 1 } })], 'E', speakers)).toEqual(['E, step 1, option 1: gives is { good, count 1–5 }, a good that exists'])
+    expect(stepIssues([choose({ reveals: 'moon-cake' })], 'E', speakers)).toEqual(['E, step 1, option 1: reveals names a good'])
+    expect(stepIssues([choose({ answer: 'maybe' })], 'E', speakers)).toEqual(['E, step 1, option 1: answer is yes or not-yet'])
+    expect(routeWith('f1', [say('Hi.'), choose({ reveals: 'onion' })])).toEqual(['Event f1: reveals onion, which isn’t one of her gifts'])
+    expect(routeWith('f1', [say('Hi.'), choose({ answer: 'yes' })])).toEqual(['Event f1: only the confession’s last choice point carries an answer'])
+  })
+
+  it('a `when` names a flag and holds steps', () => {
+    expect(stepIssues([{ when: '', then: [] }], 'E', speakers)).toEqual(['E, step 1: when names a flag', 'E, step 1 then: no steps'])
+    expect(stepIssues([{ when: 'met', then: [say('Again!')], else: [say('Hello.')] }], 'E', speakers)).toEqual([])
+  })
+
+  it('a heart event: 1–2 choice points on every path, at most one play', () => {
+    expect(routeWith('f1', [say('Hi.'), choose(), play(), play()])).toEqual(['Event f1: at most 1 play (it has 2)'])
+    expect(routeWith('f1', [choose(), choose(), choose()])).toEqual(['Event f1: every path has 1–2 choice points (it has 3–3)'])
+    expect(routeWith('f1', [say('Hi.'), play()])).toEqual(['Event f1: every path has 1–2 choice points (it has 0–0)'])
+    // A choice in one option's `then` makes two on that path, one on the other.
+    expect(routeWith('f1', [{ choice: [{ text: 'A.', tone: 'warm', friendship: 20, then: [choose()] }, { text: 'B.', tone: 'warm', friendship: 10 }] }])).toEqual([])
+    expect(routeWith('f1', [{ when: 'x', then: [choose()], else: [say('No choice.')] }])).toEqual(['Event f1: every path has 1–2 choice points (it has 0–1)'])
+  })
+
+  it('the confession, the proposal and the wedding: up to three plays and three choice points; the confession ends on Yes and Not yet', () => {
+    const answer = { choice: [{ text: 'Yes.', tone: 'warm', romance: 20, answer: 'yes' }, { text: 'Not yet.', tone: 'honest', friendship: 10, answer: 'not-yet' }] }
+    expect(routeWith('confession', [play(), play(), play(), choose(), answer])).toEqual([])
+    expect(routeWith('confession', [play(), play(), play(), play(), answer])).toEqual(['Event confession: at most 3 plays (it has 4)'])
+    expect(routeWith('confession', [choose(), choose()])).toEqual(['Event confession: its last choice point has one Yes (answer: yes) and one Not yet (answer: not-yet)'])
+    expect(routeWith('confession', [{ choice: [{ text: 'Yes.', tone: 'warm', romance: 20, answer: 'yes' }, { text: 'Also yes.', tone: 'warm', romance: 10, answer: 'yes' }] }]))
+      .toEqual(['Event confession: its last choice point has one Yes (answer: yes) and one Not yet (answer: not-yet)'])
+    expect(routeWith('confession', [{ choice: [{ text: 'Yes.', tone: 'warm', romance: 20, answer: 'yes', then: [choose()] }, answer.choice[1]] }]))
+      .toContain('Event confession: no choice point after its answer')
+    expect(routeWith('confession', [choose({ answer: 'yes' }), answer])).toEqual(['Event confession: only its last choice point carries an answer'])
+    expect(routeWith('wedding', [play(), choose(), choose(), choose()])).toEqual([])
+    expect(routeWith('wedding', [choose(), choose(), choose(), choose()])).toEqual(['Event wedding: every path has 1–3 choice points (it has 4–4)'])
+  })
+})

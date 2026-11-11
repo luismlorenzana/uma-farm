@@ -33,3 +33,14 @@
 @media (prefers-reduced-motion: reduce) {
   .love-float { animation: none; }
 }
+
+/* The level-up card's heart (F49 decision 9; RM55): a short sparkle as the heart fills; still with reduced motion. */
+@keyframes level-sparkle {
+  0% { opacity: 0.4; transform: scale(0.6) rotate(-10deg); }
+  50% { opacity: 1; transform: scale(1.25) rotate(8deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+.level-sparkle { display: inline-block; animation: level-sparkle 0.9s ease-out 2; }
+@media (prefers-reduced-motion: reduce) {
+  .level-sparkle { animation: none; }
+}

@@ -121,12 +121,12 @@ function parseMemories(value: unknown, path: string, roster: ReadonlySet<string>
 }
 
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>): TodayV4 {
-  const o = object(value, path, ['chats', 'gifts', 'praise', 'praised', 'events', 'evenings', 'invites', 'bonds'])
+  const o = object(value, path, ['chats', 'gifts', 'praise', 'praised', 'events', 'asked', 'evenings', 'invites', 'bonds'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const kind = (v: unknown, at: string) => (typeof v === 'string' && KEY.test(v) ? v : fail(at, 'expected a kind'))
   return {
     chats: umas(o.chats, `${path}.chats`), gifts: umas(o.gifts, `${path}.gifts`), praise: umas(o.praise, `${path}.praise`),
-    praised: umas(o.praised, `${path}.praised`), events: umas(o.events, `${path}.events`),
+    praised: umas(o.praised, `${path}.praised`), events: umas(o.events, `${path}.events`), asked: umas(o.asked, `${path}.asked`),
     evenings: list(o.evenings, `${path}.evenings`, 0, 2).map((v, i) => {
       const e = object(v, `${path}.evenings.${i}`, ['with', 'kind'])
       return { with: member(e.with, `${path}.evenings.${i}.with`, roster), kind: kind(e.kind, `${path}.evenings.${i}.kind`) }
