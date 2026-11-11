@@ -95,6 +95,14 @@ The owner reads each layer before the next is written. The farm's code packets (
 > `beds` arrival names a Dorm level 2–8 (the Dorm for 20, RM5); an `event` arrival's `after` is `<characterId>:<eventId>`
 > (or a bare event id: anyone's). The game reads routes in a partial mode; the sandbox keeps the strict report.
 >
+> **Landed in F47 (D52):** her bible may carry **`chats`**: `{ friend: string[]; partner: string[]; spouse: string[] }`,
+> **3–20 lines each**, each at most **160 characters**, under the line rules (`{farmer}` the only placeholder, no gendered
+> or school words); `friend` plays from Friendship 1 through the confession, `partner` from Romance 1 to the wedding,
+> `spouse` after it, and without `chats` she keeps her temperament's lines. A cast entry may carry **`birthday`**:
+> `{ month: 1–12, day }` on a real date (29 February allowed), only for a character master data's set lacks; it wins
+> where present. A beat's `trigger` is now read for Ready: `working` (a running job at a place of that activity, or a
+> tended block for farming), `item` (any stars in the Warehouse), `bond` (CS44's hearts) and `chapter`.
+>
 > F41 also settles what the story wrote around: arrivals are the authored ones only (RM1, RM4); events never wait on a
 > season, festival or hour (RM24); the farmer is never gendered at the wedding (RM30); one ring bench at the Forge opens
 > after the first romance 8 (RM38).

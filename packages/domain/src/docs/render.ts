@@ -41,9 +41,14 @@ import { CAST, CAST_IDS } from '../story/cast'
 import { CHAPTER_1_GOALS, CHAPTERS } from '../story/chapters'
 import { CLOSING_SCENE, HELLO_LINES, OPENING_SCENE, type Beat } from '../story/chapter-1'
 import { ARRIVAL_DORM_LEVELS, DORM_LEVELS_V4 } from '../farm/dorm'
-import { NIGHT_STEPS_V4 } from '../night/end-day'
+import { NIGHT_STEPS_V4, type NightStepDef } from '../night/end-day'
 import { ARRIVAL_KINDS } from '../romance/arrivals'
-import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER } from '../romance/love'
+import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER, costOf, LADDER_COLOURS, ROUTE_POINTS, SPOUSE_COST } from '../romance/love'
+import { DISLIKED_LINE, GIFT_POINTS_V4, giftStars, LOVE_POINTS } from '../romance/acts'
+import { farmBirthday } from '../romance/days'
+import { READY_CONDITIONS, WAIT_ORDER } from '../romance/ready'
+import { loveRankFactor } from '../farm/rank-rules'
+import { dateOf } from '../farm/calendar'
 import { FARMER_NAME_MAX } from '../romance/farmer'
 import { OPENING_SCENE_V4 } from '../story/opening-v4'
 import { favouriteOf, storyPackFrom } from '../story/pack'
@@ -294,7 +299,7 @@ function talentGives(): string {
 /** CS29: each rank's points, and the days of work to reach it by talent (in her favourite line in brackets). */
 function rankPoints(): string {
   const talents: readonly TalentStep[] = [0, 3, 4, 6, 7]
-  const day = (talent: TalentStep, favourite: boolean) => rankPointsForDay({ talent, favourite, wellFed: false, affinity: 0 })
+  const day = (talent: TalentStep, favourite: boolean) => rankPointsForDay({ talent, favourite, wellFed: false, heartsFactor: 1 })
   return table(['Rank', 'Points', ...talents.map((t) => TALENT_GRADES[t])], RANKS.map((name, r) => [name, RANK_POINTS[r]!.toLocaleString('en-US'),
     ...talents.map((t) => (r === 0 ? '—' : `${daysToRank(r as Rank, day(t, false))} (${daysToRank(r as Rank, day(t, true))})`))]))
 }
@@ -560,9 +565,82 @@ function arrivalPay(): string {
 function openingV4(): string {
   return table(['#', 'Who', 'Line'], OPENING_SCENE_V4.beats.map((b, i) => [i + 1, speakerWords(b), b.line]))
 }
-/** Decision 8: step 8 on v4. */
+/** F46 decision 8, F47: the steps v4 adds or changes from v3's. */
 function nightV4(): string {
-  return table(['Step', 'Function', 'What happens', 'Filled by'], NIGHT_STEPS_V4.filter((s) => s.step === 8).map((s) => [s.step, `\`${s.name}\``, s.what, s.by]))
+  const same = (s: NightStepDef) => NIGHT_STEPS.some((v3) => v3.name === s.name && v3.what === s.what)
+  return table(['Step', 'Function', 'What happens', 'Filled by'], NIGHT_STEPS_V4.filter((s) => !same(s)).map((s) => [s.step, `\`${s.name}\``, s.what, s.by]))
+}
+
+// --- F47: the ladders and points (romance spec RM11–RM18, RM24) ---------------------------------------------------------
+const whole = (n: number) => n.toLocaleString('en-US')
+/** RM12: each heart's cost, the ladders' totals and the route's. */
+function routeCosts(): string {
+  const hearts = Array.from({ length: 10 }, (_, i) => costOf(`f${i + 1}`))
+  const sum = (list: readonly number[], upTo: number) => list.slice(0, upTo + 1).reduce((a, b) => a + b, 0)
+  const spouse = [1, 2, 3, 4, 5].map((n) => costOf(`s${n}`))
+  return table(['Heart', ...hearts.map((_, i) => String(i + 1)), 'Ladder'], [
+    ['**Friendship or romance**', ...hearts.map(whole), `**${whole(sum(hearts, 9))}**`],
+    ['Cumulative', ...hearts.map((_, i) => whole(sum(hearts, i))), ''],
+    ['**Spouse**', ...spouse.map(whole), ...Array(5).fill(''), `**${whole(sum(spouse, 4))}**`],
+    ['**A route**: the three waiting rungs cost 0', ...Array(10).fill(''), `**${whole(ROUTE_POINTS)}**`],
+  ])
+}
+/** RM13: what each act pays, built now or by a later packet. */
+function lovePoints(): string {
+  const gift = (['loved', 'liked', 'neutral', 'disliked'] as const).map((t) => `${cap(t)} ${GIFT_POINTS_V4[t] > 0 ? '+' : ''}${GIFT_POINTS_V4[t]}`).join(', ')
+  return table(['Act', 'Points', 'Limit', 'Paid by'], [
+    ['Chat (tap her)', `+${LOVE_POINTS.chat}`, 'Once a day each, home or away', '`chatV4`'],
+    ['Gift (one good, its stars your choice)', `${gift}; × (1 + 0.1 a star above ★1)`, 'One a day each; ×3 on her birthday', '`giftV4`'],
+    ['Praise (a ★3+ day’s work, a rank-up, a Fine play)', `+${LOVE_POINTS.praise}`, 'Once a day, when earned', '`praiseV4`'],
+    ['Her line (she worked it today)', `+${LOVE_POINTS.line}`, 'Paid at night, step 6', '`payLines`'],
+    ['A festival together (its team or entry)', `+${LOVE_POINTS.festival}`, 'Once a festival a year each', '`festivalTogether` (F39, F32 call it)'],
+    ['Her arrival scene', `+${ARRIVAL_POINTS}, and its choice (+${CHOICE_OTHER} or +${CHOICE_BEST})`, 'Once', '`finishArrival` (F46)'],
+    ['A heart event', '+50, its choices and its play’s grade', 'One of hers a day', 'F49'],
+    ['The evening · an invitation said yes · a house morning', 'F50 · F50 · F54', '', ''],
+    ['**On her anniversary**', '×2 on every act but the evening (×1.5 instead, F50)', 'From year 2 of her marriage', '`addLove`'],
+  ])
+}
+/** RM15: a gift's points by her taste and its stars, then on her birthday. */
+function giftStarsBlock(): string {
+  const stars = [1, 2, 3, 4, 5]
+  const tastes = ['loved', 'liked', 'neutral', 'disliked'] as const
+  const pay = (t: typeof tastes[number], s: number, birthday: boolean) => Math.round(GIFT_POINTS_V4[t] * giftStars(s) * (birthday ? 3 : 1))
+  return table(['Her taste', ...stars.map((n) => `★${n}`)], [
+    ...tastes.map((t) => [cap(t), ...stars.map((n) => pay(t, n, false))]),
+    ...(['loved', 'liked', 'neutral'] as const).map((t) => [`${cap(t)}, on her birthday (×3)`, ...stars.map((n) => pay(t, n, true))]),
+  ]) + `\n\nA disliked gift pays 0 and she says one line: “${DISLIKED_LINE}”`
+}
+/** RM16: a real date's farm day. */
+function birthdayMap(): string {
+  const months = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2]
+  const names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  const name = (m: number) => names[m - 1]!
+  const at = (m: number, d: number) => { const date = dateOf(farmBirthday(m, d)); return `${SEASON_NAMES[date.season]} ${date.day}` }
+  return table(['Month', 'Days 1–8', '9–16', '17–24', '25–31'], months.map((m) => [name(m), at(m, 1), at(m, 9), at(m, 17), at(m, 25)]))
+}
+/** RM24: the four conditions, and the order `readiness` says what waits. */
+function readyRules(): string {
+  return table(['#', 'Ready needs', 'Not met'], READY_CONDITIONS.map((c, i) => [i + 1, c.condition, c.unmet]))
+}
+function readyWaits(): string {
+  return table(['Order', '`waits`', 'When'], WAIT_ORDER.map((w, i) => [i + 1, `\`${w.kind}\``, w.when]))
+}
+/** RM11: the bar's colour by ladder. */
+function ladderColours(): string {
+  return table(['Ladder', 'Stages', 'Bar'], [
+    ['Friendship', 'F0–F10, and her confession while it waits', `coral \`${LADDER_COLOURS.friendship}\``],
+    ['Romance', 'R0–R10, the proposal and the wedding while they wait', `rose \`${LADDER_COLOURS.romance}\``],
+    ['Spouse', `S0–S5 (${SPOUSE_COST} a level)`, `gold \`${LADDER_COLOURS.spouse}\``],
+  ])
+}
+/** RM18, decision 12: the hearts' factor on rank points, by save. */
+function heartsFactor(): string {
+  const levels = (factor: number) => Array.from({ length: 10 }, (_, l) => l).filter((l) => loveRankFactor({ stage: 'friendship', level: l }) === factor)
+  const span = (list: number[]) => (list.length === 1 ? `F${list[0]}` : `F${list[0]}–F${list.at(-1)}`)
+  return table(['Save', '×1', '×1.05', '×1.10'], [
+    ['v3 (M4, live): your affinity', '0–4 hearts', '5–9 hearts', '10 hearts'],
+    ['v4 (romance build): her friendship', span(levels(1)), span(levels(1.05)), `${loveRankFactor({ stage: 'confession', level: 10 }) === 1.1 ? 'F10 on: her confession, romance and spouse' : '?'}`],
+  ])
 }
 /** Decision 6: the stand-in pack in git, the dark build's cast. */
 function standIn(): string {
@@ -585,6 +663,8 @@ function farmerName(): string {
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
     'dorm-v4': dormV4, arrivals, 'arrival-pay': arrivalPay, 'opening-v4': openingV4, 'night-v4': nightV4, 'stand-in': standIn, 'farmer-name': farmerName,
+    'route-costs': routeCosts, 'love-points': lovePoints, 'gift-stars': giftStarsBlock, 'birthday-map': birthdayMap, 'ready-rules': readyRules,
+    'ready-waits': readyWaits, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor,
     calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
     crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,

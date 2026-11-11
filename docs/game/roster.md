@@ -93,8 +93,8 @@ morning.
 - **The Dorm's page** lists the eight levels (Built, Tomorrow, or the cost and Farm Rank), and a level whose arrival
   hasn't come says "Level 4 · 9 beds · someone new arrives". Spouses leave the Dorm for the houses with F54; levels 9 and
   10 come back with the S wave.
-- **Arrivals with no bed free** join away, and the swap brings them home (CS36 kept). On v4 the rows show no hearts until
-  F47.
+- **Arrivals with no bed free** join away, and the swap brings them home (CS36 kept). On v4 the Dorm's rows show no
+  hearts: her route is on her sheet (F47) and, from F48, the Hearts tab.
 
 ## The off-season and swaps (CS36)
 
@@ -138,6 +138,10 @@ on the roster and every visitor.
   "· away" when no bed was free.
 
 ## Affinity (CS45)
+
+> **M4's, on save v3 (live until F56).** On save v4 (romance build; live from F56) affinity becomes **her route**
+> (RM18, F47): Friendship 1–10, her confession, Romance 1–10, the proposal, the wedding and Spouse 1–5, with no falls,
+> gifts by her own tastes, praise, and points at her line. See [hearts.md](hearts.md#her-route-rm11-rm12-rm14).
 
 Your affinity with each Uma runs **0–10 hearts, 100 points each** (`RosterUma.affinity`, a visitor's `affinity`).
 

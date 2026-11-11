@@ -22,3 +22,14 @@
   font-style: normal;
   font-display: swap;
 }
+
+/* The "+N" that floats up from her face when an act pays her bar (F47, RM13); it stays still with reduced motion. */
+@keyframes love-float {
+  0% { opacity: 0; transform: translateY(6px); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+.love-float { animation: love-float 1.4s ease-out forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .love-float { animation: none; }
+}

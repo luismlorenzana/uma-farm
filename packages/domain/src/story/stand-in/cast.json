@@ -18,7 +18,11 @@
         "kind": "opening"
       },
       "calling": "farming",
-      "paragraph": "Stand-in one came to grow things."
+      "paragraph": "Stand-in one came to grow things.",
+      "birthday": {
+        "month": 3,
+        "day": 28
+      }
     },
     {
       "characterId": "9000002",

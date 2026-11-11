@@ -62,8 +62,11 @@ export type Arrival =
   | { kind: 'beds'; dormLevel: number }
   | { kind: 'event'; after: string }
 
-/** One Uma of the cast. `outfitId` names the one outfit she plays as (RM2): required, so the game never chooses (F46). */
-export interface CastEntry { characterId: string; outfitId: string; arrives: Arrival; calling: Calling; paragraph: string }
+/** A birthday as a date (RM16): month 1–12 and a real day of it. */
+export interface CastBirthday { month: number; day: number }
+/** One Uma of the cast. `outfitId` names the one outfit she plays as (RM2): required, so the game never chooses (F46).
+ * `birthday` only where master data's character set has none (RM16, F47): it wins where present. */
+export interface CastEntry { characterId: string; outfitId: string; arrives: Arrival; calling: Calling; paragraph: string; birthday?: CastBirthday }
 export interface Cast {
   version: 1
   export: { file: string; exportedAt: string; tier: 'SS' }
@@ -123,7 +126,13 @@ export interface UmaBible {
   laughs: string
   hurts: string
   route: Beat[]
+  /** Her chat sets (RM18, RM31's F1 perk; F47): what she says when you chat, by stage, from Friendship 1: `friend` through
+   * the confession, `partner` from Romance 1 to the wedding, `spouse` after it. Without it she keeps her temperament's
+   * lines. */
+  chats?: ChatSets
 }
+/** 3–20 lines a stage, each at most 160 characters, `{farmer}` the only placeholder (F47 decision 16). */
+export interface ChatSets { friend: string[]; partner: string[]; spouse: string[] }
 
 // --- Layer 3: scripted events and pair conversations ------------------------------------------------------------------
 
@@ -227,6 +236,32 @@ export function stepIssues(steps: unknown, where: string, speakers: ReadonlySet<
   return issues
 }
 
+/** Days in each month, February's 29 allowed (RM16: a birthday, never a year). */
+const MONTH_DAYS = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+/** A birthday on a real date: `{ month: 1–12, day }` with nothing else. */
+function realDate(v: unknown): boolean {
+  if (!isObject(v) || Object.keys(v).some((k) => k !== 'month' && k !== 'day')) return false
+  const { month, day } = v
+  return Number.isInteger(month) && (month as number) >= 1 && (month as number) <= 12 && Number.isInteger(day) && (day as number) >= 1 && (day as number) <= MONTH_DAYS[(month as number) - 1]!
+}
+
+/** Her chat sets (F47 decision 16): each stage 3–20 lines, each at most 160 characters, under the line rules. */
+export const CHAT_SETS = ['friend', 'partner', 'spouse'] as const
+function chatIssues(chats: unknown): Issues {
+  if (!isObject(chats)) return ['chats is { friend, partner, spouse }, 3–20 lines each']
+  const issues: Issues = []
+  for (const key of Object.keys(chats)) if (!(CHAT_SETS as readonly string[]).includes(key)) issues.push(`chats.${key}: a chat set is friend, partner or spouse`)
+  for (const set of CHAT_SETS) {
+    const lines = chats[set]
+    if (!Array.isArray(lines) || lines.length < 3 || lines.length > 20) { issues.push(`chats.${set}: 3–20 lines`); continue }
+    lines.forEach((line, i) => {
+      if (!isText(line, 160)) issues.push(`chats.${set} ${i + 1}: a line of 1–160 characters`)
+      else issues.push(...lineIssues(line, `chats.${set} ${i + 1}`, false))
+    })
+  }
+  return issues
+}
+
 /** cast.json (layer 1). */
 export function castIssues(cast: unknown, ctx: StoryContext): Issues {
   if (!isObject(cast) || cast.version !== 1 || !Array.isArray(cast.umas)) return ['Not a cast file (version 1, umas)']
@@ -250,6 +285,7 @@ export function castIssues(cast: unknown, ctx: StoryContext): Issues {
       (a.kind === 'beds' && Number.isInteger(a.dormLevel) && (a.dormLevel as number) >= 2 && (a.dormLevel as number) <= DORM_LEVELS_FOR_20) ||
       (a.kind === 'event' && isText(a.after, 80)))
     if (!ok) issues.push(`${at} (${id}): an arrival is opening, a chapter 1–8, a festival, Dorm beds 2–${DORM_LEVELS_FOR_20}, or after an event`)
+    if (u.birthday !== undefined && !realDate(u.birthday)) issues.push(`${at} (${id}): a birthday is { month: 1–12, day } on a real date (RM16)`)
   }
   for (const id of ctx.umas) if (!seen.has(id)) issues.push(`${id} from the export has no place in the cast`)
   const opening = Array.isArray(cast.opening) ? (cast.opening as unknown[]) : []
@@ -355,6 +391,7 @@ export function bibleIssues(bible: unknown, ctx: StoryContext): Issues {
       (u.kind === 'place' && oneOf(STORY_PLACES, u.place)) || (u.kind === 'perk' && isText(u.perk, 200))))) issues.push(`${bt}: an unlock is an item (a good), a place or a perk`)
   }
   for (const rung of RUNGS) if (!ids.has(rung)) issues.push(`Her route has no ${rung} (RS7)`)
+  if (bible.chats !== undefined) issues.push(...chatIssues(bible.chats))
   return issues
 }
 

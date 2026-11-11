@@ -110,15 +110,23 @@ export * from './save/parse-v4'
 export * from './romance/farmer'
 export * from './romance/love'
 export * from './romance/arrivals'
+// The ladders and points (F47; RM11–RM18, RM23, RM24): costs, bars and `advance`; chats, gifts by her tastes, praise, her
+// line and festivals together; birthdays, anniversaries and an item of her line; when her next event is Ready; bond
+// hearts for Ready's bond setup.
+export * from './romance/acts'
+export * from './romance/praise'
+export * from './romance/days'
+export * from './romance/ready'
+export * from './farm/bonds'
 export * from './story/pack'
 export * from './story/stand-in'
 export * from './story/opening-v4'
 export {
-  ARRIVAL, arrivalIssues, bibleIssues, CALLINGS, castIssues, DATE_GAMES, EMOTES, LADDERS, pairIssues, routeIssues, RUNGS, stepIssues, STORY_PLACES,
+  ARRIVAL, arrivalIssues, bibleIssues, CALLINGS, castIssues, CHAT_SETS, DATE_GAMES, EMOTES, LADDERS, pairIssues, routeIssues, RUNGS, stepIssues, STORY_PLACES,
   tiesIssues, TONES, unscriptedBeats,
 } from './story/authored'
 export type {
-  Arrival, Calling, Cast, CastEntry, ChoiceOption, Emote, Ladder, PairConversations, Play, Route, RouteCheck, Step, StoryContext, StoryPlace, Tie, Ties,
+  Arrival, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, Emote, Ladder, PairConversations, Play, Route, RouteCheck, Step, StoryContext, StoryPlace, Tie, Ties,
   Tone, Trigger, UmaBible,
 } from './story/authored'
 

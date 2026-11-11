@@ -84,9 +84,13 @@ describe('the v4 parse (decision 7)', () => {
   })
 
   it('refuses her route out of range', () => {
-    refuse((s) => { s.love['9000001'].level = 11 }, 'save.love.9000001.level: expected 0–10')
+    refuse((s) => { s.love['9000001'].level = 10 }, 'save.love.9000001.level: expected 0–9')
+    refuse((s) => { Object.assign(s.love['9000001'], { stage: 'confession', level: 9 }) }, 'save.love.9000001.level: expected 10–10')
+    refuse((s) => { s.love['9000001'].points = 1.5 }, 'save.love.9000001.points: expected a non-negative integer')
+    refuse((s) => { s.love['9000001'].festivals = ['flower-show:2'] }, 'save.love.9000001.festivals.0: expected <festival>:<year>, this year or before')
+    refuse((s) => { s.love['9000001'].festivals = ['flower-show:1', 'flower-show:1'] }, 'save.love.9000001.festivals.1: repeated')
     refuse((s) => { Object.assign(s.love['9000001'], { stage: 'spouse', level: 6 }) }, 'save.love.9000001.level: expected 0–5')
-    refuse((s) => { s.love['9000001'].points = -1 }, 'save.love.9000001.points: expected a non-negative number')
+    refuse((s) => { s.love['9000001'].points = -1 }, 'save.love.9000001.points: expected a non-negative integer')
     refuse((s) => { s.love['9000001'].last = 4 }, 'save.love.9000001.last: after today')
     refuse((s) => { s.love['9000001'].friend = true }, 'save.love.9000001.friend: only while her confession waits')
     refuse((s) => { s.love['9000001'].ring = 5 }, 'save.love.9000001.ring: only from the proposal on')

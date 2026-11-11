@@ -9,6 +9,7 @@
 import { dateOf, isSeasonEnd, SEASON_NAMES, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { opened, type PlaceOpens } from '../farm/places'
+import { earnPraise } from '../romance/praise'
 import { countChallenge, rankBenefits, rankQuality } from '../farm/rank-rules'
 import type { Rank } from '../farm/ranks'
 import { TALENT_D, talentGrowth, talentQuality, type TalentStep } from '../farm/talents'
@@ -248,10 +249,12 @@ function harvestPlot<S extends FarmSave>(save: S, id: BlockId, index: number, ta
   const next: Plot = regrows ? { crop: crop.id, growth: 0, ready: false, regrowing: true, own: plot.own } : emptyPlot()
   // CS30: the harvest counts toward her next farming rank's challenge.
   const roster = tender ? countChallenge(save, tender.outfitId, 'farming', { kind: 'harvest', stars, level }).roster : save.roster
-  return {
+  const harvested: S = {
     ...save, items, roster, fields: withPlots(save, id, block.plots.map((p, i) => (i === index ? next : p))),
     crops: { ...save.crops, [crop.id]: points + cropPointsOf(plot.own) }, farm: { ...save.farm, counts: bump(save.farm.counts, PLOTS_HARVESTED, 1) },
   }
+  // F47 decision 6 (b), save v4: a ★3+ crop from the block she tends earns her praise today.
+  return tender && stars.some((s) => s >= 3) ? earnPraise(harvested, tender.outfitId) : harvested
 }
 
 /** Harvests a Ready plot: each crop draws its stars into the Warehouse, a seed may come back, the crop gains its points

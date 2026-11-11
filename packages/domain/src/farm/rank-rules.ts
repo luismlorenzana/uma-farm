@@ -11,7 +11,7 @@ import type { LoopPlaceId } from '../save/parse-v3'
 import type { OutfitId, RankState, RegionId, SaveV3 } from '../save/v3'
 import { ACTIVITIES, LINE_ACTIVITY, RANK_POINTS, type Activity, type Rank } from './ranks'
 import { talentRankPoints, type TalentStep } from './talents'
-import type { FarmSave } from '../save/v4'
+import type { FarmSave, Love } from '../save/v4'
 
 const round6 = (n: number): number => Math.round(n * 1e6) / 1e6
 
@@ -38,21 +38,36 @@ export const affinityPoints = (affinity: number): number => {
   return hearts >= 10 ? 1.1 : hearts >= 5 ? 1.05 : 1
 }
 
-/** What lifts her points: her talent in the activity, whether it's her favourite, well fed, and your affinity (v3; on v4
- * the hearts factor is ×1 until F47 reads her friendship level, RM18). */
+/** Her friendship's factor on v4 (RM18; F47 decision 12): ×1.05 from Friendship 5, ×1.10 from Friendship 10 on, through
+ * her confession, romance and spouse (the F5 and F10 perks). No falls. */
+export const loveRankFactor = (love: Pick<Love, 'stage' | 'level'>): number => {
+  if (love.stage !== 'friendship') return 1.1
+  return love.level >= 10 ? 1.1 : love.level >= 5 ? 1.05 : 1
+}
+/** The hearts' factor by the save's version (F47 decision 12): v3 your affinity's (CS45), v4 her friendship's. */
+export function heartsFactorOf(save: FarmSave, id: OutfitId): number {
+  if (save.version === 4) {
+    const love = save.love[id]
+    return love ? loveRankFactor(love) : 1
+  }
+  return affinityPoints(save.roster[id]?.affinity ?? 0)
+}
+
+/** What lifts her points: her talent in the activity, whether it's her favourite, well fed, and the hearts' factor (v3
+ * your affinity's, v4 her friendship level's: `heartsFactorOf`). */
 export interface PointTerms {
   talent: TalentStep
   favourite: boolean
   wellFed: boolean
-  /** Affinity points, 0–1,000 (CS45). */
-  affinity: number
+  /** ×1, ×1.05 or ×1.10 (CS45, RM18). */
+  heartsFactor: number
 }
 
 /** Points for a pay of `base` (decision "every pay takes the same factors"): base × her talent's factor × 1.2 in her
  * favourite line × 1.25 well fed × her hearts' factor, to a millionth. A day's work is `DAY_POINTS`; a workshop play
  * and an expedition pass their own base. */
 export function rankPoints(base: number, terms: PointTerms): number {
-  return round6(base * talentRankPoints(terms.talent) * (terms.favourite ? FAVOURITE_POINTS : 1) * (terms.wellFed ? WELL_FED_POINTS : 1) * affinityPoints(terms.affinity))
+  return round6(base * talentRankPoints(terms.talent) * (terms.favourite ? FAVOURITE_POINTS : 1) * (terms.wellFed ? WELL_FED_POINTS : 1) * terms.heartsFactor)
 }
 /** A day of work's points (CS29): 10 × her factors. */
 export const rankPointsForDay = (terms: PointTerms): number => rankPoints(DAY_POINTS, terms)
@@ -283,7 +298,7 @@ export function tickRankRules<S extends FarmSave>(save: S, worked: readonly Work
     const uma = roster[day.outfitId]
     if (!uma || seen.has(day.outfitId)) continue
     seen.add(day.outfitId)
-    const points = rankPointsForDay({ ...termsOf(day.outfitId, day.activity), wellFed: uma.wellFed > 0, affinity: 'affinity' in uma ? uma.affinity : 0 })
+    const points = rankPointsForDay({ ...termsOf(day.outfitId, day.activity), wellFed: uma.wellFed > 0, heartsFactor: heartsFactorOf(save, day.outfitId) })
     const state = uma.ranks[day.activity]
     roster[day.outfitId] = { ...uma, ranks: { ...uma.ranks, [day.activity]: { ...state, points: round6(state.points + points) } } }
     paid.push({ ...day, points })

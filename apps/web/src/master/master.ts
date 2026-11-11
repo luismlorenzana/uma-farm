@@ -17,6 +17,8 @@ export interface MasterView {
   album: ReadonlyMap<string, OutfitRowBase>
   /** Each outfit's 5★ stats and growth rates, by outfit id: what the loop's talents read (CS27). */
   stats: ReadonlyMap<string, TalentOutfit>
+  /** Each character's birthday, by character id (F47 decision 10, RM16): the romance's, read at runtime, never in git. */
+  birthdays: ReadonlyMap<string, { month: number; day: number }>
   art: ArtIndex | null
 }
 
@@ -54,7 +56,8 @@ export function masterView(manifest: ReleaseManifest, characters: readonly Chara
   const kept = new Set(roster.map((o) => o.outfitId))
   const ours = outfits.filter((o) => kept.has(String(o.id)))
   const album = new Map(ours.map((o) => [String(o.id), outfitRowBase(o, byCharacter.get(o.characterId))]))
-  return { manifest, roster, album, stats: new Map(ours.map((o) => [String(o.id), o])), art }
+  const birthdays = new Map(characters.map((c) => [String(c.id), { month: c.birthday.month, day: c.birthday.day }]))
+  return { manifest, roster, album, stats: new Map(ours.map((o) => [String(o.id), o])), birthdays, art }
 }
 
 function loadMaster(): void {
