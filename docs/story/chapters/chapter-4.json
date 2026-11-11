@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "kind": "farm-chapter",
+  "chapter": 4,
+  "title": "Something Cooking",
+  "layer": "outline",
+  "opens": "The Kitchen and three recipes",
+  "brings": ["rosa-bell"],
+  "place": "kitchen",
+  "goals": [
+    "Cook 3 kinds of dish",
+    "A Good play or better",
+    "Serve a staff meal",
+    "Enter the Cooking Contest"
+  ],
+  "reward": "2,000g, a recruit and 250 Farm Rank points",
+  "item": "Rosa’s recipe card",
+  "source": "CS43; F8 decisions 15 and 16; the Contest from F39",
+  "scenes": [
+    {
+      "id": "scene:4:open",
+      "title": "A Crate of Pans",
+      "place": "kitchen",
+      "outline": [
+        "Rosa Bell, the town’s cook, carries a crate of pans into the old farm kitchen",
+        "Three recipe cards, and how a ticket works; your best cook tries the first",
+        "The staff meal: “a fed crew works faster: serve it before they head out”",
+        "The Cooking Contest on Autumn 10, which she judges, against Wren Ashby’s orchard kitchen",
+        "The goals card"
+      ]
+    },
+    {
+      "id": "scene:4:close",
+      "title": "The Judge’s Verdict",
+      "place": "festival",
+      "outline": [
+        "After the Contest, Rosa’s verdict on your dish, and a word for Wren Ashby’s",
+        "She leaves you her own recipe card",
+        "Your newest hand at the Gate",
+        "Juno Park’s post at the town edge, and the hills beyond; chapter 5 Soon"
+      ]
+    }
+  ]
+}

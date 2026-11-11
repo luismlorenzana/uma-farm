@@ -1,0 +1,376 @@
+// The farm's authored story (F40; RS1–RS20): the cast, their ties, each Uma's bible and route, and the scripted events
+// and pair conversations, as the private `content/story/` files hold them. Types and a validator only: no character,
+// name or line lives here (RS15); tests run on the invented stand-in (`authored.fixture.ts`).
+//
+// Relationships are a game, not a visual novel (D42, from the genre research): every route beat says what the farmer
+// and she *do* together (`together`: work, a date game, a festival, a gift), every choice carries its visible heart gain
+// and its tone, an event may hold a short `play` moment the farmer acts out, and a beat may unlock something shown on a
+// card. Nothing is missable: triggers name a place and a condition, never a clock or the weather.
+import { ACTIVITIES, type Activity } from '../farm/ranks'
+import { FARM_PLACE_IDS } from '../farm/places'
+import { isGoodId } from '../goods/ids'
+import { CAST_IDS } from './cast'
+
+/** The farm's places plus the romance's own backdrops (world bible W5). */
+export const STORY_PLACES = [
+  ...FARM_PLACE_IDS, 'pond-night', 'overlook', 'orchard-bench', 'dorm-porch', 'harbour-wall', 'chapel-bell', 'town', 'hilltop-track', 'sea-pier',
+] as const
+export const FESTIVALS = ['flower-show', 'fishing-derby', 'cooking-contest', 'animal-show', 'harvest-cup'] as const
+export const SEASONS = ['spring', 'summer', 'autumn', 'winter'] as const
+/** Her calling's line (FM7, from her board playstyle): front mining, pace forest, pace-late quarry, late-end fishing, late farming. */
+export const CALLINGS = ['farming', 'foraging', 'fishing', 'mining', 'quarry'] as const
+/** Her favourite work (RS10): any activity but expeditions, which are a party's, not one Uma's. */
+export const FAVOURITE_LINES = ACTIVITIES.filter((a): a is Exclude<Activity, 'expeditions'> => a !== 'expeditions')
+export const TIE_KINDS = ['friends', 'rivals', 'mentor', 'teammates', 'sisters', 'other'] as const
+export const LADDERS = ['friendship', 'confession', 'romance', 'proposal', 'wedding'] as const
+export const EMOTES = ['happy', 'shy', 'sad', 'angry', 'surprised', 'thinking', 'laughing', 'tender'] as const
+export const TONES = ['warm', 'playful', 'honest'] as const
+/** The date games: short shared activities a date is played as (D42). */
+export const DATE_GAMES = ['fishing', 'cooking', 'stargazing', 'footrace', 'dance', 'picnic', 'market', 'boat', 'walk', 'crafting'] as const
+
+/** The route's 23 rungs (RS7): ten friendship events, the confession, ten romance events, the proposal, the wedding. */
+export const RUNGS: readonly string[] = [
+  ...Array.from({ length: 10 }, (_, i) => `f${i + 1}`), 'confession', ...Array.from({ length: 10 }, (_, i) => `r${i + 1}`), 'proposal', 'wedding',
+]
+
+export type StoryPlace = typeof STORY_PLACES[number]
+export type Festival = typeof FESTIVALS[number]
+export type Season = typeof SEASONS[number]
+export type Calling = typeof CALLINGS[number]
+export type TieKind = typeof TIE_KINDS[number]
+export type Ladder = typeof LADDERS[number]
+export type Emote = typeof EMOTES[number]
+export type Tone = typeof TONES[number]
+export type DateGame = typeof DATE_GAMES[number]
+
+// --- Layer 1: the cast and the ties -----------------------------------------------------------------------------------
+
+export type Arrival =
+  | { kind: 'opening' }
+  | { kind: 'chapter'; chapter: number }
+  | { kind: 'festival'; festival: Festival; year?: number }
+  | { kind: 'beds'; dormLevel: number }
+  | { kind: 'event'; after: string }
+
+export interface CastEntry { characterId: string; outfitId: string | null; arrives: Arrival; calling: Calling; paragraph: string }
+export interface Cast {
+  version: 1
+  export: { file: string; exportedAt: string; tier: 'SS' }
+  /** Farming, foraging, fishing (RS13). */
+  opening: [string, string, string]
+  /** In arrival order. */
+  umas: CastEntry[]
+}
+export interface Tie { a: string; b: string; kind: TieKind; strength: 1 | 2 | 3; line: string; history: string }
+export interface Ties { version: 1; ties: Tie[] }
+
+// --- Layer 2: her bible -----------------------------------------------------------------------------------------------
+
+export type Trigger =
+  | { kind: 'hearts' }
+  | { kind: 'working'; activity: Activity }
+  | { kind: 'season'; season: Season }
+  | { kind: 'festival'; festival: Festival }
+  | { kind: 'bond'; with: string; level: number }
+  | { kind: 'chapter'; chapter: number }
+
+/** What the farmer and she do in the event: the game part (D42). */
+export type Together =
+  | { kind: 'talk' }
+  | { kind: 'work'; activity: Activity }
+  | { kind: 'date'; game: DateGame }
+  | { kind: 'gift'; good: string }
+  | { kind: 'festival'; festival: Festival }
+  | { kind: 'help'; with: string }
+
+/** What a beat gives besides hearts, shown on a card (D42): a recipe or an item by goods id, a place, or a perk in words. */
+export type Unlock = { kind: 'item'; good: string } | { kind: 'place'; place: StoryPlace } | { kind: 'perk'; perk: string }
+
+export interface Beat {
+  id: string
+  ladder: Ladder
+  hearts: number
+  trigger: Trigger
+  place: StoryPlace
+  together: Together
+  beat: string
+  unlock?: Unlock
+}
+export interface UmaBible {
+  characterId: string
+  outfitId: string | null
+  now: string
+  whyTheFarm: string
+  dream: string
+  blurb: string
+  favouriteLine: Exclude<Activity, 'expeditions'>
+  season: Season
+  festival: Festival
+  gifts: { loved: string; liked: [string, string, string]; disliked: [string, string]; proposed?: string[] }
+  laughs: string
+  hurts: string
+  route: Beat[]
+}
+
+// --- Layer 3: scripted events and pair conversations ------------------------------------------------------------------
+
+export interface ChoiceOption { text: string; tone: Tone; friendship?: number; romance?: number; then?: Step[] }
+/** A short moment the farmer acts out inside an event (cast the line, stir the pot, aim the telescope). */
+export interface Play { game: DateGame | Activity; prompt: string; good?: Step[]; miss?: Step[]; friendship?: number; romance?: number }
+export type Step =
+  | { say: string; line: string; emote?: Emote }
+  | { choice: ChoiceOption[] }
+  | { play: Play }
+  | { narrate: string }
+  | { thought: string }
+  | { wait: number }
+  | { place: StoryPlace }
+  | { flag: string }
+export interface Route { characterId: string; events: { id: string; steps: Step[] }[] }
+export interface PairConversations { a: string; b: string; levels: { hearts: number; place: StoryPlace; steps: Step[] }[] }
+
+// --- The validator ----------------------------------------------------------------------------------------------------
+
+/** Words that would gender the farmer (RS2): never in the farmer's own words, nor anyone's words to them. */
+const GENDERED = /\b(husband|wife|boyfriend|girlfriend|groom|sir|mister|mr|mrs|ms|ma'?am|madam|lad|lass|fella|gal|guy)\b/i
+/** The farmer's own lines may not call themself a bride either (an Uma may be one). Pronouns aren't listed: the farmer
+ * speaks of the town's men and the Umas, never of themself in the third person. */
+const GENDERED_FARMER = /\b(bride)\b/i
+/** Nothing that reads under 18 (RS3). */
+const SCHOOLISH = /\b(senpai|kouhai|classmates?|homework|high school|middle school|school uniform|schoolgirls?)\b/i
+const PLACEHOLDER = /\{([^{}]*)\}/g
+
+type Issues = string[]
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
+const isText = (v: unknown, max = 4000): v is string => typeof v === 'string' && v.trim().length > 0 && v.length <= max
+const oneOf = <T extends string>(list: readonly T[], v: unknown): v is T => typeof v === 'string' && (list as readonly string[]).includes(v)
+
+/** What the validator knows: the cast's character ids (from the export), and which goods exist. */
+export interface StoryContext {
+  /** Every Uma in the cast, by character id. */
+  umas: ReadonlySet<string>
+  /** A goods id that exists; defaults to the game's goods. */
+  isGood?: (id: string) => boolean
+}
+
+function lineIssues(text: string, where: string, farmer: boolean): Issues {
+  const issues: Issues = []
+  for (const [, name] of text.matchAll(PLACEHOLDER)) if (name !== 'farmer') issues.push(`${where}: unknown placeholder {${name}} ({farmer} only)`)
+  const gendered = text.match(GENDERED) ?? (farmer ? text.match(GENDERED_FARMER) : null)
+  if (gendered) issues.push(`${where}: “${gendered[0]}” genders the farmer (RS2)`)
+  const school = text.match(SCHOOLISH)
+  if (school) issues.push(`${where}: “${school[0]}” reads as school (RS3)`)
+  return issues
+}
+
+/** A scripted event's or a pair conversation's steps. `speakers` are who may `say`; the farmer speaks only in choices. */
+export function stepIssues(steps: unknown, where: string, speakers: ReadonlySet<string>, depth = 0): Issues {
+  if (!Array.isArray(steps) || !steps.length) return [`${where}: no steps`]
+  const issues: Issues = []
+  steps.forEach((step, i) => {
+    const at = `${where}, step ${i + 1}`
+    if (!isObject(step)) { issues.push(`${at}: not a step`); return }
+    if ('say' in step) {
+      if (typeof step.say !== 'string' || !speakers.has(step.say)) issues.push(`${at}: ${String(step.say)} can’t speak here`)
+      if (!isText(step.line, 400)) issues.push(`${at}: no line`)
+      else issues.push(...lineIssues(step.line, at, false))
+      if (step.emote !== undefined && !oneOf(EMOTES, step.emote)) issues.push(`${at}: emote is one of ${EMOTES.join(', ')}`)
+    } else if ('choice' in step) {
+      const options = step.choice
+      if (!Array.isArray(options) || options.length < 2 || options.length > 3) { issues.push(`${at}: a choice has 2–3 options`); return }
+      options.forEach((o, k) => {
+        const ot = `${at}, option ${k + 1}`
+        if (!isObject(o) || !isText(o.text, 160)) { issues.push(`${ot}: no text`); return }
+        issues.push(...lineIssues(o.text, ot, true))
+        if (!oneOf(TONES, o.tone)) issues.push(`${ot}: tone is warm, playful or honest (RS19)`)
+        for (const k2 of ['friendship', 'romance'] as const) {
+          const v = o[k2]
+          if (v !== undefined && (!Number.isInteger(v) || (v as number) < 0 || (v as number) > 50)) issues.push(`${ot}: ${k2} is 0–50 (no answer costs hearts, RS19)`)
+        }
+        if (o.then !== undefined) issues.push(...stepIssues(o.then, `${ot} then`, speakers, depth + 1))
+      })
+      if (!options.some((o) => isObject(o) && ((o.friendship as number) > 0 || (o.romance as number) > 0))) issues.push(`${at}: at least one option gains hearts`)
+    } else if ('play' in step) {
+      const p = step.play
+      if (!isObject(p) || !(oneOf(DATE_GAMES, p.game) || oneOf(ACTIVITIES, p.game)) || !isText(p.prompt, 120)) issues.push(`${at}: a play names its game and a prompt`)
+      else {
+        if (p.good !== undefined) issues.push(...stepIssues(p.good, `${at} good`, speakers, depth + 1))
+        if (p.miss !== undefined) issues.push(...stepIssues(p.miss, `${at} miss`, speakers, depth + 1))
+      }
+    } else if ('narrate' in step) {
+      if (!isText(step.narrate, 400)) issues.push(`${at}: empty narration`)
+      else issues.push(...lineIssues(step.narrate, at, false))
+    } else if ('thought' in step) {
+      if (!isText(step.thought, 400)) issues.push(`${at}: empty thought`)
+      else issues.push(...lineIssues(step.thought, at, true))
+    } else if ('wait' in step) {
+      if (typeof step.wait !== 'number' || step.wait <= 0 || step.wait > 5000) issues.push(`${at}: wait is 1–5000 ms`)
+    } else if ('place' in step) {
+      if (!oneOf(STORY_PLACES, step.place)) issues.push(`${at}: unknown place ${String(step.place)}`)
+    } else if ('flag' in step) {
+      if (!isText(step.flag, 80)) issues.push(`${at}: empty flag`)
+    } else issues.push(`${at}: unknown step`)
+  })
+  return issues
+}
+
+/** cast.json (layer 1). */
+export function castIssues(cast: unknown, ctx: StoryContext): Issues {
+  if (!isObject(cast) || cast.version !== 1 || !Array.isArray(cast.umas)) return ['Not a cast file (version 1, umas)']
+  const issues: Issues = []
+  const seen = new Set<string>()
+  for (const [i, u] of (cast.umas as unknown[]).entries()) {
+    const at = `Uma ${i + 1}`
+    if (!isObject(u) || typeof u.characterId !== 'string') { issues.push(`${at}: no character id`); continue }
+    const id = u.characterId
+    if (!ctx.umas.has(id)) issues.push(`${at} (${id}): not in the export’s cast`)
+    if (seen.has(id)) issues.push(`${at} (${id}): listed twice`)
+    seen.add(id)
+    if (u.outfitId !== null && typeof u.outfitId !== 'string') issues.push(`${at} (${id}): outfitId is an id or null`)
+    if (!oneOf(CALLINGS, u.calling)) issues.push(`${at} (${id}): calling is one of ${CALLINGS.join(', ')}`)
+    if (!isText(u.paragraph)) issues.push(`${at} (${id}): no paragraph`)
+    else issues.push(...lineIssues(u.paragraph, `${at} (${id})`, false))
+    const a = u.arrives
+    const ok = isObject(a) && (a.kind === 'opening' || (a.kind === 'chapter' && Number.isInteger(a.chapter) && (a.chapter as number) >= 1 && (a.chapter as number) <= 8) ||
+      (a.kind === 'festival' && oneOf(FESTIVALS, a.festival)) || (a.kind === 'beds' && Number.isInteger(a.dormLevel) && (a.dormLevel as number) >= 2 && (a.dormLevel as number) <= 10) ||
+      (a.kind === 'event' && isText(a.after, 80)))
+    if (!ok) issues.push(`${at} (${id}): an arrival is opening, a chapter 1–8, a festival, Dorm beds 2–10, or after an event`)
+  }
+  for (const id of ctx.umas) if (!seen.has(id)) issues.push(`${id} from the export has no place in the cast`)
+  const opening = Array.isArray(cast.opening) ? (cast.opening as unknown[]) : []
+  const umas = cast.umas as Record<string, unknown>[]
+  const callingOf = (id: unknown) => umas.find((u) => isObject(u) && u.characterId === id)?.calling
+  if (opening.length !== 3) issues.push('The opening is three Umas (RS13)')
+  else {
+    if (opening.map(callingOf).join() !== 'farming,foraging,fishing') issues.push('The opening three are, in order, a farmer, a forager and a fisher (RS13, CS42)')
+    for (const id of opening) if (!umas.some((u) => isObject(u) && u.characterId === id && isObject(u.arrives) && u.arrives.kind === 'opening')) issues.push(`${String(id)} opens the story, so she arrives at the opening`)
+  }
+  if (umas.filter((u) => isObject(u) && isObject(u.arrives) && u.arrives.kind === 'opening').length !== 3) issues.push('Exactly three Umas arrive at the opening')
+  return issues
+}
+
+/** ties.json (layer 1): one graph, every Uma with at least two ties, so each has two closest (RS12). */
+export function tiesIssues(ties: unknown, ctx: StoryContext): Issues {
+  if (!isObject(ties) || ties.version !== 1 || !Array.isArray(ties.ties)) return ['Not a ties file (version 1, ties)']
+  const issues: Issues = []
+  const pairs = new Set<string>()
+  const count = new Map<string, number>()
+  for (const [i, t] of (ties.ties as unknown[]).entries()) {
+    const at = `Tie ${i + 1}`
+    if (!isObject(t)) { issues.push(`${at}: not a tie`); continue }
+    for (const side of ['a', 'b'] as const) if (typeof t[side] !== 'string' || !ctx.umas.has(t[side] as string)) issues.push(`${at}: ${side} (${String(t[side])}) isn’t in the cast`)
+    if (t.a === t.b) issues.push(`${at}: a tie is between two Umas`)
+    const key = [t.a, t.b].sort().join('|')
+    if (pairs.has(key)) issues.push(`${at}: ${key} is tied twice`)
+    pairs.add(key)
+    if (!oneOf(TIE_KINDS, t.kind)) issues.push(`${at}: kind is one of ${TIE_KINDS.join(', ')}`)
+    if (![1, 2, 3].includes(t.strength as number)) issues.push(`${at}: strength is 1–3`)
+    if (!isText(t.line, 400)) issues.push(`${at}: no line`)
+    else issues.push(...lineIssues(t.line, at, false))
+    if (!isText(t.history, 600)) issues.push(`${at}: no history`)
+    for (const side of [t.a, t.b]) if (typeof side === 'string') count.set(side, (count.get(side) ?? 0) + 1)
+  }
+  for (const id of ctx.umas) if ((count.get(id) ?? 0) < 2) issues.push(`${id} has ${count.get(id) ?? 0} tie${count.get(id) === 1 ? '' : 's'}; every Uma needs two closest (RS12)`)
+  return issues
+}
+
+function triggerIssues(t: unknown, at: string, ctx: StoryContext): Issues {
+  if (!isObject(t)) return [`${at}: no trigger`]
+  switch (t.kind) {
+    case 'hearts': return []
+    case 'working': return oneOf(ACTIVITIES, t.activity) ? [] : [`${at}: working at what? (${ACTIVITIES.join(', ')})`]
+    case 'season': return oneOf(SEASONS, t.season) ? [] : [`${at}: unknown season`]
+    case 'festival': return oneOf(FESTIVALS, t.festival) ? [] : [`${at}: unknown festival`]
+    case 'bond': return typeof t.with === 'string' && ctx.umas.has(t.with) && Number.isInteger(t.level) && (t.level as number) >= 1 && (t.level as number) <= 5 ? [] : [`${at}: a bond names an Uma in the cast and a level 1–5`]
+    case 'chapter': return Number.isInteger(t.chapter) && (t.chapter as number) >= 1 && (t.chapter as number) <= 8 ? [] : [`${at}: chapter is 1–8`]
+    default: return [`${at}: a trigger is hearts, working, season, festival, bond or chapter`]
+  }
+}
+
+function togetherIssues(t: unknown, at: string, ctx: StoryContext, isGood: (id: string) => boolean, proposed: ReadonlySet<string>): Issues {
+  if (!isObject(t)) return [`${at}: what do they do together? (D42)`]
+  switch (t.kind) {
+    case 'talk': return []
+    case 'work': return oneOf(ACTIVITIES, t.activity) ? [] : [`${at}: work at what?`]
+    case 'date': return oneOf(DATE_GAMES, t.game) ? [] : [`${at}: a date is one of ${DATE_GAMES.join(', ')}`]
+    case 'gift': return typeof t.good === 'string' && (isGood(t.good) || proposed.has(t.good)) ? [] : [`${at}: the gift ${String(t.good)} isn’t a good`]
+    case 'festival': return oneOf(FESTIVALS, t.festival) ? [] : [`${at}: unknown festival`]
+    case 'help': return typeof t.with === 'string' && ctx.umas.has(t.with) ? [] : [`${at}: help names an Uma in the cast`]
+    default: return [`${at}: together is talk, work, date, gift, festival or help`]
+  }
+}
+
+/** umas/<id>.json (layer 2): her profile, her gifts by goods id, and every rung of her route. */
+export function bibleIssues(bible: unknown, ctx: StoryContext): Issues {
+  if (!isObject(bible) || typeof bible.characterId !== 'string') return ['Not a bible (characterId)']
+  const isGood = ctx.isGood ?? isGoodId
+  const issues: Issues = []
+  if (!ctx.umas.has(bible.characterId)) issues.push(`${bible.characterId} isn’t in the cast`)
+  for (const key of ['now', 'whyTheFarm', 'dream', 'blurb', 'laughs', 'hurts'] as const) {
+    if (!isText(bible[key], 1200)) issues.push(`No ${key}`)
+    else issues.push(...lineIssues(bible[key] as string, key, false))
+  }
+  if (!oneOf(FAVOURITE_LINES, bible.favouriteLine)) issues.push(`favouriteLine is one of ${FAVOURITE_LINES.join(', ')}`)
+  if (!oneOf(SEASONS, bible.season)) issues.push('season is spring, summer, autumn or winter')
+  if (!oneOf(FESTIVALS, bible.festival)) issues.push(`festival is one of ${FESTIVALS.join(', ')}`)
+  const gifts: Record<string, unknown> = isObject(bible.gifts) ? bible.gifts : {}
+  const proposed = new Set(Array.isArray(gifts.proposed) ? (gifts.proposed as string[]) : [])
+  const all = [gifts.loved, ...(Array.isArray(gifts.liked) ? gifts.liked : []), ...(Array.isArray(gifts.disliked) ? gifts.disliked : [])]
+  if (typeof gifts.loved !== 'string' || !Array.isArray(gifts.liked) || gifts.liked.length !== 3 || !Array.isArray(gifts.disliked) || gifts.disliked.length !== 2) issues.push('Gifts: one loved, three liked, two disliked (RS10)')
+  for (const id of all) if (typeof id === 'string' && !isGood(id) && !proposed.has(id)) issues.push(`Gift ${id} isn’t a good; list it under proposed if it’s a new one`)
+  if (new Set(all).size !== all.length) issues.push('A good is in her gifts twice')
+  const route = Array.isArray(bible.route) ? (bible.route as unknown[]) : []
+  const ids = new Set<string>()
+  for (const [i, b] of route.entries()) {
+    const at = `Beat ${i + 1}`
+    if (!isObject(b) || typeof b.id !== 'string') { issues.push(`${at}: no id`); continue }
+    const bt = `Beat ${b.id}`
+    if (ids.has(b.id)) issues.push(`${bt}: twice`)
+    ids.add(b.id)
+    if (!oneOf(LADDERS, b.ladder)) issues.push(`${bt}: ladder is one of ${LADDERS.join(', ')}`)
+    if (!Number.isInteger(b.hearts) || (b.hearts as number) < 0 || (b.hearts as number) > 10) issues.push(`${bt}: hearts are 0–10`)
+    if (!oneOf(STORY_PLACES, b.place)) issues.push(`${bt}: unknown place ${String(b.place)}`)
+    if (!isText(b.beat, 400)) issues.push(`${bt}: no beat line`)
+    else issues.push(...lineIssues(b.beat, bt, false))
+    issues.push(...triggerIssues(b.trigger, bt, ctx), ...togetherIssues(b.together, bt, ctx, isGood, proposed))
+    const u = b.unlock
+    if (u !== undefined && !(isObject(u) && ((u.kind === 'item' && typeof u.good === 'string' && (isGood(u.good) || proposed.has(u.good))) ||
+      (u.kind === 'place' && oneOf(STORY_PLACES, u.place)) || (u.kind === 'perk' && isText(u.perk, 200))))) issues.push(`${bt}: an unlock is an item (a good), a place or a perk`)
+  }
+  for (const rung of RUNGS) if (!ids.has(rung)) issues.push(`Her route has no ${rung} (RS7)`)
+  return issues
+}
+
+/** routes/<id>.json (layer 3): an event for every beat of her bible, and none without one. */
+export function routeIssues(route: unknown, bible: UmaBible | null, ctx: StoryContext): Issues {
+  if (!isObject(route) || typeof route.characterId !== 'string' || !Array.isArray(route.events)) return ['Not a route (characterId, events)']
+  const issues: Issues = []
+  const speakers = new Set<string>([...ctx.umas, ...CAST_IDS])
+  const events = route.events as unknown[]
+  const ids = new Set<string>()
+  for (const e of events) {
+    if (!isObject(e) || typeof e.id !== 'string') { issues.push('An event without an id'); continue }
+    ids.add(e.id)
+    if (bible && !bible.route.some((b) => b.id === e.id)) issues.push(`Event ${e.id} isn’t a beat in her bible`)
+    issues.push(...stepIssues(e.steps, `Event ${e.id}`, speakers))
+  }
+  if (bible) for (const b of bible.route) if (!ids.has(b.id)) issues.push(`Beat ${b.id} has no scripted event`)
+  return issues
+}
+
+/** pairs/<a>-<b>.json (layer 3): a tie's conversations, one at each bond level 1–5 (RS12). */
+export function pairIssues(pair: unknown, ctx: StoryContext): Issues {
+  if (!isObject(pair) || typeof pair.a !== 'string' || typeof pair.b !== 'string' || !Array.isArray(pair.levels)) return ['Not a pair (a, b, levels)']
+  const issues: Issues = []
+  for (const side of [pair.a, pair.b]) if (!ctx.umas.has(side)) issues.push(`${side} isn’t in the cast`)
+  const speakers = new Set<string>([pair.a, pair.b])
+  const levels = pair.levels as unknown[]
+  const hearts = levels.map((l) => (isObject(l) ? l.hearts : null))
+  for (let h = 1; h <= 5; h++) if (!hearts.includes(h)) issues.push(`No conversation at bond level ${h}`)
+  for (const l of levels) {
+    if (!isObject(l)) continue
+    if (!oneOf(STORY_PLACES, l.place)) issues.push(`Level ${String(l.hearts)}: unknown place`)
+    issues.push(...stepIssues(l.steps, `Level ${String(l.hearts)}`, speakers))
+  }
+  return issues
+}

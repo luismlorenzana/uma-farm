@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "kind": "farm-chapter",
+  "chapter": 6,
+  "title": "Open for Business",
+  "layer": "outline",
+  "opens": "The Restaurant",
+  "brings": ["rosa-bell"],
+  "place": "restaurant",
+  "goals": [
+    "Run 3 shifts",
+    "A Fine shift",
+    "Serve 50 guests",
+    "Win a festival",
+    "Reach Farm Rank 6"
+  ],
+  "reward": "3,000g, a recruit and 250 Farm Rank points",
+  "item": "The first night’s menu (proposed)",
+  "source": "CS43; the scenes outlined here (M6)",
+  "scenes": [
+    {
+      "id": "scene:6:open",
+      "title": "Tables for the Town",
+      "place": "restaurant",
+      "outline": [
+        "Rosa Bell and the Mayor at the old party hall by the farm lane: the town wants to eat what the farm grows",
+        "How a shift works: guests come in, you serve their dishes, and the tips are the score; your best server takes the floor",
+        "The Kitchen cooks and the Restaurant sells, at the best price a dish can fetch",
+        "Rosa’s rule: “cook for the person, not the price”",
+        "The goals card"
+      ]
+    },
+    {
+      "id": "scene:6:close",
+      "title": "A Full House",
+      "place": "restaurant",
+      "outline": [
+        "A full house on a festival night: the town eats at the farm now, and Rosa frames the first night’s menu",
+        "Your newest hand at the Gate",
+        "A hammer rings from the coast road: Ida Stone, the smith, wants the Mine’s best ore, and Captain Nils Berg’s old boat is for sale at the Sea Pier; chapter 7 Soon"
+      ]
+    }
+  ]
+}

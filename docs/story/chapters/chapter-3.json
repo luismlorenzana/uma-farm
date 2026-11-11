@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "kind": "farm-chapter",
+  "chapter": 3,
+  "title": "Down the Mine",
+  "layer": "outline",
+  "opens": "The Mine and the Quarry",
+  "brings": ["gus-talbot"],
+  "place": "mine",
+  "goals": [
+    "Reach Mine floor 5 and Quarry floor 5",
+    "Build the Smelter",
+    "Dig 30 ores",
+    "Reach Farm Rank 3"
+  ],
+  "reward": "1,500g, the Cutter’s plans, a recruit and 250 Farm Rank points",
+  "item": "Gus’s lamp",
+  "source": "CS43; F26 decisions 9 and 10",
+  "scenes": [
+    {
+      "id": "scene:3:open",
+      "title": "The Boarded-Up Mine",
+      "place": "mine",
+      "outline": [
+        "Gus Talbot at the boarded-up Mine; he pries off the boards and lights his lamp",
+        "Floor by floor: “the stairs don’t find themselves: dig the deepest floor and you’ll find the way down”; your best miner goes first",
+        "The Quarry next door gives stone and the odd gem",
+        "Where a smelter could stand, and what it would make of the ore",
+        "The goals card"
+      ]
+    },
+    {
+      "id": "scene:3:close",
+      "title": "Floor Five",
+      "place": "mine",
+      "outline": [
+        "Gus on floor 5, pleased, and he leaves you his lamp",
+        "He unrolls the Cutter’s plans for the Quarry",
+        "Your newest hand at the Gate",
+        "A smell of baking drifts up from town: Rosa Bell; chapter 4 Soon"
+      ]
+    }
+  ]
+}

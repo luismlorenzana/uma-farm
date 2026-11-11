@@ -11,8 +11,10 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
-    "test": "node --test scripts/check-size.test.mjs scripts/check-private-content.test.mjs scripts/check-hosting-site.test.mjs && turbo run test",
-    "test:ci": "node --test scripts/check-size.test.mjs scripts/check-private-content.test.mjs scripts/check-hosting-site.test.mjs && turbo run test --concurrency=1",
+    "test": "node --test scripts/check-size.test.mjs scripts/check-private-content.test.mjs scripts/check-hosting-site.test.mjs tools/story-sandbox/lib/model.test.mjs tools/story-sandbox/lib/pack.test.mjs && turbo run test",
+    "test:ci": "node --test scripts/check-size.test.mjs scripts/check-private-content.test.mjs scripts/check-hosting-site.test.mjs tools/story-sandbox/lib/model.test.mjs tools/story-sandbox/lib/pack.test.mjs && turbo run test --concurrency=1",
+    "stories": "node --experimental-strip-types --no-warnings tools/story-sandbox/server.mjs",
+    "stories:import-pack": "node tools/story-sandbox/import-pack.mjs",
     "web": "pnpm --filter @farm/web dev",
     "api": "pnpm --filter @farm/api dev",
     "docs:update": "pnpm --filter @farm/domain run docs:update"

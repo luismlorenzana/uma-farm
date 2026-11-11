@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "kind": "farm-chapter",
+  "chapter": 8,
+  "title": "The Harvest Cup",
+  "layer": "outline",
+  "opens": "The final",
+  "brings": ["hollis-pryor"],
+  "place": "festival",
+  "goals": [
+    "An Uma at Master",
+    "A pair at 5 hearts",
+    "Place in 3 festivals this year",
+    "Win the Harvest Cup"
+  ],
+  "reward": "4,000g, a recruit and 250 Farm Rank points; the story ends, and the farm goes on",
+  "item": "The Harvest Cup",
+  "source": "CS43, CS40 (the Cup); the scenes outlined here (M6)",
+  "scenes": [
+    {
+      "id": "scene:8:open",
+      "title": "An Old Ribbon",
+      "place": "festival",
+      "outline": [
+        "The Mayor at the festival ground with the old Cup ribbon from Hilltop Track: the farm last won the Harvest Cup in Old Ben’s day",
+        "Old Ben remembers the team that won it, and who ran beside whom",
+        "Wren Ashby and Cole Varga have shared the Cup every year since, and say so",
+        "A team of three, run by their numbers and their bonds; the Uma you’re closest to asks to run",
+        "The goals card"
+      ]
+    },
+    {
+      "id": "scene:8:close",
+      "title": "The Cup Comes Home",
+      "place": "festival",
+      "outline": [
+        "Winter 12: your team crosses the line first, and Wren and Cole come to shake hands",
+        "Old Ben sets the Cup back on the farm’s mantel",
+        "Your newest hand at the Gate",
+        "The Mayor: the farm is alive again. The story ends; the farm, the calendar and the festivals go on"
+      ]
+    }
+  ]
+}

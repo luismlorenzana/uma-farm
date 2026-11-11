@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "kind": "farm-chapter",
+  "chapter": 1,
+  "title": "A Field Again",
+  "layer": "built",
+  "opens": "The Fields, the Woods and the Pond",
+  "brings": ["hollis-pryor", "ben-carver", "marta-quill"],
+  "place": "fields",
+  "goals": [
+    "Plant and harvest 9 crops",
+    "Ship 1,000g at the bin",
+    "Bring home 10 things from the Woods or the Pond",
+    "Grow a second kind of crop",
+    "Rank an Uma up to Hand",
+    "Reach Farm Rank 2"
+  ],
+  "teaches": [
+    "Planting, tending, Ready plots",
+    "The bin, the overnight payout",
+    "Assigning, the job sheet, collecting",
+    "The shop",
+    "Ranks and challenges",
+    "The Farm’s Rank, Block B"
+  ],
+  "reward": "500g, the Mill’s plans, a recruit and 250 Farm Rank points",
+  "item": null,
+  "source": "CS42; built in F24 (D38), packages/domain/src/story/chapter-1.ts",
+  "scenes": [
+    {
+      "id": "scene:1:open",
+      "title": "The Overgrown Farm",
+      "place": "gate",
+      "outline": [
+        "The farm gate at morning, weeds to the fence; Mayor Hollis Pryor welcomes the trainer: the farm has stood empty since Old Ben retired, and the town hopes the Umas who spend their off-season here can bring it back",
+        "Old Ben Carver walks the one block he kept tilled, hands over 9 Carrot seeds, and shows how a tended row grows faster",
+        "Your first hands come in through the Gate, one at a time, each with her temperament’s hello",
+        "Marta Quill calls from the town edge that the shop is open; the shipping bin pays tonight",
+        "The chapter card shows the six goals; the first tap is planting"
+      ]
+    },
+    {
+      "id": "scene:1:close",
+      "title": "First Shipment",
+      "place": "bin",
+      "outline": [
+        "The morning summary’s total is the farm’s best yet; the Mayor and Marta stop by the bin",
+        "Old Ben unrolls the Mill’s plans and says where the Fields could use one",
+        "A visitor walks in at the Gate and asks to stay: your newest hand, the chapter’s recruit",
+        "A wagon is heard on the road: Dale Hart will bring two chickens once there’s a coop; chapter 2 opens"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "kind": "farm-chapter",
+  "chapter": 7,
+  "title": "Iron and Tide",
+  "layer": "outline",
+  "opens": "The Forge and the Sea Pier",
+  "brings": ["ida-stone", "nils-berg"],
+  "place": "forge",
+  "goals": [
+    "Forge a tool upgrade",
+    "A Masterwork merge",
+    "Catch 10 sea fish",
+    "Buy the boat (40,000g)"
+  ],
+  "reward": "3,500g, a recruit and 250 Farm Rank points",
+  "item": "Nils’s compass (proposed)",
+  "source": "CS43; the scenes outlined here (M6)",
+  "scenes": [
+    {
+      "id": "scene:7:open",
+      "title": "The Cold Forge",
+      "place": "forge",
+      "outline": [
+        "Ida Stone relights the farm’s cold forge with ore from your Mine",
+        "Merging: two of a kind make one better; your best smith works the bellows",
+        "Tools made better here dig deeper, fish farther and cut cleaner",
+        "Captain Nils Berg at the Sea Pier: his old boat, for sale to a farm that can pay for it, and the deep sea’s fish",
+        "The goals card"
+      ]
+    },
+    {
+      "id": "scene:7:close",
+      "title": "First Tide Out",
+      "place": "fishery",
+      "outline": [
+        "The boat’s first trip out, and a hold of sea fish",
+        "Ida and Nils toast the farm on the pier; Nils gives you his old compass",
+        "Your newest hand at the Gate",
+        "The Mayor brings the Harvest Cup’s poster: this winter the farm runs; chapter 8 Soon"
+      ]
+    }
+  ]
+}

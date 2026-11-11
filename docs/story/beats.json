@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "kind": "farm-story-beats",
+  "about": "CS45's story beats: five per temperament, at 2, 4, 6, 8 and 10 hearts of your affinity with her. Each is one arc in five steps. Her name is filled at run time; no Uma is named here. A premise alone is the outline layer; lines make it scripted. Clever's five are the prototype (D40).",
+  "beats": [
+    { "id": "beat.breezy.2", "temperament": "breezy", "hearts": 2, "title": "Done Already", "premise": "She races through her rows before breakfast and asks what’s next, a little out of breath and very pleased." },
+    { "id": "beat.breezy.4", "temperament": "breezy", "hearts": 4, "title": "Never a Whole Season", "premise": "Resting at the Gate, she admits she has never stayed anywhere a whole season; something always looked faster further on." },
+    { "id": "beat.breezy.6", "temperament": "breezy", "hearts": 6, "title": "The Dawn Path", "premise": "She shows you the shortcut she found through the Woods at dawn, and slows down so you can keep up." },
+    { "id": "beat.breezy.8", "temperament": "breezy", "hearts": 8, "title": "Sitting Still", "premise": "She sits still beside you through a whole sunrise, and is surprised to find she liked it." },
+    { "id": "beat.breezy.10", "temperament": "breezy", "hearts": 10, "title": "Somewhere to Come Back To", "premise": "She says the farm is the first place she has ever wanted to run back to, not away from." },
+
+    { "id": "beat.steady.2", "temperament": "steady", "hearts": 2, "title": "First at the Gate", "premise": "You come out early and she is already there, as she has been every morning, rain or shine." },
+    { "id": "beat.steady.4", "temperament": "steady", "hearts": 4, "title": "The Weather Book", "premise": "She shows you the notebook where she writes the weather down each day, and what it told her about the turnips." },
+    { "id": "beat.steady.6", "temperament": "steady", "hearts": 6, "title": "Being Useful", "premise": "She admits she keeps busy because she is afraid of being forgotten if she isn’t useful." },
+    { "id": "beat.steady.8", "temperament": "steady", "hearts": 8, "title": "A Day Off", "premise": "You give her a day off; she spends it on the farm anyway, just not working, and says that counts." },
+    { "id": "beat.steady.10", "temperament": "steady", "hearts": 10, "title": "Next Season Too", "premise": "She hands you the weather book’s last page; she has already written the first line of next season." },
+
+    { "id": "beat.bold.2", "temperament": "bold", "hearts": 2, "title": "One Post, One Uma", "premise": "She lifts a fence post on her own to show she can, then asks you to hold the other end anyway." },
+    { "id": "beat.bold.4", "temperament": "bold", "hearts": 4, "title": "Best of Three", "premise": "She challenges you to an arm-wrestle on a hay bale, and laughs loudest when she wins." },
+    { "id": "beat.bold.6", "temperament": "bold", "hearts": 6, "title": "The Broken Pick", "premise": "She snaps a pick at the Mine and asks you, very quietly, not to tell anyone." },
+    { "id": "beat.bold.8", "temperament": "bold", "hearts": 8, "title": "Loud on Purpose", "premise": "She admits she is loud because new people make her nervous, and the farm stopped being new a while ago." },
+    { "id": "beat.bold.10", "temperament": "bold", "hearts": 10, "title": "On Her Back", "premise": "She says she would carry the whole farm on her back if it needed her, and means it as a promise." },
+
+    { "id": "beat.gritty.2", "temperament": "gritty", "hearts": 2, "title": "Not in the Rain", "premise": "She will not stop work for the rain; you end up holding an umbrella over her rows." },
+    { "id": "beat.gritty.4", "temperament": "gritty", "hearts": 4, "title": "Out-Fished", "premise": "A child from town out-fishes her at the Pond, and she swears, cheerfully, to win it back." },
+    { "id": "beat.gritty.6", "temperament": "gritty", "hearts": 6, "title": "It’s Nothing", "premise": "She hurts her hand and insists it is nothing, until you sit her down and bandage it." },
+    { "id": "beat.gritty.8", "temperament": "gritty", "hearts": 8, "title": "A Hand Up", "premise": "For the first time, she asks you for help, and finds it doesn’t feel like losing." },
+    { "id": "beat.gritty.10", "temperament": "gritty", "hearts": 10, "title": "The Hardest Thing", "premise": "She says the hardest thing she ever did was let someone help, and she is glad it was you." },
+
+    {
+      "id": "beat.clever.2", "temperament": "clever", "hearts": 2, "title": "The List",
+      "premise": "She notices you keep a list of everything, and asks to be on it (CS47’s example).",
+      "lines": [
+        { "by": "her", "text": "You keep a list of everything, don’t you?" },
+        { "by": "you", "text": "Only the important things." },
+        { "by": "her", "text": "Then put me on it." }
+      ]
+    },
+    {
+      "id": "beat.clever.4", "temperament": "clever", "hearts": 4, "title": "Third Shelf",
+      "premise": "She has sorted the Warehouse by a system only she understands, and it works.",
+      "lines": [
+        { "by": "her", "text": "I sorted the Warehouse. By season, then stars, then price." },
+        { "by": "you", "text": "I can’t find the turnips." },
+        { "by": "her", "text": "Spring, two stars, forty gold. Third shelf." },
+        { "by": "you", "text": "…They’re right there." },
+        { "by": "her", "text": "Of course they are. I counted." }
+      ]
+    },
+    {
+      "id": "beat.clever.6", "temperament": "clever", "hearts": 6, "title": "Ten Years",
+      "premise": "She has drawn up a plan for the farm’s next ten years, and you are in every one of them.",
+      "lines": [
+        { "by": "her", "text": "I drew up a plan for the farm. Ten years of it." },
+        { "by": "you", "text": "Ten years?" },
+        { "by": "her", "text": "The Mill in the first, the boat in the second. You’re in all ten." },
+        { "by": "you", "text": "Am I?" },
+        { "by": "her", "text": "Someone has to read the list." }
+      ]
+    },
+    {
+      "id": "beat.clever.8", "temperament": "clever", "hearts": 8, "title": "Not on Any List",
+      "premise": "A rained-out day ruins her plan, and turns into the best afternoon she can remember.",
+      "lines": [
+        { "by": "her", "text": "It rained all day. Nothing went to plan." },
+        { "by": "you", "text": "Sorry." },
+        { "by": "her", "text": "Don’t be. We sat in the barn and talked for hours." },
+        { "by": "her", "text": "That wasn’t on any list. I’d like to do it again." }
+      ]
+    },
+    {
+      "id": "beat.clever.10", "temperament": "clever", "hearts": 10, "title": "Lost Count",
+      "premise": "She used to count her days on the farm, meaning to leave after one season. She has lost count, on purpose.",
+      "lines": [
+        { "by": "her", "text": "I used to count my days here. One season, then I’d go." },
+        { "by": "you", "text": "And now?" },
+        { "by": "her", "text": "I lost count somewhere in the second summer." },
+        { "by": "her", "text": "I don’t think I want to find it again." }
+      ]
+    }
+  ]
+}
