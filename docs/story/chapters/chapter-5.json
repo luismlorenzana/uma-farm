@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "kind": "farm-chapter",
+  "chapter": 5,
+  "title": "Beyond the Hills",
+  "layer": "outline",
+  "opens": "The expedition post",
+  "brings": ["juno-park"],
+  "place": "expeditions",
+  "goals": [
+    "Return from 2 expeditions",
+    "A Success at Echo Cave",
+    "Bring home rare seeds",
+    "Reach Farm Rank 5"
+  ],
+  "reward": "2,500g, a recruit and 250 Farm Rank points",
+  "item": "The old map",
+  "source": "CS43; F28 decisions 9 and 10",
+  "scenes": [
+    {
+      "id": "scene:5:open",
+      "title": "The Post at the Town Edge",
+      "place": "expeditions",
+      "outline": [
+        "Juno Park opens the post at the town edge, and pins up a map of seven regions, a few open for now",
+        "Parties of three or four, and dishes packed as supplies; your best explorer reads the map",
+        "“Nobody gets left behind: a hard trip comes home early with nothing lost”",
+        "Your first hands make the first party’s send-off",
+        "The goals card"
+      ]
+    },
+    {
+      "id": "scene:5:close",
+      "title": "The Old Map",
+      "place": "expeditions",
+      "outline": [
+        "The old map from Echo Cave on Juno’s table, its far regions marked",
+        "Your newest hand at the Gate",
+        "Rosa Bell talks of opening a restaurant at the farm; chapter 6 Soon"
+      ]
+    }
+  ]
+}

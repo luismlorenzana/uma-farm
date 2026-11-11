@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "kind": "farm-chapter",
+  "chapter": 2,
+  "title": "Feathers and Fences",
+  "layer": "scripted",
+  "opens": "The Coop and two chickens",
+  "brings": ["dale-hart"],
+  "place": "coop",
+  "goals": [
+    "Own 4 chickens",
+    "Collect 20 eggs",
+    "A chicken at 2 hearts",
+    "Build the Sawmill or the Smokehouse",
+    "Ship 5,000g"
+  ],
+  "reward": "1,000g, a recruit and 250 Farm Rank points",
+  "item": "Dale’s cowbell",
+  "source": "CS43; F27 decisions 12 and 13 (the beats), scripted here as the prototype",
+  "scenes": [
+    {
+      "id": "scene:2:open",
+      "title": "Two Hens in a Crate",
+      "place": "gate",
+      "outline": [
+        "Dale Hart’s wagon at the Gate, two hens in a crate",
+        "He raises a coop beside the Fields and settles them in; your best rancher takes them on",
+        "Feed: Chicken Feed from the shop, one a night each; “a hungry hen lays nothing”",
+        "Care: one carer to a pen of four, the same hands day after day; hearts make better eggs",
+        "Marta stocks feed; the Mayor reads the goals card"
+      ],
+      "beats": [
+        { "speaker": { "kind": "narrator" }, "line": "A wagon rattles up to the Gate. Two hens peer out of a crate in the back." },
+        { "speaker": { "kind": "cast", "id": "dale-hart" }, "line": "“Dale Hart, from the ranch over the hill. The Mayor said you’d have room for two hens.”" },
+        { "speaker": { "kind": "cast", "id": "dale-hart" }, "line": "“No coop yet? Then we’ll raise one. Lend me a morning and a few strong hands.”" },
+        { "speaker": { "kind": "narrator" }, "line": "By noon a little coop stands beside the Fields, and the hens step out to look around." },
+        { "speaker": { "kind": "best", "activity": "ranch" }, "line": "“Leave them to me. I’ll learn every feather.”" },
+        { "speaker": { "kind": "cast", "id": "dale-hart" }, "line": "“Feed each hen one Chicken Feed a night. A hungry hen lays nothing.”" },
+        { "speaker": { "kind": "cast", "id": "dale-hart" }, "line": "“Give a pen of four one carer, and keep the same hands on it, day after day.”" },
+        { "speaker": { "kind": "cast", "id": "dale-hart" }, "line": "“Hens lay for someone they know. Win their hearts and the eggs get better.”" },
+        { "speaker": { "kind": "cast", "id": "marta-quill" }, "line": "“I’ve put Chicken Feed on my shelves, ten gold a bag. I’ll keep it stocked.”" },
+        { "speaker": { "kind": "cast", "id": "hollis-pryor" }, "line": "“A coop already! Here’s what the town hopes to see next.”" }
+      ]
+    },
+    {
+      "id": "scene:2:close",
+      "title": "A Full Coop",
+      "place": "coop",
+      "outline": [
+        "A full coop at dawn, and a heavy egg basket",
+        "Dale says the farm is ready for a barn, and gives you his old cowbell",
+        "Your newest hand at the Gate",
+        "The Mayor mentions Gus Talbot, a retired miner, and the boarded-up Mine; chapter 3 Soon"
+      ],
+      "beats": [
+        { "speaker": { "kind": "narrator" }, "line": "Dawn. Four hens fuss in a full coop, and the egg basket is heavy." },
+        { "speaker": { "kind": "cast", "id": "dale-hart" }, "line": "“Look at that. You’ve a knack for this, all of you.”" },
+        { "speaker": { "kind": "cast", "id": "dale-hart" }, "line": "“A farm that keeps hens can keep cows. Put up a barn and I’ll bring you the rest.”" },
+        { "speaker": { "kind": "cast", "id": "dale-hart" }, "line": "“Here, take my old cowbell. It’s rung over every herd I ever started.”" },
+        { "speaker": { "kind": "narrator" }, "line": "A visitor walks in at the Gate." },
+        { "speaker": { "kind": "newest-hand" }, "line": "“I’m {name}. Word is this farm keeps hens now. Is there room for one more hand?”" },
+        { "speaker": { "kind": "cast", "id": "hollis-pryor" }, "line": "“Have you met Gus Talbot? He ran the old Mine before it was boarded up.”" },
+        { "speaker": { "kind": "cast", "id": "hollis-pryor" }, "line": "“He says the hill still has iron in it. He might show you, if you ask him nicely.”" }
+      ]
+    }
+  ]
+}

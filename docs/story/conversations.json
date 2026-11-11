@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "kind": "farm-conversations",
+  "about": "CS46's conversation templates: a pair's short exchange at each bond heart, chosen by place, hearts and the two Umas' temperament, calling (line) and best distance; {a} and {b} are their names at run time. CS47's five examples are the seed; the authoring target is 250 (M6).",
+  "templates": [
+    {
+      "id": "conv.mine.1.bold-clever.a", "place": "mine", "hearts": 1,
+      "a": { "temperament": "bold" }, "b": { "temperament": "clever" },
+      "lines": [
+        { "by": "a", "text": "Another wall, another swing. Are you counting, {b}?" },
+        { "by": "b", "text": "Forty-two. You hit the same rock twice." },
+        { "by": "a", "text": "It’s a very stubborn rock." }
+      ]
+    },
+    {
+      "id": "conv.fields.2.steady-breezy.a", "place": "fields", "hearts": 2,
+      "a": { "temperament": "steady" }, "b": { "temperament": "breezy" },
+      "lines": [
+        { "by": "b", "text": "Done with my rows already!" },
+        { "by": "a", "text": "Then help with mine. Slowly, this time. Carrots like slow." },
+        { "by": "b", "text": "…Slowly. Right." }
+      ]
+    },
+    {
+      "id": "conv.kitchen.3.any.a", "place": "kitchen", "hearts": 3,
+      "a": {}, "b": {},
+      "lines": [
+        { "by": "a", "text": "Taste this." },
+        { "by": "b", "text": "Is that ginger?" },
+        { "by": "a", "text": "A secret. Keep cooking with me and you’ll find out." }
+      ]
+    },
+    {
+      "id": "conv.fishery.4.gritty-any.a", "place": "fishery", "hearts": 4,
+      "a": { "temperament": "gritty" }, "b": {},
+      "lines": [
+        { "by": "a", "text": "I’m not leaving till it bites." },
+        { "by": "b", "text": "It’s been three hours." },
+        { "by": "a", "text": "Then you’d better fetch us lunch." },
+        { "by": "b", "text": "…Grilled?" },
+        { "by": "a", "text": "Grilled." }
+      ]
+    },
+    {
+      "id": "conv.expeditions.5.any.a", "place": "expeditions", "hearts": 5,
+      "a": {}, "b": {},
+      "lines": [
+        { "by": "a", "text": "On three?" },
+        { "by": "b", "text": "On three." },
+        { "by": "narrator", "text": "Their duo move is ready: {a} and {b}’s Twin Charge." }
+      ]
+    }
+  ]
+}
