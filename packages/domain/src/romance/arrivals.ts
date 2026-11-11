@@ -11,6 +11,7 @@
 // Arrivals are state checked at night step 8 (`arrivalsTonight`, the night's `arriveUmas`, after the Dorm settles): every cast Uma not on the roster whose
 // arrival holds joins, in the cast's order, home while a bed is free, else away; a trigger already passed (a later wave's)
 // holds the next night. Each joins once: the roster guards it. Loaded with the night and the screens.
+import { seedTies } from '../farm/bonds'
 import { farmDay, FESTIVALS, type FestivalId } from '../farm/calendar'
 import { joinRoster } from '../farm/dorm'
 import { newLove, type SaveV4 } from '../save/v4'
@@ -51,19 +52,22 @@ export function arrivalHolds(save: Pick<SaveV4, 'calendar' | 'dorm' | 'farm' | '
 }
 
 /** She joins today (decision 8): `joinRoster` (home while a bed is free, else away on her off-season) and her route at
- * Friendship 0 with 0 points. Refused for someone already on the roster. Never stamps. */
-export function arrive(save: SaveV4, id: string): { save: SaveV4; home: boolean } {
+ * Friendship 0 with 0 points; with the pack's ties, each of her ties whose other Uma is on the farm starts at its seed
+ * (F52 decision 5, `seedTies`). Refused for someone already on the roster. Never stamps. */
+export function arrive(save: SaveV4, id: string, pack: Pick<StoryPack, 'ties'> | null = null): { save: SaveV4; home: boolean } {
   const joined = joinRoster(save, id)
-  return { save: { ...joined.save, love: { ...joined.save.love, [id]: newLove() } }, home: joined.home }
+  const loved: SaveV4 = { ...joined.save, love: { ...joined.save.love, [id]: newLove() } }
+  return { save: pack ? seedTies(loved, pack, id) : loved, home: joined.home }
 }
 
-/** Night step 8's arrivals (decision 8): every cast Uma not on the roster whose arrival holds, in the cast's order. */
-export function arrivalsTonight(save: SaveV4, pack: Pick<StoryPack, 'cast'>): { save: SaveV4; arrived: { id: string; home: boolean }[] } {
+/** Night step 8's arrivals (decision 8): every cast Uma not on the roster whose arrival holds, in the cast's order, her
+ * ties seeded (F52). */
+export function arrivalsTonight(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): { save: SaveV4; arrived: { id: string; home: boolean }[] } {
   let next = save
   const arrived: { id: string; home: boolean }[] = []
   for (const entry of pack.cast.umas) {
     if (next.roster[entry.characterId] || !arrivalHolds(next, entry.arrives)) continue
-    const joined = arrive(next, entry.characterId)
+    const joined = arrive(next, entry.characterId, pack)
     next = joined.save
     arrived.push({ id: entry.characterId, home: joined.home })
   }
@@ -71,9 +75,10 @@ export function arrivalsTonight(save: SaveV4, pack: Pick<StoryPack, 'cast'>): { 
 }
 
 /** The opening three walk in (decision 9): reading or skipping the opening scene joins those of the cast's `opening` not
- * on the roster yet, in order, each home while a bed is free (day 1 has three). Once: the roster guards it. */
-export function joinOpening(save: SaveV4, pack: Pick<StoryPack, 'cast'>): SaveV4 {
-  return pack.cast.opening.reduce((next, id) => (next.roster[id] || !castEntry(pack, id) ? next : arrive(next, id).save), save)
+ * on the roster yet, in order, each home while a bed is free (day 1 has three), their ties seeded (F52: the stand-in's
+ * 9000001 and 9000002 at 150, 9000001 and 9000003 at 50). Once: the roster guards it. */
+export function joinOpening(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 {
+  return pack.cast.opening.reduce((next, id) => (next.roster[id] || !castEntry(pack, id) ? next : arrive(next, id, pack).save), save)
 }
 
 /** The chapter's authored arrival (RM4): the first cast Uma whose arrival is chapter `n`, or null. */

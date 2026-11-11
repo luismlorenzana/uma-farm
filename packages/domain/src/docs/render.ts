@@ -31,7 +31,7 @@ import { gatherQuality, haulCount, sizeSkill, stationRate, type GatherPlace, typ
 import { FISH_SIZES, FISHERY, FOREST, HAUL_BASE, STATION_JOB_RULES, STATION_RULES, TOOL_YIELD, WELL_FED_YIELD } from '../gathering/tables'
 import { farmPlace } from '../farm/places'
 import { starShares } from '../goods/stars'
-import { BLOCK_IDS } from '../save/v3'
+import { BLOCK_IDS, pairKey } from '../save/v3'
 import { DORM_LEVELS } from '../farm/dorm'
 import { CHAT_POINTS, GATE_EVERY, GIFT_POINTS, giftTaste, STAY_AFFINITY, TASTES, VISITOR_DAYS } from '../farm/visitors'
 import { START_NEEDS, START_SHEET } from '../farm/start'
@@ -53,6 +53,7 @@ import { dateOf } from '../farm/calendar'
 import { FARMER_NAME_MAX } from '../romance/farmer'
 import { OPENING_SCENE_V4 } from '../story/opening-v4'
 import { favouriteOf, storyPackFrom } from '../story/pack'
+import { BOND_HEARTS, BOND_POINTS, bondHearts, CLOSEST_BOND, SHARED_LINE, SIDE_BY_SIDE, SIDE_BY_SIDE_HEARTS, TIE_SEEDS } from '../farm/bonds'
 import { STAND_IN_FILES } from '../story/stand-in'
 
 type Cell = string | number
@@ -677,11 +678,53 @@ function farmerName(): string {
   ])
 }
 
+// --- F52: bonds between Umas (romance spec RM48–RM50; CS44, CS17) --------------------------------------------------------
+/** RM48: what a pair earns, by what they shared. */
+function bondPoints(): string {
+  return table(['Shared', 'Points', 'Paid by'], [
+    ['Working the same place the same day (the Fields’ tenders together)', `+${BOND_POINTS.place} a pair; ×${SHARED_LINE} when both favour that place’s line`, '`bondsTonight`, night step 6'],
+    ['An expedition party, a day away', `+${BOND_POINTS.party} a pair`, '`addBond`, F28 (M5)'],
+    ['A festival team', `+${BOND_POINTS.team} a pair`, '`addBond`, F32 (M6)'],
+    ['The same staff meal, or the same breakfast', `+${BOND_POINTS.meal} a pair`, '`addBond`, F8 and F54'],
+    ['The same house, a night', `+${BOND_POINTS.house} a pair`, '`addBond`, F54'],
+    ['**Romance 4:** her bond with her closest friend', `×${CLOSEST_BOND} on any of these, once (never ×${CLOSEST_BOND * CLOSEST_BOND} when both qualify)`, '`bondFactor`, in `addBond`'],
+  ])
+}
+/** CS44: the hearts' points, and the days two at one place reach them. */
+function bondHeartsBlock(): string {
+  const day = (points: number, a: number) => `Day ${Math.ceil(points / a - 1e-9)}`
+  return table(['Hearts', ...BOND_HEARTS.map((_, i) => String(i + 1))], [
+    ['Points', ...BOND_HEARTS.map((p) => p.toLocaleString('en-US'))],
+    [`Two at one place every day (+${BOND_POINTS.place})`, ...BOND_HEARTS.map((p) => day(p, BOND_POINTS.place))],
+    [`Sharing a favourite line there (+${BOND_POINTS.place * SHARED_LINE})`, ...BOND_HEARTS.map((p) => day(p, BOND_POINTS.place * SHARED_LINE))],
+  ])
+}
+/** RM49: a tie's seed by strength, and the stand-in's ties. */
+function tieSeeds(): string {
+  const pack = storyPackFrom(STAND_IN_FILES)
+  const levels = (a: string, b: string) => {
+    const set = pack.pairs.get(pairKey(a, b))
+    return set && set.size > 0 ? `Bond ${[...set].sort((x, y) => x - y).join(', ')}` : '— (the tie’s line)'
+  }
+  return table(['Tie strength', 'Bond starts at', 'Hearts'], ([3, 2, 1] as const).map((s) => [s, TIE_SEEDS[s], bondHearts(TIE_SEEDS[s])]))
+    + '\n\nThe stand-in pack’s ties (invented):\n\n'
+    + table(['Pair', 'Kind', 'Strength', 'Seeded at', 'Authored conversations'], pack.ties.ties.map((t) => [`${t.a} & ${t.b}`, t.kind, t.strength, TIE_SEEDS[t.strength], levels(t.a, t.b)]))
+}
+/** CS17, CS44: side by side at 3 hearts. */
+function sideBySide(): string {
+  const share = Math.round((SIDE_BY_SIDE - 1) * 100)
+  return table(['Where', `Beside a ${SIDE_BY_SIDE_HEARTS}-heart partner`, 'How'], [
+    ['A work place (gathering, a station)', `+${share}% of her night’s items`, 'Night step 4 (`nightExtras`), after the hauls: copies of the items her work finished tonight, the same goods and stars, `share × n` whole and one more by `draw(uid, day, \'bond:<id>\', 0)`, each picked by `draw(…, k)`; into the Warehouse. Her partner worked the same place today'],
+    ['The Fields', `Tended growth ×${SIDE_BY_SIDE}`, 'Night step 2 (`blockGrowth`): her partner tends another block with a growing plot'],
+  ])
+}
+
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
     'dorm-v4': dormV4, arrivals, 'arrival-pay': arrivalPay, 'opening-v4': openingV4, 'night-v4': nightV4, 'stand-in': standIn, 'farmer-name': farmerName,
     'route-costs': routeCosts, 'love-points': lovePoints, 'gift-stars': giftStarsBlock, 'birthday-map': birthdayMap, 'ready-rules': readyRules,
     'ready-waits': readyWaits, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor, 'perk-words': perkWordsBlock,
+    'bond-points': bondPoints, 'bond-hearts': bondHeartsBlock, 'tie-seeds': tieSeeds, 'side-by-side': sideBySide,
     calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
     crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,

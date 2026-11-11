@@ -2,7 +2,8 @@
 // back and buy; F20's Fields: plant, Plant all, harvest, Harvest all, a tender and a block; F22's work: a job, a
 // queue, Collect, Recall, Repeat, a stopped queue and building a station; F23's roster: the start's picks and its
 // redraw, the Dorm's levels and swaps, chats and gifts; F24's scenes, read once; F46's farmer's name, the v4 opening
-// (which brings the opening three) and arrival scenes; and F47's chat, gift and praise on v4. Each reads the save right
+// (which brings the opening three) and arrival scenes; F47's chat, gift and praise on v4; and F52's pair conversations
+// read. Each reads the save right
 // before its rule runs (as `edit`), commits it to the store and the device, and syncs; a refused rule throws its words.
 // The night and the harvests read F21's talents from master data, so they wait for it. Loaded on demand with the loop's
 // screens, so the night's code stays out of the initial JS.
@@ -11,7 +12,7 @@ import {
   plantAll, readScene, recallLoopWorker, receiptItems, repeatLoopJob, restartLoopStopped, SaveRuleError, setTender, ship, shipAll, shopLines, startLoopJob, takeBack,
   touched, type BlockId, type CropId, type FarmingTalentOf, type HarvestReceipt, type LoopCollected, type LoopJobInput, type LoopKinds, type LoopPlaceId,
   type LoopWorkRequest, type FarmSave, type ChapterSceneId, type ShopLine, type StationId, type SaveV3, finishArrival, joinOpening, nameFarmer,
-  type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid,
+  type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair,
 } from '@farm/domain'
 import type { QueueInput } from '@luismlorenzana/uma-work'
 import { masterReady } from '../master/master'
@@ -282,3 +283,14 @@ export async function giftHer(id: string, item: string, stars: number) {
 }
 /** Praise (decision 6): +20, once a day, when she's earned it. */
 export const praiseHer = (id: string) => loveAct((s) => praiseV4(s, id))
+
+// --- Bonds (F52) --------------------------------------------------------------------------------------------------
+
+/** A pair's conversations played or skipped (decision 9): each level into `diary.read`, once, a player's change. A replay
+ * of what's read changes nothing. */
+export async function readPairOnce(a: string, b: string, levels: readonly number[]): Promise<void> {
+  const save = loopSave()
+  if (!save || save.version !== 4 || levels.every((h) => save.diary.read.includes(pairReadId(a, b, h)))) return
+  const pack = await storyReady()
+  await change((s) => readPair(v4(s), pack, a, b, levels))
+}

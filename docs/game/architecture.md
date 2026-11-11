@@ -131,14 +131,15 @@ interface SaveV4 {
   farmer: { name: string }                            // '' until the name sheet (RM8)
   calendar, gold, items, bin, work, fields, crops, ranch, places, buildings, tools, workshops, expeditions,
   board, diary, farm                                  // as v3 (`work` keyed by character id)
-  today: { chats, gifts, praise, praised, events: CharacterId[]; evenings: { with, kind }[]; invites: { id, kind, answer }[] }
+  today: { chats, gifts, praise, praised, events: CharacterId[]; evenings: { with, kind }[]; invites: { id, kind, answer }[];
+           bonds: Record<string, number> }              // F52: a pair's hearts before it first moved since the last morning
   roster: Record<CharacterId, { joined: number; ranks: Record<Activity, RankState>; wellFed: number }>
   love: Record<CharacterId, Love>                     // one per roster Uma, from the day she joins
   dorm: { level: number; home: CharacterId[]; swaps: DormSwap[] }   // levels 1–8 (RM5)
   homestead: { houses: { name: string; extended: boolean }[]; tonight: number | null; slept: number[] }  // house 0 the Farmhouse
   memories: Record<CharacterId, string[]>             // her route's event ids played, in order
   arrivals: CharacterId[]                             // arrival scenes played or skipped
-  bonds: Record<string, number>                       // pairKey of character ids
+  bonds: Record<string, number>                       // pairKey of character ids; whole on v4 (F52)
   summary: MorningSummaryV4 | null                    // v3's, with §4 `bonds: []` replaced by `hearts`
 }
 interface Love { stage, level, points, last, friend?, ring?, wed?, house?, known: string[], flags: string[], evening }
@@ -149,7 +150,8 @@ interface Love { stage, level, points, last, friend?, ring?, wed?, house?, known
   each in range (a level 0–10, spouse 0–5; points finite and ≥ 0; `last` and `evening` no later than today; `friend` only
   while the confession waits; `ring` from the proposal on; `wed` and `house` a spouse's); `memories` and `arrivals` on
   the roster; the farmer's name empty or within RM8's rule; the Dorm on 1–8 with home within its beds; the morning's
-  Hearts lines on the roster, once each, ids only. `parseSave` returns v2, v3 and v4 as stored; `NEWEST_SAVE_VERSION` is
+  Hearts lines on the roster, once each, ids only; bond points whole, and `today.bonds` two roster ids in `pairKey` order
+  with 0–5 hearts (F52). `parseSave` returns v2, v3 and v4 as stored; `NEWEST_SAVE_VERSION` is
   4 and `SAVE_VERSION` (what production writes) stays 3 until F56.
 - **The wipe runs in the app, never in the parse** (F46 decision 2): the API, shared with production and deployed on
   every push, reads what's stored and never makes a save (FM10). The romance build's boot turns any v1–v3 it meets (on

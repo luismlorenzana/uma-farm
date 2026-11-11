@@ -1,0 +1,67 @@
+{
+  "a": "9000001",
+  "b": "9000002",
+  "levels": [
+    {
+      "hearts": 1,
+      "place": "fields",
+      "steps": [
+        { "place": "fields" },
+        { "narrate": "Two figures share the shade at the edge of the Fields." },
+        { "say": "9000002", "line": "You still hum when you weed. The same tune as years ago.", "emote": "laughing" },
+        { "say": "9000001", "line": "And you still pretend you don't know the words." }
+      ]
+    },
+    {
+      "hearts": 2,
+      "place": "forest",
+      "steps": [
+        { "place": "forest" },
+        { "say": "9000001", "line": "Show me the mushroom patch you keep bragging about." },
+        { "say": "9000002", "line": "Only if you promise not to tell {farmer}.", "emote": "thinking" },
+        { "say": "9000001", "line": "I tell {farmer} everything. That's half the fun.", "emote": "happy" }
+      ]
+    },
+    {
+      "hearts": 3,
+      "place": "dorm-porch",
+      "steps": [
+        { "place": "dorm-porch" },
+        { "say": "9000002", "line": "Do you miss how it was, before the farm?" },
+        { "say": "9000001", "line": "Some days. Then the carrots come up and I forget to.", "emote": "tender" },
+        {
+          "choice": [
+            { "text": "Leave them to the quiet.", "tone": "warm", "friendship": 5 },
+            {
+              "text": "Bring them both some tea.",
+              "tone": "playful",
+              "friendship": 5,
+              "then": [{ "say": "9000002", "line": "{farmer} remembered how we take it. Of course.", "emote": "happy" }]
+            }
+          ]
+        },
+        { "say": "9000002", "line": "I'm glad we ended up in the same place again." }
+      ]
+    },
+    {
+      "hearts": 4,
+      "place": "pond-night",
+      "steps": [
+        { "place": "pond-night" },
+        { "narrate": "Two lanterns at the water's edge, long after the work is done." },
+        { "say": "9000001", "line": "When I wanted to quit, you were the one who wouldn't let me." },
+        { "say": "9000002", "line": "You'd have done the same. You did, later.", "emote": "tender" }
+      ]
+    },
+    {
+      "hearts": 5,
+      "place": "overlook",
+      "steps": [
+        { "place": "overlook" },
+        { "say": "9000002", "line": "Whatever comes next, I'd like it to be near you." },
+        { "say": "9000001", "line": "Then it's settled. Same valley, same mornings.", "emote": "happy" },
+        { "narrate": "Below them, the farm wakes up one window at a time." }
+      ]
+    }
+  ]
+}

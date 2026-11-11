@@ -143,7 +143,7 @@ function BlockCard({ save, block, master, talentOf, onPlot, onPlantAll, onHarves
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <h2 className="font-display text-[17px] font-bold">Block {block.id}</h2>
-          <p className="text-[12px] text-ink-soft" data-growth={block.growth}>{block.tender ? 'Tended' : 'Untended'} · {growthWords(block.growth)}</p>
+          <p className="text-[12px] text-ink-soft" data-growth={block.growth} data-side={block.side || undefined}>{block.tender ? 'Tended' : 'Untended'} · {growthWords(block.growth)}{block.side ? ' · side by side' : ''}</p>
         </div>
         <div className="flex shrink-0 gap-1.5">
           {block.empty > 0 && <Button variant="secondary" size="sm" onClick={onPlantAll} data-action="plant-all">Plant all</Button>}

@@ -128,7 +128,7 @@ export {
   tiesIssues, TONES, unscriptedBeats,
 } from './story/authored'
 export type {
-  Arrival, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, Emote, Ladder, PairConversations, Play, Route, RouteCheck, Step, StoryContext, StoryPlace, Tie, Ties,
+  Arrival, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, Emote, Ladder, PairCheck, PairConversations, Play, Route, RouteCheck, Step, StoryContext, StoryPlace, Tie, Ties,
   Tone, Trigger, UmaBible,
 } from './story/authored'
 

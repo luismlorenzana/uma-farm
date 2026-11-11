@@ -150,9 +150,24 @@ export interface AnniversaryLine {
   when: 'today' | 'tomorrow'
   item: string | null
 }
-/** §4's stored lines: birthdays and anniversaries (F47), then arrivals (F46). Ready lines aren't stored: they change by
- * day, so F48 reads them live (`readiness`). */
-export type HeartLine = BirthdayLine | AnniversaryLine | ArrivedLine
+/** §4 Hearts (F52 decision 7; CS17): side by side tonight, the extras in all: copies of a night's items for Umas who worked
+ * beside a 3-heart partner, straight into the Warehouse. Once a night. */
+export interface SideLine {
+  kind: 'side'
+  items: number
+}
+/** §4 Hearts (F52 decision 9; RM50, RM57's sixth line): a pair's bond reached `hearts` since the last morning, by points or
+ * a seed; one line a pair at its highest heart, `a` and `b` in `pairKey` order. Whether it has **Read** is the pack's (its
+ * authored levels) and the save's (`diary.read`), read as the card shows. */
+export interface BondLine {
+  kind: 'bond'
+  a: string
+  b: string
+  hearts: number
+}
+/** §4's stored lines: birthdays and anniversaries (F47), then arrivals (F46), then side by side and bond hearts (F52). Ready
+ * lines aren't stored: they change by day, so F48 reads them live (`readiness`). */
+export type HeartLine = BirthdayLine | AnniversaryLine | ArrivedLine | SideLine | BondLine
 
 /** §5 on v4: v3's news without its roster lines (`joined`, `gate`, `left`): arrivals are §4's, and the Gate has no
  * visitors. Rank lines' `outfitId` holds the roster's key, her character id (decision 5). */
@@ -164,7 +179,8 @@ export interface MorningSummaryV4 {
   bin: BinSale[]
   work: WorkLine[]
   ranks: RankLine[]
-  /** §4 Hearts: birthdays and anniversaries (F47), then arrivals (F46); the romance's lines join with their packets. */
+  /** §4 Hearts: birthdays and anniversaries (F47), then arrivals (F46), then side by side and bond hearts (F52); the
+   * romance's lines join with their packets. */
   hearts: HeartLine[]
   news: NewsLineV4[]
   nudges: Nudge[]

@@ -5,17 +5,21 @@
 // as learnt (others +10), Ties (her bonds' hearts), Memories' count and her ring once given; on its Work side F21's sheet
 // (her nine activities). Chat +15, Gift and Praise +20 sit in the thumb zone with Hearts | Work. Each section shows only
 // what exists: later packets fill the Next card's Play › and Memories' replay (F49), Evening › (F50), the perks' effects,
-// her pet name and keepsake (F51), the ties' hearts moving (F52), the ring (F53) and her house (F54). Loaded on demand.
+// her pet name and keepsake (F51), the ring (F53) and her house (F54). F52's Ties: her closest friend first and marked,
+// each bond's hearts and the points to the next, and **Read** for a pair's conversation opened and unread. Loaded on
+// demand.
 import { birthdaysOf, LADDER_COLOURS, ladderOf, levelWords, type SaveV4, type Temperament } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
+import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Sheet, Tabs } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import type { MasterView } from '../master/master'
 import { ReadyChip, RouteTrack } from './HeartMarks'
 import {
-  giftSlots, MEMORY_RUNGS, nextCard, perkList, profileLine, reachedWords, routeTrack, rungLadder, tieRows, type GiftSlot, type HeartsPack, type NextCard, type PerkView,
+  giftSlots, MEMORY_RUNGS, nextCard, perkList, profileLine, reachedWords, readParam, routeTrack, rungLadder, tieRows, type GiftSlot, type HeartsPack, type NextCard,
+  type PerkView, type TieRow,
 } from './hearts-view'
 import { LoveActs } from './Love'
 import { WorkFacts, WorkSide } from './RosterAlbum'
@@ -101,18 +105,7 @@ function HeartsSide({ save, pack, id, card, nameOf }: { save: SaveV4; pack: Hear
       {ties.length > 0 && (
         <Section title="Ties">
           <ul className="divide-y divide-hairline rounded-md border border-hairline" data-ties>
-            {ties.map((tie) => (
-              <li key={tie.with} className="flex min-h-12 items-center gap-2.5 px-3 py-1" data-tie={tie.with} data-hearts={tie.hearts} data-here={tie.here || undefined}>
-                <FaceTile outfitId={tie.with} size={32} label={nameOf(tie.with)} round className={tie.here ? '' : 'opacity-60'} />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] font-semibold">{nameOf(tie.with)}</span>
-                  <span className="block text-[12px] text-ink-soft">{tie.words}</span>
-                </span>
-                {tie.here
-                  ? <span className="shrink-0 text-[14px] tracking-[-1px]" aria-label={`Bond ${tie.hearts} of 5`}><span className="text-[#e0567a]">{'♥'.repeat(tie.hearts)}</span><span className="text-ink-faint/40">{'♥'.repeat(5 - tie.hearts)}</span></span>
-                  : <span className="shrink-0 text-[12px] font-semibold text-ink-faint" data-not-here>Not here yet</span>}
-              </li>
-            ))}
+            {ties.map((tie) => <TieItem key={tie.with} id={id} tie={tie} nameOf={nameOf} />)}
           </ul>
         </Section>
       )}
@@ -125,6 +118,35 @@ function HeartsSide({ save, pack, id, card, nameOf }: { save: SaveV4; pack: Hear
         </Section>
       )}
     </div>
+  )
+}
+
+/** One tie (F48 decision 6; F52 decision 11): the other Uma's face, name and the tie's kind, "Closest" on her closest friend,
+ * the points to the next bond heart, **Read** while a conversation of theirs waits, and the five bond hearts. */
+function TieItem({ id, tie, nameOf }: { id: string; tie: TieRow; nameOf: (id: string) => string }) {
+  const location = useLocation()
+  return (
+    <li className="flex min-h-12 items-center gap-2.5 px-3 py-1" data-tie={tie.with} data-hearts={tie.hearts} data-here={tie.here || undefined} data-closest={tie.closest || undefined}>
+      <FaceTile outfitId={tie.with} size={32} label={nameOf(tie.with)} round className={tie.here ? '' : 'opacity-60'} />
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5">
+          <span className="truncate text-[14px] font-semibold">{nameOf(tie.with)}</span>
+          {tie.closest && <span className="shrink-0 rounded-full bg-[#e0567a]/12 px-1.5 text-[11px] font-semibold text-[#c2385e]" data-closest-chip>Closest</span>}
+        </span>
+        <span className="block text-[12px] text-ink-soft tabular-nums">
+          {tie.words}{tie.here && tie.next !== null ? ` · ${tie.points}/${tie.next}` : ''}
+        </span>
+      </span>
+      {tie.unread.length > 0 && (
+        <Link to={withParam(location, 'read', readParam(id, tie.with, tie.unread))} state={{ back: true }} data-action="read" data-read={tie.unread.join(',')}
+          className="grid min-h-11 shrink-0 place-items-center rounded-full bg-[#c2385e] px-3 text-[13px] font-bold text-white">
+          Read
+        </Link>
+      )}
+      {tie.here
+        ? <span className="shrink-0 text-[14px] tracking-[-1px]" aria-label={`Bond ${tie.hearts} of 5`}><span className="text-[#e0567a]">{'♥'.repeat(tie.hearts)}</span><span className="text-ink-faint/40">{'♥'.repeat(5 - tie.hearts)}</span></span>
+        : <span className="shrink-0 text-[12px] font-semibold text-ink-faint" data-not-here>Not here yet</span>}
+    </li>
   )
 }
 

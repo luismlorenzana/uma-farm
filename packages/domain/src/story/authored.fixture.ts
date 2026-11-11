@@ -14,9 +14,5 @@ export const STAND_IN_ROUTE = STAND_IN_FILES.routes[STAND_IN] as Route
 /** The forager's and the fisher's routes: their arrival scenes only. */
 export const STAND_IN_ARRIVALS = { 9000002: STAND_IN_FILES.routes['9000002'] as Route, 9000003: STAND_IN_FILES.routes['9000003'] as Route }
 
-/** A pair's conversations come with F52's pack; this one stays here until then. */
-export const STAND_IN_PAIR: PairConversations = {
-  a: '9000001',
-  b: '9000002',
-  levels: [1, 2, 3, 4, 5].map((hearts): PairConversations['levels'][number] => ({ hearts, place: 'fields', steps: [{ say: '9000001', line: 'Morning.' }, { say: '9000002', line: 'Morning.' }] })),
-}
+/** The stand-in pair's five conversations, 9000001 and 9000002 (F52 decision 10). */
+export const STAND_IN_PAIR = STAND_IN_FILES.pairs!['9000001-9000002'] as PairConversations

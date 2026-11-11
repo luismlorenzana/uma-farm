@@ -301,6 +301,13 @@ The lines are data (`story/chapter-1.ts`), one to a tap, original and short, wit
   and its count in its own unit ("4 / 9", "620g / 1,000g", "1 / 2 kinds", "Not yet", "Farm Rank 1 / 2"), and the reward;
   then **Farm Rank · 400 points ›** (the rank's sheet), and the milestones paid with their gold and "12 goods shipped so
   far". Once chapter 1 is done: "Chapter 1 done · …", chapter 2's title and **Soon**.
+- **The Diary's Conversations** (romance build; live from F56; F52 decision 11; CS38 as RM65 amends it), on save v4:
+  one row a pair with a bond heart, the most hearts first (then the most points, then the cast's order). Each shows the
+  two faces, "Stand-in 1 & Stand-in 2" and the five bond hearts; then a **Bond n** chip for each conversation read, which
+  replays it (pays nothing, marks nothing new), and **♥♥ Read** for any opened and unread; a pair with none written shows
+  its tie's line ("Closer now" for a pair the ties don't hold). Empty: "None yet. Umas who work together grow close." The
+  help adds one line. Conversations are read once into `diary.read` as `pair:<a>-<b>:<hearts>`
+  ([hearts.md](hearts.md#pair-conversations-rm50-decisions-9-and-10)). The M4 build's Diary is unchanged.
 - **The chip and the rank's sheet** (above).
 
 ## A local play of days 1–12 (decision 12)

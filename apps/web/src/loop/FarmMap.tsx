@@ -3,7 +3,8 @@
 // pill fixed. A place's quick look opens in the side panel (`/?peek=<place>`): what it is, and what opens it while it's
 // locked; the Gate's is the visitor waiting, with Chat and Gift (F23). After a night the morning summary opens over the
 // map until the player starts the day. On save v4 a Ready Uma's pip carries ♥ wherever the map draws her (F48 decision 10)
-// and the morning's Hearts section lists who's Ready (decision 9), both read live. Loaded on demand.
+// and the morning's Hearts section lists who's Ready (decision 9), both read live; its bond hearts carry Read while a
+// conversation waits (F52), which plays over the morning (`?read=`). Loaded on demand.
 import {
   farmEnvV3, FARM_PLACES, farmPlace, placeBlurb, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, STAY_AFFINITY, workNow, type FarmPlace, type LoopPlaceId,
   type FarmSave,
@@ -22,7 +23,7 @@ import { collectFarm, dismissSummary } from './actions'
 import { FARM_MAP_TILES, lockOf, placeAt, placeLink } from './farm-map'
 import { FieldsPeek, fieldsPips } from './FieldsPeek'
 import { GatePeek } from './GatePeek'
-import { readyLines } from './hearts-view'
+import { pairWords, readyLines } from './hearts-view'
 import { summaryParts } from './summary-words'
 import { farmingTalents, useTalents } from './talents'
 import { shortDate } from './words'
@@ -193,7 +194,10 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   const master = useMaster()
   const album = master.status === 'ready' ? master.view.album : null
   const ready = useReadyNow(save)
-  const parts = useMemo(() => (summary ? summaryParts(summary, (id) => album?.get(id)?.name ?? 'An Uma', ready) : []), [summary, album, ready])
+  const pack = useStory()
+  // F52: which bond lines have a conversation to Read, from the pack and what's been read.
+  const pairs = useMemo(() => (save.version === 4 && pack ? pairWords(save, pack) : null), [save, pack])
+  const parts = useMemo(() => (summary ? summaryParts(summary, (id) => album?.get(id)?.name ?? 'An Uma', ready, pairs) : []), [summary, album, ready, pairs])
   if (!summary) return null
   return (
     <Sheet

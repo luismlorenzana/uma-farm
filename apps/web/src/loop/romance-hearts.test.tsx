@@ -37,7 +37,7 @@ const save = (): SaveV4 => useGame.getState().save as SaveV4
 /** A named farm on day 3, the opening three home, 9000001 Ready for Friendship 1 with 2 banked. */
 function farm(): SaveV4 {
   const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day: 3 } }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), { cast: fixture.pack!.cast })
+  const joined = joinOpening(readScene(fresh, 'scene:1:open'), fixture.pack!)
   return {
     ...joined, arrivals: [ONE, TWO, THREE], items: { ...joined.items, carrot: [0, 0, 1, 0, 0] },
     love: { ...joined.love, [ONE]: { ...joined.love[ONE]!, points: 202 }, [TWO]: { ...joined.love[TWO]!, points: 90 } },

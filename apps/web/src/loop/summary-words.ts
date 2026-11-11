@@ -2,13 +2,15 @@
 // these say them, each line a tap to its place. With the farm map, on demand. Pure, so the card and the tests read the same.
 // On save v4 (F46 decision 15) §4 is Hearts, in RM57's order (F48 decisions 1 and 9): the Ready lines read live, up to
 // three and "+N more"; the invitation (F50); the house's morning (F54); birthdays and anniversaries, today and tomorrow
-// (F47); levels reached overnight (F54) and arrivals' scenes waiting (F46); bond hearts with Read (F52). Each opens her
-// profile on the Hearts tab (`/hearts?uma=`); the Dorm's beds are the Dorm for 20's.
+// (F47); levels reached overnight (F54) and arrivals' scenes waiting (F46); side by side's extras and bond hearts with
+// Read (F52). Each opens her profile on the Hearts tab (`/hearts?uma=`), a pair's Read its conversations (`?read=`), side
+// by side the Warehouse; the Dorm's beds are the Dorm for 20's.
 import {
   ACTIVITY_NAMES, bedsFor, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, rungName, SEASON_NAMES, SUMMARY_SECTIONS_V4, summarySections, type FarmPlaceId,
   type FestivalId, type HeartLine, type MorningSummary, type MorningSummaryV4, type SummarySection, type SummarySectionV4,
 } from '@farm/domain'
 import { chapterDoneWords, farmRankWords, milestoneWords } from './goal-words'
+import { readParam, type PairWords } from './hearts-view'
 import { challengeWords } from './roster-view'
 import { plural } from './words'
 
@@ -53,11 +55,11 @@ export interface ReadyNow {
 
 /** The morning summary as the card shows it: CS5's sections in order, empty ones hidden, each line a tap. On v4, §4 Hearts
  * also shows while someone is `ready` (decision 9). */
-export function summaryParts(summary: MorningSummary | MorningSummaryV4, nameOf: NameOf = someone, ready: readonly ReadyNow[] = []): SummaryPart[] {
+export function summaryParts(summary: MorningSummary | MorningSummaryV4, nameOf: NameOf = someone, ready: readonly ReadyNow[] = [], pairs: PairWords | null = null): SummaryPart[] {
   const sections = 'hearts' in summary
     ? SUMMARY_SECTIONS_V4.filter((section) => (section === 'hearts' ? summary.hearts.length + ready.length > 0 : summary[section].length > 0))
     : summarySections(summary)
-  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready) }))
+  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs) }))
 }
 /** Her sheet: on the roster (v3), or her profile on the Hearts tab (v4, F48 decision 2), on its Work side for a rank's
  * line. */
@@ -67,22 +69,44 @@ export const umaSheet = (outfitId: string, version: number = 3, view?: 'work'): 
 /** The morning's Ready lines: up to three, then "+N more" (RM57). */
 export const READY_LINES = 3
 /** RM57's order of §4 Hearts, by line kind: (1) Ready, (2) the invitation (F50), (3) the house's morning (F54), (4)
- * birthdays and anniversaries, (5) levels reached overnight (F54) and arrivals, (6) bond hearts (F52). A new stored kind
- * takes its place here and its words in `heartLine`; within a place the night's order holds. */
-export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = { birthday: 4, anniversary: 4, arrived: 5 }
+ * birthdays and anniversaries, (5) levels reached overnight (F54) and arrivals, (6) side by side and bond hearts (F52). A
+ * new stored kind takes its place here and its words in `heartLine`; within a place the night's order holds. */
+export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = { birthday: 4, anniversary: 4, arrived: 5, side: 6, bond: 6 }
 
-/** §4 Hearts on v4 (decisions 1 and 9): the Ready lines, then the stored lines in RM57's order. */
-export function heartsLines(hearts: readonly HeartLine[], ready: readonly ReadyNow[], nameOf: NameOf): SummaryLine[] {
+/** §4 Hearts on v4 (decisions 1 and 9): the Ready lines, then the stored lines in RM57's order. `pairs` says which bond
+ * lines have a conversation to Read (F52); without it (the pack loading) they say the heart alone. */
+export function heartsLines(hearts: readonly HeartLine[], ready: readonly ReadyNow[], nameOf: NameOf, pairs: PairWords | null = null): SummaryLine[] {
   const now = ready.slice(0, READY_LINES).map((r): SummaryLine => ({
     key: `ready:${r.id}`, to: umaSheet(r.id, 4), text: `● Ready · ${nameOf(r.id)} · ${rungName(r.rung)}${r.place ? ` · ${r.place}` : ''}`,
   }))
   const more = ready.length > READY_LINES ? [{ key: 'ready:more', to: '/hearts?filter=ready', text: `+${ready.length - READY_LINES} more` }] : []
   const stored = hearts.map((line, i) => ({ line, i })).sort((a, b) => HEARTS_ORDER[a.line.kind] - HEARTS_ORDER[b.line.kind] || a.i - b.i)
-  return [...now, ...more, ...stored.map(({ line }) => heartLine(line, nameOf))]
+  return [...now, ...more, ...stored.map(({ line }) => heartLine(line, nameOf, pairs))]
+}
+
+/** The ♥♥ of a pair's line (F52): two hearts for two Umas, whatever the level. */
+export const PAIR_MARK = '♥♥'
+
+/** A bond heart in words (F52 decision 9): "♥♥ Stand-in 1 & Stand-in 2 · bond 2" with **Read** while an authored
+ * conversation waits (its tap plays them); without one, the tie's line, or "<a> and <b> are closer now" for a pair the
+ * ties don't hold. */
+function bondLine(line: Extract<HeartLine, { kind: 'bond' }>, nameOf: NameOf, pairs: PairWords | null): SummaryLine {
+  const [a, b] = [nameOf(line.a), nameOf(line.b)]
+  const key = `bond:${line.a}:${line.b}`
+  const to = umaSheet(line.a, 4)
+  const unread = pairs?.unread(line.a, line.b, line.hearts) ?? []
+  if (unread.length > 0) return { key, to: `/?read=${readParam(line.a, line.b, unread)}`, text: `${PAIR_MARK} ${a} & ${b} · bond ${line.hearts}`, tag: 'Read' }
+  if (pairs?.authored(line.a, line.b)) return { key, to, text: `${PAIR_MARK} ${a} & ${b} · bond ${line.hearts}` }
+  const tie = pairs?.tieLine(line.a, line.b) ?? null
+  return tie
+    ? { key, to, text: `${PAIR_MARK} ${a} & ${b} · bond ${line.hearts} · ${tie}` }
+    : { key, to, text: `${PAIR_MARK} ${a} and ${b} are closer now · bond ${line.hearts}` }
 }
 
 /** A stored §4 line in words, opening her profile. */
-function heartLine(line: HeartLine, nameOf: NameOf): SummaryLine {
+function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null): SummaryLine {
+  if (line.kind === 'side') return { key: 'side', to: '/warehouse', text: `Side by side · +${plural(line.items, 'item')}` }
+  if (line.kind === 'bond') return bondLine(line, nameOf, pairs)
   const name = nameOf(line.id)
   const to = umaSheet(line.id, 4)
   switch (line.kind) {
@@ -97,7 +121,7 @@ function heartLine(line: HeartLine, nameOf: NameOf): SummaryLine {
 
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 
-function sectionLines(summary: MorningSummary | MorningSummaryV4, section: SummarySection | SummarySectionV4, nameOf: NameOf, ready: readonly ReadyNow[]): SummaryLine[] {
+function sectionLines(summary: MorningSummary | MorningSummaryV4, section: SummarySection | SummarySectionV4, nameOf: NameOf, ready: readonly ReadyNow[], pairs: PairWords | null): SummaryLine[] {
   const version = 'hearts' in summary ? 4 : 3
   switch (section) {
     case 'bin': {
@@ -156,6 +180,6 @@ function sectionLines(summary: MorningSummary | MorningSummaryV4, section: Summa
     case 'bonds':
       return []
     case 'hearts':
-      return 'hearts' in summary ? heartsLines(summary.hearts, ready, nameOf) : []
+      return 'hearts' in summary ? heartsLines(summary.hearts, ready, nameOf, pairs) : []
   }
 }

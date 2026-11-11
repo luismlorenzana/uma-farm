@@ -16,8 +16,9 @@ export const MAIN_JS_BUDGET = 180_000
  * the chapters, the scenes' lines, the scene player and the goals' words (F24); and the romance core's name sheet, its
  * story pack with the stand-in, the format and validator, the re-cut opening, arrivals and her points (F46); and her route
  * on her sheet with its words, the acts, praise, birthdays and anniversaries, Ready and bond hearts (F47); and the Hearts
- * tab, her profile, the shared roster album, the stand-in marks, the tab's view model and the perks' words (F48). The
- * Wilds' screens left in F24. Paths
+ * tab, her profile, the shared roster album, the stand-in marks, the tab's view model and the perks' words (F48); and the
+ * pair player and the Diary's Conversations (F52, with bonds' rules in `farm/bonds.ts`). The Wilds' screens left in F24.
+ * Paths
  * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
   'phaser/dist/phaser.esm.js',
@@ -81,6 +82,8 @@ export const LAZY_MODULES = [
   'src/loop/hearts-view.ts',
   'src/loop/RosterAlbum.tsx',
   'domain/src/romance/perks.ts',
+  'src/loop/PairPlayer.tsx',
+  'src/loop/Conversations.tsx',
 ]
 
 export function entrySrc(html) {

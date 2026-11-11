@@ -5,17 +5,20 @@
 // map's ♥ badges read Ready here too, live (F47 decision 14: never stored). Pure, from F47's `readiness`, `bar` and
 // `levelWords`, so the screens and the tests read the same. Loaded on demand with the tab and the farm map.
 //
-// For later packets: F50 fills `invited` (today's invitation) and the header's evening; F52 extends `tieRows` (the hearts
-// move, a conversation to Read); F54 adds her house to the row's note and the track's colours stay as they are.
+// F52 extends `tieRows` (the hearts move with `save.bonds`, her closest friend first and marked, a conversation to Read)
+// and adds the pairs' words for the morning and the Diary (`pairWords`, `conversationRows`), all over `farm/bonds.ts`.
+//
+// For later packets: F50 fills `invited` (today's invitation) and the header's evening; F54 adds her house to the row's
+// note and the track's colours stay as they are.
 import {
-  ACTIVITY_NAMES, bar, bondHearts, castOrder, dateOf, favouriteOf, farmPlace, GIFT_POINTS_V4, isGoodId, LADDER_COLOURS, ladderOf, levelWords, nextRung, pairKey, perkLineOf,
-  perksFor, readiness, ROUTE_RUNGS, rungName, SEASON_NAMES, tasteKnown, WAITING_RUNGS,
+  ACTIVITY_NAMES, bar, bondHearts, bondOf, castOrder, dateOf, favouriteOf, farmPlace, GIFT_POINTS_V4, isGoodId, LADDER_COLOURS, ladderOf, levelWords, nextBondHeart, nextRung,
+  pairLevels, pairName, pairOf, perkLineOf, perksFor, readiness, readLevels, ROUTE_RUNGS, rungName, SEASON_NAMES, tasteKnown, tiesOf, unreadLevels, WAITING_RUNGS,
   type Bar, type Birthdays, type LadderName, type Love, type LoveStage, type Perk, type Readiness, type SaveV4, type StoryPack, type Tie, type Wait,
 } from '@farm/domain'
 import { nextWords, readyWords } from './love-words'
 
 /** The pack as the tab reads it. */
-export type HeartsPack = Pick<StoryPack, 'cast' | 'ties' | 'bibles' | 'scripted'>
+export type HeartsPack = Pick<StoryPack, 'cast' | 'ties' | 'bibles' | 'scripted' | 'pairs'>
 /** An Uma's name from master data. */
 export type NameOf = (id: string) => string
 
@@ -316,7 +319,8 @@ export function giftSlots(pack: Pick<StoryPack, 'bibles'>, love: Pick<Love, 'sta
 export const TIE_WORDS: Readonly<Record<Tie['kind'], string>> = {
   friends: 'Friends', rivals: 'Rivals', mentor: 'Mentor', teammates: 'Teammates', sisters: 'Sisters', other: 'Close',
 }
-/** One of her ties on her profile (decision 6): the other Uma, its kind, and their bond hearts from `save.bonds`. */
+/** One of her ties on her profile (decision 6; F52 decision 11): the other Uma, its kind, their bond hearts from
+ * `save.bonds` and the points to the next, her closest friend marked, and the conversations opened and unread. */
 export interface TieRow {
   with: string
   kind: Tie['kind']
@@ -325,24 +329,87 @@ export interface TieRow {
   points: number
   /** CS44's bond hearts, 0–5 (`bondHearts`). */
   hearts: number
+  /** The points the next heart comes at, or null at five. */
+  next: number | null
   /** On the farm; else "Not here yet". */
   here: boolean
   /** Her place in `ties.json`, the last tie-break. */
   order: number
+  /** Her closest friend (RM49): the first row. */
+  closest: boolean
+  /** Their authored conversations opened and not read yet, lowest first: **Read** plays them (F52 decision 9). */
+  unread: number[]
 }
 
 /**
- * Her ties from the pack (decision 6), strongest first, then the most bond points, then the ties' order (RM49's closest
- * friend first). **F52's seam:** the hearts are `bondHearts` of today's `save.bonds`, so they move as F52 pays bonds; F52
- * extends the row (a conversation to Read) here.
+ * Her ties from the pack (decision 6), in `tiesOf`'s order, the one `closestFriend` reads: the strongest, then the most
+ * bond points, then the ties' order, her closest friend first. The hearts are `bondHearts` of today's `save.bonds`, so they
+ * move as bonds grow (F52); a pair's conversations opened and unread show **Read**.
  */
-export function tieRows(save: Pick<SaveV4, 'bonds' | 'roster'>, pack: Pick<StoryPack, 'ties'>, id: string): TieRow[] {
-  return pack.ties.ties.flatMap((tie, order): TieRow[] => {
-    if (tie.a !== id && tie.b !== id) return []
-    const other = tie.a === id ? tie.b : tie.a
-    const points = save.bonds[pairKey(id, other)] ?? 0
-    return [{ with: other, kind: tie.kind, words: TIE_WORDS[tie.kind], strength: tie.strength, points, hearts: bondHearts(points), here: Boolean(save.roster[other]), order }]
-  }).sort((a, b) => b.strength - a.strength || b.points - a.points || a.order - b.order)
+export function tieRows(save: Pick<SaveV4, 'bonds' | 'roster' | 'diary'>, pack: Pick<StoryPack, 'ties' | 'pairs'>, id: string): TieRow[] {
+  return tiesOf(pack, save, id).map(({ tie, with: other, points, order }, i): TieRow => {
+    const here = Boolean(save.roster[other])
+    return {
+      with: other, kind: tie.kind, words: TIE_WORDS[tie.kind], strength: tie.strength, points, hearts: bondHearts(points), next: nextBondHeart(points), here, order,
+      closest: i === 0, unread: here && save.roster[id] ? unreadLevels(save, pack, id, other) : [],
+    }
+  })
+}
+
+// --- Pairs in words: the morning and the Diary (F52 decisions 9 and 11) ------------------------------------------------
+
+/** `?read=<a>-<b>:<levels>`: the pair player's param, the levels in order ("9000001-9000002:1,2"). */
+export const readParam = (a: string, b: string, levels: readonly number[]): string => `${pairName(a, b)}:${levels.join(',')}`
+/** The pair and levels a `?read=` names, or null. */
+export function parseReadParam(value: string | null): { a: string; b: string; levels: number[] } | null {
+  const m = value ? /^(\d{1,12})-(\d{1,12}):([1-5](?:,[1-5]){0,4})$/.exec(value) : null
+  if (!m || m[1] === m[2]) return null
+  const levels = [...new Set(m[3]!.split(',').map(Number))]
+  return { a: m[1]!, b: m[2]!, levels }
+}
+
+/** What the morning's bond lines read beyond the summary: the pack's conversations and the save's reads. */
+export interface PairWords {
+  /** The authored levels opened and unread, up to `hearts`. */
+  unread(a: string, b: string, hearts: number): number[]
+  /** Whether the pack holds any of the pair's conversations. */
+  authored(a: string, b: string): boolean
+  /** Their tie's line, or null for a pair the ties don't hold. */
+  tieLine(a: string, b: string): string | null
+}
+export function pairWords(save: Pick<SaveV4, 'bonds' | 'diary'>, pack: Pick<StoryPack, 'ties' | 'pairs'>): PairWords {
+  return {
+    unread: (a, b, hearts) => unreadLevels(save, pack, a, b, hearts),
+    authored: (a, b) => pairLevels(pack, a, b).size > 0,
+    tieLine: (a, b) => pack.ties.ties.find((t) => (t.a === a && t.b === b) || (t.a === b && t.b === a))?.line ?? null,
+  }
+}
+
+/** One pair in the Diary's Conversations: its hearts and its conversations, read (replayable) or opened and unread. */
+export interface ConversationRow {
+  a: string
+  b: string
+  hearts: number
+  points: number
+  read: number[]
+  unread: number[]
+  /** The tie's line, for a pair with no conversation written. */
+  line: string | null
+}
+/** The Diary's Conversations (decision 11): every pair with a heart, the most hearts first, then the most points, then the
+ * cast's order. */
+export function conversationRows(save: Pick<SaveV4, 'bonds' | 'diary' | 'roster'>, pack: Pick<StoryPack, 'cast' | 'ties' | 'pairs'>): ConversationRow[] {
+  const order = castOrder(pack)
+  const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length)
+  const words = pairWords(save, pack)
+  return Object.keys(save.bonds).flatMap((key): ConversationRow[] => {
+    const [a, b] = pairOf(key)
+    const points = bondOf(save, a, b)
+    const hearts = bondHearts(points)
+    if (hearts === 0 || !save.roster[a] || !save.roster[b]) return []
+    return [{ a, b, hearts, points, read: readLevels(save, a, b), unread: unreadLevels(save, pack, a, b), line: words.authored(a, b) ? null : words.tieLine(a, b) }]
+  }).sort((x, y) => y.hearts - x.hearts || y.points - x.points || Math.min(rank(x.a), rank(x.b)) - Math.min(rank(y.a), rank(y.b))
+    || Math.max(rank(x.a), rank(x.b)) - Math.max(rank(y.a), rank(y.b)))
 }
 
 /** Her line, birthday and house under her name (RM53): "Farming · ★ Spring 4 · Rose Cottage". */

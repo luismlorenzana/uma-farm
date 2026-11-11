@@ -9,13 +9,15 @@
 // change is stamped once, with real time, after the ninth step.
 //
 // Save v4 (F46, the romance core, dark) runs the same steps with its own rules where the romance changes them, keyed off
-// `save.version`: step 6 reads favourites from the story pack (RM6) and her friendship's factor (F47), and pays her line
-// +10 (`payLine`, F47); step 7 clears v4's whole `today`; step 8 is `settleDorm` → `arriveUmas` (authored arrivals, in
-// place of the Gate) → `checkGoals` (the chapter's authored arrival, in place of `recruitFor`); step 9 notes praise earned
-// overnight, birthdays and anniversaries today and tomorrow with the anniversary's item (`heartsMorning`, F47), and its
-// §4 is Hearts.
+// `save.version`: step 2 grows a tended block ×1.1 side by side (F52); step 4 pays side by side's extras after the hauls
+// (`nightExtras`, F52); step 6 reads favourites from the story pack (RM6) and her friendship's factor (F47), ticks bonds
+// (`tickBonds`, F52) and pays her line +10 (`payLine`, F47); step 7 clears v4's whole `today`; step 8 is `settleDorm` →
+// `arriveUmas` (authored arrivals, in place of the Gate, their ties seeded) → `checkGoals` (the chapter's authored arrival,
+// in place of `recruitFor`); step 9 notes praise earned overnight, birthdays and anniversaries today and tomorrow with the
+// anniversary's item (`heartsMorning`, F47), and its §4 is Hearts, with side by side and the bond hearts reached (F52).
 import { endsAt, finishedCount, isRefusal, settle, speedUp } from '@luismlorenzana/uma-work'
 import { DAY_MS, festivalOn, isSeasonStart, dateOf, workNow } from '../farm/calendar'
+import { bondsTonight, extrasTonight, newBondHearts, type BondPay, type Extras } from '../farm/bonds'
 import { settleDormNight } from '../farm/dorm'
 import { favouriteActivity, PLACE_ACTIVITY, tickRankRules, type WorkedDay } from '../farm/rank-rules'
 import { gateNight } from '../farm/visitors'
@@ -50,8 +52,9 @@ export interface NightContext {
    * boundary (step 7, F22) and rank points (step 6). D for everyone when left out (tests). */
   readonly talentOf?: TalentOf
   /** The story pack (F46): a v4 night's favourites (RM6), her line's places (F47), authored arrivals (RM4) and anniversary
-   * items. A v4 night without it arrives no one, reads no favourites and pays no line; v3 never reads it. */
-  readonly story?: Pick<StoryPack, 'cast' | 'bibles'>
+   * items, and the ties (F52: seeds, her closest friend). A v4 night without it arrives no one, reads no favourites, ticks no
+   * bonds and pays no line; v3 never reads it. */
+  readonly story?: Pick<StoryPack, 'cast' | 'bibles' | 'ties'>
   /** Each cast Uma's birthday as a day of the farm's year (F47 decision 10): master data's character set through the cast
    * (`birthdaysOf`). None when left out. */
   readonly birthdays?: Birthdays
@@ -93,12 +96,16 @@ export interface NightNotes {
   readonly lines: readonly { id: string; points: number }[]
   /** Step 9 on v4: birthdays and anniversaries today and tomorrow (F47), §4's first stored lines. */
   readonly days: readonly HeartLine[]
+  /** Step 4 on v4: side by side's extras, copies of each Uma's night's items into the Warehouse (F52 decision 7). */
+  readonly extras: readonly Extras[]
+  /** Step 6 on v4: bond points each pair earned for a shared place today (F52 decision 2). */
+  readonly bonds: readonly BondPay[]
 }
 
 /** A night's notes before its first step. */
 export const emptyNotes = (): NightNotes => ({
   sold: [], worked: [], finished: [], made: [], best: null, tended: [], ripened: [], withered: [], ranks: [], dorm: null, home: [], gate: null, left: [],
-  goals: { chapter: null, paid: [], ranks: [] }, arrived: [], lines: [], days: [],
+  goals: { chapter: null, paid: [], ranks: [] }, arrived: [], lines: [], days: [], extras: [], bonds: [],
 })
 
 export interface Night {
@@ -177,6 +184,16 @@ export const countHauls: NightStep = (night) => {
   return { ...night, save, notes: { ...night.notes, best } }
 }
 
+/** Step 4 on v4, after the hauls (F52 decision 7; CS17, CS44): **the night's extras.** Side by side: each Uma whose work
+ * finished items tonight at a place where an Uma she has 3+ bond hearts with also worked today gets 10% of them again,
+ * seeded copies straight into the Warehouse; the planned hauls (uma-work's) are untouched. F51 adds in her element and
+ * the romance bonus here. v3 makes none. */
+export const nightExtras: NightStep = (night) => {
+  if (night.save.version !== 4) return night
+  const { save, extras } = extrasTonight(night.save, night.notes.made, night.notes.worked)
+  return { ...night, save, notes: { ...night.notes, extras } }
+}
+
 /** Step 5, M5 (F8): each workshop may be played again tomorrow. `workshops.played` holds the day, so nothing moves. */
 export const resetWorkshops: NightStep = same
 /**
@@ -199,8 +216,15 @@ export const tickRanks: NightStep = (night) => {
   const { save, lines } = tickRankRules(night.save, worked, (outfitId, activity) => ({ talent: talentOf(outfitId, activity), favourite: favourites.get(outfitId) === activity }))
   return { ...night, save, notes: { ...night.notes, ranks: lines } }
 }
-/** Step 6, M6 (F33): bond points for pairs who shared a place. */
-export const tickBonds: NightStep = same
+/** Step 6: bond points for pairs who shared a place (CS44). On v4 (F52 decision 2; RM48): every pair among the Umas who
+ * worked one place today (step 4's jobs; the Fields' tenders with a growing block, step 2) earns +10 once a night, ×1.5
+ * sharing a favourite line of that place's, ×1.5 more when one is at Romance 4 and the other her closest friend. v3 (M4
+ * has no bonds), or a v4 night without the pack, ticks none. */
+export const tickBonds: NightStep = (night) => {
+  if (night.save.version !== 4 || !night.context.story) return night
+  const { save, paid } = bondsTonight(night.save, night.context.story, night.notes.worked, night.notes.tended)
+  return { ...night, save, notes: { ...night.notes, bonds: paid } }
+}
 
 /** Step 6 on v4 (F47 decision 8; RM6, RM23): +10 to each Uma who worked today at one of her line's places (a running job
  * there, or a farmer's tended block with a growing plot), once a night. v3, or a v4 night without the pack, pays none. */
@@ -235,7 +259,7 @@ export const witherCrops: NightStep = (night) => {
 export const turnCalendar: NightStep = (night) => {
   const calendar = { day: night.save.calendar.day + 1 }
   const turned: FarmSave = night.save.version === 4
-    ? { ...night.save, calendar, today: { chats: [], gifts: [], praise: [], praised: [], events: [], evenings: [], invites: [] } }
+    ? { ...night.save, calendar, today: { chats: [], gifts: [], praise: [], praised: [], events: [], evenings: [], invites: [], bonds: {} } }
     : { ...night.save, calendar, today: { chats: [], gifts: [] } }
   return { ...night, save: settleLoopWork(turned, kindsOf(night)) }
 }
@@ -314,14 +338,20 @@ function dormNews({ notes }: Night): NewsLineV4[] {
 }
 
 /** §4 Hearts on v4: birthdays and anniversaries today and tomorrow (F47, `heartsMorning`), then everyone who joined tonight
- * (F46 decision 15), the arrivals at step 8 in the cast's order and then the chapter's, home or away; her arrival scene
- * waits for the farm to open. */
+ * (F46 decision 15), the arrivals at step 8 in the cast's order and then the chapter's, home or away (her arrival scene
+ * waits for the farm to open); then side by side's extras and the bond hearts reached since the last morning (F52). */
 function heartLines(night: Night): HeartLine[] {
   const { save, before, context } = night
   const order = context.story ? castOrder(context.story) : []
   const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length)
-  return [...night.notes.days, ...Object.keys(save.roster).filter((id) => !before.roster[id]).sort((a, b) => rank(a) - rank(b) || Number(a) - Number(b))
-    .map((id): HeartLine => ({ kind: 'arrived', id, home: save.dorm.home.includes(id) }))]
+  const extras = night.notes.extras.reduce((n, e) => n + e.items.length, 0)
+  return [
+    ...night.notes.days,
+    ...Object.keys(save.roster).filter((id) => !before.roster[id]).sort((a, b) => rank(a) - rank(b) || Number(a) - Number(b))
+      .map((id): HeartLine => ({ kind: 'arrived', id, home: save.dorm.home.includes(id) })),
+    ...(extras > 0 ? [{ kind: 'side' as const, items: extras }] : []),
+    ...(save.version === 4 && before.version === 4 ? newBondHearts(before, save, order) : []),
+  ]
 }
 
 /** Step 9 on v4, before the summary (F47 decisions 6, 10, 11 and 14), the date already turned: praise earned overnight
@@ -358,7 +388,8 @@ export const buildSummary: NightStep = (night) => {
       day: save.calendar.day, bin: [...notes.sold], work, ranks: [...notes.ranks], hearts: heartLines(night),
       news: [...newsOf(save.calendar.day), ...goalNews(notes), ...dormNews(night)] as NewsLineV4[], nudges,
     }
-    return { ...night, save: { ...save, summary } }
+    // The bond hearts are listed: the day ahead notes its own (F52 decision 9).
+    return { ...night, save: { ...save, today: { ...save.today, bonds: {} }, summary } }
   }
   const summary: MorningSummary = {
     day: save.calendar.day, bin: [...notes.sold], work, ranks: [...notes.ranks], bonds: [],
@@ -395,27 +426,36 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 9, name: 'buildSummary', run: buildSummary, what: 'The morning summary, from what changed', by: 'F18' },
 ]
 
-/** What v4 changes in v3's steps (F46, F47): a step replaced or reworded, and the steps added after one. */
+/** What v4 changes in v3's steps (F46, F47, F52): a step replaced or reworded, and the steps added after one. */
 const V4_STEPS: Readonly<Record<string, { replace?: Partial<NightStepDef>; after?: readonly NightStepDef[]; before?: readonly NightStepDef[] }>> = {
+  growCrops: {
+    replace: { what: 'Crops grow: 1 a night untended, the tender’s rate tended, ×1.1 side by side (her tender has a 3-heart partner tending another growing block); plots that reach their days − 0.5 turn Ready', by: 'F20, F52' },
+  },
+  countHauls: {
+    after: [{ step: 4, name: 'nightExtras', run: nightExtras, what: 'Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again, seeded copies straight into the Warehouse', by: 'F52' }],
+  },
   tickRanks: {
     replace: { what: 'Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10; rank-ups where points and the challenge are met', by: 'F21, F47' },
   },
   tickBonds: {
+    replace: { what: 'Bonds: +10 to each pair who worked one place today (the Fields’ tenders together), once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend', by: 'F52' },
     after: [{ step: 6, name: 'payLine', run: payLine, what: 'Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night', by: 'F47' }],
   },
   turnCalendar: {
     replace: { what: 'The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, evenings and invitations', by: 'F18, F47' },
   },
   gateVisitors: {
-    replace: { name: 'arriveUmas', run: arriveUmas, what: 'Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away', by: 'F46' },
+    replace: { name: 'arriveUmas', run: arriveUmas, what: 'Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50)', by: 'F46, F52' },
   },
   buildSummary: {
     before: [{ step: 9, name: 'heartsMorning', run: heartsMorning, what: 'Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse', by: 'F47' }],
+    replace: { what: 'The morning summary, from what changed; §4 Hearts lists side by side’s extras and each pair’s bond hearts reached since the last morning', by: 'F18, F52' },
   },
 }
 
-/** Save v4's steps (F46 decision 8; F47): v3's, the Gate's step replaced by authored arrivals, step 6 with her ladder's
- * factor and her line's +10, step 7 clearing the whole of `today`, and step 9 with praise, birthdays and anniversaries. */
+/** Save v4's steps (F46 decision 8; F47; F52): v3's, step 2 side by side, step 4's extras, the Gate's step replaced by
+ * authored arrivals with their ties' seeds, step 6 with her ladder's factor, bonds and her line's +10, step 7 clearing the
+ * whole of `today`, and step 9 with praise, birthdays, anniversaries and the bond hearts. */
 export const NIGHT_STEPS_V4: readonly NightStepDef[] = NIGHT_STEPS.flatMap((step) => {
   const change = V4_STEPS[step.name]
   return [...(change?.before ?? []), { ...step, ...change?.replace }, ...(change?.after ?? [])]
