@@ -1,8 +1,8 @@
 // `/hearts` (F48 decisions 2–5 and 8; romance spec RM51, RM52): the Umas' tab in the romance build, in place of Roster.
 // Two views: **Hearts** (the default) and **Work** (`?view=work`, the roster's album moved whole, each card's corner her
 // level words). The Hearts view is one 72 pt row an Uma: her face, name and chips (● Ready, ✉ an invitation, Away), her
-// level and her ladder's hearts as a bar in the stage's colour with the filling heart and "points/cost", then what's
-// banked, the most useful line and today's chat and gift ticks. Ready rows first, then the least progress, then the
+// level and her ladder's hearts as a bar in the stage's colour with the filling heart and "points/cost", then the most
+// useful line, what's banked and today's chat and gift ticks. Ready rows first, then the least progress, then the
 // cast's order; filter chips with their counts (`?filter=`); the header's "Married n/N" and the (i). Her profile opens
 // from either view at `?uma=<characterId>`, on the side the view names. Loaded on demand; only the romance build routes
 // here.
