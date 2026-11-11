@@ -15,7 +15,10 @@ describe('the stand-in story passes', () => {
     expect(routeIssues(STAND_IN_ROUTE, STAND_IN_BIBLE, ctx)).toEqual([])
     expect(pairIssues(STAND_IN_PAIR, ctx)).toEqual([])
   })
-  it('has the 23 rungs of RS7', () => expect(RUNGS).toHaveLength(23))
+  it('has the 26 rungs of RS7 as D43 amends it, ending on the spouse ladder', () => {
+    expect(RUNGS).toHaveLength(26)
+    expect(RUNGS.slice(-4)).toEqual(['wedding', 's1', 's3', 's5'])
+  })
 })
 
 describe('the cast and the ties', () => {
@@ -46,14 +49,21 @@ describe('the bible', () => {
     bible.gifts.proposed = ['moon-cake']
     expect(bibleIssues(bible, ctx)).toEqual([])
   })
-  it('every rung, each with a trigger, a place and what they do together', () => {
+  it('every rung, each with a trigger, a place, what they do together and its hint', () => {
     const bible = clone(STAND_IN_BIBLE)
-    bible.route = bible.route.filter((b) => b.id !== 'proposal')
-    bible.route[0] = { ...bible.route[0]!, together: { kind: 'date', game: 'karaoke' as never }, trigger: { kind: 'season', season: 'monsoon' as never } }
+    bible.route = bible.route.filter((b) => b.id !== 's5')
+    bible.route[0] = { ...bible.route[0]!, together: { kind: 'date', game: 'karaoke' as never }, hint: '' }
     const issues = bibleIssues(bible, ctx)
-    expect(issues).toContain('Her route has no proposal (RS7)')
+    expect(issues).toContain('Her route has no s5 (RS7)')
     expect(issues.some((i) => /Beat f1: a date is one of/.test(i))).toBe(true)
-    expect(issues).toContain('Beat f1: unknown season')
+    expect(issues).toContain('Beat f1: no hint, the line her profile shows while it’s next (D43)')
+  })
+  it('nothing waits on the calendar: no season, festival, clock or weather trigger (D43)', () => {
+    const bible = clone(STAND_IN_BIBLE)
+    bible.route[0] = { ...bible.route[0]!, trigger: { kind: 'season', season: 'spring' } as never }
+    bible.route[1] = { ...bible.route[1]!, trigger: { kind: 'item', good: 'golden-carrot' } }
+    const issues = bibleIssues(bible, ctx)
+    expect(issues).toEqual(['Beat f1: a trigger is hearts, working, item, bond or chapter; never a clock, the weather, a season or a festival (D43)'])
   })
 })
 

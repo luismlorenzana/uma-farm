@@ -1,5 +1,6 @@
 // F40's story in the sandbox: the world bible, the cast in arrival order, each Uma's page with her route as a visible
-// ladder (23 rungs: friendship 1–10, the confession, romance 1–10, the proposal, the wedding), and the ties as one graph.
+// ladder (26 rungs: friendship 1–10, the confession, romance 1–10, the proposal, the wedding, spouse 1, 3 and 5), and
+// the ties as one graph.
 // Every name, picture and line comes from the private content/story/ at run time.
 import { D, h, reviewDot, reviewPanel, stat } from './views.js'
 
@@ -111,7 +112,8 @@ export function characterView(id, onReview) {
   )
 }
 
-/** Her 23 rungs as a ladder you can see (D42): friendship 1–10, the confession, romance 1–10, the proposal, the wedding. */
+/** Her 26 rungs as a ladder you can see (D42, D43): friendship 1–10, the confession, romance 1–10, the proposal, the
+ * wedding, and the spouse ladder's three after it. */
 function ladder(id, bible) {
   const beats = new Map((bible?.data.route ?? []).map((b) => [b.id, b]))
   const route = D.routeOf.get(id)
@@ -121,12 +123,17 @@ function ladder(id, bible) {
     return h('div', { class: `rung ${cls} ${b ? 'set' : ''} ${scripted.has(rid) ? 'scripted' : ''}`, title: b ? `${b.beat}` : 'To author' },
       h('span', { class: 'rung-label', text: label }),
       h('span', { class: 'rung-text', text: b ? b.beat : 'To author' }),
-      b ? h('span', { class: 'rung-meta', text: [b.place, b.together?.kind === 'date' ? `date: ${b.together.game}` : b.together?.kind === 'work' ? `work: ${b.together.activity}` : b.together?.kind, b.unlock ? `unlocks ${b.unlock.good ?? b.unlock.place ?? b.unlock.perk}` : ''].filter(Boolean).join(' · ') }) : null)
+      b ? h('span', { class: 'rung-meta', text: [b.place, b.together?.kind === 'date' ? `date: ${b.together.game}` : b.together?.kind === 'work' ? `work: ${b.together.activity}` : b.together?.kind, b.unlock ? `unlocks ${b.unlock.good ?? b.unlock.place ?? b.unlock.perk}` : ''].filter(Boolean).join(' · ') }) : null,
+      b?.hint ? h('span', { class: 'rung-meta', text: `Opens: ${b.hint}` }) : null)
   }
-  return h('div', { class: 'ladder' },
-    h('div', { class: 'ladder-col' }, h('h4', { text: 'Friendship ♥ 1–10' }), Array.from({ length: 10 }, (_, i) => rung(`f${i + 1}`, `♥ ${i + 1}`, 'friend'))),
-    h('div', { class: 'ladder-mid' }, rung('confession', 'Confession', 'key'), rung('proposal', 'Proposal', 'key'), rung('wedding', 'Wedding', 'key')),
-    h('div', { class: 'ladder-col' }, h('h4', { text: 'Romance ❤ 1–10' }), Array.from({ length: 10 }, (_, i) => rung(`r${i + 1}`, `❤ ${i + 1}`, 'romance'))),
+  return h('div', {},
+    h('div', { class: 'ladder' },
+      h('div', { class: 'ladder-col' }, h('h4', { text: 'Friendship ♥ 1–10' }), Array.from({ length: 10 }, (_, i) => rung(`f${i + 1}`, `♥ ${i + 1}`, 'friend'))),
+      h('div', { class: 'ladder-mid' }, rung('confession', 'Confession', 'key'), rung('proposal', 'Proposal', 'key'), rung('wedding', 'Wedding', 'key')),
+      h('div', { class: 'ladder-col' }, h('h4', { text: 'Romance ❤ 1–10' }), Array.from({ length: 10 }, (_, i) => rung(`r${i + 1}`, `❤ ${i + 1}`, 'romance'))),
+    ),
+    h('h4', { class: 'spouse-head', text: 'Spouse ✦ after the wedding' }),
+    h('div', { class: 'ladder-spouse' }, ['s1', 's3', 's5'].map((rid) => rung(rid, `✦ ${rid.slice(1)}`, 'spouse'))),
   )
 }
 

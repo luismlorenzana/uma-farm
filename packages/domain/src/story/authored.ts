@@ -2,10 +2,13 @@
 // and pair conversations, as the private `content/story/` files hold them. Types and a validator only: no character,
 // name or line lives here (RS15); tests run on the invented stand-in (`authored.fixture.ts`).
 //
-// Relationships are a game, not a visual novel (D42, from the genre research): every route beat says what the farmer
-// and she *do* together (`together`: work, a date game, a festival, a gift), every choice carries its visible heart gain
-// and its tone, an event may hold a short `play` moment the farmer acts out, and a beat may unlock something shown on a
-// card. Nothing is missable: triggers name a place and a condition, never a clock or the weather.
+// Relationships are a game, not a visual novel (D42, D43, from the genre research): every route beat says what the
+// farmer and she *do* together (`together`: work, a date game, a gift, helping another Uma), every choice carries its
+// visible heart gain and its tone, an event may hold a short `play` moment the farmer acts out, a beat may unlock
+// something shown on a card, and every beat carries the hint her profile shows while it's next. Nothing is missable and
+// nothing waits on the calendar: a rung is ready when her bar is full, plus at most one setup the player controls (she
+// works a place today, an item is in the Warehouse, a bond, a chapter), never an hour, the weather, a season or a
+// festival. Routes run side by side and end in a spouse ladder (D43: every Uma can be married).
 import { ACTIVITIES, type Activity } from '../farm/ranks'
 import { FARM_PLACE_IDS } from '../farm/places'
 import { isGoodId } from '../goods/ids'
@@ -22,15 +25,16 @@ export const CALLINGS = ['farming', 'foraging', 'fishing', 'mining', 'quarry'] a
 /** Her favourite work (RS10): any activity but expeditions, which are a party's, not one Uma's. */
 export const FAVOURITE_LINES = ACTIVITIES.filter((a): a is Exclude<Activity, 'expeditions'> => a !== 'expeditions')
 export const TIE_KINDS = ['friends', 'rivals', 'mentor', 'teammates', 'sisters', 'other'] as const
-export const LADDERS = ['friendship', 'confession', 'romance', 'proposal', 'wedding'] as const
+export const LADDERS = ['friendship', 'confession', 'romance', 'proposal', 'wedding', 'spouse'] as const
 export const EMOTES = ['happy', 'shy', 'sad', 'angry', 'surprised', 'thinking', 'laughing', 'tender'] as const
 export const TONES = ['warm', 'playful', 'honest'] as const
 /** The date games: short shared activities a date is played as (D42). */
 export const DATE_GAMES = ['fishing', 'cooking', 'stargazing', 'footrace', 'dance', 'picnic', 'market', 'boat', 'walk', 'crafting'] as const
 
-/** The route's 23 rungs (RS7): ten friendship events, the confession, ten romance events, the proposal, the wedding. */
+/** The route's 26 rungs (RS7, amended by D43): ten friendship events, the confession, ten romance events, the proposal,
+ * the wedding, and three on the spouse ladder after it (S1, S3, S5), so married life goes on. */
 export const RUNGS: readonly string[] = [
-  ...Array.from({ length: 10 }, (_, i) => `f${i + 1}`), 'confession', ...Array.from({ length: 10 }, (_, i) => `r${i + 1}`), 'proposal', 'wedding',
+  ...Array.from({ length: 10 }, (_, i) => `f${i + 1}`), 'confession', ...Array.from({ length: 10 }, (_, i) => `r${i + 1}`), 'proposal', 'wedding', 's1', 's3', 's5',
 ]
 
 export type StoryPlace = typeof STORY_PLACES[number]
@@ -66,11 +70,12 @@ export interface Ties { version: 1; ties: Tie[] }
 
 // --- Layer 2: her bible -----------------------------------------------------------------------------------------------
 
+/** When a rung is ready (D43): her bar full, plus at most one setup the player controls. Never a clock, the weather, a
+ * season or a festival: those may colour a scene's words, never whether it plays. */
 export type Trigger =
   | { kind: 'hearts' }
   | { kind: 'working'; activity: Activity }
-  | { kind: 'season'; season: Season }
-  | { kind: 'festival'; festival: Festival }
+  | { kind: 'item'; good: string }
   | { kind: 'bond'; with: string; level: number }
   | { kind: 'chapter'; chapter: number }
 
@@ -80,7 +85,6 @@ export type Together =
   | { kind: 'work'; activity: Activity }
   | { kind: 'date'; game: DateGame }
   | { kind: 'gift'; good: string }
-  | { kind: 'festival'; festival: Festival }
   | { kind: 'help'; with: string }
 
 /** What a beat gives besides hearts, shown on a card (D42): a recipe or an item by goods id, a place, or a perk in words. */
@@ -94,6 +98,8 @@ export interface Beat {
   place: StoryPlace
   together: Together
   beat: string
+  /** What her profile says while this rung is next: where and how it opens (D43). */
+  hint: string
   unlock?: Unlock
 }
 export interface UmaBible {
@@ -274,16 +280,15 @@ export function tiesIssues(ties: unknown, ctx: StoryContext): Issues {
   return issues
 }
 
-function triggerIssues(t: unknown, at: string, ctx: StoryContext): Issues {
+function triggerIssues(t: unknown, at: string, ctx: StoryContext, isGood: (id: string) => boolean, proposed: ReadonlySet<string>): Issues {
   if (!isObject(t)) return [`${at}: no trigger`]
   switch (t.kind) {
     case 'hearts': return []
     case 'working': return oneOf(ACTIVITIES, t.activity) ? [] : [`${at}: working at what? (${ACTIVITIES.join(', ')})`]
-    case 'season': return oneOf(SEASONS, t.season) ? [] : [`${at}: unknown season`]
-    case 'festival': return oneOf(FESTIVALS, t.festival) ? [] : [`${at}: unknown festival`]
+    case 'item': return typeof t.good === 'string' && (isGood(t.good) || proposed.has(t.good)) ? [] : [`${at}: the item ${String(t.good)} isn’t a good`]
     case 'bond': return typeof t.with === 'string' && ctx.umas.has(t.with) && Number.isInteger(t.level) && (t.level as number) >= 1 && (t.level as number) <= 5 ? [] : [`${at}: a bond names an Uma in the cast and a level 1–5`]
     case 'chapter': return Number.isInteger(t.chapter) && (t.chapter as number) >= 1 && (t.chapter as number) <= 8 ? [] : [`${at}: chapter is 1–8`]
-    default: return [`${at}: a trigger is hearts, working, season, festival, bond or chapter`]
+    default: return [`${at}: a trigger is hearts, working, item, bond or chapter; never a clock, the weather, a season or a festival (D43)`]
   }
 }
 
@@ -294,9 +299,8 @@ function togetherIssues(t: unknown, at: string, ctx: StoryContext, isGood: (id: 
     case 'work': return oneOf(ACTIVITIES, t.activity) ? [] : [`${at}: work at what?`]
     case 'date': return oneOf(DATE_GAMES, t.game) ? [] : [`${at}: a date is one of ${DATE_GAMES.join(', ')}`]
     case 'gift': return typeof t.good === 'string' && (isGood(t.good) || proposed.has(t.good)) ? [] : [`${at}: the gift ${String(t.good)} isn’t a good`]
-    case 'festival': return oneOf(FESTIVALS, t.festival) ? [] : [`${at}: unknown festival`]
     case 'help': return typeof t.with === 'string' && ctx.umas.has(t.with) ? [] : [`${at}: help names an Uma in the cast`]
-    default: return [`${at}: together is talk, work, date, gift, festival or help`]
+    default: return [`${at}: together is talk, work, date, gift or help`]
   }
 }
 
@@ -332,7 +336,9 @@ export function bibleIssues(bible: unknown, ctx: StoryContext): Issues {
     if (!oneOf(STORY_PLACES, b.place)) issues.push(`${bt}: unknown place ${String(b.place)}`)
     if (!isText(b.beat, 400)) issues.push(`${bt}: no beat line`)
     else issues.push(...lineIssues(b.beat, bt, false))
-    issues.push(...triggerIssues(b.trigger, bt, ctx), ...togetherIssues(b.together, bt, ctx, isGood, proposed))
+    if (!isText(b.hint, 160)) issues.push(`${bt}: no hint, the line her profile shows while it’s next (D43)`)
+    else issues.push(...lineIssues(b.hint, `${bt} hint`, false))
+    issues.push(...triggerIssues(b.trigger, bt, ctx, isGood, proposed), ...togetherIssues(b.together, bt, ctx, isGood, proposed))
     const u = b.unlock
     if (u !== undefined && !(isObject(u) && ((u.kind === 'item' && typeof u.good === 'string' && (isGood(u.good) || proposed.has(u.good))) ||
       (u.kind === 'place' && oneOf(STORY_PLACES, u.place)) || (u.kind === 'perk' && isText(u.perk, 200))))) issues.push(`${bt}: an unlock is an item (a good), a place or a perk`)

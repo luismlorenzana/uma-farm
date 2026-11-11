@@ -101,24 +101,29 @@ The owner's direction (D40), and the calls that make it writable. Each has an id
     her a close friend, and the farmer can ask again later.
   - **At romance 10, the proposal,** with a ring the farmer forges (CS25's Rings: the Forge's Masterwork gives the best
     one), then **her wedding scene**.
-- **RS7, heart events at every rung.** Each Uma has about 23:
+- **RS7, heart events at every rung.** Each Uma has 26 (D43 adds the spouse ladder):
   - 10 friendship events;
   - the confession;
   - 10 romance events (dates among them);
   - the proposal;
-  - the wedding.
+  - the wedding;
+  - three spouse events after it (S1, S3, S5), so married life goes on.
 
-  Each event says when it fires (hearts, season, place, a festival, another Uma's bond with her, a chapter) and where (a
-  place on the farm: the Fields, the Mine, the Kitchen, the festival ground, the pond at night).
+  Each event says when it opens (D43: her bar full, plus at most one setup the player controls: she works a place today,
+  an item in the Warehouse, another Uma's bond with her, a chapter; never an hour, the weather, a season or a festival),
+  where (a place on the farm: the Fields, the Mine, the Kitchen, the festival ground, the pond at night), what the farmer
+  and she do together, and the one-line hint her profile shows while it's next.
 - **RS8, the romance grows while you work together.** Her events favour the places of her favourite work. Assigning her
   there, praising her, working beside her and taking her to festivals raise hearts, as well as chats and gifts. Some
-  events need a shared job, a season or a festival: the farm's loop is the romance's stage.
+  events need a shared job or an item: the farm's loop is the romance's stage. Seasons and festivals colour the words.
 - **RS9, every route is her own, and they run side by side.**
   - Every Uma can be romanced and married in her own route. There's no exclusivity and no jealousy mechanic; the routes
     are parallel.
   - Each wedding is her own scene.
   - **Marrying every Uma opens the game's final scene,** a farm-wide celebration, the long goal.
-  - The alternative, one spouse per playthrough, is noted for the owner; this packet writes to the recommendation.
+  - **Confirmed by the owner (D43): full polyamory.** The Umas' own world treats a household of many hearts as ordinary,
+    shown lightly in every route (world bible W15), and the farmer shares several houses with them, choosing who lives
+    where and where to spend each night, a cozy fade to morning (W16, RS4).
 
 **What you author**
 - **RS10, each Uma's profile in the farm's world:**
@@ -224,12 +229,13 @@ interface UmaBible {
   season: 'spring' | 'summer' | 'autumn' | 'winter'; festival: string
   gifts: { loved: string; liked: [string, string, string]; disliked: [string, string] }   // goods ids (goods.md)
   laughs: string; hurts: string
-  route: Beat[]                                                      // about 23, in order (RS7)
+  route: Beat[]                                                      // 26, in order (RS7, D43)
 }
-interface Beat { id: string; ladder: 'friendship' | 'confession' | 'romance' | 'proposal' | 'wedding'
-  hearts: number; trigger: Trigger; place: string; beat: string }      // one line in layer 2
-type Trigger = { kind: 'hearts' } | { kind: 'working'; activity: string } | { kind: 'season'; season: string }
-  | { kind: 'festival'; festival: string } | { kind: 'bond'; with: string; level: number } | { kind: 'chapter'; chapter: number }
+// The shapes as built: packages/domain/src/story/authored.ts (D42, D43), with together, hint, unlock, play steps, tones.
+interface Beat { id: string; ladder: 'friendship' | 'confession' | 'romance' | 'proposal' | 'wedding' | 'spouse'
+  hearts: number; trigger: Trigger; place: string; together: Together; beat: string; hint: string; unlock?: Unlock }
+type Trigger = { kind: 'hearts' } | { kind: 'working'; activity: string } | { kind: 'item'; good: string }
+  | { kind: 'bond'; with: string; level: number } | { kind: 'chapter'; chapter: number }
 
 // routes/<characterId>.json  (layer 3)
 interface Route { characterId: string; events: { id: string; steps: Step[] }[] }   // ids match the bible's beats

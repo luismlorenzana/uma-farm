@@ -26,9 +26,9 @@ export const STAND_IN_TIES: Ties = {
 }
 
 const beatFor = (id: string): Beat => {
-  const ladder = id.startsWith('f') ? 'friendship' : id.startsWith('r') ? 'romance' : (id as Beat['ladder'])
-  const hearts = /^[fr]\d+$/.test(id) ? Number(id.slice(1)) : 10
-  return { id, ladder, hearts, trigger: { kind: 'hearts' }, place: 'fields', together: { kind: 'work', activity: 'farming' }, beat: `The stand-in's ${id}.` }
+  const ladder = id.startsWith('f') ? 'friendship' : id.startsWith('r') ? 'romance' : id.startsWith('s') ? 'spouse' : (id as Beat['ladder'])
+  const hearts = /^[frs]\d+$/.test(id) ? Number(id.slice(1)) : 10
+  return { id, ladder, hearts, trigger: { kind: 'hearts' }, place: 'fields', together: { kind: 'work', activity: 'farming' }, beat: `The stand-in's ${id}.`, hint: 'The Fields, while she works them.' }
 }
 
 export const STAND_IN_BIBLE: UmaBible = {
