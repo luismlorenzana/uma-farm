@@ -168,11 +168,15 @@ The romance's points, birthdays and anniversaries are [hearts.md](hearts.md#poin
 
 ## The morning summary (CS5, decision 11)
 
-> **On save v4 (romance build; live from F56; F46 decision 15, F47 decision 14):** §4 is **Hearts** in place of Bonds:
+> **On save v4 (romance build; live from F56; F46 decision 15, F47 decision 14, F48 decisions 1 and 9):** §4 is **Hearts**
+> in place of Bonds, in RM57's order: (1) **Ready** lines read live from `readiness` as the card shows, never stored, up
+> to three, then "+N more" (the Hearts tab on Ready); (2) the invitation (F50); (3) the house's morning (F54); (4)
 > birthdays and anniversaries today and tomorrow (`{ kind: 'birthday', id, when }`, `{ kind: 'anniversary', id, when,
-> item }`, "★ Tomorrow: Stand-in 1's birthday"), then arrivals (`{ kind: 'arrived', id, home }`, "Stand-in 4 arrived ·
-> away", her arrival scene waiting); Ready lines are read live, never stored (F48 draws them). §5 drops the roster's
-> `joined`, Gate and `left` lines; and night step 8 runs `arriveUmas` in place of `gateVisitors`
+> item }`, "★ Tomorrow: Stand-in 1's birthday"); (5) levels reached overnight (F54) and arrivals (`{ kind: 'arrived', id,
+> home }`, "Stand-in 4 arrived · away", her arrival scene waiting); (6) bond hearts with Read (F52). The section shows
+> whenever a stored line or a Ready Uma is there, and every line opens her profile (`/hearts?uma=`); a rank's line opens
+> its Work side (`/hearts?view=work&uma=`) and "2 Umas idle" the Work view. §5 drops the roster's `joined`, Gate and
+> `left` lines; and night step 8 runs `arriveUmas` in place of `gateVisitors`
 > ([hearts.md](hearts.md#the-night-and-the-morning-on-v4)). The table below is v3's.
 
 `save.summary` holds ids and counts, never sentences, and the app words them. It's the morning it opens on (its `day` is
@@ -266,7 +270,9 @@ stay put.
 
 ## The bars (FC29, decisions 6 and 8)
 
-- **The bottom bar:** Farm · Roster · **End the day** · Diary · Menu. End the day is uma-kit's raised centre disc, with
+- **The bottom bar:** Farm · Roster · **End the day** · Diary · Menu; **on the romance build, Farm · Hearts · End the day ·
+  Diary · Menu** (romance build; live from F56; F48 decision 3): Hearts, uma-kit's heart with no badge, is the Umas' tab
+  with the roster's album as its Work view ([hearts.md](hearts.md#the-hearts-tab-rm51-rm52)). End the day is uma-kit's raised centre disc, with
   the moon; it reads "All set" and glows when nothing waits, else "End day" with the count on the disc. The badge and the
   glow are uma-kit 0.19.0's (uma-platform P112, from F18's request), and the tab's name carries the count ("End the day:
   2 Umas idle · 3 to collect"). The same release lets the work screens print days (F22 uses it).
@@ -278,7 +284,8 @@ stay put.
   [goals.md](goals.md#the-farm-rank-cs39-decisions-1-and-8)), the sync chip.
 - **Roster** (`/roster`) is the album of everyone on the roster, home or away, with F21's talents and ranks, filters and
   sorts, and her sheet ([ranks.md](ranks.md#the-screens-decision-7)); F23 adds where she is, your hearts with her, and
-  Chat and Gift ([roster.md](roster.md#the-screens)). **Diary** (`/diary`) holds the chapter's card, its goals and their counts, the Farm Rank and the milestones paid ([goals.md](goals.md#the-screens)).
+  Chat and Gift ([roster.md](roster.md#the-screens)). On the romance build `/roster` lands on **Hearts**' Work view
+  (`/hearts?view=work`). **Diary** (`/diary`) holds the chapter's card, its goals and their counts, the Farm Rank and the milestones paid ([goals.md](goals.md#the-screens)).
 - **The Menu** lists the 23 places by FC28's rows (gathering, stations, the ranch, workshops, the yard, the town), each
   opening its quick look, locked ones marked; then Account, the switch and the build.
 

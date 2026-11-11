@@ -1,0 +1,362 @@
+// The Hearts tab as the screens show it (F48 decisions 4–10; romance spec RM52, RM53, RM57): one row an Uma with her
+// level, the ladder's hearts as a bar, what's banked, today's ticks and chips; Ready first, then the least progress, then
+// the cast's order; the filters with their counts; the header's "Married n/N"; and her profile's parts (the route as one
+// track, the Next card, the perks, the gifts as learnt, her ties with their bond hearts). The morning's Ready lines and the
+// map's ♥ badges read Ready here too, live (F47 decision 14: never stored). Pure, from F47's `readiness`, `bar` and
+// `levelWords`, so the screens and the tests read the same. Loaded on demand with the tab and the farm map.
+//
+// For later packets: F50 fills `invited` (today's invitation) and the header's evening; F52 extends `tieRows` (the hearts
+// move, a conversation to Read); F54 adds her house to the row's note and the track's colours stay as they are.
+import {
+  ACTIVITY_NAMES, bar, bondHearts, castOrder, dateOf, favouriteOf, farmPlace, GIFT_POINTS_V4, isGoodId, LADDER_COLOURS, ladderOf, levelWords, nextRung, pairKey, perkLineOf,
+  perksFor, readiness, ROUTE_RUNGS, rungName, SEASON_NAMES, tasteKnown, WAITING_RUNGS,
+  type Bar, type Birthdays, type LadderName, type Love, type LoveStage, type Perk, type Readiness, type SaveV4, type StoryPack, type Tie, type Wait,
+} from '@farm/domain'
+import { nextWords, readyWords } from './love-words'
+
+/** The pack as the tab reads it. */
+export type HeartsPack = Pick<StoryPack, 'cast' | 'ties' | 'bibles' | 'scripted'>
+/** An Uma's name from master data. */
+export type NameOf = (id: string) => string
+
+// --- Places in words --------------------------------------------------------------------------------------------------
+
+/** The romance's own backdrops (W5), in words. */
+const BACKDROPS: Readonly<Record<string, string>> = {
+  'pond-night': 'the Pond at night', overlook: 'the Overlook', 'orchard-bench': 'the orchard bench', 'dorm-porch': 'the Dorm porch', 'harbour-wall': 'the harbour wall',
+  'chapel-bell': 'the chapel bell', town: 'the town', 'hilltop-track': 'the hilltop track', 'sea-pier': 'the sea pier',
+}
+/** Farm places whose names read lower-case in a line. */
+const PLACE_WORDS: Readonly<Record<string, string>> = { forest: 'the forest', bin: 'the shipping bin', board: 'the requests board', festival: 'the festival ground', expeditions: 'the expedition post' }
+
+/** A story place in a line: "the Fields", "the forest", "the Pond at night". */
+export function placeWords(place: string): string {
+  return BACKDROPS[place] ?? PLACE_WORDS[place] ?? (farmPlace(place) ? `the ${farmPlace(place)!.name}` : place.replaceAll('-', ' '))
+}
+
+/** Where her next event plays: her bible's beat for the rung, in words; null without one. */
+export function beatPlace(pack: Pick<StoryPack, 'bibles'>, id: string, rung: string | null): string | null {
+  const beat = rung ? pack.bibles.get(id)?.route.find((b) => b.id === rung) : undefined
+  return beat ? placeWords(beat.place) : null
+}
+
+// --- The row's bar (decision 4) ---------------------------------------------------------------------------------------
+
+/** One heart of her ladder on the row's bar. */
+export interface Segment {
+  state: 'full' | 'filling' | 'empty'
+  /** The filling heart's points over its cost, 0–1; 1 full, 0 empty. */
+  share: number
+}
+/** The row's bar: the ladder's hearts as segments in the stage's colour, and a waiting rung's mark. */
+export interface HeartBar {
+  ladder: LadderName
+  colour: string
+  segments: Segment[]
+  /** A waiting rung's mark: ◆ her confession, ◇ the proposal and the wedding. */
+  mark: '◆' | '◇' | null
+  /** "Ready" or "Tomorrow" beside the mark. */
+  markWords: string | null
+}
+/** Ten hearts for friendship and romance, five for a spouse. */
+export const LADDER_HEARTS: Readonly<Record<LadderName, number>> = { friendship: 10, romance: 10, spouse: 5 }
+
+/** Her ladder's hearts (decision 4): the levels played full, the next one filling by points over its cost, the rest empty;
+ * while a waiting rung waits, every heart full and its mark with "Tomorrow" or "Ready". */
+export function heartBar(love: Pick<Love, 'stage' | 'level' | 'points'>, state: Pick<Readiness, 'ready' | 'waits'>): HeartBar {
+  const ladder = ladderOf(love.stage)
+  const count = LADDER_HEARTS[ladder]
+  const now = bar(love)
+  const waiting = now.rung !== null && WAITING_RUNGS.includes(now.rung)
+  const played = waiting || now.rung === null ? count : Math.min(count, love.level)
+  const share = waiting || now.rung === null ? 0 : now.cost > 0 ? Math.min(1, now.points / now.cost) : 0
+  const segments = Array.from({ length: count }, (_, i): Segment => (i < played ? { state: 'full', share: 1 } : i === played ? { state: 'filling', share } : { state: 'empty', share: 0 }))
+  return {
+    ladder, colour: LADDER_COLOURS[ladder], segments,
+    mark: !waiting ? null : now.rung === 'confession' ? '◆' : '◇',
+    markWords: !waiting ? null : state.ready ? 'Ready' : state.waits?.kind === 'day' ? 'Tomorrow' : null,
+  }
+}
+
+/** Her level for the Work view's card corner (decision 8): "F7", "R4", "S2"; none before Friendship 1. */
+export function levelShort(love: Pick<Love, 'stage' | 'level'>): string | null {
+  switch (love.stage) {
+    case 'friendship': return love.level > 0 ? `F${love.level}` : null
+    case 'confession': return 'F10'
+    case 'romance': return `R${love.level}`
+    case 'proposal': case 'wedding': return 'R10'
+    case 'spouse': return `S${love.level}`
+  }
+}
+
+// --- The rows, the sort and the filters (decisions 4 and 5) ------------------------------------------------------------
+
+export type HeartFilter = 'ready' | 'friends' | 'partners' | 'married' | 'away'
+/** The filter chips (RM52), in order. */
+export const HEART_FILTERS: readonly { key: HeartFilter; label: string }[] = [
+  { key: 'ready', label: 'Ready' }, { key: 'friends', label: 'Friends' }, { key: 'partners', label: 'Partners' }, { key: 'married', label: 'Married' }, { key: 'away', label: 'Away' },
+]
+export const isHeartFilter = (value: string | null): value is HeartFilter => HEART_FILTERS.some((f) => f.key === value)
+/** Friends: friendship and her confession's wait; Partners: romance, the proposal's and the wedding's; Married: spouse. */
+const STAGE_FILTER: Readonly<Record<LoveStage, HeartFilter>> = {
+  friendship: 'friends', confession: 'friends', romance: 'partners', proposal: 'partners', wedding: 'partners', spouse: 'married',
+}
+
+export interface HeartRow {
+  id: string
+  name: string
+  /** "Friend · F7", "Partner · R4", "Engaged" (F47's `levelWords`). */
+  level: string
+  stage: LoveStage
+  bar: Bar
+  heart: HeartBar
+  state: Readiness
+  home: boolean
+  /** Today's invitation from her (F50 fills `today.invites`). */
+  invited: boolean
+  chatted: boolean
+  gifted: boolean
+  /** The most useful line under the bar: her Ready rung and its place, what her setup needs, "Swap her home to play her
+   * events", "Her story is still being written"; null when her bar says it all. */
+  note: string | null
+  filters: readonly HeartFilter[]
+  /** Her next rung's place on the route (28 once complete): the sort's least progress. */
+  progress: number
+  points: number
+  /** Her place in the cast's order. */
+  order: number
+}
+
+/** The line under her bar (decision 4). */
+export function rowNote(state: Readiness, now: Pick<Bar, 'points' | 'cost'>, home: boolean, place: string | null, nameOf: NameOf): string | null {
+  if (state.ready) return `Ready · ${rungName(state.rung!)}${place ? ` · ${place}` : ''}`
+  const kind = state.waits!.kind
+  if (kind === 'away' || (!home && kind === 'bar')) return 'Swap her home to play her events'
+  if (kind === 'bar') return null
+  return readyWords(state, now, nameOf)
+}
+
+/** Her place along the route: her next rung's index, the route's length once it's complete. */
+export const routeIndex = (love: Pick<Love, 'stage' | 'level'>): number => {
+  const rung = nextRung(love)
+  return rung === null ? ROUTE_RUNGS.length : ROUTE_RUNGS.indexOf(rung)
+}
+
+/** The sort (decision 4): Ready first, then the least progress (her rung along the route, then her points), then the cast's
+ * order. */
+export const heartOrder = (a: Pick<HeartRow, 'id' | 'state' | 'progress' | 'points' | 'order'>, b: Pick<HeartRow, 'id' | 'state' | 'progress' | 'points' | 'order'>): number =>
+  Number(b.state.ready) - Number(a.state.ready) || a.progress - b.progress || a.points - b.points || a.order - b.order || a.id.localeCompare(b.id)
+
+/** Everyone on the farm's roster, home or away, as the tab's rows, sorted. */
+export function heartRows(save: SaveV4, pack: HeartsPack, nameOf: NameOf): HeartRow[] {
+  const cast = castOrder(pack)
+  return Object.keys(save.roster).flatMap((id): HeartRow[] => {
+    const love = save.love[id]
+    if (!love) return []
+    const state = readiness(save, pack, id)
+    const now = bar(love)
+    const home = save.dorm.home.includes(id)
+    const order = cast.indexOf(id)
+    return [{
+      id, name: nameOf(id), level: levelWords(love), stage: love.stage, bar: now, heart: heartBar(love, state), state, home,
+      invited: save.today.invites.some((i) => i.id === id && i.answer === null), chatted: save.today.chats.includes(id), gifted: save.today.gifts.includes(id),
+      note: rowNote(state, now, home, state.ready ? beatPlace(pack, id, state.rung) : null, nameOf),
+      filters: [...(state.ready ? ['ready' as const] : []), STAGE_FILTER[love.stage], ...(home ? [] : ['away' as const])],
+      progress: routeIndex(love), points: love.points, order: order < 0 ? cast.length : order,
+    }]
+  }).sort(heartOrder)
+}
+
+/** Each filter's count, for its chip ("Ready 2"). */
+export function filterCounts(rows: readonly Pick<HeartRow, 'filters'>[]): Record<HeartFilter, number> {
+  const counts: Record<HeartFilter, number> = { ready: 0, friends: 0, partners: 0, married: 0, away: 0 }
+  for (const row of rows) for (const f of row.filters) counts[f]++
+  return counts
+}
+
+/** The header (decision 5): "Married n/N", N the cast's size (20 on the real pack, 3 on the stand-in). */
+export function marriedOf(save: Pick<SaveV4, 'love'>, pack: Pick<StoryPack, 'cast'>): { married: number; cast: number } {
+  return { married: Object.values(save.love).filter((l) => l.stage === 'spouse').length, cast: pack.cast.umas.length }
+}
+
+// --- Ready, live (decisions 9 and 10) ---------------------------------------------------------------------------------
+
+/** A Ready line for the morning: her, her rung and where it plays. */
+export interface ReadyLine {
+  id: string
+  rung: string
+  place: string | null
+}
+
+/** Who's Ready today, in the tab's order (decision 9): read live, never stored. */
+export function readyLines(save: SaveV4, pack: HeartsPack): ReadyLine[] {
+  const cast = castOrder(pack)
+  return Object.keys(save.roster).flatMap((id) => {
+    const love = save.love[id]
+    if (!love) return []
+    const state = readiness(save, pack, id)
+    if (!state.ready) return []
+    const order = cast.indexOf(id)
+    return [{ id, rung: state.rung!, place: beatPlace(pack, id, state.rung), state, progress: routeIndex(love), points: love.points, order: order < 0 ? cast.length : order }]
+  }).sort(heartOrder).map(({ id, rung, place }) => ({ id, rung, place }))
+}
+
+/** The Umas whose pip carries ♥ on the map (decision 10). */
+export const readyIds = (save: SaveV4, pack: HeartsPack): ReadonlySet<string> => new Set(readyLines(save, pack).map((l) => l.id))
+
+// --- Her profile (decision 6) -----------------------------------------------------------------------------------------
+
+/** The ladder a rung is on: her confession friendship's, the proposal and the wedding romance's. */
+export const rungLadder = (rung: string): LadderName => (rung.startsWith('f') || rung === 'confession' ? 'friendship' : /^s\d/.test(rung) ? 'spouse' : 'romance')
+
+/** One step of the route as one track: F1–F10, ◆, R1–R10, ◇, ◇, S1–S5. */
+export interface TrackCell {
+  rung: string
+  ladder: LadderName
+  colour: string
+  /** A waiting rung, drawn as its mark. */
+  wait: boolean
+  state: 'played' | 'next' | 'ahead'
+  /** The next one's fill, 0–1. */
+  share: number
+  label: string
+}
+
+/** The route as one track (decision 6): played rungs filled in their ladder's colour, the next filling, the rest empty. */
+export function routeTrack(love: Pick<Love, 'stage' | 'level' | 'points'>): TrackCell[] {
+  const now = bar(love)
+  const next = now.rung === null ? ROUTE_RUNGS.length : ROUTE_RUNGS.indexOf(now.rung)
+  return ROUTE_RUNGS.map((rung, i): TrackCell => {
+    const ladder = rungLadder(rung)
+    const state = i < next ? 'played' : i === next ? 'next' : 'ahead'
+    const share = state === 'played' ? 1 : state === 'next' ? (now.cost > 0 ? Math.min(1, now.points / now.cost) : 1) : 0
+    return { rung, ladder, colour: LADDER_COLOURS[ladder], wait: WAITING_RUNGS.includes(rung), state, share, label: rungName(rung) }
+  })
+}
+
+/** Her Next card (decision 6): the rung, its perk, its place and setup (her bible's `hint`, D43), the bar and what's
+ * banked, and what it waits for. */
+export interface NextCard {
+  rung: string | null
+  /** "Next: Romance 5", or "Her route is complete". */
+  title: string
+  perk: Perk | null
+  hint: string | null
+  bar: Bar
+  /** F47's waits in words: "Ready", "Tomorrow", "Needs a ring", "Swap her home", "Opens with chapter 3". */
+  words: string
+  ready: boolean
+  waits: Wait['kind'] | null
+}
+
+export function nextCard(save: SaveV4, pack: HeartsPack, id: string, nameOf: NameOf): NextCard {
+  const love = save.love[id]!
+  const state = readiness(save, pack, id)
+  const now = bar(love)
+  const line = perkLineOf(pack, id)
+  const perk = now.rung && line ? perksFor(line, save.farm.chapter).find((p) => p.rung === now.rung) ?? null : null
+  const hint = now.rung && state.waits?.kind !== 'unwritten' ? pack.bibles.get(id)?.route.find((b) => b.id === now.rung)?.hint ?? null : null
+  return {
+    rung: now.rung, title: now.rung ? `Next: ${rungName(now.rung)}` : 'Her route is complete', perk, hint, bar: now, words: nextWords(state, now, nameOf),
+    ready: state.ready, waits: state.waits?.kind ?? null,
+  }
+}
+
+/** A perk on her profile's list: reached ✓, the next, the rest greyed (RM53). */
+export interface PerkView extends Perk {
+  state: 'reached' | 'next' | 'ahead'
+}
+
+/** Every perk on her route for her line (decision 7), each reached, the next or ahead. */
+export function perkList(save: Pick<SaveV4, 'love' | 'farm'>, pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string): PerkView[] {
+  const love = save.love[id]
+  const line = perkLineOf(pack, id)
+  if (!love || !line) return []
+  const next = routeIndex(love)
+  let named = false
+  return perksFor(line, save.farm.chapter).map((perk): PerkView => {
+    if (ROUTE_RUNGS.indexOf(perk.rung) < next) return { ...perk, state: 'reached' }
+    if (named) return { ...perk, state: 'ahead' }
+    named = true
+    return { ...perk, state: 'next' }
+  })
+}
+
+/** The reached perks by ladder: "F1–F10 ✓ · R1–R4 ✓"; null before the first. */
+export function reachedWords(list: readonly Pick<PerkView, 'rung' | 'state'>[]): string | null {
+  const parts = ['f', 'r', 's'].flatMap((letter) => {
+    const reached = list.filter((p) => p.state === 'reached' && p.rung.startsWith(letter))
+    if (reached.length === 0) return []
+    const first = reached[0]!.rung.toUpperCase()
+    const last = reached.at(-1)!.rung.toUpperCase()
+    return [first === last ? `${first} ✓` : `${first}–${last} ✓`]
+  })
+  return parts.length > 0 ? parts.join(' · ') : null
+}
+
+/** A gift slot (RM15): her loved, liked and disliked goods, each as learnt ("?" until then), with its points at ★1. */
+export interface GiftSlot {
+  taste: 'loved' | 'liked' | 'disliked'
+  /** The good, or null while her taste for it isn't known. */
+  good: string | null
+  points: number
+}
+/** Her gifts (decision 6): her loved good from Friendship 1, the others once given, all from Friendship 7, and "Others
+ * +10". No bible: no slots, every gift +10. A slot whose good isn't in the game yet is left out. */
+export function giftSlots(pack: Pick<StoryPack, 'bibles'>, love: Pick<Love, 'stage' | 'level' | 'known'>, id: string): { slots: GiftSlot[]; others: number } {
+  const gifts = pack.bibles.get(id)?.gifts
+  const others = GIFT_POINTS_V4.neutral
+  if (!gifts) return { slots: [], others }
+  const slot = (taste: GiftSlot['taste'], good: string): GiftSlot[] =>
+    isGoodId(good) ? [{ taste, good: tasteKnown(pack, love, id, good) ? good : null, points: GIFT_POINTS_V4[taste] }] : []
+  return { slots: [...slot('loved', gifts.loved), ...gifts.liked.flatMap((g) => slot('liked', g)), ...gifts.disliked.flatMap((g) => slot('disliked', g))], others }
+}
+
+/** A tie's kind in a word. */
+export const TIE_WORDS: Readonly<Record<Tie['kind'], string>> = {
+  friends: 'Friends', rivals: 'Rivals', mentor: 'Mentor', teammates: 'Teammates', sisters: 'Sisters', other: 'Close',
+}
+/** One of her ties on her profile (decision 6): the other Uma, its kind, and their bond hearts from `save.bonds`. */
+export interface TieRow {
+  with: string
+  kind: Tie['kind']
+  words: string
+  strength: Tie['strength']
+  points: number
+  /** CS44's bond hearts, 0–5 (`bondHearts`). */
+  hearts: number
+  /** On the farm; else "Not here yet". */
+  here: boolean
+  /** Her place in `ties.json`, the last tie-break. */
+  order: number
+}
+
+/**
+ * Her ties from the pack (decision 6), strongest first, then the most bond points, then the ties' order (RM49's closest
+ * friend first). **F52's seam:** the hearts are `bondHearts` of today's `save.bonds`, so they move as F52 pays bonds; F52
+ * extends the row (a conversation to Read) here.
+ */
+export function tieRows(save: Pick<SaveV4, 'bonds' | 'roster'>, pack: Pick<StoryPack, 'ties'>, id: string): TieRow[] {
+  return pack.ties.ties.flatMap((tie, order): TieRow[] => {
+    if (tie.a !== id && tie.b !== id) return []
+    const other = tie.a === id ? tie.b : tie.a
+    const points = save.bonds[pairKey(id, other)] ?? 0
+    return [{ with: other, kind: tie.kind, words: TIE_WORDS[tie.kind], strength: tie.strength, points, hearts: bondHearts(points), here: Boolean(save.roster[other]), order }]
+  }).sort((a, b) => b.strength - a.strength || b.points - a.points || a.order - b.order)
+}
+
+/** Her line, birthday and house under her name (RM53): "Farming · ★ Spring 4 · Rose Cottage". */
+export function profileLine(save: Pick<SaveV4, 'love' | 'homestead'>, pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string, birthdays: Birthdays): string[] {
+  const line = favouriteOf(pack, id)
+  const birthday = birthdays.get(id)
+  const house = save.love[id]?.house
+  const named = house === undefined ? undefined : save.homestead.houses[house]?.name
+  return [
+    ...(line ? [ACTIVITY_NAMES[line]] : []),
+    ...(birthday !== undefined ? [`★ ${SEASON_NAMES[dateOf(birthday).season]} ${dateOf(birthday).day}`] : []),
+    ...(named ? [named] : []),
+  ]
+}
+
+/** Her Memories' count (RM56): one a rung with an event, 26 in all (S2 and S4 have none). */
+export const MEMORY_RUNGS = ROUTE_RUNGS.length - 2

@@ -1,10 +1,12 @@
 // The morning summary's lines (F18 decision 11, F19 decision 6, F20, F21, F23, F24): the save holds ids and counts, and
 // these say them, each line a tap to its place. With the farm map, on demand. Pure, so the card and the tests read the same.
-// On save v4 (F46 decision 15) §4 is Hearts: "★ Tomorrow: Stand-in 1's birthday" and her anniversary (F47), "Stand-in 1
-// arrived · away", her arrival scene waiting; the Dorm's beds are the Dorm for 20's.
+// On save v4 (F46 decision 15) §4 is Hearts, in RM57's order (F48 decisions 1 and 9): the Ready lines read live, up to
+// three and "+N more"; the invitation (F50); the house's morning (F54); birthdays and anniversaries, today and tomorrow
+// (F47); levels reached overnight (F54) and arrivals' scenes waiting (F46); bond hearts with Read (F52). Each opens her
+// profile on the Hearts tab (`/hearts?uma=`); the Dorm's beds are the Dorm for 20's.
 import {
-  ACTIVITY_NAMES, bedsFor, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, SEASON_NAMES, type FarmPlaceId, type FestivalId, type MorningSummary,
-  type MorningSummaryV4, type SummarySection, type SummarySectionV4, summarySections,
+  ACTIVITY_NAMES, bedsFor, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, rungName, SEASON_NAMES, SUMMARY_SECTIONS_V4, summarySections, type FarmPlaceId,
+  type FestivalId, type HeartLine, type MorningSummary, type MorningSummaryV4, type SummarySection, type SummarySectionV4,
 } from '@farm/domain'
 import { chapterDoneWords, farmRankWords, milestoneWords } from './goal-words'
 import { challengeWords } from './roster-view'
@@ -41,16 +43,61 @@ export const DORM = '/dorm'
 export type NameOf = (outfitId: string) => string
 const someone: NameOf = () => 'An Uma'
 
-/** The morning summary as the card shows it: CS5's sections in order, empty ones hidden, each line a tap. */
-export function summaryParts(summary: MorningSummary | MorningSummaryV4, nameOf: NameOf = someone): SummaryPart[] {
-  return summarySections(summary).map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf) }))
+/** A Ready line for the morning (F48 decision 9): read live from `readiness` as the card shows, never stored. */
+export interface ReadyNow {
+  id: string
+  rung: string
+  /** Where it plays, in words ("the Fields"); null without her bible's beat. */
+  place: string | null
 }
-/** Her sheet on the roster. */
-export const umaSheet = (outfitId: string): string => `/roster?uma=${outfitId}`
+
+/** The morning summary as the card shows it: CS5's sections in order, empty ones hidden, each line a tap. On v4, §4 Hearts
+ * also shows while someone is `ready` (decision 9). */
+export function summaryParts(summary: MorningSummary | MorningSummaryV4, nameOf: NameOf = someone, ready: readonly ReadyNow[] = []): SummaryPart[] {
+  const sections = 'hearts' in summary
+    ? SUMMARY_SECTIONS_V4.filter((section) => (section === 'hearts' ? summary.hearts.length + ready.length > 0 : summary[section].length > 0))
+    : summarySections(summary)
+  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready) }))
+}
+/** Her sheet: on the roster (v3), or her profile on the Hearts tab (v4, F48 decision 2), on its Work side for a rank's
+ * line. */
+export const umaSheet = (outfitId: string, version: number = 3, view?: 'work'): string =>
+  version >= 4 ? `/hearts?${view ? `view=${view}&` : ''}uma=${outfitId}` : `/roster?uma=${outfitId}`
+
+/** The morning's Ready lines: up to three, then "+N more" (RM57). */
+export const READY_LINES = 3
+/** RM57's order of §4 Hearts, by line kind: (1) Ready, (2) the invitation (F50), (3) the house's morning (F54), (4)
+ * birthdays and anniversaries, (5) levels reached overnight (F54) and arrivals, (6) bond hearts (F52). A new stored kind
+ * takes its place here and its words in `heartLine`; within a place the night's order holds. */
+export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = { birthday: 4, anniversary: 4, arrived: 5 }
+
+/** §4 Hearts on v4 (decisions 1 and 9): the Ready lines, then the stored lines in RM57's order. */
+export function heartsLines(hearts: readonly HeartLine[], ready: readonly ReadyNow[], nameOf: NameOf): SummaryLine[] {
+  const now = ready.slice(0, READY_LINES).map((r): SummaryLine => ({
+    key: `ready:${r.id}`, to: umaSheet(r.id, 4), text: `● Ready · ${nameOf(r.id)} · ${rungName(r.rung)}${r.place ? ` · ${r.place}` : ''}`,
+  }))
+  const more = ready.length > READY_LINES ? [{ key: 'ready:more', to: '/hearts?filter=ready', text: `+${ready.length - READY_LINES} more` }] : []
+  const stored = hearts.map((line, i) => ({ line, i })).sort((a, b) => HEARTS_ORDER[a.line.kind] - HEARTS_ORDER[b.line.kind] || a.i - b.i)
+  return [...now, ...more, ...stored.map(({ line }) => heartLine(line, nameOf))]
+}
+
+/** A stored §4 line in words, opening her profile. */
+function heartLine(line: HeartLine, nameOf: NameOf): SummaryLine {
+  const name = nameOf(line.id)
+  const to = umaSheet(line.id, 4)
+  switch (line.kind) {
+    case 'birthday': return { key: `birthday:${line.id}`, to, text: line.when === 'today' ? `★ ${name}’s birthday today` : `★ Tomorrow: ${name}’s birthday` }
+    case 'anniversary': return {
+      key: `anniversary:${line.id}`, to,
+      text: line.when === 'today' ? `♥ ${name}’s anniversary${line.item ? ` · ★5 ${goodName(line.item)} left for you` : ''}` : `♥ Tomorrow: ${name}’s anniversary`,
+    }
+    case 'arrived': return { key: `arrived:${line.id}`, to, text: `${name} arrived${line.home ? '' : ' · away'}`, tag: 'New' }
+  }
+}
 
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 
-function sectionLines(summary: MorningSummary | MorningSummaryV4, section: SummarySection | SummarySectionV4, nameOf: NameOf): SummaryLine[] {
+function sectionLines(summary: MorningSummary | MorningSummaryV4, section: SummarySection | SummarySectionV4, nameOf: NameOf, ready: readonly ReadyNow[]): SummaryLine[] {
   const version = 'hearts' in summary ? 4 : 3
   switch (section) {
     case 'bin': {
@@ -95,34 +142,20 @@ function sectionLines(summary: MorningSummary | MorningSummaryV4, section: Summa
       })
     case 'nudges':
       return summary.nudges.map((line) => line.kind === 'idle'
-        ? { key: 'idle', text: `${plural(line.umas.length, 'Uma')} idle`, to: '/roster' }
+        ? { key: 'idle', text: `${plural(line.umas.length, 'Uma')} idle`, to: version === 4 ? '/hearts?view=work' : '/roster' }
         : { key: 'seeds', text: `${plural(line.plots, 'plot')} to plant`, to: FIELDS })
     case 'ranks':
       // F21: "Name · Farming Hand" for a rank-up; "Name · Farming · Harvest 30 crops she tended · 12/30" when her points
       // filled and the challenge waits, naming the challenge in its own words with her count. Each opens her sheet.
       return summary.ranks.map((line): SummaryLine => line.kind === 'rank-up'
-        ? { key: `rank-up:${line.outfitId}:${line.activity}`, to: umaSheet(line.outfitId), text: `${nameOf(line.outfitId)} · ${ACTIVITY_NAMES[line.activity]} ${RANKS[line.rank]}`, tag: 'Rank up' }
+        ? { key: `rank-up:${line.outfitId}:${line.activity}`, to: umaSheet(line.outfitId, version, 'work'), text: `${nameOf(line.outfitId)} · ${ACTIVITY_NAMES[line.activity]} ${RANKS[line.rank]}`, tag: 'Rank up' }
         : {
-          key: `full:${line.outfitId}:${line.activity}`, to: umaSheet(line.outfitId), tag: 'Points full',
+          key: `full:${line.outfitId}:${line.activity}`, to: umaSheet(line.outfitId, version, 'work'), tag: 'Points full',
           text: `${nameOf(line.outfitId)} · ${ACTIVITY_NAMES[line.activity]} · ${challengeWords(line.activity, line.rank - 1, line.challenge) ?? RANKS[line.rank]}`,
         })
     case 'bonds':
       return []
     case 'hearts':
-      // F47: her birthday and her anniversary, today or tomorrow, with the anniversary's ★5 item on the day; F46: an Uma who
-      // arrived overnight, home or away (her arrival scene plays once the summary is put away). Each opens her sheet.
-      return 'hearts' in summary ? summary.hearts.map((line): SummaryLine => {
-        const name = nameOf(line.id)
-        switch (line.kind) {
-          case 'birthday': return {
-            key: `birthday:${line.id}`, to: umaSheet(line.id), text: line.when === 'today' ? `★ ${name}’s birthday today` : `★ Tomorrow: ${name}’s birthday`,
-          }
-          case 'anniversary': return {
-            key: `anniversary:${line.id}`, to: umaSheet(line.id),
-            text: line.when === 'today' ? `♥ ${name}’s anniversary${line.item ? ` · ★5 ${goodName(line.item)} left for you` : ''}` : `♥ Tomorrow: ${name}’s anniversary`,
-          }
-          case 'arrived': return { key: `arrived:${line.id}`, to: umaSheet(line.id), text: `${name} arrived${line.home ? '' : ' · away'}`, tag: 'New' }
-        }
-      }) : []
+      return 'hearts' in summary ? heartsLines(summary.hearts, ready, nameOf) : []
   }
 }

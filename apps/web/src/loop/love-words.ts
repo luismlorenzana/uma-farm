@@ -1,5 +1,6 @@
-// Her route in words (F47 decisions 13 and 15; romance spec RM24): what her next event waits for, as her sheet says it, and
-// F48's Hearts tab and morning after it. Pure, so the sheet and the tests read the same. Loaded on demand with her sheet.
+// Her route in words (F47 decisions 13 and 15, F48 decision 6; romance spec RM24): what her next event waits for, as her
+// Hearts row says it (`readyWords`, with the rung) and as her profile's Next card says it (`nextWords`, under the rung's
+// name). Pure, so the screens and the tests read the same. Loaded on demand with the Hearts tab.
 import { goodName, rungName, type Activity, type Bar, type Readiness } from '@farm/domain'
 
 /** A working setup's place, as RM24 says it ("Romance 5 · the Pond, when she works it"). */
@@ -34,6 +35,32 @@ export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, 
     }
   }
 }
+
+/** Her Next card's words (F48 decision 6): the wait without the rung, which the card's title already names. "Ready",
+ * "123 to go", "Tomorrow", "Needs a ring", "Swap her home", "Opens with chapter 3", "Her story is still being written". */
+export function nextWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, nameOf: (id: string) => string): string {
+  if (state.ready) return 'Ready'
+  const waits = state.waits!
+  switch (waits.kind) {
+    case 'done': return 'Her route is complete'
+    case 'unwritten': return 'Her story is still being written'
+    case 'friend': return 'She said “Not yet”'
+    case 'night': return 'Comes tonight'
+    case 'opens': return `Opens with chapter ${waits.chapter}`
+    case 'bar': return `${(bar.cost - bar.points).toLocaleString('en-US')} to go`
+    case 'day': return 'Tomorrow'
+    case 'ring': return 'Needs a ring'
+    case 'away': return 'Swap her home'
+    case 'today': return 'Tomorrow: one event a day'
+    case 'setup': {
+      const s = waits.setup
+      if (s.kind === 'working') return `${cap(WORK_PLACE[s.activity])}, when she works there`
+      if (s.kind === 'item') return `With ${goodName(s.good)} in the Warehouse`
+      return `Bond ${s.level} with ${nameOf(s.with)}`
+    }
+  }
+}
+const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
 
 /** "+15", "0". */
 export const gain = (n: number): string => (n > 0 ? `+${n}` : '0')

@@ -253,6 +253,10 @@ roster:
 
 - **`/roster`** is uma-kit's album chrome over the roster (the Umas home until F23, everyone since, with a Where filter,
   hearts, and Chat and Gift on her sheet; [roster.md](roster.md#the-screens)): search, sort and filters, a three-column grid of cards.
+  **On save v4 (romance build; live from F56; F48 decision 8) the album is the Hearts tab's Work view** (`/hearts?view=work`,
+  `loop/RosterAlbum.tsx`, shared with M4's page): the same cards, filters and sorts, with her level in words ("F7", "R4",
+  "S2") in each face's corner in place of v3's hearts; a card opens her profile on its Work side, her nine activities
+  below ([hearts.md](hearts.md#her-profile-rm53)).
   - **Her face** carries her **favourite line's mark** (top left: a Carrot farming, a Pine Log foraging, a Carp fishing,
     Copper Ore mining, from uma-art's items atlas on a light disc) and her **best talent's grade** (bottom right, on a
     chip: S gold, A coral, B blue, C green, D and below grey).

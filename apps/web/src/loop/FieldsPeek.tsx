@@ -1,6 +1,7 @@
 // The Fields on the farm map (F20): their quick look, one row a block (its tender's face, what grows, what's Ready, and a
 // locked block's Farm Rank and cost), Harvest all on every block, and Open the Fields; and their pips, one a block, each
-// its tender's face ringed by the block's growth, at her talent (F21). Part of the farm map's chunk.
+// its tender's face ringed by the block's growth, at her talent (F21), its block's letter on her lower left, or ♥ while
+// she's Ready on a v4 farm (F48 decision 10). Part of the farm map's chunk.
 import { readyPlots, talentD, type FarmingTalentOf, type FarmSave } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import type { PipModel } from '@luismlorenzana/uma-kit/hub'
@@ -18,13 +19,14 @@ const progressOf = (block: OwnedBlock): number => {
   return growing.length === 0 ? 0 : growing.reduce((sum, p) => sum + p.progress, 0) / growing.length
 }
 
-/** The Fields' pips: one an owned block, its tender's face (busy while it grows, Ready with a Ready plot) or a free dot. */
-export function fieldsPips(save: FarmSave, talentOf: FarmingTalentOf = talentD): PipModel[] {
+/** The Fields' pips: one an owned block, its tender's face (busy while it grows, Ready with a Ready plot) or a free dot; a
+ * Ready tender's badge is ♥ in place of her block's letter. */
+export function fieldsPips(save: FarmSave, talentOf: FarmingTalentOf = talentD, hearts: ReadonlySet<string> = new Set()): PipModel[] {
   return fieldsView(save, talentOf).flatMap((block): PipModel[] => {
     if (!block.owned) return []
     if (block.tender === null) return [block.ready > 0 ? { state: 'ready' } : { state: 'free' }]
     return [{
-      state: block.ready > 0 ? 'ready' : 'busy', progress: progressOf(block), badge: block.id,
+      state: block.ready > 0 ? 'ready' : 'busy', progress: progressOf(block), badge: hearts.has(block.tender) ? '♥' : block.id,
       face: <FaceTile outfitId={block.tender} size={24} label={`Block ${block.id}'s tender`} round />,
     }]
   })

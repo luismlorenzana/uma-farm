@@ -47,6 +47,7 @@ import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER, costOf, LADDER_COLOURS, ROUT
 import { DISLIKED_LINE, GIFT_POINTS_V4, giftStars, LOVE_POINTS } from '../romance/acts'
 import { farmBirthday } from '../romance/days'
 import { READY_CONDITIONS, WAIT_ORDER } from '../romance/ready'
+import { lineChapter, MORNING_GOOD, NIGHT_CHORE, PERK_LINES, PERK_PLACE, PERKS, perkWords, type PerkLine } from '../romance/perks'
 import { loveRankFactor } from '../farm/rank-rules'
 import { dateOf } from '../farm/calendar'
 import { FARMER_NAME_MAX } from '../romance/farmer'
@@ -642,6 +643,22 @@ function heartsFactor(): string {
     ['v4 (romance build): her friendship', span(levels(1)), span(levels(1.05)), `${loveRankFactor({ stage: 'confession', level: 10 }) === 1.1 ? 'F10 on: her confession, romance and spouse' : '?'}`],
   ])
 }
+// --- F48: the perks' words (romance spec RM31, RM32, RM36) -------------------------------------------------------------
+const PERK_LINE_NAME: Readonly<Record<PerkLine, string>> = {
+  farming: 'Farming', foraging: 'Foraging', fishing: 'Fishing', mining: 'Mining (the Mine)', quarry: 'Mining (the Quarry)', ranch: 'Ranch', cooking: 'Cooking',
+  serving: 'Serving', forging: 'Forging',
+}
+/** RM31: every level's perk, with a forager's words for the ones her line templates; then each line's words. */
+function perkWordsBlock(): string {
+  const levels = table(['Level', 'Perk id', 'Words (a forager’s)', 'At her line’s place'], PERKS.map((p) => [
+    p.rung.toUpperCase(), `\`${p.id}\``, perkWords(p.id, 'foraging'), p.place ? 'Yes: “Opens with chapter n” until it opens' : '',
+  ]))
+  const lines = table(['Her line', 'Her place', '+10% (F3)', 'A night chore (F6)', 'A morning item (R2)', 'Opens with'], PERK_LINES.map((line) => [
+    PERK_LINE_NAME[line], PERK_PLACE[line], perkWords('line-10', line), NIGHT_CHORE[line], `A ★2+ ${MORNING_GOOD[line]}`, lineChapter(line) === null ? 'Day 1' : `Chapter ${lineChapter(line)}`,
+  ]))
+  return `${levels}\n\n${lines}`
+}
+
 /** Decision 6: the stand-in pack in git, the dark build's cast. */
 function standIn(): string {
   const pack = storyPackFrom(STAND_IN_FILES)
@@ -664,7 +681,7 @@ export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
     'dorm-v4': dormV4, arrivals, 'arrival-pay': arrivalPay, 'opening-v4': openingV4, 'night-v4': nightV4, 'stand-in': standIn, 'farmer-name': farmerName,
     'route-costs': routeCosts, 'love-points': lovePoints, 'gift-stars': giftStarsBlock, 'birthday-map': birthdayMap, 'ready-rules': readyRules,
-    'ready-waits': readyWaits, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor,
+    'ready-waits': readyWaits, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor, 'perk-words': perkWordsBlock,
     calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
     crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,
