@@ -267,7 +267,8 @@ describe('Memories\' replays (decision 12)', () => {
     const f1 = steps('f1')
     expect(choicePointsOf(f1)).toEqual([3])
     expect(replaySteps(f1)).toEqual(f1)
-    expect(replaySteps(f1, 3)).toEqual([{ place: 'fields' }, ...f1.slice(3)])
+    // From a choice point, with the line before it (its question).
+    expect(replaySteps(f1, 3)).toEqual([{ place: 'fields' }, ...f1.slice(2)])
     expect(choicePointsOf(steps('confession'))).toEqual([4, 7])
   })
 })

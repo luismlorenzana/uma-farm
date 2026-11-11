@@ -276,10 +276,14 @@ export function askSteps(steps: readonly Step[]): Step[] {
 /** The choice points a replay can start at: each top-level choice step's index. */
 export const choicePointsOf = (steps: readonly Step[]): number[] => steps.flatMap((s, i) => ('choice' in s ? [i] : []))
 
-/** A replay's steps (decision 12): from the top, or from the top-level step `from` (a choice point), the place it plays at
- * kept. Every option is open and nothing pays or is saved. */
+/** A replay's steps (decision 12): from the top, or from the top-level step `from` (a choice point) with the line just
+ * before it, so the choice has its question, and the place it plays at kept. Every option is open and nothing pays or is
+ * saved. */
 export function replaySteps(steps: readonly Step[], from: number | null = null): Step[] {
   if (from === null || from <= 0 || from >= steps.length) return [...steps]
-  const place = steps.slice(0, from).reverse().find((s) => 'place' in s)
-  return [...(place ? [place] : []), ...steps.slice(from)]
+  let start = from
+  const before = steps[from - 1]
+  if (before && ('say' in before || 'narrate' in before || 'thought' in before)) start = from - 1
+  const place = steps.slice(0, start).reverse().find((s) => 'place' in s)
+  return [...(place ? [place] : []), ...steps.slice(start)]
 }

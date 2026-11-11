@@ -21,7 +21,7 @@ import {
 } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
-import { Button, Sheet, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
+import { Button, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useSearchParams } from 'react-router'
@@ -240,9 +240,10 @@ function Scene({ req, steps, save, pack, master, auto, onAuto, log, onLog, skipA
   // The bust: whoever's speaking, if she's an Uma; else hers. Her emote beside it.
   const speaker = step && 'say' in step ? step.say : null
   const bustId = speaker && !isCast(speaker) ? speaker : id
-  const emote = step && 'say' in step && step.say === bustId ? step.emote ?? null : null
-  // At a choice, the line before it stays in the bubble.
+  // At a choice, the line before it stays in the bubble, and her emote with it.
   const context = choiceNow ? [...before].reverse().find((s) => 'say' in s || 'narrate' in s || 'thought' in s) ?? null : null
+  const said = step && 'say' in step ? step : context && 'say' in context ? context : null
+  const emote = said && said.say === bustId ? said.emote ?? null : null
   return (
     <Shell title={title} auto={auto} onAuto={onAuto} onSkip={skip} onLog={() => onLog(true)}>
       <PlaceCardView place={place} day={save.calendar.day} bust={bustId} bustName={nameOf(bustId)} castSpeaker={speaker && isCast(speaker) ? speaker : null} emote={emote} />
@@ -257,7 +258,7 @@ function Scene({ req, steps, save, pack, master, auto, onAuto, log, onLog, skipA
         ) : <div className="flex-1" />}
       </div>
       {activePlay && (
-        <PlaySheet key={`p${plays.length}`} spec={playSpec(save, pack, id, activePlay.as, 'event', seed(plays.length))} title={activePlay.prompt ?? undefined} name={name}
+        <PlaySheet key={`p${plays.length}`} spec={playSpec(save, pack, id, activePlay.as, 'event', seed(plays.length))} title={activePlay.prompt ?? undefined} name={name} replay={mode === 'replay'}
           onDone={(result) => { setPlays([...plays, { kind: activePlay.as.kind, ...result }]); if (playNow) setAt(cursor + 1) }} />
       )}
       {log && <LogSheet lines={lines} onClose={() => onLog(false)} />}
@@ -396,15 +397,22 @@ function logLines(steps: readonly Step[], picks: readonly number[], nameOf: (id:
   })
 }
 
+/** The log, drawn inside the player's layer (the kit's sheets sit under it). */
 function LogSheet({ lines, onClose }: { lines: readonly { who: string; text: string }[]; onClose: () => void }) {
   return (
-    <Sheet open onClose={onClose} title="Log" label="The lines so far">
-      {lines.length === 0 ? <p className="text-ink-soft">Nothing yet.</p> : (
-        <ol className="space-y-2 pb-2" data-log={lines.length}>
-          {lines.map((l, i) => <li key={i} className="text-[15px]">{l.who && <span className="font-semibold">{l.who}: </span>}<span className={l.who ? '' : 'italic text-ink-soft'}>{l.text}</span></li>)}
-        </ol>
-      )}
-    </Sheet>
+    <div className="absolute inset-0 z-20 flex flex-col justify-end bg-black/40" onClick={onClose}>
+      <section role="dialog" aria-label="The lines so far" onClick={(e) => e.stopPropagation()} className="max-h-[75%] overflow-y-auto rounded-t-lg border-t border-hairline bg-panel px-4 pt-2 pb-6 shadow-3">
+        <header className="sticky top-0 flex min-h-12 items-center justify-between bg-panel">
+          <h2 className="font-display text-[17px] font-bold">Log</h2>
+          <button type="button" onClick={onClose} className="min-h-11 rounded-full px-3 text-[14px] font-semibold text-ink-soft" data-action="close-log">Close</button>
+        </header>
+        {lines.length === 0 ? <p className="text-ink-soft">Nothing yet.</p> : (
+          <ol className="space-y-2" data-log={lines.length}>
+            {lines.map((l, i) => <li key={i} className="text-[15px]">{l.who && <span className="font-semibold">{l.who}: </span>}<span className={l.who ? '' : 'italic text-ink-soft'}>{l.text}</span></li>)}
+          </ol>
+        )}
+      </section>
+    </div>
   )
 }
 
