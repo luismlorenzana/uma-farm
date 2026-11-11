@@ -1,5 +1,12 @@
 # uma-farm: the core spec
 
+> **The romance spec amends this doc (D46, 2026-11-11):** [romance-spec.md](romance-spec.md) (RM1–RM67) amends **CS2,
+> CS3, CS5, CS7, CS17, CS21, CS22, CS25, CS29, CS33–CS38, CS40–CS46, CS49 and CS51–CS55**: the start without picks,
+> the Dorm for 20 and authored arrivals instead of visitors, the ladders in place of CS45's affinity, the night's new
+> steps, the ring bench, bonds and the romance perks' terms, save v4 as a wipe, and the romance core's packets before
+> M5. Its §14 says how, one line each; its §13 re-runs CS51–CS52's sim over five years with the authored roster and the
+> romance layer. The text below is left as history.
+>
 > **Status: drafted 2026-11-08 (D27), F7's rewrite.** The owner accepted [core-loop.md](core-loop.md) whole (FC1–FC34,
 > D26) on [hd2d-farm.md](hd2d-farm.md) (FR1–FR24, D21). This spec turns those calls into numbers and rules that M4's
 > packets can be built from: every price, day, yield, rank, cost and reward, worked. Calls are **CS1–CS55**, each one

@@ -1,5 +1,11 @@
 # uma-farm: the farm's own loop
 
+> **The romance spec amends this doc (D46, 2026-11-11):** [romance-spec.md](romance-spec.md) (RM1–RM67) amends **FC1,
+> FC13, FC14, FC15, FC16, FC17, FC19, FC22, FC24, FC25, FC26, FC27, FC28, FC29, FC31, FC32 and FC33**: authored
+> arrivals instead of random Umas, each Uma's route of friendship, romance and spouse ladders, an evening in each day,
+> perks, bonds in the romance core, the ring bench, the homestead's houses, and a Hearts tab in place of Roster. Its §14
+> says how, one line each. The text below is left as history.
+>
 > **Romance becomes a pillar (D40, the owner, 2026-11-10):** the farmer is the player, a point of view, and can befriend
 > then romance every Uma of the owner's authored SS cast, with each Uma's wedding as the long goal. It will revise FC16
 > (authored arrivals, not random), FC24 (Umas in authored roles, privately), FC26 (affinity becomes the friendship ladder,
