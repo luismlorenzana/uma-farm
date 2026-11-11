@@ -7,6 +7,10 @@ Needs: F7 read · Unblocks: the first M4 packet built after its release pins it 
 > (the Dorm, the shipping bin, the seed-packet badge and the nine marks), is code-drawn pixel art, so it's Claude's in a
 > uma-platform session ("Take F25, part A"). **Part B, the three busts**, is character art, so it stays ChatGPT's ("Take
 > F25, part B"). Each part ships its own uma-art minor; neither waits on the other.
+>
+> **Part A is done and drawn in the farm (D49, D55):** uma-art 2.25.0, pinned at 2.26.0 by F49, so the live M4 build
+> draws the Dorm, the shipping bin, the seed-packet badge and the marks. **Only part B is left:** the three busts.
+> Whoever pins part B's release takes the farm side for the busts (the scene player's lettered discs give way to them).
 
 ## Why
 
