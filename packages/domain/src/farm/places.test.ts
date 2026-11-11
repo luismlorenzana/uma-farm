@@ -13,7 +13,7 @@ describe('the farm map (FC28)', () => {
     ])
     for (const p of FARM_PLACES) expect(p.col).toBe(FARM_PLACES.filter((q) => q.row === p.row).indexOf(p))
     expect(new Set(FARM_PLACES.map((p) => p.frame)).size).toBe(FARM_PLACES.length)
-    expect(FARM_PLACES.filter((p) => p.borrowed).map((p) => p.id)).toEqual(['coop', 'bin', 'dorm', 'board', 'expeditions'])
+    expect(FARM_PLACES.filter((p) => p.borrowed).map((p) => p.id)).toEqual(['coop', 'board', 'expeditions'])
     for (const id of LOOP_WORK_PLACES) expect(farmPlace(id), id).toBeDefined()
   })
 

@@ -41,9 +41,9 @@ they're dates only: the festival ground shows "Soon" (they come in M6, F32). The
 | Winter | 37–48 | Animal Show, Winter 10 (day 46); Harvest Cup, Winter 12 (day 48) |
 <!-- /live -->
 
-- **The date chip** sits in the account bar: the season's mark and the day of the season ("● 3"). uma-art's season marks
-  (`season/spring` … `season/winter`) come with F25; until then the chip draws a dot in the season's colour (Spring
-  green, Summer gold, Autumn orange, Winter blue). Its name for VoiceOver is the whole date and the next festival:
+- **The date chip** sits in the account bar: the season's mark and the day of the season. The mark is uma-art's
+  `season/spring` … `season/winter` (F25's part A, uma-art 2.25.0, pinned from F49); without it the chip draws a dot in the
+  season's colour (Spring green, Summer gold, Autumn orange, Winter blue). Its name for VoiceOver is the whole date and the next festival:
   "Calendar: Spring 3, year 1 · Flower Show in 7 days".
 - **The calendar** (`?sheet=calendar`, from the chip): the day and the year, the four seasons with this one marked, the
   season's 12 days (past ones faded, today in the accent, the festival day ringed with a trophy), the season's festivals,
@@ -256,9 +256,9 @@ stay put.
 | Quarry | `quarry` | Chapter 3 |
 | Cutter | `den-workbench` | Chapter 3 |
 | Forge | `forge` | Chapter 7 |
-| Shipping bin | `workbench` (borrowed) | Day 1 |
+| Shipping bin | `shipping-bin` | Day 1 |
 | Warehouse | `warehouse` | Day 1 |
-| Dorm | `pantry` (borrowed) | Day 1 |
+| Dorm | `dorm` | Day 1 |
 | Requests board | `card-library` (borrowed) | M6 |
 | Gate | `scenario-gate` | Day 1 |
 | Shop | `exchange` | Day 1 |
@@ -279,8 +279,8 @@ stay put.
   ([gathering.md](gathering.md#the-screens-decisions-5-and-8)). F23 opened the Dorm (`/dorm`) and the Gate (its quick
   look, `/?peek=gate`, with the visitor's face as its pip; [roster.md](roster.md#the-screens)). Every other place keeps
   its plain quick look.
-- **Borrowed buildings:** the Coop, the bin, the Dorm, the board and the expedition post stand on unused uma-art buildings
-  until their own ship (F25, F29, F38).
+- **Borrowed buildings:** the Coop, the board and the expedition post stand on unused uma-art buildings until their own
+  ship (F29, F38). The bin and the Dorm draw F25's own `shipping-bin` and `dorm` (uma-art 2.25.0, pinned from F49).
 - **Pips** hang over a work place's building in a half arch (FR7): each working Uma's face ringed by her job's progress,
   or a free dot. A locked place with no one working shows none.
 - **Ready badges and Collect all** stay (FR7): a place with finished work says Ready, and the pill collects every

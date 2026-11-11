@@ -64,8 +64,8 @@ levels, boards and parties) join with their packets.
 
 - **A rank-up is news:** the morning's **New today** says "Farm Rank 2 · Block B (800g), Dorm level 3 (8 beds), New
   seeds at the shop", tagged Farm Rank, opening the rank's sheet. Two ranks in one night are two lines.
-- **The chip** (decision 8): the account bar's third chip, after the date and the gold: the crest (`farm/rank`, F25; a
-  green "FR" shield until it ships) and the rank. Its name is "Farm Rank 2: 400 points". uma-kit's tier crest stops at
+- **The chip** (decision 8): the account bar's third chip, after the date and the gold: the crest (`farm/rank`, F25's part A,
+  pinned from F49; a green "FR" shield without it) and the rank. Its name is "Farm Rank 2: 400 points". uma-kit's tier crest stops at
   3, so the rank isn't drawn there.
 - **The sheet** (`?sheet=rank`, over any page): the points, a bar to the next rank with "100 more for Farm Rank 3
   (500)", what the next rank opens, and the points so far by source (shipping, Diary entries, milestones, chapters). The
@@ -346,5 +346,5 @@ farming Hand on day 4 isn't reachable as built (Hand asks 30 tended crops: two h
   promises two chickens "once there's a coop to keep them in".
 - **Save v3 is live:** a new summary line, a new counter key the parse checks, or any other change to its shape is v4,
   with its migration and tests.
-- F25's busts replace the lettered discs (`CastBust`), and its `farm/rank` mark the "FR" shield, once the release is
-  pinned.
+- F25's part B busts replace the lettered discs (`CastBust`) once that release is pinned; its part A marks (the crest,
+  the seasons, the coin, the seed packet, the Dorm and the bin) are pinned from F49.

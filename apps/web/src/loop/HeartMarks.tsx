@@ -1,7 +1,8 @@
-// The Hearts marks, as stand-ins (F48 decision 11; romance spec RM62): the stage hearts, the bar's segments, the route's
-// track, and the Ready and invitation chips are CSS shapes and glyphs in the ladders' colours (coral, rose, gold) until
-// the packet that pins F55's uma-art release swaps in its `hearts/*` marks (F54 at the latest). Loaded on demand with the
-// Hearts tab.
+// The Hearts marks (F48 decision 11; romance spec RM62): the stage hearts, the bar's segments and the route's track are
+// CSS shapes in the ladders' colours (coral, rose, gold), since they fill by points; the Ready and invitation chips carry
+// F55's `hearts/ready` and `hearts/invitation` marks (uma-art 2.26.0, pinned from F49), a glyph without them. Loaded on
+// demand with the Hearts tab.
+import { UiMark } from '@luismlorenzana/uma-kit/ui'
 import type { HeartBar, TrackCell } from './hearts-view'
 
 const TRACK = 'var(--color-hairline-strong)'
@@ -38,14 +39,22 @@ export function HeartSegments({ heart }: { heart: HeartBar }) {
   )
 }
 
-/** "● Ready" in the stage's colour (the `hearts/ready` mark's stand-in). */
+/** "● Ready" in the stage's colour, its dot uma-art's `hearts/ready` mark. */
 export function ReadyChip({ colour }: { colour: string }) {
-  return <span className="inline-flex shrink-0 items-center rounded-full px-1.5 text-[11px] leading-5 font-bold text-white" style={{ background: colour }} data-ready-chip>● Ready</span>
+  return (
+    <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 text-[11px] leading-5 font-bold text-white" style={{ background: colour }} data-ready-chip>
+      <UiMark mark="hearts/ready" fallback="●" /> Ready
+    </span>
+  )
 }
 
-/** "✉" an invitation from her today (the `hearts/invitation` mark's stand-in; F50 sends them). */
+/** "✉" an invitation from her today, uma-art's `hearts/invitation` mark (F50 sends them). */
 export function InviteChip() {
-  return <span className="inline-flex shrink-0 items-center rounded-full bg-[#e0567a]/15 px-1.5 text-[11px] leading-5 font-bold text-[#c2385e]" aria-label="An invitation" data-invite-chip>✉</span>
+  return (
+    <span className="inline-flex shrink-0 items-center rounded-full bg-[#e0567a]/15 px-1.5 text-[11px] leading-5 font-bold text-[#c2385e]" aria-label="An invitation" data-invite-chip>
+      <UiMark mark="hearts/invitation" fallback="✉" />
+    </span>
+  )
 }
 
 /** "Away" on her off-season. */

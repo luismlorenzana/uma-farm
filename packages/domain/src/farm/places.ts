@@ -38,7 +38,8 @@ export interface FarmPlace {
   /** Its row on the map, 1–8, and its column, 0–2. */
   row: number
   col: number
-  /** uma-art's building (CS19), or one it borrows until its own ships (F25, F29, F38). */
+  /** uma-art's building (CS19), or one it borrows until its own ships (F29, F38); F25's Dorm and shipping bin are uma-art
+   * 2.25.0's, pinned from F49. */
   frame: string
   borrowed: boolean
   /** One short line for its quick look. */
@@ -69,9 +70,9 @@ export const FARM_PLACES: readonly FarmPlace[] = [
   place('quarry', 'Quarry', 'gathering', 5, 0, 'quarry', 'Stone and gems, floor by floor.', chapter(3)),
   place('cutter', 'Cutter', 'station', 5, 1, 'den-workbench', 'Gems cut and polished.', chapter(3)),
   place('forge', 'Forge', 'workshop', 5, 2, 'forge', 'Tools, rings and fittings.', chapter(7)),
-  place('bin', 'Shipping bin', 'yard', 6, 0, 'workbench', 'What goes in pays tonight.', START, true),
+  place('bin', 'Shipping bin', 'yard', 6, 0, 'shipping-bin', 'What goes in pays tonight.', START),
   place('warehouse', 'Warehouse', 'yard', 6, 1, 'warehouse', 'Everything the farm holds, by stars.', START),
-  place('dorm', 'Dorm', 'yard', 6, 2, 'pantry', 'Beds for the Umas on the farm.', START, true),
+  place('dorm', 'Dorm', 'yard', 6, 2, 'dorm', 'Beds for the Umas on the farm.', START),
   place('board', 'Requests board', 'yard', 7, 0, 'card-library', 'The town’s requests.', { by: 'later' }, true),
   place('gate', 'Gate', 'yard', 7, 1, 'scenario-gate', 'Visitors come in here.', START),
   place('shop', 'Shop', 'town', 8, 0, 'exchange', 'Seeds for the season.', START),
