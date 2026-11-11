@@ -1,8 +1,8 @@
 // The loop's actions on the day (F18): End the day, dismiss the morning, Collect all; F19's goods: ship, Ship all, take
 // back and buy; F20's Fields: plant, Plant all, harvest, Harvest all, a tender and a block; F22's work: a job, a
 // queue, Collect, Recall, Repeat, a stopped queue and building a station; F23's roster: the start's picks and its
-// redraw, the Dorm's levels and swaps, chats and gifts; F24's scenes, read once; and F46's farmer's name, the v4 opening
-// (which brings the opening three) and arrival scenes. Each reads the save right
+// redraw, the Dorm's levels and swaps, chats and gifts; F24's scenes, read once; F46's farmer's name, the v4 opening
+// (which brings the opening three) and arrival scenes; and F47's chat, gift and praise on v4. Each reads the save right
 // before its rule runs (as `edit`), commits it to the store and the device, and syncs; a refused rule throws its words.
 // The night and the harvests read F21's talents from master data, so they wait for it. Loaded on demand with the loop's
 // screens, so the night's code stays out of the initial JS.
@@ -11,7 +11,7 @@ import {
   plantAll, readScene, recallLoopWorker, receiptItems, repeatLoopJob, restartLoopStopped, SaveRuleError, setTender, ship, shipAll, shopLines, startLoopJob, takeBack,
   touched, type BlockId, type CropId, type FarmingTalentOf, type HarvestReceipt, type LoopCollected, type LoopJobInput, type LoopKinds, type LoopPlaceId,
   type LoopWorkRequest, type FarmSave, type ChapterSceneId, type ShopLine, type StationId, type SaveV3, finishArrival, joinOpening, nameFarmer,
-  type ArrivalPlayed, type SaveV4,
+  type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid,
 } from '@farm/domain'
 import type { QueueInput } from '@luismlorenzana/uma-work'
 import { masterReady } from '../master/master'
@@ -33,7 +33,9 @@ export async function endTheDay(day: number): Promise<boolean> {
   const story = loopSave()?.version === 4 ? await storyReady() : undefined
   const save = loopSave()
   if (!save || save.calendar.day !== day) return false
-  await commit(endDay(save, { roster: view.roster, talentOf: talentsFor(view), story }, nowIso()))
+  // F47: a v4 night reads the cast's birthdays (master data's, the cast's own winning) for the morning's lines.
+  const birthdays = story ? birthdaysOf(story, view.birthdays) : undefined
+  await commit(endDay(save, { roster: view.roster, talentOf: talentsFor(view), story, birthdays }, nowIso()))
   return true
 }
 
@@ -257,3 +259,26 @@ export async function finishArrivalScene(id: string, played: ArrivalPlayed): Pro
   if (!save || save.version !== 4 || save.arrivals.includes(id)) return
   await change((s) => finishArrival(v4(s), id, played))
 }
+
+// --- Her route (F47) ----------------------------------------------------------------------------------------------
+
+/** A v4 act as a player's change: what it paid, for the "+N" that floats from her face. */
+async function loveAct<T extends LovePaid>(rule: (save: SaveV4) => T): Promise<Omit<T, 'save'>> {
+  let done: Omit<T, 'save'> | null = null
+  await change((s) => {
+    const { save, ...rest } = rule(v4(s))
+    done = rest
+    return save
+  })
+  return done!
+}
+/** A chat (decision 4): +15, once a day each, home or away. */
+export const chatHer = (id: string) => loveAct((s) => chatV4(s, id))
+/** A gift of one good at its stars (decision 5): her taste from the pack, ×3 on her birthday (master data's, read
+ * through the cast), so it waits for both. */
+export async function giftHer(id: string, item: string, stars: number) {
+  const [view, pack] = await Promise.all([masterReady(), storyReady()])
+  return loveAct((s) => giftV4(s, pack, id, item, stars, birthdaysOf(pack, view.birthdays)))
+}
+/** Praise (decision 6): +20, once a day, when she's earned it. */
+export const praiseHer = (id: string) => loveAct((s) => praiseV4(s, id))

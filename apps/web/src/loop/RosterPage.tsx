@@ -3,15 +3,15 @@
 // hearts with her in its corner, and her best rank (or her rank and talent in the activity sorted by); away, it says so.
 // The filters are where she is, her talent and rank in each activity and her favourite line; the sorts her talent score
 // and rank points in a chosen activity, joined and name. A tap opens her sheet (`?uma=<id>`): your hearts with her, Chat
-// and Gift, where she is, and her nine activities with talent, rank, points and the next challenge. On save v4 (F46) the
-// hearts, Chat and Gift wait for F47's route (decision 13): the cards and the sheet show her ranks and where she is.
-// Loaded on demand.
+// and Gift, where she is, and her nine activities with talent, rank, points and the next challenge. On save v4 her sheet
+// shows her route instead (F47 decision 15, `Love.tsx`, loaded only for a v4 save): her level, her bar, Ready, Chat, Gift
+// and Praise, with what an act paid floating from her face, until F48 moves it to the Hearts tab. Loaded on demand.
 import { ACTIVITY_NAMES, heartsOf, TALENT_GRADES, type FarmSave, type Temperament } from '@farm/domain'
 import { AlbumChrome, FaceTile } from '@luismlorenzana/uma-kit/album'
 import { emptyStateHint, runAlbumQuery, type AlbumQuery } from '@luismlorenzana/uma-kit/roster'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
@@ -23,6 +23,9 @@ import {
 import { talentTable } from './talents'
 import { FavouriteMark, TalentChip, umaBadges } from './UmaMarks'
 import { shortDate } from './words'
+
+/** Her route on her sheet (F47): the romance build's, on demand. */
+const LoveCard = lazy(() => import('./Love'))
 
 export default function RosterPage() {
   const save = useLoopSave()
@@ -36,6 +39,7 @@ export default function RosterPage() {
           <p>She climbs six ranks in each: Novice, Hand, Skilled, Expert, Master, Legend. A day of work earns rank points; a rank comes when its points are reached and its challenge is met, at night.</p>
           <p>Her favourite line (the mark on her face) earns ×1.2 rank points. She can work anywhere.</p>
           {save.version === 3 && <p>The hearts are your affinity with her: chat once a day and give a gift once a day. Goods of her favourite line please her most. At 5 hearts she earns 5% more rank points, at 10 hearts 10%.</p>}
+          {save.version === 4 && <p>Her bar fills as you chat, give gifts she likes and praise her work, and from a day at her favourite line. A full bar makes her next event Ready. From Friendship 5 she earns 5% more rank points, from Friendship 10, 10%.</p>}
           <p>Umas beyond the Dorm’s beds are away on their off-season. Swap them in at the Dorm.</p>
         </HelpButton>
       </div>
@@ -97,7 +101,7 @@ function Roster({ save, master }: { save: FarmSave; master: MasterView }) {
           })}
         </ul>
       </AlbumChrome>
-      {open && <UmaSheet save={save} row={open} temperament={talents?.get(open.id)?.temperament ?? null} onClose={() => leave(withParam(location, 'uma', null))} />}
+      {open && <UmaSheet save={save} row={open} master={master} temperament={talents?.get(open.id)?.temperament ?? null} onClose={() => leave(withParam(location, 'uma', null))} />}
     </>
   )
 }
@@ -110,12 +114,17 @@ function heartBadge(affinity: number) {
 
 /** Her sheet: your hearts with her, Chat and Gift (F23), where she is, her favourite line, when she joined, and her nine
  * activities, each with talent, rank, points and the challenge toward her next rank. */
-function UmaSheet({ save, row, temperament, onClose }: { save: FarmSave; row: LoopUmaRow; temperament: Temperament | null; onClose: () => void }) {
+function UmaSheet({ save, row, master, temperament, onClose }: { save: FarmSave; row: LoopUmaRow; master: MasterView; temperament: Temperament | null; onClose: () => void }) {
   const lines = activityLines(row)
+  // F47: what an act paid floats up from her face ("+N", RM13); each new pay is its own key.
+  const [float, setFloat] = useState<{ points: number; key: number } | null>(null)
   return (
     <Sheet open onClose={onClose} title={row.name} label={`${row.name}: talents and ranks`}>
       <div className="flex items-center gap-3 pb-3" data-uma-sheet={row.id}>
-        <FaceTile outfitId={row.id} size={56} badges={umaBadges(row)} label={row.name} />
+        <span className="relative block w-14 shrink-0">
+          <FaceTile outfitId={row.id} size={56} badges={umaBadges(row)} label={row.name} />
+          {float && <span key={float.key} aria-hidden className="love-float pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-1.5 text-[14px] font-bold text-[#c2385e] shadow-1" data-love-float={float.points}>+{float.points}</span>}
+        </span>
         <div className="min-w-0 text-[13px] text-ink-soft">
           {row.favourite && <p data-favourite-line={row.favourite}>Favourite · {ACTIVITY_NAMES[row.favourite]} (×1.2 rank points)</p>}
           <p>Joined {shortDate(row.joined)}</p>
@@ -126,6 +135,13 @@ function UmaSheet({ save, row, temperament, onClose }: { save: FarmSave; row: Lo
         <div className="space-y-2 pb-3">
           <Hearts affinity={row.affinity} />
           <TalkButtons save={save} outfitId={row.id} name={row.name} temperament={temperament} />
+        </div>
+      )}
+      {save.version === 4 && (
+        <div className="pb-3">
+          <Suspense fallback={null}>
+            <LoveCard save={save} id={row.id} name={row.name} temperament={temperament} master={master} onPaid={(points) => setFloat((f) => ({ points, key: (f?.key ?? 0) + 1 }))} />
+          </Suspense>
         </div>
       )}
       <ul className="divide-y divide-hairline rounded-md border border-hairline" aria-label="Talents and ranks">

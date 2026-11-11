@@ -1,7 +1,7 @@
 // The morning summary's lines (F18 decision 11, F19 decision 6, F20, F21, F23, F24): the save holds ids and counts, and
 // these say them, each line a tap to its place. With the farm map, on demand. Pure, so the card and the tests read the same.
-// On save v4 (F46 decision 15) §4 is Hearts: "Stand-in 1 arrived · away", her arrival scene waiting; the Dorm's beds are the
-// Dorm for 20's.
+// On save v4 (F46 decision 15) §4 is Hearts: "★ Tomorrow: Stand-in 1's birthday" and her anniversary (F47), "Stand-in 1
+// arrived · away", her arrival scene waiting; the Dorm's beds are the Dorm for 20's.
 import {
   ACTIVITY_NAMES, bedsFor, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, SEASON_NAMES, type FarmPlaceId, type FestivalId, type MorningSummary,
   type MorningSummaryV4, type SummarySection, type SummarySectionV4, summarySections,
@@ -109,9 +109,20 @@ function sectionLines(summary: MorningSummary | MorningSummaryV4, section: Summa
     case 'bonds':
       return []
     case 'hearts':
-      // F46: an Uma who arrived overnight, home or away; her arrival scene plays once the summary is put away.
-      return 'hearts' in summary ? summary.hearts.map((line): SummaryLine => ({
-        key: `arrived:${line.id}`, to: umaSheet(line.id), text: `${nameOf(line.id)} arrived${line.home ? '' : ' · away'}`, tag: 'New',
-      })) : []
+      // F47: her birthday and her anniversary, today or tomorrow, with the anniversary's ★5 item on the day; F46: an Uma who
+      // arrived overnight, home or away (her arrival scene plays once the summary is put away). Each opens her sheet.
+      return 'hearts' in summary ? summary.hearts.map((line): SummaryLine => {
+        const name = nameOf(line.id)
+        switch (line.kind) {
+          case 'birthday': return {
+            key: `birthday:${line.id}`, to: umaSheet(line.id), text: line.when === 'today' ? `★ ${name}’s birthday today` : `★ Tomorrow: ${name}’s birthday`,
+          }
+          case 'anniversary': return {
+            key: `anniversary:${line.id}`, to: umaSheet(line.id),
+            text: line.when === 'today' ? `♥ ${name}’s anniversary${line.item ? ` · ★5 ${goodName(line.item)} left for you` : ''}` : `♥ Tomorrow: ${name}’s anniversary`,
+          }
+          case 'arrived': return { key: `arrived:${line.id}`, to: umaSheet(line.id), text: `${name} arrived${line.home ? '' : ' · away'}`, tag: 'New' }
+        }
+      }) : []
   }
 }

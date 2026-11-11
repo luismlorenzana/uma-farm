@@ -49,7 +49,7 @@ const D_TERMS: TermsOf = () => ({ talent: TALENT_D, favourite: false })
 
 describe('rank points a day (CS29, CS45)', () => {
   it('pays 10 × her talent\'s factor, ×1.2 in her favourite line, ×1.25 well fed, ×1.05 at 5 hearts and ×1.10 at 10', () => {
-    const day = (talent: TalentStep, favourite = false, wellFed = false, affinity = 0) => rankPointsForDay({ talent, favourite, wellFed, affinity })
+    const day = (talent: TalentStep, favourite = false, wellFed = false, affinity = 0) => rankPointsForDay({ talent, favourite, wellFed, heartsFactor: affinityPoints(affinity) })
     expect(day(3)).toBe(10)
     expect(day(4, true)).toBe(13.2)
     expect(day(0)).toBe(8)
@@ -60,12 +60,12 @@ describe('rank points a day (CS29, CS45)', () => {
     expect([0, 99, 100, 550, 1000, 1200].map(heartsOf)).toEqual([0, 0, 1, 5, 10, 10])
     expect(affinityPoints(500)).toBe(1.05)
     // A workshop play and an expedition pass their own base, with the same factors.
-    expect(rankPoints(20, { talent: 3, favourite: false, wellFed: true, affinity: 0 })).toBe(25)
+    expect(rankPoints(20, { talent: 3, favourite: false, wellFed: true, heartsFactor: 1 })).toBe(25)
   })
 
   it('matches CS29\'s days-to-rank table, in her favourite line in brackets', () => {
     const table = (talent: TalentStep) => ([1, 2, 3, 4, 5] as Rank[]).map((r) =>
-      `${daysToRank(r, rankPointsForDay({ talent, favourite: false, wellFed: false, affinity: 0 }))} (${daysToRank(r, rankPointsForDay({ talent, favourite: true, wellFed: false, affinity: 0 }))})`)
+      `${daysToRank(r, rankPointsForDay({ talent, favourite: false, wellFed: false, heartsFactor: 1 }))} (${daysToRank(r, rankPointsForDay({ talent, favourite: true, wellFed: false, heartsFactor: 1 }))})`)
     expect(table(0)).toEqual(['5 (5)', '20 (17)', '50 (42)', '113 (94)', '250 (209)'])
     expect(table(3)).toEqual(['4 (4)', '16 (14)', '40 (34)', '90 (75)', '200 (167)'])
     expect(table(4)).toEqual(['4 (4)', '15 (13)', '37 (31)', '82 (69)', '182 (152)'])

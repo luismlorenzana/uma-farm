@@ -14,6 +14,14 @@ priority Umas, and each Uma's **arrival scene** pays the first points into her r
 `story/` for the pack). The spec is [romance-spec.md](../design/romance-spec.md) RM1–RM10, RM58 and RM59; the calls are
 F46's (D51).
 
+**Built from F47.** Each Uma's route is **one track**: Friendship 1–10, her confession, Romance 1–10, the proposal, the
+wedding and Spouse 1–5. **A level is its event:** her bar fills from chats, gifts by her own tastes, praise and a day at
+her line, her next event turns **Ready**, and the level comes when it plays (F49). Points never fall; past a full bar
+they're **banked**. Birthdays triple a gift; anniversaries double the day. The rules are in `romance/love.ts` (the
+ladders, `bar`, `advance`, `addLove`), `romance/acts.ts` (chats, gifts, praise, her line, festivals), `romance/praise.ts`,
+`romance/days.ts` (birthdays, anniversaries, `lineGood`), `romance/ready.ts` (`readiness`) and `farm/bonds.ts`; her sheet
+is `loop/Love.tsx`. The spec is RM11–RM18, RM23 and RM24; the calls are F47's (D52).
+
 ```
  a fresh v4 farm (or any v1–v3, wiped)
    │
@@ -157,40 +165,257 @@ arrival pays. A choice's `then` plays after it.
 <!-- /live -->
 
 It pays once (her id goes into `arrivals`) and stamps once. A route that doesn't script her arrival yet plays a short
-stand-in scene with the same choice and pay. F47 grows `addLove` with the ladders' costs and banking.
+stand-in scene with the same choice and pay. Its points go into her Friendship 1 bar through `addLove`, as every act's do.
 
 ## Her favourite line and tastes (RM6, RM7)
 
 - **Her favourite line** is her bible's `favouriteLine`, else her cast entry's `calling` (`quarry` is mining, at the
   Quarry): never master data's strategy. It sets ×1.2 rank points in that activity (CS33 kept, read from the pack at
-  night step 6) and the mark on her face card; F47 adds +10 a night at her line, F51 her perks there.
+  night step 6), the mark on her face card and **+10 a night at her line** (F47, [below](#her-line-rm6-rm13)); F51 adds
+  her perks there.
 - **Her line's places:** farming the Fields; foraging the forest and the Sawmill; fishing the Fishery and the
   Smokehouse; mining the Mine and the Smelter, or the Quarry and the Cutter when her calling is `quarry`; ranch the Coop
   and the Barn; cooking, serving and forging the Kitchen, the Restaurant and the Forge.
 - **Her tastes** are her bible's: one loved, three liked and two disliked by goods id; everything else neutral, and a
   proposed good neutral until it's in `goods/ids.ts` (`tasteOf`, for F47's gifts).
-- **Until F47** the romance build hides Chat, Gift and the hearts on the roster, and step 6's hearts factor is ×1.
+- **Her tastes show** as RM15 says: her loved good from Friendship 1, a good's taste once you've given it (`love.known`),
+  every taste from Friendship 7 ([gifts](#gifts-rm15-rm16)).
+
+## Her route (RM11, RM12, RM14)
+
+**Romance build; live from F56** (F47 decisions 2 and 3). One track per Uma, 26 rungs with an event, and the spouse
+levels S2 and S4, which have none and come at night when their bar fills (F54):
+
+```
+ F1 F2 F3 F4 F5 F6 F7 F8 F9 F10   ◆    R1 R2 … R8 R9 R10   ◇      ◇       S1  S2  S3  S4  S5
+ ─────── friendship ─────────  confession ── romance ─────  proposal wedding ──── spouse ─────
+ 200 240 280 … 560 (3,800)        0     200 … 560 (3,800)     0       0      600 600 600 600 600
+ an event at every level          an event                   events: ring   events at S1, S3, S5
+```
+
+<!-- live:route-costs -->
+| Heart | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | Ladder |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Friendship or romance** | 200 | 240 | 280 | 320 | 360 | 400 | 440 | 480 | 520 | 560 | **3,800** |
+| Cumulative | 200 | 440 | 720 | 1,040 | 1,400 | 1,800 | 2,240 | 2,720 | 3,240 | 3,800 |  |
+| **Spouse** | 600 | 600 | 600 | 600 | 600 |  |  |  |  |  | **3,000** |
+| **A route**: the three waiting rungs cost 0 |  |  |  |  |  |  |  |  |  |  | **10,600** |
+<!-- /live -->
+
+- **A level is its event** (the Persona rule): her bar fills, her event becomes Ready, and the level comes when it plays.
+  `advance(love, day)` is the one move, called by F49 when an event plays and by F54 for S2 and S4 at night: the cost
+  leaves her points, the rest stays banked, and `last` is the day. **F10** leaves her at her confession (level 10); her
+  confession accepted starts romance at 0; **R10** leaves her at the proposal, the proposal at the wedding, and the
+  wedding makes her a spouse at 0 (`wed` is the day); **S5** completes the route.
+- **The waiting rungs cost nothing:** the confession, the proposal and the wedding are each Ready the day after the rung
+  before (the proposal also needs a ring).
+- **Points never fall, and nothing is lost or locked** (RM14). Past a full bar they're **banked** ("+120 banked") and
+  carry into the next bar when the event plays. While a waiting rung waits, every point banks into the next ladder.
+- **Points are whole:** each pay rounds once, half up, after its factors. Once S5 has played nothing more is added.
+- **Her level in words** (`levelWords`): "New friend" at F0, "Friend · F7", "Friend · F10" while her confession waits,
+  "Close friend" after a "Not yet", "Partner" at R0, "Partner · R4", "Partner · R10", "Engaged" while the wedding waits,
+  "Spouse", "Spouse · S2". **The bar's colour carries the ladder:**
+
+<!-- live:ladder-colours -->
+| Ladder | Stages | Bar |
+|---|---|---|
+| Friendship | F0–F10, and her confession while it waits | coral `#f07a5c` |
+| Romance | R0–R10, the proposal and the wedding while they wait | rose `#e0567a` |
+| Spouse | S0–S5 (600 a level) | gold `#d9a227` |
+<!-- /live -->
+
+- **The save** (v4, grown in place): `love.level` is 0–9 on friendship and romance, 10 while a waiting rung waits, 0–5
+  as a spouse; `love.points` whole; `love.festivals` the festivals she's been at with you (`<festival>:<year>`), each
+  strictly parsed.
+
+## Points (RM13, RM15, RM18)
+
+**Romance build; live from F56** (F47 decisions 3–9). Every number shows on screen before or as it's earned: the button
+says it ("Chat +15", "Praise +20", each gift's points in the picker) and a **"+N" floats from her face**. `addLove` is
+the one way points move; it applies the day's factors and says what it paid.
+
+<!-- live:love-points -->
+| Act | Points | Limit | Paid by |
+|---|---|---|---|
+| Chat (tap her) | +15 | Once a day each, home or away | `chatV4` |
+| Gift (one good, its stars your choice) | Loved +60, Liked +30, Neutral +10, Disliked 0; × (1 + 0.1 a star above ★1) | One a day each; ×3 on her birthday | `giftV4` |
+| Praise (a ★3+ day’s work, a rank-up, a Fine play) | +20 | Once a day, when earned | `praiseV4` |
+| Her line (she worked it today) | +10 | Paid at night, step 6 | `payLines` |
+| A festival together (its team or entry) | +50 | Once a festival a year each | `festivalTogether` (F39, F32 call it) |
+| Her arrival scene | +50, and its choice (+10 or +30) | Once | `finishArrival` (F46) |
+| A heart event | +50, its choices and its play’s grade | One of hers a day | F49 |
+| The evening · an invitation said yes · a house morning | F50 · F50 · F54 |  |  |
+| **On her anniversary** | ×2 on every act but the evening (×1.5 instead, F50) | From year 2 of her marriage | `addLove` |
+<!-- /live -->
+
+- **The day's factors multiply once each** (decision 7): a gift **×3 on her birthday**; on her **anniversary every act
+  ×2** except the evening, which takes its own ×1.5 instead (F50).
+
+### Chats (RM18)
+
+**Chat** (tap her) pays +15 once a day, home or away (`chatV4`; refused "You've talked today."). Her line for the day
+(`chatLineV4`, drawn by `draw(uid, day, 'chat:<id>', 0)`, the same all day): before Friendship 1, her temperament's
+`CHAT_LINES` (v3's, kept as the fallback); **from Friendship 1, her own authored set** for her stage (her bible's
+`chats`: `friend` through the confession, `partner` from Romance 1 to the wedding, `spouse` after it). A bible without
+`chats` keeps the temperament lines. `{farmer}` and `{name}` are filled when the line shows.
+
+### Gifts (RM15, RM16)
+
+**Gift** takes one good from the Warehouse at the stars you choose, once a day each, home or away (`giftV4`; "One gift a
+day."; seeds: "That isn't a gift."). Her taste is her bible's (`tasteOf`: one loved, three liked, two disliked, the rest
+neutral; no bible, all neutral). **Stars multiply:**
+
+<!-- live:gift-stars -->
+| Her taste | ★1 | ★2 | ★3 | ★4 | ★5 |
+|---|---|---|---|---|---|
+| Loved | 60 | 66 | 72 | 78 | 84 |
+| Liked | 30 | 33 | 36 | 39 | 42 |
+| Neutral | 10 | 11 | 12 | 13 | 14 |
+| Disliked | 0 | 0 | 0 | 0 | 0 |
+| Loved, on her birthday (×3) | 180 | 198 | 216 | 234 | 252 |
+| Liked, on her birthday (×3) | 90 | 99 | 108 | 117 | 126 |
+| Neutral, on her birthday (×3) | 30 | 33 | 36 | 39 | 42 |
+
+A disliked gift pays 0 and she says one line: “She thanks you, a little puzzled.”
+<!-- /live -->
+
+- **Her tastes show** (`tasteKnown`): her **loved** good from Friendship 1; any good's taste **once you've given it**
+  (learnt into `love.known`); **every taste from Friendship 7**. The last two are derived, never stored.
+- **The picker** lists the Warehouse by family, each good at each star held, with **its points for her today** at those
+  stars (`giftPreview`: the birthday's ×3 and the anniversary's ×2 included) or **"?"** where her taste for it isn't known.
+
+### Praise (RM13)
+
+She **earns praise** for the day (`today.praise`, `earnPraise`) when (a) her work that finished overnight made a ★3+
+item, or (c) she ranked up last night (both at night step 9, `praiseOvernight`); (b) a harvest today from the block she
+tends gave a ★3+ crop (`harvest`); or (d) she assisted a Fine-or-better workshop play today (M5's packets call it).
+**Praise +20** shows on her sheet only while earned and unpaid (`canPraise`), pays once (`praiseV4`, `today.praised`),
+and both lists clear at night step 7.
+
+### Her line (RM6, RM13)
+
+Night step 6 (`payLine`, `payLines`): **+10** to each Uma who worked today at one of her line's places (`linePlaces`): a
+running job there, or for a farmer a tended block with a growing plot. One a night each; nothing for a day elsewhere (a
+farmer at the Mill earns nothing, as the Mill isn't the Fields).
+
+### A festival together
+
+`festivalTogether(save, ids, festival, year)` pays **+50** to each Uma on a festival's team or entry, once a festival a
+year each (`love.festivals`). Nothing calls it yet: F39 (M5) and F32 (M6) give festivals their teams and entries.
+
+## Birthdays and anniversaries (RM16, RM17)
+
+**Romance build; live from F56** (F47 decisions 10 and 11).
+
+**Her birthday** is master data's character set (`birthday: { month, day }`, read at runtime into `MasterView.birthdays`,
+never in git); the cast file's optional `birthday` wins where present (the stand-in cast gives 9000001 an invented one,
+28 March: Spring 4). A real date maps onto the 48-day year by quarters of its month (`farmBirthday`):
+`season day = 4 × (the month's place in its season, 0–2) + ⌈min(day, 31) ÷ 8⌉`, held to 1–4.
+
+<!-- live:birthday-map -->
+| Month | Days 1–8 | 9–16 | 17–24 | 25–31 |
+|---|---|---|---|---|
+| March | Spring 1 | Spring 2 | Spring 3 | Spring 4 |
+| April | Spring 5 | Spring 6 | Spring 7 | Spring 8 |
+| May | Spring 9 | Spring 10 | Spring 11 | Spring 12 |
+| June | Summer 1 | Summer 2 | Summer 3 | Summer 4 |
+| July | Summer 5 | Summer 6 | Summer 7 | Summer 8 |
+| August | Summer 9 | Summer 10 | Summer 11 | Summer 12 |
+| September | Autumn 1 | Autumn 2 | Autumn 3 | Autumn 4 |
+| October | Autumn 5 | Autumn 6 | Autumn 7 | Autumn 8 |
+| November | Autumn 9 | Autumn 10 | Autumn 11 | Autumn 12 |
+| December | Winter 1 | Winter 2 | Winter 3 | Winter 4 |
+| January | Winter 5 | Winter 6 | Winter 7 | Winter 8 |
+| February | Winter 9 | Winter 10 | Winter 11 | Winter 12 |
+<!-- /live -->
+
+On her birthday a **gift pays ×3** (and an evening ×1.5, F50); the morning says so **the day before and on the day**. Two
+Umas may share a day; a birthday on a festival day is both.
+
+**Her anniversary** is her wedding's day of the year, **from year 2 of her marriage** (`isAnniversary`: the days
+`wed + 48k`, k ≥ 1). That day **every act pays ×2** (the evening ×1.5 instead), and that morning **she leaves a ★5 item
+of her line** in the Warehouse (`lineGood`, a seeded draw: a crop of the season for a farmer, a good of her foraging
+rank's deepest area this season for a forager, a fish of her deepest spot for a fisher; her line's own once M5 and M6
+open mining, the ranch and the workshops, and **a ★5 crop of the season whenever her line's place isn't open**, so an
+anniversary is never empty). The morning says so the day before and on the day.
+
+## Ready (RM24)
+
+**Romance build; live from F56** (F47 decisions 1 and 13). `readiness(save, pack, id)` says whether her next event can
+play today: `{ rung, ready, waits }`. All four:
+
+<!-- live:ready-rules -->
+| # | Ready needs | Not met |
+|---|---|---|
+| 1 | Her bar is full for the rung; a waiting rung (the confession, the proposal, the wedding) is Ready the day after the rung before, and the proposal needs a ring in the Warehouse | `bar`, `day`, `ring` |
+| 2 | She’s home (on the Dorm’s list; F54 adds the houses) | `away`: “Swap her home” |
+| 3 | She hasn’t played one of her events today (RM21) | `today` |
+| 4 | Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level, a chapter has been reached | `setup`; `opens` for a chapter, or for the ranch, mining, cooking, expeditions, serving or forging before their chapters (2, 3, 4, 5, 6, 7) |
+<!-- /live -->
+
+**Never an hour, the weather, a season or a festival.** What isn't met is the first of these, in order:
+
+<!-- live:ready-waits -->
+| Order | `waits` | When |
+|---|---|---|
+| 1 | `done` | Her route is complete (S5 has played) |
+| 2 | `night` | S2 or S4, bar full: no event, the level comes at night (F54); short of it, `bar` |
+| 3 | `unwritten` | The pack doesn’t script the event yet: “Her story is still being written” |
+| 4 | `friend` | She said “Not yet” at her confession: you ask her again from her profile (F49) |
+| 5 | `opens` | A chapter setup not reached, or a working setup at a place before its chapter |
+| 6 | `bar` | Her bar isn’t full for the rung |
+| 7 | `day` | A waiting rung, on the day the rung before played |
+| 8 | `ring` | The proposal, with no ring in the Warehouse |
+| 9 | `away` | She’s away on her off-season |
+| 10 | `today` | She played one of her events today |
+| 11 | `setup` | Its day setup isn’t met today |
+<!-- /live -->
+
+A setup is her bible's beat's `trigger` for the rung (none without a bible). Bond hearts are CS44's (`bondHearts`: 50,
+150, 300, 500 and 750 points). The proposal's ring is any `ring-g1`…`ring-g10` in the Warehouse (F53's goods). Ready
+lines aren't stored in the morning: Ready changes by day, so F48 reads them live.
+
+## Her sheet, for now (decision 15)
+
+Until F48's profile, her sheet on the roster (`/roster?uma=<id>`, `loop/Love.tsx`, loaded on demand) shows, under her
+face: her level in words; **her bar** in the ladder's colour with "points / cost" toward the next rung and "+N banked";
+her next rung and whether it's **Ready**, or what it waits for ("Friendship 1 · 63 to go", "Swap her home", "tomorrow:
+one event a day", "Her story is still being written", "Opens with chapter 3", "Needs a ring"); **Chat +15** (then her
+line), **Gift** (the picker with points and "?") and **Praise +20** while earned, each a 44 pt button. What an act paid
+floats up from her face as "+N" (still, with reduced motion), and a disliked gift says "She thanks you, a little
+puzzled." F48 moves the sheet into the Hearts tab.
 
 ## The night and the morning on v4
 
-Step 8 on a v4 save (the other steps as [days.md](days.md) lists them):
+What a v4 night adds or changes from v3's ([days.md](days.md) lists the rest):
 
 <!-- live:night-v4 -->
 | Step | Function | What happens | Filled by |
 |---|---|---|---|
-| 8 | `settleDorm` | The Dorm’s level bought takes effect; swaps arrive, each Uma away coming home in the place of one leaving | F23 |
+| 6 | `tickRanks` | Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10; rank-ups where points and the challenge are met | F21, F47 |
+| 6 | `payLine` | Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night | F47 |
+| 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, evenings and invitations | F18, F47 |
 | 8 | `arriveUmas` | Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away | F46 |
-| 8 | `checkGoals` | The Diary pays its milestones and rows, the Farm Rank is recomputed, and a chapter whose goals are met completes: its gold, plans and recruit | F24 |
+| 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse | F47 |
 <!-- /live -->
 
 On v4 `checkGoals`' recruit is the chapter's authored arrival. Step 7 clears v4's whole `today`. The morning's §4 is
-**Hearts** (`arrived` lines; F47–F54 add theirs and F48 draws the section), and §5 drops v3's `joined`, Gate and `left`
-lines.
+**Hearts**, its stored lines in this order (F48 draws the section, with Ready lines read live):
+
+| Line | Words | Filled by |
+|---|---|---|
+| `{ kind: 'birthday', id, when }` | "★ Stand-in 1's birthday today", "★ Tomorrow: Stand-in 1's birthday" | F47 |
+| `{ kind: 'anniversary', id, when, item }` | "♥ Stand-in 1's anniversary · ★5 Carrot left for you" (`item` the good; null the day before), "♥ Tomorrow: Stand-in 1's anniversary" | F47 |
+| `{ kind: 'arrived', id, home }` | "Stand-in 4 arrived · away" | F46 |
+
+Today's lines come before tomorrow's, birthdays before anniversaries, each Uma in the cast's order; each opens her sheet.
+The parse refuses an Uma off the roster, a kind twice for one Uma, an anniversary's item the day before (or an unknown
+good on the day), and words. §5 drops v3's `joined`, Gate and `left` lines.
 
 ## For later packets
 
-- **F47** grows `love` (the ladders, costs, banking, chats, gifts with `tasteOf`, praise, her line's +10) and the
-  hearts factor; **F48** the Hearts tab, her profile and the morning's Hearts section; **F49** heart events and Memories
+- **F48** the Hearts tab, her profile (moving F47's sheet) and the morning's Hearts section, from `readiness`, `bar` and
+  `levelWords`; **F49** heart events and Memories
   (`memories`); **F50** the evening and invitations (`today.evenings`, `today.invites`); **F52** bonds from the ties;
   **F53** the ring and the wedding; **F54** the homestead (`homestead`, `love.house`).
 - Save v4 grows in place until F56; any change after F56 is v5.

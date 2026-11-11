@@ -3,11 +3,12 @@
 // (the API has no story pack or master data); `love` holds exactly the roster's keys, each in range; `memories` and
 // `arrivals` name roster Umas; the farmer's name is empty or within RM8's rule; the Dorm is on its eight levels. Each later
 // romance packet adds the checks for what it fills, while v4 grows in place (decision 1).
+import { dateOf, FESTIVAL_IDS } from '../farm/calendar'
 import { cleanFarmerName, farmerNameIssue } from '../romance/farmer'
 import { isCropId, isGoodId, isWarehouseId, type CropId } from '../goods/ids'
 import { LOOP_REQUESTS } from '../gathering/ids'
 import type { HeartLine, MorningSummaryV4, NewsLineV4 } from '../night/summary'
-import { amount, bool, count, int, list, object, oneOf, parseAccount, record, text } from './parse'
+import { bool, count, int, list, object, oneOf, parseAccount, record, text } from './parse'
 import {
   counts, day, fail, KEY, member, outfit, parseBinLines, parseBonds, parseBoard, parseBuildings, parseDiary, parseDig, parseDorm, parseExpeditions,
   parseFarm, parseFields, parseNewsLines, parseNudges, parseRanch, parseRankLines, parseRanks, parseTools, parseWarehouse, parseWork, parseWorkLines,
@@ -47,19 +48,35 @@ const pastDay = (value: unknown, path: string, today: number): number => {
   return d
 }
 
-const LOVE_KEYS = ['stage', 'level', 'points', 'last', 'friend', 'ring', 'wed', 'house', 'known', 'flags', 'evening'] as const
+const LOVE_KEYS = ['stage', 'level', 'points', 'last', 'friend', 'ring', 'wed', 'house', 'known', 'flags', 'evening', 'festivals'] as const
 
-/** Her route (RM10, decision 7): a level 0–10 (spouse 0–5); points finite and ≥ 0; `last` and `evening` no later than
- * today; `friend` only while the confession waits; `ring` only from the proposal on; `wed` and `house` only a spouse's. */
+/** Her level's range on each stage (F47 decision 2): friendship and romance 0–9 (the tenth event moves her on), 10 while a
+ * waiting rung waits, spouse 0–5. */
+const LEVELS: Readonly<Record<Love['stage'], readonly [number, number]>> = {
+  friendship: [0, 9], confession: [10, 10], romance: [0, 9], proposal: [10, 10], wedding: [10, 10], spouse: [0, 5],
+}
+
+/** A festival she's been at with you (F47 decision 9): `<festival>:<year>`, the year no later than this one. */
+function festivalKey(value: unknown, path: string, year: number): string {
+  const [festival, at] = typeof value === 'string' ? value.split(':') : []
+  if (!(FESTIVAL_IDS as readonly string[]).includes(festival ?? '') || !/^[1-9]\d*$/.test(at ?? '') || Number(at) > year) fail(path, 'expected <festival>:<year>, this year or before')
+  return value as string
+}
+
+/** Her route (RM10, decision 7; F47): her level in its stage's range; points whole and ≥ 0; `last` and `evening` no later
+ * than today; `friend` only while the confession waits; `ring` only from the proposal on; `wed` and `house` only a
+ * spouse's; festivals once each, by year. */
 function parseLove(value: unknown, path: string, today: number, houses: number): Love {
   const o = object(value, path, LOVE_KEYS)
   const stage = oneOf(o.stage, `${path}.stage`, LOVE_STAGES)
+  const [low, high] = LEVELS[stage]
   const love: Love = {
-    stage, level: int(o.level, `${path}.level`, 0, stage === 'spouse' ? 5 : 10), points: amount(o.points, `${path}.points`),
+    stage, level: int(o.level, `${path}.level`, low, high), points: count(o.points, `${path}.points`),
     last: pastDay(o.last, `${path}.last`, today),
     known: unique(list(o.known, `${path}.known`, 0, 2000).map((g, i) => (typeof g === 'string' && isGoodId(g) ? g : fail(`${path}.known.${i}`, 'unknown good'))), `${path}.known`),
     flags: unique(list(o.flags, `${path}.flags`, 0, 200).map((f, i) => (typeof f === 'string' && KEY.test(f) ? f : fail(`${path}.flags.${i}`, 'expected a flag id'))), `${path}.flags`),
     evening: pastDay(o.evening, `${path}.evening`, today),
+    festivals: unique(list(o.festivals, `${path}.festivals`, 0, 1000).map((f, i) => festivalKey(f, `${path}.festivals.${i}`, dateOf(today).year)), `${path}.festivals`),
   }
   if (o.friend !== undefined) {
     if (o.friend !== true) fail(`${path}.friend`, 'expected true')
@@ -143,12 +160,27 @@ function parseFarmer(value: unknown, path: string): SaveV4['farmer'] {
   return { name }
 }
 
-// --- The morning (decision 15) -----------------------------------------------------------------------------------------
+// --- The morning (decision 15; F47) -----------------------------------------------------------------------------------------
 
+/** §4 Hearts (F46 decision 15; F47 decision 14): arrivals, birthdays and anniversaries, each an Uma on the roster, once a
+ * kind each; an anniversary's item is a good on the day and null the day before. */
 function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>): HeartLine[] {
-  return unique(list(value, path, 0, roster.size).map((v, i): HeartLine => {
+  const when = (v: unknown, at: string) => oneOf(v, at, ['today', 'tomorrow'] as const)
+  return unique(list(value, path, 0, roster.size * 3).map((v, i): HeartLine => {
     const at = `${path}.${i}`
-    oneOf(record(v, at).kind, `${at}.kind`, ['arrived'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['arrived', 'birthday', 'anniversary'] as const)
+    if (kind === 'birthday') {
+      const b = object(v, at, ['kind', 'id', 'when'])
+      return { kind, id: member(b.id, `${at}.id`, roster), when: when(b.when, `${at}.when`) }
+    }
+    if (kind === 'anniversary') {
+      const a = object(v, at, ['kind', 'id', 'when', 'item'])
+      const day = when(a.when, `${at}.when`)
+      const item = day === 'tomorrow'
+        ? (a.item === null ? null : fail(`${at}.item`, 'expected null the day before'))
+        : (typeof a.item === 'string' && isGoodId(a.item) ? a.item : fail(`${at}.item`, 'unknown good'))
+      return { kind, id: member(a.id, `${at}.id`, roster), when: day, item }
+    }
     const a = object(v, at, ['kind', 'id', 'home'])
     return { kind: 'arrived', id: member(a.id, `${at}.id`, roster), home: bool(a.home, `${at}.home`) }
   }), path, (h) => `${h.kind}:${h.id}`)

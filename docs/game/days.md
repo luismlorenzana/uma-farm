@@ -122,6 +122,24 @@ time. A step whose packet hasn't landed passes the night on unchanged, and each 
 | 9 | `buildSummary` | The morning summary, from what changed | F18 |
 <!-- /live -->
 
+**On save v4** (romance build; live from F56; F46 and F47), the night runs these steps with v4's own where the romance
+changes them (`nightStepsOf`, `NIGHT_STEPS_V4`): step 6 pays rank points with her friendship's factor and **her line's
++10**, step 7 clears the whole of v4's `today` (chats, gifts, praise earned and paid, events, evenings and invitations),
+step 8 runs `arriveUmas` in the Gate's place, and step 9 notes **praise earned overnight** and **birthdays and
+anniversaries today and tomorrow** before the summary. What v4 adds or changes:
+
+<!-- live:night-v4 -->
+| Step | Function | What happens | Filled by |
+|---|---|---|---|
+| 6 | `tickRanks` | Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10; rank-ups where points and the challenge are met | F21, F47 |
+| 6 | `payLine` | Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night | F47 |
+| 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, evenings and invitations | F18, F47 |
+| 8 | `arriveUmas` | Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away | F46 |
+| 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse | F47 |
+<!-- /live -->
+
+The romance's points, birthdays and anniversaries are [hearts.md](hearts.md#points-rm13-rm15-rm18)'s.
+
 ```
  uma-work's clock    day d starts                                   day d + 1 starts
                      (d − 1) × 86,400,000                           d × 86,400,000
@@ -150,8 +168,10 @@ time. A step whose packet hasn't landed passes the night on unchanged, and each 
 
 ## The morning summary (CS5, decision 11)
 
-> **On save v4 (romance build; live from F56; F46 decision 15):** §4 is **Hearts** in place of Bonds, its first line
-> `{ kind: 'arrived', id, home }` ("Stand-in 4 arrived · away", her arrival scene waiting); §5 drops the roster's
+> **On save v4 (romance build; live from F56; F46 decision 15, F47 decision 14):** §4 is **Hearts** in place of Bonds:
+> birthdays and anniversaries today and tomorrow (`{ kind: 'birthday', id, when }`, `{ kind: 'anniversary', id, when,
+> item }`, "★ Tomorrow: Stand-in 1's birthday"), then arrivals (`{ kind: 'arrived', id, home }`, "Stand-in 4 arrived ·
+> away", her arrival scene waiting); Ready lines are read live, never stored (F48 draws them). §5 drops the roster's
 > `joined`, Gate and `left` lines; and night step 8 runs `arriveUmas` in place of `gateVisitors`
 > ([hearts.md](hearts.md#the-night-and-the-morning-on-v4)). The table below is v3's.
 

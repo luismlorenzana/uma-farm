@@ -22,6 +22,23 @@
   },
   "laughs": "A dropped hoe.",
   "hurts": "Being rushed.",
+  "chats": {
+    "friend": [
+      "Morning, {farmer}. The rows look straighter today.",
+      "I saved you the first carrot. Don't tell the others.",
+      "You water too much. I've seen you. It's sweet, though."
+    ],
+    "partner": [
+      "{farmer}, walk the long way back with me?",
+      "I keep finding reasons to work the plot next to yours.",
+      "The sunset's better when you're here to see it."
+    ],
+    "spouse": [
+      "Home smells like soil and bread. That's us, {farmer}.",
+      "I left the kettle on for you.",
+      "Another season together. Let's plant something new."
+    ]
+  },
   "route": [
     {
       "id": "arrival",

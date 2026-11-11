@@ -100,7 +100,7 @@ CS46).
 ## Rank points (CS29, CS45)
 
 **A day of work pays 10 points** in its activity × her talent's rank-point factor, **×1.2 in her favourite line**,
-**×1.25 well fed**, and **×1.05 at 5 hearts, ×1.10 at 10** of your affinity with her (`rankPointsForDay`). Points are
+**×1.25 well fed**, and **the hearts' factor** (`rankPointsForDay`, its `heartsFactor` read by `heartsFactorOf`). Points are
 kept to a millionth and shown whole. **Every pay takes the same factors** (`rankPoints(base, terms)`): a workshop play
 pays its assistant 10 (M5), an expedition 10 a day, +10 on a Success, +20 on a Great (M5); the ranch, the workshops and
 expeditions are nobody's favourite, so ×1.2 never applies there.
@@ -109,6 +109,17 @@ Ranks come at **40, 160, 400, 900 and 2,000** points (`RANK_POINTS`). Days of wo
 favourite line in brackets), challenges met; the table is computed from the rule (`daysToRank`), and a test climbs a C
 Uma in her favourite line night by night (Hand on night 4, Skilled 13, Expert 31, Master 69, Legend 152) and a G outside
 it (Hand 5, Legend 250):
+
+**The hearts' factor** reads your affinity with her on save v3 (M4, live: ×1.05 at 5 hearts, ×1.10 at 10,
+`affinityPoints`) and **her friendship level on save v4** (romance build; live from F56; F47 decision 12, RM18:
+`loveRankFactor`, the F5 and F10 perks), with no falls:
+
+<!-- live:hearts-factor -->
+| Save | ×1 | ×1.05 | ×1.10 |
+|---|---|---|---|
+| v3 (M4, live): your affinity | 0–4 hearts | 5–9 hearts | 10 hearts |
+| v4 (romance build): her friendship | F0–F4 | F5–F9 | F10 on: her confession, romance and spouse |
+<!-- /live -->
 
 <!-- live:rank-points -->
 | Rank | Points | G | D | C | A | S |
@@ -218,8 +229,9 @@ CS26's rank term is `rankQuality(rank)`. The forest's areas and the Fishery's sp
 
 > **On save v4 (romance build; live from F56; F46 decision 13, RM6):** her favourite line is her story bible's
 > `favouriteLine`, else her cast entry's calling (`quarry` is mining, at the Quarry), read from the story pack at step 6
-> (`NightContext.story`, `favouriteOf`); `favouriteActivity(outfit.line)` stays v3's. ×1.2 is unchanged, and the hearts
-> factor is ×1 on v4 until F47 ([hearts.md](hearts.md#her-favourite-line-and-tastes-rm6-rm7)).
+> (`NightContext.story`, `favouriteOf`); `favouriteActivity(outfit.line)` stays v3's. ×1.2 is unchanged; the hearts
+> factor reads her friendship level from F47 ([above](#rank-points-cs29-cs45)), and a day at her line also pays +10 into
+> her bar at step 6 ([hearts.md](hearts.md#her-line-rm6-rm13)).
 
 Her calling (her best running styles, the Wilds' rule as copied, `farmRoster` in `roster/roster.ts`) names her line, and
 the line her favourite activity (`favouriteActivity`): **Metal and Stone mining, Wood foraging, Fish fishing,

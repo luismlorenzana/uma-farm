@@ -31,12 +31,13 @@ export const LOVE_STAGES = ['friendship', 'confession', 'romance', 'proposal', '
 export type LoveStage = typeof LOVE_STAGES[number]
 
 /** Her route with the farmer (RM10, RM11). F46 makes it at Friendship 0 the day she joins and pays her arrival scene into
- * `points`; F47 grows the ladders, F49 the events, F53 the ring and the wedding, F54 the houses. */
+ * `points`; F47 writes the ladders (`romance/love.ts`), F49 the events, F53 the ring and the wedding, F54 the houses. */
 export interface Love {
   stage: LoveStage
-  /** Events played on this ladder: 0–10 (spouse 0–5). */
+  /** Events played on this ladder (F47 decision 2): friendship and romance 0–9 (the tenth moves her on), 10 while the
+   * confession, the proposal or the wedding waits, spouse 0–5 (S5 completes the route). */
   level: number
-  /** Toward the next rung; past it, banked (RM14). */
+  /** Toward the next rung; past it, banked (RM14). Whole: every pay rounds once (F47 decision 2). */
   points: number
   /** The day of her last event (one a day, RM21); 0 before any. */
   last: number
@@ -54,6 +55,8 @@ export interface Love {
   flags: string[]
   /** The day of her last evening; 0 before any. */
   evening: number
+  /** The festivals she's been at with you (F47 decision 9: +50 once a festival a year), as `<festival>:<year>`. */
+  festivals: string[]
 }
 
 /** An Uma on the v4 roster: v3's without `affinity`, which became `love` (RM10). Talents aren't saved. */
@@ -150,7 +153,7 @@ export type FarmSave = SaveV3 | SaveV4
 export const isSaveV4 = (save: { version: number }): save is SaveV4 => save.version === 4
 
 /** Her route the day she joins: Friendship 0, no points (decision 8). */
-export const newLove = (): Love => ({ stage: 'friendship', level: 0, points: 0, last: 0, known: [], flags: [], evening: 0 })
+export const newLove = (): Love => ({ stage: 'friendship', level: 0, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [] })
 
 /** A new Uma on the v4 roster: joined today, Novice at 0 points in all nine activities. */
 export function newRosterUmaV4(day: number): RosterUmaV4 {

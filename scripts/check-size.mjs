@@ -14,7 +14,8 @@ export const MAIN_JS_BUDGET = 180_000
  * and build rule, and their screens (F22); the roster's rules (the start's sheet, the Dorm, visitors and affinity) with
  * the start's cards, the Dorm's page, the Gate's quick look and the chat and gift controls (F23); and the Diary's counts,
  * the chapters, the scenes' lines, the scene player and the goals' words (F24); and the romance core's name sheet, its
- * story pack with the stand-in, the format and validator, the re-cut opening, arrivals and her points (F46). The Wilds'
+ * story pack with the stand-in, the format and validator, the re-cut opening, arrivals and her points (F46); and her route
+ * on her sheet with its words, the acts, praise, birthdays and anniversaries, Ready and bond hearts (F47). The Wilds'
  * screens left in F24. Paths
  * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
@@ -66,6 +67,13 @@ export const LAZY_MODULES = [
   'domain/src/story/opening-v4.ts',
   'domain/src/romance/arrivals.ts',
   'domain/src/romance/love.ts',
+  'src/loop/Love.tsx',
+  'src/loop/love-words.ts',
+  'domain/src/romance/acts.ts',
+  'domain/src/romance/praise.ts',
+  'domain/src/romance/days.ts',
+  'domain/src/romance/ready.ts',
+  'domain/src/farm/bonds.ts',
 ]
 
 export function entrySrc(html) {

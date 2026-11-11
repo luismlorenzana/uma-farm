@@ -136,7 +136,23 @@ export interface ArrivedLine {
   id: string
   home: boolean
 }
-export type HeartLine = ArrivedLine
+/** §4 Hearts (F47 decision 14; RM16): her birthday today or tomorrow, a ★ line the day before and on the day. */
+export interface BirthdayLine {
+  kind: 'birthday'
+  id: string
+  when: 'today' | 'tomorrow'
+}
+/** §4 Hearts (F47 decision 14; RM17): her wedding's day of the year, from year 2 of her marriage, today or tomorrow. On
+ * the day she leaves a ★5 item of her line in the Warehouse: `item` is its good, null the day before. */
+export interface AnniversaryLine {
+  kind: 'anniversary'
+  id: string
+  when: 'today' | 'tomorrow'
+  item: string | null
+}
+/** §4's stored lines: birthdays and anniversaries (F47), then arrivals (F46). Ready lines aren't stored: they change by
+ * day, so F48 reads them live (`readiness`). */
+export type HeartLine = BirthdayLine | AnniversaryLine | ArrivedLine
 
 /** §5 on v4: v3's news without its roster lines (`joined`, `gate`, `left`): arrivals are §4's, and the Gate has no
  * visitors. Rank lines' `outfitId` holds the roster's key, her character id (decision 5). */
@@ -148,7 +164,7 @@ export interface MorningSummaryV4 {
   bin: BinSale[]
   work: WorkLine[]
   ranks: RankLine[]
-  /** §4 Hearts: arrivals (F46); the romance's lines join with their packets. */
+  /** §4 Hearts: birthdays and anniversaries (F47), then arrivals (F46); the romance's lines join with their packets. */
   hearts: HeartLine[]
   news: NewsLineV4[]
   nudges: Nudge[]
