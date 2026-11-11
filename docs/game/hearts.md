@@ -404,7 +404,7 @@ Menu**: Hearts (uma-kit's heart, **no badge**) replaces Roster. The M4 build kee
 ├──────────────────────────────────────────┤
 │ (face) Stand-in 1                ● Ready │
 │        New friend ♥ ▣□□□□□□□□□  200/200  │  the ladder's hearts, the next filling
-│        +2 banked · Ready · Friendship 1 · the Fields   ✓ chat
+│        Ready · Friendship 1 · the Fields · +2 banked   ✓chat
 ├──────────────────────────────────────────┤
 │ (face) Stand-in 3                        │
 │        New friend ♥ ▣□□□□□□□□□   80/200  │
@@ -415,8 +415,8 @@ Menu**: Hearts (uma-kit's heart, **no badge**) replaces Roster. The M4 build kee
 - **A row an Uma** on the roster, home or away, 72 pt: her face (master data), her name and chips (**● Ready** in her
   stage's colour, **✉** an invitation from F50, **Away**); her level in words, the **filling heart** and **her ladder's
   hearts as a bar** (ten for friendship and romance, five as a spouse: the levels played full, the next filling by points
-  over its cost, the rest empty) with "points/cost"; then "+N banked", **the most useful line** and today's **✓ chat**
-  and **✓ gift**. A waiting rung shows all ten hearts and its mark, **◆** her confession or **◇** the proposal and the
+  over its cost, the rest empty) with "points/cost"; then **the most useful line**, "+N banked" (a narrow row cuts it
+  first) and today's **✓chat** and **✓gift**. A waiting rung shows all ten hearts and its mark, **◆** her confession or **◇** the proposal and the
   wedding, with "Tomorrow" or "Ready".
 - **The most useful line:** Ready, her rung and where it plays ("Ready · Romance 5 · the Pond at night"); away, "Swap her
   home to play her events"; her bar short, nothing more (the bar says it); else what her next event waits for, in F47's
