@@ -1,11 +1,17 @@
 # Handoff: open work
 
-> **Status: 2026-11-11, after D46. Game code is still paused at the owner's word after M4** (D39). M4 is live at [uma-farm.web.app](https://uma-farm.web.app). **The farm becomes a romance simulation** (D40): [F40](tasks/F40-story-authoring.md), the story, is in progress with the story session (layer 1 written, D42–D44), and **[F41, the romance spec](../design/romance-spec.md)** ([page](../design/previews/romance-spec.html), RM1–RM67, D46) is written: the authored cast of 20, the wiped start, the ladders, heart events, the evening, perks, the ring bench, the houses and the finale. **Next: the owner reads F41.** Then the romance core's packets (F46–F56) are written, built on stand-in content, and shipped with the private story (F56). M5 follows, revised. Time is turns (D25); parcels are parked.
-> initiative is [the first playable farm](../design/first-playable.md)** (FW1–FW13,
-> [page](../design/previews/first-playable.html)): its requirements and every planned task, from the hello app (F3) to the
-> Wilds playing, the design spec, then the Forge and parcels.
+> **Status: 2026-11-11, after D48. Game code is still paused at the owner's word after M4** (D39). M4 is live at
+> [uma-farm.web.app](https://uma-farm.web.app). **The farm becomes a romance simulation** (D40):
+> - **[F41, the romance spec](../design/romance-spec.md)** ([page](../design/previews/romance-spec.html), RM1–RM67) is
+>   accepted whole (D47).
+> - **The romance core's packets are written,** F46–F56 (D48), and wait for the owner's go. They're built dark behind
+>   `VITE_FARM_ROMANCE` on a stand-in pack. F56 delivers the private story and goes live with the wipe; its bucket
+>   needs the owner's yes.
+> - **[F40](tasks/F40-story-authoring.md), the story,** is with the story session (layer 1 written, D42–D44), and
+>   carries the romance core's format asks.
+> - M5's packets wait, to be revised after the romance core. Time is turns (D25); parcels are parked.
 >
-> - **The manual of the game as built** will be [docs/game/](../game/README.md). It starts with F3.
+> - **The manual of the game as built** is [docs/game/](../game/README.md).
 > - Each task is a self-contained packet in [tasks/](tasks/). Start a worker, Claude or ChatGPT, with uma-platform's
 >   [master prompt](https://github.com/luismlorenzana/uma-platform/blob/main/docs/handoff/master-prompt.md) and name the
 >   packet: "Take F1".
@@ -36,17 +42,17 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 | | F25 | Art for M4: **A** (Claude, pixel) the Dorm and the shipping bin, a seed-packet badge, nine UI marks; **B** (ChatGPT) three cast busts (CS19, D45) | A: Claude · B: ChatGPT | M | F7 read | [Written](tasks/F25-art-m4.md), split in two parts (D45) |
 | Story | F40 | [Author the farm's story](tasks/F40-story-authoring.md): the world, the SS cast's lives, ties and gifts, every route's beats, three routes in full (private) | The story session | L | The Studio's SS export ✓ | **In progress** (D42): layer 1 written (the world, 20 Umas' arrivals, 31 ties), the format and validator, the [Farm Story Sandbox](../../tools/story-sandbox/README.md); your read of layer 1 next |
 | | F41 | [The romance spec](../design/romance-spec.md) ([page](../design/previews/romance-spec.html)): RM1–RM67, the romance core's design and numbers, re-simulated | Claude | L | F40's layer 1 ✓ | **Written** (D46); your read next |
-| Romance core | F46 | Save v4 and the authored start: the wipe, the farmer's name, the opening, arrivals, the Dorm for 20 (RM1–RM10) | Claude | L | F41 read | To write |
-| | F47 | The ladders and points (RM11–RM18) | Claude | M | F46 | To write |
-| | F48 | The Hearts tab and her profile (RM51–RM53) | Claude | M | F47 | To write |
-| | F52 | Bonds between Umas, seeded by the ties (RM48–RM50) | Claude | M | F47 | To write |
-| | F49 | Heart events, the five plays, the cards, Memories, the confession (RM24–RM30, RM54–RM56) | Claude | L | F48 | To write |
-| | F50 | The evening, invitations and the Tonight sheet (RM19–RM23) | Claude | M | F49 | To write |
-| | F51 | Perks and their caps (RM31–RM36) | Claude | M | F49 | To write |
-| | F53 | The ring bench, the proposal and the wedding (RM37–RM40) | Claude | M | F50, F51 | To write |
-| | F54 | Married life, the houses and the finale (RM41–RM47) | Claude | L | F53 | To write |
-| | F55 | The romance core's pixel art (a uma-platform Claude session, D45) | Claude | S | F41 read | To write |
-| | F56 | The private story's delivery and the go-live with the wipe: bucket, IAM, publish, `/api/story` (RM58–RM60); the owner's yes and a cost table first | Claude | M | F46–F54, F40 | To write |
+| Romance core | F46 | Save v4 and the authored start: the wipe, the farmer's name, the opening, arrivals, the Dorm for 20 (RM1–RM10) | Claude | L | F41 read | [Written](tasks/F46-save-v4-start.md) |
+| | F47 | The ladders and points (RM11–RM18) | Claude | M | F46 | [Written](tasks/F47-ladders-points.md) |
+| | F48 | The Hearts tab and her profile (RM51–RM53) | Claude | M | F47 | [Written](tasks/F48-hearts-tab.md) |
+| | F52 | Bonds between Umas, seeded by the ties (RM48–RM50) | Claude | M | F47 | [Written](tasks/F52-bonds.md) |
+| | F49 | Heart events, the five plays, the cards, Memories, the confession (RM24–RM30, RM54–RM56) | Claude | L | F48 | [Written](tasks/F49-heart-events.md) |
+| | F50 | The evening, invitations and the Tonight sheet (RM19–RM23) | Claude | M | F49 | [Written](tasks/F50-evening.md) |
+| | F51 | Perks and their caps (RM31–RM36) | Claude | M | F49 | [Written](tasks/F51-perks.md) |
+| | F53 | The ring bench, the proposal and the wedding (RM37–RM40) | Claude | M | F50, F51 | [Written](tasks/F53-ring-wedding.md) |
+| | F54 | Married life, the houses and the finale (RM41–RM47) | Claude | L | F53 | [Written](tasks/F54-married-life.md) |
+| | F55 | The romance core's pixel art (a uma-platform Claude session, D45) | Claude | S | F41 read | [Written](tasks/F55-art-romance.md) |
+| | F56 | The private story's delivery and the go-live with the wipe: bucket, IAM, publish, `/api/story` (RM58–RM60); the owner's yes and a cost table first | Claude | M | F46–F54, F40 | [Written](tasks/F56-story-delivery.md) |
 | M5, more to do | F27 | The ranch: the Coop and the Barn, animals, feed, carers and affection, products, cloth at the Mill, chapter 2; save v4 (CS13, CS18, CS43) | Claude | L | F24 ✓ | [Written](tasks/F27-ranch.md) |
 | | F26 | The Mine and the Quarry: 30 floors, the stairs, the Smelter and the Cutter, chapter 3; save v5 (CS14, CS17, CS18, CS43) | Claude | M | F27 | [Written](tasks/F26-mine-quarry.md) |
 | | F8 | ~~The Forge's place and minigame~~ Re-scoped (D20, [hd2d-farm.md](../design/hd2d-farm.md) FR24): the minigame contract and the Kitchen: FR21's rules, the cooking game on a flat scene, recipes, the staff meal and well fed, chapter 4; save v6 (CS20–CS22, CS43) | Claude | L | F26, F27; its rules may start beside them (FR22) | [Written](tasks/F8-kitchen.md) |

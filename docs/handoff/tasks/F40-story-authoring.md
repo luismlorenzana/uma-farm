@@ -67,6 +67,18 @@ The owner reads each layer before the next is written. The farm's code packets (
 
 ## Decisions made
 
+> **Added 2026-11-11 (D48): more fields the romance core's packets need**, beyond RM58's seven:
+> - `outfitId` is required in the cast file (RM2);
+> - `petName` per route, her name for you at Romance 1 (RM8, RM31);
+> - `play.as` on a farming beat, so the author picks Pick or Rhythm (RM26);
+> - on a choice option: an optional item cost and an optional taste it reveals; and a step that shows only when a flag
+>   is set (RM27);
+> - the confession's options marked Yes and Not yet (RM30);
+> - `household.json` written so it works whoever is married (RM45);
+> - one play per event and one or two choice points per event, at most.
+>
+> Each packet (F46–F54) adds its fields to the format and validator.
+
 > **Added 2026-11-11 (D47): the romance spec is accepted, and asks seven additions of the story** ([romance-spec.md](../../design/romance-spec.md), RM58).
 > Write to them from layer 2 on. The format and validator gain them in the romance core's packets (F46–F54):
 > - **`arrival`:** one scripted event per route, a 27th scene before friendship 1 (RM4), worth +50 and one choice;
