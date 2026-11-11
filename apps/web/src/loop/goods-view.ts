@@ -2,7 +2,7 @@
 // lines and its night estimate, the shop's lines, and gold in words. Pure, so the screens and the tests read the same.
 import {
   binSales, binTotal, FAMILY_NAMES, GOOD_IDS, goodName, goodOf, inDemand, lineOpen, priceOf, refinedOf, SEED_IDS, STARS, type BinSale, type Good,
-  type GoodFamily, type SaveV3, type ShopLine, type StarCounts,
+  type GoodFamily, type FarmSave, type ShopLine, type StarCounts,
 } from '@farm/domain'
 import { opensWords } from './farm-map'
 
@@ -87,7 +87,7 @@ export function goodRow(id: string, row: StarCounts, day: number): GoodRow {
 }
 
 /** The Warehouse by stars (decision 9): each tab's held goods in the catalogue's order; the loot tab only when held. */
-export function warehouseTabs(save: Pick<SaveV3, 'items' | 'calendar'>): WarehouseTab[] {
+export function warehouseTabs(save: Pick<FarmSave, 'items' | 'calendar'>): WarehouseTab[] {
   const rows = Object.entries(save.items)
     .filter(([, row]) => row.some((n) => n > 0))
     .sort(([a], [b]) => orderOf(a) - orderOf(b))
@@ -110,7 +110,7 @@ export interface BinView {
   total: number
 }
 
-export function binView(save: Pick<SaveV3, 'bin' | 'calendar'>): BinView {
+export function binView(save: Pick<FarmSave, 'bin' | 'calendar'>): BinView {
   return {
     lines: binSales(save.bin, save.calendar.day).map((sale) => ({ ...sale, name: goodName(sale.id) })),
     total: binTotal(save.bin, save.calendar.day),
@@ -128,6 +128,6 @@ export interface ShopRow {
   gate: string | null
 }
 
-export function shopRows(save: Pick<SaveV3, 'farm'>, lines: readonly ShopLine[]): ShopRow[] {
+export function shopRows(save: Pick<FarmSave, 'farm'>, lines: readonly ShopLine[]): ShopRow[] {
   return lines.map((line) => ({ line, name: goodName(line.id), gate: lineOpen(save, line) ? null : `From ${opensWords(line.opens)}` }))
 }

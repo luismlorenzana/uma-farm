@@ -1,7 +1,7 @@
 // The Fields on the farm map (F20): their quick look, one row a block (its tender's face, what grows, what's Ready, and a
 // locked block's Farm Rank and cost), Harvest all on every block, and Open the Fields; and their pips, one a block, each
 // its tender's face ringed by the block's growth, at her talent (F21). Part of the farm map's chunk.
-import { readyPlots, talentD, type FarmingTalentOf, type SaveV3 } from '@farm/domain'
+import { readyPlots, talentD, type FarmingTalentOf, type FarmSave } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import type { PipModel } from '@luismlorenzana/uma-kit/hub'
 import { Button, LockedIcon } from '@luismlorenzana/uma-kit/ui'
@@ -19,7 +19,7 @@ const progressOf = (block: OwnedBlock): number => {
 }
 
 /** The Fields' pips: one an owned block, its tender's face (busy while it grows, Ready with a Ready plot) or a free dot. */
-export function fieldsPips(save: SaveV3, talentOf: FarmingTalentOf = talentD): PipModel[] {
+export function fieldsPips(save: FarmSave, talentOf: FarmingTalentOf = talentD): PipModel[] {
   return fieldsView(save, talentOf).flatMap((block): PipModel[] => {
     if (!block.owned) return []
     if (block.tender === null) return [block.ready > 0 ? { state: 'ready' } : { state: 'free' }]
@@ -31,7 +31,7 @@ export function fieldsPips(save: SaveV3, talentOf: FarmingTalentOf = talentD): P
 }
 
 /** The Fields' quick look. */
-export function FieldsPeek({ save, talentOf = talentD }: { save: SaveV3; talentOf?: FarmingTalentOf }) {
+export function FieldsPeek({ save, talentOf = talentD }: { save: FarmSave; talentOf?: FarmingTalentOf }) {
   const blocks = fieldsView(save, talentOf)
   const ready = readyPlots(save)
   const [note, setNote] = useState<string | null>(null)

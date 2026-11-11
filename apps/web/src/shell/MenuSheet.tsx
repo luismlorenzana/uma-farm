@@ -1,7 +1,7 @@
 // The menu, "Every place" (uma-kit's PlaceMenu, as uma-rpg's; F18): the farm's 23 places by FC28's rows, locked ones
 // marked, each with its Ready count, then Account and the switch "Ask before ending the day" (F18 decision 10), and the
 // build at the foot. `?sheet=menu` on the route it opens over, so Back closes it.
-import { FARM_PLACES, loopReadyWork, readyPlots, type FarmPlaceGroup, type LoopPlaceId, type SaveV3 } from '@farm/domain'
+import { FARM_PLACES, loopReadyWork, readyPlots, type FarmPlaceGroup, type LoopPlaceId, type FarmSave } from '@farm/domain'
 import { PlaceMenu, type MenuGroup } from '@luismlorenzana/uma-kit/shell'
 import { Sheet } from '@luismlorenzana/uma-kit/ui'
 import { APP_BUILD_ID } from '../app/build'
@@ -27,7 +27,7 @@ const GROUPS: readonly { group: FarmPlaceGroup; label: string }[] = [
 
 /** The farm's places by FC28's rows, each opening its screen once it's landed (F19: the bin, the Warehouse, the shop; F20:
  * the Fields' quick look), else its quick look on the map. The Fields count their Ready plots. */
-export function loopMenuGroups(save: SaveV3 | null): MenuGroup[] {
+export function loopMenuGroups(save: FarmSave | null): MenuGroup[] {
   const ready: Map<string, number> = save ? loopReadyWork(save) : new Map<LoopPlaceId, number>()
   if (save) ready.set('fields', readyPlots(save))
   return GROUPS.map(({ group, label }) => ({

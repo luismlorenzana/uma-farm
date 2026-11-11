@@ -11,8 +11,9 @@ import { LOOP_KINDS } from '../gathering/kinds'
 import { LOOP_SLOTS, LOOP_WORK_PLACES, type LoopKinds } from '../save/parse-v3'
 import { onFarm, type LoopWorkRequest, type OutfitId, type SaveV3 } from '../save/v3'
 import { fromWorkStock, workStock } from '../save/warehouse'
+import type { FarmSave } from '../save/v4'
 
-/** uma-work's state over a v3 save: the Warehouse as the engine's flat `<id>@<stars>` view, no building levels, the work
+/** uma-work's state over a v3 or v4 save (F46: on v4 a row's `outfitId` is her character id, the roster's key): the Warehouse as the engine's flat `<id>@<stars>` view, no building levels, the work
  * rows, and the save around them for the kinds to read (ranks, well fed, the day, the account). The world's own `items`
  * and `work` are the live ones; `save`'s copies of them are stale while an operation runs. A kind's pay may move the
  * save's `farm` and `diary` (F22: what came home, a catch's record), which `withLoopWorld` keeps. */
@@ -20,15 +21,15 @@ export interface LoopWorld extends WorkState<LoopWorkRequest> {
   readonly items: Readonly<Record<string, number>>
   readonly buildings: Readonly<Record<string, { readonly level: number }>>
   readonly work: Readonly<Record<OutfitId, WorkRow<LoopWorkRequest>>>
-  readonly save: SaveV3
+  readonly save: FarmSave
 }
 
 /** The world a save's work runs in. */
-export const loopWorld = (save: SaveV3): LoopWorld => ({ items: workStock(save.items), buildings: {}, work: save.work, save })
+export const loopWorld = (save: FarmSave): LoopWorld => ({ items: workStock(save.items), buildings: {}, work: save.work, save })
 
 /** The save with the world's Warehouse and work put back, and what its pays moved in `farm` and `diary` (F22). Nothing
  * else changes, `account.updatedAt` included. */
-export const withLoopWorld = (save: SaveV3, world: LoopWorld): SaveV3 =>
+export const withLoopWorld = <S extends FarmSave>(save: S, world: LoopWorld): S =>
   ({ ...save, items: fromWorkStock(world.items), work: { ...world.work }, farm: world.save.farm, diary: world.save.diary })
 
 /** The v3 work places as uma-work's buildings: four slots at speed 1, no levels above the first. */

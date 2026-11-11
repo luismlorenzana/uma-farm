@@ -1,0 +1,431 @@
+{
+  "characterId": "9000001",
+  "outfitId": "900000101",
+  "now": "An invented Uma, for tests.",
+  "whyTheFarm": "To be tested.",
+  "dream": "A clean run.",
+  "blurb": "The stand-in.",
+  "favouriteLine": "farming",
+  "season": "spring",
+  "festival": "flower-show",
+  "gifts": {
+    "loved": "golden-carrot",
+    "liked": [
+      "carrot",
+      "potato",
+      "cabbage"
+    ],
+    "disliked": [
+      "limestone",
+      "iron-ore"
+    ]
+  },
+  "laughs": "A dropped hoe.",
+  "hurts": "Being rushed.",
+  "route": [
+    {
+      "id": "arrival",
+      "ladder": "arrival",
+      "hearts": 0,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "gate",
+      "together": {
+        "kind": "talk"
+      },
+      "beat": "She walks in at the Gate.",
+      "hint": "She arrives at the opening."
+    },
+    {
+      "id": "f1",
+      "ladder": "friendship",
+      "hearts": 1,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's f1.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "f2",
+      "ladder": "friendship",
+      "hearts": 2,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's f2.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "f3",
+      "ladder": "friendship",
+      "hearts": 3,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's f3.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "f4",
+      "ladder": "friendship",
+      "hearts": 4,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's f4.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "f5",
+      "ladder": "friendship",
+      "hearts": 5,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's f5.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "f6",
+      "ladder": "friendship",
+      "hearts": 6,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's f6.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "f7",
+      "ladder": "friendship",
+      "hearts": 7,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's f7.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "f8",
+      "ladder": "friendship",
+      "hearts": 8,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's f8.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "f9",
+      "ladder": "friendship",
+      "hearts": 9,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's f9.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "f10",
+      "ladder": "friendship",
+      "hearts": 10,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's f10.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "confession",
+      "ladder": "confession",
+      "hearts": 10,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's confession.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "r1",
+      "ladder": "romance",
+      "hearts": 1,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's r1.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "r2",
+      "ladder": "romance",
+      "hearts": 2,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's r2.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "r3",
+      "ladder": "romance",
+      "hearts": 3,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's r3.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "r4",
+      "ladder": "romance",
+      "hearts": 4,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's r4.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "r5",
+      "ladder": "romance",
+      "hearts": 5,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's r5.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "r6",
+      "ladder": "romance",
+      "hearts": 6,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's r6.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "r7",
+      "ladder": "romance",
+      "hearts": 7,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's r7.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "r8",
+      "ladder": "romance",
+      "hearts": 8,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's r8.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "r9",
+      "ladder": "romance",
+      "hearts": 9,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's r9.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "r10",
+      "ladder": "romance",
+      "hearts": 10,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's r10.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "proposal",
+      "ladder": "proposal",
+      "hearts": 10,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's proposal.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "wedding",
+      "ladder": "wedding",
+      "hearts": 10,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's wedding.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "s1",
+      "ladder": "spouse",
+      "hearts": 1,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's s1.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "s3",
+      "ladder": "spouse",
+      "hearts": 3,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's s3.",
+      "hint": "The Fields, while she works them."
+    },
+    {
+      "id": "s5",
+      "ladder": "spouse",
+      "hearts": 5,
+      "trigger": {
+        "kind": "hearts"
+      },
+      "place": "fields",
+      "together": {
+        "kind": "work",
+        "activity": "farming"
+      },
+      "beat": "The stand-in's s5.",
+      "hint": "The Fields, while she works them."
+    }
+  ]
+}

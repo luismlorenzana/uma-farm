@@ -5,6 +5,7 @@ import { statusOf } from '@luismlorenzana/uma-work'
 import { workNow } from '../farm/calendar'
 import { loopReadyItems } from '../save/work-readings'
 import { leaving, readyPlots, type OutfitId, type SaveV3 } from '../save/v3'
+import type { FarmSave } from '../save/v4'
 
 export interface DaySet {
   /** Nothing waits: End the day reads "All set" and ends at once (CS6). */
@@ -24,7 +25,7 @@ export interface DaySet {
  * start without settling (F22): every stored save is settled there (the night stores its settle, and every operation
  * runs at `workNow`), so the bars never need the kinds' rules, which load with the screens.
  */
-export function daySetState(save: SaveV3): DaySet {
+export function daySetState(save: FarmSave): DaySet {
   const now = workNow(save)
   const tending = new Set(save.fields.blocks.filter((b) => b.tender !== null && b.plots.some((p) => p.crop !== null && !p.ready)).map((b) => b.tender!))
   const idle = save.dorm.home.filter((id) => !leaving(save, id) && statusOf(save.work[id], now) !== 'working' && !tending.has(id))

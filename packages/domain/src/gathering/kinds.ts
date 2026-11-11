@@ -23,6 +23,7 @@ import {
   type ForestAreaId, type StationId, type StationJobId,
 } from './ids'
 import { FISH_SIZES, FISHERY, FOREST, HAUL_BASE, STATION_JOB_RULES, STATION_RATE, TOOL_YIELD, WELL_FED_YIELD, type Share } from './tables'
+import type { FarmSave } from '../save/v4'
 
 const DAY_S = DAY_MS / 1000
 
@@ -46,7 +47,7 @@ export interface WorkTerms {
 }
 
 /** Her terms in an activity on this save, or null when she isn't on the roster. */
-export function termsOf(save: SaveV3, outfitId: OutfitId, activity: Activity, talentOf: TalentOf, tool: ToolId | null): WorkTerms | null {
+export function termsOf(save: FarmSave, outfitId: OutfitId, activity: Activity, talentOf: TalentOf, tool: ToolId | null): WorkTerms | null {
   const uma = save.roster[outfitId]
   if (!uma) return null
   return { rank: uma.ranks[activity].rank, talent: talentOf(outfitId, activity), tool: tool ? save.tools[tool] : 1, wellFed: uma.wellFed }
@@ -85,7 +86,7 @@ export function gatherQuality(terms: WorkTerms, fed: boolean): number {
 
 /** Why she can't work an area or a spot yet, or null when she can: her rank (decision 5's "From Hand"), and the sea's
  * chapter 7 and boat (M6). */
-export function placeLock(save: Pick<SaveV3, 'farm' | 'buildings'>, place: GatherPlace, where: string, rank: Rank): Refusal | null {
+export function placeLock(save: Pick<FarmSave, 'farm' | 'buildings'>, place: GatherPlace, where: string, rank: Rank): Refusal | null {
   if (place === 'forest') {
     const area = FOREST[where as ForestAreaId]
     if (!area) return workRefusal('not-here')
@@ -104,7 +105,7 @@ export const sharesOn = (place: GatherPlace, where: string, day: number): readon
 
 /** A gathering job's plan (decision 1): each day's items by CS17 at her terms now, each good and its stars drawn with
  * `draw(uid, day, '<place>:<slot>:<n>', 0 | 1)`, the day's seconds adding up to 86,400. */
-export function planHaul(save: SaveV3, outfitId: OutfitId, place: GatherPlace, request: LoopWorkRequest, now: number, slot: number, talentOf: TalentOf): PlannedItem[] | Refusal {
+export function planHaul(save: FarmSave, outfitId: OutfitId, place: GatherPlace, request: LoopWorkRequest, now: number, slot: number, talentOf: TalentOf): PlannedItem[] | Refusal {
   if (!Number.isInteger(request.count) || request.count < 1 || request.count > MAX_GATHER_DAYS) return refuse('count', 'A job is 1 to {max} days.', { max: MAX_GATHER_DAYS })
   const terms = termsOf(save, outfitId, PLACE_ACTIVITY[place], talentOf, GATHER_TOOL[place])
   if (!terms) return workRefusal('unknown-worker', { uma: outfitId })
@@ -128,7 +129,7 @@ export function planHaul(save: SaveV3, outfitId: OutfitId, place: GatherPlace, r
 }
 
 /** Her haul a day over `days` days from `now` at a place, at her terms now: the job sheet's sizes and "about 5 a day". */
-export function haulDays(save: SaveV3, outfitId: OutfitId, place: GatherPlace, talentOf: TalentOf, days = MAX_GATHER_DAYS): number[] {
+export function haulDays(save: FarmSave, outfitId: OutfitId, place: GatherPlace, talentOf: TalentOf, days = MAX_GATHER_DAYS): number[] {
   const terms = termsOf(save, outfitId, PLACE_ACTIVITY[place], talentOf, GATHER_TOOL[place])
   return terms ? Array.from({ length: days }, (_, k) => haulCount(place, terms, k)) : []
 }
@@ -193,7 +194,7 @@ function payHaul(place: GatherPlace, talentOf: TalentOf) {
         sizes.push({ fish: at.id, stars: at.stars, cm, record: cm > best })
       })
     }
-    const next: SaveV3 = { ...save, farm: { ...save.farm, counts: { ...save.farm.counts, [key]: before + items.length } }, diary: { ...save.diary, records } }
+    const next: FarmSave = { ...save, farm: { ...save.farm, counts: { ...save.farm.counts, [key]: before + items.length } }, diary: { ...save.diary, records } }
     return { state: { ...paid, save: next }, detail: { place, items, sizes } }
   }
 }
@@ -211,7 +212,7 @@ function gatherRules(place: GatherPlace, talentOf: TalentOf): WorkKindRules<Loop
 // --- The stations (CS18; decision 2) ----------------------------------------------------------------------------------
 
 /** Whether a station is built (F17 decision 5: 1 or more). */
-export const stationBuilt = (save: Pick<SaveV3, 'buildings'>, station: StationId): boolean => (save.buildings[station] ?? -1) >= 1
+export const stationBuilt = (save: Pick<FarmSave, 'buildings'>, station: StationId): boolean => (save.buildings[station] ?? -1) >= 1
 
 /** Items she turns on day `k` of a station job: `round(8 × rank × talent × well fed)` in the station's activity; a
  * multi-day job (the preserves) gains its well-fed time at night instead. */
@@ -244,7 +245,7 @@ function spread(count: number, days: number): number[] {
 
 /** A station job's plan (decision 2): one input of its raw good at the output's stars for each item, taken at the start;
  * its days by her rate. */
-export function planStation(save: SaveV3, outfitId: OutfitId, job: StationJobId, request: LoopWorkRequest, building: string, talentOf: TalentOf): PlannedItem[] | Refusal {
+export function planStation(save: FarmSave, outfitId: OutfitId, job: StationJobId, request: LoopWorkRequest, building: string, talentOf: TalentOf): PlannedItem[] | Refusal {
   const { station } = STATION_JOBS[job]
   const { days } = STATION_JOB_RULES[job]
   if (building !== station) return workRefusal('not-here')
@@ -261,7 +262,7 @@ export function planStation(save: SaveV3, outfitId: OutfitId, job: StationJobId,
 }
 
 /** Her day's rate at a station job now: the job sheet's sizes ("1 day · 8", "2 days · 16"). */
-export function stationRates(save: SaveV3, outfitId: OutfitId, job: StationJobId, talentOf: TalentOf, days = 2): number[] {
+export function stationRates(save: FarmSave, outfitId: OutfitId, job: StationJobId, talentOf: TalentOf, days = 2): number[] {
   const terms = termsOf(save, outfitId, PLACE_ACTIVITY[STATION_JOBS[job].station], talentOf, null)
   const multi = STATION_JOB_RULES[job].days > 1
   return terms ? Array.from({ length: days }, (_, k) => stationRate(terms, k, multi)) : []
@@ -322,7 +323,7 @@ export interface BestCatch {
  * (`countChallenge`, which reads only the challenge it's for). Before step 6, so a challenge met tonight ranks her up
  * tonight. Returns the night's best catch for the morning.
  */
-export function haulsTonight(save: SaveV3, made: readonly MadeTonight[]): { save: SaveV3; best: BestCatch | null } {
+export function haulsTonight<S extends FarmSave>(save: S, made: readonly MadeTonight[]): { save: S; best: BestCatch | null } {
   let next = save
   let best: BestCatch | null = null
   let bestValue = 0

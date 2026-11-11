@@ -1,0 +1,59 @@
+{
+  "characterId": "9000002",
+  "events": [
+    {
+      "id": "arrival",
+      "steps": [
+        {
+          "place": "gate"
+        },
+        {
+          "narrate": "An Uma with leaves caught in her mane leans on the Gate to catch her breath."
+        },
+        {
+          "say": "9000002",
+          "line": "Sorry. I took the long way through the woods. Twice.",
+          "emote": "laughing"
+        },
+        {
+          "say": "9000002",
+          "line": "Is the forest behind the farm yours? It smells like rain and pine.",
+          "emote": "surprised"
+        },
+        {
+          "choice": [
+            {
+              "text": "Take a breath. The forest will keep.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "Twice? Then you can show me the way.",
+              "tone": "playful",
+              "friendship": 15,
+              "then": [
+                {
+                  "say": "9000002",
+                  "line": "Deal. I know where the mushrooms hide.",
+                  "emote": "happy"
+                }
+              ]
+            },
+            {
+              "text": "Did you get lost?",
+              "tone": "honest",
+              "friendship": 5,
+              "then": [
+                {
+                  "say": "9000002",
+                  "line": "A little. On purpose.",
+                  "emote": "shy"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

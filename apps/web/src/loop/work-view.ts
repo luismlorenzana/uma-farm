@@ -4,7 +4,7 @@
 import {
   ACTIVITY_NAMES, AREA_NAMES, DAY_MS, FISHING_SPOTS, FOREST, FOREST_AREAS, GATHER_KIND, goodName, goodOf, haulDays, MAX_GATHER_DAYS, MAX_STATION_ITEMS,
   PLACE_ACTIVITY, parseStockKey, placeLock, sharesOn, SPOT_NAMES, STATION_JOB_RULES, STATION_JOBS, stationJobOf, stationOptions, stationRates,
-  type GatherPlace, type LoopCollected, type LoopPlaceId, type LoopWorkRequest, type SaveV3, type StationId, type StationJobId, type StationOption,
+  type GatherPlace, type LoopCollected, type LoopPlaceId, type LoopWorkRequest, type FarmSave, type StationId, type StationJobId, type StationOption,
   type TalentOf,
 } from '@farm/domain'
 import type { DurationUse, RequestLabel, SizeRule, WorkWords } from '@luismlorenzana/uma-kit/work'
@@ -81,7 +81,7 @@ export interface WhereRow {
 
 /** The What step's rows for a gathering place: every area or spot, those her rank hasn't opened greyed with the rank
  * that opens them, each with this season's goods and about how many she'd bring a day. */
-export function whereRows(save: SaveV3, place: GatherPlace, outfitId: string | null, talentOf: TalentOf): WhereRow[] {
+export function whereRows(save: FarmSave, place: GatherPlace, outfitId: string | null, talentOf: TalentOf): WhereRow[] {
   const ids: readonly string[] = place === 'forest' ? FOREST_AREAS : FISHING_SPOTS
   const activity = PLACE_ACTIVITY[place]
   const rank = outfitId ? save.roster[outfitId]?.ranks[activity].rank ?? 0 : 0
@@ -96,7 +96,7 @@ export function whereRows(save: SaveV3, place: GatherPlace, outfitId: string | n
 }
 
 /** Where the sheet opens for her: the deepest place she can go. */
-export function initialWhere(save: SaveV3, place: GatherPlace, outfitId: string | null, talentOf: TalentOf): string {
+export function initialWhere(save: FarmSave, place: GatherPlace, outfitId: string | null, talentOf: TalentOf): string {
   const rows = whereRows(save, place, outfitId, talentOf)
   return (rows.filter((r) => r.lock === null).at(-1) ?? rows[0]!).id
 }
@@ -105,7 +105,7 @@ export function initialWhere(save: SaveV3, place: GatherPlace, outfitId: string 
 
 /** A gathering job's sizes: her haul after 1, 2, 3 and 4 days ("×5 · 1 day", "×10 · 2 days"). The kit counts items, so
  * each size is the items those days bring, and `gatherRequest` turns it back into days. */
-export function gatherSizes(save: SaveV3, place: GatherPlace, outfitId: string | null, talentOf: TalentOf): number[] {
+export function gatherSizes(save: FarmSave, place: GatherPlace, outfitId: string | null, talentOf: TalentOf): number[] {
   const days = outfitId ? haulDays(save, outfitId, place, talentOf, MAX_GATHER_DAYS) : []
   const per = days.length > 0 ? days : Array.from({ length: MAX_GATHER_DAYS }, () => 1)
   return per.map((_, i) => per.slice(0, i + 1).reduce((a, b) => a + b, 0))
@@ -128,7 +128,7 @@ export function gatherSizeRule(sizes: readonly number[]): SizeRule {
 
 /** A station job's sizes (decision 2): a job's least days at her rate ("×8 · 1 day"), twice that ("×16 · 2 days"), and all
  * held ("×5"), at most 100. */
-export function stationSizeRule(save: SaveV3, item: string, outfitId: string | null, talentOf: TalentOf): SizeRule | undefined {
+export function stationSizeRule(save: FarmSave, item: string, outfitId: string | null, talentOf: TalentOf): SizeRule | undefined {
   const at = parseStockKey(item)
   const job = at ? stationJobOf(at.id) : null
   const input = at ? goodOf(at.id)?.input : null
@@ -151,7 +151,7 @@ export interface StationGroup {
   name: string
   options: StationOption[]
 }
-export function stationGroups(save: SaveV3, station: StationId): StationGroup[] {
+export function stationGroups(save: FarmSave, station: StationId): StationGroup[] {
   const options = stationOptions(save, station)
   return (Object.keys(STATION_JOBS) as StationJobId[]).filter((job) => STATION_JOBS[job].station === station)
     .map((job) => ({ job, name: STATION_JOB_RULES[job].name, options: options.filter((o) => o.job === job) }))

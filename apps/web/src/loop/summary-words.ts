@@ -1,8 +1,10 @@
 // The morning summary's lines (F18 decision 11, F19 decision 6, F20, F21, F23, F24): the save holds ids and counts, and
 // these say them, each line a tap to its place. With the farm map, on demand. Pure, so the card and the tests read the same.
+// On save v4 (F46 decision 15) §4 is Hearts: "Stand-in 1 arrived · away", her arrival scene waiting; the Dorm's beds are the
+// Dorm for 20's.
 import {
-  ACTIVITY_NAMES, bedsAt, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, SEASON_NAMES, type FarmPlaceId, type FestivalId, type MorningSummary, type SummarySection,
-  summarySections,
+  ACTIVITY_NAMES, bedsFor, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, SEASON_NAMES, type FarmPlaceId, type FestivalId, type MorningSummary,
+  type MorningSummaryV4, type SummarySection, type SummarySectionV4, summarySections,
 } from '@farm/domain'
 import { chapterDoneWords, farmRankWords, milestoneWords } from './goal-words'
 import { challengeWords } from './roster-view'
@@ -20,13 +22,13 @@ export interface SummaryLine {
   tag?: string
 }
 export interface SummaryPart {
-  section: SummarySection
+  section: SummarySection | SummarySectionV4
   title: string
   lines: SummaryLine[]
 }
 
-const SECTION_TITLE: Readonly<Record<SummarySection, string>> = {
-  bin: 'The bin', work: 'Work done', ranks: 'Ranks', bonds: 'Bonds', news: 'New today', nudges: 'Today',
+const SECTION_TITLE: Readonly<Record<SummarySection | SummarySectionV4, string>> = {
+  bin: 'The bin', work: 'Work done', ranks: 'Ranks', bonds: 'Bonds', hearts: 'Hearts', news: 'New today', nudges: 'Today',
 }
 const peek = (place: FarmPlaceId): string => `/?peek=${place}`
 /** The Fields' page (F20). */
@@ -40,7 +42,7 @@ export type NameOf = (outfitId: string) => string
 const someone: NameOf = () => 'An Uma'
 
 /** The morning summary as the card shows it: CS5's sections in order, empty ones hidden, each line a tap. */
-export function summaryParts(summary: MorningSummary, nameOf: NameOf = someone): SummaryPart[] {
+export function summaryParts(summary: MorningSummary | MorningSummaryV4, nameOf: NameOf = someone): SummaryPart[] {
   return summarySections(summary).map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf) }))
 }
 /** Her sheet on the roster. */
@@ -48,7 +50,8 @@ export const umaSheet = (outfitId: string): string => `/roster?uma=${outfitId}`
 
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 
-function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: NameOf): SummaryLine[] {
+function sectionLines(summary: MorningSummary | MorningSummaryV4, section: SummarySection | SummarySectionV4, nameOf: NameOf): SummaryLine[] {
+  const version = 'hearts' in summary ? 4 : 3
   switch (section) {
     case 'bin': {
       // F19 decision 6: each good and star with its count and gold, the demand marked, then the total.
@@ -79,9 +82,9 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
           case 'season': return { key: 'season', text: `${SEASON_NAMES[line.season]} begins`, to: '/?sheet=calendar' }
           case 'festival': return { key: `festival:${line.when}`, text: `${festivalName(line.festival)} ${line.when}`, to: peek('festival') }
           case 'chapter': return { key: 'chapter', text: chapterDoneWords(line.chapter), to: '/diary', tag: 'Chapter' }
-          case 'farm-rank': return { key: `farm-rank:${line.rank}`, text: farmRankWords(line.rank), to: '/?sheet=rank', tag: 'Farm Rank' }
+          case 'farm-rank': return { key: `farm-rank:${line.rank}`, text: farmRankWords(line.rank, version), to: '/?sheet=rank', tag: 'Farm Rank' }
           case 'milestone': return { key: `milestone:${line.id}`, text: milestoneWords(line.id), to: '/diary', tag: 'Milestone' }
-          case 'dorm': return { key: 'dorm', text: `Dorm level ${line.level} · ${bedsAt(line.level)} beds`, to: DORM }
+          case 'dorm': return { key: 'dorm', text: `Dorm level ${line.level} · ${bedsFor(version, line.level)} beds`, to: DORM }
           case 'home': return {
             key: 'home', to: DORM, text: line.umas.length === 1 ? `${nameOf(line.umas[0]!)} is home` : `${line.umas.length} Umas are home`,
           }
@@ -105,5 +108,10 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
         })
     case 'bonds':
       return []
+    case 'hearts':
+      // F46: an Uma who arrived overnight, home or away; her arrival scene plays once the summary is put away.
+      return 'hearts' in summary ? summary.hearts.map((line): SummaryLine => ({
+        key: `arrived:${line.id}`, to: umaSheet(line.id), text: `${nameOf(line.id)} arrived${line.home ? '' : ' · away'}`, tag: 'New',
+      })) : []
   }
 }

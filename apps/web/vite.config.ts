@@ -103,7 +103,8 @@ export default defineConfig(({ mode }) => {
     },
     preview: { port: 5194 },
     build: { target: 'es2022', manifest: true },
-    // uma-kit is transformed with the app, so its links share the app's router (F18's bar test renders them).
-    test: { environment: 'jsdom', maxWorkers: 2, server: { deps: { inline: [/@luismlorenzana\/uma-kit/] } } },
+    // uma-kit is transformed with the app, so its links share the app's router (F18's bar test renders them). The romance
+    // switch is off (F46 decision 4): M4's tests run unchanged, and a romance test turns it on with `vi.stubEnv`.
+    test: { environment: 'jsdom', maxWorkers: 2, env: { VITE_FARM_ROMANCE: '0' }, server: { deps: { inline: [/@luismlorenzana\/uma-kit/] } } },
   }
 })

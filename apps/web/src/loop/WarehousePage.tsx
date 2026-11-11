@@ -3,7 +3,7 @@
 // refines into or from, and Ship). With `?pick=bin` it's the bin's pick mode (decision 8): a tap on a star ships one,
 // Ship all ships the good's every star, and Done goes back to the bin. Drawn on the kit's Chip, Sheet and Button: the
 // kit's ShelfView holds one count and one price per item, and a good has five. Loaded on demand.
-import { binTotal, type SaveV3 } from '@farm/domain'
+import { binTotal, type FarmSave } from '@farm/domain'
 import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button, Chip, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
@@ -22,7 +22,7 @@ export default function WarehousePage() {
 
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
 
-function Warehouse({ save, picking }: { save: SaveV3; picking: boolean }) {
+function Warehouse({ save, picking }: { save: FarmSave; picking: boolean }) {
   const leave = useLeave()
   const tabs = useMemo(() => warehouseTabs(save), [save])
   const [shelf, setShelf] = useState<Shelf>(() => firstTab(tabs, picking))

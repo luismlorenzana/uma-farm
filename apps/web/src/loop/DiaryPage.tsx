@@ -1,7 +1,7 @@
 // `/diary` (F24; CS55): the Diary tab holds the chapter until its own screen comes in M6. The chapter's card: its number,
 // title and six goals, each with its count and a check when met, and its reward; once chapter 1 is done, chapter 2's
 // line and "Soon" until M5. Below, the Farm Rank (opening its sheet) and the milestones paid so far. Loaded on demand.
-import { chapterOf, diaryEntries, goalStates, type SaveV3 } from '@farm/domain'
+import { chapterOf, diaryEntries, goalStates, type FarmSave } from '@farm/domain'
 import { HelpButton, Panel } from '@luismlorenzana/uma-kit/ui'
 import { Link } from 'react-router'
 import { useLoopSave } from '../save/game'
@@ -30,7 +30,7 @@ export default function DiaryPage() {
   )
 }
 
-function ChapterCard({ save }: { save: SaveV3 }) {
+function ChapterCard({ save }: { save: FarmSave }) {
   const chapter = chapterOf(save.farm.chapter)
   const goals = goalStates(save)
   if (!chapter || !goals) {
@@ -67,7 +67,7 @@ function ChapterCard({ save }: { save: SaveV3 }) {
   )
 }
 
-function Milestones({ save }: { save: SaveV3 }) {
+function Milestones({ save }: { save: FarmSave }) {
   return (
     <Panel label="Milestones">
       {save.diary.milestones.length === 0

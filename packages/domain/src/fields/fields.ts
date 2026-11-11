@@ -23,6 +23,7 @@ import { SaveRuleError } from '../save/rules'
 import { BLOCK_IDS, emptyPlot, leaving, newBlock, tendedBlock, type Block, type BlockId, type OutfitId, type Plot, type SaveV3 } from '../save/v3'
 import { addGoods, goodCount, takeGoods } from '../save/warehouse'
 import { CROPS, GROWTH_SLACK, growsIn, readyAt, SHOP_SEEDS } from './crops'
+import type { FarmSave } from '../save/v4'
 
 const round6 = (n: number): number => Math.round(n * 1e6) / 1e6
 const cropName = (crop: CropId): string => itemNameOf(crop)
@@ -39,14 +40,14 @@ export const BLOCK_RULES: Readonly<Record<BlockId, { opens: PlaceOpens; cost: nu
 }
 
 /** The farm's block, or undefined while it isn't bought. */
-export const blockOf = (save: Pick<SaveV3, 'fields'>, id: BlockId): Block | undefined => save.fields.blocks.find((b) => b.id === id)
+export const blockOf = (save: Pick<FarmSave, 'fields'>, id: BlockId): Block | undefined => save.fields.blocks.find((b) => b.id === id)
 
 /** Whether a block can be bought on this save now: not owned, and its Farm Rank reached. Gold is checked by `buyBlock`. */
-export const blockOpen = (save: Pick<SaveV3, 'fields' | 'farm'>, id: BlockId): boolean => !blockOf(save, id) && opened(save, BLOCK_RULES[id].opens)
+export const blockOpen = (save: Pick<FarmSave, 'fields' | 'farm'>, id: BlockId): boolean => !blockOf(save, id) && opened(save, BLOCK_RULES[id].opens)
 
 /** Buys a block (CS12): refused when it's the farm's already (`bad-slot`), before its Farm Rank (`locked`) and when gold
  * is short (`no-gold`). Its nine plots come tilled and empty, and the blocks stay in A–D order. */
-export function buyBlock<S extends SaveV3>(save: S, id: BlockId): S {
+export function buyBlock<S extends FarmSave>(save: S, id: BlockId): S {
   if (blockOf(save, id)) throw new SaveRuleError('bad-slot', `Block ${id} is yours already.`)
   const rule = BLOCK_RULES[id]
   if (!opened(save, rule.opens)) throw new SaveRuleError('locked', rule.opens.by === 'farm-rank' ? `Opens at Farm Rank ${rule.opens.rank}.` : 'Not open yet.')
@@ -91,7 +92,7 @@ export interface TenderTerms {
 }
 
 /** The block's tender now, with her terms, or null when it's untended. */
-export function tenderTerms(save: Pick<SaveV3, 'fields' | 'roster'>, id: BlockId, talentOf: FarmingTalentOf = talentD): TenderTerms | null {
+export function tenderTerms(save: Pick<FarmSave, 'fields' | 'roster'>, id: BlockId, talentOf: FarmingTalentOf = talentD): TenderTerms | null {
   const outfitId = blockOf(save, id)?.tender ?? null
   const uma = outfitId === null ? undefined : save.roster[outfitId]
   if (outfitId === null || !uma) return null
@@ -99,7 +100,7 @@ export function tenderTerms(save: Pick<SaveV3, 'fields' | 'roster'>, id: BlockId
 }
 
 /** A block's growth tonight: its tender's rate, or 1 untended (CS12). */
-export function blockGrowth(save: Pick<SaveV3, 'fields' | 'roster' | 'tools'>, id: BlockId, talentOf: FarmingTalentOf = talentD): number {
+export function blockGrowth(save: Pick<FarmSave, 'fields' | 'roster' | 'tools'>, id: BlockId, talentOf: FarmingTalentOf = talentD): number {
   const tender = tenderTerms(save, id, talentOf)
   return tender ? tendedGrowth(tender.rank, tender.talent, save.tools['watering-can'], tender.wellFed) : UNTENDED_GROWTH
 }
@@ -115,13 +116,13 @@ export function harvestQuality(tender: Omit<TenderTerms, 'outfitId'> | null, lev
 
 /** Whether an Uma is busy (decision 1): she tends a block, or holds a running uma-work job. The Fields' picker, the job
  * sheet and the Dorm's swaps read this one rule. */
-export function isBusy(save: SaveV3, outfitId: OutfitId, kinds: LoopKinds = LOOP_KINDS): boolean {
+export function isBusy(save: FarmSave, outfitId: OutfitId, kinds: LoopKinds = LOOP_KINDS): boolean {
   return tendedBlock(save, outfitId) !== null || loopWorking(save, kinds).has(outfitId)
 }
 
 /** Sets or clears a block's tender (decision 1). She must be on the farm with no running job; a tender of another block
  * moves here. She stays until moved, across nights. */
-export function setTender<S extends SaveV3>(save: S, id: BlockId, outfitId: OutfitId | null, kinds: LoopKinds = LOOP_KINDS): S {
+export function setTender<S extends FarmSave>(save: S, id: BlockId, outfitId: OutfitId | null, kinds: LoopKinds = LOOP_KINDS): S {
   if (!blockOf(save, id)) throw new SaveRuleError('bad-slot', `No Block ${id} yet.`)
   if (outfitId !== null) {
     if (!save.dorm.home.includes(outfitId) || !save.roster[outfitId]) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
@@ -149,7 +150,7 @@ export function cropLevelOf(points: number): number {
   return level
 }
 /** A crop's level on this farm. */
-export const cropLevel = (save: Pick<SaveV3, 'crops'>, crop: CropId): number => cropLevelOf(save.crops[crop] ?? 0)
+export const cropLevel = (save: Pick<FarmSave, 'crops'>, crop: CropId): number => cropLevelOf(save.crops[crop] ?? 0)
 
 // --- Planting and harvesting (CS12; decisions 3–5, 7, 9, 10) ---------------------------------------------------------
 
@@ -157,10 +158,10 @@ export const cropLevel = (save: Pick<SaveV3, 'crops'>, crop: CropId): number => 
 export const PLOTS_PLANTED = 'plots-planted'
 export const PLOTS_HARVESTED = 'plots-harvested'
 
-const seasonOf = (save: Pick<SaveV3, 'calendar'>): Season => dateOf(save.calendar.day).season
+const seasonOf = (save: Pick<FarmSave, 'calendar'>): Season => dateOf(save.calendar.day).season
 const bump = (counts: Record<string, number>, key: string, n: number): Record<string, number> => ({ ...counts, [key]: (counts[key] ?? 0) + n })
 
-function ownedBlock(save: Pick<SaveV3, 'fields'>, id: BlockId): Block {
+function ownedBlock(save: Pick<FarmSave, 'fields'>, id: BlockId): Block {
   const block = blockOf(save, id)
   if (!block) throw new SaveRuleError('bad-slot', `No Block ${id} yet.`)
   return block
@@ -170,10 +171,10 @@ function plotOf(block: Block, index: number): Plot {
   if (!Number.isInteger(index) || !plot) throw new SaveRuleError('bad-slot', `No plot ${index + 1} in Block ${block.id}.`)
   return plot
 }
-function withPlots(save: SaveV3, id: BlockId, plots: Plot[]): SaveV3['fields'] {
+function withPlots(save: FarmSave, id: BlockId, plots: Plot[]): SaveV3['fields'] {
   return { blocks: save.fields.blocks.map((b) => (b.id === id ? { ...b, plots } : b)) }
 }
-function inSeason(save: Pick<SaveV3, 'calendar'>, crop: CropId): void {
+function inSeason(save: Pick<FarmSave, 'calendar'>, crop: CropId): void {
   if (!growsIn(crop, seasonOf(save))) {
     throw new SaveRuleError('out-of-season', `${cropName(crop)} grows in ${CROPS[crop].seasons.map((s) => SEASON_NAMES[s]).join(' and ')}.`)
   }
@@ -181,7 +182,7 @@ function inSeason(save: Pick<SaveV3, 'calendar'>, crop: CropId): void {
 
 /** Plants one seed (`seed-<crop>` or `seed-<crop>-own`) in an empty plot (decisions 7 and 10): in season only, the seed
  * from the Warehouse, the crop's entry in `crops` made on its first planting, `plots-planted` up one. */
-export function plant<S extends SaveV3>(save: S, id: BlockId, index: number, seed: string): S {
+export function plant<S extends FarmSave>(save: S, id: BlockId, index: number, seed: string): S {
   const block = ownedBlock(save, id)
   const plot = plotOf(block, index)
   const what = seedOf(seed)
@@ -198,7 +199,7 @@ export function plant<S extends SaveV3>(save: S, id: BlockId, index: number, see
 
 /** Plants every empty plot of a block with one crop (decision 9): own seeds first, then the shop's, until the plots or
  * the seeds run out. Refused with no empty plot (`bad-slot`) or no seeds of it (`no-items`). */
-export function plantAll<S extends SaveV3>(save: S, id: BlockId, crop: CropId): S {
+export function plantAll<S extends FarmSave>(save: S, id: BlockId, crop: CropId): S {
   const block = ownedBlock(save, id)
   const empty = block.plots.flatMap((p, i) => (p.crop === null ? [i] : []))
   if (empty.length === 0) throw new SaveRuleError('bad-slot', `Block ${id} is planted.`)
@@ -220,7 +221,7 @@ const noReceipt = (): HarvestReceipt => ({ stars: [0, 0, 0, 0, 0], seeds: 0, plo
 /** A receipt's crops, every star. */
 export const receiptItems = (receipt: HarvestReceipt): number => receipt.stars.reduce((a, b) => a + b, 0)
 
-function harvestPlot(save: SaveV3, id: BlockId, index: number, talentOf: FarmingTalentOf, receipt: HarvestReceipt): SaveV3 {
+function harvestPlot<S extends FarmSave>(save: S, id: BlockId, index: number, talentOf: FarmingTalentOf, receipt: HarvestReceipt): S {
   const block = ownedBlock(save, id)
   const plot = plotOf(block, index)
   if (plot.crop === null || !plot.ready) throw new SaveRuleError('not-ready', plot.crop === null ? 'Nothing planted there.' : 'Not ready yet.')
@@ -255,14 +256,14 @@ function harvestPlot(save: SaveV3, id: BlockId, index: number, talentOf: Farming
 
 /** Harvests a Ready plot: each crop draws its stars into the Warehouse, a seed may come back, the crop gains its points
  * and the tender her challenge's count (`countChallenge`), `plots-harvested` rises, and a regrowing crop starts again. */
-export function harvest(save: SaveV3, id: BlockId, index: number, talentOf: FarmingTalentOf = talentD): { save: SaveV3; receipt: HarvestReceipt } {
+export function harvest<S extends FarmSave>(save: S, id: BlockId, index: number, talentOf: FarmingTalentOf = talentD): { save: S; receipt: HarvestReceipt } {
   const receipt = noReceipt()
   return { save: harvestPlot(save, id, index, talentOf, receipt), receipt }
 }
 
 /** Harvests every Ready plot of the given blocks (Harvest all; every block for the map's Collect all). Nothing Ready
  * changes nothing. */
-export function harvestAll(save: SaveV3, ids: readonly BlockId[] = BLOCK_IDS, talentOf: FarmingTalentOf = talentD): { save: SaveV3; receipt: HarvestReceipt } {
+export function harvestAll<S extends FarmSave>(save: S, ids: readonly BlockId[] = BLOCK_IDS, talentOf: FarmingTalentOf = talentD): { save: S; receipt: HarvestReceipt } {
   const receipt = noReceipt()
   let next = save
   for (const block of save.fields.blocks) {
@@ -277,7 +278,7 @@ export function harvestAll(save: SaveV3, ids: readonly BlockId[] = BLOCK_IDS, ta
 // --- What a screen and the morning read ----------------------------------------------------------------------------
 
 /** The seeds held that plant today, by id: own seeds first, then the shop's, by CS11's order. */
-export function seedsInSeason(save: Pick<SaveV3, 'items' | 'calendar'>): { id: string; crop: CropId; own: boolean; count: number }[] {
+export function seedsInSeason(save: Pick<FarmSave, 'items' | 'calendar'>): { id: string; crop: CropId; own: boolean; count: number }[] {
   const season = seasonOf(save)
   return Object.keys(CROPS).flatMap((c) => {
     const crop = c as CropId
@@ -290,7 +291,7 @@ export function seedsInSeason(save: Pick<SaveV3, 'items' | 'calendar'>): { id: s
 }
 
 /** Empty plots that seeds held could fill today: the morning's nudge (CS5 §6). */
-export function plotsToPlant(save: Pick<SaveV3, 'items' | 'calendar' | 'fields'>): number {
+export function plotsToPlant(save: Pick<FarmSave, 'items' | 'calendar' | 'fields'>): number {
   const empty = save.fields.blocks.reduce((n, b) => n + b.plots.filter((p) => p.crop === null).length, 0)
   return Math.min(empty, seedsInSeason(save).reduce((n, s) => n + s.count, 0))
 }
@@ -302,7 +303,7 @@ export function nightsLeft(plot: Plot, growth: number): number {
 }
 
 /** The shop's seeds this season (CS4), each line opening at its tier's Farm Rank. */
-export function seedLines(save: Pick<SaveV3, 'calendar'>): { id: string; price: number; opens: PlaceOpens }[] {
+export function seedLines(save: Pick<FarmSave, 'calendar'>): { id: string; price: number; opens: PlaceOpens }[] {
   return SHOP_SEEDS[seasonOf(save)].map((crop) => {
     const { tier, seed } = CROPS[crop]
     return { id: seedId(crop), price: seed!, opens: tier === 1 ? { by: 'start' } : { by: 'farm-rank', rank: tier as number } }
@@ -328,7 +329,7 @@ export interface Withered {
  * days − 0.5 turns Ready. A tender works the night only when her block has a growing plot (decision 2): those are
  * `tended`, for F21's rank points (night step 6).
  */
-export function growFields(save: SaveV3, talentOf: FarmingTalentOf = talentD): { save: SaveV3; tended: { outfitId: OutfitId; block: BlockId }[]; ripened: Ripened[] } {
+export function growFields<S extends FarmSave>(save: S, talentOf: FarmingTalentOf = talentD): { save: S; tended: { outfitId: OutfitId; block: BlockId }[]; ripened: Ripened[] } {
   const tended: { outfitId: OutfitId; block: BlockId }[] = []
   const ripened: Ripened[] = []
   const blocks = save.fields.blocks.map((block): Block => {
@@ -354,7 +355,7 @@ export function growFields(save: SaveV3, talentOf: FarmingTalentOf = talentD): {
  * that doesn't grow in the next season withers and its plot empties. Ready crops wait to be harvested. Corn carries
  * Summer → Autumn and Cabbage Winter → Spring; nothing else does.
  */
-export function witherFields(save: SaveV3): { save: SaveV3; withered: Withered[] } {
+export function witherFields<S extends FarmSave>(save: S): { save: S; withered: Withered[] } {
   const day = save.calendar.day
   if (!isSeasonEnd(day)) return { save, withered: [] }
   const next = dateOf(day + 1).season

@@ -217,11 +217,11 @@ export const tendedBlock = (save: Pick<SaveV3, 'fields'>, outfitId: OutfitId): B
 /** The start's three (CS2; F23). */
 export const START_PICKS = 3
 /** Picks still to make (F23 decision 2): the start's sheet shows while the roster holds fewer than three. */
-export const picksLeft = (save: Pick<SaveV3, 'roster'>): number => Math.max(0, START_PICKS - Object.keys(save.roster).length)
+export const picksLeft = (save: { roster: Readonly<Record<string, unknown>> }): number => Math.max(0, START_PICKS - Object.keys(save.roster).length)
 /** She leaves the farm tomorrow: a swap at the Dorm takes her out (F23 decision 4). */
-export const leaving = (save: Pick<SaveV3, 'dorm'>, outfitId: OutfitId): boolean => save.dorm.swaps.some((s) => s.out === outfitId)
+export const leaving = (save: { dorm: { swaps: readonly DormSwap[] } }, outfitId: OutfitId): boolean => save.dorm.swaps.some((s) => s.out === outfitId)
 /** She's home and staying (F23): who may take a job or tend a block. An Uma leaving tomorrow may do neither. */
-export const onFarm = (save: Pick<SaveV3, 'dorm'>, outfitId: OutfitId): boolean => save.dorm.home.includes(outfitId) && !leaving(save, outfitId)
+export const onFarm = (save: { dorm: { home: readonly OutfitId[]; swaps: readonly DormSwap[] } }, outfitId: OutfitId): boolean => save.dorm.home.includes(outfitId) && !leaving(save, outfitId)
 
 /** A new Uma on the roster: joined today, Novice at 0 points in all nine activities. */
 export function newRosterUma(day: number): RosterUma {

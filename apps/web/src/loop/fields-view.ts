@@ -4,7 +4,7 @@
 // page, the map and the tests read the same. Loaded with the loop's screens.
 import {
   BLOCK_IDS, BLOCK_RULES, blockGrowth, blockOf, CROPS, dateOf, growsIn, isSeasonEnd, itemNameOf, nightsLeft, opened, RANKS, readyAt, SEASON_NAMES,
-  seedsInSeason, TALENT_GRADES, talentD, type BlockId, type CropId, type FarmingTalentOf, type Plot, type SaveV3, type Season,
+  seedsInSeason, TALENT_GRADES, talentD, type BlockId, type CropId, type FarmingTalentOf, type Plot, type FarmSave, type Season,
 } from '@farm/domain'
 
 export type PlotState = 'empty' | 'growing' | 'ready'
@@ -73,7 +73,7 @@ function plotView(plot: Plot, index: number, growth: number, next: Season | null
 }
 
 /** The four blocks, A to D. */
-export function fieldsView(save: SaveV3, talentOf: FarmingTalentOf = talentD): BlockView[] {
+export function fieldsView(save: FarmSave, talentOf: FarmingTalentOf = talentD): BlockView[] {
   return BLOCK_IDS.map((id): BlockView => {
     const block = blockOf(save, id)
     if (!block) {
@@ -110,7 +110,7 @@ export interface SeedOption {
 }
 
 /** The seeds that plant today: for one plot each id, own seeds first; for Plant all each crop, its seeds added up. */
-export function seedOptions(save: SaveV3, all: boolean): SeedOption[] {
+export function seedOptions(save: FarmSave, all: boolean): SeedOption[] {
   const held = seedsInSeason(save)
   if (!all) return held.map((s) => ({ key: s.id, id: s.id, crop: s.crop, name: `${itemNameOf(s.crop)}${s.own ? ' (own)' : ''}`, count: s.count }))
   const crops = [...new Set(held.map((s) => s.crop))]
@@ -121,7 +121,7 @@ export function seedOptions(save: SaveV3, all: boolean): SeedOption[] {
 }
 
 /** "No seeds for Spring." */
-export const noSeedsWords = (save: Pick<SaveV3, 'calendar'>): string => `No seeds for ${SEASON_NAMES[dateOf(save.calendar.day).season]}.`
+export const noSeedsWords = (save: Pick<FarmSave, 'calendar'>): string => `No seeds for ${SEASON_NAMES[dateOf(save.calendar.day).season]}.`
 
 /** A crop's facts for a growing plot's sheet: "Regrows every 3 days" and its yield. */
 export function cropFacts(crop: CropId): string[] {
@@ -130,7 +130,7 @@ export function cropFacts(crop: CropId): string[] {
 }
 
 /** The tender's rank and talent in farming (F21 decision 7): "Hand · B". */
-export const tenderRank = (save: SaveV3, outfitId: string, talentOf: FarmingTalentOf = talentD): string =>
+export const tenderRank = (save: FarmSave, outfitId: string, talentOf: FarmingTalentOf = talentD): string =>
   `${RANKS[save.roster[outfitId]?.ranks.farming.rank ?? 0]} · ${TALENT_GRADES[talentOf(outfitId)]}`
 
 /** The quick look's line for a block: "9 growing · 3 ready", "Empty", or what opens a locked one. */

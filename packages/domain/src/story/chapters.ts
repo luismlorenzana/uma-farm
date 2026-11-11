@@ -14,7 +14,11 @@ import { FISHING_SPOTS, FOREST_AREAS } from '../gathering/ids'
 import { HOME_COUNT, type MadeTonight } from '../gathering/kinds'
 import { GOLD_SHIPPED } from '../save/bin'
 import { earnGold } from '../save/gold'
+import { arrive, chapterArrival } from '../romance/arrivals'
 import type { BuildingId, OutfitId, SaveV3 } from '../save/v3'
+import type { SaveV4 } from '../save/v4'
+import type { StoryPack } from './pack'
+import type { FarmSave } from '../save/v4'
 
 /** One of a chapter's goals: its words, what it teaches, and how far the save has come. `need` is what completes it. */
 export interface Goal {
@@ -23,7 +27,7 @@ export interface Goal {
   readonly teaches: string
   readonly need: number
   /** Where the save stands, from the chapter's start where the goal counts a lifetime counter. */
-  readonly have: (save: SaveV3) => number
+  readonly have: (save: FarmSave) => number
 }
 
 /** What a chapter pays when it completes (CS42, CS43). The Farm Rank's 250 points come from `chaptersDone`. */
@@ -45,7 +49,7 @@ export interface Chapter {
 }
 
 /** A lifetime counter since the current chapter opened (decision 4): `farm.goals` holds each counter as it stood then. */
-export const sinceChapter = (save: Pick<SaveV3, 'farm'>, key: string): number => (save.farm.counts[key] ?? 0) - (save.farm.goals[key] ?? 0)
+export const sinceChapter = (save: Pick<FarmSave, 'farm'>, key: string): number => (save.farm.counts[key] ?? 0) - (save.farm.goals[key] ?? 0)
 
 /** CS42's six goals, read as decision 4 has it. */
 export const CHAPTER_1_GOALS: readonly Goal[] = [
@@ -77,23 +81,32 @@ export interface GoalState {
   readonly done: boolean
 }
 /** The current chapter's goals as the save stands, or null when they aren't built yet ("Soon"). */
-export function goalStates(save: SaveV3): GoalState[] | null {
+export function goalStates(save: FarmSave): GoalState[] | null {
   const goals = chapterOf(save.farm.chapter)?.goals
   return goals ? goals.map((goal) => { const have = Math.max(0, goal.have(save)); return { goal, have: Math.min(have, goal.need), done: have >= goal.need } }) : null
 }
 /** Every goal of the current chapter is met. */
-export const chapterMet = (save: SaveV3): boolean => goalStates(save)?.every((g) => g.done) ?? false
+export const chapterMet = (save: FarmSave): boolean => goalStates(save)?.every((g) => g.done) ?? false
 
-/** Completes the current chapter (decision 5): its gold, its plans (a building not yet held becomes 0), its recruit from
- * `recruitFor` joined with `joinRoster` (home, or away with no bed free), then the next chapter opens counting from now.
- * The 250 points follow from `chaptersDone`. Never stamps. */
-export function completeChapter<S extends SaveV3>(save: S, release: readonly OutfitId[], talentOf: TalentOf): { save: S; recruit: OutfitId | null } {
+/** Completes the current chapter (decision 5): its gold, its plans (a building not yet held becomes 0), its recruit, then
+ * the next chapter opens counting from now. On v3 the recruit is `recruitFor`'s, joined with `joinRoster` (home, or away
+ * with no bed free); on v4 (F46 decision 8) it's the chapter's authored arrival from the pack, joined with `arrive`, and
+ * nothing is drawn. The 250 points follow from `chaptersDone`. Never stamps. */
+export function completeChapter<S extends FarmSave>(save: S, release: readonly OutfitId[], talentOf: TalentOf, story?: Pick<StoryPack, 'cast'>): { save: S; recruit: OutfitId | null } {
   const reward = chapterOf(save.farm.chapter)?.reward
   if (!reward) return { save, recruit: null }
   let next = earnGold(save, reward.gold)
   const plans = Object.fromEntries(reward.plans.filter((b) => next.buildings[b] === undefined).map((b) => [b, 0]))
   next = { ...next, buildings: { ...next.buildings, ...plans } }
-  const recruit = reward.recruit ? recruitFor(next, release, talentOf).outfitId : null
+  if (next.version === 4) {
+    const v4: SaveV4 = next
+    const entry = reward.recruit && story ? chapterArrival(story, v4.farm.chapter) : null
+    const recruit = entry && !v4.roster[entry.characterId] ? entry.characterId : null
+    const joined = recruit ? arrive(v4, recruit).save : v4
+    return { save: { ...joined, farm: { ...joined.farm, chapter: joined.farm.chapter + 1, goals: { ...joined.farm.counts } } } as unknown as S, recruit }
+  }
+  const v3: SaveV3 = next
+  const recruit = reward.recruit ? recruitFor(v3, release, talentOf).outfitId : null
   if (recruit) next = joinRoster(next, recruit).save
   next = { ...next, farm: { ...next.farm, chapter: next.farm.chapter + 1, goals: { ...next.farm.counts } } }
   return { save: next, recruit }
@@ -118,7 +131,7 @@ export interface GoalsTonight {
 /** Night step 8's `checkGoals` (decisions 1, 2, 4 and 5): the Diary pays what's reached, the Farm Rank is recomputed, and
  * the chapter completes when its last goal is met, after which the Diary and the rank are checked again (the recruit
  * counts toward "Umas recruited", the chapter's points toward the rank). */
-export function checkGoalsNight(save: SaveV3, release: readonly OutfitId[], talentOf: TalentOf, made: readonly MadeTonight[]): { save: SaveV3; tonight: GoalsTonight } {
+export function checkGoalsNight<S extends FarmSave>(save: S, release: readonly OutfitId[], talentOf: TalentOf, made: readonly MadeTonight[], story?: Pick<StoryPack, 'cast'>): { save: S; tonight: GoalsTonight } {
   const depths = depthsTonight(made)
   const before = farmRankOf(save.farm.points)
   const first = payDiary(save, depths)
@@ -127,7 +140,7 @@ export function checkGoalsNight(save: SaveV3, release: readonly OutfitId[], tale
   let chapter: number | null = null
   if (chapterMet(next)) {
     chapter = next.farm.chapter
-    const again = payDiary(completeChapter(next, release, talentOf).save, depths)
+    const again = payDiary(completeChapter(next, release, talentOf, story).save, depths)
     next = withFarmPoints(again.save)
     paid = [...paid, ...again.paid]
   }

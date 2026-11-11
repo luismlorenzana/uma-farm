@@ -9,6 +9,7 @@ import type { SaveV3 } from '../save/v3'
 import { STATION_JOB_IDS, STATION_JOBS, stationJobOf, type StationId, type StationJobId } from './ids'
 import { stationBuilt } from './kinds'
 import { STATION_RULES } from './tables'
+import type { FarmSave } from '../save/v4'
 
 /** What stands between the farm and building a station: null when it can be built now. */
 export type StationLock =
@@ -18,7 +19,7 @@ export type StationLock =
   | { by: 'gold'; short: number }
 
 /** Why a station can't be built now (decision 6), or null when it can. */
-export function stationLock(save: Pick<SaveV3, 'buildings' | 'farm' | 'gold'>, station: StationId): StationLock | null {
+export function stationLock(save: Pick<FarmSave, 'buildings' | 'farm' | 'gold'>, station: StationId): StationLock | null {
   if (stationBuilt(save, station)) return { by: 'built' }
   const rule = STATION_RULES[station]
   if (rule.opens.by === 'plans' && save.buildings[station] !== 0) return { by: 'plans' }
@@ -28,7 +29,7 @@ export function stationLock(save: Pick<SaveV3, 'buildings' | 'farm' | 'gold'>, s
 
 /** Builds a station (decision 6): its level becomes 1 and its gold is spent. Refused while it's locked, and when it's
  * built already. Never stamps `updatedAt`: the app's action does. */
-export function buildStation<S extends SaveV3>(save: S, station: StationId): S {
+export function buildStation<S extends FarmSave>(save: S, station: StationId): S {
   const lock = stationLock(save, station)
   if (lock?.by === 'built') throw new SaveRuleError('bad-job', 'Built already.')
   if (lock?.by === 'plans') throw new SaveRuleError('locked', 'Needs the Mill’s plans: chapter 1’s reward.')
@@ -48,7 +49,7 @@ export interface StationOption {
 }
 
 /** What a station's jobs can take from the Warehouse now, job by job in CS18's order, then by grade and stars. */
-export function stationOptions(save: Pick<SaveV3, 'items'>, station: StationId): StationOption[] {
+export function stationOptions(save: Pick<FarmSave, 'items'>, station: StationId): StationOption[] {
   const out: StationOption[] = []
   for (const [input, row] of Object.entries(save.items)) {
     const output = refinedOf(input)

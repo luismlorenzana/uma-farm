@@ -3,8 +3,10 @@
 // hearts with her in its corner, and her best rank (or her rank and talent in the activity sorted by); away, it says so.
 // The filters are where she is, her talent and rank in each activity and her favourite line; the sorts her talent score
 // and rank points in a chosen activity, joined and name. A tap opens her sheet (`?uma=<id>`): your hearts with her, Chat
-// and Gift, where she is, and her nine activities with talent, rank, points and the next challenge. Loaded on demand.
-import { ACTIVITY_NAMES, heartsOf, TALENT_GRADES, type SaveV3, type Temperament } from '@farm/domain'
+// and Gift, where she is, and her nine activities with talent, rank, points and the next challenge. On save v4 (F46) the
+// hearts, Chat and Gift wait for F47's route (decision 13): the cards and the sheet show her ranks and where she is.
+// Loaded on demand.
+import { ACTIVITY_NAMES, heartsOf, TALENT_GRADES, type FarmSave, type Temperament } from '@farm/domain'
 import { AlbumChrome, FaceTile } from '@luismlorenzana/uma-kit/album'
 import { emptyStateHint, runAlbumQuery, type AlbumQuery } from '@luismlorenzana/uma-kit/roster'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -33,7 +35,7 @@ export default function RosterPage() {
           <p>Each Uma has a talent, G to S, in each activity, from her stats. Talent lifts her yield, her stars and how fast she ranks up.</p>
           <p>She climbs six ranks in each: Novice, Hand, Skilled, Expert, Master, Legend. A day of work earns rank points; a rank comes when its points are reached and its challenge is met, at night.</p>
           <p>Her favourite line (the mark on her face) earns ×1.2 rank points. She can work anywhere.</p>
-          <p>The hearts are your affinity with her: chat once a day and give a gift once a day. Goods of her favourite line please her most. At 5 hearts she earns 5% more rank points, at 10 hearts 10%.</p>
+          {save.version === 3 && <p>The hearts are your affinity with her: chat once a day and give a gift once a day. Goods of her favourite line please her most. At 5 hearts she earns 5% more rank points, at 10 hearts 10%.</p>}
           <p>Umas beyond the Dorm’s beds are away on their off-season. Swap them in at the Dorm.</p>
         </HelpButton>
       </div>
@@ -42,7 +44,7 @@ export default function RosterPage() {
   )
 }
 
-function Roster({ save, master }: { save: SaveV3; master: MasterView }) {
+function Roster({ save, master }: { save: FarmSave; master: MasterView }) {
   const location = useLocation()
   const navigate = useNavigate()
   const leave = useLeave()
@@ -83,7 +85,7 @@ function Roster({ save, master }: { save: SaveV3; master: MasterView }) {
               <li key={row.id}>
                 <button type="button" onClick={() => navigate(withParam(location, 'uma', row.id), { state: { back: true } })} data-away={row.home ? undefined : true}
                   className="flex w-full min-w-0 flex-col items-center gap-0.5 text-center" data-uma={row.id} aria-label={`${row.name}, ${first}${row.home ? '' : ', away'}`}>
-                  <FaceTile outfitId={row.id} size={72} badges={{ ...umaBadges(row), ...heartBadge(row.affinity) }} label={row.name} className={row.home ? '' : 'opacity-60'} />
+                  <FaceTile outfitId={row.id} size={72} badges={{ ...umaBadges(row), ...(save.version === 3 ? heartBadge(row.affinity) : {}) }} label={row.name} className={row.home ? '' : 'opacity-60'} />
                   <span className="w-full truncate text-[13px] font-semibold text-ink">{row.name}</span>
                   <span className="w-full truncate text-[12px] text-ink-soft" data-card-rank>{first}</span>
                   {row.home
@@ -108,7 +110,7 @@ function heartBadge(affinity: number) {
 
 /** Her sheet: your hearts with her, Chat and Gift (F23), where she is, her favourite line, when she joined, and her nine
  * activities, each with talent, rank, points and the challenge toward her next rank. */
-function UmaSheet({ save, row, temperament, onClose }: { save: SaveV3; row: LoopUmaRow; temperament: Temperament | null; onClose: () => void }) {
+function UmaSheet({ save, row, temperament, onClose }: { save: FarmSave; row: LoopUmaRow; temperament: Temperament | null; onClose: () => void }) {
   const lines = activityLines(row)
   return (
     <Sheet open onClose={onClose} title={row.name} label={`${row.name}: talents and ranks`}>
@@ -120,10 +122,12 @@ function UmaSheet({ save, row, temperament, onClose }: { save: SaveV3; row: Loop
           <p data-where={row.home ? 'home' : 'away'}>{row.home ? 'On the farm' : <>Away · <Link to="/dorm" className="font-semibold text-accent-strong underline">swap at the Dorm</Link></>}</p>
         </div>
       </div>
-      <div className="space-y-2 pb-3">
-        <Hearts affinity={row.affinity} />
-        <TalkButtons save={save} outfitId={row.id} name={row.name} temperament={temperament} />
-      </div>
+      {save.version === 3 && (
+        <div className="space-y-2 pb-3">
+          <Hearts affinity={row.affinity} />
+          <TalkButtons save={save} outfitId={row.id} name={row.name} temperament={temperament} />
+        </div>
+      )}
       <ul className="divide-y divide-hairline rounded-md border border-hairline" aria-label="Talents and ranks">
         {lines.map((line) => (
           <li key={line.activity} className="px-3 py-2" data-activity={line.activity} data-rank={line.rank} data-points={row.ranks[line.activity].points}>

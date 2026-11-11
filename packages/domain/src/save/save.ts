@@ -4,9 +4,10 @@
 // `account.updatedAt`.
 //
 // v1 (F3): the account. v2 (F4, FW5): the Wilds' world beside it: each Uma's Craft Level, the Warehouse and the work rows.
-// v3 (F17, CS53): the farm's own loop (`v3.ts`), live from F24. `parseSave` returns what's stored, v2 or v3 (a v1 still
-// becomes v2), and the app's boot migrates a v2 with master data (`migrate-v3.ts`), which the API's parse doesn't have: the
-// owner's production save was v2 when the loop went live.
+// v3 (F17, CS53): the farm's own loop (`v3.ts`), live from F24. v4 (F46, RM10): the romance core (`v4.ts`), built dark.
+// `parseSave` returns what's stored, v2, v3 or v4 (a v1 still becomes v2): the app's boot migrates a v2 with master data
+// (`migrate-v3.ts`), and the romance build wipes any v1–v3 into a fresh v4 (`freshV4`), neither of which the API does
+// (FM10): no server makes a save, and the live M4 build stops at a v4.
 import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkOutput, WorkRow } from '@luismlorenzana/uma-work'
 import type { JobKind } from '../economy/jobs'
 import { maxJobCount, PROFESSION_MAX_LEVEL } from '../economy/pacing'
@@ -18,14 +19,17 @@ import type { FarmWorkRequest } from '../work/request'
 import type { FarmUma, FarmWorld, ProfessionLevel } from '../work/world'
 import { count, list, object, parseAccount, positive, record, SaveParseError } from './parse'
 import { parseSaveV3 } from './parse-v3'
+import { parseSaveV4 } from './parse-v4'
 import type { SaveV3 } from './v3'
+import type { SaveV4 } from './v4'
 
 export { SaveParseError }
 
-/** The version the app writes: v3, the farm's own loop, live from F24 (the Wilds wrote v2 until then). */
+/** The version production writes: v3, the farm's own loop, live from F24 (the Wilds wrote v2 until then). The romance
+ * build writes v4 while dark; F56 moves this to 4 (F46 decision 2). */
 export const SAVE_VERSION = 3
-/** The newest version this app reads: v3, built in F17 and live from F24. */
-export const NEWEST_SAVE_VERSION = 3
+/** The newest version this app reads: v4, the romance core, built from F46 and live from F56. */
+export const NEWEST_SAVE_VERSION = 4
 
 export interface Account {
   /** The Firebase uid the save belongs to. */
@@ -49,8 +53,8 @@ export interface SaveV2 extends FarmWorld {
 /** The Wilds' save, v2: their rules (kept for the migration, which finishes its jobs) take it. The farm's is `SaveV3`. */
 export type Save = SaveV2
 
-/** A save as stored: the Wilds' v2 (read once, to migrate) or the farm's v3. */
-export type StoredSave = SaveV2 | SaveV3
+/** A save as stored: the Wilds' v2 (read once, to migrate), the farm's v3, or the romance core's v4. */
+export type StoredSave = SaveV2 | SaveV3 | SaveV4
 
 /** What the API stores and returns: the save and its revision (0: nothing stored yet). */
 export interface SaveEnvelope {
@@ -262,15 +266,16 @@ function parseV2(value: unknown, path: string): SaveV2 {
   }
 }
 
-/** Parses a save of any version the farm has written and returns it at the version stored (D29): v1 still migrates to v2
- * (`toV2`); v2 stays v2 for the Wilds, and v3 is the loop's. A version from a newer app is refused, so an old client can
- * never half-read a newer save. */
+/** Parses a save of any version the farm has written and returns it at the version stored (D29, F46 decision 2): v1 still
+ * migrates to v2 (`toV2`); v2 stays v2, v3 is the loop's and v4 the romance core's. Nothing is wiped here: the romance
+ * build's boot does that. A version from a newer app is refused, so an old client can never half-read a newer save. */
 export function parseSave(value: unknown, path = 'save'): StoredSave {
   const version = versionOf(value)
   if (version > NEWEST_SAVE_VERSION) throw new SaveParseError(`${path}.version`, `version ${version} is newer than this app (${NEWEST_SAVE_VERSION})`)
   if (version === 1) return toV2(parseV1(value, path))
   if (version === 2) return parseV2(value, path)
   if (version === 3) return parseSaveV3(value, path)
+  if (version === 4) return parseSaveV4(value, path)
   throw new SaveParseError(`${path}.version`, `expected 1–${NEWEST_SAVE_VERSION}`)
 }
 

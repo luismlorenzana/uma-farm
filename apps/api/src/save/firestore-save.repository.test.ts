@@ -2,7 +2,7 @@
 // the save stored as text, the backup before a newer version first replaces a stored one, and rescues; and the owner's
 // first v3 upload through the controller (F24). Invented data only.
 import { ConflictException } from '@nestjs/common'
-import { migrateToV3, newSave, newSaveV2, touched, type SaveV2 } from '@farm/domain'
+import { freshV4, migrateToV3, nameFarmer, newSave, newSaveV2, touched, type SaveV2, type SaveV3 } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { FirestoreSaveRepository } from './firestore-save.repository'
 import { SaveController } from './save.controller'
@@ -86,6 +86,38 @@ describe('the Firestore save store', () => {
     await repo.rescue('u', { a: 1 }, 'first')
     await repo.rescue('u', { a: 2 }, 'second')
     expect(store.get('saveRescues/u')).toEqual({ upload: '{"a":2}', reason: 'second', rescuedAt: SERVER_TIME })
+  })
+})
+
+describe("the romance build's first v4 over a stored v3 (F46 decision 2; RM10)", () => {
+  beforeEach(() => { store.clear(); databases.length = 0 })
+
+  /** A played v3 as the live M4 build stores it, at revision 21. */
+  const OWNER: SaveV3 = { ...newSave('owner', '2026-11-08T09:12:44.000Z'), account: { uid: 'owner', createdAt: '2026-11-08T09:12:44.000Z', updatedAt: '2026-11-10T21:40:03.512Z' }, calendar: { day: 2 }, gold: 812 }
+  const STORED = { revision: 21, save: JSON.stringify(OWNER), updatedAt: 'the server’s time' }
+
+  it('backs the v3 up to saveBackups/{uid}-v3 on the first v4 write, stores the unstamped wipe, then refuses a v3 over it into saveRescues', async () => {
+    store.set('saves/owner', structuredClone(STORED))
+    const controller = new SaveController(new FirestoreSaveRepository('farm'))
+    // The API hands the stored v3 back as it is: it never wipes or makes a save.
+    const loaded = await controller.load('owner')
+    expect(loaded).toEqual({ revision: 21, save: OWNER })
+    // The romance build's first upload: the wipe itself, its account (updatedAt included) the v3's.
+    const wiped = freshV4(loaded.save as SaveV3)
+    expect(wiped.account).toEqual(OWNER.account)
+    await expect(controller.put('owner', { baseRevision: 21, save: JSON.parse(JSON.stringify(wiped)) })).resolves.toEqual({ revision: 22, save: wiped })
+    expect(store.get('saveBackups/owner-v3')).toEqual({ ...STORED, backedUpAt: SERVER_TIME })
+    const saved = store.get('saves/owner')!
+    expect(JSON.parse(saved.save as string)).toEqual(JSON.parse(JSON.stringify(wiped)))
+    // The live M4 build, if it ever sent its v3 now, is refused and kept.
+    const old = { baseRevision: 22, save: JSON.parse(JSON.stringify(touched(OWNER, '2026-11-11T08:00:00.000Z'))) }
+    await expect(controller.put('owner', old)).rejects.toBeInstanceOf(ConflictException)
+    expect(store.get('saveRescues/owner')).toEqual({ upload: JSON.stringify(old), reason: 'save version 3 is older than the stored 4', rescuedAt: SERVER_TIME })
+    expect(store.get('saves/owner')).toEqual(saved)
+    // The farmer's name is the first stamp; later v4 writes leave the backup as it was.
+    const named = touched(nameFarmer(wiped, 'Robin'), '2026-11-11T09:00:00.000Z')
+    await expect(controller.put('owner', { baseRevision: 22, save: JSON.parse(JSON.stringify(named)) })).resolves.toMatchObject({ revision: 23 })
+    expect(store.get('saveBackups/owner-v3')).toEqual({ ...STORED, backedUpAt: SERVER_TIME })
   })
 })
 

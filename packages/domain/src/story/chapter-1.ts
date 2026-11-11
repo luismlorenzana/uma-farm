@@ -5,7 +5,8 @@
 import type { Temperament } from '../farm/talents'
 import type { OutfitId, SaveV3 } from '../save/v3'
 import type { CastId } from './cast'
-import type { SceneId } from './scenes'
+import type { ChapterSceneId } from './scenes'
+import type { FarmSave } from '../save/v4'
 
 /** Who speaks a beat: one of the cast, a role an Uma fills at runtime, or the narrator. */
 export type Speaker =
@@ -23,7 +24,7 @@ export interface Beat {
 }
 
 export interface Scene {
-  readonly id: SceneId
+  readonly id: ChapterSceneId
   readonly title: string
   readonly beats: readonly Beat[]
 }
@@ -80,15 +81,15 @@ export const CLOSING_SCENE: Scene = {
   ],
 }
 
-export const SCENES: Readonly<Record<SceneId, Scene>> = { 'scene:1:open': OPENING_SCENE, 'scene:1:close': CLOSING_SCENE }
+export const SCENES: Readonly<Record<ChapterSceneId, Scene>> = { 'scene:1:open': OPENING_SCENE, 'scene:1:close': CLOSING_SCENE }
 
 /** Your first hands (CS41): the start's three, the first three on the roster by the day they joined, then by id. */
-export function firstHands(save: Pick<SaveV3, 'roster'>): OutfitId[] {
+export function firstHands(save: Pick<FarmSave, 'roster'>): OutfitId[] {
   return Object.entries(save.roster).sort(([a, x], [b, y]) => x.joined - y.joined || Number(a) - Number(b)).slice(0, 3).map(([id]) => id)
 }
 
 /** Your newest hand (CS41): the last to join, by day, then the higher id; the chapter's recruit on the closing morning. */
-export function newestHand(save: Pick<SaveV3, 'roster'>): OutfitId | null {
+export function newestHand(save: Pick<FarmSave, 'roster'>): OutfitId | null {
   const [newest] = Object.entries(save.roster).sort(([a, x], [b, y]) => y.joined - x.joined || Number(b) - Number(a))
   return newest?.[0] ?? null
 }
@@ -101,10 +102,11 @@ export interface SceneLine {
 }
 
 /** A scene's lines on this save: each role filled (a first hand speaks her temperament's hello), a role nobody fills
- * dropped. */
-export function sceneLines(scene: Scene, save: Pick<SaveV3, 'roster'>, temperamentOf: (outfitId: OutfitId) => Temperament): SceneLine[] {
+ * dropped. On v4 (F46 decision 9) the newest hand is named, not read from the roster: chapter 1's authored arrival, or
+ * nobody when the cast has none. */
+export function sceneLines(scene: Scene, save: Pick<FarmSave, 'roster'>, temperamentOf: (outfitId: OutfitId) => Temperament, newestId?: OutfitId | null): SceneLine[] {
   const hands = firstHands(save)
-  const newest = newestHand(save)
+  const newest = newestId === undefined ? newestHand(save) : newestId
   return scene.beats.flatMap((beat): SceneLine[] => {
     const { speaker } = beat
     if (speaker.kind === 'first-hand') {

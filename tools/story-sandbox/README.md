@@ -19,7 +19,7 @@ pnpm stories               # http://127.0.0.1:4321
     `Beat` shape), `beats.json` and `conversations.json` (CS45's and CS46's templates, the fallback for pairs without an
     authored conversation).
   - **The game's story as built:** `story/cast.ts`, every `story/chapter-*.ts`, the places, temperaments and activities.
-- **Pages:** Characters (the cast in arrival order) · each Uma (her paragraph, her route as a 23-rung ladder, her ties) ·
+- **Pages:** Characters (the cast in arrival order) · each Uma (her paragraph, her route as a 27-rung ladder, her arrival first, her ties) ·
   Relationships (the ties as a ring and a table) · World (the world bible) · Chapters and their scene player · Town ·
   Bonds · Farm · Format.
 - **Reviews:** every Review panel writes the owner's verdict (liked, rework, question, a note) to the private

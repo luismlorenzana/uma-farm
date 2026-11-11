@@ -1,7 +1,8 @@
 // The loop's actions on the day (F18): End the day, dismiss the morning, Collect all; F19's goods: ship, Ship all, take
 // back and buy; F20's Fields: plant, Plant all, harvest, Harvest all, a tender and a block; F22's work: a job, a
 // queue, Collect, Recall, Repeat, a stopped queue and building a station; F23's roster: the start's picks and its
-// redraw, the Dorm's levels and swaps, chats and gifts; and F24's scenes, read once. Each reads the save right
+// redraw, the Dorm's levels and swaps, chats and gifts; F24's scenes, read once; and F46's farmer's name, the v4 opening
+// (which brings the opening three) and arrival scenes. Each reads the save right
 // before its rule runs (as `edit`), commits it to the store and the device, and syncs; a refused rule throws its words.
 // The night and the harvests read F21's talents from master data, so they wait for it. Loaded on demand with the loop's
 // screens, so the night's code stays out of the initial JS.
@@ -9,17 +10,16 @@ import {
   BLOCK_IDS, buildStation, buyDorm, cancelSwap, chat, gift, pickStart, redrawStart, swapDorm, type AffinityResult, type Taste, buy, buyBlock, collectLoopAll, collectLoopWorker, dismissLoopStopped, editLoopQueue, endDay, harvest, harvestAll, loopKinds, plant,
   plantAll, readScene, recallLoopWorker, receiptItems, repeatLoopJob, restartLoopStopped, SaveRuleError, setTender, ship, shipAll, shopLines, startLoopJob, takeBack,
   touched, type BlockId, type CropId, type FarmingTalentOf, type HarvestReceipt, type LoopCollected, type LoopJobInput, type LoopKinds, type LoopPlaceId,
-  type LoopWorkRequest, type SaveV3, type SceneId, type ShopLine, type StationId,
+  type LoopWorkRequest, type FarmSave, type ChapterSceneId, type ShopLine, type StationId, type SaveV3, finishArrival, joinOpening, nameFarmer,
+  type ArrivalPlayed, type SaveV4,
 } from '@farm/domain'
 import type { QueueInput } from '@luismlorenzana/uma-work'
 import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'
+import { storyReady } from '../story/story'
 import { farmingTalents, talentsFor } from './talents'
 
-const loopSave = (): SaveV3 | null => {
-  const save = useGame.getState().save
-  return save?.version === 3 ? save : null
-}
+const loopSave = (): FarmSave | null => useGame.getState().save
 const nowIso = () => new Date().toISOString()
 
 /**
@@ -29,9 +29,11 @@ const nowIso = () => new Date().toISOString()
  */
 export async function endTheDay(day: number): Promise<boolean> {
   const view = await masterReady()
+  // A v4 night reads the story pack: favourites and authored arrivals (F46).
+  const story = loopSave()?.version === 4 ? await storyReady() : undefined
   const save = loopSave()
   if (!save || save.calendar.day !== day) return false
-  await commit(endDay(save, { roster: view.roster, talentOf: talentsFor(view) }, nowIso()))
+  await commit(endDay(save, { roster: view.roster, talentOf: talentsFor(view), story }, nowIso()))
   return true
 }
 
@@ -65,7 +67,7 @@ export async function collectFarm(): Promise<number> {
 }
 
 /** A player's change to the save as it is now, stamped with real time. */
-async function change(rule: (save: SaveV3) => SaveV3): Promise<SaveV3> {
+async function change(rule: (save: FarmSave) => FarmSave): Promise<FarmSave> {
   const save = loopSave()
   if (!save) throw new Error('The farm is still loading.')
   const next = touched(rule(save), nowIso())
@@ -99,7 +101,7 @@ export const tendBlock = (block: BlockId, outfitId: string | null) => change((s)
 export const buyLand = (block: BlockId) => change((s) => buyBlock(s, block))
 
 /** A harvest as a player's change: what it brought, for the screen to say. */
-async function harvested(rule: (save: SaveV3) => { save: SaveV3; receipt: HarvestReceipt }): Promise<HarvestReceipt> {
+async function harvested(rule: (save: FarmSave) => { save: FarmSave; receipt: HarvestReceipt }): Promise<HarvestReceipt> {
   let receipt: HarvestReceipt | null = null
   await change((s) => {
     const done = rule(s)
@@ -133,7 +135,7 @@ export async function harvestFields(): Promise<number> {
 // --- Work at the forest, the Fishery and the stations (F22) ------------------------------------------------------------
 
 /** A work operation as a player's change: the loop's operations stamp it themselves. */
-async function work(rule: (save: SaveV3, kinds: LoopKinds, now: string) => SaveV3): Promise<void> {
+async function work(rule: (save: FarmSave, kinds: LoopKinds, now: string) => FarmSave): Promise<void> {
   const kinds = await workKinds()
   const save = loopSave()
   if (!save) throw new Error('The farm is still loading.')
@@ -185,10 +187,10 @@ export const buildPlace = (station: StationId) => change((s) => buildStation(s, 
  * so it waits for master data. */
 export async function pickFirstHands(ids: readonly string[]): Promise<void> {
   const view = await masterReady()
-  await change((s) => pickStart(s, ids, view.roster.map((o) => o.outfitId), talentsFor(view)))
+  await change((s) => pickStart(v3(s), ids, view.roster.map((o) => o.outfitId), talentsFor(view)))
 }
 /** The start's one free redraw. */
-export const redrawFirstHands = () => change(redrawStart)
+export const redrawFirstHands = () => change((s) => redrawStart(v3(s)))
 
 /** Buys the Dorm's next level (decision 3): the gold now, the beds tomorrow. */
 export const buyDormLevel = () => change(buyDorm)
@@ -200,11 +202,22 @@ export async function swapUmas(out: string, into: string): Promise<void> {
 /** Calls off a swap: she stays. */
 export const cancelDormSwap = (out: string) => change((s) => cancelSwap(s, out))
 
+/** A v3-only rule's save (M4's start, visitors and affinity): the romance build hides them until F56 deletes them. */
+function v3(save: FarmSave): SaveV3 {
+  if (save.version !== 3) throw new Error('Not on this farm.')
+  return save
+}
+/** A v4-only rule's save (the romance core). */
+function v4(save: FarmSave): SaveV4 {
+  if (save.version !== 4) throw new Error('Not on this farm.')
+  return save
+}
+
 /** What a chat or a gift did, for the screen to say: her affinity before and after, whom it brought onto the roster,
  * and a gift's taste. */
 export type AffinityNote = Omit<AffinityResult<SaveV3>, 'save'> & { taste?: Taste }
 
-async function affinity(rule: (save: SaveV3) => AffinityResult<SaveV3> & { taste?: Taste }): Promise<AffinityNote> {
+async function affinity(rule: (save: FarmSave) => AffinityResult<SaveV3> & { taste?: Taste }): Promise<AffinityNote> {
   let note: AffinityNote | null = null
   await change((s) => {
     const { save, ...rest } = rule(s)
@@ -214,19 +227,33 @@ async function affinity(rule: (save: SaveV3) => AffinityResult<SaveV3> & { taste
   return note!
 }
 /** A chat with an Uma on the roster or a visitor (decision 9): +15, once a day. */
-export const chatWith = (outfitId: string) => affinity((s) => chat(s, outfitId))
+export const chatWith = (outfitId: string) => affinity((s) => chat(v3(s), outfitId))
 /** A gift of one good at its stars (decision 8): what she thinks of it reads her favourite line from master data. */
 export async function giveGift(outfitId: string, item: string, stars: number): Promise<AffinityNote> {
   const view = await masterReady()
   const line = view.roster.find((o) => o.outfitId === outfitId)?.line ?? null
-  return affinity((s) => gift(s, outfitId, item, stars, line))
+  return affinity((s) => gift(v3(s), outfitId, item, stars, line))
 }
 
 // --- The scenes (F24) -----------------------------------------------------------------------------------------------
 
-/** A scene played through or skipped (decision 6): it goes in `diary.read`, once, a player's change. */
-export async function readSceneOnce(id: SceneId): Promise<void> {
+/** A scene played through or skipped (decision 6): it goes in `diary.read`, once, a player's change. On v4 (F46 decision
+ * 9) the opening also brings the opening three onto the farm. */
+export async function readSceneOnce(id: ChapterSceneId): Promise<void> {
   const save = loopSave()
   if (!save || save.diary.read.includes(id)) return
-  await change((s) => readScene(s, id))
+  const story = save.version === 4 && id === 'scene:1:open' ? await storyReady() : null
+  await change((s) => (s.version === 4 && story ? joinOpening(readScene(s, id), story) : readScene(s, id)))
+}
+
+// --- The romance core's start (F46) ------------------------------------------------------------------------------
+
+/** The farmer's name (RM8, decision 11): the fresh farm's first player change, stamped once; or a rename from Account. */
+export const nameTheFarmer = (name: string) => change((s) => nameFarmer(v4(s), name))
+
+/** Her arrival scene played, or skipped to its choice (decision 10): +50 and the choice into her bar, once, stamped. */
+export async function finishArrivalScene(id: string, played: ArrivalPlayed): Promise<void> {
+  const save = loopSave()
+  if (!save || save.version !== 4 || save.arrivals.includes(id)) return
+  await change((s) => finishArrival(v4(s), id, played))
 }

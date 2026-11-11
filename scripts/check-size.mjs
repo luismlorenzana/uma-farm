@@ -13,7 +13,9 @@ export const MAIN_JS_BUDGET = 180_000
  * the Umas' marks (F21); the work operations and their env, the forest's, the Fishery's and the stations' tables, kinds
  * and build rule, and their screens (F22); the roster's rules (the start's sheet, the Dorm, visitors and affinity) with
  * the start's cards, the Dorm's page, the Gate's quick look and the chat and gift controls (F23); and the Diary's counts,
- * the chapters, the scenes' lines, the scene player and the goals' words (F24). The Wilds' screens left in F24. Paths
+ * the chapters, the scenes' lines, the scene player and the goals' words (F24); and the romance core's name sheet, its
+ * story pack with the stand-in, the format and validator, the re-cut opening, arrivals and her points (F46). The Wilds'
+ * screens left in F24. Paths
  * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
   'phaser/dist/phaser.esm.js',
@@ -56,6 +58,14 @@ export const LAZY_MODULES = [
   'domain/src/story/cast.ts',
   'src/loop/ScenePlayer.tsx',
   'src/loop/goal-words.ts',
+  'src/loop/NameSheet.tsx',
+  'src/story/load.ts',
+  'domain/src/story/stand-in.ts',
+  'domain/src/story/pack.ts',
+  'domain/src/story/authored.ts',
+  'domain/src/story/opening-v4.ts',
+  'domain/src/romance/arrivals.ts',
+  'domain/src/romance/love.ts',
 ]
 
 export function entrySrc(html) {

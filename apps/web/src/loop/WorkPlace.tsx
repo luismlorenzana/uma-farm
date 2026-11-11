@@ -5,7 +5,7 @@
 // its actions. A station is locked until built: its quick look and page show Build · 1,500g. Loaded on demand.
 import {
   ACTIVITY_NAMES, farmEnvV3, farmPlace, goodName, isStation, leaving, loopKinds, loopRefusalText, loopWorld, PLACE_ACTIVITY, parseStockKey, STATION_RULES, stationBuilt,
-  stationLock, tendedBlock, workNow, type GatherPlace, type LoopPlaceId, type LoopWorkRequest, type SaveV3, type StationId, type TalentOf,
+  stationLock, tendedBlock, workNow, type GatherPlace, type LoopPlaceId, type LoopWorkRequest, type FarmSave, type StationId, type TalentOf,
 } from '@farm/domain'
 import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -60,7 +60,7 @@ function workActions(say: Say): WorkActions {
 }
 
 /** uma-kit/work over the loop's save at its day: the env with this release's talents, the farm's names, days and words. */
-function LoopWorkProvider({ save, say, children }: { save: SaveV3; say: Say; children: ReactNode }) {
+function LoopWorkProvider({ save, say, children }: { save: FarmSave; say: Say; children: ReactNode }) {
   const talents = useTalents()
   const master = useMaster()
   const album = master.status === 'ready' ? master.view.album : null
@@ -95,7 +95,7 @@ export default function WorkPlaceRoute({ place }: { place: WorkPlaceId }) {
   return <WorkPlacePage save={save} place={place} />
 }
 
-function WorkPlacePage({ save, place }: { save: SaveV3; place: WorkPlaceId }) {
+function WorkPlacePage({ save, place }: { save: FarmSave; place: WorkPlaceId }) {
   const leave = useLeave()
   const [note, setNote] = useState<string | null>(null)
   const name = farmPlace(place)!.name
@@ -128,7 +128,7 @@ interface JobRow extends LoopUmaRow {
   leaving: boolean
 }
 
-function PlaceBody({ save, place, say }: { save: SaveV3; place: WorkPlaceId; say: Say }) {
+function PlaceBody({ save, place, say }: { save: FarmSave; place: WorkPlaceId; say: Say }) {
   const work = useWorkView()
   const location = useLocation()
   const navigate = useNavigate()
@@ -219,7 +219,7 @@ function useSheetUma(outfitId: string | null, onUma: (id: string | null) => void
 /** The What step at the forest or the Fishery (decision 5): every area or spot, those her rank hasn't opened greyed
  * ("From Hand"), each with this season's goods and "About 5 a day" for her. */
 function WhereStep({ save, place, selection, talentOf, onUma }: {
-  save: SaveV3; place: GatherPlace; selection: JobSelection & { onChange: (job: string) => void }; talentOf: TalentOf; onUma: (id: string | null) => void
+  save: FarmSave; place: GatherPlace; selection: JobSelection & { onChange: (job: string) => void }; talentOf: TalentOf; onUma: (id: string | null) => void
 }) {
   useSheetUma(selection.outfitId, onUma)
   const rows = whereRows(save, place, selection.outfitId, talentOf)
@@ -245,7 +245,7 @@ function WhereStep({ save, place, selection, talentOf, onUma }: {
 
 /** The What step at a station (decision 2): its jobs, each with what the Warehouse holds for it at each star. */
 function StationStep({ save, station, selection, onUma }: {
-  save: SaveV3; station: StationId; selection: JobSelection & { onChange: (job: string) => void }; onUma: (id: string | null) => void
+  save: FarmSave; station: StationId; selection: JobSelection & { onChange: (job: string) => void }; onUma: (id: string | null) => void
 }) {
   useSheetUma(selection.outfitId, onUma)
   const groups = stationGroups(save, station)
@@ -280,7 +280,7 @@ function StationStep({ save, station, selection, onUma }: {
 }
 
 /** A station not built (decision 6): what it does, what opens it, and Build · 1,500g. */
-function BuildCard({ save, station, say }: { save: SaveV3; station: StationId; say: Say }) {
+function BuildCard({ save, station, say }: { save: FarmSave; station: StationId; say: Say }) {
   const lock = stationLock(save, station)
   const cost = STATION_RULES[station].cost
   const [busy, setBusy] = useState(false)
@@ -302,7 +302,7 @@ function BuildCard({ save, station, say }: { save: SaveV3; station: StationId; s
 
 /** A work place's quick look on the farm map: its line, its four slots' rows (each opens the page's job sheet), its
  * stopped queues, and Open; an unbuilt station's Build card. */
-export function WorkPlacePeek({ save, place }: { save: SaveV3; place: WorkPlaceId }) {
+export function WorkPlacePeek({ save, place }: { save: FarmSave; place: WorkPlaceId }) {
   const [note, setNote] = useState<string | null>(null)
   const name = farmPlace(place)!.name
   if (isStation(place) && !stationBuilt(save, place)) {

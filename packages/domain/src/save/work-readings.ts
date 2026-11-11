@@ -6,6 +6,7 @@ import { finishedCount, type WorkRow } from '@luismlorenzana/uma-work'
 import { workNow } from '../farm/calendar'
 import { LOOP_WORK_PLACES, type LoopPlaceId } from './parse-v3'
 import type { LoopWorkRequest, SaveV3 } from './v3'
+import type { FarmSave } from './v4'
 
 /** Finished items she hasn't collected, across her entries. */
 export function loopReadyItems(row: WorkRow<LoopWorkRequest> | undefined, now: number): number {
@@ -15,7 +16,7 @@ export function loopReadyItems(row: WorkRow<LoopWorkRequest> | undefined, now: n
 /** Places with something to collect this day, and how many of their slots have it. It reads the stored rows without
  * settling (F22), as the nudge does: every stored save is settled at its day's start, and the map's badges and the Menu
  * never need the kinds' rules. */
-export function loopReadyWork(save: SaveV3): Map<LoopPlaceId, number> {
+export function loopReadyWork(save: FarmSave): Map<LoopPlaceId, number> {
   const now = workNow(save)
   const out = new Map<LoopPlaceId, number>()
   for (const row of Object.values(save.work)) {

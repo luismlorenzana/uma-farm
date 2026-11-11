@@ -90,6 +90,11 @@ The owner reads each layer before the next is written. The farm's code packets (
 >   Harvest (RM43, RM45, RM46);
 > - **`birthday`** in the cast file, only where master data has none (RM16).
 >
+> **Landed in F46 (D51):** the validator now **requires `outfitId`** on every cast entry (a null is "Name her outfit
+> (RM2)"); routes have **27 rungs**, `arrival` first (hearts 0, a hearts trigger, exactly one choice point, no play); a
+> `beds` arrival names a Dorm level 2–8 (the Dorm for 20, RM5); an `event` arrival's `after` is `<characterId>:<eventId>`
+> (or a bare event id: anyone's). The game reads routes in a partial mode; the sandbox keeps the strict report.
+>
 > F41 also settles what the story wrote around: arrivals are the authored ones only (RM1, RM4); events never wait on a
 > season, festival or hour (RM24); the farmer is never gendered at the wedding (RM30); one ring bench at the Forge opens
 > after the first romance 8 (RM38).
