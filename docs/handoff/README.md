@@ -81,7 +81,7 @@ pattern).
 | ~~Farm first~~ Done 2026-11-08 | core-loop.md's 14 questions: all accepted as recommended (D26) |
 | ~~F7~~ Done 2026-11-09 | Read [the core spec](../design/core-spec.md) ([page](../design/previews/core-spec.html)): the owner's go on M4 |
 | **M4, now** | **The phone check:** open [uma-farm.web.app](https://uma-farm.web.app) on your phone (tap Restart if it offers the update), pick your three, plant the carrots, send one Uma to the Woods and one to the Pond, end the day, and read the morning. Your word goes in a D-decision |
-| **Romance, now** | **Your priority Umas:** put them first in the SS tier on the Studio's Playable Umas board (its order is the authoring order), or name them to the story session. They get the opening, the pilot routes and the first art (D44) |
+| **Romance, now** | **Your priority Umas:** put them first in the SS tier on the Studio's Playable Umas board (its order is the authoring order), or name them to the story session. They get the opening and the pilot routes (D44) |
 | M5 | The workshops' look and a play; your go for uma-rpg's receiver |
 
 ## Done
