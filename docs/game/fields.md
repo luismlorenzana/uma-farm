@@ -144,7 +144,7 @@ across nights.
   hook; the rules default to D, for tests. Her rank's terms come from CS31's table (`rankBenefits`).
 
 **Growth a night (CS12):** untended **1**; tended **(her rank's 1.25 … 1.75 + the talent's) × (1 + 0.1 a Watering Can tier
-above Basic) × 1.25 well fed**. A crop is **Ready once its growth reaches its days − 0.5**, so tending rounds to the
+above Basic) × 1.25 well fed**; on save v4, **× 1.1 side by side** (below). A crop is **Ready once its growth reaches its days − 0.5**, so tending rounds to the
 nearest night: a 4-day Carrot takes 3 nights tended and 4 untended, a 10-day Asparagus 8 at Novice and 7 at Expert.
 Growth is kept to a millionth with a hair of slack, so 3 × 1.35 reaches 4.05.
 
@@ -157,6 +157,12 @@ tender's **10% at Novice, +5% a rank (35% at Legend)**, and +5% a Hoe tier above
 
 **Tools are Basic in M4** (the Forge is M6), so the Watering Can and the Hoe add nothing yet; their terms are in the
 rule at tier 1.
+
+> **Side by side on save v4 (romance build; live from F56; F52 decision 7):** a tended block grows **×1.1** when its
+> tender has a partner she has 3+ bond hearts with tending **another block with a growing plot** (CS17's bond factor;
+> `tendsSideBySide`, read inside `blockGrowth`, so night step 2 and the page agree). The block's card says "Tended · 1.38
+> a night · side by side", and its plots' nights left count it. Two tenders also earn bond points together at step 6
+> (the Fields are one place). v3 has no bonds. Bonds are [hearts.md](hearts.md#bonds-between-umas-rm48rm50)'s.
 
 <!-- live:tending -->
 | Tender | Growth, G | Growth, D | Growth, C | Growth, B | Growth, A | Growth, S | Stars, a D tender | Seeds back |

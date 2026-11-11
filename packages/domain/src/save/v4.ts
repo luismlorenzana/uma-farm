@@ -80,7 +80,7 @@ export interface Invite {
   answer: 'yes' | 'no' | null
 }
 
-/** Today's once-a-day acts, cleared each night (F47–F50 fill them). */
+/** Today's once-a-day acts, cleared each night (F47–F50 fill them), and the bond hearts the morning compares (F52). */
 export interface TodayV4 {
   chats: CharacterId[]
   gifts: CharacterId[]
@@ -92,6 +92,9 @@ export interface TodayV4 {
   events: CharacterId[]
   evenings: Evening[]
   invites: Invite[]
+  /** Bond hearts before each pair's first move since the last morning (F52 decision 9), by `pairKey`: the morning lists what
+   * rose since, whether a day (the opening's seeds) or the night moved it. Night step 9 empties it. */
+  bonds: Record<string, number>
 }
 
 /** A house on the homestead (RM41; F54's to fill): house 0 is the Farmhouse. */
@@ -172,7 +175,7 @@ export function newSaveV4(uid: string, now: string): SaveV4 {
     farmer: { name: '' },
     calendar: { day: 1 },
     gold: START_GOLD,
-    today: { chats: [], gifts: [], praise: [], praised: [], events: [], evenings: [], invites: [] },
+    today: { chats: [], gifts: [], praise: [], praised: [], events: [], evenings: [], invites: [], bonds: {} },
     roster: {},
     love: {},
     dorm: { level: 1, home: [], swaps: [] },

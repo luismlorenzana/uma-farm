@@ -1,9 +1,306 @@
-// Bonds between Umas (core spec CS44; romance spec RM48): a pair's bond points (`save.bonds`, by `pairKey`) and the hearts
-// they make. F47 writes the hearts' thresholds for Ready's bond setup (decision 13); F52 grows this file with the points
-// themselves (`addBond`, `tickBonds`, the ties' seeds, the closest friend). Loaded with the romance's rules.
+// Bonds between Umas (core spec CS44, CS17; romance spec RM48–RM50; F47 decision 13, F52): a pair's bond points
+// (`save.bonds`, by `pairKey` of character ids on v4), the hearts they make, and what moves them.
+//
+//   Working the same place the same day   +10 a pair, ×1.5 sharing a favourite line of that place's   night step 6
+//   An expedition party, a day away        +15 (F28)        A festival team   +20 (F32)
+//   The same staff meal or breakfast       +5 a pair (F8, F54)      The same house, a night   +10 (F54)
+//   Romance 4: her bond with her closest friend ×1.5, once, never ×2.25
+//   Hearts at 50, 150, 300, 500 and 750; never a fall
+//   The ties' seeds when both are on the farm: strength 3 → 150, 2 → 50, 1 → 0
+//   Side by side at 3 hearts: +10% of a night's items as extras (step 4), a tended block ×1.1 (step 2)
+//
+// Each new heart opens the pair's conversation: an authored one for a tie's pair, from the pack (`pairs`), read once into
+// `diary.read` as `pair:<a>-<b>:<hearts>`. On save v4 only: M4 (v3) has no bonds, and its night's `tickBonds` stays a
+// no-op. Bond points are whole: each pay rounds once, half up. Loaded with the romance's rules and the night.
+import { draw } from './draw'
+import { PLACE_ACTIVITY } from './rank-rules'
+import type { Activity } from './ranks'
+import type { BondLine } from '../night/summary'
+import { roundPoints } from '../romance/love'
+import type { LoopPlaceId } from '../save/parse-v3'
+import { SaveRuleError } from '../save/rules'
+import { pairKey, type BlockId } from '../save/v3'
+import type { FarmSave, Love, SaveV4 } from '../save/v4'
+import { addGoods, parseStockKey } from '../save/warehouse'
+import type { Tie } from '../story/authored'
+import { favouriteOf, type StoryPack } from '../story/pack'
+
+// --- Hearts (CS44) ------------------------------------------------------------------------------------------------------
 
 /** CS44: a pair's bond hearts 1–5 at 50, 150, 300, 500 and 750 points. */
 export const BOND_HEARTS: readonly number[] = [50, 150, 300, 500, 750]
 
 /** A pair's bond hearts, 0–5, from its points. */
 export const bondHearts = (points: number): number => BOND_HEARTS.filter((at) => points >= at).length
+
+/** The points its next heart comes at, or null at five. */
+export const nextBondHeart = (points: number): number | null => BOND_HEARTS.find((at) => points < at) ?? null
+
+/** A pair's bond points: 0 before any. */
+export const bondOf = (save: Pick<FarmSave, 'bonds'>, a: string, b: string): number => save.bonds[pairKey(a, b)] ?? 0
+
+// --- What a pair earns (CS44, RM48; decisions 1–4) ----------------------------------------------------------------------
+
+/** RM48's table: what a pair earns, by what they shared. */
+export const BOND_POINTS = { place: 10, party: 15, team: 20, meal: 5, breakfast: 5, house: 10 } as const
+export type BondSource = keyof typeof BOND_POINTS
+/** Two who share a favourite line, working a place of it (CS33): ×1.5. */
+export const SHARED_LINE = 1.5
+/** Romance 4's perk (RM31, RM49): her bond with her closest friend ×1.5. */
+export const CLOSEST_BOND = 1.5
+/** The romance level that brings it. */
+export const CLOSEST_BOND_LEVEL = 4
+
+/** At Romance 4 or later: romance level 4–9, or the proposal, the wedding or a spouse. */
+export const atRomance4 = (love: Pick<Love, 'stage' | 'level'> | undefined): boolean =>
+  !!love && ((love.stage === 'romance' && love.level >= CLOSEST_BOND_LEVEL) || love.stage === 'proposal' || love.stage === 'wedding' || love.stage === 'spouse')
+
+/** One of her ties, as her profile and her closest friend read it. */
+export interface TieOf {
+  tie: Tie
+  /** The other Uma's character id. */
+  with: string
+  /** Their bond points today. */
+  points: number
+  /** The tie's place in `ties.json`, the last tie-break. */
+  order: number
+}
+
+/** Her ties, closest first (RM49; decision 6): the strongest, then the most bond points, then `ties.json`'s order. Over all
+ * her ties, on the farm or not. The one order her profile's Ties and `closestFriend` read. */
+export function tiesOf(pack: Pick<StoryPack, 'ties'>, save: Pick<FarmSave, 'bonds'>, id: string): TieOf[] {
+  return pack.ties.ties.flatMap((tie, order): TieOf[] => {
+    if (tie.a !== id && tie.b !== id) return []
+    const other = tie.a === id ? tie.b : tie.a
+    return [{ tie, with: other, points: bondOf(save, id, other), order }]
+  }).sort((x, y) => y.tie.strength - x.tie.strength || y.points - x.points || x.order - y.order)
+}
+
+/** Her closest friend (RM49; decision 6): her first tie by `tiesOf`, or null for an Uma the ties don't hold. Every cast
+ * Uma has two ties (D42), so she always has one. */
+export const closestFriend = (pack: Pick<StoryPack, 'ties'>, save: Pick<FarmSave, 'bonds'>, id: string): string | null => tiesOf(pack, save, id)[0]?.with ?? null
+
+/** The factor on what a pair earns (decision 4): ×1.5 when either is at Romance 4 or later and the other is her closest
+ * friend; once, never ×2.25 when both are. */
+export function bondFactor(save: Pick<SaveV4, 'bonds' | 'love'>, pack: Pick<StoryPack, 'ties'>, a: string, b: string): number {
+  const closest = (id: string, other: string) => atRomance4(save.love[id]) && closestFriend(pack, save, id) === other
+  return closest(a, b) || closest(b, a) ? CLOSEST_BOND : 1
+}
+
+/** What `addBond` paid. */
+export interface BondPaid {
+  save: SaveV4
+  /** Points into the pair's bond, after Romance 4's factor and rounding; 0 when nothing moved. */
+  paid: number
+}
+
+/**
+ * Bond points for a pair (decision 1): the one way a bond grows. Romance 4's ×1.5 (`bondFactor`), rounded once, half up;
+ * never below what's there. Both Umas on the roster, two of them. Every source calls it: the night's place (`bondsTonight`),
+ * an expedition party (+15 a day away, F28), a festival team (+20, F32), the same staff meal or breakfast (+5 a pair, F8,
+ * F54), the same house (+10 a night, F54). Never stamps.
+ */
+export function addBond(save: SaveV4, pack: Pick<StoryPack, 'ties'>, a: string, b: string, points: number): BondPaid {
+  if (a === b) throw new SaveRuleError('bad-count', 'A bond is between two Umas.')
+  if (!save.roster[a] || !save.roster[b]) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
+  if (!Number.isFinite(points) || points < 0) throw new SaveRuleError('bad-count', 'Bonds never fall.')
+  const paid = roundPoints(points * bondFactor(save, pack, a, b))
+  if (paid === 0) return { save, paid }
+  return { save: withBond(save, pairKey(a, b), bondOf(save, a, b) + paid), paid }
+}
+
+/** A pair's bond set to `points`, its hearts before noted in `today.bonds` the first time it moves since the last
+ * morning (decision 9), so the next morning lists what rose whether a night or a day moved it. */
+function withBond(save: SaveV4, key: string, points: number): SaveV4 {
+  const noted = save.today.bonds[key] !== undefined ? save.today.bonds : { ...save.today.bonds, [key]: bondHearts(save.bonds[key] ?? 0) }
+  return { ...save, bonds: { ...save.bonds, [key]: points }, today: { ...save.today, bonds: noted } }
+}
+
+// --- The ties' seeds (RM49; decision 5) ---------------------------------------------------------------------------------
+
+/** A tie's seed by its strength (RM49): 3 → 150 (2 hearts), 2 → 50 (1 heart), 1 → 0 (known, with a line). */
+export const TIE_SEEDS: Readonly<Record<Tie['strength'], number>> = { 1: 0, 2: 50, 3: 150 }
+
+/** She joins (decision 5): each of her ties whose other Uma is on the farm starts at its seed, `max(points, seed)`, so a
+ * seed never lowers a bond. A seeded heart is a new heart: the morning lists it and its conversation opens. Pure. */
+export function seedTies(save: SaveV4, pack: Pick<StoryPack, 'ties'>, id: string): SaveV4 {
+  let next = save
+  for (const { tie, with: other } of tiesOf(pack, save, id)) {
+    const seed = TIE_SEEDS[tie.strength]
+    if (other === id || !save.roster[other] || !save.roster[id] || seed <= bondOf(next, id, other)) continue
+    next = withBond(next, pairKey(id, other), seed)
+  }
+  return next
+}
+
+// --- The night: the same place the same day (decision 2) ---------------------------------------------------------------
+
+/** Who worked where today: step 4's running jobs by place, and the Fields' tenders with a growing block (step 2) as the
+ * Fields. An Uma works one place a day. */
+export function placesToday(worked: readonly { outfitId: string; place: string }[], tended: readonly { outfitId: string }[]): Map<string, string[]> {
+  const at = new Map<string, string[]>()
+  const add = (place: string, id: string) => {
+    const ids = at.get(place) ?? []
+    if (!ids.includes(id)) at.set(place, [...ids, id])
+  }
+  for (const w of worked) add(w.place, w.outfitId)
+  for (const t of tended) add('fields', t.outfitId)
+  return at
+}
+
+/** A place's activity: the Fields' is farming, a work place's its `PLACE_ACTIVITY`. */
+const placeActivity = (place: string): Activity | null => (place === 'fields' ? 'farming' : PLACE_ACTIVITY[place as LoopPlaceId] ?? null)
+
+/** One pair's pay tonight. */
+export interface BondPay { a: string; b: string; points: number }
+
+/** Night step 6 on v4 (decision 2): every pair among the Umas who worked one place today earns +10, ×1.5 when both have
+ * the same favourite line and it's that place's (farming for the Fields), through `addBond` (Romance 4's ×1.5). Once a
+ * night a pair, in the places' order and then the pair's. */
+export function bondsTonight(
+  save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' | 'ties'>, worked: readonly { outfitId: string; place: string }[], tended: readonly { outfitId: string }[],
+): { save: SaveV4; paid: BondPay[] } {
+  let next = save
+  const paid: BondPay[] = []
+  const done = new Set<string>()
+  for (const [place, ids] of placesToday(worked, tended)) {
+    const here = ids.filter((id) => save.roster[id]).sort((x, y) => Number(x) - Number(y))
+    const activity = placeActivity(place)
+    for (let i = 0; i < here.length; i++) {
+      for (let j = i + 1; j < here.length; j++) {
+        const [a, b] = [here[i]!, here[j]!]
+        if (done.has(pairKey(a, b))) continue
+        done.add(pairKey(a, b))
+        const shared = activity !== null && favouriteOf(pack, a) === activity && favouriteOf(pack, b) === activity
+        const pay = addBond(next, pack, a, b, BOND_POINTS.place * (shared ? SHARED_LINE : 1))
+        next = pay.save
+        if (pay.paid > 0) paid.push({ a, b, points: pay.paid })
+      }
+    }
+  }
+  return { save: next, paid }
+}
+
+// --- Side by side at 3 hearts (CS17, CS44; decision 7) -----------------------------------------------------------------
+
+/** Side by side: a partner she has 3 hearts or more with. */
+export const SIDE_BY_SIDE_HEARTS = 3
+/** CS17's bond factor: her items, and a tended block's growth, ×1.1. */
+export const SIDE_BY_SIDE = 1.1
+
+/** Whether she has a 3+-heart partner among `others` (not herself). */
+const besideAny = (save: Pick<FarmSave, 'bonds'>, id: string, others: readonly string[]): boolean =>
+  others.some((other) => other !== id && bondHearts(bondOf(save, id, other)) >= SIDE_BY_SIDE_HEARTS)
+
+/** Whether a tended block grows side by side (decision 7): its tender has a 3+-heart partner tending another block with a
+ * growing plot. v4 only; v3 has no bonds. */
+export function tendsSideBySide(save: Pick<FarmSave, 'version' | 'bonds' | 'fields'>, block: BlockId): boolean {
+  if (save.version !== 4) return false
+  const growing = (b: FarmSave['fields']['blocks'][number]) => b.tender !== null && b.plots.some((p) => p.crop !== null && !p.ready)
+  const own = save.fields.blocks.find((b) => b.id === block)
+  if (!own || !growing(own)) return false
+  return besideAny(save, own.tender!, save.fields.blocks.filter((b) => b.id !== block && growing(b)).map((b) => b.tender!))
+}
+
+/** Her share of extras at a place tonight (decision 7): 10% beside a 3+-heart partner who also worked there today, else
+ * none. **F51 extends it:** in her element (×1.2 in place of ×1.1) and the capped romance bonus. */
+export function extrasShare(save: Pick<FarmSave, 'bonds'>, id: string, place: string, worked: readonly { outfitId: string; place: string }[]): number {
+  return besideAny(save, id, worked.filter((w) => w.place === place).map((w) => w.outfitId)) ? SIDE_BY_SIDE - 1 : 0
+}
+
+/** One Uma's extras tonight: copies of her night's items, by stock key. */
+export interface Extras {
+  id: string
+  items: string[]
+}
+
+/**
+ * Night step 4 on v4, after the hauls (decision 7): each Uma whose work finished items tonight (`made`) at a place where a
+ * 3+-heart partner also worked today gets 10% of those items again, as extras: `share × n` whole copies and one more by
+ * `draw(uid, day, 'bond:<id>', 0)` for the fraction, each a copy of one of her night's items (the same good and stars)
+ * picked by `draw(uid, day, 'bond:<id>', k)`, straight into the Warehouse. Planned hauls are untouched (uma-work's plans and
+ * outputs). v3 makes none.
+ */
+export function extrasTonight<S extends FarmSave>(save: S, made: readonly { outfitId: string; place: string; items: readonly string[] }[], worked: readonly { outfitId: string; place: string }[]): { save: S; extras: Extras[] } {
+  if (save.version !== 4) return { save, extras: [] }
+  const mine = new Map<string, { place: string; items: string[] }[]>()
+  for (const m of made) if (m.items.length > 0) mine.set(m.outfitId, [...(mine.get(m.outfitId) ?? []), { place: m.place, items: [...m.items] }])
+  let items = save.items
+  const extras: Extras[] = []
+  for (const id of [...mine.keys()].sort((x, y) => Number(x) - Number(y))) {
+    const theirs = mine.get(id)!.flatMap((m) => {
+      const share = extrasShare(save, id, m.place, worked)
+      return share > 0 ? m.items.map((item) => ({ item, share })) : []
+    })
+    if (theirs.length === 0) continue
+    const expected = theirs.reduce((sum, t) => sum + t.share, 0)
+    const whole = Math.floor(expected + 1e-9)
+    const count = whole + (draw(save.account.uid, save.calendar.day, `bond:${id}`, 0) < expected - whole ? 1 : 0)
+    const copies = Array.from({ length: count }, (_, k) => theirs[Math.floor(draw(save.account.uid, save.calendar.day, `bond:${id}`, k + 1) * theirs.length)]!.item)
+    const kept = copies.filter((key) => parseStockKey(key) !== null)
+    for (const key of kept) {
+      const { id: good, stars } = parseStockKey(key)!
+      items = addGoods(items, good, stars, 1)
+    }
+    if (kept.length > 0) extras.push({ id, items: kept })
+  }
+  return { save: items === save.items ? save : { ...save, items }, extras }
+}
+
+// --- Pair conversations (RM50; decisions 9 and 10) ---------------------------------------------------------------------
+
+/** A pair's file and read ids: `<a>-<b>`, the two in `pairKey` order. */
+export const pairName = (a: string, b: string): string => pairKey(a, b).replace(':', '-')
+/** A read conversation in `diary.read`: `pair:<a>-<b>:<hearts>`. */
+export const pairReadId = (a: string, b: string, hearts: number): string => `pair:${pairName(a, b)}:${hearts}`
+
+const NONE: ReadonlySet<number> = new Set()
+/** The bond levels whose conversation the pack holds for a pair (its `pairs/<a>-<b>`), none without one. */
+export const pairLevels = (pack: Pick<StoryPack, 'pairs'>, a: string, b: string): ReadonlySet<number> => pack.pairs.get(pairKey(a, b)) ?? NONE
+
+/** The levels of a pair's conversations read so far, lowest first. */
+export function readLevels(save: Pick<SaveV4, 'diary'>, a: string, b: string): number[] {
+  return [1, 2, 3, 4, 5].filter((h) => save.diary.read.includes(pairReadId(a, b, h)))
+}
+
+/** Its conversations opened and unread (decision 9): authored, at or under its hearts (or `upTo`), not read, lowest first. */
+export function unreadLevels(save: Pick<SaveV4, 'bonds' | 'diary'>, pack: Pick<StoryPack, 'pairs'>, a: string, b: string, upTo = bondHearts(bondOf(save, a, b))): number[] {
+  const levels = pairLevels(pack, a, b)
+  const hearts = Math.min(upTo, bondHearts(bondOf(save, a, b)))
+  return [1, 2, 3, 4, 5].filter((h) => h <= hearts && levels.has(h) && !save.diary.read.includes(pairReadId(a, b, h)))
+}
+
+/** Conversations read (decision 9): each level authored and opened, once into `diary.read`. Pays nothing; a choice in it is
+ * wording only. Read already: unchanged. Never stamps: the app's action does, once. */
+export function readPair(save: SaveV4, pack: Pick<StoryPack, 'pairs'>, a: string, b: string, levels: readonly number[]): SaveV4 {
+  if (!save.roster[a] || !save.roster[b] || a === b) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
+  const hearts = bondHearts(bondOf(save, a, b))
+  const ids: string[] = []
+  for (const h of levels) {
+    if (!pairLevels(pack, a, b).has(h)) throw new SaveRuleError('locked', 'That conversation isn’t written yet.')
+    if (h > hearts) throw new SaveRuleError('locked', 'Their bond isn’t there yet.')
+    const id = pairReadId(a, b, h)
+    if (!save.diary.read.includes(id) && !ids.includes(id)) ids.push(id)
+  }
+  return ids.length === 0 ? save : { ...save, diary: { ...save.diary, read: [...save.diary.read, ...ids] } }
+}
+
+/** The pair a bond key names, in `pairKey` order. */
+export const pairOf = (key: string): [string, string] => key.split(':') as [string, string]
+
+/**
+ * The morning's bond hearts (decisions 5 and 9): one line a pair whose hearts rose since the last morning, at its highest,
+ * in the cast's order (then by id). Each pair's hearts before are what `today.bonds` noted when it first moved (a seed when
+ * the opening brings the three, or anything a day pays), else last night's; so a seed is a new heart, and so is one paid
+ * tonight. Night step 9 reads it, then empties `today.bonds` for the day ahead.
+ */
+export function newBondHearts(before: SaveV4, after: SaveV4, order: readonly string[] = []): BondLine[] {
+  const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length)
+  return Object.entries(after.bonds).flatMap(([key, points]): BondLine[] => {
+    const [a, b] = pairOf(key)
+    const was = before.today.bonds[key] ?? bondHearts(before.bonds[key] ?? 0)
+    const hearts = bondHearts(points)
+    return hearts > was ? [{ kind: 'bond', a, b, hearts }] : []
+  }).sort((x, y) => Math.min(rank(x.a), rank(x.b)) - Math.min(rank(y.a), rank(y.b)) || Math.max(rank(x.a), rank(x.b)) - Math.max(rank(y.a), rank(y.b))
+    || Number(x.a) - Number(y.a) || Number(x.b) - Number(y.b))
+}

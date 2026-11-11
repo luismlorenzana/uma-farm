@@ -48,11 +48,13 @@ function packWith(...more: Omit<CastEntry, 'paragraph' | 'outfitId'>[]): StoryPa
   const cast: Cast = { ...json(STAND_IN_CAST), umas: [...json(STAND_IN_CAST).umas, ...more.map((u) => ({ ...u, outfitId: `${u.characterId}01`, paragraph: 'Invented.' }))] }
   return { ...PACK, cast }
 }
-const context = (story: Pick<StoryPack, 'cast' | 'bibles'> = PACK) => ({ roster: [], kinds: TEST_KINDS, story })
-/** A named v4 farm on `day`, the opening read and the stand-ins home. */
+const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK) => ({ roster: [], kinds: TEST_KINDS, story })
+/** A named v4 farm on `day`, the opening read and the stand-ins home., their ties seeded (F52) and
+ * already listed on an earlier morning, so a night's Hearts show only its own lines. */
 function farm(day = 2): SaveV4 {
   const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
-  return joinOpening(readScene(fresh, 'scene:1:open'), PACK)
+  const joined = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
+  return { ...joined, today: { ...joined.today, bonds: {} } }
 }
 
 describe('the stand-in pack (decisions 6 and 16)', () => {
@@ -181,7 +183,8 @@ describe('the opening and arrivals (RM4, RM9; decisions 8 and 9)', () => {
     for (let i = 0; i < 12; i++) save = endDay(save, context(), LATER)
     expect(save.calendar.day).toBe(13)
     expect(draws).toEqual(before)
-    expect(nightStepsOf(save).map((s) => s.name)).toEqual(NIGHT_STEPS.flatMap((s) => (s.name === 'gateVisitors' ? ['arriveUmas'] : s.name === 'tickBonds' ? [s.name, 'payLine'] : s.name === 'buildSummary' ? ['heartsMorning', s.name] : [s.name])))
+    expect(nightStepsOf(save).map((s) => s.name)).toEqual(NIGHT_STEPS.flatMap((s) => (s.name === 'gateVisitors' ? ['arriveUmas'] : s.name === 'countHauls' ? [s.name, 'nightExtras']
+      : s.name === 'tickBonds' ? [s.name, 'payLine'] : s.name === 'buildSummary' ? ['heartsMorning', s.name] : [s.name])))
     expect(nightStepsOf({ version: 3 })).toBe(NIGHT_STEPS)
     expect(parseSaveV4(json(save))).toEqual(save)
   })

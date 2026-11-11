@@ -73,8 +73,16 @@ Seven spots; the five freshwater ones play in M4, the Sea Pier and the Deep Sea 
 
 ## What a day brings home (CS17)
 
-`items = round(base × rank × talent × tool × well fed × bond)`, never below 1. Bonds (×1.1 beside an Uma she has 3+
-hearts with) come in M6, tools above Basic with the Forge (M6).
+`items = round(base × rank × talent × tool × well fed × bond)`, never below 1. Tools above Basic come with the Forge
+(M6). On save v3 (M4) there are no bonds, so the bond term is ×1.
+
+> **Side by side on save v4 (romance build; live from F56; F52 decision 7):** CS17's bond term (×1.1 beside an Uma she
+> has 3+ bond hearts with) isn't a factor in the plan: a day's haul is planned when its job starts, so a ×1.1 there would
+> miss a partner who starts later. It pays at **night step 4, after the hauls** (`nightExtras`): an Uma whose work
+> finished items tonight at a place where a 3-heart partner also worked today gets **10% of those items again**, seeded
+> copies (the same goods and stars) straight into the Warehouse, `draw(uid, day, 'bond:<id>', n)` for the fraction. The
+> plan and uma-work's outputs are untouched; the morning says "Side by side · +3 items". The stations count too. Bonds
+> are [hearts.md](hearts.md#bonds-between-umas-rm48rm50)'s.
 
 <!-- live:haul-factors -->
 | Factor | Values |

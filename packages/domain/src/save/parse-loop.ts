@@ -355,11 +355,13 @@ export function parseExpeditions(value: unknown, path: string, roster: ReadonlyS
   return out
 }
 
-export function parseBonds(value: unknown, path: string, roster: ReadonlySet<string>): Record<string, number> {
+/** Bond points by pair (D30 i): two roster ids in numeric order. v3's may be fractional (`amount`); v4's are whole
+ * (`count`, F52 decision 1). */
+export function parseBonds(value: unknown, path: string, roster: ReadonlySet<string>, parse: (value: unknown, path: string) => number = amount): Record<string, number> {
   return counts(value, path, (k) => {
     const [a, b, ...rest] = k.split(':')
     return rest.length === 0 && !!a && !!b && a !== b && roster.has(a) && roster.has(b) && pairKey(a, b) === k
-  }, 'expected two roster ids in numeric order, idA:idB', amount)
+  }, 'expected two roster ids in numeric order, idA:idB', parse)
 }
 
 export function parseExtra(value: unknown, path: string): Extra | null {

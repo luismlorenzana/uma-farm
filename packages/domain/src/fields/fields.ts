@@ -6,6 +6,7 @@
 // A tender's farming rank is read from the save (`ranks.farming.rank`) and her talent from `talentOf`, master data's as
 // F21 reads it (`TalentOf`, passed by the night and the app); the rules default to D for tests. CS31's table
 // (`rankBenefits`) drives tended growth, quality and seeds back, and F21's `countChallenge` counts a harvest.
+import { SIDE_BY_SIDE, tendsSideBySide } from '../farm/bonds'
 import { dateOf, isSeasonEnd, SEASON_NAMES, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { opened, type PlaceOpens } from '../farm/places'
@@ -100,10 +101,13 @@ export function tenderTerms(save: Pick<FarmSave, 'fields' | 'roster'>, id: Block
   return { outfitId, rank: uma.ranks.farming.rank, talent: talentOf(outfitId), wellFed: uma.wellFed > 0 }
 }
 
-/** A block's growth tonight: its tender's rate, or 1 untended (CS12). */
-export function blockGrowth(save: Pick<FarmSave, 'fields' | 'roster' | 'tools'>, id: BlockId, talentOf: FarmingTalentOf = talentD): number {
+/** A block's growth tonight: its tender's rate, or 1 untended (CS12); on save v4, ×1.1 side by side (F52 decision 7:
+ * its tender has a 3-heart partner tending another growing block, `tendsSideBySide`). */
+export function blockGrowth(save: Pick<FarmSave, 'version' | 'fields' | 'roster' | 'tools' | 'bonds'>, id: BlockId, talentOf: FarmingTalentOf = talentD): number {
   const tender = tenderTerms(save, id, talentOf)
-  return tender ? tendedGrowth(tender.rank, tender.talent, save.tools['watering-can'], tender.wellFed) : UNTENDED_GROWTH
+  if (!tender) return UNTENDED_GROWTH
+  const rate = tendedGrowth(tender.rank, tender.talent, save.tools['watering-can'], tender.wellFed)
+  return tendsSideBySide(save, id) ? round6(rate * SIDE_BY_SIDE) : rate
 }
 
 /** A harvest's quality points (CS26, farming): a tender's rank (`rankQuality`, 0.5 a rank), talent (`talentQuality`),

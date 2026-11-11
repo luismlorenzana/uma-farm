@@ -448,15 +448,26 @@ export function routeIssues(route: unknown, bible: UmaBible | null, ctx: StoryCo
   return issues
 }
 
-/** pairs/<a>-<b>.json (layer 3): a tie's conversations, one at each bond level 1–5 (RS12). */
-export function pairIssues(pair: unknown, ctx: StoryContext): Issues {
+/** What a pair check asks: the game reads pairs in a partial mode (F52), any of the five levels written so far. */
+export interface PairCheck {
+  partial?: boolean
+}
+/** pairs/<a>-<b>.json (layer 3): a tie's conversations, one at each bond level 1–5 (RS12); each level once. The game reads
+ * them partial (F52 decision 10): any levels written so far. */
+export function pairIssues(pair: unknown, ctx: StoryContext, check: PairCheck = {}): Issues {
   if (!isObject(pair) || typeof pair.a !== 'string' || typeof pair.b !== 'string' || !Array.isArray(pair.levels)) return ['Not a pair (a, b, levels)']
   const issues: Issues = []
   for (const side of [pair.a, pair.b]) if (!ctx.umas.has(side)) issues.push(`${side} isn’t in the cast`)
+  if (pair.a === pair.b) issues.push('A pair is two Umas')
   const speakers = new Set<string>([pair.a, pair.b])
   const levels = pair.levels as unknown[]
   const hearts = levels.map((l) => (isObject(l) ? l.hearts : null))
-  for (let h = 1; h <= 5; h++) if (!hearts.includes(h)) issues.push(`No conversation at bond level ${h}`)
+  if (!check.partial) for (let h = 1; h <= 5; h++) if (!hearts.includes(h)) issues.push(`No conversation at bond level ${h}`)
+  if (check.partial && levels.length === 0) issues.push('No conversation at any bond level')
+  hearts.forEach((h, i) => {
+    if (!Number.isInteger(h) || (h as number) < 1 || (h as number) > 5) issues.push(`Level ${i + 1}: hearts is 1–5`)
+    else if (hearts.indexOf(h) !== i) issues.push(`Bond level ${String(h)} is written twice`)
+  })
   for (const l of levels) {
     if (!isObject(l)) continue
     if (!oneOf(STORY_PLACES, l.place)) issues.push(`Level ${String(l.hearts)}: unknown place`)

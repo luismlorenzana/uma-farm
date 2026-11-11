@@ -35,11 +35,12 @@ const ONE = '9000001'
 const THREE = '9000003'
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 
-/** A named farm on `day`, the opening three home, with goods in the Warehouse. */
+/** A named farm on `day`, the opening three home (their ties seeded and listed on an earlier morning, F52), with goods in
+ * the Warehouse. */
 function farm(day = 2): SaveV4 {
   const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), { cast: fixture.pack!.cast })
-  return { ...joined, arrivals: [ONE, '9000002', THREE], items: { ...joined.items, carrot: [0, 0, 1, 0, 0], 'golden-carrot': [1, 0, 0, 0, 0], limestone: [1, 0, 0, 0, 0] } }
+  const joined = joinOpening(readScene(fresh, 'scene:1:open'), fixture.pack!)
+  return { ...joined, today: { ...joined.today, bonds: {} }, arrivals: [ONE, '9000002', THREE], items: { ...joined.items, carrot: [0, 0, 1, 0, 0], 'golden-carrot': [1, 0, 0, 0, 0], limestone: [1, 0, 0, 0, 0] } }
 }
 const withLove = (s: SaveV4, id: string, love: Partial<SaveV4['love'][string]>): SaveV4 => ({ ...s, love: { ...s.love, [id]: { ...s.love[id]!, ...love } } })
 

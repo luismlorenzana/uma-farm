@@ -1,11 +1,17 @@
 // `/diary` (F24; CS55): the Diary tab holds the chapter until its own screen comes in M6. The chapter's card: its number,
 // title and six goals, each with its count and a check when met, and its reward; once chapter 1 is done, chapter 2's
-// line and "Soon" until M5. Below, the Farm Rank (opening its sheet) and the milestones paid so far. Loaded on demand.
+// line and "Soon" until M5. Below, the Farm Rank (opening its sheet) and the milestones paid so far; in the romance build,
+// on save v4, the pairs' **Conversations** (F52 decision 11), loaded apart. Loaded on demand.
 import { chapterOf, diaryEntries, goalStates, type FarmSave } from '@farm/domain'
 import { HelpButton, Panel } from '@luismlorenzana/uma-kit/ui'
+import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
+import { romanceOn } from '../app/romance'
 import { useLoopSave } from '../save/game'
 import { goalCount, milestoneWords, rewardWords } from './goal-words'
+
+// The romance build's only: the switch folds at build time, and the deployed build drops the import.
+const Conversations = /* @__PURE__ */ lazy(() => import('./Conversations'))
 
 export default function DiaryPage() {
   const save = useLoopSave()
@@ -18,6 +24,7 @@ export default function DiaryPage() {
           <p>Each chapter sets a few goals. Meet them all and the chapter completes that night, with its reward and a new hand.</p>
           <p>Goals that count things count from the chapter’s start. Everything is checked when you end the day.</p>
           <p>Milestones pay gold once, and each adds to the Farm Rank. The Diary’s own pages come later.</p>
+          {romanceOn() && save.version === 4 && <p>Conversations keeps what each pair has said as their bond grew. Replay any you’ve read.</p>}
         </HelpButton>
       </div>
       <ChapterCard save={save} />
@@ -26,6 +33,7 @@ export default function DiaryPage() {
         <span className="text-ink-soft">{save.farm.points.toLocaleString('en-US')} points ›</span>
       </Link>
       <Milestones save={save} />
+      {romanceOn() && save.version === 4 && <Suspense fallback={null}><Conversations save={save} /></Suspense>}
     </main>
   )
 }

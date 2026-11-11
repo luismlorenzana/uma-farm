@@ -39,12 +39,14 @@ const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const PACK = storyPackFrom(STAND_IN_FILES)
 const [ONE, TWO, THREE] = STAND_INS
 const BIRTHDAYS = birthdaysOf(PACK, new Map())
-const context = (birthdays = BIRTHDAYS, story: Pick<StoryPack, 'cast' | 'bibles'> = PACK): NightContext => ({ roster: [], kinds: TEST_KINDS, story, birthdays })
+const context = (birthdays = BIRTHDAYS, story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ roster: [], kinds: TEST_KINDS, story, birthdays })
 
-/** A named v4 farm on `day`, the opening read and the stand-ins home at Friendship 0. */
+/** A named v4 farm on `day`, the opening read and the stand-ins home at Friendship 0., their ties seeded (F52) and
+ * already listed on an earlier morning, so a night's Hearts show only its own lines. */
 function farm(day = 1): SaveV4 {
   const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
-  return joinOpening(readScene(fresh, 'scene:1:open'), PACK)
+  const joined = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
+  return { ...joined, today: { ...joined.today, bonds: {} } }
 }
 /** Her route set by hand. */
 const withLove = (save: SaveV4, id: string, love: Partial<Love>): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })

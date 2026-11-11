@@ -3,7 +3,7 @@
 // and the quick look's lines. A block's growth reads its tender's talent (F21), D until master data loads. Pure, so the
 // page, the map and the tests read the same. Loaded with the loop's screens.
 import {
-  BLOCK_IDS, BLOCK_RULES, blockGrowth, blockOf, CROPS, dateOf, growsIn, isSeasonEnd, itemNameOf, nightsLeft, opened, RANKS, readyAt, SEASON_NAMES,
+  BLOCK_IDS, BLOCK_RULES, blockGrowth, blockOf, tendsSideBySide, CROPS, dateOf, growsIn, isSeasonEnd, itemNameOf, nightsLeft, opened, RANKS, readyAt, SEASON_NAMES,
   seedsInSeason, TALENT_GRADES, talentD, type BlockId, type CropId, type FarmingTalentOf, type Plot, type FarmSave, type Season,
 } from '@farm/domain'
 
@@ -29,8 +29,10 @@ export interface OwnedBlock {
   id: BlockId
   owned: true
   tender: string | null
-  /** Its growth tonight: 1 untended, the tender's rate tended. */
+  /** Its growth tonight: 1 untended, the tender's rate tended (×1.1 side by side, F52). */
   growth: number
+  /** Its tender has a 3-heart partner tending another growing block (save v4, F52 decision 7): ×1.1 tonight. */
+  side: boolean
   plots: PlotView[]
   ready: number
   empty: number
@@ -87,7 +89,7 @@ export function fieldsView(save: FarmSave, talentOf: FarmingTalentOf = talentD):
     const next = lastNight(save.calendar.day)
     const plots = block.plots.map((plot, i) => plotView(plot, i, growth, next))
     return {
-      id, owned: true, tender: block.tender, growth, plots, ready: plots.filter((p) => p.state === 'ready').length,
+      id, owned: true, tender: block.tender, growth, side: tendsSideBySide(save, id), plots, ready: plots.filter((p) => p.state === 'ready').length,
       empty: plots.filter((p) => p.state === 'empty').length, growing: plots.filter((p) => p.state === 'growing').length,
     }
   })

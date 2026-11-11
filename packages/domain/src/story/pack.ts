@@ -1,8 +1,9 @@
 // The story pack at runtime (F46 decision 6; romance spec RM58, RM59): the cast, the ties, the bibles by character id and
 // which events each route scripts, checked by F40's validator as the game reads it (routes may be partial: an unscripted
-// beat waits, "Her story is still being written"). The scripts load on demand through `route(id)`. The dark build reads
-// the stand-in (`stand-in.ts`) through the web's one loader seam; F56 points that seam at the private pack. Pairs (F52) and
-// the household file (F54) join with their packets.
+// beat waits, "Her story is still being written"). The scripts load on demand through `route(id)`, a pair's conversations
+// through `pair(a, b)` (F52), and the pack says which levels each pair holds. The dark build reads the stand-in
+// (`stand-in.ts`) through the web's one loader seam; F56 points that seam at the private pack. The household file (F54)
+// joins with its packet.
 //
 // Her outfit, her favourite line, its places and her tastes are read here (RM2, RM6, RM7), never from master data's
 // strategy or a goods family.
@@ -10,14 +11,21 @@ import type { FarmPlaceId } from '../farm/places'
 import type { Activity } from '../farm/ranks'
 import type { Taste } from '../farm/visitors'
 import { isGoodId } from '../goods/ids'
-import { bibleIssues, castIssues, routeIssues, tiesIssues, type Calling, type Cast, type CastEntry, type Route, type StoryContext, type Ties, type UmaBible } from './authored'
+import { pairKey } from '../save/v3'
+import {
+  bibleIssues, castIssues, pairIssues, routeIssues, tiesIssues, type Calling, type Cast, type CastEntry, type PairConversations, type Route, type StoryContext, type Ties,
+  type UmaBible,
+} from './authored'
 
-/** A pack's files as a release holds them (`cast.json`, `ties.json`, `umas/<id>.json`, `routes/<id>.json`), unchecked. */
+/** A pack's files as a release holds them (`cast.json`, `ties.json`, `umas/<id>.json`, `routes/<id>.json` and
+ * `pairs/<a>-<b>.json`, its name the two in `pairKey` order), unchecked. */
 export interface PackFiles {
   cast: unknown
   ties: unknown
   umas: Readonly<Record<string, unknown>>
   routes: Readonly<Record<string, unknown>>
+  /** By `<a>-<b>` (F52 decision 10); none in a pack that has no pair written yet. */
+  pairs?: Readonly<Record<string, unknown>>
 }
 
 export interface StoryPack {
@@ -30,6 +38,10 @@ export interface StoryPack {
   readonly scripted: ReadonlyMap<string, ReadonlySet<string>>
   /** Her route's scripted events, loaded on demand; null when none are written. */
   route(id: string): Promise<Route | null>
+  /** The bond levels each tie's pair has a conversation at, by `pairKey` (F52 decision 10): RS12's authored ones. */
+  readonly pairs: ReadonlyMap<string, ReadonlySet<number>>
+  /** A pair's conversations, loaded on demand; null when none are written. */
+  pair(a: string, b: string): Promise<PairConversations | null>
 }
 
 /** A pack the validator refuses: the game never plays a broken pack. */
@@ -66,6 +78,18 @@ export function storyPackFrom(files: PackFiles, isGood: (id: string) => boolean 
     issues.push(...found)
     if (found.length === 0) routes.set(id, route as unknown as Route)
   }
+  const tied = new Set(isObject(files.ties) && Array.isArray(files.ties.ties)
+    ? files.ties.ties.flatMap((t) => (isObject(t) && typeof t.a === 'string' && typeof t.b === 'string' ? [pairKey(t.a, t.b)] : [])) : [])
+  const pairs = new Map<string, PairConversations>()
+  for (const [name, pair] of Object.entries(files.pairs ?? {})) {
+    const found = pairIssues(pair, ctx, { partial: true }).map((i) => `pairs/${name}: ${i}`)
+    if (isObject(pair) && typeof pair.a === 'string' && typeof pair.b === 'string') {
+      if (pairKey(pair.a, pair.b) !== `${pair.a}:${pair.b}` || name !== `${pair.a}-${pair.b}`) found.push(`pairs/${name}: its name and its a, b are the two ids in numeric order, <a>-<b>`)
+      if (!tied.has(pairKey(pair.a, pair.b))) found.push(`pairs/${name}: not a tie's pair (RS12)`)
+    }
+    issues.push(...found)
+    if (found.length === 0) pairs.set(pairKey((pair as PairConversations).a, (pair as PairConversations).b), pair as PairConversations)
+  }
   if (issues.length > 0) throw new StoryPackError(issues)
   return {
     cast: files.cast as Cast,
@@ -73,6 +97,8 @@ export function storyPackFrom(files: PackFiles, isGood: (id: string) => boolean 
     bibles,
     scripted: new Map([...routes].map(([id, route]) => [id, new Set(route.events.map((e) => e.id))])),
     route: async (id) => routes.get(id) ?? null,
+    pairs: new Map([...pairs].map(([key, pair]) => [key, new Set(pair.levels.map((l) => l.hearts))])),
+    pair: async (a, b) => pairs.get(pairKey(a, b)) ?? null,
   }
 }
 

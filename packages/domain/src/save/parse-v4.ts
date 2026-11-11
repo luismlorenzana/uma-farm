@@ -9,6 +9,7 @@ import { isCropId, isGoodId, isWarehouseId, type CropId } from '../goods/ids'
 import { LOOP_REQUESTS } from '../gathering/ids'
 import type { HeartLine, MorningSummaryV4, NewsLineV4 } from '../night/summary'
 import { bool, count, int, list, object, oneOf, parseAccount, record, text } from './parse'
+import { pairKey } from './v3'
 import {
   counts, day, fail, KEY, member, outfit, parseBinLines, parseBonds, parseBoard, parseBuildings, parseDiary, parseDig, parseDorm, parseExpeditions,
   parseFarm, parseFields, parseNewsLines, parseNudges, parseRanch, parseRankLines, parseRanks, parseTools, parseWarehouse, parseWork, parseWorkLines,
@@ -120,7 +121,7 @@ function parseMemories(value: unknown, path: string, roster: ReadonlySet<string>
 }
 
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>): TodayV4 {
-  const o = object(value, path, ['chats', 'gifts', 'praise', 'praised', 'events', 'evenings', 'invites'])
+  const o = object(value, path, ['chats', 'gifts', 'praise', 'praised', 'events', 'evenings', 'invites', 'bonds'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const kind = (v: unknown, at: string) => (typeof v === 'string' && KEY.test(v) ? v : fail(at, 'expected a kind'))
   return {
@@ -136,7 +137,20 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>): 
       const answer = n.answer === null ? null : oneOf(n.answer, `${at}.answer`, ['yes', 'no'] as const)
       return { id: member(n.id, `${at}.id`, roster), kind: kind(n.kind, `${at}.kind`), answer }
     }), `${path}.invites`, (n) => n.id),
+    bonds: parseBondHeartsToday(o.bonds, `${path}.bonds`, roster),
   }
+}
+
+/** `today.bonds` (F52 decision 9): a pair of roster Umas by `pairKey` (numeric order), its hearts 0–5 before it first moved
+ * since the last morning. */
+function parseBondHeartsToday(value: unknown, path: string, roster: ReadonlySet<string>): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const [key, raw] of Object.entries(record(value, path))) {
+    const [a, b, ...rest] = key.split(':')
+    if (rest.length > 0 || !a || !b || a === b || !roster.has(a) || !roster.has(b) || pairKey(a, b) !== key) fail(`${path}.${key}`, 'expected two roster ids in numeric order, idA:idB')
+    out[key] = int(raw, `${path}.${key}`, 0, 5)
+  }
+  return out
 }
 
 function parseHomestead(value: unknown, path: string, today: number): Homestead {
@@ -162,13 +176,15 @@ function parseFarmer(value: unknown, path: string): SaveV4['farmer'] {
 
 // --- The morning (decision 15; F47) -----------------------------------------------------------------------------------------
 
-/** §4 Hearts (F46 decision 15; F47 decision 14): arrivals, birthdays and anniversaries, each an Uma on the roster, once a
- * kind each; an anniversary's item is a good on the day and null the day before. */
+/** §4 Hearts (F46 decision 15; F47 decision 14; F52 decisions 7 and 9): arrivals, birthdays and anniversaries, each an Uma
+ * on the roster, once a kind each; an anniversary's item is a good on the day and null the day before; side by side once,
+ * 1+ items; bond hearts 1–5 once a pair, two roster Umas in `pairKey` order. */
 function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>): HeartLine[] {
   const when = (v: unknown, at: string) => oneOf(v, at, ['today', 'tomorrow'] as const)
-  return unique(list(value, path, 0, roster.size * 3).map((v, i): HeartLine => {
+  const pairs = (roster.size * (roster.size - 1)) / 2
+  return unique(list(value, path, 0, roster.size * 3 + pairs + 1).map((v, i): HeartLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['arrived', 'birthday', 'anniversary'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['arrived', 'birthday', 'anniversary', 'side', 'bond'] as const)
     if (kind === 'birthday') {
       const b = object(v, at, ['kind', 'id', 'when'])
       return { kind, id: member(b.id, `${at}.id`, roster), when: when(b.when, `${at}.when`) }
@@ -181,9 +197,20 @@ function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>):
         : (typeof a.item === 'string' && isGoodId(a.item) ? a.item : fail(`${at}.item`, 'unknown good'))
       return { kind, id: member(a.id, `${at}.id`, roster), when: day, item }
     }
+    if (kind === 'side') {
+      const o = object(v, at, ['kind', 'items'])
+      return { kind, items: int(o.items, `${at}.items`, 1, 100_000) }
+    }
+    if (kind === 'bond') {
+      const o = object(v, at, ['kind', 'a', 'b', 'hearts'])
+      const a = member(o.a, `${at}.a`, roster)
+      const b = member(o.b, `${at}.b`, roster)
+      if (a === b || pairKey(a, b) !== `${a}:${b}`) fail(`${at}.b`, 'expected two Umas in numeric order')
+      return { kind, a, b, hearts: int(o.hearts, `${at}.hearts`, 1, 5) }
+    }
     const a = object(v, at, ['kind', 'id', 'home'])
     return { kind: 'arrived', id: member(a.id, `${at}.id`, roster), home: bool(a.home, `${at}.home`) }
-  }), path, (h) => `${h.kind}:${h.id}`)
+  }), path, (h) => (h.kind === 'bond' ? `bond:${h.a}:${h.b}` : h.kind === 'side' ? 'side' : `${h.kind}:${h.id}`))
 }
 
 function parseSummaryV4(value: unknown, path: string, today: number, roster: ReadonlySet<string>): MorningSummaryV4 {
@@ -231,7 +258,7 @@ export function parseSaveV4(value: unknown, path = 'save', kinds: LoopRequestKin
     tools: parseTools(o.tools, `${path}.tools`),
     workshops: parseWorkshops(o.workshops, `${path}.workshops`, ids),
     expeditions: parseExpeditions(o.expeditions, `${path}.expeditions`, ids),
-    bonds: parseBonds(o.bonds, `${path}.bonds`, ids),
+    bonds: parseBonds(o.bonds, `${path}.bonds`, ids, count),
     board: parseBoard(o.board, `${path}.board`),
     diary: parseDiary(o.diary, `${path}.diary`),
     farm: parseFarm(o.farm, `${path}.farm`),

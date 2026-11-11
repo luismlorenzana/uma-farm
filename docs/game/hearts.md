@@ -30,6 +30,14 @@ perks' words are `romance/perks.ts`; the screens `loop/HeartsPage.tsx`, `loop/He
 `loop/HeartMarks.tsx`, `loop/RosterAlbum.tsx` and `loop/Love.tsx` (the acts). The spec is RM31's words, RM51–RM53 and
 RM57; the calls are F48's (D53).
 
+**Built from F52.** The Umas' **bonds with each other** grow when two work one place the same day, and five **bond
+hearts** come at CS44's thresholds. The 31 authored **ties seed** them when both Umas are on the farm, her **closest
+friend** is her strongest tie, Romance 4 grows that bond ×1.5, and at 3 hearts two Umas work **side by side** (+10% of a
+night's items, ×1.1 growth). Each new heart opens the pair's **conversation**: an authored one for a tie's pair, read
+from the morning, her profile or the Diary. The rules are `farm/bonds.ts` and night steps 2, 4, 6, 8 and 9; the screens
+her profile's Ties, `loop/PairPlayer.tsx` and the Diary's `loop/Conversations.tsx`. The spec is RM48–RM50; the calls are
+F52's (D54).
+
 ```
  a fresh v4 farm (or any v1–v3, wiped)
    │
@@ -65,9 +73,12 @@ RM57; the calls are F48's (D53).
   names, talents, temperaments and pickers need nothing else.
 - **A character master data doesn't hold** (the stand-ins, or one a release drops) shows a **lettered disc** ("S1" for
   Stand-in 1, coloured by her id) and reads **D** talents.
-- **The pack at runtime** (`StoryPack`): the cast, the ties, her bible by character id, and which events each route
-  scripts; the scripts load on demand (`route(id)`). The game checks it with F40's validator as it loads, routes in the
-  **partial** mode (an unscripted beat waits: "still being written"); the story sandbox keeps the strict report.
+- **The pack at runtime** (`StoryPack`): the cast, the ties, her bible by character id, which events each route scripts,
+  and which bond levels each tie's pair has a conversation at (`pairs`, F52); the scripts and the pairs' conversations
+  load on demand (`route(id)`, `pair(a, b)`). The game checks it with F40's validator as it loads, routes and pairs in
+  the **partial** mode (an unscripted beat waits: "still being written"; a pair's unwritten level gets the tie's line);
+  the story sandbox keeps the strict report. A pair file is `pairs/<a>-<b>.json`, the two ids in numeric order, for a
+  tie's pair only, each level 1–5 at most once.
 - **One loader seam** (`apps/web/src/story/load.ts`, `loadStoryPack()`): the stand-in now; F56 points it at the private
   pack. The romance build's boot waits for it, as the loop waits for master data.
 
@@ -477,10 +488,12 @@ row, a card in the Work view, the morning's lines and the Dorm's list. Each sect
   next in bold, the rest greyed). F51 makes each do what it says and adds what it does now.
 - **Gifts:** her loved, liked and disliked goods as learnt (RM15: her loved from Friendship 1, any once given, all from
   Friendship 7; "?" until then), each group's points at ★1, and "Others +10". An Uma without a bible: "Any gift +10".
-- **Ties:** her ties from the pack, strongest first (then the most bond points, then the ties' order: her closest friend
-  first), each with the other Uma's face, its kind ("Friends", "Rivals", "Mentor", "Teammates", "Sisters", "Close") and
-  **bond hearts** (CS44's, from `save.bonds`); a tie whose Uma isn't on the farm yet says "Not here yet". F52 makes the
-  hearts move and adds **Read**.
+- **Ties:** her ties from the pack in `tiesOf`'s order, the one `closestFriend` reads (strongest first, then the most
+  bond points, then the ties' order), each with the other Uma's face, its kind ("Friends", "Rivals", "Mentor",
+  "Teammates", "Sisters", "Close") and **bond hearts** (CS44's, from `save.bonds`, moving as bonds grow); her closest
+  friend first with a **Closest** chip; "Friends · 150/300", the points to the next heart; **Read** (44 pt) while an
+  authored conversation of theirs is opened and unread; a tie whose Uma isn't on the farm yet says "Not here yet"
+  (F52, [below](#bonds-between-umas-rm48rm50)).
 - **Memories:** her count, "15 of 26" (F49 adds the album and replay); her **ring** once given ("+6% at her line", F53).
 - **The actions,** 48 pt in the sheet's foot: **Chat +15** (then her line for the day), **Gift** (the picker with each
   good's points for her today or "?"), and **Praise +20** while she's earned it; what an act pays floats up from her face
@@ -541,6 +554,137 @@ says **"Opens with chapter n"** while that place waits for its chapter (RM36: a 
 | Forging | the Forge | +10% at the Forge | 5% back on the Forge’s next tool | A ★2+ Fitting | Chapter 7 |
 <!-- /live -->
 
+## Bonds between Umas (RM48–RM50)
+
+**Romance build; live from F56** (F52 decisions 1–11). Each pair of Umas holds **bond points** (`save.bonds`, by `pairKey`
+of their character ids, numeric order), **whole**, that **never fall**. They grow when two share a place, five **bond
+hearts** come at CS44's thresholds, the authored ties **seed** them, and each new heart opens the pair's
+**conversation**. Save v4 only: M4 (save v3) has no bonds, and its `tickBonds` stays a no-op. The rules are
+`farm/bonds.ts`.
+
+```
+ day 1: the opening brings the three ──► their ties seed: 9000001 & 9000002 150 (♥♥), 9000001 & 9000003 50 (♥)
+   │                                      the next morning: "♥♥ Stand-in 1 & Stand-in 2 · bond 2 · Read"
+   ▼
+ two Umas at the forest all day ──► step 6: +10 a pair (+15 if both favour foraging; ×1.5 more at Romance 4)
+   │                                 290 → 300: ♥♥♥, the morning lists "bond 3"
+   ▼
+ the next night, at the forest again ──► step 4: +10% of each one's night's items, copies into the Warehouse
+                                          the morning: "Side by side · +1 item"
+```
+
+### Points (RM48; decisions 1–4)
+
+<!-- live:bond-points -->
+| Shared | Points | Paid by |
+|---|---|---|
+| Working the same place the same day (the Fields’ tenders together) | +10 a pair; ×1.5 when both favour that place’s line | `bondsTonight`, night step 6 |
+| An expedition party, a day away | +15 a pair | `addBond`, F28 (M5) |
+| A festival team | +20 a pair | `addBond`, F32 (M6) |
+| The same staff meal, or the same breakfast | +5 a pair | `addBond`, F8 and F54 |
+| The same house, a night | +10 a pair | `addBond`, F54 |
+| **Romance 4:** her bond with her closest friend | ×1.5 on any of these, once (never ×2.25 when both qualify) | `bondFactor`, in `addBond` |
+<!-- /live -->
+
+- **The same place the same day** (decision 2, night step 6, `tickBonds` → `bondsTonight`): every pair among the Umas who
+  worked one place today earns +10, once a night: a running job at the day's start (step 4's `worked`), the Fields'
+  tenders with a growing block counting as the Fields. **×1.5** when both have the same favourite line (`favouriteOf`)
+  and it's that place's (`PLACE_ACTIVITY`; farming for the Fields): two foragers at the forest or the Sawmill, two farmers
+  tending. An Uma works one place a day, so a pair earns this once. A v4 night without the pack ticks none.
+- **Every other source** is a rule with tests, called by its packet: `addBond(save, pack, a, b, points)` is the one way a
+  bond grows (both Umas on the roster, two of them; points ≥ 0).
+- **Romance 4** (decision 4): what a pair earns is **×1.5** when either Uma is at Romance 4 or later and the other is her
+  closest friend; once, never ×2.25 when both are (`bondFactor`, inside `addBond`).
+- **Whole:** each pay rounds once, half up, after its factors: two foragers at Romance 4 and closest friends earn 10 ×
+  1.5 × 1.5 = 22.5, so **23**. The parse refuses a fraction on v4 (v3's bonds may be fractional, D30).
+
+### Hearts (CS44)
+
+<!-- live:bond-hearts -->
+| Hearts | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| Points | 50 | 150 | 300 | 500 | 750 |
+| Two at one place every day (+10) | Day 5 | Day 15 | Day 30 | Day 50 | Day 75 |
+| Sharing a favourite line there (+15) | Day 4 | Day 10 | Day 20 | Day 34 | Day 50 |
+<!-- /live -->
+
+Bonds never fall, and points go on past 750. A **duo move** at 5 hearts is M5's (F28 reads `bondHearts` ≥ 5). A bond
+setup on her route ("Bond 3 with Stand-in 2", F47's Ready) reads these hearts.
+
+### The ties' seeds and her closest friend (RM49; decisions 5 and 6)
+
+<!-- live:tie-seeds -->
+| Tie strength | Bond starts at | Hearts |
+|---|---|---|
+| 3 | 150 | 2 |
+| 2 | 50 | 1 |
+| 1 | 0 | 0 |
+
+The stand-in pack’s ties (invented):
+
+| Pair | Kind | Strength | Seeded at | Authored conversations |
+|---|---|---|---|---|
+| 9000001 & 9000002 | friends | 3 | 150 | Bond 1, 2, 3, 4, 5 |
+| 9000001 & 9000003 | rivals | 2 | 50 | — (the tie’s line) |
+| 9000002 & 9000003 | teammates | 1 | 0 | — (the tie’s line) |
+<!-- /live -->
+
+- **When both are on the farm:** `arrive` seeds each of her ties whose other Uma is on the farm to `max(points, seed)`
+  (`seedTies`): the opening three on day 1 (`joinOpening`), a night's arrivals at step 8 (`arriveUmas`), the chapter's in
+  `checkGoals`. Not before: an Uma whose friend hasn't come has no bond yet. **A seed never lowers a bond.**
+- **A seeded heart is a new heart:** its conversation opens, and the next morning lists it, so an arriving Uma comes with
+  what her closest ties already share.
+- **Her closest friend** (`closestFriend(pack, save, id)`): over all her ties, on the farm or not (every Uma has two):
+  the strongest, then the most bond points, then `ties.json`'s order. One comparator, `tiesOf`, orders her profile's Ties
+  the same way. F51's Friendship 7 perk shows her closest friend's loved gift; F54's wedding room defaults to her house.
+
+### Side by side (CS17, CS44; decision 7)
+
+<!-- live:side-by-side -->
+| Where | Beside a 3-heart partner | How |
+|---|---|---|
+| A work place (gathering, a station) | +10% of her night’s items | Night step 4 (`nightExtras`), after the hauls: copies of the items her work finished tonight, the same goods and stars, `share × n` whole and one more by `draw(uid, day, 'bond:<id>', 0)`, each picked by `draw(…, k)`; into the Warehouse. Her partner worked the same place today |
+| The Fields | Tended growth ×1.1 | Night step 2 (`blockGrowth`): her partner tends another block with a growing plot |
+<!-- /live -->
+
+- **Why at night:** a day's haul is planned when its job starts, so a ×1.1 at planning would miss a partner who starts
+  later. Side by side pays as a **night extra** at step 4, after the hauls (`nightExtras`, `extrasTonight`), reading the
+  bonds as they stand then: a pair whose bond reaches 3 hearts at tonight's step 6 works side by side from the next night.
+  uma-work's plans and outputs are untouched. **F51 extends this step** with in her element (×1.2 in place of ×1.1,
+  `extrasShare`) and the capped romance bonus.
+- **The Fields** read it inside `blockGrowth`, so the page and step 2 agree: the block's card says "· side by side" and
+  the nights left count it ([fields.md](fields.md#tending-cs12-cs28-cs31-decisions-1-and-2)). Her partner's block must
+  have a growing plot: a tender of an empty block isn't working beside her.
+- **The morning** says "Side by side · +3 items", the night's extras in all, opening the Warehouse.
+
+### Pair conversations (RM50; decisions 9 and 10)
+
+- **Each new heart opens one conversation**, the pair's at that level. **An authored one** is the pack's
+  `pairs/<a>-<b>.json` (RS12: each Uma's two closest ties, at all five levels), named by the two ids in `pairKey` order,
+  for a tie's pair only; the game reads it in a partial mode (any levels written so far, each once), and the pack says
+  which levels each pair holds (`pack.pairs`, loaded on demand through `pack.pair(a, b)`). The stand-in pack holds
+  9000001 & 9000002's five (invented); 9000001 & 9000003 have none, so their tie's line stands in.
+- **Without an authored one**, the heart's line is the tie's `line` for a tie's pair, or "<a> and <b> are closer now" for
+  another, with no scene. CS46's templates for other pairs stay M6's (F33).
+- **Read** plays the pair's opened and unread levels in turn in the scene player (`?read=<a>-<b>:<levels>` over any page,
+  `PairPlayer.tsx`): "Stand-in 1 & Stand-in 2 · Bond 1 (1/2) · Fields", each line a tap, the speaker's bust; a choice
+  is **wording only**, its options with no gain. The end, or **Skip**, marks every level read, once, into `diary.read` as
+  `pair:<a>-<b>:<hearts>` (`readPair`). **It pays nothing.** A replay from the Diary marks nothing new.
+- **The morning** lists the bond hearts reached since the last morning, **one line a pair at its highest heart**, in the
+  cast's order: "♥♥ Stand-in 1 & Stand-in 2 · bond 2" with **Read** while an authored conversation up to that heart waits
+  (a seed from 0 to 2 plays bonds 1 and 2), the heart alone once read, or the tie's line or the generic words. `today.bonds`
+  notes each pair's hearts before its first move since the last morning (the opening's day-1 seeds included); step 9
+  lists against it, else last night's bonds, and empties it.
+
+### On screen (decision 11)
+
+- **Her profile's Ties** ([above](#her-profile-rm53)): her closest friend first with **Closest**, each bond's hearts and
+  "150/300" to the next, and **Read**.
+- **The morning** (§4's sixth place): side by side, then the bond hearts.
+- **The Diary's Conversations** ([goals.md](goals.md#the-screens)): one row a pair with a heart, its conversations read
+  as **Bond n** replays and **♥♥ Read** for the unread.
+- **The Fields:** "· side by side" on a block growing ×1.1.
+
 ## The night and the morning on v4
 
 What a v4 night adds or changes from v3's ([days.md](days.md) lists the rest):
@@ -548,14 +692,18 @@ What a v4 night adds or changes from v3's ([days.md](days.md) lists the rest):
 <!-- live:night-v4 -->
 | Step | Function | What happens | Filled by |
 |---|---|---|---|
+| 2 | `growCrops` | Crops grow: 1 a night untended, the tender’s rate tended, ×1.1 side by side (her tender has a 3-heart partner tending another growing block); plots that reach their days − 0.5 turn Ready | F20, F52 |
+| 4 | `nightExtras` | Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again, seeded copies straight into the Warehouse | F52 |
 | 6 | `tickRanks` | Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10; rank-ups where points and the challenge are met | F21, F47 |
+| 6 | `tickBonds` | Bonds: +10 to each pair who worked one place today (the Fields’ tenders together), once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend | F52 |
 | 6 | `payLine` | Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night | F47 |
 | 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, evenings and invitations | F18, F47 |
-| 8 | `arriveUmas` | Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away | F46 |
+| 8 | `arriveUmas` | Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50) | F46, F52 |
 | 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse | F47 |
+| 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists side by side’s extras and each pair’s bond hearts reached since the last morning | F18, F52 |
 <!-- /live -->
 
-On v4 `checkGoals`' recruit is the chapter's authored arrival. Step 7 clears v4's whole `today`. The morning's §4 is
+On v4 `checkGoals`' recruit is the chapter's authored arrival, her ties seeded like any arrival's. Step 7 clears v4's whole `today`. The morning's §4 is
 **Hearts**, after Ranks, in **RM57's order** (F48 decisions 1 and 9), each line a tap to her profile:
 
 | # | Line | Words | Filled by |
@@ -567,24 +715,30 @@ On v4 `checkGoals`' recruit is the chapter's authored arrival. Step 7 clears v4'
 | 4 | `{ kind: 'anniversary', id, when, item }` | "♥ Stand-in 1's anniversary · ★5 Carrot left for you" (`item` the good; null the day before), "♥ Tomorrow: Stand-in 1's anniversary" | F47 |
 | 5 | Levels reached overnight (S2, S4) | — | F54 |
 | 5 | `{ kind: 'arrived', id, home }` | "Stand-in 4 arrived · away" | F46 |
-| 6 | Bond hearts, with **Read** | — | F52 |
+| 6 | `{ kind: 'side', items }`: side by side's extras tonight | "Side by side · +3 items" (opens the Warehouse) | F52 |
+| 6 | `{ kind: 'bond', a, b, hearts }`: a pair's bond reached `hearts` since the last morning, one line a pair | "♥♥ Stand-in 1 & Stand-in 2 · bond 2" with **Read**; without a conversation written, "♥♥ Stand-in 1 & Stand-in 3 · bond 1 · Old rivals." (the tie's line) or "♥♥ Stand-in 2 and Stand-in 4 are closer now · bond 1" | F52 |
 
 Within a place the night's order holds: today's lines before tomorrow's, birthdays before anniversaries, each Uma in the
-cast's order. The section shows whenever a stored line or a Ready Uma is there; an Uma who played an event today isn't
+cast's order; side by side before the bond hearts, the pairs in the cast's order. The section shows whenever a stored line or a Ready Uma is there; an Uma who played an event today isn't
 Ready. **There's no pop-up per event:** the morning, her ● Ready chip and **♥ on her pip** wherever the map draws her (a
 tender on the Fields, in place of her block's letter; a worker at a place) are the only signals. Pips stay their places'
 taps.
 The parse refuses an Uma off the roster, a kind twice for one Uma, an anniversary's item the day before (or an unknown
-good on the day), and words. §5 drops v3's `joined`, Gate and `left` lines.
+good on the day), side by side twice or with no items, a bond line twice for a pair, out of `pairKey` order or outside
+1–5 hearts, and words. §5 drops v3's `joined`, Gate and `left` lines.
 
 ## For later packets
 
 - **F49** heart events and Memories (`memories`): the Next card's **Play ›**, her row's ● Ready and the morning's Ready
   line start one, and her confession's **Ask her**; the level-up card names F48's perk words. **F50** the evening and
   invitations (`today.evenings`, `today.invites`): **Evening ›**, the header's ○/● and the row's ✉ (`HeartRow.invited`
-  reads `today.invites` already). **F51** the perks' effects over `romance/perks.ts`. **F52** bonds from the ties: the
-  profile's Ties (`tieRows`) move with `save.bonds`. **F53** the ring and the wedding. **F54** the homestead (`homestead`,
-  `love.house`), her house on the row and the profile, the marks from uma-art 2.26.0.
+  reads `today.invites` already). **F51** the perks' effects over `romance/perks.ts`: R4's ×1.5 is built (`bondFactor`),
+  F7's "her closest friend's loved gift" reads `closestFriend`, and in her element and the romance bonus extend
+  `extrasShare` and `nightExtras` (step 4). **F53** the ring and the wedding. **F54** the homestead (`homestead`,
+  `love.house`), her house on the row and the profile, the marks from uma-art 2.26.0; a shared house's +10 a night and the
+  same breakfast's +5 a pair go through `addBond`, and a wedding's room defaults to her closest friend's house. **F28,
+  F32, F8** pay an expedition party (+15 a day away), a festival team (+20) and the same staff meal (+5 a pair) through
+  `addBond`; F28's duo move reads `bondHearts` ≥ 5.
 - **A new §4 line:** add its kind to `HeartLine` (`night/summary.ts`) with its parse, give it RM57's place in
   `HEARTS_ORDER` and its words in `heartLine` (`loop/summary-words.ts`).
 - Save v4 grows in place until F56; any change after F56 is v5.

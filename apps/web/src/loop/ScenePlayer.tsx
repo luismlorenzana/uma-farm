@@ -11,7 +11,8 @@
 // bust, the line with `{farmer}` filled, the emote as a word), `narrate`, `thought` (italic), `place` (the title line),
 // `wait`, `flag` and `choice`, whose options show their gain before the tap (+30 for the best, +10 for the rest). Skip
 // jumps to the choice, never past it, so every arrival pays +50 and its choice; the last of the opening three ends on
-// chapter 1's card and **Plant the carrots**. Loaded on demand.
+// chapter 1's card and **Plant the carrots**. Its frame and steps also play F52's pair conversations (`PairPlayer.tsx`).
+// Loaded on demand.
 import {
   ARRIVAL_POINTS, arrivalOf, CAST, CAST_IDS, castInitial, chapterArrival, CHAPTER_1_GOALS, chapterOf, chapterScene, choicePoints, FALLBACK_ARRIVAL, farmPlace, pathFlags,
   sceneLines, sceneSteps, withFarmer, type CastId, type ChapterSceneId, type ChoiceOption, type SaveV4, type SceneId, type SceneLine, type Step, type Temperament,
@@ -51,8 +52,8 @@ export default function ScenePlayer({ scene }: { scene: SceneId }) {
   return <ChapterScenePlayer scene={scene as ChapterSceneId} />
 }
 
-/** The sheet's frame: the title line, Skip, and what plays. */
-function Frame({ title, label, scene, onSkip, skipping, children }: { title: string; label: string; scene: string; onSkip: () => void; skipping: boolean; children: React.ReactNode }) {
+/** The sheet's frame: the title line, Skip, and what plays. F52's pair conversations play in it too. */
+export function Frame({ title, label, scene, onSkip, skipping, children }: { title: string; label: string; scene: string; onSkip: () => void; skipping: boolean; children: React.ReactNode }) {
   return (
     <div className="pt-safe pb-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={label} data-scene={scene}>
       <header className="flex min-h-14 items-center justify-between gap-2 px-4">
@@ -182,9 +183,9 @@ function ChapterCard({ scene, onDone }: { scene: ChapterSceneId; onDone: (to: st
 // --- Her arrival scene (F46 decision 10) ----------------------------------------------------------------------------------
 
 /** A story place as the title line says it: a farm place's name, else its words ("pond-night" → "Pond night"). */
-const placeName = (place: string): string => farmPlace(place)?.name ?? `${place.charAt(0).toUpperCase()}${place.slice(1).replaceAll('-', ' ')}`
+export const placeName = (place: string): string => farmPlace(place)?.name ?? `${place.charAt(0).toUpperCase()}${place.slice(1).replaceAll('-', ' ')}`
 /** Steps that show nothing of their own: they set the title line, or a flag. */
-const silent = (step: Step): boolean => 'place' in step || 'flag' in step
+export const silent = (step: Step): boolean => 'place' in step || 'flag' in step
 
 function ArrivalPlayer({ save, id }: { save: SaveV4; id: string }) {
   const story = useStory()
@@ -267,7 +268,7 @@ function Welcome({ id, name, points, onDone }: { id: string; name: string; point
 }
 
 /** One step: a line with her bust, a narration, a thought, or a pause that goes on by itself. */
-function StepView({ step, at, count, total, nameOf, farmer, onNext }: {
+export function StepView({ step, at, count, total, nameOf, farmer, onNext }: {
   step: Step; at: number; count: number; total: number; nameOf: (id: string) => string; farmer: string; onNext: () => void
 }) {
   const wait = 'wait' in step ? Math.min(5000, Math.max(0, step.wait)) : null
