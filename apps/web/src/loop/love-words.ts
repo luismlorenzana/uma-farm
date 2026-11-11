@@ -4,7 +4,7 @@
 import { goodName, rungName, type Activity, type Bar, type Readiness } from '@farm/domain'
 
 /** A working setup's place, as RM24 says it ("Romance 5 · the Pond, when she works it"). */
-const WORK_PLACE: Readonly<Record<Activity, string>> = {
+export const WORK_PLACE: Readonly<Record<Activity, string>> = {
   farming: 'the Fields', foraging: 'the forest', fishing: 'the Fishery', mining: 'the Mine', ranch: 'the ranch', cooking: 'the Kitchen',
   serving: 'the Restaurant', forging: 'the Forge', expeditions: 'an expedition',
 }

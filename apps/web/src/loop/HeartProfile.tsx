@@ -4,11 +4,12 @@
 // her bible's hint, the bar and what's banked, and what it waits for), Perks (reached ✓, the next, the rest greyed), Gifts
 // as learnt (others +10), Ties (her bonds' hearts), Memories' count and her ring once given; on its Work side F21's sheet
 // (her nine activities). Chat +15, Gift and Praise +20 sit in the thumb zone with Hearts | Work. Each section shows only
-// what exists: later packets fill the Next card's Play › and Memories' replay (F49), Evening › (F50), the perks' effects,
+// what exists: F49's **Play ›** on the Next card when her event is Ready (what a setup needs said when it isn't, and **Ask
+// her** after her confession's "Not yet"), and Memories' album (`?album=`); later packets fill Evening › (F50), the perks' effects,
 // her pet name and keepsake (F51), the ring (F53) and her house (F54). F52's Ties: her closest friend first and marked,
 // each bond's hearts and the points to the next, and **Read** for a pair's conversation opened and unread. Loaded on
 // demand.
-import { birthdaysOf, LADDER_COLOURS, ladderOf, levelWords, type SaveV4, type Temperament } from '@farm/domain'
+import { birthdaysOf, canAsk, LADDER_COLOURS, ladderOf, levelWords, readiness, type SaveV4, type Temperament } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Sheet, Tabs } from '@luismlorenzana/uma-kit/ui'
@@ -16,9 +17,10 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import type { MasterView } from '../master/master'
+import { memoryCount, setupAdvice } from './event-view'
 import { ReadyChip, RouteTrack } from './HeartMarks'
 import {
-  giftSlots, MEMORY_RUNGS, nextCard, perkList, profileLine, reachedWords, readParam, routeTrack, rungLadder, tieRows, type GiftSlot, type HeartsPack, type NextCard,
+  giftSlots, nextCard, perkList, profileLine, reachedWords, readParam, routeTrack, rungLadder, tieRows, type GiftSlot, type HeartsPack, type NextCard,
   type PerkView, type TieRow,
 } from './hearts-view'
 import { LoveActs } from './Love'
@@ -94,12 +96,15 @@ function HeartsSide({ save, pack, id, card, nameOf }: { save: SaveV4; pack: Hear
   const perks = perkList(save, pack, id)
   const gifts = giftSlots(pack, love, id)
   const ties = tieRows(save, pack, id)
-  const memories = save.memories[id]?.length ?? 0
+  const location = useLocation()
   const played = track.filter((c) => c.state === 'played').length
+  const advice = setupAdvice(readiness(save, pack, id).waits, nameOf)
   return (
     <div className="space-y-4 pb-2">
       <RouteTrack cells={track} label={`Her route: ${played} of ${track.length} played${card.rung ? `, ${card.title.toLowerCase()}` : ''}`} />
-      <NextSection card={card} />
+      <NextSection card={card} advice={advice}
+        play={card.ready ? withParam(location, 'event', id) : null}
+        ask={card.waits === 'friend' ? (canAsk(save, id) ? withParam(location, 'ask', id) : 'asked') : null} />
       {perks.length > 0 && <PerksSection perks={perks} />}
       <GiftsSection gifts={gifts} />
       {ties.length > 0 && (
@@ -110,7 +115,10 @@ function HeartsSide({ save, pack, id, card, nameOf }: { save: SaveV4; pack: Hear
         </Section>
       )}
       <Section title="Memories">
-        <p className="text-[14px]" data-memories={memories}>{memories} of {MEMORY_RUNGS}</p>
+        <Link to={withParam(location, 'album', id)} state={{ back: true }} className="flex min-h-11 items-center justify-between text-[14px]" data-memories={(save.memories[id] ?? []).length} data-action="album">
+          <span className="tabular-nums">{memoryCount(save, id)}</span>
+          <span className="font-semibold text-accent-strong">Album ›</span>
+        </Link>
       </Section>
       {love.ring !== undefined && (
         <Section title="Ring">
@@ -159,8 +167,10 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-/** The Next card: the rung, its perk, its place and setup, the bar with what's banked, and what it waits for. */
-function NextSection({ card }: { card: NextCard }) {
+/** The Next card: the rung, its perk, its place and setup, the bar with what's banked, and what it waits for; **Play ›**
+ * when her event is Ready (F49, RM54), what to do when its setup isn't met, and **Ask her** after a "Not yet" (once a
+ * day; `ask` is 'asked' once asked today). */
+function NextSection({ card, advice = null, play = null, ask = null }: { card: NextCard; advice?: string | null; play?: string | null; ask?: string | null }) {
   const colour = LADDER_COLOURS[card.rung ? rungLadder(card.rung) : 'spouse']
   const share = card.bar.cost > 0 ? Math.min(1, card.bar.points / card.bar.cost) : card.rung ? 1 : 0
   return (
@@ -187,6 +197,18 @@ function NextSection({ card }: { card: NextCard }) {
       <p className={`text-[14px] ${card.ready ? 'font-bold' : 'font-semibold text-ink-soft'}`} style={card.ready ? { color: colour } : undefined} data-next-words={card.waits ?? 'ready'}>
         {card.waits === 'away' ? <Link to="/dorm" className="text-accent-strong underline">{card.words}</Link> : card.words}
       </p>
+      {advice && <p className="text-[13px] text-ink-soft" data-setup-advice>{advice}</p>}
+      {play && (
+        <Link to={play} state={{ back: true }} className="font-display grid min-h-12 place-items-center rounded-md text-[16px] font-bold text-white" style={{ background: colour }} data-action="play-event">
+          Play ›
+        </Link>
+      )}
+      {ask === 'asked' && <p className="text-[13px] text-ink-soft" data-asked>You asked her today. Ask again tomorrow.</p>}
+      {ask && ask !== 'asked' && (
+        <Link to={ask} state={{ back: true }} className="font-display grid min-h-12 place-items-center rounded-md border-2 text-[16px] font-bold" style={{ borderColor: colour, color: colour }} data-action="ask-her">
+          Ask her ›
+        </Link>
+      )}
     </section>
   )
 }

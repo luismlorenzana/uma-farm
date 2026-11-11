@@ -11,7 +11,7 @@ import { FaceTile, type FaceTileBadges } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Chip, HelpButton, Tabs } from '@luismlorenzana/uma-kit/ui'
 import { useMemo } from 'react'
-import { useLocation, useNavigate, useSearchParams } from 'react-router'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
@@ -122,20 +122,22 @@ function HeartsList({ rows, onOpen }: { rows: readonly HeartRow[]; onOpen: (id: 
   )
 }
 
-/** One Uma's row (RM52's mockup): three lines in 72 pt. */
+/** One Uma's row (RM52's mockup): three lines in 72 pt; a tap opens her profile, and her **● Ready** plays her event
+ * (F49, RM54: `?event=`). */
 function HeartRowView({ row, onOpen }: { row: HeartRow; onOpen: () => void }) {
+  const location = useLocation()
   const { bar, heart } = row
   const share = heart.mark ? 1 : bar.cost > 0 ? Math.min(1, bar.points / bar.cost) : bar.rung === null ? 1 : 0
   // The most useful line first, so a narrow row cuts what's banked before it.
   const under = [...(row.note ? [row.note] : []), ...(bar.banked > 0 ? [`+${bar.banked.toLocaleString('en-US')} banked`] : [])].join(' · ')
   return (
-    <button type="button" onClick={onOpen} className="flex min-h-[72px] w-full items-center gap-3 py-2 text-left"
-      data-heart-row={row.id} data-row-ready={row.state.ready || undefined} aria-label={`${row.name}, ${row.level}${row.state.ready ? ', Ready' : ''}${row.home ? '' : ', away'}`}>
+    <div className="flex min-h-[72px] w-full items-center gap-2" data-heart-row={row.id} data-row-ready={row.state.ready || undefined}>
+    <button type="button" onClick={onOpen} className="flex min-h-[72px] min-w-0 flex-1 items-center gap-3 py-2 text-left" data-open-row
+      aria-label={`${row.name}, ${row.level}${row.state.ready ? ', Ready' : ''}${row.home ? '' : ', away'}`}>
       <FaceTile outfitId={row.id} size={56} label={row.name} className={row.home ? '' : 'opacity-60'} />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex items-center gap-1.5">
           <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-ink">{row.name}</span>
-          {row.state.ready && <ReadyChip colour={heart.colour} />}
           {row.invited && <InviteChip />}
           {!row.home && <AwayChip />}
         </span>
@@ -152,5 +154,11 @@ function HeartRowView({ row, onOpen }: { row: HeartRow; onOpen: () => void }) {
         </span>
       </span>
     </button>
+    {row.state.ready && (
+      <Link to={withParam(location, 'event', row.id)} state={{ back: true }} className="grid min-h-11 shrink-0 place-items-center" aria-label={`Play ${row.name}’s event`} data-action="play-event">
+        <ReadyChip colour={heart.colour} />
+      </Link>
+    )}
+    </div>
   )
 }

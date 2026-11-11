@@ -3,7 +3,8 @@
 // On save v4 (F46 decision 15) §4 is Hearts, in RM57's order (F48 decisions 1 and 9): the Ready lines read live, up to
 // three and "+N more"; the invitation (F50); the house's morning (F54); birthdays and anniversaries, today and tomorrow
 // (F47); levels reached overnight (F54) and arrivals' scenes waiting (F46); side by side's extras and bond hearts with
-// Read (F52). Each opens her profile on the Hearts tab (`/hearts?uma=`), a pair's Read its conversations (`?read=`), side
+// Read (F52). A Ready line plays her event over the morning (`?event=`, F49, RM54); the rest open her profile on the
+// Hearts tab (`/hearts?uma=`), a pair's Read its conversations (`?read=`), side
 // by side the Warehouse; the Dorm's beds are the Dorm for 20's.
 import {
   ACTIVITY_NAMES, bedsFor, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, rungName, SEASON_NAMES, SUMMARY_SECTIONS_V4, summarySections, type FarmPlaceId,
@@ -77,7 +78,7 @@ export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = { birth
  * lines have a conversation to Read (F52); without it (the pack loading) they say the heart alone. */
 export function heartsLines(hearts: readonly HeartLine[], ready: readonly ReadyNow[], nameOf: NameOf, pairs: PairWords | null = null): SummaryLine[] {
   const now = ready.slice(0, READY_LINES).map((r): SummaryLine => ({
-    key: `ready:${r.id}`, to: umaSheet(r.id, 4), text: `● Ready · ${nameOf(r.id)} · ${rungName(r.rung)}${r.place ? ` · ${r.place}` : ''}`,
+    key: `ready:${r.id}`, to: `/?event=${r.id}`, tag: 'Play', text: `● Ready · ${nameOf(r.id)} · ${rungName(r.rung)}${r.place ? ` · ${r.place}` : ''}`,
   }))
   const more = ready.length > READY_LINES ? [{ key: 'ready:more', to: '/hearts?filter=ready', text: `+${ready.length - READY_LINES} more` }] : []
   const stored = hearts.map((line, i) => ({ line, i })).sort((a, b) => HEARTS_ORDER[a.line.kind] - HEARTS_ORDER[b.line.kind] || a.i - b.i)

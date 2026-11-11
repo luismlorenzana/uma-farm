@@ -64,8 +64,8 @@ levels, boards and parties) join with their packets.
 
 - **A rank-up is news:** the morning's **New today** says "Farm Rank 2 · Block B (800g), Dorm level 3 (8 beds), New
   seeds at the shop", tagged Farm Rank, opening the rank's sheet. Two ranks in one night are two lines.
-- **The chip** (decision 8): the account bar's third chip, after the date and the gold: the crest (`farm/rank`, F25; a
-  green "FR" shield until it ships) and the rank. Its name is "Farm Rank 2: 400 points". uma-kit's tier crest stops at
+- **The chip** (decision 8): the account bar's third chip, after the date and the gold: the crest (`farm/rank`, F25's part A,
+  pinned from F49; a green "FR" shield without it) and the rank. Its name is "Farm Rank 2: 400 points". uma-kit's tier crest stops at
   3, so the rank isn't drawn there.
 - **The sheet** (`?sheet=rank`, over any page): the points, a bar to the next rank with "100 more for Farm Rank 3
   (500)", what the next rank opens, and the points so far by source (shipping, Diary entries, milestones, chapters). The
@@ -297,6 +297,15 @@ The lines are data (`story/chapter-1.ts`), one to a tap, original and short, wit
   **Skip** works without it. The opening scene ends on chapter 1's card, its six goals and reward, and **Plant the
   carrots**, which opens the Fields; the closing scene on "Chapter 1 done", its reward and chapter 2's title, **Soon**,
   and **Start the day**.
+- **The scene player grown: the event player** (romance build; live from F56; F49, RM29): her heart events play in
+  `EventPlayer.tsx`, a full-screen sheet over any page (`?event=`, `?ask=`, `?memory=`): the title with **Auto**, **Skip**
+  and **Log**; a place card with the place's uma-art frame, her bust and an emote bubble; her lines typed out in a bubble
+  (a tap finishes, the next goes on, a hold skips); choices with their gains; a play as a sheet in the middle; and the
+  level-up card, or the confession's stage-up screen. Skip stops at each choice and play. Its rules are
+  [hearts.md](hearts.md#heart-events-rm24-rm28-rm29-rm54)'s; the chapter scenes, arrivals and pairs' conversations keep
+  this player.
+- **The Diary's Memories** (romance build; live from F56; F49 decision 12): one row an Uma on the farm with "n of 26",
+  opening her album ([hearts.md](hearts.md#memories-rm28-rm56)), above Conversations. The M4 build's Diary is unchanged.
 - **The Diary tab** (`/diary`, CS55): the chapter's card, its number, title and "4 of 6", each goal with a check when met
   and its count in its own unit ("4 / 9", "620g / 1,000g", "1 / 2 kinds", "Not yet", "Farm Rank 1 / 2"), and the reward;
   then **Farm Rank · 400 points ›** (the rank's sheet), and the milestones paid with their gold and "12 goods shipped so
@@ -346,5 +355,5 @@ farming Hand on day 4 isn't reachable as built (Hand asks 30 tended crops: two h
   promises two chickens "once there's a coop to keep them in".
 - **Save v3 is live:** a new summary line, a new counter key the parse checks, or any other change to its shape is v4,
   with its migration and tests.
-- F25's busts replace the lettered discs (`CastBust`), and its `farm/rank` mark the "FR" shield, once the release is
-  pinned.
+- F25's part B busts replace the lettered discs (`CastBust`) once that release is pinned; its part A marks (the crest,
+  the seasons, the coin, the seed packet, the Dorm and the bin) are pinned from F49.

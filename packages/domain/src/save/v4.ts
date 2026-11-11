@@ -90,6 +90,8 @@ export interface TodayV4 {
   praised: CharacterId[]
   /** Whose event played today (one a day each, RM21). */
   events: CharacterId[]
+  /** Whom you asked again after her confession's "Not yet" today (F49 decision 10): Ask her once a day, never her event. */
+  asked: CharacterId[]
   evenings: Evening[]
   invites: Invite[]
   /** Bond hearts before each pair's first move since the last morning (F52 decision 9), by `pairKey`: the morning lists what
@@ -175,7 +177,7 @@ export function newSaveV4(uid: string, now: string): SaveV4 {
     farmer: { name: '' },
     calendar: { day: 1 },
     gold: START_GOLD,
-    today: { chats: [], gifts: [], praise: [], praised: [], events: [], evenings: [], invites: [], bonds: {} },
+    today: { chats: [], gifts: [], praise: [], praised: [], events: [], asked: [], evenings: [], invites: [], bonds: {} },
     roster: {},
     love: {},
     dorm: { level: 1, home: [], swaps: [] },

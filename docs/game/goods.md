@@ -106,7 +106,7 @@ The 260 goods of `goods/ids.ts` carry their family, grade, raw or refined, price
 seeds", "Carrot seeds (own)"), and icons from uma-art 2.21.0's items atlas, a family's raw row with its refined row
 below. Only crops, forest goods, freshwater fish and the three stations' forms can be had in M4; the rest are priced so a
 migrated Warehouse can sell them. The ranch's goods, the dishes and the Forge's are priced by F27, F8 and F36. Seeds
-have no price: a seed shows its crop's icon with a plain corner tag (F20: brown from the shop, green for own seeds) until F25's seed-packet badge.
+have no price: a seed shows its crop's icon with uma-art's seed-packet badge in its corner (F25's `farm/seed-packet`, pinned from F49), an own seed's with a green dot; without the mark, F20's corner tag (brown from the shop, green for own seeds).
 
 ### The crops' own prices (CS11)
 
@@ -433,7 +433,7 @@ can't break an old morning.
 ## Gold and the account bar (decision 10)
 
 Gold is whole and never negative (`spendGold`, `earnGold`, F17). The account bar shows it beside the date: uma-art's
-`currency/gold` coin once F25 ships it, a plain "g" coin until then, and the number. Its name for VoiceOver is "Gold:
+`currency/gold` coin (F25's part A, pinned from F49; a plain "g" coin without it) and the number. Its name for VoiceOver is "Gold:
 1,240g. The bin", and it opens the bin's sheet.
 
 ## The screens

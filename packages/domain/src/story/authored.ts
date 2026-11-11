@@ -136,9 +136,31 @@ export interface ChatSets { friend: string[]; partner: string[]; spouse: string[
 
 // --- Layer 3: scripted events and pair conversations ------------------------------------------------------------------
 
-export interface ChoiceOption { text: string; tone: Tone; friendship?: number; romance?: number; then?: Step[] }
-/** A short moment the farmer acts out inside an event (cast the line, stir the pot, aim the telescope). */
-export interface Play { game: DateGame | Activity; prompt: string; good?: Step[]; miss?: Step[]; friendship?: number; romance?: number }
+/** The confession's last choice point marks its two answers (F49 decision 10, RM30): Yes opens romance, Not yet keeps her a
+ * close friend. */
+export const ANSWERS = ['yes', 'not-yet'] as const
+export type Answer = typeof ANSWERS[number]
+/** An option's item cost (F49 decision 7, RM27): 1–5 of a good, taken from the Warehouse at any stars, lowest first. */
+export interface OptionGives { good: string; count: number }
+export interface ChoiceOption {
+  text: string
+  tone: Tone
+  friendship?: number
+  romance?: number
+  then?: Step[]
+  /** It costs goods (F49): "· 1 Herb" on the button, greyed "Need 1 Herb" without them. */
+  gives?: OptionGives
+  /** It learns one of her gifts' tastes (F49): "· learns a like". */
+  reveals?: string
+  /** The confession's last choice point only: one `yes` and one `not-yet` (F49 decision 10). */
+  answer?: Answer
+}
+/** A farming play's game, picked by the author (RM26, F49 decision 14): harvest the ripe ones (Pick) or tend (Rhythm). */
+export const FARMING_PLAYS = ['pick', 'rhythm'] as const
+/** A short moment the farmer acts out inside an event (cast the line, stir the pot, aim the telescope). It plays as one of
+ * the five plays (F49, RM26); its own `friendship` and `romance` are ignored, since the grade pays. `good` plays after a
+ * Great or Perfect, `miss` after a Fine. */
+export interface Play { game: DateGame | Activity; prompt: string; good?: Step[]; miss?: Step[]; friendship?: number; romance?: number; as?: typeof FARMING_PLAYS[number] }
 export type Step =
   | { say: string; line: string; emote?: Emote }
   | { choice: ChoiceOption[] }
@@ -148,6 +170,8 @@ export type Step =
   | { wait: number }
   | { place: StoryPlace }
   | { flag: string }
+  /** Its steps play only while the flag is set, `else` otherwise (F49 decision 7): flags change wording only. */
+  | { when: string; then: Step[]; else?: Step[] }
 export interface Route { characterId: string; events: { id: string; steps: Step[] }[] }
 export interface PairConversations { a: string; b: string; levels: { hearts: number; place: StoryPlace; steps: Step[] }[] }
 
@@ -185,8 +209,9 @@ function lineIssues(text: string, where: string, farmer: boolean): Issues {
   return issues
 }
 
-/** A scripted event's or a pair conversation's steps. `speakers` are who may `say`; the farmer speaks only in choices. */
-export function stepIssues(steps: unknown, where: string, speakers: ReadonlySet<string>, depth = 0): Issues {
+/** A scripted event's or a pair conversation's steps. `speakers` are who may `say`; the farmer speaks only in choices.
+ * `isGood` checks an option's `gives` and `reveals` (F49). */
+export function stepIssues(steps: unknown, where: string, speakers: ReadonlySet<string>, depth = 0, isGood: (id: string) => boolean = isGoodId): Issues {
   if (!Array.isArray(steps) || !steps.length) return [`${where}: no steps`]
   const issues: Issues = []
   steps.forEach((step, i) => {
@@ -209,15 +234,21 @@ export function stepIssues(steps: unknown, where: string, speakers: ReadonlySet<
           const v = o[k2]
           if (v !== undefined && (!Number.isInteger(v) || (v as number) < 0 || (v as number) > 50)) issues.push(`${ot}: ${k2} is 0–50 (no answer costs hearts, RS19)`)
         }
-        if (o.then !== undefined) issues.push(...stepIssues(o.then, `${ot} then`, speakers, depth + 1))
+        if (o.then !== undefined) issues.push(...stepIssues(o.then, `${ot} then`, speakers, depth + 1, isGood))
+        const g = o.gives
+        if (g !== undefined && !(isObject(g) && Object.keys(g).every((k) => k === 'good' || k === 'count') && typeof g.good === 'string' && isGood(g.good)
+          && Number.isInteger(g.count) && (g.count as number) >= 1 && (g.count as number) <= 5)) issues.push(`${ot}: gives is { good, count 1–5 }, a good that exists`)
+        if (o.reveals !== undefined && !(typeof o.reveals === 'string' && isGood(o.reveals))) issues.push(`${ot}: reveals names a good`)
+        if (o.answer !== undefined && !oneOf(ANSWERS, o.answer)) issues.push(`${ot}: answer is yes or not-yet`)
       })
       if (!options.some((o) => isObject(o) && ((o.friendship as number) > 0 || (o.romance as number) > 0))) issues.push(`${at}: at least one option gains hearts`)
     } else if ('play' in step) {
       const p = step.play
       if (!isObject(p) || !(oneOf(DATE_GAMES, p.game) || oneOf(ACTIVITIES, p.game)) || !isText(p.prompt, 120)) issues.push(`${at}: a play names its game and a prompt`)
       else {
-        if (p.good !== undefined) issues.push(...stepIssues(p.good, `${at} good`, speakers, depth + 1))
-        if (p.miss !== undefined) issues.push(...stepIssues(p.miss, `${at} miss`, speakers, depth + 1))
+        if (p.as !== undefined && (p.game !== 'farming' || !oneOf(FARMING_PLAYS, p.as))) issues.push(`${at}: as (pick or rhythm) is a farming play’s only`)
+        if (p.good !== undefined) issues.push(...stepIssues(p.good, `${at} good`, speakers, depth + 1, isGood))
+        if (p.miss !== undefined) issues.push(...stepIssues(p.miss, `${at} miss`, speakers, depth + 1, isGood))
       }
     } else if ('narrate' in step) {
       if (!isText(step.narrate, 400)) issues.push(`${at}: empty narration`)
@@ -231,6 +262,10 @@ export function stepIssues(steps: unknown, where: string, speakers: ReadonlySet<
       if (!oneOf(STORY_PLACES, step.place)) issues.push(`${at}: unknown place ${String(step.place)}`)
     } else if ('flag' in step) {
       if (!isText(step.flag, 80)) issues.push(`${at}: empty flag`)
+    } else if ('when' in step) {
+      if (!isText(step.when, 80)) issues.push(`${at}: when names a flag`)
+      issues.push(...stepIssues(step.then, `${at} then`, speakers, depth + 1, isGood))
+      if (step.else !== undefined) issues.push(...stepIssues(step.else, `${at} else`, speakers, depth + 1, isGood))
     } else issues.push(`${at}: unknown step`)
   })
   return issues
@@ -401,9 +436,74 @@ function allSteps(steps: unknown): Record<string, unknown>[] {
   return steps.flatMap((step): Record<string, unknown>[] => {
     if (!isObject(step)) return []
     const inner = 'choice' in step && Array.isArray(step.choice) ? step.choice.flatMap((o) => (isObject(o) ? allSteps(o.then) : []))
-      : 'play' in step && isObject(step.play) ? [...allSteps(step.play.good), ...allSteps(step.play.miss)] : []
+      : 'play' in step && isObject(step.play) ? [...allSteps(step.play.good), ...allSteps(step.play.miss)]
+        : 'when' in step ? [...allSteps(step.then), ...allSteps(step.else)] : []
     return [step, ...inner]
   })
+}
+
+/** How many choice points and plays a scene's paths hold, at least and at most (F49 decision 14): a choice's options, a
+ * play's `good` and `miss`, and a `when`'s two branches are alternatives; steps in a row add up. */
+interface PathCounts { choices: [number, number]; plays: [number, number] }
+const NONE: PathCounts = { choices: [0, 0], plays: [0, 0] }
+const either = (list: PathCounts[]): PathCounts => (list.length === 0 ? NONE : {
+  choices: [Math.min(...list.map((c) => c.choices[0])), Math.max(...list.map((c) => c.choices[1]))],
+  plays: [Math.min(...list.map((c) => c.plays[0])), Math.max(...list.map((c) => c.plays[1]))],
+})
+function pathCounts(steps: unknown): PathCounts {
+  if (!Array.isArray(steps)) return NONE
+  return steps.reduce<PathCounts>((sum, step) => {
+    if (!isObject(step)) return sum
+    let here = NONE
+    if ('choice' in step && Array.isArray(step.choice)) {
+      const branch = either(step.choice.map((o) => pathCounts(isObject(o) ? o.then : undefined)))
+      here = { choices: [branch.choices[0] + 1, branch.choices[1] + 1], plays: branch.plays }
+    } else if ('play' in step && isObject(step.play)) {
+      const branch = either([pathCounts(step.play.good), pathCounts(step.play.miss)])
+      here = { choices: branch.choices, plays: [branch.plays[0] + 1, branch.plays[1] + 1] }
+    } else if ('when' in step) here = either([pathCounts(step.then), pathCounts(step.else)])
+    return { choices: [sum.choices[0] + here.choices[0], sum.choices[1] + here.choices[1]], plays: [sum.plays[0] + here.plays[0], sum.plays[1] + here.plays[1]] }
+  }, NONE)
+}
+
+/** The three big scenes (RM30): up to three plays and three choice points; a heart event has one play and 1–2 choice
+ * points at most (F49 decision 14). */
+export const BIG_EVENTS: readonly string[] = ['confession', 'proposal', 'wedding']
+export const EVENT_LIMITS = { heart: { plays: 1, choices: [1, 2] }, big: { plays: 3, choices: [1, 3] } } as const
+
+/** The confession's answer choice (F49 decision 10): its last top-level choice point, or -1. */
+export function answerAt(steps: readonly Step[]): number {
+  for (let i = steps.length - 1; i >= 0; i--) if ('choice' in steps[i]!) return i
+  return -1
+}
+
+/** One scripted heart event's own rules (F49 decision 14): on every path 1–2 choice points and at most one play (three of
+ * each in the confession, the proposal and the wedding); `answer` only on the confession's last choice point, one Yes and
+ * one Not yet, with no choice point after it; `reveals` one of her gifts. Her arrival keeps its own rule. */
+export function eventIssues(id: string, steps: unknown, bible: UmaBible | null, where = `Event ${id}`): Issues {
+  if (id === ARRIVAL) return arrivalIssues(steps, where)
+  const issues: Issues = []
+  const limits = BIG_EVENTS.includes(id) ? EVENT_LIMITS.big : EVENT_LIMITS.heart
+  const counts = pathCounts(steps)
+  if (counts.choices[0] < limits.choices[0] || counts.choices[1] > limits.choices[1]) issues.push(`${where}: every path has ${limits.choices[0]}–${limits.choices[1]} choice points (it has ${counts.choices[0]}–${counts.choices[1]})`)
+  if (counts.plays[1] > limits.plays) issues.push(`${where}: at most ${limits.plays} play${limits.plays === 1 ? '' : 's'} (it has ${counts.plays[1]})`)
+  const all = allSteps(steps)
+  const options = all.flatMap((s) => ('choice' in s && Array.isArray(s.choice) ? s.choice.filter(isObject) : []))
+  const gifts = bible ? [bible.gifts.loved, ...bible.gifts.liked, ...bible.gifts.disliked] : null
+  for (const o of options) if (typeof o.reveals === 'string' && gifts && !gifts.includes(o.reveals)) issues.push(`${where}: reveals ${o.reveals}, which isn’t one of her gifts`)
+  const answered = all.filter((s) => 'choice' in s && Array.isArray(s.choice) && s.choice.some((o) => isObject(o) && o.answer !== undefined))
+  if (id !== 'confession') {
+    if (answered.length > 0) issues.push(`${where}: only the confession’s last choice point carries an answer`)
+    return issues
+  }
+  const top = Array.isArray(steps) ? (steps as Step[]) : []
+  const at = answerAt(top)
+  const last = at >= 0 ? (top[at] as { choice: ChoiceOption[] }) : null
+  const marks = last && Array.isArray(last.choice) ? last.choice.map((o) => (isObject(o) ? o.answer : undefined)) : []
+  if (!last || marks.filter((a) => a === 'yes').length !== 1 || marks.filter((a) => a === 'not-yet').length !== 1) issues.push(`${where}: its last choice point has one Yes (answer: yes) and one Not yet (answer: not-yet)`)
+  if (answered.some((s) => s !== last)) issues.push(`${where}: only its last choice point carries an answer`)
+  if (last && pathCounts([...last.choice.map((o) => ({ when: 'answer', then: o.then ?? [] })), ...top.slice(at + 1)]).choices[1] > 0) issues.push(`${where}: no choice point after its answer`)
+  return issues
 }
 
 /** Her arrival scene (RM4, F46 decision 10): exactly one choice point and no play, so Skip lands on the choice and every
@@ -441,8 +541,8 @@ export function routeIssues(route: unknown, bible: UmaBible | null, ctx: StoryCo
     if (!isObject(e) || typeof e.id !== 'string') { issues.push('An event without an id'); continue }
     ids.add(e.id)
     if (bible && !bible.route.some((b) => b.id === e.id)) issues.push(`Event ${e.id} isn’t a beat in her bible`)
-    issues.push(...stepIssues(e.steps, `Event ${e.id}`, speakers))
-    if (e.id === ARRIVAL) issues.push(...arrivalIssues(e.steps))
+    issues.push(...stepIssues(e.steps, `Event ${e.id}`, speakers, 0, ctx.isGood ?? isGoodId))
+    issues.push(...eventIssues(e.id, e.steps, bible))
   }
   if (bible && !check.partial) for (const b of bible.route) if (!ids.has(b.id)) issues.push(`Beat ${b.id} has no scripted event`)
   return issues
@@ -472,6 +572,7 @@ export function pairIssues(pair: unknown, ctx: StoryContext, check: PairCheck = 
     if (!isObject(l)) continue
     if (!oneOf(STORY_PLACES, l.place)) issues.push(`Level ${String(l.hearts)}: unknown place`)
     issues.push(...stepIssues(l.steps, `Level ${String(l.hearts)}`, speakers))
+    if (allSteps(l.steps).some((s) => 'choice' in s && Array.isArray(s.choice) && s.choice.some((o) => isObject(o) && o.answer !== undefined))) issues.push(`Level ${String(l.hearts)}: only the confession carries an answer`)
   }
   return issues
 }

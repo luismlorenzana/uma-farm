@@ -38,6 +38,18 @@ from the morning, her profile or the Diary. The rules are `farm/bonds.ts` and ni
 her profile's Ties, `loop/PairPlayer.tsx` and the Diary's `loop/Conversations.tsx`. The spec is RM48–RM50; the calls are
 F52's (D54).
 
+**Built from F49.** **A level is its event**, and each one now plays: from her row's **● Ready**, her profile's **Play ›**
+or the morning's Ready line, a full-screen **event player** over the map shows the place card with her bust and an
+emote bubble, her lines in a bubble, choices with their gain on the button, and one short **play** the farmer and she
+do together (**Cast, Pick, Rhythm, Walk** or **Choose**), graded Fine, Great or Perfect and never failed. It ends on the
+**level-up card**: +50, the choices and the grade into her next bar, the rung's perk, a **Memory** and any unlock. Her
+**confession** ends on Yes (romance opens, with the stage-up screen) or **Not yet**, which costs nothing (**Ask her**,
+once a day). **Memories** keep an album an Uma and replay any event from any choice, paying nothing. The rules are
+`romance/events.ts` (`playEvent`, `askHer`, the replays) and `romance/plays/` (the five plays at both lengths and RM26's
+map); the screens `loop/EventPlayer.tsx`, `loop/PlaySheet.tsx`, `loop/EventCards.tsx`, `loop/Memories.tsx`,
+`loop/MemoriesShelf.tsx` and `loop/event-view.ts`. uma-art 2.26.0 is pinned (the emote bubbles, F25's and F55's marks).
+The spec is RM24–RM30 and RM54–RM56; the calls are F49's (D55).
+
 ```
  a fresh v4 farm (or any v1–v3, wiped)
    │
@@ -170,7 +182,7 @@ settles: every cast Uma not on the roster whose arrival holds joins.
 ## Her arrival scene (RM4, RM13)
 
 A short scripted scene from her route (`arrival`), played full-screen by the scene player: `say` (her bust, or her disc;
-the line with `{farmer}` filled; the emote as a word until F49's marks), `narrate`, `thought` (italic), `place` (the
+the line with `{farmer}` filled; the emote as a word: the emote bubbles load only with the event player), `narrate`, `thought` (italic), `place` (the
 title line: "Stand-in 1 arrives · Gate"), `wait`, `flag` (into `love.flags`, wording only) and its **one choice**.
 **Each option shows its gain on the button before the tap.** **Skip** jumps to the choice, never past it, so every
 arrival pays. A choice's `then` plays after it.
@@ -423,8 +435,9 @@ Menu**: Hearts (uma-kit's heart, **no badge**) replaces Roster. The M4 build kee
 └──────────────────────────────────────────┘
 ```
 
-- **A row an Uma** on the roster, home or away, 72 pt: her face (master data), her name and chips (**● Ready** in her
-  stage's colour, **✉** an invitation from F50, **Away**); her level in words, the **filling heart** and **her ladder's
+- **A row an Uma** on the roster, home or away, 72 pt: her face (master data), her name and chips (**✉** an invitation
+  from F50, **Away**), and at its end **● Ready** in her stage's colour, which plays her event (F49; a tap elsewhere opens
+  her profile); her level in words, the **filling heart** and **her ladder's
   hearts as a bar** (ten for friendship and romance, five as a spouse: the levels played full, the next filling by points
   over its cost, the rest empty) with "points/cost"; then **the most useful line**, "+N banked" (a narrow row cuts it
   first) and today's **✓chat** and **✓gift**. A waiting rung shows all ten hearts and its mark, **◆** her confession or **◇** the proposal and the
@@ -483,7 +496,9 @@ row, a card in the Work view, the morning's lines and the Dorm's list. Each sect
   "+N banked"; and what it waits for: "Ready", "123 to go", "Tomorrow", "Needs a ring", "Swap her home" (a link to the
   Dorm), "Tomorrow: one event a day", "The Fields, when she works there", "With Carrot in the Warehouse", "Bond 3 with
   Stand-in 2", "Opens with chapter 3", "Her story is still being written", "She said “Not yet”", "Comes tonight". Once
-  her route is complete: "Her route is complete". F49 adds **Play ›**.
+  her route is complete: "Her route is complete". **Play ›** (48 pt, in her ladder's colour) when her event is Ready
+  plays it (F49); a setup not met says what to do ("Assign her to the Fishery, then come back."); after a "Not yet",
+  **Ask her ›** (once a day; "You asked her today. Ask again tomorrow." once asked).
 - **Perks:** the reached ones by ladder ("F1–F10 ✓ · R1–R4 ✓"), the next, and **All 25 perks** on a tap (reached ✓, the
   next in bold, the rest greyed). F51 makes each do what it says and adds what it does now.
 - **Gifts:** her loved, liked and disliked goods as learnt (RM15: her loved from Friendship 1, any once given, all from
@@ -494,7 +509,8 @@ row, a card in the Work view, the morning's lines and the Dorm's list. Each sect
   friend first with a **Closest** chip; "Friends · 150/300", the points to the next heart; **Read** (44 pt) while an
   authored conversation of theirs is opened and unread; a tie whose Uma isn't on the farm yet says "Not here yet"
   (F52, [below](#bonds-between-umas-rm48rm50)).
-- **Memories:** her count, "15 of 26" (F49 adds the album and replay); her **ring** once given ("+6% at her line", F53).
+- **Memories:** her count, "15 of 26", and **Album ›**, her album (F49, [below](#memories-rm28-rm56)); her **ring** once
+  given ("+6% at her line", F53).
 - **The actions,** 48 pt in the sheet's foot: **Chat +15** (then her line for the day), **Gift** (the picker with each
   good's points for her today or "?"), and **Praise +20** while she's earned it; what an act pays floats up from her face
   as "+N" (still, with reduced motion) and a note says it ("She likes it. +36"). F50 adds **Evening ›**.
@@ -552,6 +568,277 @@ says **"Opens with chapter n"** while that place waits for its chapter (RM36: a 
 | Cooking | the Kitchen | +10% at the Kitchen | One more dish on the Kitchen’s next play | A ★2+ dish | Chapter 4 |
 | Serving | the Restaurant | +10% at the Restaurant | One more cover on the Restaurant’s next shift | A ★2+ dish | Chapter 6 |
 | Forging | the Forge | +10% at the Forge | 5% back on the Forge’s next tool | A ★2+ Fitting | Chapter 7 |
+<!-- /live -->
+
+## Heart events (RM24, RM28, RM29, RM54)
+
+**Romance build; live from F56** (F49 decisions 1–4 and 8). A level is its event: once her next event is
+[Ready](#ready-rm24) it waits, forever, for you to play it, and **nothing fires on its own**.
+
+- **Three ways in:** her Hearts row's **● Ready**, her profile's **Play ›** (on the Next card), and the morning's Ready line
+  (its **Play** tag), each opening the player over the page: `?event=<characterId>`. A setup not met says what to do on
+  her Next card: "Assign her to the Fishery, then come back.", "Have her tend a block on the Fields, then come back.", "Put
+  Carrot in the Warehouse, then come back.", "Let her and Stand-in 2 work side by side until bond 3."
+- **Nothing is saved while it plays.** Her script loads on demand (the pack's `route(id)`); the player waits for it and
+  for master data, and Auto, Skip and Log work meanwhile. At the end **one rule, `playEvent(save, pack, id, outcome)`,** pays
+  it and moves her on, and the app commits it once, stamped. **An event left halfway pays nothing and stays Ready.**
+- **One of hers a day** (RM21): played, she isn't Ready again until tomorrow, however full her bar.
+
+```
+┌──────────────────────────────────────────┐
+│ The Fields · Friendship 1  Auto Skip Log │  the place and the rung; the controls away from the taps
+│ ╭──────────────────────────────────────╮ │
+│ │  (the Fields' frame)        ♪ (bust) │ │  the place card, ~45%: its frame on the season's
+│ │  on spring's ground                  │ │  ground, her bust, the emote bubble beside it
+│ ╰──────────────────────────────────────╯ │
+│ ┌──────────────────────────────────────┐ │
+│ │ Stand-in 1                           │ │  her bubble: three lines at most, typed out
+│ │ Hello, Robin. Some of these are      │ │
+│ │ ready. Help me pick?                 │ │
+│ └──────────────────────────────────────┘ │
+│ [ Show me which ones.             +30 ]  │  48 pt choices, each with its gain
+│ [ Race you to the end of the row. +10 ]  │
+└──────────────────────────────────────────┘
+```
+
+- **The place card** (decision 3) fills the top: a farm place's map frame (`FARM_PLACES`' uma-art building) on the
+  season's ground, or a romance backdrop's borrowed frame and tint; a `{ place }` step changes it mid-scene, and the title
+  reads "The Fields · Friendship 1", "The Pond at night · Romance 5". Her **bust** is master data's (uma-kit's `UmaBust`; a
+  lettered disc for a stand-in), or whichever Uma is speaking; a town cast member speaks with their disc.
+
+  | Backdrop | Borrowed frame | Tint |
+  |---|---|---|
+  | `pond-night` | `fishery`, under a night sky | `#33456f` |
+  | `overlook` | `observatory` | `#f0c493` |
+  | `orchard-bench` | `orchard` | `#f3dca6` |
+  | `dorm-porch` | `dorm` | `#ebc79f` |
+  | `harbour-wall` | `warehouse` | `#bcd6e2` |
+  | `chapel-bell` | `cleric-chapel` | `#f5e6bd` |
+  | `town` | `exchange` | `#f0d4b2` |
+  | `hilltop-track` | `racecourse` | `#d2e7b7` |
+  | `sea-pier` | `fishery-workbench` | `#9fc6de` |
+
+  A farm place's ground by season: spring `#dcefc7`, summer `#f6e7b0`, autumn `#f2d3b0`, winter `#e3ebf3`.
+- **The emote mark** (decision 4) is uma-art's `emote` bubble (64 px, drawn at 48) beside her bust, until expression art
+  exists (RM62): happy and laughing `music`, shy `sweat`, sad `ellipsis`, angry `anger`, surprised `exclaim`, thinking
+  `question`, tender `heart`. The atlas loads only with the player.
+- **Her bubble:** at most three lines at 16 pt, typed out; **a tap finishes the line, the next goes on, a hold skips**.
+  Narration and thoughts are italic. A `wait` goes on by itself (≤ 5 s).
+- **Skip** (and a hold on the bubble) jumps to the next choice or play, **never past one**. **Auto** goes on after a
+  reading pause (1.2 s and 35 ms a character). **Log** lists the lines so far and your answers.
+- **Which play** (decision 6): its route's `play` step, by [RM26's map](#the-plays-rm25-rm26) (`play.as` picks Pick or
+  Rhythm for farming, Pick by default); with no `play` step anywhere in it, its beat's `together` plays at the scene's
+  end; `help` and `talk` have no play.
+
+## The plays (RM25, RM26)
+
+**Romance build; live from F56** (F49 decision 5). What the farmer and she do together is one short play on a flat sheet
+in the middle of the player. Each shows what to aim for first (her favourites, her beat, the place she loves), takes one
+thumb (timing from `pointerdown`), takes nothing from the Warehouse, and closes on its grade. **Never failed:** a missed
+tap still lands, as a Fine. The rules are pure and tested first (`romance/plays/`, FR22), seeded by `draw(uid, day,
+'play:<id>:<rung>', n)` so the same day plays the same, and **both lengths are built**: an event's and an evening's, so
+F50 only wires evenings.
+
+<!-- live:plays -->
+| Play | You | Graded by | In an event | As an evening (F50) |
+|---|---|---|---|---|
+| Cast | Tap as a closing ring meets the mark; the line lands every time | Timing | 1 cast | 3 casts |
+| Pick | Tap her favourites (starred) among the goods popping up on a 3 × 3 field | Right picks | 1 round of 10 | 3 rounds |
+| Rhythm | Tap on her beat with the activity’s mark (a hoe, a brush, a step, an oar…) | Timing | 8 beats after her 4 | 3 × 8 beats |
+| Walk | Walk with her past today’s farm places; at each fork take a turn | Her favourite turns found | 2 forks | 4 forks |
+| Choose | Pick one good of three for her | Her taste | 1 pick | — |
+<!-- /live -->
+
+<!-- live:play-grades -->
+| Grade | Score | An event adds | An evening pays (F50) |
+|---|---|---|---|
+| Fine | 0–59 | +0 | +60 |
+| Great | 60–89 | +15 | +100 |
+| Perfect | 90–100 | +30 | +150 |
+<!-- /live -->
+
+**What plays as what** (RM26). An activity whose game isn't built yet plays **Rhythm with its mark** (the fallback), the
+same grades; when the real game ships, the event plays it and Memories' replays use the best that exists. The marks are
+words until art draws them; the play's icon is uma-art's `play/*`.
+
+<!-- live:play-map -->
+| `together` (or a `play` step’s `game`) | Plays as |
+|---|---|
+| `work: farming` | Pick |
+| `work: ranch` | Rhythm with the brush |
+| `work: mining` | Rhythm with the pick |
+| `work: fishing` | Cast |
+| `work: foraging` | Pick |
+| `work: cooking` | Rhythm with the pot (the fallback until its game ships) |
+| `work: serving` | Rhythm with the tray (the fallback until its game ships) |
+| `work: forging` | Rhythm with the anvil (the fallback until its game ships) |
+| `work: expeditions` | Rhythm with the pack (the fallback until its game ships) |
+| `work: farming` with `play.as: rhythm` | Rhythm with the hoe |
+| `date: fishing` | Cast |
+| `date: walk` | Walk |
+| `date: boat` | Rhythm with the oar |
+| `date: picnic` | Pick |
+| `date: market` | Pick |
+| `date: stargazing` | Pick |
+| `date: dance` | Rhythm with her step |
+| `date: crafting` | Rhythm with your hands |
+| `date: cooking` | Rhythm with the pot (the fallback until its game ships) |
+| `date: footrace` | Rhythm with the track (the fallback until its game ships) |
+| `gift` | Choose |
+| `help`, `talk` | No play: the grade is the best choice’s |
+<!-- /live -->
+
+**The windows and numbers** (decision 5, the worker's): a careful tap lands Perfect, a casual one usually Great.
+
+<!-- live:play-windows -->
+| A tap this far from the moment | Scores | Grade |
+|---|---|---|
+| ≤ 80 ms | 100 | Perfect |
+| 81–160 ms | 99 → 90 | Perfect |
+| 161–360 ms | 89 → 60 | Great |
+| 361–719 ms | 58 → 0 | Fine |
+| 720 ms or more, or no tap | 0 | Fine |
+
+| Play | Seeded (`play:<id>:<rung>`) | Scored |
+|---|---|---|
+| Cast | The ring meets the mark 1.6 s–2.8 s after each cast starts | The tap’s timing; casts score their mean |
+| Rhythm | A beat every 700–1000 ms; her 4 first, then 8 to tap | Each beat by its nearest tap’s timing (within half a beat), their mean; a tap that matches no beat −5; rounds score their mean |
+| Pick | 10 goods a round, one every 1.1 s, each showing 1 s–1.4 s; 4 starred (her loved and liked, else her line’s first goods) | The starred tapped while showing, their share of 100; a tap on an unstarred one −10; rounds score their mean |
+| Walk | At each fork her place and another open farm place, left or right; 8 s a fork | Her place’s turn full, the other half, none 0: their share of 100 (two forks 50, 75 or 100) |
+| Choose | Three goods, one of her loved or liked; 10 s | Loved 100, liked 75, anything else 40, none 0; the taste is learnt |
+<!-- /live -->
+
+- **Walk's place:** her line's first place when it's open today, else a seeded one of the open farm places her beats use,
+  else the Fields. The path passes today's open farm places (not the Gate or the town edge). Before it she says "I love the
+  Fields."
+- **Pick and Choose's goods:** her loved and liked goods, starred; the others are the rest of their families' raw goods,
+  grades 1–5. An Uma without a bible stars her line's first goods (and Choose finds every good neutral).
+
+## Choices and rewards (RM27, RM28)
+
+**Romance build; live from F56** (F49 decisions 1, 7 and 9). Each event has 1–2 choice points of 2–3 options, and **every
+option shows its gain on the button before the tap**: +30 for the best (the highest authored gain, each one tied at the
+top), +10 for the others. **A romantic option** (`romance` above 0) carries a **♥**. An option may also:
+
+- **cost goods** (`gives: { good, count }`): "+10 · 1 Basil" on the button, taken at any stars, lowest first; greyed with
+  **"Need 1 Basil"** when the Warehouse is short;
+- **reveal a taste** (`reveals`, one of her gifts): "· learns a like" ("a love", "a dislike"), learnt into `love.known`;
+- **set a flag** (a `flag` step in its `then`) that changes later wording only: a `when` step plays its steps while the
+  flag is set (`else` otherwise).
+
+No option scores below zero, removes a later event or changes the route.
+
+<!-- live:event-pay -->
+| An event | Points into her next bar |
+|---|---|
+| Played to its end | +50 |
+| Each choice: the option with the highest authored gain (each one tied at the top) | +30 |
+| Each choice: any other option | +10 |
+| Each play: Fine, Great, Perfect | +0, +15, +30 |
+| No play (help, talk): the best option taken a Perfect, any other a Great | +30 or +15 |
+| A heart event’s limits | 1–2 choice points, at most 1 play |
+| The confession’s, the proposal’s and the wedding’s limits | 1–3 choice points, at most 3 plays |
+<!-- /live -->
+
+**Into her next bar, through `addLove`**, so an anniversary's ×2 applies; then `advance`. The event also gives:
+
+- **its rung's perk** (F48's words; F51 makes it act);
+- **a Memory:** the rung into `memories[id]`, its caption her beat's `beat` line;
+- **its unlock**, if any: an item lands in the Warehouse (★1); a place or a perk line is the card's;
+- any taste a `reveals` or a Choose learnt, and the path's flags into `love.flags`;
+- her id into `today.events`, and `love.last` today.
+
+## The level-up and stage-up cards (RM55)
+
+**Romance build; live from F56** (F49 decisions 9 and 11).
+
+```
+┌──────────────────────────────────────────┐
+│          ♥  Friendship 5  ♥              │  a short sparkle (still with reduced motion)
+│   (bust)  “This bench is ours now.”      │  her last line of the event
+├──────────────────────────────────────────┤
+│ +50 event · +30 choice · +30 Perfect     │
+│   = +110 toward Friendship 6 (+40 banked)│  "(+N banked)": what was past her full bar before
+├──────────────────────────────────────────┤
+│ Perk  ×1.05 rank points                  │
+│ Memory ▢ “The long way round.” saved     │
+│ Unlocked  New place · the orchard bench  │
+├──────────────────────────────────────────┤
+│ Next: Friendship 6 · 400 points          │
+│ 150 / 400                                │
+│ The Fields, with a Carrot in the Wareh…  │  the next beat's hint: its place and setup
+│ Opens: +0.25 growth on a block each night│  the next rung's perk
+│              [ Continue ]                │
+└──────────────────────────────────────────┘
+```
+
+- **The sum:** "+50 event", the choices ("+30 choice", "+40 choices"), each play's grade ("+15 Great"), or with no play the
+  best choice's grade; "= +N toward ‹next rung›", "(×2 anniversary)" on her anniversary, and "(+N banked)".
+- **The stage-up screen** closes the confession's Yes: "Partners", the route's track re-coloured, **Opens now** (the
+  romance ladder; R1's dates and her pet name; her partner chats; R3's stargazing; R6's dance and boat; R9's footrace) and
+  what's banked toward Romance 1, with one **Continue**. F53 adds the proposal's and the wedding's.
+
+## The confession (RM30)
+
+**Romance build; live from F56** (F49 decision 10). Ready the day after Friendship 10, at its own place; **3–5 minutes**,
+with up to three plays and three choice points, its **last choice point** marked: one option `answer: 'yes'`, one
+`answer: 'not-yet'` (the validator's rule). Either way it **pays like any event** and **counts as her event that day**.
+
+- **Yes** moves her to romance (`advance`: Romance 0, her banked points toward R1) and shows the stage-up screen.
+- **Not yet** keeps her a **close friend** (`love.friend`, "Close friend" in words): nothing is lost, her points keep
+  banking toward Romance 1, and her confession isn't Ready again.
+- **Ask her** (her profile's Next card, while she's a close friend) plays the confession again from her line before its
+  answer, without its plays, **once a day** (`today.asked`), **paying nothing** and **not her event** (`love.last` and
+  `today.events` stay). **Yes** there clears `friend` and shows the stage-up; Not yet: "Whenever you're ready. Ask again
+  tomorrow."
+- Deterministic: she always confesses. The author may write her saying "not yet" in an earlier scene's words, at no cost.
+
+## Memories (RM28, RM56)
+
+**Romance build; live from F56** (F49 decision 12). **Her album** (`?album=<characterId>`, from her profile's **Album ›**
+and the Diary's **Memories** shelf): 26 tiles, one a rung with an event, in four filters (**Friend**: F1–F10 and her
+confession; **Romance**: R1–R10; **Wed**: the proposal and the wedding; **Spouse**: S1, S3, S5), each on uma-art's Memory
+frame: played ones with their caption, **the next** marked, the rest locked. **Her arrival ›** replays her arrival scene.
+
+- **A replay** starts from the top or from any choice point picked from its list ("Choice 1 · “Show me which ones.”"),
+  at `?memory=<id>:<rung>[@<n>]`: the scene plays with its plays, **every option is open** (no cost, no gain shown),
+  **nothing is paid, taken or saved**, and it ends "A Memory, replayed. Replays give no points."
+- **The Diary's shelf** lists each Uma on the farm with "n of 26", opening her album.
+
+## The stand-in route (decision 13)
+
+9000001's 26 events are invented and exercise everything: every play, the fallback, a cost, a taste, a flag and its
+`when`, three setups, three unlock kinds and a confession with two plays and Yes and Not yet.
+
+<!-- live:stand-in-route -->
+| Rung | Place | Together | Plays | Setup | Also |
+|---|---|---|---|---|---|
+| F1 | fields | work: farming | Pick |  |  |
+| F2 | fields | work: farming | Rhythm with the hoe |  | unlocks item |
+| F3 | fishery | work: fishing | Cast | works fishing |  |
+| F4 | dorm-porch | work: cooking | Rhythm with the pot (the fallback until its game ships), from its together |  | a cost |
+| F5 | orchard-bench | date: walk | Walk, from its together |  | unlocks place |
+| F6 | fields | gift: carrot | Choose, from its together | carrot held |  |
+| F7 | dorm-porch | talk | No play: the grade is the best choice’s |  | a taste |
+| F8 | forest | help: 9000002 | No play: the grade is the best choice’s |  | a flag |
+| F9 | fields | work: farming | Pick |  | a `when` |
+| F10 | pond-night | date: stargazing | Pick |  |  |
+| Confession | overlook | talk | Walk; Pick |  | Yes / Not yet |
+| R1 | orchard-bench | date: picnic | Pick |  | unlocks perk |
+| R2 | pond-night | date: fishing | Cast |  |  |
+| R3 | overlook | date: stargazing | Pick |  |  |
+| R4 | fishery | help: 9000003 | No play: the grade is the best choice’s | bond 3 with 9000002 |  |
+| R5 | pond-night | date: boat | Rhythm with the oar |  |  |
+| R6 | town | date: dance | Rhythm with her step |  |  |
+| R7 | barn | work: ranch | Rhythm with the brush |  |  |
+| R8 | town | date: crafting | Rhythm with your hands |  |  |
+| R9 | hilltop-track | date: footrace | Rhythm with the track (the fallback until its game ships) |  |  |
+| R10 | orchard-bench | date: walk | Walk |  |  |
+| Proposal | chapel-bell | talk | Walk |  |  |
+| Wedding | chapel-bell | talk | Rhythm with her step |  |  |
+| S1 | fields | work: farming | Pick |  |  |
+| S3 | dorm-porch | gift: golden-carrot | Choose, from its together |  |  |
+| S5 | overlook | date: stargazing | Pick |  |  |
 <!-- /live -->
 
 ## Bonds between Umas (RM48–RM50)
@@ -697,7 +984,7 @@ What a v4 night adds or changes from v3's ([days.md](days.md) lists the rest):
 | 6 | `tickRanks` | Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10; rank-ups where points and the challenge are met | F21, F47 |
 | 6 | `tickBonds` | Bonds: +10 to each pair who worked one place today (the Fields’ tenders together), once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend | F52 |
 | 6 | `payLine` | Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night | F47 |
-| 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, evenings and invitations | F18, F47 |
+| 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations | F18, F47, F49 |
 | 8 | `arriveUmas` | Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50) | F46, F52 |
 | 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse | F47 |
 | 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists side by side’s extras and each pair’s bond hearts reached since the last morning | F18, F52 |
@@ -708,7 +995,7 @@ On v4 `checkGoals`' recruit is the chapter's authored arrival, her ties seeded l
 
 | # | Line | Words | Filled by |
 |---|---|---|---|
-| 1 | **Ready**, read live from `readiness` as the card shows (never stored): up to three, in the tab's order, then "+N more" (the tab filtered on Ready) | "● Ready · Stand-in 1 · Friendship 1 · the Fields", "+2 more" | F48 |
+| 1 | **Ready**, read live from `readiness` as the card shows (never stored): up to three, in the tab's order, then "+N more" (the tab filtered on Ready); a tap plays her event over the morning (`/?event=`, F49) | "● Ready · Stand-in 1 · Friendship 1 · the Fields" with a **Play** tag, "+2 more" | F48, F49 |
 | 2 | The invitation, with **Yes, tonight / Another day** | — | F50 |
 | 3 | The house's morning: breakfast, +30s, items, night chores | — | F54 |
 | 4 | `{ kind: 'birthday', id, when }` | "★ Stand-in 1's birthday today", "★ Tomorrow: Stand-in 1's birthday" | F47 |
@@ -729,8 +1016,8 @@ good on the day), side by side twice or with no items, a bond line twice for a p
 
 ## For later packets
 
-- **F49** heart events and Memories (`memories`): the Next card's **Play ›**, her row's ● Ready and the morning's Ready
-  line start one, and her confession's **Ask her**; the level-up card names F48's perk words. **F50** the evening and
+- **F49 is built** ([heart events](#heart-events-rm24-rm28-rm29-rm54)); its seams for the packets after it are
+  [below](#for-f50f56-the-event-players-seams). **F50** the evening and
   invitations (`today.evenings`, `today.invites`): **Evening ›**, the header's ○/● and the row's ✉ (`HeartRow.invited`
   reads `today.invites` already). **F51** the perks' effects over `romance/perks.ts`: R4's ×1.5 is built (`bondFactor`),
   F7's "her closest friend's loved gift" reads `closestFriend`, and in her element and the romance bonus extend
@@ -742,3 +1029,23 @@ good on the day), side by side twice or with no items, a bond line twice for a p
 - **A new §4 line:** add its kind to `HeartLine` (`night/summary.ts`) with its parse, give it RM57's place in
   `HEARTS_ORDER` and its words in `heartLine` (`loop/summary-words.ts`).
 - Save v4 grows in place until F56; any change after F56 is v5.
+
+### For F50–F56: the event player's seams
+
+- **Rules** (`@farm/domain`): `playEvent(save, pack, id, { event: { id, steps }, picks, plays })` → `{ save, card }`
+  (`EventCard`: `event`, `choices`, `plays`, `chosen`, `sum`, `paid`, `carried`, `learnt`, `taken`, `perk`, `memory`,
+  `unlock`, `answer`, `stage`, `line`, `next`); `askHer(save, id, answer)`, `canAsk`, `askSteps`; `walkScene(steps, picks,
+  { flags, plays })` / `sceneSteps` (`when`, plays' `good` and `miss`); `extraPlay`, `pathPlays`, `optionViews`,
+  `takeLowest`, `choicePointsOf`, `replaySteps`, `beatOf`, `EVENT_POINTS`. The plays: `castPlan`/`castScore`,
+  `rhythmPlan`/`rhythmScore`, `pickGoods`/`pickPlan`/`pickScore`, `walkFavourite`/`walkPlacesOpen`/`walkPlan`/`walkScore`,
+  `choosePlan`/`chooseScore`, each with an `event` and an `evening` length; `gradeOf`, `EVENT_GRADE_POINTS`,
+  `EVENING_GRADE_POINTS`, `timingScore`, `playSeed(uid, day, id, rung, k)`; `PLAY_MAP`, `playOf`, `togetherPlay`.
+- **Screens** (`apps/web/src/loop/`): `PlaySheet` with `playSpec(save, pack, id, as, 'evening', seed)` plays any of the
+  five at an evening's length (**F50**); `LevelUpCard` (any `EventCard`, so **F54**'s night levels can show one) and
+  `StageUpScreen` (`EventCards.tsx`; **F53** adds the proposal's and the wedding's stages); the player's
+  `?event=`, `?ask=` and `?memory=` (`memoryParam`) over any page; `event-view.ts`'s `placeCard`, `eventTitle`,
+  `optionWords`, `sumWords`, `stageOpens`, `setupAdvice`, `albumTiles`.
+- **F53:** `playEvent` plays the proposal and the wedding as any event until F53 adds the ring's use, the wedding's place,
+  dish and vow, and their stage-up screens; their limits (three plays, 1–3 choice points) are the validator's.
+- **F51:** the signature dish's recipe (F4) is written where `playEvent` gives the rung's perk.
+- Save v4 grows `today.asked` (Ask her once a day), cleared at step 7.

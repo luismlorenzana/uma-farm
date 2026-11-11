@@ -83,7 +83,7 @@ describe('the rows (decision 4)', () => {
     const tomorrow = heartRows(save, ALL, nameOf).find((r) => r.id === ONE)!
     expect([segments(save.love[ONE]!), tomorrow.heart.mark, tomorrow.heart.markWords, tomorrow.note]).toEqual(['■■■■■■■■■■', '◆', 'Tomorrow', 'Her confession · Ready tomorrow'])
     const next = heartRows({ ...save, calendar: { day: 6 } }, ALL, nameOf).find((r) => r.id === ONE)!
-    expect([next.heart.mark, next.heart.markWords, next.state.ready, next.note]).toEqual(['◆', 'Ready', true, 'Ready · Her confession · the Fields'])
+    expect([next.heart.mark, next.heart.markWords, next.state.ready, next.note]).toEqual(['◆', 'Ready', true, 'Ready · Her confession · the Overlook'])
     const proposal = heartBar({ stage: 'proposal', level: 10, points: 0 }, { ready: false, waits: { kind: 'ring' } })
     expect([proposal.mark, proposal.markWords, proposal.ladder]).toEqual(['◇', null, 'romance'])
   })
@@ -191,13 +191,13 @@ describe('her profile (decision 6)', () => {
 describe('the morning’s Hearts section (decisions 1 and 9; RM57)', () => {
   const summary = (hearts: MorningSummaryV4['hearts']): MorningSummaryV4 => ({ day: 5, bin: [], work: [], ranks: [], hearts, news: [], nudges: [] })
 
-  it('orders Ready, then birthdays and anniversaries, then arrivals, each opening her profile', () => {
+  it('orders Ready (playing her event, F49), then birthdays and anniversaries, then arrivals, each opening her profile', () => {
     const lines = summaryParts(summary([
       { kind: 'arrived', id: THREE, home: false }, { kind: 'birthday', id: ONE, when: 'today' }, { kind: 'anniversary', id: TWO, when: 'today', item: 'carrot' },
       { kind: 'birthday', id: TWO, when: 'tomorrow' },
     ]), nameOf, [{ id: ONE, rung: 'r5', place: 'the Fields' }]).find((p) => p.section === 'hearts')!.lines
     expect(lines.map((l) => [l.text, l.to])).toEqual([
-      ['● Ready · Stand-in 1 · Romance 5 · the Fields', `/hearts?uma=${ONE}`],
+      ['● Ready · Stand-in 1 · Romance 5 · the Fields', `/?event=${ONE}`],
       ['★ Stand-in 1’s birthday today', `/hearts?uma=${ONE}`],
       ['♥ Stand-in 2’s anniversary · ★5 Carrot left for you', `/hearts?uma=${TWO}`],
       ['★ Tomorrow: Stand-in 2’s birthday', `/hearts?uma=${TWO}`],

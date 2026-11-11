@@ -55,6 +55,15 @@ import { OPENING_SCENE_V4 } from '../story/opening-v4'
 import { favouriteOf, storyPackFrom } from '../story/pack'
 import { BOND_HEARTS, BOND_POINTS, bondHearts, CLOSEST_BOND, SHARED_LINE, SIDE_BY_SIDE, SIDE_BY_SIDE_HEARTS, TIE_SEEDS } from '../farm/bonds'
 import { STAND_IN_FILES } from '../story/stand-in'
+import { CAST_COUNT, CAST_MEET } from '../romance/plays/cast'
+import { CHOOSE_MS, CHOOSE_SCORES } from '../romance/plays/choose'
+import { EVENING_GRADE_POINTS, EVENT_GRADE_POINTS, GRADE_NAMES, GRADES, GREAT_AT, PERFECT_AT, PLAY_NAMES, TIMING_WINDOWS, timingScore, type Grade } from '../romance/plays/grade'
+import { PICK_CELLS, PICK_POPS, PICK_ROUNDS, PICK_STARS, PICK_TIMES, PICK_WRONG } from '../romance/plays/pick'
+import { RHYTHM_BEATS, RHYTHM_EXTRA, RHYTHM_LEAD, RHYTHM_MARK_WORDS, RHYTHM_PERIOD, RHYTHM_ROUNDS } from '../romance/plays/rhythm'
+import { WALK_FORK_MS, WALK_FORKS } from '../romance/plays/walk'
+import { PLAY_MAP, playOf, togetherPlay, type PlayAs } from '../romance/plays/which'
+import { EVENT_POINTS } from '../romance/events'
+import { BIG_EVENTS, EVENT_LIMITS, type Route, type Together, type UmaBible } from '../story/authored'
 
 type Cell = string | number
 /** A Markdown table; pipes in cells are escaped. */
@@ -719,12 +728,86 @@ function sideBySide(): string {
   ])
 }
 
+// --- F49: heart events and the five plays (romance spec RM25–RM28) -------------------------------------------------------
+const s1 = (ms: number) => `${Math.round(ms / 100) / 10} s`
+/** RM25: the five plays, both lengths. */
+function playsBlock(): string {
+  return table(['Play', 'You', 'Graded by', 'In an event', 'As an evening (F50)'], [
+    [PLAY_NAMES.cast, 'Tap as a closing ring meets the mark; the line lands every time', 'Timing', `${CAST_COUNT.event} cast`, `${CAST_COUNT.evening} casts`],
+    [PLAY_NAMES.pick, `Tap her favourites (starred) among the goods popping up on a ${Math.sqrt(PICK_CELLS)} × ${Math.sqrt(PICK_CELLS)} field`, 'Right picks', `${PICK_ROUNDS.event} round of ${PICK_POPS}`, `${PICK_ROUNDS.evening} rounds`],
+    [PLAY_NAMES.rhythm, 'Tap on her beat with the activity’s mark (a hoe, a brush, a step, an oar…)', 'Timing', `${RHYTHM_BEATS} beats after her ${RHYTHM_LEAD}`, `${RHYTHM_ROUNDS.evening} × ${RHYTHM_BEATS} beats`],
+    [PLAY_NAMES.walk, 'Walk with her past today’s farm places; at each fork take a turn', 'Her favourite turns found', `${WALK_FORKS.event} forks`, `${WALK_FORKS.evening} forks`],
+    [PLAY_NAMES.choose, 'Pick one good of three for her', 'Her taste', '1 pick', '—'],
+  ])
+}
+const playWords = (p: PlayAs | null): string => (p === null ? 'No play: the grade is the best choice’s' : `${PLAY_NAMES[p.kind]}${p.mark ? ` with ${RHYTHM_MARK_WORDS[p.mark]}` : ''}${p.fallback ? ' (the fallback until its game ships)' : ''}`)
+/** RM26: what plays as what. */
+function playMap(): string {
+  const work = ACTIVITIES.map((a) => [`\`work: ${a}\``, playWords(PLAY_MAP[a])])
+  const dates = (['fishing', 'walk', 'boat', 'picnic', 'market', 'stargazing', 'dance', 'crafting', 'cooking', 'footrace'] as const).map((g) => [`\`date: ${g}\``, playWords(PLAY_MAP[g])])
+  return table(['`together` (or a `play` step’s `game`)', 'Plays as'], [
+    ...work, ['`work: farming` with `play.as: rhythm`', playWords(playOf({ game: 'farming', as: 'rhythm' }))], ...dates,
+    ['`gift`', playWords(togetherPlay({ kind: 'gift', good: 'carrot' }))], ['`help`, `talk`', playWords(null)],
+  ])
+}
+/** RM25: the grades and what each pays. */
+function playGrades(): string {
+  const band = (g: Grade) => (g === 'fine' ? `0–${GREAT_AT - 1}` : g === 'great' ? `${GREAT_AT}–${PERFECT_AT - 1}` : `${PERFECT_AT}–100`)
+  return table(['Grade', 'Score', 'An event adds', 'An evening pays (F50)'], GRADES.map((g) => [GRADE_NAMES[g], band(g), `+${EVENT_GRADE_POINTS[g]}`, `+${EVENING_GRADE_POINTS[g]}`]))
+}
+/** Decision 5: each play's timing windows and numbers. */
+function playWindows(): string {
+  const { exact, perfect, great, miss } = TIMING_WINDOWS
+  const timing = table(['A tap this far from the moment', 'Scores', 'Grade'], [
+    [`≤ ${exact} ms`, timingScore(exact), 'Perfect'],
+    [`${exact + 1}–${perfect} ms`, `${timingScore(exact + 1)} → ${timingScore(perfect)}`, 'Perfect'],
+    [`${perfect + 1}–${great} ms`, `${timingScore(perfect + 1)} → ${timingScore(great)}`, 'Great'],
+    [`${great + 1}–${miss - 1} ms`, `${timingScore(great + 1)} → ${timingScore(miss - 1)}`, 'Fine'],
+    [`${miss} ms or more, or no tap`, 0, 'Fine'],
+  ])
+  const plays = table(['Play', 'Seeded (`play:<id>:<rung>`)', 'Scored'], [
+    [PLAY_NAMES.cast, `The ring meets the mark ${s1(CAST_MEET.from)}–${s1(CAST_MEET.from + CAST_MEET.spread)} after each cast starts`, 'The tap’s timing; casts score their mean'],
+    [PLAY_NAMES.rhythm, `A beat every ${RHYTHM_PERIOD.from}–${RHYTHM_PERIOD.from + RHYTHM_PERIOD.spread} ms; her ${RHYTHM_LEAD} first, then ${RHYTHM_BEATS} to tap`, `Each beat by its nearest tap’s timing (within half a beat), their mean; a tap that matches no beat −${RHYTHM_EXTRA}; rounds score their mean`],
+    [PLAY_NAMES.pick, `${PICK_POPS} goods a round, one every ${s1(PICK_TIMES.every)}, each showing ${s1(PICK_TIMES.show)}–${s1(PICK_TIMES.show + PICK_TIMES.spread)}; ${PICK_STARS} starred (her loved and liked, else her line’s first goods)`, `The starred tapped while showing, their share of 100; a tap on an unstarred one −${PICK_WRONG}; rounds score their mean`],
+    [PLAY_NAMES.walk, `At each fork her place and another open farm place, left or right; ${s1(WALK_FORK_MS)} a fork`, 'Her place’s turn full, the other half, none 0: their share of 100 (two forks 50, 75 or 100)'],
+    [PLAY_NAMES.choose, `Three goods, one of her loved or liked; ${s1(CHOOSE_MS)}`, `Loved ${CHOOSE_SCORES.loved}, liked ${CHOOSE_SCORES.liked}, anything else ${CHOOSE_SCORES.neutral}, none 0; the taste is learnt`],
+  ])
+  return `${timing}\n\n${plays}`
+}
+/** RM27, RM28: what an event pays. */
+function eventPay(): string {
+  return table(['An event', 'Points into her next bar'], [
+    ['Played to its end', `+${EVENT_POINTS}`],
+    ['Each choice: the option with the highest authored gain (each one tied at the top)', `+${CHOICE_BEST}`],
+    ['Each choice: any other option', `+${CHOICE_OTHER}`],
+    ['Each play: Fine, Great, Perfect', GRADES.map((g) => `+${EVENT_GRADE_POINTS[g]}`).join(', ')],
+    ['No play (help, talk): the best option taken a Perfect, any other a Great', `+${EVENT_GRADE_POINTS.perfect} or +${EVENT_GRADE_POINTS.great}`],
+    ['A heart event’s limits', `${EVENT_LIMITS.heart.choices[0]}–${EVENT_LIMITS.heart.choices[1]} choice points, at most ${EVENT_LIMITS.heart.plays} play`],
+    [`The ${BIG_EVENTS.slice(0, -1).join('’s, the ')}’s and the ${BIG_EVENTS.at(-1)}’s limits`, `${EVENT_LIMITS.big.choices[0]}–${EVENT_LIMITS.big.choices[1]} choice points, at most ${EVENT_LIMITS.big.plays} plays`],
+  ])
+}
+const togetherWords = (t: Together): string => (t.kind === 'work' ? `work: ${t.activity}` : t.kind === 'date' ? `date: ${t.game}` : t.kind === 'gift' ? `gift: ${t.good}` : t.kind === 'help' ? `help: ${t.with}` : 'talk')
+/** Decision 13: the stand-in's route, every play and option kind across its 26 events. */
+function standInRoute(): string {
+  const bible = STAND_IN_FILES.umas['9000001'] as UmaBible
+  const route = STAND_IN_FILES.routes['9000001'] as Route
+  return table(['Rung', 'Place', 'Together', 'Plays', 'Setup', 'Also'], bible.route.filter((b) => b.id !== 'arrival').map((b) => {
+    const steps = JSON.stringify(route.events.find((e) => e.id === b.id)?.steps ?? [])
+    const plays = (route.events.find((e) => e.id === b.id)?.steps ?? []).filter((s): s is Extract<typeof s, { play: unknown }> => 'play' in s).map((s) => playWords(playOf(s.play)))
+    const also = [steps.includes('"gives"') ? 'a cost' : '', steps.includes('"reveals"') ? 'a taste' : '', steps.includes('"flag"') ? 'a flag' : '', steps.includes('"when"') ? 'a `when`' : '',
+      steps.includes('"answer"') ? 'Yes / Not yet' : '', b.unlock ? `unlocks ${b.unlock.kind}` : ''].filter(Boolean).join(', ')
+    const setup = b.trigger.kind === 'hearts' ? '' : b.trigger.kind === 'working' ? `works ${b.trigger.activity}` : b.trigger.kind === 'item' ? `${b.trigger.good} held` : b.trigger.kind === 'bond' ? `bond ${b.trigger.level} with ${b.trigger.with}` : `chapter ${b.trigger.chapter}`
+    return [b.id.length <= 3 ? b.id.toUpperCase() : cap(b.id), b.place, togetherWords(b.together), plays.length > 0 ? plays.join('; ') : `${playWords(togetherPlay(b.together))}${togetherPlay(b.together) ? ', from its together' : ''}`, setup, also]
+  }))
+}
+
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
     'dorm-v4': dormV4, arrivals, 'arrival-pay': arrivalPay, 'opening-v4': openingV4, 'night-v4': nightV4, 'stand-in': standIn, 'farmer-name': farmerName,
     'route-costs': routeCosts, 'love-points': lovePoints, 'gift-stars': giftStarsBlock, 'birthday-map': birthdayMap, 'ready-rules': readyRules,
     'ready-waits': readyWaits, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor, 'perk-words': perkWordsBlock,
     'bond-points': bondPoints, 'bond-hearts': bondHeartsBlock, 'tie-seeds': tieSeeds, 'side-by-side': sideBySide,
+    plays: playsBlock, 'play-map': playMap, 'play-grades': playGrades, 'play-windows': playWindows, 'event-pay': eventPay, 'stand-in-route': standInRoute,
     calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
     crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,

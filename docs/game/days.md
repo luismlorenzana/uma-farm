@@ -41,9 +41,9 @@ they're dates only: the festival ground shows "Soon" (they come in M6, F32). The
 | Winter | 37–48 | Animal Show, Winter 10 (day 46); Harvest Cup, Winter 12 (day 48) |
 <!-- /live -->
 
-- **The date chip** sits in the account bar: the season's mark and the day of the season ("● 3"). uma-art's season marks
-  (`season/spring` … `season/winter`) come with F25; until then the chip draws a dot in the season's colour (Spring
-  green, Summer gold, Autumn orange, Winter blue). Its name for VoiceOver is the whole date and the next festival:
+- **The date chip** sits in the account bar: the season's mark and the day of the season. The mark is uma-art's
+  `season/spring` … `season/winter` (F25's part A, uma-art 2.25.0, pinned from F49); without it the chip draws a dot in the
+  season's colour (Spring green, Summer gold, Autumn orange, Winter blue). Its name for VoiceOver is the whole date and the next festival:
   "Calendar: Spring 3, year 1 · Flower Show in 7 days".
 - **The calendar** (`?sheet=calendar`, from the chip): the day and the year, the four seasons with this one marked, the
   season's 12 days (past ones faded, today in the accent, the festival day ringed with a trophy), the season's festivals,
@@ -149,7 +149,7 @@ What v4 adds or changes:
 | 6 | `tickRanks` | Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10; rank-ups where points and the challenge are met | F21, F47 |
 | 6 | `tickBonds` | Bonds: +10 to each pair who worked one place today (the Fields’ tenders together), once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend | F52 |
 | 6 | `payLine` | Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night | F47 |
-| 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, evenings and invitations | F18, F47 |
+| 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations | F18, F47, F49 |
 | 8 | `arriveUmas` | Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50) | F46, F52 |
 | 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse | F47 |
 | 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists side by side’s extras and each pair’s bond hearts reached since the last morning | F18, F52 |
@@ -256,9 +256,9 @@ stay put.
 | Quarry | `quarry` | Chapter 3 |
 | Cutter | `den-workbench` | Chapter 3 |
 | Forge | `forge` | Chapter 7 |
-| Shipping bin | `workbench` (borrowed) | Day 1 |
+| Shipping bin | `shipping-bin` | Day 1 |
 | Warehouse | `warehouse` | Day 1 |
-| Dorm | `pantry` (borrowed) | Day 1 |
+| Dorm | `dorm` | Day 1 |
 | Requests board | `card-library` (borrowed) | M6 |
 | Gate | `scenario-gate` | Day 1 |
 | Shop | `exchange` | Day 1 |
@@ -279,8 +279,8 @@ stay put.
   ([gathering.md](gathering.md#the-screens-decisions-5-and-8)). F23 opened the Dorm (`/dorm`) and the Gate (its quick
   look, `/?peek=gate`, with the visitor's face as its pip; [roster.md](roster.md#the-screens)). Every other place keeps
   its plain quick look.
-- **Borrowed buildings:** the Coop, the bin, the Dorm, the board and the expedition post stand on unused uma-art buildings
-  until their own ship (F25, F29, F38).
+- **Borrowed buildings:** the Coop, the board and the expedition post stand on unused uma-art buildings until their own
+  ship (F29, F38). The bin and the Dorm draw F25's own `shipping-bin` and `dorm` (uma-art 2.25.0, pinned from F49).
 - **Pips** hang over a work place's building in a half arch (FR7): each working Uma's face ringed by her job's progress,
   or a free dot. A locked place with no one working shows none.
 - **Ready badges and Collect all** stay (FR7): a place with finished work says Ready, and the pill collects every

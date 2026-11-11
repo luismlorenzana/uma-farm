@@ -63,19 +63,22 @@
           "place": "fields"
         },
         {
+          "narrate": "Morning light on Block A. She already has her sleeves rolled up."
+        },
+        {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
+          "line": "Hello, {farmer}. Some of these are ready. Help me pick?",
           "emote": "happy"
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "Show me which ones.",
               "tone": "warm",
               "friendship": 20
             },
             {
-              "text": "You again?",
+              "text": "Race you to the end of the row.",
               "tone": "playful",
               "friendship": 10
             }
@@ -84,19 +87,28 @@
         {
           "play": {
             "game": "farming",
-            "prompt": "Pull the weed",
+            "prompt": "Pick the ripe ones",
             "good": [
               {
-                "narrate": "It comes up clean."
+                "say": "9000001",
+                "line": "You have a good eye for it.",
+                "emote": "happy"
               }
             ],
             "miss": [
               {
-                "narrate": "It snaps."
+                "say": "9000001",
+                "line": "That one was still green. Next time.",
+                "emote": "laughing"
               }
             ],
-            "friendship": 10
+            "as": "pick"
           }
+        },
+        {
+          "say": "9000001",
+          "line": "Same time tomorrow?",
+          "emote": "happy"
         }
       ]
     },
@@ -107,40 +119,38 @@
           "place": "fields"
         },
         {
+          "narrate": "Dawn. The soil is cold and the rows are long."
+        },
+        {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "Keep time with me. Hoe, step, hoe, step.",
+          "emote": "thinking"
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Hoe on her beat",
+            "as": "rhythm"
+          }
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
-              "tone": "warm",
+              "text": "Your rows are perfectly straight.",
+              "tone": "honest",
               "friendship": 20
             },
             {
-              "text": "You again?",
+              "text": "My back has opinions.",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "Here. The first golden one this season. Keep it.",
+          "emote": "tender"
         }
       ]
     },
@@ -148,43 +158,54 @@
       "id": "f3",
       "steps": [
         {
-          "place": "fields"
+          "place": "fishery"
+        },
+        {
+          "narrate": "She has borrowed a rod and holds it like a hoe."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
-        },
-        {
-          "choice": [
-            {
-              "text": "Hello yourself.",
-              "tone": "warm",
-              "friendship": 20
-            },
-            {
-              "text": "You again?",
-              "tone": "playful",
-              "friendship": 10
-            }
-          ]
+          "line": "I grow things. I do not catch things. Teach me?",
+          "emote": "shy"
         },
         {
           "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
+            "game": "fishing",
+            "prompt": "Cast together",
             "good": [
               {
-                "narrate": "It comes up clean."
+                "say": "9000001",
+                "line": "It bit! It actually bit!",
+                "emote": "surprised"
               }
             ],
             "miss": [
               {
-                "narrate": "It snaps."
+                "say": "9000001",
+                "line": "A little one! It still counts.",
+                "emote": "laughing"
               }
-            ],
-            "friendship": 10
+            ]
           }
+        },
+        {
+          "choice": [
+            {
+              "text": "Not bad for a farmer.",
+              "tone": "playful",
+              "friendship": 10
+            },
+            {
+              "text": "You learn fast.",
+              "tone": "warm",
+              "friendship": 20
+            }
+          ]
+        },
+        {
+          "say": "9000001",
+          "line": "Fish for dinner, then. My treat.",
+          "emote": "happy"
         }
       ]
     },
@@ -192,43 +213,43 @@
       "id": "f4",
       "steps": [
         {
-          "place": "fields"
+          "place": "dorm-porch"
+        },
+        {
+          "narrate": "A pot of soup on a camp stove, and a wooden spoon in her hand."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
+          "line": "My grandmother’s soup. It needs a stir on every beat.",
           "emote": "happy"
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "Add some basil?",
               "tone": "warm",
+              "friendship": 10,
+              "gives": {
+                "good": "basil",
+                "count": 1
+              }
+            },
+            {
+              "text": "It smells perfect already.",
+              "tone": "honest",
               "friendship": 20
             },
             {
-              "text": "You again?",
+              "text": "Can I taste it first?",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "Stir with me, then. Slow and steady.",
+          "emote": "happy"
         }
       ]
     },
@@ -236,43 +257,34 @@
       "id": "f5",
       "steps": [
         {
-          "place": "fields"
+          "place": "orchard-bench"
+        },
+        {
+          "narrate": "The orchard bench, after work. Neither of you heads back."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
+          "line": "Walk the long way with me? I know every turn on this farm.",
           "emote": "happy"
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "Lead the way.",
               "tone": "warm",
               "friendship": 20
             },
             {
-              "text": "You again?",
+              "text": "Only if you know a shortcut back.",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "This bench is ours now. I decided.",
+          "emote": "laughing"
         }
       ]
     },
@@ -283,40 +295,31 @@
           "place": "fields"
         },
         {
+          "narrate": "A basket at her feet and a market day tomorrow."
+        },
+        {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "I’m picking a gift for someone. Help me choose?",
+          "emote": "thinking"
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
-              "tone": "warm",
+              "text": "Pick what you would want.",
+              "tone": "honest",
               "friendship": 20
             },
             {
-              "text": "You again?",
+              "text": "Is it for me?",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "Good. That’s exactly the one.",
+          "emote": "happy"
         }
       ]
     },
@@ -324,43 +327,40 @@
       "id": "f7",
       "steps": [
         {
-          "place": "fields"
+          "place": "dorm-porch"
+        },
+        {
+          "narrate": "Evening. Two mugs of tea on the porch steps."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
+          "line": "Ask me anything. I’m in a talking mood.",
           "emote": "happy"
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "What crop do you like best?",
               "tone": "warm",
+              "friendship": 20,
+              "reveals": "potato"
+            },
+            {
+              "text": "What brought you here?",
+              "tone": "honest",
               "friendship": 20
             },
             {
-              "text": "You again?",
+              "text": "Do you snore?",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "You’re easy to talk to, {farmer}.",
+          "emote": "tender"
         }
       ]
     },
@@ -368,43 +368,47 @@
       "id": "f8",
       "steps": [
         {
-          "place": "fields"
+          "place": "forest"
+        },
+        {
+          "narrate": "A blanket under the pines, and her old friend with a basket of mushrooms."
+        },
+        {
+          "say": "9000002",
+          "line": "She never stops talking about this farm, you know.",
+          "emote": "laughing"
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "I do not! Well. Sometimes.",
+          "emote": "shy"
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "Share my lunch with you both.",
               "tone": "warm",
-              "friendship": 20
+              "friendship": 20,
+              "then": [
+                {
+                  "flag": "shared-lunch"
+                },
+                {
+                  "narrate": "Three sandwiches split three ways."
+                }
+              ]
             },
             {
-              "text": "You again?",
+              "text": "Tell me something embarrassing.",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "Let’s do this again soon.",
+          "emote": "happy"
         }
       ]
     },
@@ -415,40 +419,50 @@
           "place": "fields"
         },
         {
-          "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "narrate": "Harvest day on Block A."
         },
         {
-          "choice": [
+          "when": "shared-lunch",
+          "then": [
             {
-              "text": "Hello yourself.",
-              "tone": "warm",
-              "friendship": 20
-            },
+              "say": "9000001",
+              "line": "Lunch in the woods again after this? My friend asked.",
+              "emote": "happy"
+            }
+          ],
+          "else": [
             {
-              "text": "You again?",
-              "tone": "playful",
-              "friendship": 10
+              "say": "9000001",
+              "line": "Busy day. Let’s get it done together.",
+              "emote": "thinking"
             }
           ]
         },
         {
           "play": {
             "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
+            "prompt": "Pick the ripe ones",
+            "as": "pick"
           }
+        },
+        {
+          "choice": [
+            {
+              "text": "We make a good team.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "Last one to the bin carries it.",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "say": "9000001",
+          "line": "The best harvest yet.",
+          "emote": "happy"
         }
       ]
     },
@@ -456,43 +470,40 @@
       "id": "f10",
       "steps": [
         {
-          "place": "fields"
+          "place": "pond-night"
+        },
+        {
+          "narrate": "The pond is still enough to hold the stars."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "Count the ripe ones with me. The stars, I mean.",
+          "emote": "tender"
+        },
+        {
+          "play": {
+            "game": "stargazing",
+            "prompt": "Pick the brightest stars"
+          }
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "I’d rather count with you.",
               "tone": "warm",
               "friendship": 20
             },
             {
-              "text": "You again?",
+              "text": "That one looks like a carrot.",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "I’m glad I came to this farm.",
+          "emote": "tender"
         }
       ]
     },
@@ -500,43 +511,77 @@
       "id": "confession",
       "steps": [
         {
-          "place": "fields"
+          "place": "overlook"
+        },
+        {
+          "narrate": "Late afternoon. She asked you to walk up to the overlook."
+        },
+        {
+          "play": {
+            "game": "walk",
+            "prompt": "Walk her up the hill"
+          }
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "I wanted to show you the whole farm from up here.",
+          "emote": "shy"
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "It looks different with you here.",
               "tone": "warm",
-              "friendship": 20
+              "friendship": 10,
+              "romance": 20
             },
             {
-              "text": "You again?",
-              "tone": "playful",
-              "friendship": 10
+              "text": "It looks smaller than it feels.",
+              "tone": "honest",
+              "friendship": 20
             }
           ]
         },
         {
           "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
+            "game": "stargazing",
+            "prompt": "Find the first star"
           }
+        },
+        {
+          "say": "9000001",
+          "line": "{farmer}, I like you. More than a friend. I wanted you to know.",
+          "emote": "shy"
+        },
+        {
+          "choice": [
+            {
+              "text": "I feel the same.",
+              "tone": "warm",
+              "romance": 20,
+              "answer": "yes",
+              "then": [
+                {
+                  "say": "9000001",
+                  "line": "Then let’s walk back together. Slowly.",
+                  "emote": "tender"
+                }
+              ]
+            },
+            {
+              "text": "Not yet. Can we stay as we are?",
+              "tone": "honest",
+              "friendship": 10,
+              "answer": "not-yet",
+              "then": [
+                {
+                  "say": "9000001",
+                  "line": "Of course. I’m not going anywhere. Ask me again whenever you like.",
+                  "emote": "tender"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -544,43 +589,40 @@
       "id": "r1",
       "steps": [
         {
-          "place": "fields"
+          "place": "orchard-bench"
+        },
+        {
+          "narrate": "A cloth on the grass, and far too much food."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
+          "line": "A picnic. Our first real date. I packed everything.",
           "emote": "happy"
+        },
+        {
+          "play": {
+            "game": "picnic",
+            "prompt": "Pick her favourites from the basket"
+          }
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "You packed my favourites too.",
               "tone": "warm",
-              "friendship": 20
+              "romance": 20
             },
             {
-              "text": "You again?",
+              "text": "Is that a whole pie?",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "I have a name for you now. I’ll tell you later.",
+          "emote": "shy"
         }
       ]
     },
@@ -588,43 +630,40 @@
       "id": "r2",
       "steps": [
         {
-          "place": "fields"
+          "place": "pond-night"
+        },
+        {
+          "narrate": "Lanterns on the water, and two rods."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "Night fishing. The big ones only come out now.",
+          "emote": "thinking"
+        },
+        {
+          "play": {
+            "game": "fishing",
+            "prompt": "Cast into the dark"
+          }
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "The best catch is right here.",
               "tone": "warm",
-              "friendship": 20
+              "romance": 20
             },
             {
-              "text": "You again?",
+              "text": "I bet I catch more.",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "Stay out here a little longer?",
+          "emote": "tender"
         }
       ]
     },
@@ -632,43 +671,40 @@
       "id": "r3",
       "steps": [
         {
-          "place": "fields"
+          "place": "overlook"
+        },
+        {
+          "narrate": "A blanket on the overlook, and a sky full of stars."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "Find me a star, and I’ll name it after you.",
+          "emote": "tender"
+        },
+        {
+          "play": {
+            "game": "stargazing",
+            "prompt": "Pick the stars she points to"
+          }
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "Name one after us both.",
               "tone": "warm",
-              "friendship": 20
+              "romance": 20
             },
             {
-              "text": "You again?",
+              "text": "That one is clearly a potato.",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "There. It’s yours now.",
+          "emote": "happy"
         }
       ]
     },
@@ -676,43 +712,40 @@
       "id": "r4",
       "steps": [
         {
-          "place": "fields"
+          "place": "fishery"
+        },
+        {
+          "narrate": "Her old rival is struggling with a tangled net."
+        },
+        {
+          "say": "9000003",
+          "line": "Don’t say anything. I can do it.",
+          "emote": "angry"
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "Let us help. Please.",
+          "emote": "thinking"
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "Hold this end. I’ve got the knot.",
               "tone": "warm",
               "friendship": 20
             },
             {
-              "text": "You again?",
+              "text": "Rivals help rivals. It’s the rule.",
               "tone": "playful",
-              "friendship": 10
+              "friendship": 10,
+              "romance": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "You’re kind to everyone. I noticed.",
+          "emote": "tender"
         }
       ]
     },
@@ -720,43 +753,40 @@
       "id": "r5",
       "steps": [
         {
-          "place": "fields"
+          "place": "pond-night"
+        },
+        {
+          "narrate": "A little rowboat, and her hand on the other oar."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "Row with me. Together, or we go in circles.",
+          "emote": "laughing"
+        },
+        {
+          "play": {
+            "game": "boat",
+            "prompt": "Row on her beat"
+          }
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "I’d go in circles with you.",
               "tone": "warm",
-              "friendship": 20
+              "romance": 20
             },
             {
-              "text": "You again?",
+              "text": "Left oar, left oar!",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "The middle of the pond is the quietest place in the world.",
+          "emote": "tender"
         }
       ]
     },
@@ -764,43 +794,40 @@
       "id": "r6",
       "steps": [
         {
-          "place": "fields"
+          "place": "town"
+        },
+        {
+          "narrate": "Music on the square, and the whole town dancing."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "Dance with me? I’ll count the steps.",
+          "emote": "shy"
+        },
+        {
+          "play": {
+            "game": "dance",
+            "prompt": "Step on her beat"
+          }
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "Don’t let go.",
               "tone": "warm",
-              "friendship": 20
+              "romance": 20
             },
             {
-              "text": "You again?",
+              "text": "I’ll try not to step on you.",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "You didn’t step on me once.",
+          "emote": "laughing"
         }
       ]
     },
@@ -808,43 +835,41 @@
       "id": "r7",
       "steps": [
         {
-          "place": "fields"
+          "place": "barn"
+        },
+        {
+          "narrate": "The Barn, early. A brush in each hand."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "Long strokes, on the beat. They like it slow.",
+          "emote": "thinking"
+        },
+        {
+          "play": {
+            "game": "ranch",
+            "prompt": "Brush on her beat"
+          }
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "You’re good with them.",
               "tone": "warm",
-              "friendship": 20
+              "friendship": 10,
+              "romance": 10
             },
             {
-              "text": "You again?",
+              "text": "Do I get brushed after?",
               "tone": "playful",
-              "friendship": 10
+              "romance": 20
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "Breakfast after this. My turn to cook.",
+          "emote": "happy"
         }
       ]
     },
@@ -852,43 +877,40 @@
       "id": "r8",
       "steps": [
         {
-          "place": "fields"
+          "place": "town"
+        },
+        {
+          "narrate": "The craft stall in town, and a block of soft wood."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
+          "line": "Let’s carve something. Tap when I tap.",
           "emote": "happy"
+        },
+        {
+          "play": {
+            "game": "crafting",
+            "prompt": "Carve on her beat"
+          }
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "Carve: Always the next row.",
               "tone": "warm",
-              "friendship": 20
+              "romance": 20
             },
             {
-              "text": "You again?",
+              "text": "Carve a very serious carrot.",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "I’ll keep this forever.",
+          "emote": "tender"
         }
       ]
     },
@@ -896,43 +918,40 @@
       "id": "r9",
       "steps": [
         {
-          "place": "fields"
+          "place": "hilltop-track"
+        },
+        {
+          "narrate": "The hilltop track at sunrise. She’s already stretching."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "Race me to the top. Keep my pace if you can.",
+          "emote": "laughing"
+        },
+        {
+          "play": {
+            "game": "footrace",
+            "prompt": "Keep her pace"
+          }
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "I just wanted to run beside you.",
               "tone": "warm",
-              "friendship": 20
+              "romance": 20
             },
             {
-              "text": "You again?",
+              "text": "Rematch. Tomorrow.",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "You kept up the whole way.",
+          "emote": "happy"
         }
       ]
     },
@@ -940,43 +959,40 @@
       "id": "r10",
       "steps": [
         {
-          "place": "fields"
+          "place": "orchard-bench"
+        },
+        {
+          "narrate": "The same bench. Somehow it means more now."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "One more long walk. I want to remember all of it.",
+          "emote": "tender"
+        },
+        {
+          "play": {
+            "game": "walk",
+            "prompt": "Walk her favourite way"
+          }
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "All of it, every day.",
               "tone": "warm",
-              "friendship": 20
+              "romance": 20
             },
             {
-              "text": "You again?",
+              "text": "Even the muddy turns?",
               "tone": "playful",
               "friendship": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "Especially the muddy turns.",
+          "emote": "laughing"
         }
       ]
     },
@@ -984,43 +1000,54 @@
       "id": "proposal",
       "steps": [
         {
-          "place": "fields"
+          "place": "chapel-bell"
+        },
+        {
+          "narrate": "The chapel bell, and a ring in your pocket."
+        },
+        {
+          "play": {
+            "game": "walk",
+            "prompt": "Walk her to the bell"
+          }
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "You’re quiet today. That’s new.",
+          "emote": "thinking"
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "I have something to ask you.",
               "tone": "warm",
-              "friendship": 20
+              "romance": 20
             },
             {
-              "text": "You again?",
+              "text": "I’m saving my words.",
               "tone": "playful",
-              "friendship": 10
+              "romance": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "Yes. Whatever it is, yes.",
+          "emote": "tender"
+        },
+        {
+          "choice": [
+            {
+              "text": "Then it’s a promise.",
+              "tone": "warm",
+              "romance": 20
+            },
+            {
+              "text": "I haven’t even asked yet!",
+              "tone": "playful",
+              "romance": 10
+            }
+          ]
         }
       ]
     },
@@ -1028,43 +1055,54 @@
       "id": "wedding",
       "steps": [
         {
-          "place": "fields"
+          "place": "chapel-bell"
+        },
+        {
+          "narrate": "Everyone from the farm, and the bell ringing."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "I wrote my vows on a seed packet. Is that strange?",
+          "emote": "laughing"
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "It’s perfect.",
               "tone": "warm",
-              "friendship": 20
+              "romance": 20
             },
             {
-              "text": "You again?",
+              "text": "I wrote mine on a turnip.",
               "tone": "playful",
-              "friendship": 10
+              "romance": 10
             }
           ]
         },
         {
           "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
+            "game": "dance",
+            "prompt": "The first dance"
           }
+        },
+        {
+          "say": "9000001",
+          "line": "Every season, {farmer}. I promise.",
+          "emote": "tender"
+        },
+        {
+          "choice": [
+            {
+              "text": "Every season.",
+              "tone": "warm",
+              "romance": 20
+            },
+            {
+              "text": "And every harvest.",
+              "tone": "honest",
+              "romance": 10
+            }
+          ]
         }
       ]
     },
@@ -1075,40 +1113,38 @@
           "place": "fields"
         },
         {
-          "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "narrate": "Home rows. The same block, a new year."
         },
         {
-          "choice": [
-            {
-              "text": "Hello yourself.",
-              "tone": "warm",
-              "friendship": 20
-            },
-            {
-              "text": "You again?",
-              "tone": "playful",
-              "friendship": 10
-            }
-          ]
+          "say": "9000001",
+          "line": "Ours now. All of it.",
+          "emote": "tender"
         },
         {
           "play": {
             "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
+            "prompt": "Pick the ripe ones",
+            "as": "pick"
           }
+        },
+        {
+          "choice": [
+            {
+              "text": "Ours.",
+              "tone": "warm",
+              "romance": 20
+            },
+            {
+              "text": "Mostly yours. You plant better.",
+              "tone": "honest",
+              "romance": 10
+            }
+          ]
+        },
+        {
+          "say": "9000001",
+          "line": "Breakfast is on me.",
+          "emote": "happy"
         }
       ]
     },
@@ -1116,43 +1152,34 @@
       "id": "s3",
       "steps": [
         {
-          "place": "fields"
+          "place": "dorm-porch"
+        },
+        {
+          "narrate": "The porch at dusk, and a question she has been saving."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "Can I tell you my dream? Help me pick something for it.",
+          "emote": "shy"
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "Tell me everything.",
               "tone": "warm",
-              "friendship": 20
+              "romance": 20
             },
             {
-              "text": "You again?",
+              "text": "Is it about carrots?",
               "tone": "playful",
-              "friendship": 10
+              "romance": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "A farm where everyone has a place. We built it.",
+          "emote": "tender"
         }
       ]
     },
@@ -1160,43 +1187,40 @@
       "id": "s5",
       "steps": [
         {
-          "place": "fields"
+          "place": "overlook"
+        },
+        {
+          "narrate": "The overlook again, every season since the first."
         },
         {
           "say": "9000001",
-          "line": "Hello, {farmer}.",
-          "emote": "happy"
+          "line": "Count the stars with me. Like always.",
+          "emote": "tender"
+        },
+        {
+          "play": {
+            "game": "stargazing",
+            "prompt": "Pick the brightest stars"
+          }
         },
         {
           "choice": [
             {
-              "text": "Hello yourself.",
+              "text": "Like always.",
               "tone": "warm",
-              "friendship": 20
+              "romance": 20
             },
             {
-              "text": "You again?",
+              "text": "I still see a carrot.",
               "tone": "playful",
-              "friendship": 10
+              "romance": 10
             }
           ]
         },
         {
-          "play": {
-            "game": "farming",
-            "prompt": "Pull the weed",
-            "good": [
-              {
-                "narrate": "It comes up clean."
-              }
-            ],
-            "miss": [
-              {
-                "narrate": "It snaps."
-              }
-            ],
-            "friendship": 10
-          }
+          "say": "9000001",
+          "line": "Every season, {farmer}.",
+          "emote": "tender"
         }
       ]
     }

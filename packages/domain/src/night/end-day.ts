@@ -259,7 +259,7 @@ export const witherCrops: NightStep = (night) => {
 export const turnCalendar: NightStep = (night) => {
   const calendar = { day: night.save.calendar.day + 1 }
   const turned: FarmSave = night.save.version === 4
-    ? { ...night.save, calendar, today: { chats: [], gifts: [], praise: [], praised: [], events: [], evenings: [], invites: [], bonds: {} } }
+    ? { ...night.save, calendar, today: { chats: [], gifts: [], praise: [], praised: [], events: [], asked: [], evenings: [], invites: [], bonds: {} } }
     : { ...night.save, calendar, today: { chats: [], gifts: [] } }
   return { ...night, save: settleLoopWork(turned, kindsOf(night)) }
 }
@@ -442,7 +442,7 @@ const V4_STEPS: Readonly<Record<string, { replace?: Partial<NightStepDef>; after
     after: [{ step: 6, name: 'payLine', run: payLine, what: 'Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night', by: 'F47' }],
   },
   turnCalendar: {
-    replace: { what: 'The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, evenings and invitations', by: 'F18, F47' },
+    replace: { what: 'The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations', by: 'F18, F47, F49' },
   },
   gateVisitors: {
     replace: { name: 'arriveUmas', run: arriveUmas, what: 'Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50)', by: 'F46, F52' },
