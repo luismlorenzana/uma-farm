@@ -4,8 +4,8 @@
 // locked; the Gate's is the visitor waiting, with Chat and Gift (F23). After a night the morning summary opens over the
 // map until the player starts the day. Loaded on demand.
 import {
-  farmEnvV3, FARM_PLACES, farmPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, STAY_AFFINITY, workNow, type FarmPlace, type LoopPlaceId,
-  type SaveV3,
+  farmEnvV3, FARM_PLACES, farmPlace, placeBlurb, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, STAY_AFFINITY, workNow, type FarmPlace, type LoopPlaceId,
+  type FarmSave,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { ART_TILE, artScale, HubMap, hubDpr, PALETTES, type HubMapPlace, type PageGround, type PipModel } from '@luismlorenzana/uma-kit/hub'
@@ -51,8 +51,8 @@ function pipsOf(place: FarmPlace, work: WorkView): PipModel[] | undefined {
 }
 
 /** The Gate's pip (F23): the visitor waiting, ringed by her way to staying. */
-function gatePips(save: SaveV3): PipModel[] | undefined {
-  const visitor = save.visitors[0]
+function gatePips(save: FarmSave): PipModel[] | undefined {
+  const visitor = save.version === 3 ? save.visitors[0] : undefined
   return visitor ? [{ state: 'busy', progress: Math.min(1, visitor.affinity / STAY_AFFINITY), face: <FaceTile outfitId={visitor.outfitId} size={24} label="Visitor" round /> }] : undefined
 }
 
@@ -94,7 +94,7 @@ function FarmHelp() {
   )
 }
 
-function FarmScreen({ save, peek }: { save: SaveV3; peek: FarmPlace | undefined }) {
+function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefined }) {
   // The night reads master data (decision 2): load it with the farm, so End the day doesn't wait for it. A failure shows
   // when the day ends, with Try again.
   useEffect(() => void masterReady().catch(() => undefined), [])
@@ -148,7 +148,7 @@ function FarmScreen({ save, peek }: { save: SaveV3; peek: FarmPlace | undefined 
         <PeekPanel
           key={peek.id}
           title={peek.name}
-          about={<p>{peek.blurb}</p>}
+          about={<p>{placeBlurb(peek, save.version)}</p>}
           onClose={() => leave(withParam(location, 'peek', null))}
           words={{ close: 'Close', about: `About the ${peek.name}`, backTo: 'Back to the farm' }}
           focusKey={`[data-place="${peek.id}"]`}
@@ -165,19 +165,19 @@ function FarmScreen({ save, peek }: { save: SaveV3; peek: FarmPlace | undefined 
 }
 
 /** A place's quick look while F19–F23 wire up its page: what it is, and what opens it. */
-function PlacePeek({ save, place }: { save: SaveV3; place: FarmPlace }) {
+function PlacePeek({ save, place }: { save: FarmSave; place: FarmPlace }) {
   const lock = lockOf(save, place)
   return (
     <div className="space-y-2 p-4" data-peek={place.id} data-lock={lock ?? undefined}>
       {lock && <p className="text-[15px] font-semibold">{lock === 'Soon' ? 'Opens soon' : `Opens with ${lock}`}</p>}
-      <p className="text-[14px] text-ink-soft">{place.blurb}</p>
+      <p className="text-[14px] text-ink-soft">{placeBlurb(place, save.version)}</p>
     </div>
   )
 }
 
 /** The morning summary (CS5, decision 11): one card after every night, CS5's sections in order with the empty ones
  * hidden, each line a tap to its place. "Start the day" puts it away; a tap on a line leaves it for later. */
-function Morning({ save, open }: { save: SaveV3; open: boolean }) {
+function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   const summary = save.summary
   const master = useMaster()
   const album = master.status === 'ready' ? master.view.album : null

@@ -161,7 +161,7 @@ describe('a day\'s haul (CS17; decision 1)', () => {
   it('plans a queued day at the boundary with the rank and talent the night gives', () => {
     const save = editLoopQueue(start(farm(), job('forest', forage('woods'))), { outfitId: '101', add: { request: forage('woods'), building: 'forest' } }, AT, loopKinds(C))
     // Step 6 stands in: everyone who worked today reaches Expert foraging.
-    const ranks: NightStep = (n) => ({ ...n, save: n.notes.worked.reduce((s, w) => ranked(s, w.outfitId, 'foraging', 3), n.save) })
+    const ranks: NightStep = (n) => ({ ...n, save: n.notes.worked.reduce((s, w) => ranked(s, w.outfitId, 'foraging', 3), n.save as SaveV3) })
     const morning = runNight(save, { roster: [], talentOf: at(7) }, NIGHT_STEPS.map((s) => (s.run === tickRanks ? { ...s, run: ranks } : s)))
     const [first, second] = morning.work['101']!.entries
     expect(first!.outputs).toHaveLength(5)

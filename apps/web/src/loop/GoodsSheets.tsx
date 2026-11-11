@@ -1,7 +1,7 @@
 // The bin's and the shop's sheets (F19 decisions 4, 7 and 8), drawn within the kit's `Sheet`. The bin (`?sheet=bin`,
 // from the shipping bin on the map and the gold chip): today's lines with Take back, the night's estimate, and Ship,
 // which opens the Warehouse to pick from. The shop (`?sheet=shop`): its lines on the kit's ExchangeRows, bought with gold.
-import { shopLines, type SaveV3, type ShopLine } from '@farm/domain'
+import { shopLines, type FarmSave, type ShopLine } from '@farm/domain'
 import { ExchangeRows } from '@luismlorenzana/uma-kit/places'
 import { Button, HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
@@ -74,7 +74,7 @@ export function BinSheet({ onClose }: { onClose: () => void }) {
 }
 
 /** The shop's lines (decision 7): each with its price and gate, a quantity, and Buy · 180g, refused when gold is short. */
-export function ShopList({ save, lines }: { save: SaveV3; lines: readonly ShopLine[] }) {
+export function ShopList({ save, lines }: { save: FarmSave; lines: readonly ShopLine[] }) {
   const rows = shopRows(save, lines)
   if (rows.length === 0) return <p className="py-2 text-[15px] text-ink-soft" data-shop-empty>Nothing for sale yet.</p>
   return (

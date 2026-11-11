@@ -78,7 +78,8 @@ the initial JS.
 |---|---|---|
 | 1 | F3 | The account: `{ version: 1, account: { uid, createdAt, updatedAt } }` |
 | 2 | F4 | The Wilds' world beside it: `umas` (each Uma's Craft Level, from her first job), `items` (the Warehouse), `work` (uma-work's rows) and `buildings` (always `{}`). v1 migrates with all four empty, `updatedAt` unchanged |
-| 3 | F17 | **Built in F17, grown in place by M4, live from F24.** The farm's own loop (core spec CS53): the calendar, gold, the roster and its ranks, the Dorm, the Warehouse by stars, the fields and the rest of the loop. v2 migrates in the app with master data ([below](#v2--v3-f17-cs54)), `updatedAt` unchanged. Any change from here is v4 |
+| 3 | F17 | **Built in F17, grown in place by M4, live from F24.** The farm's own loop (core spec CS53): the calendar, gold, the roster and its ranks, the Dorm, the Warehouse by stars, the fields and the rest of the loop. v2 migrates in the app with master data ([below](#v2--v3-f17-cs54)), `updatedAt` unchanged |
+| 4 | F46 | **Built dark from F46, grown in place by F47–F55, live from F56.** The romance core (RM10): the farmer's name, `love`, `homestead`, `memories`, `arrivals` and v4's `today`; the roster, the Dorm, work and bonds keyed by character id; no `start`, `visitors` or affinity. **A wipe:** the romance build turns any v1–v3 into a fresh v4 in the app ([below](#save-v4-and-the-wipe-f46)), `account` copied whole. Any change after F56 is v5 |
 
 ### The shape: v2, the Wilds' (read once, to migrate)
 
@@ -116,6 +117,67 @@ build. F24 deleted the switch and the Wilds' screens, so the loop is the app.
 - **The update prompt** (the kit's **Update ready · Restart**) sits beside the boot gates, not inside them, so an old
   build that stopped still offers the new one, and Restart takes it.
 - **v3 is live:** any change to its shape (a summary line, a counter the parse checks) is v4, with its migration.
+
+### Save v4 and the wipe (F46)
+
+**Romance build; live from F56.** `packages/domain/src/save/v4.ts`, RM10 written whole now with the later packets'
+slots, so each fills its own while v4 grows in place (F46 decision 1, as v3 did in M4):
+
+```ts
+type CharacterId = string                             // master data's character id (P8)
+interface SaveV4 {
+  version: 4
+  account: Account                                    // as stored: the wipe never changes it
+  farmer: { name: string }                            // '' until the name sheet (RM8)
+  calendar, gold, items, bin, work, fields, crops, ranch, places, buildings, tools, workshops, expeditions,
+  board, diary, farm                                  // as v3 (`work` keyed by character id)
+  today: { chats, gifts, praise, praised, events: CharacterId[]; evenings: { with, kind }[]; invites: { id, kind, answer }[] }
+  roster: Record<CharacterId, { joined: number; ranks: Record<Activity, RankState>; wellFed: number }>
+  love: Record<CharacterId, Love>                     // one per roster Uma, from the day she joins
+  dorm: { level: number; home: CharacterId[]; swaps: DormSwap[] }   // levels 1–8 (RM5)
+  homestead: { houses: { name: string; extended: boolean }[]; tonight: number | null; slept: number[] }  // house 0 the Farmhouse
+  memories: Record<CharacterId, string[]>             // her route's event ids played, in order
+  arrivals: CharacterId[]                             // arrival scenes played or skipped
+  bonds: Record<string, number>                       // pairKey of character ids
+  summary: MorningSummaryV4 | null                    // v3's, with §4 `bonds: []` replaced by `hearts`
+}
+interface Love { stage, level, points, last, friend?, ring?, wed?, house?, known: string[], flags: string[], evening }
+```
+
+- **The parse** (`parse-v4.ts`, sharing v3's parts in `parse-loop.ts`) is as strict as v3's: unknown keys and v3-only
+  keys (`start`, `visitors`, a roster Uma's `affinity`) refused; roster keys by form; `love` exactly the roster's keys,
+  each in range (a level 0–10, spouse 0–5; points finite and ≥ 0; `last` and `evening` no later than today; `friend` only
+  while the confession waits; `ring` from the proposal on; `wed` and `house` a spouse's); `memories` and `arrivals` on
+  the roster; the farmer's name empty or within RM8's rule; the Dorm on 1–8 with home within its beds; the morning's
+  Hearts lines on the roster, once each, ids only. `parseSave` returns v2, v3 and v4 as stored; `NEWEST_SAVE_VERSION` is
+  4 and `SAVE_VERSION` (what production writes) stays 3 until F56.
+- **The wipe runs in the app, never in the parse** (F46 decision 2): the API, shared with production and deployed on
+  every push, reads what's stored and never makes a save (FM10). The romance build's boot turns any v1–v3 it meets (on
+  the device, from the server, in a 409) into `freshV4(stored)`: day 1, 500g, Block A, 9 Carrot seeds, Dorm level 1, the
+  Farmhouse, the name empty, and `account` copied whole. It's committed **without stamping**, so it uploads with
+  `updatedAt` where the old save had it; **the farmer's name is the first stamp**.
+- **Nothing disappears silently:** a dirty v3 on the device is kept first as a safety copy (reason `wiped`, "Before the
+  new farm" in Account, which offers no Restore for a pre-v4 copy, since that would wipe again). The server's
+  version-bump backup copies the stored v3 document to `saveBackups/{uid}-v3` on the first v4 write; a v3 upload over a
+  stored v4 is a 409, kept in `saveRescues/{uid}`.
+- **The live M4 build stops at a v4** ("This save is from a newer version of the farm."): its boot fails with Try again,
+  its sync stops before any upload, and the kit's update prompt brings the build that can play it.
+
+### The romance core's dark switch and two builds (F46)
+
+As F17 did for M4 (D29): `romanceOn()` (`apps/web/src/app/romance.ts`) reads `VITE_FARM_ROMANCE` at call time. It's `1`
+in `apps/web/.env.development` (the dev server) and `apps/web/.env.romance`; production leaves it unset. **`pnpm build`
+size-checks both:** the deployed build in `dist/`, then `vite build --mode romance --outDir dist-romance` (never
+deployed). Vitest leaves it off, so M4's web tests run unchanged; a romance test turns it on with `vi.stubEnv`.
+`VITE_FARM_ROMANCE=0 pnpm web` plays M4 on the dev server. The switch only picks the web's build: **inside
+`@farm/domain` the romance's rules key off `save.version`**, and the shared rules (the Fields, gathering, stations, ranks,
+the bin, the night) take `FarmSave = SaveV3 | SaveV4`.
+
+**The story pack at runtime** (`story/pack.ts`, `StoryPack`): the cast, the ties, the bibles by character id and which
+events each route scripts, validated by F40's validator as it loads (routes partial); scripts load on demand. The web
+loads it once through one seam (`apps/web/src/story/load.ts`: the stand-in until F56) and sees master data through the
+cast (`outfitOf`): each cast Uma's character id reads her outfit's album row, stats and art. See
+[hearts.md](hearts.md#the-cast-and-the-pack-rm1rm3-rm58-rm59).
 
 ### The shape: v3, the farm's (built in F17, live from F24)
 
@@ -325,8 +387,11 @@ health. Docs-only pushes skip it. `VAPID_KEYS` comes from Secret Manager's `farm
 ```bash
 NODE_AUTH_TOKEN=$(gh auth token) pnpm install
 pnpm api   # :8101, auth off (the local user), saves in apps/api/.data/save.json, push in memory and off
-pnpm web   # :5194, /api proxied to :8101
+pnpm web   # :5194, /api proxied to :8101: the romance build on save v4 (F46); VITE_FARM_ROMANCE=0 pnpm web plays M4
 ```
+
+The dev server wipes a dev v3 into a fresh v4 once; the M4 dev server then stops at it. Reset `apps/api/.data/save.json`
+(and the browser's `uma-farm` database) to switch back.
 
 Master data comes from `../uma-platform/content/release` (set `MASTER_DIR` to point elsewhere). The preview pane starts both
 from `.claude/launch.json`. To try the owner guard, run the built API with `ALLOWED_EMAIL` set and no `AUTH_MODE`.

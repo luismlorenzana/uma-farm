@@ -208,6 +208,12 @@ the roster's news. The save's parse is strict: a chapter 1–8, a rank 2–10, a
 
 ## The scenes (CS41, CS42; decisions 6 and 7)
 
+> **On save v4 (romance build; live from F56; F46 decision 9):** the farmer's name comes first; the opening is re-cut
+> (no hello lines, the Mayor greets you by name, it ends "Three Umas come up the road.") and reading it brings the cast's
+> opening three; each then plays her **arrival scene**, the third ending on chapter 1's card. A chapter's recruit is its
+> **authored arrival** (`completeChapter` on v4, nothing drawn), the closing scene's newest hand, whose arrival scene
+> follows it. See [hearts.md](hearts.md#the-opening-rm9). v3's scenes below are what production plays.
+
 **The town's cast is original** (CS41): their names and lines live in git. **Umas appear only in roles** the app fills at
 runtime from master data: *your first hands* (the start's three, by the day they joined, then by id) and *your newest
 hand* (the last to join: the chapter's recruit). A role nobody fills drops its line. M4 speaks three of the cast and

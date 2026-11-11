@@ -27,10 +27,24 @@ export type MasterState =
 
 let state: MasterState = { status: 'idle' }
 const listeners = new Set<() => void>()
+/** The release as loaded, before any lens. */
+let raw: MasterView | null = null
+/** How the romance build sees master data (F46 decision 5): through the story pack's cast. Null in the M4 build. */
+let lens: ((view: MasterView) => MasterView) | null = null
 
 function set(next: MasterState): void {
   state = next
   for (const listener of listeners) listener()
+}
+
+/** The ready state for the release, through the lens if one is set. */
+const ready = (view: MasterView): MasterState => ({ status: 'ready', view: lens ? lens(view) : view })
+
+/** Sees master data through the story pack's cast from now on (F46): the romance build's loader sets it once the pack
+ * loads, and a release already loaded is seen again through it. */
+export function setMasterLens(next: (view: MasterView) => MasterView): void {
+  lens = next
+  if (raw) set(ready(raw))
 }
 
 /** The farm's view of a release's sets: only outfits the roster takes, each with her album row. */
@@ -50,7 +64,8 @@ function loadMaster(): void {
     try {
       const [client, manifest] = await Promise.all([CONTENT.release(), CONTENT.manifest()])
       const [characters, outfits, art] = await Promise.all([client.set(manifest, 'characters'), client.set(manifest, 'outfits'), client.art(manifest)])
-      set({ status: 'ready', view: masterView(manifest, characters, outfits, art) })
+      raw = masterView(manifest, characters, outfits, art)
+      set(ready(raw))
     } catch (err) {
       set({ status: 'error', offline: typeof navigator !== 'undefined' && navigator.onLine === false, message: err instanceof Error ? err.message : String(err) })
     }

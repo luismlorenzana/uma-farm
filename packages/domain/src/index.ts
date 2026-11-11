@@ -99,3 +99,26 @@ export * from './story/cast'
 export * from './story/chapters'
 export * from './story/scenes'
 export * from './story/chapter-1'
+
+// The romance core (F46; romance spec RM1–RM10, RM58, RM59), built dark behind the web's `VITE_FARM_ROMANCE` while
+// production plays M4 on v3: save v4 (the wipe, the new keys, the romance's slots) and its strict parse, the farmer's
+// name, the story pack at runtime with the invented stand-in, the one `outfitOf` resolver, her favourite line and tastes,
+// authored arrivals at night step 8, her arrival scene's pay, and the re-cut opening. The story's format and validator
+// (F40) export by name: their `SEASONS` and `FESTIVALS` are the story's words, not the calendar's.
+export * from './save/v4'
+export * from './save/parse-v4'
+export * from './romance/farmer'
+export * from './romance/love'
+export * from './romance/arrivals'
+export * from './story/pack'
+export * from './story/stand-in'
+export * from './story/opening-v4'
+export {
+  ARRIVAL, arrivalIssues, bibleIssues, CALLINGS, castIssues, DATE_GAMES, EMOTES, LADDERS, pairIssues, routeIssues, RUNGS, stepIssues, STORY_PLACES,
+  tiesIssues, TONES, unscriptedBeats,
+} from './story/authored'
+export type {
+  Arrival, Calling, Cast, CastEntry, ChoiceOption, Emote, Ladder, PairConversations, Play, Route, RouteCheck, Step, StoryContext, StoryPlace, Tie, Ties,
+  Tone, Trigger, UmaBible,
+} from './story/authored'
+

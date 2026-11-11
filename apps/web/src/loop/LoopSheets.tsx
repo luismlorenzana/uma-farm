@@ -180,7 +180,7 @@ function RankSheet() {
           <section aria-label={`Farm Rank ${next.rank} opens`}>
             <h3 className="text-micro pb-1">Farm Rank {next.rank} opens</h3>
             <ul className="divide-y divide-hairline rounded-md border border-hairline" data-opens>
-              {farmRankOpens(next.rank).map((what) => <li key={what} className="flex min-h-11 items-center px-3 text-[15px]">{what}</li>)}
+              {farmRankOpens(next.rank, save.version).map((what) => <li key={what} className="flex min-h-11 items-center px-3 text-[15px]">{what}</li>)}
             </ul>
           </section>
         )}

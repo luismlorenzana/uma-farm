@@ -1,0 +1,1204 @@
+{
+  "characterId": "9000001",
+  "events": [
+    {
+      "id": "arrival",
+      "steps": [
+        {
+          "place": "gate"
+        },
+        {
+          "narrate": "An Uma with a seed satchel stops at the Gate and reads the sign twice."
+        },
+        {
+          "say": "9000001",
+          "line": "Nine carrot seeds and a field of weeds. This is the place.",
+          "emote": "thinking"
+        },
+        {
+          "say": "9000001",
+          "line": "I came to grow things, {farmer}. Where do I start?",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Old Ben’s row. It’s yours to tend.",
+              "tone": "warm",
+              "friendship": 20,
+              "then": [
+                {
+                  "say": "9000001",
+                  "line": "Then I’ll have it green by the weekend.",
+                  "emote": "happy"
+                }
+              ]
+            },
+            {
+              "text": "Can you tell a weed from a carrot?",
+              "tone": "playful",
+              "friendship": 10,
+              "then": [
+                {
+                  "say": "9000001",
+                  "line": "Mostly. Ask me again at harvest.",
+                  "emote": "laughing"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "flag": "first-row"
+        },
+        {
+          "thought": "Someone who came for the work itself."
+        }
+      ]
+    },
+    {
+      "id": "f1",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "f9",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "f10",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "confession",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "r1",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "r2",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "r3",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "r4",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "r5",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "r6",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "r7",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "r8",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "r9",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "r10",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "proposal",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "wedding",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "s1",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "steps": [
+        {
+          "place": "fields"
+        },
+        {
+          "say": "9000001",
+          "line": "Hello, {farmer}.",
+          "emote": "happy"
+        },
+        {
+          "choice": [
+            {
+              "text": "Hello yourself.",
+              "tone": "warm",
+              "friendship": 20
+            },
+            {
+              "text": "You again?",
+              "tone": "playful",
+              "friendship": 10
+            }
+          ]
+        },
+        {
+          "play": {
+            "game": "farming",
+            "prompt": "Pull the weed",
+            "good": [
+              {
+                "narrate": "It comes up clean."
+              }
+            ],
+            "miss": [
+              {
+                "narrate": "It snaps."
+              }
+            ],
+            "friendship": 10
+          }
+        }
+      ]
+    }
+  ]
+}

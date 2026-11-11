@@ -1,0 +1,52 @@
+{
+  "characterId": "9000003",
+  "events": [
+    {
+      "id": "arrival",
+      "steps": [
+        {
+          "place": "gate"
+        },
+        {
+          "narrate": "An Uma with a rod over one shoulder waits at the Gate, as if she had been there for hours."
+        },
+        {
+          "wait": 600
+        },
+        {
+          "say": "9000003",
+          "line": "I heard there’s a pond. Is it quiet?",
+          "emote": "thinking"
+        },
+        {
+          "choice": [
+            {
+              "text": "Very quiet. You’ll like it.",
+              "tone": "warm",
+              "friendship": 20,
+              "then": [
+                {
+                  "say": "9000003",
+                  "line": "Good. I’ll bring back something for supper.",
+                  "emote": "tender"
+                }
+              ]
+            },
+            {
+              "text": "Quiet until you catch something.",
+              "tone": "playful",
+              "friendship": 10,
+              "then": [
+                {
+                  "say": "9000003",
+                  "line": "Then I’ll catch something quietly.",
+                  "emote": "laughing"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -10,11 +10,12 @@ import { earnGold } from './gold'
 import { SaveRuleError } from './rules'
 import type { SaveV3, Warehouse } from './v3'
 import { addGoods, takeGoods } from './warehouse'
+import type { FarmSave } from './v4'
 
 /** The counter the bin's gold adds to, for the Farm Rank and its milestones (F24). */
 export const GOLD_SHIPPED = 'gold-shipped'
 
-type BinSave = Pick<SaveV3, 'items' | 'bin'>
+type BinSave = Pick<FarmSave, 'items' | 'bin'>
 
 function priced(id: string): void {
   if (!hasPrice(id)) throw new SaveRuleError('no-price', 'That doesn’t sell')
@@ -71,7 +72,7 @@ export interface BinPayout<S> {
  * The gold goes to `gold` and to `farm.counts['gold-shipped']` (F24's Farm Rank and milestones), each good's count to
  * `diary.shipped` (the Diary's collections), and the bin empties. An empty bin pays nothing and changes nothing.
  */
-export function payBin<S extends Pick<SaveV3, 'bin' | 'gold' | 'farm' | 'diary'>>(save: S, day: number): BinPayout<S> {
+export function payBin<S extends Pick<FarmSave, 'bin' | 'gold' | 'farm' | 'diary'>>(save: S, day: number): BinPayout<S> {
   const sales = binSales(save.bin, day)
   if (sales.length === 0) return { save, sales, gold: 0 }
   const gold = sales.reduce((sum, sale) => sum + sale.gold, 0)

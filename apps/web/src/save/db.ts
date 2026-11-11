@@ -10,7 +10,7 @@ export interface SaveRow {
   uid: string
   /** The server revision this save is based on (0: never synced). */
   revision: number
-  /** As stored: the Wilds' v2 or the loop's v3 (F17). */
+  /** As stored: the Wilds' v2, the loop's v3 (F17) or the romance core's v4 (F46). */
   save: StoredSave
   /** Changed since the last successful sync. */
   dirty: boolean
@@ -18,9 +18,10 @@ export interface SaveRow {
   lastSyncedAt?: string | null
 }
 
-/** Why a safety copy exists: a newer save replaced unsynced changes, a restore replaced this save, or this device's save
- * couldn't be read (kept as it was, for a later build that can). */
-export type SafetyReason = 'replaced' | 'restore' | 'unreadable'
+/** Why a safety copy exists: a newer save replaced unsynced changes, a restore replaced this save, this device's save
+ * couldn't be read (kept as it was, for a later build that can), or the romance build wiped an older save with unsynced
+ * play (F46). */
+export type SafetyReason = 'replaced' | 'restore' | 'unreadable' | 'wiped'
 export interface SafetyCopy {
   id?: number
   uid: string

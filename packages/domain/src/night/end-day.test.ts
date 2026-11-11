@@ -89,7 +89,7 @@ describe('jobs in days on the calendar\'s clock (FC6, decision 1)', () => {
     const queued = editLoopQueue(start(farm(), '101', gather()), { outfitId: '101', add: { request: gather(), building: 'forest' } }, AT, TEST_KINDS)
     // F21's step stands in: everyone who worked today reaches Skilled foraging.
     const ranks: NightStep = (n) => ({
-      ...n, save: { ...n.save, roster: Object.fromEntries(Object.entries(n.save.roster).map(([id, uma]) => [id,
+      ...n, save: { ...(n.save as SaveV3), roster: Object.fromEntries(Object.entries((n.save as SaveV3).roster).map(([id, uma]) => [id,
         n.notes.worked.some((w) => w.outfitId === id) ? { ...uma, ranks: { ...uma.ranks, foraging: { points: 160, rank: 2 as const, challenge: 0 } } } : uma])) },
     })
     const steps = NIGHT_STEPS.map((s) => (s.run === tickRanks ? { ...s, run: ranks } : s))

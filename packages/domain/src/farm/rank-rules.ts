@@ -11,6 +11,7 @@ import type { LoopPlaceId } from '../save/parse-v3'
 import type { OutfitId, RankState, RegionId, SaveV3 } from '../save/v3'
 import { ACTIVITIES, LINE_ACTIVITY, RANK_POINTS, type Activity, type Rank } from './ranks'
 import { talentRankPoints, type TalentStep } from './talents'
+import type { FarmSave } from '../save/v4'
 
 const round6 = (n: number): number => Math.round(n * 1e6) / 1e6
 
@@ -37,7 +38,8 @@ export const affinityPoints = (affinity: number): number => {
   return hearts >= 10 ? 1.1 : hearts >= 5 ? 1.05 : 1
 }
 
-/** What lifts her points: her talent in the activity, whether it's her favourite, well fed, and your affinity. */
+/** What lifts her points: her talent in the activity, whether it's her favourite, well fed, and your affinity (v3; on v4
+ * the hearts factor is ×1 until F47 reads her friendship level, RM18). */
 export interface PointTerms {
   talent: TalentStep
   favourite: boolean
@@ -237,7 +239,7 @@ export const challengeFor = (activity: Activity, rank: Rank): Challenge | null =
 /** Counts an event toward her next rank's challenge in an activity (decision 1): only that challenge, from her last
  * rank-up, stopping at its target. An Uma not on the roster, a Legend, or an event the challenge doesn't read changes
  * nothing. Never stamps `updatedAt`. F20's harvests and F22's catches and gathers call it. */
-export function countChallenge<S extends Pick<SaveV3, 'roster'>>(save: S, outfitId: OutfitId, activity: Activity, event: ChallengeEvent): S {
+export function countChallenge<S extends Pick<FarmSave, 'roster'>>(save: S, outfitId: OutfitId, activity: Activity, event: ChallengeEvent): S {
   const uma = save.roster[outfitId]
   if (!uma) return save
   const state = uma.ranks[activity]
@@ -273,7 +275,7 @@ export type TermsOf = (outfitId: OutfitId, activity: Activity) => { talent: Tale
  * night, her challenge's count reset. The lines say who ranked up, then whose points filled tonight with the challenge
  * still to meet (once: the night they fill, or the night a rank-up leaves the next one already full).
  */
-export function tickRankRules(save: SaveV3, worked: readonly WorkedDay[], termsOf: TermsOf): { save: SaveV3; lines: RankLine[]; paid: (WorkedDay & { points: number })[] } {
+export function tickRankRules<S extends FarmSave>(save: S, worked: readonly WorkedDay[], termsOf: TermsOf): { save: S; lines: RankLine[]; paid: (WorkedDay & { points: number })[] } {
   const roster = { ...save.roster }
   const paid: (WorkedDay & { points: number })[] = []
   const seen = new Set<OutfitId>()
@@ -281,7 +283,7 @@ export function tickRankRules(save: SaveV3, worked: readonly WorkedDay[], termsO
     const uma = roster[day.outfitId]
     if (!uma || seen.has(day.outfitId)) continue
     seen.add(day.outfitId)
-    const points = rankPointsForDay({ ...termsOf(day.outfitId, day.activity), wellFed: uma.wellFed > 0, affinity: uma.affinity })
+    const points = rankPointsForDay({ ...termsOf(day.outfitId, day.activity), wellFed: uma.wellFed > 0, affinity: 'affinity' in uma ? uma.affinity : 0 })
     const state = uma.ranks[day.activity]
     roster[day.outfitId] = { ...uma, ranks: { ...uma.ranks, [day.activity]: { ...state, points: round6(state.points + points) } } }
     paid.push({ ...day, points })

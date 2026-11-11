@@ -20,8 +20,8 @@ export function rewardWords(chapter: number): string {
 export const chapterDoneWords = (chapter: number): string => `Chapter ${chapter} done · ${rewardWords(chapter)}`
 
 /** "Farm Rank 2 · Block B (800g), Dorm level 3 (8 beds), New seeds at the shop". */
-export const farmRankWords = (rank: number): string => {
-  const opens = farmRankOpens(rank)
+export const farmRankWords = (rank: number, version = 3): string => {
+  const opens = farmRankOpens(rank, version)
   return opens.length > 0 ? `Farm Rank ${rank} · ${opens.join(', ')}` : `Farm Rank ${rank}`
 }
 

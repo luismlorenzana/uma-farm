@@ -1,23 +1,45 @@
-// Which scene plays now (F24 decision 6; core spec CS42): the opening scene once the start's three are picked, before the
-// first tap of day 1; the closing scene the morning after chapter 1 completes, once the morning summary is put away.
-// Each plays once: its id goes in `diary.read`. Light on purpose: the shell reads it, and the scenes' lines
-// (`chapter-1.ts`) and the player load on demand.
-import { picksLeft, type SaveV3 } from '../save/v3'
+// Which scene plays now (F24 decision 6; core spec CS42; F46 decision 9): on v3 the opening scene once the start's three
+// are picked, before the first tap of day 1, and the closing scene the morning after chapter 1 completes, once the morning
+// summary is put away. On v4 nothing plays while the farmer is unnamed (the name sheet covers everything); then the
+// re-cut opening; then the closing scene when due; then each Uma's arrival scene, `arrival:<id>`, in arrival order, once
+// the summary is put away. A chapter scene goes in `diary.read`, an arrival in `arrivals`. Light on purpose: the shell
+// reads it, and the scenes' lines and the player load on demand.
+import { picksLeft } from '../save/v3'
+import type { FarmSave, SaveV4 } from '../save/v4'
 
-/** The scenes M4 plays, by the id `diary.read` keeps. */
+/** The chapter scenes M4 plays, by the id `diary.read` keeps. */
 export const SCENE_IDS = ['scene:1:open', 'scene:1:close'] as const
-export type SceneId = typeof SCENE_IDS[number]
+export type ChapterSceneId = typeof SCENE_IDS[number]
+/** A scene to play: a chapter's, or (v4) an Uma's arrival. */
+export type SceneId = ChapterSceneId | `arrival:${string}`
 
-/** The scene to play now, or null. The start's picks come first (a migrated save, already on day 1 with its Umas, sees
- * the opening scene once too); the closing scene waits for chapter 2 and for the morning summary to be put away. */
-export function sceneDue(save: Pick<SaveV3, 'roster' | 'diary' | 'farm' | 'summary'>): SceneId | null {
+/** The Uma an arrival scene belongs to, or null for a chapter scene. */
+export const arrivalOf = (id: SceneId): string | null => (id.startsWith('arrival:') ? id.slice('arrival:'.length) : null)
+export const isChapterScene = (id: SceneId): id is ChapterSceneId => (SCENE_IDS as readonly string[]).includes(id)
+
+type DueSave = Pick<FarmSave, 'roster' | 'diary' | 'farm' | 'summary'> & ({ version: 3 } | Pick<SaveV4, 'version' | 'farmer' | 'arrivals'>)
+
+/** The scene to play now, or null. `order` is the cast's order (the pack's), which breaks ties between Umas who joined
+ * the same day (v4). */
+export function sceneDue(save: DueSave, order: readonly string[] = []): SceneId | null {
+  if (save.version === 4) {
+    if (save.farmer.name === '') return null
+    if (!save.diary.read.includes('scene:1:open')) return 'scene:1:open'
+    if (save.summary !== null) return null
+    if (save.farm.chapter >= 2 && !save.diary.read.includes('scene:1:close')) return 'scene:1:close'
+    const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length)
+    const waiting = Object.entries(save.roster).filter(([id]) => !save.arrivals.includes(id))
+      .sort(([a, x], [b, y]) => x.joined - y.joined || rank(a) - rank(b) || Number(a) - Number(b))
+    return waiting[0] ? `arrival:${waiting[0][0]}` : null
+  }
   if (picksLeft(save) > 0) return null
   if (!save.diary.read.includes('scene:1:open')) return 'scene:1:open'
   if (save.farm.chapter >= 2 && save.summary === null && !save.diary.read.includes('scene:1:close')) return 'scene:1:close'
   return null
 }
 
-/** The save with a scene read, played through or skipped. Never stamps: the app's action does. */
-export function readScene<S extends SaveV3>(save: S, id: SceneId): S {
+/** The save with a chapter scene read, played through or skipped. Never stamps: the app's action does. On v4 the opening
+ * also joins the opening three (`joinOpening`, the romance's arrivals). */
+export function readScene<S extends FarmSave>(save: S, id: ChapterSceneId): S {
   return save.diary.read.includes(id) ? save : { ...save, diary: { ...save.diary, read: [...save.diary.read, id] } }
 }

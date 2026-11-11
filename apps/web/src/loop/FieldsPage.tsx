@@ -5,7 +5,7 @@
 // do a block, and the tender comes from uma-kit's picker over the Umas home (`?tend=A`), with F21's talents and ranks:
 // "Hand · B" in farming on each card, opening by farming. Each sheet is a search parameter, so Back closes it. Loaded on
 // demand.
-import { CROPS, isBusy, itemNameOf, leaving, receiptItems, tendedBlock, type BlockId, type FarmingTalentOf, type HarvestReceipt, type SaveV3 } from '@farm/domain'
+import { CROPS, isBusy, itemNameOf, leaving, receiptItems, tendedBlock, type BlockId, type FarmingTalentOf, type HarvestReceipt, type FarmSave } from '@farm/domain'
 import { FaceTile, UmaPicker } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
@@ -63,7 +63,7 @@ function About() {
   )
 }
 
-function Fields({ save }: { save: SaveV3 }) {
+function Fields({ save }: { save: FarmSave }) {
   const leave = useLeave()
   const location = useLocation()
   const navigate = useNavigate()
@@ -127,7 +127,7 @@ function Fields({ save }: { save: SaveV3 }) {
 
 /** An owned block (decision 11): its name and growth, Plant all and Harvest all, its tender's row and its nine plots. */
 function BlockCard({ save, block, master, talentOf, onPlot, onPlantAll, onHarvestAll, onTend, onStop }: {
-  save: SaveV3
+  save: FarmSave
   block: OwnedBlock
   master: MasterView | null
   talentOf: FarmingTalentOf
@@ -212,7 +212,7 @@ function LockedCard({ block, onBuy }: { block: LockedBlock; onBuy: () => void })
 
 /** Planting (decisions 7 and 9): for a plot, each seed held that plants today, own seeds first; for Plant all, each crop
  * with all its seeds. With none, a way to the shop. */
-function PlantSheet({ save, block, index, onClose, onError }: { save: SaveV3; block: BlockId; index: number; onClose: () => void; onError: (text: string) => void }) {
+function PlantSheet({ save, block, index, onClose, onError }: { save: FarmSave; block: BlockId; index: number; onClose: () => void; onError: (text: string) => void }) {
   const navigate = useNavigate()
   const location = useLocation()
   const all = index < 0
@@ -257,7 +257,7 @@ function PlantSheet({ save, block, index, onClose, onError }: { save: SaveV3; bl
 }
 
 /** A growing plot (decision 11's "shows"): its crop, the nights left, who tends it and where its seed came from. */
-function PlotSheet({ save, block, index, master, onClose }: { save: SaveV3; block: BlockId; index: number; master: MasterView | null; onClose: () => void }) {
+function PlotSheet({ save, block, index, master, onClose }: { save: FarmSave; block: BlockId; index: number; master: MasterView | null; onClose: () => void }) {
   const view = fieldsView(save).find((b): b is OwnedBlock => b.owned && b.id === block)
   const plot = view?.plots[index]
   if (!view || !plot || plot.crop === null) return null
@@ -290,7 +290,7 @@ interface TenderRow extends LoopUmaRow {
  * ("Hand · B") with her favourite line and best talent on her face, the filters and sorts of the roster, opening by
  * farming. A working Uma is shown and can't be picked; a tender of another block moves here. */
 function TenderPicker({ save, block, master, talents, onClose, onError }: {
-  save: SaveV3; block: BlockId; master: MasterView | null; talents: ReturnType<typeof useTalents>['table']; onClose: () => void; onError: (text: string) => void
+  save: FarmSave; block: BlockId; master: MasterView | null; talents: ReturnType<typeof useTalents>['table']; onClose: () => void; onError: (text: string) => void
 }) {
   const rows = useMemo((): TenderRow[] => umaRows(save, save.dorm.home, master?.album ?? new Map(), talents, master?.roster ?? []).map((row) => {
     const tends = tendedBlock(save, row.id)

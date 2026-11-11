@@ -10,6 +10,10 @@ helpers `picksLeft`, `leaving` and `onFarm` in `save/v3.ts`); the screens in `ap
 `DormPage.tsx`, `GatePeek.tsx`, `Affinity.tsx`, `RosterPage.tsx`). The spec is [core-spec.md](../design/core-spec.md) CS2,
 CS34–CS36 and CS45; the calls are D37.
 
+> **On save v4 (the romance build; live from F56):** no start sheet, no Gate visitors and no drawn recruits. The cast
+> walks in when the story says ([hearts.md](hearts.md#arrivals-rm4)), and the Dorm is [the Dorm for 20](#the-dorm-for-20-on-save-v4-rm5).
+> Everything below is v3's, which production plays.
+
 ```
  day 1: the start's sheet ──► pick 3 of 6 ──► home (3 beds)
                                                  │
@@ -68,6 +72,29 @@ morning.
   "Dorm level 2 · 5 beds".
 - **Beds free** (`freeBeds`): the level in effect's beds less who's home. A visitor comes only while one is free, and a
   recruit joins home only while one is.
+
+## The Dorm for 20 on save v4 (RM5)
+
+**Romance build; live from F56** (F46 decision 12). Eight levels, CS34's prices and Farm Ranks kept level for level,
+190,000g in all; levels 4–8 each bring an authored arrival the morning they take effect (never who).
+
+<!-- live:dorm-v4 -->
+| Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| Beds | 3 | 5 | 7 | 9 | 11 | 14 | 17 | 20 |
+| Costs | — | 1,000 | 3,000 | 8,000 | 15,000 | 28,000 | 50,000 | 85,000 |
+| Farm Rank | — | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+| Brings |  |  |  | an arrival | an arrival | an arrival | an arrival | an arrival |
+<!-- /live -->
+
+- **By the save's version:** `buyDorm`, `nextDorm`, `freeBeds`, `settleDormNight`, the Farm Rank's sheet
+  (`farmRankOpens`) and the parse read v4's ladder (`DORM_LEVELS_V4`, `bedsFor(4, level)`); v3 keeps its ten. The parse
+  refuses a level above 8 and home past its beds.
+- **The Dorm's page** lists the eight levels (Built, Tomorrow, or the cost and Farm Rank), and a level whose arrival
+  hasn't come says "Level 4 · 9 beds · someone new arrives". Spouses leave the Dorm for the houses with F54; levels 9 and
+  10 come back with the S wave.
+- **Arrivals with no bed free** join away, and the swap brings them home (CS36 kept). On v4 the rows show no hearts until
+  F47.
 
 ## The off-season and swaps (CS36)
 

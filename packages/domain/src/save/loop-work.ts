@@ -17,6 +17,7 @@ import { touched } from './save'
 import { tendedBlock, type LoopWorkRequest, type OutfitId, type SaveV3 } from './v3'
 import { loopReadyItems } from './work-readings'
 import { parseStockKey } from './warehouse'
+import type { FarmSave } from './v4'
 
 const REASON: Readonly<Record<string, SaveRuleReason>> = {
   'slot-taken': 'bad-slot', busy: 'busy', count: 'bad-count', short: 'no-items', 'queue-full': 'bad-count', 'unknown-worker': 'not-owned', locked: 'locked',
@@ -50,14 +51,14 @@ function done<R>(result: OpResult<R, LoopWorld>, now: number): { state: LoopWorl
 }
 
 /** The save's world settled at its day, with the env and the clock. */
-function opened(save: SaveV3, kinds: LoopKinds): { world: LoopWorld; env: WorkEnv<LoopWorld>; now: number } {
+function opened(save: FarmSave, kinds: LoopKinds): { world: LoopWorld; env: WorkEnv<LoopWorld>; now: number } {
   const env = farmEnvV3(kinds)
   const now = workNow(save)
   return { world: settle(loopWorld(save), now, env).state, env, now }
 }
 
 /** The world back in its save, stamped: a player's change. */
-const changed = (save: SaveV3, world: LoopWorld, stamp: string): SaveV3 => touched(withLoopWorld(save, world), stamp)
+const changed = <S extends FarmSave>(save: S, world: LoopWorld, stamp: string): S => touched(withLoopWorld(save, world), stamp)
 
 /** Her slot again if it's free or hers, else another free one at the same place. */
 function slotFor(world: LoopWorld, outfitId: OutfitId, slot: SlotRef, env: WorkEnv<LoopWorld>): SlotRef | null {
@@ -70,12 +71,12 @@ function slotFor(world: LoopWorld, outfitId: OutfitId, slot: SlotRef, env: WorkE
 
 /** The save's work settled at its day: a queued job whose turn came starts. A reading every device makes alike, so
  * `account.updatedAt` stays. The night stores it as the date turns (F18 decision 3). */
-export function settleLoopWork(save: SaveV3, kinds: LoopKinds = LOOP_KINDS): SaveV3 {
+export function settleLoopWork<S extends FarmSave>(save: S, kinds: LoopKinds = LOOP_KINDS): S {
   return withLoopWorld(save, opened(save, kinds).world)
 }
 
 /** Who holds a running job this day. */
-export function loopWorking(save: SaveV3, kinds: LoopKinds = LOOP_KINDS): Set<OutfitId> {
+export function loopWorking(save: FarmSave, kinds: LoopKinds = LOOP_KINDS): Set<OutfitId> {
   const { world, now } = opened(save, kinds)
   return new Set(Object.values(world.work).filter((row) => statusOf(row, now) === 'working').map((row) => row.outfitId))
 }
@@ -83,7 +84,7 @@ export function loopWorking(save: SaveV3, kinds: LoopKinds = LOOP_KINDS): Set<Ou
 // --- The player's operations: each runs at the day's start and is stamped with real time ----------------------------
 
 /** A tender is busy (F20 decision 1): she can't start a job until she's moved off her block. */
-function notTending(save: SaveV3, outfitId: OutfitId): void {
+function notTending(save: FarmSave, outfitId: OutfitId): void {
   const block = tendedBlock(save, outfitId)
   if (block !== null) throw new SaveRuleError('busy', `She tends Block ${block}.`)
 }
@@ -97,7 +98,7 @@ export interface LoopJobInput {
 
 /** Starts a job in a free slot this morning; its inputs leave the Warehouse now. A Ready Uma's finished work is collected
  * first. */
-export function startLoopJob(save: SaveV3, input: LoopJobInput, stamp: string, kinds: LoopKinds = LOOP_KINDS): SaveV3 {
+export function startLoopJob<S extends FarmSave>(save: S, input: LoopJobInput, stamp: string, kinds: LoopKinds = LOOP_KINDS): S {
   notTending(save, input.outfitId)
   const { world, env, now } = opened(save, kinds)
   const slot: SlotRef = { building: input.place, slot: input.slot }
@@ -106,7 +107,7 @@ export function startLoopJob(save: SaveV3, input: LoopJobInput, stamp: string, k
 }
 
 /** Adds, removes or moves a job in her queue (uma-kit's queue input): a queued job takes its inputs when it starts. */
-export function editLoopQueue(save: SaveV3, input: QueueInput<LoopWorkRequest>, stamp: string, kinds: LoopKinds = LOOP_KINDS): SaveV3 {
+export function editLoopQueue<S extends FarmSave>(save: S, input: QueueInput<LoopWorkRequest>, stamp: string, kinds: LoopKinds = LOOP_KINDS): S {
   if ('add' in input) notTending(save, input.outfitId)
   const { world, env, now } = opened(save, kinds)
   return changed(save, done(queue(world, input, now, env), now).state, stamp)
@@ -121,7 +122,7 @@ const goodsOf = (outputs: readonly WorkOutput[]): string[] => outputs.flatMap((o
 const sizesOf = (paid: readonly unknown[]): Measured[] => paid.flatMap((d) => (d && typeof d === 'object' && 'sizes' in d ? (d as HaulDetail).sizes : []))
 
 /** Collects what she has finished into the Warehouse; when she's done, her slot frees. */
-export function collectLoopWorker(save: SaveV3, outfitId: OutfitId, stamp: string, kinds: LoopKinds = LOOP_KINDS): { save: SaveV3; items: number; done: boolean } & LoopCollected {
+export function collectLoopWorker<S extends FarmSave>(save: S, outfitId: OutfitId, stamp: string, kinds: LoopKinds = LOOP_KINDS): { save: S; items: number; done: boolean } & LoopCollected {
   const { world, env, now } = opened(save, kinds)
   const { state, receipt } = collect(world, { outfitId }, now, env)
   return {
@@ -131,7 +132,7 @@ export function collectLoopWorker(save: SaveV3, outfitId: OutfitId, stamp: strin
 }
 
 /** Collects every Uma with something finished, on the given places (all by default). Nothing ready changes nothing. */
-export function collectLoopAll(save: SaveV3, stamp: string, places?: readonly LoopPlaceId[], kinds: LoopKinds = LOOP_KINDS): { save: SaveV3; items: number } & LoopCollected {
+export function collectLoopAll<S extends FarmSave>(save: S, stamp: string, places?: readonly LoopPlaceId[], kinds: LoopKinds = LOOP_KINDS): { save: S; items: number } & LoopCollected {
   const { world: settled, env, now } = opened(save, kinds)
   let world = settled
   const got: LoopCollected = { goods: [], sizes: [] }
@@ -146,14 +147,14 @@ export function collectLoopAll(save: SaveV3, stamp: string, places?: readonly Lo
 }
 
 /** Ends her work: what's made is collected, the inputs of what isn't come back, her queue drops. */
-export function recallLoopWorker(save: SaveV3, outfitId: OutfitId, stamp: string, kinds: LoopKinds = LOOP_KINDS): SaveV3 {
+export function recallLoopWorker<S extends FarmSave>(save: S, outfitId: OutfitId, stamp: string, kinds: LoopKinds = LOOP_KINDS): S {
   const { world, env, now } = opened(save, kinds)
   return changed(save, recall(world, { outfitId }, now, env).state, stamp)
 }
 
 /** Starts her last job again where she did it (another free slot there if hers is taken): a Ready Uma's finished entry
  * counts, so Collect and Repeat are one step, and the job starts this morning. */
-export function repeatLoopJob(save: SaveV3, outfitId: OutfitId, stamp: string, kinds: LoopKinds = LOOP_KINDS): SaveV3 {
+export function repeatLoopJob<S extends FarmSave>(save: S, outfitId: OutfitId, stamp: string, kinds: LoopKinds = LOOP_KINDS): S {
   notTending(save, outfitId)
   const { world, env, now } = opened(save, kinds)
   const row = world.work[outfitId]
@@ -167,7 +168,7 @@ export function repeatLoopJob(save: SaveV3, outfitId: OutfitId, stamp: string, k
 
 /** Restarts a queue that stopped: its first job starts this morning where it would have (another free slot there if
  * that one is taken), and the rest queue behind it. */
-export function restartLoopStopped(save: SaveV3, outfitId: OutfitId, stamp: string, kinds: LoopKinds = LOOP_KINDS): SaveV3 {
+export function restartLoopStopped<S extends FarmSave>(save: S, outfitId: OutfitId, stamp: string, kinds: LoopKinds = LOOP_KINDS): S {
   notTending(save, outfitId)
   const { world, env, now } = opened(save, kinds)
   const dropped = world.work[outfitId]?.dropped
@@ -181,7 +182,7 @@ export function restartLoopStopped(save: SaveV3, outfitId: OutfitId, stamp: stri
 }
 
 /** Forgets a queue that stopped. */
-export function dismissLoopStopped(save: SaveV3, outfitId: OutfitId, stamp: string, kinds: LoopKinds = LOOP_KINDS): SaveV3 {
+export function dismissLoopStopped<S extends FarmSave>(save: S, outfitId: OutfitId, stamp: string, kinds: LoopKinds = LOOP_KINDS): S {
   const { world } = opened(save, kinds)
   const row = world.work[outfitId]
   if (!row?.dropped) return save

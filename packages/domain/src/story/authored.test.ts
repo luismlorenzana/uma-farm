@@ -15,8 +15,9 @@ describe('the stand-in story passes', () => {
     expect(routeIssues(STAND_IN_ROUTE, STAND_IN_BIBLE, ctx)).toEqual([])
     expect(pairIssues(STAND_IN_PAIR, ctx)).toEqual([])
   })
-  it('has the 26 rungs of RS7 as D43 amends it, ending on the spouse ladder', () => {
-    expect(RUNGS).toHaveLength(26)
+  it('has the 27 rungs of RS7 as D43 and F46 amend it: her arrival first, ending on the spouse ladder', () => {
+    expect(RUNGS).toHaveLength(27)
+    expect(RUNGS[0]).toBe('arrival')
     expect(RUNGS.slice(-4)).toEqual(['wedding', 's1', 's3', 's5'])
   })
 })
@@ -52,7 +53,7 @@ describe('the bible', () => {
   it('every rung, each with a trigger, a place, what they do together and its hint', () => {
     const bible = clone(STAND_IN_BIBLE)
     bible.route = bible.route.filter((b) => b.id !== 's5')
-    bible.route[0] = { ...bible.route[0]!, together: { kind: 'date', game: 'karaoke' as never }, hint: '' }
+    bible.route[1] = { ...bible.route[1]!, together: { kind: 'date', game: 'karaoke' as never }, hint: '' }
     const issues = bibleIssues(bible, ctx)
     expect(issues).toContain('Her route has no s5 (RS7)')
     expect(issues.some((i) => /Beat f1: a date is one of/.test(i))).toBe(true)
@@ -60,8 +61,8 @@ describe('the bible', () => {
   })
   it('nothing waits on the calendar: no season, festival, clock or weather trigger (D43)', () => {
     const bible = clone(STAND_IN_BIBLE)
-    bible.route[0] = { ...bible.route[0]!, trigger: { kind: 'season', season: 'spring' } as never }
-    bible.route[1] = { ...bible.route[1]!, trigger: { kind: 'item', good: 'golden-carrot' } }
+    bible.route[1] = { ...bible.route[1]!, trigger: { kind: 'season', season: 'spring' } as never }
+    bible.route[2] = { ...bible.route[2]!, trigger: { kind: 'item', good: 'golden-carrot' } }
     const issues = bibleIssues(bible, ctx)
     expect(issues).toEqual(['Beat f1: a trigger is hearts, working, item, bond or chapter; never a clock, the weather, a season or a festival (D43)'])
   })

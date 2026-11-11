@@ -104,7 +104,7 @@ describe('the parse', () => {
   })
 
   it('refuses a newer version', () => {
-    expect(() => parseSave({ ...json(newSave('u1', AT)), version: 4 })).toThrow('save.version: version 4 is newer than this app (3)')
+    expect(() => parseSave({ ...json(newSave('u1', AT)), version: 5 })).toThrow('save.version: version 5 is newer than this app (4)')
   })
 
   it.each<[string, (s: Record<string, any>) => void, string]>([

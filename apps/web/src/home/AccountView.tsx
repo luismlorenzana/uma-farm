@@ -1,6 +1,9 @@
 // Account (uma-kit's AccountPage): who is signed in, the save's sync, its safety copies, the appearance, the build and
 // sign-out, and master data's release. The Notifications card says they're off (F18 decision 12): with days as turns,
-// nothing finishes while the app is closed. F6's switch went with the Wilds (F24); the server's push is untouched.
+// nothing finishes while the app is closed. F6's switch went with the Wilds (F24); the server's push is untouched. On save
+// v4 (F46, RM8) it also holds **Your name**, the farmer's, under the name sheet's rule; and a safety copy from before v4
+// lists without a Restore in the romance build, since restoring it would only wipe again.
+import { cleanFarmerName, FARMER_PLACEHOLDER, farmerNameIssue, versionOf } from '@farm/domain'
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { AccountPage } from '@luismlorenzana/uma-kit/places'
 import { Button, Panel } from '@luismlorenzana/uma-kit/ui'
@@ -8,11 +11,14 @@ import { useEffect, useState } from 'react'
 import { APP_BUILD_ID } from '../app/build'
 import { useMaster } from '../master/master'
 import { safetyCopies, type SafetyCopy } from '../save/db'
+import { romanceOn } from '../app/romance'
 import { restoreSafetyCopy, seeReplaced, useGame } from '../save/game'
 import { dateWords } from '../shell/SyncWarning'
 import { syncWords } from './sync-words'
 
-const REASON: Readonly<Record<SafetyCopy['reason'], string>> = { replaced: 'Replaced by a newer save', restore: 'Before a restore', unreadable: 'Couldn’t be read' }
+const REASON: Readonly<Record<SafetyCopy['reason'], string>> = {
+  replaced: 'Replaced by a newer save', restore: 'Before a restore', unreadable: 'Couldn’t be read', wiped: 'Before the new farm',
+}
 
 /** The loop's Notifications card (decision 12): off, since days are turns; the server's push is untouched. */
 function NotificationsOff() {
@@ -34,14 +40,41 @@ function SafetyCopies() {
   return (
     <Panel label="Safety copies">
       {copies.map((copy) => (
-        <div key={copy.id} className="flex min-h-11 items-center justify-between gap-3 py-2">
+        <div key={copy.id} className="flex min-h-11 items-center justify-between gap-3 py-2" data-safety-copy={copy.reason}>
           <span>{REASON[copy.reason]} · {dateWords(copy.at)}</span>
-          <Button size="sm" variant="secondary" onClick={() => {
-            if (copy.id === undefined || !uid) return
-            void restoreSafetyCopy(copy.id).then(() => safetyCopies(uid)).then(setCopies)
-          }}>Restore</Button>
+          {romanceOn() && versionOf(copy.save) < 4 ? <span className="text-[12px] text-ink-faint">Kept</span> : (
+            <Button size="sm" variant="secondary" onClick={() => {
+              if (copy.id === undefined || !uid) return
+              void restoreSafetyCopy(copy.id).then(() => safetyCopies(uid)).then(setCopies)
+            }}>Restore</Button>
+          )}
         </div>
       ))}
+    </Panel>
+  )
+}
+
+/** **Your name** (decision 11): the farmer's, renamed under the name sheet's rule, a player's change. */
+function YourName() {
+  const name = useGame((s) => (s.save?.version === 4 ? s.save.farmer.name : null))
+  const [draft, setDraft] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  if (name === null) return null
+  const value = draft ?? name
+  const issue = farmerNameIssue(value)
+  const same = cleanFarmerName(value) === name
+  return (
+    <Panel label="Your name">
+      <form className="flex items-center gap-2 py-1" data-your-name onSubmit={(event) => {
+        event.preventDefault()
+        if (issue || same) return
+        void import('../loop/actions').then((a) => a.nameTheFarmer(value)).then(() => { setDraft(null); setError(null) }, (err: unknown) => setError(err instanceof Error ? err.message : 'Try again.'))
+      }}>
+        <input value={value} onChange={(event) => setDraft(event.target.value)} placeholder={FARMER_PLACEHOLDER} aria-label="Your name" maxLength={40} autoComplete="off"
+          className="min-h-11 min-w-0 flex-1 rounded-sm border border-hairline bg-panel px-3 text-[16px]" />
+        <Button size="sm" type="submit" disabled={issue !== null || same}>Save</Button>
+      </form>
+      {(error ?? (draft !== null && !same ? issue : null)) && <p role="alert" className="pb-1 text-[12px] text-danger">{error ?? issue}</p>}
     </Panel>
   )
 }
@@ -62,7 +95,7 @@ export function AccountView() {
         { label: 'Master data', value: release },
       ]}
       notifications={<NotificationsOff />}
-      sections={<SafetyCopies />}
+      sections={<><YourName /><SafetyCopies /></>}
       onSignOut={auth.authRequired ? () => auth.signOut() : undefined}
     />
   )

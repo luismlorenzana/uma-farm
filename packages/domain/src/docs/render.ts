@@ -40,6 +40,14 @@ import { CHAPTER_POINTS, DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POI
 import { CAST, CAST_IDS } from '../story/cast'
 import { CHAPTER_1_GOALS, CHAPTERS } from '../story/chapters'
 import { CLOSING_SCENE, HELLO_LINES, OPENING_SCENE, type Beat } from '../story/chapter-1'
+import { ARRIVAL_DORM_LEVELS, DORM_LEVELS_V4 } from '../farm/dorm'
+import { NIGHT_STEPS_V4 } from '../night/end-day'
+import { ARRIVAL_KINDS } from '../romance/arrivals'
+import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER } from '../romance/love'
+import { FARMER_NAME_MAX } from '../romance/farmer'
+import { OPENING_SCENE_V4 } from '../story/opening-v4'
+import { favouriteOf, storyPackFrom } from '../story/pack'
+import { STAND_IN_FILES } from '../story/stand-in'
 
 type Cell = string | number
 /** A Markdown table; pipes in cells are escaped. */
@@ -525,8 +533,58 @@ function helloLines(): string {
   return table(['Temperament', 'Her hello'], TEMPERAMENTS.map((t) => [cap(t), HELLO_LINES[t]]))
 }
 
+// --- The romance core's start (F46) ---------------------------------------------------------------------------------
+
+/** RM5: the Dorm for 20, save v4's eight levels. */
+function dormV4(): string {
+  const levels = DORM_LEVELS_V4
+  return table(['Level', ...levels.map((l) => String(l.level))], [
+    ['Beds', ...levels.map((l) => l.beds)],
+    ['Costs', ...levels.map((l) => (l.cost === 0 ? '—' : l.cost.toLocaleString('en-US')))],
+    ['Farm Rank', ...levels.map((l) => (l.farmRank === 0 ? '—' : l.farmRank))],
+    ['Brings', ...levels.map((l) => (ARRIVAL_DORM_LEVELS.includes(l.level) ? 'an arrival' : ''))],
+  ])
+}
+/** RM4: the five kinds of arrival. */
+function arrivals(): string {
+  return table(['Arrival', 'When she arrives', 'Checked'], ARRIVAL_KINDS.map((a) => [`\`${a.kind}\``, a.when, a.where]))
+}
+/** Decision 10: what her arrival scene pays. */
+function arrivalPay(): string {
+  return table(['Her arrival scene', 'Points into her bar'], [
+    ['Played or skipped to its end', `+${ARRIVAL_POINTS}`], ['Its choice: the option with the highest authored gain (each one tied at the top)', `+${CHOICE_BEST}`],
+    ['Its choice: any other option', `+${CHOICE_OTHER}`],
+  ])
+}
+/** RM9: "The Overgrown Farm", re-cut for v4. */
+function openingV4(): string {
+  return table(['#', 'Who', 'Line'], OPENING_SCENE_V4.beats.map((b, i) => [i + 1, speakerWords(b), b.line]))
+}
+/** Decision 8: step 8 on v4. */
+function nightV4(): string {
+  return table(['Step', 'Function', 'What happens', 'Filled by'], NIGHT_STEPS_V4.filter((s) => s.step === 8).map((s) => [s.step, `\`${s.name}\``, s.what, s.by]))
+}
+/** Decision 6: the stand-in pack in git, the dark build's cast. */
+function standIn(): string {
+  const pack = storyPackFrom(STAND_IN_FILES)
+  return table(['Character', 'Outfit', 'Calling', 'Favourite line', 'Arrives', 'Bible', 'Scripted'], pack.cast.umas.map((u) => [
+    u.characterId, u.outfitId, u.calling, favouriteOf(pack, u.characterId) ?? '—', u.arrives.kind, pack.bibles.has(u.characterId) ? 'Yes' : 'No (her calling stands in)',
+    `${pack.scripted.get(u.characterId)?.size ?? 0} of 27`,
+  ]))
+}
+/** Decision 11: the farmer's name. */
+function farmerName(): string {
+  return table(['Rule', 'Detail'], [
+    ['Characters', 'Letters of any script (with their accents), spaces, apostrophes (\' and ’) and hyphens'],
+    ['Length', `1–${FARMER_NAME_MAX} characters, after trimming and collapsing inner runs of spaces`],
+    ['Default', 'None: an empty field with a grey “Farmer”'],
+    ['Where it shows', '`{farmer}` in every line, filled when the line shows; the save holds the name, never story text'],
+  ])
+}
+
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
+    'dorm-v4': dormV4, arrivals, 'arrival-pay': arrivalPay, 'opening-v4': openingV4, 'night-v4': nightV4, 'stand-in': standIn, 'farmer-name': farmerName,
     calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
     crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,

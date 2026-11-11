@@ -1,7 +1,7 @@
 import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { newSave, newSaveV2, touched } from '@farm/domain'
+import { freshV4, newSave, newSaveV2, touched } from '@farm/domain'
 
 /** The version a v2 save claims when it's sent. */
 const V2 = 2
@@ -35,6 +35,17 @@ describe('the local save store', () => {
     const repo = new LocalSaveRepository(path)
     await expect(repo.put('u', 1, newSaveV2('u', NOW), V2)).rejects.toBeInstanceOf(RevisionConflict)
     expect((await repo.load('u')).save).toEqual(newSave('u', NOW))
+  })
+
+  it('stores a v4 over a v3 as sent (F46), and refuses a v3 over it', async () => {
+    const path = await file()
+    await writeFile(path, JSON.stringify({ u: { revision: 1, save: newSave('u', NOW) } }))
+    const repo = new LocalSaveRepository(path)
+    const wiped = freshV4(newSave('u', NOW))
+    await expect(repo.put('u', 1, wiped, 4)).resolves.toEqual({ revision: 2, save: wiped })
+    expect(await repo.load('u')).toEqual({ revision: 2, save: wiped })
+    await expect(repo.put('u', 2, newSave('u', LATER), 3)).rejects.toBeInstanceOf(RevisionConflict)
+    expect((await repo.load('u')).save).toEqual(wiped)
   })
 
   it('keeps a refused upload beside the file', async () => {

@@ -150,6 +150,11 @@ time. A step whose packet hasn't landed passes the night on unchanged, and each 
 
 ## The morning summary (CS5, decision 11)
 
+> **On save v4 (romance build; live from F56; F46 decision 15):** §4 is **Hearts** in place of Bonds, its first line
+> `{ kind: 'arrived', id, home }` ("Stand-in 4 arrived · away", her arrival scene waiting); §5 drops the roster's
+> `joined`, Gate and `left` lines; and night step 8 runs `arriveUmas` in place of `gateVisitors`
+> ([hearts.md](hearts.md#the-night-and-the-morning-on-v4)). The table below is v3's.
+
 `save.summary` holds ids and counts, never sentences, and the app words them. It's the morning it opens on (its `day` is
 the save's), replaced each night, and set to null when the player puts it away: **Start the day**, the close button or a
 drag down, a player's change. CS5's six sections, in order; an empty one is hidden, and an empty card says "A quiet

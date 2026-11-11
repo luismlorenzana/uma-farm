@@ -216,6 +216,11 @@ CS26's rank term is `rankQuality(rank)`. The forest's areas and the Fishery's sp
 
 ## Her favourite line (CS33; decision 6)
 
+> **On save v4 (romance build; live from F56; F46 decision 13, RM6):** her favourite line is her story bible's
+> `favouriteLine`, else her cast entry's calling (`quarry` is mining, at the Quarry), read from the story pack at step 6
+> (`NightContext.story`, `favouriteOf`); `favouriteActivity(outfit.line)` stays v3's. ×1.2 is unchanged, and the hearts
+> factor is ×1 on v4 until F47 ([hearts.md](hearts.md#her-favourite-line-and-tastes-rm6-rm7)).
+
 Her calling (her best running styles, the Wilds' rule as copied, `farmRoster` in `roster/roster.ts`) names her line, and
 the line her favourite activity (`favouriteActivity`): **Metal and Stone mining, Wood foraging, Fish fishing,
 Vegetables farming**. She earns ×1.2 rank points there, and a pair sharing it will earn ×1.5 bond points (M6). The

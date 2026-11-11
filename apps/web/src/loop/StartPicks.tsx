@@ -20,7 +20,7 @@ const errorWords = (err: unknown): string => (err instanceof Error ? err.message
 
 export default function StartPicks() {
   const save = useLoopSave()
-  if (!save || picksLeft(save) === 0) return null
+  if (!save || save.version !== 3 || picksLeft(save) === 0) return null
   return (
     <div className="pt-safe pb-safe fixed inset-0 z-[60] flex flex-col bg-page" data-start role="dialog" aria-modal="true" aria-label="Your first hands">
       <MasterGate>{(master) => <Cards save={save} master={master} />}</MasterGate>

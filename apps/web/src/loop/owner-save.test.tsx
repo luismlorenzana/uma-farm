@@ -54,7 +54,7 @@ fixture.view = (await albumFixture(undefined, [
 const OWNER: SaveV2 = {
   version: 2, account: { uid: 'owner', createdAt: '2026-11-08T09:12:44.000Z', updatedAt: '2026-11-08T21:40:03.512Z' }, umas: {}, items: {}, buildings: {}, work: {},
 }
-const save = (): SaveV3 => useGame.getState().save!
+const save = (): SaveV3 => useGame.getState().save as SaveV3
 
 let host: HTMLDivElement
 let root: Root

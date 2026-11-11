@@ -4,6 +4,7 @@
 // opens each is CS3's, read from the save. Until a place's packet lands, the app shows it locked (F19–F23 wire them up).
 import type { SaveV3 } from '../save/v3'
 import { farmRankOf } from './farm'
+import type { FarmSave } from '../save/v4'
 
 export const FARM_PLACE_IDS = [
   'fields', 'mill', 'coop',
@@ -84,12 +85,16 @@ export const FARM_MAP_ROWS = 8
 const BY_ID = new Map(FARM_PLACES.map((p) => [p.id, p]))
 export const farmPlace = (id: string | null | undefined): FarmPlace | undefined => (id ? BY_ID.get(id as FarmPlaceId) : undefined)
 
+/** A place's blurb on a save's version: on v4 the Gate is where the cast walks in (F46 decision 14), not where visitors
+ * wait. */
+export const placeBlurb = (place: Pick<FarmPlace, 'id' | 'blurb'>, version: number): string => (version >= 4 && place.id === 'gate' ? 'Umas arrive here.' : place.blurb)
+
 /** Whether a place's rule has opened it on this save (CS3): a chapter once it starts, the Mill once chapter 1 is done, a
  * Farm Rank once reached. The board and the festival ground wait for M6. */
-export const placeOpen = (save: Pick<SaveV3, 'farm'>, place: FarmPlace): boolean => opened(save, place.opens)
+export const placeOpen = (save: Pick<FarmSave, 'farm'>, place: FarmPlace): boolean => opened(save, place.opens)
 
 /** Whether what opens something has happened on this save: a place, or a line in the shop (F19). */
-export function opened(save: Pick<SaveV3, 'farm'>, opens: PlaceOpens): boolean {
+export function opened(save: Pick<FarmSave, 'farm'>, opens: PlaceOpens): boolean {
   switch (opens.by) {
     case 'start': return true
     case 'chapter': return save.farm.chapter >= opens.chapter

@@ -1,5 +1,6 @@
 // F40's story in the sandbox: the world bible, the cast in arrival order, each Uma's page with her route as a visible
-// ladder (26 rungs: friendship 1–10, the confession, romance 1–10, the proposal, the wedding, spouse 1, 3 and 5), and
+// ladder (27 rungs: her arrival, friendship 1–10, the confession, romance 1–10, the proposal, the wedding, spouse 1, 3 and
+// 5; F46), and
 // the ties as one graph.
 // Every name, picture and line comes from the private content/story/ at run time.
 import { D, h, reviewDot, reviewPanel, stat } from './views.js'
@@ -112,8 +113,8 @@ export function characterView(id, onReview) {
   )
 }
 
-/** Her 26 rungs as a ladder you can see (D42, D43): friendship 1–10, the confession, romance 1–10, the proposal, the
- * wedding, and the spouse ladder's three after it. */
+/** Her 27 rungs as a ladder you can see (D42, D43, F46): her arrival scene, friendship 1–10, the confession, romance 1–10,
+ * the proposal, the wedding, and the spouse ladder's three after it. */
 function ladder(id, bible) {
   const beats = new Map((bible?.data.route ?? []).map((b) => [b.id, b]))
   const route = D.routeOf.get(id)
@@ -127,6 +128,7 @@ function ladder(id, bible) {
       b?.hint ? h('span', { class: 'rung-meta', text: `Opens: ${b.hint}` }) : null)
   }
   return h('div', {},
+    h('div', { class: 'ladder-arrival' }, rung('arrival', 'Arrival', 'key')),
     h('div', { class: 'ladder' },
       h('div', { class: 'ladder-col' }, h('h4', { text: 'Friendship ♥ 1–10' }), Array.from({ length: 10 }, (_, i) => rung(`f${i + 1}`, `♥ ${i + 1}`, 'friend'))),
       h('div', { class: 'ladder-mid' }, rung('confession', 'Confession', 'key'), rung('proposal', 'Proposal', 'key'), rung('wedding', 'Wedding', 'key')),

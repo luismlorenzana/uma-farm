@@ -40,7 +40,7 @@ fixture.view = (await albumFixture(undefined, [
 ])).view
 
 const AT = '2026-11-09T10:00:00.000Z'
-const save = (): SaveV3 => useGame.getState().save!
+const save = (): SaveV3 => useGame.getState().save as SaveV3
 /** The start's three home on day 7, the opening scene read, with `counts`; Aster at Farming Hand when `hand`. */
 function farm(counts: Record<string, number> = {}, hand = false): SaveV3 {
   const base = newSave('u1', AT)

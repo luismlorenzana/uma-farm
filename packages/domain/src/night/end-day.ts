@@ -7,6 +7,11 @@
 //
 // Every draw a step makes is `draw(uid, day, what, n)`, so the same save always gives the same morning (CS8). The player's
 // change is stamped once, with real time, after the ninth step.
+//
+// Save v4 (F46, the romance core, dark) runs the same steps with its own rules where the romance changes them, keyed off
+// `save.version`: step 6 reads favourites from the story pack (RM6) and a ×1 hearts factor until F47; step 7 clears v4's
+// `today`; step 8 is `settleDorm` → `arriveUmas` (authored arrivals, in place of the Gate) → `checkGoals` (the chapter's
+// authored arrival, in place of `recruitFor`); step 9's §4 is Hearts (`arrived` lines).
 import { endsAt, finishedCount, isRefusal, settle, speedUp } from '@luismlorenzana/uma-work'
 import { DAY_MS, festivalOn, isSeasonStart, dateOf, workNow } from '../farm/calendar'
 import { settleDormNight } from '../farm/dorm'
@@ -20,11 +25,14 @@ import { payBin } from '../save/bin'
 import { settleLoopWork } from '../save/loop-work'
 import { LOOP_WORK_PLACES, type LoopKinds, type LoopPlaceId } from '../save/parse-v3'
 import { touched } from '../save/save'
-import { BLOCK_IDS, type BlockId, type OutfitId, type SaveV3 } from '../save/v3'
+import { arrivalsTonight } from '../romance/arrivals'
+import { BLOCK_IDS, type BlockId, type OutfitId } from '../save/v3'
+import type { FarmSave, SaveV4 } from '../save/v4'
+import { castOrder, favouriteOf, type StoryPack } from '../story/pack'
 import { farmEnvV3, loopWorld, nightEnvV3, WELL_FED_TICKETS, withLoopWorld } from '../work/loop-env'
 import { checkGoalsNight, type GoalsTonight } from '../story/chapters'
 import { daySetState } from './nudge'
-import type { BinSale, MorningSummary, NewsLine, Nudge, RankLine, WorkLine } from './summary'
+import type { BinSale, HeartLine, MorningSummary, MorningSummaryV4, NewsLine, NewsLineV4, Nudge, RankLine, WorkLine } from './summary'
 
 /** What the night reads beyond the save (decision 2): master data, loaded before End the day runs, and the talents the
  * app reads from it once a release (F21). */
@@ -36,6 +44,9 @@ export interface NightContext {
   /** Each Uma's talent in an activity (F21, CS27): tending's growth (step 2), a queued job's plan when it starts at the
    * boundary (step 7, F22) and rank points (step 6). D for everyone when left out (tests). */
   readonly talentOf?: TalentOf
+  /** The story pack (F46): a v4 night's favourites (RM6) and authored arrivals (RM4). A v4 night without it arrives no
+   * one and reads no favourites; v3 never reads it. */
+  readonly story?: Pick<StoryPack, 'cast' | 'bibles'>
 }
 
 /** What the steps saw that a later one needs and the save alone can't show. Each packet adds its own notes. */
@@ -68,19 +79,21 @@ export interface NightNotes {
   readonly left: readonly OutfitId[]
   /** Step 8: the chapter completed tonight, the Diary's milestones and rows paid, and Farm Ranks reached (F24). */
   readonly goals: GoalsTonight
+  /** Step 8 on v4: the cast Umas who arrived (F46), before the chapter's own. */
+  readonly arrived: readonly { id: string; home: boolean }[]
 }
 
 /** A night's notes before its first step. */
 export const emptyNotes = (): NightNotes => ({
   sold: [], worked: [], finished: [], made: [], best: null, tended: [], ripened: [], withered: [], ranks: [], dorm: null, home: [], gate: null, left: [],
-  goals: { chapter: null, paid: [], ranks: [] },
+  goals: { chapter: null, paid: [], ranks: [] }, arrived: [],
 })
 
 export interface Night {
   /** The save as the player left the day. */
-  readonly before: SaveV3
+  readonly before: FarmSave
   /** The save as the night has it so far. */
-  readonly save: SaveV3
+  readonly save: FarmSave
   readonly context: NightContext
   readonly notes: NightNotes
 }
@@ -163,7 +176,10 @@ export const resetWorkshops: NightStep = same
  */
 export const tickRanks: NightStep = (night) => {
   const talentOf = talentsOf(night)
-  const favourites = new Map(night.context.roster.map((o) => [o.outfitId, favouriteActivity(o)]))
+  const { story } = night.context
+  const favourites = night.save.version === 4
+    ? new Map(Object.keys(night.save.roster).map((id) => [id, story ? favouriteOf(story, id) : null]))
+    : new Map(night.context.roster.map((o) => [o.outfitId, favouriteActivity(o)]))
   const worked: WorkedDay[] = [
     ...night.notes.worked.map((w) => ({ outfitId: w.outfitId, activity: PLACE_ACTIVITY[w.place] })),
     ...night.notes.tended.map((t) => ({ outfitId: t.outfitId, activity: 'farming' as const })),
@@ -175,10 +191,12 @@ export const tickRanks: NightStep = (night) => {
 export const tickBonds: NightStep = same
 
 /** Step 6: the well-fed days count down (CS22). Nothing sets them in M4 but tests; the staff meal is M5's (F8). */
-export const countWellFed: NightStep = (night) => {
-  const roster = { ...night.save.roster }
-  for (const [id, uma] of Object.entries(roster)) if (uma.wellFed > 0) roster[id] = { ...uma, wellFed: uma.wellFed - 1 }
-  return { ...night, save: { ...night.save, roster } }
+export const countWellFed: NightStep = (night) => ({ ...night, save: wellFedDown(night.save) })
+
+function wellFedDown(save: FarmSave): FarmSave {
+  const down = <U extends { wellFed: number }>(roster: Record<string, U>): Record<string, U> =>
+    Object.fromEntries(Object.entries(roster).map(([id, uma]) => [id, uma.wellFed > 0 ? { ...uma, wellFed: uma.wellFed - 1 } : uma]))
+  return save.version === 4 ? { ...save, roster: down(save.roster) } : { ...save, roster: down(save.roster) }
 }
 
 /** Step 7, before the date turns (F20; CS4, decision 6): on a season's last night, crops still growing that don't grow in
@@ -194,7 +212,10 @@ export const witherCrops: NightStep = (night) => {
  * day's once-a-day chats and gifts clear. On a season's last night `witherCrops` has already withered crops out of season.
  */
 export const turnCalendar: NightStep = (night) => {
-  const turned: SaveV3 = { ...night.save, calendar: { day: night.save.calendar.day + 1 }, today: { chats: [], gifts: [] } }
+  const calendar = { day: night.save.calendar.day + 1 }
+  const turned: FarmSave = night.save.version === 4
+    ? { ...night.save, calendar, today: { chats: [], gifts: [], praise: [], praised: [], events: [], evenings: [], invites: [] } }
+    : { ...night.save, calendar, today: { chats: [], gifts: [] } }
   return { ...night, save: settleLoopWork(turned, kindsOf(night)) }
 }
 
@@ -208,8 +229,17 @@ export const settleDorm: NightStep = (night) => {
 /** Step 8 (F23 decision 5; CS35): a visitor who has waited 6 days leaves; then, on a morning divisible by 4, one arrives
  * at the Gate while a bed is free and none waits, drawn from master data's outfits not on the roster and not waiting. */
 export const gateVisitors: NightStep = (night) => {
+  if (night.save.version === 4) return night
   const { save, arrived, left } = gateNight(night.save, night.context.roster.map((o) => o.outfitId))
   return { ...night, save, notes: { ...night.notes, gate: arrived, left } }
+}
+
+/** Step 8 on v4 (F46 decision 8; RM4), after the Dorm: every cast Uma not on the roster whose authored arrival holds
+ * joins, in the cast's order, home while a bed is free, else away. A v3 night never runs it. */
+export const arriveUmas: NightStep = (night) => {
+  if (night.save.version !== 4 || !night.context.story) return night
+  const { save, arrived } = arrivalsTonight(night.save, night.context.story)
+  return { ...night, save, notes: { ...night.notes, arrived } }
 }
 
 /** Step 8 (F24 decisions 1, 2, 4 and 5; CS38, CS39, CS42): the Diary pays the milestones and rows reached (a depth
@@ -217,7 +247,7 @@ export const gateVisitors: NightStep = (night) => {
  * is met, paying 500g, the Mill's plans and a recruit from master data's release (`recruitFor`, `joinRoster`); the next
  * chapter opens. The closing scene waits for the morning. */
 export const checkGoals: NightStep = (night) => {
-  const { save, tonight } = checkGoalsNight(night.save, night.context.roster.map((o) => o.outfitId), talentsOf(night), night.notes.made)
+  const { save, tonight } = checkGoalsNight(night.save, night.context.roster.map((o) => o.outfitId), talentsOf(night), night.notes.made, night.context.story)
   return { ...night, save, notes: { ...night.notes, goals: tonight } }
 }
 
@@ -246,6 +276,7 @@ function goalNews(notes: NightNotes): NewsLine[] {
  * roster who wasn't last evening), a visitor at the Gate and those who left. */
 function rosterNews(night: Night): NewsLine[] {
   const { save, notes, before } = night
+  if (save.version === 4) return dormNews(night)
   const joined = Object.keys(save.roster).filter((id) => !before.roster[id])
   return [
     ...(notes.dorm !== null ? [{ kind: 'dorm' as const, level: notes.dorm }] : []),
@@ -254,6 +285,21 @@ function rosterNews(night: Night): NewsLine[] {
     ...(notes.gate ? [{ kind: 'gate' as const, outfitId: notes.gate }] : []),
     ...notes.left.map((outfitId): NewsLine => ({ kind: 'left', outfitId })),
   ]
+}
+
+/** The Dorm's news on v4: its new level, and Umas home from a swap (arrivals are §4's). */
+function dormNews({ notes }: Night): NewsLineV4[] {
+  return [...(notes.dorm !== null ? [{ kind: 'dorm' as const, level: notes.dorm }] : []), ...(notes.home.length > 0 ? [{ kind: 'home' as const, umas: [...notes.home] }] : [])]
+}
+
+/** §4 Hearts on v4 (F46 decision 15): everyone who joined tonight, the arrivals at step 8 in the cast's order and then the
+ * chapter's, home or away; her arrival scene waits for the farm to open. */
+function heartLines(night: Night): HeartLine[] {
+  const { save, before, context } = night
+  const order = context.story ? castOrder(context.story) : []
+  const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length)
+  return Object.keys(save.roster).filter((id) => !before.roster[id]).sort((a, b) => rank(a) - rank(b) || Number(a) - Number(b))
+    .map((id): HeartLine => ({ kind: 'arrived', id, home: save.dorm.home.includes(id) }))
 }
 
 /** Step 9: the morning summary, built from what changed (CS5, decision 11). It replaces last night's. */
@@ -272,8 +318,16 @@ export const buildSummary: NightStep = (night) => {
   const { idle } = daySetState(save)
   const plant = plotsToPlant(save)
   const nudges: Nudge[] = [...(idle.length > 0 ? [{ kind: 'idle' as const, umas: idle }] : []), ...(plant > 0 ? [{ kind: 'seeds' as const, plots: plant }] : [])]
+  const work = [...jobs, ...best, ...crops, ...withered]
+  if (save.version === 4) {
+    const summary: MorningSummaryV4 = {
+      day: save.calendar.day, bin: [...notes.sold], work, ranks: [...notes.ranks], hearts: heartLines(night),
+      news: [...newsOf(save.calendar.day), ...goalNews(notes), ...dormNews(night)] as NewsLineV4[], nudges,
+    }
+    return { ...night, save: { ...save, summary } }
+  }
   const summary: MorningSummary = {
-    day: save.calendar.day, bin: [...notes.sold], work: [...jobs, ...best, ...crops, ...withered], ranks: [...notes.ranks], bonds: [],
+    day: save.calendar.day, bin: [...notes.sold], work, ranks: [...notes.ranks], bonds: [],
     news: [...newsOf(save.calendar.day), ...goalNews(notes), ...rosterNews(night)], nudges,
   }
   return { ...night, save: { ...save, summary } }
@@ -307,13 +361,24 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 9, name: 'buildSummary', run: buildSummary, what: 'The morning summary, from what changed', by: 'F18' },
 ]
 
+/** Save v4's steps (F46 decision 8): v3's, with the Gate's step replaced by authored arrivals. */
+export const NIGHT_STEPS_V4: readonly NightStepDef[] = NIGHT_STEPS.map((step) => step.name === 'gateVisitors'
+  ? { step: 8, name: 'arriveUmas', run: arriveUmas, what: 'Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away', by: 'F46' }
+  : step)
+
+/** The steps a save's night runs, by its version. */
+export const nightStepsOf = (save: { version: number }): readonly NightStepDef[] => (save.version === 4 ? NIGHT_STEPS_V4 : NIGHT_STEPS)
+
 /** The night's steps over a save, unstamped: `endDay` without its stamp. Tests swap a step to stand in for a later one. */
-export function runNight(save: SaveV3, context: NightContext, steps: readonly { run: NightStep }[] = NIGHT_STEPS): SaveV3 {
+export function runNight<S extends FarmSave>(save: S, context: NightContext, steps: readonly { run: NightStep }[] = nightStepsOf(save)): S {
   const start: Night = { before: save, save, context, notes: emptyNotes() }
-  return steps.reduce((night, step) => step.run(night), start).save
+  return steps.reduce((night, step) => step.run(night), start).save as S
 }
 
 /** Ends the day: the night's nine steps, then the player's one stamp, `now` in real time (decision 13). */
-export function endDay(save: SaveV3, context: NightContext, now: string): SaveV3 {
+export function endDay<S extends FarmSave>(save: S, context: NightContext, now: string): S {
   return touched(runNight(save, context), now)
 }
+
+/** A v4 night's typed entry point, for the romance build and its tests. */
+export const endDayV4 = (save: SaveV4, context: NightContext, now: string): SaveV4 => endDay(save, context, now)

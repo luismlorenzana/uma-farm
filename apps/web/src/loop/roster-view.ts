@@ -2,12 +2,14 @@
 // filters (talent and rank in each activity, favourite line) and the sorts (talent score and rank points in an activity,
 // joined, name), the words on a card, and one Uma's nine activities for her sheet. `/roster` and every Uma picker (the
 // Fields' tender, F22's jobs, F23's swaps) read these. F23 adds everyone on the roster, home or away, and your affinity
-// with her. Pure, so the pages and the tests read the same.
+// with her. On save v4 (F46) her favourite line is the story pack's (RM6) and there is no affinity until F47's route. Pure
+// but for the pack, which the romance build has loaded before any screen.
 import {
-  ACTIVITIES, ACTIVITY_NAMES, activityScore, challengeFor, challengeMet, favouriteActivity, FAVOURITE_ACTIVITIES, HEART_POINTS, heartsOf, MAX_AFFINITY,
-  pointsFull, RANK_POINTS, RANKS, TALENT_D, TALENT_GRADES,
-  type Activity, type FarmOutfit, type RosterUma, type SaveV3, type Talents, type TalentStep,
+  ACTIVITIES, ACTIVITY_NAMES, activityScore, challengeFor, challengeMet, favouriteActivity, favouriteOf, FAVOURITE_ACTIVITIES, HEART_POINTS, heartsOf,
+  MAX_AFFINITY, pointsFull, RANK_POINTS, RANKS, TALENT_D, TALENT_GRADES,
+  type Activity, type FarmOutfit, type RosterUma, type FarmSave, type StoryPack, type Talents, type TalentStep,
 } from '@farm/domain'
+import { storyPack } from '../story/story'
 import type { UmaPickerRow, UmaPickerSort } from '@luismlorenzana/uma-kit/album'
 import type { AlbumQuery, FacetDef, SortDef } from '@luismlorenzana/uma-kit/roster'
 
@@ -24,7 +26,7 @@ export interface RosterView {
 }
 
 /** Her best activity by rank: the highest, then the most points, then the activities' order. */
-export function bestActivity(uma: RosterUma): Activity {
+export function bestActivity(uma: Pick<RosterUma, 'ranks'>): Activity {
   return ACTIVITIES.reduce((top, a) => {
     const r = uma.ranks[a]
     const t = uma.ranks[top]
@@ -33,13 +35,13 @@ export function bestActivity(uma: RosterUma): Activity {
 }
 
 /** Her best rank: "Hand · Mining", or "Novice" before her first points. */
-export function bestRank(uma: RosterUma): string {
+export function bestRank(uma: Pick<RosterUma, 'ranks'>): string {
   const best = bestActivity(uma)
   const { rank, points } = uma.ranks[best]
   return rank === 0 && points === 0 ? RANKS[0] : `${RANKS[rank]} · ${ACTIVITY_NAMES[best]}`
 }
 
-export function rosterView(save: SaveV3): RosterView {
+export function rosterView(save: FarmSave): RosterView {
   return {
     home: save.dorm.home.flatMap((id) => (save.roster[id] ? [{ outfitId: id, rank: bestRank(save.roster[id]) }] : [])),
     away: Object.keys(save.roster).length - save.dorm.home.length,
@@ -90,9 +92,10 @@ export const WHERE_FACET: FacetDef = {
 /** The roster's filters: where she is, then the pickers'. */
 export const ROSTER_FACETS: readonly FacetDef[] = [WHERE_FACET, ...UMA_FACETS]
 
-/** The Umas `ids` (on the roster) as rows, with master data's names and talents; `favourites` from master data's roster. */
-export function umaRows(save: SaveV3, ids: readonly string[], names: ReadonlyMap<string, { name: string; releasedAt: string }>, talents: ReadonlyMap<string, Talents> | null,
-  roster: readonly FarmOutfit[]): LoopUmaRow[] {
+/** The Umas `ids` (on the roster) as rows, with master data's names and talents; favourites from master data's roster on
+ * v3, from the story pack on v4 (RM6). */
+export function umaRows(save: FarmSave, ids: readonly string[], names: ReadonlyMap<string, { name: string; releasedAt: string }>, talents: ReadonlyMap<string, Talents> | null,
+  roster: readonly FarmOutfit[], story: Pick<StoryPack, 'cast' | 'bibles'> | null = storyPack()): LoopUmaRow[] {
   const lines = new Map(roster.map((o) => [o.outfitId, o]))
   return ids.flatMap((id) => {
     const uma = save.roster[id]
@@ -100,10 +103,10 @@ export function umaRows(save: SaveV3, ids: readonly string[], names: ReadonlyMap
     const base = names.get(id)
     const name = base?.name ?? 'Uma'
     const outfit = lines.get(id)
-    const favourite = outfit ? favouriteActivity(outfit) : null
+    const favourite = save.version === 4 ? (story ? favouriteOf(story, id) : null) : outfit ? favouriteActivity(outfit) : null
     const row: LoopUmaRow = {
       id, name, releasedAt: base?.releasedAt ?? '', level: null, search: name.toLowerCase(), facets: {}, sorts: {},
-      talents: talents?.get(id) ?? null, ranks: uma.ranks, favourite, joined: uma.joined, home: save.dorm.home.includes(id), affinity: uma.affinity,
+      talents: talents?.get(id) ?? null, ranks: uma.ranks, favourite, joined: uma.joined, home: save.dorm.home.includes(id), affinity: 'affinity' in uma ? uma.affinity : 0,
     }
     const facets: Record<string, readonly string[]> = { favourite: favourite ? [favourite] : [], where: [row.home ? 'home' : 'away'] }
     for (const a of ACTIVITIES) {

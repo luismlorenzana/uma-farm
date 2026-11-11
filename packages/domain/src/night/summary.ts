@@ -126,9 +126,45 @@ export interface MorningSummary {
   nudges: Nudge[]
 }
 
+// --- Save v4's morning (F46 decision 15; romance spec RM57): §4 becomes Hearts ------------------------------------------
+
+/** §4 Hearts (F46): an Uma who arrived overnight, home or away on her off-season; her arrival scene waits for the farm to
+ * open. F47, F49–F52 and F54 add their lines in place while v4 is dark; F48 orders and draws the section (RM57). */
+export interface ArrivedLine {
+  kind: 'arrived'
+  /** Her character id. */
+  id: string
+  home: boolean
+}
+export type HeartLine = ArrivedLine
+
+/** §5 on v4: v3's news without its roster lines (`joined`, `gate`, `left`): arrivals are §4's, and the Gate has no
+ * visitors. Rank lines' `outfitId` holds the roster's key, her character id (decision 5). */
+export type NewsLineV4 = Exclude<NewsLine, { kind: 'joined' | 'gate' | 'left' }>
+
+/** The morning on save v4: v3's sections with §4 `bonds: []` replaced by `hearts`. */
+export interface MorningSummaryV4 {
+  day: number
+  bin: BinSale[]
+  work: WorkLine[]
+  ranks: RankLine[]
+  /** §4 Hearts: arrivals (F46); the romance's lines join with their packets. */
+  hearts: HeartLine[]
+  news: NewsLineV4[]
+  nudges: Nudge[]
+}
+
 /** CS5's order. */
 export const SUMMARY_SECTIONS = ['bin', 'work', 'ranks', 'bonds', 'news', 'nudges'] as const
 export type SummarySection = typeof SUMMARY_SECTIONS[number]
+/** v4's order: Hearts in §4's place (RM57). */
+export const SUMMARY_SECTIONS_V4 = ['bin', 'work', 'ranks', 'hearts', 'news', 'nudges'] as const
+export type SummarySectionV4 = typeof SUMMARY_SECTIONS_V4[number]
 
-/** The sections with lines, in CS5's order: the card shows these and hides the rest. */
-export const summarySections = (summary: MorningSummary): SummarySection[] => SUMMARY_SECTIONS.filter((section) => summary[section].length > 0)
+/** The sections with lines, in CS5's order: the card shows these and hides the rest. A v4 morning's §4 is Hearts. */
+export function summarySections(summary: MorningSummary): SummarySection[]
+export function summarySections(summary: MorningSummary | MorningSummaryV4): (SummarySection | SummarySectionV4)[]
+export function summarySections(summary: MorningSummary | MorningSummaryV4): (SummarySection | SummarySectionV4)[] {
+  if ('hearts' in summary) return SUMMARY_SECTIONS_V4.filter((section) => summary[section].length > 0)
+  return SUMMARY_SECTIONS.filter((section) => summary[section].length > 0)
+}

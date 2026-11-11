@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "ties": [
+    {
+      "a": "9000001",
+      "b": "9000002",
+      "kind": "friends",
+      "strength": 3,
+      "line": "Old friends.",
+      "history": "Invented."
+    },
+    {
+      "a": "9000001",
+      "b": "9000003",
+      "kind": "rivals",
+      "strength": 2,
+      "line": "Old rivals.",
+      "history": "Invented."
+    },
+    {
+      "a": "9000002",
+      "b": "9000003",
+      "kind": "teammates",
+      "strength": 1,
+      "line": "They share the Pond.",
+      "history": "Invented."
+    }
+  ]
+}

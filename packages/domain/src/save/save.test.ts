@@ -52,7 +52,7 @@ describe('save v2', () => {
 
   it('refuses a newer version, unknown keys, bad ids and bad rows, saying where', () => {
     const save = newSaveV2('u1', AT)
-    expect(() => parseSave({ version: 4, account: {} })).toThrow(/newer than this app/)
+    expect(() => parseSave({ version: 5, account: {} })).toThrow(/newer than this app/)
     expect(() => parseSave({ ...save, extra: 1 })).toThrow(/unknown keys extra/)
     expect(() => parseSave({ version: 1, account: { uid: 'u1', createdAt: 'soon', updatedAt: AT } })).toThrow(SaveParseError)
     expect(() => parseSave(null)).toThrow(/save.version/)
