@@ -8,10 +8,11 @@
 // F52 extends `tieRows` (the hearts move with `save.bonds`, her closest friend first and marked, a conversation to Read)
 // and adds the pairs' words for the morning and the Diary (`pairWords`, `conversationRows`), all over `farm/bonds.ts`.
 //
-// For later packets: F50 fills `invited` (today's invitation) and the header's evening; F54 adds her house to the row's
-// note and the track's colours stay as they are.
+// F50 fills `invited` (her invitation stands, unanswered or yes and not yet spent: `invitedNow`); the header's evening
+// marks are `evening-view.ts`'. For later packets: F54 adds her house to the row's note and the track's colours stay as
+// they are.
 import {
-  ACTIVITY_NAMES, bar, bondHearts, bondOf, castOrder, dateOf, favouriteOf, farmPlace, GIFT_POINTS_V4, isGoodId, LADDER_COLOURS, ladderOf, levelWords, nextBondHeart, nextRung,
+  ACTIVITY_NAMES, bar, bondHearts, bondOf, castOrder, dateOf, favouriteOf, farmPlace, GIFT_POINTS_V4, invitedNow, isGoodId, LADDER_COLOURS, ladderOf, levelWords, nextBondHeart, nextRung,
   pairLevels, pairName, pairOf, perkLineOf, perksFor, readiness, readLevels, ROUTE_RUNGS, rungName, SEASON_NAMES, tasteKnown, tiesOf, unreadLevels, WAITING_RUNGS,
   type Bar, type Birthdays, type LadderName, type Love, type LoveStage, type Perk, type Readiness, type SaveV4, type StoryPack, type Tie, type Wait,
 } from '@farm/domain'
@@ -162,7 +163,7 @@ export function heartRows(save: SaveV4, pack: HeartsPack, nameOf: NameOf): Heart
     const order = cast.indexOf(id)
     return [{
       id, name: nameOf(id), level: levelWords(love), stage: love.stage, bar: now, heart: heartBar(love, state), state, home,
-      invited: save.today.invites.some((i) => i.id === id && i.answer === null), chatted: save.today.chats.includes(id), gifted: save.today.gifts.includes(id),
+      invited: invitedNow(save, id), chatted: save.today.chats.includes(id), gifted: save.today.gifts.includes(id),
       note: rowNote(state, now, home, state.ready ? beatPlace(pack, id, state.rung) : null, nameOf),
       filters: [...(state.ready ? ['ready' as const] : []), STAGE_FILTER[love.stage], ...(home ? [] : ['away' as const])],
       progress: routeIndex(love), points: love.points, order: order < 0 ? cast.length : order,

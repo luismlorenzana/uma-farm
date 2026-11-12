@@ -4,7 +4,8 @@
 // the player and the tests read the same. Loaded on demand with the player.
 import {
   dateOf, EVENING_GRADE_POINTS, EVENT_GRADE_POINTS, farmPlace, GRADE_NAMES, gradeOf, goodName, nextRung, perkWords, ROUTE_RUNGS, rungName, NIGHT_RUNGS,
-  type Emote, type EventCard, type OptionView, type PerkId, type PerkLine, type PlayKind, type PlayLength, type SaveV4, type Season, type StoryPack, type Wait,
+  type Emote, type EventCard, type Grade, type OptionView, type PerkId, type PerkLine, type PlayKind, type PlayLength, type SaveV4, type Season, type StoryPack,
+  type Wait,
 } from '@farm/domain'
 import { placeWords } from './hearts-view'
 import { WORK_PLACE } from './love-words'
@@ -90,9 +91,9 @@ export const PLAY_HOW: Readonly<Record<PlayKind, string>> = {
   walk: 'At each fork, take the turn toward the place she loves.',
   choose: 'Pick the one she’d like best.',
 }
-/** The grades and what each pays, under the play. */
-export function gradeLegend(length: PlayLength): string {
-  const pays = length === 'event' ? EVENT_GRADE_POINTS : EVENING_GRADE_POINTS
+/** The grades and what each pays, under the play: the length's own, or an evening's with her factors (F50). */
+export function gradeLegend(length: PlayLength, own?: Readonly<Record<Grade, number>>): string {
+  const pays = own ?? (length === 'event' ? EVENT_GRADE_POINTS : EVENING_GRADE_POINTS)
   return (['fine', 'great', 'perfect'] as const).map((g) => `${GRADE_NAMES[g]} +${pays[g]}`).join(' · ')
 }
 /** A play's result: "Great · +15". */

@@ -1,13 +1,14 @@
 // The morning summary's lines (F18 decision 11, F19 decision 6, F20, F21, F23, F24): the save holds ids and counts, and
 // these say them, each line a tap to its place. With the farm map, on demand. Pure, so the card and the tests read the same.
 // On save v4 (F46 decision 15) §4 is Hearts, in RM57's order (F48 decisions 1 and 9): the Ready lines read live, up to
-// three and "+N more"; the invitation (F50); the house's morning (F54); birthdays and anniversaries, today and tomorrow
+// three and "+N more"; the invitation with Yes, tonight and Another day (F50); the house's morning (F54); birthdays and
+// anniversaries, today and tomorrow
 // (F47); levels reached overnight (F54) and arrivals' scenes waiting (F46); side by side's extras and bond hearts with
 // Read (F52). A Ready line plays her event over the morning (`?event=`, F49, RM54); the rest open her profile on the
 // Hearts tab (`/hearts?uma=`), a pair's Read its conversations (`?read=`), side
 // by side the Warehouse; the Dorm's beds are the Dorm for 20's.
 import {
-  ACTIVITY_NAMES, bedsFor, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, rungName, SEASON_NAMES, SUMMARY_SECTIONS_V4, summarySections, type FarmPlaceId,
+  ACTIVITY_NAMES, bedsFor, EVENINGS, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, rungName, SEASON_NAMES, SUMMARY_SECTIONS_V4, summarySections, type FarmPlaceId,
   type FestivalId, type HeartLine, type MorningSummary, type MorningSummaryV4, type SummarySection, type SummarySectionV4,
 } from '@farm/domain'
 import { chapterDoneWords, farmRankWords, milestoneWords } from './goal-words'
@@ -25,6 +26,8 @@ export interface SummaryLine {
   /** A mark after the words: "In demand" on a sale the season lifted (F19); "Rank up" and "Points full" (F21); "New"
    * (F23); "Chapter", "Farm Rank" and "Milestone" (F24). */
   tag?: string
+  /** Her invitation's id (F50): the card draws Yes, tonight and Another day under the line. */
+  invite?: string
 }
 export interface SummaryPart {
   section: SummarySection | SummarySectionV4
@@ -72,7 +75,7 @@ export const READY_LINES = 3
 /** RM57's order of §4 Hearts, by line kind: (1) Ready, (2) the invitation (F50), (3) the house's morning (F54), (4)
  * birthdays and anniversaries, (5) levels reached overnight (F54) and arrivals, (6) side by side and bond hearts (F52). A
  * new stored kind takes its place here and its words in `heartLine`; within a place the night's order holds. */
-export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = { birthday: 4, anniversary: 4, arrived: 5, side: 6, bond: 6 }
+export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = { invite: 2, birthday: 4, anniversary: 4, arrived: 5, side: 6, bond: 6 }
 
 /** §4 Hearts on v4 (decisions 1 and 9): the Ready lines, then the stored lines in RM57's order. `pairs` says which bond
  * lines have a conversation to Read (F52); without it (the pack loading) they say the heart alone. */
@@ -111,6 +114,7 @@ function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null): Su
   const name = nameOf(line.id)
   const to = umaSheet(line.id, 4)
   switch (line.kind) {
+    case 'invite': return { key: `invite:${line.id}`, to, text: `✉ ${name}: “${EVENINGS[line.evening].question ?? EVENINGS[line.evening].name}”`, invite: line.id }
     case 'birthday': return { key: `birthday:${line.id}`, to, text: line.when === 'today' ? `★ ${name}’s birthday today` : `★ Tomorrow: ${name}’s birthday` }
     case 'anniversary': return {
       key: `anniversary:${line.id}`, to,

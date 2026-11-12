@@ -341,9 +341,10 @@ describe('anniversaries (RM17; decision 11)', () => {
 
   it('leaves a ★5 item of her line that morning, with the line the day before', () => {
     const eve = runNight(married(wed + DAYS_PER_YEAR - 2), context(NO_BIRTHDAYS))
-    expect(eve.summary!.hearts).toEqual([{ kind: 'anniversary', id: ONE, when: 'tomorrow', item: null }])
+    // F50: a spouse whose favourite kind is open asks you out each morning, §4's second place.
+    expect(eve.summary!.hearts).toEqual([{ kind: 'invite', id: ONE, evening: 'stargazing' }, { kind: 'anniversary', id: ONE, when: 'tomorrow', item: null }])
     const day = runNight(eve, context(NO_BIRTHDAYS))
-    const line = day.summary!.hearts[0]!
+    const line = day.summary!.hearts.find((h) => h.kind === 'anniversary')!
     expect(line).toMatchObject({ kind: 'anniversary', id: ONE, when: 'today' })
     const item = (line as { item: string }).item
     expect(SHOP_SEEDS[dateOf(day.calendar.day).season]).toContain(item) // a farmer's: a crop of the season

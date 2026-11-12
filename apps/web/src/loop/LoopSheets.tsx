@@ -1,20 +1,28 @@
 // The loop's global sheets (F18 decisions 6 and 8, F19 decisions 7 and 8, F24 decision 8): `?sheet=end`, End the day;
 // `?sheet=calendar`, the calendar from the account bar's date; `?sheet=bin`, the shipping bin from the map or the gold
 // chip; `?sheet=shop`, the shop; `?sheet=rank`, the Farm Rank from its chip. Each opens over the page it was tapped on,
-// so Back closes it. Loaded on demand when one opens.
+// so Back closes it. Loaded on demand when one opens. In the romance build on save v4 (F50 decision 8), End the day opens
+// **Tonight** while an evening slot is free and someone can spend it, and the night is a fade to dusk and back up on the
+// morning (`night-fade.ts`); otherwise F18's rule stands.
 import {
   CHAPTER_POINTS, DAYS_PER_SEASON, DAYS_PER_YEAR, daySetState, dateOf, ENTRY_POINTS, FARM_RANK_POINTS, farmPointsOf, farmRankOf, farmRankOpens, FESTIVALS,
-  GOLD_PER_POINT, MILESTONE_POINTS, nextFarmRank, nextFestival, SEASON_NAMES, SEASONS,
+  GOLD_PER_POINT, MILESTONE_POINTS, nextFarmRank, nextFestival, SEASON_NAMES, SEASONS, tonightOpens,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { Button, HelpButton, Sheet, TrophyIcon } from '@luismlorenzana/uma-kit/ui'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Button, HelpButton, Sheet, TrophyIcon, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
+import { romanceOn } from '../app/romance'
 import { useLoopSave } from '../save/game'
+import { useStory } from '../story/story'
 import { endTheDay } from './actions'
 import { BinSheet, ShopSheet } from './GoodsSheets'
 import { useAskBeforeEnd } from './ask'
+import { withNightFade } from './night-fade'
 import { nudgeWords, SEASON_COLOR, shortDate, whenWords } from './words'
+
+// The romance build's only: the switch folds at build time, and the deployed build drops the import.
+const Tonight = /* @__PURE__ */ lazy(() => import('./Tonight'))
 
 export default function LoopSheets({ sheet }: { sheet: 'end' | 'calendar' | 'bin' | 'shop' | 'rank' }) {
   const close = useClose()
@@ -36,37 +44,53 @@ function useClose(): () => void {
 /**
  * End the day (CS6, decision 6): the tab opens `?sheet=end`. When all is set, or the Menu's switch skips the question, the
  * day ends at once; otherwise one line says what's left, with End anyway and Back. Either way the morning opens on the
- * farm. The day the tap meant is held, so a second tap or a save that moved on meanwhile ends nothing more.
+ * farm. The day the tap meant is held, so a second tap or a save that moved on meanwhile ends nothing more. In the
+ * romance build on v4 (F50 decision 8), Tonight opens first while an evening is free and someone can spend it, decided
+ * once as the sheet opens (so a played evening doesn't end the day by itself), and the night fades through dusk.
  */
 function EndDay() {
   const save = useLoopSave()
   const ask = useAskBeforeEnd()
   const navigate = useNavigate()
   const close = useClose()
+  const reduced = useReducedMotionSetting()
+  const pack = useStory()
   const day = useRef(save?.calendar.day ?? null)
   const started = useRef(false)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const set = useMemo(() => (save ? daySetState(save) : null), [save])
+  const romance = romanceOn() && save?.version === 4
+  // Tonight or F18's sheet, decided once the pack is in (the v4 night waits for it anyway).
+  const [tonight, setTonight] = useState<boolean | null>(romance ? null : false)
+  useEffect(() => {
+    if (tonight === null && save?.version === 4 && pack) setTonight(tonightOpens(save, pack))
+  }, [tonight, save, pack])
   const end = useCallback(async () => {
     if (started.current || day.current === null) return
     started.current = true
     setPending(true)
     setError(null)
-    try {
-      await endTheDay(day.current)
+    const night = async () => {
+      await endTheDay(day.current!)
       navigate('/', { replace: true })
+    }
+    try {
+      await (romance ? withNightFade(night, reduced) : night())
     } catch (err) {
       started.current = false
       setPending(false)
       setError(err instanceof Error ? err.message : 'That didn’t work. Try again.')
     }
-  }, [navigate])
-  const atOnce = set !== null && (set.allSet || !ask)
+  }, [navigate, romance, reduced])
+  const atOnce = set !== null && tonight === false && (set.allSet || !ask)
   useEffect(() => {
     if (atOnce) void end()
   }, [atOnce, end])
-  if (!save || !set || (atOnce && error === null)) return null
+  if (!save || !set || tonight === null || (atOnce && error === null)) return null
+  if (romanceOn() && tonight && save.version === 4 && pack) {
+    return <Suspense fallback={null}><Tonight save={save} pack={pack} pending={pending} error={error} onEnd={() => void end()} onBack={close} /></Suspense>
+  }
   return (
     <Sheet
       open

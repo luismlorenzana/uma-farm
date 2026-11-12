@@ -2,8 +2,10 @@
 // keys and v3-only keys (`start`, `visitors`, a roster Uma's `affinity`) are refused; roster keys are character ids by form
 // (the API has no story pack or master data); `love` holds exactly the roster's keys, each in range; `memories` and
 // `arrivals` name roster Umas; the farmer's name is empty or within RM8's rule; the Dorm is on its eight levels. Each later
-// romance packet adds the checks for what it fills, while v4 grows in place (decision 1).
-import { dateOf, FESTIVAL_IDS } from '../farm/calendar'
+// romance packet adds the checks for what it fills, while v4 grows in place (decision 1). F50: today's evenings fill the
+// day's slots (one, two on days divisible by 4 from 10 married, festival night's on a festival day) with RM37's kinds, and
+// its invitations are one (two from 10 married), each a different Uma, asking for a date game.
+import { dateOf, FESTIVAL_IDS, festivalOn } from '../farm/calendar'
 import { cleanFarmerName, farmerNameIssue } from '../romance/farmer'
 import { isCropId, isGoodId, isWarehouseId, type CropId } from '../goods/ids'
 import { LOOP_REQUESTS } from '../gathering/ids'
@@ -15,7 +17,10 @@ import {
   parseFarm, parseFields, parseNewsLines, parseNudges, parseRanch, parseRankLines, parseRanks, parseTools, parseWarehouse, parseWork, parseWorkLines,
   parseWorkshops, unique, type LoopRequestKinds,
 } from './parse-loop'
-import { LOVE_STAGES, type Homestead, type Love, type RosterUmaV4, type SaveV4, type TodayV4 } from './v4'
+import {
+  EVENING_KINDS, eveningsOn, FESTIVAL_NIGHT, invitesFor, LOVE_STAGES, marriedCount, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUmaV4, type SaveV4,
+  type TodayV4,
+} from './v4'
 
 export const SAVE_V4_KEYS = [
   'version', 'account', 'farmer', 'calendar', 'gold', 'today', 'roster', 'love', 'dorm', 'items', 'bin', 'work', 'fields', 'crops', 'ranch', 'places',
@@ -120,22 +125,33 @@ function parseMemories(value: unknown, path: string, roster: ReadonlySet<string>
   return out
 }
 
-function parseToday(value: unknown, path: string, roster: ReadonlySet<string>): TodayV4 {
+/** An evening's kind (F50, RM37): a date game or festival night. */
+const eveningKind = (v: unknown, at: string): EveningKind => oneOf(v, at, EVENING_KINDS)
+/** An invitation's kind: a date game, never festival night. */
+const inviteKind = (v: unknown, at: string): InviteKind => (v === FESTIVAL_NIGHT ? fail(at, 'expected a date game') : eveningKind(v, at) as InviteKind)
+
+/** `today` (F47–F52; F50 decisions 5 and 7): the evenings within the day's slots (`evenings` regular ones, festival
+ * night's on a festival day), and `invites` invitations, each a different Uma. */
+function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
   const o = object(value, path, ['chats', 'gifts', 'praise', 'praised', 'events', 'asked', 'evenings', 'invites', 'bonds'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
-  const kind = (v: unknown, at: string) => (typeof v === 'string' && KEY.test(v) ? v : fail(at, 'expected a kind'))
+  const slots = eveningsOn(day, married)
+  const evenings = list(o.evenings, `${path}.evenings`, 0, slots + 1).map((v, i) => {
+    const e = object(v, `${path}.evenings.${i}`, ['with', 'kind'])
+    return { with: member(e.with, `${path}.evenings.${i}.with`, roster), kind: eveningKind(e.kind, `${path}.evenings.${i}.kind`) }
+  })
+  const nights = evenings.filter((e) => e.kind === FESTIVAL_NIGHT).length
+  if (nights > (festivalOn(day) ? 1 : 0)) fail(`${path}.evenings`, 'festival night only on a festival day, once')
+  if (evenings.length - nights > slots) fail(`${path}.evenings`, `expected at most ${slots} evening${slots === 1 ? '' : 's'} today`)
   return {
     chats: umas(o.chats, `${path}.chats`), gifts: umas(o.gifts, `${path}.gifts`), praise: umas(o.praise, `${path}.praise`),
     praised: umas(o.praised, `${path}.praised`), events: umas(o.events, `${path}.events`), asked: umas(o.asked, `${path}.asked`),
-    evenings: list(o.evenings, `${path}.evenings`, 0, 2).map((v, i) => {
-      const e = object(v, `${path}.evenings.${i}`, ['with', 'kind'])
-      return { with: member(e.with, `${path}.evenings.${i}.with`, roster), kind: kind(e.kind, `${path}.evenings.${i}.kind`) }
-    }),
-    invites: unique(list(o.invites, `${path}.invites`, 0, 2).map((v, i) => {
+    evenings,
+    invites: unique(list(o.invites, `${path}.invites`, 0, invitesFor(married)).map((v, i) => {
       const at = `${path}.invites.${i}`
       const n = object(v, at, ['id', 'kind', 'answer'])
       const answer = n.answer === null ? null : oneOf(n.answer, `${at}.answer`, ['yes', 'no'] as const)
-      return { id: member(n.id, `${at}.id`, roster), kind: kind(n.kind, `${at}.kind`), answer }
+      return { id: member(n.id, `${at}.id`, roster), kind: inviteKind(n.kind, `${at}.kind`), answer }
     }), `${path}.invites`, (n) => n.id),
     bonds: parseBondHeartsToday(o.bonds, `${path}.bonds`, roster),
   }
@@ -176,15 +192,20 @@ function parseFarmer(value: unknown, path: string): SaveV4['farmer'] {
 
 // --- The morning (decision 15; F47) -----------------------------------------------------------------------------------------
 
-/** §4 Hearts (F46 decision 15; F47 decision 14; F52 decisions 7 and 9): arrivals, birthdays and anniversaries, each an Uma
- * on the roster, once a kind each; an anniversary's item is a good on the day and null the day before; side by side once,
- * 1+ items; bond hearts 1–5 once a pair, two roster Umas in `pairKey` order. */
+/** §4 Hearts (F46 decision 15; F47 decision 14; F52 decisions 7 and 9; F50 decision 7): invitations, arrivals, birthdays
+ * and anniversaries, each an Uma on the roster, once a kind each; an invitation asks for a date game; an anniversary's item
+ * is a good on the day and null the day before; side by side once, 1+ items; bond hearts 1–5 once a pair, two roster Umas
+ * in `pairKey` order. */
 function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>): HeartLine[] {
   const when = (v: unknown, at: string) => oneOf(v, at, ['today', 'tomorrow'] as const)
   const pairs = (roster.size * (roster.size - 1)) / 2
-  return unique(list(value, path, 0, roster.size * 3 + pairs + 1).map((v, i): HeartLine => {
+  return unique(list(value, path, 0, roster.size * 4 + pairs + 1).map((v, i): HeartLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['arrived', 'birthday', 'anniversary', 'side', 'bond'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['invite', 'arrived', 'birthday', 'anniversary', 'side', 'bond'] as const)
+    if (kind === 'invite') {
+      const n = object(v, at, ['kind', 'id', 'evening'])
+      return { kind, id: member(n.id, `${at}.id`, roster), evening: inviteKind(n.evening, `${at}.evening`) }
+    }
     if (kind === 'birthday') {
       const b = object(v, at, ['kind', 'id', 'when'])
       return { kind, id: member(b.id, `${at}.id`, roster), when: when(b.when, `${at}.when`) }
@@ -234,15 +255,16 @@ export function parseSaveV4(value: unknown, path = 'save', kinds: LoopRequestKin
   const buildings = parseBuildings(o.buildings, `${path}.buildings`, 4)
   const homestead = parseHomestead(o.homestead, `${path}.homestead`, today)
   const arrivals = unique(list(o.arrivals, `${path}.arrivals`, 0, ids.size).map((v, i) => member(v, `${path}.arrivals.${i}`, ids)), `${path}.arrivals`)
+  const love = parseLoveAll(o.love, `${path}.love`, ids, today, homestead.houses.length)
   return {
     version: 4,
     account: parseAccount(o.account, `${path}.account`),
     farmer: parseFarmer(o.farmer, `${path}.farmer`),
     calendar: { day: today },
     gold: count(o.gold, `${path}.gold`),
-    today: parseToday(o.today, `${path}.today`, ids),
+    today: parseToday(o.today, `${path}.today`, ids, today, marriedCount({ love })),
     roster,
-    love: parseLoveAll(o.love, `${path}.love`, ids, today, homestead.houses.length),
+    love,
     dorm: parseDorm(o.dorm, `${path}.dorm`, ids, buildings.dorm, 4),
     items: parseWarehouse(o.items, `${path}.items`, isWarehouseId),
     bin: parseWarehouse(o.bin, `${path}.bin`, isGoodId),

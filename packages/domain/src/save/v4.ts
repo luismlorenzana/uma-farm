@@ -53,7 +53,7 @@ export interface Love {
   known: string[]
   /** Set by choices; they change wording only (RM27). */
   flags: string[]
-  /** The day of her last evening; 0 before any. */
+  /** The day of her last evening (F50): what the invitations' weight reads; 0 before any. */
   evening: number
   /** The festivals she's been at with you (F47 decision 9: +50 once a festival a year), as `<festival>:<year>`. */
   festivals: string[]
@@ -68,15 +68,34 @@ export interface RosterUmaV4 {
   wellFed: number
 }
 
-/** An evening spent with her (F50 refines the kinds in place). */
+/** The evening's kinds (F50 decision 1; romance spec RM37): D42's ten date games, then festival night, its own slot on a
+ * festival day. The rules, names and plays are `romance/evening.ts`'s; the ids live here so the save's parse stays light. */
+export const EVENING_KINDS = ['walk', 'fishing', 'picnic', 'market', 'cooking', 'crafting', 'stargazing', 'dance', 'boat', 'footrace', 'festival'] as const
+export type EveningKind = typeof EVENING_KINDS[number]
+/** Festival night (RM19): a walk at the festival ground, the festival day's second evening. */
+export const FESTIVAL_NIGHT = 'festival' satisfies EveningKind
+/** A kind an invitation asks for: her favourite date game, never festival night. */
+export type InviteKind = Exclude<EveningKind, typeof FESTIVAL_NIGHT>
+/** Two evenings and two invitations (RM45) from this many married… */
+export const TWO_EVENINGS_MARRIED = 10
+/** …the second evening on days divisible by this (F50 decision 5; D48: the Gate's old every-fourth-day rule). */
+export const SECOND_EVENING_EVERY = 4
+/** Spouses on the farm (F50 decision 5): what RM45's household milestones count. F54 reads it too. */
+export const marriedCount = (save: Pick<SaveV4, 'love'>): number => Object.values(save.love).filter((love) => love.stage === 'spouse').length
+/** Today's evening slots besides festival night (F50 decision 5): one, and a second on days divisible by 4 from 10 married. */
+export const eveningsOn = (day: number, married: number): number => (married >= TWO_EVENINGS_MARRIED && day % SECOND_EVENING_EVERY === 0 ? 2 : 1)
+/** Morning invitations (RM20): one, two from 10 married. */
+export const invitesFor = (married: number): number => (married >= TWO_EVENINGS_MARRIED ? 2 : 1)
+
+/** An evening spent with her (F50 decision 5): one a slot, `festival` filling festival night's. */
 export interface Evening {
   with: CharacterId
-  kind: string
+  kind: EveningKind
 }
-/** A morning invitation (F50 refines it in place). */
+/** A morning invitation (F50 decision 7): drawn at night step 9, answered Yes or Another day, cleared at step 7. */
 export interface Invite {
   id: CharacterId
-  kind: string
+  kind: InviteKind
   answer: 'yes' | 'no' | null
 }
 
@@ -92,7 +111,9 @@ export interface TodayV4 {
   events: CharacterId[]
   /** Whom you asked again after her confession's "Not yet" today (F49 decision 10): Ask her once a day, never her event. */
   asked: CharacterId[]
+  /** Evenings spent today (F50): one a slot, in the order played. */
   evenings: Evening[]
+  /** This morning's invitations (F50): at most one, two from 10 married, each a different Uma. */
   invites: Invite[]
   /** Bond hearts before each pair's first move since the last morning (F52 decision 9), by `pairKey`: the morning lists what
    * rose since, whether a day (the opening's seeds) or the night moved it. Night step 9 empties it. */

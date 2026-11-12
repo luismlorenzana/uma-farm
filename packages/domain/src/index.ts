@@ -131,6 +131,9 @@ export * from './romance/plays/walk'
 export * from './romance/plays/choose'
 export * from './romance/plays/which'
 export * from './romance/events'
+// The evening (F50; RM19–RM22, RM37): the kinds by ladder and game, her favourite kind, the slots and festival night, the
+// evening's points and its card, the morning's invitations and their answers, and when Tonight opens.
+export * from './romance/evening'
 export * from './story/pack'
 export * from './story/stand-in'
 export * from './story/opening-v4'
