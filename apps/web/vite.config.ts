@@ -104,7 +104,8 @@ export default defineConfig(({ mode }) => {
     preview: { port: 5194 },
     build: { target: 'es2022', manifest: true },
     // uma-kit is transformed with the app, so its links share the app's router (F18's bar test renders them). The romance
-    // switch is off (F46 decision 4): M4's tests run unchanged, and a romance test turns it on with `vi.stubEnv`.
-    test: { environment: 'jsdom', maxWorkers: 2, env: { VITE_FARM_ROMANCE: '0' }, server: { deps: { inline: [/@luismlorenzana\/uma-kit/] } } },
+    // switch is off (F46 decision 4): M4's tests run unchanged, and a romance test turns it on with `vi.stubEnv`. The story
+    // pack is the stand-in (F56 decision 5): no test reads farm-api; the loader's own tests stub this.
+    test: { environment: 'jsdom', maxWorkers: 2, env: { VITE_FARM_ROMANCE: '0', VITE_FARM_STORY: 'stand-in' }, server: { deps: { inline: [/@luismlorenzana\/uma-kit/] } } },
   }
 })

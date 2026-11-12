@@ -178,8 +178,10 @@ interface Love { stage, level, points, last, friend?, ring?, wed?, house?, known
   new farm" in Account, which offers no Restore for a pre-v4 copy, since that would wipe again). The server's
   version-bump backup copies the stored v3 document to `saveBackups/{uid}-v3` on the first v4 write; a v3 upload over a
   stored v4 is a 409, kept in `saveRescues/{uid}`.
-- **The live M4 build stops at a v4** ("This save is from a newer version of the farm."): its boot fails with Try again,
-  its sync stops before any upload, and the kit's update prompt brings the build that can play it.
+- **The live M4 build stops at a v4**: its boot gate says **"This save is from a newer version of the farm."** with Try
+  again (F56, D51's carried item; the kit's generic "couldn't open" stays for any other failure) and asks the browser for
+  the new build at once, its sync stops before any upload, and the kit's update prompt beside the gate (Update ready ·
+  Restart) brings the build that can play it.
 
 ### The romance core's dark switch and two builds (F46)
 
@@ -193,9 +195,17 @@ the bin, the night) take `FarmSave = SaveV3 | SaveV4`.
 
 **The story pack at runtime** (`story/pack.ts`, `StoryPack`): the cast, the ties, the bibles by character id and which
 events each route scripts, validated by F40's validator as it loads (routes partial); scripts load on demand. The web
-loads it once through one seam (`apps/web/src/story/load.ts`: the stand-in until F56) and sees master data through the
-cast (`outfitOf`): each cast Uma's character id reads her outfit's album row, stats and art. See
+loads it once through one seam (`apps/web/src/story/load.ts`) and sees master data through the cast (`outfitOf`): each
+cast Uma's character id reads her outfit's album row, stats and art. See
 [hearts.md](hearts.md#the-cast-and-the-pack-rm1rm3-rm58-rm59).
+
+**The pack's delivery** (F56, built dark): the private pack's release (`pnpm story:release`: `story.json` and
+hash-named `story/<name>.<hash8>.json` files) is served by farm-api's `PrivatePackModule` at `/api/content/…` behind the
+owner guard (`apps/api/src/story/story-pack.ts`: `STORY_BUCKET` in production, `STORY_DIR` locally, 404 with neither).
+The seam reads `story.json` through uma-kit's content client, then each file verified by hash and kept in its Cache
+Storage (`story/delivery.ts`), with the last good index in `localStorage` for an offline boot; routes and pairs load on
+demand (`releasedStoryPack`). The stand-in is the dev server's fallback only, and `scripts/check-size.mjs` refuses a
+build that holds it. See [hearts.md](hearts.md#the-packs-delivery-rm58-f56).
 
 ### The shape: v3, the farm's (built in F17, live from F24)
 
