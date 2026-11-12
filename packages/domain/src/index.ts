@@ -138,15 +138,20 @@ export * from './romance/events'
 // The evening (F50; RM19–RM22, RM37): the kinds by ladder and game, her favourite kind, the slots and festival night, the
 // evening's points and its card, the morning's invitations and their answers, and when Tonight opens.
 export * from './romance/evening'
+// The ring bench, the proposal and the wedding (F53; RM30, RM38–RM40): the rings' bench at the Forge, her ring's grade and
+// a better ring, the proposal's ring, the wedding's place, reception and guests, and Ida Stone's scene.
+export * from './romance/bench'
+export * from './romance/wedding'
+export * from './story/bench'
 export * from './story/pack'
 export * from './story/stand-in'
 export * from './story/opening-v4'
 export {
-  ANSWERS, answerAt, ARRIVAL, arrivalIssues, BIG_EVENTS, bibleIssues, CALLINGS, castIssues, CHAT_SETS, DATE_GAMES, EMOTES, EVENT_LIMITS, eventIssues, FARMING_PLAYS, LADDERS,
+  ANSWERS, answerAt, ARRIVAL, arrivalIssues, BIG_EVENTS, bibleIssues, CALLINGS, castIssues, CHAT_SETS, DATE_GAMES, EMOTES, EVENT_LIMITS, eventIssues, FARMING_PLAYS, gendersFarmer, LADDERS,
   pairIssues, routeIssues, RUNGS, stepIssues, STORY_PLACES, tiesIssues, TONES, unscriptedBeats,
 } from './story/authored'
 export type {
   Answer, Arrival, Beat as RouteBeat, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, DateGame, Emote, Ladder, OptionGives, PairCheck, PairConversations, Play, Route, RouteCheck,
-  Step, StoryContext, StoryPlace, Tie, Ties, Together, Tone, Trigger, UmaBible, Unlock,
+  Step, StoryContext, StoryPlace, Tie, Ties, Together, Tone, Trigger, UmaBible, Unlock, WeddingPlan,
 } from './story/authored'
 

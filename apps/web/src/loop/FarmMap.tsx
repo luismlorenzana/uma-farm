@@ -5,7 +5,7 @@
 // map until the player starts the day. On save v4 a Ready Uma's pip carries ♥ wherever the map draws her (F48 decision 10)
 // and the morning's Hearts section lists who's Ready (decision 9), both read live; its bond hearts carry Read while a
 // conversation waits (F52), which plays over the morning (`?read=`); in the romance build an invitation's line carries Yes,
-// tonight and Another day (F50). Loaded on demand.
+// tonight and Another day (F50); on v4 the Forge's quick look is the ring bench's once it stands (F53). Loaded on demand.
 import {
   farmEnvV3, FARM_PLACES, farmPlace, placeBlurb, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, STAY_AFFINITY, workNow, type FarmPlace, type LoopPlaceId,
   type FarmSave,
@@ -35,6 +35,7 @@ import { isWorkScreen } from './work-view'
 const GROUND: PageGround = { id: 'farm', tiles: 'farmlands', palette: PALETTES.farmlands! }
 // The romance build's only: the switch folds at build time, and the deployed build drops the import.
 const InviteAnswer = /* @__PURE__ */ lazy(() => import('./InviteAnswer'))
+const BenchPeek = /* @__PURE__ */ lazy(() => import('./BenchSheet').then((m) => ({ default: m.BenchPeek })))
 const WORK_PLACES: ReadonlySet<string> = new Set(LOOP_WORK_PLACES)
 
 /** `/`, with an optional `?peek=<place>` quick look. An unknown place drops the panel. */
@@ -171,7 +172,8 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
           words={{ close: 'Close', about: `About the ${peek.name}`, backTo: 'Back to the farm' }}
           focusKey={`[data-place="${peek.id}"]`}
         >
-          {peek.id === 'fields' && lockOf(save, peek) === null ? <FieldsPeek save={save} talentOf={farming} />
+          {romanceOn() && save.version === 4 && peek.id === 'forge' && lockOf(save, peek) === null ? <Suspense fallback={null}><BenchPeek save={save} /></Suspense>
+            : peek.id === 'fields' && lockOf(save, peek) === null ? <FieldsPeek save={save} talentOf={farming} />
             : peek.id === 'gate' && lockOf(save, peek) === null ? <GatePeek save={save} />
               : isWorkScreen(peek.id) && placeOpen(save, peek) ? <WorkPlacePeek save={save} place={peek.id} />
                 : <PlacePeek save={save} place={peek} />}

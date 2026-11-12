@@ -70,6 +70,18 @@ the shared rules read) and `romance/perk-effects.ts` (the night's effects and th
 6 and 9; the screens her profile's Perks, **From her** and Gifts (`loop/hearts-view.ts`, `loop/HeartProfile.tsx`), the
 morning's lines and the level-up card's recipe. The spec is RM31–RM36; the calls are F51's (D57).
 
+**Built from F53.** **The ring and the wedding.** The night after the first Romance 8 event anyone plays, Ida Stone comes
+up from town and opens the old **Forge as a ring bench**: three refined goods of one grade make a ring of that grade, no
+gold, one a day. **Any ring makes the proposal Ready** the day after Romance 10: you pick which, it plays and always
+succeeds, and she's **engaged**; her ring's grade is kept (`love.ring`). **The wedding** waits until you play it: you
+choose **the place** (one of her three), play it with **every spouse and her two closest friends** as guests and **your
+vows**, then **the reception** (a dish in the Warehouse, or Marta's cake), and she's your **spouse**: her ring adds **+1%
+a grade** at her line, and a better ring can be given any day. The rings join v4's catalogue (they sell, and form a Diary
+row). The rules are `romance/bench.ts`, `romance/wedding.ts`, `playEvent`'s proposal and wedding (`romance/events.ts`),
+`story/bench.ts` and night steps 8 and 9; the screens `loop/BenchSheet.tsx`, `loop/BenchScene.tsx`, the event player's
+pickers and `loop/EventCards.tsx`'s Engaged and Married, and her profile's **Ring**. The spec is RM30 and RM38–RM40; the
+calls are F53's (D58).
+
 ```
  a fresh v4 farm (or any v1–v3, wiped)
    │
@@ -507,6 +519,7 @@ row, a card in the Work view, the morning's lines and the Dorm's list. Each sect
 │ Gifts   Loved ? +60 · Liked ??? +30 · Disliked ?? 0 · Others +10
 │ Ties    Stand-in 2 · Friends ♥♥ · Stand-in 3 · Rivals
 │ Memories 0 of 26                         │
+│ Ring    Her ring will read: ‘Always the…’│  from Romance 8 (F53)
 ├──────────────────────────────────────────┤
 │ [ Chat +15 ] [ Gift ] [ ☾ Evening › ]    │  48 pt, in the thumb zone
 │ [        Praise +20        ]             │  while she's earned it
@@ -540,8 +553,11 @@ row, a card in the Work view, the morning's lines and the Dorm's list. Each sect
   friend first with a **Closest** chip; "Friends · 150/300", the points to the next heart; **Read** (44 pt) while an
   authored conversation of theirs is opened and unread; a tie whose Uma isn't on the farm yet says "Not here yet"
   (F52, [below](#bonds-between-umas-rm48rm50)).
-- **Memories:** her count, "15 of 26", and **Album ›**, her album (F49, [below](#memories-rm28-rm56)); her **ring** once
-  given ("+6% at her line", F53).
+- **Memories:** her count, "15 of 26", and **Album ›**, her album (F49, [below](#memories-rm28-rm56)).
+- **Ring** (F53, [below](#the-ring-and-the-wedding-rm30-rm38rm40)): from Romance 8 "Her ring will read: ‘…’", the
+  engraving (her R8 beat's line); from the proposal her ring with its bonus ("Iron Ring · +3% at the Fields once you're
+  married", then "+3% at the Fields"), "Her ring reads: ‘…’", and **Give her the Cobalt Ring ›** for each better ring in
+  the Warehouse. While the proposal waits for a ring, the Next card's "Needs a ring" has **Make one at the Forge's bench ›**.
 - **The actions,** 48 pt in the sheet's foot: **Chat +15** (then her line for the day), **Gift** (the picker with each
   good's points for her today or "?"), and **Praise +20** while she's earned it; what an act pays floats up from her face
   as "+N" (still, with reduced motion) and a note says it ("She likes it. +36"). **☾ Evening ›** (F50) opens her
@@ -1007,7 +1023,13 @@ No option scores below zero, removes a later event or changes the route.
   best choice's grade; "= +N toward ‹next rung›", "(×2 anniversary)" on her anniversary, and "(+N banked)".
 - **The stage-up screen** closes the confession's Yes: "Partners", the route's track re-coloured, **Opens now** (the
   romance ladder; R1's dates and her pet name; her partner chats; R3's stargazing; R6's dance and boat; R9's footrace) and
-  what's banked toward Romance 1, with one **Continue**. F53 adds the proposal's and the wedding's.
+  what's banked toward Romance 1, with one **Continue**.
+- **F53:** the proposal closes on **Engaged** ("A ring, and a yes. Your wedding comes next."; Opens now: "Your wedding:
+  tomorrow, whenever you're ready", her ring and its bonus once you're married, a better ring any day), and the wedding on
+  **Married** ("Your wedding is done. Her bar turns gold."; the spouse ladder, her ring at her line, every evening kind
+  her ladders opened, S1's breakfast, "Your anniversary: Summer 9, each year", then RM45's "Married 1/20 · next household
+  scene at 5"). Their level-up cards add "Ring · Iron Ring · hers now" and "Wedding · The Fields · Marta's bakery sends a
+  cake · everyone well fed 1 day".
 
 ## The confession (RM30)
 
@@ -1208,6 +1230,132 @@ evenings, and festival night's only on a festival day), `today.invites` this mor
 at most one, two from 10 married, each a different Uma, `kind` a date game, never festival night), and `love.evening`
 her last evening's day. Step 7 clears both lists; the parse refuses anything else.
 
+## The ring and the wedding (RM30, RM38–RM40)
+
+**Romance build; live from F56** (F53 decisions 1–13). The proposal needs a ring (RS6), but the Forge's merge game is M6's
+while the first weddings come in the first year (RM63), so on save v4 the Forge opens early **as a bench, with no game**.
+
+```
+ an Uma's first Romance 8 event ──night step 8──► buildings.forge = 0 (the bench; chapter 7 still lights the fire, M6)
+   │                                               the morning: Ida Stone's scene, "The Ring Bench" (once, scene:bench)
+   ▼
+ the Forge's quick look ──► ?sheet=bench: 3 refined goods of grade g ──► ring-g<g> ★1 in the Warehouse (one a day)
+   │
+ Romance 10 played ──the next day, a ring held──► the proposal: which ring? ──► played, always yes ──► Engaged
+   │                                              the ring leaves the Warehouse; love.ring = its grade
+   ▼
+ the next day, and any day after ──► the wedding: where? (her three) ──► played on that card, guests and vows
+   │                                  ──► the reception (a dish, or Marta's cake) ──► Married: wed = today, spouse 0
+   ▼
+ night step 9: everyone on the farm well fed from tomorrow · her ring +1% a grade at her line, inside her own +35%
+```
+
+### The ring bench (RM38, RM40; decisions 3–5)
+
+<!-- live:bench-recipe -->
+|  | The ring bench (v4) |
+|---|---|
+| Opens | The night after the first Romance 8 event anyone plays: `buildings.forge = 0`, and Ida Stone’s scene the next morning |
+| A ring of grade g | 3 refined goods of grade g, any family, any mix; the mining families’ (ingots, blocks, cut gems) from chapter 3 |
+| Cost | The goods only: no gold, no game, no assistant, no score |
+| Out | The ring, ★1 (a Rough make), into the Warehouse |
+| How often | One ring a day (`today.ring`) |
+| Her bonus once married | +1% at her line a grade, inside her own +35%; M6’s merge game adds +1, +3 or +5 for a Fine, Great or Masterwork make |
+| Refusals | “The ring bench opens with your first Romance 8.” · “Three refined goods of one grade.” · “Ingots, blocks and cut gems open with chapter 3.” · “One ring a day.” · “Not enough in the Warehouse.” |
+<!-- /live -->
+
+- **On the map:** on v4 the Forge's lock says "Opens with your first Romance 8" until the bench stands; then it's open,
+  its quick look reads **Ring bench · one ring a day** with **Make a ring ›** (`farm/ring-bench`'s mark), and its blurb
+  "The ring bench: a ring from three refined goods of one grade, one a day." v3's Forge waits for chapter 7, as M4 has
+  it ([days.md](days.md#the-farm-map-fc28-decision-5)).
+- **Ida Stone's scene** ([goals.md](goals.md#the-ring-benchs-scene-f53)): the morning after, once the summary is put away
+  (after any chapter scene, before arrivals), seven short lines and a card, **See the bench** or **Later**; read once.
+- **The sheet** (`?sheet=bench`), RM38's mockup: Ida Stone's disc and the rule; one row a grade you can make now, lowest
+  first, each with **the three goods it would take** (the lowest-value refined goods of that grade, fewer stars first,
+  any family, any mix), "→ Iron Ring" and "+3% once married"; a tap on one of the three lists the grade's other goods held
+  ("Sardine Fillet ★1 · 2 left · 100g") and swaps it in; a tap on a row chooses it; CS25's recipe greyed "From chapter 3:
+  2 ingots + 1 cut gem · Opens with chapter 3" (from chapter 3 "CS25's recipe works too", with the chosen grade's pair);
+  "Her bonus once married: +1% a grade (+0 / +1 / +3 / +5 for the merge, M6)"; and **Make an Iron Ring · 1 a day**. Made,
+  "Iron Ring · in the Warehouse, ★1", and the foot says "One ring a day. Iron Ring made today ✓". Nothing to make: "Three
+  refined goods of one grade make a ring: planks from the Sawmill, fillets from the Smokehouse, flour from the Mill."
+
+### The rings (CS25; decision 2)
+
+<!-- live:rings -->
+| Grade | Ring | Id | ★1 | ★5 | Her bonus once married | Cheapest at the bench (chapter 1) | CS25’s recipe (from chapter 3) |
+|---|---|---|---|---|---|---|---|
+| G1 | Copper Ring | `ring-g1` | 205g | 410g | +1% | 3 Pine Plank (40g each) | 2 Copper Ingot + 1 Cut Quartz |
+| G2 | Tin Ring | `ring-g2` | 275g | 550g | +2% | 3 Birch Plank (45g each) | 2 Tin Ingot + 1 Cut Amethyst |
+| G3 | Iron Ring | `ring-g3` | 340g | 680g | +3% | 3 Cedar Plank (60g each) | 2 Iron Ingot + 1 Cut Citrine |
+| G4 | Silver Ring | `ring-g4` | 450g | 900g | +4% | 3 Polished Rice (75g each) | 2 Silver Ingot + 1 Cut Garnet |
+| G5 | Cobalt Ring | `ring-g5` | 580g | 1,160g | +5% | 3 Oak Plank (105g each) | 2 Cobalt Ingot + 1 Cut Emerald |
+| G6 | Gold Ring | `ring-g6` | 745g | 1,490g | +6% | 3 Rye Flour (90g each) | 2 Gold Ingot + 1 Cut Sapphire |
+| G7 | Platinum Ring | `ring-g7` | 950g | 1,900g | +7% | 3 Buckwheat Flour (115g each) | 2 Platinum Ingot + 1 Cut Ruby |
+| G8 | Titanium Ring | `ring-g8` | 1,220g | 2,440g | +8% | 3 Ebony Plank (220g each) | 2 Titanium Ingot + 1 Cut Diamond |
+| G9 | Mythril Ring | `ring-g9` | 1,555g | 3,110g | +9% | 3 Elderwood Plank (280g each) | 2 Mythril Ingot + 1 Cut Starstone |
+| G10 | Orichalcum Ring | `ring-g10` | 2,025g | 4,050g | +10% | 3 Yggdrasil Plank (360g each) | 2 Orichalcum Ingot + 1 Cut Philosopher's Stone |
+<!-- /live -->
+
+They're v4's catalogue only (v3 can't hold one): additive goods of the family `rings`, sold at the bin like any good (no
+season's demand), drawn with uma-art's `accessory-setting` frames, on the Warehouse's **Rings** tab while one is held, and
+a **Diary row** of their own (`row:rings`, 500g once all ten have shipped; each ring shipped is an entry). One a day from
+goods worth a little less keeps the bench a ring maker, not a mint (the Iron Ring: 180g of planks → 340g).
+
+### The proposal (RM30, RM39; decision 8)
+
+Ready by F47's rule: the day after Romance 10, **with any ring in the Warehouse** ("Needs a ring" until then). **Play ›**
+first asks **which ring**, the best grade preselected ("Propose with the Iron Ring ›"); then her authored event plays
+(up to three plays and 1–3 choice points). It **always succeeds**: the ring leaves the Warehouse (lowest stars first),
+`love.ring` is its grade, `advance` makes her **engaged** (the wedding's wait), and the stage-up reads **Engaged**.
+
+**Her ring** (decision 6): every ring is a Rough make until M6's merge game, so `love.ring` holds its grade, 1–10, and
+once she's your spouse it's her bonus in % at her line (+1% a grade, F51's `ringBonus`, inside her own +35%). **A better
+ring** any day from the proposal on: her profile offers each higher-grade ring in the Warehouse; she keeps it, and her old
+one (`ring-g<old>`, ★1) comes back. A lower or equal one is refused. **The engraving** (decision 7): from Romance 8 her
+profile shows "Her ring will read: ‘…’", her R8 beat's line (her Memory's caption); no new field.
+
+### The wedding (RM30, RM42, RM45; decision 9)
+
+Ready the day after the proposal, and **it waits until you play it**. **Play ›** asks **the place** first (her bible's
+three `wedding.places`, each on its place card); her authored event then plays on that place's card (its own place steps
+give way), **the guests' faces** along its top and one line of narration first ("Stand-in 2 and Stand-in 3 came, in
+their best."; with none, "Just the two of you, and the whole farm quiet around you."). **The guests** are every spouse on
+the farm (the cast's order), then her two closest friends on the farm (F52's order); they have no lines. **The vow line**
+is its last choice point, paying as any choice; your words are kept as the flag `vow:<n>` and the place as
+`wedding:<place>` (wording only). Then **the reception**:
+
+<!-- live:reception -->
+| The reception | Well fed from tomorrow, everyone on the farm |
+|---|---|
+| A ★1 dish | 1 day |
+| A ★2 dish | 1 day |
+| A ★3 dish | 2 days |
+| A ★4 dish | 2 days |
+| A ★5 dish | 3 days |
+| No dish in the Warehouse: Marta’s bakery sends a cake | 1 day (a Rough meal) |
+
+A meal already running is never shortened. **The guests:** every spouse on the farm, then her 2 closest friends on the farm (F52’s order); they have no lines. **The places:** her bible’s `wedding.places`, else her wedding beat’s place and `chapel-bell`, `fields`, `overlook`, `orchard-bench`, three different. **Household milestones** at 5, 10, 15, 20 married (RM45).
+<!-- /live -->
+
+The dish is used; `today.reception` holds its days and night step 9 feeds everyone on the farm (home, or a spouse in her
+house) from tomorrow. Then `advance` makes her your **spouse** (`wed` is today, so F47's anniversaries follow a year on),
+and the stage-up is **Married**: the track gold, the spouse ladder, her ring at her line, her anniversary's date, and
+"Married n/N · next household scene at 5". Until F54 she keeps her Dorm bed.
+
+**The words** (decision 10): every string the bench, the proposal and the wedding write says spouse, partner, vows, your
+wedding, you; a domain test and a web test scan them, and the stand-in's proposal and wedding, with the validator's
+gendered list (`gendersFarmer`).
+
+**The save** (v4, grown in place): `today.ring` (the grade made today, 0 none) and `today.reception` (0–3 days), both
+cleared at step 7; `love.ring` 1–10 from the proposal on (the wedding's wait and a spouse); the v4 Warehouse holds rings
+and dishes, the bin, the Diary and the morning's bin lines take rings; `buildings.forge = 0` is the bench. The parse
+refuses anything else, and v3's refuses a ring or a dish anywhere.
+
+**The format** (decision 11): her bible may carry **`wedding: { places: [place, place, place] }`**, three different story
+places; without it the wedding offers her wedding beat's place and the farm's (`chapel-bell`, `fields`, `overlook`,
+`orchard-bench`), three different. The stand-in 9000001's are the chapel bell, the orchard bench and the Fields; her
+proposal and wedding are written with plays and choices (decision 12).
+
 ## Bonds between Umas (RM48–RM50)
 
 **Romance build; live from F56** (F52 decisions 1–11). Each pair of Umas holds **bond points** (`save.bonds`, by `pairKey`
@@ -1353,8 +1501,10 @@ What a v4 night adds or changes from v3's ([days.md](days.md) lists the rest):
 | 6 | `tickRanks` | Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met | F21, F47, F51 |
 | 6 | `tickBonds` | Bonds: +10 to each pair who worked one place today (the Fields’ tenders together), once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend | F52 |
 | 6 | `payLine` | Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night | F47 |
-| 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations | F18, F47, F49 |
+| 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception | F18, F47, F49, F53 |
 | 8 | `arriveUmas` | Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50) | F46, F52 |
+| 8 | `openRingBench` | The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and Ida Stone’s scene is due in the morning | F53 |
+| 9 | `serveTheReception` | A wedding’s reception: everyone on the farm well fed from tomorrow for its days (a dish ★1–2 one, ★3–4 two, ★5 three; Marta’s cake one), never shortening a meal already running | F53 |
 | 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse | F47 |
 | 9 | `morningItems` | Morning items: each Uma on the farm leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+) | F51 |
 | 9 | `drawInvitations` | Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, 'invite', n)` among those home at Friendship 2+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14) | F50 |
@@ -1394,7 +1544,8 @@ good on the day), side by side twice or with no items, a bond line twice for a p
 - **F49 is built** ([heart events](#heart-events-rm24-rm28-rm29-rm54)); its seams for the packets after it are
   [below](#for-f50f56-the-event-players-seams). **F50 is built** ([the evening](#the-evening-rm19rm22-rm37)); its seams
   are [below](#for-f51f56-the-evenings-seams). **F51 is built** ([perks](#perks-rm31rm36)); its seams are
-  [below](#for-f53f56-the-perks-seams). **F53** the ring and the wedding. **F54** the homestead (`homestead`,
+  [below](#for-f53f56-the-perks-seams). **F53 is built** ([the ring and the wedding](#the-ring-and-the-wedding-rm30-rm38rm40));
+  its seams are [below](#for-f54f56-the-rings-and-the-weddings-seams). **F54** the homestead (`homestead`,
   `love.house`), her house on the row and the profile, the marks from uma-art 2.26.0; a shared house's +10 a night and the
   same breakfast's +5 a pair go through `addBond`, and a wedding's room defaults to her closest friend's house. **F28,
   F32, F8** pay an expedition party (+15 a day away), a festival team (+20) and the same staff meal (+5 a pair) through
@@ -1470,3 +1621,31 @@ good on the day), side by side twice or with no items, a bond line twice for a p
 - **Screens** (`apps/web/src/loop/`): `?evening=pick` and `?evening=<characterId>` over any page (`EveningPlayer.tsx`),
   `Tonight` (End the day's sheet on v4 while `tonightOpens`), `InviteAnswer` under the morning's invitation line,
   `withNightFade(night, reduced)` around every v4 night, and `PlaySheet`'s `pays` for an evening's own numbers.
+
+### For F54–F56: the ring's and the wedding's seams
+
+- **Rules** (`@farm/domain`): `romance/bench.ts`: `benchOpen(save)`, `benchDue`, `openBench` (night step 8's
+  `openRingBench`), `BENCH_RUNG`, `RING_INPUTS`, `MINING_FAMILIES`, `MINING_CHAPTER`, `forgeRecipe(grade)`, `benchTakes(chapter,
+  id)`, `benchStock(save, grade)`, `benchPick(save, grade)`, `benchGrades(save)`, `benchRefusal`, `makeRing(save, inputs)` →
+  `{ save, ring }`, `BENCH_WORDS`, `RING_PERCENT_A_GRADE`, `MAKE_BONUS`, `ringPercent(grade)`, `heldRings(save)`,
+  `betterRings(save, id)`, `giveRing(save, id, ring)`, `takeOne`. `romance/wedding.ts`: `weddingPlaces(pack, id)`,
+  `WEDDING_DEFAULTS`, `weddingPlaceFlag`, `weddingPlaceOf(flags)`, `vowFlag(n)`, `receptionDays(stars)`, `CAKE_DAYS`,
+  `Reception`, `receptionDishes(save)`, `receptionOf(save, reception)`, `serveReception(save, days)` (night step 9's
+  `serveTheReception`), `WEDDING_FRIENDS`, `weddingGuests(save, pack, id)`, `anniversaryOf(wed)`, `HOUSEHOLD_AT`,
+  `nextHousehold(married)`, `ringHeld`. `playEvent`'s `EventOutcome` takes `ring`, `place` and `reception`; its `EventCard`
+  gives `stage` (`'romance' | 'engaged' | 'married'`, `StageUp`), `ring` and `wedding` (`WeddingCard`: `place`, `dish`,
+  `stars`, `days`, `guests`); `EventPack` now holds the ties. The goods: `RING_FAMILY`, `GOOD_FAMILIES_V4`, `RING_PRICES`,
+  `RING_IDS`, `RING_GOODS`, `ringId`, `isRingId`, `ringGrade`, `ringName`, `isGoodIdV4`, `dishName` and `DISH_WORDS` (moved
+  from the perks), `isWarehouseIdV4` and `isStockId`; the Diary's `RING_ROW`, `DIARY_ROWS_V4` and `diaryRowsOf(version)`;
+  `story/bench.ts`' `BENCH_SCENE_LINES`, `scenes.ts`' `BENCH_SCENE`; the format's `gendersFarmer(text)` and `WeddingPlan`.
+- **F54:** a wedding's room (RM42) defaults to her closest tie's house; the Married screen's "Opens now" is where "her
+  room" and "house mornings with her" join (`stageOpens('married', …)` in `loop/event-view.ts`), and the reception's
+  `serveReception` already counts a spouse in her house. The household milestones read `marriedCount` and `nextHousehold`.
+- **M5, M6:** F26 (chapter 3) opens the mining families' refined goods at the bench, which is CS25's own recipe; F8's
+  Kitchen puts dishes in the Warehouse, which the reception already serves; F36 stores a ring's make with its +1/+3/+5 (a
+  v5-or-later change), and chapter 7 lights the Forge's fire beside the bench.
+- **Screens** (`apps/web/src/loop/`): `?sheet=bench` (`BenchSheet.tsx`, its `BenchPeek` the Forge's quick look on v4),
+  `BenchScene.tsx` (from `ScenePlayer.tsx`), `bench-view.ts`, `bench-actions.ts` (`makeRingOnce`, `giveBetterRing`,
+  `readBenchScene`), the event player's `RingPicker`, `PlacePicker` and `ReceptionPicker`, `StageUpScreen`'s `stage` and
+  `married`, `event-view.ts`' `STAGE_WORDS`, `stageOpens(stage, line, facts)`, `marriedWords`, `guestsLine`,
+  `receptionWords`, `PICKER_WORDS`, and `hearts-view.ts`' `ringView` and `engravingOf`; `farm-map.ts`' `BENCH_LOCK`.

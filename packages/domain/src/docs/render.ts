@@ -51,7 +51,7 @@ import { lineChapter, MORNING_GOOD, NIGHT_CHORE, PERK_LINES, PERK_PLACE, PERKS, 
 import {
   CREW_CAP, DREAM_BONUS, HOUSEHOLD, householdBonus, IN_ELEMENT, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, LINE_BONUS, MAX_CHORES, MORNING_ITEMS, OWN_CAP, ROMANCE_CAP,
 } from '../romance/perk-terms'
-import { BREAKFAST_DAYS, CHORE_GROWTH, CHORE_LINES, DISH_WORDS, dishId, dishName, LINE_DISH, MENTOR_POINTS } from '../romance/perk-effects'
+import { BREAKFAST_DAYS, CHORE_GROWTH, CHORE_LINES, dishId, LINE_DISH, MENTOR_POINTS } from '../romance/perk-effects'
 import { loveRankFactor } from '../farm/rank-rules'
 import { dateOf } from '../farm/calendar'
 import { FARMER_NAME_MAX } from '../romance/farmer'
@@ -69,6 +69,10 @@ import { PLAY_MAP, playOf, togetherPlay, type PlayAs } from '../romance/plays/wh
 import { EVENT_POINTS } from '../romance/events'
 import { DATE_FROM, EVENING_FACTOR, eveningPoints, EVENINGS, favouriteKind, HANGOUT_FROM, INVITE_POINTS, INVITE_WEIGHT_DAYS, ROLE_WORDS } from '../romance/evening'
 import { invitesFor, SECOND_EVENING_EVERY, TWO_EVENINGS_MARRIED } from '../save/v4'
+import { BENCH_WORDS, benchTakes, forgeRecipe, MAKE_BONUS, MINING_CHAPTER, RING_INPUTS, ringPercent } from '../romance/bench'
+import { CAKE_DAYS, HOUSEHOLD_AT, receptionDays, WEDDING_DEFAULTS, WEDDING_FRIENDS } from '../romance/wedding'
+import { BENCH_SCENE_LINES } from '../story/bench'
+import { DISH_WORDS, dishName, goodName, RING_GOODS } from '../goods/ids'
 import { BIG_EVENTS, EVENT_LIMITS, type Route, type Together, type UmaBible } from '../story/authored'
 
 type Cell = string | number
@@ -155,6 +159,7 @@ const FAMILY_FROM: Readonly<Record<GoodFamily, string>> = {
   grains: 'The Fields', vegetables: 'The Fields', 'herbs-spices': 'The forest, some crops', 'nuts-seeds': 'The forest (Autumn), two crops',
   sweets: 'The forest (Spring), Sugar Beet', fruits: 'The forest (Summer)', mushrooms: 'The forest', woods: 'The forest', ores: 'The Mine',
   stones: 'The Quarry', crystals: 'The Quarry', fish: 'The Fishery', 'hides-scales': 'Expeditions', 'bones-horns': 'Expeditions', essences: 'Expeditions',
+  rings: 'The ring bench (v4, F53)',
 }
 const g = (gold: number): string => `${gold.toLocaleString('en-US')}g`
 /** A day of each season, year 1, for the demand columns. */
@@ -929,6 +934,44 @@ function eveningSlotsBlock(): string {
   ]) + `\n\nAn invitation’s draw: \`draw(uid, day, 'invite', n)\` among the Umas home at Friendship ${HANGOUT_FROM}+ whose favourite kind is open to them, each weighted 1 + the days since her last evening (or since she arrived), up to ${INVITE_WEIGHT_DAYS}; a second invitation is never the first’s Uma.`
 }
 
+// --- The ring bench and the wedding (F53) ---------------------------------------------------------------------------
+
+/** RM38, CS25 (F53 decisions 2 and 5): the ten rings, their prices, the bench's cheapest three and CS25's recipe. */
+function ringsBlock(): string {
+  const cheapest = (grade: number): string => {
+    const good = GOODS.filter((x) => x.grade === grade && benchTakes(1, x.id)).sort((a, b) => a.price - b.price)[0]!
+    return `${RING_INPUTS} ${itemNameOf(good.id)} (${g(good.price)} each)`
+  }
+  return table(['Grade', 'Ring', 'Id', '★1', '★5', 'Her bonus once married', 'Cheapest at the bench (chapter 1)', 'CS25’s recipe (from chapter 3)'], RING_GOODS.map((r) => {
+    const recipe = forgeRecipe(r.grade)
+    return [`G${r.grade}`, goodName(r.id), `\`${r.id}\``, g(starPrice(r.id, 1)), g(starPrice(r.id, 5)), `+${ringPercent(r.grade)}%`, cheapest(r.grade),
+      `2 ${itemNameOf(recipe.ingot)} + 1 ${itemNameOf(recipe.gem)}`]
+  }))
+}
+/** RM38 (F53 decisions 3–5): the bench's rule, its refusals, and what M6 adds. */
+function benchRecipe(): string {
+  return table(['', 'The ring bench (v4)'], [
+    ['Opens', 'The night after the first Romance 8 event anyone plays: `buildings.forge = 0`, and Ida Stone’s scene the next morning'],
+    ['A ring of grade g', `${RING_INPUTS} refined goods of grade g, any family, any mix; the mining families’ (ingots, blocks, cut gems) from chapter ${MINING_CHAPTER}`],
+    ['Cost', 'The goods only: no gold, no game, no assistant, no score'],
+    ['Out', 'The ring, ★1 (a Rough make), into the Warehouse'],
+    ['How often', 'One ring a day (`today.ring`)'],
+    ['Her bonus once married', `+1% at her line a grade, inside her own +35%; M6’s merge game adds +${MAKE_BONUS.fine}, +${MAKE_BONUS.great} or +${MAKE_BONUS.masterwork} for a Fine, Great or Masterwork make`],
+    ['Refusals', Object.values(BENCH_WORDS).map((w) => `“${w}”`).join(' · ')],
+  ])
+}
+/** F53 decision 4: Ida Stone's scene, beat by beat. */
+function benchScene(): string {
+  return `**${BENCH_SCENE_LINES.title}** (\`${BENCH_SCENE_LINES.id}\`)\n\n${table(['#', 'Who', 'Line'], BENCH_SCENE_LINES.beats.map((b, i) => [i + 1, speakerWords(b), b.line]))}`
+}
+/** RM30, CS22 (F53 decision 9): the reception's well-fed days, and the wedding's guests and places. */
+function receptionBlock(): string {
+  return table(['The reception', 'Well fed from tomorrow, everyone on the farm'], [
+    ...[1, 2, 3, 4, 5].map((stars) => [`A ★${stars} dish`, `${receptionDays(stars)} day${receptionDays(stars) === 1 ? '' : 's'}`]),
+    ['No dish in the Warehouse: Marta’s bakery sends a cake', `${CAKE_DAYS} day (a Rough meal)`],
+  ]) + `\n\nA meal already running is never shortened. **The guests:** every spouse on the farm, then her ${WEDDING_FRIENDS} closest friends on the farm (F52’s order); they have no lines. **The places:** her bible’s \`wedding.places\`, else her wedding beat’s place and ${WEDDING_DEFAULTS.map((p) => `\`${p}\``).join(', ')}, three different. **Household milestones** at ${HOUSEHOLD_AT.join(', ')} married (RM45).`
+}
+
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
     'dorm-v4': dormV4, arrivals, 'arrival-pay': arrivalPay, 'opening-v4': openingV4, 'night-v4': nightV4, 'stand-in': standIn, 'farmer-name': farmerName,
@@ -938,6 +981,7 @@ export function renderBlock(key: string): string | null {
     'bond-points': bondPoints, 'bond-hearts': bondHeartsBlock, 'tie-seeds': tieSeeds, 'side-by-side': sideBySide,
     plays: playsBlock, 'play-map': playMap, 'play-grades': playGrades, 'play-windows': playWindows, 'event-pay': eventPay, 'stand-in-route': standInRoute,
     'evening-kinds': eveningKinds, 'evening-points': eveningPointsBlock, 'evening-slots': eveningSlotsBlock,
+    rings: ringsBlock, 'bench-recipe': benchRecipe, reception: receptionBlock, 'bench-scene': benchScene,
     calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
     crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,

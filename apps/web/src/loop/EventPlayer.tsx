@@ -13,13 +13,19 @@
 // point, every option open, nothing paid or saved. The script loads on demand (`route(id)`); Skip, Auto and Log work while
 // it does. Nothing is saved until the end: `playEvent` then commits once, stamped (decision 1). Skip jumps to the next
 // choice or play, never past one. Loaded on demand, the romance build only.
+//
+// F53: **the proposal** first asks which ring (the best grade preselected), then plays, and closes on the Engaged
+// stage-up; **the wedding** asks the place first (her three, each with its place card), plays the authored event on that
+// place's card with the guests' faces and a line of narration (its own place steps give way to the chosen one), then the
+// reception (a dish in the Warehouse, or Marta's cake), and closes on the Married stage-up.
 import emoteIndex from '@luismlorenzana/uma-art/emote/atlas.json'
 import emoteUrl from '@luismlorenzana/uma-art/emote/atlas.png?url'
 import {
-  askSteps, beatOf, CAST, CAST_IDS, canAsk, choicePointsOf, extraPlay, FALLBACK_ARRIVAL, optionViews, pathPlays, playOf, playSeed, readiness, replaySteps, rungName, walkScene, withFarmer,
-  type Answer, type CastId, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type SaveV4, type Step, type StoryPack,
+  askSteps, beatOf, CAST, CAST_IDS, canAsk, choicePointsOf, extraPlay, FALLBACK_ARRIVAL, goodName, heldRings, optionViews, pathPlays, playOf, playSeed, readiness,
+  receptionDishes, replaySteps, ringGrade, ringPercent, rungName, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
+  type Answer, type CastId, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryPack,
 } from '@farm/domain'
-import { UmaBust } from '@luismlorenzana/uma-kit/album'
+import { FaceTile, UmaBust } from '@luismlorenzana/uma-kit/album'
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -31,8 +37,9 @@ import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { askHerOnce, playHerEvent } from './event-actions'
 import { LevelUpCard, StageUpScreen } from './EventCards'
-import { EMOTE_BUBBLE, eventTitle, optionWords, placeCard } from './event-view'
-import { placeWords } from './hearts-view'
+import { EMOTE_BUBBLE, eventTitle, guestsLine, optionWords, PICKER_WORDS, placeCard, receptionWords } from './event-view'
+import { marriedOf, placeWords } from './hearts-view'
+import { ItemIcon } from '../items/ItemIcon'
 import { BuildingArt, PlaySheet, playSpec } from './PlaySheet'
 import { CastBust, silent } from './ScenePlayer'
 
@@ -150,13 +157,23 @@ function Shell({ title, auto, onAuto, onSkip, onLog, skipping = false, children 
   )
 }
 
-type Phase = 'scene' | 'saving' | 'card' | 'stage' | 'asked' | 'replayed'
+type Phase = 'scene' | 'reception' | 'saving' | 'card' | 'stage' | 'asked' | 'replayed'
 
-function Scene({ req, steps, save, pack, master, auto, onAuto, log, onLog, skipAsked, onClose }: {
+function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLog, skipAsked, onClose }: {
   req: Request & { rung: string }; steps: readonly Step[]; save: SaveV4; pack: StoryPack; master: MasterView; auto: boolean; onAuto: () => void
   log: boolean; onLog: (open: boolean) => void; skipAsked: number; onClose: () => void
 }) {
   const { id, rung, mode } = req
+  const nameOf = (who: string): string => (isCast(who) ? CAST[who].name : master.album.get(who)?.name ?? 'An Uma')
+  // F53: the proposal's ring and the wedding's place, chosen before the scene; the wedding's reception after it.
+  const [ring, setRing] = useState<string | null>(null)
+  const [chosenPlace, setChosenPlace] = useState<string | null>(null)
+  const wedding = rung === 'wedding' && mode !== 'ask'
+  // The guests, settled as the wedding starts (she isn't a spouse yet), and their line before its first.
+  const guests = useMemo(() => (wedding && mode === 'event' ? weddingGuests(save, pack, id) : []), []) // eslint-disable-line react-hooks/exhaustive-deps
+  const steps = useMemo((): readonly Step[] => (wedding
+    ? [...(mode === 'event' ? [{ narrate: guestsLine(guests.map(nameOf)) } as Step] : []), ...script.filter((s) => !('place' in s))]
+    : script), [script]) // eslint-disable-line react-hooks/exhaustive-deps
   const [picks, setPicks] = useState<number[]>([])
   const [plays, setPlays] = useState<PlayScore[]>([])
   const [at, setAt] = useState(0)
@@ -182,9 +199,9 @@ function Scene({ req, steps, save, pack, master, auto, onAuto, log, onLog, skipA
     ? { as: playOf((step as { play: Play }).play), prompt: (step as { play: Play }).play.prompt } : null
   const ended = cursor >= shown.length
   const extraNow = ended && extra && plays.length < pathPlays(shown, null).length + 1 ? { as: extra, prompt: null } : null
-  const nameOf = (who: string): string => (isCast(who) ? CAST[who].name : master.album.get(who)?.name ?? 'An Uma')
   const name = nameOf(id)
-  const place = shown.slice(0, cursor + 1).reduce<string | null>((p, s) => ('place' in s ? s.place : p), beat?.place ?? null)
+  const weddingAt = wedding ? (mode === 'event' ? chosenPlace : weddingPlaceOf(save.love[id]?.flags ?? [])) : null
+  const place = weddingAt ?? shown.slice(0, cursor + 1).reduce<string | null>((p, s) => ('place' in s ? s.place : p), beat?.place ?? null)
   const where = place ? ` · ${placeWords(place)}` : ''
   const title = mode === 'replay' ? `Memory · ${rung === 'arrival' ? 'Her arrival' : rungName(rung)}${where}` : mode === 'ask' ? `Ask her${where}` : eventTitle(place, rung)
 
@@ -201,9 +218,16 @@ function Scene({ req, steps, save, pack, master, auto, onAuto, log, onLog, skipA
       void askHerOnce(id, chosen).then(() => setPhase(chosen === 'yes' ? 'stage' : 'asked'), (e: unknown) => { setError(words(e)); setPhase('asked') })
       return
     }
-    setPhase('saving')
-    void playHerEvent(id, { event: { id: rung, steps }, picks, plays }).then((done) => { setCard(done); setPhase('card') }, (e: unknown) => { setError(words(e)); setPhase('card') })
+    if (wedding) return setPhase('reception')
+    commitEvent(null)
   }, [ended, extraNow, phase]) // eslint-disable-line react-hooks/exhaustive-deps
+  /** The event saved once (decision 1), with the proposal's ring, or the wedding's place and reception (F53). */
+  const commitEvent = (reception: Reception) => {
+    setPhase('saving')
+    const extra = rung === 'proposal' && ring ? { ring } : wedding && chosenPlace ? { place: chosenPlace, reception } : {}
+    void playHerEvent(id, { event: { id: rung, steps }, picks, plays, ...extra })
+      .then((done) => { setCard(done); setPhase('card') }, (e: unknown) => { setError(words(e)); setPhase('card') })
+  }
 
   // Skip (decision 8): to the next choice or play, never past one; with neither left, to the end.
   const skip = () => {
@@ -222,14 +246,22 @@ function Scene({ req, steps, save, pack, master, auto, onAuto, log, onLog, skipA
   const lines = logLines(shown.slice(0, cursor + (choiceNow || playNow ? 0 : 1)), picks, nameOf, save.farmer.name)
   const love = save.love[id]
 
-  if (phase === 'card' || phase === 'stage' || phase === 'asked' || phase === 'replayed' || phase === 'saving') {
+  // F53: before the proposal, which ring; before the wedding, where.
+  if (mode === 'event' && rung === 'proposal' && ring === null) {
+    return <Shell title={title} auto={auto} onAuto={onAuto} onSkip={() => undefined} onLog={() => onLog(true)} skipping><RingPicker save={save} onPick={setRing} onClose={onClose} /></Shell>
+  }
+  if (mode === 'event' && wedding && chosenPlace === null) {
+    return <Shell title={eventTitle(null, rung)} auto={auto} onAuto={onAuto} onSkip={() => undefined} onLog={() => onLog(true)} skipping><PlacePicker places={weddingPlaces(pack, id)} day={save.calendar.day} onPick={setChosenPlace} /></Shell>
+  }
+  if (phase === 'card' || phase === 'stage' || phase === 'asked' || phase === 'replayed' || phase === 'saving' || phase === 'reception') {
     return (
       <Shell title={title} auto={auto} onAuto={onAuto} onSkip={() => undefined} onLog={() => onLog(true)} skipping>
         {phase === 'saving' && <Waiting />}
+        {phase === 'reception' && <ReceptionPicker save={save} onPick={commitEvent} />}
         {phase === 'card' && (error || !card || !love
           ? <EndNote text={error ?? 'That didn’t save. Try again.'} onDone={onClose} />
           : <LevelUpCard card={card} id={id} name={name} love={love} pack={pack} farmer={save.farmer.name} onContinue={() => (card.stage ? setPhase('stage') : onClose())} />)}
-        {phase === 'stage' && love && <StageUpScreen stage="romance" id={id} love={love} pack={pack} onContinue={onClose} />}
+        {phase === 'stage' && love && <StageUpScreen stage={card?.stage ?? 'romance'} id={id} love={love} pack={pack} married={card?.stage === 'married' ? marriedOf(save, pack) : null} onContinue={onClose} />}
         {phase === 'asked' && <EndNote text={error ?? (answer === 'not-yet' ? `${name} smiles. “Whenever you’re ready.” Ask again tomorrow.` : '')} onDone={onClose} />}
         {phase === 'replayed' && <EndNote text="A Memory, replayed. Replays give no points." onDone={onClose} />}
         {log && <LogSheet lines={lines} onClose={() => onLog(false)} />}
@@ -246,7 +278,8 @@ function Scene({ req, steps, save, pack, master, auto, onAuto, log, onLog, skipA
   const emote = said && said.say === bustId ? said.emote ?? null : null
   return (
     <Shell title={title} auto={auto} onAuto={onAuto} onSkip={skip} onLog={() => onLog(true)}>
-      <PlaceCardView place={place} day={save.calendar.day} bust={bustId} bustName={nameOf(bustId)} castSpeaker={speaker && isCast(speaker) ? speaker : null} emote={emote} />
+      <PlaceCardView place={place} day={save.calendar.day} bust={bustId} bustName={nameOf(bustId)} castSpeaker={speaker && isCast(speaker) ? speaker : null} emote={emote}
+        guests={guests} nameOf={nameOf} />
       <div className="flex min-h-0 flex-1 flex-col justify-end gap-2 px-4 pt-2 pb-4">
         {choiceNow ? (
           <>
@@ -268,12 +301,102 @@ function Scene({ req, steps, save, pack, master, auto, onAuto, log, onLog, skipA
 
 const words = (e: unknown): string => (e instanceof Error ? e.message : 'That didn’t save. Try again.')
 
-/** The place card (decision 3): its frame on its ground, her bust and her emote bubble. */
-function PlaceCardView({ place, day, bust, bustName, castSpeaker, emote }: { place: string | null; day: number; bust: string; bustName: string; castSpeaker: CastId | null; emote: keyof typeof EMOTE_BUBBLE | null }) {
+/** The proposal's ring (F53 decision 8): the rings in the Warehouse, the best grade first and preselected. */
+function RingPicker({ save, onPick, onClose }: { save: SaveV4; onPick: (ring: string) => void; onClose: () => void }) {
+  const rings = heldRings(save)
+  const [chosen, setChosen] = useState(rings[0] ?? null)
+  if (!chosen) return <EndNote text="Needs a ring: make one at the Forge’s bench." onDone={onClose} />
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-4" data-ring-picker>
+      <div className="pt-2">
+        <h2 className="font-display text-[22px] font-bold">{PICKER_WORDS.ring}</h2>
+        <p className="text-[14px] text-ink-soft">{PICKER_WORDS.ringHelp}</p>
+      </div>
+      <ul className="space-y-2">
+        {rings.map((r) => (
+          <li key={r}>
+            <button type="button" onClick={() => setChosen(r)} aria-pressed={r === chosen} data-ring={r}
+              className={`flex min-h-12 w-full items-center gap-3 rounded-md border-2 bg-panel px-3 text-left ${r === chosen ? 'border-[#e0567a]' : 'border-hairline'}`}>
+              <ItemIcon id={r} size={32} />
+              <span className="min-w-0 flex-1 text-[15px] font-semibold">{goodName(r)}</span>
+              <span className="shrink-0 text-[13px] text-ink-soft">+{ringPercent(ringGrade(r))}% once married</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <div className="flex-1" />
+      <Button className="w-full" onClick={() => onPick(chosen)} data-action="propose">Propose with the {goodName(chosen)} ›</Button>
+    </div>
+  )
+}
+
+/** The wedding's place (F53 decision 9): her three, each on its place card. */
+function PlacePicker({ places, day, onPick }: { places: readonly string[]; day: number; onPick: (place: string) => void }) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-4" data-place-picker>
+      <div className="pt-2">
+        <h2 className="font-display text-[22px] font-bold">{PICKER_WORDS.place}</h2>
+        <p className="text-[14px] text-ink-soft">{PICKER_WORDS.placeHelp}</p>
+      </div>
+      <ul className="space-y-2">
+        {places.map((p) => {
+          const card = placeCard(p, day)
+          return (
+            <li key={p}>
+              <button type="button" onClick={() => onPick(p)} data-place={p}
+                className="flex min-h-[72px] w-full items-center gap-3 overflow-hidden rounded-md border border-hairline px-3 text-left shadow-1"
+                style={{ background: `linear-gradient(to right, ${card.night ? '#1d2742' : '#fdf8ee'} 0%, ${card.ground} 80%)` }}>
+                <span className="shrink-0"><BuildingArt frame={card.frame} scale={1} /></span>
+                <span className="min-w-0 flex-1 font-display text-[17px] font-bold" style={{ color: card.night ? '#ffffff' : '#3a2f22' }}>{placeWords(p).replace(/^the /, 'The ')}</span>
+                <span className="shrink-0 text-[20px]" style={{ color: card.night ? '#ffffff' : '#3a2f22' }} aria-hidden>›</span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+/** The reception (F53 decision 9): a dish in the Warehouse, its well-fed days on the button, or Marta's cake with none. */
+function ReceptionPicker({ save, onPick }: { save: SaveV4; onPick: (reception: Reception) => void }) {
+  const dishes = receptionDishes(save)
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-4" data-reception>
+      <div className="pt-2">
+        <h2 className="font-display text-[22px] font-bold">{PICKER_WORDS.reception}</h2>
+        <p className="text-[14px] text-ink-soft">{PICKER_WORDS.receptionHelp}</p>
+      </div>
+      {dishes.length === 0 && <p className="rounded-md border border-hairline bg-panel p-4 text-[15px]" data-no-dish>{PICKER_WORDS.noDish}</p>}
+      <div className="flex-1" />
+      {dishes.length === 0 ? (
+        <Button className="w-full" onClick={() => onPick(null)} data-action="cake">{PICKER_WORDS.cake}</Button>
+      ) : dishes.map((d) => (
+        <button key={`${d.dish}@${d.stars}`} type="button" onClick={() => onPick({ dish: d.dish, stars: d.stars })} data-dish={`${d.dish}@${d.stars}`}
+          className="flex min-h-12 w-full items-center gap-3 rounded-md border border-hairline bg-panel px-4 py-2 text-left shadow-1">
+          <span className="min-w-0 flex-1 text-[15px]">{receptionWords(d.dish, d.stars, d.days)}</span>
+          <span className="shrink-0 text-[12px] text-ink-soft">{d.count} held</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** The place card (decision 3): its frame on its ground, her bust and her emote bubble; a wedding's guests' faces along its
+ * top (F53). */
+function PlaceCardView({ place, day, bust, bustName, castSpeaker, emote, guests = [], nameOf }: {
+  place: string | null; day: number; bust: string; bustName: string; castSpeaker: CastId | null; emote: keyof typeof EMOTE_BUBBLE | null; guests?: readonly string[]
+  nameOf?: (id: string) => string
+}) {
   const card = placeCard(place ?? 'fields', day)
   return (
     <div className="relative mx-4 h-[42dvh] max-h-[360px] min-h-[220px] shrink-0 overflow-hidden rounded-lg border border-hairline"
       style={{ background: `linear-gradient(to bottom, ${card.night ? '#1d2742' : '#fdf8ee'} 0%, ${card.ground} 70%)` }} data-place-card={card.place} data-frame={card.frame}>
+      {guests.length > 0 && (
+        <span className="absolute top-2 left-2 flex -space-x-1.5" data-guests={guests.join(',')}>
+          {guests.map((g) => <FaceTile key={g} outfitId={g} size={32} label={nameOf?.(g) ?? 'A guest'} round />)}
+        </span>
+      )}
       <span className="absolute bottom-6 left-4"><BuildingArt frame={card.frame} scale={3} /></span>
       <span className="absolute right-2 bottom-0" data-bust={castSpeaker ? 'cast' : bust}>
         {castSpeaker ? <CastBust id={castSpeaker} size={150} /> : <UmaBust outfitId={bust} label={bustName} size={190} />}

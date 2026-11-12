@@ -12,15 +12,17 @@
 // `wait`, `flag` and `choice`, whose options show their gain before the tap (+30 for the best, +10 for the rest). Skip
 // jumps to the choice, never past it, so every arrival pays +50 and its choice; the last of the opening three ends on
 // chapter 1's card and **Plant the carrots**. Its frame and steps also play F52's pair conversations (`PairPlayer.tsx`).
-// Loaded on demand.
+// Loaded on demand. F53: on v4 the ring bench's scene (`scene:bench`) plays here too, its player loaded on demand in the
+// romance build only (`BenchScene.tsx`).
 import {
-  ARRIVAL_POINTS, arrivalOf, CAST, CAST_IDS, castInitial, chapterArrival, CHAPTER_1_GOALS, chapterOf, chapterScene, choicePoints, FALLBACK_ARRIVAL, farmPlace, pathFlags,
+  ARRIVAL_POINTS, arrivalOf, BENCH_SCENE, CAST, CAST_IDS, castInitial, chapterArrival, CHAPTER_1_GOALS, chapterOf, chapterScene, choicePoints, FALLBACK_ARRIVAL, farmPlace, pathFlags,
   sceneLines, sceneSteps, withFarmer, type CastId, type ChapterSceneId, type ChoiceOption, type SaveV4, type SceneId, type SceneLine, type Step, type Temperament,
 } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { Button } from '@luismlorenzana/uma-kit/ui'
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { romanceOn } from '../app/romance'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
@@ -30,7 +32,9 @@ import { rewardWords } from './goal-words'
 import { talentTable } from './talents'
 
 /** Each speaking cast member's disc colour, until F25's busts. */
-const CAST_COLOR: Readonly<Partial<Record<CastId, string>>> = { 'hollis-pryor': '#6b5aa6', 'marta-quill': '#c4573a', 'ben-carver': '#7a8b3a' }
+const CAST_COLOR: Readonly<Partial<Record<CastId, string>>> = { 'hollis-pryor': '#6b5aa6', 'marta-quill': '#c4573a', 'ben-carver': '#7a8b3a', 'ida-stone': '#8a5a3c' }
+// The romance build's only: the switch folds at build time, and the deployed build drops the import.
+const BenchScene = /* @__PURE__ */ lazy(() => import('./BenchScene'))
 const isCast = (id: string): id is CastId => (CAST_IDS as readonly string[]).includes(id)
 
 /** A cast member's bust: F25's art once it ships, a lettered disc until then. */
@@ -46,6 +50,7 @@ export function CastBust({ id, size }: { id: CastId; size: number }) {
 export default function ScenePlayer({ scene }: { scene: SceneId }) {
   const save = useLoopSave()
   if (!save) return null
+  if (scene === BENCH_SCENE) return romanceOn() && save.version === 4 ? <Suspense fallback={null}><BenchScene save={save} /></Suspense> : null
   const arrival = arrivalOf(scene)
   if (arrival && save.version === 4) return <ArrivalPlayer save={save} id={arrival} />
   if (arrival) return null

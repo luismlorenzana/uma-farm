@@ -3,6 +3,7 @@
 // keepsake, her signature dish, breakfast, the format's keepsake and pet name, the save's new fields and lines, and v3's
 // numbers unchanged. Invented ids only: the stand-ins 9000001–9000003 and a 9000004 built here.
 import { describe, expect, it } from 'vitest'
+import { dishName } from '../goods/ids'
 import { extrasShare, extrasTonight, bondOf } from '../farm/bonds'
 import { draw } from '../farm/draw'
 import { rankPoints } from '../farm/rank-rules'
@@ -27,7 +28,7 @@ import { playEvent } from './events'
 import { advance } from './love'
 import { perksFor } from './perks'
 import {
-  breakfast, choresTonight, dishName, fieldChores, gatherChores, leaveMorningItems, lineGrade, MENTOR_POINTS, mentorsTonight, signatureDish,
+  breakfast, choresTonight, fieldChores, gatherChores, leaveMorningItems, lineGrade, MENTOR_POINTS, mentorsTonight, signatureDish,
 } from './perk-effects'
 import {
   choresOf, hasPerk, inElement, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, keepsakeQuality, morningDue, morningRule, morningsToItem, romanceBonus, romanceTerms, routeIndex,

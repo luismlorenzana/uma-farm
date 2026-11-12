@@ -15,6 +15,7 @@ import { statusOf } from '@luismlorenzana/uma-work'
 import { workNow } from '../farm/calendar'
 import { bondHearts } from '../farm/bonds'
 import { PLACE_ACTIVITY } from '../farm/rank-rules'
+import { RING_IDS } from '../goods/ids'
 import type { Activity } from '../farm/ranks'
 import { SaveRuleError } from '../save/rules'
 import type { LoopPlaceId } from '../save/parse-v3'
@@ -26,8 +27,6 @@ import type { StoryPack } from '../story/pack'
 import { bar, NIGHT_RUNGS, WAITING_RUNGS } from './love'
 import { ACTIVITY_CHAPTER } from './perks'
 
-/** The proposal's ring (RM39, F53's goods): any grade in the Warehouse. */
-export const RING_IDS: readonly string[] = Array.from({ length: 10 }, (_, i) => `ring-g${i + 1}`)
 
 /** A setup the player meets on the day: she works a place, a good is held, a bond is reached. */
 export type Setup = Extract<Trigger, { kind: 'working' | 'item' | 'bond' }>

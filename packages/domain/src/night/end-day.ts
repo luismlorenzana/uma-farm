@@ -17,7 +17,8 @@
 // anniversary's item (`heartsMorning`, F47), draws the morning's invitations (`drawInvitations`, F50), and its §4 is
 // Hearts, with the invitations, side by side and the bond hearts reached (F52). F51's perks: step 2's farming chores and a
 // farmer in her element, step 4's perks' extras (`nightExtras`) and gathering chores (`nightChores`), step 6's mentor, and
-// step 9's morning items (`morningItems`), with their Hearts lines.
+// step 9's morning items (`morningItems`), with their Hearts lines. F53: step 8 sets the ring bench the night after the first
+// Romance 8 (`openRingBench`), and step 9 serves a wedding's reception (`serveTheReception`) before anything else.
 import { endsAt, finishedCount, isRefusal, settle, speedUp } from '@luismlorenzana/uma-work'
 import { DAY_MS, festivalOn, isSeasonStart, dateOf, workNow } from '../farm/calendar'
 import { bondsTonight, extrasTonight, newBondHearts, type BondPay, type Extras } from '../farm/bonds'
@@ -35,11 +36,13 @@ import { touched } from '../save/save'
 import { payLines } from '../romance/acts'
 import { arrivalsTonight } from '../romance/arrivals'
 import { drawInvites } from '../romance/evening'
+import { openBench } from '../romance/bench'
+import { serveReception } from '../romance/wedding'
 import { heartDays, NO_BIRTHDAYS, type Birthdays } from '../romance/days'
 import { praiseOvernight } from '../romance/praise'
 import { fieldChores, gatherChores, leaveMorningItems, mentorsTonight, type ChoresDone } from '../romance/perk-effects'
 import { BLOCK_IDS, type BlockId, type OutfitId } from '../save/v3'
-import type { FarmSave, SaveV4 } from '../save/v4'
+import { newTodayV4, type FarmSave, type SaveV4 } from '../save/v4'
 import { castOrder, favouriteOf, type StoryPack } from '../story/pack'
 import { farmEnvV3, loopWorld, nightEnvV3, WELL_FED_TICKETS, withLoopWorld } from '../work/loop-env'
 import { checkGoalsNight, type GoalsTonight } from '../story/chapters'
@@ -297,7 +300,7 @@ export const witherCrops: NightStep = (night) => {
 export const turnCalendar: NightStep = (night) => {
   const calendar = { day: night.save.calendar.day + 1 }
   const turned: FarmSave = night.save.version === 4
-    ? { ...night.save, calendar, today: { chats: [], gifts: [], praise: [], praised: [], events: [], asked: [], evenings: [], invites: [], bonds: {} } }
+    ? { ...night.save, calendar, today: newTodayV4() }
     : { ...night.save, calendar, today: { chats: [], gifts: [] } }
   return { ...night, save: settleLoopWork(turned, kindsOf(night)) }
 }
@@ -332,6 +335,19 @@ export const arriveUmas: NightStep = (night) => {
 export const checkGoals: NightStep = (night) => {
   const { save, tonight } = checkGoalsNight(night.save, night.context.roster.map((o) => o.outfitId), talentsOf(night), night.notes.made, night.context.story)
   return { ...night, save, notes: { ...night.notes, goals: tonight } }
+}
+
+/** Step 8 on v4, after the goals (F53 decision 4; RM38, RM40): the night after the first Romance 8 event anyone played,
+ * the Forge's building stands as the ring bench (`buildings.forge = 0`), and Ida Stone's scene is due in the morning. v3's
+ * Forge waits for chapter 7, as M4 has it. */
+export const openRingBench: NightStep = (night) => (night.save.version === 4 ? { ...night, save: openBench(night.save) } : night)
+
+/** Step 9 on v4, first (F53 decision 9; RM30, CS22): today's wedding reception (`today.reception`, cleared by step 7, so
+ * read from the day as it was left) feeds everyone on the farm for its days from tomorrow, never shortening a meal
+ * already running. */
+export const serveTheReception: NightStep = (night) => {
+  if (night.save.version !== 4 || night.before.version !== 4) return night
+  return { ...night, save: serveReception(night.save, night.before.today.reception).save }
 }
 
 /** The morning's news (CS5 §5): the season's first day, a festival today or tomorrow. */
@@ -510,13 +526,17 @@ const V4_STEPS: Readonly<Record<string, { replace?: Partial<NightStepDef>; after
     after: [{ step: 6, name: 'payLine', run: payLine, what: 'Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night', by: 'F47' }],
   },
   turnCalendar: {
-    replace: { what: 'The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations', by: 'F18, F47, F49' },
+    replace: { what: 'The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception', by: 'F18, F47, F49, F53' },
   },
   gateVisitors: {
     replace: { name: 'arriveUmas', run: arriveUmas, what: 'Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50)', by: 'F46, F52' },
   },
+  checkGoals: {
+    after: [{ step: 8, name: 'openRingBench', run: openRingBench, what: 'The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and Ida Stone’s scene is due in the morning', by: 'F53' }],
+  },
   buildSummary: {
     before: [
+      { step: 9, name: 'serveTheReception', run: serveTheReception, what: 'A wedding’s reception: everyone on the farm well fed from tomorrow for its days (a dish ★1–2 one, ★3–4 two, ★5 three; Marta’s cake one), never shortening a meal already running', by: 'F53' },
       { step: 9, name: 'heartsMorning', run: heartsMorning, what: 'Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse', by: 'F47' },
       { step: 9, name: 'morningItems', run: morningItems, what: 'Morning items: each Uma on the farm leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+)', by: 'F51' },
       { step: 9, name: 'drawInvitations', run: drawInvitations, what: 'Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, \'invite\', n)` among those home at Friendship 2+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14)', by: 'F50' },
@@ -525,10 +545,11 @@ const V4_STEPS: Readonly<Record<string, { replace?: Partial<NightStepDef>; after
   },
 }
 
-/** Save v4's steps (F46 decision 8; F47; F52; F50; F51): v3's, step 2 side by side and the farming chores, step 4's
+/** Save v4's steps (F46 decision 8; F47; F52; F50; F51; F53): v3's, step 2 side by side and the farming chores, step 4's
  * extras and gathering chores, the Gate's step replaced by authored arrivals with their ties' seeds, step 6 with her
- * ladder's factor, the mentor, bonds and her line's +10, step 7 clearing the whole of `today`, and step 9 with praise,
- * birthdays, anniversaries, the morning items, the invitations and the bond hearts. */
+ * ladder's factor, the mentor, bonds and her line's +10, step 7 clearing the whole of `today`, step 8 the ring bench, and
+ * step 9 with a wedding's reception, praise, birthdays, anniversaries, the morning items, the invitations and the bond
+ * hearts. */
 export const NIGHT_STEPS_V4: readonly NightStepDef[] = NIGHT_STEPS.flatMap((step) => {
   const change = V4_STEPS[step.name]
   return [...(change?.before ?? []), { ...step, ...change?.replace }, ...(change?.after ?? [])]

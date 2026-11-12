@@ -90,7 +90,8 @@ export interface RomanceTerms {
   held: boolean
 }
 
-/** Her ring's bonus as a share (RM39): once she's married, `love.ring` percent at her line. */
+/** Her ring's bonus as a share (RM39): once she's married, `love.ring` percent at her line. On v4 `love.ring` is her ring's
+ * grade (F53 decision 6: +1% a grade, every ring a Rough make until M6's merge game adds its +1/+3/+5). */
 export const ringBonus = (love: Pick<Love, 'stage' | 'ring'> | undefined): number => (love?.stage === 'spouse' && love.ring !== undefined ? love.ring / 100 : 0)
 
 /** The household's share by spouses on the farm (RM45): 0, 5% from 5 married, 10% from 15. */

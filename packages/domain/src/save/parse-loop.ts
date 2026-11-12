@@ -7,7 +7,7 @@ import { FESTIVAL_IDS, SEASONS } from '../farm/calendar'
 import { bedsFor, dormMaxLevel, FARM_RANK_POINTS } from '../farm/farm'
 import { DIARY_ROWS, isDiaryPaidId, MILESTONES } from '../farm/milestones'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
-import { GOOD_IDS, goodOf, isCropId, isGoodId, isSeedId, isWarehouseId } from '../goods/ids'
+import { GOOD_IDS, goodOf, isCropId, isGoodId, isGoodIdV4, isSeedId, isWarehouseId, RING_IDS } from '../goods/ids'
 import type { BinSale, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
 import { isOutfitId } from '../roster/roster'
 import type { LoopWorld } from '../work/loop-env'
@@ -388,10 +388,11 @@ export function keys(value: unknown, path: string): string[] {
   return unique(list(value, path, 0, 2000).map((v, i) => key(v, `${path}.${i}`)), path)
 }
 
-export function parseDiary(value: unknown, path: string): SaveV3['diary'] {
+/** The Diary. `isGood` is the version's catalogue: v3's goods, or v4's with the rings (F53). */
+export function parseDiary(value: unknown, path: string, isGood: (id: string) => boolean = isGoodId): SaveV3['diary'] {
   const o = object(value, path, ['shipped', 'milestones', 'records', 'read'])
   return {
-    shipped: counts(o.shipped, `${path}.shipped`, isGoodId, 'unknown good'),
+    shipped: counts(o.shipped, `${path}.shipped`, isGood, 'unknown good'),
     milestones: keys(o.milestones, `${path}.milestones`),
     records: counts(o.records, `${path}.records`, (k) => KEY.test(k), 'expected an id', amount),
     read: keys(o.read, `${path}.read`),
@@ -416,14 +417,15 @@ export function parseFarm(value: unknown, path: string): SaveV3['farm'] {
 
 export const none = (value: unknown, path: string): [] => list(value, path, 0, 0) as []
 
-/** §1 The bin (F19). */
-export function parseBinLines(value: unknown, path: string): BinSale[] {
+/** §1 The bin (F19), on a save's version: v3's goods, or v4's with the rings (F53). */
+export function parseBinLines(value: unknown, path: string, version = 3): BinSale[] {
+  const isGood = version >= 4 ? isGoodIdV4 : isGoodId
   // A good at one star once, a whole count and gold; the gold isn't re-priced (a later price can't break it).
-  return unique(list(value, path, 0, GOOD_IDS.length * MAX_STARS).map((v, i): BinSale => {
+  return unique(list(value, path, 0, (GOOD_IDS.length + (version >= 4 ? RING_IDS.length : 0)) * MAX_STARS).map((v, i): BinSale => {
     const at = `${path}.${i}`
     const b = object(v, at, ['kind', 'id', 'stars', 'count', 'gold', 'demand'])
     oneOf(b.kind, `${at}.kind`, ['sold'] as const)
-    const id = typeof b.id === 'string' && isGoodId(b.id) ? b.id : fail(`${at}.id`, 'unknown good')
+    const id = typeof b.id === 'string' && isGood(b.id) ? b.id : fail(`${at}.id`, 'unknown good')
     return {
       kind: 'sold', id, stars: int(b.stars, `${at}.stars`, 1, MAX_STARS), count: int(b.count, `${at}.count`, 1, Number.MAX_SAFE_INTEGER), gold: count(b.gold, `${at}.gold`),
       demand: bool(b.demand, `${at}.demand`),
@@ -478,7 +480,7 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
   const top = dormMaxLevel(version)
   // F23: the Dorm's new level, Umas home from a swap, recruits who joined (on the roster), a visitor at the Gate and those
   // who left (outfit ids by form: she may since have joined, or gone).
-  return unique(list(value, path, 0, 8 + 3 * MAX_ROSTER_NEWS + MAX_GOAL_NEWS).map((v, i): NewsLine => {
+  return unique(list(value, path, 0, 8 + 3 * MAX_ROSTER_NEWS + MAX_GOAL_NEWS + (version >= 4 ? 1 : 0)).map((v, i): NewsLine => {
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, version >= 4 ? NEWS_KINDS_V4 : NEWS_KINDS)
     switch (kind) {
@@ -487,7 +489,7 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
       case 'farm-rank': return { kind, rank: int(object(v, at, ['kind', 'rank']).rank, `${at}.rank`, 2, FARM_RANK_POINTS.length) }
       case 'milestone': {
         const id = object(v, at, ['kind', 'id']).id
-        return { kind, id: typeof id === 'string' && isDiaryPaidId(id) ? id : fail(`${at}.id`, 'unknown milestone') }
+        return { kind, id: typeof id === 'string' && isDiaryPaidId(id, version) ? id : fail(`${at}.id`, 'unknown milestone') }
       }
       case 'season': return { kind, season: oneOf(object(v, at, ['kind', 'season']).season, `${at}.season`, SEASONS) }
       case 'festival': {

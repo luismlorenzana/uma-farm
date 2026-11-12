@@ -44,6 +44,13 @@
     "line": "The first tool I ever wore out here. Keep it by the door, so the rows remember us."
   },
   "petName": "Sprout",
+  "wedding": {
+    "places": [
+      "chapel-bell",
+      "orchard-bench",
+      "fields"
+    ]
+  },
   "route": [
     {
       "id": "arrival",
@@ -414,7 +421,7 @@
         "kind": "talk"
       },
       "beat": "Vows.",
-      "hint": "The chapel bell, the day after."
+      "hint": "Tomorrow, at one of her three places."
     },
     {
       "id": "s1",
