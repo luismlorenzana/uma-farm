@@ -129,6 +129,16 @@ The owner reads each layer before the next is written. The farm's code packets (
 > keepsake" and her R1 perk says nothing more. Her signature dish needs no field: her `gifts.loved` when it's a dish id
 > (`dish-<family>-<grade>`, listed under `proposed` until dishes are goods), else her line's dish kind; her dream is her
 > `s3` event, its effect the template's.
+
+> **Landed in F53 (D58):** her bible may carry **`wedding: { places: [place, place, place] }`**: the three places your
+> wedding may be held at, the player's first choice, each a story place (`STORY_PLACES`), all three different, nothing else
+> in the object. Optional: without it the game offers her wedding beat's place and two of the farm's. Her **wedding**
+> event's own `place` steps give way to the chosen place, so write it place-free (or let a place step stand only as a
+> fallback); its **last top-level choice point is the vow line**, paying as any choice, kept as the flag `vow:<n>` (1–3,
+> the option's position) and the place as `wedding:<place>`, so later scenes may echo them with `when`. Her **R8** beat's
+> `beat` line is the engraving her ring carries ("Her ring will read: ‘…’" on her profile from Romance 8), so write it with
+> that in mind. Every line of the proposal and the wedding says spouse, partner, vows, your wedding, you; never bride,
+> groom, husband or wife for the farmer (the validator's gendered list).
 >
 > F41 also settles what the story wrote around: arrivals are the authored ones only (RM1, RM4); events never wait on a
 > season, festival or hour (RM24); the farmer is never gendered at the wedding (RM30); one ring bench at the Forge opens

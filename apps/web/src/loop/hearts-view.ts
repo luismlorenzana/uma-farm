@@ -14,11 +14,12 @@
 //
 // F51 adds what each reached perk does now (`perkNow`: "+28% at the forest · +8% ring", "2 items each night", "Next in 3
 // mornings"), her closest friend's loved gift to Gifts from Friendship 7 (`friendLoved`), and her pet name and keepsake
-// once reached (`fromHer`).
+// once reached (`fromHer`). F53 adds her Ring (`ringView`: the engraving from Romance 8, her ring and its bonus, and the
+// better rings in the Warehouse) and R8's engraving in her perks.
 import {
-  ACTIVITY_NAMES, bar, bondHearts, bondOf, castOrder, choresTonight, closestFriend, dateOf, dishName, favouriteOf, farmPlace, GIFT_POINTS_V4, goodName, hasPerk, homeOrHoused,
+  ACTIVITY_NAMES, bar, benchOpen, betterRings, bondHearts, bondOf, castOrder, choresTonight, closestFriend, dateOf, dishName, favouriteOf, farmPlace, GIFT_POINTS_V4, goodName, hasPerk, homeOrHoused,
   invitedNow, isGoodId, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, keepsakeQuality, LADDER_COLOURS, ladderOf, levelWords, linePlaces, morningRule, morningsToItem, nextBondHeart,
-  pairLevels, pairName, pairOf, PERK_PLACE, perkLineOf, perksFor, readiness, readLevels, romanceTerms, ROUTE_RUNGS, routeIndex, rungName, SEASON_NAMES, SIDE_BY_SIDE_HEARTS,
+  pairLevels, pairName, pairOf, PERK_PLACE, perkLineOf, perksFor, readiness, readLevels, ringGrade, ringName, ringPercent, romanceTerms, ROUTE_RUNGS, routeIndex, rungName, SEASON_NAMES, SIDE_BY_SIDE_HEARTS,
   tasteKnown, tiesOf, unreadLevels, WAITING_RUNGS,
   type Bar, type Birthdays, type LadderName, type Love, type LoveStage, type Perk, type PerkId, type Readiness, type SaveV4, type StoryPack, type Tie, type Wait,
 } from '@farm/domain'
@@ -44,9 +45,10 @@ export function placeWords(place: string): string {
   return BACKDROPS[place] ?? PLACE_WORDS[place] ?? (farmPlace(place) ? `the ${farmPlace(place)!.name}` : place.replaceAll('-', ' '))
 }
 
-/** Where her next event plays: her bible's beat for the rung, in words; null without one. */
+/** Where her next event plays: her bible's beat for the rung, in words; null without one, and for the wedding, whose place
+ * you choose (F53 decision 9). */
 export function beatPlace(pack: Pick<StoryPack, 'bibles'>, id: string, rung: string | null): string | null {
-  const beat = rung ? pack.bibles.get(id)?.route.find((b) => b.id === rung) : undefined
+  const beat = rung && rung !== 'wedding' ? pack.bibles.get(id)?.route.find((b) => b.id === rung) : undefined
   return beat ? placeWords(beat.place) : null
 }
 
@@ -332,7 +334,43 @@ export function perkNow(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' | 
       const friend = closestFriend(pack, save, id)
       return friend ? `With ${nameOf(friend)}` : null
     }
+    case 'engraving': {
+      const words = engravingOf(pack, id)
+      return words ? `“${words}”` : null
+    }
     default: return null
+  }
+}
+
+// --- Her ring (F53 decisions 6 and 7; RM39) ---------------------------------------------------------------------------
+
+/** Her ring's engraving (decision 7): her Romance 8 beat's line, her Memory's caption, so no new field. */
+export const engravingOf = (pack: Pick<StoryPack, 'bibles'>, id: string): string | null => pack.bibles.get(id)?.route.find((b) => b.id === 'r8')?.beat ?? null
+
+/** Her profile's Ring (decisions 6 and 7): the engraving from Romance 8 ("Her ring will read", then "Her ring reads"), her
+ * ring and its bonus at her line (once married, or "once you're married"), and the rings in the Warehouse she'd take
+ * instead. Null before Romance 8. */
+export interface RingView {
+  engraving: string | null
+  /** "Her ring will read" before the proposal, "Her ring reads" after. */
+  reads: string
+  ring: { grade: number; name: string; bonus: string } | null
+  better: { id: string; name: string; bonus: string }[]
+  /** The bench, for "Needs a ring" before the proposal: whether it stands. */
+  bench: boolean
+}
+export function ringView(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string): RingView | null {
+  const love = save.love[id]
+  if (!love || !hasPerk(love, 'r8')) return null
+  const place = PERK_PLACE[perkLineOf(pack, id) ?? 'farming']
+  const married = love.stage === 'spouse'
+  const bonus = (grade: number) => `+${ringPercent(grade)}% at ${place}${married ? '' : ' once you’re married'}`
+  return {
+    engraving: engravingOf(pack, id),
+    reads: love.ring === undefined ? 'Her ring will read' : 'Her ring reads',
+    ring: love.ring === undefined ? null : { grade: love.ring, name: ringName(love.ring), bonus: bonus(love.ring) },
+    better: betterRings(save, id).map((r) => ({ id: r, name: goodName(r), bonus: `+${ringPercent(ringGrade(r))}%` })),
+    bench: benchOpen(save),
   }
 }
 

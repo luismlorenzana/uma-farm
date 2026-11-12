@@ -137,7 +137,12 @@ export interface UmaBible {
   /** Her pet name for you (RM8, RM31; F51 decision 13): a short name she calls you from Romance 1, shown on her profile.
    * Never gendered; `{farmer}` isn't needed (it's what she calls you). */
   petName?: string
+  /** Her wedding (RM30, RM58; F53 decision 11): the three different story places your wedding may be held at, the
+   * place being its first choice. Without it the game offers her wedding beat's place and two of the farm's. */
+  wedding?: WeddingPlan
 }
+/** Her wedding's three places (F53). */
+export interface WeddingPlan { places: [StoryPlace, StoryPlace, StoryPlace] }
 /** Her keepsake (F51): a name of 1–40 characters and a line of 1–160, under the line rules. */
 export interface Keepsake { name: string; line: string }
 /** A pet name's length (F51): 1–24 characters. */
@@ -196,6 +201,11 @@ const GENDERED = /\b(husband|wife|boyfriend|girlfriend|groom|sir|mister|mr|mrs|m
  * speaks of the town's men and the Umas, never of themself in the third person. */
 const GENDERED_FARMER = /\b(bride)\b/i
 /** Nothing that reads under 18 (RS3). */
+/** Whether a line genders the farmer (RS2): the words above, in anyone's lines; `bride` too in the farmer's own (F53
+ * decision 10's test reads it for every wedding word). Returns the word, or null. */
+export function gendersFarmer(text: string, farmer = true): string | null {
+  return (text.match(GENDERED) ?? (farmer ? text.match(GENDERED_FARMER) : null))?.[0] ?? null
+}
 const SCHOOLISH = /\b(senpai|kouhai|classmates?|homework|high school|middle school|school uniform|schoolgirls?)\b/i
 const PLACEHOLDER = /\{([^{}]*)\}/g
 
@@ -442,6 +452,18 @@ export function bibleIssues(bible: unknown, ctx: StoryContext): Issues {
   if (bible.chats !== undefined) issues.push(...chatIssues(bible.chats))
   if (bible.keepsake !== undefined) issues.push(...keepsakeIssues(bible.keepsake))
   if (bible.petName !== undefined) issues.push(...petNameIssues(bible.petName))
+  if (bible.wedding !== undefined) issues.push(...weddingIssues(bible.wedding))
+  return issues
+}
+
+/** Her wedding (F53 decision 11): `{ places }` and nothing else, three different story places (RM58). */
+function weddingIssues(wedding: unknown): Issues {
+  if (!isObject(wedding) || Object.keys(wedding).some((k) => k !== 'places') || !Array.isArray(wedding.places)) return ['wedding is { places: [three places] }']
+  const places = wedding.places as unknown[]
+  const issues: Issues = []
+  if (places.length !== 3) issues.push('wedding.places: three places')
+  places.forEach((p, i) => { if (!oneOf(STORY_PLACES, p)) issues.push(`wedding.places ${i + 1}: unknown place ${String(p)}`) })
+  if (new Set(places).size !== places.length) issues.push('wedding.places: three different places')
   return issues
 }
 

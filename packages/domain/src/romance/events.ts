@@ -15,7 +15,7 @@
 // unlock come with it; the level-up card lists all of it. **Her confession** ends on Yes (romance opens, the stage-up
 // screen) or Not yet (`love.friend`: she stays a close friend, her points bank, and **Ask her** on her profile plays its
 // last choice again, once a day, paying nothing). Memories replay any event from any choice, paying nothing. Pure.
-import { goodName, isWarehouseId } from '../goods/ids'
+import { goodName, isRingId, isWarehouseId, ringGrade } from '../goods/ids'
 import { SaveRuleError } from '../save/rules'
 import type { SaveV4 } from '../save/v4'
 import { addGoods, goodCount, takeGoods } from '../save/warehouse'
@@ -30,12 +30,13 @@ import { choosePlan, chooseScore } from './plays/choose'
 import { EVENT_GRADE_POINTS, gradeOf, playSeed, type Grade, type PlayKind } from './plays/grade'
 import { playOf, togetherPlay, type PlayAs } from './plays/which'
 import { readiness } from './ready'
+import { receptionOf, vowFlag, weddingGuests, weddingPlaceFlag, weddingPlaces, type Reception } from './wedding'
 
 /** Every event pays +50 on completion (RM13, RM28). */
 export const EVENT_POINTS = 50
 
-/** The pack an event reads: her bible's beats, which events are scripted, and the cast. */
-export type EventPack = Pick<StoryPack, 'cast' | 'bibles' | 'scripted'>
+/** The pack an event reads: her bible's beats, which events are scripted, the cast, and the ties (a wedding's guests, F53). */
+export type EventPack = Pick<StoryPack, 'cast' | 'bibles' | 'scripted' | 'ties'>
 
 // --- The scene ----------------------------------------------------------------------------------------------------------
 
@@ -104,7 +105,28 @@ export interface EventOutcome {
   event: { id: string; steps: readonly Step[] }
   picks: readonly number[]
   plays: readonly PlayScore[]
+  /** The proposal's ring (F53 decision 8): a ring in the Warehouse, used. */
+  ring?: string
+  /** The wedding's place (F53 decision 9): one of her three. */
+  place?: string
+  /** The wedding's reception (F53 decision 9): a dish at its stars, used, or null for Marta's cake (with no dish held). */
+  reception?: Reception
 }
+
+/** What a wedding gave (F53 decision 9), for its cards. */
+export interface WeddingCard {
+  place: string
+  /** The dish served, or null for Marta's cake. */
+  dish: string | null
+  stars: number | null
+  /** Well-fed days for everyone on the farm tomorrow. */
+  days: number
+  /** Who attended (every spouse, her two closest friends). */
+  guests: string[]
+}
+
+/** The stages a stage-up screen closes (decision 11; F53): Partners, Engaged, Married. */
+export type StageUp = 'romance' | 'engaged' | 'married'
 
 /** One play on the level-up card. */
 export interface PlayLine { kind: PlayKind; score: number; grade: Grade; points: number }
@@ -138,9 +160,13 @@ export interface EventCard {
   unlock: Unlock | null
   /** The confession's answer. */
   answer: Answer | null
-  /** The stage-up screen it shows (decision 11): the confession's Yes opens romance. F53 adds the proposal's and the
-   * wedding's. */
-  stage: 'romance' | null
+  /** The stage-up screen it shows (decision 11): the confession's Yes opens romance; the proposal makes her engaged and the
+   * wedding married (F53). */
+  stage: StageUp | null
+  /** The proposal's ring, used (F53 decision 8); null otherwise. */
+  ring: string | null
+  /** The wedding's place, reception and guests (F53 decision 9); null otherwise. */
+  wedding: WeddingCard | null
   /** Her last line of the event. */
   line: string | null
   /** The next rung: its cost, her points toward it and what's banked past it, its place and setup (her beat's hint) and
@@ -199,6 +225,25 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
     if (p.score !== chooseScore(pack, id, good)) throw new SaveRuleError('bad-count', 'That isn’t what she thinks of it.')
     if (good !== null) learnt.push(good)
   })
+  // F53 decision 8: the proposal uses the ring you chose. Decision 9: the wedding's place, its reception's dish, its vow.
+  let ring: string | null = null
+  let wedding: WeddingCard | null = null
+  const kept: string[] = []
+  if (rung === 'proposal') {
+    if (!outcome.ring || !isRingId(outcome.ring) || goodCount(items, outcome.ring) < 1) throw new SaveRuleError('no-items', 'Choose a ring from the Warehouse.')
+    ring = outcome.ring
+    items = takeLowest(items, ring, 1)
+  }
+  if (rung === 'wedding') {
+    const place = outcome.place
+    if (!place || !(weddingPlaces(pack, id) as readonly string[]).includes(place)) throw new SaveRuleError('bad-job', 'Choose one of her three places.')
+    if (outcome.reception === undefined) throw new SaveRuleError('bad-job', 'Choose the reception.')
+    const days = receptionOf({ items }, outcome.reception)
+    if (outcome.reception) items = takeGoods(items, outcome.reception.dish, outcome.reception.stars, 1)
+    wedding = { place, dish: outcome.reception?.dish ?? null, stars: outcome.reception?.stars ?? null, days, guests: weddingGuests(save, pack, id) }
+    const vowAt = choices.indexOf(outcome.event.steps[answerAt(outcome.event.steps)] as { choice: ChoiceOption[] })
+    kept.push(weddingPlaceFlag(place), ...(vowAt >= 0 ? [vowFlag(outcome.picks[vowAt]! + 1)] : []))
+  }
   const lines: PlayLine[] = outcome.plays.map((p) => ({ kind: p.kind, score: p.score, grade: gradeOf(p.score), points: EVENT_GRADE_POINTS[gradeOf(p.score)] }))
   const best = choices.some((c, i) => choicePoints(c.choice)[outcome.picks[i]!] === CHOICE_BEST)
   const chosenGrade: Grade | null = plays.length === 0 ? (best ? 'perfect' : 'great') : null
@@ -210,17 +255,19 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
   const grown = {
     ...paidLove,
     known: [...new Set([...paidLove.known, ...learnt])],
-    flags: [...new Set([...paidLove.flags, ...pathFlags(path.steps)])],
+    flags: [...new Set([...paidLove.flags, ...pathFlags(path.steps), ...kept])],
   }
   const notYet = rung === 'confession' && answer === 'not-yet'
-  const moved = notYet ? { ...grown, friend: true as const, last: day } : advance(grown, day)
+  const advanced = notYet ? { ...grown, friend: true as const, last: day } : advance(grown, day)
+  const moved = ring ? { ...advanced, ring: ringGrade(ring) } : advanced
   const unlock = beat?.unlock ?? null
   const withUnlock = unlock?.kind === 'item' && isWarehouseId(unlock.good) ? addGoods(pay.save.items, unlock.good, 1, 1) : pay.save.items
   const played: SaveV4 = {
     ...pay.save,
     items: withUnlock,
     love: { ...pay.save.love, [id]: moved },
-    today: { ...pay.save.today, events: [...new Set([...pay.save.today.events, id])] },
+    // Two weddings in a day: the longer reception feeds the farm.
+    today: { ...pay.save.today, events: [...new Set([...pay.save.today.events, id])], ...(wedding ? { reception: Math.max(pay.save.today.reception, wedding.days) } : {}) },
     memories: { ...pay.save.memories, [id]: [...new Set([...(pay.save.memories[id] ?? []), rung])] },
   }
   // F51 decision 9: Friendship 4's perk writes her signature dish's recipe, once, where the event gives its perk.
@@ -233,7 +280,7 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
     card: {
       id, rung, event: EVENT_POINTS, choices: points, plays: lines, chosen, sum, paid: pay.paid, carried: Math.max(0, carried), learnt: [...new Set(learnt)], taken,
       perk: perkOf(rung)?.id ?? null, recipe: dish?.dish ?? null, memory: beat?.beat ?? null, unlock, answer: rung === 'confession' ? answer ?? 'yes' : null,
-      stage: rung === 'confession' && !notYet ? 'romance' : null, line: say?.line ?? null,
+      stage: rung === 'confession' && !notYet ? 'romance' : rung === 'proposal' ? 'engaged' : rung === 'wedding' ? 'married' : null, ring, wedding, line: say?.line ?? null,
       next: after.rung === null ? null : {
         rung: after.rung, cost: after.cost, points: after.points, banked: after.banked, hint: beatOf(pack, id, after.rung)?.hint ?? null, perk: perkOf(after.rung)?.id ?? null,
       },

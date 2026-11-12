@@ -2,12 +2,21 @@
 // counts by ★1 … ★5; uma-work reads a `Record<string, number>`. The engine sees a view keyed `<id>@<stars>` (`carp@2`),
 // built by `workStock` and folded back by `fromWorkStock`; v3 work rows store those keys in their inputs and outputs.
 // Nothing else reads the view. Seeds are held at ★1 only (decision 6).
+//
+// F53: the bridge and the operations take anything a v3 or a v4 Warehouse may hold (`isStockId`): v4 adds the rings
+// (the ring bench's) and dishes (the wedding's reception reads them; M5's Kitchen makes them). Each save's parse keeps
+// its own: v3's Warehouse is `isWarehouseId`'s, M4's as live, and v4's `isWarehouseIdV4`.
 import type { ItemStock } from '@luismlorenzana/uma-work'
-import { isSeedId, isWarehouseId } from '../goods/ids'
+import { isRingId, isSeedId, isWarehouseId } from '../goods/ids'
 import { SaveRuleError } from './rules'
-import type { StarCounts, Warehouse } from './v3'
+import { isDishId, type StarCounts, type Warehouse } from './v3'
 
 export const MAX_STARS = 5
+
+/** Anything a v4 Warehouse may hold (F53): v3's goods and seeds, the rings and dishes. */
+export const isWarehouseIdV4 = (id: string): boolean => isWarehouseId(id) || isRingId(id) || isDishId(id)
+/** What the engine's bridge and the Warehouse's operations take: anything either version's Warehouse may hold. */
+export const isStockId = isWarehouseIdV4
 
 /** The engine's key for a good at its stars. */
 export const stockKey = (id: string, stars: number): string => `${id}@${stars}`
@@ -18,12 +27,12 @@ export function parseStockKey(key: string): { id: string; stars: number } | null
   if (at <= 0) return null
   const id = key.slice(0, at)
   const stars = Number(key.slice(at + 1))
-  if (!/^[1-5]$/.test(key.slice(at + 1)) || !isWarehouseId(id) || (isSeedId(id) && stars !== 1)) return null
+  if (!/^[1-5]$/.test(key.slice(at + 1)) || !isStockId(id) || (isSeedId(id) && stars !== 1)) return null
   return { id, stars }
 }
 
 function check(id: string, stars: number, count: number): void {
-  if (!isWarehouseId(id)) throw new RangeError(`${id} isn't a Warehouse item`)
+  if (!isStockId(id)) throw new RangeError(`${id} isn't a Warehouse item`)
   if (!Number.isInteger(stars) || stars < 1 || stars > MAX_STARS || (isSeedId(id) && stars !== 1)) throw new RangeError(`${id} can't be ★${stars}`)
   if (!Number.isSafeInteger(count) || count < 0) throw new RangeError(`Bad count ${count}`)
 }

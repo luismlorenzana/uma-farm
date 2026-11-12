@@ -132,8 +132,11 @@ interface SaveV4 {
   calendar, gold, items, bin, work, fields, crops, ranch, places, buildings, tools, workshops, expeditions,
   board, diary, farm                                  // as v3 (`work` keyed by character id)
   today: { chats, gifts, praise, praised, events, asked: CharacterId[]; evenings: { with, kind }[]; invites: { id, kind, answer }[];
-           bonds: Record<string, number> }              // F52: a pair's hearts before it first moved since the last morning;
-                                                        // F49: `asked`, whom you asked again after a "Not yet" today
+           bonds: Record<string, number>; ring: number; reception: number }
+                                                        // F52: a pair's hearts before it first moved since the last morning;
+                                                        // F49: `asked`, whom you asked again after a "Not yet" today;
+                                                        // F53: `ring` the grade made at the bench today (0 none),
+                                                        // `reception` the wedding's well-fed days (0–3), step 9's
   roster: Record<CharacterId, { joined: number; ranks: Record<Activity, RankState>; wellFed: number }>
   love: Record<CharacterId, Love>                     // one per roster Uma, from the day she joins
   dorm: { level: number; home: CharacterId[]; swaps: DormSwap[] }   // levels 1–8 (RM5)
@@ -151,12 +154,15 @@ interface Love { stage, level, points, last, friend?, ring?, wed?, house?, known
 - **The parse** (`parse-v4.ts`, sharing v3's parts in `parse-loop.ts`) is as strict as v3's: unknown keys and v3-only
   keys (`start`, `visitors`, a roster Uma's `affinity`) refused; roster keys by form; `love` exactly the roster's keys,
   each in range (a level 0–10, spouse 0–5; points finite and ≥ 0; `last` and `evening` no later than today; `friend` only
-  while the confession waits; `ring` from the proposal on; `wed` and `house` a spouse's; F51's `morning` from Romance 2
+  while the confession waits; `ring` 1–10, her ring's grade, from the proposal on (her wedding's wait and a spouse, F53);
+  `wed` and `house` a spouse's; F51's `morning` from Romance 2
   on, no later than today, and `dish` a dish id from Friendship 4 on); `memories` and `arrivals` on
   the roster; the farmer's name empty or within RM8's rule; the Dorm on 1–8 with home within its beds; the morning's
   Hearts lines on the roster, once each, ids only; bond points whole, and `today.bonds` two roster ids in `pairKey` order
   with 0–5 hearts (F52); `today.asked` roster Umas once each (F49); F51's §4 lines: a morning item 1–3 goods at ★1–5,
-  the night's chores once (items, growth in quarters), the perks' extras once. `parseSave` returns v2, v3 and v4 as stored; `NEWEST_SAVE_VERSION` is
+  the night's chores once (items, growth in quarters), the perks' extras once; F53's `today.ring` 0–10 and
+  `today.reception` 0–3, the Warehouse's rings and dishes (`isWarehouseIdV4`), and rings in the bin, the Diary's shipped
+  and the morning's bin lines (`isGoodIdV4`), which v3's parse refuses. `parseSave` returns v2, v3 and v4 as stored; `NEWEST_SAVE_VERSION` is
   4 and `SAVE_VERSION` (what production writes) stays 3 until F56.
 - **The wipe runs in the app, never in the parse** (F46 decision 2): the API, shared with production and deployed on
   every push, reads what's stored and never makes a save (FM10). The romance build's boot turns any v1–v3 it meets (on

@@ -16,10 +16,11 @@ export interface IconFrame { sheet: Sheet; x: number; y: number }
 
 /** Each line's uma-art family: a raw row, then its refined row below it. */
 const MATERIAL_ROW = { fish: 4, vegetables: 8, ores: 20, crystals: 22, woods: 28 } as const
-/** The loop's goods (F19): each uma-art family's raw row, its refined row below it (`items/atlas.json`). */
+/** The loop's goods (F19): each uma-art family's raw row, its refined row below it (`items/atlas.json`); v4's rings (F53)
+ * draw uma-art's `accessory-setting-g1…g10` row, CS25's renamed frames. */
 const GOOD_ROW: Readonly<Record<GoodFamily, number>> = {
   grains: 0, fruits: 2, fish: 4, 'herbs-spices': 6, vegetables: 8, mushrooms: 10, sweets: 12, 'nuts-seeds': 14, 'hides-scales': 16, essences: 18,
-  ores: 20, crystals: 22, stones: 24, woods: 28, 'bones-horns': 30,
+  ores: 20, crystals: 22, stones: 24, woods: 28, 'bones-horns': 30, rings: 36,
 }
 
 /** The made items' rows; Tome Ink (uma-rpg's FL15) borrows uma-art's essences refined row, the infusion bottles. */

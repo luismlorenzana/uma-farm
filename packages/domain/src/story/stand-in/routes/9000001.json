@@ -1003,7 +1003,7 @@
           "place": "chapel-bell"
         },
         {
-          "narrate": "The chapel bell, and a ring in your pocket."
+          "narrate": "The chapel bell, and a ring in your pocket since this morning."
         },
         {
           "play": {
@@ -1031,14 +1031,17 @@
           ]
         },
         {
+          "narrate": "You hold out the ring. The bell rope sways in the wind."
+        },
+        {
           "say": "9000001",
-          "line": "Yes. Whatever it is, yes.",
+          "line": "Yes. Whatever it is, yes. Ask me anyway, {farmer}.",
           "emote": "tender"
         },
         {
           "choice": [
             {
-              "text": "Then it’s a promise.",
+              "text": "Will you marry me?",
               "tone": "warm",
               "romance": 20
             },
@@ -1048,6 +1051,11 @@
               "romance": 10
             }
           ]
+        },
+        {
+          "say": "9000001",
+          "line": "Then it’s a promise. Tomorrow, or whenever you’re ready.",
+          "emote": "happy"
         }
       ]
     },
@@ -1055,10 +1063,7 @@
       "id": "wedding",
       "steps": [
         {
-          "place": "chapel-bell"
-        },
-        {
-          "narrate": "Everyone from the farm, and the bell ringing."
+          "narrate": "Ribbons on every post, and the whole farm in its best."
         },
         {
           "say": "9000001",
@@ -1101,8 +1106,18 @@
               "text": "And every harvest.",
               "tone": "honest",
               "romance": 10
+            },
+            {
+              "text": "Every row, every rain.",
+              "tone": "playful",
+              "romance": 10
             }
           ]
+        },
+        {
+          "say": "9000001",
+          "line": "Spouses, then. Let’s go and feed everyone.",
+          "emote": "happy"
         }
       ]
     },

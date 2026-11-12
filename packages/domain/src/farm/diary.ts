@@ -7,19 +7,19 @@ import { BLOCK_RULES, cropLevelOf } from '../fields/fields'
 import { CROPS, SHOP_SEEDS } from '../fields/crops'
 import { STATION_RULES } from '../gathering/tables'
 import { STATIONS } from '../gathering/ids'
-import { isGoodId } from '../goods/ids'
+import { isGoodIdV4 } from '../goods/ids'
 import { GOLD_SHIPPED } from '../save/bin'
 import { earnGold } from '../save/gold'
 import { BLOCK_IDS, type SaveV3 } from '../save/v3'
 import { dormLevelsOf } from './dorm'
 import { FARM_RANK_POINTS, farmRankOf } from './farm'
 import {
-  CHAPTER_POINTS, DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, milestoneOf, ROW_GOLD, type DiaryRow, type Milestone,
+  CHAPTER_POINTS, diaryRowsOf, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, milestoneOf, ROW_GOLD, type DiaryRow, type Milestone,
 } from './milestones'
 import type { FarmSave } from '../save/v4'
 
-/** The goods shipped at least once: the Diary's entries (CS38). */
-export const diaryEntries = (save: Pick<FarmSave, 'diary'>): number => Object.entries(save.diary.shipped).filter(([id, n]) => n > 0 && isGoodId(id)).length
+/** The goods shipped at least once: the Diary's entries (CS38). A ring is one on v4 (F53); v3 never ships one. */
+export const diaryEntries = (save: Pick<FarmSave, 'diary'>): number => Object.entries(save.diary.shipped).filter(([id, n]) => n > 0 && isGoodIdV4(id)).length
 
 /** The milestones paid so far (rows aren't milestones). */
 export const milestonesPaid = (save: Pick<FarmSave, 'diary'>): number => save.diary.milestones.filter((id) => milestoneOf(id) !== undefined).length
@@ -91,7 +91,7 @@ export const rowComplete = (save: Pick<FarmSave, 'diary'>, row: DiaryRow): boole
 export function payDiary<S extends FarmSave>(save: S, depths: DepthsTonight = new Set()): { save: S; paid: string[] } {
   const held = new Set(save.diary.milestones)
   const milestones = MILESTONES.filter((m) => !held.has(m.id) && milestoneReached(save, m, depths))
-  const rows = DIARY_ROWS.filter((r) => !held.has(r.id) && rowComplete(save, r))
+  const rows = diaryRowsOf(save.version).filter((r) => !held.has(r.id) && rowComplete(save, r))
   const paid = [...milestones.map((m) => m.id), ...rows.map((r) => r.id)]
   if (paid.length === 0) return { save, paid }
   const gold = milestones.reduce((n, m) => n + m.gold, 0) + ROW_GOLD * rows.length

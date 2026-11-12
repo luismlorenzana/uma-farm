@@ -25,9 +25,8 @@ import { harvestQuality } from '../fields/fields'
 import { GATHER_TOOL, gatherQuality, pickShare, sharesOn, termsOf } from '../gathering/kinds'
 import { FISHING_SPOTS, FOREST_AREAS, type FishingSpotId, type ForestAreaId } from '../gathering/ids'
 import { FISHERY, FOREST } from '../gathering/tables'
-import { GOODS, goodOf, type GoodFamily } from '../goods/ids'
+import { goodOf } from '../goods/ids'
 import { drawStars, quality } from '../goods/stars'
-import { itemNameOf } from '../items/lines'
 import type { ItemLine } from '../night/summary'
 import { DISH_FAMILIES, isDishId, type BlockId } from '../save/v3'
 import type { SaveV4 } from '../save/v4'
@@ -217,21 +216,8 @@ export const LINE_DISH: Readonly<Record<PerkLine, DishFamily>> = {
   farming: 'vegetables', ranch: 'sweets', mining: 'herbs-spices', quarry: 'herbs-spices', fishing: 'fish', foraging: 'mushrooms', cooking: 'fruits',
   serving: 'nuts-seeds', forging: 'grains',
 }
-/** Each dish kind's word (CS21). */
-export const DISH_WORDS: Readonly<Record<DishFamily, string>> = {
-  vegetables: 'Salad', grains: 'Bread', fruits: 'Tart', fish: 'Grill', 'herbs-spices': 'Curry', mushrooms: 'Soup', sweets: 'Cake', 'nuts-seeds': 'Cookies',
-}
 /** A dish's id: `dish-<family>-<grade>` (uma-art's dishes atlas). */
 export const dishId = (family: DishFamily, grade: number): string => `dish-${family}-${Math.min(10, Math.max(1, grade))}`
-/** A dish in words: its family's raw good of its grade, then its kind ("Carrot Salad", "Button Mushroom Soup"), as
- * uma-art's atlas names them. */
-export function dishName(id: string): string {
-  const m = /^dish-([a-z-]+)-(\d+)$/.exec(id)
-  if (!m || !isDishId(id)) return itemNameOf(id)
-  const family = m[1] as DishFamily
-  const raw = GOODS.find((g) => g.family === (family as GoodFamily) && !g.refined && g.grade === Number(m[2]))
-  return `${raw ? itemNameOf(raw.id) : itemNameOf(family)} ${DISH_WORDS[family]}`
-}
 
 /** A share a place's goods must reach in some season to count toward its top grade: a rare catch doesn't (a Pond's koi). */
 const TOP_SHARE = 10

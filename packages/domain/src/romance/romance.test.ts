@@ -184,7 +184,8 @@ describe('the opening and arrivals (RM4, RM9; decisions 8 and 9)', () => {
     expect(save.calendar.day).toBe(13)
     expect(draws).toEqual(before)
     expect(nightStepsOf(save).map((s) => s.name)).toEqual(NIGHT_STEPS.flatMap((s) => (s.name === 'gateVisitors' ? ['arriveUmas'] : s.name === 'countHauls' ? [s.name, 'nightExtras', 'nightChores']
-      : s.name === 'tickBonds' ? [s.name, 'payLine'] : s.name === 'buildSummary' ? ['heartsMorning', 'morningItems', 'drawInvitations', s.name] : [s.name])))
+      : s.name === 'tickBonds' ? [s.name, 'payLine'] : s.name === 'checkGoals' ? [s.name, 'openRingBench']
+        : s.name === 'buildSummary' ? ['serveTheReception', 'heartsMorning', 'morningItems', 'drawInvitations', s.name] : [s.name])))
     expect(nightStepsOf({ version: 3 })).toBe(NIGHT_STEPS)
     expect(parseSaveV4(json(save))).toEqual(save)
   })

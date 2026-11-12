@@ -78,7 +78,8 @@ The Diary's own screen is M6's (CS55). M4 counts what it will show and pays for 
 - **Entries:** each good shipped at least once (`diary.shipped`, F19) is an entry, **5 points**. The catalogue is the
   260 goods; dishes, the ranch's goods and the Forge's join with their packets.
 - **Collection rows** (decision 3): a family's ten raw goods, or its ten refined ones, each shipped once, is a row. A
-  row pays **500g once** (and a decoration, M6). A row isn't a milestone: its goods are already entries.
+  row pays **500g once** (and a decoration, M6). A row isn't a milestone: its goods are already entries. On save v4 (romance
+  build; F53) the rings are a 27th row, `row:rings`, and each ring shipped an entry (`diaryRowsOf(version)`).
 - **Milestones** (decision 2): each pays its gold **once** and is worth **25 points**. They're checked at night step 8
   and paid that night, their gold with the bin's, each listed in **New today** ("10,000g shipped · +300g", tagged
   Milestone, opening the Diary). `diary.milestones` keeps the ids paid, milestones and rows alike.
@@ -235,6 +236,10 @@ names a fourth.
 | Cole Varga | Rival: Varga Ranch, animals and fishing | 1 | `cast/cole-varga` |
 <!-- /live -->
 
+> **On save v4 (romance build; live from F56; F53, RM40):** **Ida Stone is first seen at the ring bench**, the morning
+> after the first Romance 8, not at chapter 7 (CS41's "first seen" as RM65 amends it); chapter 7 still lights the Forge's
+> fire. Her scene is [below](#the-ring-benchs-scene-f53).
+
 **Each scene plays once:** its id goes in `diary.read` when it's played through or skipped (`readScene`, a player's
 change). `sceneDue(save)` says which plays now:
 - **the opening scene** once the start's three are picked (the picks come first), before the first tap of day 1. A
@@ -286,6 +291,28 @@ The lines are data (`story/chapter-1.ts`), one to a tap, original and short, wit
 | Bold | “I’m {name}, and this farm is about to wake up.” |
 | Gritty | “{name} here. Weeds don’t scare me.” |
 | Clever | “Hello, I’m {name}. I’ve counted the plots already: nine.” |
+<!-- /live -->
+
+### The ring bench's scene (F53)
+
+**Romance build; live from F56** (F53 decision 4). On v4, the morning after the first Romance 8 event anyone played (night
+step 8 set the bench), **"The Ring Bench"** (`scene:bench`) plays once the summary is put away, after any chapter scene
+and before arrivals: Ida Stone up from town, the old Forge, a bench by the door. Its card says "The ring bench is open"
+with **See the bench** (`?sheet=bench`) and **Later**; played through or skipped, it's read once (`diary.read`). Her bust
+is a lettered disc until F25's art is pinned. The lines are original and live in git (`story/bench.ts`):
+
+<!-- live:bench-scene -->
+**The Ring Bench** (`scene:bench`)
+
+| # | Who | Line |
+|---|---|---|
+| 1 | (narration) | A cart creaks up from town and stops at the old Forge. |
+| 2 | Ida Stone | “Ida Stone. I keep the smithy down in town. Old Ben said this Forge was still standing.” |
+| 3 | (narration) | She runs a hand along the cold hearth, then looks at you. |
+| 4 | Ida Stone | “The fire can wait for another year. But a bench by the door, that I can set up today.” |
+| 5 | Ida Stone | “Bring three refined goods of one grade, and you’ll make a ring of that grade. Planks, fillets, flour: whatever you have.” |
+| 6 | Ida Stone | “One ring a day, and no charge. Word in town is that someone on this farm has your heart.” |
+| 7 | (narration) | The Forge’s door stays open. A small bench waits inside, by the light. |
 <!-- /live -->
 
 ## The screens

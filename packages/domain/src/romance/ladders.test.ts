@@ -31,7 +31,8 @@ import {
   WAITING_RUNGS,
 } from './love'
 import { earnPraise } from './praise'
-import { readiness, RING_IDS, WAIT_ORDER } from './ready'
+import { RING_IDS } from '../goods/ids'
+import { readiness, WAIT_ORDER } from './ready'
 
 const AT = '2026-11-11T10:00:00.000Z'
 const LATER = '2026-11-11T21:30:00.000Z'

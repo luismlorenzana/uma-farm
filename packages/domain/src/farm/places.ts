@@ -86,9 +86,14 @@ export const FARM_MAP_ROWS = 8
 const BY_ID = new Map(FARM_PLACES.map((p) => [p.id, p]))
 export const farmPlace = (id: string | null | undefined): FarmPlace | undefined => (id ? BY_ID.get(id as FarmPlaceId) : undefined)
 
-/** A place's blurb on a save's version: on v4 the Gate is where the cast walks in (F46 decision 14), not where visitors
- * wait. */
-export const placeBlurb = (place: Pick<FarmPlace, 'id' | 'blurb'>, version: number): string => (version >= 4 && place.id === 'gate' ? 'Umas arrive here.' : place.blurb)
+/** The places' blurbs on v4 (F46 decision 14; F53 decision 3): the Gate is where the cast walks in, not where visitors wait;
+ * the Forge is the ring bench until chapter 7 lights its fire (M6). */
+const BLURBS_V4: Partial<Record<FarmPlaceId, string>> = {
+  gate: 'Umas arrive here.',
+  forge: 'The ring bench: a ring from three refined goods of one grade, one a day.',
+}
+/** A place's blurb on a save's version. */
+export const placeBlurb = (place: Pick<FarmPlace, 'id' | 'blurb'>, version: number): string => (version >= 4 ? BLURBS_V4[place.id] : undefined) ?? place.blurb
 
 /** Whether a place's rule has opened it on this save (CS3): a chapter once it starts, the Mill once chapter 1 is done, a
  * Farm Rank once reached. The board and the festival ground wait for M6. */

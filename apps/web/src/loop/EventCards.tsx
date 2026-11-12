@@ -3,14 +3,16 @@
 // · +30 choice · +15 Great = +95 toward Romance 6 (+40 banked)"), the perk it brings (F48's words; F51 makes it act, and
 // Friendship 4's names her signature dish's recipe),
 // "‹caption› saved" (her Memory), any unlock, and the next rung's cost, its place and setup (the next beat's hint) and
-// what it opens, with one **Continue**. **The stage-up screen** closes the confession's Yes (and, from F53, the proposal
-// and the wedding): the route's track re-coloured, "Opens now" and **Continue**. F54's night levels (S2, S4) show the
-// level-up card from the morning. Loaded on demand with the player.
-import { dishName, LADDER_COLOURS, ladderOf, perkLineOf, rungName, withFarmer, type EventCard, type Love, type StoryPack } from '@farm/domain'
+// what it opens, with one **Continue**. **The stage-up screen** closes the confession's Yes (Partners), the proposal
+// (Engaged: "Your wedding: tomorrow, whenever you're ready") and the wedding (Married: the track gold, the spouse ladder, her
+// ring at her line, her anniversary, "Married n/N · next household scene at 5"; F53): the route's track re-coloured, "Opens
+// now" and **Continue**. F54's night levels (S2, S4) show the level-up card from the morning. Loaded on demand with the
+// player.
+import { dishName, LADDER_COLOURS, ladderOf, perkLineOf, rungName, withFarmer, type EventCard, type Love, type StageUp, type StoryPack } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { Button, UiMark, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { RouteTrack } from './HeartMarks'
-import { perkLineWords, stageOpens, sumWords, unlockWords } from './event-view'
+import { marriedWords, perkLineWords, ringGivenWords, STAGE_WORDS, stageOpens, sumWords, unlockWords, weddingWords } from './event-view'
 import { routeTrack } from './hearts-view'
 
 
@@ -46,6 +48,8 @@ export function LevelUpCard({ card, id, name, love, pack, farmer, onContinue }: 
       <section className="space-y-1.5 rounded-md border border-hairline p-3 text-[14px]">
         {perk && <p data-card-perk><span className="text-micro pr-1.5">Perk</span>{perk}</p>}
         {card.recipe && <p data-card-recipe={card.recipe}><span className="text-micro pr-1.5">Recipe</span>{dishName(card.recipe)} · in the Kitchen’s list</p>}
+        {card.ring && <p data-card-ring={card.ring}><span className="text-micro pr-1.5">Ring</span>{ringGivenWords(card.ring)}</p>}
+        {card.wedding && <p data-card-wedding={card.wedding.place}><span className="text-micro pr-1.5">Wedding</span>{weddingWords(card.wedding)}</p>}
         {card.memory && <p className="flex items-center gap-1.5" data-card-memory><span className="text-micro pr-0.5">Memory</span><UiMark mark="hearts/memory-frame" fallback={<span aria-hidden>▢</span>} />“{card.memory}” saved</p>}
         {unlockWords(card) && <p data-card-unlock><span className="text-micro pr-1.5">Unlocked</span>{unlockWords(card)}</p>}
         {card.learnt.length > 0 && <p className="text-ink-soft" data-card-learnt>A taste learnt</p>}
@@ -68,24 +72,36 @@ export function LevelUpCard({ card, id, name, love, pack, farmer, onContinue }: 
   )
 }
 
-/** The stage-up screen (decision 11): the track re-coloured, what the stage opens, **Continue**. */
-export function StageUpScreen({ stage, id, love, pack, onContinue }: { stage: 'romance'; id: string; love: Love; pack: Pick<StoryPack, 'cast' | 'bibles'>; onContinue: () => void }) {
-  const colour = LADDER_COLOURS[stage]
+/** The stage-up screen (decision 11; F53): the track re-coloured, what the stage opens, **Continue**. Married adds RM45's
+ * line ("Married 1/3 · next household scene at 5"). */
+export function StageUpScreen({ stage, id, love, pack, married = null, onContinue }: {
+  stage: StageUp
+  id: string
+  love: Love
+  pack: Pick<StoryPack, 'cast' | 'bibles'>
+  /** Married's count and the cast's size, for its line. */
+  married?: { married: number; cast: number } | null
+  onContinue: () => void
+}) {
+  const colour = LADDER_COLOURS[stage === 'married' ? 'spouse' : 'romance']
   const track = routeTrack(love)
+  const words = STAGE_WORDS[stage]
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-4" data-stage-up={stage}>
       <div className="space-y-2 pt-4 text-center">
-        <p className="font-display text-[26px] font-bold" style={{ color: colour }}>Partners</p>
-        <p className="text-[14px] text-ink-soft">Romance opens. Her bar turns rose.</p>
+        <p className="font-display text-[26px] font-bold" style={{ color: colour }}>{words.title}</p>
+        <p className="text-[14px] text-ink-soft">{words.line}</p>
       </div>
-      <RouteTrack cells={track} label="Her route, romance next" />
+      <RouteTrack cells={track} label={`Her route, ${stage === 'married' ? 'the spouse ladder' : stage === 'engaged' ? 'the wedding' : 'romance'} next`} />
       <section className="space-y-1 rounded-md border border-hairline p-3 text-[14px]">
         <h3 className="text-micro">Opens now</h3>
         <ul className="space-y-1" data-opens>
-          {stageOpens(stage, perkLineOf(pack, id)).map((line) => <li key={line}>· {line}</li>)}
+          {stageOpens(stage, perkLineOf(pack, id), { ring: love.ring ?? null, wed: love.wed ?? null }).map((line) => <li key={line}>· {line}</li>)}
         </ul>
       </section>
-      {love.points > 0 && <p className="text-center text-[14px] tabular-nums" style={{ color: colour }}>+{love.points.toLocaleString('en-US')} banked toward Romance 1</p>}
+      {stage === 'romance' && love.points > 0 && <p className="text-center text-[14px] tabular-nums" style={{ color: colour }}>+{love.points.toLocaleString('en-US')} banked toward Romance 1</p>}
+      {stage === 'married' && love.points > 0 && <p className="text-center text-[14px] tabular-nums" style={{ color: colour }}>+{love.points.toLocaleString('en-US')} toward Spouse 1</p>}
+      {stage === 'married' && married && <p className="text-center font-display text-[16px] font-bold" data-married-line={married.married}>{marriedWords(married.married, married.cast)}</p>}
       <Button className="w-full" onClick={onContinue} data-action="continue">Continue</Button>
     </div>
   )

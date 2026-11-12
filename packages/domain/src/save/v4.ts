@@ -43,7 +43,8 @@ export interface Love {
   last: number
   /** "Not yet" at her confession (RM30): only while the confession waits. */
   friend?: true
-  /** Her ring's bonus in %, once given (RM39): from the proposal on. */
+  /** Her ring's grade, 1–10 (F53 decision 6; RM39): set at the proposal, raised by a better ring. Every ring is a Rough
+   * make until M6's merge game, so it's also her bonus in % once she's married (+1% a grade, `ringBonus`). */
   ring?: number
   /** The wedding's day: a spouse's. */
   wed?: number
@@ -123,7 +124,15 @@ export interface TodayV4 {
   /** Bond hearts before each pair's first move since the last morning (F52 decision 9), by `pairKey`: the morning lists what
    * rose since, whether a day (the opening's seeds) or the night moved it. Night step 9 empties it. */
   bonds: Record<string, number>
+  /** The ring made at the bench today (F53 decision 3): its grade, 0 before one. One a day. */
+  ring: number
+  /** Today's wedding reception (F53 decision 9): the well-fed days it gives everyone on the farm tomorrow (1–3), applied at
+   * night step 9; 0 with no wedding today. */
+  reception: number
 }
+
+/** A day's `today` before anything's done (newSaveV4; night step 7 clears to it). */
+export const newTodayV4 = (): TodayV4 => ({ chats: [], gifts: [], praise: [], praised: [], events: [], asked: [], evenings: [], invites: [], bonds: {}, ring: 0, reception: 0 })
 
 /** A house on the homestead (RM41; F54's to fill): house 0 is the Farmhouse. */
 export interface House {
@@ -203,7 +212,7 @@ export function newSaveV4(uid: string, now: string): SaveV4 {
     farmer: { name: '' },
     calendar: { day: 1 },
     gold: START_GOLD,
-    today: { chats: [], gifts: [], praise: [], praised: [], events: [], asked: [], evenings: [], invites: [], bonds: {} },
+    today: newTodayV4(),
     roster: {},
     love: {},
     dorm: { level: 1, home: [], swaps: [] },

@@ -1,7 +1,7 @@
 // The goods as the loop's screens show them (F19 decisions 7–10): the Warehouse by stars in its family tabs, the bin's
 // lines and its night estimate, the shop's lines, and gold in words. Pure, so the screens and the tests read the same.
 import {
-  binSales, binTotal, FAMILY_NAMES, GOOD_IDS, goodName, goodOf, inDemand, lineOpen, priceOf, refinedOf, SEED_IDS, STARS, type BinSale, type Good,
+  binSales, binTotal, FAMILY_NAMES, GOOD_IDS, goodName, goodOf, inDemand, isDishId, lineOpen, priceOf, refinedOf, RING_IDS, SEED_IDS, STARS, type BinSale, type Good,
   type GoodFamily, type FarmSave, type ShopLine, type StarCounts,
 } from '@farm/domain'
 import { opensWords } from './farm-map'
@@ -12,17 +12,20 @@ export const goldWords = (gold: number): string => `${gold.toLocaleString('en-US
 export const starWords = (stars: number): string => `★${stars}`
 
 /** The Warehouse's tabs (decision 9): the crops, the forest's six families, fish, mining and seeds; the expeditions' loot
- * only when the Warehouse holds some (none can be had in M4). */
-export const SHELVES = ['crops', 'woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets', 'fish', 'mining', 'seeds', 'loot'] as const
+ * only when the Warehouse holds some (none can be had in M4); v4's rings (F53) and dishes (the reception's, M5's Kitchen)
+ * likewise, so v3's tabs are M4's. */
+export const SHELVES = ['crops', 'woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets', 'fish', 'mining', 'seeds', 'loot', 'rings', 'dishes'] as const
 export type Shelf = typeof SHELVES[number]
 const SHELF_NAMES: Readonly<Record<Shelf, string>> = {
   crops: 'Crops', woods: 'Woods', mushrooms: 'Mushrooms', 'herbs-spices': 'Herbs and spices', fruits: 'Fruits', 'nuts-seeds': 'Nuts and seeds',
-  sweets: 'Sweets', fish: 'Fish', mining: 'Mining', seeds: 'Seeds', loot: 'Loot',
+  sweets: 'Sweets', fish: 'Fish', mining: 'Mining', seeds: 'Seeds', loot: 'Loot', rings: 'Rings', dishes: 'Dishes',
 }
+/** The tabs shown only while something is on them. */
+const WHEN_HELD: ReadonlySet<Shelf> = new Set(['loot', 'rings', 'dishes'])
 const MINING: ReadonlySet<GoodFamily> = new Set(['ores', 'stones', 'crystals'])
 const LOOT: ReadonlySet<GoodFamily> = new Set(['hides-scales', 'bones-horns', 'essences'])
-/** The catalogue's order, then the seeds'. */
-const ORDER = new Map([...GOOD_IDS, ...SEED_IDS].map((id, i) => [id, i]))
+/** The catalogue's order, then the seeds' and the rings'. */
+const ORDER = new Map([...GOOD_IDS, ...SEED_IDS, ...RING_IDS].map((id, i) => [id, i]))
 const orderOf = (id: string): number => ORDER.get(id) ?? Infinity
 
 /** A good's tab: the 27 crops and the flours on Crops (CS19's Farming), the rest by family. */
@@ -30,6 +33,7 @@ export function shelfOf(good: Pick<Good, 'family' | 'crop'>): Shelf {
   if (good.crop || good.family === 'grains' || good.family === 'vegetables') return 'crops'
   if (MINING.has(good.family)) return 'mining'
   if (LOOT.has(good.family)) return 'loot'
+  if (good.family === 'rings') return 'rings'
   return good.family as Shelf
 }
 
@@ -66,7 +70,7 @@ export interface WarehouseTab {
 }
 
 /** A good's facts: its family, grade and form. */
-export const goodFacts = (good: Good): string => `${FAMILY_NAMES[good.family]} · G${good.grade} · ${good.refined ? 'refined' : 'raw'}`
+export const goodFacts = (good: Good): string => `${FAMILY_NAMES[good.family]} · G${good.grade} · ${good.family === 'rings' ? 'made at the ring bench' : good.refined ? 'refined' : 'raw'}`
 
 /** What a good refines into, or what it's refined from. */
 export function goodPair(good: Good): string | null {
@@ -79,9 +83,10 @@ export function goodPair(good: Good): string | null {
 export function goodRow(id: string, row: StarCounts, day: number): GoodRow {
   const good = goodOf(id)
   const cells = STARS.map((stars): StarCell => ({ stars, count: row[stars - 1] ?? 0, price: good ? priceOf(id, stars, day) : null }))
+  const dish = !good && isDishId(id)
   return {
-    id, name: goodName(id), shelf: good ? shelfOf(good) : 'seeds', total: row.reduce((a, b) => a + b, 0), cells,
-    demand: good ? inDemand(id, day) : false, facts: good ? goodFacts(good) : 'Seeds: they don’t sell', pair: good ? goodPair(good) : null,
+    id, name: goodName(id), shelf: good ? shelfOf(good) : dish ? 'dishes' : 'seeds', total: row.reduce((a, b) => a + b, 0), cells,
+    demand: good ? inDemand(id, day) : false, facts: good ? goodFacts(good) : dish ? 'A dish: for a meal' : 'Seeds: they don’t sell', pair: good ? goodPair(good) : null,
     sells: good !== undefined, worth: cells.reduce((sum, cell) => sum + (cell.price ?? 0) * cell.count, 0),
   }
 }
@@ -95,7 +100,7 @@ export function warehouseTabs(save: Pick<FarmSave, 'items' | 'calendar'>): Wareh
   return SHELVES.map((shelf) => {
     const on = rows.filter((row) => row.shelf === shelf)
     return { shelf, label: SHELF_NAMES[shelf], count: on.reduce((n, row) => n + row.total, 0), rows: on }
-  }).filter((tab) => tab.shelf !== 'loot' || tab.rows.length > 0)
+  }).filter((tab) => !WHEN_HELD.has(tab.shelf) || tab.rows.length > 0)
 }
 
 /** The tab the Warehouse opens on: the first holding something that sells in pick mode, else the first holding anything. */

@@ -9,8 +9,11 @@
 // the ring (F53) and her house (F54). F52's Ties: her closest friend first and marked, each bond's hearts and the points to
 // the next, and **Read** for a pair's conversation opened and unread. F51's perks: each reached perk with what it does now,
 // her closest friend's loved gift in Gifts from Friendship 7, and **From her**: her pet name for you from Romance 1 and her
-// keepsake from Friendship 10. Loaded on demand.
+// keepsake from Friendship 10. F53's **Ring**: from Romance 8 the engraving her ring will carry (her R8 beat's line), from
+// the proposal her ring and its bonus at her line, and **Give her the Cobalt Ring** for any better one in the Warehouse (the
+// old one comes back); "Needs a ring" links to the Forge's bench. Loaded on demand.
 import { birthdaysOf, canAsk, LADDER_COLOURS, ladderOf, levelWords, readiness, type SaveV4, type Temperament } from '@farm/domain'
+import { giveBetterRing } from './bench-actions'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Sheet, Tabs } from '@luismlorenzana/uma-kit/ui'
@@ -21,8 +24,8 @@ import type { MasterView } from '../master/master'
 import { memoryCount, setupAdvice } from './event-view'
 import { ReadyChip, RouteTrack } from './HeartMarks'
 import {
-  friendLoved, fromHer, giftSlots, lovedWords, nextCard, perkList, profileLine, reachedWords, readParam, routeTrack, rungLadder, tieRows, type FromHer, type GiftSlot,
-  type HeartsPack, type NextCard, type PerkView, type TieRow,
+  friendLoved, fromHer, giftSlots, lovedWords, nextCard, perkList, profileLine, reachedWords, readParam, ringView, routeTrack, rungLadder, tieRows, type FromHer, type GiftSlot,
+  type HeartsPack, type NextCard, type PerkView, type RingView, type TieRow,
 } from './hearts-view'
 import { LoveActs } from './Love'
 import { WorkFacts, WorkSide } from './RosterAlbum'
@@ -102,10 +105,11 @@ function HeartsSide({ save, pack, id, card, nameOf }: { save: SaveV4; pack: Hear
   const location = useLocation()
   const played = track.filter((c) => c.state === 'played').length
   const advice = setupAdvice(readiness(save, pack, id).waits, nameOf)
+  const ring = ringView(save, pack, id)
   return (
     <div className="space-y-4 pb-2">
       <RouteTrack cells={track} label={`Her route: ${played} of ${track.length} played${card.rung ? `, ${card.title.toLowerCase()}` : ''}`} />
-      <NextSection card={card} advice={advice}
+      <NextSection card={card} advice={advice} bench={card.waits === 'ring' && ring?.bench === true}
         play={card.ready ? withParam(location, 'event', id) : null}
         ask={card.waits === 'friend' ? (canAsk(save, id) ? withParam(location, 'ask', id) : 'asked') : null} />
       {perks.length > 0 && <PerksSection perks={perks} />}
@@ -124,12 +128,49 @@ function HeartsSide({ save, pack, id, card, nameOf }: { save: SaveV4; pack: Hear
           <span className="font-semibold text-accent-strong">Album ›</span>
         </Link>
       </Section>
-      {love.ring !== undefined && (
-        <Section title="Ring">
-          <p className="text-[14px]" data-ring={love.ring}>+{love.ring}% at her line</p>
-        </Section>
-      )}
+      {ring && <RingSection id={id} ring={ring} />}
     </div>
+  )
+}
+
+/** Her Ring (F53 decisions 6 and 7): the engraving, her ring and its bonus, and a better ring to give. */
+function RingSection({ id, ring }: { id: string; ring: RingView }) {
+  const [note, setNote] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const give = async (better: RingView['better'][number]) => {
+    if (busy) return
+    setBusy(true)
+    try {
+      await giveBetterRing(id, better.id)
+      setNote(`She wears the ${better.name} now${ring.ring ? `; the ${ring.ring.name} is back in the Warehouse` : ''}.`)
+    } catch (e) {
+      setNote(e instanceof Error ? e.message : 'That didn’t work. Try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <Section title="Ring">
+      <div className="space-y-1.5 text-[14px]" data-ring={ring.ring?.grade ?? 'none'}>
+        {ring.engraving && <p data-engraving><span className="text-ink-soft">{ring.reads}: </span><span className="italic">‘{ring.engraving}’</span></p>}
+        {ring.ring && (
+          <p className="flex items-center gap-2" data-ring-bonus>
+            <ItemIcon id={`ring-g${ring.ring.grade}`} size={24} />
+            <span className="font-semibold">{ring.ring.name}</span>
+            <span className="text-ink-soft">· {ring.ring.bonus}</span>
+          </p>
+        )}
+        {ring.better.map((b) => (
+          <button key={b.id} type="button" disabled={busy} onClick={() => void give(b)} data-action="better-ring" data-better={b.id}
+            className="flex min-h-11 w-full items-center gap-2 rounded-md border border-hairline px-3 text-left font-semibold text-accent-strong">
+            <ItemIcon id={b.id} size={24} />
+            <span className="min-w-0 flex-1">Give her the {b.name} ›</span>
+            <span className="shrink-0 text-[13px] font-normal text-ink-soft">{b.bonus}</span>
+          </button>
+        ))}
+        {note && <p className="text-[13px] text-ink-soft" data-ring-note>{note}</p>}
+      </div>
+    </Section>
   )
 }
 
@@ -174,7 +215,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 /** The Next card: the rung, its perk, its place and setup, the bar with what's banked, and what it waits for; **Play ›**
  * when her event is Ready (F49, RM54), what to do when its setup isn't met, and **Ask her** after a "Not yet" (once a
  * day; `ask` is 'asked' once asked today). */
-function NextSection({ card, advice = null, play = null, ask = null }: { card: NextCard; advice?: string | null; play?: string | null; ask?: string | null }) {
+function NextSection({ card, advice = null, play = null, ask = null, bench = false }: { card: NextCard; advice?: string | null; play?: string | null; ask?: string | null; bench?: boolean }) {
   const colour = LADDER_COLOURS[card.rung ? rungLadder(card.rung) : 'spouse']
   const share = card.bar.cost > 0 ? Math.min(1, card.bar.points / card.bar.cost) : card.rung ? 1 : 0
   return (
@@ -202,6 +243,7 @@ function NextSection({ card, advice = null, play = null, ask = null }: { card: N
         {card.waits === 'away' ? <Link to="/dorm" className="text-accent-strong underline">{card.words}</Link> : card.words}
       </p>
       {advice && <p className="text-[13px] text-ink-soft" data-setup-advice>{advice}</p>}
+      {bench && <Link to="/?sheet=bench" state={{ back: true }} className="block min-h-11 py-2 text-[14px] font-semibold text-accent-strong" data-action="to-bench">Make one at the Forge’s bench ›</Link>}
       {play && (
         <Link to={play} state={{ back: true }} className="font-display grid min-h-12 place-items-center rounded-md text-[16px] font-bold text-white" style={{ background: colour }} data-action="play-event">
           Play ›

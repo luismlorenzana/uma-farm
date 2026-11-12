@@ -2,7 +2,7 @@
 // CS38, CS39): what the save's parse and the morning's words read. Light on purpose: the rules that count and pay them
 // (`diary.ts`) load with the night and the screens.
 import { FISHING_SPOTS, FOREST_AREAS } from '../gathering/ids'
-import { GOOD_FAMILIES, GOODS, type GoodFamily } from '../goods/ids'
+import { GOOD_FAMILIES, GOODS, RING_FAMILY, RING_IDS, type GoodFamily } from '../goods/ids'
 import { RANKS, type Rank } from './ranks'
 
 /** Farm Rank points (CS39): 1 per 100g shipped, 5 a Diary entry, 25 a milestone, 250 a chapter done. Festivals (150 /
@@ -58,8 +58,15 @@ export const DIARY_ROWS: readonly DiaryRow[] = [false, true].flatMap((refined) =
   const goods = GOODS.filter((g) => g.family === family && g.refined === refined).map((g) => g.id)
   return goods.length > 0 ? [{ id: `row:${family}${refined ? ':refined' : ''}`, family, refined, goods }] : []
 }))
-const ROW_BY_ID = new Map(DIARY_ROWS.map((r) => [r.id, r]))
+/** The rings' row (F53 decision 2): v4's catalogue only, its ten rings each shipped once. */
+export const RING_ROW: DiaryRow = { id: `row:${RING_FAMILY}`, family: RING_FAMILY, refined: false, goods: RING_IDS }
+/** v4's 27 rows: v3's 26, then the rings'. */
+export const DIARY_ROWS_V4: readonly DiaryRow[] = [...DIARY_ROWS, RING_ROW]
+/** The rows a save's version pays: v3's 26 (M4's, as live), or v4's 27. */
+export const diaryRowsOf = (version: number): readonly DiaryRow[] => (version >= 4 ? DIARY_ROWS_V4 : DIARY_ROWS)
+const ROW_BY_ID = new Map(DIARY_ROWS_V4.map((r) => [r.id, r]))
+/** A row by its id, either version's (the morning's words read it). */
 export const diaryRowOf = (id: string): DiaryRow | undefined => ROW_BY_ID.get(id)
 
-/** What the Diary has paid (`diary.milestones`): a milestone or a row. */
-export const isDiaryPaidId = (id: string): boolean => MILESTONE_BY_ID.has(id) || ROW_BY_ID.has(id)
+/** What the Diary has paid (`diary.milestones`): a milestone or a row, of a save's version (the rings' row is v4's). */
+export const isDiaryPaidId = (id: string, version = 3): boolean => MILESTONE_BY_ID.has(id) || diaryRowsOf(version).some((r) => r.id === id)

@@ -4,13 +4,13 @@
 // adds stars and demand.
 import type { Season } from '../farm/calendar'
 import { round5 } from '../farm/round'
-import type { CropId, GoodFamily } from './ids'
+import type { CropId, GoodFamily, GoodFamilyV3 } from './ids'
 
 /** A grade's base price, G1 → G10 (CS9). */
 export const LADDER = [30, 40, 50, 65, 85, 110, 140, 180, 230, 300] as const
 
 /** The families the ladder prices. Grains and vegetables are all crops (CS11), which have their own prices. */
-export type LadderFamily = Exclude<GoodFamily, 'grains' | 'vegetables'>
+export type LadderFamily = Exclude<GoodFamilyV3, 'grains' | 'vegetables'>
 
 /** Each family's factor on the ladder (CS9). */
 export const FAMILY_FACTOR: Readonly<Record<LadderFamily, number>> = {

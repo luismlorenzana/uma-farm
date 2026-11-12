@@ -105,7 +105,9 @@ The 260 goods of `goods/ids.ts` carry their family, grade, raw or refined, price
 (`goodOf(id)`; `refinedOf(id)` goes the other way). Names come from the ids (`goodName`: "Sunflower Seed", "Carrot
 seeds", "Carrot seeds (own)"), and icons from uma-art 2.21.0's items atlas, a family's raw row with its refined row
 below. Only crops, forest goods, freshwater fish and the three stations' forms can be had in M4; the rest are priced so a
-migrated Warehouse can sell them. The ranch's goods, the dishes and the Forge's are priced by F27, F8 and F36. Seeds
+migrated Warehouse can sell them. The ranch's goods, the dishes and the Forge's are priced by F27, F8 and F36. **On save
+v4** (romance build; live from F56; F53) the catalogue adds [the rings](#rings-save-v4-f53), and the Warehouse may hold
+dishes (`isWarehouseIdV4`; named by their kind, "Carp Grill"); v3's catalogue stays these 260. Seeds
 have no price: a seed shows its crop's icon with uma-art's seed-packet badge in its corner (F25's `farm/seed-packet`, pinned from F49), an own seed's with a green dot; without the mark, F20's corner tag (brown from the shop, green for own seeds).
 
 ### The crops' own prices (CS11)
@@ -371,6 +373,29 @@ Prices out of demand; in demand, ×1.2 and rounded to 5g again.
 | G8 | Shadow Essence | 325g | 650g |
 | G9 | Aether | 415g | 830g |
 | G10 | Prismatic Essence | 540g | 1,080g |
+<!-- /live -->
+
+### Rings (save v4, F53)
+
+**Romance build; live from F56** (F53 decision 2; CS25, RM38). The family `rings`: CS25's ten, made at
+[the ring bench](hearts.md#the-ring-bench-rm38-rm40-decisions-35) from three refined goods of their grade, ★1 (a Rough
+make). They sell at the bin like any good (no season's demand), sit on the Warehouse's **Rings** tab while one is held
+(drawn with uma-art's `accessory-setting` frames), and form v4's Diary row `row:rings`. `goodOf` prices and names them;
+`isGoodId` stays v3's 260, and v4's parse reads `isGoodIdV4`.
+
+<!-- live:rings -->
+| Grade | Ring | Id | ★1 | ★5 | Her bonus once married | Cheapest at the bench (chapter 1) | CS25’s recipe (from chapter 3) |
+|---|---|---|---|---|---|---|---|
+| G1 | Copper Ring | `ring-g1` | 205g | 410g | +1% | 3 Pine Plank (40g each) | 2 Copper Ingot + 1 Cut Quartz |
+| G2 | Tin Ring | `ring-g2` | 275g | 550g | +2% | 3 Birch Plank (45g each) | 2 Tin Ingot + 1 Cut Amethyst |
+| G3 | Iron Ring | `ring-g3` | 340g | 680g | +3% | 3 Cedar Plank (60g each) | 2 Iron Ingot + 1 Cut Citrine |
+| G4 | Silver Ring | `ring-g4` | 450g | 900g | +4% | 3 Polished Rice (75g each) | 2 Silver Ingot + 1 Cut Garnet |
+| G5 | Cobalt Ring | `ring-g5` | 580g | 1,160g | +5% | 3 Oak Plank (105g each) | 2 Cobalt Ingot + 1 Cut Emerald |
+| G6 | Gold Ring | `ring-g6` | 745g | 1,490g | +6% | 3 Rye Flour (90g each) | 2 Gold Ingot + 1 Cut Sapphire |
+| G7 | Platinum Ring | `ring-g7` | 950g | 1,900g | +7% | 3 Buckwheat Flour (115g each) | 2 Platinum Ingot + 1 Cut Ruby |
+| G8 | Titanium Ring | `ring-g8` | 1,220g | 2,440g | +8% | 3 Ebony Plank (220g each) | 2 Titanium Ingot + 1 Cut Diamond |
+| G9 | Mythril Ring | `ring-g9` | 1,555g | 3,110g | +9% | 3 Elderwood Plank (280g each) | 2 Mythril Ingot + 1 Cut Starstone |
+| G10 | Orichalcum Ring | `ring-g10` | 2,025g | 4,050g | +10% | 3 Yggdrasil Plank (360g each) | 2 Orichalcum Ingot + 1 Cut Philosopher's Stone |
 <!-- /live -->
 
 ## Stars (CS26)

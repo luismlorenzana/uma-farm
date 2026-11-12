@@ -3,9 +3,10 @@
 // plays' words, the level-up card's lines, the stage-up screen's list, a setup's advice and her Memories' album. Pure, so
 // the player and the tests read the same. Loaded on demand with the player.
 import {
-  dateOf, EVENING_GRADE_POINTS, EVENT_GRADE_POINTS, farmPlace, GRADE_NAMES, gradeOf, goodName, nextRung, perkWords, ROUTE_RUNGS, rungName, NIGHT_RUNGS,
-  type Emote, type EventCard, type Grade, type OptionView, type PerkId, type PerkLine, type PlayKind, type PlayLength, type SaveV4, type Season, type StoryPack,
-  type Wait,
+  CAKE_DAYS, dateOf, EVENING_GRADE_POINTS, EVENT_GRADE_POINTS, farmPlace, GRADE_NAMES, gradeOf, goodName, nextHousehold, nextRung, PERK_PLACE, perkWords, ROUTE_RUNGS,
+  ringName, ringPercent, rungName, NIGHT_RUNGS, SEASON_NAMES,
+  type Emote, type EventCard, type Grade, type OptionView, type PerkId, type PerkLine, type PlayKind, type PlayLength, type SaveV4, type Season, type StageUp,
+  type StoryPack, type Wait, type WeddingCard,
 } from '@farm/domain'
 import { placeWords } from './hearts-view'
 import { WORK_PLACE } from './love-words'
@@ -131,12 +132,18 @@ export const perkLineWords = (perk: PerkId | null, line: PerkLine | null): strin
 
 // --- The stage-up screen (decision 11) ---------------------------------------------------------------------------------
 
-/** What a stage opens, for its stage-up screen: the ladder, then each perk that opens a kind or a chat set, by rung. */
-export function stageOpens(stage: 'romance', line: PerkLine | null): string[] {
+/** The facts a stage-up screen lists beyond the ladder (F53): her ring's grade and her wedding's day. */
+export interface StageFacts { ring?: number | null; wed?: number | null }
+
+/** What a stage opens, for its stage-up screen: the ladder, then each perk that opens a kind or a chat set, by rung; the
+ * proposal's wedding and ring; the wedding's spouse ladder, ring, evenings and anniversary (F53 decision 9). */
+export function stageOpens(stage: StageUp, line: PerkLine | null, facts: StageFacts = {}): string[] {
   const at = (rung: string, words: string) => `${rung.toUpperCase()} · ${words}`
   const perk = (rung: string, id: PerkId) => at(rung, line ? perkWords(id, line) : perkWords(id, 'farming'))
-  if (stage === 'romance') {
-    return [
+  const place = PERK_PLACE[line ?? 'farming']
+  const ring = facts.ring ?? null
+  switch (stage) {
+    case 'romance': return [
       'The romance ladder, Romance 1–10',
       perk('r1', 'dates'),
       at('r1', 'Her partner chats'),
@@ -144,9 +151,68 @@ export function stageOpens(stage: 'romance', line: PerkLine | null): string[] {
       perk('r6', 'date-dance-boat'),
       perk('r9', 'date-footrace'),
     ]
+    case 'engaged': return [
+      'Your wedding: tomorrow, whenever you’re ready',
+      ...(ring ? [`Her ring: ${ringName(ring)} · +${ringPercent(ring)}% at ${place} once you’re married`] : []),
+      'A better ring any day, from her profile',
+    ]
+    case 'married': {
+      const wed = facts.wed ?? null
+      const date = wed !== null ? dateOf(wed) : null
+      return [
+        'The spouse ladder, Spouse 1–5',
+        ...(ring ? [`Her ring: +${ringPercent(ring)}% at ${place}`] : []),
+        'Evenings: every kind her ladders opened',
+        perk('s1', 'breakfast'),
+        ...(date ? [`Your anniversary: ${SEASON_NAMES[date.season]} ${date.day}, each year`] : []),
+      ]
+    }
   }
-  return []
 }
+
+/** A stage-up screen's title and line (decision 11; F53). */
+export const STAGE_WORDS: Readonly<Record<StageUp, { title: string; line: string }>> = {
+  romance: { title: 'Partners', line: 'Romance opens. Her bar turns rose.' },
+  engaged: { title: 'Engaged', line: 'A ring, and a yes. Your wedding comes next.' },
+  married: { title: 'Married', line: 'Your wedding is done. Her bar turns gold.' },
+}
+
+/** RM45's line under the Married screen: "Married 1/20 · next household scene at 5". */
+export function marriedWords(married: number, cast: number): string {
+  const next = nextHousehold(married)
+  return `Married ${married}/${cast}${next === null ? '' : next >= 20 ? ` · the finale at ${next}` : ` · next household scene at ${next}`}`
+}
+
+// --- The wedding (F53 decision 9) --------------------------------------------------------------------------------------
+
+/** The guests' line of narration, before the wedding's first line: "Stand-in 2 and Stand-in 3 came, in their best." */
+export function guestsLine(names: readonly string[]): string {
+  if (names.length === 0) return 'Just the two of you, and the whole farm quiet around you.'
+  const list = names.length === 1 ? names[0]! : `${names.slice(0, -1).join(', ')} and ${names.at(-1)!}`
+  return `${list} came, in ${names.length === 1 ? 'her' : 'their'} best.`
+}
+/** The reception in words: "Carp Grill ★3 · everyone well fed 2 days", "Marta’s bakery sends a cake · everyone well fed 1 day". */
+export function receptionWords(dish: string | null, stars: number | null, days: number): string {
+  const fed = `everyone well fed ${days} day${days === 1 ? '' : 's'}`
+  return dish ? `${goodName(dish)} ★${stars} · ${fed}` : `Marta’s bakery sends a cake · ${fed}`
+}
+/** Marta's cake, the reception with no dish in the Warehouse. */
+export const CAKE_WORDS = receptionWords(null, null, CAKE_DAYS)
+/** The level-up card's wedding line: "The Fields · Marta’s bakery sends a cake · everyone well fed 1 day". */
+export const weddingWords = (w: WeddingCard): string => `${cap(placeWords(w.place))} · ${receptionWords(w.dish, w.stars, w.days)}`
+/** The level-up card's ring line: "Iron Ring · hers now". */
+export const ringGivenWords = (ring: string): string => `${goodName(ring)} · hers now`
+/** The wedding's place picker's question, and the proposal's ring picker's. */
+export const PICKER_WORDS = {
+  place: 'Your wedding: where?',
+  placeHelp: 'Her three places. Your guests come to whichever you choose.',
+  ring: 'Which ring?',
+  ringHelp: 'Any ring makes the proposal. Once you’re married, hers adds +1% at her line a grade.',
+  reception: 'The reception',
+  receptionHelp: 'Everyone on the farm is well fed from tomorrow.',
+  noDish: 'No dish in the Warehouse yet, so Marta’s bakery sends a cake: a simple meal, everyone well fed for a day.',
+  cake: 'Serve Marta’s cake · 1 day',
+} as const
 
 // --- Setups (RM54) -----------------------------------------------------------------------------------------------------
 
