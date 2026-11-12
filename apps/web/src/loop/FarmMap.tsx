@@ -7,7 +7,8 @@
 // conversation waits (F52), which plays over the morning (`?read=`); in the romance build an invitation's line carries Yes,
 // tonight and Another day (F50); on v4 the Forge's quick look is the ring bench's once it stands (F53). In the romance
 // build a v4 map grows the homestead's rows after the yard, the town edge moving below them (F54, `homestead-map.tsx`);
-// v3's map is unchanged. Loaded on demand.
+// v3's map is unchanged. With F11's preview switch on (Account → HD-2D farm), the same places draw on the shared HD-2D
+// stage instead (`FarmStage.tsx`, its own chunk with three.js); off, the Hub is as it was. Loaded on demand.
 import {
   farmEnvV3, FARM_PLACES, farmPlace, placeBlurb, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, STAY_AFFINITY, workNow, type FarmPlace, type LoopPlaceId,
   type FarmSave,
@@ -20,6 +21,7 @@ import { workView, type WorkView } from '@luismlorenzana/uma-kit/work'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
 import { romanceOn } from '../app/romance'
+import { useStageOn } from '../app/stage-switch'
 import { masterReady, useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
@@ -41,6 +43,10 @@ const InviteAnswer = /* @__PURE__ */ lazy(() => import('./InviteAnswer'))
 const BenchPeek = /* @__PURE__ */ lazy(() => import('./BenchSheet').then((m) => ({ default: m.BenchPeek })))
 const HouseAnswer = /* @__PURE__ */ lazy(() => import('./HouseAnswer'))
 type HomesteadMap = typeof import('./homestead-map')
+// F11: Home on the shared HD-2D stage, with three.js, loaded only when the preview switch is on (decision 1).
+const FarmStage = lazy(() => import('./FarmStage'))
+/** Sheets and scenes that cover all of Home: the stage rests under them (F11 decision 9). */
+const FULL_SCREEN = ['event', 'ask', 'memory', 'album', 'read', 'evening', 'level', 'household'] as const
 
 /** The homestead's map module (F54), loaded for a v4 save in the romance build only; null until it's in, and always on v3. */
 function useHomesteadMap(save: FarmSave): HomesteadMap | null {
@@ -163,9 +169,15 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
     ? homestead.homesteadPlaces(save, layout, hearts, (id) => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma') : [])]
   const covered = peek !== undefined || params.get('sheet') !== null
   const total = [...ready.values()].reduce((a, b) => a + b, plots)
+  const stage = useStageOn()
   return (
     <>
-      <div className="absolute inset-0 overflow-y-auto overscroll-contain" data-farm-scroll>
+      {stage ? (
+        <Suspense fallback={null}>
+          {!waiting && <FarmStage save={save} places={places} open={peek?.id ?? null} reducedMotion={reducedMotion}
+            paused={FULL_SCREEN.some((key) => params.has(key))} />}
+        </Suspense>
+      ) : <div className="absolute inset-0 overflow-y-auto overscroll-contain" data-farm-scroll>
         <div className="relative h-full" style={{ minHeight: (layout?.tiles ?? FARM_MAP_TILES) * tile }}>
           {!waiting && <HubMap
             label="Farm map"
@@ -180,7 +192,7 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
             debug={import.meta.env.DEV}
           />}
         </div>
-      </div>
+      </div>}
       <FarmHelp />
       <CollectAll ready={total} />
       {peek && (

@@ -52,6 +52,8 @@ export * from './save/migrate-v3'
 // The day (F18, core spec CS4–CS8): the farm map's places, uma-work on the day clock, End the day's nine steps, the nudge
 // and the morning summary.
 export * from './farm/places'
+// The farm on the HD-2D stage (F11): the save as uma-stage's farm design, the plots, the recipes and the crops' families.
+export * from './farm/stage'
 export * from './work/loop-env'
 export * from './save/loop-work'
 export * from './save/work-readings'
