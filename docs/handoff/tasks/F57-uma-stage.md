@@ -10,6 +10,11 @@ farm**
 > - **How it runs:** take it in a uma-platform session ("Take F57"). That session writes its own P-packet from this one
 >   and builds it, and moves uma-quest onto the package as the protocol's step 3 says.
 > - **The farm's side:** nothing here waits on the farm; F11 adopts the package when it ships.
+> - **Filed in uma-platform (P140, `041526e`)** as ST1 (0.1.0, the move) and ST2 (0.2.0, the farm's openings). Its calls
+>   for the move: the engine takes a built world, and uma-quest keeps its generator and rooms; the kit loader takes
+>   atlases as inputs; the sprite loader takes the master-data client; the test room and the measurement upload stay in
+>   uma-quest; three.js is pinned exact, with React, uma-kit and uma-data as peers. **The owner's step after 0.1.0:** grant
+>   uma-stage's Actions access (Read) to uma-quest and uma-farm; the platform session asks when it's time.
 > - **The owner's pace (D61):** one piece at a time, checked back with the owner. **Release 1** (the move) is one piece,
 >   and **release 2** (the farm's openings) is another.
 
