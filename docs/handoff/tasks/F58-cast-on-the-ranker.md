@@ -45,7 +45,7 @@ Read on 2026-11-12, at the board's revision 337 and the profiles' revision 6:
    favourite lines, at least one of the opening three).
 6. **Each arrival scene is written with her bible,** in layer 2. F56's release refuses a pack where any cast Uma lacks
    her bible or her arrival scene, so the go-live needs all 20 of both, and none of the pilot's full routes.
-7. **Pictures and the sandbox stay as they are** until uma-platform's Farm book is live (its US4).
+7. **Pictures and the sandbox stay as they are:** the owner reviews in the Farm Story Sandbox (D72, local first).
 
 ## Do
 
