@@ -6,7 +6,9 @@
 // (F47); levels reached overnight (F54) and arrivals' scenes waiting (F46); side by side's extras and bond hearts with
 // Read (F52). A Ready line plays her event over the morning (`?event=`, F49, RM54); the rest open her profile on the
 // Hearts tab (`/hearts?uma=`), a pair's Read its conversations (`?read=`), side
-// by side the Warehouse; the Dorm's beds are the Dorm for 20's.
+// by side the Warehouse; the Dorm's beds are the Dorm for 20's. F54 adds the house's morning (with its house line, read live),
+// a move-in, a house that misses you (Tonight › and Another night under it), a night level (her level-up card at `?level=`),
+// the Festival of Vows, the household's Ready offers (live, after the Ready lines) and §5's household milestones.
 import {
   ACTIVITY_NAMES, bedsFor, EVENINGS, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, rungName, SEASON_NAMES, SUMMARY_SECTIONS_V4, summarySections, type FarmPlaceId,
   type FestivalId, type HeartLine, type MorningSummary, type MorningSummaryV4, type SummarySection, type SummarySectionV4,
@@ -28,6 +30,10 @@ export interface SummaryLine {
   tag?: string
   /** Her invitation's id (F50): the card draws Yes, tonight and Another day under the line. */
   invite?: string
+  /** A line said under it (F54: the house line), in quotes. */
+  quote?: string
+  /** A house that misses you (F54): the card draws Tonight › and Another night under the line. */
+  misses?: number
 }
 export interface SummaryPart {
   section: SummarySection | SummarySectionV4
@@ -59,11 +65,32 @@ export interface ReadyNow {
 
 /** The morning summary as the card shows it: CS5's sections in order, empty ones hidden, each line a tap. On v4, §4 Hearts
  * also shows while someone is `ready` (decision 9). */
-export function summaryParts(summary: MorningSummary | MorningSummaryV4, nameOf: NameOf = someone, ready: readonly ReadyNow[] = [], pairs: PairWords | null = null): SummaryPart[] {
+export function summaryParts(summary: MorningSummary | MorningSummaryV4, nameOf: NameOf = someone, ready: readonly ReadyNow[] = [], pairs: PairWords | null = null,
+  home: HomeWords = NO_HOME): SummaryPart[] {
   const sections = 'hearts' in summary
-    ? SUMMARY_SECTIONS_V4.filter((section) => (section === 'hearts' ? summary.hearts.length + ready.length > 0 : summary[section].length > 0))
+    ? SUMMARY_SECTIONS_V4.filter((section) => (section === 'hearts' ? summary.hearts.length + ready.length + home.household.length > 0 : summary[section].length > 0))
     : summarySections(summary)
-  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs) }))
+  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs, home) }))
+}
+
+/** What the homestead's lines read beyond the summary (F54), from the save and the pack as the card shows: a house's name,
+ * the house line (drawn live), and the household's Ready offers. None on v3 or before the pack loads. */
+export interface HomeWords {
+  houseName: (n: number) => string
+  houseLine: (line: Extract<HeartLine, { kind: 'house' }>) => string | null
+  household: readonly { id: string; text: string; to: string }[]
+}
+export const NO_HOME: HomeWords = { houseName: (n) => (n === 0 ? 'Farmhouse' : `House ${n}`), houseLine: () => null, household: [] }
+
+/** §5's household milestones in words (F54 decision 9; RM45). */
+export function householdNews(married: number): { text: string; to: string } {
+  switch (married) {
+    case 1: return { text: 'Married 1 · The homestead opens, and the night’s house', to: '/?sheet=homestead' }
+    case 5: return { text: 'Married 5 · Household scene 1, the furniture set, +5% items', to: '/?household=household:5' }
+    case 10: return { text: 'Married 10 · Household scene 2, two evenings every 4th day', to: '/?household=household:10' }
+    case 15: return { text: 'Married 15 · Household scene 3, +5% more items', to: '/?household=household:15' }
+    default: return { text: `Married ${married} · The Great Harvest is Ready`, to: '/?household=finale' }
+  }
 }
 /** Her sheet: on the roster (v3), or her profile on the Hearts tab (v4, F48 decision 2), on its Work side for a rank's
  * line. */
@@ -76,17 +103,21 @@ export const READY_LINES = 3
  * morning items and night chores (F51), (4) birthdays and anniversaries, (5) levels reached overnight (F54) and arrivals,
  * (6) the perks' extras (F51), side by side and bond hearts (F52). A new stored kind takes its place here and its words in
  * `heartLine`; within a place the night's order holds. */
-export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = { invite: 2, item: 3, chores: 3, birthday: 4, anniversary: 4, arrived: 5, perks: 6, side: 6, bond: 6 }
+export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = {
+  invite: 2, house: 3, moved: 3, misses: 3, item: 3, chores: 3, birthday: 4, anniversary: 4, vows: 4, level: 5, arrived: 5, perks: 6, side: 6, bond: 6,
+}
 
 /** §4 Hearts on v4 (decisions 1 and 9): the Ready lines, then the stored lines in RM57's order. `pairs` says which bond
  * lines have a conversation to Read (F52); without it (the pack loading) they say the heart alone. */
-export function heartsLines(hearts: readonly HeartLine[], ready: readonly ReadyNow[], nameOf: NameOf, pairs: PairWords | null = null): SummaryLine[] {
+export function heartsLines(hearts: readonly HeartLine[], ready: readonly ReadyNow[], nameOf: NameOf, pairs: PairWords | null = null, home: HomeWords = NO_HOME): SummaryLine[] {
   const now = ready.slice(0, READY_LINES).map((r): SummaryLine => ({
     key: `ready:${r.id}`, to: `/?event=${r.id}`, tag: 'Play', text: `● Ready · ${nameOf(r.id)} · ${rungName(r.rung)}${r.place ? ` · ${r.place}` : ''}`,
   }))
   const more = ready.length > READY_LINES ? [{ key: 'ready:more', to: '/hearts?filter=ready', text: `+${ready.length - READY_LINES} more` }] : []
+  // F54 decision 10: the household's Ready offers, read live, after her Ready lines.
+  const household = home.household.map((h): SummaryLine => ({ key: `household:${h.id}`, to: h.to, tag: 'Play', text: h.text }))
   const stored = hearts.map((line, i) => ({ line, i })).sort((a, b) => HEARTS_ORDER[a.line.kind] - HEARTS_ORDER[b.line.kind] || a.i - b.i)
-  return [...now, ...more, ...stored.map(({ line }) => heartLine(line, nameOf, pairs))]
+  return [...now, ...more, ...household, ...stored.map(({ line }) => heartLine(line, nameOf, pairs, home))]
 }
 
 /** The ♥♥ of a pair's line (F52): two hearts for two Umas, whatever the level. */
@@ -118,9 +149,22 @@ const starredGoods = (keys: readonly string[]): string => keys.map((key) => {
   return `★${stars} ${goodName(id!)}`
 }).join(' and ')
 
+/** The house's morning in words (F54 decision 7): "⌂ Farmhouse · Stand-in 1 · ♥ +30 · ☕ 3 fed · +1 item". */
+export function houseWords(line: Extract<HeartLine, { kind: 'house' }>, nameOf: NameOf, houseName: (n: number) => string): string {
+  const who = line.umas.length === 1 ? nameOf(line.umas[0]!) : `${line.umas.length} home`
+  return [`⌂ ${houseName(line.house)}`, who, `♥ +${line.paid}`, ...(line.breakfast > 0 ? [`☕ ${line.breakfast} fed`] : []), ...(line.items > 0 ? [`+${plural(line.items, 'item')}`] : [])].join(' · ')
+}
+
 /** A stored §4 line in words, opening her profile. */
-function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null): SummaryLine {
+function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, home: HomeWords = NO_HOME): SummaryLine {
   if (line.kind === 'side') return { key: 'side', to: '/warehouse', text: `Side by side · +${plural(line.items, 'item')}` }
+  // F54: the house's morning (its house line under it), a house that misses you, the Festival of Vows.
+  if (line.kind === 'house') {
+    const quote = home.houseLine(line)
+    return { key: 'house', to: `/?sheet=homestead&house=${line.house}`, text: houseWords(line, nameOf, home.houseName), ...(quote ? { quote } : {}) }
+  }
+  if (line.kind === 'misses') return { key: 'misses', to: `/?sheet=homestead&house=${line.house}`, text: `⌂ ${home.houseName(line.house)} misses you`, misses: line.house }
+  if (line.kind === 'vows') return { key: 'vows', to: '/hearts?filter=married', text: `♥ The Festival of Vows · ${plural(line.spouses, 'spouse')} · ♥ +${line.paid} · festival night tonight` }
   if (line.kind === 'perks') return { key: 'perks', to: '/warehouse', text: `Perks · +${plural(line.items, 'item')}` }
   if (line.kind === 'chores') return { key: 'chores', to: line.items > 0 ? '/warehouse' : FIELDS, text: choresWords(line.items, line.growth) }
   if (line.kind === 'bond') return bondLine(line, nameOf, pairs)
@@ -135,12 +179,15 @@ function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null): Su
     }
     case 'arrived': return { key: `arrived:${line.id}`, to, text: `${name} arrived${line.home ? '' : ' · away'}`, tag: 'New' }
     case 'item': return { key: `item:${line.id}`, to, text: `♥ ${name} left you ${starredGoods(line.items)}` }
+    case 'moved': return { key: `moved:${line.id}`, to, text: `⌂ ${name} moved into ${home.houseName(line.house)}` }
+    case 'level': return { key: `level:${line.id}`, to: `/?level=${line.id}:${line.rung}`, text: `♥ ${name} · ${rungName(line.rung)}, reached overnight`, tag: 'New' }
   }
 }
 
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 
-function sectionLines(summary: MorningSummary | MorningSummaryV4, section: SummarySection | SummarySectionV4, nameOf: NameOf, ready: readonly ReadyNow[], pairs: PairWords | null): SummaryLine[] {
+function sectionLines(summary: MorningSummary | MorningSummaryV4, section: SummarySection | SummarySectionV4, nameOf: NameOf, ready: readonly ReadyNow[], pairs: PairWords | null,
+  home: HomeWords): SummaryLine[] {
   const version = 'hearts' in summary ? 4 : 3
   switch (section) {
     case 'bin': {
@@ -181,6 +228,7 @@ function sectionLines(summary: MorningSummary | MorningSummaryV4, section: Summa
           case 'joined': return { key: `joined:${line.outfitId}`, to: umaSheet(line.outfitId), text: `${nameOf(line.outfitId)} joined${line.home ? '' : ' · away'}`, tag: 'New' }
           case 'gate': return { key: `gate:${line.outfitId}`, to: peek('gate'), text: `${nameOf(line.outfitId)} is at the Gate` }
           case 'left': return { key: `left:${line.outfitId}`, to: peek('gate'), text: `${nameOf(line.outfitId)} left the Gate` }
+          case 'household': return { key: `household:${line.married}`, ...householdNews(line.married), tag: 'Household' }
         }
       })
     case 'nudges':
@@ -199,6 +247,6 @@ function sectionLines(summary: MorningSummary | MorningSummaryV4, section: Summa
     case 'bonds':
       return []
     case 'hearts':
-      return 'hearts' in summary ? heartsLines(summary.hearts, ready, nameOf, pairs) : []
+      return 'hearts' in summary ? heartsLines(summary.hearts, ready, nameOf, pairs, home) : []
   }
 }

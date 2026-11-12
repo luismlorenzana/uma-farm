@@ -18,7 +18,10 @@
 // Hearts, with the invitations, side by side and the bond hearts reached (F52). F51's perks: step 2's farming chores and a
 // farmer in her element, step 4's perks' extras (`nightExtras`) and gathering chores (`nightChores`), step 6's mentor, and
 // step 9's morning items (`morningItems`), with their Hearts lines. F53: step 8 sets the ring bench the night after the first
-// Romance 8 (`openRingBench`), and step 9 serves a wedding's reception (`serveTheReception`) before anything else.
+// Romance 8 (`openRingBench`), and step 9 serves a wedding's reception (`serveTheReception`) before anything else. F54:
+// before step 1 tonight's house is noted (`noteTheNight`); step 6 pays shared houses' bonds (`shareHouses`) and levels S2
+// and S4 (`levelAtNight`); step 8 notes the household milestones (`householdMilestones`); step 9 gives the house's morning
+// (`houseMorningStep`), moves waiting spouses into rooms (`moveInRooms`) and holds the Festival of Vows (`vowsMorning`).
 import { endsAt, finishedCount, isRefusal, settle, speedUp } from '@luismlorenzana/uma-work'
 import { DAY_MS, festivalOn, isSeasonStart, dateOf, workNow } from '../farm/calendar'
 import { bondsTonight, extrasTonight, newBondHearts, type BondPay, type Extras } from '../farm/bonds'
@@ -41,13 +44,18 @@ import { serveReception } from '../romance/wedding'
 import { heartDays, NO_BIRTHDAYS, type Birthdays } from '../romance/days'
 import { praiseOvernight } from '../romance/praise'
 import { fieldChores, gatherChores, leaveMorningItems, mentorsTonight, type ChoresDone } from '../romance/perk-effects'
+import { moveInWaiting } from '../romance/homestead'
+import { festivalOfVows, householdNight, houseMorning, levelsTonight, missesLine, noteTheNight, shareHouses, type NightHouse } from '../romance/household'
 import { BLOCK_IDS, type BlockId, type OutfitId } from '../save/v3'
 import { newTodayV4, type FarmSave, type SaveV4 } from '../save/v4'
 import { castOrder, favouriteOf, type StoryPack } from '../story/pack'
 import { farmEnvV3, loopWorld, nightEnvV3, WELL_FED_TICKETS, withLoopWorld } from '../work/loop-env'
 import { checkGoalsNight, type GoalsTonight } from '../story/chapters'
 import { daySetState } from './nudge'
-import type { BinSale, HeartLine, InviteLine, ItemLine, MorningSummary, MorningSummaryV4, NewsLine, NewsLineV4, Nudge, RankLine, WorkLine } from './summary'
+import type {
+  BinSale, HeartLine, HouseholdNews, HouseLine, HouseMissesLine, InviteLine, ItemLine, LevelLine, MorningSummary, MorningSummaryV4, MovedLine, NewsLine, NewsLineV4, Nudge, RankLine,
+  VowsLine, WorkLine,
+} from './summary'
 
 /** What the night reads beyond the save (decision 2): master data, loaded before End the day runs, and the talents the
  * app reads from it once a release (F21). */
@@ -116,12 +124,26 @@ export interface NightNotes {
   readonly perks: readonly Extras[]
   /** Step 9 on v4: this morning's items, R2's and S2's (F51 decision 6). */
   readonly items: readonly ItemLine[]
+  /** Before step 1 on v4: the house slept in tonight, once anyone is married (F54 decision 6). */
+  readonly house: NightHouse | null
+  /** Step 6 on v4: spouse levels reached tonight, S2 and S4 (F54 decision 8). */
+  readonly levels: readonly LevelLine[]
+  /** Step 8 on v4: household milestones passed tonight (F54 decision 9). */
+  readonly household: readonly HouseholdNews[]
+  /** Step 9 on v4: the house's morning, its extra items, waiting spouses moved in, a house that misses you, and the Festival
+   * of Vows (F54 decisions 4, 7 and 13). */
+  readonly houseLine: HouseLine | null
+  readonly houseItems: readonly ItemLine[]
+  readonly moved: readonly MovedLine[]
+  readonly misses: HouseMissesLine | null
+  readonly vows: VowsLine | null
 }
 
 /** A night's notes before its first step. */
 export const emptyNotes = (): NightNotes => ({
   sold: [], worked: [], finished: [], made: [], best: null, tended: [], ripened: [], withered: [], ranks: [], dorm: null, home: [], gate: null, left: [],
-  goals: { chapter: null, paid: [], ranks: [] }, arrived: [], lines: [], days: [], extras: [], bonds: [], invites: [], chores: [], perks: [], items: [],
+  goals: { chapter: null, paid: [], ranks: [] }, arrived: [], lines: [], days: [], extras: [], bonds: [], invites: [], chores: [], perks: [], items: [], house: null, levels: [],
+  household: [], houseLine: null, houseItems: [], moved: [], misses: null, vows: null,
 })
 
 export interface Night {
@@ -350,6 +372,62 @@ export const serveTheReception: NightStep = (night) => {
   return { ...night, save: serveReception(night.save, night.before.today.reception).save }
 }
 
+/** Before step 1 on v4 (F54 decision 6; RM22, RM23): once anyone is married, tonight's house is noted, your pick from
+ * Tonight's Sleep at or else the house slept in least lately, and the pick clears for tomorrow. */
+export const noteTonight: NightStep = (night) => {
+  if (night.save.version !== 4) return night
+  const { save, night: house } = noteTheNight(night.save)
+  return { ...night, save, notes: { ...night.notes, house } }
+}
+
+/** Step 6 on v4 (F54 decision 6; RM42, RM48): +10 bond a night to each pair of residents sharing a house. A night without
+ * the pack pays none. */
+export const shareTheHouses: NightStep = (night) => {
+  if (night.save.version !== 4 || !night.context.story) return night
+  return { ...night, save: shareHouses(night.save, night.context.story).save }
+}
+
+/** Step 6 on v4 (F54 decision 8; RM11, RM55): a spouse at S1 or S3 whose 600 is full reaches S2 or S4, no event; the
+ * morning shows her level-up card. */
+export const levelAtNight: NightStep = (night) => {
+  if (night.save.version !== 4) return night
+  const { save, levels } = levelsTonight(night.save)
+  return { ...night, save, notes: { ...night.notes, levels } }
+}
+
+/** Step 8 on v4, after the bench (F54 decision 9; RM45): the household milestones as the married count passes 1, 5, 10, 15
+ * and 20: news, the furniture set at 5, the finale's morning at 20. */
+export const householdMilestones: NightStep = (night) => {
+  if (night.save.version !== 4) return night
+  const { save, news } = householdNight(night.save)
+  return { ...night, save, notes: { ...night.notes, household: news } }
+}
+
+/** Step 9 on v4, after the reception (F54 decision 7; RM43): the morning of the house slept in: each resident +30, her
+ * breakfast (S1) if no meal runs, one more morning item each at S2+; and a house you haven't slept in for 8 nights misses
+ * you. A night without the pack gives none. */
+export const houseMorningStep: NightStep = (night) => {
+  if (night.save.version !== 4 || !night.context.story || !night.notes.house) return night
+  const { save, line, items } = houseMorning(night.save, night.context.story, night.notes.house, talentsOf(night))
+  return { ...night, save, notes: { ...night.notes, houseLine: line, houseItems: items, misses: missesLine(save) } }
+}
+
+/** Step 9 on v4 (F54 decision 4; RM42): spouses home in the Dorm who wait for a room take one, in wedding order, once a house
+ * stands; the morning says who moved where. */
+export const moveInRooms: NightStep = (night) => {
+  if (night.save.version !== 4 || !night.context.story) return night
+  const { save, moved } = moveInWaiting(night.save, night.context.story)
+  return { ...night, save, notes: { ...night.notes, moved: moved.map((m): MovedLine => ({ kind: 'moved', id: m.id, house: m.house })) } }
+}
+
+/** Step 9 on v4 (F54 decision 13; RM46): on the finale's day of the year, each later year, every spouse +50 and a festival
+ * night tonight. */
+export const vowsMorning: NightStep = (night) => {
+  if (night.save.version !== 4) return night
+  const { save, line } = festivalOfVows(night.save)
+  return { ...night, save, notes: { ...night.notes, vows: line } }
+}
+
 /** The morning's news (CS5 §5): the season's first day, a festival today or tomorrow. */
 function newsOf(day: number): NewsLine[] {
   const news: NewsLine[] = []
@@ -387,7 +465,7 @@ function rosterNews(night: Night): NewsLine[] {
 }
 
 /** The Dorm's news on v4: its new level, and Umas home from a swap (arrivals are §4's). */
-function dormNews({ notes }: Night): NewsLineV4[] {
+function dormNews({ notes }: Night): Extract<NewsLine, { kind: 'dorm' | 'home' }>[] {
   return [...(notes.dorm !== null ? [{ kind: 'dorm' as const, level: notes.dorm }] : []), ...(notes.home.length > 0 ? [{ kind: 'home' as const, umas: [...notes.home] }] : [])]
 }
 
@@ -403,12 +481,20 @@ function heartLines(night: Night): HeartLine[] {
   const perks = night.notes.perks.reduce((n, e) => n + e.items.length, 0)
   const choreItems = night.notes.chores.reduce((n, c) => n + c.items.length, 0)
   const choreGrowth = Math.round(night.notes.chores.reduce((n, c) => n + c.growth, 0) * 4) / 4
+  // F54 decision 7: her house's extra morning item joins her own `item` line, after her count's.
+  const items = new Map<string, string[]>()
+  for (const line of [...night.notes.items, ...night.notes.houseItems]) items.set(line.id, [...(items.get(line.id) ?? []), ...line.items])
   return [
     ...night.notes.invites,
     ...night.notes.days,
+    ...(night.notes.vows ? [night.notes.vows] : []),
+    ...night.notes.levels,
     ...Object.keys(save.roster).filter((id) => !before.roster[id]).sort((a, b) => rank(a) - rank(b) || Number(a) - Number(b))
       .map((id): HeartLine => ({ kind: 'arrived', id, home: save.dorm.home.includes(id) })),
-    ...night.notes.items,
+    ...(night.notes.houseLine ? [night.notes.houseLine] : []),
+    ...night.notes.moved,
+    ...(night.notes.misses ? [night.notes.misses] : []),
+    ...[...items].map(([id, keys]): ItemLine => ({ kind: 'item', id, items: keys })),
     ...(choreItems > 0 || choreGrowth > 0 ? [{ kind: 'chores' as const, items: choreItems, growth: choreGrowth }] : []),
     ...(perks > 0 ? [{ kind: 'perks' as const, items: perks }] : []),
     ...(extras > 0 ? [{ kind: 'side' as const, items: extras }] : []),
@@ -467,7 +553,7 @@ export const buildSummary: NightStep = (night) => {
   if (save.version === 4) {
     const summary: MorningSummaryV4 = {
       day: save.calendar.day, bin: [...notes.sold], work, ranks: [...notes.ranks], hearts: heartLines(night),
-      news: [...newsOf(save.calendar.day), ...goalNews(notes), ...dormNews(night)] as NewsLineV4[], nudges,
+      news: [...newsOf(save.calendar.day), ...goalNews(notes), ...notes.household, ...dormNews(night)] as NewsLineV4[], nudges,
     }
     // The bond hearts are listed: the day ahead notes its own (F52 decision 9).
     return { ...night, save: { ...save, today: { ...save.today, bonds: {} }, summary } }
@@ -509,6 +595,9 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
 
 /** What v4 changes in v3's steps (F46, F47, F52): a step replaced or reworded, and the steps added after one. */
 const V4_STEPS: Readonly<Record<string, { replace?: Partial<NightStepDef>; after?: readonly NightStepDef[]; before?: readonly NightStepDef[] }>> = {
+  payTheBin: {
+    before: [{ step: 1, name: 'noteTonight', run: noteTonight, what: 'Before the bin, once anyone is married: tonight’s house is noted (its last night slept is today), your pick from Sleep at or else the house slept in least lately; the pick clears for tomorrow', by: 'F54' }],
+  },
   growCrops: {
     replace: { what: 'Crops grow: 1 a night untended, the tender’s rate tended, ×1.1 side by side (her tender has a 3-heart partner tending another growing block), ×1.2 for a farmer in her element (Friendship 8); a farmer’s night chores add +0.25 growth each to the untended block with the most growing plots, else hers; plots that reach their days − 0.5 turn Ready', by: 'F20, F52, F51' },
   },
@@ -523,7 +612,11 @@ const V4_STEPS: Readonly<Record<string, { replace?: Partial<NightStepDef>; after
   },
   tickBonds: {
     replace: { what: 'Bonds: +10 to each pair who worked one place today (the Fields’ tenders together), once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend', by: 'F52' },
-    after: [{ step: 6, name: 'payLine', run: payLine, what: 'Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night', by: 'F47' }],
+    after: [
+      { step: 6, name: 'payLine', run: payLine, what: 'Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night', by: 'F47' },
+      { step: 6, name: 'shareTheHouses', run: shareTheHouses, what: 'Shared houses: +10 bond a night to each pair of spouses with rooms in the same house', by: 'F54' },
+      { step: 6, name: 'levelAtNight', run: levelAtNight, what: 'Spouse levels: a spouse at S1 or S3 whose 600 is full reaches S2 or S4, no event (S2 starts her every-2nd-morning item); never S3 or S5', by: 'F54' },
+    ],
   },
   turnCalendar: {
     replace: { what: 'The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception', by: 'F18, F47, F49, F53' },
@@ -532,24 +625,31 @@ const V4_STEPS: Readonly<Record<string, { replace?: Partial<NightStepDef>; after
     replace: { name: 'arriveUmas', run: arriveUmas, what: 'Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50)', by: 'F46, F52' },
   },
   checkGoals: {
-    after: [{ step: 8, name: 'openRingBench', run: openRingBench, what: 'The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and Ida Stone’s scene is due in the morning', by: 'F53' }],
+    after: [
+      { step: 8, name: 'openRingBench', run: openRingBench, what: 'The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and Ida Stone’s scene is due in the morning', by: 'F53' },
+      { step: 8, name: 'householdMilestones', run: householdMilestones, what: 'Household milestones: as the married count passes 1, 5, 10, 15 and 20, each is news once; 5 brings the furniture set, 20 the finale’s morning; household scenes are Ready from this morning', by: 'F54' },
+    ],
   },
   buildSummary: {
     before: [
       { step: 9, name: 'serveTheReception', run: serveTheReception, what: 'A wedding’s reception: everyone on the farm well fed from tomorrow for its days (a dish ★1–2 one, ★3–4 two, ★5 three; Marta’s cake one), never shortening a meal already running', by: 'F53' },
+      { step: 9, name: 'houseMorningStep', run: houseMorningStep, what: 'The house’s morning: each resident of the house slept in +30 (only hers on a birthday-alone night); her breakfast (S1) feeds everyone on the farm with no meal left; each resident at S2+ leaves one more morning item; a house with residents not slept in for 8 nights misses you', by: 'F54' },
+      { step: 9, name: 'moveInRooms', run: moveInRooms, what: 'Rooms: spouses home in the Dorm who wait for a room take one, in wedding order, by the same default as a wedding’s', by: 'F54' },
+      { step: 9, name: 'vowsMorning', run: vowsMorning, what: 'The Festival of Vows: on the finale’s day of the year, each later year, every spouse +50 and a festival night tonight', by: 'F54' },
       { step: 9, name: 'heartsMorning', run: heartsMorning, what: 'Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse', by: 'F47' },
       { step: 9, name: 'morningItems', run: morningItems, what: 'Morning items: each Uma on the farm leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+)', by: 'F51' },
       { step: 9, name: 'drawInvitations', run: drawInvitations, what: 'Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, \'invite\', n)` among those home at Friendship 2+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14)', by: 'F50' },
     ],
-    replace: { what: 'The morning summary, from what changed; §4 Hearts lists the invitations, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning', by: 'F18, F50, F52, F51' },
+    replace: { what: 'The morning summary, from what changed; §4 Hearts lists the invitations, the Festival of Vows, the night’s levels, the house’s morning, rooms taken and a house that misses you, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning; §5 the household milestones', by: 'F18, F50, F52, F51, F54' },
   },
 }
 
-/** Save v4's steps (F46 decision 8; F47; F52; F50; F51; F53): v3's, step 2 side by side and the farming chores, step 4's
- * extras and gathering chores, the Gate's step replaced by authored arrivals with their ties' seeds, step 6 with her
- * ladder's factor, the mentor, bonds and her line's +10, step 7 clearing the whole of `today`, step 8 the ring bench, and
- * step 9 with a wedding's reception, praise, birthdays, anniversaries, the morning items, the invitations and the bond
- * hearts. */
+/** Save v4's steps (F46 decision 8; F47; F52; F50; F51; F53; F54): v3's, tonight's house noted before step 1, step 2 side
+ * by side and the farming chores, step 4's extras and gathering chores, the Gate's step replaced by authored arrivals with
+ * their ties' seeds, step 6 with her ladder's factor, the mentor, bonds, her line's +10, shared houses and the night's
+ * spouse levels, step 7 clearing the whole of `today`, step 8 the ring bench and the household milestones, and step 9 with
+ * a wedding's reception, the house's morning, rooms, the Festival of Vows, praise, birthdays, anniversaries, the morning
+ * items, the invitations and the bond hearts. */
 export const NIGHT_STEPS_V4: readonly NightStepDef[] = NIGHT_STEPS.flatMap((step) => {
   const change = V4_STEPS[step.name]
   return [...(change?.before ?? []), { ...step, ...change?.replace }, ...(change?.after ?? [])]

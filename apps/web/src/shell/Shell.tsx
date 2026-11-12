@@ -7,7 +7,8 @@
 // build `?read=<a>-<b>:<levels>` plays a pair's conversations over any page (F52), once no scene is due; and (F49) the
 // event player over any page at `?event=`, `?ask=` or `?memory=`, and her Memories' album at `?album=`; and (F50) the
 // evening over any page at `?evening=` (Tonight's picker, or her kinds sheet, the play and its card); and (F53) the ring
-// bench at `?sheet=bench` from the Forge's quick look.
+// bench at `?sheet=bench` from the Forge's quick look; and (F54) the homestead at `?sheet=homestead`, a night level's card at
+// `?level=<id>:<s2|s4>` and a household scene or the finale at `?household=<id>` (`&replay=1` from the Diary).
 import { picksLeft, sceneDue } from '@farm/domain'
 import { AppFrame, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { lazy, Suspense } from 'react'
@@ -29,6 +30,9 @@ const EventPlayer = /* @__PURE__ */ lazy(() => import('../loop/EventPlayer'))
 const Memories = /* @__PURE__ */ lazy(() => import('../loop/Memories'))
 const EveningPlayer = /* @__PURE__ */ lazy(() => import('../loop/EveningPlayer'))
 const BenchSheet = /* @__PURE__ */ lazy(() => import('../loop/BenchSheet'))
+const HomesteadSheet = /* @__PURE__ */ lazy(() => import('../loop/HomesteadSheet'))
+const NightLevel = /* @__PURE__ */ lazy(() => import('../loop/NightLevel'))
+const HouseholdPlayer = /* @__PURE__ */ lazy(() => import('../loop/HouseholdPlayer'))
 
 const PAGES: Readonly<Record<string, BarPage>> = { '/': 'farm', '/roster': 'roster', '/hearts': 'hearts', '/diary': 'diary' }
 const SHEETS = ['end', 'calendar', 'bin', 'shop', 'rank'] as const
@@ -48,6 +52,8 @@ export function Shell() {
   const playing = romanceOn() ? search.get('event') ?? search.get('ask') ?? search.get('memory') : null
   const album = romanceOn() ? search.get('album') : null
   const evening = romanceOn() ? search.get('evening') : null
+  const level = romanceOn() ? search.get('level') : null
+  const household = romanceOn() ? search.get('household') : null
   const v4 = useGame((s) => s.save?.version === 4)
   return (
     <AppFrame
@@ -65,6 +71,9 @@ export function Shell() {
           {romanceOn() && playing && v4 && !naming && !scene && !read && <Suspense fallback={null}><EventPlayer key={playing} /></Suspense>}
           {romanceOn() && evening && v4 && !naming && !scene && !read && !playing && <Suspense fallback={null}><EveningPlayer key={evening} /></Suspense>}
           {romanceOn() && sheet === 'bench' && v4 && !naming && !scene && <Suspense fallback={null}><BenchSheet /></Suspense>}
+          {romanceOn() && sheet === 'homestead' && v4 && !naming && !scene && <Suspense fallback={null}><HomesteadSheet /></Suspense>}
+          {romanceOn() && level && v4 && !naming && !scene && !read && !playing && <Suspense fallback={null}><NightLevel key={level} value={level} /></Suspense>}
+          {romanceOn() && household && v4 && !naming && !scene && !read && !playing && <Suspense fallback={null}><HouseholdPlayer key={household} value={household} replay={search.get('replay') === '1'} /></Suspense>}
         </>
       }
     >

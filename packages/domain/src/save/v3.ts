@@ -220,8 +220,21 @@ export const START_PICKS = 3
 export const picksLeft = (save: { roster: Readonly<Record<string, unknown>> }): number => Math.max(0, START_PICKS - Object.keys(save.roster).length)
 /** She leaves the farm tomorrow: a swap at the Dorm takes her out (F23 decision 4). */
 export const leaving = (save: { dorm: { swaps: readonly DormSwap[] } }, outfitId: OutfitId): boolean => save.dorm.swaps.some((s) => s.out === outfitId)
-/** She's home and staying (F23): who may take a job or tend a block. An Uma leaving tomorrow may do neither. */
-export const onFarm = (save: { dorm: { home: readonly OutfitId[]; swaps: readonly DormSwap[] } }, outfitId: OutfitId): boolean => save.dorm.home.includes(outfitId) && !leaving(save, outfitId)
+/** A spouse in her house (F54 decision 4; RM42): on the farm with no Dorm bed. Only a v4 save has `love`. */
+export const housed = (save: object, outfitId: OutfitId): boolean =>
+  'love' in save && (save.love as Readonly<Record<string, { house?: number } | undefined>>)[outfitId]?.house !== undefined
+type HomeOf = { dorm: { home: readonly OutfitId[]; swaps: readonly DormSwap[] } }
+/** She's home and staying (F23): who may take a job or tend a block. An Uma leaving tomorrow may do neither. On v4 a spouse
+ * in her house is on the farm too (F54 decision 4). */
+export const onFarm = (save: HomeOf, outfitId: OutfitId): boolean => (save.dorm.home.includes(outfitId) && !leaving(save, outfitId)) || housed(save, outfitId)
+/** Who's on the farm (F54 decision 4): the Dorm's home in its order, then the spouses in their houses by id. v3's is the
+ * Dorm's. */
+export function farmHome(save: { dorm: { home: readonly OutfitId[] } }): OutfitId[] {
+  const love = 'love' in save ? Object.keys(save.love as object) : []
+  return [...save.dorm.home, ...love.filter((id) => housed(save, id) && !save.dorm.home.includes(id)).sort((a, b) => Number(a) - Number(b))]
+}
+/** Whether she's on the farm today (F54 decision 4): home in the Dorm (leaving tomorrow or not), or in her house. */
+export const atHome = (save: { dorm: { home: readonly OutfitId[] } }, outfitId: OutfitId): boolean => save.dorm.home.includes(outfitId) || housed(save, outfitId)
 
 /** A new Uma on the roster: joined today, Novice at 0 points in all nine activities. */
 export function newRosterUma(day: number): RosterUma {

@@ -140,6 +140,16 @@ The owner reads each layer before the next is written. The farm's code packets (
 > that in mind. Every line of the proposal and the wedding says spouse, partner, vows, your wedding, you; never bride,
 > groom, husband or wife for the farmer (the validator's gendered list).
 >
+> **Landed in F54 (D59):** the pack may carry **`household.json`**: `{ scenes: [{ at: 5 | 10 | 15, open, each, close }],
+> houseLines, finale: { open, play, each, close } }`. Each scene once; `open` and `close` speak only through narration and
+> the town's cast (who is married varies); `each` is `{ <characterId>: steps }` with **a beat for every cast Uma** in every
+> scene and the finale (she and the town's cast may speak; the game plays them in wedding order and skips one not written);
+> the finale's `play` is one play step's `{ game, prompt }` (a dance at the festival ground on the stand-in); choices are
+> wording only (nothing pays) and carry no answer. `houseLines` is `{ <characterId>: 1–10 lines of 1–120 characters }`,
+> said on a morning in her house (`{farmer}` allowed); an Uma without hers gets her temperament's original template. Her
+> bible may carry **`wishes: ('own-house' | 'birthday-alone')[]`** (RM44): own-house asks for a house to herself in her S1
+> event (write it there); birthday-alone makes her birthday's morning hers alone. Mornings only in house lines (W16).
+>
 > F41 also settles what the story wrote around: arrivals are the authored ones only (RM1, RM4); events never wait on a
 > season, festival or hour (RM24); the farmer is never gendered at the wedding (RM30); one ring bench at the Forge opens
 > after the first romance 8 (RM38).

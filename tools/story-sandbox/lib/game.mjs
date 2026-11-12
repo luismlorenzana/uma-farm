@@ -60,7 +60,8 @@ export async function loadGame(src) {
         rungs: [...authored.RUNGS], places: [...authored.STORY_PLACES], festivals: [...authored.FESTIVALS], tieKinds: [...authored.TIE_KINDS],
         dateGames: [...authored.DATE_GAMES], tones: [...authored.TONES], emotes: [...authored.EMOTES], callings: [...authored.CALLINGS],
       },
-      validator: { castIssues: authored.castIssues, tiesIssues: authored.tiesIssues, bibleIssues: authored.bibleIssues, routeIssues: authored.routeIssues, pairIssues: authored.pairIssues },
+      validator: { castIssues: authored.castIssues, tiesIssues: authored.tiesIssues, bibleIssues: authored.bibleIssues, routeIssues: authored.routeIssues, pairIssues: authored.pairIssues,
+        householdIssues: authored.householdIssues },
     }
   } catch (error) {
     return { ok: false, error: `The game's story didn't load: ${error.message.split('\n')[0]}` }

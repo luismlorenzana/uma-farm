@@ -7,7 +7,7 @@
 // ● spent, festival night's in its season's colour) and the (i). Her profile opens
 // from either view at `?uma=<characterId>`, on the side the view names. Loaded on demand; only the romance build routes
 // here.
-import { festivalOn, ladderOf, type LadderName, type SaveV4 } from '@farm/domain'
+import { festivalOn, householdReady, householdTitle, ladderOf, type LadderName, type SaveV4 } from '@farm/domain'
 import { FaceTile, type FaceTileBadges } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Chip, HelpButton, Tabs, UiMark } from '@luismlorenzana/uma-kit/ui'
@@ -37,9 +37,15 @@ export default function HeartsPage() {
   const married = pack ? marriedOf(save, pack) : null
   return (
     <main className="absolute inset-0 overflow-y-auto overscroll-contain px-4 pt-4 pb-28" data-page="hearts" data-view={view}>
-      <div className="flex items-center gap-2 pb-2">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pb-2">
         <h1 className="font-display text-[22px] font-bold text-ink">Hearts</h1>
         {married && <span className="text-[13px] font-semibold text-ink-soft tabular-nums" data-married={`${married.married}/${married.cast}`}>Married {married.married}/{married.cast}</span>}
+        {pack && householdReady(save, pack.household).slice(0, 1).map((id) => (
+          <Link key={id} to={`/hearts?household=${id}`} state={{ back: true }} aria-label={`${householdTitle(id)}: Ready`}
+            className="grid min-h-11 shrink-0 place-items-center rounded-full bg-[#d9a227]/15 px-2.5 text-[12px] font-bold whitespace-nowrap text-[#8a6a14]" data-household-ready={id}>
+            ⌂ {id === 'finale' ? 'Harvest' : `Scene ${householdTitle(id).slice(-1)}`} ›
+          </Link>
+        ))}
         <EveningMarks save={save} />
         <span className="ml-auto">
           {view === 'hearts' ? (

@@ -2,8 +2,8 @@
 // which events each route scripts, checked by F40's validator as the game reads it (routes may be partial: an unscripted
 // beat waits, "Her story is still being written"). The scripts load on demand through `route(id)`, a pair's conversations
 // through `pair(a, b)` (F52), and the pack says which levels each pair holds. The dark build reads the stand-in
-// (`stand-in.ts`) through the web's one loader seam; F56 points that seam at the private pack. The household file (F54)
-// joins with its packet.
+// (`stand-in.ts`) through the web's one loader seam; F56 points that seam at the private pack. The household file (F54:
+// household scenes, house lines and the finale) is read with the pack, partial, since the night's house lines need it.
 //
 // Her outfit, her favourite line, its places and her tastes are read here (RM2, RM6, RM7), never from master data's
 // strategy or a goods family.
@@ -13,8 +13,8 @@ import type { Taste } from '../farm/visitors'
 import { isGoodId } from '../goods/ids'
 import { pairKey } from '../save/v3'
 import {
-  bibleIssues, castIssues, pairIssues, routeIssues, tiesIssues, type Calling, type Cast, type CastEntry, type PairConversations, type Route, type StoryContext, type Ties,
-  type UmaBible,
+  bibleIssues, castIssues, householdIssues, pairIssues, routeIssues, tiesIssues, type Calling, type Cast, type CastEntry, type Household, type PairConversations, type Route,
+  type StoryContext, type Ties, type UmaBible, type Wish,
 } from './authored'
 
 /** A pack's files as a release holds them (`cast.json`, `ties.json`, `umas/<id>.json`, `routes/<id>.json` and
@@ -26,6 +26,8 @@ export interface PackFiles {
   routes: Readonly<Record<string, unknown>>
   /** By `<a>-<b>` (F52 decision 10); none in a pack that has no pair written yet. */
   pairs?: Readonly<Record<string, unknown>>
+  /** `household.json` (F54 decision 11); none until it's written. */
+  household?: unknown
 }
 
 export interface StoryPack {
@@ -42,6 +44,8 @@ export interface StoryPack {
   readonly pairs: ReadonlyMap<string, ReadonlySet<number>>
   /** A pair's conversations, loaded on demand; null when none are written. */
   pair(a: string, b: string): Promise<PairConversations | null>
+  /** The household (F54 decision 11): its scenes, house lines and the finale; null until it's written. */
+  readonly household: Household | null
 }
 
 /** A pack the validator refuses: the game never plays a broken pack. */
@@ -90,6 +94,8 @@ export function storyPackFrom(files: PackFiles, isGood: (id: string) => boolean 
     issues.push(...found)
     if (found.length === 0) pairs.set(pairKey((pair as PairConversations).a, (pair as PairConversations).b), pair as PairConversations)
   }
+  // F54 decision 11: the household, read partial (an Uma without her beat is skipped).
+  if (files.household !== undefined) issues.push(...householdIssues(files.household, ctx, { partial: true }).map((i) => `household: ${i}`))
   if (issues.length > 0) throw new StoryPackError(issues)
   return {
     cast: files.cast as Cast,
@@ -99,8 +105,12 @@ export function storyPackFrom(files: PackFiles, isGood: (id: string) => boolean 
     route: async (id) => routes.get(id) ?? null,
     pairs: new Map([...pairs].map(([key, pair]) => [key, new Set(pair.levels.map((l) => l.hearts))])),
     pair: async (a, b) => pairs.get(pairKey(a, b)) ?? null,
+    household: files.household === undefined ? null : files.household as Household,
   }
 }
+
+/** Her wishes for married life (RM44; F54 decision 12): her bible's, none without one. */
+export const wishesOf = (pack: Pick<StoryPack, 'bibles'>, id: string): readonly Wish[] => pack.bibles.get(id)?.wishes ?? []
 
 // --- Her place in the cast (RM2, RM3) ----------------------------------------------------------------------------------
 

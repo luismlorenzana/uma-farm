@@ -31,6 +31,7 @@ import { EVENT_GRADE_POINTS, gradeOf, playSeed, type Grade, type PlayKind } from
 import { playOf, togetherPlay, type PlayAs } from './plays/which'
 import { readiness } from './ready'
 import { receptionOf, vowFlag, weddingGuests, weddingPlaceFlag, weddingPlaces, type Reception } from './wedding'
+import { takeRoom } from './homestead'
 
 /** Every event pays +50 on completion (RM13, RM28). */
 export const EVENT_POINTS = 50
@@ -123,6 +124,8 @@ export interface WeddingCard {
   days: number
   /** Who attended (every spouse, her two closest friends). */
   guests: string[]
+  /** Her room (F54 decision 4): the house she took at once, or null with no room free (she keeps her Dorm bed). */
+  house: number | null
 }
 
 /** The stages a stage-up screen closes (decision 11; F53): Partners, Engaged, Married. */
@@ -169,6 +172,8 @@ export interface EventCard {
   wedding: WeddingCard | null
   /** Her last line of the event. */
   line: string | null
+  /** A level reached at night (F54 decision 8: S2, S4): no event, her bar's 600 filled. */
+  night?: true
   /** The next rung: its cost, her points toward it and what's banked past it, its place and setup (her beat's hint) and
    * its perk; null once her route is complete. */
   next: { rung: string; cost: number; points: number; banked: number; hint: string | null; perk: PerkId | null } | null
@@ -240,7 +245,7 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
     if (outcome.reception === undefined) throw new SaveRuleError('bad-job', 'Choose the reception.')
     const days = receptionOf({ items }, outcome.reception)
     if (outcome.reception) items = takeGoods(items, outcome.reception.dish, outcome.reception.stars, 1)
-    wedding = { place, dish: outcome.reception?.dish ?? null, stars: outcome.reception?.stars ?? null, days, guests: weddingGuests(save, pack, id) }
+    wedding = { place, dish: outcome.reception?.dish ?? null, stars: outcome.reception?.stars ?? null, days, guests: weddingGuests(save, pack, id), house: null }
     const vowAt = choices.indexOf(outcome.event.steps[answerAt(outcome.event.steps)] as { choice: ChoiceOption[] })
     kept.push(weddingPlaceFlag(place), ...(vowAt >= 0 ? [vowFlag(outcome.picks[vowAt]! + 1)] : []))
   }
@@ -272,7 +277,10 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
   }
   // F51 decision 9: Friendship 4's perk writes her signature dish's recipe, once, where the event gives its perk.
   const dish = rung === 'f4' ? giveSignatureDish(played, pack, id) : null
-  const next = dish?.save ?? played
+  // F54 decision 4: the wedding gives her a room at once (her default), or she keeps her Dorm bed with none free.
+  const roomed = wedding ? takeRoom(dish?.save ?? played, pack, id) : null
+  if (wedding && roomed) wedding = { ...wedding, house: roomed.house }
+  const next = roomed?.save ?? dish?.save ?? played
   const after = bar(next.love[id]!)
   const say = [...path.steps].reverse().find((s): s is { say: string; line: string } => 'say' in s && s.say === id)
   return {

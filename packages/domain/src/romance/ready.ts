@@ -19,7 +19,7 @@ import { RING_IDS } from '../goods/ids'
 import type { Activity } from '../farm/ranks'
 import { SaveRuleError } from '../save/rules'
 import type { LoopPlaceId } from '../save/parse-v3'
-import { pairKey } from '../save/v3'
+import { atHome, pairKey } from '../save/v3'
 import type { SaveV4 } from '../save/v4'
 import { goodCount } from '../save/warehouse'
 import type { Trigger } from '../story/authored'
@@ -59,7 +59,7 @@ export type Wait =
 /** RM24's four conditions, as the manual lists them. */
 export const READY_CONDITIONS: readonly { condition: string; unmet: string }[] = [
   { condition: 'Her bar is full for the rung; a waiting rung (the confession, the proposal, the wedding) is Ready the day after the rung before, and the proposal needs a ring in the Warehouse', unmet: '`bar`, `day`, `ring`' },
-  { condition: 'She’s home (on the Dorm’s list; F54 adds the houses)', unmet: '`away`: “Swap her home”' },
+  { condition: 'She’s home (on the Dorm’s list, or a spouse in her house, F54)', unmet: '`away`: “Swap her home”' },
   { condition: 'She hasn’t played one of her events today (RM21)', unmet: '`today`' },
   { condition: 'Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level, a chapter has been reached', unmet: '`setup`; `opens` for a chapter, or for the ranch, mining, cooking, expeditions, serving or forging before their chapters (2, 3, 4, 5, 6, 7)' },
 ]
@@ -110,8 +110,8 @@ function opensWith(save: SaveV4, trigger: Trigger): number | null {
   return chapter !== null && save.farm.chapter < chapter ? chapter : null
 }
 
-/** Her next event's state (decisions 1 and 13). Home is `dorm.home` (F54 adds housed spouses). Refused for someone not on
- * the farm. */
+/** Her next event's state (decisions 1 and 13). Home is `dorm.home`, or a spouse in her house (F54's `atHome`). Refused for
+ * someone not on the farm. */
 export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'scripted'>, id: string): Readiness {
   const love = save.love[id]
   if (!love || !save.roster[id]) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
@@ -128,7 +128,7 @@ export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'script
   const day = save.calendar.day
   if (WAITING_RUNGS.includes(rung) ? day <= love.last : !now.full) return wait({ kind: WAITING_RUNGS.includes(rung) ? 'day' : 'bar' })
   if (rung === 'proposal' && !RING_IDS.some((ring) => goodCount(save.items, ring) > 0)) return wait({ kind: 'ring' })
-  if (!save.dorm.home.includes(id)) return wait({ kind: 'away' })
+  if (!atHome(save, id)) return wait({ kind: 'away' })
   if (save.today.events.includes(id) || love.last === day) return wait({ kind: 'today' })
   if ((trigger.kind === 'working' || trigger.kind === 'item' || trigger.kind === 'bond') && !setupMet(save, id, trigger)) return wait({ kind: 'setup', setup: trigger })
   return { rung, ready: true, waits: null }

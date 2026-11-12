@@ -140,7 +140,8 @@ interface SaveV4 {
   roster: Record<CharacterId, { joined: number; ranks: Record<Activity, RankState>; wellFed: number }>
   love: Record<CharacterId, Love>                     // one per roster Uma, from the day she joins
   dorm: { level: number; home: CharacterId[]; swaps: DormSwap[] }   // levels 1–8 (RM5)
-  homestead: { houses: { name: string; extended: boolean }[]; tonight: number | null; slept: number[] }  // house 0 the Farmhouse
+  homestead: { houses: { name: string; extended: boolean }[]; tonight: number | null; alone: string | null; slept: number[]; furniture: (number | null)[];
+               married: number; finale: number }                  // house 0 the Farmhouse; F54
   memories: Record<CharacterId, string[]>             // her route's event ids played, in order (F49's `playEvent`)
   arrivals: CharacterId[]                             // arrival scenes played or skipped
   bonds: Record<string, number>                       // pairKey of character ids; whole on v4 (F52)
@@ -162,7 +163,11 @@ interface Love { stage, level, points, last, friend?, ring?, wed?, house?, known
   with 0–5 hearts (F52); `today.asked` roster Umas once each (F49); F51's §4 lines: a morning item 1–3 goods at ★1–5,
   the night's chores once (items, growth in quarters), the perks' extras once; F53's `today.ring` 0–10 and
   `today.reception` 0–3, the Warehouse's rings and dishes (`isWarehouseIdV4`), and rings in the bin, the Diary's shipped
-  and the morning's bin lines (`isGoodIdV4`), which v3's parse refuses. `parseSave` returns v2, v3 and v4 as stored; `NEWEST_SAVE_VERSION` is
+  and the morning's bin lines (`isGoodIdV4`), which v3's parse refuses; F54's homestead (the Farmhouse first and never
+  renamed or extended, names by the letters rule at 1–20, `alone` a spouse in `tonight`'s house, furniture none or five
+  pieces in built houses from 5 married, `married` no more than the spouses, `finale` from 20 married), rooms (no house
+  past its rooms, a housed spouse never in the Dorm or a swap), a Vows day's festival night, §4's house, misses, moved,
+  level and vows lines and §5's household milestones. `parseSave` returns v2, v3 and v4 as stored; `NEWEST_SAVE_VERSION` is
   4 and `SAVE_VERSION` (what production writes) stays 3 until F56.
 - **The wipe runs in the app, never in the parse** (F46 decision 2): the API, shared with production and deployed on
   every push, reads what's stored and never makes a save (FM10). The romance build's boot turns any v1–v3 it meets (on

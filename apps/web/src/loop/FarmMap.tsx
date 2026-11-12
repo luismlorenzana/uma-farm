@@ -5,7 +5,9 @@
 // map until the player starts the day. On save v4 a Ready Uma's pip carries ♥ wherever the map draws her (F48 decision 10)
 // and the morning's Hearts section lists who's Ready (decision 9), both read live; its bond hearts carry Read while a
 // conversation waits (F52), which plays over the morning (`?read=`); in the romance build an invitation's line carries Yes,
-// tonight and Another day (F50); on v4 the Forge's quick look is the ring bench's once it stands (F53). Loaded on demand.
+// tonight and Another day (F50); on v4 the Forge's quick look is the ring bench's once it stands (F53). In the romance
+// build a v4 map grows the homestead's rows after the yard, the town edge moving below them (F54, `homestead-map.tsx`);
+// v3's map is unchanged. Loaded on demand.
 import {
   farmEnvV3, FARM_PLACES, farmPlace, placeBlurb, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, STAY_AFFINITY, workNow, type FarmPlace, type LoopPlaceId,
   type FarmSave,
@@ -26,7 +28,8 @@ import { FARM_MAP_TILES, lockOf, placeAt, placeLink } from './farm-map'
 import { FieldsPeek, fieldsPips } from './FieldsPeek'
 import { GatePeek } from './GatePeek'
 import { pairWords, readyLines } from './hearts-view'
-import { summaryParts } from './summary-words'
+import { homeWords } from './homestead-view'
+import { NO_HOME, summaryParts } from './summary-words'
 import { farmingTalents, useTalents } from './talents'
 import { shortDate } from './words'
 import { WorkPlacePeek } from './WorkPlace'
@@ -36,6 +39,17 @@ const GROUND: PageGround = { id: 'farm', tiles: 'farmlands', palette: PALETTES.f
 // The romance build's only: the switch folds at build time, and the deployed build drops the import.
 const InviteAnswer = /* @__PURE__ */ lazy(() => import('./InviteAnswer'))
 const BenchPeek = /* @__PURE__ */ lazy(() => import('./BenchSheet').then((m) => ({ default: m.BenchPeek })))
+const HouseAnswer = /* @__PURE__ */ lazy(() => import('./HouseAnswer'))
+type HomesteadMap = typeof import('./homestead-map')
+
+/** The homestead's map module (F54), loaded for a v4 save in the romance build only; null until it's in, and always on v3. */
+function useHomesteadMap(save: FarmSave): HomesteadMap | null {
+  const [module, setModule] = useState<HomesteadMap | null>(null)
+  useEffect(() => {
+    if (romanceOn() && save.version === 4 && module === null) void import('./homestead-map').then(setModule)
+  }, [save.version, module])
+  return save.version === 4 ? module : null
+}
 const WORK_PLACES: ReadonlySet<string> = new Set(LOOP_WORK_PLACES)
 
 /** `/`, with an optional `?peek=<place>` quick look. An unknown place drops the panel. */
@@ -128,26 +142,32 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   const perkStory = save.version === 4 ? story : null
   const env = useMemo(() => farmEnvV3(loopKinds(talents.of, perkStory)), [talents.of, perkStory])
   const work = useMemo(() => workView(loopWorld(save), workNow(save), env), [save, env])
-  const places: HubMapPlace[] = FARM_PLACES.map((place): HubMapPlace => {
+  const homestead = useHomesteadMap(save)
+  const master = useMaster()
+  const layout = homestead && save.version === 4 ? homestead.homesteadLayout(save) : null
+  // F54: a v4 map waits for the homestead's rows in the romance build, so the town edge never jumps.
+  const waiting = romanceOn() && save.version === 4 && layout === null
+  const places: HubMapPlace[] = [...FARM_PLACES.map((place): HubMapPlace => {
     const lock = lockOf(save, place)
     const slots = place.id === 'fields' ? plots : ready.get(place.id as LoopPlaceId) ?? 0
     const pips = place.id === 'fields' ? fieldsPips(save, farming, hearts) : place.id === 'gate' ? gatePips(save) : pipsOf(place, work, hearts)
     const busy = pips?.some((p) => p.state !== 'free') ?? false
     return {
-      id: place.id, name: place.name, frame: place.frame, at: placeAt(place),
+      id: place.id, name: place.name, frame: place.frame, at: layout && homestead ? placeAt(homestead.placeOnV4(place, layout), layout.tiles) : placeAt(place),
       to: placeLink(save, place),
       label: lock ? `${place.name}, locked: ${lock}` : slots > 0 ? `${place.name}, ready to collect` : place.name,
       locked: lock !== null, ready: slots > 0 ? 'Ready' : undefined,
       ...(pips && (lock === null || busy) ? { pips, pipsAt: 'arch' as const } : {}),
     }
-  })
+  }), ...(layout && homestead && save.version === 4
+    ? homestead.homesteadPlaces(save, layout, hearts, (id) => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma') : [])]
   const covered = peek !== undefined || params.get('sheet') !== null
   const total = [...ready.values()].reduce((a, b) => a + b, plots)
   return (
     <>
       <div className="absolute inset-0 overflow-y-auto overscroll-contain" data-farm-scroll>
-        <div className="relative h-full" style={{ minHeight: FARM_MAP_TILES * tile }}>
-          <HubMap
+        <div className="relative h-full" style={{ minHeight: (layout?.tiles ?? FARM_MAP_TILES) * tile }}>
+          {!waiting && <HubMap
             label="Farm map"
             page="farm"
             pages={['farm']}
@@ -158,7 +178,7 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
             reducedMotion={reducedMotion}
             canvas={import.meta.env.DEV && params.has('canvas')}
             debug={import.meta.env.DEV}
-          />
+          />}
         </div>
       </div>
       <FarmHelp />
@@ -203,9 +223,14 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   const album = master.status === 'ready' ? master.view.album : null
   const ready = useReadyNow(save)
   const pack = useStory()
+  const talents = useTalents()
   // F52: which bond lines have a conversation to Read, from the pack and what's been read.
   const pairs = useMemo(() => (save.version === 4 && pack ? pairWords(save, pack) : null), [save, pack])
-  const parts = useMemo(() => (summary ? summaryParts(summary, (id) => album?.get(id)?.name ?? 'An Uma', ready, pairs) : []), [summary, album, ready, pairs])
+  const nameOf = useMemo(() => (id: string) => album?.get(id)?.name ?? 'An Uma', [album])
+  // F54: the homestead's lines, the romance build's only.
+  const home = useMemo(() => (romanceOn() && save.version === 4 && pack ? homeWords(save, pack, nameOf, (id) => talents.table?.get(id)?.temperament ?? 'steady') : NO_HOME),
+    [save, pack, nameOf, talents.table])
+  const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home) : []), [summary, nameOf, ready, pairs, home])
   if (!summary) return null
   return (
     <Sheet
@@ -227,7 +252,9 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
                     <span className="min-w-0 flex-1">{line.text}</span>
                     {line.tag && <span className="shrink-0 rounded-full bg-success/15 px-1.5 text-[11px] font-semibold text-success" data-tag>{line.tag}</span>}
                   </Link>
+                  {line.quote && <p className="px-3 pb-2 text-[13px] italic text-ink-soft" data-house-quote>{line.quote}</p>}
                   {romanceOn() && line.invite && <Suspense fallback={null}><InviteAnswer id={line.invite} /></Suspense>}
+                  {romanceOn() && line.misses !== undefined && <Suspense fallback={null}><HouseAnswer house={line.misses} /></Suspense>}
                 </li>
               ))}
             </ul>

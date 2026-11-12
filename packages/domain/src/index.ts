@@ -142,16 +142,20 @@ export * from './romance/evening'
 // a better ring, the proposal's ring, the wedding's place, reception and guests, and Ida Stone's scene.
 export * from './romance/bench'
 export * from './romance/wedding'
+// Married life (F54; RM41–RM47): the homestead's houses, rooms and moves, Sleep at, the night's house and its morning,
+// shared houses' bonds, S2 and S4 at night, the household milestones, scenes, the finale and the Festival of Vows.
+export * from './romance/homestead'
+export * from './romance/household'
 export * from './story/bench'
 export * from './story/pack'
 export * from './story/stand-in'
 export * from './story/opening-v4'
 export {
-  ANSWERS, answerAt, ARRIVAL, arrivalIssues, BIG_EVENTS, bibleIssues, CALLINGS, castIssues, CHAT_SETS, DATE_GAMES, EMOTES, EVENT_LIMITS, eventIssues, FARMING_PLAYS, gendersFarmer, LADDERS,
-  pairIssues, routeIssues, RUNGS, stepIssues, STORY_PLACES, tiesIssues, TONES, unscriptedBeats,
+  ANSWERS, answerAt, ARRIVAL, arrivalIssues, BIG_EVENTS, bibleIssues, CALLINGS, castIssues, CHAT_SETS, DATE_GAMES, EMOTES, EVENT_LIMITS, eventIssues, FARMING_PLAYS, gendersFarmer,
+  HOUSE_LINE_MAX, HOUSE_LINES, HOUSEHOLD_SCENES, householdIssues, LADDERS, pairIssues, routeIssues, RUNGS, stepIssues, STORY_PLACES, tiesIssues, TONES, unscriptedBeats, WISHES,
 } from './story/authored'
 export type {
-  Answer, Arrival, Beat as RouteBeat, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, DateGame, Emote, Ladder, OptionGives, PairCheck, PairConversations, Play, Route, RouteCheck,
-  Step, StoryContext, StoryPlace, Tie, Ties, Together, Tone, Trigger, UmaBible, Unlock, WeddingPlan,
+  Answer, Arrival, Beat as RouteBeat, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, DateGame, Emote, Finale, Household, HouseholdAt, HouseholdCheck, HouseholdScene,
+  Ladder, OptionGives, PairCheck, PairConversations, Play, Route, RouteCheck, Step, StoryContext, StoryPlace, Tie, Ties, Together, Tone, Trigger, UmaBible, Unlock, WeddingPlan, Wish,
 } from './story/authored'
 

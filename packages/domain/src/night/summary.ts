@@ -195,14 +195,60 @@ export interface PerksLine {
   kind: 'perks'
   items: number
 }
-/** §4's stored lines: invitations (F50), birthdays and anniversaries (F47), then arrivals (F46), then morning items and
- * night chores (F51), then the perks' extras (F51), side by side and bond hearts (F52). Ready lines aren't stored: they
+/** §4 Hearts (F54 decision 7; RM43, RM57's third line): the house you slept in, its morning: `umas` the residents it
+ * counted (only hers on a birthday-alone night), `paid` their +30s in all (an anniversary's ×2 inside), `breakfast` the
+ * Umas her breakfast fed (0 none) and `items` the house's extra morning items (each in its Uma's `item` line). The house
+ * line is drawn live from the pack and the templates (`houseLineOf`), never stored. */
+export interface HouseLine {
+  kind: 'house'
+  house: number
+  umas: string[]
+  paid: number
+  breakfast: number
+  items: number
+}
+/** §4 Hearts (F54 decision 7; RM43): a house with residents you haven't slept in for 8 nights or more invites you warmly.
+ * **Tonight ›** picks it; **Another night** hides the line for the day. Never a penalty. */
+export interface HouseMissesLine {
+  kind: 'misses'
+  house: number
+}
+/** §4 Hearts (F54 decision 4; RM42): a spouse who waited for a room moved in this morning, a house having been built. */
+export interface MovedLine {
+  kind: 'moved'
+  id: string
+  house: number
+}
+/** §4 Hearts (F54 decision 8; RM11, RM55, RM57's fifth line): a spouse level reached overnight, S2 or S4, her 600 full.
+ * Opening it shows F49's level-up card. */
+export interface LevelLine {
+  kind: 'level'
+  id: string
+  rung: 's2' | 's4'
+}
+/** §4 Hearts (F54 decision 13; RM46): the Festival of Vows, each year on the finale's day: every spouse +50 (`paid` in all),
+ * and a festival night tonight. */
+export interface VowsLine {
+  kind: 'vows'
+  spouses: number
+  paid: number
+}
+/** §4's stored lines: invitations (F50), birthdays and anniversaries (F47) and the Festival of Vows (F54), then arrivals
+ * (F46) and the night's levels (F54), then the house's morning, a move-in and a house that misses you (F54), morning items
+ * and night chores (F51), then the perks' extras (F51), side by side and bond hearts (F52). Ready lines aren't stored: they
  * change by day, so F48 reads them live (`readiness`). */
-export type HeartLine = InviteLine | BirthdayLine | AnniversaryLine | ArrivedLine | ItemLine | ChoresLine | PerksLine | SideLine | BondLine
+export type HeartLine = InviteLine | BirthdayLine | AnniversaryLine | ArrivedLine | ItemLine | ChoresLine | PerksLine | SideLine | BondLine | HouseLine | HouseMissesLine
+  | MovedLine | LevelLine | VowsLine
 
+/** §5 on v4 (F54 decision 9; RM45): a household milestone reached, as the married count passed 1, 5, 10, 15 or 20. */
+export interface HouseholdNews {
+  kind: 'household'
+  married: number
+}
 /** §5 on v4: v3's news without its roster lines (`joined`, `gate`, `left`): arrivals are §4's, and the Gate has no
- * visitors. Rank lines' `outfitId` holds the roster's key, her character id (decision 5). */
-export type NewsLineV4 = Exclude<NewsLine, { kind: 'joined' | 'gate' | 'left' }>
+ * visitors; and the household's milestones (F54). Rank lines' `outfitId` holds the roster's key, her character id
+ * (decision 5). */
+export type NewsLineV4 = Exclude<NewsLine, { kind: 'joined' | 'gate' | 'left' }> | HouseholdNews
 
 /** The morning on save v4: v3's sections with §4 `bonds: []` replaced by `hearts`. */
 export interface MorningSummaryV4 {

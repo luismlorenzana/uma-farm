@@ -4,6 +4,7 @@
 // talents, the What step (areas and spots, or what the Warehouse holds for a station), the sizes in days, its words and
 // its actions. A station is locked until built: its quick look and page show Build · 1,500g. Loaded on demand.
 import {
+  farmHome,
   ACTIVITY_NAMES, farmEnvV3, farmPlace, goodName, isStation, leaving, loopKinds, loopRefusalText, loopWorld, PLACE_ACTIVITY, parseStockKey, STATION_RULES, stationBuilt,
   stationLock, tendedBlock, workNow, type GatherPlace, type LoopPlaceId, type LoopWorkRequest, type FarmSave, type StationId, type TalentOf,
 } from '@farm/domain'
@@ -148,7 +149,7 @@ function PlaceBody({ save, place, say }: { save: FarmSave; place: WorkPlaceId; s
   const stopped = Object.values(work.settled.work).filter((row) => row.dropped?.slot.building === place)
   // The Uma the job sheet has picked, which its sizes read (her rank and talent), lifted from its What step.
   const [sheetUma, setSheetUma] = useState<string | null>(null)
-  const rows = useMemo((): JobRow[] => umaRows(save, save.dorm.home, view?.album ?? new Map(), talents.table, view?.roster ?? []).map((row) => {
+  const rows = useMemo((): JobRow[] => umaRows(save, farmHome(save), view?.album ?? new Map(), talents.table, view?.roster ?? []).map((row) => {
     const tends = tendedBlock(save, row.id)
     const away = leaving(save, row.id)
     return { ...row, level: row.ranks[activity].rank, note: tends ? `Tends Block ${tends}` : away ? 'Leaves tomorrow' : rankTalent(row, activity), tends, leaving: away }

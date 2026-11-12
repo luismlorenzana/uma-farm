@@ -1,0 +1,104 @@
+{
+  "scenes": [
+    {
+      "at": 5,
+      "open": [
+        { "place": "orchard-bench" },
+        { "narrate": "Boots of every size stand by the orchard gate, and somebody has strung lanterns between the trees." },
+        { "say": "marta-quill", "line": "I brought the long table from the shop. You lot need a bigger one now." }
+      ],
+      "each": {
+        "9000001": [
+          { "say": "9000001", "line": "I planted a row of beans for every name at this table, {farmer}. Count them later.", "emote": "happy" }
+        ],
+        "9000002": [
+          { "say": "9000002", "line": "The lanterns were my idea. The ladder was not.", "emote": "laughing" }
+        ],
+        "9000003": [
+          { "say": "9000003", "line": "It's loud. I like it. Don't tell anyone I said that.", "emote": "shy" }
+        ]
+      },
+      "close": [
+        { "narrate": "The lanterns burn down one by one, and nobody hurries home, because home is right here." }
+      ]
+    },
+    {
+      "at": 10,
+      "open": [
+        { "place": "dorm-porch" },
+        { "narrate": "Rain on the porch roof. The whole household squeezed under one awning, and still room for the kettle." },
+        { "say": "ben-carver", "line": "When I kept this farm it was me and a goat. Look at it now." }
+      ],
+      "each": {
+        "9000001": [
+          { "say": "9000001", "line": "Rain's good for the rows. And for sitting close.", "emote": "tender" }
+        ],
+        "9000002": [
+          { "say": "9000002", "line": "I counted the mugs. We need more mugs, {farmer}.", "emote": "thinking" }
+        ],
+        "9000003": [
+          { "say": "9000003", "line": "The pond will be full tomorrow. I'll catch breakfast for everyone.", "emote": "happy" }
+        ]
+      },
+      "close": [
+        { "narrate": "The rain stops before anyone notices. Nobody moves for a while anyway." }
+      ]
+    },
+    {
+      "at": 15,
+      "open": [
+        { "place": "overlook" },
+        { "narrate": "From the Overlook the homestead's roofs make a little village of their own, smoke rising from every chimney." },
+        { "say": "hollis-pryor", "line": "The town council asked me what to call this end of the valley. I said I'd ask you." }
+      ],
+      "each": {
+        "9000001": [
+          { "say": "9000001", "line": "Call it home. It's what we say anyway.", "emote": "tender" }
+        ],
+        "9000002": [
+          { "say": "9000002", "line": "Fifteen roofs, and I've fixed the gutters on all of them.", "emote": "laughing" }
+        ],
+        "9000003": [
+          { "say": "9000003", "line": "From up here it looks small. It isn't. It's the biggest thing I have.", "emote": "shy" }
+        ]
+      },
+      "close": [
+        { "narrate": "The Mayor writes something down, crosses it out, and writes \"Home\" instead." }
+      ]
+    }
+  ],
+  "houseLines": {
+    "9000001": [
+      "Kettle's on. You sleep like a fallen fence post, {farmer}.",
+      "I already watered the porch pots. Sit, have the good cup.",
+      "The rows can wait ten minutes. Stay."
+    ],
+    "9000002": [
+      "I found a nest in the gutter. We're keeping it.",
+      "Breakfast is whatever I find on the way back from the woods."
+    ]
+  },
+  "finale": {
+    "open": [
+      { "place": "festival" },
+      { "narrate": "The whole valley comes up the festival road for the Great Harvest. Every table is borrowed and every lantern lit." },
+      { "say": "hollis-pryor", "line": "Twenty weddings on one farm. The town's never seen a harvest like it, and neither have I." }
+    ],
+    "play": { "game": "dance", "prompt": "Lead the harvest dance." },
+    "each": {
+      "9000001": [
+        { "say": "9000001", "line": "First row I ever planted was beside yours. Every row since, too.", "emote": "tender" }
+      ],
+      "9000002": [
+        { "say": "9000002", "line": "I wove the crowns for the tables. Yours has the most acorns. On purpose.", "emote": "laughing" }
+      ],
+      "9000003": [
+        { "say": "9000003", "line": "I thought the quiet was what I wanted. Then you all happened.", "emote": "shy" }
+      ]
+    },
+    "close": [
+      { "narrate": "The music goes on past midnight. Somewhere in it, the whole household is dancing at once." },
+      { "say": "marta-quill", "line": "Same time next year, then. The farm's not done yet." }
+    ]
+  }
+}

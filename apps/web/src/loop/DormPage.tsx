@@ -4,7 +4,7 @@
 // called off until then. The pickers are uma-kit's, over the roster's rows. On save v4 (F46 decision 12) it's the Dorm for
 // 20: eight levels, and a level that brings an arrival says so ("Level 4 · 9 beds · someone new arrives"), never who.
 // Loaded on demand.
-import { arriving, bedsFor, dormBought, dormLevelsOf, freeBeds, leaving, nextDorm, swapBlock, type FarmSave } from '@farm/domain'
+import { atHome, arriving, bedsFor, dormBought, dormLevelsOf, freeBeds, leaving, nextDorm, swapBlock, type FarmSave } from '@farm/domain'
 import { FaceTile, UmaPicker } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -57,7 +57,8 @@ function Dorm({ save }: { save: FarmSave }) {
     setNote(null)
     action.then(() => done && setNote(done), (err: unknown) => setError(errorWords(err)))
   }
-  const away = Object.keys(save.roster).filter((id) => !save.dorm.home.includes(id))
+  // F54: a spouse in her house is on the farm, not away.
+  const away = Object.keys(save.roster).filter((id) => !atHome(save, id))
   const rows = useMemo(() => umaRows(save, Object.keys(save.roster), view?.album ?? new Map(), talents.table, view?.roster ?? []), [save, view, talents.table])
   const byId = new Map(rows.map((row) => [row.id, row]))
   const status = (id: string): string => {

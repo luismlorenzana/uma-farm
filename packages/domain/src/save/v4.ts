@@ -10,6 +10,7 @@
 // outfit is a lookup in the story pack (`outfitOf`, `story/pack.ts`). The shared rules (the Fields, gathering, stations,
 // ranks, the bin, the night) take `FarmSave`, v3 or v4, and branch on `save.version`, never on the web's switch.
 import type { WorkRow } from '@luismlorenzana/uma-work'
+import { DAYS_PER_YEAR } from '../farm/calendar'
 import { START_GOLD, START_SEEDS } from '../farm/farm'
 import { ACTIVITIES, type Activity } from '../farm/ranks'
 import { seedId, type CropId } from '../goods/ids'
@@ -134,18 +135,55 @@ export interface TodayV4 {
 /** A day's `today` before anything's done (newSaveV4; night step 7 clears to it). */
 export const newTodayV4 = (): TodayV4 => ({ chats: [], gifts: [], praise: [], praised: [], events: [], asked: [], evenings: [], invites: [], bonds: {}, ring: 0, reception: 0 })
 
-/** A house on the homestead (RM41; F54's to fill): house 0 is the Farmhouse. */
+/** A house on the homestead (RM41; F54 decision 1): house 0 is the Farmhouse (two rooms, never extended), houses 1–6 are
+ * appended as they're built, each named by you. */
 export interface House {
   name: string
   extended: boolean
 }
+/** The homestead (RM41–RM46; F54 decision 1). **Who lives where is one source, `love.house`** (D48 call 8): a spouse's
+ * room is in the house of that number, and she has no Dorm bed. */
 export interface Homestead {
   houses: House[]
-  /** Tonight's house, or null before a choice. */
+  /** Tonight's house (Sleep at, RM22), or null before a pick: the night takes the default then. */
   tonight: number | null
-  /** The last night slept in each house; 0 never. */
+  /** "Her room" tonight (RM44): a birthday-alone wisher on her birthday, whose house is `tonight`; her morning is hers
+   * alone. Null on any other night. */
+  alone: CharacterId | null
+  /** The last night slept in each house (the evening's day); 0 never. */
   slept: number[]
+  /** The furniture set (RM45, F54 decision 9): empty until 5 married, then five pieces, each the house it stands in or null. */
+  furniture: (number | null)[]
+  /** The married count the night last saw (F54 decision 9): household milestones are news once, as it passes 1, 5, 10, 15
+   * and 20, and household scenes are Ready from the morning after. */
+  married: number
+  /** The morning the finale came (RM46: the morning after the 20th wedding), the Festival of Vows' day of the year; 0
+   * before. */
+  finale: number
 }
+
+/** A house's rooms (RM41): two, four once extended. */
+export const HOUSE_ROOMS = 2
+export const EXTENDED_ROOMS = 4
+export const roomsOf = (house: Pick<House, 'extended'>): number => (house.extended ? EXTENDED_ROOMS : HOUSE_ROOMS)
+/** The homestead's places: the Farmhouse and six houses (RM41). */
+export const MAX_HOUSES = 7
+/** The furniture set's pieces (RM45). */
+export const FURNITURE_PIECES = 5
+/** The household milestones (RM45): the homestead at 1, household scenes at 5, 10 and 15, the finale at 20. */
+export const HOUSEHOLD_MILESTONES: readonly number[] = [1, 5, 10, 15, 20]
+/** The finale's count (RM46): 20 married. */
+export const FINALE_MARRIED = 20
+
+/** A house's residents (RM42): the spouses whose room is there, in wedding order (her wedding's day, then her id). */
+export function residentsOf(save: Pick<SaveV4, 'love'>, house: number): CharacterId[] {
+  return Object.entries(save.love).filter(([, love]) => love.house === house)
+    .sort(([a, x], [b, y]) => (x.wed ?? 0) - (y.wed ?? 0) || Number(a) - Number(b)).map(([id]) => id)
+}
+
+/** Whether a day is the Festival of Vows (RM46; F54 decision 13): the finale's day of the year, each later year. */
+export const vowsOn = (homestead: Pick<Homestead, 'finale'>, day: number): boolean =>
+  homestead.finale > 0 && day > homestead.finale && (day - homestead.finale) % DAYS_PER_YEAR === 0
 
 /** Save v4 (RM10; decision 7). */
 export interface SaveV4 {
@@ -231,7 +269,7 @@ export function newSaveV4(uid: string, now: string): SaveV4 {
     board: [],
     diary: { shipped: {}, milestones: [], records: {}, read: [] },
     farm: { points: 0, chapter: 1, goals: {}, festivals: [], counts: {} },
-    homestead: { houses: [FARMHOUSE], tonight: null, slept: [0] },
+    homestead: { houses: [FARMHOUSE], tonight: null, alone: null, slept: [0], furniture: [], married: 0, finale: 0 },
     memories: {},
     arrivals: [],
     summary: null,
