@@ -24,12 +24,11 @@
 - **Claude commits and pushes to `main`** in Conventional Commits style. Delegated agents use a branch and a pull request.
   Claude merges and deploys its own packets unasked; ChatGPT may merge its own. When Claude reviews a ChatGPT pull
   request, it sends back only must-fixes (a broken rule, original-game content, a failing check, a real bug).
-- **Art is split by kind (uma-platform P126, D45; the owner, 2026-11-11):** **ChatGPT draws character art end to end**
-  (Uma sprites and keys, enemies, the cast's busts and any other character portrait) and the painted full-colour art
-  that needs image generation (kits such as `kit-farm`, after its character work), and publishes those uma-art releases.
-  **Claude draws the code-drawn pixel art** (uma-platform's `scripts/pixel-art`: items, UI marks, crests, 48 px
-  buildings, animal icons) **and the art tools,** and versions and publishes those uma-art releases in a uma-platform
-  session. A packet with both splits into parts, one per worker. The uma-farm packet that first uses the art pins it. If
+- **Art is split by kind (uma-platform P126, D45, D66; the owner, 2026-11-11 and 2026-11-12):** **ChatGPT draws
+  character art only, end to end** (Uma sprites and keys, farm-work poses, enemies, the cast's busts and any other
+  character portrait), and publishes those uma-art releases. **Claude draws all other art in code** (uma-platform's
+  `scripts/pixel-art`: items, UI marks, crests, 48 px buildings, animal icons; and the HD-2D kits such as `kit-farm`)
+  **and the art tools,** and versions and publishes those uma-art releases in a uma-platform session. A packet with both splits into parts, one per worker. The uma-farm packet that first uses the art pins it. If
   a ChatGPT code packet blocks a release, Claude takes it.
 
 ## Autonomy: what you do without asking

@@ -1,7 +1,7 @@
 # kit-farm: the farm kit's contract (F16)
 
 > **Status: 2026-11-11, F16 (D62).** The contract `kit-farm` is drawn to: the full-colour 2D art the HD-2D stage builds
-> the farm from, in uma-quest's kit format. ChatGPT draws it from this doc in F9, as a uma-art family, in two waves. The
+> the farm from, in uma-quest's kit format. Claude draws it in code from this doc in F9 (D66), as a uma-art family, in two waves. The
 > farm's stand-in kit (F11) draws every name here in flat colours until wave 1 ships. Visual page:
 > [previews/kit-farm.html](previews/kit-farm.html).
 >

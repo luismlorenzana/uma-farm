@@ -1,12 +1,12 @@
 # F9 — `kit-farm`: the HD-2D farm's kit, in two waves
 
-**uma-platform's `packages/art` (uma-art) · ChatGPT (D45, uma-platform P126) · M · Needs: F16 ✓ (the contract,
+**uma-platform's `packages/art` (uma-art) · Claude, in a uma-platform session (D66) · M · Needs: F16 ✓ (the contract,
 [kit-farm.md](../../design/kit-farm.md)) · Unblocks: F11 pins wave 1 · Milestone M7, the HD-2D farm**
 
-> **Take it in uma-platform** ("Take F9, wave 1"). It's painted, full-colour art that needs image generation, so it's
-> ChatGPT's end to end (D45): drawing, the export, the review sheets and the uma-art release. **The owner's priority
-> (D61): wave 1 comes before ChatGPT's busts** (F25 part B, F29 part B), since the HD-2D farm leads now and the busts have
-> stand-ins. Wave 2 waits until M5's places come to the stage. Its own go comes from the owner or from F11's report.
+> **Take it in a uma-platform session** ("Take F9, wave 1"). ChatGPT draws character art only (the owner, 2026-11-12,
+> D66), so the kit is **Claude's, drawn in code**, end to end: the drawing code, the export, the review sheets and the
+> uma-art release, as F55's pixel art was. Wave 1 first, since the HD-2D farm leads (D61). Wave 2 waits until M5's places
+> come to the stage; its own go comes from the owner or from F11's report.
 
 ## Why
 
@@ -35,6 +35,9 @@ waits on the art, and the art swaps in with no code change (KF14).
   - a `set` on building pieces;
   - doors two columns wide;
   - mounted pieces placed by the design.
+- **How the farm's code-drawn art is made today:** uma-platform's `scripts/pixel-art` (`pnpm art:draw`), its tests and
+  legacy freezes; F55's pieces (D50) are the latest. The kit is drawn the same way, deterministic code in place of
+  painted masters, at full colour rather than pixel density.
 - **The style references:**
   - uma-platform's sprites [format.md §10](https://github.com/luismlorenzana/uma-platform/blob/main/docs/sprites/format.md#10-style),
     the light and the shading;
@@ -61,6 +64,10 @@ waits on the art, and the art swaps in with no code change (KF14).
 
 ### Decided here
 
+0. **Drawn in code, painted in look** (D66). Each frame is drawn by deterministic code (layered shapes, gradients,
+   seeded procedural textures for planks, plaster, stone, roof tiles, thatch, grass, soil and water; painted ambient
+   occlusion and top-left highlights; antialiased edges into transparency), so the export is byte for byte the same
+   each run and the code is the master (P97). The cheapest look that reads well at one texel a pixel (lean assets).
 1. **Two parts, one a wave.** Wave 1 is this packet's first delivery and stands alone. Wave 2 adds its frames to the same
    family in a later minor, and every frame from wave 1 stays byte-identical (a legacy test, as the pixel families do).
 2. **The family's layout** is kits.md §2's: `atlas.png` (and `atlas-1.png` if a second page is needed), `atlas.json`,
@@ -85,12 +92,12 @@ waits on the art, and the art swaps in with no code change (KF14).
 
 ## Do
 
-1. **Draw wave 1's 87 frames** to the contract's roles and sizes (KF8, kits.md §3), in KF9's style, as authored masters
-   with their prompts and provenance (P97).
+1. **Draw wave 1's 87 frames in code** to the contract's roles and sizes (KF8, kits.md §3), in KF9's style (decision
+   0), with tests like the pixel families' (every name, role, size and foot; every earlier frame byte-identical).
 2. **Export** them into `kit-farm/atlas.png` and `atlas.json` with a deterministic script, byte for byte the same each
    run. Add the family to `packages/art/README.md` (its frames, roles, sets and waves), and add the changeset.
 3. **Make the review sheets** (decision 4).
-4. **Open a pull request in uma-platform,** merge it once its checks pass, version and publish uma-art, and read the
+4. **Commit and push to uma-platform's `main`** (its CLAUDE.md), then `pnpm version-packages`, push, and read the
    release back: its `kit-farm/atlas.json` lists every wave-1 name in kit-farm.md §6. Log the P-decision.
 5. **Wave 2,** on its go: the 30 frames in the same way, as a second minor.
 
@@ -107,8 +114,8 @@ waits on the art, and the art swaps in with no code change (KF14).
 
 ## Deliver
 
-In uma-platform: the uma-art release, published by ChatGPT (D45, P126), and a P-decision. Then in uma-farm, on a branch
-and a pull request it merges itself, for each wave:
+In uma-platform: the uma-art release, published by its Claude session (D66), and a P-decision. Then in uma-farm, on a
+branch and a pull request for the main session to merge, for each wave:
 - a Done row in [the handoff](../README.md) with the release's version and the review sheets;
 - the wave's D-decision in [decisions.md](../../decisions.md), fetching `main` first for the number.
 
@@ -129,5 +136,6 @@ after the release).
 
 ## Left to the worker
 
-The drawing itself, within the contract; the exact colours within KF9; how many variants look natural, within the
-counts; the review sheets' layout; anything the export needs that the farm doesn't see.
+The drawing code's design (a `scripts/kit-art` beside `scripts/pixel-art`, or a family inside it), within the contract;
+the exact colours within KF9; how many variants look natural, within the counts; the review sheets' layout; anything the
+export needs that the farm doesn't see.
