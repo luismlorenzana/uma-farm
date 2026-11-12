@@ -148,6 +148,9 @@ export * from './romance/homestead'
 export * from './romance/household'
 export * from './story/bench'
 export * from './story/pack'
+// The story pack's release (F56; RM58): `story.json` and its hash-named files, and the pack a release holds, its routes
+// and pairs read on demand.
+export * from './story/release'
 export * from './story/stand-in'
 export * from './story/opening-v4'
 export {
