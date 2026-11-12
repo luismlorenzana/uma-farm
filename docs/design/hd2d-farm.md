@@ -2,7 +2,7 @@
 
 > **Revised 2026-11-11: it leads now (the owner, D61).**
 > - **FR2's wait is gone:** the owner waived uma-quest's measured plays (uma-quest D21). F57 asked
->   uma-platform for the shared stage (D63), and it shipped as uma-stage 0.1.0 and 0.2.1 (D64, D65).
+>   uma-platform for the shared stage (D63), and it shipped as uma-stage 0.1.0 and 0.2.1 (D69, D65).
 > - **FR5's layout and FR15's kit are re-derived for today's farm** (23 places, the Dorm, the Gate, the homestead) in
 >   [kit-farm.md](kit-farm.md), F16 (D62). Read FR5's Wilds places as history.
 > - **FR15's three stages a place are revised:** places keep one look, and the Umas show the work (KF5).

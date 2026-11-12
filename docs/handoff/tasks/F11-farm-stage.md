@@ -11,7 +11,7 @@ when it has shipped, else the stand-in · Unblocks: F12 (Umas at work) · Milest
 
 The farm moves onto the HD-2D stage (M7, [hd2d-farm.md](../../design/hd2d-farm.md), accepted D21; led by the owner,
 D61). The stage now exists as `@luismlorenzana/uma-stage` 0.2.1, with the farm's openings: a portrait layout, the
-`farm` kit kind, `parseFarmDesign`, `BandStage`, taps, walkers, standees and grades (D64, D65). The farm kit's contract is
+`farm` kit kind, `parseFarmDesign`, `BandStage`, taps, walkers, standees and grades (D69, D65). The farm kit's contract is
 written (F16, [kit-farm.md](../../design/kit-farm.md)), and a stand-in of every frame ships with the stage
 (`standInFarmKit()`). This packet puts the farm on it.
 
@@ -30,7 +30,7 @@ written (F16, [kit-farm.md](../../design/kit-farm.md)), and a stand-in of every 
   built the way this packet builds the farm.
 - [decisions.md](../../decisions.md):
   - D61 (the owner's pace);
-  - D62 (F16), D64 and D65 (the stage's releases and the two findings), D66 (art);
+  - D62 (F16), D69 and D65 (the stage's releases and the two findings), D66 (art);
   - D31 (g) and D53 (the map's places and pips);
   - D54 (the homestead's rows).
 - The manual: [days.md](../../game/days.md) (the map, Tonight), [architecture.md](../../game/architecture.md).
