@@ -7,8 +7,8 @@
 >
 > It rests on uma-quest's [kits.md](https://github.com/luismlorenzana/uma-quest/blob/main/docs/design/kits.md) (the
 > format: atlas, roles, sizes, style, delivery), [hd2d-farm.md](hd2d-farm.md) (FR5, FR15, FR16), the farm as built
-> (`farm/places.ts`'s 23 places, `romance/homestead.ts`'s homestead) and [F57](../handoff/tasks/F57-uma-stage.md), the
-> stage request that opens the format for a farm. It replaces FR5's layout, which was drawn for the Wilds' places.
+> (`farm/places.ts`'s 23 places, `romance/homestead.ts`'s homestead) and F57, the
+> stage request that opened the format for a farm: uma-stage 0.2.1's [farm openings](https://github.com/luismlorenzana/uma-platform/blob/main/packages/stage/README.md#the-farms-openings-020-st2) (D65). It replaces FR5's layout, which was drawn for the Wilds' places.
 
 ## The short answer
 
@@ -35,7 +35,7 @@
 ## 1. The farm it's drawn for (KF1, KF2)
 
 **KF1: one kit, kind `farm`.** `kit-farm` ships as a uma-art family in uma-quest's format (kits.md §2–§5), with four
-openings that [F57](../handoff/tasks/F57-uma-stage.md) asks of the shared stage:
+openings that F57 asked of the shared stage, shipped in uma-stage 0.2.1 ([its README](https://github.com/luismlorenzana/uma-platform/blob/main/packages/stage/README.md#the-farms-openings-020-st2), D65):
 1. **A third kind, `farm`,** with its own required list (§6).
 2. **A `set` on building pieces,** so a design can pick a building's material.
 3. **Doors two columns wide** (256 × 256).
@@ -76,6 +76,9 @@ Everything else is kits.md as written:
 - **Levels:** the farm's ground is **level 1**. The pond and the quarry pit are **level 0**, so their banks are risers
   from the geometry with no edge art (kits.md D15 (3)). The Mine's cliff is a `wall` along its plot's back.
 - **F11 sets the exact tiles:** the lanes between columns, the Gate's opening and the path network.
+- **Two findings from uma-stage 0.2.1 that F11 settles (D65):** at 35° a one-storey roof hides about 4 tiles behind it
+  (a two-storey about 7, the Gate's arch about 5), so 4-tile bands hide the band above's apron and path; and 9 tiles
+  (1,152 px at one texel a pixel) overflow a 2× phone (750 to 828 px). Neither changes a frame in this contract.
 
 ## 2. Buildings (KF3, KF4)
 
@@ -233,7 +236,7 @@ doesn't sell it.
 
 ## 6. What the kit must hold (KF12)
 
-**KF12: `kitMissing` for kind `farm`** (F57 adds the list) checks wave 1's frames by name:
+**KF12: `kitMissing` for kind `farm`** (uma-stage 0.2.1's `KIT_REQUIRED.farm`, and `FARM_WAVE_2` for wave 2) checks wave 1's frames by name:
 - **Roles:** `floor*`, `riser*`, `building-wall*`, `window*`, `door*`, `roof*`. Each of the `plank` and `plaster` sets has
   2 walls, 2 windows and a door, and each of the four roof sets has 2 roofs.
 - **Floors:**

@@ -10,7 +10,7 @@
 
 ## Why
 
-The farm moves onto the HD-2D stage (M7): uma-quest's engine, shared through uma-platform ([F57](F57-uma-stage.md)). The
+The farm moves onto the HD-2D stage (M7): uma-quest's engine, shared through uma-platform as uma-stage 0.2.1 (F57, D65). The
 stage builds a 3D-looking world from a 2D kit, so the farm needs one. F16 wrote its contract, which lists:
 - every frame, with its role, size and foot;
 - the places' recipes;
@@ -30,7 +30,7 @@ waits on the art, and the art swaps in with no code change (KF14).
   - §8, how a kit is delivered.
 
   `kit-forest` (uma-art 2.23.0, uma-quest's Q7) is the model kit, drawn the same way.
-- **The openings the farm kind needs:** [F57](F57-uma-stage.md)'s request:
+- **The openings the farm kind needs,** shipped in uma-stage 0.2.1 ([its README](https://github.com/luismlorenzana/uma-platform/blob/main/packages/stage/README.md#the-farms-openings-020-st2), D65):
   - kind `farm`;
   - a `set` on building pieces;
   - doors two columns wide;
@@ -65,17 +65,18 @@ waits on the art, and the art swaps in with no code change (KF14).
    family in a later minor, and every frame from wave 1 stays byte-identical (a legacy test, as the pixel families do).
 2. **The family's layout** is kits.md §2's: `atlas.png` (and `atlas-1.png` if a second page is needed), `atlas.json`,
    `masters/`, the export script, and `review/`.
-3. **`atlas.json`'s new fields** follow F57:
+3. **`atlas.json`'s new fields** follow uma-stage 0.2.1's parser (`parseKitAtlas`, `KIT_REQUIRED.farm`, `FARM_WAVE_2`):
    - each building piece carries `"set": "<set>"`;
    - a wide door is a `door` frame 256 wide;
    - mounted frames (`mill-sails`, `chimney`, `forge-chimney`, `awning`, `flower-box`, `herb-box`, `mine-mouth`) carry
      role `sign` with their `foot`.
 
-   If F57's parser names a field differently when it lands, the export follows the parser, and the frames don't change.
+   A mount may be a `sign` or a `prop` frame, placed at its foot (0.2.1). The export follows the parser; the frames don't
+   change.
 4. **Review sheets** (KF13, kits.md §8):
    - the kit on light and dark grounds;
    - a **sample band**: the Fields, the Mill and an overgrown Coop over a path row, from a stand-in render. The builder
-     replaces it once F57 ships;
+     can now be uma-stage 0.2.1's builder (`BandStage` over a `FarmDesign`, as its `SAMPLE_FARM`);
    - a scale sheet with uma-quest's stand-in traveler beside a door, a tree and the bin;
    - every ripe crop family in a row.
 
