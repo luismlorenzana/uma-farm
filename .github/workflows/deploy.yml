@@ -30,6 +30,9 @@ env:
   HOSTING_URL: https://${{ vars.HOSTING_SITE || 'uma-farm' }}.web.app
   FIRESTORE_DATABASE: ${{ vars.FIRESTORE_DATABASE || 'farm' }}
   MASTER_BUCKET: ${{ vars.MASTER_BUCKET || 'uma-platform-master-data' }}
+  # The story pack's private bucket (F56 decision 6). No default: until the repository variable is set, Cloud Run gets an
+  # empty value, which names no bucket, so /api/content/… answers 404.
+  STORY_BUCKET: ${{ vars.STORY_BUCKET }}
   PUSH_AUDIENCE: ${{ vars.PUSH_AUDIENCE }}
   FARM_API_URL: ${{ vars.FARM_API_URL }}
   POST_CALLERS: ${{ vars.POST_CALLERS }}
@@ -135,6 +138,7 @@ jobs:
             PERSISTENCE=firestore
             FIRESTORE_DATABASE=${{ env.FIRESTORE_DATABASE }}
             MASTER_BUCKET=${{ env.MASTER_BUCKET }}
+            STORY_BUCKET=${{ env.STORY_BUCKET }}
             ALLOWED_ORIGIN=${{ env.HOSTING_URL }}
             ALLOWED_EMAIL=${{ vars.ALLOWED_EMAIL }}
             BUILD_ID=${{ github.sha }}
