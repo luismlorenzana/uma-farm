@@ -54,9 +54,9 @@ after it), and a v2 from the Wilds (F4–F6, retired in F24) migrates on its fir
 Main JS is 164.0 KB gzip against the 180 KB budget (FM20) as CI measured F24: one build, size-checked by `pnpm build`.
 Firebase, the farm's pages, sheets, actions, boot and night, the scene player and the goals' rules, and the Hub map's
 Phaser scene (`createHubGame`, 377 KB gzip) load on demand; `scripts/check-size.mjs`'s `LAZY_MODULES` refuses them in
-the initial JS. **F11** measured both builds at 171.24 KB (deployed) and 171.55 KB (romance), the switch adding about
-0.4 KB; the stage's chunk (`FarmStage`: three.js, uma-stage's band stage and stand-in kit, the farm's design) is 160.4 KB
-gzip (615 KB raw) and loads only with the switch on, `LAZY_MODULES` holding three.js, uma-stage's band stage and stand-in
+the initial JS. **F11**'s CI measured both builds at 171.68 KB (deployed) and 171.95 KB (romance), the switch adding
+about 0.4 KB; the stage's chunk (`FarmStage`: three.js, uma-stage's band stage and stand-in kit, the farm's design) is
+161.5 KB gzip (615 KB raw) and loads only with the switch on, `LAZY_MODULES` holding three.js, uma-stage's band stage and stand-in
 kit, `FarmStage.tsx`, `farm-stage.ts` and the domain's `farm/stage.ts`. Workbox precaches it with the rest of the app.
 
 **The farm's design (F11):** `@farm/domain`'s `farm/stage.ts` builds the save as uma-stage's `FarmDesign` (`farmDesign`,
