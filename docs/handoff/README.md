@@ -5,7 +5,7 @@
 > - **The HD-2D farm (M7):** F16, [the farm kit's contract](../design/kit-farm.md) ([page](../design/previews/kit-farm.html)),
 >   is done (D62); [F9](tasks/F9-kit-farm.md) is the kit's art, drawn in code by Claude in a uma-platform session (D66); and
 >   F57, the shared stage, shipped as uma-stage 0.1.0 and 0.2.1 (D64, D65). [F11](tasks/F11-farm-stage.md) (the farm on the stage) is
->   written (D68) and builds once the stage request ST3 ships; then F12–F15.
+>   written (D68) and ready to build on uma-stage 0.3.0 (ST3 shipped); then F12–F15.
 > - **The romance core** (F46–F55) is built and deployed dark behind `VITE_FARM_ROMANCE` (D51–D59). **F56** delivers the
 >   private story and goes live with the wipe: its bucket has the owner's yes (D60), and it waits for the story pack in
 >   `content/story/` on this Mac.
@@ -71,7 +71,7 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 | M7, the HD-2D farm | F16 | [The farm kit's contract](../design/kit-farm.md) ([page](../design/previews/kit-farm.html)): KF1–KF14, every frame, the places' recipes, the crop families, two waves | Claude | S | hd2d-farm.md ✓ | **Done** (D62), below |
 | | F57 | Both apps: the HD-2D stage as a shared package, `uma-stage`: release 1 the move, release 2 the farm's openings | A uma-platform Claude session | L there | — | **Done** (0.1.0 and 0.2.1, D64, D65), below |
 | | F9 | [`kit-farm`, the farm kit's art, drawn in code](tasks/F9-kit-farm.md), wave 1 (87 frames) then wave 2 (30) | Claude, a uma-platform session (D66) | M | F16 ✓ | [Written](tasks/F9-kit-farm.md) (D62, D66) |
-| | F11 | [The farm on the shared stage](tasks/F11-farm-stage.md): Home as the HD-2D farm on the stand-in kit, an opt-in preview (Account → HD-2D farm), with the stage request ST3 (the occluder fade, fit-to-width) | Claude | M | uma-stage 0.2.1 ✓, ST3 | [Written](tasks/F11-farm-stage.md) (D68); builds once ST3 ships |
+| | F11 | [The farm on the shared stage](tasks/F11-farm-stage.md): Home as the HD-2D farm on the stand-in kit, an opt-in preview (Account → HD-2D farm), with the stage request ST3 (the occluder fade, fit-to-width) | Claude | M | uma-stage 0.3.0 ✓ (ST3) | [Written](tasks/F11-farm-stage.md) (D68); ready to build |
 | | F12 | Umas at work: sprites and standees walking the paths, the taps, Ready bubbles, the live-set cap (FR9–FR14) | Claude | M | F11 | To write |
 | | F13, F14 | The Restaurant's serving game; the Forge's merge game, on the stage (FR19, FR20) | Claude | M | F8's contract, F11 | To write |
 | | F15 | The farm-work animations, a request to the sprite pipeline (FR11) | Claude | S | F12, the owner's go | To write |

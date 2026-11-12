@@ -1,6 +1,6 @@
 # F11 — The farm on the shared stage: Home as the HD-2D farm, on the stand-in kit
 
-**uma-farm · Claude · M · Needs: uma-stage 0.2.1 ✓ (F57, D65) and the stage request ST3 (below) · Uses F9's `kit-farm`
+**uma-farm · Claude · M · Needs: uma-stage 0.3.0 ✓ (F57, D65; ST3, D68) · Uses F9's `kit-farm`
 when it has shipped, else the stand-in · Unblocks: F12 (Umas at work) · Milestone M7, the HD-2D farm**
 
 > **One piece, checked back with the owner (D61).** This packet draws the farm on the stage: places, crops, the
@@ -43,6 +43,12 @@ written (F16, [kit-farm.md](../../design/kit-farm.md)), and a stand-in of every 
     (`HOMESTEAD_PLACES`, `homesteadShown`) and `fields/` (blocks, plots, crops).
 
 ## The stage request (uma-platform ST3), sent with this packet
+
+> **Shipped: uma-stage 0.3.0** (uma-platform P146, 2026-11-12), both options off unless asked: `fade: true | { opacity,
+> markers, ms }` (a marker counts by the middle half of its tile), plus `setFadeMarkers(kinds | predicate)` to change which
+> markers count at any time; and `fit: 'width'` (0.65 at 375 pt on 2×, 0.72 at 414 pt; never up; the kit mipmapped only
+> while scaled, sprites nearest). uma-quest pins 0.3.0 unchanged (its D57). Its finding: with the default kinds on KF2's
+> layout, 7 of the sample's 10 buildings cover some slot and stand faded at rest, so decision 7 narrows the targets.
 
 uma-stage 0.2.1's two findings (D65) are the farm's to settle. Both are settled by **two opt-in stage options**, asked of
 the uma-platform session as "Both apps" (ST3, a uma-stage minor). uma-quest changes nothing.
@@ -132,8 +138,13 @@ shipped.**
 6. **Seasons:** four `StageGrade`s from `DAY_GRADE`, tuned on the stand-in: spring fresh and soft, summer bright and
    warm, autumn an amber tint, winter cold and pale with stronger lamps. The calendar's season sets one at load, and End
    the day's morning eases to the next one over a second (instant with reduced motion).
-7. **ST3's options are on:** the occluder fade targets `slot`, `gate` and `lot` markers (and F12's figures later), and
-   fit-to-width is on.
+7. **ST3's options are on, the fade narrowed:**
+   - fit-to-width is on;
+   - the fade's targets are figures (F12's, later) and, through `setFadeMarkers`, **only the slots of the place whose
+     sheet is open**.
+
+   At rest nothing stands faded, so the farm reads whole. When you open a place, the roofs in front of its slots fade so
+   you see them.
 8. **The scroll position:** Home opens on the band of the first place with a Ready Uma, else the Fields, and keeps its
    position between visits for the session (the Hub's behaviour).
 9. **Size and battery:**
@@ -148,7 +159,7 @@ shipped.**
 2. **The stage Home:** `FarmStage.tsx` (lazy): `TurnedStage` (portrait), `BandStage` with the design, the kit (the
    stand-in, or `kit-farm` if pinned), the grade, the overlays and the taps (decisions 4–8).
 3. **The switch:** Account's row, `?stage`, and Home choosing the renderer (decision 1).
-4. **Pin** `@luismlorenzana/uma-stage` 0.2.x (exact; with ST3) and `three` 0.187.0 in `apps/web`, both lazy. Add them to
+4. **Pin** `@luismlorenzana/uma-stage` 0.3.0 (exact) and `three` 0.187.0 in `apps/web`, both lazy. Add them to
    `LAZY_MODULES` and the size checks.
 5. **The manual:** [days.md](../../game/days.md) (the farm's two looks, the switch), and
    [architecture.md](../../game/architecture.md) (the stage, the design, the kit, the preview switch).
@@ -164,7 +175,7 @@ shipped.**
   - the homestead's rows show on a v4 save in the romance build;
   - names and pips follow the camera;
   - a tap on each place opens what the Hub's opens;
-  - a slot behind a roof shows through it (ST3);
+  - with a place's sheet open, its slots behind a roof show through it, and at rest nothing is faded (ST3, decision 7);
   - the season's grade changes after End the day crosses a season;
   - the frame and the Collect all pill sit where they do today.
 - **The owner's phone look**, one line: "Turn on Account → HD-2D farm (preview) at uma-farm.web.app on your phone, scroll
