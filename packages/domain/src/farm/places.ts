@@ -30,6 +30,9 @@ export type PlaceOpens =
   | { by: 'reward'; chapter: number }
   | { by: 'farm-rank'; rank: number }
   | { by: 'later' }
+  /** A house on the v4 homestead (F54 decision 2): House 1 at the first wedding, each later one when the one before stands.
+   * The homestead's own rule reads it (`nextLot`); `opened` never does. */
+  | { by: 'house'; n: number }
 
 export interface FarmPlace {
   id: FarmPlaceId
@@ -106,6 +109,6 @@ export function opened(save: Pick<FarmSave, 'farm'>, opens: PlaceOpens): boolean
     case 'chapter': return save.farm.chapter >= opens.chapter
     case 'reward': return save.farm.chapter > opens.chapter
     case 'farm-rank': return farmRankOf(save.farm.points) >= opens.rank
-    case 'later': return false
+    case 'later': case 'house': return false
   }
 }

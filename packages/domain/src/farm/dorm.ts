@@ -9,7 +9,7 @@ import { LOOP_KINDS } from '../gathering/kinds'
 import { spendGold } from '../save/gold'
 import type { LoopKinds } from '../save/parse-v3'
 import { SaveRuleError } from '../save/rules'
-import { leaving, newRosterUma, tendedBlock, type OutfitId, type SaveV3 } from '../save/v3'
+import { housed, leaving, newRosterUma, tendedBlock, type OutfitId, type SaveV3 } from '../save/v3'
 import { newRosterUmaV4, type FarmSave } from '../save/v4'
 import { BEDS, BEDS_V4, bedsFor, dormMaxLevel, farmRankOf } from './farm'
 
@@ -72,6 +72,7 @@ export function swapDorm<S extends FarmSave>(save: S, out: OutfitId, into: Outfi
   if (!save.roster[out] || !save.dorm.home.includes(out)) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
   if (!save.roster[into]) throw new SaveRuleError('not-owned', 'She isn’t on the roster.')
   if (save.dorm.home.includes(into)) throw new SaveRuleError('bad-job', 'She’s on the farm already.')
+  if (housed(save, into)) throw new SaveRuleError('bad-job', 'She lives in her house.')
   if (arriving(save, into)) throw new SaveRuleError('busy', 'She arrives tomorrow.')
   if (leaving(save, out)) throw new SaveRuleError('busy', 'She leaves tomorrow.')
   const block = tendedBlock(save, out)
@@ -110,7 +111,8 @@ export function settleDormNight<S extends FarmSave>(save: S): { save: S; raised:
   const level = Math.min(dormMaxLevel(save.version), Math.max(save.dorm.level, dormBought(save)))
   const into = new Map(save.dorm.swaps.map((s) => [s.out, s.in]))
   const home = save.dorm.home.map((id) => into.get(id) ?? id)
-  const blocks = save.fields.blocks.map((b) => (b.tender !== null && !home.includes(b.tender) ? { ...b, tender: null } : b))
+  // F54 decision 4: a spouse in her house tends on.
+  const blocks = save.fields.blocks.map((b) => (b.tender !== null && !home.includes(b.tender) && !housed(save, b.tender) ? { ...b, tender: null } : b))
   return {
     save: { ...save, dorm: { level, home, swaps: [] }, fields: { blocks } },
     raised: level > save.dorm.level ? level : null,

@@ -4,7 +4,7 @@
 import { statusOf } from '@luismlorenzana/uma-work'
 import { workNow } from '../farm/calendar'
 import { loopReadyItems } from '../save/work-readings'
-import { leaving, readyPlots, type OutfitId, type SaveV3 } from '../save/v3'
+import { farmHome, leaving, readyPlots, type OutfitId, type SaveV3 } from '../save/v3'
 import type { FarmSave } from '../save/v4'
 
 export interface DaySet {
@@ -28,7 +28,8 @@ export interface DaySet {
 export function daySetState(save: FarmSave): DaySet {
   const now = workNow(save)
   const tending = new Set(save.fields.blocks.filter((b) => b.tender !== null && b.plots.some((p) => p.crop !== null && !p.ready)).map((b) => b.tender!))
-  const idle = save.dorm.home.filter((id) => !leaving(save, id) && statusOf(save.work[id], now) !== 'working' && !tending.has(id))
+  // F54 decision 4: on v4 a spouse in her house is on the farm, so she can be idle too.
+  const idle = farmHome(save).filter((id) => !leaving(save, id) && statusOf(save.work[id], now) !== 'working' && !tending.has(id))
   const umas = Object.values(save.work).filter((row) => loopReadyItems(row, now) > 0).length
   const collect = umas + readyPlots(save)
   return { allSet: idle.length === 0 && collect === 0, idle, collect, badge: idle.length + collect }

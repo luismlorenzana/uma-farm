@@ -17,6 +17,8 @@
 // once reached (`fromHer`). F53 adds her Ring (`ringView`: the engraving from Romance 8, her ring and its bonus, and the
 // better rings in the Warehouse) and R8's engraving in her perks.
 import {
+  homeOf, NEEDS_ROOM, OWN_HOUSE_WISH,
+  atHome,
   ACTIVITY_NAMES, bar, benchOpen, betterRings, bondHearts, bondOf, castOrder, choresTonight, closestFriend, dateOf, dishName, favouriteOf, farmPlace, GIFT_POINTS_V4, goodName, hasPerk, homeOrHoused,
   invitedNow, isGoodId, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, keepsakeQuality, LADDER_COLOURS, ladderOf, levelWords, linePlaces, morningRule, morningsToItem, nextBondHeart,
   pairLevels, pairName, pairOf, PERK_PLACE, perkLineOf, perksFor, readiness, readLevels, ringGrade, ringName, ringPercent, romanceTerms, ROUTE_RUNGS, routeIndex, rungName, SEASON_NAMES, SIDE_BY_SIDE_HEARTS,
@@ -164,12 +166,12 @@ export function heartRows(save: SaveV4, pack: HeartsPack, nameOf: NameOf): Heart
     if (!love) return []
     const state = readiness(save, pack, id)
     const now = bar(love)
-    const home = save.dorm.home.includes(id)
+    const home = atHome(save, id)
     const order = cast.indexOf(id)
     return [{
       id, name: nameOf(id), level: levelWords(love), stage: love.stage, bar: now, heart: heartBar(love, state), state, home,
       invited: invitedNow(save, id), chatted: save.today.chats.includes(id), gifted: save.today.gifts.includes(id),
-      note: rowNote(state, now, home, state.ready ? beatPlace(pack, id, state.rung) : null, nameOf),
+      note: rowNote(state, now, home, state.ready ? beatPlace(pack, id, state.rung) : null, nameOf) ?? roomNote(save, pack, id),
       filters: [...(state.ready ? ['ready' as const] : []), STAGE_FILTER[love.stage], ...(home ? [] : ['away' as const])],
       progress: routeIndex(love), points: love.points, order: order < 0 ? cast.length : order,
     }]
@@ -545,17 +547,25 @@ export function conversationRows(save: Pick<SaveV4, 'bonds' | 'diary' | 'roster'
     || Math.max(rank(x.a), rank(x.b)) - Math.max(rank(y.a), rank(y.b)))
 }
 
-/** Her line, birthday and house under her name (RM53): "Farming · ★ Spring 4 · Rose Cottage". */
+/** Her line, birthday and house under her name (RM53): "Farming · ★ Spring 4 · Rose Cottage"; a spouse waiting for a room
+ * "Needs a room", and softly, an own-house wisher sharing or waiting "She'd love her own house" (F54 decision 14). */
 export function profileLine(save: Pick<SaveV4, 'love' | 'homestead'>, pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string, birthdays: Birthdays): string[] {
   const line = favouriteOf(pack, id)
   const birthday = birthdays.get(id)
-  const house = save.love[id]?.house
-  const named = house === undefined ? undefined : save.homestead.houses[house]?.name
+  const home = homeOf(save, pack, id)
   return [
     ...(line ? [ACTIVITY_NAMES[line]] : []),
     ...(birthday !== undefined ? [`★ ${SEASON_NAMES[dateOf(birthday).season]} ${dateOf(birthday).day}`] : []),
-    ...(named ? [named] : []),
+    ...(home?.name ? [home.name] : []),
+    ...(home?.needs ? [NEEDS_ROOM] : []),
+    ...(home?.wish ? [OWN_HOUSE_WISH] : []),
   ]
+}
+
+/** A spouse's room on her Hearts row (F54 decision 14; F48's seam): her house's name, or "Needs a room". */
+export function roomNote(save: Pick<SaveV4, 'love' | 'homestead'>, pack: Pick<StoryPack, 'bibles'>, id: string): string | null {
+  const home = homeOf(save, pack, id)
+  return home === null ? null : home.needs ? NEEDS_ROOM : home.name
 }
 
 /** Her Memories' count (RM56): one a rung with an event, 26 in all (S2 and S4 have none). */

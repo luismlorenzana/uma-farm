@@ -91,8 +91,13 @@ morning.
   (`farmRankOpens`) and the parse read v4's ladder (`DORM_LEVELS_V4`, `bedsFor(4, level)`); v3 keeps its ten. The parse
   refuses a level above 8 and home past its beds.
 - **The Dorm's page** lists the eight levels (Built, Tomorrow, or the cost and Farm Rank), and a level whose arrival
-  hasn't come says "Level 4 · 9 beds · someone new arrives". Spouses leave the Dorm for the houses with F54; levels 9 and
-  10 come back with the S wave.
+  hasn't come says "Level 4 · 9 beds · someone new arrives". Levels 9 and 10 come back with the S wave.
+- **Who's on the farm on v4: the Dorm and the houses** (romance build; live from F56; F54 decision 4, RM5, RM42). A
+  spouse takes a room in the homestead at her wedding and **leaves the Dorm**, freeing her bed for the next arrival; with
+  no room free she keeps her bed ("Needs a room") until a house stands. **On the farm is the Dorm's home plus the spouses
+  in their houses** (`farmHome`, `onFarm`, `atHome`): they take jobs and tend, play their events, spend evenings, do their
+  chores and eat with everyone. The Dorm's page lists only its own beds' Umas, and its Away list never holds a housed
+  spouse; a housed spouse can't be swapped in (she's home already). See [hearts.md](hearts.md#married-life-rm41rm47).
 - **Arrivals with no bed free** join away, and the swap brings them home (CS36 kept). On v4 the Dorm's rows show no
   hearts: her route is on her sheet (F47) and, from F48, the Hearts tab.
 

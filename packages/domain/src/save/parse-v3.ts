@@ -3,7 +3,7 @@
 // `parse-loop.ts` (F46); the public names re-export from here, where they always were.
 import { ACTIVITIES } from '../farm/ranks'
 import { isCropId, isGoodId, isWarehouseId, type CropId } from '../goods/ids'
-import type { MorningSummary } from '../night/summary'
+import type { MorningSummary, NewsLine } from '../night/summary'
 import { LOOP_REQUESTS } from '../gathering/ids'
 import { amount, count, list, object, parseAccount, record } from './parse'
 import {
@@ -43,7 +43,7 @@ function parseSummary(value: unknown, path: string, today: number, roster: Reado
   if (o.day !== today) fail(`${path}.day`, 'expected today: a summary is the morning it opens on')
   return {
     day: today, bin: parseBinLines(o.bin, `${path}.bin`), work: parseWorkLines(o.work, `${path}.work`), ranks: parseRankLines(o.ranks, `${path}.ranks`, roster),
-    bonds: none(o.bonds, `${path}.bonds`), news: parseNewsLines(o.news, `${path}.news`, roster), nudges: parseNudges(o.nudges, `${path}.nudges`, roster),
+    bonds: none(o.bonds, `${path}.bonds`), news: parseNewsLines(o.news, `${path}.news`, roster) as NewsLine[], nudges: parseNudges(o.nudges, `${path}.nudges`, roster),
   }
 }
 

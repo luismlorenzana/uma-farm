@@ -8,7 +8,7 @@ import { bedsFor, dormMaxLevel, FARM_RANK_POINTS } from '../farm/farm'
 import { DIARY_ROWS, isDiaryPaidId, MILESTONES } from '../farm/milestones'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import { GOOD_IDS, goodOf, isCropId, isGoodId, isGoodIdV4, isSeedId, isWarehouseId, RING_IDS } from '../goods/ids'
-import type { BinSale, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
+import type { BinSale, HouseholdNews, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
 import { isOutfitId } from '../roster/roster'
 import type { LoopWorld } from '../work/loop-env'
 import { amount, bool, count, int, list, object, oneOf, positive, record, SaveParseError, type Obj } from './parse'
@@ -473,14 +473,16 @@ export function parseRankLines(value: unknown, path: string, roster: ReadonlySet
 
 /** v3's news kinds; v4 drops `joined`, `gate` and `left` (its arrivals are §4's hearts, F46 decision 15). */
 const NEWS_KINDS = ['season', 'festival', 'chapter', 'farm-rank', 'milestone', 'dorm', 'home', 'joined', 'gate', 'left'] as const
-const NEWS_KINDS_V4 = ['season', 'festival', 'chapter', 'farm-rank', 'milestone', 'dorm', 'home'] as const
+const NEWS_KINDS_V4 = ['season', 'festival', 'chapter', 'farm-rank', 'milestone', 'dorm', 'home', 'household'] as const
+/** The household milestones a v4 morning may announce (F54 decision 9; RM45). */
+const HOUSEHOLD_NEWS = [1, 5, 10, 15, 20] as const
 
 /** §5 New today (F18, F23, F24), on a save's version: the Dorm's levels and beds are its ladder's. */
-export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet<string>, version = 3): NewsLine[] {
+export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet<string>, version = 3): (NewsLine | HouseholdNews)[] {
   const top = dormMaxLevel(version)
   // F23: the Dorm's new level, Umas home from a swap, recruits who joined (on the roster), a visitor at the Gate and those
   // who left (outfit ids by form: she may since have joined, or gone).
-  return unique(list(value, path, 0, 8 + 3 * MAX_ROSTER_NEWS + MAX_GOAL_NEWS + (version >= 4 ? 1 : 0)).map((v, i): NewsLine => {
+  return unique(list(value, path, 0, 8 + 3 * MAX_ROSTER_NEWS + MAX_GOAL_NEWS + (version >= 4 ? 1 + HOUSEHOLD_NEWS.length : 0)).map((v, i): NewsLine | HouseholdNews => {
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, version >= 4 ? NEWS_KINDS_V4 : NEWS_KINDS)
     switch (kind) {
@@ -506,9 +508,14 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
         return { kind, outfitId: member(j.outfitId, `${at}.outfitId`, roster), home: bool(j.home, `${at}.home`) }
       }
       case 'gate': case 'left': return { kind, outfitId: outfit(object(v, at, ['kind', 'outfitId']).outfitId, `${at}.outfitId`) }
+      // F54 decision 9: a household milestone, v4 only.
+      case 'household': {
+        const married = object(v, at, ['kind', 'married']).married
+        return { kind, married: (HOUSEHOLD_NEWS as readonly unknown[]).includes(married) ? married as number : fail(`${at}.married`, 'expected 1, 5, 10, 15 or 20') }
+      }
     }
   }), path, (n) => (n.kind === 'season' || n.kind === 'dorm' || n.kind === 'home' || n.kind === 'chapter' ? n.kind : n.kind === 'festival' ? `festival:${n.when}`
-    : n.kind === 'farm-rank' ? `farm-rank:${n.rank}` : n.kind === 'milestone' ? `milestone:${n.id}` : `${n.kind}:${n.outfitId}`))
+    : n.kind === 'farm-rank' ? `farm-rank:${n.rank}` : n.kind === 'milestone' ? `milestone:${n.id}` : n.kind === 'household' ? `household:${n.married}` : `${n.kind}:${n.outfitId}`))
 }
 
 /** §6 Today's nudges (F18, F20). */

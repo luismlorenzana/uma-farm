@@ -261,7 +261,7 @@ function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLo
         {phase === 'card' && (error || !card || !love
           ? <EndNote text={error ?? 'That didn’t save. Try again.'} onDone={onClose} />
           : <LevelUpCard card={card} id={id} name={name} love={love} pack={pack} farmer={save.farmer.name} onContinue={() => (card.stage ? setPhase('stage') : onClose())} />)}
-        {phase === 'stage' && love && <StageUpScreen stage={card?.stage ?? 'romance'} id={id} love={love} pack={pack} married={card?.stage === 'married' ? marriedOf(save, pack) : null} onContinue={onClose} />}
+        {phase === 'stage' && love && <StageUpScreen stage={card?.stage ?? 'romance'} id={id} love={love} pack={pack} married={card?.stage === 'married' ? marriedOf(save, pack) : null} save={save} onContinue={onClose} />}
         {phase === 'asked' && <EndNote text={error ?? (answer === 'not-yet' ? `${name} smiles. “Whenever you’re ready.” Ask again tomorrow.` : '')} onDone={onClose} />}
         {phase === 'replayed' && <EndNote text="A Memory, replayed. Replays give no points." onDone={onClose} />}
         {log && <LogSheet lines={lines} onClose={() => onLog(false)} />}

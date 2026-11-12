@@ -6,7 +6,7 @@
 // day's slots (one, two on days divisible by 4 from 10 married, festival night's on a festival day) with RM37's kinds, and
 // its invitations are one (two from 10 married), each a different Uma, asking for a date game.
 import { dateOf, FESTIVAL_IDS, festivalOn } from '../farm/calendar'
-import { cleanFarmerName, farmerNameIssue } from '../romance/farmer'
+import { cleanFarmerName, farmerNameIssue, houseNameIssue } from '../romance/farmer'
 import { isCropId, isGoodId, isGoodIdV4, type CropId } from '../goods/ids'
 import { isWarehouseIdV4, parseStockKey } from './warehouse'
 import { LOOP_REQUESTS } from '../gathering/ids'
@@ -19,8 +19,8 @@ import {
   parseWorkshops, unique, type LoopRequestKinds,
 } from './parse-loop'
 import {
-  EVENING_KINDS, eveningsOn, FESTIVAL_NIGHT, invitesFor, LOVE_STAGES, marriedCount, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUmaV4, type SaveV4,
-  type TodayV4,
+  EVENING_KINDS, eveningsOn, FARMHOUSE, FESTIVAL_NIGHT, FINALE_MARRIED, FURNITURE_PIECES, invitesFor, LOVE_STAGES, marriedCount, MAX_HOUSES, residentsOf, roomsOf, vowsOn,
+  type EveningKind, type Homestead, type InviteKind, type Love, type RosterUmaV4, type SaveV4, type TodayV4,
 } from './v4'
 
 export const SAVE_V4_KEYS = [
@@ -28,8 +28,6 @@ export const SAVE_V4_KEYS = [
   'buildings', 'tools', 'workshops', 'expeditions', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'summary',
 ] as const
 
-/** The homestead's houses: the Farmhouse and six (RM41). */
-const MAX_HOUSES = 7
 /** Events a route can hold: her arrival and 26 rungs, with room for later waves' extras. */
 const MAX_MEMORIES = 64
 
@@ -143,7 +141,7 @@ const inviteKind = (v: unknown, at: string): InviteKind => (v === FESTIVAL_NIGHT
 
 /** `today` (F47–F52; F50 decisions 5 and 7): the evenings within the day's slots (`evenings` regular ones, festival
  * night's on a festival day), and `invites` invitations, each a different Uma. */
-function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
+function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number, vows: boolean): TodayV4 {
   const o = object(value, path, ['chats', 'gifts', 'praise', 'praised', 'events', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const slots = eveningsOn(day, married)
@@ -152,7 +150,8 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
     return { with: member(e.with, `${path}.evenings.${i}.with`, roster), kind: eveningKind(e.kind, `${path}.evenings.${i}.kind`) }
   })
   const nights = evenings.filter((e) => e.kind === FESTIVAL_NIGHT).length
-  if (nights > (festivalOn(day) ? 1 : 0)) fail(`${path}.evenings`, 'festival night only on a festival day, once')
+  // F54 decision 13: the Festival of Vows brings a festival night too.
+  if (nights > (festivalOn(day) || vows ? 1 : 0)) fail(`${path}.evenings`, 'festival night only on a festival day, once')
   if (evenings.length - nights > slots) fail(`${path}.evenings`, `expected at most ${slots} evening${slots === 1 ? '' : 's'} today`)
   return {
     chats: umas(o.chats, `${path}.chats`), gifts: umas(o.gifts, `${path}.gifts`), praise: umas(o.praise, `${path}.praise`),
@@ -183,17 +182,49 @@ function parseBondHeartsToday(value: unknown, path: string, roster: ReadonlySet<
   return out
 }
 
-function parseHomestead(value: unknown, path: string, today: number): Homestead {
-  const o = object(value, path, ['houses', 'tonight', 'slept'])
+/** The homestead (F54 decision 1): the Farmhouse first (two rooms, never extended), then up to six houses, each named by the
+ * letters rule (1–20 characters); tonight's house a built one; "her room" only with tonight's house; a night slept in each
+ * house, no later than today; the furniture none or five pieces, each in a built house or not placed; the married count
+ * the night last saw, and the finale's morning (no later than today, only from 20 married). Who lives where is `love.house`,
+ * checked with the roster (`parseRooms`). */
+function parseHomestead(value: unknown, path: string, today: number, roster: ReadonlySet<string>): Homestead {
+  const o = object(value, path, ['houses', 'tonight', 'alone', 'slept', 'furniture', 'married', 'finale'])
   const houses = list(o.houses, `${path}.houses`, 1, MAX_HOUSES).map((v, i) => {
-    const h = object(v, `${path}.houses.${i}`, ['name', 'extended'])
-    const name = text(h.name, `${path}.houses.${i}.name`)
-    if (name.length > 24) fail(`${path}.houses.${i}.name`, 'expected 1–24 characters')
-    return { name, extended: bool(h.extended, `${path}.houses.${i}.extended`) }
+    const at = `${path}.houses.${i}`
+    const h = object(v, at, ['name', 'extended'])
+    const name = text(h.name, `${at}.name`)
+    if (houseNameIssue(name) !== null || cleanFarmerName(name) !== name) fail(`${at}.name`, 'expected 1–20 letters, spaces, apostrophes or hyphens')
+    const extended = bool(h.extended, `${at}.extended`)
+    if (i === 0 && (name !== FARMHOUSE.name || extended)) fail(at, 'expected the Farmhouse, never extended')
+    return { name, extended }
   })
   const tonight = o.tonight === null ? null : int(o.tonight, `${path}.tonight`, 0, houses.length - 1)
+  const alone = o.alone === null ? null : member(o.alone, `${path}.alone`, roster)
+  if (alone !== null && tonight === null) fail(`${path}.alone`, 'her room is tonight’s house')
   const slept = list(o.slept, `${path}.slept`, houses.length, houses.length).map((v, i) => pastDay(v, `${path}.slept.${i}`, today))
-  return { houses, tonight, slept }
+  const furniture = list(o.furniture, `${path}.furniture`, 0, FURNITURE_PIECES).map((v, i) => (v === null ? null : int(v, `${path}.furniture.${i}`, 0, houses.length - 1)))
+  if (furniture.length !== 0 && furniture.length !== FURNITURE_PIECES) fail(`${path}.furniture`, `expected none or ${FURNITURE_PIECES} pieces`)
+  const married = int(o.married, `${path}.married`, 0, 10_000)
+  const finale = pastDay(o.finale, `${path}.finale`, today)
+  if (finale > 0 && married < FINALE_MARRIED) fail(`${path}.finale`, `only from ${FINALE_MARRIED} married`)
+  if (furniture.length > 0 && married < 5) fail(`${path}.furniture`, 'only from 5 married')
+  return { houses, tonight, alone, slept, furniture, married, finale }
+}
+
+/** Who lives where (F54 decisions 1 and 4): no house holds more residents than its rooms; a spouse in a house has no Dorm
+ * bed (not home, not in a swap); her room tonight is hers, a spouse in tonight's house; the married count the night saw
+ * is no more than the spouses now. */
+function parseRooms(save: Pick<SaveV4, 'love' | 'dorm' | 'homestead'>, path: string): void {
+  save.homestead.houses.forEach((house, i) => {
+    if (residentsOf(save, i).length > roomsOf(house)) fail(`${path}.homestead.houses.${i}`, `expected at most ${roomsOf(house)} residents`)
+  })
+  for (const [id, love] of Object.entries(save.love)) {
+    if (love.house === undefined) continue
+    if (save.dorm.home.includes(id) || save.dorm.swaps.some((s) => s.in === id)) fail(`${path}.love.${id}.house`, 'a spouse in her house has no Dorm bed')
+  }
+  const { alone, tonight, married } = save.homestead
+  if (alone !== null && save.love[alone]?.house !== tonight) fail(`${path}.homestead.alone`, 'expected a spouse in tonight’s house')
+  if (married > marriedCount(save)) fail(`${path}.homestead.married`, 'more than are married')
 }
 
 function parseFarmer(value: unknown, path: string): SaveV4['farmer'] {
@@ -217,12 +248,34 @@ function itemKey(v: unknown, at: string): string {
  * invitation asks for a date game; an anniversary's item is a good on the day and null the day before; a morning item 1–3
  * goods at their stars; the night's chores once, items and growth (quarters), one of them more than 0; the perks' extras
  * once, 1+ items; side by side once, 1+ items; bond hearts 1–5 once a pair, two roster Umas in `pairKey` order. */
-function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>): HeartLine[] {
+function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>, houses: number): HeartLine[] {
   const when = (v: unknown, at: string) => oneOf(v, at, ['today', 'tomorrow'] as const)
   const pairs = (roster.size * (roster.size - 1)) / 2
-  return unique(list(value, path, 0, roster.size * 5 + pairs + 3).map((v, i): HeartLine => {
+  return unique(list(value, path, 0, roster.size * 7 + pairs + 6).map((v, i): HeartLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['invite', 'arrived', 'birthday', 'anniversary', 'item', 'chores', 'perks', 'side', 'bond'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['invite', 'arrived', 'birthday', 'anniversary', 'item', 'chores', 'perks', 'side', 'bond', 'house', 'misses', 'moved', 'level', 'vows'] as const)
+    // F54 decisions 7, 8 and 13: the house's morning, a house that misses you, a move-in, a night level, the Festival of Vows.
+    if (kind === 'house') {
+      const o = object(v, at, ['kind', 'house', 'umas', 'paid', 'breakfast', 'items'])
+      const umas = unique(list(o.umas, `${at}.umas`, 1, 4).map((id, n) => member(id, `${at}.umas.${n}`, roster)), `${at}.umas`)
+      return {
+        kind, house: int(o.house, `${at}.house`, 0, houses - 1), umas, paid: int(o.paid, `${at}.paid`, 0, 100_000),
+        breakfast: int(o.breakfast, `${at}.breakfast`, 0, roster.size), items: int(o.items, `${at}.items`, 0, umas.length),
+      }
+    }
+    if (kind === 'misses') return { kind, house: int(object(v, at, ['kind', 'house']).house, `${at}.house`, 0, houses - 1) }
+    if (kind === 'moved') {
+      const o = object(v, at, ['kind', 'id', 'house'])
+      return { kind, id: member(o.id, `${at}.id`, roster), house: int(o.house, `${at}.house`, 0, houses - 1) }
+    }
+    if (kind === 'level') {
+      const o = object(v, at, ['kind', 'id', 'rung'])
+      return { kind, id: member(o.id, `${at}.id`, roster), rung: oneOf(o.rung, `${at}.rung`, ['s2', 's4'] as const) }
+    }
+    if (kind === 'vows') {
+      const o = object(v, at, ['kind', 'spouses', 'paid'])
+      return { kind, spouses: int(o.spouses, `${at}.spouses`, 1, roster.size), paid: int(o.paid, `${at}.paid`, 0, 1_000_000) }
+    }
     if (kind === 'item') {
       const o = object(v, at, ['kind', 'id', 'items'])
       return { kind, id: member(o.id, `${at}.id`, roster), items: list(o.items, `${at}.items`, 1, 3).map((k, n) => itemKey(k, `${at}.items.${n}`)) }
@@ -267,15 +320,15 @@ function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>):
     }
     const a = object(v, at, ['kind', 'id', 'home'])
     return { kind: 'arrived', id: member(a.id, `${at}.id`, roster), home: bool(a.home, `${at}.home`) }
-  }), path, (h) => (h.kind === 'bond' ? `bond:${h.a}:${h.b}` : h.kind === 'side' || h.kind === 'chores' || h.kind === 'perks' ? h.kind : `${h.kind}:${h.id}`))
+  }), path, (h) => (h.kind === 'bond' ? `bond:${h.a}:${h.b}` : h.kind === 'side' || h.kind === 'chores' || h.kind === 'perks' || h.kind === 'house' || h.kind === 'misses' || h.kind === 'vows' ? h.kind : `${h.kind}:${h.id}`))
 }
 
-function parseSummaryV4(value: unknown, path: string, today: number, roster: ReadonlySet<string>): MorningSummaryV4 {
+function parseSummaryV4(value: unknown, path: string, today: number, roster: ReadonlySet<string>, houses: number): MorningSummaryV4 {
   const o = object(value, path, ['day', 'bin', 'work', 'ranks', 'hearts', 'news', 'nudges'])
   if (o.day !== today) fail(`${path}.day`, 'expected today: a summary is the morning it opens on')
   return {
     day: today, bin: parseBinLines(o.bin, `${path}.bin`, 4), work: parseWorkLines(o.work, `${path}.work`), ranks: parseRankLines(o.ranks, `${path}.ranks`, roster),
-    hearts: parseHearts(o.hearts, `${path}.hearts`, roster), news: parseNewsLines(o.news, `${path}.news`, roster, 4) as NewsLineV4[],
+    hearts: parseHearts(o.hearts, `${path}.hearts`, roster, houses), news: parseNewsLines(o.news, `${path}.news`, roster, 4) as NewsLineV4[],
     nudges: parseNudges(o.nudges, `${path}.nudges`, roster),
   }
 }
@@ -289,16 +342,16 @@ export function parseSaveV4(value: unknown, path = 'save', kinds: LoopRequestKin
   const roster = parseRoster(o.roster, `${path}.roster`, today)
   const ids = new Set(Object.keys(roster))
   const buildings = parseBuildings(o.buildings, `${path}.buildings`, 4)
-  const homestead = parseHomestead(o.homestead, `${path}.homestead`, today)
+  const homestead = parseHomestead(o.homestead, `${path}.homestead`, today, ids)
   const arrivals = unique(list(o.arrivals, `${path}.arrivals`, 0, ids.size).map((v, i) => member(v, `${path}.arrivals.${i}`, ids)), `${path}.arrivals`)
   const love = parseLoveAll(o.love, `${path}.love`, ids, today, homestead.houses.length)
-  return {
+  const save: SaveV4 = {
     version: 4,
     account: parseAccount(o.account, `${path}.account`),
     farmer: parseFarmer(o.farmer, `${path}.farmer`),
     calendar: { day: today },
     gold: count(o.gold, `${path}.gold`),
-    today: parseToday(o.today, `${path}.today`, ids, today, marriedCount({ love })),
+    today: parseToday(o.today, `${path}.today`, ids, today, marriedCount({ love }), vowsOn(homestead, today)),
     roster,
     love,
     dorm: parseDorm(o.dorm, `${path}.dorm`, ids, buildings.dorm, 4),
@@ -323,6 +376,8 @@ export function parseSaveV4(value: unknown, path = 'save', kinds: LoopRequestKin
     homestead,
     memories: parseMemories(o.memories, `${path}.memories`, ids),
     arrivals,
-    summary: o.summary === null ? null : parseSummaryV4(o.summary, `${path}.summary`, today, ids),
+    summary: o.summary === null ? null : parseSummaryV4(o.summary, `${path}.summary`, today, ids, homestead.houses.length),
   }
+  parseRooms(save, path)
+  return save
 }

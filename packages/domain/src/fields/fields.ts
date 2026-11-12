@@ -23,7 +23,7 @@ import { loopWorking } from '../save/loop-work'
 import { LOOP_KINDS } from '../gathering/kinds'
 import type { LoopKinds } from '../save/parse-v3'
 import { SaveRuleError } from '../save/rules'
-import { BLOCK_IDS, emptyPlot, leaving, newBlock, tendedBlock, type Block, type BlockId, type OutfitId, type Plot, type SaveV3 } from '../save/v3'
+import { atHome, BLOCK_IDS, emptyPlot, leaving, newBlock, tendedBlock, type Block, type BlockId, type OutfitId, type Plot, type SaveV3 } from '../save/v3'
 import { addGoods, goodCount, takeGoods } from '../save/warehouse'
 import { CROPS, GROWTH_SLACK, growsIn, readyAt, SHOP_SEEDS } from './crops'
 import type { FarmSave, SaveV4 } from '../save/v4'
@@ -149,7 +149,8 @@ export function isBusy(save: FarmSave, outfitId: OutfitId, kinds: LoopKinds = LO
 export function setTender<S extends FarmSave>(save: S, id: BlockId, outfitId: OutfitId | null, kinds: LoopKinds = LOOP_KINDS): S {
   if (!blockOf(save, id)) throw new SaveRuleError('bad-slot', `No Block ${id} yet.`)
   if (outfitId !== null) {
-    if (!save.dorm.home.includes(outfitId) || !save.roster[outfitId]) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
+    // F54 decision 4: a spouse in her house is on the farm too.
+    if (!atHome(save, outfitId) || !save.roster[outfitId]) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
     if (leaving(save, outfitId)) throw new SaveRuleError('busy', 'She leaves tomorrow.')
     if (loopWorking(save, kinds).has(outfitId)) throw new SaveRuleError('busy', 'She’s working.')
   }

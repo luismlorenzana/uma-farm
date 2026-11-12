@@ -71,6 +71,9 @@ import { DATE_FROM, EVENING_FACTOR, eveningPoints, EVENINGS, favouriteKind, HANG
 import { invitesFor, SECOND_EVENING_EVERY, TWO_EVENINGS_MARRIED } from '../save/v4'
 import { BENCH_WORDS, benchTakes, forgeRecipe, MAKE_BONUS, MINING_CHAPTER, RING_INPUTS, ringPercent } from '../romance/bench'
 import { CAKE_DAYS, HOUSEHOLD_AT, receptionDays, WEDDING_DEFAULTS, WEDDING_FRIENDS } from '../romance/wedding'
+import { EXTENSION_COSTS, FURNITURE, HOMESTEAD_PLACES, HOUSE_COSTS, MISSES_NIGHTS } from '../romance/homestead'
+import { HOUSE_ITEM_N, HOUSE_POINTS, HOUSE_TEMPLATES, VOWS_POINTS } from '../romance/household'
+import { EXTENDED_ROOMS, FINALE_MARRIED, HOUSE_ROOMS } from '../save/v4'
 import { BENCH_SCENE_LINES } from '../story/bench'
 import { DISH_WORDS, dishName, goodName, RING_GOODS } from '../goods/ids'
 import { BIG_EVENTS, EVENT_LIMITS, type Route, type Together, type UmaBible } from '../story/authored'
@@ -140,7 +143,7 @@ function night(): string {
 }
 const opensWords = (opens: PlaceOpens): string =>
   opens.by === 'start' ? 'Day 1' : opens.by === 'chapter' ? `Chapter ${opens.chapter}` : opens.by === 'reward' ? `Chapter ${opens.chapter}'s reward`
-    : opens.by === 'farm-rank' ? `Farm Rank ${opens.rank}` : 'M6'
+    : opens.by === 'farm-rank' ? `Farm Rank ${opens.rank}` : opens.by === 'house' ? (opens.n === 1 ? 'The first wedding' : `House ${opens.n - 1} built`) : 'M6'
 /** FC28: the map's eight rows, and each place's building and what opens it. */
 function farmMap(): string {
   const rows = Array.from({ length: FARM_MAP_ROWS }, (_, r) => {
@@ -972,6 +975,56 @@ function receptionBlock(): string {
   ]) + `\n\nA meal already running is never shortened. **The guests:** every spouse on the farm, then her ${WEDDING_FRIENDS} closest friends on the farm (F52’s order); they have no lines. **The places:** her bible’s \`wedding.places\`, else her wedding beat’s place and ${WEDDING_DEFAULTS.map((p) => `\`${p}\``).join(', ')}, three different. **Household milestones** at ${HOUSEHOLD_AT.join(', ')} married (RM45).`
 }
 
+// --- F54: married life (romance spec RM41–RM47) -------------------------------------------------------------------------
+/** RM41 (F54 decisions 1 and 3): the homestead's houses, rooms, prices and what opens each. */
+function housesBlock(): string {
+  const rows = HOMESTEAD_PLACES.map((p) => p.n === 0
+    ? ['The Farmhouse', `${HOUSE_ROOMS} (your own home)`, '—', '—', 'Day 1']
+    : [`House ${p.n}`, `${HOUSE_ROOMS}, or ${EXTENDED_ROOMS} extended`, g(HOUSE_COSTS[p.n - 1]!), g(EXTENSION_COSTS[p.n - 1]!), p.n === 1 ? 'The first wedding' : `House ${p.n - 1} built`])
+  const sum = (list: readonly number[]) => list.reduce((a, b) => a + b, 0)
+  return table(['', 'Rooms', 'Build', 'Extend', 'Opens'], [...rows,
+    ['**All**', `**${HOUSE_ROOMS + HOUSE_COSTS.length * EXTENDED_ROOMS} rooms**`, `**${g(sum(HOUSE_COSTS))}**`, `**${g(sum(HOUSE_COSTS) + sum(EXTENSION_COSTS))} extended**`, '']])
+}
+/** F54 decision 2: the homestead's rows on the v4 map, after the yard, the town edge last. */
+function homesteadMap(): string {
+  const rows = [...new Set(HOMESTEAD_PLACES.map((p) => p.row))].map((row) => {
+    const here = HOMESTEAD_PLACES.filter((p) => p.row === row)
+    return [`${row}`, here.map((p) => `${p.name} (\`${p.frame}\`)`).join(' · ')]
+  })
+  return table(['Row (v4)', 'Places'], [...rows, ['After the last shown', 'The town edge: Shop · Festival ground · Expedition post']])
+}
+/** RM45 (F54 decision 9): the household milestones. */
+function householdMilestonesBlock(): string {
+  return table(['Married', 'Opens'], [
+    ['1', 'The homestead (House 1 to build); the night’s house (Sleep at); anniversaries'],
+    ['5', 'Household scene 1; the furniture set (five pieces); +5% items crew-wide'],
+    ['10', 'Household scene 2; two evenings every fourth day; two invitations a morning'],
+    ['15', 'Household scene 3; +5% more items crew-wide'],
+    [`${FINALE_MARRIED}`, 'The finale, the Great Harvest; then the Festival of Vows each year'],
+  ])
+}
+/** RM43 (F54 decision 7): the house's morning, and the Festival of Vows (decision 13). */
+function houseMorningBlock(): string {
+  return table(['', 'The morning of the house you slept in'], [
+    ['Each resident', `+${HOUSE_POINTS} to her spouse bar (\`addLove\`, an anniversary’s ×2 applies)`],
+    ['A resident at S1+', 'Her breakfast: everyone on the farm with no meal left well fed one day, once; +5 bond a pair it feeds'],
+    ['Each resident at S2+', `One more morning item of her line, ★3+ (\`lineGood\`, n = ${HOUSE_ITEM_N}), in her own item line`],
+    ['A house line', 'One resident’s line from the pack’s `houseLines`, else her temperament’s template'],
+    ['Her birthday alone', 'Her room: only her +30, breakfast and item'],
+    [`Not slept in for ${MISSES_NIGHTS} nights`, '“Rose Cottage misses you”, with Tonight › and Another night; never a penalty'],
+    ['Shared houses', 'Every night, +10 bond to each pair of residents (step 6)'],
+    ['The Festival of Vows', `The finale’s day, each later year: every spouse +${VOWS_POINTS}, and a festival night`],
+  ])
+}
+/** F54 decision 7: the house lines' templates by temperament, until the pack's are written. */
+function houseLines(): string {
+  return table(['Temperament', 'House lines (`{name}` hers)'], TEMPERAMENTS.map((t) => [t[0]!.toUpperCase() + t.slice(1), HOUSE_TEMPLATES[t].join('<br>')]))
+}
+/** RM45 (F54 decision 9): the furniture set's five pieces. */
+function furnitureBlock(): string {
+  return FURNITURE.map((f, i) => `${i + 1}. ${f}`).join('\n')
+}
+
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
     'dorm-v4': dormV4, arrivals, 'arrival-pay': arrivalPay, 'opening-v4': openingV4, 'night-v4': nightV4, 'stand-in': standIn, 'farmer-name': farmerName,
@@ -982,6 +1035,8 @@ export function renderBlock(key: string): string | null {
     plays: playsBlock, 'play-map': playMap, 'play-grades': playGrades, 'play-windows': playWindows, 'event-pay': eventPay, 'stand-in-route': standInRoute,
     'evening-kinds': eveningKinds, 'evening-points': eveningPointsBlock, 'evening-slots': eveningSlotsBlock,
     rings: ringsBlock, 'bench-recipe': benchRecipe, reception: receptionBlock, 'bench-scene': benchScene,
+    houses: housesBlock, 'homestead-map': homesteadMap, 'household-milestones': householdMilestonesBlock, 'house-morning': houseMorningBlock, 'house-lines': houseLines,
+    furniture: furnitureBlock,
     calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
     crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,

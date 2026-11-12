@@ -8,9 +8,11 @@
 // ring at her line, her anniversary, "Married n/N · next household scene at 5"; F53): the route's track re-coloured, "Opens
 // now" and **Continue**. F54's night levels (S2, S4) show the level-up card from the morning. Loaded on demand with the
 // player.
-import { dishName, LADDER_COLOURS, ladderOf, perkLineOf, rungName, withFarmer, type EventCard, type Love, type StageUp, type StoryPack } from '@farm/domain'
+import { dishName, freeRooms, LADDER_COLOURS, ladderOf, perkLineOf, rungName, withFarmer, type EventCard, type Love, type SaveV4, type StageUp, type StoryPack } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { Button, UiMark, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
+import { useState } from 'react'
+import { moveSpouseTo } from './homestead-actions'
 import { RouteTrack } from './HeartMarks'
 import { marriedWords, perkLineWords, ringGivenWords, STAGE_WORDS, stageOpens, sumWords, unlockWords, weddingWords } from './event-view'
 import { routeTrack } from './hearts-view'
@@ -74,13 +76,15 @@ export function LevelUpCard({ card, id, name, love, pack, farmer, onContinue }: 
 
 /** The stage-up screen (decision 11; F53): the track re-coloured, what the stage opens, **Continue**. Married adds RM45's
  * line ("Married 1/3 · next household scene at 5"). */
-export function StageUpScreen({ stage, id, love, pack, married = null, onContinue }: {
+export function StageUpScreen({ stage, id, love, pack, married = null, save = null, onContinue }: {
   stage: StageUp
   id: string
   love: Love
   pack: Pick<StoryPack, 'cast' | 'bibles'>
   /** Married's count and the cast's size, for its line. */
   married?: { married: number; cast: number } | null
+  /** The save now (F54): Married's room step reads the homestead. */
+  save?: SaveV4 | null
   onContinue: () => void
 }) {
   const colour = LADDER_COLOURS[stage === 'married' ? 'spouse' : 'romance']
@@ -96,13 +100,45 @@ export function StageUpScreen({ stage, id, love, pack, married = null, onContinu
       <section className="space-y-1 rounded-md border border-hairline p-3 text-[14px]">
         <h3 className="text-micro">Opens now</h3>
         <ul className="space-y-1" data-opens>
-          {stageOpens(stage, perkLineOf(pack, id), { ring: love.ring ?? null, wed: love.wed ?? null }).map((line) => <li key={line}>· {line}</li>)}
+          {stageOpens(stage, perkLineOf(pack, id), {
+            ring: love.ring ?? null, wed: love.wed ?? null,
+            ...(stage === 'married' && save ? { house: love.house === undefined ? null : save.homestead.houses[love.house]?.name ?? null } : {}),
+          }).map((line) => <li key={line}>· {line}</li>)}
         </ul>
       </section>
       {stage === 'romance' && love.points > 0 && <p className="text-center text-[14px] tabular-nums" style={{ color: colour }}>+{love.points.toLocaleString('en-US')} banked toward Romance 1</p>}
       {stage === 'married' && love.points > 0 && <p className="text-center text-[14px] tabular-nums" style={{ color: colour }}>+{love.points.toLocaleString('en-US')} toward Spouse 1</p>}
       {stage === 'married' && married && <p className="text-center font-display text-[16px] font-bold" data-married-line={married.married}>{marriedWords(married.married, married.cast)}</p>}
+      {stage === 'married' && save && <RoomStep save={save} id={id} />}
       <Button className="w-full" onClick={onContinue} data-action="continue">Continue</Button>
     </div>
+  )
+}
+
+/** The wedding's room step (F54 decision 4; F53's stage-up gains it): her room, already taken by the default, and the other
+ * houses with a free room to move her to at once, free. */
+function RoomStep({ save, id }: { save: SaveV4; id: string }) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const here = save.love[id]?.house
+  const others = save.homestead.houses.map((h, n) => ({ n, name: h.name })).filter((h) => h.n !== here && freeRooms(save, h.n) > 0)
+  if (others.length === 0) return null
+  const move = (n: number) => {
+    setBusy(true)
+    setError(null)
+    moveSpouseTo(id, n).catch((e: unknown) => setError(e instanceof Error ? e.message : 'That didn’t work.')).finally(() => setBusy(false))
+  }
+  return (
+    <section className="space-y-1.5 rounded-md border border-hairline p-3 text-[14px]" data-room-step>
+      <h3 className="text-micro">Her room</h3>
+      <div className="flex flex-wrap gap-2">
+        {others.map((h) => (
+          <button key={h.n} type="button" disabled={busy} onClick={() => move(h.n)} className="min-h-11 rounded-sm border border-hairline-strong px-3 text-[14px] font-semibold" data-room-to={h.n}>
+            {here === undefined ? `A room in ${h.name}` : `Move her to ${h.name}`}
+          </button>
+        ))}
+      </div>
+      {error && <p className="text-[12px] text-danger" role="alert">{error}</p>}
+    </section>
   )
 }

@@ -85,6 +85,8 @@ async function storyState(game, errors) {
     bibles,
     routes: await folder('routes', (d) => v.routeIssues(d, bibleOf(d?.characterId), ctx)),
     pairs: await folder('pairs', (d) => v.pairIssues(d, ctx)),
+    // F54: the household's scenes, house lines and finale.
+    household: await file('household.json', (d) => v.householdIssues(d, ctx)),
   }
 }
 

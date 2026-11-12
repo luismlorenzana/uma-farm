@@ -21,7 +21,9 @@ export const MAIN_JS_BUDGET = 180_000
  * plays' rules and their sheet, the level-up and stage-up cards, the events' rules and actions, her Memories' album and
  * the Diary's shelf, with uma-art's emote atlas (F49); and the evening's rules, its words, its actions, its player, Tonight,
  * the morning's invitation answers and the night's fade (F50); and the perks' terms and effects (F51); and the ring
- * bench's rules, sheet, view, actions and scene, and the wedding's rules (F53). The Wilds' screens left in F24.
+ * bench's rules, sheet, view, actions and scene, and the wedding's rules (F53); and the homestead's and the household's
+ * rules, the homestead's sheet, view, actions and map rows, the morning's house answer, the night level's card and the
+ * household player (F54). The Wilds' screens left in F24.
  * Paths
  * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
@@ -120,6 +122,15 @@ export const LAZY_MODULES = [
   'src/loop/BenchScene.tsx',
   'src/loop/bench-view.ts',
   'src/loop/bench-actions.ts',
+  'domain/src/romance/homestead.ts',
+  'domain/src/romance/household.ts',
+  'src/loop/homestead-view.ts',
+  'src/loop/homestead-actions.ts',
+  'src/loop/HomesteadSheet.tsx',
+  'src/loop/homestead-map.tsx',
+  'src/loop/HouseAnswer.tsx',
+  'src/loop/NightLevel.tsx',
+  'src/loop/HouseholdPlayer.tsx',
 ]
 
 export function entrySrc(html) {

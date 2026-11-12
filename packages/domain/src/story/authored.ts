@@ -140,7 +140,14 @@ export interface UmaBible {
   /** Her wedding (RM30, RM58; F53 decision 11): the three different story places your wedding may be held at, the
    * place being its first choice. Without it the game offers her wedding beat's place and two of the farm's. */
   wedding?: WeddingPlan
+  /** Her wishes for married life (RM44, RM58; F54 decision 12): `own-house` (a house to herself: she's happiest with no
+   * other resident, and asks for it in her S1 event) and `birthday-alone` (on her birthday Tonight offers her room, and the
+   * morning is hers alone). Without it, neither. */
+  wishes?: Wish[]
 }
+/** Her wishes (RM44; F54 decision 12). */
+export const WISHES = ['own-house', 'birthday-alone'] as const
+export type Wish = typeof WISHES[number]
 /** Her wedding's three places (F53). */
 export interface WeddingPlan { places: [StoryPlace, StoryPlace, StoryPlace] }
 /** Her keepsake (F51): a name of 1–40 characters and a line of 1–160, under the line rules. */
@@ -453,6 +460,16 @@ export function bibleIssues(bible: unknown, ctx: StoryContext): Issues {
   if (bible.keepsake !== undefined) issues.push(...keepsakeIssues(bible.keepsake))
   if (bible.petName !== undefined) issues.push(...petNameIssues(bible.petName))
   if (bible.wedding !== undefined) issues.push(...weddingIssues(bible.wedding))
+  if (bible.wishes !== undefined) issues.push(...wishIssues(bible.wishes))
+  return issues
+}
+
+/** Her wishes (F54 decision 12): a list of `own-house` and `birthday-alone`, each once. */
+function wishIssues(wishes: unknown): Issues {
+  if (!Array.isArray(wishes) || wishes.length === 0) return ['wishes is a list of own-house and birthday-alone']
+  const issues: Issues = []
+  wishes.forEach((w, i) => { if (!oneOf(WISHES, w)) issues.push(`wishes ${i + 1}: own-house or birthday-alone`) })
+  if (new Set(wishes).size !== wishes.length) issues.push('wishes: each once')
   return issues
 }
 
@@ -633,3 +650,83 @@ export function pairIssues(pair: unknown, ctx: StoryContext, check: PairCheck = 
   }
   return issues
 }
+
+// --- The household (F54 decision 11; RM43, RM45, RM46, RM58) ------------------------------------------------------------
+
+/** The household scenes' counts (RM45): one at 5, 10 and 15 married. */
+export const HOUSEHOLD_SCENES = [5, 10, 15] as const
+export type HouseholdAt = typeof HOUSEHOLD_SCENES[number]
+/** A household scene (decision 11): `open`, then each married Uma's `each` in wedding order, then `close`. `open` and
+ * `close` speak only through narration and the town's cast, since who is married varies; her `each` is hers (she and the
+ * town's cast speak). Choices are wording only: a household scene pays nothing. */
+export interface HouseholdScene { at: HouseholdAt; open: Step[]; each: Record<string, Step[]>; close: Step[] }
+/** The finale, the Great Harvest (RM46): `open`, its play, each spouse's beat in wedding order, then `close`. */
+export interface Finale { open: Step[]; play: Play; each: Record<string, Step[]>; close: Step[] }
+/** household.json (RM58; decision 11): built for a household the author can't know in advance. */
+export interface Household {
+  scenes: HouseholdScene[]
+  /** A spouse's house lines (RM43): 1–10 short lines each, said on a morning in her house. Without hers, the templates by
+   * temperament stand in. */
+  houseLines: Record<string, string[]>
+  finale: Finale
+}
+/** A house line's length and count (decision 11). */
+export const HOUSE_LINE_MAX = 120
+export const HOUSE_LINES = [1, 10] as const
+
+/** How strict the household's check is: the story session wants an `each` for every cast Uma; the game reads it partial
+ * (an Uma without one is skipped, her beat "still being written"). */
+export interface HouseholdCheck {
+  partial?: boolean
+}
+
+/** household.json (layer 3; F54 decision 11): three scenes at 5, 10 and 15, each once; house lines for cast Umas, 1–10 each
+ * of 1–120 characters under the line rules; the finale with its play. `open` and `close` speak through narration and the
+ * town's cast only; an `each` is a cast Uma's, she and the town's cast speaking; every cast Uma has one in every scene and
+ * the finale (unless partial). */
+export function householdIssues(household: unknown, ctx: StoryContext, check: HouseholdCheck = {}): Issues {
+  if (!isObject(household) || !Array.isArray(household.scenes) || !isObject(household.houseLines) || !isObject(household.finale)) return ['Not a household (scenes, houseLines, finale)']
+  const issues: Issues = []
+  const town = new Set<string>(CAST_IDS)
+  const isGood = ctx.isGood ?? isGoodId
+  const eachIssues = (each: unknown, where: string) => {
+    if (!isObject(each)) { issues.push(`${where}: each is { <characterId>: steps }`); return }
+    for (const [id, steps] of Object.entries(each)) {
+      if (!ctx.umas.has(id)) { issues.push(`${where}, ${id}: not in the cast`); continue }
+      issues.push(...stepIssues(steps, `${where}, ${id}`, new Set([id, ...CAST_IDS]), 0, isGood), ...noAnswer(steps, `${where}, ${id}`))
+    }
+    if (!check.partial) for (const id of ctx.umas) if (!(id in each)) issues.push(`${where}: no beat for ${id}`)
+  }
+  const ends = (o: Record<string, unknown>, where: string) => {
+    for (const part of ['open', 'close'] as const) issues.push(...stepIssues(o[part], `${where} ${part}`, town, 0, isGood), ...noAnswer(o[part], `${where} ${part}`))
+  }
+  const ats = (household.scenes as unknown[]).map((scene, i) => {
+    const where = `Household scene ${i + 1}`
+    if (!isObject(scene) || !(HOUSEHOLD_SCENES as readonly unknown[]).includes(scene.at)) { issues.push(`${where}: at is 5, 10 or 15`); return null }
+    const at = `Household scene at ${String(scene.at)}`
+    ends(scene, at)
+    eachIssues(scene.each, `${at} each`)
+    return scene.at as number
+  })
+  for (const at of HOUSEHOLD_SCENES) {
+    const n = ats.filter((a) => a === at).length
+    if (n !== 1) issues.push(`Household scene at ${at}: ${n === 0 ? 'missing' : 'written twice'}`)
+  }
+  for (const [id, lines] of Object.entries(household.houseLines)) {
+    if (!ctx.umas.has(id)) { issues.push(`houseLines ${id}: not in the cast`); continue }
+    if (!Array.isArray(lines) || lines.length < HOUSE_LINES[0] || lines.length > HOUSE_LINES[1]) { issues.push(`houseLines ${id}: ${HOUSE_LINES[0]}–${HOUSE_LINES[1]} lines`); continue }
+    lines.forEach((line, i) => {
+      if (!isText(line, HOUSE_LINE_MAX)) issues.push(`houseLines ${id} ${i + 1}: a line of 1–${HOUSE_LINE_MAX} characters`)
+      else issues.push(...lineIssues(line, `houseLines ${id} ${i + 1}`, false))
+    })
+  }
+  const finale = household.finale
+  ends(finale, 'The finale')
+  issues.push(...stepIssues([{ play: finale.play }], 'The finale’s play', town, 0, isGood))
+  eachIssues(finale.each, 'The finale each')
+  return issues
+}
+
+/** Only the confession carries an answer. */
+const noAnswer = (steps: unknown, where: string): Issues =>
+  allSteps(steps).some((s) => 'choice' in s && Array.isArray(s.choice) && s.choice.some((o) => isObject(o) && o.answer !== undefined)) ? [`${where}: only the confession carries an answer`] : []

@@ -32,14 +32,15 @@ export function placeLink(save: Pick<FarmSave, 'farm' | 'buildings' | 'version'>
 /** Tiles above the first row's ground line, and between rows: a building, its pips' arch and its name pill each fit. */
 const TOP_TILES = 3
 const ROW_TILES = 4
-/** The map's height in tiles: the eight rows, and room under the last for its name and the help button beside it
- * (36 × 24 px on a phone). */
-export const FARM_MAP_TILES = TOP_TILES + (FARM_MAP_ROWS - 1) * ROW_TILES + 5
+/** A map's height in tiles for its rows, with room under the last for its name and the help button beside it. */
+export const mapTilesFor = (rows: number): number => TOP_TILES + (rows - 1) * ROW_TILES + 5
+/** The map's height in tiles: the eight rows (36 × 24 px on a phone). On v4 the homestead's rows add to it (F54). */
+export const FARM_MAP_TILES = mapTilesFor(FARM_MAP_ROWS)
 const COLUMNS = [0.2, 0.5, 0.8] as const
 
 /** Where a place stands, as fractions of the map: its column, and its row's ground line in the middle of a tile. */
-export const placeAt = (place: Pick<FarmPlace, 'row' | 'col'>): PlaceAt => ({
-  x: COLUMNS[place.col]!, y: (TOP_TILES + (place.row - 1) * ROW_TILES + 0.5) / FARM_MAP_TILES,
+export const placeAt = (place: Pick<FarmPlace, 'row' | 'col'>, tiles: number = FARM_MAP_TILES): PlaceAt => ({
+  x: COLUMNS[place.col]!, y: (TOP_TILES + (place.row - 1) * ROW_TILES + 0.5) / tiles,
 })
 
 /** What opens a place, in its quick look's words. */
@@ -50,6 +51,7 @@ export function opensWords(opens: PlaceOpens): string {
     case 'reward': return `Chapter ${opens.chapter}’s reward`
     case 'farm-rank': return `Farm Rank ${opens.rank}`
     case 'later': return 'Soon'
+    case 'house': return opens.n === 1 ? 'your first wedding' : `House ${opens.n - 1}`
   }
 }
 

@@ -95,10 +95,13 @@ each open workshop has been played or lacks inputs (`daySetState`):
 Either way the morning opens on the farm (`/`). The tap holds the day it meant, so a second tap, or a save another device
 moved on meanwhile, ends nothing more.
 
-**On save v4, Tonight** (romance build; live from F56; F50 decision 8, RM22): the tap opens **Tonight** first whenever an
-evening slot is free and someone can spend it (`tonightOpens`; F54 adds a house to pick): its **Evening** row ("with
-Stand-in 2 · Walk ✓" once spent, the Uma who said yes with **Play ›**, else **Pick someone ›**; festival night's own row
-on a festival day), CS6's line, and **End the day** / **Back**. End the day never waits on the evening. Otherwise the
+**On save v4, Tonight** (romance build; live from F56; F50 decision 8, F54 decision 5, RM22): the tap opens **Tonight**
+first whenever an evening slot is free and someone can spend it, or anyone is married (`tonightOpens`): its **Evening**
+row ("with Stand-in 2 · Walk ✓" once spent, the Uma who said yes with **Play ›**, else **Pick someone ›**; festival
+night's own row on a festival day or the Festival of Vows), **Sleep at** once married (the Farmhouse and each house with
+someone home, "· 3 home", ☕ for tomorrow's breakfast, "8 nights" for one you haven't slept in lately, "Her room" on a
+birthday-alone wisher's birthday; the house slept in least lately preselected, a tap picks one at once), CS6's line, and
+**End the day** / **Back**. End the day never waits on the evening. Otherwise the
 rule above stands. **The night is a fade:** the screen dims to dusk, the night runs with nothing shown, and the morning
 comes up from it (a plain cut with reduced motion). See [hearts.md](hearts.md#the-evening-rm19rm22-rm37). The night reads master data, which the farm loads as it opens; if it can't load,
 the sheet says so with **Try again**. The game never ends a day by itself.
@@ -147,6 +150,12 @@ the romance changes them (`nightStepsOf`, `NIGHT_STEPS_V4`):
 - **Step 7** clears the whole of v4's `today` (chats, gifts, praise earned and paid, events, evenings, invitations, and
   the bond hearts noted since the last morning).
 - **Step 8** runs `arriveUmas` in the Gate's place; each arrival's ties are **seeded** (F52).
+- **Before step 1** (F54), once anyone is married, **tonight's house** is noted: your pick from Sleep at, else the house
+  slept in least lately. **Step 6** (F54) also pays **+10 bond a night to each pair sharing a house** and brings a
+  spouse's **S2 or S4** when its 600 is full. **Step 8** (F54) notes the **household milestones** (news at 1, 5, 10, 15
+  and 20 married; the furniture set at 5; the finale's morning at 20). **Step 9** (F54) gives **the house's morning** first
+  after a wedding's reception (+30 each resident, her breakfast, one more morning item each from S2), moves spouses
+  waiting for a room into one, and holds the **Festival of Vows** on the finale's day each later year.
 - **Step 9** notes **praise earned overnight** and **birthdays and anniversaries today and tomorrow**, leaves **this
   morning's items** (`morningItems`, F51: every 4th morning from Romance 2, every 2nd from Spouse 2), then draws **this
   morning's invitation** (`drawInvitations`, F50: one Uma home at Friendship 2+ whose favourite kind is open to her, two
@@ -159,20 +168,27 @@ What v4 adds or changes:
 <!-- live:night-v4 -->
 | Step | Function | What happens | Filled by |
 |---|---|---|---|
+| 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house is noted (its last night slept is today), your pick from Sleep at or else the house slept in least lately; the pick clears for tomorrow | F54 |
 | 2 | `growCrops` | Crops grow: 1 a night untended, the tender’s rate tended, ×1.1 side by side (her tender has a 3-heart partner tending another growing block), ×1.2 for a farmer in her element (Friendship 8); a farmer’s night chores add +0.25 growth each to the untended block with the most growing plots, else hers; plots that reach their days − 0.5 turn Ready | F20, F52, F51 |
 | 4 | `nightExtras` | Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again (20% in her element), seeded copies straight into the Warehouse; then the perks’ extras: the bond term × the romance term of the same items (her line’s +10% and +20%, her ring, a dream, the household; held to 40%), their own seeded copies | F52, F51 |
 | 4 | `nightChores` | Night chores: a forager’s bring one item each from her rank’s deepest forest area this season, a fisher’s one fish each from her deepest spot, at a day’s haul’s stars, into the Warehouse; 1 from F6, 2 from R7, 3 from S4, on the farm only | F51 |
 | 6 | `tickRanks` | Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met | F21, F47, F51 |
 | 6 | `tickBonds` | Bonds: +10 to each pair who worked one place today (the Fields’ tenders together), once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend | F52 |
 | 6 | `payLine` | Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night | F47 |
+| 6 | `shareTheHouses` | Shared houses: +10 bond a night to each pair of spouses with rooms in the same house | F54 |
+| 6 | `levelAtNight` | Spouse levels: a spouse at S1 or S3 whose 600 is full reaches S2 or S4, no event (S2 starts her every-2nd-morning item); never S3 or S5 | F54 |
 | 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception | F18, F47, F49, F53 |
 | 8 | `arriveUmas` | Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50) | F46, F52 |
 | 8 | `openRingBench` | The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and Ida Stone’s scene is due in the morning | F53 |
+| 8 | `householdMilestones` | Household milestones: as the married count passes 1, 5, 10, 15 and 20, each is news once; 5 brings the furniture set, 20 the finale’s morning; household scenes are Ready from this morning | F54 |
 | 9 | `serveTheReception` | A wedding’s reception: everyone on the farm well fed from tomorrow for its days (a dish ★1–2 one, ★3–4 two, ★5 three; Marta’s cake one), never shortening a meal already running | F53 |
+| 9 | `houseMorningStep` | The house’s morning: each resident of the house slept in +30 (only hers on a birthday-alone night); her breakfast (S1) feeds everyone on the farm with no meal left; each resident at S2+ leaves one more morning item; a house with residents not slept in for 8 nights misses you | F54 |
+| 9 | `moveInRooms` | Rooms: spouses home in the Dorm who wait for a room take one, in wedding order, by the same default as a wedding’s | F54 |
+| 9 | `vowsMorning` | The Festival of Vows: on the finale’s day of the year, each later year, every spouse +50 and a festival night tonight | F54 |
 | 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse | F47 |
 | 9 | `morningItems` | Morning items: each Uma on the farm leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+) | F51 |
 | 9 | `drawInvitations` | Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, 'invite', n)` among those home at Friendship 2+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14) | F50 |
-| 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists the invitations, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning | F18, F50, F52, F51 |
+| 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists the invitations, the Festival of Vows, the night’s levels, the house’s morning, rooms taken and a house that misses you, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning; §5 the household milestones | F18, F50, F52, F51, F54 |
 <!-- /live -->
 
 The romance's points, birthdays and anniversaries are [hearts.md](hearts.md#points-rm13-rm15-rm18)'s; bonds are
@@ -209,18 +225,22 @@ The romance's points, birthdays and anniversaries are [hearts.md](hearts.md#poin
 > **On save v4 (romance build; live from F56; F46 decision 15, F47 decision 14, F48 decisions 1 and 9):** §4 is **Hearts**
 > in place of Bonds, in RM57's order: (1) **Ready** lines read live from `readiness` as the card shows, never stored, up
 > to three, then "+N more" (the Hearts tab on Ready); (2) the invitation (`{ kind: 'invite', id, evening }`, "✉ Stand-in
-> 2: “Walk at dusk tonight?”" with **Yes, tonight** and **Another day**, F50); (3) the house's morning (F54), with her
+> 2: “Walk at dusk tonight?”" with **Yes, tonight** and **Another day**, F50); (3) the house's morning (F54: "⌂ Farmhouse
+> · Stand-in 1 · ♥ +30 · ☕ 3 fed · +1 item" with its house line, a move-in, "⌂ Rose Cottage misses you" with **Tonight ›**
+> and **Another night**), with her
 > morning items (`{ kind: 'item', id, items }`, "♥ Stand-in 2 left you ★3 Shiitake") and the night's chores (`{ kind:
 > 'chores', items, growth }`, "Night chores · 3 items · +0.25 growth", F51); (4)
 > birthdays and anniversaries today and tomorrow (`{ kind: 'birthday', id, when }`, `{ kind: 'anniversary', id, when,
-> item }`, "★ Tomorrow: Stand-in 1's birthday"); (5) levels reached overnight (F54) and arrivals (`{ kind: 'arrived', id,
+> item }`, "★ Tomorrow: Stand-in 1's birthday"; the Festival of Vows, F54); (5) levels reached overnight (F54: "♥ Stand-in
+> 1 · Spouse 2, reached overnight", her level-up card) and arrivals (`{ kind: 'arrived', id,
 > home }`, "Stand-in 4 arrived · away", her arrival scene waiting); (6) the perks' extras (`{ kind: 'perks', items }`,
 > "Perks · +2 items", F51), side by side's extras (`{ kind: 'side', items }`,
 > "Side by side · +3 items", opening the Warehouse) and bond hearts (`{ kind: 'bond', a, b, hearts }`, "♥♥ Stand-in 1 &
 > Stand-in 2 · bond 2" with **Read** while a conversation waits, F52). The section shows
 > whenever a stored line or a Ready Uma is there, and every line opens her profile (`/hearts?uma=`); a rank's line opens
-> its Work side (`/hearts?view=work&uma=`) and "2 Umas idle" the Work view. §5 drops the roster's `joined`, Gate and
-> `left` lines; and night step 8 runs `arriveUmas` in place of `gateVisitors`
+> its Work side (`/hearts?view=work&uma=`) and "2 Umas idle" the Work view. The household's Ready offers ("⌂ Household
+> scene 1 · Ready") follow the Ready lines, live (F54). §5 drops the roster's `joined`, Gate and `left` lines and adds the
+> household milestones ("Married 5 · Household scene 1, the furniture set, +5% items", F54); and night step 8 runs `arriveUmas` in place of `gateVisitors`
 > ([hearts.md](hearts.md#the-night-and-the-morning-on-v4)). The table below is v3's.
 
 `save.summary` holds ids and counts, never sentences, and the app words them. It's the morning it opens on (its `day` is
@@ -303,6 +323,13 @@ stay put.
   ([gathering.md](gathering.md#the-screens-decisions-5-and-8)). F23 opened the Dorm (`/dorm`) and the Gate (its quick
   look, `/?peek=gate`, with the visitor's face as its pip; [roster.md](roster.md#the-screens)). Every other place keeps
   its plain quick look.
+- **The homestead on v4** (romance build; live from F56; F54 decision 2, RM41): rows after the yard and before the town
+  edge, which moves down to stay the map's last row: the Farmhouse, House 1 and House 2 (row 8); Houses 3–5 (row 9); House
+  6 (row 10). Built houses and the next lot show, so the map grows a row at a time (40 tiles with one homestead row, 48
+  with three). A house's pips are its residents' faces (♥ on a Ready one) and its free rooms' dots; a tap opens the
+  homestead's sheet at that house (`/?sheet=homestead&house=<n>`); the next lot is the cottage dimmed and locked, "Build ·
+  8,000g". The rows and their frames are in [hearts.md](hearts.md#the-homestead-rm41-decisions-13). v3's map is the eight
+  rows above, unchanged.
 - **The Forge on v4** (romance build; live from F56; F53 decision 3): it opens as **the ring bench** the night after the
   first Romance 8 (`buildings.forge = 0`, D30's "held, not built"), not with chapter 7; locked before that, its quick look
   says "Opens with your first Romance 8". Open, its quick look reads **Ring bench · one ring a day** with **Make a ring ›**

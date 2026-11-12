@@ -266,6 +266,8 @@ describe('the wedding (decision 9)', () => {
     expect($$('[data-opens] li').map((l) => l.textContent)).toEqual([
       '· The spouse ladder, Spouse 1–5', '· Her ring: +3% at the Fields', '· Evenings: every kind her ladders opened',
       '· S1 · Breakfast: the crew starts well fed on a morning in her house', `· Your anniversary: ${SEASON_NAMES[date.season]} ${date.day}, each year`,
+      // F54 decision 4: her room, taken at once, and the house's mornings.
+      '· Her room: Farmhouse', '· House mornings: +30 for her each morning you sleep there',
     ])
     expect($('[data-married-line]')?.textContent).toBe('Married 1/3 · next household scene at 5')
     await click($('[data-action="continue"]'))
@@ -320,7 +322,10 @@ describe('the words (decision 10; RS2)', () => {
       ...stageOpens('engaged', 'farming', { ring: 3 }), ...stageOpens('married', 'fishing', { ring: 3, wed: 21 }),
     ]
     expect(words.filter((w) => gendersFarmer(w))).toEqual([])
-    expect([makeWords(10), marriedWords(19, 20), marriedWords(20, 20)]).toEqual(['Make an Orichalcum Ring · 1 a day', 'Married 19/20 · the finale at 20', 'Married 20/20'])
+    // F54: a milestone's own wedding says what opens tomorrow.
+    expect([makeWords(10), marriedWords(19, 20), marriedWords(20, 20), marriedWords(5, 20)]).toEqual([
+      'Make an Orichalcum Ring · 1 a day', 'Married 19/20 · the finale at 20', 'Married 20/20 · the Great Harvest tomorrow', 'Married 5/20 · household scene 1 tomorrow',
+    ])
   })
 })
 

@@ -173,7 +173,7 @@ describe('the points (RM13, RM16, RM17; decision 4)', () => {
 describe('the slots (RM19, RM45; decision 5)', () => {
   it('one evening a day; a second on days divisible by 4 from 10 married; festival night its own', () => {
     expect([eveningsOn(12, 9), eveningsOn(12, 10), eveningsOn(13, 10), eveningsOn(16, 20)]).toEqual([1, 2, 1, 2])
-    expect(eveningSlots(married(farm(12), 9))).toEqual({ evenings: 1, festival: null })
+    expect(eveningSlots(married(farm(12), 9))).toEqual({ evenings: 1, festival: null, vows: false })
     expect(eveningSlots(married(farm(12), 10)).evenings).toBe(2)
     expect(eveningSlots(married(farm(13), 10)).evenings).toBe(1)
     expect(eveningSlots(farm(10)).festival?.id).toBe('flower-show')
@@ -186,7 +186,8 @@ describe('the slots (RM19, RM45; decision 5)', () => {
     expect(slotsLeft(two)).toEqual({ evenings: 0, festival: true })
     const three = spendEvening(two, PACK, THREE, 'festival', 10).save
     expect(eveningMarks(three).map((m) => m.spent)).toEqual([{ with: ONE, kind: 'walk' }, { with: TWO, kind: 'fishing' }, { with: THREE, kind: 'festival' }])
-    expect(tonightOpens(three, PACK)).toBe(false)
+    // F54 decision 5: with anyone married, Tonight opens for Sleep at even with every evening spent.
+    expect(tonightOpens(three, PACK)).toBe(true)
     expect(parseSaveV4(json(three)).today.evenings).toHaveLength(3)
   })
 

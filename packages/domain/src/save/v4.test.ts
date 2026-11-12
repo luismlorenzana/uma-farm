@@ -99,6 +99,7 @@ describe('the v4 parse (decision 7)', () => {
     // A spouse may hold all of them.
     const save = farm()
     save.love['9000001'] = { ...newLove(), stage: 'spouse', level: 2, ring: 7, wed: 2, house: 0 }
+    save.dorm.home = save.dorm.home.filter((id) => id !== '9000001') // F54: a spouse in her house has no Dorm bed
     expect(parseSaveV4(json(save)).love['9000001']).toEqual(save.love['9000001'])
   })
 

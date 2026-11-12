@@ -16,14 +16,24 @@ const LETTER = /\p{L}/u
 /** The name as it's stored: Unicode-composed, trimmed, inner runs of spaces collapsed to one. */
 export const cleanFarmerName = (raw: string): string => raw.normalize('NFC').trim().replace(/\s+/g, ' ')
 
-/** Why a name can't be used, in the sheet's words, or null when it can. */
-export function farmerNameIssue(raw: string): string | null {
+/** Why a name can't be used under the letters rule, up to `max` characters, in the sheet's words, or null when it can. A
+ * house's name (F54 decision 3) follows the same rule at 20. */
+export function nameIssue(raw: string, max: number): string | null {
   const name = cleanFarmerName(raw)
   if (!LETTER.test(name)) return 'Enter a name'
   if (!ALLOWED.test(name)) return 'Letters, spaces, \' and - only'
-  if ([...name].length > FARMER_NAME_MAX) return `${FARMER_NAME_MAX} characters at most`
+  if ([...name].length > max) return `${max} characters at most`
   return null
 }
+
+/** Why a name can't be used, in the sheet's words, or null when it can. */
+export const farmerNameIssue = (raw: string): string | null => nameIssue(raw, FARMER_NAME_MAX)
+
+/** A house's name (F54 decision 3): the farmer's letters rule, 1–20 characters. */
+export const HOUSE_NAME_MAX = 20
+/** What fills a house's empty name field (grey, never stored). */
+export const HOUSE_PLACEHOLDER = 'Rose Cottage'
+export const houseNameIssue = (raw: string): string | null => nameIssue(raw, HOUSE_NAME_MAX)
 
 /** The farmer named, or renamed (decision 11): a player's change, which the app stamps. Refused with the sheet's words. */
 export function nameFarmer(save: SaveV4, raw: string): SaveV4 {

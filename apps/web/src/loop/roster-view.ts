@@ -5,6 +5,7 @@
 // with her. On save v4 (F46) her favourite line is the story pack's (RM6) and there is no affinity until F47's route. Pure
 // but for the pack, which the romance build has loaded before any screen.
 import {
+  atHome, farmHome,
   ACTIVITIES, ACTIVITY_NAMES, activityScore, challengeFor, challengeMet, favouriteActivity, favouriteOf, FAVOURITE_ACTIVITIES, HEART_POINTS, heartsOf,
   MAX_AFFINITY, pointsFull, RANK_POINTS, RANKS, TALENT_D, TALENT_GRADES,
   type Activity, type FarmOutfit, type RosterUma, type FarmSave, type StoryPack, type Talents, type TalentStep,
@@ -43,8 +44,8 @@ export function bestRank(uma: Pick<RosterUma, 'ranks'>): string {
 
 export function rosterView(save: FarmSave): RosterView {
   return {
-    home: save.dorm.home.flatMap((id) => (save.roster[id] ? [{ outfitId: id, rank: bestRank(save.roster[id]) }] : [])),
-    away: Object.keys(save.roster).length - save.dorm.home.length,
+    home: farmHome(save).flatMap((id) => (save.roster[id] ? [{ outfitId: id, rank: bestRank(save.roster[id]) }] : [])),
+    away: Object.keys(save.roster).length - farmHome(save).length,
   }
 }
 
@@ -106,7 +107,7 @@ export function umaRows(save: FarmSave, ids: readonly string[], names: ReadonlyM
     const favourite = save.version === 4 ? (story ? favouriteOf(story, id) : null) : outfit ? favouriteActivity(outfit) : null
     const row: LoopUmaRow = {
       id, name, releasedAt: base?.releasedAt ?? '', level: null, search: name.toLowerCase(), facets: {}, sorts: {},
-      talents: talents?.get(id) ?? null, ranks: uma.ranks, favourite, joined: uma.joined, home: save.dorm.home.includes(id), affinity: 'affinity' in uma ? uma.affinity : 0,
+      talents: talents?.get(id) ?? null, ranks: uma.ranks, favourite, joined: uma.joined, home: atHome(save, id), affinity: 'affinity' in uma ? uma.affinity : 0,
     }
     const facets: Record<string, readonly string[]> = { favourite: favourite ? [favourite] : [], where: [row.home ? 'home' : 'away'] }
     for (const a of ACTIVITIES) {
