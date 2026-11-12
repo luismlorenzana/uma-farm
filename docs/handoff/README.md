@@ -7,8 +7,9 @@
 >   F57, the shared stage, shipped as uma-stage 0.1.0 and 0.2.1 (D64, D65). [F11](tasks/F11-farm-stage.md) (the farm on the stage) is
 >   written (D68) and ready to build on uma-stage 0.3.0 (ST3 shipped); then F12–F15.
 > - **The romance core** (F46–F55) is built and deployed dark behind `VITE_FARM_ROMANCE` (D51–D59). **F56** delivers the
->   private story and goes live with the wipe: its bucket has the owner's yes (D60), and it waits for the story pack in
->   `content/story/` on this Mac.
+>   private story and goes live with the wipe: its bucket has the owner's yes (D60); its first part (the scripts, the
+>   route and the loader, dark) is done (D67); the bucket and its variable come next, and the publish and the go-live
+>   wait for the story pack in `content/story/` on this Mac.
 > - **[F40](tasks/F40-story-authoring.md), the story,** is with the story session (layer 1 written, D42–D44), and
 >   carries the romance core's format asks. **Three small packets come before layer 2** (D64):
 >   [F58](tasks/F58-cast-on-the-ranker.md), [F59](tasks/F59-tags-and-ties.md) and [F60](tasks/F60-story-counts.md),
@@ -61,7 +62,7 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 | | F53 | The ring bench, the proposal and the wedding (RM37–RM40) | Claude | M | F50 ✓, F51 ✓ | **Done** (D58), below |
 | | F54 | Married life, the houses and the finale (RM41–RM47) | Claude | L | F53 ✓ | **Done** (D59), below |
 | | F55 | The romance core's pixel art (a uma-platform Claude session, D45) | Claude | S | F41 read | **Done** (uma-art 2.26.0, D50; pinned by F49, D55), below |
-| | F56 | The private story's delivery and the go-live with the wipe: bucket, IAM, publish, `/api/story` (RM58–RM60); the owner's yes and a cost table first | Claude | M | F46–F54 ✓, F40 | [Written](tasks/F56-story-delivery.md) |
+| | F56 | The private story's delivery and the go-live with the wipe: bucket, IAM, publish, `/api/content/story…` (RM58–RM60); the owner's yes and a cost table first | Claude | M | F46–F54 ✓, F40 | [Part 1 done](tasks/F56-story-delivery.md) (D67); the cloud steps and the go-live next |
 | M5, more to do | F27 | The ranch: the Coop and the Barn, animals, feed, carers and affection, products, cloth at the Mill, chapter 2; save v4 (CS13, CS18, CS43) | Claude | L | F24 ✓ | [Written](tasks/F27-ranch.md) |
 | | F26 | The Mine and the Quarry: 30 floors, the stairs, the Smelter and the Cutter, chapter 3; save v5 (CS14, CS17, CS18, CS43) | Claude | M | F27 | [Written](tasks/F26-mine-quarry.md) |
 | | F8 | ~~The Forge's place and minigame~~ Re-scoped (D20, [hd2d-farm.md](../design/hd2d-farm.md) FR24): the minigame contract and the Kitchen: FR21's rules, the cooking game on a flat scene, recipes, the staff meal and well fed, chapter 4; save v6 (CS20–CS22, CS43) | Claude | L | F26, F27; its rules may start beside them (FR22) | [Written](tasks/F8-kitchen.md) |

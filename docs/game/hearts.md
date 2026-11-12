@@ -136,8 +136,9 @@ the morning after the 20th wedding, **the Great Harvest**; then a yearly **Festi
   the **partial** mode (an unscripted beat waits: "still being written"; a pair's unwritten level gets the tie's line);
   the story sandbox keeps the strict report. A pair file is `pairs/<a>-<b>.json`, the two ids in numeric order, for a
   tie's pair only, each level 1–5 at most once.
-- **One loader seam** (`apps/web/src/story/load.ts`, `loadStoryPack()`): the stand-in now; F56 points it at the private
-  pack. The romance build's boot waits for it, as the loop waits for master data.
+- **One loader seam** (`apps/web/src/story/load.ts`, `loadStoryPack()`): the private pack farm-api serves
+  ([its delivery](#the-packs-delivery-rm58-f56), F56); on the dev server only, the stand-in when farm-api serves none.
+  The romance build's boot waits for it, as the loop waits for master data.
 
 The stand-in pack in git (`packages/domain/src/story/stand-in/`, the private pack's layout), invented and original:
 
@@ -152,6 +153,33 @@ The stand-in pack in git (`packages/domain/src/story/stand-in/`, the private pac
 The format's 27 rungs start with `arrival` (her arrival scene, "event zero": hearts 0, a hearts trigger, exactly one
 choice point and no play), then friendship 1–10, the confession, romance 1–10, the proposal, the wedding and spouse 1, 3
 and 5. Tests build larger invented casts (9000004 on) for chapter, festival, Dorm and event arrivals.
+
+### The pack's delivery (RM58, F56)
+
+**Built dark (F56's first part); the bucket, the publish and the go-live come with its second.** The private pack never
+goes in git: it lives in the ignored `content/story/` on the owner's Mac, and the game reads only its release.
+
+- **`pnpm story:release`** (`scripts/story/release.mjs`) reads `content/story/` (only `cast.json`, `ties.json`, `umas/`,
+  `routes/`, `pairs/` and `household.json`), checks it with the game's own validator, and **refuses** it when anything
+  fails or a cast Uma lacks **her bible or her arrival scene**; routes, pairs and the household may be partial. It
+  writes the ignored `content/story-release/` as the bucket holds it: each file minified as `story/<name>.<hash8>.json`
+  (`cast`, `ties`, `household`, `uma-<id>`, `route-<id>`, `pair-<a>-<b>`) and the index **`story.json`**: `version`,
+  `release` (8 hex from the files' hashes), `builtAt`, `files` (each `{ path, bytes, sha256 }`), `scripted` (each
+  route's event ids) and `pairs` (each pair's bond levels). The same pack gives the same files.
+  `pnpm story:release --stand-in` releases the stand-in for the dev server (its forager and fisher have no bible).
+- **`pnpm story:publish`** (`scripts/story/publish.sh`) runs the release, then uploads the hash-named files, then
+  `story.json`, to the private bucket `gs://uma-farm-content`, with the scoped gcloud. Old files stay, so a phone holding
+  an older index still reads it.
+- **farm-api serves it** at **`/api/content/story.json`** (fresh on every read) and
+  **`/api/content/story/<name>.<hash8>.json`** (cached for good), behind the owner guard, and nothing else (404):
+  `STORY_BUCKET` in production, `STORY_DIR` (default `content/story-release/`) locally, 404 with neither.
+- **The phone** reads the index at boot, then the cast, the ties, the bibles and the household; each route and pair when
+  it's first played. uma-kit's content client checks every file against the index's hash and keeps it in Cache Storage,
+  so a release's file downloads once. The last good index stays on the phone, so an **offline boot plays the last
+  version**; a pack that can't load (no index, a file whose hash doesn't match, one the validator refuses) stops the
+  boot with **Try again**. The save keeps ids only, never a line of the story.
+- **The stand-in is the dev server's only:** when farm-api serves no pack, or with `VITE_FARM_STORY=stand-in` (as
+  Vitest runs); the production build holds none of it (the size check refuses one that does).
 
 ## The farmer's name (RM8)
 

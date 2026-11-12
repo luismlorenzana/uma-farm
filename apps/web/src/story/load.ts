@@ -1,14 +1,22 @@
-// The story pack's one loader seam (F46 decision 6; RM59): the dark build reads the invented stand-in from `@farm/domain`,
-// checked by F40's validator as any pack is (`storyPackFrom`). F56 points this at the private pack (`/api/content/story…`,
-// D48). Loaded on demand, with the pack, so neither reaches the initial JS.
+// The story pack's one loader seam (F46 decision 6; F56 decision 5; RM58, RM59): the private pack from farm-api's
+// `/api/content/story…` (`delivery.ts`: the index fresh, each file verified by hash and cached, the last index offline).
+// The invented stand-in from `@farm/domain` is the dev server's only (`import.meta.env.DEV`): when farm-api serves no pack
+// (no `content/story-release/`), or with `VITE_FARM_STORY=stand-in` (Vitest's), so the production build never holds it.
+// Loaded on demand, with the pack, so neither reaches the initial JS.
 import { castEntry, outfitOf, STAND_IN_FILES, storyPackFrom, type StoryPack } from '@farm/domain'
 import type { OutfitRowBase } from '@luismlorenzana/uma-kit/roster'
+import { CONTENT } from '../content/client'
 import { setMasterLens, type MasterView } from '../master/master'
+import { deviceIndexStore, loadReleasedPack } from './delivery'
 import { unknownName } from './story'
 
-/** The pack the game plays: the stand-in, until F56. */
+/** The invented stand-in, checked by F40's validator as any pack is: the dev server's fallback only. */
+const standIn = async (): Promise<StoryPack> => storyPackFrom(STAND_IN_FILES)
+
+/** The pack the game plays: the release farm-api serves; on the dev server, the stand-in when it serves none. */
 export async function loadStoryPack(): Promise<StoryPack> {
-  return storyPackFrom(STAND_IN_FILES)
+  if (import.meta.env.DEV && import.meta.env.VITE_FARM_STORY === 'stand-in') return standIn()
+  return loadReleasedPack(CONTENT, deviceIndexStore(), import.meta.env.DEV ? { missing: standIn } : {})
 }
 
 /** An album row for a character master data doesn't hold (the stand-ins): her lettered disc's name, nothing else. */

@@ -60,12 +60,39 @@ export class StoryPackError extends Error {
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
+/** The checking context a pack's cast gives: its character ids, and which goods exist. */
+export function packContext(cast: unknown, isGood: (id: string) => boolean = isGoodId): StoryContext {
+  const castIds = isObject(cast) && Array.isArray(cast.umas)
+    ? cast.umas.flatMap((u) => (isObject(u) && typeof u.characterId === 'string' ? [u.characterId] : [])) : []
+  return { umas: new Set(castIds), isGood }
+}
+
+/** The pairs the ties name, by `pairKey`: the only pairs with conversations (RS12). */
+export const tiedPairs = (ties: unknown): ReadonlySet<string> => new Set(isObject(ties) && Array.isArray(ties.ties)
+  ? ties.ties.flatMap((t) => (isObject(t) && typeof t.a === 'string' && typeof t.b === 'string' ? [pairKey(t.a, t.b)] : [])) : [])
+
+/** A route file's issues, each named `routes/<id>`: F40's validator in the partial mode (decision 16), her id, the cast. */
+export function routeFileIssues(id: string, route: unknown, bible: UmaBible | null, ctx: StoryContext): string[] {
+  const found = routeIssues(route, bible, ctx, { partial: true }).map((i) => `routes/${id}: ${i}`)
+  if (isObject(route) && route.characterId !== id) found.push(`routes/${id}: its characterId is ${String(route.characterId)}`)
+  if (!ctx.umas.has(id)) found.push(`routes/${id}: not in the cast`)
+  return found
+}
+
+/** A pair file's issues, each named `pairs/<a>-<b>`: the partial check (F52 decision 10), its name, a tie's pair. */
+export function pairFileIssues(name: string, pair: unknown, tied: ReadonlySet<string>, ctx: StoryContext): string[] {
+  const found = pairIssues(pair, ctx, { partial: true }).map((i) => `pairs/${name}: ${i}`)
+  if (isObject(pair) && typeof pair.a === 'string' && typeof pair.b === 'string') {
+    if (pairKey(pair.a, pair.b) !== `${pair.a}:${pair.b}` || name !== `${pair.a}-${pair.b}`) found.push(`pairs/${name}: its name and its a, b are the two ids in numeric order, <a>-<b>`)
+    if (!tied.has(pairKey(pair.a, pair.b))) found.push(`pairs/${name}: not a tie's pair (RS12)`)
+  }
+  return found
+}
+
 /** Reads a pack's files into a `StoryPack`, checked whole: the cast, the ties, each bible, and each route in the partial
  * mode (decision 16). Throws `StoryPackError` with every issue. */
 export function storyPackFrom(files: PackFiles, isGood: (id: string) => boolean = isGoodId): StoryPack {
-  const castIds = isObject(files.cast) && Array.isArray(files.cast.umas)
-    ? files.cast.umas.flatMap((u) => (isObject(u) && typeof u.characterId === 'string' ? [u.characterId] : [])) : []
-  const ctx: StoryContext = { umas: new Set(castIds), isGood }
+  const ctx = packContext(files.cast, isGood)
   const issues = [...castIssues(files.cast, ctx), ...tiesIssues(files.ties, ctx)]
   const bibles = new Map<string, UmaBible>()
   for (const [id, bible] of Object.entries(files.umas)) {
@@ -76,21 +103,14 @@ export function storyPackFrom(files: PackFiles, isGood: (id: string) => boolean 
   }
   const routes = new Map<string, Route>()
   for (const [id, route] of Object.entries(files.routes)) {
-    const found = routeIssues(route, bibles.get(id) ?? null, ctx, { partial: true }).map((i) => `routes/${id}: ${i}`)
-    if (isObject(route) && route.characterId !== id) found.push(`routes/${id}: its characterId is ${String(route.characterId)}`)
-    if (!ctx.umas.has(id)) found.push(`routes/${id}: not in the cast`)
+    const found = routeFileIssues(id, route, bibles.get(id) ?? null, ctx)
     issues.push(...found)
     if (found.length === 0) routes.set(id, route as unknown as Route)
   }
-  const tied = new Set(isObject(files.ties) && Array.isArray(files.ties.ties)
-    ? files.ties.ties.flatMap((t) => (isObject(t) && typeof t.a === 'string' && typeof t.b === 'string' ? [pairKey(t.a, t.b)] : [])) : [])
+  const tied = tiedPairs(files.ties)
   const pairs = new Map<string, PairConversations>()
   for (const [name, pair] of Object.entries(files.pairs ?? {})) {
-    const found = pairIssues(pair, ctx, { partial: true }).map((i) => `pairs/${name}: ${i}`)
-    if (isObject(pair) && typeof pair.a === 'string' && typeof pair.b === 'string') {
-      if (pairKey(pair.a, pair.b) !== `${pair.a}:${pair.b}` || name !== `${pair.a}-${pair.b}`) found.push(`pairs/${name}: its name and its a, b are the two ids in numeric order, <a>-<b>`)
-      if (!tied.has(pairKey(pair.a, pair.b))) found.push(`pairs/${name}: not a tie's pair (RS12)`)
-    }
+    const found = pairFileIssues(name, pair, tied, ctx)
     issues.push(...found)
     if (found.length === 0) pairs.set(pairKey((pair as PairConversations).a, (pair as PairConversations).b), pair as PairConversations)
   }

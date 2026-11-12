@@ -23,7 +23,7 @@ export const MAIN_JS_BUDGET = 180_000
  * the morning's invitation answers and the night's fade (F50); and the perks' terms and effects (F51); and the ring
  * bench's rules, sheet, view, actions and scene, and the wedding's rules (F53); and the homestead's and the household's
  * rules, the homestead's sheet, view, actions and map rows, the morning's house answer, the night level's card and the
- * household player (F54). The Wilds' screens left in F24.
+ * household player (F54); and the story pack's delivery, its index and released pack (F56). The Wilds' screens left in F24.
  * Paths
  * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
@@ -131,7 +131,20 @@ export const LAZY_MODULES = [
   'src/loop/HouseAnswer.tsx',
   'src/loop/NightLevel.tsx',
   'src/loop/HouseholdPlayer.tsx',
+  'src/story/delivery.ts',
+  'domain/src/story/release.ts',
 ]
+
+/** Modules no production build may hold at all (F56 decision 5): the invented stand-in pack is the dev server's only. A
+ * path ending in `/` is a folder. */
+export const DEV_ONLY_MODULES = ['domain/src/story/stand-in.ts', 'domain/src/story/stand-in/']
+
+/** The dev-only modules any chunk renders. */
+export function devOnlyInBuild(chunks, devOnly = DEV_ONLY_MODULES) {
+  return Object.entries(chunks).flatMap(([file, modules]) => modules
+    .filter((id) => devOnly.some((path) => (path.endsWith('/') ? id.includes(`/${path}`) || id.startsWith(path) : id === path || id.endsWith(`/${path}`))))
+    .map((id) => `${id} (${file})`))
+}
 
 export function entrySrc(html) {
   const scripts = [...html.matchAll(/<script\b[^>]*>/gi)].filter(([tag]) => /\btype\s*=\s*["']module["']/i.test(tag))
@@ -187,6 +200,8 @@ export async function checkSize(distDir, budget = MAIN_JS_BUDGET, lazy = LAZY_MO
   }
   const leaked = lazyInInitial(chunks, files, lazy)
   if (leaked.length > 0) throw new Error(`Initial JS renders modules that load on demand: ${leaked.join(', ')}`)
+  const devOnly = devOnlyInBuild(chunks)
+  if (devOnly.length > 0) throw new Error(`The build holds the dev server's stand-in: ${devOnly.join(', ')}`)
   return { entry, mainGzip, initialGzip, files: sizes, lazy: lazy.length }
 }
 

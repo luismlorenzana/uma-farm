@@ -47,9 +47,12 @@ Node 22+ and pnpm 10. The `@luismlorenzana/*` packages come from GitHub Packages
 | `pnpm build` | Build everything; the web build ends with the 180 KB size check |
 | `pnpm api` | The API on :8101, auth off (`AUTH_MODE=disabled`) |
 | `pnpm web` | The web app on :5194, `/api` proxied to :8101 |
+| `pnpm story:release` | The story pack's release: checks the ignored `content/story/` and writes `content/story-release/` (`--stand-in` releases the invented stand-in) |
+| `pnpm story:publish` | The release, uploaded to the private `gs://uma-farm-content` with the scoped gcloud (`--dry-run` lists it) |
 
 The preview pane starts both from `.claude/launch.json` (`farm-api`, `farm-web`). To try the guard locally, run the
-built API with `ALLOWED_EMAIL` set and no `AUTH_MODE`.
+built API with `ALLOWED_EMAIL` set and no `AUTH_MODE`. farm-api serves the story pack's release from
+`content/story-release/` (`STORY_DIR`); with none there, the dev server plays the invented stand-in.
 
 ## Conventions
 

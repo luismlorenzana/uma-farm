@@ -4,6 +4,14 @@
 the owner's one-line yes for the bucket and its grant (below) · Unblocks: M5 revised (F27 on save v5) · Milestone: the
 romance core**
 
+> **Part 1 landed (D67, [pull request #24](https://github.com/luismlorenzana/uma-farm/pull/24)):** Do steps 1–3, dark: the
+> release and publish scripts (`pnpm story:release`, `pnpm story:publish`), the `/api/content/story…` route, the loader
+> (index, verified files, the last index offline, the dev server's stand-in), `infra/bootstrap.sh`'s step 9 and
+> `deploy.yml`'s `STORY_BUCKET` written but not run, and decision 10's carried item (the M4 gate's "newer version" words).
+> **Next (the main session):** run the bootstrap step and set the variable (decision 6), then, once the pack is in
+> `content/story/`, `pnpm story:publish`, decision 7's checks and [infrastructure.md](../../technical/infrastructure.md),
+> and the go-live branch (Do steps 5–7). Part 2's notes are in D67.
+>
 > **The owner said yes on 2026-11-11 (D60):** create the bucket and its one binding through `infra/bootstrap.sh`'s step
 > without asking again. Build the local parts first; stop before the publish and the go-live until the private pack is in
 > `content/story/` on this Mac.

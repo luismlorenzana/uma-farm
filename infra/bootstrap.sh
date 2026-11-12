@@ -5,7 +5,7 @@ set -euo pipefail
 # piece is described before it's created, and grants are re-applied as they are. Run it with the owner's login, never
 # changing the active configuration:
 #
-#   CLOUDSDK_ACTIVE_CONFIG_NAME=default bash infra/bootstrap.sh
+#   CLOUDSDK_ACTIVE_CONFIG_NAME=default CLOUDSDK_CORE_PROJECT=uma-rpg bash infra/bootstrap.sh
 #
 # It never touches uma-rpg's or the other app's pieces: `(default)`, `rpg-*`, `github-deployer`, the uma-rpg site, and
 # the other app's database, services, accounts and site. Every piece it makes is labeled app=farm where labels apply.
@@ -30,8 +30,9 @@ SECRET="farm-vapid"
 JOB="farm-push-tick"
 SCHEDULER_SA_ID="farm-push-scheduler"
 SCHEDULER_SA="${SCHEDULER_SA_ID}@${PROJECT_ID}.iam.gserviceaccount.com"
+STORY_BUCKET="uma-farm-content"
 
-export CLOUDSDK_CORE_PROJECT="${PROJECT_ID}"
+export CLOUDSDK_ACTIVE_CONFIG_NAME="${CLOUDSDK_ACTIVE_CONFIG_NAME:-default}" CLOUDSDK_CORE_PROJECT="${PROJECT_ID}"
 PROJECT_NUMBER="$(gcloud projects describe "${PROJECT_ID}" --format='value(projectNumber)')"
 POOL_NAME="projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}"
 PROVIDER_NAME="${POOL_NAME}/providers/${PROVIDER_ID}"
@@ -180,7 +181,27 @@ else
 fi
 say "job ${JOB} is $(gcloud scheduler jobs describe "${JOB}" --location="${REGION}" --format='value(state)')"
 
-# --- 9. The repository variables ------------------------------------------------------------------------------------
+# --- 9. The story pack's private bucket (F56 decision 6, RM58, the owner's yes D60): versioned, uniform access, never
+# public, its one reader the runtime account; a noncurrent version goes once 10 newer ones exist. Hash-named files never
+# change, so only story.json keeps a history -------------------------------------------------------------------------
+if gcloud storage buckets describe "gs://${STORY_BUCKET}" >/dev/null 2>&1; then say "bucket ${STORY_BUCKET} exists"
+else
+  gcloud storage buckets create "gs://${STORY_BUCKET}" --location="${REGION}" --default-storage-class=STANDARD \
+    --uniform-bucket-level-access --public-access-prevention >/dev/null
+  say "created bucket ${STORY_BUCKET}"
+fi
+LIFECYCLE_FILE="$(mktemp)"
+cat > "${LIFECYCLE_FILE}" <<'JSON'
+{ "rule": [ { "action": { "type": "Delete" }, "condition": { "numNewerVersions": 10 } } ] }
+JSON
+gcloud storage buckets update "gs://${STORY_BUCKET}" --versioning --update-labels="app=${APP}" \
+  --uniform-bucket-level-access --public-access-prevention --lifecycle-file="${LIFECYCLE_FILE}" >/dev/null
+rm -f "${LIFECYCLE_FILE}"
+gcloud storage buckets add-iam-policy-binding "gs://${STORY_BUCKET}" --member="serviceAccount:${RUNTIME_SA}" \
+  --role="roles/storage.objectViewer" >/dev/null
+say "bucket ${STORY_BUCKET}: versioned, private, read by ${RUNTIME_SA_ID} only"
+
+# --- 10. The repository variables -----------------------------------------------------------------------------------
 ALLOWED_EMAIL="$(gh variable get ALLOWED_EMAIL -R luismlorenzana/uma-rpg 2>/dev/null || echo '<copy uma-rpg ALLOWED_EMAIL>')"
 
 echo
@@ -194,3 +215,4 @@ echo "HOSTING_SITE=${SITE}"
 echo "PUSH_AUDIENCE=${API_URL}"
 echo "FARM_API_URL=${API_URL}"
 echo "POST_CALLERS=quest-api-runtime@${PROJECT_ID}.iam.gserviceaccount.com"
+echo "STORY_BUCKET=${STORY_BUCKET}"
