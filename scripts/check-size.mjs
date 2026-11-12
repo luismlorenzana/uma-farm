@@ -19,7 +19,8 @@ export const MAIN_JS_BUDGET = 180_000
  * tab, her profile, the shared roster album, the stand-in marks, the tab's view model and the perks' words (F48); and the
  * pair player and the Diary's Conversations (F52, with bonds' rules in `farm/bonds.ts`); and the event player, the five
  * plays' rules and their sheet, the level-up and stage-up cards, the events' rules and actions, her Memories' album and
- * the Diary's shelf, with uma-art's emote atlas (F49). The Wilds' screens left in F24.
+ * the Diary's shelf, with uma-art's emote atlas (F49); and the evening's rules, its words, its actions, its player, Tonight,
+ * the morning's invitation answers and the night's fade (F50). The Wilds' screens left in F24.
  * Paths
  * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
@@ -102,6 +103,13 @@ export const LAZY_MODULES = [
   'domain/src/romance/plays/choose.ts',
   'domain/src/romance/plays/which.ts',
   'uma-art/emote/atlas.json',
+  'domain/src/romance/evening.ts',
+  'src/loop/evening-view.ts',
+  'src/loop/evening-actions.ts',
+  'src/loop/EveningPlayer.tsx',
+  'src/loop/Tonight.tsx',
+  'src/loop/InviteAnswer.tsx',
+  'src/loop/night-fade.ts',
 ]
 
 export function entrySrc(html) {

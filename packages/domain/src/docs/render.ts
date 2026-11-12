@@ -63,6 +63,8 @@ import { RHYTHM_BEATS, RHYTHM_EXTRA, RHYTHM_LEAD, RHYTHM_MARK_WORDS, RHYTHM_PERI
 import { WALK_FORK_MS, WALK_FORKS } from '../romance/plays/walk'
 import { PLAY_MAP, playOf, togetherPlay, type PlayAs } from '../romance/plays/which'
 import { EVENT_POINTS } from '../romance/events'
+import { DATE_FROM, EVENING_FACTOR, eveningPoints, EVENINGS, favouriteKind, HANGOUT_FROM, INVITE_POINTS, INVITE_WEIGHT_DAYS, ROLE_WORDS } from '../romance/evening'
+import { invitesFor, SECOND_EVENING_EVERY, TWO_EVENINGS_MARRIED } from '../save/v4'
 import { BIG_EVENTS, EVENT_LIMITS, type Route, type Together, type UmaBible } from '../story/authored'
 
 type Cell = string | number
@@ -607,8 +609,10 @@ function lovePoints(): string {
     ['A festival together (its team or entry)', `+${LOVE_POINTS.festival}`, 'Once a festival a year each', '`festivalTogether` (F39, F32 call it)'],
     ['Her arrival scene', `+${ARRIVAL_POINTS}, and its choice (+${CHOICE_OTHER} or +${CHOICE_BEST})`, 'Once', '`finishArrival` (F46)'],
     ['A heart event', '+50, its choices and its play’s grade', 'One of hers a day', 'F49'],
-    ['The evening · an invitation said yes · a house morning', 'F50 · F50 · F54', '', ''],
-    ['**On her anniversary**', '×2 on every act but the evening (×1.5 instead, F50)', 'From year 2 of her marriage', '`addLove`'],
+    ['The evening (a hangout from F2, a date from R1)', `Fine +${EVENING_GRADE_POINTS.fine}, Great +${EVENING_GRADE_POINTS.great}, Perfect +${EVENING_GRADE_POINTS.perfect}; ×${EVENING_FACTOR} in her favourite kind, on her birthday and on her anniversary, each once`, 'One evening a day across all the Umas (RM19’s more below)', '`spendEvening` (F50)'],
+    ['An invitation said yes', `+${INVITE_POINTS}`, 'With her first evening that day', '`spendEvening` (F50)'],
+    ['A house morning', '+30 each resident', 'The house you slept in', 'F54'],
+    ['**On her anniversary**', `×2 on every act but the evening (×${EVENING_FACTOR} instead)`, 'From year 2 of her marriage', '`addLove`'],
   ])
 }
 /** RM15: a gift's points by her taste and its stars, then on her birthday. */
@@ -801,6 +805,41 @@ function standInRoute(): string {
   }))
 }
 
+// --- F50: the evening (romance spec RM19–RM22, RM37) -------------------------------------------------------------------
+
+const GAME_PACKET: Readonly<Record<'F8' | 'F32', string>> = { F8: 'M5 (F8); not offered until then', F32: 'M6 (F32); not offered until then' }
+/** RM37: the kinds by ladder and game, and each one's invitation. */
+function eveningKinds(): string {
+  const pack = storyPackFrom(STAND_IN_FILES)
+  return table(['Kind', 'As a hangout', 'As a date', 'Plays as (RM26)', 'Its game', 'Her invitation'], Object.values(EVENINGS).map((d) => [
+    d.name,
+    d.kind === 'festival' ? `Festival days, F${HANGOUT_FROM}` : d.hangout === null ? '—' : `F${d.hangout}`,
+    d.kind === 'festival' ? `Festival days, R${DATE_FROM}` : `R${d.date}`,
+    d.kind === 'festival' ? 'Walk, at the festival ground' : playWords(d.play),
+    d.waits ? GAME_PACKET[d.waits] : 'Now',
+    d.question ? `“${d.question}”` : '— (never asked for)',
+  ])) + `
+
+Who: ${ROLE_WORDS.hangout.toLowerCase()} from Friendship ${HANGOUT_FROM} (her confession’s wait and Romance 0 included), ${ROLE_WORDS.date.toLowerCase()} from Romance ${DATE_FROM} (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse; she must be home. The stand-in’s favourite kinds: ${['9000001', '9000002', '9000003'].map((id) => `${id} ${favouriteKind(pack, id)}`).join(', ')}.`
+}
+/** RM13, RM16, RM17 (decision 4): what an evening pays, each factor once. */
+function eveningPointsBlock(): string {
+  const f = (kind: boolean, birthday: boolean, anniversary: boolean) => ({ kind, birthday, anniversary })
+  const cols = [f(false, false, false), f(true, false, false), f(true, true, false), f(true, true, true)]
+  return table(['Grade', 'Any kind', `Her favourite kind (×${EVENING_FACTOR})`, 'Her kind, on her birthday', 'Her kind, on her birthday and anniversary'],
+    GRADES.map((g) => [GRADE_NAMES[g], ...cols.map((c) => `+${eveningPoints(g, c)}`)]))
+    + `\n\nAn invitation said yes adds **+${INVITE_POINTS}** with her first evening that day, whatever the kind; it’s an act of its own, so her anniversary doubles it (+${INVITE_POINTS * 2}).`
+}
+/** Decisions 5 and 7: the day's slots and the morning's invitations. */
+function eveningSlotsBlock(): string {
+  const festivals = FESTIVALS.map((f) => `${SEASON_NAMES[f.season]} ${f.day}`).join(', ')
+  return table(['Today', 'Evenings', 'Festival night', 'Invitations this morning'], [
+    ['Any day', 1, '—', invitesFor(0)],
+    [`From ${TWO_EVENINGS_MARRIED} married`, `2 on days divisible by ${SECOND_EVENING_EVERY}, else 1`, '—', invitesFor(TWO_EVENINGS_MARRIED)],
+    [`A festival day (${festivals})`, 'As any day', '1 more, its own slot: only festival night fills it', 'As any day'],
+  ]) + `\n\nAn invitation’s draw: \`draw(uid, day, 'invite', n)\` among the Umas home at Friendship ${HANGOUT_FROM}+ whose favourite kind is open to them, each weighted 1 + the days since her last evening (or since she arrived), up to ${INVITE_WEIGHT_DAYS}; a second invitation is never the first’s Uma.`
+}
+
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
     'dorm-v4': dormV4, arrivals, 'arrival-pay': arrivalPay, 'opening-v4': openingV4, 'night-v4': nightV4, 'stand-in': standIn, 'farmer-name': farmerName,
@@ -808,6 +847,7 @@ export function renderBlock(key: string): string | null {
     'ready-waits': readyWaits, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor, 'perk-words': perkWordsBlock,
     'bond-points': bondPoints, 'bond-hearts': bondHeartsBlock, 'tie-seeds': tieSeeds, 'side-by-side': sideBySide,
     plays: playsBlock, 'play-map': playMap, 'play-grades': playGrades, 'play-windows': playWindows, 'event-pay': eventPay, 'stand-in-route': standInRoute,
+    'evening-kinds': eveningKinds, 'evening-points': eveningPointsBlock, 'evening-slots': eveningSlotsBlock,
     calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
     crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,

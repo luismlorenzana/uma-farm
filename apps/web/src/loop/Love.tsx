@@ -1,16 +1,21 @@
 // Her acts on her profile (F47 decision 15, moved by F48 decision 6; romance spec RM13, RM15, RM53): Chat +15 (then her
 // line for the day), Gift (the picker with each good's points for her today, or "?") and Praise +20 while earned, 48 pt in
 // the profile's thumb zone. What an act paid goes up to the profile (`onPaid`), which floats it from her face; a note
-// says it ("She likes it. +36"). Loaded on demand with the Hearts tab, so the M4 build never fetches it.
+// says it ("She likes it. +36"). F50 adds **Evening ›** (her evening at `?evening=<id>`, or why not: "Evening ✓", "Evening ·
+// F2", "Away tonight", "Evening spent"), so Chat, Gift and Evening sit side by side and Praise +20 takes the row under them
+// (RM53). Loaded on demand with the Hearts tab, so the M4 build never fetches it.
 import {
   birthdaysOf, canPraise, chatLineV4, DISLIKED_LINE, FAMILY_NAMES, GOOD_FAMILIES, giftPreview, goodName, goodOf, LOVE_POINTS, type SaveV4, type StoryPack,
   type Taste, type Temperament,
 } from '@farm/domain'
-import { Button, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { withParam } from '@luismlorenzana/uma-kit/shell'
+import { Button, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
+import { Link, useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import type { MasterView } from '../master/master'
 import { chatHer, giftHer, praiseHer } from './actions'
+import { eveningButton } from './evening-view'
 import { gain } from './love-words'
 
 const TASTE_WORDS: Readonly<Record<Taste, string>> = { loved: 'She loves it!', liked: 'She likes it.', neutral: 'Thank you.', disliked: DISLIKED_LINE }
@@ -32,11 +37,13 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
   const [note, setNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [giving, setGiving] = useState(false)
+  const location = useLocation()
   const birthdays = useMemo(() => birthdaysOf(pack, master.birthdays), [pack, master])
   if (!save.love[id]) return null
   const talked = save.today.chats.includes(id)
   const gave = save.today.gifts.includes(id)
   const praise = canPraise(save, id)
+  const evening = eveningButton(save, id)
   const line = talked ? fill(chatLineV4(save, pack, id, temperament ?? 'steady'), name, save.farmer.name) : null
   const paid = (points: number, words: string) => {
     setError(null)
@@ -48,17 +55,25 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
     <div className="space-y-2" data-love={id}>
       {line && <p className="rounded-md bg-sunken/70 px-3 py-2 text-[14px] italic" data-chat-line>{line}</p>}
       {(note || error) && <p role="status" className={`text-[13px] font-semibold ${error ? 'text-danger' : 'text-success'}`} data-love-note>{error ?? note}</p>}
-      <div className={`grid gap-2 ${praise ? 'grid-cols-3' : 'grid-cols-2'}`}>
-        <Button variant="secondary" size="md" disabled={talked} data-action="chat" onClick={() => void chatHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥`), fail)}>
-          {talked ? (praise ? 'Chat ✓' : 'Talked today') : `Chat +${LOVE_POINTS.chat}`}
+      <div className="grid grid-cols-3 gap-2">
+        <Button variant="secondary" size="md" className="px-2!" disabled={talked} data-action="chat" onClick={() => void chatHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥`), fail)}>
+          {talked ? 'Chat ✓' : `Chat +${LOVE_POINTS.chat}`}
         </Button>
-        <Button variant="secondary" size="md" disabled={gave} onClick={() => setGiving(true)} data-action="gift">{gave ? (praise ? 'Gift ✓' : 'Gift given') : 'Gift'}</Button>
-        {praise && (
-          <Button size="md" data-action="praise" onClick={() => void praiseHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥ Well done!`), fail)}>
-            Praise +{LOVE_POINTS.praise}
-          </Button>
+        <Button variant="secondary" size="md" className="px-2!" disabled={gave} onClick={() => setGiving(true)} data-action="gift">{gave ? 'Gift ✓' : 'Gift'}</Button>
+        {evening.open ? (
+          <Link to={withParam(location, 'evening', id)} state={{ back: true }} data-action="evening"
+            className="font-display inline-flex min-h-12 items-center justify-center gap-1 rounded-sm bg-[#c2385e] px-2 text-[15px] font-semibold tracking-tight text-white shadow-1">
+            <UiMark mark="hearts/evening" fallback={<span aria-hidden>☾</span>} />{evening.text}
+          </Link>
+        ) : (
+          <Button variant="secondary" size="md" className="px-2! text-[14px]!" disabled data-action="evening">{evening.text}</Button>
         )}
       </div>
+      {praise && (
+        <Button size="md" className="w-full" data-action="praise" onClick={() => void praiseHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥ Well done!`), fail)}>
+          Praise +{LOVE_POINTS.praise}
+        </Button>
+      )}
       {giving && (
         <GiftPicker save={save} id={id} name={name} points={(good, stars) => giftPreview(save, pack, id, good, stars, birthdays)} onClose={() => setGiving(false)}
           onGive={(item, stars) => {

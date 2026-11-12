@@ -4,7 +4,8 @@
 // locked; the Gate's is the visitor waiting, with Chat and Gift (F23). After a night the morning summary opens over the
 // map until the player starts the day. On save v4 a Ready Uma's pip carries ♥ wherever the map draws her (F48 decision 10)
 // and the morning's Hearts section lists who's Ready (decision 9), both read live; its bond hearts carry Read while a
-// conversation waits (F52), which plays over the morning (`?read=`). Loaded on demand.
+// conversation waits (F52), which plays over the morning (`?read=`); in the romance build an invitation's line carries Yes,
+// tonight and Another day (F50). Loaded on demand.
 import {
   farmEnvV3, FARM_PLACES, farmPlace, placeBlurb, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, STAY_AFFINITY, workNow, type FarmPlace, type LoopPlaceId,
   type FarmSave,
@@ -14,8 +15,9 @@ import { ART_TILE, artScale, HubMap, hubDpr, PALETTES, type HubMapPlace, type Pa
 import { FloatingPill, PeekPanel, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { workView, type WorkView } from '@luismlorenzana/uma-kit/work'
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
+import { romanceOn } from '../app/romance'
 import { masterReady, useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
@@ -31,6 +33,8 @@ import { WorkPlacePeek } from './WorkPlace'
 import { isWorkScreen } from './work-view'
 
 const GROUND: PageGround = { id: 'farm', tiles: 'farmlands', palette: PALETTES.farmlands! }
+// The romance build's only: the switch folds at build time, and the deployed build drops the import.
+const InviteAnswer = /* @__PURE__ */ lazy(() => import('./InviteAnswer'))
 const WORK_PLACES: ReadonlySet<string> = new Set(LOOP_WORK_PLACES)
 
 /** `/`, with an optional `?peek=<place>` quick look. An unknown place drops the panel. */
@@ -219,6 +223,7 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
                     <span className="min-w-0 flex-1">{line.text}</span>
                     {line.tag && <span className="shrink-0 rounded-full bg-success/15 px-1.5 text-[11px] font-semibold text-success" data-tag>{line.tag}</span>}
                   </Link>
+                  {romanceOn() && line.invite && <Suspense fallback={null}><InviteAnswer id={line.invite} /></Suspense>}
                 </li>
               ))}
             </ul>

@@ -8,6 +8,7 @@ import type { Activity, Rank } from '../farm/ranks'
 import type { CropId } from '../goods/ids'
 import type { LoopPlaceId } from '../save/parse-v3'
 import type { BlockId, OutfitId } from '../save/v3'
+import type { InviteKind } from '../save/v4'
 
 /** §1 The bin (F19 decision 6): a good at one star that sold tonight, how many, the gold they made, and whether the
  * season's demand lifted their price. Its gold is the night's, never checked again: a price changing later can't break
@@ -165,9 +166,18 @@ export interface BondLine {
   b: string
   hearts: number
 }
-/** §4's stored lines: birthdays and anniversaries (F47), then arrivals (F46), then side by side and bond hearts (F52). Ready
- * lines aren't stored: they change by day, so F48 reads them live (`readiness`). */
-export type HeartLine = BirthdayLine | AnniversaryLine | ArrivedLine | SideLine | BondLine
+/** §4 Hearts (F50 decision 7; RM20, RM57's second line): her invitation this morning, drawn at step 9 into
+ * `today.invites`, asking for her favourite kind. Its answer (Yes, tonight or Another day) is `today.invites`', read as the
+ * card shows. */
+export interface InviteLine {
+  kind: 'invite'
+  id: string
+  /** The kind she asks for: her favourite. */
+  evening: InviteKind
+}
+/** §4's stored lines: invitations (F50), birthdays and anniversaries (F47), then arrivals (F46), then side by side and bond
+ * hearts (F52). Ready lines aren't stored: they change by day, so F48 reads them live (`readiness`). */
+export type HeartLine = InviteLine | BirthdayLine | AnniversaryLine | ArrivedLine | SideLine | BondLine
 
 /** §5 on v4: v3's news without its roster lines (`joined`, `gate`, `left`): arrivals are §4's, and the Gate has no
  * visitors. Rank lines' `outfitId` holds the roster's key, her character id (decision 5). */
@@ -179,8 +189,8 @@ export interface MorningSummaryV4 {
   bin: BinSale[]
   work: WorkLine[]
   ranks: RankLine[]
-  /** §4 Hearts: birthdays and anniversaries (F47), then arrivals (F46), then side by side and bond hearts (F52); the
-   * romance's lines join with their packets. */
+  /** §4 Hearts: invitations (F50), birthdays and anniversaries (F47), then arrivals (F46), then side by side and bond
+   * hearts (F52); the romance's lines join with their packets. */
   hearts: HeartLine[]
   news: NewsLineV4[]
   nudges: Nudge[]

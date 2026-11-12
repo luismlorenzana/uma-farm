@@ -93,7 +93,14 @@ each open workshop has been played or lacks inputs (`daySetState`):
 - otherwise one line says what's left, **"2 Umas idle · 3 to collect"**, with **End anyway** and **Back**.
 
 Either way the morning opens on the farm (`/`). The tap holds the day it meant, so a second tap, or a save another device
-moved on meanwhile, ends nothing more. The night reads master data, which the farm loads as it opens; if it can't load,
+moved on meanwhile, ends nothing more.
+
+**On save v4, Tonight** (romance build; live from F56; F50 decision 8, RM22): the tap opens **Tonight** first whenever an
+evening slot is free and someone can spend it (`tonightOpens`; F54 adds a house to pick): its **Evening** row ("with
+Stand-in 2 · Walk ✓" once spent, the Uma who said yes with **Play ›**, else **Pick someone ›**; festival night's own row
+on a festival day), CS6's line, and **End the day** / **Back**. End the day never waits on the evening. Otherwise the
+rule above stands. **The night is a fade:** the screen dims to dusk, the night runs with nothing shown, and the morning
+comes up from it (a plain cut with reduced motion). See [hearts.md](hearts.md#the-evening-rm19rm22-rm37). The night reads master data, which the farm loads as it opens; if it can't load,
 the sheet says so with **Try again**. The game never ends a day by itself.
 
 **The Menu's switch**, "Ask before ending the day", is a device setting (`farm.ask-end-day`), on by default and never in
@@ -136,8 +143,10 @@ romance changes them (`nightStepsOf`, `NIGHT_STEPS_V4`):
 - **Step 7** clears the whole of v4's `today` (chats, gifts, praise earned and paid, events, evenings, invitations, and
   the bond hearts noted since the last morning).
 - **Step 8** runs `arriveUmas` in the Gate's place; each arrival's ties are **seeded** (F52).
-- **Step 9** notes **praise earned overnight** and **birthdays and anniversaries today and tomorrow** before the summary,
-  whose §4 lists **side by side** and each pair's **bond hearts** reached since the last morning.
+- **Step 9** notes **praise earned overnight** and **birthdays and anniversaries today and tomorrow**, then draws **this
+  morning's invitation** (`drawInvitations`, F50: one Uma home at Friendship 2+ whose favourite kind is open to her, two
+  from 10 married, weighted toward the least seen, by `draw(uid, day, 'invite', n)`) before the summary, whose §4 lists
+  the invitation, **side by side** and each pair's **bond hearts** reached since the last morning.
 
 What v4 adds or changes:
 
@@ -152,7 +161,8 @@ What v4 adds or changes:
 | 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations | F18, F47, F49 |
 | 8 | `arriveUmas` | Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50) | F46, F52 |
 | 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse | F47 |
-| 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists side by side’s extras and each pair’s bond hearts reached since the last morning | F18, F52 |
+| 9 | `drawInvitations` | Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, 'invite', n)` among those home at Friendship 2+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14) | F50 |
+| 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists the invitations, side by side’s extras and each pair’s bond hearts reached since the last morning | F18, F50, F52 |
 <!-- /live -->
 
 The romance's points, birthdays and anniversaries are [hearts.md](hearts.md#points-rm13-rm15-rm18)'s; bonds are
@@ -188,7 +198,8 @@ The romance's points, birthdays and anniversaries are [hearts.md](hearts.md#poin
 
 > **On save v4 (romance build; live from F56; F46 decision 15, F47 decision 14, F48 decisions 1 and 9):** §4 is **Hearts**
 > in place of Bonds, in RM57's order: (1) **Ready** lines read live from `readiness` as the card shows, never stored, up
-> to three, then "+N more" (the Hearts tab on Ready); (2) the invitation (F50); (3) the house's morning (F54); (4)
+> to three, then "+N more" (the Hearts tab on Ready); (2) the invitation (`{ kind: 'invite', id, evening }`, "✉ Stand-in
+> 2: “Walk at dusk tonight?”" with **Yes, tonight** and **Another day**, F50); (3) the house's morning (F54); (4)
 > birthdays and anniversaries today and tomorrow (`{ kind: 'birthday', id, when }`, `{ kind: 'anniversary', id, when,
 > item }`, "★ Tomorrow: Stand-in 1's birthday"); (5) levels reached overnight (F54) and arrivals (`{ kind: 'arrived', id,
 > home }`, "Stand-in 4 arrived · away", her arrival scene waiting); (6) side by side's extras (`{ kind: 'side', items }`,

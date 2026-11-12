@@ -4,12 +4,12 @@
 // (`romance/plays/`); this draws them: **Cast** a ring closing on the mark, **Pick** a 3 × 3 field of goods popping up,
 // **Rhythm** her beat then yours with the activity's mark in words, **Walk** two turns at each fork toward two places'
 // frames, **Choose** three goods. Both lengths are drawn (an event's and an evening's), so F50 only wires evenings
-// (`PlaySheet` with `length="evening"`, `playSpec` for its numbers). The `play/*` marks are uma-art 2.26.0's. Loaded on
-// demand with the player.
+// (`PlaySheet` with `length="evening"`, `playSpec` for its numbers, and `pays` for her own numbers with the evening's
+// factors). The `play/*` marks are uma-art 2.26.0's. Loaded on demand with the player.
 import {
   castPlan, castScore, CHOOSE_MS, GRADE_NAMES, choosePlan, chooseScore, goodName, gradeOf, pickGoods, pickPlan, pickScore, RHYTHM_LEAD, RHYTHM_MARK_WORDS, rhythmBeats, rhythmPlan,
-  rhythmScore, walkFavourite, WALK_FORK_MS, walkPlacesOpen, walkPlan, walkScore, farmPlace, type ChoosePlan, type FarmPlaceId, type PickPlan, type PickTap, type PlayAs,
-  type PlayLength, type PlayScore, type RhythmMark, type SaveV4, type Seed, type StoryPack, type Turn, type WalkPlan,
+  rhythmScore, walkFavourite, WALK_FORK_MS, walkPlacesOpen, walkPlan, walkScore, farmPlace, type ChoosePlan, type FarmPlaceId, type Grade, type PickPlan, type PickTap,
+  type PlayAs, type PlayLength, type PlayScore, type RhythmMark, type SaveV4, type Seed, type StoryPack, type Turn, type WalkPlan,
 } from '@farm/domain'
 import { Button, UiMark, useKitArt, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
@@ -56,10 +56,12 @@ export function BuildingArt({ frame, scale = 2, className = '' }: { frame: strin
 }
 
 /** The sheet: its title and how to play, then the play, then its grade and **Continue**. `name` is hers. */
-export function PlaySheet({ spec, title, name, replay = false, onDone }: {
+export function PlaySheet({ spec, title, name, replay = false, pays, onDone }: {
   spec: PlaySpec; title?: string; name: string
   /** A Memory's replay: the grade without its points, since nothing pays. */
   replay?: boolean
+  /** An evening's own numbers with her factors (F50: "Perfect +225"), in place of the length's plain ones. */
+  pays?: Readonly<Record<Grade, number>>
   onDone: (result: Omit<PlayScore, 'kind'>) => void
 }) {
   const [phase, setPhase] = useState<'intro' | 'play' | 'done'>('intro')
@@ -79,12 +81,14 @@ export function PlaySheet({ spec, title, name, replay = false, onDone }: {
         {phase === 'play' && <PlayBody spec={spec} name={name} onEnd={end} />}
         {phase === 'done' && result && (
           <div className="space-y-3 text-center" data-play-result={gradeOf(result.score)} data-score={result.score}>
-            <p className="font-display text-[26px] font-bold text-[#c2385e]">{replay ? GRADE_NAMES[gradeOf(result.score)] : gradeWords(result.score, spec.length)}</p>
+            <p className="font-display text-[26px] font-bold text-[#c2385e]">
+              {replay ? GRADE_NAMES[gradeOf(result.score)] : pays ? `${GRADE_NAMES[gradeOf(result.score)]} · +${pays[gradeOf(result.score)]}` : gradeWords(result.score, spec.length)}
+            </p>
             {result.learns !== undefined && <p className="text-[14px] text-ink-soft">{result.learns ? `You chose ${goodName(result.learns)}.` : 'Nothing chosen.'}</p>}
             <Button className="w-full" onClick={() => onDone(result)} data-action="play-done">Continue</Button>
           </div>
         )}
-        <p className="text-center text-[12px] text-ink-faint" data-legend>{replay ? 'A replay: nothing pays.' : gradeLegend(spec.length)}</p>
+        <p className="text-center text-[12px] text-ink-faint" data-legend>{replay ? 'A replay: nothing pays.' : gradeLegend(spec.length, pays)}</p>
       </section>
     </div>
   )

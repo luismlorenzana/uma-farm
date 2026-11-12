@@ -3,23 +3,26 @@
 // level words). The Hearts view is one 72 pt row an Uma: her face, name and chips (● Ready, ✉ an invitation, Away), her
 // level and her ladder's hearts as a bar in the stage's colour with the filling heart and "points/cost", then the most
 // useful line, what's banked and today's chat and gift ticks. Ready rows first, then the least progress, then the
-// cast's order; filter chips with their counts (`?filter=`); the header's "Married n/N" and the (i). Her profile opens
+// cast's order; filter chips with their counts (`?filter=`); the header's "Married n/N", the evening's marks (F50: ○ free,
+// ● spent, festival night's in its season's colour) and the (i). Her profile opens
 // from either view at `?uma=<characterId>`, on the side the view names. Loaded on demand; only the romance build routes
 // here.
-import { ladderOf, type LadderName, type SaveV4 } from '@farm/domain'
+import { festivalOn, ladderOf, type LadderName, type SaveV4 } from '@farm/domain'
 import { FaceTile, type FaceTileBadges } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { Chip, HelpButton, Tabs } from '@luismlorenzana/uma-kit/ui'
+import { Chip, HelpButton, Tabs, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { useMemo } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { MasterGate } from '../master/MasterGate'
-import type { MasterView } from '../master/master'
+import { useMaster, type MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
+import { EVENING_HELP, headerMarks } from './evening-view'
 import { AwayChip, FillingHeart, HeartSegments, InviteChip, ReadyChip } from './HeartMarks'
 import { HeartProfile, type ProfileSide } from './HeartProfile'
 import { filterCounts, HEART_FILTERS, heartRows, isHeartFilter, levelShort, marriedOf, type HeartRow, type HeartsPack } from './hearts-view'
 import { RosterAlbum, useRosterRows } from './RosterAlbum'
+import { SEASON_COLOR } from './words'
 
 export default function HeartsPage() {
   const save = useLoopSave()
@@ -37,6 +40,7 @@ export default function HeartsPage() {
       <div className="flex items-center gap-2 pb-2">
         <h1 className="font-display text-[22px] font-bold text-ink">Hearts</h1>
         {married && <span className="text-[13px] font-semibold text-ink-soft tabular-nums" data-married={`${married.married}/${married.cast}`}>Married {married.married}/{married.cast}</span>}
+        <EveningMarks save={save} />
         <span className="ml-auto">
           {view === 'hearts' ? (
             <HelpButton title="Hearts" label="About hearts">
@@ -44,7 +48,7 @@ export default function HeartsPage() {
               <p>A full bar makes her next event Ready (● Ready). Some also need a setup, such as working a place that day. She must be home.</p>
               <p>Each Uma plays one of her events a day, and each level comes when its event plays.</p>
               <p>Gifts: loved +60, liked +30, others +10, disliked 0, and more for more stars. Her loved gift shows from Friendship 1; the rest as you learn them, and all from Friendship 7.</p>
-              <p>Her route: Friendship 1–10, her confession, Romance 1–10, the proposal, the wedding, then Spouse 1–5.</p>
+              <p>{EVENING_HELP}</p>
             </HelpButton>
           ) : (
             <HelpButton title="Talents and ranks" label="About talents and ranks">
@@ -59,6 +63,27 @@ export default function HeartsPage() {
       <Tabs label="Views" value={view} onChange={setView} className="mb-3" options={[{ value: 'hearts', label: 'Hearts' }, { value: 'work', label: 'Work' }]} />
       <MasterGate>{(master) => (pack ? <Hearts save={save} pack={pack} master={master} view={view} onView={setView} /> : null)}</MasterGate>
     </main>
+  )
+}
+
+/** The evening's marks (F50 decision 9; RM52): "Evening" with ○ a free slot and ● a spent one, the evenings first, festival
+ * night's in its festival's season colour. */
+function EveningMarks({ save }: { save: SaveV4 }) {
+  const master = useMaster()
+  const nameOf = (id: string) => (master.status === 'ready' ? master.view.album.get(id)?.name ?? 'An Uma' : 'An Uma')
+  const marks = headerMarks(save, nameOf)
+  const festival = festivalOn(save.calendar.day)
+  return (
+    <span className="flex shrink-0 items-center gap-1 text-[13px] font-semibold text-ink-soft" data-evening-marks={marks.map((m) => (m.spent ? '●' : '○')).join('')}>
+      <UiMark mark="hearts/evening" fallback={<span aria-hidden>☾</span>} />
+      Evening
+      {marks.map((m) => (
+        <span key={m.key} role="img" aria-label={m.label} className="text-[14px] leading-none" data-slot={m.festival ? 'festival' : 'evening'}
+          style={{ color: m.festival && festival ? SEASON_COLOR[festival.season] : '#c2385e' }}>
+          {m.spent ? '●' : '○'}
+        </span>
+      ))}
+    </span>
   )
 }
 

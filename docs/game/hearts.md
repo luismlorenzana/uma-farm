@@ -50,6 +50,16 @@ map); the screens `loop/EventPlayer.tsx`, `loop/PlaySheet.tsx`, `loop/EventCards
 `loop/MemoriesShelf.tsx` and `loop/event-view.ts`. uma-art 2.26.0 is pinned (the emote bubbles, F25's and F55's marks).
 The spec is RM24–RM30 and RM54–RM56; the calls are F49's (D55).
 
+**Built from F50.** The day has **one evening**, its one scarce choice: a **hangout** with an Uma at Friendship 2 or
+more, a **date** from Romance 1, or any kind with a spouse, played as one of D42's date games at its evening length
+(F49's plays) and paid by its grade, **×1.5 in her favourite kind**, her birthday and her anniversary. A second evening
+comes every fourth day from 10 married, and **festival night** on each festival day. Each morning **one Uma may invite
+you** ("Walk at dusk tonight?"): **Yes, tonight** adds +20 to her evening. End the day opens **Tonight** while an
+evening is free, and the night is a **fade** straight to the morning. The rules are `romance/evening.ts` and night step
+9's `drawInvitations`; the screens `loop/EveningPlayer.tsx`, `loop/Tonight.tsx`, `loop/InviteAnswer.tsx`,
+`loop/evening-view.ts` and `loop/night-fade.ts`, with **Evening ›** in `loop/Love.tsx` and the header's marks in
+`loop/HeartsPage.tsx`. The spec is RM19–RM22 and RM37; the calls are F50's (D56).
+
 ```
  a fresh v4 farm (or any v1–v3, wiped)
    │
@@ -275,8 +285,10 @@ the one way points move; it applies the day's factors and says what it paid.
 | A festival together (its team or entry) | +50 | Once a festival a year each | `festivalTogether` (F39, F32 call it) |
 | Her arrival scene | +50, and its choice (+10 or +30) | Once | `finishArrival` (F46) |
 | A heart event | +50, its choices and its play’s grade | One of hers a day | F49 |
-| The evening · an invitation said yes · a house morning | F50 · F50 · F54 |  |  |
-| **On her anniversary** | ×2 on every act but the evening (×1.5 instead, F50) | From year 2 of her marriage | `addLove` |
+| The evening (a hangout from F2, a date from R1) | Fine +60, Great +100, Perfect +150; ×1.5 in her favourite kind, on her birthday and on her anniversary, each once | One evening a day across all the Umas (RM19’s more below) | `spendEvening` (F50) |
+| An invitation said yes | +20 | With her first evening that day | `spendEvening` (F50) |
+| A house morning | +30 each resident | The house you slept in | F54 |
+| **On her anniversary** | ×2 on every act but the evening (×1.5 instead) | From year 2 of her marriage | `addLove` |
 <!-- /live -->
 
 - **The day's factors multiply once each** (decision 7): a gift **×3 on her birthday**; on her **anniversary every act
@@ -421,7 +433,7 @@ Menu**: Hearts (uma-kit's heart, **no badge**) replaces Roster. The M4 build kee
 
 ```
 ┌──────────────────────────────────────────┐
-│ Hearts  Married 0/3                  (i) │
+│ Hearts  Married 0/3  ☾ Evening ○     (i) │  ○ free, ● spent: a mark a slot today
 │ [ Hearts ]  Work                         │
 │ [Ready 1] [Friends 3] [Partners] [Married] [Away]
 ├──────────────────────────────────────────┤
@@ -435,8 +447,8 @@ Menu**: Hearts (uma-kit's heart, **no badge**) replaces Roster. The M4 build kee
 └──────────────────────────────────────────┘
 ```
 
-- **A row an Uma** on the roster, home or away, 72 pt: her face (master data), her name and chips (**✉** an invitation
-  from F50, **Away**), and at its end **● Ready** in her stage's colour, which plays her event (F49; a tap elsewhere opens
+- **A row an Uma** on the roster, home or away, 72 pt: her face (master data), her name and chips (**✉** her invitation
+  while it stands: unanswered, or said yes and not yet spent; **Away**), and at its end **● Ready** in her stage's colour, which plays her event (F49; a tap elsewhere opens
   her profile); her level in words, the **filling heart** and **her ladder's
   hearts as a bar** (ten for friendship and romance, five as a spouse: the levels played full, the next filling by points
   over its cost, the rest empty) with "points/cost"; then **the most useful line**, "+N banked" (a narrow row cuts it
@@ -450,9 +462,11 @@ Menu**: Hearts (uma-kit's heart, **no badge**) replaces Roster. The M4 build kee
 - **The filters,** one at a time, each with its count: **Ready**; **Friends** (friendship, and her confession's wait);
   **Partners** (romance, the proposal's and the wedding's waits); **Married** (spouse); **Away**.
 - **The header:** "Married n/N", N the cast's size (20 on the real pack, 3 on the stand-in; RM47's later waves raise it).
-  F50 adds the evening's ○/●.
-- **The (i)** holds five lines: points and bars, Ready, one event a day, gifts and tastes, and her route's stages (F50 puts
-  the evening's line in the last place).
+  Beside it, **☾ Evening** with a mark a slot today (F50): **○** free, **●** spent, the evenings first, then festival
+  night's in its festival's season colour; each mark's name says who it was spent with.
+- **The (i)** holds five lines: points and bars, Ready, one event a day, gifts and tastes, and the evening (F50, in her
+  route's stages' place): "One evening a day with someone home: a hangout from Friendship 2, a date from Romance 1. Fine
+  +60, Great +100, Perfect +150, ×1.5 in her favourite kind, and +20 when she asked you."
 - **The Work view** is the roster's album moved whole: the same cards, filters and sorts, with **her level in words**
   ("F7", "R4", "S2") in each face's corner in place of v3's hearts. A card opens her profile on its Work side.
 - **Hearts | Work** sits under the title, beside the (i): the page's foot is under End the day's raised disc. It's one
@@ -481,7 +495,8 @@ row, a card in the Work view, the morning's lines and the Dorm's list. Each sect
 │ Ties    Stand-in 2 · Friends ♥♥ · Stand-in 3 · Rivals
 │ Memories 0 of 26                         │
 ├──────────────────────────────────────────┤
-│ [ Chat +15 ] [ Gift ] [ Praise +20 ]     │  48 pt, in the thumb zone
+│ [ Chat +15 ] [ Gift ] [ ☾ Evening › ]    │  48 pt, in the thumb zone
+│ [        Praise +20        ]             │  while she's earned it
 │ [ Hearts ]  Work                         │
 └──────────────────────────────────────────┘
 ```
@@ -513,7 +528,10 @@ row, a card in the Work view, the morning's lines and the Dorm's list. Each sect
   given ("+6% at her line", F53).
 - **The actions,** 48 pt in the sheet's foot: **Chat +15** (then her line for the day), **Gift** (the picker with each
   good's points for her today or "?"), and **Praise +20** while she's earned it; what an act pays floats up from her face
-  as "+N" (still, with reduced motion) and a note says it ("She likes it. +36"). F50 adds **Evening ›**.
+  as "+N" (still, with reduced motion) and a note says it ("She likes it. +36"). **☾ Evening ›** (F50) opens her
+  [evening](#the-evening-rm19rm22-rm37) while she can spend one; otherwise it says why, greyed: "Evening ✓" (spent with
+  her today), "Evening · F2" (below Friendship 2), "Away tonight", "Evening spent" (with someone else). Chat, Gift and
+  Evening sit side by side ("Chat ✓", "Gift ✓" once done); **Praise +20** takes the row under them while earned.
 - **Hearts | Work:** the Work side is F21's sheet: her favourite line, the day she joined, where she is and her nine
   activities with talent, rank, points and the next challenge.
 - **The marks are stand-ins** (decision 11): the stage hearts, the bar's segments, the track's diamonds and the Ready,
@@ -841,6 +859,142 @@ frame: played ones with their caption, **the next** marked, the rest locked. **H
 | S5 | overlook | date: stargazing | Pick |  |  |
 <!-- /live -->
 
+## The evening (RM19–RM22, RM37)
+
+**Romance build; live from F56** (F50 decisions 1–10). **One evening a day across all the Umas**, any time in the day,
+from her profile (**☾ Evening ›**) or Tonight's row; an evening left empty costs nothing. It's a short play together,
+graded **Fine, Great or Perfect** and never failed (a miss is a Fine), that pays well, and more in her favourite kind.
+
+### Who and the kinds (RM19, RM37; decisions 1–3)
+
+- **Who:** a **hangout** with an Uma at Friendship 2 or more (her confession's wait and Romance 0 included), a **date** from
+  Romance 1 (the proposal's and the wedding's waits included), and **every kind her ladders opened with a spouse**. She
+  must be **home** (`homeTonight`: the Dorm's list, and from F54 a spouse in her house).
+- **The kinds** are D42's ten date games, opened by her ladder and by their game; **cooking together** waits for F8's
+  practice mode and **the footrace** for F32's track play, so until their packets they aren't offered (a favourite kind
+  that isn't offered still counts as hers, and she doesn't invite you to it). **Festival night** is a festival day's own
+  slot (below).
+- **Her favourite kind** is the date game her bible's beats use most (`together.kind === 'date'`); **walk on a tie at the
+  top, or with none** (no bible, no date beats). It pays ×1.5 and it's what her invitations ask for.
+
+<!-- live:evening-kinds -->
+| Kind | As a hangout | As a date | Plays as (RM26) | Its game | Her invitation |
+|---|---|---|---|---|---|
+| Walk at dusk | F2 | R1 | Walk | Now | “Walk at dusk tonight?” |
+| Fishing at the Pond | F2 | R1 | Cast | Now | “Fishing tonight?” |
+| A picnic | F2 | R1 | Pick | Now | “A picnic tonight?” |
+| The market in town | F2 | R1 | Pick | Now | “The market in town tonight?” |
+| Cooking together | F2 | R1 | Rhythm with the pot (the fallback until its game ships) | M5 (F8); not offered until then | “Cook with me tonight?” |
+| Crafting | — | R1 | Rhythm with your hands | Now | “Make something with me tonight?” |
+| Stargazing at the overlook | — | R3 | Pick | Now | “Stargazing tonight?” |
+| Dancing | — | R6 | Rhythm with her step | Now | “Dance with me tonight?” |
+| A boat on the lake | — | R6 | Rhythm with the oar | Now | “A boat on the lake tonight?” |
+| A footrace | — | R9 | Rhythm with the track (the fallback until its game ships) | M6 (F32); not offered until then | “Race me tonight?” |
+| Festival night | Festival days, F2 | Festival days, R1 | Walk, at the festival ground | Now | — (never asked for) |
+
+Who: a hangout from Friendship 2 (her confession’s wait and Romance 0 included), a date from Romance 1 (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse; she must be home. The stand-in’s favourite kinds: 9000001 stargazing, 9000002 walk, 9000003 walk.
+<!-- /live -->
+
+### The points (RM13, RM16, RM17; decision 4)
+
+**The grade's 60, 100 or 150, × 1.5 in her favourite kind, × 1.5 on her birthday, × 1.5 on her anniversary**: each once,
+multiplied, rounded half up, into her bar through `addLove` (D48: an anniversary evening is ×1.5, not the day's ×2 as
+well). Her kinds sheet shows each kind's three numbers for her today before the tap ("Perfect +225"), and the play shows
+them under it.
+
+<!-- live:evening-points -->
+| Grade | Any kind | Her favourite kind (×1.5) | Her kind, on her birthday | Her kind, on her birthday and anniversary |
+|---|---|---|---|---|
+| Fine | +60 | +90 | +135 | +203 |
+| Great | +100 | +150 | +225 | +338 |
+| Perfect | +150 | +225 | +338 | +506 |
+
+An invitation said yes adds **+20** with her first evening that day, whatever the kind; it’s an act of its own, so her anniversary doubles it (+40).
+<!-- /live -->
+
+### The slots and the invitations (RM19, RM20, RM45; decisions 5 and 7)
+
+<!-- live:evening-slots -->
+| Today | Evenings | Festival night | Invitations this morning |
+|---|---|---|---|
+| Any day | 1 | — | 1 |
+| From 10 married | 2 on days divisible by 4, else 1 | — | 2 |
+| A festival day (Spring 10, Summer 10, Autumn 10, Winter 10, Winter 12) | As any day | 1 more, its own slot: only festival night fills it | As any day |
+
+An invitation’s draw: `draw(uid, day, 'invite', n)` among the Umas home at Friendship 2+ whose favourite kind is open to them, each weighted 1 + the days since her last evening (or since she arrived), up to 14; a second invitation is never the first’s Uma.
+<!-- /live -->
+
+- **One evening a day; a second on days divisible by 4 from 10 married** (`eveningsOn`, `marriedCount`); **festival
+  night** is its own slot on a festival day, filled only by its kind (a walk at the festival ground, with anyone at
+  Friendship 2 or more). An Uma may spend more than one slot in a day; the invitation's +20 comes with her first.
+- **Invitations:** night step 9 (`drawInvitations`, after `heartsMorning`) draws this morning's into `today.invites`,
+  unanswered, and §4's second place; step 7 cleared yesterday's. **Yes, tonight** makes her Tonight's evening (refused
+  once the evening is spent); **Another day** costs nothing, and she may ask again another morning. Once each.
+
+### On screen (decisions 6, 8 and 9)
+
+```
+┌──────────────────────────────────────────┐  ?evening=9000002 (her profile's Evening ›)
+│ An evening with Stand-in 2             ✕ │
+│ (face) A hangout · Friend · F2           │
+│        ✉ She asked you: +20 with the evening
+├──────────────────────────────────────────┤
+│ [walk] Walk at dusk ★                    │  her favourite, ×1.5
+│        Fine +90 · Great +150 · Perfect +225
+│ [cast] Fishing at the Pond               │
+│        Fine +60 · Great +100 · Perfect +150
+│ [pick] A picnic · [pick] The market in town
+│ ░ Crafting           At Romance 1        │  greyed: her ladder hasn't opened it
+│ ░ Stargazing at the overlook  At Romance 3
+│ ░ Dancing · A boat on the lake  At Romance 6
+└──────────────────────────────────────────┘
+```
+
+- **Her kinds sheet** (`?evening=<characterId>`): her role and level, the invitation's +20 when she asked and you said
+  yes, "★ Her birthday: ×1.5 tonight"; the kinds open to her now in RM37's order (festival night last on a festival day),
+  each with its play's mark and **her three numbers today**, ★ and a rose edge on her favourite; then the kinds her ladder
+  hasn't opened, greyed with their rung. A tap plays it.
+- **The play** is F49's at its **evening length** (three casts, three rounds of Pick or Rhythm, four forks of Walk), over
+  everything on a dusk wash, seeded by `draw(uid, day, 'evening:<id>:<kind>', n)`; its legend and result show her own
+  numbers ("Perfect · +225"). A ✕ leaves it, spending nothing: **nothing is saved until it ends**.
+- **The card:** the kind and "with ‹Name›", the grade, the sum ("+150 Perfect × 1.5 her favourite = +225", "+20 for saying
+  yes", "= +245 toward Friendship 3 (+40 banked)") and her bar in her ladder's colour, one **Continue**. `spendEvening`
+  commits it once, stamped: the points, `love.evening` today, and the slot in `today.evenings`.
+- **Tonight's picker** (`?evening=pick`): the Umas who can spend an evening now, a yes first, then an unanswered
+  invitation, then the cast's order, each with her level, ★ her favourite kind and ✉.
+
+```
+┌──────────────────────────────────────────┐
+│ Tonight · Spring 6                       │
+├──────────────────────────────────────────┤
+│ ☾ Evening   with Stand-in 2 · Walk ✓     │  spent
+│ ☾ Evening   ✉ Stand-in 3 · Walk [Play ›] │  (or) she said yes
+│                         Someone else ›   │
+│ ☾ Evening   [     Pick someone ›     ]   │  (or) free
+│ ☾ Festival night [ Pick someone › ]      │  a festival day's own row
+├──────────────────────────────────────────┤
+│ 2 Umas idle · 3 to collect               │  CS6's line
+│        [ Back ]   [ End the day ]        │
+└──────────────────────────────────────────┘
+```
+
+- **Tonight** is End the day's sheet on v4 in the romance build whenever a slot is free and someone can spend it
+  (`tonightOpens`; F54 adds a house to pick); otherwise F18's rule stands (all set or the Menu's switch off: the day ends
+  at once; else the one line). Whether it opens is settled once as the sheet opens, so coming back from a played evening
+  shows its row ✓ and never ends the day by itself. **End the day never waits on the evening.**
+- **The night is a fade:** End the day dims the whole screen to dusk (`#2b3557`, 450 ms), the night runs under it with
+  nothing shown, and the morning comes up from it (650 ms); with reduced motion, a plain cut. A failed night lifts it at
+  once and says **Try again**.
+- **The morning's invitation** sits in §4's second place: "✉ Stand-in 2: “Walk at dusk tonight?”" with **Yes, tonight**
+  and **Another day** (44 pt); said yes, "Tonight ✓" with **Play ›**; declined, "Another day". Her row's ✉ stands while
+  it's unanswered, or yes and not yet spent.
+- **The header's marks:** "☾ Evening" with ○ or ● a slot (decision 9).
+
+**The save** (v4, grown in place): `today.evenings` holds what's spent (`{ with, kind }`, one a slot: at most the day's
+evenings, and festival night's only on a festival day), `today.invites` this morning's invitations (`{ id, kind, answer }`,
+at most one, two from 10 married, each a different Uma, `kind` a date game, never festival night), and `love.evening`
+her last evening's day. Step 7 clears both lists; the parse refuses anything else.
+
 ## Bonds between Umas (RM48–RM50)
 
 **Romance build; live from F56** (F52 decisions 1–11). Each pair of Umas holds **bond points** (`save.bonds`, by `pairKey`
@@ -987,7 +1141,8 @@ What a v4 night adds or changes from v3's ([days.md](days.md) lists the rest):
 | 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations | F18, F47, F49 |
 | 8 | `arriveUmas` | Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50) | F46, F52 |
 | 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse | F47 |
-| 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists side by side’s extras and each pair’s bond hearts reached since the last morning | F18, F52 |
+| 9 | `drawInvitations` | Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, 'invite', n)` among those home at Friendship 2+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14) | F50 |
+| 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists the invitations, side by side’s extras and each pair’s bond hearts reached since the last morning | F18, F50, F52 |
 <!-- /live -->
 
 On v4 `checkGoals`' recruit is the chapter's authored arrival, her ties seeded like any arrival's. Step 7 clears v4's whole `today`. The morning's §4 is
@@ -996,7 +1151,7 @@ On v4 `checkGoals`' recruit is the chapter's authored arrival, her ties seeded l
 | # | Line | Words | Filled by |
 |---|---|---|---|
 | 1 | **Ready**, read live from `readiness` as the card shows (never stored): up to three, in the tab's order, then "+N more" (the tab filtered on Ready); a tap plays her event over the morning (`/?event=`, F49) | "● Ready · Stand-in 1 · Friendship 1 · the Fields" with a **Play** tag, "+2 more" | F48, F49 |
-| 2 | The invitation, with **Yes, tonight / Another day** | — | F50 |
+| 2 | `{ kind: 'invite', id, evening }`: her invitation this morning (`today.invites`, step 9), with **Yes, tonight** and **Another day**; answered, "Tonight ✓" with **Play ›** (her evening over the morning) or "Another day" | "✉ Stand-in 2: “Walk at dusk tonight?”" | F50 |
 | 3 | The house's morning: breakfast, +30s, items, night chores | — | F54 |
 | 4 | `{ kind: 'birthday', id, when }` | "★ Stand-in 1's birthday today", "★ Tomorrow: Stand-in 1's birthday" | F47 |
 | 4 | `{ kind: 'anniversary', id, when, item }` | "♥ Stand-in 1's anniversary · ★5 Carrot left for you" (`item` the good; null the day before), "♥ Tomorrow: Stand-in 1's anniversary" | F47 |
@@ -1010,16 +1165,15 @@ cast's order; side by side before the bond hearts, the pairs in the cast's order
 Ready. **There's no pop-up per event:** the morning, her ● Ready chip and **♥ on her pip** wherever the map draws her (a
 tender on the Fields, in place of her block's letter; a worker at a place) are the only signals. Pips stay their places'
 taps.
-The parse refuses an Uma off the roster, a kind twice for one Uma, an anniversary's item the day before (or an unknown
+The parse refuses an Uma off the roster, a kind twice for one Uma, an invitation for festival night or an unknown kind, an anniversary's item the day before (or an unknown
 good on the day), side by side twice or with no items, a bond line twice for a pair, out of `pairKey` order or outside
 1–5 hearts, and words. §5 drops v3's `joined`, Gate and `left` lines.
 
 ## For later packets
 
 - **F49 is built** ([heart events](#heart-events-rm24-rm28-rm29-rm54)); its seams for the packets after it are
-  [below](#for-f50f56-the-event-players-seams). **F50** the evening and
-  invitations (`today.evenings`, `today.invites`): **Evening ›**, the header's ○/● and the row's ✉ (`HeartRow.invited`
-  reads `today.invites` already). **F51** the perks' effects over `romance/perks.ts`: R4's ×1.5 is built (`bondFactor`),
+  [below](#for-f50f56-the-event-players-seams). **F50 is built** ([the evening](#the-evening-rm19rm22-rm37)); its seams
+  are [below](#for-f51f56-the-evenings-seams). **F51** the perks' effects over `romance/perks.ts`: R4's ×1.5 is built (`bondFactor`),
   F7's "her closest friend's loved gift" reads `closestFriend`, and in her element and the romance bonus extend
   `extrasShare` and `nightExtras` (step 4). **F53** the ring and the wedding. **F54** the homestead (`homestead`,
   `love.house`), her house on the row and the profile, the marks from uma-art 2.26.0; a shared house's +10 a night and the
@@ -1049,3 +1203,22 @@ good on the day), side by side twice or with no items, a bond line twice for a p
   dish and vow, and their stage-up screens; their limits (three plays, 1–3 choice points) are the validator's.
 - **F51:** the signature dish's recipe (F4) is written where `playEvent` gives the rung's perk.
 - Save v4 grows `today.asked` (Ask her once a day), cleared at step 7.
+
+### For F51–F56: the evening's seams
+
+- **Rules** (`@farm/domain`, `romance/evening.ts`): `EVENINGS` (RM37's table: `name`, `short`, `hangout`, `date`, `play`,
+  `waits`, `question`), `kindBuilt(kind)`, `kindOpens(love, kind)`, `eveningRole(love)` → `'hangout' | 'date' | 'spouse'
+  | null`, `homeTonight(save, id)`, `favouriteKind(pack, id)`, `eveningSlots(save)` → `{ evenings, festival }`,
+  `slotsLeft(save)`, `eveningMarks(save)`, `kindsNow(save, id)`, `eveningUmas(save, pack)`, `tonightOpens(save, pack)`,
+  `eveningFactors`, `eveningPoints(grade, factors)`, `eveningPreview`, `inviteDue`, `invitePoints`, `eveningSeed(uid, day,
+  id, kind)`, `spendEvening(save, pack, id, kind, score, birthday)` → `{ save, card }` (`EveningCard`), `inviteWeight`,
+  `inviteCandidates`, `drawInvites(save, pack)`, `answerInvite(save, id, answer)`, `invitedNow(save, id)`; in `save/v4.ts`
+  `EVENING_KINDS`, `FESTIVAL_NIGHT`, `InviteKind`, `marriedCount(save)`, `eveningsOn(day, married)`, `invitesFor(married)`,
+  `TWO_EVENINGS_MARRIED` and `SECOND_EVENING_EVERY`.
+- **F54:** `homeTonight` already counts a spouse in her house (`love.house`); `tonightOpens` is where "a house waits to be
+  picked" joins (Tonight's **Sleep at** row goes between the Evening rows and CS6's line in `loop/Tonight.tsx`), and
+  `marriedCount` is RM45's count. **F8** and **F32** clear `waits` on cooking and the footrace when their games ship
+  (the kinds then offer themselves, and their invitations with them). **M7** moves the evening's play onto the stage.
+- **Screens** (`apps/web/src/loop/`): `?evening=pick` and `?evening=<characterId>` over any page (`EveningPlayer.tsx`),
+  `Tonight` (End the day's sheet on v4 while `tonightOpens`), `InviteAnswer` under the morning's invitation line,
+  `withNightFade(night, reduced)` around every v4 night, and `PlaySheet`'s `pays` for an evening's own numbers.

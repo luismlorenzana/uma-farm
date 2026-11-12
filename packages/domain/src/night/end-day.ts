@@ -14,7 +14,8 @@
 // (`tickBonds`, F52) and pays her line +10 (`payLine`, F47); step 7 clears v4's whole `today`; step 8 is `settleDorm` →
 // `arriveUmas` (authored arrivals, in place of the Gate, their ties seeded) → `checkGoals` (the chapter's authored arrival,
 // in place of `recruitFor`); step 9 notes praise earned overnight, birthdays and anniversaries today and tomorrow with the
-// anniversary's item (`heartsMorning`, F47), and its §4 is Hearts, with side by side and the bond hearts reached (F52).
+// anniversary's item (`heartsMorning`, F47), draws the morning's invitations (`drawInvitations`, F50), and its §4 is
+// Hearts, with the invitations, side by side and the bond hearts reached (F52).
 import { endsAt, finishedCount, isRefusal, settle, speedUp } from '@luismlorenzana/uma-work'
 import { DAY_MS, festivalOn, isSeasonStart, dateOf, workNow } from '../farm/calendar'
 import { bondsTonight, extrasTonight, newBondHearts, type BondPay, type Extras } from '../farm/bonds'
@@ -31,6 +32,7 @@ import { LOOP_WORK_PLACES, type LoopKinds, type LoopPlaceId } from '../save/pars
 import { touched } from '../save/save'
 import { payLines } from '../romance/acts'
 import { arrivalsTonight } from '../romance/arrivals'
+import { drawInvites } from '../romance/evening'
 import { heartDays, NO_BIRTHDAYS, type Birthdays } from '../romance/days'
 import { praiseOvernight } from '../romance/praise'
 import { BLOCK_IDS, type BlockId, type OutfitId } from '../save/v3'
@@ -39,7 +41,7 @@ import { castOrder, favouriteOf, type StoryPack } from '../story/pack'
 import { farmEnvV3, loopWorld, nightEnvV3, WELL_FED_TICKETS, withLoopWorld } from '../work/loop-env'
 import { checkGoalsNight, type GoalsTonight } from '../story/chapters'
 import { daySetState } from './nudge'
-import type { BinSale, HeartLine, MorningSummary, MorningSummaryV4, NewsLine, NewsLineV4, Nudge, RankLine, WorkLine } from './summary'
+import type { BinSale, HeartLine, InviteLine, MorningSummary, MorningSummaryV4, NewsLine, NewsLineV4, Nudge, RankLine, WorkLine } from './summary'
 
 /** What the night reads beyond the save (decision 2): master data, loaded before End the day runs, and the talents the
  * app reads from it once a release (F21). */
@@ -100,12 +102,14 @@ export interface NightNotes {
   readonly extras: readonly Extras[]
   /** Step 6 on v4: bond points each pair earned for a shared place today (F52 decision 2). */
   readonly bonds: readonly BondPay[]
+  /** Step 9 on v4: this morning's invitations (F50 decision 7), §4's second place. */
+  readonly invites: readonly InviteLine[]
 }
 
 /** A night's notes before its first step. */
 export const emptyNotes = (): NightNotes => ({
   sold: [], worked: [], finished: [], made: [], best: null, tended: [], ripened: [], withered: [], ranks: [], dorm: null, home: [], gate: null, left: [],
-  goals: { chapter: null, paid: [], ranks: [] }, arrived: [], lines: [], days: [], extras: [], bonds: [],
+  goals: { chapter: null, paid: [], ranks: [] }, arrived: [], lines: [], days: [], extras: [], bonds: [], invites: [],
 })
 
 export interface Night {
@@ -337,7 +341,7 @@ function dormNews({ notes }: Night): NewsLineV4[] {
   return [...(notes.dorm !== null ? [{ kind: 'dorm' as const, level: notes.dorm }] : []), ...(notes.home.length > 0 ? [{ kind: 'home' as const, umas: [...notes.home] }] : [])]
 }
 
-/** §4 Hearts on v4: birthdays and anniversaries today and tomorrow (F47, `heartsMorning`), then everyone who joined tonight
+/** §4 Hearts on v4: this morning's invitations (F50), birthdays and anniversaries today and tomorrow (F47, `heartsMorning`), then everyone who joined tonight
  * (F46 decision 15), the arrivals at step 8 in the cast's order and then the chapter's, home or away (her arrival scene
  * waits for the farm to open); then side by side's extras and the bond hearts reached since the last morning (F52). */
 function heartLines(night: Night): HeartLine[] {
@@ -346,6 +350,7 @@ function heartLines(night: Night): HeartLine[] {
   const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length)
   const extras = night.notes.extras.reduce((n, e) => n + e.items.length, 0)
   return [
+    ...night.notes.invites,
     ...night.notes.days,
     ...Object.keys(save.roster).filter((id) => !before.roster[id]).sort((a, b) => rank(a) - rank(b) || Number(a) - Number(b))
       .map((id): HeartLine => ({ kind: 'arrived', id, home: save.dorm.home.includes(id) })),
@@ -364,6 +369,16 @@ export const heartsMorning: NightStep = (night) => {
   if (!night.context.story) return { ...night, save: praised }
   const { save, lines } = heartDays(praised, night.context.story, night.context.birthdays ?? NO_BIRTHDAYS)
   return { ...night, save, notes: { ...night.notes, days: lines } }
+}
+
+/** Step 9 on v4, after `heartsMorning` (F50 decision 7; RM20): this morning's invitations, one (two from 10 married),
+ * drawn by weight among the Umas home at Friendship 2+ whose favourite kind is open to them, into `today.invites`
+ * unanswered and §4's second place. A night without the pack draws none. */
+export const drawInvitations: NightStep = (night) => {
+  if (night.save.version !== 4 || !night.context.story) return night
+  const save = drawInvites(night.save, night.context.story)
+  const invites = save.today.invites.map((i): InviteLine => ({ kind: 'invite', id: i.id, evening: i.kind }))
+  return { ...night, save, notes: { ...night.notes, invites } }
 }
 
 /** Step 9: the morning summary, built from what changed (CS5, decision 11). It replaces last night's. */
@@ -448,14 +463,17 @@ const V4_STEPS: Readonly<Record<string, { replace?: Partial<NightStepDef>; after
     replace: { name: 'arriveUmas', run: arriveUmas, what: 'Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50)', by: 'F46, F52' },
   },
   buildSummary: {
-    before: [{ step: 9, name: 'heartsMorning', run: heartsMorning, what: 'Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse', by: 'F47' }],
-    replace: { what: 'The morning summary, from what changed; §4 Hearts lists side by side’s extras and each pair’s bond hearts reached since the last morning', by: 'F18, F52' },
+    before: [
+      { step: 9, name: 'heartsMorning', run: heartsMorning, what: 'Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse', by: 'F47' },
+      { step: 9, name: 'drawInvitations', run: drawInvitations, what: 'Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, \'invite\', n)` among those home at Friendship 2+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14)', by: 'F50' },
+    ],
+    replace: { what: 'The morning summary, from what changed; §4 Hearts lists the invitations, side by side’s extras and each pair’s bond hearts reached since the last morning', by: 'F18, F50, F52' },
   },
 }
 
-/** Save v4's steps (F46 decision 8; F47; F52): v3's, step 2 side by side, step 4's extras, the Gate's step replaced by
+/** Save v4's steps (F46 decision 8; F47; F52; F50): v3's, step 2 side by side, step 4's extras, the Gate's step replaced by
  * authored arrivals with their ties' seeds, step 6 with her ladder's factor, bonds and her line's +10, step 7 clearing the
- * whole of `today`, and step 9 with praise, birthdays, anniversaries and the bond hearts. */
+ * whole of `today`, and step 9 with praise, birthdays, anniversaries, the invitations and the bond hearts. */
 export const NIGHT_STEPS_V4: readonly NightStepDef[] = NIGHT_STEPS.flatMap((step) => {
   const change = V4_STEPS[step.name]
   return [...(change?.before ?? []), { ...step, ...change?.replace }, ...(change?.after ?? [])]
