@@ -80,15 +80,20 @@ export function advance(love: Love, day: number): Love {
   if (!now.full) throw new SaveRuleError('not-ready', 'Her bar isn’t full yet.')
   const { friend: _friend, ...rest } = love
   const next: Love = { ...rest, points: love.points - now.cost, last: day }
+  // F51 decision 6: Romance 2 starts her morning items' count, and Spouse 2 starts it again (every 2nd morning).
+  const counted = (level: number): Love => (level === MORNING_LEVEL ? { ...next, level, morning: day } : { ...next, level })
   switch (love.stage) {
     case 'friendship': return love.level >= 9 ? { ...next, stage: 'confession', level: 10 } : { ...next, level: love.level + 1 }
     case 'confession': return { ...next, stage: 'romance', level: 0 }
-    case 'romance': return love.level >= 9 ? { ...next, stage: 'proposal', level: 10 } : { ...next, level: love.level + 1 }
+    case 'romance': return love.level >= 9 ? { ...next, stage: 'proposal', level: 10 } : counted(love.level + 1)
     case 'proposal': return { ...next, stage: 'wedding', level: 10 }
     case 'wedding': return { ...next, stage: 'spouse', level: 0, wed: day }
-    case 'spouse': return { ...next, level: love.level + 1 }
+    case 'spouse': return counted(love.level + 1)
   }
 }
+
+/** The level on romance and on spouse whose perk starts her morning items' count (R2, S2; F51 decision 6). */
+export const MORNING_LEVEL = 2
 
 /** A rung in words: "Friendship 3", "Her confession", "Romance 4", "The proposal", "The wedding", "Spouse 2". */
 export function rungName(rung: string): string {

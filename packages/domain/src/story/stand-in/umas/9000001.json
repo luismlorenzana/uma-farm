@@ -39,6 +39,11 @@
       "Another season together. Let's plant something new."
     ]
   },
+  "keepsake": {
+    "name": "Bent Trowel",
+    "line": "The first tool I ever wore out here. Keep it by the door, so the rows remember us."
+  },
+  "petName": "Sprout",
   "route": [
     {
       "id": "arrival",

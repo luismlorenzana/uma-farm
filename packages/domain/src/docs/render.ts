@@ -47,7 +47,11 @@ import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER, costOf, LADDER_COLOURS, ROUT
 import { DISLIKED_LINE, GIFT_POINTS_V4, giftStars, LOVE_POINTS } from '../romance/acts'
 import { farmBirthday } from '../romance/days'
 import { READY_CONDITIONS, WAIT_ORDER } from '../romance/ready'
-import { lineChapter, MORNING_GOOD, NIGHT_CHORE, PERK_LINES, PERK_PLACE, PERKS, perkWords, type PerkLine } from '../romance/perks'
+import { lineChapter, MORNING_GOOD, NIGHT_CHORE, PERK_LINES, PERK_PLACE, PERKS, perkWords, type PerkId, type PerkLine } from '../romance/perks'
+import {
+  CREW_CAP, DREAM_BONUS, HOUSEHOLD, householdBonus, IN_ELEMENT, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, LINE_BONUS, MAX_CHORES, MORNING_ITEMS, OWN_CAP, ROMANCE_CAP,
+} from '../romance/perk-terms'
+import { BREAKFAST_DAYS, CHORE_GROWTH, CHORE_LINES, DISH_WORDS, dishId, dishName, LINE_DISH, MENTOR_POINTS } from '../romance/perk-effects'
 import { loveRankFactor } from '../farm/rank-rules'
 import { dateOf } from '../farm/calendar'
 import { FARMER_NAME_MAX } from '../romance/farmer'
@@ -673,6 +677,91 @@ function perkWordsBlock(): string {
   return `${levels}\n\n${lines}`
 }
 
+// --- F51: the perks' effects (romance spec RM31–RM36) --------------------------------------------------------------------
+const sharePct = (share: number): string => `${Math.round(share * 1000) / 10}%`
+/** What each perk does, where it acts and from which packet (decision 1: read from her level). */
+const PERK_EFFECT: Readonly<Record<PerkId, readonly [string, string]>> = {
+  'tastes-loved': ['Her loved gift shows on her profile; she speaks her authored chats', 'Her profile, Chat (F47)'],
+  hangouts: ['The evening opens: hangouts', 'Tonight (F50)'],
+  'line-10': [`+${sharePct(LINE_BONUS)} at her line: copies of her night’s items there (a farmer: a tended plot’s chance of an extra crop)`, 'Night step 4, a harvest (F51)'],
+  'signature-dish': ['Her signature dish’s recipe into the Kitchen’s list, once', '`playEvent` (F51)'],
+  'rank-105': ['×1.05 her rank points', 'Night step 6 (F47)'],
+  'night-chore': ['One night chore', 'Night steps 2 and 4 (F51)'],
+  'tastes-all': ['All her tastes, and her closest friend’s loved gift, on her profile', 'Her profile (F47, F51)'],
+  'in-element': [`Side by side ×${IN_ELEMENT} in place of ×1.1 at her line, outside the cap`, 'Night steps 2 and 4 (F51)'],
+  mentor: [`×${MENTOR_POINTS} rank points for the others at her place while she works there; one mentor a place`, 'Night step 6 (F51)'],
+  keepsake: [`Her keepsake: +${KEEPSAKE_QUALITY} quality at her line; ×1.10 rank points`, 'A job planned, a harvest (F51); step 6 (F47)'],
+  dates: ['Dates open; her pet name for you on her profile', 'Tonight (F50), her profile (F51)'],
+  'morning-item': [`A ★${MORNING_ITEMS.r2.stars}+ good of her line every ${MORNING_ITEMS.r2.every}th morning`, 'Night step 9 (F51)'],
+  'date-stargazing': ['Date: stargazing', 'Tonight (F50)'],
+  'closest-bond': ['×1.5 on her bond with her closest friend', '`addBond` (F52)'],
+  'line-20': [`+${sharePct(LINE_BONUS)} more at her line (+${sharePct(2 * LINE_BONUS)})`, 'Night step 4, a harvest (F51)'],
+  'date-dance-boat': ['Dates: dance and boat', 'Tonight (F50)'],
+  'night-chore-2': ['A second night chore', 'Night steps 2 and 4 (F51)'],
+  engraving: ['Her ring’s engraving shows', 'The ring bench (F53)'],
+  'date-footrace': ['Date: footrace', 'Tonight, with its game (F32)'],
+  proposal: ['The proposal', 'F53'],
+  breakfast: [`Breakfast: the crew well fed ${BREAKFAST_DAYS} day on a morning in her house, when no meal runs`, '`breakfast`, called by her house’s morning (F54)'],
+  'morning-item-2': [`A ★${MORNING_ITEMS.s2.stars}+ good of her line every ${MORNING_ITEMS.s2.every}nd morning (and each morning in her house, F54)`, 'Night step 9 (F51)'],
+  dream: [`Her dream: +${sharePct(DREAM_BONUS)} for anyone at her line’s place, once her S3 is in her Memories`, 'Night step 4, a harvest (F51)'],
+  'night-chore-3': ['A third night chore', 'Night steps 2 and 4 (F51)'],
+  'vow-renewal': [`Vow renewal; her keepsake grows to +${KEEPSAKE_GROWN}`, 'F53 (the vows); F51 (the keepsake)'],
+}
+/** RM31: every perk, what it does (a forager's words) and where it acts. */
+function perkEffects(): string {
+  return table(['Level', 'Perk', 'What it does', 'Where it acts'], PERKS.map((p) => [p.rung.toUpperCase(), perkWords(p.id, 'foraging'), PERK_EFFECT[p.id][0], PERK_EFFECT[p.id][1]]))
+}
+const LINE_TEN: Readonly<Record<PerkLine, string>> = {
+  farming: 'Each plot she tends: +10% chance of an extra crop at harvest, at the plot’s stars',
+  foraging: 'Her haul ×1.1, and her Sawmill batch ×1.1', fishing: 'Her catch ×1.1, and her Smokehouse batch ×1.1',
+  mining: 'Her haul ×1.1, and her Smelter batch ×1.1', quarry: 'Her haul ×1.1, and her Cutter batch ×1.1',
+  ranch: 'Her pen: +10% chance of an extra product', cooking: '+10% dishes as the Kitchen’s assistant', serving: '+10% tips as the Restaurant’s server',
+  forging: '+10% goods as the Forge’s assistant',
+}
+const LINE_CHORE: Readonly<Record<PerkLine, string>> = {
+  farming: `+${CHORE_GROWTH} growth on the untended block with the most growing plots, else hers (step 2)`,
+  foraging: 'One item from her rank’s deepest area this season, at a day’s haul’s stars (step 4)',
+  fishing: 'One fish from her deepest spot this season, at a day’s haul’s stars (step 4)',
+  mining: 'One ore from her deepest floor', quarry: 'One stone or gem from her deepest floor', ranch: '+5 affection to her pen (step 3)',
+  cooking: '+1 dish on the Kitchen’s next play', serving: '+1 cover on the Restaurant’s next shift', forging: '+5% refund on the Forge’s next tool',
+}
+/** RM32: what "her line" means for each template, and whether it acts in the romance core. */
+function perkLines(): string {
+  return table(['Her line', '+10% at her line (F3, R5)', 'A night chore (F6, R7, S4)', 'A morning item (R2, S2)', 'Acts'], PERK_LINES.map((line) => {
+    const opens = lineChapter(line)
+    const now = CHORE_LINES.includes(line) ? 'Now' : `With chapter ${opens} (its packet)`
+    return [PERK_LINE_NAME[line], LINE_TEN[line], LINE_CHORE[line], `A ★2+ ${MORNING_GOOD[line]}${CHORE_LINES.includes(line) ? '' : ' (a crop of the season until its place opens)'}`, now]
+  }))
+}
+/** RM34: the caps, and the worked forager. */
+function perkCaps(): string {
+  const own = Math.min(OWN_CAP, 2 * LINE_BONUS + 0.08)
+  const crew = Math.min(CREW_CAP, DREAM_BONUS + householdBonus(15))
+  const caps = table(['What', 'Cap', 'How'], [
+    [`Her own line bonuses: F3 +${sharePct(LINE_BONUS)}, R5 +${sharePct(LINE_BONUS)}, her ring +1–15% once married`, `+${sharePct(OWN_CAP)}`, 'At her line’s place only (`romanceTerms`)'],
+    [`The crew’s: a dream’s +${sharePct(DREAM_BONUS)} (the best at a place, never summed), the household’s ${HOUSEHOLD.map((h) => `+${sharePct(h.bonus)} at ${h.married}`).join(' and ')} married`, `+${sharePct(CREW_CAP)}`, 'Anyone working the place (the household anywhere)'],
+    ['All romance bonuses on any one job, added', `+${sharePct(ROMANCE_CAP)}`, 'The romance term (`romanceBonus`)'],
+    [`In her element (×${IN_ELEMENT})`, 'Outside the cap', 'The bond term (`extrasShare`)'],
+    ['Night chores', `${MAX_CHORES} a night each`, 'F6, R7, S4'],
+    ['Morning items', '1 a day each by her count, +1 on a morning in her house (F54)', `Every ${MORNING_ITEMS.r2.every}th from R2, every ${MORNING_ITEMS.s2.every}nd from S2`],
+    ['Mentor', 'One a place', 'The most hearts, then the cast’s order'],
+    ['Rank points from her ladder', '×1.10', 'F5 ×1.05, F10 ×1.10 (`loveRankFactor`)'],
+  ])
+  return `${caps}\n\nWorked (RM34): a married forager with F3, R5 and a grade-8 ring has +${sharePct(2 * LINE_BONUS + 0.08)} of her own (${sharePct(own)} after her cap); a dream at the forest (+${sharePct(DREAM_BONUS)}) and 15 married (+${sharePct(householdBonus(15))}) add +${sharePct(crew)}; together +${sharePct(own + crew)}, **held to +${sharePct(Math.min(ROMANCE_CAP, own + crew))}**. Beside a 3-heart partner in her element her night’s items come to ×${IN_ELEMENT} × ${1 + Math.min(ROMANCE_CAP, own + crew)} = ×${Math.round(IN_ELEMENT * (1 + Math.min(ROMANCE_CAP, own + crew)) * 100) / 100}.`
+}
+/** Decision 9: her signature dish by her line. */
+function signatureDishes(): string {
+  const grade: Readonly<Record<PerkLine, string>> = {
+    farming: 'The top grade of the shop’s vegetables at its open seed tiers (Farm Rank 1: G6; 2: G7; 4: G10)',
+    foraging: 'The top grade of the deepest forest area anyone has worked (the Woods G2 … the World Tree G10)',
+    fishing: 'The top grade of the deepest spot anyone has worked, its fish at 10% or more (the Pond G2)',
+    mining: 'G1 until chapter 3’s packet', quarry: 'G1 until chapter 3’s packet', ranch: 'G1 until chapter 2’s packet', cooking: 'G1 until chapter 4’s packet',
+    serving: 'G1 until chapter 6’s packet', forging: 'G1 until chapter 7’s packet',
+  }
+  return table(['Her line', 'Her dish kind', 'Its grade', 'At G1'], PERK_LINES.map((line) => [PERK_LINE_NAME[line], DISH_WORDS[LINE_DISH[line]], grade[line], dishName(dishId(LINE_DISH[line], 1))]))
+    + '\n\nHer loved good, when it’s a dish, is her signature dish as it is. The recipe joins `workshops.recipes` once (a recipe the farm knows stays once) and her route keeps its id (`love.dish`).'
+}
+
 /** Decision 6: the stand-in pack in git, the dark build's cast. */
 function standIn(): string {
   const pack = storyPackFrom(STAND_IN_FILES)
@@ -845,6 +934,7 @@ export function renderBlock(key: string): string | null {
     'dorm-v4': dormV4, arrivals, 'arrival-pay': arrivalPay, 'opening-v4': openingV4, 'night-v4': nightV4, 'stand-in': standIn, 'farmer-name': farmerName,
     'route-costs': routeCosts, 'love-points': lovePoints, 'gift-stars': giftStarsBlock, 'birthday-map': birthdayMap, 'ready-rules': readyRules,
     'ready-waits': readyWaits, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor, 'perk-words': perkWordsBlock,
+    'perk-effects': perkEffects, 'perk-lines': perkLines, 'perk-caps': perkCaps, 'signature-dish': signatureDishes,
     'bond-points': bondPoints, 'bond-hearts': bondHeartsBlock, 'tie-seeds': tieSeeds, 'side-by-side': sideBySide,
     plays: playsBlock, 'play-map': playMap, 'play-grades': playGrades, 'play-windows': playWindows, 'event-pay': eventPay, 'stand-in-route': standInRoute,
     'evening-kinds': eveningKinds, 'evening-points': eveningPointsBlock, 'evening-slots': eveningSlotsBlock,

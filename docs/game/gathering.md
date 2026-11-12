@@ -84,6 +84,17 @@ Seven spots; the five freshwater ones play in M4, the Sea Pier and the Deep Sea 
 > plan and uma-work's outputs are untouched; the morning says "Side by side · +3 items". The stations count too. Bonds
 > are [hearts.md](hearts.md#bonds-between-umas-rm48rm50)'s.
 
+> **Her perks on save v4 (romance build; live from F56; F51 decisions 2–4 and 8):** the same step pays **the romance
+> term**, one capped number (`romanceBonus`): her own +10% at her line from Friendship 3, +10% more from Romance 5 and her
+> ring once married (held to +35%), plus the crew's (the best dream at the place, +5%, and the household's +5% at 5
+> married and +5% more at 15; held to +15%), all held to **+40%**. Her items there come to × (bond × (1 + romance)): side
+> by side's pot as above (**×1.2 in her element**, Friendship 8 at her line, outside the cap), then **the perks' pot**, the
+> bond term × the romance term of the same items, its own seeded copies (`draw(uid, day, 'perk:<id>', n)`). A forager's
+> line is the forest and the Sawmill, a fisher's the Fishery and the Smokehouse; the crew's term lifts anyone's work. The
+> morning says "Perks · +2 items". Her **keepsake** (Friendship 10) adds **+0.25 quality** to a haul at her line as it's
+> planned (+0.5 from Spouse 5; [goods.md](goods.md#stars-cs26)), and her **night chores** bring one item each from her
+> rank's deepest area or spot. The rules are [hearts.md](hearts.md#perks-rm31rm36)'s.
+
 <!-- live:haul-factors -->
 | Factor | Values |
 |---|---|

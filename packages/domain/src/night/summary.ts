@@ -175,9 +175,30 @@ export interface InviteLine {
   /** The kind she asks for: her favourite. */
   evening: InviteKind
 }
-/** §4's stored lines: invitations (F50), birthdays and anniversaries (F47), then arrivals (F46), then side by side and bond
- * hearts (F52). Ready lines aren't stored: they change by day, so F48 reads them live (`readiness`). */
-export type HeartLine = InviteLine | BirthdayLine | AnniversaryLine | ArrivedLine | SideLine | BondLine
+/** §4 Hearts (F51 decision 6; RM31's R2 and S2, RM57's third line): her morning item, a good of her line she left in the
+ * Warehouse this morning; `items` its stock keys (`<good>@<stars>`), one by her count (F54 adds her house's). */
+export interface ItemLine {
+  kind: 'item'
+  id: string
+  items: string[]
+}
+/** §4 Hearts (F51 decision 5; RM32, RM57's third line): the night's chores in all, once a night: the items they left in
+ * the Warehouse (a forager's and a fisher's) and the growth they gave the Fields (a farmer's, +0.25 each). */
+export interface ChoresLine {
+  kind: 'chores'
+  items: number
+  growth: number
+}
+/** §4 Hearts (F51 decisions 2 and 3; RM57's sixth line, before side by side): the perks' extras tonight in all, copies of
+ * a night's items by the romance term (her line's +10% and +20%, her ring, dreams and the household), into the Warehouse. */
+export interface PerksLine {
+  kind: 'perks'
+  items: number
+}
+/** §4's stored lines: invitations (F50), birthdays and anniversaries (F47), then arrivals (F46), then morning items and
+ * night chores (F51), then the perks' extras (F51), side by side and bond hearts (F52). Ready lines aren't stored: they
+ * change by day, so F48 reads them live (`readiness`). */
+export type HeartLine = InviteLine | BirthdayLine | AnniversaryLine | ArrivedLine | ItemLine | ChoresLine | PerksLine | SideLine | BondLine
 
 /** §5 on v4: v3's news without its roster lines (`joined`, `gate`, `left`): arrivals are §4's, and the Gate has no
  * visitors. Rank lines' `outfitId` holds the roster's key, her character id (decision 5). */

@@ -60,6 +60,16 @@ evening is free, and the night is a **fade** straight to the morning. The rules 
 `loop/evening-view.ts` and `loop/night-fade.ts`, with **Evening ›** in `loop/Love.tsx` and the header's marks in
 `loop/HeartsPage.tsx`. The spec is RM19–RM22 and RM37; the calls are F50's (D56).
 
+**Built from F51.** **Every perk acts**, read from her level, never stored: **+10% at her line** from Friendship 3 and
++20% from Romance 5 (with her ring once married, the best dream at a place and the household's +5% and +5%, all held to
+**+40%** on any one job), **night chores** (an item from her deepest area or spot, or +0.25 growth on a block),
+**morning items** of her line, **in her element** (side by side ×1.2), the **mentor**'s +10% rank points, **her
+keepsake**'s +0.25 quality, **her signature dish**'s recipe and **breakfast**. They pay as night extras and seeded items
+(uma-work's plans untouched), and her profile says what each does now. The rules are `romance/perk-terms.ts` (the terms
+the shared rules read) and `romance/perk-effects.ts` (the night's effects and the bespoke three), with night steps 2, 4,
+6 and 9; the screens her profile's Perks, **From her** and Gifts (`loop/hearts-view.ts`, `loop/HeartProfile.tsx`), the
+morning's lines and the level-up card's recipe. The spec is RM31–RM36; the calls are F51's (D57).
+
 ```
  a fresh v4 farm (or any v1–v3, wiped)
    │
@@ -212,8 +222,8 @@ stand-in scene with the same choice and pay. Its points go into her Friendship 1
 
 - **Her favourite line** is her bible's `favouriteLine`, else her cast entry's `calling` (`quarry` is mining, at the
   Quarry): never master data's strategy. It sets ×1.2 rank points in that activity (CS33 kept, read from the pack at
-  night step 6), the mark on her face card and **+10 a night at her line** (F47, [below](#her-line-rm6-rm13)); F51 adds
-  her perks there.
+  night step 6), the mark on her face card and **+10 a night at her line** (F47, [below](#her-line-rm6-rm13)), and her
+  perks there (F51, [below](#perks-rm31rm36)).
 - **Her line's places:** farming the Fields; foraging the forest and the Sawmill; fishing the Fishery and the
   Smokehouse; mining the Mine and the Smelter, or the Quarry and the Cutter when her calling is `quarry`; ranch the Coop
   and the Barn; cooking, serving and forging the Kitchen, the Restaurant and the Forge.
@@ -490,7 +500,10 @@ row, a card in the Work view, the morning's lines and the Dorm's list. Each sect
 │ │ ████████████████████  200 / 200  +2 banked
 │ │ Ready                                  ││
 │ └────────────────────────────────────────┘│
-│ Perks   Next · F1 · …     All 25 perks   │
+│ Perks   F1–F10 ✓ · R1 ✓                  │
+│         F3  +10% chance of an extra crop │  what each does now (F51)
+│         Next · R2 · …     All 25 perks   │
+│ From her Calls you “Sprout” · Bent Trowel│  her pet name and keepsake (F51)
 │ Gifts   Loved ? +60 · Liked ??? +30 · Disliked ?? 0 · Others +10
 │ Ties    Stand-in 2 · Friends ♥♥ · Stand-in 3 · Rivals
 │ Memories 0 of 26                         │
@@ -514,10 +527,13 @@ row, a card in the Work view, the morning's lines and the Dorm's list. Each sect
   her route is complete: "Her route is complete". **Play ›** (48 pt, in her ladder's colour) when her event is Ready
   plays it (F49); a setup not met says what to do ("Assign her to the Fishery, then come back."); after a "Not yet",
   **Ask her ›** (once a day; "You asked her today. Ask again tomorrow." once asked).
-- **Perks:** the reached ones by ladder ("F1–F10 ✓ · R1–R4 ✓"), the next, and **All 25 perks** on a tap (reached ✓, the
-  next in bold, the rest greyed). F51 makes each do what it says and adds what it does now.
+- **Perks:** the reached ones by ladder ("F1–F10 ✓ · R1–R4 ✓"), **what the reached ones do now** (F51, [below](#on-screen-decision-12)),
+  the next, and **All 25 perks** on a tap (reached ✓ with "Now · …", the next in bold, the rest greyed).
+- **From her** (F51): her **pet name** for you from Romance 1 ("Calls you “Sprout”") and her **keepsake** from Friendship
+  10 (its name, "+0.25 quality at the Fields", +0.5 from Spouse 5, and her line about it), both from her bible.
 - **Gifts:** her loved, liked and disliked goods as learnt (RM15: her loved from Friendship 1, any once given, all from
   Friendship 7; "?" until then), each group's points at ★1, and "Others +10". An Uma without a bible: "Any gift +10".
+  From Friendship 7, **her closest friend's loved gift** with its icon ("Stand-in 1 loves Golden Carrot", F51).
 - **Ties:** her ties from the pack in `tiesOf`'s order, the one `closestFriend` reads (strongest first, then the most
   bond points, then the ties' order), each with the other Uma's face, its kind ("Friends", "Rivals", "Mentor",
   "Teammates", "Sisters", "Close") and **bond hearts** (CS44's, from `save.bonds`, moving as bonds grow); her closest
@@ -541,9 +557,11 @@ row, a card in the Work view, the morning's lines and the Dorm's list. Each sect
 ## The perks' words (RM31, RM32, RM36)
 
 **Romance build; live from F56** (F48 decision 7). A perk on every level, 25 in all, **words and ids only**: her profile
-lists them and F49's level-up card names the one an event brings; **F51 makes each do what it says.** They're written
+lists them and F49's level-up card names the one an event brings; **F51 makes each do what it says**
+([Perks](#perks-rm31rm36)). They're written
 once as templates by her favourite line (`perksFor(line, chapter)`, `perkLineOf`, `romance/perks.ts`); her signature
-dish, her keepsake and her dream are named generically until F51 reads them from her bible. A perk at her line's place
+dish, her keepsake and her dream are named generically here; F51 names her dish on the card and her profile, and reads
+her keepsake (and her pet name) from her bible. A perk at her line's place
 says **"Opens with chapter n"** while that place waits for its chapter (RM36: a miner's +10% before chapter 3).
 
 <!-- live:perk-words -->
@@ -587,6 +605,200 @@ says **"Opens with chapter n"** while that place waits for its chapter (RM36: a 
 | Serving | the Restaurant | +10% at the Restaurant | One more cover on the Restaurant’s next shift | A ★2+ dish | Chapter 6 |
 | Forging | the Forge | +10% at the Forge | 5% back on the Forge’s next tool | A ★2+ Fitting | Chapter 7 |
 <!-- /live -->
+
+## Perks (RM31–RM36)
+
+**Romance build; live from F56** (F51 decisions 1–13). A perk on every level, and each acts: **read from her level, never
+stored** (`hasPerk(love, rung)`: its event has played; S2 and S4 at night). Only her signature dish writes state. The terms
+the shared rules read (a haul's plan, a harvest, a block's growth, the night's extras) are `romance/perk-terms.ts`; the
+night's own effects and the bespoke three are `romance/perk-effects.ts`. Save v4 with the pack only: v3's hauls,
+harvests, growth and rank points are unchanged, and a test runs a v3 night with and without the pack to prove it.
+
+<!-- live:perk-effects -->
+| Level | Perk | What it does | Where it acts |
+|---|---|---|---|
+| F1 | Her loved gift shown; her own chats | Her loved gift shows on her profile; she speaks her authored chats | Her profile, Chat (F47) |
+| F2 | Hangouts in the evening | The evening opens: hangouts | Tonight (F50) |
+| F3 | +10% at the forest | +10% at her line: copies of her night’s items there (a farmer: a tended plot’s chance of an extra crop) | Night step 4, a harvest (F51) |
+| F4 | Her signature dish’s recipe | Her signature dish’s recipe into the Kitchen’s list, once | `playEvent` (F51) |
+| F5 | ×1.05 rank points | ×1.05 her rank points | Night step 6 (F47) |
+| F6 | One item from the forest each night | One night chore | Night steps 2 and 4 (F51) |
+| F7 | All her tastes shown, and her closest friend’s loved gift | All her tastes, and her closest friend’s loved gift, on her profile | Her profile (F47, F51) |
+| F8 | In her element: ×1.2 at the forest beside a 3-heart friend | Side by side ×1.2 in place of ×1.1 at her line, outside the cap | Night steps 2 and 4 (F51) |
+| F9 | Mentor: +10% rank points for Umas at the forest | ×1.1 rank points for the others at her place while she works there; one mentor a place | Night step 6 (F51) |
+| F10 | Her keepsake; ×1.10 rank points | Her keepsake: +0.25 quality at her line; ×1.10 rank points | A job planned, a harvest (F51); step 6 (F47) |
+| R1 | Dates; her pet name for you | Dates open; her pet name for you on her profile | Tonight (F50), her profile (F51) |
+| R2 | A ★2+ good from the forest every 4th morning | A ★2+ good of her line every 4th morning | Night step 9 (F51) |
+| R3 | Date: stargazing | Date: stargazing | Tonight (F50) |
+| R4 | ×1.5 bond with her closest friend | ×1.5 on her bond with her closest friend | `addBond` (F52) |
+| R5 | +10% more at the forest (+20%) | +10% more at her line (+20%) | Night step 4, a harvest (F51) |
+| R6 | Dates: dance and boat | Dates: dance and boat | Tonight (F50) |
+| R7 | A second night chore | A second night chore | Night steps 2 and 4 (F51) |
+| R8 | Her ring’s engraving | Her ring’s engraving shows | The ring bench (F53) |
+| R9 | Date: footrace | Date: footrace | Tonight, with its game (F32) |
+| R10 | The proposal | The proposal | F53 |
+| S1 | Breakfast: the crew starts well fed on a morning in her house | Breakfast: the crew well fed 1 day on a morning in her house, when no meal runs | `breakfast`, called by her house’s morning (F54) |
+| S2 | A ★3+ good from the forest every 2nd morning, and each morning in her house | A ★3+ good of her line every 2nd morning (and each morning in her house, F54) | Night step 9 (F51) |
+| S3 | Her dream; +5% for anyone at the forest | Her dream: +5% for anyone at her line’s place, once her S3 is in her Memories | Night step 4, a harvest (F51) |
+| S4 | A third night chore | A third night chore | Night steps 2 and 4 (F51) |
+| S5 | Vow renewal; her keepsake grows | Vow renewal; her keepsake grows to +0.5 | F53 (the vows); F51 (the keepsake) |
+<!-- /live -->
+
+### Her line (RM32; decisions 3 and 5)
+
+Each template means one thing at each line's place. **Farming, foraging and fishing act now;** mining (the Mine or the
+Quarry), the ranch, cooking, serving and forging act with their places' packets (M5, M6), their profile saying "Opens with
+chapter n" until the chapter opens (RM36: in the romance core, the Mine and Quarry Umas' line perks wait for chapter 3).
+
+<!-- live:perk-lines -->
+| Her line | +10% at her line (F3, R5) | A night chore (F6, R7, S4) | A morning item (R2, S2) | Acts |
+|---|---|---|---|---|
+| Farming | Each plot she tends: +10% chance of an extra crop at harvest, at the plot’s stars | +0.25 growth on the untended block with the most growing plots, else hers (step 2) | A ★2+ crop of the season | Now |
+| Foraging | Her haul ×1.1, and her Sawmill batch ×1.1 | One item from her rank’s deepest area this season, at a day’s haul’s stars (step 4) | A ★2+ good from the forest | Now |
+| Fishing | Her catch ×1.1, and her Smokehouse batch ×1.1 | One fish from her deepest spot this season, at a day’s haul’s stars (step 4) | A ★2+ fish | Now |
+| Mining (the Mine) | Her haul ×1.1, and her Smelter batch ×1.1 | One ore from her deepest floor | A ★2+ ore (a crop of the season until its place opens) | With chapter 3 (its packet) |
+| Mining (the Quarry) | Her haul ×1.1, and her Cutter batch ×1.1 | One stone or gem from her deepest floor | A ★2+ stone or gem (a crop of the season until its place opens) | With chapter 3 (its packet) |
+| Ranch | Her pen: +10% chance of an extra product | +5 affection to her pen (step 3) | A ★2+ egg, milk or fleece (a crop of the season until its place opens) | With chapter 2 (its packet) |
+| Cooking | +10% dishes as the Kitchen’s assistant | +1 dish on the Kitchen’s next play | A ★2+ dish (a crop of the season until its place opens) | With chapter 4 (its packet) |
+| Serving | +10% tips as the Restaurant’s server | +1 cover on the Restaurant’s next shift | A ★2+ dish (a crop of the season until its place opens) | With chapter 6 (its packet) |
+| Forging | +10% goods as the Forge’s assistant | +5% refund on the Forge’s next tool | A ★2+ Fitting (a crop of the season until its place opens) | With chapter 7 (its packet) |
+<!-- /live -->
+
+- **Expected values:** a fraction becomes a whole item by a seeded draw, so a night replays the same (CS8): the perks'
+  extras `draw(uid, day, 'perk:<id>', n)`, a chore `perk:<id>:chore`, a morning item's stars `perk:<id>:item`, a
+  harvest's extra crop `perk:harvest:<block>:<plot>`.
+- **Gathering and stations pay at night:** her items finished tonight at her line's place come to × (bond × (1 +
+  romance)): side by side's pot first (F52's, ×1.1, or ×1.2 in her element), then **the perks' pot**, the bond term × the
+  romance term of the same items, seeded copies (the same goods and stars) straight into the Warehouse (`nightExtras`,
+  `extrasTonight`, `perksShare`). A forager's Sawmill batch and a fisher's Smokehouse batch count the same.
+  uma-work's plans are never touched ([gathering.md](gathering.md)).
+- **Farming pays at harvest:** each harvested plot of a tended block has the romance term on its tender's work at the Fields
+  as the chance of **one extra crop** at the plot's stars (her own when farming is her line, plus the crew's). An
+  untended block's harvest gets nothing ([fields.md](fields.md)).
+
+### The romance term and its caps (RM33, RM34; decision 2)
+
+<!-- live:perk-caps -->
+| What | Cap | How |
+|---|---|---|
+| Her own line bonuses: F3 +10%, R5 +10%, her ring +1–15% once married | +35% | At her line’s place only (`romanceTerms`) |
+| The crew’s: a dream’s +5% (the best at a place, never summed), the household’s +5% at 5 and +5% at 15 married | +15% | Anyone working the place (the household anywhere) |
+| All romance bonuses on any one job, added | +40% | The romance term (`romanceBonus`) |
+| In her element (×1.2) | Outside the cap | The bond term (`extrasShare`) |
+| Night chores | 3 a night each | F6, R7, S4 |
+| Morning items | 1 a day each by her count, +1 on a morning in her house (F54) | Every 4th from R2, every 2nd from S2 |
+| Mentor | One a place | The most hearts, then the cast’s order |
+| Rank points from her ladder | ×1.10 | F5 ×1.05, F10 ×1.10 (`loveRankFactor`) |
+
+Worked (RM34): a married forager with F3, R5 and a grade-8 ring has +28% of her own (28% after her cap); a dream at the forest (+5%) and 15 married (+10%) add +15%; together +43%, **held to +40%**. Beside a 3-heart partner in her element her night’s items come to ×1.2 × 1.4 = ×1.68.
+<!-- /live -->
+
+- **One capped number on any one job** (`romanceTerms`, `romanceBonus`): her own (F3 + R5 + her ring, only at her line's
+  place, open) held to 35%, plus the crew's (the best dream whose line's place this is, plus the household's 5% and 5%
+  by `marriedCount`) held to 15%, the sum held to 40%. Her ring counts once she's married (`love.ring`, F53).
+- **The household and dreams lift work an Uma does** (jobs and tending): a dream at its dreamer's line's place for
+  anyone there, the household anywhere.
+- **In her element** (Friendship 8) stays in the bond term, outside the cap: side by side ×1.2 in place of ×1.1 for her at
+  her line's place beside an Uma she has 3+ bond hearts with, on the work places' extras and a farmer's tended growth.
+
+### Night chores (RM32; decision 5)
+
+- **1 from Friendship 6, 2 from Romance 7, 3 from Spouse 4**, never more, for an Uma **on the farm** (home in the Dorm, or
+  housed); **away does none**. Each is its own seeded pick (`choresTonight`).
+- **Farming** (step 2, `fieldChores`): **+0.25 growth** on the untended block with the most growing plots (a tie by a
+  seeded pick), else on the block she tends while it has a growing plot; it joins the block's rate tonight.
+- **Foraging and fishing** (step 4, `gatherChores`, after the extras): one item from her rank's **deepest forest area**
+  this season, or one fish from her **deepest spot** (`deepestOpen`), by the season's shares, at **a day's haul's stars**
+  for her there (her rank, talent, tool, well fed and keepsake), straight into the Warehouse.
+- The morning says them in one line: "Night chores · 3 items", "Night chores · 2 items · +0.25 growth".
+
+### Morning items (RM31's R2 and S2; decision 6)
+
+- From **Romance 2** she leaves **a ★2+ good of her line every 4th morning**, counted from the day she reached Romance 2;
+  from **Spouse 2**, **every 2nd morning at ★3+**, counted from the day she reached Spouse 2 (it replaces R2's count). One
+  a day by her count; F54 adds +1 on a morning in her house. On the farm only.
+- **The good** is `lineGood` with its own `n` (1): a crop of the season for a farmer, a good of her rank's deepest area
+  for a forager, a fish of her deepest spot for a fisher (a crop of the season while her line's place waits). **Its
+  stars** are her line's quality draw (`lineQuality`: a day's work at her line, keepsake included), held at the minimum.
+- Night step 9 (`morningItems`), after the birthdays and anniversaries; the morning says "♥ Stand-in 2 left you ★3
+  Shiitake", opening her profile. **Save v4 grows `love.morning`**, the day her count started, set by `advance` at R2 and
+  at S2.
+
+### The mentor (RM33; decision 7)
+
+At night step 6, at each place worked today (the Fields' tenders as one place), an Uma at **Friendship 9** whose line's
+place it is mentors the others who worked there: **×1.10 rank points** for the day (`mentorsTonight`,
+`PointTerms.mentor`). **One mentor a place**: the most hearts (her place along her route), then the cast's order, then
+her id; she earns no bonus herself, and a second Friendship 9 Uma there is mentored too ([ranks.md](ranks.md)).
+
+### Her keepsake (RM31, RM33; decisions 8 and 13)
+
+From **Friendship 10** her keepsake adds **+0.25 quality** (CS26's `keepsake` source) to her work at her line's place,
+**+0.5 from Spouse 5** (her vow renewal); nowhere else. It's read when her job is planned (`planHaul`, through
+`loopKinds(talentOf, pack)`) and when the block she tends is harvested (`tenderTerms`), and by her night chores and
+morning items ([goods.md](goods.md#stars-cs26)). Its **name and her line about it** are her bible's `keepsake` (F40's
+format, below); it shows on her profile under **From her**, never in the Warehouse.
+
+### Her signature dish (RM31's F4; decision 9)
+
+<!-- live:signature-dish -->
+| Her line | Her dish kind | Its grade | At G1 |
+|---|---|---|---|
+| Farming | Salad | The top grade of the shop’s vegetables at its open seed tiers (Farm Rank 1: G6; 2: G7; 4: G10) | Carrot Salad |
+| Foraging | Soup | The top grade of the deepest forest area anyone has worked (the Woods G2 … the World Tree G10) | Button Mushroom Soup |
+| Fishing | Grill | The top grade of the deepest spot anyone has worked, its fish at 10% or more (the Pond G2) | Carp Grill |
+| Mining (the Mine) | Curry | G1 until chapter 3’s packet | Basil Curry |
+| Mining (the Quarry) | Curry | G1 until chapter 3’s packet | Basil Curry |
+| Ranch | Cake | G1 until chapter 2’s packet | Honeycomb Cake |
+| Cooking | Tart | G1 until chapter 4’s packet | Apple Tart |
+| Serving | Cookies | G1 until chapter 6’s packet | Peanut Cookies |
+| Forging | Bread | G1 until chapter 7’s packet | Wheat Bread |
+
+Her loved good, when it’s a dish, is her signature dish as it is. The recipe joins `workshops.recipes` once (a recipe the farm knows stays once) and her route keeps its id (`love.dish`).
+<!-- /live -->
+
+`playEvent` gives it when Friendship 4 plays (`giveSignatureDish`): the recipe joins **`workshops.recipes`**, the
+Kitchen's list (the Kitchen reads it from chapter 4, F8), once, and **save v4 grows `love.dish`** so her profile names it.
+The level-up card says "Recipe · Bell Pepper Salad · in the Kitchen's list"; her profile's F4 says "Bell Pepper Salad ·
+in the Kitchen's list". The names are uma-art's dishes atlas's (`dishName`: the family's raw good of that grade, then the
+kind).
+
+### Her dream (S3; decision 10)
+
+Her dream is her **S3 event** (bespoke content); its effect is the template's: **+5% for anyone at her line's place**, in
+the crew's term, **once her S3 event is in her Memories** (`dreamActs`). Two dreams at one place count once.
+
+### Breakfast (RM35; decision 11)
+
+A spouse's S1 perk: on a morning in her house (F54's house morning calls `breakfast(save, pack)`), **every Uma on the
+farm with no well-fed days left starts the day well fed for one day** (as a Rough meal, ×1.25, so step 4's speed-up and
+step 6's points read it that night). A meal running is **never shortened or extended**, and a breakfast **isn't a staff
+meal** (no count moves: chapter 4's goal stays the Kitchen's). Each pair it feeds earns +5 bond (`addBond`, F52's
+breakfast source).
+
+### On screen (decision 12)
+
+- **Her profile's Perks:** under the reached ones by ladder, what each reached perk does now, the later perk taking the
+  earlier one's line (R5's replaces F3's): "R5 · +28% at the forest · +8% ring" (with "+5% crew" and "held to its cap"
+  when they apply; a farmer's "+20% chance of an extra crop"), "R7 · 2 items each night" (a farmer's "+0.5 growth each
+  night"; "None while she's away"), "R2 · Next tomorrow" ("Next in 3 mornings", the whole count once today's is in; "None while she's away"), "F4 · Bell
+  Pepper Salad · in the Kitchen's list", "F8 · Beside Stand-in 1" ("No 3-heart friend yet"), "F10 · Bent Trowel · +0.25
+  quality at the Fields", "R1 · She calls you “Sprout”", "R4 · With Stand-in 1". The full list shows each as "Now · …".
+  A perk at a place not open says "Opens with chapter 3" and nothing now.
+- **From her:** her pet name from Romance 1 and her keepsake from Friendship 10, with its line.
+- **Gifts:** from Friendship 7, her closest friend's loved gift ("Stand-in 1 loves Golden Carrot").
+- **The morning** (§4, RM57): "♥ Stand-in 2 left you ★3 Shiitake" and "Night chores · 3 items · +0.25 growth" in the
+  third place (the house's morning), "Perks · +2 items" in the sixth before side by side.
+- **A harvest's note:** "+3 Carrot (★1 × 2, ★2 × 1) · 1 from perks · 1 seed back".
+
+### The story format (decision 13)
+
+Her bible gains two optional fields, in F40's format and validator, and the stand-in's 9000001 has both (invented):
+
+- **`keepsake: { name, line }`** (RM58): the name 1–40 characters, the line 1–160, both under the line rules; without it
+  her profile says "Her keepsake".
+- **`petName`** (RM8, RM31): 1–24 characters, no placeholder, never gendered (the farmer's own words' rule); without it
+  her R1 perk says nothing more.
 
 ## Heart events (RM24, RM28, RM29, RM54)
 
@@ -760,7 +972,8 @@ No option scores below zero, removes a later event or changes the route.
 
 **Into her next bar, through `addLove`**, so an anniversary's ×2 applies; then `advance`. The event also gives:
 
-- **its rung's perk** (F48's words; F51 makes it act);
+- **its rung's perk** (F48's words; F51 makes it act): Friendship 4's writes **her signature dish's recipe** into the
+  Kitchen's list here, and the card says "Recipe · Bell Pepper Salad · in the Kitchen's list";
 - **a Memory:** the rung into `memories[id]`, its caption her beat's `beat` line;
 - **its unlock**, if any: an item lands in the Warehouse (★1); a place or a perk line is the card's;
 - any taste a `reveals` or a Choose learnt, and the path's flags into `love.flags`;
@@ -1077,7 +1290,8 @@ The stand-in pack’s ties (invented):
   what her closest ties already share.
 - **Her closest friend** (`closestFriend(pack, save, id)`): over all her ties, on the farm or not (every Uma has two):
   the strongest, then the most bond points, then `ties.json`'s order. One comparator, `tiesOf`, orders her profile's Ties
-  the same way. F51's Friendship 7 perk shows her closest friend's loved gift; F54's wedding room defaults to her house.
+  the same way. F51's Friendship 7 perk shows her closest friend's loved gift in Gifts; F54's wedding room defaults to her
+  house.
 
 ### Side by side (CS17, CS44; decision 7)
 
@@ -1092,7 +1306,7 @@ The stand-in pack’s ties (invented):
   later. Side by side pays as a **night extra** at step 4, after the hauls (`nightExtras`, `extrasTonight`), reading the
   bonds as they stand then: a pair whose bond reaches 3 hearts at tonight's step 6 works side by side from the next night.
   uma-work's plans and outputs are untouched. **F51 extends this step** with in her element (×1.2 in place of ×1.1,
-  `extrasShare`) and the capped romance bonus.
+  `extrasShare`) and the perks' own pot, the capped romance term ([Perks](#perks-rm31rm36)).
 - **The Fields** read it inside `blockGrowth`, so the page and step 2 agree: the block's card says "· side by side" and
   the nights left count it ([fields.md](fields.md#tending-cs12-cs28-cs31-decisions-1-and-2)). Her partner's block must
   have a growing plot: a tender of an empty block isn't working beside her.
@@ -1133,16 +1347,18 @@ What a v4 night adds or changes from v3's ([days.md](days.md) lists the rest):
 <!-- live:night-v4 -->
 | Step | Function | What happens | Filled by |
 |---|---|---|---|
-| 2 | `growCrops` | Crops grow: 1 a night untended, the tender’s rate tended, ×1.1 side by side (her tender has a 3-heart partner tending another growing block); plots that reach their days − 0.5 turn Ready | F20, F52 |
-| 4 | `nightExtras` | Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again, seeded copies straight into the Warehouse | F52 |
-| 6 | `tickRanks` | Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10; rank-ups where points and the challenge are met | F21, F47 |
+| 2 | `growCrops` | Crops grow: 1 a night untended, the tender’s rate tended, ×1.1 side by side (her tender has a 3-heart partner tending another growing block), ×1.2 for a farmer in her element (Friendship 8); a farmer’s night chores add +0.25 growth each to the untended block with the most growing plots, else hers; plots that reach their days − 0.5 turn Ready | F20, F52, F51 |
+| 4 | `nightExtras` | Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again (20% in her element), seeded copies straight into the Warehouse; then the perks’ extras: the bond term × the romance term of the same items (her line’s +10% and +20%, her ring, a dream, the household; held to 40%), their own seeded copies | F52, F51 |
+| 4 | `nightChores` | Night chores: a forager’s bring one item each from her rank’s deepest forest area this season, a fisher’s one fish each from her deepest spot, at a day’s haul’s stars, into the Warehouse; 1 from F6, 2 from R7, 3 from S4, on the farm only | F51 |
+| 6 | `tickRanks` | Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met | F21, F47, F51 |
 | 6 | `tickBonds` | Bonds: +10 to each pair who worked one place today (the Fields’ tenders together), once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend | F52 |
 | 6 | `payLine` | Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night | F47 |
 | 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations | F18, F47, F49 |
 | 8 | `arriveUmas` | Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50) | F46, F52 |
 | 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse | F47 |
+| 9 | `morningItems` | Morning items: each Uma on the farm leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+) | F51 |
 | 9 | `drawInvitations` | Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, 'invite', n)` among those home at Friendship 2+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14) | F50 |
-| 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists the invitations, side by side’s extras and each pair’s bond hearts reached since the last morning | F18, F50, F52 |
+| 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists the invitations, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning | F18, F50, F52, F51 |
 <!-- /live -->
 
 On v4 `checkGoals`' recruit is the chapter's authored arrival, her ties seeded like any arrival's. Step 7 clears v4's whole `today`. The morning's §4 is
@@ -1152,20 +1368,24 @@ On v4 `checkGoals`' recruit is the chapter's authored arrival, her ties seeded l
 |---|---|---|---|
 | 1 | **Ready**, read live from `readiness` as the card shows (never stored): up to three, in the tab's order, then "+N more" (the tab filtered on Ready); a tap plays her event over the morning (`/?event=`, F49) | "● Ready · Stand-in 1 · Friendship 1 · the Fields" with a **Play** tag, "+2 more" | F48, F49 |
 | 2 | `{ kind: 'invite', id, evening }`: her invitation this morning (`today.invites`, step 9), with **Yes, tonight** and **Another day**; answered, "Tonight ✓" with **Play ›** (her evening over the morning) or "Another day" | "✉ Stand-in 2: “Walk at dusk tonight?”" | F50 |
-| 3 | The house's morning: breakfast, +30s, items, night chores | — | F54 |
+| 3 | The house's morning: breakfast and +30s (F54); `{ kind: 'item', id, items }`: her morning item (R2, S2), its stock keys; `{ kind: 'chores', items, growth }`: the night's chores in all, once a night | "♥ Stand-in 2 left you ★3 Shiitake" (her profile); "Night chores · 3 items · +0.25 growth" (the Warehouse, or the Fields for growth alone) | F54, F51 |
 | 4 | `{ kind: 'birthday', id, when }` | "★ Stand-in 1's birthday today", "★ Tomorrow: Stand-in 1's birthday" | F47 |
 | 4 | `{ kind: 'anniversary', id, when, item }` | "♥ Stand-in 1's anniversary · ★5 Carrot left for you" (`item` the good; null the day before), "♥ Tomorrow: Stand-in 1's anniversary" | F47 |
 | 5 | Levels reached overnight (S2, S4) | — | F54 |
 | 5 | `{ kind: 'arrived', id, home }` | "Stand-in 4 arrived · away" | F46 |
+| 6 | `{ kind: 'perks', items }`: the perks' extras tonight, by the romance term | "Perks · +2 items" (opens the Warehouse) | F51 |
 | 6 | `{ kind: 'side', items }`: side by side's extras tonight | "Side by side · +3 items" (opens the Warehouse) | F52 |
 | 6 | `{ kind: 'bond', a, b, hearts }`: a pair's bond reached `hearts` since the last morning, one line a pair | "♥♥ Stand-in 1 & Stand-in 2 · bond 2" with **Read**; without a conversation written, "♥♥ Stand-in 1 & Stand-in 3 · bond 1 · Old rivals." (the tie's line) or "♥♥ Stand-in 2 and Stand-in 4 are closer now · bond 1" | F52 |
 
 Within a place the night's order holds: today's lines before tomorrow's, birthdays before anniversaries, each Uma in the
-cast's order; side by side before the bond hearts, the pairs in the cast's order. The section shows whenever a stored line or a Ready Uma is there; an Uma who played an event today isn't
+cast's order; morning items before the chores; the perks' extras before side by side before the bond hearts, the pairs in the
+cast's order. The section shows whenever a stored line or a Ready Uma is there; an Uma who played an event today isn't
 Ready. **There's no pop-up per event:** the morning, her ● Ready chip and **♥ on her pip** wherever the map draws her (a
 tender on the Fields, in place of her block's letter; a worker at a place) are the only signals. Pips stay their places'
 taps.
-The parse refuses an Uma off the roster, a kind twice for one Uma, an invitation for festival night or an unknown kind, an anniversary's item the day before (or an unknown
+The parse refuses an Uma off the roster, a kind twice for one Uma, a morning item with no goods or more than three (or a
+stock key that isn't a good at ★1–5), chores twice, with neither items nor growth or growth off a quarter, perks' extras
+twice or with no items, an invitation for festival night or an unknown kind, an anniversary's item the day before (or an unknown
 good on the day), side by side twice or with no items, a bond line twice for a pair, out of `pairKey` order or outside
 1–5 hearts, and words. §5 drops v3's `joined`, Gate and `left` lines.
 
@@ -1173,9 +1393,8 @@ good on the day), side by side twice or with no items, a bond line twice for a p
 
 - **F49 is built** ([heart events](#heart-events-rm24-rm28-rm29-rm54)); its seams for the packets after it are
   [below](#for-f50f56-the-event-players-seams). **F50 is built** ([the evening](#the-evening-rm19rm22-rm37)); its seams
-  are [below](#for-f51f56-the-evenings-seams). **F51** the perks' effects over `romance/perks.ts`: R4's ×1.5 is built (`bondFactor`),
-  F7's "her closest friend's loved gift" reads `closestFriend`, and in her element and the romance bonus extend
-  `extrasShare` and `nightExtras` (step 4). **F53** the ring and the wedding. **F54** the homestead (`homestead`,
+  are [below](#for-f51f56-the-evenings-seams). **F51 is built** ([perks](#perks-rm31rm36)); its seams are
+  [below](#for-f53f56-the-perks-seams). **F53** the ring and the wedding. **F54** the homestead (`homestead`,
   `love.house`), her house on the row and the profile, the marks from uma-art 2.26.0; a shared house's +10 a night and the
   same breakfast's +5 a pair go through `addBond`, and a wedding's room defaults to her closest friend's house. **F28,
   F32, F8** pay an expedition party (+15 a day away), a festival team (+20) and the same staff meal (+5 a pair) through
@@ -1203,6 +1422,35 @@ good on the day), side by side twice or with no items, a bond line twice for a p
   dish and vow, and their stage-up screens; their limits (three plays, 1–3 choice points) are the validator's.
 - **F51:** the signature dish's recipe (F4) is written where `playEvent` gives the rung's perk.
 - Save v4 grows `today.asked` (Ask her once a day), cleared at step 7.
+
+### For F53–F56: the perks' seams
+
+- **Rules** (`@farm/domain`, `romance/perk-terms.ts`): `routeIndex(love)`, `hasPerk(love, rung)`, `rungOfPerk(id)`,
+  `homeOrHoused(save, id)`, `linePlaceOpen(save, pack, id)`, `atHerLine(save, pack, id, place)`; `romanceTerms(save, pack, id,
+  place)` → `{ line, ring, own, dream, household, crew, total, held }` and `romanceBonus` (its `total`), `ringBonus(love)`,
+  `householdBonus(married)`, `dreamActs`, `dreamAt`; `inElement`, `IN_ELEMENT`; `keepsakeQuality(save, pack, id, place)`,
+  `KEEPSAKE_QUALITY`, `KEEPSAKE_GROWN`; `choresOf(love)`, `MAX_CHORES`; `morningRule(love)` → `{ every, stars, from }`,
+  `morningDue(rule, day)`, `morningsToItem(rule, day)`, `MORNING_ITEMS`; the caps `LINE_BONUS`, `OWN_CAP`, `DREAM_BONUS`,
+  `HOUSEHOLD`, `CREW_CAP`, `ROMANCE_CAP`. `romance/perk-effects.ts`: `choresTonight`, `fieldChores(save, pack)`,
+  `gatherChores(save, pack, talentOf)`, `lineQuality`, `leaveMorningItems(save, pack, talentOf)`, `MORNING_ITEM_N` (1),
+  `mentorsTonight`, `mentorAt`, `MENTOR_POINTS`, `signatureDish`, `giveSignatureDish`, `lineGrade`, `dishId`, `dishName`,
+  `LINE_DISH`, `DISH_WORDS`, `breakfast(save, pack)` → `{ save, fed }`, `BREAKFAST_DAYS`, `CHORE_LINES`, `CHORE_GROWTH`. The
+  shared rules take the pack where a perk reaches them: `loopKinds(talentOf, pack)`, `planHaul(…, pack)`,
+  `harvest(…, talentOf, pack)`, `harvestAll(…, talentOf, pack)`, `growFields(save, talentOf, pack, chores)`,
+  `blockGrowth(…, talentOf, pack)`, `tenderTerms(…, talentOf, pack)`, `extraCropChance`, `extrasShare(…, pack)`,
+  `perksShare`, `extrasTonight(…, pack)` → `{ save, extras, perks }`; `PointTerms.mentor`; `WorkTerms.keepsake`,
+  `TenderTerms.keepsake`, `QualitySources.keepsake`; `HarvestReceipt.perks`; `EventCard.recipe`.
+- **F53:** her ring's bonus is `love.ring` in her own term from the wedding (`ringBonus`, inside her 35%); S5's vow
+  renewal grows her keepsake by level alone (`hasPerk(love, 's5')`), and R8's engraving is the bench's words.
+- **F54:** her house's morning calls `breakfast(save, pack)` for a resident with S1 (`hasPerk(love, 's1')`), and leaves her
+  house's extra morning item with `lineGood(…, n = 2)` into her `item` line (`items` holds up to three); the house's
+  `+30`s go before the items in §4's third place. `homeOrHoused` already counts a spouse in her house (`love.house`) for
+  chores, morning items and breakfast; S2 at night goes through `advance`, which starts her every-2nd-morning count.
+- **M5, M6:** the Mine's and the Quarry's chores and +10% (chapter 3), the ranch's pen (chapter 2) and the workshops'
+  (+10% as the assistant, +1 dish, +1 cover, 5% back) join `CHORE_LINES` and the romance term's places when their packets
+  build the places; the Kitchen (F8) reads `workshops.recipes`, her signature dish among them, and a staff meal replaces a
+  breakfast.
+- **Save v4 grows** `love.morning` (from R2) and `love.dish` (from F4), and §4's `item`, `chores` and `perks` lines.
 
 ### For F51–F56: the evening's seams
 

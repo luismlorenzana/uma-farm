@@ -11,10 +11,16 @@
 // F50 fills `invited` (her invitation stands, unanswered or yes and not yet spent: `invitedNow`); the header's evening
 // marks are `evening-view.ts`'. For later packets: F54 adds her house to the row's note and the track's colours stay as
 // they are.
+//
+// F51 adds what each reached perk does now (`perkNow`: "+28% at the forest · +8% ring", "2 items each night", "Next in 3
+// mornings"), her closest friend's loved gift to Gifts from Friendship 7 (`friendLoved`), and her pet name and keepsake
+// once reached (`fromHer`).
 import {
-  ACTIVITY_NAMES, bar, bondHearts, bondOf, castOrder, dateOf, favouriteOf, farmPlace, GIFT_POINTS_V4, invitedNow, isGoodId, LADDER_COLOURS, ladderOf, levelWords, nextBondHeart, nextRung,
-  pairLevels, pairName, pairOf, perkLineOf, perksFor, readiness, readLevels, ROUTE_RUNGS, rungName, SEASON_NAMES, tasteKnown, tiesOf, unreadLevels, WAITING_RUNGS,
-  type Bar, type Birthdays, type LadderName, type Love, type LoveStage, type Perk, type Readiness, type SaveV4, type StoryPack, type Tie, type Wait,
+  ACTIVITY_NAMES, bar, bondHearts, bondOf, castOrder, choresTonight, closestFriend, dateOf, dishName, favouriteOf, farmPlace, GIFT_POINTS_V4, goodName, hasPerk, homeOrHoused,
+  invitedNow, isGoodId, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, keepsakeQuality, LADDER_COLOURS, ladderOf, levelWords, linePlaces, morningRule, morningsToItem, nextBondHeart,
+  pairLevels, pairName, pairOf, PERK_PLACE, perkLineOf, perksFor, readiness, readLevels, romanceTerms, ROUTE_RUNGS, routeIndex, rungName, SEASON_NAMES, SIDE_BY_SIDE_HEARTS,
+  tasteKnown, tiesOf, unreadLevels, WAITING_RUNGS,
+  type Bar, type Birthdays, type LadderName, type Love, type LoveStage, type Perk, type PerkId, type Readiness, type SaveV4, type StoryPack, type Tie, type Wait,
 } from '@farm/domain'
 import { nextWords, readyWords } from './love-words'
 
@@ -140,11 +146,8 @@ export function rowNote(state: Readiness, now: Pick<Bar, 'points' | 'cost'>, hom
   return readyWords(state, now, nameOf)
 }
 
-/** Her place along the route: her next rung's index, the route's length once it's complete. */
-export const routeIndex = (love: Pick<Love, 'stage' | 'level'>): number => {
-  const rung = nextRung(love)
-  return rung === null ? ROUTE_RUNGS.length : ROUTE_RUNGS.indexOf(rung)
-}
+/** Her place along the route: the domain's (F51), read here for the sort and the perks. */
+export { routeIndex }
 
 /** The sort (decision 4): Ready first, then the least progress (her rung along the route, then her points), then the cast's
  * order. */
@@ -266,25 +269,116 @@ export function nextCard(save: SaveV4, pack: HeartsPack, id: string, nameOf: Nam
   }
 }
 
-/** A perk on her profile's list: reached ✓, the next, the rest greyed (RM53). */
+/** A perk on her profile's list: reached ✓, the next, the rest greyed (RM53); a reached one with what it does now (F51). */
 export interface PerkView extends Perk {
   state: 'reached' | 'next' | 'ahead'
+  /** What it does now, in words (F51 decision 12), for a reached perk with a live effect; null otherwise. */
+  now: string | null
 }
 
-/** Every perk on her route for her line (decision 7), each reached, the next or ahead. */
-export function perkList(save: Pick<SaveV4, 'love' | 'farm'>, pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string): PerkView[] {
+const percent = (share: number): string => `${Math.round(share * 1000) / 10}%`
+/** The perks a later one replaces on the list: F3's +10% shows its now on R5's row once R5 is reached, and so on. */
+const SUPERSEDED: Partial<Record<PerkId, PerkId>> = { 'line-10': 'line-20', 'night-chore': 'night-chore-2', 'night-chore-2': 'night-chore-3', 'morning-item': 'morning-item-2' }
+
+/**
+ * What a reached perk does now (F51 decision 12), or null when its words say it all: her line's term ("+28% at the forest ·
+ * +8% ring", a farmer's "+20% chance of an extra crop", with the crew's and a cap held), her night chores ("2 items each
+ * night", "+0.5 growth each night", "None while she's away"), her morning items ("Next in 3 mornings"), her signature dish
+ * ("Bell Pepper Salad · in the Kitchen's list"), in her element ("Beside Stand-in 2"), her keepsake ("Bent Trowel · +0.25
+ * quality at the Fields"), her pet name and her closest friend.
+ */
+export function perkNow(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' | 'ties'>, id: string, perk: Pick<Perk, 'id' | 'opens'>, nameOf: NameOf): string | null {
+  const love = save.love[id]
+  const line = perkLineOf(pack, id)
+  if (!love || !line || perk.opens !== null) return null
+  const superseded = SUPERSEDED[perk.id]
+  if (superseded && perksFor(line, save.farm.chapter).some((p) => p.id === superseded && hasPerk(love, p.rung))) return null
+  const place = linePlaces(pack, id)[0]
+  switch (perk.id) {
+    case 'line-10': case 'line-20': {
+      if (!place) return null
+      const t = romanceTerms(save, pack, id, place)
+      const own = line === 'farming' ? `+${percent(t.total)} chance of an extra crop` : `+${percent(t.total)} at ${PERK_PLACE[line]}`
+      return [own, ...(t.ring > 0 ? [`+${percent(t.ring)} ring`] : []), ...(t.crew > 0 ? [`+${percent(t.crew)} crew`] : []), ...(t.held ? ['held to its cap'] : [])].join(' · ')
+    }
+    case 'night-chore': case 'night-chore-2': case 'night-chore-3': {
+      const n = choresTonight(save, pack, id)
+      if (n === 0) return homeOrHoused(save, id) ? null : 'None while she’s away'
+      return line === 'farming' ? `+${n * 0.25} growth each night` : `${n} item${n === 1 ? '' : 's'} each night`
+    }
+    case 'morning-item': case 'morning-item-2': {
+      const rule = morningRule(love)
+      if (!rule) return null
+      if (!homeOrHoused(save, id)) return 'None while she’s away'
+      // This morning's is already in (or not, had she been away): the next is a whole count away.
+      const left = morningsToItem(rule, save.calendar.day) || rule.every
+      return left === 1 ? 'Next tomorrow' : `Next in ${left} mornings`
+    }
+    case 'signature-dish': return love.dish ? `${dishName(love.dish)} · in the Kitchen’s list` : null
+    case 'in-element': {
+      const partners = tiesOf(pack, save, id).filter((t) => save.roster[t.with] && bondHearts(t.points) >= SIDE_BY_SIDE_HEARTS).map((t) => nameOf(t.with))
+      return partners.length > 0 ? `Beside ${partners.slice(0, 2).join(' or ')}` : 'No 3-heart friend yet'
+    }
+    case 'keepsake': {
+      const name = pack.bibles.get(id)?.keepsake?.name ?? 'Her keepsake'
+      const quality = place ? keepsakeQuality(save, pack, id, place) : 0
+      return quality > 0 ? `${name} · +${quality} quality at ${PERK_PLACE[line]}` : name
+    }
+    case 'dates': {
+      const pet = pack.bibles.get(id)?.petName
+      return pet ? `She calls you “${pet}”` : null
+    }
+    case 'closest-bond': {
+      const friend = closestFriend(pack, save, id)
+      return friend ? `With ${nameOf(friend)}` : null
+    }
+    default: return null
+  }
+}
+
+/** Every perk on her route for her line (decision 7), each reached, the next or ahead; a reached one with what it does now
+ * when `nameOf` is given (F51). */
+export function perkList(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' | 'ties'>, id: string, nameOf: NameOf | null = null): PerkView[] {
   const love = save.love[id]
   const line = perkLineOf(pack, id)
   if (!love || !line) return []
   const next = routeIndex(love)
   let named = false
   return perksFor(line, save.farm.chapter).map((perk): PerkView => {
-    if (ROUTE_RUNGS.indexOf(perk.rung) < next) return { ...perk, state: 'reached' }
-    if (named) return { ...perk, state: 'ahead' }
+    if (ROUTE_RUNGS.indexOf(perk.rung) < next) return { ...perk, state: 'reached', now: nameOf ? perkNow(save, pack, id, perk, nameOf) : null }
+    if (named) return { ...perk, state: 'ahead', now: null }
     named = true
-    return { ...perk, state: 'next' }
+    return { ...perk, state: 'next', now: null }
   })
 }
+
+/** Her closest friend's loved gift (F51 decision 12; RM31's F7): from Friendship 7, the friend's loved good when her bible
+ * names one that's in the game. */
+export function friendLoved(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'ties'>, id: string): { friend: string; good: string } | null {
+  if (!hasPerk(save.love[id], 'f7')) return null
+  const friend = closestFriend(pack, save, id)
+  const good = friend ? pack.bibles.get(friend)?.gifts.loved : undefined
+  return friend && good && isGoodId(good) ? { friend, good } : null
+}
+
+/** What she's given you that stays on her profile (F51 decision 12): her pet name for you from Romance 1, her keepsake from
+ * Friendship 10 (its name and her line about it, generic without a bible's), grown from Spouse 5. */
+export interface FromHer {
+  petName: string | null
+  keepsake: { name: string; line: string | null; quality: number; place: string } | null
+}
+export function fromHer(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string): FromHer {
+  const love = save.love[id]
+  const line = perkLineOf(pack, id)
+  const bible = pack.bibles.get(id)
+  const keepsake = hasPerk(love, 'f10') && line
+    ? { name: bible?.keepsake?.name ?? 'Her keepsake', line: bible?.keepsake?.line ?? null, quality: hasPerk(love, 's5') ? KEEPSAKE_GROWN : KEEPSAKE_QUALITY, place: PERK_PLACE[line] }
+    : null
+  return { petName: hasPerk(love, 'r1') ? bible?.petName ?? null : null, keepsake }
+}
+
+/** A good in words, for the friend's loved gift. */
+export const lovedWords = (friend: string, good: string, nameOf: NameOf): string => `${nameOf(friend)} loves ${goodName(good)}`
 
 /** The reached perks by ladder: "F1–F10 ✓ · R1–R4 ✓"; null before the first. */
 export function reachedWords(list: readonly Pick<PerkView, 'rung' | 'state'>[]): string | null {

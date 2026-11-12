@@ -25,6 +25,7 @@ import { tasteOf, type StoryPack } from '../story/pack'
 import type { Taste } from '../farm/visitors'
 import { addLove, advance, bar, CHOICE_BEST, choicePoints, pathFlags, walkScene } from './love'
 import { perkOf, type PerkId } from './perks'
+import { giveSignatureDish } from './perk-effects'
 import { choosePlan, chooseScore } from './plays/choose'
 import { EVENT_GRADE_POINTS, gradeOf, playSeed, type Grade, type PlayKind } from './plays/grade'
 import { playOf, togetherPlay, type PlayAs } from './plays/which'
@@ -130,6 +131,8 @@ export interface EventCard {
   /** Goods an option took. */
   taken: OptionGives[]
   perk: PerkId | null
+  /** Friendship 4's signature dish (F51 decision 9): the recipe it put in the Kitchen's list, a dish id; null otherwise. */
+  recipe: string | null
   /** The Memory's caption: her beat's line. */
   memory: string | null
   unlock: Unlock | null
@@ -213,20 +216,23 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
   const moved = notYet ? { ...grown, friend: true as const, last: day } : advance(grown, day)
   const unlock = beat?.unlock ?? null
   const withUnlock = unlock?.kind === 'item' && isWarehouseId(unlock.good) ? addGoods(pay.save.items, unlock.good, 1, 1) : pay.save.items
-  const next: SaveV4 = {
+  const played: SaveV4 = {
     ...pay.save,
     items: withUnlock,
     love: { ...pay.save.love, [id]: moved },
     today: { ...pay.save.today, events: [...new Set([...pay.save.today.events, id])] },
     memories: { ...pay.save.memories, [id]: [...new Set([...(pay.save.memories[id] ?? []), rung])] },
   }
-  const after = bar(moved)
+  // F51 decision 9: Friendship 4's perk writes her signature dish's recipe, once, where the event gives its perk.
+  const dish = rung === 'f4' ? giveSignatureDish(played, pack, id) : null
+  const next = dish?.save ?? played
+  const after = bar(next.love[id]!)
   const say = [...path.steps].reverse().find((s): s is { say: string; line: string } => 'say' in s && s.say === id)
   return {
     save: next,
     card: {
       id, rung, event: EVENT_POINTS, choices: points, plays: lines, chosen, sum, paid: pay.paid, carried: Math.max(0, carried), learnt: [...new Set(learnt)], taken,
-      perk: perkOf(rung)?.id ?? null, memory: beat?.beat ?? null, unlock, answer: rung === 'confession' ? answer ?? 'yes' : null,
+      perk: perkOf(rung)?.id ?? null, recipe: dish?.dish ?? null, memory: beat?.beat ?? null, unlock, answer: rung === 'confession' ? answer ?? 'yes' : null,
       stage: rung === 'confession' && !notYet ? 'romance' : null, line: say?.line ?? null,
       next: after.rung === null ? null : {
         rung: after.rung, cost: after.cost, points: after.points, banked: after.banked, hint: beatOf(pack, id, after.rung)?.hint ?? null, perk: perkOf(after.rung)?.id ?? null,

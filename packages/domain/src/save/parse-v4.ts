@@ -8,10 +8,11 @@
 import { dateOf, FESTIVAL_IDS, festivalOn } from '../farm/calendar'
 import { cleanFarmerName, farmerNameIssue } from '../romance/farmer'
 import { isCropId, isGoodId, isWarehouseId, type CropId } from '../goods/ids'
+import { parseStockKey } from './warehouse'
 import { LOOP_REQUESTS } from '../gathering/ids'
 import type { HeartLine, MorningSummaryV4, NewsLineV4 } from '../night/summary'
 import { bool, count, int, list, object, oneOf, parseAccount, record, text } from './parse'
-import { pairKey } from './v3'
+import { isDishId, pairKey } from './v3'
 import {
   counts, day, fail, KEY, member, outfit, parseBinLines, parseBonds, parseBoard, parseBuildings, parseDiary, parseDig, parseDorm, parseExpeditions,
   parseFarm, parseFields, parseNewsLines, parseNudges, parseRanch, parseRankLines, parseRanks, parseTools, parseWarehouse, parseWork, parseWorkLines,
@@ -54,7 +55,7 @@ const pastDay = (value: unknown, path: string, today: number): number => {
   return d
 }
 
-const LOVE_KEYS = ['stage', 'level', 'points', 'last', 'friend', 'ring', 'wed', 'house', 'known', 'flags', 'evening', 'festivals'] as const
+const LOVE_KEYS = ['stage', 'level', 'points', 'last', 'friend', 'ring', 'wed', 'house', 'known', 'flags', 'evening', 'festivals', 'morning', 'dish'] as const
 
 /** Her level's range on each stage (F47 decision 2): friendship and romance 0–9 (the tenth event moves her on), 10 while a
  * waiting rung waits, spouse 0–5. */
@@ -71,7 +72,8 @@ function festivalKey(value: unknown, path: string, year: number): string {
 
 /** Her route (RM10, decision 7; F47): her level in its stage's range; points whole and ≥ 0; `last` and `evening` no later
  * than today; `friend` only while the confession waits; `ring` only from the proposal on; `wed` and `house` only a
- * spouse's; festivals once each, by year. */
+ * spouse's; festivals once each, by year; `morning` (F51) only from Romance 2 on, no later than today; `dish` (F51) a dish
+ * id, only from Friendship 4 on. */
 function parseLove(value: unknown, path: string, today: number, houses: number): Love {
   const o = object(value, path, LOVE_KEYS)
   const stage = oneOf(o.stage, `${path}.stage`, LOVE_STAGES)
@@ -101,6 +103,14 @@ function parseLove(value: unknown, path: string, today: number, houses: number):
   if (o.house !== undefined) {
     if (stage !== 'spouse') fail(`${path}.house`, 'only a spouse')
     love.house = int(o.house, `${path}.house`, 0, houses - 1)
+  }
+  if (o.morning !== undefined) {
+    if (stage === 'friendship' || stage === 'confession' || (stage === 'romance' && love.level < 2)) fail(`${path}.morning`, 'only from Romance 2 on')
+    love.morning = pastDay(o.morning, `${path}.morning`, today)
+  }
+  if (o.dish !== undefined) {
+    if (stage === 'friendship' && love.level < 4) fail(`${path}.dish`, 'only from Friendship 4 on')
+    love.dish = typeof o.dish === 'string' && isDishId(o.dish) ? o.dish : fail(`${path}.dish`, 'unknown dish')
   }
   return love
 }
@@ -192,16 +202,38 @@ function parseFarmer(value: unknown, path: string): SaveV4['farmer'] {
 
 // --- The morning (decision 15; F47) -----------------------------------------------------------------------------------------
 
-/** §4 Hearts (F46 decision 15; F47 decision 14; F52 decisions 7 and 9; F50 decision 7): invitations, arrivals, birthdays
- * and anniversaries, each an Uma on the roster, once a kind each; an invitation asks for a date game; an anniversary's item
- * is a good on the day and null the day before; side by side once, 1+ items; bond hearts 1–5 once a pair, two roster Umas
- * in `pairKey` order. */
+/** A morning item's stock key (F51): a good at ★1–5, `<good>@<stars>`. */
+function itemKey(v: unknown, at: string): string {
+  const parsed = typeof v === 'string' ? parseStockKey(v) : null
+  return parsed && isGoodId(parsed.id) ? (v as string) : fail(at, 'expected <good>@<stars>')
+}
+
+/** §4 Hearts (F46 decision 15; F47 decision 14; F52 decisions 7 and 9; F50 decision 7; F51 decisions 2, 5 and 6):
+ * invitations, arrivals, birthdays, anniversaries and morning items, each an Uma on the roster, once a kind each; an
+ * invitation asks for a date game; an anniversary's item is a good on the day and null the day before; a morning item 1–3
+ * goods at their stars; the night's chores once, items and growth (quarters), one of them more than 0; the perks' extras
+ * once, 1+ items; side by side once, 1+ items; bond hearts 1–5 once a pair, two roster Umas in `pairKey` order. */
 function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>): HeartLine[] {
   const when = (v: unknown, at: string) => oneOf(v, at, ['today', 'tomorrow'] as const)
   const pairs = (roster.size * (roster.size - 1)) / 2
-  return unique(list(value, path, 0, roster.size * 4 + pairs + 1).map((v, i): HeartLine => {
+  return unique(list(value, path, 0, roster.size * 5 + pairs + 3).map((v, i): HeartLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['invite', 'arrived', 'birthday', 'anniversary', 'side', 'bond'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['invite', 'arrived', 'birthday', 'anniversary', 'item', 'chores', 'perks', 'side', 'bond'] as const)
+    if (kind === 'item') {
+      const o = object(v, at, ['kind', 'id', 'items'])
+      return { kind, id: member(o.id, `${at}.id`, roster), items: list(o.items, `${at}.items`, 1, 3).map((k, n) => itemKey(k, `${at}.items.${n}`)) }
+    }
+    if (kind === 'chores') {
+      const o = object(v, at, ['kind', 'items', 'growth'])
+      const items = int(o.items, `${at}.items`, 0, 100_000)
+      const growth = typeof o.growth === 'number' && Number.isInteger(o.growth * 4) && o.growth >= 0 && o.growth <= 1000 ? o.growth : fail(`${at}.growth`, 'expected quarters, 0 or more')
+      if (items === 0 && growth === 0) fail(at, 'expected items or growth')
+      return { kind, items, growth }
+    }
+    if (kind === 'perks') {
+      const o = object(v, at, ['kind', 'items'])
+      return { kind, items: int(o.items, `${at}.items`, 1, 100_000) }
+    }
     if (kind === 'invite') {
       const n = object(v, at, ['kind', 'id', 'evening'])
       return { kind, id: member(n.id, `${at}.id`, roster), evening: inviteKind(n.evening, `${at}.evening`) }
@@ -231,7 +263,7 @@ function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>):
     }
     const a = object(v, at, ['kind', 'id', 'home'])
     return { kind: 'arrived', id: member(a.id, `${at}.id`, roster), home: bool(a.home, `${at}.home`) }
-  }), path, (h) => (h.kind === 'bond' ? `bond:${h.a}:${h.b}` : h.kind === 'side' ? 'side' : `${h.kind}:${h.id}`))
+  }), path, (h) => (h.kind === 'bond' ? `bond:${h.a}:${h.b}` : h.kind === 'side' || h.kind === 'chores' || h.kind === 'perks' ? h.kind : `${h.kind}:${h.id}`))
 }
 
 function parseSummaryV4(value: unknown, path: string, today: number, roster: ReadonlySet<string>): MorningSummaryV4 {

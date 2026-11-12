@@ -3,7 +3,7 @@
 // and the quick look's lines. A block's growth reads its tender's talent (F21), D until master data loads. Pure, so the
 // page, the map and the tests read the same. Loaded with the loop's screens.
 import {
-  BLOCK_IDS, BLOCK_RULES, blockGrowth, blockOf, tendsSideBySide, CROPS, dateOf, growsIn, isSeasonEnd, itemNameOf, nightsLeft, opened, RANKS, readyAt, SEASON_NAMES,
+  type PerkPack, BLOCK_IDS, BLOCK_RULES, blockGrowth, blockOf, tendsSideBySide, CROPS, dateOf, growsIn, isSeasonEnd, itemNameOf, nightsLeft, opened, RANKS, readyAt, SEASON_NAMES,
   seedsInSeason, TALENT_GRADES, talentD, type BlockId, type CropId, type FarmingTalentOf, type Plot, type FarmSave, type Season,
 } from '@farm/domain'
 
@@ -74,8 +74,8 @@ function plotView(plot: Plot, index: number, growth: number, next: Season | null
   }
 }
 
-/** The four blocks, A to D. */
-export function fieldsView(save: FarmSave, talentOf: FarmingTalentOf = talentD): BlockView[] {
+/** The four blocks, A to D. On v4 the pack gives a farmer in her element ×1.2 (F51), so the nights left agree with step 2. */
+export function fieldsView(save: FarmSave, talentOf: FarmingTalentOf = talentD, story: PerkPack | null = null): BlockView[] {
   return BLOCK_IDS.map((id): BlockView => {
     const block = blockOf(save, id)
     if (!block) {
@@ -85,7 +85,7 @@ export function fieldsView(save: FarmSave, talentOf: FarmingTalentOf = talentD):
         short: Math.max(0, rule.cost - save.gold),
       }
     }
-    const growth = blockGrowth(save, id, talentOf)
+    const growth = blockGrowth(save, id, talentOf, story)
     const next = lastNight(save.calendar.day)
     const plots = block.plots.map((plot, i) => plotView(plot, i, growth, next))
     return {

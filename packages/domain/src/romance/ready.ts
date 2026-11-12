@@ -24,9 +24,7 @@ import { goodCount } from '../save/warehouse'
 import type { Trigger } from '../story/authored'
 import type { StoryPack } from '../story/pack'
 import { bar, NIGHT_RUNGS, WAITING_RUNGS } from './love'
-
-/** The activities whose places open with a chapter (CS3): a working setup there waits for it (RM36). */
-export const ACTIVITY_CHAPTER: Readonly<Partial<Record<Activity, number>>> = { ranch: 2, mining: 3, cooking: 4, expeditions: 5, serving: 6, forging: 7 }
+import { ACTIVITY_CHAPTER } from './perks'
 
 /** The proposal's ring (RM39, F53's goods): any grade in the Warehouse. */
 export const RING_IDS: readonly string[] = Array.from({ length: 10 }, (_, i) => `ring-g${i + 1}`)

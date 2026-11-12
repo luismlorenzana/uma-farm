@@ -144,7 +144,8 @@ across nights.
   hook; the rules default to D, for tests. Her rank's terms come from CS31's table (`rankBenefits`).
 
 **Growth a night (CS12):** untended **1**; tended **(her rank's 1.25 … 1.75 + the talent's) × (1 + 0.1 a Watering Can tier
-above Basic) × 1.25 well fed**; on save v4, **× 1.1 side by side** (below). A crop is **Ready once its growth reaches its days − 0.5**, so tending rounds to the
+above Basic) × 1.25 well fed**; on save v4, **× 1.1 side by side** (×1.2 for a farmer in her element) and **+0.25 a
+farming night chore** (below). A crop is **Ready once its growth reaches its days − 0.5**, so tending rounds to the
 nearest night: a 4-day Carrot takes 3 nights tended and 4 untended, a 10-day Asparagus 8 at Novice and 7 at Expert.
 Growth is kept to a millionth with a hair of slack, so 3 × 1.35 reaches 4.05.
 
@@ -163,6 +164,20 @@ rule at tier 1.
 > `tendsSideBySide`, read inside `blockGrowth`, so night step 2 and the page agree). The block's card says "Tended · 1.38
 > a night · side by side", and its plots' nights left count it. Two tenders also earn bond points together at step 6
 > (the Fields are one place). v3 has no bonds. Bonds are [hearts.md](hearts.md#bonds-between-umas-rm48rm50)'s.
+
+> **A farmer's perks on save v4 (romance build; live from F56; F51 decisions 3–5 and 8):** the Fields are a farmer's
+> line's place, so:
+> - **An extra crop at harvest:** each plot of a tended block, harvested, has a chance of **one extra crop at the plot's
+>   stars** equal to the romance term on its tender's work there (`extraCropChance`): her own +10% from Friendship 3 and
+>   +20% from Romance 5 (her ring too, once married) when farming is her line, plus the crew's (a farmer's dream, the
+>   household), held to 40%; `draw(uid, day, 'perk:harvest:<block>:<plot>', 0)`. **An untended block's harvest gets
+>   nothing.** The note says it: "+3 Carrot (★1 × 2, ★2 × 1) · 1 from perks".
+> - **In her element** (Friendship 8): her block grows **×1.2** side by side in place of ×1.1.
+> - **Night chores** (Friendship 6, Romance 7, Spouse 4): **+0.25 growth each** at step 2 to the untended block with the
+>   most growing plots (a tie by a seeded pick), else to her own while it has a growing plot; the morning says "Night
+>   chores · +0.5 growth".
+> - **Her keepsake** (Friendship 10): **+0.25 quality** on her tended block's harvests (+0.5 from Spouse 5).
+> The rules are [hearts.md](hearts.md#perks-rm31rm36)'s; v3's Fields are unchanged.
 
 <!-- live:tending -->
 | Tender | Growth, G | Growth, D | Growth, C | Growth, B | Growth, A | Growth, S | Stars, a D tender | Seeds back |

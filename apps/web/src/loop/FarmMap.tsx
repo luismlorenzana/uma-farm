@@ -123,7 +123,9 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   const readyNow = useReadyNow(save)
   const hearts = useMemo(() => new Set(readyNow.map((r) => r.id)), [readyNow])
   const plots = readyPlots(save)
-  const env = useMemo(() => farmEnvV3(loopKinds(talents.of)), [talents.of])
+  const story = useStory()
+  const perkStory = save.version === 4 ? story : null
+  const env = useMemo(() => farmEnvV3(loopKinds(talents.of, perkStory)), [talents.of, perkStory])
   const work = useMemo(() => workView(loopWorld(save), workNow(save), env), [save, env])
   const places: HubMapPlace[] = FARM_PLACES.map((place): HubMapPlace => {
     const lock = lockOf(save, place)

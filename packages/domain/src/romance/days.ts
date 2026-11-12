@@ -66,8 +66,8 @@ export interface LineGood {
 }
 
 /** The deepest area or spot she can work now, by her rank there (`placeLock`): the forest's last open area; the Fishery's
- * open spot with the highest rank, the sea's waiting for chapter 7 and the boat. */
-function deepestOpen(save: SaveV4, place: 'forest' | 'fishery', rank: Rank): string | null {
+ * open spot with the highest rank, the sea's waiting for chapter 7 and the boat. Her night chores read it too (F51). */
+export function deepestOpen(save: SaveV4, place: 'forest' | 'fishery', rank: Rank): string | null {
   const ids: readonly string[] = place === 'forest' ? FOREST_AREAS : FISHING_SPOTS
   const opens = (where: string) => (place === 'forest' ? FOREST[where as ForestAreaId].opens : FISHERY[where as FishingSpotId].opens)
   const open = ids.filter((where) => placeLock(save, place, where, rank) === null)

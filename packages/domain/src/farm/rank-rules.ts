@@ -61,13 +61,15 @@ export interface PointTerms {
   wellFed: boolean
   /** ×1, ×1.05 or ×1.10 (CS45, RM18). */
   heartsFactor: number
+  /** A mentor's ×1.10 at her place today (romance spec RM33; F51 decision 7), save v4 only; absent is ×1. */
+  mentor?: number
 }
 
 /** Points for a pay of `base` (decision "every pay takes the same factors"): base × her talent's factor × 1.2 in her
- * favourite line × 1.25 well fed × her hearts' factor, to a millionth. A day's work is `DAY_POINTS`; a workshop play
- * and an expedition pass their own base. */
+ * favourite line × 1.25 well fed × her hearts' factor × a mentor's (v4), to a millionth. A day's work is `DAY_POINTS`; a
+ * workshop play and an expedition pass their own base. */
 export function rankPoints(base: number, terms: PointTerms): number {
-  return round6(base * talentRankPoints(terms.talent) * (terms.favourite ? FAVOURITE_POINTS : 1) * (terms.wellFed ? WELL_FED_POINTS : 1) * terms.heartsFactor)
+  return round6(base * talentRankPoints(terms.talent) * (terms.favourite ? FAVOURITE_POINTS : 1) * (terms.wellFed ? WELL_FED_POINTS : 1) * terms.heartsFactor * (terms.mentor ?? 1))
 }
 /** A day of work's points (CS29): 10 × her factors. */
 export const rankPointsForDay = (terms: PointTerms): number => rankPoints(DAY_POINTS, terms)
@@ -280,8 +282,9 @@ export interface WorkedDay {
   outfitId: OutfitId
   activity: Activity
 }
-/** Her talent in an activity and whether it's her favourite: master data's, read by the night. */
-export type TermsOf = (outfitId: OutfitId, activity: Activity) => { talent: TalentStep; favourite: boolean }
+/** Her talent in an activity and whether it's her favourite: master data's, read by the night; on v4, a mentor's factor
+ * at her place today (F51 decision 7). */
+export type TermsOf = (outfitId: OutfitId, activity: Activity) => { talent: TalentStep; favourite: boolean; mentor?: number }
 
 /**
  * Step 6's ranks (CS7, CS29, CS30): first each Uma who worked today earns a day's points in its activity, once (one day

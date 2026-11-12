@@ -6,9 +6,10 @@
 // (her nine activities). Chat +15, Gift and Praise +20 sit in the thumb zone with Hearts | Work. Each section shows only
 // what exists: F49's **Play ›** on the Next card when her event is Ready (what a setup needs said when it isn't, and **Ask
 // her** after her confession's "Not yet"), and Memories' album (`?album=`); later packets fill Evening › (F50), the perks' effects,
-// her pet name and keepsake (F51), the ring (F53) and her house (F54). F52's Ties: her closest friend first and marked,
-// each bond's hearts and the points to the next, and **Read** for a pair's conversation opened and unread. Loaded on
-// demand.
+// the ring (F53) and her house (F54). F52's Ties: her closest friend first and marked, each bond's hearts and the points to
+// the next, and **Read** for a pair's conversation opened and unread. F51's perks: each reached perk with what it does now,
+// her closest friend's loved gift in Gifts from Friendship 7, and **From her**: her pet name for you from Romance 1 and her
+// keepsake from Friendship 10. Loaded on demand.
 import { birthdaysOf, canAsk, LADDER_COLOURS, ladderOf, levelWords, readiness, type SaveV4, type Temperament } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -20,8 +21,8 @@ import type { MasterView } from '../master/master'
 import { memoryCount, setupAdvice } from './event-view'
 import { ReadyChip, RouteTrack } from './HeartMarks'
 import {
-  giftSlots, nextCard, perkList, profileLine, reachedWords, readParam, routeTrack, rungLadder, tieRows, type GiftSlot, type HeartsPack, type NextCard,
-  type PerkView, type TieRow,
+  friendLoved, fromHer, giftSlots, lovedWords, nextCard, perkList, profileLine, reachedWords, readParam, routeTrack, rungLadder, tieRows, type FromHer, type GiftSlot,
+  type HeartsPack, type NextCard, type PerkView, type TieRow,
 } from './hearts-view'
 import { LoveActs } from './Love'
 import { WorkFacts, WorkSide } from './RosterAlbum'
@@ -93,8 +94,10 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
 function HeartsSide({ save, pack, id, card, nameOf }: { save: SaveV4; pack: HeartsPack; id: string; card: NextCard; nameOf: (id: string) => string }) {
   const love = save.love[id]!
   const track = routeTrack(love)
-  const perks = perkList(save, pack, id)
+  const perks = perkList(save, pack, id, nameOf)
   const gifts = giftSlots(pack, love, id)
+  const friend = friendLoved(save, pack, id)
+  const hers = fromHer(save, pack, id)
   const ties = tieRows(save, pack, id)
   const location = useLocation()
   const played = track.filter((c) => c.state === 'played').length
@@ -106,7 +109,8 @@ function HeartsSide({ save, pack, id, card, nameOf }: { save: SaveV4; pack: Hear
         play={card.ready ? withParam(location, 'event', id) : null}
         ask={card.waits === 'friend' ? (canAsk(save, id) ? withParam(location, 'ask', id) : 'asked') : null} />
       {perks.length > 0 && <PerksSection perks={perks} />}
-      <GiftsSection gifts={gifts} />
+      {(hers.petName || hers.keepsake) && <FromHerSection hers={hers} />}
+      <GiftsSection gifts={gifts} friend={friend ? lovedWords(friend.friend, friend.good, nameOf) : null} friendGood={friend?.good ?? null} />
       {ties.length > 0 && (
         <Section title="Ties">
           <ul className="divide-y divide-hairline rounded-md border border-hairline" data-ties>
@@ -213,16 +217,28 @@ function NextSection({ card, advice = null, play = null, ask = null }: { card: N
   )
 }
 
-/** Perks: the reached ones by ladder, the next, and every perk on a tap (reached ✓, the next, the rest greyed). */
+/** Perks: the reached ones by ladder, what the reached ones do now (F51), the next, and every perk on a tap (reached ✓ with
+ * its now, the next, the rest greyed). */
 function PerksSection({ perks }: { perks: readonly PerkView[] }) {
   const [all, setAll] = useState(false)
   const reached = reachedWords(perks)
   const next = perks.find((p) => p.state === 'next')
+  const now = perks.filter((p) => p.state === 'reached' && p.now !== null)
   const label = (p: PerkView) => `${p.rung.toUpperCase()} · ${p.words}${p.opens !== null ? ` · Opens with chapter ${p.opens}` : ''}`
   return (
     <Section title="Perks">
       <div className="space-y-1 text-[13px]" data-perks>
         {reached && <p className="text-ink-soft" data-perks-reached>{reached}</p>}
+        {now.length > 0 && (
+          <ul className="space-y-0.5" data-perks-now>
+            {now.map((p) => (
+              <li key={p.id} className="flex gap-2" data-perk-now={p.id}>
+                <span className="w-7 shrink-0 tabular-nums text-ink-soft">{p.rung.toUpperCase()}</span>
+                <span className="min-w-0 flex-1">{p.now}</span>
+              </li>
+            ))}
+          </ul>
+        )}
         {next && <p data-perks-next><span className="font-semibold">Next · </span>{label(next)}</p>}
         <button type="button" onClick={() => setAll((v) => !v)} aria-expanded={all} className="min-h-11 text-[13px] font-semibold text-accent-strong" data-action="all-perks">
           {all ? 'Hide the list' : `All ${perks.length} perks`}
@@ -232,7 +248,10 @@ function PerksSection({ perks }: { perks: readonly PerkView[] }) {
             {perks.map((p) => (
               <li key={p.id} className={`flex gap-2 px-3 py-1.5 ${p.state === 'ahead' ? 'text-ink-faint' : ''} ${p.state === 'next' ? 'font-semibold' : ''}`} data-perk={p.id} data-state={p.state}>
                 <span className="w-7 shrink-0 tabular-nums">{p.rung.toUpperCase()}</span>
-                <span className="min-w-0 flex-1">{p.words}{p.opens !== null && <span className="text-ink-faint"> · Opens with chapter {p.opens}</span>}</span>
+                <span className="min-w-0 flex-1">
+                  {p.words}{p.opens !== null && <span className="text-ink-faint"> · Opens with chapter {p.opens}</span>}
+                  {p.now && <span className="block text-[12px] font-normal text-ink-soft" data-perk-now-words>Now · {p.now}</span>}
+                </span>
                 {p.state === 'reached' && <span className="shrink-0 text-success">✓</span>}
               </li>
             ))}
@@ -243,10 +262,38 @@ function PerksSection({ perks }: { perks: readonly PerkView[] }) {
   )
 }
 
+/** From her (F51 decision 12): her pet name for you from Romance 1 and her keepsake from Friendship 10, with her line about
+ * it and what it does at her line. */
+function FromHerSection({ hers }: { hers: FromHer }) {
+  return (
+    <Section title="From her">
+      <ul className="space-y-1.5 text-[13px]" data-from-her>
+        {hers.petName && (
+          <li className="flex gap-2" data-pet-name={hers.petName}>
+            <span className="w-16 shrink-0 text-ink-soft">Calls you</span>
+            <span className="font-semibold">“{hers.petName}”</span>
+          </li>
+        )}
+        {hers.keepsake && (
+          <li className="flex gap-2" data-keepsake={hers.keepsake.name}>
+            <span className="w-16 shrink-0 text-ink-soft">Keepsake</span>
+            <span className="min-w-0 flex-1">
+              <span className="font-semibold">{hers.keepsake.name}</span>
+              <span className="text-ink-soft"> · +{hers.keepsake.quality} quality at {hers.keepsake.place}</span>
+              {hers.keepsake.line && <span className="block text-[12px] italic text-ink-soft">“{hers.keepsake.line}”</span>}
+            </span>
+          </li>
+        )}
+      </ul>
+    </Section>
+  )
+}
+
 const TASTE_LABEL: Readonly<Record<GiftSlot['taste'], string>> = { loved: 'Loved', liked: 'Liked', disliked: 'Disliked' }
 
-/** Gifts as learnt: her loved, liked and disliked goods ("?" until known), each group's points at ★1, and "Others +10". */
-function GiftsSection({ gifts }: { gifts: ReturnType<typeof giftSlots> }) {
+/** Gifts as learnt: her loved, liked and disliked goods ("?" until known), each group's points at ★1, and "Others +10";
+ * from Friendship 7 her closest friend's loved gift (F51). */
+function GiftsSection({ gifts, friend = null, friendGood = null }: { gifts: ReturnType<typeof giftSlots>; friend?: string | null; friendGood?: string | null }) {
   const groups = (['loved', 'liked', 'disliked'] as const).map((taste) => ({ taste, slots: gifts.slots.filter((s) => s.taste === taste) })).filter((g) => g.slots.length > 0)
   return (
     <Section title="Gifts">
@@ -266,6 +313,12 @@ function GiftsSection({ gifts }: { gifts: ReturnType<typeof giftSlots> }) {
           <span className="text-ink-soft">{groups.length > 0 ? 'Others' : 'Any gift'}</span>
           <span className="ml-auto font-semibold tabular-nums">+{gifts.others}</span>
         </li>
+        {friend && friendGood && (
+          <li className="flex items-center gap-2" data-friend-loved={friendGood}>
+            <span className="grid size-8 shrink-0 place-items-center rounded-sm bg-sunken"><ItemIcon id={friendGood} size={24} /></span>
+            <span className="text-ink-soft">{friend}</span>
+          </li>
+        )}
       </ul>
     </Section>
   )
