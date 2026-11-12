@@ -14,9 +14,8 @@ written around them.
 
 ## Context (read first)
 
-- [F59](F59-tags-and-ties.md). uma-platform's
-  [US1](https://github.com/luismlorenzana/uma-platform/blob/main/docs/handoff/tasks/US1-uma-story-shell.md), decision 6:
-  the report's shape.
+- [F59](F59-tags-and-ties.md). uma-platform's [story.md, "The check report"](https://github.com/luismlorenzana/uma-platform/blob/main/docs/platform-app/story.md#the-check-report): the
+  report's shape, as its app parses it.
 - `tools/story-sandbox/` (how it reads the domain's validator in place) and `story/authored.ts`.
 
 ## Decisions made
