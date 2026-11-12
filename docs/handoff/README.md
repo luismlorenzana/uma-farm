@@ -1,6 +1,6 @@
 # Handoff: open work
 
-> **Status: 2026-11-11, after D63. The HD-2D farm leads now, one piece at a time (the owner, D61).** M4 is live at
+> **Status: 2026-11-12, after D64. The HD-2D farm leads now, one piece at a time (the owner, D61).** M4 is live at
 > [uma-farm.web.app](https://uma-farm.web.app); each piece is closed fully and checked back with the owner before the next.
 > - **The HD-2D farm (M7):** F16, [the farm kit's contract](../design/kit-farm.md) ([page](../design/previews/kit-farm.html)),
 >   is done (D62); [F9](tasks/F9-kit-farm.md) (ChatGPT) draws the kit from it, wave 1 before the busts; and
@@ -10,7 +10,11 @@
 >   private story and goes live with the wipe: its bucket has the owner's yes (D60), and it waits for the story pack in
 >   `content/story/` on this Mac.
 > - **[F40](tasks/F40-story-authoring.md), the story,** is with the story session (layer 1 written, D42–D44), and
->   carries the romance core's format asks.
+>   carries the romance core's format asks. **Three small packets come before layer 2** (D64):
+>   [F58](tasks/F58-cast-on-the-ranker.md), [F59](tasks/F59-tags-and-ties.md) and [F60](tasks/F60-story-counts.md),
+>   mirroring uma-quest's story cast plan. The story's reading moves to uma-platform's
+>   [Uma Story](https://github.com/luismlorenzana/uma-platform/blob/main/docs/platform-app/story.md) when its Farm book
+>   is built.
 > - M5's packets wait, to be re-authored for the romance (RM65). Time is turns (D25); parcels are parked.
 >
 > - **The manual of the game as built** is [docs/game/](../game/README.md).
@@ -43,6 +47,9 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 | | F24 | Farm Rank and chapter 1, then the owner's phone check (CS39, CS41–CS42) | Claude | M | F18 ✓, F19 ✓, F20 ✓, F21 ✓, F22 ✓, F23 ✓ | **Done** (D38): M4 built; the owner's phone check pending |
 | | F25 | Art for M4: **A** (Claude, pixel) the Dorm and the shipping bin, a seed-packet badge, nine UI marks; **B** (ChatGPT) three cast busts (CS19, D45) | A: Claude · B: ChatGPT | M | F7 read | **A done** (uma-art 2.25.0, D49; pinned by F49, D55); [B written](tasks/F25-art-m4.md), ChatGPT's |
 | Story | F40 | [Author the farm's story](tasks/F40-story-authoring.md): the world, the SS cast's lives, ties and gifts, every route's beats, three routes in full (private) | The story session | L | The Studio's SS export ✓ | **In progress** (D42): layer 1 written (the world, 20 Umas' arrivals, 31 ties), the format and validator, the [Farm Story Sandbox](../../tools/story-sandbox/README.md); your read of layer 1 next |
+| | F58 | [The farm's cast on the Ranker](tasks/F58-cast-on-the-ranker.md): its revisions recorded, the Ranker's order as the authoring order, the opening three and the pilot's three re-checked (mirrors uma-quest's Q57) | The story session | S | — | [Written](tasks/F58-cast-on-the-ranker.md) (D64) |
+| | F59 | [The tag sheet, and the ties on the cast book](tasks/F59-tags-and-ties.md): each Uma's favourite line, season, festival and loved gift with a reason; each tie's source (mirrors Q58 and Q59) | The story session | M | F58; uma-platform US2 for the pointers | [Written](tasks/F59-tags-and-ties.md) (D64) |
+| | F60 | [The story's counts](tasks/F60-story-counts.md): `pnpm story:check` and its report, the counts, your read, the balance (mirrors Q60) | The story session, then you | S | F59 | [Written](tasks/F60-story-counts.md) (D64) |
 | | F41 | [The romance spec](../design/romance-spec.md) ([page](../design/previews/romance-spec.html)): RM1–RM67, the romance core's design and numbers, re-simulated | Claude | L | F40's layer 1 ✓ | **Accepted whole** (D47) |
 | Romance core | F46 | Save v4 and the authored start: the wipe, the farmer's name, the opening, arrivals, the Dorm for 20 (RM1–RM10) | Claude | L | F41 read | **Done** (D51), below |
 | | F47 | The ladders and points (RM11–RM18) | Claude | M | F46 ✓ | **Done** (D52), below |
@@ -91,6 +98,7 @@ pattern).
 - **uma-platform:** P88 and P89 are logged. `uma-post` (FM12) is its [PO1](https://github.com/luismlorenzana/uma-platform/blob/main/docs/handoff/tasks/PO1-uma-post.md), written ahead from our spec's §5 ([P107](https://github.com/luismlorenzana/uma-platform/blob/main/docs/decisions.md)) and built once F7 is answered (D19), before M5 ([its new-apps doc](https://github.com/luismlorenzana/uma-platform/blob/main/docs/new-apps/README.md)), and any `uma-work` or
   `uma-kit/work` change is a platform release (FM5).
 - **uma-platform and uma-quest, the stage:** [F57](tasks/F57-uma-stage.md) asks a uma-platform session to extract uma-quest's HD-2D stage as `@luismlorenzana/uma-stage` (release 1, the move; release 2, the farm's openings), and to move uma-quest onto it with nothing changed in how it plays (D63).
+- **uma-platform, the story:** [Uma Story](https://github.com/luismlorenzana/uma-platform/blob/main/docs/platform-app/story.md) (its P141) is planned as one app with a book for each game on one shared cast: the farm's drafts are pushed to the platform's private bucket for reading, and the game still reads only its own release (F56). Its US4 moves the Farm Story Sandbox there and asks for `pnpm story:check` (F60) and a publish receipt (a line in F56). Building waits for the owner's go there (D64).
 - **uma-racer:** its receiver comes last, flair only (FM13), with `racer-api-runtime` added to `POST_CALLERS`.
 
 ## The owner's steps
@@ -109,7 +117,7 @@ pattern).
 | ~~F7~~ Done 2026-11-09 | Read [the core spec](../design/core-spec.md) ([page](../design/previews/core-spec.html)): the owner's go on M4 |
 | ~~M4, now~~ Replaced by F56's phone check (D61) | **The phone check:** open [uma-farm.web.app](https://uma-farm.web.app) on your phone (tap Restart if it offers the update), pick your three, plant the carrots, send one Uma to the Woods and one to the Pond, end the day, and read the morning. Your word goes in a D-decision |
 | **HD-2D, now** | **Hand [F9](tasks/F9-kit-farm.md) to ChatGPT:** "Take F9, wave 1" in uma-platform. Then approve the kit's look from its review sheets (KF13) |
-| **Romance, now** | **Your priority Umas:** put them first in the SS tier on the Studio's Playable Umas board (its order is the authoring order), or name them to the story session. They get the opening and the pilot routes (D44) |
+| **Romance, now** | **Your priority Umas are the Ranker's order** (D64): the Studio's boards retired into [the Uma Ranker](https://uma-platform.web.app/ranker), so [F58](tasks/F58-cast-on-the-ranker.md) takes the opening three and the pilot routes from it. Then **read layer 1** in the Farm Story Sandbox |
 | M5 | The workshops' look and a play; your go for uma-rpg's receiver |
 
 ## Done

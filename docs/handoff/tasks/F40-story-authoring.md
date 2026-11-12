@@ -67,6 +67,21 @@ The owner reads each layer before the next is written. The farm's code packets (
 
 ## Decisions made
 
+> **Added 2026-11-12 (D64, uma-platform P141): the cast's source, three packets before layer 2, and where it's read.**
+> - **The cast's source is the Uma Ranker** ([F58](F58-cast-on-the-ranker.md)): the Studio's boards retired into it.
+>   The 20 stand; the Ranker's order is the authoring order and D44's priority.
+> - **Before layer 2:** [F58](F58-cast-on-the-ranker.md) (the cast on the Ranker, the opening three and the pilot
+>   re-checked), [F59](F59-tags-and-ties.md) (the tag sheet, and each tie's source), [F60](F60-story-counts.md) (the
+>   counts, the owner's read, the balance). They mirror uma-quest's Q57–Q60.
+> - **Layer 2 includes each Uma's arrival scene.** F56's release refuses a pack where any cast Uma lacks her bible or
+>   her arrival scene, so the go-live needs all 20 of both and none of the pilot's full routes.
+> - **Reading and verdicts move to Uma Story's Farm book** when it's live
+>   ([story.md](https://github.com/luismlorenzana/uma-platform/blob/main/docs/platform-app/story.md), its US4): drafts
+>   are pushed to the platform's private bucket, read on any device, and the verdicts pulled back. Until then the
+>   Farm Story Sandbox, as today. The game still reads only its own release (F56).
+> - **RS18's shared format with uma-quest is no longer a goal:** the two games keep their own formats, and share the
+>   cast and the player's stage.
+
 > **Added 2026-11-11 (D48): more fields the romance core's packets need**, beyond RM58's seven:
 > - `outfitId` is required in the cast file (RM2);
 > - `petName` per route, her name for you at Romance 1 (RM8, RM31);
