@@ -7,6 +7,7 @@
 // F21 reads it (`TalentOf`, passed by the night and the app); the rules default to D for tests. CS31's table
 // (`rankBenefits`) drives tended growth, quality and seeds back, and F21's `countChallenge` counts a harvest.
 import { SIDE_BY_SIDE, tendsSideBySide } from '../farm/bonds'
+import { IN_ELEMENT, inElement, keepsakeQuality, romanceBonus, type PerkPack } from '../romance/perk-terms'
 import { dateOf, isSeasonEnd, SEASON_NAMES, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { opened, type PlaceOpens } from '../farm/places'
@@ -25,7 +26,7 @@ import { SaveRuleError } from '../save/rules'
 import { BLOCK_IDS, emptyPlot, leaving, newBlock, tendedBlock, type Block, type BlockId, type OutfitId, type Plot, type SaveV3 } from '../save/v3'
 import { addGoods, goodCount, takeGoods } from '../save/warehouse'
 import { CROPS, GROWTH_SLACK, growsIn, readyAt, SHOP_SEEDS } from './crops'
-import type { FarmSave } from '../save/v4'
+import type { FarmSave, SaveV4 } from '../save/v4'
 
 const round6 = (n: number): number => Math.round(n * 1e6) / 1e6
 const cropName = (crop: CropId): string => itemNameOf(crop)
@@ -85,38 +86,56 @@ export function seedsBackChance(rank: Rank | null, hoeTier = 1): number {
   return round6((rank === null ? UNTENDED_SEEDS_BACK : rankBenefits(rank).seedsBack) + HOE_SEEDS_BACK * (hoeTier - 1))
 }
 
-/** What a block's tender brings to it: her farming rank, her talent and whether she's well fed. */
+/** What a block's tender brings to it: her farming rank, her talent and whether she's well fed; on save v4 with the pack,
+ * her keepsake's quality when the Fields are her line's place (F51 decision 8). */
 export interface TenderTerms {
   outfitId: OutfitId
   rank: Rank
   talent: TalentStep
   wellFed: boolean
+  keepsake?: number
 }
 
+/** The story pack the Fields read on a v4 farm (F51): a tender's line, for her keepsake, in her element and the romance
+ * term. Null on v3, or before the pack loads: the Fields then work as F20's and F52's. */
+type FieldsStory = PerkPack | null
+/** What the perks read of a v4 save beside the Fields' own parts; a v3 save has none of them. */
+type V4Parts = { version?: number; love?: SaveV4['love']; memories?: SaveV4['memories']; farm?: FarmSave['farm'] }
+const v4Story = (save: Pick<FarmSave, 'version'>, story: FieldsStory): PerkPack | null => (save.version === 4 ? story : null)
+
 /** The block's tender now, with her terms, or null when it's untended. */
-export function tenderTerms(save: Pick<FarmSave, 'fields' | 'roster'>, id: BlockId, talentOf: FarmingTalentOf = talentD): TenderTerms | null {
+export function tenderTerms(save: Pick<FarmSave, 'fields' | 'roster'> & V4Parts, id: BlockId, talentOf: FarmingTalentOf = talentD, story: FieldsStory = null): TenderTerms | null {
   const outfitId = blockOf(save, id)?.tender ?? null
   const uma = outfitId === null ? undefined : save.roster[outfitId]
   if (outfitId === null || !uma) return null
-  return { outfitId, rank: uma.ranks.farming.rank, talent: talentOf(outfitId), wellFed: uma.wellFed > 0 }
+  const terms: TenderTerms = { outfitId, rank: uma.ranks.farming.rank, talent: talentOf(outfitId), wellFed: uma.wellFed > 0 }
+  const keepsake = story && save.version === 4 && save.love && save.farm ? keepsakeQuality({ love: save.love, farm: save.farm }, story, outfitId, 'fields') : 0
+  return keepsake > 0 ? { ...terms, keepsake } : terms
 }
 
 /** A block's growth tonight: its tender's rate, or 1 untended (CS12); on save v4, ×1.1 side by side (F52 decision 7:
- * its tender has a 3-heart partner tending another growing block, `tendsSideBySide`). */
-export function blockGrowth(save: Pick<FarmSave, 'version' | 'fields' | 'roster' | 'tools' | 'bonds'>, id: BlockId, talentOf: FarmingTalentOf = talentD): number {
+ * its tender has a 3-heart partner tending another growing block, `tendsSideBySide`), ×1.2 for a farmer in her element
+ * (F51 decision 4: Friendship 8, the Fields her line's place, with the pack). */
+export function blockGrowth(save: Pick<FarmSave, 'version' | 'fields' | 'roster' | 'tools' | 'bonds'> & V4Parts, id: BlockId, talentOf: FarmingTalentOf = talentD, story: FieldsStory = null): number {
   const tender = tenderTerms(save, id, talentOf)
   if (!tender) return UNTENDED_GROWTH
   const rate = tendedGrowth(tender.rank, tender.talent, save.tools['watering-can'], tender.wellFed)
-  return tendsSideBySide(save, id) ? round6(rate * SIDE_BY_SIDE) : rate
+  if (!tendsSideBySide(save, id)) return rate
+  const pack = v4Story(save, story)
+  const element = pack && save.love && save.farm && inElement({ love: save.love, farm: save.farm }, pack, tender.outfitId, 'fields')
+  return round6(rate * (element ? IN_ELEMENT : SIDE_BY_SIDE))
 }
 
 /** A harvest's quality points (CS26, farming): a tender's rank (`rankQuality`, 0.5 a rank), talent (`talentQuality`),
- * +0.25 for tending and well fed's +0.25; the crop's level and the Hoe whoever tends it. Untended at level 1 with a
- * Basic Hoe is 0: always ★1. */
+ * +0.25 for tending and well fed's +0.25, and on v4 her keepsake (F51); the crop's level and the Hoe whoever tends it.
+ * Untended at level 1 with a Basic Hoe is 0: always ★1. */
 export function harvestQuality(tender: Omit<TenderTerms, 'outfitId'> | null, level: number, hoeTier = 1): number {
   const farm = { cropLevel: cropLevelQuality(level), tool: toolQuality(hoeTier) }
   if (!tender) return quality(farm)
-  return quality({ ...farm, rank: rankQuality(tender.rank), talent: talentQuality(tender.talent), care: TENDED_QUALITY, ...(tender.wellFed ? { boost: WELL_FED_QUALITY } : {}) })
+  return quality({
+    ...farm, rank: rankQuality(tender.rank), talent: talentQuality(tender.talent), care: TENDED_QUALITY, ...(tender.wellFed ? { boost: WELL_FED_QUALITY } : {}),
+    ...(tender.keepsake ? { keepsake: tender.keepsake } : {}),
+  })
 }
 
 /** Whether an Uma is busy (decision 1): she tends a block, or holds a running uma-work job. The Fields' picker, the job
@@ -217,16 +236,24 @@ export function plantAll<S extends FarmSave>(save: S, id: BlockId, crop: CropId)
 
 /** What a harvest brought: crops by star and own seeds back. */
 export interface HarvestReceipt {
-  /** Crops by star, ★1 … ★5. */
+  /** Crops by star, ★1 … ★5, the perks' extra crops among them. */
   stars: [number, number, number, number, number]
   seeds: number
   plots: number
+  /** Extra crops from the romance term (F51 decision 3), already in `stars`. */
+  perks: number
 }
-const noReceipt = (): HarvestReceipt => ({ stars: [0, 0, 0, 0, 0], seeds: 0, plots: 0 })
+const noReceipt = (): HarvestReceipt => ({ stars: [0, 0, 0, 0, 0], seeds: 0, plots: 0, perks: 0 })
 /** A receipt's crops, every star. */
 export const receiptItems = (receipt: HarvestReceipt): number => receipt.stars.reduce((a, b) => a + b, 0)
 
-function harvestPlot<S extends FarmSave>(save: S, id: BlockId, index: number, talentOf: FarmingTalentOf, receipt: HarvestReceipt): S {
+/** A tended plot's chance of one extra crop at harvest (F51 decision 3): the romance term on its tender's work at the
+ * Fields (her own when farming is her line, plus the crew's), on save v4 with the pack; 0 untended or on v3. */
+export function extraCropChance(save: FarmSave, tender: OutfitId | null, story: FieldsStory = null): number {
+  return save.version === 4 && story && tender !== null ? romanceBonus(save, story, tender, 'fields') : 0
+}
+
+function harvestPlot<S extends FarmSave>(save: S, id: BlockId, index: number, talentOf: FarmingTalentOf, receipt: HarvestReceipt, story: FieldsStory): S {
   const block = ownedBlock(save, id)
   const plot = plotOf(block, index)
   if (plot.crop === null || !plot.ready) throw new SaveRuleError('not-ready', plot.crop === null ? 'Nothing planted there.' : 'Not ready yet.')
@@ -234,14 +261,19 @@ function harvestPlot<S extends FarmSave>(save: S, id: BlockId, index: number, ta
   const day = save.calendar.day
   const uid = save.account.uid
   // Decision 3: the stars and challenges read the block's tender now; nobody tending is untended.
-  const tender = tenderTerms(save, id, talentOf)
+  const tender = tenderTerms(save, id, talentOf, v4Story(save, story))
   const points = save.crops[crop.id] ?? 0
   const level = cropLevelOf(points)
   const q = harvestQuality(tender, level, save.tools.hoe)
   // Decision 4: one star draw a crop.
   const stars = Array.from({ length: crop.yield }, (_, n) => drawStars(q, draw(uid, day, `harvest:${id}:${index}`, n)))
-  let items = stars.reduce((all, s) => addGoods(all, crop.id, s, 1), save.items)
-  for (const s of stars) receipt.stars[s - 1]! += 1
+  // F51 decision 3: a tended plot's chance of one extra crop, a copy of one of its crops (the plot's stars).
+  const chance = extraCropChance(save, tender?.outfitId ?? null, story)
+  const extra = chance > 0 && draw(uid, day, `perk:harvest:${id}:${index}`, 0) < chance
+    ? [stars[Math.floor(draw(uid, day, `perk:harvest:${id}:${index}`, 1) * stars.length)]!] : []
+  let items = [...stars, ...extra].reduce((all, s) => addGoods(all, crop.id, s, 1), save.items)
+  for (const s of [...stars, ...extra]) receipt.stars[s - 1]! += 1
+  receipt.perks += extra.length
   if (draw(uid, day, `seeds:${id}:${index}`, 0) < seedsBackChance(tender?.rank ?? null, save.tools.hoe)) {
     items = addGoods(items, seedId(crop.id, true), 1, 1)
     receipt.seeds += 1
@@ -262,21 +294,22 @@ function harvestPlot<S extends FarmSave>(save: S, id: BlockId, index: number, ta
 }
 
 /** Harvests a Ready plot: each crop draws its stars into the Warehouse, a seed may come back, the crop gains its points
- * and the tender her challenge's count (`countChallenge`), `plots-harvested` rises, and a regrowing crop starts again. */
-export function harvest<S extends FarmSave>(save: S, id: BlockId, index: number, talentOf: FarmingTalentOf = talentD): { save: S; receipt: HarvestReceipt } {
+ * and the tender her challenge's count (`countChallenge`), `plots-harvested` rises, and a regrowing crop starts again. On
+ * save v4 with the pack, her keepsake lifts the stars and the romance term may add a crop (F51 decisions 3 and 8). */
+export function harvest<S extends FarmSave>(save: S, id: BlockId, index: number, talentOf: FarmingTalentOf = talentD, story: FieldsStory = null): { save: S; receipt: HarvestReceipt } {
   const receipt = noReceipt()
-  return { save: harvestPlot(save, id, index, talentOf, receipt), receipt }
+  return { save: harvestPlot(save, id, index, talentOf, receipt, story), receipt }
 }
 
 /** Harvests every Ready plot of the given blocks (Harvest all; every block for the map's Collect all). Nothing Ready
  * changes nothing. */
-export function harvestAll<S extends FarmSave>(save: S, ids: readonly BlockId[] = BLOCK_IDS, talentOf: FarmingTalentOf = talentD): { save: S; receipt: HarvestReceipt } {
+export function harvestAll<S extends FarmSave>(save: S, ids: readonly BlockId[] = BLOCK_IDS, talentOf: FarmingTalentOf = talentD, story: FieldsStory = null): { save: S; receipt: HarvestReceipt } {
   const receipt = noReceipt()
   let next = save
   for (const block of save.fields.blocks) {
     if (!ids.includes(block.id)) continue
     block.plots.forEach((plot, index) => {
-      if (plot.ready) next = harvestPlot(next, block.id, index, talentOf, receipt)
+      if (plot.ready) next = harvestPlot(next, block.id, index, talentOf, receipt, story)
     })
   }
   return { save: next, receipt }
@@ -334,14 +367,16 @@ export interface Withered {
 /**
  * Step 2 (CS7, CS12): every planted plot that isn't Ready grows by its block's rate; a plot whose growth reaches its
  * days − 0.5 turns Ready. A tender works the night only when her block has a growing plot (decision 2): those are
- * `tended`, for F21's rank points (night step 6).
+ * `tended`, for F21's rank points (night step 6). On save v4 (F51) the pack gives a farmer in her element ×1.2, and
+ * `extra` is the night's farming chores' growth by block (+0.25 each, decision 5), added to the block's rate tonight.
  */
-export function growFields<S extends FarmSave>(save: S, talentOf: FarmingTalentOf = talentD): { save: S; tended: { outfitId: OutfitId; block: BlockId }[]; ripened: Ripened[] } {
+export function growFields<S extends FarmSave>(save: S, talentOf: FarmingTalentOf = talentD, story: FieldsStory = null, extra: ReadonlyMap<BlockId, number> = new Map()): { save: S; tended: { outfitId: OutfitId; block: BlockId }[]; ripened: Ripened[] } {
   const tended: { outfitId: OutfitId; block: BlockId }[] = []
   const ripened: Ripened[] = []
   const blocks = save.fields.blocks.map((block): Block => {
     if (!block.plots.some((p) => p.crop !== null && !p.ready)) return block
-    const rate = blockGrowth(save, block.id, talentOf)
+    const chores = extra.get(block.id)
+    const rate = chores ? round6(blockGrowth(save, block.id, talentOf, story) + chores) : blockGrowth(save, block.id, talentOf, story)
     if (block.tender !== null && save.roster[block.tender]) tended.push({ outfitId: block.tender, block: block.id })
     let ripe = 0
     const plots = block.plots.map((plot): Plot => {

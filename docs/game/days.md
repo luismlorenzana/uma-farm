@@ -129,40 +129,48 @@ time. A step whose packet hasn't landed passes the night on unchanged, and each 
 | 9 | `buildSummary` | The morning summary, from what changed | F18 |
 <!-- /live -->
 
-**On save v4** (romance build; live from F56; F46, F47 and F52), the night runs these steps with v4's own where the
-romance changes them (`nightStepsOf`, `NIGHT_STEPS_V4`):
+**On save v4** (romance build; live from F56; F46, F47, F52, F50 and F51), the night runs these steps with v4's own where
+the romance changes them (`nightStepsOf`, `NIGHT_STEPS_V4`):
 
 - **Step 2** grows a tended block **×1.1 side by side** when its tender has a 3-heart partner tending another growing
-  block (F52).
-- **Step 4**, after the hauls, pays **side by side's extras** (`nightExtras`, F52): 10% of an Uma's night's items again,
-  seeded copies into the Warehouse, when a 3-heart partner worked the same place today. The planned hauls are untouched.
-  F51 adds in her element and the romance bonus to this step.
-- **Step 6** pays rank points with her friendship's factor, **ticks bonds** (`tickBonds`, F52: +10 a pair at one place,
+  block (F52), **×1.2 for a farmer in her element**, and adds the farmers' **night chores**, +0.25 growth each to the
+  untended block with the most growing plots, else hers (F51).
+- **Step 4**, after the hauls, pays **side by side's extras** (`nightExtras`, F52): 10% of an Uma's night's items again
+  (20% in her element, F51), seeded copies into the Warehouse, when a 3-heart partner worked the same place today; then
+  **the perks' extras** (F51): the bond term × the romance term (her line's +10% and +20%, her ring, a dream, the
+  household; held to 40%) of the same items, their own copies. Then **night chores** (`nightChores`, F51): a forager's
+  and a fisher's bring one item each from her deepest area or spot. The planned hauls are untouched.
+- **Step 6** pays rank points with her friendship's factor and **a mentor's ×1.10** (F51: an Uma at Friendship 9 at her
+  line's place lifts the others there, one a place), **ticks bonds** (`tickBonds`, F52: +10 a pair at one place,
   ×1.5 sharing a favourite line of that place's, Romance 4's ×1.5 with her closest friend) and pays **her line's +10**.
   The bonds tick before her line, after the ranks.
 - **Step 7** clears the whole of v4's `today` (chats, gifts, praise earned and paid, events, evenings, invitations, and
   the bond hearts noted since the last morning).
 - **Step 8** runs `arriveUmas` in the Gate's place; each arrival's ties are **seeded** (F52).
-- **Step 9** notes **praise earned overnight** and **birthdays and anniversaries today and tomorrow**, then draws **this
+- **Step 9** notes **praise earned overnight** and **birthdays and anniversaries today and tomorrow**, leaves **this
+  morning's items** (`morningItems`, F51: every 4th morning from Romance 2, every 2nd from Spouse 2), then draws **this
   morning's invitation** (`drawInvitations`, F50: one Uma home at Friendship 2+ whose favourite kind is open to her, two
   from 10 married, weighted toward the least seen, by `draw(uid, day, 'invite', n)`) before the summary, whose §4 lists
-  the invitation, **side by side** and each pair's **bond hearts** reached since the last morning.
+  the invitation, the morning items and night chores, the perks' and **side by side**'s extras and each pair's **bond
+  hearts** reached since the last morning.
 
 What v4 adds or changes:
 
 <!-- live:night-v4 -->
 | Step | Function | What happens | Filled by |
 |---|---|---|---|
-| 2 | `growCrops` | Crops grow: 1 a night untended, the tender’s rate tended, ×1.1 side by side (her tender has a 3-heart partner tending another growing block); plots that reach their days − 0.5 turn Ready | F20, F52 |
-| 4 | `nightExtras` | Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again, seeded copies straight into the Warehouse | F52 |
-| 6 | `tickRanks` | Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10; rank-ups where points and the challenge are met | F21, F47 |
+| 2 | `growCrops` | Crops grow: 1 a night untended, the tender’s rate tended, ×1.1 side by side (her tender has a 3-heart partner tending another growing block), ×1.2 for a farmer in her element (Friendship 8); a farmer’s night chores add +0.25 growth each to the untended block with the most growing plots, else hers; plots that reach their days − 0.5 turn Ready | F20, F52, F51 |
+| 4 | `nightExtras` | Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again (20% in her element), seeded copies straight into the Warehouse; then the perks’ extras: the bond term × the romance term of the same items (her line’s +10% and +20%, her ring, a dream, the household; held to 40%), their own seeded copies | F52, F51 |
+| 4 | `nightChores` | Night chores: a forager’s bring one item each from her rank’s deepest forest area this season, a fisher’s one fish each from her deepest spot, at a day’s haul’s stars, into the Warehouse; 1 from F6, 2 from R7, 3 from S4, on the farm only | F51 |
+| 6 | `tickRanks` | Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met | F21, F47, F51 |
 | 6 | `tickBonds` | Bonds: +10 to each pair who worked one place today (the Fields’ tenders together), once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend | F52 |
 | 6 | `payLine` | Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night | F47 |
 | 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations | F18, F47, F49 |
 | 8 | `arriveUmas` | Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50) | F46, F52 |
 | 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse | F47 |
+| 9 | `morningItems` | Morning items: each Uma on the farm leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+) | F51 |
 | 9 | `drawInvitations` | Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, 'invite', n)` among those home at Friendship 2+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14) | F50 |
-| 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists the invitations, side by side’s extras and each pair’s bond hearts reached since the last morning | F18, F50, F52 |
+| 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists the invitations, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning | F18, F50, F52, F51 |
 <!-- /live -->
 
 The romance's points, birthdays and anniversaries are [hearts.md](hearts.md#points-rm13-rm15-rm18)'s; bonds are
@@ -199,10 +207,13 @@ The romance's points, birthdays and anniversaries are [hearts.md](hearts.md#poin
 > **On save v4 (romance build; live from F56; F46 decision 15, F47 decision 14, F48 decisions 1 and 9):** §4 is **Hearts**
 > in place of Bonds, in RM57's order: (1) **Ready** lines read live from `readiness` as the card shows, never stored, up
 > to three, then "+N more" (the Hearts tab on Ready); (2) the invitation (`{ kind: 'invite', id, evening }`, "✉ Stand-in
-> 2: “Walk at dusk tonight?”" with **Yes, tonight** and **Another day**, F50); (3) the house's morning (F54); (4)
+> 2: “Walk at dusk tonight?”" with **Yes, tonight** and **Another day**, F50); (3) the house's morning (F54), with her
+> morning items (`{ kind: 'item', id, items }`, "♥ Stand-in 2 left you ★3 Shiitake") and the night's chores (`{ kind:
+> 'chores', items, growth }`, "Night chores · 3 items · +0.25 growth", F51); (4)
 > birthdays and anniversaries today and tomorrow (`{ kind: 'birthday', id, when }`, `{ kind: 'anniversary', id, when,
 > item }`, "★ Tomorrow: Stand-in 1's birthday"); (5) levels reached overnight (F54) and arrivals (`{ kind: 'arrived', id,
-> home }`, "Stand-in 4 arrived · away", her arrival scene waiting); (6) side by side's extras (`{ kind: 'side', items }`,
+> home }`, "Stand-in 4 arrived · away", her arrival scene waiting); (6) the perks' extras (`{ kind: 'perks', items }`,
+> "Perks · +2 items", F51), side by side's extras (`{ kind: 'side', items }`,
 > "Side by side · +3 items", opening the Warehouse) and bond hearts (`{ kind: 'bond', a, b, hearts }`, "♥♥ Stand-in 1 &
 > Stand-in 2 · bond 2" with **Read** while a conversation waits, F52). The section shows
 > whenever a stored line or a Ready Uma is there, and every line opens her profile (`/hearts?uma=`); a rank's line opens

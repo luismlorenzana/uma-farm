@@ -183,8 +183,8 @@ describe('the opening and arrivals (RM4, RM9; decisions 8 and 9)', () => {
     for (let i = 0; i < 12; i++) save = endDay(save, context(), LATER)
     expect(save.calendar.day).toBe(13)
     expect(draws).toEqual(before)
-    expect(nightStepsOf(save).map((s) => s.name)).toEqual(NIGHT_STEPS.flatMap((s) => (s.name === 'gateVisitors' ? ['arriveUmas'] : s.name === 'countHauls' ? [s.name, 'nightExtras']
-      : s.name === 'tickBonds' ? [s.name, 'payLine'] : s.name === 'buildSummary' ? ['heartsMorning', 'drawInvitations', s.name] : [s.name])))
+    expect(nightStepsOf(save).map((s) => s.name)).toEqual(NIGHT_STEPS.flatMap((s) => (s.name === 'gateVisitors' ? ['arriveUmas'] : s.name === 'countHauls' ? [s.name, 'nightExtras', 'nightChores']
+      : s.name === 'tickBonds' ? [s.name, 'payLine'] : s.name === 'buildSummary' ? ['heartsMorning', 'morningItems', 'drawInvitations', s.name] : [s.name])))
     expect(nightStepsOf({ version: 3 })).toBe(NIGHT_STEPS)
     expect(parseSaveV4(json(save))).toEqual(save)
   })

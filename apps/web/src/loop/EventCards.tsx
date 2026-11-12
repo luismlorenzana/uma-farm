@@ -1,11 +1,12 @@
 // The cards that close an event (F49 decisions 9 and 11; romance spec RM55): **the level-up card** closes every event:
 // her heart fills with a short sparkle (still, with reduced motion) and she says her last line; then the sum ("+50 event
-// · +30 choice · +15 Great = +95 toward Romance 6 (+40 banked)"), the perk it brings (F48's words; F51 makes it act),
+// · +30 choice · +15 Great = +95 toward Romance 6 (+40 banked)"), the perk it brings (F48's words; F51 makes it act, and
+// Friendship 4's names her signature dish's recipe),
 // "‹caption› saved" (her Memory), any unlock, and the next rung's cost, its place and setup (the next beat's hint) and
 // what it opens, with one **Continue**. **The stage-up screen** closes the confession's Yes (and, from F53, the proposal
 // and the wedding): the route's track re-coloured, "Opens now" and **Continue**. F54's night levels (S2, S4) show the
 // level-up card from the morning. Loaded on demand with the player.
-import { LADDER_COLOURS, ladderOf, perkLineOf, rungName, withFarmer, type EventCard, type Love, type StoryPack } from '@farm/domain'
+import { dishName, LADDER_COLOURS, ladderOf, perkLineOf, rungName, withFarmer, type EventCard, type Love, type StoryPack } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { Button, UiMark, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { RouteTrack } from './HeartMarks'
@@ -44,6 +45,7 @@ export function LevelUpCard({ card, id, name, love, pack, farmer, onContinue }: 
       <section className="rounded-md border border-hairline p-3 text-[14px] tabular-nums" data-sum>{sumWords(card)}</section>
       <section className="space-y-1.5 rounded-md border border-hairline p-3 text-[14px]">
         {perk && <p data-card-perk><span className="text-micro pr-1.5">Perk</span>{perk}</p>}
+        {card.recipe && <p data-card-recipe={card.recipe}><span className="text-micro pr-1.5">Recipe</span>{dishName(card.recipe)} · in the Kitchen’s list</p>}
         {card.memory && <p className="flex items-center gap-1.5" data-card-memory><span className="text-micro pr-0.5">Memory</span><UiMark mark="hearts/memory-frame" fallback={<span aria-hidden>▢</span>} />“{card.memory}” saved</p>}
         {unlockWords(card) && <p data-card-unlock><span className="text-micro pr-1.5">Unlocked</span>{unlockWords(card)}</p>}
         {card.learnt.length > 0 && <p className="text-ink-soft" data-card-learnt>A taste learnt</p>}

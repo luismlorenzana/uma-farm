@@ -22,6 +22,9 @@ export interface QualitySources {
   tool?: number
   /** Well fed: `WELL_FED_QUALITY`. */
   boost?: number
+  /** Her keepsake (romance spec RM31, RM33; F51 decision 8): +0.25 at her line's place from Friendship 10, +0.5 from
+   * Spouse 5 (`keepsakeQuality`), save v4 only. */
+  keepsake?: number
 }
 
 /** Tended by an Uma: +0.25 (farming). */

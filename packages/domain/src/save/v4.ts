@@ -57,6 +57,11 @@ export interface Love {
   evening: number
   /** The festivals she's been at with you (F47 decision 9: +50 once a festival a year), as `<festival>:<year>`. */
   festivals: string[]
+  /** The day her morning items' count started (F51 decision 6): the day she reached Romance 2 (every 4th morning from
+   * it), then the day she reached Spouse 2 (every 2nd). `advance` sets it; absent before Romance 2. */
+  morning?: number
+  /** Her signature dish (F51 decision 9): the recipe her Friendship 4 gave, a dish id, so her profile can name it. */
+  dish?: string
 }
 
 /** An Uma on the v4 roster: v3's without `affinity`, which became `love` (RM10). Talents aren't saved. */

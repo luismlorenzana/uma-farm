@@ -143,16 +143,20 @@ interface SaveV4 {
   bonds: Record<string, number>                       // pairKey of character ids; whole on v4 (F52)
   summary: MorningSummaryV4 | null                    // v3's, with §4 `bonds: []` replaced by `hearts`
 }
-interface Love { stage, level, points, last, friend?, ring?, wed?, house?, known: string[], flags: string[], evening }
+interface Love { stage, level, points, last, friend?, ring?, wed?, house?, known: string[], flags: string[], evening,
+  festivals: string[], morning?, dish? }              // F51: `morning` the day her morning items' count started (R2, then
+                                                      // S2), `dish` her signature dish's id (F4)
 ```
 
 - **The parse** (`parse-v4.ts`, sharing v3's parts in `parse-loop.ts`) is as strict as v3's: unknown keys and v3-only
   keys (`start`, `visitors`, a roster Uma's `affinity`) refused; roster keys by form; `love` exactly the roster's keys,
   each in range (a level 0–10, spouse 0–5; points finite and ≥ 0; `last` and `evening` no later than today; `friend` only
-  while the confession waits; `ring` from the proposal on; `wed` and `house` a spouse's); `memories` and `arrivals` on
+  while the confession waits; `ring` from the proposal on; `wed` and `house` a spouse's; F51's `morning` from Romance 2
+  on, no later than today, and `dish` a dish id from Friendship 4 on); `memories` and `arrivals` on
   the roster; the farmer's name empty or within RM8's rule; the Dorm on 1–8 with home within its beds; the morning's
   Hearts lines on the roster, once each, ids only; bond points whole, and `today.bonds` two roster ids in `pairKey` order
-  with 0–5 hearts (F52); `today.asked` roster Umas once each (F49). `parseSave` returns v2, v3 and v4 as stored; `NEWEST_SAVE_VERSION` is
+  with 0–5 hearts (F52); `today.asked` roster Umas once each (F49); F51's §4 lines: a morning item 1–3 goods at ★1–5,
+  the night's chores once (items, growth in quarters), the perks' extras once. `parseSave` returns v2, v3 and v4 as stored; `NEWEST_SAVE_VERSION` is
   4 and `SAVE_VERSION` (what production writes) stays 3 until F56.
 - **The wipe runs in the app, never in the parse** (F46 decision 2): the API, shared with production and deployed on
   every push, reads what's stored and never makes a save (FM10). The romance build's boot turns any v1–v3 it meets (on

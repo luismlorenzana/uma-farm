@@ -12,7 +12,7 @@ import {
   plantAll, readScene, recallLoopWorker, receiptItems, repeatLoopJob, restartLoopStopped, SaveRuleError, setTender, ship, shipAll, shopLines, startLoopJob, takeBack,
   touched, type BlockId, type CropId, type FarmingTalentOf, type HarvestReceipt, type LoopCollected, type LoopJobInput, type LoopKinds, type LoopPlaceId,
   type LoopWorkRequest, type FarmSave, type ChapterSceneId, type ShopLine, type StationId, type SaveV3, finishArrival, joinOpening, nameFarmer,
-  type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair,
+  type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair, type StoryPack,
 } from '@farm/domain'
 import type { QueueInput } from '@luismlorenzana/uma-work'
 import { masterReady } from '../master/master'
@@ -43,9 +43,12 @@ export async function endTheDay(day: number): Promise<boolean> {
 /** Every tender's farming talent on this release (F21): a harvest's stars read it, so a harvest waits for master data. */
 const farming = async (): Promise<FarmingTalentOf> => farmingTalents(talentsFor(await masterReady()))
 
+/** The story pack a v4 farm's work and harvests read (F51: her keepsake, the romance term); none on v3. */
+const perkStory = async (): Promise<StoryPack | null> => (loopSave()?.version === 4 ? await storyReady() : null)
+
 /** The loop's work kinds with this release's talents (F22): a job's plan and a catch's size read them, so work waits for
- * master data. */
-const workKinds = async (): Promise<LoopKinds> => loopKinds(talentsFor(await masterReady()))
+ * master data; on v4 with the pack (F51: her keepsake lifts a haul's stars as it's planned). */
+const workKinds = async (): Promise<LoopKinds> => loopKinds(talentsFor(await masterReady()), await perkStory())
 
 /** Puts the morning summary away: a player's change (decision 11). */
 export async function dismissSummary(): Promise<void> {
@@ -59,11 +62,12 @@ export async function dismissSummary(): Promise<void> {
 export async function collectFarm(): Promise<number> {
   const talentOf = await farming()
   const kinds = await workKinds()
+  const story = await perkStory()
   const save = loopSave()
   if (!save) return 0
   const now = nowIso()
   const jobs = collectLoopAll(save, now, undefined, kinds)
-  const crops = harvestAll(jobs.save, BLOCK_IDS, talentOf)
+  const crops = harvestAll(jobs.save, BLOCK_IDS, talentOf, story)
   const items = jobs.items + receiptItems(crops.receipt)
   if (jobs.items > 0 || crops.receipt.plots > 0) await commit(touched(crops.save, now))
   return items
@@ -113,23 +117,26 @@ async function harvested(rule: (save: FarmSave) => { save: FarmSave; receipt: Ha
   })
   return receipt!
 }
-/** Harvests a Ready plot, its tender's talent read from master data. */
+/** Harvests a Ready plot, its tender's talent read from master data (and on v4 her keepsake and the perks' extra crop). */
 export const harvestPlot = async (block: BlockId, plot: number) => {
   const talentOf = await farming()
-  return harvested((s) => harvest(s, block, plot, talentOf))
+  const story = await perkStory()
+  return harvested((s) => harvest(s, block, plot, talentOf, story))
 }
 /** Harvests every Ready plot of a block. */
 export const harvestBlock = async (block: BlockId) => {
   const talentOf = await farming()
-  return harvested((s) => harvestAll(s, [block], talentOf))
+  const story = await perkStory()
+  return harvested((s) => harvestAll(s, [block], talentOf, story))
 }
 /** Harvests every Ready plot on the farm (the quick look's Harvest all): the crops it brought. Nothing Ready changes
  * nothing. */
 export async function harvestFields(): Promise<number> {
   const talentOf = await farming()
+  const story = await perkStory()
   const save = loopSave()
   if (!save) return 0
-  const { save: next, receipt } = harvestAll(save, BLOCK_IDS, talentOf)
+  const { save: next, receipt } = harvestAll(save, BLOCK_IDS, talentOf, story)
   if (receipt.plots > 0) await commit(touched(next, nowIso()))
   return receiptItems(receipt)
 }

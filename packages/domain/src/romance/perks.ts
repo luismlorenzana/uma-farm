@@ -20,7 +20,10 @@
 // miner's +10% before chapter 3, a cook's before the Kitchen. Loaded with the romance's screens.
 import type { Activity } from '../farm/ranks'
 import { castEntry, favouriteOf, type StoryPack } from '../story/pack'
-import { ACTIVITY_CHAPTER } from './ready'
+
+/** The activities whose places open with a chapter (CS3): a working setup there waits for it, and so does a perk at her
+ * line's place (RM36). Here since F51, so the perks' terms never import `ready.ts` (and `ready.ts` reads it from here). */
+export const ACTIVITY_CHAPTER: Readonly<Partial<Record<Activity, number>>> = { ranch: 2, mining: 3, cooking: 4, expeditions: 5, serving: 6, forging: 7 }
 
 /** Her line as the perks say it: her favourite activity, with a quarry calling's mining at the Quarry (RM6). */
 export type PerkLine = Exclude<Activity, 'expeditions'> | 'quarry'

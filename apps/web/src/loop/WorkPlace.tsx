@@ -18,6 +18,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import { useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
+import { useStory } from '../story/story'
 import { buildPlace, collectAt, collectJob, dismissJob, editQueue, recallJob, repeatJob, restartJob, startJob } from './actions'
 import { goldWords } from './goods-view'
 import { activityOrder, pickerSorts, rankTalent, UMA_FACETS, umaRows, type LoopUmaRow } from './roster-view'
@@ -64,7 +65,9 @@ function LoopWorkProvider({ save, say, children }: { save: FarmSave; say: Say; c
   const talents = useTalents()
   const master = useMaster()
   const album = master.status === 'ready' ? master.view.album : null
-  const env = useMemo(() => farmEnvV3(loopKinds(talents.of)), [talents.of])
+  const story = useStory()
+  const perkStory = save.version === 4 ? story : null
+  const env = useMemo(() => farmEnvV3(loopKinds(talents.of, perkStory)), [talents.of, perkStory])
   const world = useMemo(() => loopWorld(save), [save])
   const actions = useMemo(() => workActions(say), [say])
   const now = workNow(save)

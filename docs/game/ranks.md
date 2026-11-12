@@ -121,6 +121,12 @@ it (Hand 5, Legend 250):
 | v4 (romance build): her friendship | F0–F4 | F5–F9 | F10 on: her confession, romance and spouse |
 <!-- /live -->
 
+**A mentor on save v4** (romance build; live from F56; F51 decision 7, RM33): an Uma at **Friendship 9** working her
+line's place today mentors the others who worked there too: they earn **×1.10 rank points** for the day (`PointTerms.mentor`,
+`mentorsTonight` at step 6); she doesn't. **One mentor a place:** the one with the most hearts (her place along her route),
+then the cast's order, then her id; a second Friendship 9 Uma there is mentored too. It multiplies with the hearts' factor
+above; v3's points are unchanged ([hearts.md](hearts.md#perks-rm31rm36)).
+
 <!-- live:rank-points -->
 | Rank | Points | G | D | C | A | S |
 |---|---|---|---|---|---|---|

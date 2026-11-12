@@ -341,8 +341,9 @@ describe('anniversaries (RM17; decision 11)', () => {
 
   it('leaves a ★5 item of her line that morning, with the line the day before', () => {
     const eve = runNight(married(wed + DAYS_PER_YEAR - 2), context(NO_BIRTHDAYS))
-    // F50: a spouse whose favourite kind is open asks you out each morning, §4's second place.
-    expect(eve.summary!.hearts).toEqual([{ kind: 'invite', id: ONE, evening: 'stargazing' }, { kind: 'anniversary', id: ONE, when: 'tomorrow', item: null }])
+    // F50: a spouse whose favourite kind is open asks you out each morning, §4's second place. (F51: a spouse also has
+    // Romance 2's morning items, every 4th morning: not this test's.)
+    expect(eve.summary!.hearts.filter((h) => h.kind !== 'item')).toEqual([{ kind: 'invite', id: ONE, evening: 'stargazing' }, { kind: 'anniversary', id: ONE, when: 'tomorrow', item: null }])
     const day = runNight(eve, context(NO_BIRTHDAYS))
     const line = day.summary!.hearts.find((h) => h.kind === 'anniversary')!
     expect(line).toMatchObject({ kind: 'anniversary', id: ONE, when: 'today' })

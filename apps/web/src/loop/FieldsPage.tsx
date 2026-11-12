@@ -14,6 +14,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import { useMaster, type MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
+import { useStory } from '../story/story'
 import { buyLand, harvestBlock, harvestPlot, plantEvery, plantSeed, tendBlock } from './actions'
 import {
   cropFacts, fieldsView, growthWords, nightsWords, noSeedsWords, plotKey, seedOptions, tenderRank, type LockedBlock, type OwnedBlock, type PlotView,
@@ -36,12 +37,13 @@ function withSheets(location: { pathname: string; search: string }, key?: string
   return `${location.pathname}${search ? `?${search}` : ''}`
 }
 
-/** "+9 Carrot (★1 × 7, ★2 × 2) · 1 seed back". */
-function receiptWords(receipt: HarvestReceipt, crop: string | null): string {
+/** "+9 Carrot (★1 × 7, ★2 × 2) · 1 from perks · 1 seed back" (F51: the romance term's extra crops said as they come). */
+export function receiptWords(receipt: HarvestReceipt, crop: string | null): string {
   const items = receiptItems(receipt)
   const stars = receipt.stars.flatMap((n, i) => (n > 0 ? [`★${i + 1} × ${n}`] : [])).join(', ')
+  const perks = receipt.perks > 0 ? ` · ${receipt.perks} from perks` : ''
   const seeds = receipt.seeds > 0 ? ` · ${receipt.seeds} seed${receipt.seeds === 1 ? '' : 's'} back` : ''
-  return `+${items}${crop ? ` ${crop}` : ''} (${stars})${seeds}`
+  return `+${items}${crop ? ` ${crop}` : ''} (${stars})${perks}${seeds}`
 }
 
 export default function FieldsPage() {
@@ -72,7 +74,8 @@ function Fields({ save }: { save: FarmSave }) {
   const view = master.status === 'ready' ? master.view : null
   const talents = useTalents()
   const farming = useMemo(() => farmingTalents(talents.of), [talents.of])
-  const blocks = useMemo(() => fieldsView(save, farming), [save, farming])
+  const story = useStory()
+  const blocks = useMemo(() => fieldsView(save, farming, story), [save, farming, story])
   const [note, setNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const open = (key: string, value: string) => navigate(withParam(location, key, value), { state: { back: true } })

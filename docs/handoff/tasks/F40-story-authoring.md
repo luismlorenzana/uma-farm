@@ -122,6 +122,14 @@ The owner reads each layer before the next is written. The farm's code packets (
 > Perfect, `miss` after a Fine. With no `play` step, the beat's `together` plays at the event's end (help and talk have
 > none). Ask her replays the confession from her line before its answer, so write that line as her question.
 >
+> **Landed in F51 (D57):** her bible may carry **`keepsake: { name, line }`** (RM58's keepsake: the name 1–40 characters,
+> the line 1–160, both under the line rules; she gives it at Friendship 10 and it grows at Spouse 5; it shows on her
+> profile, never in the Warehouse) and **`petName`** (her pet name for you from Romance 1: 1–24 characters, no
+> placeholder, never gendered, as the farmer's own words). Both are optional: without them her profile says "Her
+> keepsake" and her R1 perk says nothing more. Her signature dish needs no field: her `gifts.loved` when it's a dish id
+> (`dish-<family>-<grade>`, listed under `proposed` until dishes are goods), else her line's dish kind; her dream is her
+> `s3` event, its effect the template's.
+>
 > F41 also settles what the story wrote around: arrivals are the authored ones only (RM1, RM4); events never wait on a
 > season, festival or hour (RM24); the farmer is never gendered at the wedding (RM30); one ring bench at the Forge opens
 > after the first romance 8 (RM38).

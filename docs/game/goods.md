@@ -388,12 +388,18 @@ always ★5.
 | Inputs | — | — | — | mean input ★ − 1 (`inputsQuality`) | the input's stars carry |
 | Tool | +0.25 a tier (`toolQuality`) | Hoe +0.25 a tier | Brush +0.25 a tier | — | — |
 | Boost | well fed +0.25 (`WELL_FED_QUALITY`) | well fed +0.25 | — | — | — |
+| Keepsake (save v4, F51) | +0.25 at her line from Friendship 10, +0.5 from Spouse 5 | the tender's, at her line | — | — | — |
 
 - `quality(sources)` adds a good's sources, each already in points (`{ rank, talent, care, cropLevel, inputs, tool,
-  boost }`), to a millionth; `drawStars(q, u)` draws; `starShares(q)` gives the odds of each star. F21 gives the rank
+  boost, keepsake }`), to a millionth; `drawStars(q, u)` draws; `starShares(q)` gives the odds of each star. F21 gives the rank
   and talent terms (`rankQuality` from CS31's table, `talentQuality` from CS28's, [ranks.md](ranks.md)); F20 adds them up for crops (`harvestQuality`, [fields.md](fields.md#tending-cs12-cs28-cs31-decisions-1-and-2))
   and F22 for its goods (`gatherQuality`, [gathering.md](gathering.md#stars-cs26)); a station's output keeps its input's stars.
 - A tool's tier runs 1 (Basic) to 5 (Mythril), so Basic adds nothing and a Copper Pick +0.25.
+- **Her keepsake** (romance build; live from F56; F51 decision 8, RM31, RM33): from Friendship 10 an Uma's keepsake adds
+  **+0.25** to the goods of her work at her line's place (+0.5 from Spouse 5): a haul as its job is planned
+  (`planHaul` with the pack, `keepsakeQuality`), a tended block's harvest. Nowhere else, never on v3; a station's output
+  still keeps its input's stars. Her keepsake's name and her line about it are her bible's, on her profile
+  ([hearts.md](hearts.md#perks-rm31rm36)).
 
 | Worked (CS26) | Q | Stars |
 |---|---|---|

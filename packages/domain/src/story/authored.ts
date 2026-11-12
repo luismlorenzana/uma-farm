@@ -130,7 +130,20 @@ export interface UmaBible {
    * the confession, `partner` from Romance 1 to the wedding, `spouse` after it. Without it she keeps her temperament's
    * lines. */
   chats?: ChatSets
+  /** Her keepsake (RM31, RM58; F51 decision 13): a named item she gives at Friendship 10, its name and her line about it,
+   * shown on her profile (not in the Warehouse). Its effect is the template's: +0.25 quality at her line, +0.5 from S5.
+   * Without it her profile says "Her keepsake". */
+  keepsake?: Keepsake
+  /** Her pet name for you (RM8, RM31; F51 decision 13): a short name she calls you from Romance 1, shown on her profile.
+   * Never gendered; `{farmer}` isn't needed (it's what she calls you). */
+  petName?: string
 }
+/** Her keepsake (F51): a name of 1–40 characters and a line of 1–160, under the line rules. */
+export interface Keepsake { name: string; line: string }
+/** A pet name's length (F51): 1–24 characters. */
+export const PET_NAME_MAX = 24
+/** A keepsake's name's and line's lengths (F51). */
+export const KEEPSAKE_LIMITS = { name: 40, line: 160 } as const
 /** 3–20 lines a stage, each at most 160 characters, `{farmer}` the only placeholder (F47 decision 16). */
 export interface ChatSets { friend: string[]; partner: string[]; spouse: string[] }
 
@@ -427,7 +440,29 @@ export function bibleIssues(bible: unknown, ctx: StoryContext): Issues {
   }
   for (const rung of RUNGS) if (!ids.has(rung)) issues.push(`Her route has no ${rung} (RS7)`)
   if (bible.chats !== undefined) issues.push(...chatIssues(bible.chats))
+  if (bible.keepsake !== undefined) issues.push(...keepsakeIssues(bible.keepsake))
+  if (bible.petName !== undefined) issues.push(...petNameIssues(bible.petName))
   return issues
+}
+
+/** Her keepsake (F51 decision 13): `{ name, line }` and nothing else, the name 1–40 characters, the line 1–160, both under
+ * the line rules. */
+function keepsakeIssues(keepsake: unknown): Issues {
+  if (!isObject(keepsake) || Object.keys(keepsake).some((k) => k !== 'name' && k !== 'line')) return ['keepsake is { name, line }']
+  const issues: Issues = []
+  if (!isText(keepsake.name, KEEPSAKE_LIMITS.name)) issues.push(`keepsake.name: 1–${KEEPSAKE_LIMITS.name} characters`)
+  else issues.push(...lineIssues(keepsake.name, 'keepsake.name', false))
+  if (!isText(keepsake.line, KEEPSAKE_LIMITS.line)) issues.push(`keepsake.line: 1–${KEEPSAKE_LIMITS.line} characters`)
+  else issues.push(...lineIssues(keepsake.line, 'keepsake.line', false))
+  return issues
+}
+
+/** Her pet name for you (F51 decision 13): 1–24 characters, no placeholder, never gendered (RS2, as the farmer's own
+ * words). */
+function petNameIssues(name: unknown): Issues {
+  if (!isText(name, PET_NAME_MAX)) return [`petName: 1–${PET_NAME_MAX} characters`]
+  if (/[{}]/.test(name)) return ['petName: no placeholder (it’s what she calls you)']
+  return lineIssues(name, 'petName', true)
 }
 
 /** Every step of a scripted event, `then`, `good` and `miss` included. */

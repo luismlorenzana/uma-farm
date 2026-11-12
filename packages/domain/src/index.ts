@@ -120,6 +120,10 @@ export * from './romance/ready'
 export * from './farm/bonds'
 // The perks' words (F48; RM31, RM32, RM36): each level's perk id and its words by her line, for her profile; F51 makes them act.
 export * from './romance/perks'
+// The perks' effects (F51; RM31–RM36): the romance term and its caps, in her element, her keepsake, night chores, morning
+// items, the mentor, her signature dish and breakfast, read from her level.
+export * from './romance/perk-terms'
+export * from './romance/perk-effects'
 // Heart events (F49; RM24–RM30, RM54–RM56): the five plays (Cast, Pick, Rhythm, Walk, Choose) at both lengths with their
 // grades and RM26's map, `playEvent` with its choices, rewards and the level-up card's facts, the confession's Not yet and
 // Ask her, and Memories' replays.

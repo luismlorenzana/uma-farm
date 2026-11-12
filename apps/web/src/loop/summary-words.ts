@@ -72,10 +72,11 @@ export const umaSheet = (outfitId: string, version: number = 3, view?: 'work'): 
 
 /** The morning's Ready lines: up to three, then "+N more" (RM57). */
 export const READY_LINES = 3
-/** RM57's order of §4 Hearts, by line kind: (1) Ready, (2) the invitation (F50), (3) the house's morning (F54), (4)
- * birthdays and anniversaries, (5) levels reached overnight (F54) and arrivals, (6) side by side and bond hearts (F52). A
- * new stored kind takes its place here and its words in `heartLine`; within a place the night's order holds. */
-export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = { invite: 2, birthday: 4, anniversary: 4, arrived: 5, side: 6, bond: 6 }
+/** RM57's order of §4 Hearts, by line kind: (1) Ready, (2) the invitation (F50), (3) the house's morning (F54) with the
+ * morning items and night chores (F51), (4) birthdays and anniversaries, (5) levels reached overnight (F54) and arrivals,
+ * (6) the perks' extras (F51), side by side and bond hearts (F52). A new stored kind takes its place here and its words in
+ * `heartLine`; within a place the night's order holds. */
+export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = { invite: 2, item: 3, chores: 3, birthday: 4, anniversary: 4, arrived: 5, perks: 6, side: 6, bond: 6 }
 
 /** §4 Hearts on v4 (decisions 1 and 9): the Ready lines, then the stored lines in RM57's order. `pairs` says which bond
  * lines have a conversation to Read (F52); without it (the pack loading) they say the heart alone. */
@@ -107,9 +108,21 @@ function bondLine(line: Extract<HeartLine, { kind: 'bond' }>, nameOf: NameOf, pa
     : { key, to, text: `${PAIR_MARK} ${a} and ${b} are closer now · bond ${line.hearts}` }
 }
 
+/** The night's chores in words (F51 decision 5): "Night chores · 3 items", "Night chores · 2 items · +0.5 growth". */
+export function choresWords(items: number, growth: number): string {
+  return ['Night chores', ...(items > 0 ? [plural(items, 'item')] : []), ...(growth > 0 ? [`+${growth} growth`] : [])].join(' · ')
+}
+/** Goods at their stars in words: "★2 Shiitake", "★2 Shiitake and ★3 Carp". */
+const starredGoods = (keys: readonly string[]): string => keys.map((key) => {
+  const [id, stars] = key.split('@')
+  return `★${stars} ${goodName(id!)}`
+}).join(' and ')
+
 /** A stored §4 line in words, opening her profile. */
 function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null): SummaryLine {
   if (line.kind === 'side') return { key: 'side', to: '/warehouse', text: `Side by side · +${plural(line.items, 'item')}` }
+  if (line.kind === 'perks') return { key: 'perks', to: '/warehouse', text: `Perks · +${plural(line.items, 'item')}` }
+  if (line.kind === 'chores') return { key: 'chores', to: line.items > 0 ? '/warehouse' : FIELDS, text: choresWords(line.items, line.growth) }
   if (line.kind === 'bond') return bondLine(line, nameOf, pairs)
   const name = nameOf(line.id)
   const to = umaSheet(line.id, 4)
@@ -121,6 +134,7 @@ function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null): Su
       text: line.when === 'today' ? `♥ ${name}’s anniversary${line.item ? ` · ★5 ${goodName(line.item)} left for you` : ''}` : `♥ Tomorrow: ${name}’s anniversary`,
     }
     case 'arrived': return { key: `arrived:${line.id}`, to, text: `${name} arrived${line.home ? '' : ' · away'}`, tag: 'New' }
+    case 'item': return { key: `item:${line.id}`, to, text: `♥ ${name} left you ${starredGoods(line.items)}` }
   }
 }
 

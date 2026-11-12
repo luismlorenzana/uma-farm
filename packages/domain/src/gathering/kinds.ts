@@ -18,6 +18,7 @@ import type { LoopKind, LoopKinds, LoopPlaceId } from '../save/parse-v3'
 import type { LoopWorkRequest, OutfitId, SaveV3, ToolId } from '../save/v3'
 import { parseStockKey, stockKey } from '../save/warehouse'
 import type { LoopWorld } from '../work/loop-env'
+import { keepsakeQuality, type PerkPack } from '../romance/perk-terms'
 import {
   FISHING_SPOTS, FOREST_AREAS, LOOP_REQUESTS, MAX_GATHER_DAYS, MAX_STATION_ITEMS, STATION_JOB_IDS, STATION_JOBS, stationJobOf, type FishingSpotId,
   type ForestAreaId, type StationId, type StationJobId,
@@ -38,12 +39,14 @@ export const HOME_COUNT: Readonly<Record<GatherPlace, string>> = { forest: 'home
 /** The farm day a moment on the work clock falls in. */
 export const dayAt = (now: number): number => Math.floor(now / DAY_MS) + 1
 
-/** What lifts her work in an activity: her rank, talent, the tool's tier (1 where none applies) and her well-fed days. */
+/** What lifts her work in an activity: her rank, talent, the tool's tier (1 where none applies) and her well-fed days; on
+ * save v4 her keepsake's quality at her line's place (F51 decision 8), 0 or absent anywhere else. */
 export interface WorkTerms {
   rank: Rank
   talent: TalentStep
   tool: number
   wellFed: number
+  keepsake?: number
 }
 
 /** Her terms in an activity on this save, or null when she isn't on the roster. */
@@ -79,10 +82,18 @@ export function haulCount(place: GatherPlace, terms: WorkTerms, k = 0): number {
   return countRound(HAUL_BASE[place] * rankBenefits(terms.rank).yield * talentYield(terms.talent) * TOOL_YIELD[terms.tool - 1]! * (k < terms.wellFed ? WELL_FED_YIELD : 1))
 }
 
-/** A gathered good's quality points (CS26): 0.5 × her rank, her talent's points, the tool's +0.25 a tier, well fed +0.25. */
+/** A gathered good's quality points (CS26): 0.5 × her rank, her talent's points, the tool's +0.25 a tier, well fed +0.25;
+ * on v4 her keepsake at her line's place (F51). */
 export function gatherQuality(terms: WorkTerms, fed: boolean): number {
-  return quality({ rank: rankQuality(terms.rank), talent: talentQuality(terms.talent), tool: toolQuality(terms.tool), ...(fed ? { boost: WELL_FED_QUALITY } : {}) })
+  return quality({
+    rank: rankQuality(terms.rank), talent: talentQuality(terms.talent), tool: toolQuality(terms.tool), ...(fed ? { boost: WELL_FED_QUALITY } : {}),
+    ...(terms.keepsake ? { keepsake: terms.keepsake } : {}),
+  })
 }
+
+/** Her keepsake's quality on her work at a place (F51 decision 8): a v4 save with the pack only; 0 on v3. */
+export const keepsakeAt = (save: FarmSave, story: PerkPack | null, outfitId: OutfitId, place: string): number =>
+  save.version === 4 && story ? keepsakeQuality(save, story, outfitId, place) : 0
 
 /** Why she can't work an area or a spot yet, or null when she can: her rank (decision 5's "From Hand"), and the sea's
  * chapter 7 and boat (M6). */
@@ -104,11 +115,14 @@ export const sharesOn = (place: GatherPlace, where: string, day: number): readon
   (place === 'forest' ? FOREST[where as ForestAreaId] : FISHERY[where as FishingSpotId]).seasons[dateOf(day).season]
 
 /** A gathering job's plan (decision 1): each day's items by CS17 at her terms now, each good and its stars drawn with
- * `draw(uid, day, '<place>:<slot>:<n>', 0 | 1)`, the day's seconds adding up to 86,400. */
-export function planHaul(save: FarmSave, outfitId: OutfitId, place: GatherPlace, request: LoopWorkRequest, now: number, slot: number, talentOf: TalentOf): PlannedItem[] | Refusal {
+ * `draw(uid, day, '<place>:<slot>:<n>', 0 | 1)`, the day's seconds adding up to 86,400. On save v4 with the pack her
+ * keepsake lifts the stars at her line's place (F51 decision 8). */
+export function planHaul(save: FarmSave, outfitId: OutfitId, place: GatherPlace, request: LoopWorkRequest, now: number, slot: number, talentOf: TalentOf, story: PerkPack | null = null): PlannedItem[] | Refusal {
   if (!Number.isInteger(request.count) || request.count < 1 || request.count > MAX_GATHER_DAYS) return refuse('count', 'A job is 1 to {max} days.', { max: MAX_GATHER_DAYS })
-  const terms = termsOf(save, outfitId, PLACE_ACTIVITY[place], talentOf, GATHER_TOOL[place])
-  if (!terms) return workRefusal('unknown-worker', { uma: outfitId })
+  const found = termsOf(save, outfitId, PLACE_ACTIVITY[place], talentOf, GATHER_TOOL[place])
+  if (!found) return workRefusal('unknown-worker', { uma: outfitId })
+  const keepsake = keepsakeAt(save, story, outfitId, place)
+  const terms: WorkTerms = keepsake > 0 ? { ...found, keepsake } : found
   const lock = placeLock(save, place, request.item, terms.rank)
   if (lock) return lock
   const start = dayAt(now)
@@ -199,12 +213,12 @@ function payHaul(place: GatherPlace, talentOf: TalentOf) {
   }
 }
 
-function gatherRules(place: GatherPlace, talentOf: TalentOf): WorkKindRules<LoopWorld> {
+function gatherRules(place: GatherPlace, talentOf: TalentOf, story: PerkPack | null): WorkKindRules<LoopWorld> {
   return {
     // A request is days; the items it makes are the haul, well past a Legend's four days (CS17).
     maxItems: MAX_STATION_ITEMS,
     plan: (world, outfitId, request, now, context) =>
-      (context.slot.building !== place ? workRefusal('not-here') : planHaul(world.save, outfitId, place, request, now, context.slot.slot, talentOf)),
+      (context.slot.building !== place ? workRefusal('not-here') : planHaul(world.save, outfitId, place, request, now, context.slot.slot, talentOf, story)),
     pay: payHaul(place, talentOf),
   }
 }
@@ -278,23 +292,30 @@ function stationRules(job: StationJobId, talentOf: TalentOf): WorkKindRules<Loop
 
 // --- The registry ---------------------------------------------------------------------------------------------------
 
-function build(talentOf: TalentOf): LoopKinds {
+function build(talentOf: TalentOf, story: PerkPack | null): LoopKinds {
   const kind = (id: string, rules: WorkKindRules<LoopWorld>, multiDay: boolean): [string, LoopKind] => [id, { ...LOOP_REQUESTS[id]!, rules, multiDay }]
   return Object.fromEntries([
-    kind('forage', gatherRules('forest', talentOf), false),
-    kind('fish', gatherRules('fishery', talentOf), false),
+    kind('forage', gatherRules('forest', talentOf, story), false),
+    kind('fish', gatherRules('fishery', talentOf, story), false),
     ...STATION_JOB_IDS.map((job) => kind(job, stationRules(job, talentOf), STATION_JOB_RULES[job].days > 1)),
   ])
 }
 
 const BY_TALENTS = new WeakMap<TalentOf, LoopKinds>()
+const BY_STORY = new WeakMap<PerkPack, WeakMap<TalentOf, LoopKinds>>()
 /** The loop's kinds with her talents read from `talentOf` (master data's, once a release): one registry a resolver, so
- * screens can memo on it. */
-export function loopKinds(talentOf: TalentOf = talentsD): LoopKinds {
-  let kinds = BY_TALENTS.get(talentOf)
+ * screens can memo on it. A v4 farm passes the story pack (F51 decision 8: her keepsake at her line's place lifts a haul's
+ * stars as it's planned); without it, or on v3, the kinds plan as F22's. */
+export function loopKinds(talentOf: TalentOf = talentsD, story: PerkPack | null = null): LoopKinds {
+  let byTalents = BY_TALENTS
+  if (story) {
+    byTalents = BY_STORY.get(story) ?? new WeakMap<TalentOf, LoopKinds>()
+    BY_STORY.set(story, byTalents)
+  }
+  let kinds = byTalents.get(talentOf)
   if (!kinds) {
-    kinds = build(talentOf)
-    BY_TALENTS.set(talentOf, kinds)
+    kinds = build(talentOf, story)
+    byTalents.set(talentOf, kinds)
   }
   return kinds
 }
