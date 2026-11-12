@@ -1,5 +1,13 @@
 # uma-farm: the HD-2D farm
 
+> **Revised 2026-11-11: it leads now (the owner, D61).**
+> - **FR2's wait is gone:** the owner waived uma-quest's measured plays (uma-quest D21). [F57](../handoff/tasks/F57-uma-stage.md)
+>   asks uma-platform for the shared stage now (D63).
+> - **FR5's layout and FR15's kit are re-derived for today's farm** (23 places, the Dorm, the Gate, the homestead) in
+>   [kit-farm.md](kit-farm.md), F16 (D62). Read FR5's Wilds places as history.
+> - **FR15's three stages a place are revised:** places keep one look, and the Umas show the work (KF5).
+> - The queue is the handoff's M7 rows: F16 ✓, F57, F9, then F11–F15.
+>
 > **Days are turns (D25):** where this doc says a timer or time left, read the days left. Work moves when the owner
 > ends the day, not while the app is closed (core-loop FC5, FC6, FC33).
 >
