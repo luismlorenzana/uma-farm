@@ -1,19 +1,24 @@
 // The way onto a new build (F3's update prompt, D11; F24's go-live): the kit's Update ready · Restart sits beside the
-// boot gates, not inside them, so an old build that stops at a newer save (the Wilds' build at the owner's v3, D30 e)
-// still offers the new build, and Restart activates it. The same holds over a running farm. The boot is a stub.
+// boot gates, not inside them, so an old build that stops at a newer save (the Wilds' build at the owner's v3, D30 e;
+// the M4 build at the romance core's v4, F46 decision 2) still offers the new build, and Restart activates it. The gate
+// says why it stopped (F56 decision 10, D51) and asks the browser for the new build at once. The same holds over a
+// running farm. The boot is a stub.
 import { act } from 'react'
 import { createRoot, type Root as ReactRoot } from 'react-dom/client'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const game = vi.hoisted(() => ({ boot: vi.fn<(uid: string) => Promise<void>>() }))
-vi.mock('../save/game', () => ({ boot: game.boot, startSyncTriggers: () => () => undefined }))
+vi.mock('../save/game', async (importOriginal) => ({
+  NEWER_SAVE_WORDS: (await importOriginal<typeof import('../save/game')>()).NEWER_SAVE_WORDS, boot: game.boot, startSyncTriggers: () => () => undefined,
+}))
 vi.mock('@luismlorenzana/uma-kit/auth', async (importOriginal) => ({
   ...await importOriginal<typeof import('@luismlorenzana/uma-kit/auth')>(),
   useAuth: () => ({ ready: true, authRequired: true, user: { uid: 'owner', name: 'Owner', email: null }, error: null, signIn: async () => undefined, signOut: async () => undefined, idToken: async () => null }),
 }))
 
 const { Root } = await import('./Root')
+const { NEWER_SAVE_WORDS } = await import('../save/game')
 const { appUpdateLifecycle } = await import('@luismlorenzana/uma-kit/places')
 
 let host: HTMLDivElement
@@ -52,16 +57,31 @@ describe('the update prompt (D11, D30 e)', () => {
     expect(restart()).toBeDefined()
   })
 
-  it('offers the new build even when the boot stops at a newer save, and Restart takes it', async () => {
-    game.boot.mockRejectedValue(new Error('This save is from a newer version of the farm.'))
+  it('says the save is newer when the boot stops at one, offers the new build, and Restart takes it', async () => {
+    const update = vi.fn(async () => undefined)
+    vi.stubGlobal('navigator', { ...navigator, serviceWorker: { getRegistration: async () => ({ update }) } })
+    game.boot.mockRejectedValue(new Error(NEWER_SAVE_WORDS))
     await renderRoot()
     await settle()
-    expect(text()).toContain("The game couldn't open on this phone.")
+    expect(text()).toContain('This save is from a newer version of the farm.')
+    expect(text()).not.toContain("couldn't open")
     expect(document.querySelector('[data-app]')).toBeNull()
+    expect(update).toHaveBeenCalled()
     const activate = vi.fn(async () => undefined)
     newBuildWaiting(activate)
     expect(text()).toContain('Update ready')
     await act(async () => restart()!.click())
     expect(activate).toHaveBeenCalledOnce()
+  })
+
+  it("keeps the kit's words for any other failure, and the newer words once Try again meets the newer save", async () => {
+    game.boot.mockRejectedValueOnce(new Error('offline')).mockRejectedValue(new Error(NEWER_SAVE_WORDS))
+    await renderRoot()
+    await settle()
+    expect(text()).toContain("The game couldn't open on this phone.")
+    await act(async () => [...document.body.querySelectorAll('button')].find((b) => b.textContent === 'Try again')!.click())
+    await settle()
+    expect(text()).toContain(NEWER_SAVE_WORDS)
+    expect(text()).toContain('Try again')
   })
 })
