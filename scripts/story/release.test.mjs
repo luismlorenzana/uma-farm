@@ -1,0 +1,189 @@
+// The story pack's release and publish (F56 decisions 3 and 4), on the invented stand-in pack in git (9000001–9000003):
+// no real character, name or line. A complete pack is the stand-in with invented bibles for its forager and fisher.
+// The publish script runs against a fake gcloud that only records its calls: no cloud is touched.
+import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
+import { chmod, cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { dirname, join, resolve } from 'node:path'
+import { test } from 'node:test'
+import { fileURLToPath } from 'node:url'
+import { buildRelease, ReleaseRefused, STAND_IN } from './release.mjs'
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+const BUILT_AT = '2026-11-12T00:00:00.000Z'
+const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
+const readJson = async (path) => JSON.parse(await readFile(path, 'utf8'))
+
+async function temp(t) {
+  const dir = await mkdtemp(join(tmpdir(), 'story-release-'))
+  t.after(() => rm(dir, { recursive: true, force: true })) // Only this freshly created folder.
+  return dir
+}
+
+/** The stand-in copied to a folder, changed by `edit(dir)`. */
+async function pack(t, edit = async () => {}) {
+  const dir = join(await temp(t), 'story')
+  await cp(STAND_IN, dir, { recursive: true })
+  await edit(dir)
+  return dir
+}
+
+/** Invented bibles for the stand-in's forager and fisher (9000001's, renamed, with their own lines), so the cast is whole. */
+async function withBibles(dir) {
+  const bible = await readJson(join(dir, 'umas/9000001.json'))
+  for (const [id, line] of [['9000002', 'foraging'], ['9000003', 'fishing']]) {
+    await writeFile(join(dir, `umas/${id}.json`), JSON.stringify({ ...bible, characterId: id, favouriteLine: line, wishes: undefined }))
+  }
+}
+
+test('releases the stand-in: every file minified, hash-named and listed in story.json', async (t) => {
+  const out = await temp(t)
+  const { index, summary } = await buildRelease({ from: STAND_IN, out, builtAt: BUILT_AT, bibles: false })
+  assert.deepEqual(Object.keys(index.files), ['cast', 'household', 'pair-9000001-9000002', 'route-9000001', 'route-9000002', 'route-9000003', 'ties', 'uma-9000001'])
+  assert.deepEqual(await readJson(join(out, 'story.json')), index)
+  assert.equal(index.version, 1)
+  assert.equal(index.builtAt, BUILT_AT)
+  assert.match(index.release, /^[a-f0-9]{8}$/)
+  const onDisk = (await readdir(join(out, 'story'))).sort()
+  assert.deepEqual(onDisk, Object.values(index.files).map((f) => f.path.slice('story/'.length)).sort())
+  for (const [name, file] of Object.entries(index.files)) {
+    const bytes = await readFile(join(out, file.path))
+    assert.equal(file.sha256, sha256(bytes))
+    assert.equal(file.bytes, bytes.length)
+    assert.equal(file.path, `story/${name}.${file.sha256.slice(0, 8)}.json`)
+    assert.match(file.path, /^story\/[a-z0-9]+(-[a-z0-9]+)*\.[a-f0-9]{8}\.json$/, 'the route allows it (decision 2)')
+    assert.ok(!bytes.toString().includes('\n'), `${name} is minified`)
+  }
+  assert.deepEqual(JSON.parse(await readFile(join(out, index.files['uma-9000001'].path), 'utf8')), await readJson(join(STAND_IN, 'umas/9000001.json')))
+  assert.equal(summary.files, 8)
+})
+
+test('writes scripted and pairs, so the game knows what each route and pair holds before loading it', async (t) => {
+  const { index } = await buildRelease({ from: STAND_IN, out: await temp(t), builtAt: BUILT_AT, bibles: false })
+  const route = await readJson(join(STAND_IN, 'routes/9000001.json'))
+  assert.deepEqual(index.scripted, { 9000001: route.events.map((e) => e.id), 9000002: ['arrival'], 9000003: ['arrival'] })
+  assert.equal(index.scripted['9000001'].length, 27, 'her arrival and 26 events')
+  assert.deepEqual(index.pairs, { '9000001-9000002': [1, 2, 3, 4, 5] })
+  assert.ok(index.files.household, 'the household file is in it')
+})
+
+test('the same inputs give the same files, and a rebuild swaps the folder whole', async (t) => {
+  const [a, b] = [await temp(t), await temp(t)]
+  const first = await buildRelease({ from: STAND_IN, out: a, builtAt: BUILT_AT, bibles: false })
+  const second = await buildRelease({ from: STAND_IN, out: b, builtAt: BUILT_AT, bibles: false })
+  assert.deepEqual(second.index, first.index)
+  assert.equal(await readFile(join(b, 'story.json'), 'utf8'), await readFile(join(a, 'story.json'), 'utf8'))
+  for (const file of Object.values(first.index.files)) assert.deepEqual(await readFile(join(b, file.path)), await readFile(join(a, file.path)))
+  const later = await buildRelease({ from: STAND_IN, out: a, builtAt: '2026-11-13T00:00:00.000Z', bibles: false })
+  assert.equal(later.index.release, first.index.release, 'the release id follows the files, not the time')
+
+  const changed = await pack(t, async (dir) => {
+    const ties = await readJson(join(dir, 'ties.json'))
+    ties.ties[0].line = `${ties.ties[0].line} Again.`
+    await writeFile(join(dir, 'ties.json'), JSON.stringify(ties, null, 2))
+  })
+  const third = await buildRelease({ from: changed, out: a, builtAt: BUILT_AT, bibles: false })
+  assert.notEqual(third.index.files.ties.path, first.index.files.ties.path)
+  assert.notEqual(third.index.release, first.index.release)
+  assert.equal(third.index.files.cast.path, first.index.files.cast.path)
+  assert.deepEqual((await readdir(join(a, 'story'))).sort(), Object.values(third.index.files).map((f) => f.path.slice(6)).sort(), 'no stale file left locally')
+})
+
+test("refuses a pack where a cast Uma lacks her bible, and writes nothing", async (t) => {
+  const out = join(await temp(t), 'release')
+  await assert.rejects(buildRelease({ from: STAND_IN, out, builtAt: BUILT_AT }), (e) => {
+    assert.ok(e instanceof ReleaseRefused)
+    assert.deepEqual(e.issues, ['umas/9000002.json: her bible is missing', 'umas/9000003.json: her bible is missing'])
+    return true
+  })
+  await assert.rejects(readdir(out), { code: 'ENOENT' })
+})
+
+test('releases a whole cast whose routes are partial ("Her story is still being written")', async (t) => {
+  const from = await pack(t, withBibles)
+  const { index, summary } = await buildRelease({ from, out: await temp(t), builtAt: BUILT_AT })
+  assert.deepEqual(index.scripted['9000002'], ['arrival'], 'her bible has 27 beats; only her arrival is scripted')
+  assert.deepEqual(Object.keys(index.files).filter((n) => n.startsWith('uma-')), ['uma-9000001', 'uma-9000002', 'uma-9000003'])
+  assert.equal(summary.bibles, 3)
+})
+
+test('refuses a cast Uma without her arrival scene: no route, or a route without it', async (t) => {
+  const from = await pack(t, async (dir) => {
+    await withBibles(dir)
+    await rm(join(dir, 'routes/9000003.json'))
+    const route = await readJson(join(dir, 'routes/9000001.json'))
+    await writeFile(join(dir, 'routes/9000001.json'), JSON.stringify({ ...route, events: route.events.filter((e) => e.id !== 'arrival') }))
+  })
+  await assert.rejects(buildRelease({ from, out: await temp(t), builtAt: BUILT_AT }), (e) => {
+    assert.deepEqual(e.issues, ['routes/9000001.json: her arrival scene is missing', 'routes/9000003.json: her arrival scene is missing'])
+    return true
+  })
+})
+
+test("refuses anything the game's validator refuses, with its words", async (t) => {
+  const from = await pack(t, async (dir) => {
+    const cast = await readJson(join(dir, 'cast.json'))
+    cast.umas[2].calling = 'juggling'
+    await writeFile(join(dir, 'cast.json'), JSON.stringify(cast))
+    await writeFile(join(dir, 'pairs/9000002-9000003.json'), '{ not json')
+  })
+  await assert.rejects(buildRelease({ from, out: await temp(t), builtAt: BUILT_AT, bibles: false }), (e) => {
+    assert.deepEqual(e.issues.map((i) => i.split(' (')[0]), ['pairs/9000002-9000003.json: not JSON'])
+    return true
+  })
+  await rm(join(from, 'pairs/9000002-9000003.json'))
+  await assert.rejects(buildRelease({ from, out: await temp(t), builtAt: BUILT_AT, bibles: false }), (e) => {
+    assert.ok(e.issues.some((i) => i.includes('calling')), e.message)
+    return true
+  })
+  await assert.rejects(buildRelease({ from: join(from, 'nowhere'), out: await temp(t) }), /No story pack/)
+})
+
+test('reads only the pack: the sandbox notes, reviews and the cast pack beside it never leave the folder', async (t) => {
+  const from = await pack(t, async (dir) => {
+    await writeFile(join(dir, 'world.md'), 'Invented notes.')
+    await writeFile(join(dir, 'reviews.json'), '{"schemaVersion":1,"items":{}}')
+    await mkdir(join(dir, 'pack/sample'), { recursive: true })
+    await writeFile(join(dir, 'pack/sample/pack.json'), '{}')
+  })
+  const out = await temp(t)
+  const { index } = await buildRelease({ from, out, builtAt: BUILT_AT, bibles: false })
+  assert.ok(Object.keys(index.files).every((n) => /^(cast|ties|household|uma-\d+|route-\d+|pair-\d+-\d+)$/.test(n)))
+  assert.deepEqual((await readdir(out)).sort(), ['story', 'story.json'])
+})
+
+test('publish: the release first, then the hash-named files, then story.json, with the scoped gcloud only', async (t) => {
+  const from = await pack(t, withBibles)
+  const work = await temp(t)
+  const bin = join(work, 'bin')
+  await mkdir(bin)
+  const log = join(work, 'gcloud.log')
+  await writeFile(join(bin, 'gcloud'), `#!/usr/bin/env bash\necho "$CLOUDSDK_ACTIVE_CONFIG_NAME|$CLOUDSDK_CORE_PROJECT|$*" >> "${log}"\n`)
+  await chmod(join(bin, 'gcloud'), 0o755)
+  const out = join(work, 'release')
+  const run = (args = [], env = {}) => execFileSync('bash', [join(ROOT, 'scripts/story/publish.sh'), ...args], {
+    env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, STORY_FROM: from, STORY_OUT: out, CLOUDSDK_ACTIVE_CONFIG_NAME: 'someone-else', CLOUDSDK_CORE_PROJECT: 'elsewhere', ...env },
+    encoding: 'utf8', stdio: 'pipe',
+  })
+  const said = run()
+  const index = await readJson(join(out, 'story.json'))
+  assert.match(said, new RegExp(`Published release ${index.release}: 10 files and story.json to gs://uma-farm-content`))
+  const calls = (await readFile(log, 'utf8')).trim().split('\n')
+  assert.deepEqual(calls, [
+    `default|uma-rpg|storage rsync ${out}/story gs://uma-farm-content/story --checksums-only --cache-control=private, max-age=31536000, immutable --content-type=application/json`,
+    `default|uma-rpg|storage cp ${out}/story.json gs://uma-farm-content/story.json --cache-control=private, no-cache --content-type=application/json`,
+  ])
+
+  await rm(log)
+  const dry = run(['--dry-run'], { STORY_BUCKET: 'another-bucket' })
+  assert.match(dry, /Would upload .*story\.json to gs:\/\/another-bucket\/story\.json/)
+  assert.deepEqual((await readFile(log, 'utf8')).trim().split('\n'), [
+    `default|uma-rpg|storage rsync ${out}/story gs://another-bucket/story --checksums-only --dry-run --cache-control=private, max-age=31536000, immutable --content-type=application/json`,
+  ])
+
+  await rm(log)
+  assert.throws(() => run([], { STORY_FROM: STAND_IN }), 'a pack missing bibles is never published')
+  await assert.rejects(readFile(log, 'utf8'), { code: 'ENOENT' }, 'and gcloud never runs')
+})
