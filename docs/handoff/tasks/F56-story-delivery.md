@@ -4,6 +4,10 @@
 the owner's one-line yes for the bucket and its grant (below) · Unblocks: M5 revised (F27 on save v5) · Milestone: the
 romance core**
 
+> **The owner said yes on 2026-11-11 (D60):** create the bucket and its one binding through `infra/bootstrap.sh`'s step
+> without asking again. Build the local parts first; stop before the publish and the go-live until the private pack is in
+> `content/story/` on this Mac.
+>
 > **The owner's yes comes first for the cloud (CLAUDE.md).** Creating `gs://uma-farm-content` and granting
 > `farm-api-runtime` `roles/storage.objectViewer` on it are a new cloud resource and an IAM change no earlier packet
 > lists, so they need the owner's one-line yes, with the cost table in decision 1, **before** `infra/bootstrap.sh`'s new
