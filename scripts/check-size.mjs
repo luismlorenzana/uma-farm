@@ -23,7 +23,9 @@ export const MAIN_JS_BUDGET = 180_000
  * the morning's invitation answers and the night's fade (F50); and the perks' terms and effects (F51); and the ring
  * bench's rules, sheet, view, actions and scene, and the wedding's rules (F53); and the homestead's and the household's
  * rules, the homestead's sheet, view, actions and map rows, the morning's house answer, the night level's card and the
- * household player (F54); and the story pack's delivery, its index and released pack (F56). The Wilds' screens left in F24.
+ * household player (F54); and the story pack's delivery, its index and released pack (F56); and the HD-2D farm's stage
+ * (F11): three.js, uma-stage's band stage and its stand-in kit, the stage Home, its helpers and the farm's design. The
+ * Wilds' screens left in F24.
  * Paths
  * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
@@ -133,6 +135,13 @@ export const LAZY_MODULES = [
   'src/loop/HouseholdPlayer.tsx',
   'src/story/delivery.ts',
   'domain/src/story/release.ts',
+  'three/build/three.module.js',
+  'three/build/three.core.js',
+  '@luismlorenzana/uma-stage/dist/esm/stage/bandStage.js',
+  '@luismlorenzana/uma-stage/dist/esm/world/standInFarm.js',
+  'src/loop/FarmStage.tsx',
+  'src/loop/farm-stage.ts',
+  'domain/src/farm/stage.ts',
 ]
 
 /** Modules no production build may hold at all (F56 decision 5): the invented stand-in pack is the dev server's only. A

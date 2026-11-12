@@ -2,7 +2,8 @@
 // sign-out, and master data's release. The Notifications card says they're off (F18 decision 12): with days as turns,
 // nothing finishes while the app is closed. F6's switch went with the Wilds (F24); the server's push is untouched. On save
 // v4 (F46, RM8) it also holds **Your name**, the farmer's, under the name sheet's rule; and a safety copy from before v4
-// lists without a Restore in the romance build, since restoring it would only wipe again.
+// lists without a Restore in the romance build, since restoring it would only wipe again. F11 adds **HD-2D farm (preview)**,
+// this device's switch for Home on the shared stage.
 import { cleanFarmerName, FARMER_PLACEHOLDER, farmerNameIssue, versionOf } from '@farm/domain'
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { AccountPage } from '@luismlorenzana/uma-kit/places'
@@ -12,6 +13,7 @@ import { APP_BUILD_ID } from '../app/build'
 import { useMaster } from '../master/master'
 import { safetyCopies, type SafetyCopy } from '../save/db'
 import { romanceOn } from '../app/romance'
+import { setStageOn, useStageOn } from '../app/stage-switch'
 import { restoreSafetyCopy, seeReplaced, useGame } from '../save/game'
 import { dateWords } from '../shell/SyncWarning'
 import { syncWords } from './sync-words'
@@ -79,6 +81,25 @@ function YourName() {
   )
 }
 
+/** **HD-2D farm (preview)** (F11 decision 1): Home on the shared stage, on this device only; off is uma-kit's Hub. */
+function StagePreview() {
+  const on = useStageOn()
+  return (
+    <Panel className="p-3" aria-label="HD-2D farm">
+      <button type="button" role="switch" aria-checked={on} onClick={() => setStageOn(!on)} data-stage-switch={on ? 'on' : 'off'}
+        className="flex min-h-11 w-full items-center justify-between gap-3 text-left">
+        <span>
+          <span className="block text-[14px] font-semibold">HD-2D farm (preview)</span>
+          <span className="block text-[12px] text-ink-soft">This device only</span>
+        </span>
+        <span aria-hidden className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${on ? 'bg-accent' : 'bg-sunken ring-1 ring-hairline-strong'}`}>
+          <span className={`absolute top-1 size-5 rounded-full bg-panel shadow-1 transition-[left] ${on ? 'left-6' : 'left-1'}`} />
+        </span>
+      </button>
+    </Panel>
+  )
+}
+
 export function AccountView() {
   const auth = useAuth()
   const state = useGame()
@@ -95,7 +116,7 @@ export function AccountView() {
         { label: 'Master data', value: release },
       ]}
       notifications={<NotificationsOff />}
-      sections={<><YourName /><SafetyCopies /></>}
+      sections={<><YourName /><StagePreview /><SafetyCopies /></>}
       onSignOut={auth.authRequired ? () => auth.signOut() : undefined}
     />
   )

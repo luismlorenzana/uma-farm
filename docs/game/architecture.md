@@ -10,7 +10,7 @@ after it), and a v2 from the Wilds (F4–F6, retired in F24) migrates on its fir
  iPhone (Home Screen PWA)
    └─ apps/web  React 19 + Vite 7 + Tailwind 4 + Zustand + Dexie; uma-kit for the theme, shell, sign-in,
                 content loading, the update prompt, the Hub map (Phaser, on demand), the album and the work
-                screens (F5)
+                screens (F5); uma-stage's HD-2D band stage with three.js, on demand, for Home's preview (F11)
         │  /api/*  (Firebase Hosting rewrites to Cloud Run)
         ▼
    apps/api  NestJS 11 on Cloud Run `farm-api`, behind uma-server's owner guard
@@ -44,7 +44,8 @@ after it), and a v2 from the Wilds (F4–F6, retired in F24) migrates on its fir
 | The farm | `src/loop/` | Loaded on demand: the boot (`toLoopSave`: the migration once master data has loaded), the farm map with its quick looks and the morning summary (`FarmMap.tsx`), the pages above, the global sheets (`LoopSheets.tsx`: End the day, the calendar, the bin, the shop, the Farm Rank), the start's sheet, the scene player (`ScenePlayer.tsx`), and the actions (`actions.ts`). Its words for the bars (`words.ts`) and the Menu's switch (`ask.ts`) are small and load with the shell ([days.md](days.md) and the pages after it) |
 | Shell | `src/shell/` | The kit's `AppFrame` unchanged (FM18): the account bar (the date, gold and Farm Rank chips, the sync chip), Farm · Roster · End the day (raised) · Diary · Menu, the menu sheet (`?sheet=menu`: the farm's places by its rows, Account, "Ask before ending the day", the build id), the sync warning; over everything, the start's sheet while picks are pending, then a scene due (F24) |
 | Items | `src/items/` | uma-art's item icons placed from the ids (`frames.ts`) |
-| Account | `src/home/AccountView.tsx` | The kit's Account page: appearance, Notifications "Off: days are turns", sign-in, save state, last sync, build, master data's release, safety copies, sign out |
+| Account | `src/home/AccountView.tsx` | The kit's Account page: appearance, Notifications "Off: days are turns", **HD-2D farm (preview)** (F11), sign-in, save state, last sync, build, master data's release, safety copies, sign out |
+| The HD-2D farm (preview) | `src/app/stage-switch.ts`, `src/loop/FarmStage.tsx`, `src/loop/farm-stage.ts` | F11 (D71): the switch (`farm.stage` on the device, `?stage=1`/`0` read at boot by `stage-boot.ts`, before the router), in the main chunk; with it on, Home draws `FarmStage` in the Hub's place, its own chunk with three.js and uma-stage: a `BandStage` (saver, `fit: 'width'`, the fade with no markers until a quick look opens) between the kit's bars, the design from `@farm/domain`'s `farmDesign`, the stand-in kit (`farmKit()`, the seam `kit-farm` pins into, KF14), the Hub's place models as overlays, taps and the long-press, the season's grade, the session's scroll. [days.md](days.md#the-hd-2d-farm-the-maps-second-look-f11-a-preview) |
 | Push | `public/push-sw.js` | The service worker's push and tap handlers, kept so the server's push stays deliverable; F6's switch, subscription and schedule left the app with the Wilds (F24) |
 | Save | `src/save/` | The device save in Dexie, the store and its sync engine (below). The store holds save v3 (`useLoopSave`): every v2 it meets migrates first |
 | Master data | `src/master/` | The release's manifest, characters, outfits and art through `/api/master`, cached by hash on the device; the roster (`farmRoster`) and the album's rows; the album art adapter; `masterReady()`, which the loop's boot waits on |
@@ -53,7 +54,16 @@ after it), and a v2 from the Wilds (F4–F6, retired in F24) migrates on its fir
 Main JS is 164.0 KB gzip against the 180 KB budget (FM20) as CI measured F24: one build, size-checked by `pnpm build`.
 Firebase, the farm's pages, sheets, actions, boot and night, the scene player and the goals' rules, and the Hub map's
 Phaser scene (`createHubGame`, 377 KB gzip) load on demand; `scripts/check-size.mjs`'s `LAZY_MODULES` refuses them in
-the initial JS.
+the initial JS. **F11**'s CI measured both builds at 171.68 KB (deployed) and 171.95 KB (romance), the switch adding
+about 0.4 KB; the stage's chunk (`FarmStage`: three.js, uma-stage's band stage and stand-in kit, the farm's design) is
+161.5 KB gzip (615 KB raw) and loads only with the switch on, `LAZY_MODULES` holding three.js, uma-stage's band stage and stand-in
+kit, `FarmStage.tsx`, `farm-stage.ts` and the domain's `farm/stage.ts`. Workbox precaches it with the rest of the app.
+
+**The farm's design (F11):** `@farm/domain`'s `farm/stage.ts` builds the save as uma-stage's `FarmDesign` (`farmDesign`,
+`farmPlots`, `placeStands`, the crop families `CROP_FAMILY` and `cropFrame`, `fieldsFrames`, `slotId`), typed from
+`@luismlorenzana/uma-stage/formats` with type-only imports: the package is a dev dependency of the domain, so farm-api's
+image and the CommonJS build never load it. Its slot markers are `<place>-1` … `-4` for a work place and `fields-a` …
+`fields-d` for the Fields' blocks.
 
 ## API
 

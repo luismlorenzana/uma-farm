@@ -344,6 +344,52 @@ stay put.
   counts them and harvests every block, and the Fields' pips are their blocks' tenders.
 - **The help button** says how the farm works in five short lines.
 
+### The HD-2D farm: the map's second look (F11, a preview)
+
+**Built in F11 (D71), off by default.** Home can draw the same farm on the shared HD-2D stage
+([uma-stage](https://github.com/luismlorenzana/uma-platform/blob/main/packages/stage/README.md) 0.3.0) instead of
+uma-kit's Hub: **Account → HD-2D farm (preview)**, this device only, or `?stage=1` (`?stage=0` turns it off) in the
+address at boot. Off, Home is the Hub above, unchanged. Rules never read the switch and the save never changes because of
+it (FR14). It works in the deployed build and the romance build alike.
+
+```
+  9 tiles across (fit to width on a 2× phone), the camera pitched 35°, panning up and down only, settling on a band
+ ┌─ x 0 ──── 2 │ 3 ──── 5 │ 6 ──── 8 ─┐
+ │  plot        │ L  bldg   │ L  bldg   │  z 0–1  a plot's back rows: its building (flush right in the middle and right
+ │  plot      L │ L  bldg   │ L  bldg   │         columns, left in the left one) or its ground and landmarks
+ │  apron  ▲    │ ▲  apron  │ ▲  apron  │  z 2    the apron: its `place` marker in the middle (▲), its slots
+ │  path ───────┴──────────┴────────── │  z 3    the path row under every band
+ └──────────────────────────────────────┘
+   L = a lane at each column's edge, laid as path where the recipe leaves it free; the Gate's plot (row 7, middle) is path
+```
+
+- **The rows are the map's:** the eight rows above, the homestead's 0–3 after the yard on v4 in the romance build, then
+  the town edge; 32 tiles deep, 44 with three homestead rows. Each band is a 3 × 3 plot a place and a path row.
+- **Each place is its recipe** (kit-farm.md KF4): walls, roof, width × storeys, door and mounted pieces, with its
+  landmarks. A place stands once CS3 opens it and, for a station, once it's built; before that it's an **overgrown lot**
+  (weeds, brambles, a broken fence; KF7) with its name and lock. The Coop and the Barn stand from chapter 2 though their
+  screens are still "Soon". The Mine's cliff is rock at its plot's back; the pond and the quarry's pit sit a level down.
+- **The Fields' crops:** their soil's eight tiles around the scarecrow show the first eight plots in the Fields' screen's
+  order (block A first): a sprout, then growing from half its growth, then its family's ripe frame once Ready (KF6's
+  twelve families for the 27 crops); the morning after a season's end, the withered ones while the summary is up.
+- **The homestead on v4:** the Farmhouse, each built house (one drawing for all, RM41) and the next lot's stakes.
+- **Names, locks, Ready badges and pips are uma-kit's,** the very models the Hub's place links carry, laid over the stage
+  and following the camera: the pips in a half arch over the plot, the Ready badge at its foot, the name pill under the
+  apron with a locked place's lock in it.
+- **A tap opens what the Hub's place opens** (`placeLink`; a house its sheet): whatever is drawn nearest under the finger,
+  a building, a landmark, a crop or a marker, else the plot under the ground. **A long-press** (half a second) opens any
+  place's quick look (`?peek=`), the Warehouse's and the Dorm's too; a drag never taps.
+- **What stands in front fades only for what you're looking at:** at rest nothing is faded; with a place's quick look
+  open, a roof or a tree in front of its slots fades to a third (ST3's fade, its markers narrowed to that place's slots).
+- **The seasons are the light** (KF10): spring fresh and soft, summer bright and warm, autumn amber, winter cold and pale
+  with the lamps up. The morning after a season's last night eases to the next over a second (at once with reduced motion).
+- **The camera** opens on the band of the first place with a Ready badge, else the Fields', and keeps its place between
+  visits for the session.
+- **Battery** (FR13): saver's 30 fps, and the stage stops once the camera rests and nothing eases, while the app is in the
+  background and while a full-screen scene is over Home. Phaser's Hub never loads with it on (FR4).
+- **The kit** is the stage's stand-in (every frame in flat colours) until F9's `kit-farm` ships (KF14).
+- **Not yet:** the Umas walking to their slots and their Ready bubbles (F12).
+
 ## The bars (FC29, decisions 6 and 8)
 
 - **The bottom bar:** Farm · Roster · **End the day** · Diary · Menu; **on the romance build, Farm · Hearts · End the day ·

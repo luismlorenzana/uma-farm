@@ -49,6 +49,13 @@ test('the Hub scene and its Phaser load on demand, by suffix through pnpm\'s sto
   assert.equal(lazyInInitial({ 'assets/main.js': [scene, phaser, 'src/loop/ScenePlayer.tsx', 'src/main.tsx'] }, ['assets/main.js'], LAZY_MODULES).length, 3)
 })
 
+test('the HD-2D farm\'s stage, three.js and the farm\'s design load on demand, by suffix through pnpm\'s store (F11)', () => {
+  const three = '../../node_modules/.pnpm/three@0.187.0/node_modules/three/build/three.module.js'
+  const band = '../../node_modules/.pnpm/@luismlorenzana+uma-stage@0.3.0_x/node_modules/@luismlorenzana/uma-stage/dist/esm/stage/bandStage.js'
+  const modules = [three, band, 'src/loop/FarmStage.tsx', 'src/loop/farm-stage.ts', '../../packages/domain/src/farm/stage.ts', 'src/app/stage-switch.ts', 'src/main.tsx']
+  assert.equal(lazyInInitial({ 'assets/main.js': modules }, ['assets/main.js'], LAZY_MODULES).length, 5)
+})
+
 test('the HTML must have exactly one module entry', () => {
   assert.equal(entrySrc('<script type="module" src="/assets/a.js"></script>'), '/assets/a.js')
   assert.throws(() => entrySrc('<script src="/a.js"></script>'))
