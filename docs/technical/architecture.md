@@ -23,8 +23,8 @@ value (the project, the services, the database, the buckets, the accounts and th
         │  POST /api/push/tick every five minutes, with an OIDC token (the job is paused)
    Cloud Scheduler
 
-   packages/domain   @farm/domain: the rules, the save's versions, their parse and migrations, and the farm's design for
-                     the stage; pure TypeScript with no I/O. The web reads its source; the API reads its CommonJS build.
+   packages/domain   @farm/domain: the rules, the save (v4) and its parse, and the farm's design for the stage;
+                     pure TypeScript with no I/O. The web reads its source; the API reads its CommonJS build.
 ```
 
 ### Packages and versions
@@ -52,10 +52,11 @@ uma-platform, never in a copy here.
 
 - **The domain decides.** The web app runs the rules locally for instant play. The API parses every upload with the
   same code and refuses one it can't read.
-- **The server never writes into a save.** It stores what the app sent, or refuses it and keeps it aside. Migrations run
-  in the app.
-- **Nothing is imported from the other Uma games.** The few rules taken from uma-rpg are copied at a recorded commit and
-  owned here, file by file in [wilds-copy.md](wilds-copy.md); they stay for save v2's carry-over.
+- **The server never writes into a save.** It stores what the app sent, or refuses it and keeps it aside. A new farm
+  over an older save is made in the app.
+- **Nothing is imported from the other Uma games.** A few pieces were copied from uma-rpg at a recorded commit (30a322a)
+  and are owned here, each saying so at its top: the save's envelope and conflict rule, the device store, its sync and
+  Dexie, the API client, the API's save and push modules, and the save's rule errors. uma-rpg's work engine is gone.
 - **Original-game content never goes in git.** Master data arrives at runtime from uma-platform's private release; the
   story pack lives in the ignored `content/` folder and a private bucket; test fixtures come from
   `@luismlorenzana/uma-data/testing`. `scripts/check-private-content.test.mjs` runs in CI.
@@ -81,8 +82,8 @@ uma-platform, never in a copy here.
 | `/warehouse` | The Warehouse; `?pick=bin` ships from it |
 | `/dorm` | The Dorm |
 | `/diary` | The Diary |
-| `/roster` | The deployed build: the roster. The romance build: redirects to `/hearts?view=work`, keeping `?uma=` |
-| `/hearts` | The romance build only: the Hearts tab (`?view=work`, `?uma=<id>`). The deployed build redirects to `/` |
+| `/hearts` | The Hearts tab (`?view=work` the roster's album, `?uma=<id>` her profile) |
+| `/roster` | Redirects to `/hearts?view=work`, keeping `?uma=` |
 | `/account` | Account, in the main chunk |
 | anything else | Redirects to `/` |
 
@@ -94,10 +95,10 @@ Sheets and scenes are query parameters on the page under them:
 
 | Folder | What |
 |---|---|
-| `src/app/` | Root, the router, the build id, the Firebase config, the romance switch (`romance.ts`), the stage switch and its boot |
+| `src/app/` | Root and the start-over card, the router, the build id, the Firebase config, the stage switch and its boot |
 | `src/shell/` | uma-kit's `AppFrame`: the account bar (date, gold, Farm Rank, sync chip), the bottom bar, the Menu sheet, the sync warning |
 | `src/home/` | Account |
-| `src/loop/` | The farm: its pages, sheets, scenes, actions and views, the boot's carry-over, and the HD-2D stage |
+| `src/loop/` | The farm: its pages, sheets, scenes, actions and views, and the HD-2D stage |
 | `src/save/` | Dexie, the store and its sync |
 | `src/master/` | Master data |
 | `src/story/` | The story pack's loader |
@@ -114,21 +115,26 @@ Sheets and scenes are query parameters on the page under them:
     stamps `account.updatedAt`; a player's action stamps it with `touched`.
   - **`madeHere(save)`** says whether a save is the one this device's last commit made. The HD-2D stage walks the Umas
     for those, and places everyone at once for any other.
-- **What a build plays** (`playable`):
-  - the deployed build plays a v3 as it is, carries a v1 or v2 over (`loop/boot.ts`'s `toLoopSave`, once master data has
-    loaded), and refuses a v4;
-  - the romance build waits for the story pack, plays a v4 as it is, and turns any v1–v3 into a fresh v4 (`freshV4`);
-  - a save that changed on the way is committed unstamped, so it uploads and the next boot reads the new version.
+- **Boot** (`boot(uid)`) waits for the story pack, then opens the device save, else the server's, else starts a new
+  farm (`newSave`), and resolves `{ startOver }`:
+  - a v4 plays as it is;
+  - a save older than v4 (read as its version and account) stops at uma-kit's first-launch step, the start-over card
+    (`app/StartOverCard.tsx`), with nothing written; its button (`startOver`) keeps a dirty device save as a `wiped`
+    safety copy (the raw row, `readStoredRow`), then commits `freshV4`, unstamped, so it uploads and the next boot reads
+    v4;
+  - a save newer than v4 throws `NEWER_SAVE_WORDS` (below).
+- **What a sync plays** (`playable`): a v4 as it is, an older save as the same fresh v4 (uploaded on the next pass), a
+  newer one refused before any upload.
 - **Sync** (`syncNow`, `reconcile.ts`): one pass reads `GET /api/save`, then `reconcile` decides to adopt, push or do
   nothing; a push sends `PUT /api/save` with its base revision, and a 409 reconciles against the stored envelope it
   carries, up to three times a pass. Passes coalesce, and a change made during one runs another. Triggers: a commit
   (1.5 s later), the page becoming visible, the network returning, and boot with a device save. The player-facing rules
   are in the mechanics document's save section.
 - **Master data** (`src/master/master.ts`): a small external store read with `useSyncExternalStore`: the release's
-  manifest, the roster, the album's rows, stats, birthdays and the art index, through the content client from
-  `/api/master`. In the romance build it's seen through the story pack's cast.
-- **The story pack** (`src/story/story.ts`): loaded once, on demand. `outfitFor` resolves a v4 roster key (a character id)
-  to her outfit.
+  manifest, the album's rows of every outfit with a stable id, stats, birthdays and the art index, through the content
+  client from `/api/master`, seen through the story pack's cast once it loads.
+- **The story pack** (`src/story/story.ts`): loaded once, by boot. `outfitFor` resolves a roster key (a character id) to
+  her outfit.
 - **Device preferences** go through uma-kit's prefs under the `farm.` prefix (the appearance, `farm.stage`). The story's
   last good index is `farm.story-index` in `localStorage`.
 
@@ -199,33 +205,25 @@ The preview's code and art download only for a device with the switch on, then s
   figures, who's on the stage, who's walking, whether the loop runs). The stage's root carries `data-farm-stage`
   (`loading`, `drawn`) and `data-kit-name`.
 
-### The two builds and their flags
+### The build and its flags
 
-`pnpm --filter @farm/web build` type-checks, then builds and size-checks both builds. Hosting serves `apps/web/dist`
-only.
-
-| Build | Command | Output | Deployed |
-|---|---|---|---|
-| The deployed build | `vite build` | `apps/web/dist` | Yes |
-| The romance build | `vite build --mode romance --outDir dist-romance` | `apps/web/dist-romance` | Never |
+`pnpm --filter @farm/web build` type-checks, then builds `apps/web/dist` (`vite build`) and size-checks it. Hosting
+serves it.
 
 | Variable | Set in | Read by | Effect |
 |---|---|---|---|
-| `VITE_FARM_ROMANCE` | `1` in `.env.development` and `.env.romance`; unset in production; `0` in Vitest | `romanceOn()` (`src/app/romance.ts`), at call time | Picks the romance build: save v4 with the wipe, the Hearts tab, the homestead's rows, the story pack. Each build keeps only its own pages, since the switch folds at build time. The domain never reads it: its rules branch on `save.version` |
 | `VITE_FARM_STORY` | `stand-in` in Vitest; by hand on the dev server | `src/story/load.ts`, dev only | `stand-in` plays the invented stand-in pack, whatever farm-api serves |
 | `VITE_FIREBASE_*` | `.env.production` | `src/app/firebase-config.ts` | The public Firebase web config. A production build without the API key, auth domain or project id fails |
 | `VITE_APP_BUILD_ID`, else `GITHUB_SHA` | CI | `vite.config.ts` | The build id (its first 12 characters; `local` otherwise), shown in Account |
 | `API_PROXY_TARGET` | By hand | The dev server | Where `/api` goes (default `http://localhost:8101`) |
 
-A romance test turns the switch on with `vi.stubEnv`.
-
 ### The size budget
 
-`scripts/check-size.mjs` runs after each build, on `dist` and then `dist-romance`:
+`scripts/check-size.mjs` runs after the build, on `dist`:
 - **180,000 bytes gzip** for the entry chunk and for the whole initial JS (the HTML's entry and everything it imports
   statically). Dynamic imports don't count.
 - **`LAZY_MODULES`** may never render in the initial JS: Phaser and the Hub's scene, the farm's pages, sheets, scenes,
-  actions, boot and night, the romance's rules and screens, the story's delivery, three.js, uma-stage, the stage Home and
+  actions and night, the romance's rules and screens, the story's delivery, three.js, uma-stage, the stage Home and
   its helpers, and the kit's atlas. A module matches by path or suffix. Which modules each chunk renders comes from
   `dist/.vite/chunks.json`, written by the `chunkModules` plugin in `vite.config.ts` (never deployed or precached).
 - **`DEV_ONLY_MODULES`:** the invented stand-in story pack may be in no chunk of any build.
@@ -265,7 +263,7 @@ uma-server's `AuthModule`, applied to every route:
 | `POST /api/post/ping` | Its own token | `{ ok: true }` for a Google-signed ID token whose audience is `FARM_API_URL` and whose email is on `POST_CALLERS`; anything else 401 |
 | `GET /api/push/key` | Owner | `{ publicKey }`, the VAPID key; 404 while push is off |
 | `POST /api/push/subscription` | Owner | A browser's `PushSubscription` (an https endpoint, `p256dh`, `auth`), kept with the newest five; 204 |
-| `PUT /api/push/schedule` | Owner | `{ entries: [{ at, place, badge }] }`, at most 60, replacing the stored schedule; 204 |
+| `PUT /api/push/schedule` | Owner | `{ entries: [{ at, place, badge }] }`, at most 36, replacing the stored schedule; 204 |
 | `POST /api/push/test` | Owner | A test notification to every device; `{ devices }` still subscribed |
 | `POST /api/push/tick` | The scheduler's token | Sends what came due; `{ accounts, sent }` |
 
@@ -284,7 +282,8 @@ stay in place, so notifications can come back without new plumbing.
 - **The tick:** for each account with a subscription, every schedule entry due since its last send (six hours back at
   most) becomes one "Work done" notification, a line per place, sent to every device. A device that answers 404 or 410
   is dropped. It writes only when it sent something or a device was gone.
-- **The schedule's places** are checked against the place ids the copied rules know.
+- **The schedule's places** are the farm's nine work places (`isPushPlace`), at most 36 entries (`PUSH_SCHEDULE_MAX`, one
+  a slot); one place's notice opens its quick look (`/?peek=<place>`).
 
 ## The save on the wire
 
@@ -293,7 +292,7 @@ stay in place, so notifications can come back without new plumbing.
 | Document | Fields | Written |
 |---|---|---|
 | `saves/{uid}` | `revision`; `save`, as JSON text (Firestore refuses a list inside a list); `updatedAt`, the server's time | Each accepted upload, in a transaction |
-| `saveBackups/{uid}-v{n}` | The stored `saves/{uid}` document as it was, and `backedUpAt` | In the same transaction, when an upload's version is higher than the stored version `n` |
+| `saveBackups/{uid}-v{n}` | The stored `saves/{uid}` document as it was, whole, and `backedUpAt` | In the same transaction, when an upload's version is higher than the stored version `n`: the first v4 over an older save backs that one up (`saveBackups/{uid}-v3` for the owner's) |
 | `saveRescues/{uid}` | `upload` (JSON text, exactly as sent), `reason`, `rescuedAt` | Each refused upload; the newest only |
 | `push/{uid}` | `subscriptions` (the newest five), `active` (any subscriptions), `schedule`, `checkedAt` (ms), `updatedAt` | The push routes and the tick, each setting only its own fields |
 
@@ -303,44 +302,41 @@ save } }`, written atomically (a temporary file, then a rename) with calls seria
 
 ### Revisions and refusals
 
-- **`GET /api/save`** returns the save parsed at the version stored (a v1 reads as v2).
-- **`PUT /api/save`** takes exactly `{ baseRevision, save }`. The API parses the save strictly (`parseSavePut`) and
+- **`GET /api/save`** returns the stored save parsed (`parseStored`): a v4 whole, a save from before v4 as its version and
+  account only (the rest stays in the document, unread).
+- **`PUT /api/save`** takes exactly `{ baseRevision, save }`. The API parses the save strictly as v4 (`parseSavePut`) and
   checks that `save.account.uid` is the caller's. It stores the save as `baseRevision + 1` when the stored revision is
-  `baseRevision` and the sent version isn't older than the stored one, and answers the new envelope.
+  `baseRevision` and the save's version isn't older than the stored one, and answers the new envelope.
 - **A 409** carries `{ message: 'revision conflict', current }`, the stored envelope, so the app can reconcile and retry.
 
 | Upload | Answer | Kept in `saveRescues` |
 |---|---|---|
 | Accepted | 200, the new envelope | — |
 | Stale revision, same or newer version | 409 with `current` | No: the app just syncs again |
-| Older version than the stored one | 409 with `current` | Yes: it may hold play that can never be uploaded |
-| A save the parse refuses (shape, unknown keys, ids, version) | 400, with the failing path | Yes |
+| A version older than v4 (an old cached build's) | 400, "expected 4" | Yes: it may hold play that can never be uploaded |
+| A version older than the stored one | 409 with `current` | Yes |
+| A save the parse refuses (shape, unknown keys, ids, a newer version) | 400, with the failing path | Yes |
 | Another account's save | 400 | Yes |
 | Any other failure | 500 | Yes |
 
 A rescue that fails to write is logged and never hides why the upload was refused.
 
-### Versions and migrations
+### Versions
 
 | Version | What | Who writes it |
 |---|---|---|
-| 1 | The account: `{ version, account: { uid, createdAt, updatedAt } }` | Nothing; read as v2 |
-| 2 | The account and the copied rules' world: each Uma's Craft Level, a Warehouse by item, work rows | Nothing; carried over into v3 |
-| 3 | The farm's own loop | The deployed build (`SAVE_VERSION`) |
-| 4 | v3's farm with the romance: the farmer's name, love, the homestead, memories, arrivals, rosters keyed by character id | The romance build |
+| 1–3 | Older formats, from before the farm started over | Nothing: read as `{ version, account }` (`OlderSave`) |
+| 4 | The farm: the farmer's name, the loop, love, the homestead, memories, arrivals, rosters keyed by character id | The app (`SAVE_VERSION`) |
 
-- **`parseSave`** (`packages/domain/src/save/save.ts`) reads every version and returns it at the version stored: v1
-  becomes v2 (`toV2`), and v2, v3 (`parse-v3.ts`) and v4 (`parse-v4.ts`, sharing `parse-loop.ts`) come back as they
-  are. It's strict: unknown keys and bad ids are refused, each error with its path (`SaveParseError`).
-  `NEWEST_SAVE_VERSION` is 4.
-- **Migrations run in the app, never on the server:**
-  - **v1/v2 → v3:** `migrateToV3` (`save/migrate-v3.ts`), called by `loop/boot.ts`'s `toLoopSave` once master data has
-    loaded, since her calling's line comes from master data. Pure and deterministic, so two devices carry a save over
-    alike.
-  - **v1–v3 → v4:** `freshV4` (`save/v4.ts`), the romance build's wipe: a new day-1 v4 with `account` copied whole.
-  - Both are committed unstamped, so they upload with `updatedAt` unchanged and the next boot reads the new version. A
-    dirty save the wipe replaces is kept first as a `wiped` safety copy.
-- **Every change to a live save's shape is a new version with its migration.**
+- **`parseSave`** (`packages/domain/src/save/save.ts`) parses a v4 strictly (`parse-v4.ts`, with `parse-loop.ts`'s
+  parts): unknown keys and bad ids are refused, each error with its path (`SaveParseError`). It refuses any other version:
+  what an upload must be. **`parseStored`** reads what's stored, on the server or the device: a v4 by `parseSave`, a
+  v1–v3 as its version and account only, a newer one refused.
+- **The new farm runs in the app, never on the server:** `freshV4` (`save/v4.ts`) makes day 1 on v4 with `account`
+  copied whole, committed unstamped, so it uploads with `updatedAt` unchanged and the next boot reads v4; a dirty device
+  save it replaces is kept first as a `wiped` safety copy.
+- **v4 grows in place while the game is being built;** a shape old fields can't carry is v5, with a migration or a new
+  start.
 - **Only a player's change moves `account.updatedAt`** (`touched`). The conflict rule (`resolveConflict`) compares it:
   the newer wins whole, a tie keeps the device's.
 - **The production-save rules:** never move `save.account.updatedAt` by hand; no server ever writes into a save; a stale
@@ -349,16 +345,16 @@ A rescue that fails to write is logged and never hides why the upload was refuse
 ### The newer-save refusal
 
 An old client never half-reads or overwrites a newer save:
-- **The parse** refuses a version above `NEWEST_SAVE_VERSION`, on the server (a 400, rescued) and on the device (the row
-  is kept as an `unreadable` safety copy and boot reads the server's).
-- **The deployed build meeting a v4:** `playable` throws `NEWER_SAVE_WORDS`, so boot stops on uma-kit's gate with
-  "This save is from a newer version of the farm." and Try again; `Root.tsx` asks the service worker for an update at
-  once, so the update prompt comes up. A sync that meets a v4 stops before any upload.
+- **The parse** refuses a version above `SAVE_VERSION`, on the server (a 400, rescued) and on the device (the row is kept
+  as an `unreadable` safety copy and boot reads the server's).
+- **A newer server save:** boot throws `NEWER_SAVE_WORDS`, so it stops on uma-kit's gate with "This save is from a newer
+  version of the farm." and Try again; `Root.tsx` asks the service worker for an update at once, so the update prompt
+  comes up. A sync that meets one stops before any upload.
 - **The server** refuses an upload older than the stored version (a 409, rescued).
 
 ## The story pack's delivery
 
-The romance build's story is a private pack: never in git, never in the bundle.
+The game's story is a private pack: never in git, never in the bundle.
 
 - **The source** is the ignored `content/story/` on the author's Mac.
 - **`pnpm story:release`** (`scripts/story/release.mjs`; Node 22.18 or later, for type stripping) reads the pack with
@@ -378,7 +374,7 @@ The romance build's story is a private pack: never in git, never in the bundle.
   owner guard. It serves an allowlist only, `story.json` and `story/<name>.<hash8>.json`: the index revalidated on every
   read (`private, no-cache`), the hash-named files cached for good. It reads `STORY_BUCKET` when that's set and not empty,
   else `STORY_DIR` (default the repo's `content/story-release/`); with neither, every path answers 404.
-- **The loader** (`apps/web/src/story/load.ts`, `delivery.ts`), on demand in the romance build:
+- **The loader** (`apps/web/src/story/load.ts`, `delivery.ts`), by boot:
   - `story.json` fresh from the server through uma-kit's content client;
   - offline or failing, the **last good index** from `localStorage` (`farm.story-index`, a few KB of ids and hashes,
     never a line of the story); with none, the load throws and the boot gate offers Try again;
@@ -404,7 +400,7 @@ by hand. **A push that changes only `docs/**` or Markdown files skips it.**
 - **`pnpm lint`:** `tsc --noEmit` in every package.
 - **`pnpm test:ci`:** Node's test runner on the script checks (the size check's tests, private content, the Hosting
   site's name, the Story Sandbox's libraries, the story release), then every package's Vitest, one package at a time.
-- **`pnpm build`:** the domain's CommonJS build, the API's Nest build, and the web's two builds with their size checks.
+- **`pnpm build`:** the domain's CommonJS build, the API's Nest build, and the web's build with its size check.
 
 **What deploys:**
 1. GitHub's OIDC token signs in to Google Cloud through Workload Identity.
@@ -426,17 +422,17 @@ agreement. Every value the deploy reads is in [infrastructure.md](infrastructure
 ```bash
 NODE_AUTH_TOKEN=$(gh auth token) pnpm install   # @luismlorenzana/* come from GitHub Packages
 pnpm api    # :8101, auth off (uid local-dev); saves in apps/api/.data/save.json; push in memory and off
-pnpm web    # :5194, /api proxied to :8101; the romance build on save v4
+pnpm web    # :5194, /api proxied to :8101; the game on save v4
 pnpm lint && pnpm test && pnpm build
 ```
 
 - **[`.claude/launch.json`](../../.claude/launch.json)** starts `farm-api` (:8101), `farm-web` (:5194) and
   `farm-story-sandbox` (:4321) in the preview pane.
-- **The dev server plays the romance build** (`.env.development`). `VITE_FARM_ROMANCE=0 pnpm web` plays the deployed
-  build on v3. The dev server is open on the LAN (`host: true`), so a phone can load it directly.
-- **The dev save** is `apps/api/.data/save.json`, its last refused upload beside it. The romance dev server wipes a dev v3
-  into a fresh v4 once, and the v3 dev server then stops at it. To switch back, reset that file and the browser's
-  `uma-farm` database.
+- **The dev server plays the game** as production does, on save v4. `VITE_FARM_STORY=stand-in pnpm web` plays the
+  stand-in whatever farm-api holds. The dev server is open on the LAN (`host: true`), so a phone can load it directly.
+- **The dev save** is `apps/api/.data/save.json`, its last refused upload beside it. A dev save from before v4 shows the
+  start-over card like any other; the local store keeps no backup of it. To start afresh, reset that file and the
+  browser's `uma-farm` database.
 - **Master data** comes from `../uma-platform/content/release` (`MASTER_DIR` points elsewhere). **The story pack**
   comes from `content/story-release/` (`STORY_DIR`): `pnpm story:release` fills it, `pnpm story:release --stand-in`
   fills it with the stand-in, and with nothing there the dev server plays the stand-in.

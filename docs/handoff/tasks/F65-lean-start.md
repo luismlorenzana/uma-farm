@@ -27,7 +27,7 @@ Today's start re-cuts an old opening around a fixed three; that goes.
 
 1. The new-farm flow in `apps/web`: the name, the opening's lines, then Home.
 2. Retire the opening three: `joinOpening` in `romance/arrivals.ts`, the opening's arrival kind, and the opening scene's
-   recut in `story/opening-v4.ts`. Keep only what decision 2 needs.
+   lines in `story/chapter-1.ts` (`OPENING_SCENE`, `chapterScene`). Keep only what decision 2 needs.
 3. Tests, and the mechanics document's start.
 
 ## Done when
