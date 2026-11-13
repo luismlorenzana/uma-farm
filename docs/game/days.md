@@ -387,7 +387,12 @@ it (FR14). It works in the deployed build and the romance build alike.
   visits for the session.
 - **Battery** (FR13): saver's 30 fps, and the stage stops once the camera rests and nothing eases, while the app is in the
   background and while a full-screen scene is over Home. Phaser's Hub never loads with it on (FR4).
-- **The kit** is the stage's stand-in (every frame in flat colours) until F9's `kit-farm` ships (KF14).
+- **The kit** is F9's painted `kit-farm` (uma-art 2.27.0, wave 1, the owner's look approved; D73), loaded the first time the
+  stage shows. What it doesn't draw yet (wave 2: the stone set, the Mine's cliff and mouth, the Quarry, the ranch's pieces,
+  the Forge's, the Restaurant's and the town's landmarks) is the flat stand-in until wave 2 ships (KF14). Window boxes hang
+  just under the ground floor's windows. On a slow first load the stand-in shows after a second and a half, then the kit;
+  the kit and the stage are kept on the phone after their first load, so they work offline, and a player with the switch
+  off never downloads them.
 - **Not yet:** the Umas walking to their slots and their Ready bubbles (F12).
 
 ## The bars (FC29, decisions 6 and 8)

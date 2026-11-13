@@ -8,6 +8,13 @@ import { defineConfig } from 'vitest/config'
 
 const buildId = (process.env.VITE_APP_BUILD_ID ?? process.env.GITHUB_SHA ?? 'local').slice(0, 12)
 
+/** The HD-2D preview's files (F11, D73): every chunk holding three.js, uma-stage or the stage Home, and kit-farm's page. They
+ * build into `assets/stage/`, which the precache leaves out and a runtime cache keeps once loaded, so only a player with the
+ * switch on downloads them (scripts/check-size.mjs checks the built service worker). */
+const STAGE_DIR = 'assets/stage'
+const STAGE_MODULE = /\/three\/build\/|\/@luismlorenzana\/uma-stage\/|\/src\/loop\/(FarmStage\.tsx|farm-stage\.ts|farm-kit\.ts)$/
+const STAGE_ASSET = /\/uma-art\/kit-farm\//
+
 /** Writes which source modules each chunk renders to dist/.vite/chunks.json (never deployed or precached), so the size
  * check can refuse a lazy module in the initial JS (scripts/check-size.mjs, copied from uma-rpg). */
 function chunkModules(): Plugin {
@@ -67,6 +74,8 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+          // The HD-2D preview is cached on first use instead (below); workbox's own default ignore kept.
+          globIgnores: ['**/node_modules/**/*', `${STAGE_DIR}/**`],
           // "Work done" notifications (F6, uma-rpg's D63): the handlers live in public/push-sw.js.
           importScripts: ['push-sw.js'],
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
@@ -86,6 +95,19 @@ export default defineConfig(({ mode }) => {
               handler: 'NetworkFirst',
               options: { cacheName: 'farm-master-channel', networkTimeoutSeconds: 4 },
             },
+            {
+              // The HD-2D preview (D73): named by hash, cached for good the first time it loads, so it works offline after.
+              // Never an HTML page (Hosting's answer for a file a newer deploy removed) under a chunk's name.
+              urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/assets/stage/'),
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'farm-stage',
+                expiration: { maxEntries: 16 },
+                plugins: [{
+                  cacheWillUpdate: async ({ response }) => (response.status === 200 && !(response.headers.get('content-type') ?? '').includes('text/html') ? response : null),
+                }],
+              },
+            },
           ],
         },
       }),
@@ -102,7 +124,16 @@ export default defineConfig(({ mode }) => {
       proxy: { '/api': { target: process.env.API_PROXY_TARGET ?? 'http://localhost:8101', changeOrigin: true } },
     },
     preview: { port: 5194 },
-    build: { target: 'es2022', manifest: true },
+    build: {
+      target: 'es2022',
+      manifest: true,
+      rollupOptions: {
+        output: {
+          chunkFileNames: (chunk) => `${chunk.moduleIds.some((id) => STAGE_MODULE.test(id)) ? STAGE_DIR : 'assets'}/[name]-[hash].js`,
+          assetFileNames: (asset) => (asset.originalFileNames.some((file) => STAGE_ASSET.test(file)) ? `${STAGE_DIR}/kit-farm-[hash][extname]` : 'assets/[name]-[hash][extname]'),
+        },
+      },
+    },
     // uma-kit is transformed with the app, so its links share the app's router (F18's bar test renders them). The romance
     // switch is off (F46 decision 4): M4's tests run unchanged, and a romance test turns it on with `vi.stubEnv`. The story
     // pack is the stand-in (F56 decision 5): no test reads farm-api; the loader's own tests stub this.

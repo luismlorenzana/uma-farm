@@ -45,11 +45,11 @@ after it), and a v2 from the Wilds (F4–F6, retired in F24) migrates on its fir
 | Shell | `src/shell/` | The kit's `AppFrame` unchanged (FM18): the account bar (the date, gold and Farm Rank chips, the sync chip), Farm · Roster · End the day (raised) · Diary · Menu, the menu sheet (`?sheet=menu`: the farm's places by its rows, Account, "Ask before ending the day", the build id), the sync warning; over everything, the start's sheet while picks are pending, then a scene due (F24) |
 | Items | `src/items/` | uma-art's item icons placed from the ids (`frames.ts`) |
 | Account | `src/home/AccountView.tsx` | The kit's Account page: appearance, Notifications "Off: days are turns", **HD-2D farm (preview)** (F11), sign-in, save state, last sync, build, master data's release, safety copies, sign out |
-| The HD-2D farm (preview) | `src/app/stage-switch.ts`, `src/loop/FarmStage.tsx`, `src/loop/farm-stage.ts` | F11 (D71): the switch (`farm.stage` on the device, `?stage=1`/`0` read at boot by `stage-boot.ts`, before the router), in the main chunk; with it on, Home draws `FarmStage` in the Hub's place, its own chunk with three.js and uma-stage: a `BandStage` (saver, `fit: 'width'`, the fade with no markers until a quick look opens) between the kit's bars, the design from `@farm/domain`'s `farmDesign`, the stand-in kit (`farmKit()`, the seam `kit-farm` pins into, KF14), the Hub's place models as overlays, taps and the long-press, the season's grade, the session's scroll. [days.md](days.md#the-hd-2d-farm-the-maps-second-look-f11-a-preview) |
+| The HD-2D farm (preview) | `src/app/stage-switch.ts`, `src/loop/FarmStage.tsx`, `src/loop/farm-stage.ts`, `src/loop/farm-kit.ts` | F11 (D71): the switch (`farm.stage` on the device, `?stage=1`/`0` read at boot by `stage-boot.ts`, before the router), in the main chunk; with it on, Home draws `FarmStage` in the Hub's place, its own chunk with three.js and uma-stage: a `BandStage` (saver, `fit: 'width'`, the fade with no markers until a quick look opens) between the kit's bars, the design from `@farm/domain`'s `farmDesign`, the kit (below), the Hub's place models as overlays, taps and the long-press, the season's grade, the session's scroll. [days.md](days.md#the-hd-2d-farm-the-maps-second-look-f11-a-preview) |
 | Push | `public/push-sw.js` | The service worker's push and tap handlers, kept so the server's push stays deliverable; F6's switch, subscription and schedule left the app with the Wilds (F24) |
 | Save | `src/save/` | The device save in Dexie, the store and its sync engine (below). The store holds save v3 (`useLoopSave`): every v2 it meets migrates first |
 | Master data | `src/master/` | The release's manifest, characters, outfits and art through `/api/master`, cached by hash on the device; the roster (`farmRoster`) and the album's rows; the album art adapter; `masterReady()`, which the loop's boot waits on |
-| PWA | `vite.config.ts` | Portrait, standalone, the icons from `scripts/draw-icons.mjs`; Workbox precaches the app, keeps master data's files for good, and imports `push-sw.js` into the service worker. A new build waits for the kit's **Update ready · Restart** |
+| PWA | `vite.config.ts` | Portrait, standalone, the icons from `scripts/draw-icons.mjs`; Workbox precaches the app but the HD-2D preview, keeps master data's files and the preview's (`farm-stage`, below) for good once loaded, and imports `push-sw.js` into the service worker. A new build waits for the kit's **Update ready · Restart** |
 
 Main JS is 164.0 KB gzip against the 180 KB budget (FM20) as CI measured F24: one build, size-checked by `pnpm build`.
 Firebase, the farm's pages, sheets, actions, boot and night, the scene player and the goals' rules, and the Hub map's
@@ -57,7 +57,25 @@ Phaser scene (`createHubGame`, 377 KB gzip) load on demand; `scripts/check-size.
 the initial JS. **F11**'s CI measured both builds at 171.68 KB (deployed) and 171.95 KB (romance), the switch adding
 about 0.4 KB; the stage's chunk (`FarmStage`: three.js, uma-stage's band stage and stand-in kit, the farm's design) is
 161.5 KB gzip (615 KB raw) and loads only with the switch on, `LAZY_MODULES` holding three.js, uma-stage's band stage and stand-in
-kit, `FarmStage.tsx`, `farm-stage.ts` and the domain's `farm/stage.ts`. Workbox precaches it with the rest of the app.
+kit, `FarmStage.tsx`, `farm-stage.ts` and the domain's `farm/stage.ts`. **The kit pin** (D73) adds `farm-kit.ts` and
+kit-farm's `atlas.json` to the chunk and to `LAZY_MODULES`: 166.8 KB gzip (632 KB raw) as CI measured, main JS unchanged
+(171.67 KB deployed, 171.97 KB romance).
+
+**The farm's kit (D73; kit-farm.md KF13, KF14):** `farm-kit.ts` loads `@luismlorenzana/uma-art` 2.27.0's `kit-farm` (one
+2048 page, wave 1's 87 frames) the first time the stage Home mounts: the atlas parsed and checked for kind `farm` with
+uma-stage's `checkedKit`, its page through `loadKitPage`. A frame the kit lacks (wave 2's 30, until they ship) is the
+stand-in's, copied onto the kit's page below its frames (`withStandIns`: shelves 4 texels apart, a tiling piece's edges
+extruded 2), so the stage builds from one page and the names stay the API. Home draws nothing for up to 1.5 s while the
+page loads, then the stand-in until it arrives; a refused atlas or a failed page leaves the stand-in for the session. The
+dev handle `window.__farmStage.kit` and the stage's `data-kit-name` say which kit is drawn.
+
+**The preview stays out of the precache (D73):** the build puts every chunk holding three.js, uma-stage or the stage Home,
+and kit-farm's page, under `assets/stage/` (`chunkFileNames`, `assetFileNames`); Workbox's `globIgnores` leaves that
+folder out, and a runtime route caches it cache-first (`farm-stage`, 16 entries, never an HTML answer) the first time it
+loads, so it works offline after. `scripts/check-size.mjs` (`checkStage`) fails a build whose service worker precaches a
+stage file, has no route for them, or whose precached chunks import one statically. The precache went from 60 entries
+(3,529 KiB) to 59 (2,929 KiB) deployed, and from 90 (3,700 KiB) to 89 (3,100 KiB) romance; without it the kit's page
+would have added 2,026 KB more for every player.
 
 **The farm's design (F11):** `@farm/domain`'s `farm/stage.ts` builds the save as uma-stage's `FarmDesign` (`farmDesign`,
 `farmPlots`, `placeStands`, the crop families `CROP_FAMILY` and `cropFrame`, `fieldsFrames`, `slotId`), typed from

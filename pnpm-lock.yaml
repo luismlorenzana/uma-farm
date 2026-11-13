@@ -76,8 +76,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/domain
       '@luismlorenzana/uma-art':
-        specifier: 2.26.0
-        version: 2.26.0
+        specifier: 2.27.0
+        version: 2.27.0
       '@luismlorenzana/uma-data':
         specifier: 1.4.0
         version: 1.4.0
@@ -1379,8 +1379,8 @@ packages:
   '@js-sdsl/ordered-map@4.4.2':
     resolution: {integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==}
 
-  '@luismlorenzana/uma-art@2.26.0':
-    resolution: {integrity: sha512-iO7gH8SwWUwwyCxIWj/jQMa0VeJHQBk6r5uruEmvtP66QY8909A4cejLnHJmmEF9JMbR4kkVri54YLjyGTQv2Q==, tarball: https://npm.pkg.github.com/download/@luismlorenzana/uma-art/2.26.0/c671e24ae3e0d82224ab668e7c7d37517abb51f3}
+  '@luismlorenzana/uma-art@2.27.0':
+    resolution: {integrity: sha512-sJoHdp0++wO+rlStSwHstv7bZvnt+BxlTcCosILFboYOY2AflItdrpHryZX6inlI+V1KAKV7tk+fraipK2hFkQ==, tarball: https://npm.pkg.github.com/download/@luismlorenzana/uma-art/2.27.0/abdf3e4b295811b1f25197d0816889155dc13822}
 
   '@luismlorenzana/uma-data@1.4.0':
     resolution: {integrity: sha512-fK8BkVkFAs+vfFr70mtSmR5jcHvEU9xeViKwGkhmGI/M4IxOn1JMT16nxGtgP+WJBpk514R48Oq4eQPEbzQcLQ==, tarball: https://npm.pkg.github.com/download/@luismlorenzana/uma-data/1.4.0/7e4784f5811b251f68458ec3e6a974e214fef2c9}
@@ -1428,6 +1428,15 @@ packages:
       '@luismlorenzana/uma-kit': '>=0.18.0 <1.0.0'
       react: ^19.3.0
       three: 0.187.0
+    peerDependenciesMeta:
+      '@luismlorenzana/uma-data':
+        optional: true
+      '@luismlorenzana/uma-kit':
+        optional: true
+      react:
+        optional: true
+      three:
+        optional: true
 
   '@luismlorenzana/uma-work@0.1.0':
     resolution: {integrity: sha512-Xma63ehhlKM3mkRVJ118MX90iOXhHxnZPpCYWnVRsuOn0hC5p2UkdLzeI6RR0RZMeVnAqNOypoqVRtYP3VwvvQ==, tarball: https://npm.pkg.github.com/download/@luismlorenzana/uma-work/0.1.0/e31be269e4b6a9191ce9a8d32fe33f7fbf2b8c0c}
@@ -5961,7 +5970,7 @@ snapshots:
   '@js-sdsl/ordered-map@4.4.2':
     optional: true
 
-  '@luismlorenzana/uma-art@2.26.0': {}
+  '@luismlorenzana/uma-art@2.27.0': {}
 
   '@luismlorenzana/uma-data@1.4.0': {}
 
@@ -5987,7 +5996,7 @@ snapshots:
       '@google-cloud/storage': 7.22.0
 
   '@luismlorenzana/uma-stage@0.3.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-kit@0.19.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-work@0.1.0)(firebase@12.19.0)(motion@12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(phaser@4.2.1)(react-dom@19.3.1(react@19.3.1))(react-router@7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1))(react@19.3.1)(three@0.187.0)':
-    dependencies:
+    optionalDependencies:
       '@luismlorenzana/uma-data': 1.4.0
       '@luismlorenzana/uma-kit': 0.19.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-work@0.1.0)(firebase@12.19.0)(motion@12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(phaser@4.2.1)(react-dom@19.3.1(react@19.3.1))(react-router@7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)
       react: 19.3.1

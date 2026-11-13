@@ -24,8 +24,8 @@ export const MAIN_JS_BUDGET = 180_000
  * bench's rules, sheet, view, actions and scene, and the wedding's rules (F53); and the homestead's and the household's
  * rules, the homestead's sheet, view, actions and map rows, the morning's house answer, the night level's card and the
  * household player (F54); and the story pack's delivery, its index and released pack (F56); and the HD-2D farm's stage
- * (F11): three.js, uma-stage's band stage and its stand-in kit, the stage Home, its helpers and the farm's design. The
- * Wilds' screens left in F24.
+ * (F11): three.js, uma-stage's band stage and its stand-in kit, the stage Home, its helpers and the farm's design, and
+ * kit-farm's loader with its atlas (D73). The Wilds' screens left in F24.
  * Paths
  * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
@@ -142,7 +142,46 @@ export const LAZY_MODULES = [
   'src/loop/FarmStage.tsx',
   'src/loop/farm-stage.ts',
   'domain/src/farm/stage.ts',
+  'src/loop/farm-kit.ts',
+  'uma-art/kit-farm/atlas.json',
 ]
+
+/** Where the HD-2D preview builds (apps/web/vite.config.ts, D73): out of the precache, cached on first use. */
+export const STAGE_DIR = 'assets/stage/'
+
+/** The precache's URLs, read from the built service worker (workbox's `precacheAndRoute` list). */
+export function precacheUrls(sw) {
+  return [...sw.matchAll(/\{url:"([^"]+)",revision:(?:"[^"]*"|null)\}/g)].map((m) => m[1])
+}
+
+/** What's wrong with the preview's place in the service worker: a stage file precached, no runtime route for them, or a
+ * chunk outside the stage that imports one statically (it would miss offline). `manifest` is Vite's build manifest. */
+export function stagePrecacheProblems(sw, manifest) {
+  const problems = precacheUrls(sw).filter((url) => url.startsWith(STAGE_DIR)).map((url) => `${url} is precached`)
+  if (!sw.includes(`pathname.startsWith("/${STAGE_DIR}")`)) problems.push(`no runtime route for /${STAGE_DIR}`)
+  const stage = (key) => manifest[key]?.file?.startsWith(STAGE_DIR) ?? false
+  for (const [key, node] of Object.entries(manifest)) {
+    if (stage(key) || !node.file?.endsWith('.js')) continue
+    for (const dep of node.imports ?? []) if (stage(dep)) problems.push(`${node.file} imports ${manifest[dep].file} statically`)
+  }
+  return problems
+}
+
+/** The preview's built files and their sizes, after checking they're out of the precache. */
+export async function checkStage(distDir) {
+  const sw = await readFile(resolve(distDir, 'sw.js'), 'utf8')
+  const manifest = JSON.parse(await readFile(resolve(distDir, '.vite/manifest.json'), 'utf8'))
+  const problems = stagePrecacheProblems(sw, manifest)
+  const files = [...new Set(Object.values(manifest).map((node) => node.file).filter((file) => file?.startsWith(STAGE_DIR)))]
+  if (!files.some((file) => file.endsWith('.js'))) problems.push(`no stage chunk under ${STAGE_DIR}`)
+  if (problems.length > 0) throw new Error(`The HD-2D preview's precache: ${problems.join('; ')}`)
+  const precached = precacheUrls(sw)
+  const sized = await Promise.all(files.map(async (file) => {
+    const bytes = await readFile(assetPath(distDir, file, /^assets\/stage\/[\w.-]+\.(js|png)$/))
+    return { file, bytes: bytes.byteLength, gzip: file.endsWith('.js') ? gzipSync(bytes).byteLength : null }
+  }))
+  return { files: sized, precached: precached.length }
+}
 
 /** Modules no production build may hold at all (F56 decision 5): the invented stand-in pack is the dev server's only. A
  * path ending in `/` is a folder. */
@@ -164,8 +203,8 @@ export function entrySrc(html) {
   if (sources.length !== 1) throw new Error('Expected one module entry in dist/index.html')
   return sources[0]
 }
-function assetPath(distDir, source) {
-  if (typeof source !== 'string' || !/^\/?assets\/[\w.-]+\.js$/.test(source)) throw new Error(`Unsafe JS asset: ${source}`)
+function assetPath(distDir, source, pattern = /^\/?assets\/[\w.-]+\.js$/) {
+  if (typeof source !== 'string' || !pattern.test(source)) throw new Error(`Unsafe JS asset: ${source}`)
   const root = resolve(distDir), file = resolve(root, source.replace(/^\//, ''))
   if (!file.startsWith(root + sep)) throw new Error('JS asset leaves dist')
   return file
@@ -219,6 +258,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     const result = await checkSize(resolve(process.argv[2] ?? 'dist'))
     console.log(`Main JS: ${(result.mainGzip / 1000).toFixed(2)} KB gzip / ${MAIN_JS_BUDGET / 1000} KB budget`)
     console.log(`Initial JS: ${(result.initialGzip / 1000).toFixed(2)} KB gzip across ${result.files.length} static chunk(s)`)
+    const stage = await checkStage(resolve(process.argv[2] ?? 'dist'))
+    for (const f of stage.files) console.log(`Stage, not precached: ${f.file} ${(f.bytes / 1000).toFixed(2)} KB${f.gzip === null ? '' : ` (${(f.gzip / 1000).toFixed(2)} KB gzip)`}`)
   } catch (error) {
     console.error(error instanceof Error ? error.message : error)
     process.exitCode = 1

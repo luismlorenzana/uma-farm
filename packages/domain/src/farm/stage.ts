@@ -164,6 +164,11 @@ const house = (lx: number, w: 2 | 3, walls: string, roof: string, storeys: 1 | 2
   ({ lx, w, walls, roof, storeys, door, mounts })
 const front = (name: string, column: number, level: number): FarmMount => ({ name, face: 'front', column, level })
 const roofMount = (name: string, column: number, level: number): FarmMount => ({ name, face: 'roof', column, level })
+/** A window box's level (D73): kit-farm hangs `flower-box` from its foot at the box's top, and a ground-floor window's sill
+ * stands a quarter level up its piece (levels 1–2), so at 1¼ the box hangs just under the sill, its flowers over the sill's
+ * edge. The herb box is its twin (wave 2). */
+export const WINDOW_BOX_LEVEL = 1.25
+const windowBox = (name: 'flower-box' | 'herb-box', column: number): FarmMount => front(name, column, WINDOW_BOX_LEVEL)
 /** A lane on a plot's left edge (the middle and right columns) and its ground. */
 const laneLeft = (g: string): Recipe['ground'] => [`L${g}${g}`, `L${g}${g}`, `${g}${g}${g}`]
 /** A lane on a plot's right edge (the left column) and its ground. */
@@ -191,7 +196,7 @@ function placeRecipe(id: FarmPlaceId, v4: boolean): Recipe {
     case 'fishery': return { ground: ['wwL', 'wwL', 'ggg'], props: [['reeds', 0, 0], ['dock', 1, 1]], slots: APRON }
     case 'smokehouse': return { ground: laneLeft('g'), building: house(1, 2, 'plank', 'slate', 1, { column: 0 }), props: [['smoker', 2, 2]], slots: BESIDE }
     case 'kitchen': return {
-      ground: laneLeft('g'), building: house(1, 2, 'plaster', 'red', 1, { column: 0 }, [roofMount('chimney', 1, 1), front('herb-box', 1, 1)]), props: [], slots: [],
+      ground: laneLeft('g'), building: house(1, 2, 'plaster', 'red', 1, { column: 0 }, [roofMount('chimney', 1, 1), windowBox('herb-box', 1)]), props: [], slots: [],
     }
     case 'mine': return { ground: ['###', 'ggg', 'ggg'], props: [['mine-mouth', 1, 1], ['ore-cart', 0, 1], ['lantern', 2, 1]], slots: [[0, 2], [1, 2], [2, 2], [1, 1]] }
     case 'smelter': return { ground: laneLeft('g'), building: house(1, 2, 'stone', 'slate', 1, { column: 0 }), props: [['furnace', 2, 2]], slots: BESIDE }
@@ -208,7 +213,7 @@ function placeRecipe(id: FarmPlaceId, v4: boolean): Recipe {
     case 'bin': return { ground: laneRight('g'), props: [['sack', 0, 0], ['barrel', 0, 1], ['bin', 1, 1]], slots: [] }
     case 'warehouse': return { ground: ['ggg', 'ggg', 'ggg'], building: house(0, 3, 'plank', 'red', 2, { column: 0, wide: true }), props: [['crates', 2, 2]], slots: [] }
     case 'dorm': return {
-      ground: ['ggg', 'ggg', 'ggg'], building: house(0, 3, 'plaster', 'red', 2, { column: 1 }, [front('flower-box', 0, 1), front('flower-box', 2, 1)]), props: [], slots: [],
+      ground: ['ggg', 'ggg', 'ggg'], building: house(0, 3, 'plaster', 'red', 2, { column: 1 }, [windowBox('flower-box', 0), windowBox('flower-box', 2)]), props: [], slots: [],
     }
     case 'board': return { ground: laneRight('g'), props: [['notice-board', 0, 1]], slots: [] }
     // The Gate's plot is path, the spine from the yard to the town; its arch stands over the apron, fences either side.
@@ -231,14 +236,14 @@ function homeRecipe(plot: FarmPlot): Recipe {
   if (plot.house === 0) {
     return {
       ground: ['ggg', 'ggg', 'ggg'], props: [['porch', 1, 2]], slots: [],
-      building: house(0, 3, 'plaster', 'red', 2, { column: 1 }, [roofMount('chimney', 0, 1.5), front('flower-box', 0, 1), front('flower-box', 2, 1)]),
+      building: house(0, 3, 'plaster', 'red', 2, { column: 1 }, [roofMount('chimney', 0, 1.5), windowBox('flower-box', 0), windowBox('flower-box', 2)]),
     }
   }
   // Flush away from the lane, its door on the lane's side of the apron's middle, flowers under the other window.
   const left = lane === 'right'
   return {
     ground: left ? laneRight('g') : laneLeft('g'), props: [], slots: [],
-    building: house(left ? 0 : 1, 2, 'plaster', 'thatch', 1, { column: left ? 1 : 0 }, [front('flower-box', left ? 0 : 1, 1), roofMount('chimney', left ? 0 : 1, 1)]),
+    building: house(left ? 0 : 1, 2, 'plaster', 'thatch', 1, { column: left ? 1 : 0 }, [windowBox('flower-box', left ? 0 : 1), roofMount('chimney', left ? 0 : 1, 1)]),
   }
 }
 
