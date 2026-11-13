@@ -12,7 +12,7 @@ export const SHEET_SIZE: Readonly<Record<Sheet, { w: number; h: number }>> = {
 
 export interface IconFrame { sheet: Sheet; x: number; y: number }
 
-/** The loop's goods: each uma-art family's raw row, its refined row below it (`items/atlas.json`); v4's rings
+/** The loop's goods: each uma-art family's raw row, its refined row below it (`items/atlas.json`); the rings
  * draw uma-art's `accessory-setting-g1…g10` row, the renamed frames. */
 const GOOD_ROW: Readonly<Record<GoodFamily, number>> = {
   grains: 0, fruits: 2, fish: 4, 'herbs-spices': 6, vegetables: 8, mushrooms: 10, sweets: 12, 'nuts-seeds': 14, 'hides-scales': 16, essences: 18,

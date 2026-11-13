@@ -1,7 +1,7 @@
 // The morning's invitation, answered, a line of the morning's Hearts: under "✉ Stand-in 2: “Walk at
 // dusk tonight?”", **Yes, tonight** and **Another day** while it stands unanswered; then "Tonight ✓" with **Play ›** (her
 // evening over the morning, `?evening=`) once it's yes, or "Another day" once declined. The answer is `today.invites`',
-// read as the card shows. Loaded on demand, the romance build only.
+// read as the card shows. Loaded on demand.
 import { inviteDue, slotsLeft } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -15,7 +15,7 @@ export default function InviteAnswer({ id }: { id: string }) {
   const location = useLocation()
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  if (save?.version !== 4) return null
+  if (!save) return null
   const invite = save.today.invites.find((i) => i.id === id)
   if (!invite) return null
   const answer = (yes: boolean) => {

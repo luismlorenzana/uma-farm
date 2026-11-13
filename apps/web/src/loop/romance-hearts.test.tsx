@@ -1,10 +1,10 @@
-// The Hearts tab as rendered: the romance build's bar (Farm · Hearts · End the day · Diary
-// · Menu) and the deployed build's unchanged; `/roster` landing on the Work view with her `?uma=` kept; the Hearts
+// The Hearts tab as rendered: the bar (Farm · Hearts · End the day · Diary · Menu); `/roster` landing on the Work view
+// with her `?uma=` kept; the Hearts
 // rows with 9000001 Ready first, the filter chips with their counts and Friends; her profile from a row with its
 // track, Next card, perks, gifts and ties, switching to Work; the Work view's album with her level in each card's
 // corner. The invented stand-in pack and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { joinOpening, newSaveV4, pairKey, readScene, type SaveV4, type StoryPack } from '@farm/domain'
+import { joinOpening, newSave, pairKey, readScene, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation, useRoutes } from 'react-router'
@@ -14,7 +14,7 @@ import type { MasterView } from '../master/master'
 const fixture = vi.hoisted(() => ({ view: null as MasterView | null, pack: null as StoryPack | null }))
 vi.mock('../master/master', async (importOriginal) => ({
   ...await importOriginal<typeof import('../master/master')>(),
-  masterReady: vi.fn(async () => fixture.view), masterRoster: () => fixture.view?.roster ?? null,
+  masterReady: vi.fn(async () => fixture.view),
   useMaster: () => ({ status: 'ready', view: fixture.view }), retryMaster: () => undefined, setMasterLens: () => undefined,
 }))
 vi.mock('../api/client', async () => {
@@ -36,7 +36,7 @@ const save = (): SaveV4 => useGame.getState().save as SaveV4
 
 /** A named farm on day 3, the opening three home, 9000001 Ready for Friendship 1 with 2 banked. */
 function farm(): SaveV4 {
-  const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day: 3 } }
+  const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day: 3 } }
   const joined = joinOpening(readScene(fresh, 'scene:1:open'), fixture.pack!)
   return {
     ...joined, arrivals: [ONE, TWO, THREE], items: { ...joined.items, carrot: [0, 0, 1, 0, 0] },
@@ -76,7 +76,6 @@ const click = async (el: HTMLElement | null | undefined) => {
 const tabs = () => $$('nav[data-kit="bottom-bar"] a').map((a) => [a.textContent?.replace(/\d+$/, ''), a.getAttribute('href')])
 
 beforeEach(async () => {
-  vi.stubEnv('VITE_FARM_ROMANCE', '1')
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   const pack = await storyReady()
   fixture.pack = pack
@@ -95,7 +94,7 @@ afterEach(async () => {
 })
 
 describe('the bar and the routes', () => {
-  it('reads Farm · Hearts · End the day · Diary · Menu in the romance build, with no badge on Hearts', async () => {
+  it('reads Farm · Hearts · End the day · Diary · Menu, with no badge on Hearts', async () => {
     await render(<FarmBottomBar page="hearts" />, '/hearts')
     expect(tabs()).toEqual([['Farm', '/'], ['Hearts', '/hearts'], ['End day', '/hearts?sheet=end'], ['Diary', '/diary'], ['Menu', '/hearts?sheet=menu']])
     const hearts = $('nav[data-kit="bottom-bar"] a[href="/hearts"]')!
@@ -103,25 +102,13 @@ describe('the bar and the routes', () => {
     expect(hearts.getAttribute('aria-label')).toBe('Hearts')
   })
 
-  it('keeps the deployed build’s bar with the switch off', async () => {
-    vi.stubEnv('VITE_FARM_ROMANCE', '0')
-    await render(<FarmBottomBar page="roster" />, '/roster')
-    expect(tabs().map(([label, to]) => [label, to])).toEqual([['Farm', '/'], ['Roster', '/roster'], ['End day', '/roster?sheet=end'], ['Diary', '/diary'], ['Menu', '/roster?sheet=menu']])
-  })
-
-  it('sends /roster to the Work view, her profile kept; the deployed build keeps /roster and has no /hearts', async () => {
+  it('sends /roster to the Work view, her profile kept', async () => {
     await act(async () => root.render(<MemoryRouter initialEntries={[`/roster?uma=${ONE}`]}><App /></MemoryRouter>))
     await settle()
     expect(path).toBe(`/hearts?view=work&uma=${ONE}`)
     await find('[data-page="hearts"][data-view="work"]')
     expect((await find('[data-profile]')).dataset.side).toBe('work')
     expect($('[data-work-side]')).not.toBeNull()
-    await act(async () => root.unmount())
-    root = createRoot(host)
-    vi.stubEnv('VITE_FARM_ROMANCE', '0')
-    await act(async () => root.render(<MemoryRouter initialEntries={['/hearts']}><App /></MemoryRouter>))
-    await settle()
-    expect(path).toBe('/')
   })
 })
 

@@ -1,17 +1,16 @@
 // The farm: `/`. uma-kit's Hub map in eight rows of three, the core
 // loop's rows, on uma-art's buildings; taller than a phone's screen, it scrolls, with the help button and the Collect all
 // pill fixed. A place's quick look opens in the side panel (`/?peek=<place>`): what it is, and what opens it while it's
-// locked; the Gate's is the visitor waiting, with Chat and Gift. After a night the morning summary opens over the
-// map until the player starts the day. On save v4 a Ready Uma's pip carries ♥ wherever the map draws her
-// and the morning's Hearts section lists who's Ready, both read live; its bond hearts carry Read while a
-// conversation waits, which plays over the morning (`?read=`); in the romance build an invitation's line carries Yes,
-// tonight and Another day; on v4 the Forge's quick look is the ring bench's once it stands. In the romance
-// build a v4 map grows the homestead's rows after the yard, the town edge moving below them (`homestead-map.tsx`);
-// v3's map is unchanged. With the preview switch on (Account → HD-2D farm), the same places draw on the shared HD-2D
+// locked; the Gate's says what brings the next arrivals. After a night the morning summary opens over the map until the
+// player starts the day. A Ready Uma's pip carries ♥ wherever the map draws her and the morning's Hearts section lists
+// who's Ready, both read live; its bond hearts carry Read while a conversation waits, which plays over the morning
+// (`?read=`); an invitation's line carries Yes, tonight and Another day; the Forge's quick look is the ring bench's once
+// it stands. The map grows the homestead's rows after the yard, the town edge moving below them (`homestead-map.tsx`).
+// With the preview switch on (Account → HD-2D farm), the same places draw on the shared HD-2D
 // stage instead (`FarmStage.tsx`, its own chunk with three.js), with the Umas on it from the same work view and Ready
 // hearts as the pips; off, the Hub is as it was. Loaded on demand.
 import {
-  farmEnvV3, FARM_PLACES, farmPlace, placeBlurb, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, STAY_AFFINITY, workNow, type FarmPlace, type LoopPlaceId,
+  farmEnv, FARM_PLACES, farmPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, workNow, type FarmPlace, type LoopPlaceId,
   type FarmSave,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
@@ -21,7 +20,6 @@ import { Button, HelpButton, Sheet, useReducedMotionSetting } from '@luismlorenz
 import { workView, type WorkView } from '@luismlorenzana/uma-kit/work'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
-import { romanceOn } from '../app/romance'
 import { useStageOn } from '../app/stage-switch'
 import { masterReady, useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
@@ -40,23 +38,22 @@ import { WorkPlacePeek } from './WorkPlace'
 import { isWorkScreen } from './work-view'
 
 const GROUND: PageGround = { id: 'farm', tiles: 'farmlands', palette: PALETTES.farmlands! }
-// The romance build's only: the switch folds at build time, and the deployed build drops the import.
-const InviteAnswer = /* @__PURE__ */ lazy(() => import('./InviteAnswer'))
-const BenchPeek = /* @__PURE__ */ lazy(() => import('./BenchSheet').then((m) => ({ default: m.BenchPeek })))
-const HouseAnswer = /* @__PURE__ */ lazy(() => import('./HouseAnswer'))
+const InviteAnswer = lazy(() => import('./InviteAnswer'))
+const BenchPeek = lazy(() => import('./BenchSheet').then((m) => ({ default: m.BenchPeek })))
+const HouseAnswer = lazy(() => import('./HouseAnswer'))
 type HomesteadMap = typeof import('./homestead-map')
 // Home on the shared HD-2D stage, with three.js, loaded only when the preview switch is on.
 const FarmStage = lazy(() => import('./FarmStage'))
 /** Sheets and scenes that cover all of Home: the stage rests under them. */
 const FULL_SCREEN = ['event', 'ask', 'memory', 'album', 'read', 'evening', 'level', 'household'] as const
 
-/** The homestead's map module, loaded for a v4 save in the romance build only; null until it's in, and always on v3. */
-function useHomesteadMap(save: FarmSave): HomesteadMap | null {
+/** The homestead's map module, loaded on demand; null until it's in. */
+function useHomesteadMap(): HomesteadMap | null {
   const [module, setModule] = useState<HomesteadMap | null>(null)
   useEffect(() => {
-    if (romanceOn() && save.version === 4 && module === null) void import('./homestead-map').then(setModule)
-  }, [save.version, module])
-  return save.version === 4 ? module : null
+    if (module === null) void import('./homestead-map').then(setModule)
+  }, [module])
+  return module
 }
 const WORK_PLACES: ReadonlySet<string> = new Set(LOOP_WORK_PLACES)
 
@@ -81,16 +78,10 @@ function pipsOf(place: FarmPlace, work: WorkView, hearts: ReadonlySet<string>): 
   })
 }
 
-/** Who's Ready today on a v4 farm, read live; nobody on v3 or before the pack loads. */
+/** Who's Ready today, read live; nobody before the pack loads. */
 function useReadyNow(save: FarmSave) {
   const pack = useStory()
-  return useMemo(() => (save.version === 4 && pack ? readyLines(save, pack) : []), [save, pack])
-}
-
-/** The Gate's pip: the visitor waiting, ringed by her way to staying. */
-function gatePips(save: FarmSave): PipModel[] | undefined {
-  const visitor = save.version === 3 ? save.visitors[0] : undefined
-  return visitor ? [{ state: 'busy', progress: Math.min(1, visitor.affinity / STAY_AFFINITY), face: <FaceTile outfitId={visitor.outfitId} size={24} label="Visitor" round /> }] : undefined
+  return useMemo(() => (pack ? readyLines(save, pack) : []), [save, pack])
 }
 
 /** One tap collects every finished job on the farm and harvests every Ready plot. */
@@ -147,18 +138,17 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   const hearts = useMemo(() => new Set(readyNow.map((r) => r.id)), [readyNow])
   const plots = readyPlots(save)
   const story = useStory()
-  const perkStory = save.version === 4 ? story : null
-  const env = useMemo(() => farmEnvV3(loopKinds(talents.of, perkStory)), [talents.of, perkStory])
+  const env = useMemo(() => farmEnv(loopKinds(talents.of, story)), [talents.of, story])
   const work = useMemo(() => workView(loopWorld(save), workNow(save), env), [save, env])
-  const homestead = useHomesteadMap(save)
+  const homestead = useHomesteadMap()
   const master = useMaster()
-  const layout = homestead && save.version === 4 ? homestead.homesteadLayout(save) : null
-  // A v4 map waits for the homestead's rows in the romance build, so the town edge never jumps.
-  const waiting = romanceOn() && save.version === 4 && layout === null
+  const layout = homestead ? homestead.homesteadLayout(save) : null
+  // The map waits for the homestead's rows, so the town edge never jumps.
+  const waiting = layout === null
   const places: HubMapPlace[] = [...FARM_PLACES.map((place): HubMapPlace => {
     const lock = lockOf(save, place)
     const slots = place.id === 'fields' ? plots : ready.get(place.id as LoopPlaceId) ?? 0
-    const pips = place.id === 'fields' ? fieldsPips(save, farming, hearts) : place.id === 'gate' ? gatePips(save) : pipsOf(place, work, hearts)
+    const pips = place.id === 'fields' ? fieldsPips(save, farming, hearts) : pipsOf(place, work, hearts)
     const busy = pips?.some((p) => p.state !== 'free') ?? false
     return {
       id: place.id, name: place.name, frame: place.frame, at: layout && homestead ? placeAt(homestead.placeOnV4(place, layout), layout.tiles) : placeAt(place),
@@ -167,7 +157,7 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
       locked: lock !== null, ready: slots > 0 ? 'Ready' : undefined,
       ...(pips && (lock === null || busy) ? { pips, pipsAt: 'arch' as const } : {}),
     }
-  }), ...(layout && homestead && save.version === 4
+  }), ...(layout && homestead
     ? homestead.homesteadPlaces(save, layout, hearts, (id) => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma') : [])]
   const covered = peek !== undefined || params.get('sheet') !== null
   const total = [...ready.values()].reduce((a, b) => a + b, plots)
@@ -201,12 +191,12 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
         <PeekPanel
           key={peek.id}
           title={peek.name}
-          about={<p>{placeBlurb(peek, save.version)}</p>}
+          about={<p>{peek.blurb}</p>}
           onClose={() => leave(withParam(location, 'peek', null))}
           words={{ close: 'Close', about: `About the ${peek.name}`, backTo: 'Back to the farm' }}
           focusKey={`[data-place="${peek.id}"]`}
         >
-          {romanceOn() && save.version === 4 && peek.id === 'forge' && lockOf(save, peek) === null ? <Suspense fallback={null}><BenchPeek save={save} /></Suspense>
+          {peek.id === 'forge' && lockOf(save, peek) === null ? <Suspense fallback={null}><BenchPeek save={save} /></Suspense>
             : peek.id === 'fields' && lockOf(save, peek) === null ? <FieldsPeek save={save} talentOf={farming} />
             : peek.id === 'gate' && lockOf(save, peek) === null ? <GatePeek save={save} />
               : isWorkScreen(peek.id) && placeOpen(save, peek) ? <WorkPlacePeek save={save} place={peek.id} />
@@ -224,7 +214,7 @@ function PlacePeek({ save, place }: { save: FarmSave; place: FarmPlace }) {
   return (
     <div className="space-y-2 p-4" data-peek={place.id} data-lock={lock ?? undefined}>
       {lock && <p className="text-[15px] font-semibold">{lock === 'Soon' ? 'Opens soon' : `Opens with ${lock}`}</p>}
-      <p className="text-[14px] text-ink-soft">{placeBlurb(place, save.version)}</p>
+      <p className="text-[14px] text-ink-soft">{place.blurb}</p>
     </div>
   )
 }
@@ -239,13 +229,13 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   const pack = useStory()
   const talents = useTalents()
   // Which bond lines have a conversation to Read, from the pack and what's been read.
-  const pairs = useMemo(() => (save.version === 4 && pack ? pairWords(save, pack) : null), [save, pack])
+  const pairs = useMemo(() => (pack ? pairWords(save, pack) : null), [save, pack])
   const nameOf = useMemo(() => (id: string) => album?.get(id)?.name ?? 'An Uma', [album])
-  // The homestead's lines, the romance build's only.
-  const home = useMemo(() => (romanceOn() && save.version === 4 && pack ? homeWords(save, pack, nameOf, (id) => talents.table?.get(id)?.temperament ?? 'steady') : NO_HOME),
+  // The homestead's lines.
+  const home = useMemo(() => (pack ? homeWords(save, pack, nameOf, (id) => talents.table?.get(id)?.temperament ?? 'steady') : NO_HOME),
     [save, pack, nameOf, talents.table])
-  // On v4 a chapter's new hand is the cast's arrival for it.
-  const hand = useMemo(() => (chapter: number) => chapterHand(save.version, pack, chapter), [save.version, pack])
+  // A chapter's new hand is the cast's arrival for it.
+  const hand = useMemo(() => (chapter: number) => chapterHand(pack, chapter), [pack])
   const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home, hand) : []), [summary, nameOf, ready, pairs, home, hand])
   if (!summary) return null
   return (
@@ -269,8 +259,8 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
                     {line.tag && <span className="shrink-0 rounded-full bg-success/15 px-1.5 text-[11px] font-semibold text-success" data-tag>{line.tag}</span>}
                   </Link>
                   {line.quote && <p className="px-3 pb-2 text-[13px] italic text-ink-soft" data-house-quote>{line.quote}</p>}
-                  {romanceOn() && line.invite && <Suspense fallback={null}><InviteAnswer id={line.invite} /></Suspense>}
-                  {romanceOn() && line.misses !== undefined && <Suspense fallback={null}><HouseAnswer house={line.misses} /></Suspense>}
+                  {line.invite && <Suspense fallback={null}><InviteAnswer id={line.invite} /></Suspense>}
+                  {line.misses !== undefined && <Suspense fallback={null}><HouseAnswer house={line.misses} /></Suspense>}
                 </li>
               ))}
             </ul>

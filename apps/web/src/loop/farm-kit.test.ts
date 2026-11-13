@@ -1,18 +1,18 @@
 // The farm's kit: the pinned kit-farm is a complete wave-1 farm kit, and the stand-in's frames it lacks
 // pack onto its page beside it, so every design builds. No WebGL or canvas: the page itself is the preview's to check.
 // Invented saves only.
-import { newBlock, newSave, newSaveV4, FARMHOUSE, farmDesign, type SaveV3, type SaveV4 } from '@farm/domain'
+import { newBlock, newSave, FARMHOUSE, farmDesign, type SaveV4 } from '@farm/domain'
 import { FARM_WAVE_1, FARM_WAVE_2, farmProblems, kitMissing, standInFarmAtlas, type KitAtlas, type KitFrame } from '@luismlorenzana/uma-stage/formats'
 import { describe, expect, it } from 'vitest'
 import { COPY_EXTRUDE, COPY_GAP, extrudes, farmAtlas, withStandIns } from './farm-kit'
 
 const AT = '2026-11-12T10:00:00.000Z'
-function everyOpen(): SaveV3 {
+function everyOpen(): SaveV4 {
   const save = newSave('u1', AT)
   return { ...save, farm: { ...save.farm, chapter: 9, points: 30_000 }, buildings: { ...save.buildings, mill: 1, sawmill: 1, smokehouse: 1 }, fields: { blocks: (['A', 'B', 'C', 'D'] as const).map(newBlock) } }
 }
 function v4(houses: number, open = false): SaveV4 {
-  const save = newSaveV4('u1', AT)
+  const save = newSave('u1', AT)
   const built = Array.from({ length: houses }, (_, i) => ({ name: `Home ${i + 1}`, extended: false }))
   return {
     ...save, farmer: { name: 'Robin' },
@@ -79,10 +79,10 @@ describe('the stand-in\'s frames for what the kit lacks', () => {
     }
   })
   it.each([
-    ['a fresh v3', newSave('u1', AT), false], ['every place open on v3', everyOpen(), false], ['a v4 with three houses', v4(3), true],
-    ['a v4 with every house and place', v4(6, true), true],
-  ] as const)('builds %s with no problems', (_, save, homestead) => {
-    expect(farmProblems(farmDesign(save, { homestead }), atlas)).toEqual([])
+    ['a fresh farm', newSave('u1', AT)], ['every place open', everyOpen()], ['a farm with three houses', v4(3)],
+    ['a farm with every house and place', v4(6, true)],
+  ] as const)('builds %s with no problems', (_, save) => {
+    expect(farmProblems(farmDesign(save), atlas)).toEqual([])
   })
   it('copies nothing once the kit has every frame, and grows the page only when the copies don\'t fit', () => {
     expect(withStandIns(standIn, standIn)).toEqual({ atlas: standIn, copies: [] })

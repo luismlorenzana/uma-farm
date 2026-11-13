@@ -21,7 +21,6 @@ import type { WorkView } from '@luismlorenzana/uma-kit/work'
 import { BandStage, capture, standInFarmAtlas, type FarmDesign, type Facing, type Tile } from '@luismlorenzana/uma-stage'
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { romanceOn } from '../app/romance'
 import { ItemIcon } from '../items/ItemIcon'
 import { useMaster } from '../master/master'
 import { madeHere } from '../save/game'
@@ -39,11 +38,11 @@ import { itemWords, requestWords } from './work-view'
 
 export interface FarmStageProps {
   save: FarmSave
-  /** The Hub's place models (FarmMap's): names, links, locks, Ready badges and pips, the homestead's on v4. */
+  /** The Hub's place models (FarmMap's): names, links, locks, Ready badges and pips, the homestead's. */
   places: readonly HubMapPlace[]
   /** The Hub's work view (FarmMap's): who holds which slot, as the pips read it. */
   work: Pick<WorkView, 'cards'>
-  /** Whose heart event is Ready today (v4), as the pips' ♥ reads it. */
+  /** Whose heart event is Ready today, as the pips' ♥ reads it. */
   hearts: ReadonlySet<string>
   /** The place whose sheet or quick look is open: the fade shows its slots. */
   open: string | null
@@ -73,11 +72,10 @@ interface Flight { key: number; items: string[]; count: number; from: { x: numbe
 
 export default function FarmStage({ save, places, work, hearts, open, paused, reducedMotion }: FarmStageProps) {
   const navigate = useNavigate()
-  const homestead = romanceOn()
   const master = useMaster()
   const view = master.status === 'ready' ? master.view : null
-  const design = useMemo(() => farmDesign(save, { homestead }), [save, homestead])
-  const plots = useMemo(() => farmPlots(save, { homestead }), [save, homestead])
+  const design = useMemo(() => farmDesign(save), [save])
+  const plots = useMemo(() => farmPlots(save), [save])
   const world = useMemo(() => JSON.stringify(design), [design])
   const season = dateOf(save.calendar.day).season
   const box = useRef<HTMLDivElement>(null)
@@ -509,7 +507,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     if (hits === null) return
     // Figures first: her sheet; anything else as the taps.
     const first = hits[0]?.ref
-    if (first?.kind === 'figure') { void navigate(umaSheet(first.id, latest.current.save.version), { state: { back: true } }); return }
+    if (first?.kind === 'figure') { void navigate(umaSheet(first.id), { state: { back: true } }); return }
     const target = tapTarget(hits, groundTile(s.view, p.x, p.y), latest.current.plots, latest.current.places)
     if (target) void navigate(target.to, { state: { back: true } })
   }
@@ -586,7 +584,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
       </nav>
       {/* The Umas on the farm, each to her sheet: the canvas answers a tap on her. */}
       <nav aria-label="Umas on the farm" className="sr-only">
-        {figures.map((figure) => <Link key={figure.id} to={umaSheet(figure.id, save.version)} state={{ back: true }} data-figure={figure.id}>{nameOf(figure.id)}</Link>)}
+        {figures.map((figure) => <Link key={figure.id} to={umaSheet(figure.id)} state={{ back: true }} data-figure={figure.id}>{nameOf(figure.id)}</Link>)}
       </nav>
       {error && <p role="alert" className="absolute inset-x-4 top-4 rounded-md bg-panel p-3 text-[13px] text-danger shadow-2">{error}</p>}
     </div>

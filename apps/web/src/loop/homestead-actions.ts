@@ -1,8 +1,7 @@
 // The homestead's actions: a house built and named, a house extended, a spouse moved or two
 // swapped, tonight's house picked, a piece of furniture placed, the morning's "misses you" put away, and a household scene
 // read, each one player's change over the save as it is now, committed once and stamped; a refused rule throws its words.
-// Apart from `actions.ts` so the deployed build never fetches the homestead's rules. Loaded on demand, the romance
-// build only.
+// Apart from `actions.ts` so the homestead's rules load with its sheet. Loaded on demand.
 import {
   anotherNight, birthdaysOf, buildHouse, extendHouse, moveSpouse, placeFurniture, readHousehold, sleepAt, swapRooms, touched, type HouseholdId, type SaveV4,
 } from '@farm/domain'
@@ -10,14 +9,14 @@ import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'
 import { storyReady } from '../story/story'
 
-const v4 = (): SaveV4 => {
+const current = (): SaveV4 => {
   const save = useGame.getState().save
-  if (!save || save.version !== 4) throw new Error('Not on this farm.')
+  if (!save) throw new Error('No farm yet.')
   return save
 }
 const now = () => new Date().toISOString()
 const change = async (rule: (save: SaveV4) => SaveV4): Promise<void> => {
-  const save = v4()
+  const save = current()
   const next = rule(save)
   if (next !== save) await commit(touched(next, now()))
 }

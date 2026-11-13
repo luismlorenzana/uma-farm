@@ -1,7 +1,7 @@
 // The homestead as the screens show it (Sleep at): the
 // homestead sheet's rows (a house a row with its rooms, Build or Extend with its price, the next lot, the lots after), her
 // room in words, Tonight's Sleep at rows, the morning's house lines and the household's Ready offers. Pure, so the screens
-// and the tests read the same. Loaded on demand, the romance build only.
+// and the tests read the same. Loaded on demand.
 import {
   extensionCost, FURNITURE, householdReady, householdTitle, houseLineOf, HOUSES, isHouseholdId, marriedCount, nextLot, residentsOf,
   roomsInAll, roomsOf, sleepRows, tonightsHouse, waitingForRooms, withFarmer, type Birthdays, type HouseholdId, type SaveV4, type StoryPack, type Temperament,

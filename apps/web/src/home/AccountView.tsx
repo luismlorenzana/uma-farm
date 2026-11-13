@@ -1,10 +1,9 @@
 // Account (uma-kit's AccountPage): who is signed in, the save's sync, its safety copies, the appearance, the build and
 // sign-out, and master data's release. The Notifications card says they're off: with days as turns,
-// nothing finishes while the app is closed. F6's switch went with the Wilds; the server's push is untouched. On save
-// v4 it also holds **Your name**, the farmer's, under the name sheet's rule; and a safety copy from before v4
-// lists without a Restore in the romance build, since restoring it would only wipe again. It also holds **HD-2D farm
-// (preview)**, this device's switch for Home on the shared stage.
-import { cleanFarmerName, FARMER_PLACEHOLDER, farmerNameIssue, versionOf } from '@farm/domain'
+// nothing finishes while the app is closed; the server's push is untouched. It also holds **Your name**, the farmer's,
+// under the name sheet's rule; a safety copy from before v4 lists as Kept, without a Restore, since restoring it would
+// only start over again. It also holds **HD-2D farm (preview)**, this device's switch for Home on the shared stage.
+import { cleanFarmerName, FARMER_PLACEHOLDER, farmerNameIssue, SAVE_VERSION, versionOf } from '@farm/domain'
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { AccountPage } from '@luismlorenzana/uma-kit/places'
 import { Button, Panel } from '@luismlorenzana/uma-kit/ui'
@@ -12,7 +11,6 @@ import { useEffect, useState } from 'react'
 import { APP_BUILD_ID } from '../app/build'
 import { useMaster } from '../master/master'
 import { safetyCopies, type SafetyCopy } from '../save/db'
-import { romanceOn } from '../app/romance'
 import { setStageOn, useStageOn } from '../app/stage-switch'
 import { restoreSafetyCopy, seeReplaced, useGame } from '../save/game'
 import { dateWords } from '../shell/SyncWarning'
@@ -44,7 +42,7 @@ function SafetyCopies() {
       {copies.map((copy) => (
         <div key={copy.id} className="flex min-h-11 items-center justify-between gap-3 py-2" data-safety-copy={copy.reason}>
           <span>{REASON[copy.reason]} · {dateWords(copy.at)}</span>
-          {romanceOn() && versionOf(copy.save) < 4 ? <span className="text-[12px] text-ink-faint">Kept</span> : (
+          {versionOf(copy.save) < SAVE_VERSION ? <span className="text-[12px] text-ink-faint">Kept</span> : (
             <Button size="sm" variant="secondary" onClick={() => {
               if (copy.id === undefined || !uid) return
               void restoreSafetyCopy(copy.id).then(() => safetyCopies(uid)).then(setCopies)
@@ -58,7 +56,7 @@ function SafetyCopies() {
 
 /** **Your name**: the farmer's, renamed under the name sheet's rule, a player's change. */
 function YourName() {
-  const name = useGame((s) => (s.save?.version === 4 ? s.save.farmer.name : null))
+  const name = useGame((s) => s.save?.farmer.name ?? null)
   const [draft, setDraft] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   if (name === null) return null

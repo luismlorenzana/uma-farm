@@ -1,6 +1,6 @@
 // A house that misses you, answered: under "⌂ Rose Cottage misses you", **Tonight ›**
 // (tonight's house is that one: Tonight's Sleep at shows it picked) and **Another night** (the line put away for the day,
-// costing nothing). Picked, "Tonight ✓". Never a penalty. Loaded on demand, the romance build only.
+// costing nothing). Picked, "Tonight ✓". Never a penalty. Loaded on demand.
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
 import { useLoopSave } from '../save/game'
@@ -10,7 +10,7 @@ export default function HouseAnswer({ house }: { house: number }) {
   const save = useLoopSave()
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  if (save?.version !== 4) return null
+  if (!save) return null
   const run = (act: () => Promise<void>) => {
     setBusy(true)
     setError(null)

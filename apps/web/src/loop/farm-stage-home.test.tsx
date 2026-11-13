@@ -2,13 +2,13 @@
 // Hub's own place models, the open quick look's place and no Phaser scene. Account's row and `?stage=` set the switch on
 // this device. The stage's chunk (three.js, WebGL) is a stub here: jsdom has no WebGL; the preview checks the real one.
 import 'fake-indexeddb/auto'
-import { newRosterUma, newSave, type SaveV3 } from '@farm/domain'
+import { newLove, newRosterUma, newSave, type SaveV4 } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../master/master', () => ({ masterReady: vi.fn(async () => ({ roster: [], stats: new Map() })), masterRoster: () => null, useMaster: () => ({ status: 'loading' }) }))
+vi.mock('../master/master', () => ({ masterReady: vi.fn(async () => ({ stats: new Map(), birthdays: new Map() })), useMaster: () => ({ status: 'loading' }), setMasterLens: vi.fn() }))
 vi.mock('../api/client', async () => {
   const actual = await vi.importActual<typeof import('../api/client')>('../api/client')
   return { ...actual, saveApi: { load: vi.fn(async () => ({ revision: 0, save: null })), put: vi.fn(async (_: number, save: unknown) => ({ revision: 1, save })) } }
@@ -28,9 +28,10 @@ const { readStageParam, setStageOn, stageOn, stageParam, STAGE_KEY } = await imp
 const { AccountView } = await import('../home/AccountView')
 
 const AT = '2026-11-12T10:00:00.000Z'
-function farm(): SaveV3 {
+function farm(): SaveV4 {
   const save = newSave('u1', AT)
-  return { ...save, roster: { 101: newRosterUma(1), 202: newRosterUma(1), 303: newRosterUma(1) }, dorm: { level: 1, home: ['101', '202', '303'], swaps: [] } }
+  return {
+    ...save, farmer: { name: 'Robin' }, roster: { 101: newRosterUma(1), 202: newRosterUma(1), 303: newRosterUma(1) }, love: { 101: newLove(), 202: newLove(), 303: newLove() }, dorm: { level: 1, home: ['101', '202', '303'], swaps: [] } }
 }
 
 /** A device's storage (this Node's own `localStorage` global has no methods). */
@@ -49,6 +50,11 @@ async function render(node: ReactNode, at = '/') {
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)) })
 }
 const $ = (selector: string) => document.body.querySelector(selector)
+/** Home draws once the homestead's map rows are in (loaded on demand). */
+const find = async (selector: string) => {
+  for (let i = 0; i < 100 && !$(selector); i++) await act(async () => { await new Promise((r) => setTimeout(r, 10)) })
+  expect($(selector)).not.toBeNull()
+}
 
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
@@ -70,7 +76,7 @@ describe('the preview switch', () => {
   it('is off by default: Home is the Hub, and the stage never loads', async () => {
     expect(stageOn()).toBe(false)
     await render(<FarmRoute />)
-    expect($('[data-farm-scroll] [data-stub-hub]')).not.toBeNull()
+    await find('[data-farm-scroll] [data-stub-hub]')
     expect($('[data-stub-stage]')).toBeNull()
     expect(stageProps).not.toHaveBeenCalled()
   })
@@ -78,7 +84,7 @@ describe('the preview switch', () => {
   it('on, draws the stage in the Hub\'s place with the Hub\'s place models and the open quick look\'s place', async () => {
     setStageOn(true)
     await render(<FarmRoute />, '/?peek=fields')
-    expect($('[data-stub-stage]')).not.toBeNull()
+    await find('[data-stub-stage]')
     expect($('[data-farm-scroll]')).toBeNull()
     expect($('[data-stub-hub]')).toBeNull()
     const props = stageProps.mock.lastCall![0] as {
@@ -89,7 +95,9 @@ describe('the preview switch', () => {
     expect(props.work.cards('forest')).toHaveLength(4)
     expect(props.hearts.size).toBe(0)
     expect(props.paused).toBe(false)
-    expect(props.places.map((p) => p.id)).toHaveLength(23)
+    // The 23 places, then the homestead's Farmhouse and its next lot.
+    expect(props.places.map((p) => p.id)).toHaveLength(25)
+    expect(props.places.slice(23).map((p) => p.id)).toEqual(['farmhouse', 'house-1'])
     expect(props.places.find((p) => p.id === 'warehouse')?.to).toBe('/warehouse')
     expect(props.places.find((p) => p.id === 'mill')?.locked).toBe(true)
     // The frame's pieces stay: the help button and the quick look over the stage.

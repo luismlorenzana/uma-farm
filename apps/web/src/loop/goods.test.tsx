@@ -1,15 +1,17 @@
 // The goods as rendered: gold beside the date, opening the bin; shipping from the Warehouse's
 // pick mode and from a good's sheet; Ship all; Take back in the bin's sheet; the night paying it into the morning; and
-// the shop's frame buying with gold. Master data and the server are stubs.
+// the shop's frame buying with gold. Master data and the server are stubs; the story pack is the stand-in.
 import 'fake-indexeddb/auto'
-import { farmDay, newSave, shopLines, type SaveV3, type ShopLine } from '@farm/domain'
+import { farmDay, newSave, shopLines, type SaveV4, type ShopLine } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../master/master', () => ({ masterReady: vi.fn(async () => ({ roster: [], stats: new Map() })), masterRoster: () => null }))
-vi.mock('@luismlorenzana/uma-kit/auth', () => ({ useAuth: () => ({ user: { name: 'Tester' } }) }))
+vi.mock('../master/master', () => ({ masterReady: vi.fn(async () => ({ stats: new Map(), birthdays: new Map() })), setMasterLens: vi.fn() }))
+vi.mock('@luismlorenzana/uma-kit/auth', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@luismlorenzana/uma-kit/auth')>(), useAuth: () => ({ user: { name: 'Tester' } }),
+}))
 vi.mock('../api/client', async () => {
   const actual = await vi.importActual<typeof import('../api/client')>('../api/client')
   return { ...actual, saveApi: { load: vi.fn(async () => ({ revision: 0, save: null })), put: vi.fn(async (_: number, save: unknown) => ({ revision: 1, save })) } }
@@ -21,15 +23,18 @@ const { default: LoopSheets } = await import('./LoopSheets')
 const { default: WarehousePage } = await import('./WarehousePage')
 const { ShopList } = await import('./GoodsSheets')
 const { buyLine, endTheDay } = await import('./actions')
+const { storyReady } = await import('../story/story')
+// The night reads the story pack: the stand-in, loaded once.
+await storyReady()
 
 const AT = '2026-11-09T10:00:00.000Z'
 const SUMMER_3 = farmDay({ year: 1, season: 'summer', day: 3 })
 /** Summer 3 with salmon at ★1 and ★2, and Pine Logs. */
-function stocked(): SaveV3 {
+function stocked(): SaveV4 {
   const save = newSave('u1', AT)
   return { ...save, calendar: { day: SUMMER_3 }, items: { ...save.items, salmon: [2, 2, 0, 0, 0], 'pine-log': [3, 0, 0, 0, 0] } }
 }
-const save = () => useGame.getState().save as SaveV3
+const save = () => useGame.getState().save as SaveV4
 
 let host: HTMLDivElement
 let root: Root

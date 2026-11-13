@@ -1,7 +1,6 @@
 // The night is a fade (W16): End the day dims the screen to dusk, the night runs
 // with nothing shown, and the morning comes up from it. One layer on the body, above every sheet, made and removed here,
 // so it outlives the sheet that started it; reduced motion is a plain cut (the layer shows at once and goes at once).
-// The romance build only.
 
 /** The dusk the night fades through: the event player's night sky, deepened. */
 export const DUSK = '#2b3557'

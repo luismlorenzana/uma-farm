@@ -2,7 +2,7 @@
 // (the lowest-value refined goods of that grade, any family, any mix) and the ring it makes; a tap on one of the three
 // offers the grade's other goods held; the ring's own recipe (2 ingots + 1 cut gem) greyed until chapter 3; her bonus
 // once married; and the one button, "Make an Iron Ring · 1 a day". Pure, so the sheet and the tests read the same.
-// Every word says "you". Loaded on demand with the sheet, the romance build only.
+// Every word says "you". Loaded on demand with the sheet.
 import {
   benchGrades, benchPick, benchStock, forgeRecipe, goodName, MAKE_BONUS, MINING_CHAPTER, ringId, ringName, ringPercent, type BenchInput, type BenchStock, type SaveV4,
 } from '@farm/domain'

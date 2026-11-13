@@ -1,9 +1,9 @@
 // Master data: the release's manifest, characters, outfits and art through the API's proxy, cached by hash on the
-// device. The farm's view of it is every outfit as a worker (`farmRoster`), the album's neutral rows (names and
-// art keys, from the release at runtime only) and each outfit's stats for the loop's talents (read on
-// demand, once a release: `loop/talents.ts`). Copied in shape from uma-rpg's `master/master.ts` (30a322a), cut to the sets
-// the farm reads.
-import { farmRoster, type FarmOutfit, type TalentOutfit } from '@farm/domain'
+// device. The farm's view of it is the album's neutral rows of every outfit with a stable id (names and art keys, from
+// the release at runtime only), each outfit's stats for the loop's talents (read on demand, once a release:
+// `loop/talents.ts`) and the characters' birthdays, seen through the story pack's cast once it loads (`setMasterLens`).
+// Copied in shape from uma-rpg's `master/master.ts` (30a322a), cut to the sets the farm reads.
+import { isRosterId, type TalentOutfit } from '@farm/domain'
 import type { ArtIndex, Character, Outfit, ReleaseManifest } from '@luismlorenzana/uma-data'
 import { outfitRowBase, type OutfitRowBase } from '@luismlorenzana/uma-kit/roster'
 import { useSyncExternalStore } from 'react'
@@ -11,8 +11,6 @@ import { CONTENT } from '../content/client'
 
 export interface MasterView {
   manifest: ReleaseManifest
-  /** Every outfit on the release, each with her trade. */
-  roster: FarmOutfit[]
   /** The album's rows by outfit id: name, title, rarity, release date, aptitudes and art keys. */
   album: ReadonlyMap<string, OutfitRowBase>
   /** Each outfit's 5★ stats and growth rates, by outfit id: what the loop's talents read. */
@@ -31,7 +29,7 @@ let state: MasterState = { status: 'idle' }
 const listeners = new Set<() => void>()
 /** The release as loaded, before any lens. */
 let raw: MasterView | null = null
-/** How the romance build sees master data: through the story pack's cast. Null in the deployed build. */
+/** How the farm sees master data: through the story pack's cast, once it loads. */
 let lens: ((view: MasterView) => MasterView) | null = null
 
 function set(next: MasterState): void {
@@ -42,22 +40,20 @@ function set(next: MasterState): void {
 /** The ready state for the release, through the lens if one is set. */
 const ready = (view: MasterView): MasterState => ({ status: 'ready', view: lens ? lens(view) : view })
 
-/** Sees master data through the story pack's cast from now on: the romance build's loader sets it once the pack
- * loads, and a release already loaded is seen again through it. */
+/** Sees master data through the story pack's cast from now on: the story's loader sets it once the pack loads, and a
+ * release already loaded is seen again through it. */
 export function setMasterLens(next: (view: MasterView) => MasterView): void {
   lens = next
   if (raw) set(ready(raw))
 }
 
-/** The farm's view of a release's sets: only outfits the roster takes, each with her album row. */
+/** The farm's view of a release's sets: every outfit with a stable id, each with her album row. */
 export function masterView(manifest: ReleaseManifest, characters: readonly Character[], outfits: readonly Outfit[], art: ArtIndex | null): MasterView {
   const byCharacter = new Map(characters.map((c) => [c.id, c]))
-  const roster = farmRoster({ outfits })
-  const kept = new Set(roster.map((o) => o.outfitId))
-  const ours = outfits.filter((o) => kept.has(String(o.id)))
+  const ours = outfits.filter((o) => isRosterId(String(o.id)))
   const album = new Map(ours.map((o) => [String(o.id), outfitRowBase(o, byCharacter.get(o.characterId))]))
   const birthdays = new Map(characters.map((c) => [String(c.id), { month: c.birthday.month, day: c.birthday.day }]))
-  return { manifest, roster, album, stats: new Map(ours.map((o) => [String(o.id), o])), birthdays, art }
+  return { manifest, album, stats: new Map(ours.map((o) => [String(o.id), o])), birthdays, art }
 }
 
 function loadMaster(): void {
@@ -75,8 +71,8 @@ function loadMaster(): void {
   })()
 }
 
-/** Master data once it has loaded, outside React: the loop's boot waits on it to migrate a v2 save and fill the start.
- *It starts the load if none is under way, and fails as the load does, so the boot gate offers Retry. */
+/** Master data once it has loaded, outside React: the night, the work and the harvests wait on it. It starts the load if
+ * none is under way, and fails as the load does, so a caller can offer Try again. */
 export function masterReady(): Promise<MasterView> {
   if (state.status === 'error') retryMaster()
   else loadMaster()
@@ -93,11 +89,6 @@ export function masterReady(): Promise<MasterView> {
     }
     listeners.add(listener)
   })
-}
-
-/** The roster once it has loaded, else null: for the work actions, which read it outside React (the trade gate). */
-export function masterRoster(): readonly FarmOutfit[] | null {
-  return state.status === 'ready' ? state.view.roster : null
 }
 
 export function useMaster(): MasterState {

@@ -1,8 +1,7 @@
 // A level reached overnight: `?level=<characterId>:<s2|s4>` from the morning's
 // "♥ Stand-in 1 · Spouse 2, reached overnight", the level-up card over any page: no event, her perk (S2: her morning
 // item every second morning; S4: a third night chore) and her next rung, one Continue. A stale one (she isn't there)
-// closes. Portaled to the body above the kit's sheets (z-60), like the players. Loaded on demand, the romance build
-// only.
+// closes. Portaled to the body above the kit's sheets (z-60), like the players. Loaded on demand.
 import { nightLevelCard } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { useEffect } from 'react'
@@ -26,12 +25,12 @@ export default function NightLevel({ value }: { value: string }) {
   const leave = useLeave()
   const close = () => leave(withParam(location, 'level', null))
   const asked = parseLevelParam(value)
-  const card = asked && save?.version === 4 && pack ? nightLevelCard(save, pack, asked.id, asked.rung) : null
-  const gone = !asked || (save?.version === 4 && pack !== null && card === null)
+  const card = asked && save && pack ? nightLevelCard(save, pack, asked.id, asked.rung) : null
+  const gone = !asked || (save && pack !== null && card === null)
   useEffect(() => {
     if (gone) close()
   }, [gone]) // eslint-disable-line react-hooks/exhaustive-deps
-  if (!card || !asked || save?.version !== 4 || !pack) return null
+  if (!card || !asked || !save || !pack) return null
   return createPortal(
     <div className="pt-safe pb-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label="A level reached overnight" data-night-level={asked.rung}>
       <header className="flex min-h-12 items-center px-4"><p className="text-[13px] font-semibold text-ink-soft">Overnight</p></header>

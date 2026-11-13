@@ -1,10 +1,10 @@
-// The ring bench, the proposal and the wedding on screen, the switch on: Ida Stone's
+// The ring bench, the proposal and the wedding on screen: Ida Stone's
 // scene over the farm, the Forge's quick look and the bench's sheet making a ring (a slot swapped), the proposal's ring
 // picker and its Engaged stage-up, the wedding's place, guests, reception and Married stage-up, her profile's engraving,
-// ring and better ring, and the switch off keeping the deployed build's Forge. The invented stand-in pack
+// ring and better ring, and the Forge before the bench. The invented stand-in pack
 // (9000001–9000003) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { dateOf, farmPlace, gendersFarmer, joinOpening, newSave, newSaveV4, readScene, SEASON_NAMES, type Love, type SaveV4, type StoryPack } from '@farm/domain'
+import { dateOf, farmPlace, gendersFarmer, joinOpening, newSave, readScene, SEASON_NAMES, type Love, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -14,7 +14,7 @@ import type { MasterView } from '../master/master'
 const fixture = vi.hoisted(() => ({ view: null as MasterView | null, pack: null as StoryPack | null }))
 vi.mock('../master/master', async (importOriginal) => ({
   ...await importOriginal<typeof import('../master/master')>(),
-  masterReady: vi.fn(async () => fixture.view), masterRoster: () => fixture.view?.roster ?? null,
+  masterReady: vi.fn(async () => fixture.view),
   useMaster: () => ({ status: 'ready', view: fixture.view }), retryMaster: () => undefined, setMasterLens: () => undefined,
 }))
 vi.mock('@luismlorenzana/uma-kit/auth', async (importOriginal) => ({
@@ -45,7 +45,7 @@ const save = (): SaveV4 => useGame.getState().save as SaveV4
 /** A named farm on day 21, the opening three home and their arrivals played; 9000001 at `love`. With the bench standing,
  * Ida Stone's scene is read unless `more` brings its own Diary. */
 function farm(love: Partial<Love> = {}, more: Partial<SaveV4> = {}): SaveV4 {
-  const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day: DAY } }
+  const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day: DAY } }
   const joined = joinOpening(readScene(fresh, 'scene:1:open'), fixture.pack!)
   const out = { ...joined, arrivals: [ONE, TWO, THREE], today: { ...joined.today, bonds: {} }, love: { ...joined.love, [ONE]: { ...joined.love[ONE]!, ...love } }, ...more }
   return out.buildings.forge !== undefined && !more.diary ? readScene(out, 'scene:bench') : out
@@ -103,7 +103,6 @@ async function tapUntil(selector: string) {
 }
 
 beforeEach(async () => {
-  vi.stubEnv('VITE_FARM_ROMANCE', '1')
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   const pack = await storyReady()
   fixture.pack = pack
@@ -329,14 +328,13 @@ describe('the words', () => {
   })
 })
 
-describe('the switch off', () => {
-  it('keeps the deployed build\'s Forge: locked by chapter 7 on v3, no bench sheet, no rings tab', async () => {
-    vi.stubEnv('VITE_FARM_ROMANCE', '0')
-    const v3 = newSave('u1', AT)
-    expect(lockOf(v3, farmPlace('forge')!)).toBe('Chapter 7')
-    expect(lockOf({ ...v3, buildings: { ...v3.buildings, forge: 0 } }, farmPlace('forge')!)).toBe('Chapter 7')
-    expect(warehouseTabs(v3).map((t) => t.shelf)).toEqual(['crops', 'woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets', 'fish', 'mining', 'seeds'])
-    useGame.setState({ uid: 'u1', status: 'ready', save: v3 })
+describe('before the bench', () => {
+  it('locks the Forge until the first Romance 8, closes the bench sheet, and shows no rings tab without rings', async () => {
+    const fresh = newSave('u1', AT)
+    expect(lockOf(fresh, farmPlace('forge')!)).toBe('your first Romance 8')
+    expect(lockOf({ ...fresh, buildings: { ...fresh.buildings, forge: 0 } }, farmPlace('forge')!)).toBeNull()
+    expect(warehouseTabs(fresh).map((t) => t.shelf)).toEqual(['crops', 'woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets', 'fish', 'mining', 'seeds'])
+    useGame.setState({ uid: 'u1', status: 'ready', save: fresh })
     await render(<div />, '/?sheet=bench')
     expect($('[data-bench]')).toBeNull()
   })

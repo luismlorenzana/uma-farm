@@ -1,7 +1,7 @@
 // Heart events' actions: her event played to its end is one player's change, `playEvent` over the
 // save as it is now, committed once and stamped; Ask her's answer the same through `askHer`. Nothing is written while an
-// event plays, so one left halfway pays nothing and stays Ready. Apart from `actions.ts` so the deployed build never
-// fetches the romance's rules. Loaded on demand with the player, the romance build only.
+// event plays, so one left halfway pays nothing and stays Ready. Apart from `actions.ts` so the events' rules load with
+// the player. Loaded on demand.
 import { askHer, playEvent, touched, type Answer, type EventCard, type EventOutcome } from '@farm/domain'
 import { commit, useGame } from '../save/game'
 import { storyReady } from '../story/story'
@@ -11,7 +11,7 @@ import { storyReady } from '../story/story'
 export async function playHerEvent(id: string, outcome: EventOutcome): Promise<EventCard> {
   const pack = await storyReady()
   const save = useGame.getState().save
-  if (!save || save.version !== 4) throw new Error('Not on this farm.')
+  if (!save) throw new Error('No farm yet.')
   const done = playEvent(save, pack, id, outcome)
   await commit(touched(done.save, new Date().toISOString()))
   return done.card
@@ -20,6 +20,6 @@ export async function playHerEvent(id: string, outcome: EventOutcome): Promise<E
 /** Ask her: her answer, once a day, paying nothing; Yes moves her to romance. One stamped change. */
 export async function askHerOnce(id: string, answer: Answer): Promise<void> {
   const save = useGame.getState().save
-  if (!save || save.version !== 4) throw new Error('Not on this farm.')
+  if (!save) throw new Error('No farm yet.')
   await commit(touched(askHer(save, id, answer), new Date().toISOString()))
 }

@@ -3,7 +3,7 @@
 // the profile's thumb zone. What an act paid goes up to the profile (`onPaid`), which floats it from her face; a note
 // says it ("She likes it. +36"). **Evening ›** is there too (her evening at `?evening=<id>`, or why not:
 // "Evening ✓", "Evening · F2", "Away tonight", "Evening spent"), so Chat, Gift and Evening sit side by side and
-// Praise +20 takes the row under them. Loaded on demand with the Hearts tab, so the deployed build never fetches it.
+// Praise +20 takes the row under them. Loaded on demand with the Hearts tab.
 import {
   birthdaysOf, canPraise, chatLineV4, DISLIKED_LINE, FAMILY_NAMES, GOOD_FAMILIES, giftPreview, goodName, goodOf, LOVE_POINTS, type SaveV4, type StoryPack,
   type Taste, type Temperament,

@@ -1,11 +1,11 @@
-// Bonds as the screens show them (the morning's sixth line), the switch on: her profile's
+// Bonds as the screens show them (the morning's sixth line): her profile's
 // Ties in the closest friend's order with the next heart and Read; the morning's side by side and bond hearts (Read when a
 // conversation waits, the tie's line or the generic words when none is written); the pair player over any page, its
-// levels in turn, read once into the Diary; the Diary's Conversations with replays; the Fields' side by side; and the
-// deployed build unchanged. The invented stand-in pack (9000001–9000003, the stand-in pair's five invented
+// levels in turn, read once into the Diary; the Diary's Conversations with replays; and the Fields' side by side. The
+// invented stand-in pack (9000001–9000003, the stand-in pair's five invented
 // conversations) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { joinOpening, newBlock, newSave, newSaveV4, pairKey, readScene, type Block, type MorningSummaryV4, type SaveV4, type StoryPack } from '@farm/domain'
+import { joinOpening, newBlock, newSave, pairKey, readScene, type Block, type MorningSummary, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -15,7 +15,7 @@ import type { MasterView } from '../master/master'
 const fixture = vi.hoisted(() => ({ view: null as MasterView | null, pack: null as StoryPack | null }))
 vi.mock('../master/master', async (importOriginal) => ({
   ...await importOriginal<typeof import('../master/master')>(),
-  masterReady: vi.fn(async () => fixture.view), masterRoster: () => fixture.view?.roster ?? null,
+  masterReady: vi.fn(async () => fixture.view),
   useMaster: () => ({ status: 'ready', view: fixture.view }), retryMaster: () => undefined, setMasterLens: () => undefined,
 }))
 vi.mock('@luismlorenzana/uma-kit/auth', async (importOriginal) => ({
@@ -46,7 +46,7 @@ const nameOf = (id: string) => NAMES[id] ?? 'An Uma'
 /** A named farm on day 2: the opening three home and their arrivals played, their ties seeded on day 1 (9000001 and
  * 9000002 at 150, 9000001 and 9000003 at 50). */
 function farm(): SaveV4 {
-  const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day: 2 } }
+  const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day: 2 } }
   const joined = joinOpening(readScene(fresh, 'scene:1:open'), fixture.pack!)
   return { ...joined, arrivals: [ONE, TWO, THREE], today: { ...joined.today, bonds: {} } }
 }
@@ -87,7 +87,6 @@ const click = async (el: HTMLElement | null | undefined) => {
 }
 
 beforeEach(async () => {
-  vi.stubEnv('VITE_FARM_ROMANCE', '1')
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   const pack = await storyReady()
   fixture.pack = pack
@@ -116,7 +115,7 @@ describe('the view model', () => {
   it('says the morning\'s side by side and bond hearts: Read while one waits, else the tie\'s line or the generic words', () => {
     const s = farm()
     const pairs = pairWords(s, fixture.pack!)
-    const hearts: MorningSummaryV4['hearts'] = [
+    const hearts: MorningSummary['hearts'] = [
       { kind: 'bond', a: ONE, b: TWO, hearts: 2 }, { kind: 'side', items: 3 }, { kind: 'bond', a: ONE, b: THREE, hearts: 1 }, { kind: 'arrived', id: THREE, home: true },
       { kind: 'bond', a: TWO, b: '9000009', hearts: 1 },
     ]
@@ -215,15 +214,5 @@ describe('as rendered', () => {
     await find('[data-block="A"] [data-growth]')
     expect($('[data-block="A"] [data-growth]')?.dataset.side).toBe('true')
     expect($('[data-block="A"] [data-growth]')?.textContent).toMatch(/side by side$/)
-  })
-
-  it('keeps the deployed build unchanged with the switch off: no Conversations, no player', async () => {
-    vi.stubEnv('VITE_FARM_ROMANCE', '0')
-    useGame.setState({ save: newSave('u1', AT) })
-    await render(<DiaryPage />, '/diary?read=9000001-9000002:1', true)
-    await find('[data-page="diary"]')
-    await settle()
-    expect($('[data-conversations]')).toBeNull()
-    expect($('[data-scene]')).toBeNull()
   })
 })

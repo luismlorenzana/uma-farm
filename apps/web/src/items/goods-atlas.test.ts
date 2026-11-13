@@ -1,4 +1,4 @@
-// The v3 goods are uma-art 2.21.0's own items: each id is on the items atlas with the family, grade and
+// The goods are uma-art 2.21.0's own items: each id is on the items atlas with the family, grade and
 // form `goods/ids.ts` gives it, so names and icons come from ids.
 import items from '@luismlorenzana/uma-art/items/atlas.json'
 import { GOODS } from '@farm/domain'

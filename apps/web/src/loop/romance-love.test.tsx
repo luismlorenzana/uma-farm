@@ -4,7 +4,7 @@
 // +20 after a rank-up overnight, and the morning's birthday line. The invented stand-in pack (9000001's birthday is Spring
 // 4 in its cast) and invented outfits; the server is a stub.
 import 'fake-indexeddb/auto'
-import { joinOpening, newSaveV4, readScene, type SaveV4, type StoryPack } from '@farm/domain'
+import { joinOpening, newSave, readScene, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes } from 'react-router'
@@ -14,7 +14,7 @@ import type { MasterView } from '../master/master'
 const fixture = vi.hoisted(() => ({ view: null as MasterView | null, pack: null as StoryPack | null }))
 vi.mock('../master/master', async (importOriginal) => ({
   ...await importOriginal<typeof import('../master/master')>(),
-  masterReady: vi.fn(async () => fixture.view), masterRoster: () => fixture.view?.roster ?? null,
+  masterReady: vi.fn(async () => fixture.view),
   useMaster: () => ({ status: 'ready', view: fixture.view }), retryMaster: () => undefined, setMasterLens: () => undefined,
 }))
 vi.mock('../api/client', async () => {
@@ -38,7 +38,7 @@ const save = (): SaveV4 => useGame.getState().save as SaveV4
 /** A named farm on `day`, the opening three home (their ties seeded and listed on an earlier morning), with goods in
  * the Warehouse. */
 function farm(day = 2): SaveV4 {
-  const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
+  const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
   const joined = joinOpening(readScene(fresh, 'scene:1:open'), fixture.pack!)
   return { ...joined, today: { ...joined.today, bonds: {} }, arrivals: [ONE, '9000002', THREE], items: { ...joined.items, carrot: [0, 0, 1, 0, 0], 'golden-carrot': [1, 0, 0, 0, 0], limestone: [1, 0, 0, 0, 0] } }
 }
@@ -68,7 +68,6 @@ const click = async (el: HTMLElement | null | undefined) => {
   await settle()
 }
 beforeEach(async () => {
-  vi.stubEnv('VITE_FARM_ROMANCE', '1')
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   const pack = await storyReady()
   fixture.pack = pack

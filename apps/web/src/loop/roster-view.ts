@@ -1,14 +1,13 @@
 // The roster's cards: the Umas on the farm as album rows with their talents and ranks, the
 // filters (talent and rank in each activity, favourite line) and the sorts (talent score and rank points in an activity,
-// joined, name), the words on a card, and one Uma's nine activities for her sheet. `/roster` and every Uma picker (the
-// Fields' tender, the jobs, the swaps) read these. They cover everyone on the roster, home or away, and your affinity
-// with her. On save v4 her favourite line is the story pack's and there is no affinity until the route. Pure
-// but for the pack, which the romance build has loaded before any screen.
+// joined, name), the words on a card, and one Uma's nine activities for her sheet. The Hearts tab's Work view and every
+// Uma picker (the Fields' tender, the jobs, the swaps) read these. They cover everyone on the roster, home or away. Her
+// favourite line is the story pack's. Pure but for the pack, which boot has loaded before any screen.
 import {
   atHome, farmHome,
-  ACTIVITIES, ACTIVITY_NAMES, activityScore, challengeFor, challengeMet, favouriteActivity, favouriteOf, FAVOURITE_ACTIVITIES, HEART_POINTS, heartsOf,
-  MAX_AFFINITY, pointsFull, RANK_POINTS, RANKS, TALENT_D, TALENT_GRADES,
-  type Activity, type FarmOutfit, type RosterUma, type FarmSave, type StoryPack, type Talents, type TalentStep,
+  ACTIVITIES, ACTIVITY_NAMES, activityScore, challengeFor, challengeMet, favouriteOf, FAVOURITE_ACTIVITIES,
+  pointsFull, RANK_POINTS, RANKS, TALENT_D, TALENT_GRADES,
+  type Activity, type RosterUma, type FarmSave, type StoryPack, type Talents, type TalentStep,
 } from '@farm/domain'
 import { storyPack } from '../story/story'
 import type { UmaPickerRow, UmaPickerSort } from '@luismlorenzana/uma-kit/album'
@@ -56,13 +55,11 @@ export interface LoopUmaRow extends UmaPickerRow {
   /** Her talents on this release; null for an outfit master data doesn't hold (she reads D). */
   talents: Talents | null
   ranks: RosterUma['ranks']
-  /** Her favourite activity, from her calling's line. */
+  /** Her favourite activity: her favourite line's, from the story pack. */
   favourite: Activity | null
   joined: number
   /** On the farm, or away on her off-season. */
   home: boolean
-  /** Your affinity with her, 0–1,000. */
-  affinity: number
 }
 
 /** Her step in an activity: master data's, or D. */
@@ -93,21 +90,18 @@ export const WHERE_FACET: FacetDef = {
 /** The roster's filters: where she is, then the pickers'. */
 export const ROSTER_FACETS: readonly FacetDef[] = [WHERE_FACET, ...UMA_FACETS]
 
-/** The Umas `ids` (on the roster) as rows, with master data's names and talents; favourites from master data's roster on
- * v3, from the story pack on v4. */
+/** The Umas `ids` (on the roster) as rows, with master data's names and talents and the story pack's favourites. */
 export function umaRows(save: FarmSave, ids: readonly string[], names: ReadonlyMap<string, { name: string; releasedAt: string }>, talents: ReadonlyMap<string, Talents> | null,
-  roster: readonly FarmOutfit[], story: Pick<StoryPack, 'cast' | 'bibles'> | null = storyPack()): LoopUmaRow[] {
-  const lines = new Map(roster.map((o) => [o.outfitId, o]))
+  story: Pick<StoryPack, 'cast' | 'bibles'> | null = storyPack()): LoopUmaRow[] {
   return ids.flatMap((id) => {
     const uma = save.roster[id]
     if (!uma) return []
     const base = names.get(id)
     const name = base?.name ?? 'Uma'
-    const outfit = lines.get(id)
-    const favourite = save.version === 4 ? (story ? favouriteOf(story, id) : null) : outfit ? favouriteActivity(outfit) : null
+    const favourite = story ? favouriteOf(story, id) : null
     const row: LoopUmaRow = {
       id, name, releasedAt: base?.releasedAt ?? '', level: null, search: name.toLowerCase(), facets: {}, sorts: {},
-      talents: talents?.get(id) ?? null, ranks: uma.ranks, favourite, joined: uma.joined, home: atHome(save, id), affinity: 'affinity' in uma ? uma.affinity : 0,
+      talents: talents?.get(id) ?? null, ranks: uma.ranks, favourite, joined: uma.joined, home: atHome(save, id),
     }
     const facets: Record<string, readonly string[]> = { favourite: favourite ? [favourite] : [], where: [row.home ? 'home' : 'away'] }
     for (const a of ACTIVITIES) {
@@ -202,11 +196,3 @@ export function activityLines(row: LoopUmaRow): ActivityLine[] {
   })
 }
 
-// --- Affinity --------------------------------------------------------------------------------------------
-
-/** "♥ 2 · 45/100": her whole hearts and her points toward the next; "♥ 10" at the top. */
-export function heartsWords(affinity: number): string {
-  const hearts = heartsOf(affinity)
-  if (affinity >= MAX_AFFINITY) return '♥ 10'
-  return `♥ ${hearts} · ${Math.floor(affinity - hearts * HEART_POINTS)}/${HEART_POINTS}`
-}

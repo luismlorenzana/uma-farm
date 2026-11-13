@@ -134,9 +134,8 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    // uma-kit is transformed with the app, so its links share the app's router (the bar test renders them). The romance
-    // switch is off: the deployed build's tests run unchanged, and a romance test turns it on with `vi.stubEnv`. The
-    // story pack is the stand-in: no test reads farm-api; the loader's own tests stub this.
-    test: { environment: 'jsdom', maxWorkers: 2, env: { VITE_FARM_ROMANCE: '0', VITE_FARM_STORY: 'stand-in' }, server: { deps: { inline: [/@luismlorenzana\/uma-kit/] } } },
+    // uma-kit is transformed with the app, so its links share the app's router (the bar test renders them). The story pack
+    // is the stand-in: no test reads farm-api; the loader's own tests stub this.
+    test: { environment: 'jsdom', maxWorkers: 2, env: { VITE_FARM_STORY: 'stand-in' }, server: { deps: { inline: [/@luismlorenzana\/uma-kit/] } } },
   }
 })

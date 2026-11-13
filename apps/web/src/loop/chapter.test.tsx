@@ -1,19 +1,23 @@
 // Farm Rank and chapter 1 as rendered: the Diary's chapter card with each goal's count, the Farm
 // Rank's chip and sheet, the morning's chapter, rank and milestone lines, and the closing scene the morning after the
-// chapter completes, once the summary is put away, with the recruit as your newest hand. Invented outfits (the album
-// fixture); the server is a stub.
+// chapter completes, once the summary is put away, with the chapter's authored arrival as your newest hand. Invented
+// outfits (the album fixture) and a cast of them built from the stand-in pack; the server is a stub.
 import 'fake-indexeddb/auto'
-import { CAST, GOLD_SHIPPED, newRosterUma, newSave, type MorningSummary, type SaveV3 } from '@farm/domain'
+import { CAST, GOLD_SHIPPED, newLove, newRosterUma, newSave, STAND_IN_FILES, storyPackFrom, type MorningSummary, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MasterView } from '../master/master'
 
-const fixture = vi.hoisted(() => ({ view: null as MasterView | null }))
+const fixture = vi.hoisted(() => ({ view: null as MasterView | null, pack: null as StoryPack | null }))
+vi.mock('../story/story', async (importOriginal) => ({
+  ...await importOriginal<typeof import('../story/story')>(),
+  storyReady: async () => fixture.pack!, useStory: () => fixture.pack, storyPack: () => fixture.pack, castIds: () => fixture.pack!.cast.umas.map((u) => u.characterId),
+}))
 vi.mock('../master/master', async (importOriginal) => ({
   ...await importOriginal<typeof import('../master/master')>(),
-  masterReady: vi.fn(async () => fixture.view), masterRoster: () => fixture.view?.roster ?? null,
+  masterReady: vi.fn(async () => fixture.view),
   useMaster: () => ({ status: 'ready', view: fixture.view }), retryMaster: () => undefined,
 }))
 vi.mock('@luismlorenzana/uma-kit/auth', async (importOriginal) => ({
@@ -33,26 +37,39 @@ const { default: LoopSheets } = await import('./LoopSheets')
 const { dismissSummary, endTheDay } = await import('./actions')
 const { summaryParts } = await import('./summary-words')
 
-/** Aster, Beryl and Cinder plain; Dune, Ember and Fable strong at everything, so the chapter's recruit is one of them. */
+/** Aster, Beryl and Cinder plain; Dune, Ember and Fable strong at everything. */
 fixture.view = (await albumFixture(undefined, [
   { star5: [100, 100, 100, 100, 100] }, { star5: [100, 100, 100, 100, 100] }, { star5: [100, 100, 100, 100, 100] },
   { star5: [160, 160, 160, 160, 160] }, { star5: [160, 160, 160, 160, 160] }, { star5: [160, 160, 160, 160, 160] },
 ])).view
 
+/** A cast of the invented outfits: Aster, Beryl and Cinder the opening three, Dune chapter 1's arrival. */
+const standIn = storyPackFrom(STAND_IN_FILES)
+const entry = (from: number, characterId: string, arrives: StoryPack['cast']['umas'][number]['arrives']) => ({ ...standIn.cast.umas[from]!, characterId, outfitId: characterId, arrives })
+fixture.pack = {
+  ...standIn, bibles: new Map(), ties: { ...standIn.ties, ties: [] },
+  cast: {
+    ...standIn.cast, opening: ['81001', '81002', '81003'],
+    umas: [entry(0, '81001', { kind: 'opening' }), entry(1, '81002', { kind: 'opening' }), entry(2, '81003', { kind: 'opening' }), entry(2, '81004', { kind: 'chapter', chapter: 1 })],
+  },
+}
+
 const AT = '2026-11-09T10:00:00.000Z'
-const save = (): SaveV3 => useGame.getState().save as SaveV3
-/** The start's three home on day 7, the opening scene read, with `counts`; Aster at Farming Hand when `hand`. */
-function farm(counts: Record<string, number> = {}, hand = false): SaveV3 {
+const save = (): SaveV4 => useGame.getState().save as SaveV4
+/** The opening three home on day 7, the farmer named, the opening and their arrivals read, with `counts`; Aster at
+ * Farming Hand when `hand`. */
+function farm(counts: Record<string, number> = {}, hand = false): SaveV4 {
   const base = newSave('u1', AT)
   const aster = newRosterUma(1)
   if (hand) aster.ranks.farming = { points: 40, rank: 1, challenge: 0 }
   return {
-    ...base, calendar: { day: 7 }, roster: { 81001: aster, 81002: newRosterUma(1), 81003: newRosterUma(1) },
+    ...base, farmer: { name: 'Robin' }, calendar: { day: 7 }, roster: { 81001: aster, 81002: newRosterUma(1), 81003: newRosterUma(1) },
+    love: { 81001: newLove(), 81002: newLove(), 81003: newLove() }, arrivals: ['81001', '81002', '81003'],
     dorm: { level: 1, home: ['81001', '81002', '81003'], swaps: [] }, diary: { ...base.diary, read: ['scene:1:open'] }, farm: { ...base.farm, counts },
   }
 }
 /** Every goal met but the Farm Rank, which tonight's milestones reach. */
-const ready = (): SaveV3 => ({ ...farm({ [GOLD_SHIPPED]: 10_000, 'plots-harvested': 9, 'home:forest': 6, 'home:fishery': 4 }, true), crops: { carrot: 20, potato: 2 } })
+const ready = (): SaveV4 => ({ ...farm({ [GOLD_SHIPPED]: 10_000, 'plots-harvested': 9, 'home:forest': 6, 'home:fishery': 4 }, true), crops: { carrot: 20, potato: 2 } })
 
 let host: HTMLDivElement
 let root: Root
@@ -135,7 +152,7 @@ describe('the Farm Rank', () => {
     expect($('[data-rank-sheet="1"]')).not.toBeNull()
     expect($('[data-points]')?.textContent).toBe('47 points')
     expect($('[data-next]')?.textContent).toBe('103 more for Farm Rank 2 (150)')
-    expect($$('[data-opens] li').map((li) => li.textContent)).toEqual(['Block B (800g)', 'Dorm level 3 (8 beds)', 'New seeds at the shop'])
+    expect($$('[data-opens] li').map((li) => li.textContent)).toEqual(['Block B (800g)', 'Dorm level 3 (7 beds)', 'New seeds at the shop'])
     expect($$('[data-source]').map((li) => li.textContent)).toEqual(['Shipping · 1 per 100g42', 'Diary entries · 5 each5', 'Milestones · 25 each0', 'Chapters · 250 each0'])
   })
 })
@@ -143,12 +160,12 @@ describe('the Farm Rank', () => {
 describe("the morning's goal lines", () => {
   it('names the chapter done, the Farm Rank and what it opens, and each milestone with its gold', () => {
     const summary: MorningSummary = {
-      day: 8, bin: [], work: [], ranks: [], bonds: [], nudges: [],
+      day: 8, bin: [], work: [], ranks: [], hearts: [], nudges: [],
       news: [{ kind: 'chapter', chapter: 1 }, { kind: 'farm-rank', rank: 2 }, { kind: 'milestone', id: 'rank:hand' }, { kind: 'milestone', id: 'row:woods:refined' }],
     }
     expect(summaryParts(summary)[0]!.lines).toEqual([
       { key: 'chapter', text: 'Chapter 1 done · +500g, the Mill’s plans, a new hand, 250 Farm Rank points', to: '/diary', tag: 'Chapter' },
-      { key: 'farm-rank:2', text: 'Farm Rank 2 · Block B (800g), Dorm level 3 (8 beds), New seeds at the shop', to: '/?sheet=rank', tag: 'Farm Rank' },
+      { key: 'farm-rank:2', text: 'Farm Rank 2 · Block B (800g), Dorm level 3 (7 beds), New seeds at the shop', to: '/?sheet=rank', tag: 'Farm Rank' },
       { key: 'milestone:rank:hand', text: 'First Uma at Hand · +300g', to: '/diary', tag: 'Milestone' },
       { key: 'milestone:row:woods:refined', text: 'Woods, refined: every grade shipped · +500g', to: '/diary', tag: 'Milestone' },
     ])
@@ -156,12 +173,12 @@ describe("the morning's goal lines", () => {
 })
 
 describe('chapter 1 completes, and the closing scene plays the next morning', () => {
-  it('ends the day into chapter 2 with the reward, then plays the closing scene after the summary, once', async () => {
+  it('ends the day into chapter 2 with the reward and its arrival, then plays the closing scene after the summary, once', async () => {
     useGame.setState({ save: ready() })
     expect(await endTheDay(7)).toBe(true)
     expect(save()).toMatchObject({ calendar: { day: 8 }, farm: { chapter: 2, points: 400 }, buildings: { mill: 0 }, gold: 500 + 300 + 300 + 500 })
     const recruit = Object.keys(save().roster).find((id) => !['81001', '81002', '81003'].includes(id))!
-    expect(['81004', '81005', '81006']).toContain(recruit)
+    expect(recruit).toBe('81004')
     expect(save().summary!.news.slice(0, 2)).toEqual([{ kind: 'chapter', chapter: 1 }, { kind: 'farm-rank', rank: 2 }])
     await renderShell()
     await settle()
@@ -179,7 +196,8 @@ describe('chapter 1 completes, and the closing scene plays the next morning', ()
     expect($('[data-chapter-card="2"]')?.textContent).toContain('Feathers and Fences')
     await click($('[data-action="start-day"]'))
     expect(save().diary.read).toEqual(['scene:1:open', 'scene:1:close'])
-    expect($('[data-scene]')).toBeNull()
     expect(path).toBe('/')
+    // Her own arrival scene comes next.
+    expect((await find('[data-scene]')).dataset.scene).toBe('arrival:81004')
   })
 })

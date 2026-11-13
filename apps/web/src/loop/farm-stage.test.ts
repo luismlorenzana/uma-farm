@@ -2,15 +2,15 @@
 // grades and the ground under a finger. The design's build on the stand-in kit is the domain's test now, from the stage's
 // three-free `/formats` entry (0.4.0). No WebGL: the stage itself needs a phone's canvas; the preview checks it. Invented
 // saves only.
-import { farmPlots, FARMHOUSE, newSave, newSaveV4, type SaveV3, type SaveV4 } from '@farm/domain'
+import { farmPlots, FARMHOUSE, newSave, type SaveV4 } from '@farm/domain'
 import { project, validGrade, type FarmMarker, type PickHit, type View } from '@luismlorenzana/uma-stage'
 import { describe, expect, it } from 'vitest'
 import { bandCentre, fadeMarkers, groundTile, peekLink, rememberCentre, rememberedCentre, SEASON_GRADES, slotPlace, startPlot, tapTarget } from './farm-stage'
 
 const AT = '2026-11-12T10:00:00.000Z'
-const fresh = (): SaveV3 => newSave('u1', AT)
+const fresh = (): SaveV4 => newSave('u1', AT)
 function v4(houses: number, open = false): SaveV4 {
-  const save = newSaveV4('u1', AT)
+  const save = newSave('u1', AT)
   const built = Array.from({ length: houses }, (_, i) => ({ name: `Home ${i + 1}`, extended: false }))
   return {
     ...save, farmer: { name: 'Robin' },
@@ -19,12 +19,10 @@ function v4(houses: number, open = false): SaveV4 {
     homestead: { ...save.homestead, houses: [FARMHOUSE, ...built], slept: [0, ...built.map(() => 0)] },
   }
 }
-const M4 = { homestead: false }
-const HOME = { homestead: true }
 const marker = (kind: FarmMarker['kind'], id: string, x = 0, z = 0): PickHit => ({ ref: { kind: 'marker', marker: { kind, id, x, z } }, at: { x, y: 1, z }, depth: 1 })
 
 describe('taps', () => {
-  const plots = farmPlots(v4(3), HOME)
+  const plots = farmPlots(v4(3))
   const places = [
     { id: 'fields', to: '/?peek=fields' }, { id: 'mill', to: '/?peek=mill' }, { id: 'warehouse', to: '/warehouse' }, { id: 'gate', to: '/?peek=gate' },
     { id: 'house-1', to: '/?sheet=homestead&house=1' }, { id: 'house-4', to: '/?sheet=homestead&house=4' },
@@ -62,7 +60,7 @@ describe('taps', () => {
 
 describe('the camera, the fade and the light', () => {
   it('opens on the first Ready place\'s band, else the Fields\'', () => {
-    const plots = farmPlots(fresh(), M4)
+    const plots = farmPlots(fresh())
     expect(startPlot(plots, [{ id: 'fields' }, { id: 'warehouse' }])?.id).toBe('fields')
     expect(startPlot(plots, [{ id: 'fields' }, { id: 'fishery', ready: 'Ready' }, { id: 'forest', ready: 'Ready' }])?.id).toBe('forest')
     expect(bandCentre({ band: 2 }, 5)).toBe(13)

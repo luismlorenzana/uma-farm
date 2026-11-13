@@ -1,6 +1,6 @@
 // The evening in words: the kinds sheet's rows with each one's
 // three numbers for her today, the picker's rows, Tonight's Evening rows, the Hearts header's marks, the card's sum and
-// the profile's Evening button. Pure, so the screens and the tests read the same. Loaded on demand, the romance build only.
+// the profile's Evening button. Pure, so the screens and the tests read the same. Loaded on demand.
 import {
   DATE_FROM, EVENING_KINDS, EVENINGS, eveningMarks, eveningPreview, eveningRole, eveningUmas, favouriteKind, GRADE_NAMES, GRADES, HANGOUT_FROM, homeTonight, invitedNow,
   inviteDue, invitePoints, isFestivalNight, kindBuilt, kindOpens, kindsNow, levelWords, ROLE_WORDS, rungName, slotsLeft, type EveningCard, type EveningKind,

@@ -4,8 +4,7 @@
 // (one without hers written is skipped), then `close`, in the scene player's frame and steps; a choice is wording only.
 // The finale plays its dance after `open` (the play sheet, its grade shown without points: it pays nothing) and ends
 // on the game's last stage-up card, "The Great Harvest", with every spouse's face. The end or Skip reads it once
-// (`diary.read`); a replay marks nothing. Portaled above the kit's sheets (z-60). Loaded on demand, the romance build
-// only.
+// (`diary.read`); a replay marks nothing. Portaled above the kit's sheets (z-60). Loaded on demand.
 import {
   CAST, CAST_IDS, householdPlay, householdReady, playOf, playSeed, sceneSteps, withFarmer, type CastId, type ChoiceOption, type HouseholdId, type HouseholdPlay, type SaveV4,
   type Step, type StoryPack,
@@ -39,13 +38,13 @@ export default function HouseholdPlayer({ value, replay }: { value: string; repl
     at.searchParams.delete('replay')
     leave(`${at.pathname}${at.search}`)
   }
-  const play = useMemo(() => (id && save?.version === 4 && pack?.household ? householdPlay(save, pack.household, id) : null), [id, save, pack])
-  const open = !!id && save?.version === 4 && !!pack && (replay ? save.diary.read.includes(id) : householdReady(save, pack.household).includes(id))
-  const gone = !id || (save !== null && save?.version !== 4) || (!!pack && (!open || play === null))
+  const play = useMemo(() => (id && save && pack?.household ? householdPlay(save, pack.household, id) : null), [id, save, pack])
+  const open = !!id && save && !!pack && (replay ? save.diary.read.includes(id) : householdReady(save, pack.household).includes(id))
+  const gone = !id || (!!pack && (!open || play === null))
   useEffect(() => {
     if (gone) close()
   }, [gone]) // eslint-disable-line react-hooks/exhaustive-deps
-  if (gone || !play || !pack || save?.version !== 4 || !id) return null
+  if (gone || !play || !pack || !save || !id) return null
   const finish = () => {
     if (leaving) return
     setLeaving(true)

@@ -30,8 +30,8 @@ function unknownRow(id: string): OutfitRowBase {
 }
 
 /** Master data seen through the resolver: each cast Uma's character id gets her outfit's album row (her
- * name is her character's) and stats, so the screens, the talents and the pickers read v4's roster keys as they read v3's
- * outfit ids. A character master data lacks gets a lettered disc's row and no stats (D talents). */
+ * name is her character's) and stats, so the screens, the talents and the pickers read the roster's character ids as
+ * outfits. A character master data lacks gets a lettered disc's row and no stats (D talents). */
 export function castLens(pack: StoryPack): (view: MasterView) => MasterView {
   return (view) => {
     const album = new Map(view.album)

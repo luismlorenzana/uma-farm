@@ -1,12 +1,11 @@
-// `/hearts`: the Umas' tab in the romance build, in place of Roster.
+// `/hearts`: the Umas' tab.
 // Two views: **Hearts** (the default) and **Work** (`?view=work`, the roster's album moved whole, each card's corner her
 // level words). The Hearts view is one 72 pt row an Uma: her face, name and chips (● Ready, ✉ an invitation, Away), her
 // level and her ladder's hearts as a bar in the stage's colour with the filling heart and "points/cost", then the most
 // useful line, what's banked and today's chat and gift ticks. Ready rows first, then the least progress, then the
 // cast's order; filter chips with their counts (`?filter=`); the header's "Married n/N", the evening's marks (○ free,
 // ● spent, festival night's in its season's colour) and the (i). Her profile opens
-// from either view at `?uma=<characterId>`, on the side the view names. Loaded on demand; only the romance build routes
-// here.
+// from either view at `?uma=<characterId>`, on the side the view names. Loaded on demand.
 import { festivalOn, householdReady, householdTitle, ladderOf, type LadderName, type SaveV4 } from '@farm/domain'
 import { FaceTile, type FaceTileBadges } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -31,7 +30,7 @@ export default function HeartsPage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const view: ProfileSide = params.get('view') === 'work' ? 'work' : 'hearts'
-  if (save?.version !== 4) return null
+  if (!save) return null
   // The view rides in the URL, so the profile's Hearts | Work and the tab's switch are one; replacing keeps Back's way.
   const setView = (next: ProfileSide) => navigate(withParam(location, 'view', next === 'work' ? 'work' : null), { replace: true, state: location.state })
   const married = pack ? marriedOf(save, pack) : null

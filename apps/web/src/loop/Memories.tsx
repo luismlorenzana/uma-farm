@@ -3,7 +3,7 @@
 // Wed, Spouse): the played ones with her beat's caption on uma-art's Memory frame, the next marked, the rest locked; her
 // arrival scene replays from the header. A tap on a played tile **replays it from any choice**: from the top or a
 // choice point picked from its list, every option open, nothing paid or saved (`?memory=`, the event player). Loaded on
-// demand, the romance build only.
+// demand.
 import { choicePointsOf, type ChoiceOption, type Step } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Chip, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
@@ -25,8 +25,8 @@ export default function Memories() {
   const id = params.get('album')
   const [filter, setFilter] = useState<AlbumFilter>('friend')
   const [picked, setPicked] = useState<{ tile: AlbumTile; points: { at: number; first: string }[] | null } | null>(null)
-  const tiles = useMemo(() => (save?.version === 4 && pack && id && save.love[id] ? albumTiles(save, pack, id) : null), [save, pack, id])
-  if (!id || save?.version !== 4 || !pack || !tiles) return null
+  const tiles = useMemo(() => (save && pack && id && save.love[id] ? albumTiles(save, pack, id) : null), [save, pack, id])
+  if (!id || !save || !pack || !tiles) return null
   const name = (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma'
   const close = () => leave(withParam(location, 'album', null))
   const replay = (rung: string, from: number | null = null) => withParam(location, 'memory', memoryParam(id, rung, from))

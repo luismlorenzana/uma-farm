@@ -27,7 +27,7 @@ describe('the nudge', () => {
 describe('the morning summary', () => {
   it('words each line with its tap, in order, hiding empty sections', () => {
     const summary: MorningSummary = {
-      day: 13, bin: [], ranks: [], bonds: [],
+      day: 13, bin: [], ranks: [], hearts: [],
       nudges: [{ kind: 'idle', umas: ['101'] }],
       news: [{ kind: 'season', season: 'summer' }, { kind: 'festival', festival: 'fishing-derby', when: 'tomorrow' }],
       work: [{ kind: 'jobs', place: 'forest', jobs: 2, items: 9 }, { kind: 'jobs', place: 'mill', jobs: 1, items: 1 }],
@@ -41,7 +41,7 @@ describe('the morning summary', () => {
         { key: 'season', text: 'Summer begins', to: '/?sheet=calendar' },
         { key: 'festival:tomorrow', text: 'Fishing Derby tomorrow', to: '/?peek=festival' },
       ] },
-      { section: 'nudges', title: 'Today', lines: [{ key: 'idle', text: '1 Uma idle', to: '/roster' }] },
+      { section: 'nudges', title: 'Today', lines: [{ key: 'idle', text: '1 Uma idle', to: '/hearts?view=work' }] },
     ])
     expect(summaryParts({ ...summary, work: [], news: [], nudges: [] })).toEqual([])
   })
@@ -50,7 +50,7 @@ describe('the morning summary', () => {
 describe('the morning\'s bin', () => {
   it('lists each good and star with its count and gold, the demand marked, then the total', () => {
     const summary: MorningSummary = {
-      day: 16, ranks: [], bonds: [], work: [], news: [], nudges: [],
+      day: 16, ranks: [], hearts: [], work: [], news: [], nudges: [],
       bin: [{ kind: 'sold', id: 'salmon', stars: 2, count: 3, gold: 495, demand: true }, { kind: 'sold', id: 'pine-log', stars: 1, count: 2, gold: 50, demand: false }],
     }
     expect(summaryParts(summary)).toEqual([{ section: 'bin', title: 'The bin', lines: [
@@ -65,7 +65,7 @@ describe('the morning\'s bin', () => {
 describe('the morning\'s Fields', () => {
   it('lists crops ready by block, what withered, and plots to plant, each opening the Fields', () => {
     const summary: MorningSummary = {
-      day: 25, bin: [], ranks: [], bonds: [], news: [],
+      day: 25, bin: [], ranks: [], hearts: [], news: [],
       work: [{ kind: 'crops', block: 'A', plots: 9 }, { kind: 'crops', block: 'B', plots: 1 }, { kind: 'withered', block: 'A', crop: 'tomato', plots: 3 }],
       nudges: [{ kind: 'seeds', plots: 4 }],
     }
@@ -83,7 +83,7 @@ describe('the morning\'s Fields', () => {
 describe('the morning\'s ranks', () => {
   it('names rank-ups, then points full with the challenge in its own words, each opening her sheet', () => {
     const summary: MorningSummary = {
-      day: 6, bin: [], work: [], bonds: [], news: [], nudges: [],
+      day: 6, bin: [], work: [], hearts: [], news: [], nudges: [],
       ranks: [
         { kind: 'rank-up', outfitId: '101', activity: 'farming', rank: 1 },
         { kind: 'full', outfitId: '202', activity: 'fishing', rank: 1, challenge: 12 },
@@ -92,30 +92,24 @@ describe('the morning\'s ranks', () => {
     }
     const names: Record<string, string> = { 101: 'Aster', 202: 'Beryl' }
     expect(summaryParts(summary, (id) => names[id]!)).toEqual([{ section: 'ranks', title: 'Ranks', lines: [
-      { key: 'rank-up:101:farming', text: 'Aster · Farming Hand', to: '/roster?uma=101', tag: 'Rank up' },
-      { key: 'full:202:fishing', text: 'Beryl · Fishing · Catch 30 fish · 12/30', to: '/roster?uma=202', tag: 'Points full' },
-      { key: 'full:101:mining', text: 'Aster · Mining · Dig at floor 10', to: '/roster?uma=101', tag: 'Points full' },
+      { key: 'rank-up:101:farming', text: 'Aster · Farming Hand', to: '/hearts?view=work&uma=101', tag: 'Rank up' },
+      { key: 'full:202:fishing', text: 'Beryl · Fishing · Catch 30 fish · 12/30', to: '/hearts?view=work&uma=202', tag: 'Points full' },
+      { key: 'full:101:mining', text: 'Aster · Mining · Dig at floor 10', to: '/hearts?view=work&uma=101', tag: 'Points full' },
     ] }])
     expect(summaryParts(summary)[0]!.lines[0]!.text).toBe('An Uma · Farming Hand')
   })
 })
 
-describe('the morning\'s roster news', () => {
-  it('says the Dorm\'s new beds, who\'s home, who joined, who\'s at the Gate and who left, each a tap', () => {
-    const names: Readonly<Record<string, string>> = { 101: 'Aster', 202: 'Beryl', 303: 'Cinder', 404: 'Dune' }
+describe('the morning\'s Dorm news', () => {
+  it('says the Dorm\'s new beds and who\'s home, each a tap', () => {
+    const names: Readonly<Record<string, string>> = { 101: 'Aster', 202: 'Beryl' }
     const summary: MorningSummary = {
-      day: 8, bin: [], work: [], ranks: [], bonds: [], nudges: [],
-      news: [
-        { kind: 'dorm', level: 2 }, { kind: 'home', umas: ['101'] }, { kind: 'joined', outfitId: '202', home: false }, { kind: 'gate', outfitId: '303' },
-        { kind: 'left', outfitId: '404' },
-      ],
+      day: 8, bin: [], work: [], ranks: [], hearts: [], nudges: [],
+      news: [{ kind: 'dorm', level: 2 }, { kind: 'home', umas: ['101'] }],
     }
     expect(summaryParts(summary, (id) => names[id] ?? 'An Uma')).toEqual([{ section: 'news', title: 'New today', lines: [
       { key: 'dorm', text: 'Dorm level 2 · 5 beds', to: '/dorm' },
       { key: 'home', text: 'Aster is home', to: '/dorm' },
-      { key: 'joined:202', text: 'Beryl joined · away', to: '/roster?uma=202', tag: 'New' },
-      { key: 'gate:303', text: 'Cinder is at the Gate', to: '/?peek=gate' },
-      { key: 'left:404', text: 'Dune left the Gate', to: '/?peek=gate' },
     ] }])
     expect(summaryParts({ ...summary, news: [{ kind: 'home', umas: ['101', '202'] }] })[0]!.lines[0]!.text).toBe('2 Umas are home')
   })

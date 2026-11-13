@@ -12,8 +12,8 @@ export const goldWords = (gold: number): string => `${gold.toLocaleString('en-US
 export const starWords = (stars: number): string => `★${stars}`
 
 /** The Warehouse's tabs: the crops, the forest's six families, fish, mining and seeds; the expeditions' loot
- * only when the Warehouse holds some (none can be had yet); v4's rings and dishes (the reception's, the Kitchen's)
- * likewise, so v3's tabs are the deployed build's. */
+ * only when the Warehouse holds some (none can be had yet); the rings and dishes (the bench's, the reception's, the
+ * Kitchen's) likewise. */
 export const SHELVES = ['crops', 'woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets', 'fish', 'mining', 'seeds', 'loot', 'rings', 'dishes'] as const
 export type Shelf = typeof SHELVES[number]
 const SHELF_NAMES: Readonly<Record<Shelf, string>> = {
