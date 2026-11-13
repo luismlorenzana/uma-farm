@@ -4,7 +4,7 @@
 // for 20. The stand-ins aren't in master data: their faces are lettered discs. Invented outfits (the album fixture) and
 // the invented stand-in pack; the server is a stub.
 import 'fake-indexeddb/auto'
-import { newSaveV4, type SaveV4 } from '@farm/domain'
+import { joinOpening, newSaveV4, readScene, type Cast, type SaveV4 } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -168,6 +168,49 @@ describe('a fresh farm on v4', () => {
     expect(path).toBe('/fields')
     await settle()
     expect($('[data-scene]')).toBeNull()
+  })
+})
+
+describe('an open pack\'s stopgaps', () => {
+  it('an opening that brings nobody leaves out its last line and ends on chapter 1\'s card', async () => {
+    const pack = await storyReady() as { cast: Cast }
+    const cast = pack.cast
+    pack.cast = { ...cast, opening: [] }
+    try {
+      useGame.setState({ save: { ...newSaveV4('u1', AT), farmer: { name: 'Robin' } } })
+      await renderShell()
+      await find('[data-scene="scene:1:open"] [data-beat]')
+      const lines: string[] = []
+      while ($('[data-scene="scene:1:open"] [data-beat]')) {
+        lines.push($('[data-line]')!.textContent!)
+        await click($('[data-beat]'))
+      }
+      expect(lines.at(-1)).toBe('“You’ll want help with all this. I hear some is on its way.”')
+      await click($('[data-action="plant"]'))
+      await until(() => save().diary.read.includes('scene:1:open'))
+      expect(Object.keys(save().roster)).toEqual([])
+      expect(path).toBe('/fields')
+    } finally {
+      pack.cast = cast
+    }
+  })
+
+  it('an arrival written with no choice plays to its end and pays +50 alone', async () => {
+    const pack = await storyReady()
+    const route = pack.route
+    pack.route = async (id) => (id === '9000001' ? { events: [{ id: 'arrival', steps: [{ narrate: 'Someone new leans on the Gate.' }] }] } : route(id))
+    try {
+      useGame.setState({ save: joinOpening(readScene({ ...newSaveV4('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open'), pack) })
+      await renderShell()
+      await find('[data-scene="arrival:9000001"] [data-beat]')
+      await click($('[data-beat]'))
+      expect($('[data-arrival-done]')?.dataset.points).toBe('50')
+      await click($('[data-action="welcome"]'))
+      await until(() => save().arrivals.includes('9000001'))
+      expect(save().love['9000001']!.points).toBe(50)
+    } finally {
+      pack.route = route
+    }
   })
 })
 

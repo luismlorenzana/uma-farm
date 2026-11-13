@@ -2,7 +2,8 @@
 // in when the story says. No start picks, no Gate visitors, no chapter recruit drawn for the weakest activity: on save v4
 // none of `startSheet`, `gateNight` or `recruitFor` runs.
 //
-//   opening    the opening scene, day 1: read or skipped, it joins the opening three (a player's change)
+//   opening    the opening scene, day 1: read or skipped, it joins the opening's Umas (a player's change): the cast's
+//              `opening`, else those who arrive at it, else the welcome list (`openingOf`)
 //   chapter n  the night chapter n completes, inside `completeChapter`
 //   festival   the morning of that festival's day in its year (year 1 unless named), built or not
 //   beds n     the morning the Dorm's level n takes effect
@@ -10,17 +11,18 @@
 //
 // Arrivals are state checked at night step 8 (`arrivalsTonight`, the night's `arriveUmas`, after the Dorm settles): every cast Uma not on the roster whose
 // arrival holds joins, in the cast's order, home while a bed is free, else away; a trigger already passed (a later wave's)
-// holds the next night. Each joins once: the roster guards it. Loaded with the night and the screens.
+// holds the next night. Each joins once: the roster guards it. A cast Uma with no arrival (the pack's is optional) and not
+// in the opening waits off the farm until meeting her in town lands. Loaded with the night and the screens.
 import { seedTies } from '../farm/bonds'
 import { farmDay, FESTIVALS, type FestivalId } from '../farm/calendar'
 import { joinRoster } from '../farm/dorm'
 import { newLove, type SaveV4 } from '../save/v4'
 import type { Arrival, CastEntry } from '../story/authored'
-import { castEntry, type StoryPack } from '../story/pack'
+import { castEntry, openingOf, type StoryPack } from '../story/pack'
 
 /** The five kinds of arrival, as the manual lists them. */
 export const ARRIVAL_KINDS: readonly { kind: Arrival['kind']; when: string; where: string }[] = [
-  { kind: 'opening', when: 'The opening scene, day 1: read or skipped, it brings the cast file’s opening three, a farmer, a forager and a fisher', where: 'The opening scene' },
+  { kind: 'opening', when: 'The opening scene, day 1: read or skipped, it brings the opening’s Umas: the cast file’s `opening` list, else those whose arrival is the opening, else the welcome list', where: 'The opening scene' },
   { kind: 'chapter', when: 'The night chapter *n* completes, in place of a drawn recruit (chapter 1 today; chapters 2–7 once they’re built)', where: 'Night step 8, `checkGoals`' },
   { kind: 'festival', when: 'The morning of that festival’s day in its year (year 1 unless the cast names one), built or not', where: 'Night step 8, `arriveUmas`' },
   { kind: 'beds', when: 'The morning the Dorm’s level *n* takes effect (levels 4–8)', where: 'Night step 8, `arriveUmas`' },
@@ -66,7 +68,7 @@ export function arrivalsTonight(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ti
   let next = save
   const arrived: { id: string; home: boolean }[] = []
   for (const entry of pack.cast.umas) {
-    if (next.roster[entry.characterId] || !arrivalHolds(next, entry.arrives)) continue
+    if (next.roster[entry.characterId] || !entry.arrives || !arrivalHolds(next, entry.arrives)) continue
     const joined = arrive(next, entry.characterId, pack)
     next = joined.save
     arrived.push({ id: entry.characterId, home: joined.home })
@@ -74,22 +76,22 @@ export function arrivalsTonight(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ti
   return { save: next, arrived }
 }
 
-/** The opening three walk in: reading or skipping the opening scene joins those of the cast's `opening` not
- * on the roster yet, in order, each home while a bed is free (day 1 has three), their ties seeded (the stand-in's
- * 9000001 and 9000002 at 150, 9000001 and 9000003 at 50). Once: the roster guards it. */
+/** The opening's Umas walk in: reading or skipping the opening scene joins `openingOf`'s (any number, in order) not on
+ * the roster yet, each home while a bed is free (day 1 has three), their ties seeded (the stand-in's 9000001 and 9000002
+ * at 150, 9000001 and 9000003 at 50). Once: the roster guards it. */
 export function joinOpening(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 {
-  return pack.cast.opening.reduce((next, id) => (next.roster[id] || !castEntry(pack, id) ? next : arrive(next, id, pack).save), save)
+  return openingOf(pack).reduce((next, id) => (next.roster[id] || !castEntry(pack, id) ? next : arrive(next, id, pack).save), save)
 }
 
 /** The chapter's authored arrival: the first cast Uma whose arrival is chapter `n`, or null. */
 export function chapterArrival(pack: Pick<StoryPack, 'cast'>, chapter: number): CastEntry | null {
-  return pack.cast.umas.find((u) => u.arrives.kind === 'chapter' && u.arrives.chapter === chapter) ?? null
+  return pack.cast.umas.find((u) => u.arrives?.kind === 'chapter' && u.arrives.chapter === chapter) ?? null
 }
 
 /** What brings the next arrivals, never who: up to three triggers still waiting, most likely first: the
  * chapter's end, the Dorm's next arrival level, the next festivals by date, then events. Empty when everyone is here. */
 export function nextArrivals(save: SaveV4, pack: Pick<StoryPack, 'cast'>, max = 3): Arrival[] {
-  const waiting = pack.cast.umas.filter((u) => !save.roster[u.characterId] && u.arrives.kind !== 'opening').map((u) => u.arrives)
+  const waiting = pack.cast.umas.flatMap((u) => (!save.roster[u.characterId] && u.arrives && u.arrives.kind !== 'opening' ? [u.arrives] : []))
   const key = (a: Arrival): string => JSON.stringify(a)
   const seen = new Set<string>()
   const unique = waiting.filter((a) => (seen.has(key(a)) ? false : (seen.add(key(a)), true)))

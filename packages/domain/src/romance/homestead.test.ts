@@ -12,7 +12,7 @@ import { TEST_KINDS } from '../night/kinds.fixture'
 import { parseSaveV4 } from '../save/parse-v4'
 import { newSave, onFarm } from '../save/v3'
 import { FINALE_MARRIED, marriedCount, newLove, newRosterUmaV4, newSaveV4, residentsOf, roomsOf, vowsOn, type Love, type SaveV4 } from '../save/v4'
-import { bibleIssues, householdIssues, type Household, type UmaBible } from '../story/authored'
+import { checkBible, checkHousehold, type Household, type UmaBible } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_INS } from '../story/authored.fixture'
 import { storyPackFrom, wishesOf, type StoryPack } from '../story/pack'
 import { readScene } from '../story/scenes'
@@ -282,7 +282,7 @@ describe('the house\'s morning', () => {
   it('draws a house line from the pack, else the templates by temperament', () => {
     const named = (id: string) => `Stand-in ${Number(id) - 9_000_000}`
     const ones = Array.from({ length: 20 }, (_, d) => houseLineOf('u1', d, [ONE], PACK.household, () => 'steady', named)!)
-    expect(ones.every((l) => PACK.household!.houseLines[ONE]!.includes(l.text))).toBe(true)
+    expect(ones.every((l) => PACK.household!.houseLines![ONE]!.includes(l.text))).toBe(true)
     const threes = Array.from({ length: 20 }, (_, d) => houseLineOf('u1', d, [THREE], PACK.household, () => 'clever', named)!)
     expect(threes.every((l) => HOUSE_TEMPLATES.clever.map((t) => t.replaceAll('{name}', 'Stand-in 3')).includes(l.text))).toBe(true)
     expect(houseLineOf('u1', 3, [], PACK.household, () => 'clever', named)).toBeNull()
@@ -400,35 +400,48 @@ describe('the format: household.json and wishes', () => {
   const ctx = { umas: new Set(STAND_INS) }
   const household = () => json(STAND_IN_FILES.household) as Household
 
-  it('validates the stand-in household and 9000001\'s wishes', () => {
-    expect(householdIssues(household(), ctx)).toEqual([])
-    expect(bibleIssues(STAND_IN_BIBLE, ctx)).toEqual([])
-    expect(PACK.household!.scenes.map((s) => s.at)).toEqual([5, 10, 15])
+  it('reads the stand-in household and 9000001\'s wishes clean', () => {
+    expect(checkHousehold(household(), ctx)).toMatchObject({ errors: [], notes: [] })
+    expect(checkBible(STAND_IN_BIBLE, ONE, ctx)).toMatchObject({ errors: [], notes: [] })
+    expect(PACK.household!.scenes!.map((s) => s.at)).toEqual([5, 10, 15])
   })
 
-  it('wants an each for every cast Uma in every scene and the finale; partial reads skip them', () => {
+  it('reads a scene or the finale without a beat for every Uma: hers is skipped as it plays', () => {
     const missing = household()
-    delete missing.scenes[0]!.each[THREE]
-    delete missing.finale.each[TWO]
-    expect(householdIssues(missing, ctx)).toEqual(['Household scene at 5 each: no beat for 9000003', 'The finale each: no beat for 9000002'])
-    expect(householdIssues(missing, ctx, { partial: true })).toEqual([])
+    delete missing.scenes![0]!.each![THREE]
+    delete missing.finale!.each![TWO]
+    expect(checkHousehold(missing, ctx)).toMatchObject({ errors: [], notes: [] })
   })
 
-  it('refuses a scene twice or missing, a speaker in open and close but the town\'s, long or gendering house lines, and a bad wish', () => {
+  it('skips a scene written twice and a line too long; a speaker outside the scene\'s, gendering words and a stranger\'s lines are notes; a bad wish is skipped', () => {
     const h = household()
-    h.scenes[1]!.at = 5
-    h.scenes[0]!.open.push({ say: ONE, line: 'Hello.' })
-    h.houseLines[ONE] = ['x'.repeat(121), 'Good morning, sir.']
-    h.houseLines['9000099'] = ['Hi.']
-    const issues = householdIssues(h, ctx)
-    expect(issues).toContain('Household scene at 5 open, step 4: 9000001 can’t speak here')
-    expect(issues).toContain('Household scene at 5: written twice')
-    expect(issues).toContain('Household scene at 10: missing')
-    expect(issues).toContain('houseLines 9000001 1: a line of 1–120 characters')
-    expect(issues).toContain('houseLines 9000001 2: “sir” genders the farmer')
-    expect(issues).toContain('houseLines 9000099: not in the cast')
-    const wish = { ...json(STAND_IN_BIBLE), wishes: ['own-house', 'own-house', 'a-pony'] }
-    expect(bibleIssues(wish, ctx)).toEqual(['wishes 3: own-house or birthday-alone', 'wishes: each once'])
+    h.scenes![1]!.at = 5
+    h.scenes![0]!.open!.push({ say: ONE, line: 'Hello.' })
+    h.houseLines![ONE] = ['x'.repeat(121), 'Good morning, sir.']
+    h.houseLines!['9000099'] = ['Hi.']
+    const read = checkHousehold(h, ctx)
+    expect(read.errors).toEqual([
+      'Household scene at 5: written twice; the later one is skipped',
+      'houseLines 9000001 1: its line is 121 characters; the screen shows 120; skipped',
+    ])
+    expect(read.notes).toContain('Household scene at 5 open, step 4: 9000001 isn’t one who speaks here (one outside the cast shows as “An Uma”)')
+    expect(read.notes).toContain('houseLines 9000001 2: “sir” genders the farmer')
+    expect(read.notes).toContain('houseLines 9000099: not in the cast')
+    expect(read.value!.scenes!.map((s) => s.at)).toEqual([5, 15])
+    expect(read.value!.houseLines![ONE]).toEqual(['Good morning, sir.'])
+    const wish = checkBible({ ...json(STAND_IN_BIBLE), wishes: ['own-house', 'own-house', 'a-pony'] }, ONE, ctx)
+    expect(wish.errors).toEqual(['wishes 3: a-pony isn’t one of own-house and birthday-alone; skipped'])
+    expect(wish.notes).toEqual(['wishes: own-house is listed twice; once is kept'])
+    expect(wish.value!.wishes).toEqual(['own-house'])
+  })
+
+  it('plays a household with only some of its parts: no open or close, a finale with no play', () => {
+    const h: Household = { scenes: [{ at: 5, each: { [ONE]: [{ say: ONE, line: 'Home.' }] } }], finale: { each: {} } }
+    expect(checkHousehold(h, ctx)).toMatchObject({ errors: [], notes: [] })
+    const save = { ...spouse(farm(), ONE), homestead: { ...spouse(farm(), ONE).homestead, married: 5 } }
+    expect(householdPlay(save, h, 'household:5')).toMatchObject({ play: null, parts: [{ who: null, steps: [] }, { who: ONE }, { who: null, steps: [] }] })
+    expect(householdPlay(save, h, 'finale')).toMatchObject({ play: null })
+    expect(householdPlay(save, { houseLines: {} }, 'household:10')).toBeNull()
   })
 })
 

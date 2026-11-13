@@ -102,7 +102,7 @@ export function nightLevelCard(save: Pick<SaveV4, 'love'>, pack: Pick<StoryPack,
     id, rung, event: 0, choices: [], plays: [], chosen: null, sum: 0, paid: 0, carried: 0, learnt: [], taken: [], perk: perkOf(rung)?.id ?? null, recipe: null, memory: null,
     unlock: null, answer: null, stage: null, ring: null, wedding: null, line: null, night: true,
     next: after.rung === null ? null : {
-      rung: after.rung, cost: after.cost, points: after.points, banked: after.banked, hint: pack.bibles.get(id)?.route.find((b) => b.id === after.rung)?.hint ?? null,
+      rung: after.rung, cost: after.cost, points: after.points, banked: after.banked, hint: pack.bibles.get(id)?.route?.find((b) => b.id === after.rung)?.hint ?? null,
       perk: perkOf(after.rung)?.id ?? null,
     },
   }
@@ -228,7 +228,7 @@ export function houseLineOf(uid: string, day: number, umas: readonly string[], h
   nameOf: (id: string) => string): { id: string; text: string; authored: boolean } | null {
   if (umas.length === 0) return null
   const id = umas[Math.floor(draw(uid, day, 'house-line', 0) * umas.length)]!
-  const lines = household?.houseLines[id] ?? []
+  const lines = household?.houseLines?.[id] ?? []
   const pick = (list: readonly string[]) => list[Math.floor(draw(uid, day, 'house-line', 1) * list.length)]!
   return lines.length > 0 ? { id, text: pick(lines), authored: true } : { id, text: pick(HOUSE_TEMPLATES[temperamentOf(id)]).replaceAll('{name}', nameOf(id)), authored: false }
 }
@@ -255,7 +255,7 @@ export const householdReached = (save: Pick<SaveV4, 'homestead'>, id: HouseholdI
 export function householdReady(save: Pick<SaveV4, 'homestead' | 'diary'>, household: Household | null): HouseholdId[] {
   if (!household) return []
   return HOUSEHOLD_IDS.filter((id) => householdReached(save, id) && !save.diary.read.includes(id)
-    && (id === 'finale' || household.scenes.some((s) => `household:${s.at}` === id)))
+    && (id === 'finale' ? household.finale !== undefined : (household.scenes ?? []).some((s) => `household:${s.at}` === id)))
 }
 
 /** The spouses on the farm's roster, in wedding order: who a household scene's `each` plays for. */
@@ -276,13 +276,15 @@ export interface HouseholdPlay {
   spouses: string[]
 }
 export function householdPlay(save: Pick<SaveV4, 'love' | 'roster'>, household: Household, id: HouseholdId): HouseholdPlay | null {
-  const scene = id === 'finale' ? household.finale : household.scenes.find((s) => `household:${s.at}` === id)
+  const scene = id === 'finale' ? household.finale : household.scenes?.find((s) => `household:${s.at}` === id)
   if (!scene) return null
   const spouses = spousesInOrder(save)
-  const beats = spouses.flatMap((who) => (scene.each[who] ? [{ who, steps: scene.each[who]! }] : []))
+  // Every part is optional in the pack: a missing `open` or `close` plays as nothing, and the finale without its play
+  // goes straight on.
+  const beats = spouses.flatMap((who) => (scene.each?.[who] ? [{ who, steps: scene.each[who]! }] : []))
   return {
-    id, title: householdTitle(id), spouses, play: id === 'finale' ? household.finale.play : null,
-    parts: [{ who: null, steps: scene.open }, ...beats, { who: null, steps: scene.close }],
+    id, title: householdTitle(id), spouses, play: id === 'finale' ? household.finale?.play ?? null : null,
+    parts: [{ who: null, steps: scene.open ?? [] }, ...beats, { who: null, steps: scene.close ?? [] }],
   }
 }
 

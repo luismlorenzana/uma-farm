@@ -108,7 +108,7 @@ export interface EventOutcome {
   plays: readonly PlayScore[]
   /** The proposal's ring: a ring in the Warehouse, used. */
   ring?: string
-  /** The wedding's place: one of her three. */
+  /** The wedding's place: one of her places. */
   place?: string
   /** The wedding's reception: a dish at its stars, used, or null for Marta's cake (with no dish held). */
   reception?: Reception
@@ -180,7 +180,7 @@ export interface EventCard {
 }
 
 /** The beat a rung plays, from her bible. */
-export const beatOf = (pack: Pick<StoryPack, 'bibles'>, id: string, rung: string): Beat | undefined => pack.bibles.get(id)?.route.find((b) => b.id === rung)
+export const beatOf = (pack: Pick<StoryPack, 'bibles'>, id: string, rung: string): Beat | undefined => pack.bibles.get(id)?.route?.find((b) => b.id === rung)
 
 /**
  * Her Ready event, played to its end: +50, each choice and each play's grade (or, with no
@@ -241,7 +241,7 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
   }
   if (rung === 'wedding') {
     const place = outcome.place
-    if (!place || !(weddingPlaces(pack, id) as readonly string[]).includes(place)) throw new SaveRuleError('bad-job', 'Choose one of her three places.')
+    if (!place || !(weddingPlaces(pack, id) as readonly string[]).includes(place)) throw new SaveRuleError('bad-job', 'Choose one of her places.')
     if (outcome.reception === undefined) throw new SaveRuleError('bad-job', 'Choose the reception.')
     const days = receptionOf({ items }, outcome.reception)
     if (outcome.reception) items = takeGoods(items, outcome.reception.dish, outcome.reception.stars, 1)

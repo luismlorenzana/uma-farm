@@ -2414,8 +2414,9 @@ The lines, one to a tap:
 <!-- /live -->
 
 > **On a v4 save (the romance build):** nothing plays until the farmer is named. The opening is re-cut: the Mayor
-> greets you by name, there are no hello lines, and it ends "Three Umas come up the road." Reading it brings the cast's
-> opening three, and each then plays her own arrival scene, the third ending on chapter 1's card. The closing scene's
+> greets you by name, there are no hello lines, and it ends as the opening's Umas come up the road ("Three Umas come up
+> the road." for the stand-in's three). Reading it brings them, and each then plays her own arrival scene, the last ending
+> on chapter 1's card. The closing scene's
 > newest hand is chapter 1's authored arrival. Ida Stone first appears at the ring bench, the morning after the first
 > Romance 8 event, in a scene that plays once the summary is put away, after any chapter scene and before arrivals.
 > The romance part covers the bench; its scene's lines are:
@@ -2515,48 +2516,72 @@ when the story says, and has a route of her own.
 
 #### What the pack holds
 
-The pack is a folder of JSON files, kept out of git. The game checks every file with one validator before it plays any of
-it.
+The pack is a folder of JSON files, kept out of git. **It's a menu, not a checklist:** every part is optional, any number
+of characters is fine, in any order, and nothing is counted. [The story pack's menu](story-pack.md) lists every field the
+game reads, what it does in play, and what plays when it's missing.
 
-| File | Holds | What the validator wants |
+| File | Holds | Without it |
 |---|---|---|
-| Cast | Every Uma in arrival order: her character id, outfit, calling, a short paragraph, her arrival and, optionally, her birthday; and the opening three | Each Uma once, each with an outfit; a calling of farming, foraging, fishing, mining or quarry (mining at the Quarry); an arrival that is the opening, a chapter 1–8, a festival (and optionally its year), a Dorm level 2–8, or after a named event; a birthday on a real date. Exactly three Umas arrive at the opening, and the opening three are, in order, a farmer, a forager and a fisher |
-| Ties | Each tie: two Umas, its kind, a strength of 1–3, a line and a history | Each pair once; the kind friends, rivals, mentor, teammates, sisters or other (shown as "Close"); every Uma with at least two ties |
-| Her bible (one per Uma) | Her profile texts, favourite line, season, festival, gifts, and her route's 27 beats; optionally her chat sets, keepsake, pet name, wedding places and wishes | Her favourite line is any activity but expeditions; her gifts are one loved, three liked and two disliked goods, each a good in the game or listed as proposed; every beat has its ladder, hearts, setup, place, what you do together, its caption and its hint |
-| Her route (one per Uma) | Her scripted events, one per beat | The event rules below; a route may be partial |
-| A pair's conversations | One conversation per bond level 1–5 for a tie's two Umas | Named by the two ids in numeric order; a tie's pair only; each level at most once |
-| The household | The household scenes at 5, 10 and 15 married, the finale with its play, and each spouse's house lines | Each scene once, with a beat for every cast Uma (the game reads it partial); a scene's opening and close speak only through narration and the town's cast, each beat is one Uma's; 1–10 house lines an Uma, each 1–120 characters |
+| Cast | The cast, in its order: each character's id and, optionally, her outfit, calling, birthday, trigger to meet, chapters and arrival; the welcome list; the opening | No characters |
+| Ties | Each tie: two characters and, optionally, its kind, a strength of 1–3 and a line | No ties |
+| Her bible (one per Uma) | Optionally her favourite line, gifts (loved, liked, disliked, any number each), her route's beats, chat sets, keepsake, pet name, wedding places and wishes. Her profile texts, season and festival are the story's own | Her calling's line, neutral tastes, her temperament's chats |
+| Her route (one per Uma) | Her scripted events, by rung, any of them | Her arrival is the game's own short scene; her other events wait |
+| A pair's conversations | Conversations at bond levels 1–5 for a tie's two Umas | The tie's line |
+| The household | Household scenes at 5, 10 and 15 married, house lines and the finale, every part optional | No household scenes; house lines from her temperament |
 
-**Her route's 27 beats** are her arrival ("event zero": hearts 0, no setup beyond hearts), Friendship 1–10, her
-confession, Romance 1–10, the proposal, the wedding and Spouse 1, 3 and 5. Each beat says:
+**One reader, two kinds of findings.** The game, the release and the Farm Story Sandbox read a pack with one reader
+(`readStoryPack`):
 
-- **its setup:** hearts only, or one thing the player controls: she works an activity, a named good is in the Warehouse,
-  her bond with a named Uma reaches a level 1–5, or a chapter 1–8 is reached. Never an hour, the weather, a season or a
-  festival;
+| | What | What happens |
+|---|---|---|
+| **An error** | Only what the game can't read: a file that isn't JSON or isn't the shape the game reads, a value the game can't use where it reads it, or a line longer than its screen | It skips the one part it's in (a line, a field, a beat, an event, a bond level, a tie, a character, at most a file); the rest plays |
+| **A note** | Everything else: what isn't written yet, an unusual count, a word that genders the farmer, a bible and the tag sheet disagreeing | Nothing: notes block nothing |
+
+**The game's backbone** stays as built, and the story writes any of it: her arrival ("event zero"), Friendship 1–10,
+her confession, Romance 1–10, the proposal, the wedding and Spouse 1, 3 and 5 are the 27 rungs the game plays an event
+at. A beat says, each optional:
+
+- **its setup:** her full bar only, or one thing the player controls: she works an activity, a named good is in the
+  Warehouse, her bond with a named Uma reaches a level 1–5, or a chapter 1–8 is reached. Never an hour, the weather, a
+  season or a festival;
 - **what you do together:** talk, work an activity, one of the ten date games (fishing, cooking, stargazing, footrace,
   dance, picnic, market, boat, walk, crafting), give a named good, or help another cast Uma;
-- **its caption** (the Memory's line) and **its hint** (what her profile says while it's next), and optionally **an
+- **its caption** (the Memory's line), **its hint** (what her profile says while it's next), its place, and **an
   unlock:** an item, a place or a perk in words.
 
-**Her optional fields:** chat sets (friend, partner and spouse, 3–20 lines each, 160 characters at most), a keepsake (a
-name of 1–40 characters and a line of 1–160), a pet name for you (1–24 characters, no placeholder, never gendered), three
-different wedding places, and wishes (her own house, her birthday alone).
-
 **A scripted event** is a list of steps: a line said by a cast Uma or the town's cast (with an optional emote: happy, shy,
-sad, angry, surprised, thinking, laughing or tender), narration, a thought, a pause of up to 5 s, a change of place, a
-flag, a branch on a flag, a choice, or a play.
+sad, angry, surprised, thinking, laughing or tender), narration, a thought, a pause, a change of place, a flag, a branch
+on a flag, a choice, or a play.
 
-- **A choice** has 2–3 options. Each has a tone (warm, playful or honest) and an authored gain of 0–50 friendship or
-  romance hearts; at least one option gains. An option may cost 1–5 of a good, reveal one of her gift tastes, or carry
-  steps that follow it.
-- **A heart event** has 1–2 choice points and at most one play on every path. **The confession, the proposal and the
-  wedding** have 1–3 choice points and at most three plays.
-- **The confession's last choice point** holds exactly one Yes and one Not yet, with no choice after it. No other choice
-  anywhere carries an answer.
-- **Her arrival** has exactly one choice point and no play.
+- **A choice** has any number of options, each with its text, an optional tone (warm, playful or honest) and an authored
+  gain that ranks the options. An option may cost a count of a good, reveal one of her gift tastes, or carry steps that
+  follow it.
+- **The usual sizes,** a note when an event leaves them, never a refusal: a heart event has 1–2 choice points and at most
+  one play on every path; the confession, the proposal and the wedding 1–3 choice points and at most three plays; a
+  choice two or three options.
+- **The confession's last choice point** holds one Yes and one Not yet. An option there without an answer counts as
+  Yes; answers anywhere else are ignored (a note).
+- **Her arrival** usually has one choice point and no play. Written with none it pays +50 alone; with more, the first
+  pays.
 
-**Every line** obeys three rules: `{farmer}` is the only placeholder; no word genders the farmer (husband, wife,
-boyfriend, girlfriend, groom, sir and the like, in anyone's lines, and bride in the farmer's own); nothing reads as school.
+**Every line** is within its screen's length (an error otherwise) and, as notes, follows three rules: `{farmer}` is the
+only placeholder; no word genders the farmer (husband, wife, boyfriend, girlfriend, groom, sir and the like, in anyone's
+lines, and bride in the farmer's own); nothing reads as school. A flag's name is one the save can keep (lowercase
+letters, digits and `- . : _`), and an option's cost and reveal name goods the game has: the save keeps them, so each is
+an error otherwise.
+
+#### The menu's welcome list, her trigger and her chapters
+
+The cast file also gives, all optional, three things the game reads now and acts on as meeting her and her chapters
+land:
+
+| Item | What it is | Without it |
+|---|---|---|
+| **The welcome list** (`welcome`) | Who comes to the farm in the first days, in order, any number | The first five of the cast, in its order |
+| **Her trigger to meet** (`meet`) | From the trigger menu: talks on *n* days, a gift, a town spot, a season, a festival, a Farm Rank, a place built, a good shipped, or after another character's event | Talk with her on three different days |
+| **Her chapters** (`chapters`) | Their titles, which of her rungs each holds, and an optional gate from the same menu | Four: "Getting to know her" (her arrival, F1–F10, the confession), "Together" (R1–R10, the proposal), "The wedding", "Married life" (S1, S3, S5) |
+
+The domain reads them through `welcomeOf`, `meetOf` and `chaptersOf`, each with its default.
 
 #### The pack at runtime
 
@@ -2564,21 +2589,26 @@ The game holds the cast, the ties, each bible by character id, the event ids eac
 tie's pair has a conversation at, and the household. Routes and pairs' conversations load on demand, the first time
 they're needed.
 
-- **Checked as it loads.** The cast, the ties and the bibles are checked whole. Routes, pairs and the household are read
-  **partial**: an unscripted beat waits ("Her story is still being written"), a pair's unwritten level gets the tie's
-  line, and a household beat not yet written is skipped. A pack with any other issue never plays.
+- **Read, never refused.** Every part is read on its own: a part with an error is skipped and the rest plays, so a pack
+  never stops the game. An unscripted rung waits ("Her story is still being written"), a pair's unwritten level gets the
+  tie's line, a household beat not yet written is skipped, and a character without a bible plays on her calling.
+- **What a missing part plays today:** a missing outfit shows a lettered disc ("An Uma"); a missing calling and favourite
+  line leave her with no line; a missing arrival leaves her off the farm until the opening or meeting her brings her; a
+  missing arrival scene plays the game's own; missing wedding places play the farm's. Placeholders for every read come
+  next.
 - **The save holds ids only:** her character id, rung ids, flags, counts. Never a line of the story.
 
 #### One outfit each, and the resolver
 
-- **Her outfit** is the cast file's, and it's required: the game never chooses. Her face, bust, talents and temperament
-  come from that outfit; her name is her character's. Talents aren't saved, so a changed outfit shows on the next boot.
+- **Her outfit** is the cast file's: the game never chooses. Her face, bust, talents and temperament come from that
+  outfit; her name is her character's. Talents aren't saved, so a changed outfit shows on the next boot. Without one, she
+  plays as her character id, which master data doesn't hold as an outfit, so she shows a lettered disc.
 - **One resolver** turns a roster id into the outfit it plays: the cast's outfit on v4, the id itself on v3. The app sees
   master data through it, so faces, busts, names, talents, temperaments and pickers all follow the cast with nothing else
   to change.
 - **A character master data doesn't hold** shows a lettered disc (her name's first letter and its number, "S1") and reads
   D talents in every activity. The stand-ins are named "Stand-in 1" to "Stand-in 3"; any other unknown character (one a
-  release drops) is "An Uma".
+  release drops, or one with no outfit) is "An Uma".
 
 #### The stand-in pack
 
@@ -2597,11 +2627,12 @@ the three outfits is in master data, so all three show lettered discs. The three
 
 #### How the app gets the pack
 
-- **The release** checks the private pack with the game's own validator and **refuses** it when anything fails, or when a
-  cast Uma lacks her bible or her arrival scene. Routes, pairs and the household may be partial. It writes each file
-  minified, named with the first 8 hex of its SHA-256 (`story/<name>.<hash8>.json`), and an index, `story.json`: every
-  file with its path, size and hash, the event ids each route scripts, and the bond levels each pair holds. The same pack
-  gives the same release.
+- **The release** reads the private pack with the game's own reader and **releases any pack**, partial or not: it lists
+  what it skipped (the errors) and the notes, and refuses only when there's no pack folder. It holds the pack as the game
+  reads it, every broken part already skipped and every other field kept, and always a cast and a ties file (empty when
+  the pack has none). It writes each file minified, named with the first 8 hex of its SHA-256
+  (`story/<name>.<hash8>.json`), and an index, `story.json`: every file with its path, size and hash, the event ids each
+  route scripts, and the bond levels each pair holds. The same pack gives the same release.
 - **The publish** uploads the hash-named files first and the index last, to a private bucket. Old files stay, so a phone
   holding an older index still reads it.
 - **farm-api serves it** to the owner only: the index fresh on every read, the hash-named files cached for good, and
@@ -2610,8 +2641,9 @@ the three outfits is in master data, so all three show lettered discs. The three
   loads when it's first needed. Every file is checked against the index's hash and kept in the content cache, so a
   release's file downloads once. The boot and the night wait for the pack, as they wait for master data.
 - **The last good index stays on the phone.** When the index can't be read (offline, or the server failing), the boot
-  plays the last version kept. A pack that can't load (no index and none kept, a file whose hash doesn't match, a file the
-  validator refuses) stops the boot with **Try again**.
+  plays the last version kept. The phone reads each file with the same reader, so a broken part is skipped there too. A
+  release that can't load (no index and none kept, a file whose hash doesn't match, a route or pair that isn't what the
+  index lists) stops the boot with **Try again**.
 - **The stand-in is the dev server's only:** it plays when farm-api serves no pack, or when it's asked for (as the tests
   do). The production build holds none of it, and the build's size check refuses one that does.
 
@@ -2644,9 +2676,12 @@ Day 1 runs in this order:
 1. **The name sheet.** Nothing else plays while the farmer is unnamed.
 2. **"The Overgrown Farm", re-cut.** The Mayor at the gate welcomes you by name, Old Ben gives the nine Carrot seeds and
    explains the tended row, Marta shows the shop and the bin, and three Umas come up the road.
-3. **Reading it or skipping it brings the opening three,** home in the Dorm at Friendship 0, their ties seeded.
-4. **Each one's arrival scene,** in the cast's order. The third ends on chapter 1's card and **Plant the
-   carrots**, which opens the Fields.
+3. **Reading it or skipping it brings the opening's Umas,** any number, in order: the cast file's `opening`, else those
+   whose arrival is the opening, else the welcome list. They're home in the Dorm at Friendship 0 while a bed is free
+   (day 1 has three), the rest away, their ties seeded. Its last line counts them ("An Uma comes up the road.", "Five
+   Umas come up the road.").
+4. **Each one's arrival scene,** in the cast's order. The last ends on chapter 1's card and **Plant the carrots**, which
+   opens the Fields. An opening that brings nobody ends on chapter 1's card itself.
 
 There are no hello lines and no picks. Chapter 1's reward names **a new hand** only when the cast has an Uma who arrives
 with chapter 1, and never says who; with none it reads "+500g, the Mill's plans, 250 Farm Rank points", and the Diary and
@@ -2671,18 +2706,19 @@ The re-cut opening's lines, as they play:
 
 #### Arrivals
 
-Each Uma's arrival is her cast entry's. The five kinds, and when each one is checked:
+Each Uma's arrival is her cast entry's, and it's optional. The five kinds, and when each one is checked:
 
 <!-- live:arrivals -->
 | Arrival | When she arrives | Checked |
 |---|---|---|
-| `opening` | The opening scene, day 1: read or skipped, it brings the cast file’s opening three, a farmer, a forager and a fisher | The opening scene |
+| `opening` | The opening scene, day 1: read or skipped, it brings the opening’s Umas: the cast file’s `opening` list, else those whose arrival is the opening, else the welcome list | The opening scene |
 | `chapter` | The night chapter *n* completes, in place of a drawn recruit (chapter 1 today; chapters 2–7 once they’re built) | Night step 8, `checkGoals` |
 | `festival` | The morning of that festival’s day in its year (year 1 unless the cast names one), built or not | Night step 8, `arriveUmas` |
 | `beds` | The morning the Dorm’s level *n* takes effect (levels 4–8) | Night step 8, `arriveUmas` |
 | `event` | The morning after another Uma’s named event plays (`<characterId>:<eventId>`, or an event id: anyone’s) | Night step 8, `arriveUmas` |
 <!-- /live -->
 
+- **No arrival:** a cast Uma with none, and not in the opening, stays off the farm until meeting her in town brings her.
 - **A state, checked each night** at step 8, after the Dorm settles: every cast Uma not on the roster whose arrival holds
   joins. A trigger already passed holds too, so she arrives that night.
 - **She joins** home while a bed is free, else away on her off-season (the Dorm's swap brings her home), at Friendship 0
@@ -2705,11 +2741,12 @@ Each Uma's arrival is her cast entry's. The five kinds, and when each one is che
 Her arrival scene plays the next time the farm opens with the morning summary put away: after the opening, any chapter
 scene due and the ring bench's scene, in the order the Umas joined (by day, then the cast's order). The scene player shows
 her lines with her bust (or her disc) and `{farmer}` filled, her emote as a word, narration, thoughts in italics, a title
-line ("Stand-in 1 arrives · Gate"), pauses, flags (wording only) and **her one choice**.
+line ("Stand-in 1 arrives · Gate"), pauses, flags (wording only) and **her choice**: usually one; written with none she
+pays +50 alone, and with more the first pays.
 
 - **Each option shows its gain on the button** before the tap.
 - **Skip** jumps to the choice, never past it; after the choice, to the end. So every arrival pays.
-- It ends on her bust, "♥ +80" (or +60) and **Welcome, ‹her name›**; the last of the opening three ends on chapter 1's
+- It ends on her bust, "♥ +80" (or +60) and **Welcome, ‹her name›**; the last of the opening's Umas ends on chapter 1's
   card instead.
 
 What it pays into her Friendship 1 bar:
@@ -2720,10 +2757,12 @@ What it pays into her Friendship 1 bar:
 | Played or skipped to its end | +50 |
 | Its choice: the option with the highest authored gain (each one tied at the top) | +30 |
 | Its choice: any other option | +10 |
+| Written with no choice | Nothing more |
+| Written with more than one choice | The first pays; the rest are words only |
 <!-- /live -->
 
 It pays once and is stamped once. A route without her arrival scene plays a short fallback (a new face at the Gate, two
-options worth +30 and +10). The release refuses a pack that lacks one, so only the stand-in can meet the fallback.
+options worth +30 and +10). Any pack can leave one unwritten: the release notes it, and the fallback plays.
 
 ### Her favourite line and tastes
 
@@ -2744,7 +2783,7 @@ options worth +30 and +10). The release refuses a pack that lacks one, so only t
 | Serving | The Restaurant |
 | Forging | The Forge |
 
-- **Her tastes** are her bible's: one loved, three liked and two disliked goods. Everything else is neutral, a good not in
+- **Her tastes** are her bible's: loved, liked and disliked goods, any number of each. Everything else is neutral, a good not in
   the game yet counts as neutral, and an Uma without a bible finds every good neutral.
 - **Her tastes show** in steps: her loved good from Friendship 1; any good once you've given it, or once an event's option
   or a Choose play has revealed it; every taste from Friendship 7.
@@ -3421,8 +3460,8 @@ No option scores below zero, removes a later event or changes the route. What an
 | Each choice: any other option | +10 |
 | Each play: Fine, Great, Perfect | +0, +15, +30 |
 | No play (help, talk): the best option taken a Perfect, any other a Great | +30 or +15 |
-| A heart event’s limits | 1–2 choice points, at most 1 play |
-| The confession’s, the proposal’s and the wedding’s limits | 1–3 choice points, at most 3 plays |
+| A heart event’s usual size (any other is a note, and plays) | 1–2 choice points, at most 1 play |
+| The confession’s, the proposal’s and the wedding’s usual size | 1–3 choice points, at most 3 plays |
 <!-- /live -->
 
 The sum goes **into her next bar** through the same rule as every act, so her anniversary's ×2 applies; then she moves up.
@@ -3760,7 +3799,7 @@ worth a little less keeps the bench a ring maker, not a mint (an Iron Ring: 180g
 #### The wedding and the reception
 
 - **Ready** the day after the proposal, and it **waits until you play it.**
-- **Play ›** asks **the place** first: her bible's three wedding places, else her wedding beat's place and the farm's
+- **Play ›** asks **the place** first: her bible's wedding places (any number), else her wedding beat's place and the farm's
   defaults (the chapel bell, the Fields, the Overlook, the orchard bench), three different. Her event then plays on that
   place's card.
 - **The guests** are every spouse on the farm (the cast's order), then her two closest friends on the farm. Their faces

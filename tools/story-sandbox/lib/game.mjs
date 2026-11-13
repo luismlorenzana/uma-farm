@@ -14,7 +14,7 @@ const SCENE_ID = /^scene:(\d+):(open|close)$/
 const isScene = (v) => v && typeof v === 'object' && typeof v.id === 'string' && SCENE_ID.test(v.id) && typeof v.title === 'string' && Array.isArray(v.beats)
 
 /** The files the sandbox reads, relative to the domain's `src/`. */
-const FIXED = { cast: 'story/cast.ts', places: 'farm/places.ts', talents: 'farm/talents.ts', ranks: 'farm/ranks.ts', lines: 'items/lines.ts', authored: 'story/authored.ts' }
+const FIXED = { cast: 'story/cast.ts', places: 'farm/places.ts', talents: 'farm/talents.ts', ranks: 'farm/ranks.ts', lines: 'items/lines.ts', authored: 'story/authored.ts', pack: 'story/pack.ts' }
 
 async function version(src, files) {
   const times = await Promise.all(files.map((f) => stat(join(src, f)).then((s) => s.mtimeMs, () => 0)))
@@ -31,7 +31,7 @@ export async function loadGame(src) {
     const files = [...Object.values(FIXED), ...chapters.map((n) => `story/${n}`)]
     const v = await version(src, files)
     const load = (file) => import(`${pathToFileURL(join(src, file)).href}?v=${v}`)
-    const [cast, places, talents, ranks, lines, authored] = await Promise.all(Object.values(FIXED).map(load))
+    const [cast, places, talents, ranks, lines, authored, pack] = await Promise.all(Object.values(FIXED).map(load))
     const scenes = {}
     let hello = null
     const fileOf = {}
@@ -55,13 +55,13 @@ export async function loadGame(src) {
       statTemperament: { ...talents.STAT_TEMPERAMENT },
       activities: [...ranks.ACTIVITIES],
       callings: [...lines.MATERIAL_LINES],
-      /** The authored format: its vocabulary for the page, and the validator the server runs (never sent as JSON). */
+      /** The authored format: its vocabulary for the page, and the game's own reader the server runs (never sent as JSON). */
       authored: {
         rungs: [...authored.RUNGS], places: [...authored.STORY_PLACES], festivals: [...authored.FESTIVALS], tieKinds: [...authored.TIE_KINDS],
-        dateGames: [...authored.DATE_GAMES], tones: [...authored.TONES], emotes: [...authored.EMOTES], callings: [...authored.CALLINGS],
+        dateGames: [...authored.DATE_GAMES], tones: [...authored.TONES], emotes: [...authored.EMOTES], callings: [...authored.CALLINGS], triggers: [...authored.TRIGGER_KINDS],
+        defaults: { meet: { ...authored.DEFAULT_MEET }, chapters: authored.DEFAULT_CHAPTERS.map((c) => ({ title: c.title, events: [...c.events] })), welcome: authored.DEFAULT_WELCOME },
       },
-      validator: { castIssues: authored.castIssues, tiesIssues: authored.tiesIssues, bibleIssues: authored.bibleIssues, routeIssues: authored.routeIssues, pairIssues: authored.pairIssues,
-        householdIssues: authored.householdIssues, tagsIssues: authored.tagsIssues, bibleTagIssues: authored.bibleTagIssues, unscriptedBeats: authored.unscriptedBeats },
+      validator: { readStoryPack: pack.readStoryPack, tagNotes: authored.tagNotes, bibleTagNotes: authored.bibleTagNotes, unscriptedBeats: authored.unscriptedBeats },
     }
   } catch (error) {
     return { ok: false, error: `The game's story didn't load: ${error.message.split('\n')[0]}` }

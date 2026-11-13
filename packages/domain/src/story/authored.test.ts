@@ -1,232 +1,334 @@
-// The authored story's format and validator, on the invented stand-in only.
+// The story's one reader, on the invented stand-in only: errors are only what the game can't read, each skipping the part
+// it's in; everything else is a note.
 import { describe, expect, it } from 'vitest'
-import { bibleIssues, bibleTagIssues, castIssues, pairIssues, routeIssues, RUNGS, stepIssues, tagsIssues, tiesIssues, type StoryContext, type TagEntry } from './authored'
+import {
+  bibleTagNotes, checkBible, checkCast, checkPair, checkRoute, checkTies, eventNotes, LINE_LIMITS, RUNGS, stepFindings, tagNotes, type StoryContext, type TagEntry,
+} from './authored'
 import { STAND_IN, STAND_IN_BIBLE, STAND_IN_CAST, STAND_IN_PAIR, STAND_IN_ROUTE, STAND_IN_TIES, STAND_INS } from './authored.fixture'
 
 const ctx: StoryContext = { umas: new Set(STAND_INS) }
 const clone = <T>(v: T): T => structuredClone(v)
 const speakers = new Set<string>([STAND_IN, 'hollis-pryor'])
+const clean = { errors: [], notes: [] }
 
-describe('the stand-in story passes', () => {
-  it('every layer', () => {
-    expect(castIssues(STAND_IN_CAST, ctx)).toEqual([])
-    expect(tiesIssues(STAND_IN_TIES, ctx)).toEqual([])
-    expect(bibleIssues(STAND_IN_BIBLE, ctx)).toEqual([])
-    expect(routeIssues(STAND_IN_ROUTE, STAND_IN_BIBLE, ctx)).toEqual([])
-    expect(pairIssues(STAND_IN_PAIR, ctx)).toEqual([])
+describe('the stand-in story reads clean', () => {
+  it('every file, with nothing skipped and nothing noted', () => {
+    expect(checkCast(STAND_IN_CAST)).toMatchObject(clean)
+    expect(checkTies(STAND_IN_TIES, ctx)).toMatchObject(clean)
+    expect(checkBible(STAND_IN_BIBLE, STAND_IN, ctx)).toMatchObject(clean)
+    expect(checkRoute(STAND_IN_ROUTE, STAND_IN, STAND_IN_BIBLE, ctx)).toMatchObject(clean)
+    expect(checkPair(STAND_IN_PAIR, ctx)).toMatchObject(clean)
   })
-  it('has the route’s 27 rungs: her arrival first, ending on the spouse ladder', () => {
+  it('reads each file as it is: nothing changes a clean file', () => {
+    expect(checkCast(STAND_IN_CAST).value).toEqual(STAND_IN_CAST)
+    expect(checkBible(STAND_IN_BIBLE, STAND_IN, ctx).value).toEqual(STAND_IN_BIBLE)
+    expect(checkRoute(STAND_IN_ROUTE, STAND_IN, STAND_IN_BIBLE, ctx).value).toEqual(STAND_IN_ROUTE)
+  })
+  it('the game plays an event at 27 rungs: her arrival first, ending on the spouse ladder', () => {
     expect(RUNGS).toHaveLength(27)
     expect(RUNGS[0]).toBe('arrival')
     expect(RUNGS.slice(-4)).toEqual(['wedding', 's1', 's3', 's5'])
   })
 })
 
-describe('the cast and the ties', () => {
-  it('every Uma of the export, once, with the opening three a farmer, a forager and a fisher', () => {
-    const cast = clone(STAND_IN_CAST)
-    cast.opening = ['9000002', '9000001', '9000003']
-    cast.umas.push({ ...cast.umas[0]!, characterId: '9000009' })
-    const issues = castIssues(cast, ctx)
-    expect(issues).toContain('Uma 4 (9000009): not in the export’s cast')
-    expect(issues).toContain('The opening three are, in order, a farmer, a forager and a fisher')
-    expect(issues).toContain('Exactly three Umas arrive at the opening')
-    expect(castIssues({ ...clone(STAND_IN_CAST), umas: clone(STAND_IN_CAST).umas.slice(0, 2) }, ctx)).toContain('9000003 from the export has no place in the cast')
+describe('the cast', () => {
+  it('needs only a character id: any number of characters, in any order, with no opening three', () => {
+    const read = checkCast({ umas: [{ characterId: '9000003' }, { characterId: '9000001' }] })
+    expect(read.errors).toEqual([])
+    expect(read.value.umas).toEqual([{ characterId: '9000003' }, { characterId: '9000001' }])
+    expect(read.notes).toEqual(['Uma 1 (9000003): no outfit, so she shows as a lettered disc', 'Uma 2 (9000001): no outfit, so she shows as a lettered disc'])
+    expect(checkCast({ umas: [] })).toMatchObject(clean)
+    expect(checkCast(undefined)).toMatchObject({ value: { umas: [] }, errors: [], notes: ['No cast: the pack holds no characters'] })
   })
-  it('every Uma needs two ties; a pair is tied once', () => {
-    const ties = clone(STAND_IN_TIES)
-    ties.ties = [ties.ties[0]!, { ...ties.ties[0]!, kind: 'rivals' }]
-    const issues = tiesIssues(ties, ctx)
-    expect(issues).toContain('Tie 2: 9000001|9000002 is tied twice')
-    expect(issues).toContain('9000003 has 0 ties; every Uma needs at least two')
+  it('takes the opening in any order and any number, a farmer or not', () => {
+    const cast = clone(STAND_IN_CAST)
+    cast.opening = ['9000002', '9000001']
+    expect(checkCast(cast)).toMatchObject({ ...clean, value: { opening: ['9000002', '9000001'] } })
+  })
+  it('skips only the character it can\'t read; a broken field skips that field', () => {
+    const cast = clone(STAND_IN_CAST) as unknown as { umas: Record<string, unknown>[] }
+    cast.umas.push({ characterId: 'Nine' }, { characterId: '9000001', calling: 'farming' })
+    cast.umas[1]!.calling = 'juggling'
+    cast.umas[2]!.arrives = { kind: 'festival', festival: 'moon-dance' }
+    const read = checkCast(cast)
+    expect(read.errors).toEqual([
+      'Uma 2 (9000002): calling is one of farming, foraging, fishing, mining, quarry; skipped',
+      'Uma 3 (9000003): arrives is the opening, a chapter, a festival (and a year), the Dorm’s beds, or after an event; skipped',
+      'Uma 4: no characterId (master data’s id, a positive integer); skipped',
+      'Uma 5 (9000001): listed twice; the later one is skipped',
+    ])
+    expect(read.value.umas.map((u) => u.characterId)).toEqual([...STAND_INS])
+    expect(read.value.umas[1]).not.toHaveProperty('calling')
+    expect(read.value.umas[1]!.outfitId).toBe('900000201')
+    expect(read.value.umas[2]).not.toHaveProperty('arrives')
+  })
+  it('keeps the fields the game doesn\'t read, for the story', () => {
+    const cast = { ...clone(STAND_IN_CAST), mood: 'sunny', umas: [{ characterId: '9000001', voice: 'low', paragraph: 'Hers.' }] }
+    expect(checkCast(cast).value).toEqual(cast)
+  })
+  it('notes a welcome or opening id that isn\'t in the cast, and a character outside the Studio export', () => {
+    const read = checkCast({ ...clone(STAND_IN_CAST), welcome: ['9000002', '9000009', '9000002', 'x'] }, { exported: new Set(['9000001', '9000002']) })
+    expect(read.errors).toEqual(['welcome 4: x isn’t one of character ids; skipped'])
+    expect(read.notes).toEqual([
+      'Uma 3 (9000003): not in the Studio export',
+      'welcome: 9000002 is listed twice; once is kept',
+      'welcome: 9000009 isn’t in the cast; she has no cast entry yet',
+    ])
+    expect(read.value.welcome).toEqual(['9000002', '9000009'])
   })
 })
 
-describe('the bible', () => {
-  it('gifts are goods that exist, or flagged proposals', () => {
-    const bible = clone(STAND_IN_BIBLE)
-    bible.gifts.loved = 'moon-cake'
-    expect(bibleIssues(bible, ctx)).toContain('Gift moon-cake isn’t a good; list it under proposed if it’s a new one')
-    bible.gifts.proposed = ['moon-cake']
-    expect(bibleIssues(bible, ctx)).toEqual([])
+describe('the menu: her trigger to meet and her chapters', () => {
+  const entry = (more: Record<string, unknown>) => checkCast({ umas: [{ characterId: '9000001', outfitId: '900000101', ...more }] })
+  it('reads every trigger on the menu', () => {
+    const triggers = [
+      { kind: 'talks', days: 5 }, { kind: 'gift' }, { kind: 'gift', good: 'carrot' }, { kind: 'spot', spot: 'plaza' }, { kind: 'season', season: 'winter' },
+      { kind: 'festival', festival: 'harvest-cup' }, { kind: 'farm-rank', rank: 4 }, { kind: 'built', place: 'kitchen' }, { kind: 'shipped', good: 'carrot', count: 50 },
+      { kind: 'event', after: '9000002:f3' },
+    ]
+    for (const meet of triggers) expect(entry({ meet })).toMatchObject({ ...clean, value: { umas: [{ meet }] } })
   })
-  it('every rung, each with a trigger, a place, what they do together and its hint', () => {
-    const bible = clone(STAND_IN_BIBLE)
-    bible.route = bible.route.filter((b) => b.id !== 's5')
-    bible.route[1] = { ...bible.route[1]!, together: { kind: 'date', game: 'karaoke' as never }, hint: '' }
-    const issues = bibleIssues(bible, ctx)
-    expect(issues).toContain('Her route has no s5 (a route has all 27 rungs)')
-    expect(issues.some((i) => /Beat f1: a date is one of/.test(i))).toBe(true)
-    expect(issues).toContain('Beat f1: no hint, the line her profile shows while it’s next')
+  it('skips a trigger it can\'t read, and notes one that never holds', () => {
+    expect(entry({ meet: { kind: 'talks', days: 0 } }).errors).toEqual(['Uma 1 (9000001) meet: talks names its days, from 1; skipped'])
+    expect(entry({ meet: { kind: 'weather', sky: 'rain' } }).errors).toEqual(['Uma 1 (9000001) meet: a trigger is one of talks, gift, spot, season, festival, farm-rank, built, shipped, event; skipped'])
+    expect(entry({ meet: { kind: 'built', place: 'castle' } }).value.umas[0]).not.toHaveProperty('meet')
+    expect(entry({ meet: { kind: 'farm-rank', rank: 12 } }).notes).toEqual(['Uma 1 (9000001) meet: Farm Rank 12 is past the top, 10, so it never holds'])
+    expect(entry({ meet: { kind: 'shipped', good: 'moon-cake', count: 3 } }).notes).toEqual(['Uma 1 (9000001) meet: moon-cake isn’t a good in the game yet, so it can’t be shipped'])
   })
-  it('nothing waits on the calendar: no season, festival, clock or weather trigger', () => {
+  it('reads her chapters: titles, her events in them, a gate from the same menu; notes rungs outside them', () => {
+    const chapters = [
+      { title: 'Spring', events: ['arrival', 'f1', 'f2'] },
+      { title: 'Summer', events: ['f3', 'f4'], gate: { kind: 'built', place: 'kitchen' } },
+    ]
+    const read = entry({ chapters })
+    expect(read.errors).toEqual([])
+    expect(read.value.umas[0]!.chapters).toEqual(chapters)
+    expect(read.notes).toEqual([`Uma 1 (9000001): ${RUNGS.slice(5).join(', ')} are in none of her chapters`])
+  })
+  it('skips a chapter title too long for her profile, a gate it can\'t read, and notes the rest', () => {
+    const read = entry({ chapters: [{ title: 'x'.repeat(LINE_LIMITS.chapterTitle + 1), events: ['f1', 'f9', 'zz'], gate: { kind: 'built' } }, { events: ['f1'] }, 'Three'] })
+    expect(read.errors).toEqual([
+      'Uma 1 (9000001), chapter 1: its title is 41 characters; the screen shows 40; skipped',
+      'Uma 1 (9000001), chapter 1 gate: built names one of the farm’s places; skipped',
+      'Uma 1 (9000001), chapter 3: not a chapter; skipped',
+    ])
+    expect(read.notes).toContain('Uma 1 (9000001), chapter 1: zz isn’t a rung the game plays')
+    expect(read.notes).toContain('Uma 1 (9000001), chapter 2: f1 is in chapter 1 too; the first holds it')
+    expect(read.notes).toContain('Uma 1 (9000001), chapter 2: no title')
+    expect(read.value.umas[0]!.chapters).toEqual([{ events: ['f1', 'f9', 'zz'] }, { events: ['f1'] }])
+  })
+})
+
+describe('the ties', () => {
+  it('need only their two characters; a pair tied twice is skipped, a bad kind or strength skipped alone', () => {
+    const ties = clone(STAND_IN_TIES) as unknown as { ties: Record<string, unknown>[] }
+    ties.ties = [{ a: '9000001', b: '9000002' }, { ...ties.ties[0]!, kind: 'rivals' }, { a: '9000002', b: '9000003', kind: 'cousins', strength: 4 }, { a: '9000003', b: '9000003' }]
+    const read = checkTies(ties, ctx)
+    expect(read.errors).toEqual([
+      'Tie 2: 9000001 and 9000002 are tied already; skipped',
+      'Tie 3: kind is one of friends, rivals, mentor, teammates, sisters, other; skipped',
+      'Tie 3: strength is 1–3; skipped',
+      'Tie 4: a tie names two different characters, a and b; skipped',
+    ])
+    expect(read.value.ties).toEqual([{ a: '9000001', b: '9000002' }, { a: '9000002', b: '9000003' }])
+    expect(read.notes).toEqual([])
+  })
+  it('notes a tie to someone outside the cast; no Uma needs two ties', () => {
+    expect(checkTies({ ties: [{ a: '9000001', b: '9000009' }] }, ctx).notes).toEqual(['Tie 1: 9000009 isn’t in the cast, so the tie never starts'])
+    expect(checkTies({ ties: [] }, ctx)).toMatchObject(clean)
+  })
+})
+
+describe('her bible', () => {
+  it('needs nothing but its file\'s id; a bad field is skipped alone', () => {
+    expect(checkBible({}, '9000002', ctx)).toMatchObject({ ...clean, value: { characterId: '9000002' } })
+    const read = checkBible({ ...clone(STAND_IN_BIBLE), favouriteLine: 'expeditions', gifts: { loved: 7, liked: ['carrot', 'moon-cake'], disliked: 'onion' } }, STAND_IN, ctx)
+    expect(read.errors).toEqual([
+      'gifts.loved is a goods id; skipped',
+      'gifts.disliked: a list of goods ids; skipped',
+      'favouriteLine is one of farming, ranch, mining, fishing, foraging, cooking, serving, forging; skipped',
+    ])
+    expect(read.notes).toEqual(['gifts.liked: moon-cake isn’t a good in the game, so she finds it neutral'])
+    expect(read.value!.gifts).toEqual({ liked: ['carrot', 'moon-cake'] })
+    expect(read.value).not.toHaveProperty('favouriteLine')
+  })
+  it('takes any number of gifts, a proposed good noted', () => {
+    const read = checkBible({ characterId: STAND_IN, gifts: { loved: 'moon-cake', liked: ['carrot', 'potato', 'cabbage', 'onion', 'basil'], proposed: ['moon-cake'] } }, STAND_IN, ctx)
+    expect(read).toMatchObject({ errors: [], notes: ['gifts.loved: moon-cake isn’t a good in the game yet (proposed), so she finds it neutral'] })
+  })
+  it('takes any of her rungs, in any order; a beat it can\'t read is skipped, a bad field alone', () => {
     const bible = clone(STAND_IN_BIBLE)
-    bible.route[1] = { ...bible.route[1]!, trigger: { kind: 'season', season: 'spring' } as never }
-    bible.route[2] = { ...bible.route[2]!, trigger: { kind: 'item', good: 'golden-carrot' } }
-    const issues = bibleIssues(bible, ctx)
-    expect(issues).toEqual(['Beat f1: a trigger is hearts, working, item, bond or chapter; never a clock, the weather, a season or a festival'])
+    bible.route = [
+      { ...bible.route![3]!, together: { kind: 'date', game: 'karaoke' } as never, hint: '' },
+      bible.route![0]!,
+      { id: 'f11', beat: 'Extra.' },
+      { ...bible.route![2]!, trigger: { kind: 'season', season: 'spring' } as never },
+      { hint: 'No id.' } as never,
+    ]
+    const read = checkBible(bible, STAND_IN, ctx)
+    expect(read.errors).toEqual([
+      'Beat f3: together is talk, work, date, gift or help; skipped',
+      'Beat f3 hint: no hint; skipped',
+      'Beat f2: trigger is hearts, working, item, bond or chapter (never a clock, the weather, a season or a festival); skipped',
+      'Beat 5: no id; skipped',
+    ])
+    expect(read.notes).toEqual([`Beat f11: not a rung the game plays (${RUNGS.join(', ')}); kept for the story`])
+    expect(read.value!.route!.map((b) => b.id)).toEqual(['f3', 'arrival', 'f11', 'f2'])
+    expect(read.value!.route![0]).not.toHaveProperty('together')
+    expect(read.value!.route![3]).not.toHaveProperty('trigger')
+  })
+  it('notes what waits forever: an item that isn\'t a good, a bond with someone outside the cast', () => {
+    const bible = clone(STAND_IN_BIBLE)
+    bible.route = [{ ...bible.route![1]!, trigger: { kind: 'item', good: 'moon-cake' } }, { ...bible.route![2]!, trigger: { kind: 'bond', with: '9000009', level: 2 } }]
+    expect(checkBible(bible, STAND_IN, ctx).notes).toEqual([
+      'Beat f1: she waits for moon-cake, which isn’t in the game yet',
+      'Beat f2: a bond with 9000009, who isn’t in the cast, never forms',
+    ])
+  })
+  it('notes a characterId that isn\'t its file\'s, and reads it by the file', () => {
+    expect(checkBible({ characterId: '9000002' }, STAND_IN, ctx)).toMatchObject({ errors: [], notes: ['its characterId is 9000002; the game reads it as 9000001’s, by its file’s name'], value: { characterId: STAND_IN } })
   })
 })
 
 describe('the scripted steps', () => {
-  it('the farmer is never gendered and nothing reads as school', () => {
-    const issues = stepIssues([
+  it('a line longer than the screen is an error; the line rules are notes', () => {
+    const f = stepFindings([
       { say: STAND_IN, line: 'Good morning, sir.' },
       { choice: [{ text: 'I’m your husband now.', tone: 'warm', friendship: 10 }, { text: 'Hello.', tone: 'honest', friendship: 5 }] },
       { thought: 'I feel like a bride.' },
       { thought: 'Old Ben would say he told me so.' },
-      { say: STAND_IN, line: 'Like my old classmates.' },
+      { say: STAND_IN, line: 'Like my old classmates, {name}.' },
+      { narrate: 'x'.repeat(LINE_LIMITS.line + 1) },
     ], 'Event', speakers)
-    expect(issues).toEqual([
+    expect(f.errors).toEqual(['Event, step 6: its narration is 401 characters; the screen shows 400'])
+    expect(f.notes).toEqual([
       'Event, step 1: “sir” genders the farmer',
       'Event, step 2, option 1: “husband” genders the farmer',
       'Event, step 3: “bride” genders the farmer',
+      'Event, step 5: {name} shows as written ({farmer} is the one placeholder)',
       'Event, step 5: “classmates” reads as school',
     ])
   })
-  it('choices: 2–3 options, a tone each, gains shown and never negative, one that gains', () => {
-    const issues = stepIssues([
-      { choice: [{ text: 'Only one.', tone: 'warm', friendship: 5 }] },
-      { choice: [{ text: 'Cold.', tone: 'cruel' as never, friendship: -10 }, { text: 'Flat.', tone: 'honest' }] },
-    ], 'Event', speakers)
-    expect(issues).toContain('Event, step 1: a choice has 2–3 options')
-    expect(issues).toContain('Event, step 2, option 1: tone is warm, playful or honest')
-    expect(issues).toContain('Event, step 2, option 1: friendship is 0–50 (no answer costs hearts)')
-    expect(issues).toContain('Event, step 2: at least one option gains hearts')
+  it('a choice with any number of options plays; one with none, or an option with no text, can\'t', () => {
+    expect(stepFindings([{ choice: [{ text: 'Only one.', friendship: 5 }] }], 'E', speakers)).toEqual({ errors: [], notes: ['E, step 1: one option, so there’s nothing to choose'] })
+    const four = Array.from({ length: 4 }, (_, i) => ({ text: `${i}.`, friendship: i }))
+    expect(stepFindings([{ choice: four }], 'E', speakers).notes).toEqual(['E, step 1: 4 options; more than three crowd the screen'])
+    expect(stepFindings([{ choice: [] }], 'E', speakers).errors).toEqual(['E, step 1: a choice lists its options'])
+    expect(stepFindings([{ choice: [{ tone: 'warm' }, { text: 'Yes.' }] }], 'E', speakers).errors).toEqual(['E, step 1, option 1: no text'])
+    const f = stepFindings([{ choice: [{ text: 'Cold.', tone: 'cruel', friendship: -10 }, { text: 'Flat.', tone: 'honest' }] }], 'E', speakers)
+    expect(f.errors).toEqual([])
+    expect(f.notes).toEqual([
+      'E, step 1, option 1: the tone cruel isn’t one of warm, playful, honest',
+      'E, step 1, option 1: friendship -10 is outside the usual 0–50; a gain only ranks the options (+30 the best, +10 the rest)',
+      'E, step 1: no option gains hearts, so each pays the best (+30)',
+    ])
   })
-  it('only the cast speaks; {farmer} is the one placeholder', () => {
-    const issues = stepIssues([{ say: 'farmer', line: 'Hi.' }, { say: STAND_IN, line: 'Hi, {name}.' }, { play: { game: 'karaoke', prompt: 'Sing' } }], 'Event', speakers)
-    expect(issues).toContain('Event, step 1: farmer can’t speak here')
-    expect(issues).toContain('Event, step 2: unknown placeholder {name} ({farmer} only)')
-    expect(issues).toContain('Event, step 3: a play names its game and a prompt')
+  it('an option\'s goods, taste and answer are what the save keeps, so a bad one is an error', () => {
+    const choose = (extra: Record<string, unknown>) => [{ choice: [{ text: 'Yes.', friendship: 20, ...extra }, { text: 'No.', friendship: 10 }] }]
+    expect(stepFindings(choose({ gives: { good: 'basil', count: 6 } }), 'E', speakers)).toEqual({ errors: [], notes: ['E, step 1, option 1: gives 6, more than the usual 1–5'] })
+    expect(stepFindings(choose({ gives: { good: 'moon-cake', count: 1 } }), 'E', speakers).errors).toEqual(['E, step 1, option 1: gives is { good, count }, a good the game has and a count from 1'])
+    expect(stepFindings(choose({ reveals: 'moon-cake' }), 'E', speakers).errors).toEqual(['E, step 1, option 1: reveals names a good the game has'])
+    expect(stepFindings(choose({ answer: 'maybe' }), 'E', speakers).errors).toEqual(['E, step 1, option 1: answer is yes or not-yet'])
   })
-  it('a route scripts every beat of her bible, and a pair talks at every bond level', () => {
-    const route = clone(STAND_IN_ROUTE)
-    route.events = route.events.filter((e) => e.id !== 'wedding')
-    route.events.push({ id: 'f11', steps: [{ narrate: 'Extra.' }] })
-    const issues = routeIssues(route, STAND_IN_BIBLE, ctx)
-    expect(issues).toContain('Beat wedding has no scripted event')
-    expect(issues).toContain('Event f11 isn’t a beat in her bible')
-    const pair = clone(STAND_IN_PAIR)
-    pair.levels = pair.levels.slice(0, 4)
-    expect(pairIssues(pair, ctx)).toEqual(['No conversation at bond level 5'])
+  it('a flag is what the save keeps; a play names its game; a `when` holds its steps', () => {
+    expect(stepFindings([{ flag: 'Shared lunch!' }], 'E', speakers).errors).toEqual(['E, step 1: a flag is lowercase letters, digits and - . : _ (up to 64), as the save keeps it'])
+    expect(stepFindings([{ flag: 'shared-lunch' }], 'E', speakers)).toEqual({ errors: [], notes: [] })
+    expect(stepFindings([{ play: { game: 'karaoke', prompt: 'Sing' } }], 'E', speakers).errors).toEqual(['E, step 1: a play names its game (a date game or an activity)'])
+    expect(stepFindings([{ play: { game: 'walk' } }], 'E', speakers)).toEqual({ errors: [], notes: [] })
+    expect(stepFindings([{ play: { game: 'fishing', prompt: 'Cast', as: 'pick' } }], 'E', speakers).notes).toEqual(['E, step 1: as (pick or rhythm) is a farming play’s; it’s ignored here'])
+    expect(stepFindings([{ when: 'met', then: [] }], 'E', speakers)).toEqual({ errors: [], notes: [] })
+    expect(stepFindings([{ when: 'met', then: 'Again!' }], 'E', speakers).errors).toEqual(['E, step 1 then: steps are a list'])
+    expect(stepFindings([{ dance: true }, 'Hi.'], 'E', speakers).errors).toEqual(['E, step 1: not a step the game plays', 'E, step 2: not a step'])
+    expect(stepFindings([], 'E', speakers).errors).toEqual(['E: no steps'])
+  })
+  it('a speaker outside the scene\'s, an unknown place, an emote off the menu and a long wait are notes', () => {
+    expect(stepFindings([{ say: 'farmer', line: 'Hi.', emote: 'smug' }, { place: 'moon' }, { wait: 9000 }], 'E', speakers).notes).toEqual([
+      'E, step 1: farmer isn’t one who speaks here (one outside the cast shows as “An Uma”)',
+      'E, step 1: the emote smug shows as its word (the menu’s are happy, shy, sad, angry, surprised, thinking, laughing, tender)',
+      'E, step 2: moon isn’t one of the game’s places; its title line shows the words',
+      'E, step 3: a wait of 9000 ms plays as 0–5000',
+    ])
   })
 })
 
-describe('heart events', () => {
+describe('a route', () => {
   const say = (line: string) => ({ say: STAND_IN, line })
   const choose = (extra: Record<string, unknown> = {}) => ({ choice: [{ text: 'Yes.', tone: 'warm' as const, friendship: 20, ...extra }, { text: 'No.', tone: 'honest' as const, friendship: 10 }] })
-  const play = (game = 'fishing', extra: Record<string, unknown> = {}) => ({ play: { game, prompt: 'Together', ...extra } })
+  const play = (game = 'fishing') => ({ play: { game, prompt: 'Together' } })
   const routeWith = (id: string, steps: unknown[]) => {
     const route = clone(STAND_IN_ROUTE)
     route.events = route.events.map((e) => (e.id === id ? { id, steps: steps as never } : e))
-    return routeIssues(route, STAND_IN_BIBLE, ctx)
+    return checkRoute(route, STAND_IN, STAND_IN_BIBLE, ctx)
   }
 
-  it('the stand-in route plays every kind: Cast, Pick, Rhythm (farming and a fallback), Walk, Choose, help, talk, a cost, a taste, a flag, a `when`, and a confession with two plays and Yes and Not yet', () => {
-    const events = new Map(STAND_IN_ROUTE.events.map((e) => [e.id, JSON.stringify(e.steps)]))
-    const together = new Map(STAND_IN_BIBLE.route.map((b) => [b.id, b.together]))
-    expect(events.get('f3')).toContain('"game":"fishing"')
-    expect(events.get('f1')).toContain('"as":"pick"')
-    expect(events.get('f2')).toContain('"as":"rhythm"')
-    expect(together.get('f4')).toEqual({ kind: 'work', activity: 'cooking' })
-    expect(together.get('f5')).toEqual({ kind: 'date', game: 'walk' })
-    expect(together.get('f6')?.kind).toBe('gift')
-    expect(together.get('f7')?.kind).toBe('talk')
-    expect(together.get('f8')?.kind).toBe('help')
-    expect(events.get('f4')).toContain('"gives":{"good":"basil","count":1}')
-    expect(events.get('f7')).toContain('"reveals":"potato"')
-    expect(events.get('f8')).toContain('"flag":"shared-lunch"')
-    expect(events.get('f9')).toContain('"when":"shared-lunch"')
-    expect(events.get('confession')!.match(/"play"/g)).toHaveLength(2)
-    expect(events.get('confession')).toContain('"answer":"not-yet"')
+  it('skips only a broken event; the rest play', () => {
+    const read = routeWith('f2', [say('Hi.'), { choice: [] }])
+    expect(read.errors).toEqual(['Event f2, step 2: a choice lists its options (the event is skipped)'])
+    expect(read.value!.events.map((e) => e.id)).toEqual(RUNGS.filter((r) => r !== 'f2'))
   })
-
-  it('`play.as` is a farming play\'s, pick or rhythm', () => {
-    expect(stepIssues([play('fishing', { as: 'pick' })], 'E', speakers)).toEqual(['E, step 1: as (pick or rhythm) is a farming play’s only'])
-    expect(stepIssues([play('farming', { as: 'sing' })], 'E', speakers)).toEqual(['E, step 1: as (pick or rhythm) is a farming play’s only'])
-    expect(stepIssues([play('farming', { as: 'rhythm' })], 'E', speakers)).toEqual([])
+  it('takes a partial route, an event not in her bible, and one off the rungs (a note)', () => {
+    const route = clone(STAND_IN_ROUTE)
+    route.events = [...route.events.filter((e) => e.id !== 'wedding'), { id: 'f11', steps: [{ narrate: 'Extra.' }, { choice: [{ text: 'Go on.', friendship: 5 }, { text: 'Stop.' }] }] }]
+    expect(checkRoute(route, STAND_IN, null, ctx)).toMatchObject({ errors: [], notes: ['Event f11: not a rung the game plays; kept for the story'] })
   })
-
-  it('an option gives 1–5 of a good, reveals a good (one of her gifts), and only the confession answers', () => {
-    expect(stepIssues([choose({ gives: { good: 'basil', count: 6 } })], 'E', speakers)).toEqual(['E, step 1, option 1: gives is { good, count 1–5 }, a good that exists'])
-    expect(stepIssues([choose({ gives: { good: 'moon-cake', count: 1 } })], 'E', speakers)).toEqual(['E, step 1, option 1: gives is { good, count 1–5 }, a good that exists'])
-    expect(stepIssues([choose({ reveals: 'moon-cake' })], 'E', speakers)).toEqual(['E, step 1, option 1: reveals names a good'])
-    expect(stepIssues([choose({ answer: 'maybe' })], 'E', speakers)).toEqual(['E, step 1, option 1: answer is yes or not-yet'])
-    expect(routeWith('f1', [say('Hi.'), choose({ reveals: 'onion' })])).toEqual(['Event f1: reveals onion, which isn’t one of her gifts'])
-    expect(routeWith('f1', [say('Hi.'), choose({ answer: 'yes' })])).toEqual(['Event f1: only the confession’s last choice point carries an answer'])
+  it('notes an event outside its usual size; each choice and play pays', () => {
+    expect(routeWith('f1', [say('Hi.'), choose(), play(), play()]).notes).toEqual(['Event f1: 2 plays, more than the usual 1; each pays'])
+    expect(routeWith('f1', [choose(), choose(), choose()]).notes).toEqual(['Event f1: 3 choice points on a path, outside the usual 1–2; each pays'])
+    expect(routeWith('f1', [say('Hi.'), play()]).notes).toEqual(['Event f1: 0 choice points on a path, outside the usual 1–2; each pays'])
+    expect(routeWith('f1', [{ when: 'x', then: [choose()], else: [say('No choice.')] }]).notes).toEqual(['Event f1: 0–1 choice points on a path, outside the usual 1–2; each pays'])
+    expect(routeWith('wedding', [play(), choose(), choose(), choose()])).toMatchObject(clean)
   })
-
-  it('a `when` names a flag and holds steps', () => {
-    expect(stepIssues([{ when: '', then: [] }], 'E', speakers)).toEqual(['E, step 1: when names a flag', 'E, step 1 then: no steps'])
-    expect(stepIssues([{ when: 'met', then: [say('Again!')], else: [say('Hello.')] }], 'E', speakers)).toEqual([])
-  })
-
-  it('a heart event: 1–2 choice points on every path, at most one play', () => {
-    expect(routeWith('f1', [say('Hi.'), choose(), play(), play()])).toEqual(['Event f1: at most 1 play (it has 2)'])
-    expect(routeWith('f1', [choose(), choose(), choose()])).toEqual(['Event f1: every path has 1–2 choice points (it has 3–3)'])
-    expect(routeWith('f1', [say('Hi.'), play()])).toEqual(['Event f1: every path has 1–2 choice points (it has 0–0)'])
-    // A choice in one option's `then` makes two on that path, one on the other.
-    expect(routeWith('f1', [{ choice: [{ text: 'A.', tone: 'warm', friendship: 20, then: [choose()] }, { text: 'B.', tone: 'warm', friendship: 10 }] }])).toEqual([])
-    expect(routeWith('f1', [{ when: 'x', then: [choose()], else: [say('No choice.')] }])).toEqual(['Event f1: every path has 1–2 choice points (it has 0–1)'])
-  })
-
-  it('the confession, the proposal and the wedding: up to three plays and three choice points; the confession ends on Yes and Not yet', () => {
+  it('notes the confession\'s answers, a reveal that isn\'t one of her gifts, and an answer off the confession', () => {
     const answer = { choice: [{ text: 'Yes.', tone: 'warm', romance: 20, answer: 'yes' }, { text: 'Not yet.', tone: 'honest', friendship: 10, answer: 'not-yet' }] }
-    expect(routeWith('confession', [play(), play(), play(), choose(), answer])).toEqual([])
-    expect(routeWith('confession', [play(), play(), play(), play(), answer])).toEqual(['Event confession: at most 3 plays (it has 4)'])
-    expect(routeWith('confession', [choose(), choose()])).toEqual(['Event confession: its last choice point has one Yes (answer: yes) and one Not yet (answer: not-yet)'])
-    expect(routeWith('confession', [{ choice: [{ text: 'Yes.', tone: 'warm', romance: 20, answer: 'yes' }, { text: 'Also yes.', tone: 'warm', romance: 10, answer: 'yes' }] }]))
-      .toEqual(['Event confession: its last choice point has one Yes (answer: yes) and one Not yet (answer: not-yet)'])
-    expect(routeWith('confession', [{ choice: [{ text: 'Yes.', tone: 'warm', romance: 20, answer: 'yes', then: [choose()] }, answer.choice[1]] }]))
-      .toContain('Event confession: no choice point after its answer')
-    expect(routeWith('confession', [choose({ answer: 'yes' }), answer])).toEqual(['Event confession: only its last choice point carries an answer'])
-    expect(routeWith('wedding', [play(), choose(), choose(), choose()])).toEqual([])
-    expect(routeWith('wedding', [choose(), choose(), choose(), choose()])).toEqual(['Event wedding: every path has 1–3 choice points (it has 4–4)'])
+    expect(routeWith('confession', [play(), choose(), answer])).toMatchObject(clean)
+    expect(routeWith('confession', [choose(), choose()]).notes).toEqual(['Event confession: its last choice point has no answer: yes and no answer: not-yet; an option without an answer counts as Yes'])
+    expect(routeWith('confession', [choose({ answer: 'yes' }), answer]).notes).toEqual(['Event confession: only its last choice point’s answers count'])
+    expect(routeWith('f1', [say('Hi.'), choose({ reveals: 'onion' })]).notes).toEqual(['Event f1: reveals onion, which isn’t one of her gifts (she finds it neutral)'])
+    expect(routeWith('f1', [say('Hi.'), choose({ answer: 'yes' })]).notes).toEqual(['Event f1: only the confession’s answers count; these are ignored'])
+  })
+  it('her arrival: any number of choice points, a play shown as a pause', () => {
+    expect(eventNotes('arrival', [say('Hi.')], null)).toEqual(['Event arrival: no choice point, so it pays +50 and no choice'])
+    expect(eventNotes('arrival', [choose(), choose()], null)).toEqual(['Event arrival: 2 choice points; only the first pays'])
+    expect(eventNotes('arrival', [play(), choose()], null)).toEqual(['Event arrival: an arrival plays no play; it shows as a pause'])
   })
 })
 
-describe('the cast on the Ranker', () => {
-  it('records the Ranker’s revisions, optional and checked when present', () => {
-    expect(castIssues({ ...clone(STAND_IN_CAST), ranker: { boardRevision: 337, profilesRevision: 6, pulledAt: '2026-11-12T10:00:00Z' } }, ctx)).toEqual([])
-    expect(castIssues({ ...clone(STAND_IN_CAST), ranker: { boardRevision: 0, profilesRevision: 6, pulledAt: 'yesterday' } }, ctx))
-      .toEqual(['ranker is { boardRevision, profilesRevision, pulledAt }: two revisions from 1 and a date'])
+describe('a pair\'s conversations', () => {
+  it('any levels; a broken level is skipped, a level twice skipped, one off 1–5 noted', () => {
+    const pair = clone(STAND_IN_PAIR)
+    pair.levels = [pair.levels[0]!, { ...pair.levels[1]!, steps: [{ say: '9000001', line: 'x'.repeat(401) }] }, pair.levels[0]!, { ...pair.levels[2]!, hearts: 6 }]
+    const read = checkPair(pair, ctx)
+    expect(read.errors).toEqual([
+      'Level 2, step 1: its line is 401 characters; the screen shows 400 (the level is skipped)',
+      'Level 1: written twice; the later one is skipped',
+    ])
+    expect(read.notes).toEqual(['Level 6: bonds reach levels 1–5, so it never plays'])
+    expect(read.value!.levels.map((l) => l.hearts)).toEqual([1, 6])
   })
 })
 
-describe('the tag sheet and the ties’ sources', () => {
+describe('the tag sheet (the sandbox\'s): notes only', () => {
   const tag = (characterId: string, change: Partial<TagEntry> = {}): TagEntry => ({
     characterId, favouriteLine: 'farming', season: 'spring', festival: 'flower-show', loved: 'golden-carrot',
     reasons: { favouriteLine: 'An invented reason.', season: 'An invented reason.', festival: 'An invented reason.', loved: 'An invented reason.' }, ...change,
   })
   it('one entry a cast Uma, each value valid with its reason; a new good is flagged as proposed', () => {
-    expect(tagsIssues({ version: 1, tags: STAND_INS.map((id) => tag(id)) }, ctx)).toEqual([])
-    const issues = tagsIssues({ version: 1, tags: [
+    expect(tagNotes({ version: 1, tags: STAND_INS.map((id) => tag(id)) }, ctx)).toEqual([])
+    expect(tagNotes({ version: 1, tags: [
       tag('9000001', { loved: 'moon-cake' }), tag('9000002', { season: 'monsoon' as never, reasons: { favouriteLine: '', season: 'x', festival: 'x', loved: 'Her husband’s favourite.' } }), tag('9000002'),
-    ] }, ctx)
-    expect(issues).toEqual([
+    ] }, ctx)).toEqual([
       'Tags 9000001: loved moon-cake isn’t a good; mark it proposed if it’s a new one',
       'Tags 9000002: unknown season',
       'Tags 9000002: a one-line reason for favouriteLine',
       'Tags 9000002 loved: “husband” genders the farmer',
       'Tags 9000002: twice',
-      '9000003 has no tags',
-    ])
-    expect(tagsIssues({ version: 1, tags: [tag('9000001', { loved: 'moon-cake', proposed: true }), tag('9000002'), tag('9000003')] }, ctx)).toEqual([])
-  })
-  it('her bible agrees with her tags', () => {
-    expect(bibleTagIssues(STAND_IN_BIBLE, tag(STAND_IN))).toEqual([])
-    expect(bibleTagIssues(STAND_IN_BIBLE, tag(STAND_IN, { season: 'winter', loved: 'carrot' }))).toEqual([
-      'season: the bible says spring, the tag sheet winter; they must agree',
-      'loved: the bible says golden-carrot, the tag sheet carrot; they must agree',
     ])
   })
-  it('a tie says where it comes from: real (with uma-quest’s relationship id once it exists) or story', () => {
-    const ties = clone(STAND_IN_TIES)
-    ties.ties[0] = { ...ties.ties[0]!, source: 'real', from: 'rel-0001' }
-    ties.ties[1] = { ...ties.ties[1]!, source: 'story' }
-    expect(tiesIssues(ties, ctx)).toEqual([])
-    ties.ties[1] = { ...ties.ties[1]!, source: 'legend' as never, from: 'rel-0002' }
-    expect(tiesIssues(ties, ctx)).toEqual(['Tie 2: source is real or story', 'Tie 2: from is a real tie’s relationship id'])
+  it('her bible and her tags disagreeing is a note', () => {
+    expect(bibleTagNotes(STAND_IN_BIBLE, tag(STAND_IN))).toEqual([])
+    expect(bibleTagNotes(STAND_IN_BIBLE, tag(STAND_IN, { season: 'winter', loved: 'carrot' }))).toEqual([
+      'season: the bible says spring, the tag sheet winter',
+      'loved: the bible says golden-carrot, the tag sheet carrot',
+    ])
   })
 })

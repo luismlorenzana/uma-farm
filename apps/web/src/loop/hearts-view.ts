@@ -21,8 +21,8 @@ import {
   ACTIVITY_NAMES, bar, benchOpen, betterRings, bondHearts, bondOf, castOrder, choresTonight, closestFriend, dateOf, dishName, favouriteOf, farmPlace, GIFT_POINTS_V4, goodName, hasPerk, homeOrHoused,
   invitedNow, isGoodId, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, keepsakeQuality, LADDER_COLOURS, ladderOf, levelWords, linePlaces, morningRule, morningsToItem, nextBondHeart,
   pairLevels, pairName, pairOf, PERK_PLACE, perkLineOf, perksFor, readiness, readLevels, ringGrade, ringName, ringPercent, romanceTerms, ROUTE_RUNGS, routeIndex, rungName, SEASON_NAMES, SIDE_BY_SIDE_HEARTS,
-  tasteKnown, tiesOf, unreadLevels, WAITING_RUNGS,
-  type Bar, type Birthdays, type LadderName, type Love, type LoveStage, type Perk, type PerkId, type Readiness, type SaveV4, type StoryPack, type Tie, type Wait,
+  tasteKnown, tieKind, tiesOf, tieStrength, unreadLevels, WAITING_RUNGS,
+  type Bar, type Birthdays, type LadderName, type Love, type LoveStage, type Perk, type PerkId, type Readiness, type SaveV4, type StoryPack, type TieKind, type Wait,
 } from '@farm/domain'
 import { nextWords, readyWords } from './love-words'
 
@@ -49,8 +49,8 @@ export function placeWords(place: string): string {
 /** Where her next event plays: her bible's beat for the rung, in words; null without one, and for the wedding, whose place
  * you choose. */
 export function beatPlace(pack: Pick<StoryPack, 'bibles'>, id: string, rung: string | null): string | null {
-  const beat = rung && rung !== 'wedding' ? pack.bibles.get(id)?.route.find((b) => b.id === rung) : undefined
-  return beat ? placeWords(beat.place) : null
+  const beat = rung && rung !== 'wedding' ? pack.bibles.get(id)?.route?.find((b) => b.id === rung) : undefined
+  return beat?.place ? placeWords(beat.place) : null
 }
 
 // --- The row's bar ---------------------------------------------------------------------------------------
@@ -262,7 +262,7 @@ export function nextCard(save: SaveV4, pack: HeartsPack, id: string, nameOf: Nam
   const now = bar(love)
   const line = perkLineOf(pack, id)
   const perk = now.rung && line ? perksFor(line, save.farm.chapter).find((p) => p.rung === now.rung) ?? null : null
-  const hint = now.rung && state.waits?.kind !== 'unwritten' ? pack.bibles.get(id)?.route.find((b) => b.id === now.rung)?.hint ?? null : null
+  const hint = now.rung && state.waits?.kind !== 'unwritten' ? pack.bibles.get(id)?.route?.find((b) => b.id === now.rung)?.hint ?? null : null
   return {
     rung: now.rung, title: now.rung ? `Next: ${rungName(now.rung)}` : 'Her route is complete', perk, hint, bar: now, words: nextWords(state, now, nameOf),
     ready: state.ready, waits: state.waits?.kind ?? null,
@@ -343,7 +343,7 @@ export function perkNow(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' | 
 // --- Her ring ---------------------------------------------------------------------------
 
 /** Her ring's engraving: her Romance 8 beat's line, her Memory's caption, so no new field. */
-export const engravingOf = (pack: Pick<StoryPack, 'bibles'>, id: string): string | null => pack.bibles.get(id)?.route.find((b) => b.id === 'r8')?.beat ?? null
+export const engravingOf = (pack: Pick<StoryPack, 'bibles'>, id: string): string | null => pack.bibles.get(id)?.route?.find((b) => b.id === 'r8')?.beat ?? null
 
 /** Her profile's Ring: the engraving from Romance 8 ("Her ring will read", then "Her ring reads"), her
  * ring and its bonus at her line (once married, or "once you're married"), and the rings in the Warehouse she'd take
@@ -393,7 +393,7 @@ export function perkList(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' |
 export function friendLoved(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'ties'>, id: string): { friend: string; good: string } | null {
   if (!hasPerk(save.love[id], 'f7')) return null
   const friend = closestFriend(pack, save, id)
-  const good = friend ? pack.bibles.get(friend)?.gifts.loved : undefined
+  const good = friend ? pack.bibles.get(friend)?.gifts?.loved : undefined
   return friend && good && isGoodId(good) ? { friend, good } : null
 }
 
@@ -443,20 +443,20 @@ export function giftSlots(pack: Pick<StoryPack, 'bibles'>, love: Pick<Love, 'sta
   if (!gifts) return { slots: [], others }
   const slot = (taste: GiftSlot['taste'], good: string): GiftSlot[] =>
     isGoodId(good) ? [{ taste, good: tasteKnown(pack, love, id, good) ? good : null, points: GIFT_POINTS_V4[taste] }] : []
-  return { slots: [...slot('loved', gifts.loved), ...gifts.liked.flatMap((g) => slot('liked', g)), ...gifts.disliked.flatMap((g) => slot('disliked', g))], others }
+  return { slots: [...(gifts.loved ? slot('loved', gifts.loved) : []), ...(gifts.liked ?? []).flatMap((g) => slot('liked', g)), ...(gifts.disliked ?? []).flatMap((g) => slot('disliked', g))], others }
 }
 
 /** A tie's kind in a word. */
-export const TIE_WORDS: Readonly<Record<Tie['kind'], string>> = {
+export const TIE_WORDS: Readonly<Record<TieKind, string>> = {
   friends: 'Friends', rivals: 'Rivals', mentor: 'Mentor', teammates: 'Teammates', sisters: 'Sisters', other: 'Close',
 }
 /** One of her ties on her profile: the other Uma, its kind, their bond hearts from
  * `save.bonds` and the points to the next, her closest friend marked, and the conversations opened and unread. */
 export interface TieRow {
   with: string
-  kind: Tie['kind']
+  kind: TieKind
   words: string
-  strength: Tie['strength']
+  strength: 1 | 2 | 3
   points: number
   /** The bond hearts, 0–5 (`bondHearts`). */
   hearts: number
@@ -481,7 +481,7 @@ export function tieRows(save: Pick<SaveV4, 'bonds' | 'roster' | 'diary'>, pack: 
   return tiesOf(pack, save, id).map(({ tie, with: other, points, order }, i): TieRow => {
     const here = Boolean(save.roster[other])
     return {
-      with: other, kind: tie.kind, words: TIE_WORDS[tie.kind], strength: tie.strength, points, hearts: bondHearts(points), next: nextBondHeart(points), here, order,
+      with: other, kind: tieKind(tie), words: TIE_WORDS[tieKind(tie)], strength: tieStrength(tie), points, hearts: bondHearts(points), next: nextBondHeart(points), here, order,
       closest: i === 0, unread: here && save.roster[id] ? unreadLevels(save, pack, id, other) : [],
     }
   })

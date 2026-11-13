@@ -127,7 +127,7 @@ export function homeTonight(save: Pick<SaveV4, 'dorm' | 'love'>, id: string): bo
  * at the top, or with none (no bible, or no date beats). A kind not offered yet (cooking, the footrace) still counts. */
 export function favouriteKind(pack: Pick<StoryPack, 'bibles'>, id: string): DateGame {
   const counts = new Map<DateGame, number>()
-  for (const beat of pack.bibles.get(id)?.route ?? []) if (beat.together.kind === 'date') counts.set(beat.together.game, (counts.get(beat.together.game) ?? 0) + 1)
+  for (const beat of pack.bibles.get(id)?.route ?? []) if (beat.together?.kind === 'date') counts.set(beat.together.game, (counts.get(beat.together.game) ?? 0) + 1)
   const top = Math.max(0, ...counts.values())
   const leaders = [...counts].filter(([, n]) => n === top).map(([game]) => game)
   return top > 0 && leaders.length === 1 ? leaders[0]! : 'walk'

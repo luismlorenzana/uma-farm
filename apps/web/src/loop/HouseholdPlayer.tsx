@@ -81,7 +81,7 @@ function Scene({ save, pack, id, play, master, replay, leaving, onDone }: {
     const spec = playSpec(save, pack, first, playOf(play.play), 'event', playSeed(save.account.uid, save.calendar.day, first, 'finale'))
     return (
       <div className="pt-safe pb-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={play.title} data-household-play>
-        <PlaySheet spec={spec} title={`${play.title} · ${play.play.prompt}`} name={nameOf(first)} replay={replay} unpaid="For the joy of it: the Great Harvest pays nothing." onDone={next} />
+        <PlaySheet spec={spec} title={play.play.prompt ? `${play.title} · ${play.play.prompt}` : play.title} name={nameOf(first)} replay={replay} unpaid="For the joy of it: the Great Harvest pays nothing." onDone={next} />
       </div>
     )
   }

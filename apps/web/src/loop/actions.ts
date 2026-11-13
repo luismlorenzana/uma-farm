@@ -2,7 +2,7 @@
 // back and buy; the Fields: plant, Plant all, harvest, Harvest all, a tender and a block; the work: a job, a
 // queue, Collect, Recall, Repeat, a stopped queue and building a station; the roster: the start's picks and its
 // redraw, the Dorm's levels and swaps, chats and gifts; the scenes, read once; the farmer's name, the v4 opening
-// (which brings the opening three) and arrival scenes; the chat, gift and praise on v4; and the pair conversations
+// (which brings the opening's Umas) and arrival scenes; the chat, gift and praise on v4; and the pair conversations
 // read. Each reads the save right
 // before its rule runs (as `edit`), commits it to the store and the device, and syncs; a refused rule throws its words.
 // The night and the harvests read the talents from master data, so they wait for it. Loaded on demand with the loop's
@@ -249,7 +249,7 @@ export async function giveGift(outfitId: string, item: string, stars: number): P
 // --- The scenes -----------------------------------------------------------------------------------------------
 
 /** A scene played through or skipped: it goes in `diary.read`, once, a player's change. On v4 the opening
- * also brings the opening three onto the farm. */
+ * also brings the opening's Umas onto the farm (`openingOf`). */
 export async function readSceneOnce(id: ChapterSceneId): Promise<void> {
   const save = loopSave()
   if (!save || save.diary.read.includes(id)) return

@@ -33,7 +33,7 @@ builds is in [design/progression.md](design/progression.md). How it's built is i
 |---|---|---|
 | **The farm's loop** | **Deployed** (save v3) | The days, the Fields, the forest and the Fishery, the Mill, the Sawmill and the Smokehouse, goods and the bin, talents and ranks, the roster, the Farm Rank, chapter 1. **Being reworked:** one game on v4 (F62), the farm by building (F64) |
 | **The romance** | **Built, behind a switch** | Hearts, heart events and plays, evenings, perks, the ring and the wedding, married life, the homestead, bonds. It plays a fixed cast of 20 arriving in a set order. **Becomes the game:** the switch goes (F62), the town and meeting replace arrivals (F66, F67), and her chapters frame her route (F68) |
-| **The story** | **Being written** | In the Farm Story Sandbox on this Mac. Its checker refuses a pack unless the opening is exactly three Umas, every chat set has 3–20 lines, every Uma has three liked gifts and two disliked, and every cast Uma has her bible and arrival scene. **That goes first** (F61) |
+| **The story** | **Being written** | In the Farm Story Sandbox on this Mac. The pack is open: every part optional, any number of characters, notes instead of blocks, and any pack releases. [The story pack's menu](story-pack.md) lists what the game reads, with the welcome list, her trigger to meet and her chapters |
 | **The HD-2D farm** | **Opt-in preview** | The farm and its Umas on the shared HD-2D stage (Account → HD-2D farm). The 2D Hub is still Home. A working Uma doesn't nod yet: uma-stage 0.5.0 can now play it |
 | **Art** | **Mixed** | The farm kit's first wave is painted; its second wave is still the stand-in's frames. Umas whose outfits have no sprite set show as cards with their faces. The town cast's busts aren't drawn |
 | **The workshops** | **Not built** | The ranch, the Mine and the Quarry, the Kitchen and its cooking game, expeditions, the Restaurant and the Forge's games |
@@ -66,8 +66,8 @@ The farm is a full game when all eight of these hold:
 
 ```text
 Phase 0  Clean slate                       ── done
-Phase 1  One game, built around the Umas   ── an open story pack, one build on v4, placeholders, the farm by building,
-                                              the lean start, the town, meeting her, her chapters
+Phase 1  One game, built around the Umas   ── one build on v4, placeholders, the farm by building, the lean start,
+                                              the town, meeting her, her chapters
 Phase 2  The whole farm                    ── each workshop's game, the sea, festivals and the long game
 Phase 3  Feel and polish                   ── sound, animation, settings, balance, speed
 Phase 4  Steady                            ── error reports, save safety, a tested playthrough, releases
@@ -93,7 +93,6 @@ town, each with her own story.
 
 | Step | What | Packet |
 |---|---|---|
-| 1.1 **An open story pack** | Every part optional, any number of characters, notes instead of blocks, any pack releasable. The menu adds her trigger, her chapters and the welcome list | [F61](handoff/tasks/F61-open-story-pack.md) |
 | 1.2 **One game** | The romance switch goes. Save v4 is the only save, the old one is backed up and the farm starts over. v2 and v3's code is retired | [F62](handoff/tasks/F62-one-game.md) |
 | 1.3 **Placeholders everywhere** | Every story read has a plain fallback, including four default chapters, so the game plays whole with no story | [F63](handoff/tasks/F63-story-placeholders.md) |
 | 1.4 **The farm grows by building** | No global chapters. Farm Rank comes from income and goods; places are built with gold and goods; weddings open houses; the farm's projects | [F64](handoff/tasks/F64-farm-by-building.md) |
@@ -174,6 +173,6 @@ The farm sends items to uma-quest, uma-rpg and uma-racer, one way. It's parked u
 
 ## Your steps now
 
-- **Say go on Phase 1,** starting with F61 (it unblocks the story session) and F62 (one game on v4).
+- **Say go on the rest of Phase 1,** from F62 (one game on v4).
 - **Keep writing the story** however you like.
 - **The HD-2D farm on your phone,** when you have a minute.

@@ -84,7 +84,7 @@ working places grow with what you earn.**
 - **Her story is hers:** her own chapters, from the day you meet her to married life.
 - **The story decides them:**
   - how many there are, their titles, and which of her events each holds;
-  - nothing is required (the [open pack](../handoff/tasks/F61-open-story-pack.md));
+  - nothing is required (the [open pack's menu](../story-pack.md));
   - a chapter is the story's grouping of her events along the game's backbone.
 - **The game's backbone stays as built:**
   - friendship F1–F10, then the confession;
@@ -116,12 +116,11 @@ There's no global ending. Instead:
 
 | Packet | What it builds of this |
 |---|---|
-| [F61](../handoff/tasks/F61-open-story-pack.md), the open pack | Her chapters, her trigger and the welcome list in the pack's menu, all optional |
+| F61, the open pack (shipped: [the menu](../story-pack.md)) | Her chapters, her trigger and the welcome list in the pack's menu, all optional |
 | [F62](../handoff/tasks/F62-one-game.md), one game | One build on save v4: the live farm's chapter 1 and v3 go |
 | [F63](../handoff/tasks/F63-story-placeholders.md), placeholders | The four default chapters |
 | [F64](../handoff/tasks/F64-farm-by-building.md), the farm by building | Global chapters removed, Farm Rank from income alone, every place by rank and build, the milestones with the Umas, the farm's projects |
 | [F67](../handoff/tasks/F67-meeting-her.md), meeting her | Triggers include "a place built" and "a Farm Rank" |
 | [F68](../handoff/tasks/F68-her-chapters.md), her chapters | Her chapters on her profile and the Hearts tab, their gates, and the morning's line |
 
-The [roadmap](../roadmap.md#phase-1-one-game-built-around-the-umas) has the order: F61, F62, F63, F64, F65, F66, F67,
-F68.
+The [roadmap](../roadmap.md#phase-1-one-game-built-around-the-umas) has the order: F62, F63, F64, F65, F66, F67, F68.

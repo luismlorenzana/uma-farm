@@ -122,7 +122,7 @@ export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'script
   if (NIGHT_RUNGS.includes(rung)) return wait({ kind: now.full ? 'night' : 'bar' })
   if (!pack.scripted.get(id)?.has(rung)) return wait({ kind: 'unwritten' })
   if (love.stage === 'confession' && love.friend) return wait({ kind: 'friend' })
-  const trigger: Trigger = pack.bibles.get(id)?.route.find((b) => b.id === rung)?.trigger ?? { kind: 'hearts' }
+  const trigger: Trigger = pack.bibles.get(id)?.route?.find((b) => b.id === rung)?.trigger ?? { kind: 'hearts' }
   const chapter = opensWith(save, trigger)
   if (chapter !== null) return wait({ kind: 'opens', chapter })
   const day = save.calendar.day

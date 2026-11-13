@@ -43,3 +43,11 @@ test('once bibles and routes exist: gifts, pair conversations and events scripte
   assert.deepEqual(c.eventsPer, [{ id: 'u1', bible: true, scripted: 2, of: 3 }, { id: 'u2', bible: true, scripted: 0, of: 3 }, { id: 'u3', bible: false, scripted: 0, of: 3 }])
   assert.deepEqual(c.pairsPer.map((p) => [p.id, p.written, p.of]), [['u1', 1, 2], ['u2', 1, 2], ['u3', 0, 2]])
 })
+
+test('counts an open cast: a character with only her id is in the cast, and in no group', () => {
+  const c = storyCounts({ cast: { umas: [...cast.umas, { characterId: 'u4' }] }, rungs })
+  assert.equal(c.umas, 4)
+  assert.deepEqual(c.byCalling, { farming: ['u1', 'u2'], fishing: ['u3'] })
+  assert.deepEqual(c.arrivals, { opening: ['u1', 'u3'], chapter: ['u2'] })
+  assert.deepEqual(c.eventsPer.find((e) => e.id === 'u4'), { id: 'u4', bible: false, scripted: 0, of: 3 })
+})

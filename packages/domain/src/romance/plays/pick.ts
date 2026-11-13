@@ -36,9 +36,9 @@ const LINE_GOODS: Readonly<Record<string, readonly string[]>> = {
  * other raw goods of the same families, grades 1–5. */
 export function pickGoods(pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string): { favourites: string[]; others: string[] } {
   const gifts = pack.bibles.get(id)?.gifts
-  const own = gifts ? [gifts.loved, ...gifts.liked].filter(isGoodId) : []
+  const own = gifts ? [gifts.loved, ...(gifts.liked ?? [])].filter((g): g is string => g !== undefined && isGoodId(g)) : []
   const favourites = own.length > 0 ? own : [...(LINE_GOODS[favouriteOf(pack, id) ?? 'farming'] ?? LINE_GOODS.farming!)].filter(isGoodId)
-  const avoid = new Set([...favourites, ...(gifts ? [...gifts.disliked] : [])])
+  const avoid = new Set([...favourites, ...(gifts?.disliked ?? [])])
   const families = new Set(favourites.map((g) => goodOf(g)?.family))
   const others = GOODS.filter((g) => families.has(g.family) && !g.refined && g.grade <= 5 && !avoid.has(g.id)).map((g) => g.id)
   return { favourites, others: others.length > 0 ? others : GOODS.filter((g) => !g.refined && g.grade <= 3 && !avoid.has(g.id)).map((g) => g.id).slice(0, 12) }

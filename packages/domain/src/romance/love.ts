@@ -241,17 +241,18 @@ export const pathFlags = (steps: readonly Step[]): string[] => [...new Set(steps
 
 /** What her arrival scene earned: its choice's points and the flags its path set. */
 export interface ArrivalPlayed {
-  /** +30 or +10 (`choicePoints`). */
+  /** +30 or +10 (`choicePoints`), or 0 for an arrival the pack writes without a choice. */
   choice: number
   flags: readonly string[]
 }
 
-/** Her arrival scene, played (or skipped to its choice) once: +50 and its choice into her bar, its flags
- * into hers, and her id into `arrivals`. Played already: unchanged. Never stamps: the app's action does, once. */
+/** Her arrival scene, played (or skipped to its choice) once: +50 and its choice into her bar (none for an arrival
+ * written without one), its flags into hers, and her id into `arrivals`. Played already: unchanged. Never stamps: the
+ * app's action does, once. */
 export function finishArrival(save: SaveV4, id: string, played: ArrivalPlayed): SaveV4 {
   if (save.arrivals.includes(id)) return save
   if (!save.roster[id] || !save.love[id]) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
-  if (played.choice !== CHOICE_BEST && played.choice !== CHOICE_OTHER) throw new SaveRuleError('bad-count', 'An arrival’s choice pays +10 or +30.')
+  if (played.choice !== CHOICE_BEST && played.choice !== CHOICE_OTHER && played.choice !== 0) throw new SaveRuleError('bad-count', 'An arrival’s choice pays +10 or +30.')
   const paid = addLove(save, id, ARRIVAL_POINTS + played.choice, 'arrival').save
   const love = paid.love[id]!
   return { ...paid, love: { ...paid.love, [id]: { ...love, flags: [...new Set([...love.flags, ...played.flags])] } }, arrivals: [...save.arrivals, id] }

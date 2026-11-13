@@ -1,6 +1,6 @@
 // The story pack in the app: loaded once, on demand, through one
 // seam (`load.ts`'s `loadStoryPack`: the invented stand-in, or the private pack once it ships). Light on purpose,
-// since the shell, the store and the album's art read it: the pack, its validator and the stand-in load lazily.
+// since the shell, the store and the album's art read it: the pack, its reader and the stand-in load lazily.
 //
 // `outfitFor` is the one resolver where a roster id meets master data: on save v4 the roster's key is her character id
 // and the pack's cast names her outfit (the domain's `outfitOf`); before the pack loads, and always in the deployed

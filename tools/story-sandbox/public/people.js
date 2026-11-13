@@ -1,6 +1,7 @@
-// The authored story in the sandbox: the world bible, the cast in arrival order, each Uma's page with her route as a
+// The authored story in the sandbox: the world bible, the cast in its order, each Uma's page with her route as a
 // visible ladder (27 rungs: her arrival, friendship 1–10, the confession, romance 1–10, the proposal, the wedding,
-// spouse 1, 3 and 5), and the ties as one graph.
+// spouse 1, 3 and 5), her trigger to meet and her chapters, and the ties as one graph. What the game's reader found shows
+// as errors (skipped: the game can't read them) and notes (they block nothing), each with a count.
 // Every name, picture and line comes from the private content/story/ at run time.
 import { D, h, reviewDot, reviewPanel, stat } from './views.js'
 
@@ -20,7 +21,8 @@ export function indexStory(story) {
   D.routeOf = new Map((story?.routes ?? []).map((r) => [r.data.characterId, r]))
   D.tiesOf = new Map()
   for (const t of story?.ties?.data?.ties ?? []) for (const id of [t.a, t.b]) D.tiesOf.set(id, [...(D.tiesOf.get(id) ?? []), t])
-  D.tagOf = new Map((story?.tags?.data?.tags ?? []).map((t) => [t.characterId, t]))
+  D.tagOf = new Map((story?.tags?.data?.tags ?? []).filter((t) => t && typeof t === 'object').map((t) => [t.characterId, t]))
+  D.welcome = new Set(story?.welcome ?? [])
 }
 export const umaName = (id) => D.uma.get(id)?.name ?? id
 export function face(id, cls = '') {
@@ -30,52 +32,87 @@ export function face(id, cls = '') {
 }
 const CALLING_COLOR = { farming: '#5f9a3c', foraging: '#2f6a34', fishing: '#3a7aa0', mining: '#6a5a4a', quarry: '#8a7a9a' }
 const KIND_COLOR = { friends: '#4f8a3c', rivals: '#c4573a', mentor: '#7a5ac4', teammates: '#3a7aa0', sisters: '#c08a22', other: '#8a8478' }
-const calling = (c) => h('span', { class: 'chip dot', vars: { '--c': CALLING_COLOR[c] }, text: c })
+const calling = (c) => (c ? h('span', { class: 'chip dot', vars: { '--c': CALLING_COLOR[c] }, text: c }) : null)
+/** A tie's kind and strength as the game reads them: "other" ("Close") and 1 when the pack gives none. */
+const kindOf = (t) => t.kind ?? 'other'
+const strengthOf = (t) => t.strength ?? 1
 const FESTIVAL = { 'flower-show': 'the Flower Show', 'fishing-derby': 'the Fishing Derby', 'cooking-contest': 'the Cooking Contest', 'animal-show': 'the Animal Show', 'harvest-cup': 'the Harvest Cup' }
 export function arrivalWords(a) {
   if (!a) return ''
-  if (a.kind === 'opening') return 'The opening: one of the first three'
+  if (a.kind === 'opening') return 'The opening'
   if (a.kind === 'chapter') return `Chapter ${a.chapter}’s recruit`
   if (a.kind === 'festival') return `At ${FESTIVAL[a.festival] ?? a.festival}${a.year ? `, year ${a.year}` : ''}`
   if (a.kind === 'beds') return `When the Dorm reaches level ${a.dormLevel}`
   return `After ${a.after}`
 }
 const issuesList = (issues) => (issues?.length ? h('ul', { class: 'issues' }, issues.map((i) => h('li', { text: i }))) : null)
-const noStory = () => h('div', { class: 'note-box' }, h('b', { text: 'No story yet. ' }), 'The private story files go in content/story/: world.md, cast.json, ties.json, then umas/, routes/ and pairs/.')
+const noStory = () => h('div', { class: 'note-box' }, h('b', { text: 'No story yet. ' }), 'The private story files go in content/story/: any of world.md, cast.json, ties.json, umas/, routes/, pairs/ and household.json. Every part is optional (docs/story-pack.md).')
 
-/** Where the story stands, layer by layer. */
+/** What the game's reader found: errors, which skip only their part (the rest plays), and notes, which block nothing. */
+export function findingsBox(found, title = '') {
+  const errors = found?.errors ?? [], notes = found?.notes ?? []
+  if (!errors.length && !notes.length) return null
+  const head = (words) => `${title ? `${title} · ` : ''}${words}`
+  return h('div', { class: 'stack' },
+    errors.length ? h('div', { class: 'error-box' }, h('b', { text: head(`Skipped · ${errors.length}`) }),
+      h('p', { class: 'small', text: 'The game can’t read these, so each skips only its own part: the rest of the pack plays.' }), issuesList(errors)) : null,
+    notes.length ? h('details', { class: 'note-box' }, h('summary', {}, h('b', { text: head(`Notes · ${notes.length}`) }), ' They block nothing: open to read them.'), h('ul', { class: 'list small' }, notes.map((n) => h('li', { text: n })))) : null)
+}
+
+/** Where the story stands: the cast, what's written of it, and what the game's reader found. */
 function layers() {
-  const st = D.story, n = st.umas.length
-  const count = (list) => list.reduce((k, x) => k + x.issues.length, 0)
-  const l1 = [st.world, st.cast, st.ties].filter(Boolean).length
+  const st = D.story, n = st.cast?.data?.umas?.length ?? 0
   return h('div', { class: 'summary' },
-    stat(`${l1}/3`, `layer 1: the world, the cast, the ties${st.cast || st.ties ? ` · ${count([st.cast, st.ties].filter(Boolean))} checks` : ''}`),
-    stat(`${st.bibles.length}/${n}`, `layer 2: bibles${st.bibles.length ? ` · ${count(st.bibles)} checks` : ''}`),
-    stat(`${st.routes.length}/3`, `layer 3: pilot routes${st.routes.length ? ` · ${count(st.routes)} checks` : ''}`),
+    stat(n, 'characters in the cast'),
+    stat(`${st.bibles.length}/${n}`, 'bibles'),
+    stat(`${st.routes.length}/${n}`, 'routes'),
     stat(st.pairs.length, 'pair conversations'),
     stat(st.ties?.data?.ties?.length ?? 0, 'ties'),
-    stat(n, `Umas in the export (pack ${st.pack?.id ?? '—'})`),
+    stat(st.check?.notes?.length ?? 0, 'notes · they block nothing'),
+    stat(st.check?.errors?.length ?? 0, 'skipped · the game can’t read them'),
+    st.pack ? stat(st.umas.length, `Umas in the export (pack ${st.pack.id})`) : null,
   )
+}
+
+/** Her trigger to meet in words: the pack's, or the default. */
+function meetWords(m) {
+  switch (m?.kind) {
+    case 'talks': return `Talk with her on ${m.days} different days`
+    case 'gift': return m.good ? `Give her ${m.good}` : 'Give her a gift she likes'
+    case 'spot': return `Talk with her at ${m.spot}`
+    case 'season': return `Talk with her in ${m.season}`
+    case 'festival': return `Talk with her on ${FESTIVAL[m.festival] ?? m.festival}`
+    case 'farm-rank': return `Reach Farm Rank ${m.rank}`
+    case 'built': return `Build the ${m.place}`
+    case 'shipped': return `Ship ${m.count} ${m.good}`
+    case 'event': return `After ${m.after}`
+    default: return '—'
+  }
 }
 
 // ── Characters ───────────────────────────────────────────────────────────────
 export function charactersView() {
   const st = D.story
-  if (!st?.cast) return h('div', {}, h('h1', { text: 'Characters' }), noStory())
+  if (!st?.cast) return h('div', {}, h('h1', { text: 'Characters' }), st?.error ? h('div', { class: 'error-box', text: st.error }) : null, noStory())
   const cast = st.cast.data
   return h('div', {},
     h('h1', { text: 'Characters' }),
-    h('p', { class: 'muted', text: 'The cast: the SS Umas of the Playable Umas board, in the order they arrive on the farm. Each is a grown woman with a life of her own; click one for her page, her ties and her route.' }),
+    h('p', { class: 'muted', text: 'The cast, in its order: as many characters as the story wants, each with as much as is written. Click one for her page, her ties, her route, her trigger to meet and her chapters. Nothing here blocks writing or releasing.' }),
     layers(),
-    st.cast.issues.length ? h('div', { class: 'error-box' }, h('b', { text: 'cast.json' }), issuesList(st.cast.issues)) : null,
+    findingsBox(st.check, 'The pack'),
+    cast.umas.length ? null : noStory(),
     h('div', { class: 'cast-list' }, cast.umas.map((u, i) => {
       const ties = D.tiesOf.get(u.characterId) ?? []
-      return h('a', { class: `cast-row ${u.arrives.kind === 'opening' ? 'opening' : ''}`, href: `#/c/${encodeURIComponent(u.characterId)}` },
+      const own = st.own?.[u.characterId]
+      return h('a', { class: `cast-row ${u.arrives?.kind === 'opening' ? 'opening' : ''}`, href: `#/c/${encodeURIComponent(u.characterId)}` },
         h('span', { class: 'order', text: i + 1 }), face(u.characterId, 'lg'),
         h('div', { class: 'cast-text' },
-          h('div', { class: 'row' }, h('b', { text: umaName(u.characterId) }), calling(u.calling), h('span', { class: 'muted small', text: arrivalWords(u.arrives) }), reviewDot(`cast/${u.characterId}`)),
-          h('p', { class: 'small', text: u.paragraph }),
-          h('div', { class: 'row tiny' }, ties.map((t) => { const other = t.a === u.characterId ? t.b : t.a; return h('span', { class: 'tie-chip', vars: { '--c': KIND_COLOR[t.kind] }, title: `${t.kind}, strength ${t.strength}` }, face(other, 'xs'), `${umaName(other)} ${'●'.repeat(t.strength)}`) })),
+          h('div', { class: 'row' }, h('b', { text: umaName(u.characterId) }), calling(u.calling), D.welcome.has(u.characterId) ? h('span', { class: 'chip', text: 'welcome list' }) : null,
+            u.arrives ? h('span', { class: 'muted small', text: arrivalWords(u.arrives) }) : null, reviewDot(`cast/${u.characterId}`),
+            own?.errors?.length ? h('span', { class: 'warn-text', text: `${own.errors.length} skipped` }) : null,
+            own?.notes?.length ? h('span', { class: 'muted small', text: `${own.notes.length} notes` }) : null),
+          u.paragraph ? h('p', { class: 'small', text: u.paragraph }) : null,
+          h('div', { class: 'row tiny' }, ties.map((t) => { const other = t.a === u.characterId ? t.b : t.a; return h('span', { class: 'tie-chip', vars: { '--c': KIND_COLOR[kindOf(t)] }, title: `${kindOf(t)}, strength ${strengthOf(t)}` }, face(other, 'xs'), `${umaName(other)} ${'●'.repeat(strengthOf(t))}`) })),
         ))
     })),
   )
@@ -93,25 +130,40 @@ export function characterView(id, onReview) {
     h('div', { class: 'char' },
       h('div', { class: 'char-art' }, uma?.images?.art ? h('img', { src: uma.images.art, alt: uma.name }) : face(id, 'xl')),
       h('div', { class: 'stack' },
-        h('div', { class: 'row' }, h('span', { class: 'chip', text: `#${entry.order} to arrive` }), calling(entry.calling), h('span', { class: 'chip', text: arrivalWords(entry.arrives) }), entry.outfitId ? h('span', { class: 'chip', text: `Outfit ${entry.outfitId}${uma?.outfit?.title ? ` · ${uma.outfit.title}` : ''}` }) : null),
+        h('div', { class: 'row' }, h('span', { class: 'chip', text: `#${entry.order} in the cast` }), calling(entry.calling), D.welcome.has(id) ? h('span', { class: 'chip', text: 'welcome list' }) : null,
+          entry.arrives ? h('span', { class: 'chip', text: arrivalWords(entry.arrives) }) : null, entry.outfitId ? h('span', { class: 'chip', text: `Outfit ${entry.outfitId}${uma?.outfit?.title ? ` · ${uma.outfit.title}` : ''}` }) : h('span', { class: 'chip', text: 'No outfit yet' })),
         h('h1', { text: umaName(id) }),
-        h('p', { class: 'logline', text: entry.paragraph }),
+        entry.paragraph ? h('p', { class: 'logline', text: entry.paragraph }) : null,
         h('div', { class: 'row small' }, prev ? h('a', { href: `#/c/${prev.characterId}`, text: `← ${umaName(prev.characterId)}` }) : null, next ? h('a', { href: `#/c/${next.characterId}`, text: `${umaName(next.characterId)} →` }) : null),
         tagPanel(id),
-        h('div', { class: 'panel' }, h('div', { class: 'row' }, h('h3', { text: 'Her route' }), h('span', { class: 'muted small', text: bible ? `umas/${id}.json` : 'The bible (layer 2) writes these rungs' }), routeProgress(id)), ladder(id, bible)),
+        menuPanel(entry),
+        h('div', { class: 'panel' }, h('div', { class: 'row' }, h('h3', { text: 'Her route' }), h('span', { class: 'muted small', text: bible ? `umas/${id}.json` : 'Her bible can name any of these rungs; none is required' }), routeProgress(id)), ladder(id, bible)),
         bible ? biblePanel(bible) : null,
         h('div', { class: 'panel' }, h('h3', { text: `Her ties · ${ties.length}` }),
           ties.length ? h('div', { class: 'stack' }, ties.map((t) => {
             const other = t.a === id ? t.b : t.a
             return h('div', { class: 'rel' },
-              h('a', { class: 'rel-who', href: `#/c/${other}` }, face(other), h('div', {}, h('b', { text: umaName(other) }), h('span', { class: 'muted small', text: `${t.kind} · ${'●'.repeat(t.strength)}${'○'.repeat(3 - t.strength)}` }))),
-              h('div', { class: 'rel-body' }, h('p', { text: t.line }), h('p', { class: 'small muted' }, t.source ? h('span', { class: `chip ${t.source === 'real' ? 'dot' : ''}`, text: t.source === 'real' ? 'real' : 'farm-born' }) : null, ' ', t.history)))
+              h('a', { class: 'rel-who', href: `#/c/${other}` }, face(other), h('div', {}, h('b', { text: umaName(other) }), h('span', { class: 'muted small', text: `${kindOf(t)} · ${'●'.repeat(strengthOf(t))}${'○'.repeat(3 - strengthOf(t))}` }))),
+              h('div', { class: 'rel-body' }, t.line ? h('p', { text: t.line }) : null, h('p', { class: 'small muted' }, t.source ? h('span', { class: `chip ${t.source === 'real' ? 'dot' : ''}`, text: t.source === 'real' ? 'real' : 'farm-born' }) : null, ' ', t.history ?? '')))
           })) : h('p', { class: 'muted', text: 'No ties yet.' })),
       ),
     ),
     h('div', { class: 'section-head' }, h('h2', { text: 'Review' })),
-    reviewPanel(`cast/${id}`, [...(bible?.issues ?? [])], bible ? bible.file : 'content/story/cast.json', onReview, 'No problems.'),
+    reviewPanel(`cast/${id}`, st.own?.[id] ?? { errors: [], notes: [] }, bible ? bible.file : 'content/story/cast.json', onReview, 'Nothing to note: what’s written of her reads whole.'),
   )
+}
+
+/** Her trigger to meet and her chapters: the pack's, else the game's defaults (marked). */
+function menuPanel(entry) {
+  const defaults = D.data.game.authored?.defaults ?? {}
+  const meet = entry.meet ?? defaults.meet
+  const chapters = entry.chapters?.length ? entry.chapters : defaults.chapters ?? []
+  return h('div', { class: 'panel' }, h('h3', { text: 'Meeting her and her chapters' }),
+    h('dl', { class: 'kv' },
+      h('dt', { text: 'Her trigger to meet' }), h('dd', { text: `${meetWords(meet)}${entry.meet ? '' : ' (the default)'}` }),
+      h('dt', { text: 'Her chapters' }), h('dd', { text: entry.chapters?.length ? `${entry.chapters.length}, the story’s` : `${chapters.length}, the defaults` })),
+    h('ol', { class: 'list small' }, chapters.map((c, i) => h('li', {}, h('b', { text: c.title ?? `Chapter ${i + 1}` }), ` · ${(c.events ?? []).join(', ') || 'no events'}`, c.gate ? h('span', { class: 'muted', text: ` · waits for: ${meetWords(c.gate)}` }) : null))),
+    h('p', { class: 'muted small', text: 'Read today; meeting her in town and her chapters’ screens act on them.' }))
 }
 
 /** Her 27 rungs as a ladder you can see: her arrival scene, friendship 1–10, the confession, romance 1–10,
@@ -144,14 +196,13 @@ function biblePanel(bible) {
   const b = bible.data
   return h('div', { class: 'panel' }, h('h3', { text: 'Her bible' }),
     h('dl', { class: 'kv' },
-      ...[['Now', b.now], ['Why the farm', b.whyTheFarm], ['Dream', b.dream], ['Blurb', b.blurb], ['Favourite work', b.favouriteLine], ['Season, festival', `${b.season}, ${b.festival}`],
+      ...[['Now', b.now], ['Why the farm', b.whyTheFarm], ['Dream', b.dream], ['Blurb', b.blurb], ['Favourite work', b.favouriteLine], ['Season, festival', b.season || b.festival ? `${b.season ?? '—'}, ${b.festival ?? '—'}` : null],
         ['Loved', b.gifts?.loved], ['Liked', b.gifts?.liked?.join(', ')], ['Disliked', b.gifts?.disliked?.join(', ')], ['Laughs at', b.laughs], ['Hurt by', b.hurts],
         ['Her name for you', b.petName], ['Keepsake', b.keepsake ? `${b.keepsake.name}: “${b.keepsake.line}”` : null], ['Wedding places', b.wedding?.places?.join(', ')],
-        ['Wishes', b.wishes?.join(', ')], ['Chats', b.chats ? `${b.chats.friend.length} friend · ${b.chats.partner.length} partner · ${b.chats.spouse.length} spouse` : null]]
+        ['Wishes', b.wishes?.join(', ')], ['Chats', b.chats ? `${b.chats.friend?.length ?? 0} friend · ${b.chats.partner?.length ?? 0} partner · ${b.chats.spouse?.length ?? 0} spouse` : null]]
         .flatMap(([k, v]) => [h('dt', { text: k }), h('dd', { text: v ?? '—' })])),
     b.chats ? h('details', {}, h('summary', { class: 'small', text: 'Her chat lines' }),
-      ['friend', 'partner', 'spouse'].map((set) => h('div', {}, h('h4', { text: set }), h('ul', { class: 'list small' }, b.chats[set].map((l) => h('li', { text: l })))))) : null,
-    issuesList(bible.issues))
+      ['friend', 'partner', 'spouse'].map((set) => h('div', {}, h('h4', { text: set }), h('ul', { class: 'list small' }, (b.chats[set] ?? []).map((l) => h('li', { text: l })))))) : null)
 }
 
 /** Her tags: favourite line, season, festival and loved gift, each with its reason. */
@@ -164,13 +215,14 @@ function tagPanel(id) {
       row('Festival', t.festival, t.reasons.festival), row('Loved gift', `${t.loved}${t.proposed ? ' (proposed)' : ''}`, t.reasons.loved)))
 }
 
-/** How far her route is scripted: her arrival scene (layer 2), then her events (layer 3). */
+/** How far her route is scripted: her arrival scene, then her events, any of them in any order. */
 function routeProgress(id) {
   const route = D.routeOf.get(id)
   if (!route) return h('span', { class: 'chip', text: 'Arrival scene to write' })
   const of = D.data.game.authored?.rungs?.length ?? 27
   const scripted = route.data.events.length
-  return h('span', { class: `chip ${scripted ? 'dot' : ''}`, text: `${scripted}/${of} scripted${route.issues.length ? ` · ${route.issues.length} checks` : ''}` })
+  const found = (route.errors?.length ?? 0) + (route.notes?.length ?? 0)
+  return h('span', { class: `chip ${scripted ? 'dot' : ''}`, text: `${scripted}/${of} scripted${found ? ` · ${found} notes and skips` : ''}` })
 }
 
 // ── Counts ─────────────────────────────────────────────────────────────
@@ -182,7 +234,7 @@ export function countsView() {
     Object.keys(groups).length ? h('table', { class: 'table' }, Object.entries(groups).map(([k, ids]) => h('tr', {}, h('td', {}, h('b', { text: k })), h('td', { text: ids.length }), h('td', {}, who(ids))))) : h('p', { class: 'muted', text: 'Nothing yet.' }))
   return h('div', {},
     h('h1', { text: 'Counts' }),
-    h('p', { class: 'muted', text: 'What the cast, the tag sheet, the ties and the bibles add up to, each with the Umas behind it. Nothing is forced to a quota: read it, and say what to balance.' }),
+    h('p', { class: 'muted', text: 'What the cast, the tag sheet, the ties and the bibles add up to, each with the Umas behind it. Nothing is a quota: read it, and say what to balance.' }),
     h('div', { class: 'summary' },
       stat(c.umas, 'Umas'), stat(`${c.tagged}/${c.umas}`, 'tagged'), stat(c.ties.total, `ties · ${c.ties.real} real · ${c.ties.story} farm-born`),
       stat(`${c.bibles}/${c.umas}`, 'bibles'), stat(c.eventsPer.reduce((n, e) => n + e.scripted, 0), `events scripted of ${c.umas * (c.eventsPer[0]?.of ?? 27)}`),
@@ -212,30 +264,30 @@ export function relationshipsView(onReview) {
   const st = D.story
   if (!st?.ties) return h('div', {}, h('h1', { text: 'Relationships' }), noStory())
   const ties = st.ties.data.ties
-  const kinds = [...new Set(ties.map((t) => t.kind))]
+  const kinds = [...new Set(ties.map(kindOf))]
   return h('div', {},
     h('h1', { text: 'Relationships' }),
     h('p', { class: 'muted', text: 'The cast’s ties as one graph: who are friends, rivals, mentor and protégée, teammates or sisters in all but name, drawn from their real careers or born on the farm. The thicker the line, the stronger the tie; each Uma’s two strongest get authored pair conversations.' }),
     h('div', { class: 'two' },
-      h('div', { class: 'panel' }, ring(ties), h('div', { class: 'row small' }, kinds.map((k) => h('span', { class: 'chip dot', vars: { '--c': KIND_COLOR[k] }, text: `${k} · ${ties.filter((t) => t.kind === k).length}` })))),
+      h('div', { class: 'panel' }, ring(ties), h('div', { class: 'row small' }, kinds.map((k) => h('span', { class: 'chip dot', vars: { '--c': KIND_COLOR[k] }, text: `${k} · ${ties.filter((t) => kindOf(t) === k).length}` })))),
       h('div', { class: 'panel' }, h('h3', { text: 'Each Uma’s closest two' }), h('table', { class: 'table' },
         st.cast.data.umas.map((u) => {
-          const two = [...(D.tiesOf.get(u.characterId) ?? [])].sort((a, b) => b.strength - a.strength).slice(0, 2)
+          const two = [...(D.tiesOf.get(u.characterId) ?? [])].sort((a, b) => strengthOf(b) - strengthOf(a)).slice(0, 2)
           return h('tr', {}, h('td', {}, h('a', { href: `#/c/${u.characterId}` }, face(u.characterId, 'sm'), umaName(u.characterId))),
-            h('td', { class: 'small' }, two.map((t) => { const o = t.a === u.characterId ? t.b : t.a; return h('div', {}, `${umaName(o)} `, h('span', { class: 'muted', text: `${t.kind} ${'●'.repeat(t.strength)}` })) })))
+            h('td', { class: 'small' }, two.map((t) => { const o = t.a === u.characterId ? t.b : t.a; return h('div', {}, `${umaName(o)} `, h('span', { class: 'muted', text: `${kindOf(t)} ${'●'.repeat(strengthOf(t))}` })) })))
         }))),
     ),
-    st.ties.issues.length ? h('div', { class: 'error-box' }, h('b', { text: 'ties.json' }), issuesList(st.ties.issues)) : null,
+    findingsBox(st.ties, 'ties.json'),
     h('div', { class: 'section-head' }, h('h2', { text: `Every tie · ${ties.length}` })),
     h('div', { class: 'panel' }, h('table', { class: 'table rels' },
       h('tr', {}, ['Between', 'Kind', 'Strength', 'On the farm', 'From'].map((x) => h('th', { text: x }))),
-      [...ties].sort((a, b) => b.strength - a.strength).map((t) => h('tr', {},
+      [...ties].sort((a, b) => strengthOf(b) - strengthOf(a)).map((t) => h('tr', {},
         h('td', {}, h('div', { class: 'pair' }, h('a', { href: `#/c/${t.a}` }, face(t.a, 'sm'), umaName(t.a)), h('span', { class: 'muted', text: '↔' }), h('a', { href: `#/c/${t.b}` }, face(t.b, 'sm'), umaName(t.b)))),
-        h('td', {}, h('span', { class: 'chip dot', vars: { '--c': KIND_COLOR[t.kind] }, text: t.kind })),
-        h('td', { text: '●'.repeat(t.strength) + '○'.repeat(3 - t.strength) }),
-        h('td', { class: 'small', text: t.line }), h('td', { class: 'small muted', text: t.history }))))),
+        h('td', {}, h('span', { class: 'chip dot', vars: { '--c': KIND_COLOR[kindOf(t)] }, text: kindOf(t) })),
+        h('td', { text: '●'.repeat(strengthOf(t)) + '○'.repeat(3 - strengthOf(t)) }),
+        h('td', { class: 'small', text: t.line ?? '' }), h('td', { class: 'small muted', text: t.history ?? '' }))))),
     h('div', { class: 'section-head' }, h('h2', { text: 'Review' })),
-    reviewPanel('ties', st.ties.issues, st.ties.file, onReview, 'No problems: every tie between two Umas of the cast, each Uma with at least two.'),
+    reviewPanel('ties', { errors: st.ties.errors, notes: st.ties.notes }, st.ties.file, onReview, 'Nothing to note: every tie reads whole.'),
   )
 }
 
@@ -248,7 +300,7 @@ function ring(ties) {
     s('circle', { cx: C, cy: C, r: R, class: 'orbit' }),
     ties.filter((t) => at.has(t.a) && at.has(t.b)).map((t) => {
       const [x1, y1] = at.get(t.a), [x2, y2] = at.get(t.b)
-      return s('path', { d: `M${x1},${y1} Q${C},${C} ${x2},${y2}`, class: 'edge', stroke: KIND_COLOR[t.kind], 'stroke-width': 1 + t.strength * 1.3 }, s('title', {}, `${umaName(t.a)} and ${umaName(t.b)}: ${t.kind}. ${t.line}`))
+      return s('path', { d: `M${x1},${y1} Q${C},${C} ${x2},${y2}`, class: 'edge', stroke: KIND_COLOR[kindOf(t)], 'stroke-width': 1 + strengthOf(t) * 1.3 }, s('title', {}, `${umaName(t.a)} and ${umaName(t.b)}: ${kindOf(t)}.${t.line ? ` ${t.line}` : ''}`))
     }),
     umas.map((id) => {
       const [x, y] = at.get(id), u = D.uma.get(id)

@@ -361,9 +361,10 @@ An old client never half-reads or overwrites a newer save:
 The romance build's story is a private pack: never in git, never in the bundle.
 
 - **The source** is the ignored `content/story/` on the author's Mac.
-- **`pnpm story:release`** (`scripts/story/release.mjs`; Node 22.18 or later, for type stripping) checks the whole pack
-  with the game's own validator (`storyPackFrom`, read in place). It refuses a pack with any problem, or one where a cast
-  Uma lacks her bible or her arrival scene; routes, pairs and the household may be partial. It writes the ignored
+- **`pnpm story:release`** (`scripts/story/release.mjs`; Node 22.18 or later, for type stripping) reads the pack with
+  the game's own reader (`readStoryPack`, read in place). Any pack releases: an error (only what the game can't read)
+  skips the one part it's in, notes block nothing, and both are printed; it refuses only a missing pack folder. The
+  release holds the pack as the game reads it ([the menu](../story-pack.md)). It writes the ignored
   `content/story-release/`, laid out as the bucket is: the index `story.json` (each file's path, bytes and SHA-256) and
   each file minified as `story/<name>.<hash8>.json`. The same inputs give the same files, and only the pack's own files
   are read. `--stand-in` releases the invented stand-in in git, for the dev server; `--from <dir> --out <dir>` moves
@@ -383,7 +384,9 @@ The romance build's story is a private pack: never in git, never in the bundle.
     never a line of the story); with none, the load throws and the boot gate offers Try again;
   - each file by its path, verified against the index's hash and kept in the content client's Cache Storage, so it
     downloads once: the cast, the ties, the bibles and the household at boot, routes and pairs on demand;
-  - the index is kept on the device only once the pack it names has loaded and checked whole;
+  - each file read with the same reader, a part with an error skipped; only a hash that doesn't match, or a route or
+    pair that isn't what the index lists, fails the load;
+  - the index is kept on the device only once the pack it names has loaded;
   - **on the dev server only,** a 404 for `story.json` (farm-api serves no release) plays the invented stand-in, and
     `VITE_FARM_STORY=stand-in` forces it. `DEV_ONLY_MODULES` keeps the stand-in out of every production build.
 
@@ -440,7 +443,8 @@ pnpm lint && pnpm test && pnpm build
 - **The owner guard locally:** run the built API with `ALLOWED_EMAIL` set and no `AUTH_MODE`.
 - **The Story Sandbox** (`tools/story-sandbox`, [its README](../../tools/story-sandbox/README.md)): `pnpm stories` serves
   http://127.0.0.1:4321, a local page for reading, playing and reviewing the story. It reads the private
-  `content/story/` (checked by the domain's own validator), the chapter drafts in `docs/story/chapters/`, and the game's
+  `content/story/` (read by the game's own reader, its errors and notes shown with counts; nothing blocks), the chapter
+  drafts in `docs/story/chapters/`, and the game's
   story code, on every request. Its only write is the owner's reviews, to `content/story/reviews.json`. It has no
   dependencies, binds to 127.0.0.1 and refuses other hosts. `pnpm stories:import-pack` brings in the Umas' pictures.
 

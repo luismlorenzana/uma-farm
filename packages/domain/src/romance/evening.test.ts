@@ -49,8 +49,8 @@ function married(save: SaveV4, n: number): SaveV4 {
 /** A pack whose 9000001 has these date beats only (the rest of her bible as the stand-in's). */
 function packWith(games: readonly string[]): Pick<StoryPack, 'cast' | 'bibles'> {
   const bible = json(PACK.bibles.get(ONE)!) as UmaBible
-  const route = bible.route.filter((b) => b.together.kind !== 'date')
-  const dates = games.map((game, i) => ({ ...route[1]!, id: `x${i}`, together: { kind: 'date', game } })) as UmaBible['route']
+  const route = bible.route!.filter((b) => b.together?.kind !== 'date')
+  const dates = games.map((game, i) => ({ ...route[1]!, id: `x${i}`, together: { kind: 'date', game } })) as NonNullable<UmaBible['route']>
   return { cast: PACK.cast, bibles: new Map([[ONE, { ...bible, route: [...route, ...dates] }]]) }
 }
 

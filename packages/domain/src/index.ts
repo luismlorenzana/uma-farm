@@ -156,12 +156,16 @@ export * from './story/pack'
 export * from './story/release'
 export * from './story/stand-in'
 export * from './story/opening-v4'
+// The story's one reader: errors only for what the game can't read, each skipping its part; notes for the rest. The
+// menu's defaults (the welcome list, her trigger to meet, her chapters) are read by `pack.ts`.
 export {
-  ANSWERS, answerAt, ARRIVAL, arrivalIssues, BIG_EVENTS, bibleIssues, CALLINGS, castIssues, CHAT_SETS, DATE_GAMES, EMOTES, EVENT_LIMITS, eventIssues, FARMING_PLAYS, gendersFarmer,
-  HOUSE_LINE_MAX, HOUSE_LINES, HOUSEHOLD_SCENES, householdIssues, LADDERS, pairIssues, routeIssues, RUNGS, stepIssues, STORY_PLACES, tiesIssues, TONES, unscriptedBeats, WISHES,
+  ANSWERS, answerAt, ARRIVAL, BIG_EVENTS, bibleTagNotes, CALLINGS, CHARACTER_ID, CHAT_SETS, DATE_GAMES, DEFAULT_CHAPTERS, DEFAULT_MEET, DEFAULT_WELCOME, EMOTES, EVENT_LIMITS,
+  eventNotes, FARMING_PLAYS, gendersFarmer, HOUSE_LINE_MAX, HOUSEHOLD_SCENES, LADDERS, LINE_LIMITS, checkBible, checkCast, checkHousehold, checkPair, checkRoute, checkTies, RUNGS,
+  stepFindings, STORY_PLACES, tagNotes, tieKind, tieStrength, TONES, TRIGGER_KINDS, unscriptedBeats, WISHES,
 } from './story/authored'
 export type {
-  Answer, Arrival, Beat as RouteBeat, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, DateGame, Emote, Finale, Household, HouseholdAt, HouseholdCheck, HouseholdScene,
-  Ladder, OptionGives, PairCheck, PairConversations, Play, Route, RouteCheck, Step, StoryContext, StoryPlace, Tie, Ties, Together, Tone, Trigger, UmaBible, Unlock, WeddingPlan, Wish,
+  Answer, Arrival, Beat as RouteBeat, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, DateGame, Emote, Finale, Findings, Gifts, HerChapter, Household, HouseholdAt,
+  HouseholdScene, Keepsake, Ladder, OptionGives, PairConversations, Play, Read, Route, Step, StoryContext, StoryPlace, StoryTrigger, Tie, TieKind, Ties, Together, Tone, Trigger, UmaBible,
+  Unlock, WeddingPlan, Wish,
 } from './story/authored'
 

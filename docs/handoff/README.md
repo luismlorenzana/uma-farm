@@ -10,11 +10,10 @@ deployed site is the work in progress: saves can start over whenever the game ne
 
 | Track | Piece | Who | State |
 |---|---|---|---|
-| **Game's frame** | **An open story pack:** every part optional, any characters, notes instead of blocks; it unblocks the story session | Claude | [F61](tasks/F61-open-story-pack.md): next, after your go |
 | **Game's frame** | One game on v4, placeholders, the farm by building, the lean start, the town, meeting her, her chapters | Claude | [F62](tasks/F62-one-game.md) to [F68](tasks/F68-her-chapters.md), in order |
 | **HD-2D farm** | **The working nod:** an Uma at work nods every 4–7 seconds, seeded by her id, none with reduced motion, on uma-stage 0.5.0's `emote` | Claude | Next on this track: small, no packet |
 | **HD-2D farm** | **The kit's second wave:** the 30 frames the stand-in still draws, painted in code | Claude, in a uma-platform session | [F9](tasks/F9-kit-farm.md): waits for your go |
-| **Story** | **Free authoring:** the world, the backgrounds, the characters, however the story wants | You and the story session | [F40](tasks/F40-story-authoring.md): how it reaches the game |
+| **Story** | **Free authoring:** the world, the backgrounds, the characters, however the story wants. The pack is open: every part optional, notes instead of blocks | You and the story session | [F40](tasks/F40-story-authoring.md): how it reaches the game; [the pack's menu](../story-pack.md) |
 | **Art** | **The town cast's busts** | ChatGPT | [F25](tasks/F25-art-m4.md), part B |
 
 ## Open packets
@@ -23,7 +22,6 @@ A packet is written when a piece is next and deleted when it ships. Git keeps th
 
 | Packet | What | Who |
 |---|---|---|
-| [F61](tasks/F61-open-story-pack.md) | An open story pack: every part optional, notes instead of blocks, any pack releasable; her trigger, her chapters and the welcome list in the menu | Claude |
 | [F62](tasks/F62-one-game.md) | One game: the romance switch gone, save v4 only (the old one backed up, the farm starts over), v2 and v3's code retired | Claude |
 | [F63](tasks/F63-story-placeholders.md) | Placeholders everywhere: the game plays whole with no story, with four default chapters | Claude |
 | [F64](tasks/F64-farm-by-building.md) | The farm grows by building: no global chapters; Farm Rank from income; places built with gold and goods; weddings open houses | Claude |
@@ -39,7 +37,7 @@ A packet is written when a piece is next and deleted when it ships. Git keeps th
 
 | What | Where |
 |---|---|
-| **Say go on Phase 1,** starting with F61 and F62 | [roadmap.md](../roadmap.md#phase-1-one-game-built-around-the-umas) |
+| **Say go on the rest of Phase 1,** from F62 | [roadmap.md](../roadmap.md#phase-1-one-game-built-around-the-umas) |
 | **The HD-2D farm on your phone:** turn on Account → HD-2D farm, put an Uma to work and watch her walk, end the day, tap her bubble in the morning. Then say how the walk and the bubble feel, and whether the pips can go | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story** however you like | The Farm Story Sandbox on this Mac (`pnpm stories`) |
 | **The kit's second wave:** your go, when you want it | [F9](tasks/F9-kit-farm.md) |

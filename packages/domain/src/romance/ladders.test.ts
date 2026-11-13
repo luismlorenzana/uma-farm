@@ -17,7 +17,7 @@ import { startLoopJob } from '../save/loop-work'
 import { parseSaveV4 } from '../save/parse-v4'
 import { newSave, pairKey } from '../save/v3'
 import { newLove, newSaveV4, type Love, type SaveV4 } from '../save/v4'
-import { bibleIssues, castIssues, type Cast, type CastEntry, type Trigger, type UmaBible } from '../story/authored'
+import { checkBible, checkCast, type Cast, type CastEntry, type Trigger, type UmaBible } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_IN_CAST, STAND_INS } from '../story/authored.fixture'
 import { readScene } from '../story/scenes'
 import { storyPackFrom, type StoryPack } from '../story/pack'
@@ -54,7 +54,7 @@ const withLove = (save: SaveV4, id: string, love: Partial<Love>): SaveV4 => ({ .
 const give = (save: SaveV4, good: string, stars = 1, count = 1): SaveV4 => ({ ...save, items: addGoods(save.items, good, stars, count) })
 /** 9000001's bible with her F1 behind another trigger. */
 function packWithTrigger(trigger: Trigger, rung = 'f1'): StoryPack {
-  const bible: UmaBible = { ...json(STAND_IN_BIBLE), route: json(STAND_IN_BIBLE).route.map((b) => (b.id === rung ? { ...b, trigger } : b)) }
+  const bible: UmaBible = { ...json(STAND_IN_BIBLE), route: json(STAND_IN_BIBLE).route!.map((b) => (b.id === rung ? { ...b, trigger } : b)) }
   return { ...PACK, bibles: new Map([[ONE, bible]]) }
 }
 /** A pack whose cast is the stand-ins plus `more` (invented ids 9000004 on, no bibles). */
@@ -301,10 +301,12 @@ describe('birthdays', () => {
     const cast = json(STAND_IN_CAST) as unknown as { umas: Record<string, unknown>[] }
     cast.umas[1]!.birthday = { month: 2, day: 30 }
     cast.umas[2]!.birthday = { month: 13, day: 1 }
-    expect(castIssues(cast, { umas: new Set(STAND_INS) })).toEqual([
-      'Uma 2 (9000002): a birthday is { month: 1–12, day } on a real date, with no year',
-      'Uma 3 (9000003): a birthday is { month: 1–12, day } on a real date, with no year',
+    const read = checkCast(cast)
+    expect(read.errors).toEqual([
+      'Uma 2 (9000002): birthday is { month: 1–12, day } on a real date; skipped',
+      'Uma 3 (9000003): birthday is { month: 1–12, day } on a real date; skipped',
     ])
+    expect(read.value.umas.map((u) => u.birthday ?? null)).toEqual([{ month: 3, day: 28 }, null, null])
   })
 
   it('writes her ★ line the day before and on the day', () => {
@@ -471,17 +473,18 @@ describe('the morning\'s Hearts lines', () => {
 })
 
 describe('the format\'s chats', () => {
-  it('takes 3–20 lines a stage under the line rules', () => {
+  it('takes any number of lines a stage; a line too long for the screen is skipped, the line rules are notes', () => {
     const ctx = { umas: new Set(STAND_INS) }
-    expect(bibleIssues(STAND_IN_BIBLE, ctx)).toEqual([])
+    expect(checkBible(STAND_IN_BIBLE, ONE, ctx)).toMatchObject({ errors: [], notes: [] })
     const bad = json(STAND_IN_BIBLE) as unknown as { chats: Record<string, unknown> }
     bad.chats = { friend: ['One.', 'Two.'], partner: ['Hi, {name}.', 'Yes, sir.', 'x'.repeat(161)], spouse: ['A.', 'B.', 'C.'], extra: [] }
-    expect(bibleIssues(bad, ctx)).toEqual([
-      'chats.extra: a chat set is friend, partner or spouse',
-      'chats.friend: 3–20 lines',
-      'chats.partner 1: unknown placeholder {name} ({farmer} only)',
+    const read = checkBible(bad, ONE, ctx)
+    expect(read.errors).toEqual(['chats.partner 3: its line is 161 characters; the screen shows 160; skipped'])
+    expect(read.notes).toEqual([
+      'chats.extra: not a chat set the game reads (friend, partner, spouse); kept',
+      'chats.partner 1: {name} shows as written ({farmer} is the one placeholder)',
       'chats.partner 2: “sir” genders the farmer',
-      'chats.partner 3: a line of 1–160 characters',
     ])
+    expect(read.value!.chats).toEqual({ friend: ['One.', 'Two.'], partner: ['Hi, {name}.', 'Yes, sir.'], spouse: ['A.', 'B.', 'C.'], extra: [] })
   })
 })

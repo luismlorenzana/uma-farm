@@ -268,7 +268,7 @@ export function albumTiles(save: Pick<SaveV4, 'love' | 'memories'>, pack: Pick<S
   return MEMORY_TILES.map((rung) => ({
     rung, label: tileLabel(rung), filter: albumFilterOf(rung),
     state: played.has(rung) ? 'played' : rung === next ? 'next' : 'locked',
-    caption: played.has(rung) ? pack.bibles.get(id)?.route.find((b) => b.id === rung)?.beat ?? rungName(rung) : null,
+    caption: played.has(rung) ? pack.bibles.get(id)?.route?.find((b) => b.id === rung)?.beat ?? rungName(rung) : null,
   }))
 }
 

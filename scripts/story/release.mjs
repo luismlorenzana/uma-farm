@@ -1,17 +1,17 @@
 #!/usr/bin/env node
-// Builds the story pack's release: the private pack in the ignored
-// content/story/, checked whole by the game's own validator (`storyPackFrom`, read in place with Node's type stripping as
-// the Story Sandbox reads it), written to the ignored content/story-release/ laid out as the bucket is: each file
-// minified as `story/<name>.<hash8>.json` and the index `story.json`. The same inputs give the same files.
+// Builds the story pack's release: the private pack in the ignored content/story/, read by the game's own reader
+// (`readStoryPack`, read in place with Node's type stripping as the Story Sandbox reads it), written to the ignored
+// content/story-release/ laid out as the bucket is: each file minified as `story/<name>.<hash8>.json` and the index
+// `story.json`. The same inputs give the same files.
 //
-// It refuses a pack where anything fails the validator, or where a cast Uma lacks her bible or her arrival scene (the
-// release needs all of them); routes, pairs and the household may be partial ("Her story is still being written").
-// Only the pack's files are read (cast, ties, umas/, routes/, pairs/, household): the sandbox's notes, reviews and the
-// cast pack's images beside them never leave the folder.
+// Any pack releases: a partial one is the normal case. The release holds the pack as the game reads it: a part with an
+// error (a file that isn't JSON, a value the game can't read, a line longer than its screen) is skipped and listed, the
+// rest kept; the notes (what isn't written yet, and what plays instead) are listed and block nothing. It refuses only
+// when there's no pack folder, or its index can't be written. Only the pack's files are read (cast, ties, umas/, routes/,
+// pairs/, household): the sandbox's notes, reviews and the cast pack's images beside them never leave the folder.
 //
 //   pnpm story:release                  content/story → content/story-release
-//   pnpm story:release --stand-in       the invented stand-in in git, for the dev server (its forager and fisher have
-//                                       no bible by design, so only there a bible may be missing)
+//   pnpm story:release --stand-in       the invented stand-in in git, for the dev server
 //   pnpm story:release --from <dir> --out <dir>
 //
 // Needs Node with type stripping (22.18 or later).
@@ -32,10 +32,10 @@ export const STAND_IN = join(DOMAIN, 'story/stand-in')
 
 if (!process.features?.typescript) throw new Error('This Node reads no TypeScript: the release needs Node 22.18 or later (type stripping).')
 register(pathToFileURL(join(ROOT, 'tools/story-sandbox/lib/resolve-ts.mjs')))
-const { storyPackFrom, StoryPackError } = await import(pathToFileURL(join(DOMAIN, 'story/pack.ts')).href)
+const { readStoryPack } = await import(pathToFileURL(join(DOMAIN, 'story/pack.ts')).href)
 const { parseStoryIndex, releasedStoryPack, STORY_INDEX, STORY_NAME, storyFileName, storyFilePath } = await import(pathToFileURL(join(DOMAIN, 'story/release.ts')).href)
 
-/** A pack the release refuses, with every reason. */
+/** A pack the release refuses (no pack folder, or an index it can't write), with every reason. */
 export class ReleaseRefused extends Error {
   constructor(issues) {
     super(`The story pack can't be released (${issues.length} issue${issues.length === 1 ? '' : 's'}):\n${issues.map((i) => `  - ${i}`).join('\n')}`)
@@ -45,63 +45,52 @@ export class ReleaseRefused extends Error {
 }
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
-const isObject = (v) => typeof v === 'object' && v !== null && !Array.isArray(v)
 
-/** Reads a JSON file, or undefined when it isn't there. A file that doesn't parse is an issue. */
-async function json(path, issues, from) {
+/** Reads a JSON file, or undefined when it isn't there. A file that doesn't parse is an error: it's skipped. */
+async function json(path, errors, from) {
   let text
   try { text = await readFile(path, 'utf8') } catch (e) { if (e.code === 'ENOENT') return undefined; throw e }
-  try { return JSON.parse(text) } catch (e) { issues.push(`${relative(from, path)}: not JSON (${e.message})`); return undefined }
+  try { return JSON.parse(text) } catch (e) { errors.push(`${relative(from, path)}: not JSON (${e.message}); skipped`); return undefined }
 }
 
 /** A folder's `<name>.json` files, by name; none when the folder isn't there. */
-async function folder(dir, issues, from) {
+async function folder(dir, errors, from) {
   const names = (await readdir(dir).catch(() => [])).filter((n) => n.endsWith('.json')).sort()
   const out = {}
   for (const file of names) {
     const name = basename(file, '.json')
-    if (!STORY_NAME.test(name)) { issues.push(`${relative(from, join(dir, file))}: a file name is lowercase letters, digits and -`); continue }
-    const value = await json(join(dir, file), issues, from)
+    if (!STORY_NAME.test(name)) { errors.push(`${relative(from, join(dir, file))}: a file name is lowercase letters, digits and -; skipped`); continue }
+    const value = await json(join(dir, file), errors, from)
     if (value !== undefined) out[name] = value
   }
   return out
 }
 
-/** The pack's files in `from`, laid out as the validator reads them (`PackFiles`). */
+/** The pack's files in `from`, as the reader takes them (`PackFiles`), and the files it couldn't read at all. */
 export async function readPack(from) {
   if (!existsSync(from)) throw new ReleaseRefused([`No story pack in ${from}`])
-  const issues = []
-  const cast = await json(join(from, 'cast.json'), issues, from)
-  const ties = await json(join(from, 'ties.json'), issues, from)
-  if (cast === undefined && !issues.some((i) => i.startsWith('cast.json'))) issues.push('cast.json is missing')
-  if (ties === undefined && !issues.some((i) => i.startsWith('ties.json'))) issues.push('ties.json is missing')
+  const errors = []
   const files = {
-    cast, ties,
-    umas: await folder(join(from, 'umas'), issues, from),
-    routes: await folder(join(from, 'routes'), issues, from),
-    pairs: await folder(join(from, 'pairs'), issues, from),
+    cast: await json(join(from, 'cast.json'), errors, from),
+    ties: await json(join(from, 'ties.json'), errors, from),
+    umas: await folder(join(from, 'umas'), errors, from),
+    routes: await folder(join(from, 'routes'), errors, from),
+    pairs: await folder(join(from, 'pairs'), errors, from),
   }
-  const household = await json(join(from, 'household.json'), issues, from)
+  const household = await json(join(from, 'household.json'), errors, from)
   if (household !== undefined) files.household = household
-  return { files, issues }
+  return { files, errors }
 }
 
-/** Every issue that refuses a release: the validator's, then each cast Uma's missing bible or arrival scene. */
-export function releaseIssues(files, { bibles = true } = {}) {
-  const issues = []
-  try { storyPackFrom(files) } catch (e) { if (e instanceof StoryPackError) issues.push(...e.issues); else throw e }
-  const cast = isObject(files.cast) && Array.isArray(files.cast.umas) ? files.cast.umas.filter((u) => isObject(u) && typeof u.characterId === 'string') : []
-  for (const { characterId: id } of cast) {
-    if (bibles && files.umas[id] === undefined) issues.push(`umas/${id}.json: her bible is missing`)
-    const route = files.routes[id]
-    if (!isObject(route) || !Array.isArray(route.events) || !route.events.some((e) => isObject(e) && e.id === 'arrival')) issues.push(`routes/${id}.json: her arrival scene is missing`)
-  }
-  return issues
+/** The pack as the game reads it: its files with every broken part skipped, what was skipped (`errors`) and the notes. */
+export function releaseCheck(files) {
+  const read = readStoryPack(files)
+  return { files: read.files, errors: read.errors, notes: read.notes }
 }
 
 const byId = (a, b) => (Number(a) - Number(b)) || a.localeCompare(b)
 
-/** The release's files, minified, in name order: [name, bytes]. */
+/** The release's files, minified, in name order: [name, bytes]. The cast and the ties are always there. */
 function releaseFiles(files) {
   const out = [[storyFileName.cast, files.cast], [storyFileName.ties, files.ties]]
   if (files.household !== undefined) out.push([storyFileName.household, files.household])
@@ -113,13 +102,14 @@ function releaseFiles(files) {
 
 /**
  * Builds the release of the pack in `from` into `out`: the hash-named files under `story/`, swapped in whole, then
- * `story.json`. Checks its own output as the game reads it (the index, then every route and pair). Returns the index
- * and a summary in ids and counts. Throws `ReleaseRefused` and writes nothing when the pack isn't releasable.
+ * `story.json`. The release holds the pack as the game reads it, every broken part skipped. Checks its own output as the
+ * game reads it (the index, then every route and pair). Returns the index, a summary in ids and counts, what was skipped
+ * (`errors`) and the `notes`. Throws `ReleaseRefused` and writes nothing when there's no pack folder or no index to write.
  */
-export async function buildRelease({ from = SOURCE, out = OUT, builtAt = new Date().toISOString(), bibles = true } = {}) {
-  const { files, issues } = await readPack(from)
-  if (issues.length === 0) issues.push(...releaseIssues(files, { bibles }))
-  if (issues.length > 0) throw new ReleaseRefused(issues)
+export async function buildRelease({ from = SOURCE, out = OUT, builtAt = new Date().toISOString() } = {}) {
+  const read = await readPack(from)
+  const { files, errors: skipped, notes } = releaseCheck(read.files)
+  const errors = [...read.errors, ...skipped]
 
   const written = releaseFiles(files)
   const listed = Object.fromEntries(written.map(([name, bytes]) => {
@@ -135,15 +125,21 @@ export async function buildRelease({ from = SOURCE, out = OUT, builtAt = new Dat
     pairs: Object.fromEntries(Object.keys(files.pairs).sort().map((name) => [name, files.pairs[name].levels.map((l) => l.hearts).sort((a, b) => a - b)])),
   }
 
-  // The game's reader takes it: the index, the files at boot, every route and pair.
+  // The game's reader takes it: the index, the files at boot, every route and pair. A failure here is the release's own
+  // fault, never the pack's: nothing is written.
   const bytesOf = new Map(written)
-  const pack = await releasedStoryPack(parseStoryIndex(index), async (name, file) => {
-    const bytes = bytesOf.get(name)
-    if (!bytes || sha256(bytes) !== file.sha256) throw new Error(`${name}: not the bytes the index lists`)
-    return JSON.parse(bytes.toString('utf8'))
-  })
-  for (const id of Object.keys(index.scripted)) await pack.route(id)
-  for (const name of Object.keys(index.pairs)) await pack.pair(...name.split('-'))
+  let pack
+  try {
+    pack = await releasedStoryPack(parseStoryIndex(index), async (name, file) => {
+      const bytes = bytesOf.get(name)
+      if (!bytes || sha256(bytes) !== file.sha256) throw new Error(`${name}: not the bytes the index lists`)
+      return JSON.parse(bytes.toString('utf8'))
+    })
+    for (const id of Object.keys(index.scripted)) await pack.route(id)
+    for (const name of Object.keys(index.pairs)) await pack.pair(...name.split('-'))
+  } catch (e) {
+    throw new ReleaseRefused([`story.json can't be written: ${e.issues?.join('; ') ?? e.message}`])
+  }
 
   // Swap the finished folder in, then the index that names its files.
   await mkdir(out, { recursive: true })
@@ -169,8 +165,10 @@ export async function buildRelease({ from = SOURCE, out = OUT, builtAt = new Dat
     beats,
     pairs: Object.keys(index.pairs).length,
     household: files.household !== undefined,
+    skipped: errors.length,
+    notes: notes.length,
   }
-  return { index, summary }
+  return { index, summary, errors, notes }
 }
 
 async function main() {
@@ -180,9 +178,25 @@ async function main() {
   const from = option('--from') ?? process.env.STORY_FROM ?? (standIn ? STAND_IN : SOURCE)
   const out = option('--out') ?? process.env.STORY_OUT ?? OUT
   const builtAt = process.env.SOURCE_DATE_EPOCH ? new Date(Number(process.env.SOURCE_DATE_EPOCH) * 1000).toISOString() : undefined
-  const { summary: s } = await buildRelease({ from, out, bibles: !standIn, ...(builtAt ? { builtAt } : {}) })
+  const { summary: s, errors, notes } = await buildRelease({ from, out, ...(builtAt ? { builtAt } : {}) })
   console.log(`Story release ${s.release}${standIn ? ' (the stand-in)' : ''}: ${s.files} files, ${(s.bytes / 1024).toFixed(1)} KB → ${out.startsWith(ROOT) ? relative(ROOT, out) : out}`)
-  console.log(`  ${s.cast} Umas, ${s.bibles} bibles; ${s.routes} routes scripting ${s.events} events (bibles hold ${s.beats} beats); ${s.pairs} pairs; household ${s.household ? 'yes' : 'not yet'}`)
+  console.log(`  ${s.cast} character${s.cast === 1 ? '' : 's'}, ${s.bibles} bible${s.bibles === 1 ? '' : 's'}; ${s.routes} routes scripting ${s.events} events (bibles hold ${s.beats} beats); ${s.pairs} pairs; household ${s.household ? 'yes' : 'not yet'}`)
+  if (errors.length > 0) console.log(`\nSkipped, since the game can't read them (${errors.length}); the rest of the pack is in:\n${errors.map((e) => `  - ${e}`).join('\n')}`)
+  if (notes.length > 0) console.log(`\nNotes (${notes.length}), which block nothing:\n${groupNotes(notes).map((n) => `  - ${n}`).join('\n')}`)
+}
+
+/** Notes that differ only in a character's id, as one line with the ids: "… (37: 9000004, 9000005, …)". */
+export function groupNotes(notes) {
+  const groups = new Map()
+  for (const note of notes) {
+    const ids = note.match(/\b[1-9]\d{3,}\b/g) ?? []
+    const key = note.replace(/\b[1-9]\d{3,}\b/g, '<id>').replace(/\bUma \d+ \(/g, 'Uma (')
+    const group = groups.get(key) ?? { first: note, ids: [] }
+    group.ids.push(...ids.filter((id) => !group.ids.includes(id)))
+    group.count = (group.count ?? 0) + 1
+    groups.set(key, group)
+  }
+  return [...groups].map(([key, g]) => (g.count === 1 ? g.first : `${key} (${g.count}: ${g.ids.join(', ')})`))
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

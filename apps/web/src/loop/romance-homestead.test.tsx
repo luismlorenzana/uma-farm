@@ -237,7 +237,7 @@ describe('the morning', () => {
     const parts = summaryParts(morning.summary!, () => 'Stand-in 1', [], null, home)
     const hearts = parts.find((p) => p.section === 'hearts')!.lines
     expect(hearts[0]).toMatchObject({ key: 'house', text: '⌂ Farmhouse · Stand-in 1 · ♥ +30 · ☕ 3 fed · +1 item', to: '/?sheet=homestead&house=0' })
-    expect(fixture.pack!.household!.houseLines[ONE]!.map((l) => `Stand-in 1: “${l.replaceAll('{farmer}', 'Robin')}”`)).toContain(hearts[0]!.quote)
+    expect(fixture.pack!.household!.houseLines![ONE]!.map((l) => `Stand-in 1: “${l.replaceAll('{farmer}', 'Robin')}”`)).toContain(hearts[0]!.quote)
     expect(hearts[1]).toMatchObject({ key: 'misses', text: '⌂ Farmhouse misses you', misses: 0 })
     expect(parts.find((p) => p.section === 'news')!.lines[0]).toMatchObject({ text: 'Married 1 · The homestead opens, and the night’s house', tag: 'Household' })
     // On the card: Tonight › picks it.

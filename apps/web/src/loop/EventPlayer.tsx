@@ -196,7 +196,7 @@ function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLo
   const playsBefore = before.filter((s) => 'play' in s).length
   const choiceNow = step && 'choice' in step && choicesBefore >= picks.length ? step.choice : null
   const playNow: { as: PlayAs; prompt: string | null } | null = step && 'play' in step && mode !== 'ask' && playsBefore >= plays.length
-    ? { as: playOf((step as { play: Play }).play), prompt: (step as { play: Play }).play.prompt } : null
+    ? { as: playOf((step as { play: Play }).play), prompt: (step as { play: Play }).play.prompt ?? null } : null
   const ended = cursor >= shown.length
   const extraNow = ended && extra && plays.length < pathPlays(shown, null).length + 1 ? { as: extra, prompt: null } : null
   const name = nameOf(id)

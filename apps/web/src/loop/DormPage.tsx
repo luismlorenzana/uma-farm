@@ -78,7 +78,7 @@ function Dorm({ save }: { save: FarmSave }) {
   const next = nextDorm(save)
   const beds = bedsFor(save.version, save.dorm.level)
   /** v4: a level whose arrival hasn't come yet brings someone new (never who). */
-  const bringsSomeone = (level: number): boolean => save.version === 4 && !!story?.cast.umas.some((u) => u.arrives.kind === 'beds' && u.arrives.dormLevel === level && !save.roster[u.characterId])
+  const bringsSomeone = (level: number): boolean => save.version === 4 && !!story?.cast.umas.some((u) => u.arrives?.kind === 'beds' && u.arrives.dormLevel === level && !save.roster[u.characterId])
   const arrivalWords = (level: number): string => (bringsSomeone(level) ? ' · someone new arrives' : '')
   const nameOf = (id: string) => view?.album.get(id)?.name ?? 'Uma'
   const canSwap = save.dorm.home.some((id) => swapBlock(save, id) === null) && away.some((id) => !arriving(save, id))

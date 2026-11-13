@@ -34,6 +34,24 @@ start: each pack fills in more of what's already there, and nothing waits for th
    on placeholders. A pack only adds words, scenes and her own chapters.
 4. **The stand-in pack stays for tests only.** The dev server and a fresh device run on "no pack": the placeholders.
 
+## What F61 left for this packet
+
+The open pack (F61) made every part optional and put a stopgap wherever the game needed a value the pack no longer
+guarantees. Each is to become a proper placeholder here:
+
+| Stopgap today | Where |
+|---|---|
+| A cast Uma with no `outfitId` plays as her character id: a lettered disc named "An Uma", D talents | `outfitOf` (`story/pack.ts`), the web's `castLens` |
+| No calling and no bible's `favouriteLine`: she has no line (no ×1.2, no perk at her line) | `favouriteOf`, `linePlaces` |
+| No `opening`: those who arrive at it, else the welcome list come up the road; the last line counts them; with nobody, the opening ends on chapter 1's card | `openingOf`, `chapterScene`'s `roadLine`, the scene player |
+| No `arrives` and not in the opening: she never comes to the farm (F67's meeting replaces this) | `arrivalsTonight`, `nextArrivals` |
+| An arrival scene written with no choice pays +50 alone; with several, the first pays | `finishArrival`, the scene player's arrival |
+| No arrival scene: `FALLBACK_ARRIVAL` (a new face at the Gate) | The scene player, the event player |
+| An empty `wedding.places`: her wedding beat's place and the farm's | `weddingPlaces` |
+| A tie with no `kind` or `strength`: "Close", strength 1 | `tieKind`, `tieStrength` |
+| A pair level, a household part or a play prompt not written: none shown, the scene goes on | The pair, household and event players |
+| No chapters: `DEFAULT_CHAPTERS`, with their titles | `chaptersOf` |
+
 ## Do
 
 1. One module of placeholders in `packages/domain/src/story/`, and one lookup: "the pack's, or the placeholder".

@@ -16,7 +16,7 @@ import { parseSaveV4 } from '../save/parse-v4'
 import { newSave } from '../save/v3'
 import { newSaveV4, newTodayV4, type Love, type SaveV4 } from '../save/v4'
 import { addGoods, goodCount } from '../save/warehouse'
-import { bibleIssues, gendersFarmer, type Step } from '../story/authored'
+import { checkBible, gendersFarmer, type Step } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_IN_ROUTE, STAND_INS } from '../story/authored.fixture'
 import { BENCH_SCENE_LINES } from '../story/bench'
 import { storyPackFrom } from '../story/pack'
@@ -255,8 +255,8 @@ describe('the wedding', () => {
     expect(card.wedding?.place).toBe('fields')
     expect(save.love[ONE]!.flags).toEqual(expect.arrayContaining([weddingPlaceFlag('fields'), vowFlag(2)]))
     expect(weddingPlaceOf(save.love[ONE]!.flags)).toBe('fields')
-    expect(() => playEvent(engaged(), PACK, ONE, wedding('overlook', null))).toThrow('Choose one of her three places.')
-    expect(() => playEvent(engaged(), PACK, ONE, wedding(undefined, null))).toThrow('Choose one of her three places.')
+    expect(() => playEvent(engaged(), PACK, ONE, wedding('overlook', null))).toThrow('Choose one of her places.')
+    expect(() => playEvent(engaged(), PACK, ONE, wedding(undefined, null))).toThrow('Choose one of her places.')
     expect(() => playEvent(engaged(), PACK, ONE, wedding('fields', undefined))).toThrow('Choose the reception.')
   })
 
@@ -316,13 +316,13 @@ describe('the wedding', () => {
 
 describe('the words', () => {
   const all = (list: readonly Step[]): string[] => list.flatMap((s) => 'say' in s ? [s.line] : 'narrate' in s ? [s.narrate] : 'thought' in s ? [s.thought]
-    : 'choice' in s ? s.choice.flatMap((o) => [o.text, ...all(o.then ?? [])]) : 'play' in s ? [s.play.prompt, ...all(s.play.good ?? []), ...all(s.play.miss ?? [])] : [])
+    : 'choice' in s ? s.choice.flatMap((o) => [o.text, ...all(o.then ?? [])]) : 'play' in s ? [...(s.play.prompt ? [s.play.prompt] : []), ...all(s.play.good ?? []), ...all(s.play.miss ?? [])] : [])
 
   it('never genders the farmer: the bench\'s scene and words, the proposal and the wedding', () => {
     const words = [
       ...BENCH_SCENE_LINES.beats.map((b) => b.line), BENCH_SCENE_LINES.title, ...Object.values(BENCH_WORDS),
       ...all(steps('proposal')), ...all(steps('wedding')),
-      'Choose a ring from the Warehouse.', 'Choose one of her three places.', 'Choose a dish for the reception.', 'A better ring: a higher grade than hers.',
+      'Choose a ring from the Warehouse.', 'Choose one of her places.', 'Choose a dish for the reception.', 'A better ring: a higher grade than hers.',
     ]
     expect(words.filter((w) => gendersFarmer(w))).toEqual([])
     expect([gendersFarmer('the bride and groom'), gendersFarmer('your husband'), gendersFarmer('your spouse and partner')]).toEqual(['groom', 'husband', null])
@@ -332,16 +332,22 @@ describe('the words', () => {
 
 describe('the format: `wedding.places`', () => {
   const ctx = { umas: new Set(STAND_INS) }
-  const issues = (wedding: unknown) => bibleIssues({ ...STAND_IN_BIBLE, wedding }, ctx)
-  it('takes three different known places, and none at all', () => {
-    expect(bibleIssues(STAND_IN_BIBLE, ctx)).toEqual([])
+  const read = (wedding: unknown) => checkBible({ ...STAND_IN_BIBLE, wedding }, ONE, ctx)
+  const issues = (wedding: unknown) => { const { errors, notes } = read(wedding); return [...errors, ...notes] }
+  it('takes any number of known places, and none at all; an unknown one is skipped', () => {
+    expect(issues(STAND_IN_BIBLE.wedding)).toEqual([])
     const { wedding: _wedding, ...without } = STAND_IN_BIBLE
-    expect(bibleIssues(without, ctx)).toEqual([])
-    expect(issues({ places: ['fields', 'overlook'] })).toEqual(['wedding.places: three places'])
-    expect(issues({ places: ['fields', 'fields', 'overlook'] })).toEqual(['wedding.places: three different places'])
-    expect(issues({ places: ['fields', 'moon', 'overlook'] })).toEqual(['wedding.places 2: unknown place moon'])
-    expect(issues({ places: ['fields', 'town', 'overlook'], when: 'spring' })).toEqual(['wedding is { places: [three places] }'])
-    expect(issues(['fields', 'town', 'overlook'])).toEqual(['wedding is { places: [three places] }'])
+    expect(checkBible(without, ONE, ctx)).toMatchObject({ errors: [], notes: [] })
+    expect(issues({ places: ['fields', 'overlook'] })).toEqual([])
+    expect(issues({ places: ['fields', 'fields', 'overlook'] })).toEqual(['wedding.places: fields is listed twice; once is kept'])
+    expect(issues({ places: ['fields', 'moon', 'overlook'] })).toEqual(['wedding.places 2: moon isn’t one of the game’s places; skipped'])
+    expect(read({ places: ['fields', 'moon', 'overlook'] }).value!.wedding).toEqual({ places: ['fields', 'overlook'] })
+    expect(issues({ places: ['fields', 'town', 'overlook'], when: 'spring' })).toEqual([])
+    expect(issues(['fields', 'town', 'overlook'])).toEqual(['wedding is { places: [places] }; skipped'])
+    // With none it reads, the farm's places play.
+    expect(issues({ places: [] })).toEqual(['wedding.places: none the game reads, so the farm’s places play'])
+    const bible = read({ places: [] }).value!
+    expect(weddingPlaces({ bibles: new Map([[ONE, bible]]) }, ONE)).toEqual(['chapel-bell', 'fields', 'overlook'])
   })
 })
 

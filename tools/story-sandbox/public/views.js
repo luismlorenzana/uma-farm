@@ -251,6 +251,8 @@ function scenesTab(entry) {
 }
 
 // ── Reviews ──────────────────────────────────────────────────────────────────
+/** The Review panel: the owner's verdict, and beside it what the checks found. `issues` is a list (the drafts' checks),
+ * or the game's reader's `{ errors, notes }`: errors skip their part, notes block nothing. */
 export function reviewPanel(item, issues, file, onReview, clean) {
   const current = review(item) ?? { status: null, note: '' }
   let status = current.status
@@ -269,9 +271,15 @@ export function reviewPanel(item, issues, file, onReview, clean) {
       row, h('div', { class: 'section-head' }), note,
       h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: async () => { saved.textContent = 'Saving…'; try { await onReview({ item, status, note: note.value }); saved.textContent = 'Saved' } catch (e) { saved.textContent = `Not saved: ${e.message}` } }, text: 'Save note' }), saved),
     ),
-    h('div', { class: 'panel' },
+    Array.isArray(issues) ? h('div', { class: 'panel' },
       h('h3', { text: 'Authoring checks' }),
       issues.length ? h('ul', { class: 'issues' }, issues.map((i) => h('li', { text: i }))) : h('p', { class: 'muted', text: clean }),
+      h('p', { class: 'muted small', text: `File: ${file}` }),
+    ) : h('div', { class: 'panel' },
+      h('h3', { text: `What the game reads · ${issues.errors.length} skipped · ${issues.notes.length} notes` }),
+      issues.errors.length ? h('div', {}, h('h4', { text: 'Skipped: the game can’t read these, so each skips only its part' }), h('ul', { class: 'issues' }, issues.errors.map((i) => h('li', { text: i })))) : null,
+      issues.notes.length ? h('div', {}, h('h4', { text: 'Notes: they block nothing' }), h('ul', { class: 'list small' }, issues.notes.map((i) => h('li', { text: i })))) : null,
+      issues.errors.length || issues.notes.length ? null : h('p', { class: 'muted', text: clean }),
       h('p', { class: 'muted small', text: `File: ${file}` }),
     ),
   )
@@ -373,7 +381,9 @@ export function formatView() {
   const first = D.data.chapters.find((e) => playable(e).length)
   return h('div', {},
     h('h1', { text: 'The format' }),
-    h('p', { class: 'muted', text: 'What a draft holds, in the game’s own shapes, so it moves into the game as it is. Green plays in uma-farm today; amber is what the sandbox tries first.' }),
+    h('div', { class: 'note-box' }, h('b', { text: 'The story pack is a menu, not a checklist. ' }),
+      'docs/story-pack.md lists everything the game can read from content/story/, what each part does in play, and what plays when it’s missing. Every part is optional and any number of characters is fine. The game skips only a part it can’t read (an error); everything else is a note, and nothing blocks writing or releasing.'),
+    h('p', { class: 'muted', text: 'What a chapter draft holds, in the game’s own shapes, so it moves into the game as it is. Green plays in uma-farm today; amber is what the sandbox tries first.' }),
     first ? h('p', {}, h('a', { class: 'btn primary', href: `#/play/ch/${first.chapter.chapter}/${playable(first)[0].kind}`, text: `Play a scene from chapter ${first.chapter.chapter}` })) : null,
     h('div', { class: 'two' },
       h('div', { class: 'stack' },
