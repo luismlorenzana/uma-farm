@@ -1,12 +1,12 @@
-// v2 → v3 (F17; core spec CS54, D25, D28, D29): the Wilds' save carried into the farm's own loop. It runs once, in the
+// v2 → v3: the Wilds' save carried into the farm's own loop. It runs once, in the
 // loop's boot, after master data's roster has loaded: her calling's line comes from master data, which the API's parse
-// doesn't have (decision 2). Pure and deterministic, and it never moves `account.updatedAt` (nor `createdAt` or `uid`).
+// doesn't have. Pure and deterministic, and it never moves `account.updatedAt` (nor `createdAt` or `uid`).
 //
 // | Step | What |
 // |---|---|
 // | 1 | Running jobs finish into the Warehouse, paying their Craft EXP first; queues and stopped queues drop |
-// | 2 | Materials still goods in v3 carry over at ★1; what leaves the game is refunded per grade (D28) |
-// | 3 | Craft Level becomes her rank in her calling's activity (CS32); the other eight start at Novice |
+// | 2 | Materials still goods in v3 carry over at ★1; what leaves the game is refunded per grade |
+// | 3 | Craft Level becomes her rank in her calling's activity; the other eight start at Novice |
 // | 4 | Every Uma in `umas` joins on day 1; the Dorm's level is the lowest with a bed for each, free |
 // | 5 | The calendar starts: day 1, 500g plus the refunds, Block A, 9 Carrot seeds, chapter 1 |
 // | 6 | Everything else starts empty: Farm Rank 1, the Diary, bonds, the board |
@@ -48,7 +48,7 @@ export function finishJobs(save: SaveV2): SaveV2 {
 
 // --- Step 2: materials ----------------------------------------------------------------------------------------------
 
-/** The gold a v2 item that leaves the game is worth (D28): a raw line item 10g × its grade, a refined one 15g × its grade,
+/** The gold a v2 item that leaves the game is worth: a raw line item 10g × its grade, a refined one 15g × its grade,
  * a made item 15g × its grade × the refined items in its recipe (an Arms Gem G3 is 15 × 3 × 10 = 450g). */
 export function refundOf(id: string): number {
   const item = lineItem(id)
@@ -73,7 +73,7 @@ export function carryMaterials(items: Readonly<Record<string, number>>): { items
 
 // --- Step 3: Craft Level becomes her rank ---------------------------------------------------------------------------
 
-/** Her nine activities: Novice at 0 points, but her calling's, which takes her Craft Level's rank and points (CS32), every
+/** Her nine activities: Novice at 0 points, but her calling's, which takes her Craft Level's rank and points, every
  * challenge up to it done (her count toward the next starts at 0). */
 export function ranksFromCraft(level: number, line: MaterialLine | null): Record<Activity, RankState> {
   const ranks = newRosterUma(FIRST_DAY).ranks
@@ -102,7 +102,7 @@ export function rosterFromUmas(umas: Readonly<Record<OutfitId, FarmUma>>, lineOf
 
 // --- The whole migration --------------------------------------------------------------------------------------------
 
-/** A v2 save as the loop's v3 (CS54): steps 1–6 above. The account is v2's own, untouched. */
+/** A v2 save as the loop's v3: steps 1–6 above. The account is v2's own, untouched. */
 export function migrateToV3(save: SaveV2, context: MigrationContext): SaveV3 {
   const done = finishJobs(save)
   const { items, refund } = carryMaterials(done.items)

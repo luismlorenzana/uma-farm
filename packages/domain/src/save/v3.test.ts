@@ -1,4 +1,4 @@
-// Save v3 (F17; CS3, CS53): day 1, the strict parse and its paths, and the largest save fitting Firestore's 1 MiB. Invented
+// Save v3: day 1, the strict parse and its paths, and the largest save fitting Firestore's 1 MiB. Invented
 // outfit ids only.
 import { payItems, type Entry, type WorkRow } from '@luismlorenzana/uma-work'
 import { describe, expect, it } from 'vitest'

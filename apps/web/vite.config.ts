@@ -8,7 +8,7 @@ import { defineConfig } from 'vitest/config'
 
 const buildId = (process.env.VITE_APP_BUILD_ID ?? process.env.GITHUB_SHA ?? 'local').slice(0, 12)
 
-/** The HD-2D preview's files (F11, D73): every chunk holding three.js, uma-stage or the stage Home (with F12's figures), and
+/** The HD-2D preview's files: every chunk holding three.js, uma-stage or the stage Home (with F12's figures), and
  * kit-farm's page. They build into `assets/stage/`, which the precache leaves out and a runtime cache keeps once loaded, so
  * only a player with the switch on downloads them (scripts/check-size.mjs checks the built service worker). */
 const STAGE_DIR = 'assets/stage'
@@ -76,7 +76,7 @@ export default defineConfig(({ mode }) => {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
           // The HD-2D preview is cached on first use instead (below); workbox's own default ignore kept.
           globIgnores: ['**/node_modules/**/*', `${STAGE_DIR}/**`],
-          // "Work done" notifications (F6, uma-rpg's D63): the handlers live in public/push-sw.js.
+          // "Work done" notifications (uma-rpg's D63): the handlers live in public/push-sw.js.
           importScripts: ['push-sw.js'],
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
           navigateFallback: '/index.html',
@@ -96,7 +96,7 @@ export default defineConfig(({ mode }) => {
               options: { cacheName: 'farm-master-channel', networkTimeoutSeconds: 4 },
             },
             {
-              // The HD-2D preview (D73): named by hash, cached for good the first time it loads, so it works offline after.
+              // The HD-2D preview: named by hash, cached for good the first time it loads, so it works offline after.
               // Never an HTML page (Hosting's answer for a file a newer deploy removed) under a chunk's name.
               urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/assets/stage/'),
               handler: 'CacheFirst',
@@ -135,8 +135,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     // uma-kit is transformed with the app, so its links share the app's router (F18's bar test renders them). The romance
-    // switch is off (F46 decision 4): M4's tests run unchanged, and a romance test turns it on with `vi.stubEnv`. The story
-    // pack is the stand-in (F56 decision 5): no test reads farm-api; the loader's own tests stub this.
+    // switch is off: M4's tests run unchanged, and a romance test turns it on with `vi.stubEnv`. The story
+    // pack is the stand-in: no test reads farm-api; the loader's own tests stub this.
     test: { environment: 'jsdom', maxWorkers: 2, env: { VITE_FARM_ROMANCE: '0', VITE_FARM_STORY: 'stand-in' }, server: { deps: { inline: [/@luismlorenzana\/uma-kit/] } } },
   }
 })

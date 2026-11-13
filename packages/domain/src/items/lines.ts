@@ -1,9 +1,9 @@
-// Copied from uma-rpg packages/domain/src/items/lines.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// The materials (D224; farm-by-line.md FL5, FL8, FL14, FL15; H109, live since H112): five lines of ten grades, each
+// Copied from uma-rpg packages/domain/src/items/lines.ts at 30a322a, with its Wilds-only parts cut.
+// The materials (farm-by-line.md FL5; live since H112): five lines of ten grades, each
 // grade a raw item and its refined form, the same fifty types in every world. Each line is one uma-art family of its
 // `items` atlas (ores, woods, vegetables, fish, crystals) and a grade its family's grade, so ids, names and icons are
 // uma-art's own. R2's sixty ids (save v28–v29) are among them; save v30's migration moved each to its line's G1 or G6
-// (`toV30`). Many ids are also legacy ids (`identity.ts`) with another meaning; the economy stage decides (D208).
+// (`toV30`). Many ids are also legacy ids (`identity.ts`) with another meaning; the economy stage decides.
 
 export const MATERIAL_LINES = ['metal', 'wood', 'vegetables', 'fish', 'stone'] as const
 /** A gathering profession's material: Mining metal, Wood Chopping wood, Farming vegetables, Fishing fish, Hunting stone. */
@@ -20,7 +20,7 @@ const MARKED: Readonly<Record<string, string>> = { puree: 'Purée', philosophers
 /** An item's name from its uma-art id: its words capitalized, two keeping their marks ("Tomato Purée"). */
 export const itemNameOf = (id: string): string => id.split('-').map((w) => MARKED[w] ?? w[0]!.toUpperCase() + w.slice(1)).join(' ')
 
-/** The ten grades of a line, raw then refined, as uma-art's family holds them (FL5). */
+/** The ten grades of a line, raw then refined, as uma-art's family holds them. */
 const LINE_GRADES: Readonly<Record<MaterialLine, readonly (readonly [string, string])[]>> = {
   metal: [['copper-ore', 'copper-ingot'], ['tin-ore', 'tin-ingot'], ['iron-ore', 'iron-ingot'], ['silver-ore', 'silver-ingot'],
     ['cobalt-ore', 'cobalt-ingot'], ['gold-ore', 'gold-ingot'], ['platinum-ore', 'platinum-ingot'], ['titanium-ore', 'titanium-ingot'],
@@ -41,7 +41,7 @@ const LINE_GRADES: Readonly<Record<MaterialLine, readonly (readonly [string, str
 /** Grades a line holds. */
 export const LINE_GRADE_COUNT = 10
 
-/** A raw or refined item of a line: its grade opens it at Craft Lv 5g − 4 (FL6) and a grade-g made item takes it (FL7). */
+/** A raw or refined item of a line: its grade opens it at Craft Lv 5g − 4 and a grade-g made item takes it. */
 export interface LineItem {
   id: string
   line: MaterialLine

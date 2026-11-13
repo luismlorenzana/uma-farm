@@ -1,4 +1,4 @@
-// Walk (F49 decision 5; RM25): a walk with her along a flat path drawn from today's farm places' frames (not the Hub map
+// Walk: a walk with her along a flat path drawn from today's farm places' frames (not the Hub map
 // itself). Before it she says what she loves; at each fork two turns lead toward two places, and the turn toward her
 // place scores full, the other half, and none at all nothing. Her place is her line's when it's open today, else a seeded
 // one from the farm places her beats use. Two forks (an event, about 20 s) give 50, 75 or 100; four (an evening, about
@@ -22,10 +22,10 @@ export interface WalkPlan {
   forks: WalkFork[]
 }
 
-/** Today's open farm places a walk passes (decision 5). */
+/** Today's open farm places a walk passes. */
 export const walkPlacesOpen = (save: Pick<FarmSave, 'farm'>): FarmPlaceId[] => FARM_PLACES.filter((p) => placeOpen(save, p) && !OFF_PATH.has(p.id)).map((p) => p.id)
 
-/** The place she loves on a walk (decision 5): her line's first place when it's open today, else a seeded one of the open
+/** The place she loves on a walk: her line's first place when it's open today, else a seeded one of the open
  * farm places her beats use, else the Fields. */
 export function walkFavourite(save: Pick<FarmSave, 'farm'>, pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string, seed: Seed): FarmPlaceId {
   const open = new Set(walkPlacesOpen(save))

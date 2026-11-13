@@ -1,4 +1,4 @@
-// The story's counts (F60), on invented records only: no real names.
+// The story's counts, on invented records only: no real names.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { storyCounts } from './counts.mjs'

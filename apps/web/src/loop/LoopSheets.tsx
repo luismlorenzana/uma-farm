@@ -1,7 +1,7 @@
-// The loop's global sheets (F18 decisions 6 and 8, F19 decisions 7 and 8, F24 decision 8): `?sheet=end`, End the day;
+// The loop's global sheets: `?sheet=end`, End the day;
 // `?sheet=calendar`, the calendar from the account bar's date; `?sheet=bin`, the shipping bin from the map or the gold
 // chip; `?sheet=shop`, the shop; `?sheet=rank`, the Farm Rank from its chip. Each opens over the page it was tapped on,
-// so Back closes it. Loaded on demand when one opens. In the romance build on save v4 (F50 decision 8), End the day opens
+// so Back closes it. Loaded on demand when one opens. In the romance build on save v4, End the day opens
 // **Tonight** while an evening slot is free and someone can spend it, and the night is a fade to dusk and back up on the
 // morning (`night-fade.ts`); otherwise F18's rule stands.
 import {
@@ -42,10 +42,10 @@ function useClose(): () => void {
 }
 
 /**
- * End the day (CS6, decision 6): the tab opens `?sheet=end`. When all is set, or the Menu's switch skips the question, the
+ * End the day: the tab opens `?sheet=end`. When all is set, or the Menu's switch skips the question, the
  * day ends at once; otherwise one line says what's left, with End anyway and Back. Either way the morning opens on the
  * farm. The day the tap meant is held, so a second tap or a save that moved on meanwhile ends nothing more. In the
- * romance build on v4 (F50 decision 8), Tonight opens first while an evening is free and someone can spend it, decided
+ * romance build on v4, Tonight opens first while an evening is free and someone can spend it, decided
  * once as the sheet opens (so a played evening doesn't end the day by itself), and the night fades through dusk.
  */
 function EndDay() {
@@ -109,7 +109,7 @@ function EndDay() {
   )
 }
 
-/** The calendar (CS4, decision 8): the year and the season, the season's 12 days with today and its festival marked, and
+/** The calendar: the year and the season, the season's 12 days with today and its festival marked, and
  * the next festival with its countdown. */
 function CalendarSheet() {
   const save = useLoopSave()
@@ -164,7 +164,7 @@ function CalendarSheet() {
   )
 }
 
-/** The Farm Rank (F24 decision 8; CS39): the rank and its points, the way to the next with what it opens, and where the
+/** The Farm Rank: the rank and its points, the way to the next with what it opens, and where the
  * points come from on this farm. Points are counted each night. */
 function RankSheet() {
   const save = useLoopSave()

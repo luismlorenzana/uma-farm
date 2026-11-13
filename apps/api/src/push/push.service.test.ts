@@ -1,4 +1,4 @@
-// The tick (copied from uma-rpg's push.service.test.ts at 30a322a and cut, F6): it never reads a save, only the schedule
+// The tick (copied from uma-rpg's push.service.test.ts at 30a322a and cut): it never reads a save, only the schedule
 // the app sent. Due, not due, a dead subscription, and what a tick writes. Invented data only.
 import { newSaveV2, pushSchedule, startJob, type PushEntry } from '@farm/domain'
 import { describe, expect, it } from 'vitest'

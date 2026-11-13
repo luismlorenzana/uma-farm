@@ -1,14 +1,14 @@
-// The ring bench (F53 decisions 2–6; romance spec RM38–RM40; core spec CS25): the proposal needs a ring, and the Forge's
+// The ring bench: the proposal needs a ring, and the Forge's
 // merge game is M6's, so on save v4 the Forge's building opens early as a bench with no game. The night after the first
 // Romance 8 event anyone plays, step 8 sets `buildings.forge = 0` (D30: the building held, its fire not lit) and Ida
-// Stone's scene comes up the next morning (`story/bench.ts`); chapter 7 (M6) still lights the fire.
+// Stone's scene comes up the next morning (`story/bench.ts`); chapter 7 still lights the fire.
 //
 //   a ring of grade g  =  3 refined goods of grade g, any family, any mix (planks, fillets, flours, preserves, dried goods;
 //                         the mining families' ingots, blocks and cut gems from chapter 3, which is CS25's own recipe)
 //   no gold, no game, no assistant, no score: a Rough make, ★1 in the Warehouse; one ring a day (`today.ring`)
 //
 // Worked: 3 Cedar Planks (G3, 60g each) make an Iron Ring (`ring-g3`, 340g); 3 Salmon Fillets (G5) a Cobalt Ring. Her
-// ring's bonus once married is its grade in % at her line (+1% a grade, RM39, inside her own cap); a better ring may be
+// ring's bonus once married is its grade in % at her line (+1% a grade, inside her own cap); a better ring may be
 // given any day from the proposal on, the old one back in the Warehouse. Pure; v3's Forge is untouched (`benchOpen` is v4's
 // only). Loaded with the bench's sheet, the night and the events.
 import { goodOf, GOODS, isRingId, ringGrade, ringId, RING_IDS, type GoodFamily } from '../goods/ids'
@@ -18,19 +18,19 @@ import type { FarmSave, SaveV4 } from '../save/v4'
 import { addGoods, goodCount, takeGoods } from '../save/warehouse'
 import type { Warehouse } from '../save/v3'
 
-// --- The bench's state (decision 3) -----------------------------------------------------------------------------------
+// --- The bench's state -----------------------------------------------------------------------------------
 
-/** Whether the Forge stands as the ring bench (decision 3): a v4 farm with `buildings.forge` set. Never on v3. */
+/** Whether the Forge stands as the ring bench: a v4 farm with `buildings.forge` set. Never on v3. */
 export const benchOpen = (save: Pick<FarmSave, 'version' | 'buildings'>): boolean => save.version === 4 && save.buildings.forge !== undefined
-/** The rung whose first event anywhere opens the bench (RM38). */
+/** The rung whose first event anywhere opens the bench. */
 export const BENCH_RUNG = 'r8'
-/** Whether the bench opens tonight (decision 4): not standing yet, and an Uma's Romance 8 is in her Memories. */
+/** Whether the bench opens tonight: not standing yet, and an Uma's Romance 8 is in her Memories. */
 export const benchDue = (save: Pick<SaveV4, 'buildings' | 'memories'>): boolean =>
   save.buildings.forge === undefined && Object.values(save.memories).some((played) => played.includes(BENCH_RUNG))
-/** Night step 8 (decision 4): the bench stands, `buildings.forge = 0`, once. */
+/** Night step 8: the bench stands, `buildings.forge = 0`, once. */
 export const openBench = (save: SaveV4): SaveV4 => (benchDue(save) ? { ...save, buildings: { ...save.buildings, forge: 0 } } : save)
 
-// --- The recipe (RM38; decision 5) ------------------------------------------------------------------------------------
+// --- The recipe ------------------------------------------------------------------------------------
 
 /** A ring takes three refined goods of its grade. */
 export const RING_INPUTS = 3
@@ -38,7 +38,7 @@ export const RING_INPUTS = 3
 export const MINING_FAMILIES: readonly GoodFamily[] = ['ores', 'stones', 'crystals']
 export const MINING_CHAPTER = 3
 
-/** CS25's own recipe for a grade (decision 5): 2 of its ingot and 1 of its cut gem, from chapter 3. */
+/** CS25's own recipe for a grade: 2 of its ingot and 1 of its cut gem, from chapter 3. */
 export function forgeRecipe(grade: number): { ingot: string; gem: string } {
   const of = (family: GoodFamily) => GOODS.find((g) => g.family === family && g.refined && g.grade === grade)!.id
   return { ingot: of('ores'), gem: of('crystals') }
@@ -57,7 +57,7 @@ export interface BenchStock extends BenchInput { count: number; value: number }
 
 const CATALOGUE = new Map(GOODS.map((g, i) => [g.id, i]))
 
-/** The held goods a grade's ring could take (decision 5): the lowest value first (★1 price × the star's factor), then
+/** The held goods a grade's ring could take: the lowest value first (★1 price × the star's factor), then
  * fewer stars, then the catalogue's order. */
 export function benchStock(save: Pick<SaveV4, 'items' | 'farm'>, grade: number): BenchStock[] {
   return Object.entries(save.items).flatMap(([id, row]) => (benchTakes(save.farm.chapter, id) && goodOf(id)!.grade === grade
@@ -65,7 +65,7 @@ export function benchStock(save: Pick<SaveV4, 'items' | 'farm'>, grade: number):
     : [])).sort((a, b) => a.value - b.value || a.stars - b.stars || (CATALOGUE.get(a.id) ?? 0) - (CATALOGUE.get(b.id) ?? 0))
 }
 
-/** The three a grade's ring would take now (decision 5): the lowest-value goods first, any family, any mix; null when
+/** The three a grade's ring would take now: the lowest-value goods first, any family, any mix; null when
  * fewer than three are held. */
 export function benchPick(save: Pick<SaveV4, 'items' | 'farm'>, grade: number): BenchInput[] | null {
   const pick: BenchInput[] = []
@@ -76,7 +76,7 @@ export function benchPick(save: Pick<SaveV4, 'items' | 'farm'>, grade: number): 
 /** The grades whose ring you can make now, lowest first (the sheet's rows). */
 export const benchGrades = (save: Pick<SaveV4, 'items' | 'farm'>): number[] => RING_IDS.map((_, i) => i + 1).filter((g) => benchPick(save, g) !== null)
 
-/** The bench's refusals, in the player's words (decision 5). */
+/** The bench's refusals, in the player's words. */
 export const BENCH_WORDS = {
   closed: 'The ring bench opens with your first Romance 8.',
   three: 'Three refined goods of one grade.',
@@ -85,7 +85,7 @@ export const BENCH_WORDS = {
   short: 'Not enough in the Warehouse.',
 } as const
 
-/** Why three goods can't make a ring now, or null (decision 5). */
+/** Why three goods can't make a ring now, or null. */
 export function benchRefusal(save: SaveV4, inputs: readonly BenchInput[]): string | null {
   if (!benchOpen(save)) return BENCH_WORDS.closed
   if (save.today.ring > 0) return BENCH_WORDS.today
@@ -102,7 +102,7 @@ export function benchRefusal(save: SaveV4, inputs: readonly BenchInput[]): strin
 }
 
 /**
- * Makes a ring at the bench (decision 5): the three goods leave the Warehouse, a ring of their grade comes in at ★1 (a
+ * Makes a ring at the bench: the three goods leave the Warehouse, a ring of their grade comes in at ★1 (a
  * Rough make) and `today.ring` holds its grade. No gold moves. Refused with the bench's words. Pure; never stamps.
  */
 export function makeRing(save: SaveV4, inputs: readonly BenchInput[]): { save: SaveV4; ring: string } {
@@ -114,19 +114,19 @@ export function makeRing(save: SaveV4, inputs: readonly BenchInput[]): { save: S
   return { save: { ...save, items: addGoods(taken, ring, 1, 1), today: { ...save.today, ring: grade } }, ring }
 }
 
-// --- Her ring (RM39; decision 6) --------------------------------------------------------------------------------------
+// --- Her ring --------------------------------------------------------------------------------------
 
-/** Her ring's bonus once married, a grade's worth (RM39): +1% a grade, every ring a Rough make until M6. */
+/** Her ring's bonus once married, a grade's worth: +1% a grade, every ring a Rough make until M6. */
 export const RING_PERCENT_A_GRADE = 1
-/** M6's merge game adds this for a Fine, Great or Masterwork make (RM39): the bench's sheet says it. */
+/** M6's merge game adds this for a Fine, Great or Masterwork make: the bench's sheet says it. */
 export const MAKE_BONUS = { rough: 0, fine: 1, great: 3, masterwork: 5 } as const
 /** A ring's bonus in % (a Rough make). */
 export const ringPercent = (grade: number): number => grade * RING_PERCENT_A_GRADE
 
-/** The rings in the Warehouse, best grade first (decision 8): the proposal's picker, the best preselected. */
+/** The rings in the Warehouse, best grade first: the proposal's picker, the best preselected. */
 export const heldRings = (save: Pick<SaveV4, 'items'>): string[] => [...RING_IDS].reverse().filter((id) => goodCount(save.items, id) > 0)
 
-/** The rings she'd take over hers (decision 6): any held of a higher grade, best first; none before the proposal. */
+/** The rings she'd take over hers: any held of a higher grade, best first; none before the proposal. */
 export function betterRings(save: Pick<SaveV4, 'items' | 'love'>, id: string): string[] {
   const ring = save.love[id]?.ring
   return ring === undefined ? [] : heldRings(save).filter((r) => ringGrade(r) > ring)
@@ -140,7 +140,7 @@ export function takeOne(items: Warehouse, id: string): Warehouse {
 }
 
 /**
- * A better ring (decision 6; RM39): from the proposal on, any ring of a higher grade than hers. The new one leaves the
+ * A better ring: from the proposal on, any ring of a higher grade than hers. The new one leaves the
  * Warehouse (lowest stars first), her old one (`ring-g<old>`, ★1) comes back, and `love.ring` is the new grade, so her
  * bonus rises once she's married. Refused before the proposal and for a ring no better than hers. Pure; never stamps.
  */

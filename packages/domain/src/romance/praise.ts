@@ -1,4 +1,4 @@
-// Praise's causes (F47 decision 6; romance spec RM13; core spec CS45's rule): she earns praise for the day when (a) her
+// Praise's causes (core spec CS45's rule): she earns praise for the day when (a) her
 // work that finished overnight made a ★3+ item or (c) she ranked up last night (night step 9), (b) a harvest today from the
 // block she tends gave a ★3+ crop (`harvest`), or (d) she assisted a Fine-or-better workshop play today (M5's packets).
 // Earning only lists her in `today.praise`; Praise +20 (`praiseV4`) pays once, and step 7 clears both lists. Light on

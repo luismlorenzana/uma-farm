@@ -1,4 +1,4 @@
-// `/hearts` (F48 decisions 2–5 and 8; romance spec RM51, RM52): the Umas' tab in the romance build, in place of Roster.
+// `/hearts`: the Umas' tab in the romance build, in place of Roster.
 // Two views: **Hearts** (the default) and **Work** (`?view=work`, the roster's album moved whole, each card's corner her
 // level words). The Hearts view is one 72 pt row an Uma: her face, name and chips (● Ready, ✉ an invitation, Away), her
 // level and her ladder's hearts as a bar in the stage's colour with the filling heart and "points/cost", then the most
@@ -72,7 +72,7 @@ export default function HeartsPage() {
   )
 }
 
-/** The evening's marks (F50 decision 9; RM52): "Evening" with ○ a free slot and ● a spent one, the evenings first, festival
+/** The evening's marks: "Evening" with ○ a free slot and ● a spent one, the evenings first, festival
  * night's in its festival's season colour. */
 function EveningMarks({ save }: { save: SaveV4 }) {
   const master = useMaster()
@@ -96,7 +96,7 @@ function EveningMarks({ save }: { save: SaveV4 }) {
 /** The ladders' colours, darkened to read on the corner's white. */
 const LEVEL_INK: Readonly<Record<LadderName, string>> = { friendship: '#c4492d', romance: '#c2385e', spouse: '#9a6f0e' }
 
-/** Her level words in the Work view's card corner (decision 8), in her ladder's colour, from Friendship 1. */
+/** Her level words in the Work view's card corner, in her ladder's colour, from Friendship 1. */
 function levelBadge(save: SaveV4, id: string): FaceTileBadges {
   const love = save.love[id]
   const short = love ? levelShort(love) : null
@@ -154,7 +154,7 @@ function HeartsList({ rows, onOpen }: { rows: readonly HeartRow[]; onOpen: (id: 
 }
 
 /** One Uma's row (RM52's mockup): three lines in 72 pt; a tap opens her profile, and her **● Ready** plays her event
- * (F49, RM54: `?event=`). */
+ * (RM54: `?event=`). */
 function HeartRowView({ row, onOpen }: { row: HeartRow; onOpen: () => void }) {
   const location = useLocation()
   const { bar, heart } = row

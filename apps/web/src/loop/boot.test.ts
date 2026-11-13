@@ -1,4 +1,4 @@
-// The loop's boot (F17 decision 2, F23 decision 2): a stored save carried into v3 once master data has loaded, and a
+// The loop's boot: a stored save carried into v3 once master data has loaded, and a
 // new account on day 1 with nobody on the roster, the start's sheet to come. Invented outfit ids only.
 import { newSave, newSaveV2, picksLeft, type SaveV2 } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'

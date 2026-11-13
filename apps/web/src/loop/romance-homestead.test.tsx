@@ -1,4 +1,4 @@
-// Married life on screen (F54 decisions 2–8, 10, 13 and 14; RM41–RM46), the switch on: the homestead's rows on the v4 map,
+// Married life on screen, the switch on: the homestead's rows on the v4 map,
 // building and naming House 1 on the homestead's sheet, a move and a swap, the wedding's room on Married, Tonight's Sleep at,
 // the morning's house line and "misses you", a night level's card, a household scene played and read, and her room on her
 // profile; with the switch off, the sheet never opens and v3's map is M4's. The invented stand-in pack (9000001–9000003) and

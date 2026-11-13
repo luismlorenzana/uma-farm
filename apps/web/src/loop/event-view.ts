@@ -1,4 +1,4 @@
-// Heart events as the screens say them (F49 decisions 3, 4, 7, 9, 11 and 12; romance spec RM27–RM29, RM54–RM56): the place
+// Heart events as the screens say them: the place
 // card's backdrop and tint, the emote bubble beside her bust, the event's title, each choice's gain on its button, the
 // plays' words, the level-up card's lines, the stage-up screen's list, a setup's advice and her Memories' album. Pure, so
 // the player and the tests read the same. Loaded on demand with the player.
@@ -13,15 +13,15 @@ import { WORK_PLACE } from './love-words'
 
 const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
 
-// --- The place card (decisions 3 and 4) --------------------------------------------------------------------------------
+// --- The place card --------------------------------------------------------------------------------
 
-/** Her emote as uma-art's bubble beside her bust (decision 4), until expression art exists (RM62). */
+/** Her emote as uma-art's bubble beside her bust, until expression art exists. */
 export const EMOTE_BUBBLE: Readonly<Record<Emote, string>> = {
   happy: 'emote/music', laughing: 'emote/music', shy: 'emote/sweat', sad: 'emote/ellipsis', angry: 'emote/anger', surprised: 'emote/exclaim',
   thinking: 'emote/question', tender: 'emote/heart',
 }
 
-/** The nine romance backdrops (W5), each on a borrowed building frame with its own tint (decision 3, the worker's). */
+/** The nine romance backdrops (W5), each on a borrowed building frame with its own tint (the worker's). */
 export const BACKDROPS: Readonly<Record<string, { frame: string; tint: string; night?: true }>> = {
   'pond-night': { frame: 'fishery', tint: '#33456f', night: true },
   overlook: { frame: 'observatory', tint: '#f0c493' },
@@ -33,7 +33,7 @@ export const BACKDROPS: Readonly<Record<string, { frame: string; tint: string; n
   'hilltop-track': { frame: 'racecourse', tint: '#d2e7b7' },
   'sea-pier': { frame: 'fishery-workbench', tint: '#9fc6de' },
 }
-/** A farm place's ground by the season (decision 3). */
+/** A farm place's ground by the season. */
 export const SEASON_GROUND: Readonly<Record<Season, string>> = { spring: '#dcefc7', summer: '#f6e7b0', autumn: '#f2d3b0', winter: '#e3ebf3' }
 
 export interface PlaceCard {
@@ -45,21 +45,21 @@ export interface PlaceCard {
   night: boolean
 }
 
-/** A place's card (decision 3): a farm place's map frame on the season's ground, a backdrop's borrowed frame and tint. */
+/** A place's card: a farm place's map frame on the season's ground, a backdrop's borrowed frame and tint. */
 export function placeCard(place: string, day: number): PlaceCard {
   const backdrop = BACKDROPS[place]
   if (backdrop) return { place, frame: backdrop.frame, ground: backdrop.tint, night: backdrop.night ?? false }
   return { place, frame: farmPlace(place)?.frame ?? 'fields', ground: SEASON_GROUND[dateOf(day).season], night: false }
 }
 
-/** The player's title (decision 3): "The Fields · Friendship 1", "The Pond at night · Romance 5". */
+/** The player's title: "The Fields · Friendship 1", "The Pond at night · Romance 5". */
 export const eventTitle = (place: string | null, rung: string): string => (place ? `${cap(placeWords(place))} · ${rungName(rung)}` : rungName(rung))
 
-// --- Choices (decision 7) ----------------------------------------------------------------------------------------------
+// --- Choices ----------------------------------------------------------------------------------------------
 
 const TASTE_WORD = { loved: 'a love', liked: 'a like', neutral: 'a taste', disliked: 'a dislike' } as const
 
-/** An option's button (RM27): "+30" or "+10", then its cost ("· 1 Basil") or the taste it reveals ("· learns a like"), and
+/** An option's button: "+30" or "+10", then its cost ("· 1 Basil") or the taste it reveals ("· learns a like"), and
  * "Need 1 Basil" in place of the cost when you're short. */
 export function optionWords(view: OptionView): { gain: string; extra: string | null; need: string | null } {
   const cost = view.gives ? `${view.gives.count} ${goodName(view.gives.good)}` : null
@@ -70,7 +70,7 @@ export function optionWords(view: OptionView): { gain: string; extra: string | n
   }
 }
 
-// --- The plays (decision 5) --------------------------------------------------------------------------------------------
+// --- The plays --------------------------------------------------------------------------------------------
 
 const COUNT_WORDS = ['', 'one', 'two', 'three', 'four'] as const
 /** A play's title: "Together: one cast", "Together: three rounds". */
@@ -92,7 +92,7 @@ export const PLAY_HOW: Readonly<Record<PlayKind, string>> = {
   walk: 'At each fork, take the turn toward the place she loves.',
   choose: 'Pick the one she’d like best.',
 }
-/** The grades and what each pays, under the play: the length's own, or an evening's with her factors (F50). */
+/** The grades and what each pays, under the play: the length's own, or an evening's with her factors. */
 export function gradeLegend(length: PlayLength, own?: Readonly<Record<Grade, number>>): string {
   const pays = own ?? (length === 'event' ? EVENT_GRADE_POINTS : EVENING_GRADE_POINTS)
   return (['fine', 'great', 'perfect'] as const).map((g) => `${GRADE_NAMES[g]} +${pays[g]}`).join(' · ')
@@ -101,7 +101,7 @@ export function gradeLegend(length: PlayLength, own?: Readonly<Record<Grade, num
 export const gradeWords = (score: number, length: PlayLength = 'event'): string =>
   `${GRADE_NAMES[gradeOf(score)]} · +${(length === 'event' ? EVENT_GRADE_POINTS : EVENING_GRADE_POINTS)[gradeOf(score)]}`
 
-// --- The level-up card (decision 9) ------------------------------------------------------------------------------------
+// --- The level-up card ------------------------------------------------------------------------------------
 
 /** The sum: "+50 event · +30 choice · +15 Great = +95 toward Friendship 2 (+40 banked)". */
 export function sumWords(card: EventCard): string {
@@ -120,7 +120,7 @@ export function sumWords(card: EventCard): string {
   return `${parts.join(' · ')} = +${card.paid}${factor}${toward}${banked}`
 }
 
-/** An unlock in words (RM28): an item into the Warehouse, a place, a perk line. */
+/** An unlock in words: an item into the Warehouse, a place, a perk line. */
 export function unlockWords(card: EventCard): string | null {
   const u = card.unlock
   if (!u) return null
@@ -132,14 +132,14 @@ export function unlockWords(card: EventCard): string | null {
 /** A perk in her line's words, or null. */
 export const perkLineWords = (perk: PerkId | null, line: PerkLine | null): string | null => (perk && line ? perkWords(perk, line) : null)
 
-// --- The stage-up screen (decision 11) ---------------------------------------------------------------------------------
+// --- The stage-up screen ---------------------------------------------------------------------------------
 
-/** The facts a stage-up screen lists beyond the ladder (F53): her ring's grade and her wedding's day; F54: her room's house
+/** The facts a stage-up screen lists beyond the ladder: her ring's grade and her wedding's day; F54: her room's house
  * (its name, or null when none was free). */
 export interface StageFacts { ring?: number | null; wed?: number | null; house?: string | null }
 
 /** What a stage opens, for its stage-up screen: the ladder, then each perk that opens a kind or a chat set, by rung; the
- * proposal's wedding and ring; the wedding's spouse ladder, ring, evenings and anniversary (F53 decision 9). */
+ * proposal's wedding and ring; the wedding's spouse ladder, ring, evenings and anniversary. */
 export function stageOpens(stage: StageUp, line: PerkLine | null, facts: StageFacts = {}): string[] {
   const at = (rung: string, words: string) => `${rung.toUpperCase()} · ${words}`
   const perk = (rung: string, id: PerkId) => at(rung, line ? perkWords(id, line) : perkWords(id, 'farming'))
@@ -176,14 +176,14 @@ export function stageOpens(stage: StageUp, line: PerkLine | null, facts: StageFa
   }
 }
 
-/** A stage-up screen's title and line (decision 11; F53). */
+/** A stage-up screen's title and line. */
 export const STAGE_WORDS: Readonly<Record<StageUp, { title: string; line: string }>> = {
   romance: { title: 'Partners', line: 'Romance opens. Her bar turns rose.' },
   engaged: { title: 'Engaged', line: 'A ring, and a yes. Your wedding comes next.' },
   married: { title: 'Married', line: 'Your wedding is done. Her bar turns gold.' },
 }
 
-/** RM45's line under the Married screen: "Married 1/20 · next household scene at 5"; on a milestone's own wedding (F54),
+/** RM45's line under the Married screen: "Married 1/20 · next household scene at 5"; on a milestone's own wedding,
  * what opens tomorrow: "Married 5/20 · household scene 1 tomorrow", "Married 20/20 · the Great Harvest tomorrow". */
 export function marriedWords(married: number, cast: number): string {
   const scene = [5, 10, 15].indexOf(married)
@@ -193,7 +193,7 @@ export function marriedWords(married: number, cast: number): string {
   return `Married ${married}/${cast}${next === null ? '' : next >= 20 ? ` · the finale at ${next}` : ` · next household scene at ${next}`}`
 }
 
-// --- The wedding (F53 decision 9) --------------------------------------------------------------------------------------
+// --- The wedding --------------------------------------------------------------------------------------
 
 /** The guests' line of narration, before the wedding's first line: "Stand-in 2 and Stand-in 3 came, in their best." */
 export function guestsLine(names: readonly string[]): string {
@@ -224,9 +224,9 @@ export const PICKER_WORDS = {
   cake: 'Serve Marta’s cake · 1 day',
 } as const
 
-// --- Setups (RM54) -----------------------------------------------------------------------------------------------------
+// --- Setups -----------------------------------------------------------------------------------------------------
 
-/** What to do when her setup isn't met (RM54): "Assign her to the Fishery, then come back." */
+/** What to do when her setup isn't met: "Assign her to the Fishery, then come back." */
 export function setupAdvice(waits: Wait | null, nameOf: (id: string) => string): string | null {
   if (waits?.kind !== 'setup') return null
   const s = waits.setup
@@ -235,9 +235,9 @@ export function setupAdvice(waits: Wait | null, nameOf: (id: string) => string):
   return `Let her and ${nameOf(s.with)} work side by side until bond ${s.level}.`
 }
 
-// --- Memories (decision 12) --------------------------------------------------------------------------------------------
+// --- Memories --------------------------------------------------------------------------------------------
 
-/** The album's four filters (RM56). */
+/** The album's four filters. */
 export const ALBUM_FILTERS = [
   { key: 'friend', label: 'Friend' }, { key: 'romance', label: 'Romance' }, { key: 'wed', label: 'Wed' }, { key: 'spouse', label: 'Spouse' },
 ] as const
@@ -259,7 +259,7 @@ export interface AlbumTile {
 
 const tileLabel = (rung: string): string => (rung === 'confession' ? '◆' : rung === 'proposal' || rung === 'wedding' ? '◇' : rung.toUpperCase())
 
-/** Her album (RM56): one tile a rung with an event, played ones with their caption, the next marked, the rest locked. */
+/** Her album: one tile a rung with an event, played ones with their caption, the next marked, the rest locked. */
 export function albumTiles(save: Pick<SaveV4, 'love' | 'memories'>, pack: Pick<StoryPack, 'bibles'>, id: string): AlbumTile[] {
   const love = save.love[id]
   const played = new Set(save.memories[id] ?? [])

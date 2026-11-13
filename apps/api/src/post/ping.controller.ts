@@ -16,7 +16,7 @@ export function googleVerifier(): PingVerifier {
 
 const callers = (): string[] => (process.env.POST_CALLERS ?? '').split(',').map((s) => s.trim()).filter(Boolean)
 
-// The parcel ping (IN18): outside the owner guard, checked by its own token instead. Only a Google-signed ID token whose
+// The parcel ping: outside the owner guard, checked by its own token instead. Only a Google-signed ID token whose
 // audience is FARM_API_URL (this service's own URL) and whose email is on POST_CALLERS gets { ok: true }.
 @Controller('post')
 export class PingController {

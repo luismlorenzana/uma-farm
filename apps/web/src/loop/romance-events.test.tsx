@@ -1,4 +1,4 @@
-// Heart events on screen (F49 decisions 1–12; RM24–RM30, RM54–RM56), the switch on: an event from her row's ● Ready
+// Heart events on screen, the switch on: an event from her row's ● Ready
 // plays through its lines, Skip stops at the choice, each option shows its gain, a play runs to its grade, and the
 // level-up card lists it all; her confession's Not yet, then Ask her and Yes with the stage-up; a Memory replayed pays
 // nothing; the morning's Ready line plays her event. The invented stand-in pack (9000001–9000003) and invented outfits;

@@ -1,7 +1,7 @@
-// What plays as what (F49 decision 6; romance spec RM26): an event's play is its route's `play` step (its `game`, and a
+// What plays as what: an event's play is its route's `play` step (its `game`, and a
 // farming play's `as`), else its beat's `together`; `help` and `talk` have no play, so their grade is the best choice's.
 // An activity whose game isn't built yet plays Rhythm with that activity's mark, the same grades (the fallback): cooking
-// (a pot, the Kitchen's practice mode from F8), serving (a tray, F35), forging (an anvil, F36), the footrace (the track,
+// (a pot, the Kitchen's practice mode from F8), serving (a tray), forging (an anvil), the footrace (the track,
 // F32) and an expedition (the pack). When a real game ships, the event plays it. Pure.
 import type { Activity } from '../../farm/ranks'
 import type { DateGame, Play, Together } from '../../story/authored'
@@ -38,13 +38,13 @@ export const PLAY_MAP: Readonly<Record<Activity | DateGame, PlayAs>> = {
   footrace: play('rhythm', 'track', true),
 }
 
-/** A `play` step's play (RM26): its game's, a farming play's `as` choosing Pick (the default) or Rhythm with the hoe. */
+/** A `play` step's play: its game's, a farming play's `as` choosing Pick (the default) or Rhythm with the hoe. */
 export function playOf(step: Pick<Play, 'game' | 'as'>): PlayAs {
   if (step.game === 'farming' && step.as === 'rhythm') return play('rhythm', 'hoe')
   return PLAY_MAP[step.game]
 }
 
-/** A beat's `together` as a play (RM26): work and dates by the table, a gift Choose, help and talk none. */
+/** A beat's `together` as a play: work and dates by the table, a gift Choose, help and talk none. */
 export function togetherPlay(together: Together): PlayAs | null {
   switch (together.kind) {
     case 'work': return PLAY_MAP[together.activity]
@@ -54,7 +54,7 @@ export function togetherPlay(together: Together): PlayAs | null {
   }
 }
 
-/** The game a `together` names for a synthetic play step (F49 decision 6): with no `play` step, the beat's together plays
+/** The game a `together` names for a synthetic play step: with no `play` step, the beat's together plays
  * at the scene's end. A gift plays as Choose, which no game names, so it keeps its own kind. */
 export function togetherGame(together: Together): Activity | DateGame | null {
   return together.kind === 'work' ? together.activity : together.kind === 'date' ? together.game : null

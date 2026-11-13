@@ -1,4 +1,4 @@
-// The farm's app icons (F3): the letter F as a pixel glyph in uma-kit's accent ink on its accent, the cheapest mark that
+// The farm's app icons: the letter F as a pixel glyph in uma-kit's accent ink on its accent, the cheapest mark that
 // looks fine. Real art is ChatGPT's, later. Run `node scripts/draw-icons.mjs` to redraw apps/web/public/icons; iOS keeps
 // the icon it saw at Add to Home Screen, so change them only with a reinstall in mind.
 import { mkdirSync, writeFileSync } from 'node:fs'

@@ -1,4 +1,4 @@
-// The ladders and points (F47 decisions 2–14; romance spec RM11–RM18, RM23, RM24): the costs and the route, RM13's worked
+// The ladders and points: the costs and the route, RM13's worked
 // days, gifts by her tastes, chats, praise and its causes, her line at night, banking, birthdays, anniversaries, the
 // rank-point factor, Ready and the morning's lines. Invented ids only: the stand-ins 9000001–9000003 and casts of 9000004
 // onward built here; birthdays are invented dates.
@@ -42,7 +42,7 @@ const [ONE, TWO, THREE] = STAND_INS
 const BIRTHDAYS = birthdaysOf(PACK, new Map())
 const context = (birthdays = BIRTHDAYS, story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ roster: [], kinds: TEST_KINDS, story, birthdays })
 
-/** A named v4 farm on `day`, the opening read and the stand-ins home at Friendship 0., their ties seeded (F52) and
+/** A named v4 farm on `day`, the opening read and the stand-ins home at Friendship 0., their ties seeded and
  * already listed on an earlier morning, so a night's Hearts show only its own lines. */
 function farm(day = 1): SaveV4 {
   const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
@@ -239,7 +239,7 @@ describe('praise (RM13; decision 6)', () => {
     expect(() => praiseV4(paid.save, ONE)).toThrow('You’ve praised her today.')
     const night = runNight(paid.save, context())
     expect([night.today.praise, night.today.praised]).toEqual([[], []])
-    // A workshop play (M5) calls the same rule; v3 is never touched.
+    // A workshop play calls the same rule; v3 is never touched.
     expect(earnPraise(save, TWO).today.praise).toEqual([TWO])
     const v3 = newSave('u1', AT)
     expect(earnPraise(v3, TWO)).toBe(v3)
@@ -435,7 +435,7 @@ describe('Ready (RM24; decisions 1 and 13)', () => {
     expect(RING_IDS).toHaveLength(10)
     const wedding = withLove(tomorrow, ONE, { stage: 'wedding', level: 10, ring: 4 })
     expect(readiness(wedding, PACK, ONE).ready).toBe(true)
-    // S2 and S4 have no event: they come at night once their bar fills (F54).
+    // S2 and S4 have no event: they come at night once their bar fills.
     const s2 = withLove(tomorrow, ONE, { stage: 'spouse', level: 1, wed: 2, points: 600 })
     expect(readiness(s2, PACK, ONE).waits).toEqual({ kind: 'night' })
     expect(readiness(withLove(s2, ONE, { points: 10 }), PACK, ONE).waits).toEqual({ kind: 'bar' })

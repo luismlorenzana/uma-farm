@@ -9,10 +9,10 @@ import { PushModule } from './push/push.module'
 import { SaveModule } from './save/save.module'
 import { storyPackModule } from './story/story-pack'
 
-// Every route sits behind the shared owner guard (uma-platform P54): a Firebase ID token for the owner's email, or the
+// Every route sits behind the shared owner guard: a Firebase ID token for the owner's email, or the
 // fixed local user with AUTH_MODE=disabled. `@Public()` opens a route: /api/health, and the parcel ping and the push tick
-// (F6), which check their own tokens. Master data comes through uma-server's proxy, from uma-platform's bucket in
-// production and its local release folder in dev (F3). The story pack is the farm's one private pack (F56, RM58), at
+//, which check their own tokens. Master data comes through uma-server's proxy, from uma-platform's bucket in
+// production and its local release folder in dev. The story pack is the farm's one private pack, at
 // `/api/content/…`: `STORY_BUCKET` in production, `STORY_DIR` locally, 404 with neither.
 @Module({
   imports: [

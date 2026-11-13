@@ -1,4 +1,4 @@
-// The farm's Umas on the stage (F12 decisions 1–4): who stands where, checked against the Hub's own counts (the work
+// The farm's Umas on the stage: who stands where, checked against the Hub's own counts (the work
 // view's cards the pips draw, the Fields' tenders, the places' Ready badges), the idle spots and their staying put, the
 // bubbles, and what moves between two readings. Invented saves and ids only; the kit's blocking is the stand-in's.
 import {

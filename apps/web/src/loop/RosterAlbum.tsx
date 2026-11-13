@@ -1,5 +1,5 @@
-// The roster's album (F18; F21 decision 7; F23 decision 11; FC19), shared by M4's `/roster` and the romance build's Hearts
-// tab, whose Work view it is (F48 decision 8): everyone on the roster, home or away, as album cards on uma-kit's album
+// The roster's album, shared by M4's `/roster` and the romance build's Hearts
+// tab, whose Work view it is: everyone on the roster, home or away, as album cards on uma-kit's album
 // chrome. Each card has her favourite line's mark and her best talent on her face, the page's corner mark (your hearts
 // with her on v3, her level words on v4), and her best rank (or her rank and talent in the activity sorted by); away, it
 // says so. The filters are where she is, her talent and rank in each activity and her favourite line; the sorts her talent
@@ -81,7 +81,7 @@ export function RosterAlbum({ save, rows: base, corner }: { save: FarmSave; rows
   )
 }
 
-/** Her favourite line, when she joined and where she is (F21, F23). */
+/** Her favourite line, when she joined and where she is. */
 export function WorkFacts({ row }: { row: LoopUmaRow }) {
   return (
     <div className="min-w-0 text-[13px] text-ink-soft">

@@ -3,8 +3,8 @@ import { scheduleNotice, type PushEntry, type PushNotice } from '@farm/domain'
 import { PUSH_REPOSITORY, type PushRepository, type Subscription } from './push.repository'
 import { PushSender } from './push.sender'
 
-// Copied from uma-rpg's apps/api/src/push at 30a322a (its D63) and cut for the farm (F6): uma-rpg's tick reads each save;
-// the farm's never does (FM10). The app sends when each slot goes idle on every sync, and the tick sends what came due.
+// Copied from uma-rpg's apps/api/src/push at 30a322a and cut for the farm: uma-rpg's tick reads each save;
+// the farm's never does. The app sends when each slot goes idle on every sync, and the tick sends what came due.
 
 /** How far back a tick looks when the last one was long ago: older finishes aren't news. */
 const LOOKBACK_MS = 6 * 3600 * 1000

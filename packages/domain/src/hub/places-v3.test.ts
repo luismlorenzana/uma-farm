@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/hub/places-v3.test.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// The Wilds' trios on the Hub (H114, FL32): fifteen places in five rows.
+// Copied from uma-rpg packages/domain/src/hub/places-v3.test.ts at 30a322a, with its Wilds-only parts cut.
+// The Wilds' trios on the Hub: fifteen places in five rows.
 import { describe, expect, it } from 'vitest'
 import { PLACES, placeById, placesOn, wildsPlaces, type Place } from './places'
 

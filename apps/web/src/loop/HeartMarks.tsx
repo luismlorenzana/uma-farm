@@ -1,4 +1,4 @@
-// The Hearts marks (F48 decision 11; romance spec RM62): the stage hearts, the bar's segments and the route's track are
+// The Hearts marks: the stage hearts, the bar's segments and the route's track are
 // CSS shapes in the ladders' colours (coral, rose, gold), since they fill by points; the Ready and invitation chips carry
 // F55's `hearts/ready` and `hearts/invitation` marks (uma-art 2.26.0, pinned from F49), a glyph without them. Loaded on
 // demand with the Hearts tab.
@@ -19,7 +19,7 @@ export function FillingHeart({ colour, share, size = 14 }: { colour: string; sha
   )
 }
 
-/** The row's bar (decision 4): her ladder's hearts as segments, the levels played full, the next filling, a waiting rung's
+/** The row's bar: her ladder's hearts as segments, the levels played full, the next filling, a waiting rung's
  * mark after them with "Tomorrow" or "Ready". */
 export function HeartSegments({ heart }: { heart: HeartBar }) {
   return (
@@ -62,7 +62,7 @@ export function AwayChip() {
   return <span className="inline-flex shrink-0 items-center rounded-full bg-sunken px-1.5 text-[11px] leading-5 font-semibold text-ink-soft" data-away-chip>Away</span>
 }
 
-/** The route as one track (decision 6): F1–F10, ◆, R1–R10, ◇, ◇, S1–S5 in one row, two under 375 pt. Played rungs are
+/** The route as one track: F1–F10, ◆, R1–R10, ◇, ◇, S1–S5 in one row, two under 375 pt. Played rungs are
  * filled in their ladder's colour, the next one filling, the rest empty; a waiting rung is a diamond. */
 export function RouteTrack({ cells, label }: { cells: readonly TrackCell[]; label: string }) {
   return (

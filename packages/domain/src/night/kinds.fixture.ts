@@ -1,4 +1,4 @@
-// Test-only work kinds on the day clock (F18), so the night can be tested before F22's real ones: a 1-day gather at the
+// Test-only work kinds on the day clock, so the night can be tested before F22's real ones: a 1-day gather at the
 // forest and a multi-day make at the Mill. Invented requests over real good ids.
 import { payItems, type WorkKindRules } from '@luismlorenzana/uma-work'
 import { DAY_MS } from '../farm/calendar'

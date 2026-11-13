@@ -1,4 +1,4 @@
-// v2 → v3 (F17; CS54, D28): each step, then the whole migration of a v2 save mid-play, with invented outfit ids.
+// v2 → v3: each step, then the whole migration of a v2 save mid-play, with invented outfit ids.
 import { describe, expect, it } from 'vitest'
 import { ACTIVITIES, type Activity } from '../farm/ranks'
 import type { MaterialLine } from '../items/lines'

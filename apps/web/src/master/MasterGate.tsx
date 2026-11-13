@@ -1,4 +1,4 @@
-// Copied from uma-rpg apps/web/src/places/MasterGate.tsx at 30a322a (F5): renders its children once master data is loaded,
+// Copied from uma-rpg apps/web/src/places/MasterGate.tsx at 30a322a: renders its children once master data is loaded,
 // else a loading line or "connect once".
 import type { ReactNode } from 'react'
 import { retryMaster, useMaster, type MasterView } from './master'

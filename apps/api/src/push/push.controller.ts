@@ -29,7 +29,7 @@ export function parseSchedule(body: unknown): PushEntry[] {
   })
 }
 
-// "Work done" notifications (copied from uma-rpg's D63 at 30a322a, F6). Every route but the tick sits behind the owner
+// "Work done" notifications (copied from uma-rpg's D63 at 30a322a). Every route but the tick sits behind the owner
 // guard; the tick is public at that guard and checked by its own (Cloud Scheduler's OIDC token).
 @Controller('push')
 export class PushController {

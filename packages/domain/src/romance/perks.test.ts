@@ -1,4 +1,4 @@
-// The perks' words (F48 decision 7; romance spec RM31, RM32, RM36): one perk a level, 25 in all, templated by her line;
+// The perks' words: one perk a level, 25 in all, templated by her line;
 // "Opens with chapter n" for a perk at a place that waits for its chapter. Invented ids only: the stand-ins and casts of
 // 9000004 onward built here.
 import { describe, expect, it } from 'vitest'

@@ -1,5 +1,5 @@
-// Copied from uma-rpg apps/web/src/items/ItemIcon.tsx at 30a322a (F5, FM2), cut to the items and gems sheets: a line or
-// made item's icon from uma-art's atlases (P37–P38), drawn pixel-crisp at any size. Gear and its kind badges stay behind.
+// Copied from uma-rpg apps/web/src/items/ItemIcon.tsx at 30a322a, cut to the items and gems sheets: a line or
+// made item's icon from uma-art's atlases, drawn pixel-crisp at any size. Gear and its kind badges stay behind.
 import gemsUrl from '@luismlorenzana/uma-art/gems/atlas.png?url'
 import itemsUrl from '@luismlorenzana/uma-art/items/atlas.png?url'
 import { seedOf } from '@farm/domain'
@@ -9,7 +9,7 @@ import { ATLAS_CELL, iconFrame, SHEET_SIZE, type Sheet } from './frames'
 const URL: Readonly<Record<Sheet, string>> = { items: itemsUrl, gems: gemsUrl }
 
 /** A seed's icon is its crop's with uma-art's seed-packet badge in its corner (F25's `farm/seed-packet`, pinned from F49),
- * an own seed's with a green dot beside it; without the mark, F20's corner tag (decision 11): brown from the shop, green
+ * an own seed's with a green dot beside it; without the mark, F20's corner tag: brown from the shop, green
  * for own seeds. */
 export function ItemIcon({ id, size = 32, className = '', label }: { id: string; size?: number; className?: string; label?: string }) {
   const frame = iconFrame(id)

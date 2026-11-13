@@ -1,4 +1,4 @@
-// The cards that close an event (F49 decisions 9 and 11; romance spec RM55): **the level-up card** closes every event:
+// The cards that close an event: **the level-up card** closes every event:
 // her heart fills with a short sparkle (still, with reduced motion) and she says her last line; then the sum ("+50 event
 // · +30 choice · +15 Great = +95 toward Romance 6 (+40 banked)"), the perk it brings (F48's words; F51 makes it act, and
 // Friendship 4's names her signature dish's recipe),
@@ -18,7 +18,7 @@ import { marriedWords, perkLineWords, ringGivenWords, STAGE_WORDS, stageOpens, s
 import { routeTrack } from './hearts-view'
 
 
-/** The level-up card (decision 9). */
+/** The level-up card. */
 export function LevelUpCard({ card, id, name, love, pack, farmer, onContinue }: {
   card: EventCard
   id: string
@@ -74,7 +74,7 @@ export function LevelUpCard({ card, id, name, love, pack, farmer, onContinue }: 
   )
 }
 
-/** The stage-up screen (decision 11; F53): the track re-coloured, what the stage opens, **Continue**. Married adds RM45's
+/** The stage-up screen: the track re-coloured, what the stage opens, **Continue**. Married adds RM45's
  * line ("Married 1/3 · next household scene at 5"). */
 export function StageUpScreen({ stage, id, love, pack, married = null, save = null, onContinue }: {
   stage: StageUp
@@ -83,7 +83,7 @@ export function StageUpScreen({ stage, id, love, pack, married = null, save = nu
   pack: Pick<StoryPack, 'cast' | 'bibles'>
   /** Married's count and the cast's size, for its line. */
   married?: { married: number; cast: number } | null
-  /** The save now (F54): Married's room step reads the homestead. */
+  /** The save now: Married's room step reads the homestead. */
   save?: SaveV4 | null
   onContinue: () => void
 }) {
@@ -115,7 +115,7 @@ export function StageUpScreen({ stage, id, love, pack, married = null, save = nu
   )
 }
 
-/** The wedding's room step (F54 decision 4; F53's stage-up gains it): her room, already taken by the default, and the other
+/** The wedding's room step (F53's stage-up gains it): her room, already taken by the default, and the other
  * houses with a free room to move her to at once, free. */
 function RoomStep({ save, id }: { save: SaveV4; id: string }) {
   const [busy, setBusy] = useState(false)

@@ -1,4 +1,4 @@
-// The evening in words (F50 decisions 6, 8 and 9; romance spec RM19–RM22, RM37): the kinds sheet's rows with each one's
+// The evening in words: the kinds sheet's rows with each one's
 // three numbers for her today, the picker's rows, Tonight's Evening rows, the Hearts header's marks, the card's sum and
 // the profile's Evening button. Pure, so the screens and the tests read the same. Loaded on demand, the romance build only.
 import {
@@ -15,14 +15,14 @@ export interface KindRow {
   kind: EveningKind
   name: string
   play: PlayKind
-  /** Fine, Great and Perfect with her today: "Perfect +225" before the tap (RM13). */
+  /** Fine, Great and Perfect with her today: "Perfect +225" before the tap. */
   pays: Readonly<Record<Grade, number>>
   favourite: boolean
   /** Null when she can play it now; else the rung that opens it. */
   locked: string | null
 }
 
-/** Her kinds sheet (decisions 1–6): the kinds open to her now in RM37's order, festival night last on a festival day, then
+/** Her kinds sheet: the kinds open to her now in RM37's order, festival night last on a festival day, then
  * the kinds her ladder hasn't opened yet, greyed with their rung. Kinds whose game isn't built aren't shown. */
 export function kindRows(save: SaveV4, pack: Pack, id: string, birthday: boolean): KindRow[] {
   const love = save.love[id]
@@ -50,7 +50,7 @@ export function roleWords(save: SaveV4, id: string): string {
   return role ? ROLE_WORDS[role] : `From Friendship ${HANGOUT_FROM}`
 }
 
-/** A row of Tonight's picker (decision 6): who's home and can spend it, her favourite kind, and her invitation. */
+/** A row of Tonight's picker: who's home and can spend it, her favourite kind, and her invitation. */
 export interface PickRow {
   id: string
   name: string
@@ -71,7 +71,7 @@ export function pickRows(save: SaveV4, pack: Pack, nameOf: NameOf): PickRow[] {
   })).map((r, i) => ({ r, i })).sort((a, b) => rank(a.r) - rank(b.r) || a.i - b.i).map(({ r }) => r)
 }
 
-/** One of Tonight's Evening rows (decision 8): a spent slot "with Stand-in 2 · Walk ✓", the Uma who said yes with **Play ›**,
+/** One of Tonight's Evening rows: a spent slot "with Stand-in 2 · Walk ✓", the Uma who said yes with **Play ›**,
  * or **Pick someone ›**; festival night's its own row on a festival day. */
 export type TonightRow =
   | { slot: 'evening' | 'festival'; state: 'spent'; with: string; text: string }
@@ -93,7 +93,7 @@ export function tonightRows(save: SaveV4, pack: Pack, nameOf: NameOf): TonightRo
   })
 }
 
-/** The Hearts header's marks (decision 9): ○ free, ● spent, festival night's tinted by its festival. */
+/** The Hearts header's marks: ○ free, ● spent, festival night's tinted by its festival. */
 export interface HeaderMark {
   key: string
   spent: boolean
@@ -107,7 +107,7 @@ export function headerMarks(save: SaveV4, nameOf: NameOf): HeaderMark[] {
   }))
 }
 
-/** The card's sum (decision 6): "+150 Perfect × 1.5 her favourite × 1.5 her birthday = +338", "+20 for saying yes", then
+/** The card's sum: "+150 Perfect × 1.5 her favourite × 1.5 her birthday = +338", "+20 for saying yes", then
  * "= +358 toward Friendship 3 (+40 banked)". */
 export function cardSum(card: EveningCard): { play: string; invite: string | null; total: string } {
   const factors = [
@@ -120,10 +120,10 @@ export function cardSum(card: EveningCard): { play: string; invite: string | nul
   return { play, invite, total }
 }
 
-/** The (i)'s evening line, in its fifth place (F48 decision 5). */
+/** The (i)'s evening line, in its fifth place. */
 export const EVENING_HELP = `One evening a day with someone home: a hangout from Friendship ${HANGOUT_FROM}, a date from Romance ${DATE_FROM}. Fine +60, Great +100, Perfect +150, ×1.5 in her favourite kind, and +20 when she asked you.`
 
-/** What her profile's Evening button says (decision 6): "Evening ›" while she can spend one, else why not. */
+/** What her profile's Evening button says: "Evening ›" while she can spend one, else why not. */
 export function eveningButton(save: SaveV4, id: string): { open: boolean; text: string } {
   const love = save.love[id]
   if (!love) return { open: false, text: 'Evening' }

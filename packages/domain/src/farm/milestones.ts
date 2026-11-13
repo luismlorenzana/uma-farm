@@ -5,14 +5,14 @@ import { FISHING_SPOTS, FOREST_AREAS } from '../gathering/ids'
 import { GOOD_FAMILIES, GOODS, RING_FAMILY, RING_IDS, type GoodFamily } from '../goods/ids'
 import { RANKS, type Rank } from './ranks'
 
-/** Farm Rank points (CS39): 1 per 100g shipped, 5 a Diary entry, 25 a milestone, 250 a chapter done. Festivals (150 /
+/** Farm Rank points: 1 per 100g shipped, 5 a Diary entry, 25 a milestone, 250 a chapter done. Festivals (150 /
  * 75 / 25) and decorations (1 per 100g) come with M6. */
 export const GOLD_PER_POINT = 100
 export const ENTRY_POINTS = 5
 export const MILESTONE_POINTS = 25
 export const CHAPTER_POINTS = 250
 
-/** A milestone (CS38): what reaches it, and the gold it pays once. Each is worth `MILESTONE_POINTS`. */
+/** A milestone: what reaches it, and the gold it pays once. Each is worth `MILESTONE_POINTS`. */
 export type Milestone =
   /** Gold shipped at the bin, all time (`farm.counts['gold-shipped']`). */
   | { readonly id: string; readonly kind: 'shipped'; readonly at: number; readonly gold: number }
@@ -29,7 +29,7 @@ const DEPTH_GOLD = 500
 const rankId = (rank: Rank): string => `rank:${RANKS[rank].toLowerCase()}`
 
 /** M4's milestones in CS38's order. "Umas recruited" at 100 and 272, festivals won, Mine floors, an animal at 10 hearts
- * and a Masterwork wait for the packets that pay them (M5, M6). */
+ * and a Masterwork wait for the packets that pay them. */
 export const MILESTONES: readonly Milestone[] = [
   ...([[10_000, 300], [50_000, 1_000], [100_000, 2_000], [250_000, 4_000], [500_000, 8_000], [1_000_000, 15_000]] as const)
     .map(([at, gold]): Milestone => ({ id: `shipped:${at}`, kind: 'shipped', at, gold })),
@@ -44,8 +44,8 @@ export const MILESTONES: readonly Milestone[] = [
 const MILESTONE_BY_ID = new Map(MILESTONES.map((m) => [m.id, m]))
 export const milestoneOf = (id: string): Milestone | undefined => MILESTONE_BY_ID.get(id)
 
-/** A collection row (CS38, decision 3): a family's ten raw goods, or its ten refined ones, each shipped once. It pays
- * `ROW_GOLD` once (and a decoration, M6), and isn't a milestone: its goods are already entries. */
+/** A collection row: a family's ten raw goods, or its ten refined ones, each shipped once. It pays
+ * `ROW_GOLD` once (and a decoration), and isn't a milestone: its goods are already entries. */
 export interface DiaryRow {
   readonly id: string
   readonly family: GoodFamily
@@ -58,7 +58,7 @@ export const DIARY_ROWS: readonly DiaryRow[] = [false, true].flatMap((refined) =
   const goods = GOODS.filter((g) => g.family === family && g.refined === refined).map((g) => g.id)
   return goods.length > 0 ? [{ id: `row:${family}${refined ? ':refined' : ''}`, family, refined, goods }] : []
 }))
-/** The rings' row (F53 decision 2): v4's catalogue only, its ten rings each shipped once. */
+/** The rings' row: v4's catalogue only, its ten rings each shipped once. */
 export const RING_ROW: DiaryRow = { id: `row:${RING_FAMILY}`, family: RING_FAMILY, refined: false, goods: RING_IDS }
 /** v4's 27 rows: v3's 26, then the rings'. */
 export const DIARY_ROWS_V4: readonly DiaryRow[] = [...DIARY_ROWS, RING_ROW]

@@ -1,4 +1,4 @@
-// The farm's save parse, shared by v3 and v4 (F17, F46; core spec CS53, romance spec RM10): strict keys, explicit paths,
+// The farm's save parse, shared by v3 and v4: strict keys, explicit paths,
 // every id checked. Roster ids are checked by form, as in v2: the API has no master data or story pack, and an id a later
 // release drops still parses. Internal to `save/`: `parse-v3.ts` and `parse-v4.ts` compose these, and `parse-v3.ts`
 // re-exports the public names (the work places, their slots and the kinds' types), so nothing outside moved.
@@ -20,13 +20,13 @@ import {
 } from './v3'
 import { MAX_STARS, parseStockKey } from './warehouse'
 
-/** The places v3 work rows sit at (decision 11): the forest, the Fishery and their stations in M4; the Mine, the Quarry and
+/** The places v3 work rows sit at: the forest, the Fishery and their stations in M4; the Mine, the Quarry and
  * theirs from M5. Four slots each (D24 #13). */
 export const LOOP_WORK_PLACES = ['forest', 'fishery', 'mill', 'sawmill', 'smokehouse', 'mine', 'quarry', 'smelter', 'cutter'] as const
 export type LoopPlaceId = typeof LOOP_WORK_PLACES[number]
 export const LOOP_SLOTS = 4
 
-/** A v3 work kind's request (F17 decision 11): the places it works at and its request's parse (strict keys, its own ids;
+/** A v3 work kind's request: the places it works at and its request's parse (strict keys, its own ids;
  * a `SaveParseError` with the path when wrong). The save's parse reads only this, so it stays in the initial JS. */
 export interface LoopRequestKind {
   readonly places: readonly LoopPlaceId[]
@@ -34,14 +34,14 @@ export interface LoopRequestKind {
 }
 export type LoopRequestKinds = Readonly<Record<string, LoopRequestKind>>
 
-/** A v3 work kind (F17 decision 11, F18, F22): its request, its rules on uma-work's day clock (`farmEnvV3`), and whether
+/** A v3 work kind: its request, its rules on uma-work's day clock (`farmEnvV3`), and whether
  * it runs for days at a time. F22's are `LOOP_KINDS` (`gathering/kinds.ts`, loaded with the screens and the night); the
  * save's parse reads their requests from `LOOP_REQUESTS` (`gathering/ids.ts`). */
 export interface LoopKind extends LoopRequestKind {
   /** How it plans and pays (uma-work's kind rules), over the loop's world. */
   readonly rules: WorkKindRules<LoopWorld>
   /** A multi-day kind (making; in M4 the Mill's preserves; later expeditions): a well-fed Uma's running entry gains a
-   * quarter day a night (CS22, F18 decision 4). A 1-day kind's plan takes ×1.25 items instead (F22). */
+   * quarter day a night. A 1-day kind's plan takes ×1.25 items instead. */
   readonly multiDay: boolean
 }
 export type LoopKinds = Readonly<Record<string, LoopKind>>
@@ -49,11 +49,11 @@ export type LoopKinds = Readonly<Record<string, LoopKind>>
 /** Up to three requests wait behind the running one (the engine's MAX_QUEUE); four started entries at most. */
 export const MAX_QUEUED = 3
 export const MAX_ENTRIES = MAX_QUEUED + 1
-/** The most items one entry makes: well past a Legend's day at the forest (CS17). */
+/** The most items one entry makes: well past a Legend's day at the forest. */
 export const MAX_ENTRY_ITEMS = 200
 /** The most recruits, visitors or departures one morning can name. */
 export const MAX_ROSTER_NEWS = 60
-/** The most goal lines one morning can hold (F24): a chapter, every Farm Rank, every milestone and row. */
+/** The most goal lines one morning can hold: a chapter, every Farm Rank, every milestone and row. */
 export const MAX_GOAL_NEWS = 1 + FARM_RANK_POINTS.length + MILESTONES.length + DIARY_ROWS.length
 /** The chapter a save may be in: 1–9 (CS43's eight, then the story's end). */
 export const MAX_CHAPTER = 9
@@ -115,7 +115,7 @@ export function parseRanks(value: unknown, path: string): Record<Activity, RankS
   })) as Record<Activity, RankState>
 }
 
-/** The Dorm on a save's version (F46 decision 12): v3's ten levels (CS34), v4's eight (RM5); home at most its beds. */
+/** The Dorm on a save's version: v3's ten levels, v4's eight; home at most its beds. */
 export function parseDorm(value: unknown, path: string, roster: ReadonlySet<string>, bought: number | undefined, version = 3): SaveV3['dorm'] {
   const o = object(value, path, ['level', 'home', 'swaps'])
   const top = dormMaxLevel(version)
@@ -162,7 +162,7 @@ export function parseWarehouse(value: unknown, path: string, check: (id: string)
   return out
 }
 
-// --- Work (decision 11): uma-work's rows at the v3 places, their stock keys, and each kind's own requests --------------
+// --- Work: uma-work's rows at the v3 places, their stock keys, and each kind's own requests --------------
 
 export function stock(value: unknown, path: string): string {
   if (typeof value !== 'string' || !parseStockKey(value)) fail(path, 'expected a stock key <id>@<stars>')
@@ -356,7 +356,7 @@ export function parseExpeditions(value: unknown, path: string, roster: ReadonlyS
 }
 
 /** Bond points by pair (D30 i): two roster ids in numeric order. v3's may be fractional (`amount`); v4's are whole
- * (`count`, F52 decision 1). */
+ * (`count`). */
 export function parseBonds(value: unknown, path: string, roster: ReadonlySet<string>, parse: (value: unknown, path: string) => number = amount): Record<string, number> {
   return counts(value, path, (k) => {
     const [a, b, ...rest] = k.split(':')
@@ -388,7 +388,7 @@ export function keys(value: unknown, path: string): string[] {
   return unique(list(value, path, 0, 2000).map((v, i) => key(v, `${path}.${i}`)), path)
 }
 
-/** The Diary. `isGood` is the version's catalogue: v3's goods, or v4's with the rings (F53). */
+/** The Diary. `isGood` is the version's catalogue: v3's goods, or v4's with the rings. */
 export function parseDiary(value: unknown, path: string, isGood: (id: string) => boolean = isGoodId): SaveV3['diary'] {
   const o = object(value, path, ['shipped', 'milestones', 'records', 'read'])
   return {
@@ -413,11 +413,11 @@ export function parseFarm(value: unknown, path: string): SaveV3['farm'] {
   }
 }
 
-// --- The morning summary (F18 decision 11): ids and counts only, the morning it was built for ---------------------
+// --- The morning summary: ids and counts only, the morning it was built for ---------------------
 
 export const none = (value: unknown, path: string): [] => list(value, path, 0, 0) as []
 
-/** §1 The bin (F19), on a save's version: v3's goods, or v4's with the rings (F53). */
+/** §1 The bin, on a save's version: v3's goods, or v4's with the rings. */
 export function parseBinLines(value: unknown, path: string, version = 3): BinSale[] {
   const isGood = version >= 4 ? isGoodIdV4 : isGoodId
   // A good at one star once, a whole count and gold; the gold isn't re-priced (a later price can't break it).
@@ -433,9 +433,9 @@ export function parseBinLines(value: unknown, path: string, version = 3): BinSal
   }), path, (b) => `${b.id}@${b.stars}`)
 }
 
-/** §2 Work done (F18, F20, F22). */
+/** §2 Work done. */
 export function parseWorkLines(value: unknown, path: string): WorkLine[] {
-  // Work done: jobs by place (F18); crops ready by block and what withered, by block and crop (F20). A plot count is 1–9.
+  // Work done: jobs by place; crops ready by block and what withered, by block and crop. A plot count is 1–9.
   const plots = (value: unknown, at: string) => int(value, at, 1, PLOTS_PER_BLOCK)
   return unique(list(value, path, 0, LOOP_WORK_PLACES.length + 1 + BLOCK_IDS.length * (1 + PLOTS_PER_BLOCK)).map((v, i): WorkLine => {
     const at = `${path}.${i}`
@@ -460,7 +460,7 @@ export function parseWorkLines(value: unknown, path: string): WorkLine[] {
   }), path, (w) => (w.kind === 'jobs' ? `jobs:${w.place}` : w.kind === 'catch' ? 'catch' : w.kind === 'crops' ? `crops:${w.block}` : `withered:${w.block}:${w.crop}`))
 }
 
-/** §3 Ranks (F21): rank-ups, then points full, each an Uma on the roster in an activity, a rank Hand–Legend; once each. */
+/** §3 Ranks: rank-ups, then points full, each an Uma on the roster in an activity, a rank Hand–Legend; once each. */
 export function parseRankLines(value: unknown, path: string, roster: ReadonlySet<string>): RankLine[] {
   return unique(list(value, path, 0, 2 * ACTIVITIES.length * roster.size).map((v, i): RankLine => {
     const at = `${path}.${i}`
@@ -471,13 +471,13 @@ export function parseRankLines(value: unknown, path: string, roster: ReadonlySet
   }), path, (r) => `${r.kind}:${r.outfitId}:${r.activity}`)
 }
 
-/** v3's news kinds; v4 drops `joined`, `gate` and `left` (its arrivals are §4's hearts, F46 decision 15). */
+/** v3's news kinds; v4 drops `joined`, `gate` and `left` (its arrivals are §4's hearts). */
 const NEWS_KINDS = ['season', 'festival', 'chapter', 'farm-rank', 'milestone', 'dorm', 'home', 'joined', 'gate', 'left'] as const
 const NEWS_KINDS_V4 = ['season', 'festival', 'chapter', 'farm-rank', 'milestone', 'dorm', 'home', 'household'] as const
-/** The household milestones a v4 morning may announce (F54 decision 9; RM45). */
+/** The household milestones a v4 morning may announce. */
 const HOUSEHOLD_NEWS = [1, 5, 10, 15, 20] as const
 
-/** §5 New today (F18, F23, F24), on a save's version: the Dorm's levels and beds are its ladder's. */
+/** §5 New today, on a save's version: the Dorm's levels and beds are its ladder's. */
 export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet<string>, version = 3): (NewsLine | HouseholdNews)[] {
   const top = dormMaxLevel(version)
   // F23: the Dorm's new level, Umas home from a swap, recruits who joined (on the roster), a visitor at the Gate and those
@@ -518,7 +518,7 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
     : n.kind === 'farm-rank' ? `farm-rank:${n.rank}` : n.kind === 'milestone' ? `milestone:${n.id}` : n.kind === 'household' ? `household:${n.married}` : `${n.kind}:${n.outfitId}`))
 }
 
-/** §6 Today's nudges (F18, F20). */
+/** §6 Today's nudges. */
 export function parseNudges(value: unknown, path: string, roster: ReadonlySet<string>): Nudge[] {
   return unique(list(value, path, 0, 4).map((v, i): Nudge => {
     const at = `${path}.${i}`

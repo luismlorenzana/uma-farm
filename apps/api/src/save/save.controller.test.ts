@@ -1,4 +1,4 @@
-// A refused upload is kept (uma-rpg D260): a server that sends every upload back and keeps nothing leaves days of play on
+// A refused upload is kept: a server that sends every upload back and keeps nothing leaves days of play on
 // one phone. Invented data only.
 import { BadRequestException, ConflictException } from '@nestjs/common'
 import { newSave, newSaveV2, type Save } from '@farm/domain'

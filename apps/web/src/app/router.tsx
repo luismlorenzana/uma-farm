@@ -1,8 +1,8 @@
-// The pages (F18–F24), inside the shell: `/` the farm map (`?peek=<place>` a quick look), `/roster`, `/diary` and
+// The pages, inside the shell: `/` the farm map (`?peek=<place>` a quick look), `/roster`, `/diary` and
 // `/account`; F19's Warehouse by stars, `/warehouse` (`?pick=bin` to ship from it); F20's Fields, `/fields`; F22's
 // forest, Fishery and stations, `/forest`, `/fishery`, `/mill`, `/sawmill`, `/smokehouse`; and F23's Dorm, `/dorm`. Every
 // page but Account loads on demand; anything else (the Wilds' old `/wilds/<place>` among them) goes to the farm. The romance
-// build's Hearts tab is `/hearts` (`?view=work` the roster's album, `?uma=` her profile, F48 decision 2), and there
+// build's Hearts tab is `/hearts` (`?view=work` the roster's album, `?uma=` her profile), and there
 // `/roster` lands on the Work view; the M4 build keeps `/roster` and has no `/hearts`.
 import { lazy, Suspense, type ReactNode } from 'react'
 import { createBrowserRouter, Navigate, useLocation, type RouteObject } from 'react-router'

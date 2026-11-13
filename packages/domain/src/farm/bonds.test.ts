@@ -1,4 +1,4 @@
-// Bonds between Umas (F52 decisions 1–10; romance spec RM48–RM50; core spec CS44, CS17): the points and their sources, the
+// Bonds between Umas: the points and their sources, the
 // hearts at their edges and CS44's days, the ties' seeds, the closest friend and Romance 4's ×1.5, side by side's extras
 // and tended growth, the pair conversations and the morning's lines. Invented ids only: the stand-ins 9000001–9000003 and
 // a cast of 9000004 onward built here.

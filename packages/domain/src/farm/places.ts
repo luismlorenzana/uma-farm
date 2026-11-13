@@ -1,4 +1,4 @@
-// The farm map's places (F18 decision 5; core-loop FC28, hd2d-farm FR5–FR7, core spec CS3, CS19): uma-kit's Hub map in
+// The farm map's places: uma-kit's Hub map in
 // eight rows of three, gathering and its station and the ranch or a workshop on the first five, then the yard and the
 // town edge. One source for the map, its quick looks and the menu. Where each stands on the screen is the app's; what
 // opens each is CS3's, read from the save. Until a place's packet lands, the app shows it locked (F19–F23 wire them up).
@@ -22,8 +22,8 @@ export const isFarmPlaceId = (id: string): id is FarmPlaceId => (FARM_PLACE_IDS 
 /** FC28's rows, by what a place is. */
 export type FarmPlaceGroup = 'gathering' | 'station' | 'ranch' | 'workshop' | 'yard' | 'town'
 
-/** What opens a place (CS3): open from day 1, a chapter's opening, a chapter's reward (the Mill's plans), a Farm Rank, or a
- * later milestone (the board and the festivals, M6). */
+/** What opens a place: open from day 1, a chapter's opening, a chapter's reward (the Mill's plans), a Farm Rank, or a
+ * later milestone (the board and the festivals). */
 export type PlaceOpens =
   | { by: 'start' }
   | { by: 'chapter'; chapter: number }
@@ -41,7 +41,7 @@ export interface FarmPlace {
   /** Its row on the map, 1–8, and its column, 0–2. */
   row: number
   col: number
-  /** uma-art's building (CS19), or one it borrows until its own ships (F29, F38); F25's Dorm and shipping bin are uma-art
+  /** uma-art's building, or one it borrows until its own ships; F25's Dorm and shipping bin are uma-art
    * 2.25.0's, pinned from F49. */
   frame: string
   borrowed: boolean
@@ -83,14 +83,14 @@ export const FARM_PLACES: readonly FarmPlace[] = [
   place('expeditions', 'Expedition post', 'town', 8, 2, 'rangers-lodge', 'Parties out for days.', chapter(5), true),
 ]
 
-/** The map's rows (FC28). */
+/** The map's rows. */
 export const FARM_MAP_ROWS = 8
 
 const BY_ID = new Map(FARM_PLACES.map((p) => [p.id, p]))
 export const farmPlace = (id: string | null | undefined): FarmPlace | undefined => (id ? BY_ID.get(id as FarmPlaceId) : undefined)
 
-/** The places' blurbs on v4 (F46 decision 14; F53 decision 3): the Gate is where the cast walks in, not where visitors wait;
- * the Forge is the ring bench until chapter 7 lights its fire (M6). */
+/** The places' blurbs on v4: the Gate is where the cast walks in, not where visitors wait;
+ * the Forge is the ring bench until chapter 7 lights its fire. */
 const BLURBS_V4: Partial<Record<FarmPlaceId, string>> = {
   gate: 'Umas arrive here.',
   forge: 'The ring bench: a ring from three refined goods of one grade, one a day.',
@@ -98,11 +98,11 @@ const BLURBS_V4: Partial<Record<FarmPlaceId, string>> = {
 /** A place's blurb on a save's version. */
 export const placeBlurb = (place: Pick<FarmPlace, 'id' | 'blurb'>, version: number): string => (version >= 4 ? BLURBS_V4[place.id] : undefined) ?? place.blurb
 
-/** Whether a place's rule has opened it on this save (CS3): a chapter once it starts, the Mill once chapter 1 is done, a
+/** Whether a place's rule has opened it on this save: a chapter once it starts, the Mill once chapter 1 is done, a
  * Farm Rank once reached. The board and the festival ground wait for M6. */
 export const placeOpen = (save: Pick<FarmSave, 'farm'>, place: FarmPlace): boolean => opened(save, place.opens)
 
-/** Whether what opens something has happened on this save: a place, or a line in the shop (F19). */
+/** Whether what opens something has happened on this save: a place, or a line in the shop. */
 export function opened(save: Pick<FarmSave, 'farm'>, opens: PlaceOpens): boolean {
   switch (opens.by) {
     case 'start': return true

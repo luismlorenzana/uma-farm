@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/save/work-v3.test.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// The Wilds' work (H77; profession-progression.md §4–§5, PP4, PP16; the farm by line since H112, D224): the farm's env,
+// Copied from uma-rpg packages/domain/src/save/work-v3.test.ts at 30a322a, with its Wilds-only parts cut.
+// The Wilds' work (profession-progression.md §4–§5; the farm by line since H112): the farm's env,
 // four slots a place, no levels, collects, and the trade gate through the operations' context and none for settles.
 import { describe, expect, it } from 'vitest'
 import { jobExp, stepMinutes } from '../economy/pacing'

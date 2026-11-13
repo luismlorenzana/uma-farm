@@ -1,7 +1,7 @@
-// Copied from uma-rpg packages/domain/src/items/made-id.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// The made items' ids (R2, D208–D209): what the Forge, the Armorer, the Charm Shop and the Lapidary make. Ids, lines and grades
-// only, safe for the main bundle and the save's parse; names and places are `items/made.ts`'s (H77), recipes
-// `made-v4.ts`'. Tome Ink (D224, FL14; H109) is the farm by line's, made at the Workbench for Tomes.
+// Copied from uma-rpg packages/domain/src/items/made-id.ts at 30a322a, with its Wilds-only parts cut.
+// The made items' ids (R2): what the Forge, the Armorer, the Charm Shop and the Lapidary make. Ids, lines and grades
+// only, safe for the main bundle and the save's parse; names and places are `items/made.ts`'s, recipes
+// `made-v4.ts`'. Tome Ink is the farm by line's, made at the Workbench for Tomes.
 export const MADE_LINES = ['weapon-gem', 'armor-fittings', 'accessory-setting', 'jewel-planet', 'jewel-moon', 'tome-ink'] as const
 export type MadeLine = typeof MADE_LINES[number]
 export interface MadeIdentity { id: string; line: MadeLine; grade: number }

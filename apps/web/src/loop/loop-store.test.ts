@@ -1,4 +1,4 @@
-// The store (F17 decisions 1 and 2; live from F24): every v2 it meets (on the device, on the server, in a 409, in a safety
+// The store (live from F24): every v2 it meets (on the device, on the server, in a 409, in a safety
 // copy) becomes v3 once, committed without moving `updatedAt`. An in-memory server with the API's revision and version
 // rules, and a fake IndexedDB. Invented outfit ids only. The owner's own first open is `owner-save.test.tsx`.
 import 'fake-indexeddb/auto'
@@ -64,7 +64,7 @@ describe('the loop boots a v2 into v3 once', () => {
     await boot('u1')
     expect(v3()).toMatchObject({ version: 3, calendar: { day: 1 }, gold: 500 + 450, account: { updatedAt: T1, createdAt: T0 } })
     expect(v3().roster['1001']?.ranks.mining).toEqual({ points: 160, rank: 2, challenge: 0 })
-    expect(Object.keys(v3().roster)).toEqual(['1001', '1002']) // one to pick on the start's sheet (F23)
+    expect(Object.keys(v3().roster)).toEqual(['1001', '1002']) // one to pick on the start's sheet
     expect(useGame.getState().dirty).toBe(true)
     // The device holds the v3, so a reload doesn't migrate again.
     const row = await readSaveRow('u1')

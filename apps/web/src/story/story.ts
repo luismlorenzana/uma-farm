@@ -1,4 +1,4 @@
-// The story pack in the app (F46 decisions 5 and 6; romance spec RM3, RM58, RM59): loaded once, on demand, through one
+// The story pack in the app: loaded once, on demand, through one
 // seam (`load.ts`'s `loadStoryPack`: the invented stand-in now, the private pack from F56). Light on purpose, since the
 // shell, the store and the album's art read it: the pack, its validator and the stand-in load lazily.
 //
@@ -16,7 +16,7 @@ const listeners = new Set<() => void>()
 
 /** The pack once loaded, else null (the M4 build never loads it). */
 export const storyPack = (): StoryPack | null => pack
-/** The outfit a roster id plays as (decision 5): her cast entry's on v4, else the id itself. */
+/** The outfit a roster id plays as: her cast entry's on v4, else the id itself. */
 export const outfitFor = (id: string): string => resolve(id)
 /** Whether an id is one of the cast's (a v4 roster key). */
 export const inCast = (id: string): boolean => pack?.cast.umas.some((u) => u.characterId === id) ?? false
@@ -47,7 +47,7 @@ export function useStory(): StoryPack | null {
   }, () => pack, () => pack)
 }
 
-/** A name for a character master data doesn't hold (RM3): the stand-ins' invented range (9000001 on) reads "Stand-in 1",
+/** A name for a character master data doesn't hold: the stand-ins' invented range (9000001 on) reads "Stand-in 1",
  * anyone else (a character a release drops) "An Uma". */
 export function unknownName(id: string): string {
   const n = Number(id) - 9_000_000

@@ -1,4 +1,4 @@
-// Ranks (F21; CS26, CS29–CS31, CS33, CS45; decisions 1–3): rank points a day, the challenges, rank-ups at night, what a
+// Ranks: rank points a day, the challenges, rank-ups at night, what a
 // rank gives and the favourite line. Invented outfit ids and test kinds (`kinds.fixture.ts`) until F22's.
 import { describe, expect, it } from 'vitest'
 import { harvestAll, harvestQuality, plantAll, seedsBackChance, setTender, tendedGrowth } from '../fields/fields'
@@ -107,7 +107,7 @@ describe('rank-ups at night (CS30; decisions 1 and 3)', () => {
   it('ranks up the night after the challenge is met during the day, and resets the count', () => {
     let save = withRank(farm(), '101', 'farming', { points: 41, challenge: 25 })
     save = countChallenge(save, '101', 'farming', { kind: 'harvest', stars: [1, 1, 1, 1, 1, 1, 1], level: 1 })
-    // Met during the day: it waits for the night (decision 3), and the count stops at the target.
+    // Met during the day: it waits for the night, and the count stops at the target.
     expect(save.roster['101']!.ranks.farming).toEqual({ points: 41, rank: 0, challenge: 30 })
     save = night(save)
     expect(save.roster['101']!.ranks.farming).toEqual({ points: 41, rank: 1, challenge: 0 })

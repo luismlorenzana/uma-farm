@@ -1,4 +1,4 @@
-// The device save (copied from uma-rpg at 30a322a; its D32, D260): one Dexie row holding the whole save, its last synced
+// The device save (copied from uma-rpg at 30a322a): one Dexie row holding the whole save, its last synced
 // revision and a dirty flag. Safety copies sit beside it: a save kept on this device before anything replaced it, the
 // newest five for each account. Dexie loads only when device I/O starts.
 import type { Dexie, Table } from 'dexie'
@@ -10,7 +10,7 @@ export interface SaveRow {
   uid: string
   /** The server revision this save is based on (0: never synced). */
   revision: number
-  /** As stored: the Wilds' v2, the loop's v3 (F17) or the romance core's v4 (F46). */
+  /** As stored: the Wilds' v2, the loop's v3 or the romance core's v4. */
   save: StoredSave
   /** Changed since the last successful sync. */
   dirty: boolean
@@ -20,7 +20,7 @@ export interface SaveRow {
 
 /** Why a safety copy exists: a newer save replaced unsynced changes, a restore replaced this save, this device's save
  * couldn't be read (kept as it was, for a later build that can), or the romance build wiped an older save with unsynced
- * play (F46). */
+ * play. */
 export type SafetyReason = 'replaced' | 'restore' | 'unreadable' | 'wiped'
 export interface SafetyCopy {
   id?: number

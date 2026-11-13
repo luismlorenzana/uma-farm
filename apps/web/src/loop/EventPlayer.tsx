@@ -1,4 +1,4 @@
-// The event player (F49 decisions 2–4, 8–12; romance spec RM29, RM54–RM56): her heart event as a full-screen sheet over
+// The event player: her heart event as a full-screen sheet over
 // today's map, CS42's scene player grown. From the top: the title ("The Fields · Friendship 1") with **Auto**, **Skip**
 // and **Log** away from the taps; **the place card** (~45%: the place's uma-art frame on its season's ground, or a
 // romance backdrop's borrowed frame and tint), her bust from master data (a lettered disc for a stand-in) and **an emote
@@ -11,7 +11,7 @@
 // row's ● Ready, her profile's **Play ›**, the morning's Ready line); `?ask=<id>` her confession's last choice again
 // (**Ask her**, once a day, paying nothing); `?memory=<id>:<rung>[@<n>]` replays a Memory from the top or its nth choice
 // point, every option open, nothing paid or saved. The script loads on demand (`route(id)`); Skip, Auto and Log work while
-// it does. Nothing is saved until the end: `playEvent` then commits once, stamped (decision 1). Skip jumps to the next
+// it does. Nothing is saved until the end: `playEvent` then commits once, stamped. Skip jumps to the next
 // choice or play, never past one. Loaded on demand, the romance build only.
 //
 // F53: **the proposal** first asks which ring (the best grade preselected), then plays, and closes on the Engaged
@@ -140,7 +140,7 @@ function Waiting() {
   return <div className="flex flex-1 items-end px-4 pb-6"><p className="w-full rounded-md border border-hairline bg-panel p-4 text-[17px] text-ink-soft" data-loading>…</p></div>
 }
 
-/** The sheet's frame (RM29): the title, and Auto, Skip and Log top right, away from the taps. */
+/** The sheet's frame: the title, and Auto, Skip and Log top right, away from the taps. */
 function Shell({ title, auto, onAuto, onSkip, onLog, skipping = false, children }: {
   title: string; auto: boolean; onAuto: () => void; onSkip: () => void; onLog: () => void; skipping?: boolean; children: React.ReactNode
 }) {
@@ -221,7 +221,7 @@ function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLo
     if (wedding) return setPhase('reception')
     commitEvent(null)
   }, [ended, extraNow, phase]) // eslint-disable-line react-hooks/exhaustive-deps
-  /** The event saved once (decision 1), with the proposal's ring, or the wedding's place and reception (F53). */
+  /** The event saved once, with the proposal's ring, or the wedding's place and reception. */
   const commitEvent = (reception: Reception) => {
     setPhase('saving')
     const extra = rung === 'proposal' && ring ? { ring } : wedding && chosenPlace ? { place: chosenPlace, reception } : {}
@@ -229,7 +229,7 @@ function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLo
       .then((done) => { setCard(done); setPhase('card') }, (e: unknown) => { setError(words(e)); setPhase('card') })
   }
 
-  // Skip (decision 8): to the next choice or play, never past one; with neither left, to the end.
+  // Skip: to the next choice or play, never past one; with neither left, to the end.
   const skip = () => {
     if (phase !== 'scene') return
     const pending = shown.findIndex((s, i) => i >= cursor && (('choice' in s && shown.slice(0, i).filter((x) => 'choice' in x).length >= picks.length)
@@ -301,7 +301,7 @@ function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLo
 
 const words = (e: unknown): string => (e instanceof Error ? e.message : 'That didn’t save. Try again.')
 
-/** The proposal's ring (F53 decision 8): the rings in the Warehouse, the best grade first and preselected. */
+/** The proposal's ring: the rings in the Warehouse, the best grade first and preselected. */
 function RingPicker({ save, onPick, onClose }: { save: SaveV4; onPick: (ring: string) => void; onClose: () => void }) {
   const rings = heldRings(save)
   const [chosen, setChosen] = useState(rings[0] ?? null)
@@ -330,7 +330,7 @@ function RingPicker({ save, onPick, onClose }: { save: SaveV4; onPick: (ring: st
   )
 }
 
-/** The wedding's place (F53 decision 9): her three, each on its place card. */
+/** The wedding's place: her three, each on its place card. */
 function PlacePicker({ places, day, onPick }: { places: readonly string[]; day: number; onPick: (place: string) => void }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-4" data-place-picker>
@@ -358,7 +358,7 @@ function PlacePicker({ places, day, onPick }: { places: readonly string[]; day: 
   )
 }
 
-/** The reception (F53 decision 9): a dish in the Warehouse, its well-fed days on the button, or Marta's cake with none. */
+/** The reception: a dish in the Warehouse, its well-fed days on the button, or Marta's cake with none. */
 function ReceptionPicker({ save, onPick }: { save: SaveV4; onPick: (reception: Reception) => void }) {
   const dishes = receptionDishes(save)
   return (
@@ -382,8 +382,8 @@ function ReceptionPicker({ save, onPick }: { save: SaveV4; onPick: (reception: R
   )
 }
 
-/** The place card (decision 3): its frame on its ground, her bust and her emote bubble; a wedding's guests' faces along its
- * top (F53). */
+/** The place card: its frame on its ground, her bust and her emote bubble; a wedding's guests' faces along its
+ * top. */
 function PlaceCardView({ place, day, bust, bustName, castSpeaker, emote, guests = [], nameOf }: {
   place: string | null; day: number; bust: string; bustName: string; castSpeaker: CastId | null; emote: keyof typeof EMOTE_BUBBLE | null; guests?: readonly string[]
   nameOf?: (id: string) => string
@@ -407,7 +407,7 @@ function PlaceCardView({ place, day, bust, bustName, castSpeaker, emote, guests 
 }
 
 type EmoteFrames = { width: number; height: number; frames: Record<string, { x: number; y: number; w: number; h: number }> }
-/** uma-art's emote bubble beside her bust (decision 4): music happy or laughing, sweat shy, ellipsis sad, anger angry,
+/** uma-art's emote bubble beside her bust: music happy or laughing, sweat shy, ellipsis sad, anger angry,
  * exclaim surprised, question thinking, heart tender. */
 function EmoteBubble({ emote }: { emote: keyof typeof EMOTE_BUBBLE }) {
   const index = emoteIndex as unknown as EmoteFrames
@@ -424,7 +424,7 @@ function EmoteBubble({ emote }: { emote: keyof typeof EMOTE_BUBBLE }) {
   )
 }
 
-/** Her bubble (RM29): at most three lines, typed out; a tap finishes the line, the next goes on, a hold skips; Auto goes
+/** Her bubble: at most three lines, typed out; a tap finishes the line, the next goes on, a hold skips; Auto goes
  * on after a reading pause. A `wait` goes on by itself. */
 function Bubble({ step, nameOf, farmer, onNext, onHold, auto, still = false }: {
   step: Step; nameOf: (id: string) => string; farmer: string; onNext: () => void; onHold: () => void; auto: boolean; still?: boolean
@@ -473,7 +473,7 @@ function Bubble({ step, nameOf, farmer, onNext, onHold, auto, still = false }: {
   )
 }
 
-/** The choices (RM27): full width, 48 pt, each with its gain on the button; a replay opens every option and pays nothing,
+/** The choices: full width, 48 pt, each with its gain on the button; a replay opens every option and pays nothing,
  * Ask her's answer pays nothing either. */
 function Choices({ mode, options, save, pack, id, farmer, onPick }: {
   mode: Mode; options: readonly ChoiceOption[]; save: SaveV4; pack: StoryPack; id: string; farmer: string; onPick: (i: number) => void
@@ -504,7 +504,7 @@ function Choices({ mode, options, save, pack, id, farmer, onPick }: {
   )
 }
 
-/** The log (decision 8): every line so far, and your answers. */
+/** The log: every line so far, and your answers. */
 function logLines(steps: readonly Step[], picks: readonly number[], nameOf: (id: string) => string, farmer: string): { who: string; text: string }[] {
   let choice = 0
   return steps.flatMap((s): { who: string; text: string }[] => {

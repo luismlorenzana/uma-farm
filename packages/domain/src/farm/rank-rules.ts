@@ -1,4 +1,4 @@
-// Ranks (F21; core spec CS26, CS29–CS31, CS33, CS45; FC18): each Uma climbs six ranks in each of the nine activities.
+// Ranks: each Uma climbs six ranks in each of the nine activities.
 // A day of work pays rank points in its activity; a rank comes when its points are reached and its challenge is met,
 // at night (step 6). A rank pays: more yield, faster tending, better stars, deeper places, more seeds back. Her calling's
 // line is her favourite, where she earns ×1.2 points; she can work anywhere. `farm/ranks.ts` holds the ladder the save
@@ -15,36 +15,36 @@ import type { FarmSave, Love } from '../save/v4'
 
 const round6 = (n: number): number => Math.round(n * 1e6) / 1e6
 
-// --- Rank points (CS29, CS45) ----------------------------------------------------------------------------------------
+// --- Rank points ----------------------------------------------------------------------------------------
 
 /** A day of work pays 10 points in its activity. */
 export const DAY_POINTS = 10
-/** A workshop play pays its assistant 10 (CS20; F8, F35, F36). */
+/** A workshop play pays its assistant 10. */
 export const PLAY_POINTS = 10
-/** An expedition pays 10 a day away, +10 on a Success, +20 on a Great (CS49; F28). */
+/** An expedition pays 10 a day away, +10 on a Success, +20 on a Great. */
 export const EXPEDITION_DAY_POINTS = 10
 export const EXPEDITION_RESULT_POINTS = { success: 10, great: 20 } as const
-/** ×1.2 in her favourite line (CS33). */
+/** ×1.2 in her favourite line. */
 export const FAVOURITE_POINTS = 1.2
 /** ×1.25 well fed. */
 export const WELL_FED_POINTS = 1.25
-/** Affinity's points to a heart (CS45): 0–10 hearts. */
+/** Affinity's points to a heart: 0–10 hearts. */
 export const HEART_POINTS = 100
 /** Her hearts with you: whole hearts, 0–10. */
 export const heartsOf = (affinity: number): number => Math.min(10, Math.max(0, Math.floor(affinity / HEART_POINTS + 1e-9)))
-/** ×1.05 at 5 hearts, ×1.10 at 10 (CS45). */
+/** ×1.05 at 5 hearts, ×1.10 at 10. */
 export const affinityPoints = (affinity: number): number => {
   const hearts = heartsOf(affinity)
   return hearts >= 10 ? 1.1 : hearts >= 5 ? 1.05 : 1
 }
 
-/** Her friendship's factor on v4 (RM18; F47 decision 12): ×1.05 from Friendship 5, ×1.10 from Friendship 10 on, through
+/** Her friendship's factor on v4: ×1.05 from Friendship 5, ×1.10 from Friendship 10 on, through
  * her confession, romance and spouse (the F5 and F10 perks). No falls. */
 export const loveRankFactor = (love: Pick<Love, 'stage' | 'level'>): number => {
   if (love.stage !== 'friendship') return 1.1
   return love.level >= 10 ? 1.1 : love.level >= 5 ? 1.05 : 1
 }
-/** The hearts' factor by the save's version (F47 decision 12): v3 your affinity's (CS45), v4 her friendship's. */
+/** The hearts' factor by the save's version: v3 your affinity's, v4 her friendship's. */
 export function heartsFactorOf(save: FarmSave, id: OutfitId): number {
   if (save.version === 4) {
     const love = save.love[id]
@@ -59,9 +59,9 @@ export interface PointTerms {
   talent: TalentStep
   favourite: boolean
   wellFed: boolean
-  /** ×1, ×1.05 or ×1.10 (CS45, RM18). */
+  /** ×1, ×1.05 or ×1.10. */
   heartsFactor: number
-  /** A mentor's ×1.10 at her place today (romance spec RM33; F51 decision 7), save v4 only; absent is ×1. */
+  /** A mentor's ×1.10 at her place today, save v4 only; absent is ×1. */
   mentor?: number
 }
 
@@ -71,13 +71,13 @@ export interface PointTerms {
 export function rankPoints(base: number, terms: PointTerms): number {
   return round6(base * talentRankPoints(terms.talent) * (terms.favourite ? FAVOURITE_POINTS : 1) * (terms.wellFed ? WELL_FED_POINTS : 1) * terms.heartsFactor * (terms.mentor ?? 1))
 }
-/** A day of work's points (CS29): 10 × her factors. */
+/** A day of work's points: 10 × her factors. */
 export const rankPointsForDay = (terms: PointTerms): number => rankPoints(DAY_POINTS, terms)
 
 /** Days of work to reach `rank`'s points at a day's pay (CS29's table, challenges met). */
 export const daysToRank = (rank: Rank, perDay: number): number => (rank === 0 ? 0 : Math.ceil(RANK_POINTS[rank]! / perDay - 1e-9))
 
-// --- Her favourite line (CS33) -------------------------------------------------------------------------------------
+// --- Her favourite line -------------------------------------------------------------------------------------
 
 /** Her favourite activity: her calling's line's (D24 #9): Metal and Stone mining, Wood foraging, Fish fishing,
  * Vegetables farming. The ranch, the workshops and expeditions are nobody's favourite. */
@@ -85,7 +85,7 @@ export const favouriteActivity = (outfit: { readonly line: MaterialLine }): Acti
 /** The activities that can be a favourite, in the activities' order. */
 export const FAVOURITE_ACTIVITIES: readonly Activity[] = ACTIVITIES.filter((a) => Object.values(LINE_ACTIVITY).includes(a))
 
-// --- Who worked today (decision 2) ---------------------------------------------------------------------------------
+// --- Who worked today ---------------------------------------------------------------------------------
 
 /** The activity a day at each work place pays: the forest and the Sawmill foraging, the Fishery and the Smokehouse
  * fishing, the Mill farming; the Mine, the Quarry, the Smelter and the Cutter mining. The Fields' tenders are farming. */
@@ -94,9 +94,9 @@ export const PLACE_ACTIVITY: Readonly<Record<LoopPlaceId, Activity>> = {
   mine: 'mining', quarry: 'mining', smelter: 'mining', cutter: 'mining',
 }
 
-// --- What a rank gives (CS31) --------------------------------------------------------------------------------------
+// --- What a rank gives --------------------------------------------------------------------------------------
 
-/** What one rank gives (CS31). */
+/** What one rank gives. */
 export interface RankBenefits {
   /** Gathering yield. */
   readonly yield: number
@@ -109,9 +109,9 @@ export interface RankBenefits {
   readonly expeditionPower: number
   /** A tended harvest's chance of a seed back, before the Hoe. */
   readonly seedsBack: number
-  /** Affection a day an animal in her care gains (M5). */
+  /** Affection a day an animal in her care gains. */
   readonly affection: number
-  /** A workshop play's yield as its assistant (CS20). */
+  /** A workshop play's yield as its assistant. */
   readonly workshopYield: number
 }
 
@@ -125,20 +125,20 @@ export const RANK_BENEFITS: readonly RankBenefits[] = [
   { yield: 2, tendedGrowth: 1.75, quality: 2.5, deepest: { floor: 30, forest: 'world-tree', fishery: 'moon-pool' }, expeditionPower: 60, seedsBack: 0.35, affection: 15, workshopYield: 1.5 },
 ]
 export const rankBenefits = (rank: Rank): RankBenefits => RANK_BENEFITS[rank]!
-/** Quality points from her rank (CS26's rank term, CS31): 0.5 a rank, Novice 0 … Legend 2.5. */
+/** Quality points from her rank (CS26's rank term): 0.5 a rank, Novice 0 … Legend 2.5. */
 export const rankQuality = (rank: Rank): number => rankBenefits(rank).quality
 
-// --- The challenges (CS30; decisions 1 and 3) --------------------------------------------------------------------------
+// --- The challenges --------------------------------------------------------------------------
 
-/** A workshop play's tier (CS20). */
+/** A workshop play's tier. */
 export type PlayGrade = 'rough' | 'good' | 'fine' | 'masterwork'
 const PLAY_GRADES: readonly PlayGrade[] = ['rough', 'good', 'fine', 'masterwork']
-/** An expedition's result (CS49). */
+/** An expedition's result. */
 export type ExpeditionResult = 'failure' | 'partial' | 'success' | 'great'
 
-/** What happened, for a challenge (CS30): each packet reports its own, for the Uma who did it. */
+/** What happened, for a challenge: each packet reports its own, for the Uma who did it. */
 export type ChallengeEvent =
-  /** Farming (F20): the crops a harvest she tended brought, by star, and the crop's level. */
+  /** Farming: the crops a harvest she tended brought, by star, and the crop's level. */
   | { kind: 'harvest'; stars: readonly number[]; level: number }
   /** The ranch (F27): a day caring for animals; an animal in her care reaching `hearts`. */
   | { kind: 'care' }
@@ -183,7 +183,7 @@ export interface Challenge {
 const row = (rank: Rank, target: number, what: string, by: string, count: Counter): Challenge => ({ rank, target, what, by, count })
 
 /** CS30: each activity's five challenges, toward Hand … Legend. Each depth challenge is "reach the deepest place your
- * rank allows". A challenge counts from her last rank-up in its activity (decision 1). */
+ * rank allows". A challenge counts from her last rank-up in its activity. */
 export const CHALLENGES: Readonly<Record<Activity, readonly Challenge[]>> = {
   farming: [
     row(1, 30, 'Harvest 30 crops she tended', 'F20', on('harvest', (e) => e.stars.length)),
@@ -253,7 +253,7 @@ export const CHALLENGES: Readonly<Record<Activity, readonly Challenge[]>> = {
 /** The challenge toward her next rank in an activity, or null at Legend. */
 export const challengeFor = (activity: Activity, rank: Rank): Challenge | null => CHALLENGES[activity][rank] ?? null
 
-/** Counts an event toward her next rank's challenge in an activity (decision 1): only that challenge, from her last
+/** Counts an event toward her next rank's challenge in an activity: only that challenge, from her last
  * rank-up, stopping at its target. An Uma not on the roster, a Legend, or an event the challenge doesn't read changes
  * nothing. Never stamps `updatedAt`. F20's harvests and F22's catches and gathers call it. */
 export function countChallenge<S extends Pick<FarmSave, 'roster'>>(save: S, outfitId: OutfitId, activity: Activity, event: ChallengeEvent): S {
@@ -275,7 +275,7 @@ export function challengeMet(activity: Activity, state: RankState): boolean {
 /** Whether her points have reached her next rank's. False at Legend. */
 export const pointsFull = (state: RankState): boolean => state.rank < 5 && state.points + 1e-9 >= RANK_POINTS[state.rank + 1]!
 
-// --- The night's step 6 (decisions 2 and 3) ------------------------------------------------------------------------
+// --- The night's step 6 ------------------------------------------------------------------------
 
 /** One Uma's day of work, in its activity. */
 export interface WorkedDay {
@@ -283,11 +283,11 @@ export interface WorkedDay {
   activity: Activity
 }
 /** Her talent in an activity and whether it's her favourite: master data's, read by the night; on v4, a mentor's factor
- * at her place today (F51 decision 7). */
+ * at her place today. */
 export type TermsOf = (outfitId: OutfitId, activity: Activity) => { talent: TalentStep; favourite: boolean; mentor?: number }
 
 /**
- * Step 6's ranks (CS7, CS29, CS30): first each Uma who worked today earns a day's points in its activity, once (one day
+ * Step 6's ranks: first each Uma who worked today earns a day's points in its activity, once (one day
  * pays one activity: her first entry in `worked`), her factors read as she worked (well fed before the night counts it
  * down). Then every Uma on the roster ranks up in each activity whose points and challenge are both met: one rank a
  * night, her challenge's count reset. The lines say who ranked up, then whose points filled tonight with the challenge

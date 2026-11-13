@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/items/catalog.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// The grade gate, the one rule the Wilds read from uma-rpg's v1 item catalog: its 160 v1 items stay behind (FM4).
+// Copied from uma-rpg packages/domain/src/items/catalog.ts at 30a322a, with its Wilds-only parts cut.
+// The grade gate, the one rule the Wilds read from uma-rpg's v1 item catalog: its 160 v1 items stay behind.
 
 export const ITEM_GRADES = 10
 

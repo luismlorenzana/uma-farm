@@ -1,4 +1,4 @@
-// Household scenes and the finale (F54 decisions 10, 11 and 13; romance spec RM45, RM46): `?household=<household:5 |
+// Household scenes and the finale: `?household=<household:5 |
 // household:10 | household:15 | finale>` over any page, from the morning's "⌂ Household scene 1 · Ready", the Hearts
 // header or the Diary's Memories shelf (`&replay=1`). It plays the pack's `open`, then each spouse's beat in wedding order
 // (one without hers written is skipped), then `close`, in F46's scene player's frame and steps; a choice is wording only.
@@ -139,7 +139,7 @@ function Choice({ options, farmer, onPick }: { options: readonly ChoiceOption[];
   )
 }
 
-/** The game's last stage-up card (RM46): "The Great Harvest", every spouse's face, and the year's Festival of Vows. */
+/** The game's last stage-up card: "The Great Harvest", every spouse's face, and the year's Festival of Vows. */
 function GreatHarvest({ spouses, nameOf, replay, onDone }: { spouses: readonly string[]; nameOf: (id: string) => string; replay: boolean; onDone: () => void }) {
   return (
     <div className="pt-safe pb-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label="The Great Harvest" data-great-harvest>

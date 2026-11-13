@@ -1,9 +1,9 @@
-// Tonight (F50 decision 8; romance spec RM22): End the day's sheet in the romance build on save v4, while an evening slot
+// Tonight: End the day's sheet in the romance build on save v4, while an evening slot
 // is free and someone can spend it (F54 adds a house to pick). From the top: **Evening**, today's slot as "with Stand-in 2
 // · Walk ✓" once spent, the Uma who said yes with **Play ›**, else **Pick someone ›** (skippable); festival night's own
 // row on a festival day; then CS6's line ("2 Umas idle · 3 to collect") and **End the day** / **Back**. End the day never
 // waits on the evening. Picking and playing open the evening's player over it (`?evening=`), so Back from the card lands
-// here again. Once anyone is married (F54 decision 5), **Sleep at** sits between the evening and CS6's line: the Farmhouse
+// here again. Once anyone is married, **Sleep at** sits between the evening and CS6's line: the Farmhouse
 // and each house with someone home ("· 3 home"), ☕ when a resident's breakfast is on tomorrow, "8 nights" for one you
 // haven't slept in lately, and on a birthday-alone wisher's birthday "Her room"; the pick (else the house slept in least
 // lately) is marked, and a tap picks it at once. End the day never waits on it. Loaded on demand, the romance build only.
@@ -95,7 +95,7 @@ function EveningRow({ row }: { row: TonightRow }) {
   }
 }
 
-/** Sleep at (F54 decision 5; RM22): one row a house, the pick marked; a tap picks it at once. */
+/** Sleep at: one row a house, the pick marked; a tap picks it at once. */
 function SleepAt({ rows, nameOf }: { rows: readonly SleepView[]; nameOf: (id: string) => string }) {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)

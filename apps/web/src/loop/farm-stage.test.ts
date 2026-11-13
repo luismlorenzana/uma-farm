@@ -1,4 +1,4 @@
-// The stage Home's pure half (F11 decisions 4–8): what a tap opens, the band Home opens on, the fade's markers, the seasons'
+// The stage Home's pure half: what a tap opens, the band Home opens on, the fade's markers, the seasons'
 // grades and the ground under a finger. The design's build on the stand-in kit is the domain's test now, from the stage's
 // three-free `/formats` entry (0.4.0). No WebGL: the stage itself needs a phone's canvas; the preview checks it. Invented
 // saves only.

@@ -1,4 +1,4 @@
-// The store with the romance switch on (F46 decision 2; RM10) and off: every v1–v3 the romance build meets, on the device
+// The store with the romance switch on and off: every v1–v3 the romance build meets, on the device
 // or from the server, becomes a fresh v4 once, its `updatedAt` where it was and its first upload unstamped; a dirty v3 on
 // the device is kept as a safety copy first, which offers no Restore. The M4 build (switch off) stops at a v4 and never
 // writes over it. An in-memory server with the API's revision and version rules, and a fake IndexedDB. Invented ids only.

@@ -1,4 +1,4 @@
-// The Warehouse by stars and uma-work's flat stock (F17 decision 3), and gold.
+// The Warehouse by stars and uma-work's flat stock, and gold.
 import { describe, expect, it } from 'vitest'
 import { earnGold, spendGold } from './gold'
 import { SaveRuleError } from './rules'

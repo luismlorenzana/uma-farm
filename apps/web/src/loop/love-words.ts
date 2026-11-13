@@ -1,4 +1,4 @@
-// Her route in words (F47 decisions 13 and 15, F48 decision 6; romance spec RM24): what her next event waits for, as her
+// Her route in words: what her next event waits for, as her
 // Hearts row says it (`readyWords`, with the rung) and as her profile's Next card says it (`nextWords`, under the rung's
 // name). Pure, so the screens and the tests read the same. Loaded on demand with the Hearts tab.
 import { goodName, rungName, type Activity, type Bar, type Readiness } from '@farm/domain'
@@ -36,7 +36,7 @@ export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, 
   }
 }
 
-/** Her Next card's words (F48 decision 6): the wait without the rung, which the card's title already names. "Ready",
+/** Her Next card's words: the wait without the rung, which the card's title already names. "Ready",
  * "123 to go", "Tomorrow", "Needs a ring", "Swap her home", "Opens with chapter 3", "Her story is still being written". */
 export function nextWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, nameOf: (id: string) => string): string {
   if (state.ready) return 'Ready'

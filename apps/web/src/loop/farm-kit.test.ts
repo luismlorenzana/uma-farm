@@ -1,4 +1,4 @@
-// The farm's kit (KF13, KF14; D73): the pinned kit-farm is a complete wave-1 farm kit, and the stand-in's frames it lacks
+// The farm's kit: the pinned kit-farm is a complete wave-1 farm kit, and the stand-in's frames it lacks
 // pack onto its page beside it, so every design builds. No WebGL or canvas: the page itself is the preview's to check.
 // Invented saves only.
 import { newBlock, newSave, newSaveV4, FARMHOUSE, farmDesign, type SaveV3, type SaveV4 } from '@farm/domain'

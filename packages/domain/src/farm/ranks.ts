@@ -1,4 +1,4 @@
-// The nine activities and their six ranks (F17; core spec CS29, CS32; D24 #8, #9). F21 adds talents, points a day, the
+// The nine activities and their six ranks (D24 #8, #9). F21 adds talents, points a day, the
 // challenges and what a rank gives; this file holds what the save and the v2 → v3 migration need.
 import type { MaterialLine } from '../items/lines'
 
@@ -11,11 +11,11 @@ export const ACTIVITY_NAMES: Readonly<Record<Activity, string>> = {
   serving: 'Serving', forging: 'Forging', expeditions: 'Expeditions',
 }
 
-/** Six ranks, 0–5 (CS29). */
+/** Six ranks, 0–5. */
 export const RANKS = ['Novice', 'Hand', 'Skilled', 'Expert', 'Master', 'Legend'] as const
 export type Rank = 0 | 1 | 2 | 3 | 4 | 5
 export const LEGEND: Rank = 5
-/** The points each rank asks (CS29): Hand 40, Skilled 160, Expert 400, Master 900, Legend 2,000. */
+/** The points each rank asks: Hand 40, Skilled 160, Expert 400, Master 900, Legend 2,000. */
 export const RANK_POINTS: readonly number[] = [0, 40, 160, 400, 900, 2000]
 
 /** Her calling's line names the activity Craft Level becomes (D24 #9): Metal and Stone mining, Wood foraging, Fish
@@ -34,7 +34,7 @@ export const CRAFT_BANDS: readonly { from: number; rank: Rank; points: number; p
   { from: 46, rank: 5, points: 2000, perLevel: 0 },
 ]
 
-/** Today's Craft Level as her rank in her calling's activity (CS32): Lv 1–5 Novice at 8 a level above 1, … Lv 46–50
+/** Today's Craft Level as her rank in her calling's activity: Lv 1–5 Novice at 8 a level above 1, … Lv 46–50
  * Legend at 2,000. */
 export function craftRank(level: number): { rank: Rank; points: number } {
   const lv = Math.min(50, Math.max(1, Math.floor(level)))

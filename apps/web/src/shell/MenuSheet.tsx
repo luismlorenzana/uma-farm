@@ -1,5 +1,5 @@
-// The menu, "Every place" (uma-kit's PlaceMenu, as uma-rpg's; F18): the farm's 23 places by FC28's rows, locked ones
-// marked, each with its Ready count, then Account and the switch "Ask before ending the day" (F18 decision 10), and the
+// The menu, "Every place" (uma-kit's PlaceMenu, as uma-rpg's): the farm's 23 places by FC28's rows, locked ones
+// marked, each with its Ready count, then Account and the switch "Ask before ending the day", and the
 // build at the foot. `?sheet=menu` on the route it opens over, so Back closes it.
 import { FARM_PLACES, loopReadyWork, readyPlots, type FarmPlaceGroup, type LoopPlaceId, type FarmSave } from '@farm/domain'
 import { PlaceMenu, type MenuGroup } from '@luismlorenzana/uma-kit/shell'

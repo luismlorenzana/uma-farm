@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/docs/render.ts at 30a322a (F4, FM2, FW13); cuts in docs/technical/wilds-copy.md.
-// The live docs' generated blocks (docs/game/, D92): every list in the manual is rendered here from the rules, so it can't
+// Copied from uma-rpg packages/domain/src/docs/render.ts at 30a322a, with its Wilds-only parts cut.
+// The live docs' generated blocks (docs/game/): every list in the manual is rendered here from the rules, so it can't
 // drift from the game. A doc marks a block with `<!-- live:<key> -->` … `<!-- /live -->`; `pnpm docs:update` rewrites
 // them, and `docs.test.ts` fails when one is stale. Pure: no I/O (the test reads and writes the files). uma-rpg's blocks
 // for fights, classes, gear, Extra Stats, Laurels, prices, worlds, the Rift and achievements stay behind; the Wilds' own
@@ -91,7 +91,7 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const LINE_NAME: Readonly<Record<MaterialLine, string>> = { metal: 'Metal', wood: 'Wood', vegetables: 'Vegetables', fish: 'Fish', stone: 'Stone' }
 const MADE_LINE_NAME: Readonly<Record<MadeLine, string>> = { 'weapon-gem': 'Arms Gems', 'tome-ink': 'Tome Ink', 'armor-fittings': 'Armor Fittings',
   'accessory-setting': 'Accessory Settings', 'jewel-planet': 'Planet Jewels', 'jewel-moon': 'Moon Jewels' }
-// --- Save v3 and the migration (F17) --------------------------------------------------------------------------------
+// --- Save v3 and the migration --------------------------------------------------------------------------------
 
 /** CS32: Craft Level → her rank in her calling's activity, with the points it starts at. */
 function craftRanks(): string {
@@ -128,7 +128,7 @@ function farmRanks(): string {
   return table(['Farm Rank', ...FARM_RANK_POINTS.map((_, i) => String(i + 1))], [['Points', ...FARM_RANK_POINTS.map((p) => p.toLocaleString('en-US'))]])
 }
 
-// --- The calendar, the night and the farm map (F18) -----------------------------------------------------------------
+// --- The calendar, the night and the farm map -----------------------------------------------------------------
 
 /** CS4: the seasons of year 1 and their festivals. */
 function calendar(): string {
@@ -155,7 +155,7 @@ function farmMap(): string {
 ${table(['Place', 'Building (uma-art)', 'Opens'], FARM_PLACES.map((p) => [p.name, `\`${p.frame}\`${p.borrowed ? ' (borrowed)' : ''}`, opensWords(p.opens)]))}`
 }
 
-// --- Goods and prices (F19) -----------------------------------------------------------------------------------------
+// --- Goods and prices -----------------------------------------------------------------------------------------
 
 /** Where each family comes from (CS9's table). */
 const FAMILY_FROM: Readonly<Record<GoodFamily, string>> = {
@@ -225,7 +225,7 @@ function starPrices(): string {
   ]))
 }
 
-// --- The Fields (F20) -----------------------------------------------------------------------------------------------
+// --- The Fields -----------------------------------------------------------------------------------------------
 
 const STATION_NAME = { mill: 'Mill', sawmill: 'Sawmill' } as const
 const seasonsOf = (seasons: readonly (typeof SEASONS)[number][]) => seasons.map((season) => SEASON_NAMES[season]).join(', ')
@@ -287,7 +287,7 @@ function farmingChallenges(): string {
   return table(['Toward', 'Challenge', 'Counted'], CHALLENGES.farming.map((c) => [RANKS[c.rank], c.what, c.by === 'F20' ? 'At harvest, for the tender (F20)' : c.by]))
 }
 
-// --- Talents and ranks (F21) ----------------------------------------------------------------------------------------
+// --- Talents and ranks ----------------------------------------------------------------------------------------
 
 const STAT_NAME = { speed: 'Speed', stamina: 'Stamina', power: 'Power', guts: 'Guts', wit: 'Wit' } as const
 const signed = (n: number) => (n > 0 ? `+${per(n)}` : n < 0 ? `−${per(-n)}` : '0')
@@ -348,7 +348,7 @@ function placeActivity(): string {
   return table(['Where she worked', 'Pays rank points in'], [['The Fields, tending a block with a growing plot', ACTIVITY_NAMES.farming], ...places])
 }
 
-// --- The forest, the Fishery and the stations (F22) ---------------------------------------------------------------------
+// --- The forest, the Fishery and the stations ---------------------------------------------------------------------
 
 const SEASON_COLS = SEASONS.map((s) => SEASON_NAMES[s])
 const shareCell = (shares: readonly (readonly [string, number])[]) => shares.map(([id, p]) => `${itemNameOf(id)} ${p}%`).join(', ')
@@ -446,7 +446,7 @@ function stationRecipes(): string {
   }).join('\n\n')
 }
 
-// --- The roster (F23) -----------------------------------------------------------------------------------------------
+// --- The roster -----------------------------------------------------------------------------------------------
 
 /** CS34: the Dorm's ten levels, their beds, costs and Farm Ranks. */
 function dormLevels(): string {
@@ -456,7 +456,7 @@ function dormLevels(): string {
     return [l.level, l.beds, l.cost ? g(l.cost) : '—', l.farmRank || '—', g(total)]
   }))
 }
-/** CS35: the ways an Uma joins, as built (decisions 5, 6, 10). */
+/** CS35: the ways an Uma joins, as built. */
 function rosterWays(): string {
   const days = [1, 2, 3].map((n) => n * GATE_EVERY).join(', ')
   return table(['Way', 'Who', 'When she joins'], [
@@ -492,9 +492,9 @@ function giftLikes(): string {
   return table(['Favourite line', 'Likes (+30)', 'Dislikes (−20)'], LINES.map((line) => [LINE_NAME[line], byFamily(line, 'liked'), byFamily(line, 'disliked')]))
 }
 
-// --- Farm Rank and chapter 1 (F24) ----------------------------------------------------------------------------------
+// --- Farm Rank and chapter 1 ----------------------------------------------------------------------------------
 
-/** CS39's point values (decision 1). */
+/** CS39's point values. */
 function farmRankPoints(): string {
   return table(['Source', 'Points', 'In M4'], [
     ['Gold shipped at the bin', `1 per ${GOLD_PER_POINT}g`, 'Yes: `farm.counts[\'gold-shipped\']`'],
@@ -505,7 +505,7 @@ function farmRankPoints(): string {
     ['Decorations', '1 per 100g', 'M6'],
   ])
 }
-/** Each Farm Rank's threshold and what it opens in the game as built (decision 8), from the rules that gate on it. */
+/** Each Farm Rank's threshold and what it opens in the game as built, from the rules that gate on it. */
 function farmRankOpensBlock(): string {
   return table(['Farm Rank', 'Points', 'Opens'], FARM_RANK_POINTS.map((points, i) => [i + 1, points.toLocaleString('en-US'), i === 0 ? 'Block A, tier-1 seeds (the start); Dorm level 2' : farmRankOpens(i + 1).join(', ')]))
 }
@@ -518,15 +518,15 @@ const milestoneWhat = (m: Milestone): string => {
     case 'crop-level': return `The first crop at level ${m.level}`
   }
 }
-/** CS38's milestones as built (decision 2). */
+/** CS38's milestones as built. */
 function milestonesBlock(): string {
   return table(['Milestone', 'Id', 'Gold', 'Points'], MILESTONES.map((m) => [milestoneWhat(m), `\`${m.id}\``, g(m.gold), MILESTONE_POINTS]))
 }
-/** The collection rows (decision 3). */
+/** The collection rows. */
 function diaryRows(): string {
   return table(['Row', 'Id', 'Its ten goods', 'Gold'], DIARY_ROWS.map((r) => [`${FAMILY_NAMES[r.family]}${r.refined ? ', refined' : ''}`, `\`${r.id}\``, r.goods.map((id) => itemNameOf(id)).join(', '), g(ROW_GOLD)]))
 }
-/** Chapter 1's six goals (CS42, decision 4). */
+/** Chapter 1's six goals. */
 function chapterOne(): string {
   const reads: Readonly<Record<string, string>> = {
     harvest: '`farm.counts[\'plots-harvested\']` since the chapter opened', ship: '`farm.counts[\'gold-shipped\']` since the chapter opened',
@@ -542,7 +542,7 @@ function chaptersBlock(): string {
     c.reward ? [`${g(c.reward.gold)}`, ...c.reward.plans.map((b) => `the ${cap(b)}'s plans (\`buildings.${b} = 0\`)`), ...(c.reward.recruit ? ['a recruit'] : []), `${CHAPTER_POINTS} Farm Rank points`].join(', ') : '—',
   ]))
 }
-/** The town's cast (CS41). */
+/** The town's cast. */
 function castBlock(): string {
   return table(['Who', 'Is', 'From chapter', 'Bust (F25)'], CAST_IDS.map((id) => [CAST[id].name, CAST[id].is, CAST[id].from, `\`${CAST[id].art}\``]))
 }
@@ -554,16 +554,16 @@ const speakerWords = (beat: Beat): string => {
     case 'narrator': return '(narration)'
   }
 }
-/** The two scenes, beat by beat (decision 6). */
+/** The two scenes, beat by beat. */
 function scenesBlock(): string {
   return [OPENING_SCENE, CLOSING_SCENE].map((scene) => `**${scene.title}** (\`${scene.id}\`)\n\n${table(['#', 'Who', 'Line'], scene.beats.map((b, i) => [i + 1, speakerWords(b), b.line || '—']))}`).join('\n\n')
 }
-/** The hello lines (decision 7). */
+/** The hello lines. */
 function helloLines(): string {
   return table(['Temperament', 'Her hello'], TEMPERAMENTS.map((t) => [cap(t), HELLO_LINES[t]]))
 }
 
-// --- The romance core's start (F46) ---------------------------------------------------------------------------------
+// --- The romance core's start ---------------------------------------------------------------------------------
 
 /** RM5: the Dorm for 20, save v4's eight levels. */
 function dormV4(): string {
@@ -596,7 +596,7 @@ function nightV4(): string {
   return table(['Step', 'Function', 'What happens', 'Filled by'], NIGHT_STEPS_V4.filter((s) => !same(s)).map((s) => [s.step, `\`${s.name}\``, s.what, s.by]))
 }
 
-// --- F47: the ladders and points (romance spec RM11–RM18, RM24) ---------------------------------------------------------
+// --- F47: the ladders and points ---------------------------------------------------------
 const whole = (n: number) => n.toLocaleString('en-US')
 /** RM12: each heart's cost, the ladders' totals and the route's. */
 function routeCosts(): string {
@@ -669,7 +669,7 @@ function heartsFactor(): string {
     ['v4 (romance build): her friendship', span(levels(1)), span(levels(1.05)), `${loveRankFactor({ stage: 'confession', level: 10 }) === 1.1 ? 'F10 on: her confession, romance and spouse' : '?'}`],
   ])
 }
-// --- F48: the perks' words (romance spec RM31, RM32, RM36) -------------------------------------------------------------
+// --- F48: the perks' words -------------------------------------------------------------
 const PERK_LINE_NAME: Readonly<Record<PerkLine, string>> = {
   farming: 'Farming', foraging: 'Foraging', fishing: 'Fishing', mining: 'Mining (the Mine)', quarry: 'Mining (the Quarry)', ranch: 'Ranch', cooking: 'Cooking',
   serving: 'Serving', forging: 'Forging',
@@ -685,7 +685,7 @@ function perkWordsBlock(): string {
   return `${levels}\n\n${lines}`
 }
 
-// --- F51: the perks' effects (romance spec RM31–RM36) --------------------------------------------------------------------
+// --- F51: the perks' effects --------------------------------------------------------------------
 const sharePct = (share: number): string => `${Math.round(share * 1000) / 10}%`
 /** What each perk does, where it acts and from which packet (decision 1: read from her level). */
 const PERK_EFFECT: Readonly<Record<PerkId, readonly [string, string]>> = {
@@ -788,7 +788,7 @@ function farmerName(): string {
   ])
 }
 
-// --- F52: bonds between Umas (romance spec RM48–RM50; CS44, CS17) --------------------------------------------------------
+// --- F52: bonds between Umas --------------------------------------------------------
 /** RM48: what a pair earns, by what they shared. */
 function bondPoints(): string {
   return table(['Shared', 'Points', 'Paid by'], [
@@ -829,7 +829,7 @@ function sideBySide(): string {
   ])
 }
 
-// --- F49: heart events and the five plays (romance spec RM25–RM28) -------------------------------------------------------
+// --- F49: heart events and the five plays -------------------------------------------------------
 const s1 = (ms: number) => `${Math.round(ms / 100) / 10} s`
 /** RM25: the five plays, both lengths. */
 function playsBlock(): string {
@@ -902,7 +902,7 @@ function standInRoute(): string {
   }))
 }
 
-// --- F50: the evening (romance spec RM19–RM22, RM37) -------------------------------------------------------------------
+// --- F50: the evening -------------------------------------------------------------------
 
 const GAME_PACKET: Readonly<Record<'F8' | 'F32', string>> = { F8: 'M5 (F8); not offered until then', F32: 'M6 (F32); not offered until then' }
 /** RM37: the kinds by ladder and game, and each one's invitation. */
@@ -919,7 +919,7 @@ function eveningKinds(): string {
 
 Who: ${ROLE_WORDS.hangout.toLowerCase()} from Friendship ${HANGOUT_FROM} (her confession’s wait and Romance 0 included), ${ROLE_WORDS.date.toLowerCase()} from Romance ${DATE_FROM} (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse; she must be home. The stand-in’s favourite kinds: ${['9000001', '9000002', '9000003'].map((id) => `${id} ${favouriteKind(pack, id)}`).join(', ')}.`
 }
-/** RM13, RM16, RM17 (decision 4): what an evening pays, each factor once. */
+/** RM13, RM16, RM17: what an evening pays, each factor once. */
 function eveningPointsBlock(): string {
   const f = (kind: boolean, birthday: boolean, anniversary: boolean) => ({ kind, birthday, anniversary })
   const cols = [f(false, false, false), f(true, false, false), f(true, true, false), f(true, true, true)]
@@ -937,9 +937,9 @@ function eveningSlotsBlock(): string {
   ]) + `\n\nAn invitation’s draw: \`draw(uid, day, 'invite', n)\` among the Umas home at Friendship ${HANGOUT_FROM}+ whose favourite kind is open to them, each weighted 1 + the days since her last evening (or since she arrived), up to ${INVITE_WEIGHT_DAYS}; a second invitation is never the first’s Uma.`
 }
 
-// --- The ring bench and the wedding (F53) ---------------------------------------------------------------------------
+// --- The ring bench and the wedding ---------------------------------------------------------------------------
 
-/** RM38, CS25 (F53 decisions 2 and 5): the ten rings, their prices, the bench's cheapest three and CS25's recipe. */
+/** RM38, CS25: the ten rings, their prices, the bench's cheapest three and CS25's recipe. */
 function ringsBlock(): string {
   const cheapest = (grade: number): string => {
     const good = GOODS.filter((x) => x.grade === grade && benchTakes(1, x.id)).sort((a, b) => a.price - b.price)[0]!
@@ -951,7 +951,7 @@ function ringsBlock(): string {
       `2 ${itemNameOf(recipe.ingot)} + 1 ${itemNameOf(recipe.gem)}`]
   }))
 }
-/** RM38 (F53 decisions 3–5): the bench's rule, its refusals, and what M6 adds. */
+/** RM38: the bench's rule, its refusals, and what M6 adds. */
 function benchRecipe(): string {
   return table(['', 'The ring bench (v4)'], [
     ['Opens', 'The night after the first Romance 8 event anyone plays: `buildings.forge = 0`, and Ida Stone’s scene the next morning'],
@@ -967,7 +967,7 @@ function benchRecipe(): string {
 function benchScene(): string {
   return `**${BENCH_SCENE_LINES.title}** (\`${BENCH_SCENE_LINES.id}\`)\n\n${table(['#', 'Who', 'Line'], BENCH_SCENE_LINES.beats.map((b, i) => [i + 1, speakerWords(b), b.line]))}`
 }
-/** RM30, CS22 (F53 decision 9): the reception's well-fed days, and the wedding's guests and places. */
+/** RM30, CS22: the reception's well-fed days, and the wedding's guests and places. */
 function receptionBlock(): string {
   return table(['The reception', 'Well fed from tomorrow, everyone on the farm'], [
     ...[1, 2, 3, 4, 5].map((stars) => [`A ★${stars} dish`, `${receptionDays(stars)} day${receptionDays(stars) === 1 ? '' : 's'}`]),
@@ -975,8 +975,8 @@ function receptionBlock(): string {
   ]) + `\n\nA meal already running is never shortened. **The guests:** every spouse on the farm, then her ${WEDDING_FRIENDS} closest friends on the farm (F52’s order); they have no lines. **The places:** her bible’s \`wedding.places\`, else her wedding beat’s place and ${WEDDING_DEFAULTS.map((p) => `\`${p}\``).join(', ')}, three different. **Household milestones** at ${HOUSEHOLD_AT.join(', ')} married (RM45).`
 }
 
-// --- F54: married life (romance spec RM41–RM47) -------------------------------------------------------------------------
-/** RM41 (F54 decisions 1 and 3): the homestead's houses, rooms, prices and what opens each. */
+// --- F54: married life -------------------------------------------------------------------------
+/** RM41: the homestead's houses, rooms, prices and what opens each. */
 function housesBlock(): string {
   const rows = HOMESTEAD_PLACES.map((p) => p.n === 0
     ? ['The Farmhouse', `${HOUSE_ROOMS} (your own home)`, '—', '—', 'Day 1']
@@ -993,7 +993,7 @@ function homesteadMap(): string {
   })
   return table(['Row (v4)', 'Places'], [...rows, ['After the last shown', 'The town edge: Shop · Festival ground · Expedition post']])
 }
-/** RM45 (F54 decision 9): the household milestones. */
+/** RM45: the household milestones. */
 function householdMilestonesBlock(): string {
   return table(['Married', 'Opens'], [
     ['1', 'The homestead (House 1 to build); the night’s house (Sleep at); anniversaries'],
@@ -1003,7 +1003,7 @@ function householdMilestonesBlock(): string {
     [`${FINALE_MARRIED}`, 'The finale, the Great Harvest; then the Festival of Vows each year'],
   ])
 }
-/** RM43 (F54 decision 7): the house's morning, and the Festival of Vows (decision 13). */
+/** RM43: the house's morning, and the Festival of Vows. */
 function houseMorningBlock(): string {
   return table(['', 'The morning of the house you slept in'], [
     ['Each resident', `+${HOUSE_POINTS} to her spouse bar (\`addLove\`, an anniversary’s ×2 applies)`],
@@ -1020,7 +1020,7 @@ function houseMorningBlock(): string {
 function houseLines(): string {
   return table(['Temperament', 'House lines (`{name}` hers)'], TEMPERAMENTS.map((t) => [t[0]!.toUpperCase() + t.slice(1), HOUSE_TEMPLATES[t].join('<br>')]))
 }
-/** RM45 (F54 decision 9): the furniture set's five pieces. */
+/** RM45: the furniture set's five pieces. */
 function furnitureBlock(): string {
   return FURNITURE.map((f, i) => `${i + 1}. ${f}`).join('\n')
 }

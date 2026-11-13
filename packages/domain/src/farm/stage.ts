@@ -1,12 +1,12 @@
-// The farm on the HD-2D stage (F11 decisions 2 and 3; hd2d-farm FR3, FR14; kit-farm KF2–KF7): the save as a farm design
+// The farm on the HD-2D stage: the save as a farm design
 // for uma-stage's band stage. Portrait, 9 tiles across: three 3 × 3 plots a band and a path row under each, the map's
 // rows from `FARM_PLACES` (gather → process → make, left to right), the homestead's 0–3 rows after the yard on a v4 save
 // in the romance build, and the town edge last. Each place is KF4's recipe (walls, roof, width × storeys, door, mounted
 // pieces and landmarks); a place not yet standing is KF7's overgrown lot; crops by KF6's families. It only reads the
-// save: the stage never changes a rule or the save (FR14). Typed from `@luismlorenzana/uma-stage/formats` (types only, so
+// save: the stage never changes a rule or the save. Typed from `@luismlorenzana/uma-stage/formats` (types only, so
 // neither the rules nor farm-api load the stage). Pure.
 //
-// The tiles (F11's "left to the worker", D71):
+// The tiles (F11's "left to the worker"):
 // - **a plot:** its back two rows hold the building (or the place's ground and landmarks), the front row is its apron,
 //   where its slots are and its `place` marker stands, at the apron's middle;
 // - **the lanes:** each column keeps a lane at an edge, laid as path where the recipe leaves it free: the left column's
@@ -26,12 +26,12 @@ import { BLOCK_IDS, PLOTS_PER_BLOCK, type BlockId, type Plot } from '../save/v3'
 import type { FarmSave } from '../save/v4'
 import { FARM_MAP_ROWS, FARM_PLACES, placeOpen, type FarmPlace, type FarmPlaceId } from './places'
 
-/** The farm's width in tiles (FR3), a plot's side and a band's depth (KF2). */
+/** The farm's width in tiles, a plot's side and a band's depth. */
 export const FARM_STAGE_TILES = 9
 export const FARM_PLOT = 3
 export const FARM_BAND = 4
 
-// --- Crops (KF6; decision 3) ------------------------------------------------------------------------------------------
+// --- Crops ------------------------------------------------------------------------------------------
 
 /** KF6's twelve ripe frames. */
 export const CROP_FAMILIES = [
@@ -84,7 +84,7 @@ export function fieldsFrames(save: Pick<FarmSave, 'fields' | 'summary'>): { bloc
   })
 }
 
-// --- The plots (KF2) --------------------------------------------------------------------------------------------------
+// --- The plots --------------------------------------------------------------------------------------------------
 
 export type FarmPlotKind = 'place' | 'house' | 'lot' | 'open'
 /** A 3 × 3 plot on the stage: a map place, a built house, the homestead's next lot, or the open ground beside the Gate. */
@@ -97,20 +97,20 @@ export interface FarmPlot {
   z: number
   band: number
   col: number
-  /** Its recipe stands (a place open by CS3 and built; a house built); otherwise an overgrown lot (KF7). */
+  /** Its recipe stands (a place open by CS3 and built; a house built); otherwise an overgrown lot. */
   standing: boolean
   place?: FarmPlace
   /** The homestead's house number (0, the Farmhouse, to 6). */
   house?: number
 }
 
-/** What a design reads besides the save: whether the homestead's rows show (the romance build, on a v4 save; F54). */
+/** What a design reads besides the save: whether the homestead's rows show (the romance build, on a v4 save). */
 export interface FarmStageOptions {
   homestead: boolean
 }
 
-/** Whether a place's recipe stands on this save: CS3 has opened it and, for a station, it's built (F22 decision 5); on v4
- * the Forge stands once its ring bench does (F53 decision 3). The map's lock (`lockOf`) adds the screens not landed yet;
+/** Whether a place's recipe stands on this save: CS3 has opened it and, for a station, it's built; on v4
+ * the Forge stands once its ring bench does. The map's lock (`lockOf`) adds the screens not landed yet;
  * those stand, locked. */
 export function placeStands(save: Pick<FarmSave, 'farm' | 'buildings' | 'version'>, place: FarmPlace): boolean {
   if (place.id === 'forge' && save.version === 4) return save.buildings.forge !== undefined
@@ -144,9 +144,9 @@ export function plotAt(plots: readonly FarmPlot[], x: number, z: number): FarmPl
   return plots.find((p) => x >= p.x && x < p.x + FARM_PLOT && z >= p.z && z < p.z + FARM_BAND)
 }
 
-// --- The recipes (KF4, KF7) -------------------------------------------------------------------------------------------
+// --- The recipes -------------------------------------------------------------------------------------------
 
-/** The Gate's row on the map (FC28), its arch in the middle column. */
+/** The Gate's row on the map, its arch in the middle column. */
 const GATE_ROW = 7
 
 /** A building in a recipe, from its plot's left (`lx`); it's always the back two rows. */
@@ -164,7 +164,7 @@ const house = (lx: number, w: 2 | 3, walls: string, roof: string, storeys: 1 | 2
   ({ lx, w, walls, roof, storeys, door, mounts })
 const front = (name: string, column: number, level: number): FarmMount => ({ name, face: 'front', column, level })
 const roofMount = (name: string, column: number, level: number): FarmMount => ({ name, face: 'roof', column, level })
-/** A window box's level (D73): kit-farm hangs `flower-box` from its foot at the box's top, and a ground-floor window's sill
+/** A window box's level: kit-farm hangs `flower-box` from its foot at the box's top, and a ground-floor window's sill
  * stands a quarter level up its piece (levels 1–2), so at 1¼ the box hangs just under the sill, its flowers over the sill's
  * edge. The herb box is its twin (wave 2). */
 export const WINDOW_BOX_LEVEL = 1.25
@@ -190,7 +190,7 @@ function placeRecipe(id: FarmPlaceId, v4: boolean): Recipe {
       ground: laneRight('f'), slots: APRON,
       props: [['tree-1', 0, 0], ['tree-3', 1, 0], ['tree-2', 0, 1], ['stump', 1, 1], ['mushroom-patch', 0, 2], ['herb-patch', 2, 2]],
     }
-    // Open-fronted: windows only. Its four slots leave one tile for a landmark, the log pile (D71).
+    // Open-fronted: windows only. Its four slots leave one tile for a landmark, the log pile.
     case 'sawmill': return { ground: laneLeft('g'), building: house(1, 2, 'plank', 'shingle', 1, null), props: [['log-pile', 2, 2]], slots: BESIDE }
     case 'barn': return { ground: ['ddd', 'ddd', 'ddd'], building: house(0, 3, 'plank', 'red', 2, { column: 0, wide: true }), props: [['hay-bale', 2, 2]], slots: [] }
     case 'fishery': return { ground: ['wwL', 'wwL', 'ggg'], props: [['reeds', 0, 0], ['dock', 1, 1]], slots: APRON }
@@ -205,7 +205,7 @@ function placeRecipe(id: FarmPlaceId, v4: boolean): Recipe {
     }
     case 'quarry': return { ground: ['qqL', 'qqL', 'ggg'], props: [['quarry-rock-1', 0, 0], ['stone-stack', 1, 0], ['quarry-rock-2', 1, 1]], slots: APRON }
     case 'cutter': return { ground: laneLeft('g'), building: house(1, 2, 'stone', 'slate', 1, { column: 0 }), props: [['grindstone', 2, 2]], slots: BESIDE }
-    // The anvil and, on v4, the ring bench beside it (D58) take the Forge's lane: it has no slots.
+    // The anvil and, on v4, the ring bench beside it take the Forge's lane: it has no slots.
     case 'forge': return {
       ground: ['ggg', 'ggg', 'ggg'], building: house(1, 2, 'stone', 'slate', 1, { column: 0 }, [roofMount('forge-chimney', 1, 1)]),
       props: [['anvil', 0, 1], ...(v4 ? [['ring-bench', 0, 0] as const] : [])], slots: [],
@@ -229,7 +229,7 @@ function placeRecipe(id: FarmPlaceId, v4: boolean): Recipe {
 /** A plot's lane edge: the left column's on its right, the others' on their left. */
 const laneOf = (col: number): 'left' | 'right' => (col === 0 ? 'right' : 'left')
 
-/** The homestead's recipes (KF4): the Farmhouse, one drawing for every house (RM41), and the next lot's stakes. */
+/** The homestead's recipes: the Farmhouse, one drawing for every house, and the next lot's stakes. */
 function homeRecipe(plot: FarmPlot): Recipe {
   const lane = laneOf(plot.col)
   if (plot.kind === 'lot') return { ground: lane === 'left' ? laneLeft('g') : laneRight('g'), props: [['lot-stakes', 1, 1]], slots: [] }
@@ -262,7 +262,7 @@ function recipeOf(save: FarmSave, plot: FarmPlot): Recipe {
   return plot.standing ? placeRecipe(plot.place!.id, save.version === 4) : overgrown(plot.col)
 }
 
-// --- The design (decision 2) --------------------------------------------------------------------------------------------
+// --- The design --------------------------------------------------------------------------------------------
 
 /** The tiles of the Fields' soil the crops stand on, row by row, around the scarecrow. */
 export const FIELDS_CROP_TILES: readonly (readonly [number, number])[] = [0, 1, 2].flatMap((lz) => [0, 1, 2].map((lx) => [lx, lz] as const))
@@ -272,10 +272,10 @@ export const FIELDS_CROP_TILES: readonly (readonly [number, number])[] = [0, 1, 
 export const slotId = (place: string, slot: number | BlockId): string => `${place}-${typeof slot === 'number' ? slot + 1 : slot.toLowerCase()}`
 
 /**
- * The save as a farm design (decision 2): every plot by its recipe (open places with a `place` marker on their apron and a
+ * The save as a farm design: every plot by its recipe (open places with a `place` marker on their apron and a
  * `slot` marker for each work slot, the Fields' one an owned block; places not standing as overgrown lots with their
  * `place` marker; on v4 with the homestead the Farmhouse, every built house and the next lot with its `lot` marker), the
- * Gate's `gate` marker, the path rows and the lanes, and the Fields' crops (decision 3). Levels: the ground is 1, the pond
+ * Gate's `gate` marker, the path rows and the lanes, and the Fields' crops. Levels: the ground is 1, the pond
  * and the quarry's pit 0, the Mine's cliff a rock wall.
  */
 export function farmDesign(save: FarmSave, options: FarmStageOptions): FarmDesign {

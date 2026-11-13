@@ -1,4 +1,4 @@
-// How an Uma looks on the HD-2D stage (F12 decision 7; hd2d-farm FR12, FR13): her outfit's sprite set from master data's
+// How an Uma looks on the HD-2D stage: her outfit's sprite set from master data's
 // `outfit-sprites` by outfit id (in the romance build her roster key goes through `outfitFor`), loaded only when the stage's
 // cap lets it go live, through uma-stage's loader and the release client, so its hash-named files are cached on the device
 // (the service worker's cache-first rule for `/api/master/files/`) and download once. With no set (most outfits today), or

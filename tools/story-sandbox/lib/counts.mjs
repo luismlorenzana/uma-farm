@@ -1,4 +1,4 @@
-// The story's counts (F60): what the cast, the tag sheet, the ties, the bibles and the routes add up to, each count with
+// The story's counts: what the cast, the tag sheet, the ties, the bibles and the routes add up to, each count with
 // the Umas behind it, so the owner can see what's unbalanced before the bibles are written around it. Pure: it reads only
 // what the sandbox already loads, and holds no name (the page puts names to ids).
 

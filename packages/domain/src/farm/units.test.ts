@@ -1,4 +1,4 @@
-// The loop's units and helpers (F17; CS1, CS32, CS34, CS39).
+// The loop's units and helpers.
 import { describe, expect, it } from 'vitest'
 import { dateOf, DAY_MS, workNow } from './calendar'
 import { draw, fnv1a, mulberry32 } from './draw'

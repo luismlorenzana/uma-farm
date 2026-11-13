@@ -1,4 +1,4 @@
-// The story pack's release as the game reads it (F56 decisions 3 and 5): `story.json` checked whole, then the pack with its
+// The story pack's release as the game reads it: `story.json` checked whole, then the pack with its
 // cast, ties, bibles and household read at once and its routes and pairs on demand, each checked as it loads. On the
 // invented stand-in pack only (9000001–9000003).
 import { createHash } from 'node:crypto'

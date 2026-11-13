@@ -1,4 +1,4 @@
-// The roster (F23; core spec CS2, CS34–CS36, CS45): the start's six and three picks, the Dorm's levels and beds, swaps,
+// The roster: the start's six and three picks, the Dorm's levels and beds, swaps,
 // visitors at the Gate with chats and gifts, joining at 2 hearts, and chapter recruits. Invented outfit ids with chosen
 // talents; the night runs with test kinds.
 import { describe, expect, it } from 'vitest'
@@ -214,7 +214,7 @@ describe('visitors at the Gate (CS35; decision 5)', () => {
     expect(day4.summary!.news).toContainEqual({ kind: 'gate', outfitId: visitor.outfitId })
     expect(daysLeft(day4, visitor)).toBe(6)
     expect(parseSaveV3(json(day4))).toEqual(day4)
-    // The same account gets the same visitor (CS8).
+    // The same account gets the same visitor.
     expect(night(json(save)).visitors).toEqual(day4.visitors)
     // Day 8: she still waits, so nobody else comes.
     const day9 = nights(day4, 5)

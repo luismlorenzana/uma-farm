@@ -1,4 +1,4 @@
-// Heart events (F49 decisions 1, 6, 7, 9 and 10; romance spec RM24, RM27, RM28, RM30, RM54): a level is its event. Her
+// Heart events: a level is its event. Her
 // event plays once it's Ready (`ready.ts`), from her row, her profile's Next card or the morning; nothing is saved until it
 // ends, when **one rule, `playEvent`,** pays it and moves her on, and the app commits it once, stamped. An event left
 // halfway pays nothing and stays Ready.
@@ -33,10 +33,10 @@ import { readiness } from './ready'
 import { receptionOf, vowFlag, weddingGuests, weddingPlaceFlag, weddingPlaces, type Reception } from './wedding'
 import { takeRoom } from './homestead'
 
-/** Every event pays +50 on completion (RM13, RM28). */
+/** Every event pays +50 on completion. */
 export const EVENT_POINTS = 50
 
-/** The pack an event reads: her bible's beats, which events are scripted, the cast, and the ties (a wedding's guests, F53). */
+/** The pack an event reads: her bible's beats, which events are scripted, the cast, and the ties (a wedding's guests). */
 export type EventPack = Pick<StoryPack, 'cast' | 'bibles' | 'scripted' | 'ties'>
 
 // --- The scene ----------------------------------------------------------------------------------------------------------
@@ -44,16 +44,16 @@ export type EventPack = Pick<StoryPack, 'cast' | 'bibles' | 'scripted' | 'ties'>
 const hasPlay = (steps: readonly Step[]): boolean => steps.some((s) => ('play' in s) || ('choice' in s && s.choice.some((o) => o.then && hasPlay(o.then)))
   || ('when' in s && (hasPlay(s.then) || (s.else !== undefined && hasPlay(s.else)))))
 
-/** The play an event adds at its end (decision 6): with no `play` step anywhere in it, its beat's `together` (RM26); none
+/** The play an event adds at its end: with no `play` step anywhere in it, its beat's `together`; none
  * for help and talk, or when it scripts its own. */
 export const extraPlay = (steps: readonly Step[], together: Together | undefined): PlayAs | null => (together && !hasPlay(steps) ? togetherPlay(together) : null)
 
-/** The plays a path holds, in order: each `play` step's (RM26), then the extra one. */
+/** The plays a path holds, in order: each `play` step's, then the extra one. */
 export function pathPlays(path: readonly Step[], extra: PlayAs | null): PlayAs[] {
   return [...path.filter((s): s is { play: Play } => 'play' in s).map((s) => playOf(s.play)), ...(extra ? [extra] : [])]
 }
 
-/** A choice option on its button (RM27; decision 7): its points (+30 the best, +10 the rest), the heart tag on a romantic
+/** A choice option on its button: its points (+30 the best, +10 the rest), the heart tag on a romantic
  * one, the goods it costs and whether you're short of them, the taste it reveals while that's not known yet, and the
  * confession's answer. A replay opens every option and shows no cost. */
 export interface OptionView {
@@ -78,7 +78,7 @@ export function optionViews(save: Pick<SaveV4, 'items' | 'love'>, pack: Pick<Sto
   }))
 }
 
-/** Goods an option gives, taken at any stars, lowest first (decision 7); refused without them ("Need 1 Basil"). */
+/** Goods an option gives, taken at any stars, lowest first; refused without them ("Need 1 Basil"). */
 export function takeLowest(items: Warehouse, good: string, count: number): Warehouse {
   if (goodCount(items, good) < count) throw new SaveRuleError('no-items', `Need ${count} ${goodName(good)}`)
   let out = items
@@ -91,7 +91,7 @@ export function takeLowest(items: Warehouse, good: string, count: number): Wareh
   return out
 }
 
-// --- Playing it (decision 1) ------------------------------------------------------------------------------------------
+// --- Playing it ------------------------------------------------------------------------------------------
 
 /** A play as it ended: which of the five, its score 0–100 and, for Choose, the good you chose (its taste is learnt). */
 export interface PlayScore {
@@ -100,21 +100,21 @@ export interface PlayScore {
   learns?: string | null
 }
 
-/** What the player did (decision 1): the event's script as it played, each choice's option in order, and each play's
+/** What the player did: the event's script as it played, each choice's option in order, and each play's
  * score in order (the path's `play` steps, then the extra one). */
 export interface EventOutcome {
   event: { id: string; steps: readonly Step[] }
   picks: readonly number[]
   plays: readonly PlayScore[]
-  /** The proposal's ring (F53 decision 8): a ring in the Warehouse, used. */
+  /** The proposal's ring: a ring in the Warehouse, used. */
   ring?: string
-  /** The wedding's place (F53 decision 9): one of her three. */
+  /** The wedding's place: one of her three. */
   place?: string
-  /** The wedding's reception (F53 decision 9): a dish at its stars, used, or null for Marta's cake (with no dish held). */
+  /** The wedding's reception: a dish at its stars, used, or null for Marta's cake (with no dish held). */
   reception?: Reception
 }
 
-/** What a wedding gave (F53 decision 9), for its cards. */
+/** What a wedding gave, for its cards. */
 export interface WeddingCard {
   place: string
   /** The dish served, or null for Marta's cake. */
@@ -124,17 +124,17 @@ export interface WeddingCard {
   days: number
   /** Who attended (every spouse, her two closest friends). */
   guests: string[]
-  /** Her room (F54 decision 4): the house she took at once, or null with no room free (she keeps her Dorm bed). */
+  /** Her room: the house she took at once, or null with no room free (she keeps her Dorm bed). */
   house: number | null
 }
 
-/** The stages a stage-up screen closes (decision 11; F53): Partners, Engaged, Married. */
+/** The stages a stage-up screen closes: Partners, Engaged, Married. */
 export type StageUp = 'romance' | 'engaged' | 'married'
 
 /** One play on the level-up card. */
 export interface PlayLine { kind: PlayKind; score: number; grade: Grade; points: number }
 
-/** The level-up card (RM55; decision 9): everything the event gave, then the next rung. */
+/** The level-up card: everything the event gave, then the next rung. */
 export interface EventCard {
   id: string
   rung: string
@@ -156,19 +156,19 @@ export interface EventCard {
   /** Goods an option took. */
   taken: OptionGives[]
   perk: PerkId | null
-  /** Friendship 4's signature dish (F51 decision 9): the recipe it put in the Kitchen's list, a dish id; null otherwise. */
+  /** Friendship 4's signature dish: the recipe it put in the Kitchen's list, a dish id; null otherwise. */
   recipe: string | null
   /** The Memory's caption: her beat's line. */
   memory: string | null
   unlock: Unlock | null
   /** The confession's answer. */
   answer: Answer | null
-  /** The stage-up screen it shows (decision 11): the confession's Yes opens romance; the proposal makes her engaged and the
-   * wedding married (F53). */
+  /** The stage-up screen it shows: the confession's Yes opens romance; the proposal makes her engaged and the
+   * wedding married. */
   stage: StageUp | null
-  /** The proposal's ring, used (F53 decision 8); null otherwise. */
+  /** The proposal's ring, used; null otherwise. */
   ring: string | null
-  /** The wedding's place, reception and guests (F53 decision 9); null otherwise. */
+  /** The wedding's place, reception and guests; null otherwise. */
   wedding: WeddingCard | null
   /** Her last line of the event. */
   line: string | null
@@ -183,7 +183,7 @@ export interface EventCard {
 export const beatOf = (pack: Pick<StoryPack, 'bibles'>, id: string, rung: string): Beat | undefined => pack.bibles.get(id)?.route.find((b) => b.id === rung)
 
 /**
- * Her Ready event, played to its end (decisions 1, 6, 7 and 10): +50, each choice and each play's grade (or, with no
+ * Her Ready event, played to its end: +50, each choice and each play's grade (or, with no
  * play, the best choice's) into her next bar through `addLove`; any option's goods taken, any revealed or chosen taste
  * learnt, the path's flags set, the beat's item unlock into the Warehouse; then `advance` (her confession's Not yet sets
  * `friend` instead), her id into `today.events` and the rung into `memories`. Refused unless she's Ready, the script is her
@@ -296,14 +296,14 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
   }
 }
 
-// --- Her confession's Not yet, and Ask her (decision 10) --------------------------------------------------------------
+// --- Her confession's Not yet, and Ask her --------------------------------------------------------------
 
 /** Whether Ask her shows today: she said Not yet, and you haven't asked her today. */
 export const canAsk = (save: Pick<SaveV4, 'love' | 'today'>, id: string): boolean =>
   save.love[id]?.stage === 'confession' && save.love[id]?.friend === true && !save.today.asked.includes(id)
 
 /**
- * Ask her (decision 10): her confession's last choice again, from her profile while she's a close friend, once a day. It
+ * Ask her: her confession's last choice again, from her profile while she's a close friend, once a day. It
  * pays nothing and isn't her event (`last` stays, `today.events` doesn't hold her); Yes clears `friend` and moves her to
  * romance (`advance`), Not yet leaves her waiting. Never stamps.
  */
@@ -317,7 +317,7 @@ export function askHer(save: SaveV4, id: string, answer: Answer): SaveV4 {
   return { ...save, today, love: { ...save.love, [id]: { ...advance(love, save.calendar.day), last: love.last } } }
 }
 
-/** Ask her's scene (decision 10): the confession from her line before its answer (the place it plays at kept), without
+/** Ask her's scene: the confession from her line before its answer (the place it plays at kept), without
  * its plays. Empty when the confession has no answer. */
 export function askSteps(steps: readonly Step[]): Step[] {
   const at = answerAt(steps)
@@ -332,12 +332,12 @@ export function askSteps(steps: readonly Step[]): Step[] {
   return [...(place ? [place] : []), ...steps.slice(from).filter((s) => !('play' in s))]
 }
 
-// --- Memories' replays (decision 12) ----------------------------------------------------------------------------------
+// --- Memories' replays ----------------------------------------------------------------------------------
 
 /** The choice points a replay can start at: each top-level choice step's index. */
 export const choicePointsOf = (steps: readonly Step[]): number[] => steps.flatMap((s, i) => ('choice' in s ? [i] : []))
 
-/** A replay's steps (decision 12): from the top, or from the top-level step `from` (a choice point) with the line just
+/** A replay's steps: from the top, or from the top-level step `from` (a choice point) with the line just
  * before it, so the choice has its question, and the place it plays at kept. Every option is open and nothing pays or is
  * saved. */
 export function replaySteps(steps: readonly Step[], from: number | null = null): Step[] {

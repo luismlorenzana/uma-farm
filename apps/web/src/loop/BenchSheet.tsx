@@ -1,4 +1,4 @@
-// The ring bench (F53 decisions 3 and 5; romance spec RM38's mockup), `?sheet=bench` from the Forge's quick look on a v4
+// The ring bench (romance spec RM38's mockup), `?sheet=bench` from the Forge's quick look on a v4
 // farm: one row a grade you can make now with the three goods it would take (a tap on one swaps it for another of the
 // grade's goods), "→ Iron Ring"; CS25's recipe greyed "Opens with chapter 3"; her bonus once married; and **Make an Iron
 // Ring · 1 a day** in the thumb zone. A made ring is ★1 in the Warehouse; the bench says "One ring a day." until tomorrow.
@@ -152,7 +152,7 @@ function RowView({ save, row, chosen, open, onChoose, onOpen, onSwap }: {
   )
 }
 
-/** The Forge's quick look on v4 once the bench stands (decision 3): "Ring bench · one ring a day" and the way in. */
+/** The Forge's quick look on v4 once the bench stands: "Ring bench · one ring a day" and the way in. */
 export function BenchPeek({ save }: { save: SaveV4 }) {
   const made = save.today.ring > 0
   return (

@@ -1,4 +1,4 @@
-// The farm map's places (F18 decision 5; FC28, CS3): eight rows of three, CS19's frames, and what opens each.
+// The farm map's places: eight rows of three, CS19's frames, and what opens each.
 import { describe, expect, it } from 'vitest'
 import { LOOP_WORK_PLACES } from '../save/parse-v3'
 import { newSave } from '../save/v3'

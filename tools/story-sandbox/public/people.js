@@ -44,7 +44,7 @@ export function arrivalWords(a) {
 const issuesList = (issues) => (issues?.length ? h('ul', { class: 'issues' }, issues.map((i) => h('li', { text: i }))) : null)
 const noStory = () => h('div', { class: 'note-box' }, h('b', { text: 'No story yet. ' }), 'F40’s private files go in content/story/: world.md, cast.json, ties.json, then umas/, routes/ and pairs/.')
 
-/** Where the story stands, layer by layer (RS17). */
+/** Where the story stands, layer by layer. */
 function layers() {
   const st = D.story, n = st.umas.length
   const count = (list) => list.reduce((k, x) => k + x.issues.length, 0)
@@ -115,7 +115,7 @@ export function characterView(id, onReview) {
   )
 }
 
-/** Her 27 rungs as a ladder you can see (D42, D43, F46): her arrival scene, friendship 1–10, the confession, romance 1–10,
+/** Her 27 rungs as a ladder you can see: her arrival scene, friendship 1–10, the confession, romance 1–10,
  * the proposal, the wedding, and the spouse ladder's three after it. */
 function ladder(id, bible) {
   const beats = new Map((bible?.data.route ?? []).map((b) => [b.id, b]))
@@ -155,7 +155,7 @@ function biblePanel(bible) {
     issuesList(bible.issues))
 }
 
-/** Her tags (F59): favourite line, season, festival and loved gift, each with its reason. */
+/** Her tags: favourite line, season, festival and loved gift, each with its reason. */
 function tagPanel(id) {
   const t = D.tagOf?.get(id)
   if (!t) return null
@@ -174,7 +174,7 @@ function routeProgress(id) {
   return h('span', { class: `chip ${scripted ? 'dot' : ''}`, text: `${scripted}/${of} scripted${route.issues.length ? ` · ${route.issues.length} checks` : ''}` })
 }
 
-// ── Counts (F60) ─────────────────────────────────────────────────────────────
+// ── Counts ─────────────────────────────────────────────────────────────
 export function countsView() {
   const c = D.story?.counts
   if (!c) return h('div', {}, h('h1', { text: 'Counts' }), noStory())

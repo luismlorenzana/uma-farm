@@ -1,7 +1,7 @@
-// The ring bench's scene (F53 decision 4; romance spec RM38, RM40; core spec CS41): the morning after your first Romance 8
+// The ring bench's scene: the morning after your first Romance 8
 // event, Ida Stone, the town's smith, comes up from town and opens the old Forge as a ring bench. CS41's "first seen:
-// chapter 7" becomes "the first Romance 8" on save v4; chapter 7 still lights the Forge's fire (M6). The lines are
-// original and short, one to a tap, and stay in git; they say "you" and never gender the farmer (RS2). It plays once,
+// chapter 7" becomes "the first Romance 8" on save v4; chapter 7 still lights the Forge's fire. The lines are
+// original and short, one to a tap, and stay in git; they say "you" and never gender the farmer. It plays once,
 // as `scene:bench` in `diary.read`. Loaded on demand with its player.
 import type { Beat } from './chapter-1'
 import type { CastId } from './cast'

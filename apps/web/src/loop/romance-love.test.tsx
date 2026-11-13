@@ -1,4 +1,4 @@
-// Her route on her profile (F47 decision 15, moved to the Hearts tab by F48 decision 6; RM11–RM16, RM24, RM53), the
+// Her route on her profile (moved to the Hearts tab by F48 decision 6), the
 // switch on: her level and her bar in the ladder's colour with what's banked, Ready or what it waits for, Chat +15 with her
 // line and the "+N" over her face, the gift picker's points and "?" (her loved good from F1, a given good learnt), Praise
 // +20 after a rank-up overnight, and the morning's birthday line. The invented stand-in pack (9000001's birthday is Spring
@@ -35,7 +35,7 @@ const ONE = '9000001'
 const THREE = '9000003'
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 
-/** A named farm on `day`, the opening three home (their ties seeded and listed on an earlier morning, F52), with goods in
+/** A named farm on `day`, the opening three home (their ties seeded and listed on an earlier morning), with goods in
  * the Warehouse. */
 function farm(day = 2): SaveV4 {
   const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }

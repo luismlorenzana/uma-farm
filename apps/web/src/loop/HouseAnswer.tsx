@@ -1,4 +1,4 @@
-// A house that misses you, answered (F54 decision 7; romance spec RM43): under "⌂ Rose Cottage misses you", **Tonight ›**
+// A house that misses you, answered: under "⌂ Rose Cottage misses you", **Tonight ›**
 // (tonight's house is that one: Tonight's Sleep at shows it picked) and **Another night** (the line put away for the day,
 // costing nothing). Picked, "Tonight ✓". Never a penalty. Loaded on demand, the romance build only.
 import { Button } from '@luismlorenzana/uma-kit/ui'

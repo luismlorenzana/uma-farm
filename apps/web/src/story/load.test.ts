@@ -1,4 +1,4 @@
-// The loader seam (F46 decision 6; F56 decision 5) on the dev server: the pack farm-api serves, else the invented
+// The loader seam on the dev server: the pack farm-api serves, else the invented
 // stand-in when it serves none, and the stand-in alone with `VITE_FARM_STORY=stand-in` (Vitest's). A production build
 // holds no stand-in at all (`scripts/check-size.mjs`'s DEV_ONLY_MODULES). farm-api is a stub; no network.
 import { STAND_IN_FILES, storyFileName, storyFilePath, type StoryIndex } from '@farm/domain'

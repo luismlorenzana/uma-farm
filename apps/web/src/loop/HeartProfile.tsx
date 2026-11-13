@@ -1,12 +1,12 @@
-// Her profile (F48 decision 6; romance spec RM53), a sheet over the Hearts tab at `?uma=<characterId>`. From the top: her
+// Her profile, a sheet over the Hearts tab at `?uma=<characterId>`. From the top: her
 // face (the "+N" an act paid floats up from it), her level in words and her ● Ready chip, her line, birthday and house;
 // then on its Hearts side the route as one track (F ◆ R ◇ S), the Next card (the rung, its perk, its place and setup in
 // her bible's hint, the bar and what's banked, and what it waits for), Perks (reached ✓, the next, the rest greyed), Gifts
 // as learnt (others +10), Ties (her bonds' hearts), Memories' count and her ring once given; on its Work side F21's sheet
 // (her nine activities). Chat +15, Gift and Praise +20 sit in the thumb zone with Hearts | Work. Each section shows only
 // what exists: F49's **Play ›** on the Next card when her event is Ready (what a setup needs said when it isn't, and **Ask
-// her** after her confession's "Not yet"), and Memories' album (`?album=`); later packets fill Evening › (F50), the perks' effects,
-// the ring (F53) and her house (F54). F52's Ties: her closest friend first and marked, each bond's hearts and the points to
+// her** after her confession's "Not yet"), and Memories' album (`?album=`); later packets fill Evening ›, the perks' effects,
+// the ring and her house. F52's Ties: her closest friend first and marked, each bond's hearts and the points to
 // the next, and **Read** for a pair's conversation opened and unread. F51's perks: each reached perk with what it does now,
 // her closest friend's loved gift in Gifts from Friendship 7, and **From her**: her pet name for you from Romance 1 and her
 // keepsake from Friendship 10. F53's **Ring**: from Romance 8 the engraving her ring will carry (her R8 beat's line), from
@@ -133,7 +133,7 @@ function HeartsSide({ save, pack, id, card, nameOf }: { save: SaveV4; pack: Hear
   )
 }
 
-/** Her Ring (F53 decisions 6 and 7): the engraving, her ring and its bonus, and a better ring to give. */
+/** Her Ring: the engraving, her ring and its bonus, and a better ring to give. */
 function RingSection({ id, ring }: { id: string; ring: RingView }) {
   const [note, setNote] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -174,7 +174,7 @@ function RingSection({ id, ring }: { id: string; ring: RingView }) {
   )
 }
 
-/** One tie (F48 decision 6; F52 decision 11): the other Uma's face, name and the tie's kind, "Closest" on her closest friend,
+/** One tie: the other Uma's face, name and the tie's kind, "Closest" on her closest friend,
  * the points to the next bond heart, **Read** while a conversation of theirs waits, and the five bond hearts. */
 function TieItem({ id, tie, nameOf }: { id: string; tie: TieRow; nameOf: (id: string) => string }) {
   const location = useLocation()
@@ -213,7 +213,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 /** The Next card: the rung, its perk, its place and setup, the bar with what's banked, and what it waits for; **Play ›**
- * when her event is Ready (F49, RM54), what to do when its setup isn't met, and **Ask her** after a "Not yet" (once a
+ * when her event is Ready, what to do when its setup isn't met, and **Ask her** after a "Not yet" (once a
  * day; `ask` is 'asked' once asked today). */
 function NextSection({ card, advice = null, play = null, ask = null, bench = false }: { card: NextCard; advice?: string | null; play?: string | null; ask?: string | null; bench?: boolean }) {
   const colour = LADDER_COLOURS[card.rung ? rungLadder(card.rung) : 'spouse']
@@ -259,7 +259,7 @@ function NextSection({ card, advice = null, play = null, ask = null, bench = fal
   )
 }
 
-/** Perks: the reached ones by ladder, what the reached ones do now (F51), the next, and every perk on a tap (reached ✓ with
+/** Perks: the reached ones by ladder, what the reached ones do now, the next, and every perk on a tap (reached ✓ with
  * its now, the next, the rest greyed). */
 function PerksSection({ perks }: { perks: readonly PerkView[] }) {
   const [all, setAll] = useState(false)
@@ -304,7 +304,7 @@ function PerksSection({ perks }: { perks: readonly PerkView[] }) {
   )
 }
 
-/** From her (F51 decision 12): her pet name for you from Romance 1 and her keepsake from Friendship 10, with her line about
+/** From her: her pet name for you from Romance 1 and her keepsake from Friendship 10, with her line about
  * it and what it does at her line. */
 function FromHerSection({ hers }: { hers: FromHer }) {
   return (
@@ -334,7 +334,7 @@ function FromHerSection({ hers }: { hers: FromHer }) {
 const TASTE_LABEL: Readonly<Record<GiftSlot['taste'], string>> = { loved: 'Loved', liked: 'Liked', disliked: 'Disliked' }
 
 /** Gifts as learnt: her loved, liked and disliked goods ("?" until known), each group's points at ★1, and "Others +10";
- * from Friendship 7 her closest friend's loved gift (F51). */
+ * from Friendship 7 her closest friend's loved gift. */
 function GiftsSection({ gifts, friend = null, friendGood = null }: { gifts: ReturnType<typeof giftSlots>; friend?: string | null; friendGood?: string | null }) {
   const groups = (['loved', 'liked', 'disliked'] as const).map((taste) => ({ taste, slots: gifts.slots.filter((s) => s.taste === taste) })).filter((g) => g.slots.length > 0)
   return (

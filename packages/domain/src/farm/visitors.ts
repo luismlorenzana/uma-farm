@@ -1,8 +1,8 @@
-// Visitors, affinity and recruits (F23 decisions 5–10; core spec CS35, CS45, CS46; FC16, FC26): a visitor stops at the
+// Visitors, affinity and recruits: a visitor stops at the
 // Gate every fourth morning while a bed is free and none waits, and stays once your affinity with her reaches 2 hearts;
 // a chat a day and a gift a day raise it, for every Uma on the roster and every visitor; each chapter's end brings a
-// recruit for the farm's weakest open activity (F24 calls `recruitFor`). Praise and story beats are M6's (F34). Every
-// draw is the account's (CS8). Loaded with the loop's screens and the night.
+// recruit for the farm's weakest open activity (F24 calls `recruitFor`). Praise and story beats are M6's. Every
+// draw is the account's. Loaded with the loop's screens and the night.
 import { goodOf, isSeedId, type GoodFamily } from '../goods/ids'
 import type { MaterialLine } from '../items/lines'
 import { SaveRuleError } from '../save/rules'
@@ -15,42 +15,42 @@ import { HEART_POINTS, heartsOf } from './rank-rules'
 import { ACTIVITIES, type Activity } from './ranks'
 import type { Temperament, TalentOf, TalentStep } from './talents'
 
-/** A visitor stops by on days divisible by 4 (CS35). */
+/** A visitor stops by on days divisible by 4. */
 export const GATE_EVERY = 4
 /** She waits 6 days, then leaves (`leaves` = her first day + 6). */
 export const VISITOR_DAYS = 6
-/** She asks to stay at 2 hearts (CS45). */
+/** She asks to stay at 2 hearts. */
 export const STAY_AFFINITY = 2 * HEART_POINTS
 /** 10 hearts. */
 export const MAX_AFFINITY = 10 * HEART_POINTS
 
-// --- Affinity (CS45; decisions 7–9) ----------------------------------------------------------------------------------
+// --- Affinity ----------------------------------------------------------------------------------
 
 /** A chat a day (tap her): +15. */
 export const CHAT_POINTS = 15
 /** A gift a day: loved +60, liked +30, neutral +10, disliked −20 (never below a heart she's reached). Praise, +20 a day,
- * is M6's (F34). */
+ * is M6's. */
 export const GIFT_POINTS = { loved: 60, liked: 30, neutral: 10, disliked: -20 } as const
 export type Taste = keyof typeof GIFT_POINTS
 export const TASTES: readonly Taste[] = ['loved', 'liked', 'neutral', 'disliked']
 
-/** Affinity after `points` (decision 7): up to 10 hearts; a fall stops at the hearts she's reached, and nothing decays. */
+/** Affinity after `points`: up to 10 hearts; a fall stops at the hearts she's reached, and nothing decays. */
 export function addAffinity(affinity: number, points: number): number {
   if (points >= 0) return Math.min(MAX_AFFINITY, affinity + points)
   return Math.max(heartsOf(affinity) * HEART_POINTS, affinity + points)
 }
 
-/** The forest's six families (CS16): a Wood Uma's likes, raw and refined. */
+/** The forest's six families: a Wood Uma's likes, raw and refined. */
 export const FOREST_FAMILIES: readonly GoodFamily[] = ['woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets']
-/** Each favourite line's families (decision 8); Vegetables reads crops and their refined forms instead. */
+/** Each favourite line's families; Vegetables reads crops and their refined forms instead. */
 const LINE_FAMILIES: Readonly<Record<Exclude<MaterialLine, 'vegetables'>, readonly GoodFamily[]>> = {
   wood: FOREST_FAMILIES, fish: ['fish'], metal: ['ores'], stone: ['stones', 'crystals'],
 }
 
-/** What she thinks of a good as a gift (decision 8; CS45): **liked**, goods of her favourite line (Wood the forest's six
+/** What she thinks of a good as a gift: **liked**, goods of her favourite line (Wood the forest's six
  * families, Fish fish and fillets, Vegetables crops and their refined forms, Metal ores and ingots, Stone stones and
- * crystals, raw and refined); **disliked**, raw stones unless her favourite is mining (Metal or Stone), and feed (M5);
- * everything else **neutral**. **Loved** is the dish kind of her best talent, when dishes come (M5, F8). */
+ * crystals, raw and refined); **disliked**, raw stones unless her favourite is mining (Metal or Stone), and feed;
+ * everything else **neutral**. **Loved** is the dish kind of her best talent, when dishes come. */
 export function giftTaste(item: string, line: MaterialLine | null): Taste {
   const good = goodOf(item)
   if (!good) return 'neutral'
@@ -68,7 +68,7 @@ function member(save: SaveV3, outfitId: OutfitId): 'roster' | 'visitor' {
   throw new SaveRuleError('not-owned', 'She isn’t here.')
 }
 
-/** What a chat or a gift did: her points, and whether she joined (a visitor at 2 hearts, decision 6). */
+/** What a chat or a gift did: her points, and whether she joined (a visitor at 2 hearts). */
 export interface AffinityResult<S> {
   save: S
   /** Affinity before and after. */
@@ -78,7 +78,7 @@ export interface AffinityResult<S> {
   joined: { outfitId: OutfitId; home: boolean } | null
 }
 
-/** Her affinity moved by `points`; a visitor reaching 200 joins at once, keeping it (decision 6). */
+/** Her affinity moved by `points`; a visitor reaching 200 joins at once, keeping it. */
 function moveAffinity<S extends SaveV3>(save: S, outfitId: OutfitId, points: number): AffinityResult<S> {
   if (member(save, outfitId) === 'roster') {
     const uma = save.roster[outfitId]!
@@ -93,7 +93,7 @@ function moveAffinity<S extends SaveV3>(save: S, outfitId: OutfitId, points: num
   return { save: join.save, from: visitor.affinity, to, joined: { outfitId, home: join.home } }
 }
 
-/** A chat (tap her): +15, once a day each, for any Uma on the roster, home or away, and any visitor (decisions 4, 9). */
+/** A chat (tap her): +15, once a day each, for any Uma on the roster, home or away, and any visitor. */
 export function chat<S extends SaveV3>(save: S, outfitId: OutfitId): AffinityResult<S> {
   member(save, outfitId)
   if (save.today.chats.includes(outfitId)) throw new SaveRuleError('busy', 'You’ve talked today.')
@@ -101,7 +101,7 @@ export function chat<S extends SaveV3>(save: S, outfitId: OutfitId): AffinityRes
   return moveAffinity(talked, outfitId, CHAT_POINTS)
 }
 
-/** A gift (decisions 8, 9): one good from the Warehouse at the stars the player chooses, once a day each. Seeds aren't
+/** A gift: one good from the Warehouse at the stars the player chooses, once a day each. Seeds aren't
  * gifts. What she thinks of it (`giftTaste`, her favourite line from master data) sets the points. */
 export function gift<S extends SaveV3>(save: S, outfitId: OutfitId, item: string, stars: number, line: MaterialLine | null): AffinityResult<S> & { taste: Taste } {
   member(save, outfitId)
@@ -113,7 +113,7 @@ export function gift<S extends SaveV3>(save: S, outfitId: OutfitId, item: string
   return { ...moveAffinity(given, outfitId, GIFT_POINTS[taste]), taste }
 }
 
-// --- Chats' lines (decision 9; CS46): five a temperament, her name filled in at runtime (`{name}`) -------------------
+// --- Chats' lines: five a temperament, her name filled in at runtime (`{name}`) -------------------
 
 /** A short line by her temperament, original text; M6's conversations replace them. */
 export const CHAT_LINES: Readonly<Record<Temperament, readonly string[]>> = {
@@ -154,14 +154,14 @@ export const CHAT_LINES: Readonly<Record<Temperament, readonly string[]>> = {
   ],
 }
 
-/** Today's line from her (decision 9): one of her temperament's five, drawn by the account, the day and her id, so it's
+/** Today's line from her: one of her temperament's five, drawn by the account, the day and her id, so it's
  * the same all day on every device. `{name}` is filled in by the app. */
 export function chatLine(save: Pick<SaveV3, 'account' | 'calendar'>, outfitId: OutfitId, temperament: Temperament): string {
   const lines = CHAT_LINES[temperament]
   return lines[Math.floor(draw(save.account.uid, save.calendar.day, `chat:${outfitId}`, 0) * lines.length)]!
 }
 
-// --- The Gate at night (decision 5; CS35) ----------------------------------------------------------------------------
+// --- The Gate at night ----------------------------------------------------------------------------
 
 /** Night step 8, after the Dorm: a waiting visitor whose 6 days are up leaves; then, on a morning divisible by 4, while a
  * bed is free and no Gate visitor waits, one arrives, a seeded draw from the release's outfits not on the roster and not
@@ -186,19 +186,19 @@ export const daysLeft = (save: Pick<SaveV3, 'calendar'>, visitor: Pick<Visitor, 
 /** The next morning a visitor may stop by: the next day divisible by 4 after today. */
 export const nextGateDay = (day: number): number => (Math.floor(day / GATE_EVERY) + 1) * GATE_EVERY
 
-// --- Chapter recruits (decision 10; CS35) -----------------------------------------------------------------------------
+// --- Chapter recruits -----------------------------------------------------------------------------
 
 /** C or better: what a recruit has in the activity she's drawn for. */
 export const RECRUIT_STEP: TalentStep = 4
 
-/** The activities open on this save (CS3): farming, foraging and fishing from day 1; the ranch with chapter 2 (the Coop),
+/** The activities open on this save: farming, foraging and fishing from day 1; the ranch with chapter 2 (the Coop),
  * mining with 3, cooking with 4 (the Kitchen), expeditions with 5, serving with 6 (the Restaurant) and forging with 7. */
 export function openActivities(save: Pick<SaveV3, 'farm'>): Activity[] {
   const from: Readonly<Record<Activity, number>> = { farming: 1, foraging: 1, fishing: 1, ranch: 2, mining: 3, cooking: 4, expeditions: 5, serving: 6, forging: 7 }
   return ACTIVITIES.filter((a) => opened(save, { by: 'chapter', chapter: from[a] }))
 }
 
-/** The open activity the farm is weakest at (decision 10): the lowest best rank on the roster, then the lowest best
+/** The open activity the farm is weakest at: the lowest best rank on the roster, then the lowest best
  * talent, then the activities' order. */
 export function weakestActivity(save: Pick<SaveV3, 'roster' | 'farm'>, talentOf: TalentOf): Activity {
   const ids = Object.keys(save.roster)
@@ -213,7 +213,7 @@ export function weakestActivity(save: Pick<SaveV3, 'roster' | 'farm'>, talentOf:
   })
 }
 
-/** A chapter's recruit (decision 10): an outfit not on the roster and not waiting at the Gate, C or better in the farm's
+/** A chapter's recruit: an outfit not on the roster and not waiting at the Gate, C or better in the farm's
  * weakest open activity, drawn by the account, the day and the chapter. Null when the release has none left. F24 calls
  * it for chapter 1's reward and joins her with `joinRoster` (home, or away with no bed free). */
 export function recruitFor(save: SaveV3, release: readonly OutfitId[], talentOf: TalentOf): { activity: Activity; outfitId: OutfitId | null } {

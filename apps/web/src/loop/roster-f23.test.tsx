@@ -1,4 +1,4 @@
-// The roster's screens as rendered (F23 decision 11): the start's six cards, the redraw and three picks; the Dorm's beds,
+// The roster's screens as rendered: the start's six cards, the redraw and three picks; the Dorm's beds,
 // Upgrade and a swap through the pickers; the visitor at the Gate with Chat, Gift and "She'd like to stay"; everyone on
 // the roster, home or away, with hearts, Chat and Gift. Invented outfits with chosen stats; the server is a stub.
 import 'fake-indexeddb/auto'

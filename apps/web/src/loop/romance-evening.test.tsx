@@ -1,4 +1,4 @@
-// The evening on screen (F50 decisions 6–9; RM19–RM22, RM37), the switch on: an evening from her profile's Evening › to
+// The evening on screen, the switch on: an evening from her profile's Evening › to
 // its card, paid and saved once; the morning's invitation answered Yes making her Tonight's evening (Play ›, the +20 on her
 // kinds sheet) and Another day costing nothing; Tonight's Pick someone › to a spent row; the Hearts header's ○ and ●; and
 // End the day's fade to the morning. The invented stand-in pack (9000001–9000003) and invented outfits; master data and

@@ -1,4 +1,4 @@
-// Gold (F17; core spec CS1): whole numbers. Spending refuses when the farm is short; neither stamps `updatedAt`, which the
+// Gold: whole numbers. Spending refuses when the farm is short; neither stamps `updatedAt`, which the
 // player's operation does around them.
 import { SaveRuleError } from './rules'
 import type { SaveV3 } from './v3'

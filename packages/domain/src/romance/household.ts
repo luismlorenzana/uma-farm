@@ -1,4 +1,4 @@
-// Married life at night and the household (F54 decisions 6–13; romance spec RM11, RM23, RM43–RM46, RM55): the night's
+// Married life at night and the household: the night's
 // house, shared houses' bonds, the spouse ladder's night levels, the household milestones, the house's morning with its
 // house line, the household scenes, the finale and the Festival of Vows.
 //
@@ -28,14 +28,14 @@ import { perkOf } from './perks'
 import { breakfast, lineQuality } from './perk-effects'
 import { hasPerk, MORNING_ITEMS } from './perk-terms'
 
-/** A house morning pays each resident +30 (RM13, RM43). */
+/** A house morning pays each resident +30. */
 export const HOUSE_POINTS = 30
-/** The Festival of Vows pays every spouse +50 (RM46). */
+/** The Festival of Vows pays every spouse +50. */
 export const VOWS_POINTS = 50
 /** The house's extra morning item's draw on `lineGood` (F51's `MORNING_ITEM_N` is 1). */
 export const HOUSE_ITEM_N = 2
 
-// --- Before step 1: the night's house (decision 6) ----------------------------------------------------------------------
+// --- Before step 1: the night's house ----------------------------------------------------------------------
 
 /** The house slept in tonight, and whose room it is on a birthday-alone night. */
 export interface NightHouse {
@@ -43,7 +43,7 @@ export interface NightHouse {
   alone: string | null
 }
 
-/** Before step 1 (decision 6; RM23): once anyone is married, tonight's house is noted, your pick or else the default (the
+/** Before step 1: once anyone is married, tonight's house is noted, your pick or else the default (the
  * house slept in least lately), its night the evening's day; the pick clears for tomorrow's. Before the first wedding, nothing. */
 export function noteTheNight(save: SaveV4): { save: SaveV4; night: NightHouse | null } {
   if (marriedCount(save) === 0) return { save, night: null }
@@ -54,9 +54,9 @@ export function noteTheNight(save: SaveV4): { save: SaveV4; night: NightHouse | 
   return { save: { ...save, homestead: { ...h, tonight: null, alone: null, slept } }, night: { house, alone } }
 }
 
-// --- Step 6: shared houses and night levels (decisions 6 and 8) ---------------------------------------------------------
+// --- Step 6: shared houses and night levels ---------------------------------------------------------
 
-/** Step 6 (RM42, RM48): +10 bond a night to each pair of residents sharing a house, through F52's `addBond` (Romance 4's
+/** Step 6: +10 bond a night to each pair of residents sharing a house, through F52's `addBond` (Romance 4's
  * ×1.5 inside). Every house, every night. */
 export function shareHouses(save: SaveV4, pack: Pick<StoryPack, 'ties'>): { save: SaveV4; paid: { a: string; b: string; points: number }[] } {
   let next = save
@@ -74,10 +74,10 @@ export function shareHouses(save: SaveV4, pack: Pick<StoryPack, 'ties'>): { save
   return { save: next, paid }
 }
 
-/** The spouse levels that come at night (RM11, RM55): S2 and S4, from S1 and S3. */
+/** The spouse levels that come at night: S2 and S4, from S1 and S3. */
 const NIGHT_LEVEL_FROM: Readonly<Record<number, 's2' | 's4'>> = { 1: 's2', 3: 's4' }
 
-/** Step 6 (decision 8; RM11): a spouse at S1 or S3 whose 600 is full reaches S2 or S4 through F47's `advance` (which starts
+/** Step 6: a spouse at S1 or S3 whose 600 is full reaches S2 or S4 through F47's `advance` (which starts
  * S2's every-2nd-morning count), no event; never S3 or S5, which are events. In the roster's id order. */
 export function levelsTonight(save: SaveV4): { save: SaveV4; levels: LevelLine[] } {
   let love = save.love
@@ -92,7 +92,7 @@ export function levelsTonight(save: SaveV4): { save: SaveV4; levels: LevelLine[]
   return { save: levels.length === 0 ? save : { ...save, love }, levels }
 }
 
-/** A night level's card (decision 8; RM55): F49's level-up card with no event, her perk and her next rung, read from her
+/** A night level's card: F49's level-up card with no event, her perk and her next rung, read from her
  * route now. Null unless she has reached that rung. */
 export function nightLevelCard(save: Pick<SaveV4, 'love'>, pack: Pick<StoryPack, 'bibles'>, id: string, rung: 's2' | 's4'): EventCard | null {
   const love = save.love[id]
@@ -108,9 +108,9 @@ export function nightLevelCard(save: Pick<SaveV4, 'love'>, pack: Pick<StoryPack,
   }
 }
 
-// --- Step 8: the household milestones (decision 9; RM45) ----------------------------------------------------------------
+// --- Step 8: the household milestones ----------------------------------------------------------------
 
-/** Step 8 (decision 9): as the married count passes 1, 5, 10, 15 and 20, each is news once; 5 gives the furniture set (five
+/** Step 8: as the married count passes 1, 5, 10, 15 and 20, each is news once; 5 gives the furniture set (five
  * pieces, none placed) and 20 sets the finale's morning (today, the morning after the 20th wedding). The count the night
  * saw is kept, so household scenes are Ready from this morning. */
 export function householdNight(save: SaveV4): { save: SaveV4; news: HouseholdNews[] } {
@@ -123,10 +123,10 @@ export function householdNight(save: SaveV4): { save: SaveV4; news: HouseholdNew
   return { save: { ...save, homestead: { ...h, married: count, furniture, finale } }, news: passed.map((married) => ({ kind: 'household', married })) }
 }
 
-// --- Step 9: the house's morning (decision 7; RM43) ---------------------------------------------------------------------
+// --- Step 9: the house's morning ---------------------------------------------------------------------
 
 /**
- * Step 9 (decision 7): the morning of the house slept in. Each resident +30 through `addLove` (an anniversary's ×2 applies);
+ * Step 9: the morning of the house slept in. Each resident +30 through `addLove` (an anniversary's ×2 applies);
  * a resident at S1 or more brings **breakfast** (F51's, once: everyone on the farm with no meal left, +5 bond a pair it
  * feeds); each resident at S2 or more leaves **one more morning item** of her line (★3+, `lineGood(…, n = 2)`), on top of her
  * own count. On a birthday-alone night only she counts. An empty house's morning is quiet: no line.
@@ -160,7 +160,7 @@ export function houseMorning(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bible
   return { save: next, line: { kind: 'house', house: night.house, umas, paid, breakfast: fed, items: items.length }, items }
 }
 
-/** The morning's "misses you" line (RM43): among the houses with residents not slept in for 8 nights or more, the one slept
+/** The morning's "misses you" line: among the houses with residents not slept in for 8 nights or more, the one slept
  * in least lately (ties the lower number); null with none. */
 export function missesLine(save: SaveV4): { kind: 'misses'; house: number } | null {
   const houses = save.homestead.houses.map((_, i) => i).filter((i) => missesYou(save, i))
@@ -168,13 +168,13 @@ export function missesLine(save: SaveV4): { kind: 'misses'; house: number } | nu
   return houses.length > 0 ? { kind: 'misses', house: houses[0]! } : null
 }
 
-/** "Another night" (RM43): the morning's "misses you" line put away for the day. Free; nothing else changes. */
+/** "Another night": the morning's "misses you" line put away for the day. Free; nothing else changes. */
 export function anotherNight(save: SaveV4): SaveV4 {
   if (!save.summary || !save.summary.hearts.some((h) => h.kind === 'misses')) return save
   return { ...save, summary: { ...save.summary, hearts: save.summary.hearts.filter((h) => h.kind !== 'misses') } }
 }
 
-/** Step 9 (decision 13; RM46): on the finale's day of the year, each later year, the Festival of Vows: every spouse +50,
+/** Step 9: on the finale's day of the year, each later year, the Festival of Vows: every spouse +50,
  * and a festival night tonight (`eveningSlots`). */
 export function festivalOfVows(save: SaveV4): { save: SaveV4; line: VowsLine | null } {
   if (!vowsOn(save.homestead, save.calendar.day)) return { save, line: null }
@@ -189,9 +189,9 @@ export function festivalOfVows(save: SaveV4): { save: SaveV4; line: VowsLine | n
   return { save: next, line: spouses.length > 0 ? { kind: 'vows', spouses: spouses.length, paid } : null }
 }
 
-// --- The house line (decision 7) ----------------------------------------------------------------------------------------
+// --- The house line ----------------------------------------------------------------------------------------
 
-/** The house lines by temperament (decision 7; CS46's templates), until the pack's are written: three a temperament, `{name}`
+/** The house lines by temperament (CS46's templates), until the pack's are written: three a temperament, `{name}`
  * her name, filled at runtime. Original; mornings only (W16); you are never gendered. */
 export const HOUSE_TEMPLATES: Readonly<Record<Temperament, readonly [string, string, string]>> = {
   breezy: [
@@ -221,7 +221,7 @@ export const HOUSE_TEMPLATES: Readonly<Record<Temperament, readonly [string, str
   ],
 }
 
-/** The house line a morning shows (decision 7): one resident, drawn by `draw(uid, day, 'house-line', 0)`, says one of her
+/** The house line a morning shows: one resident, drawn by `draw(uid, day, 'house-line', 0)`, says one of her
  * pack's house lines (`draw(…, 1)`; `authored`, her words, `{farmer}` still to fill), else her temperament's template with
  * `{name}` filled. Read live, never stored. */
 export function houseLineOf(uid: string, day: number, umas: readonly string[], household: Pick<Household, 'houseLines'> | null, temperamentOf: (id: string) => Temperament,
@@ -233,9 +233,9 @@ export function houseLineOf(uid: string, day: number, umas: readonly string[], h
   return lines.length > 0 ? { id, text: pick(lines), authored: true } : { id, text: pick(HOUSE_TEMPLATES[temperamentOf(id)]).replaceAll('{name}', nameOf(id)), authored: false }
 }
 
-// --- Household scenes and the finale (decisions 10, 11 and 13; RM45, RM46) ----------------------------------------------
+// --- Household scenes and the finale ----------------------------------------------
 
-/** A household scene's or the finale's id in `diary.read` (decision 13): `household:5`, `household:10`, `household:15`,
+/** A household scene's or the finale's id in `diary.read`: `household:5`, `household:10`, `household:15`,
  * `finale`. */
 export type HouseholdId = `household:${HouseholdAt}` | 'finale'
 export const HOUSEHOLD_IDS: readonly HouseholdId[] = ['household:5', 'household:10', 'household:15', 'finale']
@@ -245,12 +245,12 @@ export const householdAt = (id: HouseholdId): number => (id === 'finale' ? FINAL
 /** Its title: "Household scene 1", …, "The Great Harvest". */
 export const householdTitle = (id: HouseholdId): string => (id === 'finale' ? 'The Great Harvest' : `Household scene ${HOUSEHOLD_IDS.indexOf(id) + 1}`)
 
-/** Whether a household scene or the finale is reached (decision 10): the night saw its count (the morning after the
+/** Whether a household scene or the finale is reached: the night saw its count (the morning after the
  * wedding that made it), the finale once its morning came. */
 export const householdReached = (save: Pick<SaveV4, 'homestead'>, id: HouseholdId): boolean =>
   id === 'finale' ? save.homestead.finale > 0 : save.homestead.married >= householdAt(id)
 
-/** The household's Ready offers (decision 10): each scene and the finale reached, written in the pack, and not yet played.
+/** The household's Ready offers: each scene and the finale reached, written in the pack, and not yet played.
  * Never auto-played. */
 export function householdReady(save: Pick<SaveV4, 'homestead' | 'diary'>, household: Household | null): HouseholdId[] {
   if (!household) return []
@@ -264,7 +264,7 @@ export function spousesInOrder(save: Pick<SaveV4, 'love' | 'roster'>): string[] 
     .sort((a, b) => (save.love[a]!.wed ?? 0) - (save.love[b]!.wed ?? 0) || Number(a) - Number(b))
 }
 
-/** A household scene as it plays (decision 11): `open`, each spouse's `each` in wedding order (one without hers is skipped,
+/** A household scene as it plays: `open`, each spouse's `each` in wedding order (one without hers is skipped,
  * partial), then `close`; the finale's play after its `open`. */
 export interface HouseholdPlay {
   id: HouseholdId
@@ -286,7 +286,7 @@ export function householdPlay(save: Pick<SaveV4, 'love' | 'roster'>, household: 
   }
 }
 
-/** A household scene or the finale played or skipped (decision 10): read once into `diary.read`, paying nothing. Refused
+/** A household scene or the finale played or skipped: read once into `diary.read`, paying nothing. Refused
  * before it's reached. */
 export function readHousehold(save: SaveV4, id: HouseholdId): SaveV4 {
   if (!householdReached(save, id)) return save

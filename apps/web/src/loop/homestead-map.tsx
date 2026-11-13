@@ -1,4 +1,4 @@
-// The homestead on the farm map (F54 decision 2; FC28 as RM41 grows it), save v4 only: its rows sit after the yard and
+// The homestead on the farm map (FC28 as RM41 grows it), save v4 only: its rows sit after the yard and
 // before the town edge, which stays the map's last row: the Farmhouse, House 1 and House 2; Houses 3–5; House 6. Built
 // houses and the next lot show, so the map grows a row at a time. A house's pips are its residents' faces (a Ready one
 // badged ♥, F48) and its free rooms' dots; a tap opens the homestead's sheet at that house; the next lot shows the house's

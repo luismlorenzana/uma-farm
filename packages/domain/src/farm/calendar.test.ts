@@ -1,4 +1,4 @@
-// The year's dates (F18; core spec CS4, FC22): four 12-day seasons, a festival on each season's 10th day and the Harvest
+// The year's dates: four 12-day seasons, a festival on each season's 10th day and the Harvest
 // Cup on Winter 12, and the next festival from any day.
 import { describe, expect, it } from 'vitest'
 import { dateOf, farmDay, FESTIVALS, festivalOn, isSeasonEnd, isSeasonStart, nextFestival } from './calendar'

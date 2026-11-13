@@ -1,4 +1,4 @@
-// Farm Rank and chapter 1 (F24; core spec CS38, CS39, CS41, CS42): the Farm Rank's thresholds and points, the Diary's
+// Farm Rank and chapter 1: the Farm Rank's thresholds and points, the Diary's
 // milestones and rows paying once, chapter 1's goals from their counters and its completion at night, and the two scenes
 // playing once with Umas only in roles. Invented outfit ids with chosen talents; the night runs with test kinds.
 import { describe, expect, it } from 'vitest'

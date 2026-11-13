@@ -1,8 +1,8 @@
-// The farm's Umas on the HD-2D stage (F12 decisions 1–4; hd2d-farm FR10, FR14; kit-farm KF5): who stands where, read from
+// The farm's Umas on the HD-2D stage: who stands where, read from
 // the save as the Hub's pips read it, what her bubble shows, and what moved between two readings. Figures only show the
-// save (FR14): nothing here changes it. Pure, and part of the stage's lazy chunk (`FarmStage.tsx`).
+// save: nothing here changes it. Pure, and part of the stage's lazy chunk (`FarmStage.tsx`).
 //
-// Who stands (decision 1): every Uma whose job holds a slot (uma-kit's `workView` cards, the pips' own source) at that
+// Who stands: every Uma whose job holds a slot (uma-kit's `workView` cards, the pips' own source) at that
 // slot's marker, every tender at her block's marker on the Fields, and the rest of the farm's home (`farmHome`) idle: a
 // housed spouse (v4) on her house's apron, everyone else in the yard. Nobody who's away. The idle spots (F12's "left to
 // the worker"): the Dorm's apron, middle first, then the path in front of it, then the path row on to the bin, then the
@@ -13,7 +13,7 @@ import type { SlotCardModel } from '@luismlorenzana/uma-kit/work'
 import type { Facing } from '@luismlorenzana/uma-stage'
 import type { FarmDesign, Tile } from '@luismlorenzana/uma-stage/formats'
 
-/** What her bubble shows (decision 4): her work's item when she has some to collect (the place's Ready), the Fields' crop
+/** What her bubble shows: her work's item when she has some to collect (the place's Ready), the Fields' crop
  * when her block has Ready plots, each with ♥ when her heart event is Ready (v4); ♥ alone with nothing to collect. */
 export type FigureBubble =
   | { kind: 'work'; request: LoopWorkRequest; heart: boolean }
@@ -59,7 +59,7 @@ export function standable(design: FarmDesign, blocks: (frame: string) => boolean
   }
 }
 
-/** The way an Uma at a slot faces (FR10, "facing the place's work"): into a building behind her, toward one beside her (or
+/** The way an Uma at a slot faces ("facing the place's work"): into a building behind her, toward one beside her (or
  * beside the tile behind her), else into the place: away from the camera. */
 export function slotFacing(design: FarmDesign, t: Tile): Facing {
   const covers = (x: number, z: number) => design.buildings.some((b) => x >= b.x && x < b.x + b.w && z >= b.z && z < b.z + b.d)
@@ -111,7 +111,7 @@ export function assignSpots(ids: readonly string[], spots: readonly Tile[], prev
 }
 
 /**
- * Everyone on the farm as the stage draws her (decision 1), in the save's order: the workers place by place and slot by
+ * Everyone on the farm as the stage draws her, in the save's order: the workers place by place and slot by
  * slot, the tenders block by block, then the idle in `farmHome`'s order. `previous` is where the idle stood last time (the
  * stage's last reading), so their spots hold.
  */
@@ -178,7 +178,7 @@ export function farmFigures(input: FiguresInput, previous?: ReadonlyMap<string, 
 export const idleTiles = (figures: readonly FarmFigure[]): Map<string, Tile> =>
   new Map(figures.filter((f) => f.where !== 'slot').map((f) => [f.id, f.tile]))
 
-// --- What moved (decisions 2 and 3) ----------------------------------------------------------------------------------------
+// --- What moved ----------------------------------------------------------------------------------------
 
 /** How a new reading reaches the stage: everyone placed at once (boot, the morning, a sync from another device), or only
  * who moved, walking (a change made here today). */
@@ -190,7 +190,7 @@ export function moveMode(before: number | null, day: number, madeHere: boolean):
   return before === null || before !== day || !madeHere ? 'place' : 'walk'
 }
 
-/** What the farm last showed, kept for the session as Home's camera is (F11 decision 8): a put-to-work from a place's page
+/** What the farm last showed, kept for the session as Home's camera is: a put-to-work from a place's page
  * walks her when Home comes back. */
 let kept: { figures: FarmFigure[]; day: number } | null = null
 export const keptFigures = (): { figures: FarmFigure[]; day: number } | null => kept
@@ -211,7 +211,7 @@ export type FigureMove =
   | { id: string; kind: 'remove' }
 
 /**
- * What the stage does between two readings (decisions 2 and 3). In `place` mode everyone stands at her tile at once and
+ * What the stage does between two readings. In `place` mode everyone stands at her tile at once and
  * whoever's gone goes. In `walk` mode only who moved moves: a new Uma walks in from the Gate, one whose tile changed walks
  * to a slot or runs home, one who's gone runs out of the Gate; the rest stay (or turn).
  */

@@ -1,5 +1,5 @@
-// Master data (F3, F5): the release's manifest, characters, outfits and art through the API's proxy, cached by hash on the
-// device. The farm's view of it is every outfit as a worker (`farmRoster`, FM6), the album's neutral rows (names and
+// Master data: the release's manifest, characters, outfits and art through the API's proxy, cached by hash on the
+// device. The farm's view of it is every outfit as a worker (`farmRoster`), the album's neutral rows (names and
 // art keys, from the release at runtime only) and each outfit's stats for the loop's talents (F21, which reads them on
 // demand, once a release: `loop/talents.ts`). Copied in shape from uma-rpg's `master/master.ts` (30a322a), cut to the sets
 // the farm reads.
@@ -11,13 +11,13 @@ import { CONTENT } from '../content/client'
 
 export interface MasterView {
   manifest: ReleaseManifest
-  /** Every outfit on the release, each with her trade (FM6, FM7). */
+  /** Every outfit on the release, each with her trade. */
   roster: FarmOutfit[]
   /** The album's rows by outfit id: name, title, rarity, release date, aptitudes and art keys. */
   album: ReadonlyMap<string, OutfitRowBase>
-  /** Each outfit's 5★ stats and growth rates, by outfit id: what the loop's talents read (CS27). */
+  /** Each outfit's 5★ stats and growth rates, by outfit id: what the loop's talents read. */
   stats: ReadonlyMap<string, TalentOutfit>
-  /** Each character's birthday, by character id (F47 decision 10, RM16): the romance's, read at runtime, never in git. */
+  /** Each character's birthday, by character id: the romance's, read at runtime, never in git. */
   birthdays: ReadonlyMap<string, { month: number; day: number }>
   art: ArtIndex | null
 }
@@ -31,7 +31,7 @@ let state: MasterState = { status: 'idle' }
 const listeners = new Set<() => void>()
 /** The release as loaded, before any lens. */
 let raw: MasterView | null = null
-/** How the romance build sees master data (F46 decision 5): through the story pack's cast. Null in the M4 build. */
+/** How the romance build sees master data: through the story pack's cast. Null in the M4 build. */
 let lens: ((view: MasterView) => MasterView) | null = null
 
 function set(next: MasterState): void {
@@ -42,7 +42,7 @@ function set(next: MasterState): void {
 /** The ready state for the release, through the lens if one is set. */
 const ready = (view: MasterView): MasterState => ({ status: 'ready', view: lens ? lens(view) : view })
 
-/** Sees master data through the story pack's cast from now on (F46): the romance build's loader sets it once the pack
+/** Sees master data through the story pack's cast from now on: the romance build's loader sets it once the pack
  * loads, and a release already loaded is seen again through it. */
 export function setMasterLens(next: (view: MasterView) => MasterView): void {
   lens = next
@@ -75,8 +75,8 @@ function loadMaster(): void {
   })()
 }
 
-/** Master data once it has loaded, outside React: the loop's boot waits on it to migrate a v2 save and fill the start
- * (F17). It starts the load if none is under way, and fails as the load does, so the boot gate offers Retry. */
+/** Master data once it has loaded, outside React: the loop's boot waits on it to migrate a v2 save and fill the start.
+ *It starts the load if none is under way, and fails as the load does, so the boot gate offers Retry. */
 export function masterReady(): Promise<MasterView> {
   if (state.status === 'error') retryMaster()
   else loadMaster()

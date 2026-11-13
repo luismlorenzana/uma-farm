@@ -1,4 +1,4 @@
-// Chapter 1's scenes (F24 decisions 6 and 7; core spec CS42, CS41, CS46): "The Overgrown Farm" on day 1 and "First
+// Chapter 1's scenes: "The Overgrown Farm" on day 1 and "First
 // Shipment" the morning after the chapter's goals are met. Data, never Uma names: the town's cast speaks by name, and Umas
 // speak only in roles the app fills from master data (your first hands, your newest hand), `{name}` filled at runtime.
 // The lines are original and short, one to a tap. Loaded on demand with the scene player.
@@ -33,7 +33,7 @@ const cast = (id: CastId, line: string): Beat => ({ speaker: { kind: 'cast', id 
 const narrator = (line: string): Beat => ({ speaker: { kind: 'narrator' }, line })
 const hand = (index: 0 | 1 | 2): Beat => ({ speaker: { kind: 'first-hand', index }, line: '' })
 
-/** The hello lines (decision 7): one a temperament (F21's five), `{name}` filled at runtime. */
+/** The hello lines: one a temperament (F21's five), `{name}` filled at runtime. */
 export const HELLO_LINES: Readonly<Record<Temperament, string>> = {
   breezy: '“Hi, I’m {name}! Point me at the work and I’m off.”',
   steady: '“{name}. I’ll be here every morning, rain or shine.”',
@@ -42,7 +42,7 @@ export const HELLO_LINES: Readonly<Record<Temperament, string>> = {
   clever: '“Hello, I’m {name}. I’ve counted the plots already: nine.”',
 }
 
-/** "The Overgrown Farm" (CS42): the gate, the Mayor, Old Ben's seeds, your first hands, Marta and the bin; then the
+/** "The Overgrown Farm": the gate, the Mayor, Old Ben's seeds, your first hands, Marta and the bin; then the
  * chapter card. */
 export const OPENING_SCENE: Scene = {
   id: 'scene:1:open',
@@ -63,7 +63,7 @@ export const OPENING_SCENE: Scene = {
   ],
 }
 
-/** "First Shipment" (CS42): the Mayor and Marta at the bin, Old Ben's plans for the Mill, your newest hand at the Gate,
+/** "First Shipment": the Mayor and Marta at the bin, Old Ben's plans for the Mill, your newest hand at the Gate,
  * and Dale Hart's wagon; then chapter 2's card. */
 export const CLOSING_SCENE: Scene = {
   id: 'scene:1:close',
@@ -83,12 +83,12 @@ export const CLOSING_SCENE: Scene = {
 
 export const SCENES: Readonly<Record<ChapterSceneId, Scene>> = { 'scene:1:open': OPENING_SCENE, 'scene:1:close': CLOSING_SCENE }
 
-/** Your first hands (CS41): the start's three, the first three on the roster by the day they joined, then by id. */
+/** Your first hands: the start's three, the first three on the roster by the day they joined, then by id. */
 export function firstHands(save: Pick<FarmSave, 'roster'>): OutfitId[] {
   return Object.entries(save.roster).sort(([a, x], [b, y]) => x.joined - y.joined || Number(a) - Number(b)).slice(0, 3).map(([id]) => id)
 }
 
-/** Your newest hand (CS41): the last to join, by day, then the higher id; the chapter's recruit on the closing morning. */
+/** Your newest hand: the last to join, by day, then the higher id; the chapter's recruit on the closing morning. */
 export function newestHand(save: Pick<FarmSave, 'roster'>): OutfitId | null {
   const [newest] = Object.entries(save.roster).sort(([a, x], [b, y]) => y.joined - x.joined || Number(b) - Number(a))
   return newest?.[0] ?? null
@@ -102,7 +102,7 @@ export interface SceneLine {
 }
 
 /** A scene's lines on this save: each role filled (a first hand speaks her temperament's hello), a role nobody fills
- * dropped. On v4 (F46 decision 9) the newest hand is named, not read from the roster: chapter 1's authored arrival, or
+ * dropped. On v4 the newest hand is named, not read from the roster: chapter 1's authored arrival, or
  * nobody when the cast has none. */
 export function sceneLines(scene: Scene, save: Pick<FarmSave, 'roster'>, temperamentOf: (outfitId: OutfitId) => Temperament, newestId?: OutfitId | null): SceneLine[] {
   const hands = firstHands(save)

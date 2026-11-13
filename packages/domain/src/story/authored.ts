@@ -1,8 +1,8 @@
-// The farm's authored story (F40; RS1–RS20): the cast, their ties, each Uma's bible and route, and the scripted events
+// The farm's authored story: the cast, their ties, each Uma's bible and route, and the scripted events
 // and pair conversations, as the private `content/story/` files hold them. Types and a validator only: no character,
-// name or line lives here (RS15); tests run on the invented stand-in (`authored.fixture.ts`).
+// name or line lives here; tests run on the invented stand-in (`authored.fixture.ts`).
 //
-// Relationships are a game, not a visual novel (D42, D43, from the genre research): every route beat says what the
+// Relationships are a game, not a visual novel (from the genre research): every route beat says what the
 // farmer and she *do* together (`together`: work, a date game, a gift, helping another Uma), every choice carries its
 // visible heart gain and its tone, an event may hold a short `play` moment the farmer acts out, a beat may unlock
 // something shown on a card, and every beat carries the hint her profile shows while it's next. Nothing is missable and
@@ -20,22 +20,22 @@ export const STORY_PLACES = [
 ] as const
 export const FESTIVALS = ['flower-show', 'fishing-derby', 'cooking-contest', 'animal-show', 'harvest-cup'] as const
 export const SEASONS = ['spring', 'summer', 'autumn', 'winter'] as const
-/** Her calling's line (FM7, from her board playstyle): front mining, pace forest, pace-late quarry, late-end fishing, late farming. */
+/** Her calling's line (from her board playstyle): front mining, pace forest, pace-late quarry, late-end fishing, late farming. */
 export const CALLINGS = ['farming', 'foraging', 'fishing', 'mining', 'quarry'] as const
-/** Her favourite work (RS10): any activity but expeditions, which are a party's, not one Uma's. */
+/** Her favourite work: any activity but expeditions, which are a party's, not one Uma's. */
 export const FAVOURITE_LINES = ACTIVITIES.filter((a): a is Exclude<Activity, 'expeditions'> => a !== 'expeditions')
 export const TIE_KINDS = ['friends', 'rivals', 'mentor', 'teammates', 'sisters', 'other'] as const
-/** The ladders a beat sits on: her arrival (F46, RM4), then RS7's six. */
+/** The ladders a beat sits on: her arrival, then RS7's six. */
 export const LADDERS = ['arrival', 'friendship', 'confession', 'romance', 'proposal', 'wedding', 'spouse'] as const
 export const EMOTES = ['happy', 'shy', 'sad', 'angry', 'surprised', 'thinking', 'laughing', 'tender'] as const
 export const TONES = ['warm', 'playful', 'honest'] as const
-/** The Dorm for 20's levels (RM5): a `beds` arrival names one of them; level 1 comes with the farm. */
+/** The Dorm for 20's levels: a `beds` arrival names one of them; level 1 comes with the farm. */
 const DORM_LEVELS_FOR_20 = 8
 
-/** The date games: short shared activities a date is played as (D42). */
+/** The date games: short shared activities a date is played as. */
 export const DATE_GAMES = ['fishing', 'cooking', 'stargazing', 'footrace', 'dance', 'picnic', 'market', 'boat', 'walk', 'crafting'] as const
 
-/** The route's 27 rungs (RS7, amended by D43 and F46): her arrival scene ("event zero", RM4), ten friendship events, the
+/** The route's 27 rungs (amended by D43 and F46): her arrival scene ("event zero"), ten friendship events, the
  * confession, ten romance events, the proposal, the wedding, and three on the spouse ladder after it (S1, S3, S5), so
  * married life goes on. */
 export const ARRIVAL = 'arrival'
@@ -62,24 +62,24 @@ export type Arrival =
   | { kind: 'beds'; dormLevel: number }
   | { kind: 'event'; after: string }
 
-/** A birthday as a date (RM16): month 1–12 and a real day of it. */
+/** A birthday as a date: month 1–12 and a real day of it. */
 export interface CastBirthday { month: number; day: number }
-/** One Uma of the cast. `outfitId` names the one outfit she plays as (RM2): required, so the game never chooses (F46).
- * `birthday` only where master data's character set has none (RM16, F47): it wins where present. */
+/** One Uma of the cast. `outfitId` names the one outfit she plays as: required, so the game never chooses.
+ * `birthday` only where master data's character set has none: it wins where present. */
 export interface CastEntry { characterId: string; outfitId: string; arrives: Arrival; calling: Calling; paragraph: string; birthday?: CastBirthday }
-/** Which state of the Uma Ranker the cast was read from (F58 decision 2): the board's and the profiles' revisions, and when. */
+/** Which state of the Uma Ranker the cast was read from: the board's and the profiles' revisions, and when. */
 export interface CastRanker { boardRevision: number; profilesRevision: number; pulledAt: string }
 export interface Cast {
   version: 1
   export: { file: string; exportedAt: string; tier: 'SS' }
-  /** The Uma Ranker the cast is checked against (F58): optional, checked when present. */
+  /** The Uma Ranker the cast is checked against: optional, checked when present. */
   ranker?: CastRanker
-  /** Farming, foraging, fishing (RS13). */
+  /** Farming, foraging, fishing. */
   opening: [string, string, string]
   /** In arrival order. */
   umas: CastEntry[]
 }
-/** Where a tie comes from (F59 decision 5): `real`, a relationship from the real careers, checked against public records,
+/** Where a tie comes from: `real`, a relationship from the real careers, checked against public records,
  * with `from` the id uma-quest's relationships give it (filled once they exist); or `story`, born on the farm. */
 export const TIE_SOURCES = ['real', 'story'] as const
 export type TieSource = typeof TIE_SOURCES[number]
@@ -88,7 +88,7 @@ export interface Ties { version: 1; ties: Tie[] }
 
 // --- Layer 2: her bible -----------------------------------------------------------------------------------------------
 
-/** When a rung is ready (D43): her bar full, plus at most one setup the player controls. Never a clock, the weather, a
+/** When a rung is ready: her bar full, plus at most one setup the player controls. Never a clock, the weather, a
  * season or a festival: those may colour a scene's words, never whether it plays. */
 export type Trigger =
   | { kind: 'hearts' }
@@ -97,7 +97,7 @@ export type Trigger =
   | { kind: 'bond'; with: string; level: number }
   | { kind: 'chapter'; chapter: number }
 
-/** What the farmer and she do in the event: the game part (D42). */
+/** What the farmer and she do in the event: the game part. */
 export type Together =
   | { kind: 'talk' }
   | { kind: 'work'; activity: Activity }
@@ -105,7 +105,7 @@ export type Together =
   | { kind: 'gift'; good: string }
   | { kind: 'help'; with: string }
 
-/** What a beat gives besides hearts, shown on a card (D42): a recipe or an item by goods id, a place, or a perk in words. */
+/** What a beat gives besides hearts, shown on a card: a recipe or an item by goods id, a place, or a perk in words. */
 export type Unlock = { kind: 'item'; good: string } | { kind: 'place'; place: StoryPlace } | { kind: 'perk'; perk: string }
 
 export interface Beat {
@@ -116,7 +116,7 @@ export interface Beat {
   place: StoryPlace
   together: Together
   beat: string
-  /** What her profile says while this rung is next: where and how it opens (D43). */
+  /** What her profile says while this rung is next: where and how it opens. */
   hint: string
   unlock?: Unlock
 }
@@ -134,46 +134,46 @@ export interface UmaBible {
   laughs: string
   hurts: string
   route: Beat[]
-  /** Her chat sets (RM18, RM31's F1 perk; F47): what she says when you chat, by stage, from Friendship 1: `friend` through
+  /** Her chat sets (RM31's F1 perk): what she says when you chat, by stage, from Friendship 1: `friend` through
    * the confession, `partner` from Romance 1 to the wedding, `spouse` after it. Without it she keeps her temperament's
    * lines. */
   chats?: ChatSets
-  /** Her keepsake (RM31, RM58; F51 decision 13): a named item she gives at Friendship 10, its name and her line about it,
+  /** Her keepsake: a named item she gives at Friendship 10, its name and her line about it,
    * shown on her profile (not in the Warehouse). Its effect is the template's: +0.25 quality at her line, +0.5 from S5.
    * Without it her profile says "Her keepsake". */
   keepsake?: Keepsake
-  /** Her pet name for you (RM8, RM31; F51 decision 13): a short name she calls you from Romance 1, shown on her profile.
+  /** Her pet name for you: a short name she calls you from Romance 1, shown on her profile.
    * Never gendered; `{farmer}` isn't needed (it's what she calls you). */
   petName?: string
-  /** Her wedding (RM30, RM58; F53 decision 11): the three different story places your wedding may be held at, the
+  /** Her wedding: the three different story places your wedding may be held at, the
    * place being its first choice. Without it the game offers her wedding beat's place and two of the farm's. */
   wedding?: WeddingPlan
-  /** Her wishes for married life (RM44, RM58; F54 decision 12): `own-house` (a house to herself: she's happiest with no
+  /** Her wishes for married life: `own-house` (a house to herself: she's happiest with no
    * other resident, and asks for it in her S1 event) and `birthday-alone` (on her birthday Tonight offers her room, and the
    * morning is hers alone). Without it, neither. */
   wishes?: Wish[]
 }
-/** Her wishes (RM44; F54 decision 12). */
+/** Her wishes. */
 export const WISHES = ['own-house', 'birthday-alone'] as const
 export type Wish = typeof WISHES[number]
-/** Her wedding's three places (F53). */
+/** Her wedding's three places. */
 export interface WeddingPlan { places: [StoryPlace, StoryPlace, StoryPlace] }
-/** Her keepsake (F51): a name of 1–40 characters and a line of 1–160, under the line rules. */
+/** Her keepsake: a name of 1–40 characters and a line of 1–160, under the line rules. */
 export interface Keepsake { name: string; line: string }
-/** A pet name's length (F51): 1–24 characters. */
+/** A pet name's length: 1–24 characters. */
 export const PET_NAME_MAX = 24
-/** A keepsake's name's and line's lengths (F51). */
+/** A keepsake's name's and line's lengths. */
 export const KEEPSAKE_LIMITS = { name: 40, line: 160 } as const
-/** 3–20 lines a stage, each at most 160 characters, `{farmer}` the only placeholder (F47 decision 16). */
+/** 3–20 lines a stage, each at most 160 characters, `{farmer}` the only placeholder. */
 export interface ChatSets { friend: string[]; partner: string[]; spouse: string[] }
 
 // --- Layer 3: scripted events and pair conversations ------------------------------------------------------------------
 
-/** The confession's last choice point marks its two answers (F49 decision 10, RM30): Yes opens romance, Not yet keeps her a
+/** The confession's last choice point marks its two answers: Yes opens romance, Not yet keeps her a
  * close friend. */
 export const ANSWERS = ['yes', 'not-yet'] as const
 export type Answer = typeof ANSWERS[number]
-/** An option's item cost (F49 decision 7, RM27): 1–5 of a good, taken from the Warehouse at any stars, lowest first. */
+/** An option's item cost: 1–5 of a good, taken from the Warehouse at any stars, lowest first. */
 export interface OptionGives { good: string; count: number }
 export interface ChoiceOption {
   text: string
@@ -181,17 +181,17 @@ export interface ChoiceOption {
   friendship?: number
   romance?: number
   then?: Step[]
-  /** It costs goods (F49): "· 1 Herb" on the button, greyed "Need 1 Herb" without them. */
+  /** It costs goods: "· 1 Herb" on the button, greyed "Need 1 Herb" without them. */
   gives?: OptionGives
-  /** It learns one of her gifts' tastes (F49): "· learns a like". */
+  /** It learns one of her gifts' tastes: "· learns a like". */
   reveals?: string
-  /** The confession's last choice point only: one `yes` and one `not-yet` (F49 decision 10). */
+  /** The confession's last choice point only: one `yes` and one `not-yet`. */
   answer?: Answer
 }
-/** A farming play's game, picked by the author (RM26, F49 decision 14): harvest the ripe ones (Pick) or tend (Rhythm). */
+/** A farming play's game, picked by the author: harvest the ripe ones (Pick) or tend (Rhythm). */
 export const FARMING_PLAYS = ['pick', 'rhythm'] as const
 /** A short moment the farmer acts out inside an event (cast the line, stir the pot, aim the telescope). It plays as one of
- * the five plays (F49, RM26); its own `friendship` and `romance` are ignored, since the grade pays. `good` plays after a
+ * the five plays; its own `friendship` and `romance` are ignored, since the grade pays. `good` plays after a
  * Great or Perfect, `miss` after a Fine. */
 export interface Play { game: DateGame | Activity; prompt: string; good?: Step[]; miss?: Step[]; friendship?: number; romance?: number; as?: typeof FARMING_PLAYS[number] }
 export type Step =
@@ -210,13 +210,13 @@ export interface PairConversations { a: string; b: string; levels: { hearts: num
 
 // --- The validator ----------------------------------------------------------------------------------------------------
 
-/** Words that would gender the farmer (RS2): never in the farmer's own words, nor anyone's words to them. */
+/** Words that would gender the farmer: never in the farmer's own words, nor anyone's words to them. */
 const GENDERED = /\b(husband|wife|boyfriend|girlfriend|groom|sir|mister|mr|mrs|ms|ma'?am|madam|lad|lass|fella|gal|guy)\b/i
 /** The farmer's own lines may not call themself a bride either (an Uma may be one). Pronouns aren't listed: the farmer
  * speaks of the town's men and the Umas, never of themself in the third person. */
 const GENDERED_FARMER = /\b(bride)\b/i
-/** Nothing that reads under 18 (RS3). */
-/** Whether a line genders the farmer (RS2): the words above, in anyone's lines; `bride` too in the farmer's own (F53
+/** Nothing that reads under 18. */
+/** Whether a line genders the farmer: the words above, in anyone's lines; `bride` too in the farmer's own (F53
  * decision 10's test reads it for every wedding word). Returns the word, or null. */
 export function gendersFarmer(text: string, farmer = true): string | null {
   return (text.match(GENDERED) ?? (farmer ? text.match(GENDERED_FARMER) : null))?.[0] ?? null
@@ -248,7 +248,7 @@ function lineIssues(text: string, where: string, farmer: boolean): Issues {
 }
 
 /** A scripted event's or a pair conversation's steps. `speakers` are who may `say`; the farmer speaks only in choices.
- * `isGood` checks an option's `gives` and `reveals` (F49). */
+ * `isGood` checks an option's `gives` and `reveals`. */
 export function stepIssues(steps: unknown, where: string, speakers: ReadonlySet<string>, depth = 0, isGood: (id: string) => boolean = isGoodId): Issues {
   if (!Array.isArray(steps) || !steps.length) return [`${where}: no steps`]
   const issues: Issues = []
@@ -318,7 +318,7 @@ function realDate(v: unknown): boolean {
   return Number.isInteger(month) && (month as number) >= 1 && (month as number) <= 12 && Number.isInteger(day) && (day as number) >= 1 && (day as number) <= MONTH_DAYS[(month as number) - 1]!
 }
 
-/** Her chat sets (F47 decision 16): each stage 3–20 lines, each at most 160 characters, under the line rules. */
+/** Her chat sets: each stage 3–20 lines, each at most 160 characters, under the line rules. */
 export const CHAT_SETS = ['friend', 'partner', 'spouse'] as const
 function chatIssues(chats: unknown): Issues {
   if (!isObject(chats)) return ['chats is { friend, partner, spouse }, 3–20 lines each']
@@ -378,7 +378,7 @@ export function castIssues(cast: unknown, ctx: StoryContext): Issues {
   return issues
 }
 
-/** ties.json (layer 1): one graph, every Uma with at least two ties, so each has two closest (RS12). */
+/** ties.json (layer 1): one graph, every Uma with at least two ties, so each has two closest. */
 export function tiesIssues(ties: unknown, ctx: StoryContext): Issues {
   if (!isObject(ties) || ties.version !== 1 || !Array.isArray(ties.ties)) return ['Not a ties file (version 1, ties)']
   const issues: Issues = []
@@ -429,10 +429,10 @@ function togetherIssues(t: unknown, at: string, ctx: StoryContext, isGood: (id: 
   }
 }
 
-// --- The tag sheet (F59) ----------------------------------------------------------------------------------------------
+// --- The tag sheet ----------------------------------------------------------------------------------------------
 
-/** One Uma's tags (F59 decision 1): her favourite line, season, festival and loved gift, each with a one-line reason from
- * her career and her character. Her bible carries the same values (decision 3). */
+/** One Uma's tags: her favourite line, season, festival and loved gift, each with a one-line reason from
+ * her career and her character. Her bible carries the same values. */
 export interface TagEntry {
   characterId: string
   favouriteLine: Exclude<Activity, 'expeditions'>
@@ -446,7 +446,7 @@ export interface TagEntry {
 export interface Tags { version: 1; tags: TagEntry[] }
 const TAG_KEYS = ['favouriteLine', 'season', 'festival', 'loved'] as const
 
-/** tags.json (F59): one entry a cast Uma, each value valid and with its reason. */
+/** tags.json: one entry a cast Uma, each value valid and with its reason. */
 export function tagsIssues(tags: unknown, ctx: StoryContext): Issues {
   if (!isObject(tags) || tags.version !== 1 || !Array.isArray(tags.tags)) return ['Not a tag sheet (version 1, tags)']
   const isGood = ctx.isGood ?? isGoodId
@@ -473,7 +473,7 @@ export function tagsIssues(tags: unknown, ctx: StoryContext): Issues {
   return issues
 }
 
-/** Her bible agrees with her tags (F59 decision 3), when she has both. */
+/** Her bible agrees with her tags, when she has both. */
 export function bibleTagIssues(bible: UmaBible, tags: TagEntry): Issues {
   const pairs: [string, unknown, unknown][] = [['favouriteLine', bible.favouriteLine, tags.favouriteLine], ['season', bible.season, tags.season],
     ['festival', bible.festival, tags.festival], ['loved', bible.gifts?.loved, tags.loved]]
@@ -530,7 +530,7 @@ export function bibleIssues(bible: unknown, ctx: StoryContext): Issues {
   return issues
 }
 
-/** Her wishes (F54 decision 12): a list of `own-house` and `birthday-alone`, each once. */
+/** Her wishes: a list of `own-house` and `birthday-alone`, each once. */
 function wishIssues(wishes: unknown): Issues {
   if (!Array.isArray(wishes) || wishes.length === 0) return ['wishes is a list of own-house and birthday-alone']
   const issues: Issues = []
@@ -539,7 +539,7 @@ function wishIssues(wishes: unknown): Issues {
   return issues
 }
 
-/** Her wedding (F53 decision 11): `{ places }` and nothing else, three different story places (RM58). */
+/** Her wedding: `{ places }` and nothing else, three different story places. */
 function weddingIssues(wedding: unknown): Issues {
   if (!isObject(wedding) || Object.keys(wedding).some((k) => k !== 'places') || !Array.isArray(wedding.places)) return ['wedding is { places: [three places] }']
   const places = wedding.places as unknown[]
@@ -550,7 +550,7 @@ function weddingIssues(wedding: unknown): Issues {
   return issues
 }
 
-/** Her keepsake (F51 decision 13): `{ name, line }` and nothing else, the name 1–40 characters, the line 1–160, both under
+/** Her keepsake: `{ name, line }` and nothing else, the name 1–40 characters, the line 1–160, both under
  * the line rules. */
 function keepsakeIssues(keepsake: unknown): Issues {
   if (!isObject(keepsake) || Object.keys(keepsake).some((k) => k !== 'name' && k !== 'line')) return ['keepsake is { name, line }']
@@ -562,7 +562,7 @@ function keepsakeIssues(keepsake: unknown): Issues {
   return issues
 }
 
-/** Her pet name for you (F51 decision 13): 1–24 characters, no placeholder, never gendered (RS2, as the farmer's own
+/** Her pet name for you: 1–24 characters, no placeholder, never gendered (as the farmer's own
  * words). */
 function petNameIssues(name: unknown): Issues {
   if (!isText(name, PET_NAME_MAX)) return [`petName: 1–${PET_NAME_MAX} characters`]
@@ -582,7 +582,7 @@ function allSteps(steps: unknown): Record<string, unknown>[] {
   })
 }
 
-/** How many choice points and plays a scene's paths hold, at least and at most (F49 decision 14): a choice's options, a
+/** How many choice points and plays a scene's paths hold, at least and at most: a choice's options, a
  * play's `good` and `miss`, and a `when`'s two branches are alternatives; steps in a row add up. */
 interface PathCounts { choices: [number, number]; plays: [number, number] }
 const NONE: PathCounts = { choices: [0, 0], plays: [0, 0] }
@@ -606,18 +606,18 @@ function pathCounts(steps: unknown): PathCounts {
   }, NONE)
 }
 
-/** The three big scenes (RM30): up to three plays and three choice points; a heart event has one play and 1–2 choice
- * points at most (F49 decision 14). */
+/** The three big scenes: up to three plays and three choice points; a heart event has one play and 1–2 choice
+ * points at most. */
 export const BIG_EVENTS: readonly string[] = ['confession', 'proposal', 'wedding']
 export const EVENT_LIMITS = { heart: { plays: 1, choices: [1, 2] }, big: { plays: 3, choices: [1, 3] } } as const
 
-/** The confession's answer choice (F49 decision 10): its last top-level choice point, or -1. */
+/** The confession's answer choice: its last top-level choice point, or -1. */
 export function answerAt(steps: readonly Step[]): number {
   for (let i = steps.length - 1; i >= 0; i--) if ('choice' in steps[i]!) return i
   return -1
 }
 
-/** One scripted heart event's own rules (F49 decision 14): on every path 1–2 choice points and at most one play (three of
+/** One scripted heart event's own rules: on every path 1–2 choice points and at most one play (three of
  * each in the confession, the proposal and the wedding); `answer` only on the confession's last choice point, one Yes and
  * one Not yet, with no choice point after it; `reveals` one of her gifts. Her arrival keeps its own rule. */
 export function eventIssues(id: string, steps: unknown, bible: UmaBible | null, where = `Event ${id}`): Issues {
@@ -646,7 +646,7 @@ export function eventIssues(id: string, steps: unknown, bible: UmaBible | null, 
   return issues
 }
 
-/** Her arrival scene (RM4, F46 decision 10): exactly one choice point and no play, so Skip lands on the choice and every
+/** Her arrival scene: exactly one choice point and no play, so Skip lands on the choice and every
  * arrival pays +50 and its choice. */
 export function arrivalIssues(steps: unknown, where = `Event ${ARRIVAL}`): Issues {
   const all = allSteps(steps)
@@ -657,7 +657,7 @@ export function arrivalIssues(steps: unknown, where = `Event ${ARRIVAL}`): Issue
   return issues
 }
 
-/** Her bible's beats a route doesn't script yet (a partial route, F46 decision 16): listed, not refused. */
+/** Her bible's beats a route doesn't script yet (a partial route): listed, not refused. */
 export function unscriptedBeats(route: Route, bible: UmaBible | null): string[] {
   const ids = new Set(route.events.map((e) => e.id))
   return bible ? bible.route.filter((b) => !ids.has(b.id)).map((b) => b.id) : []
@@ -688,12 +688,12 @@ export function routeIssues(route: unknown, bible: UmaBible | null, ctx: StoryCo
   return issues
 }
 
-/** What a pair check asks: the game reads pairs in a partial mode (F52), any of the five levels written so far. */
+/** What a pair check asks: the game reads pairs in a partial mode, any of the five levels written so far. */
 export interface PairCheck {
   partial?: boolean
 }
-/** pairs/<a>-<b>.json (layer 3): a tie's conversations, one at each bond level 1–5 (RS12); each level once. The game reads
- * them partial (F52 decision 10): any levels written so far. */
+/** pairs/<a>-<b>.json (layer 3): a tie's conversations, one at each bond level 1–5; each level once. The game reads
+ * them partial: any levels written so far. */
 export function pairIssues(pair: unknown, ctx: StoryContext, check: PairCheck = {}): Issues {
   if (!isObject(pair) || typeof pair.a !== 'string' || typeof pair.b !== 'string' || !Array.isArray(pair.levels)) return ['Not a pair (a, b, levels)']
   const issues: Issues = []
@@ -717,26 +717,26 @@ export function pairIssues(pair: unknown, ctx: StoryContext, check: PairCheck = 
   return issues
 }
 
-// --- The household (F54 decision 11; RM43, RM45, RM46, RM58) ------------------------------------------------------------
+// --- The household ------------------------------------------------------------
 
-/** The household scenes' counts (RM45): one at 5, 10 and 15 married. */
+/** The household scenes' counts: one at 5, 10 and 15 married. */
 export const HOUSEHOLD_SCENES = [5, 10, 15] as const
 export type HouseholdAt = typeof HOUSEHOLD_SCENES[number]
-/** A household scene (decision 11): `open`, then each married Uma's `each` in wedding order, then `close`. `open` and
+/** A household scene: `open`, then each married Uma's `each` in wedding order, then `close`. `open` and
  * `close` speak only through narration and the town's cast, since who is married varies; her `each` is hers (she and the
  * town's cast speak). Choices are wording only: a household scene pays nothing. */
 export interface HouseholdScene { at: HouseholdAt; open: Step[]; each: Record<string, Step[]>; close: Step[] }
-/** The finale, the Great Harvest (RM46): `open`, its play, each spouse's beat in wedding order, then `close`. */
+/** The finale, the Great Harvest: `open`, its play, each spouse's beat in wedding order, then `close`. */
 export interface Finale { open: Step[]; play: Play; each: Record<string, Step[]>; close: Step[] }
-/** household.json (RM58; decision 11): built for a household the author can't know in advance. */
+/** household.json: built for a household the author can't know in advance. */
 export interface Household {
   scenes: HouseholdScene[]
-  /** A spouse's house lines (RM43): 1–10 short lines each, said on a morning in her house. Without hers, the templates by
+  /** A spouse's house lines: 1–10 short lines each, said on a morning in her house. Without hers, the templates by
    * temperament stand in. */
   houseLines: Record<string, string[]>
   finale: Finale
 }
-/** A house line's length and count (decision 11). */
+/** A house line's length and count. */
 export const HOUSE_LINE_MAX = 120
 export const HOUSE_LINES = [1, 10] as const
 
@@ -746,7 +746,7 @@ export interface HouseholdCheck {
   partial?: boolean
 }
 
-/** household.json (layer 3; F54 decision 11): three scenes at 5, 10 and 15, each once; house lines for cast Umas, 1–10 each
+/** household.json (layer 3): three scenes at 5, 10 and 15, each once; house lines for cast Umas, 1–10 each
  * of 1–120 characters under the line rules; the finale with its play. `open` and `close` speak through narration and the
  * town's cast only; an `each` is a cast Uma's, she and the town's cast speaking; every cast Uma has one in every scene and
  * the finale (unless partial). */

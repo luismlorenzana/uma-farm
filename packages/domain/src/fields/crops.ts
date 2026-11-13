@@ -1,28 +1,28 @@
-// The crops (F20; core spec CS11, CS4): CS11's table row for row, 27 crops (22 from the shop, 5 rare ones from
+// The crops: CS11's table row for row, 27 crops (22 from the shop, 5 rare ones from
 // expeditions, requests and prizes), and the shop's seeds by season and tier. Price ★1 is F19's (`CROP_PRICES`), and a
 // refined form is `refinedOf` (goods/ids); this file holds what growing needs. The Novice and Expert days follow from
 // the untended days by CS12's rule (`nightsToReady`), and a test checks every row against CS11's columns.
 import type { Season } from '../farm/calendar'
 import type { CropId } from '../goods/ids'
 
-/** Where a crop's seeds come from (CS4): the shop from a Farm Rank (1, 2 or 4), or rare (expeditions, requests,
+/** Where a crop's seeds come from: the shop from a Farm Rank (1, 2 or 4), or rare (expeditions, requests,
  * prizes). */
 export type SeedTier = 1 | 2 | 4 | 'rare'
 
 export interface Crop {
   id: CropId
-  /** The seasons it grows in: it's planted in these, and a growing one carries over where two join (CS4). */
+  /** The seasons it grows in: it's planted in these, and a growing one carries over where two join. */
   seasons: readonly Season[]
   tier: SeedTier
   /** A shop seed's price; null for a rare crop. */
   seed: number | null
-  /** Days to Ready untended (CS11's first column): Ready once its growth reaches days − 0.5 (CS12). */
+  /** Days to Ready untended (CS11's first column): Ready once its growth reaches days − 0.5. */
   days: number
   /** Crops a plot gives each harvest. */
   yield: number
   /** A regrowing crop turns Ready again every this many days after a harvest; null when it doesn't regrow. */
   regrows: number | null
-  /** The station that refines it (F22): the Mill or the Sawmill, or null. */
+  /** The station that refines it: the Mill or the Sawmill, or null. */
   station: 'mill' | 'sawmill' | null
 }
 
@@ -74,10 +74,10 @@ export const growsIn = (crop: CropId, season: Season): boolean => CROPS[crop].se
 
 /** A hair of slack, so growth summed in floats reaches its mark (3 × 1.35 is 4.050000000000001). */
 export const GROWTH_SLACK = 1e-9
-/** Ready at the untended days − 0.5 (CS12): tending rounds to the nearest night. */
+/** Ready at the untended days − 0.5: tending rounds to the nearest night. */
 export const READY_MARGIN = 0.5
 
-/** The growth a crop needs to turn Ready: its days − 0.5, or its regrowth's − 0.5 after a harvest (decision 5). */
+/** The growth a crop needs to turn Ready: its days − 0.5, or its regrowth's − 0.5 after a harvest. */
 export function readyAt(crop: CropId, regrowing: boolean): number {
   const c = CROPS[crop]
   return (regrowing && c.regrows !== null ? c.regrows : c.days) - READY_MARGIN

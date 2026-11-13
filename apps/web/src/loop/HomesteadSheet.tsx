@@ -1,4 +1,4 @@
-// The homestead (F54 decisions 3, 4, 9 and 14; romance spec RM41's mockup), `?sheet=homestead` from a house's tap on the
+// The homestead (romance spec RM41's mockup), `?sheet=homestead` from a house's tap on the
 // map (`&house=<n>` marks its row): one row a house, its mark, its name, its rooms (a face ▣ or a free room ▢) and its count;
 // **Extend · 4,000g** on a built house; the next lot with a name field (grey "Rose Cottage") and **Build · 8,000g**, or
 // "Need 300g more", or "Opens with your first wedding"; the lots after it in one line; "Needs a room: …"; moves (tap a face,
@@ -173,7 +173,7 @@ function LotLine({ lot, busy, onBuild }: { lot: { n: number; cost: number; open:
   )
 }
 
-/** The furniture set (RM45): a piece a row and where it stands; a tap cycles it through the houses with no piece. */
+/** The furniture set: a piece a row and where it stands; a tap cycles it through the houses with no piece. */
 function Furniture({ save, busy, onPlace }: { save: SaveV4; busy: boolean; onPlace: (piece: number, house: number | null) => void }) {
   const rows = furnitureRows(save)
   const next = (piece: number, house: number | null): number | null => {

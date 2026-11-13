@@ -1,4 +1,4 @@
-// Copied from uma-rpg packages/domain/src/save/notify.test.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
+// Copied from uma-rpg packages/domain/src/save/notify.test.ts at 30a322a, with its Wilds-only parts cut.
 import { describe, expect, it } from 'vitest'
 import { HOUR, MINUTE, stepMinutes } from '../economy/pacing'
 import { newSaveV2, type Save } from './save'
@@ -7,7 +7,7 @@ import { queueJob, startJob, type WorkOutfit } from './work'
 
 const T0 = Date.parse('2026-10-10T12:00:00.000Z')
 const at = (ms: number) => new Date(T0 + ms).toISOString()
-// An invented outfit at Craft Lv1: an item takes U at a place's ×1.25, whatever its grade (D139).
+// An invented outfit at Craft Lv1: an item takes U at a place's ×1.25, whatever its grade.
 const turfA: WorkOutfit = { outfitId: '101' }
 const U = Math.round((stepMinutes(1) * MINUTE) / 1000 / 1.25) * 1000
 const give = (save: Save, items: Record<string, number>): Save => ({ ...save, items: { ...save.items, ...items } })
@@ -48,7 +48,7 @@ describe('finish notifications (QoL, D63)', () => {
   })
 })
 
-// The farm's own (F6): what the app sends on every sync, and the one notification a tick makes of what came due.
+// The farm's own: what the app sends on every sync, and the one notification a tick makes of what came due.
 describe('the push schedule (F6)', () => {
   it('lists each slot going idle after now, past its queue, with the badge then', () => {
     let save = startJob(newSaveV2('u1', at(0)), 'mine', 0, turfA, 'copper-ore', 2, at(0))

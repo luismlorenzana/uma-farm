@@ -1,4 +1,4 @@
-// The farm's roster (FM6, FM7, R3): every outfit on the release works, each in her trade's three places. Synthetic master
+// The farm's roster (R3): every outfit on the release works, each in her trade's three places. Synthetic master
 // data only (uma-data/testing): one invented outfit, and invented copies with other running styles.
 import type { Outfit } from '@luismlorenzana/uma-data'
 import { syntheticMasterData } from '@luismlorenzana/uma-data/testing'

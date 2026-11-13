@@ -1,4 +1,4 @@
-// The owner's first open of the live loop (F24 decision 9): production holds one save, a v2 made with F4 (D17) that has
+// The owner's first open of the live loop: production holds one save, a v2 made with F4 that has
 // no Umas, no items and no jobs. The app migrates it to v3 without moving `updatedAt`, uploads it, and offers the start's
 // three picks; then the opening scene plays once and the first tap is planting. Invented outfits (the album fixture);
 // the server is an in-memory stand-in with the API's revision and version rules.

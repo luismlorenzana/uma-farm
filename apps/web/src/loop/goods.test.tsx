@@ -1,4 +1,4 @@
-// The goods as rendered (F19 decisions 4 and 7–10): gold beside the date, opening the bin; shipping from the Warehouse's
+// The goods as rendered: gold beside the date, opening the bin; shipping from the Warehouse's
 // pick mode and from a good's sheet; Ship all; Take back in the bin's sheet; the night paying it into the morning; and
 // the shop's frame buying with gold. Master data and the server are stubs.
 import 'fake-indexeddb/auto'

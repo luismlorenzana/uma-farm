@@ -1,4 +1,4 @@
-// The five plays (F49 decision 5; RM25, RM26; FR21, FR22): pure rules, tested before any screen draws them. Each scores
+// The five plays: pure rules, tested before any screen draws them. Each scores
 // 0–100 at its edges, a perfect run 100, no taps a Fine, the same seed and taps the same score, both lengths; Choose's
 // tastes; Walk's 50/75/100; RM26's map. Invented ids only: the stand-ins 9000001–9000003.
 import { describe, expect, it } from 'vitest'

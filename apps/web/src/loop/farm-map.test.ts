@@ -1,4 +1,4 @@
-// The farm map (F18 decision 5): eight rows of three on the Hub's tile grid, every building on the pinned uma-art sheet,
+// The farm map: eight rows of three on the Hub's tile grid, every building on the pinned uma-art sheet,
 // and each place's lock in its quick look's words.
 import atlas from '@luismlorenzana/uma-art/buildings/atlas.json'
 import { FARM_PLACES, farmPlace, newSave } from '@farm/domain'

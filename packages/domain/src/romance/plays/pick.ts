@@ -1,4 +1,4 @@
-// Pick (F49 decision 5; RM25): goods pop up on a 3 × 3 field for about a second each; tap her favourites (her loved and
+// Pick: goods pop up on a 3 × 3 field for about a second each; tap her favourites (her loved and
 // liked goods, starred) and leave the rest. A round shows ten, four of them starred; the starred ones tapped score their
 // share of 100, a tap on one that isn't costs 10, never below 0, and the rounds score their mean. An event plays one
 // round (about 15 s); an evening three (45 s). An Uma without a bible stars her line's first goods. Pure.
@@ -32,7 +32,7 @@ const LINE_GOODS: Readonly<Record<string, readonly string[]>> = {
   farming: ['carrot', 'potato', 'cabbage'], foraging: ['button-mushroom', 'basil', 'apple'], fishing: ['carp', 'trout', 'sardine'],
 }
 
-/** Her favourites and the rest (decision 5): her loved and liked goods, else her line's first goods; the rest are the
+/** Her favourites and the rest: her loved and liked goods, else her line's first goods; the rest are the
  * other raw goods of the same families, grades 1–5. */
 export function pickGoods(pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string): { favourites: string[]; others: string[] } {
   const gifts = pack.bibles.get(id)?.gifts

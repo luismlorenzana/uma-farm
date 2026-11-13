@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/roster/template-v19.test.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// Classes v3's calling (H126; classes-v3.md §5; CV19): her Tier 0 from her best running styles alone, no pick. Invented
+// Copied from uma-rpg packages/domain/src/roster/template-v19.test.ts at 30a322a, with its Wilds-only parts cut.
+// Classes v3's calling (classes-v3.md §5): her Tier 0 from her best running styles alone, no pick. Invented
 // outfits only: every grade here is made up.
 import type { AptitudeGrade, Aptitudes } from '@luismlorenzana/uma-data'
 import { describe, expect, it } from 'vitest'

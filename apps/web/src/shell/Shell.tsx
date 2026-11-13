@@ -1,13 +1,13 @@
-// The shell (uma-kit's AppFrame, unchanged; FM18): the top bar, the page between, the bottom bar in the thumb zone, and the
+// The shell (uma-kit's AppFrame, unchanged): the top bar, the page between, the bottom bar in the thumb zone, and the
 // menu sheet (`?sheet=menu`). F18's End the day (`?sheet=end`) and calendar (`?sheet=calendar`); F19's bin
 // (`?sheet=bin`) and shop (`?sheet=shop`); F24's Farm Rank (`?sheet=rank`). Each is loaded when one opens. While the
-// roster holds fewer than three, the start's sheet covers everything, the game's first tap (F23); then a scene due plays
+// roster holds fewer than three, the start's sheet covers everything, the game's first tap; then a scene due plays
 // over everything (F24: the opening scene after the picks, the closing scene the morning after chapter 1). On save v4
-// (F46) the farmer's name sheet is the first screen instead, and arrival scenes play after the chapter's; in the romance
-// build `?read=<a>-<b>:<levels>` plays a pair's conversations over any page (F52), once no scene is due; and (F49) the
-// event player over any page at `?event=`, `?ask=` or `?memory=`, and her Memories' album at `?album=`; and (F50) the
-// evening over any page at `?evening=` (Tonight's picker, or her kinds sheet, the play and its card); and (F53) the ring
-// bench at `?sheet=bench` from the Forge's quick look; and (F54) the homestead at `?sheet=homestead`, a night level's card at
+// the farmer's name sheet is the first screen instead, and arrival scenes play after the chapter's; in the romance
+// build `?read=<a>-<b>:<levels>` plays a pair's conversations over any page, once no scene is due; and the
+// event player over any page at `?event=`, `?ask=` or `?memory=`, and her Memories' album at `?album=`; and the
+// evening over any page at `?evening=` (Tonight's picker, or her kinds sheet, the play and its card); and the ring
+// bench at `?sheet=bench` from the Forge's quick look; and the homestead at `?sheet=homestead`, a night level's card at
 // `?level=<id>:<s2|s4>` and a household scene or the finale at `?household=<id>` (`&replay=1` from the Diary).
 import { picksLeft, sceneDue } from '@farm/domain'
 import { AppFrame, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'

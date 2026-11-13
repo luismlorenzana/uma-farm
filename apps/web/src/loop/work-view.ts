@@ -1,4 +1,4 @@
-// The forest's, the Fishery's and the stations' screens as data (F22 decisions 1, 2, 5 and 8): days in the kit's words,
+// The forest's, the Fishery's and the stations' screens as data: days in the kit's words,
 // the What step's areas, spots and station options, the job sheet's sizes, a request's label, and a collect's words.
 // Pure, so the pages and the tests read the same. Loaded with the loop's work screens.
 import {
@@ -10,7 +10,7 @@ import {
 import type { DurationUse, RequestLabel, SizeRule, WorkWords } from '@luismlorenzana/uma-kit/work'
 import { dayCount } from './words'
 
-// --- Days in the kit's words (D33; decision 8) ------------------------------------------------------------------------
+// --- Days in the kit's words ------------------------------------------------------------------------
 
 /** Whole days in a span on the day clock, rounding a well-fed job's quarter days up. */
 const daysIn = (ms: number): number => Math.max(0, Math.ceil(ms / DAY_MS - 1e-9))
@@ -65,7 +65,7 @@ export const isGatherPlace = (id: string): id is GatherPlace => id === 'forest' 
 /** The header's line: "Foraging · 4 slots". */
 export const placeLine = (place: WorkPlaceId, slots: number): string => `${ACTIVITY_NAMES[PLACE_ACTIVITY[place as LoopPlaceId]]} · ${slots} slots`
 
-// --- The What step: where to gather (decision 5) -----------------------------------------------------------------------
+// --- The What step: where to gather -----------------------------------------------------------------------
 
 /** One area or spot in the What step: its goods this season, and why she can't go yet or how much she'd bring. */
 export interface WhereRow {
@@ -101,7 +101,7 @@ export function initialWhere(save: FarmSave, place: GatherPlace, outfitId: strin
   return (rows.filter((r) => r.lock === null).at(-1) ?? rows[0]!).id
 }
 
-// --- The job sheet's sizes (decisions 1 and 2) -------------------------------------------------------------------------
+// --- The job sheet's sizes -------------------------------------------------------------------------
 
 /** A gathering job's sizes: her haul after 1, 2, 3 and 4 days ("×5 · 1 day", "×10 · 2 days"). The kit counts items, so
  * each size is the items those days bring, and `gatherRequest` turns it back into days. */
@@ -126,7 +126,7 @@ export function gatherSizeRule(sizes: readonly number[]): SizeRule {
   return { mode: 'duration', sizes, max: sizes.at(-1) ?? 1 }
 }
 
-/** A station job's sizes (decision 2): a job's least days at her rate ("×8 · 1 day"), twice that ("×16 · 2 days"), and all
+/** A station job's sizes: a job's least days at her rate ("×8 · 1 day"), twice that ("×16 · 2 days"), and all
  * held ("×5"), at most 100. */
 export function stationSizeRule(save: FarmSave, item: string, outfitId: string | null, talentOf: TalentOf): SizeRule | undefined {
   const at = parseStockKey(item)
@@ -159,7 +159,7 @@ export function stationGroups(save: FarmSave, station: StationId): StationGroup[
 /** What a station's jobs take, in words: "logs, mushrooms or herbs". */
 export const STATION_TAKES: Readonly<Record<StationId, string>> = { mill: 'grain, sweets, nuts or fruit', sawmill: 'logs, mushrooms or herbs', smokehouse: 'fish' }
 
-// --- A collect, in words (decision 3) ----------------------------------------------------------------------------------
+// --- A collect, in words ----------------------------------------------------------------------------------
 
 /** "+5 · ★1 × 4, ★2 × 1", and a catch's biggest: "Carp 41.2 cm, a record". Nothing collected says nothing. */
 export function haulWords(got: Pick<LoopCollected, 'goods' | 'sizes'>): string | null {

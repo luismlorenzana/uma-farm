@@ -1,4 +1,4 @@
-// Save v4 (F46 decisions 1, 2, 7 and 12; romance spec RM5, RM10): the wipe from any older save keeps the account whole,
+// Save v4: the wipe from any older save keeps the account whole,
 // the strict parse round-trips and refuses what v4 doesn't hold, `parseSave` returns v2, v3 and v4 as stored, and the
 // Dorm for 20 sits beside v3's ten levels. Invented ids only (the stand-ins 9000001–9000003 and 9000004 onward).
 import { describe, expect, it } from 'vitest'

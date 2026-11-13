@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/save/notify.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// What finished in a time window, for push notifications (QoL, D63, SC3; the farm's F6): every entry that ended in it,
+// Copied from uma-rpg packages/domain/src/save/notify.ts at 30a322a, with its Wilds-only parts cut.
+// What finished in a time window, for push notifications (QoL; the farm's F6): every entry that ended in it,
 // read from the work rows settled to the window's end, so a queue that stopped on short inputs never announces jobs that
 // didn't start. uma-rpg's tier worlds stay behind: the farm has one.
 import { endsAt, settle } from '@luismlorenzana/uma-work'
@@ -57,7 +57,7 @@ export function readySlots(world: FarmWorld, now: string): number {
 
 export interface Notice { title: string; body: string; tag: string; url: string }
 
-/** One notification for the slots that went idle (a queue moving on to its next job needs nothing from you, D65): one
+/** One notification for the slots that went idle (a queue moving on to its next job needs nothing from you): one
  * names itself; several are listed. Its link opens the place's page. */
 export function finishNotice(all: readonly Finish[]): Notice | null {
   const finishes = all.filter((f) => f.idle)
@@ -78,8 +78,8 @@ export function workNotice(world: FarmWorld, from: number, to: number): Notice |
   return finishNotice(finishesBetween(world, from, to))
 }
 
-// --- The farm's push schedule (F6) ------------------------------------------------------------------------------------
-// The server never reads a save (FM10): on every sync the app sends when each slot goes idle, and Cloud Scheduler's tick
+// --- The farm's push schedule ------------------------------------------------------------------------------------
+// The server never reads a save: on every sync the app sends when each slot goes idle, and Cloud Scheduler's tick
 // sends what came due. The words name places, never an Uma.
 
 /** One moment a slot goes idle, as the app sends it: when, which place, and the app badge then (slots ready to collect,

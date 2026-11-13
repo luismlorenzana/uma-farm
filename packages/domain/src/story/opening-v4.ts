@@ -1,4 +1,4 @@
-// "The Overgrown Farm", re-cut for save v4 (F46 decision 9; romance spec RM9): the Mayor at the gate welcomes you by name
+// "The Overgrown Farm", re-cut for save v4: the Mayor at the gate welcomes you by name
 // once, Old Ben's nine Carrot seeds and the tended row, Marta's shop and the bin, then the opening three come up the road;
 // each walks in with her own arrival scene, the third ending on chapter 1's card. No hello lines, no picks. The lines are
 // original and stay in git; `{farmer}` is filled at display time. Kept apart from `chapter-1.ts`, whose live opening the

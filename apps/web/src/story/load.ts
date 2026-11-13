@@ -1,4 +1,4 @@
-// The story pack's one loader seam (F46 decision 6; F56 decision 5; RM58, RM59): the private pack from farm-api's
+// The story pack's one loader seam: the private pack from farm-api's
 // `/api/content/story…` (`delivery.ts`: the index fresh, each file verified by hash and cached, the last index offline).
 // The invented stand-in from `@farm/domain` is the dev server's only (`import.meta.env.DEV`): when farm-api serves no pack
 // (no `content/story-release/`), or with `VITE_FARM_STORY=stand-in` (Vitest's), so the production build never holds it.
@@ -29,7 +29,7 @@ function unknownRow(id: string): OutfitRowBase {
   }
 }
 
-/** Master data seen through the resolver (decision 5): each cast Uma's character id gets her outfit's album row (her
+/** Master data seen through the resolver: each cast Uma's character id gets her outfit's album row (her
  * name is her character's) and stats, so the screens, the talents and the pickers read v4's roster keys as they read v3's
  * outfit ids. A character master data lacks gets a lettered disc's row and no stats (D talents). */
 export function castLens(pack: StoryPack): (view: MasterView) => MasterView {

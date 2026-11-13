@@ -1,4 +1,4 @@
-// The warning a failed backup earns (copied from uma-rpg at 30a322a; its D260): once the server has gone ten minutes
+// The warning a failed backup earns (copied from uma-rpg at 30a322a): once the server has gone ten minutes
 // without this device's changes, the app says so in words, on every page. It also says when a newer save replaced changes
 // here. Either opens the Account, where the safety copies are.
 import { Link } from 'react-router'

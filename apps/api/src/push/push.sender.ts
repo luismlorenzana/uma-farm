@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config'
 import webpush from 'web-push'
 import type { Subscription } from './push.repository'
 
-// Copied from uma-rpg's apps/api/src/push at 30a322a (F6).
+// Copied from uma-rpg's apps/api/src/push at 30a322a.
 
 export type SendResult = 'sent' | 'gone' | 'failed'
 

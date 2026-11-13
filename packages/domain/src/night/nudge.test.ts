@@ -1,4 +1,4 @@
-// The nudge (F18 decision 9; CS6): idle Umas plus things to collect, read at the day's start.
+// The nudge: idle Umas plus things to collect, read at the day's start.
 import { describe, expect, it } from 'vitest'
 import { startLoopJob } from '../save/loop-work'
 import { newBlock, newRosterUma, newSave, type SaveV3 } from '../save/v3'

@@ -1,4 +1,4 @@
-// The bin's and the shop's sheets (F19 decisions 4, 7 and 8), drawn within the kit's `Sheet`. The bin (`?sheet=bin`,
+// The bin's and the shop's sheets, drawn within the kit's `Sheet`. The bin (`?sheet=bin`,
 // from the shipping bin on the map and the gold chip): today's lines with Take back, the night's estimate, and Ship,
 // which opens the Warehouse to pick from. The shop (`?sheet=shop`): its lines on the kit's ExchangeRows, bought with gold.
 import { shopLines, type FarmSave, type ShopLine } from '@farm/domain'
@@ -12,12 +12,12 @@ import { GoldMark } from '../shell/Gold'
 import { buyLine, takeBackLine } from './actions'
 import { binView, goldWords, saleWords, shopRows } from './goods-view'
 
-/** The Warehouse to pick from (decision 8): a tap ships one, Ship all every star. */
+/** The Warehouse to pick from: a tap ships one, Ship all every star. */
 export const PICK_PATH = '/warehouse?pick=bin'
 
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
 
-/** The shipping bin (decision 8). */
+/** The shipping bin. */
 export function BinSheet({ onClose }: { onClose: () => void }) {
   const save = useLoopSave()
   const navigate = useNavigate()
@@ -73,7 +73,7 @@ export function BinSheet({ onClose }: { onClose: () => void }) {
   )
 }
 
-/** The shop's lines (decision 7): each with its price and gate, a quantity, and Buy · 180g, refused when gold is short. */
+/** The shop's lines: each with its price and gate, a quantity, and Buy · 180g, refused when gold is short. */
 export function ShopList({ save, lines }: { save: FarmSave; lines: readonly ShopLine[] }) {
   const rows = shopRows(save, lines)
   if (rows.length === 0) return <p className="py-2 text-[15px] text-ink-soft" data-shop-empty>Nothing for sale yet.</p>
@@ -93,7 +93,7 @@ export function ShopList({ save, lines }: { save: FarmSave; lines: readonly Shop
   )
 }
 
-/** The shop (decision 7): F20 fills it with the season's seeds. */
+/** The shop: F20 fills it with the season's seeds. */
 export function ShopSheet({ onClose }: { onClose: () => void }) {
   const save = useLoopSave()
   if (!save) return null

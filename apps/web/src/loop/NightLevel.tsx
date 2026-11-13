@@ -1,4 +1,4 @@
-// A level reached overnight (F54 decision 8; romance spec RM11, RM55): `?level=<characterId>:<s2|s4>` from the morning's
+// A level reached overnight: `?level=<characterId>:<s2|s4>` from the morning's
 // "♥ Stand-in 1 · Spouse 2, reached overnight", F49's level-up card over any page: no event, her perk (S2: her morning item
 // every second morning; S4: a third night chore) and her next rung, one Continue. A stale one (she isn't there) closes.
 // Portaled to the body above the kit's sheets (z-60), like the players. Loaded on demand, the romance build only.

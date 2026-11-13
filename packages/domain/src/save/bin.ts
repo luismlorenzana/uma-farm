@@ -1,4 +1,4 @@
-// The shipping bin (F19 decisions 4–6; core spec CS10, CS7 step 1): anything with a price goes in at any time in the
+// The shipping bin (CS7 step 1): anything with a price goes in at any time in the
 // day, comes back out until the night if the player changes their mind, and pays at night at price × stars × demand.
 // There's no selling cap and nothing is ever bought back. The bin is `save.bin`, star counts like the Warehouse's.
 // None of these stamp `updatedAt`: shipping and taking back are the player's operations, which stamp around them, and
@@ -12,7 +12,7 @@ import type { SaveV3, Warehouse } from './v3'
 import { addGoods, takeGoods } from './warehouse'
 import type { FarmSave } from './v4'
 
-/** The counter the bin's gold adds to, for the Farm Rank and its milestones (F24). */
+/** The counter the bin's gold adds to, for the Farm Rank and its milestones. */
 export const GOLD_SHIPPED = 'gold-shipped'
 
 type BinSave = Pick<FarmSave, 'items' | 'bin'>
@@ -22,7 +22,7 @@ function priced(id: string): void {
 }
 
 /** `count` of a good at `stars` from the Warehouse into today's bin. Refused for anything without a price (`no-price`:
- * seeds, decision 5) and when the Warehouse is short (`no-items`). */
+ * seeds) and when the Warehouse is short (`no-items`). */
 export function ship<S extends BinSave>(save: S, id: string, stars: number, count: number): S {
   priced(id)
   if (!Number.isInteger(count) || count < 1) throw new SaveRuleError('bad-count', 'Ship at least one')
@@ -37,7 +37,7 @@ export function shipAll<S extends BinSave>(save: S, id: string): S {
   return row.reduce((next, n, i) => (n > 0 ? ship(next, id, i + 1, n) : next), save)
 }
 
-/** `count` of a good at `stars` from today's bin back to the Warehouse (decision 4). Refused when the bin holds fewer
+/** `count` of a good at `stars` from today's bin back to the Warehouse. Refused when the bin holds fewer
  * (`no-items`). Once the night pays, it's final. */
 export function takeBack<S extends BinSave>(save: S, id: string, stars: number, count: number): S {
   if (!Number.isInteger(count) || count < 1) throw new SaveRuleError('bad-count', 'Take back at least one')
@@ -68,7 +68,7 @@ export interface BinPayout<S> {
 }
 
 /**
- * Night step 1 (CS7, decision 6): everything in the bin pays at price × stars × demand on `day`, the day it was shipped.
+ * Night step 1: everything in the bin pays at price × stars × demand on `day`, the day it was shipped.
  * The gold goes to `gold` and to `farm.counts['gold-shipped']` (F24's Farm Rank and milestones), each good's count to
  * `diary.shipped` (the Diary's collections), and the bin empties. An empty bin pays nothing and changes nothing.
  */

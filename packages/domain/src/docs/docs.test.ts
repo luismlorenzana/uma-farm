@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/docs/docs.test.ts at 30a322a (F4, FM2, FW13); cuts in docs/technical/wilds-copy.md.
-// Keeps the live docs (docs/game/, D92) true to the rules: every `<!-- live:<key> -->` block must equal what `render.ts`
+// Copied from uma-rpg packages/domain/src/docs/docs.test.ts at 30a322a, with its Wilds-only parts cut.
+// Keeps the live docs (docs/game/) true to the rules: every `<!-- live:<key> -->` block must equal what `render.ts`
 // makes of the code today. When a rule changes, run `pnpm docs:update` (UPDATE_DOCS=1) to rewrite the blocks.
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'

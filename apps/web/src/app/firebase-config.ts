@@ -1,4 +1,4 @@
-// The farm's Firebase config for the kit's sign-in (uma-platform P56). Present only in production builds: local dev has
+// The farm's Firebase config for the kit's sign-in. Present only in production builds: local dev has
 // none, so the app runs as `local-dev` and the API runs with AUTH_MODE=disabled.
 import { firebaseEnabled, type FirebaseConfig } from '@luismlorenzana/uma-kit/auth'
 

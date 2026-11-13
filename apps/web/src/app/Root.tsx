@@ -1,4 +1,4 @@
-// Getting in (uma-kit's gates, uma-platform P56): splash → sign-in → boot → the app. The farm's boot opens the device save,
+// Getting in (uma-kit's gates): splash → sign-in → boot → the app. The farm's boot opens the device save,
 // else the server's, else starts a new account; it has no first-launch step. Nothing waits on the network once a device
 // save exists.
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
@@ -19,7 +19,7 @@ function checkForUpdate(): void {
 
 export function Root() {
   const auth = useAuth()
-  // F46's carried item (D51, F56 decision 10): the gate says why it stopped at a newer save, beside the update prompt,
+  // F46's carried item: the gate says why it stopped at a newer save, beside the update prompt,
   // instead of the kit's generic "couldn't open".
   const [newer, setNewer] = useState(false)
   useEffect(() => startSyncTriggers(), [])
@@ -34,7 +34,7 @@ export function Root() {
     setNewer(false)
     return { firstLaunch: false }
   }, [])
-  // Never run a production build signed out: every API call would fail (uma-rpg D42).
+  // Never run a production build signed out: every API call would fail.
   if (import.meta.env.PROD && !signInEnabled)
     return <div className="fixed inset-0 flex items-center justify-center bg-page p-8 text-center text-ink-soft">This build is missing its sign-in configuration.</div>
   return (

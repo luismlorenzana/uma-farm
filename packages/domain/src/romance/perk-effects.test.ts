@@ -1,4 +1,4 @@
-// The perks' effects (F51 decisions 1–13; romance spec RM31–RM36, RM39, RM45): `hasPerk` from her level, the romance term
+// The perks' effects: `hasPerk` from her level, the romance term
 // and its caps, in her element, the line effects at night and at harvest, night chores, morning items, the mentor, her
 // keepsake, her signature dish, breakfast, the format's keepsake and pet name, the save's new fields and lines, and v3's
 // numbers unchanged. Invented ids only: the stand-ins 9000001–9000003 and a 9000004 built here.
@@ -120,7 +120,7 @@ describe('the romance term and its caps (RM34; decision 2)', () => {
     save = { ...save, memories: { ...save.memories, [TWO]: ['s3'], [FOUR]: ['s3'] } }
     expect(romanceTerms(save, pack, THREE, 'forest').dream).toBeCloseTo(0.05, 9)
     expect(romanceTerms(married(save, 20), pack, THREE, 'forest')).toMatchObject({ dream: 0.05, household: 0.1, crew: 0.15 })
-    // A dream acts once her S3 event is in her Memories (decision 10).
+    // A dream acts once her S3 event is in her Memories.
     const unplayed = { ...save, memories: { ...save.memories, [TWO]: [], [FOUR]: [] } }
     expect(romanceTerms(unplayed, pack, THREE, 'forest').dream).toBe(0)
   })

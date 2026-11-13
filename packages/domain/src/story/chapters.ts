@@ -1,4 +1,4 @@
-// The story's chapters (F24 decisions 4 and 5; core spec CS42, CS43): chapter 1's six goals, each read from a counter or
+// The story's chapters: chapter 1's six goals, each read from a counter or
 // the save, its reward, and chapter 2's line ("Soon" until M5). Night step 8 (`checkGoals`) pays the Diary, recomputes
 // the Farm Rank, and completes the chapter the night its last goal is met: 500g, the Mill's plans, a recruit and the
 // chapter's 250 points, then the next chapter opens, counting from its own start (`farm.goals`). The closing scene plays
@@ -30,7 +30,7 @@ export interface Goal {
   readonly have: (save: FarmSave) => number
 }
 
-/** What a chapter pays when it completes (CS42, CS43). The Farm Rank's 250 points come from `chaptersDone`. */
+/** What a chapter pays when it completes. The Farm Rank's 250 points come from `chaptersDone`. */
 export interface ChapterReward {
   readonly gold: number
   /** Buildings whose plans it gives: `buildings[id] = 0`. */
@@ -48,7 +48,7 @@ export interface Chapter {
   readonly reward: ChapterReward | null
 }
 
-/** A lifetime counter since the current chapter opened (decision 4): `farm.goals` holds each counter as it stood then. */
+/** A lifetime counter since the current chapter opened: `farm.goals` holds each counter as it stood then. */
 export const sinceChapter = (save: Pick<FarmSave, 'farm'>, key: string): number => (save.farm.counts[key] ?? 0) - (save.farm.goals[key] ?? 0)
 
 /** CS42's six goals, read as decision 4 has it. */
@@ -88,10 +88,10 @@ export function goalStates(save: FarmSave): GoalState[] | null {
 /** Every goal of the current chapter is met. */
 export const chapterMet = (save: FarmSave): boolean => goalStates(save)?.every((g) => g.done) ?? false
 
-/** Completes the current chapter (decision 5): its gold, its plans (a building not yet held becomes 0), its recruit, then
+/** Completes the current chapter: its gold, its plans (a building not yet held becomes 0), its recruit, then
  * the next chapter opens counting from now. On v3 the recruit is `recruitFor`'s, joined with `joinRoster` (home, or away
- * with no bed free); on v4 (F46 decision 8) it's the chapter's authored arrival from the pack, joined with `arrive`, and
- * nothing is drawn, her ties seeded (F52). The 250 points follow from `chaptersDone`. Never stamps. */
+ * with no bed free); on v4 it's the chapter's authored arrival from the pack, joined with `arrive`, and
+ * nothing is drawn, her ties seeded. The 250 points follow from `chaptersDone`. Never stamps. */
 export function completeChapter<S extends FarmSave>(save: S, release: readonly OutfitId[], talentOf: TalentOf, story?: Pick<StoryPack, 'cast' | 'ties'>): { save: S; recruit: OutfitId | null } {
   const reward = chapterOf(save.farm.chapter)?.reward
   if (!reward) return { save, recruit: null }
@@ -128,7 +128,7 @@ export interface GoalsTonight {
   ranks: number[]
 }
 
-/** Night step 8's `checkGoals` (decisions 1, 2, 4 and 5): the Diary pays what's reached, the Farm Rank is recomputed, and
+/** Night step 8's `checkGoals`: the Diary pays what's reached, the Farm Rank is recomputed, and
  * the chapter completes when its last goal is met, after which the Diary and the rank are checked again (the recruit
  * counts toward "Umas recruited", the chapter's points toward the rank). */
 export function checkGoalsNight<S extends FarmSave>(save: S, release: readonly OutfitId[], talentOf: TalentOf, made: readonly MadeTonight[], story?: Pick<StoryPack, 'cast' | 'ties'>): { save: S; tonight: GoalsTonight } {

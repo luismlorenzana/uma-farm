@@ -1,8 +1,8 @@
-// `/roster` (F18; F21 decision 7; F23 decision 11; FC19): M4's page. Everyone on the roster, home or away, as album cards
-// on uma-kit's album chrome (`RosterAlbum`, which the romance build's Hearts tab shows as its Work view, F48 decision 8),
+// `/roster`: M4's page. Everyone on the roster, home or away, as album cards
+// on uma-kit's album chrome (`RosterAlbum`, which the romance build's Hearts tab shows as its Work view),
 // with your hearts with her in each face's corner. A tap opens her sheet (`?uma=<id>`): your hearts with her, Chat and
 // Gift, where she is, and her nine activities with talent, rank, points and the next challenge. The romance build sends
-// `/roster` to the Hearts tab's Work view (F48 decision 2), so this page only ever plays a v3 save. Loaded on demand.
+// `/roster` to the Hearts tab's Work view, so this page only ever plays a v3 save. Loaded on demand.
 import { heartsOf, type FarmSave, type Temperament } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -50,13 +50,13 @@ function Roster({ save, master }: { save: FarmSave; master: MasterView }) {
   )
 }
 
-/** Your hearts with her, in her face's top-right corner, once there's one (F23). */
+/** Your hearts with her, in her face's top-right corner, once there's one. */
 function heartBadge(affinity: number) {
   const hearts = heartsOf(affinity)
   return hearts > 0 ? { topRight: <span className="rounded-full bg-white/90 px-1 text-[11px] font-bold text-[#c2385e] shadow-1 ring-1 ring-black/10" data-card-hearts={hearts}>♥{hearts}</span> } : {}
 }
 
-/** Her sheet: your hearts with her, Chat and Gift (F23), where she is, her favourite line, when she joined, and her nine
+/** Her sheet: your hearts with her, Chat and Gift, where she is, her favourite line, when she joined, and her nine
  * activities, each with talent, rank, points and the challenge toward her next rank. */
 function UmaSheet({ save, row, temperament, onClose }: { save: FarmSave; row: LoopUmaRow; temperament: Temperament | null; onClose: () => void }) {
   return (

@@ -1,4 +1,4 @@
-// The shop's frame (F19 decision 7): lines with a price and a gate, bought with gold into the Warehouse at ★1. These lines
+// The shop's frame: lines with a price and a gate, bought with gold into the Warehouse at ★1. These lines
 // are invented; F20's seeds by season and tier are tested in fields/fields.test.ts.
 import { describe, expect, it } from 'vitest'
 import { FARM_RANK_POINTS } from '../farm/farm'

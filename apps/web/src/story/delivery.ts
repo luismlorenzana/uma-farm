@@ -1,4 +1,4 @@
-// The story pack's delivery on the device (F56 decision 5; romance spec RM58): `story.json` from farm-api's
+// The story pack's delivery on the device: `story.json` from farm-api's
 // `/api/content/…` at boot, always fresh; then each file by its hash through uma-kit's content client, which verifies the
 // bytes against the index and keeps them in its Cache Storage, so a release's file downloads once (RM58's "cached
 // immutably", in the kit's content-addressed cache rather than IndexedDB). The cast, the ties, the bibles and the

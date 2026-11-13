@@ -1,4 +1,4 @@
-// The ring bench, the proposal and the wedding on screen (F53 decisions 3–10; RM30, RM38–RM40), the switch on: Ida Stone's
+// The ring bench, the proposal and the wedding on screen, the switch on: Ida Stone's
 // scene over the farm, the Forge's quick look and the bench's sheet making a ring (a slot swapped), the proposal's ring
 // picker and its Engaged stage-up, the wedding's place, guests, reception and Married stage-up, her profile's engraving,
 // ring and better ring, and the switch off keeping M4's Forge. The invented stand-in pack (9000001–9000003) and invented

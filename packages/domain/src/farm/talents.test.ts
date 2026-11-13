@@ -1,4 +1,4 @@
-// Talents (F21; CS27, CS28, CS46): the stat → talent rule on invented outfits, copies of uma-data's synthetic one with
+// Talents: the stat → talent rule on invented outfits, copies of uma-data's synthetic one with
 // chosen stats and growth rates. No release data.
 import type { Outfit } from '@luismlorenzana/uma-data'
 import { syntheticMasterData } from '@luismlorenzana/uma-data/testing'

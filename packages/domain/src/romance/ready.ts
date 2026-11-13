@@ -1,9 +1,9 @@
-// When her next event is Ready (F47 decisions 1 and 13; romance spec RM24, RM36): written with the ladders, since F48's
+// When her next event is Ready: written with the ladders, since F48's
 // Ready chips, sort and filter read it before F49 plays the events. All four:
 //
 //   1 her bar is full for the rung, or for a waiting rung it's the day after the rung before (the proposal: and a ring)
 //   2 she's home (away shows "Swap her home")
-//   3 she hasn't played an event today (RM21)
+//   3 she hasn't played an event today
 //   4 its one setup is met, if it has one: she works a named place today, a named good is in the Warehouse, her bond with
 //     a named Uma has reached a level, a chapter has been reached
 //
@@ -31,7 +31,7 @@ import { ACTIVITY_CHAPTER } from './perks'
 /** A setup the player meets on the day: she works a place, a good is held, a bond is reached. */
 export type Setup = Extract<Trigger, { kind: 'working' | 'item' | 'bond' }>
 
-/** What keeps her next event from being Ready (decision 13). */
+/** What keeps her next event from being Ready. */
 export type Wait =
   /** Her bar isn't full for the rung. */
   | { kind: 'bar' }
@@ -86,7 +86,7 @@ export interface Readiness {
   waits: Wait | null
 }
 
-/** Whether she works an activity today (decision 13): a running job at a place of it (`PLACE_ACTIVITY`), or for farming
+/** Whether she works an activity today: a running job at a place of it (`PLACE_ACTIVITY`), or for farming
  * a tended block with a growing plot. */
 export function worksToday(save: SaveV4, id: string, activity: Activity): boolean {
   const row = save.work[id]
@@ -95,7 +95,7 @@ export function worksToday(save: SaveV4, id: string, activity: Activity): boolea
   return activity === 'farming' && save.fields.blocks.some((b) => b.tender === id && b.plots.some((p) => p.crop !== null && !p.ready))
 }
 
-/** Whether a day setup is met (decision 13). */
+/** Whether a day setup is met. */
 export function setupMet(save: SaveV4, id: string, setup: Setup): boolean {
   switch (setup.kind) {
     case 'working': return worksToday(save, id, setup.activity)
@@ -104,13 +104,13 @@ export function setupMet(save: SaveV4, id: string, setup: Setup): boolean {
   }
 }
 
-/** The chapter a setup waits for, or null when it can be met now (RM36). */
+/** The chapter a setup waits for, or null when it can be met now. */
 function opensWith(save: SaveV4, trigger: Trigger): number | null {
   const chapter = trigger.kind === 'chapter' ? trigger.chapter : trigger.kind === 'working' ? ACTIVITY_CHAPTER[trigger.activity] ?? null : null
   return chapter !== null && save.farm.chapter < chapter ? chapter : null
 }
 
-/** Her next event's state (decisions 1 and 13). Home is `dorm.home`, or a spouse in her house (F54's `atHome`). Refused for
+/** Her next event's state. Home is `dorm.home`, or a spouse in her house (F54's `atHome`). Refused for
  * someone not on the farm. */
 export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'scripted'>, id: string): Readiness {
   const love = save.love[id]

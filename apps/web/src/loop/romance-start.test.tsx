@@ -1,4 +1,4 @@
-// The romance core's start as rendered (F46 decisions 9–12 and 14; RM4, RM8, RM9), the switch on: a fresh account's name
+// The romance core's start as rendered, the switch on: a fresh account's name
 // sheet, the re-cut opening with `{farmer}` filled, the opening three's arrival scenes in turn (Skip landing on the choice,
 // the gains on the buttons, +50 and the choice paid once), chapter 1's card and planting; the Gate's words and the Dorm
 // for 20. The stand-ins aren't in master data: their faces are lettered discs. Invented outfits (the album fixture) and
@@ -159,7 +159,7 @@ describe('a fresh farm on v4 (RM8, RM9)', () => {
     await click($('[data-option="0"]'))
     await click($('[data-action="skip"]'))
     expect($('[data-chapter-card="1"]')?.textContent).toContain('A Field Again')
-    // The stand-in's three all come with the opening, so chapter 1 brings no one: no new hand on its card (D74).
+    // The stand-in's three all come with the opening, so chapter 1 brings no one: no new hand on its card.
     expect($('[data-chapter-card="1"] [data-reward]')?.textContent).toBe('Reward: +500g, the Mill’s plans, 250 Farm Rank points.')
     await click($('[data-action="plant"]'))
     await until(() => save().arrivals.includes('9000003'))

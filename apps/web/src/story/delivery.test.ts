@@ -1,4 +1,4 @@
-// The story pack's delivery (F56 decision 5) through uma-kit's real content client, against a fake farm-api and an
+// The story pack's delivery through uma-kit's real content client, against a fake farm-api and an
 // in-memory Cache Storage: the index fresh, each file verified and cached by hash, the last index kept for an offline
 // boot, a mismatch refused, and the dev server's stand-in when farm-api serves no pack. On the invented stand-in pack
 // (9000001–9000003) as a release holds it; no network.

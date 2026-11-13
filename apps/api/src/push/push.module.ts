@@ -7,7 +7,7 @@ import { PushSender } from './push.sender'
 import { PushService } from './push.service'
 import { SchedulerGuard, TICK_VERIFIER } from './scheduler.guard'
 
-// Copied from uma-rpg's push module at 30a322a (F6), without its save repository: the farm's push never reads a save.
+// Copied from uma-rpg's push module at 30a322a, without its save repository: the farm's push never reads a save.
 @Module({
   controllers: [PushController],
   providers: [
