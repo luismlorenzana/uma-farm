@@ -1,39 +1,38 @@
 # uma-farm
 
-A personal, never-distributed farm inspired by *Umamusume: Pretty Derby*, played on the owner's iPhone as a Home Screen
-web app. Umas gather, process and make across five lines, as in uma-rpg's Wilds. A Forge minigame then turns those base
-items into the other Uma games' items, sent as one-way parcels to uma-quest, uma-rpg and uma-racer.
-
-**Status (2026-11-08):** the workspace and the cloud are live at https://uma-farm.web.app (F1, F2). The current
-initiative is [the first playable farm](docs/design/first-playable.md); F3, the hello app, is next.
-
-## Layout
-
-| Path | What |
-|---|---|
-| `apps/web` | `@farm/web`: Vite, React 19 and uma-kit's theme. A placeholder page until F3 |
-| `apps/api` | `@farm/api`: NestJS 11 behind uma-server's owner guard: `/api/health`, `/api/save` and `/api/post/ping` (its own token check) |
-| `packages/domain` | `@farm/domain`: the game's rules, pure, no I/O |
-| `scripts/` | The 180 KB size check and the private-content guard, each with tests |
-| `.github/workflows/deploy.yml` | Verify on every push and pull request; the deploy job comes with F2 |
+A personal farm game inspired by *Umamusume: Pretty Derby*, played on the owner's iPhone as a Home Screen web app at
+https://uma-farm.web.app. Days are turns: you plant, gather, process and ship with a roster of Umas, end the day, and
+read the morning. The farm's Umas are an authored cast with a romance to each, written by the owner (built, switched off
+until the story ships), and the farm is moving onto an HD-2D stage (an opt-in preview today).
 
 ## Where things are
 
 | Path | What |
 |---|---|
-| [docs/handoff/README.md](docs/handoff/README.md) | **Start here:** the current phase, its packets and the owner's steps |
-| [docs/design/first-playable.md](docs/design/first-playable.md) | **The current initiative:** the first playable farm's requirements and planned tasks, FW1–FW13 ([page](docs/design/previews/first-playable.html)) |
-| [docs/design/plan.md](docs/design/plan.md) | The plan: Phases 0–5, the calls FM1–FM26, how a parcel travels ([page](docs/design/previews/plan.html)) |
-| [docs/decisions.md](docs/decisions.md) | The decision log, from D1 |
-| [docs/technical/infrastructure.md](docs/technical/infrastructure.md) | Every cloud value (planned until F2) |
-| [docs/game/](docs/game/README.md) | The manual of the game as built, from F3 |
+| [docs/roadmap.md](docs/roadmap.md) | **Start here:** where the farm stands, what a full game means, and the phases to it ([page](docs/pages/roadmap.html)) |
+| [docs/game-mechanics.md](docs/game-mechanics.md) | How the game works today, with its tables generated from the code ([page](docs/pages/game-mechanics.html)) |
+| [docs/handoff/README.md](docs/handoff/README.md) | What's being built now, the open packets, and the owner's steps ([page](docs/pages/handoff.html)) |
+| [docs/technical/architecture.md](docs/technical/architecture.md) | The app, the API, the save and its sync, builds, deploy, local setup ([page](docs/pages/architecture.html)) |
+| [docs/technical/infrastructure.md](docs/technical/infrastructure.md) | Every cloud value ([page](docs/pages/infrastructure.html)) |
+| [docs/design/kit-farm.md](docs/design/kit-farm.md) | The HD-2D farm kit's art contract ([page](docs/pages/kit-farm.html)) |
+| `docs/story/` | The story's original drafts, read by the Farm Story Sandbox |
 | [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) | How to work here |
+
+## Layout
+
+| Path | What |
+|---|---|
+| `apps/web` | `@farm/web`: React 19, Vite, Zustand, Dexie and uma-kit, an installable web app; the HD-2D stage loads on demand |
+| `apps/api` | `@farm/api`: NestJS on Cloud Run behind uma-server's owner guard: the save, the story pack, push and the parcel ping |
+| `packages/domain` | `@farm/domain`: the game's rules, pure, no I/O |
+| `scripts/` | The size budget, the private-content guard, the hosting-site check, the story pack's release and publish, the docs' pages |
+| `tools/story-sandbox` | The Farm Story Sandbox: write and read the story locally (`pnpm stories`) |
+| `infra/bootstrap.sh` | The cloud's setup, safe to re-run |
+| `.github/workflows/deploy.yml` | Lint, test and build on every push and pull request; every push to `main` deploys |
 
 ## The other Uma repos
 
-- **uma-platform:** the cross-game plan (`docs/architecture.md`, `roadmap.md`, `decisions.md`), master data, and the
-  shared packages uma-data, uma-kit, uma-work, uma-server and uma-art. `uma-post`, the parcel format, will live there.
-- **uma-rpg:** the live party RPG, whose Wilds the farm copies (FM2). Its GCP project hosts the farm's cloud, and its
-  [cloud plan](https://github.com/luismlorenzana/uma-rpg/blob/main/docs/design/cloud/plan.md) sets up all three apps.
-- **uma-quest:** the HD-2D travelers RPG, the farm's first receiver (DN14's consumables).
-- **uma-racer:** the racing game, which receives flair only, last.
+- **uma-platform:** the shared master data and packages (uma-data, uma-kit, uma-work, uma-server, uma-art, uma-stage).
+- **uma-quest:** the HD-2D travelers RPG; it shares the stage and the story's way of working.
+- **uma-rpg:** the party RPG, frozen. Its GCP project hosts the farm's cloud.
+- **uma-racer:** the racing game.

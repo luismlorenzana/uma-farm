@@ -1,17 +1,20 @@
 # F40 — Author the farm's story: the cast, their lives, and a romance for every Uma
 
-**uma-farm · the story session (Claude) · L · Needs: the Studio's SS export (the owner's Playable Umas board) ·
-Unblocks: the romance spec (F41) and the farm's story packets · Content: private, in uma-farm's ignored `content/story/`**
+**uma-farm · the story session (Claude), and the owner · L · Needs: the cast on the Uma Ranker · Unblocks: the story's
+release and the romance's go-live ([F56](F56-story-delivery.md)) · Content: private, in uma-farm's ignored
+`content/story/` · [Roadmap](../../roadmap.md#phase-1-one-game-not-three): Phase 1, step 1.1**
 
 ## Why
 
-The owner is turning uma-farm into a **romance simulation** (D40, 2026-11-10). You play the farmer, a point of view who
-is never drawn, and you can befriend and then romance **every Uma** in the cast. **Maxing every romance and unlocking
-each wedding scene is the game's long goal.** The romance runs beside the farm's loop: farming, the ranch, mining,
-fishing, cooking, festivals and expeditions are where it grows.
+The owner is making uma-farm a **romance simulation**. You play the farmer, a point of view who is never drawn, and you
+can befriend and then romance **every Uma** in the cast. **Maxing every romance and unlocking each wedding scene is the
+game's long goal.** The romance runs beside the farm's loop: farming, the ranch, mining, fishing, cooking, festivals and
+expeditions are where it grows.
 
-Today a new farm starts with three random Umas from six cards (core spec CS2). The owner doesn't want random. Like
-uma-quest, the cast is **the owner's own authored characters**: the SS tier of the Studio's Playable Umas board.
+The deployed game still starts a farm with three random Umas from six cards. The owner doesn't want random. Like
+uma-quest, the cast is **the owner's own authored characters**: the 20 Umas on the owner's Uma Ranker, in its order. The
+romance build already plays an authored cast from the story pack
+([game mechanics](../../game-mechanics.md#the-cast-and-the-story-pack)).
 
 This packet writes the story's foundation:
 - the world;
@@ -21,174 +24,182 @@ This packet writes the story's foundation:
 - the shape of every route;
 - three routes in full, as a pilot.
 
-The owner reads each layer before the next is written. The farm's code packets (F41 on) are written from it afterwards.
+The owner reads each layer before the next is written. The game's romance is built and plays the pack; the story's
+release ([F56](F56-story-delivery.md)) needs every Uma's bible and arrival scene.
 
 ## Context (read first)
 
-**The farm, as built and planned** (uma-farm, this repo):
-- [core-loop.md](../../design/core-loop.md): the loop.
-  - FC16: Umas joining over time.
-  - FC22: festivals.
-  - FC24: eight light chapters, an original town cast, Umas in roles.
-  - FC25: bonds between Umas.
-  - FC26: your affinity with each Uma.
-  - FC27: conversations from templates.
-  - FC5, FC33: time is turns.
-- [core-spec.md](../../design/core-spec.md): the numbers.
-  - CS35, CS45: visitors and affinity.
-  - CS41: the original cast of eleven.
-  - CS42, CS43: chapter 1 and chapters 2–8.
-  - CS44, CS46, CS47: bonds, conversation templates and example lines.
-  - CS21, CS25: the Kitchen's dishes, and the Forge's Rings.
-- [decisions.md](../../decisions.md): D37, D38, D40.
-  - D37 (F23): the roster, chats, gifts, the Gate, `CHAT_LINES`.
-  - D38 (F24): Farm Rank, the Diary, chapter 1, the scene player.
-  - D40: this direction.
-- The manual: [roster.md](../../game/roster.md), [goals.md](../../game/goals.md), [goods.md](../../game/goods.md) for the
-  goods ids, [days.md](../../game/days.md).
+**The farm, as built** (uma-farm, this repo): [the game mechanics](../../game-mechanics.md), above all
+[Part 3, Hearts](../../game-mechanics.md#part-3--hearts-the-cast-and-the-romance).
+- Umas joining over time: [the roster](../../game-mechanics.md#the-roster) and
+  [arrivals](../../game-mechanics.md#arrivals).
+- Festivals: [festivals](../../game-mechanics.md#festivals).
+- The chapters, the original town cast, Umas in roles: [the chapters](../../game-mechanics.md#the-chapters),
+  [the town's cast](../../game-mechanics.md#the-towns-cast), [the scenes](../../game-mechanics.md#the-scenes).
+- Bonds between Umas: [bonds and ties](../../game-mechanics.md#bonds-and-ties).
+- Your affinity and hearts with each Uma: [affinity](../../game-mechanics.md#affinity),
+  [her route](../../game-mechanics.md#her-route).
+- Conversations from templates, and pair conversations:
+  [pair conversations](../../game-mechanics.md#pair-conversations).
+- Time is turns: [work is measured in days](../../game-mechanics.md#work-is-measured-in-days).
+- The rings and dishes: [the ring bench](../../game-mechanics.md#the-ring-bench),
+  [her signature dish](../../game-mechanics.md#her-signature-dish).
+- The pack's files and the validator's rules, from the game's side:
+  [what the pack holds](../../game-mechanics.md#what-the-pack-holds).
+- The goods: [the catalogue](../../game-mechanics.md#the-catalogue), and every id in `goods/ids.ts`.
 - The code you'll write to and read from:
-  - `packages/domain/src/story/` (`cast.ts`, `chapters.ts`, `scenes.ts`, `chapter-1.ts`): the scene shape the game plays
-    today;
+  - `packages/domain/src/story/` (`authored.ts` and its validator, `pack.ts`, `cast.ts`, `chapters.ts`, `scenes.ts`,
+    `chapter-1.ts`): the format, and the scene shape the game plays;
   - `packages/domain/src/farm/visitors.ts`: affinity, hearts, gift tastes, chats;
-  - `packages/domain/src/goods/ids.ts`: every good's id.
+  - `packages/domain/src/goods/ids.ts`: every good's id;
+  - `tools/story-sandbox/`: the Farm Story Sandbox (`pnpm stories`).
 
 **uma-quest, the model** (`~/workspace/uma-quest`, read only):
-- `docs/design/campaign.md`: CM16 (stories are private content), CM17 (scenes as data), CM18 (bibles first).
+- Its way with stories: stories are private content, scenes are data, and bibles come first (RS15, RS18 and RS17 below
+  take them from it).
 - `docs/design/story-sandbox.md`: SB1–SB15, especially:
-  - SB2, the cast as a pack made from the Studio's tier export;
-  - SB9, four layers, each read before the next;
+  - SB2, the cast as a private pack, built from the owner's ranking;
+  - SB9, the layers, each read before the next;
   - SB13, the owner's reviews saved for the next session.
 - Its script format, `packages/domain/src/story/script.ts`.
-- Its adult travelers, D38 and D41: Umas drawn as grown women.
+- Its adult travelers: every Uma drawn as a grown woman.
 
 **uma-platform, the cast's source** (`~/workspace/uma-platform`, read only):
-- `docs/authoring/tiers.md`: the Studio, the Playable Umas board, SS–F tiers ranked per character, the export (TS12).
+- The Uma Ranker ([platform-app](https://github.com/luismlorenzana/uma-platform/blob/main/docs/platform-app/README.md)),
+  read with `pnpm ranker:pull`: the owner's tiers, ranked per character. `docs/authoring/tiers.md` has the tiers it
+  grew from.
 - `docs/sprites/format.md`: which outfits have HD-2D sprite sets.
+- [Uma Story](https://github.com/luismlorenzana/uma-platform/blob/main/docs/platform-app/story.md#local-first-p150): the
+  site is parked, since the story is written and read locally first.
 
 ## Decisions made
 
-> **Added 2026-11-12 (D64; amended by D72, local first): the cast's source, three packets before layer 2, and where it's read.**
-> - **The cast's source is the Uma Ranker** (F58 (done, D78)): the Studio's boards retired into it.
->   The 20 stand; the Ranker's order is the authoring order and D44's priority.
-> - **Before layer 2:** F58 (done, D78) (the cast on the Ranker, the opening three and the pilot
->   re-checked), F59 (done, D79) (the tag sheet, and each tie's source), [F60](F60-story-counts.md) (the
->   counts, the owner's read, the balance). They mirror uma-quest's Q57–Q60.
-> - **Layer 2 includes each Uma's arrival scene.** F56's release refuses a pack where any cast Uma lacks her bible or
->   her arrival scene, so the go-live needs all 20 of both and none of the pilot's full routes.
-> - **Reading and verdicts stay in the Farm Story Sandbox** (D72, local first): the owner reviews there, and its
->   Review panels write `content/story/reviews.json`, read before each next layer. uma-platform's Uma Story site is
->   parked ([story.md](https://github.com/luismlorenzana/uma-platform/blob/main/docs/platform-app/story.md), its P150). Two optional helpers, run from uma-platform: `pnpm story:push farm`
->   backs up the text, and `pnpm story:pull farm --drafts` takes the drafts to the Mac for F56. The game still reads
->   only its own release (F56).
-> - **RS18's shared format with uma-quest is no longer a goal:** the two games keep their own formats, and share the
->   cast and the player's stage.
+### The cast, the order, and where it's read
 
-> **Added 2026-11-11 (D48): more fields the romance core's packets need**, beyond RM58's seven:
-> - `outfitId` is required in the cast file (RM2);
-> - `petName` per route, her name for you at Romance 1 (RM8, RM31);
-> - `play.as` on a farming beat, so the author picks Pick or Rhythm (RM26);
-> - on a choice option: an optional item cost and an optional taste it reveals; and a step that shows only when a flag
->   is set (RM27);
-> - the confession's options marked Yes and Not yet (RM30);
-> - `household.json` written so it works whoever is married (RM45);
-> - one play per event and one or two choice points per event, at most.
->
-> Each packet (F46–F54) adds its fields to the format and validator.
+- **The cast's source is the Uma Ranker:** the Studio's boards retired into it. The 20 cast Umas stand; the Ranker's
+  order is the authoring order and the owner's priority. `cast.json` records the Ranker read it was checked against
+  (`ranker`: the board's and the profiles' revisions, and when).
+- **The owner's priority Umas come first.** The opening three and the three pilot routes go to them, taken from the
+  Ranker's order, or from a list the owner gives.
+- **Tags before bibles.** `content/story/tags.json` holds each Uma's favourite line, season, festival and loved gift,
+  with a one-line reason each from her career and character; her bible agrees with it, and the validator checks. Each
+  tie says whether it's **real** (from the real careers, checked against public records) or the **story's** (`source`);
+  a real one carries uma-quest's relationship id (`from`) once uma-quest has written them.
+- **The counts, then the owner's read** ([F60](F60-story-counts.md)): the balance follows the read, with no quotas
+  before.
+- **Layer 2 includes each Uma's arrival scene.** F56's release refuses a pack where any cast Uma lacks her bible or her
+  arrival scene, so the go-live needs all 20 of both and none of the pilot's full routes.
+- **Layer 2 is written in waves of five,** in the Ranker's order (the private `notes.md` lists them).
+- **Reading and verdicts stay in the Farm Story Sandbox:** the owner reviews there, and its Review panels write
+  `content/story/reviews.json`, read before each next layer. uma-platform's Uma Story site is parked. Two optional
+  helpers, run from uma-platform: `pnpm story:push farm` backs up the text, and `pnpm story:pull farm --drafts` takes
+  the drafts to the Mac for F56. The game still reads only its own release (F56).
+- **No shared format with uma-quest:** the two games keep their own formats, and share the cast and the player's stage.
+- **F40 builds no art.** It writes text only. Character art (busts, expressions, event illustrations) is a separate,
+  later effort, private in the pack.
+- **The owner's live save is wiped** when the romance goes live (F56), so the authored start needs no migration path
+  for an existing farm.
 
-> **Added 2026-11-11 (D47): the romance spec is accepted, and asks seven additions of the story** ([romance-spec.md](../../design/romance-spec.md), RM58).
-> Write to them from layer 2 on. The format and validator gain them in the romance core's packets (F46–F54):
-> - **`arrival`:** one scripted event per route, a 27th scene before friendship 1 (RM4), worth +50 and one choice;
-> - **`chats`** in her bible: about 10 lines a stage (friend, partner, spouse), the F1 perk's chat set (RM31);
-> - **`wishes`** in her bible, optional: `own-house`, `birthday-alone` (RM44);
-> - **`keepsake`** in her bible: a name and a line (RM31);
-> - **`wedding.places`:** the three places her wedding offers (RM30);
-> - **`household.json`:** three household scenes (at 5, 10 and 15 married), house lines, and the finale, the Great
->   Harvest (RM43, RM45, RM46);
-> - **`birthday`** in the cast file, only where master data has none (RM16).
->
-> **Landed in F46 (D51):** the validator now **requires `outfitId`** on every cast entry (a null is "Name her outfit
-> (RM2)"); routes have **27 rungs**, `arrival` first (hearts 0, a hearts trigger, exactly one choice point, no play); a
-> `beds` arrival names a Dorm level 2–8 (the Dorm for 20, RM5); an `event` arrival's `after` is `<characterId>:<eventId>`
-> (or a bare event id: anyone's). The game reads routes in a partial mode; the sandbox keeps the strict report.
->
-> **Landed in F47 (D52):** her bible may carry **`chats`**: `{ friend: string[]; partner: string[]; spouse: string[] }`,
-> **3–20 lines each**, each at most **160 characters**, under the line rules (`{farmer}` the only placeholder, no gendered
-> or school words); `friend` plays from Friendship 1 through the confession, `partner` from Romance 1 to the wedding,
-> `spouse` after it, and without `chats` she keeps her temperament's lines. A cast entry may carry **`birthday`**:
-> `{ month: 1–12, day }` on a real date (29 February allowed), only for a character master data's set lacks; it wins
-> where present. A beat's `trigger` is now read for Ready: `working` (a running job at a place of that activity, or a
-> tended block for farming), `item` (any stars in the Warehouse), `bond` (CS44's hearts) and `chapter`.
->
-> **Landed in F52 (D54):** the game reads **`pairs/<a>-<b>.json`** (no new field). The file's name and its `a`, `b` are
-> the two character ids **in numeric order**; it's for **a tie's pair only** (RS12); each level's `hearts` is 1–5 and
-> written **at most once**; the game reads a pair **partial** (any levels written so far: an unwritten level gets the
-> tie's `line`), the sandbox keeps the strict report. Each new bond heart opens that level; the player reads it from the
-> morning, her profile or the Diary. **A choice in a pair's conversation is wording only:** it pays nothing and its
-> flags aren't kept, though the validator still asks one option to carry a gain. A tie's `line` shows in the morning
-> when the pair has no conversation at that heart, so write it as a short phrase ("Old rivals.").
->
-> **Landed in F49 (D55):** the format gains, with the validator's rules: **`play.as: 'pick' | 'rhythm'`** on a farming
-> play only (Pick by default); on a choice option **`gives: { good, count: 1–5 }`** (a good that exists; taken at any
-> stars, lowest first, the option greyed "Need 1 Basil" without it) and **`reveals: '<good>'`** (one of her gifts: her
-> loved, liked or disliked), and **`answer: 'yes' | 'not-yet'`** on **the confession's last top-level choice point only**,
-> one of each, with no choice point after it; a step **`{ when: '<flag>', then: Step[], else?: Step[] }`** that plays its
-> steps while the flag is set (flags change wording only). **Per event, on every path:** a heart event has **1–2 choice
-> points** and **at most one play**; the confession, the proposal and the wedding **1–3 choice points** and **up to three
-> plays**. A play's own `friendship` and `romance` are ignored (its grade pays); its `good` steps play after a Great or
-> Perfect, `miss` after a Fine. With no `play` step, the beat's `together` plays at the event's end (help and talk have
-> none). Ask her replays the confession from her line before its answer, so write that line as her question.
->
-> **Landed in F51 (D57):** her bible may carry **`keepsake: { name, line }`** (RM58's keepsake: the name 1–40 characters,
-> the line 1–160, both under the line rules; she gives it at Friendship 10 and it grows at Spouse 5; it shows on her
-> profile, never in the Warehouse) and **`petName`** (her pet name for you from Romance 1: 1–24 characters, no
-> placeholder, never gendered, as the farmer's own words). Both are optional: without them her profile says "Her
-> keepsake" and her R1 perk says nothing more. Her signature dish needs no field: her `gifts.loved` when it's a dish id
-> (`dish-<family>-<grade>`, listed under `proposed` until dishes are goods), else her line's dish kind; her dream is her
-> `s3` event, its effect the template's.
+### What the romance reads: the fields and their rules
 
-> **Landed in F53 (D58):** her bible may carry **`wedding: { places: [place, place, place] }`**: the three places your
-> wedding may be held at, the player's first choice, each a story place (`STORY_PLACES`), all three different, nothing else
-> in the object. Optional: without it the game offers her wedding beat's place and two of the farm's. Her **wedding**
-> event's own `place` steps give way to the chosen place, so write it place-free (or let a place step stand only as a
-> fallback); its **last top-level choice point is the vow line**, paying as any choice, kept as the flag `vow:<n>` (1–3,
-> the option's position) and the place as `wedding:<place>`, so later scenes may echo them with `when`. Her **R8** beat's
-> `beat` line is the engraving her ring carries ("Her ring will read: ‘…’" on her profile from Romance 8), so write it with
-> that in mind. Every line of the proposal and the wedding says spouse, partner, vows, your wedding, you; never bride,
-> groom, husband or wife for the farmer (the validator's gendered list).
->
-> **Landed in F54 (D59):** the pack may carry **`household.json`**: `{ scenes: [{ at: 5 | 10 | 15, open, each, close }],
-> houseLines, finale: { open, play, each, close } }`. Each scene once; `open` and `close` speak only through narration and
-> the town's cast (who is married varies); `each` is `{ <characterId>: steps }` with **a beat for every cast Uma** in every
-> scene and the finale (she and the town's cast may speak; the game plays them in wedding order and skips one not written);
-> the finale's `play` is one play step's `{ game, prompt }` (a dance at the festival ground on the stand-in); choices are
-> wording only (nothing pays) and carry no answer. `houseLines` is `{ <characterId>: 1–10 lines of 1–120 characters }`,
-> said on a morning in her house (`{farmer}` allowed); an Uma without hers gets her temperament's original template. Her
-> bible may carry **`wishes: ('own-house' | 'birthday-alone')[]`** (RM44): own-house asks for a house to herself in her S1
-> event (write it there); birthday-alone makes her birthday's morning hers alone. Mornings only in house lines (W16).
->
-> F41 also settles what the story wrote around: arrivals are the authored ones only (RM1, RM4); events never wait on a
-> season, festival or hour (RM24); the farmer is never gendered at the wedding (RM30); one ring bench at the Forge opens
-> after the first romance 8 (RM38).
+The romance asks these of the story, beyond the first shapes below. Write to them from layer 2 on. The validator in
+`story/authored.ts` checks every one, and [the game mechanics](../../game-mechanics.md#what-the-pack-holds) has the
+same rules from the game's side.
 
+**The cast file**
+- **`outfitId` is required** on every cast entry: a null reads "Name her outfit". It's the one outfit she plays as.
+- **`birthday`**, only for a character master data's set lacks: `{ month: 1–12, day }` on a real date (29 February
+  allowed). It wins where present.
+- **Arrivals:** a `beds` arrival names a Dorm level 2–8 (the Dorm for 20); an `event` arrival's `after` is
+  `<characterId>:<eventId>` (or a bare event id: anyone's).
 
-> **Added 2026-11-11 (D44), from the owner:** (1) **the owner's priority Umas come first.** The opening three and the
-> three pilot routes go to them. Take the priority from the SS tier's order on the Studio's Playable Umas board, which the
-> owner sets (the board's order is the authoring order), or from a list the owner gives. Revisit D42's opening three
-> against it. (2) **F40 builds no art.** It writes text only. Character art (busts, expressions, event illustrations)
-> is a separate, later effort; F41 plans where it would sit. (3) **The owner's live save will be wiped** when the romance
-> core ships, so the authored start needs no migration path for an existing farm.
+**Her route**
+- **`arrival`:** one scripted event per route, a 27th scene before Friendship 1, worth +50 and one choice. Routes have
+  **27 rungs**, `arrival` first (hearts 0, a hearts trigger, exactly one choice point, no play).
+- The game reads routes in a **partial mode** (an unscripted beat waits); the sandbox keeps the strict report.
+- A beat's `trigger` is read for Ready: `working` (a running job at a place of that activity, or a tended block for
+  farming), `item` (any stars in the Warehouse), `bond` (the pair's bond hearts) and `chapter`.
 
+**Plays, choices and flags**
+- **`play.as: 'pick' | 'rhythm'`** on a farming play only, so the author picks Pick or Rhythm (Pick by default).
+- On a choice option, **`gives: { good, count: 1–5 }`**: an item cost, a good that exists, taken at any stars, lowest
+  first, the option greyed "Need 1 Basil" without it. And **`reveals: '<good>'`**: one of her gifts (her loved, liked or
+  disliked) that the option reveals.
+- **`answer: 'yes' | 'not-yet'`** on **the confession's last top-level choice point only**, one of each, with no choice
+  point after it.
+- A step **`{ when: '<flag>', then: Step[], else?: Step[] }`** plays its steps while the flag is set. Flags change
+  wording only.
+- **Per event, on every path:** a heart event has **1–2 choice points** and **at most one play**; the confession, the
+  proposal and the wedding **1–3 choice points** and **up to three plays**.
+- A play's own `friendship` and `romance` are ignored (its grade pays). Its `good` steps play after a Great or Perfect,
+  `miss` after a Fine. With no `play` step, the beat's `together` plays at the event's end (help and talk have none).
+- Ask her replays the confession from her line before its answer, so write that line as her question.
 
-The owner's direction (D40), and the calls that make it writable. Each has an id, **RS1–RS20**, for the romance spec.
+**Her bible's optional fields**
+- **`chats`**, her Friendship 1 perk's chat set: `{ friend: string[]; partner: string[]; spouse: string[] }`, about 10
+  lines a stage, **3–20 lines each**, each at most **160 characters**, under the line rules (`{farmer}` the only
+  placeholder, no gendered or school words). `friend` plays from Friendship 1 through the confession, `partner` from
+  Romance 1 to the wedding, `spouse` after it. Without `chats` she keeps her temperament's lines.
+- **`keepsake: { name, line }`**: the name 1–40 characters, the line 1–160, both under the line rules. She gives it at
+  Friendship 10 and it grows at Spouse 5; it shows on her profile, never in the Warehouse.
+- **`petName`**: her pet name for you from Romance 1: 1–24 characters, no placeholder, never gendered, as the farmer's
+  own words.
+- Both are optional: without them her profile says "Her keepsake" and her R1 perk says nothing more.
+- **Her signature dish needs no field:** it's her `gifts.loved` when that's a dish id (`dish-<family>-<grade>`, listed
+  under `proposed` until dishes are goods), else her line's dish kind. **Her dream** is her `s3` event, its effect the
+  template's.
+- **`wishes: ('own-house' | 'birthday-alone')[]`**: own-house asks for a house to herself in her S1 event (write it
+  there); birthday-alone makes her birthday's morning hers alone.
+
+**The wedding**
+- Her bible may carry **`wedding: { places: [place, place, place] }`**: the three places your wedding may be held at,
+  the player's first choice, each a story place (`STORY_PLACES`), all three different, nothing else in the object.
+  Optional: without it the game offers her wedding beat's place and two of the farm's.
+- Her **wedding** event's own `place` steps give way to the chosen place, so write it place-free (or let a place step
+  stand only as a fallback).
+- Its **last top-level choice point is the vow line**, paying as any choice, kept as the flag `vow:<n>` (1–3, the
+  option's position), and the place as `wedding:<place>`, so later scenes may echo them with `when`.
+- Her **R8** beat's `beat` line is the engraving her ring carries ("Her ring will read: ‘…’" on her profile from Romance
+  8), so write it with that in mind.
+- Every line of the proposal and the wedding says spouse, partner, vows, your wedding, you; never bride, groom, husband
+  or wife for the farmer (the validator's gendered list).
+
+**Pairs: `pairs/<a>-<b>.json`**
+- The file's name and its `a`, `b` are the two character ids **in numeric order**; it's for **a tie's pair only**
+  (RS12).
+- Each level's `hearts` is 1–5 and written **at most once**. The game reads a pair **partial** (any levels written so
+  far: an unwritten level gets the tie's `line`); the sandbox keeps the strict report.
+- Each new bond heart opens that level; the player reads it from the morning, her profile or the Diary.
+- **A choice in a pair's conversation is wording only:** it pays nothing and its flags aren't kept, though the validator
+  still asks one option to carry a gain.
+- A tie's `line` shows in the morning when the pair has no conversation at that heart, so write it as a short phrase
+  ("Old rivals.").
+
+**The household: `household.json`**
+- `{ scenes: [{ at: 5 | 10 | 15, open, each, close }], houseLines, finale: { open, play, each, close } }`: three
+  household scenes (at 5, 10 and 15 married), house lines, and the finale, the Great Harvest. Each scene once.
+- Write it so it works whoever is married: `open` and `close` speak only through narration and the town's cast; `each`
+  is `{ <characterId>: steps }`, with **a beat for every cast Uma** in every scene and the finale (she and the town's
+  cast may speak; the game plays them in wedding order and skips one not written).
+- The finale's `play` is one play step's `{ game, prompt }` (a dance at the festival ground on the stand-in).
+- Choices are wording only (nothing pays) and carry no answer.
+- `houseLines` is `{ <characterId>: 1–10 lines of 1–120 characters }`, said on a morning in her house (`{farmer}`
+  allowed); an Uma without hers gets her temperament's original template. Mornings only in house lines (W16).
+
+**What the story writes around:** arrivals are the authored ones only; events never wait on a season, festival or hour;
+the farmer is never gendered at the wedding; one ring bench at the Forge opens after the first Romance 8.
+
+### The owner's direction, RS1–RS20
+
+The owner's direction, and the calls that make it writable. Each has an id, **RS1–RS20**, that the story's work cites.
 
 **The cast**
-- **RS1, the cast is the Studio's SS export.** The SS tier of the Playable Umas board, ranked per character: 40 at the
-  board's first state, eight per playstyle.
-  - Take the export the owner hands you, as uma-quest's sandbox does (SB2). The board is the source of truth, and its
-    order is the authoring order.
-  - S and A join later in their own packets. Uma NPCs and boss boards aren't in this story.
-  - Each Uma is a character, not an outfit. Her look in the farm is her sprite set's outfit where she has one, else her
-    best-ranked outfit.
+- **RS1, the cast is the owner's Umas on the Uma Ranker:** the 20, ranked per character, in the Ranker's order.
+  - Take the Ranker's read as uma-quest's sandbox does (SB2). The Ranker is the source of truth, and its order is the
+    authoring order.
+  - Umas beyond the 20 join later, in their own work; the sisters wait. Uma NPCs and boss boards aren't in this story.
+  - Each Uma is a character, not an outfit. Her look in the farm is the outfit the cast file names: her sprite set's
+    outfit where she has one, else her best-ranked outfit.
 - **RS2, the farmer is you.** The player character is a point of view only, never drawn and never voiced.
   - The player names them at the start (`{farmer}` in lines). Lines say "you".
   - **Written to read for any farmer:** no gendered words for the farmer, ever.
@@ -203,17 +214,20 @@ The owner's direction (D40), and the calls that make it writable. Each has an id
   - Consent is clear in every romantic step.
   - She can say "not yet". The farmer can stay friends.
 - **RS5, her canon personality, a new life.** Each Uma keeps who she is: her voice, her quirks, her dreams, her ties to
-  other Umas from her racing career. All of it is set in the farm's world: why she came to the countryside, what she does
-  here, what she wants next.
+  other Umas from her racing career. All of it is set in the farm's world: why she came to the countryside, what she
+  does here, what she wants next.
 
 **How a route runs**
 - **RS6, friendship becomes romance, on two ladders.**
-  - **Friendship hearts 0–10:** today's affinity (FC26, CS45), from chats, gifts, praise, working together and festivals.
+  - **Friendship hearts 0–10:** your affinity with her
+    ([game mechanics](../../game-mechanics.md#points-from-every-source)), from chats, gifts, praise, working together
+    and festivals.
   - **At friendship 10, her confession event.** If the farmer accepts, the **romance hearts 0–10** open. Declining keeps
     her a close friend, and the farmer can ask again later.
-  - **At romance 10, the proposal,** with a ring the farmer forges (CS25's Rings: the Forge's Masterwork gives the best
-    one), then **her wedding scene**.
-- **RS7, heart events at every rung.** Each Uma has 26 (D43 adds the spouse ladder):
+  - **At romance 10, the proposal,** with a ring the farmer makes at the Forge
+    ([game mechanics](../../game-mechanics.md#the-ring-bench); the Forge's Masterwork gives the best one), then **her
+    wedding scene**.
+- **RS7, heart events at every rung.** After her arrival scene, each Uma has 26 (27 rungs in all):
   - 10 friendship events;
   - the confession;
   - 10 romance events (dates among them);
@@ -221,10 +235,10 @@ The owner's direction (D40), and the calls that make it writable. Each has an id
   - the wedding;
   - three spouse events after it (S1, S3, S5), so married life goes on.
 
-  Each event says when it opens (D43: her bar full, plus at most one setup the player controls: she works a place today,
-  an item in the Warehouse, another Uma's bond with her, a chapter; never an hour, the weather, a season or a festival),
-  where (a place on the farm: the Fields, the Mine, the Kitchen, the festival ground, the pond at night), what the farmer
-  and she do together, and the one-line hint her profile shows while it's next.
+  Each event says when it opens (her bar full, plus at most one setup the player controls: she works a place today, an
+  item in the Warehouse, another Uma's bond with her, a chapter; never an hour, the weather, a season or a festival),
+  where (a place on the farm: the Fields, the Mine, the Kitchen, the festival ground, the pond at night), what the
+  farmer and she do together, and the one-line hint her profile shows while it's next.
 - **RS8, the romance grows while you work together.** Her events favour the places of her favourite work. Assigning her
   there, praising her, working beside her and taking her to festivals raise hearts, as well as chats and gifts. Some
   events need a shared job or an item: the farm's loop is the romance's stage. Seasons and festivals colour the words.
@@ -233,16 +247,16 @@ The owner's direction (D40), and the calls that make it writable. Each has an id
     are parallel.
   - Each wedding is her own scene.
   - **Marrying every Uma opens the game's final scene,** a farm-wide celebration, the long goal.
-  - **Confirmed by the owner (D43): full polyamory.** The Umas' own world treats a household of many hearts as ordinary,
+  - **Confirmed by the owner: full polyamory.** The Umas' own world treats a household of many hearts as ordinary,
     shown lightly in every route (world bible W15), and the farmer shares several houses with them, choosing who lives
     where and where to spend each night, a cozy fade to morning (W16, RS4).
 
 **What you author**
 - **RS10, each Uma's profile in the farm's world:**
   - who she is now and why she came to the farm;
-  - her favourite work line (it should fit her calling, FM7, and her stats);
+  - her favourite work line (it should fit her calling and her stats);
   - **her gifts by goods id:**
-    - one **loved** (a dish id from CS21 where it fits);
+    - one **loved** (a dish id where it fits: her signature dish, above);
     - three **liked**;
     - two **disliked**;
   - her favourite season and festival;
@@ -251,20 +265,23 @@ The owner's direction (D40), and the calls that make it writable. Each has an id
   - the one thing that makes her laugh, and the one that hurts her.
 - **RS11, the cast's relationships, as one graph:**
   - who are friends, old rivals, mentor and protégée, former teammates, or sisters in all but name. Draw on their real
-    racing careers, as uma-quest's ties do (D36);
+    racing careers, as uma-quest's ties do;
   - each tie has a strength and a short line;
-  - these drive the pair conversations (FC25, FC27) and some heart events (her best friend helps the confession).
+  - these drive the pair conversations ([game mechanics](../../game-mechanics.md#pair-conversations)) and some heart
+    events (her best friend helps the confession).
 - **RS12, pair conversations for the strongest ties.** Each Uma's two closest ties get authored pair conversations at
-  each of the five bond levels. Every other pair keeps CS46's templates, chosen by place, bond level and temperament.
+  each of the five bond levels. Every other pair keeps the game's conversation templates, chosen by place, bond level
+  and temperament.
 - **RS13, the arrivals are authored, not drawn.**
   - The opening scene brings the first three Umas: the bible picks them, one each for farming, foraging and fishing,
-    matching chapter 1 (CS42).
+    matching chapter 1 ([game mechanics](../../game-mechanics.md#the-opening)).
   - The rest arrive in the bible's order, each with a short arrival scene, tied to chapters, festivals and the farm's
-    growth (Dorm beds, CS34).
-  - This replaces CS2's random start and CS35's random Gate draws for the cast. The code change is F41's.
-- **RS14, the original town cast stays.** CS41's eleven (the mayor, the shopkeepers, the rival farmers) host events and
-  give the world its people. They are not romanceable: the romance is the Umas'. Keep their names and roles as CS41 has
-  them, or propose changes.
+    growth (Dorm beds).
+  - On a v4 save this replaces the random start and the Gate's random draws for the cast
+    ([game mechanics](../../game-mechanics.md#arrivals)).
+- **RS14, the original town cast stays.** The town's eleven ([game mechanics](../../game-mechanics.md#the-towns-cast):
+  the mayor, the shopkeepers, the rival farmers) host events and give the world its people. They are not romanceable:
+  the romance is the Umas'. Keep their names and roles as the game has them, or propose changes.
 
 **Where it lives**
 - **RS15, all of it is private.**
@@ -272,10 +289,10 @@ The owner's direction (D40), and the calls that make it writable. Each has an id
     public URL. It names real characters and draws on their canon, so it's original-game content (CLAUDE.md).
   - **Git holds only:**
     - the format (types and a validator, with no names);
-    - a tiny stand-in route with an invented Uma (a placeholder outfit id such as 9000001, the name "Stand-in") for tests;
+    - a tiny stand-in pack with invented Umas (placeholder ids such as 9000001, the name "Stand-in") for tests;
     - any local tool that has no names in it.
-  - **Shipping:** how the story reaches the game (a private bucket and farm-api's private pack route, as uma-rpg's and
-    uma-quest's stories do) is decided later (D41). This packet needs no cloud.
+  - **Shipping:** the story reaches the game through a private bucket and farm-api's private pack route, as uma-rpg's
+    and uma-quest's stories do ([F56](F56-story-delivery.md)). This packet needs no cloud.
 - **RS16, keyed by ids.** Every file keys an Uma by her character id from master data, plus the outfit id her sprite set
   uses where she has one. Inside the private files you may write her name in lines, since they're private. Display names
   in the game still come from master data at runtime.
@@ -283,12 +300,12 @@ The owner's direction (D40), and the calls that make it writable. Each has an id
 **How it's written**
 - **RS17, four layers, each read before the next** (uma-quest's SB9):
   1. **Skeleton:** the world bible, and one paragraph per Uma with her arrival order and ties.
-  2. **Bible:** each Uma's profile, gifts, ties and her route as about 23 one-line beats.
+  2. **Bible:** each Uma's profile, gifts, ties and her route as about 23 one-line beats, with her arrival scene.
   3. **Pilot:** three routes scripted end to end, from the first chat to the wedding.
   4. **Waves:** the rest scripted in waves of five.
 
   **This packet delivers layers 1–3.** Layer 4 is a packet per wave, written after the owner reads the pilot.
-- **RS18, the scene format extends the farm's own** (`story/` today: speaker, line). The JSON shapes are below, and the
+- **RS18, the scene format extends the farm's own** (`story/`: speaker, line). The JSON shapes are below, and the
   validator in git checks them. Steps:
   - `say`: a speaker and a line, with an emote;
   - `choice`: 2–3 farmer options, each with an affinity or romance change and an optional branch;
@@ -296,13 +313,14 @@ The owner's direction (D40), and the calls that make it writable. Each has an id
   - `thought`: the farmer's, in italics;
   - `wait`: a beat;
   - `place`: set the scene;
-  - `flag`: set a story flag.
+  - `flag`: set a story flag;
+  - and the romance's `play` and `when` (above).
 
-  It stays close to uma-quest's script steps (CM17, SB11), so a later shared format is easy.
+  It stays close to uma-quest's script steps (SB11), but each game keeps its own format.
 - **RS19, the farmer's voice.** Kind, a little dry, curious about each Uma. Choices offer warm, playful and honest
   options. None is cruel, and none is a wrong answer that locks a route; a cold answer only gains less.
-- **RS20, the size.** About 150 words an event × 23 events is about 3,500 words a route, so 40 routes come to about
-  140,000 words. The pilot is about 10,000 words, plus 40 bibles of about 600 words each.
+- **RS20, the size.** About 150 words an event × 23 events is about 3,500 words a route, so the 20 routes come to about
+  70,000 words. The pilot is about 10,000 words, plus 20 bibles of about 600 words each.
 
 ## The formats (in git as types; content in `content/story/`)
 
@@ -312,11 +330,18 @@ content/story/                          (ignored by git)
   world.md                              the world bible (layer 1)
   cast.json                             the cast: ids, arrival order, opening three, a paragraph each (layer 1)
   ties.json                             the relationships graph (layer 1, refined in layer 2)
+  tags.json                             each Uma's favourite line, season, festival and loved gift, a reason each
   umas/<characterId>.json               her profile, gifts and route beats (layer 2)
-  routes/<characterId>.json             her scripted events (layer 3: three pilot routes)
+  routes/<characterId>.json             her scripted events: her arrival scene (layer 2), whole routes (layer 3 on)
   pairs/<characterIdA>-<characterIdB>.json   pair conversations for the strongest ties (layer 3 for the pilot's ties)
+  household.json                        the household scenes, house lines and the finale
   reviews.json                          the owner's verdicts per file and event (liked, rework, question, note)
+  notes.md                              the session's private notes: the waves, the counts' summary
 ```
+
+These are the first shapes this packet set. The shapes as built, with every field above (`calling`, `ranker`, a tie's
+`source` and `from`, `together`, `hint`, `unlock`, plays, tones and the rest), are in
+`packages/domain/src/story/authored.ts`, and they win.
 
 ```ts
 // cast.json
@@ -339,11 +364,11 @@ interface UmaBible {
   now: string; whyTheFarm: string; dream: string; blurb: string     // RS3, RS5, RS10
   favouriteLine: 'farming' | 'ranch' | 'mining' | 'fishing' | 'foraging' | 'cooking' | 'serving' | 'forging'
   season: 'spring' | 'summer' | 'autumn' | 'winter'; festival: string
-  gifts: { loved: string; liked: [string, string, string]; disliked: [string, string] }   // goods ids (goods.md)
+  gifts: { loved: string; liked: [string, string, string]; disliked: [string, string] }   // goods ids (goods/ids.ts)
   laughs: string; hurts: string
-  route: Beat[]                                                      // 26, in order (RS7, D43)
+  route: Beat[]                                                      // 27 in order: her arrival, then RS7's 26
 }
-// The shapes as built: packages/domain/src/story/authored.ts (D42, D43), with together, hint, unlock, play steps, tones.
+// As built, a beat also has together, hint and an optional unlock; events have play steps and tones.
 interface Beat { id: string; ladder: 'friendship' | 'confession' | 'romance' | 'proposal' | 'wedding' | 'spouse'
   hearts: number; trigger: Trigger; place: string; together: Together; beat: string; hint: string; unlock?: Unlock }
 type Trigger = { kind: 'hearts' } | { kind: 'working'; activity: string } | { kind: 'item'; good: string }
@@ -351,8 +376,8 @@ type Trigger = { kind: 'hearts' } | { kind: 'working'; activity: string } | { ki
 
 // routes/<characterId>.json  (layer 3)
 interface Route { characterId: string; events: { id: string; steps: Step[] }[] }   // ids match the bible's beats
-type Step =
-  | { say: string; line: string; emote?: 'happy' | 'shy' | 'sad' | 'angry' | 'surprised' | 'thinking' }  // say: a character id or a CS41 cast id
+type Step =   // say: a character id or a town cast id
+  | { say: string; line: string; emote?: 'happy' | 'shy' | 'sad' | 'angry' | 'surprised' | 'thinking' }
   | { choice: { text: string; friendship?: number; romance?: number; then?: Step[] }[] }
   | { narrate: string } | { thought: string } | { wait: number } | { place: string } | { flag: string }
 ```
@@ -366,25 +391,25 @@ The validator checks:
 
 ## Do
 
-1. **Ask the owner for the Studio's SS export.** It's the Playable Umas board's export from `pnpm studio` in
-   uma-platform. Put it in `content/story/export/` and read the board's SS tier in its order.
-2. **Write the format and the validator in git:**
-   - `packages/domain/src/story/authored.ts` (the types above) and its validator, with tests on the stand-in route
-     (RS15);
-   - optionally `tools/story-review/`: a dependency-free local page on loopback that shows the private
-     `content/story/` files and writes the owner's verdicts to `reviews.json`, as uma-quest's Story Sandbox does (SB1,
-     SB13).
+1. **The cast:** read from the Uma Ranker into `cast.json`, in its order. Done; `cast.json` records the read.
+2. **The format and the validator in git:**
+   - `packages/domain/src/story/authored.ts` (the types above) and its validator, with tests on the stand-in pack
+     (RS15). Built; a field the story needs is added there first, with tests;
+   - the review tool: the Farm Story Sandbox, `tools/story-sandbox/`, a dependency-free local page on loopback that
+     shows the private `content/story/` files and writes the owner's verdicts to `reviews.json`, as uma-quest's Story
+     Sandbox does (SB1, SB13). Built.
 
    No names in any of it.
 3. **Layer 1:**
    - `world.md`: the farm's countryside, the town, the seasons, why Umas come here, the tone, and RS3 and RS4 stated as
      the world's rules;
    - `cast.json`, with the opening three and an arrival for every Uma;
-   - `ties.json`.
+   - `ties.json`, and the tag sheet.
 
-   Ask the owner to read it, in one line.
-4. **Layer 2:** `umas/<id>.json` for every Uma in the export, each with her full profile, gifts and about 23 beats. Ask
-   the owner to read them; a wave of ten at a time is fine.
+   Written. Ask the owner to read it, in one line (with F60's counts).
+4. **Layer 2:** `umas/<id>.json` for every Uma in the cast, each with her full profile, gifts and her route's 27 beats,
+   and her arrival scene in `routes/<id>.json`, in waves of five. Ask the owner to read them; a wave of ten at a time is fine.
+   The first wave is written.
 5. **Layer 3, the pilot:**
    - three routes scripted end to end, from the first chat to the wedding;
    - the pair conversations for their two closest ties.
@@ -392,23 +417,25 @@ The validator checks:
    Pick the three for range: three different playstyles, three different favourite lines, and at least one of the
    opening three. Ask the owner to read the pilot.
 6. **Write up:**
-   - log the packet's D-decision with every call you made;
-   - list what the romance spec (F41) must decide from the owner's verdicts: the hearts' numbers, the confession's
-     trigger, how gifts and work pay romance, the wedding's place in the loop, and the final scene's trigger.
+   - say in the commit every call you made (ids and counts only, never a name);
+   - list what the owner's verdicts ask of the game's romance rules (the hearts' numbers, the confession's trigger, how
+     gifts and work pay romance, the wedding's place in the loop, and the final scene's trigger), for a code change and
+     [the game mechanics](../../game-mechanics.md).
 
 ## Done when
 
 - `content/story/` holds:
-  - the world, the cast with arrivals for every SS Uma, and the ties;
-  - a bible for every SS Uma;
+  - the world, the cast with arrivals for every cast Uma, the ties and the tag sheet;
+  - a bible and an arrival scene for every cast Uma;
   - three pilot routes and their pair conversations;
 
   and all of it passes the validator.
 - The owner has read layers 1, 2 and 3, and `reviews.json` holds their verdicts.
-- Git holds only the format, the validator, the stand-in route and any review tool. `pnpm test`, with the private-content
+- Git holds only the format, the validator, the stand-in pack and the sandbox. `pnpm test`, with the private-content
   guard, passes, and `git grep` finds no character name.
-- The content is backed up as a dated copy in uma-platform's backed-up `content/authoring/` (P96). Delivering it to the
-  game (a private bucket and farm-api's private pack route) is later, the owner's call (D41).
+- The content is backed up as a dated copy in uma-platform's private authoring bucket
+  (`gs://uma-platform-authoring/authoring/farm-story/<date>/`, or `pnpm story:push farm`). Delivering it to the game
+  (a private bucket and farm-api's private pack route) is [F56](F56-story-delivery.md)'s.
 
 ## Deliver
 
@@ -417,8 +444,8 @@ The validator checks:
 - The content: never committed.
 - When the owner has read the pilot:
   - delete this packet;
-  - add a Done row in [the handoff](../README.md);
-  - log the D-decision (fetch `main` first).
+  - take its rows out of [the handoff](../README.md);
+  - say in the commit what was written and read (ids and counts only).
 
 ## Rules that hold
 
@@ -430,14 +457,14 @@ The validator checks:
   The private-content guard reads the git index; run `pnpm test` after staging.
 - **RS3 and RS4 hold in every line:** adults only, tender and non-explicit.
 - **The farmer is never gendered and never drawn** (RS2).
-- **Gifts use goods ids that exist** (`goods.md`); new goods are proposals, flagged, never invented silently.
-- **Nothing here changes the game's code or save.** That's F41's and the story packets'.
+- **Gifts use goods ids that exist** (`goods/ids.ts`); new goods are proposals, flagged, never invented silently.
+- **Nothing here changes the game's rules or save.** A rule change the story asks for is a code change of its own.
 
 ## Left to the worker
 
 - The world's details: the town's and the region's names, and why Umas come here.
 - The arrival order beyond the opening three, and each arrival's reason.
 - The pilot's three Umas (RS17's range).
-- The emote list, if the six above are too few.
-- Whether to write the review tool or read the files as markdown with the owner.
+- The emote list, if the format's (`EMOTES`) are too few.
+- What the sandbox shows, as the reading needs it.
 - New goods worth proposing as loved gifts.
