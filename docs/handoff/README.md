@@ -55,7 +55,8 @@ A packet is written when a piece is next and deleted when it ships. Git keeps th
   owner's PC, and the HD-2D stage.
 - **uma-rpg** is frozen. The farm's v2 save engine was copied from it, never imported.
 - **Parcels** to uma-quest, uma-rpg and uma-racer are parked until the farm's own game is done. uma-quest's accept list
-  is final in [its spec](https://github.com/luismlorenzana/uma-quest/blob/main/docs/design/spec/05-accept-list.md).
+  is in [its spec at `a88838b`](https://github.com/luismlorenzana/uma-quest/blob/a88838b/docs/design/spec/05-accept-list.md)
+  (its clean slate removed it from `main`).
 
 ## How a packet reads
 
