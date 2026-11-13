@@ -159,6 +159,8 @@ describe('a fresh farm on v4 (RM8, RM9)', () => {
     await click($('[data-option="0"]'))
     await click($('[data-action="skip"]'))
     expect($('[data-chapter-card="1"]')?.textContent).toContain('A Field Again')
+    // The stand-in's three all come with the opening, so chapter 1 brings no one: no new hand on its card (D74).
+    expect($('[data-chapter-card="1"] [data-reward]')?.textContent).toBe('Reward: +500g, the Mill’s plans, 250 Farm Rank points.')
     await click($('[data-action="plant"]'))
     await until(() => save().arrivals.includes('9000003'))
     expect(save().love['9000003']!.points).toBe(80)

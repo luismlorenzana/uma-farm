@@ -182,7 +182,9 @@ chapter 2 starts from a copy of `farm.counts` taken the night chapter 1 complete
   `joinRoster`, home while a bed is free, else away. The morning's news names her ("… joined", tagged New) with no more
   code. A release with none left gives no recruit.
 - **The morning's New today** opens with "Chapter 1 done · +500g, the Mill's plans, a new hand, 250 Farm Rank points",
-  tagged Chapter, opening the Diary.
+  tagged Chapter, opening the Diary. On v4 (the romance build) a chapter's hand is the cast's arrival for it, so the
+  reward drops "a new hand" when the cast has no chapter-1 arrival: on chapter 1's card, the Diary's card and this line
+  alike (D74; [hearts.md](hearts.md#the-opening-rm9)).
 - **Chapter 2** is a line until M5: its card says **Soon**, and nothing completes again.
 
 <!-- live:chapters -->

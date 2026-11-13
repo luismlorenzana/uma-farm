@@ -29,6 +29,7 @@ import { collectFarm, dismissSummary } from './actions'
 import { FARM_MAP_TILES, lockOf, placeAt, placeLink } from './farm-map'
 import { FieldsPeek, fieldsPips } from './FieldsPeek'
 import { GatePeek } from './GatePeek'
+import { chapterHand } from './goal-words'
 import { pairWords, readyLines } from './hearts-view'
 import { homeWords } from './homestead-view'
 import { NO_HOME, summaryParts } from './summary-words'
@@ -242,7 +243,9 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   // F54: the homestead's lines, the romance build's only.
   const home = useMemo(() => (romanceOn() && save.version === 4 && pack ? homeWords(save, pack, nameOf, (id) => talents.table?.get(id)?.temperament ?? 'steady') : NO_HOME),
     [save, pack, nameOf, talents.table])
-  const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home) : []), [summary, nameOf, ready, pairs, home])
+  // D74: on v4 a chapter's new hand is the cast's arrival for it.
+  const hand = useMemo(() => (chapter: number) => chapterHand(save.version, pack, chapter), [save.version, pack])
+  const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home, hand) : []), [summary, nameOf, ready, pairs, home, hand])
   if (!summary) return null
   return (
     <Sheet

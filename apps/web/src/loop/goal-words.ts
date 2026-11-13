@@ -2,22 +2,31 @@
 // The save holds ids and counts; these say them, for the morning, the Diary and the rank's sheet. Loaded on demand with
 // those screens. Pure, so the screens and the tests read the same.
 import {
-  AREA_NAMES, CHAPTER_POINTS, chapterOf, diaryRowOf, FAMILY_NAMES, farmRankOpens, milestoneOf, paidGold, RANKS, SPOT_NAMES, type ForestAreaId, type FishingSpotId,
-  type GoalState,
+  AREA_NAMES, CHAPTER_POINTS, chapterArrival, chapterOf, diaryRowOf, FAMILY_NAMES, farmRankOpens, milestoneOf, paidGold, RANKS, SPOT_NAMES, type ForestAreaId,
+  type FishingSpotId, type GoalState, type StoryPack,
 } from '@farm/domain'
 
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 const BUILDING_PLANS: Readonly<Record<string, string>> = { mill: 'the Mill’s plans' }
 
-/** A chapter's reward in a line: "+500g, the Mill's plans, a new hand, 250 Farm Rank points". */
-export function rewardWords(chapter: number): string {
+/** Whether a chapter's reward brings a new hand on this save (D74): on v3 the chapter's drawn recruit; on v4 its hand is
+ * the cast's authored arrival for that chapter (F46 decision 8), so none when the cast has none, or before the pack loads.
+ * Never who (decision 14): the words stay "a new hand". */
+export function chapterHand(version: number, story: Pick<StoryPack, 'cast'> | null, chapter: number): boolean {
+  const recruit = chapterOf(chapter)?.reward?.recruit ?? false
+  return version === 4 ? recruit && story !== null && chapterArrival(story, chapter) !== null : recruit
+}
+
+/** A chapter's reward in a line: "+500g, the Mill's plans, a new hand, 250 Farm Rank points"; without the hand when it
+ * brings none (`chapterHand`). */
+export function rewardWords(chapter: number, hand = chapterOf(chapter)?.reward?.recruit ?? false): string {
   const reward = chapterOf(chapter)?.reward
   if (!reward) return ''
-  return [`+${gold(reward.gold)}`, ...reward.plans.map((b) => BUILDING_PLANS[b] ?? `${b} plans`), ...(reward.recruit ? ['a new hand'] : []), `${CHAPTER_POINTS} Farm Rank points`].join(', ')
+  return [`+${gold(reward.gold)}`, ...reward.plans.map((b) => BUILDING_PLANS[b] ?? `${b} plans`), ...(hand ? ['a new hand'] : []), `${CHAPTER_POINTS} Farm Rank points`].join(', ')
 }
 
 /** "Chapter 1 done · +500g, the Mill's plans, a new hand, 250 Farm Rank points". */
-export const chapterDoneWords = (chapter: number): string => `Chapter ${chapter} done · ${rewardWords(chapter)}`
+export const chapterDoneWords = (chapter: number, hand?: boolean): string => `Chapter ${chapter} done · ${rewardWords(chapter, hand)}`
 
 /** "Farm Rank 2 · Block B (800g), Dorm level 3 (8 beds), New seeds at the shop". */
 export const farmRankWords = (rank: number, version = 3): string => {
