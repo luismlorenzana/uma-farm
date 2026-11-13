@@ -14,18 +14,19 @@ describe('the push routes', () => {
     }
   })
 
-  it('takes a schedule of Wilds places and times, never a save', () => {
+  it('takes a schedule of the farm\'s work places and times, never a save', () => {
     const at = Date.parse('2026-11-08T12:00:00.000Z')
     expect(parseSchedule({ entries: [] })).toEqual([])
     expect(parseSchedule({ entries: [{ at, place: 'mine', badge: 1, outfitId: '101' }] })).toEqual([{ at, place: 'mine', badge: 1 }])
     const refused = [
       null, [], { entries: {} }, { save: {} },
-      { entries: Array.from({ length: 61 }, () => ({ at, place: 'mine', badge: 1 })) },
+      { entries: Array.from({ length: 37 }, () => ({ at, place: 'mine', badge: 1 })) },
       { entries: [{ at, place: 'forge', badge: 1 }] },
       { entries: [{ at: 'soon', place: 'mine', badge: 1 }] },
       { entries: [{ at: 1.5, place: 'mine', badge: 1 }] },
       { entries: [{ at, place: 'mine', badge: -1 }] },
-      { entries: [{ at, place: 'mine', badge: 61 }] },
+      { entries: [{ at, place: 'mine', badge: 37 }] },
+      { entries: [{ at, place: 'fields', badge: 1 }] },
       { entries: [null] },
     ]
     for (const bad of refused) expect(() => parseSchedule(bad)).toThrow(BadRequestException)
