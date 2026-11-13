@@ -25,8 +25,8 @@ before changing anything.
 - **Don't touch production infrastructure** unless your task says so: `.github/workflows/`, `infra/`, `firebase.json`,
   `.env.production` and `apps/api/Dockerfile`. GCP project `uma-rpg` also runs uma-rpg and uma-quest: never touch their
   pieces.
-- **Never import from uma-rpg, uma-racer or uma-quest.** uma-rpg's work engine is copied at a recorded commit, with its
-  tests, and stays only to read and migrate v2 saves.
+- **Never import from uma-rpg, uma-racer or uma-quest.** The few pieces copied from uma-rpg (the save's envelope and
+  sync, the API's save and push modules) say so at their top and are owned here.
 - **No server ever writes into a save.** Parcels, when they come, are one-way: the farm sends and the games receive.
 - **Docs stay true:** a rule change updates `docs/game-mechanics.md` in the same commit (`pnpm docs:update` regenerates
   its tables and every page in `docs/pages/`). A finished packet is deleted in the commit that finishes it, and its
