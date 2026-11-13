@@ -26,7 +26,7 @@
   - Once [F61](F61-open-story-pack.md) ships, `docs/story-pack.md` lists everything the game can read. Every item is
     optional, and each comes with what plays when it's missing.
   - Write into the pack only what you want the game to show. Anything missing plays as a placeholder
-    ([F62](F62-story-placeholders.md)), and each new pack adds what it has.
+    ([F63](F63-story-placeholders.md)), and each new pack adds what it has.
 - **Until F61 ships,** the checker still complains about fixed counts:
   - the opening three and their order;
   - list sizes;
@@ -38,8 +38,10 @@
   - **Who:** any character in master data, by her `characterId`.
   - **The welcome list:** the pack names who welcomes the farmer in the first days. It can be any number, in order,
     and the first five in the cast are the default.
-  - **Her trigger:** how her story begins is the story's choice, from the trigger menu ([F65](F65-meeting-her.md)),
+  - **Her trigger:** how her story begins is the story's choice, from the trigger menu ([F67](F67-meeting-her.md)),
     or the default: three days' talks in town.
+  - **Her chapters:** how many, their titles and which of her events each holds are the story's choice too, all
+    optional ([F68](F68-her-chapters.md)); with none, she has four default chapters.
 - **Going live:** when the owner wants a pack in the game, `pnpm story:release` builds it, and Claude publishes it
   (`pnpm story:publish`) to the farm's private bucket. Any pack can go; a partial one is normal.
 

@@ -1,6 +1,6 @@
 # F61 — An open story pack
 
-**uma-farm · Claude · M · Needs: nothing · Unblocks: the story session, F62–F65 · [Roadmap](../../roadmap.md#phase-1-live-with-the-storys-frame):
+**uma-farm · Claude · M · Needs: nothing · Unblocks: the story session, F62–F68 · [Roadmap](../../roadmap.md#phase-1-one-game-built-around-the-umas):
 Phase 1, step 1.1**
 
 > The story drives the game; the game never drives the story. A pack is a menu of what the game can read, not a
@@ -35,15 +35,27 @@ The owner wants to define as many characters as the story needs, in any order, a
    - the opening three and their order go;
    - so do the fixed sizes of the cast, chat sets, gift lists, the wedding's places and the route's rungs.
 
-   Where the game needs a number, it uses what the pack gives and fills the rest from its placeholders (F62).
-4. **A welcome list:** the pack may name characters, any number, in order, who come to the farm early (F65). With none
+   Where the game needs a number, it uses what the pack gives and fills the rest from its placeholders (F63).
+4. **What the menu offers for each character, all optional:**
+
+   | Item | What it does |
+   |---|---|
+   | **Her outfit and lines** | How she looks and what she says |
+   | **Her trigger to meet** | From the trigger menu (F67) |
+   | **Her chapters** | Their titles, which of her events each holds, and an optional farm gate for each, from the same menu (F68) |
+   | **Her events, tastes and birthday** | As the game reads them today |
+
+5. **A welcome list:** the pack may name characters, any number, in order, who come to the farm early (F67). With none
    named, it's the first five characters in the pack's cast order.
-5. **Any pack can be released.** `pnpm story:release` prints the notes and refuses only a pack whose index can't be
+6. **Any pack can be released.** `pnpm story:release` prints the notes and refuses only a pack whose index can't be
    written. A partial pack is the normal case.
-6. **The menu is written down:** `docs/story-pack.md` lists everything the game can read from a pack. For each item it
+7. **Publishing:**
+   - **When:** whenever the owner wants a pack in the game, `pnpm story:publish` sends it to the private bucket.
+   - **The first publish adds the isolation checks** to [infrastructure.md](../../technical/infrastructure.md):
+     signed out 401, the owner signed in 200, an unlisted path 404.
+8. **The menu is written down:** `docs/story-pack.md` lists everything the game can read from a pack. For each item it
    gives what it does in play and what plays when it's missing. It's a menu for the story session, never a requirement.
    It gets a page in `docs/pages/`, through `scripts/docs-pages.mjs`'s list.
-7. **No save change.** v4 is still dark; nothing here touches a save.
 
 ## Do
 
@@ -52,23 +64,25 @@ The owner wants to define as many characters as the story needs, in any order, a
 2. **The release:** `scripts/story/release.mjs` releases with notes and refuses on index errors only. Update its tests.
 3. **The sandbox** (`tools/story-sandbox/`): its checks show as notes, with a count. Nothing in it blocks writing,
    reading or releasing.
-4. **The welcome list** in the cast's format (decision 4), read by `pack.ts` with its default.
-5. **`docs/story-pack.md`** (decision 6) and the mechanics document's story-pack section.
+4. **The welcome list, her trigger and her chapters** in the cast's format (decisions 4 and 5), read by `pack.ts` with
+   their defaults. F67 and F68 act on them.
+5. **`docs/story-pack.md`** (decision 8) and the mechanics document's story-pack section.
 
 ## Done when
 
 - `pnpm lint`, `pnpm test` and `pnpm build` pass.
-- A pack with five opening characters in any order, one with forty characters, and one with a single character and no
-  routes all read and release, with notes only.
+- These packs all read and release, with notes only:
+  - one with five opening characters in any order;
+  - one with forty characters;
+  - one with a single character and no routes.
 - A pack with one broken event loses only that event.
 - The sandbox opens each of those packs and shows its notes.
-- The deployed build (v3) is unchanged.
 
 ## Deliver
 
 Branch `feat/f61-open-story-pack` and a pull request. In it:
 - the packet deleted;
-- the roadmap's step 1.1 removed;
+- the roadmap's step removed;
 - [the handoff](../README.md) updated;
 - [the game mechanics](../../game-mechanics.md) updated.
 
@@ -79,4 +93,4 @@ with a link to `docs/story-pack.md`.
 
 - the notes' wording;
 - the exact line-length limits, from the screens;
-- how the welcome list is spelled in the cast file.
+- how the welcome list, the trigger and the chapters are spelled in the cast file.

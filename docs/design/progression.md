@@ -1,8 +1,10 @@
 # Progression without global chapters
 
-**A proposal, for the owner's go.** The farm has no global chapters and no global story. The farm grows by what you earn
-and grow, and by the lives you build with the Umas. The story lives in each Uma, in her own chapters. The page view is
-[progression.html](../pages/progression.html).
+**Adopted by the owner, 2026-11-13** ("this progression and update makes sense to me"). The farm has no global chapters
+and no global story. The farm grows by what you earn and grow, and by the lives you build with the Umas. The story lives
+in each Uma, in her own chapters. It's built by [F64](../handoff/tasks/F64-farm-by-building.md) and
+[F68](../handoff/tasks/F68-her-chapters.md), and moves into [the game mechanics](../game-mechanics.md) as it lands. The
+page view is [progression.html](../pages/progression.html).
 
 ## The idea
 
@@ -16,11 +18,11 @@ and grow, and by the lives you build with the Umas. The story lives in each Uma,
 
 ## What global chapters do today, and what replaces each
 
-Everything below is in the code today; v3, the live farm, has chapter 1 only.
+Everything below is in the code today; the deployed farm (v3) has chapter 1 only.
 
 | Today, gated by a global chapter | Proposed |
 |---|---|
-| Chapter 1's six goals and its reward: 500g, the Mill's plans, a recruit, 250 Farm Rank points | The Mill is the first thing you build, at Farm Rank 1. New people come from the town, by meeting them ([F65](../handoff/tasks/F65-meeting-her.md)) |
+| Chapter 1's six goals and its reward: 500g, the Mill's plans, a recruit, 250 Farm Rank points | The Mill is the first thing you build, at Farm Rank 1. New people come from the town, by meeting them ([F67](../handoff/tasks/F67-meeting-her.md)) |
 | The Coop and the Barn, at chapter 2 | Built, from Farm Rank 2 and 3 |
 | The Mine, the Quarry, the Smelter and the Cutter, at chapter 3 | Built, from Farm Rank 4 and 5 |
 | The Kitchen, at chapter 4 | Built, from Farm Rank 5 |
@@ -110,27 +112,16 @@ There's no global ending. Instead:
 - **the people:** as many stories as you choose to follow, each to its own end, and a homestead full of houses;
 - **the years:** festivals, seasons, records, and the household's milestones.
 
-## What it changes, if you say go
+## Where it's built
 
-| Where | Change |
+| Packet | What it builds of this |
 |---|---|
-| **The live farm (v3)** | Nothing until the go-live: its chapter 1 stays until v4 ships |
-| **Save v4** (dark, growing in place) | `farm.chapter` goes. The built places already live in `buildings`. Her chapter is worked out from her route, so there are no new fields, except a chapter's farm gate if the story uses one |
-| **[F61](../handoff/tasks/F61-open-story-pack.md), the open pack** | Adds her chapters to the pack's menu: titles, and which events each holds, all optional |
-| **[F62](../handoff/tasks/F62-story-placeholders.md), placeholders** | Adds the four default chapters |
-| **[F65](../handoff/tasks/F65-meeting-her.md), meeting her** | Drops the "finish a chapter" trigger, and adds "a place built" and "a Farm Rank" |
-| **New: F66, the farm grows by building** | Global chapters removed from v4; every place opens by Farm Rank and a build cost; Farm Rank from income alone; the sea by the dock and the boat; the milestones above; the farm's projects replace the Diary's chapter card |
-| **New: F67, her chapters** | Her chapters on her profile and the Hearts tab, with their gates and the morning's line |
-| **[The roadmap](../roadmap.md)** | Phase 1 gains F66 and F67. Phase 2 drops "chapters 2–5": each workshop opens by rank and building, with no global arc. The finish line's "a whole arc" becomes "each Uma's story to its end, and the farm built out" |
+| [F61](../handoff/tasks/F61-open-story-pack.md), the open pack | Her chapters, her trigger and the welcome list in the pack's menu, all optional |
+| [F62](../handoff/tasks/F62-one-game.md), one game | One build on save v4: the live farm's chapter 1 and v3 go |
+| [F63](../handoff/tasks/F63-story-placeholders.md), placeholders | The four default chapters |
+| [F64](../handoff/tasks/F64-farm-by-building.md), the farm by building | Global chapters removed, Farm Rank from income alone, every place by rank and build, the milestones with the Umas, the farm's projects |
+| [F67](../handoff/tasks/F67-meeting-her.md), meeting her | Triggers include "a place built" and "a Farm Rank" |
+| [F68](../handoff/tasks/F68-her-chapters.md), her chapters | Her chapters on her profile and the Hearts tab, their gates, and the morning's line |
 
-**Recommended order:**
-1. F61, the open pack;
-2. F62, placeholders;
-3. F66, the farm by building;
-4. F63, the lean start;
-5. F64, the town;
-6. F65, meeting her;
-7. F67, her chapters;
-8. F56, go live.
-
-F66 comes early because it takes the global chapters out before the start, the town and the meetings are built on top.
+The [roadmap](../roadmap.md#phase-1-one-game-built-around-the-umas) has the order: F61, F62, F63, F64, F65, F66, F67,
+F68.
