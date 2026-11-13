@@ -1,9 +1,9 @@
-// Her acts on her profile (moved by F48 decision 6): Chat +15 (then her
+// Her acts on her profile (on the Hearts tab): Chat +15 (then her
 // line for the day), Gift (the picker with each good's points for her today, or "?") and Praise +20 while earned, 48 pt in
 // the profile's thumb zone. What an act paid goes up to the profile (`onPaid`), which floats it from her face; a note
-// says it ("She likes it. +36"). F50 adds **Evening ›** (her evening at `?evening=<id>`, or why not: "Evening ✓", "Evening ·
-// F2", "Away tonight", "Evening spent"), so Chat, Gift and Evening sit side by side and Praise +20 takes the row under them
-//. Loaded on demand with the Hearts tab, so the M4 build never fetches it.
+// says it ("She likes it. +36"). **Evening ›** is there too (her evening at `?evening=<id>`, or why not:
+// "Evening ✓", "Evening · F2", "Away tonight", "Evening spent"), so Chat, Gift and Evening sit side by side and
+// Praise +20 takes the row under them. Loaded on demand with the Hearts tab, so the deployed build never fetches it.
 import {
   birthdaysOf, canPraise, chatLineV4, DISLIKED_LINE, FAMILY_NAMES, GOOD_FAMILIES, giftPreview, goodName, goodOf, LOVE_POINTS, type SaveV4, type StoryPack,
   type Taste, type Temperament,

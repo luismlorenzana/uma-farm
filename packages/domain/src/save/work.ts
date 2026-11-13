@@ -6,7 +6,7 @@
 // Uma's trade, for R2's trade gate); collects, recalls and settles need none. Speed Tickets and place upgrades stay behind.
 import {
   chainTimes, collect, endsAt, finishedCount, isRefusal, kindRules, MAX_QUEUE, progress, queue, recall, settle, slotHolder, slotsOf,
-  start, statusOf, withRow, workRefusal, type Entry, type OpResult, type QueueInput, type Refusal, type SlotRef, type WorkEnv,
+  start, statusOf, withRow, workRefusal, type Entry, type OpResult, type Refusal, type SlotRef, type WorkEnv,
   type WorkRow,
 } from '@luismlorenzana/uma-work'
 import type { JobKind } from '../economy/jobs'
@@ -26,7 +26,6 @@ import { withWorld, type Save } from './save'
 
 export { grantProfessionExp, MAX_QUEUE }
 export type { FarmWorkRequest, WorkContext }
-export type FarmQueueInput = QueueInput<FarmWorkRequest>
 
 /** What work needs from an outfit's master data (a roster outfit fits). Aptitudes no longer set job speed. */
 export interface WorkOutfit {
@@ -146,16 +145,9 @@ export function availableWorkers(world: FarmWorld, now: string, outfitIds: Itera
   return new Set([...outfitIds].filter(id => statusOf(settled.work[id], ms) !== 'working'))
 }
 
-/** Why this Uma can't take a job now, or null: she works one job at a time; a finished one is collected as she starts.
- * Every outfit may work. */
-export function availabilityBlock(world: FarmWorld, outfitId: string, now: string): string | null {
-  const settled = settle(world, msOf(now), envOf()).state
-  return statusOf(settled.work[outfitId], msOf(now)) === 'working' ? 'Already working' : null
-}
-
 // --- Operations: each takes the save and gives it back with the change stamped (`withWorld`) ---------------------------
 
-/** Her row, from her first job (FM6: every outfit may work; she is Craft Lv 1 until she collects). */
+/** Her row, from her first job: every outfit may work; she is Craft Lv 1 until she collects). */
 function withUma(world: FarmWorld, outfitId: string): FarmWorld {
   return world.umas[outfitId] ? world : { ...world, umas: { ...world.umas, [outfitId]: { craft: { level: 1, exp: 0 } } } }
 }
@@ -238,33 +230,12 @@ function queueIn(world: FarmWorld, placeId: string, slot: number, outfit: WorkOu
   return done(queue(settled, { outfitId: outfit.outfitId, add }, msOf(now), env), msOf(now)).state
 }
 
-export function unqueueJob(save: Save, placeId: string, slot: number, index: number, now: string): Save {
-  const env = envOf()
-  const world = settle(save, msOf(now), env).state
-  const outfitId = holderOf(world, placeId, slot)
-  if (!world.work[outfitId]?.queue[index]) throw new SaveRuleError('bad-slot', 'nothing queued there')
-  return withWorld(save, done(queue(world, { outfitId, remove: index }, msOf(now), env), msOf(now)).state, now)
-}
-
-/** Applies the kit's add, remove or move queue edit without translating it through a screen-specific card model. */
-export function editWorkerQueue(save: Save, input: QueueInput<FarmWorkRequest>, now: string, context?: WorkContext): Save {
-  const env = envOf(context)
-  const world = settle(save, msOf(now), env).state
-  return withWorld(save, done(queue(world, input, msOf(now), env), msOf(now)).state, now)
-}
-
 /** Ends her work early: collects what's made; inputs for items never made come back; the item in progress is lost; her
  * queue drops and Repeat forgets her last job. */
 export function recallJob(save: Save, placeId: string, slot: number, now: string): Save {
   const env = envOf()
   const world = settle(save, msOf(now), env).state
   return withWorld(save, recall(world, { outfitId: holderOf(world, placeId, slot) }, msOf(now), env).state, now)
-}
-
-/** Recalls one Uma's work. */
-export function recallWorker(save: Save, outfitId: string, now: string): Save {
-  const env = envOf()
-  return withWorld(save, recall(settle(save, msOf(now), env).state, { outfitId }, msOf(now), env).state, now)
 }
 
 /** The first free slot of a place, or null. */

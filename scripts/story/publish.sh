@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Publishes the story pack (F56 decision 4; romance spec RM60): builds the release from the ignored content/story/
+# Publishes the story pack (romance build): builds the release from the ignored content/story/
 # (`pnpm story:release`, which refuses a pack that fails the validator or lacks a bible or an arrival scene), then uploads
 # the hash-named files first and `story.json` last, so a reader never sees an index that points at missing files. Old
 # hash-named files stay in the bucket, so a phone holding an older index still reads it; the bucket's versioning keeps

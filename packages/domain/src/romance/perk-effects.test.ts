@@ -69,7 +69,7 @@ const block = (id: Block['id'], tender: string | null, plots: Plot[]): Block => 
 const startJob = (save: SaveV4, id: string, place: 'forest', slot = 0): SaveV4 =>
   startLoopJob(save, { outfitId: id, place, slot, request: { kind: 'gather', item: 'pine-log', count: 4 } }, AT, TEST_KINDS)
 
-describe('reached perks (decision 1)', () => {
+describe('reached perks', () => {
   it('reads each perk from her level, never stored: a rung is hers once its event has played', () => {
     expect(hasPerk({ stage: 'friendship', level: 2 }, 'f3')).toBe(false)
     expect(hasPerk({ stage: 'friendship', level: 3 }, 'f3')).toBe(true)
@@ -84,7 +84,7 @@ describe('reached perks (decision 1)', () => {
   })
 })
 
-describe('the romance term and its caps (RM34; decision 2)', () => {
+describe('the romance term and its caps', () => {
   // 9000002 is a forager (her calling): the forest and the Sawmill are her line's places.
   const forager = (love: Partial<Love>) => withLove(farm(), TWO, love)
 
@@ -103,7 +103,7 @@ describe('the romance term and its caps (RM34; decision 2)', () => {
     expect(romanceTerms(forager(spouse(0, { ring: 20 })), PACK, TWO, 'forest')).toMatchObject({ own: 0.35, total: 0.35, held: true })
   })
 
-  it('RM34\'s worked forager: F3, R5, a grade-8 ring, a dream at the forest and 15 married come to +43%, held to +40%', () => {
+  it('the worked forager: F3, R5, a grade-8 ring, a dream at the forest and 15 married come to +43%, held to +40%', () => {
     const pack = packWithFour('foraging')
     let save = withLove(withFour(pack), TWO, spouse(0, { ring: 8 }))
     save = { ...withLove(save, FOUR, spouse(3)), memories: { ...save.memories, [FOUR]: ['s3'] } }
@@ -137,13 +137,13 @@ describe('the romance term and its caps (RM34; decision 2)', () => {
     const ten = extrasTonight(save, [made(TWO, 100)], worked, pack)
     expect(ten.extras[0]!.items).toHaveLength(20)
     expect(ten.perks[0]!.items).toHaveLength(48)
-    // Not at her line, or before F8: ×1.1.
+    // Not at her line, or before the F8 perk: ×1.1.
     expect(extrasShare(save, TWO, 'fishery', [{ outfitId: TWO, place: 'fishery' }, { outfitId: THREE, place: 'fishery' }], pack)).toBeCloseTo(0.1, 9)
     expect(extrasShare(withLove(save, TWO, at('friendship', 7)), TWO, 'forest', worked, pack)).toBeCloseTo(0.1, 9)
   })
 })
 
-describe('the line effects (RM32; decisions 3 and 4)', () => {
+describe('the line effects', () => {
   it('lifts a forager\'s night items ×1.1 at F3 and ×1.2 at R5: an exact count over a seeded sample, the same goods and stars', () => {
     for (const [love, share] of [[at('friendship', 3), 0.1], [at('romance', 5), 0.2]] as const) {
       let total = 0
@@ -222,7 +222,7 @@ describe('the line effects (RM32; decisions 3 and 4)', () => {
   })
 })
 
-describe('night chores (RM32; decision 5)', () => {
+describe('night chores', () => {
   it('counts 1 at F6, 2 at R7 and 3 at S4, never more, and none away', () => {
     expect([at('friendship', 5), at('friendship', 6), at('romance', 7), spouse(4), spouse(5)].map((l) => choresOf(l as Love))).toEqual([0, 1, 2, 3, 3])
     const save = withLove(farm(), TWO, spouse(5))
@@ -270,7 +270,7 @@ describe('night chores (RM32; decision 5)', () => {
   })
 })
 
-describe('morning items (RM31, RM32; decision 6)', () => {
+describe('morning items', () => {
   it('every 4th morning from R2 at ★2+, every 2nd from S2 at ★3+, one a day by her count', () => {
     const r2 = morningRule({ stage: 'romance', level: 2, morning: 10 })!
     expect(r2).toEqual({ every: 4, stars: 2, from: 10 })
@@ -314,7 +314,7 @@ describe('morning items (RM31, RM32; decision 6)', () => {
   })
 })
 
-describe('the mentor (RM33; decision 7)', () => {
+describe('the mentor', () => {
   it('lifts the others at her place ×1.10 while she works there; one mentor a place, never herself', () => {
     const pack = packWithFour('foraging')
     const save = withLove(withFour(pack), TWO, at('friendship', 9))
@@ -342,7 +342,7 @@ describe('the mentor (RM33; decision 7)', () => {
   })
 })
 
-describe('her keepsake (RM31, RM33; decision 8)', () => {
+describe('her keepsake', () => {
   it('adds +0.25 quality at her line from F10, +0.5 from S5, nowhere else', () => {
     const at10 = withLove(farm(), TWO, at('confession', 10))
     expect(keepsakeQuality(withLove(farm(), TWO, at('friendship', 9)), PACK, TWO, 'forest')).toBe(0)
@@ -368,7 +368,7 @@ describe('her keepsake (RM31, RM33; decision 8)', () => {
   })
 })
 
-describe('her signature dish (decision 9)', () => {
+describe('her signature dish', () => {
   it('is her loved good when it\'s a dish, taken as is', () => {
     const bible: UmaBible = { ...json(STAND_IN_BIBLE), gifts: { ...json(STAND_IN_BIBLE).gifts, loved: 'dish-fish-3', proposed: ['dish-fish-3'] } }
     const pack = storyPackFrom({ ...STAND_IN_FILES, umas: { [ONE]: bible } })
@@ -399,7 +399,7 @@ describe('her signature dish (decision 9)', () => {
   })
 })
 
-describe('breakfast (RM35; decision 11)', () => {
+describe('breakfast', () => {
   it('feeds the crew one day when none is; a meal running is neither shortened nor extended; not a staff meal', () => {
     const base = farm()
     const save: SaveV4 = { ...base, roster: { ...base.roster, [TWO]: { ...base.roster[TWO]!, wellFed: 2 } } }
@@ -408,7 +408,7 @@ describe('breakfast (RM35; decision 11)', () => {
     expect([ONE, TWO, THREE].map((id) => after.roster[id]!.wellFed)).toEqual([1, 2, 1])
     expect(after.farm.counts).toEqual(save.farm.counts)
     expect(after.workshops).toEqual(save.workshops)
-    // +5 a pair it fed (F52's breakfast).
+    // +5 a pair it fed (the breakfast).
     expect(bondOf(after, ONE, THREE) - bondOf(save, ONE, THREE)).toBe(5)
     expect(bondOf(after, ONE, TWO)).toBe(bondOf(save, ONE, TWO))
     // Nobody to feed: unchanged.
@@ -418,7 +418,7 @@ describe('breakfast (RM35; decision 11)', () => {
   })
 })
 
-describe('the format\'s keepsake and pet name (decision 13)', () => {
+describe('the format\'s keepsake and pet name', () => {
   it('validates both; the stand-in bible has them', () => {
     const ctx = { umas: new Set(STAND_INS) }
     expect(STAND_IN_BIBLE.keepsake?.name).toBeTruthy()
@@ -430,7 +430,7 @@ describe('the format\'s keepsake and pet name (decision 13)', () => {
     expect(bad({ keepsake: { name: 'x'.repeat(41), line: 'Hi {name}.' } })).toEqual(['keepsake.name: 1–40 characters', 'keepsake.line: unknown placeholder {name} ({farmer} only)'])
     expect(bad({ petName: 'x'.repeat(25) })).toEqual(['petName: 1–24 characters'])
     expect(bad({ petName: '{farmer}' })).toEqual(['petName: no placeholder (it’s what she calls you)'])
-    expect(bad({ petName: 'Bride' })).toEqual(['petName: “Bride” genders the farmer (RS2)'])
+    expect(bad({ petName: 'Bride' })).toEqual(['petName: “Bride” genders the farmer'])
   })
 })
 
@@ -461,7 +461,7 @@ describe('save v4\'s new fields and lines', () => {
   })
 })
 
-describe('v3\'s numbers unchanged (RM59)', () => {
+describe('v3\'s numbers unchanged', () => {
   it('plans, harvests, grows, ranks and ends the night on v3 exactly as before, the pack or not', () => {
     // A v3 farm with an Uma (an outfit id) tending Block A and another at the forest.
     const base = newSave('u1', AT)

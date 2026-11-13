@@ -57,7 +57,7 @@ function farm(day = 2): SaveV4 {
   return { ...joined, today: { ...joined.today, bonds: {} } }
 }
 
-describe('the stand-in pack (decisions 6 and 16)', () => {
+describe('the stand-in pack', () => {
   it('validates, its forager\'s and fisher\'s routes partial, and names every outfit', () => {
     expect(PACK.cast.opening).toEqual([...STAND_INS])
     expect([...PACK.bibles.keys()]).toEqual(['9000001'])
@@ -69,13 +69,13 @@ describe('the stand-in pack (decisions 6 and 16)', () => {
     expect(outfitOf(null, '9000001')).toBe('9000001')
   })
 
-  it('refuses a cast with no outfit (RM2), a bible with no arrival rung, and an arrival with a play or two choices', () => {
+  it('refuses a cast with no outfit, a bible with no arrival rung, and an arrival with a play or two choices', () => {
     const cast = json(STAND_IN_CAST) as unknown as { umas: { outfitId: string | null }[] }
     cast.umas[1]!.outfitId = null
-    expect(castIssues(cast, { umas: new Set(STAND_INS) })).toContain('Uma 2 (9000002): Name her outfit (RM2)')
+    expect(castIssues(cast, { umas: new Set(STAND_INS) })).toContain('Uma 2 (9000002): Name her outfit: outfitId is the outfit she plays as')
     const bible = json(STAND_IN_BIBLE)
     bible.route = bible.route.filter((b) => b.id !== 'arrival')
-    expect(bibleIssues(bible, { umas: new Set(STAND_INS) })).toContain('Her route has no arrival (RS7)')
+    expect(bibleIssues(bible, { umas: new Set(STAND_INS) })).toContain('Her route has no arrival (a route has all 27 rungs)')
     const played = { characterId: '9000002', events: [{ id: 'arrival', steps: [
       { narrate: 'Hi.' }, { play: { game: 'walk', prompt: 'Walk' } },
       { choice: [{ text: 'A.', tone: 'warm', friendship: 10 }, { text: 'B.', tone: 'warm', friendship: 5, then: [{ choice: [{ text: 'C.', tone: 'warm', friendship: 5 }, { text: 'D.', tone: 'honest' }] }] }] },
@@ -94,7 +94,7 @@ describe('the stand-in pack (decisions 6 and 16)', () => {
   })
 })
 
-describe('the opening and arrivals (RM4, RM9; decisions 8 and 9)', () => {
+describe('the opening and arrivals', () => {
   it('reading the opening joins the opening three home, once, each at Friendship 0', () => {
     const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' } }
     expect(sceneDue(fresh)).toBe('scene:1:open')
@@ -204,7 +204,7 @@ describe('the opening and arrivals (RM4, RM9; decisions 8 and 9)', () => {
   })
 })
 
-describe('her arrival scene (decision 10)', () => {
+describe('her arrival scene', () => {
   const route = STAND_IN_FILES.routes['9000002'] as { events: { steps: import('../story/authored').Step[] }[] }
   const steps = route.events[0]!.steps
 
@@ -237,7 +237,7 @@ describe('her arrival scene (decision 10)', () => {
   })
 })
 
-describe('her favourite line and tastes (RM6, RM7; decision 13)', () => {
+describe('her favourite line and tastes', () => {
   it('reads the bible, else the calling; quarry is mining at the Quarry', () => {
     const pack = packWith({ characterId: '9000004', arrives: { kind: 'beds', dormLevel: 6 }, calling: 'quarry' }, { characterId: '9000005', arrives: { kind: 'beds', dormLevel: 7 }, calling: 'mining' })
     expect(favouriteOf(pack, '9000001')).toBe('farming')
@@ -277,7 +277,7 @@ describe('her favourite line and tastes (RM6, RM7; decision 13)', () => {
   })
 })
 
-describe('the farmer\'s name (RM8; decision 11)', () => {
+describe('the farmer\'s name', () => {
   it('takes letters of any script, spaces, apostrophes and hyphens, 1–16 after trimming', () => {
     expect(farmerNameIssue('Sixteen Letters!')).toBe('Letters, spaces, \' and - only')
     expect(farmerNameIssue('A'.repeat(16))).toBeNull()

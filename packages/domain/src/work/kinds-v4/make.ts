@@ -1,5 +1,5 @@
 // Copied from uma-rpg packages/domain/src/work/kinds-v4/make.ts at 30a322a, with its Wilds-only parts cut.
-// Making under the farm by line (farm-by-line.md FL3): a making place makes its one item from
+// Making under the farm by line: a making place makes its one item from
 // its own line's refined items of the item's grade (`madeRecipeV4`), one step for each refined item in it (`stepMinutes`
 // for each refined item), grade g at Craft Lv 5g − 4 (a jewel's grade is its node's); paid into the Warehouse.
 import { payItems, workRefusal, type WorkKindRules } from '@luismlorenzana/uma-work'

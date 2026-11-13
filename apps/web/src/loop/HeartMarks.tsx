@@ -1,6 +1,6 @@
 // The Hearts marks: the stage hearts, the bar's segments and the route's track are
 // CSS shapes in the ladders' colours (coral, rose, gold), since they fill by points; the Ready and invitation chips carry
-// F55's `hearts/ready` and `hearts/invitation` marks (uma-art 2.26.0, pinned from F49), a glyph without them. Loaded on
+// the `hearts/ready` and `hearts/invitation` marks (uma-art 2.26.0), a glyph without them. Loaded on
 // demand with the Hearts tab.
 import { UiMark } from '@luismlorenzana/uma-kit/ui'
 import type { HeartBar, TrackCell } from './hearts-view'
@@ -48,7 +48,7 @@ export function ReadyChip({ colour }: { colour: string }) {
   )
 }
 
-/** "✉" an invitation from her today, uma-art's `hearts/invitation` mark (F50 sends them). */
+/** "✉" an invitation from her today, uma-art's `hearts/invitation` mark. */
 export function InviteChip() {
   return (
     <span className="inline-flex shrink-0 items-center rounded-full bg-[#e0567a]/15 px-1.5 text-[11px] leading-5 font-bold text-[#c2385e]" aria-label="An invitation" data-invite-chip>

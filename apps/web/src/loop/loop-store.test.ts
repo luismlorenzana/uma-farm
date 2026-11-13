@@ -1,4 +1,4 @@
-// The store (live from F24): every v2 it meets (on the device, on the server, in a 409, in a safety
+// The store (the loop's): every v2 it meets (on the device, on the server, in a 409, in a safety
 // copy) becomes v3 once, committed without moving `updatedAt`. An in-memory server with the API's revision and version
 // rules, and a fake IndexedDB. Invented outfit ids only. The owner's own first open is `owner-save.test.tsx`.
 import 'fake-indexeddb/auto'
@@ -87,7 +87,7 @@ describe('the loop boots a v2 into v3 once', () => {
     expect(useGame.getState()).toMatchObject({ revision: 6, dirty: false })
   })
 
-  it('starts a new account on day 1 with 9 Carrot seeds and nobody yet, the start\'s sheet to pick from (F23)', async () => {
+  it('starts a new account on day 1 with 9 Carrot seeds and nobody yet, the start\'s sheet to pick from', async () => {
     await boot('u1')
     expect(v3()).toMatchObject({ version: 3, calendar: { day: 1 }, gold: 500, roster: {}, items: { 'seed-carrot': [9, 0, 0, 0, 0] } })
     expect(v3().dorm.home).toEqual([])

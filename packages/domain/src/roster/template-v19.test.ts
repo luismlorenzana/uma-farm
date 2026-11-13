@@ -1,5 +1,5 @@
 // Copied from uma-rpg packages/domain/src/roster/template-v19.test.ts at 30a322a, with its Wilds-only parts cut.
-// Classes v3's calling (classes-v3.md §5): her Tier 0 from her best running styles alone, no pick. Invented
+// Classes v3's calling: her Tier 0 from her best running styles alone, no pick. Invented
 // outfits only: every grade here is made up.
 import type { AptitudeGrade, Aptitudes } from '@luismlorenzana/uma-data'
 import { describe, expect, it } from 'vitest'
@@ -13,19 +13,19 @@ function uma(style: Grades<Style>): CallingOutfit {
 }
 const best = (styles: readonly Style[]) => uma(Object.fromEntries(styles.map((s) => [s, 'A'])))
 
-describe('the calling by running style (CV19, §5)', () => {
-  it('reads §5.1\'s five rows, the first that fits', () => {
+describe('the calling by running style', () => {
+  it('reads the five rows, the first that fits', () => {
     expect([best(['front']), best(['pace']), best(['pace', 'late']), best(['end']), best(['late'])].map(umaCallingRowV3)).toEqual([1, 2, 3, 4, 5])
     expect(UMA_ROW_CALLING_V3).toEqual({ 1: 'recruit', 2: 'duelist', 3: 'apprentice', 4: 'caller', 5: 'acolyte' })
   })
 
-  it('gives every combination of best styles §5.2\'s Tier 0', () => {
+  it('gives every combination of best styles the table\'s Tier 0', () => {
     const styles: readonly Style[] = ['front', 'pace', 'late', 'end']
     const subsets = Array.from({ length: 15 }, (_, i) => styles.filter((_, k) => (i + 1) & (1 << k)))
     const want = (set: readonly Style[]): UmaCallingClass => set.includes('front') ? 'recruit' : set.includes('pace') ? (set.length === 1 ? 'duelist' : 'apprentice')
       : set.includes('end') ? 'caller' : 'acolyte'
     for (const set of subsets) expect(umaCalling(best(set)), set.join(' + ')).toBe(want(set))
-    // §5.2's rows by name.
+    // The table's rows by name.
     const table: [Style[], UmaCallingClass][] = [
       [['front'], 'recruit'], [['front', 'pace'], 'recruit'], [['front', 'late'], 'recruit'], [['front', 'end'], 'recruit'],
       [['front', 'pace', 'late', 'end'], 'recruit'], [['pace'], 'duelist'], [['pace', 'late'], 'apprentice'], [['pace', 'late', 'end'], 'apprentice'],

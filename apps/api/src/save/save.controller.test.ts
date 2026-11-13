@@ -46,7 +46,7 @@ describe('the save upload', () => {
     expect(repo.rescue).not.toHaveBeenCalled()
   })
 
-  it('stores a v3 upload as sent (F17)', async () => {
+  it('stores a v3 upload as sent', async () => {
     const { repo, controller } = fake(async (_uid, revision, save) => ({ revision: revision + 1, save }))
     const save = JSON.parse(JSON.stringify(newSave('u', NOW))) as unknown
     await expect(controller.put('u', { baseRevision: 3, save })).resolves.toEqual({ revision: 4, save })
@@ -60,7 +60,7 @@ describe('the save upload', () => {
     expect(repo.rescue).toHaveBeenCalledWith('u', body, expect.any(String))
   })
 
-  it('keeps a v2 upload refused for a stored v3: a Wilds client after the loop (F17)', async () => {
+  it('keeps a v2 upload refused for a stored v3: a Wilds client after the loop', async () => {
     const stored = { revision: 5, save: newSave('u', NOW) }
     const { repo, controller } = fake(async () => { throw new RevisionConflict(stored) })
     const body = upload()

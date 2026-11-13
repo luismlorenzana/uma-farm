@@ -66,8 +66,8 @@ function packWishing(wishes: UmaBible['wishes'], id = ONE): StoryPack {
 }
 const NO_WISHES = packWishing(undefined)
 
-describe('the houses (RM41; decisions 1 and 3)', () => {
-  it('costs RM41\'s table: 408,000g for six, 612,000g extended; 2 rooms, 4 extended, 26 in all', () => {
+describe('the houses', () => {
+  it('costs the table: 408,000g for six, 612,000g extended; 2 rooms, 4 extended, 26 in all', () => {
     expect(HOUSE_COSTS).toEqual([8000, 20000, 40000, 70000, 110000, 160000])
     expect(EXTENSION_COSTS).toEqual([4000, 10000, 20000, 35000, 55000, 80000])
     expect(HOUSE_COSTS.reduce((a, b) => a + b)).toBe(408_000)
@@ -114,7 +114,7 @@ describe('the houses (RM41; decisions 1 and 3)', () => {
   })
 })
 
-describe('rooms (RM42, RM44; decision 4)', () => {
+describe('rooms', () => {
   it('gives her the Farmhouse at her wedding, at once: she leaves the Dorm, freeing her bed, and is still on the farm', () => {
     const save = farm(30)
     const wed = playWedding(save, NO_WISHES)
@@ -203,7 +203,7 @@ describe('rooms (RM42, RM44; decision 4)', () => {
   })
 })
 
-describe('the night (RM22, RM23; decisions 5, 6 and 8)', () => {
+describe('the night', () => {
   it('defaults Sleep at to the house slept in least lately, ties the lower number; your pick is noted, then cleared', () => {
     let save = buildHouse(spouse(spouse(farm(30), ONE), TWO, 3), 'Rose Cottage')
     save = moveSpouse(moveSpouse(save, ONE, 0), TWO, 1)
@@ -242,7 +242,7 @@ describe('the night (RM22, RM23; decisions 5, 6 and 8)', () => {
   })
 })
 
-describe('the house\'s morning (RM43, RM44; decision 7)', () => {
+describe('the house\'s morning', () => {
   /** 9000001 and 9000002 in the Farmhouse, married on day 2, 9000003 home in the Dorm. */
   const house = (love: Partial<Love> = {}) => moveSpouse(moveSpouse(spouse(spouse(farm(30), ONE, 2, love), TWO, 3, love), ONE, 0), TWO, 0)
 
@@ -319,7 +319,7 @@ describe('the house\'s morning (RM43, RM44; decision 7)', () => {
   })
 })
 
-describe('the household (RM45–RM47; decisions 9, 10 and 13)', () => {
+describe('the household', () => {
   /** `n` married spouses, all invented, on day `day`, away (the Dorm holds 20). */
   const marriedFarm = (n: number, day = 30) => more(farm(day), n, 9000004, false)
 
@@ -396,7 +396,7 @@ describe('the household (RM45–RM47; decisions 9, 10 and 13)', () => {
   })
 })
 
-describe('the format: household.json and wishes (RM58; decisions 11 and 12)', () => {
+describe('the format: household.json and wishes', () => {
   const ctx = { umas: new Set(STAND_INS) }
   const household = () => json(STAND_IN_FILES.household) as Household
 
@@ -425,14 +425,14 @@ describe('the format: household.json and wishes (RM58; decisions 11 and 12)', ()
     expect(issues).toContain('Household scene at 5: written twice')
     expect(issues).toContain('Household scene at 10: missing')
     expect(issues).toContain('houseLines 9000001 1: a line of 1–120 characters')
-    expect(issues).toContain('houseLines 9000001 2: “sir” genders the farmer (RS2)')
+    expect(issues).toContain('houseLines 9000001 2: “sir” genders the farmer')
     expect(issues).toContain('houseLines 9000099: not in the cast')
     const wish = { ...json(STAND_IN_BIBLE), wishes: ['own-house', 'own-house', 'a-pony'] }
     expect(bibleIssues(wish, ctx)).toEqual(['wishes 3: own-house or birthday-alone', 'wishes: each once'])
   })
 })
 
-/** 9000001's wedding played on `save` with her default room (F53's outcome, the stand-in's script). */
+/** 9000001's wedding played on `save` with her default room (the stand-in's script). */
 function playWedding(save: SaveV4, pack: StoryPack): SaveV4 {
   const ready = withLove(save, ONE, { stage: 'wedding', level: 10, points: 0, last: save.calendar.day - 1, ring: 3 })
   const route = STAND_IN_FILES.routes[ONE] as { events: { id: string; steps: never[] }[] }
@@ -440,8 +440,8 @@ function playWedding(save: SaveV4, pack: StoryPack): SaveV4 {
   return playEvent(ready, pack, ONE, { event: { id: 'wedding', steps }, picks: [0, 1], plays: [{ kind: 'rhythm', score: 95 }], place: 'chapel-bell', reception: null }).save
 }
 
-describe('v3 is unchanged (D29; RM59)', () => {
-  it('runs none of F54\'s steps on a v3 night, and keeps v3\'s steps and on-the-farm rule', () => {
+describe('v3 is unchanged', () => {
+  it('runs none of the romance steps on a v3 night, and keeps v3\'s steps and on-the-farm rule', () => {
     const v3 = newSave('u1', AT)
     const night = { before: v3, save: v3, context: context(), notes: emptyNotes() }
     for (const step of [noteTonight, shareTheHouses, levelAtNight, householdMilestones, houseMorningStep, moveInRooms, vowsMorning]) expect(step(night)).toBe(night)

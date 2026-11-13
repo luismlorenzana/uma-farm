@@ -115,7 +115,7 @@ afterEach(async () => {
   vi.restoreAllMocks()
 })
 
-describe('her event from her row (decisions 2, 3, 7, 8; RM54)', () => {
+describe('her event from her row', () => {
   it('plays Friendship 1 from ● Ready: the place card, her lines, Skip stopping at the choice, each option\'s gain, then the play', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(ready('friendship', 0, 'f1', 2)) })
     await render(<HeartsPage />, '/hearts')
@@ -192,7 +192,7 @@ describe('her event from her row (decisions 2, 3, 7, 8; RM54)', () => {
   })
 })
 
-describe('her confession (decision 10)', () => {
+describe('her confession', () => {
   it('Not yet keeps her a close friend; Ask her on her profile, once a day, then Yes opens romance with the stage-up', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm({ stage: 'confession', level: 10, points: 0, last: 2 }) })
     await render(<HeartsPage />, `/hearts?uma=${ONE}`)
@@ -245,7 +245,7 @@ describe('her confession (decision 10)', () => {
   })
 })
 
-describe('Memories (decision 12)', () => {
+describe('Memories', () => {
   it('her album lists her Memories; a replay from a choice point plays every option open and pays nothing', async () => {
     const played = farm(ready('friendship', 1, 'f2'))
     useGame.setState({ uid: 'u1', status: 'ready', save: { ...played, memories: { [ONE]: ['f1'] }, love: { ...played.love, [ONE]: { ...played.love[ONE]!, stage: 'friendship', level: 1 } } } })
@@ -279,7 +279,7 @@ describe('Memories (decision 12)', () => {
   })
 })
 
-describe('the morning (RM54, RM57)', () => {
+describe('the morning', () => {
   it('a Ready line plays her event over the morning', () => {
     const lines = heartsLines([], [{ id: ONE, rung: 'f1', place: 'the Fields' }], () => 'Stand-in 1')
     expect(lines[0]).toEqual({ key: `ready:${ONE}`, to: `/?event=${ONE}`, tag: 'Play', text: '● Ready · Stand-in 1 · Friendship 1 · the Fields' })

@@ -48,7 +48,7 @@ function farming(): SaveV3 {
   }
 }
 
-/** A morning summary on day 1: every line kind F18, F19 and F21 write. */
+/** A morning summary on day 1: every line kind the night writes. */
 const SUMMARY: MorningSummary = {
   day: 1, bin: [{ kind: 'sold', id: 'carp', stars: 2, count: 3, gold: 150, demand: false }, { kind: 'sold', id: 'carp', stars: 1, count: 1, gold: 40, demand: false }], work: [{ kind: 'jobs', place: 'forest', jobs: 1, items: 5 }],
   ranks: [{ kind: 'rank-up', outfitId: '101', activity: 'farming', rank: 1 }, { kind: 'full', outfitId: '101', activity: 'farming', rank: 2, challenge: 0 }], bonds: [],
@@ -62,7 +62,7 @@ const entry = (item: string, n: number): Entry<LoopWorkRequest> => ({
   collected: 0, speed: 1, fromQueue: false,
 })
 
-describe('day 1 (CS3)', () => {
+describe('day 1', () => {
   it('starts with 500g, 9 Carrot seeds, Block A of 9 empty plots, the Dorm at level 1 and chapter 1', () => {
     const save = newSave('u1', AT)
     expect(save).toMatchObject({
@@ -167,7 +167,7 @@ describe('the parse', () => {
   })
 })
 
-describe('work rows (decision 11)', () => {
+describe('work rows', () => {
   const row = (outfitId: string, building: string, slot: number): WorkRow<LoopWorkRequest> => ({
     outfitId, slot: { building, slot }, entries: [entry('pine-log', 5)], queue: [{ kind: 'gather', item: 'pine-log', count: 1 }], last: null, dropped: null,
   })
@@ -198,7 +198,7 @@ describe('work rows (decision 11)', () => {
   })
 })
 
-describe('size (CS53)', () => {
+describe('size', () => {
   it('fits Firestore with 60 Umas, 1,770 bonds, every good at five stars and 48 work rows', () => {
     const ids = Array.from({ length: 60 }, (_, i) => String(1001 + i))
     const save = newSave('u1', AT)

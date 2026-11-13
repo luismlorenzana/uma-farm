@@ -1,7 +1,7 @@
 name: Verify and deploy production
 
-# Copied from uma-rpg's workflow (F2). The deploy job runs once the repository variable DEPLOY_ENABLED is "true".
-# Every piece is uma-farm's own: the farm-api service, the farm images, the uma-farm site (IN7).
+# Copied from uma-rpg's workflow. The deploy job runs once the repository variable DEPLOY_ENABLED is "true".
+# Every piece is uma-farm's own: the farm-api service, the farm images, the uma-farm site.
 
 on:
   push:
@@ -30,7 +30,7 @@ env:
   HOSTING_URL: https://${{ vars.HOSTING_SITE || 'uma-farm' }}.web.app
   FIRESTORE_DATABASE: ${{ vars.FIRESTORE_DATABASE || 'farm' }}
   MASTER_BUCKET: ${{ vars.MASTER_BUCKET || 'uma-platform-master-data' }}
-  # The story pack's private bucket (F56 decision 6). No default: until the repository variable is set, Cloud Run gets an
+  # The story pack's private bucket. No default: until the repository variable is set, Cloud Run gets an
   # empty value, which names no bucket, so /api/content/… answers 404.
   STORY_BUCKET: ${{ vars.STORY_BUCKET }}
   PUSH_AUDIENCE: ${{ vars.PUSH_AUDIENCE }}
@@ -63,7 +63,7 @@ jobs:
         run: pnpm lint
 
       - name: Run tests
-        # One package at a time, as in uma-rpg: parallel Vitest suites starve the two-core runner (uma-rpg D256).
+        # One package at a time, as in uma-rpg: parallel Vitest suites starve the two-core runner.
         run: pnpm test:ci
 
       - name: Build production artifacts

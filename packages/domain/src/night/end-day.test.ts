@@ -1,6 +1,6 @@
 // End the day: the nine steps in order, seeded and replayable, jobs counted in days on
 // uma-work's clock, well fed's quarter day, the calendar turning, the summary, and one stamp a night. Invented outfit ids
-// and test kinds (`kinds.fixture.ts`) until F22's.
+// and test kinds (`kinds.fixture.ts`) .
 import { endsAt } from '@luismlorenzana/uma-work'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DAY_MS } from '../farm/calendar'
@@ -35,7 +35,7 @@ const nights = (save: SaveV3, n: number) => Array.from({ length: n }).reduce<Sav
 
 afterEach(() => vi.useRealTimers())
 
-describe('the night (CS7)', () => {
+describe('the night', () => {
   it('runs nine steps in order, each a named function', () => {
     expect(NIGHT_STEPS.map((s) => `${s.step} ${s.name}`)).toEqual([
       '1 payTheBin', '2 growCrops', '3 tendAnimals', '4 moveJobs', '4 countHauls', '5 resetWorkshops', '6 tickRanks', '6 tickBonds', '6 countWellFed',
@@ -43,7 +43,7 @@ describe('the night (CS7)', () => {
     ])
   })
 
-  it('gives the same morning from the same save, every time and on every device (CS8), and keeps no random state', () => {
+  it('gives the same morning from the same save, every time and on every device, and keeps no random state', () => {
     const save = start(start(farm(), '101', gather()), '202', make(2))
     const once = night(save)
     expect(night(json(save))).toEqual(once)
@@ -65,7 +65,7 @@ describe('the night (CS7)', () => {
   })
 })
 
-describe('jobs in days on the calendar\'s clock (FC6, decision 1)', () => {
+describe('jobs in days on the calendar\'s clock', () => {
   it('makes a 1-day job Ready after one night, and not before', () => {
     const save = start(farm(), '101', gather())
     expect(loopWorking(save, TEST_KINDS)).toEqual(new Set(['101']))
@@ -85,9 +85,9 @@ describe('jobs in days on the calendar\'s clock (FC6, decision 1)', () => {
     expect(after.map((s) => s.calendar.day)).toEqual([2, 3, 4])
   })
 
-  it('starts a queued job at the boundary, planned with the rank step 6 gave that night (decision 3)', () => {
+  it('starts a queued job at the boundary, planned with the rank step 6 gave that night', () => {
     const queued = editLoopQueue(start(farm(), '101', gather()), { outfitId: '101', add: { request: gather(), building: 'forest' } }, AT, TEST_KINDS)
-    // F21's step stands in: everyone who worked today reaches Skilled foraging.
+    // A stand-in step: everyone who worked today reaches Skilled foraging.
     const ranks: NightStep = (n) => ({
       ...n, save: { ...(n.save as SaveV3), roster: Object.fromEntries(Object.entries((n.save as SaveV3).roster).map(([id, uma]) => [id,
         n.notes.worked.some((w) => w.outfitId === id) ? { ...uma, ranks: { ...uma.ranks, foraging: { points: 160, rank: 2 as const, challenge: 0 } } } : uma])) },
@@ -116,7 +116,7 @@ describe('jobs in days on the calendar\'s clock (FC6, decision 1)', () => {
   })
 })
 
-describe('well fed (CS22, decision 4)', () => {
+describe('well fed', () => {
   const fed = (save: SaveV3, id: string, days: number): SaveV3 => ({ ...save, roster: { ...save.roster, [id]: { ...save.roster[id]!, wellFed: days } } })
 
   it('gives a 2-day making job a quarter day a night, through acceleratedMs, and counts the days down', () => {
@@ -141,14 +141,14 @@ describe('well fed (CS22, decision 4)', () => {
     expect(loopReadyWork(morning).get('mill')).toBe(1)
   })
 
-  it('gives a 1-day job no time: its kind plans more items instead (F22)', () => {
+  it('gives a 1-day job no time: its kind plans more items instead', () => {
     const morning = night(fed(start(farm(), '101', gather()), '101', 3))
     expect(morning.work['101']!.entries[0]!.acceleratedMs).toBe(0)
     expect(morning.roster['101']!.wellFed).toBe(2)
   })
 })
 
-describe('the calendar turns (CS4)', () => {
+describe('the calendar turns', () => {
   it('turns Spring into Summer after day 12, and the year after day 48', () => {
     expect(night(farm(12))).toMatchObject({ calendar: { day: 13 }, summary: { day: 13, news: [{ kind: 'season', season: 'summer' }] } })
     expect(night(farm(48))).toMatchObject({ calendar: { day: 49 }, summary: { day: 49, news: [{ kind: 'season', season: 'spring' }] } })
@@ -168,8 +168,8 @@ describe('the calendar turns (CS4)', () => {
   })
 })
 
-describe('the morning summary (CS5, decision 11)', () => {
-  it('lists work done by place, the news and the idle Umas, in CS5\'s order, hiding empty sections', () => {
+describe('the morning summary', () => {
+  it('lists work done by place, the news and the idle Umas, in section order, hiding empty sections', () => {
     const save = start(start(start(farm(12), '101', gather()), '202', make(1)), '303', gather())
     const morning = night(save)
     expect(morning.summary).toEqual({
@@ -190,7 +190,7 @@ describe('the morning summary (CS5, decision 11)', () => {
   })
 })
 
-describe('the bin pays at night (step 1, F19)', () => {
+describe('the bin pays at night (step 1)', () => {
   /** Day `day` with salmon at ★1 and ★2 and carrots at ★1. */
   const stocked = (day: number): SaveV3 => {
     const save = farm(day)

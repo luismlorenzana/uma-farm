@@ -1,4 +1,4 @@
-// The price rule: the spec's worked prices, CS14's, CS15's and CS16's tables as the rule's
+// The price rule: the worked prices, the tables as the rule's
 // output row for row, the crops' own prices, stars never compounded, and demand by season.
 import { describe, expect, it } from 'vitest'
 import { farmDay } from '../farm/calendar'
@@ -14,10 +14,10 @@ const WINTER_7 = farmDay({ year: 1, season: 'winter', day: 7 })
 /** A family's ten raw or refined prices ★1, G1 → G10. */
 const row = (family: GoodFamily, refined: boolean): number[] =>
   GOODS.filter((g) => g.family === family && g.refined === refined).sort((a, b) => a.grade - b.grade).map((g) => g.price)
-/** A table row as the spec prints it: "30 · 40 · 50". */
+/** A table row as the table prints it: "30 · 40 · 50". */
 const spec = (text: string): number[] => text.split(' · ').map(Number)
 
-describe('the ladder and the factors (CS9)', () => {
+describe('the ladder and the factors', () => {
   it('climbs ten grades from 30g to 300g', () => {
     expect(LADDER).toEqual([30, 40, 50, 65, 85, 110, 140, 180, 230, 300])
     expect(ladderPrice('ores', 1)).toBe(30)
@@ -33,7 +33,7 @@ describe('the ladder and the factors (CS9)', () => {
   })
 })
 
-describe('the worked prices (CS9)', () => {
+describe('the worked prices', () => {
   it('prices Silver Ore 65g, a Silver Ingot 100g and a ★3 Silver Ingot 150g', () => {
     expect(priceOf('silver-ore', 1, SPRING_1)).toBe(65)
     expect(priceOf('silver-ingot', 1, SPRING_1)).toBe(100)
@@ -48,11 +48,11 @@ describe('the worked prices (CS9)', () => {
 
 describe('the tables are the rule\'s output, row for row', () => {
   it.each<[GoodFamily, string, string]>([
-    // CS14
+    // Mining
     ['ores', '30 · 40 · 50 · 65 · 85 · 110 · 140 · 180 · 230 · 300', '45 · 60 · 75 · 100 · 130 · 165 · 210 · 270 · 345 · 450'],
     ['stones', '25 · 30 · 40 · 50 · 70 · 90 · 110 · 145 · 185 · 240', '40 · 45 · 60 · 75 · 105 · 135 · 165 · 220 · 280 · 360'],
     ['crystals', '50 · 65 · 80 · 105 · 135 · 175 · 225 · 290 · 370 · 480', '75 · 100 · 120 · 160 · 205 · 265 · 340 · 435 · 555 · 720'],
-    // CS16
+    // Forest
     ['woods', '25 · 30 · 40 · 50 · 70 · 90 · 110 · 145 · 185 · 240', '40 · 45 · 60 · 75 · 105 · 135 · 165 · 220 · 280 · 360'],
     ['mushrooms', '30 · 40 · 50 · 65 · 85 · 110 · 140 · 180 · 230 · 300', '45 · 60 · 75 · 100 · 130 · 165 · 210 · 270 · 345 · 450'],
     ['herbs-spices', '45 · 45 · 45 · 60 · 200 · 100 · 125 · 160 · 520 · 270', '70 · 70 · 70 · 90 · 300 · 150 · 190 · 240 · 780 · 405'],
@@ -64,7 +64,7 @@ describe('the tables are the rule\'s output, row for row', () => {
     expect(row(family, true)).toEqual(spec(refined))
   })
 
-  it('fish and fillets as CS15 prices them', () => {
+  it('fish and fillets as the fish table prices them', () => {
     const fish = ['carp', 'trout', 'sardine', 'mackerel', 'salmon', 'sea-bream', 'eel', 'tuna', 'silverfin', 'rainbow-koi']
     expect(fish.map((id) => goodOf(id)!.price)).toEqual([40, 50, 65, 85, 110, 145, 180, 235, 300, 390])
     expect(fish.map((id) => goodOf(`${id}-fillet`)!.price)).toEqual([60, 75, 100, 130, 165, 220, 270, 355, 450, 585])
@@ -72,7 +72,7 @@ describe('the tables are the rule\'s output, row for row', () => {
   })
 })
 
-describe('crops have their own prices (CS11)', () => {
+describe('crops have their own prices', () => {
   it('prices all 27, and the seven that are forest goods keep them', () => {
     expect(Object.keys(CROP_PRICES).sort()).toEqual([...CROP_IDS].sort())
     for (const crop of CROP_IDS) expect(goodOf(crop)!.price, crop).toBe(CROP_PRICES[crop])
@@ -93,7 +93,7 @@ describe('crops have their own prices (CS11)', () => {
   })
 })
 
-describe('stars (CS9 rule 5, D24 #12)', () => {
+describe('stars', () => {
   it('adds a quarter a star, never compounded', () => {
     expect(STARS.map(starFactor)).toEqual([1, 1.25, 1.5, 1.75, 2])
     expect(STARS.map((s) => priceOf('silver-ingot', s, SPRING_1))).toEqual([100, 125, 150, 175, 200])
@@ -102,14 +102,14 @@ describe('stars (CS9 rule 5, D24 #12)', () => {
     expect(() => priceOf('carrot', 0, SPRING_1)).toThrow(RangeError)
   })
 
-  it('rounds the unit price once, to 5g, after stars and demand (decision 2)', () => {
+  it('rounds the unit price once, to 5g, after stars and demand', () => {
     expect(priceOf('silver-ore', 2, SPRING_1)).toBe(80) // 81.25
     expect(priceOf('trout', 2, SUMMER_3)).toBe(75) // 50 × 1.25 × 1.2 = 75
     expect(priceOf('pine-log', 4, SPRING_1)).toBe(45) // 25 × 1.75 = 43.75
   })
 })
 
-describe('demand (CS4, decision 3)', () => {
+describe('demand', () => {
   it('lifts a Summer Salmon and a Summer Salmon Fillet, not a Summer Carrot', () => {
     expect(inDemand('salmon', SUMMER_3) && inDemand('salmon-fillet', SUMMER_3)).toBe(true)
     expect(inDemand('carrot', SUMMER_3)).toBe(false)
@@ -147,7 +147,7 @@ describe('what has a price', () => {
     expect(() => priceOf('seed-carrot', 1, SPRING_1)).toThrow(RangeError)
   })
 
-  it('prices a made good at ×1.25 its inputs at ★1 (rule 3)', () => {
+  it('prices a made good at ×1.25 its inputs at ★1', () => {
     expect(madePrice({ 'silver-ingot': 2, 'cut-garnet': 1 })).toBe(450) // (200 + 160) × 1.25
     expect(() => madePrice({ 'seed-carrot': 1 })).toThrow(RangeError)
   })

@@ -10,7 +10,7 @@ import { setMasterLens, type MasterView } from '../master/master'
 import { deviceIndexStore, loadReleasedPack } from './delivery'
 import { unknownName } from './story'
 
-/** The invented stand-in, checked by F40's validator as any pack is: the dev server's fallback only. */
+/** The invented stand-in, checked by the validator as any pack is: the dev server's fallback only. */
 const standIn = async (): Promise<StoryPack> => storyPackFrom(STAND_IN_FILES)
 
 /** The pack the game plays: the release farm-api serves; on the dev server, the stand-in when it serves none. */

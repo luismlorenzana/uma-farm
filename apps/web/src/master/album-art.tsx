@@ -1,6 +1,6 @@
 // Copied from uma-rpg apps/web/src/master/album-art.tsx at 30a322a: the album's kinds mapped to uma-data's art
 // families; uma-kit/content owns the authenticated, cached loading. The art comes from the release at runtime only.
-// F46: every id goes through the one resolver (`outfitFor`), so a v4 roster key, her character id, shows her cast
+// Every id goes through the one resolver (`outfitFor`), so a v4 roster key, her character id, shows her cast
 // outfit's art; a cast Uma whose outfit master data doesn't hold (the stand-ins) shows a lettered disc.
 import type { AlbumArt, UmaArtKind } from '@luismlorenzana/uma-kit/album'
 import { AtlasSprite, imagePath, useArtUrl } from '@luismlorenzana/uma-kit/content'

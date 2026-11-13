@@ -6,7 +6,7 @@
 //   Gift      loved 60 · liked 30 · neutral 10 · disliked 0, × (1 + 0.1 a star above ★1)   one a day each
 //   Praise    +20                                   once a day, when she's earned it (`praise.ts`)
 //   Her line  +10                                   night step 6, a day at one of her line's places
-//   Festival  +50                                   once a festival a year, on its team or entry (F32 call it)
+//   Festival  +50                                   once a festival a year, on its team or entry (festivals call it)
 //
 // Rules on save v4 only; v3 keeps `farm/visitors.ts`' affinity. Loaded with the romance's screens and the night.
 import { draw } from '../farm/draw'
@@ -21,7 +21,7 @@ import { linePlaces, tasteOf, type StoryPack } from '../story/pack'
 import { NO_BIRTHDAYS, isBirthday, type Birthdays } from './days'
 import { addLove, dayFactor, nextRung, roundPoints, type LovePaid } from './love'
 
-/** RM13's fixed pays. */
+/** The fixed pays. */
 export const LOVE_POINTS = { chat: 15, praise: 20, line: 10, festival: 50 } as const
 /** A gift by her taste: disliked pays 0 and never takes points away. */
 export const GIFT_POINTS_V4: Readonly<Record<Taste, number>> = { loved: 60, liked: 30, neutral: 10, disliked: 0 }
@@ -46,7 +46,7 @@ export function chatV4(save: SaveV4, id: string): LovePaid {
   return addLove({ ...save, today: { ...save.today, chats: [...save.today.chats, id] } }, id, LOVE_POINTS.chat, 'chat')
 }
 
-/** Her authored chat sets (F40's format). */
+/** Her authored chat sets (its format). */
 export type ChatSet = 'friend' | 'partner' | 'spouse'
 /** Which of her sets she speaks: none before Friendship 1 (her temperament's lines); `friend` from
  * Friendship 1 through the confession, `partner` from Romance 1 to the wedding, `spouse` after it. */
@@ -157,7 +157,7 @@ export function payLines(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>,
 export const festivalKey = (festival: FestivalId, year: number): string => `${festival}:${year}`
 
 /** A festival together: +50 to each Uma on its team or entry, once a festival a year each. Written and tested
- * here; F39 and F32 call it once a festival has a team or an entry. */
+ * here; the festivals call it once a festival has a team or an entry. */
 export function festivalTogether(save: SaveV4, ids: readonly string[], festival: FestivalId, year: number): { save: SaveV4; paid: Paid[] } {
   const key = festivalKey(festival, year)
   let next = save

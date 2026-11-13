@@ -56,7 +56,7 @@ export function nextFarmRank(points: number): { rank: number; points: number } |
   return at === undefined ? null : { rank: rank + 1, points: at }
 }
 
-/** What a Farm Rank opens in the game as built (D24 #4: more of what's open), read from the rules that gate
+/** What a Farm Rank opens in the game as built: more of what's open, read from the rules that gate
  * on it: the Fields' blocks, the Dorm's levels (by the save's version: v4's Dorm for 20), the shop's seeds (tier 1
  * is the start's) and the stations. Rank 10 is the farm's gold crest. */
 export function farmRankOpens(rank: number, version = 3): string[] {
@@ -87,7 +87,7 @@ export function milestoneReached(save: Pick<FarmSave, 'farm' | 'roster' | 'crops
 export const rowComplete = (save: Pick<FarmSave, 'diary'>, row: DiaryRow): boolean => row.goods.every((id) => (save.diary.shipped[id] ?? 0) > 0)
 
 /** Pays every milestone and row reached and not yet paid: its gold now, its id in
- * `diary.milestones`. Milestones in CS38's order, then rows. Never stamps. */
+ * `diary.milestones`. Milestones in their order, then rows. Never stamps. */
 export function payDiary<S extends FarmSave>(save: S, depths: DepthsTonight = new Set()): { save: S; paid: string[] } {
   const held = new Set(save.diary.milestones)
   const milestones = MILESTONES.filter((m) => !held.has(m.id) && milestoneReached(save, m, depths))

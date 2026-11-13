@@ -22,7 +22,7 @@ export interface KindRow {
   locked: string | null
 }
 
-/** Her kinds sheet: the kinds open to her now in RM37's order, festival night last on a festival day, then
+/** Her kinds sheet: the kinds open to her now in the kinds' order, festival night last on a festival day, then
  * the kinds her ladder hasn't opened yet, greyed with their rung. Kinds whose game isn't built aren't shown. */
 export function kindRows(save: SaveV4, pack: Pack, id: string, birthday: boolean): KindRow[] {
   const love = save.love[id]

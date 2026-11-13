@@ -1,5 +1,5 @@
 // Copied from uma-rpg packages/domain/src/items/lines.ts at 30a322a, with its Wilds-only parts cut.
-// The materials (farm-by-line.md FL5; live since H112): five lines of ten grades, each
+// The materials: five lines of ten grades, each
 // grade a raw item and its refined form, the same fifty types in every world. Each line is one uma-art family of its
 // `items` atlas (ores, woods, vegetables, fish, crystals) and a grade its family's grade, so ids, names and icons are
 // uma-art's own. R2's sixty ids (save v28–v29) are among them; save v30's migration moved each to its line's G1 or G6
@@ -38,8 +38,6 @@ const LINE_GRADES: Readonly<Record<MaterialLine, readonly (readonly [string, str
     ['emerald', 'cut-emerald'], ['sapphire', 'cut-sapphire'], ['ruby', 'cut-ruby'], ['diamond', 'cut-diamond'],
     ['starstone', 'cut-starstone'], ['philosophers-stone', 'cut-philosophers-stone']],
 }
-/** Grades a line holds. */
-export const LINE_GRADE_COUNT = 10
 
 /** A raw or refined item of a line: its grade opens it at Craft Lv 5g − 4 and a grade-g made item takes it. */
 export interface LineItem {

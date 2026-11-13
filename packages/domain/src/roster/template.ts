@@ -1,5 +1,5 @@
 // Copied from uma-rpg packages/domain/src/roster/template.ts at 30a322a, with its Wilds-only parts cut.
-// The calling rule (uma-templates §2.2; Classes v3), the one part of uma-rpg's Uma templates the Wilds read: her
+// The calling rule (Classes v3), the one part of uma-rpg's Uma templates the Wilds read: her
 // calling, from her best running styles alone, names her trade. Strides, knacks, families, the calling pick and the
 // templates themselves stay behind with the classes.
 import type { AptitudeGrade, Aptitudes } from '@luismlorenzana/uma-data'
@@ -16,7 +16,7 @@ export interface CallingOutfit { aptitudes: Pick<Aptitudes, 'strategy'> }
 // The rule's orders: Front wins a best-style tie, then Pace owns any remaining tie; grades run best first.
 const STYLES = ['front', 'pace', 'late', 'end'] as const
 const GRADES: readonly AptitudeGrade[] = ['S', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
-/** Classes v3's calling by row: her Tier 0. The manual prints them from H134. */
+/** Classes v3's calling by row: her Tier 0. */
 export const UMA_ROW_CALLING_V3: Readonly<Record<UmaCallingRowV3, UmaCallingClass>> = { 1: 'recruit', 2: 'duelist', 3: 'apprentice', 4: 'caller', 5: 'acolyte' }
 
 const grade = (g: AptitudeGrade): number => GRADES.indexOf(g)

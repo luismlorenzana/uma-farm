@@ -64,8 +64,8 @@ const engagedSoon = (day = 20): SaveV4 => withLove(farm(day), { stage: 'proposal
 /** 9000001 engaged with an Iron Ring, the wedding Ready on `day`. */
 const engaged = (day = 21): SaveV4 => withLove(farm(day), { stage: 'wedding', level: 10, points: 0, last: day - 1, ring: 3 })
 
-describe('the rings (decision 2; CS25)', () => {
-  it('are ten goods at CS25\'s ★1 prices, Copper to Orichalcum Ring, apart from v3\'s catalogue', () => {
+describe('the rings', () => {
+  it('are ten goods at their ★1 prices, Copper to Orichalcum Ring, apart from v3\'s catalogue', () => {
     expect(RING_IDS).toEqual(['ring-g1', 'ring-g2', 'ring-g3', 'ring-g4', 'ring-g5', 'ring-g6', 'ring-g7', 'ring-g8', 'ring-g9', 'ring-g10'])
     expect(RING_GOODS.map((g) => g.price)).toEqual([205, 275, 340, 450, 580, 745, 950, 1220, 1555, 2025])
     expect(RING_GOODS.map((g) => goodName(g.id))).toEqual(['Copper Ring', 'Tin Ring', 'Iron Ring', 'Silver Ring', 'Cobalt Ring', 'Gold Ring', 'Platinum Ring',
@@ -99,7 +99,7 @@ describe('the rings (decision 2; CS25)', () => {
   })
 })
 
-describe('the bench opens (decisions 3 and 4; RM38, RM40)', () => {
+describe('the bench opens', () => {
   it('the night after the first Romance 8, once; its scene plays the next morning, once; never before', () => {
     let save = { ...farm(5), memories: { [ONE]: ['f1', 'f2', 'r7'] } }
     expect(benchDue(save)).toBe(false)
@@ -131,7 +131,7 @@ describe('the bench opens (decisions 3 and 4; RM38, RM40)', () => {
   })
 })
 
-describe('making a ring (decision 5; RM38)', () => {
+describe('making a ring', () => {
   it('3 Cedar Planks make an Iron Ring at ★1; no gold moves; one a day', () => {
     const save = give(bench(farm()), 'cedar-plank', 1, 4)
     expect(benchPick(save, 3)).toEqual(three('cedar-plank', 'cedar-plank', 'cedar-plank'))
@@ -168,7 +168,7 @@ describe('making a ring (decision 5; RM38)', () => {
     expect(() => makeRing(closed, three('cedar-plank', 'cedar-plank', 'cedar-plank'))).toThrow(BENCH_WORDS.closed)
   })
 
-  it('takes CS25\'s recipe, 2 ingots and a cut gem, from chapter 3 only', () => {
+  it('takes the recipe, 2 ingots and a cut gem, from chapter 3 only', () => {
     expect(forgeRecipe(3)).toEqual({ ingot: 'iron-ingot', gem: 'cut-citrine' })
     const save = give(give(bench(farm()), 'iron-ingot', 1, 2), 'cut-citrine')
     const recipe = three('iron-ingot', 'iron-ingot', 'cut-citrine')
@@ -187,7 +187,7 @@ describe('making a ring (decision 5; RM38)', () => {
   })
 })
 
-describe('the proposal (decision 8; RM30, RM39)', () => {
+describe('the proposal', () => {
   it('isn\'t Ready before the day after Romance 10, nor without a ring', () => {
     const today = withLove(farm(20), { stage: 'proposal', level: 10, last: 20 })
     expect(readiness(give(today, 'ring-g3'), PACK, ONE).waits).toEqual({ kind: 'day' })
@@ -218,7 +218,7 @@ describe('the proposal (decision 8; RM30, RM39)', () => {
   })
 })
 
-describe('a better ring (decision 6; RM39)', () => {
+describe('a better ring', () => {
   it('takes a higher grade, gives the old one back at ★1, and raises her bonus once married', () => {
     const save = give(engaged(), 'ring-g5', 2)
     expect(betterRings(give(save, 'ring-g2'), ONE)).toEqual(['ring-g5'])
@@ -240,7 +240,7 @@ describe('a better ring (decision 6; RM39)', () => {
   })
 })
 
-describe('the wedding (decision 9; RM30, RM42, RM45)', () => {
+describe('the wedding', () => {
   it('is Ready the day after the proposal and waits until you play it', () => {
     const played = playEvent(give(engagedSoon(), 'ring-g3'), PACK, ONE, proposal('ring-g3')).save
     expect(readiness(played, PACK, ONE)).toMatchObject({ rung: 'wedding', ready: false })
@@ -314,7 +314,7 @@ describe('the wedding (decision 9; RM30, RM42, RM45)', () => {
   })
 })
 
-describe('the words (decision 10; RS2)', () => {
+describe('the words', () => {
   const all = (list: readonly Step[]): string[] => list.flatMap((s) => 'say' in s ? [s.line] : 'narrate' in s ? [s.narrate] : 'thought' in s ? [s.thought]
     : 'choice' in s ? s.choice.flatMap((o) => [o.text, ...all(o.then ?? [])]) : 'play' in s ? [s.play.prompt, ...all(s.play.good ?? []), ...all(s.play.miss ?? [])] : [])
 
@@ -330,7 +330,7 @@ describe('the words (decision 10; RS2)', () => {
   })
 })
 
-describe('the format: `wedding.places` (decision 11; RM58)', () => {
+describe('the format: `wedding.places`', () => {
   const ctx = { umas: new Set(STAND_INS) }
   const issues = (wedding: unknown) => bibleIssues({ ...STAND_IN_BIBLE, wedding }, ctx)
   it('takes three different known places, and none at all', () => {
@@ -345,7 +345,7 @@ describe('the format: `wedding.places` (decision 11; RM58)', () => {
   })
 })
 
-describe('save v4 grows in place; v3 is unchanged (RM59)', () => {
+describe('save v4 grows in place; v3 is unchanged', () => {
   it('parses `today.ring` and `today.reception`, her ring\'s grade from the proposal on, and rings and dishes in the Warehouse', () => {
     const save = give(give(engaged(), 'ring-g10', 1, 2), 'dish-grains-5', 5)
     const stored = json({ ...save, today: { ...save.today, ring: 10, reception: 3 }, bin: { 'ring-g2': [1, 0, 0, 0, 0] } })
@@ -385,7 +385,7 @@ describe('save v4 grows in place; v3 is unchanged (RM59)', () => {
   })
 })
 
-describe('a whole wedding day on the stand-in (decisions 8 and 9)', () => {
+describe('a whole wedding day on the stand-in', () => {
   it('Romance 8 → the bench → a ring from planks → the proposal → the wedding with Marta\'s cake → married 1/3', () => {
     let save = withLove({ ...farm(30), memories: { [ONE]: ['r8'] }, arrivals: [...STAND_INS] }, { stage: 'proposal', level: 10, points: 0, last: 29 })
     save = runNight(save, context())

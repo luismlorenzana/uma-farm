@@ -1,5 +1,5 @@
 // Copied from uma-rpg packages/domain/src/save/work-v3.test.ts at 30a322a, with its Wilds-only parts cut.
-// The Wilds' work (profession-progression.md §4–§5; the farm by line since H112): the farm's env,
+// The Wilds' work (the farm by line): the farm's env,
 // four slots a place, no levels, collects, and the trade gate through the operations' context and none for settles.
 import { describe, expect, it } from 'vitest'
 import { jobExp, stepMinutes } from '../economy/pacing'
@@ -48,7 +48,7 @@ describe('the Wilds\' places over the save', () => {
     expect(done.items).toEqual({ 'copper-ingot': 1, 'pine-plank': 3, 'weapon-gem-g1': 1 })
   })
 
-  it('plans each grade opening at Craft Lv 5g − 4 (FL6)', () => {
+  it('plans each grade opening at Craft Lv 5g − 4', () => {
     expect(() => startJob(worldOf({ 101: 1 }), 'mine', 0, { outfitId: '101' }, 'gold-ore', 1, at(0))).toThrow('Needs Craft Lv26')
     const plan = planJob(worldOf({ 101: 46 }), 'lapidary', { outfitId: '101' }, 'jewel-moon-5', 1)!
     expect(plan.inputs).toEqual({ 'cut-philosophers-stone': 5 })

@@ -1,4 +1,4 @@
-// The shipping bin (CS7 step 1): anything with a price goes in at any time in the
+// The shipping bin (night step 1): anything with a price goes in at any time in the
 // day, comes back out until the night if the player changes their mind, and pays at night at price × stars × demand.
 // There's no selling cap and nothing is ever bought back. The bin is `save.bin`, star counts like the Warehouse's.
 // None of these stamp `updatedAt`: shipping and taking back are the player's operations, which stamp around them, and
@@ -69,7 +69,7 @@ export interface BinPayout<S> {
 
 /**
  * Night step 1: everything in the bin pays at price × stars × demand on `day`, the day it was shipped.
- * The gold goes to `gold` and to `farm.counts['gold-shipped']` (F24's Farm Rank and milestones), each good's count to
+ * The gold goes to `gold` and to `farm.counts['gold-shipped']` (the Farm Rank and milestones), each good's count to
  * `diary.shipped` (the Diary's collections), and the bin empties. An empty bin pays nothing and changes nothing.
  */
 export function payBin<S extends Pick<FarmSave, 'bin' | 'gold' | 'farm' | 'diary'>>(save: S, day: number): BinPayout<S> {

@@ -35,7 +35,7 @@ const withLove = (save: SaveV4, love: Partial<Love>, id = ONE): SaveV4 => ({ ...
 const at = (stage: Love['stage'], level: number): Pick<Love, 'stage' | 'level'> => ({ stage, level })
 /** All three stand-ins at Friendship 2. */
 const friends = (save: SaveV4): SaveV4 => [ONE, TWO, THREE].reduce((s, id) => withLove(s, { level: 2 }, id), save)
-/** `n` invented spouses, 9000004 onward, home: what RM45's milestones count. */
+/** `n` invented spouses, 9000004 onward, home: what the household milestones count. */
 function married(save: SaveV4, n: number): SaveV4 {
   const ids = Array.from({ length: n }, (_, i) => String(9000004 + i))
   return {
@@ -54,7 +54,7 @@ function packWith(games: readonly string[]): Pick<StoryPack, 'cast' | 'bibles'> 
   return { cast: PACK.cast, bibles: new Map([[ONE, { ...bible, route: [...route, ...dates] }]]) }
 }
 
-describe('who (RM19; decision 2)', () => {
+describe('who', () => {
   it('Friendship 1 can\'t; Friendship 2 is a hangout through her confession\'s wait and Romance 0; Romance 1 a date through the wedding\'s wait; a spouse', () => {
     expect(eveningRole(at('friendship', 0))).toBeNull()
     expect(eveningRole(at('friendship', 1))).toBeNull()
@@ -80,7 +80,7 @@ describe('who (RM19; decision 2)', () => {
   })
 })
 
-describe('the kinds (RM37; decisions 1–3)', () => {
+describe('the kinds', () => {
   it('opens by her ladder: hangouts at F2, crafting at R1, stargazing at R3, dance and boat at R6; cooking and the footrace aren\'t offered', () => {
     const open = (love: Pick<Love, 'stage' | 'level'>) => EVENING_GAMES.filter((k) => kindOpens(love, k) && kindBuilt(k))
     expect(open(at('friendship', 2))).toEqual(['walk', 'fishing', 'picnic', 'market'])
@@ -95,7 +95,7 @@ describe('the kinds (RM37; decisions 1–3)', () => {
     expect(kindsNow(withLove(farm(), { stage: 'spouse', level: 3, wed: 1 }), ONE)).not.toContain('footrace')
   })
 
-  it('plays each kind as RM26 maps it, festival night as a walk', () => {
+  it('plays each kind as the map has it, festival night as a walk', () => {
     expect(Object.fromEntries(Object.values(EVENINGS).map((d) => [d.kind, `${d.play.kind}${d.play.mark ? `:${d.play.mark}` : ''}`]))).toEqual({
       walk: 'walk', fishing: 'cast', picnic: 'pick', market: 'pick', cooking: 'rhythm:pot', crafting: 'rhythm:hands', stargazing: 'pick', dance: 'rhythm:step',
       boat: 'rhythm:oar', footrace: 'rhythm:track', festival: 'walk',
@@ -130,7 +130,7 @@ describe('the kinds (RM37; decisions 1–3)', () => {
   })
 })
 
-describe('the points (RM13, RM16, RM17; decision 4)', () => {
+describe('the points', () => {
   const none = { kind: false, birthday: false, anniversary: false }
   it('pays 60, 100 or 150 by the grade; ×1.5 her kind; her birthday and her anniversary each ×1.5 more, once each; whole', () => {
     expect([eveningPoints('fine', none), eveningPoints('great', none), eveningPoints('perfect', none)]).toEqual([60, 100, 150])
@@ -170,7 +170,7 @@ describe('the points (RM13, RM16, RM17; decision 4)', () => {
   })
 })
 
-describe('the slots (RM19, RM45; decision 5)', () => {
+describe('the slots', () => {
   it('one evening a day; a second on days divisible by 4 from 10 married; festival night its own', () => {
     expect([eveningsOn(12, 9), eveningsOn(12, 10), eveningsOn(13, 10), eveningsOn(16, 20)]).toEqual([1, 2, 1, 2])
     expect(eveningSlots(married(farm(12), 9))).toEqual({ evenings: 1, festival: null, vows: false })
@@ -186,7 +186,7 @@ describe('the slots (RM19, RM45; decision 5)', () => {
     expect(slotsLeft(two)).toEqual({ evenings: 0, festival: true })
     const three = spendEvening(two, PACK, THREE, 'festival', 10).save
     expect(eveningMarks(three).map((m) => m.spent)).toEqual([{ with: ONE, kind: 'walk' }, { with: TWO, kind: 'fishing' }, { with: THREE, kind: 'festival' }])
-    // F54 decision 5: with anyone married, Tonight opens for Sleep at even with every evening spent.
+    // With anyone married, Tonight opens for Sleep at even with every evening spent.
     expect(tonightOpens(three, PACK)).toBe(true)
     expect(parseSaveV4(json(three)).today.evenings).toHaveLength(3)
   })
@@ -201,7 +201,7 @@ describe('the slots (RM19, RM45; decision 5)', () => {
   })
 })
 
-describe('invitations (RM20; decision 7)', () => {
+describe('invitations', () => {
   it('none from an Uma below F2, away, or whose favourite kind isn\'t open to her; one a morning', () => {
     expect(inviteCandidates(farm(), PACK)).toEqual([])
     // 9000001's favourite, stargazing, opens at R3; the stand-in's forager and fisher favour walk.
@@ -265,8 +265,8 @@ describe('invitations (RM20; decision 7)', () => {
   })
 })
 
-describe('Tonight\'s rule (decision 8)', () => {
-  it('opens with a free slot and someone to spend it; otherwise F18\'s rule stands', () => {
+describe('Tonight\'s rule', () => {
+  it('opens with a free slot and someone to spend it; otherwise the old rule stands', () => {
     expect(tonightOpens(farm(), PACK)).toBe(false) // nobody at Friendship 2
     const save = withLove(farm(), { level: 2 }, TWO)
     expect(eveningUmas(save, PACK)).toEqual([TWO])
@@ -280,7 +280,7 @@ describe('Tonight\'s rule (decision 8)', () => {
   })
 })
 
-describe('the night and the save (decisions 5 and 7)', () => {
+describe('the night and the save', () => {
   it('draws the morning\'s invitation at step 9 into today and §4, after step 7 cleared yesterday\'s', () => {
     const eve = { ...friends(farm(4)), today: { ...farm().today, invites: [{ id: TWO, kind: 'walk' as const, answer: 'yes' as const }] } }
     const spent = spendEvening(eve, PACK, TWO, 'walk', 90).save

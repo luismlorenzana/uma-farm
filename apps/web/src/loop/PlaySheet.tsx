@@ -3,7 +3,7 @@
 // `pointerdown`), never takes from the Warehouse, and closes on its grade. The rules are `@farm/domain`'s
 // (`romance/plays/`); this draws them: **Cast** a ring closing on the mark, **Pick** a 3 × 3 field of goods popping up,
 // **Rhythm** her beat then yours with the activity's mark in words, **Walk** two turns at each fork toward two places'
-// frames, **Choose** three goods. Both lengths are drawn (an event's and an evening's), so F50 only wires evenings
+// frames, **Choose** three goods. Both lengths are drawn (an event's and an evening's), so evenings only wire
 // (`PlaySheet` with `length="evening"`, `playSpec` for its numbers, and `pays` for her own numbers with the evening's
 // factors). The `play/*` marks are uma-art 2.26.0's. Loaded on demand with the player.
 import {
@@ -17,7 +17,7 @@ import { ItemIcon } from '../items/ItemIcon'
 import { gradeLegend, gradeWords, PLAY_HOW, playTitle } from './event-view'
 import { placeWords } from './hearts-view'
 
-/** What a play needs, its plan built from the seed: F49's events and F50's evenings make it with `playSpec`. */
+/** What a play needs, its plan built from the seed: the events and the evenings make it with `playSpec`. */
 export type PlaySpec =
   | { kind: 'cast'; length: PlayLength; plan: ReturnType<typeof castPlan> }
   | { kind: 'pick'; length: PlayLength; plan: PickPlan; favourites: readonly string[] }
@@ -60,9 +60,9 @@ export function PlaySheet({ spec, title, name, replay = false, unpaid = null, pa
   spec: PlaySpec; title?: string; name: string
   /** A Memory's replay: the grade without its points, since nothing pays. */
   replay?: boolean
-  /** A play that pays nothing (F54: the finale's dance): the grade without points, and this line in the legend's place. */
+  /** A play that pays nothing (the finale's dance): the grade without points, and this line in the legend's place. */
   unpaid?: string | null
-  /** An evening's own numbers with her factors (F50: "Perfect +225"), in place of the length's plain ones. */
+  /** An evening's own numbers with her factors ("Perfect +225"), in place of the length's plain ones. */
   pays?: Readonly<Record<Grade, number>>
   onDone: (result: Omit<PlayScore, 'kind'>) => void
 }) {
@@ -96,7 +96,7 @@ export function PlaySheet({ spec, title, name, replay = false, unpaid = null, pa
   )
 }
 
-/** What to aim for, first (FR21's seed): how it plays, and what's hers. */
+/** What to aim for, first (the play's seed): how it plays, and what's hers. */
 function Intro({ spec, name, onStart }: { spec: PlaySpec; name: string; onStart: () => void }) {
   return (
     <div className="space-y-3" data-play-intro>

@@ -1,7 +1,8 @@
 // A level reached overnight: `?level=<characterId>:<s2|s4>` from the morning's
-// "♥ Stand-in 1 · Spouse 2, reached overnight", F49's level-up card over any page: no event, her perk (S2: her morning item
-// every second morning; S4: a third night chore) and her next rung, one Continue. A stale one (she isn't there) closes.
-// Portaled to the body above the kit's sheets (z-60), like the players. Loaded on demand, the romance build only.
+// "♥ Stand-in 1 · Spouse 2, reached overnight", the level-up card over any page: no event, her perk (S2: her morning
+// item every second morning; S4: a third night chore) and her next rung, one Continue. A stale one (she isn't there)
+// closes. Portaled to the body above the kit's sheets (z-60), like the players. Loaded on demand, the romance build
+// only.
 import { nightLevelCard } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { useEffect } from 'react'

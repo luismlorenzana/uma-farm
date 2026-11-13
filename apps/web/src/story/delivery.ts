@@ -1,6 +1,6 @@
 // The story pack's delivery on the device: `story.json` from farm-api's
 // `/api/content/…` at boot, always fresh; then each file by its hash through uma-kit's content client, which verifies the
-// bytes against the index and keeps them in its Cache Storage, so a release's file downloads once (RM58's "cached
+// bytes against the index and keeps them in its Cache Storage, so a release's file downloads once ("cached
 // immutably", in the kit's content-addressed cache rather than IndexedDB). The cast, the ties, the bibles and the
 // household load at boot (the night reads the household's lines); routes and pairs on demand. The last good index stays
 // on the device, so an offline boot plays the last version. A pack that can't load (no index, a hash mismatch, a file
@@ -17,7 +17,7 @@ export interface IndexStore {
 /** The device's key for the last good index: a few KB of ids and hashes, never a line of the story. */
 export const LAST_INDEX_KEY = 'farm.story-index'
 
-/** The last good index in `localStorage` (decision 5's "kept on the device"); a private window or a full store keeps it
+/** The last good index in `localStorage` ("kept on the device"); a private window or a full store keeps it
  * in memory only, and the next boot reads the server again. */
 export function deviceIndexStore(storage: Pick<Storage, 'getItem' | 'setItem'> | undefined = globalThis.localStorage): IndexStore {
   return {

@@ -1,7 +1,7 @@
 // The evening's actions: an evening played to its card is one player's change, `spendEvening` over
 // the save as it is now with her birthday from master data, committed once and stamped; an invitation's answer the same
 // through `answerInvite`. Nothing is written while the play runs, so one left halfway spends nothing. Apart from
-// `actions.ts` so the M4 build never fetches the evening's rules. Loaded on demand, the romance build only.
+// `actions.ts` so the deployed build never fetches the evening's rules. Loaded on demand, the romance build only.
 import { answerInvite, birthdaysOf, isBirthday, spendEvening, touched, type EveningCard, type EveningKind } from '@farm/domain'
 import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'

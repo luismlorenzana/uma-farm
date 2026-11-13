@@ -53,7 +53,7 @@ test('releases the stand-in: every file minified, hash-named and listed in story
     assert.equal(file.sha256, sha256(bytes))
     assert.equal(file.bytes, bytes.length)
     assert.equal(file.path, `story/${name}.${file.sha256.slice(0, 8)}.json`)
-    assert.match(file.path, /^story\/[a-z0-9]+(-[a-z0-9]+)*\.[a-f0-9]{8}\.json$/, 'the route allows it (decision 2)')
+    assert.match(file.path, /^story\/[a-z0-9]+(-[a-z0-9]+)*\.[a-f0-9]{8}\.json$/, 'the route allows it')
     assert.ok(!bytes.toString().includes('\n'), `${name} is minified`)
   }
   assert.deepEqual(JSON.parse(await readFile(join(out, index.files['uma-9000001'].path), 'utf8')), await readJson(join(STAND_IN, 'umas/9000001.json')))

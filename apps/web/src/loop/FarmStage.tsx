@@ -4,16 +4,16 @@
 // while its page is slow or if it fails. Names, locks, Ready badges and pips are uma-kit's, the same models the Hub's place
 // links carry, as overlays projected from each plot; a tap opens what the Hub's place opens, a long-press
 // its quick look; the season is the light; a place's open sheet fades the roofs in front
-// of its slots; Home opens on the first Ready place's band and keeps its scroll this session (F11 decision
-// 8). One canvas engine: the Hub's Phaser scene never loads here. Battery: saver on, and the loop stops when
-// the stage says it's at rest (uma-stage 0.4.0's `onSettled`), and while the app or Home is hidden.
+// of its slots; Home opens on the first Ready place's band and keeps its scroll this session. One canvas engine: the
+// Hub's Phaser scene never loads here. Battery: saver on, and the loop stops when the stage says it's at rest
+// (uma-stage 0.4.0's `onSettled`), and while the app or Home is hidden.
 //
-// F12 puts the Umas on it (`farm-figures.ts`): each where the save says she is, a sprite when her outfit's set is live
+// The Umas are on it (`farm-figures.ts`): each where the save says she is, a sprite when her outfit's set is live
 // (at most 8, `figure-looks.ts`) and a standee otherwise; she walks to her slot when put to work here, runs home when
 // recalled, and everyone is placed at once at boot, in the morning and after a sync. A Ready Uma has
 // a bubble at her head: a tap collects, and only she counts for the fade, so nothing is faded at rest
-// (ST4's `setFadeFigures`). A tap on her opens her sheet. Loaded on demand, with three.js, only when the preview switch is
-// on.
+// (uma-stage's `setFadeFigures`). A tap on her opens her sheet. Loaded on demand, with three.js, only when the
+// preview switch is on.
 import { dateOf, farmDesign, farmPlots, parseStockKey, receiptItems, type FarmPlot, type FarmSave } from '@farm/domain'
 import { ArchPips, type HubMapPlace } from '@luismlorenzana/uma-kit/hub'
 import { LockedIcon } from '@luismlorenzana/uma-kit/ui'
@@ -244,8 +244,9 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     return standing
   }
 
-  /** Walks (or runs) her to a tile. A walk a rebuild dropped (ST4's `keepWalks` couldn't keep it) is walked again from where
-   * she stands; one with no way places her there at once, since the counts never wait on a walk. */
+  /** Walks (or runs) her to a tile. A walk a rebuild dropped (uma-stage's `keepWalks` couldn't keep it) is
+   * walked again from where she stands; one with no way places her there at once, since the counts never wait on a
+   * walk. */
   const go = (s: BandStage, id: string, to: Tile, facing: Facing, run: boolean, then?: () => void) => {
     const standing = onStage.current.get(id)
     if (!standing) return
@@ -506,7 +507,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     const p = point(e)
     const hits = s.pointerUp(p.x, p.y)
     if (hits === null) return
-    // Figures first: her sheet; anything else as F11's taps.
+    // Figures first: her sheet; anything else as the taps.
     const first = hits[0]?.ref
     if (first?.kind === 'figure') { void navigate(umaSheet(first.id, latest.current.save.version), { state: { back: true } }); return }
     const target = tapTarget(hits, groundTile(s.view, p.x, p.y), latest.current.plots, latest.current.places)
@@ -520,7 +521,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     wake()
   }
 
-  /** Where collected items fly (F12's "left to the worker"): the Warehouse's chip, or the edge of the view toward it. */
+  /** Where collected items fly (the "left to the worker"): the Warehouse's chip, or the edge of the view toward it. */
   const warehousePoint = (): { x: number; y: number } => {
     const s = stage.current, a = anchors.current.get('warehouse')
     const width = s?.view.width ?? 0, height = s?.view.height ?? 0
@@ -648,7 +649,7 @@ function FigureBubble({ figure, day, name, reducedMotion, onTap, onRef }: {
   )
 }
 
-/** Collected items rising from her bubble to the Warehouse (F12's "left to the worker"): up to three icons and the count,
+/** Collected items rising from her bubble to the Warehouse (the "left to the worker"): up to three icons and the count,
  * up and over in an arc, fading as they land. */
 function ItemFlight({ flight, onDone }: { flight: Flight; onDone: () => void }) {
   const el = useRef<HTMLDivElement>(null)

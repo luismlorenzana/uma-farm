@@ -2,10 +2,10 @@
 // from her master-data stats by one rule, the same for everyone. Her talent score in an activity is her 5★ base stat ×
 // (100 + her growth rate for that stat) ÷ 100; expeditions read the mean of her three best scores. Talents aren't saved
 //: a fixed release always gives the same talents, so the app computes them once a release. Her
-// temperament is her top score's stat, for F24's hello lines and M6's conversations.
+// temperament is her top score's stat, for her hello lines and conversations.
 import { ACTIVITIES, type Activity } from './ranks'
 
-/** The five stats, in CS46's tie order: Speed, Stamina, Power, Guts, Wit. */
+/** The five stats, in the tie order: Speed, Stamina, Power, Guts, Wit. */
 export const TALENT_STATS = ['speed', 'stamina', 'power', 'guts', 'wit'] as const
 export type TalentStat = typeof TALENT_STATS[number]
 export type TalentScores = Record<TalentStat, number>
@@ -18,20 +18,18 @@ export interface TalentOutfit {
 
 /** The grades, by step: G 0, F 1, E 2, D 3, C 4, B 5, A 6, S 7. */
 export const TALENT_GRADES = ['G', 'F', 'E', 'D', 'C', 'B', 'A', 'S'] as const
-export type TalentGrade = typeof TALENT_GRADES[number]
 /** A talent's step: G 0 … S 7. */
 export type TalentStep = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
 /** D: the middle, the talent everyone has until master data is read (tests and a dropped outfit). */
 export const TALENT_D: TalentStep = 3
-export const talentGrade = (step: TalentStep): TalentGrade => TALENT_GRADES[step]
 
-/** The stat each activity reads (D24 #10): Stamina farming; Guts the ranch; Power mining and forging; Wit
+/** The stat each activity reads: Stamina farming; Guts the ranch; Power mining and forging; Wit
  * cooking and fishing; Speed foraging and serving. Expeditions read all five. */
 export const ACTIVITY_STAT: Readonly<Record<Exclude<Activity, 'expeditions'>, TalentStat>> = {
   farming: 'stamina', ranch: 'guts', mining: 'power', fishing: 'wit', foraging: 'speed', cooking: 'wit', serving: 'speed', forging: 'power',
 }
 
-/** CS27's cut-offs, F upward: a score at or above the first is F, … at or above the last is S; below the first is G. */
+/** The cut-offs, F upward: a score at or above the first is F, … at or above the last is S; below the first is G. */
 export const STAT_CUTOFFS: readonly number[] = [88, 96, 104, 114, 126, 138, 150]
 /** Expeditions' cut-offs on the mean of her three best scores, F upward. */
 export const EXPEDITION_CUTOFFS: readonly number[] = [120, 122, 124, 126, 129, 132, 136]
@@ -90,7 +88,7 @@ export interface Talents {
   readonly scores: TalentScores
   /** Her step in each activity. */
   readonly steps: Readonly<Record<Activity, TalentStep>>
-  /** Her best talent among the five stats' activities (CS27's "best talent"): the highest step, then the higher score,
+  /** Her best talent among the five stats' activities: the highest step, then the higher score,
    * then the activities' order. Expeditions, on their own scale, aren't in it. */
   readonly best: Exclude<Activity, 'expeditions'>
   readonly temperament: Temperament
@@ -120,7 +118,7 @@ export const TALENT_YIELD: readonly number[] = [0.85, 0.9, 0.95, 1, 1.05, 1.1, 1
 export const TALENT_RANK_POINTS: readonly number[] = [0.8, 0.85, 0.9, 1, 1.1, 1.2, 1.3, 1.5]
 export const talentYield = (step: TalentStep): number => TALENT_YIELD[step]!
 export const talentRankPoints = (step: TalentStep): number => TALENT_RANK_POINTS[step]!
-/** Quality points (CS26's talent term): G −0.75, F −0.5, E −0.25, D 0, C +0.25, B +0.5, A +0.75, S +1. */
+/** Quality points (the talent term): G −0.75, F −0.5, E −0.25, D 0, C +0.25, B +0.5, A +0.75, S +1. */
 export const talentQuality = (step: TalentStep): number => 0.25 * (step - TALENT_D)
 /** Tended growth: +0.05 at B, +0.10 at A, +0.15 at S; nothing below B. */
 export const talentGrowth = (step: TalentStep): number => round6(Math.max(0, step - 4) * 0.05)

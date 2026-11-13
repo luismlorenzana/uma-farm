@@ -41,7 +41,7 @@ export interface Festival {
   day: number
 }
 
-/** The five festivals, in the year's order. In M4 they are dates only; their events come in M6. */
+/** The five festivals, in the year's order. They are dates only here; their events come with the romance. */
 export const FESTIVALS: readonly Festival[] = [
   { id: 'flower-show', name: 'Flower Show', season: 'spring', day: FESTIVAL_DAY },
   { id: 'fishing-derby', name: 'Fishing Derby', season: 'summer', day: FESTIVAL_DAY },

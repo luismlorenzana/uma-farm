@@ -1,9 +1,10 @@
 // The loop's work kinds: foraging an area, fishing a spot, and
 // the stations' six jobs, on uma-work's day clock. A gathering job is days, its haul planned when it starts: each day's
-// items by CS17 with her rank, talent, tool and well-fed days as they stand then, their goods and stars drawn from the
-// account and the day, so the same save always plans the same haul. A station job is items, its inputs taken at the
-// start and its stars carried through. Talents aren't saved, so the kinds close over the app's `talentOf` (the night's
-// `NightContext.talentOf`, the app's `talentsFor(view)`): `loopKinds(talentOf)`. Loaded with the screens and the night.
+// items by the bond rule with her rank, talent, tool and well-fed days as they stand then, their goods and stars drawn
+// from the account and the day, so the same save always plans the same haul. A station job is items, its inputs taken
+// at the start and its stars carried through. Talents aren't saved, so the kinds close over the app's `talentOf` (the
+// night's `NightContext.talentOf`, the app's `talentsFor(view)`): `loopKinds(talentOf)`. Loaded with the screens and
+// the night.
 import { payItems, refuse, workRefusal, type PayContext, type PlannedItem, type Refusal, type WorkKindRules, type WorkOutput } from '@luismlorenzana/uma-work'
 import { DAY_MS, dateOf } from '../farm/calendar'
 import { draw } from '../farm/draw'
@@ -77,7 +78,7 @@ export function pickShare(shares: readonly Share[], u: number): string {
 // --- What a day of gathering brings home -----------------------------------------------------------------
 
 /** Items on day `k` of a gathering job (0 its first): `round(base × rank × talent × tool × well fed)`, never below 1.
- * Bonds (×1.1) come in M6. */
+ * Bonds (×1.1) come later. */
 export function haulCount(place: GatherPlace, terms: WorkTerms, k = 0): number {
   return countRound(HAUL_BASE[place] * rankBenefits(terms.rank).yield * talentYield(terms.talent) * TOOL_YIELD[terms.tool - 1]! * (k < terms.wellFed ? WELL_FED_YIELD : 1))
 }
@@ -95,7 +96,7 @@ export function gatherQuality(terms: WorkTerms, fed: boolean): number {
 export const keepsakeAt = (save: FarmSave, story: PerkPack | null, outfitId: OutfitId, place: string): number =>
   save.version === 4 && story ? keepsakeQuality(save, story, outfitId, place) : 0
 
-/** Why she can't work an area or a spot yet, or null when she can: her rank (decision 5's "From Hand"), and the sea's
+/** Why she can't work an area or a spot yet, or null when she can: her rank ("From Hand"), and the sea's
  * chapter 7 and boat. */
 export function placeLock(save: Pick<FarmSave, 'farm' | 'buildings'>, place: GatherPlace, where: string, rank: Rank): Refusal | null {
   if (place === 'forest') {
@@ -114,7 +115,7 @@ export function placeLock(save: Pick<FarmSave, 'farm' | 'buildings'>, place: Gat
 export const sharesOn = (place: GatherPlace, where: string, day: number): readonly Share[] =>
   (place === 'forest' ? FOREST[where as ForestAreaId] : FISHERY[where as FishingSpotId]).seasons[dateOf(day).season]
 
-/** A gathering job's plan: each day's items by CS17 at her terms now, each good and its stars drawn with
+/** A gathering job's plan: each day's items by the bond rule at her terms now, each good and its stars drawn with
  * `draw(uid, day, '<place>:<slot>:<n>', 0 | 1)`, the day's seconds adding up to 86,400. On save v4 with the pack her
  * keepsake lifts the stars at her line's place. */
 export function planHaul(save: FarmSave, outfitId: OutfitId, place: GatherPlace, request: LoopWorkRequest, now: number, slot: number, talentOf: TalentOf, story: PerkPack | null = null): PlannedItem[] | Refusal {
@@ -225,7 +226,7 @@ function gatherRules(place: GatherPlace, talentOf: TalentOf, story: PerkPack | n
 
 // --- The stations ----------------------------------------------------------------------------------
 
-/** Whether a station is built (F17 decision 5: 1 or more). */
+/** Whether a station is built (1 or more). */
 export const stationBuilt = (save: Pick<FarmSave, 'buildings'>, station: StationId): boolean => (save.buildings[station] ?? -1) >= 1
 
 /** Items she turns on day `k` of a station job: `round(8 × rank × talent × well fed)` in the station's activity; a
@@ -304,8 +305,8 @@ function build(talentOf: TalentOf, story: PerkPack | null): LoopKinds {
 const BY_TALENTS = new WeakMap<TalentOf, LoopKinds>()
 const BY_STORY = new WeakMap<PerkPack, WeakMap<TalentOf, LoopKinds>>()
 /** The loop's kinds with her talents read from `talentOf` (master data's, once a release): one registry a resolver, so
- * screens can memo on it. A v4 farm passes the story pack (F51 decision 8: her keepsake at her line's place lifts a haul's
- * stars as it's planned); without it, or on v3, the kinds plan as F22's. */
+ * screens can memo on it. A v4 farm passes the story pack (her keepsake at her line's place lifts a haul's
+ * stars as it's planned); without it, or on v3, the kinds plan as before. */
 export function loopKinds(talentOf: TalentOf = talentsD, story: PerkPack | null = null): LoopKinds {
   let byTalents = BY_TALENTS
   if (story) {

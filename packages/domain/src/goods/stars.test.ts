@@ -1,5 +1,5 @@
-// Stars: the formula, its own terms, CS26's worked rows, and their shares over a seeded sample. Her rank's and
-// talent's terms are F21's; here they're the spec's numbers (Novice 0, Skilled 1, Expert 1.5; C +0.25, B +0.5, A +0.75).
+// Stars: the formula, its own terms, the worked rows, and their shares over a seeded sample. Her rank's and
+// talent's terms are elsewhere; here they're fixed numbers (Novice 0, Skilled 1, Expert 1.5; C +0.25, B +0.5, A +0.75).
 import { describe, expect, it } from 'vitest'
 import { draw } from '../farm/draw'
 import {
@@ -14,7 +14,7 @@ function sample(q: number, n = 20_000): number[] {
 }
 const near = (shares: number[], expected: number[]) => shares.forEach((s, i) => expect(Math.abs(s - expected[i]!), `★${i + 1}`).toBeLessThan(0.015))
 
-describe('the terms (CS26)', () => {
+describe('the terms', () => {
   it('prices each source in points', () => {
     expect([TENDED_QUALITY, WELL_FED_QUALITY]).toEqual([0.25, 0.25])
     expect([1, 2, 3, 5].map(toolQuality)).toEqual([0, 0.25, 0.5, 1])
@@ -30,7 +30,7 @@ describe('the terms (CS26)', () => {
   })
 })
 
-describe('the worked rows (CS26)', () => {
+describe('the worked rows', () => {
   it('a Novice C forager: Q 0.25, ★1 75%, ★2 25%', () => {
     const q = quality({ rank: 0, talent: 0.25 })
     expect(q).toBe(0.25)
@@ -68,7 +68,7 @@ describe('the worked rows (CS26)', () => {
   })
 })
 
-describe('the draw (CS26)', () => {
+describe('the draw', () => {
   it('is 1 + ⌊Q + u⌋, clamped to 1–5', () => {
     expect([drawStars(0, 0), drawStars(0, 0.999), drawStars(0.25, 0.75), drawStars(0.25, 0.74)]).toEqual([1, 1, 2, 1])
     expect([drawStars(-0.75, 0.9), drawStars(-2, 0.5), drawStars(4, 0), drawStars(9, 0.5)]).toEqual([1, 1, 5, 5])

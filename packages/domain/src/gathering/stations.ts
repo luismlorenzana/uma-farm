@@ -48,7 +48,8 @@ export interface StationOption {
   held: number
 }
 
-/** What a station's jobs can take from the Warehouse now, job by job in CS18's order, then by grade and stars. */
+/** What a station's jobs can take from the Warehouse now, job by job in the stations' order, then by grade and
+ * stars. */
 export function stationOptions(save: Pick<FarmSave, 'items'>, station: StationId): StationOption[] {
   const out: StationOption[] = []
   for (const [input, row] of Object.entries(save.items)) {

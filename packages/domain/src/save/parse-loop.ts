@@ -20,8 +20,8 @@ import {
 } from './v3'
 import { MAX_STARS, parseStockKey } from './warehouse'
 
-/** The places v3 work rows sit at: the forest, the Fishery and their stations in M4; the Mine, the Quarry and
- * theirs from M5. Four slots each (D24 #13). */
+/** The places v3 work rows sit at: the forest, the Fishery and their stations; the Mine, the Quarry and
+ * theirs once the workshops are built. Four slots each. */
 export const LOOP_WORK_PLACES = ['forest', 'fishery', 'mill', 'sawmill', 'smokehouse', 'mine', 'quarry', 'smelter', 'cutter'] as const
 export type LoopPlaceId = typeof LOOP_WORK_PLACES[number]
 export const LOOP_SLOTS = 4
@@ -35,12 +35,12 @@ export interface LoopRequestKind {
 export type LoopRequestKinds = Readonly<Record<string, LoopRequestKind>>
 
 /** A v3 work kind: its request, its rules on uma-work's day clock (`farmEnvV3`), and whether
- * it runs for days at a time. F22's are `LOOP_KINDS` (`gathering/kinds.ts`, loaded with the screens and the night); the
- * save's parse reads their requests from `LOOP_REQUESTS` (`gathering/ids.ts`). */
+ * it runs for days at a time. The farm's are `LOOP_KINDS` (`gathering/kinds.ts`, loaded with the screens and the
+ * night); the save's parse reads their requests from `LOOP_REQUESTS` (`gathering/ids.ts`). */
 export interface LoopKind extends LoopRequestKind {
   /** How it plans and pays (uma-work's kind rules), over the loop's world. */
   readonly rules: WorkKindRules<LoopWorld>
-  /** A multi-day kind (making; in M4 the Mill's preserves; later expeditions): a well-fed Uma's running entry gains a
+  /** A multi-day kind (making; the Mill's preserves; later expeditions): a well-fed Uma's running entry gains a
    * quarter day a night. A 1-day kind's plan takes ×1.25 items instead. */
   readonly multiDay: boolean
 }
@@ -55,7 +55,7 @@ export const MAX_ENTRY_ITEMS = 200
 export const MAX_ROSTER_NEWS = 60
 /** The most goal lines one morning can hold: a chapter, every Farm Rank, every milestone and row. */
 export const MAX_GOAL_NEWS = 1 + FARM_RANK_POINTS.length + MILESTONES.length + DIARY_ROWS.length
-/** The chapter a save may be in: 1–9 (CS43's eight, then the story's end). */
+/** The chapter a save may be in: 1–9 (eight chapters, then the story's end). */
 export const MAX_CHAPTER = 9
 /** Ids the save names itself (requests, milestones, animals, records): short kebab words, colons allowed. */
 export const KEY = /^[a-z0-9][a-z0-9:._-]{0,63}$/
@@ -355,7 +355,7 @@ export function parseExpeditions(value: unknown, path: string, roster: ReadonlyS
   return out
 }
 
-/** Bond points by pair (D30 i): two roster ids in numeric order. v3's may be fractional (`amount`); v4's are whole
+/** Bond points by pair: two roster ids in numeric order. v3's may be fractional (`amount`); v4's are whole
  * (`count`). */
 export function parseBonds(value: unknown, path: string, roster: ReadonlySet<string>, parse: (value: unknown, path: string) => number = amount): Record<string, number> {
   return counts(value, path, (k) => {
@@ -441,7 +441,7 @@ export function parseWorkLines(value: unknown, path: string): WorkLine[] {
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, ['jobs', 'catch', 'crops', 'withered'] as const)
     if (kind === 'catch') {
-      // F22: the night's best catch, a fish at its stars.
+      // The night's best catch, a fish at its stars.
       const c = object(v, at, ['kind', 'id', 'stars'])
       const id = typeof c.id === 'string' && goodOf(c.id)?.family === 'fish' && !goodOf(c.id)!.refined ? c.id : fail(`${at}.id`, 'expected a fish')
       return { kind, id, stars: int(c.stars, `${at}.stars`, 1, MAX_STARS) }
@@ -480,13 +480,14 @@ const HOUSEHOLD_NEWS = [1, 5, 10, 15, 20] as const
 /** §5 New today, on a save's version: the Dorm's levels and beds are its ladder's. */
 export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet<string>, version = 3): (NewsLine | HouseholdNews)[] {
   const top = dormMaxLevel(version)
-  // F23: the Dorm's new level, Umas home from a swap, recruits who joined (on the roster), a visitor at the Gate and those
+  // The Dorm's new level, Umas home from a swap, recruits who joined (on the roster), a visitor at the Gate and those
   // who left (outfit ids by form: she may since have joined, or gone).
   return unique(list(value, path, 0, 8 + 3 * MAX_ROSTER_NEWS + MAX_GOAL_NEWS + (version >= 4 ? 1 + HOUSEHOLD_NEWS.length : 0)).map((v, i): NewsLine | HouseholdNews => {
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, version >= 4 ? NEWS_KINDS_V4 : NEWS_KINDS)
     switch (kind) {
-      // F24: the chapter completed tonight (one of the story's), a Farm Rank reached (2–10), a Diary milestone or row paid.
+      // The chapter completed tonight (one of the story's), a Farm Rank reached (2–10), a Diary milestone or row
+      // paid.
       case 'chapter': return { kind, chapter: int(object(v, at, ['kind', 'chapter']).chapter, `${at}.chapter`, 1, MAX_CHAPTER - 1) }
       case 'farm-rank': return { kind, rank: int(object(v, at, ['kind', 'rank']).rank, `${at}.rank`, 2, FARM_RANK_POINTS.length) }
       case 'milestone': {
@@ -508,7 +509,7 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
         return { kind, outfitId: member(j.outfitId, `${at}.outfitId`, roster), home: bool(j.home, `${at}.home`) }
       }
       case 'gate': case 'left': return { kind, outfitId: outfit(object(v, at, ['kind', 'outfitId']).outfitId, `${at}.outfitId`) }
-      // F54 decision 9: a household milestone, v4 only.
+      // A household milestone, v4 only.
       case 'household': {
         const married = object(v, at, ['kind', 'married']).married
         return { kind, married: (HOUSEHOLD_NEWS as readonly unknown[]).includes(married) ? married as number : fail(`${at}.married`, 'expected 1, 5, 10, 15 or 20') }

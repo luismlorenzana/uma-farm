@@ -1,7 +1,7 @@
 // Copied from uma-rpg packages/domain/src/work/kinds-v4.test.ts at 30a322a, with its Wilds-only parts cut.
-// The farm by line's job kinds (farm-by-line.md FL2): every place one line's, a making place
+// The farm by line's job kinds: every place one line's, a making place
 // processing its own line and making its one item, every gate Craft Lv 5g − 4, making at three quarters of a gather a
-// refined item. Read from `rpgWorkEnvV4`, the live env since H112.
+// refined item. Read from `rpgWorkEnvV4`, the live env.
 import { isRefusal, kindRules, type PlannedItem, type Refusal, type WorkEnv } from '@luismlorenzana/uma-work'
 import { describe, expect, it } from 'vitest'
 import { jobExp, jobSizes, makeMinutesV4, stepMinutes } from '../economy/pacing'
@@ -41,7 +41,7 @@ const NOT_HERE = "That isn't made here."
 const FORGES = [['weapon-forge', 'craft', gradeItem('weapon-gem', 1)], ['tome-forge', 'craft', gradeItem('tome-ink', 1)], ['armorer', 'craft', gradeItem('armor-fittings', 1)],
   ['charm-forge', 'craft', gradeItem('accessory-setting', 1)], ['lapidary', 'cut', jewelId('planet', 1)], ['lapidary', 'cut', jewelId('moon', 1)]] as const
 
-describe('every forge\'s longest batch (D273)', () => {
+describe('every forge\'s longest batch', () => {
   it('reaches the same 8 hours at Craft Lv 25, through the real planner', () => {
     for (const [place, kind, item] of FORGES) {
       const most = jobSizes(madeRefinedV4(item)).at(-1)!
@@ -53,7 +53,7 @@ describe('every forge\'s longest batch (D273)', () => {
   })
 })
 
-describe('the farm by line\'s places and env (FL1–FL3)', () => {
+describe('the farm by line\'s places and env', () => {
   it('has fifteen places, slots and speed, each one line and one kind', () => {
     expect(PLACES_V4.map((p) => p.id)).toEqual([...PLACE_IDS_V3])
     expect(PLACES_V4.map((p) => p.profession)).toEqual(PLACE_IDS_V3.map((id) => PROFESSIONS.find((p) => p.place === id)!.id))
@@ -90,7 +90,7 @@ describe('the farm by line\'s places and env (FL1–FL3)', () => {
   })
 })
 
-describe('gathering (FL5, FL6)', () => {
+describe('gathering', () => {
   it('gathers its line\'s raw items only, grade g from Craft Lv 5g − 4', () => {
     expect(first(plan(worldOf({ 101: 1 }), 'mine', 'gather', 'copper-ore', { count: 3 }))).toEqual({ seconds: 1152, inputs: [], output: { item: 'copper-ore' }, exp: 48 })
     expect(why(plan(worldOf({ 101: 5 }), 'mine', 'gather', 'tin-ore'))).toBe('Needs Craft Lv6')
@@ -106,7 +106,7 @@ describe('gathering (FL5, FL6)', () => {
 
 })
 
-describe('processing at the line\'s making place (FL2, FL10)', () => {
+describe('processing at the line\'s making place', () => {
   it('processes its own line one for one, one step each, up to ×40', () => {
     const items = plan(worldOf({ 101: 1 }), 'mine-workbench', 'refine', 'copper-ingot', { count: 40 })
     expect(items).toHaveLength(40)
@@ -126,7 +126,7 @@ describe('processing at the line\'s making place (FL2, FL10)', () => {
   })
 })
 
-describe('making (FL3, FL7, FL9, FL10)', () => {
+describe('making', () => {
   it('takes one line\'s refined items of its own grade, the same amount at every grade', () => {
     expect(madeRecipeV4('weapon-gem-g3')).toEqual({ 'iron-ingot': 10 })
     expect(madeRecipeV4('tome-ink-g1')).toEqual({ 'chopped-carrot': 10 })
@@ -165,13 +165,13 @@ describe('making (FL3, FL7, FL9, FL10)', () => {
     expect(why(plan(worldOf({ 101: 50 }), 'tome-forge', 'craft', 'weapon-gem-g1'))).toBe(NOT_HERE)
   })
 
-  it('names the Weapon Gem Arms Gem and the new line Tome Ink (FL14)', () => {
+  it('names the Weapon Gem Arms Gem and the new line Tome Ink', () => {
     expect([gradeItem('weapon-gem', 3), gradeItem('tome-ink', 3), 'armor-fittings-g3', jewelId('planet', 2)].map(madeNameV4))
       .toEqual(['Arms Gem G3', 'Tome Ink G3', 'Armor Fittings G3', 'Planet Jewel II'])
   })
 })
 
-describe('the trade gate (PP15, PP16), unchanged', () => {
+describe('the trade gate, unchanged', () => {
   const context = { tradeOf: tradesOf({ 101: 'acolyte', 102: 'recruit', 103: 'apprentice' }) }
   const world = worldOf({ 101: 50, 102: 50, 103: 50 })
 

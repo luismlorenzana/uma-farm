@@ -2,14 +2,14 @@
 // face (the "+N" an act paid floats up from it), her level in words and her ● Ready chip, her line, birthday and house;
 // then on its Hearts side the route as one track (F ◆ R ◇ S), the Next card (the rung, its perk, its place and setup in
 // her bible's hint, the bar and what's banked, and what it waits for), Perks (reached ✓, the next, the rest greyed), Gifts
-// as learnt (others +10), Ties (her bonds' hearts), Memories' count and her ring once given; on its Work side F21's sheet
+// as learnt (others +10), Ties (her bonds' hearts), Memories' count and her ring once given; on its Work side the sheet
 // (her nine activities). Chat +15, Gift and Praise +20 sit in the thumb zone with Hearts | Work. Each section shows only
-// what exists: F49's **Play ›** on the Next card when her event is Ready (what a setup needs said when it isn't, and **Ask
-// her** after her confession's "Not yet"), and Memories' album (`?album=`); later packets fill Evening ›, the perks' effects,
-// the ring and her house. F52's Ties: her closest friend first and marked, each bond's hearts and the points to
-// the next, and **Read** for a pair's conversation opened and unread. F51's perks: each reached perk with what it does now,
+// what exists: **Play ›** on the Next card when her event is Ready (what a setup needs said when it isn't, and **Ask
+// her** after her confession's "Not yet"), and Memories' album (`?album=`); Evening ›, the perks' effects,
+// the ring and her house. Ties: her closest friend first and marked, each bond's hearts and the points to
+// the next, and **Read** for a pair's conversation opened and unread. Perks: each reached perk with what it does now,
 // her closest friend's loved gift in Gifts from Friendship 7, and **From her**: her pet name for you from Romance 1 and her
-// keepsake from Friendship 10. F53's **Ring**: from Romance 8 the engraving her ring will carry (her R8 beat's line), from
+// keepsake from Friendship 10. **Ring**: from Romance 8 the engraving her ring will carry (her R8 beat's line), from
 // the proposal her ring and its bonus at her line, and **Give her the Cobalt Ring** for any better one in the Warehouse (the
 // old one comes back); "Needs a ring" links to the Forge's bench. Loaded on demand.
 import { birthdaysOf, canAsk, LADDER_COLOURS, ladderOf, levelWords, readiness, type SaveV4, type Temperament } from '@farm/domain'

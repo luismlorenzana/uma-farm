@@ -63,7 +63,7 @@ afterAll(async () => {
   await rm(dir, { recursive: true, force: true }) // Only this freshly created folder.
 })
 
-describe('the story route, /api/content/… (F56 decision 2)', () => {
+describe('the story route, /api/content/…', () => {
   it('serves the index fresh on every read, to the owner', async () => {
     const res = await release.get('story.json', 'owner-token')
     expect(res.status).toBe(200)

@@ -1,9 +1,9 @@
-// The homestead as the screens show it (RM22's Sleep at): the
+// The homestead as the screens show it (Sleep at): the
 // homestead sheet's rows (a house a row with its rooms, Build or Extend with its price, the next lot, the lots after), her
 // room in words, Tonight's Sleep at rows, the morning's house lines and the household's Ready offers. Pure, so the screens
 // and the tests read the same. Loaded on demand, the romance build only.
 import {
-  extensionCost, FURNITURE, householdReady, householdTitle, homeOf, houseLineOf, HOUSES, isHouseholdId, levelWords, marriedCount, NEEDS_ROOM, nextLot, OWN_HOUSE_WISH, residentsOf,
+  extensionCost, FURNITURE, householdReady, householdTitle, houseLineOf, HOUSES, isHouseholdId, marriedCount, nextLot, residentsOf,
   roomsInAll, roomsOf, sleepRows, tonightsHouse, waitingForRooms, withFarmer, type Birthdays, type HouseholdId, type SaveV4, type StoryPack, type Temperament,
 } from '@farm/domain'
 import { NO_HOME, type HomeWords } from './summary-words'
@@ -11,7 +11,7 @@ import { NO_HOME, type HomeWords } from './summary-words'
 type NameOf = (id: string) => string
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 
-// --- The homestead's sheet (RM41's mockup) ---------------------------------------------------------------
+// --- The homestead's sheet ----------------------------------------------------------------------
 
 /** One house on the sheet: its rooms (a resident or a free room), its count, and what it can still take. */
 export interface HouseRow {
@@ -63,7 +63,7 @@ export function homesteadView(save: SaveV4, nameOf: NameOf): HomesteadView {
   }
 }
 
-/** "Build · 8,000g" or "Need 300g more" for a lot or an extension (RM41's mockup). */
+/** "Build · 8,000g" or "Need 300g more" for a lot or an extension. */
 export const priceWords = (verb: 'Build' | 'Extend', cost: number, short: number): string => (short > 0 ? `Need ${gold(short)} more` : `${verb} · ${gold(cost)}`)
 
 /** The sheet's words. */
@@ -86,15 +86,6 @@ export function furnitureRows(save: SaveV4): { piece: number; name: string; hous
   return save.homestead.furniture.map((house, piece) => ({
     piece, name: FURNITURE[piece]!, house, where: house === null ? 'Not placed' : save.homestead.houses[house]?.name ?? 'Not placed',
   }))
-}
-
-// --- Her room in words ----------------------------------------------------------------------------------
-
-/** Her room for her profile and her Hearts row: her house's name, "Needs a room", and softly "She'd love her own house". */
-export function roomWords(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string): string[] {
-  const home = homeOf(save, pack, id)
-  if (!home) return []
-  return [...(home.needs ? [NEEDS_ROOM] : []), ...(home.wish ? [OWN_HOUSE_WISH] : [])]
 }
 
 // --- Tonight's Sleep at ------------------------------------------------------------------------------
@@ -151,12 +142,4 @@ export function householdLines(save: SaveV4, pack: Pick<StoryPack, 'household'>)
 /** `?household=<id>` and its replay flag. */
 export function parseHouseholdParam(value: string | null): HouseholdId | null {
   return value !== null && isHouseholdId(value) ? value : null
-}
-
-/** A spouse's level words with her house: "Spouse · S2 · Rose Cottage". */
-export function spouseWords(save: SaveV4, id: string): string {
-  const love = save.love[id]
-  if (!love) return ''
-  const house = love.house === undefined ? null : save.homestead.houses[love.house]?.name ?? null
-  return [levelWords(love), ...(house ? [house] : [])].join(' · ')
 }

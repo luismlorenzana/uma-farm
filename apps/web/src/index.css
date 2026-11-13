@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-/* The shared theme (uma-kit, uma-platform P48): the "Paddock" tokens in light and dark, base styles and utilities.
+/* The shared theme (uma-kit): the "Paddock" tokens in light and dark, base styles and utilities.
    Tailwind also reads the kit's own classes. */
 @import '@luismlorenzana/uma-kit/theme.css';
 
@@ -23,7 +23,7 @@
   font-display: swap;
 }
 
-/* The "+N" that floats up from her face when an act pays her bar (F47, RM13); it stays still with reduced motion. */
+/* The "+N" that floats up from her face when an act pays her bar; it stays still with reduced motion. */
 @keyframes love-float {
   0% { opacity: 0; transform: translateY(6px); }
   15% { opacity: 1; }
@@ -34,7 +34,7 @@
   .love-float { animation: none; }
 }
 
-/* The level-up card's heart (F49 decision 9; RM55): a short sparkle as the heart fills; still with reduced motion. */
+/* The level-up card's heart: a short sparkle as the heart fills; still with reduced motion. */
 @keyframes level-sparkle {
   0% { opacity: 0.4; transform: scale(0.6) rotate(-10deg); }
   50% { opacity: 1; transform: scale(1.25) rotate(8deg); }

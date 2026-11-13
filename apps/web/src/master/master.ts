@@ -1,6 +1,6 @@
 // Master data: the release's manifest, characters, outfits and art through the API's proxy, cached by hash on the
 // device. The farm's view of it is every outfit as a worker (`farmRoster`), the album's neutral rows (names and
-// art keys, from the release at runtime only) and each outfit's stats for the loop's talents (F21, which reads them on
+// art keys, from the release at runtime only) and each outfit's stats for the loop's talents (read on
 // demand, once a release: `loop/talents.ts`). Copied in shape from uma-rpg's `master/master.ts` (30a322a), cut to the sets
 // the farm reads.
 import { farmRoster, type FarmOutfit, type TalentOutfit } from '@farm/domain'
@@ -31,7 +31,7 @@ let state: MasterState = { status: 'idle' }
 const listeners = new Set<() => void>()
 /** The release as loaded, before any lens. */
 let raw: MasterView | null = null
-/** How the romance build sees master data: through the story pack's cast. Null in the M4 build. */
+/** How the romance build sees master data: through the story pack's cast. Null in the deployed build. */
 let lens: ((view: MasterView) => MasterView) | null = null
 
 function set(next: MasterState): void {

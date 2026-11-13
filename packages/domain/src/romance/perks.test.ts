@@ -11,18 +11,18 @@ import { lineChapter, PERK_LINES, perkLineOf, perkOf, PERKS, perksFor, perkWords
 const PACK = storyPackFrom(STAND_IN_FILES)
 const words = (line: PerkLine, chapter = 1) => Object.fromEntries(perksFor(line, chapter).map((p) => [p.rung, p.words]))
 
-describe('the perks (RM31)', () => {
+describe('the perks', () => {
   it('has one perk on every level of her route, and none on a waiting rung', () => {
     const levels = ROUTE_RUNGS.filter((r) => !WAITING_RUNGS.includes(r))
     expect(PERKS.map((p) => p.rung)).toEqual(levels)
     expect(PERKS).toHaveLength(25)
     expect(new Set(PERKS.map((p) => p.id)).size).toBe(25)
     for (const rung of WAITING_RUNGS) expect(perkOf(rung)).toBeNull()
-    // S2 and S4 have no event but each brings a perk (F54 levels them at night).
+    // S2 and S4 have no event but each brings a perk (they level at night).
     for (const rung of NIGHT_RUNGS) expect(perkOf(rung)).not.toBeNull()
   })
 
-  it('templates each line’s place, chore and morning item (RM32)', () => {
+  it('templates each line’s place, chore and morning item', () => {
     expect(words('farming')).toMatchObject({
       f3: '+10% at the Fields', f6: '+0.25 growth on a block each night', r2: 'A ★2+ crop of the season every 4th morning', r5: '+10% more at the Fields (+20%)',
       s3: 'Her dream; +5% for anyone at the Fields',
@@ -42,7 +42,7 @@ describe('the perks (RM31)', () => {
     }
   })
 
-  it('says "Opens with chapter 3" for a miner’s perks at her place until chapter 3 (RM36)', () => {
+  it('says "Opens with chapter 3" for a miner’s perks at her place until chapter 3', () => {
     const at = (line: PerkLine, chapter: number) => Object.fromEntries(perksFor(line, chapter).map((p) => [p.rung, p.opens]))
     expect(at('mining', 1)).toMatchObject({ f3: 3, f6: 3, f8: 3, f9: 3, r5: 3, r7: 3, s3: 3, s4: 3, f1: null, f5: null, r2: null })
     expect(at('quarry', 2).f3).toBe(3)

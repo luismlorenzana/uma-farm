@@ -8,7 +8,7 @@ import { Outlet } from 'react-router'
 import { boot, NEWER_SAVE_WORDS, startSyncTriggers } from '../save/game'
 import { signInEnabled } from './firebase-config'
 
-/** A boot that stopped at a save this build can't play (F46 decision 2: the M4 build meeting a v4). */
+/** A boot that stopped at a save this build can't play (the deployed build meeting a v4). */
 const isNewerSave = (error: unknown): boolean => error instanceof Error && error.message === NEWER_SAVE_WORDS
 
 /** Asks the browser for the new build now, so the kit's update prompt (Update ready · Restart) comes up without waiting
@@ -19,7 +19,7 @@ function checkForUpdate(): void {
 
 export function Root() {
   const auth = useAuth()
-  // F46's carried item: the gate says why it stopped at a newer save, beside the update prompt,
+  // The gate says why it stopped at a newer save, beside the update prompt,
   // instead of the kit's generic "couldn't open".
   const [newer, setNewer] = useState(false)
   useEffect(() => startSyncTriggers(), [])

@@ -48,7 +48,7 @@ const ready = (harvested = 9): SaveV3 => ranked({
 const made = (kind: 'forage' | 'fish', item: string, items = 3): MadeTonight =>
   ({ outfitId: '1001', place: kind === 'forage' ? 'forest' : 'fishery', request: { kind, item, count: 1 }, items: Array.from({ length: items }, () => 'pine-log@1') })
 
-describe('the Farm Rank (CS39; decision 1)', () => {
+describe('the Farm Rank', () => {
   it('reaches each rank at its threshold, never a point before', () => {
     FARM_RANK_POINTS.forEach((at, i) => {
       expect(farmRankOf(at)).toBe(i + 1)
@@ -88,7 +88,7 @@ describe('the Farm Rank (CS39; decision 1)', () => {
   })
 })
 
-describe('the Diary (CS38; decisions 2 and 3)', () => {
+describe('the Diary', () => {
   it('pays each milestone once, the night it is reached, with its gold', () => {
     const save = farm(2, { [GOLD_SHIPPED]: 10_000 })
     const once = payDiary(save)
@@ -150,7 +150,7 @@ describe('the Diary (CS38; decisions 2 and 3)', () => {
   })
 })
 
-describe('chapter 1 (CS42; decisions 4 and 5)', () => {
+describe('chapter 1', () => {
   it('counts each goal from its counter, or the save', () => {
     const save = { ...farm(3, { 'plots-harvested': 4, [GOLD_SHIPPED]: 620, 'home:forest': 2, 'home:fishery': 1 }), crops: { carrot: 4 } }
     expect(goalStates(save)!.map((g) => [g.goal.id, g.have, g.done])).toEqual([
@@ -179,7 +179,7 @@ describe('chapter 1 (CS42; decisions 4 and 5)', () => {
       { kind: 'joined', outfitId: '1030', home: false },
     ])
     expect(parseSaveV3(json(morning), 'save', TEST_KINDS)).toEqual(morning)
-    // Chapter 2's goals come with M5: the Diary says Soon, and nothing completes again.
+    // Chapter 2's goals come with the workshops: the Diary says Soon, and nothing completes again.
     expect(goalStates(morning)).toBeNull()
     expect(night({ ...morning, summary: null }).farm.chapter).toBe(2)
   })
@@ -211,7 +211,7 @@ describe('chapter 1 (CS42; decisions 4 and 5)', () => {
   })
 })
 
-describe('the scenes (CS42; decisions 6 and 7)', () => {
+describe('the scenes', () => {
   it('opens once the start is picked, before day 1, once', () => {
     const fresh = newSave('u1', AT)
     expect(sceneDue(fresh)).toBeNull() // the start's picks come first

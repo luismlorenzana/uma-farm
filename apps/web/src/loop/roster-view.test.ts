@@ -44,7 +44,7 @@ describe('the roster page', () => {
   })
 })
 
-describe('talents and ranks on the cards (decision 7)', () => {
+describe('talents and ranks on the cards', () => {
   it('reads each Uma\'s talents once a release, her favourite line from her calling, and her best talent', async () => {
     const { view, rows: all } = await rows()
     expect(talentTable(view)).toBe(talentTable(view))

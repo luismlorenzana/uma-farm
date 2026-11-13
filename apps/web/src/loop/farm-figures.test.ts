@@ -46,7 +46,7 @@ function input(save: FarmSave, options = M4, hearts: ReadonlySet<string> = new S
 }
 const byId = (figures: readonly FarmFigure[]) => new Map(figures.map((f) => [f.id, f]))
 
-describe('who stands on the farm (decision 1)', () => {
+describe('who stands on the farm', () => {
   it('matches the Hub\'s pips: the workers at their slots, the tenders on the Fields, everyone else home in the yard', () => {
     const save = working()
     const view = input(save)
@@ -144,7 +144,7 @@ describe('the idle Umas\' spots', () => {
   })
 })
 
-describe('the bubbles (decision 4)', () => {
+describe('the bubbles', () => {
   it('show a worker\'s work when she has some to collect, as many a place as its Ready badge, and nothing while none waits', () => {
     const today = farmFigures(input(working()))
     expect(today.filter((f) => f.bubble)).toEqual([])
@@ -171,7 +171,7 @@ describe('the bubbles (decision 4)', () => {
   })
 })
 
-describe('what moves (decisions 2 and 3)', () => {
+describe('what moves', () => {
   const save = farm()
   const before = farmFigures(input(save))
 

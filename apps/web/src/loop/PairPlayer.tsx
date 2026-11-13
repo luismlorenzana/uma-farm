@@ -1,4 +1,4 @@
-// A pair's conversations: `?read=<a>-<b>:<levels>` over any page, played in F46's
+// A pair's conversations: `?read=<a>-<b>:<levels>` over any page, played in the
 // scene player's frame and steps. Each level in order, titled "Stand-in 1 & Stand-in 2 · Bond 2 · Forest"; a line
 // with its speaker's bust, a narration, a pause; a choice's options are wording only, with no gain. Skip, or the last
 // line, marks every level read (`diary.read`, once each) and closes; a replay from the Diary marks nothing new. It pays

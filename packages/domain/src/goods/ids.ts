@@ -1,13 +1,13 @@
-// The v3 Warehouse's ids: the goods CS19 prices by the ladder or as crops, plus seeds.
+// The v3 Warehouse's ids: the goods priced by the ladder or as crops, plus seeds.
 // Written from uma-art 2.21.0's `items/atlas.json`: every good's id, family and grade are uma-art's own, so names and
 // icons come from ids as today (a web test checks each id is on the atlas). 260 goods: 27 crops and 10 flours, the
 // forest's 113, mining's 60, fishing's 20 and expeditions' 30. The ranch's, the dishes' and the Forge's goods join with
-// their packets. F19 gives each its price ★1 by the one rule (`rule.ts`) and a refined good its
-// input; seasons and stations are F20's and F22's.
+// their screens. Each gets its price ★1 by the one rule (`rule.ts`) and a refined good its
+// input.
 //
-// **The rings** are the v4 catalogue's own family: CS25's ten, `ring-g1` …
+// **The rings** are the v4 catalogue's own family: the ten, `ring-g1` …
 // `ring-g10`, at its ★1 prices, made at the ring bench (`romance/bench.ts`) and drawn on uma-art's `accessory-setting`
-// frames. They're apart from `GOODS`, so v3's catalogue (its families, its Diary rows, its parse) is M4's as live:
+// frames. They're apart from `GOODS`, so v3's catalogue (its families, its Diary rows, its parse) is the live one:
 // `goodOf` prices and names a ring, `isGoodId` stays v3's, and v4 reads `isGoodIdV4`.
 import { itemNameOf } from '../items/lines'
 import { CROP_PRICES, ladderPrice, refinedPrice, type LadderFamily } from './rule'
@@ -23,8 +23,6 @@ export const RING_FAMILY = 'rings'
 export type GoodFamilyV3 = typeof GOOD_FAMILIES[number]
 /** A good's family: v3's fifteen, and the rings on v4. */
 export type GoodFamily = GoodFamilyV3 | typeof RING_FAMILY
-/** The v4 catalogue's families: v3's, then the rings. */
-export const GOOD_FAMILIES_V4: readonly GoodFamily[] = [...GOOD_FAMILIES, RING_FAMILY]
 /** Each family in the player's words. */
 export const FAMILY_NAMES: Readonly<Record<GoodFamily, string>> = {
   grains: 'Grains', vegetables: 'Vegetables', 'herbs-spices': 'Herbs and spices', 'nuts-seeds': 'Nuts and seeds', sweets: 'Sweets', fruits: 'Fruits',
@@ -158,9 +156,9 @@ export const GOOD_IDS: readonly string[] = GOODS.map((g) => g.id)
 
 // --- The rings ---------------------------------------------------------------------------------
 
-/** CS25's rings' ★1 prices, G1 → G10. */
+/** The rings' ★1 prices, G1 → G10. */
 export const RING_PRICES = [205, 275, 340, 450, 580, 745, 950, 1220, 1555, 2025] as const
-/** CS25's names: Copper to Orichalcum Ring, by grade. */
+/** The names: Copper to Orichalcum Ring, by grade. */
 const RING_METALS = ['Copper', 'Tin', 'Iron', 'Silver', 'Cobalt', 'Gold', 'Platinum', 'Titanium', 'Mythril', 'Orichalcum'] as const
 /** A ring's id by its grade (1–10): `ring-g3`. */
 export const ringId = (grade: number): string => `ring-g${grade}`
@@ -181,7 +179,7 @@ export const goodOf = (id: string): Good | undefined => GOOD_BY_ID.get(id) ?? RI
 const REFINED_OF = new Map(GOODS.flatMap((g) => (g.input ? [[g.input, g.id] as const] : [])))
 /** What a raw good refines into at a station, or null (the vegetables' and the expeditions' have none). */
 export const refinedOf = (id: string): string | null => REFINED_OF.get(id) ?? null
-/** A good of v3's catalogue (M4's 260). */
+/** A good of v3's catalogue (the 260). */
 export const isGoodId = (id: string): boolean => GOOD_BY_ID.has(id)
 /** A good of v4's catalogue: v3's and the rings. */
 export const isGoodIdV4 = (id: string): boolean => GOOD_BY_ID.has(id) || RING_BY_ID.has(id)
@@ -198,7 +196,7 @@ export const seedOf = (id: string): { crop: CropId; own: boolean } | undefined =
 /** Anything the v3 Warehouse may hold: a good or a seed. */
 export const isWarehouseId = (id: string): boolean => GOOD_BY_ID.has(id) || SEEDS.has(id)
 
-/** Each dish kind's word, by its family (here since F53 so the Warehouse names a dish). */
+/** Each dish kind's word, by its family. */
 export const DISH_WORDS = {
   vegetables: 'Salad', grains: 'Bread', fruits: 'Tart', fish: 'Grill', 'herbs-spices': 'Curry', mushrooms: 'Soup', sweets: 'Cake', 'nuts-seeds': 'Cookies',
 } as const
@@ -213,7 +211,7 @@ export function dishName(id: string): string {
 }
 
 /** A Warehouse item in the player's words: a good by its uma-art id ("Sunflower Seed"), a seed by its crop
- * ("Carrot seeds", "Carrot seeds (own)"), a ring by CS25's name ("Iron Ring") and a dish by its kind ("Carp Grill"). */
+ * ("Carrot seeds", "Carrot seeds (own)"), a ring by its name ("Iron Ring") and a dish by its kind ("Carp Grill"). */
 export function goodName(id: string): string {
   const seed = SEEDS.get(id)
   if (seed) return `${itemNameOf(seed.crop)} seeds${seed.own ? ' (own)' : ''}`

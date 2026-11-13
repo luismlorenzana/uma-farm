@@ -1,8 +1,8 @@
 // The perks' words: one perk on every level of her route, written once as
 // templates keyed by her favourite line, in the farm's own words. Her profile lists every one before it's reached and
-// F49's level-up card names the one an event brings; **F51 makes each do what it says** (`hasPerk` and the effects), so
+// the level-up card names the one an event brings; **each does what it says** (`hasPerk` and the effects), so
 // this file is words and ids only. Only three are bespoke per Uma (her signature dish, her keepsake, her dream), named
-// generically here until F51 reads them from her bible.
+// generically here; the effects read them from her bible.
 //
 //   Level  Friendship                      Romance                          Spouse
 //     1    her loved gift shown, her chats dates, her pet name              breakfast in her house
@@ -22,14 +22,14 @@ import type { Activity } from '../farm/ranks'
 import { castEntry, favouriteOf, type StoryPack } from '../story/pack'
 
 /** The activities whose places open with a chapter: a working setup there waits for it, and so does a perk at her
- * line's place. Here since F51, so the perks' terms never import `ready.ts` (and `ready.ts` reads it from here). */
+ * line's place. Here so the perks' terms never import `ready.ts` (and `ready.ts` reads it from here). */
 export const ACTIVITY_CHAPTER: Readonly<Partial<Record<Activity, number>>> = { ranch: 2, mining: 3, cooking: 4, expeditions: 5, serving: 6, forging: 7 }
 
 /** Her line as the perks say it: her favourite activity, with a quarry calling's mining at the Quarry. */
 export type PerkLine = Exclude<Activity, 'expeditions'> | 'quarry'
 export const PERK_LINES: readonly PerkLine[] = ['farming', 'foraging', 'fishing', 'mining', 'quarry', 'ranch', 'cooking', 'serving', 'forging']
 
-/** Each level's perk, by id: F51's `hasPerk` and effects key off these. */
+/** Each level's perk, by id: `hasPerk` and the effects key off these. */
 export type PerkId =
   | 'tastes-loved' | 'hangouts' | 'line-10' | 'signature-dish' | 'rank-105' | 'night-chore' | 'tastes-all' | 'in-element' | 'mentor' | 'keepsake'
   | 'dates' | 'morning-item' | 'date-stargazing' | 'closest-bond' | 'line-20' | 'date-dance-boat' | 'night-chore-2' | 'engraving' | 'date-footrace'
@@ -43,7 +43,7 @@ export interface PerkDef {
   place: boolean
 }
 
-/** RM31's table in route order: F1–F10, R1–R10, S1–S5. The waiting rungs (her confession, the proposal's and the
+/** The table in route order: F1–F10, R1–R10, S1–S5. The waiting rungs (her confession, the proposal's and the
  * wedding's waits) bring no perk of their own. */
 export const PERKS: readonly PerkDef[] = [
   { rung: 'f1', id: 'tastes-loved', place: false },
@@ -73,13 +73,13 @@ export const PERKS: readonly PerkDef[] = [
   { rung: 's5', id: 'vow-renewal', place: false },
 ]
 
-/** Her line's place in words (RM6's table): where her line's perks work. */
+/** Her line's place in words (the line table): where her line's perks work. */
 export const PERK_PLACE: Readonly<Record<PerkLine, string>> = {
   farming: 'the Fields', foraging: 'the forest', fishing: 'the Fishery', mining: 'the Mine', quarry: 'the Quarry', ranch: 'the ranch',
   cooking: 'the Kitchen', serving: 'the Restaurant', forging: 'the Forge',
 }
 
-/** A night chore by her line: what F6 brings each night. */
+/** A night chore by her line: what the F6 perk brings each night. */
 export const NIGHT_CHORE: Readonly<Record<PerkLine, string>> = {
   farming: '+0.25 growth on a block each night',
   foraging: 'One item from the forest each night',
@@ -130,7 +130,7 @@ export function perkWords(id: PerkId, line: PerkLine): string {
   }
 }
 
-/** The chapter her line's place opens with (CS3: the ranch 2, the Mine and the Quarry 3, the Kitchen 4, the Restaurant 6,
+/** The chapter her line's place opens with (the ranch 2, the Mine and the Quarry 3, the Kitchen 4, the Restaurant 6,
  * the Forge 7), or null for a place open from the start. */
 export const lineChapter = (line: PerkLine): number | null => ACTIVITY_CHAPTER[line === 'quarry' ? 'mining' : line] ?? null
 

@@ -1,8 +1,8 @@
 // The Hearts tab as rendered: the romance build's bar (Farm · Hearts · End the day · Diary
-// · Menu) and the M4 build's unchanged; `/roster` landing on the Work view with her `?uma=` kept; the Hearts rows with
-// 9000001 Ready first, the filter chips with their counts and Friends; her profile from a row with its track, Next card,
-// perks, gifts and ties, switching to Work; the Work view's album with her level in each card's corner. The invented
-// stand-in pack and invented outfits; master data and the server are stubs.
+// · Menu) and the deployed build's unchanged; `/roster` landing on the Work view with her `?uma=` kept; the Hearts
+// rows with 9000001 Ready first, the filter chips with their counts and Friends; her profile from a row with its
+// track, Next card, perks, gifts and ties, switching to Work; the Work view's album with her level in each card's
+// corner. The invented stand-in pack and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
 import { joinOpening, newSaveV4, pairKey, readScene, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
@@ -94,7 +94,7 @@ afterEach(async () => {
   vi.unstubAllEnvs()
 })
 
-describe('the bar and the routes (decisions 2 and 3)', () => {
+describe('the bar and the routes', () => {
   it('reads Farm · Hearts · End the day · Diary · Menu in the romance build, with no badge on Hearts', async () => {
     await render(<FarmBottomBar page="hearts" />, '/hearts')
     expect(tabs()).toEqual([['Farm', '/'], ['Hearts', '/hearts'], ['End day', '/hearts?sheet=end'], ['Diary', '/diary'], ['Menu', '/hearts?sheet=menu']])
@@ -103,13 +103,13 @@ describe('the bar and the routes (decisions 2 and 3)', () => {
     expect(hearts.getAttribute('aria-label')).toBe('Hearts')
   })
 
-  it('keeps M4’s bar with the switch off', async () => {
+  it('keeps the deployed build’s bar with the switch off', async () => {
     vi.stubEnv('VITE_FARM_ROMANCE', '0')
     await render(<FarmBottomBar page="roster" />, '/roster')
     expect(tabs().map(([label, to]) => [label, to])).toEqual([['Farm', '/'], ['Roster', '/roster'], ['End day', '/roster?sheet=end'], ['Diary', '/diary'], ['Menu', '/roster?sheet=menu']])
   })
 
-  it('sends /roster to the Work view, her profile kept; M4 keeps /roster and has no /hearts', async () => {
+  it('sends /roster to the Work view, her profile kept; the deployed build keeps /roster and has no /hearts', async () => {
     await act(async () => root.render(<MemoryRouter initialEntries={[`/roster?uma=${ONE}`]}><App /></MemoryRouter>))
     await settle()
     expect(path).toBe(`/hearts?view=work&uma=${ONE}`)
@@ -125,7 +125,7 @@ describe('the bar and the routes (decisions 2 and 3)', () => {
   })
 })
 
-describe('the Hearts view (decisions 4 and 5)', () => {
+describe('the Hearts view', () => {
   it('lists the three stand-ins, 9000001 Ready first, with the header and the chips’ counts', async () => {
     await render(<HeartsPage />, '/hearts')
     await find('[data-heart-row]')
@@ -158,7 +158,7 @@ describe('the Hearts view (decisions 4 and 5)', () => {
   })
 })
 
-describe('her profile (decision 6)', () => {
+describe('her profile', () => {
   it('shows the track, the Next card, the perks, her gifts and her ties, and switches to Work', async () => {
     await render(<HeartsPage />, `/hearts?uma=${ONE}`)
     await find(`[data-profile="${ONE}"]`)

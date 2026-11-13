@@ -45,7 +45,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('the loader seam on the dev server (F56 decision 5)', () => {
+describe('the loader seam on the dev server', () => {
   it("plays the stand-in without asking farm-api when VITE_FARM_STORY is 'stand-in'", async () => {
     serveRelease()
     const pack = await loadStoryPack()

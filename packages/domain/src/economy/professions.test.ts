@@ -1,12 +1,12 @@
 // Copied from uma-rpg packages/domain/src/economy/professions.test.ts at 30a322a, with its Wilds-only parts cut.
-// The professions and trades (profession-progression.md §2, §4.1; the farm by line):
+// The professions and trades (the farm by line):
 // fifteen professions in three kinds, fifteen places each one line's, and one trade an Uma by her calling.
 import { describe, expect, it } from 'vitest'
 import { FARM_BUILDINGS, farmWorkEnv } from '../work/env-v4'
 import { PLACES_V4, placeSpecV4 } from './places-v4'
 import { professionById, PROFESSIONS, tradePlaces, tradeProfessions, TRADES } from './professions'
 
-describe('fifteen professions (FL25)', () => {
+describe('fifteen professions', () => {
   it('splits into five gathering, processing and making professions, one place each', () => {
     expect(PROFESSIONS.map((p) => [p.id, p.name, p.kind, p.place])).toEqual([
       ['mining', 'Mining', 'gathering', 'mine'], ['smelting', 'Smelting', 'processing', 'mine-workbench'],
@@ -39,7 +39,7 @@ describe('fifteen professions (FL25)', () => {
   })
 })
 
-describe('the trade (PP2, PP3)', () => {
+describe('the trade', () => {
   it('gives each trade its gathering, processing and crafting places', () => {
     expect(Object.fromEntries(TRADES.map((t) => [t.id, tradePlaces(t.id)]))).toEqual({
       physical: ['mine', 'mine-workbench', 'weapon-forge'], 'physical-hybrid': ['forest', 'forest-workbench', 'armorer'],

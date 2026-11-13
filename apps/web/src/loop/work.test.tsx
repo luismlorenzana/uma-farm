@@ -69,7 +69,7 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-describe('the forest\'s page (decisions 1, 5 and 8)', () => {
+describe('the forest\'s page', () => {
   it('sends an Uma to the Woods for two days, the rows in days, and collects each morning\'s haul by stars', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
     await render(page('forest'), '/forest')
@@ -153,7 +153,7 @@ describe('the Fishery\'s page', () => {
   })
 })
 
-describe('the stations (decisions 2 and 6)', () => {
+describe('the stations', () => {
   it('locks an unbuilt Sawmill until Farm Rank 3, builds it, and saws a day of logs', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: { ...farm(), gold: 2000 } })
     await render(page('sawmill'), '/sawmill')

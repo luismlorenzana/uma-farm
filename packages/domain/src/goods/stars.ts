@@ -1,10 +1,10 @@
 // Stars: each good adds up quality points Q from its sources, then draws its stars,
 // `1 + ⌊Q + u⌋` clamped to 1–5, with `u` a seeded draw in [0, 1). So the expected stars are 1 + Q for Q from 0 to
-// 4, and Q of 4 or more is always ★5. This file holds the formula and the terms of its own rows; F21 gives the rank and
-// talent terms (`rankQuality` in `farm/rank-rules.ts`, CS31's 0.5 a rank; `talentQuality` in `farm/talents.ts`, G −0.75
-// … S +1), and F20 and F22 add them up for their goods.
+// 4, and Q of 4 or more is always ★5. This file holds the formula and the terms of its own rows; the rank and
+// talent terms are (`rankQuality` in `farm/rank-rules.ts`, 0.5 a rank; `talentQuality` in `farm/talents.ts`, G −0.75
+// … S +1), and each good adds them up.
 
-/** The quality points a good gets from each of its sources (CS26's rows), each already in points. Leave a source out
+/** The quality points a good gets from each of its sources (the rows), each already in points. Leave a source out
  * where it doesn't apply. */
 export interface QualitySources {
   /** Her rank: `rankQuality(rank)`, 0.5 a rank (Novice 0 … Legend 2.5). The tender's in farming, the assistant's in a
@@ -56,7 +56,7 @@ export function drawStars(q: number, u: number): number {
   return Math.min(5, Math.max(1, 1 + Math.floor(q + u)))
 }
 
-/** The odds of each star, ★1 … ★5, at quality points `q`: the two stars either side of 1 + Q (CS26's worked shares). */
+/** The odds of each star, ★1 … ★5, at quality points `q`: the two stars either side of 1 + Q. */
 export function starShares(q: number): [number, number, number, number, number] {
   const shares: [number, number, number, number, number] = [0, 0, 0, 0, 0]
   const clamped = Math.min(4, Math.max(-1, q))

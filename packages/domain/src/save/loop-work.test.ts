@@ -1,4 +1,4 @@
-// The loop's work on the day clock: F5's operations over a v3 save at `workNow`, stamped with real time;
+// The loop's work on the day clock: the operations over a v3 save at `workNow`, stamped with real time;
 // readings stamp nothing. Invented outfit ids and the test kinds.
 import { describe, expect, it } from 'vitest'
 import { DAY_MS } from '../farm/calendar'
@@ -25,7 +25,7 @@ const night = (save: SaveV3) => endDay(save, { roster: [], kinds: TEST_KINDS }, 
 const startAt = (save: SaveV3, outfitId: string, place: 'mill' | 'forest', slot: number, request = place === 'mill' ? make : gather) =>
   startLoopJob(save, { outfitId, place, slot, request }, T1, TEST_KINDS)
 
-describe('work on the day clock (decision 1)', () => {
+describe('work on the day clock', () => {
   it('starts a job at the day\'s start, stamped with real time, its inputs taken', () => {
     const save = startAt(farm(3), '101', 'mill', 0)
     expect(save.work['101']!.entries[0]).toMatchObject({ startedAt: 2 * DAY_MS, seconds: [86_400], speed: 1 })

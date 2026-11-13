@@ -1,7 +1,8 @@
 // The store with the romance switch on and off: every v1–v3 the romance build meets, on the device
 // or from the server, becomes a fresh v4 once, its `updatedAt` where it was and its first upload unstamped; a dirty v3 on
-// the device is kept as a safety copy first, which offers no Restore. The M4 build (switch off) stops at a v4 and never
-// writes over it. An in-memory server with the API's revision and version rules, and a fake IndexedDB. Invented ids only.
+// the device is kept as a safety copy first, which offers no Restore. The deployed build (switch off) stops at a v4
+// and never writes over it. An in-memory server with the API's revision and version rules, and a fake IndexedDB.
+// Invented ids only.
 import 'fake-indexeddb/auto'
 import { newRosterUma, newSave, newSaveV4, versionOf, type SaveEnvelope, type SaveV3, type SaveV4, type StoredSave } from '@farm/domain'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -33,7 +34,7 @@ const { db, readSaveRow, safetyCopies } = await import('../save/db')
 
 const T0 = '2026-11-08T09:12:44.000Z'
 const T1 = '2026-11-10T21:40:03.512Z'
-/** A played v3 as M4 leaves it: day 2, three Umas, its last change at T1. */
+/** A played v3 as the deployed build leaves it: day 2, three Umas, its last change at T1. */
 const played = (): SaveV3 => ({
   ...newSave('u1', T0), account: { uid: 'u1', createdAt: T0, updatedAt: T1 }, calendar: { day: 2 }, gold: 812,
   roster: { 1001: newRosterUma(1), 1002: newRosterUma(1), 1003: newRosterUma(1) }, dorm: { level: 1, home: ['1001', '1002', '1003'], swaps: [] },
@@ -101,7 +102,7 @@ describe('the romance build wipes once (switch on)', () => {
   })
 })
 
-describe('the M4 build stops at a v4 (switch off)', () => {
+describe('the deployed build stops at a v4 (switch off)', () => {
   it('refuses a v4 on the device or the server and never writes over it', async () => {
     const stored = newSaveV4('u1', T0)
     server.envelope = { revision: 3, save: stored }

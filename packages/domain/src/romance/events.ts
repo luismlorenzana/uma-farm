@@ -172,7 +172,7 @@ export interface EventCard {
   wedding: WeddingCard | null
   /** Her last line of the event. */
   line: string | null
-  /** A level reached at night (F54 decision 8: S2, S4): no event, her bar's 600 filled. */
+  /** A level reached at night (S2, S4): no event, her bar's 600 filled. */
   night?: true
   /** The next rung: its cost, her points toward it and what's banked past it, its place and setup (her beat's hint) and
    * its perk; null once her route is complete. */
@@ -230,7 +230,7 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
     if (p.score !== chooseScore(pack, id, good)) throw new SaveRuleError('bad-count', 'That isn’t what she thinks of it.')
     if (good !== null) learnt.push(good)
   })
-  // F53 decision 8: the proposal uses the ring you chose. Decision 9: the wedding's place, its reception's dish, its vow.
+  // The proposal uses the ring you chose; the wedding's place, its reception's dish, its vow.
   let ring: string | null = null
   let wedding: WeddingCard | null = null
   const kept: string[] = []
@@ -275,9 +275,9 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
     today: { ...pay.save.today, events: [...new Set([...pay.save.today.events, id])], ...(wedding ? { reception: Math.max(pay.save.today.reception, wedding.days) } : {}) },
     memories: { ...pay.save.memories, [id]: [...new Set([...(pay.save.memories[id] ?? []), rung])] },
   }
-  // F51 decision 9: Friendship 4's perk writes her signature dish's recipe, once, where the event gives its perk.
+  // Friendship 4's perk writes her signature dish's recipe, once, where the event gives its perk.
   const dish = rung === 'f4' ? giveSignatureDish(played, pack, id) : null
-  // F54 decision 4: the wedding gives her a room at once (her default), or she keeps her Dorm bed with none free.
+  // The wedding gives her a room at once (her default), or she keeps her Dorm bed with none free.
   const roomed = wedding ? takeRoom(dish?.save ?? played, pack, id) : null
   if (wedding && roomed) wedding = { ...wedding, house: roomed.house }
   const next = roomed?.save ?? dish?.save ?? played

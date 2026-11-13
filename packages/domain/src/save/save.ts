@@ -1,13 +1,13 @@
-// The farm's save: local first in Dexie, synced through `farm-api`. Nothing carries over from uma-rpg (P4).
+// The farm's save: local first in Dexie, synced through `farm-api`. Nothing carries over from uma-rpg.
 // The shape, its parse and the conflict rule are copied from uma-rpg's `save/save.ts` at 30a322a, cut to
-// the farm's one account. Every change to the shape is a new version with its migration (N5), and no migration ever moves
+// the farm's one account. Every change to the shape is a new version with its migration, and no migration ever moves
 // `account.updatedAt`.
 //
 // v1: the account. v2: the Wilds' world beside it: each Uma's Craft Level, the Warehouse and the work rows.
-// v3: the farm's own loop (`v3.ts`), live from F24. v4: the romance core (`v4.ts`), built dark.
+// v3: the farm's own loop (`v3.ts`), live. v4: the romance core (`v4.ts`), built dark.
 // `parseSave` returns what's stored, v2, v3 or v4 (a v1 still becomes v2): the app's boot migrates a v2 with master data
 // (`migrate-v3.ts`), and the romance build wipes any v1–v3 into a fresh v4 (`freshV4`), neither of which the API does
-//: no server makes a save, and the live M4 build stops at a v4.
+//: no server makes a save, and the live build stops at a v4.
 import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkOutput, WorkRow } from '@luismlorenzana/uma-work'
 import type { JobKind } from '../economy/jobs'
 import { maxJobCount, PROFESSION_MAX_LEVEL } from '../economy/pacing'
@@ -25,10 +25,10 @@ import type { SaveV4 } from './v4'
 
 export { SaveParseError }
 
-/** The version production writes: v3, the farm's own loop, live from F24 (the Wilds wrote v2 until then). The romance
- * build writes v4 while dark; F56 moves this to 4. */
+/** The version production writes: v3, the farm's own loop, live (the Wilds wrote v2 before it). The romance
+ * build writes v4 while dark; shipping moves this to 4. */
 export const SAVE_VERSION = 3
-/** The newest version this app reads: v4, the romance core, built from F46 and live from F56. */
+/** The newest version this app reads: v4, the romance core, built dark until it ships. */
 export const NEWEST_SAVE_VERSION = 4
 
 export interface Account {

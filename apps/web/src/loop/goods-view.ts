@@ -12,8 +12,8 @@ export const goldWords = (gold: number): string => `${gold.toLocaleString('en-US
 export const starWords = (stars: number): string => `★${stars}`
 
 /** The Warehouse's tabs: the crops, the forest's six families, fish, mining and seeds; the expeditions' loot
- * only when the Warehouse holds some (none can be had in M4); v4's rings and dishes (the reception's, M5's Kitchen)
- * likewise, so v3's tabs are M4's. */
+ * only when the Warehouse holds some (none can be had yet); v4's rings and dishes (the reception's, the Kitchen's)
+ * likewise, so v3's tabs are the deployed build's. */
 export const SHELVES = ['crops', 'woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets', 'fish', 'mining', 'seeds', 'loot', 'rings', 'dishes'] as const
 export type Shelf = typeof SHELVES[number]
 const SHELF_NAMES: Readonly<Record<Shelf, string>> = {
@@ -28,7 +28,7 @@ const LOOT: ReadonlySet<GoodFamily> = new Set(['hides-scales', 'bones-horns', 'e
 const ORDER = new Map([...GOOD_IDS, ...SEED_IDS, ...RING_IDS].map((id, i) => [id, i]))
 const orderOf = (id: string): number => ORDER.get(id) ?? Infinity
 
-/** A good's tab: the 27 crops and the flours on Crops (CS19's Farming), the rest by family. */
+/** A good's tab: the 27 crops and the flours on Crops (Farming), the rest by family. */
 export function shelfOf(good: Pick<Good, 'family' | 'crop'>): Shelf {
   if (good.crop || good.family === 'grains' || good.family === 'vegetables') return 'crops'
   if (MINING.has(good.family)) return 'mining'

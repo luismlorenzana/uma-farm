@@ -1,6 +1,6 @@
 // Small, invented UI fixtures only (from uma-rpg's album/testing.ts at 30a322a). Never import private release data into
-// tests: the outfits are copies of uma-data's synthetic one with invented ids, names, running styles and, for F21's
-// talents, chosen 5★ stats and growth rates.
+// tests: the outfits are copies of uma-data's synthetic one with invented ids, names, running styles and, for the
+// loop's talents, chosen 5★ stats and growth rates.
 import type { Character, Outfit } from '@luismlorenzana/uma-data'
 import { buildMemoryRelease, syntheticMasterData } from '@luismlorenzana/uma-data/testing'
 import { masterView, type MasterView } from '../master/master'

@@ -3,7 +3,7 @@
 // chip; `?sheet=shop`, the shop; `?sheet=rank`, the Farm Rank from its chip. Each opens over the page it was tapped on,
 // so Back closes it. Loaded on demand when one opens. In the romance build on save v4, End the day opens
 // **Tonight** while an evening slot is free and someone can spend it, and the night is a fade to dusk and back up on the
-// morning (`night-fade.ts`); otherwise F18's rule stands.
+// morning (`night-fade.ts`); otherwise the rule stands.
 import {
   CHAPTER_POINTS, DAYS_PER_SEASON, DAYS_PER_YEAR, daySetState, dateOf, ENTRY_POINTS, FARM_RANK_POINTS, farmPointsOf, farmRankOf, farmRankOpens, FESTIVALS,
   GOLD_PER_POINT, MILESTONE_POINTS, nextFarmRank, nextFestival, SEASON_NAMES, SEASONS, tonightOpens,
@@ -61,7 +61,7 @@ function EndDay() {
   const [error, setError] = useState<string | null>(null)
   const set = useMemo(() => (save ? daySetState(save) : null), [save])
   const romance = romanceOn() && save?.version === 4
-  // Tonight or F18's sheet, decided once the pack is in (the v4 night waits for it anyway).
+  // Tonight or the sheet, decided once the pack is in (the v4 night waits for it anyway).
   const [tonight, setTonight] = useState<boolean | null>(romance ? null : false)
   useEffect(() => {
     if (tonight === null && save?.version === 4 && pack) setTonight(tonightOpens(save, pack))

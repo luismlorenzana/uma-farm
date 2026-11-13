@@ -1,8 +1,8 @@
 // Married life on screen, the switch on: the homestead's rows on the v4 map,
 // building and naming House 1 on the homestead's sheet, a move and a swap, the wedding's room on Married, Tonight's Sleep at,
 // the morning's house line and "misses you", a night level's card, a household scene played and read, and her room on her
-// profile; with the switch off, the sheet never opens and v3's map is M4's. The invented stand-in pack (9000001–9000003) and
-// invented outfits; master data and the server are stubs.
+// profile; with the switch off, the sheet never opens and v3's map is the deployed build's. The invented stand-in
+// pack (9000001–9000003) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
 import {
   FARM_PLACES, joinOpening, moveSpouse, newLove, newRosterUmaV4, newSave, newSaveV4, readScene, type HouseLine, type Love, type SaveV4, type StoryPack,
@@ -116,7 +116,7 @@ afterEach(async () => {
   vi.restoreAllMocks()
 })
 
-describe('the homestead on the map (decision 2)', () => {
+describe('the homestead on the map', () => {
   it('adds the Farmhouse and the next lot after the yard, the town edge last; a built house\'s pips are its residents', () => {
     const one = wedOne()
     const layout = homesteadLayout(one)
@@ -135,7 +135,7 @@ describe('the homestead on the map (decision 2)', () => {
     expect(homesteadPlaces(three, homesteadLayout(three), new Set()).map((p) => p.id)).toEqual(['farmhouse', 'house-1', 'house-2', 'house-3'])
   })
 
-  it('keeps v3\'s map: eight rows, 36 tiles, every place where M4 has it', () => {
+  it('keeps v3\'s map: eight rows, 36 tiles, every place where the deployed build has it', () => {
     expect(FARM_MAP_TILES).toBe(36)
     const v3 = newSave('u1', AT)
     expect(v3.version).toBe(3)
@@ -143,7 +143,7 @@ describe('the homestead on the map (decision 2)', () => {
   })
 })
 
-describe('the homestead\'s sheet (decisions 3, 4 and 14)', () => {
+describe('the homestead\'s sheet', () => {
   it('builds and names House 1, which stands at once, then moves her there with a tap on her face and a free room', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: wedOne() })
     await render(<p />, '/?sheet=homestead&house=1')
@@ -194,7 +194,7 @@ describe('the homestead\'s sheet (decisions 3, 4 and 14)', () => {
   })
 })
 
-describe('Tonight\'s Sleep at (decision 5)', () => {
+describe('Tonight\'s Sleep at', () => {
   beforeEach(() => {
     const items = new Map<string, string>()
     vi.stubGlobal('localStorage', { getItem: (k: string) => items.get(k) ?? null, setItem: (k: string, v: string) => void items.set(k, v), removeItem: (k: string) => void items.delete(k) })
@@ -228,7 +228,7 @@ describe('Tonight\'s Sleep at (decision 5)', () => {
   })
 })
 
-describe('the morning (decisions 7 and 8)', () => {
+describe('the morning', () => {
   it('says the house\'s morning with its house line, and a house that misses you with Tonight › and Another night', async () => {
     const one = wedOne()
     const house: HouseLine = { kind: 'house', house: 0, umas: [ONE], paid: 30, breakfast: 3, items: 1 }
@@ -262,7 +262,7 @@ describe('the morning (decisions 7 and 8)', () => {
   })
 })
 
-describe('household scenes (decision 10)', () => {
+describe('household scenes', () => {
   it('plays the scene with each spouse\'s beat, reads it once, and replays from the Diary without reading again', async () => {
     let five = wedOne()
     const ids = ['9000004', '9000005', '9000006', '9000007']
@@ -292,7 +292,7 @@ describe('household scenes (decision 10)', () => {
   })
 })
 
-describe('her room on her profile (decision 14)', () => {
+describe('her room on her profile', () => {
   it('names her house, or says she needs a room, and softly her wish', async () => {
     const waiting = farm({ [ONE]: { stage: 'spouse', level: 0, points: 0, wed: 2 }, [TWO]: { stage: 'spouse', level: 0, points: 0, wed: 3 }, [THREE]: { stage: 'spouse', level: 0, points: 0, wed: 4 } })
     const full = moveSpouse(moveSpouse(waiting, TWO, 0), THREE, 0)
@@ -304,8 +304,8 @@ describe('her room on her profile (decision 14)', () => {
   })
 })
 
-describe('the switch off (RM59)', () => {
-  it('never opens the homestead\'s sheet, and plays v3 as M4', async () => {
+describe('the switch off', () => {
+  it('never opens the homestead\'s sheet, and plays v3 as the deployed build', async () => {
     vi.stubEnv('VITE_FARM_ROMANCE', '0')
     useGame.setState({ uid: 'u1', status: 'ready', save: newSave('u1', AT) })
     await render(<p />, '/?sheet=homestead')

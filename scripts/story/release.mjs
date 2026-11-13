@@ -4,14 +4,14 @@
 // the Story Sandbox reads it), written to the ignored content/story-release/ laid out as the bucket is: each file
 // minified as `story/<name>.<hash8>.json` and the index `story.json`. The same inputs give the same files.
 //
-// It refuses a pack where anything fails the validator, or where a cast Uma lacks her bible or her arrival scene (D64:
-// the go-live needs all of them); routes, pairs and the household may be partial ("Her story is still being written").
+// It refuses a pack where anything fails the validator, or where a cast Uma lacks her bible or her arrival scene (the
+// release needs all of them); routes, pairs and the household may be partial ("Her story is still being written").
 // Only the pack's files are read (cast, ties, umas/, routes/, pairs/, household): the sandbox's notes, reviews and the
 // cast pack's images beside them never leave the folder.
 //
 //   pnpm story:release                  content/story → content/story-release
 //   pnpm story:release --stand-in       the invented stand-in in git, for the dev server (its forager and fisher have
-//                                       no bible by design, D51 b, so only there a bible may be missing)
+//                                       no bible by design, so only there a bible may be missing)
 //   pnpm story:release --from <dir> --out <dir>
 //
 // Needs Node with type stripping (22.18 or later).
@@ -67,7 +67,7 @@ async function folder(dir, issues, from) {
   return out
 }
 
-/** The pack's files in `from`, laid out as F40 writes them (`PackFiles`). */
+/** The pack's files in `from`, laid out as the validator reads them (`PackFiles`). */
 export async function readPack(from) {
   if (!existsSync(from)) throw new ReleaseRefused([`No story pack in ${from}`])
   const issues = []

@@ -17,7 +17,7 @@ function stocked(): SaveV3 {
   }
 }
 
-describe('the Warehouse by stars (decision 9)', () => {
+describe('the Warehouse by stars', () => {
   it('puts the crops and flours on Crops, the rest by family, mining together, and seeds last', () => {
     const tabs = warehouseTabs(stocked())
     expect(tabs.map((t) => t.shelf)).toEqual(['crops', 'woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets', 'fish', 'mining', 'seeds'])
@@ -57,7 +57,7 @@ describe('the Warehouse by stars (decision 9)', () => {
   })
 })
 
-describe('the bin\'s sheet (decision 8)', () => {
+describe('the bin\'s sheet', () => {
   it('lists today\'s lines and the night\'s estimate', () => {
     const save = ship(ship(stocked(), 'salmon', 2, 2), 'carrot', 1, 1)
     expect(binView(save)).toEqual({
@@ -72,7 +72,7 @@ describe('the bin\'s sheet (decision 8)', () => {
   })
 })
 
-describe('the shop\'s rows (decision 7)', () => {
+describe('the shop\'s rows', () => {
   it('names each line and says its gate while it\'s shut', () => {
     const lines = [{ id: 'seed-carrot', price: 20, opens: { by: 'start' as const } }, { id: 'seed-onion', price: 30, opens: { by: 'farm-rank' as const, rank: 2 } }]
     const save = newSave('u1', AT)
@@ -81,7 +81,7 @@ describe('the shop\'s rows (decision 7)', () => {
   })
 })
 
-describe('the places F19 opens (PLACE_SCREENS)', () => {
+describe('the places that open their screens (PLACE_SCREENS)', () => {
   it('opens the bin and the shop as sheets and the Warehouse as a page; the rest keep their quick look', () => {
     const save = newSave('u1', AT)
     const link = (id: string) => placeLink(save, farmPlace(id)!)

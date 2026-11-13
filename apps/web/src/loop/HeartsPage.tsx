@@ -3,7 +3,7 @@
 // level words). The Hearts view is one 72 pt row an Uma: her face, name and chips (● Ready, ✉ an invitation, Away), her
 // level and her ladder's hearts as a bar in the stage's colour with the filling heart and "points/cost", then the most
 // useful line, what's banked and today's chat and gift ticks. Ready rows first, then the least progress, then the
-// cast's order; filter chips with their counts (`?filter=`); the header's "Married n/N", the evening's marks (F50: ○ free,
+// cast's order; filter chips with their counts (`?filter=`); the header's "Married n/N", the evening's marks (○ free,
 // ● spent, festival night's in its season's colour) and the (i). Her profile opens
 // from either view at `?uma=<characterId>`, on the side the view names. Loaded on demand; only the romance build routes
 // here.
@@ -153,8 +153,8 @@ function HeartsList({ rows, onOpen }: { rows: readonly HeartRow[]; onOpen: (id: 
   )
 }
 
-/** One Uma's row (RM52's mockup): three lines in 72 pt; a tap opens her profile, and her **● Ready** plays her event
- * (RM54: `?event=`). */
+/** One Uma's row: three lines in 72 pt; a tap opens her profile, and her **● Ready** plays her event
+ * (`?event=`). */
 function HeartRowView({ row, onOpen }: { row: HeartRow; onOpen: () => void }) {
   const location = useLocation()
   const { bar, heart } = row

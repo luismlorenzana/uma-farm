@@ -1,7 +1,7 @@
 // Copied from uma-rpg packages/domain/src/economy/professions.ts at 30a322a, with its Wilds-only parts cut.
-// The professions (R2; profession-progression.md §2; the farm by line):
+// The professions (the farm by line):
 // fifteen professions, five each for gathering, processing and making. One trade is a row of three Wilds places chosen
-// by an Uma's calling (one Craft Level across all three, never her active class; UT19). The engine's job kinds stay four
+// by an Uma's calling (one Craft Level across all three, never her active class). The engine's job kinds stay four
 // (`gather`, `refine`, `craft`, `cut`); the player reads gather, process, make. Profession ids never reach a save.
 import { umaCalling, type CallingOutfit, type UmaCallingClass } from '../roster/template'
 
@@ -54,7 +54,7 @@ export const PLACE_SPEED_V3 = 1.25
 // --- The trade ------------------------------------------------------------------------------------------------
 
 export const TRADE_IDS = ['physical', 'physical-hybrid', 'healer', 'magical-hybrid', 'magical'] as const
-/** Her calling's fight type, which names her trade (UT19). */
+/** Her calling's fight type, which names her trade. */
 export type TradeId = typeof TRADE_IDS[number]
 export interface Trade { id: TradeId; gathering: ProfessionId; processing: ProfessionId; crafting: ProfessionId }
 /** One row a trade, physical on top as on the Learning page. */
@@ -88,7 +88,7 @@ export const tradePlaces = (trade: TradeId): readonly [PlaceIdV3, PlaceIdV3, Pla
 /** Her trade from her outfit: her Tier 0's. */
 export const umaTrade = (outfit: CallingOutfit): TradeId => tradeOfCalling(umaCalling(outfit))
 
-/** What the work rules ask of the caller (D208: template-dependent rules take their template from the caller): each
+/** What the work rules ask of the caller: template-dependent rules take their template from the caller: each
  * owned Uma's trade, or null when it can't say. */
 export type TradeOf = (outfitId: string) => TradeId | null
 /** A `TradeOf` over a world's Umas and the outfits the caller holds (the web's master data): an outfit it doesn't hold,

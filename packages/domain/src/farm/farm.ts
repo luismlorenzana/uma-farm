@@ -1,5 +1,5 @@
 // The farm's own ladders: the Dorm's beds, the Farm Rank's thresholds and day 1's
-// numbers. Read-only until the packets that move them (F23 buys beds, F24 makes Farm Rank points).
+// numbers. The Dorm buys beds and the night makes Farm Rank points.
 
 /** Day 1: 500g and 9 Carrot seeds. */
 export const START_GOLD = 500
@@ -10,13 +10,13 @@ export const BEDS: readonly number[] = [3, 5, 8, 12, 16, 22, 30, 40, 50, 60]
 export const DORM_MAX_LEVEL = BEDS.length
 /** The beds at a Dorm level. */
 export const bedsAt = (level: number): number => BEDS[Math.min(DORM_MAX_LEVEL, Math.max(1, level)) - 1]!
-/** The lowest Dorm level with a bed for each of `count` Umas, at most level 10 (CS54 step 4). */
+/** The lowest Dorm level with a bed for each of `count` Umas, at most level 10. */
 export const dormLevelFor = (count: number): number => {
   const i = BEDS.findIndex((beds) => beds >= count)
   return i === -1 ? DORM_MAX_LEVEL : i + 1
 }
 
-/** The Dorm for 20: save v4's eight levels, 3 → 20 beds. v3 keeps CS34's ten. */
+/** The Dorm for 20: save v4's eight levels, 3 → 20 beds. v3 keeps the ten levels. */
 export const BEDS_V4: readonly number[] = [3, 5, 7, 9, 11, 14, 17, 20]
 export const DORM_MAX_LEVEL_V4 = BEDS_V4.length
 /** The beds at a Dorm level on save v4. */

@@ -1,9 +1,9 @@
-// The Dorm and the off-season (D24 #11): beds cap who lives and works on
+// The Dorm and the off-season: beds cap who lives and works on
 // the farm at once, 3 → 60. A level is bought at the Dorm (`buildings.dorm`, gold spent now) and takes effect the next
 // morning (`dorm.level`, night step 8). The roster grows past the beds: an Uma beyond them is away on her off-season,
 // keeping her ranks and your affinity, earning nothing. A swap brings one away home for one idle at home, the next
 // morning; swaps are free and unlimited. On save v4 the Dorm has eight levels to 20 beds, its levels 4–8 each
-// bringing an authored arrival; v3 keeps CS34's ten. Loaded with the loop's screens and the night.
+// bringing an authored arrival; v3 keeps the ten levels. Loaded with the loop's screens and the night.
 import { isBusy } from '../fields/fields'
 import { LOOP_KINDS } from '../gathering/kinds'
 import { spendGold } from '../save/gold'
@@ -13,7 +13,7 @@ import { housed, leaving, newRosterUma, tendedBlock, type OutfitId, type SaveV3 
 import { newRosterUmaV4, type FarmSave } from '../save/v4'
 import { BEDS, BEDS_V4, bedsFor, dormMaxLevel, farmRankOf } from './farm'
 
-/** CS34: each level's cost and the Farm Rank it needs (level 1 comes with the farm). */
+/** Each level's cost and the Farm Rank it needs (level 1 comes with the farm). */
 export const DORM_COSTS: readonly number[] = [0, 1000, 3000, 8000, 15000, 28000, 50000, 85000, 130000, 200000]
 export const DORM_FARM_RANKS: readonly number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
@@ -26,7 +26,7 @@ export interface DormLevel {
 }
 /** The Dorm's ten levels. */
 export const DORM_LEVELS: readonly DormLevel[] = BEDS.map((beds, i) => ({ level: i + 1, beds, cost: DORM_COSTS[i]!, farmRank: DORM_FARM_RANKS[i]! }))
-/** The Dorm for 20: save v4's eight levels, CS34's costs and Farm Ranks kept level for level. */
+/** The Dorm for 20: save v4's eight levels, the costs and Farm Ranks kept level for level. */
 export const DORM_LEVELS_V4: readonly DormLevel[] = BEDS_V4.map((beds, i) => ({ level: i + 1, beds, cost: DORM_COSTS[i]!, farmRank: DORM_FARM_RANKS[i]! }))
 /** The levels from which a v4 Dorm level brings an authored arrival: 4–8. */
 export const ARRIVAL_DORM_LEVELS: readonly number[] = [4, 5, 6, 7, 8]
@@ -58,7 +58,7 @@ export function buyDorm<S extends FarmSave>(save: S): S {
 export const arriving = (save: Pick<FarmSave, 'dorm'>, outfitId: OutfitId): boolean => save.dorm.swaps.some((s) => s.in === outfitId)
 
 /** Why an Uma home can't be swapped out today, or null: she leaves already, tends a block or holds a running
- * job (F20's `isBusy`). */
+ * job (`isBusy`). */
 export function swapBlock(save: FarmSave, outfitId: OutfitId, kinds: LoopKinds = LOOP_KINDS): string | null {
   if (leaving(save, outfitId)) return 'Leaves tomorrow'
   const block = tendedBlock(save, outfitId)
@@ -111,7 +111,7 @@ export function settleDormNight<S extends FarmSave>(save: S): { save: S; raised:
   const level = Math.min(dormMaxLevel(save.version), Math.max(save.dorm.level, dormBought(save)))
   const into = new Map(save.dorm.swaps.map((s) => [s.out, s.in]))
   const home = save.dorm.home.map((id) => into.get(id) ?? id)
-  // F54 decision 4: a spouse in her house tends on.
+  // A spouse in her house tends on.
   const blocks = save.fields.blocks.map((b) => (b.tender !== null && !home.includes(b.tender) && !housed(save, b.tender) ? { ...b, tender: null } : b))
   return {
     save: { ...save, dorm: { level, home, swaps: [] }, fields: { blocks } },

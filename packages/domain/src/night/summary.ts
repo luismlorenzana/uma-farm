@@ -1,8 +1,6 @@
 // The morning summary: data, never sentences. The night's last step builds it from what
 // changed and the app words it, each line a tap to its place. It's replaced each night and set to null when the player
-// dismisses it. CS5's six sections, in order; an empty one is hidden. Each M4 packet filled its own lines in place while
-// v3 was unreleased: F19 the bin, F20 crops and seeds, F21 ranks, F23 the Dorm, swaps and visitors, F24 the chapter,
-// the Farm Rank and the Diary's milestones. v3 is live from F24, so a new line is a new save version; bonds come in M6.
+// dismisses it. Six sections, in order; an empty one is hidden. v3 is live, so a new line is a new save version.
 import type { FestivalId, Season } from '../farm/calendar'
 import type { Activity, Rank } from '../farm/ranks'
 import type { CropId } from '../goods/ids'
@@ -53,7 +51,8 @@ export interface BestCatchLine {
   stars: number
 }
 
-/** §2's lines: jobs by place, the night's best catch, then crops ready by block, then what withered (CS5's order). */
+/** §2's lines: jobs by place, the night's best catch, then crops ready by block, then what withered (in section
+ * order). */
 export type WorkLine = JobsDone | BestCatchLine | CropsReady | CropsWithered
 
 /** §3 Ranks: she reached a rank in an activity tonight. */
@@ -81,7 +80,7 @@ export type RankLine = RankUp | PointsFull
 
 /** §5 New today: the season's first day, or a festival today or tomorrow; the goals' news: the chapter
  * completed tonight, a Farm Rank reached, a Diary milestone or row paid; and the roster's news: the Dorm's new
- * level in effect, Umas a swap brought home, a recruit who joined tonight (home or away; F24's chapter recruits), a
+ * level in effect, Umas a swap brought home, a recruit who joined tonight (home or away; chapter recruits), a
  * visitor at the Gate, and one who left. */
 export type NewsLine =
   | { kind: 'season'; season: Season }
@@ -130,7 +129,7 @@ export interface MorningSummary {
 // --- Save v4's morning: §4 becomes Hearts ------------------------------------------
 
 /** §4 Hearts: an Uma who arrived overnight, home or away on her off-season; her arrival scene waits for the farm to
- * open. F47, F49–F52 and F54 add their lines in place while v4 is dark; F48 orders and draws the section. */
+ * open. The romance's lines come in place while v4 grows; the app orders and draws the section. */
 export interface ArrivedLine {
   kind: 'arrived'
   /** Her character id. */
@@ -157,7 +156,7 @@ export interface SideLine {
   kind: 'side'
   items: number
 }
-/** §4 Hearts (RM57's sixth line): a pair's bond reached `hearts` since the last morning, by points or
+/** §4 Hearts: a pair's bond reached `hearts` since the last morning, by points or
  * a seed; one line a pair at its highest heart, `a` and `b` in `pairKey` order. Whether it has **Read** is the pack's (its
  * authored levels) and the save's (`diary.read`), read as the card shows. */
 export interface BondLine {
@@ -166,7 +165,7 @@ export interface BondLine {
   b: string
   hearts: number
 }
-/** §4 Hearts (RM57's second line): her invitation this morning, drawn at step 9 into
+/** §4 Hearts: her invitation this morning, drawn at step 9 into
  * `today.invites`, asking for her favourite kind. Its answer (Yes, tonight or Another day) is `today.invites`', read as the
  * card shows. */
 export interface InviteLine {
@@ -175,27 +174,27 @@ export interface InviteLine {
   /** The kind she asks for: her favourite. */
   evening: InviteKind
 }
-/** §4 Hearts (RM31's R2 and S2, RM57's third line): her morning item, a good of her line she left in the
- * Warehouse this morning; `items` its stock keys (`<good>@<stars>`), one by her count (F54 adds her house's). */
+/** §4 Hearts (R2 and S2): her morning item, a good of her line she left in the
+ * Warehouse this morning; `items` its stock keys (`<good>@<stars>`), one by her count (the house's adds one). */
 export interface ItemLine {
   kind: 'item'
   id: string
   items: string[]
 }
-/** §4 Hearts (RM57's third line): the night's chores in all, once a night: the items they left in
+/** §4 Hearts: the night's chores in all, once a night: the items they left in
  * the Warehouse (a forager's and a fisher's) and the growth they gave the Fields (a farmer's, +0.25 each). */
 export interface ChoresLine {
   kind: 'chores'
   items: number
   growth: number
 }
-/** §4 Hearts (RM57's sixth line, before side by side): the perks' extras tonight in all, copies of
+/** §4 Hearts (before side by side): the perks' extras tonight in all, copies of
  * a night's items by the romance term (her line's +10% and +20%, her ring, dreams and the household), into the Warehouse. */
 export interface PerksLine {
   kind: 'perks'
   items: number
 }
-/** §4 Hearts (RM57's third line): the house you slept in, its morning: `umas` the residents it
+/** §4 Hearts: the house you slept in, its morning: `umas` the residents it
  * counted (only hers on a birthday-alone night), `paid` their +30s in all (an anniversary's ×2 inside), `breakfast` the
  * Umas her breakfast fed (0 none) and `items` the house's extra morning items (each in its Uma's `item` line). The house
  * line is drawn live from the pack and the templates (`houseLineOf`), never stored. */
@@ -219,8 +218,8 @@ export interface MovedLine {
   id: string
   house: number
 }
-/** §4 Hearts (RM57's fifth line): a spouse level reached overnight, S2 or S4, her 600 full.
- * Opening it shows F49's level-up card. */
+/** §4 Hearts: a spouse level reached overnight, S2 or S4, her 600 full.
+ * Opening it shows the level-up card. */
 export interface LevelLine {
   kind: 'level'
   id: string
@@ -236,7 +235,7 @@ export interface VowsLine {
 /** §4's stored lines: invitations, birthdays and anniversaries and the Festival of Vows, then arrivals
  * and the night's levels, then the house's morning, a move-in and a house that misses you, morning items
  * and night chores, then the perks' extras, side by side and bond hearts. Ready lines aren't stored: they
- * change by day, so F48 reads them live (`readiness`). */
+ * change by day, so the app reads them live (`readiness`). */
 export type HeartLine = InviteLine | BirthdayLine | AnniversaryLine | ArrivedLine | ItemLine | ChoresLine | PerksLine | SideLine | BondLine | HouseLine | HouseMissesLine
   | MovedLine | LevelLine | VowsLine
 
@@ -257,20 +256,20 @@ export interface MorningSummaryV4 {
   work: WorkLine[]
   ranks: RankLine[]
   /** §4 Hearts: invitations, birthdays and anniversaries, then arrivals, then side by side and bond
-   * hearts; the romance's lines join with their packets. */
+   * hearts; the romance's lines join as they are built. */
   hearts: HeartLine[]
   news: NewsLineV4[]
   nudges: Nudge[]
 }
 
-/** CS5's order. */
+/** The sections' order. */
 export const SUMMARY_SECTIONS = ['bin', 'work', 'ranks', 'bonds', 'news', 'nudges'] as const
 export type SummarySection = typeof SUMMARY_SECTIONS[number]
 /** v4's order: Hearts in §4's place. */
 export const SUMMARY_SECTIONS_V4 = ['bin', 'work', 'ranks', 'hearts', 'news', 'nudges'] as const
 export type SummarySectionV4 = typeof SUMMARY_SECTIONS_V4[number]
 
-/** The sections with lines, in CS5's order: the card shows these and hides the rest. A v4 morning's §4 is Hearts. */
+/** The sections with lines, in order: the card shows these and hides the rest. A v4 morning's §4 is Hearts. */
 export function summarySections(summary: MorningSummary): SummarySection[]
 export function summarySections(summary: MorningSummary | MorningSummaryV4): (SummarySection | SummarySectionV4)[]
 export function summarySections(summary: MorningSummary | MorningSummaryV4): (SummarySection | SummarySectionV4)[] {

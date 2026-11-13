@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // The Farm Story Sandbox: a local-only page for reading, playing and checking uma-farm's story
-// (docs/design/story-sandbox.md). It binds to loopback and reads, on every request:
-// - F40's private story in content/story/ (the world, the cast, the ties, the bibles, routes and pairs), checked by the
-//   domain's own validator (`story/authored.ts`), with the Umas' faces from the cast pack;
+// (tools/story-sandbox/README.md). It binds to loopback and reads, on every request:
+// - the private authored story in content/story/ (the world, the cast, the ties, the bibles, routes and pairs),
+//   checked by the domain's own validator (`story/authored.ts`), with the Umas' faces from the cast pack;
 // - the chapter drafts in docs/story/ (original, in git) and the game's story in @farm/domain.
 // Its only write is the owner's reviews, to the private content/story/reviews.json.
 import { createServer } from 'node:http'
@@ -20,7 +20,7 @@ import { storyCounts } from './lib/counts.mjs'
 const here = dirname(fileURLToPath(import.meta.url))
 const repo = resolve(here, '../..')
 const drafts = resolve(process.env.UMA_FARM_STORY ?? join(repo, 'docs/story'))
-/** The private side (ignored by git): F40's story, the cast pack and the reviews. */
+/** The private side (ignored by git): the authored story, the cast pack and the reviews. */
 const content = resolve(process.env.UMA_FARM_CONTENT ?? join(repo, 'content/story'))
 const domain = join(repo, 'packages/domain/src')
 const port = Number(process.env.UMA_FARM_STORY_PORT ?? 4321)
@@ -55,7 +55,8 @@ async function currentPack() {
   return packs.sort((a, b) => String(b.exportedAt).localeCompare(String(a.exportedAt)))[0] ?? null
 }
 
-/** F40's story as it stands: each file with the domain validator's issues. The cast's ids are the export's Umas. */
+/** The authored story as it stands: each file with the domain validator's issues. The cast's ids are the export's
+ * Umas. */
 async function storyState(game, errors) {
   const pack = await currentPack()
   const umas = pack ? packUmas(pack) : []
@@ -75,7 +76,7 @@ async function storyState(game, errors) {
     }
     return out
   }
-  // F59: the tag sheet, and each bible checked against her tags when she has both.
+  // The tag sheet, and each bible checked against her tags when she has both.
   const tags = await file('tags.json', (d) => v.tagsIssues(d, ctx))
   const tagOf = (id) => tags?.data?.tags?.find((t) => t.characterId === id) ?? null
   const bibles = await folder('umas', (d) => [...v.bibleIssues(d, ctx), ...(tagOf(d?.characterId) ? v.bibleTagIssues(d, tagOf(d.characterId)) : [])])
@@ -93,10 +94,10 @@ async function storyState(game, errors) {
     bibles,
     routes,
     pairs: await folder('pairs', (d) => v.pairIssues(d, ctx)),
-    // F54: the household's scenes, house lines and finale.
+    // The household's scenes, house lines and finale.
     household: await file('household.json', (d) => v.householdIssues(d, ctx)),
   }
-  // F60: the counts, each with the Umas behind it.
+  // The counts, each with the Umas behind it.
   story.counts = story.cast ? storyCounts({
     cast: story.cast.data, tags: tags?.data, ties: story.ties?.data, bibles: bibles.map((b) => b.data), routes: routes.map((r) => r.data),
     pairs: story.pairs.map((p) => p.data), rungs: game.authored?.rungs ?? [],
@@ -133,7 +134,7 @@ async function body(request) {
 }
 
 let reviewWrite = Promise.resolve()
-/** The owner's verdict on a file or an event (F40: liked, rework, question, and a note), to the private reviews.json. */
+/** The owner's verdict on a file or an event (liked, rework, question, and a note), to the private reviews.json. */
 async function saveReview(input) {
   const ok = input && typeof input.item === 'string' && /^[A-Za-z0-9._:/-]{1,120}$/.test(input.item) &&
     (input.status === null || ['liked', 'rework', 'question'].includes(input.status)) && typeof input.note === 'string' && input.note.length <= 4000

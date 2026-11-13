@@ -1,17 +1,12 @@
 // Copied from uma-rpg packages/domain/src/economy/pacing.ts at 30a322a, with its Wilds-only parts cut.
-// The pacing model (docs/design/pacing.md): every timer, curve, price and payout outside the battle engine, in one
+// The pacing model: every timer, curve, price and payout outside the battle engine, in one
 // place so a balance pass changes numbers here and the tests say what they mean in play time.
 
 export const MINUTE = 60_000
 export const HOUR = 60 * MINUTE
 
-// --- Professions (design §4, §8.5) ----------------------------------------------------------------------------------
+// --- Professions ----------------------------------------------------------------------------------
 
-/** Each Uma's one profession: **Craft Level**, raised by every job at the Wilds sites, the Workbench, the Forge
- * and the Lapidary. */
-export const CRAFT_LABEL = 'Craft Level'
-/** The short name, as in "Craft Lv 6". */
-export const CRAFT_SHORT = 'Craft'
 export const PROFESSION_MAX_LEVEL = 50
 
 /** EXP from level L to L+1: 12 hours of work at Lv1, an eighth of an hour more each level, 18 at Lv49. Lv46
@@ -31,11 +26,11 @@ export function grantProfessionExp(p: { level: number; exp: number }, exp: numbe
   return { level, exp: bank }
 }
 
-/** Profession EXP per minute of work at her level: every job pays for its time, whatever it makes (§8.5). */
+/** Profession EXP per minute of work at her level: every job pays for its time, whatever it makes. */
 export const EXP_PER_MINUTE = 2
 
-/** The Wilds' trios: each v4 step takes 24 minutes at Lv1, falling evenly to 16 at Lv50 (D264: was 36 to 24,
- * two thirds, as a rank now takes half as many items again, so a place's hours hold). */
+/** The Wilds' trios: each v4 step takes 24 minutes at Lv1, falling evenly to 16 at Lv50 (was 36 to 24,
+ * two thirds, as a rank takes half as many items again, so a place's hours hold). */
 export const STEP_MINUTES = { atFirst: 24, atMax: 16 } as const
 export const stepMinutes = (level: number): number => {
   const l = Math.min(PROFESSION_MAX_LEVEL, Math.max(1, Math.floor(level)))
@@ -62,6 +57,6 @@ export function jobSizes(steps: number): number[] {
   const most = Math.max(1, Math.round(JOB_STEPS_MOST / steps))
   return [...JOB_SIZES.filter((n) => n < most), most]
 }
-/** The most items one new job of a kind makes (a gather 30 since D264; a process keeps v1's 40 for queued jobs). */
+/** The most items one new job of a kind makes (a gather 30; a process keeps v1's 40 for queued jobs). */
 export const maxJobCount = (kind: 'gather' | 'refine' | 'craft' | 'cut'): number =>
   kind === 'refine' ? REFINE_BATCHES.at(-1)! : kind === 'gather' ? JOB_SIZES.at(-1)! : MAX_JOB_COUNT

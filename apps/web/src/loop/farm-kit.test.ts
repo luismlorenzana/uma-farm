@@ -26,7 +26,7 @@ function v4(houses: number, open = false): SaveV4 {
 const grown = (f: Pick<KitFrame, 'x' | 'y' | 'w' | 'h'>, m: number) => ({ x0: f.x - m, y0: f.y - m, x1: f.x + f.w + m, y1: f.y + f.h + m })
 const overlaps = (a: ReturnType<typeof grown>, b: ReturnType<typeof grown>) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1
 
-describe('kit-farm, pinned (uma-art 2.27.0, KF13)', () => {
+describe('kit-farm, pinned (uma-art 2.27.0)', () => {
   const kit = farmAtlas()
   it('is a farm kit with wave 1 whole and wave 2 to come, on one 2048 page', () => {
     expect(kit.kind).toBe('farm')
@@ -35,7 +35,7 @@ describe('kit-farm, pinned (uma-art 2.27.0, KF13)', () => {
     expect(kitMissing(kit, FARM_WAVE_2)).toHaveLength(30)
     expect(kit.pages).toEqual([{ file: 'atlas.png', width: 2048, height: 2048 }])
   })
-  it('mounts the sails at their hub, the chimney at its foot and the flower box at its top (D70)', () => {
+  it('mounts the sails at their hub, the chimney at its foot and the flower box at its top', () => {
     expect(['mill-sails', 'chimney', 'flower-box'].map((n) => [kit.frames[n]!.role, kit.frames[n]!.foot]))
       .toEqual([['sign', { x: 192, y: 192 }], ['sign', { x: 32, y: 186 }], ['sign', { x: 64, y: 30 }]])
   })
@@ -47,7 +47,7 @@ describe('kit-farm, pinned (uma-art 2.27.0, KF13)', () => {
   })
 })
 
-describe('the stand-in\'s frames for what the kit lacks (KF14)', () => {
+describe('the stand-in\'s frames for what the kit lacks', () => {
   const kit = farmAtlas(), standIn = standInFarmAtlas()
   const { atlas, copies } = withStandIns(kit, standIn)
 

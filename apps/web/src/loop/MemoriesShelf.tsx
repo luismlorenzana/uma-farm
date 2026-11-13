@@ -1,5 +1,5 @@
-// The Diary's Memories shelf (CS38 as RM65 amends it): each Uma on the farm with her
-// Memories' count, "4 of 26", opening her album (`?album=`). F54: the household scenes and the finale once played, each a
+// The Diary's Memories shelf (in the romance build): each Uma on the farm with her
+// Memories' count, "4 of 26", opening her album (`?album=`). The household scenes and the finale once played, each a
 // replay (`?household=<id>&replay=1`). Loaded on demand with the Diary, the romance build only.
 import { HOUSEHOLD_IDS, householdTitle, type SaveV4 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'

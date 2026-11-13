@@ -1,9 +1,9 @@
-// Bonds as the screens show them (RM57's sixth line), the switch on: her profile's
+// Bonds as the screens show them (the morning's sixth line), the switch on: her profile's
 // Ties in the closest friend's order with the next heart and Read; the morning's side by side and bond hearts (Read when a
 // conversation waits, the tie's line or the generic words when none is written); the pair player over any page, its
-// levels in turn, read once into the Diary; the Diary's Conversations with replays; the Fields' side by side; and the M4
-// build unchanged. The invented stand-in pack (9000001–9000003, the stand-in pair's five invented conversations) and
-// invented outfits; master data and the server are stubs.
+// levels in turn, read once into the Diary; the Diary's Conversations with replays; the Fields' side by side; and the
+// deployed build unchanged. The invented stand-in pack (9000001–9000003, the stand-in pair's five invented
+// conversations) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
 import { joinOpening, newBlock, newSave, newSaveV4, pairKey, readScene, type Block, type MorningSummaryV4, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
@@ -105,7 +105,7 @@ afterEach(async () => {
   vi.unstubAllEnvs()
 })
 
-describe('the view model (decisions 9 and 11)', () => {
+describe('the view model', () => {
   it('lists her ties in the closest friend\'s order, with the next heart and the conversations to Read', () => {
     const rows = tieRows(farm(), fixture.pack!, ONE)
     expect(rows.map((t) => [t.with, t.hearts, t.points, t.next, t.closest, t.unread])).toEqual([[TWO, 2, 150, 300, true, [1, 2]], [THREE, 1, 50, 150, false, []]])
@@ -148,7 +148,7 @@ describe('the view model (decisions 9 and 11)', () => {
   })
 })
 
-describe('as rendered (decision 11)', () => {
+describe('as rendered', () => {
   it('marks her closest friend and plays their conversations from Read, in turn, once into the Diary', async () => {
     await render(<HeartsPage />, `/hearts?uma=${ONE}`, true)
     await find(`[data-profile="${ONE}"]`)
@@ -217,7 +217,7 @@ describe('as rendered (decision 11)', () => {
     expect($('[data-block="A"] [data-growth]')?.textContent).toMatch(/side by side$/)
   })
 
-  it('keeps M4 unchanged with the switch off: no Conversations, no player', async () => {
+  it('keeps the deployed build unchanged with the switch off: no Conversations, no player', async () => {
     vi.stubEnv('VITE_FARM_ROMANCE', '0')
     useGame.setState({ save: newSave('u1', AT) })
     await render(<DiaryPage />, '/diary?read=9000001-9000002:1', true)

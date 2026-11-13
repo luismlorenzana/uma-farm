@@ -11,9 +11,9 @@ import type { FarmSave } from '../save/v4'
 /** Who speaks a beat: one of the cast, a role an Uma fills at runtime, or the narrator. */
 export type Speaker =
   | { readonly kind: 'cast'; readonly id: CastId }
-  /** Your first hands (CS41): the start's three, in the order they joined. Her line is her temperament's hello. */
+  /** Your first hands: the start's three, in the order they joined. Her line is her temperament's hello. */
   | { readonly kind: 'first-hand'; readonly index: 0 | 1 | 2 }
-  /** Your newest hand (CS41): the chapter's recruit. */
+  /** Your newest hand: the chapter's recruit. */
   | { readonly kind: 'newest-hand' }
   | { readonly kind: 'narrator' }
 
@@ -33,7 +33,7 @@ const cast = (id: CastId, line: string): Beat => ({ speaker: { kind: 'cast', id 
 const narrator = (line: string): Beat => ({ speaker: { kind: 'narrator' }, line })
 const hand = (index: 0 | 1 | 2): Beat => ({ speaker: { kind: 'first-hand', index }, line: '' })
 
-/** The hello lines: one a temperament (F21's five), `{name}` filled at runtime. */
+/** The hello lines: one a temperament (the five), `{name}` filled at runtime. */
 export const HELLO_LINES: Readonly<Record<Temperament, string>> = {
   breezy: '“Hi, I’m {name}! Point me at the work and I’m off.”',
   steady: '“{name}. I’ll be here every morning, rain or shine.”',

@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 import { dateOf, farmDay, FESTIVALS, festivalOn, isSeasonEnd, isSeasonStart, nextFestival } from './calendar'
 
-describe('the festivals (CS4)', () => {
+describe('the festivals', () => {
   it('falls on each season\'s 10th day, and the Harvest Cup on Winter 12', () => {
     expect(FESTIVALS.map((f) => [f.name, farmDay({ year: 1, season: f.season, day: f.day })])).toEqual([
       ['Flower Show', 10], ['Fishing Derby', 22], ['Cooking Contest', 34], ['Animal Show', 46], ['Harvest Cup', 48],

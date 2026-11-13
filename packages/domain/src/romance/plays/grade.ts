@@ -1,5 +1,5 @@
 // The five plays' grades and timing: what the farmer and she do
-// together inside an event (and, from F50, as an evening) is one short play, scored 0–100 and graded **Fine below 60,
+// together inside an event (and as an evening) is one short play, scored 0–100 and graded **Fine below 60,
 // Great 60–89, Perfect 90+**. An event adds +0, +15 or +30; an evening pays 60, 100 or 150. **Never failed:** a missed
 // tap still lands, as a Fine, and no tap at all scores 0. Every play is seeded (`draw(uid, day, 'play:<id>:<rung>', n)`),
 // takes one thumb, times from `pointerdown`, shows what to aim for first, and takes nothing from the Warehouse. Pure.
@@ -9,7 +9,7 @@ export const PLAY_KINDS = ['cast', 'pick', 'rhythm', 'walk', 'choose'] as const
 export type PlayKind = typeof PLAY_KINDS[number]
 /** Each play's name on screen. */
 export const PLAY_NAMES: Readonly<Record<PlayKind, string>> = { cast: 'Cast', pick: 'Pick', rhythm: 'Rhythm', walk: 'Walk', choose: 'Choose' }
-/** An event's play or an evening's (RM25's two lengths, both built here so F50 only wires evenings). */
+/** An event's play or an evening's (two lengths, both built here). */
 export type PlayLength = 'event' | 'evening'
 
 export const GRADES = ['fine', 'great', 'perfect'] as const
@@ -21,7 +21,7 @@ export const PERFECT_AT = 90
 export const gradeOf = (score: number): Grade => (score >= PERFECT_AT ? 'perfect' : score >= GREAT_AT ? 'great' : 'fine')
 /** What a grade adds to an event. */
 export const EVENT_GRADE_POINTS: Readonly<Record<Grade, number>> = { fine: 0, great: 15, perfect: 30 }
-/** What an evening pays by its grade (F50 pays it, ×1.5 in her favourite kind). */
+/** What an evening pays by its grade (×1.5 in her favourite kind). */
 export const EVENING_GRADE_POINTS: Readonly<Record<Grade, number>> = { fine: 60, great: 100, perfect: 150 }
 
 /** A play's seeded numbers: the `n`th draw in [0, 1). */

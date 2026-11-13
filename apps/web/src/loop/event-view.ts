@@ -84,7 +84,7 @@ export function playTitle(kind: PlayKind, length: PlayLength): string {
     case 'choose': return 'Together: pick one for her'
   }
 }
-/** What to aim for, shown first (FR21's seed). */
+/** What to aim for, shown first (the play's seed). */
 export const PLAY_HOW: Readonly<Record<PlayKind, string>> = {
   cast: 'Tap as the ring meets the mark. Every cast lands a fish.',
   pick: 'Tap the starred ones, her favourites, as they show. Leave the rest.',
@@ -105,7 +105,7 @@ export const gradeWords = (score: number, length: PlayLength = 'event'): string 
 
 /** The sum: "+50 event · +30 choice · +15 Great = +95 toward Friendship 2 (+40 banked)". */
 export function sumWords(card: EventCard): string {
-  // F54 decision 8: a night level has no event; her 600 filled.
+  // A night level has no event; her 600 filled.
   if (card.night) return `Her bar filled overnight: no event, the level comes by itself${card.next ? ` · now toward ${rungName(card.next.rung)}` : ''}`
   const choices = card.choices.reduce((a, b) => a + b, 0)
   const parts = [
@@ -134,7 +134,7 @@ export const perkLineWords = (perk: PerkId | null, line: PerkLine | null): strin
 
 // --- The stage-up screen ---------------------------------------------------------------------------------
 
-/** The facts a stage-up screen lists beyond the ladder: her ring's grade and her wedding's day; F54: her room's house
+/** The facts a stage-up screen lists beyond the ladder: her ring's grade and her wedding's day; her room's house
  * (its name, or null when none was free). */
 export interface StageFacts { ring?: number | null; wed?: number | null; house?: string | null }
 
@@ -168,7 +168,7 @@ export function stageOpens(stage: StageUp, line: PerkLine | null, facts: StageFa
         'Evenings: every kind her ladders opened',
         perk('s1', 'breakfast'),
         ...(date ? [`Your anniversary: ${SEASON_NAMES[date.season]} ${date.day}, each year`] : []),
-        // F54 decision 4: her room, and the house's mornings.
+        // Her room, and the house's mornings.
         ...(facts.house !== undefined ? [facts.house === null ? 'Her room: none free yet, so she keeps her Dorm bed until a house is built' : `Her room: ${facts.house}`] : []),
         ...(facts.house !== undefined ? ['House mornings: +30 for her each morning you sleep there'] : []),
       ]
@@ -183,7 +183,7 @@ export const STAGE_WORDS: Readonly<Record<StageUp, { title: string; line: string
   married: { title: 'Married', line: 'Your wedding is done. Her bar turns gold.' },
 }
 
-/** RM45's line under the Married screen: "Married 1/20 · next household scene at 5"; on a milestone's own wedding,
+/** The line under the Married screen: "Married 1/20 · next household scene at 5"; on a milestone's own wedding,
  * what opens tomorrow: "Married 5/20 · household scene 1 tomorrow", "Married 20/20 · the Great Harvest tomorrow". */
 export function marriedWords(married: number, cast: number): string {
   const scene = [5, 10, 15].indexOf(married)

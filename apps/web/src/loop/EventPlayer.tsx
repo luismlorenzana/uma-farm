@@ -1,5 +1,5 @@
 // The event player: her heart event as a full-screen sheet over
-// today's map, CS42's scene player grown. From the top: the title ("The Fields · Friendship 1") with **Auto**, **Skip**
+// today's map, the scene player grown. From the top: the title ("The Fields · Friendship 1") with **Auto**, **Skip**
 // and **Log** away from the taps; **the place card** (~45%: the place's uma-art frame on its season's ground, or a
 // romance backdrop's borrowed frame and tint), her bust from master data (a lettered disc for a stand-in) and **an emote
 // bubble** beside it (uma-art's `emote` family); **her bubble** below, at most three lines, typed out: a tap finishes the
@@ -14,7 +14,7 @@
 // it does. Nothing is saved until the end: `playEvent` then commits once, stamped. Skip jumps to the next
 // choice or play, never past one. Loaded on demand, the romance build only.
 //
-// F53: **the proposal** first asks which ring (the best grade preselected), then plays, and closes on the Engaged
+// **the proposal** first asks which ring (the best grade preselected), then plays, and closes on the Engaged
 // stage-up; **the wedding** asks the place first (her three, each with its place card), plays the authored event on that
 // place's card with the guests' faces and a line of narration (its own place steps give way to the chosen one), then the
 // reception (a dish in the Warehouse, or Marta's cake), and closes on the Married stage-up.
@@ -165,7 +165,7 @@ function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLo
 }) {
   const { id, rung, mode } = req
   const nameOf = (who: string): string => (isCast(who) ? CAST[who].name : master.album.get(who)?.name ?? 'An Uma')
-  // F53: the proposal's ring and the wedding's place, chosen before the scene; the wedding's reception after it.
+  // The proposal's ring and the wedding's place, chosen before the scene; the wedding's reception after it.
   const [ring, setRing] = useState<string | null>(null)
   const [chosenPlace, setChosenPlace] = useState<string | null>(null)
   const wedding = rung === 'wedding' && mode !== 'ask'
@@ -246,7 +246,7 @@ function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLo
   const lines = logLines(shown.slice(0, cursor + (choiceNow || playNow ? 0 : 1)), picks, nameOf, save.farmer.name)
   const love = save.love[id]
 
-  // F53: before the proposal, which ring; before the wedding, where.
+  // Before the proposal, which ring; before the wedding, where.
   if (mode === 'event' && rung === 'proposal' && ring === null) {
     return <Shell title={title} auto={auto} onAuto={onAuto} onSkip={() => undefined} onLog={() => onLog(true)} skipping><RingPicker save={save} onPick={setRing} onClose={onClose} /></Shell>
   }

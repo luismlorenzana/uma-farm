@@ -1,8 +1,8 @@
-// Praise's causes (core spec CS45's rule): she earns praise for the day when (a) her
+// Praise's causes: she earns praise for the day when (a) her
 // work that finished overnight made a ★3+ item or (c) she ranked up last night (night step 9), (b) a harvest today from the
-// block she tends gave a ★3+ crop (`harvest`), or (d) she assisted a Fine-or-better workshop play today (M5's packets).
-// Earning only lists her in `today.praise`; Praise +20 (`praiseV4`) pays once, and step 7 clears both lists. Light on
-// purpose: the Fields' harvest calls it.
+// block she tends gave a ★3+ crop (`harvest`), or (d) she assisted a Fine-or-better workshop play today (once the
+// workshops are built). Earning only lists her in `today.praise`; Praise +20 (`praiseV4`) pays once, and step 7 clears
+// both lists. Light on purpose: the Fields' harvest calls it.
 import { isSaveV4, type FarmSave } from '../save/v4'
 
 /** She earned praise today: into `today.praise`, once. A v3 save, or an Uma off the roster, changes nothing. Never stamps. */

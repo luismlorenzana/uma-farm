@@ -5,7 +5,7 @@ import { CROP_IDS, GOODS, GOOD_IDS, goodName, goodOf, isCropId, refinedOf, isGoo
 
 const of = (families: string[]) => GOODS.filter((g) => families.includes(g.family))
 
-describe('the goods (CS19)', () => {
+describe('the goods', () => {
   it('holds 260 goods, each once', () => {
     expect(GOOD_IDS).toHaveLength(260)
     expect(new Set(GOOD_IDS).size).toBe(260)
@@ -39,7 +39,7 @@ describe('the goods (CS19)', () => {
   })
 })
 
-describe('seeds (decision 6)', () => {
+describe('seeds', () => {
   it('names a shop seed and an own seed for each crop', () => {
     expect(SEED_IDS).toHaveLength(54)
     expect(seedId('carrot')).toBe('seed-carrot')
@@ -50,7 +50,7 @@ describe('seeds (decision 6)', () => {
     expect(isWarehouseId('seed-chopped-carrot')).toBe(false)
   })
 
-  it('names goods by their ids and seeds by their crops (F19)', () => {
+  it('names goods by their ids and seeds by their crops', () => {
     expect([goodName('sunflower-seed'), goodName('seed-carrot'), goodName('seed-wild-rice-own'), goodName('cut-philosophers-stone')]).toEqual([
       'Sunflower Seed', 'Carrot seeds', 'Wild Rice seeds (own)', "Cut Philosopher's Stone",
     ])

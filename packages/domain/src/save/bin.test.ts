@@ -1,4 +1,4 @@
-// The shipping bin (CS7 step 1): shipping, taking back and paying move the Warehouse, the bin,
+// The shipping bin (night step 1): shipping, taking back and paying move the Warehouse, the bin,
 // gold, `farm.counts['gold-shipped']` and `diary.shipped` exactly; the bin refuses a seed.
 import { describe, expect, it } from 'vitest'
 import { farmDay } from '../farm/calendar'
@@ -24,7 +24,7 @@ const refusal = (run: () => unknown): string | null => {
   }
 }
 
-describe('shipping (CS10)', () => {
+describe('shipping', () => {
   it('moves a good at its stars from the Warehouse into the bin, exactly', () => {
     const save = ship(ship(stocked(), 'carrot', 1, 3), 'carrot', 2, 1)
     expect(save.items.carrot).toEqual([1, 1, 0, 0, 0])
@@ -39,7 +39,7 @@ describe('shipping (CS10)', () => {
     expect(save.bin['pine-log']).toEqual([10, 0, 0, 0, 0])
   })
 
-  it('refuses a seed (decision 5), more than the Warehouse holds, and none', () => {
+  it('refuses a seed, more than the Warehouse holds, and none', () => {
     expect(refusal(() => ship(stocked(), 'seed-carrot', 1, 1))).toBe('no-price')
     expect(refusal(() => ship(stocked(), 'carrot', 2, 3))).toBe('no-items')
     expect(refusal(() => ship(stocked(), 'carrot', 3, 1))).toBe('no-items')
@@ -56,7 +56,7 @@ describe('shipping (CS10)', () => {
   })
 })
 
-describe('taking back (decision 4)', () => {
+describe('taking back', () => {
   it('moves a line back into the Warehouse until the night', () => {
     const shipped = ship(ship(stocked(), 'carrot', 1, 3), 'carrot', 2, 2)
     const back = takeBack(shipped, 'carrot', 2, 2)
@@ -88,7 +88,7 @@ describe('what the bin holds', () => {
   })
 })
 
-describe('the night pays (CS7 step 1, decision 6)', () => {
+describe('the night pays (step 1)', () => {
   it('pays gold, counts the gold shipped and each good shipped, and empties the bin', () => {
     const shipped = ship(ship(stocked(), 'carrot', 1, 3), 'carrot', 2, 1)
     const before: SaveV3 = { ...shipped, farm: { ...shipped.farm, counts: { [GOLD_SHIPPED]: 1000 } }, diary: { ...shipped.diary, shipped: { carrot: 5 } } }

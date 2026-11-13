@@ -6,7 +6,7 @@ import { BEDS, bedsAt, dormLevelFor, farmRankOf, FARM_RANK_POINTS } from './farm
 import { ACTIVITIES, craftRank, LINE_ACTIVITY, RANK_POINTS, RANKS } from './ranks'
 import { countRound, round10, round5 } from './round'
 
-describe('the calendar (CS1)', () => {
+describe('the calendar', () => {
   it('turns a day into its date: 12-day seasons, 48-day years', () => {
     expect(dateOf(1)).toEqual({ year: 1, season: 'spring', day: 1 })
     expect(dateOf(12)).toEqual({ year: 1, season: 'spring', day: 12 })
@@ -26,7 +26,7 @@ describe('the calendar (CS1)', () => {
   })
 })
 
-describe('seeded draws (CS8)', () => {
+describe('seeded draws', () => {
   it('hashes with FNV-1a and steps mulberry32, both pinned', () => {
     expect([fnv1a(''), fnv1a('a'), fnv1a('foobar')]).toEqual([0x811c9dc5, 0xe40c292c, 0xbf9cf968])
     expect([mulberry32(0), mulberry32(1)]).toEqual([0.26642920868471265, 0.6270739405881613])
@@ -51,7 +51,7 @@ describe('seeded draws (CS8)', () => {
   })
 })
 
-describe('rounding (CS1)', () => {
+describe('rounding', () => {
   it('rounds prices to 5g and rewards to 10g, half up', () => {
     expect(round5(97.5)).toBe(100)
     expect(round5(110.5)).toBe(110)
@@ -71,14 +71,14 @@ describe('rounding (CS1)', () => {
   })
 })
 
-describe('ranks (CS29, CS32)', () => {
+describe('ranks', () => {
   it('has nine activities and six ranks at 0, 40, 160, 400, 900, 2,000', () => {
     expect(ACTIVITIES).toHaveLength(9)
     expect(RANKS).toEqual(['Novice', 'Hand', 'Skilled', 'Expert', 'Master', 'Legend'])
     expect(RANK_POINTS).toEqual([0, 40, 160, 400, 900, 2000])
   })
 
-  it("maps today's lines to their activity (D24 #9)", () => {
+  it("maps today's lines to their activity", () => {
     expect(LINE_ACTIVITY).toEqual({ metal: 'mining', stone: 'mining', wood: 'foraging', fish: 'fishing', vegetables: 'farming' })
   })
 
@@ -98,7 +98,7 @@ describe('ranks (CS29, CS32)', () => {
   })
 })
 
-describe('the farm (CS34, CS39)', () => {
+describe('the farm', () => {
   it("gives the Dorm's beds by level, and the lowest level with a bed for each", () => {
     expect(BEDS).toEqual([3, 5, 8, 12, 16, 22, 30, 40, 50, 60])
     expect(bedsAt(1)).toBe(3)

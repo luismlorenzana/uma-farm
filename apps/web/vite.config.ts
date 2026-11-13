@@ -8,7 +8,7 @@ import { defineConfig } from 'vitest/config'
 
 const buildId = (process.env.VITE_APP_BUILD_ID ?? process.env.GITHUB_SHA ?? 'local').slice(0, 12)
 
-/** The HD-2D preview's files: every chunk holding three.js, uma-stage or the stage Home (with F12's figures), and
+/** The HD-2D preview's files: every chunk holding three.js, uma-stage or the stage Home (with the figures), and
  * kit-farm's page. They build into `assets/stage/`, which the precache leaves out and a runtime cache keeps once loaded, so
  * only a player with the switch on downloads them (scripts/check-size.mjs checks the built service worker). */
 const STAGE_DIR = 'assets/stage'
@@ -55,7 +55,7 @@ export default defineConfig(({ mode }) => {
         // The kit's update prompt (Update ready · Restart) decides when a new build takes over.
         registerType: 'prompt',
         injectRegister: null,
-        // Drawn by scripts/draw-icons.mjs. iOS keeps the icon it saw at Add to Home Screen.
+        // The icons are committed PNGs in public/icons. iOS keeps the icon it saw at Add to Home Screen.
         includeAssets: ['icons/icon-64.png', 'icons/apple-touch-icon.png'],
         manifest: {
           name: 'Uma Farm',
@@ -76,7 +76,7 @@ export default defineConfig(({ mode }) => {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
           // The HD-2D preview is cached on first use instead (below); workbox's own default ignore kept.
           globIgnores: ['**/node_modules/**/*', `${STAGE_DIR}/**`],
-          // "Work done" notifications (uma-rpg's D63): the handlers live in public/push-sw.js.
+          // "Work done" notifications (copied from uma-rpg): the handlers live in public/push-sw.js.
           importScripts: ['push-sw.js'],
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
           navigateFallback: '/index.html',
@@ -134,9 +134,9 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    // uma-kit is transformed with the app, so its links share the app's router (F18's bar test renders them). The romance
-    // switch is off: M4's tests run unchanged, and a romance test turns it on with `vi.stubEnv`. The story
-    // pack is the stand-in: no test reads farm-api; the loader's own tests stub this.
+    // uma-kit is transformed with the app, so its links share the app's router (the bar test renders them). The romance
+    // switch is off: the deployed build's tests run unchanged, and a romance test turns it on with `vi.stubEnv`. The
+    // story pack is the stand-in: no test reads farm-api; the loader's own tests stub this.
     test: { environment: 'jsdom', maxWorkers: 2, env: { VITE_FARM_ROMANCE: '0', VITE_FARM_STORY: 'stand-in' }, server: { deps: { inline: [/@luismlorenzana\/uma-kit/] } } },
   }
 })

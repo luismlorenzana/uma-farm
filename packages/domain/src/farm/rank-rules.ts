@@ -19,11 +19,6 @@ const round6 = (n: number): number => Math.round(n * 1e6) / 1e6
 
 /** A day of work pays 10 points in its activity. */
 export const DAY_POINTS = 10
-/** A workshop play pays its assistant 10. */
-export const PLAY_POINTS = 10
-/** An expedition pays 10 a day away, +10 on a Success, +20 on a Great. */
-export const EXPEDITION_DAY_POINTS = 10
-export const EXPEDITION_RESULT_POINTS = { success: 10, great: 20 } as const
 /** ×1.2 in her favourite line. */
 export const FAVOURITE_POINTS = 1.2
 /** ×1.25 well fed. */
@@ -65,7 +60,7 @@ export interface PointTerms {
   mentor?: number
 }
 
-/** Points for a pay of `base` (decision "every pay takes the same factors"): base × her talent's factor × 1.2 in her
+/** Points for a pay of `base` (every pay takes the same factors): base × her talent's factor × 1.2 in her
  * favourite line × 1.25 well fed × her hearts' factor × a mentor's (v4), to a millionth. A day's work is `DAY_POINTS`; a
  * workshop play and an expedition pass their own base. */
 export function rankPoints(base: number, terms: PointTerms): number {
@@ -74,12 +69,12 @@ export function rankPoints(base: number, terms: PointTerms): number {
 /** A day of work's points: 10 × her factors. */
 export const rankPointsForDay = (terms: PointTerms): number => rankPoints(DAY_POINTS, terms)
 
-/** Days of work to reach `rank`'s points at a day's pay (CS29's table, challenges met). */
+/** Days of work to reach `rank`'s points at a day's pay, challenges met. */
 export const daysToRank = (rank: Rank, perDay: number): number => (rank === 0 ? 0 : Math.ceil(RANK_POINTS[rank]! / perDay - 1e-9))
 
 // --- Her favourite line -------------------------------------------------------------------------------------
 
-/** Her favourite activity: her calling's line's (D24 #9): Metal and Stone mining, Wood foraging, Fish fishing,
+/** Her favourite activity: her calling's line's: Metal and Stone mining, Wood foraging, Fish fishing,
  * Vegetables farming. The ranch, the workshops and expeditions are nobody's favourite. */
 export const favouriteActivity = (outfit: { readonly line: MaterialLine }): Activity => LINE_ACTIVITY[outfit.line]
 /** The activities that can be a favourite, in the activities' order. */
@@ -102,7 +97,7 @@ export interface RankBenefits {
   readonly yield: number
   /** A tended block's growth a night, before her talent and tools. */
   readonly tendedGrowth: number
-  /** Quality points (CS26's rank term). */
+  /** Quality points (the rank term). */
   readonly quality: number
   /** The deepest place she may work: the Mine's and the Quarry's floor, the forest's area, the Fishery's spot. */
   readonly deepest: { readonly floor: number; readonly forest: ForestAreaId; readonly fishery: FishingSpotId }
@@ -115,7 +110,7 @@ export interface RankBenefits {
   readonly workshopYield: number
 }
 
-/** CS31, Novice … Legend. */
+/** What each rank gives, Novice … Legend. */
 export const RANK_BENEFITS: readonly RankBenefits[] = [
   { yield: 1, tendedGrowth: 1.25, quality: 0, deepest: { floor: 5, forest: 'woods', fishery: 'pond' }, expeditionPower: 10, seedsBack: 0.1, affection: 0, workshopYield: 1 },
   { yield: 1.15, tendedGrowth: 1.35, quality: 0.5, deepest: { floor: 10, forest: 'hills', fishery: 'river' }, expeditionPower: 20, seedsBack: 0.15, affection: 3, workshopYield: 1.1 },
@@ -125,7 +120,7 @@ export const RANK_BENEFITS: readonly RankBenefits[] = [
   { yield: 2, tendedGrowth: 1.75, quality: 2.5, deepest: { floor: 30, forest: 'world-tree', fishery: 'moon-pool' }, expeditionPower: 60, seedsBack: 0.35, affection: 15, workshopYield: 1.5 },
 ]
 export const rankBenefits = (rank: Rank): RankBenefits => RANK_BENEFITS[rank]!
-/** Quality points from her rank (CS26's rank term): 0.5 a rank, Novice 0 … Legend 2.5. */
+/** Quality points from her rank (the rank term): 0.5 a rank, Novice 0 … Legend 2.5. */
 export const rankQuality = (rank: Rank): number => rankBenefits(rank).quality
 
 // --- The challenges --------------------------------------------------------------------------
@@ -136,20 +131,20 @@ const PLAY_GRADES: readonly PlayGrade[] = ['rough', 'good', 'fine', 'masterwork'
 /** An expedition's result. */
 export type ExpeditionResult = 'failure' | 'partial' | 'success' | 'great'
 
-/** What happened, for a challenge: each packet reports its own, for the Uma who did it. */
+/** What happened, for a challenge: each part of the game reports its own, for the Uma who did it. */
 export type ChallengeEvent =
   /** Farming: the crops a harvest she tended brought, by star, and the crop's level. */
   | { kind: 'harvest'; stars: readonly number[]; level: number }
-  /** The ranch (F27): a day caring for animals; an animal in her care reaching `hearts`. */
+  /** The ranch: a day caring for animals; an animal in her care reaching `hearts`. */
   | { kind: 'care' }
   | { kind: 'hearts'; hearts: number }
-  /** Mining (F26): ores or stones dug at a floor of the Mine or the Quarry. */
+  /** Mining: ores or stones dug at a floor of the Mine or the Quarry. */
   | { kind: 'dig'; floor: number; items: number }
-  /** Fishing (F22): fish caught at a spot. */
+  /** Fishing: fish caught at a spot. */
   | { kind: 'catch'; spot: FishingSpotId; fish: number }
-  /** Foraging (F22): items gathered in an area. */
+  /** Foraging: items gathered in an area. */
   | { kind: 'gather'; area: ForestAreaId; items: number }
-  /** Cooking, serving and forging (F8, F35, F36): a play she assisted, by its tier. */
+  /** Cooking, serving and forging: a workshop play she assisted, by its tier. */
   | { kind: 'play'; grade: PlayGrade }
   /** Cooking: dishes made, by star. */
   | { kind: 'dishes'; stars: readonly number[] }
@@ -157,9 +152,9 @@ export type ChallengeEvent =
   | { kind: 'guests'; guests: number }
   /** Forging: a tool upgrade, or a Mythril tool. */
   | { kind: 'forged'; tool: 'upgrade' | 'mythril' }
-  /** Expeditions (F28): a return home, its result and its region's level. */
+  /** Expeditions: a return home, its result and its region's level. */
   | { kind: 'expedition'; result: ExpeditionResult; level: number; region: RegionId }
-  /** 1st at a festival (M6, F32): the Flower Show, the Fishing Derby, the Cooking Contest, the Animal Show. */
+  /** 1st at a festival: the Flower Show, the Fishing Derby, the Cooking Contest, the Animal Show. */
   | { kind: 'won'; festival: FestivalId }
 
 type Counter = (event: ChallengeEvent) => number
@@ -171,82 +166,82 @@ const atLeast = (grade: PlayGrade, least: PlayGrade): boolean => PLAY_GRADES.ind
 const won = (festival: FestivalId): Counter => on('won', (e) => yes(e.festival === festival))
 const successful = (result: ExpeditionResult): boolean => result === 'success' || result === 'great'
 
-/** One rank's challenge: the rank it opens, its target, its words, the packet that counts it, and what an event adds. */
+/** One rank's challenge: the rank it opens, its target, its words, what counts it, and what an event adds. */
 export interface Challenge {
   readonly rank: Rank
   readonly target: number
   readonly what: string
-  /** Who counts it: its packet. */
+  /** What counts it, in words (lower case: the live tables capitalise it). */
   readonly by: string
   readonly count: Counter
 }
 const row = (rank: Rank, target: number, what: string, by: string, count: Counter): Challenge => ({ rank, target, what, by, count })
 
-/** CS30: each activity's five challenges, toward Hand … Legend. Each depth challenge is "reach the deepest place your
+/** Each activity's five challenges, toward Hand … Legend. Each depth challenge is "reach the deepest place your
  * rank allows". A challenge counts from her last rank-up in its activity. */
 export const CHALLENGES: Readonly<Record<Activity, readonly Challenge[]>> = {
   farming: [
-    row(1, 30, 'Harvest 30 crops she tended', 'F20', on('harvest', (e) => e.stars.length)),
-    row(2, 40, '40 crops of ★3+ she tended', 'F20', on('harvest', (e) => e.stars.filter((s) => s >= 3).length)),
-    row(3, 1, 'Tend a crop of level 4+ to harvest', 'F20', on('harvest', (e) => yes(e.level >= 4 && e.stars.length > 0))),
-    row(4, 30, '30 crops of ★5', 'F20', on('harvest', (e) => e.stars.filter((s) => s === 5).length)),
-    row(5, 1, '1st at a Flower Show with a crop she tended', 'M6 (F32)', won('flower-show')),
+    row(1, 30, 'Harvest 30 crops she tended', 'at harvest, for the tender', on('harvest', (e) => e.stars.length)),
+    row(2, 40, '40 crops of ★3+ she tended', 'at harvest, for the tender', on('harvest', (e) => e.stars.filter((s) => s >= 3).length)),
+    row(3, 1, 'Tend a crop of level 4+ to harvest', 'at harvest, for the tender', on('harvest', (e) => yes(e.level >= 4 && e.stars.length > 0))),
+    row(4, 30, '30 crops of ★5', 'at harvest, for the tender', on('harvest', (e) => e.stars.filter((s) => s === 5).length)),
+    row(5, 1, '1st at a Flower Show with a crop she tended', 'a festival win (festivals aren’t built yet)', won('flower-show')),
   ],
   ranch: [
-    row(1, 10, 'Care for animals 10 days', 'M5 (F27)', on('care', () => 1)),
-    row(2, 1, 'An animal in her care reaches 4 hearts', 'M5 (F27)', on('hearts', (e) => yes(e.hearts >= 4))),
-    row(3, 1, 'An animal in her care reaches 7 hearts', 'M5 (F27)', on('hearts', (e) => yes(e.hearts >= 7))),
-    row(4, 1, 'An animal in her care reaches 10 hearts', 'M5 (F27)', on('hearts', (e) => yes(e.hearts >= 10))),
-    row(5, 1, '1st at an Animal Show with an animal in her care', 'M6 (F32)', won('animal-show')),
+    row(1, 10, 'Care for animals 10 days', 'the ranch (not built yet)', on('care', () => 1)),
+    row(2, 1, 'An animal in her care reaches 4 hearts', 'the ranch (not built yet)', on('hearts', (e) => yes(e.hearts >= 4))),
+    row(3, 1, 'An animal in her care reaches 7 hearts', 'the ranch (not built yet)', on('hearts', (e) => yes(e.hearts >= 7))),
+    row(4, 1, 'An animal in her care reaches 10 hearts', 'the ranch (not built yet)', on('hearts', (e) => yes(e.hearts >= 10))),
+    row(5, 1, '1st at an Animal Show with an animal in her care', 'a festival win (festivals aren’t built yet)', won('animal-show')),
   ],
   mining: [
-    row(1, 40, 'Dig 40 ores or stones', 'M5 (F26)', on('dig', (e) => e.items)),
-    row(2, 1, 'Dig at floor 10', 'M5 (F26)', on('dig', (e) => yes(e.floor >= 10))),
-    row(3, 1, 'Dig at floor 15', 'M5 (F26)', on('dig', (e) => yes(e.floor >= 15))),
-    row(4, 1, 'Dig at floor 20', 'M5 (F26)', on('dig', (e) => yes(e.floor >= 20))),
-    row(5, 1, 'Dig at floor 25', 'M5 (F26)', on('dig', (e) => yes(e.floor >= 25))),
+    row(1, 40, 'Dig 40 ores or stones', 'the Mine and the Quarry (not built yet)', on('dig', (e) => e.items)),
+    row(2, 1, 'Dig at floor 10', 'the Mine and the Quarry (not built yet)', on('dig', (e) => yes(e.floor >= 10))),
+    row(3, 1, 'Dig at floor 15', 'the Mine and the Quarry (not built yet)', on('dig', (e) => yes(e.floor >= 15))),
+    row(4, 1, 'Dig at floor 20', 'the Mine and the Quarry (not built yet)', on('dig', (e) => yes(e.floor >= 20))),
+    row(5, 1, 'Dig at floor 25', 'the Mine and the Quarry (not built yet)', on('dig', (e) => yes(e.floor >= 25))),
   ],
   fishing: [
-    row(1, 30, 'Catch 30 fish', 'F22', on('catch', (e) => e.fish)),
-    row(2, 10, 'Catch 10 fish at the River', 'F22', on('catch', (e) => (e.spot === 'river' ? e.fish : 0))),
-    row(3, 10, 'Catch 10 fish at the Lake', 'F22', on('catch', (e) => (e.spot === 'lake' ? e.fish : 0))),
-    row(4, 10, 'Catch 10 fish at the Falls', 'F22', on('catch', (e) => (e.spot === 'falls' ? e.fish : 0))),
-    row(5, 1, '1st at a Fishing Derby, on the team', 'M6 (F32)', won('fishing-derby')),
+    row(1, 30, 'Catch 30 fish', 'the night’s catches (night step 4)', on('catch', (e) => e.fish)),
+    row(2, 10, 'Catch 10 fish at the River', 'the night’s catches (night step 4)', on('catch', (e) => (e.spot === 'river' ? e.fish : 0))),
+    row(3, 10, 'Catch 10 fish at the Lake', 'the night’s catches (night step 4)', on('catch', (e) => (e.spot === 'lake' ? e.fish : 0))),
+    row(4, 10, 'Catch 10 fish at the Falls', 'the night’s catches (night step 4)', on('catch', (e) => (e.spot === 'falls' ? e.fish : 0))),
+    row(5, 1, '1st at a Fishing Derby, on the team', 'a festival win (festivals aren’t built yet)', won('fishing-derby')),
   ],
   foraging: [
-    row(1, 50, 'Gather 50 items', 'F22', on('gather', (e) => e.items)),
-    row(2, 20, 'Gather 20 items in the Hills', 'F22', on('gather', (e) => (e.area === 'hills' ? e.items : 0))),
-    row(3, 20, 'Gather 20 items in the Old Forest', 'F22', on('gather', (e) => (e.area === 'old-forest' ? e.items : 0))),
-    row(4, 20, 'Gather 20 items on the Mountain', 'F22', on('gather', (e) => (e.area === 'mountain' ? e.items : 0))),
-    row(5, 20, 'Gather 20 items in the Misty Vale', 'F22', on('gather', (e) => (e.area === 'misty-vale' ? e.items : 0))),
+    row(1, 50, 'Gather 50 items', 'the night’s hauls (night step 4)', on('gather', (e) => e.items)),
+    row(2, 20, 'Gather 20 items in the Hills', 'the night’s hauls (night step 4)', on('gather', (e) => (e.area === 'hills' ? e.items : 0))),
+    row(3, 20, 'Gather 20 items in the Old Forest', 'the night’s hauls (night step 4)', on('gather', (e) => (e.area === 'old-forest' ? e.items : 0))),
+    row(4, 20, 'Gather 20 items on the Mountain', 'the night’s hauls (night step 4)', on('gather', (e) => (e.area === 'mountain' ? e.items : 0))),
+    row(5, 20, 'Gather 20 items in the Misty Vale', 'the night’s hauls (night step 4)', on('gather', (e) => (e.area === 'misty-vale' ? e.items : 0))),
   ],
   cooking: [
-    row(1, 5, 'Assist 5 Kitchen plays', 'M5 (F8)', on('play', () => 1)),
-    row(2, 1, 'Assist a Fine play', 'M5 (F8)', on('play', (e) => yes(atLeast(e.grade, 'fine')))),
-    row(3, 10, 'Make 10 dishes of ★4+', 'M5 (F8)', on('dishes', (e) => e.stars.filter((s) => s >= 4).length)),
-    row(4, 1, 'Assist a Masterwork', 'M5 (F8)', on('play', (e) => yes(e.grade === 'masterwork'))),
-    row(5, 1, '1st at a Cooking Contest as the cook', 'M6 (F32)', won('cooking-contest')),
+    row(1, 5, 'Assist 5 Kitchen plays', 'the Kitchen (not built yet)', on('play', () => 1)),
+    row(2, 1, 'Assist a Fine play', 'the Kitchen (not built yet)', on('play', (e) => yes(atLeast(e.grade, 'fine')))),
+    row(3, 10, 'Make 10 dishes of ★4+', 'the Kitchen (not built yet)', on('dishes', (e) => e.stars.filter((s) => s >= 4).length)),
+    row(4, 1, 'Assist a Masterwork', 'the Kitchen (not built yet)', on('play', (e) => yes(e.grade === 'masterwork'))),
+    row(5, 1, '1st at a Cooking Contest as the cook', 'a festival win (festivals aren’t built yet)', won('cooking-contest')),
   ],
   serving: [
-    row(1, 5, 'Assist 5 shifts', 'M6 (F35)', on('play', () => 1)),
-    row(2, 1, 'Assist a Fine shift', 'M6 (F35)', on('play', (e) => yes(atLeast(e.grade, 'fine')))),
-    row(3, 100, 'Serve 100 guests', 'M6 (F35)', on('guests', (e) => e.guests)),
-    row(4, 1, 'Assist a Masterwork shift', 'M6 (F35)', on('play', (e) => yes(e.grade === 'masterwork'))),
-    row(5, 1000, 'Serve 1,000 guests', 'M6 (F35)', on('guests', (e) => e.guests)),
+    row(1, 5, 'Assist 5 shifts', 'the Restaurant (not built yet)', on('play', () => 1)),
+    row(2, 1, 'Assist a Fine shift', 'the Restaurant (not built yet)', on('play', (e) => yes(atLeast(e.grade, 'fine')))),
+    row(3, 100, 'Serve 100 guests', 'the Restaurant (not built yet)', on('guests', (e) => e.guests)),
+    row(4, 1, 'Assist a Masterwork shift', 'the Restaurant (not built yet)', on('play', (e) => yes(e.grade === 'masterwork'))),
+    row(5, 1000, 'Serve 1,000 guests', 'the Restaurant (not built yet)', on('guests', (e) => e.guests)),
   ],
   forging: [
-    row(1, 5, 'Assist 5 Forge plays', 'M6 (F36)', on('play', () => 1)),
-    row(2, 1, 'Assist a Fine merge', 'M6 (F36)', on('play', (e) => yes(atLeast(e.grade, 'fine')))),
-    row(3, 1, 'Forge a tool upgrade', 'M6 (F36)', on('forged', () => 1)),
-    row(4, 1, 'Assist a Masterwork', 'M6 (F36)', on('play', (e) => yes(e.grade === 'masterwork'))),
-    row(5, 1, 'Forge a Mythril tool', 'M6 (F36)', on('forged', (e) => yes(e.tool === 'mythril'))),
+    row(1, 5, 'Assist 5 Forge plays', 'the Forge’s workshop (not built yet)', on('play', () => 1)),
+    row(2, 1, 'Assist a Fine merge', 'the Forge’s workshop (not built yet)', on('play', (e) => yes(atLeast(e.grade, 'fine')))),
+    row(3, 1, 'Forge a tool upgrade', 'the Forge’s workshop (not built yet)', on('forged', () => 1)),
+    row(4, 1, 'Assist a Masterwork', 'the Forge’s workshop (not built yet)', on('play', (e) => yes(e.grade === 'masterwork'))),
+    row(5, 1, 'Forge a Mythril tool', 'the Forge’s workshop (not built yet)', on('forged', (e) => yes(e.tool === 'mythril'))),
   ],
   expeditions: [
-    row(1, 2, 'Return from 2 expeditions', 'M5 (F28)', on('expedition', () => 1)),
-    row(2, 1, 'A Success at level 10+', 'M5 (F28)', on('expedition', (e) => yes(successful(e.result) && e.level >= 10))),
-    row(3, 1, 'A Success at level 20+', 'M5 (F28)', on('expedition', (e) => yes(successful(e.result) && e.level >= 20))),
-    row(4, 1, 'A Great at level 20+', 'M5 (F28)', on('expedition', (e) => yes(e.result === 'great' && e.level >= 20))),
-    row(5, 1, 'A Success at the Sky Ruins', 'M5 (F28)', on('expedition', (e) => yes(successful(e.result) && e.region === 'sky-ruins'))),
+    row(1, 2, 'Return from 2 expeditions', 'expeditions (not built yet)', on('expedition', () => 1)),
+    row(2, 1, 'A Success at level 10+', 'expeditions (not built yet)', on('expedition', (e) => yes(successful(e.result) && e.level >= 10))),
+    row(3, 1, 'A Success at level 20+', 'expeditions (not built yet)', on('expedition', (e) => yes(successful(e.result) && e.level >= 20))),
+    row(4, 1, 'A Great at level 20+', 'expeditions (not built yet)', on('expedition', (e) => yes(e.result === 'great' && e.level >= 20))),
+    row(5, 1, 'A Success at the Sky Ruins', 'expeditions (not built yet)', on('expedition', (e) => yes(successful(e.result) && e.region === 'sky-ruins'))),
   ],
 }
 
@@ -255,7 +250,7 @@ export const challengeFor = (activity: Activity, rank: Rank): Challenge | null =
 
 /** Counts an event toward her next rank's challenge in an activity: only that challenge, from her last
  * rank-up, stopping at its target. An Uma not on the roster, a Legend, or an event the challenge doesn't read changes
- * nothing. Never stamps `updatedAt`. F20's harvests and F22's catches and gathers call it. */
+ * nothing. Never stamps `updatedAt`. A harvest and the night's catches and gathers call it. */
 export function countChallenge<S extends Pick<FarmSave, 'roster'>>(save: S, outfitId: OutfitId, activity: Activity, event: ChallengeEvent): S {
   const uma = save.roster[outfitId]
   if (!uma) return save

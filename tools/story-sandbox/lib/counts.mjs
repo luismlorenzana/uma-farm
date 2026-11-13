@@ -8,7 +8,7 @@ const group = (entries) => {
   return Object.fromEntries(Object.entries(out).sort(([a, x], [b, y]) => y.length - x.length || String(a).localeCompare(String(b))))
 }
 
-/** Every count F60 decision 2 names. `rungs` is the route's rung ids (27); `closest` RS12's two closest ties an Uma. */
+/** Every count the Counts page shows. `rungs` is the route's rung ids (27); `closest` the two closest ties an Uma. */
 export function storyCounts({ cast, tags, ties, bibles = [], routes = [], pairs = [], rungs = [], closest = 2 }) {
   const umas = cast?.umas ?? []
   const ids = umas.map((u) => u.characterId)
@@ -20,7 +20,7 @@ export function storyCounts({ cast, tags, ties, bibles = [], routes = [], pairs 
     const mine = tieList.filter((t) => t.a === id || t.b === id)
     return { id, ties: mine.length, strong: mine.filter((t) => t.strength === 3).length, real: mine.filter((t) => t.source === 'real').length }
   }).sort((a, b) => a.ties - b.ties || a.strong - b.strong || a.id.localeCompare(b.id))
-  // A pair conversation file counts for both its Umas; RS12 asks one for each of her two closest ties.
+  // A pair conversation file counts for both its Umas; each Uma needs one for each of her two closest ties.
   const pairsPer = ids.map((id) => ({ id, written: pairs.filter((p) => p.a === id || p.b === id).length, of: closest }))
   const eventsPer = ids.map((id) => {
     const scripted = new Set((routeOf.get(id)?.events ?? []).map((e) => e.id))

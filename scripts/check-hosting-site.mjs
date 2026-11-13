@@ -1,6 +1,6 @@
-// Every Hosting deploy names its site (the cloud plan's IN7): the uma-rpg project hosts three apps, so an unnamed
-// deploy could land on another app's site. firebase.json's `hosting.site`, the workflow's HOSTING_SITE default and its
-// `--only hosting:<site>` must all agree. Copied from uma-rpg's check.
+// Every Hosting deploy names its site (see docs/technical/infrastructure.md): the uma-rpg project hosts three apps,
+// so an unnamed deploy could land on another app's site. firebase.json's `hosting.site`, the workflow's HOSTING_SITE
+// default and its `--only hosting:<site>` must all agree. Copied from uma-rpg's check.
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 

@@ -1,4 +1,4 @@
-// Birthdays and anniversaries (RM23 step 9).
+// Birthdays and anniversaries.
 //
 // Her birthday is master data's character set (`birthday: { month, day }`), read at runtime and never in git; the cast
 // file's optional `birthday` wins where present. A real date maps onto the 48-day year by quarters of the month:
@@ -57,7 +57,7 @@ export function birthdaysOf(pack: Pick<StoryPack, 'cast'>, master: ReadonlyMap<s
 /** Whether a farm day is her birthday. */
 export const isBirthday = (birthdays: Birthdays, id: string, day: number): boolean => birthdays.get(id) === dayOfYear(day)
 
-// --- An item of her line (RM32's morning-item column) -----------------------------------------------------
+// --- An item of her line -----------------------------------------------------
 
 /** A good at its stars. */
 export interface LineGood {
@@ -79,7 +79,7 @@ export function deepestOpen(save: SaveV4, place: 'forest' | 'fishery', rank: Ran
  * deepest area this season for a forager, a fish of her deepest spot this season for a fisher; each pick a seeded draw
  * (`draw(uid, day, 'line:<id>', n)`), the forest's and the Fishery's by their seasons' shares, the season's six shop crops
  * evenly. Mining, the ranch, cooking, serving and forging bring theirs with their places; until then, and
- * whenever her line's place isn't open, it's a crop of the season, so an anniversary is never empty. F51's morning items
+ * whenever her line's place isn't open, it's a crop of the season, so an anniversary is never empty. The morning items
  * reuse it with their own `n`.
  */
 export function lineGood(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string, stars: number, n = 0): LineGood {
@@ -99,7 +99,7 @@ export function lineGood(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>,
 /** Her anniversary's item: ★5. */
 export const ANNIVERSARY_STARS = 5
 
-// --- The morning's lines (RM23 step 9) --------------------------------------------------------------------
+// --- The morning's lines --------------------------------------------------------------------
 
 /**
  * Night step 9, the date already turned: each Uma on the roster, in the cast's order, whose

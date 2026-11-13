@@ -1,13 +1,13 @@
 // The farm's roster (R3): every outfit on master data's release can work, from day one, with no tickets. Each
 // has her trade, from her calling (her best running styles, `template.ts`), and so her line's three places. The farm reads
-// master data by stable ids only (P8): names and art stay in the app, from the release.
+// master data by stable ids only: names and art stay in the app, from the release.
 import type { Outfit } from '@luismlorenzana/uma-data'
 import { placeSpecV4 } from '../economy/places-v4'
 import { tradePlaces, umaTrade, type TradeId, type TradeOf } from '../economy/professions'
 import type { MaterialLine } from '../items/lines'
 import type { WorkContext } from '../work/env-v3'
 
-/** A master outfit id, as master data's stable key for an Uma (P8). */
+/** A master outfit id, as master data's stable key for an Uma. */
 export const OUTFIT_ID = /^[1-9]\d{0,11}$/
 export const isOutfitId = (id: string): boolean => OUTFIT_ID.test(id)
 

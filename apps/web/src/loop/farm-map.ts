@@ -5,9 +5,9 @@ import { FARM_MAP_ROWS, isStation, placeOpen, type FarmPlace, type FarmPlaceId, 
 // module never pulls the bench's rules.
 import type { PlaceAt } from '@luismlorenzana/uma-kit/hub'
 
-/** The places whose screens have landed, each with where a tap on it goes: F19's bin and shop (their sheets
- * over the farm) and Warehouse; F20's Fields (their quick look, which opens `/fields`); F22's forest, Fishery and three
- * stations (their quick looks, which open their pages); F23's Dorm (its page) and Gate (its quick look, the visitor
+/** The places whose screens have landed, each with where a tap on it goes: the bin and shop (their sheets
+ * over the farm) and Warehouse; the Fields (their quick look, which opens `/fields`); the forest, Fishery and three
+ * stations (their quick looks, which open their pages); the Dorm (its page) and Gate (its quick look, the visitor
  * waiting). Until then a place shows "Soon". */
 export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlaceId, string>([
   ['fields', '/?peek=fields'],
@@ -58,9 +58,9 @@ export function opensWords(opens: PlaceOpens): string {
 /** The Forge's lock on v4 before its bench: it opens with the first Romance 8, not chapter 7. */
 export const BENCH_LOCK = 'your first Romance 8'
 
-/** Why a place is locked on this save, or null when it's open: CS3's rule first, then a station not built yet (F22
- * decision 5: its quick look offers Build), then whether its screen has landed. On v4 the Forge opens
- * as the ring bench once `buildings.forge` is set, and before that waits for the first Romance 8; v3's Forge is M4's. */
+/** Why a place is locked on this save, or null when it's open: the chapter's rule first, then a station not built yet
+ * (its quick look offers Build), then whether its screen has landed. On v4 the Forge opens as the ring bench once
+ * `buildings.forge` is set, and before that waits for the first Romance 8; v3's Forge is the deployed build's. */
 export function lockOf(save: Pick<FarmSave, 'farm' | 'buildings'> & Partial<Pick<FarmSave, 'version'>>, place: FarmPlace,
   screens: ReadonlyMap<FarmPlaceId, unknown> | ReadonlySet<FarmPlaceId> = PLACE_SCREENS): string | null {
   if (place.id === 'forge' && save.version === 4) return save.buildings.forge !== undefined ? null : BENCH_LOCK

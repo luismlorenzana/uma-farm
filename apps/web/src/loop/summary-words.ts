@@ -1,14 +1,15 @@
 // The morning summary's lines: the save holds ids and counts, and
 // these say them, each line a tap to its place. With the farm map, on demand. Pure, so the card and the tests read the same.
-// On save v4 §4 is Hearts, in RM57's order: the Ready lines read live, up to
+// On save v4 §4 is Hearts, in its own order: the Ready lines read live, up to
 // three and "+N more"; the invitation with Yes, tonight and Another day; the house's morning; birthdays and
 // anniversaries, today and tomorrow
 //; levels reached overnight and arrivals' scenes waiting; side by side's extras and bond hearts with
 // Read. A Ready line plays her event over the morning (`?event=`); the rest open her profile on the
 // Hearts tab (`/hearts?uma=`), a pair's Read its conversations (`?read=`), side
-// by side the Warehouse; the Dorm's beds are the Dorm for 20's. F54 adds the house's morning (with its house line, read live),
-// a move-in, a house that misses you (Tonight › and Another night under it), a night level (her level-up card at `?level=`),
-// the Festival of Vows, the household's Ready offers (live, after the Ready lines) and §5's household milestones.
+// by side the Warehouse; the Dorm's beds are the Dorm for 20's. It also has the house's morning (with its house line,
+// read live), a move-in, a house that misses you (Tonight › and Another night under it), a night level (her level-up
+// card at `?level=`), the Festival of Vows, the household's Ready offers (live, after the Ready lines) and §5's
+// household milestones.
 import {
   ACTIVITY_NAMES, bedsFor, EVENINGS, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, rungName, SEASON_NAMES, SUMMARY_SECTIONS_V4, summarySections, type FarmPlaceId,
   type FestivalId, type HeartLine, type MorningSummary, type MorningSummaryV4, type SummarySection, type SummarySectionV4,
@@ -30,7 +31,7 @@ export interface SummaryLine {
   tag?: string
   /** Her invitation's id: the card draws Yes, tonight and Another day under the line. */
   invite?: string
-  /** A line said under it (F54: the house line), in quotes. */
+  /** A line said under it (the house line), in quotes. */
   quote?: string
   /** A house that misses you: the card draws Tonight › and Another night under the line. */
   misses?: number
@@ -63,8 +64,8 @@ export interface ReadyNow {
   place: string | null
 }
 
-/** The morning summary as the card shows it: CS5's sections in order, empty ones hidden, each line a tap. On v4, §4 Hearts
- * also shows while someone is `ready`. */
+/** The morning summary as the card shows it: its sections in order, empty ones hidden, each line a tap.
+ * On v4, §4 Hearts also shows while someone is `ready`. */
 export function summaryParts(summary: MorningSummary | MorningSummaryV4, nameOf: NameOf = someone, ready: readonly ReadyNow[] = [], pairs: PairWords | null = null,
   home: HomeWords = NO_HOME, hand?: ChapterHand): SummaryPart[] {
   const sections = 'hearts' in summary
@@ -101,7 +102,7 @@ export const umaSheet = (outfitId: string, version: number = 3, view?: 'work'): 
 
 /** The morning's Ready lines: up to three, then "+N more". */
 export const READY_LINES = 3
-/** RM57's order of §4 Hearts, by line kind: (1) Ready, (2) the invitation, (3) the house's morning with the
+/** The order of §4 Hearts, by line kind: (1) Ready, (2) the invitation, (3) the house's morning with the
  * morning items and night chores, (4) birthdays and anniversaries, (5) levels reached overnight and arrivals,
  * (6) the perks' extras, side by side and bond hearts. A new stored kind takes its place here and its words in
  * `heartLine`; within a place the night's order holds. */
@@ -109,14 +110,14 @@ export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = {
   invite: 2, house: 3, moved: 3, misses: 3, item: 3, chores: 3, birthday: 4, anniversary: 4, vows: 4, level: 5, arrived: 5, perks: 6, side: 6, bond: 6,
 }
 
-/** §4 Hearts on v4: the Ready lines, then the stored lines in RM57's order. `pairs` says which bond
+/** §4 Hearts on v4: the Ready lines, then the stored lines in that order. `pairs` says which bond
  * lines have a conversation to Read; without it (the pack loading) they say the heart alone. */
 export function heartsLines(hearts: readonly HeartLine[], ready: readonly ReadyNow[], nameOf: NameOf, pairs: PairWords | null = null, home: HomeWords = NO_HOME): SummaryLine[] {
   const now = ready.slice(0, READY_LINES).map((r): SummaryLine => ({
     key: `ready:${r.id}`, to: `/?event=${r.id}`, tag: 'Play', text: `● Ready · ${nameOf(r.id)} · ${rungName(r.rung)}${r.place ? ` · ${r.place}` : ''}`,
   }))
   const more = ready.length > READY_LINES ? [{ key: 'ready:more', to: '/hearts?filter=ready', text: `+${ready.length - READY_LINES} more` }] : []
-  // F54 decision 10: the household's Ready offers, read live, after her Ready lines.
+  // The household's Ready offers, read live, after her Ready lines.
   const household = home.household.map((h): SummaryLine => ({ key: `household:${h.id}`, to: h.to, tag: 'Play', text: h.text }))
   const stored = hearts.map((line, i) => ({ line, i })).sort((a, b) => HEARTS_ORDER[a.line.kind] - HEARTS_ORDER[b.line.kind] || a.i - b.i)
   return [...now, ...more, ...household, ...stored.map(({ line }) => heartLine(line, nameOf, pairs, home))]
@@ -160,7 +161,7 @@ export function houseWords(line: Extract<HeartLine, { kind: 'house' }>, nameOf: 
 /** A stored §4 line in words, opening her profile. */
 function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, home: HomeWords = NO_HOME): SummaryLine {
   if (line.kind === 'side') return { key: 'side', to: '/warehouse', text: `Side by side · +${plural(line.items, 'item')}` }
-  // F54: the house's morning (its house line under it), a house that misses you, the Festival of Vows.
+  // The house's morning (its house line under it), a house that misses you, the Festival of Vows.
   if (line.kind === 'house') {
     const quote = home.houseLine(line)
     return { key: 'house', to: `/?sheet=homestead&house=${line.house}`, text: houseWords(line, nameOf, home.houseName), ...(quote ? { quote } : {}) }
@@ -193,7 +194,7 @@ function sectionLines(summary: MorningSummary | MorningSummaryV4, section: Summa
   const version = 'hearts' in summary ? 4 : 3
   switch (section) {
     case 'bin': {
-      // F19 decision 6: each good and star with its count and gold, the demand marked, then the total.
+      // Each good and star with its count and gold, the demand marked, then the total.
       const sold = summary.bin.map((sale): SummaryLine => ({
         key: `sold:${sale.id}@${sale.stars}`, to: '/?sheet=bin', text: `${goodName(sale.id)} ★${sale.stars} × ${sale.count} · ${gold(sale.gold)}`,
         ...(sale.demand ? { tag: 'In demand' } : {}),
@@ -214,7 +215,7 @@ function sectionLines(summary: MorningSummary | MorningSummaryV4, section: Summa
         }
       })
     case 'news':
-      // F18: the season and festivals; F24: the chapter done, a Farm Rank and what it opens, the Diary's milestones; F23:
+      // The season and festivals; the chapter done, a Farm Rank and what it opens, the Diary's milestones;
       // the Dorm's beds, swaps home, recruits, a visitor at the Gate and one who left.
       return summary.news.map((line): SummaryLine => {
         switch (line.kind) {
@@ -238,7 +239,7 @@ function sectionLines(summary: MorningSummary | MorningSummaryV4, section: Summa
         ? { key: 'idle', text: `${plural(line.umas.length, 'Uma')} idle`, to: version === 4 ? '/hearts?view=work' : '/roster' }
         : { key: 'seeds', text: `${plural(line.plots, 'plot')} to plant`, to: FIELDS })
     case 'ranks':
-      // F21: "Name · Farming Hand" for a rank-up; "Name · Farming · Harvest 30 crops she tended · 12/30" when her points
+      // "Name · Farming Hand" for a rank-up; "Name · Farming · Harvest 30 crops she tended · 12/30" when her points
       // filled and the challenge waits, naming the challenge in its own words with her count. Each opens her sheet.
       return summary.ranks.map((line): SummaryLine => line.kind === 'rank-up'
         ? { key: `rank-up:${line.outfitId}:${line.activity}`, to: umaSheet(line.outfitId, version, 'work'), text: `${nameOf(line.outfitId)} · ${ACTIVITY_NAMES[line.activity]} ${RANKS[line.rank]}`, tag: 'Rank up' }

@@ -3,7 +3,7 @@
 // name). Pure, so the screens and the tests read the same. Loaded on demand with the Hearts tab.
 import { goodName, rungName, type Activity, type Bar, type Readiness } from '@farm/domain'
 
-/** A working setup's place, as RM24 says it ("Romance 5 · the Pond, when she works it"). */
+/** A working setup's place, as the route says it ("Romance 5 · the Pond, when she works it"). */
 export const WORK_PLACE: Readonly<Record<Activity, string>> = {
   farming: 'the Fields', foraging: 'the forest', fishing: 'the Fishery', mining: 'the Mine', ranch: 'the ranch', cooking: 'the Kitchen',
   serving: 'the Restaurant', forging: 'the Forge', expeditions: 'an expedition',

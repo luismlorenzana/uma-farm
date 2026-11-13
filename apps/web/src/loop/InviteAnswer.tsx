@@ -1,4 +1,4 @@
-// The morning's invitation, answered (RM57's second line): under "✉ Stand-in 2: “Walk at
+// The morning's invitation, answered, a line of the morning's Hearts: under "✉ Stand-in 2: “Walk at
 // dusk tonight?”", **Yes, tonight** and **Another day** while it stands unanswered; then "Tonight ✓" with **Play ›** (her
 // evening over the morning, `?evening=`) once it's yes, or "Another day" once declined. The answer is `today.invites`',
 // read as the card shows. Loaded on demand, the romance build only.

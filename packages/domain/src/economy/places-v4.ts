@@ -1,5 +1,5 @@
 // Copied from uma-rpg packages/domain/src/economy/places-v4.ts at 30a322a, with its Wilds-only parts cut.
-// The Wilds' places (farm-by-line.md FL1–FL3): five rows of three, one line a row. The
+// The Wilds' places : five rows of three, one line a row. The
 // gathering place gathers its raw items, its workbench processes them, and its making place makes the items an Uma uses.
 import { isLineItemId, lineItem, type MaterialLine } from '../items/lines'
 import { madeIdentity, type MadeLine } from '../items/made-id'
@@ -42,10 +42,6 @@ export const PLACES_V4: readonly PlaceSpecV4[] = [
 const BY_ID = new Map(PLACES_V4.map((p) => [p.id, p]))
 export const placeSpecV4 = (placeId: string): PlaceSpecV4 | undefined => BY_ID.get(placeId as PlaceIdV3)
 
-/** Whether a place processes its line's raw items. */
-export const isProcessingPlaceV4 = (place: PlaceSpecV4): boolean => place.kinds.includes('refine')
-/** Whether a place makes an Uma's item. */
-export const isMakingPlaceV4 = (place: PlaceSpecV4): boolean => place.kinds.includes('craft') || place.kinds.includes('cut')
 
 /** The professions' names: the Forge's Arms Crafting, the Workbench's Tome Crafting. */
 export const PROFESSION_NAMES_V4: Readonly<Record<ProfessionId, string>> = Object.fromEntries(PROFESSIONS.map((p) => [p.id, p.name])) as Record<ProfessionId, string>

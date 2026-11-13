@@ -1,4 +1,4 @@
-// The crops: CS11's table row for row, and its Novice and Expert columns derived by CS12's rule.
+// The crops: the table row for row, and its Novice and Expert columns derived by the growth rule.
 import { describe, expect, it } from 'vitest'
 import { SEASONS } from '../farm/calendar'
 import { CROP_PRICES } from '../goods/rule'
@@ -7,7 +7,7 @@ import { CROPS, growsIn, nightsToReady, readyAt, SHOP_SEEDS } from './crops'
 import { TALENT_D } from '../farm/talents'
 import { tendedGrowth, UNTENDED_GROWTH } from './fields'
 
-/** CS11's "Days: untended · Novice · Expert" column, as the spec prints it. */
+/** The "Days: untended · Novice · Expert" column, as the table prints it. */
 const CS11_DAYS: Readonly<Record<string, [number, number, number]>> = {
   carrot: [4, 3, 3], potato: [6, 5, 4], mint: [4, 3, 3], onion: [5, 4, 3], cabbage: [8, 6, 5], asparagus: [10, 8, 7],
   tomato: [7, 6, 5], basil: [4, 3, 3], 'bell-pepper': [6, 5, 4], eggplant: [6, 5, 4], 'sunflower-seed': [8, 6, 5], corn: [9, 7, 6],
@@ -16,7 +16,7 @@ const CS11_DAYS: Readonly<Record<string, [number, number, number]>> = {
   'golden-carrot': [6, 5, 4], sunwheat: [7, 6, 5], moonrice: [7, 6, 5], 'wild-rice': [6, 5, 4], mandrake: [8, 6, 5],
 }
 
-describe('the crops (CS11)', () => {
+describe('the crops', () => {
   it('has the 27 crops, 22 from the shop and 5 rare', () => {
     expect(Object.keys(CROPS)).toEqual([...CROP_IDS])
     expect(Object.values(CROPS).filter((c) => c.tier !== 'rare')).toHaveLength(22)
@@ -28,7 +28,7 @@ describe('the crops (CS11)', () => {
     }
   })
 
-  it.each(CROP_IDS.map((id) => [id]))('%s: its Novice and Expert days follow from its untended days (CS12)', (id) => {
+  it.each(CROP_IDS.map((id) => [id]))('%s: its Novice and Expert days follow from its untended days', (id) => {
     const [untended, novice, expert] = CS11_DAYS[id]!
     expect(CROPS[id].days).toBe(untended)
     expect(nightsToReady(id, UNTENDED_GROWTH)).toBe(untended)
@@ -54,7 +54,7 @@ describe('the crops (CS11)', () => {
     expect(Object.values(CROPS).filter((c) => c.regrows !== null).map((c) => c.id)).toEqual(['mint', 'tomato', 'basil', 'bell-pepper', 'eggplant', 'corn'])
   })
 
-  it('sells six seeds a season by CS4\'s tiers: three at Farm Rank 1, two at FR2, one at FR4', () => {
+  it('sells six seeds a season by tier: three at Farm Rank 1, two at Farm Rank 2, one at Farm Rank 4', () => {
     for (const season of SEASONS) {
       const tiers = SHOP_SEEDS[season].map((id) => CROPS[id].tier)
       expect(tiers, season).toEqual([1, 1, 1, 2, 2, 4])
@@ -65,7 +65,7 @@ describe('the crops (CS11)', () => {
     expect(SHOP_SEEDS.winter.slice(3)).toEqual(['rye', 'cabbage', 'ginger'])
   })
 
-  it('carries over only where seasons join: Corn Summer → Autumn, Cabbage Winter → Spring (decision 6)', () => {
+  it('carries over only where seasons join: Corn Summer → Autumn, Cabbage Winter → Spring', () => {
     const next = (s: number) => SEASONS[(s + 1) % 4]!
     const carried = Object.values(CROPS).flatMap((c) => SEASONS.flatMap((season, i) => (growsIn(c.id, season) && growsIn(c.id, next(i)) ? [`${c.id} ${season}`] : [])))
     expect(carried).toEqual(['cabbage winter', 'corn summer'])

@@ -1,4 +1,4 @@
-// The price rule's numbers (D24 #12): one ladder of ten grades × the family's
+// The price rule's numbers: one ladder of ten grades × the family's
 // factor, refined ×1.5, made goods ×1.25 their inputs, crops at their own prices, +25% a star (never compounded), and +20%
 // for the season's demand. Data and arithmetic only: `ids.ts` gives every good its price ★1 from here, and `prices.ts`
 // adds stars and demand.
@@ -18,13 +18,13 @@ export const FAMILY_FACTOR: Readonly<Record<LadderFamily, number>> = {
   sweets: 1.1, fish: 1.3, 'hides-scales': 1.5, 'bones-horns': 1.6, essences: 1.8,
 }
 
-/** A station's 1 → 1 output sells at ×1.5 its input (CS9 rule 2). */
+/** A station's 1 → 1 output sells at ×1.5 its input. */
 export const REFINED_FACTOR = 1.5
-/** Made goods and dishes sell at ×1.25 the sum of their inputs at ★1 (CS9 rule 3). */
+/** Made goods and dishes sell at ×1.25 the sum of their inputs at ★1. */
 export const MADE_FACTOR = 1.25
-/** Each star above ★1 adds a quarter of the base, never compounded: ★5 is exactly twice ★1 (CS9 rule 5, D24 #12). */
+/** Each star above ★1 adds a quarter of the base, never compounded: ★5 is exactly twice ★1. */
 export const STAR_STEP = 0.25
-/** The season's demand adds a fifth, on top of the stars (CS9 rule 6). */
+/** The season's demand adds a fifth, on top of the stars. */
 export const DEMAND_LIFT = 0.2
 
 /** The crops' own prices ★1, wherever they come from: the seven that are also forest goods keep them. */

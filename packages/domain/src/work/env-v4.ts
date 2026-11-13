@@ -1,5 +1,5 @@
 // Copied from uma-rpg packages/domain/src/work/env-v4.ts at 30a322a, with its Wilds-only parts cut.
-// The farm's work env (farm-by-line.md FL1–FL10): fifteen places of four slots at ×1.25, each one
+// The farm's work env: fifteen places of four slots at ×1.25, each one
 // line and one kind. Craft EXP and who may work are `env.ts`'s; the trade gate and the open shop are R2's.
 import { buildingTable, type WorkEnv } from '@luismlorenzana/uma-work'
 import { PLACE_SLOTS_V3, PLACE_SPEED_V3 } from '../economy/professions'

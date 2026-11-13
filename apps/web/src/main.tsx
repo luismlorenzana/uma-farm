@@ -18,7 +18,7 @@ import { RouterProvider } from 'react-router'
 import { registerSW } from 'virtual:pwa-register'
 import { setTokenProvider } from './api/client'
 import { FIREBASE } from './app/firebase-config'
-// F11: `?stage=1` or `?stage=0` sets the HD-2D farm's preview on this device, before the router reads the address.
+// `?stage=1` or `?stage=0` sets the HD-2D farm's preview on this device, before the router reads the address.
 import './app/stage-boot'
 import { router } from './app/router'
 import { CONTENT } from './content/client'

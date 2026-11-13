@@ -1,6 +1,6 @@
-// The ring bench (romance spec RM38's mockup), `?sheet=bench` from the Forge's quick look on a v4
+// The ring bench (romance build), `?sheet=bench` from the Forge's quick look on a v4
 // farm: one row a grade you can make now with the three goods it would take (a tap on one swaps it for another of the
-// grade's goods), "→ Iron Ring"; CS25's recipe greyed "Opens with chapter 3"; her bonus once married; and **Make an Iron
+// grade's goods), "→ Iron Ring"; the recipe greyed "Opens with chapter 3"; her bonus once married; and **Make an Iron
 // Ring · 1 a day** in the thumb zone. A made ring is ★1 in the Warehouse; the bench says "One ring a day." until tomorrow.
 // Also the Forge's quick look on v4 once the bench stands (`BenchPeek`). Loaded on demand, the romance build only.
 import { benchOpen, BENCH_WORDS, goodName, ringName, type BenchInput, type SaveV4 } from '@farm/domain'

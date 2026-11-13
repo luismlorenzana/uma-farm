@@ -1,16 +1,16 @@
-// The evening: the day's one scarce choice. One evening a day across
-// all the Umas, a **hangout** with an Uma at Friendship 2 or more, a **date** from Romance 1, or any kind with a spouse,
-// played as one of D42's date games at its evening length (F49's plays), graded and never failed:
+// The evening: the day's one scarce choice. One evening a day across all the Umas, a **hangout** with an Uma at
+// Friendship 2 or more, a **date** from Romance 1, or any kind with a spouse, played as one of the date games at its
+// evening length (the heart events' plays), graded and never failed:
 //
 //   Fine 60 · Great 100 · Perfect 150, × 1.5 in her favourite kind, × 1.5 on her birthday, × 1.5 on her anniversary
-//   (each once, multiplied, rounded half up; RM17's anniversary ×1.5 in place of the day's ×2)
+//   (each once, multiplied, rounded half up; on her anniversary the evening takes ×1.5 in place of the day's ×2)
 //
 // **The slots:** one evening a day; a second on days divisible by 4 from 10 married; and on a festival day,
-// **festival night**, its own slot that only its kind fills. **Invitations:** each morning (night step 9) at most one Uma
-// invites you, two from 10 married, drawn by `draw(uid, day, 'invite', n)` among the Umas at Friendship 2+ who are home
-// and whose favourite kind is open to them today, weighted `1 + min(14, days since her last evening)`. **Yes** makes her
-// Tonight's evening and pays **+20** with it; **Another day** costs nothing. **Tonight** opens while a slot is free and
-// someone can spend it. Pure; the app stamps.
+// **festival night**, its own slot that only its kind fills. **Invitations:** each morning (night step 9) at most one
+// Uma invites you, two from 10 married, drawn by `draw(uid, day, 'invite', n)` among the Umas at Friendship 2+ who are
+// home and whose favourite kind is open to them today, weighted `1 + min(14, days since her last evening)`. **Yes**
+// makes her Tonight's evening and pays **+20** with it; **Another day** costs nothing. **Tonight** opens while a slot
+// is free and someone can spend it. Pure; the app stamps.
 import { festivalOn, type Festival } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { SaveRuleError } from '../save/rules'
@@ -25,8 +25,11 @@ import { PLAY_MAP, type PlayAs } from './plays/which'
 
 // --- The kinds ------------------------------------------------------------------------------------
 
-/** One evening kind (RM37's row): its words, the rung that opens it as a hangout (a friendship level) and as a date (a
- * romance level), its play, and the packet whose game it waits for. */
+/** What an evening kind waits for: the Kitchen, or the footrace. */
+export type EveningWait = 'kitchen' | 'footrace'
+
+/** One evening kind: its words, the rung that opens it as a hangout (a friendship level) and as a date (a romance
+ * level), its play, and the game it waits for. */
 export interface EveningKindDef {
   kind: EveningKind
   /** "Walk at dusk": the kinds sheet's row and the card's title. */
@@ -37,11 +40,11 @@ export interface EveningKindDef {
   hangout: number | null
   /** The romance level that opens it as a date. */
   date: number
-  /** RM25's play at its evening length (RM26's map); festival night walks. */
+  /** Its play at its evening length (`PLAY_MAP`); festival night walks. */
   play: PlayAs
-  /** The packet that builds its game (cooking F8's practice mode, the footrace F32's track): until then it isn't offered.
-   *Null: it plays now. */
-  waits: 'F8' | 'F32' | null
+  /** The game it waits for (cooking the Kitchen's practice mode, the footrace its track): until that's built it isn't
+   * offered. Null: it plays now. */
+  waits: EveningWait | null
   /** Her invitation, one original template a kind; festival night is never asked for. */
   question: string | null
 }
@@ -50,30 +53,30 @@ const kind = (k: EveningKind, name: string, short: string, hangout: number | nul
   kind: k, name, short, hangout, date, play: PLAY_MAP[k === FESTIVAL_NIGHT ? 'walk' : k], waits, question,
 })
 
-/** Friendship 2 opens hangouts (RM31's F2 perk); Romance 1 dates (R1). */
+/** Friendship 2 opens hangouts (her F2 perk); Romance 1 dates (R1). */
 export const HANGOUT_FROM = 2
 export const DATE_FROM = 1
 
-/** RM37's table, in its order, festival night last. */
+/** The evening kinds, in their order, festival night last. */
 export const EVENINGS: Readonly<Record<EveningKind, EveningKindDef>> = {
   walk: kind('walk', 'Walk at dusk', 'Walk', HANGOUT_FROM, DATE_FROM, 'Walk at dusk tonight?'),
   fishing: kind('fishing', 'Fishing at the Pond', 'Fishing', HANGOUT_FROM, DATE_FROM, 'Fishing tonight?'),
   picnic: kind('picnic', 'A picnic', 'Picnic', HANGOUT_FROM, DATE_FROM, 'A picnic tonight?'),
   market: kind('market', 'The market in town', 'Market', HANGOUT_FROM, DATE_FROM, 'The market in town tonight?'),
-  cooking: kind('cooking', 'Cooking together', 'Cooking', HANGOUT_FROM, DATE_FROM, 'Cook with me tonight?', 'F8'),
+  cooking: kind('cooking', 'Cooking together', 'Cooking', HANGOUT_FROM, DATE_FROM, 'Cook with me tonight?', 'kitchen'),
   crafting: kind('crafting', 'Crafting', 'Crafting', null, DATE_FROM, 'Make something with me tonight?'),
   stargazing: kind('stargazing', 'Stargazing at the overlook', 'Stargazing', null, 3, 'Stargazing tonight?'),
   dance: kind('dance', 'Dancing', 'Dancing', null, 6, 'Dance with me tonight?'),
   boat: kind('boat', 'A boat on the lake', 'Boat', null, 6, 'A boat on the lake tonight?'),
-  footrace: kind('footrace', 'A footrace', 'Footrace', null, 9, 'Race me tonight?', 'F32'),
+  footrace: kind('footrace', 'A footrace', 'Footrace', null, 9, 'Race me tonight?', 'footrace'),
   festival: kind('festival', 'Festival night', 'Walk', HANGOUT_FROM, DATE_FROM, null),
 }
 
-/** Whether a kind's game is built: cooking waits for F8, the footrace for F32. */
+/** Whether a kind's game is built: cooking waits for the Kitchen, the footrace for its track. */
 export const kindBuilt = (k: EveningKind): boolean => EVENINGS[k].waits === null
 /** Festival night is its own slot. */
 export const isFestivalNight = (k: EveningKind): k is typeof FESTIVAL_NIGHT => k === FESTIVAL_NIGHT
-/** The date games an evening plays as, RM37's order: every kind but festival night. */
+/** The date games an evening plays as, in the kinds' order: every kind but festival night. */
 export const EVENING_GAMES: readonly InviteKind[] = EVENING_KINDS.filter((k): k is InviteKind => k !== FESTIVAL_NIGHT)
 
 // --- Who ------------------------------------------------------------------------------------------
@@ -173,7 +176,7 @@ export function eveningMarks(save: Pick<SaveV4, 'calendar' | 'love' | 'today'>):
   ]
 }
 
-/** The kinds she can play now: RM37's order, each open to her by her ladders, its game built and
+/** The kinds she can play now, in their order, each open to her by her ladders, its game built and
  * its slot free (festival night only on a festival day). Empty when she isn't on the farm, isn't home or is below
  * Friendship 2. */
 export function kindsNow(save: SaveV4, id: string): EveningKind[] {

@@ -65,7 +65,7 @@ describe('the Firestore save store', () => {
     expect(store.has('saveBackups/u-v1')).toBe(false)
   })
 
-  it('backs up a stored v2 document whole before the first v3 write (F17), then refuses a v2 over it', async () => {
+  it('backs up a stored v2 document whole before the first v3 write, then refuses a v2 over it', async () => {
     const repo = new FirestoreSaveRepository('farm')
     const v2 = newSaveV2('u', NOW)
     await repo.put('u', 0, v2, 2)
@@ -89,10 +89,10 @@ describe('the Firestore save store', () => {
   })
 })
 
-describe("the romance build's first v4 over a stored v3 (F46 decision 2; RM10)", () => {
+describe("the romance build's first v4 over a stored v3", () => {
   beforeEach(() => { store.clear(); databases.length = 0 })
 
-  /** A played v3 as the live M4 build stores it, at revision 21. */
+  /** A played v3 as the deployed build stores it, at revision 21. */
   const OWNER: SaveV3 = { ...newSave('owner', '2026-11-08T09:12:44.000Z'), account: { uid: 'owner', createdAt: '2026-11-08T09:12:44.000Z', updatedAt: '2026-11-10T21:40:03.512Z' }, calendar: { day: 2 }, gold: 812 }
   const STORED = { revision: 21, save: JSON.stringify(OWNER), updatedAt: 'the server’s time' }
 
@@ -109,7 +109,7 @@ describe("the romance build's first v4 over a stored v3 (F46 decision 2; RM10)",
     expect(store.get('saveBackups/owner-v3')).toEqual({ ...STORED, backedUpAt: SERVER_TIME })
     const saved = store.get('saves/owner')!
     expect(JSON.parse(saved.save as string)).toEqual(JSON.parse(JSON.stringify(wiped)))
-    // The live M4 build, if it ever sent its v3 now, is refused and kept.
+    // The live deployed build, if it ever sent its v3 now, is refused and kept.
     const old = { baseRevision: 22, save: JSON.parse(JSON.stringify(touched(OWNER, '2026-11-11T08:00:00.000Z'))) }
     await expect(controller.put('owner', old)).rejects.toBeInstanceOf(ConflictException)
     expect(store.get('saveRescues/owner')).toEqual({ upload: JSON.stringify(old), reason: 'save version 3 is older than the stored 4', rescuedAt: SERVER_TIME })
@@ -121,10 +121,10 @@ describe("the romance build's first v4 over a stored v3 (F46 decision 2; RM10)",
   })
 })
 
-describe("the owner's first upload of the live loop (F24 decision 9)", () => {
+describe("the owner's first upload of the live loop", () => {
   beforeEach(() => { store.clear(); databases.length = 0 })
 
-  /** Production's one save as D17 has it: v2 from F4, no Umas, no items, no jobs, at revision 12. */
+  /** Production's one save as it was: v2 (the Wilds'), no Umas, no items, no jobs, at revision 12. */
   const OWNER = { version: 2, account: { uid: 'owner', createdAt: '2026-11-08T09:12:44.000Z', updatedAt: '2026-11-08T21:40:03.512Z' }, umas: {}, items: {}, buildings: {}, work: {} }
   const STORED = { revision: 12, save: JSON.stringify(OWNER), updatedAt: 'the server’s time' }
 

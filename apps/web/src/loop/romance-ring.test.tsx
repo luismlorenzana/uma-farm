@@ -1,8 +1,8 @@
 // The ring bench, the proposal and the wedding on screen, the switch on: Ida Stone's
 // scene over the farm, the Forge's quick look and the bench's sheet making a ring (a slot swapped), the proposal's ring
 // picker and its Engaged stage-up, the wedding's place, guests, reception and Married stage-up, her profile's engraving,
-// ring and better ring, and the switch off keeping M4's Forge. The invented stand-in pack (9000001–9000003) and invented
-// outfits; master data and the server are stubs.
+// ring and better ring, and the switch off keeping the deployed build's Forge. The invented stand-in pack
+// (9000001–9000003) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
 import { dateOf, farmPlace, gendersFarmer, joinOpening, newSave, newSaveV4, readScene, SEASON_NAMES, type Love, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
@@ -124,7 +124,7 @@ afterEach(async () => {
   vi.restoreAllMocks()
 })
 
-describe('the ring bench (decisions 3–5)', () => {
+describe('the ring bench', () => {
   it('opens with Ida Stone\'s scene once the summary is away; See the bench opens its sheet', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm({}, { ...bench, summary: null, diary: farm().diary }) })
     await render(<div />, '/')
@@ -186,7 +186,7 @@ describe('the ring bench (decisions 3–5)', () => {
   })
 })
 
-describe('the proposal (decision 8)', () => {
+describe('the proposal', () => {
   it('asks which ring, the best preselected, plays, uses the ring and closes on Engaged', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm({ stage: 'proposal', level: 10, points: 0, last: DAY - 1 }, { ...bench, items: items(['ring-g3', 1], ['ring-g5', 1]) }) })
     await render(<HeartsPage />, `/hearts?event=${ONE}`)
@@ -226,7 +226,7 @@ describe('the proposal (decision 8)', () => {
   })
 })
 
-describe('the wedding (decision 9)', () => {
+describe('the wedding', () => {
   it('asks the place, plays on its card with the guests, then the reception (Marta\'s cake), and closes on Married', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm({ stage: 'wedding', level: 10, points: 0, last: DAY - 1, ring: 3 }, bench) })
     await render(<HeartsPage />, `/hearts?event=${ONE}`)
@@ -266,7 +266,7 @@ describe('the wedding (decision 9)', () => {
     expect($$('[data-opens] li').map((l) => l.textContent)).toEqual([
       '· The spouse ladder, Spouse 1–5', '· Her ring: +3% at the Fields', '· Evenings: every kind her ladders opened',
       '· S1 · Breakfast: the crew starts well fed on a morning in her house', `· Your anniversary: ${SEASON_NAMES[date.season]} ${date.day}, each year`,
-      // F54 decision 4: her room, taken at once, and the house's mornings.
+      // Her room, taken at once, and the house's mornings.
       '· Her room: Farmhouse', '· House mornings: +30 for her each morning you sleep there',
     ])
     expect($('[data-married-line]')?.textContent).toBe('Married 1/3 · next household scene at 5')
@@ -276,7 +276,7 @@ describe('the wedding (decision 9)', () => {
   })
 })
 
-describe('her ring on her profile (decisions 6 and 7)', () => {
+describe('her ring on her profile', () => {
   it('shows the engraving from Romance 8, then her ring, its bonus and a better ring to give', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm({ stage: 'romance', level: 8, points: 0, last: 1 }, bench) })
     await render(<HeartsPage />, `/hearts?uma=${ONE}`)
@@ -314,7 +314,7 @@ describe('her ring on her profile (decisions 6 and 7)', () => {
   })
 })
 
-describe('the words (decision 10; RS2)', () => {
+describe('the words', () => {
   it('never gender the farmer', () => {
     const words = [
       ...Object.values(BENCH_TEXT).flat(), makeWords(3), withArticle('Orichalcum Ring'), ...Object.values(STAGE_WORDS).flatMap((w) => [w.title, w.line]),
@@ -322,15 +322,15 @@ describe('the words (decision 10; RS2)', () => {
       ...stageOpens('engaged', 'farming', { ring: 3 }), ...stageOpens('married', 'fishing', { ring: 3, wed: 21 }),
     ]
     expect(words.filter((w) => gendersFarmer(w))).toEqual([])
-    // F54: a milestone's own wedding says what opens tomorrow.
+    // A milestone's own wedding says what opens tomorrow.
     expect([makeWords(10), marriedWords(19, 20), marriedWords(20, 20), marriedWords(5, 20)]).toEqual([
       'Make an Orichalcum Ring · 1 a day', 'Married 19/20 · the finale at 20', 'Married 20/20 · the Great Harvest tomorrow', 'Married 5/20 · household scene 1 tomorrow',
     ])
   })
 })
 
-describe('the switch off (RM59)', () => {
-  it('keeps M4\'s Forge: locked by chapter 7 on v3, no bench sheet, no rings tab', async () => {
+describe('the switch off', () => {
+  it('keeps the deployed build\'s Forge: locked by chapter 7 on v3, no bench sheet, no rings tab', async () => {
     vi.stubEnv('VITE_FARM_ROMANCE', '0')
     const v3 = newSave('u1', AT)
     expect(lockOf(v3, farmPlace('forge')!)).toBe('Chapter 7')

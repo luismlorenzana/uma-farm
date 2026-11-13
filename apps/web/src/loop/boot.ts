@@ -2,7 +2,7 @@
 // since her calling's line comes from it. Loaded on demand: only a v2 or a new account reaches it. Nothing here moves
 // `account.updatedAt`, so two devices carrying the same save over agree, and the conflict rule still sees the player's
 // last change. A roster under three isn't filled here: the start's sheet asks for the picks, which replaced
-// F17's temporary ones.
+// temporary ones.
 import { migrateToV3, newSave, newSaveV4, type SaveV3, type SaveV4, type StoredSave } from '@farm/domain'
 import { masterReady } from '../master/master'
 

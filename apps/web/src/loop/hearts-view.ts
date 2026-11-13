@@ -2,20 +2,19 @@
 // level, the ladder's hearts as a bar, what's banked, today's ticks and chips; Ready first, then the least progress, then
 // the cast's order; the filters with their counts; the header's "Married n/N"; and her profile's parts (the route as one
 // track, the Next card, the perks, the gifts as learnt, her ties with their bond hearts). The morning's Ready lines and the
-// map's ♥ badges read Ready here too, live (F47 decision 14: never stored). Pure, from F47's `readiness`, `bar` and
+// map's ♥ badges read Ready here too, live (never stored). Pure, from `readiness`, `bar` and
 // `levelWords`, so the screens and the tests read the same. Loaded on demand with the tab and the farm map.
 //
-// F52 extends `tieRows` (the hearts move with `save.bonds`, her closest friend first and marked, a conversation to Read)
+// `tieRows` (the hearts move with `save.bonds`, her closest friend first and marked, a conversation to Read)
 // and adds the pairs' words for the morning and the Diary (`pairWords`, `conversationRows`), all over `farm/bonds.ts`.
 //
-// F50 fills `invited` (her invitation stands, unanswered or yes and not yet spent: `invitedNow`); the header's evening
-// marks are `evening-view.ts`'. For later packets: F54 adds her house to the row's note and the track's colours stay as
-// they are.
+// `invited` (her invitation stands, unanswered or yes and not yet spent: `invitedNow`); the header's evening
+// marks are `evening-view.ts`'. Her house is in the row's note, and the track's colours stay as they are.
 //
-// F51 adds what each reached perk does now (`perkNow`: "+28% at the forest · +8% ring", "2 items each night", "Next in 3
-// mornings"), her closest friend's loved gift to Gifts from Friendship 7 (`friendLoved`), and her pet name and keepsake
-// once reached (`fromHer`). F53 adds her Ring (`ringView`: the engraving from Romance 8, her ring and its bonus, and the
-// better rings in the Warehouse) and R8's engraving in her perks.
+// It words what each reached perk does now (`perkNow`: "+28% at the forest · +8% ring", "2 items each night", "Next
+// in 3 mornings"), her closest friend's loved gift in Gifts from Friendship 7 (`friendLoved`), and her pet name and
+// keepsake once reached (`fromHer`). Her Ring (`ringView`: the engraving from Romance 8, her ring and its bonus, and
+// the better rings in the Warehouse) and R8's engraving in her perks.
 import {
   homeOf, NEEDS_ROOM, OWN_HOUSE_WISH,
   atHome,
@@ -119,14 +118,14 @@ const STAGE_FILTER: Readonly<Record<LoveStage, HeartFilter>> = {
 export interface HeartRow {
   id: string
   name: string
-  /** "Friend · F7", "Partner · R4", "Engaged" (F47's `levelWords`). */
+  /** "Friend · F7", "Partner · R4", "Engaged" (the `levelWords`). */
   level: string
   stage: LoveStage
   bar: Bar
   heart: HeartBar
   state: Readiness
   home: boolean
-  /** Today's invitation from her (F50 fills `today.invites`). */
+  /** Today's invitation from her (`today.invites`). */
   invited: boolean
   chatted: boolean
   gifted: boolean
@@ -212,9 +211,6 @@ export function readyLines(save: SaveV4, pack: HeartsPack): ReadyLine[] {
   }).sort(heartOrder).map(({ id, rung, place }) => ({ id, rung, place }))
 }
 
-/** The Umas whose pip carries ♥ on the map. */
-export const readyIds = (save: SaveV4, pack: HeartsPack): ReadonlySet<string> => new Set(readyLines(save, pack).map((l) => l.id))
-
 // --- Her profile -----------------------------------------------------------------------------------------
 
 /** The ladder a rung is on: her confession friendship's, the proposal and the wedding romance's. */
@@ -254,7 +250,7 @@ export interface NextCard {
   perk: Perk | null
   hint: string | null
   bar: Bar
-  /** F47's waits in words: "Ready", "Tomorrow", "Needs a ring", "Swap her home", "Opens with chapter 3". */
+  /** Her waits in words: "Ready", "Tomorrow", "Needs a ring", "Swap her home", "Opens with chapter 3". */
   words: string
   ready: boolean
   waits: Wait['kind'] | null
@@ -392,7 +388,7 @@ export function perkList(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' |
   })
 }
 
-/** Her closest friend's loved gift (RM31's F7): from Friendship 7, the friend's loved good when her bible
+/** Her closest friend's loved gift: from Friendship 7, the friend's loved good when her bible
  * names one that's in the game. */
 export function friendLoved(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'ties'>, id: string): { friend: string; good: string } | null {
   if (!hasPerk(save.love[id], 'f7')) return null
@@ -462,7 +458,7 @@ export interface TieRow {
   words: string
   strength: Tie['strength']
   points: number
-  /** CS44's bond hearts, 0–5 (`bondHearts`). */
+  /** The bond hearts, 0–5 (`bondHearts`). */
   hearts: number
   /** The points the next heart comes at, or null at five. */
   next: number | null
@@ -562,11 +558,8 @@ export function profileLine(save: Pick<SaveV4, 'love' | 'homestead'>, pack: Pick
   ]
 }
 
-/** A spouse's room on her Hearts row (F48's seam): her house's name, or "Needs a room". */
+/** A spouse's room on her Hearts row (the seam): her house's name, or "Needs a room". */
 export function roomNote(save: Pick<SaveV4, 'love' | 'homestead'>, pack: Pick<StoryPack, 'bibles'>, id: string): string | null {
   const home = homeOf(save, pack, id)
   return home === null ? null : home.needs ? NEEDS_ROOM : home.name
 }
-
-/** Her Memories' count: one a rung with an event, 26 in all (S2 and S4 have none). */
-export const MEMORY_RUNGS = ROUTE_RUNGS.length - 2

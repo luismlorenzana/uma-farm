@@ -44,7 +44,7 @@ const start = (save: SaveV3, input: LoopJobInput, talentOf: TalentOf = C) => sta
 const night = (save: SaveV3, talentOf: TalentOf = C) => endDay(save, { roster: [], talentOf }, LATER)
 const terms = (t: Partial<WorkTerms> = {}): WorkTerms => ({ rank: 0, talent: 4, tool: 1, wellFed: 0, ...t })
 
-describe('the tables (CS15, CS16)', () => {
+describe('the tables', () => {
   it('lists every area and spot by season, each season\'s shares adding up to 100, every good in the catalogue', () => {
     expect(Object.keys(FOREST)).toEqual([...FOREST_AREAS])
     expect(Object.keys(FISHERY)).toEqual([...FISHING_SPOTS])
@@ -109,7 +109,7 @@ describe('the tables (CS15, CS16)', () => {
   })
 })
 
-describe('a day\'s haul (CS17; decision 1)', () => {
+describe('a day\'s haul', () => {
   it('brings a Novice C forager in the Woods 5 items a day, and a Hand C angler at the River 4', () => {
     expect(haulCount('forest', terms())).toBe(5)
     expect(haulCount('fishery', terms({ rank: 1 }))).toBe(4)
@@ -127,7 +127,7 @@ describe('a day\'s haul (CS17; decision 1)', () => {
     expect(haulCount('fishery', terms({ talent: 0 }))).toBe(3)
   })
 
-  it('refuses the Hills at Novice and opens them at Hand; refuses the Sea Pier in M4', () => {
+  it('refuses the Hills at Novice and opens them at Hand; refuses the Sea Pier on v3', () => {
     expect(() => start(farm(), job('forest', forage('hills')))).toThrow('Opens at Hand.')
     expect(start(ranked(farm(), '101', 'foraging', 1), job('forest', forage('hills'))).work['101']!.entries).toHaveLength(1)
     expect(() => start(ranked(farm(), '101', 'fishing', 5), job('fishery', fish('sea-pier')))).toThrow('Opens with Chapter 7.')
@@ -179,7 +179,7 @@ describe('a day\'s haul (CS17; decision 1)', () => {
   })
 })
 
-describe('collecting a haul (decisions 3 and 7)', () => {
+describe('collecting a haul', () => {
   it('fills the Warehouse by stars and counts what came home', () => {
     const morning = night(start(farm(), job('forest', forage('woods'))))
     const got = collectLoopWorker(morning, '101', LATER, loopKinds(C))
@@ -229,7 +229,7 @@ describe('collecting a haul (decisions 3 and 7)', () => {
   })
 })
 
-describe('the night\'s hauls (decision 7; CS30)', () => {
+describe('the night\'s hauls', () => {
   it('counts catches and items toward her next rank\'s challenge, at the right places', () => {
     const save = start(start(ranked(farm(), '202', 'fishing', 1), job('forest', forage('woods'))), job('fishery', fish('river'), '202'))
     const morning = night(save)
@@ -264,7 +264,7 @@ describe('the night\'s hauls (decision 7; CS30)', () => {
   })
 })
 
-describe('the stations (CS18; decisions 2 and 6)', () => {
+describe('the stations', () => {
   const sawmill = (save: SaveV3): SaveV3 => ({ ...save, buildings: { ...save.buildings, sawmill: 1, mill: 1, smokehouse: 1 } })
 
   it('saws a Hand C forager\'s 10 logs a day, ★3 logs into ★3 planks', () => {
@@ -343,7 +343,7 @@ describe('the stations (CS18; decisions 2 and 6)', () => {
   })
 })
 
-describe('the save (decision 1; F17 decision 11)', () => {
+describe('the save', () => {
   it('parses every kind\'s request at its place, an entry with more items than days, and refuses the rest', () => {
     const save = sawmill2(start(farm(), job('forest', forage('woods', 2))))
     expect(parseSaveV3(json(save))).toEqual(save)

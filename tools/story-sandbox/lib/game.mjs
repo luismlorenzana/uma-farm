@@ -1,5 +1,5 @@
 // The story as the game has it: @farm/domain's TypeScript read in place with Node's type stripping, so the sandbox
-// shows chapter 1 (and every chapter a packet builds after it) exactly as it plays. It reads the town's cast, the
+// shows chapter 1 (and every chapter built after it) exactly as it plays. It reads the town's cast, the
 // hello lines, every `scene:<n>:<open|close>` the story files export, the farm's places, the temperaments and the
 // activities. Nothing is copied: edit a story file and the next request reads it again. Needs Node's type stripping
 // (`--experimental-strip-types` before Node 22.18; `pnpm stories` passes it).
@@ -55,7 +55,7 @@ export async function loadGame(src) {
       statTemperament: { ...talents.STAT_TEMPERAMENT },
       activities: [...ranks.ACTIVITIES],
       callings: [...lines.MATERIAL_LINES],
-      /** F40's authored format: its vocabulary for the page, and the validator the server runs (never sent as JSON). */
+      /** The authored format: its vocabulary for the page, and the validator the server runs (never sent as JSON). */
       authored: {
         rungs: [...authored.RUNGS], places: [...authored.STORY_PLACES], festivals: [...authored.FESTIVALS], tieKinds: [...authored.TIE_KINDS],
         dateGames: [...authored.DATE_GAMES], tones: [...authored.TONES], emotes: [...authored.EMOTES], callings: [...authored.CALLINGS],

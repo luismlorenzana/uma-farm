@@ -62,7 +62,7 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-describe('the roster\'s cards (decision 7)', () => {
+describe('the roster\'s cards', () => {
   it('shows each Uma\'s favourite line and best talent on her face, and her best rank', async () => {
     await render(<RosterPage />, '/roster')
     expect($$('[data-roster-cards] [data-uma]').map((b) => b.getAttribute('data-uma'))).toEqual(IDS)
@@ -85,7 +85,7 @@ describe('the roster\'s cards (decision 7)', () => {
   })
 })
 
-describe('the tender\'s picker (decision 7)', () => {
+describe('the tender\'s picker', () => {
   it('shows her farming rank and talent, opening by farming', async () => {
     useGame.setState({ save: setTender(farm(), 'A', '81002') })
     await render(<FieldsPage />, '/fields?tend=A')

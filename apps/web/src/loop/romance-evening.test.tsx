@@ -124,7 +124,7 @@ afterEach(async () => {
   vi.restoreAllMocks()
 })
 
-describe('an evening from her profile (decisions 4–6)', () => {
+describe('an evening from her profile', () => {
   it('shows her kinds with her numbers, plays a Walk at its evening length, and pays it on the card once', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm({ [TWO]: { level: 2 } }) })
     const before = save().account.updatedAt
@@ -180,7 +180,7 @@ describe('an evening from her profile (decisions 4–6)', () => {
   })
 })
 
-describe('the morning\'s invitation (decision 7)', () => {
+describe('the morning\'s invitation', () => {
   it('words her line, and Yes makes her Tonight\'s evening with +20; the row\'s ✉ stands until it\'s spent', async () => {
     expect(heartsLines([{ kind: 'invite', id: TWO, evening: 'walk' }, { kind: 'birthday', id: ONE, when: 'today' }], [], (id) => (id === TWO ? 'Stand-in 2' : 'Stand-in 1'))
       .map((l) => [l.text, l.invite ?? null])).toEqual([['✉ Stand-in 2: “Walk at dusk tonight?”', TWO], ['★ Stand-in 1’s birthday today', null]])
@@ -228,7 +228,7 @@ describe('the morning\'s invitation (decision 7)', () => {
   })
 })
 
-describe('Tonight (decision 8)', () => {
+describe('Tonight', () => {
   beforeEach(() => {
     const items = new Map<string, string>()
     vi.stubGlobal('localStorage', { getItem: (k: string) => items.get(k) ?? null, setItem: (k: string, v: string) => void items.set(k, v), removeItem: (k: string) => void items.delete(k) })
@@ -269,7 +269,7 @@ describe('Tonight (decision 8)', () => {
     expect(save().today.evenings).toEqual([])
   }, 20_000)
 
-  it('stays shut when nobody can spend an evening: F18\'s one line', async () => {
+  it('stays shut when nobody can spend an evening: the one line', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
     await render(<p />, '/?sheet=end')
     await find('[data-end-line]')

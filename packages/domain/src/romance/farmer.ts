@@ -31,8 +31,6 @@ export const farmerNameIssue = (raw: string): string | null => nameIssue(raw, FA
 
 /** A house's name: the farmer's letters rule, 1–20 characters. */
 export const HOUSE_NAME_MAX = 20
-/** What fills a house's empty name field (grey, never stored). */
-export const HOUSE_PLACEHOLDER = 'Rose Cottage'
 export const houseNameIssue = (raw: string): string | null => nameIssue(raw, HOUSE_NAME_MAX)
 
 /** The farmer named, or renamed: a player's change, which the app stamps. Refused with the sheet's words. */

@@ -15,7 +15,7 @@ describe('the stand-in story passes', () => {
     expect(routeIssues(STAND_IN_ROUTE, STAND_IN_BIBLE, ctx)).toEqual([])
     expect(pairIssues(STAND_IN_PAIR, ctx)).toEqual([])
   })
-  it('has the 27 rungs of RS7 as D43 and F46 amend it: her arrival first, ending on the spouse ladder', () => {
+  it('has the route’s 27 rungs: her arrival first, ending on the spouse ladder', () => {
     expect(RUNGS).toHaveLength(27)
     expect(RUNGS[0]).toBe('arrival')
     expect(RUNGS.slice(-4)).toEqual(['wedding', 's1', 's3', 's5'])
@@ -29,7 +29,7 @@ describe('the cast and the ties', () => {
     cast.umas.push({ ...cast.umas[0]!, characterId: '9000009' })
     const issues = castIssues(cast, ctx)
     expect(issues).toContain('Uma 4 (9000009): not in the export’s cast')
-    expect(issues).toContain('The opening three are, in order, a farmer, a forager and a fisher (RS13, CS42)')
+    expect(issues).toContain('The opening three are, in order, a farmer, a forager and a fisher')
     expect(issues).toContain('Exactly three Umas arrive at the opening')
     expect(castIssues({ ...clone(STAND_IN_CAST), umas: clone(STAND_IN_CAST).umas.slice(0, 2) }, ctx)).toContain('9000003 from the export has no place in the cast')
   })
@@ -38,7 +38,7 @@ describe('the cast and the ties', () => {
     ties.ties = [ties.ties[0]!, { ...ties.ties[0]!, kind: 'rivals' }]
     const issues = tiesIssues(ties, ctx)
     expect(issues).toContain('Tie 2: 9000001|9000002 is tied twice')
-    expect(issues).toContain('9000003 has 0 ties; every Uma needs two closest (RS12)')
+    expect(issues).toContain('9000003 has 0 ties; every Uma needs at least two')
   })
 })
 
@@ -55,16 +55,16 @@ describe('the bible', () => {
     bible.route = bible.route.filter((b) => b.id !== 's5')
     bible.route[1] = { ...bible.route[1]!, together: { kind: 'date', game: 'karaoke' as never }, hint: '' }
     const issues = bibleIssues(bible, ctx)
-    expect(issues).toContain('Her route has no s5 (RS7)')
+    expect(issues).toContain('Her route has no s5 (a route has all 27 rungs)')
     expect(issues.some((i) => /Beat f1: a date is one of/.test(i))).toBe(true)
-    expect(issues).toContain('Beat f1: no hint, the line her profile shows while it’s next (D43)')
+    expect(issues).toContain('Beat f1: no hint, the line her profile shows while it’s next')
   })
-  it('nothing waits on the calendar: no season, festival, clock or weather trigger (D43)', () => {
+  it('nothing waits on the calendar: no season, festival, clock or weather trigger', () => {
     const bible = clone(STAND_IN_BIBLE)
     bible.route[1] = { ...bible.route[1]!, trigger: { kind: 'season', season: 'spring' } as never }
     bible.route[2] = { ...bible.route[2]!, trigger: { kind: 'item', good: 'golden-carrot' } }
     const issues = bibleIssues(bible, ctx)
-    expect(issues).toEqual(['Beat f1: a trigger is hearts, working, item, bond or chapter; never a clock, the weather, a season or a festival (D43)'])
+    expect(issues).toEqual(['Beat f1: a trigger is hearts, working, item, bond or chapter; never a clock, the weather, a season or a festival'])
   })
 })
 
@@ -78,10 +78,10 @@ describe('the scripted steps', () => {
       { say: STAND_IN, line: 'Like my old classmates.' },
     ], 'Event', speakers)
     expect(issues).toEqual([
-      'Event, step 1: “sir” genders the farmer (RS2)',
-      'Event, step 2, option 1: “husband” genders the farmer (RS2)',
-      'Event, step 3: “bride” genders the farmer (RS2)',
-      'Event, step 5: “classmates” reads as school (RS3)',
+      'Event, step 1: “sir” genders the farmer',
+      'Event, step 2, option 1: “husband” genders the farmer',
+      'Event, step 3: “bride” genders the farmer',
+      'Event, step 5: “classmates” reads as school',
     ])
   })
   it('choices: 2–3 options, a tone each, gains shown and never negative, one that gains', () => {
@@ -90,8 +90,8 @@ describe('the scripted steps', () => {
       { choice: [{ text: 'Cold.', tone: 'cruel' as never, friendship: -10 }, { text: 'Flat.', tone: 'honest' }] },
     ], 'Event', speakers)
     expect(issues).toContain('Event, step 1: a choice has 2–3 options')
-    expect(issues).toContain('Event, step 2, option 1: tone is warm, playful or honest (RS19)')
-    expect(issues).toContain('Event, step 2, option 1: friendship is 0–50 (no answer costs hearts, RS19)')
+    expect(issues).toContain('Event, step 2, option 1: tone is warm, playful or honest')
+    expect(issues).toContain('Event, step 2, option 1: friendship is 0–50 (no answer costs hearts)')
     expect(issues).toContain('Event, step 2: at least one option gains hearts')
   })
   it('only the cast speaks; {farmer} is the one placeholder', () => {
@@ -113,7 +113,7 @@ describe('the scripted steps', () => {
   })
 })
 
-describe('heart events (F49 decision 14)', () => {
+describe('heart events', () => {
   const say = (line: string) => ({ say: STAND_IN, line })
   const choose = (extra: Record<string, unknown> = {}) => ({ choice: [{ text: 'Yes.', tone: 'warm' as const, friendship: 20, ...extra }, { text: 'No.', tone: 'honest' as const, friendship: 10 }] })
   const play = (game = 'fishing', extra: Record<string, unknown> = {}) => ({ play: { game, prompt: 'Together', ...extra } })
@@ -186,15 +186,15 @@ describe('heart events (F49 decision 14)', () => {
   })
 })
 
-describe('the cast on the Ranker (F58)', () => {
+describe('the cast on the Ranker', () => {
   it('records the Ranker’s revisions, optional and checked when present', () => {
     expect(castIssues({ ...clone(STAND_IN_CAST), ranker: { boardRevision: 337, profilesRevision: 6, pulledAt: '2026-11-12T10:00:00Z' } }, ctx)).toEqual([])
     expect(castIssues({ ...clone(STAND_IN_CAST), ranker: { boardRevision: 0, profilesRevision: 6, pulledAt: 'yesterday' } }, ctx))
-      .toEqual(['ranker is { boardRevision, profilesRevision, pulledAt }: two revisions from 1 and a date (F58)'])
+      .toEqual(['ranker is { boardRevision, profilesRevision, pulledAt }: two revisions from 1 and a date'])
   })
 })
 
-describe('the tag sheet and the ties’ sources (F59)', () => {
+describe('the tag sheet and the ties’ sources', () => {
   const tag = (characterId: string, change: Partial<TagEntry> = {}): TagEntry => ({
     characterId, favouriteLine: 'farming', season: 'spring', festival: 'flower-show', loved: 'golden-carrot',
     reasons: { favouriteLine: 'An invented reason.', season: 'An invented reason.', festival: 'An invented reason.', loved: 'An invented reason.' }, ...change,
@@ -208,7 +208,7 @@ describe('the tag sheet and the ties’ sources (F59)', () => {
       'Tags 9000001: loved moon-cake isn’t a good; mark it proposed if it’s a new one',
       'Tags 9000002: unknown season',
       'Tags 9000002: a one-line reason for favouriteLine',
-      'Tags 9000002 loved: “husband” genders the farmer (RS2)',
+      'Tags 9000002 loved: “husband” genders the farmer',
       'Tags 9000002: twice',
       '9000003 has no tags',
     ])
@@ -217,8 +217,8 @@ describe('the tag sheet and the ties’ sources (F59)', () => {
   it('her bible agrees with her tags', () => {
     expect(bibleTagIssues(STAND_IN_BIBLE, tag(STAND_IN))).toEqual([])
     expect(bibleTagIssues(STAND_IN_BIBLE, tag(STAND_IN, { season: 'winter', loved: 'carrot' }))).toEqual([
-      'season: the bible says spring, the tag sheet winter (F59)',
-      'loved: the bible says golden-carrot, the tag sheet carrot (F59)',
+      'season: the bible says spring, the tag sheet winter; they must agree',
+      'loved: the bible says golden-carrot, the tag sheet carrot; they must agree',
     ])
   })
   it('a tie says where it comes from: real (with uma-quest’s relationship id once it exists) or story', () => {
@@ -227,6 +227,6 @@ describe('the tag sheet and the ties’ sources (F59)', () => {
     ties.ties[1] = { ...ties.ties[1]!, source: 'story' }
     expect(tiesIssues(ties, ctx)).toEqual([])
     ties.ties[1] = { ...ties.ties[1]!, source: 'legend' as never, from: 'rel-0002' }
-    expect(tiesIssues(ties, ctx)).toEqual(['Tie 2: source is real or story (F59)', 'Tie 2: from is a real tie’s relationship id (F59)'])
+    expect(tiesIssues(ties, ctx)).toEqual(['Tie 2: source is real or story', 'Tie 2: from is a real tie’s relationship id'])
   })
 })

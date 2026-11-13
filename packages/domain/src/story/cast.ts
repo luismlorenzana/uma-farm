@@ -1,5 +1,5 @@
 // The town's cast: eleven original people, whose names and lines live in git. Umas never
-// appear here: they speak only in roles the app fills at runtime from master data (CS41's roles). M4's scenes speak
+// appear here: they speak only in roles the app fills at runtime from master data (the cast's roles). v3's scenes speak
 // three of them (the Mayor, Marta, Old Ben) and name a fourth (Dale Hart); the rest arrive with their chapters.
 
 export const CAST_IDS = [
@@ -15,13 +15,13 @@ export interface CastMember {
   readonly is: string
   /** The chapter that first brings them in (1 for the rivals: the Flower Show). */
   readonly from: number
-  /** uma-art's bust key (F25's `cast` atlas); a lettered disc until it ships. */
+  /** uma-art's bust key (the `cast` atlas); a lettered disc until it ships. */
   readonly art: string
 }
 
 const member = (id: CastId, name: string, is: string, from: number): CastMember => ({ id, name, is, from, art: `cast/${id}` })
 
-/** CS41's table. */
+/** The cast table. */
 export const CAST: Readonly<Record<CastId, CastMember>> = {
   'hollis-pryor': member('hollis-pryor', 'Mayor Hollis Pryor', 'Runs the town; opens each chapter', 1),
   'marta-quill': member('marta-quill', 'Marta Quill', 'Keeps the general store (the shop)', 1),
@@ -36,5 +36,5 @@ export const CAST: Readonly<Record<CastId, CastMember>> = {
   'cole-varga': member('cole-varga', 'Cole Varga', 'Rival: Varga Ranch, animals and fishing', 1),
 }
 
-/** The letter on a cast member's disc until F25's busts ship: the first letter of their given name. */
+/** The letter on a cast member's disc until the busts ship: the first letter of their given name. */
 export const castInitial = (id: CastId): string => CAST[id].name.replace(/^(Mayor|Old|Captain) /, '').charAt(0)

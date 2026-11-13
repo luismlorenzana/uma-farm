@@ -1,9 +1,9 @@
 // Copied from uma-rpg packages/domain/src/items/made-v4.ts at 30a322a, with its Wilds-only parts cut.
-// The farm by line's recipes (farm-by-line.md FL7): a made item takes one line's refined items of
+// The farm by line's recipes: a made item takes one line's refined items of
 // its own grade, the same amount at every grade (a jewel's grade is its node's: Planet n 2n − 1, Moon n 2n). An Arms Gem
 // (R2's Weapon Gem, renamed) or Tome Ink 10, Armor Fittings 3, an Accessory Setting 5, a Planet Jewel or a Moon Jewel 5, so
 // one rank of everything takes two Umas, one on Arms and one on Tomes, exactly 30 refined items on each of the five lines
-// (FL9's successor): 3 × 10, 5 × 3 × 2, 3 × 5 × 2, 3 × 5 × 2. Live since H112 (save v30).
+// (3 × 10, 5 × 3 × 2, 3 × 5 × 2, 3 × 5 × 2.
 import { lineItemId, type MaterialLine } from './lines'
 import { madeName } from './made'
 import { madeIdentity, type MadeLine } from './made-id'
