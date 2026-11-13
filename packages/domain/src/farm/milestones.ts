@@ -53,20 +53,16 @@ export interface DiaryRow {
   readonly goods: readonly string[]
 }
 export const ROW_GOLD = 500
-/** The 26 rows: the fifteen families' raw goods, then the eleven families with refined forms. */
-export const DIARY_ROWS: readonly DiaryRow[] = [false, true].flatMap((refined) => GOOD_FAMILIES.flatMap((family): DiaryRow[] => {
+/** The rings' row: its ten rings each shipped once. */
+export const RING_ROW: DiaryRow = { id: `row:${RING_FAMILY}`, family: RING_FAMILY, refined: false, goods: RING_IDS }
+/** The 27 rows: the fifteen families' raw goods, then the eleven families with refined forms, then the rings'. */
+export const DIARY_ROWS: readonly DiaryRow[] = [...[false, true].flatMap((refined) => GOOD_FAMILIES.flatMap((family): DiaryRow[] => {
   const goods = GOODS.filter((g) => g.family === family && g.refined === refined).map((g) => g.id)
   return goods.length > 0 ? [{ id: `row:${family}${refined ? ':refined' : ''}`, family, refined, goods }] : []
-}))
-/** The rings' row: v4's catalogue only, its ten rings each shipped once. */
-export const RING_ROW: DiaryRow = { id: `row:${RING_FAMILY}`, family: RING_FAMILY, refined: false, goods: RING_IDS }
-/** v4's 27 rows: v3's 26, then the rings'. */
-export const DIARY_ROWS_V4: readonly DiaryRow[] = [...DIARY_ROWS, RING_ROW]
-/** The rows a save's version pays: v3's 26 (as live), or v4's 27. */
-export const diaryRowsOf = (version: number): readonly DiaryRow[] => (version >= 4 ? DIARY_ROWS_V4 : DIARY_ROWS)
-const ROW_BY_ID = new Map(DIARY_ROWS_V4.map((r) => [r.id, r]))
-/** A row by its id, either version's (the morning's words read it). */
+})), RING_ROW]
+const ROW_BY_ID = new Map(DIARY_ROWS.map((r) => [r.id, r]))
+/** A row by its id (the morning's words read it). */
 export const diaryRowOf = (id: string): DiaryRow | undefined => ROW_BY_ID.get(id)
 
-/** What the Diary has paid (`diary.milestones`): a milestone or a row, of a save's version (the rings' row is v4's). */
-export const isDiaryPaidId = (id: string, version = 3): boolean => MILESTONE_BY_ID.has(id) || diaryRowsOf(version).some((r) => r.id === id)
+/** What the Diary has paid (`diary.milestones`): a milestone or a row. */
+export const isDiaryPaidId = (id: string): boolean => MILESTONE_BY_ID.has(id) || ROW_BY_ID.has(id)

@@ -1,28 +1,28 @@
-// The v3 Warehouse's ids: the goods priced by the ladder or as crops, plus seeds.
+// The Warehouse's ids: the goods priced by the ladder or as crops, plus seeds.
 // Written from uma-art 2.21.0's `items/atlas.json`: every good's id, family and grade are uma-art's own, so names and
 // icons come from ids as today (a web test checks each id is on the atlas). 260 goods: 27 crops and 10 flours, the
 // forest's 113, mining's 60, fishing's 20 and expeditions' 30. The ranch's, the dishes' and the Forge's goods join with
 // their screens. Each gets its price ★1 by the one rule (`rule.ts`) and a refined good its
 // input.
 //
-// **The rings** are the v4 catalogue's own family: the ten, `ring-g1` …
+// **The rings** are the catalogue's own family: the ten, `ring-g1` …
 // `ring-g10`, at its ★1 prices, made at the ring bench (`romance/bench.ts`) and drawn on uma-art's `accessory-setting`
-// frames. They're apart from `GOODS`, so v3's catalogue (its families, its Diary rows, its parse) is the live one:
-// `goodOf` prices and names a ring, `isGoodId` stays v3's, and v4 reads `isGoodIdV4`.
+// frames. They're apart from `GOODS` (the 260): `goodOf` prices and names a ring, `isGoodId` is the 260's, and
+// `isGoodOrRingId` takes the rings too (the bin, the Diary).
 import { itemNameOf } from '../items/lines'
 import { CROP_PRICES, ladderPrice, refinedPrice, type LadderFamily } from './rule'
 
-/** uma-art's families the v3 goods come from. */
+/** uma-art's families the 260 goods come from. */
 export const GOOD_FAMILIES = [
   'grains', 'vegetables', 'herbs-spices', 'nuts-seeds', 'sweets', 'fruits', 'mushrooms', 'woods',
   'ores', 'stones', 'crystals', 'fish', 'hides-scales', 'bones-horns', 'essences',
 ] as const
-/** The rings' family: the v4 catalogue's only, never in `GOOD_FAMILIES`. */
+/** The rings' family, never in `GOOD_FAMILIES`. */
 export const RING_FAMILY = 'rings'
-/** A family of v3's catalogue. */
-export type GoodFamilyV3 = typeof GOOD_FAMILIES[number]
-/** A good's family: v3's fifteen, and the rings on v4. */
-export type GoodFamily = GoodFamilyV3 | typeof RING_FAMILY
+/** A family of the 260 goods. */
+export type GoodsFamily = typeof GOOD_FAMILIES[number]
+/** A good's family: the fifteen, and the rings. */
+export type GoodFamily = GoodsFamily | typeof RING_FAMILY
 /** Each family in the player's words. */
 export const FAMILY_NAMES: Readonly<Record<GoodFamily, string>> = {
   grains: 'Grains', vegetables: 'Vegetables', 'herbs-spices': 'Herbs and spices', 'nuts-seeds': 'Nuts and seeds', sweets: 'Sweets', fruits: 'Fruits',
@@ -32,7 +32,7 @@ export const FAMILY_NAMES: Readonly<Record<GoodFamily, string>> = {
 
 /** Each family's ten raw ids, G1 → G10, and their refined forms where the farm keeps them (the vegetables' refined forms
  * leave the game; the expeditions' loot is raw only). */
-const FAMILY_IDS: Readonly<Record<GoodFamilyV3, { raw: readonly string[]; refined: readonly string[] | null }>> = {
+const FAMILY_IDS: Readonly<Record<GoodsFamily, { raw: readonly string[]; refined: readonly string[] | null }>> = {
   grains: {
     raw: ['wheat', 'oats', 'barley', 'rice', 'corn', 'rye', 'buckwheat', 'wild-rice', 'moonrice', 'sunwheat'],
     refined: ['wheat-flour', 'rolled-oats', 'pearl-barley', 'polished-rice', 'cornmeal', 'rye-flour', 'buckwheat-flour', 'hulled-wild-rice',
@@ -120,7 +120,7 @@ export type CropId = typeof CROP_IDS[number]
 const CROPS: ReadonlySet<string> = new Set(CROP_IDS)
 export const isCropId = (id: string): id is CropId => CROPS.has(id)
 
-/** A good in the v3 Warehouse: uma-art's family and grade, raw or refined, whether it's a crop, its price ★1
+/** A good in the Warehouse: uma-art's family and grade, raw or refined, whether it's a crop, its price ★1
  * and, for a refined good, the raw good a station makes it from. */
 export interface Good {
   id: string
@@ -135,7 +135,7 @@ export interface Good {
 }
 
 /** A raw good's price ★1: a crop's own, else the ladder's. Grains and vegetables are all crops. */
-function rawPrice(id: string, family: GoodFamilyV3, grade: number): number {
+function rawPrice(id: string, family: GoodsFamily, grade: number): number {
   if (CROPS.has(id)) return CROP_PRICES[id as CropId]
   if (family === 'grains' || family === 'vegetables') throw new RangeError(`${id} is a ${family} good but not a crop`)
   return ladderPrice(family as LadderFamily, grade)
@@ -179,10 +179,10 @@ export const goodOf = (id: string): Good | undefined => GOOD_BY_ID.get(id) ?? RI
 const REFINED_OF = new Map(GOODS.flatMap((g) => (g.input ? [[g.input, g.id] as const] : [])))
 /** What a raw good refines into at a station, or null (the vegetables' and the expeditions' have none). */
 export const refinedOf = (id: string): string | null => REFINED_OF.get(id) ?? null
-/** A good of v3's catalogue (the 260). */
+/** One of the 260 goods (the rings apart). */
 export const isGoodId = (id: string): boolean => GOOD_BY_ID.has(id)
-/** A good of v4's catalogue: v3's and the rings. */
-export const isGoodIdV4 = (id: string): boolean => GOOD_BY_ID.has(id) || RING_BY_ID.has(id)
+/** A good or a ring: what the bin ships and the Diary counts. */
+export const isGoodOrRingId = (id: string): boolean => GOOD_BY_ID.has(id) || RING_BY_ID.has(id)
 
 /** Seeds are Warehouse items with farm ids: `seed-<crop>` from the shop and `seed-<crop>-own` from
  * harvests, held at ★1 only. They have no bin price. */
@@ -193,7 +193,7 @@ export const isSeedId = (id: string): boolean => SEEDS.has(id)
 /** A seed's crop and whether it's an own seed, or undefined for any other id. */
 export const seedOf = (id: string): { crop: CropId; own: boolean } | undefined => SEEDS.get(id)
 
-/** Anything the v3 Warehouse may hold: a good or a seed. */
+/** A good or a seed (the rings and dishes apart: `isStockId`). */
 export const isWarehouseId = (id: string): boolean => GOOD_BY_ID.has(id) || SEEDS.has(id)
 
 /** Each dish kind's word, by its family. */

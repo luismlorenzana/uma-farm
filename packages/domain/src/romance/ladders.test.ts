@@ -4,9 +4,9 @@
 // onward built here; birthdays are invented dates.
 import { describe, expect, it } from 'vitest'
 import { dateOf, DAYS_PER_YEAR } from '../farm/calendar'
-import { affinityPoints, loveRankFactor, rankPointsForDay, tickRankRules } from '../farm/rank-rules'
+import { loveRankFactor, rankPointsForDay, tickRankRules } from '../farm/rank-rules'
 import { TALENT_D } from '../farm/talents'
-import { CHAT_LINES } from '../farm/visitors'
+import { CHAT_LINES } from './chats'
 import { harvest, plant, setTender } from '../fields/fields'
 import { SHOP_SEEDS } from '../fields/crops'
 import { FOREST } from '../gathering/tables'
@@ -15,8 +15,7 @@ import { endDay, runNight, type NightContext } from '../night/end-day'
 import { TEST_KINDS } from '../night/kinds.fixture'
 import { startLoopJob } from '../save/loop-work'
 import { parseSaveV4 } from '../save/parse-v4'
-import { newSave, pairKey } from '../save/v3'
-import { newLove, newSaveV4, type Love, type SaveV4 } from '../save/v4'
+import { newLove, newSave, pairKey, type Love, type SaveV4 } from '../save/v4'
 import { checkBible, checkCast, type Cast, type CastEntry, type Trigger, type UmaBible } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_IN_CAST, STAND_INS } from '../story/authored.fixture'
 import { readScene } from '../story/scenes'
@@ -40,12 +39,12 @@ const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const PACK = storyPackFrom(STAND_IN_FILES)
 const [ONE, TWO, THREE] = STAND_INS
 const BIRTHDAYS = birthdaysOf(PACK, new Map())
-const context = (birthdays = BIRTHDAYS, story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ roster: [], kinds: TEST_KINDS, story, birthdays })
+const context = (birthdays = BIRTHDAYS, story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ kinds: TEST_KINDS, story, birthdays })
 
-/** A named v4 farm on `day`, the opening read and the stand-ins home at Friendship 0., their ties seeded and
+/** A named farm on `day`, the opening read and the stand-ins home at Friendship 0., their ties seeded and
  * already listed on an earlier morning, so a night's Hearts show only its own lines. */
 function farm(day = 1): SaveV4 {
-  const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
+  const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
   const joined = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
   return { ...joined, today: { ...joined.today, bonds: {} } }
 }
@@ -239,10 +238,9 @@ describe('praise', () => {
     expect(() => praiseV4(paid.save, ONE)).toThrow('You’ve praised her today.')
     const night = runNight(paid.save, context())
     expect([night.today.praise, night.today.praised]).toEqual([[], []])
-    // A workshop play calls the same rule; v3 is never touched.
+    // A workshop play calls the same rule; an Uma off the roster earns nothing.
     expect(earnPraise(save, TWO).today.praise).toEqual([TWO])
-    const v3 = newSave('u1', AT)
-    expect(earnPraise(v3, TWO)).toBe(v3)
+    expect(earnPraise(save, '9000009')).toBe(save)
   })
 
   it('is earned overnight by a ★3+ item from her work, or a rank-up', () => {
@@ -325,7 +323,7 @@ describe('birthdays', () => {
 describe('anniversaries', () => {
   const wed = 5
   const married = (day: number, id = ONE, pack = PACK) => {
-    const base = pack === PACK ? farm(day) : joinOpening(readScene({ ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack)
+    const base = pack === PACK ? farm(day) : joinOpening(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack)
     return withLove(base, id, { stage: 'spouse', level: 1, wed, points: 0 })
   }
 
@@ -375,7 +373,7 @@ describe('anniversaries', () => {
 })
 
 describe('the rank-point factor', () => {
-  it('is ×1.05 from Friendship 5 and ×1.10 from Friendship 10 on v4; v3\'s affinity factor unchanged', () => {
+  it('is ×1.05 from Friendship 5 and ×1.10 from Friendship 10 on', () => {
     const at = (stage: Love['stage'], level: number) => loveRankFactor({ stage, level })
     expect([at('friendship', 0), at('friendship', 4), at('friendship', 5), at('friendship', 9), at('confession', 10), at('romance', 0), at('spouse', 5)])
       .toEqual([1, 1, 1.05, 1.05, 1.1, 1.1, 1.1])
@@ -383,8 +381,7 @@ describe('the rank-point factor', () => {
     const save = withLove(withLove(farm(3), ONE, { level: 5 }), TWO, { stage: 'romance', level: 2 })
     const { paid } = tickRankRules(save, [{ outfitId: ONE, activity: 'farming' }, { outfitId: TWO, activity: 'foraging' }, { outfitId: THREE, activity: 'fishing' }], terms)
     expect(paid.map((p) => p.points)).toEqual([10.5, 11, 10])
-    expect([affinityPoints(499), affinityPoints(500), affinityPoints(1000)]).toEqual([1, 1.05, 1.1])
-    expect(rankPointsForDay({ talent: TALENT_D, favourite: false, wellFed: false, heartsFactor: affinityPoints(1000) })).toBe(11)
+    expect(rankPointsForDay({ talent: TALENT_D, favourite: false, wellFed: false, heartsFactor: at('spouse', 0) })).toBe(11)
   })
 })
 

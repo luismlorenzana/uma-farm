@@ -1,35 +1,18 @@
 // The farm's save: local first in Dexie, synced through `farm-api`. Nothing carries over from uma-rpg.
-// The shape, its parse and the conflict rule are copied from uma-rpg's `save/save.ts` at 30a322a, cut to
-// the farm's one account. Every change to the shape is a new version with its migration, and no migration ever moves
-// `account.updatedAt`.
+// The envelope, the parse and the conflict rule are copied from uma-rpg's `save/save.ts` at 30a322a, cut to the farm's
+// one account. No change ever moves `account.updatedAt` but a player's own (`touched`).
 //
-// v1: the account. v2: the Wilds' world beside it: each Uma's Craft Level, the Warehouse and the work rows.
-// v3: the farm's own loop (`v3.ts`), live. v4: the romance core (`v4.ts`), built dark.
-// `parseSave` returns what's stored, v2, v3 or v4 (a v1 still becomes v2): the app's boot migrates a v2 with master data
-// (`migrate-v3.ts`), and the romance build wipes any v1–v3 into a fresh v4 (`freshV4`), neither of which the API does
-//: no server makes a save, and the live build stops at a v4.
-import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkOutput, WorkRow } from '@luismlorenzana/uma-work'
-import type { JobKind } from '../economy/jobs'
-import { maxJobCount, PROFESSION_MAX_LEVEL } from '../economy/pacing'
-import { jobKindV4, placeSpecV4 } from '../economy/places-v4'
-import { PLACE_SLOTS_V3 } from '../economy/professions'
-import { isStockItemId } from '../items/stock-id'
-import { isOutfitId } from '../roster/roster'
-import type { FarmWorkRequest } from '../work/request'
-import type { FarmUma, FarmWorld, ProfessionLevel } from '../work/world'
-import { count, list, object, parseAccount, positive, record, SaveParseError } from './parse'
-import { parseSaveV3 } from './parse-v3'
+// v4 (`v4.ts`) is the one save. An older save (v1, v2 or v3, from before the farm started over) is read as its version
+// and account only: the app shows the start-over card and makes a fresh v4 from it (`freshV4`), and the server keeps the
+// stored document as it is until that v4 replaces it, backing it up first. A save from a newer app is refused.
+import { object, parseAccount, count, SaveParseError } from './parse'
 import { parseSaveV4 } from './parse-v4'
-import type { SaveV3 } from './v3'
 import type { SaveV4 } from './v4'
 
 export { SaveParseError }
 
-/** The version production writes: v3, the farm's own loop, live (the Wilds wrote v2 before it). The romance
- * build writes v4 while dark; shipping moves this to 4. */
-export const SAVE_VERSION = 3
-/** The newest version this app reads: v4, the romance core, built dark until it ships. */
-export const NEWEST_SAVE_VERSION = 4
+/** The version the farm reads and writes: v4. */
+export const SAVE_VERSION = 4
 
 export interface Account {
   /** The Firebase uid the save belongs to. */
@@ -39,22 +22,18 @@ export interface Account {
   updatedAt: string
 }
 
-export interface SaveV1 {
-  version: 1
+/** A save from before the farm started over (v1–v3): only its version and account are read. Nothing plays it: the app
+ * starts a fresh v4 from its account, and nothing ever writes one again. */
+export interface OlderSave {
+  version: 1 | 2 | 3
   account: Account
 }
 
-/** Save v2: the account and the Wilds' world, whole. */
-export interface SaveV2 extends FarmWorld {
-  version: 2
-  account: Account
-}
+/** A save as stored: the farm's v4, or an older one that starts over. */
+export type StoredSave = SaveV4 | OlderSave
 
-/** The Wilds' save, v2: their rules (kept for the migration, which finishes its jobs) take it. The farm's is `SaveV3`. */
-export type Save = SaveV2
-
-/** A save as stored: the Wilds' v2 (read once, to migrate), the farm's v3, or the romance core's v4. */
-export type StoredSave = SaveV2 | SaveV3 | SaveV4
+/** Whether a stored save is from before v4. */
+export const isOlderSave = (save: StoredSave): save is OlderSave => save.version < SAVE_VERSION
 
 /** What the API stores and returns: the save and its revision (0: nothing stored yet). */
 export interface SaveEnvelope {
@@ -62,188 +41,19 @@ export interface SaveEnvelope {
   save: StoredSave | null
 }
 
-/** A save upload: the revision it was based on, the save, and the version the client sent before any migration. */
+/** A save upload: the revision it was based on, and the save. */
 export interface SavePut {
   baseRevision: number
-  save: StoredSave
-  /** The API refuses a version older than what it stores. */
-  sentVersion: number
-}
-
-/** A new Wilds account's save: nobody has worked yet, and the Warehouse is empty. The loop's day 1 is `newSave` (v3). */
-export function newSaveV2(uid: string, now: string): SaveV2 {
-  return { version: 2, account: { uid, createdAt: now, updatedAt: now }, umas: {}, items: {}, buildings: {}, work: {} }
+  save: SaveV4
 }
 
 /** A save after a player's change at `now`: the only thing that moves `updatedAt`. */
-export const touched = <S extends StoredSave>(save: S, now: string): S => ({ ...save, account: { ...save.account, updatedAt: now } })
-
-/** The world after a player's change, put back in its save at `now` (uma-rpg's `withWorld`). */
-export function withWorld(save: Save, world: FarmWorld, now: string): Save {
-  return { ...save, account: { ...save.account, updatedAt: now }, umas: world.umas, items: world.items, buildings: world.buildings, work: world.work }
-}
+export const touched = <S extends SaveV4>(save: S, now: string): S => ({ ...save, account: { ...save.account, updatedAt: now } })
 
 /** The conflict rule: when two devices both changed the save, the one changed last wins whole, and a tie
  * keeps this device's. The loser is kept, never dropped: as a safety copy on the device, or in `saveRescues` on the server. */
 export function resolveConflict<S extends StoredSave>(local: S, remote: S): S {
   return Date.parse(local.account.updatedAt) >= Date.parse(remote.account.updatedAt) ? local : remote
-}
-
-// --- Migrations: each older version to the next, never moving `account.updatedAt` --------------------------------------
-
-/** v1 → v2: the Wilds arrive empty. */
-export function toV2(save: SaveV1): SaveV2 {
-  return { version: 2, account: save.account, umas: {}, items: {}, buildings: {}, work: {} }
-}
-
-// --- Parsing: explicit, path-reporting, strict on unknown keys (the helpers are `parse.ts`'s) -------------------------
-
-function parseCraft(value: unknown, path: string): ProfessionLevel {
-  const v = object(value, path, ['level', 'exp'])
-  const level = count(v.level, `${path}.level`)
-  if (level < 1 || level > PROFESSION_MAX_LEVEL) throw new SaveParseError(`${path}.level`, `expected 1–${PROFESSION_MAX_LEVEL}`)
-  return { level, exp: count(v.exp, `${path}.exp`) }
-}
-
-function parseUmas(value: unknown, path: string): Record<string, FarmUma> {
-  const out: Record<string, FarmUma> = {}
-  for (const [id, raw] of Object.entries(record(value, path))) {
-    const at = `${path}.${id}`
-    if (!isOutfitId(id)) throw new SaveParseError(at, 'outfit ids are positive integers')
-    out[id] = { craft: parseCraft(object(raw, at, ['craft']).craft, `${at}.craft`) }
-  }
-  return out
-}
-
-/** The Warehouse (the farm by line): the hundred line items and the made items. */
-function parseStock(value: unknown, path: string): Record<string, number> {
-  const items: Record<string, number> = {}
-  for (const [id, n] of Object.entries(record(value, path))) {
-    if (!isStockItemId(id)) throw new SaveParseError(`${path}.${id}`, 'unknown item')
-    const c = count(n, `${path}.${id}`)
-    if (c > 0) items[id] = c
-  }
-  return items
-}
-
-// --- Work: the shared engine's rows, parsed strictly (uma-rpg's v31 rules: fifteen places, four slots) ------------
-
-/** Up to three requests wait behind the running one (the engine's MAX_QUEUE). */
-const MAX_QUEUED = 3
-/** The most started entries a row can hold: one running and its queue's finished ones waiting for Collect. */
-const MAX_ENTRIES = MAX_QUEUED + 1
-
-/** A slot: one of the fifteen places, four slots each. */
-function parseSlot(value: unknown, path: string): SlotRef {
-  const o = object(value, path, ['building', 'slot'])
-  if (typeof o.building !== 'string' || !placeSpecV4(o.building)) throw new SaveParseError(`${path}.building`, 'not a place')
-  const slot = count(o.slot, `${path}.slot`)
-  if (slot >= PLACE_SLOTS_V3) throw new SaveParseError(`${path}.slot`, 'no such slot')
-  return { building: o.building, slot }
-}
-
-/** A request at a slot: the place's one kind, an item the place makes, 1 to the kind's most. */
-function parseRequest(value: unknown, path: string, slot: SlotRef): FarmWorkRequest {
-  const r = object(value, path, ['kind', 'item', 'count'])
-  const kindAtPlace = placeSpecV4(slot.building)!.kinds[0]!
-  if (r.kind !== kindAtPlace) throw new SaveParseError(`${path}.kind`, `expected ${kindAtPlace}`)
-  const kind = r.kind as JobKind
-  if (typeof r.item !== 'string' || jobKindV4(slot.building, r.item) !== kind) throw new SaveParseError(`${path}.item`, 'not made at this place')
-  const n = count(r.count, `${path}.count`)
-  if (n < 1 || n > maxJobCount(kind)) throw new SaveParseError(`${path}.count`, `expected 1–${maxJobCount(kind)}`)
-  return { kind, item: r.item, count: n }
-}
-
-function parseQty(value: unknown, path: string): ItemQty {
-  const o = object(value, path, ['item', 'qty'])
-  if (typeof o.item !== 'string' || !isStockItemId(o.item)) throw new SaveParseError(`${path}.item`, 'unknown item')
-  const qty = count(o.qty, `${path}.qty`)
-  if (qty < 1) throw new SaveParseError(`${path}.qty`, 'expected at least 1')
-  return { item: o.item, qty }
-}
-
-const ENTRY_KEYS = ['request', 'seconds', 'inputs', 'outputs', 'exp', 'startedAt', 'acceleratedMs', 'collected', 'speed', 'fromQueue'] as const
-
-function parseEntry(value: unknown, path: string, slot: SlotRef): Entry<FarmWorkRequest> {
-  const e = object(value, path, ENTRY_KEYS)
-  const request = parseRequest(e.request, `${path}.request`, slot)
-  const n = request.count
-  const each = <T>(raw: unknown, key: string, parse: (v: unknown, at: string) => T): T[] => list(raw, `${path}.${key}`, n, n).map((v, i) => parse(v, `${path}.${key}.${i}`))
-  const seconds = each(e.seconds, 'seconds', positive)
-  const inputs = each(e.inputs, 'inputs', (v, at) => list(v, at, 0, 8).map((q, j) => parseQty(q, `${at}.${j}`)))
-  const outputs = each(e.outputs, 'outputs', (v, at): WorkOutput => {
-    const o = object(v, at, ['item'])
-    if (o.item !== request.item) throw new SaveParseError(`${at}.item`, 'expected the request\'s item')
-    return { item: request.item }
-  })
-  const exp = each(e.exp, 'exp', count)
-  const collected = count(e.collected, `${path}.collected`)
-  if (collected > n) throw new SaveParseError(`${path}.collected`, 'more than the entry makes')
-  if (typeof e.fromQueue !== 'boolean') throw new SaveParseError(`${path}.fromQueue`, 'expected true or false')
-  return { request, seconds, inputs, outputs, exp, startedAt: count(e.startedAt, `${path}.startedAt`), acceleratedMs: count(e.acceleratedMs, `${path}.acceleratedMs`),
-    collected, speed: positive(e.speed, `${path}.speed`), fromQueue: e.fromQueue }
-}
-
-function parseRefusal(value: unknown, path: string): Refusal | null {
-  if (value === null) return null
-  const o = object(value, path, ['refused', 'code', 'message', 'data'])
-  if (o.refused !== true || typeof o.code !== 'string' || typeof o.message !== 'string') throw new SaveParseError(path, 'expected a refusal')
-  if (o.data === undefined) return { refused: true, code: o.code, message: o.message }
-  const data = record(o.data, `${path}.data`)
-  if (Object.values(data).some((v) => typeof v !== 'string' && typeof v !== 'number')) throw new SaveParseError(`${path}.data`, 'expected strings and numbers')
-  return { refused: true, code: o.code, message: o.message, data: data as Record<string, string | number> }
-}
-
-function parseDropped(value: unknown, path: string): DroppedQueue<FarmWorkRequest> | null {
-  if (value === null) return null
-  const d = object(value, path, ['at', 'slot', 'requests', 'short', 'refused'])
-  const slot = parseSlot(d.slot, `${path}.slot`)
-  return {
-    at: count(d.at, `${path}.at`), slot,
-    requests: list(d.requests, `${path}.requests`, 1, MAX_QUEUED + 1).map((r, i) => parseRequest(r, `${path}.requests.${i}`, slot)),
-    short: list(d.short, `${path}.short`, 0, 8).map((q, i) => parseQty(q, `${path}.short.${i}`)),
-    refused: parseRefusal(d.refused, `${path}.refused`),
-  }
-}
-
-function parseLast(value: unknown, path: string): LastWork<FarmWorkRequest> | null {
-  if (value === null) return null
-  const l = object(value, path, ['slot', 'request'])
-  const slot = parseSlot(l.slot, `${path}.slot`)
-  return { slot, request: parseRequest(l.request, `${path}.request`, slot) }
-}
-
-/** Places have no levels: the engine's levels stay empty. */
-function parseBuildings(value: unknown, path: string): Record<string, { level: number }> {
-  object(value, path, [])
-  return {}
-}
-
-function parseWork(value: unknown, path: string, umas: Record<string, FarmUma>): Record<string, WorkRow<FarmWorkRequest>> {
-  const out: Record<string, WorkRow<FarmWorkRequest>> = {}
-  const held = new Set<string>()
-  for (const [id, raw] of Object.entries(record(value, path))) {
-    const at = `${path}.${id}`
-    if (!umas[id]) throw new SaveParseError(at, 'expected an Uma who has worked')
-    const r = object(raw, at, ['outfitId', 'slot', 'entries', 'queue', 'last', 'dropped'])
-    if (r.outfitId !== id) throw new SaveParseError(`${at}.outfitId`, 'expected its own key')
-    const slot = r.slot === null ? null : parseSlot(r.slot, `${at}.slot`)
-    const entries = list(r.entries, `${at}.entries`, 0, MAX_ENTRIES)
-    const queue = list(r.queue, `${at}.queue`, 0, MAX_QUEUED)
-    if (!slot && (entries.length > 0 || queue.length > 0)) throw new SaveParseError(`${at}.slot`, 'work needs a slot')
-    if (slot && entries.length > 0) {
-      const key = `${slot.building}:${slot.slot}`
-      if (held.has(key)) throw new SaveParseError(`${at}.slot`, 'already held')
-      held.add(key)
-    }
-    out[id] = {
-      outfitId: id, slot,
-      entries: entries.map((e, i) => parseEntry(e, `${at}.entries.${i}`, slot!)),
-      queue: queue.map((q, i) => parseRequest(q, `${at}.queue.${i}`, slot!)),
-      last: parseLast(r.last, `${at}.last`), dropped: parseDropped(r.dropped, `${at}.dropped`),
-    }
-  }
-  return out
 }
 
 /** The version a stored or sent value claims, or 0 when it claims none. */
@@ -252,35 +62,34 @@ export function versionOf(value: unknown): number {
   return typeof v === 'number' && Number.isSafeInteger(v) ? v : 0
 }
 
-function parseV1(value: unknown, path: string): SaveV1 {
-  const o = object(value, path, ['version', 'account'])
-  return { version: 1, account: parseAccount(o.account, `${path}.account`) }
-}
-
-function parseV2(value: unknown, path: string): SaveV2 {
-  const o = object(value, path, ['version', 'account', 'umas', 'items', 'buildings', 'work'])
-  const umas = parseUmas(o.umas, `${path}.umas`)
-  return {
-    version: 2, account: parseAccount(o.account, `${path}.account`), umas, items: parseStock(o.items, `${path}.items`),
-    buildings: parseBuildings(o.buildings, `${path}.buildings`), work: parseWork(o.work, `${path}.work`, umas),
-  }
-}
-
-/** Parses a save of any version the farm has written and returns it at the version stored: v1 still
- * migrates to v2 (`toV2`); v2 stays v2, v3 is the loop's and v4 the romance core's. Nothing is wiped here: the romance
- * build's boot does that. A version from a newer app is refused, so an old client can never half-read a newer save. */
-export function parseSave(value: unknown, path = 'save'): StoredSave {
+function refuseNewer(value: unknown, path: string): void {
   const version = versionOf(value)
-  if (version > NEWEST_SAVE_VERSION) throw new SaveParseError(`${path}.version`, `version ${version} is newer than this app (${NEWEST_SAVE_VERSION})`)
-  if (version === 1) return toV2(parseV1(value, path))
-  if (version === 2) return parseV2(value, path)
-  if (version === 3) return parseSaveV3(value, path)
-  if (version === 4) return parseSaveV4(value, path)
-  throw new SaveParseError(`${path}.version`, `expected 1–${NEWEST_SAVE_VERSION}`)
+  if (version > SAVE_VERSION) throw new SaveParseError(`${path}.version`, `version ${version} is newer than this app (${SAVE_VERSION})`)
+}
+
+/** Parses a save v4, strictly: what an upload must be. An older save is refused (the app starts it over and uploads the
+ * new farm), and so is a save from a newer app, so an old client can never half-read or overwrite a newer save. */
+export function parseSave(value: unknown, path = 'save'): SaveV4 {
+  refuseNewer(value, path)
+  const version = versionOf(value)
+  if (version !== SAVE_VERSION) throw new SaveParseError(`${path}.version`, `expected ${SAVE_VERSION}${version >= 1 ? ': an older save starts over on the device' : ''}`)
+  return parseSaveV4(value, path)
+}
+
+/** Reads a save as stored, on the server or a device: a v4 parsed strictly, or an older save's version and account (the
+ * rest stays as stored, unread). A save from a newer app is refused. */
+export function parseStored(value: unknown, path = 'save'): StoredSave {
+  refuseNewer(value, path)
+  const version = versionOf(value)
+  if (version >= 1 && version < SAVE_VERSION) {
+    const account = parseAccount((value as { account?: unknown }).account, `${path}.account`)
+    return { version: version as OlderSave['version'], account }
+  }
+  return parseSave(value, path)
 }
 
 /** The body of `PUT /api/save`. */
 export function parseSavePut(value: unknown): SavePut {
   const o = object(value, 'body', ['baseRevision', 'save'])
-  return { baseRevision: count(o.baseRevision, 'body.baseRevision'), save: parseSave(o.save, 'body.save'), sentVersion: versionOf(o.save) }
+  return { baseRevision: count(o.baseRevision, 'body.baseRevision'), save: parseSave(o.save, 'body.save') }
 }

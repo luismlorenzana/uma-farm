@@ -1,6 +1,5 @@
-// The v3 Warehouse's ids. The web's test checks each good is on uma-art's atlas.
+// The Warehouse's ids. The web's test checks each good is on uma-art's atlas.
 import { describe, expect, it } from 'vitest'
-import { isLineItemId, LINE_ITEMS } from '../items/lines'
 import { CROP_IDS, GOODS, GOOD_IDS, goodName, goodOf, isCropId, refinedOf, isGoodId, isSeedId, isWarehouseId, SEED_IDS, seedId, seedOf } from './ids'
 
 const of = (families: string[]) => GOODS.filter((g) => families.includes(g.family))
@@ -31,11 +30,8 @@ describe('the goods', () => {
     expect(isCropId('carrot') && !isCropId('chopped-carrot')).toBe(true)
   })
 
-  it("keeps v2's ores and ingots, logs and planks, fish and fillets, crystals, and raw vegetables; not the rest", () => {
-    const kept = LINE_ITEMS.filter((m) => isGoodId(m.id))
-    expect(kept).toHaveLength(90)
-    expect(LINE_ITEMS.filter((m) => !isGoodId(m.id)).every((m) => m.line === 'vegetables' && m.refined)).toBe(true)
-    expect(isLineItemId('weapon-gem-g1') || isGoodId('weapon-gem-g1')).toBe(false)
+  it('takes no item the catalogue doesn\'t hold', () => {
+    expect(isGoodId('weapon-gem-g1') || isGoodId('chopped-carrot')).toBe(false)
   })
 })
 

@@ -7,7 +7,7 @@
 // A release holds the pack as read: every part with an error already skipped, so the game reads it whole. The game reads
 // it with the same reader all the same, and refuses only an index it can't read or a file that isn't what the index says.
 import { isGoodId } from '../goods/ids'
-import { pairKey } from '../save/v3'
+import { pairKey } from '../save/v4'
 import { checkRoute, type PairConversations, type Route } from './authored'
 import { packContext, checkPairFile, readStoryPack, StoryPackError, tiedPairs, type StoryPack } from './pack'
 

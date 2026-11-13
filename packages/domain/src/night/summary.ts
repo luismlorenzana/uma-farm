@@ -1,11 +1,11 @@
 // The morning summary: data, never sentences. The night's last step builds it from what
 // changed and the app words it, each line a tap to its place. It's replaced each night and set to null when the player
-// dismisses it. Six sections, in order; an empty one is hidden. v3 is live, so a new line is a new save version.
+// dismisses it. Six sections, in order; an empty one is hidden. A new line kind is a new part of the save's parse.
 import type { FestivalId, Season } from '../farm/calendar'
 import type { Activity, Rank } from '../farm/ranks'
 import type { CropId } from '../goods/ids'
-import type { LoopPlaceId } from '../save/parse-v3'
-import type { BlockId, OutfitId } from '../save/v3'
+import type { LoopPlaceId } from '../save/parse-v4'
+import type { BlockId, OutfitId } from '../save/v4'
 import type { InviteKind } from '../save/v4'
 
 /** §1 The bin: a good at one star that sold tonight, how many, the gold they made, and whether the
@@ -78,10 +78,15 @@ export interface PointsFull {
 /** §3's lines: rank-ups, then points full. */
 export type RankLine = RankUp | PointsFull
 
+/** §5 New today: a household milestone reached, as the married count passed 1, 5, 10, 15 or 20. */
+export interface HouseholdNews {
+  kind: 'household'
+  married: number
+}
+
 /** §5 New today: the season's first day, or a festival today or tomorrow; the goals' news: the chapter
- * completed tonight, a Farm Rank reached, a Diary milestone or row paid; and the roster's news: the Dorm's new
- * level in effect, Umas a swap brought home, a recruit who joined tonight (home or away; chapter recruits), a
- * visitor at the Gate, and one who left. */
+ * completed tonight, a Farm Rank reached, a Diary milestone or row paid; the household's milestones; and the Dorm's
+ * news: its new level in effect and Umas a swap brought home. Arrivals are §4's. */
 export type NewsLine =
   | { kind: 'season'; season: Season }
   | { kind: 'festival'; festival: FestivalId; when: 'today' | 'tomorrow' }
@@ -90,9 +95,7 @@ export type NewsLine =
   | { kind: 'milestone'; id: string }
   | { kind: 'dorm'; level: number }
   | { kind: 'home'; umas: OutfitId[] }
-  | { kind: 'joined'; outfitId: OutfitId; home: boolean }
-  | { kind: 'gate'; outfitId: OutfitId }
-  | { kind: 'left'; outfitId: OutfitId }
+  | HouseholdNews
 
 /** §6 Today's nudges: the Umas on the farm with no work this morning. */
 export interface IdleNudge {
@@ -108,28 +111,10 @@ export interface SeedsNudge {
 
 export type Nudge = IdleNudge | SeedsNudge
 
-export interface MorningSummary {
-  /** The morning it opens on: the save's day. */
-  day: number
-  /** §1 The bin: yesterday's sales by good and star, in the catalogue's order, with the season's demand marked.
-   * The total is their gold added up. */
-  bin: BinSale[]
-  /** §2 Work done: jobs by place, the night's best catch, crops ready by block and what withered. */
-  work: WorkLine[]
-  /** §3 Ranks: rank-ups, then Umas whose points filled tonight with their challenge to meet. */
-  ranks: RankLine[]
-  /** §4 Bonds and affinity: new hearts. */
-  bonds: []
-  /** §5 New today: the season and festivals, the goals' news, then the roster's news. */
-  news: NewsLine[]
-  /** §6 Today's nudges: idle Umas, plots to plant. */
-  nudges: Nudge[]
-}
-
-// --- Save v4's morning: §4 becomes Hearts ------------------------------------------
+// --- §4 Hearts ------------------------------------------------------------------------
 
 /** §4 Hearts: an Uma who arrived overnight, home or away on her off-season; her arrival scene waits for the farm to
- * open. The romance's lines come in place while v4 grows; the app orders and draws the section. */
+ * open. The app orders and draws the section. */
 export interface ArrivedLine {
   kind: 'arrived'
   /** Her character id. */
@@ -239,40 +224,30 @@ export interface VowsLine {
 export type HeartLine = InviteLine | BirthdayLine | AnniversaryLine | ArrivedLine | ItemLine | ChoresLine | PerksLine | SideLine | BondLine | HouseLine | HouseMissesLine
   | MovedLine | LevelLine | VowsLine
 
-/** §5 on v4: a household milestone reached, as the married count passed 1, 5, 10, 15 or 20. */
-export interface HouseholdNews {
-  kind: 'household'
-  married: number
-}
-/** §5 on v4: v3's news without its roster lines (`joined`, `gate`, `left`): arrivals are §4's, and the Gate has no
- * visitors; and the household's milestones. Rank lines' `outfitId` holds the roster's key, her character id.
- **/
-export type NewsLineV4 = Exclude<NewsLine, { kind: 'joined' | 'gate' | 'left' }> | HouseholdNews
-
-/** The morning on save v4: v3's sections with §4 `bonds: []` replaced by `hearts`. */
-export interface MorningSummaryV4 {
+/** The morning summary: its six sections. */
+export interface MorningSummary {
+  /** The morning it opens on: the save's day. */
   day: number
+  /** §1 The bin: yesterday's sales by good and star, in the catalogue's order, with the season's demand marked.
+   * The total is their gold added up. */
   bin: BinSale[]
+  /** §2 Work done: jobs by place, the night's best catch, crops ready by block and what withered. */
   work: WorkLine[]
+  /** §3 Ranks: rank-ups, then Umas whose points filled tonight with their challenge to meet. */
   ranks: RankLine[]
-  /** §4 Hearts: invitations, birthdays and anniversaries, then arrivals, then side by side and bond
-   * hearts; the romance's lines join as they are built. */
+  /** §4 Hearts: invitations, birthdays and anniversaries, then arrivals, then side by side and bond hearts. */
   hearts: HeartLine[]
-  news: NewsLineV4[]
+  /** §5 New today: the season and festivals, the goals' news, the household's, then the Dorm's. */
+  news: NewsLine[]
+  /** §6 Today's nudges: idle Umas, plots to plant. */
   nudges: Nudge[]
 }
 
 /** The sections' order. */
-export const SUMMARY_SECTIONS = ['bin', 'work', 'ranks', 'bonds', 'news', 'nudges'] as const
+export const SUMMARY_SECTIONS = ['bin', 'work', 'ranks', 'hearts', 'news', 'nudges'] as const
 export type SummarySection = typeof SUMMARY_SECTIONS[number]
-/** v4's order: Hearts in §4's place. */
-export const SUMMARY_SECTIONS_V4 = ['bin', 'work', 'ranks', 'hearts', 'news', 'nudges'] as const
-export type SummarySectionV4 = typeof SUMMARY_SECTIONS_V4[number]
 
-/** The sections with lines, in order: the card shows these and hides the rest. A v4 morning's §4 is Hearts. */
-export function summarySections(summary: MorningSummary): SummarySection[]
-export function summarySections(summary: MorningSummary | MorningSummaryV4): (SummarySection | SummarySectionV4)[]
-export function summarySections(summary: MorningSummary | MorningSummaryV4): (SummarySection | SummarySectionV4)[] {
-  if ('hearts' in summary) return SUMMARY_SECTIONS_V4.filter((section) => summary[section].length > 0)
+/** The sections with lines, in order: the card shows these and hides the rest. */
+export function summarySections(summary: MorningSummary): SummarySection[] {
   return SUMMARY_SECTIONS.filter((section) => summary[section].length > 0)
 }

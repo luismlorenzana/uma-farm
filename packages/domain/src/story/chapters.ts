@@ -1,24 +1,19 @@
 // The story's chapters: chapter 1's six goals, each read from a counter or
 // the save, its reward, and chapter 2's line ("Soon" until the workshops are built). Night step 8 (`checkGoals`) pays
 // the Diary, recomputes the Farm Rank, and completes the chapter the night its last goal is met: 500g, the Mill's
-// plans, a recruit and the chapter's 250 points, then the next chapter opens, counting from its own start
+// plans, the chapter's authored arrival and its 250 points, then the next chapter opens, counting from its own start
 // (`farm.goals`). The closing scene plays the next morning (`scenes.ts`). Loaded with the night and the screens.
 import { payDiary, withFarmPoints, type DepthsTonight } from '../farm/diary'
-import { joinRoster } from '../farm/dorm'
 import { farmRankOf } from '../farm/farm'
 import { RANKS } from '../farm/ranks'
-import type { TalentOf } from '../farm/talents'
-import { recruitFor } from '../farm/visitors'
 import { PLOTS_HARVESTED } from '../fields/fields'
 import { FISHING_SPOTS, FOREST_AREAS } from '../gathering/ids'
 import { HOME_COUNT, type MadeTonight } from '../gathering/kinds'
 import { GOLD_SHIPPED } from '../save/bin'
 import { earnGold } from '../save/gold'
 import { arrive, chapterArrival } from '../romance/arrivals'
-import type { BuildingId, OutfitId, SaveV3 } from '../save/v3'
-import type { SaveV4 } from '../save/v4'
+import type { BuildingId, FarmSave, OutfitId } from '../save/v4'
 import type { StoryPack } from './pack'
-import type { FarmSave } from '../save/v4'
 
 /** One of a chapter's goals: its words, what it teaches, and how far the save has come. `need` is what completes it. */
 export interface Goal {
@@ -35,6 +30,7 @@ export interface ChapterReward {
   readonly gold: number
   /** Buildings whose plans it gives: `buildings[id] = 0`. */
   readonly plans: readonly BuildingId[]
+  /** Whether it brings the chapter's authored arrival, when the cast has one. */
   readonly recruit: boolean
 }
 
@@ -88,28 +84,19 @@ export function goalStates(save: FarmSave): GoalState[] | null {
 /** Every goal of the current chapter is met. */
 export const chapterMet = (save: FarmSave): boolean => goalStates(save)?.every((g) => g.done) ?? false
 
-/** Completes the current chapter: its gold, its plans (a building not yet held becomes 0), its recruit, then
- * the next chapter opens counting from now. On v3 the recruit is `recruitFor`'s, joined with `joinRoster` (home, or away
- * with no bed free); on v4 it's the chapter's authored arrival from the pack, joined with `arrive`, and
- * nothing is drawn, her ties seeded. The 250 points follow from `chaptersDone`. Never stamps. */
-export function completeChapter<S extends FarmSave>(save: S, release: readonly OutfitId[], talentOf: TalentOf, story?: Pick<StoryPack, 'cast' | 'ties'>): { save: S; recruit: OutfitId | null } {
+/** Completes the current chapter: its gold, its plans (a building not yet held becomes 0), the chapter's authored
+ * arrival from the pack (joined with `arrive`, her ties seeded; nothing is drawn), then the next chapter opens counting
+ * from now. The 250 points follow from `chaptersDone`. Never stamps. */
+export function completeChapter<S extends FarmSave>(save: S, story?: Pick<StoryPack, 'cast' | 'ties'>): { save: S; recruit: OutfitId | null } {
   const reward = chapterOf(save.farm.chapter)?.reward
   if (!reward) return { save, recruit: null }
-  let next = earnGold(save, reward.gold)
+  let next: FarmSave = earnGold(save, reward.gold)
   const plans = Object.fromEntries(reward.plans.filter((b) => next.buildings[b] === undefined).map((b) => [b, 0]))
   next = { ...next, buildings: { ...next.buildings, ...plans } }
-  if (next.version === 4) {
-    const v4: SaveV4 = next
-    const entry = reward.recruit && story ? chapterArrival(story, v4.farm.chapter) : null
-    const recruit = entry && !v4.roster[entry.characterId] ? entry.characterId : null
-    const joined = recruit ? arrive(v4, recruit, story ?? null).save : v4
-    return { save: { ...joined, farm: { ...joined.farm, chapter: joined.farm.chapter + 1, goals: { ...joined.farm.counts } } } as unknown as S, recruit }
-  }
-  const v3: SaveV3 = next
-  const recruit = reward.recruit ? recruitFor(v3, release, talentOf).outfitId : null
-  if (recruit) next = joinRoster(next, recruit).save
-  next = { ...next, farm: { ...next.farm, chapter: next.farm.chapter + 1, goals: { ...next.farm.counts } } }
-  return { save: next, recruit }
+  const entry = reward.recruit && story ? chapterArrival(story, next.farm.chapter) : null
+  const recruit = entry && !next.roster[entry.characterId] ? entry.characterId : null
+  const joined = recruit ? arrive(next, recruit, story ?? null).save : next
+  return { save: { ...joined, farm: { ...joined.farm, chapter: joined.farm.chapter + 1, goals: { ...joined.farm.counts } } } as S, recruit }
 }
 
 /** The forest areas and fishing spots a haul came home from tonight. */
@@ -129,9 +116,9 @@ export interface GoalsTonight {
 }
 
 /** Night step 8's `checkGoals`: the Diary pays what's reached, the Farm Rank is recomputed, and
- * the chapter completes when its last goal is met, after which the Diary and the rank are checked again (the recruit
- * counts toward "Umas recruited", the chapter's points toward the rank). */
-export function checkGoalsNight<S extends FarmSave>(save: S, release: readonly OutfitId[], talentOf: TalentOf, made: readonly MadeTonight[], story?: Pick<StoryPack, 'cast' | 'ties'>): { save: S; tonight: GoalsTonight } {
+ * the chapter completes when its last goal is met, after which the Diary and the rank are checked again (its arrival
+ * counts toward "Umas on the roster", the chapter's points toward the rank). */
+export function checkGoalsNight<S extends FarmSave>(save: S, made: readonly MadeTonight[], story?: Pick<StoryPack, 'cast' | 'ties'>): { save: S; tonight: GoalsTonight } {
   const depths = depthsTonight(made)
   const before = farmRankOf(save.farm.points)
   const first = payDiary(save, depths)
@@ -140,7 +127,7 @@ export function checkGoalsNight<S extends FarmSave>(save: S, release: readonly O
   let chapter: number | null = null
   if (chapterMet(next)) {
     chapter = next.farm.chapter
-    const again = payDiary(completeChapter(next, release, talentOf, story).save, depths)
+    const again = payDiary(completeChapter(next, story).save, depths)
     next = withFarmPoints(again.save)
     paid = [...paid, ...again.paid]
   }

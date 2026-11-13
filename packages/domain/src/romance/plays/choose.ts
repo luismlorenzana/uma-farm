@@ -1,7 +1,7 @@
 // Choose: pick one good from three for her, the gift picker narrowed. The three are seeded, one of
 // them a good she loves or likes; a loved one scores 100, a liked one 75, anything else 40, and no pick 0. The taste is
 // learnt (`love.known`). An event's pick waits 10 s; Choose isn't an evening. Takes nothing from the Warehouse. Pure.
-import type { Taste } from '../../farm/visitors'
+import type { Taste } from '../chats'
 import { tasteOf, type StoryPack } from '../../story/pack'
 import { pickIndex, shuffled, type Seed } from './grade'
 import { pickGoods } from './pick'

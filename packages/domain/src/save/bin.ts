@@ -8,7 +8,7 @@ import { hasPrice, inDemand, priceOf } from '../goods/prices'
 import type { BinSale } from '../night/summary'
 import { earnGold } from './gold'
 import { SaveRuleError } from './rules'
-import type { SaveV3, Warehouse } from './v3'
+import type { Warehouse } from './v4'
 import { addGoods, takeGoods } from './warehouse'
 import type { FarmSave } from './v4'
 

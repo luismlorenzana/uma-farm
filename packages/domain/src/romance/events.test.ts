@@ -6,8 +6,8 @@ import { DAYS_PER_YEAR } from '../farm/calendar'
 import { setTender, plant } from '../fields/fields'
 import { parseSaveV4 } from '../save/parse-v4'
 import { addGoods, goodCount } from '../save/warehouse'
-import { newSaveV4, type Love, type SaveV4 } from '../save/v4'
-import { pairKey } from '../save/v3'
+import { newSave, type Love, type SaveV4 } from '../save/v4'
+import { pairKey } from '../save/v4'
 import { STAND_IN_ROUTE } from '../story/authored.fixture'
 import type { Cast, ChoiceOption, Step } from '../story/authored'
 import { readScene } from '../story/scenes'
@@ -29,9 +29,9 @@ const PACK = storyPackFrom(STAND_IN_FILES)
 const ONE = '9000001'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
-/** A named v4 farm on `day`, the opening read and the stand-ins home at Friendship 0. */
+/** A named farm on `day`, the opening read and the stand-ins home at Friendship 0. */
 function farm(day = 3): SaveV4 {
-  const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
+  const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
   const joined = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
   return { ...joined, today: { ...joined.today, bonds: {} } }
 }

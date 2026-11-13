@@ -15,8 +15,8 @@ import { talentQuality, talentsD, talentYield, type TalentOf, type TalentStep } 
 import { goodOf } from '../goods/ids'
 import { starPrice } from '../goods/prices'
 import { drawStars, quality, toolQuality, WELL_FED_QUALITY } from '../goods/stars'
-import type { LoopKind, LoopKinds, LoopPlaceId } from '../save/parse-v3'
-import type { LoopWorkRequest, OutfitId, SaveV3, ToolId } from '../save/v3'
+import type { LoopKind, LoopKinds, LoopPlaceId } from '../save/parse-v4'
+import type { LoopWorkRequest, OutfitId, ToolId } from '../save/v4'
 import { parseStockKey, stockKey } from '../save/warehouse'
 import type { LoopWorld } from '../work/loop-env'
 import { keepsakeQuality, type PerkPack } from '../romance/perk-terms'
@@ -40,8 +40,8 @@ export const HOME_COUNT: Readonly<Record<GatherPlace, string>> = { forest: 'home
 /** The farm day a moment on the work clock falls in. */
 export const dayAt = (now: number): number => Math.floor(now / DAY_MS) + 1
 
-/** What lifts her work in an activity: her rank, talent, the tool's tier (1 where none applies) and her well-fed days; on
- * save v4 her keepsake's quality at her line's place, 0 or absent anywhere else. */
+/** What lifts her work in an activity: her rank, talent, the tool's tier (1 where none applies) and her well-fed days;
+ * her keepsake's quality at her line's place, 0 or absent anywhere else. */
 export interface WorkTerms {
   rank: Rank
   talent: TalentStep
@@ -84,7 +84,7 @@ export function haulCount(place: GatherPlace, terms: WorkTerms, k = 0): number {
 }
 
 /** A gathered good's quality points: 0.5 × her rank, her talent's points, the tool's +0.25 a tier, well fed +0.25;
- * on v4 her keepsake at her line's place. */
+ * her keepsake at her line's place. */
 export function gatherQuality(terms: WorkTerms, fed: boolean): number {
   return quality({
     rank: rankQuality(terms.rank), talent: talentQuality(terms.talent), tool: toolQuality(terms.tool), ...(fed ? { boost: WELL_FED_QUALITY } : {}),
@@ -92,9 +92,9 @@ export function gatherQuality(terms: WorkTerms, fed: boolean): number {
   })
 }
 
-/** Her keepsake's quality on her work at a place: a v4 save with the pack only; 0 on v3. */
+/** Her keepsake's quality on her work at a place: with the pack only. */
 export const keepsakeAt = (save: FarmSave, story: PerkPack | null, outfitId: OutfitId, place: string): number =>
-  save.version === 4 && story ? keepsakeQuality(save, story, outfitId, place) : 0
+  story ? keepsakeQuality(save, story, outfitId, place) : 0
 
 /** Why she can't work an area or a spot yet, or null when she can: her rank ("From Hand"), and the sea's
  * chapter 7 and boat. */
@@ -116,7 +116,7 @@ export const sharesOn = (place: GatherPlace, where: string, day: number): readon
   (place === 'forest' ? FOREST[where as ForestAreaId] : FISHERY[where as FishingSpotId]).seasons[dateOf(day).season]
 
 /** A gathering job's plan: each day's items by the bond rule at her terms now, each good and its stars drawn with
- * `draw(uid, day, '<place>:<slot>:<n>', 0 | 1)`, the day's seconds adding up to 86,400. On save v4 with the pack her
+ * `draw(uid, day, '<place>:<slot>:<n>', 0 | 1)`, the day's seconds adding up to 86,400. With the pack her
  * keepsake lifts the stars at her line's place. */
 export function planHaul(save: FarmSave, outfitId: OutfitId, place: GatherPlace, request: LoopWorkRequest, now: number, slot: number, talentOf: TalentOf, story: PerkPack | null = null): PlannedItem[] | Refusal {
   if (!Number.isInteger(request.count) || request.count < 1 || request.count > MAX_GATHER_DAYS) return refuse('count', 'A job is 1 to {max} days.', { max: MAX_GATHER_DAYS })
@@ -305,8 +305,8 @@ function build(talentOf: TalentOf, story: PerkPack | null): LoopKinds {
 const BY_TALENTS = new WeakMap<TalentOf, LoopKinds>()
 const BY_STORY = new WeakMap<PerkPack, WeakMap<TalentOf, LoopKinds>>()
 /** The loop's kinds with her talents read from `talentOf` (master data's, once a release): one registry a resolver, so
- * screens can memo on it. A v4 farm passes the story pack (her keepsake at her line's place lifts a haul's
- * stars as it's planned); without it, or on v3, the kinds plan as before. */
+ * screens can memo on it. With the story pack her keepsake at her line's place lifts a haul's stars as it's planned;
+ * without it the kinds plan without the keepsake. */
 export function loopKinds(talentOf: TalentOf = talentsD, story: PerkPack | null = null): LoopKinds {
   let byTalents = BY_TALENTS
   if (story) {

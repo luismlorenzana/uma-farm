@@ -1,5 +1,5 @@
 // Bonds between Umas: a pair's bond points
-// (`save.bonds`, by `pairKey` of character ids on v4), the hearts they make, and what moves them.
+// (`save.bonds`, by `pairKey` of character ids), the hearts they make, and what moves them.
 //
 //   Working the same place the same day   +10 a pair, ×1.5 sharing a favourite line of that place's   night step 6
 //   An expedition party, a day away        +15        A festival team   +20
@@ -10,17 +10,17 @@
 //   Side by side at 3 hearts: +10% of a night's items as extras (step 4), a tended block ×1.1 (step 2)
 //
 // Each new heart opens the pair's conversation: an authored one for a tie's pair, from the pack (`pairs`), read once into
-// `diary.read` as `pair:<a>-<b>:<hearts>`. On save v4 only: v3 has no bonds, and its night's `tickBonds` stays a
-// no-op. Bond points are whole: each pay rounds once, half up. Loaded with the romance's rules and the night.
+// `diary.read` as `pair:<a>-<b>:<hearts>`. Bond points are whole: each pay rounds once, half up. Loaded with the
+// romance's rules and the night.
 import { draw } from './draw'
 import { PLACE_ACTIVITY } from './rank-rules'
 import type { Activity } from './ranks'
 import type { BondLine } from '../night/summary'
 import { roundPoints } from '../romance/love'
 import { IN_ELEMENT, inElement, romanceBonus, type PerkPack } from '../romance/perk-terms'
-import type { LoopPlaceId } from '../save/parse-v3'
+import type { LoopPlaceId } from '../save/parse-v4'
 import { SaveRuleError } from '../save/rules'
-import { pairKey, type BlockId } from '../save/v3'
+import { pairKey, type BlockId } from '../save/v4'
 import type { FarmSave, Love, SaveV4 } from '../save/v4'
 import { addGoods, parseStockKey } from '../save/warehouse'
 import { tieStrength, type Tie } from '../story/authored'
@@ -154,7 +154,7 @@ const placeActivity = (place: string): Activity | null => (place === 'fields' ? 
 /** One pair's pay tonight. */
 export interface BondPay { a: string; b: string; points: number }
 
-/** Night step 6 on v4: every pair among the Umas who worked one place today earns +10, ×1.5 when both have
+/** Night step 6: every pair among the Umas who worked one place today earns +10, ×1.5 when both have
  * the same favourite line and it's that place's (farming for the Fields), through `addBond` (Romance 4's ×1.5). Once a
  * night a pair, in the places' order and then the pair's. */
 export function bondsTonight(
@@ -193,9 +193,8 @@ const besideAny = (save: Pick<FarmSave, 'bonds'>, id: string, others: readonly s
   others.some((other) => other !== id && bondHearts(bondOf(save, id, other)) >= SIDE_BY_SIDE_HEARTS)
 
 /** Whether a tended block grows side by side: its tender has a 3+-heart partner tending another block with a
- * growing plot. v4 only; v3 has no bonds. */
-export function tendsSideBySide(save: Pick<FarmSave, 'version' | 'bonds' | 'fields'>, block: BlockId): boolean {
-  if (save.version !== 4) return false
+ * growing plot. */
+export function tendsSideBySide(save: Pick<FarmSave, 'bonds' | 'fields'>, block: BlockId): boolean {
   const growing = (b: FarmSave['fields']['blocks'][number]) => b.tender !== null && b.plots.some((p) => p.crop !== null && !p.ready)
   const own = save.fields.blocks.find((b) => b.id === block)
   if (!own || !growing(own)) return false
@@ -203,18 +202,18 @@ export function tendsSideBySide(save: Pick<FarmSave, 'version' | 'bonds' | 'fiel
 }
 
 /** Her share of side by side's extras at a place tonight: 10% beside a 3+-heart partner who also worked there
- * today, else none; **20% in her element** (Friendship 8, at her line's place, on save v4 with the pack). */
-export function extrasShare(save: Pick<FarmSave, 'bonds'> & Partial<Pick<SaveV4, 'version' | 'love' | 'farm'>>, id: string, place: string, worked: readonly { outfitId: string; place: string }[], story: PerkPack | null = null): number {
+ * today, else none; **20% in her element** (Friendship 8, at her line's place, with the pack). */
+export function extrasShare(save: Pick<FarmSave, 'bonds'> & Partial<Pick<SaveV4, 'love' | 'farm'>>, id: string, place: string, worked: readonly { outfitId: string; place: string }[], story: PerkPack | null = null): number {
   if (!besideAny(save, id, worked.filter((w) => w.place === place).map((w) => w.outfitId))) return 0
-  const element = story && save.version === 4 && save.love && save.farm && inElement({ love: save.love, farm: save.farm }, story, id, place)
+  const element = story && save.love && save.farm && inElement({ love: save.love, farm: save.farm }, story, id, place)
   return round2((element ? IN_ELEMENT : SIDE_BY_SIDE) - 1)
 }
 const round2 = (n: number): number => Math.round(n * 100) / 100
 
 /** Her share of the perks' extras at a place tonight: the bond term × the romance term, so that with
- * side by side's share her items come to × (bond × (1 + romance)) in all. 0 on v3 or without the pack. */
+ * side by side's share her items come to × (bond × (1 + romance)) in all. 0 without the pack. */
 export function perksShare(save: FarmSave, id: string, place: string, worked: readonly { outfitId: string; place: string }[], story: PerkPack | null): number {
-  if (save.version !== 4 || !story) return 0
+  if (!story) return 0
   const romance = romanceBonus(save, story, id, place)
   return romance > 0 ? Math.round((1 + extrasShare(save, id, place, worked, story)) * romance * 1e6) / 1e6 : 0
 }
@@ -251,16 +250,15 @@ function payExtras<S extends FarmSave>(save: S, mine: ReadonlyMap<string, readon
 }
 
 /**
- * Night step 4 on v4, after the hauls: each Uma whose work finished items tonight (`made`) at a place where a
+ * Night step 4, after the hauls: each Uma whose work finished items tonight (`made`) at a place where a
  * 3+-heart partner also worked today gets 10% of those items again (20% in her element), as extras: `share × n` whole
  * copies and one more by `draw(uid, day, 'bond:<id>', 0)` for the fraction, each a copy of one of her night's items (the
  * same good and stars) picked by `draw(uid, day, 'bond:<id>', k)`, straight into the Warehouse. **The perks' extras**
  * follow as their own pot (`perks`, `draw(uid, day, 'perk:<id>', n)`): the bond term × the romance term of each item's place
  * (`perksShare`), so her items come to × (bond × (1 + romance)) in all. Planned hauls are untouched (uma-work's plans and
- * outputs). v3 makes none; without the pack, no perks.
+ * outputs). Without the pack, no perks.
  */
 export function extrasTonight<S extends FarmSave>(save: S, made: readonly { outfitId: string; place: string; items: readonly string[] }[], worked: readonly { outfitId: string; place: string }[], story: PerkPack | null = null): { save: S; extras: Extras[]; perks: Extras[] } {
-  if (save.version !== 4) return { save, extras: [], perks: [] }
   const mine = new Map<string, { place: string; items: string[] }[]>()
   for (const m of made) if (m.items.length > 0) mine.set(m.outfitId, [...(mine.get(m.outfitId) ?? []), { place: m.place, items: [...m.items] }])
   const side = payExtras(save, mine, 'bond', (id, place) => extrasShare(save, id, place, worked, story))

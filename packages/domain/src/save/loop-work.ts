@@ -1,4 +1,4 @@
-// The loop's work on the day clock: the operations over a v3 save. Every one runs at
+// The loop's work on the day clock: the operations over the save. Every one runs at
 // `workNow(save)`, the start of the save's day, and never reads the device's clock, so reopening the app moves nothing;
 // a player's change is stamped with real time (`stamp`). Readings settle and store nothing. `kinds` is the work registry
 // (`LOOP_KINDS`; the app passes `loopKinds(talentOf)` so plans read master data's talents, and tests their own). The
@@ -9,12 +9,12 @@ import {
 } from '@luismlorenzana/uma-work'
 import { DAY_MS, workNow } from '../farm/calendar'
 import { goodName } from '../goods/ids'
-import { farmEnvV3, loopWorld, withLoopWorld, type LoopWorld } from '../work/loop-env'
+import { farmEnv, loopWorld, withLoopWorld, type LoopWorld } from '../work/loop-env'
 import { LOOP_KINDS, type HaulDetail, type Measured } from '../gathering/kinds'
-import { LOOP_WORK_PLACES, type LoopKinds, type LoopPlaceId } from './parse-v3'
+import { LOOP_WORK_PLACES, type LoopKinds, type LoopPlaceId } from './parse-v4'
 import { SaveRuleError, type SaveRuleReason } from './rules'
 import { touched } from './save'
-import { tendedBlock, type LoopWorkRequest, type OutfitId, type SaveV3 } from './v3'
+import { tendedBlock, type LoopWorkRequest, type OutfitId } from './v4'
 import { loopReadyItems } from './work-readings'
 import { parseStockKey } from './warehouse'
 import type { FarmSave } from './v4'
@@ -52,7 +52,7 @@ function done<R>(result: OpResult<R, LoopWorld>, now: number): { state: LoopWorl
 
 /** The save's world settled at its day, with the env and the clock. */
 function opened(save: FarmSave, kinds: LoopKinds): { world: LoopWorld; env: WorkEnv<LoopWorld>; now: number } {
-  const env = farmEnvV3(kinds)
+  const env = farmEnv(kinds)
   const now = workNow(save)
   return { world: settle(loopWorld(save), now, env).state, env, now }
 }

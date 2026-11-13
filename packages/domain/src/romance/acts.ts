@@ -8,9 +8,9 @@
 //   Her line  +10                                   night step 6, a day at one of her line's places
 //   Festival  +50                                   once a festival a year, on its team or entry (festivals call it)
 //
-// Rules on save v4 only; v3 keeps `farm/visitors.ts`' affinity. Loaded with the romance's screens and the night.
+// Loaded with the romance's screens and the night.
 import { draw } from '../farm/draw'
-import { CHAT_LINES, type Taste } from '../farm/visitors'
+import { CHAT_LINES, type Taste } from './chats'
 import type { FestivalId } from '../farm/calendar'
 import type { Temperament } from '../farm/talents'
 import { goodOf, isSeedId } from '../goods/ids'

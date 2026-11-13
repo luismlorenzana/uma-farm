@@ -12,9 +12,8 @@
 //   In her element stays in the bond term, outside the cap: ×1.2 for ×1.1.
 //   Her keepsake: +0.25 quality at her line's place, +0.5 from S5.
 //
-// A perk at her line's place works only once that place is open ("Opens with chapter n"). Rules on save v4 only;
-// the shared rules call these only for a v4 save with the pack, so v3's numbers never move. Loaded with the night and the
-// romance's screens.
+// A perk at her line's place works only once that place is open ("Opens with chapter n"). The shared rules call these
+// only with the pack. Loaded with the night and the romance's screens.
 import type { FarmPlaceId } from '../farm/places'
 import { marriedCount, type Love, type SaveV4 } from '../save/v4'
 import { linePlaces, type StoryPack } from '../story/pack'
@@ -87,7 +86,7 @@ export interface RomanceTerms {
   held: boolean
 }
 
-/** Her ring's bonus as a share: once she's married, `love.ring` percent at her line. On v4 `love.ring` is her ring's
+/** Her ring's bonus as a share: once she's married, `love.ring` percent at her line. `love.ring` is her ring's
  * grade (+1% a grade, every ring a Rough make until the merge game adds its +1/+3/+5). */
 export const ringBonus = (love: Pick<Love, 'stage' | 'ring'> | undefined): number => (love?.stage === 'spouse' && love.ring !== undefined ? love.ring / 100 : 0)
 

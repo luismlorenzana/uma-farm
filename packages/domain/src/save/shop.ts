@@ -6,7 +6,6 @@ import { seedLines } from '../fields/fields'
 import { opened, type PlaceOpens } from '../farm/places'
 import { spendGold } from './gold'
 import { SaveRuleError } from './rules'
-import type { SaveV3 } from './v3'
 import { addGoods } from './warehouse'
 import type { FarmSave } from './v4'
 

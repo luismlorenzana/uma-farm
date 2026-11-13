@@ -3,11 +3,11 @@
 // block she tends gave a ★3+ crop (`harvest`), or (d) she assisted a Fine-or-better workshop play today (once the
 // workshops are built). Earning only lists her in `today.praise`; Praise +20 (`praiseV4`) pays once, and step 7 clears
 // both lists. Light on purpose: the Fields' harvest calls it.
-import { isSaveV4, type FarmSave } from '../save/v4'
+import type { FarmSave } from '../save/v4'
 
-/** She earned praise today: into `today.praise`, once. A v3 save, or an Uma off the roster, changes nothing. Never stamps. */
+/** She earned praise today: into `today.praise`, once. An Uma off the roster changes nothing. Never stamps. */
 export function earnPraise<S extends FarmSave>(save: S, id: string): S {
-  if (!isSaveV4(save) || !save.roster[id] || save.today.praise.includes(id)) return save
+  if (!save.roster[id] || save.today.praise.includes(id)) return save
   return { ...save, today: { ...save.today, praise: [...save.today.praise, id] } }
 }
 

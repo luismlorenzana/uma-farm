@@ -2,8 +2,8 @@
 import { describe, expect, it } from 'vitest'
 import { dateOf, DAY_MS, workNow } from './calendar'
 import { draw, fnv1a, mulberry32 } from './draw'
-import { BEDS, bedsAt, dormLevelFor, farmRankOf, FARM_RANK_POINTS } from './farm'
-import { ACTIVITIES, craftRank, LINE_ACTIVITY, RANK_POINTS, RANKS } from './ranks'
+import { BEDS, bedsAt, DORM_MAX_LEVEL, farmRankOf, FARM_RANK_POINTS } from './farm'
+import { ACTIVITIES, LINE_ACTIVITY, RANK_POINTS, RANKS } from './ranks'
 import { countRound, round10, round5 } from './round'
 
 describe('the calendar', () => {
@@ -81,29 +81,15 @@ describe('ranks', () => {
   it("maps today's lines to their activity", () => {
     expect(LINE_ACTIVITY).toEqual({ metal: 'mining', stone: 'mining', wood: 'foraging', fish: 'fishing', vegetables: 'farming' })
   })
-
-  it.each([
-    [1, 0, 0], [5, 0, 32], [6, 1, 40], [15, 1, 148], [16, 2, 160], [25, 2, 376],
-    [26, 3, 400], [35, 3, 850], [36, 4, 900], [45, 4, 1890], [46, 5, 2000], [50, 5, 2000],
-  ])('Craft Lv %i becomes rank %i at %i points', (level, rank, points) => {
-    expect(craftRank(level)).toEqual({ rank, points })
-  })
-
-  it('keeps every mapped rank inside its own points band', () => {
-    for (let level = 1; level <= 50; level++) {
-      const { rank, points } = craftRank(level)
-      expect(points).toBeGreaterThanOrEqual(RANK_POINTS[rank]!)
-      if (rank < 5) expect(points).toBeLessThan(RANK_POINTS[rank + 1]!)
-    }
-  })
 })
 
 describe('the farm', () => {
-  it("gives the Dorm's beds by level, and the lowest level with a bed for each", () => {
-    expect(BEDS).toEqual([3, 5, 8, 12, 16, 22, 30, 40, 50, 60])
+  it("gives the Dorm for 20's beds by level, held to its eight levels", () => {
+    expect(BEDS).toEqual([3, 5, 7, 9, 11, 14, 17, 20])
+    expect(DORM_MAX_LEVEL).toBe(8)
     expect(bedsAt(1)).toBe(3)
-    expect(bedsAt(10)).toBe(60)
-    expect([0, 3, 4, 8, 9, 10, 12, 60, 61, 272].map(dormLevelFor)).toEqual([1, 1, 2, 3, 4, 4, 4, 10, 10, 10])
+    expect(bedsAt(8)).toBe(20)
+    expect([0, 9].map(bedsAt)).toEqual([3, 20])
   })
 
   it("reads the Farm Rank from its points", () => {

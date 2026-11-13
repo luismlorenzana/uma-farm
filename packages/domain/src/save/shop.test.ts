@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { FARM_RANK_POINTS } from '../farm/farm'
 import { SaveRuleError } from './rules'
 import { buy, lineOpen, shopLines, type ShopLine } from './shop'
-import { newSave } from './v3'
+import { newSave } from './v4'
 
 const AT = '2026-11-09T10:00:00.000Z'
 const CARROT: ShopLine = { id: 'seed-carrot', price: 20, opens: { by: 'start' } }

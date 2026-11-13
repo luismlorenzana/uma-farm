@@ -14,7 +14,7 @@
 //   Breakfast (S1): the crew well fed for the day when no meal runs (the house morning calls it)
 //
 // Counts are expected values: a fraction becomes a whole item by a seeded draw, `draw(uid, day, 'perk:<id>…', n)`, so a
-// night replays the same. Save v4 only. Loaded with the night and the romance's screens.
+// night replays the same. Loaded with the night and the romance's screens.
 import { addBond, BOND_POINTS, placesToday } from '../farm/bonds'
 import { draw } from '../farm/draw'
 import { opened } from '../farm/places'
@@ -28,7 +28,7 @@ import { FISHERY, FOREST } from '../gathering/tables'
 import { goodOf } from '../goods/ids'
 import { drawStars, quality } from '../goods/stars'
 import type { ItemLine } from '../night/summary'
-import { DISH_FAMILIES, isDishId, type BlockId } from '../save/v3'
+import { DISH_FAMILIES, isDishId, type BlockId } from '../save/v4'
 import type { SaveV4 } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
 import { castOrder, favouriteOf, type StoryPack } from '../story/pack'

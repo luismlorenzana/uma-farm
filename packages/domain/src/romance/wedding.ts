@@ -13,7 +13,7 @@
 import { DAYS_PER_YEAR } from '../farm/calendar'
 import { tiesOf } from '../farm/bonds'
 import { SaveRuleError } from '../save/rules'
-import { isDishId } from '../save/v3'
+import { isDishId } from '../save/v4'
 import type { SaveV4 } from '../save/v4'
 import type { StoryPlace } from '../story/authored'
 import { castOrder, type StoryPack } from '../story/pack'

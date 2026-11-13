@@ -10,7 +10,7 @@
 //                  Vows: every spouse +50 and a festival night
 //
 // Household scenes (5, 10, 15) and the finale (20) are Ready offers from the morning after, never auto-played; they pay
-// nothing. Every draw is `draw(uid, day, what, n)`. Pure; save v4 only. Loaded with the night and the romance's screens.
+// nothing. Every draw is `draw(uid, day, what, n)`. Pure. Loaded with the night and the romance's screens.
 import { addBond, BOND_POINTS } from '../farm/bonds'
 import { draw } from '../farm/draw'
 import { talentsD, type TalentOf, type Temperament } from '../farm/talents'

@@ -4,14 +4,14 @@ import { describe, expect, it } from 'vitest'
 import { farmDay } from '../farm/calendar'
 import { binSales, binTotal, GOLD_SHIPPED, payBin, ship, shipAll, takeBack } from './bin'
 import { SaveRuleError } from './rules'
-import { newSave, type SaveV3 } from './v3'
+import { newSave, type SaveV4 } from './v4'
 
 const AT = '2026-11-09T10:00:00.000Z'
 const SPRING_3 = farmDay({ year: 1, season: 'spring', day: 3 })
 const SUMMER_3 = farmDay({ year: 1, season: 'summer', day: 3 })
 
 /** Day 1 with a few goods: carrots at ★1 and ★2, salmon at ★1–★3, Pine Logs. */
-function stocked(): SaveV3 {
+function stocked(): SaveV4 {
   const save = newSave('u1', AT)
   return { ...save, items: { ...save.items, carrot: [4, 2, 0, 0, 0], salmon: [1, 2, 1, 0, 0], 'pine-log': [10, 0, 0, 0, 0] } }
 }
@@ -91,7 +91,7 @@ describe('what the bin holds', () => {
 describe('the night pays (step 1)', () => {
   it('pays gold, counts the gold shipped and each good shipped, and empties the bin', () => {
     const shipped = ship(ship(stocked(), 'carrot', 1, 3), 'carrot', 2, 1)
-    const before: SaveV3 = { ...shipped, farm: { ...shipped.farm, counts: { [GOLD_SHIPPED]: 1000 } }, diary: { ...shipped.diary, shipped: { carrot: 5 } } }
+    const before: SaveV4 = { ...shipped, farm: { ...shipped.farm, counts: { [GOLD_SHIPPED]: 1000 } }, diary: { ...shipped.diary, shipped: { carrot: 5 } } }
     const { save, sales, gold } = payBin(before, SPRING_3) // carrots in demand in Spring: 72 → 70, 90
     expect(sales).toEqual([
       { kind: 'sold', id: 'carrot', stars: 1, count: 3, gold: 210, demand: true },
