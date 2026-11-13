@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Publishes the story pack (romance build): builds the release from the ignored content/story/
-# (`pnpm story:release`, which refuses a pack that fails the validator or lacks a bible or an arrival scene), then uploads
+# Publishes the story pack: builds the release from the ignored content/story/ (`pnpm story:release`, which releases
+# any pack as the game reads it, skipping only the parts the game can't read, and refuses only a missing pack), then uploads
 # the hash-named files first and `story.json` last, so a reader never sees an index that points at missing files. Old
 # hash-named files stay in the bucket, so a phone holding an older index still reads it; the bucket's versioning keeps
 # the older indexes. Never changes the gcloud account or its configuration: every call is scoped by the environment.

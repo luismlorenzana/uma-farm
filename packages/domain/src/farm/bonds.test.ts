@@ -15,7 +15,7 @@ import { newSaveV4, type Love, type SaveV4 } from '../save/v4'
 import { goodCount } from '../save/warehouse'
 import type { Cast, CastEntry, PairConversations, Ties } from '../story/authored'
 import { STAND_IN_CAST, STAND_IN_PAIR, STAND_IN_TIES, STAND_INS } from '../story/authored.fixture'
-import { storyPackFrom, StoryPackError, type StoryPack } from '../story/pack'
+import { readStoryPack, storyPackFrom, type StoryPack } from '../story/pack'
 import { readScene } from '../story/scenes'
 import { STAND_IN_FILES } from '../story/stand-in'
 import {
@@ -309,24 +309,24 @@ describe('pair conversations', () => {
     expect(parseSaveV4(json(read))).toEqual(read)
   })
 
-  it('validates a pack\'s pairs: partial levels, each once, named in numeric order, a tie\'s pair only', () => {
+  it('reads a pack\'s pairs: any levels, each once; a file out of numeric order is skipped, an untied pair noted', () => {
     const partial: PairConversations = { ...json(STAND_IN_PAIR), levels: json(STAND_IN_PAIR).levels.slice(0, 2) }
     expect([...storyPackFrom({ ...STAND_IN_FILES, pairs: { '9000001-9000002': partial } }).pairs.get(pairKey(ONE, TWO))!]).toEqual([1, 2])
-    const issues = (pairs: Record<string, unknown>) => {
-      try {
-        storyPackFrom({ ...STAND_IN_FILES, pairs })
-        return []
-      } catch (error) {
-        return (error as StoryPackError).issues
-      }
+    const read = (pairs: Record<string, unknown>, files: Partial<typeof STAND_IN_FILES> = {}) => {
+      const { errors, notes, pack } = readStoryPack({ ...STAND_IN_FILES, ...files, pairs })
+      return { errors, notes: notes.filter((n) => n.startsWith('pairs/')), pack }
     }
-    expect(issues({ '9000002-9000001': { ...partial, a: TWO, b: ONE } })).toEqual(['pairs/9000002-9000001: its name and its a, b are the two ids in numeric order, <a>-<b>'])
-    expect(issues({ '9000001-9000002': { ...partial, levels: [...partial.levels, partial.levels[0]!] } })).toEqual(['pairs/9000001-9000002: Bond level 1 is written twice'])
-    expect(issues({ '9000001-9000002': { ...partial, levels: [{ ...partial.levels[0]!, hearts: 6 }] } })).toEqual(['pairs/9000001-9000002: Level 1: hearts is 1–5'])
-    // A pair the ties don't hold isn't a tie's pair.
+    expect(read({ '9000002-9000001': { ...partial, a: TWO, b: ONE } })).toMatchObject({ errors: ['pairs/9000002-9000001.json: its name and its a, b are the two ids in numeric order, <a>-<b>; none is read'] })
+    expect(read({ '9000002-9000001': { ...partial, a: TWO, b: ONE } }).pack.pairs.size).toBe(0)
+    const twice = read({ '9000001-9000002': { ...partial, levels: [...partial.levels, partial.levels[0]!] } })
+    expect(twice.errors).toEqual(['pairs/9000001-9000002.json: Level 1: written twice; the later one is skipped'])
+    expect([...twice.pack.pairs.get(pairKey(ONE, TWO))!]).toEqual([1, 2])
+    expect(read({ '9000001-9000002': { ...partial, levels: [{ ...partial.levels[0]!, hearts: 6 }] } }).notes).toEqual(['pairs/9000001-9000002.json: Level 6: bonds reach levels 1–5, so it never plays'])
+    // A pair the ties don't hold never plays: a note.
     const four = packWithFour()
-    expect(() => storyPackFrom({ ...STAND_IN_FILES, cast: four.cast, ties: four.ties, pairs: { '9000001-9000004': { a: ONE, b: FOUR, levels: partial.levels.map((l) => ({ ...l, steps: [{ say: ONE, line: 'Hi.' }] })) } } }))
-      .toThrow('not a tie\'s pair')
+    const untied = read({ '9000001-9000004': { a: ONE, b: FOUR, levels: partial.levels.map((l) => ({ ...l, steps: [{ say: ONE, line: 'Hi.' }] })) } }, { cast: four.cast, ties: four.ties })
+    expect(untied.errors).toEqual([])
+    expect(untied.notes).toEqual(['pairs/9000001-9000004.json: not a tie’s pair, so its conversations never play'])
   })
 })
 

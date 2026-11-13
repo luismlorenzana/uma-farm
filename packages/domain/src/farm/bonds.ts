@@ -23,7 +23,7 @@ import { SaveRuleError } from '../save/rules'
 import { pairKey, type BlockId } from '../save/v3'
 import type { FarmSave, Love, SaveV4 } from '../save/v4'
 import { addGoods, parseStockKey } from '../save/warehouse'
-import type { Tie } from '../story/authored'
+import { tieStrength, type Tie } from '../story/authored'
 import { favouriteOf, type StoryPack } from '../story/pack'
 
 // --- Hearts ------------------------------------------------------------------------------------------------------
@@ -73,7 +73,7 @@ export function tiesOf(pack: Pick<StoryPack, 'ties'>, save: Pick<FarmSave, 'bond
     if (tie.a !== id && tie.b !== id) return []
     const other = tie.a === id ? tie.b : tie.a
     return [{ tie, with: other, points: bondOf(save, id, other), order }]
-  }).sort((x, y) => y.tie.strength - x.tie.strength || y.points - x.points || x.order - y.order)
+  }).sort((x, y) => tieStrength(y.tie) - tieStrength(x.tie) || y.points - x.points || x.order - y.order)
 }
 
 /** Her closest friend: her first tie by `tiesOf`, or null for an Uma the ties don't hold. Every cast
@@ -118,15 +118,15 @@ function withBond(save: SaveV4, key: string, points: number): SaveV4 {
 
 // --- The ties' seeds ---------------------------------------------------------------------------------
 
-/** A tie's seed by its strength: 3 → 150 (2 hearts), 2 → 50 (1 heart), 1 → 0 (known, with a line). */
-export const TIE_SEEDS: Readonly<Record<Tie['strength'], number>> = { 1: 0, 2: 50, 3: 150 }
+/** A tie's seed by its strength (1 when the pack gives none): 3 → 150 (2 hearts), 2 → 50 (1 heart), 1 → 0 (known, with a line). */
+export const TIE_SEEDS: Readonly<Record<1 | 2 | 3, number>> = { 1: 0, 2: 50, 3: 150 }
 
 /** She joins: each of her ties whose other Uma is on the farm starts at its seed, `max(points, seed)`, so a
  * seed never lowers a bond. A seeded heart is a new heart: the morning lists it and its conversation opens. Pure. */
 export function seedTies(save: SaveV4, pack: Pick<StoryPack, 'ties'>, id: string): SaveV4 {
   let next = save
   for (const { tie, with: other } of tiesOf(pack, save, id)) {
-    const seed = TIE_SEEDS[tie.strength]
+    const seed = TIE_SEEDS[tieStrength(tie)]
     if (other === id || !save.roster[other] || !save.roster[id] || seed <= bondOf(next, id, other)) continue
     next = withBond(next, pairKey(id, other), seed)
   }

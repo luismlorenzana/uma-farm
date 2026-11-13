@@ -23,17 +23,13 @@
 
 - **The game reads a pack:** `cast.json`, `ties.json`, `umas/<characterId>.json`, `routes/<characterId>.json`,
   `pairs/<a>-<b>.json` and `household.json`, in the shapes `packages/domain/src/story/authored.ts` reads.
-  - Once [F61](F61-open-story-pack.md) ships, `docs/story-pack.md` lists everything the game can read. Every item is
-    optional, and each comes with what plays when it's missing.
-  - Write into the pack only what you want the game to show. Anything missing plays as a placeholder
-    ([F63](F63-story-placeholders.md)), and each new pack adds what it has.
-- **Until F61 ships,** the checker still complains about fixed counts:
-  - the opening three and their order;
-  - list sizes;
-  - an arrival scene's one choice;
-  - a bible for every cast Uma.
-
-  Ignore those complaints: they're being removed, and they never block your writing.
+  - [The story pack's menu](../../story-pack.md) lists everything the game can read. Every item is optional, and each
+    comes with what plays when it's missing.
+  - Write into the pack only what you want the game to show. Anything missing plays as the game's own (placeholders for
+    every read come with [F63](F63-story-placeholders.md)), and each new pack adds what it has.
+- **The checker blocks nothing.** Errors are only what the game can't read (a file that isn't JSON, a value it can't
+  use, a line longer than its screen), and each skips only the part it's in. Everything else is a note. No counts or
+  orders are fixed: any opening, any number of lines, gifts or wedding places, any arrival scene.
 - **Characters:**
   - **Who:** any character in master data, by her `characterId`.
   - **The welcome list:** the pack names who welcomes the farmer in the first days. It can be any number, in order,
@@ -42,8 +38,9 @@
     or the default: three days' talks in town.
   - **Her chapters:** how many, their titles and which of her events each holds are the story's choice too, all
     optional ([F68](F68-her-chapters.md)); with none, she has four default chapters.
-- **Going live:** when the owner wants a pack in the game, `pnpm story:release` builds it, and Claude publishes it
-  (`pnpm story:publish`) to the farm's private bucket. Any pack can go; a partial one is normal.
+- **Going live:** when the owner wants a pack in the game, `pnpm story:release` builds it (it prints what it skipped and
+  the notes), and Claude publishes it (`pnpm story:publish`) to the farm's private bucket. Any pack can go; a partial one
+  is normal.
 
 ## What the game itself assumes
 

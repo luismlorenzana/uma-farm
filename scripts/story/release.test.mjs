@@ -1,5 +1,5 @@
-// The story pack's release and publish, on the invented stand-in pack in git (9000001–9000003):
-// no real character, name or line. A complete pack is the stand-in with invented bibles for its forager and fisher.
+// The story pack's release and publish, on invented packs only: the stand-in in git (9000001–9000003) and casts built here
+// in its numbering. No real character, name or line. Any pack releases, partial or not; only a missing pack is refused.
 // The publish script runs against a fake gcloud that only records its calls: no cloud is touched.
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
@@ -15,6 +15,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const BUILT_AT = '2026-11-12T00:00:00.000Z'
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const readJson = async (path) => JSON.parse(await readFile(path, 'utf8'))
+const id = (n) => String(9_000_000 + n)
 
 async function temp(t) {
   const dir = await mkdtemp(join(tmpdir(), 'story-release-'))
@@ -30,17 +31,20 @@ async function pack(t, edit = async () => {}) {
   return dir
 }
 
-/** Invented bibles for the stand-in's forager and fisher (9000001's, renamed, with their own lines), so the cast is whole. */
-async function withBibles(dir) {
-  const bible = await readJson(join(dir, 'umas/9000001.json'))
-  for (const [id, line] of [['9000002', 'foraging'], ['9000003', 'fishing']]) {
-    await writeFile(join(dir, `umas/${id}.json`), JSON.stringify({ ...bible, characterId: id, favouriteLine: line, wishes: undefined }))
+/** A pack folder holding only `files` (name → JSON). */
+async function packOf(t, files) {
+  const dir = join(await temp(t), 'story')
+  for (const [name, value] of Object.entries(files)) {
+    await mkdir(dirname(join(dir, name)), { recursive: true })
+    await writeFile(join(dir, name), typeof value === 'string' ? value : JSON.stringify(value, null, 2))
   }
+  return dir
 }
 
 test('releases the stand-in: every file minified, hash-named and listed in story.json', async (t) => {
   const out = await temp(t)
-  const { index, summary } = await buildRelease({ from: STAND_IN, out, builtAt: BUILT_AT, bibles: false })
+  const { index, summary, errors } = await buildRelease({ from: STAND_IN, out, builtAt: BUILT_AT })
+  assert.deepEqual(errors, [])
   assert.deepEqual(Object.keys(index.files), ['cast', 'household', 'pair-9000001-9000002', 'route-9000001', 'route-9000002', 'route-9000003', 'ties', 'uma-9000001'])
   assert.deepEqual(await readJson(join(out, 'story.json')), index)
   assert.equal(index.version, 1)
@@ -61,7 +65,7 @@ test('releases the stand-in: every file minified, hash-named and listed in story
 })
 
 test('writes scripted and pairs, so the game knows what each route and pair holds before loading it', async (t) => {
-  const { index } = await buildRelease({ from: STAND_IN, out: await temp(t), builtAt: BUILT_AT, bibles: false })
+  const { index } = await buildRelease({ from: STAND_IN, out: await temp(t), builtAt: BUILT_AT })
   const route = await readJson(join(STAND_IN, 'routes/9000001.json'))
   assert.deepEqual(index.scripted, { 9000001: route.events.map((e) => e.id), 9000002: ['arrival'], 9000003: ['arrival'] })
   assert.equal(index.scripted['9000001'].length, 27, 'her arrival and 26 events')
@@ -71,12 +75,12 @@ test('writes scripted and pairs, so the game knows what each route and pair hold
 
 test('the same inputs give the same files, and a rebuild swaps the folder whole', async (t) => {
   const [a, b] = [await temp(t), await temp(t)]
-  const first = await buildRelease({ from: STAND_IN, out: a, builtAt: BUILT_AT, bibles: false })
-  const second = await buildRelease({ from: STAND_IN, out: b, builtAt: BUILT_AT, bibles: false })
+  const first = await buildRelease({ from: STAND_IN, out: a, builtAt: BUILT_AT })
+  const second = await buildRelease({ from: STAND_IN, out: b, builtAt: BUILT_AT })
   assert.deepEqual(second.index, first.index)
   assert.equal(await readFile(join(b, 'story.json'), 'utf8'), await readFile(join(a, 'story.json'), 'utf8'))
   for (const file of Object.values(first.index.files)) assert.deepEqual(await readFile(join(b, file.path)), await readFile(join(a, file.path)))
-  const later = await buildRelease({ from: STAND_IN, out: a, builtAt: '2026-11-13T00:00:00.000Z', bibles: false })
+  const later = await buildRelease({ from: STAND_IN, out: a, builtAt: '2026-11-13T00:00:00.000Z' })
   assert.equal(later.index.release, first.index.release, 'the release id follows the files, not the time')
 
   const changed = await pack(t, async (dir) => {
@@ -84,61 +88,106 @@ test('the same inputs give the same files, and a rebuild swaps the folder whole'
     ties.ties[0].line = `${ties.ties[0].line} Again.`
     await writeFile(join(dir, 'ties.json'), JSON.stringify(ties, null, 2))
   })
-  const third = await buildRelease({ from: changed, out: a, builtAt: BUILT_AT, bibles: false })
+  const third = await buildRelease({ from: changed, out: a, builtAt: BUILT_AT })
   assert.notEqual(third.index.files.ties.path, first.index.files.ties.path)
   assert.notEqual(third.index.release, first.index.release)
   assert.equal(third.index.files.cast.path, first.index.files.cast.path)
   assert.deepEqual((await readdir(join(a, 'story'))).sort(), Object.values(third.index.files).map((f) => f.path.slice(6)).sort(), 'no stale file left locally')
 })
 
-test("refuses a pack where a cast Uma lacks her bible, and writes nothing", async (t) => {
-  const out = join(await temp(t), 'release')
-  await assert.rejects(buildRelease({ from: STAND_IN, out, builtAt: BUILT_AT }), (e) => {
-    assert.ok(e instanceof ReleaseRefused)
-    assert.deepEqual(e.issues, ['umas/9000002.json: her bible is missing', 'umas/9000003.json: her bible is missing'])
-    return true
-  })
-  await assert.rejects(readdir(out), { code: 'ENOENT' })
-})
-
-test('releases a whole cast whose routes are partial ("Her story is still being written")', async (t) => {
-  const from = await pack(t, withBibles)
-  const { index, summary } = await buildRelease({ from, out: await temp(t), builtAt: BUILT_AT })
-  assert.deepEqual(index.scripted['9000002'], ['arrival'], 'her bible has 27 beats; only her arrival is scripted')
-  assert.deepEqual(Object.keys(index.files).filter((n) => n.startsWith('uma-')), ['uma-9000001', 'uma-9000002', 'uma-9000003'])
-  assert.equal(summary.bibles, 3)
-})
-
-test('refuses a cast Uma without her arrival scene: no route, or a route without it', async (t) => {
+test('releases a partial pack with notes: bibles and arrival scenes missing, routes partial', async (t) => {
   const from = await pack(t, async (dir) => {
-    await withBibles(dir)
     await rm(join(dir, 'routes/9000003.json'))
     const route = await readJson(join(dir, 'routes/9000001.json'))
     await writeFile(join(dir, 'routes/9000001.json'), JSON.stringify({ ...route, events: route.events.filter((e) => e.id !== 'arrival') }))
   })
-  await assert.rejects(buildRelease({ from, out: await temp(t), builtAt: BUILT_AT }), (e) => {
-    assert.deepEqual(e.issues, ['routes/9000001.json: her arrival scene is missing', 'routes/9000003.json: her arrival scene is missing'])
-    return true
-  })
+  const { index, errors, notes, summary } = await buildRelease({ from, out: await temp(t), builtAt: BUILT_AT })
+  assert.deepEqual(errors, [])
+  assert.deepEqual(Object.keys(index.scripted), ['9000001', '9000002'])
+  assert.ok(notes.includes('umas/9000002.json: no bible yet, so her calling gives her line, her tastes are neutral, and her chats are her temperament’s'), notes.join('\n'))
+  assert.ok(notes.includes('routes/9000001.json: no arrival scene, so the game’s own short one plays'), notes.join('\n'))
+  assert.ok(notes.includes('routes/9000003.json: no route yet, so her arrival is the game’s own short scene and her events wait (“Her story is still being written”)'), notes.join('\n'))
+  assert.equal(summary.notes, notes.length)
 })
 
-test("refuses anything the game's validator refuses, with its words", async (t) => {
+test('releases five opening characters in any order, with notes only', async (t) => {
+  const umas = [4, 2, 5, 1, 3].map((n) => ({ characterId: id(n), outfitId: `${id(n)}01`, calling: ['quarry', 'fishing', 'farming', 'mining', 'foraging'][n - 1], arrives: { kind: 'opening' } }))
+  const from = await packOf(t, { 'cast.json': { opening: umas.map((u) => u.characterId), umas } })
+  const out = await temp(t)
+  const { index, errors, notes } = await buildRelease({ from, out, builtAt: BUILT_AT })
+  assert.deepEqual(errors, [])
+  assert.ok(notes.length > 0)
+  const cast = JSON.parse(await readFile(join(out, index.files.cast.path), 'utf8'))
+  assert.deepEqual(cast.opening, [id(4), id(2), id(5), id(1), id(3)])
+  assert.deepEqual(index.files.ties ? Object.keys(index.files).sort() : [], ['cast', 'ties'], 'an empty ties file stands in for a missing one')
+})
+
+test('releases forty characters, with notes only', async (t) => {
+  const umas = Array.from({ length: 40 }, (_, i) => ({ characterId: id(i + 1), outfitId: `${id(i + 1)}01` }))
+  const from = await packOf(t, {
+    'cast.json': { umas, welcome: [id(12), id(3)] },
+    'ties.json': { ties: [{ a: id(1), b: id(2), kind: 'friends', strength: 2 }, { a: id(39), b: id(40) }] },
+    [`umas/${id(12)}.json`]: { characterId: id(12), favouriteLine: 'cooking', gifts: { loved: 'carrot' } },
+    [`routes/${id(12)}.json`]: { characterId: id(12), events: [{ id: 'arrival', steps: [{ narrate: 'Someone new at the Gate.' }, { choice: [{ text: 'Welcome.', friendship: 10 }, { text: 'Hello.' }] }] }] },
+  })
+  const out = await temp(t)
+  const { index, errors, notes, summary } = await buildRelease({ from, out, builtAt: BUILT_AT })
+  assert.deepEqual(errors, [])
+  assert.equal(summary.cast, 40)
+  assert.deepEqual(index.scripted, { [id(12)]: ['arrival'] })
+  assert.ok(notes.some((n) => n.startsWith(`umas/${id(40)}.json: no bible yet`)))
+  assert.equal(JSON.parse(await readFile(join(out, index.files.cast.path), 'utf8')).welcome.join(), [id(12), id(3)].join())
+})
+
+test('releases a single character with no routes, ties or bible', async (t) => {
+  const from = await packOf(t, { 'cast.json': { umas: [{ characterId: id(1) }] } })
+  const { index, errors, notes } = await buildRelease({ from, out: await temp(t), builtAt: BUILT_AT })
+  assert.deepEqual(errors, [])
+  assert.deepEqual(index.scripted, {})
+  assert.deepEqual(index.pairs, {})
+  assert.equal(notes.length, 5)
+})
+
+test('a pack with one broken event loses only that event', async (t) => {
+  const from = await pack(t, async (dir) => {
+    const route = await readJson(join(dir, 'routes/9000001.json'))
+    route.events.find((e) => e.id === 'r3').steps.push({ choice: [] })
+    await writeFile(join(dir, 'routes/9000001.json'), JSON.stringify(route))
+  })
+  const out = await temp(t)
+  const { index, errors } = await buildRelease({ from, out, builtAt: BUILT_AT })
+  assert.equal(errors.length, 1)
+  assert.match(errors[0], /^routes\/9000001\.json: Event r3, step \d+: a choice lists its options \(the event is skipped\)$/)
+  assert.equal(index.scripted['9000001'].length, 26)
+  assert.ok(!index.scripted['9000001'].includes('r3'))
+  const released = JSON.parse(await readFile(join(out, index.files['route-9000001'].path), 'utf8'))
+  assert.deepEqual(released.events.map((e) => e.id), index.scripted['9000001'])
+})
+
+test('skips what the game can\'t read, file by file, and releases the rest', async (t) => {
   const from = await pack(t, async (dir) => {
     const cast = await readJson(join(dir, 'cast.json'))
     cast.umas[2].calling = 'juggling'
     await writeFile(join(dir, 'cast.json'), JSON.stringify(cast))
     await writeFile(join(dir, 'pairs/9000002-9000003.json'), '{ not json')
+    await writeFile(join(dir, 'ties.json'), '{ "ties": "none" }')
   })
-  await assert.rejects(buildRelease({ from, out: await temp(t), builtAt: BUILT_AT, bibles: false }), (e) => {
-    assert.deepEqual(e.issues.map((i) => i.split(' (')[0]), ['pairs/9000002-9000003.json: not JSON'])
+  const out = await temp(t)
+  const { index, errors } = await buildRelease({ from, out, builtAt: BUILT_AT })
+  assert.deepEqual(errors.map((e) => e.split(' (')[0]), [
+    'pairs/9000002-9000003.json: not JSON',
+    'cast.json: Uma 3',
+    'ties.json: Not a ties file',
+  ])
+  const cast = JSON.parse(await readFile(join(out, index.files.cast.path), 'utf8'))
+  assert.equal(cast.umas[2].calling, undefined)
+  assert.equal(cast.umas.length, 3)
+  assert.deepEqual(JSON.parse(await readFile(join(out, index.files.ties.path), 'utf8')), { ties: [] })
+  await assert.rejects(buildRelease({ from: join(from, 'nowhere'), out: await temp(t) }), (e) => {
+    assert.ok(e instanceof ReleaseRefused)
+    assert.match(e.message, /No story pack/)
     return true
   })
-  await rm(join(from, 'pairs/9000002-9000003.json'))
-  await assert.rejects(buildRelease({ from, out: await temp(t), builtAt: BUILT_AT, bibles: false }), (e) => {
-    assert.ok(e.issues.some((i) => i.includes('calling')), e.message)
-    return true
-  })
-  await assert.rejects(buildRelease({ from: join(from, 'nowhere'), out: await temp(t) }), /No story pack/)
 })
 
 test('reads only the pack: the sandbox notes, reviews and the cast pack beside it never leave the folder', async (t) => {
@@ -149,13 +198,13 @@ test('reads only the pack: the sandbox notes, reviews and the cast pack beside i
     await writeFile(join(dir, 'pack/sample/pack.json'), '{}')
   })
   const out = await temp(t)
-  const { index } = await buildRelease({ from, out, builtAt: BUILT_AT, bibles: false })
+  const { index } = await buildRelease({ from, out, builtAt: BUILT_AT })
   assert.ok(Object.keys(index.files).every((n) => /^(cast|ties|household|uma-\d+|route-\d+|pair-\d+-\d+)$/.test(n)))
   assert.deepEqual((await readdir(out)).sort(), ['story', 'story.json'])
 })
 
 test('publish: the release first, then the hash-named files, then story.json, with the scoped gcloud only', async (t) => {
-  const from = await pack(t, withBibles)
+  const from = await pack(t)
   const work = await temp(t)
   const bin = join(work, 'bin')
   await mkdir(bin)
@@ -169,7 +218,7 @@ test('publish: the release first, then the hash-named files, then story.json, wi
   })
   const said = run()
   const index = await readJson(join(out, 'story.json'))
-  assert.match(said, new RegExp(`Published release ${index.release}: 10 files and story.json to gs://uma-farm-content`))
+  assert.match(said, new RegExp(`Published release ${index.release}: 8 files and story.json to gs://uma-farm-content`))
   const calls = (await readFile(log, 'utf8')).trim().split('\n')
   assert.deepEqual(calls, [
     `default|uma-rpg|storage rsync ${out}/story gs://uma-farm-content/story --checksums-only --cache-control=private, max-age=31536000, immutable --content-type=application/json`,
@@ -184,6 +233,6 @@ test('publish: the release first, then the hash-named files, then story.json, wi
   ])
 
   await rm(log)
-  assert.throws(() => run([], { STORY_FROM: STAND_IN }), 'a pack missing bibles is never published')
+  assert.throws(() => run([], { STORY_FROM: join(work, 'no-pack') }), 'a missing pack is never published')
   await assert.rejects(readFile(log, 'utf8'), { code: 'ENOENT' }, 'and gcloud never runs')
 })

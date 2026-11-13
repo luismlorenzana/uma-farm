@@ -23,12 +23,12 @@ import { homeOrHoused } from './perk-terms'
 
 /** The places a wedding falls back on without her bible's `wedding.places`: after her wedding beat's. */
 export const WEDDING_DEFAULTS: readonly StoryPlace[] = ['chapel-bell', 'fields', 'overlook', 'orchard-bench']
-/** Her wedding's three places: her bible's `wedding.places`, else her wedding beat's place and the
+/** Her wedding's places: her bible's `wedding.places` (any number), else her wedding beat's place and the
  * farm's defaults, three different. */
 export function weddingPlaces(pack: Pick<StoryPack, 'bibles'>, id: string): StoryPlace[] {
   const bible = pack.bibles.get(id)
-  if (bible?.wedding) return [...bible.wedding.places]
-  const beat = bible?.route.find((b) => b.id === 'wedding')?.place
+  if (bible?.wedding && bible.wedding.places.length > 0) return [...bible.wedding.places]
+  const beat = bible?.route?.find((b) => b.id === 'wedding')?.place
   return [...new Set([...(beat ? [beat] : []), ...WEDDING_DEFAULTS])].slice(0, 3)
 }
 /** The flag a wedding keeps of its place, so a later scene's words and a replay can name it. */

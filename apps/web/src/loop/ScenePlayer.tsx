@@ -2,21 +2,22 @@
 // member's lettered disc until the busts ship, or an Uma's from master data through uma-kit's `UmaBust`), the speaker's
 // name and one line; a tap goes on, and **Skip** ends it. The chapter scenes' lines are data (`@farm/domain`'s
 // `story/chapter-1.ts`, and v4's re-cut opening) with roles the save fills: on v3 your first hands speak their
-// temperament's hello and your newest hand asks to stay; on v4 the opening ends as the three come up the road (reading it
-// brings them), and the closing scene's newest hand is chapter 1's authored arrival. The v3 opening ends on chapter 1's
+// temperament's hello and your newest hand asks to stay; on v4 the opening ends as its Umas come up the road (reading it
+// brings them: the pack's `openingOf`, any number; with none it ends on chapter 1's card), and the closing scene's newest
+// hand is chapter 1's authored arrival. The v3 opening ends on chapter 1's
 // card, the closing scene on chapter 2's. Each plays once (`diary.read`). It loads master data itself, for the Umas'
 // names, busts and temperaments, since a new account's boot doesn't wait for it; Skip works without it.
 //
 // On v4 it also plays each Uma's **arrival scene** from the story pack, the format's steps: `say` (her
 // bust, the line with `{farmer}` filled, the emote as a word), `narrate`, `thought` (italic), `place` (the title line),
 // `wait`, `flag` and `choice`, whose options show their gain before the tap (+30 for the best, +10 for the rest). Skip
-// jumps to the choice, never past it, so every arrival pays +50 and its choice; the last of the opening three ends on
-// chapter 1's card and **Plant the carrots**. Its frame and steps also play the pair conversations (`PairPlayer.tsx`).
+// jumps to the choice, never past it, so every arrival pays +50 and its choice (an arrival the pack writes without one
+// pays +50 alone); the last of the opening's Umas ends on chapter 1's card and **Plant the carrots**. Its frame and steps also play the pair conversations (`PairPlayer.tsx`).
 // Loaded on demand. On v4 the ring bench's scene (`scene:bench`) plays here too, its player loaded on demand in the
 // romance build only (`BenchScene.tsx`).
 import {
-  ARRIVAL_POINTS, arrivalOf, BENCH_SCENE, CAST, CAST_IDS, castInitial, chapterArrival, CHAPTER_1_GOALS, chapterOf, chapterScene, choicePoints, FALLBACK_ARRIVAL, farmPlace, pathFlags,
-  sceneLines, sceneSteps, withFarmer, type CastId, type ChapterSceneId, type ChoiceOption, type SaveV4, type SceneId, type SceneLine, type Step, type Temperament,
+  ARRIVAL_POINTS, arrivalOf, BENCH_SCENE, CAST, CAST_IDS, castInitial, chapterArrival, CHAPTER_1_GOALS, chapterOf, chapterScene, choicePoints, FALLBACK_ARRIVAL, farmPlace, openingOf,
+  pathFlags, sceneLines, sceneSteps, withFarmer, type CastId, type ChapterSceneId, type ChoiceOption, type SaveV4, type SceneId, type SceneLine, type Step, type Temperament,
 } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -74,10 +75,11 @@ export function Frame({ title, label, scene, onSkip, skipping, children }: { tit
 
 function ChapterScenePlayer({ scene }: { scene: ChapterSceneId }) {
   const save = useLoopSave()
+  const story = useStory()
   const navigate = useNavigate()
   const [leaving, setLeaving] = useState(false)
   if (!save) return null
-  const data = chapterScene(scene, save.version)
+  const data = chapterScene(scene, save.version, story ? openingOf(story).length : undefined)
   /** Played through or skipped: the scene is read, once, and the farm goes on where `to` says. */
   const finish = (to: string | null) => {
     if (leaving) return
@@ -99,15 +101,16 @@ function Play({ scene, master, onDone }: { scene: ChapterSceneId; master: Master
     const table = talentTable(master)
     // On v4 the closing scene's newest hand is chapter 1's authored arrival, or nobody.
     const newest = save.version === 4 ? (story ? chapterArrival(story, 1)?.characterId ?? null : null) : undefined
-    return sceneLines(chapterScene(scene, save.version), save, (id): Temperament => table.get(id)?.temperament ?? 'steady', newest)
+    return sceneLines(chapterScene(scene, save.version, story ? openingOf(story).length : undefined), save, (id): Temperament => table.get(id)?.temperament ?? 'steady', newest)
     // The roles are filled once, when the scene starts: a save changing under it doesn't recast it.
   }, [scene, master]) // eslint-disable-line react-hooks/exhaustive-deps
   const [at, setAt] = useState(0)
   const nameOf = (id: string): string => master.album.get(id)?.name ?? 'An Uma'
   const farmer = save.version === 4 ? save.farmer.name : ''
   if (at >= lines.length) {
-    // v4's opening ends as the three come up the road: reading it brings them, and their arrivals play next.
-    if (save.version === 4 && scene === 'scene:1:open') return <ReadOn onDone={() => onDone(null)} />
+    // v4's opening ends as its Umas come up the road: reading it brings them, and their arrivals play next. An opening
+    // that brings nobody ends on chapter 1's card, as the last arrival would.
+    if (save.version === 4 && scene === 'scene:1:open' && (!story || openingOf(story).length > 0)) return <ReadOn onDone={() => onDone(null)} />
     return <ChapterCard scene={scene} onDone={onDone} />
   }
   const line = lines[at]!
@@ -214,11 +217,11 @@ function ArrivalPlayer({ save, id }: { save: SaveV4; id: string }) {
   }, [story, id])
   if (!steps) return null
   return (
-    <MasterGate>{(master) => <Arrival save={save} id={id} steps={steps} master={master} lastOpening={!!story && isLastOpening(save, story.cast.opening, id)} />}</MasterGate>
+    <MasterGate>{(master) => <Arrival save={save} id={id} steps={steps} master={master} lastOpening={!!story && isLastOpening(save, openingOf(story), id)} />}</MasterGate>
   )
 }
 
-/** The third of the opening three: the others' arrivals have played. */
+/** The last of the opening's Umas: the others' arrivals have played. */
 const isLastOpening = (save: Pick<SaveV4, 'arrivals'>, opening: readonly string[], id: string): boolean =>
   opening.includes(id) && opening.every((o) => o === id || save.arrivals.includes(o))
 
@@ -245,10 +248,11 @@ function Arrival({ save, id, steps, master, lastOpening }: { save: SaveV4; id: s
     if (leaving) return
     const choice = shown.find((s): s is { choice: ChoiceOption[] } => 'choice' in s)
     const pick = picks[0]
-    if (!choice || pick === undefined) return
+    // An arrival the pack writes with no choice pays +50 alone; with one, its first choice pays too.
+    if (choice && pick === undefined) return
     setLeaving(true)
     if (to) navigate(to)
-    void finishArrivalScene(id, { choice: choicePoints(choice.choice)[pick]!, flags: pathFlags(shown) }).catch(() => setLeaving(false))
+    void finishArrivalScene(id, { choice: choice && pick !== undefined ? choicePoints(choice.choice)[pick]! : 0, flags: pathFlags(shown) }).catch(() => setLeaving(false))
   }
   // Skip: to her choice, never past it; once chosen, to the end.
   const skip = () => {

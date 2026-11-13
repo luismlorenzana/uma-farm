@@ -88,7 +88,7 @@ describe('playEvent', () => {
     expect(readiness(save, PACK, ONE).waits).toEqual({ kind: 'setup', setup: { kind: 'working', activity: 'fishing' } })
     // The test's work kinds gather at the forest, so her setup there stands in for the Fishery's.
     const bible = json(PACK.bibles.get(ONE)!)
-    bible.route = bible.route.map((b) => (b.id === 'f3' ? { ...b, trigger: { kind: 'working', activity: 'foraging' } } : b))
+    bible.route = bible.route!.map((b) => (b.id === 'f3' ? { ...b, trigger: { kind: 'working', activity: 'foraging' } } : b))
     const pack: StoryPack = { ...PACK, bibles: new Map([[ONE, bible]]) }
     expect(readiness(save, pack, ONE).waits?.kind).toBe('setup')
     const working = startLoopJob(save, { outfitId: ONE, place: 'forest', slot: 0, request: { kind: 'gather', item: 'pine-log', count: 1 } }, AT, TEST_KINDS) as SaveV4
@@ -100,7 +100,7 @@ describe('playEvent', () => {
 
   it('an option\'s goods: refused without them ("Need 1 Basil"), taken lowest stars first; with no play step, her together plays (Rhythm with the pot)', () => {
     const save = readyFor(farm(), 'friendship', 3, 'f4')
-    expect(extraPlay(steps('f4'), PACK.bibles.get(ONE)!.route.find((b) => b.id === 'f4')!.together)).toEqual({ kind: 'rhythm', mark: 'pot', fallback: true })
+    expect(extraPlay(steps('f4'), PACK.bibles.get(ONE)!.route!.find((b) => b.id === 'f4')!.together)).toEqual({ kind: 'rhythm', mark: 'pot', fallback: true })
     expect(() => playEvent(save, PACK, ONE, outcome('f4', [0], [{ kind: 'rhythm', score: 70 }]))).toThrow('Need 1 Basil')
     const stocked = give(give(save, 'basil', 3), 'basil', 1)
     const { save: after, card } = playEvent(stocked, PACK, ONE, outcome('f4', [0], [{ kind: 'rhythm', score: 70 }]))

@@ -251,7 +251,7 @@ export function lineGrade(save: SaveV4, pack: PerkPack, id: string): number {
 /** Her signature dish: her loved good when it's a dish, taken as is; else her line's dish kind at the grade
  * of her line's best place now. */
 export function signatureDish(save: SaveV4, pack: PerkPack, id: string): string {
-  const loved = pack.bibles.get(id)?.gifts.loved
+  const loved = pack.bibles.get(id)?.gifts?.loved
   if (loved !== undefined && isDishId(loved)) return loved
   const line = perkLineOf(pack, id) ?? 'farming'
   return dishId(LINE_DISH[line], lineGrade(save, pack, id))

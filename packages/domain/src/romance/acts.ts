@@ -78,7 +78,7 @@ export function chatLineV4(save: Pick<SaveV4, 'account' | 'calendar' | 'love'>, 
 export function tasteKnown(pack: Pick<StoryPack, 'bibles'>, love: Pick<Love, 'stage' | 'level' | 'known'>, id: string, good: string): boolean {
   if (love.known.includes(good)) return true
   const reached = (level: number) => love.stage !== 'friendship' || love.level >= level
-  return reached(7) || (reached(1) && pack.bibles.get(id)?.gifts.loved === good)
+  return reached(7) || (reached(1) && pack.bibles.get(id)?.gifts?.loved === good)
 }
 
 /** A gift's points for her today: her taste's base × its stars × 3 on her birthday × 2 on her anniversary,

@@ -74,7 +74,7 @@ import { HOUSE_ITEM_N, HOUSE_POINTS, HOUSE_TEMPLATES, VOWS_POINTS } from '../rom
 import { EXTENDED_ROOMS, FINALE_MARRIED, HOUSE_ROOMS } from '../save/v4'
 import { BENCH_SCENE_LINES } from '../story/bench'
 import { DISH_WORDS, dishName, goodName, RING_GOODS } from '../goods/ids'
-import { BIG_EVENTS, EVENT_LIMITS, type Route, type Together, type UmaBible } from '../story/authored'
+import { BIG_EVENTS, EVENT_LIMITS, tieKind, tieStrength, type Route, type Together, type UmaBible } from '../story/authored'
 
 type Cell = string | number
 /** A Markdown table; pipes in cells are escaped. */
@@ -577,7 +577,7 @@ function arrivals(): string {
 function arrivalPay(): string {
   return table(['Her arrival scene', 'Points into her bar'], [
     ['Played or skipped to its end', `+${ARRIVAL_POINTS}`], ['Its choice: the option with the highest authored gain (each one tied at the top)', `+${CHOICE_BEST}`],
-    ['Its choice: any other option', `+${CHOICE_OTHER}`],
+    ['Its choice: any other option', `+${CHOICE_OTHER}`], ['Written with no choice', 'Nothing more'], ['Written with more than one choice', 'The first pays; the rest are words only'],
   ])
 }
 /** "The Overgrown Farm": v4's opening scene. */
@@ -768,7 +768,7 @@ function signatureDishes(): string {
 function standIn(): string {
   const pack = storyPackFrom(STAND_IN_FILES)
   return table(['Character', 'Outfit', 'Calling', 'Favourite line', 'Arrives', 'Bible', 'Scripted'], pack.cast.umas.map((u) => [
-    u.characterId, u.outfitId, u.calling, favouriteOf(pack, u.characterId) ?? '—', u.arrives.kind, pack.bibles.has(u.characterId) ? 'Yes' : 'No (her calling stands in)',
+    u.characterId, u.outfitId ?? '—', u.calling ?? '—', favouriteOf(pack, u.characterId) ?? '—', u.arrives?.kind ?? '—', pack.bibles.has(u.characterId) ? 'Yes' : 'No (her calling stands in)',
     `${pack.scripted.get(u.characterId)?.size ?? 0} of 27`,
   ]))
 }
@@ -812,7 +812,7 @@ function tieSeeds(): string {
   }
   return table(['Tie strength', 'Bond starts at', 'Hearts'], ([3, 2, 1] as const).map((s) => [s, TIE_SEEDS[s], bondHearts(TIE_SEEDS[s])]))
     + '\n\nThe stand-in pack’s ties (invented):\n\n'
-    + table(['Pair', 'Kind', 'Strength', 'Seeded at', 'Authored conversations'], pack.ties.ties.map((t) => [`${t.a} & ${t.b}`, t.kind, t.strength, TIE_SEEDS[t.strength], levels(t.a, t.b)]))
+    + table(['Pair', 'Kind', 'Strength', 'Seeded at', 'Authored conversations'], pack.ties.ties.map((t) => [`${t.a} & ${t.b}`, tieKind(t), tieStrength(t), TIE_SEEDS[tieStrength(t)], levels(t.a, t.b)]))
 }
 /** Side by side at 3 hearts. */
 function sideBySide(): string {
@@ -877,8 +877,8 @@ function eventPay(): string {
     ['Each choice: any other option', `+${CHOICE_OTHER}`],
     ['Each play: Fine, Great, Perfect', GRADES.map((g) => `+${EVENT_GRADE_POINTS[g]}`).join(', ')],
     ['No play (help, talk): the best option taken a Perfect, any other a Great', `+${EVENT_GRADE_POINTS.perfect} or +${EVENT_GRADE_POINTS.great}`],
-    ['A heart event’s limits', `${EVENT_LIMITS.heart.choices[0]}–${EVENT_LIMITS.heart.choices[1]} choice points, at most ${EVENT_LIMITS.heart.plays} play`],
-    [`The ${BIG_EVENTS.slice(0, -1).join('’s, the ')}’s and the ${BIG_EVENTS.at(-1)}’s limits`, `${EVENT_LIMITS.big.choices[0]}–${EVENT_LIMITS.big.choices[1]} choice points, at most ${EVENT_LIMITS.big.plays} plays`],
+    ['A heart event’s usual size (any other is a note, and plays)', `${EVENT_LIMITS.heart.choices[0]}–${EVENT_LIMITS.heart.choices[1]} choice points, at most ${EVENT_LIMITS.heart.plays} play`],
+    [`The ${BIG_EVENTS.slice(0, -1).join('’s, the ')}’s and the ${BIG_EVENTS.at(-1)}’s usual size`, `${EVENT_LIMITS.big.choices[0]}–${EVENT_LIMITS.big.choices[1]} choice points, at most ${EVENT_LIMITS.big.plays} plays`],
   ])
 }
 const togetherWords = (t: Together): string => (t.kind === 'work' ? `work: ${t.activity}` : t.kind === 'date' ? `date: ${t.game}` : t.kind === 'gift' ? `gift: ${t.good}` : t.kind === 'help' ? `help: ${t.with}` : 'talk')
@@ -886,13 +886,15 @@ const togetherWords = (t: Together): string => (t.kind === 'work' ? `work: ${t.a
 function standInRoute(): string {
   const bible = STAND_IN_FILES.umas['9000001'] as UmaBible
   const route = STAND_IN_FILES.routes['9000001'] as Route
-  return table(['Rung', 'Place', 'Together', 'Plays', 'Setup', 'Also'], bible.route.filter((b) => b.id !== 'arrival').map((b) => {
+  return table(['Rung', 'Place', 'Together', 'Plays', 'Setup', 'Also'], (bible.route ?? []).filter((b) => b.id !== 'arrival').map((b) => {
     const steps = JSON.stringify(route.events.find((e) => e.id === b.id)?.steps ?? [])
     const plays = (route.events.find((e) => e.id === b.id)?.steps ?? []).filter((s): s is Extract<typeof s, { play: unknown }> => 'play' in s).map((s) => playWords(playOf(s.play)))
     const also = [steps.includes('"gives"') ? 'a cost' : '', steps.includes('"reveals"') ? 'a taste' : '', steps.includes('"flag"') ? 'a flag' : '', steps.includes('"when"') ? 'a `when`' : '',
       steps.includes('"answer"') ? 'Yes / Not yet' : '', b.unlock ? `unlocks ${b.unlock.kind}` : ''].filter(Boolean).join(', ')
-    const setup = b.trigger.kind === 'hearts' ? '' : b.trigger.kind === 'working' ? `works ${b.trigger.activity}` : b.trigger.kind === 'item' ? `${b.trigger.good} held` : b.trigger.kind === 'bond' ? `bond ${b.trigger.level} with ${b.trigger.with}` : `chapter ${b.trigger.chapter}`
-    return [b.id.length <= 3 ? b.id.toUpperCase() : cap(b.id), b.place, togetherWords(b.together), plays.length > 0 ? plays.join('; ') : `${playWords(togetherPlay(b.together))}${togetherPlay(b.together) ? ', from its together' : ''}`, setup, also]
+    const t = b.trigger ?? { kind: 'hearts' }
+    const setup = t.kind === 'hearts' ? '' : t.kind === 'working' ? `works ${t.activity}` : t.kind === 'item' ? `${t.good} held` : t.kind === 'bond' ? `bond ${t.level} with ${t.with}` : `chapter ${t.chapter}`
+    const together = b.together ?? { kind: 'talk' }
+    return [b.id.length <= 3 ? b.id.toUpperCase() : cap(b.id), b.place ?? '—', togetherWords(together), plays.length > 0 ? plays.join('; ') : `${playWords(togetherPlay(together))}${togetherPlay(together) ? ', from its together' : ''}`, setup, also]
   }))
 }
 

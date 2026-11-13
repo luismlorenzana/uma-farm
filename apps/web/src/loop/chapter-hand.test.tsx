@@ -56,7 +56,7 @@ afterEach(async () => {
 
 describe('whether chapter 1 brings a new hand', () => {
   it('is its drawn recruit on v3, and on v4 the cast\'s chapter-1 arrival, none without the pack', () => {
-    expect(standIn.cast.umas.some((u) => u.arrives.kind === 'chapter')).toBe(false)
+    expect(standIn.cast.umas.some((u) => u.arrives?.kind === 'chapter')).toBe(false)
     expect(chapterHand(3, null, 1)).toBe(true)
     expect(chapterHand(3, standIn, 1)).toBe(true)
     expect(chapterHand(4, standIn, 1)).toBe(false)

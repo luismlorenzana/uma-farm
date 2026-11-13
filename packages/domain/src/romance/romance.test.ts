@@ -24,10 +24,10 @@ const { TEST_KINDS } = await import('../night/kinds.fixture')
 const { GOLD_SHIPPED } = await import('../save/bin')
 const { newRosterUmaV4, newSaveV4 } = await import('../save/v4')
 const { parseSaveV4 } = await import('../save/parse-v4')
-const { castIssues, bibleIssues, routeIssues, RUNGS } = await import('../story/authored')
+const { checkCast, checkBible, checkRoute, RUNGS } = await import('../story/authored')
 const { STAND_IN_BIBLE, STAND_IN_CAST, STAND_INS } = await import('../story/authored.fixture')
 const { readScene, sceneDue } = await import('../story/scenes')
-const { favouriteOf, linePlaces, outfitOf, storyPackFrom, StoryPackError, tasteOf } = await import('../story/pack')
+const { favouriteOf, linePlaces, openingOf, outfitOf, readStoryPack, storyPackFrom, tasteOf } = await import('../story/pack')
 const { STAND_IN_FILES } = await import('../story/stand-in')
 const { arrive, arrivalsTonight, festivalArrivalDay, joinOpening, nextArrivals } = await import('./arrivals')
 const { choicePoints, FALLBACK_ARRIVAL, finishArrival, pathFlags, sceneSteps } = await import('./love')
@@ -69,28 +69,67 @@ describe('the stand-in pack', () => {
     expect(outfitOf(null, '9000001')).toBe('9000001')
   })
 
-  it('refuses a cast with no outfit, a bible with no arrival rung, and an arrival with a play or two choices', () => {
-    const cast = json(STAND_IN_CAST) as unknown as { umas: { outfitId: string | null }[] }
+  it('reads a cast with no outfit, a bible with no arrival rung, and an arrival with a play and two choices, with notes only', () => {
+    const ctx = { umas: new Set(STAND_INS) }
+    const cast = json(STAND_IN_CAST) as unknown as { umas: { outfitId?: string | null }[] }
     cast.umas[1]!.outfitId = null
-    expect(castIssues(cast, { umas: new Set(STAND_INS) })).toContain('Uma 2 (9000002): Name her outfit: outfitId is the outfit she plays as')
+    const readCast = checkCast(cast)
+    expect(readCast.errors).toEqual([])
+    expect(readCast.notes).toEqual(['Uma 2 (9000002): no outfit, so she shows as a lettered disc'])
+    expect(outfitOf({ cast: readCast.value }, '9000002')).toBe('9000002')
     const bible = json(STAND_IN_BIBLE)
-    bible.route = bible.route.filter((b) => b.id !== 'arrival')
-    expect(bibleIssues(bible, { umas: new Set(STAND_INS) })).toContain('Her route has no arrival (a route has all 27 rungs)')
+    bible.route = bible.route!.filter((b) => b.id !== 'arrival')
+    expect(checkBible(bible, '9000001', ctx)).toMatchObject({ errors: [], notes: [] })
     const played = { characterId: '9000002', events: [{ id: 'arrival', steps: [
       { narrate: 'Hi.' }, { play: { game: 'walk', prompt: 'Walk' } },
       { choice: [{ text: 'A.', tone: 'warm', friendship: 10 }, { text: 'B.', tone: 'warm', friendship: 5, then: [{ choice: [{ text: 'C.', tone: 'warm', friendship: 5 }, { text: 'D.', tone: 'honest' }] }] }] },
     ] }] }
-    expect(routeIssues(played, null, { umas: new Set(STAND_INS) })).toEqual([
-      'Event arrival: an arrival has exactly one choice point (it has 2)', 'Event arrival: an arrival has no play',
-    ])
-    expect(() => storyPackFrom({ ...STAND_IN_FILES, routes: { ...STAND_IN_FILES.routes, 9000002: played } })).toThrow(StoryPackError)
+    expect(checkRoute(played, '9000002', null, ctx)).toMatchObject({ errors: [], notes: [
+      'Event arrival: 2 choice points; only the first pays', 'Event arrival: an arrival plays no play; it shows as a pause',
+    ] })
+    const read = readStoryPack({ ...STAND_IN_FILES, routes: { ...STAND_IN_FILES.routes, 9000002: played } })
+    expect(read.errors).toEqual([])
+    expect([...read.pack.scripted.get('9000002')!]).toEqual(['arrival'])
   })
 
-  it('takes a partial route in the game, and the sandbox\'s strict check lists what\'s missing', () => {
+  it('takes a partial route, and lists nothing missing as a problem', () => {
     const route = json(STAND_IN_FILES.routes['9000001']) as { characterId: string; events: { id: string }[] }
     route.events = route.events.filter((e) => e.id !== 'wedding')
-    expect(routeIssues(route, STAND_IN_BIBLE, { umas: new Set(STAND_INS) })).toEqual(['Beat wedding has no scripted event'])
-    expect(routeIssues(route, STAND_IN_BIBLE, { umas: new Set(STAND_INS) }, { partial: true })).toEqual([])
+    expect(checkRoute(route, '9000001', STAND_IN_BIBLE, { umas: new Set(STAND_INS) })).toMatchObject({ errors: [], notes: [] })
+  })
+})
+
+describe('an open opening', () => {
+  const cast = (more: Partial<Cast>): Cast => ({ ...json(STAND_IN_CAST), ...more })
+  it('brings the cast\'s opening in its order, any number; else who arrives at it; else the welcome list', () => {
+    expect(openingOf(PACK)).toEqual([...STAND_INS])
+    expect(openingOf({ cast: cast({ opening: ['9000003', '9000001'] }) })).toEqual(['9000003', '9000001'])
+    const { opening: _opening, ...without } = json(STAND_IN_CAST)
+    expect(openingOf({ cast: { ...without, umas: without.umas.map((u, i) => (i === 1 ? u : { ...u, arrives: { kind: 'beds' as const, dormLevel: 4 } })) } })).toEqual(['9000002'])
+    expect(openingOf({ cast: { ...without, umas: without.umas.map(({ arrives: _a, ...u }) => u) } })).toEqual([...STAND_INS])
+    expect(openingOf({ cast: { ...without, umas: without.umas.map(({ arrives: _a, ...u }) => u), welcome: ['9000002'] } })).toEqual(['9000002'])
+    expect(openingOf({ cast: cast({ opening: [] }) })).toEqual([])
+  })
+
+  it('joins any number at the opening, the rest away when the beds are full; and nobody joins an empty one', () => {
+    // No opening and no arrivals: the welcome list, the first five, comes up the road.
+    const umas = [...json(STAND_IN_CAST).umas.map(({ arrives: _a, ...u }) => u), ...['9000004', '9000005', '9000006'].map((characterId) => ({ characterId }))]
+    const five: StoryPack = { ...PACK, cast: { umas } }
+    const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' } }
+    const read = joinOpening(readScene(fresh, 'scene:1:open'), five)
+    expect(Object.keys(read.roster)).toEqual([...STAND_INS, '9000004', '9000005'])
+    expect(read.dorm.home).toEqual([...STAND_INS])
+    expect(parseSaveV4(json(read))).toEqual(read)
+    const none = joinOpening(readScene(fresh, 'scene:1:open'), { ...PACK, cast: cast({ opening: [] }) })
+    expect(Object.keys(none.roster)).toEqual([])
+    // A cast Uma with no arrival waits off the farm; the night passes her by.
+    expect(read.roster['9000006']).toBeUndefined()
+    expect(arrivalsTonight(read, five).arrived).toEqual([])
+  })
+
+  it('an arrival written with no choice pays +50 alone', () => {
+    const save = farm(1)
+    expect(finishArrival(save, '9000002', { choice: 0, flags: [] }).love['9000002']!.points).toBe(50)
   })
 })
 

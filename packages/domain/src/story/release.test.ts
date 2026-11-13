@@ -104,24 +104,31 @@ describe('the released pack', () => {
     expect((await pack.route('9000003'))?.events.map((e) => e.id)).toEqual(['arrival'])
   })
 
-  it('refuses a route that fails the validator as it loads', async () => {
+  it('reads a route as the game does: a broken event it holds that the index lists is refused', async () => {
     const files = clone(STAND_IN_FILES)
     ;(files.routes['9000003'] as { characterId: string }).characterId = '9000002'
     const { index, read } = release(files)
     const pack = await releasedStoryPack(index, read)
-    await expect(pack.route('9000003')).rejects.toThrow('routes/9000003: its characterId is 9000002')
+    expect((await pack.route('9000003'))?.events.map((e) => e.id)).toEqual(['arrival'])
+    const broken = clone(STAND_IN_FILES)
+    ;(broken.routes['9000002'] as { events: { steps: unknown[] }[] }).events[0]!.steps = []
+    const second = release(broken)
+    await expect((await releasedStoryPack(second.index, second.read)).route('9000002')).rejects.toThrow("routes/9000002: its events aren't the index's")
   })
 
-  it("refuses a pack whose boot files fail, or whose index names an Uma or a pair the pack doesn't hold", async () => {
+  it('reads boot files with broken parts, skipping them; refuses only an index naming a pair out of numeric order', async () => {
     const files = clone(STAND_IN_FILES)
     ;(files.cast as { umas: { calling: string }[] }).umas[0]!.calling = 'juggling'
-    await expect(releasedStoryPack(release(files).index, release(files).read)).rejects.toBeInstanceOf(StoryPackError)
+    const pack = await releasedStoryPack(release(files).index, release(files).read)
+    expect(pack.cast.umas[0]).not.toHaveProperty('calling')
+    expect(pack.cast.umas.map((u) => u.characterId)).toEqual(['9000001', '9000002', '9000003'])
     const { index, read, text } = release()
     index.scripted['9000042'] = ['arrival']
-    index.pairs['9000003-9000002'] = [1]
     index.files['route-9000042'] = index.files['route-9000003']!
-    index.files['pair-9000003-9000002'] = index.files['pair-9000001-9000002']!
     text.set('route-9000042', text.get('route-9000003')!)
-    await expect(releasedStoryPack(index, read)).rejects.toThrow(/scripted\.9000042 isn't in the cast.*pairs\.9000003-9000002 isn't a tie's pair/)
+    expect((await (await releasedStoryPack(index, read)).route('9000042'))?.events.map((e) => e.id)).toEqual(['arrival'])
+    index.pairs['9000003-9000002'] = [1]
+    index.files['pair-9000003-9000002'] = index.files['pair-9000001-9000002']!
+    await expect(releasedStoryPack(index, read)).rejects.toThrow("story.json: pairs.9000003-9000002 isn't <a>-<b> in numeric order")
   })
 })

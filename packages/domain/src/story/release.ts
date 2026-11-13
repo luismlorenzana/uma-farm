@@ -2,11 +2,14 @@
 // one index, `story.json`, laid out as the bucket is and served by farm-api at `/api/content/…` behind the owner guard.
 // `scripts/story/release.mjs` writes them; the web reads the index at boot, then the cast, the ties, the bibles and the
 // household, and each route and pair on demand, every file verified by its hash in uma-kit's content cache. The format
-// is here, beside `storyPackFrom`, so the release script and the game read one definition. Nothing private is in it.
+// is here, beside `readStoryPack`, so the release script and the game read one definition. Nothing private is in it.
+//
+// A release holds the pack as read: every part with an error already skipped, so the game reads it whole. The game reads
+// it with the same reader all the same, and refuses only an index it can't read or a file that isn't what the index says.
 import { isGoodId } from '../goods/ids'
 import { pairKey } from '../save/v3'
-import type { PairConversations, Route, UmaBible } from './authored'
-import { pairFileIssues, packContext, routeFileIssues, storyPackFrom, StoryPackError, tiedPairs, type StoryPack } from './pack'
+import { checkRoute, type PairConversations, type Route } from './authored'
+import { packContext, checkPairFile, readStoryPack, StoryPackError, tiedPairs, type StoryPack } from './pack'
 
 /** The index's path in the release, revalidated on every read. */
 export const STORY_INDEX = 'story.json'
@@ -97,10 +100,10 @@ export type ReadStoryFile = (name: string, file: StoryFile) => Promise<unknown>
 const sameList = (a: readonly (string | number)[], b: readonly (string | number)[]): boolean => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort())
 
 /**
- * The pack a release holds: its cast, ties, bibles and household read at once and checked whole as
- * `storyPackFrom` checks them; its routes and pairs listed by the index and read on demand, each checked as it loads
- * (the partial mode) and refused when it doesn't hold what the index says. A file that fails to load or check rejects
- * that call and is read again next time. Throws `StoryPackError` with every issue.
+ * The pack a release holds: its cast, ties, bibles and household read at once, as `readStoryPack` reads them (a part with
+ * an error skipped); its routes and pairs listed by the index and read on demand, each read as it loads and refused when
+ * it doesn't hold what the index says. A file that fails to load rejects that call and is read again next time. Throws
+ * `StoryPackError` only for an index naming a pair out of its numeric order.
  */
 export async function releasedStoryPack(index: StoryIndex, read: ReadStoryFile, isGood: (id: string) => boolean = isGoodId): Promise<StoryPack> {
   const file = (name: string) => read(name, index.files[name]!)
@@ -110,15 +113,13 @@ export async function releasedStoryPack(index: StoryIndex, read: ReadStoryFile, 
     storyFileName.household in index.files ? file(storyFileName.household) : Promise.resolve(undefined),
     ...umaIds.map((id) => file(storyFileName.uma(id))),
   ])
-  const base = storyPackFrom({ cast, ties, umas: Object.fromEntries(umaIds.map((id, i) => [id, bibles[i]])), routes: {}, household }, isGood)
-  const ctx = packContext(cast, isGood)
-  const tied = tiedPairs(ties)
-  const issues: string[] = []
-  for (const id of Object.keys(index.scripted)) if (!ctx.umas.has(id)) issues.push(`story.json: scripted.${id} isn't in the cast`)
-  for (const name of Object.keys(index.pairs)) {
+  const base = readStoryPack({ cast, ties, umas: Object.fromEntries(umaIds.map((id, i) => [id, bibles[i]])), routes: {}, household }, isGood).pack
+  const ctx = packContext(base, isGood)
+  const tied = tiedPairs(base.ties)
+  const issues = Object.keys(index.pairs).flatMap((name) => {
     const [a = '', b = ''] = name.split('-')
-    if (pairFile(a, b) !== name || !tied.has(pairKey(a, b))) issues.push(`story.json: pairs.${name} isn't a tie's pair, <a>-<b> in numeric order`)
-  }
+    return pairFile(a, b) === name ? [] : [`story.json: pairs.${name} isn't <a>-<b> in numeric order`]
+  })
   if (issues.length > 0) throw new StoryPackError(issues)
 
   const routes = new Map<string, Promise<Route>>()
@@ -128,10 +129,9 @@ export async function releasedStoryPack(index: StoryIndex, read: ReadStoryFile, 
     let loading = routes.get(id)
     if (!loading) {
       loading = file(storyFileName.route(id)).then((value) => {
-        const found = routeFileIssues(id, value, base.bibles.get(id) ?? null, ctx)
-        if (found.length === 0 && !sameList((value as Route).events.map((e) => e.id), events)) found.push(`routes/${id}: its events aren't the index's`)
-        if (found.length > 0) throw new StoryPackError(found)
-        return value as Route
+        const got = checkRoute(value, id, base.bibles.get(id) ?? null, ctx).value
+        if (!got || !sameList(got.events.map((e) => e.id), events)) throw new StoryPackError([`routes/${id}: its events aren't the index's`])
+        return got
       })
       routes.set(id, loading)
       loading.catch(() => routes.delete(id))
@@ -146,10 +146,9 @@ export async function releasedStoryPack(index: StoryIndex, read: ReadStoryFile, 
     let loading = pairs.get(name)
     if (!loading) {
       loading = file(storyFileName.pair(name)).then((value) => {
-        const found = pairFileIssues(name, value, tied, ctx)
-        if (found.length === 0 && !sameList((value as PairConversations).levels.map((l) => l.hearts), levels)) found.push(`pairs/${name}: its levels aren't the index's`)
-        if (found.length > 0) throw new StoryPackError(found)
-        return value as PairConversations
+        const got = checkPairFile(name, value, tied, ctx).value
+        if (!got || !sameList(got.levels.map((l) => l.hearts), levels)) throw new StoryPackError([`pairs/${name}: its levels aren't the index's`])
+        return got
       })
       pairs.set(name, loading)
       loading.catch(() => pairs.delete(name))
@@ -159,7 +158,7 @@ export async function releasedStoryPack(index: StoryIndex, read: ReadStoryFile, 
   return {
     cast: base.cast,
     ties: base.ties,
-    bibles: base.bibles as ReadonlyMap<string, UmaBible>,
+    bibles: base.bibles,
     scripted: new Map(Object.entries(index.scripted).map(([id, events]) => [id, new Set(events)])),
     route,
     pairs: new Map(Object.entries(index.pairs).map(([name, levels]) => [name.replace('-', ':'), new Set(levels)])),

@@ -47,7 +47,7 @@ Node 22+ and pnpm 10. The `@luismlorenzana/*` packages come from GitHub Packages
 | `pnpm web` | The web app on :5194, `/api` proxied to :8101 |
 | `pnpm docs:update` | Regenerate the mechanics document's tables from the rules, then the HTML pages in `docs/pages/` |
 | `pnpm stories` | The Farm Story Sandbox on http://127.0.0.1:4321 (`pnpm stories:import-pack` brings uma-quest's pictures) |
-| `pnpm story:release` | The story pack's release: checks the ignored `content/story/` and writes `content/story-release/` (`--stand-in` releases the invented stand-in) |
+| `pnpm story:release` | The story pack's release: reads the ignored `content/story/` as the game does (any pack releases; it prints what it skipped and the notes) and writes `content/story-release/` (`--stand-in` releases the invented stand-in) |
 | `pnpm story:publish` | The release, uploaded to the private `gs://uma-farm-content` with the scoped gcloud (`--dry-run` lists it) |
 
 The preview pane starts both from `.claude/launch.json` (`farm-api`, `farm-web`). To try the guard locally, run the

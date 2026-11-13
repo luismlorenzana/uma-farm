@@ -3,8 +3,9 @@
 // bytes against the index and keeps them in its Cache Storage, so a release's file downloads once ("cached
 // immutably", in the kit's content-addressed cache rather than IndexedDB). The cast, the ties, the bibles and the
 // household load at boot (the night reads the household's lines); routes and pairs on demand. The last good index stays
-// on the device, so an offline boot plays the last version. A pack that can't load (no index, a hash mismatch, a file
-// the validator refuses) throws, and the boot gate offers Try again. Loaded with `load.ts`, on demand.
+// on the device, so an offline boot plays the last version. Each file is read by the game's one reader, which skips a part it
+// can't read and keeps the rest; a release that can't load (no index, a hash mismatch, a route or pair that isn't what the
+// index lists) throws, and the boot gate offers Try again. Loaded with `load.ts`, on demand.
 import { parseStoryIndex, releasedStoryPack, STORY_INDEX, type StoryIndex, type StoryPack } from '@farm/domain'
 import type { ContentClient } from '@luismlorenzana/uma-kit/content'
 
@@ -50,7 +51,7 @@ export interface LoadOptions {
 
 /**
  * The released pack: the index fresh from the server, else (offline, or the server failing) the last good one kept on
- * the device; then its files, verified. The index is kept once the pack it names has loaded and checked whole.
+ * the device; then its files, verified and read. The index is kept once the pack it names has loaded.
  */
 export async function loadReleasedPack(client: Pick<ContentClient, 'pack'>, store: IndexStore, { missing }: LoadOptions = {}): Promise<StoryPack> {
   let index: StoryIndex

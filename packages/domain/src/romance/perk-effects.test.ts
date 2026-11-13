@@ -18,7 +18,7 @@ import { parseSaveV4 } from '../save/parse-v4'
 import { newBlock, newRosterUma, newSave, pairKey, type Block, type Plot } from '../save/v3'
 import { newSaveV4, type Love, type SaveV4 } from '../save/v4'
 import { goodCount, parseStockKey } from '../save/warehouse'
-import { bibleIssues, type Cast, type Ties, type UmaBible } from '../story/authored'
+import { checkBible, type Cast, type Ties, type UmaBible } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_IN_CAST, STAND_IN_TIES, STAND_INS } from '../story/authored.fixture'
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { readScene } from '../story/scenes'
@@ -423,12 +423,16 @@ describe('the format\'s keepsake and pet name', () => {
     const ctx = { umas: new Set(STAND_INS) }
     expect(STAND_IN_BIBLE.keepsake?.name).toBeTruthy()
     expect(STAND_IN_BIBLE.petName).toBeTruthy()
-    expect(bibleIssues(STAND_IN_BIBLE, ctx)).toEqual([])
-    const bad = (more: Record<string, unknown>) => bibleIssues({ ...json(STAND_IN_BIBLE), ...more }, ctx)
-    expect(bad({ keepsake: 'A ribbon' })).toEqual(['keepsake is { name, line }'])
-    expect(bad({ keepsake: { name: '', line: 'Hi {name}.', extra: 1 } })).toEqual(['keepsake is { name, line }'])
-    expect(bad({ keepsake: { name: 'x'.repeat(41), line: 'Hi {name}.' } })).toEqual(['keepsake.name: 1–40 characters', 'keepsake.line: unknown placeholder {name} ({farmer} only)'])
-    expect(bad({ petName: 'x'.repeat(25) })).toEqual(['petName: 1–24 characters'])
+    expect(checkBible(STAND_IN_BIBLE, '9000001', ctx)).toMatchObject({ errors: [], notes: [] })
+    const bad = (more: Record<string, unknown>) => {
+      const { errors, notes } = checkBible({ ...json(STAND_IN_BIBLE), ...more }, '9000001', ctx)
+      return [...errors, ...notes]
+    }
+    expect(bad({ keepsake: 'A ribbon' })).toEqual(['keepsake is { name, line }; skipped'])
+    expect(bad({ keepsake: { name: '', line: 'Hi {name}.', extra: 1 } })).toEqual(['keepsake.name: no name; skipped', 'keepsake.line: {name} shows as written ({farmer} is the one placeholder)'])
+    expect(bad({ keepsake: { name: 'x'.repeat(41), line: 'Hi {name}.' } })).toEqual(['keepsake.name: its name is 41 characters; the screen shows 40; skipped', 'keepsake.line: {name} shows as written ({farmer} is the one placeholder)'])
+    expect(checkBible({ ...json(STAND_IN_BIBLE), keepsake: { line: 'Only a line.' } }, '9000001', ctx).value!.keepsake).toEqual({ line: 'Only a line.' })
+    expect(bad({ petName: 'x'.repeat(25) })).toEqual(['petName is 1–24 characters; skipped'])
     expect(bad({ petName: '{farmer}' })).toEqual(['petName: no placeholder (it’s what she calls you)'])
     expect(bad({ petName: 'Bride' })).toEqual(['petName: “Bride” genders the farmer'])
   })

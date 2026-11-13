@@ -2,7 +2,8 @@
 // The Farm Story Sandbox: a local-only page for reading, playing and checking uma-farm's story
 // (tools/story-sandbox/README.md). It binds to loopback and reads, on every request:
 // - the private authored story in content/story/ (the world, the cast, the ties, the bibles, routes and pairs),
-//   checked by the domain's own validator (`story/authored.ts`), with the Umas' faces from the cast pack;
+//   read by the game's own reader (`story/pack.ts`'s `readStoryPack`): errors skip only their part and notes block
+//   nothing, as in the game and the release; with the Umas' faces from the cast pack;
 // - the chapter drafts in docs/story/ (original, in git) and the game's story in @farm/domain.
 // Its only write is the owner's reviews, to the private content/story/reviews.json.
 import { createServer } from 'node:http'
@@ -55,55 +56,97 @@ async function currentPack() {
   return packs.sort((a, b) => String(b.exportedAt).localeCompare(String(a.exportedAt)))[0] ?? null
 }
 
-/** The authored story as it stands: each file with the domain validator's issues. The cast's ids are the export's
- * Umas. */
-async function storyState(game, errors) {
+
+/** The authored story as the game reads it: the pack's files through the game's own reader (`readStoryPack`), each with
+ * its errors (what the game can't read, skipped) and its notes (everything else; they block nothing). The world bible and
+ * the tag sheet are the story's own: the tag sheet's checks are notes. A file that isn't JSON is skipped with an error. */
+async function storyState(game) {
   const pack = await currentPack()
   const umas = pack ? packUmas(pack) : []
   const v = game.ok ? game.validator : null
-  const ctx = { umas: new Set(umas.map((u) => u.id)) }
-  const file = async (name, check) => {
-    try {
-      const data = await maybeJson(join(content, name), null)
-      return data === null ? null : { file: `content/story/${name}`, data, issues: v ? check(data) : ['The game’s validator didn’t load'] }
-    } catch (e) { errors.push({ file: `content/story/${name}`, error: e.message }); return null }
+  const unreadable = []
+  const json = async (name) => {
+    try { return await maybeJson(join(content, name), undefined) } catch (e) { unreadable.push(`${name}: not JSON (${e.message}); skipped`); return undefined }
   }
-  const folder = async (dir, check) => {
-    const out = []
+  const folder = async (dir) => {
+    const out = {}
     for (const name of (await readdir(join(content, dir)).catch(() => [])).filter((n) => n.endsWith('.json')).sort()) {
-      const entry = await file(`${dir}/${name}`, check)
-      if (entry) out.push(entry)
+      const value = await json(`${dir}/${name}`)
+      if (value !== undefined) out[name.slice(0, -'.json'.length)] = value
     }
     return out
   }
-  // The tag sheet, and each bible checked against her tags when she has both.
-  const tags = await file('tags.json', (d) => v.tagsIssues(d, ctx))
-  const tagOf = (id) => tags?.data?.tags?.find((t) => t.characterId === id) ?? null
-  const bibles = await folder('umas', (d) => [...v.bibleIssues(d, ctx), ...(tagOf(d?.characterId) ? v.bibleTagIssues(d, tagOf(d.characterId)) : [])])
-  const bibleOf = (id) => bibles.find((b) => b.data.characterId === id)?.data ?? null
-  // Routes are read partial while layers 2 and 3 are written: the unscripted beats are listed, not reported as problems.
-  const routes = await folder('routes', (d) => v.routeIssues(d, bibleOf(d?.characterId), ctx, { partial: true }))
-  for (const r of routes) r.unscripted = v ? v.unscriptedBeats(r.data, bibleOf(r.data.characterId)) : []
+  const files = { cast: await json('cast.json'), ties: await json('ties.json'), umas: await folder('umas'), routes: await folder('routes'), pairs: await folder('pairs') }
+  const household = await json('household.json')
+  if (household !== undefined) files.household = household
+  const tagSheet = await json('tags.json')
   const story = {
     pack: pack ? { id: pack.id, exportedAt: pack.exportedAt } : null,
     umas,
     world: await maybeText(join(content, 'world.md')),
-    cast: await file('cast.json', (d) => v.castIssues(d, ctx)),
-    ties: await file('ties.json', (d) => v.tiesIssues(d, ctx)),
+    hasCast: files.cast !== undefined,
+  }
+  if (!v) return { ...story, error: 'The game’s reader didn’t load', check: { errors: unreadable, notes: [] } }
+
+  const read = v.readStoryPack(files, undefined, umas.length > 0 ? new Set(umas.map((u) => u.id)) : undefined)
+  // Every finding by its file: `umas/<id>.json: …` → `umas/<id>.json`.
+  const byFile = new Map()
+  const add = (kind) => (line) => {
+    const at = line.indexOf(': ')
+    const file = line.slice(0, at)
+    const entry = byFile.get(file) ?? { errors: [], notes: [] }
+    entry[kind].push(line.slice(at + 2))
+    byFile.set(file, entry)
+  }
+  ;[...unreadable, ...read.errors].forEach(add('errors'))
+  read.notes.forEach(add('notes'))
+  const found = (name) => byFile.get(name) ?? { errors: [], notes: [] }
+  const entry = (name, data) => ({ file: `content/story/${name}`, data, ...found(name) })
+  const ctx = { umas: new Set(read.files.cast.umas.map((u) => u.characterId)) }
+
+  // The tag sheet, and each bible against her tags when she has both: notes only.
+  const tagOf = (id) => tagSheet?.tags?.find?.((t) => t?.characterId === id) ?? null
+  const tags = tagSheet === undefined ? null : { file: 'content/story/tags.json', data: tagSheet, errors: found('tags.json').errors, notes: v.tagNotes(tagSheet, ctx) }
+  const bibles = Object.entries(read.files.umas).map(([id, bible]) => {
+    const e = entry(`umas/${id}.json`, bible)
+    return tagOf(id) ? { ...e, notes: [...e.notes, ...v.bibleTagNotes(bible, tagOf(id))] } : e
+  })
+  const routes = Object.entries(read.files.routes).map(([id, route]) => ({ ...entry(`routes/${id}.json`, route), unscripted: v.unscriptedBeats(route, read.files.umas[id] ?? null) }))
+  const pairs = Object.entries(read.files.pairs).map(([name, pair]) => entry(`pairs/${name}.json`, pair))
+  // Each character's findings, from every file of hers and the cast's lines that name her.
+  const own = {}
+  for (const { characterId: id } of read.files.cast.umas) {
+    const cast = found('cast.json')
+    const hers = (list) => list.filter((line) => line.includes(`(${id})`) || line.startsWith(`${id} `))
+    own[id] = {
+      errors: [...hers(cast.errors), ...found(`umas/${id}.json`).errors, ...found(`routes/${id}.json`).errors],
+      notes: [...hers(cast.notes), ...found(`umas/${id}.json`).notes, ...found(`routes/${id}.json`).notes],
+    }
+  }
+  const all = { errors: [...unreadable, ...read.errors], notes: [...read.notes, ...(tags?.notes ?? []).map((n) => `tags.json: ${n}`)] }
+  return {
+    ...story,
+    cast: entry('cast.json', read.files.cast),
+    ties: entry('ties.json', read.files.ties),
     tags,
     bibles,
     routes,
-    pairs: await folder('pairs', (d) => v.pairIssues(d, ctx)),
+    pairs,
     // The household's scenes, house lines and finale.
-    household: await file('household.json', (d) => v.householdIssues(d, ctx)),
+    household: read.files.household ? entry('household.json', read.files.household) : null,
+    own,
+    // Every finding, and the files read whole that the game skipped (a file that isn't JSON or isn't the shape).
+    check: all,
+    // The menu's defaults, and the welcome list as the game reads it.
+    welcome: read.files.cast.welcome?.length ? read.files.cast.welcome : read.files.cast.umas.slice(0, game.authored?.defaults?.welcome ?? 5).map((u) => u.characterId),
+    // The counts, each with the Umas behind it.
+    counts: storyCounts({
+      cast: read.files.cast, tags: tagSheet, ties: read.files.ties, bibles: Object.values(read.files.umas), routes: Object.entries(read.files.routes).map(([id, r]) => ({ ...r, characterId: id })),
+      pairs: Object.values(read.files.pairs), rungs: game.authored?.rungs ?? [],
+    }),
   }
-  // The counts, each with the Umas behind it.
-  story.counts = story.cast ? storyCounts({
-    cast: story.cast.data, tags: tags?.data, ties: story.ties?.data, bibles: bibles.map((b) => b.data), routes: routes.map((r) => r.data),
-    pairs: story.pairs.map((p) => p.data), rungs: game.authored?.rungs ?? [],
-  }) : null
-  return story
 }
+
 
 async function state() {
   const { validator, ...game } = await loadGame(domain)
@@ -117,7 +160,7 @@ async function state() {
   try { beats = parseBeats(await maybeJson(join(drafts, 'beats.json'), { schemaVersion: 1, kind: 'farm-story-beats', beats: [] }), game) } catch (e) { errors.push({ file: 'docs/story/beats.json', error: e.message }) }
   let conversations = []
   try { conversations = parseConversations(await maybeJson(join(drafts, 'conversations.json'), { schemaVersion: 1, kind: 'farm-conversations', templates: [] }), game) } catch (e) { errors.push({ file: 'docs/story/conversations.json', error: e.message }) }
-  const story = await storyState({ ...game, validator }, errors)
+  const story = await storyState({ ...game, validator })
   const reviews = await maybeJson(join(content, 'reviews.json'), { schemaVersion: 1, items: {} })
   return {
     game, story, chapters, beats, conversations, errors, reviews,
