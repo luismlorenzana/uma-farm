@@ -4,7 +4,7 @@
 // for 20. The stand-ins aren't in master data: their faces are lettered discs. Invented outfits (the album fixture) and
 // the invented stand-in pack; the server is a stub.
 import 'fake-indexeddb/auto'
-import { joinOpening, newSaveV4, readScene, type Cast, type SaveV4 } from '@farm/domain'
+import { joinOpening, newSave, readScene, type Cast, type SaveV4 } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -14,7 +14,7 @@ import type { MasterView } from '../master/master'
 const fixture = vi.hoisted(() => ({ view: null as MasterView | null }))
 vi.mock('../master/master', async (importOriginal) => ({
   ...await importOriginal<typeof import('../master/master')>(),
-  masterReady: vi.fn(async () => fixture.view), masterRoster: () => fixture.view?.roster ?? null,
+  masterReady: vi.fn(async () => fixture.view),
   useMaster: () => ({ status: 'ready', view: fixture.view }), retryMaster: () => undefined, setMasterLens: () => undefined,
 }))
 vi.mock('@luismlorenzana/uma-kit/auth', async (importOriginal) => ({
@@ -80,7 +80,6 @@ async function type(input: HTMLInputElement, value: string) {
 }
 
 beforeEach(async () => {
-  vi.stubEnv('VITE_FARM_ROMANCE', '1')
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   const pack = await storyReady()
   fixture.view = castLens(pack)((await albumFixture()).view)
@@ -88,7 +87,7 @@ beforeEach(async () => {
   document.body.append(host)
   root = createRoot(host)
   resetGame()
-  useGame.setState({ uid: 'u1', status: 'ready', save: newSaveV4('u1', AT) })
+  useGame.setState({ uid: 'u1', status: 'ready', save: newSave('u1', AT) })
 })
 afterEach(async () => {
   await act(async () => root.unmount())
@@ -177,7 +176,7 @@ describe('an open pack\'s stopgaps', () => {
     const cast = pack.cast
     pack.cast = { ...cast, opening: [] }
     try {
-      useGame.setState({ save: { ...newSaveV4('u1', AT), farmer: { name: 'Robin' } } })
+      useGame.setState({ save: { ...newSave('u1', AT), farmer: { name: 'Robin' } } })
       await renderShell()
       await find('[data-scene="scene:1:open"] [data-beat]')
       const lines: string[] = []
@@ -200,7 +199,7 @@ describe('an open pack\'s stopgaps', () => {
     const route = pack.route
     pack.route = async (id) => (id === '9000001' ? { events: [{ id: 'arrival', steps: [{ narrate: 'Someone new leans on the Gate.' }] }] } : route(id))
     try {
-      useGame.setState({ save: joinOpening(readScene({ ...newSaveV4('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open'), pack) })
+      useGame.setState({ save: joinOpening(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open'), pack) })
       await renderShell()
       await find('[data-scene="arrival:9000001"] [data-beat]')
       await click($('[data-beat]'))
@@ -229,10 +228,10 @@ describe('a face master data lacks', () => {
 describe('the Gate and the Dorm on v4', () => {
   it('says what brings the next arrivals, never who, and "Everyone is here" with the cast on the farm', async () => {
     const pack = await storyReady()
-    const named: SaveV4 = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' } }
+    const named: SaveV4 = { ...newSave('u1', AT), farmer: { name: 'Robin' } }
     await render(<GatePeek save={named} />)
     expect($('[data-peek="gate"]')?.textContent).toBe('Umas arrive here.')
-    const everyone: SaveV4 = { ...named, roster: Object.fromEntries(pack.cast.umas.map((u) => [u.characterId, { joined: 1, ranks: newSaveV4('u', AT).roster as never, wellFed: 0 }])) }
+    const everyone: SaveV4 = { ...named, roster: Object.fromEntries(pack.cast.umas.map((u) => [u.characterId, { joined: 1, ranks: newSave('u', AT).roster as never, wellFed: 0 }])) }
     await render(<GatePeek save={everyone} />)
     expect($('[data-everyone]')?.textContent).toBe('Everyone is here.')
     // A larger invented cast: chapter 2's end, the Dorm's level 4, the Fishing Derby.
@@ -247,7 +246,7 @@ describe('the Gate and the Dorm on v4', () => {
   })
 
   it('shows the Dorm for 20\'s eight levels', async () => {
-    useGame.setState({ save: { ...newSaveV4('u1', AT), farmer: { name: 'Robin' } } })
+    useGame.setState({ save: { ...newSave('u1', AT), farmer: { name: 'Robin' } } })
     await render(<DormPage />, '/dorm')
     expect($$('[data-ladder-level]').map((li) => li.dataset.ladderLevel)).toEqual(['1', '2', '3', '4', '5', '6', '7', '8'])
     expect($('[data-ladder-level="8"]')?.textContent).toContain('20 beds')

@@ -4,7 +4,7 @@
 // nothing; the morning's Ready line plays her event. The invented stand-in pack (9000001–9000003) and invented outfits;
 // master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { costOf, joinOpening, newSaveV4, readScene, type Love, type SaveV4, type StoryPack } from '@farm/domain'
+import { costOf, joinOpening, newSave, readScene, type Love, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -14,7 +14,7 @@ import type { MasterView } from '../master/master'
 const fixture = vi.hoisted(() => ({ view: null as MasterView | null, pack: null as StoryPack | null }))
 vi.mock('../master/master', async (importOriginal) => ({
   ...await importOriginal<typeof import('../master/master')>(),
-  masterReady: vi.fn(async () => fixture.view), masterRoster: () => fixture.view?.roster ?? null,
+  masterReady: vi.fn(async () => fixture.view),
   useMaster: () => ({ status: 'ready', view: fixture.view }), retryMaster: () => undefined, setMasterLens: () => undefined,
 }))
 vi.mock('@luismlorenzana/uma-kit/auth', async (importOriginal) => ({
@@ -39,7 +39,7 @@ const save = (): SaveV4 => useGame.getState().save as SaveV4
 
 /** A named farm on day 3, the opening three home and their arrivals played; 9000001 at `love`. */
 function farm(love: Partial<Love> = {}): SaveV4 {
-  const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day: 3 } }
+  const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day: 3 } }
   const joined = joinOpening(readScene(fresh, 'scene:1:open'), fixture.pack!)
   return { ...joined, arrivals: [ONE, TWO, THREE], today: { ...joined.today, bonds: {} }, love: { ...joined.love, [ONE]: { ...joined.love[ONE]!, ...love } } }
 }
@@ -94,7 +94,6 @@ async function tapUntil(selector: string) {
 }
 
 beforeEach(async () => {
-  vi.stubEnv('VITE_FARM_ROMANCE', '1')
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   const pack = await storyReady()
   fixture.pack = pack

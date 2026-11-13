@@ -3,7 +3,7 @@
 // with its speaker's bust, a narration, a pause; a choice's options are wording only, with no gain. Skip, or the last
 // line, marks every level read (`diary.read`, once each) and closes; a replay from the Diary marks nothing new. It pays
 // nothing. The morning's Read, her profile's Read and the Diary's replays open it, so it's portaled to the body above their
-// sheets (the kit's sheets portal there at z-50; the frame is z-60). Loaded on demand, the romance build only.
+// sheets (the kit's sheets portal there at z-50; the frame is z-60). Loaded on demand.
 import { bondHearts, bondOf, sceneSteps, withFarmer, type ChoiceOption, type PairConversations, type SaveV4, type Step } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { useEffect, useMemo, useState } from 'react'
@@ -33,9 +33,9 @@ export default function PairPlayer({ read }: { read: string }) {
     return () => { live = false }
   }, [story, wanted])
   // The levels to play: those asked for that the pack holds and the bond has reached.
-  const reached = save?.version === 4 && wanted ? bondHearts(bondOf(save, wanted.a, wanted.b)) : 0
+  const reached = save && wanted ? bondHearts(bondOf(save, wanted.a, wanted.b)) : 0
   const levels = useMemo(() => (pair && wanted ? wanted.levels.flatMap((h) => (h <= reached ? pair.levels.filter((l) => l.hearts === h) : [])) : []), [pair, wanted, reached])
-  const nothing = !wanted || save?.version !== 4 || pair === null || (pair !== undefined && levels.length === 0)
+  const nothing = !wanted || !save || pair === null || (pair !== undefined && levels.length === 0)
   useEffect(() => {
     if (nothing) close()
   }, [nothing]) // eslint-disable-line react-hooks/exhaustive-deps

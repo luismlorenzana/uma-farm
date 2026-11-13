@@ -1,41 +1,36 @@
 // The scene player: a full-screen sheet over the farm. A bust (a cast
 // member's lettered disc until the busts ship, or an Uma's from master data through uma-kit's `UmaBust`), the speaker's
 // name and one line; a tap goes on, and **Skip** ends it. The chapter scenes' lines are data (`@farm/domain`'s
-// `story/chapter-1.ts`, and v4's re-cut opening) with roles the save fills: on v3 your first hands speak their
-// temperament's hello and your newest hand asks to stay; on v4 the opening ends as its Umas come up the road (reading it
-// brings them: the pack's `openingOf`, any number; with none it ends on chapter 1's card), and the closing scene's newest
-// hand is chapter 1's authored arrival. The v3 opening ends on chapter 1's
-// card, the closing scene on chapter 2's. Each plays once (`diary.read`). It loads master data itself, for the Umas'
-// names, busts and temperaments, since a new account's boot doesn't wait for it; Skip works without it.
+// `story/chapter-1.ts`): the opening ends as its Umas come up the road (reading it brings them: the pack's `openingOf`,
+// any number; with none it ends on chapter 1's card), and the closing scene's newest hand is chapter 1's authored
+// arrival, then chapter 2's card. Each plays once (`diary.read`). It loads master data itself, for the Umas' names and
+// busts, since a new account's boot doesn't wait for it; Skip works without it.
 //
-// On v4 it also plays each Uma's **arrival scene** from the story pack, the format's steps: `say` (her
+// It also plays each Uma's **arrival scene** from the story pack, the format's steps: `say` (her
 // bust, the line with `{farmer}` filled, the emote as a word), `narrate`, `thought` (italic), `place` (the title line),
 // `wait`, `flag` and `choice`, whose options show their gain before the tap (+30 for the best, +10 for the rest). Skip
 // jumps to the choice, never past it, so every arrival pays +50 and its choice (an arrival the pack writes without one
-// pays +50 alone); the last of the opening's Umas ends on chapter 1's card and **Plant the carrots**. Its frame and steps also play the pair conversations (`PairPlayer.tsx`).
-// Loaded on demand. On v4 the ring bench's scene (`scene:bench`) plays here too, its player loaded on demand in the
-// romance build only (`BenchScene.tsx`).
+// pays +50 alone); the last of the opening's Umas ends on chapter 1's card and **Plant the carrots**. Its frame and steps
+// also play the pair conversations (`PairPlayer.tsx`). Loaded on demand. The ring bench's scene (`scene:bench`) plays
+// here too, its player loaded on demand (`BenchScene.tsx`).
 import {
   ARRIVAL_POINTS, arrivalOf, BENCH_SCENE, CAST, CAST_IDS, castInitial, chapterArrival, CHAPTER_1_GOALS, chapterOf, chapterScene, choicePoints, FALLBACK_ARRIVAL, farmPlace, openingOf,
-  pathFlags, sceneLines, sceneSteps, withFarmer, type CastId, type ChapterSceneId, type ChoiceOption, type SaveV4, type SceneId, type SceneLine, type Step, type Temperament,
+  pathFlags, sceneLines, sceneSteps, withFarmer, type CastId, type ChapterSceneId, type ChoiceOption, type SaveV4, type SceneId, type SceneLine, type Step,
 } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { romanceOn } from '../app/romance'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { finishArrivalScene, readSceneOnce } from './actions'
 import { chapterHand, rewardWords } from './goal-words'
-import { talentTable } from './talents'
 
 /** Each speaking cast member's disc colour, until the busts. */
 const CAST_COLOR: Readonly<Partial<Record<CastId, string>>> = { 'hollis-pryor': '#6b5aa6', 'marta-quill': '#c4573a', 'ben-carver': '#7a8b3a', 'ida-stone': '#8a5a3c' }
-// The romance build's only: the switch folds at build time, and the deployed build drops the import.
-const BenchScene = /* @__PURE__ */ lazy(() => import('./BenchScene'))
+const BenchScene = lazy(() => import('./BenchScene'))
 const isCast = (id: string): id is CastId => (CAST_IDS as readonly string[]).includes(id)
 
 /** A cast member's bust: the art once it ships, a lettered disc until then. */
@@ -51,10 +46,9 @@ export function CastBust({ id, size }: { id: CastId; size: number }) {
 export default function ScenePlayer({ scene }: { scene: SceneId }) {
   const save = useLoopSave()
   if (!save) return null
-  if (scene === BENCH_SCENE) return romanceOn() && save.version === 4 ? <Suspense fallback={null}><BenchScene save={save} /></Suspense> : null
+  if (scene === BENCH_SCENE) return <Suspense fallback={null}><BenchScene save={save} /></Suspense>
   const arrival = arrivalOf(scene)
-  if (arrival && save.version === 4) return <ArrivalPlayer save={save} id={arrival} />
-  if (arrival) return null
+  if (arrival) return <ArrivalPlayer save={save} id={arrival} />
   return <ChapterScenePlayer scene={scene as ChapterSceneId} />
 }
 
@@ -79,7 +73,7 @@ function ChapterScenePlayer({ scene }: { scene: ChapterSceneId }) {
   const navigate = useNavigate()
   const [leaving, setLeaving] = useState(false)
   if (!save) return null
-  const data = chapterScene(scene, save.version, story ? openingOf(story).length : undefined)
+  const data = chapterScene(scene, story ? openingOf(story).length : undefined)
   /** Played through or skipped: the scene is read, once, and the farm goes on where `to` says. */
   const finish = (to: string | null) => {
     if (leaving) return
@@ -98,19 +92,18 @@ function Play({ scene, master, onDone }: { scene: ChapterSceneId; master: Master
   const save = useLoopSave()!
   const story = useStory()
   const lines = useMemo(() => {
-    const table = talentTable(master)
-    // On v4 the closing scene's newest hand is chapter 1's authored arrival, or nobody.
-    const newest = save.version === 4 ? (story ? chapterArrival(story, 1)?.characterId ?? null : null) : undefined
-    return sceneLines(chapterScene(scene, save.version, story ? openingOf(story).length : undefined), save, (id): Temperament => table.get(id)?.temperament ?? 'steady', newest)
+    // The closing scene's newest hand is chapter 1's authored arrival, or nobody.
+    const newest = story ? chapterArrival(story, 1)?.characterId ?? null : null
+    return sceneLines(chapterScene(scene, story ? openingOf(story).length : undefined), newest)
     // The roles are filled once, when the scene starts: a save changing under it doesn't recast it.
-  }, [scene, master]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [scene]) // eslint-disable-line react-hooks/exhaustive-deps
   const [at, setAt] = useState(0)
   const nameOf = (id: string): string => master.album.get(id)?.name ?? 'An Uma'
-  const farmer = save.version === 4 ? save.farmer.name : ''
+  const farmer = save.farmer.name
   if (at >= lines.length) {
-    // v4's opening ends as its Umas come up the road: reading it brings them, and their arrivals play next. An opening
+    // The opening ends as its Umas come up the road: reading it brings them, and their arrivals play next. An opening
     // that brings nobody ends on chapter 1's card, as the last arrival would.
-    if (save.version === 4 && scene === 'scene:1:open' && (!story || openingOf(story).length > 0)) return <ReadOn onDone={() => onDone(null)} />
+    if (scene === 'scene:1:open' && (!story || openingOf(story).length > 0)) return <ReadOn onDone={() => onDone(null)} />
     return <ChapterCard scene={scene} onDone={onDone} />
   }
   const line = lines[at]!
@@ -129,7 +122,7 @@ function Play({ scene, master, onDone }: { scene: ChapterSceneId; master: Master
   )
 }
 
-/** The re-cut opening's end on v4: the scene is read, which brings the three, and the first arrival plays. */
+/** The opening's end: the scene is read, which brings the three, and the first arrival plays. */
 function ReadOn({ onDone }: { onDone: () => void }) {
   useEffect(() => onDone(), []) // eslint-disable-line react-hooks/exhaustive-deps
   return <div className="flex-1" />
@@ -149,8 +142,8 @@ function Bust({ line, nameOf }: { line: SceneLine; nameOf: (id: string) => strin
   )
 }
 
-/** Chapter 1's card: its six goals and the first tap, planting. Its reward names a new hand on v3, and on v4
- * only when the cast has a chapter-1 arrival. */
+/** Chapter 1's card: its six goals and the first tap, planting. Its reward names a new hand only when the cast has a
+ * chapter-1 arrival. */
 export function ChapterOneCard({ onPlant }: { onPlant: () => void }) {
   const chapter = chapterOf(1)!
   const hand = useChapterHand(1)
@@ -195,7 +188,7 @@ function ChapterCard({ scene, onDone }: { scene: ChapterSceneId; onDone: (to: st
 function useChapterHand(chapter: number): boolean {
   const save = useLoopSave()
   const story = useStory()
-  return chapterHand(save?.version ?? 3, story, chapter)
+  return chapterHand(story, chapter)
 }
 
 // --- Her arrival scene ----------------------------------------------------------------------------------

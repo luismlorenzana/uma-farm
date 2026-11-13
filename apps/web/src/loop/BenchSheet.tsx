@@ -1,8 +1,7 @@
-// The ring bench (romance build), `?sheet=bench` from the Forge's quick look on a v4
-// farm: one row a grade you can make now with the three goods it would take (a tap on one swaps it for another of the
+// The ring bench, `?sheet=bench` from the Forge's quick look: one row a grade you can make now with the three goods it would take (a tap on one swaps it for another of the
 // grade's goods), "→ Iron Ring"; the recipe greyed "Opens with chapter 3"; her bonus once married; and **Make an Iron
 // Ring · 1 a day** in the thumb zone. A made ring is ★1 in the Warehouse; the bench says "One ring a day." until tomorrow.
-// Also the Forge's quick look on v4 once the bench stands (`BenchPeek`). Loaded on demand, the romance build only.
+// Also the Forge's quick look once the bench stands (`BenchPeek`). Loaded on demand.
 import { benchOpen, BENCH_WORDS, goodName, ringName, type BenchInput, type SaveV4 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
@@ -16,17 +15,17 @@ import { CastBust } from './ScenePlayer'
 
 const RING = '#b58a2a'
 
-/** `?sheet=bench`: the bench over the farm. Closed, or on v3, it closes itself. */
+/** `?sheet=bench`: the bench over the farm. Closed, it closes itself. */
 export default function BenchSheet() {
   const save = useLoopSave()
   const location = useLocation()
   const leave = useLeave()
   const close = () => leave(withParam(location, 'sheet', null))
-  const shut = !!save && (save.version !== 4 || !benchOpen(save))
+  const shut = !!save && !benchOpen(save)
   useEffect(() => {
     if (shut) close()
   }, [shut]) // eslint-disable-line react-hooks/exhaustive-deps
-  if (!save || save.version !== 4 || !benchOpen(save)) return null
+  if (!save || !benchOpen(save)) return null
   return <Bench save={save} onClose={close} />
 }
 
@@ -152,7 +151,7 @@ function RowView({ save, row, chosen, open, onChoose, onOpen, onSwap }: {
   )
 }
 
-/** The Forge's quick look on v4 once the bench stands: "Ring bench · one ring a day" and the way in. */
+/** The Forge's quick look once the bench stands: "Ring bench · one ring a day" and the way in. */
 export function BenchPeek({ save }: { save: SaveV4 }) {
   const made = save.today.ring > 0
   return (

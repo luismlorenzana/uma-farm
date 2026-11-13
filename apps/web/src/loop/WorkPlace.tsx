@@ -5,7 +5,7 @@
 // its actions. A station is locked until built: its quick look and page show Build · 1,500g. Loaded on demand.
 import {
   farmHome,
-  ACTIVITY_NAMES, farmEnvV3, farmPlace, goodName, isStation, leaving, loopKinds, loopRefusalText, loopWorld, PLACE_ACTIVITY, parseStockKey, STATION_RULES, stationBuilt,
+  ACTIVITY_NAMES, farmEnv, farmPlace, goodName, isStation, leaving, loopKinds, loopRefusalText, loopWorld, PLACE_ACTIVITY, parseStockKey, STATION_RULES, stationBuilt,
   stationLock, tendedBlock, workNow, type GatherPlace, type LoopPlaceId, type LoopWorkRequest, type FarmSave, type StationId, type TalentOf,
 } from '@farm/domain'
 import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
@@ -67,8 +67,7 @@ function LoopWorkProvider({ save, say, children }: { save: FarmSave; say: Say; c
   const master = useMaster()
   const album = master.status === 'ready' ? master.view.album : null
   const story = useStory()
-  const perkStory = save.version === 4 ? story : null
-  const env = useMemo(() => farmEnvV3(loopKinds(talents.of, perkStory)), [talents.of, perkStory])
+  const env = useMemo(() => farmEnv(loopKinds(talents.of, story)), [talents.of, story])
   const world = useMemo(() => loopWorld(save), [save])
   const actions = useMemo(() => workActions(say), [say])
   const now = workNow(save)
@@ -149,7 +148,7 @@ function PlaceBody({ save, place, say }: { save: FarmSave; place: WorkPlaceId; s
   const stopped = Object.values(work.settled.work).filter((row) => row.dropped?.slot.building === place)
   // The Uma the job sheet has picked, which its sizes read (her rank and talent), lifted from its What step.
   const [sheetUma, setSheetUma] = useState<string | null>(null)
-  const rows = useMemo((): JobRow[] => umaRows(save, farmHome(save), view?.album ?? new Map(), talents.table, view?.roster ?? []).map((row) => {
+  const rows = useMemo((): JobRow[] => umaRows(save, farmHome(save), view?.album ?? new Map(), talents.table).map((row) => {
     const tends = tendedBlock(save, row.id)
     const away = leaving(save, row.id)
     return { ...row, level: row.ranks[activity].rank, note: tends ? `Tends Block ${tends}` : away ? 'Leaves tomorrow' : rankTalent(row, activity), tends, leaving: away }

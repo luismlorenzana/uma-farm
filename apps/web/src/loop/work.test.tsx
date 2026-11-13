@@ -1,16 +1,16 @@
 // The forest, the Fishery and the stations as rendered: a job sheet's areas and spots
 // with their locks, sizes in days, a job started, a night, the haul collected by stars with a fish's size, a queue, a
-// station built and a station job, the quick look, and the view model behind them. Invented outfit ids; master data and
-// the server are stubs.
+// station built and a station job, the quick look, and the view model behind them. Invented ids; master data and the
+// server are stubs; the story pack is the stand-in.
 import 'fake-indexeddb/auto'
-import { DAY_MS, newRosterUma, newSave, type SaveV3 } from '@farm/domain'
+import { DAY_MS, newLove, newRosterUma, newSave, type SaveV4 } from '@farm/domain'
 import { jobQuery } from '@luismlorenzana/uma-kit/work'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../master/master', () => ({ masterReady: vi.fn(async () => ({ roster: [], stats: new Map() })), masterRoster: () => null, useMaster: () => ({ status: 'loading' }) }))
+vi.mock('../master/master', () => ({ masterReady: vi.fn(async () => ({ stats: new Map(), birthdays: new Map() })), useMaster: () => ({ status: 'loading' }), setMasterLens: vi.fn() }))
 vi.mock('../api/client', async () => {
   const actual = await vi.importActual<typeof import('../api/client')>('../api/client')
   return { ...actual, saveApi: { load: vi.fn(async () => ({ revision: 0, save: null })), put: vi.fn(async (_: number, save: unknown) => ({ revision: 1, save })) } }
@@ -21,14 +21,17 @@ const { default: WorkPlace, WorkPlacePeek } = await import('./WorkPlace')
 const { endTheDay } = await import('./actions')
 const { dayWords, daysFor, gatherSizes, haulWords, requestWords, stationSizeRule, whereRows } = await import('./work-view')
 const { talentsD } = await import('@farm/domain')
+const { storyReady } = await import('../story/story')
+// The work and the night read the story pack: the stand-in, loaded once.
+await storyReady()
 
 const AT = '2026-11-09T10:00:00.000Z'
 /** Day 1 with two Umas home, Novice everywhere. */
-function farm(): SaveV3 {
+function farm(): SaveV4 {
   const save = newSave('u1', AT)
-  return { ...save, roster: { 101: newRosterUma(1), 202: newRosterUma(1) }, dorm: { level: 1, home: ['101', '202'], swaps: [] } }
+  return { ...save, roster: { 101: newRosterUma(1), 202: newRosterUma(1) }, love: { 101: newLove(), 202: newLove() }, dorm: { level: 1, home: ['101', '202'], swaps: [] } }
 }
-const save = () => useGame.getState().save as SaveV3
+const save = () => useGame.getState().save as SaveV4
 
 let host: HTMLDivElement
 let root: Root
@@ -214,7 +217,7 @@ describe('the work screens\' view (pure)', () => {
     expect(whereRows(save, 'fishery', '101', talentsD).map((r) => r.lock)).toEqual([null, 'From Hand', 'From Skilled', 'From Expert', 'From Legend', 'Chapter 7', 'Chapter 7'])
     expect(requestWords({ kind: 'forage', item: 'old-forest', count: 2 }, 1)).toEqual({ name: 'Old Forest', item: 'maple-log' })
     expect(requestWords({ kind: 'planks', item: 'pine-plank@3', count: 8 }, 1)).toEqual({ name: 'Pine Plank ★3', item: 'pine-plank@3', count: 8 })
-    const held = { ...save, items: { apple: [5, 0, 0, 0, 0] } } as SaveV3
+    const held = { ...save, items: { apple: [5, 0, 0, 0, 0] } } as SaveV4
     expect(stationSizeRule(held, 'apple-preserve@1', '101', talentsD)).toEqual({ mode: 'duration', sizes: [5, 16, 32], max: 32 })
     expect(haulWords({ goods: ['carp@1', 'carp@2', 'trout@1'], sizes: [{ fish: 'carp', stars: 1, cm: 30.2, record: false }, { fish: 'trout', stars: 1, cm: 41.5, record: true }] }))
       .toBe('+3 · ★1 × 2, ★2 × 1 · Trout 41.5 cm, a record')

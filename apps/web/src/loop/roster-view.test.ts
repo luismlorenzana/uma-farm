@@ -1,7 +1,7 @@
 // The roster's cards: the Umas on the farm with their best rank, and how many are away; their
 // talents and ranks as album rows, the filters and sorts, a card's words and her sheet's nine activities. Invented outfits
-// with chosen stats (`album/testing.ts`).
-import { newRosterUma, newSave, type SaveV3 } from '@farm/domain'
+// with chosen stats (`album/testing.ts`), and a cast naming each one's calling, her favourite line.
+import { newRosterUma, newSave, type SaveV4, type StoryPack } from '@farm/domain'
 import { runAlbumQuery } from '@luismlorenzana/uma-kit/roster'
 import { describe, expect, it } from 'vitest'
 import { albumFixture, type Five } from '../album/testing'
@@ -19,18 +19,21 @@ const STATS: { star5: Five; growth?: Five }[] = [
   { star5: [100, 100, 100, 100, 140] }, { star5: [100, 100, 100, 100, 115] }, { star5: [100, 152, 100, 100, 100] },
 ]
 const IDS = ['81001', '81002', '81003', '81004', '81005', '81006']
+/** Their callings: the story pack's, which name each one's favourite line. */
+const CALLINGS = ['mining', 'foraging', 'foraging', 'quarry', 'fishing', 'farming'] as const
+const STORY = { cast: { umas: IDS.map((characterId, i) => ({ characterId, calling: CALLINGS[i] })) }, bibles: new Map() } as unknown as Pick<StoryPack, 'cast' | 'bibles'>
 
-async function rows(save?: SaveV3) {
+async function rows(save?: SaveV4) {
   const { view } = await albumFixture(undefined, STATS)
   const farm = save ?? { ...newSave('u1', AT), roster: Object.fromEntries(IDS.map((id, i) => [id, newRosterUma(i + 1)])), dorm: { level: 2, home: IDS, swaps: [] } }
-  return { view, farm, rows: umaRows(farm, farm.dorm.home, view.album, talentTable(view), view.roster) }
+  return { view, farm, rows: umaRows(farm, farm.dorm.home, view.album, talentTable(view), STORY) }
 }
 
 describe('the roster page', () => {
   it('lists the Umas on the farm with their best rank, and counts those away', () => {
     const miner = newRosterUma(1)
     miner.ranks.mining = { points: 160, rank: 2, challenge: 0 }
-    const save: SaveV3 = { ...newSave('u1', AT), roster: { 101: miner, 202: newRosterUma(1), 303: newRosterUma(1) }, dorm: { level: 1, home: ['101', '202'], swaps: [] } }
+    const save: SaveV4 = { ...newSave('u1', AT), roster: { 101: miner, 202: newRosterUma(1), 303: newRosterUma(1) }, dorm: { level: 1, home: ['101', '202'], swaps: [] } }
     expect(rosterView(save)).toEqual({ away: 1, home: [{ outfitId: '101', rank: 'Skilled · Mining' }, { outfitId: '202', rank: 'Novice' }] })
   })
 
@@ -45,7 +48,7 @@ describe('the roster page', () => {
 })
 
 describe('talents and ranks on the cards', () => {
-  it('reads each Uma\'s talents once a release, her favourite line from her calling, and her best talent', async () => {
+  it('reads each Uma\'s talents once a release, her favourite line from the story pack, and her best talent', async () => {
     const { view, rows: all } = await rows()
     expect(talentTable(view)).toBe(talentTable(view))
     expect(talentsFor(view)).toBe(talentsFor(view))
@@ -59,7 +62,7 @@ describe('talents and ranks on the cards', () => {
   })
 
   it('filters to "Fishing talent B+" and sorts by fishing rank points', async () => {
-    const save: SaveV3 = (await rows()).farm
+    const save: SaveV4 = (await rows()).farm
     save.roster['81005']!.ranks.fishing = { points: 52.8, rank: 1, challenge: 3 }
     save.roster['81003']!.ranks.fishing = { points: 12, rank: 0, challenge: 0 }
     const { rows: all } = await rows(save)
@@ -79,7 +82,7 @@ describe('talents and ranks on the cards', () => {
   })
 
   it('opens a picker by the place\'s activity, with its talent and points sorts', async () => {
-    const save: SaveV3 = (await rows()).farm
+    const save: SaveV4 = (await rows()).farm
     save.roster['81002']!.ranks.farming = { points: 41, rank: 1, challenge: 0 }
     const { rows: all } = await rows(save)
     expect([...all].sort(activityOrder('farming')).map((r) => r.name)).toEqual(['Beryl', 'Fable', 'Aster', 'Cinder', 'Dune', 'Ember'])
@@ -89,7 +92,7 @@ describe('talents and ranks on the cards', () => {
   })
 
   it('lists her nine activities with talent, rank, points and the next challenge', async () => {
-    const save: SaveV3 = (await rows()).farm
+    const save: SaveV4 = (await rows()).farm
     save.roster['81006']!.ranks.farming = { points: 47.5, rank: 0, challenge: 12 }
     save.roster['81006']!.ranks.mining = { points: 2100, rank: 5, challenge: 0 }
     save.roster['81006']!.ranks.fishing = { points: 41, rank: 0, challenge: 30 }

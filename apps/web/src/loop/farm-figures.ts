@@ -4,7 +4,7 @@
 //
 // Who stands: every Uma whose job holds a slot (uma-kit's `workView` cards, the pips' own source) at that
 // slot's marker, every tender at her block's marker on the Fields, and the rest of the farm's home (`farmHome`) idle: a
-// housed spouse (v4) on her house's apron, everyone else in the yard. Nobody who's away. The idle spots ("left to
+// housed spouse on her house's apron, everyone else in the yard. Nobody who's away. The idle spots ("left to
 // the worker"): the Dorm's apron, middle first, then the path in front of it, then the path row on to the bin, then the
 // free tiles of the open ground beside the Gate; more Umas than spots share them from the first. An Uma idle before keeps
 // her spot while it's still a spot, so putting one to work never shuffles the others (only who moved walks).
@@ -14,14 +14,14 @@ import type { Facing } from '@luismlorenzana/uma-stage'
 import type { FarmDesign, Tile } from '@luismlorenzana/uma-stage/formats'
 
 /** What her bubble shows: her work's item when she has some to collect (the place's Ready), the Fields' crop
- * when her block has Ready plots, each with ♥ when her heart event is Ready (v4); ♥ alone with nothing to collect. */
+ * when her block has Ready plots, each with ♥ when her heart event is Ready; ♥ alone with nothing to collect. */
 export type FigureBubble =
   | { kind: 'work'; request: LoopWorkRequest; heart: boolean }
   | { kind: 'crop'; block: BlockId; crop: CropId; heart: boolean }
   | { kind: 'heart' }
 
 export type FigureWhere = 'slot' | 'yard' | 'house'
-/** An Uma on the farm as the stage draws her. `id` is her roster key (an outfit id on v3, a character id on v4). */
+/** An Uma on the farm as the stage draws her. `id` is her roster key, her character id. */
 export interface FarmFigure {
   id: string
   tile: Tile
@@ -38,7 +38,7 @@ export interface FiguresInput {
   plots: readonly FarmPlot[]
   /** The Hub's work view (FarmMap's): who holds which slot. */
   work: { cards: (building: string) => readonly SlotCardModel[] }
-  /** Whose heart event is Ready today (v4; empty on v3). */
+  /** Whose heart event is Ready today. */
   hearts: ReadonlySet<string>
   /** Whether a prop frame blocks its tile (the kit's `blocks`). */
   blocks: (frame: string) => boolean
@@ -86,7 +86,7 @@ export function yardSpots(design: FarmDesign, plots: readonly FarmPlot[], ok: (t
   return [...frontOf(dorm, ok), ...path, ...ground].filter((t) => !seen.has(key(t)) && seen.add(key(t)))
 }
 
-/** A house's idle spots (v4): its apron, then the path in front of it. */
+/** A house's idle spots: its apron, then the path in front of it. */
 export const houseSpots = (plot: FarmPlot, ok: (t: Tile) => boolean): Tile[] => frontOf(plot, ok)
 
 /** Gives each idle Uma a spot: her spot from before while it's still one and free, the first free spot otherwise; with
@@ -155,7 +155,7 @@ export function farmFigures(input: FiguresInput, previous?: ReadonlyMap<string, 
   const houses = new Map<number, string[]>()
   const yard: string[] = []
   for (const id of idle) {
-    const n = housed(save, id) && save.version === 4 ? save.love[id]?.house : undefined
+    const n = housed(save, id) ? save.love[id]?.house : undefined
     const plot = n === undefined ? undefined : plots.find((p) => p.kind === 'house' && p.house === n)
     if (n !== undefined && plot) houses.set(n, [...houses.get(n) ?? [], id])
     else yard.push(id)

@@ -1,11 +1,11 @@
-// Married life on screen, the switch on: the homestead's rows on the v4 map,
+// Married life on screen: the homestead's rows on the map,
 // building and naming House 1 on the homestead's sheet, a move and a swap, the wedding's room on Married, Tonight's Sleep at,
 // the morning's house line and "misses you", a night level's card, a household scene played and read, and her room on her
-// profile; with the switch off, the sheet never opens and v3's map is the deployed build's. The invented stand-in
+// profile. The invented stand-in
 // pack (9000001–9000003) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
 import {
-  FARM_PLACES, joinOpening, moveSpouse, newLove, newRosterUmaV4, newSave, newSaveV4, readScene, type HouseLine, type Love, type SaveV4, type StoryPack,
+  FARM_PLACES, joinOpening, moveSpouse, newLove, newRosterUma, newSave, readScene, type HouseLine, type Love, type SaveV4, type StoryPack,
 } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -16,7 +16,7 @@ import type { MasterView } from '../master/master'
 const fixture = vi.hoisted(() => ({ view: null as MasterView | null, pack: null as StoryPack | null }))
 vi.mock('../master/master', async (importOriginal) => ({
   ...await importOriginal<typeof import('../master/master')>(),
-  masterReady: vi.fn(async () => fixture.view), masterRoster: () => fixture.view?.roster ?? null,
+  masterReady: vi.fn(async () => fixture.view),
   useMaster: () => ({ status: 'ready', view: fixture.view }), retryMaster: () => undefined, setMasterLens: () => undefined,
 }))
 vi.mock('@luismlorenzana/uma-kit/auth', async (importOriginal) => ({
@@ -46,7 +46,7 @@ const save = (): SaveV4 => useGame.getState().save as SaveV4
 
 /** A named farm on day 30, the opening three home and their arrivals played; `love` by id. */
 function farm(love: Record<string, Partial<Love>> = {}, more: Partial<SaveV4> = {}): SaveV4 {
-  const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day: DAY }, gold: 50_000 }
+  const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day: DAY }, gold: 50_000 }
   const joined = joinOpening(readScene(fresh, 'scene:1:open'), fixture.pack!)
   const loves = Object.fromEntries(Object.entries(love).map(([id, l]) => [id, { ...joined.love[id]!, ...l }]))
   return { ...joined, arrivals: [ONE, TWO, THREE], today: { ...joined.today, bonds: {} }, love: { ...joined.love, ...loves }, ...more }
@@ -98,7 +98,6 @@ async function type(input: HTMLInputElement, value: string) {
 }
 
 beforeEach(async () => {
-  vi.stubEnv('VITE_FARM_ROMANCE', '1')
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   const pack = await storyReady()
   fixture.pack = pack
@@ -135,10 +134,8 @@ describe('the homestead on the map', () => {
     expect(homesteadPlaces(three, homesteadLayout(three), new Set()).map((p) => p.id)).toEqual(['farmhouse', 'house-1', 'house-2', 'house-3'])
   })
 
-  it('keeps v3\'s map: eight rows, 36 tiles, every place where the deployed build has it', () => {
+  it('places the eight rows on 36 tiles before the homestead grows them', () => {
     expect(FARM_MAP_TILES).toBe(36)
-    const v3 = newSave('u1', AT)
-    expect(v3.version).toBe(3)
     expect(FARM_PLACES.map((p) => placeAt(p))).toEqual(FARM_PLACES.map((p) => ({ x: [0.2, 0.5, 0.8][p.col], y: (3 + (p.row - 1) * 4 + 0.5) / 36 })))
   })
 })
@@ -267,7 +264,7 @@ describe('household scenes', () => {
     let five = wedOne()
     const ids = ['9000004', '9000005', '9000006', '9000007']
     five = {
-      ...five, roster: { ...five.roster, ...Object.fromEntries(ids.map((id) => [id, newRosterUmaV4(1)])) },
+      ...five, roster: { ...five.roster, ...Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])) },
       love: { ...five.love, ...Object.fromEntries(ids.map((id) => [id, { ...newLove(), stage: 'spouse' as const, level: 0, wed: 5 }])) },
       homestead: { ...five.homestead, married: 5, furniture: [null, null, null, null, null] }, arrivals: [...five.arrivals, ...ids],
     }
@@ -304,14 +301,11 @@ describe('her room on her profile', () => {
   })
 })
 
-describe('the switch off', () => {
-  it('never opens the homestead\'s sheet, and plays v3 as the deployed build', async () => {
-    vi.stubEnv('VITE_FARM_ROMANCE', '0')
-    useGame.setState({ uid: 'u1', status: 'ready', save: newSave('u1', AT) })
-    await render(<p />, '/?sheet=homestead')
-    await settle()
-    expect($('[data-homestead]')).toBeNull()
+describe('before anyone is married', () => {
+  it('plays no household scene: a stale ?household= closes', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
     await render(<p />, '/?household=finale')
+    await settle()
     expect($('[data-scene]')).toBeNull()
   })
 })

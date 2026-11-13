@@ -1,7 +1,7 @@
-// The Diary's Conversations (in the romance build): one row a pair with a bond heart,
+// The Diary's Conversations: one row a pair with a bond heart,
 // the most hearts first. Each shows the two faces, their names and hearts, and their conversations: those read as
 // "Bond n" chips that replay them, **Read** for any opened and unread, and the tie's line for a pair with none written.
-// Replays pay nothing and mark nothing new. Loaded on demand with the Diary, the romance build only.
+// Replays pay nothing and mark nothing new. Loaded on demand with the Diary.
 import type { SaveV4 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { withParam } from '@luismlorenzana/uma-kit/shell'

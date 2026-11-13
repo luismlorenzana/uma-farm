@@ -4,7 +4,7 @@
 // stand-in pack (9000001–9000003) and a 9000004 built here; master data and the server are stubs.
 import 'fake-indexeddb/auto'
 import {
-  joinOpening, newSaveV4, pairKey, readScene, STAND_IN_FILES, storyPackFrom, type Cast, type HarvestReceipt, type Love, type SaveV4, type StoryPack, type Ties,
+  joinOpening, newSave, pairKey, readScene, STAND_IN_FILES, storyPackFrom, type Cast, type HarvestReceipt, type Love, type SaveV4, type StoryPack, type Ties,
 } from '@farm/domain'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -15,7 +15,7 @@ import type { MasterView } from '../master/master'
 const fixture = vi.hoisted(() => ({ view: null as MasterView | null, pack: null as StoryPack | null }))
 vi.mock('../master/master', async (importOriginal) => ({
   ...await importOriginal<typeof import('../master/master')>(),
-  masterReady: vi.fn(async () => fixture.view), masterRoster: () => fixture.view?.roster ?? null,
+  masterReady: vi.fn(async () => fixture.view),
   useMaster: () => ({ status: 'ready', view: fixture.view }), retryMaster: () => undefined, setMasterLens: () => undefined,
 }))
 vi.mock('../api/client', async () => {
@@ -40,7 +40,7 @@ const json = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
 /** A named farm on day 13, the opening three home, each with her love as given. */
 function farm(loves: Partial<Record<string, Partial<Love>>> = {}, pack: Pick<StoryPack, 'cast' | 'ties'> = fixture.pack!): SaveV4 {
-  const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day: 13 } }
+  const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day: 13 } }
   const joined = joinOpening(readScene(fresh, 'scene:1:open'), pack)
   return {
     ...joined, arrivals: [ONE, TWO, THREE], bonds: { ...joined.bonds, [pairKey(ONE, TWO)]: 300 },
@@ -65,7 +65,6 @@ async function profile(id: string) {
 }
 
 beforeEach(async () => {
-  vi.stubEnv('VITE_FARM_ROMANCE', '1')
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   const pack = await storyReady()
   fixture.pack = pack

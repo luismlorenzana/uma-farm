@@ -2,8 +2,7 @@
 // view's cards the pips draw, the Fields' tenders, the places' Ready badges), the idle spots and their staying put, the
 // bubbles, and what moves between two readings. Invented saves and ids only; the kit's blocking is the stand-in's.
 import {
-  farmDesign, farmEnvV3, farmHome, farmPlots, FARMHOUSE, LOOP_WORK_PLACES, loopReadyWork, loopWorld, newBlock, newLove, newRosterUma, newRosterUmaV4, newSave, newSaveV4,
-  startLoopJob, workNow, type FarmSave, type SaveV3, type SaveV4,
+  farmDesign, farmEnv, farmHome, farmPlots, FARMHOUSE, LOOP_WORK_PLACES, loopReadyWork, loopWorld, newBlock, newLove, newRosterUma, newSave, startLoopJob, workNow, type FarmSave, type SaveV4,
 } from '@farm/domain'
 import { workView } from '@luismlorenzana/uma-kit/work'
 import { standInFarmAtlas } from '@luismlorenzana/uma-stage/formats'
@@ -16,22 +15,20 @@ import {
 const AT = '2026-11-12T10:00:00.000Z'
 const atlas = standInFarmAtlas()
 const blocks = (name: string) => atlas.frames[name]?.blocks ?? false
-const M4 = { homestead: false }
-const HOME = { homestead: true }
 
-/** Day 1 of a v3 farm with six Umas home, blocks A and B owned, A tended by 505. */
-function farm(): SaveV3 {
+/** Day 1 of a farm with six Umas home, blocks A and B owned, A tended by 505. */
+function farm(): SaveV4 {
   const save = newSave('u1', AT)
   const ids = ['101', '202', '303', '404', '505', '606']
   return {
-    ...save, roster: Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])), dorm: { level: 3, home: ids, swaps: [] },
+    ...save, roster: Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])), love: Object.fromEntries(ids.map((id) => [id, newLove()])), dorm: { level: 3, home: ids, swaps: [] },
     fields: { blocks: [{ ...newBlock('A'), tender: '505' }, newBlock('B')] },
   }
 }
 const forage = (count: number) => ({ kind: 'forage', item: 'woods', count })
 const fish = (count: number) => ({ kind: 'fish', item: 'pond', count })
 /** 101 and 202 in the forest (2 and 1 days), 303 at the Fishery (1 day). */
-function working(): SaveV3 {
+function working(): SaveV4 {
   let save = farm()
   save = startLoopJob(save, { outfitId: '101', place: 'forest', slot: 0, request: forage(2) }, AT)
   save = startLoopJob(save, { outfitId: '202', place: 'forest', slot: 2, request: forage(1) }, AT)
@@ -41,8 +38,8 @@ function working(): SaveV3 {
 /** The next morning, read without a night: each finished day waits to be collected. */
 const morning = <S extends FarmSave>(save: S): S => ({ ...save, calendar: { day: save.calendar.day + 1 } })
 
-function input(save: FarmSave, options = M4, hearts: ReadonlySet<string> = new Set()) {
-  return { save, design: farmDesign(save, options), plots: farmPlots(save, options), work: workView(loopWorld(save), workNow(save), farmEnvV3()), hearts, blocks }
+function input(save: FarmSave, hearts: ReadonlySet<string> = new Set()) {
+  return { save, design: farmDesign(save), plots: farmPlots(save), work: workView(loopWorld(save), workNow(save), farmEnv()), hearts, blocks }
 }
 const byId = (figures: readonly FarmFigure[]) => new Map(figures.map((f) => [f.id, f]))
 
@@ -75,16 +72,16 @@ describe('who stands on the farm', () => {
     expect(farmFigures(input(save)).map((f) => f.id)).toEqual(['101', '202'])
   })
 
-  it('puts a housed spouse on her house\'s apron (v4), and the rest in the yard', () => {
-    const base = newSaveV4('u1', AT)
+  it('puts a housed spouse on her house\'s apron, and the rest in the yard', () => {
+    const base = newSave('u1', AT)
     const save: SaveV4 = {
       ...base, farmer: { name: 'Robin' },
-      roster: { 9001: newRosterUmaV4(1), 9002: newRosterUmaV4(1), 9003: newRosterUmaV4(1) },
+      roster: { 9001: newRosterUma(1), 9002: newRosterUma(1), 9003: newRosterUma(1) },
       dorm: { level: 3, home: ['9001', '9002'], swaps: [] },
       love: { 9003: { ...newLove(), stage: 'spouse', wed: 3, house: 1 } },
       homestead: { ...base.homestead, houses: [FARMHOUSE, { name: 'Home 1', extended: false }], slept: [0, 0] },
     }
-    const view = input(save, HOME)
+    const view = input(save)
     const figures = farmFigures(view)
     const house = view.plots.find((p) => p.kind === 'house' && p.house === 1)!
     const spouse = byId(figures).get('9003')!
@@ -94,7 +91,7 @@ describe('who stands on the farm', () => {
   })
 
   it('faces the place\'s work: toward a building beside her, else into the place; the idle face the camera', () => {
-    const design = farmDesign({ ...farm(), farm: { ...farm().farm, chapter: 2, points: 1300 }, buildings: { dorm: 1, mill: 1 } }, M4)
+    const design = farmDesign({ ...farm(), farm: { ...farm().farm, chapter: 2, points: 1300 }, buildings: { dorm: 1, mill: 1 } })
     const mill = (n: number) => design.markers.find((m) => m.id === `mill-${n}`)!
     expect([1, 2, 3, 4].map((n) => slotFacing(design, mill(n)))).toEqual(['right', 'right', 'right', 'back'])
     const forest = design.markers.find((m) => m.id === 'forest-1')!
@@ -105,8 +102,8 @@ describe('who stands on the farm', () => {
 
 describe('the idle Umas\' spots', () => {
   const save = farm()
-  const design = farmDesign(save, M4)
-  const plots = farmPlots(save, M4)
+  const design = farmDesign(save)
+  const plots = farmPlots(save)
   const ok = standable(design, blocks)
   const spots = yardSpots(design, plots, ok)
 
@@ -164,7 +161,7 @@ describe('the bubbles', () => {
   })
 
   it('carry ♥ for a Ready heart event, alone over an Uma with nothing to collect', () => {
-    const figures = byId(farmFigures(input(morning(working()), M4, new Set(['101', '404']))))
+    const figures = byId(farmFigures(input(morning(working()), new Set(['101', '404']))))
     expect(figures.get('101')!.bubble).toMatchObject({ kind: 'work', heart: true })
     expect(figures.get('404')!.bubble).toEqual({ kind: 'heart' })
     expect(figures.get('606')!.bubble).toBeNull()

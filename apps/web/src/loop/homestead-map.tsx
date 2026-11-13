@@ -1,16 +1,15 @@
-// The homestead on the farm map (the farm map's rows, grown), save v4 only: its rows sit after the yard and
+// The homestead on the farm map (the farm map's rows, grown): its rows sit after the yard and
 // before the town edge, which stays the map's last row: the Farmhouse, House 1 and House 2; Houses 3–5; House 6. Built
 // houses and the next lot show, so the map grows a row at a time. A house's pips are its residents' faces (a Ready one
 // badged ♥) and its free rooms' dots; a tap opens the homestead's sheet at that house; the next lot shows the house's
-// frame locked with "Build · 8,000g" (or what it waits for). v3's map is untouched: this module loads only in the romance
-// build, for a v4 save. Loaded on demand.
+// frame locked with "Build · 8,000g" (or what it waits for). Loaded on demand.
 import { homesteadRows, homesteadShown, HOMESTEAD_FIRST_ROW, nextLot, residentsOf, roomsOf, type FarmPlace, type SaveV4 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import type { HubMapPlace, PipModel } from '@luismlorenzana/uma-kit/hub'
 import { mapTilesFor, placeAt } from './farm-map'
 import { priceWords } from './homestead-view'
 
-/** The v4 map's rows: the eight, less the town edge, then the homestead's, then the town edge. */
+/** The map's rows: the eight, less the town edge, then the homestead's, then the town edge. */
 export interface MapLayout {
   tiles: number
   townRow: number
@@ -20,7 +19,7 @@ export function homesteadLayout(save: Pick<SaveV4, 'homestead'>): MapLayout {
   return { tiles: mapTilesFor(townRow), townRow }
 }
 
-/** A farm place on the v4 map: the town edge moves below the homestead. */
+/** A farm place on the map: the town edge moves below the homestead. */
 export const placeOnV4 = (place: FarmPlace, layout: MapLayout): Pick<FarmPlace, 'row' | 'col'> => (place.group === 'town' ? { row: layout.townRow, col: place.col } : place)
 
 /** The homestead's places on the map, with their pips and links. */

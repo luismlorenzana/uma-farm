@@ -2,7 +2,7 @@
 // town and opens the old Forge as the ring bench. It plays over the farm once the summary is put away (the order), one
 // line a tap, Skip to its card; the card says what the bench does, with **See the bench** (`?sheet=bench`) and **Later**.
 // Read once (`scene:bench` in `diary.read`). Her bust is a lettered disc until the art is pinned. Loaded on demand from
-// the scene player, the romance build only.
+// the scene player.
 import { BENCH_SCENE, BENCH_SCENE_LINES, CAST, withFarmer, type SaveV4 } from '@farm/domain'
 import { Button, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'

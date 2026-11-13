@@ -1,5 +1,5 @@
 // How an Uma looks on the HD-2D stage: her outfit's sprite set from master data's
-// `outfit-sprites` by outfit id (in the romance build her roster key goes through `outfitFor`), loaded only when the stage's
+// `outfit-sprites` by outfit id (her roster key goes through `outfitFor`), loaded only when the stage's
 // cap lets it go live, through uma-stage's loader and the release client, so its hash-named files are cached on the device
 // (the service worker's cache-first rule for `/api/master/files/`) and download once. With no set (most outfits today), or
 // while hers loads, she's a standee: her face from `outfit-faces` on a card, or a plain card when the release has none.

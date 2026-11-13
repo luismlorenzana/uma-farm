@@ -1,5 +1,5 @@
-// The farmer's name: the first screen on a fresh v4 farm, covering everything until
-// it's entered, as the picks did. One field, "What should they call you?", a grey "Farmer" placeholder and no default;
+// The farmer's name: the first screen on a new farm, covering everything until
+// it's entered. One field, "What should they call you?", a grey "Farmer" placeholder and no default;
 // **Continue** stays off until the name fits the rule, and the words say why. Entering it is the fresh farm's first
 // player change, stamped once. No pronouns, no gender, never drawn. Loaded on demand.
 import { cleanFarmerName, FARMER_NAME_MAX, FARMER_PLACEHOLDER, farmerNameIssue } from '@farm/domain'
@@ -14,7 +14,7 @@ export default function NameSheet() {
   const [touched, setTouched] = useState(false)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  if (!save || save.version !== 4 || save.farmer.name !== '') return null
+  if (!save || save.farmer.name !== '') return null
   const issue = farmerNameIssue(name)
   const shown = error ?? (touched && name.length > 0 ? issue : null)
   const submit = () => {

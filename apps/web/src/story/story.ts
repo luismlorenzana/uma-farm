@@ -1,10 +1,9 @@
 // The story pack in the app: loaded once, on demand, through one
-// seam (`load.ts`'s `loadStoryPack`: the invented stand-in, or the private pack once it ships). Light on purpose,
-// since the shell, the store and the album's art read it: the pack, its reader and the stand-in load lazily.
+// seam (`load.ts`'s `loadStoryPack`: the private pack's release, or on the dev server the invented stand-in). Light on
+// purpose, since the shell, the store and the album's art read it: the pack, its reader and the stand-in load lazily.
 //
-// `outfitFor` is the one resolver where a roster id meets master data: on save v4 the roster's key is her character id
-// and the pack's cast names her outfit (the domain's `outfitOf`); before the pack loads, and always in the deployed
-// build, an id is its own outfit. The album's art and master data's view (`setMasterLens`) read through it, so faces,
+// `outfitFor` is the one resolver where a roster id meets master data: the roster's key is her character id and the
+// pack's cast names her outfit (the domain's `outfitOf`); before the pack loads, an id is its own outfit. The album's art and master data's view (`setMasterLens`) read through it, so faces,
 // busts, names, talents, temperaments and pickers all follow her cast entry.
 import type { StoryPack } from '@farm/domain'
 import { useSyncExternalStore } from 'react'
@@ -14,11 +13,11 @@ let resolve: (id: string) => string = (id) => id
 let loading: Promise<StoryPack> | null = null
 const listeners = new Set<() => void>()
 
-/** The pack once loaded, else null (the deployed build never loads it). */
+/** The pack once loaded, else null. */
 export const storyPack = (): StoryPack | null => pack
-/** The outfit a roster id plays as: her cast entry's on v4, else the id itself. */
+/** The outfit a roster id plays as: her cast entry's, else the id itself. */
 export const outfitFor = (id: string): string => resolve(id)
-/** Whether an id is one of the cast's (a v4 roster key). */
+/** Whether an id is one of the cast's (a roster key). */
 export const inCast = (id: string): boolean => pack?.cast.umas.some((u) => u.characterId === id) ?? false
 /** The cast's character ids, in arrival order: the scenes' tie-break (`sceneDue`). */
 export const castIds = (): string[] => pack?.cast.umas.map((u) => u.characterId) ?? []

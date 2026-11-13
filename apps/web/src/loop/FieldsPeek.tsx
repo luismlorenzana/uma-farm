@@ -1,7 +1,7 @@
 // The Fields on the farm map: their quick look, one row a block (its tender's face, what grows, what's Ready, and a
 // locked block's Farm Rank and cost), Harvest all on every block, and Open the Fields; and their pips, one a block, each
 // its tender's face ringed by the block's growth, at her talent, its block's letter on her lower left, or ♥ while
-// she's Ready on a v4 farm. Part of the farm map's chunk.
+// she's Ready. Part of the farm map's chunk.
 import { readyPlots, talentD, type FarmingTalentOf, type FarmSave } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import type { PipModel } from '@luismlorenzana/uma-kit/hub'

@@ -1,7 +1,6 @@
-// The roster's album, shared by the deployed build's `/roster` and the romance build's Hearts
-// tab, whose Work view it is: everyone on the roster, home or away, as album cards on uma-kit's album
-// chrome. Each card has her favourite line's mark and her best talent on her face, the page's corner mark (your hearts
-// with her on v3, her level words on v4), and her best rank (or her rank and talent in the activity sorted by); away, it
+// The roster's album, the Hearts tab's Work view: everyone on the roster, home or away, as album cards on uma-kit's album
+// chrome. Each card has her favourite line's mark and her best talent on her face, the page's corner mark (her level
+// words), and her best rank (or her rank and talent in the activity sorted by); away, it
 // says so. The filters are where she is, her talent and rank in each activity and her favourite line; the sorts her talent
 // score and rank points in a chosen activity, joined and name. A tap opens her sheet (`?uma=<id>`), whose Work side is
 // `WorkSide`: her favourite line, the day she joined, where she is, and her nine activities with talent, rank, points and
@@ -23,7 +22,7 @@ import { shortDate } from './words'
 /** Everyone on the roster as album rows, with the release's talents table. */
 export function useRosterRows(save: FarmSave, master: MasterView) {
   const talents = talentTable(master)
-  const rows = useMemo(() => umaRows(save, Object.keys(save.roster), master.album, talents, master.roster), [save, master, talents])
+  const rows = useMemo(() => umaRows(save, Object.keys(save.roster), master.album, talents), [save, master, talents])
   return { rows, talents }
 }
 

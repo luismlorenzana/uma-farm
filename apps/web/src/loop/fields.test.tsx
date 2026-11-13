@@ -1,15 +1,15 @@
 // The Fields as rendered: the four block cards, Plant all and a plot's plant sheet, a tender's row,
 // nights left and Ready, Harvest all and a single harvest into the Warehouse by stars, a locked block's Buy, the quick
-// look with Harvest all on every block, the map's Collect all, and the view model behind them. Invented outfit ids;
-// master data and the server are stubs.
+// look with Harvest all on every block, the map's Collect all, and the view model behind them. Invented ids and the
+// stand-in pack; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { FARM_RANK_POINTS, newRosterUma, newSave, type SaveV3 } from '@farm/domain'
+import { FARM_RANK_POINTS, newLove, newRosterUma, newSave, type SaveV4 } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../master/master', () => ({ masterReady: vi.fn(async () => ({ roster: [], stats: new Map() })), masterRoster: () => null, useMaster: () => ({ status: 'loading' }) }))
+vi.mock('../master/master', () => ({ masterReady: vi.fn(async () => ({ stats: new Map(), birthdays: new Map() })), useMaster: () => ({ status: 'loading' }), setMasterLens: vi.fn() }))
 vi.mock('../api/client', async () => {
   const actual = await vi.importActual<typeof import('../api/client')>('../api/client')
   return { ...actual, saveApi: { load: vi.fn(async () => ({ revision: 0, save: null })), put: vi.fn(async (_: number, save: unknown) => ({ revision: 1, save })) } }
@@ -23,11 +23,11 @@ const { blockLine, fieldsView, nightsWords, plotKey, seedOptions } = await impor
 
 const AT = '2026-11-09T10:00:00.000Z'
 /** Day 1 with two Umas home and the 9 Carrot seeds. */
-function farm(): SaveV3 {
+function farm(): SaveV4 {
   const save = newSave('u1', AT)
-  return { ...save, roster: { 101: newRosterUma(1), 202: newRosterUma(1) }, dorm: { level: 1, home: ['101', '202'], swaps: [] } }
+  return { ...save, roster: { 101: newRosterUma(1), 202: newRosterUma(1) }, love: { 101: newLove(), 202: newLove() }, dorm: { level: 1, home: ['101', '202'], swaps: [] } }
 }
-const save = () => useGame.getState().save as SaveV3
+const save = () => useGame.getState().save as SaveV4
 
 let host: HTMLDivElement
 let root: Root
@@ -162,7 +162,7 @@ describe('the Fields\' page', () => {
 
 describe('the Fields on the farm map', () => {
   /** Block A Ready with carrots, tended by 101. */
-  function ripe(): SaveV3 {
+  function ripe(): SaveV4 {
     const save = farm()
     const plot = { crop: 'carrot' as const, growth: 3.75, ready: true, regrowing: false, own: false }
     return { ...save, fields: { blocks: [{ id: 'A', tender: '101', plots: save.fields.blocks[0]!.plots.map((p, i) => (i < 3 ? { ...plot } : p)) }] } }
@@ -196,7 +196,7 @@ describe('the Fields\' view (pure)', () => {
     expect(view.map((b) => (b.owned ? `${b.id} ${b.empty}` : `${b.id} ${b.opens} ${b.cost}`))).toEqual(['A 9', 'B Farm Rank 2 800', 'C Farm Rank 4 3000', 'D Farm Rank 6 8000'])
     expect([nightsWords(1), nightsWords(3)]).toEqual(['Ready tomorrow', 'Ready in 3 nights'])
     expect([plotKey('A.4'), plotKey('B'), plotKey('E.1'), plotKey('A.9'), plotKey(null)]).toEqual([{ block: 'A', index: 4 }, { block: 'B', index: -1 }, null, null, null])
-    const held = { ...farm(), items: { 'seed-carrot': [2, 0, 0, 0, 0], 'seed-carrot-own': [1, 0, 0, 0, 0], 'seed-mint': [3, 0, 0, 0, 0] } } as SaveV3
+    const held = { ...farm(), items: { 'seed-carrot': [2, 0, 0, 0, 0], 'seed-carrot-own': [1, 0, 0, 0, 0], 'seed-mint': [3, 0, 0, 0, 0] } } as SaveV4
     expect(seedOptions(held, false).map((o) => `${o.name} ${o.count}`)).toEqual(['Carrot (own) 1', 'Carrot 2', 'Mint 3'])
     expect(seedOptions(held, true).map((o) => `${o.name} ${o.count}`)).toEqual(['Carrot 3', 'Mint 3'])
     expect(blockLine(view[0]!)).toBe('Empty')

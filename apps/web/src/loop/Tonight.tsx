@@ -1,4 +1,4 @@
-// Tonight: End the day's sheet in the romance build on save v4, while an evening slot
+// Tonight: End the day's sheet while an evening slot
 // is free and someone can spend it (a house is picked too). From the top: **Evening**, today's slot as "with Stand-in 2
 // · Walk ✓" once spent, the Uma who said yes with **Play ›**, else **Pick someone ›** (skippable); festival night's own
 // row on a festival day; then the nudge's line ("2 Umas idle · 3 to collect") and **End the day** / **Back**. End the
@@ -6,8 +6,7 @@
 // the card lands here again. Once anyone is married, **Sleep at** sits between the evening and the nudge's line: the
 // Farmhouse and each house with someone home ("· 3 home"), ☕ when a resident's breakfast is on tomorrow, "8 nights"
 // for one you haven't slept in lately, and on a birthday-alone wisher's birthday "Her room"; the pick (else the house
-// slept in least lately) is marked, and a tap picks it at once. End the day never waits on it. Loaded on demand, the
-// romance build only.
+// slept in least lately) is marked, and a tap picks it at once. End the day never waits on it. Loaded on demand.
 import { birthdaysOf, daySetState, marriedCount, type SaveV4, type StoryPack } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { withParam } from '@luismlorenzana/uma-kit/shell'

@@ -1,4 +1,4 @@
-// The evening on screen: `?evening=` over any page, the romance build only.
+// The evening on screen: `?evening=` over any page.
 // `?evening=pick` is Tonight's **Pick someone ›**: the Umas home who can spend one, a yes first, each with her favourite
 // kind and ✉. `?evening=<characterId>` is her profile's **Evening ›** (and a picked row): her kinds sheet, each open kind
 // with her three numbers today ("Perfect +225", ★ her favourite ×1.5, +20 when she asked), the ones her ladder hasn't
@@ -41,7 +41,7 @@ export default function EveningPlayer() {
   const story = useStory()
   const asked = useMemo(() => parseEvening(params), [params])
   const close = () => leave(withParam(location, 'evening', null))
-  if (!asked || save?.version !== 4 || !story) return null
+  if (!asked || !save || !story) return null
   return (
     <MasterGate skeleton={null}>
       {(master) => asked.mode === 'pick'

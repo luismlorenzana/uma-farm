@@ -1,10 +1,9 @@
 // The Dorm's page: `/dorm`. Beds used of beds, the
 // next level with its cost and Farm Rank (**Upgrade · 1,000g**, its beds tomorrow), who's home and who's away on her
 // off-season, and **Swap**: pick one home with nothing to do, then one away; she arrives tomorrow, and a swap can be
-// called off until then. The pickers are uma-kit's, over the roster's rows. On save v4 it's the Dorm for
-// 20: eight levels, and a level that brings an arrival says so ("Level 4 · 9 beds · someone new arrives"), never who.
-// Loaded on demand.
-import { atHome, arriving, bedsFor, dormBought, dormLevelsOf, freeBeds, leaving, nextDorm, swapBlock, type FarmSave } from '@farm/domain'
+// called off until then. The pickers are uma-kit's, over the roster's rows. It's the Dorm for 20: eight levels, and a
+// level that brings an arrival says so ("Level 4 · 9 beds · someone new arrives"), never who. Loaded on demand.
+import { atHome, arriving, bedsAt, dormBought, DORM_LEVELS, leaving, nextDorm, swapBlock, type FarmSave } from '@farm/domain'
 import { FaceTile, UmaPicker } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -16,7 +15,7 @@ import { useStory } from '../story/story'
 import { buyDormLevel, cancelDormSwap, swapUmas } from './actions'
 import { goldWords } from './goods-view'
 import { umaSheet } from './summary-words'
-import { cardLines, heartsWords, UMA_FACETS, umaRows, type LoopUmaRow } from './roster-view'
+import { cardLines, UMA_FACETS, umaRows, type LoopUmaRow } from './roster-view'
 import { useTalents } from './talents'
 import { umaBadges } from './UmaMarks'
 
@@ -28,13 +27,13 @@ export default function DormPage() {
   return <Dorm save={save} />
 }
 
-function About({ version }: { version: number }) {
+function About() {
   return (
     <>
-      <p>Beds cap who lives and works on the farm at once. Everyone else on the roster is away on her off-season: she keeps her ranks{version === 3 ? ' and your affinity' : ''}, and earns nothing.</p>
+      <p>Beds cap who lives and works on the farm at once. Everyone else on the roster is away on her off-season: she keeps her ranks, and earns nothing.</p>
       <p>Upgrade the Dorm for more beds. You pay now; the beds come the next morning. Higher levels need a higher Farm Rank.</p>
       <p>Swap an Uma with nothing to do for one away, free, as often as you like. She leaves and the other arrives the next morning.</p>
-      {version === 3 ? <p>Visitors come to the Gate only while a bed is free.</p> : <p>Some levels bring someone new to the farm the morning they’re ready.</p>}
+      <p>Some levels bring someone new to the farm the morning they’re ready.</p>
     </>
   )
 }
@@ -59,7 +58,7 @@ function Dorm({ save }: { save: FarmSave }) {
   }
   // A spouse in her house is on the farm, not away.
   const away = Object.keys(save.roster).filter((id) => !atHome(save, id))
-  const rows = useMemo(() => umaRows(save, Object.keys(save.roster), view?.album ?? new Map(), talents.table, view?.roster ?? []), [save, view, talents.table])
+  const rows = useMemo(() => umaRows(save, Object.keys(save.roster), view?.album ?? new Map(), talents.table), [save, view, talents.table])
   const byId = new Map(rows.map((row) => [row.id, row]))
   const status = (id: string): string => {
     if (leaving(save, id)) return 'Leaves tomorrow'
@@ -76,15 +75,15 @@ function Dorm({ save }: { save: FarmSave }) {
   const story = useStory()
   const bought = dormBought(save)
   const next = nextDorm(save)
-  const beds = bedsFor(save.version, save.dorm.level)
-  /** v4: a level whose arrival hasn't come yet brings someone new (never who). */
-  const bringsSomeone = (level: number): boolean => save.version === 4 && !!story?.cast.umas.some((u) => u.arrives?.kind === 'beds' && u.arrives.dormLevel === level && !save.roster[u.characterId])
+  const beds = bedsAt(save.dorm.level)
+  /** A level whose arrival hasn't come yet brings someone new (never who). */
+  const bringsSomeone = (level: number): boolean => !!story?.cast.umas.some((u) => u.arrives?.kind === 'beds' && u.arrives.dormLevel === level && !save.roster[u.characterId])
   const arrivalWords = (level: number): string => (bringsSomeone(level) ? ' · someone new arrives' : '')
   const nameOf = (id: string) => view?.album.get(id)?.name ?? 'Uma'
   const canSwap = save.dorm.home.some((id) => swapBlock(save, id) === null) && away.some((id) => !arriving(save, id))
   return (
     <div className="absolute inset-0 flex flex-col" data-page="dorm">
-      <PlaceHeader title="Dorm" onBack={() => leave('/')} about={<About version={save.version} />} words={{ back: 'Back to the farm', about: 'About the Dorm' }} />
+      <PlaceHeader title="Dorm" onBack={() => leave('/')} about={<About />} words={{ back: 'Back to the farm', about: 'About the Dorm' }} />
       <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="space-y-3 px-4 pt-3 pb-24">
           {(note || error) && (
@@ -97,7 +96,7 @@ function Dorm({ save }: { save: FarmSave }) {
               <h2 className="font-display text-[17px] font-bold">Level {save.dorm.level}</h2>
               <p className="text-[14px] tabular-nums" data-beds>{save.dorm.home.length} of {beds} beds</p>
             </div>
-            {bought > save.dorm.level && <p className="text-[13px] font-semibold text-success" data-upgrade-tomorrow>Level {bought} tomorrow · {bedsFor(save.version, bought)} beds{arrivalWords(bought)}</p>}
+            {bought > save.dorm.level && <p className="text-[13px] font-semibold text-success" data-upgrade-tomorrow>Level {bought} tomorrow · {bedsAt(bought)} beds{arrivalWords(bought)}</p>}
             {next ? (
               <div className="flex items-center justify-between gap-2 border-t border-hairline pt-2">
                 <span className="min-w-0 text-[13px] text-ink-soft" data-next-level={next.level}>Level {next.level} · {next.beds} beds{arrivalWords(next.level)}{next.open ? '' : ` · Farm Rank ${next.farmRank}`}</span>
@@ -108,21 +107,19 @@ function Dorm({ save }: { save: FarmSave }) {
             ) : <p className="border-t border-hairline pt-2 text-[13px] text-ink-soft">The Dorm is at its top level.</p>}
             {next && next.open && save.gold < next.cost && <p className="text-[12px] text-ink-soft">Need {goldWords(next.cost - save.gold)} more</p>}
           </section>
-          {save.version === 4 && (
-            <section aria-label="The Dorm's levels" className="space-y-1" data-dorm-ladder>
-              <h3 className="text-micro">Levels</h3>
-              <ul className="divide-y divide-hairline rounded-md border border-hairline">
-                {dormLevelsOf(save).map((l) => (
-                  <li key={l.level} className={`flex min-h-11 items-center gap-2 px-3 text-[13px] ${l.level <= bought ? 'text-ink' : 'text-ink-soft'}`} data-ladder-level={l.level}
-                    data-brings={bringsSomeone(l.level) || undefined}>
-                    <span className="w-14 shrink-0 font-semibold">Level {l.level}</span>
-                    <span className="min-w-0 flex-1 truncate">{l.beds} beds{arrivalWords(l.level)}</span>
-                    <span className="shrink-0 tabular-nums">{l.level <= bought ? (l.level <= save.dorm.level ? 'Built' : 'Tomorrow') : `${goldWords(l.cost)} · FR ${l.farmRank}`}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+          <section aria-label="The Dorm's levels" className="space-y-1" data-dorm-ladder>
+            <h3 className="text-micro">Levels</h3>
+            <ul className="divide-y divide-hairline rounded-md border border-hairline">
+              {DORM_LEVELS.map((l) => (
+                <li key={l.level} className={`flex min-h-11 items-center gap-2 px-3 text-[13px] ${l.level <= bought ? 'text-ink' : 'text-ink-soft'}`} data-ladder-level={l.level}
+                  data-brings={bringsSomeone(l.level) || undefined}>
+                  <span className="w-14 shrink-0 font-semibold">Level {l.level}</span>
+                  <span className="min-w-0 flex-1 truncate">{l.beds} beds{arrivalWords(l.level)}</span>
+                  <span className="shrink-0 tabular-nums">{l.level <= bought ? (l.level <= save.dorm.level ? 'Built' : 'Tomorrow') : `${goldWords(l.cost)} · FR ${l.farmRank}`}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
           {save.dorm.swaps.length > 0 && (
             <section aria-label="Swaps tomorrow" className="space-y-1">
               <h3 className="text-micro">Tomorrow</h3>
@@ -139,12 +136,11 @@ function Dorm({ save }: { save: FarmSave }) {
               </ul>
             </section>
           )}
-          <UmaList title={`On the farm · ${save.dorm.home.length}`} ids={save.dorm.home} nameOf={nameOf} status={status} rows={byId} where="home" hearts={save.version === 3} />
+          <UmaList title={`On the farm · ${save.dorm.home.length}`} ids={save.dorm.home} nameOf={nameOf} status={status} rows={byId} where="home" />
           <Button className="w-full" variant="secondary" disabled={!canSwap} onClick={() => setSwap({ step: 'out' })} data-action="swap">
             {away.length === 0 ? 'Swap · nobody away' : 'Swap'}
           </Button>
-          <UmaList title={`Away · ${away.length}`} ids={away} nameOf={nameOf} status={status} rows={byId} where="away"
-            empty={save.version === 3 && freeBeds(save) > 0 ? 'Nobody away. Free beds bring visitors to the Gate.' : 'Nobody away.'} hearts={save.version === 3} />
+          <UmaList title={`Away · ${away.length}`} ids={away} nameOf={nameOf} status={status} rows={byId} where="away" empty="Nobody away." />
         </div>
       </main>
       <UmaPicker<SwapRow>
@@ -177,8 +173,8 @@ function Dorm({ save }: { save: FarmSave }) {
   )
 }
 
-/** Who's home, or who's away: a row each, her face, name, best rank, hearts and what she's doing. */
-function UmaList({ title, ids, nameOf, status, rows, where, empty, hearts }: {
+/** Who's home, or who's away: a row each, her face, name, best rank and what she's doing. */
+function UmaList({ title, ids, nameOf, status, rows, where, empty }: {
   title: string
   ids: readonly string[]
   nameOf: (id: string) => string
@@ -186,8 +182,6 @@ function UmaList({ title, ids, nameOf, status, rows, where, empty, hearts }: {
   rows: ReadonlyMap<string, LoopUmaRow>
   where: 'home' | 'away'
   empty?: string
-  /** v3 shows your hearts with her; v4 waits for the route. */
-  hearts: boolean
 }) {
   return (
     <section aria-label={title} className="space-y-1" data-dorm-list={where}>
@@ -198,11 +192,11 @@ function UmaList({ title, ids, nameOf, status, rows, where, empty, hearts }: {
             const row = rows.get(id)
             return (
               <li key={id}>
-                <Link to={umaSheet(id, hearts ? 3 : 4)} state={{ back: true }} className="flex min-h-14 items-center gap-2.5 px-3 py-1" data-dorm-uma={id} data-status={status(id)}>
+                <Link to={umaSheet(id)} state={{ back: true }} className="flex min-h-14 items-center gap-2.5 px-3 py-1" data-dorm-uma={id} data-status={status(id)}>
                   <FaceTile outfitId={id} size={40} label={nameOf(id)} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[14px] font-semibold">{nameOf(id)}</span>
-                    <span className="block truncate text-[12px] text-ink-soft">{row ? (hearts ? `${cardLines(row, null)[0]} · ${heartsWords(row.affinity)}` : cardLines(row, null)[0]) : ''}</span>
+                    <span className="block truncate text-[12px] text-ink-soft">{row ? cardLines(row, null)[0] : ''}</span>
                   </span>
                   <span className="shrink-0 text-[12px] font-semibold text-ink-soft">{status(id)}</span>
                 </Link>

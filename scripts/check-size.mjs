@@ -8,13 +8,12 @@ import { gzipSync } from 'node:zlib'
 
 export const MAIN_JS_BUDGET = 180_000
 /** Modules that must load on demand: the Hub map's Phaser scene, which uma-kit imports only when a map mounts; the
- * loop's boot with its migration; the farm's pages, its sheets, its actions and the night; the Fields' page,
- * rules and crop table, and the morning's words; the talents, the rank rules and their table, the roster's rows and
- * the Umas' marks; the work operations and their env, the forest's, the Fishery's and the stations' tables, kinds
- * and build rule, and their screens; the roster's rules (the start's sheet, the Dorm, visitors and affinity) with
- * the start's cards, the Dorm's page, the Gate's quick look and the chat and gift controls; and the Diary's counts,
- * the chapters, the scenes' lines, the scene player and the goals' words; and the romance core's name sheet, its
- * story pack with the stand-in, the format and validator, the re-cut opening, arrivals and her points; and her route
+ * farm's pages, its sheets, its actions and the night; the Fields' page, rules and crop table, and the morning's words;
+ * the talents, the rank rules and their table, the roster's rows and the Umas' marks; the work operations and their
+ * env, the forest's, the Fishery's and the stations' tables, kinds and build rule, and their screens; the Dorm's rules
+ * and page, the Gate's quick look and the chats' fallback lines; and the Diary's counts, the chapters, the scenes'
+ * lines, the scene player and the goals' words; and the name sheet, the story pack with the stand-in, the format and
+ * validator, arrivals and her points; and her route
  * on her sheet with its words, the acts, praise, birthdays and anniversaries, Ready and bond hearts; and the Hearts
  * tab, her profile, the shared roster album, the stand-in marks, the tab's view model and the perks' words; and the
  * pair player and the Diary's Conversations (with bonds' rules in `farm/bonds.ts`); and the event player, the five
@@ -25,17 +24,14 @@ export const MAIN_JS_BUDGET = 180_000
  * rules, the homestead's sheet, view, actions and map rows, the morning's house answer, the night level's card and the
  * household player; and the story pack's delivery, its index and released pack; and the HD-2D farm's stage:
  *three.js, uma-stage's band stage and its stand-in kit, the stage Home, its helpers and the farm's design, and
- * kit-farm's loader with its atlas; and the Umas on the stage, their figures and looks. The Wilds' screens are gone.
+ * kit-farm's loader with its atlas; and the Umas on the stage, their figures and looks.
  * Paths
  * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
   'phaser/dist/phaser.esm.js',
   '@luismlorenzana/uma-kit/dist/hub/scene/createHubGame.js',
   '@luismlorenzana/uma-kit/dist/hub/scene/HubScene.js',
-  'src/loop/boot.ts',
-  'domain/src/save/migrate-v3.ts',
   'src/loop/FarmMap.tsx',
-  'src/loop/RosterPage.tsx',
   'src/loop/DiaryPage.tsx',
   'src/loop/LoopSheets.tsx',
   'src/loop/actions.ts',
@@ -56,13 +52,10 @@ export const LAZY_MODULES = [
   'domain/src/gathering/stations.ts',
   'src/loop/WorkPlace.tsx',
   'src/loop/work-view.ts',
-  'domain/src/farm/start.ts',
   'domain/src/farm/dorm.ts',
-  'domain/src/farm/visitors.ts',
-  'src/loop/StartPicks.tsx',
+  'domain/src/romance/chats.ts',
   'src/loop/DormPage.tsx',
   'src/loop/GatePeek.tsx',
-  'src/loop/Affinity.tsx',
   'domain/src/farm/diary.ts',
   'domain/src/story/chapters.ts',
   'domain/src/story/chapter-1.ts',
@@ -74,7 +67,6 @@ export const LAZY_MODULES = [
   'domain/src/story/stand-in.ts',
   'domain/src/story/pack.ts',
   'domain/src/story/authored.ts',
-  'domain/src/story/opening-v4.ts',
   'domain/src/romance/arrivals.ts',
   'domain/src/romance/love.ts',
   'src/loop/Love.tsx',

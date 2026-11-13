@@ -12,7 +12,7 @@
 // (**Ask her**, once a day, paying nothing); `?memory=<id>:<rung>[@<n>]` replays a Memory from the top or its nth choice
 // point, every option open, nothing paid or saved. The script loads on demand (`route(id)`); Skip, Auto and Log work while
 // it does. Nothing is saved until the end: `playEvent` then commits once, stamped. Skip jumps to the next
-// choice or play, never past one. Loaded on demand, the romance build only.
+// choice or play, never past one. Loaded on demand.
 //
 // **the proposal** first asks which ring (the best grade preselected), then plays, and closes on the Engaged
 // stage-up; **the wedding** asks the place first (her three, each with its place card), plays the authored event on that
@@ -85,7 +85,7 @@ export default function EventPlayer() {
   const [gone, setGone] = useState(false)
   const close = () => leave(without(location))
   useEffect(() => {
-    if (req || !asked || save?.version !== 4 || !story) return
+    if (req || !asked || !save || !story) return
     const love = save.love[asked.id]
     const fail = () => setGone(true)
     if (!love || !save.roster[asked.id]) return fail()
@@ -113,7 +113,7 @@ export default function EventPlayer() {
   useEffect(() => {
     if (gone || !asked) close()
   }, [gone, asked]) // eslint-disable-line react-hooks/exhaustive-deps
-  if (!asked || gone || save?.version !== 4) return null
+  if (!asked || gone || !save) return null
   return createPortal(
     <Player req={req} steps={steps} save={save} pack={story} onClose={close} />,
     document.body,

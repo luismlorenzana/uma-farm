@@ -296,7 +296,7 @@ interface TenderRow extends LoopUmaRow {
 function TenderPicker({ save, block, master, talents, onClose, onError }: {
   save: FarmSave; block: BlockId; master: MasterView | null; talents: ReturnType<typeof useTalents>['table']; onClose: () => void; onError: (text: string) => void
 }) {
-  const rows = useMemo((): TenderRow[] => umaRows(save, farmHome(save), master?.album ?? new Map(), talents, master?.roster ?? []).map((row) => {
+  const rows = useMemo((): TenderRow[] => umaRows(save, farmHome(save), master?.album ?? new Map(), talents).map((row) => {
     const tends = tendedBlock(save, row.id)
     const away = leaving(save, row.id)
     return { ...row, note: tends ? `Tends Block ${tends}` : away ? 'Leaves tomorrow' : rankTalent(row, 'farming'), working: tends === null && isBusy(save, row.id), leaving: away }

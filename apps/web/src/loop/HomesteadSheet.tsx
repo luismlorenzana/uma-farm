@@ -1,14 +1,14 @@
-// The homestead (romance build), `?sheet=homestead` from a house's tap on the
+// The homestead, `?sheet=homestead` from a house's tap on the
 // map (`&house=<n>` marks its row): one row a house, its mark, its name, its rooms (a face ▣ or a free room ▢) and its count;
 // **Extend · 4,000g** on a built house; the next lot with a name field (grey "Rose Cottage") and **Build · 8,000g**, or
 // "Need 300g more", or "Opens with your first wedding"; the lots after it in one line; "Needs a room: …"; moves (tap a face,
 // then a free room or another face to swap); "Shared houses: +10 bond a night a pair."; and the furniture set from 5
-// married, a piece a row and the house it stands in. "Married n/N" in the header. Loaded on demand, the romance build only.
+// married, a piece a row and the house it stands in. "Married n/N" in the header. Loaded on demand.
 import { houseNameIssue, HOUSE_NAME_MAX, type SaveV4 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router'
 import { MasterGate } from '../master/MasterGate'
 import { useLoopSave } from '../save/game'
@@ -18,7 +18,7 @@ import { furnitureRows, HOMESTEAD_TEXT, homesteadView, priceWords, type HouseRow
 
 const ROSE = '#c2385e'
 
-/** `?sheet=homestead`: the homestead over the farm. On v3 it closes itself. */
+/** `?sheet=homestead`: the homestead over the farm. */
 export default function HomesteadSheet() {
   const save = useLoopSave()
   const [params] = useSearchParams()
@@ -29,11 +29,7 @@ export default function HomesteadSheet() {
     at.searchParams.delete('house')
     leave(`${at.pathname}${at.search}`)
   }
-  const shut = !!save && save.version !== 4
-  useEffect(() => {
-    if (shut) close()
-  }, [shut]) // eslint-disable-line react-hooks/exhaustive-deps
-  if (!save || save.version !== 4) return null
+  if (!save) return null
   const focus = Number(params.get('house'))
   return <Homestead save={save} focus={Number.isInteger(focus) ? focus : null} onClose={close} />
 }

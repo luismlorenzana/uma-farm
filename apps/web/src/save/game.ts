@@ -2,21 +2,19 @@
 // (Dexie) and in a Zustand store; every change writes both and schedules a background sync. Play never waits on the
 // network once a device save exists.
 //
-// The deployed build holds save v3, the farm's own loop (the loop is the app). Every v2 it meets (the Wilds' save, on
-// the device, from the server, in a 409 or from a safety copy) migrates once master data has loaded (`loop/boot.ts`), and
-// the migration is committed without moving `updatedAt`, so it uploads and the next boot reads v3. It stops at a v4, with
-// the kit's update prompt, and never writes over one.
-//
-// The romance build (`VITE_FARM_ROMANCE=1`, dark until the private pack ships) holds save v4. Every v1–v3 it meets,
-// wherever it meets one, is wiped into a fresh v4 (`freshV4`, the account copied whole) and committed without
-// stamping, so it uploads and the server backs the v3 up; a dirty v3 on the device is kept as a safety copy first.
-// The farmer's name is the first stamp. Its boot waits for the story pack, as the loop waits for master data.
-import { freshV4, parseSave, touched, type FarmSave, type SaveEnvelope, type StoredSave } from '@farm/domain'
+// The store holds save v4. Boot waits for the story pack, as the farm's screens do. A save older than v4 found at boot
+// (on the device, or the server's on a fresh device) isn't played: boot stops at the start-over card (`olderFound`), and
+// its button (`startOver`) makes a fresh v4 (`freshV4`, the account copied whole), keeping a dirty device save as a
+// safety copy first, and commits it unstamped, so it uploads and the server backs the older save up; the farmer's name
+// is the first stamp. An older save met later (in a sync or a 409) is turned into the same fresh v4 and uploaded. A save
+// from a newer app stops boot and the sync, with the kit's update prompt, and nothing writes over it.
+import {
+  freshV4, isOlderSave, newSave, parseStored, SAVE_VERSION, touched, versionOf, type FarmSave, type OlderSave, type SaveEnvelope, type StoredSave,
+} from '@farm/domain'
 import { create } from 'zustand'
 import { conflictEnvelope, saveApi } from '../api/client'
-import { romanceOn } from '../app/romance'
 import { storyReady } from '../story/story'
-import { addSafetyCopy, readSafetyCopy, readSaveRow, removeSafetyCopy, writeSaveRow } from './db'
+import { addSafetyCopy, readSafetyCopy, readSaveRow, readStoredRow, removeSafetyCopy, writeSaveRow } from './db'
 import { reconcile } from './reconcile'
 
 export type GameStatus = 'idle' | 'booting' | 'ready'
@@ -25,8 +23,7 @@ export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'offline' | 'error'
 export interface GameState {
   uid: string | null
   status: GameStatus
-  /** The save the build plays: v3 (a v2 migrated) in the deployed build,
-   * v4 (any older one wiped) in the romance build. */
+  /** The save the farm plays: v4. */
   save: FarmSave | null
   /** The server revision the save is based on (0: never synced). */
   revision: number
@@ -44,41 +41,26 @@ export const useGame = create<GameState>(() => INITIAL)
 /** The save once booted, or null. */
 export const useLoopSave = (): FarmSave | null => useGame((s) => s.save)
 
-/** The deployed build meeting a v4: it can't play it, and nothing writes over it (the kit's update prompt
- * brings the build that can). */
+/** A save from a newer app: this build can't play it, and nothing writes over it (the kit's update prompt brings the
+ * build that can). */
 export const NEWER_SAVE_WORDS = 'This save is from a newer version of the farm.'
 
-/** A stored save as this build plays it. The deployed build: a v3 as it is, a v2 migrated once master data has loaded
- * (`loop/boot.ts`), a v4 refused. The romance build: a v4 as it is, any v1–v3 wiped (`freshV4`), once the story pack has
- * loaded. The same object comes back when nothing changed, so the store knows when to commit. */
-async function playable(save: StoredSave): Promise<FarmSave> {
-  if (romanceOn()) {
-    await storyReady()
-    return save.version === 4 ? save : freshV4(save)
-  }
-  if (save.version === 4) throw new Error(NEWER_SAVE_WORDS)
-  if (save.version === 3) return save
-  const { toLoopSave } = await import('../loop/boot')
-  return toLoopSave(save)
+/** A stored save as the farm plays it: a v4 as it is, an older one as a fresh v4 (`freshV4`), a newer one refused. The
+ * same object comes back when nothing changed, so the store knows when to commit. */
+function playable(save: StoredSave): FarmSave {
+  if (versionOf(save) > SAVE_VERSION) throw new Error(NEWER_SAVE_WORDS)
+  return isOlderSave(save) ? freshV4(save) : save
 }
 
-/** A server envelope as the farm plays it, and whether its save changed on the way (a v2 migrated, a v3 wiped). */
-async function playableEnvelope(envelope: SaveEnvelope): Promise<{ revision: number; save: FarmSave | null; migrated: boolean }> {
+/** A server envelope as the farm plays it, and whether its save changed on the way (an older save made new). */
+function playableEnvelope(envelope: SaveEnvelope): { revision: number; save: FarmSave | null; migrated: boolean } {
   if (!envelope.save) return { revision: envelope.revision, save: null, migrated: false }
-  const save = await playable(envelope.save)
+  const save = playable(envelope.save)
   return { revision: envelope.revision, save, migrated: save !== envelope.save }
 }
 
-/** A new account: day 1, nobody on the roster yet; the start's sheet is the first tap, or the farmer's name
- * (the romance build). */
-async function freshSave(uid: string): Promise<FarmSave> {
-  const { newLoopSave, newRomanceSave } = await import('../loop/boot')
-  if (romanceOn()) {
-    await storyReady()
-    return newRomanceSave(uid, nowIso())
-  }
-  return newLoopSave(uid, nowIso())
-}
+/** A new account: day 1, nobody on the roster yet; the farmer's name is the first tap. */
+const freshSave = (uid: string): FarmSave => newSave(uid, nowIso())
 
 const nowIso = () => new Date().toISOString()
 
@@ -88,46 +70,85 @@ function persist(): Promise<void> {
   return writeSaveRow({ id: 'main', uid, revision, save, dirty, lastSyncedAt })
 }
 
+/** An older save boot found, waiting for the start-over card's button: where it was, its revision, and whether the
+ * device held changes the server never got. */
+interface OlderFound {
+  save: OlderSave
+  revision: number
+  dirty: boolean
+  lastSyncedAt: string | null
+  fromDevice: boolean
+}
+let olderFound: OlderFound | null = null
+
+/** Whether boot stopped at an older save: the start-over card shows until `startOver`. */
+export const startingOver = (): boolean => olderFound !== null
+
 /**
  * Opens the device save, else the server's, else starts a new account. Safe to call again for the same uid. A fresh
  * device needs the server's answer first: starting a new save offline could later outrank the real one (the conflict rule
- * keeps the save changed last), so boot fails instead and the gate offers Retry.
+ * keeps the save changed last), so boot fails instead and the gate offers Retry. Resolves whether the farm starts over:
+ * a save older than v4 waits for the start-over card's button (`startOver`).
  */
-export async function boot(uid: string): Promise<void> {
+export async function boot(uid: string): Promise<{ startOver: boolean }> {
   const state = useGame.getState()
-  if (state.uid === uid && state.status !== 'idle') return
+  if (state.uid === uid && state.status !== 'idle') return { startOver: startingOver() }
   useGame.setState({ ...INITIAL, uid, status: 'booting' })
+  olderFound = null
   try {
+    await storyReady()
     const row = await readSaveRow(uid)
     if (row) {
-      const save = await playable(row.save)
-      // The wipe never loses unsynced play silently: a dirty older save is kept on the device first.
-      if (save.version !== row.save.version && row.dirty && romanceOn()) {
-        const kept = await addSafetyCopy({ uid, reason: 'wiped', at: nowIso(), revision: row.revision, save: row.save })
-        if (!kept) throw new Error('This device couldn’t keep a copy of its save. Try again.')
+      if (versionOf(row.save) > SAVE_VERSION) throw new Error(NEWER_SAVE_WORDS)
+      if (isOlderSave(row.save)) {
+        olderFound = { save: row.save, revision: row.revision, dirty: row.dirty, lastSyncedAt: row.lastSyncedAt ?? null, fromDevice: true }
+        return { startOver: true }
       }
-      useGame.setState({ status: 'ready', save, revision: row.revision, dirty: row.dirty, lastSyncedAt: row.lastSyncedAt ?? null })
-      // A migration or a wipe is committed once, as it is: `updatedAt` stays, and the next boot reads the new version.
-      if (save !== row.save) await commit(save)
+      useGame.setState({ status: 'ready', save: row.save, revision: row.revision, dirty: row.dirty, lastSyncedAt: row.lastSyncedAt ?? null })
       void syncNow()
-      return
+      return { startOver: false }
     }
-    const remote = await playableEnvelope(await saveApi.load())
+    const remote = await saveApi.load()
+    if (remote.save && versionOf(remote.save) > SAVE_VERSION) throw new Error(NEWER_SAVE_WORDS)
+    if (remote.save && isOlderSave(remote.save)) {
+      olderFound = { save: remote.save, revision: remote.revision, dirty: false, lastSyncedAt: null, fromDevice: false }
+      return { startOver: true }
+    }
     if (remote.save) {
       useGame.setState({ status: 'ready', save: remote.save, revision: remote.revision, dirty: false, sync: 'synced', lastSyncedAt: nowIso() })
-      if (remote.migrated) await commit(remote.save)
-      else await persist()
-      return
+      await persist()
+      return { startOver: false }
     }
     useGame.setState({ status: 'ready', revision: remote.revision })
-    await commit(await freshSave(uid))
+    await commit(freshSave(uid))
+    return { startOver: false }
   } catch (err) {
+    olderFound = null
     useGame.setState({ ...INITIAL })
     throw err
   }
 }
 
+/**
+ * The start-over card's button: the older save boot found becomes a fresh v4 on day 1, its account copied whole, and
+ * is committed unstamped, so it uploads (the server backs the older save up when the v4 replaces it). A device save with
+ * changes the server never got is kept first as a safety copy; if it can't be kept, nothing changes and this throws.
+ */
+export async function startOver(): Promise<void> {
+  const found = olderFound
+  const { uid } = useGame.getState()
+  if (!found || !uid) return
+  if (found.fromDevice && found.dirty) {
+    const kept = await addSafetyCopy({ uid, reason: 'wiped', at: nowIso(), revision: found.revision, save: (await readStoredRow(uid)) ?? found.save })
+    if (!kept) throw new Error('This device couldn’t keep a copy of its save. Try again.')
+  }
+  olderFound = null
+  useGame.setState({ status: 'ready', revision: found.revision, dirty: found.dirty, lastSyncedAt: found.lastSyncedAt })
+  await commit(freshV4(found.save))
+}
+
 export function resetGame(): void {
+  olderFound = null
   useGame.setState(INITIAL)
 }
 
@@ -182,7 +203,7 @@ async function syncPass(): Promise<void> {
   if (!start.uid || !start.save) return
   useGame.setState({ sync: 'syncing' })
   try {
-    let remote = await playableEnvelope(await saveApi.load())
+    let remote = playableEnvelope(await saveApi.load())
     for (let attempt = 0; attempt < 3; attempt++) {
       const local = useGame.getState()
       const step = reconcile(local, remote)
@@ -201,7 +222,7 @@ async function syncPass(): Promise<void> {
             break
           }
         }
-        // A v2 the loop migrated, or a v3 the romance build wiped, isn't what the server holds: it goes up on the next pass.
+        // An older save made new isn't what the server holds: it goes up on the next pass.
         useGame.setState({ save: step.envelope.save, revision: step.envelope.revision, dirty: remote.migrated, ...(step.replacesUnsynced ? { replacedAt: nowIso() } : {}) })
         await persist()
         if (remote.migrated) again = true
@@ -217,7 +238,7 @@ async function syncPass(): Promise<void> {
       } catch (err) {
         const current = conflictEnvelope(err)
         if (!current) throw err
-        remote = await playableEnvelope(current) // someone else wrote first: reconcile against what's stored now
+        remote = playableEnvelope(current) // someone else wrote first: reconcile against what's stored now
       }
     }
     // Changes left unsent (three conflicts in a row) aren't synced; the time says when the server last held everything.
@@ -242,10 +263,10 @@ export async function restoreSafetyCopy(id: number): Promise<boolean> {
   if (copy?.uid !== uid) return false
   let restored: FarmSave
   try {
-    const stored = parseSave(copy.save)
-    // In the romance build a copy from before v4 would only wipe again: it isn't restored.
-    if (romanceOn() && stored.version < 4) return false
-    restored = await playable(stored)
+    const stored = parseStored(copy.save)
+    // A copy from before v4 would only start over again: it isn't restored.
+    if (isOlderSave(stored)) return false
+    restored = stored
   } catch {
     return false
   }
@@ -261,8 +282,8 @@ export function seeReplaced(): void {
   useGame.setState({ replacedAt: null })
 }
 
-/** Syncs when the app comes back to the foreground or the network returns. Returns a stop function. (The Wilds' push
- * schedule went with them: days are turns, so nothing finishes while the app is closed.) */
+/** Syncs when the app comes back to the foreground or the network returns. Returns a stop function. (No push schedule:
+ * days are turns, so nothing finishes while the app is closed.) */
 export function startSyncTriggers(): () => void {
   const onVisible = () => {
     if (document.visibilityState === 'visible') void syncNow()

@@ -1,16 +1,17 @@
-// The way onto a new build (the update prompt): the kit's Update ready · Restart sits beside the
-// boot gates, not inside them, so an old build that stops at a newer save (the Wilds' build at the owner's v3;
-// the deployed build at the romance core's v4) still offers the new build, and Restart activates it. The gate
-// says why it stopped and asks the browser for the new build at once. The same holds over a
-// running farm. The boot is a stub.
+// Getting in: a save from before v4 stops at the start-over card (the kit's first-launch step), whose button starts the
+// new farm and opens the app; any other boot opens the app at once. And the way onto a new build (the update prompt):
+// the kit's Update ready · Restart sits beside the boot gates, not inside them, so a build that stops at a newer save
+// still offers the new build, and Restart activates it. The gate says why it stopped and asks the browser for the new
+// build at once. The same holds over a running farm. The boot and the start-over are stubs.
 import { act } from 'react'
 import { createRoot, type Root as ReactRoot } from 'react-dom/client'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const game = vi.hoisted(() => ({ boot: vi.fn<(uid: string) => Promise<void>>() }))
+const game = vi.hoisted(() => ({ boot: vi.fn<(uid: string) => Promise<{ startOver: boolean }>>(), startOver: vi.fn<() => Promise<void>>() }))
 vi.mock('../save/game', async (importOriginal) => ({
-  NEWER_SAVE_WORDS: (await importOriginal<typeof import('../save/game')>()).NEWER_SAVE_WORDS, boot: game.boot, startSyncTriggers: () => () => undefined,
+  NEWER_SAVE_WORDS: (await importOriginal<typeof import('../save/game')>()).NEWER_SAVE_WORDS, boot: game.boot, startOver: game.startOver,
+  startSyncTriggers: () => () => undefined,
 }))
 vi.mock('@luismlorenzana/uma-kit/auth', async (importOriginal) => ({
   ...await importOriginal<typeof import('@luismlorenzana/uma-kit/auth')>(),
@@ -19,15 +20,18 @@ vi.mock('@luismlorenzana/uma-kit/auth', async (importOriginal) => ({
 
 const { Root } = await import('./Root')
 const { NEWER_SAVE_WORDS } = await import('../save/game')
+const { START_OVER_WORDS } = await import('./StartOverCard')
 const { appUpdateLifecycle } = await import('@luismlorenzana/uma-kit/places')
 
 let host: HTMLDivElement
 let root: ReactRoot
 const settle = () => act(async () => { await new Promise((r) => setTimeout(r, 0)) })
 const text = () => document.body.textContent ?? ''
-const restart = () => [...document.body.querySelectorAll('button')].find((b) => b.textContent === 'Restart')
+const button = (words: string) => [...document.body.querySelectorAll('button')].find((b) => b.textContent === words)
+const restart = () => button('Restart')
 
 beforeEach(() => {
+  game.startOver.mockClear()
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   host = document.createElement('div')
   document.body.append(host)
@@ -46,9 +50,51 @@ const renderRoot = () => act(async () => root.render(
  * service worker's skip-waiting and reload. */
 const newBuildWaiting = (activate: () => Promise<void>) => act(() => appUpdateLifecycle.workerWaiting(activate))
 
+describe('the start-over card', () => {
+  it('stops a save from before v4 at the card; its button starts the new farm and opens the app', async () => {
+    game.boot.mockResolvedValue({ startOver: true })
+    let started: () => void = () => undefined
+    game.startOver.mockReturnValue(new Promise<void>((resolve) => { started = resolve }))
+    await renderRoot()
+    await settle()
+    expect(text()).toContain(START_OVER_WORDS.title)
+    expect(text()).toContain('Your farm starts over')
+    expect(text()).toContain('This version of the game begins a new farm on day 1.')
+    expect(document.querySelector('[data-app]')).toBeNull()
+    await act(async () => button('Start the new farm')!.click())
+    expect(game.startOver).toHaveBeenCalledOnce()
+    expect(document.querySelector('[data-app]')).toBeNull()
+    expect(button('Start the new farm')!.disabled).toBe(true)
+    await act(async () => started())
+    await settle()
+    expect(document.querySelector('[data-app]')).not.toBeNull()
+    expect(document.querySelector('[data-start-over]')).toBeNull()
+  })
+
+  it('says why when the new farm can’t start, and offers the button again', async () => {
+    game.boot.mockResolvedValue({ startOver: true })
+    game.startOver.mockRejectedValue(new Error('This device couldn’t keep a copy of its save. Try again.'))
+    await renderRoot()
+    await settle()
+    await act(async () => button('Start the new farm')!.click())
+    await settle()
+    expect(text()).toContain('couldn’t keep a copy')
+    expect(button('Start the new farm')!.disabled).toBe(false)
+    expect(document.querySelector('[data-app]')).toBeNull()
+  })
+
+  it('opens the app at once for any other boot', async () => {
+    game.boot.mockResolvedValue({ startOver: false })
+    await renderRoot()
+    await settle()
+    expect(document.querySelector('[data-app]')).not.toBeNull()
+    expect(document.querySelector('[data-start-over]')).toBeNull()
+  })
+})
+
 describe('the update prompt', () => {
   it('offers it over a running farm', async () => {
-    game.boot.mockResolvedValue(undefined)
+    game.boot.mockResolvedValue({ startOver: false })
     await renderRoot()
     await settle()
     expect(document.querySelector('[data-app]')).not.toBeNull()

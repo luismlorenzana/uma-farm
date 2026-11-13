@@ -1,6 +1,6 @@
 // The goods as the loop shows them: the Warehouse by stars in its tabs, the bin's lines and
 // estimate, the shop's rows with their gates, and the place links the map and the menu follow.
-import { farmDay, farmPlace, FARM_RANK_POINTS, newSave, ship, type SaveV3 } from '@farm/domain'
+import { farmDay, farmPlace, FARM_RANK_POINTS, newSave, ship, type SaveV4 } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { lockOf, placeLink } from './farm-map'
 import { binView, firstTab, goldWords, goodRow, saleWords, shelfOf, shopRows, warehouseTabs } from './goods-view'
@@ -9,7 +9,7 @@ const AT = '2026-11-09T10:00:00.000Z'
 const SUMMER_3 = farmDay({ year: 1, season: 'summer', day: 3 })
 
 /** Summer 3 with a few goods and the day-1 seeds. */
-function stocked(): SaveV3 {
+function stocked(): SaveV4 {
   const save = newSave('u1', AT)
   return {
     ...save, calendar: { day: SUMMER_3 },

@@ -31,7 +31,7 @@ export interface OwnedBlock {
   tender: string | null
   /** Its growth tonight: 1 untended, the tender's rate tended (×1.1 side by side). */
   growth: number
-  /** Its tender has a 3-heart partner tending another growing block (save v4): ×1.1 tonight. */
+  /** Its tender has a 3-heart partner tending another growing block: ×1.1 tonight. */
   side: boolean
   plots: PlotView[]
   ready: number
@@ -74,7 +74,7 @@ function plotView(plot: Plot, index: number, growth: number, next: Season | null
   }
 }
 
-/** The four blocks, A to D. On v4 the pack gives a farmer in her element ×1.2, so the nights left agree with step 2. */
+/** The four blocks, A to D. The pack gives a farmer in her element ×1.2, so the nights left agree with step 2. */
 export function fieldsView(save: FarmSave, talentOf: FarmingTalentOf = talentD, story: PerkPack | null = null): BlockView[] {
   return BLOCK_IDS.map((id): BlockView => {
     const block = blockOf(save, id)

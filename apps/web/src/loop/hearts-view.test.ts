@@ -3,7 +3,7 @@
 // in the summary's order with live Ready lines, and the ♥ on a Ready tender's pip. The invented stand-in pack
 // (9000001–9000003), with every rung scripted where a test needs several Umas Ready; no network.
 import {
-  newBlock, newLove, newRosterUmaV4, newSaveV4, pairKey, ROUTE_RUNGS, STAND_IN_FILES, storyPackFrom, talentD, type Love, type MorningSummaryV4, type Readiness, type SaveV4,
+  newBlock, newLove, newRosterUma, newSave, pairKey, ROUTE_RUNGS, STAND_IN_FILES, storyPackFrom, talentD, type Love, type MorningSummary, type Readiness, type SaveV4,
 } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { fieldsPips } from './FieldsPeek'
@@ -23,11 +23,11 @@ const nameOf = (id: string) => NAMES[id] ?? 'An Uma'
 
 /** The three stand-ins home on `day`, each with her love as given. */
 function farm(loves: Partial<Record<string, Partial<Love>>> = {}, day = 5): SaveV4 {
-  const save = newSaveV4('u1', '2026-11-11T10:00:00.000Z')
+  const save = newSave('u1', '2026-11-11T10:00:00.000Z')
   const ids = [ONE, TWO, THREE]
   return {
     ...save, calendar: { day }, farmer: { name: 'Robin' },
-    roster: Object.fromEntries(ids.map((id) => [id, newRosterUmaV4(1)])),
+    roster: Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])),
     love: Object.fromEntries(ids.map((id) => [id, { ...newLove(), ...loves[id] }])),
     dorm: { ...save.dorm, home: ids },
   }
@@ -189,7 +189,7 @@ describe('her profile', () => {
 })
 
 describe('the morning’s Hearts section', () => {
-  const summary = (hearts: MorningSummaryV4['hearts']): MorningSummaryV4 => ({ day: 5, bin: [], work: [], ranks: [], hearts, news: [], nudges: [] })
+  const summary = (hearts: MorningSummary['hearts']): MorningSummary => ({ day: 5, bin: [], work: [], ranks: [], hearts, news: [], nudges: [] })
 
   it('orders Ready (playing her event), then birthdays and anniversaries, then arrivals, each opening her profile', () => {
     const lines = summaryParts(summary([
@@ -222,8 +222,8 @@ describe('the morning’s Hearts section', () => {
     expect(readyLines(save, PACK).map((l) => l.id)).toEqual([ONE])
   })
 
-  it('sends her links to the Hearts tab on v4 and to the roster on v3', () => {
-    expect([umaSheet(ONE), umaSheet(ONE, 4), umaSheet(ONE, 4, 'work')]).toEqual([`/roster?uma=${ONE}`, `/hearts?uma=${ONE}`, `/hearts?view=work&uma=${ONE}`])
+  it('sends her links to her profile on the Hearts tab, on its Work side for her ranks', () => {
+    expect([umaSheet(ONE), umaSheet(ONE, 'work')]).toEqual([`/hearts?uma=${ONE}`, `/hearts?view=work&uma=${ONE}`])
   })
 })
 

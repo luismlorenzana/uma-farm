@@ -2,7 +2,7 @@
 // revision and a dirty flag. Safety copies sit beside it: a save kept on this device before anything replaced it, the
 // newest five for each account. Dexie loads only when device I/O starts.
 import type { Dexie, Table } from 'dexie'
-import { parseSave, type StoredSave } from '@farm/domain'
+import { parseStored, type StoredSave } from '@farm/domain'
 
 export interface SaveRow {
   id: 'main'
@@ -10,7 +10,7 @@ export interface SaveRow {
   uid: string
   /** The server revision this save is based on (0: never synced). */
   revision: number
-  /** As stored: the Wilds' v2, the loop's v3 or the romance core's v4. */
+  /** As stored: the farm's v4, or (read as its version and account) an older save that starts over. */
   save: StoredSave
   /** Changed since the last successful sync. */
   dirty: boolean
@@ -19,8 +19,8 @@ export interface SaveRow {
 }
 
 /** Why a safety copy exists: a newer save replaced unsynced changes, a restore replaced this save, this device's save
- * couldn't be read (kept as it was, for a later build that can), or the romance build wiped an older save with unsynced
- * play. */
+ * couldn't be read (kept as it was, for a later build that can), or the farm started over from an older save with
+ * unsynced play. */
 export type SafetyReason = 'replaced' | 'restore' | 'unreadable' | 'wiped'
 export interface SafetyCopy {
   id?: number
@@ -93,11 +93,21 @@ export async function readSaveRow(uid: string): Promise<SaveRow | null> {
   try {
     row = await db.save.get('main')
     if (!row || row.uid !== uid) return null
-    // An older build's save version migrates as it's read. An unreadable row is kept as a safety copy, since boot then
-    // falls back to the server's save and writes over it.
-    return { ...row, save: parseSave(row.save) }
+    // An older save reads as its version and account (boot starts it over). An unreadable row is kept as a safety copy,
+    // since boot then falls back to the server's save and writes over it.
+    return { ...row, save: parseStored(row.save) }
   } catch {
     if (row?.uid === uid) await addSafetyCopy({ uid, reason: 'unreadable', at: new Date().toISOString(), revision: row.revision, save: row.save })
+    return null
+  }
+}
+
+/** The account's device save exactly as stored, unparsed (what a safety copy keeps), or null. */
+export async function readStoredRow(uid: string): Promise<unknown> {
+  try {
+    const row = await db.save.get('main')
+    return row?.uid === uid ? row.save : null
+  } catch {
     return null
   }
 }

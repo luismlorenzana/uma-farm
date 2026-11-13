@@ -1,7 +1,7 @@
-// The store against an in-memory server with the API's revision rules, and a fake IndexedDB: the sync engine on save v3
-// (the loop is the app; `loop/loop-store.test.ts` carries every v2 into it). Invented data only.
+// The store against an in-memory server with the API's revision rules, and a fake IndexedDB: the sync engine on save v4
+// (`start-over.test.ts` has a save from before v4). Invented data only.
 import 'fake-indexeddb/auto'
-import { SAVE_VERSION, newSave, touched, type SaveEnvelope, type SaveV3 } from '@farm/domain'
+import { SAVE_VERSION, newSave, touched, type SaveEnvelope, type SaveV4 } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const server: { envelope: SaveEnvelope; puts: number; down: boolean } = { envelope: { revision: 0, save: null }, puts: 0, down: false }
@@ -15,7 +15,7 @@ vi.mock('../api/client', async () => {
         if (server.down) throw new TypeError('Failed to fetch')
         return structuredClone(server.envelope)
       }),
-      put: vi.fn(async (baseRevision: number, save: SaveV3) => {
+      put: vi.fn(async (baseRevision: number, save: SaveV4) => {
         if (server.down) throw new TypeError('Failed to fetch')
         if (baseRevision !== server.envelope.revision) throw new actual.ApiError('/api/save', 409, { current: structuredClone(server.envelope) })
         server.puts++
