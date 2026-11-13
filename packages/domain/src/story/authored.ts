@@ -67,15 +67,23 @@ export interface CastBirthday { month: number; day: number }
 /** One Uma of the cast. `outfitId` names the one outfit she plays as (RM2): required, so the game never chooses (F46).
  * `birthday` only where master data's character set has none (RM16, F47): it wins where present. */
 export interface CastEntry { characterId: string; outfitId: string; arrives: Arrival; calling: Calling; paragraph: string; birthday?: CastBirthday }
+/** Which state of the Uma Ranker the cast was read from (F58 decision 2): the board's and the profiles' revisions, and when. */
+export interface CastRanker { boardRevision: number; profilesRevision: number; pulledAt: string }
 export interface Cast {
   version: 1
   export: { file: string; exportedAt: string; tier: 'SS' }
+  /** The Uma Ranker the cast is checked against (F58): optional, checked when present. */
+  ranker?: CastRanker
   /** Farming, foraging, fishing (RS13). */
   opening: [string, string, string]
   /** In arrival order. */
   umas: CastEntry[]
 }
-export interface Tie { a: string; b: string; kind: TieKind; strength: 1 | 2 | 3; line: string; history: string }
+/** Where a tie comes from (F59 decision 5): `real`, a relationship from the real careers, checked against public records,
+ * with `from` the id uma-quest's relationships give it (filled once they exist); or `story`, born on the farm. */
+export const TIE_SOURCES = ['real', 'story'] as const
+export type TieSource = typeof TIE_SOURCES[number]
+export interface Tie { a: string; b: string; kind: TieKind; strength: 1 | 2 | 3; line: string; history: string; source?: TieSource; from?: string }
 export interface Ties { version: 1; ties: Tie[] }
 
 // --- Layer 2: her bible -----------------------------------------------------------------------------------------------
@@ -362,6 +370,11 @@ export function castIssues(cast: unknown, ctx: StoryContext): Issues {
     for (const id of opening) if (!umas.some((u) => isObject(u) && u.characterId === id && isObject(u.arrives) && u.arrives.kind === 'opening')) issues.push(`${String(id)} opens the story, so she arrives at the opening`)
   }
   if (umas.filter((u) => isObject(u) && isObject(u.arrives) && u.arrives.kind === 'opening').length !== 3) issues.push('Exactly three Umas arrive at the opening')
+  if (cast.ranker !== undefined) {
+    const r = cast.ranker
+    if (!isObject(r) || !Number.isInteger(r.boardRevision) || (r.boardRevision as number) < 1 || !Number.isInteger(r.profilesRevision) || (r.profilesRevision as number) < 1 ||
+      typeof r.pulledAt !== 'string' || Number.isNaN(Date.parse(r.pulledAt))) issues.push('ranker is { boardRevision, profilesRevision, pulledAt }: two revisions from 1 and a date (F58)')
+  }
   return issues
 }
 
@@ -384,6 +397,8 @@ export function tiesIssues(ties: unknown, ctx: StoryContext): Issues {
     if (!isText(t.line, 400)) issues.push(`${at}: no line`)
     else issues.push(...lineIssues(t.line, at, false))
     if (!isText(t.history, 600)) issues.push(`${at}: no history`)
+    if (t.source !== undefined && !oneOf(TIE_SOURCES, t.source)) issues.push(`${at}: source is real or story (F59)`)
+    if (t.from !== undefined && (t.source !== 'real' || !isText(t.from, 80))) issues.push(`${at}: from is a real tie’s relationship id (F59)`)
     for (const side of [t.a, t.b]) if (typeof side === 'string') count.set(side, (count.get(side) ?? 0) + 1)
   }
   for (const id of ctx.umas) if ((count.get(id) ?? 0) < 2) issues.push(`${id} has ${count.get(id) ?? 0} tie${count.get(id) === 1 ? '' : 's'}; every Uma needs two closest (RS12)`)
@@ -412,6 +427,57 @@ function togetherIssues(t: unknown, at: string, ctx: StoryContext, isGood: (id: 
     case 'help': return typeof t.with === 'string' && ctx.umas.has(t.with) ? [] : [`${at}: help names an Uma in the cast`]
     default: return [`${at}: together is talk, work, date, gift or help`]
   }
+}
+
+// --- The tag sheet (F59) ----------------------------------------------------------------------------------------------
+
+/** One Uma's tags (F59 decision 1): her favourite line, season, festival and loved gift, each with a one-line reason from
+ * her career and her character. Her bible carries the same values (decision 3). */
+export interface TagEntry {
+  characterId: string
+  favouriteLine: Exclude<Activity, 'expeditions'>
+  season: Season
+  festival: Festival
+  loved: string
+  reasons: { favouriteLine: string; season: string; festival: string; loved: string }
+  /** A loved gift that isn't a good yet (a dish to come), flagged as a proposal (F40's rule). */
+  proposed?: boolean
+}
+export interface Tags { version: 1; tags: TagEntry[] }
+const TAG_KEYS = ['favouriteLine', 'season', 'festival', 'loved'] as const
+
+/** tags.json (F59): one entry a cast Uma, each value valid and with its reason. */
+export function tagsIssues(tags: unknown, ctx: StoryContext): Issues {
+  if (!isObject(tags) || tags.version !== 1 || !Array.isArray(tags.tags)) return ['Not a tag sheet (version 1, tags)']
+  const isGood = ctx.isGood ?? isGoodId
+  const issues: Issues = []
+  const seen = new Set<string>()
+  for (const [i, t] of (tags.tags as unknown[]).entries()) {
+    if (!isObject(t) || typeof t.characterId !== 'string') { issues.push(`Tag ${i + 1}: no character id`); continue }
+    const at = `Tags ${t.characterId}`
+    if (!ctx.umas.has(t.characterId)) issues.push(`${at}: not in the cast`)
+    if (seen.has(t.characterId)) issues.push(`${at}: twice`)
+    seen.add(t.characterId)
+    if (!oneOf(FAVOURITE_LINES, t.favouriteLine)) issues.push(`${at}: favouriteLine is one of ${FAVOURITE_LINES.join(', ')}`)
+    if (!oneOf(SEASONS, t.season)) issues.push(`${at}: unknown season`)
+    if (!oneOf(FESTIVALS, t.festival)) issues.push(`${at}: unknown festival`)
+    if (typeof t.loved !== 'string' || (!isGood(t.loved) && t.proposed !== true)) issues.push(`${at}: loved ${String(t.loved)} isn’t a good; mark it proposed if it’s a new one`)
+    const reasons = isObject(t.reasons) ? t.reasons : {}
+    for (const key of TAG_KEYS) {
+      const reason = reasons[key]
+      if (!isText(reason, 240)) issues.push(`${at}: a one-line reason for ${key}`)
+      else issues.push(...lineIssues(reason, `${at} ${key}`, false))
+    }
+  }
+  for (const id of ctx.umas) if (!seen.has(id)) issues.push(`${id} has no tags`)
+  return issues
+}
+
+/** Her bible agrees with her tags (F59 decision 3), when she has both. */
+export function bibleTagIssues(bible: UmaBible, tags: TagEntry): Issues {
+  const pairs: [string, unknown, unknown][] = [['favouriteLine', bible.favouriteLine, tags.favouriteLine], ['season', bible.season, tags.season],
+    ['festival', bible.festival, tags.festival], ['loved', bible.gifts?.loved, tags.loved]]
+  return pairs.filter(([, a, b]) => a !== b).map(([key, a, b]) => `${key}: the bible says ${String(a)}, the tag sheet ${String(b)} (F59)`)
 }
 
 /** umas/<id>.json (layer 2): her profile, her gifts by goods id, and every rung of her route. */

@@ -21,6 +21,7 @@ export function indexStory(story) {
   D.routeOf = new Map((story?.routes ?? []).map((r) => [r.data.characterId, r]))
   D.tiesOf = new Map()
   for (const t of story?.ties?.data?.ties ?? []) for (const id of [t.a, t.b]) D.tiesOf.set(id, [...(D.tiesOf.get(id) ?? []), t])
+  D.tagOf = new Map((story?.tags?.data?.tags ?? []).map((t) => [t.characterId, t]))
 }
 export const umaName = (id) => D.uma.get(id)?.name ?? id
 export function face(id, cls = '') {
@@ -97,14 +98,15 @@ export function characterView(id, onReview) {
         h('h1', { text: umaName(id) }),
         h('p', { class: 'logline', text: entry.paragraph }),
         h('div', { class: 'row small' }, prev ? h('a', { href: `#/c/${prev.characterId}`, text: `← ${umaName(prev.characterId)}` }) : null, next ? h('a', { href: `#/c/${next.characterId}`, text: `${umaName(next.characterId)} →` }) : null),
-        h('div', { class: 'panel' }, h('div', { class: 'row' }, h('h3', { text: 'Her route' }), h('span', { class: 'muted small', text: bible ? `umas/${id}.json` : 'The bible (layer 2) writes these rungs' })), ladder(id, bible)),
+        tagPanel(id),
+        h('div', { class: 'panel' }, h('div', { class: 'row' }, h('h3', { text: 'Her route' }), h('span', { class: 'muted small', text: bible ? `umas/${id}.json` : 'The bible (layer 2) writes these rungs' }), routeProgress(id)), ladder(id, bible)),
         bible ? biblePanel(bible) : null,
         h('div', { class: 'panel' }, h('h3', { text: `Her ties · ${ties.length}` }),
           ties.length ? h('div', { class: 'stack' }, ties.map((t) => {
             const other = t.a === id ? t.b : t.a
             return h('div', { class: 'rel' },
               h('a', { class: 'rel-who', href: `#/c/${other}` }, face(other), h('div', {}, h('b', { text: umaName(other) }), h('span', { class: 'muted small', text: `${t.kind} · ${'●'.repeat(t.strength)}${'○'.repeat(3 - t.strength)}` }))),
-              h('div', { class: 'rel-body' }, h('p', { text: t.line }), h('p', { class: 'small muted', text: t.history })))
+              h('div', { class: 'rel-body' }, h('p', { text: t.line }), h('p', { class: 'small muted' }, t.source ? h('span', { class: `chip ${t.source === 'real' ? 'dot' : ''}`, text: t.source === 'real' ? 'real' : 'farm-born' }) : null, ' ', t.history)))
           })) : h('p', { class: 'muted', text: 'No ties yet.' })),
       ),
     ),
@@ -144,9 +146,66 @@ function biblePanel(bible) {
   return h('div', { class: 'panel' }, h('h3', { text: 'Her bible' }),
     h('dl', { class: 'kv' },
       ...[['Now', b.now], ['Why the farm', b.whyTheFarm], ['Dream', b.dream], ['Blurb', b.blurb], ['Favourite work', b.favouriteLine], ['Season, festival', `${b.season}, ${b.festival}`],
-        ['Loved', b.gifts?.loved], ['Liked', b.gifts?.liked?.join(', ')], ['Disliked', b.gifts?.disliked?.join(', ')], ['Laughs at', b.laughs], ['Hurt by', b.hurts]]
+        ['Loved', b.gifts?.loved], ['Liked', b.gifts?.liked?.join(', ')], ['Disliked', b.gifts?.disliked?.join(', ')], ['Laughs at', b.laughs], ['Hurt by', b.hurts],
+        ['Her name for you', b.petName], ['Keepsake', b.keepsake ? `${b.keepsake.name}: “${b.keepsake.line}”` : null], ['Wedding places', b.wedding?.places?.join(', ')],
+        ['Wishes', b.wishes?.join(', ')], ['Chats', b.chats ? `${b.chats.friend.length} friend · ${b.chats.partner.length} partner · ${b.chats.spouse.length} spouse` : null]]
         .flatMap(([k, v]) => [h('dt', { text: k }), h('dd', { text: v ?? '—' })])),
+    b.chats ? h('details', {}, h('summary', { class: 'small', text: 'Her chat lines' }),
+      ['friend', 'partner', 'spouse'].map((set) => h('div', {}, h('h4', { text: set }), h('ul', { class: 'list small' }, b.chats[set].map((l) => h('li', { text: l })))))) : null,
     issuesList(bible.issues))
+}
+
+/** Her tags (F59): favourite line, season, festival and loved gift, each with its reason. */
+function tagPanel(id) {
+  const t = D.tagOf?.get(id)
+  if (!t) return null
+  const row = (label, value, reason) => [h('dt', { text: label }), h('dd', {}, h('b', { text: value }), h('div', { class: 'small muted', text: reason }))]
+  return h('div', { class: 'panel' }, h('h3', { text: 'Her tags' }),
+    h('dl', { class: 'kv' }, row('Favourite work', t.favouriteLine, t.reasons.favouriteLine), row('Season', t.season, t.reasons.season),
+      row('Festival', t.festival, t.reasons.festival), row('Loved gift', `${t.loved}${t.proposed ? ' (proposed)' : ''}`, t.reasons.loved)))
+}
+
+/** How far her route is scripted: her arrival scene (layer 2), then her events (layer 3). */
+function routeProgress(id) {
+  const route = D.routeOf.get(id)
+  if (!route) return h('span', { class: 'chip', text: 'Arrival scene to write' })
+  const of = D.data.game.authored?.rungs?.length ?? 27
+  const scripted = route.data.events.length
+  return h('span', { class: `chip ${scripted ? 'dot' : ''}`, text: `${scripted}/${of} scripted${route.issues.length ? ` · ${route.issues.length} checks` : ''}` })
+}
+
+// ── Counts (F60) ─────────────────────────────────────────────────────────────
+export function countsView() {
+  const c = D.story?.counts
+  if (!c) return h('div', {}, h('h1', { text: 'Counts' }), noStory())
+  const who = (ids) => h('div', { class: 'row tiny' }, ids.map((id) => h('a', { class: 'tie-chip', href: `#/c/${id}`, vars: { '--c': '#8a8478' } }, face(id, 'xs'), umaName(id))))
+  const table = (title, groups, note) => h('div', { class: 'panel' }, h('h3', { text: title }), note ? h('p', { class: 'small muted', text: note }) : null,
+    Object.keys(groups).length ? h('table', { class: 'table' }, Object.entries(groups).map(([k, ids]) => h('tr', {}, h('td', {}, h('b', { text: k })), h('td', { text: ids.length }), h('td', {}, who(ids))))) : h('p', { class: 'muted', text: 'Nothing yet.' }))
+  return h('div', {},
+    h('h1', { text: 'Counts' }),
+    h('p', { class: 'muted', text: 'What the cast, the tag sheet, the ties and the bibles add up to (F60), each with the Umas behind it. Nothing is forced to a quota: read it, and say what to balance.' }),
+    h('div', { class: 'summary' },
+      stat(c.umas, 'Umas'), stat(`${c.tagged}/${c.umas}`, 'tagged'), stat(c.ties.total, `ties · ${c.ties.real} real · ${c.ties.story} farm-born`),
+      stat(`${c.bibles}/${c.umas}`, 'bibles'), stat(c.eventsPer.reduce((n, e) => n + e.scripted, 0), `events scripted of ${c.umas * (c.eventsPer[0]?.of ?? 27)}`),
+      stat(c.pairsPer.reduce((n, p) => n + Math.min(p.written, p.of), 0), `pair conversations toward ${c.umas * 2}`)),
+    h('div', { class: 'two' },
+      h('div', { class: 'stack' },
+        table('Callings', c.byCalling, 'From her board playstyle (FM7).'),
+        table('Favourite work', c.byLine), table('Seasons', c.bySeason), table('Festivals', c.byFestival), table('Loved gifts', c.byLoved),
+      ),
+      h('div', { class: 'stack' },
+        table('Arrivals', c.arrivals),
+        h('div', { class: 'panel' }, h('h3', { text: 'Ties an Uma, the least tied first' }), h('table', { class: 'table' },
+          h('tr', {}, ['', 'Ties', 'Strength 3', 'Real'].map((x) => h('th', { text: x }))),
+          c.tiesPer.map((t) => h('tr', {}, h('td', {}, h('a', { href: `#/c/${t.id}` }, face(t.id, 'sm'), umaName(t.id))), h('td', { text: t.ties }), h('td', { text: t.strong }), h('td', { text: t.real }))))),
+        c.bibles ? table('Liked gifts', c.liked) : null,
+        c.bibles ? table('Disliked gifts', c.disliked) : null,
+        h('div', { class: 'panel' }, h('h3', { text: 'Routes and pairs, an Uma' }), h('table', { class: 'table' },
+          h('tr', {}, ['', 'Bible', 'Scripted', 'Pairs'].map((x) => h('th', { text: x }))),
+          c.eventsPer.map((e) => { const p = c.pairsPer.find((x) => x.id === e.id); return h('tr', {}, h('td', {}, h('a', { href: `#/c/${e.id}` }, face(e.id, 'sm'), umaName(e.id))), h('td', { text: e.bible ? '✓' : '—' }), h('td', { text: `${e.scripted}/${e.of}` }), h('td', { text: `${p?.written ?? 0}/${p?.of ?? 2}` })) }))),
+      ),
+    ),
+  )
 }
 
 // ── Relationships ────────────────────────────────────────────────────────────

@@ -15,6 +15,7 @@ import {
   crossCheck, parseBeats, parseChapter, parseConversations,
 } from './lib/model.mjs'
 import { packUmas, parseCastPack } from './lib/pack.mjs'
+import { storyCounts } from './lib/counts.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const repo = resolve(here, '../..')
@@ -74,20 +75,33 @@ async function storyState(game, errors) {
     }
     return out
   }
-  const bibles = await folder('umas', (d) => v.bibleIssues(d, ctx))
+  // F59: the tag sheet, and each bible checked against her tags when she has both.
+  const tags = await file('tags.json', (d) => v.tagsIssues(d, ctx))
+  const tagOf = (id) => tags?.data?.tags?.find((t) => t.characterId === id) ?? null
+  const bibles = await folder('umas', (d) => [...v.bibleIssues(d, ctx), ...(tagOf(d?.characterId) ? v.bibleTagIssues(d, tagOf(d.characterId)) : [])])
   const bibleOf = (id) => bibles.find((b) => b.data.characterId === id)?.data ?? null
-  return {
+  // Routes are read partial while layers 2 and 3 are written: the unscripted beats are listed, not reported as problems.
+  const routes = await folder('routes', (d) => v.routeIssues(d, bibleOf(d?.characterId), ctx, { partial: true }))
+  for (const r of routes) r.unscripted = v ? v.unscriptedBeats(r.data, bibleOf(r.data.characterId)) : []
+  const story = {
     pack: pack ? { id: pack.id, exportedAt: pack.exportedAt } : null,
     umas,
     world: await maybeText(join(content, 'world.md')),
     cast: await file('cast.json', (d) => v.castIssues(d, ctx)),
     ties: await file('ties.json', (d) => v.tiesIssues(d, ctx)),
+    tags,
     bibles,
-    routes: await folder('routes', (d) => v.routeIssues(d, bibleOf(d?.characterId), ctx)),
+    routes,
     pairs: await folder('pairs', (d) => v.pairIssues(d, ctx)),
     // F54: the household's scenes, house lines and finale.
     household: await file('household.json', (d) => v.householdIssues(d, ctx)),
   }
+  // F60: the counts, each with the Umas behind it.
+  story.counts = story.cast ? storyCounts({
+    cast: story.cast.data, tags: tags?.data, ties: story.ties?.data, bibles: bibles.map((b) => b.data), routes: routes.map((r) => r.data),
+    pairs: story.pairs.map((p) => p.data), rungs: game.authored?.rungs ?? [],
+  }) : null
+  return story
 }
 
 async function state() {
