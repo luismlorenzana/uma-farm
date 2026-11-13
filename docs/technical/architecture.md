@@ -383,8 +383,8 @@ The game's story is a private pack: never in git, never in the bundle.
   - each file read with the same reader, a part with an error skipped; only a hash that doesn't match, or a route or
     pair that isn't what the index lists, fails the load;
   - the index is kept on the device only once the pack it names has loaded;
-  - **on the dev server only,** a 404 for `story.json` (farm-api serves no release) plays the invented stand-in, and
-    `VITE_FARM_STORY=stand-in` forces it. `DEV_ONLY_MODULES` keeps the stand-in out of every production build.
+  - a 404 for `story.json` (nothing published yet, or no release on the dev server) plays the invented stand-in, so a
+    farm always opens; `VITE_FARM_STORY=stand-in` forces it in the tests. It loads on demand, never in the initial JS.
 
 ## Build, CI and deploy
 

@@ -2381,8 +2381,8 @@ the three outfits is in master data, so all three show lettered discs. The three
   plays the last version kept. The phone reads each file with the same reader, so a broken part is skipped there too. A
   release that can't load (no index and none kept, a file whose hash doesn't match, a route or pair that isn't what the
   index lists) stops the boot with **Try again**.
-- **The stand-in is the dev server's only:** it plays when farm-api serves no pack, or when it's asked for (as the tests
-  do). The production build holds none of it, and the build's size check refuses one that does.
+- **The stand-in plays while no pack is published:** when farm-api serves no pack at all, the invented stand-in's cast
+  plays, so the farm always opens; the tests ask for it too. Placeholders built into the game replace it later.
 
 ### The opening, the farmer's name, and arrivals
 

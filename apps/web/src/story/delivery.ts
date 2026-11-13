@@ -45,7 +45,7 @@ const statusOf = (error: unknown): number | null => {
 }
 
 export interface LoadOptions {
-  /** What to play when the server holds no pack at all (a 404 for `story.json`): the dev server's stand-in. */
+  /** What to play when the server holds no pack at all (a 404 for `story.json`): the stand-in. */
   missing?: () => Promise<StoryPack>
 }
 

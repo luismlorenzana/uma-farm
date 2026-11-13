@@ -45,7 +45,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('the loader seam on the dev server', () => {
+describe('the loader seam', () => {
   it("plays the stand-in without asking farm-api when VITE_FARM_STORY is 'stand-in'", async () => {
     serveRelease()
     const pack = await loadStoryPack()
@@ -61,7 +61,7 @@ describe('the loader seam on the dev server', () => {
     expect(api.asked[0]).toBe('story.json')
   })
 
-  it('plays the stand-in when farm-api serves no pack (no content/story-release/)', async () => {
+  it('plays the stand-in when farm-api serves no pack (nothing published yet), in production as on the dev server', async () => {
     vi.stubEnv('VITE_FARM_STORY', '')
     const pack = await loadStoryPack()
     expect(pack.cast.umas[0]!.paragraph).toBe('Stand-in one came to grow things.')

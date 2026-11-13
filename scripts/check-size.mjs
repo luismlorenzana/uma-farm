@@ -177,17 +177,6 @@ export async function checkStage(distDir) {
   return { files: sized, precached: precached.length }
 }
 
-/** Modules no production build may hold at all: the invented stand-in pack is the dev server's only. A
- * path ending in `/` is a folder. */
-export const DEV_ONLY_MODULES = ['domain/src/story/stand-in.ts', 'domain/src/story/stand-in/']
-
-/** The dev-only modules any chunk renders. */
-export function devOnlyInBuild(chunks, devOnly = DEV_ONLY_MODULES) {
-  return Object.entries(chunks).flatMap(([file, modules]) => modules
-    .filter((id) => devOnly.some((path) => (path.endsWith('/') ? id.includes(`/${path}`) || id.startsWith(path) : id === path || id.endsWith(`/${path}`))))
-    .map((id) => `${id} (${file})`))
-}
-
 export function entrySrc(html) {
   const scripts = [...html.matchAll(/<script\b[^>]*>/gi)].filter(([tag]) => /\btype\s*=\s*["']module["']/i.test(tag))
   const sources = scripts.flatMap(([tag]) => {
@@ -242,8 +231,6 @@ export async function checkSize(distDir, budget = MAIN_JS_BUDGET, lazy = LAZY_MO
   }
   const leaked = lazyInInitial(chunks, files, lazy)
   if (leaked.length > 0) throw new Error(`Initial JS renders modules that load on demand: ${leaked.join(', ')}`)
-  const devOnly = devOnlyInBuild(chunks)
-  if (devOnly.length > 0) throw new Error(`The build holds the dev server's stand-in: ${devOnly.join(', ')}`)
   return { entry, mainGzip, initialGzip, files: sizes, lazy: lazy.length }
 }
 

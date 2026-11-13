@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { randomBytes } from 'node:crypto'
 import { join } from 'node:path'
 import test from 'node:test'
-import { checkSize, devOnlyInBuild, entrySrc, LAZY_MODULES, lazyInInitial, MAIN_JS_BUDGET, precacheUrls, stagePrecacheProblems } from './check-size.mjs'
+import { checkSize, entrySrc, LAZY_MODULES, lazyInInitial, MAIN_JS_BUDGET, precacheUrls, stagePrecacheProblems } from './check-size.mjs'
 
 async function fixture(fn, { mainBytes = 1_000, chunks = { 'assets/main.js': ['src/main.tsx'] }, lazyFile = false } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'size-test-'))
@@ -89,12 +89,3 @@ test('the HTML must have exactly one module entry', () => {
   assert.throws(() => entrySrc('<script src="/a.js"></script>'))
 })
 
-test("no chunk of a production build holds the dev server's stand-in pack, lazy or not", async () => {
-  const standIn = ['../../packages/domain/src/story/stand-in.ts', '../../packages/domain/src/story/stand-in/routes/9000001.json']
-  assert.deepEqual(devOnlyInBuild({ 'assets/main.js': ['src/main.tsx'], 'assets/load.js': ['src/story/load.ts', ...standIn] }),
-    standIn.map((id) => `${id} (assets/load.js)`))
-  assert.deepEqual(devOnlyInBuild({ 'assets/load.js': ['src/story/load.ts', '../../packages/domain/src/story/release.ts', '../../packages/domain/src/story/stand-in-notes.ts'] }), [])
-  await fixture(async (root) => {
-    await assert.rejects(checkSize(root), /stand-in: \.\.\/\.\.\/packages\/domain\/src\/story\/stand-in\.ts \(assets\/lazy\.js\)/)
-  }, { chunks: { 'assets/main.js': ['src/main.tsx'], 'assets/lazy.js': [standIn[0]] } })
-})

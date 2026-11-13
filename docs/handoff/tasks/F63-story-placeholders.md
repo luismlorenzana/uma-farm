@@ -51,6 +51,7 @@ guarantees. Each is to become a proper placeholder here:
 | A tie with no `kind` or `strength`: "Close", strength 1 | `tieKind`, `tieStrength` |
 | A pair level, a household part or a play prompt not written: none shown, the scene goes on | The pair, household and event players |
 | No chapters: `DEFAULT_CHAPTERS`, with their titles | `chaptersOf` |
+| No pack published at all: the invented stand-in's cast plays, in production too, so the farm opens | `loadStoryPack` (`apps/web/src/story/load.ts`) |
 
 ## Do
 
