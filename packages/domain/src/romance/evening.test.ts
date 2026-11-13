@@ -7,7 +7,7 @@ import { DAYS_PER_YEAR, festivalOn } from '../farm/calendar'
 import { runNight, type NightContext } from '../night/end-day'
 import { TEST_KINDS } from '../night/kinds.fixture'
 import { parseSaveV4 } from '../save/parse-v4'
-import { eveningsOn, invitesFor, marriedCount, newLove, newRosterUmaV4, newSaveV4, type Love, type SaveV4 } from '../save/v4'
+import { eveningsOn, invitesFor, marriedCount, newLove, newRosterUma, newSave, type Love, type SaveV4 } from '../save/v4'
 import type { UmaBible } from '../story/authored'
 import { readScene } from '../story/scenes'
 import { storyPackFrom, type StoryPack } from '../story/pack'
@@ -23,11 +23,11 @@ const AT = '2026-11-11T10:00:00.000Z'
 const PACK = storyPackFrom(STAND_IN_FILES)
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
-const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ roster: [], kinds: TEST_KINDS, story })
+const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ kinds: TEST_KINDS, story })
 
-/** A named v4 farm on `day`, the opening read: the stand-ins home at Friendship 0. */
+/** A named farm on `day`, the opening read: the stand-ins home at Friendship 0. */
 function farm(day = 3): SaveV4 {
-  const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
+  const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
   const joined = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
   return { ...joined, today: { ...joined.today, bonds: {} } }
 }
@@ -40,7 +40,7 @@ function married(save: SaveV4, n: number): SaveV4 {
   const ids = Array.from({ length: n }, (_, i) => String(9000004 + i))
   return {
     ...save,
-    roster: { ...save.roster, ...Object.fromEntries(ids.map((id) => [id, newRosterUmaV4(1)])) },
+    roster: { ...save.roster, ...Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])) },
     love: { ...save.love, ...Object.fromEntries(ids.map((id) => [id, { ...newLove(), stage: 'spouse' as const, level: 0, wed: 1 }])) },
     dorm: { ...save.dorm, level: 8, home: [...save.dorm.home, ...ids] },
     buildings: { ...save.buildings, dorm: 8 },

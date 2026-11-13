@@ -2,7 +2,6 @@
 // eight rows of three, gathering and its station and the ranch or a workshop on the first five, then the yard and the
 // town edge. One source for the map, its quick looks and the menu. Where each stands on the screen is the app's; what
 // opens each is its rule's, read from the save. Until a place's screen lands, the app shows it locked.
-import type { SaveV3 } from '../save/v3'
 import { farmRankOf } from './farm'
 import type { FarmSave } from '../save/v4'
 
@@ -29,7 +28,7 @@ export type PlaceOpens =
   | { by: 'reward'; chapter: number }
   | { by: 'farm-rank'; rank: number }
   | { by: 'later' }
-  /** A house on the v4 homestead: House 1 at the first wedding, each later one when the one before stands.
+  /** A house on the homestead: House 1 at the first wedding, each later one when the one before stands.
    * The homestead's own rule reads it (`nextLot`); `opened` never does. */
   | { by: 'house'; n: number }
 
@@ -71,12 +70,12 @@ export const FARM_PLACES: readonly FarmPlace[] = [
   place('restaurant', 'Restaurant', 'workshop', 4, 2, 'party-hall', 'Dishes served for gold and tips.', chapter(6)),
   place('quarry', 'Quarry', 'gathering', 5, 0, 'quarry', 'Stone and gems, floor by floor.', chapter(3)),
   place('cutter', 'Cutter', 'station', 5, 1, 'den-workbench', 'Gems cut and polished.', chapter(3)),
-  place('forge', 'Forge', 'workshop', 5, 2, 'forge', 'Tools, rings and fittings.', chapter(7)),
+  place('forge', 'Forge', 'workshop', 5, 2, 'forge', 'The ring bench: a ring from three refined goods of one grade, one a day.', chapter(7)),
   place('bin', 'Shipping bin', 'yard', 6, 0, 'shipping-bin', 'What goes in pays tonight.', START),
   place('warehouse', 'Warehouse', 'yard', 6, 1, 'warehouse', 'Everything the farm holds, by stars.', START),
   place('dorm', 'Dorm', 'yard', 6, 2, 'dorm', 'Beds for the Umas on the farm.', START),
   place('board', 'Requests board', 'yard', 7, 0, 'card-library', 'The town’s requests.', { by: 'later' }, true),
-  place('gate', 'Gate', 'yard', 7, 1, 'scenario-gate', 'Visitors come in here.', START),
+  place('gate', 'Gate', 'yard', 7, 1, 'scenario-gate', 'Umas arrive here.', START),
   place('shop', 'Shop', 'town', 8, 0, 'exchange', 'Seeds for the season.', START),
   place('festival', 'Festival ground', 'town', 8, 1, 'racecourse', 'A festival on each season’s 10th day.', { by: 'later' }),
   place('expeditions', 'Expedition post', 'town', 8, 2, 'rangers-lodge', 'Parties out for days.', chapter(5), true),
@@ -87,15 +86,6 @@ export const FARM_MAP_ROWS = 8
 
 const BY_ID = new Map(FARM_PLACES.map((p) => [p.id, p]))
 export const farmPlace = (id: string | null | undefined): FarmPlace | undefined => (id ? BY_ID.get(id as FarmPlaceId) : undefined)
-
-/** The places' blurbs on v4: the Gate is where the cast walks in, not where visitors wait;
- * the Forge is the ring bench until chapter 7 lights its fire. */
-const BLURBS_V4: Partial<Record<FarmPlaceId, string>> = {
-  gate: 'Umas arrive here.',
-  forge: 'The ring bench: a ring from three refined goods of one grade, one a day.',
-}
-/** A place's blurb on a save's version. */
-export const placeBlurb = (place: Pick<FarmPlace, 'id' | 'blurb'>, version: number): string => (version >= 4 ? BLURBS_V4[place.id] : undefined) ?? place.blurb
 
 /** Whether a place's rule has opened it on this save: a chapter once it starts, the Mill once chapter 1 is done, a
  * Farm Rank once reached. The board and the festival ground wait for the festivals. */

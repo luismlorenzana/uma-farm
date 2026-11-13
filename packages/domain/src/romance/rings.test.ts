@@ -1,20 +1,17 @@
-// The ring bench, the proposal and the wedding: the rings in the v4
+// The ring bench, the proposal and the wedding: the rings in the
 // catalogue, the bench's opening and recipe, the proposal's ring, a better ring, the wedding's place, reception, guests
-// and vow, the words, the format's `wedding.places`, and v3's Forge and catalogue unchanged. Invented ids only: the
-// stand-ins 9000001–9000003.
+// and vow, the words, and the format's `wedding.places`. Invented ids only: the stand-ins 9000001–9000003.
 import { describe, expect, it } from 'vitest'
 import { DAYS_PER_YEAR } from '../farm/calendar'
 import { diaryEntries, payDiary } from '../farm/diary'
-import { DIARY_ROWS, DIARY_ROWS_V4, diaryRowsOf, RING_ROW } from '../farm/milestones'
-import { GOOD_FAMILIES, GOODS, goodName, goodOf, isGoodId, isGoodIdV4, RING_GOODS, RING_IDS, ringGrade, ringName } from '../goods/ids'
+import { DIARY_ROWS, RING_ROW } from '../farm/milestones'
+import { GOOD_FAMILIES, GOODS, goodName, goodOf, isGoodId, isGoodOrRingId, RING_GOODS, RING_IDS, ringGrade, ringName } from '../goods/ids'
 import { priceOf } from '../goods/prices'
-import { NIGHT_STEPS, runNight, type NightContext } from '../night/end-day'
+import { runNight, type NightContext } from '../night/end-day'
 import { TEST_KINDS } from '../night/kinds.fixture'
 import { payBin, ship } from '../save/bin'
-import { parseSaveV3 } from '../save/parse-v3'
 import { parseSaveV4 } from '../save/parse-v4'
-import { newSave } from '../save/v3'
-import { newSaveV4, newTodayV4, type Love, type SaveV4 } from '../save/v4'
+import { newSave, newTodayV4, type Love, type SaveV4 } from '../save/v4'
 import { addGoods, goodCount } from '../save/warehouse'
 import { checkBible, gendersFarmer, type Step } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_IN_ROUTE, STAND_INS } from '../story/authored.fixture'
@@ -41,11 +38,11 @@ const LATER = '2026-11-11T21:30:00.000Z'
 const PACK = storyPackFrom(STAND_IN_FILES)
 const [ONE, TWO, THREE]: readonly string[] = STAND_INS
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
-const context = (): NightContext => ({ roster: [], kinds: TEST_KINDS, story: PACK })
+const context = (): NightContext => ({ kinds: TEST_KINDS, story: PACK })
 
-/** A named v4 farm on `day`, the opening read and the stand-ins home at Friendship 0. */
+/** A named farm on `day`, the opening read and the stand-ins home at Friendship 0. */
 function farm(day = 3): SaveV4 {
-  const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
+  const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
   const joined = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
   return { ...joined, today: { ...joined.today, bonds: {} } }
 }
@@ -65,14 +62,14 @@ const engagedSoon = (day = 20): SaveV4 => withLove(farm(day), { stage: 'proposal
 const engaged = (day = 21): SaveV4 => withLove(farm(day), { stage: 'wedding', level: 10, points: 0, last: day - 1, ring: 3 })
 
 describe('the rings', () => {
-  it('are ten goods at their ★1 prices, Copper to Orichalcum Ring, apart from v3\'s catalogue', () => {
+  it('are ten goods at their ★1 prices, Copper to Orichalcum Ring, apart from the 260 goods', () => {
     expect(RING_IDS).toEqual(['ring-g1', 'ring-g2', 'ring-g3', 'ring-g4', 'ring-g5', 'ring-g6', 'ring-g7', 'ring-g8', 'ring-g9', 'ring-g10'])
     expect(RING_GOODS.map((g) => g.price)).toEqual([205, 275, 340, 450, 580, 745, 950, 1220, 1555, 2025])
     expect(RING_GOODS.map((g) => goodName(g.id))).toEqual(['Copper Ring', 'Tin Ring', 'Iron Ring', 'Silver Ring', 'Cobalt Ring', 'Gold Ring', 'Platinum Ring',
       'Titanium Ring', 'Mythril Ring', 'Orichalcum Ring'])
     expect(goodOf('ring-g3')).toEqual({ id: 'ring-g3', family: 'rings', grade: 3, refined: false, crop: false, price: 340, input: null })
     expect([ringGrade('ring-g10'), ringGrade('iron-ingot'), ringName(5)]).toEqual([10, 0, 'Cobalt Ring'])
-    expect([isGoodId('ring-g3'), isGoodIdV4('ring-g3'), isGoodIdV4('cedar-plank')]).toEqual([false, true, true])
+    expect([isGoodId('ring-g3'), isGoodOrRingId('ring-g3'), isGoodOrRingId('cedar-plank')]).toEqual([false, true, true])
   })
 
   it('sell at the bin like any good (no demand), and count in the Diary', () => {
@@ -86,11 +83,10 @@ describe('the rings', () => {
     expect(parseSaveV4(json(paid.save))).toEqual(paid.save)
   })
 
-  it('form v4\'s Diary row, ten rings shipped once each paying the row\'s gold; v3 keeps its 26 rows', () => {
+  it('form the Diary\'s 27th row, ten rings shipped once each paying the row\'s gold', () => {
     expect(RING_ROW).toEqual({ id: 'row:rings', family: 'rings', refined: false, goods: RING_IDS })
-    expect(DIARY_ROWS).toHaveLength(26)
-    expect(DIARY_ROWS_V4).toEqual([...DIARY_ROWS, RING_ROW])
-    expect([diaryRowsOf(3), diaryRowsOf(4)]).toEqual([DIARY_ROWS, DIARY_ROWS_V4])
+    expect(DIARY_ROWS).toHaveLength(27)
+    expect(DIARY_ROWS.at(-1)).toEqual(RING_ROW)
     const all = { ...farm(), diary: { ...farm().diary, shipped: Object.fromEntries(RING_IDS.map((id) => [id, 1])) } }
     const { save, paid } = payDiary(all)
     expect(paid).toEqual(['row:rings'])
@@ -120,14 +116,6 @@ describe('the bench opens', () => {
     const again = runNight({ ...read, memories: { ...read.memories, [TWO]: ['r8'] } }, context())
     expect(again.buildings.forge).toBe(0)
     expect(parseSaveV4(json(again))).toEqual(again)
-  })
-
-  it('keeps chapter 7 for v3: a v3 night never opens it, and a v3 Forge is never a bench', () => {
-    const v3 = newSave('u1', AT)
-    const night = runNight(v3, { roster: [], kinds: TEST_KINDS })
-    expect(night.buildings.forge).toBeUndefined()
-    expect(benchOpen({ ...v3, buildings: { ...v3.buildings, forge: 0 } })).toBe(false)
-    expect(NIGHT_STEPS.map((s) => s.name)).not.toContain('openRingBench')
   })
 })
 
@@ -351,7 +339,7 @@ describe('the format: `wedding.places`', () => {
   })
 })
 
-describe('save v4 grows in place; v3 is unchanged', () => {
+describe('save v4 grows in place', () => {
   it('parses `today.ring` and `today.reception`, her ring\'s grade from the proposal on, and rings and dishes in the Warehouse', () => {
     const save = give(give(engaged(), 'ring-g10', 1, 2), 'dish-grains-5', 5)
     const stored = json({ ...save, today: { ...save.today, ring: 10, reception: 3 }, bin: { 'ring-g2': [1, 0, 0, 0, 0] } })
@@ -370,24 +358,9 @@ describe('save v4 grows in place; v3 is unchanged', () => {
     refuse((s) => { s.items['dish-fish-11'] = [1, 0, 0, 0, 0] }, 'unknown item')
   })
 
-  it('keeps v3\'s catalogue and Forge: no ring in a v3 Warehouse or bin, the same goods, families and rows', () => {
-    expect([GOODS.length, GOOD_FAMILIES.length, DIARY_ROWS.length]).toEqual([260, 15, 26])
+  it('keeps the rings apart from the 260 goods and their fifteen families', () => {
+    expect([GOODS.length, GOOD_FAMILIES.length, DIARY_ROWS.length]).toEqual([260, 15, 27])
     expect(GOODS.some((g) => g.family === 'rings')).toBe(false)
-    const v3 = newSave('u1', AT)
-    expect(() => parseSaveV3(json({ ...v3, items: { ...v3.items, 'ring-g3': [1, 0, 0, 0, 0] } }))).toThrow('unknown item')
-    expect(() => parseSaveV3(json({ ...v3, bin: { 'ring-g3': [1, 0, 0, 0, 0] } }))).toThrow('unknown item')
-    expect(() => parseSaveV3(json({ ...v3, items: { ...v3.items, 'dish-fish-3': [1, 0, 0, 0, 0] } }))).toThrow('unknown item')
-    expect(() => parseSaveV3(json({ ...v3, diary: { ...v3.diary, shipped: { 'ring-g3': 1 } } }))).toThrow('unknown good')
-    expect(payDiary({ ...v3, diary: { ...v3.diary, shipped: Object.fromEntries(RING_IDS.map((id) => [id, 1])) } }).paid).toEqual([])
-  })
-
-  it('ends a v3 night as before: no bench, no reception', () => {
-    const v3 = newSave('u1', AT)
-    const a = runNight(v3, { roster: [], kinds: TEST_KINDS })
-    const b = runNight(v3, { roster: [], kinds: TEST_KINDS, story: PACK })
-    expect(a).toEqual(b)
-    expect(a.today).toEqual({ chats: [], gifts: [] })
-    expect(parseSaveV3(json(a))).toEqual(a)
   })
 })
 

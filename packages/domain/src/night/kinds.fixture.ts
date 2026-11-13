@@ -3,7 +3,7 @@
 import { payItems, type WorkKindRules } from '@luismlorenzana/uma-work'
 import { DAY_MS } from '../farm/calendar'
 import { int, object, oneOf } from '../save/parse'
-import type { LoopKinds } from '../save/parse-v3'
+import type { LoopKinds } from '../save/parse-v4'
 import { stockKey } from '../save/warehouse'
 import type { LoopWorld } from '../work/loop-env'
 

@@ -1,27 +1,183 @@
-// Save v4: the romance core's save, written whole, the later slots
-// included, so each fills its own while v4 grows in place behind the dark switch (as v3 did). Once it ships,
-// any change is v5.
+// Save v4: the farm's one save. Every farm starts on it, and any older save the app meets starts over as a fresh v4
+// (`freshV4`), its `account` copied whole, so `updatedAt` moves only with the player's first change (the farmer's name).
+// The new farm is made in the app, never in `parseSave`: the API reads an older save's version and account only, and
+// never makes a save. v4 grows in place while the game is being built; a shape old fields can't carry is v5.
 //
-// v4 is a wipe: any v1, v2 or v3 becomes a fresh v4 (`freshV4`), its `account` copied whole, so `updatedAt` moves
-// only with the player's first change (the farmer's name). The wipe runs in the app, never in `parseSave`:
-// the API reads v2, v3 and v4 as stored and never makes a save.
-//
-// The roster, the Dorm, work, bonds, `love`, `today`, `memories` and `arrivals` are keyed by character id. Her
-// outfit is a lookup in the story pack (`outfitOf`, `story/pack.ts`). The shared rules (the Fields, gathering, stations,
-// ranks, the bin, the night) take `FarmSave`, v3 or v4, and branch on `save.version`, never on the web's switch.
-import type { WorkRow } from '@luismlorenzana/uma-work'
+// The roster, the Dorm, work, bonds, `love`, `today`, `memories` and `arrivals` are keyed by character id. Her outfit is
+// a lookup in the story pack (`outfitOf`, `story/pack.ts`).
+import type { ItemRequest, WorkRow } from '@luismlorenzana/uma-work'
 import { DAYS_PER_YEAR } from '../farm/calendar'
 import { START_GOLD, START_SEEDS } from '../farm/farm'
-import { ACTIVITIES, type Activity } from '../farm/ranks'
+import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import { seedId, type CropId } from '../goods/ids'
-import type { MorningSummaryV4 } from '../night/summary'
-import type { Account, SaveV1, SaveV2 } from './save'
-import {
-  newBlock, TOOL_IDS, type Animal, type Block, type BoardRequest, type BuildingId, type Dig, type DormSwap, type Expedition, type FestivalResult,
-  type LoopWorkRequest, type PlayInProgress, type RankState, type SaveV3, type ToolId, type ToolTier, type Warehouse, type WorkshopId,
-} from './v3'
+import type { MorningSummary } from '../night/summary'
+import type { Account, OlderSave } from './save'
 
-/** Master data's character id: the roster's key on v4. */
+/** A master outfit id: the look a character id plays (`outfitOf`). Older rules still name roster ids with it. */
+export type OutfitId = string
+
+/** A Warehouse row: counts by ★1 … ★5. */
+export type StarCounts = [number, number, number, number, number]
+/** The Warehouse (or the bin): a row of star counts per good or seed id. */
+export type Warehouse = Record<string, StarCounts>
+
+/** Her standing in one activity: points, her rank (0 Novice … 5 Legend) and her count toward the next rank's challenge.
+ **/
+export interface RankState {
+  points: number
+  rank: Rank
+  challenge: number
+}
+
+/** A swap at the Dorm, arriving the next morning. */
+export interface DormSwap {
+  out: OutfitId
+  in: OutfitId
+}
+
+/** A work request: the common item request where the loop's kinds have no request of their own. */
+export type LoopWorkRequest = ItemRequest
+
+export const BLOCK_IDS = ['A', 'B', 'C', 'D'] as const
+export type BlockId = typeof BLOCK_IDS[number]
+export const PLOTS_PER_BLOCK = 9
+
+export interface Plot {
+  crop: CropId | null
+  growth: number
+  ready: boolean
+  regrowing: boolean
+  /** Planted from her own seeds. */
+  own: boolean
+}
+
+export interface Block {
+  id: BlockId
+  tender: OutfitId | null
+  plots: Plot[]
+}
+
+export const ANIMAL_KINDS = ['chicken', 'duck', 'cow', 'goat', 'sheep', 'alpaca', 'cashmere-goat'] as const
+export type AnimalKind = typeof ANIMAL_KINDS[number]
+/** Where each kind lives. */
+export const ANIMAL_HOME: Readonly<Record<AnimalKind, 'coop' | 'barn'>> = {
+  chicken: 'coop', duck: 'coop', cow: 'barn', goat: 'barn', sheep: 'barn', alpaca: 'barn', 'cashmere-goat': 'barn',
+}
+export interface Animal {
+  id: string
+  kind: AnimalKind
+  building: 'coop' | 'barn'
+  affection: number
+  /** Days in a row with the same carer. */
+  streak: number
+  carer: OutfitId | null
+  /** Days to her next product. */
+  next: number
+}
+
+/** A dig's progress: the deepest floor reached and the stairs-days found toward the next. */
+export interface Dig {
+  deepest: number
+  stairs: number
+}
+export const DEEPEST_FLOOR = 30
+
+/** The buildings with levels: absent is locked, 0 is "plans held, not built", 1 or more is built. */
+export const BUILDING_IDS = ['dorm', 'coop', 'barn', 'kitchen', 'restaurant', 'forge', 'mill', 'sawmill', 'smokehouse', 'smelter', 'cutter', 'boat'] as const
+export type BuildingId = typeof BUILDING_IDS[number]
+export const BUILDING_MAX_LEVEL = 10
+
+/** The farm's tools, tiers 1–5 (Basic, Copper, Iron, Gold, Mythril). */
+export const TOOL_IDS = ['watering-can', 'hoe', 'brush', 'pick', 'hammer', 'rod', 'axe'] as const
+export type ToolId = typeof TOOL_IDS[number]
+export type ToolTier = 1 | 2 | 3 | 4 | 5
+
+export const WORKSHOP_IDS = ['kitchen', 'restaurant', 'forge'] as const
+export type WorkshopId = typeof WORKSHOP_IDS[number]
+/** A workshop play under way: its workshop, its assistant and the day it started. */
+export interface PlayInProgress {
+  workshop: WorkshopId
+  assistant: OutfitId
+  day: number
+}
+
+/** The 80 dishes are `dish-<family>-<grade>` (uma-art's dishes atlas). */
+export const DISH_FAMILIES = ['grains', 'vegetables', 'fruits', 'herbs-spices', 'mushrooms', 'nuts-seeds', 'sweets', 'fish'] as const
+export const isDishId = (id: string): boolean => {
+  const m = /^dish-([a-z-]+)-(\d+)$/.exec(id)
+  return !!m && (DISH_FAMILIES as readonly string[]).includes(m[1]!) && Number(m[2]) >= 1 && Number(m[2]) <= 10 && String(Number(m[2])) === m[2]
+}
+
+/** The expedition regions. */
+export const REGION_IDS = ['old-fort-ruins', 'echo-cave', 'hilltop-track', 'misty-marsh', 'sunken-temple', 'ember-peak', 'sky-ruins'] as const
+export type RegionId = typeof REGION_IDS[number]
+export interface Expedition {
+  region: RegionId
+  party: OutfitId[]
+  supplies: string[]
+  /** The day it left. */
+  left: number
+  /** The day it comes back. */
+  back: number
+}
+
+/** A request's extra: a recipe, rare seeds, an animal or a recruit. */
+export const EXTRA_KINDS = ['recipe', 'seeds', 'animal', 'recruit'] as const
+export interface Extra {
+  kind: typeof EXTRA_KINDS[number]
+  /** A dish id, a seed id, an animal kind or an outfit id. */
+  id: string
+}
+export interface BoardRequest {
+  id: string
+  /** One of the town's cast. */
+  from: string
+  item: string
+  count: number
+  stars: number
+  due: number
+  reward: number
+  extra: Extra | null
+}
+
+export interface FestivalResult {
+  id: string
+  day: number
+  score: number
+  place: 1 | 2 | 3
+}
+
+/** A plot with nothing planted. */
+export const emptyPlot = (): Plot => ({ crop: null, growth: 0, ready: false, regrowing: false, own: false })
+/** A block of nine empty plots. */
+export const newBlock = (id: BlockId): Block => ({ id, tender: null, plots: Array.from({ length: PLOTS_PER_BLOCK }, emptyPlot) })
+/** Ready plots on the farm, every block: the map's badge, Collect all and the nudge's "to collect". */
+export const readyPlots = (save: Pick<SaveV4, 'fields'>): number => save.fields.blocks.reduce((n, b) => n + b.plots.filter((p) => p.ready).length, 0)
+/** The block an Uma tends, or null: a tender is busy, so she can't take an uma-work job. */
+export const tendedBlock = (save: Pick<SaveV4, 'fields'>, outfitId: OutfitId): BlockId | null =>
+  save.fields.blocks.find((b) => b.tender === outfitId)?.id ?? null
+
+/** She leaves the farm tomorrow: a swap at the Dorm takes her out. */
+export const leaving = (save: { dorm: { swaps: readonly DormSwap[] } }, outfitId: OutfitId): boolean => save.dorm.swaps.some((s) => s.out === outfitId)
+/** A spouse in her house: on the farm with no Dorm bed. */
+export const housed = (save: Pick<SaveV4, 'love'>, id: CharacterId): boolean => save.love[id]?.house !== undefined
+type HomeOf = { dorm: { home: readonly CharacterId[]; swaps: readonly DormSwap[] }; love: SaveV4['love'] }
+/** She's home and staying: who may take a job or tend a block. An Uma leaving tomorrow may do neither. A spouse in her
+ * house is on the farm too. */
+export const onFarm = (save: HomeOf, id: CharacterId): boolean => (save.dorm.home.includes(id) && !leaving(save, id)) || housed(save, id)
+/** Who's on the farm: the Dorm's home in its order, then the spouses in their houses by id. */
+export function farmHome(save: Pick<SaveV4, 'dorm' | 'love'>): CharacterId[] {
+  return [...save.dorm.home, ...Object.keys(save.love).filter((id) => housed(save, id) && !save.dorm.home.includes(id)).sort((a, b) => Number(a) - Number(b))]
+}
+/** Whether she's on the farm today: home in the Dorm (leaving tomorrow or not), or in her house. */
+export const atHome = (save: Pick<SaveV4, 'dorm' | 'love'>, id: CharacterId): boolean => save.dorm.home.includes(id) || housed(save, id)
+
+/** A bond's key: the two outfit ids in numeric order, joined by a colon. */
+export function pairKey(a: OutfitId, b: OutfitId): string {
+  return Number(a) <= Number(b) ? `${a}:${b}` : `${b}:${a}`
+}
+
+/** Master data's character id: the roster's key. */
 export type CharacterId = string
 
 /** Her route's stages: the ladder she's on, or the rung that waits. */
@@ -63,8 +219,8 @@ export interface Love {
   dish?: string
 }
 
-/** An Uma on the v4 roster: v3's without `affinity`, which became `love`. Talents aren't saved. */
-export interface RosterUmaV4 {
+/** An Uma on the roster. Talents aren't saved: they're read from master data each boot. */
+export interface RosterUma {
   /** The day she joined. */
   joined: number
   ranks: Record<Activity, RankState>
@@ -129,7 +285,7 @@ export interface TodayV4 {
   reception: number
 }
 
-/** A day's `today` before anything's done (newSaveV4; night step 7 clears to it). */
+/** A day's `today` before anything's done (newSave; night step 7 clears to it). */
 export const newTodayV4 = (): TodayV4 => ({ chats: [], gifts: [], praise: [], praised: [], events: [], asked: [], evenings: [], invites: [], bonds: {}, ring: 0, reception: 0 })
 
 /** A house on the homestead: house 0 is the Farmhouse (two rooms, never extended), houses 1–6 are
@@ -182,7 +338,7 @@ export function residentsOf(save: Pick<SaveV4, 'love'>, house: number): Characte
 export const vowsOn = (homestead: Pick<Homestead, 'finale'>, day: number): boolean =>
   homestead.finale > 0 && day > homestead.finale && (day - homestead.finale) % DAYS_PER_YEAR === 0
 
-/** Save v4. */
+/** Save v4: the farm's one save. */
 export interface SaveV4 {
   version: 4
   /** As stored: the wipe never changes it, and only a player's change moves `updatedAt`. */
@@ -192,7 +348,7 @@ export interface SaveV4 {
   calendar: { day: number }
   gold: number
   today: TodayV4
-  roster: Record<CharacterId, RosterUmaV4>
+  roster: Record<CharacterId, RosterUma>
   /** One per roster Uma, from the day she joins. */
   love: Record<CharacterId, Love>
   /** Levels 1–8: the level in effect, who's on the farm (≤ its beds) and swaps arriving tomorrow. */
@@ -219,19 +375,17 @@ export interface SaveV4 {
   memories: Record<CharacterId, string[]>
   /** Arrival scenes played or skipped, in the order they played. */
   arrivals: CharacterId[]
-  summary: MorningSummaryV4 | null
+  summary: MorningSummary | null
 }
 
-/** A save the farm's loop plays: v3 (live) or v4 (the romance core, dark). */
-export type FarmSave = SaveV3 | SaveV4
-
-export const isSaveV4 = (save: { version: number }): save is SaveV4 => save.version === 4
+/** The save the game plays: v4. */
+export type FarmSave = SaveV4
 
 /** Her route the day she joins: Friendship 0, no points. */
 export const newLove = (): Love => ({ stage: 'friendship', level: 0, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [] })
 
-/** A new Uma on the v4 roster: joined today, Novice at 0 points in all nine activities. */
-export function newRosterUmaV4(day: number): RosterUmaV4 {
+/** A new Uma on the roster: joined today, Novice at 0 points in all nine activities. */
+export function newRosterUma(day: number): RosterUma {
   return { joined: day, ranks: Object.fromEntries(ACTIVITIES.map((a) => [a, { points: 0, rank: 0, challenge: 0 }])) as Record<Activity, RankState>, wellFed: 0 }
 }
 
@@ -240,7 +394,7 @@ export const FARMHOUSE: House = { name: 'Farmhouse', extended: false }
 
 /** Day 1 on v4: 500g, 9 Carrot seeds, Block A of 9 tilled plots, the Dorm at level 1 (3 beds), chapter 1,
  * the Farmhouse, the farmer's name empty, nobody on the roster: the name sheet, then the opening, bring the first three. */
-export function newSaveV4(uid: string, now: string): SaveV4 {
+export function newSave(uid: string, now: string): SaveV4 {
   return {
     version: 4,
     account: { uid, createdAt: now, updatedAt: now },
@@ -273,8 +427,8 @@ export function newSaveV4(uid: string, now: string): SaveV4 {
   }
 }
 
-/** The wipe: any older save becomes day 1 on v4, its `account` copied whole (uid, `createdAt`,
- * `updatedAt`), so the conflict rule still sees the player's last change and the first upload isn't stamped. Pure. */
-export function freshV4(stored: SaveV1 | SaveV2 | SaveV3): SaveV4 {
-  return { ...newSaveV4(stored.account.uid, stored.account.createdAt), account: { ...stored.account } }
+/** The new farm over an older save: day 1 on v4, its `account` copied whole (uid, `createdAt`, `updatedAt`), so the
+ * conflict rule still sees the player's last change and the first upload isn't stamped. Pure. */
+export function freshV4(older: Pick<OlderSave, 'account'>): SaveV4 {
+  return { ...newSave(older.account.uid, older.account.createdAt), account: { ...older.account } }
 }

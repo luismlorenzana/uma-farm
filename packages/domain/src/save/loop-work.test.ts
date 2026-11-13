@@ -1,5 +1,5 @@
-// The loop's work on the day clock: the operations over a v3 save at `workNow`, stamped with real time;
-// readings stamp nothing. Invented outfit ids and the test kinds.
+// The loop's work on the day clock: the operations over the save at `workNow`, stamped with real time;
+// readings stamp nothing. Invented ids and the test kinds.
 import { describe, expect, it } from 'vitest'
 import { DAY_MS } from '../farm/calendar'
 import { endDay } from '../night/end-day'
@@ -8,11 +8,11 @@ import {
   collectLoopWorker, dismissLoopStopped, editLoopQueue, recallLoopWorker, repeatLoopJob, restartLoopStopped, settleLoopWork, startLoopJob,
 } from './loop-work'
 import { SaveRuleError } from './rules'
-import { newRosterUma, newSave, type SaveV3 } from './v3'
+import { newRosterUma, newSave, type SaveV4 } from './v4'
 
 const AT = '2026-11-09T10:00:00.000Z'
 const T1 = '2026-11-09T11:00:00.000Z'
-function farm(day = 1): SaveV3 {
+function farm(day = 1): SaveV4 {
   const save = newSave('u1', AT)
   return {
     ...save, calendar: { day }, roster: { 101: newRosterUma(1), 202: newRosterUma(1), 303: newRosterUma(1) },
@@ -21,8 +21,8 @@ function farm(day = 1): SaveV3 {
 }
 const make = { kind: 'make', item: 'wheat-flour', count: 1 }
 const gather = { kind: 'gather', item: 'pine-log', count: 1 }
-const night = (save: SaveV3) => endDay(save, { roster: [], kinds: TEST_KINDS }, T1)
-const startAt = (save: SaveV3, outfitId: string, place: 'mill' | 'forest', slot: number, request = place === 'mill' ? make : gather) =>
+const night = (save: SaveV4) => endDay(save, { kinds: TEST_KINDS }, T1)
+const startAt = (save: SaveV4, outfitId: string, place: 'mill' | 'forest', slot: number, request = place === 'mill' ? make : gather) =>
   startLoopJob(save, { outfitId, place, slot, request }, T1, TEST_KINDS)
 
 describe('work on the day clock', () => {
@@ -62,7 +62,7 @@ describe('work on the day clock', () => {
     const morning = night(queued)
     expect(morning.work['101']!.dropped).toMatchObject({ at: DAY_MS, short: [{ item: 'wheat@1', qty: 1 }] })
     expect(() => restartLoopStopped(morning, '101', T1, TEST_KINDS)).toThrow('Short 1 Wheat.')
-    const stocked: SaveV3 = { ...morning, items: { ...morning.items, wheat: [1, 0, 0, 0, 0] } }
+    const stocked: SaveV4 = { ...morning, items: { ...morning.items, wheat: [1, 0, 0, 0, 0] } }
     expect(restartLoopStopped(stocked, '101', T1, TEST_KINDS).work['101']!.entries).toMatchObject([{ startedAt: DAY_MS }])
     expect(dismissLoopStopped(morning, '101', T1, TEST_KINDS).work['101']!.dropped).toBeNull()
   })

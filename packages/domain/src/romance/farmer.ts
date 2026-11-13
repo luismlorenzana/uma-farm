@@ -1,4 +1,4 @@
-// The farmer's name: the first screen on a fresh v4 farm, and Menu → Account's
+// The farmer's name: the first screen on a new farm, and Menu → Account's
 // **Your name**. Letters of any script, spaces, apostrophes and hyphens; trimmed, inner runs of spaces collapsed, then
 // 1–16 characters. No default, no pronouns, no gender: the farmer is never drawn, lines say "you", and `{farmer}`
 // fills with this name at display time. Small on purpose: the save's parse checks it, so it loads at start.

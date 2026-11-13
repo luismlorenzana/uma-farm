@@ -1,25 +1,23 @@
-// Chapter 1's scenes: "The Overgrown Farm" on day 1 and "First
-// Shipment" the morning after the chapter's goals are met. Data, never Uma names: the town's cast speaks by name, and Umas
-// speak only in roles the app fills from master data (your first hands, your newest hand), `{name}` filled at runtime.
-// The lines are original and short, one to a tap. Loaded on demand with the scene player.
-import type { Temperament } from '../farm/talents'
-import type { OutfitId, SaveV3 } from '../save/v3'
+// Chapter 1's scenes: "The Overgrown Farm" on day 1, once the farmer is named, and "First Shipment" the morning after
+// the chapter's goals are met. Data, never Uma names: the town's cast speaks by name, and an Uma speaks only in a role the
+// app fills at runtime (your newest hand, chapter 1's authored arrival), `{name}` and `{farmer}` filled at display time.
+// The lines are original and short, one to a tap. The opening ends as the opening's Umas come up the road (its last line
+// counts them: `chapterScene`); reading it brings them, and each walks in with her own arrival scene. Loaded on demand
+// with the scene player.
+import type { OutfitId } from '../save/v4'
 import type { CastId } from './cast'
 import type { ChapterSceneId } from './scenes'
-import type { FarmSave } from '../save/v4'
 
 /** Who speaks a beat: one of the cast, a role an Uma fills at runtime, or the narrator. */
 export type Speaker =
   | { readonly kind: 'cast'; readonly id: CastId }
-  /** Your first hands: the start's three, in the order they joined. Her line is her temperament's hello. */
-  | { readonly kind: 'first-hand'; readonly index: 0 | 1 | 2 }
-  /** Your newest hand: the chapter's recruit. */
+  /** Your newest hand: the chapter's authored arrival. */
   | { readonly kind: 'newest-hand' }
   | { readonly kind: 'narrator' }
 
 export interface Beat {
   readonly speaker: Speaker
-  /** One line; `{name}` is the Uma's name. A first hand's line is her hello (`HELLO_LINES`), so it's left empty here. */
+  /** One line; `{name}` is the Uma's name and `{farmer}` yours. */
   readonly line: string
 }
 
@@ -31,35 +29,22 @@ export interface Scene {
 
 const cast = (id: CastId, line: string): Beat => ({ speaker: { kind: 'cast', id }, line })
 const narrator = (line: string): Beat => ({ speaker: { kind: 'narrator' }, line })
-const hand = (index: 0 | 1 | 2): Beat => ({ speaker: { kind: 'first-hand', index }, line: '' })
 
-/** The hello lines: one a temperament (the five), `{name}` filled at runtime. */
-export const HELLO_LINES: Readonly<Record<Temperament, string>> = {
-  breezy: '“Hi, I’m {name}! Point me at the work and I’m off.”',
-  steady: '“{name}. I’ll be here every morning, rain or shine.”',
-  bold: '“I’m {name}, and this farm is about to wake up.”',
-  gritty: '“{name} here. Weeds don’t scare me.”',
-  clever: '“Hello, I’m {name}. I’ve counted the plots already: nine.”',
-}
-
-/** "The Overgrown Farm": the gate, the Mayor, Old Ben's seeds, your first hands, Marta and the bin; then the
- * chapter card. */
+/** "The Overgrown Farm": the Mayor at the gate welcomes you by name, Old Ben's nine Carrot seeds and the tended row,
+ * Marta's shop and the bin, then three Umas come up the road. */
 export const OPENING_SCENE: Scene = {
   id: 'scene:1:open',
   title: 'The Overgrown Farm',
   beats: [
     narrator('Morning at the farm gate. The weeds stand as high as the fence.'),
-    cast('hollis-pryor', '“Welcome! I’m Hollis Pryor, mayor of the town down the road.”'),
-    cast('hollis-pryor', '“This farm has stood empty since Old Ben retired. We hope the Umas who spend their off-season here can bring it back.”'),
+    cast('hollis-pryor', '“Welcome, {farmer}! I’m Hollis Pryor, mayor of the town down the road.”'),
+    cast('hollis-pryor', '“This farm has stood empty since Old Ben retired. The whole town hopes you can wake it up.”'),
     cast('ben-carver', '“I kept one block tilled, just in case. Here: nine Carrot seeds to start you off.”'),
     cast('ben-carver', '“A tended row grows faster. Tap a plot, then pick who tends it.”'),
-    narrator('Your first hands come in through the Gate.'),
-    hand(0),
-    hand(1),
-    hand(2),
     cast('marta-quill', '“Marta Quill, from the general store at the town edge. The shop is open whenever you need seeds.”'),
     cast('marta-quill', '“And that’s the shipping bin. Anything you put in pays tonight.”'),
-    cast('hollis-pryor', '“Here’s what the town hopes to see first.”'),
+    cast('hollis-pryor', '“You’ll want help with all this. I hear some is on its way.”'),
+    narrator('Three Umas come up the road.'),
   ],
 }
 
@@ -83,15 +68,21 @@ export const CLOSING_SCENE: Scene = {
 
 export const SCENES: Readonly<Record<ChapterSceneId, Scene>> = { 'scene:1:open': OPENING_SCENE, 'scene:1:close': CLOSING_SCENE }
 
-/** Your first hands: the start's three, the first three on the roster by the day they joined, then by id. */
-export function firstHands(save: Pick<FarmSave, 'roster'>): OutfitId[] {
-  return Object.entries(save.roster).sort(([a, x], [b, y]) => x.joined - y.joined || Number(a) - Number(b)).slice(0, 3).map(([id]) => id)
+const COUNT_WORDS = ['No', 'An', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten']
+/** The opening's last line for the Umas it brings: "An Uma comes up the road.", "Five Umas come up the road."; none
+ * with nobody. */
+export function roadLine(count: number): string | null {
+  if (count <= 0) return null
+  if (count === 1) return 'An Uma comes up the road.'
+  return `${COUNT_WORDS[count] ?? count} Umas come up the road.`
 }
 
-/** Your newest hand: the last to join, by day, then the higher id; the chapter's recruit on the closing morning. */
-export function newestHand(save: Pick<FarmSave, 'roster'>): OutfitId | null {
-  const [newest] = Object.entries(save.roster).sort(([a, x], [b, y]) => y.joined - x.joined || Number(b) - Number(a))
-  return newest?.[0] ?? null
+/** A chapter scene as it plays: the opening's last line for the Umas it brings (`openingOf`, three unless the pack says),
+ * else the scene as written. */
+export function chapterScene(id: ChapterSceneId, opening = 3): Scene {
+  if (id !== 'scene:1:open') return SCENES[id]
+  const road = roadLine(opening)
+  return { ...OPENING_SCENE, beats: [...OPENING_SCENE.beats.slice(0, -1), ...(road ? [narrator(road)] : [])] }
 }
 
 /** A beat as it plays: who speaks (a cast member, an Uma by outfit id, or the narrator) and the line, `{name}` still to
@@ -101,18 +92,11 @@ export interface SceneLine {
   readonly line: string
 }
 
-/** A scene's lines on this save: each role filled (a first hand speaks her temperament's hello), a role nobody fills
- * dropped. On v4 the newest hand is named, not read from the roster: chapter 1's authored arrival, or
- * nobody when the cast has none. */
-export function sceneLines(scene: Scene, save: Pick<FarmSave, 'roster'>, temperamentOf: (outfitId: OutfitId) => Temperament, newestId?: OutfitId | null): SceneLine[] {
-  const hands = firstHands(save)
-  const newest = newestId === undefined ? newestHand(save) : newestId
+/** A scene's lines: the newest hand's role filled with `newest` (chapter 1's authored arrival), or dropped when nobody
+ * fills it. */
+export function sceneLines(scene: Scene, newest: OutfitId | null): SceneLine[] {
   return scene.beats.flatMap((beat): SceneLine[] => {
     const { speaker } = beat
-    if (speaker.kind === 'first-hand') {
-      const id = hands[speaker.index]
-      return id ? [{ speaker: { kind: 'uma', outfitId: id }, line: HELLO_LINES[temperamentOf(id)] }] : []
-    }
     if (speaker.kind === 'newest-hand') return newest ? [{ speaker: { kind: 'uma', outfitId: newest }, line: beat.line }] : []
     return [{ speaker, line: beat.line }]
   })

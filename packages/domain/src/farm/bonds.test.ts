@@ -10,8 +10,7 @@ import { joinOpening, arrive } from '../romance/arrivals'
 import { startLoopJob } from '../save/loop-work'
 import { parseSaveV4 } from '../save/parse-v4'
 import { SaveParseError } from '../save/parse'
-import { newBlock, newSave, pairKey, type Block } from '../save/v3'
-import { newSaveV4, type Love, type SaveV4 } from '../save/v4'
+import { newBlock, newSave, pairKey, type Block, type Love, type SaveV4 } from '../save/v4'
 import { goodCount } from '../save/warehouse'
 import type { Cast, CastEntry, PairConversations, Ties } from '../story/authored'
 import { STAND_IN_CAST, STAND_IN_PAIR, STAND_IN_TIES, STAND_INS } from '../story/authored.fixture'
@@ -30,11 +29,11 @@ const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const PACK = storyPackFrom(STAND_IN_FILES)
 const [ONE, TWO, THREE] = STAND_INS
 const FOUR = '9000004'
-const context = (story: NightContext['story'] = PACK): NightContext => ({ roster: [], kinds: TEST_KINDS, story, talentOf: () => TALENT_D })
+const context = (story: NightContext['story'] = PACK): NightContext => ({ kinds: TEST_KINDS, story, talentOf: () => TALENT_D })
 
-/** A named v4 farm on `day` with the opening read: the stand-ins home, their ties seeded. */
+/** A named farm on `day` with the opening read: the stand-ins home, their ties seeded. */
 function opened(day = 1, pack: Pick<StoryPack, 'cast' | 'ties'> = PACK): SaveV4 {
-  return joinOpening(readScene({ ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack)
+  return joinOpening(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack)
 }
 /** The same, the seeds listed on an earlier morning, so a night's Hearts show only its own. */
 const farm = (day = 3, pack: Pick<StoryPack, 'cast' | 'ties'> = PACK): SaveV4 => {
@@ -127,7 +126,7 @@ describe('the closest friend and Romance 4', () => {
     // A stronger tie wins over more points.
     expect(closestFriend(PACK, withBond(farm(), ONE, THREE, 700), ONE)).toBe(TWO)
     // Before her friend arrives, she's still the closest.
-    const alone = arrive({ ...newSaveV4('u1', AT), farmer: { name: 'Robin' } }, ONE, PACK).save
+    const alone = arrive({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, ONE, PACK).save
     expect(closestFriend(PACK, alone, ONE)).toBe(TWO)
   })
 
@@ -153,7 +152,7 @@ describe('the closest friend and Romance 4', () => {
 describe('the ties\' seeds', () => {
   it('seeds 3 → 150, 2 → 50 and 1 → 0 when the second Uma arrives, not before', () => {
     expect(TIE_SEEDS).toEqual({ 1: 0, 2: 50, 3: 150 })
-    let save: SaveV4 = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' } }
+    let save: SaveV4 = { ...newSave('u1', AT), farmer: { name: 'Robin' } }
     save = arrive(save, ONE, PACK).save
     expect(save.bonds).toEqual({})
     save = arrive(save, TWO, PACK).save
@@ -164,11 +163,11 @@ describe('the ties\' seeds', () => {
     expect(bondHearts(bondOf(save, ONE, THREE))).toBe(1)
     // The opening seeds the three on day 1; without the pack's ties, an arrival seeds nothing.
     expect(opened(1).bonds).toEqual(save.bonds)
-    expect(arrive(arrive({ ...newSaveV4('u1', AT), farmer: { name: 'Robin' } }, ONE).save, TWO).save.bonds).toEqual({})
+    expect(arrive(arrive({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, ONE).save, TWO).save.bonds).toEqual({})
   })
 
   it('never lowers a bond, and a seeded heart is a new heart: its conversation opens and the morning lists it', () => {
-    const both = arrive(arrive({ ...newSaveV4('u1', AT), farmer: { name: 'Robin' } }, ONE).save, TWO).save
+    const both = arrive(arrive({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, ONE).save, TWO).save
     expect(seedTies(withBond(both, ONE, TWO, 400), PACK, TWO).bonds[pairKey(ONE, TWO)]).toBe(400)
     const seeded = seedTies(both, PACK, TWO)
     expect(seeded.today.bonds).toEqual({ [pairKey(ONE, TWO)]: 0 })
@@ -194,7 +193,7 @@ describe('the ties\' seeds', () => {
 })
 
 describe('the night: points at step 6', () => {
-  it('ticks bonds for two at the forest, 290 → 300 reaching 3 hearts in the morning\'s line; v3 and a night without the pack tick none', () => {
+  it('ticks bonds for two at the forest, 290 → 300 reaching 3 hearts in the morning\'s line; a night without the pack ticks none', () => {
     let save = withBond(farm(3), TWO, THREE, 290)
     save = startLoopJob(save, { outfitId: TWO, place: 'forest', slot: 0, request: { kind: 'gather', item: 'pine-log', count: 2 } }, AT, TEST_KINDS)
     save = startLoopJob(save, { outfitId: THREE, place: 'forest', slot: 1, request: { kind: 'gather', item: 'pine-log', count: 2 } }, AT, TEST_KINDS)
@@ -202,9 +201,6 @@ describe('the night: points at step 6', () => {
     expect(bondOf(night, TWO, THREE)).toBe(300)
     expect(night.summary!.hearts).toContainEqual({ kind: 'bond', a: TWO, b: THREE, hearts: 3 })
     expect(bondOf(runNight(save, { ...context(), story: undefined }), TWO, THREE)).toBe(290)
-    // v3 has no bonds: its night ticks none.
-    const v3 = { ...newSave('u1', AT), bonds: { '101:202': 10 } }
-    expect(runNight(v3, { roster: [], kinds: TEST_KINDS }).bonds).toEqual({ '101:202': 10 })
   })
 })
 
@@ -260,7 +256,7 @@ describe('side by side', () => {
     expect(night(pays, 290).after.summary!.hearts.some((h) => h.kind === 'side')).toBe(false)
   })
 
-  it('grows a tended block ×1.1 beside a 3-heart partner tending another growing block; never on v3', () => {
+  it('grows a tended block ×1.1 beside a 3-heart partner tending another growing block', () => {
     const farmers = packWithFour('farming')
     const base = withFour(farmers)
     const blockB: Block = { ...newBlock('B'), tender: FOUR, plots: newBlock('B').plots.map((p, i) => (i === 0 ? { ...p, crop: 'carrot' } : p)) }
@@ -276,8 +272,6 @@ describe('side by side', () => {
     // Her partner's block with nothing growing: she isn't working beside her.
     const idle: SaveV4 = { ...close, fields: { blocks: [close.fields.blocks[0]!, { ...blockB, plots: newBlock('B').plots }] } }
     expect(tendsSideBySide(idle, 'A')).toBe(false)
-    // v3 never.
-    expect(tendsSideBySide({ version: 3, bonds: close.bonds, fields: close.fields }, 'A')).toBe(false)
     // At night step 2 the block grows by it.
     const night = runNight(close, context(farmers))
     expect(night.fields.blocks[0]!.plots[0]!.growth).toBeCloseTo(plain * 1.1, 6)
@@ -341,7 +335,7 @@ describe('the morning\'s lines and their parse', () => {
     expect(newBondHearts(noted, noted, [ONE, TWO, THREE])).toEqual([{ kind: 'bond', a: ONE, b: TWO, hearts: 2 }])
   })
 
-  it('parses the side and bond lines and today.bonds strictly; v4\'s bonds are whole', () => {
+  it('parses the side and bond lines and today.bonds strictly; bonds are whole', () => {
     const save = farm(5)
     const summary = { day: 5, bin: [], work: [], ranks: [], hearts: [{ kind: 'side', items: 3 }, { kind: 'bond', a: ONE, b: TWO, hearts: 2 }], news: [], nudges: [] }
     const good = { ...save, summary, today: { ...save.today, bonds: { [pairKey(ONE, TWO)]: 1 } } }

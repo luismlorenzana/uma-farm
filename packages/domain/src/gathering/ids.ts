@@ -1,10 +1,10 @@
-// The forest's areas, the Fishery's spots and the stations' jobs by id: what a v3 work
+// The forest's areas, the Fishery's spots and the stations' jobs by id: what a work
 // request names, and each request's parse. Light on purpose: the save's parse (in the initial JS) reads this file, while
 // the area and fish tables (`tables.ts`) and the kinds' rules (`kinds.ts`) load with the loop's screens and the night.
 import { goodOf, type GoodFamily } from '../goods/ids'
 import { int, object, oneOf, SaveParseError, type Obj } from '../save/parse'
-import type { LoopPlaceId, LoopRequestKind } from '../save/parse-v3'
-import type { LoopWorkRequest } from '../save/v3'
+import type { LoopPlaceId, LoopRequestKind } from '../save/parse-v4'
+import type { LoopWorkRequest } from '../save/v4'
 import { parseStockKey } from '../save/warehouse'
 
 /** The forest's areas, deepest last. */
@@ -25,7 +25,7 @@ export const MAX_GATHER_DAYS = 4
 /** A station job makes up to 100 items. */
 export const MAX_STATION_ITEMS = 100
 
-/** The three stations v3 opens, each at its gathering place's row. */
+/** The three stations, each at its gathering place's row. */
 export const STATIONS = ['mill', 'sawmill', 'smokehouse'] as const
 export type StationId = typeof STATIONS[number]
 export const isStation = (id: string): id is StationId => (STATIONS as readonly string[]).includes(id)
@@ -74,7 +74,7 @@ const stationParse = (kind: StationJobId) => (value: Obj, path: string): LoopWor
   return { kind, item: r.item as string, count: int(r.count, `${path}.count`, 1, MAX_STATION_ITEMS) }
 }
 
-/** Each loop kind's places and request parse: what the save's parse needs (`parseSaveV3`). Their rules are `LOOP_KINDS`
+/** Each loop kind's places and request parse: what the save's parse needs (`parseSaveV4`). Their rules are `LOOP_KINDS`
  * (`kinds.ts`), loaded with the screens and the night. */
 export const LOOP_REQUESTS: Readonly<Record<string, LoopRequestKind>> = {
   forage: { places: ['forest'], parseRequest: gatherParse('forage', FOREST_AREAS) },

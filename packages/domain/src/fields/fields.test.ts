@@ -1,6 +1,6 @@
 // The Fields: blocks, planting and harvesting, tending and growth,
 // regrowing and withering at night, seeds back, crop levels, stars, challenges, the counters and the shop's seeds.
-// Invented outfit ids and test kinds (`kinds.fixture.ts`).
+// Invented ids and test kinds (`kinds.fixture.ts`).
 import { describe, expect, it } from 'vitest'
 import { farmDay } from '../farm/calendar'
 import { FARM_RANK_POINTS } from '../farm/farm'
@@ -10,10 +10,10 @@ import { starShares } from '../goods/stars'
 import { emptyNotes, endDay, growCrops, type NightContext } from '../night/end-day'
 import { TEST_KINDS } from '../night/kinds.fixture'
 import { startLoopJob } from '../save/loop-work'
-import { parseSaveV3 } from '../save/parse-v3'
+import { parseSaveV4 } from '../save/parse-v4'
 import { SaveRuleError } from '../save/rules'
 import { buy, lineOpen, shopLines } from '../save/shop'
-import { newRosterUma, newSave, readyPlots, type BlockId, type Plot, type SaveV3 } from '../save/v3'
+import { newLove, newRosterUma, newSave, readyPlots, type BlockId, type Plot, type SaveV4 } from '../save/v4'
 import {
   blockGrowth, buyBlock, cropLevelOf, cropLevelStart, harvest, harvestAll, harvestQuality, isBusy, nightsLeft, plant, plantAll,
   PLOTS_HARVESTED, PLOTS_PLANTED, plotsToPlant, receiptItems, seedsBackChance, seedsInSeason, setTender, tendedGrowth,
@@ -21,21 +21,21 @@ import {
 
 const AT = '2026-11-09T10:00:00.000Z'
 const LATER = '2026-11-09T21:30:00.000Z'
-const CONTEXT: NightContext = { roster: [], kinds: TEST_KINDS }
+const CONTEXT: NightContext = { kinds: TEST_KINDS }
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const SUMMER = (d: number) => farmDay({ year: 1, season: 'summer', day: d })
 
 /** Two Umas home on `day`, with seeds. */
-function farm(day = 1, seeds: Record<string, number> = { 'seed-carrot': 9 }, uid = 'u1'): SaveV3 {
+function farm(day = 1, seeds: Record<string, number> = { 'seed-carrot': 9 }, uid = 'u1'): SaveV4 {
   const save = newSave(uid, AT)
   return {
-    ...save, calendar: { day }, roster: { 101: newRosterUma(1), 202: newRosterUma(1) }, dorm: { level: 1, home: ['101', '202'], swaps: [] },
-    items: Object.fromEntries(Object.entries(seeds).map(([id, n]) => [id, [n, 0, 0, 0, 0]])),
+    ...save, calendar: { day }, roster: { 101: newRosterUma(1), 202: newRosterUma(1) }, love: { 101: newLove(), 202: newLove() },
+    dorm: { level: 1, home: ['101', '202'], swaps: [] }, items: Object.fromEntries(Object.entries(seeds).map(([id, n]) => [id, [n, 0, 0, 0, 0]])),
   }
 }
-const night = (save: SaveV3, context: NightContext = CONTEXT) => endDay(save, context, LATER)
-const nights = (save: SaveV3, n: number) => Array.from({ length: n }).reduce<SaveV3>((s) => night(s), save)
-const plots = (save: SaveV3, id: BlockId = 'A'): Plot[] => save.fields.blocks.find((b) => b.id === id)!.plots
+const night = (save: SaveV4, context: NightContext = CONTEXT) => endDay(save, context, LATER)
+const nights = (save: SaveV4, n: number) => Array.from({ length: n }).reduce<SaveV4>((s) => night(s), save)
+const plots = (save: SaveV4, id: BlockId = 'A'): Plot[] => save.fields.blocks.find((b) => b.id === id)!.plots
 const reason = (run: () => unknown): string | null => {
   try {
     run()
@@ -45,7 +45,7 @@ const reason = (run: () => unknown): string | null => {
   }
 }
 /** Block A with every plot Ready with `crop`. */
-function ripe(save: SaveV3, crop: Plot['crop'] = 'carrot', own = false): SaveV3 {
+function ripe(save: SaveV4, crop: Plot['crop'] = 'carrot', own = false): SaveV4 {
   const plot: Plot = { crop, growth: 3.5, ready: true, regrowing: false, own }
   return { ...save, fields: { blocks: save.fields.blocks.map((b) => (b.id === 'A' ? { ...b, plots: b.plots.map(() => ({ ...plot })) } : b)) } }
 }
@@ -127,7 +127,7 @@ describe('growth and Ready', () => {
 
   it('stops growing once Ready, and a tender works only a night her block has a growing plot', () => {
     const save = setTender(plantAll(farm(), 'A', 'carrot'), 'A', '101')
-    const run = (s: SaveV3) => growCrops({ before: s, save: s, context: CONTEXT, notes: emptyNotes() }).notes
+    const run = (s: SaveV4) => growCrops({ before: s, save: s, context: CONTEXT, notes: emptyNotes() }).notes
     expect(run(save).tended).toEqual([{ outfitId: '101', block: 'A' }])
     const ready = nights(save, 3)
     expect(run(ready).tended).toEqual([])
@@ -282,13 +282,13 @@ describe('blocks', () => {
     expect(reason(() => buyBlock({ ...bought, gold: 5000 }, 'C'))).toBe('locked')
     const rank6 = { ...bought, gold: 20000, farm: { ...bought.farm, points: FARM_RANK_POINTS[5]! } }
     expect(buyBlock(buyBlock(rank6, 'D'), 'C').fields.blocks.map((b) => b.id)).toEqual(['A', 'B', 'C', 'D'])
-    expect(parseSaveV3(json(buyBlock(rank6, 'D'))).fields.blocks.map((b) => b.id)).toEqual(['A', 'B', 'D'])
+    expect(parseSaveV4(json(buyBlock(rank6, 'D'))).fields.blocks.map((b) => b.id)).toEqual(['A', 'B', 'D'])
   })
 })
 
 describe('tenders', () => {
   const gather = { kind: 'gather', item: 'pine-log', count: 1 }
-  const job = (save: SaveV3, outfitId: string) => startLoopJob(save, { outfitId, place: 'forest', slot: 0, request: gather }, AT, TEST_KINDS)
+  const job = (save: SaveV4, outfitId: string) => startLoopJob(save, { outfitId, place: 'forest', slot: 0, request: gather }, AT, TEST_KINDS)
 
   it('keeps a tender until she\'s moved, and moves one from another block', () => {
     const rank2 = { ...farm(), gold: 900, farm: { ...farm().farm, points: FARM_RANK_POINTS[1]! } }
@@ -345,18 +345,18 @@ describe('the morning', () => {
     const planted = nights(plantAll(farm(1, { 'seed-carrot': 12 }), 'A', 'carrot'), 4)
     expect(planted.summary).toMatchObject({ work: [{ kind: 'crops', block: 'A', plots: 9 }] })
     expect(planted.summary!.nudges.find((n) => n.kind === 'seeds')).toBeUndefined()
-    expect(parseSaveV3(json(planted), 'save', TEST_KINDS)).toEqual(planted)
-    expect(parseSaveV3(json(empty), 'save', TEST_KINDS)).toEqual(empty)
+    expect(parseSaveV4(json(planted), 'save', TEST_KINDS)).toEqual(planted)
+    expect(parseSaveV4(json(empty), 'save', TEST_KINDS)).toEqual(empty)
   })
 
   it('refuses a bad line: no plots, a crop it doesn\'t know, a block twice', () => {
     const morning = nights(plantAll(farm(), 'A', 'carrot'), 4)
     const withWork = (work: unknown[]) => ({ ...json(morning), summary: { ...json(morning).summary, work } })
-    expect(() => parseSaveV3(withWork([{ kind: 'crops', block: 'A', plots: 0 }]))).toThrow(/plots/)
-    expect(() => parseSaveV3(withWork([{ kind: 'withered', block: 'A', crop: 'kale', plots: 1 }]))).toThrow(/crop/)
-    expect(() => parseSaveV3(withWork([{ kind: 'crops', block: 'A', plots: 1 }, { kind: 'crops', block: 'A', plots: 2 }]))).toThrow(/repeated/)
-    expect(() => parseSaveV3(withWork([{ kind: 'crops', block: 'E', plots: 1 }]))).toThrow(/block/)
+    expect(() => parseSaveV4(withWork([{ kind: 'crops', block: 'A', plots: 0 }]))).toThrow(/plots/)
+    expect(() => parseSaveV4(withWork([{ kind: 'withered', block: 'A', crop: 'kale', plots: 1 }]))).toThrow(/crop/)
+    expect(() => parseSaveV4(withWork([{ kind: 'crops', block: 'A', plots: 1 }, { kind: 'crops', block: 'A', plots: 2 }]))).toThrow(/repeated/)
+    expect(() => parseSaveV4(withWork([{ kind: 'crops', block: 'E', plots: 1 }]))).toThrow(/block/)
     const withNudge = { ...json(morning), summary: { ...json(morning).summary, nudges: [{ kind: 'seeds', plots: 0 }] } }
-    expect(() => parseSaveV3(withNudge)).toThrow(/plots/)
+    expect(() => parseSaveV4(withNudge)).toThrow(/plots/)
   })
 })

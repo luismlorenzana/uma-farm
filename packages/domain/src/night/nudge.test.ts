@@ -1,17 +1,17 @@
 // The nudge: idle Umas plus things to collect, read at the day's start.
 import { describe, expect, it } from 'vitest'
 import { startLoopJob } from '../save/loop-work'
-import { newBlock, newRosterUma, newSave, type SaveV3 } from '../save/v3'
+import { newBlock, newRosterUma, newSave, type SaveV4 } from '../save/v4'
 import { endDay } from './end-day'
 import { TEST_KINDS } from './kinds.fixture'
 import { daySetState } from './nudge'
 
 const AT = '2026-11-09T10:00:00.000Z'
-function farm(): SaveV3 {
+function farm(): SaveV4 {
   const save = newSave('u1', AT)
   return { ...save, roster: { 101: newRosterUma(1), 202: newRosterUma(1), 303: newRosterUma(1) }, dorm: { level: 1, home: ['101', '202', '303'], swaps: [] } }
 }
-const gather = (save: SaveV3, outfitId: string, slot: number) =>
+const gather = (save: SaveV4, outfitId: string, slot: number) =>
   startLoopJob(save, { outfitId, place: 'forest', slot, request: { kind: 'gather', item: 'pine-log', count: 1 } }, AT, TEST_KINDS)
 
 describe('the nudge', () => {
@@ -24,7 +24,7 @@ describe('the nudge', () => {
   })
 
   it('counts each Uma with finished work as one to collect, and idle until she has work again', () => {
-    const morning = endDay(gather(farm(), '101', 0), { roster: [], kinds: TEST_KINDS }, AT)
+    const morning = endDay(gather(farm(), '101', 0), { kinds: TEST_KINDS }, AT)
     expect(daySetState(morning)).toEqual({ allSet: false, idle: ['101', '202', '303'], collect: 1, badge: 4 })
   })
 

@@ -1,28 +1,14 @@
 // The authored start: the stand-in pack read and validated,
 // the opening three joining when the opening is read, authored arrivals at night step 8 and with chapter 1, her arrival
 // scene's +50 and choice, her favourite line and tastes from the pack, and the farmer's name. Invented ids only: the
-// stand-ins 9000001–9000003, and casts of 9000004 onward built here. Nothing on v4 reaches the Gate's or the start's draws.
-import { describe, expect, it, vi } from 'vitest'
-
-const draws = vi.hoisted(() => ({ gate: 0, start: 0, recruit: 0 }))
-vi.mock('../farm/visitors', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../farm/visitors')>()
-  return {
-    ...actual,
-    gateNight: (...args: Parameters<typeof actual.gateNight>) => { draws.gate++; return actual.gateNight(...args) },
-    recruitFor: (...args: Parameters<typeof actual.recruitFor>) => { draws.recruit++; return actual.recruitFor(...args) },
-  }
-})
-vi.mock('../farm/start', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../farm/start')>()
-  return { ...actual, startSheet: (...args: Parameters<typeof actual.startSheet>) => { draws.start++; return actual.startSheet(...args) } }
-})
+// stand-ins 9000001–9000003, and casts of 9000004 onward built here. Nothing is drawn: every Uma is the cast's.
+import { describe, expect, it } from 'vitest'
 
 const { TALENT_D } = await import('../farm/talents')
-const { endDay, nightStepsOf, NIGHT_STEPS, runNight } = await import('../night/end-day')
+const { endDay, NIGHT_STEPS, runNight } = await import('../night/end-day')
 const { TEST_KINDS } = await import('../night/kinds.fixture')
 const { GOLD_SHIPPED } = await import('../save/bin')
-const { newRosterUmaV4, newSaveV4 } = await import('../save/v4')
+const { newSave } = await import('../save/v4')
 const { parseSaveV4 } = await import('../save/parse-v4')
 const { checkCast, checkBible, checkRoute, RUNGS } = await import('../story/authored')
 const { STAND_IN_BIBLE, STAND_IN_CAST, STAND_INS } = await import('../story/authored.fixture')
@@ -48,11 +34,11 @@ function packWith(...more: Omit<CastEntry, 'paragraph' | 'outfitId'>[]): StoryPa
   const cast: Cast = { ...json(STAND_IN_CAST), umas: [...json(STAND_IN_CAST).umas, ...more.map((u) => ({ ...u, outfitId: `${u.characterId}01`, paragraph: 'Invented.' }))] }
   return { ...PACK, cast }
 }
-const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK) => ({ roster: [], kinds: TEST_KINDS, story })
-/** A named v4 farm on `day`, the opening read and the stand-ins home., their ties seeded and
+const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK) => ({ kinds: TEST_KINDS, story })
+/** A named farm on `day`, the opening read and the stand-ins home., their ties seeded and
  * already listed on an earlier morning, so a night's Hearts show only its own lines. */
 function farm(day = 2): SaveV4 {
-  const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
+  const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
   const joined = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
   return { ...joined, today: { ...joined.today, bonds: {} } }
 }
@@ -64,7 +50,7 @@ describe('the stand-in pack', () => {
     expect([...PACK.scripted.get('9000001')!]).toEqual(RUNGS)
     expect([...PACK.scripted.get('9000002')!]).toEqual(['arrival'])
     expect(STAND_INS.map((id) => outfitOf(PACK, id))).toEqual(['900000101', '900000201', '900000301'])
-    // Off the pack (a v3 outfit id, or no pack): its own id.
+    // Off the pack (someone the cast doesn't hold, or no pack): its own id.
     expect(outfitOf(PACK, '1001')).toBe('1001')
     expect(outfitOf(null, '9000001')).toBe('9000001')
   })
@@ -115,7 +101,7 @@ describe('an open opening', () => {
     // No opening and no arrivals: the welcome list, the first five, comes up the road.
     const umas = [...json(STAND_IN_CAST).umas.map(({ arrives: _a, ...u }) => u), ...['9000004', '9000005', '9000006'].map((characterId) => ({ characterId }))]
     const five: StoryPack = { ...PACK, cast: { umas } }
-    const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' } }
+    const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' } }
     const read = joinOpening(readScene(fresh, 'scene:1:open'), five)
     expect(Object.keys(read.roster)).toEqual([...STAND_INS, '9000004', '9000005'])
     expect(read.dorm.home).toEqual([...STAND_INS])
@@ -135,7 +121,7 @@ describe('an open opening', () => {
 
 describe('the opening and arrivals', () => {
   it('reading the opening joins the opening three home, once, each at Friendship 0', () => {
-    const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' } }
+    const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' } }
     expect(sceneDue(fresh)).toBe('scene:1:open')
     expect(sceneDue({ ...fresh, farmer: { name: '' } })).toBeNull()
     const read = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
@@ -202,31 +188,25 @@ describe('the opening and arrivals', () => {
       ...base, crops: { carrot: 20, potato: 2 }, farm: { ...base.farm, counts: { [GOLD_SHIPPED]: 10_000, 'plots-harvested': 9, 'home:forest': 6, 'home:fishery': 4 } },
       roster: { ...base.roster, 9000001: { ...base.roster['9000001']!, ranks: { ...base.roster['9000001']!.ranks, farming: { points: 40, rank: 1, challenge: 0 } } } },
     }
-    const before = { ...draws }
     const morning = endDay(ready, context(pack), LATER)
     expect(morning.farm.chapter).toBe(2)
     expect(morning.roster['9000004']).toBeDefined()
     expect(morning.love['9000004']).toBeDefined()
     expect(morning.summary!.hearts).toEqual([{ kind: 'arrived', id: '9000004', home: false }])
     expect(morning.summary!.news).toContainEqual({ kind: 'chapter', chapter: 1 })
-    expect(draws).toEqual(before)
     // The closing scene, then her arrival scene, once the summary is put away.
     const away = { ...morning, summary: null, arrivals: [...STAND_INS] }
     expect(sceneDue(away, pack.cast.umas.map((u) => u.characterId))).toBe('scene:1:close')
     expect(sceneDue(readScene(away, 'scene:1:close'), pack.cast.umas.map((u) => u.characterId))).toBe('arrival:9000004')
   })
 
-  it('never reaches the Gate\'s, the start\'s or the recruit\'s draws on v4, and runs arriveUmas in the Gate\'s place', () => {
-    const before = { ...draws }
+  it('runs arriveUmas after the Dorm settles, and twelve nights bring nobody the cast doesn\'t name', () => {
     let save = farm(1)
     for (let i = 0; i < 12; i++) save = endDay(save, context(), LATER)
     expect(save.calendar.day).toBe(13)
-    expect(draws).toEqual(before)
-    expect(nightStepsOf(save).map((s) => s.name)).toEqual(NIGHT_STEPS.flatMap((s) => (s.name === 'gateVisitors' ? ['arriveUmas'] : s.name === 'countHauls' ? [s.name, 'nightExtras', 'nightChores']
-      : s.name === 'payTheBin' ? ['noteTonight', s.name]
-        : s.name === 'tickBonds' ? [s.name, 'payLine', 'shareTheHouses', 'levelAtNight'] : s.name === 'checkGoals' ? [s.name, 'openRingBench', 'householdMilestones']
-          : s.name === 'buildSummary' ? ['serveTheReception', 'houseMorningStep', 'moveInRooms', 'vowsMorning', 'heartsMorning', 'morningItems', 'drawInvitations', s.name] : [s.name])))
-    expect(nightStepsOf({ version: 3 })).toBe(NIGHT_STEPS)
+    expect(Object.keys(save.roster).sort()).toEqual([...STAND_INS])
+    const names = NIGHT_STEPS.map((s) => s.name)
+    expect(names.indexOf('arriveUmas')).toBe(names.indexOf('settleDorm') + 1)
     expect(parseSaveV4(json(save))).toEqual(save)
   })
 
@@ -295,12 +275,12 @@ describe('her favourite line and tastes', () => {
     const save = farm(2)
     const tended: SaveV4 = { ...save, fields: { blocks: [{ ...save.fields.blocks[0]!, tender: '9000001', plots: save.fields.blocks[0]!.plots.map((p) => ({ ...p, crop: 'carrot' as const })) }] } }
     const both: SaveV4 = { ...tended, fields: { blocks: [tended.fields.blocks[0]!] } }
-    const morning = runNight(both, { roster: [], kinds: TEST_KINDS, story: PACK, talentOf: () => TALENT_D })
+    const morning = runNight(both, { kinds: TEST_KINDS, story: PACK, talentOf: () => TALENT_D })
     expect(morning.roster['9000001']!.ranks.farming.points).toBe(12)
-    const noFavourite = runNight(both, { roster: [], kinds: TEST_KINDS, talentOf: () => TALENT_D })
+    const noFavourite = runNight(both, { kinds: TEST_KINDS, talentOf: () => TALENT_D })
     expect(noFavourite.roster['9000001']!.ranks.farming.points).toBe(10)
     const tender2: SaveV4 = { ...both, fields: { blocks: [{ ...both.fields.blocks[0]!, tender: '9000002' }] } }
-    expect(runNight(tender2, { roster: [], kinds: TEST_KINDS, story: PACK, talentOf: () => TALENT_D }).roster['9000002']!.ranks.farming.points).toBe(10)
+    expect(runNight(tender2, { kinds: TEST_KINDS, story: PACK, talentOf: () => TALENT_D }).roster['9000002']!.ranks.farming.points).toBe(10)
   })
 
   it('loved, liked and disliked by the bible, the rest neutral, a proposed good neutral until it exists', () => {
@@ -333,7 +313,7 @@ describe('the farmer\'s name', () => {
   })
 
   it('is stored clean, refused with the sheet\'s words, and fills {farmer}', () => {
-    const save = newSaveV4('u1', AT)
+    const save = newSave('u1', AT)
     expect(nameFarmer(save, '  Robin   Lea ').farmer.name).toBe('Robin Lea')
     expect(() => nameFarmer(save, 'R2')).toThrow('Letters, spaces, \' and - only')
     expect(withFarmer('Hello, {farmer}.', 'Robin')).toBe('Hello, Robin.')

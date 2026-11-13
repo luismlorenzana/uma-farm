@@ -1,7 +1,7 @@
 // The farm on the HD-2D stage: the save as a farm design
 // for uma-stage's band stage. Portrait, 9 tiles across: three 3 × 3 plots a band and a path row under each, the map's
-// rows from `FARM_PLACES` (gather → process → make, left to right), the homestead's 0–3 rows after the yard on a v4 save
-// in the romance build, and the town edge last. Each place is the kit's recipe (walls, roof, width × storeys, door,
+// rows from `FARM_PLACES` (gather → process → make, left to right), the homestead's 1–3 rows after the yard, and the
+// town edge last. Each place is the kit's recipe (walls, roof, width × storeys, door,
 // mounted pieces and landmarks); a place not yet standing is the kit's overgrown lot; crops by the kit's families. It
 // only reads the save: the stage never changes a rule or the save. Typed from `@luismlorenzana/uma-stage/formats`
 // (types only, so neither the rules nor farm-api load the stage). Pure.
@@ -22,8 +22,7 @@ import type { CropId } from '../goods/ids'
 import { isStation } from '../gathering/ids'
 import { homesteadShown } from '../romance/homestead'
 import { readyAt } from '../fields/crops'
-import { BLOCK_IDS, PLOTS_PER_BLOCK, type BlockId, type Plot } from '../save/v3'
-import type { FarmSave } from '../save/v4'
+import { BLOCK_IDS, PLOTS_PER_BLOCK, type BlockId, type FarmSave, type Plot } from '../save/v4'
 import { FARM_MAP_ROWS, FARM_PLACES, placeOpen, type FarmPlace, type FarmPlaceId } from './places'
 
 /** The farm's width in tiles, a plot's side and a band's depth. */
@@ -104,33 +103,27 @@ export interface FarmPlot {
   house?: number
 }
 
-/** What a design reads besides the save: whether the homestead's rows show (the romance build, on a v4 save). */
-export interface FarmStageOptions {
-  homestead: boolean
-}
-
-/** Whether a place's recipe stands on this save: its rule has opened it and, for a station, it's built; on v4
- * the Forge stands once its ring bench does. The map's lock (`lockOf`) adds the screens not landed yet;
+/** Whether a place's recipe stands on this save: its rule has opened it and, for a station, it's built; the Forge
+ * stands once its ring bench does. The map's lock (`lockOf`) adds the screens not landed yet;
  * those stand, locked. */
-export function placeStands(save: Pick<FarmSave, 'farm' | 'buildings' | 'version'>, place: FarmPlace): boolean {
-  if (place.id === 'forge' && save.version === 4) return save.buildings.forge !== undefined
+export function placeStands(save: Pick<FarmSave, 'farm' | 'buildings'>, place: FarmPlace): boolean {
+  if (place.id === 'forge') return save.buildings.forge !== undefined
   if (!placeOpen(save, place)) return false
   if (isStation(place.id)) return (save.buildings[place.id] ?? -1) >= 1
   return true
 }
 
-/** The homestead's rows on this save's stage: 0, or 1–3 on v4 with the option. */
-const homeRows = (save: FarmSave, options: FarmStageOptions): number =>
-  options.homestead && save.version === 4 ? Math.ceil(homesteadShown(save).length / FARM_PLOT) : 0
+/** The homestead's rows on this save's stage: 1–3. */
+const homeRows = (save: FarmSave): number => Math.ceil(homesteadShown(save).length / FARM_PLOT)
 
 /** Every plot on the stage, top to bottom, left to right: the map's rows, the homestead's, then the town edge. */
-export function farmPlots(save: FarmSave, options: FarmStageOptions): FarmPlot[] {
-  const home = homeRows(save, options)
+export function farmPlots(save: FarmSave): FarmPlot[] {
+  const home = homeRows(save)
   const bandOf = (row: number, group: FarmPlace['group']): number => (group === 'town' ? FARM_MAP_ROWS - 1 + home : row - 1)
   const at = (band: number, col: number) => ({ x: col * FARM_PLOT, z: band * FARM_BAND, band, col })
   const plots: FarmPlot[] = FARM_PLACES.map((place) => ({ id: place.id, kind: 'place', ...at(bandOf(place.row, place.group), place.col), standing: placeStands(save, place), place }))
   plots.push({ id: 'open-ground', kind: 'open', ...at(GATE_ROW - 1, 2), standing: true })
-  if (home > 0 && save.version === 4) {
+  if (home > 0) {
     for (const house of homesteadShown(save)) {
       const built = house.n < save.homestead.houses.length
       plots.push({ id: house.id, kind: built ? 'house' : 'lot', ...at(FARM_MAP_ROWS - 1 + Math.floor(house.n / FARM_PLOT), house.n % FARM_PLOT), standing: built, house: house.n })
@@ -181,7 +174,7 @@ const APRON: Recipe['slots'] = [[0, 2], [1, 2], [2, 2], [2, 1]]
 const SCARECROW: readonly [number, number] = [1, 1]
 
 /** The kit's recipes for the places, row for row; a station's building stands once it's built. */
-function placeRecipe(id: FarmPlaceId, v4: boolean): Recipe {
+function placeRecipe(id: FarmPlaceId): Recipe {
   switch (id) {
     case 'fields': return { ground: ['ttt', 'ttt', 'ttt'], props: [['scarecrow', ...SCARECROW]], slots: APRON }
     case 'mill': return { ground: laneLeft('g'), building: house(1, 2, 'plaster', 'thatch', 1, { column: 0 }, [front('mill-sails', 1, 2)]), props: [], slots: BESIDE }
@@ -205,10 +198,10 @@ function placeRecipe(id: FarmPlaceId, v4: boolean): Recipe {
     }
     case 'quarry': return { ground: ['qqL', 'qqL', 'ggg'], props: [['quarry-rock-1', 0, 0], ['stone-stack', 1, 0], ['quarry-rock-2', 1, 1]], slots: APRON }
     case 'cutter': return { ground: laneLeft('g'), building: house(1, 2, 'stone', 'slate', 1, { column: 0 }), props: [['grindstone', 2, 2]], slots: BESIDE }
-    // The anvil and, on v4, the ring bench beside it take the Forge's lane: it has no slots.
+    // The anvil and the ring bench beside it take the Forge's lane: it has no slots.
     case 'forge': return {
       ground: ['ggg', 'ggg', 'ggg'], building: house(1, 2, 'stone', 'slate', 1, { column: 0 }, [roofMount('forge-chimney', 1, 1)]),
-      props: [['anvil', 0, 1], ...(v4 ? [['ring-bench', 0, 0] as const] : [])], slots: [],
+      props: [['anvil', 0, 1], ['ring-bench', 0, 0]], slots: [],
     }
     case 'bin': return { ground: laneRight('g'), props: [['sack', 0, 0], ['barrel', 0, 1], ['bin', 1, 1]], slots: [] }
     case 'warehouse': return { ground: ['ggg', 'ggg', 'ggg'], building: house(0, 3, 'plank', 'red', 2, { column: 0, wide: true }), props: [['crates', 2, 2]], slots: [] }
@@ -259,7 +252,7 @@ const OPEN_GROUND: Recipe = { ground: laneLeft('g'), props: [['flowers-1', 1, 0]
 function recipeOf(save: FarmSave, plot: FarmPlot): Recipe {
   if (plot.kind === 'open') return OPEN_GROUND
   if (plot.kind === 'house' || plot.kind === 'lot') return homeRecipe(plot)
-  return plot.standing ? placeRecipe(plot.place!.id, save.version === 4) : overgrown(plot.col)
+  return plot.standing ? placeRecipe(plot.place!.id) : overgrown(plot.col)
 }
 
 // --- The design --------------------------------------------------------------------------------------------
@@ -274,12 +267,12 @@ export const slotId = (place: string, slot: number | BlockId): string => `${plac
 /**
  * The save as a farm design: every plot by its recipe (open places with a `place` marker on their apron and a
  * `slot` marker for each work slot, the Fields' one an owned block; places not standing as overgrown lots with their
- * `place` marker; on v4 with the homestead the Farmhouse, every built house and the next lot with its `lot` marker), the
+ * `place` marker; the homestead's Farmhouse, every built house and the next lot with its `lot` marker), the
  * Gate's `gate` marker, the path rows and the lanes, and the Fields' crops. Levels: the ground is 1, the pond
  * and the quarry's pit 0, the Mine's cliff a rock wall.
  */
-export function farmDesign(save: FarmSave, options: FarmStageOptions): FarmDesign {
-  const plots = farmPlots(save, options)
+export function farmDesign(save: FarmSave): FarmDesign {
+  const plots = farmPlots(save)
   const bands = Math.max(...plots.map((p) => p.band)) + 1
   const depth = bands * FARM_BAND
   const cells = Array.from({ length: depth }, (_, z) => (z % FARM_BAND === FARM_PLOT ? 'p' : 'g').repeat(FARM_STAGE_TILES).split(''))

@@ -89,7 +89,7 @@ export function roomsInAll(save: Pick<SaveV4, 'homestead' | 'love'>): { rooms: n
 
 // --- On the map (the farm map, grown) ---------------------------------------------------------------------
 
-/** A homestead place on the v4 map: the Farmhouse (0) or a house's lot (1–6). */
+/** A homestead place on the map: the Farmhouse (0) or a house's lot (1–6). */
 export interface HomesteadPlace {
   id: string
   n: number

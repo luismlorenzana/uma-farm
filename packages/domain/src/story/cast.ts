@@ -1,6 +1,7 @@
 // The town's cast: eleven original people, whose names and lines live in git. Umas never
-// appear here: they speak only in roles the app fills at runtime from master data (the cast's roles). v3's scenes speak
-// three of them (the Mayor, Marta, Old Ben) and name a fourth (Dale Hart); the rest arrive with their chapters.
+// appear here: they speak only in roles the app fills at runtime from master data (the cast's roles). Chapter 1's scenes
+// speak three of them (the Mayor, Marta, Old Ben) and name a fourth (Dale Hart); Ida Stone opens the ring bench; the rest
+// arrive with their chapters.
 
 export const CAST_IDS = [
   'hollis-pryor', 'marta-quill', 'ben-carver', 'dale-hart', 'gus-talbot', 'rosa-bell', 'juno-park', 'ida-stone', 'nils-berg', 'wren-ashby', 'cole-varga',

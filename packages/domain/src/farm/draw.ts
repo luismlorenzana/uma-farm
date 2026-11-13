@@ -1,7 +1,7 @@
 // Seeded draws: every random number in the loop is a draw of the account, the day and what's
 // drawn, so a night settles the same way however often, and on whichever device, it's replayed. The save holds no random
-// state. FNV-1a (32-bit) over the UTF-8 of `uid|day|what|n`, then one mulberry32 step. Its test pins vectors: once v3 is
-// live this function never changes, or every saved night would replay differently.
+// state. FNV-1a (32-bit) over the UTF-8 of `uid|day|what|n`, then one mulberry32 step. Its test pins vectors: this
+// function never changes, or every saved night would replay differently.
 
 /** The UTF-8 bytes of a string. */
 function* utf8(text: string): Generator<number> {

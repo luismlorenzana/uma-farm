@@ -9,9 +9,9 @@
 // family; so are the menu's welcome list, her trigger to meet and her chapters, with their defaults.
 import type { FarmPlaceId } from '../farm/places'
 import type { Activity } from '../farm/ranks'
-import type { Taste } from '../farm/visitors'
+import type { Taste } from '../romance/chats'
 import { isGoodId } from '../goods/ids'
-import { pairKey } from '../save/v3'
+import { pairKey } from '../save/v4'
 import {
   ARRIVAL, CHARACTER_ID, DEFAULT_CHAPTERS, DEFAULT_MEET, DEFAULT_WELCOME, checkBible, checkCast, checkHousehold, checkPair, checkRoute, checkTies, type Calling, type Cast,
   type CastEntry, type Findings, type HerChapter, type Household, type PairConversations, type Read, type Route, type StoryContext, type StoryTrigger, type Ties,
@@ -180,8 +180,8 @@ export const castEntry = (pack: Pick<StoryPack, 'cast'>, id: string): CastEntry 
 /** The cast's character ids, in the cast's order. */
 export const castOrder = (pack: Pick<StoryPack, 'cast'>): string[] => pack.cast.umas.map((u) => u.characterId)
 
-/** The one resolver: the outfit a roster id plays as. On v4 the roster's key is her character id and the
- * cast names her outfit; anything else (a v3 outfit id, no pack, no outfit named) is its own outfit. Faces, busts, names,
+/** The one resolver: the outfit a roster id plays as. The roster's key is her character id and the cast names her
+ * outfit; anything else (no pack, someone the cast doesn't hold, no outfit named) is its own outfit. Faces, busts, names,
  * talents, temperaments and pickers all meet master data through it. */
 export const outfitOf = (pack: Pick<StoryPack, 'cast'> | null, id: string): string => (pack ? castEntry(pack, id)?.outfitId : undefined) ?? id
 
@@ -246,8 +246,7 @@ export function linePlaces(pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string)
 // --- Her tastes -------------------------------------------------------------------------------------
 
 /** What she thinks of a good as a gift: her bible's loved, liked and disliked, any number of each; everything else
- * neutral. A proposed good counts once it exists in `goods/ids.ts`; until then that slot is neutral. No bible: neutral.
- * The v4 gifts read it; v3's `giftTaste` stays for the live build. */
+ * neutral. A proposed good counts once it exists in `goods/ids.ts`; until then that slot is neutral. No bible: neutral. */
 export function tasteOf(pack: Pick<StoryPack, 'bibles'>, id: string, good: string, isGood: (id: string) => boolean = isGoodId): Taste {
   const gifts = pack.bibles.get(id)?.gifts
   if (!gifts || !isGood(good)) return 'neutral'

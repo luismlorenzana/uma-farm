@@ -7,19 +7,18 @@ import { BLOCK_RULES, cropLevelOf } from '../fields/fields'
 import { CROPS, SHOP_SEEDS } from '../fields/crops'
 import { STATION_RULES } from '../gathering/tables'
 import { STATIONS } from '../gathering/ids'
-import { isGoodIdV4 } from '../goods/ids'
+import { isGoodOrRingId } from '../goods/ids'
 import { GOLD_SHIPPED } from '../save/bin'
 import { earnGold } from '../save/gold'
-import { BLOCK_IDS, type SaveV3 } from '../save/v3'
-import { dormLevelsOf } from './dorm'
+import { BLOCK_IDS, type FarmSave } from '../save/v4'
+import { DORM_LEVELS } from './dorm'
 import { FARM_RANK_POINTS, farmRankOf } from './farm'
 import {
-  CHAPTER_POINTS, diaryRowsOf, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, milestoneOf, ROW_GOLD, type DiaryRow, type Milestone,
+  CHAPTER_POINTS, DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, milestoneOf, ROW_GOLD, type DiaryRow, type Milestone,
 } from './milestones'
-import type { FarmSave } from '../save/v4'
 
-/** The goods shipped at least once: the Diary's entries. A ring is one on v4; v3 never ships one. */
-export const diaryEntries = (save: Pick<FarmSave, 'diary'>): number => Object.entries(save.diary.shipped).filter(([id, n]) => n > 0 && isGoodIdV4(id)).length
+/** The goods shipped at least once: the Diary's entries, a ring among them. */
+export const diaryEntries = (save: Pick<FarmSave, 'diary'>): number => Object.entries(save.diary.shipped).filter(([id, n]) => n > 0 && isGoodOrRingId(id)).length
 
 /** The milestones paid so far (rows aren't milestones). */
 export const milestonesPaid = (save: Pick<FarmSave, 'diary'>): number => save.diary.milestones.filter((id) => milestoneOf(id) !== undefined).length
@@ -57,12 +56,12 @@ export function nextFarmRank(points: number): { rank: number; points: number } |
 }
 
 /** What a Farm Rank opens in the game as built: more of what's open, read from the rules that gate
- * on it: the Fields' blocks, the Dorm's levels (by the save's version: v4's Dorm for 20), the shop's seeds (tier 1
+ * on it: the Fields' blocks, the Dorm's levels (the Dorm for 20), the shop's seeds (tier 1
  * is the start's) and the stations. Rank 10 is the farm's gold crest. */
-export function farmRankOpens(rank: number, version = 3): string[] {
+export function farmRankOpens(rank: number): string[] {
   const blocks = BLOCK_IDS.filter((id) => { const o = BLOCK_RULES[id].opens; return o.by === 'farm-rank' && o.rank === rank })
     .map((id) => `Block ${id} (${BLOCK_RULES[id].cost.toLocaleString('en-US')}g)`)
-  const dorm = dormLevelsOf({ version }).filter((l) => l.level > 1 && l.farmRank === rank).map((l) => `Dorm level ${l.level} (${l.beds} beds)`)
+  const dorm = DORM_LEVELS.filter((l) => l.level > 1 && l.farmRank === rank).map((l) => `Dorm level ${l.level} (${l.beds} beds)`)
   const seeds = rank > 1 && Object.values(SHOP_SEEDS).some((crops) => crops.some((crop) => CROPS[crop].tier === rank)) ? ['New seeds at the shop'] : []
   const stations = STATIONS.filter((s) => { const o = STATION_RULES[s].opens; return o.by === 'farm-rank' && o.rank === rank })
     .map((s) => `The ${s === 'sawmill' ? 'Sawmill' : s === 'smokehouse' ? 'Smokehouse' : 'Mill'} (${STATION_RULES[s].cost.toLocaleString('en-US')}g)`)
@@ -91,7 +90,7 @@ export const rowComplete = (save: Pick<FarmSave, 'diary'>, row: DiaryRow): boole
 export function payDiary<S extends FarmSave>(save: S, depths: DepthsTonight = new Set()): { save: S; paid: string[] } {
   const held = new Set(save.diary.milestones)
   const milestones = MILESTONES.filter((m) => !held.has(m.id) && milestoneReached(save, m, depths))
-  const rows = diaryRowsOf(save.version).filter((r) => !held.has(r.id) && rowComplete(save, r))
+  const rows = DIARY_ROWS.filter((r) => !held.has(r.id) && rowComplete(save, r))
   const paid = [...milestones.map((m) => m.id), ...rows.map((r) => r.id)]
   if (paid.length === 0) return { save, paid }
   const gold = milestones.reduce((n, m) => n + m.gold, 0) + ROW_GOLD * rows.length

@@ -1,7 +1,6 @@
 // Gold: whole numbers. Spending refuses when the farm is short; neither stamps `updatedAt`, which the
 // player's operation does around them.
 import { SaveRuleError } from './rules'
-import type { SaveV3 } from './v3'
 import type { FarmSave } from './v4'
 
 function whole(gold: number): void {

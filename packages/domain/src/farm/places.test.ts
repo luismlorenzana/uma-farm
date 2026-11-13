@@ -1,7 +1,7 @@
 // The farm map's places: eight rows of three, the frames, and what opens each.
 import { describe, expect, it } from 'vitest'
-import { LOOP_WORK_PLACES } from '../save/parse-v3'
-import { newSave } from '../save/v3'
+import { LOOP_WORK_PLACES } from '../save/parse-v4'
+import { newSave } from '../save/v4'
 import { FARM_MAP_ROWS, FARM_PLACES, farmPlace, placeOpen } from './places'
 
 describe('the farm map', () => {

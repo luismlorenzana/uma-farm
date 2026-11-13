@@ -2,16 +2,12 @@
 // game. A doc marks a block with `<!-- live:<key> -->` … `<!-- /live -->`; `pnpm docs:update` rewrites them, and
 // `docs.test.ts` fails when one is stale. Pure: no I/O (the test reads and writes the files). Headings a block prints
 // are `#####`, so a block never breaks the outline of the section it sits in. Adapted from uma-rpg's own `render.ts`.
-import { lineItems, MATERIAL_LINES, type MaterialLine } from '../items/lines'
-import { MADE_IDENTITIES, MADE_LINES, type MadeLine } from '../items/made-id'
-import { madeRecipeV4 } from '../items/made-v4'
-import { BEDS, FARM_RANK_POINTS } from '../farm/farm'
-import { ACTIVITIES, ACTIVITY_NAMES, CRAFT_BANDS, craftRank, LINE_ACTIVITY, RANK_POINTS, RANKS, type Rank } from '../farm/ranks'
-import { CROP_IDS, FAMILY_NAMES, GOOD_FAMILIES, GOODS, goodOf, isGoodId, refinedOf, type GoodFamily } from '../goods/ids'
+import { FARM_RANK_POINTS } from '../farm/farm'
+import { ACTIVITIES, ACTIVITY_NAMES, RANK_POINTS, RANKS, type Rank } from '../farm/ranks'
+import { CROP_IDS, FAMILY_NAMES, GOOD_FAMILIES, GOODS, goodOf, refinedOf, type GoodFamily } from '../goods/ids'
 import { itemNameOf } from '../items/lines'
 import { inDemand, priceOf, STARS, starFactor, starPrice } from '../goods/prices'
 import { DEMAND, FAMILY_FACTOR, LADDER, REFINED_FACTOR, type LadderFamily } from '../goods/rule'
-import { refundOf } from '../save/migrate-v3'
 import { DAYS_PER_SEASON, farmDay, FESTIVALS, SEASON_NAMES, SEASONS } from '../farm/calendar'
 import { FARM_MAP_ROWS, FARM_PLACES, type PlaceOpens } from '../farm/places'
 import { NIGHT_STEPS } from '../night/end-day'
@@ -29,17 +25,13 @@ import { gatherQuality, haulCount, sizeSkill, stationRate, type GatherPlace, typ
 import { FISH_SIZES, FISHERY, FOREST, HAUL_BASE, STATION_JOB_RULES, STATION_RULES, TOOL_YIELD, WELL_FED_YIELD } from '../gathering/tables'
 import { farmPlace } from '../farm/places'
 import { starShares } from '../goods/stars'
-import { BLOCK_IDS, pairKey } from '../save/v3'
-import { DORM_LEVELS } from '../farm/dorm'
-import { CHAT_POINTS, GATE_EVERY, GIFT_POINTS, giftTaste, STAY_AFFINITY, TASTES, VISITOR_DAYS } from '../farm/visitors'
-import { START_NEEDS, START_SHEET } from '../farm/start'
+import { BLOCK_IDS, pairKey } from '../save/v4'
+import { ARRIVAL_DORM_LEVELS, DORM_LEVELS } from '../farm/dorm'
 import { farmRankOpens } from '../farm/diary'
 import { CHAPTER_POINTS, DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, ROW_GOLD, type Milestone } from '../farm/milestones'
 import { CAST, CAST_IDS } from '../story/cast'
 import { CHAPTER_1_GOALS, CHAPTERS } from '../story/chapters'
-import { CLOSING_SCENE, HELLO_LINES, OPENING_SCENE, type Beat } from '../story/chapter-1'
-import { ARRIVAL_DORM_LEVELS, DORM_LEVELS_V4 } from '../farm/dorm'
-import { NIGHT_STEPS_V4, type NightStepDef } from '../night/end-day'
+import { CLOSING_SCENE, OPENING_SCENE, type Beat } from '../story/chapter-1'
 import { ARRIVAL_KINDS } from '../romance/arrivals'
 import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER, costOf, LADDER_COLOURS, ROUTE_POINTS, SPOUSE_COST } from '../romance/love'
 import { DISLIKED_LINE, GIFT_POINTS_V4, giftStars, LOVE_POINTS } from '../romance/acts'
@@ -53,7 +45,6 @@ import { BREAKFAST_DAYS, CHORE_GROWTH, CHORE_LINES, dishId, LINE_DISH, MENTOR_PO
 import { loveRankFactor } from '../farm/rank-rules'
 import { dateOf } from '../farm/calendar'
 import { FARMER_NAME_MAX } from '../romance/farmer'
-import { OPENING_SCENE_V4 } from '../story/opening-v4'
 import { favouriteOf, storyPackFrom } from '../story/pack'
 import { BOND_HEARTS, BOND_POINTS, bondHearts, CLOSEST_BOND, SHARED_LINE, SIDE_BY_SIDE, SIDE_BY_SIDE_HEARTS, TIE_SEEDS } from '../farm/bonds'
 import { STAND_IN_FILES } from '../story/stand-in'
@@ -84,44 +75,6 @@ function table(head: readonly string[], rows: readonly (readonly Cell[])[]): str
 }
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
-// --- The lines' names (the migration's refunds and the gifts' likes) ------------------------------------------------
-
-const LINE_NAME: Readonly<Record<MaterialLine, string>> = { metal: 'Metal', wood: 'Wood', vegetables: 'Vegetables', fish: 'Fish', stone: 'Stone' }
-const MADE_LINE_NAME: Readonly<Record<MadeLine, string>> = { 'weapon-gem': 'Arms Gems', 'tome-ink': 'Tome Ink', 'armor-fittings': 'Armor Fittings',
-  'accessory-setting': 'Accessory Settings', 'jewel-planet': 'Planet Jewels', 'jewel-moon': 'Moon Jewels' }
-// --- Save v3 and the migration --------------------------------------------------------------------------------
-
-/** Craft Level → her rank in her calling's activity, with the points it starts at. */
-function craftRanks(): string {
-  const lines = MATERIAL_LINES.map((line) => `${LINE_NAME[line]} → ${ACTIVITY_NAMES[LINE_ACTIVITY[line]].toLowerCase()}`).join(', ')
-  const rows = CRAFT_BANDS.map((band, i) => {
-    const to = (CRAFT_BANDS[i + 1]?.from ?? 51) - 1
-    const start = band.points === 0 ? '' : `${band.points.toLocaleString('en-US')} + `
-    const points = band.perLevel === 0 ? band.points.toLocaleString('en-US') : `${start}${band.perLevel} a level above ${band.from} (Lv ${to}: ${craftRank(to).points.toLocaleString('en-US')})`
-    return [`${band.from}–${to}`, RANKS[band.rank]!, points]
-  })
-  return `${table(['Craft Level', 'Rank', 'Points set to'], rows)}
-
-Her calling's line names the activity: ${lines}. Every challenge up to the rank counts as done; her other eight activities start at Novice, 0 points.`
-}
-/** What each v2 item that leaves the game is refunded, by kind and grade. */
-function refunds(): string {
-  const leaving = [
-    ...MATERIAL_LINES.flatMap((line) => [false, true].map((refined) => ({ name: `${LINE_NAME[line]}, ${refined ? 'refined' : 'raw'}`, ids: lineItems(line, refined).map((m) => m.id) }))),
-    ...MADE_LINES.map((line) => ({ name: MADE_LINE_NAME[line], ids: MADE_IDENTITIES.filter((m) => m.line === line).sort((a, b) => a.grade - b.grade).map((m) => m.id) })),
-  ].filter((group) => group.ids.every((id) => !isGoodId(id)))
-  return `${table(['Leaves the game', 'Refund each, by grade', 'Rule'], leaving.map((group) => {
-    const made = MADE_IDENTITIES.find((m) => m.id === group.ids[0])
-    const rule = made ? `15g × grade × ${madeRecipeV4(made.id)[Object.keys(madeRecipeV4(made.id))[0]!]} refined` : '15g × grade'
-    return [group.name, group.ids.map((id) => `${refundOf(id).toLocaleString('en-US')}g`).join(' · '), rule]
-  }))}
-
-Everything else in a v2 Warehouse (ores and ingots, logs and planks, fish and fillets, crystals and cut crystals, raw vegetables) is still a good, and carries over at ★1.`
-}
-/** The beds by Dorm level, and the Farm Rank thresholds. */
-function beds(): string {
-  return table(['Dorm level', ...BEDS.map((_, i) => String(i + 1))], [['Beds', ...BEDS]])
-}
 function farmRanks(): string {
   return table(['Farm Rank', ...FARM_RANK_POINTS.map((_, i) => String(i + 1))], [['Points', ...FARM_RANK_POINTS.map((p) => p.toLocaleString('en-US'))]])
 }
@@ -446,48 +399,14 @@ function stationRecipes(): string {
 
 // --- The roster -----------------------------------------------------------------------------------------------
 
-/** The Dorm's ten levels, their beds, costs and Farm Ranks. */
+/** The Dorm for 20: its eight levels, their beds, costs and Farm Ranks, and the levels that bring an arrival. */
 function dormLevels(): string {
   let total = 0
-  return table(['Level', 'Beds', 'Costs', 'Farm Rank', 'Cumulative'], DORM_LEVELS.map((l) => {
+  return table(['Level', 'Beds', 'Costs', 'Farm Rank', 'Cumulative', 'Brings'], DORM_LEVELS.map((l) => {
     total += l.cost
-    return [l.level, l.beds, l.cost ? g(l.cost) : '—', l.farmRank || '—', g(total)]
+    return [l.level, l.beds, l.cost ? g(l.cost) : '—', l.farmRank || '—', g(total), ARRIVAL_DORM_LEVELS.includes(l.level) ? 'An arrival' : '—']
   }))
 }
-/** The ways an Uma joins. */
-function rosterWays(): string {
-  const days = [1, 2, 3].map((n) => n * GATE_EVERY).join(', ')
-  return table(['Way', 'Who', 'When she joins'], [
-    ['The start', `${START_SHEET} candidates, a C or better in ${START_NEEDS.map((a) => ACTIVITY_NAMES[a].toLowerCase()).join(', ')} among them; one free redraw`, 'You pick 3 (3 − the Umas a migrated save brings)'],
-    ['The Gate', `While a bed is free and no visitor waits, one stops by every ${GATE_EVERY}th morning (days ${days} …), drawn from the release's outfits not on the roster and not waiting`,
-      `At ${STAY_AFFINITY} affinity (2 hearts), the moment a chat or a gift reaches it. She waits ${VISITOR_DAYS} days, then leaves; she may come again`],
-    ['Chapters', 'Each chapter\'s end: drawn C or better in the open activity whose best rank on the roster is lowest, then whose best talent is', 'At once'],
-  ])
-}
-/** Affinity's acts and their limits. */
-function affinityActs(): string {
-  return table(['Act', 'Points', 'Limit'], [
-    ['Chat (tap her)', `+${CHAT_POINTS}`, 'Once a day each'],
-    ['Gift (one good, its stars your choice)', TASTES.map((t) => `${cap(t)} ${signed(GIFT_POINTS[t])}`).join(', '), 'One a day each'],
-  ])
-}
-const LINES: readonly MaterialLine[] = ['metal', 'stone', 'wood', 'fish', 'vegetables']
-/** What each favourite line likes and dislikes as a gift, counted from the rule over the goods. */
-function giftLikes(): string {
-  const byFamily = (line: MaterialLine, taste: 'liked' | 'disliked') => {
-    const counts = new Map<GoodFamily, { raw: number; refined: number }>()
-    for (const good of GOODS) {
-      if (giftTaste(good.id, line) !== taste) continue
-      const c = counts.get(good.family) ?? { raw: 0, refined: 0 }
-      if (good.refined) c.refined++
-      else c.raw++
-      counts.set(good.family, c)
-    }
-    return [...counts].map(([f, c]) => `${FAMILY_NAMES[f]} (${c.raw && c.refined ? `${c.raw} raw, ${c.refined} refined` : c.raw ? `${c.raw} raw` : `${c.refined} refined`})`).join('; ') || '—'
-  }
-  return table(['Favourite line', 'Likes (+30)', 'Dislikes (−20)'], LINES.map((line) => [LINE_NAME[line], byFamily(line, 'liked'), byFamily(line, 'disliked')]))
-}
-
 // --- Farm Rank and chapter 1 ----------------------------------------------------------------------------------
 
 /** The Farm Rank's points, and the save fields they're read from. */
@@ -533,7 +452,7 @@ function chapterOne(): string {
 function chaptersBlock(): string {
   return table(['Chapter', 'Title', 'Opens with', 'Goals', 'Reward'], CHAPTERS.map((c) => [
     c.chapter, c.title, c.opens, c.goals ? c.goals.length : 'Not built yet',
-    c.reward ? [`${g(c.reward.gold)}`, ...c.reward.plans.map((b) => `the ${cap(b)}'s plans (\`buildings.${b} = 0\`)`), ...(c.reward.recruit ? ['a recruit'] : []), `${CHAPTER_POINTS} Farm Rank points`].join(', ') : '—',
+    c.reward ? [`${g(c.reward.gold)}`, ...c.reward.plans.map((b) => `the ${cap(b)}'s plans (\`buildings.${b} = 0\`)`), ...(c.reward.recruit ? ['the chapter’s authored arrival'] : []), `${CHAPTER_POINTS} Farm Rank points`].join(', ') : '—',
   ]))
 }
 /** The town's cast. */
@@ -543,7 +462,6 @@ function castBlock(): string {
 const speakerWords = (beat: Beat): string => {
   switch (beat.speaker.kind) {
     case 'cast': return CAST[beat.speaker.id].name
-    case 'first-hand': return `Your first hand #${beat.speaker.index + 1} (her hello)`
     case 'newest-hand': return 'Your newest hand'
     case 'narrator': return '(narration)'
   }
@@ -552,23 +470,8 @@ const speakerWords = (beat: Beat): string => {
 function scenesBlock(): string {
   return [OPENING_SCENE, CLOSING_SCENE].map((scene) => `**${scene.title}** (\`${scene.id}\`)\n\n${table(['#', 'Who', 'Line'], scene.beats.map((b, i) => [i + 1, speakerWords(b), b.line || '—']))}`).join('\n\n')
 }
-/** The hello lines. */
-function helloLines(): string {
-  return table(['Temperament', 'Her hello'], TEMPERAMENTS.map((t) => [cap(t), HELLO_LINES[t]]))
-}
+// --- Arrivals ---------------------------------------------------------------------------------
 
-// --- The romance core's start ---------------------------------------------------------------------------------
-
-/** The Dorm for 20: save v4's eight levels. */
-function dormV4(): string {
-  const levels = DORM_LEVELS_V4
-  return table(['Level', ...levels.map((l) => String(l.level))], [
-    ['Beds', ...levels.map((l) => l.beds)],
-    ['Costs', ...levels.map((l) => (l.cost === 0 ? '—' : l.cost.toLocaleString('en-US')))],
-    ['Farm Rank', ...levels.map((l) => (l.farmRank === 0 ? '—' : l.farmRank))],
-    ['Brings', ...levels.map((l) => (ARRIVAL_DORM_LEVELS.includes(l.level) ? 'an arrival' : ''))],
-  ])
-}
 /** The five kinds of arrival. */
 function arrivals(): string {
   return table(['Arrival', 'When she arrives', 'Checked'], ARRIVAL_KINDS.map((a) => [`\`${a.kind}\``, a.when, a.where]))
@@ -580,16 +483,6 @@ function arrivalPay(): string {
     ['Its choice: any other option', `+${CHOICE_OTHER}`], ['Written with no choice', 'Nothing more'], ['Written with more than one choice', 'The first pays; the rest are words only'],
   ])
 }
-/** "The Overgrown Farm": v4's opening scene. */
-function openingV4(): string {
-  return table(['#', 'Who', 'Line'], OPENING_SCENE_V4.beats.map((b, i) => [i + 1, speakerWords(b), b.line]))
-}
-/** The steps v4 adds or changes from v3's. */
-function nightV4(): string {
-  const same = (s: NightStepDef) => NIGHT_STEPS.some((v3) => v3.name === s.name && v3.what === s.what)
-  return table(['Step', 'Function', 'What happens'], NIGHT_STEPS_V4.filter((s) => !same(s)).map((s) => [s.step, `\`${s.name}\``, s.what]))
-}
-
 // --- The ladders and points ----------------------------------------------------------------------------------
 const whole = (n: number) => n.toLocaleString('en-US')
 /** Each heart's cost, the ladders' totals and the route's. */
@@ -654,13 +547,12 @@ function ladderColours(): string {
     ['Spouse', `S0–S5 (${SPOUSE_COST} a level)`, `gold \`${LADDER_COLOURS.spouse}\``],
   ])
 }
-/** The hearts' factor on rank points, by save. */
+/** Her friendship's factor on rank points. */
 function heartsFactor(): string {
   const levels = (factor: number) => Array.from({ length: 10 }, (_, l) => l).filter((l) => loveRankFactor({ stage: 'friendship', level: l }) === factor)
   const span = (list: number[]) => (list.length === 1 ? `F${list[0]}` : `F${list[0]}–F${list.at(-1)}`)
-  return table(['Save', '×1', '×1.05', '×1.10'], [
-    ['v3 (the live farm): your affinity', '0–4 hearts', '5–9 hearts', '10 hearts'],
-    ['v4 (romance build): her friendship', span(levels(1)), span(levels(1.05)), `${loveRankFactor({ stage: 'confession', level: 10 }) === 1.1 ? 'F10 on: her confession, romance and spouse' : '?'}`],
+  return table(['×1', '×1.05', '×1.10'], [
+    [span(levels(1)), span(levels(1.05)), `${loveRankFactor({ stage: 'confession', level: 10 }) === 1.1 ? 'F10 on: her confession, romance and spouse' : '?'}`],
   ])
 }
 // --- The perks' words ---------------------------------------------------------------------------------------
@@ -764,7 +656,7 @@ function signatureDishes(): string {
     + '\n\nHer loved good, when it’s a dish, is her signature dish as it is. The recipe joins `workshops.recipes` once (a recipe the farm knows stays once) and her route keeps its id (`love.dish`).'
 }
 
-/** The stand-in pack in git: the dark build's cast. */
+/** The stand-in pack in git: the dev server's and the tests' cast. */
 function standIn(): string {
   const pack = storyPackFrom(STAND_IN_FILES)
   return table(['Character', 'Outfit', 'Calling', 'Favourite line', 'Arrives', 'Bible', 'Scripted'], pack.cast.umas.map((u) => [
@@ -949,7 +841,7 @@ function ringsBlock(): string {
 }
 /** The bench's rule, its refusals, and what the merge game will add. */
 function benchRecipe(): string {
-  return table(['', 'The ring bench (v4)'], [
+  return table(['', 'The ring bench'], [
     ['Opens', 'The night after the first Romance 8 event anyone plays: `buildings.forge = 0`, and Ida Stone’s scene the next morning'],
     ['A ring of grade g', `${RING_INPUTS} refined goods of grade g, any family, any mix; the mining families’ (ingots, blocks, cut gems) from chapter ${MINING_CHAPTER}`],
     ['Cost', 'The goods only: no gold, no game, no assistant, no score'],
@@ -981,13 +873,13 @@ function housesBlock(): string {
   return table(['', 'Rooms', 'Build', 'Extend', 'Opens'], [...rows,
     ['**All**', `**${HOUSE_ROOMS + HOUSE_COSTS.length * EXTENDED_ROOMS} rooms**`, `**${g(sum(HOUSE_COSTS))}**`, `**${g(sum(HOUSE_COSTS) + sum(EXTENSION_COSTS))} extended**`, '']])
 }
-/** The homestead's rows on the v4 map, after the yard, the town edge last. */
+/** The homestead's rows on the map, after the yard, the town edge last. */
 function homesteadMap(): string {
   const rows = [...new Set(HOMESTEAD_PLACES.map((p) => p.row))].map((row) => {
     const here = HOMESTEAD_PLACES.filter((p) => p.row === row)
     return [`${row}`, here.map((p) => `${p.name} (\`${p.frame}\`)`).join(' · ')]
   })
-  return table(['Row (v4)', 'Places'], [...rows, ['After the last shown', 'The town edge: Shop · Festival ground · Expedition post']])
+  return table(['Row', 'Places'], [...rows, ['After the last shown', 'The town edge: Shop · Festival ground · Expedition post']])
 }
 /** The household milestones. */
 function householdMilestonesBlock(): string {
@@ -1022,8 +914,8 @@ function furnitureBlock(): string {
 }
 
 export function renderBlock(key: string): string | null {
-  const blocks_: Record<string, () => string> = { 'craft-ranks': craftRanks, refunds, beds, 'farm-ranks': farmRanks,
-    'dorm-v4': dormV4, arrivals, 'arrival-pay': arrivalPay, 'opening-v4': openingV4, 'night-v4': nightV4, 'stand-in': standIn, 'farmer-name': farmerName,
+  const blocks_: Record<string, () => string> = { 'farm-ranks': farmRanks,
+    arrivals, 'arrival-pay': arrivalPay, 'stand-in': standIn, 'farmer-name': farmerName,
     'route-costs': routeCosts, 'love-points': lovePoints, 'gift-stars': giftStarsBlock, 'birthday-map': birthdayMap, 'ready-rules': readyRules,
     'ready-waits': readyWaits, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor, 'perk-words': perkWordsBlock,
     'perk-effects': perkEffects, 'perk-lines': perkLines, 'perk-caps': perkCaps, 'signature-dish': signatureDishes,
@@ -1038,8 +930,8 @@ export function renderBlock(key: string): string | null {
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,
     'place-activity': placeActivity, 'forest-areas': forestAreas, 'fishing-spots': fishingSpots, 'fish-sizes': fishSizes, 'size-skill': sizeSkills,
     'haul-day': haulDay, 'haul-factors': haulFactors, 'gather-quality': gatherQualities, stations, 'station-day': stationDay, 'station-recipes': stationRecipes,
-    'dorm-levels': dormLevels, 'roster-ways': rosterWays, 'affinity-acts': affinityActs, 'gift-likes': giftLikes,
+    'dorm-levels': dormLevels,
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, 'chapter-1': chapterOne,
-    chapters: chaptersBlock, cast: castBlock, scenes: scenesBlock, 'hello-lines': helloLines }
+    chapters: chaptersBlock, cast: castBlock, scenes: scenesBlock }
   return blocks_[key]?.() ?? null
 }

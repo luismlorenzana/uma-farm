@@ -1,5 +1,5 @@
 // Ranks: rank points a day, the challenges, rank-ups at night, what a
-// rank gives and the favourite line. Invented outfit ids and test kinds (`kinds.fixture.ts`).
+// rank gives and the favourite line. Invented ids and test kinds (`kinds.fixture.ts`); favourites from an invented cast.
 import { describe, expect, it } from 'vitest'
 import { harvestAll, harvestQuality, plantAll, seedsBackChance, setTender, tendedGrowth } from '../fields/fields'
 import { cropLevelQuality, quality, TENDED_QUALITY } from '../goods/stars'
@@ -7,39 +7,40 @@ import { endDay, type NightContext } from '../night/end-day'
 import { TEST_KINDS } from '../night/kinds.fixture'
 import type { RankLine } from '../night/summary'
 import { startLoopJob } from '../save/loop-work'
-import { parseSaveV3 } from '../save/parse-v3'
-import { newRosterUma, newSave, type Plot, type RankState, type SaveV3 } from '../save/v3'
-import type { FarmOutfit } from '../roster/roster'
+import { parseSaveV4 } from '../save/parse-v4'
+import { newLove, newRosterUma, newSave, type Love, type Plot, type RankState, type SaveV4 } from '../save/v4'
+import type { Calling, CastEntry } from '../story/authored'
+import { STAND_IN_CAST } from '../story/authored.fixture'
 import {
-  affinityPoints, challengeFor, challengeMet, CHALLENGES, countChallenge, daysToRank, FAVOURITE_ACTIVITIES, favouriteActivity, heartsOf,
+  challengeFor, challengeMet, CHALLENGES, countChallenge, daysToRank, FAVOURITE_ACTIVITIES, heartsFactorOf, loveRankFactor,
   PLACE_ACTIVITY, pointsFull, RANK_BENEFITS, rankBenefits, rankPoints, rankPointsForDay, rankQuality, tickRankRules, type ChallengeEvent,
   type TermsOf,
 } from './rank-rules'
 import { AREA_NAMES, SPOT_NAMES } from '../gathering/ids'
-import { ACTIVITIES, RANK_POINTS, type Activity, type Rank } from './ranks'
+import { ACTIVITIES, LINE_ACTIVITY, RANK_POINTS, type Activity, type Rank } from './ranks'
 import { TALENT_D, talentQuality, type TalentStep } from './talents'
 
 const AT = '2026-11-09T10:00:00.000Z'
 const LATER = '2026-11-09T21:30:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
-/** 101 calls Vegetables (farming), 202 Wood (foraging), 303 Metal (mining). */
-const ROSTER: FarmOutfit[] = [
-  { outfitId: '101', trade: 'healer', line: 'vegetables' },
-  { outfitId: '202', trade: 'physical-hybrid', line: 'wood' },
-  { outfitId: '303', trade: 'physical', line: 'metal' },
-]
-const CONTEXT: NightContext = { roster: ROSTER, kinds: TEST_KINDS }
+const entry = (characterId: string, calling: Calling): CastEntry => ({ characterId, outfitId: `${characterId}01`, arrives: { kind: 'opening' }, calling, paragraph: 'Invented.' })
+/** 101 calls farming, 202 foraging, 303 mining: their favourite lines (no bibles: the calling stands in). */
+const STORY: NonNullable<NightContext['story']> = {
+  cast: { ...STAND_IN_CAST, umas: [entry('101', 'farming'), entry('202', 'foraging'), entry('303', 'mining')] }, bibles: new Map(), ties: { version: 1, ties: [] },
+}
+const CONTEXT: NightContext = { kinds: TEST_KINDS, story: STORY }
 
-function farm(day = 1): SaveV3 {
+function farm(day = 1): SaveV4 {
   const save = newSave('u1', AT)
   return {
-    ...save, calendar: { day }, roster: { 101: newRosterUma(1), 202: newRosterUma(1), 303: newRosterUma(1) },
+    ...save, calendar: { day }, roster: { 101: newRosterUma(1), 202: newRosterUma(1), 303: newRosterUma(1) }, love: { 101: newLove(), 202: newLove(), 303: newLove() },
     dorm: { level: 1, home: ['101', '202', '303'], swaps: [] }, items: { 'seed-carrot': [9, 0, 0, 0, 0] },
   }
 }
-const night = (save: SaveV3, context: NightContext = CONTEXT) => endDay(save, context, LATER)
-const nights = (save: SaveV3, n: number, context: NightContext = CONTEXT) => Array.from({ length: n }).reduce<SaveV3>((s) => night(s, context), save)
-const withRank = (save: SaveV3, id: string, activity: Activity, state: Partial<RankState>, more: Partial<SaveV3['roster'][string]> = {}): SaveV3 => {
+const withLove = (save: SaveV4, id: string, love: Partial<Love>): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })
+const night = (save: SaveV4, context: NightContext = CONTEXT) => endDay(save, context, LATER)
+const nights = (save: SaveV4, n: number, context: NightContext = CONTEXT) => Array.from({ length: n }).reduce<SaveV4>((s) => night(s, context), save)
+const withRank = (save: SaveV4, id: string, activity: Activity, state: Partial<RankState>, more: Partial<SaveV4['roster'][string]> = {}): SaveV4 => {
   const uma = save.roster[id]!
   return { ...save, roster: { ...save.roster, [id]: { ...uma, ...more, ranks: { ...uma.ranks, [activity]: { ...uma.ranks[activity], ...state } } } } }
 }
@@ -48,17 +49,18 @@ const tended = (save = farm()) => setTender(plantAll(save, 'A', 'carrot'), 'A', 
 const D_TERMS: TermsOf = () => ({ talent: TALENT_D, favourite: false })
 
 describe('rank points a day', () => {
-  it('pays 10 × her talent\'s factor, ×1.2 in her favourite line, ×1.25 well fed, ×1.05 at 5 hearts and ×1.10 at 10', () => {
-    const day = (talent: TalentStep, favourite = false, wellFed = false, affinity = 0) => rankPointsForDay({ talent, favourite, wellFed, heartsFactor: affinityPoints(affinity) })
+  it('pays 10 × her talent\'s factor, ×1.2 in her favourite line, ×1.25 well fed, ×1.05 from Friendship 5 and ×1.10 from 10', () => {
+    const day = (talent: TalentStep, favourite = false, wellFed = false, level = 0) =>
+      rankPointsForDay({ talent, favourite, wellFed, heartsFactor: loveRankFactor(level >= 10 ? { stage: 'confession', level: 10 } : { stage: 'friendship', level }) })
     expect(day(3)).toBe(10)
     expect(day(4, true)).toBe(13.2)
     expect(day(0)).toBe(8)
     expect(day(7, true)).toBe(18)
     expect(day(3, false, true)).toBe(12.5)
-    expect([0, 499, 500, 999, 1000].map((a) => day(3, false, false, a))).toEqual([10, 10, 10.5, 10.5, 11])
-    expect(day(7, true, true, 1000)).toBe(24.75)
-    expect([0, 99, 100, 550, 1000, 1200].map(heartsOf)).toEqual([0, 0, 1, 5, 10, 10])
-    expect(affinityPoints(500)).toBe(1.05)
+    expect([0, 4, 5, 9, 10].map((l) => day(3, false, false, l))).toEqual([10, 10, 10.5, 10.5, 11])
+    expect(day(7, true, true, 10)).toBe(24.75)
+    expect(heartsFactorOf(withLove(farm(), '101', { level: 5 }), '101')).toBe(1.05)
+    expect(heartsFactorOf(farm(), '999')).toBe(1)
     // A workshop play and an expedition pass their own base, with the same factors.
     expect(rankPoints(20, { talent: 3, favourite: false, wellFed: true, heartsFactor: 1 })).toBe(25)
   })
@@ -112,7 +114,7 @@ describe('rank-ups at night', () => {
     save = night(save)
     expect(save.roster['101']!.ranks.farming).toEqual({ points: 41, rank: 1, challenge: 0 })
     expect(save.summary!.ranks).toEqual([{ kind: 'rank-up', outfitId: '101', activity: 'farming', rank: 1 }])
-    expect(parseSaveV3(json(save), 'save', TEST_KINDS)).toEqual(save)
+    expect(parseSaveV4(json(save), 'save', TEST_KINDS)).toEqual(save)
   })
 
   it('takes one rank a night, one challenge at a time, and says when the next one\'s points are already full', () => {
@@ -154,11 +156,11 @@ describe('who worked today', () => {
   it('pays a tender whose block has a growing plot, and never a tender of an empty block', () => {
     const empty = setTender(farm(), 'A', '101')
     expect(night(empty).roster['101']!.ranks.farming.points).toBe(0)
-    // 101's favourite is farming (Vegetables): 10 × 1.2.
+    // 101's favourite is farming: 10 × 1.2.
     expect(night(tended()).roster['101']!.ranks.farming.points).toBe(12)
     // A C talent in her favourite line: 10 × 1.1 × 1.2.
     expect(night(tended(), { ...CONTEXT, talentOf: (_id, a) => (a === 'farming' ? 4 : 3) }).roster['101']!.ranks.farming.points).toBe(13.2)
-    // Outside her favourite: 202 tends (Wood calls foraging).
+    // Outside her favourite: 202 tends (she calls foraging).
     expect(night(setTender(plantAll(farm(), 'A', 'carrot'), 'A', '202')).roster['202']!.ranks.farming.points).toBe(10)
   })
 
@@ -177,13 +179,13 @@ describe('who worked today', () => {
     expect(save.roster['101']!.ranks.fishing.points).toBe(10)
   })
 
-  it('lifts the points for the well fed and for your hearts, read before the night counts well fed down', () => {
+  it('lifts the points for the well fed and for her friendship, read before the night counts well fed down', () => {
     const fed = withRank(tended(), '202', 'farming', {}, { wellFed: 1 })
     const both = setTender(fed, 'A', '202')
     const after = night(both)
     expect(after.roster['202']!.ranks.farming.points).toBe(12.5)
     expect(after.roster['202']!.wellFed).toBe(0)
-    const fond = setTender(withRank(tended(), '202', 'farming', {}, { affinity: 500 }), 'A', '202')
+    const fond = setTender(withLove(tended(), '202', { level: 5 }), 'A', '202')
     expect(night(fond).roster['202']!.ranks.farming.points).toBe(10.5)
   })
 
@@ -238,7 +240,7 @@ describe('the challenges', () => {
   })
 
   it('counts a tended harvest for the tender, by her rank, and none untended', () => {
-    const ripe = (save: SaveV3): SaveV3 => {
+    const ripe = (save: SaveV4): SaveV4 => {
       const plot: Plot = { crop: 'carrot', growth: 3.5, ready: true, regrowing: false, own: false }
       return { ...save, fields: { blocks: save.fields.blocks.map((b) => ({ ...b, plots: b.plots.map(() => ({ ...plot })) })) } }
     }
@@ -272,8 +274,8 @@ describe('what a rank gives', () => {
     expect(RANK_POINTS).toEqual([0, 40, 160, 400, 900, 2000])
   })
 
-  it('makes her calling\'s line her favourite: Metal and Stone mining, Wood foraging, Fish fishing, Vegetables farming', () => {
-    expect((['metal', 'stone', 'wood', 'fish', 'vegetables'] as const).map((line) => favouriteActivity({ line }))).toEqual(['mining', 'mining', 'foraging', 'fishing', 'farming'])
+  it('makes a line\'s activity a favourite: Metal and Stone mining, Wood foraging, Fish fishing, Vegetables farming', () => {
+    expect((['metal', 'stone', 'wood', 'fish', 'vegetables'] as const).map((line) => LINE_ACTIVITY[line])).toEqual(['mining', 'mining', 'foraging', 'fishing', 'farming'])
     expect(FAVOURITE_ACTIVITIES).toEqual(['farming', 'mining', 'fishing', 'foraging'])
   })
 })

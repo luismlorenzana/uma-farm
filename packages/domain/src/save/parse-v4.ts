@@ -1,5 +1,5 @@
-// Save v4's parse: as strict as v3's, whose parts it shares (`parse-loop.ts`). Unknown
-// keys and v3-only keys (`start`, `visitors`, a roster Uma's `affinity`) are refused; roster keys are character ids by form
+// Save v4's parse: strict keys, explicit paths, every id checked, the farm's parts from `parse-loop.ts`. Unknown
+// keys (an older save's `start`, `visitors`, a roster Uma's `affinity` among them) are refused; roster keys are character ids by form
 // (the API has no story pack or master data); `love` holds exactly the roster's keys, each in range; `memories` and
 // `arrivals` name roster Umas; the farmer's name is empty or within its rule; the Dorm is on its eight levels. Each
 // part of the romance adds the checks for what it fills. Today's evenings fill the
@@ -7,12 +7,11 @@
 // kinds, and its invitations are one (two from 10 married), each a different Uma, asking for a date game.
 import { dateOf, FESTIVAL_IDS, festivalOn } from '../farm/calendar'
 import { cleanFarmerName, farmerNameIssue, houseNameIssue } from '../romance/farmer'
-import { isCropId, isGoodId, isGoodIdV4, type CropId } from '../goods/ids'
-import { isWarehouseIdV4, parseStockKey } from './warehouse'
+import { isCropId, isGoodId, isGoodOrRingId, type CropId } from '../goods/ids'
+import { isStockId, parseStockKey } from './warehouse'
 import { LOOP_REQUESTS } from '../gathering/ids'
-import type { HeartLine, MorningSummaryV4, NewsLineV4 } from '../night/summary'
+import type { HeartLine, MorningSummary } from '../night/summary'
 import { bool, count, int, list, object, oneOf, parseAccount, record, text } from './parse'
-import { isDishId, pairKey } from './v3'
 import {
   counts, day, fail, KEY, member, outfit, parseBinLines, parseBonds, parseBoard, parseBuildings, parseDiary, parseDig, parseDorm, parseExpeditions,
   parseFarm, parseFields, parseNewsLines, parseNudges, parseRanch, parseRankLines, parseRanks, parseTools, parseWarehouse, parseWork, parseWorkLines,
@@ -20,8 +19,11 @@ import {
 } from './parse-loop'
 import {
   EVENING_KINDS, eveningsOn, FARMHOUSE, FESTIVAL_NIGHT, FINALE_MARRIED, FURNITURE_PIECES, invitesFor, LOVE_STAGES, marriedCount, MAX_HOUSES, residentsOf, roomsOf, vowsOn,
-  type EveningKind, type Homestead, type InviteKind, type Love, type RosterUmaV4, type SaveV4, type TodayV4,
+  isDishId, pairKey, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUma, type SaveV4, type TodayV4,
 } from './v4'
+
+export { isRosterId, LOOP_SLOTS, LOOP_WORK_PLACES } from './parse-loop'
+export type { LoopKind, LoopKinds, LoopPlaceId, LoopRequestKind, LoopRequestKinds } from './parse-loop'
 
 export const SAVE_V4_KEYS = [
   'version', 'account', 'farmer', 'calendar', 'gold', 'today', 'roster', 'love', 'dorm', 'items', 'bin', 'work', 'fields', 'crops', 'ranch', 'places',
@@ -33,8 +35,8 @@ const MAX_MEMORIES = 64
 
 // --- The roster and her route ----------------------------------------------------------------------------------------
 
-function parseRoster(value: unknown, path: string, today: number): Record<string, RosterUmaV4> {
-  const out: Record<string, RosterUmaV4> = {}
+function parseRoster(value: unknown, path: string, today: number): Record<string, RosterUma> {
+  const out: Record<string, RosterUma> = {}
   for (const [id, raw] of Object.entries(record(value, path))) {
     const at = `${path}.${id}`
     outfit(id, at)
@@ -323,12 +325,12 @@ function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>, 
   }), path, (h) => (h.kind === 'bond' ? `bond:${h.a}:${h.b}` : h.kind === 'side' || h.kind === 'chores' || h.kind === 'perks' || h.kind === 'house' || h.kind === 'misses' || h.kind === 'vows' ? h.kind : `${h.kind}:${h.id}`))
 }
 
-function parseSummaryV4(value: unknown, path: string, today: number, roster: ReadonlySet<string>, houses: number): MorningSummaryV4 {
+function parseSummaryV4(value: unknown, path: string, today: number, roster: ReadonlySet<string>, houses: number): MorningSummary {
   const o = object(value, path, ['day', 'bin', 'work', 'ranks', 'hearts', 'news', 'nudges'])
   if (o.day !== today) fail(`${path}.day`, 'expected today: a summary is the morning it opens on')
   return {
-    day: today, bin: parseBinLines(o.bin, `${path}.bin`, 4), work: parseWorkLines(o.work, `${path}.work`), ranks: parseRankLines(o.ranks, `${path}.ranks`, roster),
-    hearts: parseHearts(o.hearts, `${path}.hearts`, roster, houses), news: parseNewsLines(o.news, `${path}.news`, roster, 4) as NewsLineV4[],
+    day: today, bin: parseBinLines(o.bin, `${path}.bin`), work: parseWorkLines(o.work, `${path}.work`), ranks: parseRankLines(o.ranks, `${path}.ranks`, roster),
+    hearts: parseHearts(o.hearts, `${path}.hearts`, roster, houses), news: parseNewsLines(o.news, `${path}.news`, roster),
     nudges: parseNudges(o.nudges, `${path}.nudges`, roster),
   }
 }
@@ -341,7 +343,7 @@ export function parseSaveV4(value: unknown, path = 'save', kinds: LoopRequestKin
   const today = day(c.day, `${path}.calendar.day`)
   const roster = parseRoster(o.roster, `${path}.roster`, today)
   const ids = new Set(Object.keys(roster))
-  const buildings = parseBuildings(o.buildings, `${path}.buildings`, 4)
+  const buildings = parseBuildings(o.buildings, `${path}.buildings`)
   const homestead = parseHomestead(o.homestead, `${path}.homestead`, today, ids)
   const arrivals = unique(list(o.arrivals, `${path}.arrivals`, 0, ids.size).map((v, i) => member(v, `${path}.arrivals.${i}`, ids)), `${path}.arrivals`)
   const love = parseLoveAll(o.love, `${path}.love`, ids, today, homestead.houses.length)
@@ -354,9 +356,9 @@ export function parseSaveV4(value: unknown, path = 'save', kinds: LoopRequestKin
     today: parseToday(o.today, `${path}.today`, ids, today, marriedCount({ love }), vowsOn(homestead, today)),
     roster,
     love,
-    dorm: parseDorm(o.dorm, `${path}.dorm`, ids, buildings.dorm, 4),
-    items: parseWarehouse(o.items, `${path}.items`, isWarehouseIdV4),
-    bin: parseWarehouse(o.bin, `${path}.bin`, isGoodIdV4),
+    dorm: parseDorm(o.dorm, `${path}.dorm`, ids, buildings.dorm),
+    items: parseWarehouse(o.items, `${path}.items`, isStockId),
+    bin: parseWarehouse(o.bin, `${path}.bin`, isGoodOrRingId),
     work: parseWork(o.work, `${path}.work`, ids, kinds),
     fields: parseFields(o.fields, `${path}.fields`, ids),
     crops: counts(o.crops, `${path}.crops`, isCropId, 'unknown crop') as Partial<Record<CropId, number>>,
@@ -369,9 +371,9 @@ export function parseSaveV4(value: unknown, path = 'save', kinds: LoopRequestKin
     tools: parseTools(o.tools, `${path}.tools`),
     workshops: parseWorkshops(o.workshops, `${path}.workshops`, ids),
     expeditions: parseExpeditions(o.expeditions, `${path}.expeditions`, ids),
-    bonds: parseBonds(o.bonds, `${path}.bonds`, ids, count),
+    bonds: parseBonds(o.bonds, `${path}.bonds`, ids),
     board: parseBoard(o.board, `${path}.board`),
-    diary: parseDiary(o.diary, `${path}.diary`, isGoodIdV4),
+    diary: parseDiary(o.diary, `${path}.diary`),
     farm: parseFarm(o.farm, `${path}.farm`),
     homestead,
     memories: parseMemories(o.memories, `${path}.memories`, ids),

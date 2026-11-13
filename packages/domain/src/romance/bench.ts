@@ -1,5 +1,5 @@
 // The ring bench: the proposal needs a ring, and the Forge's
-// merge game comes later, so on save v4 the Forge's building opens early as a bench with no game. The night after the
+// merge game comes later, so the Forge's building opens early as a bench with no game. The night after the
 // first Romance 8 event anyone plays, step 8 sets `buildings.forge = 0` (the building held, its fire not lit) and Ida
 // Stone's scene comes up the next morning (`story/bench.ts`); chapter 7 still lights the fire.
 //
@@ -9,19 +9,19 @@
 //
 // Worked: 3 Cedar Planks (G3, 60g each) make an Iron Ring (`ring-g3`, 340g); 3 Salmon Fillets (G5) a Cobalt Ring. Her
 // ring's bonus once married is its grade in % at her line (+1% a grade, inside her own cap); a better ring may be
-// given any day from the proposal on, the old one back in the Warehouse. Pure; v3's Forge is untouched (`benchOpen` is v4's
-// only). Loaded with the bench's sheet, the night and the events.
+// given any day from the proposal on, the old one back in the Warehouse. Pure. Loaded with the bench's sheet, the night
+// and the events.
 import { goodOf, GOODS, isRingId, ringGrade, ringId, RING_IDS, type GoodFamily } from '../goods/ids'
 import { starPrice } from '../goods/prices'
 import { SaveRuleError } from '../save/rules'
 import type { FarmSave, SaveV4 } from '../save/v4'
 import { addGoods, goodCount, takeGoods } from '../save/warehouse'
-import type { Warehouse } from '../save/v3'
+import type { Warehouse } from '../save/v4'
 
 // --- The bench's state -----------------------------------------------------------------------------------
 
-/** Whether the Forge stands as the ring bench: a v4 farm with `buildings.forge` set. Never on v3. */
-export const benchOpen = (save: Pick<FarmSave, 'version' | 'buildings'>): boolean => save.version === 4 && save.buildings.forge !== undefined
+/** Whether the Forge stands as the ring bench: `buildings.forge` set. */
+export const benchOpen = (save: Pick<FarmSave, 'buildings'>): boolean => save.buildings.forge !== undefined
 /** The rung whose first event anywhere opens the bench. */
 export const BENCH_RUNG = 'r8'
 /** Whether the bench opens tonight: not standing yet, and an Uma's Romance 8 is in her Memories. */

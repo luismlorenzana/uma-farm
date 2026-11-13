@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import { earnGold, spendGold } from './gold'
 import { SaveRuleError } from './rules'
-import type { Warehouse } from './v3'
+import type { Warehouse } from './v4'
 import { addGoods, fromWorkStock, goodCount, parseStockKey, stockKey, stockTotal, takeGoods, workStock } from './warehouse'
 
 const STOCK: Warehouse = { carp: [3, 2, 0, 0, 1], 'seed-carrot': [9, 0, 0, 0, 0], 'pine-log': [0, 0, 0, 0, 0] }

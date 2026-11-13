@@ -1,45 +1,47 @@
 // End the day: the nine steps in order, seeded and replayable, jobs counted in days on
-// uma-work's clock, well fed's quarter day, the calendar turning, the summary, and one stamp a night. Invented outfit ids
-// and test kinds (`kinds.fixture.ts`) .
+// uma-work's clock, well fed's quarter day, the calendar turning, the summary, and one stamp a night. Invented ids
+// and test kinds (`kinds.fixture.ts`); no story pack, so the romance's steps run without one.
 import { endsAt } from '@luismlorenzana/uma-work'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DAY_MS } from '../farm/calendar'
 import { GOLD_SHIPPED, ship, takeBack } from '../save/bin'
 import { collectLoopAll, editLoopQueue, loopWorking, settleLoopWork, startLoopJob } from '../save/loop-work'
 import { loopReadyWork } from '../save/work-readings'
-import { parseSaveV3, SAVE_V3_KEYS } from '../save/parse-v3'
-import { newRosterUma, newSave, type SaveV3 } from '../save/v3'
+import { parseSaveV4, SAVE_V4_KEYS } from '../save/parse-v4'
+import { newLove, newRosterUma, newSave, newTodayV4, type SaveV4 } from '../save/v4'
 import { emptyNotes, endDay, NIGHT_STEPS, runNight, tickRanks, type NightContext, type NightStep } from './end-day'
 import { TEST_KINDS } from './kinds.fixture'
 import { summarySections } from './summary'
 
 const AT = '2026-11-09T10:00:00.000Z'
 const LATER = '2026-11-09T21:30:00.000Z'
-const CONTEXT: NightContext = { roster: [], kinds: TEST_KINDS }
+const CONTEXT: NightContext = { kinds: TEST_KINDS }
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
 /** Three Umas home on `day`, with five Wheat. */
-function farm(day = 1): SaveV3 {
+function farm(day = 1): SaveV4 {
   const save = newSave('u1', AT)
   return {
-    ...save, calendar: { day }, roster: { 101: newRosterUma(1), 202: newRosterUma(1), 303: newRosterUma(1) },
+    ...save, calendar: { day }, roster: { 101: newRosterUma(1), 202: newRosterUma(1), 303: newRosterUma(1) }, love: { 101: newLove(), 202: newLove(), 303: newLove() },
     dorm: { level: 1, home: ['101', '202', '303'], swaps: [] }, items: { ...save.items, wheat: [5, 0, 0, 0, 0] },
   }
 }
 const gather = (days = 1) => ({ kind: 'gather', item: 'pine-log', count: days })
 const make = (days: number) => ({ kind: 'make', item: 'wheat-flour', count: days })
-const start = (save: SaveV3, outfitId: string, request: ReturnType<typeof gather>) =>
+const start = (save: SaveV4, outfitId: string, request: ReturnType<typeof gather>) =>
   startLoopJob(save, { outfitId, place: request.kind === 'make' ? 'mill' : 'forest', slot: Number(outfitId) % 4, request }, AT, TEST_KINDS)
-const night = (save: SaveV3, now = LATER) => endDay(save, CONTEXT, now)
-const nights = (save: SaveV3, n: number) => Array.from({ length: n }).reduce<SaveV3>((s) => night(s), save)
+const night = (save: SaveV4, now = LATER) => endDay(save, CONTEXT, now)
+const nights = (save: SaveV4, n: number) => Array.from({ length: n }).reduce<SaveV4>((s) => night(s), save)
 
 afterEach(() => vi.useRealTimers())
 
 describe('the night', () => {
   it('runs nine steps in order, each a named function', () => {
     expect(NIGHT_STEPS.map((s) => `${s.step} ${s.name}`)).toEqual([
-      '1 payTheBin', '2 growCrops', '3 tendAnimals', '4 moveJobs', '4 countHauls', '5 resetWorkshops', '6 tickRanks', '6 tickBonds', '6 countWellFed',
-      '7 witherCrops', '7 turnCalendar', '8 settleDorm', '8 gateVisitors', '8 checkGoals', '9 buildSummary',
+      '1 noteTonight', '1 payTheBin', '2 growCrops', '3 tendAnimals', '4 moveJobs', '4 countHauls', '4 nightExtras', '4 nightChores', '5 resetWorkshops',
+      '6 tickRanks', '6 tickBonds', '6 payLine', '6 shareTheHouses', '6 levelAtNight', '6 countWellFed', '7 witherCrops', '7 turnCalendar',
+      '8 settleDorm', '8 arriveUmas', '8 checkGoals', '8 openRingBench', '8 householdMilestones',
+      '9 serveTheReception', '9 houseMorningStep', '9 moveInRooms', '9 vowsMorning', '9 heartsMorning', '9 morningItems', '9 drawInvitations', '9 buildSummary',
     ])
   })
 
@@ -50,8 +52,8 @@ describe('the night', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2030-01-01T00:00:00Z'))
     expect(night(save)).toEqual(once)
-    expect(Object.keys(once).sort()).toEqual([...SAVE_V3_KEYS].sort())
-    expect(parseSaveV3(json(once), 'save', TEST_KINDS)).toEqual(once)
+    expect(Object.keys(once).sort()).toEqual([...SAVE_V4_KEYS].sort())
+    expect(parseSaveV4(json(once), 'save', TEST_KINDS)).toEqual(once)
   })
 
   it('stamps updatedAt once, with real time, after the ninth step', () => {
@@ -89,7 +91,7 @@ describe('jobs in days on the calendar\'s clock', () => {
     const queued = editLoopQueue(start(farm(), '101', gather()), { outfitId: '101', add: { request: gather(), building: 'forest' } }, AT, TEST_KINDS)
     // A stand-in step: everyone who worked today reaches Skilled foraging.
     const ranks: NightStep = (n) => ({
-      ...n, save: { ...(n.save as SaveV3), roster: Object.fromEntries(Object.entries((n.save as SaveV3).roster).map(([id, uma]) => [id,
+      ...n, save: { ...(n.save as SaveV4), roster: Object.fromEntries(Object.entries((n.save as SaveV4).roster).map(([id, uma]) => [id,
         n.notes.worked.some((w) => w.outfitId === id) ? { ...uma, ranks: { ...uma.ranks, foraging: { points: 160, rank: 2 as const, challenge: 0 } } } : uma])) },
     })
     const steps = NIGHT_STEPS.map((s) => (s.run === tickRanks ? { ...s, run: ranks } : s))
@@ -117,7 +119,7 @@ describe('jobs in days on the calendar\'s clock', () => {
 })
 
 describe('well fed', () => {
-  const fed = (save: SaveV3, id: string, days: number): SaveV3 => ({ ...save, roster: { ...save.roster, [id]: { ...save.roster[id]!, wellFed: days } } })
+  const fed = (save: SaveV4, id: string, days: number): SaveV4 => ({ ...save, roster: { ...save.roster, [id]: { ...save.roster[id]!, wellFed: days } } })
 
   it('gives a 2-day making job a quarter day a night, through acceleratedMs, and counts the days down', () => {
     const save = fed(start(farm(), '202', make(2)), '202', 2)
@@ -135,7 +137,7 @@ describe('well fed', () => {
     // A making job with 4 hours left at tonight's start gains only those 4 hours.
     const save = fed(start(farm(), '202', make(2)), '202', 1)
     const entry = save.work['202']!.entries[0]!
-    const late: SaveV3 = { ...save, calendar: { day: 2 }, work: { 202: { ...save.work['202']!, entries: [{ ...entry, seconds: [(DAY_MS + 14_400_000) / 1000] }] } } }
+    const late: SaveV4 = { ...save, calendar: { day: 2 }, work: { 202: { ...save.work['202']!, entries: [{ ...entry, seconds: [(DAY_MS + 14_400_000) / 1000] }] } } }
     const morning = night(late)
     expect(morning.work['202']!.entries[0]!.acceleratedMs).toBe(14_400_000)
     expect(loopReadyWork(morning).get('mill')).toBe(1)
@@ -162,9 +164,9 @@ describe('the calendar turns', () => {
     expect(night(farm(47)).summary!.news).toEqual([{ kind: 'festival', festival: 'harvest-cup', when: 'today' }])
   })
 
-  it('clears the day\'s chats and gifts', () => {
-    const save: SaveV3 = { ...farm(), today: { chats: ['101'], gifts: ['202'] } }
-    expect(night(save).today).toEqual({ chats: [], gifts: [] })
+  it('clears the whole of today: chats, gifts and the rest', () => {
+    const save: SaveV4 = { ...farm(), today: { ...newTodayV4(), chats: ['101'], gifts: ['202'], praised: ['101'] } }
+    expect(night(save).today).toEqual(newTodayV4())
   })
 })
 
@@ -173,7 +175,7 @@ describe('the morning summary', () => {
     const save = start(start(start(farm(12), '101', gather()), '202', make(1)), '303', gather())
     const morning = night(save)
     expect(morning.summary).toEqual({
-      day: 13, bin: [], ranks: [], bonds: [],
+      day: 13, bin: [], ranks: [], hearts: [],
       work: [{ kind: 'jobs', place: 'forest', jobs: 2, items: 2 }, { kind: 'jobs', place: 'mill', jobs: 1, items: 1 }],
       news: [{ kind: 'season', season: 'summer' }],
       nudges: [{ kind: 'idle', umas: ['101', '202', '303'] }],
@@ -183,7 +185,7 @@ describe('the morning summary', () => {
 
   it('is replaced each night, and has no nudge when everyone works', () => {
     const save = editLoopQueue(start(farm(3), '101', gather()), { outfitId: '101', add: { request: gather(), building: 'forest' } }, AT, TEST_KINDS)
-    const busy: SaveV3 = { ...save, dorm: { ...save.dorm, home: ['101'] }, items: { wheat: [5, 0, 0, 0, 0] } }
+    const busy: SaveV4 = { ...save, dorm: { ...save.dorm, home: ['101'] }, items: { wheat: [5, 0, 0, 0, 0] } }
     const morning = night(busy)
     expect(morning.summary).toMatchObject({ day: 4, work: [{ place: 'forest', jobs: 1 }], nudges: [] })
     expect(night(morning).summary).toMatchObject({ day: 5, work: [{ place: 'forest', jobs: 1 }], nudges: [{ kind: 'idle', umas: ['101'] }] })
@@ -192,7 +194,7 @@ describe('the morning summary', () => {
 
 describe('the bin pays at night (step 1)', () => {
   /** Day `day` with salmon at ★1 and ★2 and carrots at ★1. */
-  const stocked = (day: number): SaveV3 => {
+  const stocked = (day: number): SaveV4 => {
     const save = farm(day)
     return { ...save, items: { ...save.items, salmon: [2, 2, 0, 0, 0], carrot: [3, 0, 0, 0, 0] } }
   }
@@ -210,7 +212,7 @@ describe('the bin pays at night (step 1)', () => {
     expect(morning.diary.shipped).toEqual({ salmon: 2 })
     expect(morning.bin).toEqual({})
     expect(morning.items.salmon).toEqual([1, 1, 0, 0, 0])
-    expect(parseSaveV3(json(morning), 'save', TEST_KINDS)).toEqual(morning)
+    expect(parseSaveV4(json(morning), 'save', TEST_KINDS)).toEqual(morning)
   })
 
   it('pays at the day it was shipped: a season\'s last night keeps its demand', () => {

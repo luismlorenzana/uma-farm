@@ -1,32 +1,30 @@
-// The farm's save parse, shared by v3 and v4: strict keys, explicit paths,
-// every id checked. Roster ids are checked by form, as in v2: the API has no master data or story pack, and an id a later
-// release drops still parses. Internal to `save/`: `parse-v3.ts` and `parse-v4.ts` compose these, and `parse-v3.ts`
-// re-exports the public names (the work places, their slots and the kinds' types), so nothing outside moved.
+// The save's parse helpers for the farm's parts: strict keys, explicit paths, every id checked. Roster ids are checked
+// by form: the API has no master data or story pack, and an id a later release drops still parses. Internal to `save/`:
+// `parse-v4.ts` composes these and re-exports the public names (the work places, their slots and the kinds' types).
 import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkKindRules, WorkOutput, WorkRow } from '@luismlorenzana/uma-work'
 import { FESTIVAL_IDS, SEASONS } from '../farm/calendar'
-import { bedsFor, dormMaxLevel, FARM_RANK_POINTS } from '../farm/farm'
+import { bedsAt, DORM_MAX_LEVEL, FARM_RANK_POINTS } from '../farm/farm'
 import { DIARY_ROWS, isDiaryPaidId, MILESTONES } from '../farm/milestones'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
-import { GOOD_IDS, goodOf, isCropId, isGoodId, isGoodIdV4, isSeedId, isWarehouseId, RING_IDS } from '../goods/ids'
-import type { BinSale, HouseholdNews, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
-import { isOutfitId } from '../roster/roster'
+import { GOOD_IDS, goodOf, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, RING_IDS } from '../goods/ids'
+import type { BinSale, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
 import type { LoopWorld } from '../work/loop-env'
 import { amount, bool, count, int, list, object, oneOf, positive, record, SaveParseError, type Obj } from './parse'
 import {
   ANIMAL_HOME, ANIMAL_KINDS, BLOCK_IDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, EXTRA_KINDS, isDishId, pairKey, PLOTS_PER_BLOCK,
-  REGION_IDS, TOOL_IDS, VISITOR_FROM, WORKSHOP_IDS, type Animal, type Block, type BoardRequest, type BuildingId, type Dig, type DormSwap,
-  type Expedition, type Extra, type FestivalResult, type LoopWorkRequest, type Plot, type RankState, type SaveV3, type StarCounts,
-  type ToolId, type ToolTier, type Visitor, type Warehouse, type WorkshopId,
-} from './v3'
+  REGION_IDS, TOOL_IDS, WORKSHOP_IDS, type Animal, type Block, type BoardRequest, type BuildingId, type Dig, type DormSwap,
+  type Expedition, type Extra, type FestivalResult, type LoopWorkRequest, type Plot, type RankState, type SaveV4, type StarCounts,
+  type ToolId, type ToolTier, type Warehouse, type WorkshopId,
+} from './v4'
 import { MAX_STARS, parseStockKey } from './warehouse'
 
-/** The places v3 work rows sit at: the forest, the Fishery and their stations; the Mine, the Quarry and
+/** The places work rows sit at: the forest, the Fishery and their stations; the Mine, the Quarry and
  * theirs once the workshops are built. Four slots each. */
 export const LOOP_WORK_PLACES = ['forest', 'fishery', 'mill', 'sawmill', 'smokehouse', 'mine', 'quarry', 'smelter', 'cutter'] as const
 export type LoopPlaceId = typeof LOOP_WORK_PLACES[number]
 export const LOOP_SLOTS = 4
 
-/** A v3 work kind's request: the places it works at and its request's parse (strict keys, its own ids;
+/** A work kind's request: the places it works at and its request's parse (strict keys, its own ids;
  * a `SaveParseError` with the path when wrong). The save's parse reads only this, so it stays in the initial JS. */
 export interface LoopRequestKind {
   readonly places: readonly LoopPlaceId[]
@@ -34,7 +32,7 @@ export interface LoopRequestKind {
 }
 export type LoopRequestKinds = Readonly<Record<string, LoopRequestKind>>
 
-/** A v3 work kind: its request, its rules on uma-work's day clock (`farmEnvV3`), and whether
+/** A work kind: its request, its rules on uma-work's day clock (`farmEnv`), and whether
  * it runs for days at a time. The farm's are `LOOP_KINDS` (`gathering/kinds.ts`, loaded with the screens and the
  * night); the save's parse reads their requests from `LOOP_REQUESTS` (`gathering/ids.ts`). */
 export interface LoopKind extends LoopRequestKind {
@@ -51,8 +49,6 @@ export const MAX_QUEUED = 3
 export const MAX_ENTRIES = MAX_QUEUED + 1
 /** The most items one entry makes: well past a Legend's day at the forest. */
 export const MAX_ENTRY_ITEMS = 200
-/** The most recruits, visitors or departures one morning can name. */
-export const MAX_ROSTER_NEWS = 60
 /** The most goal lines one morning can hold: a chapter, every Farm Rank, every milestone and row. */
 export const MAX_GOAL_NEWS = 1 + FARM_RANK_POINTS.length + MILESTONES.length + DIARY_ROWS.length
 /** The chapter a save may be in: 1–9 (eight chapters, then the story's end). */
@@ -68,11 +64,15 @@ export function key(value: unknown, path: string): string {
   if (typeof value !== 'string' || !KEY.test(value)) fail(path, 'expected an id')
   return value as string
 }
+/** A character id (or a master outfit id), as master data's stable key: a positive integer of up to twelve digits. */
+export const ROSTER_ID = /^[1-9]\d{0,11}$/
+export const isRosterId = (id: string): boolean => ROSTER_ID.test(id)
+/** A roster id by form. */
 export function outfit(value: unknown, path: string): string {
-  if (typeof value !== 'string' || !isOutfitId(value)) fail(path, 'outfit ids are positive integers')
+  if (typeof value !== 'string' || !isRosterId(value)) fail(path, 'ids are positive integers')
   return value as string
 }
-/** An outfit on the roster (or among `word`'s set). */
+/** An Uma on the roster (or among `word`'s set). */
 export function member(value: unknown, path: string, roster: ReadonlySet<string>, word = 'expected an Uma on the roster'): string {
   const id = outfit(value, path)
   if (!roster.has(id)) fail(path, word)
@@ -115,15 +115,14 @@ export function parseRanks(value: unknown, path: string): Record<Activity, RankS
   })) as Record<Activity, RankState>
 }
 
-/** The Dorm on a save's version: v3's ten levels, v4's eight; home at most its beds. */
-export function parseDorm(value: unknown, path: string, roster: ReadonlySet<string>, bought: number | undefined, version = 3): SaveV3['dorm'] {
+/** The Dorm on its eight levels; home at most its beds. */
+export function parseDorm(value: unknown, path: string, roster: ReadonlySet<string>, bought: number | undefined): SaveV4['dorm'] {
   const o = object(value, path, ['level', 'home', 'swaps'])
-  const top = dormMaxLevel(version)
-  const level = int(o.level, `${path}.level`, 1, top)
+  const level = int(o.level, `${path}.level`, 1, DORM_MAX_LEVEL)
   if (bought === undefined || level > bought) fail(`${path}.level`, 'above the level bought (buildings.dorm)')
-  const home = unique(list(o.home, `${path}.home`, 0, bedsFor(version, level)).map((v, i) => member(v, `${path}.home.${i}`, roster)), `${path}.home`)
+  const home = unique(list(o.home, `${path}.home`, 0, bedsAt(level)).map((v, i) => member(v, `${path}.home.${i}`, roster)), `${path}.home`)
   const atHome = new Set(home)
-  const swaps = list(o.swaps, `${path}.swaps`, 0, bedsFor(version, top)).map((v, i): DormSwap => {
+  const swaps = list(o.swaps, `${path}.swaps`, 0, bedsAt(DORM_MAX_LEVEL)).map((v, i): DormSwap => {
     const at = `${path}.swaps.${i}`
     const s = object(v, at, ['out', 'in'])
     const out = member(s.out, `${at}.out`, roster)
@@ -135,16 +134,6 @@ export function parseDorm(value: unknown, path: string, roster: ReadonlySet<stri
   unique(swaps, `${path}.swaps`, (s) => s.out)
   unique(swaps, `${path}.swaps`, (s) => s.in)
   return { level, home, swaps }
-}
-
-export function parseVisitors(value: unknown, path: string, roster: ReadonlySet<string>): Visitor[] {
-  return unique(list(value, path, 0, 60).map((v, i): Visitor => {
-    const at = `${path}.${i}`
-    const o = object(v, at, ['outfitId', 'from', 'leaves', 'affinity'])
-    const id = outfit(o.outfitId, `${at}.outfitId`)
-    if (roster.has(id)) fail(`${at}.outfitId`, 'already on the roster')
-    return { outfitId: id, from: oneOf(o.from, `${at}.from`, VISITOR_FROM), leaves: day(o.leaves, `${at}.leaves`), affinity: amount(o.affinity, `${at}.affinity`) }
-  }), path, (v) => v.outfitId)
 }
 
 // --- The Warehouse --------------------------------------------------------------------------------------------------
@@ -162,7 +151,7 @@ export function parseWarehouse(value: unknown, path: string, check: (id: string)
   return out
 }
 
-// --- Work: uma-work's rows at the v3 places, their stock keys, and each kind's own requests --------------
+// --- Work: uma-work's rows at the places, their stock keys, and each kind's own requests -----------------
 
 export function stock(value: unknown, path: string): string {
   if (typeof value !== 'string' || !parseStockKey(value)) fail(path, 'expected a stock key <id>@<stars>')
@@ -274,7 +263,7 @@ export function parsePlot(value: unknown, path: string): Plot {
   return plot
 }
 
-export function parseFields(value: unknown, path: string, roster: ReadonlySet<string>): SaveV3['fields'] {
+export function parseFields(value: unknown, path: string, roster: ReadonlySet<string>): SaveV4['fields'] {
   const o = object(value, path, ['blocks'])
   const blocks = list(o.blocks, `${path}.blocks`, 1, BLOCK_IDS.length).map((v, i): Block => {
     const at = `${path}.blocks.${i}`
@@ -291,7 +280,7 @@ export function parseFields(value: unknown, path: string, roster: ReadonlySet<st
   return { blocks }
 }
 
-export function parseRanch(value: unknown, path: string, roster: ReadonlySet<string>): SaveV3['ranch'] {
+export function parseRanch(value: unknown, path: string, roster: ReadonlySet<string>): SaveV4['ranch'] {
   const o = object(value, path, ['animals'])
   const animals = list(o.animals, `${path}.animals`, 0, 28).map((v, i): Animal => {
     const at = `${path}.animals.${i}`
@@ -310,12 +299,12 @@ export function parseDig(value: unknown, path: string): Dig {
   return { deepest: int(o.deepest, `${path}.deepest`, 0, DEEPEST_FLOOR), stairs: amount(o.stairs, `${path}.stairs`) }
 }
 
-export function parseBuildings(value: unknown, path: string, version = 3): Partial<Record<BuildingId, number>> {
+export function parseBuildings(value: unknown, path: string): Partial<Record<BuildingId, number>> {
   const out: Partial<Record<BuildingId, number>> = {}
   for (const [id, level] of Object.entries(record(value, path))) {
     const at = `${path}.${id}`
     const building = oneOf(id, at, BUILDING_IDS)
-    out[building] = int(level, at, 0, building === 'dorm' ? dormMaxLevel(version) : BUILDING_MAX_LEVEL)
+    out[building] = int(level, at, 0, building === 'dorm' ? DORM_MAX_LEVEL : BUILDING_MAX_LEVEL)
   }
   if (!out.dorm) fail(`${path}.dorm`, 'the Dorm is built from day 1')
   return out
@@ -326,11 +315,11 @@ export function parseTools(value: unknown, path: string): Record<ToolId, ToolTie
   return Object.fromEntries(TOOL_IDS.map((t) => [t, int(o[t], `${path}.${t}`, 1, 5) as ToolTier])) as Record<ToolId, ToolTier>
 }
 
-export function parseWorkshops(value: unknown, path: string, roster: ReadonlySet<string>): SaveV3['workshops'] {
+export function parseWorkshops(value: unknown, path: string, roster: ReadonlySet<string>): SaveV4['workshops'] {
   const o = object(value, path, ['played', 'current', 'recipes', 'best'])
   const p = object(o.played, `${path}.played`, WORKSHOP_IDS)
   const played = Object.fromEntries(WORKSHOP_IDS.map((w) => [w, count(p[w], `${path}.played.${w}`)])) as Record<WorkshopId, number>
-  let current: SaveV3['workshops']['current'] = null
+  let current: SaveV4['workshops']['current'] = null
   if (o.current !== null) {
     const c = object(o.current, `${path}.current`, ['workshop', 'assistant', 'day'])
     current = { workshop: oneOf(c.workshop, `${path}.current.workshop`, WORKSHOP_IDS), assistant: member(c.assistant, `${path}.current.assistant`, roster),
@@ -355,13 +344,12 @@ export function parseExpeditions(value: unknown, path: string, roster: ReadonlyS
   return out
 }
 
-/** Bond points by pair: two roster ids in numeric order. v3's may be fractional (`amount`); v4's are whole
- * (`count`). */
-export function parseBonds(value: unknown, path: string, roster: ReadonlySet<string>, parse: (value: unknown, path: string) => number = amount): Record<string, number> {
+/** Bond points by pair: two roster ids in numeric order, whole. */
+export function parseBonds(value: unknown, path: string, roster: ReadonlySet<string>): Record<string, number> {
   return counts(value, path, (k) => {
     const [a, b, ...rest] = k.split(':')
     return rest.length === 0 && !!a && !!b && a !== b && roster.has(a) && roster.has(b) && pairKey(a, b) === k
-  }, 'expected two roster ids in numeric order, idA:idB', parse)
+  }, 'expected two roster ids in numeric order, idA:idB')
 }
 
 export function parseExtra(value: unknown, path: string): Extra | null {
@@ -369,7 +357,7 @@ export function parseExtra(value: unknown, path: string): Extra | null {
   const o = object(value, path, ['kind', 'id'])
   const kind = oneOf(o.kind, `${path}.kind`, EXTRA_KINDS)
   const id = typeof o.id === 'string' ? o.id : ''
-  const ok = kind === 'recipe' ? isDishId(id) : kind === 'seeds' ? isSeedId(id) : kind === 'animal' ? (ANIMAL_KINDS as readonly string[]).includes(id) : isOutfitId(id)
+  const ok = kind === 'recipe' ? isDishId(id) : kind === 'seeds' ? isSeedId(id) : kind === 'animal' ? (ANIMAL_KINDS as readonly string[]).includes(id) : isRosterId(id)
   if (!ok) fail(`${path}.id`, `expected the ${kind}'s id`)
   return { kind, id }
 }
@@ -388,18 +376,18 @@ export function keys(value: unknown, path: string): string[] {
   return unique(list(value, path, 0, 2000).map((v, i) => key(v, `${path}.${i}`)), path)
 }
 
-/** The Diary. `isGood` is the version's catalogue: v3's goods, or v4's with the rings. */
-export function parseDiary(value: unknown, path: string, isGood: (id: string) => boolean = isGoodId): SaveV3['diary'] {
+/** The Diary: what's shipped is the catalogue's goods and the rings. */
+export function parseDiary(value: unknown, path: string): SaveV4['diary'] {
   const o = object(value, path, ['shipped', 'milestones', 'records', 'read'])
   return {
-    shipped: counts(o.shipped, `${path}.shipped`, isGood, 'unknown good'),
+    shipped: counts(o.shipped, `${path}.shipped`, isGoodOrRingId, 'unknown good'),
     milestones: keys(o.milestones, `${path}.milestones`),
     records: counts(o.records, `${path}.records`, (k) => KEY.test(k), 'expected an id', amount),
     read: keys(o.read, `${path}.read`),
   }
 }
 
-export function parseFarm(value: unknown, path: string): SaveV3['farm'] {
+export function parseFarm(value: unknown, path: string): SaveV4['farm'] {
   const o = object(value, path, ['points', 'chapter', 'goals', 'festivals', 'counts'])
   const festivals = list(o.festivals, `${path}.festivals`, 0, 1000).map((v, i): FestivalResult => {
     const at = `${path}.festivals.${i}`
@@ -417,15 +405,14 @@ export function parseFarm(value: unknown, path: string): SaveV3['farm'] {
 
 export const none = (value: unknown, path: string): [] => list(value, path, 0, 0) as []
 
-/** §1 The bin, on a save's version: v3's goods, or v4's with the rings. */
-export function parseBinLines(value: unknown, path: string, version = 3): BinSale[] {
-  const isGood = version >= 4 ? isGoodIdV4 : isGoodId
+/** §1 The bin: the catalogue's goods and the rings. */
+export function parseBinLines(value: unknown, path: string): BinSale[] {
   // A good at one star once, a whole count and gold; the gold isn't re-priced (a later price can't break it).
-  return unique(list(value, path, 0, (GOOD_IDS.length + (version >= 4 ? RING_IDS.length : 0)) * MAX_STARS).map((v, i): BinSale => {
+  return unique(list(value, path, 0, (GOOD_IDS.length + RING_IDS.length) * MAX_STARS).map((v, i): BinSale => {
     const at = `${path}.${i}`
     const b = object(v, at, ['kind', 'id', 'stars', 'count', 'gold', 'demand'])
     oneOf(b.kind, `${at}.kind`, ['sold'] as const)
-    const id = typeof b.id === 'string' && isGood(b.id) ? b.id : fail(`${at}.id`, 'unknown good')
+    const id = typeof b.id === 'string' && isGoodOrRingId(b.id) ? b.id : fail(`${at}.id`, 'unknown good')
     return {
       kind: 'sold', id, stars: int(b.stars, `${at}.stars`, 1, MAX_STARS), count: int(b.count, `${at}.count`, 1, Number.MAX_SAFE_INTEGER), gold: count(b.gold, `${at}.gold`),
       demand: bool(b.demand, `${at}.demand`),
@@ -471,20 +458,17 @@ export function parseRankLines(value: unknown, path: string, roster: ReadonlySet
   }), path, (r) => `${r.kind}:${r.outfitId}:${r.activity}`)
 }
 
-/** v3's news kinds; v4 drops `joined`, `gate` and `left` (its arrivals are §4's hearts). */
-const NEWS_KINDS = ['season', 'festival', 'chapter', 'farm-rank', 'milestone', 'dorm', 'home', 'joined', 'gate', 'left'] as const
-const NEWS_KINDS_V4 = ['season', 'festival', 'chapter', 'farm-rank', 'milestone', 'dorm', 'home', 'household'] as const
-/** The household milestones a v4 morning may announce. */
+/** §5's kinds: the roster's arrivals are §4's hearts. */
+const NEWS_KINDS = ['season', 'festival', 'chapter', 'farm-rank', 'milestone', 'dorm', 'home', 'household'] as const
+/** The household milestones a morning may announce. */
 const HOUSEHOLD_NEWS = [1, 5, 10, 15, 20] as const
 
-/** §5 New today, on a save's version: the Dorm's levels and beds are its ladder's. */
-export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet<string>, version = 3): (NewsLine | HouseholdNews)[] {
-  const top = dormMaxLevel(version)
-  // The Dorm's new level, Umas home from a swap, recruits who joined (on the roster), a visitor at the Gate and those
-  // who left (outfit ids by form: she may since have joined, or gone).
-  return unique(list(value, path, 0, 8 + 3 * MAX_ROSTER_NEWS + MAX_GOAL_NEWS + (version >= 4 ? 1 + HOUSEHOLD_NEWS.length : 0)).map((v, i): NewsLine | HouseholdNews => {
+/** §5 New today. */
+export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet<string>): NewsLine[] {
+  // The season and festivals, the goals' news, the Dorm's new level and Umas home from a swap, and the household's.
+  return unique(list(value, path, 0, 8 + MAX_GOAL_NEWS + 1 + HOUSEHOLD_NEWS.length).map((v, i): NewsLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, version >= 4 ? NEWS_KINDS_V4 : NEWS_KINDS)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, NEWS_KINDS)
     switch (kind) {
       // The chapter completed tonight (one of the story's), a Farm Rank reached (2–10), a Diary milestone or row
       // paid.
@@ -492,31 +476,26 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
       case 'farm-rank': return { kind, rank: int(object(v, at, ['kind', 'rank']).rank, `${at}.rank`, 2, FARM_RANK_POINTS.length) }
       case 'milestone': {
         const id = object(v, at, ['kind', 'id']).id
-        return { kind, id: typeof id === 'string' && isDiaryPaidId(id, version) ? id : fail(`${at}.id`, 'unknown milestone') }
+        return { kind, id: typeof id === 'string' && isDiaryPaidId(id) ? id : fail(`${at}.id`, 'unknown milestone') }
       }
       case 'season': return { kind, season: oneOf(object(v, at, ['kind', 'season']).season, `${at}.season`, SEASONS) }
       case 'festival': {
         const f = object(v, at, ['kind', 'festival', 'when'])
         return { kind, festival: oneOf(f.festival, `${at}.festival`, FESTIVAL_IDS), when: oneOf(f.when, `${at}.when`, ['today', 'tomorrow'] as const) }
       }
-      case 'dorm': return { kind, level: int(object(v, at, ['kind', 'level']).level, `${at}.level`, 2, top) }
+      case 'dorm': return { kind, level: int(object(v, at, ['kind', 'level']).level, `${at}.level`, 2, DORM_MAX_LEVEL) }
       case 'home': {
         const h = object(v, at, ['kind', 'umas'])
-        return { kind, umas: unique(list(h.umas, `${at}.umas`, 1, bedsFor(version, top)).map((id, j) => member(id, `${at}.umas.${j}`, roster)), `${at}.umas`) }
+        return { kind, umas: unique(list(h.umas, `${at}.umas`, 1, bedsAt(DORM_MAX_LEVEL)).map((id, j) => member(id, `${at}.umas.${j}`, roster)), `${at}.umas`) }
       }
-      case 'joined': {
-        const j = object(v, at, ['kind', 'outfitId', 'home'])
-        return { kind, outfitId: member(j.outfitId, `${at}.outfitId`, roster), home: bool(j.home, `${at}.home`) }
-      }
-      case 'gate': case 'left': return { kind, outfitId: outfit(object(v, at, ['kind', 'outfitId']).outfitId, `${at}.outfitId`) }
-      // A household milestone, v4 only.
+      // A household milestone.
       case 'household': {
         const married = object(v, at, ['kind', 'married']).married
         return { kind, married: (HOUSEHOLD_NEWS as readonly unknown[]).includes(married) ? married as number : fail(`${at}.married`, 'expected 1, 5, 10, 15 or 20') }
       }
     }
   }), path, (n) => (n.kind === 'season' || n.kind === 'dorm' || n.kind === 'home' || n.kind === 'chapter' ? n.kind : n.kind === 'festival' ? `festival:${n.when}`
-    : n.kind === 'farm-rank' ? `farm-rank:${n.rank}` : n.kind === 'milestone' ? `milestone:${n.id}` : n.kind === 'household' ? `household:${n.married}` : `${n.kind}:${n.outfitId}`))
+    : n.kind === 'farm-rank' ? `farm-rank:${n.rank}` : n.kind === 'milestone' ? `milestone:${n.id}` : `household:${n.married}`))
 }
 
 /** §6 Today's nudges. */

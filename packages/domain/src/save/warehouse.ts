@@ -1,22 +1,20 @@
 // The Warehouse by stars meets uma-work's flat stock through one bridge. The save stores `items[id]` as
 // counts by ★1 … ★5; uma-work reads a `Record<string, number>`. The engine sees a view keyed `<id>@<stars>` (`carp@2`),
-// built by `workStock` and folded back by `fromWorkStock`; v3 work rows store those keys in their inputs and outputs.
+// built by `workStock` and folded back by `fromWorkStock`; work rows store those keys in their inputs and outputs.
 // Nothing else reads the view. Seeds are held at ★1 only.
 //
-// The bridge and the operations take anything a v3 or a v4 Warehouse may hold (`isStockId`): v4 adds the rings
-// (the ring bench's) and dishes (the wedding's reception reads them; the Kitchen makes them). Each save's parse keeps
-// its own: v3's Warehouse is `isWarehouseId`'s, as live, and v4's `isWarehouseIdV4`.
+// The bridge and the operations take anything the Warehouse may hold (`isStockId`): the goods and seeds, the rings (the
+// ring bench's) and dishes (the wedding's reception reads them; the Kitchen makes them).
 import type { ItemStock } from '@luismlorenzana/uma-work'
 import { isRingId, isSeedId, isWarehouseId } from '../goods/ids'
 import { SaveRuleError } from './rules'
-import { isDishId, type StarCounts, type Warehouse } from './v3'
+import { isDishId, type StarCounts, type Warehouse } from './v4'
 
 export const MAX_STARS = 5
 
-/** Anything a v4 Warehouse may hold: v3's goods and seeds, the rings and dishes. */
-export const isWarehouseIdV4 = (id: string): boolean => isWarehouseId(id) || isRingId(id) || isDishId(id)
-/** What the engine's bridge and the Warehouse's operations take: anything either version's Warehouse may hold. */
-export const isStockId = isWarehouseIdV4
+/** Anything the Warehouse may hold: the goods and seeds, the rings and dishes. What the engine's bridge and the
+ * Warehouse's operations take. */
+export const isStockId = (id: string): boolean => isWarehouseId(id) || isRingId(id) || isDishId(id)
 
 /** The engine's key for a good at its stars. */
 export const stockKey = (id: string, stars: number): string => `${id}@${stars}`

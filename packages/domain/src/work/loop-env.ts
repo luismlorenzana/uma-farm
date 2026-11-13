@@ -1,5 +1,5 @@
 // The loop's work env: uma-work on the day clock. Day d starts at
-// (d − 1) × DAY_MS (`workNow`) and every work operation runs then, so nothing moves until the night ends the day. The v3
+// (d − 1) × DAY_MS (`workNow`) and every work operation runs then, so nothing moves until the night ends the day. The
 // work places hold four slots each at speed 1 (a day is a day), with no upgrades and no Speed Tickets; who may work is
 // who's home on the farm and not leaving tomorrow; work pays no EXP (ranks tick at night); and the kinds are
 // `LOOP_KINDS`, or `loopKinds(talentOf)` with master data's talents. uma-work sees the Warehouse through the
@@ -9,12 +9,11 @@ import {
 } from '@luismlorenzana/uma-work'
 import { DAY_MS } from '../farm/calendar'
 import { LOOP_KINDS } from '../gathering/kinds'
-import { LOOP_SLOTS, LOOP_WORK_PLACES, type LoopKinds } from '../save/parse-v3'
-import { onFarm, type LoopWorkRequest, type OutfitId, type SaveV3 } from '../save/v3'
+import { LOOP_SLOTS, LOOP_WORK_PLACES, type LoopKinds } from '../save/parse-v4'
+import { onFarm, type FarmSave, type LoopWorkRequest, type OutfitId } from '../save/v4'
 import { fromWorkStock, workStock } from '../save/warehouse'
-import type { FarmSave } from '../save/v4'
 
-/** uma-work's state over a v3 or v4 save (on v4 a row's `outfitId` is her character id, the roster's key): the
+/** uma-work's state over a save (a row's `outfitId` is her character id, the roster's key): the
  * Warehouse as the engine's flat `<id>@<stars>` view, no building levels, the work rows, and the save around them for
  * the kinds to read (ranks, well fed, the day, the account). The world's own `items` and `work` are the live ones;
  * `save`'s copies of them are stale while an operation runs. A kind's pay may move the save's `farm` and `diary` (what
@@ -34,7 +33,7 @@ export const loopWorld = (save: FarmSave): LoopWorld => ({ items: workStock(save
 export const withLoopWorld = <S extends FarmSave>(save: S, world: LoopWorld): S =>
   ({ ...save, items: fromWorkStock(world.items), work: { ...world.work }, farm: world.save.farm, diary: world.save.diary })
 
-/** The v3 work places as uma-work's buildings: four slots at speed 1, no levels above the first. */
+/** The work places as uma-work's buildings: four slots at speed 1, no levels above the first. */
 export const LOOP_BUILDINGS: BuildingRules = /* @__PURE__ */ buildingTable(Object.fromEntries(LOOP_WORK_PLACES.map((id) => [id, { slots: [LOOP_SLOTS], speed: [1], upgrades: [] }])))
 
 /** No Speed Tickets by day. */
@@ -49,7 +48,7 @@ const NO_EXP: ExpRules<LoopWorld> = { grant: (state) => ({ state }), gradeOpen: 
 
 /** The loop's env: the kinds' rules from the registry (`LOOP_KINDS` unless the app passes `loopKinds(talentOf)` or a test
  * its own). */
-export function farmEnvV3(kinds: LoopKinds = LOOP_KINDS): WorkEnv<LoopWorld> {
+export function farmEnv(kinds: LoopKinds = LOOP_KINDS): WorkEnv<LoopWorld> {
   return {
     kinds: Object.fromEntries(Object.entries(kinds).map(([id, kind]) => [id, kind.rules])),
     buildings: LOOP_BUILDINGS,
@@ -60,4 +59,4 @@ export function farmEnvV3(kinds: LoopKinds = LOOP_KINDS): WorkEnv<LoopWorld> {
 }
 
 /** The night's env: the same, with free tickets for well fed's quarter day. Never used by day. */
-export const nightEnvV3 = (kinds: LoopKinds = LOOP_KINDS): WorkEnv<LoopWorld> => ({ ...farmEnvV3(kinds), tickets: FREE_TICKETS })
+export const nightEnv = (kinds: LoopKinds = LOOP_KINDS): WorkEnv<LoopWorld> => ({ ...farmEnv(kinds), tickets: FREE_TICKETS })

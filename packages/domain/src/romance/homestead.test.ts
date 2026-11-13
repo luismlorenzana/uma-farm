@@ -5,13 +5,10 @@
 import { describe, expect, it } from 'vitest'
 import { bondOf } from '../farm/bonds'
 import { DAYS_PER_YEAR } from '../farm/calendar'
-import {
-  emptyNotes, householdMilestones, houseMorningStep, levelAtNight, moveInRooms, NIGHT_STEPS, nightStepsOf, noteTonight, runNight, shareTheHouses, vowsMorning, type NightContext,
-} from '../night/end-day'
+import { runNight, type NightContext } from '../night/end-day'
 import { TEST_KINDS } from '../night/kinds.fixture'
 import { parseSaveV4 } from '../save/parse-v4'
-import { newSave, onFarm } from '../save/v3'
-import { FINALE_MARRIED, marriedCount, newLove, newRosterUmaV4, newSaveV4, residentsOf, roomsOf, vowsOn, type Love, type SaveV4 } from '../save/v4'
+import { FINALE_MARRIED, marriedCount, newLove, newRosterUma, newSave, onFarm, residentsOf, roomsOf, vowsOn, type Love, type SaveV4 } from '../save/v4'
 import { checkBible, checkHousehold, type Household, type UmaBible } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_INS } from '../story/authored.fixture'
 import { storyPackFrom, wishesOf, type StoryPack } from '../story/pack'
@@ -22,7 +19,7 @@ import { birthdaysOf } from './days'
 import { eveningSlots, homeTonight, slotsLeft, tonightOpens } from './evening'
 import { playEvent } from './events'
 import {
-  breakfastTomorrow, buildHouse, defaultHouse, EXTENSION_COSTS, extendHouse, FURNITURE, homeOf, HOUSE_COSTS, MISSES_NIGHTS, moveInWaiting, moveSpouse, nextLot, placeFurniture,
+  breakfastTomorrow, buildHouse, defaultHouse, EXTENSION_COSTS, extendHouse, FURNITURE, homeOf, HOUSE_COSTS, MISSES_NIGHTS, moveSpouse, nextLot, placeFurniture,
   roomFor, roomsInAll, sleepAt, sleepRows, swapRooms, takeRoom, waitingForRooms,
 } from './homestead'
 import {
@@ -35,11 +32,11 @@ const PACK = storyPackFrom(STAND_IN_FILES)
 const [ONE, TWO, THREE] = STAND_INS
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const BIRTHDAYS = birthdaysOf(PACK, new Map())
-const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ roster: [], kinds: TEST_KINDS, story, birthdays: BIRTHDAYS })
+const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ kinds: TEST_KINDS, story, birthdays: BIRTHDAYS })
 
-/** A named v4 farm on `day`, the opening read and the stand-ins home at Friendship 0, rich enough to build. */
+/** A named farm on `day`, the opening read and the stand-ins home at Friendship 0, rich enough to build. */
 function farm(day = 30, gold = 1_000_000): SaveV4 {
-  const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day }, gold }
+  const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day }, gold }
   const joined = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
   return { ...joined, today: { ...joined.today, bonds: {} } }
 }
@@ -51,7 +48,7 @@ function more(save: SaveV4, n: number, from = 9000004, home = true): SaveV4 {
   const ids = Array.from({ length: n }, (_, i) => String(from + i))
   return {
     ...save,
-    roster: { ...save.roster, ...Object.fromEntries(ids.map((id) => [id, newRosterUmaV4(1)])) },
+    roster: { ...save.roster, ...Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])) },
     love: { ...save.love, ...Object.fromEntries(ids.map((id) => [id, { ...newLove(), stage: 'spouse' as const, level: 0, wed: 1 }])) },
     dorm: { ...save.dorm, level: 8, home: [...save.dorm.home, ...(home ? ids : [])] },
     buildings: { ...save.buildings, dorm: 8 },
@@ -453,17 +450,7 @@ function playWedding(save: SaveV4, pack: StoryPack): SaveV4 {
   return playEvent(ready, pack, ONE, { event: { id: 'wedding', steps }, picks: [0, 1], plays: [{ kind: 'rhythm', score: 95 }], place: 'chapel-bell', reception: null }).save
 }
 
-describe('v3 is unchanged', () => {
-  it('runs none of the romance steps on a v3 night, and keeps v3\'s steps and on-the-farm rule', () => {
-    const v3 = newSave('u1', AT)
-    const night = { before: v3, save: v3, context: context(), notes: emptyNotes() }
-    for (const step of [noteTonight, shareTheHouses, levelAtNight, householdMilestones, houseMorningStep, moveInRooms, vowsMorning]) expect(step(night)).toBe(night)
-    expect(nightStepsOf(v3)).toBe(NIGHT_STEPS)
-    expect(NIGHT_STEPS.map((s) => s.name)).not.toContain('noteTonight')
-    expect(onFarm({ dorm: { home: ['1001'], swaps: [] } }, '1001')).toBe(true)
-    expect(onFarm({ dorm: { home: [], swaps: [] } }, '1001')).toBe(false)
-  })
-
+describe('a wedding\'s room', () => {
   it('takes a wedding\'s room through takeRoom: none free, she keeps her bed', () => {
     const save = moveSpouse(moveSpouse(spouse(spouse(spouse(farm(), ONE), TWO, 3), THREE, 4), TWO, 0), THREE, 0)
     expect(takeRoom(save, NO_WISHES, ONE)).toEqual({ save, house: null })

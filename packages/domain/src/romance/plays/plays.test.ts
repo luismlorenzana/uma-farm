@@ -2,7 +2,7 @@
 // 0–100 at its edges, a perfect run 100, no taps a Fine, the same seed and taps the same score, both lengths; Choose's
 // tastes; Walk's 50/75/100; the plays' map. Invented ids only: the stand-ins 9000001–9000003.
 import { describe, expect, it } from 'vitest'
-import { newSaveV4 } from '../../save/v4'
+import { newSave } from '../../save/v4'
 import { DATE_GAMES, type Together } from '../../story/authored'
 import { ACTIVITIES } from '../../farm/ranks'
 import { storyPackFrom } from '../../story/pack'
@@ -162,7 +162,7 @@ describe('Pick', () => {
 })
 
 describe('Walk', () => {
-  const save = { ...newSaveV4('u1', '2026-11-11T10:00:00.000Z'), calendar: { day: 3 } }
+  const save = { ...newSave('u1', '2026-11-11T10:00:00.000Z'), calendar: { day: 3 } }
   const places = walkPlacesOpen(save)
   it('passes today\'s open farm places, not the Gate or the town edge; she loves her line\'s place', () => {
     expect(places).toContain('fields')

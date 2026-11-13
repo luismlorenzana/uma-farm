@@ -1,14 +1,13 @@
 // Ranks: each Uma climbs six ranks in each of the nine activities.
 // A day of work pays rank points in its activity; a rank comes when its points are reached and its challenge is met,
-// at night (step 6). A rank pays: more yield, faster tending, better stars, deeper places, more seeds back. Her calling's
-// line is her favourite, where she earns ×1.2 points; she can work anywhere. `farm/ranks.ts` holds the ladder the save
-// and the migration need; this file holds the rest, loaded with the loop's screens and the night.
+// at night (step 6). A rank pays: more yield, faster tending, better stars, deeper places, more seeds back. Her favourite
+// line (the story pack's, `favouriteOf`) is where she earns ×1.2 points; she can work anywhere. `farm/ranks.ts` holds
+// the ladder the save needs; this file holds the rest, loaded with the loop's screens and the night.
 import type { FestivalId } from './calendar'
 import type { FishingSpotId, ForestAreaId } from '../gathering/ids'
-import type { MaterialLine } from '../items/lines'
 import type { RankLine } from '../night/summary'
-import type { LoopPlaceId } from '../save/parse-v3'
-import type { OutfitId, RankState, RegionId, SaveV3 } from '../save/v3'
+import type { LoopPlaceId } from '../save/parse-v4'
+import type { OutfitId, RankState, RegionId } from '../save/v4'
 import { ACTIVITIES, LINE_ACTIVITY, RANK_POINTS, type Activity, type Rank } from './ranks'
 import { talentRankPoints, type TalentStep } from './talents'
 import type { FarmSave, Love } from '../save/v4'
@@ -23,45 +22,32 @@ export const DAY_POINTS = 10
 export const FAVOURITE_POINTS = 1.2
 /** ×1.25 well fed. */
 export const WELL_FED_POINTS = 1.25
-/** Affinity's points to a heart: 0–10 hearts. */
-export const HEART_POINTS = 100
-/** Her hearts with you: whole hearts, 0–10. */
-export const heartsOf = (affinity: number): number => Math.min(10, Math.max(0, Math.floor(affinity / HEART_POINTS + 1e-9)))
-/** ×1.05 at 5 hearts, ×1.10 at 10. */
-export const affinityPoints = (affinity: number): number => {
-  const hearts = heartsOf(affinity)
-  return hearts >= 10 ? 1.1 : hearts >= 5 ? 1.05 : 1
-}
-
-/** Her friendship's factor on v4: ×1.05 from Friendship 5, ×1.10 from Friendship 10 on, through
- * her confession, romance and spouse (the F5 and F10 perks). No falls. */
+/** Her friendship's factor: ×1.05 from Friendship 5, ×1.10 from Friendship 10 on, through her confession, romance and
+ * spouse (the F5 and F10 perks). No falls. */
 export const loveRankFactor = (love: Pick<Love, 'stage' | 'level'>): number => {
   if (love.stage !== 'friendship') return 1.1
   return love.level >= 10 ? 1.1 : love.level >= 5 ? 1.05 : 1
 }
-/** The hearts' factor by the save's version: v3 your affinity's, v4 her friendship's. */
-export function heartsFactorOf(save: FarmSave, id: OutfitId): number {
-  if (save.version === 4) {
-    const love = save.love[id]
-    return love ? loveRankFactor(love) : 1
-  }
-  return affinityPoints(save.roster[id]?.affinity ?? 0)
+/** The hearts' factor: her friendship's (`loveRankFactor`), ×1 before her route starts. */
+export function heartsFactorOf(save: Pick<FarmSave, 'love'>, id: OutfitId): number {
+  const love = save.love[id]
+  return love ? loveRankFactor(love) : 1
 }
 
-/** What lifts her points: her talent in the activity, whether it's her favourite, well fed, and the hearts' factor (v3
- * your affinity's, v4 her friendship level's: `heartsFactorOf`). */
+/** What lifts her points: her talent in the activity, whether it's her favourite, well fed, and the hearts' factor (her
+ * friendship level's: `heartsFactorOf`). */
 export interface PointTerms {
   talent: TalentStep
   favourite: boolean
   wellFed: boolean
   /** ×1, ×1.05 or ×1.10. */
   heartsFactor: number
-  /** A mentor's ×1.10 at her place today, save v4 only; absent is ×1. */
+  /** A mentor's ×1.10 at her place today; absent is ×1. */
   mentor?: number
 }
 
 /** Points for a pay of `base` (every pay takes the same factors): base × her talent's factor × 1.2 in her
- * favourite line × 1.25 well fed × her hearts' factor × a mentor's (v4), to a millionth. A day's work is `DAY_POINTS`; a
+ * favourite line × 1.25 well fed × her hearts' factor × a mentor's, to a millionth. A day's work is `DAY_POINTS`; a
  * workshop play and an expedition pass their own base. */
 export function rankPoints(base: number, terms: PointTerms): number {
   return round6(base * talentRankPoints(terms.talent) * (terms.favourite ? FAVOURITE_POINTS : 1) * (terms.wellFed ? WELL_FED_POINTS : 1) * terms.heartsFactor * (terms.mentor ?? 1))
@@ -74,10 +60,8 @@ export const daysToRank = (rank: Rank, perDay: number): number => (rank === 0 ? 
 
 // --- Her favourite line -------------------------------------------------------------------------------------
 
-/** Her favourite activity: her calling's line's: Metal and Stone mining, Wood foraging, Fish fishing,
- * Vegetables farming. The ranch, the workshops and expeditions are nobody's favourite. */
-export const favouriteActivity = (outfit: { readonly line: MaterialLine }): Activity => LINE_ACTIVITY[outfit.line]
-/** The activities that can be a favourite, in the activities' order. */
+/** The activities that can be a favourite, her favourite line's (Metal and Stone mining, Wood foraging, Fish fishing,
+ * Vegetables farming), in the activities' order. The ranch, the workshops and expeditions are nobody's favourite. */
 export const FAVOURITE_ACTIVITIES: readonly Activity[] = ACTIVITIES.filter((a) => Object.values(LINE_ACTIVITY).includes(a))
 
 // --- Who worked today ---------------------------------------------------------------------------------
@@ -277,8 +261,8 @@ export interface WorkedDay {
   outfitId: OutfitId
   activity: Activity
 }
-/** Her talent in an activity and whether it's her favourite: master data's, read by the night; on v4, a mentor's factor
- * at her place today. */
+/** Her talent in an activity and whether it's her favourite, read by the night, and a mentor's factor at her place
+ * today. */
 export type TermsOf = (outfitId: OutfitId, activity: Activity) => { talent: TalentStep; favourite: boolean; mentor?: number }
 
 /**

@@ -1,5 +1,5 @@
 // The forest, the Fishery and the stations: the tables, a day's haul, the
-// stations' rate, building them, the catch's sizes, the night's hauls and the save's parse. Invented outfit ids, the
+// stations' rate, building them, the catch's sizes, the night's hauls and the save's parse. Invented ids, the
 // loop's own kinds.
 import { endsAt } from '@luismlorenzana/uma-work'
 import { describe, expect, it } from 'vitest'
@@ -11,9 +11,9 @@ import { goodOf, isGoodId } from '../goods/ids'
 import { endDay, NIGHT_STEPS, runNight, tickRanks, type NightStep } from '../night/end-day'
 import { collectLoopAll, collectLoopWorker, editLoopQueue, startLoopJob, type LoopJobInput } from '../save/loop-work'
 import { loopReadyWork } from '../save/work-readings'
-import { parseSaveV3 } from '../save/parse-v3'
+import { parseSaveV4 } from '../save/parse-v4'
 import { SaveRuleError } from '../save/rules'
-import { newRosterUma, newSave, type LoopWorkRequest, type SaveV3 } from '../save/v3'
+import { newLove, newRosterUma, newSave, type LoopWorkRequest, type SaveV4 } from '../save/v4'
 import { loopWorld } from '../work/loop-env'
 import { FISHING_SPOTS, FOREST_AREAS, LOOP_REQUESTS, STATION_JOB_IDS, stationJobOf } from './ids'
 import {
@@ -31,17 +31,20 @@ const at = (step: TalentStep): TalentOf => () => step
 const C = at(4)
 
 /** Two Umas home on `day`, Novice everywhere. */
-function farm(day = 1): SaveV3 {
+function farm(day = 1): SaveV4 {
   const save = newSave('u1', AT)
-  return { ...save, calendar: { day }, roster: { 101: newRosterUma(1), 202: newRosterUma(1) }, dorm: { level: 1, home: ['101', '202'], swaps: [] } }
+  return {
+    ...save, calendar: { day }, roster: { 101: newRosterUma(1), 202: newRosterUma(1) }, love: { 101: newLove(), 202: newLove() },
+    dorm: { level: 1, home: ['101', '202'], swaps: [] },
+  }
 }
-const ranked = (save: SaveV3, id: string, activity: 'foraging' | 'fishing' | 'farming', rank: Rank): SaveV3 =>
+const ranked = (save: SaveV4, id: string, activity: 'foraging' | 'fishing' | 'farming', rank: Rank): SaveV4 =>
   ({ ...save, roster: { ...save.roster, [id]: { ...save.roster[id]!, ranks: { ...save.roster[id]!.ranks, [activity]: { points: 0, rank, challenge: 0 } } } } })
 const job = (place: LoopJobInput['place'], request: LoopWorkRequest, outfitId = '101', slot = 0): LoopJobInput => ({ outfitId, place, slot, request })
 const forage = (item: string, count = 1): LoopWorkRequest => ({ kind: 'forage', item, count })
 const fish = (item: string, count = 1): LoopWorkRequest => ({ kind: 'fish', item, count })
-const start = (save: SaveV3, input: LoopJobInput, talentOf: TalentOf = C) => startLoopJob(save, input, AT, loopKinds(talentOf))
-const night = (save: SaveV3, talentOf: TalentOf = C) => endDay(save, { roster: [], talentOf }, LATER)
+const start = (save: SaveV4, input: LoopJobInput, talentOf: TalentOf = C) => startLoopJob(save, input, AT, loopKinds(talentOf))
+const night = (save: SaveV4, talentOf: TalentOf = C) => endDay(save, { talentOf }, LATER)
 const terms = (t: Partial<WorkTerms> = {}): WorkTerms => ({ rank: 0, talent: 4, tool: 1, wellFed: 0, ...t })
 
 describe('the tables', () => {
@@ -127,7 +130,7 @@ describe('a day\'s haul', () => {
     expect(haulCount('fishery', terms({ talent: 0 }))).toBe(3)
   })
 
-  it('refuses the Hills at Novice and opens them at Hand; refuses the Sea Pier on v3', () => {
+  it('refuses the Hills at Novice and opens them at Hand; refuses the Sea Pier before chapter 7', () => {
     expect(() => start(farm(), job('forest', forage('hills')))).toThrow('Opens at Hand.')
     expect(start(ranked(farm(), '101', 'foraging', 1), job('forest', forage('hills'))).work['101']!.entries).toHaveLength(1)
     expect(() => start(ranked(farm(), '101', 'fishing', 5), job('fishery', fish('sea-pier')))).toThrow('Opens with Chapter 7.')
@@ -161,8 +164,8 @@ describe('a day\'s haul', () => {
   it('plans a queued day at the boundary with the rank and talent the night gives', () => {
     const save = editLoopQueue(start(farm(), job('forest', forage('woods'))), { outfitId: '101', add: { request: forage('woods'), building: 'forest' } }, AT, loopKinds(C))
     // Step 6 stands in: everyone who worked today reaches Expert foraging.
-    const ranks: NightStep = (n) => ({ ...n, save: n.notes.worked.reduce((s, w) => ranked(s, w.outfitId, 'foraging', 3), n.save as SaveV3) })
-    const morning = runNight(save, { roster: [], talentOf: at(7) }, NIGHT_STEPS.map((s) => (s.run === tickRanks ? { ...s, run: ranks } : s)))
+    const ranks: NightStep = (n) => ({ ...n, save: n.notes.worked.reduce((s, w) => ranked(s, w.outfitId, 'foraging', 3), n.save as SaveV4) })
+    const morning = runNight(save, { talentOf: at(7) }, NIGHT_STEPS.map((s) => (s.run === tickRanks ? { ...s, run: ranks } : s)))
     const [first, second] = morning.work['101']!.entries
     expect(first!.outputs).toHaveLength(5)
     // Expert ×1.5 and S ×1.2: round(5 × 1.5 × 1.2) = 9.
@@ -171,7 +174,7 @@ describe('a day\'s haul', () => {
   })
 
   it('gives a well-fed forager ×1.25 items a day and +0.25 quality, and no time', () => {
-    const fed: SaveV3 = { ...farm(), roster: { ...farm().roster, 101: { ...newRosterUma(1), wellFed: 1 } } }
+    const fed: SaveV4 = { ...farm(), roster: { ...farm().roster, 101: { ...newRosterUma(1), wellFed: 1 } } }
     const save = start(fed, job('forest', forage('woods', 2)))
     const entry = save.work['101']!.entries[0]!
     expect(entry.outputs).toHaveLength(7 + 5)
@@ -252,7 +255,7 @@ describe('the night\'s hauls', () => {
     expect(one.roster['101']!.ranks.fishing.challenge).toBe(4)
     expect(one.summary!.work).toEqual([expect.objectContaining({ kind: 'catch' })])
     expect(night(one).roster['101']!.ranks.fishing.challenge).toBe(8)
-    expect(parseSaveV3(json(one))).toEqual(one)
+    expect(parseSaveV4(json(one))).toEqual(one)
     const { best } = haulsTonight(save, [{ outfitId: '101', place: 'fishery', request: fish('pond'), items: ['carp@3', 'rainbow-koi@1', 'trout@5'] }])
     expect(best).toEqual({ id: 'rainbow-koi', stars: 1 })
   })
@@ -265,7 +268,7 @@ describe('the night\'s hauls', () => {
 })
 
 describe('the stations', () => {
-  const sawmill = (save: SaveV3): SaveV3 => ({ ...save, buildings: { ...save.buildings, sawmill: 1, mill: 1, smokehouse: 1 } })
+  const sawmill = (save: SaveV4): SaveV4 => ({ ...save, buildings: { ...save.buildings, sawmill: 1, mill: 1, smokehouse: 1 } })
 
   it('saws a Hand C forager\'s 10 logs a day, ★3 logs into ★3 planks', () => {
     const save = sawmill(ranked({ ...farm(), items: { 'pine-log': [0, 0, 12, 0, 0] } }, '101', 'foraging', 1))
@@ -285,7 +288,7 @@ describe('the stations', () => {
     expect(night(started).work['101']!.entries[0]!.outputs).toHaveLength(8)
     const two = night(night(started))
     expect(collectLoopWorker(two, '101', LATER, loopKinds(C)).save.items['apple-preserve']).toEqual([8, 0, 0, 0, 0])
-    const fed: SaveV3 = { ...started, roster: { ...started.roster, 101: { ...started.roster['101']!, wellFed: 1 } } }
+    const fed: SaveV4 = { ...started, roster: { ...started.roster, 101: { ...started.roster['101']!, wellFed: 1 } } }
     expect(night(fed).work['101']!.entries[0]!.acceleratedMs).toBe(DAY_MS / 4)
   })
 
@@ -312,7 +315,7 @@ describe('the stations', () => {
   })
 
   it('offers what the Warehouse holds, job by job, at each star', () => {
-    const save: SaveV3 = { ...farm(), items: { 'pine-log': [2, 0, 3, 0, 0], shiitake: [1, 0, 0, 0, 0], carp: [4, 0, 0, 0, 0], 'pine-plank': [1, 0, 0, 0, 0] } }
+    const save: SaveV4 = { ...farm(), items: { 'pine-log': [2, 0, 3, 0, 0], shiitake: [1, 0, 0, 0, 0], carp: [4, 0, 0, 0, 0], 'pine-plank': [1, 0, 0, 0, 0] } }
     expect(stationOptions(save, 'sawmill').map((o) => `${o.job} ${o.item} ${o.held}`)).toEqual([
       'planks pine-plank@1 2', 'planks pine-plank@3 3', 'drying dried-shiitake@1 1',
     ])
@@ -346,8 +349,8 @@ describe('the stations', () => {
 describe('the save', () => {
   it('parses every kind\'s request at its place, an entry with more items than days, and refuses the rest', () => {
     const save = sawmill2(start(farm(), job('forest', forage('woods', 2))))
-    expect(parseSaveV3(json(save))).toEqual(save)
-    const bad = (request: unknown, building = 'forest') => () => parseSaveV3(json({ ...save, work: { 101: { ...save.work['101']!, slot: { building, slot: 0 }, entries: [{ ...save.work['101']!.entries[0]!, request }] } } }))
+    expect(parseSaveV4(json(save))).toEqual(save)
+    const bad = (request: unknown, building = 'forest') => () => parseSaveV4(json({ ...save, work: { 101: { ...save.work['101']!, slot: { building, slot: 0 }, entries: [{ ...save.work['101']!.entries[0]!, request }] } } }))
     expect(bad({ kind: 'forage', item: 'woods', count: 5 })).toThrow('save.work.101.entries.0.request.count')
     expect(bad({ kind: 'forage', item: 'beach', count: 1 })).toThrow('save.work.101.entries.0.request.item')
     expect(bad({ kind: 'fish', item: 'pond', count: 1 })).toThrow('not worked at this place')
@@ -365,6 +368,6 @@ describe('the save', () => {
   })
 })
 
-function sawmill2(save: SaveV3): SaveV3 {
+function sawmill2(save: SaveV4): SaveV4 {
   return { ...save, buildings: { ...save.buildings, sawmill: 1 } }
 }

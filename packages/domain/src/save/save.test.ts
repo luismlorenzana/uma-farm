@@ -1,72 +1,70 @@
+// The save's envelope: v4 is the one save; an older save (v1–v3) reads as its version and account only, and a newer one
+// is refused. Invented data only.
 import { describe, expect, it } from 'vitest'
-import { newSaveV2, parseSave, parseSavePut, resolveConflict, SAVE_VERSION, SaveParseError, toV2, touched, versionOf, type Save } from './save'
-import { collectWorker, queueJob, startJob } from './work'
+import { isOlderSave, parseSave, parseSavePut, parseStored, resolveConflict, SAVE_VERSION, SaveParseError, touched, versionOf } from './save'
+import { freshV4, newSave } from './v4'
 
 const AT = '2026-11-08T10:00:00.000Z'
 const LATER = '2026-11-08T11:00:00.000Z'
-const V1 = { version: 1, account: { uid: 'u1', createdAt: AT, updatedAt: LATER } }
+const ACCOUNT = { uid: 'u1', createdAt: AT, updatedAt: LATER }
+/** An older save as a device or the server holds it: its body is never read. */
+const V3 = { version: 3, account: ACCOUNT, calendar: { day: 12 }, gold: 812, start: { redraws: 1 }, visitors: [] }
+const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
-/** A save mid-play: a gather running with one queued behind it, an Arms Gem being made, items in the Warehouse. */
-function playing(): Save {
-  let save: Save = { ...newSaveV2('u1', AT), items: { 'copper-ingot': 20, 'copper-ore': 3 } }
-  save = startJob(save, 'mine', 0, { outfitId: '101' }, 'copper-ore', 3, AT)
-  save = queueJob(save, 'mine', 0, { outfitId: '101' }, 'copper-ore', 1, AT)
-  save = startJob(save, 'weapon-forge', 2, { outfitId: '202' }, 'weapon-gem-g1', 2, AT)
-  return save
-}
-
-describe('save v2', () => {
-  it('starts an account with the Wilds empty', () => {
-    expect(newSaveV2('u1', AT)).toEqual({ version: 2, account: { uid: 'u1', createdAt: AT, updatedAt: AT }, umas: {}, items: {}, buildings: {}, work: {} })
-    // The app writes v3; v2 stays readable for the migration.
-    expect(SAVE_VERSION).toBe(3)
+describe('save v4, the one save', () => {
+  it('is the version the farm reads and writes', () => {
+    expect(SAVE_VERSION).toBe(4)
+    expect(newSave('u1', AT)).toMatchObject({ version: 4, account: { uid: 'u1', createdAt: AT, updatedAt: AT } })
   })
 
-  it('migrates v1 to v2, keeping updatedAt where it was', () => {
-    const migrated = parseSave(V1)
-    expect(migrated).toEqual({ version: 2, account: V1.account, umas: {}, items: {}, buildings: {}, work: {} })
-    expect(migrated.account.updatedAt).toBe(LATER)
-    expect(toV2({ version: 1, account: V1.account }).account).toBe(V1.account)
-  })
-
-  it('round-trips through JSON, mid-play', () => {
-    const save = playing()
-    expect(Object.keys(save.work).sort()).toEqual(['101', '202'])
-    expect(save.umas).toEqual({ 101: { craft: { level: 1, exp: 0 } }, 202: { craft: { level: 1, exp: 0 } } })
-    expect(save.items).toEqual({ 'copper-ore': 3 })
-    const parsed = parseSave(JSON.parse(JSON.stringify(save)))
-    expect(parsed).toEqual(save)
-    expect(parseSave(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed)
-  })
-
-  it('never moves updatedAt while parsing', () => {
-    expect(parseSave({ ...newSaveV2('u1', AT), account: V1.account }).account.updatedAt).toBe(LATER)
+  it('round-trips through JSON, and never moves updatedAt while parsing', () => {
+    const save = { ...newSave('u1', AT), account: ACCOUNT }
+    expect(parseSave(json(save))).toEqual(save)
+    expect(parseSave(json(save)).account.updatedAt).toBe(LATER)
   })
 
   it('moves updatedAt only on a change', () => {
-    expect(touched(newSaveV2('u1', AT), LATER).account).toEqual({ uid: 'u1', createdAt: AT, updatedAt: LATER })
-    const started = startJob(newSaveV2('u1', AT), 'mine', 0, { outfitId: '101' }, 'copper-ore', 1, LATER)
-    expect(started.account.updatedAt).toBe(LATER)
-    expect(collectWorker(started, '101', '2026-11-08T12:00:00.000Z').save.account.updatedAt).toBe('2026-11-08T12:00:00.000Z')
+    expect(touched(newSave('u1', AT), LATER).account).toEqual(ACCOUNT)
   })
 
-  it('refuses a newer version, unknown keys, bad ids and bad rows, saying where', () => {
-    const save = newSaveV2('u1', AT)
+  it('refuses an older save, a newer one, unknown keys and a missing version, saying where', () => {
+    expect(() => parseSave(V3)).toThrow('save.version: expected 4: an older save starts over on the device')
+    expect(() => parseSave({ version: 1, account: ACCOUNT })).toThrow(SaveParseError)
     expect(() => parseSave({ version: 5, account: {} })).toThrow(/newer than this app/)
-    expect(() => parseSave({ ...save, extra: 1 })).toThrow(/unknown keys extra/)
-    expect(() => parseSave({ version: 1, account: { uid: 'u1', createdAt: 'soon', updatedAt: AT } })).toThrow(SaveParseError)
-    expect(() => parseSave(null)).toThrow(/save.version/)
-    expect(() => parseSave({ ...save, items: { 'not-an-item': 1 } })).toThrow(/save.items.not-an-item: unknown item/)
-    expect(() => parseSave({ ...save, umas: { abc: { craft: { level: 1, exp: 0 } } } })).toThrow(/save.umas.abc/)
-    expect(() => parseSave({ ...save, umas: { 101: { craft: { level: 51, exp: 0 } } } })).toThrow(/expected 1–50/)
-    expect(() => parseSave({ ...save, buildings: { mine: { level: 2 } } })).toThrow(/save.buildings: unknown keys mine/)
-    const mid = JSON.parse(JSON.stringify(playing())) as Save
-    expect(() => parseSave({ ...mid, umas: {} })).toThrow(/save.work.101: expected an Uma who has worked/)
-    const wrongPlace = JSON.parse(JSON.stringify(mid)) as { work: Record<string, { slot: { building: string } }> }
-    wrongPlace.work['101']!.slot.building = 'quarry'
-    expect(() => parseSave(wrongPlace)).toThrow(/save.work.101.slot.building: not a place/)
+    expect(() => parseSave({ ...newSave('u1', AT), extra: 1 })).toThrow(/unknown keys extra/)
+    expect(() => parseSave(null)).toThrow('save.version: expected 4')
+  })
+})
+
+describe('a stored save', () => {
+  it('reads a v4 strictly', () => {
+    const save = newSave('u1', AT)
+    expect(parseStored(json(save))).toEqual(save)
+    expect(() => parseStored({ ...json(save), gold: -1 })).toThrow('save.gold')
   })
 
+  it('reads an older save as its version and account only, whatever else it holds', () => {
+    expect(parseStored(V3)).toEqual({ version: 3, account: ACCOUNT })
+    expect(parseStored({ version: 2, account: ACCOUNT, umas: {}, items: {}, buildings: {}, work: {} })).toEqual({ version: 2, account: ACCOUNT })
+    expect(parseStored({ version: 1, account: ACCOUNT })).toEqual({ version: 1, account: ACCOUNT })
+    expect(isOlderSave(parseStored(V3))).toBe(true)
+    expect(isOlderSave(newSave('u1', AT))).toBe(false)
+    expect(() => parseStored({ ...V3, account: { ...ACCOUNT, createdAt: 'soon' } })).toThrow('save.account.createdAt')
+  })
+
+  it('refuses a newer save and a value with no version', () => {
+    expect(() => parseStored({ version: 5, account: ACCOUNT })).toThrow(/newer than this app/)
+    expect(() => parseStored({ account: ACCOUNT })).toThrow('save.version: expected 4')
+  })
+
+  it('starts a fresh v4 from an older save with its account whole', () => {
+    const fresh = freshV4(parseStored(V3))
+    expect(fresh).toEqual({ ...newSave('u1', AT), account: ACCOUNT })
+    expect(fresh.account.updatedAt).toBe(LATER)
+  })
+})
+
+describe('the envelope', () => {
   it('reads the version a value claims', () => {
     expect(versionOf({ version: 1 })).toBe(1)
     expect(versionOf({})).toBe(0)
@@ -74,7 +72,7 @@ describe('save v2', () => {
   })
 
   it('keeps the save changed last, and this device on a tie', () => {
-    const early = newSaveV2('u1', AT)
+    const early = newSave('u1', AT)
     const late = touched(early, LATER)
     expect(resolveConflict(early, late)).toBe(late)
     expect(resolveConflict(late, early)).toBe(late)
@@ -82,10 +80,10 @@ describe('save v2', () => {
     expect(resolveConflict(early, twin)).toBe(early)
   })
 
-  it('parses an upload, saying which version was sent', () => {
-    const save = newSaveV2('u1', AT)
-    expect(parseSavePut({ baseRevision: 3, save })).toEqual({ baseRevision: 3, save, sentVersion: 2 })
-    expect(parseSavePut({ baseRevision: 0, save: V1 })).toEqual({ baseRevision: 0, save: parseSave(V1), sentVersion: 1 })
+  it('parses an upload: a v4 only', () => {
+    const save = newSave('u1', AT)
+    expect(parseSavePut({ baseRevision: 3, save: json(save) })).toEqual({ baseRevision: 3, save })
+    expect(() => parseSavePut({ baseRevision: 0, save: V3 })).toThrow('body.save.version: expected 4')
     expect(() => parseSavePut({ baseRevision: -1, save })).toThrow(/body.baseRevision/)
     expect(() => parseSavePut({ baseRevision: 0, save, more: true })).toThrow(/unknown keys more/)
   })

@@ -23,7 +23,7 @@ export interface QualitySources {
   /** Well fed: `WELL_FED_QUALITY`. */
   boost?: number
   /** Her keepsake: +0.25 at her line's place from Friendship 10, +0.5 from
-   * Spouse 5 (`keepsakeQuality`), save v4 only. */
+   * Spouse 5 (`keepsakeQuality`). */
   keepsake?: number
 }
 

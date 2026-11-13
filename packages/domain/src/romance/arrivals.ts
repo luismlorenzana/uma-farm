@@ -1,6 +1,5 @@
-// Authored arrivals: the farm's Umas are only the cast, and each walks
-// in when the story says. No start picks, no Gate visitors, no chapter recruit drawn for the weakest activity: on save v4
-// none of `startSheet`, `gateNight` or `recruitFor` runs.
+// Authored arrivals: the farm's Umas are only the cast, and each walks in when the story says. Nothing is drawn: no
+// start picks, no Gate visitors, no chapter recruit.
 //
 //   opening    the opening scene, day 1: read or skipped, it joins the opening's Umas (a player's change): the cast's
 //              `opening`, else those who arrive at it, else the welcome list (`openingOf`)

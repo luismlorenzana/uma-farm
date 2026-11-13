@@ -1,7 +1,7 @@
 // The perks' effects: `hasPerk` from her level, the romance term
 // and its caps, in her element, the line effects at night and at harvest, night chores, morning items, the mentor, her
-// keepsake, her signature dish, breakfast, the format's keepsake and pet name, the save's new fields and lines, and v3's
-// numbers unchanged. Invented ids only: the stand-ins 9000001–9000003 and a 9000004 built here.
+// keepsake, her signature dish, breakfast, the format's keepsake and pet name, and the save's new fields and lines.
+// Invented ids only: the stand-ins 9000001–9000003 and a 9000004 built here.
 import { describe, expect, it } from 'vitest'
 import { dishName } from '../goods/ids'
 import { extrasShare, extrasTonight, bondOf } from '../farm/bonds'
@@ -15,8 +15,7 @@ import { runNight, type NightContext } from '../night/end-day'
 import { TEST_KINDS } from '../night/kinds.fixture'
 import { startLoopJob } from '../save/loop-work'
 import { parseSaveV4 } from '../save/parse-v4'
-import { newBlock, newRosterUma, newSave, pairKey, type Block, type Plot } from '../save/v3'
-import { newSaveV4, type Love, type SaveV4 } from '../save/v4'
+import { newBlock, newSave, pairKey, type Block, type Love, type Plot, type SaveV4 } from '../save/v4'
 import { goodCount, parseStockKey } from '../save/warehouse'
 import { checkBible, type Cast, type Ties, type UmaBible } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_IN_CAST, STAND_IN_TIES, STAND_INS } from '../story/authored.fixture'
@@ -39,11 +38,11 @@ const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const PACK = storyPackFrom(STAND_IN_FILES)
 const [ONE, TWO, THREE] = STAND_INS as [string, string, string]
 const FOUR = '9000004'
-const context = (story: NightContext['story'] = PACK): NightContext => ({ roster: [], kinds: TEST_KINDS, story, talentOf: () => TALENT_D })
+const context = (story: NightContext['story'] = PACK): NightContext => ({ kinds: TEST_KINDS, story, talentOf: () => TALENT_D })
 
-/** A named v4 farm on `day`, the opening read: 9000001 (a farmer), 9000002 (a forager) and 9000003 (a fisher) home. */
+/** A named farm on `day`, the opening read: 9000001 (a farmer), 9000002 (a forager) and 9000003 (a fisher) home. */
 function farm(day = 3, pack: Pick<StoryPack, 'cast' | 'ties'> = PACK): SaveV4 {
-  const save = joinOpening(readScene({ ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack)
+  const save = joinOpening(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack)
   return { ...save, today: { ...save.today, bonds: {} } }
 }
 const withLove = (save: SaveV4, id: string, love: Partial<Love>): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })
@@ -167,7 +166,7 @@ describe('the line effects', () => {
     const save = withLove(farm(), TWO, at('romance', 5))
     expect(extrasTonight(save, [made(TWO, 10, 'sawmill', 'pine-plank@2')], [{ outfitId: TWO, place: 'sawmill' }], PACK).perks).toEqual([{ id: TWO, items: ['pine-plank@2', 'pine-plank@2'] }])
     expect(extrasTonight(save, [made(TWO, 10, 'fishery', 'carp@1')], [{ outfitId: TWO, place: 'fishery' }], PACK).perks).toEqual([])
-    // Without the pack, or on v3, none.
+    // Without the pack, none.
     expect(extrasTonight(save, [made(TWO, 10)], [{ outfitId: TWO, place: 'forest' }]).perks).toEqual([])
   })
 
@@ -351,7 +350,7 @@ describe('her keepsake', () => {
     expect(keepsakeQuality(withLove(farm(), TWO, spouse(5)), PACK, TWO, 'forest')).toBe(KEEPSAKE_GROWN)
   })
 
-  it('lifts a haul as it\'s planned and a tended harvest; never on v3', () => {
+  it('lifts a haul as it\'s planned and a tended harvest', () => {
     const save = withLove(farm(), TWO, at('confession', 10))
     const request = { kind: 'forage', item: 'woods', count: 1 }
     const plain = planHaul(save, TWO, 'forest', request, 0, 0, talentsD)
@@ -464,27 +463,3 @@ describe('save v4\'s new fields and lines', () => {
     refuse([{ kind: 'perks', items: 1 }, { kind: 'perks', items: 2 }], 'save.summary.hearts.1: repeated')
   })
 })
-
-describe('v3\'s numbers unchanged', () => {
-  it('plans, harvests, grows, ranks and ends the night on v3 exactly as before, the pack or not', () => {
-    // A v3 farm with an Uma (an outfit id) tending Block A and another at the forest.
-    const base = newSave('u1', AT)
-    const v3 = { ...base, roster: { '101': newRosterUma(1), '202': newRosterUma(1) }, dorm: { ...base.dorm, home: ['101', '202'] } }
-    const request = { kind: 'forage', item: 'woods', count: 2 }
-    expect(planHaul(v3, '202', 'forest', request, 0, 0, talentsD, PACK)).toEqual(planHaul(v3, '202', 'forest', request, 0, 0, talentsD))
-    expect(loopKinds(talentsD, PACK).forage!.rules.plan).toBeTypeOf('function')
-    const fields = { ...v3, fields: { blocks: [block('A', '101', [ripe(), growing()]), block('B', null, [growing()])] } }
-    expect(harvest(fields, 'A', 0, () => TALENT_D, PACK)).toEqual(harvest(fields, 'A', 0, () => TALENT_D))
-    expect(growFields(fields, () => TALENT_D, PACK)).toEqual(growFields(fields))
-    expect(blockGrowth(fields, 'A', undefined, PACK)).toBe(blockGrowth(fields, 'A'))
-    expect(extrasTonight({ ...v3, bonds: {} }, [made('101', 10)], [{ outfitId: '101', place: 'forest' }], PACK)).toEqual({ save: { ...v3, bonds: {} }, extras: [], perks: [] })
-    expect(rankPoints(10, { talent: TALENT_D, favourite: true, wellFed: true, heartsFactor: 1.05 })).toBe(15.75)
-    const ctx: NightContext = { roster: [], kinds: TEST_KINDS, talentOf: () => TALENT_D }
-    const working = startLoopJob(fields, { outfitId: '202', place: 'forest', slot: 0, request: { kind: 'gather', item: 'pine-log', count: 2 } }, AT, TEST_KINDS)
-    const night = runNight(working, { ...ctx, story: PACK })
-    expect(night).toEqual(runNight(working, ctx))
-    expect(night.fields.blocks[0]!.plots[1]!.growth).toBeGreaterThan(1)
-    expect(night.roster['202']!.ranks.foraging.points).toBeGreaterThan(0)
-  })
-})
-
