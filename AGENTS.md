@@ -1,18 +1,16 @@
 # AGENTS.md — guide for AI coding agents
 
-uma-farm is a personal, never-distributed farm inspired by *Umamusume: Pretty Derby*, played on the owner's iPhone as a
-Home Screen web app. Umas gather, process and make, and a Forge sends the other Uma games their items as one-way
-parcels. Read this before changing anything.
+uma-farm is a personal farm game inspired by *Umamusume: Pretty Derby*, played on the owner's iPhone as a Home Screen
+web app. Days are turns: Umas plant, gather, process and ship, and an authored cast brings a romance to each. Read this
+before changing anything.
 
 ## Read first
 
-1. `docs/handoff/README.md`: the current phase and its queue. Your task is a packet in `docs/handoff/tasks/`.
-   The current initiative is `docs/design/core-loop.md` (the farm's own loop, D26) on `docs/design/hd2d-farm.md` (D21);
-   `docs/design/first-playable.md` is M1–M2's brief, done.
-2. `docs/game/`: the manual of the game as built. It is empty until F3; after that, look up any rule or screen there first.
-3. `docs/design/`: the plan, its specs and intent. When a design changes a rule, update the manual in the
-   same change.
-4. `docs/decisions.md` (append-only, from D1), and the cross-game plan in uma-platform `docs/architecture.md`.
+1. `docs/handoff/README.md`: what's being built now. Your task is a packet in `docs/handoff/tasks/`.
+2. `docs/roadmap.md`: where the game is going, phase by phase.
+3. `docs/game-mechanics.md`: how the game works today. Look up any rule or screen there first. Its tables are generated
+   from the code.
+4. `docs/technical/architecture.md` and `docs/technical/infrastructure.md`: how it's built and where it runs.
 
 ## Hard rules
 
@@ -27,12 +25,12 @@ parcels. Read this before changing anything.
 - **Don't touch production infrastructure** unless your task says so: `.github/workflows/`, `infra/`, `firebase.json`,
   `.env.production` and `apps/api/Dockerfile`. GCP project `uma-rpg` also runs uma-rpg and uma-quest: never touch their
   pieces.
-- **Never import from uma-rpg, uma-racer or uma-quest.** The Wilds' rules are copied from uma-rpg at a recorded commit,
-  with their tests (FM2); their screens were retired in F24, and the rules stay for save v2's migration.
-- **Parcels are one-way, and no server writes into a save** (FM10, FM11). A parcel lives in `farm-api`'s `parcels` and is
-  claimed exactly once.
-- **Logs:** append decision rows and never edit old ones. A finished packet is deleted in the commit that finishes it,
-  with a Done row in the handoff README.
+- **Never import from uma-rpg, uma-racer or uma-quest.** uma-rpg's work engine is copied at a recorded commit, with its
+  tests, and stays only to read and migrate v2 saves.
+- **No server ever writes into a save.** Parcels, when they come, are one-way: the farm sends and the games receive.
+- **Docs stay true:** a rule change updates `docs/game-mechanics.md` in the same commit (`pnpm docs:update` regenerates
+  its tables and every page in `docs/pages/`). A finished packet is deleted in the commit that finishes it, and its
+  roadmap step leaves the roadmap. There's no decision log: the commit says what changed and why.
 
 ## Commands
 
@@ -43,10 +41,12 @@ Node 22+ and pnpm 10. The `@luismlorenzana/*` packages come from GitHub Packages
 |---|---|
 | `pnpm install` | Install the workspace |
 | `pnpm lint` | Type-check every package |
-| `pnpm test` | The script checks (size, private content), then every package's Vitest |
+| `pnpm test` | The script checks (size, private content, hosting site, the docs' pages, the story tools), then every package's Vitest |
 | `pnpm build` | Build everything; the web build ends with the 180 KB size check |
 | `pnpm api` | The API on :8101, auth off (`AUTH_MODE=disabled`) |
 | `pnpm web` | The web app on :5194, `/api` proxied to :8101 |
+| `pnpm docs:update` | Regenerate the mechanics document's tables from the rules, then the HTML pages in `docs/pages/` |
+| `pnpm stories` | The Farm Story Sandbox on http://127.0.0.1:4321 (`pnpm stories:import-pack` brings uma-quest's pictures) |
 | `pnpm story:release` | The story pack's release: checks the ignored `content/story/` and writes `content/story-release/` (`--stand-in` releases the invented stand-in) |
 | `pnpm story:publish` | The release, uploaded to the private `gs://uma-farm-content` with the scoped gcloud (`--dry-run` lists it) |
 
@@ -57,7 +57,7 @@ built API with `ALLOWED_EMAIL` set and no `AUTH_MODE`. farm-api serves the story
 ## Conventions
 
 - TypeScript strict with `noUncheckedIndexedAccess`; Vitest next to the code; no network in tests.
-- **Mobile first at 390×844 portrait** (check 375×667): 44 pt targets, safe areas, `h-dvh` (FM18).
-- **Main JS ≤ 180 KB gzip** (FM20). The Hub map and the Forge's scene load on demand.
+- **Mobile first at 390×844 portrait** (check 375×667): 44 pt targets, safe areas, `h-dvh`.
+- **Main JS ≤ 180 KB gzip.** The Hub map and the HD-2D stage load on demand, and the stage stays out of the precache.
 - **Player-facing text is short:** labels, counts, buttons and plain empty states. Explanations go behind a help button.
 - Conventional Commits; the body explains why.

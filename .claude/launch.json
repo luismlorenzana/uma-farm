@@ -30,6 +30,20 @@
         "tools/story-sandbox/server.mjs"
       ],
       "port": 4321
+    },
+    {
+      "name": "docs-pages",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5199",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "docs/pages"
+      ],
+      "port": 5199
     }
   ]
 }

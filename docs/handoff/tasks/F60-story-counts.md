@@ -1,11 +1,9 @@
 # F60 — The farm story's counts, the owner's read, the balance
 
-**uma-farm · the story session (Claude), then the owner · S · Needs: F59 · Unblocks: layer 2 (F40)**
+**uma-farm · the story session (Claude), then the owner · S · Needs: the tag sheet and the ties' sources · Unblocks:
+layer 2's next waves ([F40](F40-story-authoring.md))**
 
-> Written 2026-11-12 (D64). It mirrors uma-quest's Q60.
->
-> **Amended 2026-11-12 (D72, local first):** the counts are a page in the Farm Story Sandbox, where the owner reviews.
-> No report file is written for uma-platform.
+> The counts are a page in the Farm Story Sandbox, where the owner reviews. No report file is written for uma-platform.
 
 ## Why
 
@@ -14,9 +12,10 @@ written around them.
 
 ## Context (read first)
 
-- F59 (done, D79): the tag sheet and each tie's source.
-- `tools/story-sandbox/` (`lib/model.mjs`, `public/views.js`, and how it reads the domain's validator in place) and
-  `story/authored.ts`.
+- The tag sheet, `content/story/tags.json` (each Uma's favourite line, season, festival and loved gift, a reason each),
+  and each tie's source (`real` or `story`) in `ties.json`.
+- `tools/story-sandbox/` (`lib/model.mjs`, `lib/counts.mjs`, `public/views.js`, and how it reads the domain's validator
+  in place) and `story/authored.ts`.
 
 ## Decisions made
 
@@ -24,15 +23,18 @@ written around them.
    and the bibles and routes as they come). No new file.
 2. **The counts,** each listing the Umas behind it: Umas per calling, favourite line, season, festival and loved good;
    arrivals by kind; ties an Uma, the least tied first; and, once bibles exist, every liked and disliked good, pair
-   conversations written against RS12's two an Uma, and events scripted of 27 an Uma.
+   conversations written against F40's RS12 (two an Uma), and events scripted of 27 an Uma.
 3. **A short private summary** of what looks unbalanced, with a recommendation each.
 4. **The balance comes after the read:** retags, new ties. No quotas before.
+5. **One read, three parts.** The owner asked for layer 2's first wave before reading the counts, so the counts, layer
+   1 and that first wave are read together, and any balance the read asks for applies to all three.
 
 ## Do
 
-1. The page and its model function, with tests on invented records (in `pnpm test`).
-2. Open it on the private pack; write the summary.
-3. Ask the owner in one line to read the Counts page; apply the answer; then layer 2.
+1. The page and its model function, with tests on invented records (in `pnpm test`). Built.
+2. Open it on the private pack; write the summary. Written.
+3. Ask the owner in one line to read the Counts page (with layer 1 and the first wave); apply the answer; then go on
+   with layer 2.
 
 ## Done when
 
@@ -42,8 +44,9 @@ written around them.
 
 ## Deliver
 
-The page by pull request to `main`; the summary never committed. Delete this packet, add a Done row in
-[the handoff](../README.md), log the D-decision (fetch `main` first), and go on to F40's layer 2.
+The page is in git; the summary is never committed. Once the owner's answer is applied: delete this packet and take its
+rows out of [the handoff](../README.md), say in the commit what the read changed (ids and counts only, no names), and
+go on with F40's layer 2.
 
 ## Rules that hold
 
