@@ -1,6 +1,6 @@
-// The Warehouse by stars (F19 decision 9): `/warehouse`. Families in tabs, each good with its five
+// The Warehouse by stars: `/warehouse`. Families in tabs, each good with its five
 // star counts, its price at each star today and "In demand" when it is; a tap opens its sheet (family, grade, what it
-// refines into or from, and Ship). With `?pick=bin` it's the bin's pick mode (decision 8): a tap on a star ships one,
+// refines into or from, and Ship). With `?pick=bin` it's the bin's pick mode: a tap on a star ships one,
 // Ship all ships the good's every star, and Done goes back to the bin. Drawn on the kit's Chip, Sheet and Button: the
 // kit's ShelfView holds one count and one price per item, and a good has five. Loaded on demand.
 import { binTotal, type FarmSave } from '@farm/domain'

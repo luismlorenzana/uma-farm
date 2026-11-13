@@ -1,4 +1,4 @@
-// `/roster` as rendered (F21 decision 7): each card with her favourite line's mark and her best talent on her face, her
+// `/roster` as rendered: each card with her favourite line's mark and her best talent on her face, her
 // best rank, and her sheet with her nine activities; the Fields' tender picker with "Hand · B" in farming. Invented
 // outfits with chosen stats; the server is a stub.
 import 'fake-indexeddb/auto'

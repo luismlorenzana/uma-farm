@@ -1,4 +1,4 @@
-// The evening (F50 decisions 1–9; romance spec RM19–RM22, RM37): who can spend one and which kinds open by her ladders,
+// The evening: who can spend one and which kinds open by her ladders,
 // her favourite kind, the points with each factor once, the slots and festival night, the morning's invitations (who,
 // how many, the weight, the same save drawing the same) and their answers, Tonight's rule, the night's step 9 and the
 // save's parse. Invented ids only: the stand-ins 9000001–9000003 and 9000004 onward built here.
@@ -88,7 +88,7 @@ describe('the kinds (RM37; decisions 1–3)', () => {
     expect(open(at('romance', 3))).toEqual(['walk', 'fishing', 'picnic', 'market', 'crafting', 'stargazing'])
     expect(open(at('romance', 6))).toEqual(['walk', 'fishing', 'picnic', 'market', 'crafting', 'stargazing', 'dance', 'boat'])
     expect(open(at('spouse', 0))).toEqual(['walk', 'fishing', 'picnic', 'market', 'crafting', 'stargazing', 'dance', 'boat'])
-    // Opened by the ladder but not built: cooking (F8) from F2, the footrace (F32) from R9.
+    // Opened by the ladder but not built: cooking from F2, the footrace from R9.
     expect(kindOpens(at('friendship', 2), 'cooking')).toBe(true)
     expect(kindOpens(at('romance', 9), 'footrace')).toBe(true)
     expect([kindBuilt('cooking'), kindBuilt('footrace')]).toEqual([false, false])
@@ -117,7 +117,7 @@ describe('the kinds (RM37; decisions 1–3)', () => {
   })
 
   it('her favourite kind is the date game her beats use most, walk on a tie or with none', () => {
-    // The stand-in's beats: stargazing three times (F10, R3, S5), walk twice, the rest once.
+    // The stand-in's beats: stargazing three times (R3, S5), walk twice, the rest once.
     expect(favouriteKind(PACK, ONE)).toBe('stargazing')
     expect(favouriteKind(packWith(['fishing', 'fishing', 'boat']), ONE)).toBe('fishing')
     expect(favouriteKind(packWith(['fishing', 'fishing', 'boat', 'boat']), ONE)).toBe('walk')

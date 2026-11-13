@@ -1,7 +1,7 @@
-// The way onto a new build (F3's update prompt, D11; F24's go-live): the kit's Update ready · Restart sits beside the
+// The way onto a new build (F3's update prompt; F24's go-live): the kit's Update ready · Restart sits beside the
 // boot gates, not inside them, so an old build that stops at a newer save (the Wilds' build at the owner's v3, D30 e;
 // the M4 build at the romance core's v4, F46 decision 2) still offers the new build, and Restart activates it. The gate
-// says why it stopped (F56 decision 10, D51) and asks the browser for the new build at once. The same holds over a
+// says why it stopped and asks the browser for the new build at once. The same holds over a
 // running farm. The boot is a stub.
 import { act } from 'react'
 import { createRoot, type Root as ReactRoot } from 'react-dom/client'

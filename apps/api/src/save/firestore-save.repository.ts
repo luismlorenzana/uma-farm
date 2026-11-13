@@ -4,10 +4,10 @@ import { parseSave, versionOf, type SaveEnvelope, type StoredSave } from '@farm/
 import { EMPTY_ENVELOPE, RevisionConflict, type SaveRepository } from './save.repository'
 
 // Production persistence in the `farm` database (FIRESTORE_DATABASE; never `(default)`, which is uma-rpg's, IN5):
-// `saves/{uid}` = { revision, save }, revision-checked inside a transaction. Copied from uma-rpg at 30a322a (F3). `save` is
-// JSON text (uma-rpg D260): Firestore refuses a list inside a list. When a newer save version first replaces a stored one,
-// the stored document is copied to `saveBackups/{uid}-v{n}` (uma-rpg D69), so a migration can be undone by hand. A refused
-// upload waits in `saveRescues/{uid}`, newest only. The server never changes a save; it stores what the app sent (FM10).
+// `saves/{uid}` = { revision, save }, revision-checked inside a transaction. Copied from uma-rpg at 30a322a. `save` is
+// JSON text: Firestore refuses a list inside a list. When a newer save version first replaces a stored one,
+// the stored document is copied to `saveBackups/{uid}-v{n}`, so a migration can be undone by hand. A refused
+// upload waits in `saveRescues/{uid}`, newest only. The server never changes a save; it stores what the app sent.
 const storedSave = (data: { save?: unknown } | undefined): unknown => (typeof data?.save === 'string' ? JSON.parse(data.save) as unknown : data?.save)
 
 export class FirestoreSaveRepository implements SaveRepository {

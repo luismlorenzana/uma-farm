@@ -1,4 +1,4 @@
-// The roster's cards (F18; F21 decision 7): the Umas on the farm with their best rank, and how many are away; their
+// The roster's cards: the Umas on the farm with their best rank, and how many are away; their
 // talents and ranks as album rows, the filters and sorts, a card's words and her sheet's nine activities. Invented outfits
 // with chosen stats (`album/testing.ts`).
 import { newRosterUma, newSave, type SaveV3 } from '@farm/domain'

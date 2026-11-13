@@ -1,4 +1,4 @@
-// The story pack's release (F56 decisions 2, 3 and 5; romance spec RM58): the private pack ships as hash-named files and
+// The story pack's release: the private pack ships as hash-named files and
 // one index, `story.json`, laid out as the bucket is and served by farm-api at `/api/content/…` behind the owner guard.
 // `scripts/story/release.mjs` writes them; the web reads the index at boot, then the cast, the ties, the bibles and the
 // household, and each route and pair on demand, every file verified by its hash in uma-kit's content cache. The format
@@ -12,10 +12,10 @@ import { pairFileIssues, packContext, routeFileIssues, storyPackFrom, StoryPackE
 export const STORY_INDEX = 'story.json'
 /** A file's name in the release: lowercase letters and digits in words joined by `-` (`cast`, `uma-<id>`, `pair-<a>-<b>`). */
 export const STORY_NAME = /^[a-z0-9]+(-[a-z0-9]+)*$/
-/** What the farm-api route serves (decision 2): the index, and hash-named files under `story/`. */
+/** What the farm-api route serves: the index, and hash-named files under `story/`. */
 export const STORY_FILE_PATH = /^story\/[a-z0-9]+(-[a-z0-9]+)*\.[a-f0-9]{8}\.json$/
 
-/** Each file's name in the release, by what it holds (decision 3). */
+/** Each file's name in the release, by what it holds. */
 export const storyFileName = {
   cast: 'cast',
   ties: 'ties',
@@ -42,7 +42,7 @@ export interface StoryFile {
   sha256: string
 }
 
-/** `story.json` (decision 3): what the release holds, so the game reads the pack without listing the bucket. */
+/** `story.json`: what the release holds, so the game reads the pack without listing the bucket. */
 export interface StoryIndex {
   version: 1
   /** The release's id: the first 8 hex of the SHA-256 of its files' names and hashes. The same files, the same id. */
@@ -50,7 +50,7 @@ export interface StoryIndex {
   builtAt: string
   /** Every file by its name (`storyFileName`). */
   files: Record<string, StoryFile>
-  /** The event ids each route scripts, by character id, so Ready (F47) knows what's scripted before a route loads. */
+  /** The event ids each route scripts, by character id, so Ready knows what's scripted before a route loads. */
   scripted: Record<string, string[]>
   /** The bond levels each pair's file holds, by its name (`<a>-<b>`), so the morning knows which levels have words. */
   pairs: Record<string, number[]>
@@ -99,7 +99,7 @@ export type ReadStoryFile = (name: string, file: StoryFile) => Promise<unknown>
 const sameList = (a: readonly (string | number)[], b: readonly (string | number)[]): boolean => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort())
 
 /**
- * The pack a release holds (decision 5): its cast, ties, bibles and household read at once and checked whole as
+ * The pack a release holds: its cast, ties, bibles and household read at once and checked whole as
  * `storyPackFrom` checks them; its routes and pairs listed by the index and read on demand, each checked as it loads
  * (the partial mode) and refused when it doesn't hold what the index says. A file that fails to load or check rejects
  * that call and is read again next time. Throws `StoryPackError` with every issue.

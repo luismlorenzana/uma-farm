@@ -1,4 +1,4 @@
-// The goods as the loop's screens show them (F19 decisions 7–10): the Warehouse by stars in its family tabs, the bin's
+// The goods as the loop's screens show them: the Warehouse by stars in its family tabs, the bin's
 // lines and its night estimate, the shop's lines, and gold in words. Pure, so the screens and the tests read the same.
 import {
   binSales, binTotal, FAMILY_NAMES, GOOD_IDS, goodName, goodOf, inDemand, isDishId, lineOpen, priceOf, refinedOf, RING_IDS, SEED_IDS, STARS, type BinSale, type Good,
@@ -11,8 +11,8 @@ export const goldWords = (gold: number): string => `${gold.toLocaleString('en-US
 /** "★2". */
 export const starWords = (stars: number): string => `★${stars}`
 
-/** The Warehouse's tabs (decision 9): the crops, the forest's six families, fish, mining and seeds; the expeditions' loot
- * only when the Warehouse holds some (none can be had in M4); v4's rings (F53) and dishes (the reception's, M5's Kitchen)
+/** The Warehouse's tabs: the crops, the forest's six families, fish, mining and seeds; the expeditions' loot
+ * only when the Warehouse holds some (none can be had in M4); v4's rings and dishes (the reception's, M5's Kitchen)
  * likewise, so v3's tabs are M4's. */
 export const SHELVES = ['crops', 'woods', 'mushrooms', 'herbs-spices', 'fruits', 'nuts-seeds', 'sweets', 'fish', 'mining', 'seeds', 'loot', 'rings', 'dishes'] as const
 export type Shelf = typeof SHELVES[number]
@@ -91,7 +91,7 @@ export function goodRow(id: string, row: StarCounts, day: number): GoodRow {
   }
 }
 
-/** The Warehouse by stars (decision 9): each tab's held goods in the catalogue's order; the loot tab only when held. */
+/** The Warehouse by stars: each tab's held goods in the catalogue's order; the loot tab only when held. */
 export function warehouseTabs(save: Pick<FarmSave, 'items' | 'calendar'>): WarehouseTab[] {
   const rows = Object.entries(save.items)
     .filter(([, row]) => row.some((n) => n > 0))
@@ -109,7 +109,7 @@ export function firstTab(tabs: readonly WarehouseTab[], picking: boolean): Shelf
   return (held[0] ?? tabs[0])?.shelf ?? 'crops'
 }
 
-/** The bin's sheet (decision 8): today's lines, their gold, and the night's estimate. */
+/** The bin's sheet: today's lines, their gold, and the night's estimate. */
 export interface BinView {
   lines: (BinSale & { name: string })[]
   total: number
@@ -125,7 +125,7 @@ export function binView(save: Pick<FarmSave, 'bin' | 'calendar'>): BinView {
 /** "Carrot ★2 × 3". */
 export const saleWords = (sale: Pick<BinSale, 'id' | 'stars' | 'count'>): string => `${goodName(sale.id)} ${starWords(sale.stars)} × ${sale.count}`
 
-/** A shop line as its row shows it (decision 7): the name, the price each, and the gate's words while it's shut. */
+/** A shop line as its row shows it: the name, the price each, and the gate's words while it's shut. */
 export interface ShopRow {
   line: ShopLine
   name: string

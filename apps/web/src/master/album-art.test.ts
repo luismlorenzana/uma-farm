@@ -1,4 +1,4 @@
-// Copied from uma-rpg apps/web/src/master/album-art.test.ts at 30a322a (F5): the album's art adapter, with invented paths.
+// Copied from uma-rpg apps/web/src/master/album-art.test.ts at 30a322a: the album's art adapter, with invented paths.
 import type { ArtIndex } from '@luismlorenzana/uma-data'
 import { describe, expect, it } from 'vitest'
 import { albumImagePath } from './album-art'

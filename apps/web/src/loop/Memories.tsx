@@ -1,4 +1,4 @@
-// Her Memories (F49 decision 12; romance spec RM28, RM56): an album an Uma at `?album=<characterId>` over any page,
+// Her Memories: an album an Uma at `?album=<characterId>` over any page,
 // opened from her profile and the Diary's shelf. One tile a rung with an event (26), in four filters (Friend, Romance,
 // Wed, Spouse): the played ones with her beat's caption on uma-art's Memory frame, the next marked, the rest locked; her
 // arrival scene replays from the header. A tap on a played tile **replays it from any choice**: from the top or a

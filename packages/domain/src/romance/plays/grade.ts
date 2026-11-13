@@ -1,4 +1,4 @@
-// The five plays' grades and timing (F49 decision 5; romance spec RM25; hd2d-farm FR21, FR22): what the farmer and she do
+// The five plays' grades and timing: what the farmer and she do
 // together inside an event (and, from F50, as an evening) is one short play, scored 0–100 and graded **Fine below 60,
 // Great 60–89, Perfect 90+**. An event adds +0, +15 or +30; an evening pays 60, 100 or 150. **Never failed:** a missed
 // tap still lands, as a Fine, and no tap at all scores 0. Every play is seeded (`draw(uid, day, 'play:<id>:<rung>', n)`),
@@ -15,18 +15,18 @@ export type PlayLength = 'event' | 'evening'
 export const GRADES = ['fine', 'great', 'perfect'] as const
 export type Grade = typeof GRADES[number]
 export const GRADE_NAMES: Readonly<Record<Grade, string>> = { fine: 'Fine', great: 'Great', perfect: 'Perfect' }
-/** Great from 60, Perfect from 90 (RM25). */
+/** Great from 60, Perfect from 90. */
 export const GREAT_AT = 60
 export const PERFECT_AT = 90
 export const gradeOf = (score: number): Grade => (score >= PERFECT_AT ? 'perfect' : score >= GREAT_AT ? 'great' : 'fine')
-/** What a grade adds to an event (RM25). */
+/** What a grade adds to an event. */
 export const EVENT_GRADE_POINTS: Readonly<Record<Grade, number>> = { fine: 0, great: 15, perfect: 30 }
-/** What an evening pays by its grade (RM13, RM25; F50 pays it, ×1.5 in her favourite kind). */
+/** What an evening pays by its grade (F50 pays it, ×1.5 in her favourite kind). */
 export const EVENING_GRADE_POINTS: Readonly<Record<Grade, number>> = { fine: 60, great: 100, perfect: 150 }
 
 /** A play's seeded numbers: the `n`th draw in [0, 1). */
 export type Seed = (n: number) => number
-/** The draws a play reads (decision 5): `draw(uid, day, 'play:<id>:<rung>', n)`; the `k`th play of one scene (the
+/** The draws a play reads: `draw(uid, day, 'play:<id>:<rung>', n)`; the `k`th play of one scene (the
  * confession holds up to three) reads its own hundred. */
 export const playSeed = (uid: string, day: number, id: string, rung: string, k = 0): Seed => (n) => draw(uid, day, `play:${id}:${rung}`, k * 100 + n)
 /** A whole number of `n` from a draw: 0 … n − 1. */
@@ -46,7 +46,7 @@ export const clampScore = (n: number): number => Math.max(0, Math.min(100, Math.
 /** The mean of some scores, whole (0 for none). */
 export const meanScore = (scores: readonly number[]): number => (scores.length === 0 ? 0 : clampScore(scores.reduce((a, b) => a + b, 0) / scores.length))
 
-/** The timing windows (decision 5, set by the worker): how far a tap is from the moment, in ms, and what it scores. A
+/** The timing windows (set by the worker): how far a tap is from the moment, in ms, and what it scores. A
  * careful tap lands inside 160 ms (Perfect); a casual one usually inside 360 ms (Great); 720 ms or more, or none, is 0. */
 export const TIMING_WINDOWS = { exact: 80, perfect: 160, great: 360, miss: 720 } as const
 /**

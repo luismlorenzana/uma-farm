@@ -1,7 +1,7 @@
 // Account (uma-kit's AccountPage): who is signed in, the save's sync, its safety copies, the appearance, the build and
-// sign-out, and master data's release. The Notifications card says they're off (F18 decision 12): with days as turns,
-// nothing finishes while the app is closed. F6's switch went with the Wilds (F24); the server's push is untouched. On save
-// v4 (F46, RM8) it also holds **Your name**, the farmer's, under the name sheet's rule; and a safety copy from before v4
+// sign-out, and master data's release. The Notifications card says they're off: with days as turns,
+// nothing finishes while the app is closed. F6's switch went with the Wilds; the server's push is untouched. On save
+// v4 it also holds **Your name**, the farmer's, under the name sheet's rule; and a safety copy from before v4
 // lists without a Restore in the romance build, since restoring it would only wipe again. F11 adds **HD-2D farm (preview)**,
 // this device's switch for Home on the shared stage.
 import { cleanFarmerName, FARMER_PLACEHOLDER, farmerNameIssue, versionOf } from '@farm/domain'
@@ -22,7 +22,7 @@ const REASON: Readonly<Record<SafetyCopy['reason'], string>> = {
   replaced: 'Replaced by a newer save', restore: 'Before a restore', unreadable: 'Couldn’t be read', wiped: 'Before the new farm',
 }
 
-/** The loop's Notifications card (decision 12): off, since days are turns; the server's push is untouched. */
+/** The loop's Notifications card: off, since days are turns; the server's push is untouched. */
 function NotificationsOff() {
   return (
     <Panel className="p-3" aria-label="Notifications">
@@ -56,7 +56,7 @@ function SafetyCopies() {
   )
 }
 
-/** **Your name** (decision 11): the farmer's, renamed under the name sheet's rule, a player's change. */
+/** **Your name**: the farmer's, renamed under the name sheet's rule, a player's change. */
 function YourName() {
   const name = useGame((s) => (s.save?.version === 4 ? s.save.farmer.name : null))
   const [draft, setDraft] = useState<string | null>(null)
@@ -81,7 +81,7 @@ function YourName() {
   )
 }
 
-/** **HD-2D farm (preview)** (F11 decision 1): Home on the shared stage, on this device only; off is uma-kit's Hub. */
+/** **HD-2D farm (preview)**: Home on the shared stage, on this device only; off is uma-kit's Hub. */
 function StagePreview() {
   const on = useStageOn()
   return (

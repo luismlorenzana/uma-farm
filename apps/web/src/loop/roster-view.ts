@@ -1,8 +1,8 @@
-// The roster's cards (F18; F21 decision 7; FC19): the Umas on the farm as album rows with their talents and ranks, the
+// The roster's cards: the Umas on the farm as album rows with their talents and ranks, the
 // filters (talent and rank in each activity, favourite line) and the sorts (talent score and rank points in an activity,
 // joined, name), the words on a card, and one Uma's nine activities for her sheet. `/roster` and every Uma picker (the
 // Fields' tender, F22's jobs, F23's swaps) read these. F23 adds everyone on the roster, home or away, and your affinity
-// with her. On save v4 (F46) her favourite line is the story pack's (RM6) and there is no affinity until F47's route. Pure
+// with her. On save v4 her favourite line is the story pack's and there is no affinity until F47's route. Pure
 // but for the pack, which the romance build has loaded before any screen.
 import {
   atHome, farmHome,
@@ -49,19 +49,19 @@ export function rosterView(save: FarmSave): RosterView {
   }
 }
 
-// --- The album's rows (decision 7) -----------------------------------------------------------------------------------
+// --- The album's rows -----------------------------------------------------------------------------------
 
 /** One Uma as the roster and the pickers show her. */
 export interface LoopUmaRow extends UmaPickerRow {
   /** Her talents on this release; null for an outfit master data doesn't hold (she reads D). */
   talents: Talents | null
   ranks: RosterUma['ranks']
-  /** Her favourite activity (CS33), from her calling's line. */
+  /** Her favourite activity, from her calling's line. */
   favourite: Activity | null
   joined: number
-  /** On the farm, or away on her off-season (F23). */
+  /** On the farm, or away on her off-season. */
   home: boolean
-  /** Your affinity with her, 0–1,000 (CS45). */
+  /** Your affinity with her, 0–1,000. */
   affinity: number
 }
 
@@ -79,14 +79,14 @@ const TALENT_BANDS: readonly { value: string; label: string; step: TalentStep }[
 export const talentFacet = (activity: Activity): string => `talent-${activity}`
 export const rankFacet = (activity: Activity): string => `rank-${activity}`
 
-/** The filters (decision 7): her favourite line, her talent in each activity (C+, B+, A+, S), her rank in each. */
+/** The filters: her favourite line, her talent in each activity (C+, B+, A+, S), her rank in each. */
 export const UMA_FACETS: readonly FacetDef[] = [
   { key: 'favourite', label: 'Favourite line', group: 'Favourite line', kind: 'enum', options: FAVOURITE_ACTIVITIES.map((a) => ({ value: a, label: ACTIVITY_NAMES[a] })) },
   ...ACTIVITIES.map((a): FacetDef => ({ key: talentFacet(a), label: `${ACTIVITY_NAMES[a]} talent`, group: 'Talent', kind: 'enum', options: TALENT_BANDS.map(({ value, label }) => ({ value, label })) })),
   ...ACTIVITIES.map((a): FacetDef => ({ key: rankFacet(a), label: `${ACTIVITY_NAMES[a]} rank`, group: 'Rank', kind: 'enum', options: RANKS.map((label, r) => ({ value: String(r), label })) })),
 ]
 
-/** Where she is (F23): on the farm or away. The roster's filter; pickers list only the Umas home. */
+/** Where she is: on the farm or away. The roster's filter; pickers list only the Umas home. */
 export const WHERE_FACET: FacetDef = {
   key: 'where', label: 'Where', group: 'Where', kind: 'enum', options: [{ value: 'home', label: 'On the farm' }, { value: 'away', label: 'Away' }],
 }
@@ -94,7 +94,7 @@ export const WHERE_FACET: FacetDef = {
 export const ROSTER_FACETS: readonly FacetDef[] = [WHERE_FACET, ...UMA_FACETS]
 
 /** The Umas `ids` (on the roster) as rows, with master data's names and talents; favourites from master data's roster on
- * v3, from the story pack on v4 (RM6). */
+ * v3, from the story pack on v4. */
 export function umaRows(save: FarmSave, ids: readonly string[], names: ReadonlyMap<string, { name: string; releasedAt: string }>, talents: ReadonlyMap<string, Talents> | null,
   roster: readonly FarmOutfit[], story: Pick<StoryPack, 'cast' | 'bibles'> | null = storyPack()): LoopUmaRow[] {
   const lines = new Map(roster.map((o) => [o.outfitId, o]))
@@ -124,7 +124,7 @@ export function sortedFor(rows: readonly LoopUmaRow[], activity: Activity): Loop
 }
 
 const ACTIVITY_OPTIONS = ACTIVITIES.map((a) => ({ value: a, label: ACTIVITY_NAMES[a] }))
-/** The roster's sorts (decision 7): talent score and rank points in a chosen activity, joined, name. */
+/** The roster's sorts: talent score and rank points in a chosen activity, joined, name. */
 export const ROSTER_SORTS: readonly SortDef[] = [
   { key: 'joined', label: 'Joined', defaultDirection: 'asc' },
   { key: 'talent', label: 'Talent', defaultDirection: 'desc', parameter: { label: 'In', options: ACTIVITY_OPTIONS } },
@@ -137,7 +137,7 @@ export const ROSTER_QUERY: AlbumQuery = { search: '', filters: {}, sort: 'joined
 export const sortActivity = (query: Pick<AlbumQuery, 'sort'>, parameter: string | null): Activity | null =>
   query.sort === 'talent' || query.sort === 'points' ? ((parameter as Activity | null) ?? 'farming') : null
 
-/** A picker's sorts for a place's activity (decision 7): her talent and rank points in it, joined, name. */
+/** A picker's sorts for a place's activity: her talent and rank points in it, joined, name. */
 export function pickerSorts<T extends LoopUmaRow>(activity: Activity): UmaPickerSort<T>[] {
   const name = ACTIVITY_NAMES[activity]
   return [
@@ -202,7 +202,7 @@ export function activityLines(row: LoopUmaRow): ActivityLine[] {
   })
 }
 
-// --- Affinity (F23; CS45) --------------------------------------------------------------------------------------------
+// --- Affinity --------------------------------------------------------------------------------------------
 
 /** "♥ 2 · 45/100": her whole hearts and her points toward the next; "♥ 10" at the top. */
 export function heartsWords(affinity: number): string {

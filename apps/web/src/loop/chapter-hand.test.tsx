@@ -1,5 +1,5 @@
-// Chapter 1's reward on its cards (D74, F46's loose end): on save v4 a chapter's new hand is the cast's authored arrival
-// for it, so the reward names "a new hand" only when the cast has a chapter-1 arrival (never who, F46 decision 14). M4's
+// Chapter 1's reward on its cards (F46's loose end): on save v4 a chapter's new hand is the cast's authored arrival
+// for it, so the reward names "a new hand" only when the cast has a chapter-1 arrival (never who). M4's
 // v3 keeps its words. The invented stand-in pack (its three arrive with the opening), and a copy of it with a chapter-1
 // arrival added; invented saves; the server is a stub.
 import 'fake-indexeddb/auto'

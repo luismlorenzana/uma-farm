@@ -1,4 +1,4 @@
-// The perks on screen (F51 decision 12; RM31–RM36, RM53, RM57): what each reached perk does now on her profile, a miner's
+// The perks on screen: what each reached perk does now on her profile, a miner's
 // "Opens with chapter 3", her closest friend's loved gift from Friendship 7, her pet name and keepsake under **From her**,
 // the morning's item, chores and perks lines, the harvest's "from perks" and the level-up card's recipe. The invented
 // stand-in pack (9000001–9000003) and a 9000004 built here; master data and the server are stubs.

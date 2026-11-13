@@ -1,4 +1,4 @@
-// The v3 Warehouse's ids (F17 decision 7; CS19). The web's test checks each good is on uma-art's atlas.
+// The v3 Warehouse's ids. The web's test checks each good is on uma-art's atlas.
 import { describe, expect, it } from 'vitest'
 import { isLineItemId, LINE_ITEMS } from '../items/lines'
 import { CROP_IDS, GOODS, GOOD_IDS, goodName, goodOf, isCropId, refinedOf, isGoodId, isSeedId, isWarehouseId, SEED_IDS, seedId, seedOf } from './ids'

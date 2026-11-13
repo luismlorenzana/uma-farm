@@ -1,4 +1,4 @@
-// The crops (F20; CS11, CS12): CS11's table row for row, and its Novice and Expert columns derived by CS12's rule.
+// The crops: CS11's table row for row, and its Novice and Expert columns derived by CS12's rule.
 import { describe, expect, it } from 'vitest'
 import { SEASONS } from '../farm/calendar'
 import { CROP_PRICES } from '../goods/rule'

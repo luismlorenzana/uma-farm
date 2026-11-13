@@ -1,4 +1,4 @@
-// Bonds as the screens show them (F52 decisions 7, 9 and 11; RM48–RM50, RM57's sixth line), the switch on: her profile's
+// Bonds as the screens show them (RM57's sixth line), the switch on: her profile's
 // Ties in the closest friend's order with the next heart and Read; the morning's side by side and bond hearts (Read when a
 // conversation waits, the tie's line or the generic words when none is written); the pair player over any page, its
 // levels in turn, read once into the Diary; the Diary's Conversations with replays; the Fields' side by side; and the M4

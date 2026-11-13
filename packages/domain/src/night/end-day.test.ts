@@ -1,4 +1,4 @@
-// End the day (F18; core spec CS4–CS8, CS22): the nine steps in order, seeded and replayable, jobs counted in days on
+// End the day: the nine steps in order, seeded and replayable, jobs counted in days on
 // uma-work's clock, well fed's quarter day, the calendar turning, the summary, and one stamp a night. Invented outfit ids
 // and test kinds (`kinds.fixture.ts`) until F22's.
 import { endsAt } from '@luismlorenzana/uma-work'

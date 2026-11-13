@@ -1,4 +1,4 @@
-// The goods as the loop shows them (F19 decisions 7–10): the Warehouse by stars in its tabs, the bin's lines and
+// The goods as the loop shows them: the Warehouse by stars in its tabs, the bin's lines and
 // estimate, the shop's rows with their gates, and the place links the map and the menu follow.
 import { farmDay, farmPlace, FARM_RANK_POINTS, newSave, ship, type SaveV3 } from '@farm/domain'
 import { describe, expect, it } from 'vitest'

@@ -1,11 +1,11 @@
-// Copied from uma-rpg packages/domain/src/work/kinds/shared.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
+// Copied from uma-rpg packages/domain/src/work/kinds/shared.ts at 30a322a, with its Wilds-only parts cut.
 // What the four kinds share: her Craft Level, an item's whole seconds at a building's speed, and one planned item
 // repeated for a request's count.
 import type { PlannedItem } from '@luismlorenzana/uma-work'
 import { MINUTE } from '../../economy/pacing'
 import type { FarmWorld } from '../world'
 
-/** Her Craft Level: it sets every job's minutes (D139). */
+/** Her Craft Level: it sets every job's minutes. */
 export const craftLevel = (world: FarmWorld, outfitId: string): number => world.umas[outfitId]?.craft.level ?? 1
 
 /** An item's real seconds: its minutes at her level, sped up by the building's level, whole and at least one. */

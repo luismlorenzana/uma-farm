@@ -1,10 +1,10 @@
-// Rhythm (F49 decision 5; RM25, RM26): tap on her beat with the activity's mark (a hoe, a brush, a step, an oar; the
+// Rhythm: tap on her beat with the activity's mark (a hoe, a brush, a step, an oar; the
 // fallback's pot, tray, anvil or track). Each round shows her beat first (four beats), then eight to tap; each beat
 // scores by the timing windows against its nearest tap, a tap that matches no beat costs 5, and the rounds score their
 // mean. An event plays one round (about 12 s); an evening three (about 45 s). Pure.
 import { clampScore, meanScore, timingScore, type PlayLength, type Seed } from './grade'
 
-/** Rounds a play holds, and each round's beats (RM25). */
+/** Rounds a play holds, and each round's beats. */
 export const RHYTHM_ROUNDS: Readonly<Record<PlayLength, number>> = { event: 1, evening: 3 }
 export const RHYTHM_BEATS = 8
 /** Her beat shown first: four beats before the first to tap. */
@@ -14,7 +14,7 @@ export const RHYTHM_PERIOD = { from: 700, spread: 300 } as const
 /** What a tap that matches no beat costs (so tapping fast never scores). */
 export const RHYTHM_EXTRA = 5
 
-/** The marks Rhythm plays with (RM26), in words until art draws them. */
+/** The marks Rhythm plays with, in words until art draws them. */
 export const RHYTHM_MARKS = ['hoe', 'swing', 'brush', 'pot', 'tray', 'anvil', 'oar', 'step', 'hands', 'track', 'pack'] as const
 export type RhythmMark = typeof RHYTHM_MARKS[number]
 export const RHYTHM_MARK_WORDS: Readonly<Record<RhythmMark, string>> = {

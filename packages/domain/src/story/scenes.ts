@@ -1,4 +1,4 @@
-// Which scene plays now (F24 decision 6; core spec CS42; F46 decision 9): on v3 the opening scene once the start's three
+// Which scene plays now: on v3 the opening scene once the start's three
 // are picked, before the first tap of day 1, and the closing scene the morning after chapter 1 completes, once the morning
 // summary is put away. On v4 nothing plays while the farmer is unnamed (the name sheet covers everything); then the
 // re-cut opening; then the closing scene when due; then each Uma's arrival scene, `arrival:<id>`, in arrival order, once
@@ -12,7 +12,7 @@ import type { FarmSave, SaveV4 } from '../save/v4'
 /** The chapter scenes M4 plays, by the id `diary.read` keeps. */
 export const SCENE_IDS = ['scene:1:open', 'scene:1:close'] as const
 export type ChapterSceneId = typeof SCENE_IDS[number]
-/** The ring bench's scene (F53 decision 4), v4's only. */
+/** The ring bench's scene, v4's only. */
 export const BENCH_SCENE = 'scene:bench'
 /** A scene to play: a chapter's, (v4) the ring bench's, or (v4) an Uma's arrival. */
 export type SceneId = ChapterSceneId | typeof BENCH_SCENE | `arrival:${string}`

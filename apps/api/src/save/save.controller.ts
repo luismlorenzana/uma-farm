@@ -3,8 +3,8 @@ import { parseSavePut, SaveParseError, versionOf, type SaveEnvelope } from '@far
 import { CurrentUid } from '@luismlorenzana/uma-server/auth'
 import { RevisionConflict, SAVE_REPOSITORY, type SaveRepository } from './save.repository'
 
-// GET and PUT /api/save, behind the owner guard (copied from uma-rpg at 30a322a, F3). The server stores what the app sent
-// and never edits a save (FM10). It takes v2, v3 and v4 as sent (F17, F46): the live app writes v3 from F24, carrying a
+// GET and PUT /api/save, behind the owner guard (copied from uma-rpg at 30a322a). The server stores what the app sent
+// and never edits a save. It takes v2, v3 and v4 as sent: the live app writes v3 from F24, carrying a
 // stored v2 over on the phone, and the romance build (dark until F56) writes v4, its wipe made on the phone. An upload older
 // than what's stored (an old cached build after a newer save) is refused with a 409 and kept in `saveRescues`.
 @Controller('save')
@@ -18,7 +18,7 @@ export class SaveController {
     return this.saves.load(uid)
   }
 
-  /** 409 carries the stored envelope so the client can reconcile and retry (uma-rpg D32). */
+  /** 409 carries the stored envelope so the client can reconcile and retry. */
   @Put()
   async put(@CurrentUid() uid: string, @Body() body: unknown): Promise<SaveEnvelope> {
     let request: ReturnType<typeof parseSavePut>
@@ -46,7 +46,7 @@ export class SaveController {
     }
   }
 
-  /** A refused upload may be the only copy of days of play (uma-rpg D260), so it's kept, and failing to keep it never
+  /** A refused upload may be the only copy of days of play, so it's kept, and failing to keep it never
    * hides why. */
   private async keepRefused(uid: string, body: unknown, err: unknown): Promise<void> {
     const reason = err instanceof Error ? err.message : String(err)

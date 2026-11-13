@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/work/kinds-v4/material.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// Gathering and processing under the farm by line (D224; farm-by-line.md FL2, FL6, FL10; H109). Gathering: a raw item
+// Copied from uma-rpg packages/domain/src/work/kinds-v4/material.ts at 30a322a, with its Wilds-only parts cut.
+// Gathering and processing under the farm by line (farm-by-line.md FL2). Gathering: a raw item
 // of the place's line, one gather's minutes at her Craft Level (54 → 36), 1–10 a job. Processing, at the line's making
 // place only: a refined item of its line from its raw form, one for one, a quarter of a gather, batches up to ×40. Either
 // opens grade g at Craft Lv 5g − 4, the same in every world, pays 2 Craft EXP a minute before the place's speed, and pays

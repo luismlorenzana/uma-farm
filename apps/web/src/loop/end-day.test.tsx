@@ -1,4 +1,4 @@
-// End the day as rendered (F18 decisions 6, 9, 10 and 13): the raised tab's words and count, the one-line sheet with End
+// End the day as rendered: the raised tab's words and count, the one-line sheet with End
 // anyway and Back, ending at once when all is set or the Menu's switch is off, the morning summary after, and a second
 // tap ending nothing more. Invented outfit ids; master data and the server are stubs.
 import 'fake-indexeddb/auto'

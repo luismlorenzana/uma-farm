@@ -1,4 +1,4 @@
-// Rounding (F17; core spec CS1): gold is whole, prices round to 5g and rewards to 10g, and counts round half up, never
+// Rounding: gold is whole, prices round to 5g and rewards to 10g, and counts round half up, never
 // below 1 for a job that ran. A hair of slack keeps a float product like 110 × 1.25 × 1.2 on the half it means.
 const SLACK = 1e-9
 

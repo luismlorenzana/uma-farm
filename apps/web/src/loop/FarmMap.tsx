@@ -1,15 +1,15 @@
-// The farm (F18 decision 5; FC28, FR5–FR9): `/`. uma-kit's Hub map in eight rows of three, the core
+// The farm: `/`. uma-kit's Hub map in eight rows of three, the core
 // loop's rows, on uma-art's buildings; taller than a phone's screen, it scrolls, with the help button and the Collect all
 // pill fixed. A place's quick look opens in the side panel (`/?peek=<place>`): what it is, and what opens it while it's
-// locked; the Gate's is the visitor waiting, with Chat and Gift (F23). After a night the morning summary opens over the
-// map until the player starts the day. On save v4 a Ready Uma's pip carries ♥ wherever the map draws her (F48 decision 10)
-// and the morning's Hearts section lists who's Ready (decision 9), both read live; its bond hearts carry Read while a
-// conversation waits (F52), which plays over the morning (`?read=`); in the romance build an invitation's line carries Yes,
-// tonight and Another day (F50); on v4 the Forge's quick look is the ring bench's once it stands (F53). In the romance
-// build a v4 map grows the homestead's rows after the yard, the town edge moving below them (F54, `homestead-map.tsx`);
+// locked; the Gate's is the visitor waiting, with Chat and Gift. After a night the morning summary opens over the
+// map until the player starts the day. On save v4 a Ready Uma's pip carries ♥ wherever the map draws her
+// and the morning's Hearts section lists who's Ready, both read live; its bond hearts carry Read while a
+// conversation waits, which plays over the morning (`?read=`); in the romance build an invitation's line carries Yes,
+// tonight and Another day; on v4 the Forge's quick look is the ring bench's once it stands. In the romance
+// build a v4 map grows the homestead's rows after the yard, the town edge moving below them (`homestead-map.tsx`);
 // v3's map is unchanged. With F11's preview switch on (Account → HD-2D farm), the same places draw on the shared HD-2D
 // stage instead (`FarmStage.tsx`, its own chunk with three.js), with the Umas on it from the same work view and Ready
-// hearts as the pips (F12); off, the Hub is as it was. Loaded on demand.
+// hearts as the pips; off, the Hub is as it was. Loaded on demand.
 import {
   farmEnvV3, FARM_PLACES, farmPlace, placeBlurb, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, STAY_AFFINITY, workNow, type FarmPlace, type LoopPlaceId,
   type FarmSave,
@@ -45,12 +45,12 @@ const InviteAnswer = /* @__PURE__ */ lazy(() => import('./InviteAnswer'))
 const BenchPeek = /* @__PURE__ */ lazy(() => import('./BenchSheet').then((m) => ({ default: m.BenchPeek })))
 const HouseAnswer = /* @__PURE__ */ lazy(() => import('./HouseAnswer'))
 type HomesteadMap = typeof import('./homestead-map')
-// F11: Home on the shared HD-2D stage, with three.js, loaded only when the preview switch is on (decision 1).
+// F11: Home on the shared HD-2D stage, with three.js, loaded only when the preview switch is on.
 const FarmStage = lazy(() => import('./FarmStage'))
-/** Sheets and scenes that cover all of Home: the stage rests under them (F11 decision 9). */
+/** Sheets and scenes that cover all of Home: the stage rests under them. */
 const FULL_SCREEN = ['event', 'ask', 'memory', 'album', 'read', 'evening', 'level', 'household'] as const
 
-/** The homestead's map module (F54), loaded for a v4 save in the romance build only; null until it's in, and always on v3. */
+/** The homestead's map module, loaded for a v4 save in the romance build only; null until it's in, and always on v3. */
 function useHomesteadMap(save: FarmSave): HomesteadMap | null {
   const [module, setModule] = useState<HomesteadMap | null>(null)
   useEffect(() => {
@@ -81,19 +81,19 @@ function pipsOf(place: FarmPlace, work: WorkView, hearts: ReadonlySet<string>): 
   })
 }
 
-/** Who's Ready today on a v4 farm (decisions 9 and 10), read live; nobody on v3 or before the pack loads. */
+/** Who's Ready today on a v4 farm, read live; nobody on v3 or before the pack loads. */
 function useReadyNow(save: FarmSave) {
   const pack = useStory()
   return useMemo(() => (save.version === 4 && pack ? readyLines(save, pack) : []), [save, pack])
 }
 
-/** The Gate's pip (F23): the visitor waiting, ringed by her way to staying. */
+/** The Gate's pip: the visitor waiting, ringed by her way to staying. */
 function gatePips(save: FarmSave): PipModel[] | undefined {
   const visitor = save.version === 3 ? save.visitors[0] : undefined
   return visitor ? [{ state: 'busy', progress: Math.min(1, visitor.affinity / STAY_AFFINITY), face: <FaceTile outfitId={visitor.outfitId} size={24} label="Visitor" round /> }] : undefined
 }
 
-/** One tap collects every finished job on the farm and harvests every Ready plot (F20). */
+/** One tap collects every finished job on the farm and harvests every Ready plot. */
 function CollectAll({ ready }: { ready: number }) {
   const [note, setNote] = useState<string | null>(null)
   if (ready === 0 && !note) return null
@@ -132,7 +132,7 @@ function FarmHelp() {
 }
 
 function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefined }) {
-  // The night reads master data (decision 2): load it with the farm, so End the day doesn't wait for it. A failure shows
+  // The night reads master data: load it with the farm, so End the day doesn't wait for it. A failure shows
   // when the day ends, with Try again.
   useEffect(() => void masterReady().catch(() => undefined), [])
   const [params] = useSearchParams()
@@ -229,7 +229,7 @@ function PlacePeek({ save, place }: { save: FarmSave; place: FarmPlace }) {
   )
 }
 
-/** The morning summary (CS5, decision 11): one card after every night, CS5's sections in order with the empty ones
+/** The morning summary: one card after every night, CS5's sections in order with the empty ones
  * hidden, each line a tap to its place. "Start the day" puts it away; a tap on a line leaves it for later. */
 function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   const summary = save.summary

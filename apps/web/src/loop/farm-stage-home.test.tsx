@@ -1,4 +1,4 @@
-// Home with the HD-2D farm's preview switch (F11 decision 1): off, the Hub as it was; on, the stage in its place with the
+// Home with the HD-2D farm's preview switch: off, the Hub as it was; on, the stage in its place with the
 // Hub's own place models, the open quick look's place and no Phaser scene. Account's row and `?stage=` set the switch on
 // this device. The stage's chunk (three.js, WebGL) is a stub here: jsdom has no WebGL; the preview checks the real one.
 import 'fake-indexeddb/auto'

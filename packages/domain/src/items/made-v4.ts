@@ -1,14 +1,14 @@
-// Copied from uma-rpg packages/domain/src/items/made-v4.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// The farm by line's recipes (D224; farm-by-line.md FL7, FL9, FL14; H109): a made item takes one line's refined items of
+// Copied from uma-rpg packages/domain/src/items/made-v4.ts at 30a322a, with its Wilds-only parts cut.
+// The farm by line's recipes (farm-by-line.md FL7): a made item takes one line's refined items of
 // its own grade, the same amount at every grade (a jewel's grade is its node's: Planet n 2n − 1, Moon n 2n). An Arms Gem
 // (R2's Weapon Gem, renamed) or Tome Ink 10, Armor Fittings 3, an Accessory Setting 5, a Planet Jewel or a Moon Jewel 5, so
 // one rank of everything takes two Umas, one on Arms and one on Tomes, exactly 30 refined items on each of the five lines
-// (D264, FL9's successor): 3 × 10, 5 × 3 × 2, 3 × 5 × 2, 3 × 5 × 2. Live since H112 (save v30).
+// (FL9's successor): 3 × 10, 5 × 3 × 2, 3 × 5 × 2, 3 × 5 × 2. Live since H112 (save v30).
 import { lineItemId, type MaterialLine } from './lines'
 import { madeName } from './made'
 import { madeIdentity, type MadeLine } from './made-id'
 
-/** Each made line's line and amount (FL9). */
+/** Each made line's line and amount. */
 export const RECIPE_V4: Readonly<Record<MadeLine, { line: MaterialLine; qty: number }>> = {
   'weapon-gem': { line: 'metal', qty: 10 },
   'tome-ink': { line: 'vegetables', qty: 10 },
@@ -26,8 +26,8 @@ export function madeRecipeV4(id: string): Readonly<Record<string, number>> {
   return { [lineItemId(line, made.grade, true)]: qty }
 }
 
-/** A made item's refined count: its make time in three-quarter gathers (FL10). */
+/** A made item's refined count: its make time in three-quarter gathers. */
 export const madeRefinedV4 = (id: string): number => Object.values(madeRecipeV4(id)).reduce((a, b) => a + b, 0)
 
-/** A made item's name: `madeName`, which reads Arms Gem for a Weapon Gem since the farm by line (FL14). */
+/** A made item's name: `madeName`, which reads Arms Gem for a Weapon Gem since the farm by line. */
 export const madeNameV4 = (id: string): string | undefined => madeName(id)

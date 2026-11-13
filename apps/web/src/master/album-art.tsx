@@ -1,7 +1,7 @@
-// Copied from uma-rpg apps/web/src/master/album-art.tsx at 30a322a (F5, FM2): the album's kinds mapped to uma-data's art
+// Copied from uma-rpg apps/web/src/master/album-art.tsx at 30a322a: the album's kinds mapped to uma-data's art
 // families; uma-kit/content owns the authenticated, cached loading. The art comes from the release at runtime only.
 // F46: every id goes through the one resolver (`outfitFor`), so a v4 roster key, her character id, shows her cast
-// outfit's art; a cast Uma whose outfit master data doesn't hold (the stand-ins) shows a lettered disc (RM3).
+// outfit's art; a cast Uma whose outfit master data doesn't hold (the stand-ins) shows a lettered disc.
 import type { AlbumArt, UmaArtKind } from '@luismlorenzana/uma-kit/album'
 import { AtlasSprite, imagePath, useArtUrl } from '@luismlorenzana/uma-kit/content'
 import type { ArtIndex, ImageFamily } from '@luismlorenzana/uma-data'
@@ -22,7 +22,7 @@ function useUrl(kind: UmaArtKind, id: string) {
 const DISC_COLORS = ['#6b5aa6', '#c4573a', '#3a7aa0', '#5f9a3c', '#c08a22', '#8a5a7a', '#4f7a6a', '#a0603a']
 const discColor = (id: string): string => DISC_COLORS[[...id].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7) % DISC_COLORS.length]!
 
-/** A cast Uma master data doesn't hold: her letters on a coloured disc (RM3). */
+/** A cast Uma master data doesn't hold: her letters on a coloured disc. */
 export function LetterDisc({ id, size }: { id: string; size: number }) {
   const master = useMaster()
   const name = master.status === 'ready' ? master.view.album.get(id)?.name ?? '' : ''

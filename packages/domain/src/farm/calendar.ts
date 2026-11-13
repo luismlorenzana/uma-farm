@@ -1,7 +1,7 @@
-// The farm's units of time (F17; core spec CS1, D25): a farm day is one turn, ended by the player. Day 1 is Spring 1 of
+// The farm's units of time: a farm day is one turn, ended by the player. Day 1 is Spring 1 of
 // year 1; four seasons of 12 days make a 48-day year. uma-work's clock is the calendar: day d starts at (d − 1) whole days.
 
-/** One farm day on uma-work's clock (FC6): 86,400,000 ms. */
+/** One farm day on uma-work's clock: 86,400,000 ms. */
 export const DAY_MS = 86_400_000
 export const DAYS_PER_SEASON = 12
 export const SEASONS = ['spring', 'summer', 'autumn', 'winter'] as const
@@ -16,19 +16,19 @@ export interface FarmDate {
   day: number
 }
 
-/** Day d's date (CS1): year ⌈d/48⌉, season ⌊((d−1) mod 48)/12⌋, day ((d−1) mod 12) + 1. */
+/** Day d's date: year ⌈d/48⌉, season ⌊((d−1) mod 48)/12⌋, day ((d−1) mod 12) + 1. */
 export function dateOf(day: number): FarmDate {
   if (!Number.isSafeInteger(day) || day < 1) throw new RangeError(`No farm day ${day}`)
   const index = day - 1
   return { year: Math.floor(index / DAYS_PER_YEAR) + 1, season: SEASONS[Math.floor((index % DAYS_PER_YEAR) / DAYS_PER_SEASON)]!, day: (index % DAYS_PER_SEASON) + 1 }
 }
 
-/** uma-work's clock on a save's day: its start, (day − 1) × DAY_MS. Every loop work operation runs at this time (F18). */
+/** uma-work's clock on a save's day: its start, (day − 1) × DAY_MS. Every loop work operation runs at this time. */
 export const workNow = (save: { calendar: { day: number } }): number => (save.calendar.day - 1) * DAY_MS
 
-// --- The year's dates (F18; core spec CS4, FC22, core-loop's note #1) ----------------------------------------------
+// --- The year's dates (core-loop's note #1) ----------------------------------------------
 
-/** The day of a season each festival falls on: the 10th, and the Harvest Cup on Winter's last (CS4). */
+/** The day of a season each festival falls on: the 10th, and the Harvest Cup on Winter's last. */
 export const FESTIVAL_DAY = 10
 export const FESTIVAL_IDS = ['flower-show', 'fishing-derby', 'cooking-contest', 'animal-show', 'harvest-cup'] as const
 export type FestivalId = typeof FESTIVAL_IDS[number]
@@ -41,7 +41,7 @@ export interface Festival {
   day: number
 }
 
-/** The five festivals, in the year's order (CS4). In M4 they are dates only; their events come in M6 (F32). */
+/** The five festivals, in the year's order. In M4 they are dates only; their events come in M6. */
 export const FESTIVALS: readonly Festival[] = [
   { id: 'flower-show', name: 'Flower Show', season: 'spring', day: FESTIVAL_DAY },
   { id: 'fishing-derby', name: 'Fishing Derby', season: 'summer', day: FESTIVAL_DAY },
@@ -73,7 +73,7 @@ export function nextFestival(day: number): { festival: Festival; day: number; in
   throw new RangeError(`No festival after day ${day}`)
 }
 
-/** A season's first day: new seeds, fish and demand (CS4, CS5). */
+/** A season's first day: new seeds, fish and demand. */
 export const isSeasonStart = (day: number): boolean => dateOf(day).day === 1
-/** A season's last day: tonight, crops out of season wither (CS4; F20). */
+/** A season's last day: tonight, crops out of season wither. */
 export const isSeasonEnd = (day: number): boolean => dateOf(day).day === DAYS_PER_SEASON

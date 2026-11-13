@@ -1,4 +1,4 @@
-// The shipping bin (F19 decisions 4–6; CS10, CS7 step 1): shipping, taking back and paying move the Warehouse, the bin,
+// The shipping bin (CS7 step 1): shipping, taking back and paying move the Warehouse, the bin,
 // gold, `farm.counts['gold-shipped']` and `diary.shipped` exactly; the bin refuses a seed.
 import { describe, expect, it } from 'vitest'
 import { farmDay } from '../farm/calendar'

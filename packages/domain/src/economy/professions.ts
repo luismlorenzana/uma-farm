@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/economy/professions.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// The professions (R2, D195, D208; profession-progression.md §2, PP1–PP6, PP16; H77; the farm by line, D224, FL1–FL3):
+// Copied from uma-rpg packages/domain/src/economy/professions.ts at 30a322a, with its Wilds-only parts cut.
+// The professions (R2; profession-progression.md §2; the farm by line):
 // fifteen professions, five each for gathering, processing and making. One trade is a row of three Wilds places chosen
 // by an Uma's calling (one Craft Level across all three, never her active class; UT19). The engine's job kinds stay four
 // (`gather`, `refine`, `craft`, `cut`); the player reads gather, process, make. Profession ids never reach a save.
@@ -13,10 +13,10 @@ export const PROFESSION_IDS = [
   'hunting', 'stonecutting', 'jewel-crafting',
 ] as const
 export type ProfessionId = typeof PROFESSION_IDS[number]
-/** What the work does (FL25): gathering brings raw material in, processing refines it, making makes an Uma's items. */
+/** What the work does: gathering brings raw material in, processing refines it, making makes an Uma's items. */
 export type ProfessionKind = 'gathering' | 'processing' | 'making'
 
-/** The fifteen places, row by row: gathering, processing, making (FL25). */
+/** The fifteen places, row by row: gathering, processing, making. */
 export const PLACE_IDS_V3 = [
   'mine', 'mine-workbench', 'weapon-forge',
   'fields', 'fields-workbench', 'tome-forge',
@@ -47,17 +47,17 @@ export const PROFESSIONS: readonly Profession[] = [
 const PROFESSION_BY_ID = new Map(PROFESSIONS.map((p) => [p.id, p]))
 export const professionById = (id: string): Profession | undefined => PROFESSION_BY_ID.get(id as ProfessionId)
 
-/** Every place's slots and speed from day 1 (PP4): one level, nothing to upgrade. */
+/** Every place's slots and speed from day 1: one level, nothing to upgrade. */
 export const PLACE_SLOTS_V3 = 4
 export const PLACE_SPEED_V3 = 1.25
 
-// --- The trade (PP2, PP3) ------------------------------------------------------------------------------------------------
+// --- The trade ------------------------------------------------------------------------------------------------
 
 export const TRADE_IDS = ['physical', 'physical-hybrid', 'healer', 'magical-hybrid', 'magical'] as const
 /** Her calling's fight type, which names her trade (UT19). */
 export type TradeId = typeof TRADE_IDS[number]
 export interface Trade { id: TradeId; gathering: ProfessionId; processing: ProfessionId; crafting: ProfessionId }
-/** One row a trade, physical on top as on the Learning page (PP3). */
+/** One row a trade, physical on top as on the Learning page. */
 export const TRADES: readonly Trade[] = [
   { id: 'physical', gathering: 'mining', processing: 'smelting', crafting: 'arms-crafting' },
   { id: 'physical-hybrid', gathering: 'wood-chopping', processing: 'sawing', crafting: 'armor-crafting' },
@@ -67,12 +67,12 @@ export const TRADES: readonly Trade[] = [
 ]
 const TRADE_BY_ID = new Map(TRADES.map((t) => [t.id, t]))
 
-/** Her trade by calling (PP2); from v19 one a Tier 0 (CV20): the Warrior Metal, the Spellblade Wood, the Healer Vegetables,
+/** Her trade by calling; from v19 one a Tier 0: the Warrior Metal, the Spellblade Wood, the Healer Vegetables,
  * the Summoner Fish, the Mage Stone, the fight types' slots in the same order. The `TradeId`s keep their names. */
 const CALLING_TRADE: Readonly<Record<UmaCallingClass, TradeId>> = {
   recruit: 'physical', duelist: 'physical-hybrid', acolyte: 'healer', caller: 'magical-hybrid', apprentice: 'magical',
 }
-/** Her trade by her calling's class (PP2). */
+/** Her trade by her calling's class. */
 export const tradeOfCalling = (calling: UmaCallingClass): TradeId => CALLING_TRADE[calling]
 /** A trade's gathering, processing and crafting professions. */
 export const tradeProfessions = (trade: TradeId): readonly [ProfessionId, ProfessionId, ProfessionId] => {
@@ -85,7 +85,7 @@ export const tradePlaces = (trade: TradeId): readonly [PlaceIdV3, PlaceIdV3, Pla
   return [PROFESSION_BY_ID.get(gathering)!.place, PROFESSION_BY_ID.get(processing)!.place, PROFESSION_BY_ID.get(crafting)!.place]
 }
 
-/** Her trade from her outfit: her Tier 0's (CV20). */
+/** Her trade from her outfit: her Tier 0's. */
 export const umaTrade = (outfit: CallingOutfit): TradeId => tradeOfCalling(umaCalling(outfit))
 
 /** What the work rules ask of the caller (D208: template-dependent rules take their template from the caller): each

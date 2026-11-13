@@ -1,11 +1,11 @@
-// Her route (F47 decisions 2, 3 and 7; romance spec RM11–RM14, RM17) and her arrival scene's pay (F46 decisions 8 and 10;
+// Her route and her arrival scene's pay (F46 decisions 8 and 10;
 // RM4, RM13). One track per Uma, 26 rungs with an event and the spouse levels S2 and S4 between them:
 //
 //   F1 … F10 ─ her confession ─ R1 … R10 ─ the proposal ─ the wedding ─ S1 … S5
 //   160 + 40n a heart (200 … 560)   0      160 + 40n          0             0       600 a level
 //
 // A level is its event: her bar fills, the event becomes Ready (`ready.ts`), and the level comes when it plays (`advance`,
-// which F49 calls). The three waiting rungs cost nothing; S2 and S4 have no event and come at night (F54). Points never
+// which F49 calls). The three waiting rungs cost nothing; S2 and S4 have no event and come at night. Points never
 // fall: past a full bar they're banked and carry into the next bar when the event plays; while a waiting rung waits they
 // bank into the next ladder. `addLove` is the one way points move: the day's factors, rounded once, nothing once S5 has
 // played. Her arrival scene, "event zero", pays +50 and its one choice: the option with the highest authored gain +30,
@@ -15,24 +15,24 @@ import { SaveRuleError } from '../save/rules'
 import type { Love, LoveStage, SaveV4 } from '../save/v4'
 import type { ChoiceOption, Step } from '../story/authored'
 
-// --- The ladders (RM11, RM12; decision 2) ------------------------------------------------------------------------------
+// --- The ladders ------------------------------------------------------------------------------
 
 const rungs = (letter: string, n: number): string[] => Array.from({ length: n }, (_, i) => `${letter}${i + 1}`)
 /** Every step of her route in order, what `nextRung` names: the 26 rungs with an event (F46's `RUNGS` without her
- * arrival) and the spouse levels S2 and S4, which have none and come at night (F54). */
+ * arrival) and the spouse levels S2 and S4, which have none and come at night. */
 export const ROUTE_RUNGS: readonly string[] = [...rungs('f', 10), 'confession', ...rungs('r', 10), 'proposal', 'wedding', ...rungs('s', 5)]
-/** The rungs that cost nothing: each is Ready the day after the rung before (RM12; the proposal also needs a ring). */
+/** The rungs that cost nothing: each is Ready the day after the rung before (the proposal also needs a ring). */
 export const WAITING_RUNGS: readonly string[] = ['confession', 'proposal', 'wedding']
-/** The spouse levels with no event: they come at night when their bar fills (RM11; F54). */
+/** The spouse levels with no event: they come at night when their bar fills. */
 export const NIGHT_RUNGS: readonly string[] = ['s2', 's4']
 
-/** Heart n on friendship and romance costs 160 + 40n (RM12). */
+/** Heart n on friendship and romance costs 160 + 40n. */
 export const HEART_BASE = 160
 export const HEART_STEP = 40
 /** A spouse level costs 600. */
 export const SPOUSE_COST = 600
 
-/** What a rung costs (RM12): 160 + 40n for a friendship or romance heart, 600 a spouse level, 0 a waiting rung. */
+/** What a rung costs: 160 + 40n for a friendship or romance heart, 600 a spouse level, 0 a waiting rung. */
 export function costOf(rung: string): number {
   if (!ROUTE_RUNGS.includes(rung)) throw new RangeError(`No rung ${rung}`)
   if (WAITING_RUNGS.includes(rung)) return 0
@@ -41,7 +41,7 @@ export function costOf(rung: string): number {
 /** A whole route: 3,800 a friendship or romance ladder, 3,000 the spouse ladder, 10,600 in all. */
 export const ROUTE_POINTS = ROUTE_RUNGS.reduce((sum, rung) => sum + costOf(rung), 0)
 
-/** Her next rung (decision 2), or null once S5 has played (her route is complete). */
+/** Her next rung, or null once S5 has played (her route is complete). */
 export function nextRung(love: Pick<Love, 'stage' | 'level'>): string | null {
   switch (love.stage) {
     case 'friendship': return `f${love.level + 1}`
@@ -51,7 +51,7 @@ export function nextRung(love: Pick<Love, 'stage' | 'level'>): string | null {
   }
 }
 
-/** Her bar toward the next rung (RM14): its points held to the cost, the cost, what's banked past it, and whether it's
+/** Her bar toward the next rung: its points held to the cost, the cost, what's banked past it, and whether it's
  * full. A waiting rung's bar is full at once, every point banked into the next ladder. A complete route has none. */
 export interface Bar {
   rung: string | null
@@ -68,7 +68,7 @@ export function bar(love: Pick<Love, 'stage' | 'level' | 'points'>): Bar {
 }
 
 /**
- * Her next rung is reached (decision 2): F49 calls it when her event plays, F54 when S2 or S4 fills at night. The cost
+ * Her next rung is reached: F49 calls it when her event plays, F54 when S2 or S4 fills at night. The cost
  * leaves her points (the rest stays banked), the level or the stage moves and `last` is the day. F10 leaves her at her
  * confession (level 10), the confession accepted starts romance at 0 (`friend` cleared), R10 leaves her at the proposal,
  * the proposal at the wedding, the wedding makes her a spouse at 0 (`wed` is the day), and S5 completes the route. Refused
@@ -92,7 +92,7 @@ export function advance(love: Love, day: number): Love {
   }
 }
 
-/** The level on romance and on spouse whose perk starts her morning items' count (R2, S2; F51 decision 6). */
+/** The level on romance and on spouse whose perk starts her morning items' count (R2, S2). */
 export const MORNING_LEVEL = 2
 
 /** A rung in words: "Friendship 3", "Her confession", "Romance 4", "The proposal", "The wedding", "Spouse 2". */
@@ -106,7 +106,7 @@ export function rungName(rung: string): string {
   return `${ladder} ${rung.slice(1)}`
 }
 
-/** Her stage and level in words (decision 2): "Friend · F7", "Close friend" after a "Not yet", "Partner · R4", "Engaged"
+/** Her stage and level in words: "Friend · F7", "Close friend" after a "Not yet", "Partner · R4", "Engaged"
  * while the wedding waits, "Spouse · S2"; level 0 of a ladder is its name alone ("New friend", "Partner", "Spouse"). */
 export function levelWords(love: Pick<Love, 'stage' | 'level' | 'friend'>): string {
   switch (love.stage) {
@@ -119,46 +119,46 @@ export function levelWords(love: Pick<Love, 'stage' | 'level' | 'friend'>): stri
   }
 }
 
-/** The three ladders a bar's colour shows (RM11). */
+/** The three ladders a bar's colour shows. */
 export type LadderName = 'friendship' | 'romance' | 'spouse'
 /** The ladder a stage's points go to and its bar is drawn in: friendship until her confession is accepted, romance until
  * the wedding, spouse after it. */
 export const ladderOf = (stage: LoveStage): LadderName => (stage === 'friendship' || stage === 'confession' ? 'friendship' : stage === 'spouse' ? 'spouse' : 'romance')
-/** The bar's colour carries the stage (RM11): coral, rose and gold, as uma-art's `hearts` marks draw them. */
+/** The bar's colour carries the stage: coral, rose and gold, as uma-art's `hearts` marks draw them. */
 export const LADDER_COLOURS: Readonly<Record<LadderName, string>> = { friendship: '#f07a5c', romance: '#e0567a', spouse: '#d9a227' }
 
-// --- Points (RM13, RM14, RM17; decisions 3 and 7) ---------------------------------------------------------------------
+// --- Points ---------------------------------------------------------------------
 
-/** What paid points into her bar: each act of RM13's table. The evening (F50), an invitation (F50) and a house morning
- * (F54) are named now so their packets pass them. */
+/** What paid points into her bar: each act of RM13's table. The evening, an invitation and a house morning
+ * are named now so their packets pass them. */
 export type LoveSource = 'chat' | 'gift' | 'praise' | 'line' | 'festival' | 'arrival' | 'event' | 'evening' | 'invite' | 'house'
 
-/** A gift on her birthday pays ×3 (RM16). */
+/** A gift on her birthday pays ×3. */
 export const BIRTHDAY_GIFT = 3
-/** Every act on her anniversary pays ×2 but the evening, which takes its own ×1.5 instead (RM17; decision 7, F50). */
+/** Every act on her anniversary pays ×2 but the evening, which takes its own ×1.5 instead. */
 export const ANNIVERSARY_POINTS = 2
 
-/** Whether a day is her anniversary (RM17; decision 11): her wedding's day of the year, from year 2 of her marriage. */
+/** Whether a day is her anniversary: her wedding's day of the year, from year 2 of her marriage. */
 export const isAnniversary = (love: Pick<Love, 'wed'>, day: number): boolean =>
   love.wed !== undefined && day > love.wed && (day - love.wed) % DAYS_PER_YEAR === 0
 
-/** The day's factor on an act (decision 7): a gift ×3 on her birthday; on her anniversary every act ×2 except the evening.
+/** The day's factor on an act: a gift ×3 on her birthday; on her anniversary every act ×2 except the evening.
  * Each multiplies once. */
 export function dayFactor(love: Pick<Love, 'wed'>, day: number, source: LoveSource, birthday = false): number {
   return (source === 'gift' && birthday ? BIRTHDAY_GIFT : 1) * (source !== 'evening' && isAnniversary(love, day) ? ANNIVERSARY_POINTS : 1)
 }
 
-/** Points are whole: each pay rounds once, half up, after its factors (decision 2). */
+/** Points are whole: each pay rounds once, half up, after its factors. */
 export const roundPoints = (n: number): number => Math.floor(n + 0.5 + 1e-9)
 
-/** What an act paid, for the "+N" that floats from her face (RM13). */
+/** What an act paid, for the "+N" that floats from her face. */
 export interface LovePaid {
   save: SaveV4
   /** Points into her bar, after the day's factors; 0 when nothing moved. */
   paid: number
 }
 
-/** Points into her bar (decision 3): the one way they move. The day's factors (a gift on her `birthday`, her
+/** Points into her bar: the one way they move. The day's factors (a gift on her `birthday`, her
  * anniversary), rounded once; never below 0; nothing once her route is complete. Never stamps. */
 export function addLove(save: SaveV4, id: string, points: number, source: LoveSource, birthday = false): LovePaid {
   const love = save.love[id]
@@ -170,24 +170,24 @@ export function addLove(save: SaveV4, id: string, points: number, source: LoveSo
   return { save: { ...save, love: { ...save.love, [id]: { ...love, points: love.points + paid } } }, paid }
 }
 
-// --- Her arrival scene (F46 decision 10) -------------------------------------------------------------------------------
+// --- Her arrival scene -------------------------------------------------------------------------------
 
-/** Every arrival pays +50 on completion (RM13). */
+/** Every arrival pays +50 on completion. */
 export const ARRIVAL_POINTS = 50
-/** Her arrival's choice: the best option +30, the others +10 (decision 10). */
+/** Her arrival's choice: the best option +30, the others +10. */
 export const CHOICE_BEST = 30
 export const CHOICE_OTHER = 10
 
 /** An option's authored gain: its friendship and romance hearts. */
 export const authoredGain = (option: Pick<ChoiceOption, 'friendship' | 'romance'>): number => (option.friendship ?? 0) + (option.romance ?? 0)
 
-/** Each option's points, in order (decision 10): the highest authored gain pays +30, every tie at the top too; the rest +10. */
+/** Each option's points, in order: the highest authored gain pays +30, every tie at the top too; the rest +10. */
 export function choicePoints(options: readonly Pick<ChoiceOption, 'friendship' | 'romance'>[]): number[] {
   const top = Math.max(...options.map(authoredGain))
   return options.map((o) => (authoredGain(o) === top ? CHOICE_BEST : CHOICE_OTHER))
 }
 
-/** What a scene's path depends on besides its picks (F49 decisions 6 and 7): her flags, which choose each `when` step's
+/** What a scene's path depends on besides its picks: her flags, which choose each `when` step's
  * branch (flags a `flag` step sets on the way count from there on), and each play's result in order, `true` for a Great or
  * better (its `good` steps follow) and `false` for a Fine (its `miss`). Without `plays`, a play neither stops the walk nor
  * splices anything (her arrival and the pairs' conversations have none). */
@@ -196,7 +196,7 @@ export interface SceneState {
   plays?: readonly boolean[]
 }
 
-/** A scene's path (decision 10; F49): its steps in order, each picked option's `then` spliced in after its choice and each
+/** A scene's path: its steps in order, each picked option's `then` spliced in after its choice and each
  * `when` replaced by its branch, up to and including the first choice not yet picked (and, with `plays`, the first play not
  * yet played). `done` is whether it ran to its end. */
 export function walkScene(steps: readonly Step[], picks: readonly number[], state: SceneState = {}): { steps: Step[]; done: boolean } {
@@ -233,7 +233,7 @@ export function walkScene(steps: readonly Step[], picks: readonly number[], stat
   return { steps: out, done }
 }
 
-/** A scripted scene as it plays (decision 10): `walkScene`'s steps, up to and including the first choice not yet picked.
+/** A scripted scene as it plays: `walkScene`'s steps, up to and including the first choice not yet picked.
  * `picks` are the options chosen, in order. */
 export const sceneSteps = (steps: readonly Step[], picks: readonly number[], state: SceneState = {}): Step[] => walkScene(steps, picks, state).steps
 
@@ -247,7 +247,7 @@ export interface ArrivalPlayed {
   flags: readonly string[]
 }
 
-/** Her arrival scene, played (or skipped to its choice) once (decision 10): +50 and its choice into her bar, its flags
+/** Her arrival scene, played (or skipped to its choice) once: +50 and its choice into her bar, its flags
  * into hers, and her id into `arrivals`. Played already: unchanged. Never stamps: the app's action does, once. */
 export function finishArrival(save: SaveV4, id: string, played: ArrivalPlayed): SaveV4 {
   if (save.arrivals.includes(id)) return save
@@ -258,7 +258,7 @@ export function finishArrival(save: SaveV4, id: string, played: ArrivalPlayed): 
   return { ...paid, love: { ...paid.love, [id]: { ...love, flags: [...new Set([...love.flags, ...played.flags])] } }, arrivals: [...save.arrivals, id] }
 }
 
-/** Her arrival when the pack scripts none ("still being written", D48): a line and a choice, so every arrival still
+/** Her arrival when the pack scripts none ("still being written"): a line and a choice, so every arrival still
  * pays. Original, and it never names her. */
 export const FALLBACK_ARRIVAL: readonly Step[] = [
   { place: 'gate' },

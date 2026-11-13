@@ -1,4 +1,4 @@
-// The homestead (F54 decisions 1–5, 9 and 14; romance spec RM41–RM44, RM22): the Farmhouse and six houses you build, name
+// The homestead: the Farmhouse and six houses you build, name
 // and extend; each spouse's room; who sleeps where tonight. **Who lives where is one source, `love.house`** (D48 call 8).
 //
 //                 rooms         costs                       opens
@@ -23,20 +23,20 @@ import { isBirthday, type Birthdays } from './days'
 import { cleanFarmerName, houseNameIssue } from './farmer'
 import { hasPerk } from './perk-terms'
 
-// --- The houses (RM41; decisions 1 and 3) -------------------------------------------------------------------------------
+// --- The houses -------------------------------------------------------------------------------
 
-/** House 1–6's prices (RM41), in gold. */
+/** House 1–6's prices, in gold. */
 export const HOUSE_COSTS: readonly number[] = [8_000, 20_000, 40_000, 70_000, 110_000, 160_000]
-/** An extension costs half its house (RM41): 4,000g … 80,000g. */
+/** An extension costs half its house: 4,000g … 80,000g. */
 export const EXTENSION_COSTS: readonly number[] = HOUSE_COSTS.map((cost) => cost / 2)
-/** The houses you build (RM41): six, after the Farmhouse. */
+/** The houses you build: six, after the Farmhouse. */
 export const HOUSES = HOUSE_COSTS.length
 
 /** A house's number on the homestead: 0 the Farmhouse, 1–6 the houses. */
 export const houseCost = (n: number): number => HOUSE_COSTS[n - 1] ?? 0
 export const extensionCost = (n: number): number => EXTENSION_COSTS[n - 1] ?? 0
 
-/** The next lot (decision 3): its house's number, its price and whether it may be built now (House 1 from the first
+/** The next lot: its house's number, its price and whether it may be built now (House 1 from the first
  * wedding, each later one once the one before stands, which it does by the time it's next); null once all six stand. */
 export interface Lot {
   n: number
@@ -49,7 +49,7 @@ export function nextLot(save: Pick<SaveV4, 'homestead' | 'love'>): Lot | null {
   return { n, cost: houseCost(n), open: n > 1 || marriedCount(save) >= 1 }
 }
 
-/** Builds and names the next house (decision 3): it stands at once, two rooms, its name the letters rule's (1–20). Refused
+/** Builds and names the next house: it stands at once, two rooms, its name the letters rule's (1–20). Refused
  * before the first wedding (`locked`), once all six stand (`bad-job`), for a name outside the rule or another house's
  * (`bad-job`), and when gold is short (`no-gold`). */
 export function buildHouse(save: SaveV4, raw: string): SaveV4 {
@@ -65,7 +65,7 @@ export function buildHouse(save: SaveV4, raw: string): SaveV4 {
   return { ...paid, homestead: { ...h, houses: [...h.houses, { name, extended: false }], slept: [...h.slept, 0] } }
 }
 
-/** Extends a house (decision 3): two more rooms at once, for half its price. Refused for the Farmhouse and a house not built
+/** Extends a house: two more rooms at once, for half its price. Refused for the Farmhouse and a house not built
  * (`bad-job`), once extended (`bad-job`), and when gold is short (`no-gold`). */
 export function extendHouse(save: SaveV4, n: number): SaveV4 {
   const house = save.homestead.houses[n]
@@ -87,7 +87,7 @@ export function roomsInAll(save: Pick<SaveV4, 'homestead' | 'love'>): { rooms: n
   return { rooms, taken: Object.values(save.love).filter((l) => l.house !== undefined).length }
 }
 
-// --- On the map (FC28 as RM41 grows it; decision 2) ---------------------------------------------------------------------
+// --- On the map (FC28 as RM41 grows it) ---------------------------------------------------------------------
 
 /** A homestead place on the v4 map: the Farmhouse (0) or a house's lot (1–6). */
 export interface HomesteadPlace {
@@ -98,7 +98,7 @@ export interface HomesteadPlace {
   /** Its row and column among the homestead's rows: the Farmhouse, House 1 and House 2; Houses 3–5; House 6. */
   row: number
   col: number
-  /** uma-art 2.26.0's buildings (F55): the Farmhouse's own, and one cottage for every lot. */
+  /** uma-art 2.26.0's buildings: the Farmhouse's own, and one cottage for every lot. */
   frame: 'farmhouse' | 'homestead-house'
   opens: PlaceOpens
 }
@@ -109,20 +109,20 @@ export const HOMESTEAD_PLACES: readonly HomesteadPlace[] = Array.from({ length: 
   row: HOMESTEAD_FIRST_ROW + Math.floor(n / 3), col: n % 3, frame: n === 0 ? 'farmhouse' : 'homestead-house',
   opens: n === 0 ? { by: 'start' } : { by: 'house', n },
 }))
-/** The homestead's places the map shows (decision 2): the Farmhouse, every house built and the next lot; later lots wait, so
+/** The homestead's places the map shows: the Farmhouse, every house built and the next lot; later lots wait, so
  * the map grows a row at a time. */
 export const homesteadShown = (save: Pick<SaveV4, 'homestead'>): HomesteadPlace[] => HOMESTEAD_PLACES.filter((p) => p.n <= save.homestead.houses.length)
 /** The homestead's rows on the map now: one to three. */
 export const homesteadRows = (save: Pick<SaveV4, 'homestead'>): number => Math.ceil(homesteadShown(save).length / 3)
 
-// --- Rooms (RM42, RM44; decision 4) -------------------------------------------------------------------------------------
+// --- Rooms -------------------------------------------------------------------------------------
 
 /** What the room rules read of the pack: her wishes (bibles) and her closest friend (ties). */
 export type RoomPack = Pick<StoryPack, 'bibles' | 'ties'>
 
-/** She wishes for a house to herself (RM44). */
+/** She wishes for a house to herself. */
 export const wantsOwnHouse = (pack: Pick<StoryPack, 'bibles'>, id: string): boolean => wishesOf(pack, id).includes('own-house')
-/** She wishes to spend her birthday alone with you (RM44). */
+/** She wishes to spend her birthday alone with you. */
 export const wantsBirthdayAlone = (pack: Pick<StoryPack, 'bibles'>, id: string): boolean => wishesOf(pack, id).includes('birthday-alone')
 
 /** A house an own-house wisher has to herself, which other spouses' defaults pass over while another has room. */
@@ -130,7 +130,7 @@ const kept = (save: Pick<SaveV4, 'love'>, pack: Pick<StoryPack, 'bibles'>, house
   residentsOf(save, house).some((r) => wantsOwnHouse(pack, r))
 
 /**
- * Her default room (decision 4): among the houses with a free room (not hers), an own-house wisher's first empty one;
+ * Her default room: among the houses with a free room (not hers), an own-house wisher's first empty one;
  * else the house where her closest friend lives (F52's order) when it has room; else the first with room, the Farmhouse
  * first. Both pass over a house an own-house wisher lives in while another has room. Null with no room free.
  */
@@ -148,7 +148,7 @@ export function roomFor(save: Pick<SaveV4, 'homestead' | 'love' | 'bonds'>, pack
   return open[0] ?? free[0]!
 }
 
-/** Why a spouse can't move now, or null (decision 4): she must be a spouse, and one leaving or arriving tomorrow by a swap
+/** Why a spouse can't move now, or null: she must be a spouse, and one leaving or arriving tomorrow by a swap
  * waits for the morning. */
 function moveBlock(save: SaveV4, id: string): string | null {
   if (save.love[id]?.stage !== 'spouse' || !save.roster[id]) return 'Only a spouse has a room.'
@@ -161,7 +161,7 @@ function moveBlock(save: SaveV4, id: string): string | null {
 const keepAlone = (homestead: SaveV4['homestead'], moved: readonly string[]): SaveV4['homestead'] =>
   homestead.alone !== null && moved.includes(homestead.alone) ? { ...homestead, alone: null } : homestead
 
-/** Moves a spouse to a free room in another house (decision 4), at once and free; from her Dorm bed, she leaves the Dorm and
+/** Moves a spouse to a free room in another house, at once and free; from her Dorm bed, she leaves the Dorm and
  * frees it. Refused for someone not a spouse, a swap waiting, her own house, a house not built or one with no room free. */
 export function moveSpouse(save: SaveV4, id: string, house: number): SaveV4 {
   const block = moveBlock(save, id)
@@ -178,7 +178,7 @@ export function moveSpouse(save: SaveV4, id: string, house: number): SaveV4 {
   }
 }
 
-/** Two spouses in two houses trade rooms (decision 4), at once and free. */
+/** Two spouses in two houses trade rooms, at once and free. */
 export function swapRooms(save: SaveV4, a: string, b: string): SaveV4 {
   for (const id of [a, b]) {
     const block = moveBlock(save, id)
@@ -194,7 +194,7 @@ export function swapRooms(save: SaveV4, a: string, b: string): SaveV4 {
   }
 }
 
-/** Her room at her wedding (decision 4; F53's wedding gains the step): her default room, at once; with none free (or a swap
+/** Her room at her wedding (F53's wedding gains the step): her default room, at once; with none free (or a swap
  * waiting) she keeps her Dorm bed. The house she took, or null. */
 export function takeRoom(save: SaveV4, pack: RoomPack, id: string): { save: SaveV4; house: number | null } {
   const house = roomFor(save, pack, id)
@@ -202,7 +202,7 @@ export function takeRoom(save: SaveV4, pack: RoomPack, id: string): { save: Save
   return { save: moveSpouse(save, id, house), house }
 }
 
-/** A spouse in the Dorm waiting for a room (RM42): "Needs a room". */
+/** A spouse in the Dorm waiting for a room: "Needs a room". */
 export const needsRoom = (save: Pick<SaveV4, 'love'>, id: string): boolean => save.love[id]?.stage === 'spouse' && save.love[id]?.house === undefined
 
 /** The spouses waiting for a room, in wedding order (her wedding's day, then her id). */
@@ -211,7 +211,7 @@ export function waitingForRooms(save: Pick<SaveV4, 'love' | 'roster'>): string[]
     .sort((a, b) => (save.love[a]!.wed ?? 0) - (save.love[b]!.wed ?? 0) || Number(a) - Number(b))
 }
 
-/** Night step 9 (decision 4; RM42): spouses home in the Dorm who wait for a room take one, in wedding order, by the same
+/** Night step 9: spouses home in the Dorm who wait for a room take one, in wedding order, by the same
  * default, once a house stands. An away spouse waits until she's swapped home. Who moved, and where. */
 export function moveInWaiting(save: SaveV4, pack: RoomPack): { save: SaveV4; moved: { id: string; house: number }[] } {
   let next = save
@@ -226,7 +226,7 @@ export function moveInWaiting(save: SaveV4, pack: RoomPack): { save: SaveV4; mov
   return { save: next, moved }
 }
 
-/** Her room in words (decision 14): her house's name, "Needs a room", and softly, for an own-house wisher sharing or
+/** Her room in words: her house's name, "Needs a room", and softly, for an own-house wisher sharing or
  * waiting, "She'd love her own house". Null before she's a spouse. */
 export interface HomeWords {
   house: number | null
@@ -247,9 +247,9 @@ export function homeOf(save: Pick<SaveV4, 'love' | 'homestead'>, pack: Pick<Stor
 export const NEEDS_ROOM = 'Needs a room'
 export const OWN_HOUSE_WISH = 'She’d love her own house'
 
-// --- Sleep at (RM22, RM43, RM44; decision 5) ----------------------------------------------------------------------------
+// --- Sleep at ----------------------------------------------------------------------------
 
-/** A house you haven't slept in for this many nights misses you (RM43). */
+/** A house you haven't slept in for this many nights misses you. */
 export const MISSES_NIGHTS = 8
 
 /** Nights since you last slept in a house, or null when you never have. */
@@ -257,7 +257,7 @@ export const nightsAway = (save: Pick<SaveV4, 'homestead' | 'calendar'>, house: 
   const last = save.homestead.slept[house] ?? 0
   return last > 0 ? save.calendar.day - last : null
 }
-/** A house with residents you haven't slept in for 8 nights or more (RM43). */
+/** A house with residents you haven't slept in for 8 nights or more. */
 export const missesYou = (save: Pick<SaveV4, 'homestead' | 'calendar' | 'love'>, house: number): boolean =>
   residentsOf(save, house).length > 0 && (nightsAway(save, house) ?? 0) >= MISSES_NIGHTS
 
@@ -265,7 +265,7 @@ export const missesYou = (save: Pick<SaveV4, 'homestead' | 'calendar' | 'love'>,
 export const sleepHouses = (save: Pick<SaveV4, 'homestead' | 'love'>): number[] =>
   save.homestead.houses.map((_, i) => i).filter((i) => i === 0 || residentsOf(save, i).length > 0)
 
-/** Tonight's default (decision 5): among the houses with residents, the one slept in least lately (never first), ties the
+/** Tonight's default: among the houses with residents, the one slept in least lately (never first), ties the
  * lower number; the Farmhouse when no one has a room. */
 export function defaultHouse(save: Pick<SaveV4, 'homestead' | 'love'>): number {
   const lived = save.homestead.houses.map((_, i) => i).filter((i) => residentsOf(save, i).length > 0)
@@ -276,14 +276,14 @@ export function defaultHouse(save: Pick<SaveV4, 'homestead' | 'love'>): number {
 export const tonightsHouse = (save: Pick<SaveV4, 'homestead' | 'love'>): { house: number; alone: string | null } =>
   save.homestead.tonight === null ? { house: defaultHouse(save), alone: null } : { house: save.homestead.tonight, alone: save.homestead.alone }
 
-/** Whether her breakfast is on tomorrow in a house (decision 5): a resident at S1 or more, and someone on the farm whose
+/** Whether her breakfast is on tomorrow in a house: a resident at S1 or more, and someone on the farm whose
  * meal ends tonight, with no reception feeding everyone. */
 export function breakfastTomorrow(save: Pick<SaveV4, 'homestead' | 'love' | 'roster' | 'dorm' | 'today'>, house: number): boolean {
   if (save.today.reception > 0 || !residentsOf(save, house).some((r) => hasPerk(save.love[r], 's1'))) return false
   return Object.keys(save.roster).some((id) => (save.dorm.home.includes(id) || save.love[id]?.house !== undefined) && save.roster[id]!.wellFed <= 1)
 }
 
-/** One of Sleep at's rows (decision 5): a house, its residents, ☕ for tomorrow's breakfast and the nights since you slept
+/** One of Sleep at's rows: a house, its residents, ☕ for tomorrow's breakfast and the nights since you slept
  * there once that's 8 or more; or "Her room" on a birthday-alone wisher's birthday. */
 export interface SleepRow {
   house: number
@@ -312,7 +312,7 @@ export function sleepRows(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, birthda
   return [...houses, ...rooms]
 }
 
-/** Sleep at (decision 5): tonight's house, or her room on her birthday; a player's change. Refused for a house not built,
+/** Sleep at: tonight's house, or her room on her birthday; a player's change. Refused for a house not built,
  * and for her room on any other night or for someone not in that house. */
 export function sleepAt(save: SaveV4, house: number, alone: string | null = null, birthdays: Birthdays | null = null): SaveV4 {
   if (!save.homestead.houses[house]) throw new SaveRuleError('bad-job', 'That house isn’t built.')
@@ -323,9 +323,9 @@ export function sleepAt(save: SaveV4, house: number, alone: string | null = null
   return { ...save, homestead: { ...save.homestead, tonight: house, alone } }
 }
 
-// --- The furniture set (RM45; decision 9) -------------------------------------------------------------------------------
+// --- The furniture set -------------------------------------------------------------------------------
 
-/** The furniture set at 5 married (RM45): five pieces with original names, placed one a house as words; M6's decorations
+/** The furniture set at 5 married: five pieces with original names, placed one a house as words; M6's decorations
  * draw them. */
 export const FURNITURE: readonly string[] = ['Patchwork Armchair', 'Pine Bookcase', 'Copper Kettle Stand', 'Window-Seat Cushions', 'Braided Hearth Rug']
 

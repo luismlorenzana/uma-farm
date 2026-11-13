@@ -1,4 +1,4 @@
-// The five plays on screen (F49 decision 5; romance spec RM25, RM29; hd2d-farm FR21): a flat sheet in the middle of the
+// The five plays on screen: a flat sheet in the middle of the
 // event player that opens on the play, shows what to aim for first (the seed), takes one thumb (timing from
 // `pointerdown`), never takes from the Warehouse, and closes on its grade. The rules are `@farm/domain`'s
 // (`romance/plays/`); this draws them: **Cast** a ring closing on the mark, **Pick** a 3 × 3 field of goods popping up,
@@ -25,7 +25,7 @@ export type PlaySpec =
   | { kind: 'walk'; length: PlayLength; plan: WalkPlan }
   | { kind: 'choose'; length: PlayLength; plan: ChoosePlan; scoreOf: (good: string | null) => number }
 
-/** A play's numbers for her (decision 5): its seeded plan, her favourites for Pick, her place for Walk, her tastes for
+/** A play's numbers for her: its seeded plan, her favourites for Pick, her place for Walk, her tastes for
  * Choose. */
 export function playSpec(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string, play: PlayAs, length: PlayLength, seed: Seed): PlaySpec {
   switch (play.kind) {

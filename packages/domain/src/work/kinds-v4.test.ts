@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/work/kinds-v4.test.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// The farm by line's job kinds (H109; farm-by-line.md FL2, FL6, FL9, FL10): every place one line's, a making place
+// Copied from uma-rpg packages/domain/src/work/kinds-v4.test.ts at 30a322a, with its Wilds-only parts cut.
+// The farm by line's job kinds (farm-by-line.md FL2): every place one line's, a making place
 // processing its own line and making its one item, every gate Craft Lv 5g − 4, making at three quarters of a gather a
 // refined item. Read from `rpgWorkEnvV4`, the live env since H112.
 import { isRefusal, kindRules, type PlannedItem, type Refusal, type WorkEnv } from '@luismlorenzana/uma-work'

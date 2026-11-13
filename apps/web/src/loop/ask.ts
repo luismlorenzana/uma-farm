@@ -1,4 +1,4 @@
-// The Menu's switch (F18 decision 10; CS6): "Ask before ending the day". A device setting under uma-kit's `farm.` keys,
+// The Menu's switch: "Ask before ending the day". A device setting under uma-kit's `farm.` keys,
 // never in the save. On by default; off, End the day ends at once even with Umas idle.
 import { kitKey, readPref, subscribePrefs, writePref } from '@luismlorenzana/uma-kit/ui'
 import { useSyncExternalStore } from 'react'

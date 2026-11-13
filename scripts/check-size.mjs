@@ -7,25 +7,25 @@ import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
 
 export const MAIN_JS_BUDGET = 180_000
-/** Modules that must load on demand: the Hub map's Phaser scene, which uma-kit imports only when a map mounts (F5); the
- * loop's boot with its migration (F17); the farm's pages, its sheets, its actions and the night (F18); the Fields' page,
- * rules and crop table, and the morning's words (F20); the talents, the rank rules and their table, the roster's rows and
- * the Umas' marks (F21); the work operations and their env, the forest's, the Fishery's and the stations' tables, kinds
- * and build rule, and their screens (F22); the roster's rules (the start's sheet, the Dorm, visitors and affinity) with
- * the start's cards, the Dorm's page, the Gate's quick look and the chat and gift controls (F23); and the Diary's counts,
- * the chapters, the scenes' lines, the scene player and the goals' words (F24); and the romance core's name sheet, its
- * story pack with the stand-in, the format and validator, the re-cut opening, arrivals and her points (F46); and her route
- * on her sheet with its words, the acts, praise, birthdays and anniversaries, Ready and bond hearts (F47); and the Hearts
- * tab, her profile, the shared roster album, the stand-in marks, the tab's view model and the perks' words (F48); and the
- * pair player and the Diary's Conversations (F52, with bonds' rules in `farm/bonds.ts`); and the event player, the five
+/** Modules that must load on demand: the Hub map's Phaser scene, which uma-kit imports only when a map mounts; the
+ * loop's boot with its migration; the farm's pages, its sheets, its actions and the night; the Fields' page,
+ * rules and crop table, and the morning's words; the talents, the rank rules and their table, the roster's rows and
+ * the Umas' marks; the work operations and their env, the forest's, the Fishery's and the stations' tables, kinds
+ * and build rule, and their screens; the roster's rules (the start's sheet, the Dorm, visitors and affinity) with
+ * the start's cards, the Dorm's page, the Gate's quick look and the chat and gift controls; and the Diary's counts,
+ * the chapters, the scenes' lines, the scene player and the goals' words; and the romance core's name sheet, its
+ * story pack with the stand-in, the format and validator, the re-cut opening, arrivals and her points; and her route
+ * on her sheet with its words, the acts, praise, birthdays and anniversaries, Ready and bond hearts; and the Hearts
+ * tab, her profile, the shared roster album, the stand-in marks, the tab's view model and the perks' words; and the
+ * pair player and the Diary's Conversations (with bonds' rules in `farm/bonds.ts`); and the event player, the five
  * plays' rules and their sheet, the level-up and stage-up cards, the events' rules and actions, her Memories' album and
- * the Diary's shelf, with uma-art's emote atlas (F49); and the evening's rules, its words, its actions, its player, Tonight,
- * the morning's invitation answers and the night's fade (F50); and the perks' terms and effects (F51); and the ring
- * bench's rules, sheet, view, actions and scene, and the wedding's rules (F53); and the homestead's and the household's
+ * the Diary's shelf, with uma-art's emote atlas; and the evening's rules, its words, its actions, its player, Tonight,
+ * the morning's invitation answers and the night's fade; and the perks' terms and effects; and the ring
+ * bench's rules, sheet, view, actions and scene, and the wedding's rules; and the homestead's and the household's
  * rules, the homestead's sheet, view, actions and map rows, the morning's house answer, the night level's card and the
- * household player (F54); and the story pack's delivery, its index and released pack (F56); and the HD-2D farm's stage
- * (F11): three.js, uma-stage's band stage and its stand-in kit, the stage Home, its helpers and the farm's design, and
- * kit-farm's loader with its atlas (D73); and the Umas on the stage, their figures and looks (F12). The Wilds' screens left
+ * household player; and the story pack's delivery, its index and released pack; and the HD-2D farm's stage:
+ *three.js, uma-stage's band stage and its stand-in kit, the stage Home, its helpers and the farm's design, and
+ * kit-farm's loader with its atlas; and the Umas on the stage, their figures and looks. The Wilds' screens left
  * in F24.
  * Paths
  * match a module id exactly or as its suffix. */
@@ -149,7 +149,7 @@ export const LAZY_MODULES = [
   'src/loop/figure-looks.ts',
 ]
 
-/** Where the HD-2D preview builds (apps/web/vite.config.ts, D73): out of the precache, cached on first use. */
+/** Where the HD-2D preview builds (apps/web/vite.config.ts): out of the precache, cached on first use. */
 export const STAGE_DIR = 'assets/stage/'
 
 /** The precache's URLs, read from the built service worker (workbox's `precacheAndRoute` list). */
@@ -186,7 +186,7 @@ export async function checkStage(distDir) {
   return { files: sized, precached: precached.length }
 }
 
-/** Modules no production build may hold at all (F56 decision 5): the invented stand-in pack is the dev server's only. A
+/** Modules no production build may hold at all: the invented stand-in pack is the dev server's only. A
  * path ending in `/` is a folder. */
 export const DEV_ONLY_MODULES = ['domain/src/story/stand-in.ts', 'domain/src/story/stand-in/']
 

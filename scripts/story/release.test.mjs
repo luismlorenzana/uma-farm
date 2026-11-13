@@ -1,4 +1,4 @@
-// The story pack's release and publish (F56 decisions 3 and 4), on the invented stand-in pack in git (9000001–9000003):
+// The story pack's release and publish, on the invented stand-in pack in git (9000001–9000003):
 // no real character, name or line. A complete pack is the stand-in with invented bibles for its forager and fisher.
 // The publish script runs against a fake gcloud that only records its calls: no cloud is touched.
 import assert from 'node:assert/strict'

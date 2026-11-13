@@ -1,13 +1,13 @@
-// The farm's save (FM16, F3): local first in Dexie, synced through `farm-api`. Nothing carries over from uma-rpg (P4).
-// The shape, its parse and the conflict rule are copied from uma-rpg's `save/save.ts` at 30a322a (D32, D45, D260), cut to
+// The farm's save: local first in Dexie, synced through `farm-api`. Nothing carries over from uma-rpg (P4).
+// The shape, its parse and the conflict rule are copied from uma-rpg's `save/save.ts` at 30a322a, cut to
 // the farm's one account. Every change to the shape is a new version with its migration (N5), and no migration ever moves
 // `account.updatedAt`.
 //
-// v1 (F3): the account. v2 (F4, FW5): the Wilds' world beside it: each Uma's Craft Level, the Warehouse and the work rows.
-// v3 (F17, CS53): the farm's own loop (`v3.ts`), live from F24. v4 (F46, RM10): the romance core (`v4.ts`), built dark.
+// v1: the account. v2: the Wilds' world beside it: each Uma's Craft Level, the Warehouse and the work rows.
+// v3: the farm's own loop (`v3.ts`), live from F24. v4: the romance core (`v4.ts`), built dark.
 // `parseSave` returns what's stored, v2, v3 or v4 (a v1 still becomes v2): the app's boot migrates a v2 with master data
 // (`migrate-v3.ts`), and the romance build wipes any v1–v3 into a fresh v4 (`freshV4`), neither of which the API does
-// (FM10): no server makes a save, and the live M4 build stops at a v4.
+//: no server makes a save, and the live M4 build stops at a v4.
 import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkOutput, WorkRow } from '@luismlorenzana/uma-work'
 import type { JobKind } from '../economy/jobs'
 import { maxJobCount, PROFESSION_MAX_LEVEL } from '../economy/pacing'
@@ -26,7 +26,7 @@ import type { SaveV4 } from './v4'
 export { SaveParseError }
 
 /** The version production writes: v3, the farm's own loop, live from F24 (the Wilds wrote v2 until then). The romance
- * build writes v4 while dark; F56 moves this to 4 (F46 decision 2). */
+ * build writes v4 while dark; F56 moves this to 4. */
 export const SAVE_VERSION = 3
 /** The newest version this app reads: v4, the romance core, built from F46 and live from F56. */
 export const NEWEST_SAVE_VERSION = 4
@@ -44,7 +44,7 @@ export interface SaveV1 {
   account: Account
 }
 
-/** Save v2 (F4): the account and the Wilds' world, whole. */
+/** Save v2: the account and the Wilds' world, whole. */
 export interface SaveV2 extends FarmWorld {
   version: 2
   account: Account
@@ -66,7 +66,7 @@ export interface SaveEnvelope {
 export interface SavePut {
   baseRevision: number
   save: StoredSave
-  /** The API refuses a version older than what it stores (uma-rpg D45). */
+  /** The API refuses a version older than what it stores. */
   sentVersion: number
 }
 
@@ -83,7 +83,7 @@ export function withWorld(save: Save, world: FarmWorld, now: string): Save {
   return { ...save, account: { ...save.account, updatedAt: now }, umas: world.umas, items: world.items, buildings: world.buildings, work: world.work }
 }
 
-/** The conflict rule (uma-rpg D32): when two devices both changed the save, the one changed last wins whole, and a tie
+/** The conflict rule: when two devices both changed the save, the one changed last wins whole, and a tie
  * keeps this device's. The loser is kept, never dropped: as a safety copy on the device, or in `saveRescues` on the server. */
 export function resolveConflict<S extends StoredSave>(local: S, remote: S): S {
   return Date.parse(local.account.updatedAt) >= Date.parse(remote.account.updatedAt) ? local : remote
@@ -91,7 +91,7 @@ export function resolveConflict<S extends StoredSave>(local: S, remote: S): S {
 
 // --- Migrations: each older version to the next, never moving `account.updatedAt` --------------------------------------
 
-/** v1 → v2 (F4): the Wilds arrive empty. */
+/** v1 → v2: the Wilds arrive empty. */
 export function toV2(save: SaveV1): SaveV2 {
   return { version: 2, account: save.account, umas: {}, items: {}, buildings: {}, work: {} }
 }
@@ -115,7 +115,7 @@ function parseUmas(value: unknown, path: string): Record<string, FarmUma> {
   return out
 }
 
-/** The Warehouse (H77, the farm by line, D224): the hundred line items and the made items. */
+/** The Warehouse (the farm by line): the hundred line items and the made items. */
 function parseStock(value: unknown, path: string): Record<string, number> {
   const items: Record<string, number> = {}
   for (const [id, n] of Object.entries(record(value, path))) {
@@ -126,14 +126,14 @@ function parseStock(value: unknown, path: string): Record<string, number> {
   return items
 }
 
-// --- Work (SC3): the shared engine's rows, parsed strictly (uma-rpg's v31 rules: fifteen places, four slots) ------------
+// --- Work: the shared engine's rows, parsed strictly (uma-rpg's v31 rules: fifteen places, four slots) ------------
 
 /** Up to three requests wait behind the running one (the engine's MAX_QUEUE). */
 const MAX_QUEUED = 3
 /** The most started entries a row can hold: one running and its queue's finished ones waiting for Collect. */
 const MAX_ENTRIES = MAX_QUEUED + 1
 
-/** A slot: one of the fifteen places (FL25), four slots each. */
+/** A slot: one of the fifteen places, four slots each. */
 function parseSlot(value: unknown, path: string): SlotRef {
   const o = object(value, path, ['building', 'slot'])
   if (typeof o.building !== 'string' || !placeSpecV4(o.building)) throw new SaveParseError(`${path}.building`, 'not a place')
@@ -213,7 +213,7 @@ function parseLast(value: unknown, path: string): LastWork<FarmWorkRequest> | nu
   return { slot, request: parseRequest(l.request, `${path}.request`, slot) }
 }
 
-/** Places have no levels (PP4): the engine's levels stay empty. */
+/** Places have no levels: the engine's levels stay empty. */
 function parseBuildings(value: unknown, path: string): Record<string, { level: number }> {
   object(value, path, [])
   return {}
@@ -266,7 +266,7 @@ function parseV2(value: unknown, path: string): SaveV2 {
   }
 }
 
-/** Parses a save of any version the farm has written and returns it at the version stored (D29, F46 decision 2): v1 still
+/** Parses a save of any version the farm has written and returns it at the version stored: v1 still
  * migrates to v2 (`toV2`); v2 stays v2, v3 is the loop's and v4 the romance core's. Nothing is wiped here: the romance
  * build's boot does that. A version from a newer app is refused, so an old client can never half-read a newer save. */
 export function parseSave(value: unknown, path = 'save'): StoredSave {

@@ -1,7 +1,7 @@
 // The farm's top and bottom bars on uma-kit (as uma-rpg's): the account's initial, which opens Account, and the sync chip;
-// the date chip, which opens the calendar (F18); the gold chip, which opens the bin (F19); and the Farm Rank's chip, which
-// opens its sheet (F24). The bottom bar: Farm · Roster · End the day (raised) · Diary · Menu (F18); in the romance build,
-// Farm · Hearts · End the day · Diary · Menu (F48 decision 3; RM51).
+// the date chip, which opens the calendar; the gold chip, which opens the bin; and the Farm Rank's chip, which
+// opens its sheet. The bottom bar: Farm · Roster · End the day (raised) · Diary · Menu; in the romance build,
+// Farm · Hearts · End the day · Diary · Menu.
 import { dateOf, daySetState, farmRankOf, type Season } from '@farm/domain'
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { AccountBar, BottomBar, withParam, type BarTab, type CurrencyChip } from '@luismlorenzana/uma-kit/shell'
@@ -14,12 +14,12 @@ import { GoldCoin } from './Gold'
 
 export type BarPage = 'farm' | 'roster' | 'hearts' | 'diary'
 
-/** A season's dot: the date chip's mark until uma-art's season marks ship (F25). */
+/** A season's dot: the date chip's mark until uma-art's season marks ship. */
 function SeasonDot({ season }: { season: Season }) {
   return <span aria-hidden className="inline-block size-3 rounded-full ring-1 ring-ink/15" style={{ background: SEASON_COLOR[season] }} />
 }
 
-/** The date (decision 8): the season's mark and the day of the season; its name says the year and the next festival. */
+/** The date: the season's mark and the day of the season; its name says the year and the next festival. */
 function dateChip(day: number | null, location: Location): CurrencyChip {
   const season = day === null ? 'spring' : dateOf(day).season
   return {
@@ -28,7 +28,7 @@ function dateChip(day: number | null, location: Location): CurrencyChip {
   }
 }
 
-/** Gold (F19 decision 10): uma-art's coin (a plain "g" until F25) and the farm's gold; it opens the bin. */
+/** Gold: uma-art's coin (a plain "g" until F25) and the farm's gold; it opens the bin. */
 function goldChip(gold: number | null, location: Location): CurrencyChip {
   return {
     key: 'gold', mark: 'currency/gold', fallback: <GoldCoin />, value: gold, to: withParam(location, 'sheet', 'bin'),
@@ -45,7 +45,7 @@ function RankCrest() {
   )
 }
 
-/** The Farm Rank (decision 8): the crest and the rank; it opens the rank's sheet. The kit's tier crest stops at 3, so the
+/** The Farm Rank: the crest and the rank; it opens the rank's sheet. The kit's tier crest stops at 3, so the
  * rank isn't drawn there. */
 function rankChip(points: number | null, location: Location): CurrencyChip {
   const rank = points === null ? null : farmRankOf(points)
@@ -75,11 +75,10 @@ export function FarmAccountBar() {
 }
 
 /**
- * The bar (FC29, F18 decision 6): Farm · Roster · End the day · Diary · Menu; the romance build's second tab is Hearts
+ * The bar: Farm · Roster · End the day · Diary · Menu; the romance build's second tab is Hearts
  * (`/hearts`, uma-kit's heart, no badge: F48 decision 3, RM57's signals are the morning, her Ready chip and her pip). End the day is the raised centre; it reads
- * "All set" and glows when nothing waits (CS6), else "End day" with the count of idle Umas and things to collect on the
- * disc. It reads the save at its day, never the clock. The badge and the glow are uma-kit 0.19.0's (uma-platform P112,
- * from F18's request); the tab's name carries the count for VoiceOver.
+ * "All set" and glows when nothing waits, else "End day" with the count of idle Umas and things to collect on the
+ * disc. It reads the save at its day, never the clock. The badge and the glow are uma-kit 0.19.0's (* from F18's request); the tab's name carries the count for VoiceOver.
  */
 export function FarmBottomBar({ page }: { page: BarPage | null }) {
   const location = useLocation()

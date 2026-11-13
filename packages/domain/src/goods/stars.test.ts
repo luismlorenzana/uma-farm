@@ -1,4 +1,4 @@
-// Stars (CS26): the formula, its own terms, CS26's worked rows, and their shares over a seeded sample. Her rank's and
+// Stars: the formula, its own terms, CS26's worked rows, and their shares over a seeded sample. Her rank's and
 // talent's terms are F21's; here they're the spec's numbers (Novice 0, Skilled 1, Expert 1.5; C +0.25, B +0.5, A +0.75).
 import { describe, expect, it } from 'vitest'
 import { draw } from '../farm/draw'

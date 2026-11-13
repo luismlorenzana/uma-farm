@@ -1,4 +1,4 @@
-// A queue that stops (F5): it stops when its turn comes and the Warehouse can't cover it, which the screens see by
+// A queue that stops: it stops when its turn comes and the Warehouse can't cover it, which the screens see by
 // settling. Dismiss and Restart work on that settled stop even before any change has stored it.
 import { describe, expect, it } from 'vitest'
 import { newSaveV2, type Save } from './save'

@@ -1,7 +1,7 @@
-// Copied from uma-rpg packages/domain/src/work/env.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// The farm's side of the shared work engine (SC3, uma-platform P53): Craft Level from every collect, and who may work:
-// every outfit (FM6), not only the Umas a world owns.
-// uma-rpg's v1 facilities, kinds and upgrades, its Speed Tickets and its Laurels stay behind (FM4): the ticket balance is
+// Copied from uma-rpg packages/domain/src/work/env.ts at 30a322a, with its Wilds-only parts cut.
+// The farm's side of the shared work engine: Craft Level from every collect, and who may work:
+// every outfit, not only the Umas a world owns.
+// uma-rpg's v1 facilities, kinds and upgrades, its Speed Tickets and its Laurels stay behind: the ticket balance is
 // always 0, so the engine refuses every speed-up.
 import type { TicketRules, WorkEnv } from '@luismlorenzana/uma-work'
 import { grantProfessionExp } from '../economy/pacing'
@@ -12,7 +12,7 @@ import type { FarmWorld } from './world'
 /** What a collect's Craft EXP did. */
 export interface CraftGain { levelsUp: number }
 
-/** No Speed Tickets (FM4): none to spend, ever. */
+/** No Speed Tickets: none to spend, ever. */
 export const NO_TICKETS: TicketRules<FarmWorld> = {
   balance: () => 0,
   spend: (world) => world,
@@ -30,7 +30,7 @@ export const FARM_WORK_BASE: Omit<WorkEnv<FarmWorld>, 'kinds' | 'buildings'> = {
     },
     gradeOpen: (world, outfitId, _kind, grade) => (world.umas[outfitId]?.craft.level ?? 1) >= gradeUnlockLevel(grade),
   },
-  // Every outfit on the release may work (FM6): the roster says who when the caller has it (`env-v4.ts`), and any
+  // Every outfit on the release may work: the roster says who when the caller has it (`env-v4.ts`), and any
   // well-formed outfit id when it hasn't (settles, the API's parse).
   isWorker: (_world, outfitId) => isOutfitId(outfitId),
 }

@@ -1,4 +1,4 @@
-// The start's sheet (F23 decisions 1, 2 and 11; core spec CS2): the first tap of the game. While the roster holds fewer
+// The start's sheet: the first tap of the game. While the roster holds fewer
 // than three, six cards cover the farm, two columns of three: each her face with her favourite line's mark, her name and
 // outfit's title (master data) and her three day-1 talents (farming, foraging, fishing). Tap to choose, **Pick 3** to start, and one
 // free **Redraw** for six more. The farm's own cards, not uma-kit's picker: six need no filters. Loaded on demand.

@@ -1,4 +1,4 @@
-// The loop's work on the day clock (F18 decision 1; core spec CS7, FC6): F5's operations over a v3 save. Every one runs at
+// The loop's work on the day clock: F5's operations over a v3 save. Every one runs at
 // `workNow(save)`, the start of the save's day, and never reads the device's clock, so reopening the app moves nothing;
 // a player's change is stamped with real time (`stamp`). Readings settle and store nothing. `kinds` is the work registry
 // (`LOOP_KINDS`; the app passes `loopKinds(talentOf)` so plans read master data's talents, and tests their own). The
@@ -70,7 +70,7 @@ function slotFor(world: LoopWorld, outfitId: OutfitId, slot: SlotRef, env: WorkE
 // --- Readings: no stamp, nothing stored --------------------------------------------------------------------------
 
 /** The save's work settled at its day: a queued job whose turn came starts. A reading every device makes alike, so
- * `account.updatedAt` stays. The night stores it as the date turns (F18 decision 3). */
+ * `account.updatedAt` stays. The night stores it as the date turns. */
 export function settleLoopWork<S extends FarmSave>(save: S, kinds: LoopKinds = LOOP_KINDS): S {
   return withLoopWorld(save, opened(save, kinds).world)
 }
@@ -83,7 +83,7 @@ export function loopWorking(save: FarmSave, kinds: LoopKinds = LOOP_KINDS): Set<
 
 // --- The player's operations: each runs at the day's start and is stamped with real time ----------------------------
 
-/** A tender is busy (F20 decision 1): she can't start a job until she's moved off her block. */
+/** A tender is busy: she can't start a job until she's moved off her block. */
 function notTending(save: FarmSave, outfitId: OutfitId): void {
   const block = tendedBlock(save, outfitId)
   if (block !== null) throw new SaveRuleError('busy', `She tends Block ${block}.`)
@@ -113,7 +113,7 @@ export function editLoopQueue<S extends FarmSave>(save: S, input: QueueInput<Loo
   return changed(save, done(queue(world, input, now, env), now).state, stamp)
 }
 
-/** What a collect brought home: the goods (`<id>@<stars>`) and each fish's size (F22). */
+/** What a collect brought home: the goods (`<id>@<stars>`) and each fish's size. */
 export interface LoopCollected {
   goods: string[]
   sizes: Measured[]

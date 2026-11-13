@@ -1,4 +1,4 @@
-// The start's picks (F23 decisions 1 and 2; core spec CS2): the first boot shows six candidates, and you pick any three.
+// The start's picks: the first boot shows six candidates, and you pick any three.
 // The six are a seeded draw from the release's outfits not on the roster, nudged so the sheet always holds a C-or-better
 // farmer (Stamina), forager (Speed) and fisher (Wit). One free redraw replaces all six. A migrated save with k Umas picks
 // 3 − k from the same sheet. The sheet isn't saved: it's drawn again from the account, `start.redraws` and the release.
@@ -10,7 +10,7 @@ import { draw } from './draw'
 import type { Activity } from './ranks'
 import type { TalentOf, TalentStep } from './talents'
 
-/** Six candidates (CS2). */
+/** Six candidates. */
 export const START_SHEET = 6
 /** One free redraw. */
 export const START_REDRAWS = 1
@@ -29,7 +29,7 @@ function shuffled(ids: readonly OutfitId[], uid: string, what: string): OutfitId
   return out
 }
 
-/** One sheet from the candidates in their drawn order (decision 1): taken in order, except that a card which would leave
+/** One sheet from the candidates in their drawn order: taken in order, except that a card which would leave
  * too few places for the needs still open is passed over for the next draw that fills one. Passed-over cards fill any
  * places left (a release without the needs still gives six). */
 function drawSheet(order: readonly OutfitId[], talentOf: TalentOf): OutfitId[] {
@@ -45,7 +45,7 @@ function drawSheet(order: readonly OutfitId[], talentOf: TalentOf): OutfitId[] {
   return [...sheet, ...passed].slice(0, START_SHEET)
 }
 
-/** The six on the sheet now (decision 1): the same six for the same account, release and redraws. Sheet *r* draws the
+/** The six on the sheet now: the same six for the same account, release and redraws. Sheet *r* draws the
  * release's outfits not on the roster in the order `start:<r>` shuffles them, those an earlier sheet showed moved last,
  * so a redraw shows six new faces unless only an earlier card fills a need. */
 export function startSheet(save: Pick<SaveV3, 'account' | 'roster' | 'start'>, release: readonly OutfitId[], talentOf: TalentOf): OutfitId[] {
@@ -63,14 +63,14 @@ export function startSheet(save: Pick<SaveV3, 'account' | 'roster' | 'start'>, r
 /** Redraws left. */
 export const redrawsLeft = (save: Pick<SaveV3, 'start'>): number => Math.max(0, START_REDRAWS - save.start.redraws)
 
-/** The free redraw (decision 1): `start.redraws` to 1, and six more. Refused once used, or when no picks are left. */
+/** The free redraw: `start.redraws` to 1, and six more. Refused once used, or when no picks are left. */
 export function redrawStart<S extends SaveV3>(save: S): S {
   if (picksLeft(save) === 0) throw new SaveRuleError('bad-job', 'Your first hands are here.')
   if (redrawsLeft(save) === 0) throw new SaveRuleError('bad-job', 'No redraws left.')
   return { ...save, start: { redraws: save.start.redraws + 1 } }
 }
 
-/** Picks the start's Umas from the sheet (decision 2): exactly the picks left (3 − the roster), each joining today, home
+/** Picks the start's Umas from the sheet: exactly the picks left (3 − the roster), each joining today, home
  * while a bed is free. */
 export function pickStart<S extends SaveV3>(save: S, ids: readonly OutfitId[], release: readonly OutfitId[], talentOf: TalentOf): S {
   const left = picksLeft(save)

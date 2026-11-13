@@ -1,6 +1,6 @@
 // The production store against an in-memory Firestore: the `farm` database by name, revisions checked in a transaction,
 // the save stored as text, the backup before a newer version first replaces a stored one, and rescues; and the owner's
-// first v3 upload through the controller (F24). Invented data only.
+// first v3 upload through the controller. Invented data only.
 import { ConflictException } from '@nestjs/common'
 import { freshV4, migrateToV3, nameFarmer, newSave, newSaveV2, touched, type SaveV2, type SaveV3 } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'

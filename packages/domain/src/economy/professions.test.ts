@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/economy/professions.test.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// The professions and trades (H77; profession-progression.md §2, §4.1, PP1–PP3, PP4; the farm by line, D224, FL1–FL3):
+// Copied from uma-rpg packages/domain/src/economy/professions.test.ts at 30a322a, with its Wilds-only parts cut.
+// The professions and trades (profession-progression.md §2, §4.1; the farm by line):
 // fifteen professions in three kinds, fifteen places each one line's, and one trade an Uma by her calling.
 import { describe, expect, it } from 'vitest'
 import { FARM_BUILDINGS, farmWorkEnv } from '../work/env-v4'

@@ -1,7 +1,7 @@
-// The loop's work kinds (F22 decisions 1–4; core spec CS15–CS18, CS22, CS26, CS30): foraging an area, fishing a spot, and
+// The loop's work kinds: foraging an area, fishing a spot, and
 // the stations' six jobs, on uma-work's day clock. A gathering job is days, its haul planned when it starts: each day's
 // items by CS17 with her rank, talent, tool and well-fed days as they stand then, their goods and stars drawn from the
-// account and the day (CS8), so the same save always plans the same haul. A station job is items, its inputs taken at the
+// account and the day, so the same save always plans the same haul. A station job is items, its inputs taken at the
 // start and its stars carried through. Talents aren't saved, so the kinds close over the app's `talentOf` (the night's
 // `NightContext.talentOf`, the app's `talentsFor(view)`): `loopKinds(talentOf)`. Loaded with the screens and the night.
 import { payItems, refuse, workRefusal, type PayContext, type PlannedItem, type Refusal, type WorkKindRules, type WorkOutput } from '@luismlorenzana/uma-work'
@@ -31,16 +31,16 @@ const DAY_S = DAY_MS / 1000
 /** The gathering places and their kinds. */
 export type GatherPlace = 'forest' | 'fishery'
 export const GATHER_KIND: Readonly<Record<GatherPlace, 'forage' | 'fish'>> = { forest: 'forage', fishery: 'fish' }
-/** The tool each gathering place uses (CS17): the Axe, the Rod. */
+/** The tool each gathering place uses: the Axe, the Rod. */
 export const GATHER_TOOL: Readonly<Record<GatherPlace, ToolId>> = { forest: 'axe', fishery: 'rod' }
-/** The lifetime counters of what each gathering place brought home (decision 7; chapter 1's goal 3, F24). */
+/** The lifetime counters of what each gathering place brought home (chapter 1's goal 3). */
 export const HOME_COUNT: Readonly<Record<GatherPlace, string>> = { forest: 'home:forest', fishery: 'home:fishery' }
 
 /** The farm day a moment on the work clock falls in. */
 export const dayAt = (now: number): number => Math.floor(now / DAY_MS) + 1
 
 /** What lifts her work in an activity: her rank, talent, the tool's tier (1 where none applies) and her well-fed days; on
- * save v4 her keepsake's quality at her line's place (F51 decision 8), 0 or absent anywhere else. */
+ * save v4 her keepsake's quality at her line's place, 0 or absent anywhere else. */
 export interface WorkTerms {
   rank: Rank
   talent: TalentStep
@@ -74,7 +74,7 @@ export function pickShare(shares: readonly Share[], u: number): string {
   return shares.at(-1)![0]
 }
 
-// --- What a day of gathering brings home (CS17, CS26) -----------------------------------------------------------------
+// --- What a day of gathering brings home -----------------------------------------------------------------
 
 /** Items on day `k` of a gathering job (0 its first): `round(base × rank × talent × tool × well fed)`, never below 1.
  * Bonds (×1.1) come in M6. */
@@ -82,8 +82,8 @@ export function haulCount(place: GatherPlace, terms: WorkTerms, k = 0): number {
   return countRound(HAUL_BASE[place] * rankBenefits(terms.rank).yield * talentYield(terms.talent) * TOOL_YIELD[terms.tool - 1]! * (k < terms.wellFed ? WELL_FED_YIELD : 1))
 }
 
-/** A gathered good's quality points (CS26): 0.5 × her rank, her talent's points, the tool's +0.25 a tier, well fed +0.25;
- * on v4 her keepsake at her line's place (F51). */
+/** A gathered good's quality points: 0.5 × her rank, her talent's points, the tool's +0.25 a tier, well fed +0.25;
+ * on v4 her keepsake at her line's place. */
 export function gatherQuality(terms: WorkTerms, fed: boolean): number {
   return quality({
     rank: rankQuality(terms.rank), talent: talentQuality(terms.talent), tool: toolQuality(terms.tool), ...(fed ? { boost: WELL_FED_QUALITY } : {}),
@@ -91,12 +91,12 @@ export function gatherQuality(terms: WorkTerms, fed: boolean): number {
   })
 }
 
-/** Her keepsake's quality on her work at a place (F51 decision 8): a v4 save with the pack only; 0 on v3. */
+/** Her keepsake's quality on her work at a place: a v4 save with the pack only; 0 on v3. */
 export const keepsakeAt = (save: FarmSave, story: PerkPack | null, outfitId: OutfitId, place: string): number =>
   save.version === 4 && story ? keepsakeQuality(save, story, outfitId, place) : 0
 
 /** Why she can't work an area or a spot yet, or null when she can: her rank (decision 5's "From Hand"), and the sea's
- * chapter 7 and boat (M6). */
+ * chapter 7 and boat. */
 export function placeLock(save: Pick<FarmSave, 'farm' | 'buildings'>, place: GatherPlace, where: string, rank: Rank): Refusal | null {
   if (place === 'forest') {
     const area = FOREST[where as ForestAreaId]
@@ -114,9 +114,9 @@ export function placeLock(save: Pick<FarmSave, 'farm' | 'buildings'>, place: Gat
 export const sharesOn = (place: GatherPlace, where: string, day: number): readonly Share[] =>
   (place === 'forest' ? FOREST[where as ForestAreaId] : FISHERY[where as FishingSpotId]).seasons[dateOf(day).season]
 
-/** A gathering job's plan (decision 1): each day's items by CS17 at her terms now, each good and its stars drawn with
+/** A gathering job's plan: each day's items by CS17 at her terms now, each good and its stars drawn with
  * `draw(uid, day, '<place>:<slot>:<n>', 0 | 1)`, the day's seconds adding up to 86,400. On save v4 with the pack her
- * keepsake lifts the stars at her line's place (F51 decision 8). */
+ * keepsake lifts the stars at her line's place. */
 export function planHaul(save: FarmSave, outfitId: OutfitId, place: GatherPlace, request: LoopWorkRequest, now: number, slot: number, talentOf: TalentOf, story: PerkPack | null = null): PlannedItem[] | Refusal {
   if (!Number.isInteger(request.count) || request.count < 1 || request.count > MAX_GATHER_DAYS) return refuse('count', 'A job is 1 to {max} days.', { max: MAX_GATHER_DAYS })
   const found = termsOf(save, outfitId, PLACE_ACTIVITY[place], talentOf, GATHER_TOOL[place])
@@ -148,9 +148,9 @@ export function haulDays(save: FarmSave, outfitId: OutfitId, place: GatherPlace,
   return terms ? Array.from({ length: days }, (_, k) => haulCount(place, terms, k)) : []
 }
 
-// --- A catch's size (CS15; decision 3) --------------------------------------------------------------------------------
+// --- A catch's size --------------------------------------------------------------------------------
 
-/** How much her catch leans big (CS15): `k = 1 + 0.25 × rank + 0.1 × talent step + 0.05 × Rod tier`. */
+/** How much her catch leans big: `k = 1 + 0.25 × rank + 0.1 × talent step + 0.05 × Rod tier`. */
 export const sizeSkill = (terms: Pick<WorkTerms, 'rank' | 'talent' | 'tool'>): number => 1 + 0.25 * terms.rank + 0.1 * terms.talent + 0.05 * terms.tool
 
 /** A fish's size in cm, to a tenth: `min + (max − min) × u^(8/k)`. */
@@ -161,7 +161,7 @@ export function fishSize(fish: string, k: number, u: number): number {
   return Math.round((min + (max - min) * u ** (8 / k)) * 10) / 10
 }
 
-/** The Diary's record for a fish: the biggest caught, in cm (decision 3). */
+/** The Diary's record for a fish: the biggest caught, in cm. */
 export const sizeRecord = (fish: string): string => `size:${fish}`
 
 /** A catch measured at a collect. */
@@ -181,7 +181,7 @@ export interface HaulDetail {
 }
 
 /**
- * Pays a haul (decision 3): its starred goods into the Warehouse, `farm.counts['home:<place>']` up by the items, and each
+ * Pays a haul: its starred goods into the Warehouse, `farm.counts['home:<place>']` up by the items, and each
  * fish measured, seeded by the account, the collect's day, the Uma and the fish's place in the farm's catches (that count
  * before it), so the same collect always measures the same; the biggest of each kind is kept in `diary.records`. Her
  * rank, talent and Rod at the collect set the sizes.
@@ -215,7 +215,7 @@ function payHaul(place: GatherPlace, talentOf: TalentOf) {
 
 function gatherRules(place: GatherPlace, talentOf: TalentOf, story: PerkPack | null): WorkKindRules<LoopWorld> {
   return {
-    // A request is days; the items it makes are the haul, well past a Legend's four days (CS17).
+    // A request is days; the items it makes are the haul, well past a Legend's four days.
     maxItems: MAX_STATION_ITEMS,
     plan: (world, outfitId, request, now, context) =>
       (context.slot.building !== place ? workRefusal('not-here') : planHaul(world.save, outfitId, place, request, now, context.slot.slot, talentOf, story)),
@@ -223,7 +223,7 @@ function gatherRules(place: GatherPlace, talentOf: TalentOf, story: PerkPack | n
   }
 }
 
-// --- The stations (CS18; decision 2) ----------------------------------------------------------------------------------
+// --- The stations ----------------------------------------------------------------------------------
 
 /** Whether a station is built (F17 decision 5: 1 or more). */
 export const stationBuilt = (save: Pick<FarmSave, 'buildings'>, station: StationId): boolean => (save.buildings[station] ?? -1) >= 1
@@ -257,7 +257,7 @@ function spread(count: number, days: number): number[] {
   return Array.from({ length: count }, (_, i) => Math.floor((total * (i + 1)) / count) - Math.floor((total * i) / count))
 }
 
-/** A station job's plan (decision 2): one input of its raw good at the output's stars for each item, taken at the start;
+/** A station job's plan: one input of its raw good at the output's stars for each item, taken at the start;
  * its days by her rate. */
 export function planStation(save: FarmSave, outfitId: OutfitId, job: StationJobId, request: LoopWorkRequest, building: string, talentOf: TalentOf): PlannedItem[] | Refusal {
   const { station } = STATION_JOBS[job]
@@ -323,7 +323,7 @@ export function loopKinds(talentOf: TalentOf = talentsD, story: PerkPack | null 
  * which imports the work modules for their readings, drops it with the tables and the rules. */
 export const LOOP_KINDS: LoopKinds = /* @__PURE__ */ loopKinds()
 
-// --- The night: what came in tonight (decision 7; CS30) -----------------------------------------------------------------
+// --- The night: what came in tonight -----------------------------------------------------------------
 
 /** Items an entry finished tonight: who, where, the request and the goods (stock keys). */
 export interface MadeTonight {
@@ -340,7 +340,7 @@ export interface BestCatch {
 }
 
 /**
- * Counts tonight's gathering toward each Uma's next rank's challenge (CS30): her catches at a spot, her items in an area
+ * Counts tonight's gathering toward each Uma's next rank's challenge: her catches at a spot, her items in an area
  * (`countChallenge`, which reads only the challenge it's for). Before step 6, so a challenge met tonight ranks her up
  * tonight. Returns the night's best catch for the morning.
  */

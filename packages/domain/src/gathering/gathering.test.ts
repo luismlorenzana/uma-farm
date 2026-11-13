@@ -1,4 +1,4 @@
-// The forest, the Fishery and the stations (F22; core spec CS15–CS18, CS26, CS30): the tables, a day's haul, the
+// The forest, the Fishery and the stations: the tables, a day's haul, the
 // stations' rate, building them, the catch's sizes, the night's hauls and the save's parse. Invented outfit ids, the
 // loop's own kinds.
 import { endsAt } from '@luismlorenzana/uma-work'

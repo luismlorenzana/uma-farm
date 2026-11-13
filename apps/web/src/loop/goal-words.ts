@@ -1,4 +1,4 @@
-// The goals' words (F24): a chapter's reward, a Farm Rank and what it opens, a Diary milestone or row, a goal's count.
+// The goals' words: a chapter's reward, a Farm Rank and what it opens, a Diary milestone or row, a goal's count.
 // The save holds ids and counts; these say them, for the morning, the Diary and the rank's sheet. Loaded on demand with
 // those screens. Pure, so the screens and the tests read the same.
 import {
@@ -9,9 +9,9 @@ import {
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 const BUILDING_PLANS: Readonly<Record<string, string>> = { mill: 'the Mill’s plans' }
 
-/** Whether a chapter's reward brings a new hand on this save (D74): on v3 the chapter's drawn recruit; on v4 its hand is
- * the cast's authored arrival for that chapter (F46 decision 8), so none when the cast has none, or before the pack loads.
- * Never who (decision 14): the words stay "a new hand". */
+/** Whether a chapter's reward brings a new hand on this save: on v3 the chapter's drawn recruit; on v4 its hand is
+ * the cast's authored arrival for that chapter, so none when the cast has none, or before the pack loads.
+ * Never who: the words stay "a new hand". */
 export function chapterHand(version: number, story: Pick<StoryPack, 'cast'> | null, chapter: number): boolean {
   const recruit = chapterOf(chapter)?.reward?.recruit ?? false
   return version === 4 ? recruit && story !== null && chapterArrival(story, chapter) !== null : recruit

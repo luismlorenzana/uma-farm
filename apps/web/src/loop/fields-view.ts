@@ -1,6 +1,6 @@
-// The Fields as the screens show them (F20 decision 11): four block cards, a locked one with its Farm Rank and cost, an
+// The Fields as the screens show them: four block cards, a locked one with its Farm Rank and cost, an
 // owned one with its tender and its 3 × 3 plots (a crop's icon, the nights left, or Ready), the seeds that plant today,
-// and the quick look's lines. A block's growth reads its tender's talent (F21), D until master data loads. Pure, so the
+// and the quick look's lines. A block's growth reads its tender's talent, D until master data loads. Pure, so the
 // page, the map and the tests read the same. Loaded with the loop's screens.
 import {
   type PerkPack, BLOCK_IDS, BLOCK_RULES, blockGrowth, blockOf, tendsSideBySide, CROPS, dateOf, growsIn, isSeasonEnd, itemNameOf, nightsLeft, opened, RANKS, readyAt, SEASON_NAMES,
@@ -29,9 +29,9 @@ export interface OwnedBlock {
   id: BlockId
   owned: true
   tender: string | null
-  /** Its growth tonight: 1 untended, the tender's rate tended (×1.1 side by side, F52). */
+  /** Its growth tonight: 1 untended, the tender's rate tended (×1.1 side by side). */
   growth: number
-  /** Its tender has a 3-heart partner tending another growing block (save v4, F52 decision 7): ×1.1 tonight. */
+  /** Its tender has a 3-heart partner tending another growing block (save v4): ×1.1 tonight. */
   side: boolean
   plots: PlotView[]
   ready: number
@@ -74,7 +74,7 @@ function plotView(plot: Plot, index: number, growth: number, next: Season | null
   }
 }
 
-/** The four blocks, A to D. On v4 the pack gives a farmer in her element ×1.2 (F51), so the nights left agree with step 2. */
+/** The four blocks, A to D. On v4 the pack gives a farmer in her element ×1.2, so the nights left agree with step 2. */
 export function fieldsView(save: FarmSave, talentOf: FarmingTalentOf = talentD, story: PerkPack | null = null): BlockView[] {
   return BLOCK_IDS.map((id): BlockView => {
     const block = blockOf(save, id)
@@ -131,7 +131,7 @@ export function cropFacts(crop: CropId): string[] {
   return [`${c.yield} a plot`, ...(c.regrows !== null ? [`Regrows every ${c.regrows} days`] : [])]
 }
 
-/** The tender's rank and talent in farming (F21 decision 7): "Hand · B". */
+/** The tender's rank and talent in farming: "Hand · B". */
 export const tenderRank = (save: FarmSave, outfitId: string, talentOf: FarmingTalentOf = talentD): string =>
   `${RANKS[save.roster[outfitId]?.ranks.farming.rank ?? 0]} · ${TALENT_GRADES[talentOf(outfitId)]}`
 

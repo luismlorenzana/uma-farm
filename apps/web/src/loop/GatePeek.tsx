@@ -1,6 +1,6 @@
-// The Gate's quick look (F23 decision 11; CS35): the visitor waiting, her days left, her way to staying, Chat and Gift.
+// The Gate's quick look: the visitor waiting, her days left, her way to staying, Chat and Gift.
 // With nobody waiting, when the next one may come, or why none will. A visitor reaching 2 hearts joins, and "She'd like
-// to stay" shows over the map. Loaded with the farm map. On save v4 (F46 decision 14) nobody visits: the Gate is where the
+// to stay" shows over the map. Loaded with the farm map. On save v4 nobody visits: the Gate is where the
 // cast walks in, and its quick look says what brings the next arrivals, never who.
 import { daysLeft, favouriteActivity, FESTIVALS, freeBeds, nextArrivals, nextGateDay, type Arrival, type FarmSave, type SaveV3, type SaveV4 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
@@ -31,7 +31,7 @@ export function GatePeek({ save }: { save: FarmSave }) {
   return save.version === 4 ? <ArrivalsPeek save={save} /> : <VisitorPeek save={save} />
 }
 
-/** v4's Gate (decision 14): up to three triggers, most likely first, or everyone here. */
+/** v4's Gate: up to three triggers, most likely first, or everyone here. */
 function ArrivalsPeek({ save }: { save: SaveV4 }) {
   const story = useStory()
   const next = story ? nextArrivals(save, story) : []

@@ -25,7 +25,7 @@ import { CONTENT } from './content/client'
 import { ItemIcon } from './items/ItemIcon'
 import { ALBUM_ART } from './master/album-art'
 
-// uma-kit, as uma-rpg wires it (F3, F5): this app's device keys, the phone's appearance, uma-art for the bars and the map,
+// uma-kit, as uma-rpg wires it: this app's device keys, the phone's appearance, uma-art for the bars and the map,
 // the kit's sign-in, the update prompt (a new build waits for Restart), and the album's and work screens' art: outfit art
 // from master data, item icons from uma-art.
 configureKit({ storagePrefix: 'farm.' })

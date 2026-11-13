@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/hub/places.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// The place registry (D33, D144, D147), cut to the Wilds: the fifteen places in five rows, one source for the map, the hit
+// Copied from uma-rpg packages/domain/src/hub/places.ts at 30a322a, with its Wilds-only parts cut.
+// The place registry, cut to the Wilds: the fifteen places in five rows, one source for the map, the hit
 // targets, the global menu and the routes. uma-rpg's other pages (Town Hall, Learning, Battle), its slices and its tiers
 // stay behind.
 
@@ -22,9 +22,9 @@ export interface Place {
   frame?: string
 }
 
-/** The Wilds' trios (D230, FL25): five rows of three, each line's gathering, processing and making places left to right, a
+/** The Wilds' trios: five rows of three, each line's gathering, processing and making places left to right, a
  * sixth of the map so it snaps to the same tile spacing on a short screen (24 rows at 375×667), leaving room for the
- * pips' arch (D233). */
+ * pips' arch. */
 const WILDS_LAYOUT: readonly { x: number; y: number }[] = [
   { x: 0.2, y: 0.155 }, { x: 0.5, y: 0.155 }, { x: 0.8, y: 0.155 },
   { x: 0.2, y: 0.315 }, { x: 0.5, y: 0.315 }, { x: 0.8, y: 0.315 },
@@ -38,7 +38,7 @@ const placeV3 = (at: number, id: string, kind: PlaceKind, name: string, blurb: s
   id, page: 'wilds', kind, name, blurb, details: [detail, 'Four slots, ×1.25'], slots: 4, at: WILDS_LAYOUT[at]!, ...(frame ? { frame } : {}),
 })
 
-/** The Wilds' trios (D230, FL25–FL27): each line's gathering, processing and making places. */
+/** The Wilds' trios: each line's gathering, processing and making places. */
 const WILDS_V4: Place[] = [
   placeV3(0, 'mine', 'gather-site', 'Mine', 'Mining: metal, G1–G10.', 'Ores G1–G10'),
   placeV3(1, 'mine-workbench', 'station', 'Mine Workbench', 'Smelting: ores into ingots.', 'Processes Metal G1–G10'),

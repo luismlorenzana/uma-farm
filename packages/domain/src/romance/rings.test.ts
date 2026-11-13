@@ -1,4 +1,4 @@
-// The ring bench, the proposal and the wedding (F53 decisions 2–12; romance spec RM30, RM38–RM40): the rings in the v4
+// The ring bench, the proposal and the wedding: the rings in the v4
 // catalogue, the bench's opening and recipe, the proposal's ring, a better ring, the wedding's place, reception, guests
 // and vow, the words, the format's `wedding.places`, and v3's Forge and catalogue unchanged. Invented ids only: the
 // stand-ins 9000001–9000003.

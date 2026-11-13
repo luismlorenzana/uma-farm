@@ -1,4 +1,4 @@
-// Married life (F54 decisions 1–13; romance spec RM41–RM47, RM22, RM23): the houses and their prices, rooms and moves, the
+// Married life: the houses and their prices, rooms and moves, the
 // night's house, shared houses' bonds, S2 and S4 at night, the house's morning, the household milestones, scenes, the
 // finale and the Festival of Vows, and the format's `household.json` and `wishes`. Invented ids only: the stand-ins
 // 9000001–9000003 and 9000004 on.

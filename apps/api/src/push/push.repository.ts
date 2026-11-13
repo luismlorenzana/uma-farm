@@ -2,7 +2,7 @@ import { getApps, initializeApp } from 'firebase-admin/app'
 import { FieldValue, getFirestore, type CollectionReference, type DocumentData } from 'firebase-admin/firestore'
 import type { PushEntry } from '@farm/domain'
 
-// Copied from uma-rpg's apps/api/src/push at 30a322a (F6) and cut: the farm's server never reads a save (FM10), so the
+// Copied from uma-rpg's apps/api/src/push at 30a322a and cut: the farm's server never reads a save, so the
 // record also keeps the schedule the app sends, and each write sets only its own fields.
 
 /** A browser's push subscription, as `PushSubscription.toJSON()` gives it. */

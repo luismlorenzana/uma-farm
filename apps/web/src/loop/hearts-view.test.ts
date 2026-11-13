@@ -1,4 +1,4 @@
-// The Hearts tab's view model (F48 decisions 4–10; RM52, RM53, RM57): the rows' sort, filters and counts, the bar's
+// The Hearts tab's view model: the rows' sort, filters and counts, the bar's
 // segments and a waiting rung's mark, the profile's track, Next card, perks, gifts and ties, the morning's Hearts section
 // in RM57's order with live Ready lines, and the ♥ on a Ready tender's pip. The invented stand-in pack (9000001–9000003),
 // with every rung scripted where a test needs several Umas Ready; no network.

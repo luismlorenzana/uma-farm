@@ -1,4 +1,4 @@
-// The Fields' page (F20 decision 11): `/fields`, the farm's own page, not uma-kit/work's slot rows.
+// The Fields' page: `/fields`, the farm's own page, not uma-kit/work's slot rows.
 // Four block cards, A to D: a locked one shows its Farm Rank and cost with Buy · 800g; an owned one its tender's row and
 // a 3 × 3 grid of plots. A plot shows its crop's icon and the nights left, or Ready; a tap on an empty plot plants
 // (`?plant=A.4`), on a growing one shows it (`?plot=A.4`), on a Ready one harvests. Plant all (`?plant=A`) and Harvest all
@@ -128,7 +128,7 @@ function Fields({ save }: { save: FarmSave }) {
   )
 }
 
-/** An owned block (decision 11): its name and growth, Plant all and Harvest all, its tender's row and its nine plots. */
+/** An owned block: its name and growth, Plant all and Harvest all, its tender's row and its nine plots. */
 function BlockCard({ save, block, master, talentOf, onPlot, onPlantAll, onHarvestAll, onTend, onStop }: {
   save: FarmSave
   block: OwnedBlock
@@ -213,7 +213,7 @@ function LockedCard({ block, onBuy }: { block: LockedBlock; onBuy: () => void })
   )
 }
 
-/** Planting (decisions 7 and 9): for a plot, each seed held that plants today, own seeds first; for Plant all, each crop
+/** Planting: for a plot, each seed held that plants today, own seeds first; for Plant all, each crop
  * with all its seeds. With none, a way to the shop. */
 function PlantSheet({ save, block, index, onClose, onError }: { save: FarmSave; block: BlockId; index: number; onClose: () => void; onError: (text: string) => void }) {
   const navigate = useNavigate()
@@ -285,11 +285,11 @@ interface TenderRow extends LoopUmaRow {
   /** "Tends Block A", or her farming rank and talent. */
   note: string
   working: boolean
-  /** A swap takes her away tomorrow (F23): she can't tend. */
+  /** A swap takes her away tomorrow: she can't tend. */
   leaving: boolean
 }
 
-/** The tender's picker (F20; F21 decision 7): uma-kit's picker over the Umas home, each card her farming rank and talent
+/** The tender's picker: uma-kit's picker over the Umas home, each card her farming rank and talent
  * ("Hand · B") with her favourite line and best talent on her face, the filters and sorts of the roster, opening by
  * farming. A working Uma is shown and can't be picked; a tender of another block moves here. */
 function TenderPicker({ save, block, master, talents, onClose, onError }: {

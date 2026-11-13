@@ -1,4 +1,4 @@
-// The loop's words for the day (F18): dates, festivals, the nudge's line, and the morning summary in CS5's order.
+// The loop's words for the day: dates, festivals, the nudge's line, and the morning summary in CS5's order.
 import type { MorningSummary } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { summaryParts } from './summary-words'

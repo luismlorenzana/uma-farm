@@ -1,4 +1,4 @@
-// The forest, the Fishery and the stations as rendered (F22 decisions 1, 2, 5, 6 and 8): a job sheet's areas and spots
+// The forest, the Fishery and the stations as rendered: a job sheet's areas and spots
 // with their locks, sizes in days, a job started, a night, the haul collected by stars with a fish's size, a queue, a
 // station built and a station job, the quick look, and the view model behind them. Invented outfit ids; master data and
 // the server are stubs.

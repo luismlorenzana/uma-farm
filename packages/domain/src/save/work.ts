@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/save/work.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// The Wilds' work (S4, D55, D144, SC3): put an Uma in a slot to gather, process or make, queue up to three more behind her,
+// Copied from uma-rpg packages/domain/src/save/work.ts at 30a322a, with its Wilds-only parts cut.
+// The Wilds' work (S4): put an Uma in a slot to gather, process or make, queue up to three more behind her,
 // collect what she has made (with her Craft EXP), recall her, repeat her last job, and restart or dismiss a queue that
 // stopped. Every rule runs in the shared engine, `@luismlorenzana/uma-work`, through the farm's kinds and hooks; these are
 // thin wrappers plus the small derived readings the screens use. The player's operations take an optional `context` (each
@@ -28,7 +28,7 @@ export { grantProfessionExp, MAX_QUEUE }
 export type { FarmWorkRequest, WorkContext }
 export type FarmQueueInput = QueueInput<FarmWorkRequest>
 
-/** What work needs from an outfit's master data (a roster outfit fits). Aptitudes no longer set job speed (D139). */
+/** What work needs from an outfit's master data (a roster outfit fits). Aptitudes no longer set job speed. */
 export interface WorkOutfit {
   outfitId: string
 }
@@ -65,7 +65,7 @@ function done<R>(result: OpResult<R, FarmWorld>, now: number): { state: FarmWorl
 }
 
 const slotRef = (placeId: string, slot: number): SlotRef => ({ building: placeId, slot })
-/** A job's kind: its item's at the place (a place has one kind, FL2). */
+/** A job's kind: its item's at the place (a place has one kind). */
 const kindAt = (placeId: string, output: string): JobKind | null => {
   const place = placeSpecV4(placeId)
   // An item the place doesn't work goes to its first kind, whose rules refuse it ("That isn't made here.").
@@ -98,7 +98,7 @@ export interface JobPlan {
   block: string | null
 }
 
-/** A place's level: always 1, since places have no levels (PP4). */
+/** A place's level: always 1, since places have no levels. */
 export const facilityLevel = (world: FarmWorld, placeId: string): number => world.buildings[placeId]?.level ?? 1
 
 /** What a job makes: a line item (its grade is its line's) or a made item. */
@@ -139,7 +139,7 @@ export function inputsBlock(world: FarmWorld, inputs: Record<string, number>, co
 }
 
 /** Free workers at this time, among `outfitIds` (the roster's; by default every Uma who has worked). Settle once for the
- * whole album; finished work frees its Uma (D119). */
+ * whole album; finished work frees its Uma. */
 export function availableWorkers(world: FarmWorld, now: string, outfitIds: Iterable<string> = Object.keys(world.umas)): ReadonlySet<string> {
   const ms = msOf(now)
   const settled = settle(world, ms, envOf()).state
@@ -147,7 +147,7 @@ export function availableWorkers(world: FarmWorld, now: string, outfitIds: Itera
 }
 
 /** Why this Uma can't take a job now, or null: she works one job at a time; a finished one is collected as she starts.
- * Every outfit may work (FM6). */
+ * Every outfit may work. */
 export function availabilityBlock(world: FarmWorld, outfitId: string, now: string): string | null {
   const settled = settle(world, msOf(now), envOf()).state
   return statusOf(settled.work[outfitId], msOf(now)) === 'working' ? 'Already working' : null
@@ -330,7 +330,7 @@ export function restartStopped(save: Save, outfitId: string, now: string, contex
   return withWorld(save, next, now)
 }
 
-/** Forgets a queue that stopped. It settles first (F5): a queue stops when its turn comes, which a screen sees by settling,
+/** Forgets a queue that stopped. It settles first: a queue stops when its turn comes, which a screen sees by settling,
  * so the stored save may not hold the stop yet. */
 export function dismissStopped(save: Save, outfitId: string, now: string): Save {
   const world = settle(save, msOf(now), envOf()).state

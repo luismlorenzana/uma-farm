@@ -1,4 +1,4 @@
-// Affinity on screen (F23 decisions 6–9; core spec CS45): her hearts, Chat and Gift on her card at the roster and on the
+// Affinity on screen: her hearts, Chat and Gift on her card at the roster and on the
 // visitor at the Gate, the gift's sheet (one good from the Warehouse at the stars you choose) and "She'd like to stay"
 // when a visitor joins. Chats say a line by her temperament, her name filled in here. Loaded on demand with the roster
 // and the farm map.
@@ -26,7 +26,7 @@ export function Hearts({ affinity, label }: { affinity: number; label?: string }
   )
 }
 
-/** A visitor's way to staying: her points of the 200 that ask her to (decision 6). */
+/** A visitor's way to staying: her points of the 200 that ask her to. */
 export function StayBar({ affinity }: { affinity: number }) {
   const share = Math.min(1, affinity / STAY_AFFINITY)
   return (
@@ -42,7 +42,7 @@ export function StayBar({ affinity }: { affinity: number }) {
 const TASTE_WORDS: Readonly<Record<Taste, string>> = { loved: 'She loves it!', liked: 'She likes it.', neutral: 'Thank you.', disliked: 'Not her thing.' }
 const signed = (n: number): string => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '')
 
-/** Chat and Gift (decision 9): once a day each. After a chat her line for today shows; after a gift, what she thought. A
+/** Chat and Gift: once a day each. After a chat her line for today shows; after a gift, what she thought. A
  * visitor reaching 2 hearts joins, and `onJoined` shows the card. */
 export function TalkButtons({ save, outfitId, name, temperament, onJoined }: {
   save: SaveV3
@@ -86,7 +86,7 @@ export function TalkButtons({ save, outfitId, name, temperament, onJoined }: {
   )
 }
 
-/** The gift's sheet (decision 8): every good in the Warehouse at each star held, by family, seeds left out. A tap gives
+/** The gift's sheet: every good in the Warehouse at each star held, by family, seeds left out. A tap gives
  * one. */
 export function GiftSheet({ save, name, onGive, onClose }: { save: SaveV3; name: string; onGive: (item: string, stars: number) => void; onClose: () => void }) {
   const groups = GOOD_FAMILIES.map((family) => ({
@@ -122,7 +122,7 @@ export function GiftSheet({ save, name, onGive, onClose }: { save: SaveV3; name:
   )
 }
 
-/** "She'd like to stay" (decision 6): the visitor joins at 2 hearts, home while a bed is free, else away. */
+/** "She'd like to stay": the visitor joins at 2 hearts, home while a bed is free, else away. */
 export function JoinCard({ outfitId, home, name, onClose }: { outfitId: string; home: boolean; name: string; onClose: () => void }) {
   return (
     <Sheet open onClose={onClose} title="She’d like to stay" label={`${name} joins the farm`}

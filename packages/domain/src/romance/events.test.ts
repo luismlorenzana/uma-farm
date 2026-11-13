@@ -1,4 +1,4 @@
-// Heart events (F49 decisions 1, 6, 7, 9, 10 and 12; romance spec RM24, RM27, RM28, RM30): `playEvent` at every stage,
+// Heart events: `playEvent` at every stage,
 // the choices' gains and costs, flags and `when`, the confession's Yes and Not yet, Ask her, an event arrival after the
 // event it names, and Memories' replays. Invented ids only: the stand-ins 9000001–9000003 and 9000004 built here.
 import { describe, expect, it } from 'vitest'
@@ -53,7 +53,7 @@ describe('playEvent (decision 1)', () => {
     expect(card).toMatchObject({ perk: 'tastes-loved', memory: 'First rows, side by side.', line: 'Same time tomorrow?', stage: null, answer: null })
     expect(after.today.events).toEqual([ONE])
     expect(after.memories[ONE]).toEqual(['f1'])
-    // One of hers a day (RM21): played, she isn't Ready again today, however full her bar.
+    // One of hers a day: played, she isn't Ready again today, however full her bar.
     expect(readiness(after, PACK, ONE).waits?.kind).toBe('bar')
     expect(readiness(withLove(after, { points: 1000 }), PACK, ONE).waits?.kind).toBe('today')
     expect(() => playEvent(after, PACK, ONE, outcome('f2', [0], [{ kind: 'rhythm', score: 100 }]))).toThrow('Her event isn’t Ready.')
@@ -200,7 +200,7 @@ describe('the confession (decision 10)', () => {
     expect(save.love[ONE]!.points).toBe(120 + 50 + 30 + 10 + 30 + 30)
     expect(card).toMatchObject({ answer: 'not-yet', stage: null })
     expect(readiness({ ...save, calendar: { day: 9 } }, PACK, ONE).waits?.kind).toBe('friend')
-    // Her points keep banking into romance while she waits (F47).
+    // Her points keep banking into romance while she waits.
     expect(save.memories[ONE]).toEqual(['confession'])
   })
 

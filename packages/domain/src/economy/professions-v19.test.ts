@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/economy/professions-v19.test.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// Classes v3's trades (H126; classes-v3.md §6, CV20): one trade a Tier 0, her calling naming it; the trade ids keep their
+// Copied from uma-rpg packages/domain/src/economy/professions-v19.test.ts at 30a322a, with its Wilds-only parts cut.
+// Classes v3's trades (classes-v3.md §6): one trade a Tier 0, her calling naming it; the trade ids keep their
 // names. Invented outfits only.
 import { describe, expect, it } from 'vitest'
 import { UMA_ROW_CALLING_V3 } from '../roster/template'

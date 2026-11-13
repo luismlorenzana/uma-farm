@@ -1,4 +1,4 @@
-// The Fields as rendered (F20 decision 11): the four block cards, Plant all and a plot's plant sheet, a tender's row,
+// The Fields as rendered: the four block cards, Plant all and a plot's plant sheet, a tender's row,
 // nights left and Ready, Harvest all and a single harvest into the Warehouse by stars, a locked block's Buy, the quick
 // look with Harvest all on every block, the map's Collect all, and the view model behind them. Invented outfit ids;
 // master data and the server are stubs.

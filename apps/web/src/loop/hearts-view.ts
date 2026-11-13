@@ -1,4 +1,4 @@
-// The Hearts tab as the screens show it (F48 decisions 4–10; romance spec RM52, RM53, RM57): one row an Uma with her
+// The Hearts tab as the screens show it: one row an Uma with her
 // level, the ladder's hearts as a bar, what's banked, today's ticks and chips; Ready first, then the least progress, then
 // the cast's order; the filters with their counts; the header's "Married n/N"; and her profile's parts (the route as one
 // track, the Next card, the perks, the gifts as learnt, her ties with their bond hearts). The morning's Ready lines and the
@@ -48,13 +48,13 @@ export function placeWords(place: string): string {
 }
 
 /** Where her next event plays: her bible's beat for the rung, in words; null without one, and for the wedding, whose place
- * you choose (F53 decision 9). */
+ * you choose. */
 export function beatPlace(pack: Pick<StoryPack, 'bibles'>, id: string, rung: string | null): string | null {
   const beat = rung && rung !== 'wedding' ? pack.bibles.get(id)?.route.find((b) => b.id === rung) : undefined
   return beat ? placeWords(beat.place) : null
 }
 
-// --- The row's bar (decision 4) ---------------------------------------------------------------------------------------
+// --- The row's bar ---------------------------------------------------------------------------------------
 
 /** One heart of her ladder on the row's bar. */
 export interface Segment {
@@ -75,7 +75,7 @@ export interface HeartBar {
 /** Ten hearts for friendship and romance, five for a spouse. */
 export const LADDER_HEARTS: Readonly<Record<LadderName, number>> = { friendship: 10, romance: 10, spouse: 5 }
 
-/** Her ladder's hearts (decision 4): the levels played full, the next one filling by points over its cost, the rest empty;
+/** Her ladder's hearts: the levels played full, the next one filling by points over its cost, the rest empty;
  * while a waiting rung waits, every heart full and its mark with "Tomorrow" or "Ready". */
 export function heartBar(love: Pick<Love, 'stage' | 'level' | 'points'>, state: Pick<Readiness, 'ready' | 'waits'>): HeartBar {
   const ladder = ladderOf(love.stage)
@@ -92,7 +92,7 @@ export function heartBar(love: Pick<Love, 'stage' | 'level' | 'points'>, state: 
   }
 }
 
-/** Her level for the Work view's card corner (decision 8): "F7", "R4", "S2"; none before Friendship 1. */
+/** Her level for the Work view's card corner: "F7", "R4", "S2"; none before Friendship 1. */
 export function levelShort(love: Pick<Love, 'stage' | 'level'>): string | null {
   switch (love.stage) {
     case 'friendship': return love.level > 0 ? `F${love.level}` : null
@@ -103,10 +103,10 @@ export function levelShort(love: Pick<Love, 'stage' | 'level'>): string | null {
   }
 }
 
-// --- The rows, the sort and the filters (decisions 4 and 5) ------------------------------------------------------------
+// --- The rows, the sort and the filters ------------------------------------------------------------
 
 export type HeartFilter = 'ready' | 'friends' | 'partners' | 'married' | 'away'
-/** The filter chips (RM52), in order. */
+/** The filter chips, in order. */
 export const HEART_FILTERS: readonly { key: HeartFilter; label: string }[] = [
   { key: 'ready', label: 'Ready' }, { key: 'friends', label: 'Friends' }, { key: 'partners', label: 'Partners' }, { key: 'married', label: 'Married' }, { key: 'away', label: 'Away' },
 ]
@@ -141,7 +141,7 @@ export interface HeartRow {
   order: number
 }
 
-/** The line under her bar (decision 4). */
+/** The line under her bar. */
 export function rowNote(state: Readiness, now: Pick<Bar, 'points' | 'cost'>, home: boolean, place: string | null, nameOf: NameOf): string | null {
   if (state.ready) return `Ready · ${rungName(state.rung!)}${place ? ` · ${place}` : ''}`
   const kind = state.waits!.kind
@@ -150,10 +150,10 @@ export function rowNote(state: Readiness, now: Pick<Bar, 'points' | 'cost'>, hom
   return readyWords(state, now, nameOf)
 }
 
-/** Her place along the route: the domain's (F51), read here for the sort and the perks. */
+/** Her place along the route: the domain's, read here for the sort and the perks. */
 export { routeIndex }
 
-/** The sort (decision 4): Ready first, then the least progress (her rung along the route, then her points), then the cast's
+/** The sort: Ready first, then the least progress (her rung along the route, then her points), then the cast's
  * order. */
 export const heartOrder = (a: Pick<HeartRow, 'id' | 'state' | 'progress' | 'points' | 'order'>, b: Pick<HeartRow, 'id' | 'state' | 'progress' | 'points' | 'order'>): number =>
   Number(b.state.ready) - Number(a.state.ready) || a.progress - b.progress || a.points - b.points || a.order - b.order || a.id.localeCompare(b.id)
@@ -185,12 +185,12 @@ export function filterCounts(rows: readonly Pick<HeartRow, 'filters'>[]): Record
   return counts
 }
 
-/** The header (decision 5): "Married n/N", N the cast's size (20 on the real pack, 3 on the stand-in). */
+/** The header: "Married n/N", N the cast's size (20 on the real pack, 3 on the stand-in). */
 export function marriedOf(save: Pick<SaveV4, 'love'>, pack: Pick<StoryPack, 'cast'>): { married: number; cast: number } {
   return { married: Object.values(save.love).filter((l) => l.stage === 'spouse').length, cast: pack.cast.umas.length }
 }
 
-// --- Ready, live (decisions 9 and 10) ---------------------------------------------------------------------------------
+// --- Ready, live ---------------------------------------------------------------------------------
 
 /** A Ready line for the morning: her, her rung and where it plays. */
 export interface ReadyLine {
@@ -199,7 +199,7 @@ export interface ReadyLine {
   place: string | null
 }
 
-/** Who's Ready today, in the tab's order (decision 9): read live, never stored. */
+/** Who's Ready today, in the tab's order: read live, never stored. */
 export function readyLines(save: SaveV4, pack: HeartsPack): ReadyLine[] {
   const cast = castOrder(pack)
   return Object.keys(save.roster).flatMap((id) => {
@@ -212,10 +212,10 @@ export function readyLines(save: SaveV4, pack: HeartsPack): ReadyLine[] {
   }).sort(heartOrder).map(({ id, rung, place }) => ({ id, rung, place }))
 }
 
-/** The Umas whose pip carries ♥ on the map (decision 10). */
+/** The Umas whose pip carries ♥ on the map. */
 export const readyIds = (save: SaveV4, pack: HeartsPack): ReadonlySet<string> => new Set(readyLines(save, pack).map((l) => l.id))
 
-// --- Her profile (decision 6) -----------------------------------------------------------------------------------------
+// --- Her profile -----------------------------------------------------------------------------------------
 
 /** The ladder a rung is on: her confession friendship's, the proposal and the wedding romance's. */
 export const rungLadder = (rung: string): LadderName => (rung.startsWith('f') || rung === 'confession' ? 'friendship' : /^s\d/.test(rung) ? 'spouse' : 'romance')
@@ -233,7 +233,7 @@ export interface TrackCell {
   label: string
 }
 
-/** The route as one track (decision 6): played rungs filled in their ladder's colour, the next filling, the rest empty. */
+/** The route as one track: played rungs filled in their ladder's colour, the next filling, the rest empty. */
 export function routeTrack(love: Pick<Love, 'stage' | 'level' | 'points'>): TrackCell[] {
   const now = bar(love)
   const next = now.rung === null ? ROUTE_RUNGS.length : ROUTE_RUNGS.indexOf(now.rung)
@@ -245,7 +245,7 @@ export function routeTrack(love: Pick<Love, 'stage' | 'level' | 'points'>): Trac
   })
 }
 
-/** Her Next card (decision 6): the rung, its perk, its place and setup (her bible's `hint`, D43), the bar and what's
+/** Her Next card: the rung, its perk, its place and setup (her bible's `hint`), the bar and what's
  * banked, and what it waits for. */
 export interface NextCard {
   rung: string | null
@@ -273,10 +273,10 @@ export function nextCard(save: SaveV4, pack: HeartsPack, id: string, nameOf: Nam
   }
 }
 
-/** A perk on her profile's list: reached ✓, the next, the rest greyed (RM53); a reached one with what it does now (F51). */
+/** A perk on her profile's list: reached ✓, the next, the rest greyed; a reached one with what it does now. */
 export interface PerkView extends Perk {
   state: 'reached' | 'next' | 'ahead'
-  /** What it does now, in words (F51 decision 12), for a reached perk with a live effect; null otherwise. */
+  /** What it does now, in words, for a reached perk with a live effect; null otherwise. */
   now: string | null
 }
 
@@ -285,7 +285,7 @@ const percent = (share: number): string => `${Math.round(share * 1000) / 10}%`
 const SUPERSEDED: Partial<Record<PerkId, PerkId>> = { 'line-10': 'line-20', 'night-chore': 'night-chore-2', 'night-chore-2': 'night-chore-3', 'morning-item': 'morning-item-2' }
 
 /**
- * What a reached perk does now (F51 decision 12), or null when its words say it all: her line's term ("+28% at the forest ·
+ * What a reached perk does now, or null when its words say it all: her line's term ("+28% at the forest ·
  * +8% ring", a farmer's "+20% chance of an extra crop", with the crew's and a cap held), her night chores ("2 items each
  * night", "+0.5 growth each night", "None while she's away"), her morning items ("Next in 3 mornings"), her signature dish
  * ("Bell Pepper Salad · in the Kitchen's list"), in her element ("Beside Stand-in 2"), her keepsake ("Bent Trowel · +0.25
@@ -344,12 +344,12 @@ export function perkNow(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' | 
   }
 }
 
-// --- Her ring (F53 decisions 6 and 7; RM39) ---------------------------------------------------------------------------
+// --- Her ring ---------------------------------------------------------------------------
 
-/** Her ring's engraving (decision 7): her Romance 8 beat's line, her Memory's caption, so no new field. */
+/** Her ring's engraving: her Romance 8 beat's line, her Memory's caption, so no new field. */
 export const engravingOf = (pack: Pick<StoryPack, 'bibles'>, id: string): string | null => pack.bibles.get(id)?.route.find((b) => b.id === 'r8')?.beat ?? null
 
-/** Her profile's Ring (decisions 6 and 7): the engraving from Romance 8 ("Her ring will read", then "Her ring reads"), her
+/** Her profile's Ring: the engraving from Romance 8 ("Her ring will read", then "Her ring reads"), her
  * ring and its bonus at her line (once married, or "once you're married"), and the rings in the Warehouse she'd take
  * instead. Null before Romance 8. */
 export interface RingView {
@@ -376,8 +376,8 @@ export function ringView(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>,
   }
 }
 
-/** Every perk on her route for her line (decision 7), each reached, the next or ahead; a reached one with what it does now
- * when `nameOf` is given (F51). */
+/** Every perk on her route for her line, each reached, the next or ahead; a reached one with what it does now
+ * when `nameOf` is given. */
 export function perkList(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' | 'ties'>, id: string, nameOf: NameOf | null = null): PerkView[] {
   const love = save.love[id]
   const line = perkLineOf(pack, id)
@@ -392,7 +392,7 @@ export function perkList(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' |
   })
 }
 
-/** Her closest friend's loved gift (F51 decision 12; RM31's F7): from Friendship 7, the friend's loved good when her bible
+/** Her closest friend's loved gift (RM31's F7): from Friendship 7, the friend's loved good when her bible
  * names one that's in the game. */
 export function friendLoved(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'ties'>, id: string): { friend: string; good: string } | null {
   if (!hasPerk(save.love[id], 'f7')) return null
@@ -401,7 +401,7 @@ export function friendLoved(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'ties
   return friend && good && isGoodId(good) ? { friend, good } : null
 }
 
-/** What she's given you that stays on her profile (F51 decision 12): her pet name for you from Romance 1, her keepsake from
+/** What she's given you that stays on her profile: her pet name for you from Romance 1, her keepsake from
  * Friendship 10 (its name and her line about it, generic without a bible's), grown from Spouse 5. */
 export interface FromHer {
   petName: string | null
@@ -432,14 +432,14 @@ export function reachedWords(list: readonly Pick<PerkView, 'rung' | 'state'>[]):
   return parts.length > 0 ? parts.join(' · ') : null
 }
 
-/** A gift slot (RM15): her loved, liked and disliked goods, each as learnt ("?" until then), with its points at ★1. */
+/** A gift slot: her loved, liked and disliked goods, each as learnt ("?" until then), with its points at ★1. */
 export interface GiftSlot {
   taste: 'loved' | 'liked' | 'disliked'
   /** The good, or null while her taste for it isn't known. */
   good: string | null
   points: number
 }
-/** Her gifts (decision 6): her loved good from Friendship 1, the others once given, all from Friendship 7, and "Others
+/** Her gifts: her loved good from Friendship 1, the others once given, all from Friendship 7, and "Others
  * +10". No bible: no slots, every gift +10. A slot whose good isn't in the game yet is left out. */
 export function giftSlots(pack: Pick<StoryPack, 'bibles'>, love: Pick<Love, 'stage' | 'level' | 'known'>, id: string): { slots: GiftSlot[]; others: number } {
   const gifts = pack.bibles.get(id)?.gifts
@@ -454,7 +454,7 @@ export function giftSlots(pack: Pick<StoryPack, 'bibles'>, love: Pick<Love, 'sta
 export const TIE_WORDS: Readonly<Record<Tie['kind'], string>> = {
   friends: 'Friends', rivals: 'Rivals', mentor: 'Mentor', teammates: 'Teammates', sisters: 'Sisters', other: 'Close',
 }
-/** One of her ties on her profile (decision 6; F52 decision 11): the other Uma, its kind, their bond hearts from
+/** One of her ties on her profile: the other Uma, its kind, their bond hearts from
  * `save.bonds` and the points to the next, her closest friend marked, and the conversations opened and unread. */
 export interface TieRow {
   with: string
@@ -470,16 +470,16 @@ export interface TieRow {
   here: boolean
   /** Her place in `ties.json`, the last tie-break. */
   order: number
-  /** Her closest friend (RM49): the first row. */
+  /** Her closest friend: the first row. */
   closest: boolean
-  /** Their authored conversations opened and not read yet, lowest first: **Read** plays them (F52 decision 9). */
+  /** Their authored conversations opened and not read yet, lowest first: **Read** plays them. */
   unread: number[]
 }
 
 /**
- * Her ties from the pack (decision 6), in `tiesOf`'s order, the one `closestFriend` reads: the strongest, then the most
+ * Her ties from the pack, in `tiesOf`'s order, the one `closestFriend` reads: the strongest, then the most
  * bond points, then the ties' order, her closest friend first. The hearts are `bondHearts` of today's `save.bonds`, so they
- * move as bonds grow (F52); a pair's conversations opened and unread show **Read**.
+ * move as bonds grow; a pair's conversations opened and unread show **Read**.
  */
 export function tieRows(save: Pick<SaveV4, 'bonds' | 'roster' | 'diary'>, pack: Pick<StoryPack, 'ties' | 'pairs'>, id: string): TieRow[] {
   return tiesOf(pack, save, id).map(({ tie, with: other, points, order }, i): TieRow => {
@@ -491,7 +491,7 @@ export function tieRows(save: Pick<SaveV4, 'bonds' | 'roster' | 'diary'>, pack: 
   })
 }
 
-// --- Pairs in words: the morning and the Diary (F52 decisions 9 and 11) ------------------------------------------------
+// --- Pairs in words: the morning and the Diary ------------------------------------------------
 
 /** `?read=<a>-<b>:<levels>`: the pair player's param, the levels in order ("9000001-9000002:1,2"). */
 export const readParam = (a: string, b: string, levels: readonly number[]): string => `${pairName(a, b)}:${levels.join(',')}`
@@ -531,7 +531,7 @@ export interface ConversationRow {
   /** The tie's line, for a pair with no conversation written. */
   line: string | null
 }
-/** The Diary's Conversations (decision 11): every pair with a heart, the most hearts first, then the most points, then the
+/** The Diary's Conversations: every pair with a heart, the most hearts first, then the most points, then the
  * cast's order. */
 export function conversationRows(save: Pick<SaveV4, 'bonds' | 'diary' | 'roster'>, pack: Pick<StoryPack, 'cast' | 'ties' | 'pairs'>): ConversationRow[] {
   const order = castOrder(pack)
@@ -547,8 +547,8 @@ export function conversationRows(save: Pick<SaveV4, 'bonds' | 'diary' | 'roster'
     || Math.max(rank(x.a), rank(x.b)) - Math.max(rank(y.a), rank(y.b)))
 }
 
-/** Her line, birthday and house under her name (RM53): "Farming · ★ Spring 4 · Rose Cottage"; a spouse waiting for a room
- * "Needs a room", and softly, an own-house wisher sharing or waiting "She'd love her own house" (F54 decision 14). */
+/** Her line, birthday and house under her name: "Farming · ★ Spring 4 · Rose Cottage"; a spouse waiting for a room
+ * "Needs a room", and softly, an own-house wisher sharing or waiting "She'd love her own house". */
 export function profileLine(save: Pick<SaveV4, 'love' | 'homestead'>, pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string, birthdays: Birthdays): string[] {
   const line = favouriteOf(pack, id)
   const birthday = birthdays.get(id)
@@ -562,11 +562,11 @@ export function profileLine(save: Pick<SaveV4, 'love' | 'homestead'>, pack: Pick
   ]
 }
 
-/** A spouse's room on her Hearts row (F54 decision 14; F48's seam): her house's name, or "Needs a room". */
+/** A spouse's room on her Hearts row (F48's seam): her house's name, or "Needs a room". */
 export function roomNote(save: Pick<SaveV4, 'love' | 'homestead'>, pack: Pick<StoryPack, 'bibles'>, id: string): string | null {
   const home = homeOf(save, pack, id)
   return home === null ? null : home.needs ? NEEDS_ROOM : home.name
 }
 
-/** Her Memories' count (RM56): one a rung with an event, 26 in all (S2 and S4 have none). */
+/** Her Memories' count: one a rung with an event, 26 in all (S2 and S4 have none). */
 export const MEMORY_RUNGS = ROUTE_RUNGS.length - 2

@@ -1,4 +1,4 @@
-// The town's cast (F24; core spec CS41, FC24): eleven original people, whose names and lines live in git. Umas never
+// The town's cast: eleven original people, whose names and lines live in git. Umas never
 // appear here: they speak only in roles the app fills at runtime from master data (CS41's roles). M4's scenes speak
 // three of them (the Mayor, Marta, Old Ben) and name a fourth (Dale Hart); the rest arrive with their chapters.
 

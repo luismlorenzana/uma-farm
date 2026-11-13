@@ -1,6 +1,6 @@
-// The farm on the HD-2D stage (F11 decisions 2 and 3): the save as a farm design, parsed by uma-stage's own format, with
+// The farm on the HD-2D stage: the save as a farm design, parsed by uma-stage's own format, with
 // every recipe's frames in the farm kit's contract, built with no problems on the stand-in farm kit (`farmProblems`, what
-// `BandStage.setWorld` refuses on), and the crops by family. All from the stage's three-free `/formats` entry (0.4.0, ST4).
+// `BandStage.setWorld` refuses on), and the crops by family. All from the stage's three-free `/formats` entry (0.4.0).
 import {
   FARM_WAVE_1, FARM_WAVE_2, farmProblems, farmReach, KIT_REQUIRED, parseFarmDesign, SAMPLE_FARM, standInFarmAtlas, type FarmDesign,
 } from '@luismlorenzana/uma-stage/formats'
@@ -120,7 +120,7 @@ describe('the farm design (decision 2)', () => {
     expect(open.buildings.map((b) => b.id)).toEqual(['mill', 'coop', 'sawmill', 'barn', 'smokehouse', 'kitchen', 'smelter', 'restaurant', 'cutter', 'forge', 'warehouse', 'dorm', 'shop', 'expeditions'])
     expect(open.cells[12]).toBe('###pggvvv') // the Mine's cliff; the Restaurant's paving
     expect(open.heights![16]).toBe('001111111') // the quarry's pit
-    // The board and the festival ground wait for M6 (CS3): still overgrown.
+    // The board and the festival ground wait for M6: still overgrown.
     expect(placeStands(everyOpen(), FARM_PLACES.find((p) => p.id === 'board')!)).toBe(false)
   })
 

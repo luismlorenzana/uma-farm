@@ -1,4 +1,4 @@
-// The Diary's counts and the Farm Rank's points (F24 decisions 1–3; core spec CS38, CS39). Each good shipped once is an
+// The Diary's counts and the Farm Rank's points. Each good shipped once is an
 // entry; a family's ten raw or ten refined goods shipped once is a row, paying 500g once; milestones pay their gold once.
 // All of it is checked at night step 8 (`checkGoals`) and paid that night, and the Farm Rank's points are recomputed
 // from the save there: ⌊gold shipped ÷ 100⌋ + 5 × entries + 25 × milestones + 250 × chapters done. Loaded with the night
@@ -18,7 +18,7 @@ import {
 } from './milestones'
 import type { FarmSave } from '../save/v4'
 
-/** The goods shipped at least once: the Diary's entries (CS38). A ring is one on v4 (F53); v3 never ships one. */
+/** The goods shipped at least once: the Diary's entries. A ring is one on v4; v3 never ships one. */
 export const diaryEntries = (save: Pick<FarmSave, 'diary'>): number => Object.entries(save.diary.shipped).filter(([id, n]) => n > 0 && isGoodIdV4(id)).length
 
 /** The milestones paid so far (rows aren't milestones). */
@@ -27,7 +27,7 @@ export const milestonesPaid = (save: Pick<FarmSave, 'diary'>): number => save.di
 /** The chapters done: every chapter before the current one. */
 export const chaptersDone = (save: Pick<FarmSave, 'farm'>): number => save.farm.chapter - 1
 
-/** Each source of the Farm Rank's points on this save (decision 1). */
+/** Each source of the Farm Rank's points on this save. */
 export interface FarmPoints {
   shipped: number
   entries: number
@@ -43,7 +43,7 @@ export function farmPointsOf(save: Pick<FarmSave, 'farm' | 'diary'>): FarmPoints
   return { shipped, entries, milestones, chapters, total: shipped + entries + milestones + chapters }
 }
 
-/** The save with its Farm Rank's points recomputed (decision 1). */
+/** The save with its Farm Rank's points recomputed. */
 export const withFarmPoints = <S extends FarmSave>(save: S): S => {
   const points = farmPointsOf(save).total
   return points === save.farm.points ? save : { ...save, farm: { ...save.farm, points } }
@@ -56,8 +56,8 @@ export function nextFarmRank(points: number): { rank: number; points: number } |
   return at === undefined ? null : { rank: rank + 1, points: at }
 }
 
-/** What a Farm Rank opens in the game as built (decision 8, D24 #4: more of what's open), read from the rules that gate
- * on it: the Fields' blocks, the Dorm's levels (by the save's version: v4's Dorm for 20, F46), the shop's seeds (tier 1
+/** What a Farm Rank opens in the game as built (D24 #4: more of what's open), read from the rules that gate
+ * on it: the Fields' blocks, the Dorm's levels (by the save's version: v4's Dorm for 20), the shop's seeds (tier 1
  * is the start's) and the stations. Rank 10 is the farm's gold crest. */
 export function farmRankOpens(rank: number, version = 3): string[] {
   const blocks = BLOCK_IDS.filter((id) => { const o = BLOCK_RULES[id].opens; return o.by === 'farm-rank' && o.rank === rank })
@@ -72,7 +72,7 @@ export function farmRankOpens(rank: number, version = 3): string[] {
 /** The forest areas and fishing spots a haul came home from tonight (night step 4's `notes.made`): depth milestones. */
 export type DepthsTonight = ReadonlySet<string>
 
-/** Whether a milestone is reached on this save (decision 2). */
+/** Whether a milestone is reached on this save. */
 export function milestoneReached(save: Pick<FarmSave, 'farm' | 'roster' | 'crops'>, milestone: Milestone, depths: DepthsTonight): boolean {
   switch (milestone.kind) {
     case 'shipped': return (save.farm.counts[GOLD_SHIPPED] ?? 0) >= milestone.at
@@ -86,7 +86,7 @@ export function milestoneReached(save: Pick<FarmSave, 'farm' | 'roster' | 'crops
 /** Whether a row's goods have all been shipped once. */
 export const rowComplete = (save: Pick<FarmSave, 'diary'>, row: DiaryRow): boolean => row.goods.every((id) => (save.diary.shipped[id] ?? 0) > 0)
 
-/** Pays every milestone and row reached and not yet paid (decisions 2 and 3): its gold now, its id in
+/** Pays every milestone and row reached and not yet paid: its gold now, its id in
  * `diary.milestones`. Milestones in CS38's order, then rows. Never stamps. */
 export function payDiary<S extends FarmSave>(save: S, depths: DepthsTonight = new Set()): { save: S; paid: string[] } {
   const held = new Set(save.diary.milestones)

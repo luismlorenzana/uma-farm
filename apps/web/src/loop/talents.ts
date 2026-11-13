@@ -1,4 +1,4 @@
-// Talents in the app (F21 decision 5; CS27): computed from master data's stats once a release, for every outfit, and
+// Talents in the app: computed from master data's stats once a release, for every outfit, and
 // kept with that release's view (one view a release hash), so the night, the harvests and the screens all read the same
 // table. The API never needs them. Loaded on demand with the loop's screens.
 import { talentResolver, talentsD, talentsOf, type FarmingTalentOf, type TalentOf, type Talents } from '@farm/domain'

@@ -1,4 +1,4 @@
-// The authored story's format and validator (F40 RS15–RS18, D42), on the invented stand-in only.
+// The authored story's format and validator, on the invented stand-in only.
 import { describe, expect, it } from 'vitest'
 import { bibleIssues, bibleTagIssues, castIssues, pairIssues, routeIssues, RUNGS, stepIssues, tagsIssues, tiesIssues, type StoryContext, type TagEntry } from './authored'
 import { STAND_IN, STAND_IN_BIBLE, STAND_IN_CAST, STAND_IN_PAIR, STAND_IN_ROUTE, STAND_IN_TIES, STAND_INS } from './authored.fixture'

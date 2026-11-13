@@ -1,4 +1,4 @@
-// A pair's conversations (F52 decisions 9–11; romance spec RM50): `?read=<a>-<b>:<levels>` over any page, played in F46's
+// A pair's conversations: `?read=<a>-<b>:<levels>` over any page, played in F46's
 // scene player's frame and steps. Each level in order, titled "Stand-in 1 & Stand-in 2 · Bond 2 · Forest"; a line
 // with its speaker's bust, a narration, a pause; a choice's options are wording only, with no gain. Skip, or the last
 // line, marks every level read (`diary.read`, once each) and closes; a replay from the Diary marks nothing new. It pays
@@ -97,7 +97,7 @@ function Conversation({ save, pair, hearts, steps, place, nameOf, of, leaving, o
   )
 }
 
-/** A choice in a pair's conversation: wording only (decision 9), so the options carry no gain. */
+/** A choice in a pair's conversation: wording only, so the options carry no gain. */
 function PairChoice({ options, farmer, onPick }: { options: readonly ChoiceOption[]; farmer: string; onPick: (i: number) => void }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 px-4 pb-4" data-choice>

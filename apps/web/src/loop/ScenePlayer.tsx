@@ -1,4 +1,4 @@
-// The scene player (F24 decision 6; core spec CS42; F46 decision 10): a full-screen sheet over the farm. A bust (a cast
+// The scene player: a full-screen sheet over the farm. A bust (a cast
 // member's lettered disc until F25's busts ship, or an Uma's from master data through uma-kit's `UmaBust`), the speaker's
 // name and one line; a tap goes on, and **Skip** ends it. The chapter scenes' lines are data (`@farm/domain`'s
 // `story/chapter-1.ts`, and v4's re-cut opening) with roles the save fills: on v3 your first hands speak their
@@ -7,7 +7,7 @@
 // card, the closing scene on chapter 2's. Each plays once (`diary.read`). It loads master data itself, for the Umas'
 // names, busts and temperaments, since a new account's boot doesn't wait for it; Skip works without it.
 //
-// On v4 it also plays each Uma's **arrival scene** from the story pack (F46 decision 10), the format's steps: `say` (her
+// On v4 it also plays each Uma's **arrival scene** from the story pack, the format's steps: `say` (her
 // bust, the line with `{farmer}` filled, the emote as a word), `narrate`, `thought` (italic), `place` (the title line),
 // `wait`, `flag` and `choice`, whose options show their gain before the tap (+30 for the best, +10 for the rest). Skip
 // jumps to the choice, never past it, so every arrival pays +50 and its choice; the last of the opening three ends on
@@ -97,7 +97,7 @@ function Play({ scene, master, onDone }: { scene: ChapterSceneId; master: Master
   const story = useStory()
   const lines = useMemo(() => {
     const table = talentTable(master)
-    // On v4 the closing scene's newest hand is chapter 1's authored arrival (decision 9), or nobody.
+    // On v4 the closing scene's newest hand is chapter 1's authored arrival, or nobody.
     const newest = save.version === 4 ? (story ? chapterArrival(story, 1)?.characterId ?? null : null) : undefined
     return sceneLines(chapterScene(scene, save.version), save, (id): Temperament => table.get(id)?.temperament ?? 'steady', newest)
     // The roles are filled once, when the scene starts: a save changing under it doesn't recast it.
@@ -147,7 +147,7 @@ function Bust({ line, nameOf }: { line: SceneLine; nameOf: (id: string) => strin
 }
 
 /** Chapter 1's card (CS42 beat 5): its six goals and the first tap, planting. Its reward names a new hand on v3, and on v4
- * only when the cast has a chapter-1 arrival (D74). */
+ * only when the cast has a chapter-1 arrival. */
 export function ChapterOneCard({ onPlant }: { onPlant: () => void }) {
   const chapter = chapterOf(1)!
   const hand = useChapterHand(1)
@@ -188,14 +188,14 @@ function ChapterCard({ scene, onDone }: { scene: ChapterSceneId; onDone: (to: st
   )
 }
 
-/** Whether chapter `n`'s reward brings a new hand on this save and pack (D74). */
+/** Whether chapter `n`'s reward brings a new hand on this save and pack. */
 function useChapterHand(chapter: number): boolean {
   const save = useLoopSave()
   const story = useStory()
   return chapterHand(save?.version ?? 3, story, chapter)
 }
 
-// --- Her arrival scene (F46 decision 10) ----------------------------------------------------------------------------------
+// --- Her arrival scene ----------------------------------------------------------------------------------
 
 /** A story place as the title line says it: a farm place's name, else its words ("pond-night" → "Pond night"). */
 export const placeName = (place: string): string => farmPlace(place)?.name ?? `${place.charAt(0).toUpperCase()}${place.slice(1).replaceAll('-', ' ')}`

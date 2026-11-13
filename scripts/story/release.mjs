@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Builds the story pack's release (F56 decision 3; romance spec RM58, RM60): the private pack in the ignored
+// Builds the story pack's release: the private pack in the ignored
 // content/story/, checked whole by the game's own validator (`storyPackFrom`, read in place with Node's type stripping as
 // the Story Sandbox reads it), written to the ignored content/story-release/ laid out as the bucket is: each file
 // minified as `story/<name>.<hash8>.json` and the index `story.json`. The same inputs give the same files.

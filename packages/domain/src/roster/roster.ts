@@ -1,4 +1,4 @@
-// The farm's roster (FM6, FM7, R3): every outfit on master data's release can work, from day one, with no tickets. Each
+// The farm's roster (R3): every outfit on master data's release can work, from day one, with no tickets. Each
 // has her trade, from her calling (her best running styles, `template.ts`), and so her line's three places. The farm reads
 // master data by stable ids only (P8): names and art stay in the app, from the release.
 import type { Outfit } from '@luismlorenzana/uma-data'
@@ -33,7 +33,7 @@ export function farmRoster(data: { outfits: readonly Pick<Outfit, 'id' | 'aptitu
 }
 
 /** What the work rules take from a roster: each outfit's trade, for the trade gate, and who may work at all. Settles and
- * the API's parse pass none: then every well-formed outfit may work and the gate is open (D208). */
+ * the API's parse pass none: then every well-formed outfit may work and the gate is open. */
 export function rosterContext(roster: readonly FarmOutfit[]): WorkContext & { tradeOf: TradeOf; roster: ReadonlySet<string> } {
   const trades = new Map(roster.map((o) => [o.outfitId, o.trade]))
   return { tradeOf: (outfitId) => trades.get(outfitId) ?? null, roster: new Set(trades.keys()) }

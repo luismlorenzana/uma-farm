@@ -1,4 +1,4 @@
-// The evening on screen (F50 decision 6; romance spec RM19, RM37): `?evening=` over any page, the romance build only.
+// The evening on screen: `?evening=` over any page, the romance build only.
 // `?evening=pick` is Tonight's **Pick someone ›**: the Umas home who can spend one, a yes first, each with her favourite
 // kind and ✉. `?evening=<characterId>` is her profile's **Evening ›** (and a picked row): her kinds sheet, each open kind
 // with her three numbers today ("Perfect +225", ★ her favourite ×1.5, +20 when she asked), the ones her ladder hasn't
@@ -53,7 +53,7 @@ export default function EveningPlayer() {
 
 const nameIn = (master: MasterView) => (id: string) => master.album.get(id)?.name ?? 'An Uma'
 
-/** Tonight's picker (decision 6): who's home and can spend an evening now. */
+/** Tonight's picker: who's home and can spend an evening now. */
 function Picker({ save, pack, master, onPick, onClose }: { save: SaveV4; pack: StoryPack; master: MasterView; onPick: (id: string) => void; onClose: () => void }) {
   const rows = pickRows(save, pack, nameIn(master))
   return (
@@ -160,7 +160,7 @@ function PlayLayer({ save, pack, id, kind, name, birthday, error, onDone, onLeav
   )
 }
 
-/** The evening's card (decision 6): the grade, the sum and her bar, one Continue. */
+/** The evening's card: the grade, the sum and her bar, one Continue. */
 function CardLayer({ card, name, colour, onContinue }: { card: EveningCard; name: string; colour: string; onContinue: () => void }) {
   const sum = cardSum(card)
   const def = EVENINGS[card.kind]

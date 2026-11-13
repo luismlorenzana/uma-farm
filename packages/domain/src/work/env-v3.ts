@@ -1,4 +1,4 @@
-// Copied from uma-rpg packages/domain/src/work/env-v3.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
+// Copied from uma-rpg packages/domain/src/work/env-v3.ts at 30a322a, with its Wilds-only parts cut.
 // What the work rules take from the caller, and the trade gate's words. uma-rpg's generation switch (`liveWorkEnv`) stays
 // behind: the farm has only the Wilds' env (`env-v4.ts`).
 import type { TradeOf } from '../economy/professions'

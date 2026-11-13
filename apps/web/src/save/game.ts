@@ -1,11 +1,11 @@
-// The farm's store and its sync engine (copied from uma-rpg at 30a322a; its D32, D260): the save lives on the device
+// The farm's store and its sync engine (copied from uma-rpg at 30a322a): the save lives on the device
 // (Dexie) and in a Zustand store; every change writes both and schedules a background sync. Play never waits on the
 // network once a device save exists.
 //
 // The M4 build (live) holds save v3, the farm's own loop (F24: the loop is the app). Every v2 it meets (the Wilds' save, on
 // the device, from the server, in a 409 or from a safety copy) migrates once master data has loaded (`loop/boot.ts`), and
 // the migration is committed without moving `updatedAt`, so it uploads and the next boot reads v3. It stops at a v4, with
-// the kit's update prompt, and never writes over one (F46 decision 2).
+// the kit's update prompt, and never writes over one.
 //
 // The romance build (`VITE_FARM_ROMANCE=1`, dark until F56) holds save v4. Every v1–v3 it meets, wherever it meets one, is
 // wiped into a fresh v4 (`freshV4`, the account copied whole) and committed without stamping, so it uploads and the server
@@ -43,7 +43,7 @@ export const useGame = create<GameState>(() => INITIAL)
 /** The save once booted, or null. */
 export const useLoopSave = (): FarmSave | null => useGame((s) => s.save)
 
-/** The M4 build meeting a v4: it can't play it, and nothing writes over it (F46 decision 2; the kit's update prompt
+/** The M4 build meeting a v4: it can't play it, and nothing writes over it (the kit's update prompt
  * brings the build that can). */
 export const NEWER_SAVE_WORDS = 'This save is from a newer version of the farm.'
 
@@ -68,8 +68,8 @@ async function playableEnvelope(envelope: SaveEnvelope): Promise<{ revision: num
   return { revision: envelope.revision, save, migrated: save !== envelope.save }
 }
 
-/** A new account: day 1 (CS3), nobody on the roster yet; the start's sheet is the first tap (M4), or the farmer's name
- * (the romance build, RM8). */
+/** A new account: day 1, nobody on the roster yet; the start's sheet is the first tap, or the farmer's name
+ * (the romance build). */
 async function freshSave(uid: string): Promise<FarmSave> {
   const { newLoopSave, newRomanceSave } = await import('../loop/boot')
   if (romanceOn()) {
@@ -100,7 +100,7 @@ export async function boot(uid: string): Promise<void> {
     const row = await readSaveRow(uid)
     if (row) {
       const save = await playable(row.save)
-      // The wipe never loses unsynced play silently (decision 2): a dirty older save is kept on the device first.
+      // The wipe never loses unsynced play silently: a dirty older save is kept on the device first.
       if (save.version !== row.save.version && row.dirty && romanceOn()) {
         const kept = await addSafetyCopy({ uid, reason: 'wiped', at: nowIso(), revision: row.revision, save: row.save })
         if (!kept) throw new Error('This device couldn’t keep a copy of its save. Try again.')
@@ -242,7 +242,7 @@ export async function restoreSafetyCopy(id: number): Promise<boolean> {
   let restored: FarmSave
   try {
     const stored = parseSave(copy.save)
-    // In the romance build a copy from before v4 would only wipe again: it isn't restored (decision 2).
+    // In the romance build a copy from before v4 would only wipe again: it isn't restored.
     if (romanceOn() && stored.version < 4) return false
     restored = await playable(stored)
   } catch {

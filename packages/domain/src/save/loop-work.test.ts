@@ -1,4 +1,4 @@
-// The loop's work on the day clock (F18 decision 1): F5's operations over a v3 save at `workNow`, stamped with real time;
+// The loop's work on the day clock: F5's operations over a v3 save at `workNow`, stamped with real time;
 // readings stamp nothing. Invented outfit ids and the test kinds.
 import { describe, expect, it } from 'vitest'
 import { DAY_MS } from '../farm/calendar'

@@ -1,7 +1,7 @@
-// The Dorm's page (F23 decisions 3, 4 and 11; core spec CS34, CS36): `/dorm`. Beds used of beds, the
+// The Dorm's page: `/dorm`. Beds used of beds, the
 // next level with its cost and Farm Rank (**Upgrade · 1,000g**, its beds tomorrow), who's home and who's away on her
 // off-season, and **Swap**: pick one home with nothing to do, then one away; she arrives tomorrow, and a swap can be
-// called off until then. The pickers are uma-kit's, over the roster's rows. On save v4 (F46 decision 12) it's the Dorm for
+// called off until then. The pickers are uma-kit's, over the roster's rows. On save v4 it's the Dorm for
 // 20: eight levels, and a level that brings an arrival says so ("Level 4 · 9 beds · someone new arrives"), never who.
 // Loaded on demand.
 import { atHome, arriving, bedsFor, dormBought, dormLevelsOf, freeBeds, leaving, nextDorm, swapBlock, type FarmSave } from '@farm/domain'

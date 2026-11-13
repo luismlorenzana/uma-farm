@@ -1,8 +1,8 @@
-// Save v4's parse (F46 decision 7; romance spec RM10): as strict as v3's, whose parts it shares (`parse-loop.ts`). Unknown
+// Save v4's parse: as strict as v3's, whose parts it shares (`parse-loop.ts`). Unknown
 // keys and v3-only keys (`start`, `visitors`, a roster Uma's `affinity`) are refused; roster keys are character ids by form
 // (the API has no story pack or master data); `love` holds exactly the roster's keys, each in range; `memories` and
 // `arrivals` name roster Umas; the farmer's name is empty or within RM8's rule; the Dorm is on its eight levels. Each later
-// romance packet adds the checks for what it fills, while v4 grows in place (decision 1). F50: today's evenings fill the
+// romance packet adds the checks for what it fills, while v4 grows in place. F50: today's evenings fill the
 // day's slots (one, two on days divisible by 4 from 10 married, festival night's on a festival day) with RM37's kinds, and
 // its invitations are one (two from 10 married), each a different Uma, asking for a date game.
 import { dateOf, FESTIVAL_IDS, festivalOn } from '../farm/calendar'
@@ -55,22 +55,22 @@ const pastDay = (value: unknown, path: string, today: number): number => {
 
 const LOVE_KEYS = ['stage', 'level', 'points', 'last', 'friend', 'ring', 'wed', 'house', 'known', 'flags', 'evening', 'festivals', 'morning', 'dish'] as const
 
-/** Her level's range on each stage (F47 decision 2): friendship and romance 0–9 (the tenth event moves her on), 10 while a
+/** Her level's range on each stage: friendship and romance 0–9 (the tenth event moves her on), 10 while a
  * waiting rung waits, spouse 0–5. */
 const LEVELS: Readonly<Record<Love['stage'], readonly [number, number]>> = {
   friendship: [0, 9], confession: [10, 10], romance: [0, 9], proposal: [10, 10], wedding: [10, 10], spouse: [0, 5],
 }
 
-/** A festival she's been at with you (F47 decision 9): `<festival>:<year>`, the year no later than this one. */
+/** A festival she's been at with you: `<festival>:<year>`, the year no later than this one. */
 function festivalKey(value: unknown, path: string, year: number): string {
   const [festival, at] = typeof value === 'string' ? value.split(':') : []
   if (!(FESTIVAL_IDS as readonly string[]).includes(festival ?? '') || !/^[1-9]\d*$/.test(at ?? '') || Number(at) > year) fail(path, 'expected <festival>:<year>, this year or before')
   return value as string
 }
 
-/** Her route (RM10, decision 7; F47): her level in its stage's range; points whole and ≥ 0; `last` and `evening` no later
+/** Her route: her level in its stage's range; points whole and ≥ 0; `last` and `evening` no later
  * than today; `friend` only while the confession waits; `ring` only from the proposal on; `wed` and `house` only a
- * spouse's; festivals once each, by year; `morning` (F51) only from Romance 2 on, no later than today; `dish` (F51) a dish
+ * spouse's; festivals once each, by year; `morning` only from Romance 2 on, no later than today; `dish` a dish
  * id, only from Friendship 4 on. */
 function parseLove(value: unknown, path: string, today: number, houses: number): Love {
   const o = object(value, path, LOVE_KEYS)
@@ -134,12 +134,12 @@ function parseMemories(value: unknown, path: string, roster: ReadonlySet<string>
   return out
 }
 
-/** An evening's kind (F50, RM37): a date game or festival night. */
+/** An evening's kind: a date game or festival night. */
 const eveningKind = (v: unknown, at: string): EveningKind => oneOf(v, at, EVENING_KINDS)
 /** An invitation's kind: a date game, never festival night. */
 const inviteKind = (v: unknown, at: string): InviteKind => (v === FESTIVAL_NIGHT ? fail(at, 'expected a date game') : eveningKind(v, at) as InviteKind)
 
-/** `today` (F47–F52; F50 decisions 5 and 7): the evenings within the day's slots (`evenings` regular ones, festival
+/** `today`: the evenings within the day's slots (`evenings` regular ones, festival
  * night's on a festival day), and `invites` invitations, each a different Uma. */
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number, vows: boolean): TodayV4 {
   const o = object(value, path, ['chats', 'gifts', 'praise', 'praised', 'events', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception'])
@@ -170,7 +170,7 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
   }
 }
 
-/** `today.bonds` (F52 decision 9): a pair of roster Umas by `pairKey` (numeric order), its hearts 0–5 before it first moved
+/** `today.bonds`: a pair of roster Umas by `pairKey` (numeric order), its hearts 0–5 before it first moved
  * since the last morning. */
 function parseBondHeartsToday(value: unknown, path: string, roster: ReadonlySet<string>): Record<string, number> {
   const out: Record<string, number> = {}
@@ -182,7 +182,7 @@ function parseBondHeartsToday(value: unknown, path: string, roster: ReadonlySet<
   return out
 }
 
-/** The homestead (F54 decision 1): the Farmhouse first (two rooms, never extended), then up to six houses, each named by the
+/** The homestead: the Farmhouse first (two rooms, never extended), then up to six houses, each named by the
  * letters rule (1–20 characters); tonight's house a built one; "her room" only with tonight's house; a night slept in each
  * house, no later than today; the furniture none or five pieces, each in a built house or not placed; the married count
  * the night last saw, and the finale's morning (no later than today, only from 20 married). Who lives where is `love.house`,
@@ -211,7 +211,7 @@ function parseHomestead(value: unknown, path: string, today: number, roster: Rea
   return { houses, tonight, alone, slept, furniture, married, finale }
 }
 
-/** Who lives where (F54 decisions 1 and 4): no house holds more residents than its rooms; a spouse in a house has no Dorm
+/** Who lives where: no house holds more residents than its rooms; a spouse in a house has no Dorm
  * bed (not home, not in a swap); her room tonight is hers, a spouse in tonight's house; the married count the night saw
  * is no more than the spouses now. */
 function parseRooms(save: Pick<SaveV4, 'love' | 'dorm' | 'homestead'>, path: string): void {
@@ -235,15 +235,15 @@ function parseFarmer(value: unknown, path: string): SaveV4['farmer'] {
   return { name }
 }
 
-// --- The morning (decision 15; F47) -----------------------------------------------------------------------------------------
+// --- The morning -----------------------------------------------------------------------------------------
 
-/** A morning item's stock key (F51): a good at ★1–5, `<good>@<stars>`. */
+/** A morning item's stock key: a good at ★1–5, `<good>@<stars>`. */
 function itemKey(v: unknown, at: string): string {
   const parsed = typeof v === 'string' ? parseStockKey(v) : null
   return parsed && isGoodId(parsed.id) ? (v as string) : fail(at, 'expected <good>@<stars>')
 }
 
-/** §4 Hearts (F46 decision 15; F47 decision 14; F52 decisions 7 and 9; F50 decision 7; F51 decisions 2, 5 and 6):
+/** §4 Hearts:
  * invitations, arrivals, birthdays, anniversaries and morning items, each an Uma on the roster, once a kind each; an
  * invitation asks for a date game; an anniversary's item is a good on the day and null the day before; a morning item 1–3
  * goods at their stars; the night's chores once, items and growth (quarters), one of them more than 0; the perks' extras

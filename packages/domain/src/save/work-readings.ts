@@ -1,7 +1,7 @@
-// The loop's work readings the bars and the Menu need at start (F18 decision 9, F22): finished items waiting, and the
+// The loop's work readings the bars and the Menu need at start: finished items waiting, and the
 // places that have them. They read the stored work rows at the day's start without settling, since every stored save is
 // settled there (the night stores its settle, and every operation runs at `workNow`). Kept apart from `loop-work.ts`,
-// whose operations reach the kinds' rules and tables, so the initial JS never pulls those in (F22).
+// whose operations reach the kinds' rules and tables, so the initial JS never pulls those in.
 import { finishedCount, type WorkRow } from '@luismlorenzana/uma-work'
 import { workNow } from '../farm/calendar'
 import { LOOP_WORK_PLACES, type LoopPlaceId } from './parse-v3'
@@ -14,7 +14,7 @@ export function loopReadyItems(row: WorkRow<LoopWorkRequest> | undefined, now: n
 }
 
 /** Places with something to collect this day, and how many of their slots have it. It reads the stored rows without
- * settling (F22), as the nudge does: every stored save is settled at its day's start, and the map's badges and the Menu
+ * settling, as the nudge does: every stored save is settled at its day's start, and the map's badges and the Menu
  * never need the kinds' rules. */
 export function loopReadyWork(save: FarmSave): Map<LoopPlaceId, number> {
   const now = workNow(save)

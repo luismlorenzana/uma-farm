@@ -1,4 +1,4 @@
-// The farm's kit (KF13, KF14; D73): uma-art's `kit-farm` (2.27.0, wave 1's 87 frames), loaded through uma-stage's kit
+// The farm's kit: uma-art's `kit-farm` (2.27.0, wave 1's 87 frames), loaded through uma-stage's kit
 // loader when the stage Home first mounts, and checked for kind `farm`. The names are the API: a frame the kit lacks
 // (wave 2's 30 until they ship) is the stand-in's, copied onto the kit's page so the stage builds from one page. The
 // stand-in alone while the page is slow to load, and if it can't. Part of the stage's lazy chunk, the only module that
@@ -21,7 +21,7 @@ export interface FarmKit {
  * page decodes well within it; a first load on a slow line doesn't. */
 export const KIT_WAIT_MS = 1500
 
-// --- The stand-in's frames on the kit's page (KF14) ---------------------------------------------------------------------
+// --- The stand-in's frames on the kit's page ---------------------------------------------------------------------
 
 /** Texels between copied frames, and how far a tiling piece's edge texels are copied into them, so a page the stage scales
  * down (fit-to-width, mipmapped) shows no seams, as kit-farm's own pieces are extruded. */
@@ -39,7 +39,7 @@ export interface FrameCopy {
 }
 
 /**
- * The kit with the stand-in's frames it lacks (KF14): every frame of the kit on its first page (the one the stage draws)
+ * The kit with the stand-in's frames it lacks: every frame of the kit on its first page (the one the stage draws)
  * as it is, then each stand-in frame whose name the kit doesn't draw, packed in shelves below the kit's lowest frame,
  * tallest first, `COPY_GAP` apart; the page grows only if they don't fit. Their roles, sets, feet, blocking and lights stay
  * the stand-in's. No copies when the kit lacks nothing.

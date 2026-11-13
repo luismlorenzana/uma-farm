@@ -1,4 +1,4 @@
-// The story pack's route (F56 decision 2) through a real Nest app over HTTP, with the owner guard on and its Firebase
+// The story pack's route through a real Nest app over HTTP, with the owner guard on and its Firebase
 // check replaced: an allowlisted file is served with its cache rule, anything else is a 404, and nobody but the owner
 // reads it. The release folder holds invented files only.
 import 'reflect-metadata'

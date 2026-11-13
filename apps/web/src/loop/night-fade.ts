@@ -1,4 +1,4 @@
-// The night is a fade (F50 decision 8; romance spec RM22, RS4, W16): End the day dims the screen to dusk, the night runs
+// The night is a fade (W16): End the day dims the screen to dusk, the night runs
 // with nothing shown, and the morning comes up from it. One layer on the body, above every sheet, made and removed here,
 // so it outlives the sheet that started it; reduced motion is a plain cut (the layer shows at once and goes at once).
 // The romance build only.

@@ -1,4 +1,4 @@
-// The perks' words (F48 decision 7; romance spec RM31, RM32, RM36): one perk on every level of her route, written once as
+// The perks' words: one perk on every level of her route, written once as
 // templates keyed by her favourite line, in the farm's own words. Her profile lists every one before it's reached and
 // F49's level-up card names the one an event brings; **F51 makes each do what it says** (`hasPerk` and the effects), so
 // this file is words and ids only. Only three are bespoke per Uma (her signature dish, her keepsake, her dream), named
@@ -16,27 +16,27 @@
 //     9    mentor                          footrace
 //    10    her keepsake, ×1.10 rank points the proposal
 //
-// A perk that works at her line's place says "Opens with chapter n" while that place waits for its chapter (RM36): a
+// A perk that works at her line's place says "Opens with chapter n" while that place waits for its chapter: a
 // miner's +10% before chapter 3, a cook's before the Kitchen. Loaded with the romance's screens.
 import type { Activity } from '../farm/ranks'
 import { castEntry, favouriteOf, type StoryPack } from '../story/pack'
 
-/** The activities whose places open with a chapter (CS3): a working setup there waits for it, and so does a perk at her
- * line's place (RM36). Here since F51, so the perks' terms never import `ready.ts` (and `ready.ts` reads it from here). */
+/** The activities whose places open with a chapter: a working setup there waits for it, and so does a perk at her
+ * line's place. Here since F51, so the perks' terms never import `ready.ts` (and `ready.ts` reads it from here). */
 export const ACTIVITY_CHAPTER: Readonly<Partial<Record<Activity, number>>> = { ranch: 2, mining: 3, cooking: 4, expeditions: 5, serving: 6, forging: 7 }
 
-/** Her line as the perks say it: her favourite activity, with a quarry calling's mining at the Quarry (RM6). */
+/** Her line as the perks say it: her favourite activity, with a quarry calling's mining at the Quarry. */
 export type PerkLine = Exclude<Activity, 'expeditions'> | 'quarry'
 export const PERK_LINES: readonly PerkLine[] = ['farming', 'foraging', 'fishing', 'mining', 'quarry', 'ranch', 'cooking', 'serving', 'forging']
 
-/** Each level's perk (RM31), by id: F51's `hasPerk` and effects key off these. */
+/** Each level's perk, by id: F51's `hasPerk` and effects key off these. */
 export type PerkId =
   | 'tastes-loved' | 'hangouts' | 'line-10' | 'signature-dish' | 'rank-105' | 'night-chore' | 'tastes-all' | 'in-element' | 'mentor' | 'keepsake'
   | 'dates' | 'morning-item' | 'date-stargazing' | 'closest-bond' | 'line-20' | 'date-dance-boat' | 'night-chore-2' | 'engraving' | 'date-footrace'
   | 'proposal'
   | 'breakfast' | 'morning-item-2' | 'dream' | 'night-chore-3' | 'vow-renewal'
 
-/** A level and its perk. `place`: it works at her line's place, so it waits for that place's chapter (RM36). */
+/** A level and its perk. `place`: it works at her line's place, so it waits for that place's chapter. */
 export interface PerkDef {
   rung: string
   id: PerkId
@@ -79,7 +79,7 @@ export const PERK_PLACE: Readonly<Record<PerkLine, string>> = {
   cooking: 'the Kitchen', serving: 'the Restaurant', forging: 'the Forge',
 }
 
-/** A night chore by her line (RM32): what F6 brings each night. */
+/** A night chore by her line: what F6 brings each night. */
 export const NIGHT_CHORE: Readonly<Record<PerkLine, string>> = {
   farming: '+0.25 growth on a block each night',
   foraging: 'One item from the forest each night',
@@ -92,13 +92,13 @@ export const NIGHT_CHORE: Readonly<Record<PerkLine, string>> = {
   forging: '5% back on the Forge’s next tool',
 }
 
-/** A morning item by her line (RM32): what R2 and S2 leave in the Warehouse. */
+/** A morning item by her line: what R2 and S2 leave in the Warehouse. */
 export const MORNING_GOOD: Readonly<Record<PerkLine, string>> = {
   farming: 'crop of the season', foraging: 'good from the forest', fishing: 'fish', mining: 'ore', quarry: 'stone or gem', ranch: 'egg, milk or fleece',
   cooking: 'dish', serving: 'dish', forging: 'Fitting',
 }
 
-/** A perk in words for her line (decision 7): "+10% at the forest", "One item from the forest each night". */
+/** A perk in words for her line: "+10% at the forest", "One item from the forest each night". */
 export function perkWords(id: PerkId, line: PerkLine): string {
   const place = PERK_PLACE[line]
   switch (id) {
@@ -142,14 +142,14 @@ export function perkLineOf(pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string)
   return line === 'mining' && castEntry(pack, id)?.calling === 'quarry' ? 'quarry' : line
 }
 
-/** One level's perk for her: its words and, for a perk at her line's place, the chapter it waits for (RM36). */
+/** One level's perk for her: its words and, for a perk at her line's place, the chapter it waits for. */
 export interface Perk extends PerkDef {
   words: string
   /** "Opens with chapter n": her line's place waits for chapter `opens`; null when it works now. */
   opens: number | null
 }
 
-/** Every perk on her route for her line, in order, at the farm's chapter (RM31, RM36). */
+/** Every perk on her route for her line, in order, at the farm's chapter. */
 export function perksFor(line: PerkLine, chapter: number): Perk[] {
   const waits = lineChapter(line)
   return PERKS.map((p) => ({ ...p, words: perkWords(p.id, line), opens: p.place && waits !== null && chapter < waits ? waits : null }))

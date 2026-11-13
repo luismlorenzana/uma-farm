@@ -1,4 +1,4 @@
-// The Fields (F20; CS11, CS12, CS26, CS30, CS31, CS4's last night): blocks, planting and harvesting, tending and growth,
+// The Fields (CS4's last night): blocks, planting and harvesting, tending and growth,
 // regrowing and withering at night, seeds back, crop levels, stars, challenges, the counters and the shop's seeds.
 // Invented outfit ids and test kinds (`kinds.fixture.ts`) until F22's.
 import { describe, expect, it } from 'vitest'

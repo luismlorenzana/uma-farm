@@ -1,6 +1,6 @@
-// Save v3's parse (F17; core spec CS53): strict keys, explicit paths, every id checked. Outfit ids are checked by form, as in
+// Save v3's parse: strict keys, explicit paths, every id checked. Outfit ids are checked by form, as in
 // v2: the API has no master data, and an outfit a later release drops still parses. The parts v4 shares live in
-// `parse-loop.ts` (F46); the public names re-export from here, where they always were.
+// `parse-loop.ts`; the public names re-export from here, where they always were.
 import { ACTIVITIES } from '../farm/ranks'
 import { isCropId, isGoodId, isWarehouseId, type CropId } from '../goods/ids'
 import type { MorningSummary, NewsLine } from '../night/summary'
@@ -36,7 +36,7 @@ function parseRoster(value: unknown, path: string, today: number): Record<string
   return out
 }
 
-// --- The morning summary (F18 decision 11): ids and counts only, the morning it was built for ---------------------
+// --- The morning summary: ids and counts only, the morning it was built for ---------------------
 
 function parseSummary(value: unknown, path: string, today: number, roster: ReadonlySet<string>): MorningSummary {
   const o = object(value, path, ['day', 'bin', 'work', 'ranks', 'bonds', 'news', 'nudges'])

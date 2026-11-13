@@ -1,4 +1,4 @@
-// The forest, the Fishery and the stations (F22 decisions 1, 2, 5, 6 and 8): `/forest`, `/fishery`, `/mill`, `/sawmill`
+// The forest, the Fishery and the stations: `/forest`, `/fishery`, `/mill`, `/sawmill`
 // and `/smokehouse`, and their quick looks on the farm map. uma-kit/work owns the slot rows, the job
 // sheet, queues, Recall, Repeat and stopped queues; the farm supplies the save at its day, the env with master data's
 // talents, the What step (areas and spots, or what the Warehouse holds for a station), the sizes in days, its words and
@@ -128,7 +128,7 @@ function WorkPlacePage({ save, place }: { save: FarmSave; place: WorkPlaceId }) 
 interface JobRow extends LoopUmaRow {
   note: string
   tends: string | null
-  /** A swap takes her away tomorrow (F23): she can't take a job. */
+  /** A swap takes her away tomorrow: she can't take a job. */
   leaving: boolean
 }
 
@@ -220,7 +220,7 @@ function useSheetUma(outfitId: string | null, onUma: (id: string | null) => void
   useEffect(() => onUma(outfitId), [outfitId, onUma])
 }
 
-/** The What step at the forest or the Fishery (decision 5): every area or spot, those her rank hasn't opened greyed
+/** The What step at the forest or the Fishery: every area or spot, those her rank hasn't opened greyed
  * ("From Hand"), each with this season's goods and "About 5 a day" for her. */
 function WhereStep({ save, place, selection, talentOf, onUma }: {
   save: FarmSave; place: GatherPlace; selection: JobSelection & { onChange: (job: string) => void }; talentOf: TalentOf; onUma: (id: string | null) => void
@@ -247,7 +247,7 @@ function WhereStep({ save, place, selection, talentOf, onUma }: {
   )
 }
 
-/** The What step at a station (decision 2): its jobs, each with what the Warehouse holds for it at each star. */
+/** The What step at a station: its jobs, each with what the Warehouse holds for it at each star. */
 function StationStep({ save, station, selection, onUma }: {
   save: FarmSave; station: StationId; selection: JobSelection & { onChange: (job: string) => void }; onUma: (id: string | null) => void
 }) {
@@ -283,7 +283,7 @@ function StationStep({ save, station, selection, onUma }: {
   )
 }
 
-/** A station not built (decision 6): what it does, what opens it, and Build · 1,500g. */
+/** A station not built: what it does, what opens it, and Build · 1,500g. */
 function BuildCard({ save, station, say }: { save: FarmSave; station: StationId; say: Say }) {
   const lock = stationLock(save, station)
   const cost = STATION_RULES[station].cost

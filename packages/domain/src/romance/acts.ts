@@ -1,4 +1,4 @@
-// The acts that fill her bar (F47 decisions 4–9; romance spec RM13, RM15, RM18): a chat, a gift by her own tastes, praise,
+// The acts that fill her bar: a chat, a gift by her own tastes, praise,
 // her line at night and a festival together. Each pays through `addLove`, so the day's factors apply once (a gift ×3 on
 // her birthday, every act ×2 on her anniversary) and each says what it paid, for the "+N" that floats from her face.
 //
@@ -6,7 +6,7 @@
 //   Gift      loved 60 · liked 30 · neutral 10 · disliked 0, × (1 + 0.1 a star above ★1)   one a day each
 //   Praise    +20                                   once a day, when she's earned it (`praise.ts`)
 //   Her line  +10                                   night step 6, a day at one of her line's places
-//   Festival  +50                                   once a festival a year, on its team or entry (F39, F32 call it)
+//   Festival  +50                                   once a festival a year, on its team or entry (F32 call it)
 //
 // Rules on save v4 only; v3 keeps `farm/visitors.ts`' affinity. Loaded with the romance's screens and the night.
 import { draw } from '../farm/draw'
@@ -23,11 +23,11 @@ import { addLove, dayFactor, nextRung, roundPoints, type LovePaid } from './love
 
 /** RM13's fixed pays. */
 export const LOVE_POINTS = { chat: 15, praise: 20, line: 10, festival: 50 } as const
-/** A gift by her taste (RM13, RM15): disliked pays 0 and never takes points away. */
+/** A gift by her taste: disliked pays 0 and never takes points away. */
 export const GIFT_POINTS_V4: Readonly<Record<Taste, number>> = { loved: 60, liked: 30, neutral: 10, disliked: 0 }
 /** A gift's stars: × (1 + 0.1 a star above ★1). */
 export const giftStars = (stars: number): number => 1 + 0.1 * (stars - 1)
-/** What she says to a disliked gift (decision 5): one fixed line, original and kind. */
+/** What she says to a disliked gift: one fixed line, original and kind. */
 export const DISLIKED_LINE = 'She thanks you, a little puzzled.'
 
 /** Her route, or the refusal for someone not on the farm. */
@@ -37,7 +37,7 @@ function loveOf(save: SaveV4, id: string): Love {
   return love
 }
 
-// --- Chats (decision 4; RM18) ------------------------------------------------------------------------------------------
+// --- Chats ------------------------------------------------------------------------------------------
 
 /** A chat (tap her): +15, once a day each, home or away. */
 export function chatV4(save: SaveV4, id: string): LovePaid {
@@ -46,9 +46,9 @@ export function chatV4(save: SaveV4, id: string): LovePaid {
   return addLove({ ...save, today: { ...save.today, chats: [...save.today.chats, id] } }, id, LOVE_POINTS.chat, 'chat')
 }
 
-/** Her authored chat sets (F40's format, decision 16). */
+/** Her authored chat sets (F40's format). */
 export type ChatSet = 'friend' | 'partner' | 'spouse'
-/** Which of her sets she speaks (decision 4): none before Friendship 1 (her temperament's lines); `friend` from
+/** Which of her sets she speaks: none before Friendship 1 (her temperament's lines); `friend` from
  * Friendship 1 through the confession, `partner` from Romance 1 to the wedding, `spouse` after it. */
 export function chatSet(love: Pick<Love, 'stage' | 'level'>): ChatSet | null {
   switch (love.stage) {
@@ -60,7 +60,7 @@ export function chatSet(love: Pick<Love, 'stage' | 'level'>): ChatSet | null {
   }
 }
 
-/** Today's line from her (decision 4): her authored set for her stage from Friendship 1, else (before it, or a bible with
+/** Today's line from her: her authored set for her stage from Friendship 1, else (before it, or a bible with
  * no `chats`) her temperament's `CHAT_LINES`; drawn by the account, the day and her id, so it's the same all day. The
  * app fills `{farmer}` and `{name}`. */
 export function chatLineV4(save: Pick<SaveV4, 'account' | 'calendar' | 'love'>, pack: Pick<StoryPack, 'bibles'>, id: string, temperament: Temperament): string {
@@ -71,9 +71,9 @@ export function chatLineV4(save: Pick<SaveV4, 'account' | 'calendar' | 'love'>, 
   return lines[Math.floor(draw(save.account.uid, save.calendar.day, `chat:${id}`, 0) * lines.length)]!
 }
 
-// --- Gifts (decision 5; RM15) ------------------------------------------------------------------------------------------
+// --- Gifts ------------------------------------------------------------------------------------------
 
-/** Whether her taste for a good shows (RM15): learnt by giving it (`love.known`), her loved good from Friendship 1, every
+/** Whether her taste for a good shows: learnt by giving it (`love.known`), her loved good from Friendship 1, every
  * taste from Friendship 7. The last two are derived, never stored. */
 export function tasteKnown(pack: Pick<StoryPack, 'bibles'>, love: Pick<Love, 'stage' | 'level' | 'known'>, id: string, good: string): boolean {
   if (love.known.includes(good)) return true
@@ -81,7 +81,7 @@ export function tasteKnown(pack: Pick<StoryPack, 'bibles'>, love: Pick<Love, 'st
   return reached(7) || (reached(1) && pack.bibles.get(id)?.gifts.loved === good)
 }
 
-/** A gift's points for her today (decision 5): her taste's base × its stars × 3 on her birthday × 2 on her anniversary,
+/** A gift's points for her today: her taste's base × its stars × 3 on her birthday × 2 on her anniversary,
  * rounded once. 0 once her route is complete. */
 export function giftPoints(save: Pick<SaveV4, 'calendar' | 'love'>, id: string, taste: Taste, stars: number, birthday: boolean): number {
   const love = save.love[id]
@@ -89,7 +89,7 @@ export function giftPoints(save: Pick<SaveV4, 'calendar' | 'love'>, id: string, 
   return roundPoints(GIFT_POINTS_V4[taste] * giftStars(stars) * dayFactor(love, save.calendar.day, 'gift', birthday))
 }
 
-/** The gift picker's number (RM15): what a good at its stars pays her today, or null ("?") while her taste for it isn't
+/** The gift picker's number: what a good at its stars pays her today, or null ("?") while her taste for it isn't
  * known. */
 export function giftPreview(save: Pick<SaveV4, 'calendar' | 'love'>, pack: Pick<StoryPack, 'bibles'>, id: string, good: string, stars: number, birthdays: Birthdays = NO_BIRTHDAYS): number | null {
   const love = save.love[id]
@@ -97,7 +97,7 @@ export function giftPreview(save: Pick<SaveV4, 'calendar' | 'love'>, pack: Pick<
   return giftPoints(save, id, tasteOf(pack, id, good), stars, isBirthday(birthdays, id, save.calendar.day))
 }
 
-/** A gift (decision 5): one good from the Warehouse at the stars you choose, once a day each, home or away. Seeds aren't
+/** A gift: one good from the Warehouse at the stars you choose, once a day each, home or away. Seeds aren't
  * gifts. Her taste (`tasteOf`) sets the points; the good's taste is learnt. Disliked pays 0, never a loss. */
 export function giftV4(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string, item: string, stars: number, birthdays: Birthdays = NO_BIRTHDAYS): LovePaid & { taste: Taste } {
   const love = loveOf(save, id)
@@ -110,12 +110,12 @@ export function giftV4(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string
   return { ...addLove(given, id, GIFT_POINTS_V4[taste] * giftStars(stars), 'gift', isBirthday(birthdays, id, save.calendar.day)), taste }
 }
 
-// --- Praise (decision 6) -----------------------------------------------------------------------------------------------
+// --- Praise -----------------------------------------------------------------------------------------------
 
 /** Whether Praise +20 shows on her sheet: earned today and not yet paid. */
 export const canPraise = (save: Pick<SaveV4, 'today'>, id: string): boolean => save.today.praise.includes(id) && !save.today.praised.includes(id)
 
-/** Praise (decision 6): +20, once a day, after she's earned it (`earnPraise`). */
+/** Praise: +20, once a day, after she's earned it (`earnPraise`). */
 export function praiseV4(save: SaveV4, id: string): LovePaid {
   loveOf(save, id)
   if (save.today.praised.includes(id)) throw new SaveRuleError('busy', 'You’ve praised her today.')
@@ -123,7 +123,7 @@ export function praiseV4(save: SaveV4, id: string): LovePaid {
   return addLove({ ...save, today: { ...save.today, praised: [...save.today.praised, id] } }, id, LOVE_POINTS.praise, 'praise')
 }
 
-// --- Her line at night (decision 8; RM6, RM23) -------------------------------------------------------------------------
+// --- Her line at night -------------------------------------------------------------------------
 
 /** One Uma's pay at night, for the notes. */
 export interface Paid {
@@ -131,7 +131,7 @@ export interface Paid {
   points: number
 }
 
-/** Night step 6 (decision 8): +10 to each Uma who worked today at one of her line's places (`linePlaces`): a running job
+/** Night step 6: +10 to each Uma who worked today at one of her line's places (`linePlaces`): a running job
  * there (step 4's `worked`), or, for a farmer, a tended block with a growing plot (step 2's `tended`, the Fields). One a
  * night each; nothing for a day elsewhere. */
 export function payLines(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>, worked: readonly { outfitId: string; place: string }[], tended: readonly { outfitId: string }[]): { save: SaveV4; paid: Paid[] } {
@@ -151,13 +151,13 @@ export function payLines(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>,
   return { save: next, paid }
 }
 
-// --- A festival together (decision 9) ----------------------------------------------------------------------------------
+// --- A festival together ----------------------------------------------------------------------------------
 
 /** A festival's key in `love.festivals`. */
 export const festivalKey = (festival: FestivalId, year: number): string => `${festival}:${year}`
 
-/** A festival together (decision 9): +50 to each Uma on its team or entry, once a festival a year each. Written and tested
- * here; F39 (M5) and F32 (M6) call it once a festival has a team or an entry. */
+/** A festival together: +50 to each Uma on its team or entry, once a festival a year each. Written and tested
+ * here; F39 and F32 call it once a festival has a team or an entry. */
 export function festivalTogether(save: SaveV4, ids: readonly string[], festival: FestivalId, year: number): { save: SaveV4; paid: Paid[] } {
   const key = festivalKey(festival, year)
   let next = save

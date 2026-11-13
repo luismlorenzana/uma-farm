@@ -1,8 +1,8 @@
-// The HD-2D farm's preview switch (F11 decision 1): Home draws the farm on the shared stage (uma-stage) instead of
+// The HD-2D farm's preview switch: Home draws the farm on the shared stage (uma-stage) instead of
 // uma-kit's Hub, on this device only, off by default. Account's "HD-2D farm (preview)" row sets it, and so do `?stage=1`
 // and `?stage=0` at boot. Remembered with the kit's device preferences (`farm.stage`, the key `configureKit`'s prefix
 // gives), which survive blocked storage: a private window just reads "off". Rules never read it and the save never
-// changes because of it (FR14). Small and in the main chunk; the stage itself loads only when it's on.
+// changes because of it. Small and in the main chunk; the stage itself loads only when it's on.
 import { readPref, subscribePrefs, writePref } from '@luismlorenzana/uma-kit/ui'
 import { useSyncExternalStore } from 'react'
 

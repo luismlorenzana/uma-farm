@@ -1,4 +1,4 @@
-// The story pack's route (F56 decision 2; romance spec RM58): uma-server's `PrivatePackModule` at `/api/content/…`, where
+// The story pack's route: uma-server's `PrivatePackModule` at `/api/content/…`, where
 // uma-kit's content client reads private packs (as uma-rpg's and uma-quest's do), behind the owner guard on its own
 // controller. It serves an allowlist only: the index `story.json`, revalidated on every read, and the release's
 // hash-named files, cached for good. Production reads the private bucket `STORY_BUCKET`; locally `STORY_DIR`, the ignored
@@ -8,8 +8,8 @@ import { resolve } from 'node:path'
 import { PrivatePackModule, type PackAllow } from '@luismlorenzana/uma-server/content'
 import type { DynamicModule } from '@nestjs/common'
 
-/** What the route serves (decision 2): `story.json`, and `story/<name>.<hash8>.json` (`scripts/story/release.mjs`'s
- * names). Character art's pattern (RM61) joins it with that art. */
+/** What the route serves: `story.json`, and `story/<name>.<hash8>.json` (`scripts/story/release.mjs`'s
+ * names). Character art's pattern joins it with that art. */
 export const STORY_ALLOW: PackAllow = ['story.json', /story\/[a-z0-9]+(-[a-z0-9]+)*\.[a-f0-9]{8}\.json/]
 
 /** The route's module, read from the environment: the bucket when one is named (an empty variable names none), else the

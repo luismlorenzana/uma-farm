@@ -1,4 +1,4 @@
-// The Bonds page: the 25 story beats (CS45) and the conversations (CS46), their coverage, and a tester that runs CS46's
+// The Bonds page: the 25 story beats and the conversations, their coverage, and a tester that runs CS46's
 // choosing rule on two of the sample crew, so a template's reach can be seen before the game has it.
 import { chooseConversation } from './model.js'
 import { D, TEMPERAMENT_COLOR, crew, h, placeName, reviewDot, stat, temperaments, umaDisc } from './views.js'

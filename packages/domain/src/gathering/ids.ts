@@ -1,4 +1,4 @@
-// The forest's areas, the Fishery's spots and the stations' jobs by id (F22; core spec CS15, CS16, CS18): what a v3 work
+// The forest's areas, the Fishery's spots and the stations' jobs by id: what a v3 work
 // request names, and each request's parse. Light on purpose: the save's parse (in the initial JS) reads this file, while
 // the area and fish tables (`tables.ts`) and the kinds' rules (`kinds.ts`) load with the loop's screens and the night.
 import { goodOf, type GoodFamily } from '../goods/ids'
@@ -7,10 +7,10 @@ import type { LoopPlaceId, LoopRequestKind } from '../save/parse-v3'
 import type { LoopWorkRequest } from '../save/v3'
 import { parseStockKey } from '../save/warehouse'
 
-/** The forest's areas, deepest last (CS16). */
+/** The forest's areas, deepest last. */
 export const FOREST_AREAS = ['woods', 'hills', 'old-forest', 'mountain', 'misty-vale', 'world-tree'] as const
 export type ForestAreaId = typeof FOREST_AREAS[number]
-/** The Fishery's spots (CS15): the five freshwater ones and the two at sea (chapter 7, M6). */
+/** The Fishery's spots: the five freshwater ones and the two at sea (chapter 7). */
 export const FISHING_SPOTS = ['pond', 'river', 'lake', 'falls', 'moon-pool', 'sea-pier', 'deep-sea'] as const
 export type FishingSpotId = typeof FISHING_SPOTS[number]
 export const AREA_NAMES: Readonly<Record<ForestAreaId, string>> = {
@@ -20,18 +20,18 @@ export const SPOT_NAMES: Readonly<Record<FishingSpotId, string>> = {
   pond: 'the Pond', river: 'the River', lake: 'the Lake', falls: 'the Falls', 'moon-pool': 'the Moon Pool', 'sea-pier': 'the Sea Pier', 'deep-sea': 'the Deep Sea',
 }
 
-/** A gathering job is 1–4 days (decision 1); a queue adds up to three more jobs. */
+/** A gathering job is 1–4 days; a queue adds up to three more jobs. */
 export const MAX_GATHER_DAYS = 4
-/** A station job makes up to 100 items (decision 2). */
+/** A station job makes up to 100 items. */
 export const MAX_STATION_ITEMS = 100
 
-/** The three stations M4 opens (CS18), each at its gathering place's row. */
+/** The three stations M4 opens, each at its gathering place's row. */
 export const STATIONS = ['mill', 'sawmill', 'smokehouse'] as const
 export type StationId = typeof STATIONS[number]
 export const isStation = (id: string): id is StationId => (STATIONS as readonly string[]).includes(id)
 
-/** A station's job (CS18): where it runs and the families whose raw goods it refines one for one. Its days and name are
- * `STATION_JOB_RULES` (`tables.ts`). The Mill's Cloth waits for the ranch's wool (M5, F27). */
+/** A station's job: where it runs and the families whose raw goods it refines one for one. Its days and name are
+ * `STATION_JOB_RULES` (`tables.ts`). The Mill's Cloth waits for the ranch's wool. */
 export interface StationJob {
   readonly station: StationId
   readonly families: readonly GoodFamily[]
@@ -54,7 +54,7 @@ export function stationJobOf(output: string): StationJobId | null {
   return STATION_JOB_IDS.find((job) => (STATION_JOBS[job].families as readonly GoodFamily[]).includes(good.family)) ?? null
 }
 
-// --- The requests' parse (F17 decision 11): strict keys, the kind's own ids ------------------------------------------
+// --- The requests' parse: strict keys, the kind's own ids ------------------------------------------
 
 const fail = (path: string, message: string): never => {
   throw new SaveParseError(path, message)

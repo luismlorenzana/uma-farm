@@ -1,5 +1,5 @@
-// Building a station, and what its jobs can take from the Warehouse (F22 decisions 2 and 6; core spec CS18, CS3). A
-// station is locked until built: the Mill needs its plans (`buildings.mill` 0, chapter 1's reward, F24), the Sawmill and
+// Building a station, and what its jobs can take from the Warehouse. A
+// station is locked until built: the Mill needs its plans (`buildings.mill` 0, chapter 1's reward), the Sawmill and
 // the Smokehouse Farm Rank 3; building sets its level to 1 for its gold. Loaded with the screens.
 import { farmRankOf } from '../farm/farm'
 import { goodOf, refinedOf } from '../goods/ids'
@@ -18,7 +18,7 @@ export type StationLock =
   | { by: 'farm-rank'; rank: number }
   | { by: 'gold'; short: number }
 
-/** Why a station can't be built now (decision 6), or null when it can. */
+/** Why a station can't be built now, or null when it can. */
 export function stationLock(save: Pick<FarmSave, 'buildings' | 'farm' | 'gold'>, station: StationId): StationLock | null {
   if (stationBuilt(save, station)) return { by: 'built' }
   const rule = STATION_RULES[station]
@@ -27,7 +27,7 @@ export function stationLock(save: Pick<FarmSave, 'buildings' | 'farm' | 'gold'>,
   return save.gold < rule.cost ? { by: 'gold', short: rule.cost - save.gold } : null
 }
 
-/** Builds a station (decision 6): its level becomes 1 and its gold is spent. Refused while it's locked, and when it's
+/** Builds a station: its level becomes 1 and its gold is spent. Refused while it's locked, and when it's
  * built already. Never stamps `updatedAt`: the app's action does. */
 export function buildStation<S extends FarmSave>(save: S, station: StationId): S {
   const lock = stationLock(save, station)

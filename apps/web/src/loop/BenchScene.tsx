@@ -1,4 +1,4 @@
-// Ida Stone's scene (F53 decision 4; romance spec RM38, RM40): the morning after the first Romance 8, she comes up from
+// Ida Stone's scene: the morning after the first Romance 8, she comes up from
 // town and opens the old Forge as the ring bench. It plays over the farm once the summary is put away (F46's order), one
 // line a tap, Skip to its card; the card says what the bench does, with **See the bench** (`?sheet=bench`) and **Later**.
 // Read once (`scene:bench` in `diary.read`). Her bust is a lettered disc until F25's art is pinned. Loaded on demand from

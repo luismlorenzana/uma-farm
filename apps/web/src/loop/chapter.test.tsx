@@ -1,4 +1,4 @@
-// Farm Rank and chapter 1 as rendered (F24 decisions 4–8): the Diary's chapter card with each goal's count, the Farm
+// Farm Rank and chapter 1 as rendered: the Diary's chapter card with each goal's count, the Farm
 // Rank's chip and sheet, the morning's chapter, rank and milestone lines, and the closing scene the morning after the
 // chapter completes, once the summary is put away, with the recruit as your newest hand. Invented outfits (the album
 // fixture); the server is a stub.

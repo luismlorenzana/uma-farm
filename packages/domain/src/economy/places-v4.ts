@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/economy/places-v4.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// The Wilds' places (D224, D230; farm-by-line.md FL1–FL3, FL14, FL25–FL27): five rows of three, one line a row. The
+// Copied from uma-rpg packages/domain/src/economy/places-v4.ts at 30a322a, with its Wilds-only parts cut.
+// The Wilds' places (farm-by-line.md FL1–FL3): five rows of three, one line a row. The
 // gathering place gathers its raw items, its workbench processes them, and its making place makes the items an Uma uses.
 import { isLineItemId, lineItem, type MaterialLine } from '../items/lines'
 import { madeIdentity, type MadeLine } from '../items/made-id'
@@ -9,7 +9,7 @@ import { PROFESSIONS, type PlaceIdV3, type ProfessionId } from './professions'
 export interface PlaceSpecV4 {
   id: PlaceIdV3
   profession: ProfessionId
-  /** The one line the place works (FL2). */
+  /** The one line the place works. */
   line: MaterialLine
   /** Exactly one kind: `gather`, `refine`, `craft`, or `cut` at the Lapidary. */
   kinds: readonly JobKind[]
@@ -47,10 +47,10 @@ export const isProcessingPlaceV4 = (place: PlaceSpecV4): boolean => place.kinds.
 /** Whether a place makes an Uma's item. */
 export const isMakingPlaceV4 = (place: PlaceSpecV4): boolean => place.kinds.includes('craft') || place.kinds.includes('cut')
 
-/** The professions' names (FL14): the Forge's Arms Crafting, the Workbench's Tome Crafting. */
+/** The professions' names: the Forge's Arms Crafting, the Workbench's Tome Crafting. */
 export const PROFESSION_NAMES_V4: Readonly<Record<ProfessionId, string>> = Object.fromEntries(PROFESSIONS.map((p) => [p.id, p.name])) as Record<ProfessionId, string>
 
-/** The kind of job an item is at its one place; null for anything the place doesn't work (FL2, FL27). */
+/** The kind of job an item is at its one place; null for anything the place doesn't work. */
 export function jobKindV4(placeId: string, item: string): JobKind | null {
   const place = placeSpecV4(placeId)
   if (!place) return null

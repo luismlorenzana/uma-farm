@@ -1,4 +1,4 @@
-// The homestead as the screens show it (F54 decisions 2, 5, 7, 9, 13 and 14; romance spec RM41–RM46, RM22's Sleep at): the
+// The homestead as the screens show it (RM22's Sleep at): the
 // homestead sheet's rows (a house a row with its rooms, Build or Extend with its price, the next lot, the lots after), her
 // room in words, Tonight's Sleep at rows, the morning's house lines and the household's Ready offers. Pure, so the screens
 // and the tests read the same. Loaded on demand, the romance build only.
@@ -11,7 +11,7 @@ import { NO_HOME, type HomeWords } from './summary-words'
 type NameOf = (id: string) => string
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 
-// --- The homestead's sheet (decision 14; RM41's mockup) ---------------------------------------------------------------
+// --- The homestead's sheet (RM41's mockup) ---------------------------------------------------------------
 
 /** One house on the sheet: its rooms (a resident or a free room), its count, and what it can still take. */
 export interface HouseRow {
@@ -81,14 +81,14 @@ export const HOMESTEAD_TEXT = {
   ],
 } as const
 
-/** A piece of furniture's place (RM45): the house's name or "Not placed". */
+/** A piece of furniture's place: the house's name or "Not placed". */
 export function furnitureRows(save: SaveV4): { piece: number; name: string; house: number | null; where: string }[] {
   return save.homestead.furniture.map((house, piece) => ({
     piece, name: FURNITURE[piece]!, house, where: house === null ? 'Not placed' : save.homestead.houses[house]?.name ?? 'Not placed',
   }))
 }
 
-// --- Her room in words (decision 14) ----------------------------------------------------------------------------------
+// --- Her room in words ----------------------------------------------------------------------------------
 
 /** Her room for her profile and her Hearts row: her house's name, "Needs a room", and softly "She'd love her own house". */
 export function roomWords(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string): string[] {
@@ -97,7 +97,7 @@ export function roomWords(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: str
   return [...(home.needs ? [NEEDS_ROOM] : []), ...(home.wish ? [OWN_HOUSE_WISH] : [])]
 }
 
-// --- Tonight's Sleep at (decision 5; RM22) ------------------------------------------------------------------------------
+// --- Tonight's Sleep at ------------------------------------------------------------------------------
 
 export interface SleepView {
   key: string
@@ -112,7 +112,7 @@ export interface SleepView {
   nights: string | null
   picked: boolean
 }
-/** Sleep at's rows (decision 5): the Farmhouse and each house with someone home, ☕ and "8 nights", and her room on her
+/** Sleep at's rows: the Farmhouse and each house with someone home, ☕ and "8 nights", and her room on her
  * birthday; the pick, else the default, marked. */
 export function sleepViews(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, birthdays: Birthdays, nameOf: NameOf): SleepView[] {
   const now = tonightsHouse(save)
@@ -126,9 +126,9 @@ export function sleepViews(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, birthd
   }))
 }
 
-// --- The morning (decision 7) ------------------------------------------------------------------------------------------
+// --- The morning ------------------------------------------------------------------------------------------
 
-/** The homestead's morning words (decision 7): a house's name, its house line drawn live (the pack's, "Name: “…”", else her
+/** The homestead's morning words: a house's name, its house line drawn live (the pack's, "Name: “…”", else her
  * temperament's template) and the household's Ready offers. */
 export function homeWords(save: SaveV4, pack: Pick<StoryPack, 'household'>, nameOf: NameOf, temperamentOf: (id: string) => Temperament): HomeWords {
   return {
@@ -141,7 +141,7 @@ export function homeWords(save: SaveV4, pack: Pick<StoryPack, 'household'>, name
   }
 }
 
-// --- The household's offers (decision 10) -----------------------------------------------------------------------------
+// --- The household's offers -----------------------------------------------------------------------------
 
 /** The household's Ready offers for the morning and the Hearts header: "⌂ Household scene 1 · Ready". */
 export function householdLines(save: SaveV4, pack: Pick<StoryPack, 'household'>): { id: HouseholdId; text: string; to: string }[] {

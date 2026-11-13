@@ -1,4 +1,4 @@
-// The price rule (F19 decisions 1–3; CS9, CS4): the spec's worked prices, CS14's, CS15's and CS16's tables as the rule's
+// The price rule: the spec's worked prices, CS14's, CS15's and CS16's tables as the rule's
 // output row for row, the crops' own prices, stars never compounded, and demand by season.
 import { describe, expect, it } from 'vitest'
 import { farmDay } from '../farm/calendar'

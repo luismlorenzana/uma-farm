@@ -1,5 +1,5 @@
-// What one sync round should do, as a pure decision (copied from uma-rpg at 30a322a; its D32): adopt the server's save,
-// push ours, or nothing. Generic over the save, so the store's v3 stays v3 (F24).
+// What one sync round should do, as a pure decision (copied from uma-rpg at 30a322a): adopt the server's save,
+// push ours, or nothing. Generic over the save, so the store's v3 stays v3.
 import { resolveConflict, type StoredSave } from '@farm/domain'
 
 export interface LocalState<S extends StoredSave = StoredSave> {

@@ -1,4 +1,4 @@
-// The forest's areas, the Fishery's spots, the fish's sizes, a day's haul and the stations (F22; core spec CS15–CS18):
+// The forest's areas, the Fishery's spots, the fish's sizes, a day's haul and the stations:
 // the spec's tables as data, row for row. Loaded with the loop's screens and the night, never in the initial JS (the
 // save's parse reads only `ids.ts`).
 import type { Season } from '../farm/calendar'
@@ -8,7 +8,7 @@ import type { FishingSpotId, ForestAreaId, StationId, StationJobId } from './ids
 /** One good in a place's season, and its share of the draws in percent. */
 export type Share = readonly [good: string, percent: number]
 
-/** A forest area (CS16): the rank that opens it, its two grades, and each season's goods with their shares. */
+/** A forest area: the rank that opens it, its two grades, and each season's goods with their shares. */
 export interface ForestArea {
   readonly opens: Rank
   readonly grades: readonly [number, number]
@@ -74,12 +74,12 @@ export const FOREST: Readonly<Record<ForestAreaId, ForestArea>> = {
   },
 }
 
-/** A fishing spot (CS15): the rank that opens it, the chapter (and the boat) the sea also needs, and each season's fish. */
+/** A fishing spot: the rank that opens it, the chapter (and the boat) the sea also needs, and each season's fish. */
 export interface FishingSpot {
   readonly opens: Rank
-  /** The sea's spots wait for chapter 7 (M6); null for freshwater. */
+  /** The sea's spots wait for chapter 7; null for freshwater. */
   readonly chapter: number | null
-  /** The Deep Sea also needs the boat (40,000g, M6). */
+  /** The Deep Sea also needs the boat (40, 000g). */
   readonly boat: boolean
   readonly seasons: Readonly<Record<Season, readonly Share[]>>
 }
@@ -130,22 +130,22 @@ export const FISHERY: Readonly<Record<FishingSpotId, FishingSpot>> = {
   },
 }
 
-/** Each fish's size range in cm (CS15). */
+/** Each fish's size range in cm. */
 export const FISH_SIZES: Readonly<Record<string, readonly [min: number, max: number]>> = {
   carp: [20, 60], trout: [25, 70], sardine: [12, 25], mackerel: [25, 50], salmon: [50, 120], 'sea-bream': [30, 70], eel: [40, 120], tuna: [80, 250],
   silverfin: [40, 90], 'rainbow-koi': [40, 100],
 }
 
-// --- A day's haul (CS17) ---------------------------------------------------------------------------------------------
+// --- A day's haul ---------------------------------------------------------------------------------------------
 
-/** Items a day at Novice before the factors: the forest 5, the Fishery 3 (the Mine and the Quarry 4, M5). */
+/** Items a day at Novice before the factors: the forest 5, the Fishery 3 (the Mine and the Quarry 4). */
 export const HAUL_BASE = { forest: 5, fishery: 3 } as const
-/** The tool's factor by tier, Basic → Mythril (CS17): the Axe in the forest, the Rod at the Fishery. */
+/** The tool's factor by tier, Basic → Mythril: the Axe in the forest, the Rod at the Fishery. */
 export const TOOL_YIELD: readonly number[] = [1, 1.15, 1.3, 1.45, 1.6]
-/** Well fed (CS22): ×1.25 items a day for a 1-day kind. */
+/** Well fed: ×1.25 items a day for a 1-day kind. */
 export const WELL_FED_YIELD = 1.25
 
-// --- The stations (CS18) ---------------------------------------------------------------------------------------------
+// --- The stations ---------------------------------------------------------------------------------------------
 
 /** Items a station turns a day at Novice D, before her rank, talent and well fed. */
 export const STATION_RATE = 8
@@ -153,7 +153,7 @@ export const STATION_RATE = 8
 /** A station: the place whose activity's rank it uses, what it costs to build, and what opens it. */
 export interface Station {
   readonly cost: number
-  /** The Mill needs its plans (chapter 1's reward, F24); the Sawmill and the Smokehouse Farm Rank 3. */
+  /** The Mill needs its plans (chapter 1's reward); the Sawmill and the Smokehouse Farm Rank 3. */
   readonly opens: { readonly by: 'plans' } | { readonly by: 'farm-rank'; readonly rank: number }
 }
 export const STATION_RULES: Readonly<Record<StationId, Station>> = {
@@ -162,7 +162,7 @@ export const STATION_RULES: Readonly<Record<StationId, Station>> = {
   smokehouse: { cost: 2000, opens: { by: 'farm-rank', rank: 3 } },
 }
 
-/** Each station job's least days and its name (CS18): a job lasts at least its days, 1 or the preserves' 2. */
+/** Each station job's least days and its name: a job lasts at least its days, 1 or the preserves' 2. */
 export const STATION_JOB_RULES: Readonly<Record<StationJobId, { readonly days: number; readonly name: string }>> = {
   flour: { days: 1, name: 'Flour' },
   'sugars-oils': { days: 1, name: 'Sugars and oils' },

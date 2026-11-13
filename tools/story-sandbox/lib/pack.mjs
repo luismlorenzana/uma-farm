@@ -1,4 +1,4 @@
-// The cast pack: the Studio's tier export as uma-quest's import makes it (its SB2), with each character's face and art.
+// The cast pack: the Studio's tier export as uma-quest's import makes it, with each character's face and art.
 // The sandbox uses it only to show the Umas' pictures beside F40's private files; F40's cast is `content/story/cast.json`.
 // Names, images and profiles are private content in the ignored content/story/pack/; this code holds none of them.
 

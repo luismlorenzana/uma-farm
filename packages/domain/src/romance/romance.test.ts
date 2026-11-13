@@ -1,4 +1,4 @@
-// The authored start (F46 decisions 6, 8–11, 13 and 16; romance spec RM1–RM9): the stand-in pack read and validated,
+// The authored start: the stand-in pack read and validated,
 // the opening three joining when the opening is read, authored arrivals at night step 8 and with chapter 1, her arrival
 // scene's +50 and choice, her favourite line and tastes from the pack, and the farmer's name. Invented ids only: the
 // stand-ins 9000001–9000003, and casts of 9000004 onward built here. Nothing on v4 reaches the Gate's or the start's draws.
@@ -49,7 +49,7 @@ function packWith(...more: Omit<CastEntry, 'paragraph' | 'outfitId'>[]): StoryPa
   return { ...PACK, cast }
 }
 const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK) => ({ roster: [], kinds: TEST_KINDS, story })
-/** A named v4 farm on `day`, the opening read and the stand-ins home., their ties seeded (F52) and
+/** A named v4 farm on `day`, the opening read and the stand-ins home., their ties seeded and
  * already listed on an earlier morning, so a night's Hearts show only its own lines. */
 function farm(day = 2): SaveV4 {
   const fresh = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }

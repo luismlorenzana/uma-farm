@@ -1,5 +1,5 @@
-// Stars (F19; core spec CS26): each good adds up quality points Q from its sources, then draws its stars,
-// `1 + ⌊Q + u⌋` clamped to 1–5, with `u` a seeded draw in [0, 1) (CS8). So the expected stars are 1 + Q for Q from 0 to
+// Stars: each good adds up quality points Q from its sources, then draws its stars,
+// `1 + ⌊Q + u⌋` clamped to 1–5, with `u` a seeded draw in [0, 1). So the expected stars are 1 + Q for Q from 0 to
 // 4, and Q of 4 or more is always ★5. This file holds the formula and the terms of its own rows; F21 gives the rank and
 // talent terms (`rankQuality` in `farm/rank-rules.ts`, CS31's 0.5 a rank; `talentQuality` in `farm/talents.ts`, G −0.75
 // … S +1), and F20 and F22 add them up for their goods.
@@ -22,7 +22,7 @@ export interface QualitySources {
   tool?: number
   /** Well fed: `WELL_FED_QUALITY`. */
   boost?: number
-  /** Her keepsake (romance spec RM31, RM33; F51 decision 8): +0.25 at her line's place from Friendship 10, +0.5 from
+  /** Her keepsake: +0.25 at her line's place from Friendship 10, +0.5 from
    * Spouse 5 (`keepsakeQuality`), save v4 only. */
   keepsake?: number
 }

@@ -1,8 +1,8 @@
-// The ring bench as its sheet shows it (F53 decision 5; romance spec RM38's mockup): one row a grade you can make now, each
+// The ring bench as its sheet shows it (romance spec RM38's mockup): one row a grade you can make now, each
 // with the three goods it would take (the lowest-value refined goods of that grade, any family, any mix) and the ring it
 // makes; a tap on one of the three offers the grade's other goods held; CS25's recipe greyed until chapter 3; her bonus
 // once married; and the one button, "Make an Iron Ring · 1 a day". Pure, so the sheet and the tests read the same. Every
-// word says "you" (RS2). Loaded on demand with the sheet, the romance build only.
+// word says "you". Loaded on demand with the sheet, the romance build only.
 import {
   benchGrades, benchPick, benchStock, forgeRecipe, goodName, MAKE_BONUS, MINING_CHAPTER, ringId, ringName, ringPercent, type BenchInput, type BenchStock, type SaveV4,
 } from '@farm/domain'
@@ -26,7 +26,7 @@ export const BENCH_TEXT = {
 export const withArticle = (name: string): string => `${/^[AEIOU]/.test(name) ? 'an' : 'a'} ${name}`
 /** The button: "Make an Iron Ring · 1 a day". */
 export const makeWords = (grade: number): string => `Make ${withArticle(ringName(grade))} · 1 a day`
-/** CS25's recipe line (decision 5): greyed "Opens with chapter 3" before it, the grade's own pair after. */
+/** CS25's recipe line: greyed "Opens with chapter 3" before it, the grade's own pair after. */
 export function forgeRecipeWords(chapter: number): { text: string; open: boolean } {
   return chapter >= MINING_CHAPTER
     ? { text: 'CS25’s recipe works too: 2 ingots + 1 cut gem of the grade', open: true }
@@ -38,7 +38,7 @@ export const forgePairWords = (grade: number): string => {
   return `2 ${goodName(r.ingot)} + 1 ${goodName(r.gem)}`
 }
 
-/** One grade's row (decision 5): its three, the ring and what it's worth to her once married. */
+/** One grade's row: its three, the ring and what it's worth to her once married. */
 export interface BenchRow {
   grade: number
   ring: string

@@ -1,5 +1,5 @@
-// Copied from uma-rpg packages/domain/src/items/made.test.ts at 30a322a (F4, FM2); cuts in docs/technical/wilds-copy.md.
-// The made items (H77; the farm by line since H112, D224, FL3, FL14): names, places and grades. Their recipes, one line
+// Copied from uma-rpg packages/domain/src/items/made.test.ts at 30a322a, with its Wilds-only parts cut.
+// The made items (the farm by line since H112): names, places and grades. Their recipes, one line
 // each, are `made-v4.ts`' (checked in `work/kinds-v4.test.ts`).
 import { describe, expect, it } from 'vitest'
 import { madeName, madePlace } from './made'

@@ -1,4 +1,4 @@
-// The Hearts tab as rendered (F48 decisions 2–8; RM51–RM53): the romance build's bar (Farm · Hearts · End the day · Diary
+// The Hearts tab as rendered: the romance build's bar (Farm · Hearts · End the day · Diary
 // · Menu) and the M4 build's unchanged; `/roster` landing on the Work view with her `?uma=` kept; the Hearts rows with
 // 9000001 Ready first, the filter chips with their counts and Friends; her profile from a row with its track, Next card,
 // perks, gifts and ties, switching to Work; the Work view's album with her level in each card's corner. The invented

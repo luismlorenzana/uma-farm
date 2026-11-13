@@ -1,19 +1,19 @@
-// Home on the shared HD-2D stage (F11; hd2d-farm FR3–FR14; kit-farm KF2–KF14): the farm as uma-stage's band stage draws
-// it, portrait and 9 tiles across, between uma-kit's bars (FR7). The save is the design (`farmDesign`, F11 decision 2); the
-// kit is uma-art's `kit-farm` with the stand-in's frames for what it lacks (`farm-kit.ts`, KF14, D73), the stand-in alone
+// Home on the shared HD-2D stage: the farm as uma-stage's band stage draws
+// it, portrait and 9 tiles across, between uma-kit's bars. The save is the design (`farmDesign`); the
+// kit is uma-art's `kit-farm` with the stand-in's frames for what it lacks (`farm-kit.ts`), the stand-in alone
 // while its page is slow or if it fails. Names, locks, Ready badges and pips are uma-kit's, the same models the Hub's place
-// links carry, as overlays projected from each plot (F11 decision 4); a tap opens what the Hub's place opens, a long-press
-// its quick look (F11 decision 5); the season is the light (F11 decision 6); a place's open sheet fades the roofs in front
-// of its slots (F11 decision 7); Home opens on the first Ready place's band and keeps its scroll this session (F11 decision
-// 8). One canvas engine: the Hub's Phaser scene never loads here (FR4). Battery (FR13): saver on, and the loop stops when
+// links carry, as overlays projected from each plot; a tap opens what the Hub's place opens, a long-press
+// its quick look; the season is the light; a place's open sheet fades the roofs in front
+// of its slots; Home opens on the first Ready place's band and keeps its scroll this session (F11 decision
+// 8). One canvas engine: the Hub's Phaser scene never loads here. Battery: saver on, and the loop stops when
 // the stage says it's at rest (uma-stage 0.4.0's `onSettled`), and while the app or Home is hidden.
 //
 // F12 puts the Umas on it (`farm-figures.ts`): each where the save says she is, a sprite when her outfit's set is live
 // (at most 8, `figure-looks.ts`) and a standee otherwise; she walks to her slot when put to work here, runs home when
-// recalled, and everyone is placed at once at boot, in the morning and after a sync (decisions 1–3, 7). A Ready Uma has
-// a bubble at her head: a tap collects (decision 4, 5), and only she counts for the fade, so nothing is faded at rest
+// recalled, and everyone is placed at once at boot, in the morning and after a sync. A Ready Uma has
+// a bubble at her head: a tap collects, and only she counts for the fade, so nothing is faded at rest
 // (ST4's `setFadeFigures`). A tap on her opens her sheet. Loaded on demand, with three.js, only when the preview switch is
-// on (F11 decision 1).
+// on.
 import { dateOf, farmDesign, farmPlots, parseStockKey, receiptItems, type FarmPlot, type FarmSave } from '@farm/domain'
 import { ArchPips, type HubMapPlace } from '@luismlorenzana/uma-kit/hub'
 import { LockedIcon } from '@luismlorenzana/uma-kit/ui'
@@ -41,9 +41,9 @@ export interface FarmStageProps {
   save: FarmSave
   /** The Hub's place models (FarmMap's): names, links, locks, Ready badges and pips, the homestead's on v4. */
   places: readonly HubMapPlace[]
-  /** The Hub's work view (FarmMap's): who holds which slot, as the pips read it (F12 decision 1). */
+  /** The Hub's work view (FarmMap's): who holds which slot, as the pips read it. */
   work: Pick<WorkView, 'cards'>
-  /** Whose heart event is Ready today (v4; F48 decision 10), as the pips' ♥ reads it. */
+  /** Whose heart event is Ready today (v4), as the pips' ♥ reads it. */
   hearts: ReadonlySet<string>
   /** The place whose sheet or quick look is open: the fade shows its slots. */
   open: string | null
@@ -89,12 +89,12 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
   const loop = useRef({ running: false, raf: 0, idle: 0, lastCentre: Number.NaN, lastSize: '', pointer: false, hidden: false, paused: false })
   const press = useRef<{ x: number; y: number; timer: number; long: boolean } | null>(null)
   /** The kit the farm is drawn with: null until kit-farm's page loads or `KIT_WAIT_MS` passes, then the stand-in until the
-   * page arrives (KF14). */
+   * page arrives. */
   const [kit, setKit] = useState<FarmKit | null>(readyFarmKit)
   /** This stage has its world (so a new design keeps the camera) and its season (so a new one eases); reset with each stage. */
   const built = useRef(false)
   const graded = useRef(false)
-  // The figures (F12): the reading the farm shows and its day (kept between Home's visits this session), whether this stage
+  // The figures: the reading the farm shows and its day (kept between Home's visits this session), whether this stage
   // has drawn it yet, who's on the stage, the walks under way, the rebuilds (a walk a rebuild dropped is walked again), and
   // the Ready Umas the fade counts.
   const applied = useRef<FarmFigure[] | null>(keptFigures()?.figures ?? null)
@@ -145,7 +145,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     }
   }
 
-  /** Places every bubble at its Uma's head (decision 4), kept inside the stage's edges, hiding those off screen. */
+  /** Places every bubble at its Uma's head, kept inside the stage's edges, hiding those off screen. */
   const placeBubbles = () => {
     const s = stage.current
     if (!s) return
@@ -177,7 +177,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     loop.current.lastCentre = Number.NaN
   }
 
-  // --- The loop (FR13): it runs while anything moves, a finger is down or a walk is under way, and stops at rest. -------
+  // --- The loop: it runs while anything moves, a finger is down or a walk is under way, and stops at rest. -------
 
   /** Starts the loop if it's stopped: a touch, a resize, a new world, a figure moved, a set loaded, a fade or a season. */
   const wake = () => {
@@ -217,7 +217,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     placeBubbles()
   }
 
-  // --- The figures (F12 decisions 1–3, 7) ------------------------------------------------------------------------------
+  // --- The figures ------------------------------------------------------------------------------
 
   /** How an Uma looks now: her set's key and loader, and her face as decoded so far (one starts loading if it hasn't). */
   const lookOf = (id: string) => {
@@ -245,7 +245,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
   }
 
   /** Walks (or runs) her to a tile. A walk a rebuild dropped (ST4's `keepWalks` couldn't keep it) is walked again from where
-   * she stands (decision 3); one with no way places her there at once, since the counts never wait on a walk (FR14). */
+   * she stands; one with no way places her there at once, since the counts never wait on a walk. */
   const go = (s: BandStage, id: string, to: Tile, facing: Facing, run: boolean, then?: () => void) => {
     const standing = onStage.current.get(id)
     if (!standing) return
@@ -318,9 +318,9 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     }
   }
 
-  /** The save's figures onto the stage: everyone at once at boot, in the morning and after a sync, else only who moved
-   * (decision 3). A new stage first stands everyone where the farm last showed them (Home's last visit). The fade counts
-   * the Ready Umas only (ST4). */
+  /** The save's figures onto the stage: everyone at once at boot, in the morning and after a sync, else only who moved.
+   *A new stage first stands everyone where the farm last showed them (Home's last visit). The fade counts
+   * the Ready Umas only. */
   const syncFigures = () => {
     const s = stage.current
     if (!s || !built.current) return
@@ -357,7 +357,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     onStage.current.clear()
     walks.current.clear()
     bubbled.current = new Set()
-    // Only a Ready Uma counts for the fade (ST4): nobody, until the figures arrive.
+    // Only a Ready Uma counts for the fade: nobody, until the figures arrive.
     s.setFadeFigures(() => false)
     const size = () => {
       const r = frame.getBoundingClientRect()
@@ -393,7 +393,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     }
   }, [])
 
-  // The kit (KF14): kit-farm once its page loads; the stand-in if it's slow, swapped when it arrives, or if it fails.
+  // The kit: kit-farm once its page loads; the stand-in if it's slow, swapped when it arrives, or if it fails.
   useEffect(() => {
     if (kit) return
     let live = true
@@ -403,7 +403,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
   }, [])
 
   // The world: rebuilt when the design changes (a place opens, a crop grows) or the kit arrives. A rebuild keeps the camera
-  // and every walk whose path still stands (ST4); the figures follow.
+  // and every walk whose path still stands; the figures follow.
   useEffect(() => {
     const s = stage.current
     if (!s || !kit) return
@@ -429,10 +429,10 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     wake()
   }, [world, kit])
 
-  // The figures follow the save (decision 3).
+  // The figures follow the save.
   useEffect(() => { syncFigures() }, [figures])
 
-  // Looks: master data's sets and faces once they load (decision 7).
+  // Looks: master data's sets and faces once they load.
   useEffect(() => {
     const s = stage.current
     if (!s) return
@@ -440,7 +440,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     wake()
   }, [view, faceTick])
 
-  // The season's light: at once on load, eased over a second when a morning brings the next (F11 decision 6).
+  // The season's light: at once on load, eased over a second when a morning brings the next.
   useEffect(() => {
     const s = stage.current
     if (!s) return
@@ -449,7 +449,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     wake()
   }, [season])
 
-  // The fade (F11 decision 7): nothing at rest; the open place's slots while its sheet is up.
+  // The fade: nothing at rest; the open place's slots while its sheet is up.
   useEffect(() => {
     stage.current?.setFadeMarkers(fadeMarkers(open))
     wake()
@@ -506,7 +506,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     const p = point(e)
     const hits = s.pointerUp(p.x, p.y)
     if (hits === null) return
-    // Figures first (decision 5): her sheet; anything else as F11's taps.
+    // Figures first: her sheet; anything else as F11's taps.
     const first = hits[0]?.ref
     if (first?.kind === 'figure') { void navigate(umaSheet(first.id, latest.current.save.version), { state: { back: true } }); return }
     const target = tapTarget(hits, groundTile(s.view, p.x, p.y), latest.current.plots, latest.current.places)
@@ -534,7 +534,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     setFlights((all) => [...all, { key: ++flightSeq.current, items: icons, count, from: { x: from.x, y: from.y - BUBBLE / 2 }, to: warehousePoint() }])
   }
 
-  /** A bubble's tap (decision 5): her work collected (the items rise to the Warehouse, and she starts her queued job or runs
+  /** A bubble's tap: her work collected (the items rise to the Warehouse, and she starts her queued job or runs
    * home), her block harvested, or her Ready heart event played. A refused collect leaves the bubble. */
   const tapBubble = async (figure: FarmFigure) => {
     const bubble = figure.bubble
@@ -592,7 +592,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
   )
 }
 
-/** A place's chip over the stage (F11 decision 4), as the Hub draws its place link: its pips in a half arch over its plot,
+/** A place's chip over the stage, as the Hub draws its place link: its pips in a half arch over its plot,
  * the Ready badge at its foot, and its name pill under the apron, a locked one's lock in the pill (the stage's roofs rise
  * over the band above, so a lock at the box's corner would read as that band's). */
 function PlaceChip({ plot, place, box, onRef }: { plot: FarmPlot; place: HubMapPlace; box: Box; onRef: (el: HTMLDivElement | null) => void }) {
@@ -620,7 +620,7 @@ function PlaceChip({ plot, place, box, onRef }: { plot: FarmPlot; place: HubMapP
 /** The rise every new bubble makes (none with reduced motion). */
 const RISE: Keyframe[] = [{ transform: 'translateY(8px)', opacity: 0 }, { transform: 'none', opacity: 1 }]
 
-/** A Ready Uma's bubble at her head (decision 4): her work's item (or the Fields' crop) on a round card with a tail, ♥ in
+/** A Ready Uma's bubble at her head: her work's item (or the Fields' crop) on a round card with a tail, ♥ in
  * its corner when her heart event is Ready too, or ♥ alone. A 44 pt target; a tap collects. */
 function FigureBubble({ figure, day, name, reducedMotion, onTap, onRef }: {
   figure: FarmFigure; day: number; name: string; reducedMotion: boolean; onTap: () => void; onRef: (el: HTMLButtonElement | null) => void

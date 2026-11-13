@@ -1,4 +1,4 @@
-// "Work done" notifications (copied from uma-rpg's public/push-sw.js at 30a322a, its D63; the farm's F6). Imported by the
+// "Work done" notifications (copied from uma-rpg's public/push-sw.js at 30a322a; the farm's F6). Imported by the
 // generated service worker (vite.config.ts, workbox.importScripts). Every push shows a notification: iOS revokes push for
 // an app that receives one silently. The badge is the slots ready to collect; opening the app clears it.
 self.addEventListener('push', (event) => {
