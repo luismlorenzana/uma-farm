@@ -205,7 +205,10 @@ On day 1, in order: (1) the name; (2) **"The Overgrown Farm"**, re-cut: the Mayo
 Old Ben's nine Carrot seeds and the tended row, Marta's shop and the bin, ending as three Umas come up the road; (3)
 **reading or skipping it brings the opening three** (the cast file's `opening`: a farmer, a forager and a fisher, the
 owner's priority Umas), home at Friendship 0, a player's change; (4) each one's **arrival scene**, in that order; the
-third ends on **chapter 1's card** and **Plant the carrots**. No hello lines, no picks.
+third ends on **chapter 1's card** and **Plant the carrots**. No hello lines, no picks. The card's reward names **a new
+hand** only when the cast has a chapter-1 arrival (`chapterArrival`), never who (decision 14); the stand-in's three all
+come with the opening, so its card reads "+500g, the Mill's plans, 250 Farm Rank points". The Diary's card and the
+morning's "Chapter 1 done" line say the same (D74).
 
 <!-- live:opening-v4 -->
 | # | Who | Line |

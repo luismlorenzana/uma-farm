@@ -28,7 +28,7 @@ import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { finishArrivalScene, readSceneOnce } from './actions'
-import { rewardWords } from './goal-words'
+import { chapterHand, rewardWords } from './goal-words'
 import { talentTable } from './talents'
 
 /** Each speaking cast member's disc colour, until F25's busts. */
@@ -146,9 +146,11 @@ function Bust({ line, nameOf }: { line: SceneLine; nameOf: (id: string) => strin
   )
 }
 
-/** Chapter 1's card (CS42 beat 5): its six goals and the first tap, planting. */
-function ChapterOneCard({ onPlant }: { onPlant: () => void }) {
+/** Chapter 1's card (CS42 beat 5): its six goals and the first tap, planting. Its reward names a new hand on v3, and on v4
+ * only when the cast has a chapter-1 arrival (D74). */
+export function ChapterOneCard({ onPlant }: { onPlant: () => void }) {
   const chapter = chapterOf(1)!
+  const hand = useChapterHand(1)
   return (
     <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 px-4 pb-4" data-chapter-card={1}>
       <div className="rounded-md border border-hairline bg-panel p-4 shadow-2">
@@ -159,7 +161,7 @@ function ChapterOneCard({ onPlant }: { onPlant: () => void }) {
             <li key={goal.id} className="flex gap-2 text-[15px]"><span className="w-4 shrink-0 font-semibold text-ink-faint">{i + 1}</span>{goal.text}</li>
           ))}
         </ol>
-        <p className="pt-2 text-[13px] text-ink-soft">Reward: {rewardWords(1)}.</p>
+        <p className="pt-2 text-[13px] text-ink-soft" data-reward>Reward: {rewardWords(1, hand)}.</p>
       </div>
       <Button className="w-full" onClick={onPlant} data-action="plant">Plant the carrots</Button>
     </div>
@@ -169,13 +171,14 @@ function ChapterOneCard({ onPlant }: { onPlant: () => void }) {
 /** The scene's last card (CS42 beat 5): chapter 1's six goals and the first tap, planting; or the chapter's reward and
  * chapter 2's line. */
 function ChapterCard({ scene, onDone }: { scene: ChapterSceneId; onDone: (to: string | null) => void }) {
+  const hand = useChapterHand(1)
   if (scene === 'scene:1:open') return <ChapterOneCard onPlant={() => onDone('/fields')} />
   const next = chapterOf(2)!
   return (
     <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 px-4 pb-4" data-chapter-card={2}>
       <div className="rounded-md border border-hairline bg-panel p-4 shadow-2">
         <p className="text-micro text-ink-soft">Chapter 1 done</p>
-        <p className="text-[15px]">{rewardWords(1)}</p>
+        <p className="text-[15px]" data-reward>{rewardWords(1, hand)}</p>
         <p className="text-micro pt-3 text-ink-soft">Chapter 2</p>
         <h2 className="font-display text-[22px] font-bold">{next.title}</h2>
         <p className="text-[15px] text-ink-soft">Soon</p>
@@ -183,6 +186,13 @@ function ChapterCard({ scene, onDone }: { scene: ChapterSceneId; onDone: (to: st
       <Button className="w-full" onClick={() => onDone('/')} data-action="start-day">Start the day</Button>
     </div>
   )
+}
+
+/** Whether chapter `n`'s reward brings a new hand on this save and pack (D74). */
+function useChapterHand(chapter: number): boolean {
+  const save = useLoopSave()
+  const story = useStory()
+  return chapterHand(save?.version ?? 3, story, chapter)
 }
 
 // --- Her arrival scene (F46 decision 10) ----------------------------------------------------------------------------------

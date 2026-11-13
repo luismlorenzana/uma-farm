@@ -9,7 +9,8 @@ import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
 import { romanceOn } from '../app/romance'
 import { useLoopSave } from '../save/game'
-import { goalCount, milestoneWords, rewardWords } from './goal-words'
+import { useStory } from '../story/story'
+import { chapterHand, goalCount, milestoneWords, rewardWords } from './goal-words'
 
 // The romance build's only: the switch folds at build time, and the deployed build drops the import.
 const Conversations = /* @__PURE__ */ lazy(() => import('./Conversations'))
@@ -45,11 +46,14 @@ export default function DiaryPage() {
 function ChapterCard({ save }: { save: FarmSave }) {
   const chapter = chapterOf(save.farm.chapter)
   const goals = goalStates(save)
+  // On v4 a chapter's hand is the cast's arrival for it (D74).
+  const story = useStory()
+  const reward = (n: number) => rewardWords(n, chapterHand(save.version, story, n))
   if (!chapter || !goals) {
     return (
       <Panel label={`Chapter ${save.farm.chapter}`} data-chapter={save.farm.chapter}>
         <div className="py-1">
-          {save.farm.chapter > 1 && <p className="text-[13px] text-ink-soft" data-done-chapter>Chapter {save.farm.chapter - 1} done · {rewardWords(save.farm.chapter - 1)}</p>}
+          {save.farm.chapter > 1 && <p className="text-[13px] text-ink-soft" data-done-chapter>Chapter {save.farm.chapter - 1} done · {reward(save.farm.chapter - 1)}</p>}
           <h2 className="font-display pt-1 text-[20px] font-bold">{chapter?.title ?? 'Next chapter'}</h2>
           <p className="text-ink-soft" data-soon>Soon</p>
         </div>
@@ -74,7 +78,7 @@ function ChapterCard({ save }: { save: FarmSave }) {
           </li>
         ))}
       </ol>
-      <p className="pt-2 pb-1 text-[13px] text-ink-soft">Reward: {rewardWords(chapter.chapter)}</p>
+      <p className="pt-2 pb-1 text-[13px] text-ink-soft" data-reward>Reward: {reward(chapter.chapter)}</p>
     </Panel>
   )
 }

@@ -66,12 +66,14 @@ export interface ReadyNow {
 /** The morning summary as the card shows it: CS5's sections in order, empty ones hidden, each line a tap. On v4, §4 Hearts
  * also shows while someone is `ready` (decision 9). */
 export function summaryParts(summary: MorningSummary | MorningSummaryV4, nameOf: NameOf = someone, ready: readonly ReadyNow[] = [], pairs: PairWords | null = null,
-  home: HomeWords = NO_HOME): SummaryPart[] {
+  home: HomeWords = NO_HOME, hand?: ChapterHand): SummaryPart[] {
   const sections = 'hearts' in summary
     ? SUMMARY_SECTIONS_V4.filter((section) => (section === 'hearts' ? summary.hearts.length + ready.length + home.household.length > 0 : summary[section].length > 0))
     : summarySections(summary)
-  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs, home) }))
+  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs, home, hand) }))
 }
+/** Whether a chapter done tonight brought a new hand (`chapterHand`, D74); without it, the chapter's own reward says. */
+export type ChapterHand = (chapter: number) => boolean
 
 /** What the homestead's lines read beyond the summary (F54), from the save and the pack as the card shows: a house's name,
  * the house line (drawn live), and the household's Ready offers. None on v3 or before the pack loads. */
@@ -187,7 +189,7 @@ function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, hom
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 
 function sectionLines(summary: MorningSummary | MorningSummaryV4, section: SummarySection | SummarySectionV4, nameOf: NameOf, ready: readonly ReadyNow[], pairs: PairWords | null,
-  home: HomeWords): SummaryLine[] {
+  home: HomeWords, hand?: ChapterHand): SummaryLine[] {
   const version = 'hearts' in summary ? 4 : 3
   switch (section) {
     case 'bin': {
@@ -218,7 +220,7 @@ function sectionLines(summary: MorningSummary | MorningSummaryV4, section: Summa
         switch (line.kind) {
           case 'season': return { key: 'season', text: `${SEASON_NAMES[line.season]} begins`, to: '/?sheet=calendar' }
           case 'festival': return { key: `festival:${line.when}`, text: `${festivalName(line.festival)} ${line.when}`, to: peek('festival') }
-          case 'chapter': return { key: 'chapter', text: chapterDoneWords(line.chapter), to: '/diary', tag: 'Chapter' }
+          case 'chapter': return { key: 'chapter', text: chapterDoneWords(line.chapter, hand?.(line.chapter)), to: '/diary', tag: 'Chapter' }
           case 'farm-rank': return { key: `farm-rank:${line.rank}`, text: farmRankWords(line.rank, version), to: '/?sheet=rank', tag: 'Farm Rank' }
           case 'milestone': return { key: `milestone:${line.id}`, text: milestoneWords(line.id), to: '/diary', tag: 'Milestone' }
           case 'dorm': return { key: 'dorm', text: `Dorm level ${line.level} · ${bedsFor(version, line.level)} beds`, to: DORM }
