@@ -58,7 +58,8 @@ the initial JS. **F11**'s CI measured both builds at 171.68 KB (deployed) and 17
 about 0.4 KB; the stage's chunk (`FarmStage`: three.js, uma-stage's band stage and stand-in kit, the farm's design) is
 161.5 KB gzip (615 KB raw) and loads only with the switch on, `LAZY_MODULES` holding three.js, uma-stage's band stage and stand-in
 kit, `FarmStage.tsx`, `farm-stage.ts` and the domain's `farm/stage.ts`. **The kit pin** (D73) adds `farm-kit.ts` and
-kit-farm's `atlas.json` to the chunk and to `LAZY_MODULES`: 165.4 KB gzip (632 KB raw) on this Mac, main JS unchanged.
+kit-farm's `atlas.json` to the chunk and to `LAZY_MODULES`: 166.8 KB gzip (632 KB raw) as CI measured, main JS unchanged
+(171.67 KB deployed, 171.97 KB romance).
 
 **The farm's kit (D73; kit-farm.md KF13, KF14):** `farm-kit.ts` loads `@luismlorenzana/uma-art` 2.27.0's `kit-farm` (one
 2048 page, wave 1's 87 frames) the first time the stage Home mounts: the atlas parsed and checked for kind `farm` with
