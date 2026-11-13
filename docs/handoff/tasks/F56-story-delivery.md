@@ -1,22 +1,32 @@
-# F56 — The private story's delivery and the go-live with the wipe
+# F56 — Go live: one build, the story pack published, the wipe
 
-**uma-farm · Claude · M · Needs: [F40](F40-story-authoring.md) (the private pack holds every cast Uma's bible and
-arrival scene) · Unblocks: save v5 and the workshops ([the roadmap's Phase 2](../../roadmap.md#phase-2-the-whole-farm))
-· [Roadmap](../../roadmap.md#phase-1-one-game-not-three): Phase 1, step 1.2**
+**uma-farm · Claude · M · Needs: F61–F65 · Unblocks: the workshops ([the roadmap's Phase 2](../../roadmap.md#phase-2-the-whole-farm))
+· [Roadmap](../../roadmap.md#phase-1-live-with-the-storys-frame): Phase 1, step 1.6**
 
-> **Where it stands.** Do steps 1–4 are done, and the code is merged dark: the release and publish scripts
-> (`pnpm story:release`, `pnpm story:publish`), the `/api/content/story…` route, the loader (the index, verified files,
-> the last index offline, the dev server's stand-in), and decision 10's newer-save words in the deployed build.
-> Production plays v3 as before.
+> **Where it stands.** The delivery is built and merged dark:
+> - the release and publish scripts (`pnpm story:release`, `pnpm story:publish`);
+> - the `/api/content/story…` route;
+> - the loader: the index, verified files, the last index offline;
+> - the newer-save words in the deployed build.
 >
-> **The cloud is in place.** The owner said yes on 2026-11-11 to the bucket and its one binding, after decision 1's cost
-> table. `infra/bootstrap.sh`'s step 9 created `gs://uma-farm-content` and bound `farm-api-runtime` to it; the
-> repository variable `STORY_BUCKET` is set; [infrastructure.md](../../technical/infrastructure.md) has the bucket, the
-> grant and the isolation checks so far (the troubleshooter's refusals, a signed-out 401).
+> The owner said yes on 2026-11-11 to the bucket and its one binding. `infra/bootstrap.sh`'s step 9 created
+> `gs://uma-farm-content` and bound `farm-api-runtime` to it, the repository variable `STORY_BUCKET` is set, and
+> [infrastructure.md](../../technical/infrastructure.md) has the bucket, the grant and the isolation checks.
 >
-> **What's left** (decision 9 d–g): once the private pack is in `content/story/` on this Mac with every cast Uma's bible
-> and arrival scene, `pnpm story:publish`, decision 7's signed and unlisted reads, the go-live, the owner's phone check
-> and the production read. **Stop before the publish and the go-live until that pack is there.**
+> **What changed with the roadmap:**
+> - the go-live no longer waits for a finished story: it comes after F61–F65, with whatever pack exists, or none;
+> - placeholders (F62) play the rest, and every later pack is published the same way, adding what it has;
+> - F61 lets `pnpm story:release` publish any pack, so the old rule that every cast Uma needs her bible and arrival
+>   scene is gone.
+>
+> **What's left:**
+> 1. the publish of the latest pack, if there is one;
+> 2. the signed, unlisted reads;
+> 3. the go-live: the romance switch removed, one build, v4 shipped with the owner's v3 backed up first;
+> 4. the owner's phone check;
+> 5. the production read.
+>
+> **Ask the owner in one line before the wipe ships.**
 
 ## Why
 

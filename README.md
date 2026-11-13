@@ -1,9 +1,10 @@
 # uma-farm
 
 A personal farm game inspired by *Umamusume: Pretty Derby*, played on the owner's iPhone as a Home Screen web app at
-https://uma-farm.web.app. Days are turns: you plant, gather, process and ship with a roster of Umas, end the day, and
-read the morning. The farm's Umas are an authored cast with a romance to each, written by the owner (built, switched off
-until the story ships), and the farm is moving onto an HD-2D stage (an opt-in preview today).
+https://uma-farm.web.app. It's never public: only the owner's Google account can sign in. Days are turns: you plant,
+gather, process and ship with a roster of Umas, end the day, and read the morning. Next, per the roadmap: every
+character lives in town, you choose who to meet, and her story, written by the owner over time, unlocks as story packs
+arrive. The farm is moving onto an HD-2D stage (an opt-in preview today).
 
 ## Where things are
 
