@@ -62,6 +62,18 @@ welcoming you to town.
   - a met character with no bed waits in town, and moves in when invited after a bed frees;
   - her events play, written or as placeholders.
 
+## From the story (2026-11-13)
+
+The pack now has:
+- `welcome`: five characters, one a morning. Each one's arrival scene is written as her visit to the Gate on her
+  morning (the first to the fifth), and nods at the mornings before it.
+- `meet` for eleven of the other fifteen: festivals, a place built, a Farm Rank, a season, two days' talks, and two
+  "after another character's meeting" (`<id>:arrival`).
+- Its other four have no `meet`, so they use the default.
+
+**Asked (small):** the story sandbox shows a welcome-list character's trigger as "Talk with her on 3 different days
+(the default)". Decision 1 says she meets on the first talk, so it should say so.
+
 ## Deliver
 
 Branch `feat/f67-meeting-her` and a pull request; merge and deploy. In it:

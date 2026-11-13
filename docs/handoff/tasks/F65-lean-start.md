@@ -35,6 +35,20 @@ Today's start re-cuts an old opening around a fixed three; that goes.
 - `pnpm lint`, `pnpm test` and `pnpm build` pass.
 - At 390×844, a new farm is on Home in three taps after the name.
 
+## From the story (2026-11-13)
+
+The pack has its own opening now, for decision 1's "the pack's own opening":
+
+- **Where:** `content/story/opening.json`, `{ "about"?: string, "steps": [ … ] }`, with steps in a route's shape
+  (`narrate`, `say`, `thought`, `wait`). Today it's four lines: three narrated, then the farmer's thought. It ends
+  with the farmer told that someone is already waiting at the Gate: the welcome list's first visitor (F67).
+- **Asked:**
+  - read it as the opening's lines, with the three placeholder lines when it's missing;
+  - add it to [the pack's menu](../../story-pack.md) and to `story:release`;
+  - check it with the same line limits as a scene.
+- The pack no longer has `opening` or an `arrives` of `opening`. Until this packet lands, the welcome list walks up
+  the road at the old opening (the reader's note says so).
+
 ## Deliver
 
 Branch `feat/f65-lean-start` and a pull request; merge and deploy. In it:

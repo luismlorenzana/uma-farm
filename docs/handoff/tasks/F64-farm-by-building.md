@@ -77,6 +77,15 @@ come from income, farmed resources and relationship milestones ("x married Umas 
   - the projects list shows the next offers;
   - the first wedding opens house 1.
 
+## From the story (2026-11-13)
+
+The story's launch pass gates its characters' chapters on the farm's builds (`built` from the trigger menu): the
+Mine, the Quarry, the Cutter, the Kitchen, the Restaurant and the Forge. One chapter waits on the boat, and the pack names
+**Farm Rank 6** for it because the farm has no place id for the dock or the boat yet.
+
+- **Asked:** give the dock and the boat place ids in `FARM_PLACE_IDS` when they become places you build, so a `built`
+  gate can name them. The story then switches that chapter's gate to the boat.
+
 ## Deliver
 
 Branch `feat/f64-farm-by-building` and a pull request; merge and deploy. In it:

@@ -51,6 +51,35 @@ should be present in the town, and a character's full story should begin when yo
   - a talk counts once a day;
   - the People list finds anyone by name.
 
+## From the story (2026-11-13)
+
+**The town's people (the owner's direction):** no character in the game is a man, and every townsperson is an Uma from
+the Uma Ranker's NPC board. That changes decision 1's "the town's own cast stays".
+
+- **Today:** the game's eleven original townsfolk (`CAST` in `story/cast.ts`: Mayor Hollis Pryor, Marta Quill, Old Ben
+  Carver and the rest) include several men.
+- **Asked:**
+  - the town's people become characters from master data, role for role, by `characterId`;
+  - their names and busts come from master data at run time, so no name enters git;
+  - a scene's `say` by one of them shows her name and bust, not "An Uma";
+  - the story sandbox's Town page shows them.
+- **The mapping is the story's:** `content/story/town.json`'s `people` lists 14 roles. Each has a `characterId`, `does`
+  (one line), and `game`, the townsfolk id it replaces (`hollis-pryor`, `marta-quill`, `ben-carver`, `dale-hart`,
+  `gus-talbot`, `rosa-bell`, `juno-park`, `ida-stone`, `nils-berg`, `wren-ashby`, `cole-varga`). Three roles are
+  new: the courier, the musician and the chapel bell's keeper.
+- Until this lands, the routes speak the town's people in narration.
+
+**The spots:** the pack names the town's spots, for decision 3 and "left to the worker: the spots' names".
+
+- `town.json`'s `spots`: `plaza`, `market`, `cafe`, `harbour`, `library`, `track`. Each has a `name` ("The
+  Plaza", "The Hilltop Track"), a `blurb`, and a `keeper`: the townsperson usually there.
+- Each cast entry in `cast.json` has `spot`: her favourite spot, the one she's at more often. It's the story's own
+  field today.
+- **Asked:**
+  - use these ids and names for the town's spots;
+  - read `spot` as her favourite;
+  - add both to [the pack's menu](../../story-pack.md), so a `spot` trigger can name them.
+
 ## Deliver
 
 Branch `feat/f66-the-town` and a pull request; merge and deploy. In it:
