@@ -12,7 +12,7 @@
   `pnpm docs:update` regenerates its tables and every HTML page in `docs/pages/`.
 - This game stands alone: its own save, rules and economy. It reads master data from uma-platform by stable IDs only,
   and never imports from uma-rpg, uma-racer or uma-quest at runtime.
-  - uma-rpg's work engine is copied at a recorded commit with its tests, never imported, and stays only for v2 saves.
+  - Save v4 is the only save: an older one starts over on the device, and the server keeps it in `saveBackups`.
   - **Parcels are one-way** (parked until the farm's own game is done): the farm sends and the games receive. No server
     ever writes into a save, the farm's or a game's. Each game's accept list and caps are that game's to set.
 - Shared changes (master data schema, shared packages, `uma-work`, `uma-kit/work`, `uma-post`, original art) happen in a
