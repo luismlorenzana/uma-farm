@@ -1,6 +1,6 @@
 // The Farm Story Sandbox's entry: loads the story from the local server and routes between views.
 import { bondsView } from './bonds.js'
-import { characterView, charactersView, indexStory, relationshipsView, worldView } from './people.js'
+import { characterView, charactersView, countsView, indexStory, relationshipsView, worldView } from './people.js'
 import { playerView } from './player.js'
 import { castView, chaptersView, chapterView, D, farmView, formatView, h, index } from './views.js'
 
@@ -28,7 +28,7 @@ async function saveReview(input) {
 
 function route() {
   const [head, a, b, ...rest] = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent)
-  const nav = { '': 'characters', characters: 'characters', c: 'characters', rel: 'rel', world: 'world', chapters: 'chapters', ch: 'chapters', town: 'town', cast: 'town', bonds: 'bonds', farm: 'farm', format: 'format', play: a === 'ch' ? 'chapters' : 'bonds' }[head] ?? 'characters'
+  const nav = { '': 'characters', characters: 'characters', c: 'characters', rel: 'rel', counts: 'counts', world: 'world', chapters: 'chapters', ch: 'chapters', town: 'town', cast: 'town', bonds: 'bonds', farm: 'farm', format: 'format', play: a === 'ch' ? 'chapters' : 'bonds' }[head] ?? 'characters'
   for (const link of document.querySelectorAll('[data-nav]')) link.classList.toggle('on', link.dataset.nav === nav)
   let view
   try {
@@ -36,6 +36,7 @@ function route() {
     else if (head === 'c' && a) view = characterView(a, saveReview)
     else if (head === 'rel') view = relationshipsView(saveReview)
     else if (head === 'world') view = worldView(saveReview)
+    else if (head === 'counts') view = countsView()
     else if (head === 'chapters') view = chaptersView()
     else if (head === 'town' || head === 'cast') view = castView()
     else if (head === 'bonds') view = bondsView()

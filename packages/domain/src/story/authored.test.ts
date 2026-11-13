@@ -1,6 +1,6 @@
 // The authored story's format and validator (F40 RS15–RS18, D42), on the invented stand-in only.
 import { describe, expect, it } from 'vitest'
-import { bibleIssues, castIssues, pairIssues, routeIssues, RUNGS, stepIssues, tiesIssues, type StoryContext } from './authored'
+import { bibleIssues, bibleTagIssues, castIssues, pairIssues, routeIssues, RUNGS, stepIssues, tagsIssues, tiesIssues, type StoryContext, type TagEntry } from './authored'
 import { STAND_IN, STAND_IN_BIBLE, STAND_IN_CAST, STAND_IN_PAIR, STAND_IN_ROUTE, STAND_IN_TIES, STAND_INS } from './authored.fixture'
 
 const ctx: StoryContext = { umas: new Set(STAND_INS) }
@@ -183,5 +183,50 @@ describe('heart events (F49 decision 14)', () => {
     expect(routeWith('confession', [choose({ answer: 'yes' }), answer])).toEqual(['Event confession: only its last choice point carries an answer'])
     expect(routeWith('wedding', [play(), choose(), choose(), choose()])).toEqual([])
     expect(routeWith('wedding', [choose(), choose(), choose(), choose()])).toEqual(['Event wedding: every path has 1–3 choice points (it has 4–4)'])
+  })
+})
+
+describe('the cast on the Ranker (F58)', () => {
+  it('records the Ranker’s revisions, optional and checked when present', () => {
+    expect(castIssues({ ...clone(STAND_IN_CAST), ranker: { boardRevision: 337, profilesRevision: 6, pulledAt: '2026-11-12T10:00:00Z' } }, ctx)).toEqual([])
+    expect(castIssues({ ...clone(STAND_IN_CAST), ranker: { boardRevision: 0, profilesRevision: 6, pulledAt: 'yesterday' } }, ctx))
+      .toEqual(['ranker is { boardRevision, profilesRevision, pulledAt }: two revisions from 1 and a date (F58)'])
+  })
+})
+
+describe('the tag sheet and the ties’ sources (F59)', () => {
+  const tag = (characterId: string, change: Partial<TagEntry> = {}): TagEntry => ({
+    characterId, favouriteLine: 'farming', season: 'spring', festival: 'flower-show', loved: 'golden-carrot',
+    reasons: { favouriteLine: 'An invented reason.', season: 'An invented reason.', festival: 'An invented reason.', loved: 'An invented reason.' }, ...change,
+  })
+  it('one entry a cast Uma, each value valid with its reason; a new good is flagged as proposed', () => {
+    expect(tagsIssues({ version: 1, tags: STAND_INS.map((id) => tag(id)) }, ctx)).toEqual([])
+    const issues = tagsIssues({ version: 1, tags: [
+      tag('9000001', { loved: 'moon-cake' }), tag('9000002', { season: 'monsoon' as never, reasons: { favouriteLine: '', season: 'x', festival: 'x', loved: 'Her husband’s favourite.' } }), tag('9000002'),
+    ] }, ctx)
+    expect(issues).toEqual([
+      'Tags 9000001: loved moon-cake isn’t a good; mark it proposed if it’s a new one',
+      'Tags 9000002: unknown season',
+      'Tags 9000002: a one-line reason for favouriteLine',
+      'Tags 9000002 loved: “husband” genders the farmer (RS2)',
+      'Tags 9000002: twice',
+      '9000003 has no tags',
+    ])
+    expect(tagsIssues({ version: 1, tags: [tag('9000001', { loved: 'moon-cake', proposed: true }), tag('9000002'), tag('9000003')] }, ctx)).toEqual([])
+  })
+  it('her bible agrees with her tags', () => {
+    expect(bibleTagIssues(STAND_IN_BIBLE, tag(STAND_IN))).toEqual([])
+    expect(bibleTagIssues(STAND_IN_BIBLE, tag(STAND_IN, { season: 'winter', loved: 'carrot' }))).toEqual([
+      'season: the bible says spring, the tag sheet winter (F59)',
+      'loved: the bible says golden-carrot, the tag sheet carrot (F59)',
+    ])
+  })
+  it('a tie says where it comes from: real (with uma-quest’s relationship id once it exists) or story', () => {
+    const ties = clone(STAND_IN_TIES)
+    ties.ties[0] = { ...ties.ties[0]!, source: 'real', from: 'rel-0001' }
+    ties.ties[1] = { ...ties.ties[1]!, source: 'story' }
+    expect(tiesIssues(ties, ctx)).toEqual([])
+    ties.ties[1] = { ...ties.ties[1]!, source: 'legend' as never, from: 'rel-0002' }
+    expect(tiesIssues(ties, ctx)).toEqual(['Tie 2: source is real or story (F59)', 'Tie 2: from is a real tie’s relationship id (F59)'])
   })
 })

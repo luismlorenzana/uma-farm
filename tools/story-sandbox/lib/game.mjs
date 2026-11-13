@@ -61,7 +61,7 @@ export async function loadGame(src) {
         dateGames: [...authored.DATE_GAMES], tones: [...authored.TONES], emotes: [...authored.EMOTES], callings: [...authored.CALLINGS],
       },
       validator: { castIssues: authored.castIssues, tiesIssues: authored.tiesIssues, bibleIssues: authored.bibleIssues, routeIssues: authored.routeIssues, pairIssues: authored.pairIssues,
-        householdIssues: authored.householdIssues },
+        householdIssues: authored.householdIssues, tagsIssues: authored.tagsIssues, bibleTagIssues: authored.bibleTagIssues, unscriptedBeats: authored.unscriptedBeats },
     }
   } catch (error) {
     return { ok: false, error: `The game's story didn't load: ${error.message.split('\n')[0]}` }

@@ -68,10 +68,10 @@ The owner reads each layer before the next is written. The farm's code packets (
 ## Decisions made
 
 > **Added 2026-11-12 (D64; amended by D72, local first): the cast's source, three packets before layer 2, and where it's read.**
-> - **The cast's source is the Uma Ranker** ([F58](F58-cast-on-the-ranker.md)): the Studio's boards retired into it.
+> - **The cast's source is the Uma Ranker** (F58 (done, D78)): the Studio's boards retired into it.
 >   The 20 stand; the Ranker's order is the authoring order and D44's priority.
-> - **Before layer 2:** [F58](F58-cast-on-the-ranker.md) (the cast on the Ranker, the opening three and the pilot
->   re-checked), [F59](F59-tags-and-ties.md) (the tag sheet, and each tie's source), [F60](F60-story-counts.md) (the
+> - **Before layer 2:** F58 (done, D78) (the cast on the Ranker, the opening three and the pilot
+>   re-checked), F59 (done, D79) (the tag sheet, and each tie's source), [F60](F60-story-counts.md) (the
 >   counts, the owner's read, the balance). They mirror uma-quest's Q57–Q60.
 > - **Layer 2 includes each Uma's arrival scene.** F56's release refuses a pack where any cast Uma lacks her bible or
 >   her arrival scene, so the go-live needs all 20 of both and none of the pilot's full routes.

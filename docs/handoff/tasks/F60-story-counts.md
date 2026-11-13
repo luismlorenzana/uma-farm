@@ -14,7 +14,7 @@ written around them.
 
 ## Context (read first)
 
-- [F59](F59-tags-and-ties.md): the tag sheet and each tie's source.
+- F59 (done, D79): the tag sheet and each tie's source.
 - `tools/story-sandbox/` (`lib/model.mjs`, `public/views.js`, and how it reads the domain's validator in place) and
   `story/authored.ts`.
 
