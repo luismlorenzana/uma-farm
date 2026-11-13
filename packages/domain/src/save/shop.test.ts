@@ -1,5 +1,5 @@
 // The shop's frame: lines with a price and a gate, bought with gold into the Warehouse at ★1. These lines
-// are invented; F20's seeds by season and tier are tested in fields/fields.test.ts.
+// are invented; the seeds by season and tier are tested in fields/fields.test.ts.
 import { describe, expect, it } from 'vitest'
 import { FARM_RANK_POINTS } from '../farm/farm'
 import { SaveRuleError } from './rules'
@@ -18,8 +18,8 @@ const reason = (run: () => unknown): string | null => {
   }
 }
 
-describe('the shop (decision 7)', () => {
-  it('sells the season\'s seeds (F20)', () => {
+describe('the shop', () => {
+  it('sells the season\'s seeds', () => {
     expect(shopLines(newSave('u1', AT)).map((l) => l.id)).toEqual(['seed-carrot', 'seed-potato', 'seed-mint', 'seed-onion', 'seed-cabbage', 'seed-asparagus'])
   })
 

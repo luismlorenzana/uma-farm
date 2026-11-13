@@ -1,7 +1,6 @@
-// F40's story in the sandbox: the world bible, the cast in arrival order, each Uma's page with her route as a visible
-// ladder (27 rungs: her arrival, friendship 1–10, the confession, romance 1–10, the proposal, the wedding, spouse 1, 3 and
-// 5; F46), and
-// the ties as one graph.
+// The authored story in the sandbox: the world bible, the cast in arrival order, each Uma's page with her route as a
+// visible ladder (27 rungs: her arrival, friendship 1–10, the confession, romance 1–10, the proposal, the wedding,
+// spouse 1, 3 and 5), and the ties as one graph.
 // Every name, picture and line comes from the private content/story/ at run time.
 import { D, h, reviewDot, reviewPanel, stat } from './views.js'
 
@@ -42,7 +41,7 @@ export function arrivalWords(a) {
   return `After ${a.after}`
 }
 const issuesList = (issues) => (issues?.length ? h('ul', { class: 'issues' }, issues.map((i) => h('li', { text: i }))) : null)
-const noStory = () => h('div', { class: 'note-box' }, h('b', { text: 'No story yet. ' }), 'F40’s private files go in content/story/: world.md, cast.json, ties.json, then umas/, routes/ and pairs/.')
+const noStory = () => h('div', { class: 'note-box' }, h('b', { text: 'No story yet. ' }), 'The private story files go in content/story/: world.md, cast.json, ties.json, then umas/, routes/ and pairs/.')
 
 /** Where the story stands, layer by layer. */
 function layers() {
@@ -66,7 +65,7 @@ export function charactersView() {
   const cast = st.cast.data
   return h('div', {},
     h('h1', { text: 'Characters' }),
-    h('p', { class: 'muted', text: 'F40’s cast: the SS Umas of the Playable Umas board, in the order they arrive on the farm. Each is a grown woman with a life of her own (RS3); click one for her page, her ties and her route.' }),
+    h('p', { class: 'muted', text: 'The cast: the SS Umas of the Playable Umas board, in the order they arrive on the farm. Each is a grown woman with a life of her own; click one for her page, her ties and her route.' }),
     layers(),
     st.cast.issues.length ? h('div', { class: 'error-box' }, h('b', { text: 'cast.json' }), issuesList(st.cast.issues)) : null,
     h('div', { class: 'cast-list' }, cast.umas.map((u, i) => {
@@ -183,14 +182,14 @@ export function countsView() {
     Object.keys(groups).length ? h('table', { class: 'table' }, Object.entries(groups).map(([k, ids]) => h('tr', {}, h('td', {}, h('b', { text: k })), h('td', { text: ids.length }), h('td', {}, who(ids))))) : h('p', { class: 'muted', text: 'Nothing yet.' }))
   return h('div', {},
     h('h1', { text: 'Counts' }),
-    h('p', { class: 'muted', text: 'What the cast, the tag sheet, the ties and the bibles add up to (F60), each with the Umas behind it. Nothing is forced to a quota: read it, and say what to balance.' }),
+    h('p', { class: 'muted', text: 'What the cast, the tag sheet, the ties and the bibles add up to, each with the Umas behind it. Nothing is forced to a quota: read it, and say what to balance.' }),
     h('div', { class: 'summary' },
       stat(c.umas, 'Umas'), stat(`${c.tagged}/${c.umas}`, 'tagged'), stat(c.ties.total, `ties · ${c.ties.real} real · ${c.ties.story} farm-born`),
       stat(`${c.bibles}/${c.umas}`, 'bibles'), stat(c.eventsPer.reduce((n, e) => n + e.scripted, 0), `events scripted of ${c.umas * (c.eventsPer[0]?.of ?? 27)}`),
       stat(c.pairsPer.reduce((n, p) => n + Math.min(p.written, p.of), 0), `pair conversations toward ${c.umas * 2}`)),
     h('div', { class: 'two' },
       h('div', { class: 'stack' },
-        table('Callings', c.byCalling, 'From her board playstyle (FM7).'),
+        table('Callings', c.byCalling, 'From her board playstyle.'),
         table('Favourite work', c.byLine), table('Seasons', c.bySeason), table('Festivals', c.byFestival), table('Loved gifts', c.byLoved),
       ),
       h('div', { class: 'stack' },
@@ -216,7 +215,7 @@ export function relationshipsView(onReview) {
   const kinds = [...new Set(ties.map((t) => t.kind))]
   return h('div', {},
     h('h1', { text: 'Relationships' }),
-    h('p', { class: 'muted', text: 'The cast’s ties as one graph (RS11): who are friends, rivals, mentor and protégée, teammates or sisters in all but name, drawn from their real careers or born on the farm. The thicker the line, the stronger the tie; each Uma’s two strongest get authored pair conversations (RS12).' }),
+    h('p', { class: 'muted', text: 'The cast’s ties as one graph: who are friends, rivals, mentor and protégée, teammates or sisters in all but name, drawn from their real careers or born on the farm. The thicker the line, the stronger the tie; each Uma’s two strongest get authored pair conversations.' }),
     h('div', { class: 'two' },
       h('div', { class: 'panel' }, ring(ties), h('div', { class: 'row small' }, kinds.map((k) => h('span', { class: 'chip dot', vars: { '--c': KIND_COLOR[k] }, text: `${k} · ${ties.filter((t) => t.kind === k).length}` })))),
       h('div', { class: 'panel' }, h('h3', { text: 'Each Uma’s closest two' }), h('table', { class: 'table' },

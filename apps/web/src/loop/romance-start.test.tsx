@@ -97,7 +97,7 @@ afterEach(async () => {
   vi.unstubAllEnvs()
 })
 
-describe('a fresh farm on v4 (RM8, RM9)', () => {
+describe('a fresh farm on v4', () => {
   it('names the farmer, plays the opening, then the three arrivals, and ends on chapter 1\'s card and planting', async () => {
     await renderShell()
     const field = await find('[data-name-field]') as HTMLInputElement
@@ -171,7 +171,7 @@ describe('a fresh farm on v4 (RM8, RM9)', () => {
   })
 })
 
-describe('a face master data lacks (RM3)', () => {
+describe('a face master data lacks', () => {
   it('is a lettered disc named for the stand-in, through the resolver', async () => {
     const { LetterDisc } = await import('../master/album-art')
     const { outfitFor } = await import('../story/story')
@@ -183,7 +183,7 @@ describe('a face master data lacks (RM3)', () => {
   })
 })
 
-describe('the Gate and the Dorm on v4 (decisions 12 and 14)', () => {
+describe('the Gate and the Dorm on v4', () => {
   it('says what brings the next arrivals, never who, and "Everyone is here" with the cast on the farm', async () => {
     const pack = await storyReady()
     const named: SaveV4 = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' } }

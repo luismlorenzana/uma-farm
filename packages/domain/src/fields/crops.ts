@@ -1,7 +1,7 @@
-// The crops: CS11's table row for row, 27 crops (22 from the shop, 5 rare ones from
-// expeditions, requests and prizes), and the shop's seeds by season and tier. Price ★1 is F19's (`CROP_PRICES`), and a
+// The crops: the table row for row, 27 crops (22 from the shop, 5 rare ones from
+// expeditions, requests and prizes), and the shop's seeds by season and tier. Price ★1 is `CROP_PRICES`, and a
 // refined form is `refinedOf` (goods/ids); this file holds what growing needs. The Novice and Expert days follow from
-// the untended days by CS12's rule (`nightsToReady`), and a test checks every row against CS11's columns.
+// the untended days by the growth rule (`nightsToReady`), and a test checks every row against the table's columns.
 import type { Season } from '../farm/calendar'
 import type { CropId } from '../goods/ids'
 
@@ -16,7 +16,7 @@ export interface Crop {
   tier: SeedTier
   /** A shop seed's price; null for a rare crop. */
   seed: number | null
-  /** Days to Ready untended (CS11's first column): Ready once its growth reaches days − 0.5. */
+  /** Days to Ready untended (the table's first column): Ready once its growth reaches days − 0.5. */
   days: number
   /** Crops a plot gives each harvest. */
   yield: number
@@ -29,7 +29,7 @@ export interface Crop {
 const crop = (id: CropId, seasons: readonly Season[], tier: SeedTier, seed: number | null, days: number, yields: number, regrows: number | null,
   station: Crop['station'] = null): Crop => ({ id, seasons, tier, seed, days, yield: yields, regrows, station })
 
-/** CS11, in its order. */
+/** The crops, in table order. */
 export const CROPS: Readonly<Record<CropId, Crop>> = {
   carrot: crop('carrot', ['spring'], 1, 20, 4, 1, null),
   potato: crop('potato', ['spring'], 1, 35, 6, 2, null),
@@ -60,8 +60,8 @@ export const CROPS: Readonly<Record<CropId, Crop>> = {
   mandrake: crop('mandrake', ['winter'], 'rare', null, 8, 1, null, 'sawmill'),
 }
 
-/** The shop's seeds by season, in CS4's order: the first three from Farm Rank 1, the next two from FR2, the last from
- * FR4. Onion sells in Spring and Autumn, Cabbage in Spring and Winter, and Corn in Summer only. */
+/** The shop's seeds by season, in order: the first three from Farm Rank 1, the next two from Farm Rank 2, the last from
+ * Farm Rank 4. Onion sells in Spring and Autumn, Cabbage in Spring and Winter, and Corn in Summer only. */
 export const SHOP_SEEDS: Readonly<Record<Season, readonly CropId[]>> = {
   spring: ['carrot', 'potato', 'mint', 'onion', 'cabbage', 'asparagus'],
   summer: ['tomato', 'basil', 'bell-pepper', 'eggplant', 'sunflower-seed', 'corn'],
@@ -83,7 +83,8 @@ export function readyAt(crop: CropId, regrowing: boolean): number {
   return (regrowing && c.regrows !== null ? c.regrows : c.days) - READY_MARGIN
 }
 
-/** Nights to Ready from planting at a block's growth a night: CS11's day columns (1 untended, 1.25 Novice, 1.55 Expert). */
+/** Nights to Ready from planting at a block's growth a night: the table's day columns (1 untended, 1.25 Novice, 1.55
+ * Expert). */
 export function nightsToReady(crop: CropId, growth: number, regrowing = false): number {
   return Math.max(1, Math.ceil(readyAt(crop, regrowing) / growth - GROWTH_SLACK))
 }

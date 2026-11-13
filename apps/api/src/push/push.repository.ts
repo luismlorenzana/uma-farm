@@ -31,7 +31,7 @@ const record = (uid: string, data: DocumentData | undefined): PushRecord => ({
   checkedAt: typeof data?.checkedAt === 'number' ? data.checkedAt : 0,
 })
 
-/** Production: `push/{uid}` in the `farm` database (FIRESTORE_DATABASE; never `(default)`, which is uma-rpg's, IN5). */
+/** Production: `push/{uid}` in the `farm` database (FIRESTORE_DATABASE; never `(default)`, which is uma-rpg's). */
 export class FirestorePushRepository implements PushRepository {
   constructor(private readonly databaseId: string) {}
 

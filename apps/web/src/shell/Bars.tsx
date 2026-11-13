@@ -28,7 +28,7 @@ function dateChip(day: number | null, location: Location): CurrencyChip {
   }
 }
 
-/** Gold: uma-art's coin (a plain "g" until F25) and the farm's gold; it opens the bin. */
+/** Gold: uma-art's coin (a plain "g" until it ships) and the farm's gold; it opens the bin. */
 function goldChip(gold: number | null, location: Location): CurrencyChip {
   return {
     key: 'gold', mark: 'currency/gold', fallback: <GoldCoin />, value: gold, to: withParam(location, 'sheet', 'bin'),
@@ -36,7 +36,7 @@ function goldChip(gold: number | null, location: Location): CurrencyChip {
   }
 }
 
-/** The Farm Rank's crest until F25's `farm/rank` ships: "FR" on a green shield. */
+/** The Farm Rank's crest until the `farm/rank` ships: "FR" on a green shield. */
 function RankCrest() {
   return (
     <span aria-hidden className="font-display inline-flex h-4 min-w-5 shrink-0 items-center justify-center rounded-[4px] bg-[#3f7d3a] px-0.5 text-[9px] leading-none font-bold text-white ring-1 ring-[#2c5a28]">
@@ -76,9 +76,10 @@ export function FarmAccountBar() {
 
 /**
  * The bar: Farm · Roster · End the day · Diary · Menu; the romance build's second tab is Hearts
- * (`/hearts`, uma-kit's heart, no badge: F48 decision 3, RM57's signals are the morning, her Ready chip and her pip). End the day is the raised centre; it reads
- * "All set" and glows when nothing waits, else "End day" with the count of idle Umas and things to collect on the
- * disc. It reads the save at its day, never the clock. The badge and the glow are uma-kit 0.19.0's (* from F18's request); the tab's name carries the count for VoiceOver.
+ * (`/hearts`, uma-kit's heart, no badge: its signals are the morning, her Ready chip and her pip). End the day is the
+ * raised centre; it reads "All set" and glows when nothing waits, else "End day" with the count of idle Umas and
+ * things to collect on the disc. It reads the save at its day, never the clock. The badge and the glow are uma-kit
+ * 0.19.0's (a request from this app); the tab's name carries the count for VoiceOver.
  */
 export function FarmBottomBar({ page }: { page: BarPage | null }) {
   const location = useLocation()

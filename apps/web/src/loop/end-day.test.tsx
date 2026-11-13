@@ -71,7 +71,7 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-describe('End the day (CS6)', () => {
+describe('End the day', () => {
   it('counts idle Umas on the raised tab, asks in one line, and ends the day on End anyway', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
     await render(<FarmBottomBar page="farm" />)

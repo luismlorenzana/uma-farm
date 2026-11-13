@@ -1,9 +1,9 @@
 // The pages, inside the shell: `/` the farm map (`?peek=<place>` a quick look), `/roster`, `/diary` and
-// `/account`; F19's Warehouse by stars, `/warehouse` (`?pick=bin` to ship from it); F20's Fields, `/fields`; F22's
-// forest, Fishery and stations, `/forest`, `/fishery`, `/mill`, `/sawmill`, `/smokehouse`; and F23's Dorm, `/dorm`. Every
+// `/account`; the Warehouse by stars, `/warehouse` (`?pick=bin` to ship from it); the Fields, `/fields`; the
+// forest, Fishery and stations, `/forest`, `/fishery`, `/mill`, `/sawmill`, `/smokehouse`; and the Dorm, `/dorm`. Every
 // page but Account loads on demand; anything else (the Wilds' old `/wilds/<place>` among them) goes to the farm. The romance
 // build's Hearts tab is `/hearts` (`?view=work` the roster's album, `?uma=` her profile), and there
-// `/roster` lands on the Work view; the M4 build keeps `/roster` and has no `/hearts`.
+// `/roster` lands on the Work view; the deployed build keeps `/roster` and has no `/hearts`.
 import { lazy, Suspense, type ReactNode } from 'react'
 import { createBrowserRouter, Navigate, useLocation, type RouteObject } from 'react-router'
 import { AccountView } from '../home/AccountView'
@@ -24,7 +24,7 @@ const DormPage = lazy(() => import('../loop/DormPage'))
 const loading = (page: ReactNode) => <Suspense fallback={<p className="p-4 text-ink-soft">Loading…</p>}>{page}</Suspense>
 const work = (place: 'forest' | 'fishery' | 'mill' | 'sawmill' | 'smokehouse'): RouteObject => ({ path: place, element: loading(<WorkPlace key={place} place={place} />) })
 
-/** `/roster`: M4's page, or in the romance build the Hearts tab's Work view, her `?uma=` kept. */
+/** `/roster`: the deployed build's page, or in the romance build the Hearts tab's Work view, her `?uma=` kept. */
 function RosterRoute() {
   const location = useLocation()
   if (!romanceOn()) return loading(<RosterPage />)

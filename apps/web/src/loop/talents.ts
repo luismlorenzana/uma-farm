@@ -28,7 +28,7 @@ export function talentsFor(view: Pick<MasterView, 'stats'>): TalentOf {
   }
   return of
 }
-/** Her farming talent: what the Fields' rules take (F20's hook). */
+/** Her farming talent: what the Fields' rules take (the hook). */
 export const farmingTalents = (of: TalentOf): FarmingTalentOf => (outfitId) => of(outfitId, 'farming')
 
 /** The release's talents and table once master data has loaded; D for everyone and no table until then (the screens

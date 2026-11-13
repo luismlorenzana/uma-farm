@@ -2,7 +2,7 @@
 // Four block cards, A to D: a locked one shows its Farm Rank and cost with Buy · 800g; an owned one its tender's row and
 // a 3 × 3 grid of plots. A plot shows its crop's icon and the nights left, or Ready; a tap on an empty plot plants
 // (`?plant=A.4`), on a growing one shows it (`?plot=A.4`), on a Ready one harvests. Plant all (`?plant=A`) and Harvest all
-// do a block, and the tender comes from uma-kit's picker over the Umas home (`?tend=A`), with F21's talents and ranks:
+// do a block, and the tender comes from uma-kit's picker over the Umas home (`?tend=A`), with the talents and ranks:
 // "Hand · B" in farming on each card, opening by farming. Each sheet is a search parameter, so Back closes it. Loaded on
 // demand.
 import { farmHome, CROPS, isBusy, itemNameOf, leaving, receiptItems, tendedBlock, type BlockId, type FarmingTalentOf, type HarvestReceipt, type FarmSave } from '@farm/domain'
@@ -37,7 +37,8 @@ function withSheets(location: { pathname: string; search: string }, key?: string
   return `${location.pathname}${search ? `?${search}` : ''}`
 }
 
-/** "+9 Carrot (★1 × 7, ★2 × 2) · 1 from perks · 1 seed back" (F51: the romance term's extra crops said as they come). */
+/** "+9 Carrot (★1 × 7, ★2 × 2) · 1 from perks · 1 seed back" (the romance term's extra crops
+ * said as they come). */
 export function receiptWords(receipt: HarvestReceipt, crop: string | null): string {
   const items = receiptItems(receipt)
   const stars = receipt.stars.flatMap((n, i) => (n > 0 ? [`★${i + 1} × ${n}`] : [])).join(', ')
@@ -259,7 +260,7 @@ function PlantSheet({ save, block, index, onClose, onError }: { save: FarmSave; 
   )
 }
 
-/** A growing plot (decision 11's "shows"): its crop, the nights left, who tends it and where its seed came from. */
+/** A growing plot (what a plot "shows"): its crop, the nights left, who tends it and where its seed came from. */
 function PlotSheet({ save, block, index, master, onClose }: { save: FarmSave; block: BlockId; index: number; master: MasterView | null; onClose: () => void }) {
   const view = fieldsView(save).find((b): b is OwnedBlock => b.owned && b.id === block)
   const plot = view?.plots[index]

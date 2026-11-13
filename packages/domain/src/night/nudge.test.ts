@@ -14,7 +14,7 @@ function farm(): SaveV3 {
 const gather = (save: SaveV3, outfitId: string, slot: number) =>
   startLoopJob(save, { outfitId, place: 'forest', slot, request: { kind: 'gather', item: 'pine-log', count: 1 } }, AT, TEST_KINDS)
 
-describe('the nudge (CS6)', () => {
+describe('the nudge', () => {
   it('counts idle Umas, and reads "All set" when everyone works and nothing waits', () => {
     expect(daySetState(farm())).toEqual({ allSet: false, idle: ['101', '202', '303'], collect: 0, badge: 3 })
     const two = gather(gather(farm(), '101', 0), '202', 1)

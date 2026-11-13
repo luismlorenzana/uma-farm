@@ -1,5 +1,5 @@
 // Ranks: rank points a day, the challenges, rank-ups at night, what a
-// rank gives and the favourite line. Invented outfit ids and test kinds (`kinds.fixture.ts`) until F22's.
+// rank gives and the favourite line. Invented outfit ids and test kinds (`kinds.fixture.ts`).
 import { describe, expect, it } from 'vitest'
 import { harvestAll, harvestQuality, plantAll, seedsBackChance, setTender, tendedGrowth } from '../fields/fields'
 import { cropLevelQuality, quality, TENDED_QUALITY } from '../goods/stars'
@@ -47,7 +47,7 @@ const withRank = (save: SaveV3, id: string, activity: Activity, state: Partial<R
 const tended = (save = farm()) => setTender(plantAll(save, 'A', 'carrot'), 'A', '101')
 const D_TERMS: TermsOf = () => ({ talent: TALENT_D, favourite: false })
 
-describe('rank points a day (CS29, CS45)', () => {
+describe('rank points a day', () => {
   it('pays 10 × her talent\'s factor, ×1.2 in her favourite line, ×1.25 well fed, ×1.05 at 5 hearts and ×1.10 at 10', () => {
     const day = (talent: TalentStep, favourite = false, wellFed = false, affinity = 0) => rankPointsForDay({ talent, favourite, wellFed, heartsFactor: affinityPoints(affinity) })
     expect(day(3)).toBe(10)
@@ -63,7 +63,7 @@ describe('rank points a day (CS29, CS45)', () => {
     expect(rankPoints(20, { talent: 3, favourite: false, wellFed: true, heartsFactor: 1 })).toBe(25)
   })
 
-  it('matches CS29\'s days-to-rank table, in her favourite line in brackets', () => {
+  it('matches the days-to-rank table, in her favourite line in brackets', () => {
     const table = (talent: TalentStep) => ([1, 2, 3, 4, 5] as Rank[]).map((r) =>
       `${daysToRank(r, rankPointsForDay({ talent, favourite: false, wellFed: false, heartsFactor: 1 }))} (${daysToRank(r, rankPointsForDay({ talent, favourite: true, wellFed: false, heartsFactor: 1 }))})`)
     expect(table(0)).toEqual(['5 (5)', '20 (17)', '50 (42)', '113 (94)', '250 (209)'])
@@ -73,7 +73,7 @@ describe('rank points a day (CS29, CS45)', () => {
     expect(table(7)).toEqual(['3 (3)', '11 (9)', '27 (23)', '60 (50)', '134 (112)'])
   })
 
-  it('reaches each rank on CS29\'s night, night by night, with every challenge met', () => {
+  it('reaches each rank on its night, night by night, with every challenge met', () => {
     /** The night she reaches each rank, working every day, her challenge met as soon as it's asked. */
     const climb = (talent: TalentStep, favourite: boolean): number[] => {
       let save = farm()
@@ -93,7 +93,7 @@ describe('rank points a day (CS29, CS45)', () => {
   })
 })
 
-describe('rank-ups at night (CS30; decisions 1 and 3)', () => {
+describe('rank-ups at night', () => {
   it('lets points go on past a threshold and waits for the challenge, saying so once', () => {
     let save = withRank(tended(), '101', 'farming', { points: 35 })
     save = night(save)
@@ -150,7 +150,7 @@ describe('rank-ups at night (CS30; decisions 1 and 3)', () => {
   })
 })
 
-describe('who worked today (decision 2)', () => {
+describe('who worked today', () => {
   it('pays a tender whose block has a growing plot, and never a tender of an empty block', () => {
     const empty = setTender(farm(), 'A', '101')
     expect(night(empty).roster['101']!.ranks.farming.points).toBe(0)
@@ -193,14 +193,14 @@ describe('who worked today (decision 2)', () => {
     expect([growth(3), growth(7)]).toEqual([1.25, 1.4])
   })
 
-  it('gives the same morning from the same save (CS8)', () => {
+  it('gives the same morning from the same save', () => {
     const save = withRank(tended(), '101', 'farming', { points: 35 })
     expect(night(json(save))).toEqual(night(save))
     expect(nights(save, 3).roster['101']!.ranks.farming.points).toBe(71)
   })
 })
 
-describe('the challenges (CS30)', () => {
+describe('the challenges', () => {
   it('holds five a activity, toward Hand … Legend, with their targets', () => {
     for (const a of ACTIVITIES) expect(CHALLENGES[a].map((c) => c.rank), a).toEqual([1, 2, 3, 4, 5])
     const targets = Object.fromEntries(ACTIVITIES.map((a) => [a, CHALLENGES[a].map((c) => c.target)]))
@@ -253,8 +253,8 @@ describe('the challenges (CS30)', () => {
   })
 })
 
-describe('what a rank gives (CS31) and her favourite line (CS33)', () => {
-  it('drives yield, tended growth, quality, the deepest place and seeds back from CS31\'s table', () => {
+describe('what a rank gives', () => {
+  it('drives yield, tended growth, quality, the deepest place and seeds back from the table', () => {
     expect(RANK_BENEFITS.map((b) => b.yield)).toEqual([1, 1.15, 1.3, 1.5, 1.7, 2])
     expect(RANK_BENEFITS.map((b) => [b.expeditionPower, b.affection, b.workshopYield])).toEqual([[10, 0, 1], [20, 3, 1.1], [30, 6, 1.2], [40, 9, 1.3], [50, 12, 1.4], [60, 15, 1.5]])
     const ranks = [0, 1, 2, 3, 4, 5] as Rank[]

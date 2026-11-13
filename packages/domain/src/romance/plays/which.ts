@@ -1,8 +1,8 @@
 // What plays as what: an event's play is its route's `play` step (its `game`, and a
 // farming play's `as`), else its beat's `together`; `help` and `talk` have no play, so their grade is the best choice's.
 // An activity whose game isn't built yet plays Rhythm with that activity's mark, the same grades (the fallback): cooking
-// (a pot, the Kitchen's practice mode from F8), serving (a tray), forging (an anvil), the footrace (the track,
-// F32) and an expedition (the pack). When a real game ships, the event plays it. Pure.
+// (a pot, the Kitchen's practice mode), serving (a tray), forging (an anvil), the footrace (the track) and an
+// expedition (the pack). When a real game ships, the event plays it. Pure.
 import type { Activity } from '../../farm/ranks'
 import type { DateGame, Play, Together } from '../../story/authored'
 import type { PlayKind } from './grade'
@@ -17,7 +17,7 @@ export interface PlayAs {
 
 const play = (kind: PlayKind, mark: RhythmMark | null = null, fallback = false): PlayAs => ({ kind, mark, fallback })
 
-/** RM26's table, by `together`'s work activity or date game (a `play` step's `game` reads the same). */
+/** The table, by `together`'s work activity or date game (a `play` step's `game` reads the same). */
 export const PLAY_MAP: Readonly<Record<Activity | DateGame, PlayAs>> = {
   farming: play('pick'),
   foraging: play('pick'),
@@ -52,10 +52,4 @@ export function togetherPlay(together: Together): PlayAs | null {
     case 'gift': return play('choose')
     case 'help': case 'talk': return null
   }
-}
-
-/** The game a `together` names for a synthetic play step: with no `play` step, the beat's together plays
- * at the scene's end. A gift plays as Choose, which no game names, so it keeps its own kind. */
-export function togetherGame(together: Together): Activity | DateGame | null {
-  return together.kind === 'work' ? together.activity : together.kind === 'date' ? together.game : null
 }

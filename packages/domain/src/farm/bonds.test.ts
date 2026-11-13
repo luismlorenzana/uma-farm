@@ -1,7 +1,7 @@
 // Bonds between Umas: the points and their sources, the
-// hearts at their edges and CS44's days, the ties' seeds, the closest friend and Romance 4's ×1.5, side by side's extras
-// and tended growth, the pair conversations and the morning's lines. Invented ids only: the stand-ins 9000001–9000003 and
-// a cast of 9000004 onward built here.
+// hearts at their edges and the heart days, the ties' seeds, the closest friend and Romance 4's ×1.5, side by side's
+// extras and tended growth, the pair conversations and the morning's lines. Invented ids only: the stand-ins
+// 9000001–9000003 and a cast of 9000004 onward built here.
 import { describe, expect, it } from 'vitest'
 import { blockGrowth, plant, setTender } from '../fields/fields'
 import { runNight, type NightContext } from '../night/end-day'
@@ -55,14 +55,14 @@ const withFour = (pack: StoryPack, day = 3): SaveV4 => {
   return { ...save, today: { ...save.today, bonds: {} } }
 }
 
-describe('bond hearts (CS44)', () => {
+describe('bond hearts', () => {
   it('come at 50, 150, 300, 500 and 750, at their edges', () => {
     expect(BOND_HEARTS).toEqual([50, 150, 300, 500, 750])
     expect([0, 49, 50, 149, 150, 299, 300, 499, 500, 749, 750, 2000].map(bondHearts)).toEqual([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5])
     expect([0, 50, 299, 750].map(nextBondHeart)).toEqual([50, 150, 300, null])
   })
 
-  it('two at one place every day reach them on CS44\'s days 5, 15, 30, 50 and 75', () => {
+  it('two at one place every day reach them on the heart days 5, 15, 30, 50 and 75', () => {
     // 9000002 (a forager) and 9000003 (a fisher) at the forest: no favourite shared, a strength-1 tie seeded at 0.
     let save = farm()
     expect(bondOf(save, TWO, THREE)).toBe(0)
@@ -76,7 +76,7 @@ describe('bond hearts (CS44)', () => {
   })
 })
 
-describe('what a pair earns (RM48; decisions 1–4)', () => {
+describe('what a pair earns', () => {
   it('pays +10 a pair at one place, ×1.5 sharing a favourite line of that place\'s, once a night, the Fields\' tenders counted', () => {
     const pack = packWithFour('foraging')
     const save = withFour(pack)
@@ -112,7 +112,7 @@ describe('what a pair earns (RM48; decisions 1–4)', () => {
   })
 })
 
-describe('the closest friend and Romance 4 (RM49; decisions 4 and 6)', () => {
+describe('the closest friend and Romance 4', () => {
   it('is her strongest tie, then the most bond points, then the ties\' order, on the farm or not', () => {
     expect(closestFriend(PACK, farm(), ONE)).toBe(TWO)
     expect(closestFriend(PACK, farm(), THREE)).toBe(ONE)
@@ -150,7 +150,7 @@ describe('the closest friend and Romance 4 (RM49; decisions 4 and 6)', () => {
   })
 })
 
-describe('the ties\' seeds (RM49; decision 5)', () => {
+describe('the ties\' seeds', () => {
   it('seeds 3 → 150, 2 → 50 and 1 → 0 when the second Uma arrives, not before', () => {
     expect(TIE_SEEDS).toEqual({ 1: 0, 2: 50, 3: 150 })
     let save: SaveV4 = { ...newSaveV4('u1', AT), farmer: { name: 'Robin' } }
@@ -193,7 +193,7 @@ describe('the ties\' seeds (RM49; decision 5)', () => {
   })
 })
 
-describe('the night: points at step 6 (decision 2)', () => {
+describe('the night: points at step 6', () => {
   it('ticks bonds for two at the forest, 290 → 300 reaching 3 hearts in the morning\'s line; v3 and a night without the pack tick none', () => {
     let save = withBond(farm(3), TWO, THREE, 290)
     save = startLoopJob(save, { outfitId: TWO, place: 'forest', slot: 0, request: { kind: 'gather', item: 'pine-log', count: 2 } }, AT, TEST_KINDS)
@@ -202,13 +202,13 @@ describe('the night: points at step 6 (decision 2)', () => {
     expect(bondOf(night, TWO, THREE)).toBe(300)
     expect(night.summary!.hearts).toContainEqual({ kind: 'bond', a: TWO, b: THREE, hearts: 3 })
     expect(bondOf(runNight(save, { ...context(), story: undefined }), TWO, THREE)).toBe(290)
-    // M4 (v3) has no bonds: its night ticks none.
+    // v3 has no bonds: its night ticks none.
     const v3 = { ...newSave('u1', AT), bonds: { '101:202': 10 } }
     expect(runNight(v3, { roster: [], kinds: TEST_KINDS }).bonds).toEqual({ '101:202': 10 })
   })
 })
 
-describe('side by side (CS17, CS44; decision 7)', () => {
+describe('side by side', () => {
   const made = (id: string, n: number, key = 'pine-log@2') => ({ outfitId: id, place: 'forest', items: Array.from({ length: n }, () => key) })
   const worked = [{ outfitId: TWO, place: 'forest' }, { outfitId: THREE, place: 'forest' }]
 
@@ -284,7 +284,7 @@ describe('side by side (CS17, CS44; decision 7)', () => {
   })
 })
 
-describe('pair conversations (RM50; decisions 9 and 10)', () => {
+describe('pair conversations', () => {
   it('reads the stand-in pair\'s five levels from the pack; none for another pair', async () => {
     expect([...pairLevels(PACK, TWO, ONE)]).toEqual([1, 2, 3, 4, 5])
     expect(pairLevels(PACK, ONE, THREE).size).toBe(0)
@@ -323,14 +323,14 @@ describe('pair conversations (RM50; decisions 9 and 10)', () => {
     expect(issues({ '9000002-9000001': { ...partial, a: TWO, b: ONE } })).toEqual(['pairs/9000002-9000001: its name and its a, b are the two ids in numeric order, <a>-<b>'])
     expect(issues({ '9000001-9000002': { ...partial, levels: [...partial.levels, partial.levels[0]!] } })).toEqual(['pairs/9000001-9000002: Bond level 1 is written twice'])
     expect(issues({ '9000001-9000002': { ...partial, levels: [{ ...partial.levels[0]!, hearts: 6 }] } })).toEqual(['pairs/9000001-9000002: Level 1: hearts is 1–5'])
-    // A pair the ties don't hold isn't RS12's.
+    // A pair the ties don't hold isn't a tie's pair.
     const four = packWithFour()
     expect(() => storyPackFrom({ ...STAND_IN_FILES, cast: four.cast, ties: four.ties, pairs: { '9000001-9000004': { a: ONE, b: FOUR, levels: partial.levels.map((l) => ({ ...l, steps: [{ say: ONE, line: 'Hi.' }] })) } } }))
       .toThrow('not a tie\'s pair')
   })
 })
 
-describe('the morning\'s lines and their parse (decisions 7 and 9)', () => {
+describe('the morning\'s lines and their parse', () => {
   it('lists a pair once at its highest heart, in the cast\'s order, against today.bonds or last night\'s', () => {
     const before = withBond(withBond(farm(), ONE, THREE, 140), TWO, THREE, 0)
     const after = withBond(withBond(before, ONE, THREE, 320), TWO, THREE, 60)

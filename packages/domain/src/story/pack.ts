@@ -1,9 +1,9 @@
-// The story pack at runtime: the cast, the ties, the bibles by character id and
-// which events each route scripts, checked by F40's validator as the game reads it (routes may be partial: an unscripted
-// beat waits, "Her story is still being written"). The scripts load on demand through `route(id)`, a pair's conversations
+// The story pack at runtime: the cast, the ties, the bibles by character id and which events each route scripts,
+// checked by the story's validator (`authored.ts`) as the game reads it (routes may be partial: an unscripted beat
+// waits, "Her story is still being written"). The scripts load on demand through `route(id)`, a pair's conversations
 // through `pair(a, b)`, and the pack says which levels each pair holds. The dark build reads the stand-in
-// (`stand-in.ts`) through the web's one loader seam; F56 points that seam at the private pack. The household file (F54:
-// household scenes, house lines and the finale) is read with the pack, partial, since the night's house lines need it.
+// (`stand-in.ts`) through the web's one loader seam, which a release points at the private pack. The household file
+// (household scenes, house lines and the finale) is read with the pack, partial, since the night's house lines need it.
 //
 // Her outfit, her favourite line, its places and her tastes are read here, never from master data's
 // strategy or a goods family.
@@ -40,7 +40,7 @@ export interface StoryPack {
   readonly scripted: ReadonlyMap<string, ReadonlySet<string>>
   /** Her route's scripted events, loaded on demand; null when none are written. */
   route(id: string): Promise<Route | null>
-  /** The bond levels each tie's pair has a conversation at, by `pairKey`: RS12's authored ones. */
+  /** The bond levels each tie's pair has a conversation at, by `pairKey`: the authored ones. */
   readonly pairs: ReadonlyMap<string, ReadonlySet<number>>
   /** A pair's conversations, loaded on demand; null when none are written. */
   pair(a: string, b: string): Promise<PairConversations | null>
@@ -71,7 +71,7 @@ export function packContext(cast: unknown, isGood: (id: string) => boolean = isG
 export const tiedPairs = (ties: unknown): ReadonlySet<string> => new Set(isObject(ties) && Array.isArray(ties.ties)
   ? ties.ties.flatMap((t) => (isObject(t) && typeof t.a === 'string' && typeof t.b === 'string' ? [pairKey(t.a, t.b)] : [])) : [])
 
-/** A route file's issues, each named `routes/<id>`: F40's validator in the partial mode, her id, the cast. */
+/** A route file's issues, each named `routes/<id>`: the validator in the partial mode, her id, the cast. */
 export function routeFileIssues(id: string, route: unknown, bible: UmaBible | null, ctx: StoryContext): string[] {
   const found = routeIssues(route, bible, ctx, { partial: true }).map((i) => `routes/${id}: ${i}`)
   if (isObject(route) && route.characterId !== id) found.push(`routes/${id}: its characterId is ${String(route.characterId)}`)
@@ -84,7 +84,7 @@ export function pairFileIssues(name: string, pair: unknown, tied: ReadonlySet<st
   const found = pairIssues(pair, ctx, { partial: true }).map((i) => `pairs/${name}: ${i}`)
   if (isObject(pair) && typeof pair.a === 'string' && typeof pair.b === 'string') {
     if (pairKey(pair.a, pair.b) !== `${pair.a}:${pair.b}` || name !== `${pair.a}-${pair.b}`) found.push(`pairs/${name}: its name and its a, b are the two ids in numeric order, <a>-<b>`)
-    if (!tied.has(pairKey(pair.a, pair.b))) found.push(`pairs/${name}: not a tie's pair (RS12)`)
+    if (!tied.has(pairKey(pair.a, pair.b))) found.push(`pairs/${name}: not a tie's pair; a conversation is between two tied Umas`)
   }
   return found
 }
@@ -114,7 +114,7 @@ export function storyPackFrom(files: PackFiles, isGood: (id: string) => boolean 
     issues.push(...found)
     if (found.length === 0) pairs.set(pairKey((pair as PairConversations).a, (pair as PairConversations).b), pair as PairConversations)
   }
-  // F54 decision 11: the household, read partial (an Uma without her beat is skipped).
+  // The household, read partial (an Uma without her beat is skipped).
   if (files.household !== undefined) issues.push(...householdIssues(files.household, ctx, { partial: true }).map((i) => `household: ${i}`))
   if (issues.length > 0) throw new StoryPackError(issues)
   return {
@@ -158,7 +158,7 @@ export function favouriteOf(pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string
   return entry ? CALLING_ACTIVITY[entry.calling] : null
 }
 
-/** Her line's places (RM6's table): where her perks work and her events default to. A miner's are the Mine and the
+/** Her line's places: where her perks work and her events default to. A miner's are the Mine and the
  * Smelter, or the Quarry and the Cutter when her calling is `quarry`. */
 export function linePlaces(pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string): FarmPlaceId[] {
   switch (favouriteOf(pack, id)) {
@@ -178,7 +178,7 @@ export function linePlaces(pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string)
 
 /** What she thinks of a good as a gift: her bible's one loved, three liked and two disliked; everything else
  * neutral. A proposed good counts once it exists in `goods/ids.ts`; until then that slot is neutral. No bible: neutral.
- * F47's gifts read it; v3's `giftTaste` stays for the live build. */
+ * The v4 gifts read it; v3's `giftTaste` stays for the live build. */
 export function tasteOf(pack: Pick<StoryPack, 'bibles'>, id: string, good: string, isGood: (id: string) => boolean = isGoodId): Taste {
   const gifts = pack.bibles.get(id)?.gifts
   if (!gifts || !isGood(good)) return 'neutral'

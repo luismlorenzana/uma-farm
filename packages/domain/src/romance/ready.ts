@@ -1,5 +1,5 @@
-// When her next event is Ready: written with the ladders, since F48's
-// Ready chips, sort and filter read it before F49 plays the events. All four:
+// When her next event is Ready: written with the ladders, since the
+// Ready chips, sort and filter read it before the events play. All four:
 //
 //   1 her bar is full for the rung, or for a waiting rung it's the day after the rung before (the proposal: and a ring)
 //   2 she's home (away shows "Swap her home")
@@ -49,26 +49,26 @@ export type Wait =
   | { kind: 'opens'; chapter: number }
   /** The pack doesn't script her event yet: "Her story is still being written". */
   | { kind: 'unwritten' }
-  /** S2 and S4 have no event: they come at night once their bar fills (F54). */
+  /** S2 and S4 have no event: they come at night once their bar fills. */
   | { kind: 'night' }
-  /** She said "Not yet" at her confession: you ask her again from her profile (F49). */
+  /** She said "Not yet" at her confession: you ask her again from her profile. */
   | { kind: 'friend' }
   /** Her route is complete. */
   | { kind: 'done' }
 
-/** RM24's four conditions, as the manual lists them. */
+/** The four conditions, as the manual lists them. */
 export const READY_CONDITIONS: readonly { condition: string; unmet: string }[] = [
   { condition: 'Her bar is full for the rung; a waiting rung (the confession, the proposal, the wedding) is Ready the day after the rung before, and the proposal needs a ring in the Warehouse', unmet: '`bar`, `day`, `ring`' },
-  { condition: 'She’s home (on the Dorm’s list, or a spouse in her house, F54)', unmet: '`away`: “Swap her home”' },
-  { condition: 'She hasn’t played one of her events today (RM21)', unmet: '`today`' },
+  { condition: 'She’s home (on the Dorm’s list, or a spouse in her house)', unmet: '`away`: “Swap her home”' },
+  { condition: 'She hasn’t played one of her events today', unmet: '`today`' },
   { condition: 'Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level, a chapter has been reached', unmet: '`setup`; `opens` for a chapter, or for the ranch, mining, cooking, expeditions, serving or forging before their chapters (2, 3, 4, 5, 6, 7)' },
 ]
 /** The waits in the order `readiness` says them: the first one met is the one shown. */
 export const WAIT_ORDER: readonly { kind: Wait['kind']; when: string }[] = [
   { kind: 'done', when: 'Her route is complete (S5 has played)' },
-  { kind: 'night', when: 'S2 or S4, bar full: no event, the level comes at night (F54); short of it, `bar`' },
+  { kind: 'night', when: 'S2 or S4, bar full: no event, the level comes at night; short of it, `bar`' },
   { kind: 'unwritten', when: 'The pack doesn’t script the event yet: “Her story is still being written”' },
-  { kind: 'friend', when: 'She said “Not yet” at her confession: you ask her again from her profile (F49)' },
+  { kind: 'friend', when: 'She said “Not yet” at her confession: you ask her again from her profile' },
   { kind: 'opens', when: 'A chapter setup not reached, or a working setup at a place before its chapter' },
   { kind: 'bar', when: 'Her bar isn’t full for the rung' },
   { kind: 'day', when: 'A waiting rung, on the day the rung before played' },
@@ -110,7 +110,7 @@ function opensWith(save: SaveV4, trigger: Trigger): number | null {
   return chapter !== null && save.farm.chapter < chapter ? chapter : null
 }
 
-/** Her next event's state. Home is `dorm.home`, or a spouse in her house (F54's `atHome`). Refused for
+/** Her next event's state. Home is `dorm.home`, or a spouse in her house (`atHome`). Refused for
  * someone not on the farm. */
 export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'scripted'>, id: string): Readiness {
   const love = save.love[id]

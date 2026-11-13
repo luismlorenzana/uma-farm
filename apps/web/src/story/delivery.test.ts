@@ -67,7 +67,7 @@ beforeEach(() => {
   if (!globalThis.crypto?.subtle) vi.stubGlobal('crypto', webcrypto)
 })
 
-describe('the story pack from farm-api (F56 decision 5)', () => {
+describe('the story pack from farm-api', () => {
   it('reads the index fresh, then the boot files by hash, verified; routes wait until asked', async () => {
     const api = server()
     const store = memoryStore()

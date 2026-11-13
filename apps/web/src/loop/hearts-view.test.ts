@@ -1,7 +1,7 @@
 // The Hearts tab's view model: the rows' sort, filters and counts, the bar's
 // segments and a waiting rung's mark, the profile's track, Next card, perks, gifts and ties, the morning's Hearts section
-// in RM57's order with live Ready lines, and the ♥ on a Ready tender's pip. The invented stand-in pack (9000001–9000003),
-// with every rung scripted where a test needs several Umas Ready; no network.
+// in the summary's order with live Ready lines, and the ♥ on a Ready tender's pip. The invented stand-in pack
+// (9000001–9000003), with every rung scripted where a test needs several Umas Ready; no network.
 import {
   newBlock, newLove, newRosterUmaV4, newSaveV4, pairKey, ROUTE_RUNGS, STAND_IN_FILES, storyPackFrom, talentD, type Love, type MorningSummaryV4, type Readiness, type SaveV4,
 } from '@farm/domain'
@@ -37,7 +37,7 @@ const segments = (love: Pick<Love, 'stage' | 'level' | 'points'>, state: Pick<Re
   return heart.segments.map((s) => (s.state === 'full' ? '■' : s.state === 'filling' ? '▣' : '□')).join('')
 }
 
-describe('the rows (decision 4)', () => {
+describe('the rows', () => {
   it('sorts Ready first, then the least progress, then the cast’s order', () => {
     // 9000003 is Ready at Friendship 2; 9000001 and 9000002 wait at Friendship 3, 9000002 with fewer points.
     const save = farm({ [ONE]: { level: 2, points: 100 }, [TWO]: { level: 2, points: 50 }, [THREE]: { level: 1, points: 240 } })
@@ -112,7 +112,7 @@ describe('the rows (decision 4)', () => {
   })
 })
 
-describe('her profile (decision 6)', () => {
+describe('her profile', () => {
   const played = (love: Pick<Love, 'stage' | 'level' | 'points'>) => routeTrack(love).filter((c) => c.state === 'played').map((c) => c.rung)
   const next = (love: Pick<Love, 'stage' | 'level' | 'points'>) => routeTrack(love).find((c) => c.state === 'next')
 
@@ -131,7 +131,7 @@ describe('her profile (decision 6)', () => {
     expect(next({ stage: 'spouse', level: 5, points: 0 })).toBeUndefined()
   })
 
-  it('says each of F47’s waits on the Next card', () => {
+  it('says each of her waits on the Next card', () => {
     const at = (waits: Readiness['waits'], rung: string | null = 'r5') => nextWords({ rung, ready: waits === null, waits }, { points: 300, cost: 360 }, nameOf)
     expect([
       at(null), at({ kind: 'bar' }), at({ kind: 'day' }, 'confession'), at({ kind: 'ring' }, 'proposal'), at({ kind: 'away' }), at({ kind: 'today' }),
@@ -188,10 +188,10 @@ describe('her profile (decision 6)', () => {
   })
 })
 
-describe('the morning’s Hearts section (decisions 1 and 9; RM57)', () => {
+describe('the morning’s Hearts section', () => {
   const summary = (hearts: MorningSummaryV4['hearts']): MorningSummaryV4 => ({ day: 5, bin: [], work: [], ranks: [], hearts, news: [], nudges: [] })
 
-  it('orders Ready (playing her event, F49), then birthdays and anniversaries, then arrivals, each opening her profile', () => {
+  it('orders Ready (playing her event), then birthdays and anniversaries, then arrivals, each opening her profile', () => {
     const lines = summaryParts(summary([
       { kind: 'arrived', id: THREE, home: false }, { kind: 'birthday', id: ONE, when: 'today' }, { kind: 'anniversary', id: TWO, when: 'today', item: 'carrot' },
       { kind: 'birthday', id: TWO, when: 'tomorrow' },
@@ -227,7 +227,7 @@ describe('the morning’s Hearts section (decisions 1 and 9; RM57)', () => {
   })
 })
 
-describe('the pips’ badge (decision 10)', () => {
+describe('the pips’ badge', () => {
   it('puts ♥ on a Ready tender’s pip in place of her block’s letter', () => {
     const block = { ...newBlock('A'), tender: ONE }
     block.plots[0] = { crop: 'carrot', growth: 1, ready: false, regrowing: false, own: false }

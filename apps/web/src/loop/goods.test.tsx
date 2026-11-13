@@ -67,7 +67,7 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-describe('gold in the account bar (decision 10)', () => {
+describe('gold in the account bar', () => {
   it('shows the farm\'s gold beside the date, and opens the bin', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: stocked() })
     await render(<FarmAccountBar />)
@@ -78,7 +78,7 @@ describe('gold in the account bar (decision 10)', () => {
   })
 })
 
-describe('shipping (decisions 4, 8 and 9)', () => {
+describe('shipping', () => {
   it('ships one a tap in pick mode, takes a line back in the bin, and the night pays the rest into the morning', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: stocked() })
     await render(<WarehousePage />, '/warehouse?pick=bin')
@@ -139,7 +139,7 @@ describe('shipping (decisions 4, 8 and 9)', () => {
   })
 })
 
-describe('the shop (decision 7, F20)', () => {
+describe('the shop', () => {
   const SPRING = () => newSave('u1', AT)
 
   it('sells the season\'s seeds, a shut tier showing its Farm Rank', async () => {

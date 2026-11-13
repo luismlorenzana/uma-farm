@@ -57,7 +57,7 @@ function Dorm({ save }: { save: FarmSave }) {
     setNote(null)
     action.then(() => done && setNote(done), (err: unknown) => setError(errorWords(err)))
   }
-  // F54: a spouse in her house is on the farm, not away.
+  // A spouse in her house is on the farm, not away.
   const away = Object.keys(save.roster).filter((id) => !atHome(save, id))
   const rows = useMemo(() => umaRows(save, Object.keys(save.roster), view?.album ?? new Map(), talents.table, view?.roster ?? []), [save, view, talents.table])
   const byId = new Map(rows.map((row) => [row.id, row]))
@@ -186,7 +186,7 @@ function UmaList({ title, ids, nameOf, status, rows, where, empty, hearts }: {
   rows: ReadonlyMap<string, LoopUmaRow>
   where: 'home' | 'away'
   empty?: string
-  /** v3 shows your hearts with her; v4 waits for F47's route. */
+  /** v3 shows your hearts with her; v4 waits for the route. */
   hearts: boolean
 }) {
   return (

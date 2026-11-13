@@ -1,7 +1,7 @@
 // Visitors, affinity and recruits: a visitor stops at the
 // Gate every fourth morning while a bed is free and none waits, and stays once your affinity with her reaches 2 hearts;
 // a chat a day and a gift a day raise it, for every Uma on the roster and every visitor; each chapter's end brings a
-// recruit for the farm's weakest open activity (F24 calls `recruitFor`). Praise and story beats are M6's. Every
+// recruit for the farm's weakest open activity (`recruitFor`). Praise and story beats come later. Every
 // draw is the account's. Loaded with the loop's screens and the night.
 import { goodOf, isSeedId, type GoodFamily } from '../goods/ids'
 import type { MaterialLine } from '../items/lines'
@@ -29,7 +29,7 @@ export const MAX_AFFINITY = 10 * HEART_POINTS
 /** A chat a day (tap her): +15. */
 export const CHAT_POINTS = 15
 /** A gift a day: loved +60, liked +30, neutral +10, disliked −20 (never below a heart she's reached). Praise, +20 a day,
- * is M6's. */
+ * comes later. */
 export const GIFT_POINTS = { loved: 60, liked: 30, neutral: 10, disliked: -20 } as const
 export type Taste = keyof typeof GIFT_POINTS
 export const TASTES: readonly Taste[] = ['loved', 'liked', 'neutral', 'disliked']
@@ -115,7 +115,7 @@ export function gift<S extends SaveV3>(save: S, outfitId: OutfitId, item: string
 
 // --- Chats' lines: five a temperament, her name filled in at runtime (`{name}`) -------------------
 
-/** A short line by her temperament, original text; M6's conversations replace them. */
+/** A short line by her temperament, original text; the conversations replace them. */
 export const CHAT_LINES: Readonly<Record<Temperament, readonly string[]>> = {
   breezy: [
     '{name} jogs over. “Morning! I lapped the fence twice already.”',
@@ -214,8 +214,8 @@ export function weakestActivity(save: Pick<SaveV3, 'roster' | 'farm'>, talentOf:
 }
 
 /** A chapter's recruit: an outfit not on the roster and not waiting at the Gate, C or better in the farm's
- * weakest open activity, drawn by the account, the day and the chapter. Null when the release has none left. F24 calls
- * it for chapter 1's reward and joins her with `joinRoster` (home, or away with no bed free). */
+ * weakest open activity, drawn by the account, the day and the chapter. Null when the release has none left. The night
+ * calls it for chapter 1's reward and joins her with `joinRoster` (home, or away with no bed free). */
 export function recruitFor(save: SaveV3, release: readonly OutfitId[], talentOf: TalentOf): { activity: Activity; outfitId: OutfitId | null } {
   const activity = weakestActivity(save, talentOf)
   const waiting = new Set(save.visitors.map((v) => v.outfitId))

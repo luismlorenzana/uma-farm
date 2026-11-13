@@ -1,12 +1,12 @@
 // The cards that close an event: **the level-up card** closes every event:
 // her heart fills with a short sparkle (still, with reduced motion) and she says her last line; then the sum ("+50 event
-// · +30 choice · +15 Great = +95 toward Romance 6 (+40 banked)"), the perk it brings (F48's words; F51 makes it act, and
-// Friendship 4's names her signature dish's recipe),
+// · +30 choice · +15 Great = +95 toward Romance 6 (+40 banked)"), the perk it brings (its words; it acts on the farm,
+// and Friendship 4's names her signature dish's recipe),
 // "‹caption› saved" (her Memory), any unlock, and the next rung's cost, its place and setup (the next beat's hint) and
 // what it opens, with one **Continue**. **The stage-up screen** closes the confession's Yes (Partners), the proposal
 // (Engaged: "Your wedding: tomorrow, whenever you're ready") and the wedding (Married: the track gold, the spouse ladder, her
-// ring at her line, her anniversary, "Married n/N · next household scene at 5"; F53): the route's track re-coloured, "Opens
-// now" and **Continue**. F54's night levels (S2, S4) show the level-up card from the morning. Loaded on demand with the
+// ring at her line, her anniversary, "Married n/N · next household scene at 5"): the route's track re-coloured, "Opens
+// now" and **Continue**. The night levels (S2, S4) show the level-up card from the morning. Loaded on demand with the
 // player.
 import { dishName, freeRooms, LADDER_COLOURS, ladderOf, perkLineOf, rungName, withFarmer, type EventCard, type Love, type SaveV4, type StageUp, type StoryPack } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
@@ -74,7 +74,7 @@ export function LevelUpCard({ card, id, name, love, pack, farmer, onContinue }: 
   )
 }
 
-/** The stage-up screen: the track re-coloured, what the stage opens, **Continue**. Married adds RM45's
+/** The stage-up screen: the track re-coloured, what the stage opens, **Continue**. Married adds the
  * line ("Married 1/3 · next household scene at 5"). */
 export function StageUpScreen({ stage, id, love, pack, married = null, save = null, onContinue }: {
   stage: StageUp
@@ -115,7 +115,7 @@ export function StageUpScreen({ stage, id, love, pack, married = null, save = nu
   )
 }
 
-/** The wedding's room step (F53's stage-up gains it): her room, already taken by the default, and the other
+/** The wedding's room step (the stage-up screen gains it): her room, already taken by the default, and the other
  * houses with a free room to move her to at once, free. */
 function RoomStep({ save, id }: { save: SaveV4; id: string }) {
   const [busy, setBusy] = useState(false)

@@ -1,7 +1,7 @@
 // An Uma's marks on her face (the badge drawing left to the worker): her favourite line's mark, top left,
 // is her line's first raw good from uma-art's items atlas on a light disc (a Carrot farming, a Pine Log foraging, a Carp
 // fishing, Copper Ore mining); her best talent, bottom right, is its grade on a coloured chip (S gold, A coral, B blue,
-// C green, D and below grey). The cheapest art that reads at 68 px, until F25 or later draws marks. Loaded on demand.
+// C green, D and below grey). The cheapest art that reads at 68 px, until marks are drawn. Loaded on demand.
 import { ACTIVITY_NAMES, TALENT_GRADES, type Activity, type TalentStep } from '@farm/domain'
 import type { FaceTileBadges } from '@luismlorenzana/uma-kit/album'
 import { ItemIcon } from '../items/ItemIcon'

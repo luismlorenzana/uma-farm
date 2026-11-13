@@ -62,7 +62,7 @@ describe('adding and taking', () => {
   })
 })
 
-describe('gold (CS1)', () => {
+describe('gold', () => {
   it('spends what the farm has, and refuses the rest', () => {
     expect(spendGold({ gold: 500 }, 180)).toEqual({ gold: 320 })
     expect(spendGold({ gold: 500 }, 500)).toEqual({ gold: 0 })

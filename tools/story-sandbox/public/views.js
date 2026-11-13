@@ -21,7 +21,7 @@ export function h(tag, attrs = {}, ...kids) {
 export const stat = (n, label) => h('div', { class: 'stat' }, h('b', { text: n }), h('span', { text: label }))
 const bullets = (list) => (list?.length ? h('ul', { class: 'list' }, list.map((x) => h('li', { text: x }))) : null)
 
-// ── Colours: the game's three cast discs (ScenePlayer.tsx), the rest the sandbox's until F25 and F29's busts ──────────
+// ── Colours: the game's three cast discs (ScenePlayer.tsx), the rest the sandbox's own (discs, not the busts) ────────
 const CAST_COLOR = {
   'hollis-pryor': '#6b5aa6', 'marta-quill': '#c4573a', 'ben-carver': '#7a8b3a', 'dale-hart': '#a0703c', 'gus-talbot': '#5f6670', 'rosa-bell': '#c0466e',
   'juno-park': '#2f8a7a', 'ida-stone': '#8a4b2a', 'nils-berg': '#2c5d8a', 'wren-ashby': '#d08a2c', 'cole-varga': '#4d6b3a',
@@ -147,7 +147,7 @@ export function chaptersView() {
       stat(`${scenes.filter((s) => s.beats.length).length}/${scenes.length}`, 'scenes you can play'),
       stat(lines, 'scene lines'),
       stat(`${data.cross.beats.scripted}/${data.cross.beats.target}`, `story beats scripted (${data.cross.beats.outlined} outlined)`),
-      stat(`${convDone}/${convTarget}`, `conversations toward CS46’s target (${data.conversations.length} written)`),
+      stat(`${convDone}/${convTarget}`, `conversations toward the target (${data.conversations.length} written)`),
       stat(words.toLocaleString(), 'words written'),
     ),
     h('div', { class: 'road' }, data.chapters.map((c) => h('a', { href: `#/ch/${c.chapter.chapter}` }, h('span', { class: `stop ${c.chapter.layer}`, text: c.chapter.chapter }), h('span', { text: c.chapter.opens })))),
@@ -219,7 +219,7 @@ function overviewTab(entry) {
           [...speaking].map(([id, n]) => h('div', {}, castDisc(id, 40), h('div', {}, h('b', { text: D.cast.get(id)?.name ?? id }), `${n} line${n === 1 ? '' : 's'}`))),
           [...roles].map((key) => { const uma = umaFor(key); return h('div', {}, umaDisc(uma, 40), h('div', {}, h('b', { text: roleLabel(key) }), `played here by ${uma.name}`)) }),
         ) : h('p', { class: 'muted', text: 'Nobody speaks yet: the scenes are outlines.' }),
-        h('p', { class: 'small muted', text: 'Umas speak only in roles the game fills at run time (CS41). Here, the sample crew fills them: rename it on the Town page.' })),
+        h('p', { class: 'small muted', text: 'Umas speak only in roles the game fills at run time. Here, the sample crew fills them: rename it on the Town page.' })),
       h('div', { class: 'panel' }, h('h3', { text: 'What it brings' }),
         h('dl', {}, h('dt', { class: 'muted small', text: 'Opens' }), h('dd', { text: c.opens }),
           h('dt', { class: 'muted small', text: 'Brought by' }), h('dd', { text: c.brings.map((id) => `${D.cast.get(id)?.name ?? id}: ${D.cast.get(id)?.is ?? ''}`).join('; ') }),
@@ -245,7 +245,7 @@ function scenesTab(entry) {
         return h('tr', { class: line.length > limit ? 'long' : '' },
           h('td', {}, who.kind === 'narrator' ? h('span', { class: 'muted small', text: 'Narrator' }) : h('span', { class: 'sp' }, who.disc(24), who.kind === 'uma' ? roleLabel(who.role) : who.name)),
           h('td', {}, h('span', { class: who.kind === 'narrator' ? 'muted' : '', text: line }), line.length > limit ? h('div', { class: 'warn-text', text: `${line.length} characters: over the box’s ${limit}` }) : null))
-      })) : h('p', { class: 'muted', text: 'No lines yet. The next layer scripts them here, in the game’s own shape, then a packet moves them into the game.' })),
+      })) : h('p', { class: 'muted', text: 'No lines yet. The next layer scripts them here, in the game’s own shape, then they move into the game.' })),
     ),
   )))
 }
@@ -292,8 +292,8 @@ export function castView() {
   }
   return h('div', {},
     h('h1', { text: 'The town' }),
-    h('p', { class: 'muted', text: 'The town is original (CS41): its people speak by name and their lines live in git. Umas appear only in roles the game fills from master data at run time, so here an invented crew plays them. The Umas themselves, and the other boards’ characters, are on the Characters page.' }),
-    h('div', { class: 'section-head' }, h('h2', { text: 'The town’s cast' }), h('span', { class: 'muted small', text: 'Lettered discs until F25 and F29’s busts ship' })),
+    h('p', { class: 'muted', text: 'The town is original: its people speak by name and their lines live in git. Umas appear only in roles the game fills from master data at run time, so here an invented crew plays them. The Umas themselves, and the other boards’ characters, are on the Characters page.' }),
+    h('div', { class: 'section-head' }, h('h2', { text: 'The town’s cast' }), h('span', { class: 'muted small', text: 'Lettered discs, not the game’s busts' })),
     h('div', { class: 'townsfolk' }, D.data.game.cast.map((c) => h('div', { class: `person ${lines.get(c.id) ? '' : 'quiet'}` }, castDisc(c.id, 52),
       h('div', {}, h('div', { class: 'name', text: c.name }), h('div', { class: 'is', text: c.is }),
         h('div', { class: 'lines', text: `From chapter ${c.from}${lines.get(c.id) ? ` · ${lines.get(c.id)} lines in chapter ${[...scenesBy.get(c.id)].join(', ')}` : ' · no lines yet'}` }))))),
@@ -340,13 +340,13 @@ export function farmView(selected) {
   const scenesAt = new Map(), convAt = new Map()
   for (const e of D.data.chapters) for (const s of e.chapter.scenes) if (s.place) scenesAt.set(s.place, [...(scenesAt.get(s.place) ?? []), { chapter: e.chapter.chapter, scene: s }])
   for (const c of D.data.conversations) convAt.set(c.template.place, (convAt.get(c.template.place) ?? 0) + 1)
-  const opens = (o) => (o.by === 'start' ? 'Open from day 1' : o.by === 'chapter' ? `Chapter ${o.chapter}` : o.by === 'reward' ? `Chapter ${o.chapter}’s reward` : o.by === 'farm-rank' ? `Farm Rank ${o.rank}` : 'Later (M6)')
+  const opens = (o) => (o.by === 'start' ? 'Open from day 1' : o.by === 'chapter' ? `Chapter ${o.chapter}` : o.by === 'reward' ? `Chapter ${o.chapter}’s reward` : o.by === 'farm-rank' ? `Farm Rank ${o.rank}` : 'Not built yet')
   const rows = [...new Set(places.map((p) => p.row))].sort((a, b) => a - b)
   const LABEL = { 1: 'Gathering · stations · the ranch and workshops', 6: 'The yard', 8: 'The town edge' }
   const pick = places.find((p) => p.id === selected)
   return h('div', {},
     h('h1', { text: 'The farm' }),
-    h('p', { class: 'muted', text: 'The map’s 23 places as the game has them (FC28): what opens each, the scenes set there, and the conversations that can play there. Click a place.' }),
+    h('p', { class: 'muted', text: 'The map’s 23 places as the game has them: what opens each, the scenes set there, and the conversations that can play there. Click a place.' }),
     h('div', { class: 'farm' },
       h('div', { class: 'map' }, rows.map((r) => [LABEL[r] ? h('div', { class: 'row-label', text: LABEL[r] }) : null,
         places.filter((p) => p.row === r).sort((a, b) => a.col - b.col).map((p) => {
@@ -373,7 +373,7 @@ export function formatView() {
   const first = D.data.chapters.find((e) => playable(e).length)
   return h('div', {},
     h('h1', { text: 'The format' }),
-    h('p', { class: 'muted', text: 'What a draft holds, in the game’s own shapes, so a packet copies it as it is. Green plays in uma-farm today; amber is what the sandbox tries first.' }),
+    h('p', { class: 'muted', text: 'What a draft holds, in the game’s own shapes, so it moves into the game as it is. Green plays in uma-farm today; amber is what the sandbox tries first.' }),
     first ? h('p', {}, h('a', { class: 'btn primary', href: `#/play/ch/${first.chapter.chapter}/${playable(first)[0].kind}`, text: `Play a scene from chapter ${first.chapter.chapter}` })) : null,
     h('div', { class: 'two' },
       h('div', { class: 'stack' },
@@ -390,19 +390,19 @@ export function formatView() {
       h('div', { class: 'stack' },
         h('div', { class: 'panel' }, h('h3', { text: 'A chapter, from line to built' }),
           h('ol', { class: 'list' },
-            h('li', {}, h('b', { text: 'line' }), ': CS43’s one line: the title, what it opens, its goals.'),
+            h('li', {}, h('b', { text: 'line' }), ': its one line: the title, what it opens, its goals.'),
             h('li', {}, h('b', { text: 'outline' }), ': each of its two scenes in three to six beats, with the place, who brings it, the reward and the story item.'),
             h('li', {}, h('b', { text: 'scripted' }), ': both scenes in the game’s Beat shape, played here, read by you; the closing scene has the recruit and names who opens the next chapter.'),
-            h('li', {}, h('b', { text: 'built' }), ': the chapter’s packet has moved the lines into packages/domain/src/story/; the sandbox now plays the game’s own, and flags a draft that differs.'),
+            h('li', {}, h('b', { text: 'built' }), ': the lines live in packages/domain/src/story/; the sandbox plays the game’s own, and flags a draft that differs.'),
           )),
         h('div', { class: 'panel' }, h('h3', { text: 'Bonds' }), h('ul', { class: 'list' },
-          h('li', { text: 'Story beats (CS45): five a temperament, at 2, 4, 6, 8 and 10 hearts of your affinity, lines by her and by you. 25 in all.' }),
-          h('li', { text: `Conversations (CS46): at each bond heart 1–5, chosen by place, then the pair’s temperaments, callings and distances, both orders tried, the same pair always the same. Target: ${D.data.target.any} any-place and ${D.data.target.place} a work place, per heart: 250.` }),
+          h('li', { text: 'Story beats: five a temperament, at 2, 4, 6, 8 and 10 hearts of your affinity, lines by her and by you. 25 in all.' }),
+          h('li', { text: `Conversations: at each bond heart 1–5, chosen by place, then the pair’s temperaments, callings and distances, both orders tried, the same pair always the same. Target: ${D.data.target.any} any-place and ${D.data.target.place} a work place, per heart: 250.` }),
         )),
         h('div', { class: 'panel small' }, h('h3', { text: 'Files' }), h('ul', { class: 'list' },
           h('li', {}, h('code', { text: 'docs/story/chapters/chapter-<n>.json' }), ': one a chapter'),
           h('li', {}, h('code', { text: 'docs/story/beats.json' }), ', ', h('code', { text: 'docs/story/conversations.json' })),
-          h('li', {}, h('code', { text: 'docs/story/reviews.json' }), ': your reads, written by the Review panels'),
+          h('li', {}, h('code', { text: 'content/story/reviews.json' }), ': your reads, written by the Review panels (private, ignored by git)'),
           h('li', {}, h('code', { text: 'packages/domain/src/story/' }), ': the game’s story as built, read in place'),
         )),
       ),

@@ -21,13 +21,13 @@ import { castEntry, type StoryPack } from '../story/pack'
 /** The five kinds of arrival, as the manual lists them. */
 export const ARRIVAL_KINDS: readonly { kind: Arrival['kind']; when: string; where: string }[] = [
   { kind: 'opening', when: 'The opening scene, day 1: read or skipped, it brings the cast file’s opening three, a farmer, a forager and a fisher', where: 'The opening scene' },
-  { kind: 'chapter', when: 'The night chapter *n* completes, in place of a drawn recruit (chapter 1 now; 2–7 with M5 and M6)', where: 'Night step 8, `checkGoals`' },
+  { kind: 'chapter', when: 'The night chapter *n* completes, in place of a drawn recruit (chapter 1 today; chapters 2–7 once they’re built)', where: 'Night step 8, `checkGoals`' },
   { kind: 'festival', when: 'The morning of that festival’s day in its year (year 1 unless the cast names one), built or not', where: 'Night step 8, `arriveUmas`' },
   { kind: 'beds', when: 'The morning the Dorm’s level *n* takes effect (levels 4–8)', where: 'Night step 8, `arriveUmas`' },
   { kind: 'event', when: 'The morning after another Uma’s named event plays (`<characterId>:<eventId>`, or an event id: anyone’s)', where: 'Night step 8, `arriveUmas`' },
 ]
 
-/** The farm day of a festival in a year (CS4's dates). */
+/** The farm day of a festival in a year (the calendar's dates). */
 export function festivalArrivalDay(festival: FestivalId, year = 1): number {
   const f = FESTIVALS.find((x) => x.id === festival)!
   return farmDay({ year, season: f.season, day: f.day })
@@ -75,7 +75,7 @@ export function arrivalsTonight(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ti
 }
 
 /** The opening three walk in: reading or skipping the opening scene joins those of the cast's `opening` not
- * on the roster yet, in order, each home while a bed is free (day 1 has three), their ties seeded (F52: the stand-in's
+ * on the roster yet, in order, each home while a bed is free (day 1 has three), their ties seeded (the stand-in's
  * 9000001 and 9000002 at 150, 9000001 and 9000003 at 50). Once: the roster guards it. */
 export function joinOpening(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 {
   return pack.cast.opening.reduce((next, id) => (next.roster[id] || !castEntry(pack, id) ? next : arrive(next, id, pack).save), save)
@@ -84,13 +84,6 @@ export function joinOpening(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>
 /** The chapter's authored arrival: the first cast Uma whose arrival is chapter `n`, or null. */
 export function chapterArrival(pack: Pick<StoryPack, 'cast'>, chapter: number): CastEntry | null {
   return pack.cast.umas.find((u) => u.arrives.kind === 'chapter' && u.arrives.chapter === chapter) ?? null
-}
-
-/** The order arrivals play their scenes: by the day she joined, then the cast's order. */
-export function arrivalOrder(save: Pick<SaveV4, 'roster'>, pack: Pick<StoryPack, 'cast'> | null): string[] {
-  const order = pack ? pack.cast.umas.map((u) => u.characterId) : []
-  const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length)
-  return Object.entries(save.roster).sort(([a, x], [b, y]) => x.joined - y.joined || rank(a) - rank(b) || Number(a) - Number(b)).map(([id]) => id)
 }
 
 /** What brings the next arrivals, never who: up to three triggers still waiting, most likely first: the

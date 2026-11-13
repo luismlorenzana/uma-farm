@@ -25,7 +25,7 @@ export const MAX_GATHER_DAYS = 4
 /** A station job makes up to 100 items. */
 export const MAX_STATION_ITEMS = 100
 
-/** The three stations M4 opens, each at its gathering place's row. */
+/** The three stations v3 opens, each at its gathering place's row. */
 export const STATIONS = ['mill', 'sawmill', 'smokehouse'] as const
 export type StationId = typeof STATIONS[number]
 export const isStation = (id: string): id is StationId => (STATIONS as readonly string[]).includes(id)

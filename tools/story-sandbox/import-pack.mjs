@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Copies the cast pack into the farm's private content so the sandbox can show the Umas' faces and art beside F40's
-// files: the newest pack uma-quest made from the Studio's tier export, and the images it lists (never downloaded again).
+// Copies the cast pack into the farm's private content so the sandbox can show the Umas' faces and art beside the
+// authored story's files: the newest pack uma-quest made from the Studio's tier export, and the images it lists (never
+// downloaded again).
 //
 //   node tools/story-sandbox/import-pack.mjs [uma-quest's content/stories folder]
 //

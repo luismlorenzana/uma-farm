@@ -1,14 +1,14 @@
-// The Farm Story Sandbox's model (docs/design/story-sandbox.md): chapter drafts, story beats and conversation templates
-// from docs/story/, checked against the game's story as built (lib/game.mjs). The farm's story is original (core spec
-// CS41, CS46): the town's cast speaks by name, and Umas speak only in roles the game fills at run time, so no Uma's name
-// is in this code or in the drafts. The sample crew below is invented, one Uma a temperament.
+// The Farm Story Sandbox's model (tools/story-sandbox/README.md): chapter drafts, story beats and conversation
+// templates from docs/story/, checked against the game's story as built (lib/game.mjs). The farm's story is original:
+// the town's cast speaks by name, and Umas speak only in roles the game fills at run time, so no Uma's name is in this
+// code or in the drafts. The sample crew below is invented, one Uma a temperament.
 
 const object = (v) => typeof v === 'object' && v !== null && !Array.isArray(v)
 const text = (v, max = 4000) => typeof v === 'string' && v.trim().length > 0 && v.length <= max
 const int = (v) => Number.isSafeInteger(v)
 
 export const CHAPTER_COUNT = 8
-/** A chapter's depth: CS43's one line, an outline of its two scenes, the scenes scripted here, or built in the game. */
+/** A chapter's depth: its one line, an outline of its two scenes, the scenes scripted here, or built in the game. */
 export const LAYERS = ['line', 'outline', 'scripted', 'built']
 /** The longest line a scene's text box takes (chapter 1's longest is 118); one line to a tap. */
 export const SCENE_LINE_LIMIT = 120
@@ -17,7 +17,8 @@ export const BUBBLE_LINE_LIMIT = 80
 export const BEAT_HEARTS = [2, 4, 6, 8, 10]
 export const BOND_HEARTS = [1, 2, 3, 4, 5]
 export const DISTANCES = ['sprint', 'mile', 'medium', 'long']
-/** CS46's authoring target per bond heart: 20 templates for any place, and 2 for each place Umas work (map rows 1–5). */
+/** The conversations' authoring target per bond heart: 20 templates for any place, and 2 for each place Umas work
+ * (map rows 1–5). */
 export const CONVERSATION_TARGET = { any: 20, place: 2 }
 const PLACEHOLDERS = { scene: ['name'], beat: ['name', 'farm'], conversation: ['a', 'b', 'place', 'item', 'farm'] }
 
@@ -27,9 +28,9 @@ export const SPEAKERS = {
   narrator: { game: true, uma: false, about: 'Narration: no speaker, in italics' },
   'first-hand': { game: true, uma: true, about: 'Your first hands (index 0–2), the start’s three. The line is left empty: she says her temperament’s hello' },
   'newest-hand': { game: true, uma: true, about: 'Your newest hand: the last to join, the chapter’s recruit on a closing morning' },
-  best: { game: false, uma: true, about: 'Your best at an activity (CS41): the highest rank in it, then talent' },
-  closest: { game: false, uma: true, about: 'The Uma you’re closest to (CS41): the highest affinity' },
-  team: { game: false, uma: true, about: 'Your team (index 0–2, CS41): a festival’s three' },
+  best: { game: false, uma: true, about: 'Your best at an activity: the highest rank in it, then talent' },
+  closest: { game: false, uma: true, about: 'The Uma you’re closest to: the highest affinity' },
+  team: { game: false, uma: true, about: 'Your team (index 0–2): a festival’s three' },
 }
 
 /** An invented crew, one a temperament, that fills the roles when a scene plays here. The page lets you rename them. */
@@ -99,7 +100,7 @@ export function parseChapter(raw, game) {
   if (!brings.length) issues.push('No “brings”: the cast member who opens it')
   if (game?.ok) for (const id of brings) if (!castIds.has(id)) issues.push(`brings ${id}, who isn’t in the town’s cast`)
   const goals = Array.isArray(raw.goals) ? raw.goals : []
-  if (goals.length < 3 || goals.length > 6 || !goals.every((g) => text(g, 200))) issues.push('Three to six goals, each a line (CS42, CS43)')
+  if (goals.length < 3 || goals.length > 6 || !goals.every((g) => text(g, 200))) issues.push('Three to six goals, each a line')
   if (!text(raw.reward, 300)) issues.push('No reward line')
   const scenes = []
   for (const kind of ['open', 'close']) {
@@ -136,7 +137,7 @@ function chapterWords(chapter, game) {
   return n
 }
 
-/** The story beats file (CS46's `StoryBeat`, with a title and a premise for the outline layer). */
+/** The story beats file (the game's `StoryBeat` shape, with a title and a premise for the outline layer). */
 export function parseBeats(raw, game) {
   if (!object(raw) || raw.schemaVersion !== 1 || raw.kind !== 'farm-story-beats' || !Array.isArray(raw.beats)) throw new Error('Not a story beats file (kind farm-story-beats, schemaVersion 1)')
   const temperaments = game?.temperaments ?? []
@@ -144,7 +145,7 @@ export function parseBeats(raw, game) {
     const issues = []
     if (!object(beat)) return { beat: { id: `#${i + 1}` }, issues: ['Not a beat'] }
     if (game?.ok && !temperaments.includes(beat.temperament)) issues.push(`Temperament is one of ${temperaments.join(', ')}`)
-    if (!BEAT_HEARTS.includes(beat.hearts)) issues.push(`Hearts are ${BEAT_HEARTS.join(', ')} (CS45)`)
+    if (!BEAT_HEARTS.includes(beat.hearts)) issues.push(`Hearts are ${BEAT_HEARTS.join(', ')}`)
     if (beat.id !== `beat.${beat.temperament}.${beat.hearts}`) issues.push(`The id is beat.<temperament>.<hearts>: beat.${beat.temperament}.${beat.hearts}`)
     if (!text(beat.title, 120)) issues.push('No title')
     if (!text(beat.premise, 600)) issues.push('No premise: one line on what happens')
@@ -162,7 +163,7 @@ export function parseBeats(raw, game) {
 
 const WHO_KEYS = { temperament: 'temperaments', line: 'callings', distance: 'distances' }
 
-/** The conversation templates file (CS46's `ConversationTemplate`; a `narrator` line is sandbox-first). */
+/** The conversation templates file (the game's `ConversationTemplate` shape; a `narrator` line is sandbox-first). */
 export function parseConversations(raw, game) {
   if (!object(raw) || raw.schemaVersion !== 1 || raw.kind !== 'farm-conversations' || !Array.isArray(raw.templates)) throw new Error('Not a conversations file (kind farm-conversations, schemaVersion 1)')
   const allowed = { temperaments: game?.temperaments ?? [], callings: game?.callings ?? [], distances: DISTANCES }
@@ -171,7 +172,7 @@ export function parseConversations(raw, game) {
     const issues = []
     if (!object(t)) return { template: { id: `#${i + 1}` }, issues: ['Not a template'] }
     if (game?.ok && !places.has(t.place)) issues.push(`Place is a farm place or any, not ${t.place}`)
-    if (!BOND_HEARTS.includes(t.hearts)) issues.push('Hearts are 1–5 (CS44)')
+    if (!BOND_HEARTS.includes(t.hearts)) issues.push('Hearts are 1–5')
     if (typeof t.id !== 'string' || !t.id.startsWith(`conv.${t.place}.${t.hearts}.`)) issues.push(`The id starts conv.${t.place}.${t.hearts}.`)
     for (const side of ['a', 'b']) {
       const who = t[side]
@@ -182,7 +183,7 @@ export function parseConversations(raw, game) {
       }
     }
     const lines = Array.isArray(t.lines) ? t.lines : []
-    if (lines.length < 3 || lines.length > 6) issues.push('Three to six lines (FC27)')
+    if (lines.length < 3 || lines.length > 6) issues.push('Three to six lines')
     if (!lines.some((l) => l?.by === 'a') || !lines.some((l) => l?.by === 'b')) issues.push('Both a and b speak')
     lines.forEach((l, k) => {
       if (!object(l) || !['a', 'b', 'narrator'].includes(l.by) || !text(l.text, 1000)) issues.push(`Line ${k + 1}: by a, b or narrator, with its text`)
@@ -192,15 +193,15 @@ export function parseConversations(raw, game) {
   })
 }
 
-/** A small stable hash (FNV-1a), for CS46's seeded tie-break. */
+/** A small stable hash (FNV-1a), for the choosing rule's seeded tie-break. */
 export function seedOf(value) {
   let h = 0x811c9dc5
   for (const ch of String(value)) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0 }
   return h
 }
 
-/** How well a template fits a pair in one order, or null when a filter doesn't match (CS46: 2 a temperament, 1 a line
- * or a distance). */
+/** How well a template fits a pair in one order, or null when a filter doesn't match (2 a temperament, 1 a line or a
+ * distance). */
 function fit(t, a, b) {
   let score = 0
   for (const [who, uma] of [[t.a ?? {}, a], [t.b ?? {}, b]]) {
@@ -213,9 +214,10 @@ function fit(t, a, b) {
   return score
 }
 
-/** CS46's choosing rule: of the templates for these hearts at this place or any, score 3 for the place, 2 a temperament
- * and 1 a line or distance matched, trying both orders of the pair; the best wins, ties broken by a seed from the two
- * ids, so the same pair always gets the same conversation. Returns every eligible template, best first. */
+/** The conversations' choosing rule: of the templates for these hearts at this place or any, score 3 for the place,
+ * 2 a temperament and 1 a line or distance matched, trying both orders of the pair; the best wins, ties broken by a
+ * seed from the two ids, so the same pair always gets the same conversation. Returns every eligible template, best
+ * first. */
 export function chooseConversation(templates, pair, place, hearts) {
   const [x, y] = pair
   const key = [x.id, y.id].sort().join('|')
@@ -232,7 +234,8 @@ export function chooseConversation(templates, pair, place, hearts) {
   return ranked
 }
 
-/** The work places of CS46's target: the map's first five rows (gathering, the stations, the ranch, the workshops). */
+/** The work places of the conversations' target: the map's first five rows (gathering, the stations, the ranch, the
+ * workshops). */
 export const workPlaces = (places) => places.filter((p) => p.row <= 5).map((p) => p.id)
 
 /** Checks across the files, and how far the beats and conversations have come. */

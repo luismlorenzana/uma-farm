@@ -2,7 +2,7 @@
 // `?evening=pick` is Tonight's **Pick someone ›**: the Umas home who can spend one, a yes first, each with her favourite
 // kind and ✉. `?evening=<characterId>` is her profile's **Evening ›** (and a picked row): her kinds sheet, each open kind
 // with her three numbers today ("Perfect +225", ★ her favourite ×1.5, +20 when she asked), the ones her ladder hasn't
-// opened greyed with their rung; then F49's play at its evening length (`PlaySheet`, seeded by the day, her and the kind)
+// opened greyed with their rung; then the play at its evening length (`PlaySheet`, seeded by the day, her and the kind)
 // over everything; then the card: the grade, the sum and her bar, one **Continue**. Nothing is saved until the play ends:
 // `spendEvening` commits once, stamped. Loaded on demand.
 import {

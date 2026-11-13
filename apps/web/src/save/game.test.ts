@@ -1,5 +1,5 @@
 // The store against an in-memory server with the API's revision rules, and a fake IndexedDB: the sync engine on save v3
-// (F24: the loop is the app; `loop/loop-store.test.ts` carries every v2 into it). Invented data only.
+// (the loop is the app; `loop/loop-store.test.ts` carries every v2 into it). Invented data only.
 import 'fake-indexeddb/auto'
 import { SAVE_VERSION, newSave, touched, type SaveEnvelope, type SaveV3 } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -95,7 +95,7 @@ describe('the store', () => {
     expect((await safetyCopies('u1'))[0]).toMatchObject({ reason: 'restore' })
   })
 
-  it('knows a save this device\'s last change made: a push keeps it, a save from the server or the boot isn\'t (F12)', async () => {
+  it('knows a save this device\'s last change made: a push keeps it, a save from the server or the boot isn\'t', async () => {
     server.envelope = { revision: 1, save: newSave('u1', T0) }
     await boot('u1')
     expect(madeHere(useGame.getState().save!)).toBe(false)

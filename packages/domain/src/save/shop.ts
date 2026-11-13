@@ -1,7 +1,7 @@
 // The shop: lines of things to buy, each with a price and an optional gate, bought
-// with gold into the Warehouse at ★1. F19 made the frame and F20 the season's seeds by tier: the first three from Farm
-// Rank 1, the next two from FR2, the last from FR4. The list changes on a season's first day and never runs out (F20
-// decision 8); land, beds and stations are bought at their own places. Like `spendGold`, `buy` doesn't stamp `updatedAt`.
+// with gold into the Warehouse at ★1. The season's seeds come by tier: the first three from Farm
+// Rank 1, the next two from Farm Rank 2, the last from Farm Rank 4. The list changes on a season's first day and never
+// runs out; land, beds and stations are bought at their own places. Like `spendGold`, `buy` doesn't stamp `updatedAt`.
 import { seedLines } from '../fields/fields'
 import { opened, type PlaceOpens } from '../farm/places'
 import { spendGold } from './gold'

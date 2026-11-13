@@ -1,8 +1,8 @@
 // The roster's cards: the Umas on the farm as album rows with their talents and ranks, the
 // filters (talent and rank in each activity, favourite line) and the sorts (talent score and rank points in an activity,
 // joined, name), the words on a card, and one Uma's nine activities for her sheet. `/roster` and every Uma picker (the
-// Fields' tender, F22's jobs, F23's swaps) read these. F23 adds everyone on the roster, home or away, and your affinity
-// with her. On save v4 her favourite line is the story pack's and there is no affinity until F47's route. Pure
+// Fields' tender, the jobs, the swaps) read these. They cover everyone on the roster, home or away, and your affinity
+// with her. On save v4 her favourite line is the story pack's and there is no affinity until the route. Pure
 // but for the pack, which the romance build has loaded before any screen.
 import {
   atHome, farmHome,
@@ -72,7 +72,7 @@ export const scoreIn = (row: Pick<LoopUmaRow, 'talents'>, activity: Activity): n
 /** "Hand · B": her rank and talent in an activity (the picker's card for a place's activity). */
 export const rankTalent = (row: Pick<LoopUmaRow, 'talents' | 'ranks'>, activity: Activity): string => `${RANKS[row.ranks[activity].rank]} · ${TALENT_GRADES[stepIn(row, activity)]}`
 
-/** The talent filter's bands: a row meets every band up to her grade (decision 7: C+, B+, A+, S). */
+/** The talent filter's bands: a row meets every band up to her grade (C+, B+, A+, S). */
 const TALENT_BANDS: readonly { value: string; label: string; step: TalentStep }[] = [
   { value: 'c', label: 'C+', step: 4 }, { value: 'b', label: 'B+', step: 5 }, { value: 'a', label: 'A+', step: 6 }, { value: 's', label: 'S', step: 7 },
 ]

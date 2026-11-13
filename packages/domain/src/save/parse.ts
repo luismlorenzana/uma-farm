@@ -1,4 +1,4 @@
-// The save's strict parse helpers (shared by every version since F17): explicit, path-reporting, and strict on
+// The save's strict parse helpers (shared by every version): explicit, path-reporting, and strict on
 // unknown keys, so an older client can't half-write a newer save. Internal to `save/`: the versions' parsers use them.
 import type { Account } from './save'
 

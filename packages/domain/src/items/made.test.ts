@@ -1,5 +1,5 @@
 // Copied from uma-rpg packages/domain/src/items/made.test.ts at 30a322a, with its Wilds-only parts cut.
-// The made items (the farm by line since H112): names, places and grades. Their recipes, one line
+// The made items (the farm by line's): names, places and grades. Their recipes, one line
 // each, are `made-v4.ts`' (checked in `work/kinds-v4.test.ts`).
 import { describe, expect, it } from 'vitest'
 import { madeName, madePlace } from './made'
@@ -15,7 +15,7 @@ describe('made items: names, places and grades', () => {
     expect(new Set(MADE_IDENTITIES.map((m) => madeName(m.id))).size).toBe(MADE_IDENTITIES.length)
   })
 
-  it('makes each line at its own place (FL3), a jewel at its node\'s grade', () => {
+  it('makes each line at its own place, a jewel at its node\'s grade', () => {
     expect(MADE_LINES.map((l) => madePlace(l))).toEqual(['weapon-forge', 'armorer', 'charm-forge', 'lapidary', 'lapidary', 'tome-forge'])
     expect([1, 2, 3, 4, 5].map((n) => madeIdentity(jewelId('planet', n))!.grade)).toEqual([1, 3, 5, 7, 9])
     expect([1, 2, 3, 4, 5].map((n) => madeIdentity(jewelId('moon', n))!.grade)).toEqual([2, 4, 6, 8, 10])

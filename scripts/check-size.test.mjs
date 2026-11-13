@@ -43,20 +43,20 @@ test('a lazy module rendered in the initial JS fails', () => {
     ['src/scene/engine.ts (assets/main.js)'])
 })
 
-test('the Hub scene and its Phaser load on demand, by suffix through pnpm\'s store (F5), and the scene player too (F24)', () => {
+test('the Hub scene and its Phaser load on demand, by suffix through pnpm\'s store, and the scene player too', () => {
   const scene = '../../node_modules/.pnpm/@luismlorenzana+uma-kit@0.17.0_x/node_modules/@luismlorenzana/uma-kit/dist/hub/scene/createHubGame.js'
   const phaser = '../../node_modules/.pnpm/phaser@4.2.1/node_modules/phaser/dist/phaser.esm.js'
   assert.equal(lazyInInitial({ 'assets/main.js': [scene, phaser, 'src/loop/ScenePlayer.tsx', 'src/main.tsx'] }, ['assets/main.js'], LAZY_MODULES).length, 3)
 })
 
-test('the HD-2D farm\'s stage, three.js and the farm\'s design load on demand, by suffix through pnpm\'s store (F11)', () => {
+test('the HD-2D farm\'s stage, three.js and the farm\'s design load on demand, by suffix through pnpm\'s store', () => {
   const three = '../../node_modules/.pnpm/three@0.187.0/node_modules/three/build/three.module.js'
   const band = '../../node_modules/.pnpm/@luismlorenzana+uma-stage@0.3.0_x/node_modules/@luismlorenzana/uma-stage/dist/esm/stage/bandStage.js'
   const modules = [three, band, 'src/loop/FarmStage.tsx', 'src/loop/farm-stage.ts', '../../packages/domain/src/farm/stage.ts', 'src/app/stage-switch.ts', 'src/main.tsx']
   assert.equal(lazyInInitial({ 'assets/main.js': modules }, ['assets/main.js'], LAZY_MODULES).length, 5)
 })
 
-test('kit-farm\'s loader and its atlas load on demand with the stage (D73)', () => {
+test('kit-farm\'s loader and its atlas load on demand with the stage', () => {
   const atlas = '../../node_modules/.pnpm/@luismlorenzana+uma-art@2.27.0/node_modules/@luismlorenzana/uma-art/kit-farm/atlas.json'
   assert.equal(lazyInInitial({ 'assets/main.js': ['src/loop/farm-kit.ts', atlas, 'src/main.tsx'] }, ['assets/main.js'], LAZY_MODULES).length, 2)
 })
@@ -71,7 +71,7 @@ const manifest = {
   'atlas.png': { file: 'assets/stage/kit-farm.png' },
 }
 
-test('the HD-2D preview stays out of the precache, cached on first use instead (D73)', () => {
+test('the HD-2D preview stays out of the precache, cached on first use instead', () => {
   assert.deepEqual(precacheUrls(sw(['index.html', 'assets/index.js'])), ['index.html', 'assets/index.js'])
   assert.deepEqual(stagePrecacheProblems(sw(['index.html', 'assets/index.js', 'assets/FarmMap.js']), manifest), [])
   assert.deepEqual(stagePrecacheProblems(sw(['assets/index.js', 'assets/stage/FarmStage.js', 'assets/stage/kit-farm.png']), manifest),
@@ -79,7 +79,7 @@ test('the HD-2D preview stays out of the precache, cached on first use instead (
   assert.deepEqual(stagePrecacheProblems(sw(['assets/index.js'], false), manifest), ['no runtime route for /assets/stage/'])
 })
 
-test('no precached chunk imports a stage chunk statically, or it would miss offline (D73)', () => {
+test('no precached chunk imports a stage chunk statically, or it would miss offline', () => {
   const shared = { ...manifest, 'src/loop/FarmMap.tsx': { file: 'assets/FarmMap.js', imports: ['index.html', 'src/loop/FarmStage.tsx'] } }
   assert.deepEqual(stagePrecacheProblems(sw(['assets/index.js']), shared), ['assets/FarmMap.js imports assets/stage/FarmStage.js statically'])
 })
@@ -89,7 +89,7 @@ test('the HTML must have exactly one module entry', () => {
   assert.throws(() => entrySrc('<script src="/a.js"></script>'))
 })
 
-test("no chunk of a production build holds the dev server's stand-in pack, lazy or not (F56)", async () => {
+test("no chunk of a production build holds the dev server's stand-in pack, lazy or not", async () => {
   const standIn = ['../../packages/domain/src/story/stand-in.ts', '../../packages/domain/src/story/stand-in/routes/9000001.json']
   assert.deepEqual(devOnlyInBuild({ 'assets/main.js': ['src/main.tsx'], 'assets/load.js': ['src/story/load.ts', ...standIn] }),
     standIn.map((id) => `${id} (assets/load.js)`))

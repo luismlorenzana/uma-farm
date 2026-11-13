@@ -1,7 +1,8 @@
 // The homestead's actions: a house built and named, a house extended, a spouse moved or two
 // swapped, tonight's house picked, a piece of furniture placed, the morning's "misses you" put away, and a household scene
 // read, each one player's change over the save as it is now, committed once and stamped; a refused rule throws its words.
-// Apart from `actions.ts` so the M4 build never fetches the homestead's rules. Loaded on demand, the romance build only.
+// Apart from `actions.ts` so the deployed build never fetches the homestead's rules. Loaded on demand, the romance
+// build only.
 import {
   anotherNight, birthdaysOf, buildHouse, extendHouse, moveSpouse, placeFurniture, readHousehold, sleepAt, swapRooms, touched, type HouseholdId, type SaveV4,
 } from '@farm/domain'

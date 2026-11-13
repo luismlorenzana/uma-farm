@@ -3,7 +3,7 @@ import { FieldValue, getFirestore, type DocumentSnapshot, type Firestore } from 
 import { parseSave, versionOf, type SaveEnvelope, type StoredSave } from '@farm/domain'
 import { EMPTY_ENVELOPE, RevisionConflict, type SaveRepository } from './save.repository'
 
-// Production persistence in the `farm` database (FIRESTORE_DATABASE; never `(default)`, which is uma-rpg's, IN5):
+// Production persistence in the `farm` database (FIRESTORE_DATABASE; never `(default)`, which is uma-rpg's):
 // `saves/{uid}` = { revision, save }, revision-checked inside a transaction. Copied from uma-rpg at 30a322a. `save` is
 // JSON text: Firestore refuses a list inside a list. When a newer save version first replaces a stored one,
 // the stored document is copied to `saveBackups/{uid}-v{n}`, so a migration can be undone by hand. A refused

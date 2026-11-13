@@ -8,13 +8,13 @@
 // something shown on a card, and every beat carries the hint her profile shows while it's next. Nothing is missable and
 // nothing waits on the calendar: a rung is ready when her bar is full, plus at most one setup the player controls (she
 // works a place today, an item is in the Warehouse, a bond, a chapter), never an hour, the weather, a season or a
-// festival. Routes run side by side and end in a spouse ladder (D43: every Uma can be married).
+// festival. Routes run side by side and end in a spouse ladder: every Uma can be married.
 import { ACTIVITIES, type Activity } from '../farm/ranks'
 import { FARM_PLACE_IDS } from '../farm/places'
 import { isGoodId } from '../goods/ids'
 import { CAST_IDS } from './cast'
 
-/** The farm's places plus the romance's own backdrops (world bible W5). */
+/** The farm's places plus the romance's own backdrops. */
 export const STORY_PLACES = [
   ...FARM_PLACE_IDS, 'pond-night', 'overlook', 'orchard-bench', 'dorm-porch', 'harbour-wall', 'chapel-bell', 'town', 'hilltop-track', 'sea-pier',
 ] as const
@@ -25,7 +25,7 @@ export const CALLINGS = ['farming', 'foraging', 'fishing', 'mining', 'quarry'] a
 /** Her favourite work: any activity but expeditions, which are a party's, not one Uma's. */
 export const FAVOURITE_LINES = ACTIVITIES.filter((a): a is Exclude<Activity, 'expeditions'> => a !== 'expeditions')
 export const TIE_KINDS = ['friends', 'rivals', 'mentor', 'teammates', 'sisters', 'other'] as const
-/** The ladders a beat sits on: her arrival, then RS7's six. */
+/** The ladders a beat sits on: her arrival, then the route's six. */
 export const LADDERS = ['arrival', 'friendship', 'confession', 'romance', 'proposal', 'wedding', 'spouse'] as const
 export const EMOTES = ['happy', 'shy', 'sad', 'angry', 'surprised', 'thinking', 'laughing', 'tender'] as const
 export const TONES = ['warm', 'playful', 'honest'] as const
@@ -35,7 +35,7 @@ const DORM_LEVELS_FOR_20 = 8
 /** The date games: short shared activities a date is played as. */
 export const DATE_GAMES = ['fishing', 'cooking', 'stargazing', 'footrace', 'dance', 'picnic', 'market', 'boat', 'walk', 'crafting'] as const
 
-/** The route's 27 rungs (amended by D43 and F46): her arrival scene ("event zero"), ten friendship events, the
+/** The route's 27 rungs: her arrival scene ("event zero"), ten friendship events, the
  * confession, ten romance events, the proposal, the wedding, and three on the spouse ladder after it (S1, S3, S5), so
  * married life goes on. */
 export const ARRIVAL = 'arrival'
@@ -134,7 +134,7 @@ export interface UmaBible {
   laughs: string
   hurts: string
   route: Beat[]
-  /** Her chat sets (RM31's F1 perk): what she says when you chat, by stage, from Friendship 1: `friend` through
+  /** Her chat sets (her F1 perk): what she says when you chat, by stage, from Friendship 1: `friend` through
    * the confession, `partner` from Romance 1 to the wedding, `spouse` after it. Without it she keeps her temperament's
    * lines. */
   chats?: ChatSets
@@ -203,7 +203,7 @@ export type Step =
   | { wait: number }
   | { place: StoryPlace }
   | { flag: string }
-  /** Its steps play only while the flag is set, `else` otherwise (F49 decision 7): flags change wording only. */
+  /** Its steps play only while the flag is set, `else` otherwise: flags change wording only. */
   | { when: string; then: Step[]; else?: Step[] }
 export interface Route { characterId: string; events: { id: string; steps: Step[] }[] }
 export interface PairConversations { a: string; b: string; levels: { hearts: number; place: StoryPlace; steps: Step[] }[] }
@@ -216,8 +216,8 @@ const GENDERED = /\b(husband|wife|boyfriend|girlfriend|groom|sir|mister|mr|mrs|m
  * speaks of the town's men and the Umas, never of themself in the third person. */
 const GENDERED_FARMER = /\b(bride)\b/i
 /** Nothing that reads under 18. */
-/** Whether a line genders the farmer: the words above, in anyone's lines; `bride` too in the farmer's own (F53
- * decision 10's test reads it for every wedding word). Returns the word, or null. */
+/** Whether a line genders the farmer: the words above, in anyone's lines; `bride` too in the farmer's own (the rings
+ * test reads it for every wedding word). Returns the word, or null. */
 export function gendersFarmer(text: string, farmer = true): string | null {
   return (text.match(GENDERED) ?? (farmer ? text.match(GENDERED_FARMER) : null))?.[0] ?? null
 }
@@ -241,9 +241,9 @@ function lineIssues(text: string, where: string, farmer: boolean): Issues {
   const issues: Issues = []
   for (const [, name] of text.matchAll(PLACEHOLDER)) if (name !== 'farmer') issues.push(`${where}: unknown placeholder {${name}} ({farmer} only)`)
   const gendered = text.match(GENDERED) ?? (farmer ? text.match(GENDERED_FARMER) : null)
-  if (gendered) issues.push(`${where}: “${gendered[0]}” genders the farmer (RS2)`)
+  if (gendered) issues.push(`${where}: “${gendered[0]}” genders the farmer`)
   const school = text.match(SCHOOLISH)
-  if (school) issues.push(`${where}: “${school[0]}” reads as school (RS3)`)
+  if (school) issues.push(`${where}: “${school[0]}” reads as school`)
   return issues
 }
 
@@ -267,10 +267,10 @@ export function stepIssues(steps: unknown, where: string, speakers: ReadonlySet<
         const ot = `${at}, option ${k + 1}`
         if (!isObject(o) || !isText(o.text, 160)) { issues.push(`${ot}: no text`); return }
         issues.push(...lineIssues(o.text, ot, true))
-        if (!oneOf(TONES, o.tone)) issues.push(`${ot}: tone is warm, playful or honest (RS19)`)
+        if (!oneOf(TONES, o.tone)) issues.push(`${ot}: tone is warm, playful or honest`)
         for (const k2 of ['friendship', 'romance'] as const) {
           const v = o[k2]
-          if (v !== undefined && (!Number.isInteger(v) || (v as number) < 0 || (v as number) > 50)) issues.push(`${ot}: ${k2} is 0–50 (no answer costs hearts, RS19)`)
+          if (v !== undefined && (!Number.isInteger(v) || (v as number) < 0 || (v as number) > 50)) issues.push(`${ot}: ${k2} is 0–50 (no answer costs hearts)`)
         }
         if (o.then !== undefined) issues.push(...stepIssues(o.then, `${ot} then`, speakers, depth + 1, isGood))
         const g = o.gives
@@ -309,7 +309,7 @@ export function stepIssues(steps: unknown, where: string, speakers: ReadonlySet<
   return issues
 }
 
-/** Days in each month, February's 29 allowed (RM16: a birthday, never a year). */
+/** Days in each month, February's 29 allowed (a birthday has no year). */
 const MONTH_DAYS = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 /** A birthday on a real date: `{ month: 1–12, day }` with nothing else. */
 function realDate(v: unknown): boolean {
@@ -347,7 +347,7 @@ export function castIssues(cast: unknown, ctx: StoryContext): Issues {
     if (!ctx.umas.has(id)) issues.push(`${at} (${id}): not in the export’s cast`)
     if (seen.has(id)) issues.push(`${at} (${id}): listed twice`)
     seen.add(id)
-    if (u.outfitId === null || u.outfitId === undefined) issues.push(`${at} (${id}): Name her outfit (RM2)`)
+    if (u.outfitId === null || u.outfitId === undefined) issues.push(`${at} (${id}): Name her outfit: outfitId is the outfit she plays as`)
     else if (typeof u.outfitId !== 'string' || !/^[1-9]\d*$/.test(u.outfitId)) issues.push(`${at} (${id}): outfitId is an outfit id`)
     if (!oneOf(CALLINGS, u.calling)) issues.push(`${at} (${id}): calling is one of ${CALLINGS.join(', ')}`)
     if (!isText(u.paragraph)) issues.push(`${at} (${id}): no paragraph`)
@@ -358,22 +358,22 @@ export function castIssues(cast: unknown, ctx: StoryContext): Issues {
       (a.kind === 'beds' && Number.isInteger(a.dormLevel) && (a.dormLevel as number) >= 2 && (a.dormLevel as number) <= DORM_LEVELS_FOR_20) ||
       (a.kind === 'event' && isText(a.after, 80)))
     if (!ok) issues.push(`${at} (${id}): an arrival is opening, a chapter 1–8, a festival, Dorm beds 2–${DORM_LEVELS_FOR_20}, or after an event`)
-    if (u.birthday !== undefined && !realDate(u.birthday)) issues.push(`${at} (${id}): a birthday is { month: 1–12, day } on a real date (RM16)`)
+    if (u.birthday !== undefined && !realDate(u.birthday)) issues.push(`${at} (${id}): a birthday is { month: 1–12, day } on a real date, with no year`)
   }
   for (const id of ctx.umas) if (!seen.has(id)) issues.push(`${id} from the export has no place in the cast`)
   const opening = Array.isArray(cast.opening) ? (cast.opening as unknown[]) : []
   const umas = cast.umas as Record<string, unknown>[]
   const callingOf = (id: unknown) => umas.find((u) => isObject(u) && u.characterId === id)?.calling
-  if (opening.length !== 3) issues.push('The opening is three Umas (RS13)')
+  if (opening.length !== 3) issues.push('The opening is three Umas')
   else {
-    if (opening.map(callingOf).join() !== 'farming,foraging,fishing') issues.push('The opening three are, in order, a farmer, a forager and a fisher (RS13, CS42)')
+    if (opening.map(callingOf).join() !== 'farming,foraging,fishing') issues.push('The opening three are, in order, a farmer, a forager and a fisher')
     for (const id of opening) if (!umas.some((u) => isObject(u) && u.characterId === id && isObject(u.arrives) && u.arrives.kind === 'opening')) issues.push(`${String(id)} opens the story, so she arrives at the opening`)
   }
   if (umas.filter((u) => isObject(u) && isObject(u.arrives) && u.arrives.kind === 'opening').length !== 3) issues.push('Exactly three Umas arrive at the opening')
   if (cast.ranker !== undefined) {
     const r = cast.ranker
     if (!isObject(r) || !Number.isInteger(r.boardRevision) || (r.boardRevision as number) < 1 || !Number.isInteger(r.profilesRevision) || (r.profilesRevision as number) < 1 ||
-      typeof r.pulledAt !== 'string' || Number.isNaN(Date.parse(r.pulledAt))) issues.push('ranker is { boardRevision, profilesRevision, pulledAt }: two revisions from 1 and a date (F58)')
+      typeof r.pulledAt !== 'string' || Number.isNaN(Date.parse(r.pulledAt))) issues.push('ranker is { boardRevision, profilesRevision, pulledAt }: two revisions from 1 and a date')
   }
   return issues
 }
@@ -397,11 +397,11 @@ export function tiesIssues(ties: unknown, ctx: StoryContext): Issues {
     if (!isText(t.line, 400)) issues.push(`${at}: no line`)
     else issues.push(...lineIssues(t.line, at, false))
     if (!isText(t.history, 600)) issues.push(`${at}: no history`)
-    if (t.source !== undefined && !oneOf(TIE_SOURCES, t.source)) issues.push(`${at}: source is real or story (F59)`)
-    if (t.from !== undefined && (t.source !== 'real' || !isText(t.from, 80))) issues.push(`${at}: from is a real tie’s relationship id (F59)`)
+    if (t.source !== undefined && !oneOf(TIE_SOURCES, t.source)) issues.push(`${at}: source is real or story`)
+    if (t.from !== undefined && (t.source !== 'real' || !isText(t.from, 80))) issues.push(`${at}: from is a real tie’s relationship id`)
     for (const side of [t.a, t.b]) if (typeof side === 'string') count.set(side, (count.get(side) ?? 0) + 1)
   }
-  for (const id of ctx.umas) if ((count.get(id) ?? 0) < 2) issues.push(`${id} has ${count.get(id) ?? 0} tie${count.get(id) === 1 ? '' : 's'}; every Uma needs two closest (RS12)`)
+  for (const id of ctx.umas) if ((count.get(id) ?? 0) < 2) issues.push(`${id} has ${count.get(id) ?? 0} tie${count.get(id) === 1 ? '' : 's'}; every Uma needs at least two`)
   return issues
 }
 
@@ -413,12 +413,12 @@ function triggerIssues(t: unknown, at: string, ctx: StoryContext, isGood: (id: s
     case 'item': return typeof t.good === 'string' && (isGood(t.good) || proposed.has(t.good)) ? [] : [`${at}: the item ${String(t.good)} isn’t a good`]
     case 'bond': return typeof t.with === 'string' && ctx.umas.has(t.with) && Number.isInteger(t.level) && (t.level as number) >= 1 && (t.level as number) <= 5 ? [] : [`${at}: a bond names an Uma in the cast and a level 1–5`]
     case 'chapter': return Number.isInteger(t.chapter) && (t.chapter as number) >= 1 && (t.chapter as number) <= 8 ? [] : [`${at}: chapter is 1–8`]
-    default: return [`${at}: a trigger is hearts, working, item, bond or chapter; never a clock, the weather, a season or a festival (D43)`]
+    default: return [`${at}: a trigger is hearts, working, item, bond or chapter; never a clock, the weather, a season or a festival`]
   }
 }
 
 function togetherIssues(t: unknown, at: string, ctx: StoryContext, isGood: (id: string) => boolean, proposed: ReadonlySet<string>): Issues {
-  if (!isObject(t)) return [`${at}: what do they do together? (D42)`]
+  if (!isObject(t)) return [`${at}: what do they do together? (talk, work, date, gift or help)`]
   switch (t.kind) {
     case 'talk': return []
     case 'work': return oneOf(ACTIVITIES, t.activity) ? [] : [`${at}: work at what?`]
@@ -440,7 +440,7 @@ export interface TagEntry {
   festival: Festival
   loved: string
   reasons: { favouriteLine: string; season: string; festival: string; loved: string }
-  /** A loved gift that isn't a good yet (a dish to come), flagged as a proposal (F40's rule). */
+  /** A loved gift that isn't a good yet (a dish to come), flagged as a proposal. */
   proposed?: boolean
 }
 export interface Tags { version: 1; tags: TagEntry[] }
@@ -477,7 +477,7 @@ export function tagsIssues(tags: unknown, ctx: StoryContext): Issues {
 export function bibleTagIssues(bible: UmaBible, tags: TagEntry): Issues {
   const pairs: [string, unknown, unknown][] = [['favouriteLine', bible.favouriteLine, tags.favouriteLine], ['season', bible.season, tags.season],
     ['festival', bible.festival, tags.festival], ['loved', bible.gifts?.loved, tags.loved]]
-  return pairs.filter(([, a, b]) => a !== b).map(([key, a, b]) => `${key}: the bible says ${String(a)}, the tag sheet ${String(b)} (F59)`)
+  return pairs.filter(([, a, b]) => a !== b).map(([key, a, b]) => `${key}: the bible says ${String(a)}, the tag sheet ${String(b)}; they must agree`)
 }
 
 /** umas/<id>.json (layer 2): her profile, her gifts by goods id, and every rung of her route. */
@@ -496,7 +496,7 @@ export function bibleIssues(bible: unknown, ctx: StoryContext): Issues {
   const gifts: Record<string, unknown> = isObject(bible.gifts) ? bible.gifts : {}
   const proposed = new Set(Array.isArray(gifts.proposed) ? (gifts.proposed as string[]) : [])
   const all = [gifts.loved, ...(Array.isArray(gifts.liked) ? gifts.liked : []), ...(Array.isArray(gifts.disliked) ? gifts.disliked : [])]
-  if (typeof gifts.loved !== 'string' || !Array.isArray(gifts.liked) || gifts.liked.length !== 3 || !Array.isArray(gifts.disliked) || gifts.disliked.length !== 2) issues.push('Gifts: one loved, three liked, two disliked (RS10)')
+  if (typeof gifts.loved !== 'string' || !Array.isArray(gifts.liked) || gifts.liked.length !== 3 || !Array.isArray(gifts.disliked) || gifts.disliked.length !== 2) issues.push('Gifts: one loved, three liked, two disliked')
   for (const id of all) if (typeof id === 'string' && !isGood(id) && !proposed.has(id)) issues.push(`Gift ${id} isn’t a good; list it under proposed if it’s a new one`)
   if (new Set(all).size !== all.length) issues.push('A good is in her gifts twice')
   const route = Array.isArray(bible.route) ? (bible.route as unknown[]) : []
@@ -508,20 +508,20 @@ export function bibleIssues(bible: unknown, ctx: StoryContext): Issues {
     if (ids.has(b.id)) issues.push(`${bt}: twice`)
     ids.add(b.id)
     if (!oneOf(LADDERS, b.ladder)) issues.push(`${bt}: ladder is one of ${LADDERS.join(', ')}`)
-    if ((b.id === ARRIVAL) !== (b.ladder === ARRIVAL)) issues.push(`${bt}: the arrival beat is \`arrival\` on the arrival ladder (RM4)`)
-    if (b.id === ARRIVAL && (b.hearts !== 0 || !isObject(b.trigger) || b.trigger.kind !== 'hearts')) issues.push(`${bt}: her arrival has hearts 0 and a hearts trigger (RM4)`)
+    if ((b.id === ARRIVAL) !== (b.ladder === ARRIVAL)) issues.push(`${bt}: the arrival beat is \`arrival\` on the arrival ladder`)
+    if (b.id === ARRIVAL && (b.hearts !== 0 || !isObject(b.trigger) || b.trigger.kind !== 'hearts')) issues.push(`${bt}: her arrival has hearts 0 and a hearts trigger`)
     if (!Number.isInteger(b.hearts) || (b.hearts as number) < 0 || (b.hearts as number) > 10) issues.push(`${bt}: hearts are 0–10`)
     if (!oneOf(STORY_PLACES, b.place)) issues.push(`${bt}: unknown place ${String(b.place)}`)
     if (!isText(b.beat, 400)) issues.push(`${bt}: no beat line`)
     else issues.push(...lineIssues(b.beat, bt, false))
-    if (!isText(b.hint, 160)) issues.push(`${bt}: no hint, the line her profile shows while it’s next (D43)`)
+    if (!isText(b.hint, 160)) issues.push(`${bt}: no hint, the line her profile shows while it’s next`)
     else issues.push(...lineIssues(b.hint, `${bt} hint`, false))
     issues.push(...triggerIssues(b.trigger, bt, ctx, isGood, proposed), ...togetherIssues(b.together, bt, ctx, isGood, proposed))
     const u = b.unlock
     if (u !== undefined && !(isObject(u) && ((u.kind === 'item' && typeof u.good === 'string' && (isGood(u.good) || proposed.has(u.good))) ||
       (u.kind === 'place' && oneOf(STORY_PLACES, u.place)) || (u.kind === 'perk' && isText(u.perk, 200))))) issues.push(`${bt}: an unlock is an item (a good), a place or a perk`)
   }
-  for (const rung of RUNGS) if (!ids.has(rung)) issues.push(`Her route has no ${rung} (RS7)`)
+  for (const rung of RUNGS) if (!ids.has(rung)) issues.push(`Her route has no ${rung} (a route has all ${RUNGS.length} rungs)`)
   if (bible.chats !== undefined) issues.push(...chatIssues(bible.chats))
   if (bible.keepsake !== undefined) issues.push(...keepsakeIssues(bible.keepsake))
   if (bible.petName !== undefined) issues.push(...petNameIssues(bible.petName))
@@ -664,13 +664,13 @@ export function unscriptedBeats(route: Route, bible: UmaBible | null): string[] 
 }
 
 /** How strict a route's check is: the sandbox and the story session want every beat scripted; the game's loader and
- * F56's release take a partial route, whose unscripted beats wait ("Her story is still being written"). */
+ * the release take a partial route, whose unscripted beats wait ("Her story is still being written"). */
 export interface RouteCheck {
   partial?: boolean
 }
 
 /** routes/<id>.json (layer 3): an event for every beat of her bible, and none without one (a partial route may leave
- * beats unscripted). Her arrival plays as RM4's scene. */
+ * beats unscripted). Her arrival plays as her arrival scene. */
 export function routeIssues(route: unknown, bible: UmaBible | null, ctx: StoryContext, check: RouteCheck = {}): Issues {
   if (!isObject(route) || typeof route.characterId !== 'string' || !Array.isArray(route.events)) return ['Not a route (characterId, events)']
   const issues: Issues = []

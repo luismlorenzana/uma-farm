@@ -1,11 +1,11 @@
-// The Bonds page: the 25 story beats and the conversations, their coverage, and a tester that runs CS46's
+// The Bonds page: the 25 story beats and the conversations, their coverage, and a tester that runs the conversations'
 // choosing rule on two of the sample crew, so a template's reach can be seen before the game has it.
 import { chooseConversation } from './model.js'
 import { D, TEMPERAMENT_COLOR, crew, h, placeName, reviewDot, stat, temperaments, umaDisc } from './views.js'
 
 const tester = { a: 0, b: 1, place: 'mine', hearts: 1 }
 
-/** CS46's rule (lib/model.mjs, tested there) over every written template. */
+/** The choosing rule (lib/model.mjs, tested there) over every written template. */
 export const choose = (pair, place, hearts) => chooseConversation(D.data.conversations.map((c) => c.template), pair, place, hearts)
 const filterWords = (who) => (Object.keys(who ?? {}).length ? Object.entries(who).map(([k, v]) => `${k === 'line' ? 'calling' : k} ${v}`).join(', ') : 'anyone')
 
@@ -26,7 +26,7 @@ export function bondsView() {
         h('span', { class: 'score', text: r.score }),
         h('span', {}, h('b', { text: r.template.id }), h('br'), h('span', { class: 'muted', text: `${placeName(r.template.place)} · {a}: ${filterWords(r.template.a)} → ${r.a.name} · {b}: ${filterWords(r.template.b)} → ${r.b.name}` })),
         h('a', { class: `btn sm ${i === 0 ? 'primary' : ''}`, href: `#/play/conv/${encodeURIComponent(r.template.id)}/${r.a.id}/${r.b.id}`, text: i === 0 ? 'Play the winner' : 'Play' }))))
-      : h('div', { class: 'note-box' }, h('b', { text: 'No template fits this pair here yet. ' }), `CS46 promises every pair a match, so each heart needs a catch-all: an any-place template with no filters. Heart ${tester.hearts} ${cov[tester.hearts - 1]?.catchAll ? 'has one, so this shouldn’t happen' : 'has none yet'}.`))
+      : h('div', { class: 'note-box' }, h('b', { text: 'No template fits this pair here yet. ' }), `Every pair must get a match, so each heart needs a catch-all: an any-place template with no filters. Heart ${tester.hearts} ${cov[tester.hearts - 1]?.catchAll ? 'has one, so this shouldn’t happen' : 'has none yet'}.`))
   }
   // Each select stores one tester field: a crew index for a and b, a place id, or a number of hearts.
   const pick = (k, values, labelOf) => {
@@ -37,12 +37,12 @@ export function bondsView() {
   drawTester()
   return h('div', {},
     h('h1', { text: 'Bonds' }),
-    h('p', { class: 'muted', text: 'The crew’s own stories: your affinity with each Uma opens her story beats (CS45), and pairs who work together open conversations (CS44, CS46). Both come from templates, so no Uma is named: her name is filled at run time.' }),
+    h('p', { class: 'muted', text: 'The crew’s own stories: your affinity with each Uma opens her story beats, and pairs who work together open conversations. Both come from templates, so no Uma is named: her name is filled at run time.' }),
     h('div', { class: 'summary' },
       stat(`${data.cross.beats.scripted}/${data.cross.beats.target}`, 'story beats scripted'),
       stat(`${data.cross.beats.outlined}`, 'story beats outlined'),
       stat(data.conversations.length, 'conversations written'),
-      stat(`${cov.reduce((n, x) => n + x.counted, 0)}/${cov.reduce((n, x) => n + x.target, 0)}`, 'toward CS46’s target'),
+      stat(`${cov.reduce((n, x) => n + x.counted, 0)}/${cov.reduce((n, x) => n + x.target, 0)}`, 'toward the target'),
       stat(`${cov.filter((x) => x.catchAll).length}/5`, 'hearts with a catch-all'),
       stat(data.beats.concat(data.conversations).filter((x) => x.issues.length).length, 'with checks to fix'),
     ),
@@ -61,7 +61,7 @@ export function bondsView() {
               h('span', { text: b.premise }), h('div', {}, h('span', { class: `badge ${b.layer}`, text: b.layer })))
           })]
       })),
-    h('div', { class: 'section-head' }, h('h2', { text: 'Who would talk, and what about' }), h('span', { class: 'muted small', text: 'CS46’s choosing rule on two of the sample crew' })),
+    h('div', { class: 'section-head' }, h('h2', { text: 'Who would talk, and what about' }), h('span', { class: 'muted small', text: 'The choosing rule on two of the sample crew' })),
     h('div', { class: 'panel' },
       h('div', { class: 'tester' },
         h('label', {}, 'Uma {a} or {b}', pick('a', list, (c) => `${c.name} · ${c.temperament}`)),
@@ -70,7 +70,7 @@ export function bondsView() {
         h('label', {}, 'Their bond', pick('hearts', data.bondHearts, (n) => `${n} heart${n === 1 ? '' : 's'}`)),
         h('a', { class: 'btn', href: '#/town', text: 'Edit the crew' })),
       result),
-    h('div', { class: 'section-head' }, h('h2', { text: 'Coverage' }), h('span', { class: 'muted small', text: `Per heart: ${data.target.any} any-place and ${data.target.place} a work place (CS46)` })),
+    h('div', { class: 'section-head' }, h('h2', { text: 'Coverage' }), h('span', { class: 'muted small', text: `Per heart: ${data.target.any} any-place and ${data.target.place} a work place` })),
     h('div', { class: 'panel' }, h('table', { class: 'table cover' },
       h('tr', {}, h('th', { text: 'Place' }), data.bondHearts.map((n) => h('th', { text: `♥ ${n}` }))),
       h('tr', {}, h('td', {}, h('b', { text: 'Any place' })), cov.map((x) => h('td', { class: `n ${x.any >= data.target.any ? 'met' : x.any ? 'some' : ''}`, text: `${x.any}/${data.target.any}${x.catchAll ? ' ✓' : ''}` }))),

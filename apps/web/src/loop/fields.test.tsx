@@ -67,7 +67,7 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-describe('the Fields\' page (decision 11)', () => {
+describe('the Fields\' page', () => {
   it('plants all, tends, grows to Ready over three nights, and harvests all into the Warehouse by stars', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
     await render(<FieldsPage />)

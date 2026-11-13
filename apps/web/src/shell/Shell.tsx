@@ -1,8 +1,8 @@
 // The shell (uma-kit's AppFrame, unchanged): the top bar, the page between, the bottom bar in the thumb zone, and the
-// menu sheet (`?sheet=menu`). F18's End the day (`?sheet=end`) and calendar (`?sheet=calendar`); F19's bin
-// (`?sheet=bin`) and shop (`?sheet=shop`); F24's Farm Rank (`?sheet=rank`). Each is loaded when one opens. While the
+// menu sheet (`?sheet=menu`). End the day (`?sheet=end`) and calendar (`?sheet=calendar`); the bin
+// (`?sheet=bin`) and shop (`?sheet=shop`); the Farm Rank (`?sheet=rank`). Each is loaded when one opens. While the
 // roster holds fewer than three, the start's sheet covers everything, the game's first tap; then a scene due plays
-// over everything (F24: the opening scene after the picks, the closing scene the morning after chapter 1). On save v4
+// over everything (the opening scene after the picks, the closing scene the morning after chapter 1). On save v4
 // the farmer's name sheet is the first screen instead, and arrival scenes play after the chapter's; in the romance
 // build `?read=<a>-<b>:<levels>` plays a pair's conversations over any page, once no scene is due; and the
 // event player over any page at `?event=`, `?ask=` or `?memory=`, and her Memories' album at `?album=`; and the

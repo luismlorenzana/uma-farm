@@ -17,7 +17,7 @@ function outfit(star5: Five, growth: Five = [0, 0, 0, 0, 0]): Outfit {
 }
 const scores = (v: Five): TalentScores => ({ speed: v[0], stamina: v[1], power: v[2], guts: v[3], wit: v[4] })
 
-describe('the talent score (CS27)', () => {
+describe('the talent score', () => {
   it('is her 5★ base stat × (100 + her growth rate) ÷ 100', () => {
     expect(talentScores(outfit([102, 108, 120, 110, 110], [0, 20, 0, 0, 10]))).toEqual(scores([102, 129.6, 120, 110, 121]))
     expect(talentScores(outfit([125, 152, 100, 100, 73], [20, 20, 0, 0, 0]))).toEqual(scores([150, 182.4, 100, 100, 73]))
@@ -34,7 +34,7 @@ describe('the talent score (CS27)', () => {
   })
 })
 
-describe('the grades (CS27)', () => {
+describe('the grades', () => {
   it('makes 150 S and 149.9 A, and cuts every grade at its edge', () => {
     expect(TALENT_GRADES[gradeStep(150)]).toBe('S')
     expect(TALENT_GRADES[gradeStep(149.9)]).toBe('A')
@@ -64,7 +64,7 @@ describe('the grades (CS27)', () => {
   })
 })
 
-describe('her talents, best and temperament (CS27, CS46; decision 4)', () => {
+describe('her talents, best and temperament', () => {
   it('reads every activity, her best among the five stats and her temperament', () => {
     const t = talentsOf(outfit([100, 125, 100, 100, 125], [0, 20, 0, 0, 0]))
     expect(t.steps).toEqual({ farming: 7, ranch: 2, mining: 2, fishing: 4, foraging: 2, cooking: 4, serving: 2, forging: 2, expeditions: 3 })
@@ -93,9 +93,9 @@ describe('her talents, best and temperament (CS27, CS46; decision 4)', () => {
   })
 })
 
-describe('what a talent gives (CS28)', () => {
+describe('what a talent gives', () => {
   const steps = [0, 1, 2, 3, 4, 5, 6, 7] as TalentStep[]
-  it('matches CS28 row by row', () => {
+  it('matches the table row by row', () => {
     expect(steps.map(talentYield)).toEqual([0.85, 0.9, 0.95, 1, 1.05, 1.1, 1.15, 1.2])
     expect(steps.map(talentQuality)).toEqual([-0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1])
     expect(steps.map(talentRankPoints)).toEqual([0.8, 0.85, 0.9, 1, 1.1, 1.2, 1.3, 1.5])

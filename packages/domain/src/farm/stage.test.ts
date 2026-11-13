@@ -30,7 +30,7 @@ function played(): SaveV3 {
     summary: { day: 1, bin: [], work: [{ kind: 'withered', block: 'A', crop: 'onion', plots: 2 }], ranks: [], bonds: [], news: [], nudges: [] },
   }
 }
-/** Every place CS3 can open: chapter 9, Farm Rank 10, the stations built. */
+/** Every place the rules can open: chapter 9, Farm Rank 10, the stations built. */
 function everyOpen(): SaveV3 {
   const save = fresh()
   return { ...save, farm: { ...save.farm, chapter: 9, points: 30_000 }, buildings: { ...save.buildings, mill: 1, sawmill: 1, smokehouse: 1 }, fields: { blocks: (['A', 'B', 'C', 'D'] as const).map(newBlock) } }
@@ -70,7 +70,7 @@ function framesOf(design: FarmDesign): string[] {
   return [...out]
 }
 
-describe('the farm design (decision 2)', () => {
+describe('the farm design', () => {
   it.each(CASES)('parses for %s, every slot reached from the Gate, every frame in the kit\'s contract', (_, make) => {
     const design = make()
     expect(parseFarmDesign(JSON.parse(JSON.stringify(design)))).toEqual(design)
@@ -108,7 +108,7 @@ describe('the farm design (decision 2)', () => {
     for (let band = 0; band < 8; band++) expect(design.cells[band * FARM_BAND + 3]).toBe('ppppppppp')
   })
 
-  it('stands open places by their recipe and the rest as overgrown lots (KF4, KF7)', () => {
+  it('stands open places by their recipe and the rest as overgrown lots', () => {
     const design = farmDesign(fresh(), M4)
     expect(design.buildings.map((b) => b.id)).toEqual(['warehouse', 'dorm', 'shop'])
     const props = (x: number, z: number) => (design.props ?? []).filter((p) => p.x >= x && p.x < x + 3 && p.z >= z && p.z < z + 3).map((p) => p.name)
@@ -120,7 +120,7 @@ describe('the farm design (decision 2)', () => {
     expect(open.buildings.map((b) => b.id)).toEqual(['mill', 'coop', 'sawmill', 'barn', 'smokehouse', 'kitchen', 'smelter', 'restaurant', 'cutter', 'forge', 'warehouse', 'dorm', 'shop', 'expeditions'])
     expect(open.cells[12]).toBe('###pggvvv') // the Mine's cliff; the Restaurant's paving
     expect(open.heights![16]).toBe('001111111') // the quarry's pit
-    // The board and the festival ground wait for M6: still overgrown.
+    // The board and the festival ground wait for the festivals: still overgrown.
     expect(placeStands(everyOpen(), FARM_PLACES.find((p) => p.id === 'board')!)).toBe(false)
   })
 
@@ -135,7 +135,7 @@ describe('the farm design (decision 2)', () => {
     expect(slots(farmDesign(played(), M4)).filter((s) => s.startsWith('smokehouse'))).toEqual([])
   })
 
-  it('grows the homestead\'s rows on v4 in the romance build: the Farmhouse, the houses, the next lot (F54)', () => {
+  it('grows the homestead\'s rows on v4 in the romance build: the Farmhouse, the houses, the next lot', () => {
     const three = farmDesign(v4(3), HOME)
     expect(three.cells).toHaveLength(10 * FARM_BAND)
     expect(three.markers.filter((m) => m.kind === 'lot')).toEqual([{ kind: 'lot', id: 'house-4', x: 4, z: 34 }])
@@ -147,7 +147,7 @@ describe('the farm design (decision 2)', () => {
     expect(farmDesign(fresh(), HOME).cells).toHaveLength(8 * FARM_BAND)
   })
 
-  it('hangs every window box just under a ground-floor window\'s sill, at 1¼ levels (D73)', () => {
+  it('hangs every window box just under a ground-floor window\'s sill, at 1¼ levels', () => {
     const boxes = CASES.flatMap(([, make]) => make().buildings.flatMap((b) => b.mounts.filter((m) => m.name.endsWith('-box')).map((m) => ({ ...m, storeys: b.storeys }))))
     expect(boxes.length).toBeGreaterThan(0)
     expect(new Set(boxes.map((m) => `${m.name} ${m.face} ${m.level}`))).toEqual(new Set(['flower-box front 1.25', 'herb-box front 1.25']))
@@ -165,8 +165,8 @@ describe('the farm design (decision 2)', () => {
   })
 })
 
-describe('the crops (decision 3, KF6)', () => {
-  it('maps every crop of CS11 to one of KF6\'s twelve families', () => {
+describe('the crops', () => {
+  it('maps every crop to one of the kit\'s twelve families', () => {
     expect(Object.keys(CROP_FAMILY).sort()).toEqual([...CROP_IDS].sort())
     expect(new Set(Object.values(CROP_FAMILY))).toEqual(new Set(CROP_FAMILIES))
     expect(Object.keys(CROPS)).toHaveLength(27)

@@ -42,7 +42,7 @@ const outcome = (rung: string, picks: number[], plays: PlayScore[] = []): EventO
 /** Her bar for `rung` full with `extra` banked past it. */
 const readyFor = (save: SaveV4, stage: Love['stage'], level: number, rung: string, extra = 0): SaveV4 => withLove(save, { stage, level, points: costOf(rung) + extra })
 
-describe('playEvent (decision 1)', () => {
+describe('playEvent', () => {
   it('Friendship 1: +50, the best choice +30 and a Perfect +30 into her bar after the cost; F1, its perk, its Memory, today', () => {
     const save = readyFor(farm(), 'friendship', 0, 'f1', 40)
     expect(readiness(save, PACK, ONE).ready).toBe(true)
@@ -163,7 +163,7 @@ describe('playEvent (decision 1)', () => {
     expect(readiness(tomorrow, PACK, ONE).ready).toBe(true)
   })
 
-  it('an anniversary doubles the event (F47\'s day factor); S1 on the spouse ladder', () => {
+  it('an anniversary doubles the event (the day factor); S1 on the spouse ladder', () => {
     const day = 1 + DAYS_PER_YEAR
     const save = withLove(farm(day), { stage: 'spouse', level: 0, points: 600, wed: 1 })
     expect(readiness(save, PACK, ONE).ready).toBe(true)
@@ -181,7 +181,7 @@ describe('playEvent (decision 1)', () => {
   })
 })
 
-describe('the confession (decision 10)', () => {
+describe('the confession', () => {
   const ready = (): SaveV4 => withLove(farm(5), { stage: 'confession', level: 10, points: 120, last: 4 })
   // Its first choice, then the answer: Yes is option 0, Not yet option 1.
   const confess = (answer: 0 | 1) => outcome('confession', [0, answer], [{ kind: 'walk', score: 100 }, { kind: 'pick', score: 90 }])
@@ -243,7 +243,7 @@ describe('the confession (decision 10)', () => {
   })
 })
 
-describe('choices on their buttons (decision 7)', () => {
+describe('choices on their buttons', () => {
   it('+30 the best (ties too), +10 the others; a heart on a romantic one; a cost, greyed without it; a taste to learn', () => {
     const save = farm()
     const f4 = steps('f4').find((s): s is { choice: ChoiceOption[] } => 'choice' in s)!.choice
@@ -262,7 +262,7 @@ describe('choices on their buttons (decision 7)', () => {
   })
 })
 
-describe('Memories\' replays (decision 12)', () => {
+describe('Memories\' replays', () => {
   it('start at the top or at any choice point, the place kept; nothing is paid or saved', () => {
     const f1 = steps('f1')
     expect(choicePointsOf(f1)).toEqual([3])
@@ -273,7 +273,7 @@ describe('Memories\' replays (decision 12)', () => {
   })
 })
 
-describe('save v4 grows in place (decision 10)', () => {
+describe('save v4 grows in place', () => {
   it('parses `today.asked`, roster Umas once each', () => {
     const save = playEvent(withLove(farm(5), { stage: 'confession', level: 10, points: 0, last: 4 }), PACK, ONE,
       outcome('confession', [0, 1], [{ kind: 'walk', score: 100 }, { kind: 'pick', score: 90 }])).save
@@ -284,7 +284,7 @@ describe('save v4 grows in place (decision 10)', () => {
     expect(() => parseSaveV4(json({ ...asked, today }))).toThrow()
     expect(asked.today.asked).toEqual([ONE])
   })
-  it('a tended block\'s farmer works the Fields (the stand-in\'s F9 needs no setup)', () => {
+  it('a tended block\'s farmer works the Fields (the stand-in\'s F9 perk needs no setup)', () => {
     const save = setTender(plant(farm(), 'A', 0, 'seed-carrot'), 'A', ONE)
     expect(readiness(readyFor(save as SaveV4, 'friendship', 8, 'f9'), PACK, ONE).ready).toBe(true)
     expect(pairKey(ONE, '9000002')).toBe('9000001:9000002')

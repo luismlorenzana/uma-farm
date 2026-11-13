@@ -16,7 +16,7 @@ const styled = (id: number, ...best: ('front' | 'pace' | 'late' | 'end')[]): Out
 const OUTFITS = [styled(900201, 'front'), styled(900202, 'pace'), styled(900203, 'pace', 'late'), styled(900204, 'end'), styled(900205, 'late')]
 const AT = '2026-11-08T10:00:00.000Z'
 
-describe('the roster (FM6, FM7)', () => {
+describe('the roster', () => {
   it('takes every outfit on the release, each with her trade and its line', () => {
     expect(farmRoster(syntheticMasterData())).toEqual([{ outfitId: '900101', trade: 'physical', line: 'metal' }])
     expect(farmRoster({ outfits: OUTFITS }).map((o) => [o.outfitId, o.trade, o.line])).toEqual([

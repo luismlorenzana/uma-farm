@@ -113,7 +113,7 @@ test('conversations: places, filters and lines', () => {
   assert.ok(items[2].issues.some((i) => /Both a and b speak/.test(i)))
 })
 
-test('CS46’s choosing rule: the place, then temperaments, then line and distance, either order, the same pair the same', () => {
+test('the conversations’ choosing rule: the place, then temperaments, then line and distance, either order, the same pair the same', () => {
   const quick = { id: 'u1', temperament: 'quick', calling: 'wood', distance: 'mile' }
   const calm = { id: 'u2', temperament: 'calm', calling: 'fish', distance: 'long' }
   const templates = [

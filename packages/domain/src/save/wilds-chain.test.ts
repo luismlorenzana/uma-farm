@@ -1,4 +1,4 @@
-// F4's check (R2, R4): every line runs gather → process → make from G1 to G10 over the save, each grade opening at Craft
+// Every line runs gather → process → make from G1 to G10 over the save, each grade opening at Craft
 // Lv 5g − 4, the made item landing in the Warehouse on a fake clock.
 import { describe, expect, it } from 'vitest'
 import { PLACES_V4 } from '../economy/places-v4'

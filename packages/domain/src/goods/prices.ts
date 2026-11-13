@@ -1,6 +1,6 @@
 // What a good sells for: its price ★1 × its star's factor × the
 // season's demand, rounded to 5g once, then × the count. The bin pays it overnight; requests, the Restaurant and prizes
-// pay more in later packets. Seeds have no price, so the bin refuses them.
+// pay more later. Seeds have no price, so the bin refuses them.
 import { dateOf } from '../farm/calendar'
 import { round5 } from '../farm/round'
 import { goodOf, type Good } from './ids'
@@ -13,7 +13,7 @@ function checkStars(stars: number): void {
   if (!Number.isInteger(stars) || stars < 1 || stars > 5) throw new RangeError(`Stars run 1–5: ${stars}`)
 }
 
-/** A star's factor on the base: ★1 ×1, ★2 ×1.25, ★3 ×1.5, ★4 ×1.75, ★5 ×2 (D24 #12). */
+/** A star's factor on the base: ★1 ×1, ★2 ×1.25, ★3 ×1.5, ★4 ×1.75, ★5 ×2. */
 export function starFactor(stars: number): number {
   checkStars(stars)
   return 1 + STAR_STEP * (stars - 1)
@@ -47,7 +47,7 @@ function unitPrice(id: string, stars: number, demand: boolean): number {
   return round5(good.price * starFactor(stars) * (demand ? 1 + DEMAND_LIFT : 1))
 }
 
-/** A made good's or a dish's price ★1 (CS9 rule 3): ×1.25 the sum of its inputs at ★1, to 5g. For F8 and F36. */
+/** A made good's or a dish's price ★1: ×1.25 the sum of its inputs at ★1, to 5g. */
 export function madePrice(inputs: Readonly<Record<string, number>>): number {
   const sum = Object.entries(inputs).reduce((total, [id, n]) => {
     const good = goodOf(id)

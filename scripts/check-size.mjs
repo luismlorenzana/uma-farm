@@ -1,4 +1,4 @@
-// The initial JS budget (the platform's 180 KB rule, copied from uma-rpg's check, H16/D56). It measures the HTML entry and
+// The initial JS budget (the platform's 180 KB rule, copied from uma-rpg's check). It measures the HTML entry and
 // its static imports, not the largest asset: scenes and big libraries load on demand and are listed in LAZY_MODULES once
 // they exist, so they can never render in the initial JS.
 import { readFile } from 'node:fs/promises'
@@ -25,8 +25,7 @@ export const MAIN_JS_BUDGET = 180_000
  * rules, the homestead's sheet, view, actions and map rows, the morning's house answer, the night level's card and the
  * household player; and the story pack's delivery, its index and released pack; and the HD-2D farm's stage:
  *three.js, uma-stage's band stage and its stand-in kit, the stage Home, its helpers and the farm's design, and
- * kit-farm's loader with its atlas; and the Umas on the stage, their figures and looks. The Wilds' screens left
- * in F24.
+ * kit-farm's loader with its atlas; and the Umas on the stage, their figures and looks. The Wilds' screens are gone.
  * Paths
  * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [

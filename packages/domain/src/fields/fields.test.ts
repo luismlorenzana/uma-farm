@@ -1,6 +1,6 @@
-// The Fields (CS4's last night): blocks, planting and harvesting, tending and growth,
+// The Fields: blocks, planting and harvesting, tending and growth,
 // regrowing and withering at night, seeds back, crop levels, stars, challenges, the counters and the shop's seeds.
-// Invented outfit ids and test kinds (`kinds.fixture.ts`) until F22's.
+// Invented outfit ids and test kinds (`kinds.fixture.ts`).
 import { describe, expect, it } from 'vitest'
 import { farmDay } from '../farm/calendar'
 import { FARM_RANK_POINTS } from '../farm/farm'
@@ -50,7 +50,7 @@ function ripe(save: SaveV3, crop: Plot['crop'] = 'carrot', own = false): SaveV3 
   return { ...save, fields: { blocks: save.fields.blocks.map((b) => (b.id === 'A' ? { ...b, plots: b.plots.map(() => ({ ...plot })) } : b)) } }
 }
 
-describe('planting (CS12, decisions 7, 9, 10)', () => {
+describe('planting', () => {
   it('plants a seed from the Warehouse in an empty plot, counting the plot and making the crop\'s entry', () => {
     const save = plant(farm(), 'A', 4, 'seed-carrot')
     expect(plots(save)[4]).toEqual({ crop: 'carrot', growth: 0, ready: false, regrowing: false, own: false })
@@ -96,7 +96,7 @@ describe('planting (CS12, decisions 7, 9, 10)', () => {
   })
 })
 
-describe('growth and Ready (CS12)', () => {
+describe('growth and Ready', () => {
   it('grows 1.25 a night at Novice, +0.1 a rank, the talent, the Watering Can and well fed; 1 untended', () => {
     expect([0, 1, 2, 3, 4, 5].map((r) => tendedGrowth(r as 0, TALENT_D))).toEqual([1.25, 1.35, 1.45, 1.55, 1.65, 1.75])
     expect(([4, 5, 6, 7] as TalentStep[]).map(talentGrowth)).toEqual([0, 0.05, 0.1, 0.15])
@@ -125,7 +125,7 @@ describe('growth and Ready (CS12)', () => {
     expect(nightsLeft(plots(nights(untended, 1))[0]!, 1.25)).toBe(2)
   })
 
-  it('stops growing once Ready, and a tender works only a night her block has a growing plot (decision 2)', () => {
+  it('stops growing once Ready, and a tender works only a night her block has a growing plot', () => {
     const save = setTender(plantAll(farm(), 'A', 'carrot'), 'A', '101')
     const run = (s: SaveV3) => growCrops({ before: s, save: s, context: CONTEXT, notes: emptyNotes() }).notes
     expect(run(save).tended).toEqual([{ outfitId: '101', block: 'A' }])
@@ -176,7 +176,7 @@ describe('growth and Ready (CS12)', () => {
   })
 })
 
-describe('harvesting (CS11, CS26; decisions 3–5)', () => {
+describe('harvesting', () => {
   it('draws each crop\'s stars into the Warehouse, counts the plot, adds the crop\'s points and empties the plot', () => {
     const { save, receipt } = harvestAll(ripe(farm(1, { 'seed-carrot': 1 })))
     expect(receipt).toMatchObject({ stars: [9, 0, 0, 0, 0], plots: 9 })
@@ -197,12 +197,12 @@ describe('harvesting (CS11, CS26; decisions 3–5)', () => {
     expect(harvestAll(ripe(farm(SUMMER(1), {}), 'sunflower-seed')).save.items['sunflower-seed']!.reduce((a, b) => a + b, 0)).toBe(27)
   })
 
-  it('draws the same stars from the same save, whoever replays it (CS8)', () => {
+  it('draws the same stars from the same save, whoever replays it', () => {
     const save = setTender(ripe(farm(1, {})), 'A', '101')
     expect(harvestAll(json(save)).save).toEqual(harvestAll(save).save)
   })
 
-  it('matches CS26\'s shares: untended at level 1 always ★1, a Novice D tender ★1 75% and ★2 25%', () => {
+  it('matches the star shares: untended at level 1 always ★1, a Novice D tender ★1 75% and ★2 25%', () => {
     expect(harvestQuality(null, 1)).toBe(0)
     expect(starShares(harvestQuality(null, 1))).toEqual([1, 0, 0, 0, 0])
     const novice = harvestQuality({ rank: 0, talent: TALENT_D, wellFed: false }, 1)
@@ -252,12 +252,12 @@ describe('harvesting (CS11, CS26; decisions 3–5)', () => {
     expect(starShares(harvestQuality(null, 5))).toEqual([0.6, 0.4, 0, 0, 0])
   })
 
-  it('counts farming\'s challenges for the tender at harvest (CS30), by her rank now', () => {
+  it('counts farming\'s challenges for the tender at harvest, by her rank now', () => {
     const save = setTender(ripe(farm(1, {})), 'A', '101')
     const after = harvestAll(save).save
     expect(after.roster['101']!.ranks.farming.challenge).toBe(9)
     expect(harvestAll(ripe(farm(1, {}))).save.roster['101']!.ranks.farming.challenge).toBe(0)
-    // F21's challenge rows read the harvest by her rank now.
+    // The challenge rows read the harvest by her rank now.
     const count = (rank: 0 | 1 | 2 | 3 | 4, stars: number[], level: number) => CHALLENGES.farming[rank]!.count({ kind: 'harvest', stars, level })
     expect(count(0, [1, 2], 1)).toBe(2)
     expect(count(1, [1, 3, 4, 2], 1)).toBe(2)
@@ -268,7 +268,7 @@ describe('harvesting (CS11, CS26; decisions 3–5)', () => {
   })
 })
 
-describe('blocks (CS12)', () => {
+describe('blocks', () => {
   it('refuses Block B before Farm Rank 2 and without 800g, then adds it in order', () => {
     const save = farm()
     expect(reason(() => buyBlock(save, 'B'))).toBe('locked')
@@ -286,7 +286,7 @@ describe('blocks (CS12)', () => {
   })
 })
 
-describe('tenders (decision 1)', () => {
+describe('tenders', () => {
   const gather = { kind: 'gather', item: 'pine-log', count: 1 }
   const job = (save: SaveV3, outfitId: string) => startLoopJob(save, { outfitId, place: 'forest', slot: 0, request: gather }, AT, TEST_KINDS)
 
@@ -313,8 +313,8 @@ describe('tenders (decision 1)', () => {
   })
 })
 
-describe('the shop\'s seeds (CS4)', () => {
-  it('sells Spring\'s tier-1 seeds at Farm Rank 1 and refuses Asparagus before FR4', () => {
+describe('the shop\'s seeds', () => {
+  it('sells Spring\'s tier-1 seeds at Farm Rank 1 and refuses Asparagus before Farm Rank 4', () => {
     const save = farm()
     const lines = shopLines(save)
     expect(lines.map((l) => [l.id, l.price])).toEqual([
@@ -338,7 +338,7 @@ describe('the shop\'s seeds (CS4)', () => {
   })
 })
 
-describe('the morning (CS5)', () => {
+describe('the morning', () => {
   it('lists crops ready by block and nudges toward empty plots with seeds, and parses back', () => {
     const empty = night(farm())
     expect(empty.summary!.nudges).toContainEqual({ kind: 'seeds', plots: 9 })

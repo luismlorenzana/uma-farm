@@ -1,10 +1,10 @@
 // Copied from uma-rpg packages/domain/src/items/lines.test.ts at 30a322a, with its Wilds-only parts cut.
-// The farm by line's catalog (farm-by-line.md FL5): five lines of ten grades from uma-art's families,
+// The farm by line's catalog: five lines of ten grades from uma-art's families,
 // every name uma-art's own, and R2's sixty ids among them at the grades R2 drew them with.
 import { describe, expect, it } from 'vitest'
 import { isLineItemId, LINE_ITEMS, lineItem, lineItemId, lineItems, MATERIAL_LINES } from './lines'
 
-describe('the farm by line\'s catalog (FL5)', () => {
+describe('the farm by line\'s catalog', () => {
   it('holds a hundred ids, each line ten raw then ten refined by grade, each the other form\'s pair', () => {
     expect(LINE_ITEMS).toHaveLength(100)
     expect(new Set(LINE_ITEMS.map((m) => m.id)).size).toBe(100)
@@ -39,7 +39,7 @@ describe('the farm by line\'s catalog (FL5)', () => {
     ])
   })
 
-  it('draws each from its line\'s uma-art family at its grade (FL15)', () => {
+  it('draws each from its line\'s uma-art family at its grade', () => {
     const family = { metal: 'ores', wood: 'woods', vegetables: 'vegetables', fish: 'fish', stone: 'crystals' } as const
     for (const m of LINE_ITEMS) expect(m.art, m.id).toEqual({ family: family[m.line], grade: m.grade })
   })

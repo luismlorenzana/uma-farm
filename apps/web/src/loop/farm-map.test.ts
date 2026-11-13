@@ -28,15 +28,15 @@ describe('the farm map', () => {
       'Chapter 3', 'Farm Rank 3', 'Chapter 1’s reward', 'Chapter 2', 'Soon', 'Chapter 4', null,
     ])
     expect(lockOf(day1, farmPlace('festival')!, new Set(['festival']))).toBe('Soon')
-    // F23: the Dorm opens its page, the Gate its quick look.
+    // The Dorm opens its page, the Gate its quick look.
     expect([lock('dorm'), lock('gate')]).toEqual([null, null])
     expect(placeLink(day1, farmPlace('dorm')!)).toBe('/dorm')
     expect(placeLink(day1, farmPlace('gate')!)).toBe('/?peek=gate')
-    // F20: the Fields open their quick look, which leads to their page; F22 the forest's and the Fishery's.
+    // The Fields open their quick look, which leads to their page; so do the forest's and the Fishery's.
     expect(placeLink(day1, farmPlace('fields')!)).toBe('/?peek=fields')
     expect([lock('forest'), lock('fishery')]).toEqual([null, null])
     expect(placeLink(day1, farmPlace('forest')!)).toBe('/?peek=forest')
-    // F22 decision 5: a station is locked until built; once Farm Rank 3 opens it, its quick look offers Build.
+    // A station is locked until built; once Farm Rank 3 opens it, its quick look offers Build.
     const fr3 = { ...day1, farm: { ...day1.farm, points: 500 } }
     expect(lock('sawmill', fr3)).toBe('Not built')
     expect(placeLink(fr3, farmPlace('sawmill')!)).toBe('/?peek=sawmill')

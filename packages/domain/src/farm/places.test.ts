@@ -1,11 +1,11 @@
-// The farm map's places: eight rows of three, CS19's frames, and what opens each.
+// The farm map's places: eight rows of three, the frames, and what opens each.
 import { describe, expect, it } from 'vitest'
 import { LOOP_WORK_PLACES } from '../save/parse-v3'
 import { newSave } from '../save/v3'
 import { FARM_MAP_ROWS, FARM_PLACES, farmPlace, placeOpen } from './places'
 
-describe('the farm map (FC28)', () => {
-  it('lays FC28\'s rows: gathering, its station and the ranch or a workshop; the yard; the town edge', () => {
+describe('the farm map', () => {
+  it('lays the rows: gathering, its station and the ranch or a workshop; the yard; the town edge', () => {
     const rows = Array.from({ length: FARM_MAP_ROWS }, (_, r) => FARM_PLACES.filter((p) => p.row === r + 1).map((p) => p.name))
     expect(rows).toEqual([
       ['Fields', 'Mill', 'Coop'], ['Forest', 'Sawmill', 'Barn'], ['Fishery', 'Smokehouse', 'Kitchen'], ['Mine', 'Smelter', 'Restaurant'],
@@ -17,7 +17,7 @@ describe('the farm map (FC28)', () => {
     for (const id of LOOP_WORK_PLACES) expect(farmPlace(id), id).toBeDefined()
   })
 
-  it('opens day 1\'s places and keeps the rest locked by chapter or Farm Rank (CS3)', () => {
+  it('opens day 1\'s places and keeps the rest locked by chapter or Farm Rank', () => {
     const day1 = newSave('u1', '2026-11-09T10:00:00.000Z')
     const open = (save: typeof day1) => FARM_PLACES.filter((p) => placeOpen(save, p)).map((p) => p.id)
     expect(open(day1)).toEqual(['fields', 'forest', 'fishery', 'bin', 'warehouse', 'dorm', 'gate', 'shop'])

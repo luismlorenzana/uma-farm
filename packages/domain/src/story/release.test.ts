@@ -33,7 +33,7 @@ const issuesOf = (fn: () => unknown): string[] => {
   return []
 }
 
-describe('story.json (decision 3)', () => {
+describe('story.json', () => {
   it('reads an index the release writes', () => {
     const { index } = release()
     expect(parseStoryIndex(clone(index))).toEqual(index)
@@ -65,7 +65,7 @@ describe('story.json (decision 3)', () => {
   })
 })
 
-describe('the released pack (decision 5)', () => {
+describe('the released pack', () => {
   it('reads the cast, ties, bibles and household at once, and is the pack storyPackFrom makes', async () => {
     const { index, read, reads } = release()
     const pack = await releasedStoryPack(index, read)

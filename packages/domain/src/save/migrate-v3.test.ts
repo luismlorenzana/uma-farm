@@ -59,7 +59,7 @@ describe('step 1: running jobs finish', () => {
   })
 })
 
-describe('step 2: materials (D28)', () => {
+describe('step 2: materials', () => {
   it('refunds what leaves the game per grade', () => {
     expect(refundOf('weapon-gem-g3')).toBe(450) // 15 × 3 × 10
     expect(refundOf('chopped-carrot')).toBe(15)
@@ -80,7 +80,7 @@ describe('step 2: materials (D28)', () => {
   })
 })
 
-describe('step 3: Craft Level becomes her rank (CS32)', () => {
+describe('step 3: Craft Level becomes her rank', () => {
   it.each<[number, number, number]>([
     [1, 0, 0], [5, 0, 32], [6, 1, 40], [15, 1, 148], [16, 2, 160], [25, 2, 376],
     [26, 3, 400], [35, 3, 850], [36, 4, 900], [45, 4, 1890], [46, 5, 2000], [50, 5, 2000],
@@ -126,7 +126,7 @@ describe('step 4: the roster', () => {
   })
 })
 
-describe('the whole migration (CS54)', () => {
+describe('the whole migration', () => {
   it('carries a v2 save mid-play into day 1', () => {
     const before = midPlay()
     const after = migrateToV3(before, context)

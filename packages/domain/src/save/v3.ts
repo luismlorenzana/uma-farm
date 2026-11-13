@@ -1,6 +1,6 @@
-// Save v3: the farm's own loop, written whole from the spec with F17's additions (`start`,
-// `today`, `dorm.swaps`, `farm.counts`). Built in F17, grown in place by M4's packets, and live from F24: any change to
-// its shape now is v4, with its migration.
+// Save v3: the farm's own loop, with its own additions (`start`,
+// `today`, `dorm.swaps`, `farm.counts`). It is live: any change to
+// its shape is v4, with its migration.
 import type { ItemRequest, WorkRow } from '@luismlorenzana/uma-work'
 import { START_GOLD, START_SEEDS } from '../farm/farm'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
@@ -8,7 +8,7 @@ import { seedId, type CropId } from '../goods/ids'
 import type { MorningSummary } from '../night/summary'
 import type { Account } from './save'
 
-/** A master outfit id (P8). */
+/** A master outfit id. */
 export type OutfitId = string
 
 /** A Warehouse row: counts by ★1 … ★5. */
@@ -49,7 +49,7 @@ export interface DormSwap {
   in: OutfitId
 }
 
-/** A v3 work request: the common item request until F18 and F22 give the loop's kinds their own. */
+/** A v3 work request: the common item request where the loop's kinds have no request of their own. */
 export type LoopWorkRequest = ItemRequest
 
 export const BLOCK_IDS = ['A', 'B', 'C', 'D'] as const
@@ -198,7 +198,7 @@ export interface SaveV3 {
   bonds: Record<string, number>
   board: BoardRequest[]
   diary: { shipped: Record<string, number>; milestones: string[]; records: Record<string, number>; read: string[] }
-  /** Farm Rank points, the chapter, its goals' counts, festivals, and lifetime counters each packet names. */
+  /** Farm Rank points, the chapter, its goals' counts, festivals, and lifetime counters. */
   farm: { points: number; chapter: number; goals: Record<string, number>; festivals: FestivalResult[]; counts: Record<string, number> }
   /** The last night's morning summary, until the player dismisses it. */
   summary: MorningSummary | null

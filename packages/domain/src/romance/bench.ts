@@ -1,10 +1,10 @@
 // The ring bench: the proposal needs a ring, and the Forge's
-// merge game is M6's, so on save v4 the Forge's building opens early as a bench with no game. The night after the first
-// Romance 8 event anyone plays, step 8 sets `buildings.forge = 0` (D30: the building held, its fire not lit) and Ida
+// merge game comes later, so on save v4 the Forge's building opens early as a bench with no game. The night after the
+// first Romance 8 event anyone plays, step 8 sets `buildings.forge = 0` (the building held, its fire not lit) and Ida
 // Stone's scene comes up the next morning (`story/bench.ts`); chapter 7 still lights the fire.
 //
 //   a ring of grade g  =  3 refined goods of grade g, any family, any mix (planks, fillets, flours, preserves, dried goods;
-//                         the mining families' ingots, blocks and cut gems from chapter 3, which is CS25's own recipe)
+//                         the mining families' ingots, blocks and cut gems from chapter 3, the ring's own recipe)
 //   no gold, no game, no assistant, no score: a Rough make, ★1 in the Warehouse; one ring a day (`today.ring`)
 //
 // Worked: 3 Cedar Planks (G3, 60g each) make an Iron Ring (`ring-g3`, 340g); 3 Salmon Fillets (G5) a Cobalt Ring. Her
@@ -38,7 +38,7 @@ export const RING_INPUTS = 3
 export const MINING_FAMILIES: readonly GoodFamily[] = ['ores', 'stones', 'crystals']
 export const MINING_CHAPTER = 3
 
-/** CS25's own recipe for a grade: 2 of its ingot and 1 of its cut gem, from chapter 3. */
+/** The ring's own recipe for a grade: 2 of its ingot and 1 of its cut gem, from chapter 3. */
 export function forgeRecipe(grade: number): { ingot: string; gem: string } {
   const of = (family: GoodFamily) => GOODS.find((g) => g.family === family && g.refined && g.grade === grade)!.id
   return { ingot: of('ores'), gem: of('crystals') }
@@ -116,9 +116,9 @@ export function makeRing(save: SaveV4, inputs: readonly BenchInput[]): { save: S
 
 // --- Her ring --------------------------------------------------------------------------------------
 
-/** Her ring's bonus once married, a grade's worth: +1% a grade, every ring a Rough make until M6. */
+/** Her ring's bonus once married, a grade's worth: +1% a grade, every ring a Rough make until the merge game. */
 export const RING_PERCENT_A_GRADE = 1
-/** M6's merge game adds this for a Fine, Great or Masterwork make: the bench's sheet says it. */
+/** The merge game adds this for a Fine, Great or Masterwork make: the bench's sheet says it. */
 export const MAKE_BONUS = { rough: 0, fine: 1, great: 3, masterwork: 5 } as const
 /** A ring's bonus in % (a Rough make). */
 export const ringPercent = (grade: number): number => grade * RING_PERCENT_A_GRADE

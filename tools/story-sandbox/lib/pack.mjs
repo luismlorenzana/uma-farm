@@ -1,5 +1,6 @@
 // The cast pack: the Studio's tier export as uma-quest's import makes it, with each character's face and art.
-// The sandbox uses it only to show the Umas' pictures beside F40's private files; F40's cast is `content/story/cast.json`.
+// The sandbox uses it only to show the Umas' pictures beside the private story files; the cast is
+// `content/story/cast.json`.
 // Names, images and profiles are private content in the ignored content/story/pack/; this code holds none of them.
 
 const object = (v) => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -19,7 +20,7 @@ export function parseCastPack(value) {
   return value
 }
 
-/** The pack's Umas only (F40 RS1: boss boards aren't in the farm's story), with their image paths as the server serves them. */
+/** The pack's Umas only (boss boards aren't in the farm's story), with their image paths as the server serves them. */
 export function packUmas(pack) {
   return pack.characters.filter((c) => c.role === 'hero').map(({ sources, profile, ...c }) => ({
     ...c, images: Object.fromEntries(Object.entries(c.images ?? {}).map(([k, p]) => [k, `/img/${pack.id}/${p.slice(7)}`])),

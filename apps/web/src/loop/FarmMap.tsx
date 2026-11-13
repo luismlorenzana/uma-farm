@@ -7,7 +7,7 @@
 // conversation waits, which plays over the morning (`?read=`); in the romance build an invitation's line carries Yes,
 // tonight and Another day; on v4 the Forge's quick look is the ring bench's once it stands. In the romance
 // build a v4 map grows the homestead's rows after the yard, the town edge moving below them (`homestead-map.tsx`);
-// v3's map is unchanged. With F11's preview switch on (Account → HD-2D farm), the same places draw on the shared HD-2D
+// v3's map is unchanged. With the preview switch on (Account → HD-2D farm), the same places draw on the shared HD-2D
 // stage instead (`FarmStage.tsx`, its own chunk with three.js), with the Umas on it from the same work view and Ready
 // hearts as the pips; off, the Hub is as it was. Loaded on demand.
 import {
@@ -45,7 +45,7 @@ const InviteAnswer = /* @__PURE__ */ lazy(() => import('./InviteAnswer'))
 const BenchPeek = /* @__PURE__ */ lazy(() => import('./BenchSheet').then((m) => ({ default: m.BenchPeek })))
 const HouseAnswer = /* @__PURE__ */ lazy(() => import('./HouseAnswer'))
 type HomesteadMap = typeof import('./homestead-map')
-// F11: Home on the shared HD-2D stage, with three.js, loaded only when the preview switch is on.
+// Home on the shared HD-2D stage, with three.js, loaded only when the preview switch is on.
 const FarmStage = lazy(() => import('./FarmStage'))
 /** Sheets and scenes that cover all of Home: the stage rests under them. */
 const FULL_SCREEN = ['event', 'ask', 'memory', 'album', 'read', 'evening', 'level', 'household'] as const
@@ -153,7 +153,7 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   const homestead = useHomesteadMap(save)
   const master = useMaster()
   const layout = homestead && save.version === 4 ? homestead.homesteadLayout(save) : null
-  // F54: a v4 map waits for the homestead's rows in the romance build, so the town edge never jumps.
+  // A v4 map waits for the homestead's rows in the romance build, so the town edge never jumps.
   const waiting = romanceOn() && save.version === 4 && layout === null
   const places: HubMapPlace[] = [...FARM_PLACES.map((place): HubMapPlace => {
     const lock = lockOf(save, place)
@@ -218,7 +218,7 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   )
 }
 
-/** A place's quick look while F19–F23 wire up its page: what it is, and what opens it. */
+/** A place's quick look while its page isn't wired up: what it is, and what opens it. */
 function PlacePeek({ save, place }: { save: FarmSave; place: FarmPlace }) {
   const lock = lockOf(save, place)
   return (
@@ -229,7 +229,7 @@ function PlacePeek({ save, place }: { save: FarmSave; place: FarmPlace }) {
   )
 }
 
-/** The morning summary: one card after every night, CS5's sections in order with the empty ones
+/** The morning summary: one card after every night, its sections in order with the empty ones
  * hidden, each line a tap to its place. "Start the day" puts it away; a tap on a line leaves it for later. */
 function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   const summary = save.summary
@@ -238,13 +238,13 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   const ready = useReadyNow(save)
   const pack = useStory()
   const talents = useTalents()
-  // F52: which bond lines have a conversation to Read, from the pack and what's been read.
+  // Which bond lines have a conversation to Read, from the pack and what's been read.
   const pairs = useMemo(() => (save.version === 4 && pack ? pairWords(save, pack) : null), [save, pack])
   const nameOf = useMemo(() => (id: string) => album?.get(id)?.name ?? 'An Uma', [album])
-  // F54: the homestead's lines, the romance build's only.
+  // The homestead's lines, the romance build's only.
   const home = useMemo(() => (romanceOn() && save.version === 4 && pack ? homeWords(save, pack, nameOf, (id) => talents.table?.get(id)?.temperament ?? 'steady') : NO_HOME),
     [save, pack, nameOf, talents.table])
-  // D74: on v4 a chapter's new hand is the cast's arrival for it.
+  // On v4 a chapter's new hand is the cast's arrival for it.
   const hand = useMemo(() => (chapter: number) => chapterHand(save.version, pack, chapter), [save.version, pack])
   const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home, hand) : []), [summary, nameOf, ready, pairs, home, hand])
   if (!summary) return null

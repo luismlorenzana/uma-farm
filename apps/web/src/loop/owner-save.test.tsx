@@ -50,7 +50,7 @@ fixture.view = (await albumFixture(undefined, [
   { star5: [100, 100, 100, 140, 100] }, { star5: [100, 100, 100, 100, 140] },
 ])).view
 
-/** The owner's production save as D17 describes it: v2 from F4, nobody worked, nothing held. */
+/** The owner's production save as the live one is: v2 (the Wilds'), nobody worked, nothing held. */
 const OWNER: SaveV2 = {
   version: 2, account: { uid: 'owner', createdAt: '2026-11-08T09:12:44.000Z', updatedAt: '2026-11-08T21:40:03.512Z' }, umas: {}, items: {}, buildings: {}, work: {},
 }
@@ -102,7 +102,7 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-describe("the owner's first open (decision 9)", () => {
+describe("the owner's first open", () => {
   it('migrates the v2 on the phone to v3, uploads it with updatedAt unchanged, and offers the three picks', async () => {
     await db.save.put({ id: 'main', uid: 'owner', revision: 12, dirty: false, save: structuredClone(OWNER) })
     await boot('owner')

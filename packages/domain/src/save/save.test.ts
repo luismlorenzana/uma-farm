@@ -18,7 +18,7 @@ function playing(): Save {
 describe('save v2', () => {
   it('starts an account with the Wilds empty', () => {
     expect(newSaveV2('u1', AT)).toEqual({ version: 2, account: { uid: 'u1', createdAt: AT, updatedAt: AT }, umas: {}, items: {}, buildings: {}, work: {} })
-    // From F24 the app writes v3; v2 stays readable for the migration.
+    // The app writes v3; v2 stays readable for the migration.
     expect(SAVE_VERSION).toBe(3)
   })
 

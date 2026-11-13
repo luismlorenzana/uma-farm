@@ -1,4 +1,4 @@
-// `/roster`: M4's page. Everyone on the roster, home or away, as album cards
+// `/roster`: the deployed build's page. Everyone on the roster, home or away, as album cards
 // on uma-kit's album chrome (`RosterAlbum`, which the romance build's Hearts tab shows as its Work view),
 // with your hearts with her in each face's corner. A tap opens her sheet (`?uma=<id>`): your hearts with her, Chat and
 // Gift, where she is, and her nine activities with talent, rank, points and the next challenge. The romance build sends

@@ -1,5 +1,5 @@
 // The scene player: a full-screen sheet over the farm. A bust (a cast
-// member's lettered disc until F25's busts ship, or an Uma's from master data through uma-kit's `UmaBust`), the speaker's
+// member's lettered disc until the busts ship, or an Uma's from master data through uma-kit's `UmaBust`), the speaker's
 // name and one line; a tap goes on, and **Skip** ends it. The chapter scenes' lines are data (`@farm/domain`'s
 // `story/chapter-1.ts`, and v4's re-cut opening) with roles the save fills: on v3 your first hands speak their
 // temperament's hello and your newest hand asks to stay; on v4 the opening ends as the three come up the road (reading it
@@ -11,8 +11,8 @@
 // bust, the line with `{farmer}` filled, the emote as a word), `narrate`, `thought` (italic), `place` (the title line),
 // `wait`, `flag` and `choice`, whose options show their gain before the tap (+30 for the best, +10 for the rest). Skip
 // jumps to the choice, never past it, so every arrival pays +50 and its choice; the last of the opening three ends on
-// chapter 1's card and **Plant the carrots**. Its frame and steps also play F52's pair conversations (`PairPlayer.tsx`).
-// Loaded on demand. F53: on v4 the ring bench's scene (`scene:bench`) plays here too, its player loaded on demand in the
+// chapter 1's card and **Plant the carrots**. Its frame and steps also play the pair conversations (`PairPlayer.tsx`).
+// Loaded on demand. On v4 the ring bench's scene (`scene:bench`) plays here too, its player loaded on demand in the
 // romance build only (`BenchScene.tsx`).
 import {
   ARRIVAL_POINTS, arrivalOf, BENCH_SCENE, CAST, CAST_IDS, castInitial, chapterArrival, CHAPTER_1_GOALS, chapterOf, chapterScene, choicePoints, FALLBACK_ARRIVAL, farmPlace, pathFlags,
@@ -31,13 +31,13 @@ import { finishArrivalScene, readSceneOnce } from './actions'
 import { chapterHand, rewardWords } from './goal-words'
 import { talentTable } from './talents'
 
-/** Each speaking cast member's disc colour, until F25's busts. */
+/** Each speaking cast member's disc colour, until the busts. */
 const CAST_COLOR: Readonly<Partial<Record<CastId, string>>> = { 'hollis-pryor': '#6b5aa6', 'marta-quill': '#c4573a', 'ben-carver': '#7a8b3a', 'ida-stone': '#8a5a3c' }
 // The romance build's only: the switch folds at build time, and the deployed build drops the import.
 const BenchScene = /* @__PURE__ */ lazy(() => import('./BenchScene'))
 const isCast = (id: string): id is CastId => (CAST_IDS as readonly string[]).includes(id)
 
-/** A cast member's bust: F25's art once it ships, a lettered disc until then. */
+/** A cast member's bust: the art once it ships, a lettered disc until then. */
 export function CastBust({ id, size }: { id: CastId; size: number }) {
   return (
     <span aria-hidden className="font-display flex shrink-0 items-center justify-center rounded-full font-bold text-white shadow-2 ring-4 ring-white/70"
@@ -57,7 +57,7 @@ export default function ScenePlayer({ scene }: { scene: SceneId }) {
   return <ChapterScenePlayer scene={scene as ChapterSceneId} />
 }
 
-/** The sheet's frame: the title line, Skip, and what plays. F52's pair conversations play in it too. */
+/** The sheet's frame: the title line, Skip, and what plays. The pair conversations play in it too. */
 export function Frame({ title, label, scene, onSkip, skipping, children }: { title: string; label: string; scene: string; onSkip: () => void; skipping: boolean; children: React.ReactNode }) {
   return (
     <div className="pt-safe pb-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={label} data-scene={scene}>
@@ -146,7 +146,7 @@ function Bust({ line, nameOf }: { line: SceneLine; nameOf: (id: string) => strin
   )
 }
 
-/** Chapter 1's card (CS42 beat 5): its six goals and the first tap, planting. Its reward names a new hand on v3, and on v4
+/** Chapter 1's card: its six goals and the first tap, planting. Its reward names a new hand on v3, and on v4
  * only when the cast has a chapter-1 arrival. */
 export function ChapterOneCard({ onPlant }: { onPlant: () => void }) {
   const chapter = chapterOf(1)!
@@ -168,7 +168,7 @@ export function ChapterOneCard({ onPlant }: { onPlant: () => void }) {
   )
 }
 
-/** The scene's last card (CS42 beat 5): chapter 1's six goals and the first tap, planting; or the chapter's reward and
+/** The scene's last card: chapter 1's six goals and the first tap, planting; or the chapter's reward and
  * chapter 2's line. */
 function ChapterCard({ scene, onDone }: { scene: ChapterSceneId; onDone: (to: string | null) => void }) {
   const hand = useChapterHand(1)

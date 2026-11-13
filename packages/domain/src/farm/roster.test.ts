@@ -48,7 +48,7 @@ const night = (save: SaveV3, release = RELEASE) => endDay(save, context(release)
 const nights = (save: SaveV3, n: number, release = RELEASE) => Array.from({ length: n }).reduce<SaveV3>((s) => night(s, release), save)
 const withGold = (save: SaveV3, gold: number): SaveV3 => ({ ...save, gold })
 
-describe('the start: six cards, one redraw, three picks (CS2; decisions 1, 2)', () => {
+describe('the start: six cards, one redraw, three picks', () => {
   it('always holds a C-or-better farmer, forager and fisher, six different outfits off the roster', () => {
     for (let u = 0; u < 40; u++) {
       const save = { ...newSave(`u${u}`, AT) }
@@ -115,8 +115,8 @@ describe('the start: six cards, one redraw, three picks (CS2; decisions 1, 2)', 
   })
 })
 
-describe('the Dorm: levels and beds (CS34; decision 3)', () => {
-  it('has CS34\'s ten levels', () => {
+describe('the Dorm: levels and beds', () => {
+  it('has the ten levels', () => {
     expect(DORM_LEVELS.map((l) => [l.level, l.beds, l.cost, l.farmRank])).toEqual([
       [1, 3, 0, 0], [2, 5, 1000, 1], [3, 8, 3000, 2], [4, 12, 8000, 3], [5, 16, 15000, 4], [6, 22, 28000, 5], [7, 30, 50000, 6], [8, 40, 85000, 7],
       [9, 50, 130000, 8], [10, 60, 200000, 9],
@@ -152,7 +152,7 @@ describe('the Dorm: levels and beds (CS34; decision 3)', () => {
   })
 })
 
-describe('the off-season and swaps (CS36; decision 4)', () => {
+describe('the off-season and swaps', () => {
   /** Three home, two away. */
   const full = () => farm(['1001', '1002', '1003', '1004', '1005'], 2, 3)
 
@@ -202,7 +202,7 @@ describe('the off-season and swaps (CS36; decision 4)', () => {
   })
 })
 
-describe('visitors at the Gate (CS35; decision 5)', () => {
+describe('visitors at the Gate', () => {
   it('comes on the morning of day 4 while a bed is free and none waits, and leaves after 6 days', () => {
     const save = farm(['1001', '1002'], 3)
     const day4 = night(save)
@@ -242,7 +242,7 @@ describe('visitors at the Gate (CS35; decision 5)', () => {
   })
 })
 
-describe('affinity: chats and gifts (CS45; decisions 6–9)', () => {
+describe('affinity: chats and gifts', () => {
   const visiting = (affinity = 0, home = 2) => ({ ...farm(['1001', '1002', '1003'].slice(0, home), 5), visitors: [{ outfitId: '1020', from: 'gate' as const, leaves: 10, affinity }],
     items: { carp: [3, 1, 0, 0, 0] as [number, number, number, number, number], granite: [2, 0, 0, 0, 0] as [number, number, number, number, number], 'seed-carrot': [9, 0, 0, 0, 0] as [number, number, number, number, number] } })
 
@@ -316,7 +316,7 @@ describe('affinity: chats and gifts (CS45; decisions 6–9)', () => {
   })
 })
 
-describe('chapter recruits (CS35; decision 10)', () => {
+describe('chapter recruits', () => {
   it('draws for the open activity whose best rank, then best talent, is lowest, C or better in it', () => {
     const table = talents({ 1001: { farming: 6, foraging: 5, fishing: 4 }, 1002: { fishing: 5 }, 1030: { foraging: 4 }, 1031: { foraging: 6 }, 1032: { fishing: 7 } })
     const save = farm(['1001', '1002'], 8)
@@ -331,13 +331,13 @@ describe('chapter recruits (CS35; decision 10)', () => {
     expect(recruitFor(ranked, ['1001', '1002'], table).outfitId).toBeNull()
     // The ranch opens with chapter 2, mining with 3.
     expect(openActivities({ farm: { ...save.farm, chapter: 3 } })).toEqual(['farming', 'ranch', 'mining', 'fishing', 'foraging'])
-    // F24 joins her at once, home while a bed is free.
+    // She joins at once, home while a bed is free.
     expect(joinRoster(ranked, pick.outfitId!).home).toBe(true)
   })
 
   it('names a recruit who joined in the night in the morning news, home or away', () => {
     const save = farm(['1001', '1002'], 2)
-    // A stand-in for F24's step 8: two recruits, the second with no bed free.
+    // A stand-in for the night's recruiting step: two recruits, the second with no bed free.
     const recruit = { run: (n: Night) => ({ ...n, save: joinRoster(joinRoster(n.save, '1030').save, '1031').save }) }
     const morning = runNight(save, context(), [recruit, { run: buildSummary }])
     expect(morning.summary!.news).toEqual([{ kind: 'joined', outfitId: '1030', home: true }, { kind: 'joined', outfitId: '1031', home: false }])

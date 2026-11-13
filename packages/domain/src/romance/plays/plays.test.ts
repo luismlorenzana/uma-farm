@@ -1,6 +1,6 @@
 // The five plays: pure rules, tested before any screen draws them. Each scores
 // 0–100 at its edges, a perfect run 100, no taps a Fine, the same seed and taps the same score, both lengths; Choose's
-// tastes; Walk's 50/75/100; RM26's map. Invented ids only: the stand-ins 9000001–9000003.
+// tastes; Walk's 50/75/100; the plays' map. Invented ids only: the stand-ins 9000001–9000003.
 import { describe, expect, it } from 'vitest'
 import { newSaveV4 } from '../../save/v4'
 import { DATE_GAMES, type Together } from '../../story/authored'
@@ -21,7 +21,7 @@ const PACK = storyPackFrom(STAND_IN_FILES)
 const seed: Seed = playSeed('u1', 3, '9000001', 'f1')
 const other: Seed = playSeed('u1', 4, '9000001', 'f1')
 
-describe('grades (RM25)', () => {
+describe('grades', () => {
   it('Fine below 60, Great 60–89, Perfect 90+', () => {
     expect([0, 59, 60, 89, 90, 100].map(gradeOf)).toEqual(['fine', 'fine', 'great', 'great', 'perfect', 'perfect'])
     expect(EVENT_GRADE_POINTS).toEqual({ fine: 0, great: 15, perfect: 30 })
@@ -222,7 +222,7 @@ describe('Choose', () => {
   })
 })
 
-describe('what plays as what (RM26)', () => {
+describe('what plays as what', () => {
   it('every activity and date game maps to a play; the unbuilt games fall back to Rhythm with their mark', () => {
     for (const key of [...ACTIVITIES, ...DATE_GAMES]) expect(PLAY_MAP[key]).toBeDefined()
     const as = (t: Together) => togetherPlay(t)

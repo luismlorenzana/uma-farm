@@ -1,4 +1,4 @@
-// The homestead (romance spec RM41's mockup), `?sheet=homestead` from a house's tap on the
+// The homestead (romance build), `?sheet=homestead` from a house's tap on the
 // map (`&house=<n>` marks its row): one row a house, its mark, its name, its rooms (a face ▣ or a free room ▢) and its count;
 // **Extend · 4,000g** on a built house; the next lot with a name field (grey "Rose Cottage") and **Build · 8,000g**, or
 // "Need 300g more", or "Opens with your first wedding"; the lots after it in one line; "Needs a room: …"; moves (tap a face,

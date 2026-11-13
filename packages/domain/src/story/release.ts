@@ -12,8 +12,6 @@ import { pairFileIssues, packContext, routeFileIssues, storyPackFrom, StoryPackE
 export const STORY_INDEX = 'story.json'
 /** A file's name in the release: lowercase letters and digits in words joined by `-` (`cast`, `uma-<id>`, `pair-<a>-<b>`). */
 export const STORY_NAME = /^[a-z0-9]+(-[a-z0-9]+)*$/
-/** What the farm-api route serves: the index, and hash-named files under `story/`. */
-export const STORY_FILE_PATH = /^story\/[a-z0-9]+(-[a-z0-9]+)*\.[a-f0-9]{8}\.json$/
 
 /** Each file's name in the release, by what it holds. */
 export const storyFileName = {

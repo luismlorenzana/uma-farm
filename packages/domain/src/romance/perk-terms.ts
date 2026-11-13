@@ -12,14 +12,14 @@
 //   In her element stays in the bond term, outside the cap: ×1.2 for ×1.1.
 //   Her keepsake: +0.25 quality at her line's place, +0.5 from S5.
 //
-// A perk at her line's place works only once that place is open (RM36: "Opens with chapter n"). Rules on save v4 only;
+// A perk at her line's place works only once that place is open ("Opens with chapter n"). Rules on save v4 only;
 // the shared rules call these only for a v4 save with the pack, so v3's numbers never move. Loaded with the night and the
 // romance's screens.
 import type { FarmPlaceId } from '../farm/places'
 import { marriedCount, type Love, type SaveV4 } from '../save/v4'
 import { linePlaces, type StoryPack } from '../story/pack'
 import { nextRung, ROUTE_RUNGS } from './love'
-import { lineChapter, PERKS, perkLineOf, type PerkId } from './perks'
+import { lineChapter, perkLineOf } from './perks'
 
 /** What the perks read of the story pack: her favourite line (her bible, else her calling) and so her line's places. */
 export type PerkPack = Pick<StoryPack, 'cast' | 'bibles'>
@@ -37,9 +37,6 @@ export const routeIndex = (love: Pick<Love, 'stage' | 'level'>): number => {
 export const hasPerk = (love: Pick<Love, 'stage' | 'level'> | undefined, rung: string): boolean =>
   !!love && ROUTE_RUNGS.indexOf(rung) >= 0 && ROUTE_RUNGS.indexOf(rung) < routeIndex(love)
 
-/** A perk's rung by its id. */
-export const rungOfPerk = (id: PerkId): string => PERKS.find((p) => p.id === id)!.rung
-
 /** Whether she's on the farm tonight: home in the Dorm, or a spouse in her house. Away does nothing. */
 export const homeOrHoused = (save: Pick<SaveV4, 'dorm' | 'love'>, id: string): boolean => {
   const love = save.love[id]
@@ -54,7 +51,7 @@ export function linePlaceOpen(save: Pick<SaveV4, 'farm'>, pack: PerkPack, id: st
   return chapter === null || save.farm.chapter >= chapter
 }
 
-/** Whether `place` is one of her line's places (RM6's table: the Fields, the forest and the Sawmill, the Fishery and the
+/** Whether `place` is one of her line's places (the Fields, the forest and the Sawmill, the Fishery and the
  * Smokehouse, …) and open. */
 export const atHerLine = (save: Pick<SaveV4, 'farm'>, pack: PerkPack, id: string, place: string): boolean =>
   linePlaces(pack, id).includes(place as FarmPlaceId) && linePlaceOpen(save, pack, id)
@@ -91,7 +88,7 @@ export interface RomanceTerms {
 }
 
 /** Her ring's bonus as a share: once she's married, `love.ring` percent at her line. On v4 `love.ring` is her ring's
- * grade (F53 decision 6: +1% a grade, every ring a Rough make until M6's merge game adds its +1/+3/+5). */
+ * grade (+1% a grade, every ring a Rough make until the merge game adds its +1/+3/+5). */
 export const ringBonus = (love: Pick<Love, 'stage' | 'ring'> | undefined): number => (love?.stage === 'spouse' && love.ring !== undefined ? love.ring / 100 : 0)
 
 /** The household's share by spouses on the farm: 0, 5% from 5 married, 10% from 15. */
@@ -100,7 +97,7 @@ export const householdBonus = (married: number): number => round6(HOUSEHOLD.redu
 /** Whether her dream acts: her S3 event is in `memories`, and it's still hers (her S3 reached). */
 export const dreamActs = (save: Pick<SaveV4, 'love' | 'memories'>, id: string): boolean => hasPerk(save.love[id], 's3') && (save.memories[id] ?? []).includes('s3')
 
-/** The best dream at a place (RM34: never summed): +5% when any Uma's dream acts and the place is her line's, open. */
+/** The best dream at a place (never summed): +5% when any Uma's dream acts and the place is her line's, open. */
 export function dreamAt(save: Pick<SaveV4, 'love' | 'memories' | 'farm'>, pack: PerkPack, place: string): number {
   return Object.keys(save.love).some((d) => dreamActs(save, d) && atHerLine(save, pack, d, place)) ? DREAM_BONUS : 0
 }
@@ -127,7 +124,7 @@ export const romanceBonus = (save: Pick<SaveV4, 'love' | 'memories' | 'farm'>, p
 
 // --- In her element -----------------------------------------------------------------------------------
 
-/** In her element: CS17's bond factor ×1.2 in place of ×1.1, outside the cap. */
+/** In her element: the bond factor ×1.2 in place of ×1.1, outside the cap. */
 export const IN_ELEMENT = 1.2
 /** Whether she's in her element at `place`: Friendship 8 reached and the place her line's, open. Beside a
  * 3-heart partner is the bond term's own check (`farm/bonds.ts`). */
@@ -136,7 +133,7 @@ export const inElement = (save: Pick<SaveV4, 'love' | 'farm'>, pack: PerkPack, i
 
 // --- Her keepsake (S5) --------------------------------------------------------------------------------
 
-/** Her keepsake's quality (CS26's `keepsake` source): +0.25 from F10, +0.5 from S5. */
+/** Her keepsake's quality (the `keepsake` source): +0.25 from F10, +0.5 from S5. */
 export const KEEPSAKE_QUALITY = 0.25
 export const KEEPSAKE_GROWN = 0.5
 /** Her keepsake's quality on her work at `place`: at her line's place, open, from F10; 0 anywhere else. Read

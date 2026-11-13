@@ -6,12 +6,12 @@
 //     farming   +0.25 growth on the untended block with the most growing plots, else hers         night step 2
 //     foraging  one item from her rank's deepest forest area this season, at a day's haul's stars   night step 4
 //     fishing   one fish from her deepest spot this season, the same way                           night step 4
-//     mining, the ranch, cooking, serving, forging: with their places' packets
+//     mining, the ranch, cooking, serving, forging: with their places
 //   Morning items (R2 every 4th morning ★2+, S2 every 2nd ★3+; on the farm)                        night step 9
 //   Mentor: the others at her place today ×1.10 rank points, one mentor a place               night step 6
 //   Her signature dish: her loved good when it's a dish, else her line's dish kind at the grade of her line's best
 //     place, once, into `workshops.recipes`                                                        `playEvent`
-//   Breakfast (S1): the crew well fed for the day when no meal runs (F54's house morning calls it)
+//   Breakfast (S1): the crew well fed for the day when no meal runs (the house morning calls it)
 //
 // Counts are expected values: a fraction becomes a whole item by a seeded draw, `draw(uid, day, 'perk:<id>…', n)`, so a
 // night replays the same. Save v4 only. Loaded with the night and the romance's screens.
@@ -46,13 +46,13 @@ function inCastOrder(pack: Pick<StoryPack, 'cast'>, ids: readonly string[]): str
 // --- Night chores -----------------------------------------------------------------------------------------
 
 /** The lines whose night chores act now: farming (step 2), foraging and fishing (step 4). Mining, the ranch,
- * cooking, serving and forging bring theirs with their places' packets; until then their profile says "Opens with
+ * cooking, serving and forging bring theirs with their places; until then their profile says "Opens with
  * chapter n". */
 export const CHORE_LINES: readonly PerkLine[] = ['farming', 'foraging', 'fishing']
 /** A farming chore's growth on one block. */
 export const CHORE_GROWTH = 0.25
 
-/** Her chores tonight: F6's, R7's and S4's (`choresOf`, at most 3) while she's on the farm, her line's chores
+/** Her chores tonight: the F6, R7 and S4 perks' (`choresOf`, at most 3) while she's on the farm, her line's chores
  * act and its place is open; else none. */
 export function choresTonight(save: SaveV4, pack: PerkPack, id: string): number {
   const line = perkLineOf(pack, id)
@@ -134,7 +134,7 @@ export function gatherChores(save: SaveV4, pack: PerkPack, talentOf: TalentOf = 
 
 // --- Morning items ----------------------------------------------------------------------------------------
 
-/** `lineGood`'s `n` for her morning item (her anniversary's is 0; F54's house item takes 2). */
+/** `lineGood`'s `n` for her morning item (her anniversary's is 0; the house item takes 2). */
 export const MORNING_ITEM_N = 1
 
 /** Her line's quality: what a day's work at her line gives her items: a forager's and a fisher's day's haul
@@ -159,7 +159,7 @@ export function lineQuality(save: SaveV4, pack: PerkPack, id: string, talentOf: 
  * Night step 9's morning items, the date already turned: each Uma on the farm whose morning it is by her
  * count (`morningRule`: every 4th morning from R2, every 2nd from S2) leaves one good of her line (`lineGood`, n = 1) in
  * the Warehouse, its stars her line's quality draw (`draw(uid, day, 'perk:<id>:item', 0)`) held at ★2 (★3 from S2). In
- * the cast's order. F54 adds her house's +1 on a morning in it.
+ * the cast's order. The house adds +1 on a morning in it.
  */
 export function leaveMorningItems(save: SaveV4, pack: PerkPack, talentOf: TalentOf = talentsD): { save: SaveV4; lines: ItemLine[] } {
   const day = save.calendar.day
@@ -208,9 +208,9 @@ export function mentorAt(save: SaveV4, pack: PerkPack, place: string, ids: reado
 
 // --- Her signature dish -----------------------------------------------------------------------------------
 
-/** A dish's family: CS21's eight dishes. */
+/** A dish's family: the eight dishes. */
 export type DishFamily = typeof DISH_FAMILIES[number]
-/** Her line's dish kind (CS45's list): farming Salad, ranch Cake, mining Curry, fishing Grill, foraging Soup, cooking
+/** Her line's dish kind (the list): farming Salad, ranch Cake, mining Curry, fishing Grill, foraging Soup, cooking
  * Tart, serving Cookies, forging Bread. */
 export const LINE_DISH: Readonly<Record<PerkLine, DishFamily>> = {
   farming: 'vegetables', ranch: 'sweets', mining: 'herbs-spices', quarry: 'herbs-spices', fishing: 'fish', foraging: 'mushrooms', cooking: 'fruits',
@@ -232,7 +232,7 @@ const worked = (save: SaveV4, ids: readonly string[]): string[] => ids.filter((w
 
 /** The grade of her line's best place: the top grade of the deepest forest area anyone has worked (a
  * forager's), of the deepest fishing spot (a fisher's), of the shop's vegetables at its highest open seed tier (a
- * farmer's); 1 for mining, the ranch and the workshops until their chapters' packets. */
+ * farmer's); 1 for mining, the ranch and the workshops until their chapters. */
 export function lineGrade(save: SaveV4, pack: PerkPack, id: string): number {
   switch (perkLineOf(pack, id)) {
     case 'foraging': return Math.max(...worked(save, FOREST_AREAS).map((a) => FOREST[a as ForestAreaId].grades[1]))
@@ -274,7 +274,7 @@ export function giveSignatureDish(save: SaveV4, pack: PerkPack, id: string): { s
 export const BREAKFAST_DAYS = 1
 
 /**
- * Breakfast, a spouse's S1 perk on a morning in her house (F54's house morning calls it): every Uma on
+ * Breakfast, a spouse's S1 perk on a morning in her house (the house morning calls it): every Uma on
  * the farm (home or housed) with no well-fed days left starts the day well fed for one day. A meal running is never
  * shortened or extended, and a breakfast isn't a staff meal (no count moves: chapter 4's goal stays the Kitchen's). Each
  * pair it feeds earns +5 bond (`addBond`, Romance 4's ×1.5 inside). Pure; never stamps.

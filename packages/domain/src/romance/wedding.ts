@@ -1,5 +1,5 @@
 // The proposal and the wedding: the parts `playEvent` adds to
-// F49's big scenes, and what their screens read.
+// The big scenes, and what their screens read.
 //
 //   the proposal  Ready the day after Romance 10 with a ring in the Warehouse; Play › asks which ring (the best grade
 //                 preselected), the authored event plays, it always succeeds: the ring leaves the Warehouse, `love.ring`
@@ -13,7 +13,6 @@
 import { DAYS_PER_YEAR } from '../farm/calendar'
 import { tiesOf } from '../farm/bonds'
 import { SaveRuleError } from '../save/rules'
-import { goodCount } from '../save/warehouse'
 import { isDishId } from '../save/v3'
 import type { SaveV4 } from '../save/v4'
 import type { StoryPlace } from '../story/authored'
@@ -41,10 +40,10 @@ export const vowFlag = (n: number): string => `vow:${n}`
 
 // --- The reception ---------------------------------------------------------------------------------------
 
-/** A dish's well-fed days at the reception, by its stars (CS22's 1–3, read from the dish's stars since the Warehouse holds
+/** A dish's well-fed days at the reception, by its stars (read from the dish's stars since the Warehouse holds
  * no play tier): ★1–2 one, ★3–4 two, ★5 three. */
 export const receptionDays = (stars: number): number => (stars >= 5 ? 3 : stars >= 3 ? 2 : 1)
-/** Marta's bakery's cake, with no dish in the Warehouse (no Kitchen before M5): a Rough meal, one day. */
+/** Marta's bakery's cake, with no dish in the Warehouse (no Kitchen before the Kitchen): a Rough meal, one day. */
 export const CAKE_DAYS = 1
 /** The reception: a dish at its stars, or null for Marta's cake. */
 export type Reception = { dish: string; stars: number } | null
@@ -81,7 +80,7 @@ export function serveReception(save: SaveV4, days: number): { save: SaveV4; fed:
 /** Her closest friends who come to her wedding: two. */
 export const WEDDING_FRIENDS = 2
 /** Who attends her wedding: every spouse on the farm in the cast's order, then her two closest friends
- * among the Umas on the farm (F52's order). Never her; each once. They have no lines. */
+ * among the Umas on the farm (by closeness). Never her; each once. They have no lines. */
 export function weddingGuests(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>, id: string): string[] {
   const here = (other: string) => other !== id && !!save.roster[other] && homeOrHoused(save, other)
   const order = castOrder(pack)
@@ -94,12 +93,10 @@ export function weddingGuests(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties
 
 // --- After it --------------------------------------------------------------------------------------
 
-/** Her anniversary: her wedding's day a year on (F47's `isAnniversary`). */
+/** Her anniversary: her wedding's day a year on (`isAnniversary`). */
 export const anniversaryOf = (wed: number): number => wed + DAYS_PER_YEAR
-/** RM45's household milestones, by the number married: scenes at 5, 10 and 15, the finale at 20. */
+/** The household milestones, by the number married: scenes at 5, 10 and 15, the finale at 20. */
 export const HOUSEHOLD_AT: readonly number[] = [5, 10, 15, 20]
 /** The next household milestone past `married`, or null after the finale's. */
 export const nextHousehold = (married: number): number | null => HOUSEHOLD_AT.find((n) => n > married) ?? null
 
-/** Whether the proposal's ring is held. */
-export const ringHeld = (save: Pick<SaveV4, 'items'>, ring: string): boolean => goodCount(save.items, ring) > 0

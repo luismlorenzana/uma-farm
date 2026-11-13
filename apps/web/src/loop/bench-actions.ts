@@ -1,6 +1,6 @@
 // The ring bench's actions: a ring made, a better ring given and Ida Stone's scene read, each one
 // player's change over the save as it is now, committed once and stamped; a refused rule throws its words. Apart from
-// `actions.ts` so the M4 build never fetches the bench's rules. Loaded on demand, the romance build only.
+// `actions.ts` so the deployed build never fetches the bench's rules. Loaded on demand, the romance build only.
 import { BENCH_SCENE, giveRing, makeRing, readScene, touched, type BenchInput, type SaveV4 } from '@farm/domain'
 import { commit, useGame } from '../save/game'
 

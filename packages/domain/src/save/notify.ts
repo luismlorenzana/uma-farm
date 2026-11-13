@@ -1,10 +1,9 @@
 // Copied from uma-rpg packages/domain/src/save/notify.ts at 30a322a, with its Wilds-only parts cut.
-// What finished in a time window, for push notifications (QoL; the farm's F6): every entry that ended in it,
+// What finished in a time window, for push notifications: every entry that ended in it,
 // read from the work rows settled to the window's end, so a queue that stopped on short inputs never announces jobs that
 // didn't start. uma-rpg's tier worlds stay behind: the farm has one.
 import { endsAt, settle } from '@luismlorenzana/uma-work'
 import type { JobKind } from '../economy/jobs'
-import { stockName } from '../economy/stock'
 import { placeById, PLACES } from '../hub/places'
 import { farmWorkEnv } from '../work/env-v4'
 import type { FarmWorld } from '../work/world'
@@ -45,38 +44,12 @@ function idleAfter(world: FarmWorld, from: number): Finish[] {
   return finishesBetween(world, from, horizon + 4 * 24 * 3_600_000).filter((f) => f.idle)
 }
 
-/** The next moment a slot goes idle after `from`, or null when nothing is running. */
-export function nextIdleAt(world: FarmWorld, from: number): number | null {
-  return idleAfter(world, from)[0]?.at ?? null
-}
-
 /** Slots with something to collect at `now`: the app badge. */
 export function readySlots(world: FarmWorld, now: string): number {
   return [...readyWork(world, now).values()].reduce((a, b) => a + b, 0)
 }
 
 export interface Notice { title: string; body: string; tag: string; url: string }
-
-/** One notification for the slots that went idle (a queue moving on to its next job needs nothing from you): one
- * names itself; several are listed. Its link opens the place's page. */
-export function finishNotice(all: readonly Finish[]): Notice | null {
-  const finishes = all.filter((f) => f.idle)
-  if (finishes.length === 0) return null
-  const line = (f: Finish) => `${placeById(f.placeId)?.name ?? f.placeId}: ${stockName(f.output)} ×${f.count}`
-  if (finishes.length === 1) {
-    const f = finishes[0]!
-    const place = placeById(f.placeId)
-    return { title: 'Work done', body: line(f), tag: `slot-${f.placeId}-${f.slot}`, url: place ? `/${place.page}/${place.id}` : '/' }
-  }
-  const shown = finishes.slice(-4).map(line)
-  return { title: `${finishes.length} jobs done`, body: [...shown, ...(finishes.length > 4 ? [`and ${finishes.length - 4} more`] : [])].join('\n'),
-    tag: 'work', url: '/' }
-}
-
-/** The notice for what finished in (from, to], or null. */
-export function workNotice(world: FarmWorld, from: number, to: number): Notice | null {
-  return finishNotice(finishesBetween(world, from, to))
-}
 
 // --- The farm's push schedule ------------------------------------------------------------------------------------
 // The server never reads a save: on every sync the app sends when each slot goes idle, and Cloud Scheduler's tick

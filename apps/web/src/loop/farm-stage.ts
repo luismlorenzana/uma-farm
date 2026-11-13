@@ -25,7 +25,7 @@ export const SEASON_EASE_MS = 1000
 export const slotPlace = (id: string): string => id.slice(0, id.lastIndexOf('-'))
 
 /** The plot a hit stands for: a place's or a lot's marker, a slot's place, the Gate, a building, or the plot a prop stands
- * in. Null for what opens nothing: a path point, a figure (F12's), the open ground. */
+ * in. Null for what opens nothing: a path point, a figure, the open ground. */
 export function plotOfHit(hit: PickHit, plots: readonly FarmPlot[]): string | null {
   const ref = hit.ref
   let id: string | null

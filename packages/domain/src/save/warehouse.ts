@@ -1,11 +1,11 @@
-// The Warehouse by stars meets uma-work's flat stock through one bridge. CS53 stores `items[id]` as
+// The Warehouse by stars meets uma-work's flat stock through one bridge. The save stores `items[id]` as
 // counts by ★1 … ★5; uma-work reads a `Record<string, number>`. The engine sees a view keyed `<id>@<stars>` (`carp@2`),
 // built by `workStock` and folded back by `fromWorkStock`; v3 work rows store those keys in their inputs and outputs.
 // Nothing else reads the view. Seeds are held at ★1 only.
 //
-// F53: the bridge and the operations take anything a v3 or a v4 Warehouse may hold (`isStockId`): v4 adds the rings
-// (the ring bench's) and dishes (the wedding's reception reads them; M5's Kitchen makes them). Each save's parse keeps
-// its own: v3's Warehouse is `isWarehouseId`'s, M4's as live, and v4's `isWarehouseIdV4`.
+// The bridge and the operations take anything a v3 or a v4 Warehouse may hold (`isStockId`): v4 adds the rings
+// (the ring bench's) and dishes (the wedding's reception reads them; the Kitchen makes them). Each save's parse keeps
+// its own: v3's Warehouse is `isWarehouseId`'s, as live, and v4's `isWarehouseIdV4`.
 import type { ItemStock } from '@luismlorenzana/uma-work'
 import { isRingId, isSeedId, isWarehouseId } from '../goods/ids'
 import { SaveRuleError } from './rules'

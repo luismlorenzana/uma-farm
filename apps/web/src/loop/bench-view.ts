@@ -1,8 +1,8 @@
-// The ring bench as its sheet shows it (romance spec RM38's mockup): one row a grade you can make now, each
-// with the three goods it would take (the lowest-value refined goods of that grade, any family, any mix) and the ring it
-// makes; a tap on one of the three offers the grade's other goods held; CS25's recipe greyed until chapter 3; her bonus
-// once married; and the one button, "Make an Iron Ring · 1 a day". Pure, so the sheet and the tests read the same. Every
-// word says "you". Loaded on demand with the sheet, the romance build only.
+// The ring bench as its sheet shows it: one row a grade you can make now, each with the three goods it would take
+// (the lowest-value refined goods of that grade, any family, any mix) and the ring it makes; a tap on one of the three
+// offers the grade's other goods held; the ring's own recipe (2 ingots + 1 cut gem) greyed until chapter 3; her bonus
+// once married; and the one button, "Make an Iron Ring · 1 a day". Pure, so the sheet and the tests read the same.
+// Every word says "you". Loaded on demand with the sheet, the romance build only.
 import {
   benchGrades, benchPick, benchStock, forgeRecipe, goodName, MAKE_BONUS, MINING_CHAPTER, ringId, ringName, ringPercent, type BenchInput, type BenchStock, type SaveV4,
 } from '@farm/domain'
@@ -12,7 +12,7 @@ export const BENCH_TEXT = {
   title: 'The Forge · ring bench',
   rule: 'A ring of grade g: 3 refined goods of grade g, any family',
   bonus: `Her bonus once married: +${ringPercent(1)}% a grade`,
-  merge: `(+${MAKE_BONUS.rough} / +${MAKE_BONUS.fine} / +${MAKE_BONUS.great} / +${MAKE_BONUS.masterwork} for the merge, M6)`,
+  merge: `(Soon, the Forge’s merge game: +${MAKE_BONUS.fine} / +${MAKE_BONUS.great} / +${MAKE_BONUS.masterwork} more for a Fine, Great or Masterwork ring)`,
   none: 'Nothing to make yet. Three refined goods of one grade make a ring: planks from the Sawmill, fillets from the Smokehouse, flour from the Mill.',
   made: 'One ring a day. Come back tomorrow.',
   help: [
@@ -26,13 +26,13 @@ export const BENCH_TEXT = {
 export const withArticle = (name: string): string => `${/^[AEIOU]/.test(name) ? 'an' : 'a'} ${name}`
 /** The button: "Make an Iron Ring · 1 a day". */
 export const makeWords = (grade: number): string => `Make ${withArticle(ringName(grade))} · 1 a day`
-/** CS25's recipe line: greyed "Opens with chapter 3" before it, the grade's own pair after. */
+/** The ring's own recipe line: greyed "Opens with chapter 3" before it, the grade's own pair after. */
 export function forgeRecipeWords(chapter: number): { text: string; open: boolean } {
   return chapter >= MINING_CHAPTER
-    ? { text: 'CS25’s recipe works too: 2 ingots + 1 cut gem of the grade', open: true }
+    ? { text: 'Or use the ring’s own recipe: 2 ingots + 1 cut gem of its grade', open: true }
     : { text: `From chapter ${MINING_CHAPTER}: 2 ingots + 1 cut gem · Opens with chapter ${MINING_CHAPTER}`, open: false }
 }
-/** A grade's CS25 pair in words: "2 Iron Ingot + 1 Cut Citrine". */
+/** A grade's own recipe in words: "2 Iron Ingot + 1 Cut Citrine". */
 export const forgePairWords = (grade: number): string => {
   const r = forgeRecipe(grade)
   return `2 ${goodName(r.ingot)} + 1 ${goodName(r.gem)}`

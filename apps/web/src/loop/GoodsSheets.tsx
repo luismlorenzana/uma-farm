@@ -93,7 +93,7 @@ export function ShopList({ save, lines }: { save: FarmSave; lines: readonly Shop
   )
 }
 
-/** The shop: F20 fills it with the season's seeds. */
+/** The shop: it lists the season's seeds. */
 export function ShopSheet({ onClose }: { onClose: () => void }) {
   const save = useLoopSave()
   if (!save) return null

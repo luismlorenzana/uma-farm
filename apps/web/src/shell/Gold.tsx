@@ -1,4 +1,4 @@
-// Gold's mark: uma-art's `currency/gold` once F25 ships it; until then a plain "g" on a coin.
+// Gold's mark: uma-art's `currency/gold` once it ships; until then a plain "g" on a coin.
 import { UiMark } from '@luismlorenzana/uma-kit/ui'
 
 /** The coin drawn while the pinned uma-art has no `currency/gold`. */

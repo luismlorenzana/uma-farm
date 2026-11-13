@@ -1,4 +1,4 @@
-// The ladders and points: the costs and the route, RM13's worked
+// The ladders and points: the costs and the route, the worked
 // days, gifts by her tastes, chats, praise and its causes, her line at night, banking, birthdays, anniversaries, the
 // rank-point factor, Ready and the morning's lines. Invented ids only: the stand-ins 9000001–9000003 and casts of 9000004
 // onward built here; birthdays are invented dates.
@@ -63,8 +63,8 @@ function packWith(...more: Omit<CastEntry, 'paragraph' | 'outfitId'>[]): StoryPa
   return { ...PACK, cast }
 }
 
-describe('the ladders and their costs (RM11, RM12; decision 2)', () => {
-  it('costs RM12\'s table: 160 + 40n a heart, 3,800 a ladder, 600 a spouse level, 10,600 a route; the waiting rungs free', () => {
+describe('the ladders and their costs', () => {
+  it('costs the table: 160 + 40n a heart, 3,800 a ladder, 600 a spouse level, 10,600 a route; the waiting rungs free', () => {
     const hearts = (letter: string) => Array.from({ length: 10 }, (_, i) => costOf(`${letter}${i + 1}`))
     expect(hearts('f')).toEqual([200, 240, 280, 320, 360, 400, 440, 480, 520, 560])
     expect(hearts('r')).toEqual(hearts('f'))
@@ -114,8 +114,8 @@ describe('the ladders and their costs (RM11, RM12; decision 2)', () => {
   })
 })
 
-describe('points and banking (RM13, RM14; decisions 2, 3)', () => {
-  it('plays RM13\'s worked days: +75, +55, +55, +45 make Friendship 1 Ready on day 3 at 230; it plays and F2 shows 117 of 240', () => {
+describe('points and banking', () => {
+  it('plays the worked days: +75, +55, +55, +45 make Friendship 1 Ready on day 3 at 230; it plays and F2 shows 117 of 240', () => {
     let save = farm(1)
     save = addLove(save, ONE, 75, 'arrival').save
     save = setTender(plant(save, 'A', 0, 'seed-carrot'), 'A', ONE, TEST_KINDS)
@@ -132,7 +132,7 @@ describe('points and banking (RM13, RM14; decisions 2, 3)', () => {
     expect(save.love[ONE]!.points).toBe(230)
     expect(bar(save.love[ONE]!)).toEqual({ rung: 'f1', points: 200, cost: 200, banked: 30, full: true })
     expect(readiness(save, PACK, ONE)).toEqual({ rung: 'f1', ready: true, waits: null })
-    // It plays (F49 pays +50, its choice and grade after the cost): 30 banked + 87 = 117 of 240.
+    // It plays (it pays +50, its choice and grade after the cost): 30 banked + 87 = 117 of 240.
     save = { ...save, love: { ...save.love, [ONE]: advance(save.love[ONE]!, save.calendar.day) } }
     save = addLove(save, ONE, 87, 'event').save
     expect(bar(save.love[ONE]!)).toEqual({ rung: 'f2', points: 117, cost: 240, banked: 0, full: false })
@@ -157,7 +157,7 @@ describe('points and banking (RM13, RM14; decisions 2, 3)', () => {
   })
 })
 
-describe('chats (RM18; decision 4)', () => {
+describe('chats', () => {
   it('pays +15 once a day, home or away, with her temperament\'s lines before F1 and her own set by stage from F1, the same all day', () => {
     let save = farm(3)
     save = { ...save, dorm: { ...save.dorm, home: [ONE, TWO] } } // 9000003 away
@@ -178,7 +178,7 @@ describe('chats (RM18; decision 4)', () => {
   })
 })
 
-describe('gifts (RM15, RM16; decision 5)', () => {
+describe('gifts', () => {
   it('pays her taste × its stars: a ★3 liked 36, a ★5 loved on her birthday 252, a disliked 0 and never a fall; one a day', () => {
     const save = give(give(give(farm(2), 'carrot', 3), 'limestone'), 'pine-log')
     const liked = giftV4(save, PACK, ONE, 'carrot', 3)
@@ -220,7 +220,7 @@ describe('gifts (RM15, RM16; decision 5)', () => {
   })
 })
 
-describe('praise (RM13; decision 6)', () => {
+describe('praise', () => {
   it('is earned by a ★3+ harvest from her block, pays +20 once, and clears at night', () => {
     let save = setTender(plant(farm(3), 'A', 0, 'seed-carrot'), 'A', ONE, TEST_KINDS)
     save.fields.blocks[0]!.plots[0] = { ...save.fields.blocks[0]!.plots[0]!, growth: 4, ready: true }
@@ -259,7 +259,7 @@ describe('praise (RM13; decision 6)', () => {
   })
 })
 
-describe('her line at night (RM6, RM23; decision 8)', () => {
+describe('her line at night', () => {
   it('pays +10 for a day at one of her line\'s places, tending for a farmer, once a night; nothing elsewhere', () => {
     const save = farm(3)
     const { save: paid, paid: who } = payLines(save, PACK, [
@@ -275,7 +275,7 @@ describe('her line at night (RM6, RM23; decision 8)', () => {
   })
 })
 
-describe('a festival together (decision 9)', () => {
+describe('a festival together', () => {
   it('pays +50 to each Uma on its team or entry, once a festival a year each', () => {
     const save = farm(10)
     const once = festivalTogether(save, [ONE, TWO, ONE, '9000009'], 'flower-show', 1)
@@ -286,8 +286,8 @@ describe('a festival together (decision 9)', () => {
   })
 })
 
-describe('birthdays (RM16; decision 10)', () => {
-  it('maps RM16\'s six dates onto the 48-day year', () => {
+describe('birthdays', () => {
+  it('maps the six dates onto the 48-day year', () => {
     const at = (month: number, day: number) => { const d = dateOf(farmBirthday(month, day)); return `${d.season} ${d.day}` }
     expect([at(3, 1), at(4, 1), at(5, 31), at(2, 14), at(8, 15), at(12, 31)]).toEqual(['spring 1', 'spring 5', 'spring 12', 'winter 10', 'summer 10', 'winter 4'])
     expect([dayOfYear(1), dayOfYear(48), dayOfYear(49), dayOfYear(100)]).toEqual([1, 48, 1, 4])
@@ -302,8 +302,8 @@ describe('birthdays (RM16; decision 10)', () => {
     cast.umas[1]!.birthday = { month: 2, day: 30 }
     cast.umas[2]!.birthday = { month: 13, day: 1 }
     expect(castIssues(cast, { umas: new Set(STAND_INS) })).toEqual([
-      'Uma 2 (9000002): a birthday is { month: 1–12, day } on a real date (RM16)',
-      'Uma 3 (9000003): a birthday is { month: 1–12, day } on a real date (RM16)',
+      'Uma 2 (9000002): a birthday is { month: 1–12, day } on a real date, with no year',
+      'Uma 3 (9000003): a birthday is { month: 1–12, day } on a real date, with no year',
     ])
   })
 
@@ -320,7 +320,7 @@ describe('birthdays (RM16; decision 10)', () => {
   })
 })
 
-describe('anniversaries (RM17; decision 11)', () => {
+describe('anniversaries', () => {
   const wed = 5
   const married = (day: number, id = ONE, pack = PACK) => {
     const base = pack === PACK ? farm(day) : joinOpening(readScene({ ...newSaveV4('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack)
@@ -342,8 +342,8 @@ describe('anniversaries (RM17; decision 11)', () => {
 
   it('leaves a ★5 item of her line that morning, with the line the day before', () => {
     const eve = runNight(married(wed + DAYS_PER_YEAR - 2), context(NO_BIRTHDAYS))
-    // F50: a spouse whose favourite kind is open asks you out each morning, §4's second place. (F51: a spouse also has
-    // Romance 2's morning items, every 4th morning; F54: she takes the Farmhouse's room and its mornings: not this test's.)
+    // A spouse whose favourite kind is open asks you out each morning. (A spouse also has Romance 2's morning
+    // items, every 4th morning, and takes the Farmhouse's room and its mornings: not this test's.)
     expect(eve.summary!.hearts.filter((h) => h.kind === 'invite' || h.kind === 'anniversary')).toEqual([{ kind: 'invite', id: ONE, evening: 'stargazing' }, { kind: 'anniversary', id: ONE, when: 'tomorrow', item: null }])
     const day = runNight(eve, context(NO_BIRTHDAYS))
     const line = day.summary!.hearts.find((h) => h.kind === 'anniversary')!
@@ -372,7 +372,7 @@ describe('anniversaries (RM17; decision 11)', () => {
   })
 })
 
-describe('the rank-point factor (RM18; decision 12)', () => {
+describe('the rank-point factor', () => {
   it('is ×1.05 from Friendship 5 and ×1.10 from Friendship 10 on v4; v3\'s affinity factor unchanged', () => {
     const at = (stage: Love['stage'], level: number) => loveRankFactor({ stage, level })
     expect([at('friendship', 0), at('friendship', 4), at('friendship', 5), at('friendship', 9), at('confession', 10), at('romance', 0), at('spouse', 5)])
@@ -386,7 +386,7 @@ describe('the rank-point factor (RM18; decision 12)', () => {
   })
 })
 
-describe('Ready (RM24; decisions 1 and 13)', () => {
+describe('Ready', () => {
   const full = (save: SaveV4, id: string = ONE) => withLove(save, id, { points: 200 })
 
   it('needs all four: her bar full, home, no event today, its setup met', () => {
@@ -452,7 +452,7 @@ describe('Ready (RM24; decisions 1 and 13)', () => {
   })
 })
 
-describe('the morning\'s Hearts lines (decision 14)', () => {
+describe('the morning\'s Hearts lines', () => {
   it('parse strictly: off the roster, a line twice, an item the day before and words are refused', () => {
     const save = farm(3)
     save.summary = { day: 3, bin: [], work: [], ranks: [], news: [], nudges: [], hearts: [
@@ -470,7 +470,7 @@ describe('the morning\'s Hearts lines (decision 14)', () => {
   })
 })
 
-describe('the format\'s chats (decision 16)', () => {
+describe('the format\'s chats', () => {
   it('takes 3–20 lines a stage under the line rules', () => {
     const ctx = { umas: new Set(STAND_INS) }
     expect(bibleIssues(STAND_IN_BIBLE, ctx)).toEqual([])
@@ -480,7 +480,7 @@ describe('the format\'s chats (decision 16)', () => {
       'chats.extra: a chat set is friend, partner or spouse',
       'chats.friend: 3–20 lines',
       'chats.partner 1: unknown placeholder {name} ({farmer} only)',
-      'chats.partner 2: “sir” genders the farmer (RS2)',
+      'chats.partner 2: “sir” genders the farmer',
       'chats.partner 3: a line of 1–160 characters',
     ])
   })

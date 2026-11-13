@@ -2,15 +2,15 @@
 // (Dexie) and in a Zustand store; every change writes both and schedules a background sync. Play never waits on the
 // network once a device save exists.
 //
-// The M4 build (live) holds save v3, the farm's own loop (F24: the loop is the app). Every v2 it meets (the Wilds' save, on
+// The deployed build holds save v3, the farm's own loop (the loop is the app). Every v2 it meets (the Wilds' save, on
 // the device, from the server, in a 409 or from a safety copy) migrates once master data has loaded (`loop/boot.ts`), and
 // the migration is committed without moving `updatedAt`, so it uploads and the next boot reads v3. It stops at a v4, with
 // the kit's update prompt, and never writes over one.
 //
-// The romance build (`VITE_FARM_ROMANCE=1`, dark until F56) holds save v4. Every v1–v3 it meets, wherever it meets one, is
-// wiped into a fresh v4 (`freshV4`, the account copied whole) and committed without stamping, so it uploads and the server
-// backs the v3 up; a dirty v3 on the device is kept as a safety copy first. The farmer's name is the first stamp. Its boot
-// waits for the story pack, as the loop waits for master data.
+// The romance build (`VITE_FARM_ROMANCE=1`, dark until the private pack ships) holds save v4. Every v1–v3 it meets,
+// wherever it meets one, is wiped into a fresh v4 (`freshV4`, the account copied whole) and committed without
+// stamping, so it uploads and the server backs the v3 up; a dirty v3 on the device is kept as a safety copy first.
+// The farmer's name is the first stamp. Its boot waits for the story pack, as the loop waits for master data.
 import { freshV4, parseSave, touched, type FarmSave, type SaveEnvelope, type StoredSave } from '@farm/domain'
 import { create } from 'zustand'
 import { conflictEnvelope, saveApi } from '../api/client'
@@ -25,7 +25,8 @@ export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'offline' | 'error'
 export interface GameState {
   uid: string | null
   status: GameStatus
-  /** The save the build plays: v3 (a v2 migrated) in the M4 build, v4 (any older one wiped) in the romance build. */
+  /** The save the build plays: v3 (a v2 migrated) in the deployed build,
+   * v4 (any older one wiped) in the romance build. */
   save: FarmSave | null
   /** The server revision the save is based on (0: never synced). */
   revision: number
@@ -43,11 +44,11 @@ export const useGame = create<GameState>(() => INITIAL)
 /** The save once booted, or null. */
 export const useLoopSave = (): FarmSave | null => useGame((s) => s.save)
 
-/** The M4 build meeting a v4: it can't play it, and nothing writes over it (the kit's update prompt
+/** The deployed build meeting a v4: it can't play it, and nothing writes over it (the kit's update prompt
  * brings the build that can). */
 export const NEWER_SAVE_WORDS = 'This save is from a newer version of the farm.'
 
-/** A stored save as this build plays it. The M4 build: a v3 as it is, a v2 migrated once master data has loaded
+/** A stored save as this build plays it. The deployed build: a v3 as it is, a v2 migrated once master data has loaded
  * (`loop/boot.ts`), a v4 refused. The romance build: a v4 as it is, any v1–v3 wiped (`freshV4`), once the story pack has
  * loaded. The same object comes back when nothing changed, so the store knows when to commit. */
 async function playable(save: StoredSave): Promise<FarmSave> {
@@ -132,7 +133,7 @@ export function resetGame(): void {
 
 /** The save this device's last change committed. */
 let committed: FarmSave | null = null
-/** Whether a save is the one this device's last change made (F12: the HD-2D farm walks the Umas a change made here moved,
+/** Whether a save is the one this device's last change made (the HD-2D farm walks the Umas a change made here moved,
  * and places everyone at once for a save from the server or the device's boot). A sync's push keeps the object. */
 export const madeHere = (save: FarmSave): boolean => save === committed
 
@@ -261,7 +262,7 @@ export function seeReplaced(): void {
 }
 
 /** Syncs when the app comes back to the foreground or the network returns. Returns a stop function. (The Wilds' push
- * schedule went with them in F24: days are turns, so nothing finishes while the app is closed.) */
+ * schedule went with them: days are turns, so nothing finishes while the app is closed.) */
 export function startSyncTriggers(): () => void {
   const onVisible = () => {
     if (document.visibilityState === 'visible') void syncNow()

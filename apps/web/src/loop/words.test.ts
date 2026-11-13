@@ -1,10 +1,10 @@
-// The loop's words for the day: dates, festivals, the nudge's line, and the morning summary in CS5's order.
+// The loop's words for the day: dates, festivals, the nudge's line, and the morning summary in order.
 import type { MorningSummary } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { summaryParts } from './summary-words'
 import { dateLabel, dateWords, dayCount, festivalWords, nudgeWords, shortDate } from './words'
 
-describe('the date (decision 8)', () => {
+describe('the date', () => {
   it('names the day, the season, the year and the next festival', () => {
     expect([shortDate(3), dateWords(3), dateWords(49)]).toEqual(['Spring 3', 'Spring 3, year 1', 'Spring 1, year 2'])
     expect(dateLabel(3)).toBe('Spring 3, year 1 · Flower Show in 7 days')
@@ -15,7 +15,7 @@ describe('the date (decision 8)', () => {
   })
 })
 
-describe('the nudge (CS6)', () => {
+describe('the nudge', () => {
   it('says what\'s left in one line', () => {
     expect(nudgeWords({ idle: ['1', '2'], collect: 3 })).toBe('2 Umas idle · 3 to collect')
     expect(nudgeWords({ idle: ['1'], collect: 0 })).toBe('1 Uma idle')
@@ -24,8 +24,8 @@ describe('the nudge (CS6)', () => {
   })
 })
 
-describe('the morning summary (CS5)', () => {
-  it('words each line with its tap, in CS5\'s order, hiding empty sections', () => {
+describe('the morning summary', () => {
+  it('words each line with its tap, in order, hiding empty sections', () => {
     const summary: MorningSummary = {
       day: 13, bin: [], ranks: [], bonds: [],
       nudges: [{ kind: 'idle', umas: ['101'] }],
@@ -47,7 +47,7 @@ describe('the morning summary (CS5)', () => {
   })
 })
 
-describe('the morning\'s bin (F19 decision 6)', () => {
+describe('the morning\'s bin', () => {
   it('lists each good and star with its count and gold, the demand marked, then the total', () => {
     const summary: MorningSummary = {
       day: 16, ranks: [], bonds: [], work: [], news: [], nudges: [],
@@ -62,7 +62,7 @@ describe('the morning\'s bin (F19 decision 6)', () => {
 })
 
 
-describe('the morning\'s Fields (F20)', () => {
+describe('the morning\'s Fields', () => {
   it('lists crops ready by block, what withered, and plots to plant, each opening the Fields', () => {
     const summary: MorningSummary = {
       day: 25, bin: [], ranks: [], bonds: [], news: [],
@@ -80,7 +80,7 @@ describe('the morning\'s Fields (F20)', () => {
   })
 })
 
-describe('the morning\'s ranks (F21)', () => {
+describe('the morning\'s ranks', () => {
   it('names rank-ups, then points full with the challenge in its own words, each opening her sheet', () => {
     const summary: MorningSummary = {
       day: 6, bin: [], work: [], bonds: [], news: [], nudges: [],
@@ -100,7 +100,7 @@ describe('the morning\'s ranks (F21)', () => {
   })
 })
 
-describe('the morning\'s roster news (F23 decision 11)', () => {
+describe('the morning\'s roster news', () => {
   it('says the Dorm\'s new beds, who\'s home, who joined, who\'s at the Gate and who left, each a tap', () => {
     const names: Readonly<Record<string, string>> = { 101: 'Aster', 202: 'Beryl', 303: 'Cinder', 404: 'Dune' }
     const summary: MorningSummary = {

@@ -1,4 +1,4 @@
-// Keep original-game content out of Git, including forced additions (copied from uma-rpg's guard, cloud plan IN14).
+// Keep original-game content out of Git, including forced additions (copied from uma-rpg's guard).
 // Master data, art, stories and review work live in the ignored content/ folder locally and in private buckets.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'

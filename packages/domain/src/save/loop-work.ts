@@ -1,8 +1,8 @@
-// The loop's work on the day clock: F5's operations over a v3 save. Every one runs at
+// The loop's work on the day clock: the operations over a v3 save. Every one runs at
 // `workNow(save)`, the start of the save's day, and never reads the device's clock, so reopening the app moves nothing;
 // a player's change is stamped with real time (`stamp`). Readings settle and store nothing. `kinds` is the work registry
 // (`LOOP_KINDS`; the app passes `loopKinds(talentOf)` so plans read master data's talents, and tests their own). The
-// screens that call these are F22's, on uma-kit/work.
+// screens that call these are on uma-kit/work.
 import {
   collect, isRefusal, queue, recall, settle, slotHolder, slotsOf, start, statusOf, withRow, type OpResult, type QueueInput, type Refusal,
   type SlotRef, type WorkEnv, type WorkOutput, type WorkRow,
@@ -26,7 +26,7 @@ const REASON: Readonly<Record<string, SaveRuleReason>> = {
 /** Whole days from now to a moment on the work clock, at least 1. */
 const daysUntil = (at: number, now: number): number => Math.max(1, Math.ceil((at - now) / DAY_MS))
 
-/** A refusal's sentence on the loop's screens: days for times, a good's name without its stars (F19's `goodName`), and
+/** A refusal's sentence on the loop's screens: days for times, a good's name without its stars (`goodName`), and
  * "isn't on the farm" for an Uma who isn't home. */
 export function loopRefusalText(refusal: Refusal, now: number): string {
   if (refusal.code === 'unknown-worker') return 'She isn’t on the farm.'

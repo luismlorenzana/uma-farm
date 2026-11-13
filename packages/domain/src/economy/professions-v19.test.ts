@@ -1,5 +1,5 @@
 // Copied from uma-rpg packages/domain/src/economy/professions-v19.test.ts at 30a322a, with its Wilds-only parts cut.
-// Classes v3's trades (classes-v3.md §6): one trade a Tier 0, her calling naming it; the trade ids keep their
+// Classes v3's trades: one trade a Tier 0, her calling naming it; the trade ids keep their
 // names. Invented outfits only.
 import { describe, expect, it } from 'vitest'
 import { UMA_ROW_CALLING_V3 } from '../roster/template'
@@ -12,7 +12,7 @@ const outfit = (style: 'front' | 'pace' | 'late' | 'end', also?: 'late' | 'end')
   baseStats: { power: 100, wit: 90 },
 }) as const
 
-describe('trades by Tier 0 (CV20)', () => {
+describe('trades by Tier 0', () => {
   it('gives each Tier 0 one trade: Warrior Metal, Spellblade Wood, Healer Vegetables, Summoner Fish, Mage Stone', () => {
     expect(Object.fromEntries(TIER0.map((c) => [c, tradeOfCalling(c)]))).toEqual({
       recruit: 'physical', duelist: 'physical-hybrid', acolyte: 'healer', caller: 'magical-hybrid', apprentice: 'magical',

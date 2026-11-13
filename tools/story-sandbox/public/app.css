@@ -267,7 +267,7 @@ a.chip.off { opacity: 0.5; }
 .ring .edge:hover { stroke-width: 5; opacity: 1; }
 .ring .node { fill: var(--panel); stroke: var(--line-2); stroke-width: 2; }
 
-/* F40: the cast, the ladder, the world */
+/* The cast, the ladder, the world */
 .cast-list { display: grid; gap: 10px; }
 .cast-row { display: grid; grid-template-columns: 34px 72px 1fr; gap: 14px; align-items: start; padding: 12px 14px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); color: var(--ink); }
 .cast-row:hover { border-color: var(--accent); text-decoration: none; }

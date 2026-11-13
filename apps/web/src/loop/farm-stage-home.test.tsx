@@ -66,7 +66,7 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-describe('the preview switch (decision 1)', () => {
+describe('the preview switch', () => {
   it('is off by default: Home is the Hub, and the stage never loads', async () => {
     expect(stageOn()).toBe(false)
     await render(<FarmRoute />)
@@ -85,7 +85,7 @@ describe('the preview switch (decision 1)', () => {
       places: { id: string; to: string; locked?: boolean }[]; open: string | null; paused: boolean; work: { cards: (place: string) => unknown[] }; hearts: ReadonlySet<string>
     }
     expect(props.open).toBe('fields')
-    // F12: the pips' own work view and Ready hearts, for the Umas on the stage.
+    // The pips' own work view and Ready hearts, for the Umas on the stage.
     expect(props.work.cards('forest')).toHaveLength(4)
     expect(props.hearts.size).toBe(0)
     expect(props.paused).toBe(false)

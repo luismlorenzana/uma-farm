@@ -1,8 +1,8 @@
-// `/diary`: the Diary tab holds the chapter until its own screen comes in M6. The chapter's card: its number,
+// `/diary`: the Diary tab holds the chapter until its own screen comes. The chapter's card: its number,
 // title and six goals, each with its count and a check when met, and its reward; once chapter 1 is done, chapter 2's
-// line and "Soon" until M5. Below, the Farm Rank (opening its sheet) and the milestones paid so far; in the romance build,
-// on save v4, each Uma's **Memories** (her album at `?album=`) and the pairs' **Conversations** (F52
-// decision 11), loaded apart. Loaded on demand.
+// line and "Soon" until the workshops open. Below, the Farm Rank (opening its sheet) and the milestones paid so far;
+// in the romance build, on save v4, each Uma's **Memories** (her album at `?album=`) and the pairs' **Conversations**
+// (loaded apart). Loaded on demand.
 import { chapterOf, diaryEntries, goalStates, type FarmSave } from '@farm/domain'
 import { HelpButton, Panel } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense } from 'react'

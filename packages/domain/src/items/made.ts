@@ -1,8 +1,7 @@
 // Copied from uma-rpg packages/domain/src/items/made.ts at 30a322a, with its Wilds-only parts cut.
-// The made items' names and places (R2, D208; weapon-progression.md WP26; extra-stats-progression.md EP17–EP18; H77; the
-// farm by line, D224, FL3, FL14). Their ids are `made-id.ts`'s, their recipes `made-v4.ts`' (one line each). The
-// Weapon Gem's id stays and reads Arms Gem: it raises Arms only, Tome Ink raises Tomes. A jewel's grade is its node's
-// (Planet n 2n − 1, Moon n 2n).
+// The made items' names and places (the farm by line's). Their ids are `made-id.ts`'s, their recipes `made-v4.ts`' (one
+// line each). The Weapon Gem's id stays and reads Arms Gem: it raises Arms only, Tome Ink raises Tomes. A jewel's grade
+// is its node's (Planet n 2n − 1, Moon n 2n).
 import type { PlaceIdV3 } from '../economy/professions'
 import { madeIdentity, type MadeLine } from './made-id'
 

@@ -2,7 +2,7 @@
 // once, Old Ben's nine Carrot seeds and the tended row, Marta's shop and the bin, then the opening three come up the road;
 // each walks in with her own arrival scene, the third ending on chapter 1's card. No hello lines, no picks. The lines are
 // original and stay in git; `{farmer}` is filled at display time. Kept apart from `chapter-1.ts`, whose live opening the
-// M4 build and the story sandbox read. Loaded on demand with the scene player.
+// v3 build and the story sandbox read. Loaded on demand with the scene player.
 import type { CastId } from './cast'
 import type { Beat, Scene } from './chapter-1'
 import { SCENES } from './chapter-1'

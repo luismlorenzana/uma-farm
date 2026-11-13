@@ -1,8 +1,5 @@
 // Copied from uma-rpg packages/domain/src/items/catalog.ts at 30a322a, with its Wilds-only parts cut.
 // The grade gate, the one rule the Wilds read from uma-rpg's v1 item catalog: its 160 v1 items stay behind.
 
-export const ITEM_GRADES = 10
-
 /** Craft Level opens one grade every five levels: grade k at Lv 5k − 4 (1, 6, 11 … 46). */
 export const gradeUnlockLevel = (grade: number): number => 5 * grade - 4
-export const highestGrade = (craftLevel: number): number => Math.min(ITEM_GRADES, Math.floor((craftLevel + 4) / 5))

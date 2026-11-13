@@ -57,11 +57,6 @@ const WILDS_V4: Place[] = [
   placeV3(14, 'lapidary', 'station', 'Lapidary', 'Jewel Crafting: Planet and Moon Jewels.', 'Makes Planet and Moon Jewels I–V'),
 ]
 
-/** The Wilds' fifteen places. */
-export function wildsPlaces(): Place[] {
-  return WILDS_V4
-}
-
 /** Every place. */
 export const PLACES: readonly Place[] = WILDS_V4
 
@@ -69,9 +64,4 @@ const BY_ID = new Map(PLACES.map((p) => [p.id, p]))
 
 export function placeById(id: string | undefined): Place | undefined {
   return id === undefined ? undefined : BY_ID.get(id)
-}
-
-/** Places drawn on a page's map, in registry order. */
-export function placesOn(page: 'wilds'): Place[] {
-  return PLACES.filter((p) => p.page === page)
 }

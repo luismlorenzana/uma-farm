@@ -73,7 +73,7 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-describe('the start\'s sheet (CS2; decisions 1, 2)', () => {
+describe('the start\'s sheet', () => {
   it('shows six cards with three talents each, redraws once, and picks three', async () => {
     useGame.setState({ save: newSave('u1', AT) })
     await render(<StartPicks />, '/')
@@ -108,7 +108,7 @@ describe('the start\'s sheet (CS2; decisions 1, 2)', () => {
   })
 })
 
-describe('the Dorm (CS34, CS36; decisions 3, 4)', () => {
+describe('the Dorm', () => {
   it('shows the beds, buys the next level for tomorrow, and swaps one home for one away', async () => {
     await render(<DormPage />, '/dorm')
     expect($('[data-beds]')?.textContent).toBe('5 of 5 beds')
@@ -127,7 +127,7 @@ describe('the Dorm (CS34, CS36; decisions 3, 4)', () => {
   })
 })
 
-describe('the Gate (CS35, CS45; decisions 5–9)', () => {
+describe('the Gate', () => {
   it('shows the visitor with her days left, chats once a day and takes a gift', async () => {
     useGame.setState({ save: { ...farm(4), visitors: [{ outfitId: '81005', from: 'gate', leaves: 10, affinity: 40 }], roster: Object.fromEntries(IDS.slice(0, 4).map((id) => [id, newRosterUma(1)])), dorm: { level: 2, home: IDS.slice(0, 4), swaps: [] } } })
     await render(<GatePeek save={save()} />, '/?peek=gate')
@@ -166,7 +166,7 @@ describe('the Gate (CS35, CS45; decisions 5–9)', () => {
   })
 })
 
-describe('the roster, home and away (FC19; decision 11)', () => {
+describe('the roster, home and away', () => {
   it('shows everyone, away dimmed, hearts on the face, and Chat and Gift on her sheet', async () => {
     useGame.setState({ save: { ...farm(5), roster: { ...farm(5).roster, 81006: { ...newRosterUma(1), affinity: 230 } } } })
     await render(<RosterPage />, '/roster?uma=81006')

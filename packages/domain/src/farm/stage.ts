@@ -1,12 +1,12 @@
 // The farm on the HD-2D stage: the save as a farm design
 // for uma-stage's band stage. Portrait, 9 tiles across: three 3 × 3 plots a band and a path row under each, the map's
 // rows from `FARM_PLACES` (gather → process → make, left to right), the homestead's 0–3 rows after the yard on a v4 save
-// in the romance build, and the town edge last. Each place is KF4's recipe (walls, roof, width × storeys, door, mounted
-// pieces and landmarks); a place not yet standing is KF7's overgrown lot; crops by KF6's families. It only reads the
-// save: the stage never changes a rule or the save. Typed from `@luismlorenzana/uma-stage/formats` (types only, so
-// neither the rules nor farm-api load the stage). Pure.
+// in the romance build, and the town edge last. Each place is the kit's recipe (walls, roof, width × storeys, door,
+// mounted pieces and landmarks); a place not yet standing is the kit's overgrown lot; crops by the kit's families. It
+// only reads the save: the stage never changes a rule or the save. Typed from `@luismlorenzana/uma-stage/formats`
+// (types only, so neither the rules nor farm-api load the stage). Pure.
 //
-// The tiles (F11's "left to the worker"):
+// The tiles (left to the worker):
 // - **a plot:** its back two rows hold the building (or the place's ground and landmarks), the front row is its apron,
 //   where its slots are and its `place` marker stands, at the apron's middle;
 // - **the lanes:** each column keeps a lane at an edge, laid as path where the recipe leaves it free: the left column's
@@ -33,14 +33,14 @@ export const FARM_BAND = 4
 
 // --- Crops ------------------------------------------------------------------------------------------
 
-/** KF6's twelve ripe frames. */
+/** The kit's twelve ripe frames. */
 export const CROP_FAMILIES = [
   'crop-root', 'crop-leafy', 'crop-herb', 'crop-grain', 'crop-rice', 'crop-staked-red', 'crop-staked-green', 'crop-staked-purple', 'crop-corn',
   'crop-sunflower', 'crop-spear', 'crop-gourd',
 ] as const
 export type CropFamily = typeof CROP_FAMILIES[number]
 
-/** CS11's 27 crops by their ripe family, KF6's table row for row. */
+/** The 27 crops by their ripe family, the kit's table row for row. */
 export const CROP_FAMILY: Readonly<Record<CropId, CropFamily>> = {
   carrot: 'crop-root', potato: 'crop-root', onion: 'crop-root', 'sugar-beet': 'crop-root', ginger: 'crop-root', peanut: 'crop-root',
   'golden-carrot': 'crop-root', mandrake: 'crop-root',
@@ -97,7 +97,7 @@ export interface FarmPlot {
   z: number
   band: number
   col: number
-  /** Its recipe stands (a place open by CS3 and built; a house built); otherwise an overgrown lot. */
+  /** Its recipe stands (a place open by its rule and built; a house built); otherwise an overgrown lot. */
   standing: boolean
   place?: FarmPlace
   /** The homestead's house number (0, the Farmhouse, to 6). */
@@ -109,7 +109,7 @@ export interface FarmStageOptions {
   homestead: boolean
 }
 
-/** Whether a place's recipe stands on this save: CS3 has opened it and, for a station, it's built; on v4
+/** Whether a place's recipe stands on this save: its rule has opened it and, for a station, it's built; on v4
  * the Forge stands once its ring bench does. The map's lock (`lockOf`) adds the screens not landed yet;
  * those stand, locked. */
 export function placeStands(save: Pick<FarmSave, 'farm' | 'buildings' | 'version'>, place: FarmPlace): boolean {
@@ -180,7 +180,7 @@ const APRON: Recipe['slots'] = [[0, 2], [1, 2], [2, 2], [2, 1]]
 /** The Fields' scarecrow, in the middle of the soil; the crops take the other eight tiles. */
 const SCARECROW: readonly [number, number] = [1, 1]
 
-/** KF4's recipes for the places, row for row; a station's building stands once it's built. */
+/** The kit's recipes for the places, row for row; a station's building stands once it's built. */
 function placeRecipe(id: FarmPlaceId, v4: boolean): Recipe {
   switch (id) {
     case 'fields': return { ground: ['ttt', 'ttt', 'ttt'], props: [['scarecrow', ...SCARECROW]], slots: APRON }
@@ -247,7 +247,7 @@ function homeRecipe(plot: FarmPlot): Recipe {
   }
 }
 
-/** KF7's overgrown lot: weeds, brambles and a broken fence on grass, its lane left clear. */
+/** The kit's overgrown lot: weeds, brambles and a broken fence on grass, its lane left clear. */
 function overgrown(col: number): Recipe {
   if (laneOf(col) === 'right') return { ground: laneRight('g'), props: [['weeds-1', 0, 0], ['brambles', 1, 0], ['weeds-2', 1, 1], ['fence-broken', 0, 2]], slots: [] }
   return { ground: laneLeft('g'), props: [['weeds-1', 2, 0], ['brambles', 1, 0], ['weeds-2', 1, 1], ['fence-broken', 2, 2]], slots: [] }

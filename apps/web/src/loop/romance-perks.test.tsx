@@ -82,7 +82,7 @@ afterEach(async () => {
   vi.unstubAllEnvs()
 })
 
-describe('her profile\'s perks (decision 12)', () => {
+describe('her profile\'s perks', () => {
   it('says what each reached perk does now: her line\'s term with her ring, her chores, her next morning item, in her element', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm({ [TWO]: { stage: 'spouse', level: 0, wed: 2, ring: 8, morning: 10 } }) })
     await profile(TWO)
@@ -128,7 +128,7 @@ describe('her profile\'s perks (decision 12)', () => {
 })
 
 describe('the morning and the screens\' words', () => {
-  it('words the morning items, the night\'s chores and the perks\' extras in RM57\'s places', () => {
+  it('words the morning items, the night\'s chores and the perks\' extras in the morning summary\'s places', () => {
     // The night's order (`heartLines`): invitations, birthdays, arrivals, morning items, chores, perks, side by side, bonds.
     const lines = heartsLines([
       { kind: 'invite', id: ONE, evening: 'walk' }, { kind: 'arrived', id: THREE, home: true }, { kind: 'item', id: TWO, items: ['shiitake@3'] },

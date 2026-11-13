@@ -1,4 +1,4 @@
-// Her route on her profile (moved to the Hearts tab by F48 decision 6), the
+// Her route on her profile (on the Hearts tab), the
 // switch on: her level and her bar in the ladder's colour with what's banked, Ready or what it waits for, Chat +15 with her
 // line and the "+N" over her face, the gift picker's points and "?" (her loved good from F1, a given good learnt), Praise
 // +20 after a rank-up overnight, and the morning's birthday line. The invented stand-in pack (9000001's birthday is Spring
@@ -86,7 +86,7 @@ afterEach(async () => {
   vi.unstubAllEnvs()
 })
 
-describe('her profile on v4 (F47 decision 15, F48 decision 6)', () => {
+describe('her profile on v4', () => {
   it('shows her level, her bar with what\'s banked, and Ready or what it waits for', async () => {
     useGame.setState({ save: withLove(farm(), ONE, { level: 1, points: 300 }) })
     await render(<HeartsPage />, `/hearts?uma=${ONE}`)
@@ -150,7 +150,7 @@ describe('her profile on v4 (F47 decision 15, F48 decision 6)', () => {
   })
 })
 
-describe('the morning\'s Hearts (decision 14)', () => {
+describe('the morning\'s Hearts', () => {
   it('says her birthday the day before and on the day', async () => {
     await act(async () => { await endTheDay(2) })
     await until(() => save().calendar.day === 3)
@@ -166,7 +166,7 @@ describe('the morning\'s Hearts (decision 14)', () => {
   })
 })
 
-describe('what her next event waits for, in words (decision 13)', () => {
+describe('what her next event waits for, in words', () => {
   it('names each wait', async () => {
     const { readyWords } = await import('./love-words')
     const at = (waits: Parameters<typeof readyWords>[0]['waits'], rung: string | null = 'r5') => readyWords({ rung, ready: false, waits }, { points: 300, cost: 360 }, () => 'Stand-in 2')

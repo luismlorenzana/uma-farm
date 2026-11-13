@@ -1,5 +1,5 @@
 // The homestead: the Farmhouse and six houses you build, name
-// and extend; each spouse's room; who sleeps where tonight. **Who lives where is one source, `love.house`** (D48 call 8).
+// and extend; each spouse's room; who sleeps where tonight. **Who lives where is one source, `love.house`**.
 //
 //                 rooms         costs                       opens
 //   the Farmhouse 2             —                           day 1 (the farmer's own home)
@@ -87,7 +87,7 @@ export function roomsInAll(save: Pick<SaveV4, 'homestead' | 'love'>): { rooms: n
   return { rooms, taken: Object.values(save.love).filter((l) => l.house !== undefined).length }
 }
 
-// --- On the map (FC28 as RM41 grows it) ---------------------------------------------------------------------
+// --- On the map (the farm map, grown) ---------------------------------------------------------------------
 
 /** A homestead place on the v4 map: the Farmhouse (0) or a house's lot (1–6). */
 export interface HomesteadPlace {
@@ -131,8 +131,8 @@ const kept = (save: Pick<SaveV4, 'love'>, pack: Pick<StoryPack, 'bibles'>, house
 
 /**
  * Her default room: among the houses with a free room (not hers), an own-house wisher's first empty one;
- * else the house where her closest friend lives (F52's order) when it has room; else the first with room, the Farmhouse
- * first. Both pass over a house an own-house wisher lives in while another has room. Null with no room free.
+ * else the house where her closest friend lives (by closeness) when it has room; else the first with room, the
+ * Farmhouse first. Both pass over a house an own-house wisher lives in while another has room. Null with no room free.
  */
 export function roomFor(save: Pick<SaveV4, 'homestead' | 'love' | 'bonds'>, pack: RoomPack, id: string): number | null {
   const free = save.homestead.houses.map((_, i) => i).filter((i) => i !== save.love[id]?.house && freeRooms(save, i) > 0)
@@ -194,7 +194,7 @@ export function swapRooms(save: SaveV4, a: string, b: string): SaveV4 {
   }
 }
 
-/** Her room at her wedding (F53's wedding gains the step): her default room, at once; with none free (or a swap
+/** Her room at her wedding (the wedding's step): her default room, at once; with none free (or a swap
  * waiting) she keeps her Dorm bed. The house she took, or null. */
 export function takeRoom(save: SaveV4, pack: RoomPack, id: string): { save: SaveV4; house: number | null } {
   const house = roomFor(save, pack, id)
@@ -290,7 +290,7 @@ export interface SleepRow {
   name: string
   residents: string[]
   breakfast: boolean
-  /** Nights away, once 8 or more (RM43's "8 nights"); null otherwise. */
+  /** Nights away, once 8 or more ("8 nights"); null otherwise. */
   nights: number | null
   /** "Her room": a birthday-alone wisher on her birthday, her house hers alone tonight. */
   alone: string | null
@@ -325,7 +325,7 @@ export function sleepAt(save: SaveV4, house: number, alone: string | null = null
 
 // --- The furniture set -------------------------------------------------------------------------------
 
-/** The furniture set at 5 married: five pieces with original names, placed one a house as words; M6's decorations
+/** The furniture set at 5 married: five pieces with original names, placed one a house as words; the decorations
  * draw them. */
 export const FURNITURE: readonly string[] = ['Patchwork Armchair', 'Pine Bookcase', 'Copper Kettle Stand', 'Window-Seat Cushions', 'Braided Hearth Rug']
 

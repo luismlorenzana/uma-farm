@@ -24,7 +24,7 @@ function farm(day = 3): SaveV4 {
   return save
 }
 
-describe('the wipe (RM10; decision 2)', () => {
+describe('the wipe', () => {
   const played: SaveV3 = {
     ...newSave('u1', CREATED), account, calendar: { day: 2 }, gold: 1234, roster: { 1001: newRosterUma(1), 1002: newRosterUma(1), 1003: newRosterUma(2) },
     dorm: { level: 1, home: ['1001', '1002', '1003'], swaps: [] }, diary: { shipped: { carrot: 3 }, milestones: [], records: {}, read: ['scene:1:open'] },
@@ -54,7 +54,7 @@ describe('the wipe (RM10; decision 2)', () => {
   })
 })
 
-describe('the v4 parse (decision 7)', () => {
+describe('the v4 parse', () => {
   it('round-trips a played v4, and parseSave returns v2, v3 and v4 as stored', () => {
     const save = farm()
     expect(parseSaveV4(json(save))).toEqual(save)
@@ -99,7 +99,7 @@ describe('the v4 parse (decision 7)', () => {
     // A spouse may hold all of them.
     const save = farm()
     save.love['9000001'] = { ...newLove(), stage: 'spouse', level: 2, ring: 7, wed: 2, house: 0 }
-    save.dorm.home = save.dorm.home.filter((id) => id !== '9000001') // F54: a spouse in her house has no Dorm bed
+    save.dorm.home = save.dorm.home.filter((id) => id !== '9000001') // a spouse in her house has no Dorm bed
     expect(parseSaveV4(json(save)).love['9000001']).toEqual(save.love['9000001'])
   })
 
@@ -133,8 +133,8 @@ describe('the v4 parse (decision 7)', () => {
   })
 })
 
-describe('the Dorm for 20 (RM5; decision 12)', () => {
-  it('has eight levels at RM5\'s beds, costs and Farm Ranks; v3 keeps its ten', () => {
+describe('the Dorm for 20', () => {
+  it('has eight levels at its beds, costs and Farm Ranks; v3 keeps its ten', () => {
     expect(DORM_LEVELS_V4.map((l) => [l.level, l.beds, l.cost, l.farmRank])).toEqual([
       [1, 3, 0, 0], [2, 5, 1000, 1], [3, 7, 3000, 2], [4, 9, 8000, 3], [5, 11, 15000, 4], [6, 14, 28000, 5], [7, 17, 50000, 6], [8, 20, 85000, 7],
     ])

@@ -1,4 +1,4 @@
-// The roster's album, shared by M4's `/roster` and the romance build's Hearts
+// The roster's album, shared by the deployed build's `/roster` and the romance build's Hearts
 // tab, whose Work view it is: everyone on the roster, home or away, as album cards on uma-kit's album
 // chrome. Each card has her favourite line's mark and her best talent on her face, the page's corner mark (your hearts
 // with her on v3, her level words on v4), and her best rank (or her rank and talent in the activity sorted by); away, it
@@ -92,7 +92,7 @@ export function WorkFacts({ row }: { row: LoopUmaRow }) {
   )
 }
 
-/** Her nine activities (F21's sheet), each with talent, rank, points and the challenge toward her next rank. */
+/** Her nine activities (the sheet), each with talent, rank, points and the challenge toward her next rank. */
 export function WorkSide({ row }: { row: LoopUmaRow }) {
   const lines = activityLines(row)
   return (

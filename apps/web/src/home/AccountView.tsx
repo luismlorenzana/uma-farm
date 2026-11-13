@@ -2,8 +2,8 @@
 // sign-out, and master data's release. The Notifications card says they're off: with days as turns,
 // nothing finishes while the app is closed. F6's switch went with the Wilds; the server's push is untouched. On save
 // v4 it also holds **Your name**, the farmer's, under the name sheet's rule; and a safety copy from before v4
-// lists without a Restore in the romance build, since restoring it would only wipe again. F11 adds **HD-2D farm (preview)**,
-// this device's switch for Home on the shared stage.
+// lists without a Restore in the romance build, since restoring it would only wipe again. It also holds **HD-2D farm
+// (preview)**, this device's switch for Home on the shared stage.
 import { cleanFarmerName, FARMER_PLACEHOLDER, farmerNameIssue, versionOf } from '@farm/domain'
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { AccountPage } from '@luismlorenzana/uma-kit/places'

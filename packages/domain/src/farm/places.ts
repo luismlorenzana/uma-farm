@@ -1,7 +1,7 @@
 // The farm map's places: uma-kit's Hub map in
 // eight rows of three, gathering and its station and the ranch or a workshop on the first five, then the yard and the
 // town edge. One source for the map, its quick looks and the menu. Where each stands on the screen is the app's; what
-// opens each is CS3's, read from the save. Until a place's packet lands, the app shows it locked (F19–F23 wire them up).
+// opens each is its rule's, read from the save. Until a place's screen lands, the app shows it locked.
 import type { SaveV3 } from '../save/v3'
 import { farmRankOf } from './farm'
 import type { FarmSave } from '../save/v4'
@@ -17,9 +17,8 @@ export const FARM_PLACE_IDS = [
   'shop', 'festival', 'expeditions',
 ] as const
 export type FarmPlaceId = typeof FARM_PLACE_IDS[number]
-export const isFarmPlaceId = (id: string): id is FarmPlaceId => (FARM_PLACE_IDS as readonly string[]).includes(id)
 
-/** FC28's rows, by what a place is. */
+/** The rows, by what a place is. */
 export type FarmPlaceGroup = 'gathering' | 'station' | 'ranch' | 'workshop' | 'yard' | 'town'
 
 /** What opens a place: open from day 1, a chapter's opening, a chapter's reward (the Mill's plans), a Farm Rank, or a
@@ -30,7 +29,7 @@ export type PlaceOpens =
   | { by: 'reward'; chapter: number }
   | { by: 'farm-rank'; rank: number }
   | { by: 'later' }
-  /** A house on the v4 homestead (F54 decision 2): House 1 at the first wedding, each later one when the one before stands.
+  /** A house on the v4 homestead: House 1 at the first wedding, each later one when the one before stands.
    * The homestead's own rule reads it (`nextLot`); `opened` never does. */
   | { by: 'house'; n: number }
 
@@ -41,8 +40,8 @@ export interface FarmPlace {
   /** Its row on the map, 1–8, and its column, 0–2. */
   row: number
   col: number
-  /** uma-art's building, or one it borrows until its own ships; F25's Dorm and shipping bin are uma-art
-   * 2.25.0's, pinned from F49. */
+  /** uma-art's building, or one it borrows until its own ships; the Dorm and shipping bin are uma-art
+   * 2.25.0's. */
   frame: string
   borrowed: boolean
   /** One short line for its quick look. */
@@ -99,7 +98,7 @@ const BLURBS_V4: Partial<Record<FarmPlaceId, string>> = {
 export const placeBlurb = (place: Pick<FarmPlace, 'id' | 'blurb'>, version: number): string => (version >= 4 ? BLURBS_V4[place.id] : undefined) ?? place.blurb
 
 /** Whether a place's rule has opened it on this save: a chapter once it starts, the Mill once chapter 1 is done, a
- * Farm Rank once reached. The board and the festival ground wait for M6. */
+ * Farm Rank once reached. The board and the festival ground wait for the festivals. */
 export const placeOpen = (save: Pick<FarmSave, 'farm'>, place: FarmPlace): boolean => opened(save, place.opens)
 
 /** Whether what opens something has happened on this save: a place, or a line in the shop. */

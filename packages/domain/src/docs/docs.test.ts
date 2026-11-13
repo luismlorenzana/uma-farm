@@ -1,13 +1,14 @@
 // Copied from uma-rpg packages/domain/src/docs/docs.test.ts at 30a322a, with its Wilds-only parts cut.
-// Keeps the live docs (docs/game/) true to the rules: every `<!-- live:<key> -->` block must equal what `render.ts`
+// Keeps the live docs (docs/game-mechanics.md) true to the rules: every `<!-- live:<key> -->` block must equal what `render.ts`
 // makes of the code today. When a rule changes, run `pnpm docs:update` (UPDATE_DOCS=1) to rewrite the blocks.
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { renderBlock } from './render'
 
 const ROOT = join(__dirname, '..', '..', '..', '..')
-const DOCS = join(ROOT, 'docs', 'game')
+/** The documents with live blocks. */
+const DOCS = [join(ROOT, 'docs', 'game-mechanics.md')]
 const BLOCK = /<!-- live:([a-z0-9-]+) -->\n[\s\S]*?<!-- \/live -->/g
 
 /** A doc with every live block rendered fresh; unknown keys are reported. */
@@ -19,11 +20,11 @@ function refresh(text: string, unknown: string[]): string {
   })
 }
 
-describe('live docs (D92)', () => {
-  const files = readdirSync(DOCS).filter((f) => f.endsWith('.md')).map((f) => join(DOCS, f))
+describe('live docs', () => {
+  const files = DOCS
 
   it('has a game manual with live blocks', () => {
-    expect(files.length).toBeGreaterThanOrEqual(2)
+    expect(files.length).toBeGreaterThanOrEqual(1)
     expect(files.some((f) => readFileSync(f, 'utf8').includes('<!-- live:'))).toBe(true)
   })
 

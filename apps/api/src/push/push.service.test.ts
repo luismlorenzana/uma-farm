@@ -24,7 +24,7 @@ function setup() {
   return { sent, records, writes, push: new PushService(counted, sender) }
 }
 
-describe('push tick (uma-rpg D63, the farm F6)', () => {
+describe('push tick (copied from uma-rpg)', () => {
   it('sends each entry once when it comes due, and nothing before', async () => {
     const { push, sent } = setup()
     await push.subscribe('u', sub('https://push.example/phone'), T0)

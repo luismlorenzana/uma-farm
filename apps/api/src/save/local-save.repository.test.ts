@@ -37,7 +37,7 @@ describe('the local save store', () => {
     expect((await repo.load('u')).save).toEqual(newSave('u', NOW))
   })
 
-  it('stores a v4 over a v3 as sent (F46), and refuses a v3 over it', async () => {
+  it('stores a v4 over a v3 as sent, and refuses a v3 over it', async () => {
     const path = await file()
     await writeFile(path, JSON.stringify({ u: { revision: 1, save: newSave('u', NOW) } }))
     const repo = new LocalSaveRepository(path)

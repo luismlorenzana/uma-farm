@@ -1,8 +1,8 @@
 // The story's chapters: chapter 1's six goals, each read from a counter or
-// the save, its reward, and chapter 2's line ("Soon" until M5). Night step 8 (`checkGoals`) pays the Diary, recomputes
-// the Farm Rank, and completes the chapter the night its last goal is met: 500g, the Mill's plans, a recruit and the
-// chapter's 250 points, then the next chapter opens, counting from its own start (`farm.goals`). The closing scene plays
-// the next morning (`scenes.ts`). Loaded with the night and the screens.
+// the save, its reward, and chapter 2's line ("Soon" until the workshops are built). Night step 8 (`checkGoals`) pays
+// the Diary, recomputes the Farm Rank, and completes the chapter the night its last goal is met: 500g, the Mill's
+// plans, a recruit and the chapter's 250 points, then the next chapter opens, counting from its own start
+// (`farm.goals`). The closing scene plays the next morning (`scenes.ts`). Loaded with the night and the screens.
 import { payDiary, withFarmPoints, type DepthsTonight } from '../farm/diary'
 import { joinRoster } from '../farm/dorm'
 import { farmRankOf } from '../farm/farm'
@@ -43,7 +43,7 @@ export interface Chapter {
   readonly title: string
   /** What it opens with, in a line. */
   readonly opens: string
-  /** Null while its goals aren't built: the Diary says "Soon" (chapter 2 until M5). */
+  /** Null while its goals aren't built: the Diary says "Soon" (chapter 2 until the workshops are built). */
   readonly goals: readonly Goal[] | null
   readonly reward: ChapterReward | null
 }
@@ -51,7 +51,7 @@ export interface Chapter {
 /** A lifetime counter since the current chapter opened: `farm.goals` holds each counter as it stood then. */
 export const sinceChapter = (save: Pick<FarmSave, 'farm'>, key: string): number => (save.farm.counts[key] ?? 0) - (save.farm.goals[key] ?? 0)
 
-/** CS42's six goals, read as decision 4 has it. */
+/** The six goals. */
 export const CHAPTER_1_GOALS: readonly Goal[] = [
   { id: 'harvest', text: 'Plant and harvest 9 crops', teaches: 'Planting, tending, Ready plots', need: 9, have: (s) => sinceChapter(s, PLOTS_HARVESTED) },
   { id: 'ship', text: 'Ship 1,000g at the bin', teaches: 'The bin, the overnight payout', need: 1000, have: (s) => sinceChapter(s, GOLD_SHIPPED) },
@@ -67,7 +67,7 @@ export const CHAPTER_1_GOALS: readonly Goal[] = [
   { id: 'farm-rank', text: 'Reach Farm Rank 2', teaches: 'The Farm’s Rank, Block B', need: 2, have: (s) => farmRankOf(s.farm.points) },
 ]
 
-/** The chapters as built: chapter 1 whole, chapter 2's line (its goals come with M5). */
+/** The chapters as built: chapter 1 whole, chapter 2's line (its goals come with the workshops). */
 export const CHAPTERS: readonly Chapter[] = [
   { chapter: 1, title: 'A Field Again', opens: 'The Fields, the Woods and the Pond', goals: CHAPTER_1_GOALS, reward: { gold: 500, plans: ['mill'], recruit: true } },
   { chapter: 2, title: 'Feathers and Fences', opens: 'The Coop and two chickens (Dale Hart)', goals: null, reward: null },

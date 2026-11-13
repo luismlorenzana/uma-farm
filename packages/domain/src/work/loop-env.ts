@@ -1,8 +1,9 @@
 // The loop's work env: uma-work on the day clock. Day d starts at
 // (d − 1) × DAY_MS (`workNow`) and every work operation runs then, so nothing moves until the night ends the day. The v3
 // work places hold four slots each at speed 1 (a day is a day), with no upgrades and no Speed Tickets; who may work is
-// who's home on the farm and not leaving tomorrow; work pays no EXP (ranks tick at night); and the kinds are F22's `LOOP_KINDS`, or
-// `loopKinds(talentOf)` with master data's talents. uma-work sees the Warehouse through F17's `<id>@<stars>` bridge.
+// who's home on the farm and not leaving tomorrow; work pays no EXP (ranks tick at night); and the kinds are
+// `LOOP_KINDS`, or `loopKinds(talentOf)` with master data's talents. uma-work sees the Warehouse through the
+// `<id>@<stars>` bridge.
 import {
   buildingTable, SPEED_TICKET_MS, type BuildingRules, type ExpRules, type TicketRules, type WorkEnv, type WorkRow, type WorkState,
 } from '@luismlorenzana/uma-work'
@@ -13,10 +14,11 @@ import { onFarm, type LoopWorkRequest, type OutfitId, type SaveV3 } from '../sav
 import { fromWorkStock, workStock } from '../save/warehouse'
 import type { FarmSave } from '../save/v4'
 
-/** uma-work's state over a v3 or v4 save (F46: on v4 a row's `outfitId` is her character id, the roster's key): the Warehouse as the engine's flat `<id>@<stars>` view, no building levels, the work
- * rows, and the save around them for the kinds to read (ranks, well fed, the day, the account). The world's own `items`
- * and `work` are the live ones; `save`'s copies of them are stale while an operation runs. A kind's pay may move the
- * save's `farm` and `diary` (F22: what came home, a catch's record), which `withLoopWorld` keeps. */
+/** uma-work's state over a v3 or v4 save (on v4 a row's `outfitId` is her character id, the roster's key): the
+ * Warehouse as the engine's flat `<id>@<stars>` view, no building levels, the work rows, and the save around them for
+ * the kinds to read (ranks, well fed, the day, the account). The world's own `items` and `work` are the live ones;
+ * `save`'s copies of them are stale while an operation runs. A kind's pay may move the save's `farm` and `diary` (what
+  * came home, a catch's record), which `withLoopWorld` keeps. */
 export interface LoopWorld extends WorkState<LoopWorkRequest> {
   readonly items: Readonly<Record<string, number>>
   readonly buildings: Readonly<Record<string, { readonly level: number }>>

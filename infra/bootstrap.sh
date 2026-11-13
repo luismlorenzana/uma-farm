@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# uma-farm's cloud inside the shared `uma-rpg` project (F2; uma-rpg's cloud plan, IN1–IN26). Idempotent: every
+# uma-farm's cloud inside the shared `uma-rpg` project (uma-rpg's cloud plan). Idempotent: every
 # piece is described before it's created, and grants are re-applied as they are. Run it with the owner's login, never
 # changing the active configuration:
 #
@@ -80,7 +80,7 @@ JSON
 gcloud artifacts repositories set-cleanup-policies "${AR_REPO}" --location="${REGION}" --policy="${POLICY_FILE}" --no-dry-run >/dev/null
 rm -f "${POLICY_FILE}"
 
-# --- 4. The API, created once from Google's sample image (IN8); the workflow replaces the image -----------------------
+# --- 4. The API, created once from Google's sample image; the workflow replaces the image ------------------------------
 if gcloud run services describe "${SERVICE}" --region="${REGION}" >/dev/null 2>&1; then say "service ${SERVICE} exists"
 else
   gcloud run deploy "${SERVICE}" --region="${REGION}" --image=us-docker.pkg.dev/cloudrun/container/hello \
@@ -154,8 +154,8 @@ else
   say "authorized domain ${NEW_DOMAIN}"
 fi
 
-# --- 8. Push (IN17): the VAPID secret, the scheduler's account and its job. A new job is created paused (F2); a job that
-# exists keeps its state, so a re-run never pauses the tick F6 resumed (D15) ---------------------------------------------
+# --- 8. Push: the VAPID secret, the scheduler's account and its job. A new job is created paused; a job that exists
+# keeps its state, so a re-run never changes whether the tick runs -------------------------------------------------------
 gcloud services enable secretmanager.googleapis.com cloudscheduler.googleapis.com >/dev/null
 if gcloud secrets describe "${SECRET}" >/dev/null 2>&1; then say "secret ${SECRET} exists"
 else
@@ -181,7 +181,7 @@ else
 fi
 say "job ${JOB} is $(gcloud scheduler jobs describe "${JOB}" --location="${REGION}" --format='value(state)')"
 
-# --- 9. The story pack's private bucket (F56 decision 6, RM58, the owner's yes D60): versioned, uniform access, never
+# --- 9. The story pack's private bucket (the owner's yes, 2026-11-11): versioned, uniform access, never
 # public, its one reader the runtime account; a noncurrent version goes once 10 newer ones exist. Hash-named files never
 # change, so only story.json keeps a history -------------------------------------------------------------------------
 if gcloud storage buckets describe "gs://${STORY_BUCKET}" >/dev/null 2>&1; then say "bucket ${STORY_BUCKET} exists"

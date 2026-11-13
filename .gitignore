@@ -11,10 +11,9 @@ build
 # env
 .env
 .env.*
-!.env.example
 # Public Firebase web config (apiKey/authDomain/projectId are public by design); needed by the production build.
 !apps/web/.env.production
-# The romance core's dark switch (F46): the dev server's and the size-checked romance build's.
+# The romance core's dark switch: the dev server's and the size-checked romance build's.
 !apps/web/.env.development
 !apps/web/.env.romance
 

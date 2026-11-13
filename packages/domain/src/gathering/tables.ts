@@ -1,5 +1,5 @@
 // The forest's areas, the Fishery's spots, the fish's sizes, a day's haul and the stations:
-// the spec's tables as data, row for row. Loaded with the loop's screens and the night, never in the initial JS (the
+// the tables as data, row for row. Loaded with the loop's screens and the night, never in the initial JS (the
 // save's parse reads only `ids.ts`).
 import type { Season } from '../farm/calendar'
 import type { Rank } from '../farm/ranks'
@@ -15,7 +15,7 @@ export interface ForestArea {
   readonly seasons: Readonly<Record<Season, readonly Share[]>>
 }
 
-/** CS16, row for row: woods 40%, mushrooms 30%, herbs and spices 15%, the season's family 15% (Spring sweets, Summer
+/** Forest, row for row: woods 40%, mushrooms 30%, herbs and spices 15%, the season's family 15% (Spring sweets, Summer
  * fruits, Autumn nuts and seeds, Winter more mushrooms), each family's two grades about 65/35. */
 export const FOREST: Readonly<Record<ForestAreaId, ForestArea>> = {
   woods: {
@@ -86,7 +86,7 @@ export interface FishingSpot {
 
 const all = (shares: readonly Share[]): Readonly<Record<Season, readonly Share[]>> => ({ spring: shares, summer: shares, autumn: shares, winter: shares })
 
-/** CS15, row for row. The Sea Pier and the Deep Sea wait for M6. */
+/** Fishing, row for row. The Sea Pier and the Deep Sea come later. */
 export const FISHERY: Readonly<Record<FishingSpotId, FishingSpot>> = {
   pond: {
     opens: 0, chapter: null, boat: false,

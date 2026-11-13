@@ -1,10 +1,11 @@
 // Household scenes and the finale: `?household=<household:5 |
 // household:10 | household:15 | finale>` over any page, from the morning's "⌂ Household scene 1 · Ready", the Hearts
 // header or the Diary's Memories shelf (`&replay=1`). It plays the pack's `open`, then each spouse's beat in wedding order
-// (one without hers written is skipped), then `close`, in F46's scene player's frame and steps; a choice is wording only.
-// The finale plays its dance after `open` (F49's play sheet, its grade shown without points: it pays nothing) and ends on the
-// game's last stage-up card, "The Great Harvest", with every spouse's face. The end or Skip reads it once (`diary.read`);
-// a replay marks nothing. Portaled above the kit's sheets (z-60). Loaded on demand, the romance build only.
+// (one without hers written is skipped), then `close`, in the scene player's frame and steps; a choice is wording only.
+// The finale plays its dance after `open` (the play sheet, its grade shown without points: it pays nothing) and ends
+// on the game's last stage-up card, "The Great Harvest", with every spouse's face. The end or Skip reads it once
+// (`diary.read`); a replay marks nothing. Portaled above the kit's sheets (z-60). Loaded on demand, the romance build
+// only.
 import {
   CAST, CAST_IDS, householdPlay, householdReady, playOf, playSeed, sceneSteps, withFarmer, type CastId, type ChoiceOption, type HouseholdId, type HouseholdPlay, type SaveV4,
   type Step, type StoryPack,

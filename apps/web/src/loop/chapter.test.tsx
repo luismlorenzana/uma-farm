@@ -98,7 +98,7 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-describe("the Diary's chapter card (decision 4; CS55)", () => {
+describe("the Diary's chapter card", () => {
   it('shows chapter 1, its six goals with their counts, a check on each met, and the reward', async () => {
     useGame.setState({ save: { ...farm({ 'plots-harvested': 4, [GOLD_SHIPPED]: 620, 'home:forest': 3 }, true), crops: { carrot: 4 } } })
     await render(<DiaryPage />, '/diary')
@@ -124,7 +124,7 @@ describe("the Diary's chapter card (decision 4; CS55)", () => {
   })
 })
 
-describe('the Farm Rank (decision 8)', () => {
+describe('the Farm Rank', () => {
   it('is a chip in the account bar that opens its sheet: points, the way to the next, what it opens, where points come from', async () => {
     useGame.setState({ save: { ...farm({ [GOLD_SHIPPED]: 4_250 }), farm: { ...farm().farm, points: 47, counts: { [GOLD_SHIPPED]: 4_250 } }, diary: { ...farm().diary, shipped: { carrot: 50 } } } })
     await render(<FarmAccountBar />)
@@ -140,7 +140,7 @@ describe('the Farm Rank (decision 8)', () => {
   })
 })
 
-describe("the morning's goal lines (decisions 2, 5 and 8)", () => {
+describe("the morning's goal lines", () => {
   it('names the chapter done, the Farm Rank and what it opens, and each milestone with its gold', () => {
     const summary: MorningSummary = {
       day: 8, bin: [], work: [], ranks: [], bonds: [], nudges: [],
@@ -155,7 +155,7 @@ describe("the morning's goal lines (decisions 2, 5 and 8)", () => {
   })
 })
 
-describe('chapter 1 completes, and the closing scene plays the next morning (decisions 5 and 6)', () => {
+describe('chapter 1 completes, and the closing scene plays the next morning', () => {
   it('ends the day into chapter 2 with the reward, then plays the closing scene after the summary, once', async () => {
     useGame.setState({ save: ready() })
     expect(await endTheDay(7)).toBe(true)

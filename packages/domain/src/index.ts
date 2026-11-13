@@ -1,5 +1,5 @@
-// uma-farm's rules: pure, no I/O. F3 brought save v1; F4 the Wilds' rules, copied from uma-rpg at 30a322a (FM2,
-// docs/technical/wilds-copy.md), and save v2; F17 the loop's units, goods and save v3 with its migration; F24 turned the loop on.
+// uma-farm's rules: pure, no I/O. Save v1, the Wilds' rules (copied from uma-rpg at 30a322a) and save v2, the loop's
+// units, goods and save v3 with its migration.
 export const GAME = 'uma-farm' as const
 
 // The lines, their items and the made items (R2, R4).
@@ -103,7 +103,7 @@ export * from './story/scenes'
 export * from './story/chapter-1'
 
 // The romance core, built dark behind the web's `VITE_FARM_ROMANCE` while
-// production plays M4 on v3: save v4 (the wipe, the new keys, the romance's slots) and its strict parse, the farmer's
+// production plays v3: save v4 (the wipe, the new keys, the romance's slots) and its strict parse, the farmer's
 // name, the story pack at runtime with the invented stand-in, the one `outfitOf` resolver, her favourite line and tastes,
 // authored arrivals at night step 8, her arrival scene's pay, and the re-cut opening. The story's format and validator
 // export by name: their `SEASONS` and `FESTIVALS` are the story's words, not the calendar's.
@@ -120,15 +120,16 @@ export * from './romance/praise'
 export * from './romance/days'
 export * from './romance/ready'
 export * from './farm/bonds'
-// The perks' words: each level's perk id and its words by her line, for her profile; F51 makes them act.
+// The perks' words: each level's perk id and its words by her line, for her profile, and the effects that make them
+// act.
 export * from './romance/perks'
 // The perks' effects: the romance term and its caps, in her element, her keepsake, night chores, morning
 // items, the mentor, her signature dish and breakfast, read from her level.
 export * from './romance/perk-terms'
 export * from './romance/perk-effects'
 // Heart events: the five plays (Cast, Pick, Rhythm, Walk, Choose) at both lengths with their
-// grades and RM26's map, `playEvent` with its choices, rewards and the level-up card's facts, the confession's Not yet and
-// Ask her, and Memories' replays.
+// grades and the plays' map, `playEvent` with its choices, rewards and the level-up card's facts, the confession's Not
+// yet and Ask her, and Memories' replays.
 export * from './romance/plays/grade'
 export * from './romance/plays/cast'
 export * from './romance/plays/rhythm'

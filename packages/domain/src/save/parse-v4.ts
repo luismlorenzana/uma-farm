@@ -1,10 +1,10 @@
 // Save v4's parse: as strict as v3's, whose parts it shares (`parse-loop.ts`). Unknown
 // keys and v3-only keys (`start`, `visitors`, a roster Uma's `affinity`) are refused; roster keys are character ids by form
 // (the API has no story pack or master data); `love` holds exactly the roster's keys, each in range; `memories` and
-// `arrivals` name roster Umas; the farmer's name is empty or within RM8's rule; the Dorm is on its eight levels. Each later
-// romance packet adds the checks for what it fills, while v4 grows in place. F50: today's evenings fill the
-// day's slots (one, two on days divisible by 4 from 10 married, festival night's on a festival day) with RM37's kinds, and
-// its invitations are one (two from 10 married), each a different Uma, asking for a date game.
+// `arrivals` name roster Umas; the farmer's name is empty or within its rule; the Dorm is on its eight levels. Each
+// part of the romance adds the checks for what it fills. Today's evenings fill the
+// day's slots (one, two on days divisible by 4 from 10 married, festival night's on a festival day) with the evening
+// kinds, and its invitations are one (two from 10 married), each a different Uma, asking for a date game.
 import { dateOf, FESTIVAL_IDS, festivalOn } from '../farm/calendar'
 import { cleanFarmerName, farmerNameIssue, houseNameIssue } from '../romance/farmer'
 import { isCropId, isGoodId, isGoodIdV4, type CropId } from '../goods/ids'
@@ -90,7 +90,7 @@ function parseLove(value: unknown, path: string, today: number, houses: number):
     love.friend = true
   }
   if (o.ring !== undefined) {
-    // F53 decision 6: her ring's grade, set when the proposal plays (her wedding's wait on).
+    // Her ring's grade, set when the proposal plays (her wedding's wait on).
     if (stage !== 'wedding' && stage !== 'spouse') fail(`${path}.ring`, 'only from the proposal on')
     love.ring = int(o.ring, `${path}.ring`, 1, 10)
   }
@@ -150,7 +150,7 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
     return { with: member(e.with, `${path}.evenings.${i}.with`, roster), kind: eveningKind(e.kind, `${path}.evenings.${i}.kind`) }
   })
   const nights = evenings.filter((e) => e.kind === FESTIVAL_NIGHT).length
-  // F54 decision 13: the Festival of Vows brings a festival night too.
+  // The Festival of Vows brings a festival night too.
   if (nights > (festivalOn(day) || vows ? 1 : 0)) fail(`${path}.evenings`, 'festival night only on a festival day, once')
   if (evenings.length - nights > slots) fail(`${path}.evenings`, `expected at most ${slots} evening${slots === 1 ? '' : 's'} today`)
   return {
@@ -164,7 +164,7 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
       return { id: member(n.id, `${at}.id`, roster), kind: inviteKind(n.kind, `${at}.kind`), answer }
     }), `${path}.invites`, (n) => n.id),
     bonds: parseBondHeartsToday(o.bonds, `${path}.bonds`, roster),
-    // F53 decisions 3 and 9: the ring made today (its grade, 0 none) and the reception's well-fed days (0 none).
+    // The ring made today (its grade, 0 none) and the reception's well-fed days (0 none).
     ring: int(o.ring, `${path}.ring`, 0, 10),
     reception: int(o.reception, `${path}.reception`, 0, 3),
   }
@@ -254,7 +254,7 @@ function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>, 
   return unique(list(value, path, 0, roster.size * 7 + pairs + 6).map((v, i): HeartLine => {
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, ['invite', 'arrived', 'birthday', 'anniversary', 'item', 'chores', 'perks', 'side', 'bond', 'house', 'misses', 'moved', 'level', 'vows'] as const)
-    // F54 decisions 7, 8 and 13: the house's morning, a house that misses you, a move-in, a night level, the Festival of Vows.
+    // The house's morning, a house that misses you, a move-in, a night level, the Festival of Vows.
     if (kind === 'house') {
       const o = object(v, at, ['kind', 'house', 'umas', 'paid', 'breakfast', 'items'])
       const umas = unique(list(o.umas, `${at}.umas`, 1, 4).map((id, n) => member(id, `${at}.umas.${n}`, roster)), `${at}.umas`)

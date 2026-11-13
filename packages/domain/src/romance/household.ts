@@ -32,7 +32,7 @@ import { hasPerk, MORNING_ITEMS } from './perk-terms'
 export const HOUSE_POINTS = 30
 /** The Festival of Vows pays every spouse +50. */
 export const VOWS_POINTS = 50
-/** The house's extra morning item's draw on `lineGood` (F51's `MORNING_ITEM_N` is 1). */
+/** The house's extra morning item's draw on `lineGood` (`MORNING_ITEM_N` is 1). */
 export const HOUSE_ITEM_N = 2
 
 // --- Before step 1: the night's house ----------------------------------------------------------------------
@@ -56,7 +56,7 @@ export function noteTheNight(save: SaveV4): { save: SaveV4; night: NightHouse | 
 
 // --- Step 6: shared houses and night levels ---------------------------------------------------------
 
-/** Step 6: +10 bond a night to each pair of residents sharing a house, through F52's `addBond` (Romance 4's
+/** Step 6: +10 bond a night to each pair of residents sharing a house, through `addBond` (Romance 4's
  * ×1.5 inside). Every house, every night. */
 export function shareHouses(save: SaveV4, pack: Pick<StoryPack, 'ties'>): { save: SaveV4; paid: { a: string; b: string; points: number }[] } {
   let next = save
@@ -77,7 +77,7 @@ export function shareHouses(save: SaveV4, pack: Pick<StoryPack, 'ties'>): { save
 /** The spouse levels that come at night: S2 and S4, from S1 and S3. */
 const NIGHT_LEVEL_FROM: Readonly<Record<number, 's2' | 's4'>> = { 1: 's2', 3: 's4' }
 
-/** Step 6: a spouse at S1 or S3 whose 600 is full reaches S2 or S4 through F47's `advance` (which starts
+/** Step 6: a spouse at S1 or S3 whose 600 is full reaches S2 or S4 through `advance` (which starts
  * S2's every-2nd-morning count), no event; never S3 or S5, which are events. In the roster's id order. */
 export function levelsTonight(save: SaveV4): { save: SaveV4; levels: LevelLine[] } {
   let love = save.love
@@ -92,7 +92,7 @@ export function levelsTonight(save: SaveV4): { save: SaveV4; levels: LevelLine[]
   return { save: levels.length === 0 ? save : { ...save, love }, levels }
 }
 
-/** A night level's card: F49's level-up card with no event, her perk and her next rung, read from her
+/** A night level's card: the level-up card with no event, her perk and her next rung, read from her
  * route now. Null unless she has reached that rung. */
 export function nightLevelCard(save: Pick<SaveV4, 'love'>, pack: Pick<StoryPack, 'bibles'>, id: string, rung: 's2' | 's4'): EventCard | null {
   const love = save.love[id]
@@ -127,7 +127,7 @@ export function householdNight(save: SaveV4): { save: SaveV4; news: HouseholdNew
 
 /**
  * Step 9: the morning of the house slept in. Each resident +30 through `addLove` (an anniversary's ×2 applies);
- * a resident at S1 or more brings **breakfast** (F51's, once: everyone on the farm with no meal left, +5 bond a pair it
+ * a resident at S1 or more brings **breakfast** (once: everyone on the farm with no meal left, +5 bond a pair it
  * feeds); each resident at S2 or more leaves **one more morning item** of her line (★3+, `lineGood(…, n = 2)`), on top of her
  * own count. On a birthday-alone night only she counts. An empty house's morning is quiet: no line.
  */
@@ -191,8 +191,8 @@ export function festivalOfVows(save: SaveV4): { save: SaveV4; line: VowsLine | n
 
 // --- The house line ----------------------------------------------------------------------------------------
 
-/** The house lines by temperament (CS46's templates), until the pack's are written: three a temperament, `{name}`
- * her name, filled at runtime. Original; mornings only (W16); you are never gendered. */
+/** The house lines by temperament (templates), until the pack's are written: three a temperament, `{name}`
+ * her name, filled at runtime. Original; mornings only; you are never gendered. */
 export const HOUSE_TEMPLATES: Readonly<Record<Temperament, readonly [string, string, string]>> = {
   breezy: [
     '{name} is already out the door: “Race you to the porch!”',

@@ -1,6 +1,6 @@
-// The way onto a new build (F3's update prompt; F24's go-live): the kit's Update ready · Restart sits beside the
-// boot gates, not inside them, so an old build that stops at a newer save (the Wilds' build at the owner's v3, D30 e;
-// the M4 build at the romance core's v4, F46 decision 2) still offers the new build, and Restart activates it. The gate
+// The way onto a new build (the update prompt): the kit's Update ready · Restart sits beside the
+// boot gates, not inside them, so an old build that stops at a newer save (the Wilds' build at the owner's v3;
+// the deployed build at the romance core's v4) still offers the new build, and Restart activates it. The gate
 // says why it stopped and asks the browser for the new build at once. The same holds over a
 // running farm. The boot is a stub.
 import { act } from 'react'
@@ -46,7 +46,7 @@ const renderRoot = () => act(async () => root.render(
  * service worker's skip-waiting and reload. */
 const newBuildWaiting = (activate: () => Promise<void>) => act(() => appUpdateLifecycle.workerWaiting(activate))
 
-describe('the update prompt (D11, D30 e)', () => {
+describe('the update prompt', () => {
   it('offers it over a running farm', async () => {
     game.boot.mockResolvedValue(undefined)
     await renderRoot()

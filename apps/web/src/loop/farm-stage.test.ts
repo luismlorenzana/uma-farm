@@ -23,7 +23,7 @@ const M4 = { homestead: false }
 const HOME = { homestead: true }
 const marker = (kind: FarmMarker['kind'], id: string, x = 0, z = 0): PickHit => ({ ref: { kind: 'marker', marker: { kind, id, x, z } }, at: { x, y: 1, z }, depth: 1 })
 
-describe('taps (decision 5)', () => {
+describe('taps', () => {
   const plots = farmPlots(v4(3), HOME)
   const places = [
     { id: 'fields', to: '/?peek=fields' }, { id: 'mill', to: '/?peek=mill' }, { id: 'warehouse', to: '/warehouse' }, { id: 'gate', to: '/?peek=gate' },
@@ -36,7 +36,7 @@ describe('taps (decision 5)', () => {
     expect(tapTarget([{ ref: { kind: 'building', id: 'warehouse' }, at: { x: 4, y: 2, z: 21 }, depth: 2 }], null, plots, places)?.to).toBe('/warehouse')
     expect(tapTarget([{ ref: { kind: 'prop', name: 'crop-sprout', tile: { x: 0, z: 0 } }, at: { x: 0, y: 1, z: 0 }, depth: 1 }], null, plots, places)?.to).toBe('/?peek=fields')
     expect(tapTarget([marker('lot', 'house-4')], null, plots, places)?.to).toBe('/?sheet=homestead&house=4')
-    // A figure (F12's) and a path point open nothing themselves: what's under them does.
+    // A figure and a path point open nothing themselves: what's under them does.
     expect(tapTarget([{ ref: { kind: 'figure', id: 'x' }, at: { x: 4, y: 1, z: 2 }, depth: 0.5 }, marker('place', 'mill')], null, plots, places)?.id).toBe('mill')
   })
   it('falls back to the plot of the ground under the finger, never the open ground', () => {
@@ -60,7 +60,7 @@ describe('taps (decision 5)', () => {
   })
 })
 
-describe('the camera, the fade and the light (decisions 6–8)', () => {
+describe('the camera, the fade and the light', () => {
   it('opens on the first Ready place\'s band, else the Fields\'', () => {
     const plots = farmPlots(fresh(), M4)
     expect(startPlot(plots, [{ id: 'fields' }, { id: 'warehouse' }])?.id).toBe('fields')

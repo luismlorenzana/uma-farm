@@ -1,11 +1,11 @@
-// The loop's actions on the day: End the day, dismiss the morning, Collect all; F19's goods: ship, Ship all, take
-// back and buy; F20's Fields: plant, Plant all, harvest, Harvest all, a tender and a block; F22's work: a job, a
-// queue, Collect, Recall, Repeat, a stopped queue and building a station; F23's roster: the start's picks and its
-// redraw, the Dorm's levels and swaps, chats and gifts; F24's scenes, read once; F46's farmer's name, the v4 opening
-// (which brings the opening three) and arrival scenes; F47's chat, gift and praise on v4; and F52's pair conversations
+// The loop's actions on the day: End the day, dismiss the morning, Collect all; the goods: ship, Ship all, take
+// back and buy; the Fields: plant, Plant all, harvest, Harvest all, a tender and a block; the work: a job, a
+// queue, Collect, Recall, Repeat, a stopped queue and building a station; the roster: the start's picks and its
+// redraw, the Dorm's levels and swaps, chats and gifts; the scenes, read once; the farmer's name, the v4 opening
+// (which brings the opening three) and arrival scenes; the chat, gift and praise on v4; and the pair conversations
 // read. Each reads the save right
 // before its rule runs (as `edit`), commits it to the store and the device, and syncs; a refused rule throws its words.
-// The night and the harvests read F21's talents from master data, so they wait for it. Loaded on demand with the loop's
+// The night and the harvests read the talents from master data, so they wait for it. Loaded on demand with the loop's
 // screens, so the night's code stays out of the initial JS.
 import {
   BLOCK_IDS, buildStation, buyDorm, cancelSwap, chat, gift, pickStart, redrawStart, swapDorm, type AffinityResult, type Taste, buy, buyBlock, collectLoopAll, collectLoopWorker, dismissLoopStopped, editLoopQueue, endDay, harvest, harvestAll, loopKinds, plant,
@@ -25,7 +25,7 @@ const nowIso = () => new Date().toISOString()
 
 /**
  * Ends `day`: the night's nine steps over the save as it is now, stamped once. It waits for master
- * data, which the night reads (the roster's favourite lines and F21's talents); a second tap, or a save that already
+ * data, which the night reads (the roster's favourite lines and the talents); a second tap, or a save that already
  * moved past `day`, changes nothing.
  */
 export async function endTheDay(day: number): Promise<boolean> {
@@ -34,7 +34,7 @@ export async function endTheDay(day: number): Promise<boolean> {
   const story = loopSave()?.version === 4 ? await storyReady() : undefined
   const save = loopSave()
   if (!save || save.calendar.day !== day) return false
-  // F47: a v4 night reads the cast's birthdays (master data's, the cast's own winning) for the morning's lines.
+  // A v4 night reads the cast's birthdays (master data's, the cast's own winning) for the morning's lines.
   const birthdays = story ? birthdaysOf(story, view.birthdays) : undefined
   await commit(endDay(save, { roster: view.roster, talentOf: talentsFor(view), story, birthdays }, nowIso()))
   return true
@@ -43,11 +43,11 @@ export async function endTheDay(day: number): Promise<boolean> {
 /** Every tender's farming talent on this release: a harvest's stars read it, so a harvest waits for master data. */
 const farming = async (): Promise<FarmingTalentOf> => farmingTalents(talentsFor(await masterReady()))
 
-/** The story pack a v4 farm's work and harvests read (F51: her keepsake, the romance term); none on v3. */
+/** The story pack a v4 farm's work and harvests read (her keepsake, the romance term); none on v3. */
 const perkStory = async (): Promise<StoryPack | null> => (loopSave()?.version === 4 ? await storyReady() : null)
 
 /** The loop's work kinds with this release's talents: a job's plan and a catch's size read them, so work waits for
- * master data; on v4 with the pack (F51: her keepsake lifts a haul's stars as it's planned). */
+ * master data; on v4 with the pack (her keepsake lifts a haul's stars as it's planned). */
 const workKinds = async (): Promise<LoopKinds> => loopKinds(talentsFor(await masterReady()), await perkStory())
 
 /** Puts the morning summary away: a player's change. */
@@ -57,8 +57,8 @@ export async function dismissSummary(): Promise<void> {
   await commit(touched({ ...save, summary: null }, nowIso()))
 }
 
-/** Collects every finished job on the farm into the Warehouse and harvests every Ready plot (Harvest all on every block,
- * F20). Nothing ready changes nothing. */
+/** Collects every finished job on the farm into the Warehouse and harvests every Ready plot (Harvest all on every
+ * block). Nothing ready changes nothing. */
 export async function collectFarm(): Promise<number> {
   const talentOf = await farming()
   const kinds = await workKinds()
@@ -82,7 +82,7 @@ async function change(rule: (save: FarmSave) => FarmSave): Promise<FarmSave> {
   return next
 }
 
-/** Ships `count` of a good at `stars` into today's bin (decision 8: a tap ships one). */
+/** Ships `count` of a good at `stars` into today's bin (a tap ships one). */
 export const shipGood = (id: string, stars: number, count = 1) => change((s) => ship(s, id, stars, count))
 /** Ships every star of a good ("Ship all"). */
 export const shipEvery = (id: string) => change((s) => shipAll(s, id))
@@ -212,7 +212,8 @@ export async function swapUmas(out: string, into: string): Promise<void> {
 /** Calls off a swap: she stays. */
 export const cancelDormSwap = (out: string) => change((s) => cancelSwap(s, out))
 
-/** A v3-only rule's save (M4's start, visitors and affinity): the romance build hides them until F56 deletes them. */
+/** A v3-only rule's save (the deployed build's start, visitors and affinity): the romance build hides them until
+ * the private pack replaces them. */
 function v3(save: FarmSave): SaveV3 {
   if (save.version !== 3) throw new Error('Not on this farm.')
   return save
@@ -247,8 +248,8 @@ export async function giveGift(outfitId: string, item: string, stars: number): P
 
 // --- The scenes -----------------------------------------------------------------------------------------------
 
-/** A scene played through or skipped: it goes in `diary.read`, once, a player's change. On v4 (F46 decision
- * 9) the opening also brings the opening three onto the farm. */
+/** A scene played through or skipped: it goes in `diary.read`, once, a player's change. On v4 the opening
+ * also brings the opening three onto the farm. */
 export async function readSceneOnce(id: ChapterSceneId): Promise<void> {
   const save = loopSave()
   if (!save || save.diary.read.includes(id)) return
