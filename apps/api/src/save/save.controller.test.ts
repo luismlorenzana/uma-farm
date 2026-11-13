@@ -1,22 +1,23 @@
 // A refused upload is kept: a server that sends every upload back and keeps nothing leaves days of play on
-// one phone. Invented data only.
+// one phone. Uploads are v4 only. Invented data only.
 import { BadRequestException, ConflictException } from '@nestjs/common'
-import { newSave, newSaveV2, type Save } from '@farm/domain'
+import { newSave } from '@farm/domain'
 import { describe, expect, it, vi } from 'vitest'
 import { SaveController } from './save.controller'
 import { EMPTY_ENVELOPE, RevisionConflict, type SaveRepository } from './save.repository'
 
 const NOW = '2026-11-08T12:00:00.000Z'
-const upload = (uid = 'u') => ({ baseRevision: 3, save: JSON.parse(JSON.stringify(newSaveV2(uid, NOW))) as Save })
+const upload = (uid = 'u') => ({ baseRevision: 3, save: JSON.parse(JSON.stringify(newSave(uid, NOW))) as unknown })
 function fake(put: SaveRepository['put'], rescue: SaveRepository['rescue'] = vi.fn(async () => undefined)) {
   const repo: SaveRepository = { load: async () => EMPTY_ENVELOPE, put, rescue }
   return { repo, controller: new SaveController(repo) }
 }
 
 describe('the save upload', () => {
-  it('stores it and keeps nothing aside', async () => {
+  it('stores a v4 as sent and keeps nothing aside', async () => {
     const { repo, controller } = fake(async (_uid, revision, save) => ({ revision: revision + 1, save }))
-    await expect(controller.put('u', upload())).resolves.toMatchObject({ revision: 4 })
+    const body = upload()
+    await expect(controller.put('u', body)).resolves.toEqual({ revision: 4, save: body.save })
     expect(repo.rescue).not.toHaveBeenCalled()
   })
 
@@ -29,9 +30,23 @@ describe('the save upload', () => {
 
   it('keeps an upload that fails the save rules, as sent, and says why', async () => {
     const { repo, controller } = fake(async () => { throw new Error('never stored') })
-    const body = { baseRevision: 3, save: { version: 1, nonsense: true } }
+    const body = { baseRevision: 3, save: { version: 4, nonsense: true } }
     await expect(controller.put('u', body)).rejects.toBeInstanceOf(BadRequestException)
     expect(repo.rescue).toHaveBeenCalledWith('u', body, expect.any(String))
+  })
+
+  it('refuses a malformed v4 with its path, and keeps it', async () => {
+    const { repo, controller } = fake(async () => { throw new Error('never stored') })
+    const body = { baseRevision: 3, save: { ...JSON.parse(JSON.stringify(newSave('u', NOW))), gold: -1 } }
+    await expect(controller.put('u', body)).rejects.toThrow('body.save.gold: expected a non-negative integer')
+    expect(repo.rescue).toHaveBeenCalledWith('u', body, expect.any(String))
+  })
+
+  it('refuses a save from before v4, an old cached build\'s, and keeps it whole', async () => {
+    const { repo, controller } = fake(async () => { throw new Error('never stored') })
+    const body = { baseRevision: 3, save: { version: 3, account: { uid: 'u', createdAt: NOW, updatedAt: NOW }, gold: 812 } }
+    await expect(controller.put('u', body)).rejects.toThrow('body.save.version: expected 4')
+    expect(repo.rescue).toHaveBeenCalledWith('u', body, expect.stringContaining('expected 4'))
   })
 
   it("refuses another account's save, and keeps it", async () => {
@@ -46,26 +61,12 @@ describe('the save upload', () => {
     expect(repo.rescue).not.toHaveBeenCalled()
   })
 
-  it('stores a v3 upload as sent', async () => {
-    const { repo, controller } = fake(async (_uid, revision, save) => ({ revision: revision + 1, save }))
-    const save = JSON.parse(JSON.stringify(newSave('u', NOW))) as unknown
-    await expect(controller.put('u', { baseRevision: 3, save })).resolves.toEqual({ revision: 4, save })
-    expect(repo.rescue).not.toHaveBeenCalled()
-  })
-
-  it('refuses a malformed v3 with its path, and keeps it', async () => {
-    const { repo, controller } = fake(async () => { throw new Error('never stored') })
-    const body = { baseRevision: 3, save: { ...JSON.parse(JSON.stringify(newSave('u', NOW))), gold: -1 } }
-    await expect(controller.put('u', body)).rejects.toThrow('body.save.gold: expected a non-negative integer')
-    expect(repo.rescue).toHaveBeenCalledWith('u', body, expect.any(String))
-  })
-
-  it('keeps a v2 upload refused for a stored v3: a Wilds client after the loop', async () => {
-    const stored = { revision: 5, save: newSave('u', NOW) }
+  it('keeps an upload refused as older than what is stored', async () => {
+    const stored = { revision: 5, save: { ...newSave('u', NOW), version: 5 as unknown as 4 } }
     const { repo, controller } = fake(async () => { throw new RevisionConflict(stored) })
     const body = upload()
     await expect(controller.put('u', body)).rejects.toBeInstanceOf(ConflictException)
-    expect(repo.rescue).toHaveBeenCalledWith('u', body, 'save version 2 is older than the stored 3')
+    expect(repo.rescue).toHaveBeenCalledWith('u', body, 'save version 4 is older than the stored 5')
   })
 
   it('never lets a failed rescue hide why the upload failed', async () => {

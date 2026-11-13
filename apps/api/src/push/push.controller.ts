@@ -1,5 +1,5 @@
 import { BadRequestException, Body, Controller, Get, HttpCode, NotFoundException, Post, Put, UseGuards } from '@nestjs/common'
-import { placeById, PUSH_SCHEDULE_MAX, type PushEntry } from '@farm/domain'
+import { isPushPlace, PUSH_SCHEDULE_MAX, type PushEntry } from '@farm/domain'
 import { CurrentUid, Public } from '@luismlorenzana/uma-server/auth'
 import type { Subscription } from './push.repository'
 import { PushSender } from './push.sender'
@@ -15,13 +15,13 @@ export function parseSubscription(body: unknown): Subscription {
   return { endpoint: b.endpoint, keys: { p256dh: b.keys.p256dh as string, auth: b.keys.auth as string } }
 }
 
-/** `{ entries: [{ at, place, badge }] }`: a Wilds place, a time in ms, a badge no bigger than the slots. */
+/** `{ entries: [{ at, place, badge }] }`: one of the farm's work places, a time in ms, a badge no bigger than the slots. */
 export function parseSchedule(body: unknown): PushEntry[] {
   const entries = (body as { entries?: unknown } | null)?.entries
   if (!Array.isArray(entries) || entries.length > PUSH_SCHEDULE_MAX) throw new BadRequestException('expected a push schedule')
   return entries.map((e: unknown) => {
     const { at, place, badge } = (e ?? {}) as { at?: unknown; place?: unknown; badge?: unknown }
-    if (typeof at !== 'number' || !Number.isSafeInteger(at) || at < 0 || typeof place !== 'string' || !placeById(place)
+    if (typeof at !== 'number' || !Number.isSafeInteger(at) || at < 0 || typeof place !== 'string' || !isPushPlace(place)
       || typeof badge !== 'number' || !Number.isInteger(badge) || badge < 0 || badge > PUSH_SCHEDULE_MAX) {
       throw new BadRequestException('expected a push schedule')
     }

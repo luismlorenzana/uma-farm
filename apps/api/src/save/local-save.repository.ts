@@ -1,12 +1,12 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { parseSave, versionOf, type SaveEnvelope, type StoredSave } from '@farm/domain'
+import { parseStored, versionOf, type SaveEnvelope, type SaveV4 } from '@farm/domain'
 import { EMPTY_ENVELOPE, RevisionConflict, type SaveRepository } from './save.repository'
 
 type FileShape = Record<string, { revision: number; save: unknown }>
 
 // Local dev persistence (copied from uma-rpg at 30a322a): one JSON file written atomically (tmp + rename), with calls
-// serialized in-process.
+// serialized in-process. It keeps no backups: a v4 over an older save replaces it.
 export class LocalSaveRepository implements SaveRepository {
   private queue: Promise<unknown> = Promise.resolve()
 
@@ -37,16 +37,16 @@ export class LocalSaveRepository implements SaveRepository {
   load(uid: string): Promise<SaveEnvelope> {
     return this.serialize(async () => {
       const row = (await this.read())[uid]
-      return row ? { revision: row.revision, save: parseSave(row.save) } : EMPTY_ENVELOPE
+      return row ? { revision: row.revision, save: parseStored(row.save) } : EMPTY_ENVELOPE
     })
   }
 
-  put(uid: string, baseRevision: number, save: StoredSave, sentVersion: number): Promise<SaveEnvelope> {
+  put(uid: string, baseRevision: number, save: SaveV4): Promise<SaveEnvelope> {
     return this.serialize(async () => {
       const data = await this.read()
       const row = data[uid]
-      const current: SaveEnvelope = row ? { revision: row.revision, save: parseSave(row.save) } : EMPTY_ENVELOPE
-      if (current.revision !== baseRevision || sentVersion < versionOf(row?.save)) throw new RevisionConflict(current)
+      const current: SaveEnvelope = row ? { revision: row.revision, save: parseStored(row.save) } : EMPTY_ENVELOPE
+      if (current.revision !== baseRevision || save.version < versionOf(row?.save)) throw new RevisionConflict(current)
       const next = { revision: baseRevision + 1, save }
       data[uid] = next
       await this.write(data)

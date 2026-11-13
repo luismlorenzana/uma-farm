@@ -4,10 +4,11 @@ import { CurrentUid } from '@luismlorenzana/uma-server/auth'
 import { RevisionConflict, SAVE_REPOSITORY, type SaveRepository } from './save.repository'
 
 // GET and PUT /api/save, behind the owner guard (copied from uma-rpg at 30a322a). The server stores what the app sent
-// and never edits a save. It takes v2, v3 and v4 as sent: the live app writes v3, carrying a
-// stored v2 over on the phone, and the romance build (dark until the private pack ships) writes v4, its wipe made on
-// the phone. An upload older than what's stored (an old cached build after a newer save) is refused with a 409 and
-// kept in `saveRescues`.
+// and never edits a save. GET returns the stored save parsed: a v4 whole, an older one as its version and account (the
+// phone starts it over). PUT takes a v4 only: an older version (an old cached build) is refused with a 400 and kept in
+// `saveRescues`, and so is anything the parse refuses. The first v4 over an older stored save backs that one up
+// (`saveBackups`, the Firestore store's). An upload older than what's stored (a v4 after a later version) is refused with
+// a 409 and kept too.
 @Controller('save')
 export class SaveController {
   private readonly logger = new Logger(SaveController.name)
@@ -35,11 +36,11 @@ export class SaveController {
       throw new BadRequestException('save belongs to another account')
     }
     try {
-      return await this.saves.put(uid, request.baseRevision, request.save, request.sentVersion)
+      return await this.saves.put(uid, request.baseRevision, request.save)
     } catch (err) {
       if (err instanceof RevisionConflict) {
         // A stale revision just syncs again; an older version may hold play that can never be uploaded, so it's kept.
-        if (request.sentVersion < versionOf(err.current.save)) await this.keepRefused(uid, body, new Error(`save version ${request.sentVersion} is older than the stored ${versionOf(err.current.save)}`))
+        if (request.save.version < versionOf(err.current.save)) await this.keepRefused(uid, body, new Error(`save version ${request.save.version} is older than the stored ${versionOf(err.current.save)}`))
         throw new ConflictException({ message: 'revision conflict', current: err.current })
       }
       await this.keepRefused(uid, body, err)

@@ -1,6 +1,6 @@
 // The tick (copied from uma-rpg's push.service.test.ts at 30a322a and cut): it never reads a save, only the schedule
 // the app sent. Due, not due, a dead subscription, and what a tick writes. Invented data only.
-import { newSaveV2, pushSchedule, startJob, type PushEntry } from '@farm/domain'
+import type { PushEntry } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { MemoryPushRepository, type PushRepository, type Subscription } from './push.repository'
 import type { PushSender, SendResult } from './push.sender'
@@ -32,7 +32,7 @@ describe('push tick (copied from uma-rpg)', () => {
 
     expect(await push.tick(T0 + 5 * MINUTE)).toEqual({ accounts: 1, sent: 0 })
     expect(await push.tick(T0 + 10 * MINUTE)).toEqual({ accounts: 1, sent: 1 })
-    expect(sent[0]!.payload).toEqual({ title: 'Work done', body: 'Mine: 1 job done', tag: 'work-mine', url: '/wilds/mine', badge: 1 })
+    expect(sent[0]!.payload).toEqual({ title: 'Work done', body: 'Mine: 1 job done', tag: 'work-mine', url: '/?peek=mine', badge: 1 })
     expect(await push.tick(T0 + 15 * MINUTE)).toEqual({ accounts: 1, sent: 0 })
     expect(sent).toHaveLength(1)
   })
@@ -40,9 +40,9 @@ describe('push tick (copied from uma-rpg)', () => {
   it('makes one notification of everything due in a tick, with the latest badge', async () => {
     const { push, sent } = setup()
     await push.subscribe('u', sub('https://push.example/phone'), T0)
-    await push.schedule('u', [entry('mine', T0 + MINUTE, 1), entry('fields', T0 + 2 * MINUTE, 2), entry('mine', T0 + 3 * MINUTE, 3), entry('forest', T0 + HOUR, 4)])
+    await push.schedule('u', [entry('mine', T0 + MINUTE, 1), entry('mill', T0 + 2 * MINUTE, 2), entry('mine', T0 + 3 * MINUTE, 3), entry('forest', T0 + HOUR, 4)])
     expect(await push.tick(T0 + 5 * MINUTE)).toEqual({ accounts: 1, sent: 1 })
-    expect(sent.map((s) => s.payload)).toEqual([{ title: 'Work done', body: 'Mine: 2 jobs done\nFields: 1 job done', tag: 'work', url: '/', badge: 3 }])
+    expect(sent.map((s) => s.payload)).toEqual([{ title: 'Work done', body: 'Mine: 2 jobs done\nMill: 1 job done', tag: 'work', url: '/', badge: 3 }])
   })
 
   it('pushes to every live device and forgets a dead subscription', async () => {
@@ -71,7 +71,7 @@ describe('push tick (copied from uma-rpg)', () => {
     await push.schedule('u', [entry('mine', T0 - MINUTE)])
     await push.subscribe('u', sub('https://push.example/phone'), T0)
     expect(await push.tick(T0 + 5 * MINUTE)).toEqual({ accounts: 1, sent: 0 })
-    await push.schedule('u', [entry('fields', T0 + 10 * MINUTE), entry('forest', T0 + 7 * HOUR)])
+    await push.schedule('u', [entry('mill', T0 + 10 * MINUTE), entry('forest', T0 + 7 * HOUR)])
     expect(await push.tick(T0 + 7 * HOUR)).toEqual({ accounts: 1, sent: 1 })
     expect(sent.map((s) => (s.payload as { body: string }).body)).toEqual(['Forest: 1 job done'])
   })
@@ -91,22 +91,9 @@ describe('push tick (copied from uma-rpg)', () => {
     const { push, sent } = setup()
     await push.subscribe('u', sub('https://push.example/phone'), T0)
     await push.schedule('u', [entry('mine', T0 + 7 * MINUTE)])
-    await push.schedule('u', [entry('fields', T0 + 8 * MINUTE)])
+    await push.schedule('u', [entry('mill', T0 + 8 * MINUTE)])
     await push.tick(T0 + 10 * MINUTE)
-    expect(sent.map((s) => (s.payload as { body: string }).body)).toEqual(['Fields: 1 job done'])
-  })
-
-  it("announces the app's own schedule from a real job, when its slot goes idle", async () => {
-    // An invented outfit at Craft Lv1 mining one ore: the schedule the app would send on its next sync.
-    const save = startJob(newSaveV2('u', new Date(T0).toISOString()), 'mine', 0, { outfitId: '101' }, 'copper-ore', 1, new Date(T0).toISOString())
-    const schedule = pushSchedule(save, T0)
-    expect(schedule).toHaveLength(1)
-    const { push, sent } = setup()
-    await push.subscribe('u', sub('https://push.example/phone'), T0)
-    await push.schedule('u', schedule)
-    expect(await push.tick(schedule[0]!.at - 1)).toEqual({ accounts: 1, sent: 0 })
-    expect(await push.tick(schedule[0]!.at)).toEqual({ accounts: 1, sent: 1 })
-    expect(sent[0]!.payload).toMatchObject({ title: 'Work done', body: 'Mine: 1 job done', badge: 1 })
+    expect(sent.map((s) => (s.payload as { body: string }).body)).toEqual(['Mill: 1 job done'])
   })
 })
 
