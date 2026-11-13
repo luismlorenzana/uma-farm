@@ -1,9 +1,9 @@
-// The stage Home's pure half (F11 decisions 4–8; KF10, KF14): the seasons as grades, what a tap opens, the band Home
-// opens on, the fade's markers, the session's scroll, and the kit's seam. Part of the stage's lazy chunk with
+// The stage Home's pure half (F11 decisions 4–8; KF10): the seasons as grades, what a tap opens, the band Home opens on,
+// the fade's markers and the session's scroll. The kit is `farm-kit.ts` (KF14, D73). Part of the stage's lazy chunk with
 // `FarmStage.tsx`: it imports uma-stage's root, and so three.js.
 import { FARM_BAND, FARM_PLOT, plotAt, type FarmPlot, type Season } from '@farm/domain'
 import type { HubMapPlace } from '@luismlorenzana/uma-kit/hub'
-import { DAY_GRADE, rayAt, standInFarmKit, type FarmMarker, type LoadedKit, type PickHit, type StageGrade, type View } from '@luismlorenzana/uma-stage'
+import { DAY_GRADE, rayAt, type FarmMarker, type PickHit, type StageGrade, type View } from '@luismlorenzana/uma-stage'
 
 // --- The seasons (decision 6, KF10) -------------------------------------------------------------------------------------
 
@@ -108,16 +108,3 @@ export function overlayBox(plot: Pick<FarmPlot, 'x' | 'z'>, building: { storeys:
     top: { x: plot.x + FARM_PLOT / 2, y: top, z: plot.z + 1 },
   }
 }
-
-// --- The kit (KF14) -----------------------------------------------------------------------------------------------------------
-
-/**
- * The farm's kit: the stage's stand-in, every frame in flat colours, until F9's `kit-farm` ships. Then this pins it
- * (`checkedKit(atlas, 'kit-farm')` and `loadKitPage('farm', …)`), keeping the stand-in while its page loads, if it fails,
- * and for a design that draws a frame it lacks (`farmProblems`), so the names stay the API and nothing breaks.
- */
-export function farmKit(): LoadedKit {
-  return standInFarmKit()
-}
-/** The kit's name, for the Done row and the stage's debug. */
-export const FARM_KIT_NAME = 'stand-in'

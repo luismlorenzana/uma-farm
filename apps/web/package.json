@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@farm/domain": "workspace:*",
-    "@luismlorenzana/uma-art": "2.26.0",
+    "@luismlorenzana/uma-art": "2.27.0",
     "@luismlorenzana/uma-data": "1.4.0",
     "@luismlorenzana/uma-kit": "0.19.0",
     "@luismlorenzana/uma-stage": "0.3.0",

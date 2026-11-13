@@ -10,6 +10,7 @@ import { CROPS } from '../fields/crops'
 import { FARM_PLACES } from './places'
 import {
   CROP_FAMILIES, CROP_FAMILY, cropFrame, FARM_BAND, FARM_STAGE_TILES, farmDesign, farmPlots, FIELDS_CROP_TILES, fieldsFrames, placeStands, plotAt, slotId,
+  WINDOW_BOX_LEVEL,
 } from './stage'
 
 const AT = '2026-11-12T10:00:00.000Z'
@@ -133,6 +134,15 @@ describe('the farm design (decision 2)', () => {
     // Without the homestead option, or on v3, the map's eight rows only.
     expect(farmDesign(v4(3), M4).cells).toHaveLength(8 * FARM_BAND)
     expect(farmDesign(fresh(), HOME).cells).toHaveLength(8 * FARM_BAND)
+  })
+
+  it('hangs every window box just under a ground-floor window\'s sill, at 1¼ levels (D73)', () => {
+    const boxes = CASES.flatMap(([, make]) => make().buildings.flatMap((b) => b.mounts.filter((m) => m.name.endsWith('-box')).map((m) => ({ ...m, storeys: b.storeys }))))
+    expect(boxes.length).toBeGreaterThan(0)
+    expect(new Set(boxes.map((m) => `${m.name} ${m.face} ${m.level}`))).toEqual(new Set(['flower-box front 1.25', 'herb-box front 1.25']))
+    expect(WINDOW_BOX_LEVEL).toBe(1.25)
+    // The window piece is a storey's levels 1–2: a box between them hangs under the ground floor's windows.
+    expect(boxes.every((m) => m.level > 1 && m.level < 2)).toBe(true)
   })
 
   it('finds the plot under a tile, its path row with it', () => {

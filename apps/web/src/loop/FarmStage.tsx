@@ -1,6 +1,7 @@
 // Home on the shared HD-2D stage (F11; hd2d-farm FR3–FR8, FR13, FR14; kit-farm KF2–KF14): the farm as uma-stage's band
 // stage draws it, portrait and 9 tiles across, between uma-kit's bars (FR7). The save is the design (`farmDesign`, decision
-// 2); the kit is the stand-in until F9's `kit-farm` ships (KF14). Names, locks, Ready badges and pips are uma-kit's, the
+// 2); the kit is uma-art's `kit-farm` with the stand-in's frames for what it lacks (`farm-kit.ts`, KF14, D73), the stand-in
+// alone while its page is slow or if it fails. Names, locks, Ready badges and pips are uma-kit's, the
 // same models the Hub's place links carry, as overlays projected from each plot (decision 4); a tap opens what the Hub's
 // place opens, a long-press its quick look (decision 5); the season is the light (decision 6); a place's open sheet fades
 // the roofs in front of its slots (decision 7); Home opens on the first Ready place's band and keeps its scroll this
@@ -14,8 +15,9 @@ import { BandStage, capture, type FarmDesign } from '@luismlorenzana/uma-stage'
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { romanceOn } from '../app/romance'
+import { KIT_WAIT_MS, loadFarmKit, readyFarmKit, standInKit, type FarmKit } from './farm-kit'
 import {
-  bandCentre, FARM_KIT_NAME, fadeMarkers, farmKit, groundTile, LONG_PRESS_MS, overlayBox, peekLink, rememberCentre, rememberedCentre, SEASON_EASE_MS, SEASON_GRADES, startPlot,
+  bandCentre, fadeMarkers, groundTile, LONG_PRESS_MS, overlayBox, peekLink, rememberCentre, rememberedCentre, SEASON_EASE_MS, SEASON_GRADES, startPlot,
   tapTarget,
 } from './farm-stage'
 
@@ -36,10 +38,6 @@ interface Box { w: number; h: number; apron: number }
 const AWAKE_MS = 700
 const TAP_SLOP = 8
 
-let kit: ReturnType<typeof farmKit> | null = null
-/** The kit, drawn once a session. */
-const stageKit = () => (kit ??= farmKit())
-
 export default function FarmStage({ save, places, open, paused, reducedMotion }: FarmStageProps) {
   const navigate = useNavigate()
   const homestead = romanceOn()
@@ -54,8 +52,11 @@ export default function FarmStage({ save, places, open, paused, reducedMotion }:
   const anchors = useRef(new Map<string, ReturnType<typeof overlayBox>>())
   const loop = useRef({ until: 0, running: false, raf: 0, lastCentre: Number.NaN, lastSize: '', pointer: false, hidden: false, paused: false })
   const press = useRef<{ x: number; y: number; timer: number; long: boolean } | null>(null)
-  const latest = useRef({ plots, places, design })
-  latest.current = { plots, places, design }
+  /** The kit the farm is drawn with: null until kit-farm's page loads or `KIT_WAIT_MS` passes, then the stand-in until the
+   * page arrives (KF14). */
+  const [kit, setKit] = useState<FarmKit | null>(readyFarmKit)
+  const latest = useRef({ plots, places, design, kit })
+  latest.current = { plots, places, design, kit }
   /** This stage has its world (so a new design keeps the camera) and its season (so a new one eases); reset with each stage. */
   const built = useRef(false)
   const graded = useRef(false)
@@ -144,7 +145,7 @@ export default function FarmStage({ save, places, open, paused, reducedMotion }:
       else wake()
     }
     document.addEventListener('visibilitychange', visibility)
-    if (import.meta.env.DEV) (window as unknown as { __farmStage?: unknown }).__farmStage = { stage: s, kit: FARM_KIT_NAME, get design() { return latest.current.design }, get plots() { return latest.current.plots } }
+    if (import.meta.env.DEV) (window as unknown as { __farmStage?: unknown }).__farmStage = { stage: s, get kit() { return latest.current.kit?.name ?? null }, get design() { return latest.current.design }, get plots() { return latest.current.plots } }
     return () => {
       document.removeEventListener('visibilitychange', visibility)
       observer?.disconnect()
@@ -155,13 +156,22 @@ export default function FarmStage({ save, places, open, paused, reducedMotion }:
     }
   }, [])
 
-  // The world: rebuilt when the design changes (a place opens, a crop grows), the camera kept where it was.
+  // The kit (KF14): kit-farm once its page loads; the stand-in if it's slow, swapped when it arrives, or if it fails.
+  useEffect(() => {
+    if (kit) return
+    let live = true
+    const slow = window.setTimeout(() => { if (live) setKit((k) => k ?? standInKit()) }, KIT_WAIT_MS)
+    void loadFarmKit().then((loaded) => { if (live) setKit(loaded) })
+    return () => { live = false; window.clearTimeout(slow) }
+  }, [])
+
+  // The world: rebuilt when the design changes (a place opens, a crop grows) or the kit arrives, the camera kept where it was.
   useEffect(() => {
     const s = stage.current
-    if (!s) return
+    if (!s || !kit) return
     const centre = s.bandCamera.centre
     try {
-      s.setWorld(JSON.parse(world) as FarmDesign, stageKit())
+      s.setWorld(JSON.parse(world) as FarmDesign, kit.loaded)
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'The farm can’t be drawn.')
@@ -175,9 +185,11 @@ export default function FarmStage({ save, places, open, paused, reducedMotion }:
       if (start !== null) s.scrollTo(start, true)
       built.current = true
     }
+    // The stand-in's page leaves the GPU once kit-farm stands in its place (its canvas stays for a later fallback).
+    if (kit.name === 'kit-farm') standInKit().loaded.page.dispose()
     measure()
     wake()
-  }, [world])
+  }, [world, kit])
 
   // The season's light: at once on load, eased over a second when a morning brings the next (decision 6).
   useEffect(() => {
@@ -258,7 +270,7 @@ export default function FarmStage({ save, places, open, paused, reducedMotion }:
 
   const byId = new Map(places.map((p) => [p.id, p]))
   return (
-    <div ref={box} className="absolute inset-0 overflow-hidden" data-farm-stage={drawn ? 'drawn' : 'loading'} data-kit-name={FARM_KIT_NAME}>
+    <div ref={box} className="absolute inset-0 overflow-hidden" data-farm-stage={drawn ? 'drawn' : 'loading'} data-kit-name={kit?.name ?? 'loading'}>
       <canvas ref={canvas} className="absolute inset-0 block size-full" style={{ touchAction: 'none' }} aria-hidden
         onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onCancel} onContextMenu={(e) => e.preventDefault()} />
       <div className="pointer-events-none absolute inset-0" aria-hidden data-stage-overlays>
