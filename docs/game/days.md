@@ -346,8 +346,8 @@ stay put.
 
 ### The HD-2D farm: the map's second look (F11, a preview)
 
-**Built in F11 (D71), off by default.** Home can draw the same farm on the shared HD-2D stage
-([uma-stage](https://github.com/luismlorenzana/uma-platform/blob/main/packages/stage/README.md) 0.3.0) instead of
+**Built in F11 (D71), off by default; the Umas on it in F12 (D77).** Home can draw the same farm on the shared HD-2D stage
+([uma-stage](https://github.com/luismlorenzana/uma-platform/blob/main/packages/stage/README.md) 0.4.0) instead of
 uma-kit's Hub: **Account → HD-2D farm (preview)**, this device only, or `?stage=1` (`?stage=0` turns it off) in the
 address at boot. Off, Home is the Hub above, unchanged. Rules never read the switch and the save never changes because of
 it (FR14). It works in the deployed build and the romance build alike.
@@ -379,21 +379,69 @@ it (FR14). It works in the deployed build and the romance build alike.
 - **A tap opens what the Hub's place opens** (`placeLink`; a house its sheet): whatever is drawn nearest under the finger,
   a building, a landmark, a crop or a marker, else the plot under the ground. **A long-press** (half a second) opens any
   place's quick look (`?peek=`), the Warehouse's and the Dorm's too; a drag never taps.
-- **What stands in front fades only for what you're looking at:** at rest nothing is faded; with a place's quick look
-  open, a roof or a tree in front of its slots fades to a third (ST3's fade, its markers narrowed to that place's slots).
+- **What stands in front fades only for what you're looking at:** at rest nothing is faded, but a roof or a tree in front
+  of a Ready Uma (below); with a place's quick look open, a roof or a tree in front of its slots fades to a third (ST3's
+  fade, its markers narrowed to that place's slots; ST4's figure filter counting the Ready Umas only).
 - **The seasons are the light** (KF10): spring fresh and soft, summer bright and warm, autumn amber, winter cold and pale
   with the lamps up. The morning after a season's last night eases to the next over a second (at once with reduced motion).
 - **The camera** opens on the band of the first place with a Ready badge, else the Fields', and keeps its place between
   visits for the session.
-- **Battery** (FR13): saver's 30 fps, and the stage stops once the camera rests and nothing eases, while the app is in the
-  background and while a full-screen scene is over Home. Phaser's Hub never loads with it on (FR4).
+- **Battery** (FR13): saver's 30 fps, and the stage stops once it says it's at rest (the camera, every walk, every fade
+  and the light still; uma-stage 0.4.0's `onSettled`), while the app is in the background and while a full-screen scene is
+  over Home. Phaser's Hub never loads with it on (FR4).
 - **The kit** is F9's painted `kit-farm` (uma-art 2.27.0, wave 1, the owner's look approved; D73), loaded the first time the
   stage shows. What it doesn't draw yet (wave 2: the stone set, the Mine's cliff and mouth, the Quarry, the ranch's pieces,
   the Forge's, the Restaurant's and the town's landmarks) is the flat stand-in until wave 2 ships (KF14). Window boxes hang
   just under the ground floor's windows. On a slow first load the stand-in shows after a second and a half, then the kit;
   the kit and the stage are kept on the phone after their first load, so they work offline, and a player with the switch
   off never downloads them.
-- **Not yet:** the Umas walking to their slots and their Ready bubbles (F12).
+
+#### The Umas on the stage (F12)
+
+**Built in F12 (D77; hd2d-farm FR9–FR14, kit-farm KF5).** The places keep one look, and the Umas show the work. Days are
+turns (D25): nobody moves while the app is closed, work is settled at night, and Ready is the morning's Ready.
+
+```
+  the yard (band 6)                         a work place (the Mill: its lane and apron)
+ ┌ Shipping bin ┬ Warehouse ┬ Dorm ──────┐  ┌ x 3 ┬ 4 ─ 5 ┐
+ │              │           │   bldg     │  │ ①→  │ bldg  │  z 0   ① ② ③ face the building (right)
+ │              │           │   bldg     │  │ ②→  │ bldg  │  z 1
+ │              │           │ ② ① ③      │  │ ③↗  │ ④↑    │  z 2   ④ in front of it faces it (back)
+ │ ⑫ ⑪ ⑩ ⑨ ⑧ ⑦  ─────────── ⑤ ④ ⑥ ─────│  └─────┴───────┘
+ └──────────────── then the open ground beside the Gate (⑬…, its free tiles)
+   ① … the idle Umas in order, each keeping her spot while she stays idle; a spouse on v4 stands on her house's apron
+```
+
+- **Who stands on the farm** (decision 1), the same Umas the Hub's pips show: every Uma whose job holds a slot at that
+  slot (a place's four slots: its lane's three tiles and the apron's middle beside a building, or the apron's three and
+  one behind its end), every tender on her block's slot on the Fields, and everyone else on the farm (`farmHome`) idle in
+  the yard: on the Dorm's apron, the path in front of it, the path row on toward the bin, then the open ground beside the
+  Gate. A spouse in her house (v4, the romance build) stands on her house's apron. Nobody who's away. A visitor waiting
+  at the Gate stays its pip (she isn't on the farm yet). The pips stay in the chips too.
+- **They face the work:** a building beside a slot (or beside the tile behind it), else into the place, away from the
+  camera; the idle face you.
+- **Walks** (decisions 2, 3): an Uma you put to work (from a place's quick look, its page or the Fields) walks from where
+  she stood to her slot; one recalled, or collected with nothing queued next, runs home; one who joins walks in from the
+  Gate, and one who leaves runs out of it. Only who moved moves: the farm compares where everyone stood before and after
+  each change made on this device today, and a walk started while you were on a place's page plays when Home comes back.
+  **At boot, in the morning and after a sync from another device, everyone stands where she belongs at once** (FR14: the
+  counts never wait on a walk). A walk that a rebuild (a crop growing, a place opening) couldn't keep starts again from
+  where she stands. The walk is uma-quest's field speed, the run its dash.
+- **Ready bubbles** (decision 4): a round card over her head, with a tail to her, rising as it appears: her work's item
+  whenever she has something to collect (the Forest's and the Fishery's haul each morning of a longer job, so a place has
+  as many bubbles as its Ready badge counts; a station's output), the crop over a tender whose block has Ready plots, with
+  ♥ in its corner when her heart event is Ready too (v4), or ♥ alone over an Uma with nothing to collect. Nothing while
+  she works. **A Ready Uma counts for the fade,** so a roof or a tree in front of her fades and she shows through.
+- **Taps** (decision 5), the Umas first: **a bubble** collects her work (`collectJob`) or harvests her block, the items
+  rising to the Warehouse with their count (none with reduced motion), and she starts her queued job or runs home; a ♥
+  bubble plays her event (`?event=`); **an Uma** opens her sheet (her roster sheet on v3, her profile on the Hearts tab on
+  v4); anything else is a tap as before. Collect all still collects everything.
+- **How they look** (decision 7, FR12, FR13): an Uma whose outfit has a sprite set in master data walks as a sprite once
+  her set is live, at most 8 sets at once, those nearest the view's middle; the rest, and every outfit without a set, are
+  **standees**: her face on a card on a small base, gliding with a bob. Sets download the first time they're needed and
+  stay on the phone.
+- **Not yet: the nod.** Decision 8's gentle `nod` every 4–7 seconds while she works waits on uma-stage: its band stage
+  can't play an action on a figure yet (D77's stage ask). Until then a working Uma stands still at her slot.
 
 ## The bars (FC29, decisions 6 and 8)
 

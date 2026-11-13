@@ -2,7 +2,7 @@
 // pack onto its page beside it, so every design builds. No WebGL or canvas: the page itself is the preview's to check.
 // Invented saves only.
 import { newBlock, newSave, newSaveV4, FARMHOUSE, farmDesign, type SaveV3, type SaveV4 } from '@farm/domain'
-import { FARM_WAVE_1, FARM_WAVE_2, farmProblems, kitMissing, standInFarmAtlas, type KitAtlas, type KitFrame } from '@luismlorenzana/uma-stage'
+import { FARM_WAVE_1, FARM_WAVE_2, farmProblems, kitMissing, standInFarmAtlas, type KitAtlas, type KitFrame } from '@luismlorenzana/uma-stage/formats'
 import { describe, expect, it } from 'vitest'
 import { COPY_EXTRUDE, COPY_GAP, extrudes, farmAtlas, withStandIns } from './farm-kit'
 
