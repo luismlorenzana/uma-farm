@@ -58,6 +58,30 @@ These are the owner's standing direction for anything that reaches the screen:
 - **Optional helpers, from uma-platform:** `pnpm story:push farm` backs up the drafts, and
   `pnpm story:pull farm --drafts` brings them to this Mac.
 
+## From the story: the hundred (2026-11-13)
+
+**Group scenes: asked of the game, for a later packet.** The story's web of the Uma Ranker's 100 holds groups as well as
+pairs:
+
+- **10 families:** sets of sisters, and houses that share a family name.
+- **17 crews:** generations that raced together.
+
+Every character is in at least one. They're in `content/story/circles.json` (the story's own), each with an `id`, a
+`name`, a `shape` (`family` or `crew`), its `members` and a line `about` it.
+
+- **Today:** the pack plays conversations between two characters only (`pairs/<a>-<b>.json`) and the household's
+  scenes.
+- **Asked:** a pack file for scenes with three or more characters, played when enough of a group is met or living on
+  the farm:
+  - a family's scenes;
+  - a crew's reunion;
+  - a whole group at a festival.
+- **Left to the game:**
+  - when it fits the roadmap (Phase 2's long game is the natural place);
+  - how a group scene is triggered;
+  - what it pays.
+- **Until then:** the story writes the duos first. The web has 70 strength-3 ties, and they become pair conversations.
+
 ## Deliver
 
 Nothing to deliver as a packet: this page stays open while the story is written. Commit only tools or original

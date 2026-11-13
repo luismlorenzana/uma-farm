@@ -80,6 +80,38 @@ the Uma Ranker's NPC board. That changes decision 1's "the town's own cast stays
   - read `spot` as her favourite;
   - add both to [the pack's menu](../../story-pack.md), so a `spot` trigger can name them.
 
+## From the story: the hundred (2026-11-13)
+
+The story now has a baseline for the Uma Ranker's whole cast of 100 (its ten tiers): tags for every one, and a web of
+257 ties in which everyone has at least three ties and one closest. The 76 who are Umas in master data are in the pack's
+cast with their Ranker outfit and favourite spot, and each has a thin bible with her favourite line and loved gift. Two
+things the town touches can't reach the game yet.
+
+**1. Sisters.** 24 of the 100 are the Ranker's sisters. A sister is an outfit of an Uma, presented as her own character
+with her own name and profile (the Ranker keeps them in uma-platform's private `ranker/profiles.json`, and its cast
+export names them `s<outfitId>`).
+
+- **Today:**
+  - the pack keys a character by her `characterId`, and a sister shares her elder's, so a sister can't be in the cast;
+  - a tie's `a` and `b` must be digits, so a tie with a sister can't be read;
+  - master data has no sister, so the town can't hold one.
+- **Waiting in the pack:** the story keeps the sisters' tags in `tags.json`'s `waiting` and their 84 ties in
+  `ties.json`'s `waiting`, so the pack checks clean.
+- **Asked:**
+  - the town holds the sisters as characters of their own;
+  - the pack accepts a sister's id (`s<outfitId>`) in the cast, the ties and her bible and route files;
+  - her name, face and bust come from a private source at run time, never git: the story pack's release or master
+    data's private release (left to the worker).
+- **When it lands:** the story moves the sisters into `cast.json` and `ties`.
+
+**2. The town's people in the web.** The town's 14 people (`town.json`) aren't in the web yet.
+
+- **Asked:**
+  - `ties.json` may name one of the town's people;
+  - such a tie never builds a bond, since she doesn't live on the farm;
+  - its line shows on both profiles, and on the town's talk sheet if that fits.
+- **When it lands:** the story writes those ties.
+
 ## Deliver
 
 Branch `feat/f66-the-town` and a pull request; merge and deploy. In it:
