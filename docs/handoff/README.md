@@ -1,12 +1,13 @@
 # Handoff: open work
 
-> **Status: 2026-11-12, after D73. The HD-2D farm leads now, one piece at a time (the owner, D61).** M4 is live at
+> **Status: 2026-11-12, after D76. The HD-2D farm leads now, one piece at a time (the owner, D61).** M4 is live at
 > [uma-farm.web.app](https://uma-farm.web.app); each piece is closed fully and checked back with the owner before the next.
 > - **The HD-2D farm (M7):** F16, [the farm kit's contract](../design/kit-farm.md) ([page](../design/previews/kit-farm.html)),
 >   is done (D62); [F9](tasks/F9-kit-farm.md) is the kit's art, drawn in code by Claude in a uma-platform session (D66); and
 >   F57, the shared stage, shipped as uma-stage 0.1.0, 0.2.1 and 0.3.0 (D69, D65, D68). **F11, the farm on the stage, is
 >   built** (D71): Home's opt-in preview, Account → HD-2D farm, now on F9's painted `kit-farm` (the owner approved its art;
->   pinned in D73, the preview out of the precache); the owner's phone look comes after its deploy. Then F12–F15.
+>   pinned in D73, the preview out of the precache); the owner's phone look comes after its deploy. **F12, the Umas at work, is building** on uma-stage 0.4.0 (ST4, D76).
+>   Then F13–F15.
 > - **The romance core** (F46–F55) is built and deployed dark behind `VITE_FARM_ROMANCE` (D51–D59). **F56** delivers the
 >   private story and goes live with the wipe: its bucket has the owner's yes (D60); its first part (the scripts, the
 >   route and the loader, dark) is done (D67); the bucket and its variable come next, and the publish and the go-live
@@ -73,7 +74,7 @@ from F11 (F3–F10 are the doc's); decision numbers from D8.
 | | F57 | Both apps: the HD-2D stage as a shared package, `uma-stage`: release 1 the move, release 2 the farm's openings | A uma-platform Claude session | L there | — | **Done** (0.1.0 and 0.2.1, D69, D65), below |
 | | F9 | [`kit-farm`, the farm kit's art, drawn in code](tasks/F9-kit-farm.md), wave 1 (87 frames) then wave 2 (30) | Claude, a uma-platform session (D66) | M | F16 ✓ | **Wave 1 shipped** (D70): `@luismlorenzana/uma-art` 2.27.0, `kit-farm`, 87 frames; the owner approved its look (D73) and F11 pinned it; wave 2 waits for its go |
 | | F11 | The farm on the shared stage: Home as the HD-2D farm, an opt-in preview (Account → HD-2D farm), with the stage request ST3 (the occluder fade, fit-to-width); then `kit-farm` pinned in | Claude | M | uma-stage 0.3.0 ✓ (ST3) | **Done** (D71), below; **kit-farm pinned, the preview out of the precache** (D73); the owner's phone look next |
-| | F12 | [Umas at work on the stage](tasks/F12-umas-at-work.md): figures where the save puts them, walks when you move them, Ready bubbles, standees, the live-set cap (FR9–FR14, days as turns), with the stage request ST4 (the fade's figure filter and four small fixes) | Claude | M | F11 ✓, the kit pin, ST4 | [Written](tasks/F12-umas-at-work.md); builds once ST4 ships |
+| | F12 | [Umas at work on the stage](tasks/F12-umas-at-work.md): figures where the save puts them, walks when you move them, Ready bubbles, standees, the live-set cap (FR9–FR14, days as turns), with the stage request ST4 (the fade's figure filter and four small fixes) | Claude | M | F11 ✓, the kit pin ✓, ST4 ✓ (uma-stage 0.4.0, D76) | [Written](tasks/F12-umas-at-work.md); building |
 | | F13, F14 | The Restaurant's serving game; the Forge's merge game, on the stage (FR19, FR20) | Claude | M | F8's contract, F11 | To write |
 | | F15 | The farm-work animations, a request to the sprite pipeline (FR11) | Claude | S | F12, the owner's go | To write |
 | Later, parcels | F10 | The sender: the outbox, `parcels`, `/api/post/parcels` and `/api/post/claims` | Claude | M | F8, uma-platform PO1 | **Parked (D22):** later, once the farm's own loop stands |

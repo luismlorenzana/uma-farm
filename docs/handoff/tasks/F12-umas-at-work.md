@@ -1,6 +1,6 @@
 # F12 — Umas at work on the stage: figures, walks, bubbles, the live-set cap
 
-**uma-farm · Claude · M · Needs: F11 ✓ (D71), the kit pin (D73), and the stage request ST4 (below) · Unblocks: F13 and
+**uma-farm · Claude · M · Needs: F11 ✓ (D71), the kit pin (D73), and ST4 ✓ (uma-stage 0.4.0, P154, D76) · Unblocks: F13 and
 F14 (the workshops' games on the stage), the owner's call to turn the stage on for everyone · Milestone M7, the HD-2D
 farm**
 
@@ -57,6 +57,24 @@ F11's worker found five things the stage could do better (D71). **The first is n
 **Done for ST4:** each option has a test; the farm-band sample shows a figure that doesn't count for the fade leaving
 its roof whole; uma-quest is unchanged. The main session sends it to the uma-platform session with the owner's go, and
 **F12 builds once it ships**. A contained portrait stage, F11's other note, isn't needed: F11 sized its own canvas.
+
+**ST4 shipped as `@luismlorenzana/uma-stage` 0.4.0** (uma-platform P154, 2026-11-12; D76). All five are opt-in, and
+with none used it runs as 0.3.0 did:
+1. `stage.setFadeFigures(ids | (f) => boolean)`, with `f` = `{ id, tile, moving }`. Every figure counts until it's
+   called; "only a Ready Uma counts" is `setFadeFigures((f) => ready.has(f.id))`.
+2. `setWorld(design, kit, { keepCamera: true })`: the camera stays, held inside the new farm's range.
+3. `setWorld(design, kit, { keepWalks: true })`: a walk goes on if her tile and every step left still stand
+   (`pathStands`); any other walk resolves `false` and she stays on her tile (decision 3 walks her again from there).
+4. `new BandStage(canvas, { …, onSettled })` fires once each time the stage comes to rest (camera, walks, fades and
+   grade still), after that frame is drawn, and saver's pacer never skips it; `stage.atRest` answers on demand; and
+   `stop({ draw: true })` draws, then stops. Idle breathing and blinks don't count as motion. Either replaces F11's
+   animation-frame watcher and its `step(0)`.
+5. `farmProblems`, `standInFarmAtlas` and `SAMPLE_FARM` come from `@luismlorenzana/uma-stage/formats` (no three.js, no
+   DOM; ESM and CJS), and the main entry still has them.
+
+It also fixes 0.3.0's fade, which never visibly faded a part that was opaque on its first frame (three.js had compiled
+its shader to write alpha 1); 0.4.0 recompiles the part's materials when the fade turns on or off. uma-quest stays on
+0.3.0. uma-platform ran this repo's lint and 1,040 tests on the packed package.
 
 ## Decisions made
 
@@ -116,7 +134,9 @@ its roof whole; uma-quest is unchanged. The main session sends it to the uma-pla
 2. **The stage side** in `FarmStage.tsx` and `farm-stage.ts`: figures, walks, standees, sets, the cap and the loop's
    wake (decisions 2, 3, 7, 8).
 3. **The bubbles and taps** (decisions 4, 5), with the fade's figure filter (ST4).
-4. **Pin** the uma-stage release with ST4.
+4. **Pin** `@luismlorenzana/uma-stage` 0.4.0 exact (from 0.3.0), in the web app and the domain. Use `onSettled` (or
+   `stop({ draw: true })`) in place of F11's watcher, `keepCamera` in place of restoring the camera, and the
+   `/formats` entry wherever the domain or its tests need `farmProblems` or the stand-in atlas.
 5. **The manual:** [days.md](../../game/days.md) (the farm's figures) and
    [architecture.md](../../game/architecture.md) (figures, sets, the cap).
 
