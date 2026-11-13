@@ -14,6 +14,7 @@ test('anchors follow GitHub: lower case, punctuation dropped, spaces to hyphens'
 
 test('inline Markdown: code is kept whole, links to docs with a page go to the page', () => {
   assert.equal(inline('`a **b**` and **c**'), '<code>a **b**</code> and <strong>c</strong>')
+  assert.equal(inline('**The *n*-th wedding**'), '<strong>The <em>n</em>-th wedding</strong>')
   assert.equal(inline('[mech](game-mechanics.md#the-fields)', 'roadmap.md'), '<a href="game-mechanics.html#the-fields">mech</a>')
   assert.equal(inline('[pkt](handoff/tasks/F9-kit-farm.md)', 'roadmap.md'), '<a href="https://github.com/luismlorenzana/uma-farm/blob/main/docs/handoff/tasks/F9-kit-farm.md">pkt</a>')
   assert.equal(inline('[site](https://uma-farm.web.app)'), '<a href="https://uma-farm.web.app">site</a>')

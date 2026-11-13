@@ -162,6 +162,9 @@ The farm sends items to uma-quest, uma-rpg and uma-racer, one way. It's parked u
 
 ## Your steps now
 
+- **Read the progression proposal,** [design/progression.md](design/progression.md): no global chapters, the farm
+  grows by income and building, the homestead by your life with the Umas, and each Uma has her own chapters. Say go,
+  and F61–F67 and this roadmap follow it.
 - **Read this roadmap** and the five Phase 1 packets: [F61](handoff/tasks/F61-open-story-pack.md),
   [F62](handoff/tasks/F62-story-placeholders.md), [F63](handoff/tasks/F63-lean-start.md),
   [F64](handoff/tasks/F64-the-town.md) and [F65](handoff/tasks/F65-meeting-her.md). Say go, or what to change.

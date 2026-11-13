@@ -16,6 +16,7 @@ export const PAGES = [
   { doc: 'technical/architecture.md', page: 'architecture.html', title: 'Architecture' },
   { doc: 'technical/infrastructure.md', page: 'infrastructure.html', title: 'Infrastructure' },
   { doc: 'handoff/README.md', page: 'handoff.html', title: 'Open work' },
+  { doc: 'design/progression.md', page: 'progression.html', title: 'Progression' },
   { doc: 'design/kit-farm.md', page: 'kit-farm.html', title: 'Farm kit' },
 ]
 
@@ -45,7 +46,7 @@ export function inline(text, fromDoc = 'x.md') {
   let s = text.replace(/`([^`]+)`/g, (_, c) => `\u0000${codes.push(c) - 1}\u0000`)
   s = escape(s)
   s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, href) => `<a href="${escape(linkTarget(href.replace(/&amp;/g, '&'), fromDoc))}">${label}</a>`)
-  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+  s = s.replace(/\*\*((?:[^*]|\*[^*\s][^*]*\*)+)\*\*/g, '<strong>$1</strong>')
   s = s.replace(/(^|[^\w*])\*([^*\s][^*]*)\*(?!\w)/g, '$1<em>$2</em>')
   return s.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${escape(codes[Number(i)])}</code>`)
 }

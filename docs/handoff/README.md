@@ -36,6 +36,7 @@ A packet is written when a piece is next and deleted when it ships. Git keeps th
 
 | What | Where |
 |---|---|
+| **Read the progression proposal:** no global chapters; the farm grows by income and building; each Uma has her own chapters. Say go, and the packets follow it | [progression.md](../design/progression.md) |
 | **Read the roadmap and the five Phase 1 packets,** and say go or what to change | [roadmap.md](../roadmap.md#phase-1-live-with-the-storys-frame) |
 | **The HD-2D farm on your phone:** turn on Account → HD-2D farm, put an Uma to work and watch her walk, end the day, tap her bubble in the morning. Then say how the walk and the bubble feel, and whether the pips can go | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story** however you like | The Farm Story Sandbox on this Mac (`pnpm stories`) |
