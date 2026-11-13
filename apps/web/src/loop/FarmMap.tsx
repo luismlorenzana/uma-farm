@@ -8,7 +8,8 @@
 // tonight and Another day (F50); on v4 the Forge's quick look is the ring bench's once it stands (F53). In the romance
 // build a v4 map grows the homestead's rows after the yard, the town edge moving below them (F54, `homestead-map.tsx`);
 // v3's map is unchanged. With F11's preview switch on (Account → HD-2D farm), the same places draw on the shared HD-2D
-// stage instead (`FarmStage.tsx`, its own chunk with three.js); off, the Hub is as it was. Loaded on demand.
+// stage instead (`FarmStage.tsx`, its own chunk with three.js), with the Umas on it from the same work view and Ready
+// hearts as the pips (F12); off, the Hub is as it was. Loaded on demand.
 import {
   farmEnvV3, FARM_PLACES, farmPlace, placeBlurb, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, STAY_AFFINITY, workNow, type FarmPlace, type LoopPlaceId,
   type FarmSave,
@@ -175,7 +176,7 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
     <>
       {stage ? (
         <Suspense fallback={null}>
-          {!waiting && <FarmStage save={save} places={places} open={peek?.id ?? null} reducedMotion={reducedMotion}
+          {!waiting && <FarmStage save={save} places={places} work={work} hearts={hearts} open={peek?.id ?? null} reducedMotion={reducedMotion}
             paused={FULL_SCREEN.some((key) => params.has(key))} />}
         </Suspense>
       ) : <div className="absolute inset-0 overflow-y-auto overscroll-contain" data-farm-scroll>

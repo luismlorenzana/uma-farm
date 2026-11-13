@@ -25,7 +25,8 @@ export const MAIN_JS_BUDGET = 180_000
  * rules, the homestead's sheet, view, actions and map rows, the morning's house answer, the night level's card and the
  * household player (F54); and the story pack's delivery, its index and released pack (F56); and the HD-2D farm's stage
  * (F11): three.js, uma-stage's band stage and its stand-in kit, the stage Home, its helpers and the farm's design, and
- * kit-farm's loader with its atlas (D73). The Wilds' screens left in F24.
+ * kit-farm's loader with its atlas (D73); and the Umas on the stage, their figures and looks (F12). The Wilds' screens left
+ * in F24.
  * Paths
  * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
@@ -144,6 +145,8 @@ export const LAZY_MODULES = [
   'domain/src/farm/stage.ts',
   'src/loop/farm-kit.ts',
   'uma-art/kit-farm/atlas.json',
+  'src/loop/farm-figures.ts',
+  'src/loop/figure-looks.ts',
 ]
 
 /** Where the HD-2D preview builds (apps/web/vite.config.ts, D73): out of the precache, cached on first use. */

@@ -1,7 +1,9 @@
 // The farm on the HD-2D stage (F11 decisions 2 and 3): the save as a farm design, parsed by uma-stage's own format, with
-// every recipe's frames in the farm kit's contract, and the crops by family. `farmProblems` against the stand-in kit runs
-// in the web's tests, which carry three.js (`apps/web/src/loop/farm-stage.test.ts`).
-import { FARM_WAVE_1, FARM_WAVE_2, farmReach, KIT_REQUIRED, parseFarmDesign, type FarmDesign } from '@luismlorenzana/uma-stage/formats'
+// every recipe's frames in the farm kit's contract, built with no problems on the stand-in farm kit (`farmProblems`, what
+// `BandStage.setWorld` refuses on), and the crops by family. All from the stage's three-free `/formats` entry (0.4.0, ST4).
+import {
+  FARM_WAVE_1, FARM_WAVE_2, farmProblems, farmReach, KIT_REQUIRED, parseFarmDesign, SAMPLE_FARM, standInFarmAtlas, type FarmDesign,
+} from '@luismlorenzana/uma-stage/formats'
 import { describe, expect, it } from 'vitest'
 import { CROP_IDS } from '../goods/ids'
 import { newSave, newBlock, type Plot, type SaveV3 } from '../save/v3'
@@ -82,6 +84,15 @@ describe('the farm design (decision 2)', () => {
     const blocked = new Set((design.props ?? []).filter((p) => blocking.has(p.name)).map((p) => `${p.x},${p.z}`))
     const reach = farmReach(design, blocked)
     for (const m of design.markers.filter((k) => k.kind === 'slot' || k.kind === 'place' || k.kind === 'lot')) expect(reach.has(`${m.x},${m.z}`), `${m.kind} ${m.id}`).toBe(true)
+  })
+
+  it.each(CASES)('builds %s on the stand-in farm kit with no problems', (_, make) => {
+    expect(farmProblems(make(), standInFarmAtlas())).toEqual([])
+  })
+
+  it('agrees with the stage\'s own sample on the stand-in (the check is real)', () => {
+    expect(farmProblems(SAMPLE_FARM, standInFarmAtlas())).toEqual([])
+    expect(farmProblems({ ...SAMPLE_FARM, props: [{ name: 'not-a-frame', x: 0, z: 0 }] }, standInFarmAtlas())).toEqual(['no prop frame not-a-frame'])
   })
 
   it('lays the map\'s eight rows, 32 tiles deep, the Gate in the middle of the seventh, the town edge last', () => {

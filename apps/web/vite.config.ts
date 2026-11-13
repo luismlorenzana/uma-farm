@@ -8,11 +8,11 @@ import { defineConfig } from 'vitest/config'
 
 const buildId = (process.env.VITE_APP_BUILD_ID ?? process.env.GITHUB_SHA ?? 'local').slice(0, 12)
 
-/** The HD-2D preview's files (F11, D73): every chunk holding three.js, uma-stage or the stage Home, and kit-farm's page. They
- * build into `assets/stage/`, which the precache leaves out and a runtime cache keeps once loaded, so only a player with the
- * switch on downloads them (scripts/check-size.mjs checks the built service worker). */
+/** The HD-2D preview's files (F11, D73): every chunk holding three.js, uma-stage or the stage Home (with F12's figures), and
+ * kit-farm's page. They build into `assets/stage/`, which the precache leaves out and a runtime cache keeps once loaded, so
+ * only a player with the switch on downloads them (scripts/check-size.mjs checks the built service worker). */
 const STAGE_DIR = 'assets/stage'
-const STAGE_MODULE = /\/three\/build\/|\/@luismlorenzana\/uma-stage\/|\/src\/loop\/(FarmStage\.tsx|farm-stage\.ts|farm-kit\.ts)$/
+const STAGE_MODULE = /\/three\/build\/|\/@luismlorenzana\/uma-stage\/|\/src\/loop\/(FarmStage\.tsx|farm-stage\.ts|farm-kit\.ts|farm-figures\.ts|figure-looks\.ts)$/
 const STAGE_ASSET = /\/uma-art\/kit-farm\//
 
 /** Writes which source modules each chunk renders to dist/.vite/chunks.json (never deployed or precached), so the size

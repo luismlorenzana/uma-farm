@@ -1,17 +1,14 @@
-// The stage Home's pure half (F11 decisions 2–8): the design builds on the stand-in kit with no problems, what a tap
-// opens, the band Home opens on, the fade's markers, the seasons' grades and the ground under a finger. No WebGL: the
-// stage itself needs a phone's canvas; the preview checks it. Invented saves only.
-import { farmDesign, farmPlots, FARMHOUSE, newBlock, newSave, newSaveV4, type SaveV3, type SaveV4 } from '@farm/domain'
-import { farmProblems, project, SAMPLE_FARM, standInFarmAtlas, validGrade, type FarmMarker, type PickHit, type View } from '@luismlorenzana/uma-stage'
+// The stage Home's pure half (F11 decisions 4–8): what a tap opens, the band Home opens on, the fade's markers, the seasons'
+// grades and the ground under a finger. The design's build on the stand-in kit is the domain's test now, from the stage's
+// three-free `/formats` entry (0.4.0). No WebGL: the stage itself needs a phone's canvas; the preview checks it. Invented
+// saves only.
+import { farmPlots, FARMHOUSE, newSave, newSaveV4, type SaveV3, type SaveV4 } from '@farm/domain'
+import { project, validGrade, type FarmMarker, type PickHit, type View } from '@luismlorenzana/uma-stage'
 import { describe, expect, it } from 'vitest'
 import { bandCentre, fadeMarkers, groundTile, peekLink, rememberCentre, rememberedCentre, SEASON_GRADES, slotPlace, startPlot, tapTarget } from './farm-stage'
 
 const AT = '2026-11-12T10:00:00.000Z'
 const fresh = (): SaveV3 => newSave('u1', AT)
-function everyOpen(): SaveV3 {
-  const save = fresh()
-  return { ...save, farm: { ...save.farm, chapter: 9, points: 30_000 }, buildings: { ...save.buildings, mill: 1, sawmill: 1, smokehouse: 1 }, fields: { blocks: (['A', 'B', 'C', 'D'] as const).map(newBlock) } }
-}
 function v4(houses: number, open = false): SaveV4 {
   const save = newSaveV4('u1', AT)
   const built = Array.from({ length: houses }, (_, i) => ({ name: `Home ${i + 1}`, extended: false }))
@@ -25,18 +22,6 @@ function v4(houses: number, open = false): SaveV4 {
 const M4 = { homestead: false }
 const HOME = { homestead: true }
 const marker = (kind: FarmMarker['kind'], id: string, x = 0, z = 0): PickHit => ({ ref: { kind: 'marker', marker: { kind, id, x, z } }, at: { x, y: 1, z }, depth: 1 })
-
-describe('the design on the stand-in kit (decision 2, KF14)', () => {
-  it.each([
-    ['a fresh v3', fresh(), M4], ['every place open on v3', everyOpen(), M4], ['a v4 with three houses', v4(3), HOME], ['a v4 with every house and place', v4(6, true), HOME],
-  ] as const)('builds %s with no problems', (_, save, options) => {
-    expect(farmProblems(farmDesign(save, options), standInFarmAtlas())).toEqual([])
-  })
-  it('agrees with the stage\'s own sample on the stand-in (the check is real)', () => {
-    expect(farmProblems(SAMPLE_FARM, standInFarmAtlas())).toEqual([])
-    expect(farmProblems({ ...SAMPLE_FARM, props: [{ name: 'not-a-frame', x: 0, z: 0 }] }, standInFarmAtlas())).toEqual(['no prop frame not-a-frame'])
-  })
-})
 
 describe('taps (decision 5)', () => {
   const plots = farmPlots(v4(3), HOME)

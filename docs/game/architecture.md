@@ -45,7 +45,7 @@ after it), and a v2 from the Wilds (F4–F6, retired in F24) migrates on its fir
 | Shell | `src/shell/` | The kit's `AppFrame` unchanged (FM18): the account bar (the date, gold and Farm Rank chips, the sync chip), Farm · Roster · End the day (raised) · Diary · Menu, the menu sheet (`?sheet=menu`: the farm's places by its rows, Account, "Ask before ending the day", the build id), the sync warning; over everything, the start's sheet while picks are pending, then a scene due (F24) |
 | Items | `src/items/` | uma-art's item icons placed from the ids (`frames.ts`) |
 | Account | `src/home/AccountView.tsx` | The kit's Account page: appearance, Notifications "Off: days are turns", **HD-2D farm (preview)** (F11), sign-in, save state, last sync, build, master data's release, safety copies, sign out |
-| The HD-2D farm (preview) | `src/app/stage-switch.ts`, `src/loop/FarmStage.tsx`, `src/loop/farm-stage.ts`, `src/loop/farm-kit.ts` | F11 (D71): the switch (`farm.stage` on the device, `?stage=1`/`0` read at boot by `stage-boot.ts`, before the router), in the main chunk; with it on, Home draws `FarmStage` in the Hub's place, its own chunk with three.js and uma-stage: a `BandStage` (saver, `fit: 'width'`, the fade with no markers until a quick look opens) between the kit's bars, the design from `@farm/domain`'s `farmDesign`, the kit (below), the Hub's place models as overlays, taps and the long-press, the season's grade, the session's scroll. [days.md](days.md#the-hd-2d-farm-the-maps-second-look-f11-a-preview) |
+| The HD-2D farm (preview) | `src/app/stage-switch.ts`, `src/loop/FarmStage.tsx`, `src/loop/farm-stage.ts`, `src/loop/farm-kit.ts`, `src/loop/farm-figures.ts`, `src/loop/figure-looks.ts` | F11 (D71): the switch (`farm.stage` on the device, `?stage=1`/`0` read at boot by `stage-boot.ts`, before the router), in the main chunk; with it on, Home draws `FarmStage` in the Hub's place, its own chunk with three.js and uma-stage: a `BandStage` (saver, `fit: 'width'`, the fade with no markers until a quick look opens and only Ready Umas counting) between the kit's bars, the design from `@farm/domain`'s `farmDesign`, the kit (below), the Hub's place models as overlays, taps and the long-press, the season's grade, the session's scroll; F12 (D77): the Umas as figures, their walks, Ready bubbles and taps (below). [days.md](days.md#the-hd-2d-farm-the-maps-second-look-f11-a-preview) |
 | Push | `public/push-sw.js` | The service worker's push and tap handlers, kept so the server's push stays deliverable; F6's switch, subscription and schedule left the app with the Wilds (F24) |
 | Save | `src/save/` | The device save in Dexie, the store and its sync engine (below). The store holds save v3 (`useLoopSave`): every v2 it meets migrates first |
 | Master data | `src/master/` | The release's manifest, characters, outfits and art through `/api/master`, cached by hash on the device; the roster (`farmRoster`) and the album's rows; the album art adapter; `masterReady()`, which the loop's boot waits on |
@@ -59,7 +59,10 @@ about 0.4 KB; the stage's chunk (`FarmStage`: three.js, uma-stage's band stage a
 161.5 KB gzip (615 KB raw) and loads only with the switch on, `LAZY_MODULES` holding three.js, uma-stage's band stage and stand-in
 kit, `FarmStage.tsx`, `farm-stage.ts` and the domain's `farm/stage.ts`. **The kit pin** (D73) adds `farm-kit.ts` and
 kit-farm's `atlas.json` to the chunk and to `LAZY_MODULES`: 166.8 KB gzip (632 KB raw) as CI measured, main JS unchanged
-(171.67 KB deployed, 171.97 KB romance).
+(171.67 KB deployed, 171.97 KB romance). **F12** (D77) adds `farm-figures.ts` and `figure-looks.ts` to the chunk (and to
+`vite.config.ts`'s `STAGE_MODULE` and `LAZY_MODULES`) and uma-stage 0.4.0: 171.7 KB gzip (646 KB raw; 171.8 romance) as
+CI measured, up 4.9 from the kit pin's; main JS 171.69 KB deployed and 171.98 KB romance (`madeHere` in the store adds
+0.02), the precache unchanged (59 and 89 entries).
 
 **The farm's kit (D73; kit-farm.md KF13, KF14):** `farm-kit.ts` loads `@luismlorenzana/uma-art` 2.27.0's `kit-farm` (one
 2048 page, wave 1's 87 frames) the first time the stage Home mounts: the atlas parsed and checked for kind `farm` with
@@ -81,7 +84,35 @@ would have added 2,026 KB more for every player.
 `farmPlots`, `placeStands`, the crop families `CROP_FAMILY` and `cropFrame`, `fieldsFrames`, `slotId`), typed from
 `@luismlorenzana/uma-stage/formats` with type-only imports: the package is a dev dependency of the domain, so farm-api's
 image and the CommonJS build never load it. Its slot markers are `<place>-1` … `-4` for a work place and `fields-a` …
-`fields-d` for the Fields' blocks.
+`fields-d` for the Fields' blocks. Since uma-stage 0.4.0 (ST4, D76) the domain's test also builds every design on the
+stand-in farm kit with `farmProblems` and `standInFarmAtlas` from `/formats` (three-free), what `setWorld` refuses on.
+
+**The Umas on the stage (F12, D77):** three pieces in the stage chunk, none of which changes a rule or the save (FR14).
+- **`farm-figures.ts`, pure:** `farmFigures` reads who stands where from the save as the Hub's pips read it: FarmMap's own
+  `workView` cards (passed in with its Ready hearts) put each worker at her slot marker, `save.fields` each tender at her
+  block's, and `farmHome`'s rest idle on `yardSpots` (the Dorm's apron, the path in front, the path row toward the bin,
+  the open ground's free tiles: walkable, under no building and no blocking prop of the kit) or, a housed spouse on v4,
+  `houseSpots`; `assignSpots` keeps an idle Uma's spot from the last reading. Each figure's bubble is her work's request
+  when `loopReadyItems` > 0 (so a place's bubbles are its Ready badge's count), the block's ripe crop for a tender, ♥ for a
+  Ready heart. `figureMoves` diffs two readings into place, arrive, walk, run, turn, leave and remove; `moveMode` places
+  everyone at the first reading, a new day or a save this device didn't make, and walks otherwise. `keepFigures` keeps the
+  reading Home last showed for the session (anyone still walking at her walk's start), so a job started on a place's page
+  walks when Home comes back. Tested against the work view's cards, the Fields' pips and `loopReadyWork`.
+- **`madeHere(save)`** in `src/save/game.ts`: whether a save is the one this device's last `commit` made. A push keeps the
+  object, so it stays true; a save adopted from the server, or read at boot, isn't.
+- **`FarmStage.tsx`** applies a reading to the `BandStage`: `addFigure` (her set and face from `figure-looks.ts`),
+  `placeFigure`, `walkTo` (`run` going home or out of the Gate), `removeFigure`; a walk that `setWorld` couldn't keep
+  (`keepWalks`) is walked again from her tile, one with no way places her. `setFadeFigures` counts the Ready Umas only.
+  Bubbles are buttons at `headOf(id)`, placed each frame while anyone walks and when the camera moves, kept inside the
+  stage's edges; collected items fly to the Warehouse's chip with the Web Animations API. A tap whose nearest hit is a
+  figure opens `umaSheet`. The loop starts on any change (`wake`) and stops in `onSettled` (or a short check after a
+  wake that moved nothing) once no finger is down and no one walks: `stop({ draw: true })`; F11's animation-frame watcher
+  and `step(0)` are gone, and `setWorld(…, { keepCamera, keepWalks })` replaces restoring the camera. The dev handle
+  `window.__farmStage` adds `figures`, `onStage`, `walking` and `running`.
+- **`figure-looks.ts`:** her set's key is master data's `art.sprites[outfit]` (the outfit through `outfitFor`, a v4
+  character id's cast outfit), loaded by uma-stage's `loadSpriteSet` through the release client when the cap lets it go
+  live (8, nearest the view's middle), and the loop woken when it arrives; her standee's face is `outfit-faces`, decoded
+  once a session. No set, or not live yet: a standee.
 
 ## API
 
