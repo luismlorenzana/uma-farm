@@ -99,6 +99,12 @@ order.
    outfits.
 3. **The rest, in the Uma Ranker's order.**
 
+## Where they go
+
+Deliver them as you deliver the universe looks: a collection named `dialogue-busts`, approved by the owner in its local
+gallery, then published with `pnpm art:push dialogue-busts`. Each picture then shows on her page in Uma Character Art,
+under "Dialogue Busts".
+
 ## Done when
 
 The pilot's two Umas are in Uma Character Art, in every outfit and every core and romance expression, and the owner has

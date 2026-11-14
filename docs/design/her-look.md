@@ -70,7 +70,9 @@ same style, as busts and faces.
 - **Why one set of faces fits every outfit:** her head is the same in every bust (same size, spot, angle and bangs).
   Only what's below the neck, and what she wears on her head, changes with the outfit.
 - **The format is settled later:** sizes, and how a face sits on a bust, are worked out once the pilot's pictures are in
-  Uma Character Art.
+  Uma Character Art. Until then the pictures go up as a universe-looks collection, `dialogue-busts`, with
+  `pnpm art:push` (uma-platform P163): nothing new is built there yet, and its earlier draft of a bust family is parked
+  until the format is settled.
 - **The game composes them:** the bust, with the face over it, swapped when the expression changes. Both are
   cached on the device.
 - **Fallbacks:**

@@ -38,8 +38,9 @@ she's wearing.
 
 ## Do
 
-1. **Read uma-platform's bust family** (requested 2026-11-13): its manifest type in `@luismlorenzana/uma-data`, pinned at
-   the release that carries the pilot.
+1. **Settle the format with the owner and uma-platform** from the pilot's pictures in Uma Character Art (the
+   `dialogue-busts` collection), then send uma-platform the request for the bust family. Its earlier draft is parked,
+   ready to build from.
 2. **The domain:** the 22 expressions, their fallback chains, and the pack's `emote` menu, with tests.
 3. **The web:** the composed bust in the scene, event and pair players, its cache and preload.
 4. [The game mechanics](../../game-mechanics.md) and `docs/story-pack.md`.
