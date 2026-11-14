@@ -12,11 +12,12 @@ export const MAIN_JS_BUDGET = 180_000
  * the talents, the rank rules and their table, the roster's rows and the Umas' marks; the work operations and their
  * env, the forest's, the Fishery's and the stations' tables, kinds and build rule, and their screens; the Dorm's rules
  * and page, the Gate's quick look and the chats' fallback lines; and the Diary's counts, building and the farm's
- * projects with the Build card, the scene player and the goals' words; and the name sheet, the story pack with its placeholders (the opening's lines among them), the format
+ * projects with the Build card, the scene player and the goals' words; and the name sheet, the story pack with its default story (the opening's lines among them), the format
  * and validator, arrivals and her points; and her route
  * on her sheet with its words, the acts, praise, birthdays and anniversaries, Ready and bond hearts; and the Hearts
  * tab, her profile, the shared roster album, the stand-in marks, the tab's view model and the perks' words; and the
- * pair player and the Diary's Conversations (with bonds' rules in `farm/bonds.ts`); and the event player, the five
+ * pair player and the Diary's Conversations (with bonds' rules in `farm/bonds.ts`); and the event player with the
+ * wedding night and the blank bust, the five
  * plays' rules and their sheet, the level-up and stage-up cards, the events' rules and actions, her Memories' album and
  * the Diary's shelf, with uma-art's emote atlas; and the evening's rules, its words, its actions, its player, Tonight,
  * the morning's invitation answers and the night's fade; and the perks' terms and effects; and the ring
@@ -64,6 +65,7 @@ export const LAZY_MODULES = [
   'domain/src/story/stand-in.ts',
   'domain/src/story/pack.ts',
   'domain/src/story/placeholders.ts',
+  'domain/src/story/default-story.ts',
   'domain/src/story/authored.ts',
   'domain/src/romance/arrivals.ts',
   'domain/src/romance/love.ts',
@@ -83,6 +85,8 @@ export const LAZY_MODULES = [
   'src/loop/PairPlayer.tsx',
   'src/loop/Conversations.tsx',
   'src/loop/EventPlayer.tsx',
+  'src/loop/WeddingNight.tsx',
+  'src/dialogue/blank.tsx',
   'src/loop/PlaySheet.tsx',
   'src/loop/EventCards.tsx',
   'src/loop/event-view.ts',

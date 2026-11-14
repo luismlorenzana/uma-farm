@@ -6,9 +6,10 @@ the same commit, and where it and the code ever differ, the code wins and this d
 
 **What's live and what isn't.** The deployed game is one game on **save v5**: a day of ten actions on a tile farm the
 farmer works by hand, its places, the farm growing by building, and the **romance** (Part 3), played from the story
-pack, and played whole without one: wherever the pack is silent, a placeholder plays (see [What plays without the
-story](#what-plays-without-the-story)). The game is laid out **sideways**, for a phone held in landscape (see [the
-frame](#the-frame-landscape)). A save from before v5 starts over (see [Save versions](#save-versions)).
+pack, and played whole without one: wherever the pack is silent, the default story plays, and every Uma without
+portraits plays on the blank bust (see [What plays without the story](#what-plays-without-the-story)). The game is
+laid out **sideways**, for a phone held in landscape (see [the frame](#the-frame-landscape)). A save from before v5
+starts over (see [Save versions](#save-versions)).
 
 **The tables are generated.** Every table between `<!-- live:… -->` markers is written from the rules by
 `packages/domain/src/docs/render.ts`. A test fails when one is stale, and `pnpm docs:update` rewrites them. Edit the
@@ -2329,7 +2330,7 @@ The Diary tab (`/diary`) holds the world's pages, the farm's projects, the Farm 
 
 ## Part 3 — Hearts: the cast and the romance
 
-> **The romance is the game's.** It plays on save v5 from the story pack, and with placeholders wherever the pack is
+> **The romance is the game's.** It plays on save v5 from the story pack, and with the default story wherever the pack is
 > silent: anyone in town can be met, the welcome list (the pack's, or with no pack master data's first five) at the Gate
 > in the first days, and **People** is the rail's third page (Farm · Town · People · Book · Diary), with the
 > roster's album as its Work view. A save from before v5 starts over as a new farm (see
@@ -2338,9 +2339,10 @@ The Diary tab (`/diary`) holds the world's pages, the farm's projects, the Farm 
 ### The dialogue engine
 
 One engine plays every scene: the opening, meeting her, the ring bench's scene, heart events (and Ask her, and a Memory
-replayed), pair conversations, and the household's scenes and the finale. The evenings and the plays have no lines; the
-evenings' and the calendar's own scenes (dinners, nights in, the wedding night, the festival nights) will play on it as
-they're written, handing it their moment. The story's steps are the same in every scene (`say`, `narrate`, `thought`,
+replayed), the wedding night, pair conversations, and the household's scenes and the finale. The evenings and the plays
+have no lines yet; the evenings' and the calendar's own scenes (dinners, nights in, the festival nights) will play on it
+as their packets land, handing it their moment, and the default story already writes each one
+([what plays without the story](#what-plays-without-the-story)). The story's steps are the same in every scene (`say`, `narrate`, `thought`,
 `choice`, `play`, …).
 
 ```
@@ -2369,10 +2371,9 @@ they're written, handing it their moment. The story's steps are the same in ever
     ms; at once with reduced motion), and neutral fades the last face away; until a new face has loaded, the last one
     stays;
   - **the next line's** portrait and face load while this line shows.
-- **Without her portraits** she shows her master-data bust, without faces, the emote as uma-art's bubble beside it (its
-  own, else its nearest's: happy and laughing a music note, shy a sweat drop, sad an ellipsis, angry an anger mark,
-  surprised an exclamation, thinking a question mark, tender a heart, sleepy a zzz). A role no one plays shows its
-  lettered disc. The default Uma's blank bust comes next ([F76](handoff/tasks/F76-default-uma.md)).
+- **Without her portraits** she shows **the blank bust**: the silhouette of an Uma in the outfit the scene calls for,
+  with a face for every one of the 22 expressions, so her face changes line by line like a portrait's
+  ([the blank bust](#the-blank-bust)). A role no one plays shows its lettered disc.
 
 #### Her portraits
 
@@ -2464,11 +2465,60 @@ the menu shows neutral (the story's check notes it).
 | `dreamy` | Extra | `tender` | `tender` → `happy` → `neutral` |
 <!-- /live -->
 
+#### The blank bust
+
+Every Uma without portraits plays every scene on **the blank bust**, drawn in the web app's code (`dialogue/blank.tsx`),
+so it needs no release and is replaced the moment her portraits are published.
+
+- **The fallback order on a stage:** her portraits, else the blank bust, else (a role no one plays) the role's lettered
+  disc. The blank bust comes before her master-data bust because a scene's point is her face changing line by line,
+  and the master-data bust has no faces. Her master-data face and bust stay where they always were: cards, lists, the
+  town's sheets and her profile.
+- **The base:** a soft silhouette of an Uma (her ears, her long hair, her shoulders) at a portrait's size (525 × 700),
+  in the scene's outfit by [outfits by context](#outfits-by-context): each of the 12 has its colours and its mark (the
+  kimono's crossed collar and gold obi, the wedding dress's veil and gold flowers, the wedding night outfit's soft robe
+  with blush lace, work clothes' overalls, pajamas' dots, and so on).
+- **Her tint:** her hair is her theme colour from master data's character set, softened toward a hair tone; her eyes
+  and her ear ribbon take her second colour. Without one (a stand-in), a tone picked by her id, the same every time.
+- **The face:** a simple face for each of the 22 expressions (224 × 224), laid over the base at its face position (150,
+  188), exactly as a portrait's face is, and swapped with the same 140 ms fade (at once with reduced motion). All 22
+  are drawn, so an emote shows as written; an unknown one shows neutral.
+
+  | Expression | Her eyes | Her mouth | Its marks |
+  |---|---|---|---|
+  | `neutral` | Open | A small smile | — |
+  | `happy` | Smiling arcs | A smile | A light blush |
+  | `laughing` | Squeezed shut | Open, laughing | A light blush |
+  | `surprised` | Wide | A small “o” | Brows high |
+  | `thinking` | Looking up | To one side | Thought dots, one brow up |
+  | `sad` | Drooping | A frown | Worried brows |
+  | `angry` | Glaring | A frown | An anger mark |
+  | `worried` | Open | Wavy | A sweat drop |
+  | `determined` | Set | Firm | A sparkle |
+  | `pouting` | Half-lidded | Pursed | A puffed cheek, a light blush |
+  | `shy` | Looking down | A small smile | A deep blush |
+  | `tender` | Softly closed | A smile | A light blush |
+  | `flustered` | Wide | Wavy | A deep blush, blush lines |
+  | `loving` | Smiling arcs | A smile | A deep blush, a heart |
+  | `tearful-joy` | Smiling arcs | Open, smiling | Tears |
+  | `sleepy` | Closed | A yawn | Z's |
+  | `crying` | Shut tight | Open, sobbing | Streams of tears |
+  | `teasing` | A wink | A cat's smile | A light blush |
+  | `smug` | Half-lidded | A smirk | One brow up |
+  | `embarrassed` | Squeezed shut | Wavy | A deep blush, blush lines, a sweat drop |
+  | `startled` | Wide, small pupils | A big “O” | Alarm lines |
+  | `dreamy` | Half-lidded, looking up | A smile | Sparkles, a light blush |
+
+- **Her place holds while her portraits load,** so a pilot's bust never flashes blank before her portrait.
+- **The blank profile:** where master data has no face for her (a stand-in, or one it doesn't hold), lists and cards
+  show the same head and shoulders on her colour, with her letters ("S1"). Where master data has her face and name,
+  those show, as before.
+
 ### The cast and the story pack
 
 Everyone you've met is one of **the cast**: one character each, keyed by her character id everywhere the save names an
 Uma (the roster, her route, the Dorm, work, bonds, Memories and meeting scenes). She plays one outfit, is met when her
-trigger holds, and has a route of her own. One you meet whom the pack doesn't hold joins the cast bare, on placeholders.
+trigger holds, and has a route of her own. One you meet whom the pack doesn't hold joins the cast bare, on the default story.
 
 #### What the pack holds
 
@@ -2494,7 +2544,7 @@ game reads, what it does in play, and what plays when it's missing.
 | | What | What happens |
 |---|---|---|
 | **An error** | Only what the game can't read: a file that isn't JSON or isn't the shape the game reads, a value the game can't use where it reads it, or a line longer than its screen | It skips the one part it's in (a line, a field, a beat, an event, a bond level, a tie, a character, at most a file); the rest plays |
-| **A note** | Everything else: what isn't written yet, an unusual count, a word that genders the farmer, a bible and the tag sheet disagreeing | Nothing: notes block nothing |
+| **A note** | Everything else: what isn't written yet, an unusual count, a bible and the tag sheet disagreeing | Nothing: notes block nothing |
 
 **The game's backbone** stays as built, and the story writes any of it: her arrival ("event zero"), Friendship 1–10,
 her confession, Romance 1–10, the proposal, the wedding and Spouse 1, 3 and 5 are the 27 rungs the game plays an event
@@ -2524,11 +2574,16 @@ context](#outfits-by-context)).
 - **Her arrival** usually has one choice point and no play. Written with none it pays +50 alone; with more, the first
   pays.
 
-**Every line** is within its screen's length (an error otherwise) and, as notes, follows three rules: `{farmer}` is the
-only placeholder; no word genders the farmer (husband, wife, boyfriend, girlfriend, groom, sir and the like, in anyone's
-lines, and bride in the farmer's own); nothing reads as school. A flag's name is one the save can keep (lowercase
+**Every line** is within its screen's length (an error otherwise) and, as notes, follows two rules: `{farmer}` is the
+only placeholder, and nothing reads as school. **The protagonist is a man** (the owner, 2026-11-14): a line may say he,
+her husband, the groom, and no word about him is a note any more. A flag's name is one the save can keep (lowercase
 letters, digits and `- . : _`), and an option's cost and reveal name goods the game has: the save keeps them, so each is
 an error otherwise.
+
+**Her events past the rungs:** a route may also write her life's events (`wedding-night`, `moving-in`, `s2`, `s4`), her
+occasions (`birthday`, `new-year` and the five festivals by id) and the evenings' scenes (`hangout-<kind>`,
+`date-<kind>`, `dinner-in-town`, `a-night-in`). Each replaces the default story's scene of that id; they pay nothing,
+so their choices are wording only, and the usual sizes don't apply. Any other id is a note, kept for the story.
 
 #### The menu's welcome list, her trigger and her chapters
 
@@ -2598,10 +2653,10 @@ they're needed.
 
 - **Read, never refused.** Every part is read on its own: a part with an error is skipped and the rest plays, so a pack
   never stops the game.
-- **Never waited on.** Every read of the pack goes through one lookup, the pack's or the placeholder
-  (`story/placeholders.ts`), so a part the pack doesn't write plays the game's own: an unscripted rung plays a short
-  card, a pair's unwritten level its two lines, a household beat its one line. Nothing is gated on the story. The next
-  section lists every placeholder.
+- **Never waited on.** Every read of the pack goes through one lookup, the pack's or the default
+  (`story/placeholders.ts`, the default story's home), so a part the pack doesn't write plays the game's own: an
+  unscripted rung plays the default story's event, a pair's unwritten level its two lines, a household beat its one
+  line. Nothing is gated on the story. The next section lists every default.
 - **The save holds ids only:** her character id, rung ids, flags, counts. Never a line of the story.
 
 #### One outfit each, and the resolver
@@ -2621,21 +2676,22 @@ they're needed.
 - **Anyone in town** meets master data through the same resolver: one of the town's people, or any other character,
   plays her default outfit; a role, the Uma who plays it. A character with no outfit shows master data's character face,
   else her name's letters on a disc.
-- **A character master data doesn't hold** shows a lettered disc (her name's first letter and its number, "S1") and reads
+- **A character master data doesn't hold** shows her blank profile (the silhouette of an Uma on her colour, with her
+  name's first letter and its number, "S1") and reads
   D talents in every activity. The stand-ins are named "Stand-in 1" to "Stand-in 3"; any other unknown character is "An
   Uma".
 - **Everyone on the farm stays in the cast.** An Uma on the roster the pack doesn't hold (one a release dropped, or one
-  from an older story) joins the cast bare as the save comes in, at its end, and plays on placeholders: her name and face
-  from master data's default outfit for her, or a lettered disc.
+  from an older story) joins the cast bare as the save comes in, at its end, and plays on the default story: her name and
+  face from master data's default outfit for her, or her blank profile.
 
 #### The stand-in pack
 
 The repo carries an invented stand-in pack in the private pack's layout, so the romance is built and tested without a real
 character, name or line. It's the tests' only: no production build holds it, and the dev server plays no pack unless a
 release is there (`pnpm story:release --stand-in` writes one). Its first Uma, a farmer, has her whole route and every
-optional field; the forager and the fisher have only their arrival scenes and no bible, so the placeholders and the
+optional field; the forager and the fisher have only their arrival scenes and no bible, so the default story and the
 calling's line are exercised. Its opening is four invented lines, three narrated and then the farmer's thought, ending
-on someone at the Gate; it names no welcome list, so its three are the welcome list and its first is day 1's visitor. None of the three outfits is in master data, so all three show lettered discs. The three
+on someone at the Gate; it names no welcome list, so its three are the welcome list and its first is day 1's visitor. None of the three outfits is in master data, so all three show their blank profiles. The three
 stand-ins:
 
 <!-- live:stand-in -->
@@ -2671,8 +2727,8 @@ stand-ins:
   release that can't load (no index and none kept, a file whose hash doesn't match, a route or pair that isn't what the
   index lists) stops the boot with **Try again**.
 - **No pack published plays no pack:** when farm-api serves none at all (a 404 for the index), the game plays with no
-  pack, on placeholders: master data's first five are the cast, so a fresh farm opens and plays whole. The boot waits
-  for master data as well as the index, since the placeholders read it.
+  pack, on the default story: master data's first five are the cast, so a fresh farm opens and plays whole. The boot waits
+  for master data as well as the index, since the default story reads it.
 - **"New story arrived."** A fresh index whose number isn't the one the phone kept last is a new release. Once its pack
   has loaded, the phone keeps its number (`farm.story-news`, a few bytes) until the next night, which opens the
   morning's New today with **"New story arrived · *its note*"**, tagged **New**; a tap opens the People page. It shows
@@ -2685,11 +2741,64 @@ stand-ins:
 
 ### What plays without the story
 
-The game plays whole with no story at all. Wherever it would read the pack, it has a plain placeholder, so a character,
-an event or a scene that isn't written yet still plays and still pays. **Placeholders read as the game's own voice,**
-short and original, with no "placeholder" label in play; the Farm Story Sandbox marks, for each character, what's
-written and what's a placeholder ("In the game" on her page). A pack only adds words, scenes and her own chapters:
-every ladder, event, perk, evening, proposal, wedding and household runs end to end without one.
+The game plays whole with no story at all. Wherever it would read the pack, it plays **the default story**: written
+once for the game, warm and short, adults only, tender and never explicit, with her name, her favourite good and her
+line's work filled in at run time and nobody named. The protagonist is a man: it may say he, her husband, the groom.
+So every Uma plays her whole story from day one, from meeting her to married life, and nothing is blank. It reads as
+the game's own voice, with no "placeholder" label in play; the Farm Story Sandbox marks, for each character, what's
+written and what's the default ("In the game" on her page). Her own story replaces it **piece by piece**: her bible's
+chat set replaces the talks for its stage, her route's event of an id replaces that event (a rung, the wedding night,
+an occasion, an evening's scene), her bible's gifts replace her tastes; anything her pack leaves out stays default.
+Every ladder, event, perk, evening, proposal, wedding and household runs end to end without one.
+
+**The default story** (`story/default-story.ts`, loaded with the story pack, never in the initial JS):
+
+<!-- live:default-story -->
+| Piece | What the default holds | Replaced by the story’s |
+|---|---|---|
+| Her talks | 120: 4 for each stage (acquaintance, friend, farmhand, sweetheart, engaged, married) and temperament (breezy, steady, bold, gritty, clever) | Her bible’s `chats` set for the stage |
+| Her gift reactions | 3 for each taste (loved, liked, neutral, disliked) | — |
+| Her meeting | At the Gate (the welcome list’s), or in town, where you introduce yourself | Her route’s `arrival` |
+| Her events | Every rung (27), and her life’s: `wedding-night`, `moving-in`, `s2`, `s4` | Her route’s event of that id |
+| Her occasions | `birthday`, `new-year`, `flower-show`, `fishing-derby`, `cooking-contest`, `animal-show`, `harvest-cup` | Her route’s event of that id |
+| The evenings’ scenes | `hangout-walk`, `hangout-fishing`, `hangout-picnic`, `hangout-market`, `hangout-cooking`, `hangout-festival`, `date-walk`, `date-fishing`, `date-picnic`, `date-market`, `date-cooking`, `date-crafting`, `date-stargazing`, `date-dance`, `date-boat`, `date-footrace`, `date-festival`, `dinner-in-town`, `a-night-in` | Her route’s event of that id |
+| The night’s companion | 3 morning greetings for each temperament | — |
+| Meals | 3 lines for breakfast and 3 for dinner | — |
+| Her favourite good (`{good}`), the gift she loves | Farming Peach, Ranch Honey, Mining Amethyst, Fishing Seashell, Foraging Chestnut, Cooking Cinnamon, Serving Chocolate, Forging Garnet | Her bible’s loved gift |
+| Her line’s work (`{work}`) | Farming “farming”, Ranch “tending the animals”, Mining “mining”, Fishing “fishing”, Foraging “foraging”, Cooking “cooking”, Serving “serving”, Forging “forging” | Her line (her bible’s, her calling’s) |
+<!-- /live -->
+
+The default scenes that name their outfit (the rest wear the moment's, by [outfits by context](#outfits-by-context)):
+
+<!-- live:default-outfits -->
+| Scene | Her outfit |
+|---|---|
+| `r3` | `garden-party` |
+| `wedding-night` | `wedding-night` |
+| `birthday` | `dinner` |
+| `new-year` | `kimono` |
+| `flower-show` | `garden-party` |
+| `fishing-derby` | `kimono` |
+| `harvest-cup` | `kimono` |
+| `hangout-picnic` | `garden-party` |
+| `hangout-festival` | `kimono` |
+| `date-picnic` | `garden-party` |
+| `date-festival` | `kimono` |
+| `dinner-in-town` | `dinner` |
+| `a-night-in` | `pajamas` |
+<!-- /live -->
+
+- **Her stage, as her talks follow it,** is the Uma loop's ([F79](handoff/tasks/F79-uma-loop.md) builds the rest):
+  acquaintance to Friendship 2; friend from Friendship 3 through the confession's wait (farmhand once she works the
+  farm); sweetheart from the confession through the proposal's wait; engaged until the wedding; married after it.
+- **The wedding night** plays right after the wedding's card, before the Married stage-up: her route's `wedding-night`,
+  else the default's, in the wedding night outfit on a night backdrop, tender and fading to morning. It pays nothing
+  and saves nothing; Skip ends it.
+- **What waits for its packet:** moving in, married life 2 and 4, the occasions, the evenings' scenes, the morning
+  greetings and the meal lines are written and read through the same lookup (`eventOf`, `morningGreetingsOf`,
+  `mealLinesOf`); they play when the Uma loop (F79) and the calendar (F82) give them their moment.
+
+Every other part of the story, and what plays without it:
 
 <!-- live:placeholders -->
 | What the story can give | What plays without it |
@@ -2697,14 +2806,19 @@ every ladder, event, perk, evening, proposal, wedding and household runs end to 
 | The cast | Master data’s first 5 characters, in its order (the welcome list’s size) |
 | The opening | Three short lines: the farm, its nine Carrot seeds, and someone waiting at the Gate (that line only when someone is coming) |
 | Her name and outfit | Her master-data name and default outfit (her first original one) |
-| Her chat lines, by stage | 5 short lines a stage, written for the game (before Friendship 1, her temperament’s) |
-| Her meeting scene | Two short lines and a hello, at the Gate for the welcome list, in town for anyone else; it pays as a written one does. A written one with no choice gets the hello |
-| A heart event | A short card: her moment, her line and your reply; its points and rewards pay as written |
+| Her chat lines, by stage | The default story’s talks: 4 a stage (acquaintance, friend, farmhand, sweetheart, engaged, married) for each of her 5 temperaments |
+| Her gift reactions | The default story’s: 3 lines for each taste (loved, liked, neutral, disliked) |
+| Her meeting scene | The default story’s: at the Gate for the welcome list, in town (you introduce yourself) for anyone else; it pays as a written one does. A written one with no choice gets the hello |
+| A heart event | The default story’s: her moment, her lines with their faces and your reply; its points and rewards pay as written |
+| The wedding night, moving in, married life 2 and 4 | The default story’s: the wedding night in its outfit, tender and fading to morning; they pay nothing |
+| Her occasions | The default story’s 7: her birthday, the five festivals and New Year’s |
+| Her evenings’ scenes | The default story’s 19: a hangout’s and a date’s for each kind, Dinner in town and A night in |
+| Her morning greetings and meal lines | The default story’s: 3 greetings for each temperament, and 3 lines for each meal |
 | A play’s prompt | Its game’s: “Cast the line together.” |
 | Her chapters | “Getting to know her”, “Together”, “The wedding”, “Married life” |
 | Her trigger to meet | Talk with her on three different days |
 | Her favourite line | Her line from master data: the work her stats suit best |
-| Her tastes | Every gift neutral |
+| Her tastes | Her favourite good loved (by her line: a Peach for farming, a Seashell for fishing…), every other gift neutral |
 | Her birthday | Master data’s, or none |
 | Her pet name for you | Your name |
 | Her keepsake | “Her keepsake”, with a plain line |
@@ -2735,22 +2849,22 @@ every ladder, event, perk, evening, proposal, wedding and household runs end to 
 - **Her line from master data** is the work her stats suit best, by the talents' one rule: each activity reads one stat
   (Stamina farming, Guts the ranch, Power mining, Wit fishing, Speed foraging), and a tie goes to the first in that
   order. A line whose places aren't built yet waits as a written one does ("Opens when the Mine is built").
-- **A heart event's card** is her moment, her line and your reply: the warmer reply pays +30, the other +10, and with
+- **A heart event's default** is her moment, her lines with their faces and your reply: the warmer reply pays +30, the other +10, and with
   no play the best reply is a Perfect, so a card pays +50, +30 and +30 at best, as a written heart event does. Her beat's
   setup, place, play and unlock still apply when her bible has them. The big rungs keep their shape: her confession's
   reply holds Yes and Not yet, the proposal follows the ring you chose, and the wedding's last choice is the vows.
-- **Her meeting scene** is two lines and a hello at the Gate for the welcome list, or two lines and a reply in town for
-  anyone else: +50 and the reply's +30 or +10. A written one with no choice gets the Gate's hello, so every meeting pays
+- **Her meeting scene** is the default story's at the Gate for the welcome list, or in town for anyone else, where you
+  introduce yourself: +50 and the reply's +30 or +10. A written one with no choice gets the Gate's hello, so every meeting pays
   as one with a choice does.
 - **A tie's pair** has a conversation at every bond level: the pack's where it writes one, else two short lines, one
   each. A pair the ties don't hold has none ("‹a› and ‹b› are closer now").
 - **The household** plays its scenes at 5, 10 and 15 married and the finale at 20 whatever the pack holds: the pack's
   `open` and `close` where written, else a line each; each spouse's beat, else her one line; the finale's dance.
 
-Each card's first line, which is also its Memory's caption when her beat gives none:
+Each default event's first line, which is also its Memory's caption when her beat gives none:
 
 <!-- live:placeholder-moments -->
-| Rung | The card’s first line (and its Memory’s caption) |
+| Rung | The default event’s first line (and its Memory’s caption) |
 |---|---|
 | Her meeting scene | Someone new is waiting at the Gate. |
 | Friendship 1 | A quiet afternoon with her. |
@@ -2801,7 +2915,8 @@ The rule, and where the name shows:
 | Where it shows | `{farmer}` in every line, filled when the line shows; the save holds the name, never story text |
 <!-- /live -->
 
-No pronouns and no gender are asked, and the farmer is never drawn: lines say "you".
+No pronouns are asked: the protagonist is a man (the owner, 2026-11-14), never drawn. Lines say "you", and may say he,
+her husband, the groom.
 
 #### The opening
 
@@ -2888,8 +3003,8 @@ chapters](#her-chapters); she shows on the People page. There's no cap on how ma
 
 Her meeting scene is her route's arrival scene, and plays as soon as she's met (above), after the opening and the ring
 bench's scene, in the order you met them (by day, then the cast's order). The scene player shows her lines with her bust
-(her portrait in the scene's own outfit, else the day's season, her face the line's emote; else her master-data bust, or
-her disc) and `{farmer}` filled, narration, thoughts in italics, a title line ("Meeting
+(her portrait in the scene's own outfit, else the day's season, her face the line's emote; else the blank bust in that
+outfit with the same face, or a role's disc) and `{farmer}` filled, narration, thoughts in italics, a title line ("Meeting
 Stand-in 1 · Gate"), pauses, flags (wording only) and **her choice**: usually one; written with none she pays +50 alone,
 and with more the first pays.
 
@@ -2910,10 +3025,10 @@ What it pays into her Friendship 1 bar:
 | Written with more than one choice | The first pays; the rest are words only |
 <!-- /live -->
 
-It pays once and is stamped once (`arrivals`). A route without her arrival scene plays the game's own, worth +30 and
-+10: for the welcome list, two lines and a hello at the Gate; for anyone else, two lines and a reply in town ("You get
-talking, and the time slips by."). A written one with no choice ends on the Gate's hello. Any pack can leave one
-unwritten: the release notes it, and the placeholder plays.
+It pays once and is stamped once (`arrivals`). A route without her arrival scene plays the default story's, its reply
+worth +30 or +10: for the welcome list, at the Gate; for anyone else, in town, where you introduce yourself ("You
+introduce yourself, and the time slips by."). A written one with no choice ends on the Gate's hello. Any pack can leave
+one unwritten: the release notes it, and the default plays.
 
 ### Her favourite line and tastes
 
@@ -2934,8 +3049,11 @@ unwritten: the release notes it, and the placeholder plays.
 | Serving | The Restaurant |
 | Forging | The Forge |
 
-- **Her tastes** are her bible's: loved, liked and disliked goods, any number of each. Everything else is neutral, a good not in
-  the game yet counts as neutral, and an Uma without a bible finds every good neutral.
+- **Her tastes** are her bible's: loved, liked and disliked goods, any number of each. Everything else is neutral, and a good
+  not in the game yet counts as neutral. An Uma whose bible names no taste has the default story's: **her favourite good
+  loved** (by her line: a Peach for farming, a Seashell for fishing, the full list in [what plays without the
+  story](#what-plays-without-the-story)), every other good neutral. Her favourite good is what the default story's
+  lines call `{good}`.
 - **Her tastes show** in steps: her loved good from Friendship 1; any good once you've given it, or once an event's option
   or a Choose play has revealed it; every taste from Friendship 7.
 
@@ -3013,9 +3131,10 @@ applies the day's factors and says what it paid. The acts, what each pays and ho
 - **The day's factors multiply once each:** a gift ×3 on her birthday; on her anniversary every act ×2 except the
   evening, which takes its own ×1.5 instead.
 - **Chat** (tap her): +15, once a day each, on the farm or in town ("You've talked today."). Her line for the day is drawn by the
-  account, the day and her id, so it's the same all day. Before Friendship 1 she speaks her temperament's lines; from
-  Friendship 1, her chat set for her stage: friend through her confession (Romance 0 included), partner from Romance 1
-  to the wedding, spouse after it. A stage her bible doesn't write plays the game's five short lines for it.
+  account, the day and her id, so it's the same all day. From Friendship 1 her bible's chat set for her stage plays when
+  it holds any: friend through her confession (Romance 0 included), partner from Romance 1 to the wedding, spouse after
+  it. Anything else plays the default story's talks for her stage in the Uma loop and her temperament, her favourite
+  good and her line's work in.
 - **Gift:** one good from the Warehouse at the stars you choose, once a day each, on the farm or in town ("One gift a day."; a seed
   is "That isn't a gift."). The good is used, and its taste is learnt. Stars multiply by 1 + 0.1 a star above ★1:
 
@@ -3030,7 +3149,7 @@ applies the day's factors and says what it paid. The acts, what each pays and ho
 | Liked, on her birthday (×3) | 90 | 99 | 108 | 117 | 126 |
 | Neutral, on her birthday (×3) | 30 | 33 | 36 | 39 | 42 |
 
-A disliked gift pays 0 and she says one line: “She thanks you, a little puzzled.”
+A disliked gift pays 0 and never takes points away. She says one of the default story’s lines for her taste (“{name} thanks you, a little puzzled.”).
 <!-- /live -->
 
 - **The gift picker** lists the Warehouse by family, each good at each star held, with **its points for her today**
@@ -3576,9 +3695,8 @@ A level is its event. Once her next event is Ready it waits for you, for good: *
   `#e3ebf3`), or a romance backdrop's borrowed frame and tint. A place step changes it mid-scene, and the title follows:
   "The Fields · Friendship 1", "The Pond at night · Romance 5". The speaker's bust is her portrait in the event's outfit
   (its own `outfit`, else its moment's: her wedding, her work, a picnic, the summer shore; else the day's season), her
-  face the line's emote; during narration she keeps her last line's face. Without portraits, her master-data bust (one of
-  the town's people's too; a lettered disc for a stand-in, or for a role no one plays). A wedding's guests wear the day's
-  season.
+  face the line's emote; during narration she keeps her last line's face. Without portraits, the blank bust (one of the
+  town's people's too; a lettered disc for a role no one plays). A wedding's guests wear the day's season.
 
   | Backdrop | Borrowed frame | Tint |
   |---|---|---|
@@ -3592,8 +3710,7 @@ A level is its event. Once her next event is Ready it waits for you, for good: *
   | The hilltop track | The racecourse's | `#d2e7b7` |
   | The sea pier | The fishery workbench's | `#9fc6de` |
 
-- **The emote** is her face; on a master-data bust without faces, a bubble beside it ([the dialogue
-  engine](#the-dialogue-engine)).
+- **The emote** is her face: her portrait's, else the blank bust's ([the dialogue engine](#the-dialogue-engine)).
 - **Her bubble** holds three lines at most, at 16 pt, typed out: **a tap finishes the line, the next tap goes on, a hold
   skips.** Narration and thoughts are italic. A pause goes on by itself (5 s at most).
 - **Skip** (or a hold on the bubble) jumps to the next choice or play, **never past one.** **Auto** goes on after a
@@ -4074,8 +4191,10 @@ A meal already running is never shortened. **The guests:** every spouse on the f
 - **She becomes your spouse** at Spouse 0, her wedding day noted (her anniversaries follow a year on), and takes **her
   room** at once (see Rooms and moves, below). That night everyone on the farm is well fed from tomorrow; two weddings
   in one day feed the farm by the longer reception.
-- **The words** of the bench, the proposal and the wedding say spouse, partner, vows, your wedding and you; never a word
-  that genders the farmer.
+- **The words** of the bench, the proposal and the wedding say spouse, partner, vows, your wedding and you; the
+  protagonist is a man, so a line may say the groom.
+- **The wedding night** follows the wedding's card, before the Married stage-up: her route's `wedding-night`, else the
+  default story's, in the wedding night outfit, tender and fading to morning. It pays nothing and saves nothing.
 
 #### The homestead
 

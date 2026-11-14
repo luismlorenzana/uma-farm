@@ -1,7 +1,8 @@
 // The dialogue engine on master data's synthetic `dialogue-portraits` family (invented ids, fake pictures): a line's
 // pick (the outfit's base, the emote's face or its nearest), the compositor (the face at its base's position, swapped
-// line by line with a fade, at once with reduced motion), the bubble a bust without faces shows, and the art source
-// reading her portraits from the release, with nothing fetched for an Uma the family doesn't hold.
+// line by line with a fade, at once with reduced motion), the blank bust an Uma without portraits shows (her outfit's
+// silhouette, her tint, a face for each of the 22 expressions, swapped as a portrait's), and the art source reading her
+// portraits from the release, with nothing fetched for an Uma the family doesn't hold.
 import { createReleaseClient, type MasterData } from '@luismlorenzana/uma-data'
 import { buildMemoryRelease, createMemorySource, syntheticDialoguePortraits, syntheticMasterData } from '@luismlorenzana/uma-data/testing'
 import { act } from 'react'
@@ -12,7 +13,9 @@ const fixture = vi.hoisted(() => ({ view: null as unknown, release: vi.fn() }))
 vi.mock('../master/master', async (importOriginal) => ({ ...await importOriginal<typeof import('../master/master')>(), masterReady: vi.fn(async () => fixture.view) }))
 vi.mock('../content/client', () => ({ CONTENT: { release: fixture.release, artUrl: async (p: string) => `blob:${p}`, hold: () => () => undefined } }))
 
-const { bubbleOf, SceneBust, SceneLookProvider, FADE_MS } = await import('./Bust')
+const { SceneBust, SceneLookProvider, FADE_MS } = await import('./Bust')
+const { BLANK_FACES, blankTint, mix } = await import('./blank')
+const { EXPRESSION_IDS } = await import('@farm/domain')
 const { portraitPick, setPortraitSource } = await import('./portraits')
 
 const ID = 9000001
@@ -55,15 +58,59 @@ describe('a line’s pick', () => {
   })
 })
 
-describe('the bust without faces', () => {
-  it('shows the emote’s bubble, or its nearest’s: none for neutral', () => {
-    expect(bubbleOf('happy')).toBe('emote/music')
-    expect(bubbleOf('sleepy')).toBe('emote/zzz')
-    expect(bubbleOf('worried')).toBe('emote/ellipsis')
-    expect(bubbleOf('embarrassed')).toBe('emote/sweat')
-    expect(bubbleOf('tearful-joy')).toBe('emote/heart')
-    expect(bubbleOf('neutral')).toBeNull()
-    expect(bubbleOf('wistful')).toBeNull()
+describe('the blank bust', () => {
+  const blank = (emote: string | null, look: Parameters<typeof SceneLookProvider>[0]['value'] = { day: 1 }) => (
+    <SceneLookProvider value={look}><SceneBust who="9000002" name="Another" emote={emote} size={200} /></SceneLookProvider>
+  )
+  it('draws a face for every one of the 22 expressions, each its own', () => {
+    expect(Object.keys(BLANK_FACES).sort()).toEqual([...EXPRESSION_IDS].sort())
+    const looks = new Set(Object.values(BLANK_FACES).map((f) => JSON.stringify(f)))
+    expect(looks.size).toBe(EXPRESSION_IDS.length)
+  })
+  it('tints her hair by her theme colour, else by her id, the same every time', () => {
+    expect(blankTint('9000002', { main: '#ff88aa', sub: '#3366cc' })).toEqual({ hair: mix('#ff88aa', '#5c4a3d', 0.35), ribbon: '#3366cc', eyes: mix('#3366cc', '#2a2030', 0.35) })
+    expect(blankTint('9000002')).toEqual(blankTint('9000002'))
+    expect(blankTint('9000002', { main: 'nonsense', sub: '' }).hair).toMatch(/^#[0-9a-f]{6}$/)
+  })
+  it('shows an Uma without portraits in the scene’s outfit, her face the line’s emote, swapping with the fade', async () => {
+    setPortraitSource({ portraitsOf: async () => null, art: ART })
+    await act(async () => root.render(blank('happy', { own: 'kimono', day: 1 })))
+    await settle()
+    await settle()
+    const bust = $('[data-bust-art="blank"]')!
+    expect(bust.dataset.portrait).toBe('kimono')
+    expect(bust.style.aspectRatio).toBe('525 / 700')
+    expect($('[data-blank-base="kimono"]')).not.toBeNull()
+    const face = $('[data-blank-face]')!
+    expect(face.dataset.blankFace).toBe('happy')
+    expect(face.style.left).toBe(`${(150 / 525) * 100}%`)
+    expect(face.style.top).toBe(`${(188 / 700) * 100}%`)
+    // Every emote is drawn: a romance one and an extra one show as written.
+    await act(async () => root.render(blank('tearful-joy', { own: 'kimono', day: 1 })))
+    await settle()
+    expect(bust.dataset.expression).toBe('tearful-joy')
+    expect($('[data-blank-face="tearful-joy"]')?.style.animation).toContain('portrait-face-in')
+    await act(async () => { await new Promise((r) => setTimeout(r, FADE_MS + 20)) })
+    expect(host.querySelectorAll('[data-bust-art="blank"] > span').length).toBe(1)
+    // An unknown emote is neutral; the wedding night wears its outfit.
+    await act(async () => root.render(blank('wistful', { moments: ['wedding-night'], day: 1 })))
+    await settle()
+    expect($('[data-bust-art="blank"]')?.dataset.expression).toBe('neutral')
+    expect($('[data-bust-art="blank"]')?.dataset.portrait).toBe('wedding-night')
+  })
+  it('holds her place while her portraits load, so a pilot’s bust never flashes blank', async () => {
+    let release: (p: typeof PORTRAITS) => void = () => undefined
+    setPortraitSource({ portraitsOf: () => new Promise((r) => { release = r }), art: ART })
+    await act(async () => root.render(
+      <SceneLookProvider value={{ own: 'work', day: 1 }}><SceneBust who={String(ID)} name="Her" emote="happy" size={200} /></SceneLookProvider>,
+    ))
+    await settle()
+    expect($('[data-bust-art="loading"]')).not.toBeNull()
+    expect($('[data-bust-art="blank"]')).toBeNull()
+    await act(async () => release(PORTRAITS))
+    await settle()
+    await settle()
+    expect($('[data-bust-art="portrait"]')?.dataset.portrait).toBe('farm-work')
   })
 })
 
@@ -149,6 +196,7 @@ describe('the art source', () => {
     expect(art?.dialoguePortraits?.[String(ID)]).toBeTruthy()
     fixture.view = { manifest, art }
     fixture.release.mockResolvedValue(client)
+    fixture.release.mockClear()
     setPortraitSource(null)
     await act(async () => root.render(
       <SceneLookProvider value={{ own: 'work', day: 1 }}>

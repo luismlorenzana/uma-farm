@@ -306,13 +306,13 @@ describe('her bust on the dialogue engine', () => {
     await tapUntil('[data-portrait-face="determined"]')
     expect($('[data-portrait]')?.dataset.portrait).toBe('farm-work')
   })
-  it('an Uma without portraits shows her master-data bust, the emote’s bubble beside it', async () => {
+  it('an Uma without portraits shows the blank bust, her face the line’s emote', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
     await render(<HeartsPage />, `/hearts?memory=${TWO}:arrival`)
     await tapUntil('[data-step="say"]')
-    expect($('[data-portrait]')).toBeNull()
-    expect($('[data-bust-art="master"]')).not.toBeNull()
-    expect($('[data-emote]')?.dataset.emoteFrame).toBe('emote/music')
+    expect($('[data-bust-art="portrait"]')).toBeNull()
+    expect($('[data-bust-art="blank"]')).not.toBeNull()
+    expect($('[data-blank-face]')?.dataset.blankFace).toBe($('[data-bust-art="blank"]')?.dataset.expression)
   })
 })
 

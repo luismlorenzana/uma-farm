@@ -2,11 +2,12 @@
 // families; uma-kit/content owns the authenticated, cached loading. The art comes from the release at runtime only.
 // Every id goes through the one resolver (`outfitFor`), so a roster key, her character id, shows her cast
 // outfit's art, and so does anyone in town (a sister her own outfit's, one of the town's people hers); a character with
-// no outfit shows master data's character face; a cast Uma whose outfit master data doesn't hold (the stand-ins) shows a
-// lettered disc.
+// no outfit shows master data's character face; a cast Uma whose outfit master data doesn't hold (the stand-ins) shows her blank
+// profile: the silhouette of an Uma, with her letters.
 import type { AlbumArt, UmaArtKind } from '@luismlorenzana/uma-kit/album'
 import { AtlasSprite, imagePath, useArtUrl } from '@luismlorenzana/uma-kit/content'
 import type { ArtIndex, ImageFamily } from '@luismlorenzana/uma-data'
+import { BlankProfile, blankTint } from '../dialogue/blank-profile'
 import { discLetters, inCast, outfitFor } from '../story/story'
 import { useMaster } from './master'
 
@@ -28,14 +29,17 @@ function useUrl(kind: UmaArtKind, id: string) {
 const DISC_COLORS = ['#6b5aa6', '#c4573a', '#3a7aa0', '#5f9a3c', '#c08a22', '#8a5a7a', '#4f7a6a', '#a0603a']
 const discColor = (id: string): string => DISC_COLORS[[...id].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7) % DISC_COLORS.length]!
 
-/** A cast Uma master data doesn't hold, or a character with no art of her own: her letters on a coloured disc. */
+/** A cast Uma master data doesn't hold, or a character with no art of her own: her blank profile, the silhouette of an
+ * Uma on her colour with her letters (`blank-profile.tsx`). */
 export function LetterDisc({ id, size }: { id: string; size: number }) {
   const master = useMaster()
-  const name = master.status === 'ready' ? master.view.album.get(id)?.name ?? master.view.names?.get(outfitFor(id)) ?? '' : ''
+  const view = master.status === 'ready' ? master.view : null
+  const name = view ? view.album.get(id)?.name ?? view.names?.get(outfitFor(id)) ?? '' : ''
+  const character = view?.outfits.get(outfitFor(id))?.characterId ?? id
   return (
-    <span aria-hidden className={`font-display mx-auto flex items-center justify-center font-bold text-white ${size >= 120 ? 'rounded-full' : 'size-full'}`}
-      style={{ background: discColor(id), fontSize: Math.max(10, size * 0.34), ...(size >= 120 ? { width: size, maxWidth: '100%', aspectRatio: '1 / 1' } : {}) }} data-disc={id}>
-      {discLetters(name)}
+    <span aria-hidden className={`mx-auto block overflow-hidden ${size >= 120 ? 'rounded-full' : 'size-full'}`}
+      style={size >= 120 ? { width: size, maxWidth: '100%', aspectRatio: '1 / 1' } : undefined}>
+      <BlankProfile id={id} letters={discLetters(name)} tint={blankTint(id, view?.colors?.get(character))} background={discColor(id)} />
     </span>
   )
 }

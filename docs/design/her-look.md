@@ -37,7 +37,7 @@ same style, as busts and faces.
 | Where | Art | Expressions |
 |---|---|---|
 | Cards, the HD-2D farm's standees, lists | Her face (`outfit-faces`) | — |
-| Every scene (the dialogue engine, F75) | Her portrait in the scene's outfit (master data's `dialogue-portraits`, the pilot's two Umas); else her bust (`outfit-busts`) | Her face changes with each line's emote, by the 22 expressions' fallbacks; without portraits, the emote's bubble |
+| Every scene (the dialogue engine, F75) | Her portrait in the scene's outfit (master data's `dialogue-portraits`, the pilot's two Umas); else the blank bust (F76): her silhouette in the outfit's colours | Her face changes with each line's emote: her portrait's by the 22 expressions' fallbacks, else the blank bust's own face for each of the 22 |
 | The HD-2D farm | Her chibi sprite set | The sprite's own actions |
 
 ## Her wardrobe
@@ -78,7 +78,8 @@ same style, as busts and faces.
 - **Fallbacks:**
   - a face not drawn yet shows its fallback (the table below), ending at the bust's own neutral face;
   - a bust not drawn yet for that outfit shows her spring bust;
-  - an Uma with none shows her single master-data bust, as today.
+  - an Uma with none shows the blank bust in the outfit's colours, with its own 22 faces (F76); her master-data bust
+    stays on cards and lists.
 
 ### The expressions
 
@@ -133,7 +134,7 @@ Folded into the owner's rework ([the game's design](game-design.md), 2026-11-14)
 |---|---|---|
 | [F69](../handoff/tasks/F69-bust-art-spec.md) | **The bust art:** her outfits and faces. The pilot is done (12 outfit portraits and 15 faces for each of two Umas); the rest follow | ChatGPT (character art) |
 | F75, done | **The dialogue engine:** the face over the outfit's portrait, the story's `emote` picks the face, outfits by context, every fallback, on master data's `dialogue-portraits` family ([the rules](../game-mechanics.md#the-dialogue-engine)) | Claude |
-| [F76](../handoff/tasks/F76-default-uma.md) | **The default Uma:** a blank bust with 22 faces for every Uma without art | Claude |
+| F76, done | **The default Uma:** a blank bust with 22 faces for every Uma without art, and the default story ([the blank bust](../game-mechanics.md#the-blank-bust)) | Claude |
 | [F79](../handoff/tasks/F79-uma-loop.md) | **The evenings:** Dinner in town and A night in, the wedding night, the night's companion | Claude |
 
 The wardrobe now has 12 outfits, matching the art: the four seasons (spring the default), work clothes, the garden party

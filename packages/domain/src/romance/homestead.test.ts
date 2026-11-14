@@ -414,7 +414,7 @@ describe('the format: household.json and wishes', () => {
     expect(checkHousehold(missing, ctx)).toMatchObject({ errors: [], notes: [] })
   })
 
-  it('skips a scene written twice and a line too long; a speaker outside the scene\'s, gendering words and a stranger\'s lines are notes; a bad wish is skipped', () => {
+  it('skips a scene written twice and a line too long; a speaker outside the scene\'s and a stranger\'s lines are notes; a bad wish is skipped', () => {
     const h = household()
     h.scenes![1]!.at = 5
     h.scenes![0]!.open!.push({ say: ONE, line: 'Hello.' })
@@ -426,7 +426,8 @@ describe('the format: household.json and wishes', () => {
       'houseLines 9000001 1: its line is 121 characters; the screen shows 120; skipped',
     ])
     expect(read.notes).toContain('Household scene at 5 open, step 4: 9000001 isn’t one who speaks here (one outside the cast and the town’s people shows as “An Uma”)')
-    expect(read.notes).toContain('houseLines 9000001 2: “sir” genders the farmer')
+    // The protagonist is a man: a word that genders him is no note.
+    expect(read.notes.filter((n) => n.startsWith('houseLines 9000001 2'))).toEqual([])
     expect(read.notes).toContain('houseLines 9000099: not in the cast')
     expect(read.value!.scenes!.map((s) => s.at)).toEqual([5, 15])
     expect(read.value!.houseLines![ONE]).toEqual(['Good morning, sir.'])

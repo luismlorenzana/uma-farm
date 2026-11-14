@@ -2,9 +2,16 @@
 // lens), a sister (the pack's name, else her elder's, as her sister), one of the town's roles (the Uma who plays it,
 // else the role in words: "The smith"), or any other character of master data's. Names come from master data and the
 // pack at run time, never from git. Loaded with the screens that name people.
-import { CAST, isCastId, isSister, sisterNameOf, sisterOutfit, speakerId, type StoryPack } from '@farm/domain'
-import type { MasterView } from '../master/master'
+import { CAST, eventOf, isCastId, isSister, sisterNameOf, sisterOutfit, speakerId, type PlayedEvent, type StoryPack } from '@farm/domain'
+import { masterReady, type MasterView } from '../master/master'
 import { unknownName } from './story'
+
+/** Her event as the game plays it (`eventOf`: her route's, else the default story's), the default filled in with her name
+ * as the screens know it (master data's, once it's in). */
+export async function herEventOf(pack: StoryPack, id: string, event: string): Promise<PlayedEvent> {
+  const view = await masterReady().catch(() => null)
+  return eventOf(pack, id, event, nameOfAnyone(view, pack, id))
+}
 
 type NamesView = Pick<MasterView, 'album' | 'names' | 'outfits'>
 

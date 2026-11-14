@@ -155,7 +155,7 @@ describe('the opening: opening.json', () => {
       { choice: [{ text: 'Hello.' }, { text: 'Hi.' }] },
       { say: id(2), line: 'x'.repeat(LINE_LIMITS.line + 1) },
       { flag: 'met-at-gate' },
-      { thought: 'Time to get to work, girlfriend.' },
+      { thought: 'Time to get to work, husband.' },
       ...Array.from({ length: 12 }, (_, i) => ({ narrate: `Line ${i + 1}.` })),
     ]
     const { pack, errors, notes } = read({ ...clone(STAND_IN_FILES), opening: { about: 'Invented.', steps } })
@@ -164,7 +164,8 @@ describe('the opening: opening.json', () => {
       `opening.json: Step 6: its line is ${LINE_LIMITS.line + 1} characters; the screen shows ${LINE_LIMITS.line}; skipped`,
       'opening.json: Step 7: the opening plays lines only (say, narrate, thought, wait, place), never a pick; skipped',
     ])
-    expect(notes).toContain('opening.json: Step 8: “girlfriend” genders the farmer')
+    // The protagonist is a man: a word that genders him is no note.
+    expect(notes.filter((n) => n.includes('Step 8'))).toEqual([])
     expect(pack.opening!.about).toBe('Invented.')
     expect(openingOf(pack)).toHaveLength(steps.length - 3)
     expect(openingOf(pack)[1]).toEqual({ say: id(1), line: '“You must be {farmer}.”', emote: 'happy' })
@@ -184,7 +185,7 @@ describe('the opening: opening.json', () => {
     expect(openingOf(shapeless.pack)).toEqual(PLACEHOLDER_OPENING)
   })
 
-  it('the game\'s own three are short and plain: {farmer} the only placeholder, no word that genders the farmer', () => {
+  it('the game\'s own three are short and plain: {farmer} the only placeholder', () => {
     const { errors, notes } = read({ ...clone(STAND_IN_FILES), opening: { steps: PLACEHOLDER_OPENING } })
     expect(errors).toEqual([])
     expect(notes.filter((n) => n.startsWith('opening.json'))).toEqual([])

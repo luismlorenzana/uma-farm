@@ -10,7 +10,7 @@
 //
 // Loaded with the romance's screens and the night.
 import { draw } from '../farm/draw'
-import { CHAT_LINES, type Taste } from './chats'
+import type { Taste } from './chats'
 import type { FestivalId } from '../farm/calendar'
 import type { Temperament } from '../farm/talents'
 import { goodOf, isSeedId } from '../goods/ids'
@@ -18,7 +18,7 @@ import { SaveRuleError } from '../save/rules'
 import type { Love, SaveV4 } from '../save/v4'
 import { takeGoods } from '../save/warehouse'
 import { type StoryPack } from '../story/pack'
-import { chatLinesOf, giftsOf, linePlaces, tasteOf } from '../story/placeholders'
+import { chatLinesOf, defaultTalksOf, giftReactionsOf, giftsOf, linePlaces, talkStageOf, tasteOf } from '../story/placeholders'
 import { NO_BIRTHDAYS, isBirthday, type Birthdays } from './days'
 import { addLove, dayFactor, nextRung, roundPoints, type LovePaid } from './love'
 
@@ -28,8 +28,6 @@ export const LOVE_POINTS = { chat: 15, praise: 20, line: 10, festival: 50 } as c
 export const GIFT_POINTS_V4: Readonly<Record<Taste, number>> = { loved: 60, liked: 30, neutral: 10, disliked: 0 }
 /** A gift's stars: × (1 + 0.1 a star above ★1). */
 export const giftStars = (stars: number): number => 1 + 0.1 * (stars - 1)
-/** What she says to a disliked gift: one fixed line, original and kind. */
-export const DISLIKED_LINE = 'She thanks you, a little puzzled.'
 
 /** Her route, or the refusal for someone not on the farm. */
 function loveOf(save: SaveV4, id: string): Love {
@@ -61,14 +59,25 @@ export function chatSet(love: Pick<Love, 'stage' | 'level'>): ChatSet | null {
   }
 }
 
-/** Today's line from her: from Friendship 1 her set for her stage, her bible's or the stage's placeholders
- * (`chatLinesOf`); before it, her temperament's `CHAT_LINES`. Drawn by the account, the day and her id, so it's the same
- * all day. The app fills `{farmer}` and `{name}`. */
-export function chatLineV4(save: Pick<SaveV4, 'account' | 'calendar' | 'love'>, pack: Pick<StoryPack, 'bibles'>, id: string, temperament: Temperament): string {
+/** Today's line from her: from Friendship 1 her bible's set for her stage when it holds any (`chatLinesOf`); else the
+ * default story's talks for her stage in the Uma loop and her temperament (`talkStageOf`; `farmhand` once she works the
+ * farm). Drawn by the account, the day and her id, so it's the same all day. The app fills `{farmer}` and `{name}`. */
+export function chatLineV4(
+  save: Pick<SaveV4, 'account' | 'calendar' | 'love'>, pack: Pick<StoryPack, 'bibles'> & Partial<Pick<StoryPack, 'cast' | 'master'>>, id: string, temperament: Temperament,
+  farmhand = false,
+): string {
   const love = save.love[id]
   const set = love ? chatSet(love) : null
-  const lines = set ? chatLinesOf(pack, id, set) : CHAT_LINES[temperament]
+  const own = set ? chatLinesOf(pack, id, set) : []
+  const lines = own.length > 0 ? own : defaultTalksOf(pack, id, talkStageOf(love ?? { stage: 'friendship', level: 0 }, farmhand), temperament)
   return lines[Math.floor(draw(save.account.uid, save.calendar.day, `chat:${id}`, 0) * lines.length)]!
+}
+
+/** What she says to a gift today: the default story's line for her taste, drawn by the account, the day and her id. The
+ * gift's name, her favourite good and her line's work are in; the app fills `{farmer}` and `{name}`. */
+export function giftLineV4(save: Pick<SaveV4, 'account' | 'calendar'>, pack: Pick<StoryPack, 'bibles'> & Partial<Pick<StoryPack, 'cast' | 'master'>>, id: string, taste: Taste, gift: string): string {
+  const lines = giftReactionsOf(pack, id, taste, gift)
+  return lines[Math.floor(draw(save.account.uid, save.calendar.day, `gift:${id}`, 0) * lines.length)]!
 }
 
 // --- Gifts ------------------------------------------------------------------------------------------

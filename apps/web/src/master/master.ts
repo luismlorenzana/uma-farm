@@ -24,6 +24,8 @@ export interface MasterView {
   /** Each outfit's character and variant (null for an original outfit), by outfit id: the story's placeholders read her
    * default outfit and her line from them (`story/load.ts`). */
   outfits: ReadonlyMap<string, { characterId: string; variant: string | null }>
+  /** Each character's theme colours (`#rrggbb`), by character id: the blank bust's tint, read at runtime, never in git. */
+  colors?: ReadonlyMap<string, { main: string; sub: string }>
   art: ArtIndex | null
 }
 
@@ -65,7 +67,8 @@ export function masterView(manifest: ReleaseManifest, characters: readonly Chara
     return name ? [[String(c.id), name] as const] : []
   }))
   const kinds = new Map(ours.filter((o) => byCharacter.has(o.characterId)).map((o) => [String(o.id), { characterId: String(o.characterId), variant: o.variant }]))
-  return { manifest, album, stats: new Map(ours.map((o) => [String(o.id), o])), birthdays, names, outfits: kinds, art }
+  const colors = new Map(characters.flatMap((c) => (c.colors ? [[String(c.id), { main: `#${c.colors.main}`, sub: `#${c.colors.sub}` }] as const] : [])))
+  return { manifest, album, stats: new Map(ours.map((o) => [String(o.id), o])), birthdays, names, outfits: kinds, colors, art }
 }
 
 function loadMaster(): void {

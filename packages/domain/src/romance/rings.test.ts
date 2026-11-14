@@ -12,7 +12,7 @@ import { payBin, ship } from '../save/bin'
 import { parseSaveV5 } from '../save/parse-v4'
 import { newSave, newTodayV4, type Love, type SaveV4 } from '../save/v4'
 import { addGoods, goodCount } from '../save/warehouse'
-import { checkBible, gendersFarmer, type Step } from '../story/authored'
+import { checkBible, type Step } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_IN_ROUTE, STAND_INS } from '../story/authored.fixture'
 import { BENCH_SCENE_LINES } from '../story/bench'
 import { storyPackFrom } from '../story/pack'
@@ -306,15 +306,14 @@ describe('the words', () => {
   const all = (list: readonly Step[]): string[] => list.flatMap((s) => 'say' in s ? [s.line] : 'narrate' in s ? [s.narrate] : 'thought' in s ? [s.thought]
     : 'choice' in s ? s.choice.flatMap((o) => [o.text, ...all(o.then ?? [])]) : 'play' in s ? [...(s.play.prompt ? [s.play.prompt] : []), ...all(s.play.good ?? []), ...all(s.play.miss ?? [])] : [])
 
-  it('never genders the farmer: the bench\'s scene and words, the proposal and the wedding', () => {
+  it('fill everything but your name: the bench\'s scene and words, the proposal and the wedding', () => {
     const words = [
       ...BENCH_SCENE_LINES.beats.map((b) => b.line), BENCH_SCENE_LINES.title, ...Object.values(BENCH_WORDS),
       ...all(steps('proposal')), ...all(steps('wedding')),
-      'Choose a ring from the Warehouse.', 'Choose one of her places.', 'Choose a dish for the reception.', 'A better ring: a higher grade than hers.',
     ]
-    expect(words.filter((w) => gendersFarmer(w))).toEqual([])
-    expect([gendersFarmer('the bride and groom'), gendersFarmer('your husband'), gendersFarmer('your spouse and partner')]).toEqual(['groom', 'husband', null])
-    expect(gendersFarmer('a bride', true)).toBe('bride')
+    expect(words.length).toBeGreaterThan(10)
+    // The protagonist is a man (the groom may be named); `{farmer}` is the one placeholder left to fill as a line shows.
+    expect(words.filter((w) => /\{(?!farmer\})/.test(w))).toEqual([])
   })
 })
 

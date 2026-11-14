@@ -1,6 +1,6 @@
 # F79 — The Uma loop
 
-**uma-farm · Claude · L · Needs: F76, F78 · Unblocks: F80 · [Design](../../design/game-design.md#the-uma-loop) ·
+**uma-farm · Claude · L · Needs: F78 (F76 is in) · Unblocks: F80 · [Design](../../design/game-design.md#the-uma-loop) ·
 [Roadmap](../../roadmap.md#the-rework-2026-11-14): step 6**
 
 > From meeting to married life, in the owner's stages: acquaintance, friend, farmhand, sweetheart, proposal, wedding,
@@ -47,6 +47,11 @@ life … cooking meals, and every night I would pickup one Uma to spend the nigh
    - her married life's events and the household's scenes stay as built.
 6. **The occasion scenes the story wrote play on their occasion:** `dinner-in-town` and `a-night-in` as those evenings;
    `wedding-night` on the wedding night. The rest are in F82.
+
+**Already in from F76:** the default story writes every piece this packet plays, read through one lookup per piece
+(`packages/domain/src/story/placeholders.ts`): `talkStageOf` (the six stages, `farmhand` as a flag to set),
+`eventOf(pack, id, 'moving-in' | 's2' | 's4' | 'dinner-in-town' | 'a-night-in' | eveningSceneId(kind, role), name)`,
+`morningGreetingsOf` and `mealLinesOf`. The wedding night already plays after the wedding (`apps/web/src/loop/WeddingNight.tsx`).
 
 ## Do
 

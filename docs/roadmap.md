@@ -95,7 +95,6 @@ table. Its steps, in order:
 
 | Step | What | Packet |
 |---|---|---|
-| 3 | **The default Uma:** a blank bust and profile, and a complete default story, for every Uma without her own | [F76](handoff/tasks/F76-default-uma.md) |
 | 5 | **The town map:** locations, who's there now, introductions, her menu | [F78](handoff/tasks/F78-town-map.md) |
 | 6 | **The Uma loop:** acquaintance, friend, farmhand, sweetheart, the wedding night, moving in, married life with meals and the night's companion | [F79](handoff/tasks/F79-uma-loop.md) |
 | 7 | **Farmhands:** her part-time job, then her farm actions; the work board; aptitudes that grow with practice | [F80](handoff/tasks/F80-farmhands.md) |
@@ -106,6 +105,9 @@ table. Its steps, in order:
 Step 1, landscape, is done: the app sideways, the bar and the rail, side panels, and the portrait HD-2D preview
 retired. Step 2, the dialogue engine, is done: every scene on one engine, the pilot's portraits from master data with
 her face changing line by line and her outfit by context ([the dialogue engine](game-mechanics.md#the-dialogue-engine)).
+Step 3, the default Uma, is done: the blank bust and profile for every Uma without art, and a complete default story
+for every Uma without hers, replaced piece by piece ([what plays without the
+story](game-mechanics.md#what-plays-without-the-story)).
 After step 5 a day can be played end to end. Phone checks follow steps 1, 2, 4, 5 and 7.
 
 **What it changes below:**

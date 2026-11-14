@@ -4,13 +4,14 @@
 // arrival scene replays from the header. A tap on a played tile **replays it from any choice**: from the top or a
 // choice point picked from its list, every option open, nothing paid or saved (`?memory=`, the event player). Loaded on
 // demand.
-import { choicePointsOf, eventOf, type ChoiceOption, type Step } from '@farm/domain'
+import { choicePointsOf, type ChoiceOption, type Step } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Chip, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router'
 import { useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
+import { herEventOf } from '../story/people'
 import { useStory } from '../story/story'
 import { memoryParam } from './EventPlayer'
 import { ALBUM_FILTERS, albumTiles, choicePointWords, memoryCount, type AlbumFilter, type AlbumTile } from './event-view'
@@ -32,7 +33,7 @@ export default function Memories() {
   const replay = (rung: string, from: number | null = null) => withParam(location, 'memory', memoryParam(id, rung, from))
   const open = (tile: AlbumTile) => {
     setPicked({ tile, points: null })
-    void eventOf(pack, id, tile.rung).then((event) => {
+    void herEventOf(pack, id, tile.rung).then((event) => {
       const steps: readonly Step[] = event.steps
       const points = choicePointsOf(steps).map((at) => ({ at, first: (steps[at] as { choice: ChoiceOption[] }).choice[0]?.text ?? '' }))
       setPicked({ tile, points })

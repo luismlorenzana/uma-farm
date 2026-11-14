@@ -103,7 +103,8 @@ describe('her profile\'s perks', () => {
     expect($('[data-pet-name]')?.textContent).toBe('Calls you“Sprout”')
     expect($('[data-keepsake]')?.dataset.keepsake).toBe('Bent Trowel')
     expect($('[data-keepsake]')?.textContent).toContain('+0.25 quality at the Fields')
-    expect($('[data-friend-loved]')).toBeNull()
+    // Her closest friend has no bible: the default story's favourite good for her line (a forager's Chestnut).
+    expect($('[data-friend-loved]')?.dataset.friendLoved).toBe('chestnut')
     await profile(TWO)
     expect($('[data-from-her]')).toBeNull()
     expect($('[data-friend-loved]')?.dataset.friendLoved).toBe('golden-carrot')
