@@ -15,10 +15,12 @@
 // season's line under "Spring begins", the Town notes the night unlocked (a tap opens them in the Diary), and the town's
 // name where she's met in town.
 import {
-  ACTIVITY_NAMES, bedsAt, EVENINGS, farmPlace, FESTIVAL_ACTIONS, FESTIVALS, festivalNameOf, festivalsOf, goodName, itemNameOf, NEW_YEAR_ACTIONS, NEW_YEAR_NAME, RANKS, rungName, SEASON_NAMES,
-  seasonLineOf, storyDayNameOf, SUMMARY_SECTIONS, townNoteOf, worldNamesOf, type FarmPlaceId, type HeartLine, type MorningSummary, type Season, type StoryPack, type SummarySection,
+  ACTIVITY_NAMES, bedsAt, EVENINGS, farmPlace, FESTIVAL_ACTIONS, FESTIVALS, festivalNameOf, festivalsOf, goodName, itemNameOf, NEW_YEAR_ACTIONS, NEW_YEAR_NAME, placeNameOf, RANKS, rungName,
+  SEASON_NAMES, seasonLineOf, sectionOf, storyDayNameOf, SUMMARY_SECTIONS, townNoteOf, worldNamesOf, type FarmPlaceId, type HeartLine, type MorningSummary, type Season, type StoryPack,
+  type SummarySection,
 } from '@farm/domain'
 import { builtWords, farmRankWords, milestoneWords } from './goal-words'
+import { moneyLines } from './money-words'
 import { readParam, type PairWords } from './hearts-view'
 import { challengeWords } from './roster-view'
 import { plural } from './words'
@@ -32,14 +34,18 @@ export interface WorldWords {
   noteTitle: (id: string) => string | null
   day: (id: string) => string | null
   town: string | null
+  /** A place on the farm by the map's name (the world's, else the game's). */
+  place: (id: FarmPlaceId) => string
 }
-export const NO_WORLD: WorldWords = { festival: (id) => festivalNameOf(FESTIVALS, id), seasonLine: () => null, noteTitle: () => null, day: () => null, town: null }
+export const NO_WORLD: WorldWords = {
+  festival: (id) => festivalNameOf(FESTIVALS, id), seasonLine: () => null, noteTitle: () => null, day: () => null, town: null, place: (id) => placeNameOf(null, id),
+}
 /** The world's words from the pack. */
 export function worldWords(pack: Partial<Pick<StoryPack, 'world'>> | null): WorldWords {
   const year = festivalsOf(pack)
   return {
     festival: (id) => festivalNameOf(year, id), seasonLine: (s) => seasonLineOf(pack, s), noteTitle: (id) => townNoteOf(pack, id)?.title ?? null,
-    day: (id) => storyDayNameOf(pack, id), town: worldNamesOf(pack).town,
+    day: (id) => storyDayNameOf(pack, id), town: worldNamesOf(pack).town, place: (id) => placeNameOf(pack, id),
   }
 }
 
@@ -71,6 +77,8 @@ export interface SummaryLine {
   quote?: string
   /** A house that misses you: the card draws Tonight › and Another night under the line. */
   misses?: number
+  /** A short night's line: its tag drawn as a warning. */
+  warn?: boolean
 }
 export interface SummaryPart {
   section: SummarySection
@@ -79,7 +87,7 @@ export interface SummaryPart {
 }
 
 const SECTION_TITLE: Readonly<Record<SummarySection, string>> = {
-  bin: 'The bin', work: 'Work done', ranks: 'Ranks', hearts: 'Hearts', news: 'New today', nudges: 'Today',
+  bin: 'The bin', money: 'Upkeep and loans', work: 'Work done', ranks: 'Ranks', hearts: 'Hearts', news: 'New today', nudges: 'Today',
 }
 const peek = (place: FarmPlaceId): string => `/?peek=${place}`
 /** The field: the farm map, where its tiles are. */
@@ -87,6 +95,8 @@ export const FIELDS = '/'
 
 /** The Dorm's page. */
 export const DORM = '/dorm'
+/** The farm's book: its money. */
+export const BOOK = '/book'
 
 /** An Uma's name from master data, for the ranks and news sections; "An Uma" until it loads. */
 export type NameOf = (outfitId: string) => string
@@ -104,7 +114,7 @@ export interface ReadyNow {
  * §4 Hearts also shows while someone is `ready`. */
 export function summaryParts(summary: MorningSummary, nameOf: NameOf = someone, ready: readonly ReadyNow[] = [], pairs: PairWords | null = null,
   home: HomeWords = NO_HOME, chapterOf: ChapterOf = noChapter, noteOf: NoteOf = noNote, world: WorldWords = NO_WORLD): SummaryPart[] {
-  const sections = SUMMARY_SECTIONS.filter((section) => (section === 'hearts' ? summary.hearts.length + ready.length + home.household.length > 0 : summary[section].length > 0))
+  const sections = SUMMARY_SECTIONS.filter((section) => (section === 'hearts' ? summary.hearts.length + ready.length + home.household.length > 0 : sectionOf(summary, section).length > 0))
   return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs, home, chapterOf, noteOf, world) }))
 }
 
@@ -248,6 +258,9 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
       }))
       return [...sold, { key: 'sold:total', to: '/?sheet=bin', text: `Total · ${gold(summary.bin.reduce((sum, sale) => sum + sale.gold, 0))}` }]
     }
+    case 'money':
+      // The loans' shares, the upkeep, a short night (a warning) or the owed paid: each a tap to the Book.
+      return moneyLines(summary.money ?? [], { place: world.place, house: home.houseName }).map((line): SummaryLine => ({ ...line, to: BOOK }))
     case 'work':
       // The stations' loads, which open the station; the field's growth and what withered, which open the farm.
       return summary.work.map((line): SummaryLine => {

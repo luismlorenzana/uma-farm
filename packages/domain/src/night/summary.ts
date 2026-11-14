@@ -1,6 +1,6 @@
 // The morning summary: data, never sentences. The night's last step builds it from what
 // changed and the app words it, each line a tap to its place. It's replaced each night and set to null when the player
-// dismisses it. Six sections, in order; an empty one is hidden. A new line kind is a new part of the save's parse.
+// dismisses it. Seven sections, in order (the bin, upkeep and loans, work, ranks, hearts, news and today); an empty one is hidden. A new line kind is a new part of the save's parse.
 import type { Season } from '../farm/calendar'
 import type { FarmPlaceId } from '../farm/places'
 import type { Activity, Rank } from '../farm/ranks'
@@ -20,6 +20,17 @@ export interface BinSale {
   gold: number
   demand: boolean
 }
+
+/** §1½ Upkeep and loans, after the bin (`farm/economy.ts`): what the night charged and repaid, in the night's order.
+ * - `loan`: a loan's share of the night's income, `paid` (0 on a night with no sales), and what's `left` (0: cleared);
+ * - `upkeep`: the night's upkeep with any owed from before (`due`), and what was `paid`;
+ * - `short`: gold `owed` after a short night, and the short nights in a row (`nights`: 1 warns, 2 and on is half pace);
+ * - `paid-up`: the upkeep owed from before is paid, the half pace over. */
+export type MoneyLine =
+  | { kind: 'loan'; for: string; paid: number; left: number }
+  | { kind: 'upkeep'; paid: number; due: number }
+  | { kind: 'short'; owed: number; nights: number }
+  | { kind: 'paid-up'; owed: number }
 
 /** §2 Work done: the field overnight: the tiles that grew a stage, and how many of them turned ripe. */
 export interface FieldGrew {
@@ -238,13 +249,16 @@ export interface VowsLine {
 export type HeartLine = InviteLine | BirthdayLine | AnniversaryLine | ArrivedLine | ItemLine | ChoresLine | PerksLine | SideLine | BondLine | HouseLine | HouseMissesLine
   | MovedLine | LevelLine | VowsLine | ChapterLine
 
-/** The morning summary: its six sections. */
+/** The morning summary: its seven sections. */
 export interface MorningSummary {
   /** The morning it opens on: the save's day. */
   day: number
   /** §1 The bin: yesterday's sales by good and star, in the catalogue's order, with the season's demand marked.
    * The total is their gold added up. */
   bin: BinSale[]
+  /** §1½ Upkeep and loans: the loans' shares, the upkeep, a short night or the owed paid. Absent on a morning from before
+   * upkeep, and on one with nothing charged. */
+  money?: MoneyLine[]
   /** §2 Work done: the stations' loads, the field's growth and what withered. */
   work: WorkLine[]
   /** §3 Ranks: rank-ups, then Umas whose points filled tonight with their challenge to meet. */
@@ -258,10 +272,13 @@ export interface MorningSummary {
 }
 
 /** The sections' order. */
-export const SUMMARY_SECTIONS = ['bin', 'work', 'ranks', 'hearts', 'news', 'nudges'] as const
+export const SUMMARY_SECTIONS = ['bin', 'money', 'work', 'ranks', 'hearts', 'news', 'nudges'] as const
 export type SummarySection = typeof SUMMARY_SECTIONS[number]
+
+/** A section's lines: `money` is absent on a morning from before upkeep. */
+export const sectionOf = (summary: MorningSummary, section: SummarySection): readonly unknown[] => summary[section] ?? []
 
 /** The sections with lines, in order: the card shows these and hides the rest. */
 export function summarySections(summary: MorningSummary): SummarySection[] {
-  return SUMMARY_SECTIONS.filter((section) => summary[section].length > 0)
+  return SUMMARY_SECTIONS.filter((section) => sectionOf(summary, section).length > 0)
 }

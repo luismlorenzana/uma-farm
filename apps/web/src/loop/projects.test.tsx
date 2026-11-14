@@ -128,6 +128,22 @@ describe("the Diary's projects", () => {
     expect($('[data-rank-link]')?.getAttribute('href')).toBe('/diary?sheet=rank')
   })
 
+  it('shows each loan as a goal, what\'s owed and when it clears, and points a build short of gold to the mayor\'s office', async () => {
+    const base = farm()
+    useGame.setState({ save: {
+      ...base, gold: 600, items: { 'pine-log': [20, 0, 0, 0, 0] },
+      farm: { ...base.farm, loans: [{ for: 'dorm:2', day: 1, lent: 700, fee: 70, owed: 770, nightly: 80 }] },
+    } })
+    await render(<DiaryPage />, '/diary')
+    expect($$('[data-project-loan]').map((l) => [l.dataset.projectLoan, l.textContent, l.getAttribute('href')])).toEqual([
+      // Day 7 and ten nights: Summer 5.
+      ['dorm:2', 'Dorm level 2770g owed · 80g a night · clears in about 10 nights (Summer 5)', '/book'],
+    ])
+    // The Mill wants only gold now.
+    expect($('[data-project="mill"] [data-state]')?.textContent).toBe('Need 400g more')
+    expect($('[data-to-office]')?.getAttribute('href')).toBe('/town?at=mayor')
+  })
+
   it('says Build when it can, "Builds tonight" once paid, and names what\'s offered but not built yet', async () => {
     useGame.setState({ save: { ...farm(), gold: 5000, items: { 'pine-log': [60, 0, 0, 0, 0] } } })
     await render(<DiaryPage />, '/diary')

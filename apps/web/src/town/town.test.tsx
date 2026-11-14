@@ -164,16 +164,45 @@ describe('the town', () => {
     await click($('[data-location="cafe"]'))
     expect($('[data-place-name]')?.textContent).toBe('Invented Café')
     expect($('[data-keeper]')?.textContent).toBe('Fable · The smith')
-    // The general store: its keeper sells seeds; the mayor's office takes build orders and loans, later.
+    // The general store: its keeper sells seeds; the mayor's office takes build orders and lends toward them.
     await click($('[data-location="store"]'))
     expect($('[data-keeper]')?.textContent).toBe('Dune · The shopkeeper')
     expect($('[data-post-item="seeds"]')?.getAttribute('href')).toBe('/town?at=store&sheet=shop')
     await click($('[data-location="mayor"]'))
     expect($('[data-keeper]')?.textContent).toBe('Ember · The mayor')
-    expect($$('[data-post-item]').map((p) => p.dataset.why)).toEqual(['Coming with upkeep and loans', 'Coming with upkeep and loans'])
+    expect($$('[data-post-item]').map((p) => [p.dataset.postItem, p.getAttribute('href')])).toEqual([['build', '/town?at=mayor&sheet=mayor'], ['loan', '/town?at=mayor&sheet=mayor']])
     // The plaza's keeper is at her office, so the plaza shows none.
     await click($('[data-location="plaza"]'))
     expect($('[data-keeper]')).toBeNull()
+  })
+
+  it('at the mayor\'s office, borrows toward the Mill, builds it on the loan, and repays it', async () => {
+    const day = 5
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...farm(day), gold: 640, items: addGoods(farm(day).items, 'pine-log', 1, 20) } })
+    await render(<TownPage />, '/town?at=mayor')
+    await click(await find('[data-post-item="build"]'))
+    expect(path).toBe('/town?at=mayor&sheet=mayor')
+    await find('[data-mayor]')
+    // The Mill, short 360g: the office lends 400g. The Dorm's level 2 too, short 360g.
+    expect($$('[data-order]').map((o) => [o.dataset.order, o.dataset.borrow])).toEqual([['mill', '400'], ['dorm:2', '400']])
+    expect($('[data-order="mill"] [data-order-terms]')?.textContent).toBe('Need 360g more · 440g owed, a tenth a night from income')
+    expect($('[data-terms]')?.textContent).toContain('Up to 1,000g at Farm Rank 1')
+    expect($('[data-no-loans]')?.textContent).toBe('No loans.')
+    await click($('[data-order="mill"] [data-action="borrow"]'))
+    await until(() => save().farm.loans.length === 1)
+    expect(save()).toMatchObject({ gold: 40, farm: { builds: ['mill'], loans: [{ for: 'mill', lent: 400, fee: 40, owed: 440, nightly: 45 }] } })
+    expect(save().today.actions).toBe(0)
+    await until(() => $('[data-mayor-note]')?.textContent === 'The Mill stands tomorrow, on a loan.')
+    expect($('[data-order="mill"]')?.textContent).toContain('Builds tonight')
+    // One loan at a time: the Dorm waits.
+    expect($('[data-order="dorm:2"] [data-order-why]')?.textContent).toBe('One loan at a time: this one first.')
+    expect($('[data-office-loan="mill"]')?.textContent).toContain('440g owed · 45g a night · clears in about 10 nights (Summer 3)')
+    expect($('[data-office-loan="mill"] [data-action="repay"]')?.textContent).toBe('Repay · need 400g more')
+    // With the gold, repay it all.
+    await act(async () => useGame.setState({ save: { ...save(), gold: 500 } }))
+    await click($('[data-office-loan="mill"] [data-action="repay"]'))
+    await until(() => save().farm.loans.length === 0)
+    expect(save().gold).toBe(60)
   })
 
   it('puts an Uma with a routine where it says', async () => {

@@ -8,12 +8,12 @@ import { BUILD_PLACES, farmPlace, isBuildPlace, type FarmPlaceId } from '../farm
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import { STATION_JOBS, stationJobOf, STATIONS, type StationId } from '../gathering/ids'
 import { GOOD_IDS, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, RING_IDS } from '../goods/ids'
-import type { BinSale, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
+import type { BinSale, MoneyLine, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
 import { amount, bool, count, int, list, object, oneOf, record, SaveParseError, type Obj } from './parse'
 import {
-  ANIMAL_HOME, ANIMAL_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, EXTRA_KINDS, FIELD_TILES, GROUNDS, isDishId, pairKey,
+  ANIMAL_HOME, ANIMAL_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOUSE_LOAN, INCOME_NIGHTS, isDishId, MAX_LOANS, pairKey,
   REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig, type DormSwap,
-  type Expedition, type Extra, type FestivalResult, type RankState, type SaveV5, type StarCounts, type StationLoad, type Tile,
+  type Expedition, type Extra, type FestivalResult, type Loan, type RankState, type SaveV5, type StarCounts, type StationLoad, type Tile,
   type ToolId, type ToolTier, type Warehouse, type WorkshopId,
 } from './v4'
 import { MAX_STARS, parseStockKey } from './warehouse'
@@ -278,10 +278,33 @@ export function parseDiary(value: unknown, path: string): SaveV5['diary'] {
 }
 
 /** A farm's keys: `chapter` and `goals` are an older v4's, from the global chapters, read and ignored (`legacyChapter`
- * keeps what a chapter had opened); `builds` is missing on one, and defaults to none. */
-const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'chapter', 'goals'] as const
+ * keeps what a chapter had opened); `builds` is missing on one, and defaults to none. The accounts (`loans`, `owed`,
+ * `short`, `income`) grow v5 in place: a save from before upkeep has none, read as no loans, nothing owed and no nights,
+ * and nothing moves `updatedAt` for it. */
+const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'chapter', 'goals'] as const
+const LOAN_KEYS = ['for', 'day', 'lent', 'fee', 'owed', 'nightly'] as const
 
-export function parseFarm(value: unknown, path: string): SaveV5['farm'] {
+/** A loan's project: a place you build, a Dorm level (`dorm:2` … `dorm:8`) or a house on the homestead (`house:1` …
+ * `house:6`). */
+const isLoanFor = (id: unknown): id is string => typeof id === 'string' && (isBuildPlace(farmPlace(id)) || DORM_LOAN.test(id) || HOUSE_LOAN.test(id))
+const LOAN_FOR_WORDS = 'expected a place you build, dorm:2 to dorm:8, or house:1 to house:6'
+
+/** The mayor's office's loans: at most two, one a project, each with gold lent, its fee, what's still owed (1 up to both)
+ * and a nightly share from 1. */
+function parseLoans(value: unknown, path: string, today: number): Loan[] {
+  return unique(list(value, path, 0, MAX_LOANS).map((v, i): Loan => {
+    const at = `${path}.${i}`
+    const l = object(v, at, LOAN_KEYS)
+    const lent = int(l.lent, `${at}.lent`, 1, Number.MAX_SAFE_INTEGER)
+    const fee = count(l.fee, `${at}.fee`)
+    return {
+      for: isLoanFor(l.for) ? l.for : fail(`${at}.for`, LOAN_FOR_WORDS), day: int(l.day, `${at}.day`, 1, today), lent, fee,
+      owed: int(l.owed, `${at}.owed`, 1, lent + fee), nightly: int(l.nightly, `${at}.nightly`, 1, lent + fee),
+    }
+  }), path, (l) => l.for)
+}
+
+export function parseFarm(value: unknown, path: string, today: number): SaveV5['farm'] {
   const o = object(value, path, FARM_KEYS)
   const festivals = list(o.festivals, `${path}.festivals`, 0, 1000).map((v, i): FestivalResult => {
     const at = `${path}.festivals.${i}`
@@ -290,9 +313,15 @@ export function parseFarm(value: unknown, path: string): SaveV5['farm'] {
   })
   const builds = o.builds === undefined ? [] : unique(list(o.builds, `${path}.builds`, 0, BUILD_PLACES.length)
     .map((v, i) => (typeof v === 'string' && isBuildPlace(farmPlace(v)) ? v as FarmPlaceId : fail(`${path}.builds.${i}`, 'expected a place you build'))), `${path}.builds`)
+  // Upkeep owed and the short nights in a row come together: a short night leaves gold owed, and paying it clears both.
+  const owed = o.owed === undefined ? 0 : count(o.owed, `${path}.owed`)
+  const short = o.short === undefined ? 0 : count(o.short, `${path}.short`)
+  if ((owed > 0) !== (short > 0)) fail(`${path}.short`, 'expected short nights with upkeep owed, or neither')
   return {
     points: count(o.points, `${path}.points`), festivals,
     counts: counts(o.counts, `${path}.counts`, (k) => KEY.test(k), 'expected an id'), builds,
+    loans: o.loans === undefined ? [] : parseLoans(o.loans, `${path}.loans`, today), owed, short,
+    income: o.income === undefined ? [] : list(o.income, `${path}.income`, 0, INCOME_NIGHTS).map((v, i) => count(v, `${path}.income.${i}`)),
   }
 }
 
@@ -320,6 +349,32 @@ export function parseBinLines(value: unknown, path: string): BinSale[] {
       demand: bool(b.demand, `${at}.demand`),
     }
   }), path, (b) => `${b.id}@${b.stars}`)
+}
+
+/** §1½ Upkeep and loans: a loan's share once a loan (what's left, 0 once cleared), the upkeep once (paid no more than
+ * due), a short night once (gold owed from 1, the nights in a row from 1), the owed paid once. */
+export function parseMoneyLines(value: unknown, path: string): MoneyLine[] {
+  const gold = (v: unknown, at: string, min = 0) => int(v, at, min, Number.MAX_SAFE_INTEGER)
+  return unique(list(value, path, 0, MAX_LOANS + 3).map((v, i): MoneyLine => {
+    const at = `${path}.${i}`
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['loan', 'upkeep', 'short', 'paid-up'] as const)
+    switch (kind) {
+      case 'loan': {
+        const l = object(v, at, ['kind', 'for', 'paid', 'left'])
+        return { kind, for: isLoanFor(l.for) ? l.for : fail(`${at}.for`, LOAN_FOR_WORDS), paid: gold(l.paid, `${at}.paid`), left: gold(l.left, `${at}.left`) }
+      }
+      case 'upkeep': {
+        const u = object(v, at, ['kind', 'paid', 'due'])
+        const due = gold(u.due, `${at}.due`, 1)
+        return { kind, paid: int(u.paid, `${at}.paid`, 0, due), due }
+      }
+      case 'short': {
+        const s = object(v, at, ['kind', 'owed', 'nights'])
+        return { kind, owed: gold(s.owed, `${at}.owed`, 1), nights: gold(s.nights, `${at}.nights`, 1) }
+      }
+      case 'paid-up': return { kind, owed: gold(object(v, at, ['kind', 'owed']).owed, `${at}.owed`, 1) }
+    }
+  }), path, (m) => (m.kind === 'loan' ? `loan:${m.for}` : m.kind))
 }
 
 /** §2 Work done: each station's load once (an output it makes at its stars, 1–8); the field's growth once (tiles that

@@ -97,7 +97,6 @@ table. Its steps, in order:
 |---|---|---|
 | 6 | **The Uma loop:** acquaintance, friend, farmhand, sweetheart, the wedding night, moving in, married life with meals and the night's companion | [F79](handoff/tasks/F79-uma-loop.md) |
 | 7 | **Farmhands:** her part-time job, then her farm actions; the work board; aptitudes that grow with practice | [F80](handoff/tasks/F80-farmhands.md) |
-| 8 | **Upkeep and loans** | [F81](handoff/tasks/F81-economy.md) |
 | 10 | **The ranch and the mine,** in the farm loop's style | [F83](handoff/tasks/F83-ranch-and-mine.md) |
 | 11 | **Illustrations:** her big moments full screen (the first Uma's nine are published), and a gallery on her profile | [F84](handoff/tasks/F84-illustrations.md) |
 
@@ -109,6 +108,10 @@ for every Uma without hers, replaced piece by piece ([what plays without the
 story](game-mechanics.md#what-plays-without-the-story)). Step 9, the calendar, is built: the year on one screen with
 the faces of the Umas who have an event each day, special days' event actions spent on her events, and the occasion
 scenes on their days ([the calendar](game-mechanics.md#the-calendar-screen)).
+Step 8, upkeep and loans, is built: each night's upkeep for what you've built and who lives on the farm, a short
+night's warning and then half pace for the farmhands, and the mayor's office's loans toward a build, repaid from each
+night's income; the Book sets the upkeep beside the income, and a simulated first year pays its way
+([upkeep and loans](game-mechanics.md#upkeep-and-loans)).
 Step 5, the town map, is done: a map you walk around in landscape, who's at each place now (the story's home, job and
 routine, else the day's draw), and her menu at the design's costs, meeting her by introducing yourself, with no welcome
 week ([the town](game-mechanics.md#the-town)). A day can now be played end to end. Phone checks follow steps 1, 2, 4, 5 and 7.

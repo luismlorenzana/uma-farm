@@ -409,6 +409,25 @@ export interface TownTalks {
 /** Whom the town holds talks for: a character id, or a sister's (`s<outfitId>`). */
 export const TOWN_ID = /^s?[1-9]\d{0,11}$/
 
+/** A loan from the mayor's office, toward one build: what it paid for, the day it was taken, the gold lent and its fee,
+ * what's still owed, and the most one night's income repays. It goes once nothing is owed. */
+export interface Loan {
+  /** A place you build (its id), a Dorm level (`dorm:<level>`, 2–8), or a house on the homestead (`house:<n>`, 1–6). */
+  for: string
+  day: number
+  lent: number
+  fee: number
+  owed: number
+  nightly: number
+}
+/** The most loans the farm holds at once: two, from Farm Rank 4. */
+export const MAX_LOANS = 2
+/** The nights of income the farm's book keeps: the last seven. */
+export const INCOME_NIGHTS = 7
+/** A loan's project as the save names it, besides a place's id: a house, `house:<n>`, or a Dorm level, `dorm:<level>`. */
+export const HOUSE_LOAN = /^house:([1-6])$/
+export const DORM_LOAN = /^dorm:([2-8])$/
+
 /** Save v5: the farm's one save. */
 export interface SaveV5 {
   version: 5
@@ -444,8 +463,10 @@ export interface SaveV5 {
    * order they unlocked: the words are the pack's). An older v4 has no `notes`: none. */
   diary: { shipped: Record<string, number>; milestones: string[]; records: Record<string, number>; read: string[]; notes: string[] }
   /** The Farm Rank's points, festivals, lifetime counters, and the places paid for today, standing tomorrow morning
-   * (`builds`, in the order paid). */
-  farm: { points: number; festivals: FestivalResult[]; counts: Record<string, number>; builds: FarmPlaceId[] }
+   * (`builds`, in the order paid). Then the farm's accounts (`farm/economy.ts`): the mayor's office's loans, the upkeep
+   * still owed and the short nights in a row, and the bin's pay on each of the last seven nights, oldest first. A save
+   * from before upkeep has none of them: no loans, nothing owed, no nights. */
+  farm: { points: number; festivals: FestivalResult[]; counts: Record<string, number>; builds: FarmPlaceId[]; loans: Loan[]; owed: number; short: number; income: number[] }
   homestead: Homestead
   /** Her route's event ids played, in order. */
   memories: Record<CharacterId, string[]>
@@ -499,7 +520,7 @@ export function newSave(uid: string, now: string): SaveV5 {
     bonds: {},
     board: [],
     diary: { shipped: {}, milestones: [], records: {}, read: [], notes: [] },
-    farm: { points: 0, festivals: [], counts: {}, builds: [] },
+    farm: { points: 0, festivals: [], counts: {}, builds: [], loans: [], owed: 0, short: 0, income: [] },
     homestead: { houses: [FARMHOUSE], tonight: null, alone: null, slept: [0], furniture: [], married: 0, finale: 0 },
     memories: {},
     arrivals: [],

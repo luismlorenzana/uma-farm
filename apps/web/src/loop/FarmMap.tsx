@@ -338,7 +338,11 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
                 <li key={line.key}>
                   <Link to={line.to} state={{ back: true }} className="flex min-h-11 items-center gap-2 px-3 text-[15px]" data-line={line.key}>
                     <span className="min-w-0 flex-1">{line.text}</span>
-                    {line.tag && <span className="shrink-0 rounded-full bg-success/15 px-1.5 text-[11px] font-semibold text-success" data-tag>{line.tag}</span>}
+                    {line.tag && (
+                      <span className={`shrink-0 rounded-full px-1.5 text-[11px] font-semibold ${line.warn ? 'bg-danger/15 text-danger' : 'bg-success/15 text-success'}`} data-tag data-warn={line.warn || undefined}>
+                        {line.tag}
+                      </span>
+                    )}
                   </Link>
                   {line.quote && <p className="px-3 pb-2 text-[13px] italic text-ink-soft" data-house-quote>{line.quote}</p>}
                   {line.invite && <Suspense fallback={null}><InviteAnswer id={line.invite} /></Suspense>}

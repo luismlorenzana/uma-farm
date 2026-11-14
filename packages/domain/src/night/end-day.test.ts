@@ -37,7 +37,7 @@ afterEach(() => vi.useRealTimers())
 describe('the night', () => {
   it('runs nine steps in order, each a named function', () => {
     expect(NIGHT_STEPS.map((s) => `${s.step} ${s.name}`)).toEqual([
-      '1 noteTonight', '1 payTheBin', '2 growCrops', '3 tendAnimals', '4 finishTheLoads', '4 nightExtras', '4 nightChores', '5 resetWorkshops',
+      '1 noteTonight', '1 payTheBin', '1 settleTheAccounts', '2 growCrops', '3 tendAnimals', '4 finishTheLoads', '4 nightExtras', '4 nightChores', '5 resetWorkshops',
       '6 tickRanks', '6 tickBonds', '6 payLine', '6 shareTheHouses', '6 levelAtNight', '6 countWellFed', '7 witherCrops', '7 turnCalendar',
       '8 raiseBuildings', '8 settleDorm', '8 checkGoals', '8 unlockTownNotes', '8 openRingBench', '8 householdMilestones',
       '9 serveTheReception', '9 houseMorningStep', '9 moveInRooms', '9 vowsMorning', '9 heartsMorning', '9 morningItems', '9 drawInvitations', '9 buildSummary',
@@ -111,7 +111,8 @@ describe('the morning summary', () => {
   it('lists the loads and the field\'s growth, the news and the tiles to water, in section order, hiding empty sections', () => {
     const morning = night(worked(farm(12)))
     expect(morning.summary).toEqual({
-      day: 13, bin: [], ranks: [], hearts: [],
+      // Three Umas home and the Mill: 45g of upkeep a night, after the bin.
+      day: 13, bin: [], money: [{ kind: 'upkeep', paid: 45, due: 45 }], ranks: [], hearts: [],
       // Spring's last night: the watered Carrot grows a stage, then withers out of season.
       work: [{ kind: 'load', station: 'mill', item: 'wheat-flour@1', count: 5 }, { kind: 'grew', tiles: 1, ripe: 0 }, { kind: 'withered', crop: 'carrot', tiles: 1 }],
       news: [{ kind: 'season', season: 'summer' }],
@@ -119,7 +120,7 @@ describe('the morning summary', () => {
     })
     const spring = night(worked(farm(3)))
     expect(spring.summary).toMatchObject({ work: [{ kind: 'load' }, { kind: 'grew', tiles: 1, ripe: 0 }], nudges: [{ kind: 'water', tiles: 1 }] })
-    expect(summarySections(spring.summary!)).toEqual(['work', 'nudges'])
+    expect(summarySections(spring.summary!)).toEqual(['money', 'work', 'nudges'])
   })
 
   it('says a new story release first in New today, by its number only, when the device brings one', () => {
@@ -147,7 +148,9 @@ describe('the bin pays at night (step 1)', () => {
       { kind: 'sold', id: 'salmon', stars: 2, count: 1, gold: 165, demand: true },
     ])
     expect(summarySections(morning.summary!)[0]).toBe('bin')
-    expect(morning.gold).toBe(shipped.gold + 295)
+    // The bin's 295g, less the night's upkeep (three Umas home and the Mill).
+    expect(morning.gold).toBe(shipped.gold + 295 - 45)
+    expect(morning.farm.income).toEqual([295])
     expect(morning.farm.counts[GOLD_SHIPPED]).toBe(295)
     expect(morning.diary.shipped).toEqual({ salmon: 2 })
     expect(morning.bin).toEqual({})
@@ -165,7 +168,8 @@ describe('the bin pays at night (step 1)', () => {
   it('pays once: the next night\'s bin is empty and its summary has no bin', () => {
     const morning = night(ship(stocked(15), 'carrot', 1, 1))
     const next = night(morning)
-    expect(next.gold).toBe(morning.gold)
+    expect(next.gold).toBe(morning.gold - 45)
     expect(next.summary!.bin).toEqual([])
+    expect(next.farm.income).toEqual([60, 0])
   })
 })

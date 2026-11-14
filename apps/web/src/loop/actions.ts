@@ -1,13 +1,13 @@
 // The loop's actions on the day: End the day and dismiss the morning; the day's actions: a tile cleared, tilled,
 // planted, watered and harvested, a forage, a log chopped, a catch, a station's load, a crate shipped and going into
-// town; the goods: take back and buy; paying for a place to build; the roster: the Dorm's levels and swaps; the scenes,
+// town; the goods: take back and buy; paying for a place to build, and the mayor's office's loans; the roster: the Dorm's levels and swaps; the scenes,
 // read once; the farmer's name, the opening, Invite to the farm, and meeting scenes; the chat and the gift (an action
 // each) and praise; and the pair conversations read. Each reads the save right before its rule runs (as
 // `edit`), commits it to the store and the device, and syncs; a refused rule throws its words. The night reads the
 // talents from master data, so it waits for it. Loaded on demand with the loop's screens, so the night's code stays out
 // of the initial JS.
 import {
-  payBuild, buyDorm, cancelSwap, swapDorm, buy, endDay, readScene, SaveRuleError, shopLines, takeBack,
+  payBuild, borrowFor, repayLoan, buyDorm, cancelSwap, swapDorm, buy, endDay, readScene, SaveRuleError, shopLines, takeBack,
   touched, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, inviteToFarm, nameFarmer,
   type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair,
   chop, clearTile, fish, forage, goToTown, harvestTile, plantTile, shipCrate, startLoad, tillTile, waterTile,
@@ -118,6 +118,11 @@ export const intoTown = () => change(goToTown)
 
 /** Pays for a place to build: its gold and goods now, standing tomorrow morning. */
 export const buildPlace = (place: FarmPlaceId) => change((s) => payBuild(s, place))
+
+/** At the mayor's office, in town: borrows what a build is short of gold and orders it (a house named `name`). */
+export const borrowAndBuild = (project: string, name = '') => change((s) => borrowFor(s, project, name))
+/** At the mayor's office, in town: repays a loan in full. */
+export const repayTheLoan = (project: string) => change((s) => repayLoan(s, project))
 
 // --- The roster ----------------------------------------------------------------------------------------------
 

@@ -62,6 +62,9 @@ export * from './farm/dorm'
 export * from './farm/milestones'
 export * from './farm/diary'
 export * from './farm/builds'
+// Upkeep and loans: the night's upkeep and what it counts, an average night's income, a short night's half pace, and the
+// mayor's office's loans toward a build (`borrowFor`, `repayLoan`, the night's shares).
+export * from './farm/economy'
 export * from './story/cast'
 export * from './story/scenes'
 // The town map: its locations, who lives there and who's where today (the story's places, else the day's draw), and her
