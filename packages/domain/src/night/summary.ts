@@ -2,6 +2,7 @@
 // changed and the app words it, each line a tap to its place. It's replaced each night and set to null when the player
 // dismisses it. Six sections, in order; an empty one is hidden. A new line kind is a new part of the save's parse.
 import type { FestivalId, Season } from '../farm/calendar'
+import type { FarmPlaceId } from '../farm/places'
 import type { Activity, Rank } from '../farm/ranks'
 import type { CropId } from '../goods/ids'
 import type { LoopPlaceId } from '../save/parse-v4'
@@ -84,13 +85,13 @@ export interface HouseholdNews {
   married: number
 }
 
-/** §5 New today: the season's first day, or a festival today or tomorrow; the goals' news: the chapter
- * completed tonight, a Farm Rank reached, a Diary milestone or row paid; the household's milestones; and the Dorm's
+/** §5 New today: the season's first day, or a festival today or tomorrow; the goals' news: a place built
+ * overnight, a Farm Rank reached, a Diary milestone or row paid; the household's milestones; and the Dorm's
  * news: its new level in effect and Umas a swap brought home. Arrivals are §4's. */
 export type NewsLine =
   | { kind: 'season'; season: Season }
   | { kind: 'festival'; festival: FestivalId; when: 'today' | 'tomorrow' }
-  | { kind: 'chapter'; chapter: number }
+  | { kind: 'built'; place: FarmPlaceId }
   | { kind: 'farm-rank'; rank: number }
   | { kind: 'milestone'; id: string }
   | { kind: 'dorm'; level: number }

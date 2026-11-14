@@ -5,12 +5,12 @@
 //   2 she's home (away shows "Swap her home")
 //   3 she hasn't played an event today
 //   4 its one setup is met, if it has one: she works a named place today, a named good is in the Warehouse, her bond with
-//     a named Uma has reached a level, a chapter has been reached
+//     a named Uma has reached a level
 //
 // Never an hour, the weather, a season or a festival, and never the story: an event the pack doesn't script plays the
 // game's own short card (`placeholders.ts`). What isn't met is said: `waits` names the first thing in the way, in this
-// order: the route done; S2 and S4, which come at night; a "Not yet" at her confession; a setup that opens with a chapter
-// (a chapter setup, or a place before its chapter); the bar or the day; the ring; away; today; the setup. Read live: Ready
+// order: the route done; S2 and S4, which come at night; a "Not yet" at her confession; a working setup at a place not
+// built yet; the bar or the day; the ring; away; today; the setup. Read live: Ready
 // changes by day, so the morning never stores it.
 import { statusOf } from '@luismlorenzana/uma-work'
 import { workNow } from '../farm/calendar'
@@ -27,7 +27,8 @@ import type { Trigger } from '../story/authored'
 import type { StoryPack } from '../story/pack'
 import { beatOf } from '../story/placeholders'
 import { bar, NIGHT_RUNGS, WAITING_RUNGS } from './love'
-import { ACTIVITY_CHAPTER } from './perks'
+import { placeBuilt, type FarmPlaceId } from '../farm/places'
+import { ACTIVITY_PLACE } from './perks'
 
 
 /** A setup the player meets on the day: she works a place, a good is held, a bond is reached. */
@@ -47,8 +48,8 @@ export type Wait =
   | { kind: 'today' }
   /** Its setup, not met today. */
   | { kind: 'setup'; setup: Setup }
-  /** A chapter not reached, or a place not open before its chapter. */
-  | { kind: 'opens'; chapter: number }
+  /** A working setup at a place not built yet: "Opens when the Kitchen is built". */
+  | { kind: 'opens'; place: FarmPlaceId }
   /** S2 and S4 have no event: they come at night once their bar fills. */
   | { kind: 'night' }
   /** She said "Not yet" at her confession: you ask her again from her profile. */
@@ -61,14 +62,14 @@ export const READY_CONDITIONS: readonly { condition: string; unmet: string }[] =
   { condition: 'Her bar is full for the rung; a waiting rung (the confession, the proposal, the wedding) is Ready the day after the rung before, and the proposal needs a ring in the Warehouse', unmet: '`bar`, `day`, `ring`' },
   { condition: 'She’s home (on the Dorm’s list, or a spouse in her house)', unmet: '`away`: “Swap her home”' },
   { condition: 'She hasn’t played one of her events today', unmet: '`today`' },
-  { condition: 'Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level, a chapter has been reached', unmet: '`setup`; `opens` for a chapter, or for the ranch, mining, cooking, expeditions, serving or forging before their chapters (2, 3, 4, 5, 6, 7)' },
+  { condition: 'Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level', unmet: '`setup`; `opens` for the ranch, mining, cooking, expeditions, serving or forging before their place is built (the Coop, the Mine, the Kitchen, the expedition post, the Restaurant, the Forge)' },
 ]
 /** The waits in the order `readiness` says them: the first one met is the one shown. */
 export const WAIT_ORDER: readonly { kind: Wait['kind']; when: string }[] = [
   { kind: 'done', when: 'Her route is complete (S5 has played)' },
   { kind: 'night', when: 'S2 or S4, bar full: no event, the level comes at night; short of it, `bar`' },
   { kind: 'friend', when: 'She said “Not yet” at her confession: you ask her again from her profile' },
-  { kind: 'opens', when: 'A chapter setup not reached, or a working setup at a place before its chapter' },
+  { kind: 'opens', when: 'A working setup at a place not built yet' },
   { kind: 'bar', when: 'Her bar isn’t full for the rung' },
   { kind: 'day', when: 'A waiting rung, on the day the rung before played' },
   { kind: 'ring', when: 'The proposal, with no ring in the Warehouse' },
@@ -103,10 +104,10 @@ export function setupMet(save: SaveV4, id: string, setup: Setup): boolean {
   }
 }
 
-/** The chapter a setup waits for, or null when it can be met now. */
-function opensWith(save: SaveV4, trigger: Trigger): number | null {
-  const chapter = trigger.kind === 'chapter' ? trigger.chapter : trigger.kind === 'working' ? ACTIVITY_CHAPTER[trigger.activity] ?? null : null
-  return chapter !== null && save.farm.chapter < chapter ? chapter : null
+/** The place a setup waits for, or null when it can be met now. */
+function opensWith(save: SaveV4, trigger: Trigger): FarmPlaceId | null {
+  const place = trigger.kind === 'working' ? ACTIVITY_PLACE[trigger.activity] ?? null : null
+  return place !== null && !placeBuilt(save, place) ? place : null
 }
 
 /** Her next event's state. Home is `dorm.home`, or a spouse in her house (`atHome`). Refused for
@@ -121,8 +122,8 @@ export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: str
   if (NIGHT_RUNGS.includes(rung)) return wait({ kind: now.full ? 'night' : 'bar' })
   if (love.stage === 'confession' && love.friend) return wait({ kind: 'friend' })
   const trigger: Trigger = beatOf(pack, id, rung)?.trigger ?? { kind: 'hearts' }
-  const chapter = opensWith(save, trigger)
-  if (chapter !== null) return wait({ kind: 'opens', chapter })
+  const place = opensWith(save, trigger)
+  if (place !== null) return wait({ kind: 'opens', place })
   const day = save.calendar.day
   if (WAITING_RUNGS.includes(rung) ? day <= love.last : !now.full) return wait({ kind: WAITING_RUNGS.includes(rung) ? 'day' : 'bar' })
   if (rung === 'proposal' && !RING_IDS.some((ring) => goodCount(save.items, ring) > 0)) return wait({ kind: 'ring' })

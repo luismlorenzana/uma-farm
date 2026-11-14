@@ -8,6 +8,7 @@
 import type { ItemRequest, WorkRow } from '@luismlorenzana/uma-work'
 import { DAYS_PER_YEAR } from '../farm/calendar'
 import { START_GOLD, START_SEEDS } from '../farm/farm'
+import type { FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import { seedId, type CropId } from '../goods/ids'
 import type { MorningSummary } from '../night/summary'
@@ -82,8 +83,11 @@ export interface Dig {
 }
 export const DEEPEST_FLOOR = 30
 
-/** The buildings with levels: absent is locked, 0 is "plans held, not built", 1 or more is built. */
-export const BUILDING_IDS = ['dorm', 'coop', 'barn', 'kitchen', 'restaurant', 'forge', 'mill', 'sawmill', 'smokehouse', 'smelter', 'cutter', 'boat'] as const
+/** The buildings with levels: absent or 0 is not built (the Forge's 0 is its ring bench, its fire not lit), 1 or more
+ * is built. Every place you build is one (`farm/builds.ts`); the Dorm's is the level bought. */
+export const BUILDING_IDS = [
+  'dorm', 'coop', 'barn', 'kitchen', 'restaurant', 'forge', 'mill', 'sawmill', 'smokehouse', 'smelter', 'cutter', 'boat', 'mine', 'quarry', 'dock', 'expeditions',
+] as const
 export type BuildingId = typeof BUILDING_IDS[number]
 export const BUILDING_MAX_LEVEL = 10
 
@@ -369,7 +373,9 @@ export interface SaveV4 {
   bonds: Record<string, number>
   board: BoardRequest[]
   diary: { shipped: Record<string, number>; milestones: string[]; records: Record<string, number>; read: string[] }
-  farm: { points: number; chapter: number; goals: Record<string, number>; festivals: FestivalResult[]; counts: Record<string, number> }
+  /** The Farm Rank's points, festivals, lifetime counters, and the places paid for today, standing tomorrow morning
+   * (`builds`, in the order paid). */
+  farm: { points: number; festivals: FestivalResult[]; counts: Record<string, number>; builds: FarmPlaceId[] }
   homestead: Homestead
   /** Her route's event ids played, in order. */
   memories: Record<CharacterId, string[]>
@@ -392,8 +398,7 @@ export function newRosterUma(day: number): RosterUma {
 /** The Farmhouse: house 0, there from day 1 (its rule amended). */
 export const FARMHOUSE: House = { name: 'Farmhouse', extended: false }
 
-/** Day 1 on v4: 500g, 9 Carrot seeds, Block A of 9 tilled plots, the Dorm at level 1 (3 beds), chapter 1,
- * the Farmhouse, the farmer's name empty, nobody on the roster: the name sheet, then the opening, bring the first three. */
+/** Day 1 on v4: 500g, 9 Carrot seeds, Block A of 9 tilled plots, the Dorm at level 1 (3 beds), the Farmhouse, the farmer's name empty, nobody on the roster: the name sheet, then the opening, bring the first three. */
 export function newSave(uid: string, now: string): SaveV4 {
   return {
     version: 4,
@@ -419,7 +424,7 @@ export function newSave(uid: string, now: string): SaveV4 {
     bonds: {},
     board: [],
     diary: { shipped: {}, milestones: [], records: {}, read: [] },
-    farm: { points: 0, chapter: 1, goals: {}, festivals: [], counts: {} },
+    farm: { points: 0, festivals: [], counts: {}, builds: [] },
     homestead: { houses: [FARMHOUSE], tonight: null, alone: null, slept: [0], furniture: [], married: 0, finale: 0 },
     memories: {},
     arrivals: [],

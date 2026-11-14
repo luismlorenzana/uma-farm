@@ -1,9 +1,8 @@
 // Authored arrivals: the farm's Umas are only the cast, and each walks in when the story says. Nothing is drawn: no
-// start picks, no Gate visitors, no chapter recruit.
+// start picks, no Gate visitors. Meeting her in town replaces arrivals later.
 //
 //   opening    the opening scene, day 1: read or skipped, it joins the opening's Umas (a player's change): the cast's
 //              `opening`, else those who arrive at it, else the welcome list (`openingOf`)
-//   chapter n  the night chapter n completes, inside `completeChapter`
 //   festival   the morning of that festival's day in its year (year 1 unless named), built or not
 //   beds n     the morning the Dorm's level n takes effect
 //   event      the morning after another Uma's named event plays (`<characterId>:<eventId>`, or a bare event id: anyone's)
@@ -17,14 +16,13 @@ import { seedTies } from '../farm/bonds'
 import { farmDay, FESTIVALS, type FestivalId } from '../farm/calendar'
 import { joinRoster } from '../farm/dorm'
 import { newLove, type SaveV4 } from '../save/v4'
-import type { Arrival, CastEntry } from '../story/authored'
+import type { Arrival } from '../story/authored'
 import { castEntry, type StoryPack } from '../story/pack'
 import { arrivesOf, openingOf } from '../story/placeholders'
 
-/** The five kinds of arrival, as the manual lists them. */
+/** The four kinds of arrival, as the manual lists them. */
 export const ARRIVAL_KINDS: readonly { kind: Arrival['kind']; when: string; where: string }[] = [
   { kind: 'opening', when: 'The opening scene, day 1: read or skipped, it brings the opening’s Umas: the cast file’s `opening` list, else those whose arrival is the opening, else the welcome list', where: 'The opening scene' },
-  { kind: 'chapter', when: 'The night chapter *n* completes, in place of a drawn recruit (chapter 1 today; chapters 2–7 once they’re built)', where: 'Night step 8, `checkGoals`' },
   { kind: 'festival', when: 'The morning of that festival’s day in its year (year 1 unless the cast names one), built or not', where: 'Night step 8, `arriveUmas`' },
   { kind: 'beds', when: 'The morning the Dorm’s level *n* takes effect (levels 4–8)', where: 'Night step 8, `arriveUmas`' },
   { kind: 'event', when: 'The morning after another Uma’s named event plays (`<characterId>:<eventId>`, or an event id: anyone’s)', where: 'Night step 8, `arriveUmas`' },
@@ -44,10 +42,9 @@ function eventPlayed(save: Pick<SaveV4, 'memories'>, after: string): boolean {
 }
 
 /** Whether her arrival holds on this save, as step 8 sees it (after the Dorm settles, the date already turned). */
-export function arrivalHolds(save: Pick<SaveV4, 'calendar' | 'dorm' | 'farm' | 'diary' | 'memories'>, arrival: Arrival): boolean {
+export function arrivalHolds(save: Pick<SaveV4, 'calendar' | 'dorm' | 'diary' | 'memories'>, arrival: Arrival): boolean {
   switch (arrival.kind) {
     case 'opening': return save.diary.read.includes('scene:1:open')
-    case 'chapter': return save.farm.chapter > arrival.chapter
     case 'festival': return save.calendar.day >= festivalArrivalDay(arrival.festival, arrival.year ?? 1)
     case 'beds': return save.dorm.level >= arrival.dormLevel
     case 'event': return eventPlayed(save, arrival.after)
@@ -85,13 +82,8 @@ export function joinOpening(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>
   return openingOf(pack).reduce((next, id) => (next.roster[id] || !castEntry(pack, id) ? next : arrive(next, id, pack).save), save)
 }
 
-/** The chapter's authored arrival: the first cast Uma whose arrival is chapter `n`, or null. */
-export function chapterArrival(pack: Pick<StoryPack, 'cast'>, chapter: number): CastEntry | null {
-  return pack.cast.umas.find((u) => { const arrival = arrivesOf(pack, u.characterId); return arrival?.kind === 'chapter' && arrival.chapter === chapter }) ?? null
-}
-
-/** What brings the next arrivals, never who: up to three triggers still waiting, most likely first: the
- * chapter's end, the Dorm's next arrival level, the next festivals by date, then events. Empty when everyone is here. */
+/** What brings the next arrivals, never who: up to three triggers still waiting, most likely first: the Dorm's next
+ * arrival level, the next festivals by date, then events. Empty when everyone is here. */
 export function nextArrivals(save: SaveV4, pack: Pick<StoryPack, 'cast'>, max = 3): Arrival[] {
   const waiting = pack.cast.umas.flatMap((u) => {
     const arrival = arrivesOf(pack, u.characterId)
@@ -100,8 +92,8 @@ export function nextArrivals(save: SaveV4, pack: Pick<StoryPack, 'cast'>, max = 
   const key = (a: Arrival): string => JSON.stringify(a)
   const seen = new Set<string>()
   const unique = waiting.filter((a) => (seen.has(key(a)) ? false : (seen.add(key(a)), true)))
-  const when = (a: Arrival): number => a.kind === 'chapter' ? a.chapter : a.kind === 'beds' ? a.dormLevel : a.kind === 'festival' ? festivalArrivalDay(a.festival, a.year ?? 1) : 0
-  const kinds = ['chapter', 'beds', 'festival', 'event'] as const
+  const when = (a: Arrival): number => a.kind === 'beds' ? a.dormLevel : a.kind === 'festival' ? festivalArrivalDay(a.festival, a.year ?? 1) : 0
+  const kinds = ['beds', 'festival', 'event'] as const
   const byKind = kinds.map((k) => unique.filter((a) => a.kind === k).sort((a, b) => when(a) - when(b)))
   const firsts = byKind.flatMap((list) => list.slice(0, 1))
   const rest = byKind.flatMap((list) => list.slice(1))

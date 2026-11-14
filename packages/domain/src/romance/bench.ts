@@ -1,10 +1,11 @@
 // The ring bench: the proposal needs a ring, and the Forge's
 // merge game comes later, so the Forge's building opens early as a bench with no game. The night after the
 // first Romance 8 event anyone plays, step 8 sets `buildings.forge = 0` (the building held, its fire not lit) and Ida
-// Stone's scene comes up the next morning (`story/bench.ts`); chapter 7 still lights the fire.
+// Stone's scene comes up the next morning (`story/bench.ts`); building the Forge's merge game lights the fire.
 //
 //   a ring of grade g  =  3 refined goods of grade g, any family, any mix (planks, fillets, flours, preserves, dried goods;
-//                         the mining families' ingots, blocks and cut gems from chapter 3, the ring's own recipe)
+//                         the mining families' ingots, blocks and cut gems once the Smelter and the Cutter stand, the
+//                         ring's own recipe)
 //   no gold, no game, no assistant, no score: a Rough make, ★1 in the Warehouse; one ring a day (`today.ring`)
 //
 // Worked: 3 Cedar Planks (G3, 60g each) make an Iron Ring (`ring-g3`, 340g); 3 Salmon Fillets (G5) a Cobalt Ring. Her
@@ -14,6 +15,7 @@
 import { goodOf, GOODS, isRingId, ringGrade, ringId, RING_IDS, type GoodFamily } from '../goods/ids'
 import { starPrice } from '../goods/prices'
 import { SaveRuleError } from '../save/rules'
+import { placeBuilt } from '../farm/places'
 import type { FarmSave, SaveV4 } from '../save/v4'
 import { addGoods, goodCount, takeGoods } from '../save/warehouse'
 import type { Warehouse } from '../save/v4'
@@ -34,20 +36,22 @@ export const openBench = (save: SaveV4): SaveV4 => (benchDue(save) ? { ...save, 
 
 /** A ring takes three refined goods of its grade. */
 export const RING_INPUTS = 3
-/** The mining families' refined goods (ingots, stone blocks, cut gems) count from chapter 3, when their places open. */
+/** The mining families' refined goods (ingots, stone blocks, cut gems) count once the Smelter and the Cutter stand. */
 export const MINING_FAMILIES: readonly GoodFamily[] = ['ores', 'stones', 'crystals']
-export const MINING_CHAPTER = 3
+/** Whether the bench takes the mining families' goods: the Smelter and the Cutter both built. */
+export const miningOpen = (save: Pick<FarmSave, 'buildings'>): boolean => placeBuilt(save, 'smelter') && placeBuilt(save, 'cutter')
 
-/** The ring's own recipe for a grade: 2 of its ingot and 1 of its cut gem, from chapter 3. */
+/** The ring's own recipe for a grade: 2 of its ingot and 1 of its cut gem, once the Smelter and the Cutter stand. */
 export function forgeRecipe(grade: number): { ingot: string; gem: string } {
   const of = (family: GoodFamily) => GOODS.find((g) => g.family === family && g.refined && g.grade === grade)!.id
   return { ingot: of('ores'), gem: of('crystals') }
 }
 
-/** Whether the bench takes a good at the farm's chapter: any refined good, the mining families' from chapter 3. */
-export function benchTakes(chapter: number, id: string): boolean {
+/** Whether the bench takes a good on this farm: any refined good, the mining families' once the Smelter and the Cutter
+ * stand (`mining`). */
+export function benchTakes(mining: boolean, id: string): boolean {
   const good = goodOf(id)
-  return !!good && good.refined && (chapter >= MINING_CHAPTER || !MINING_FAMILIES.includes(good.family))
+  return !!good && good.refined && (mining || !MINING_FAMILIES.includes(good.family))
 }
 
 /** One of the three: a good at its stars. */
@@ -59,28 +63,29 @@ const CATALOGUE = new Map(GOODS.map((g, i) => [g.id, i]))
 
 /** The held goods a grade's ring could take: the lowest value first (★1 price × the star's factor), then
  * fewer stars, then the catalogue's order. */
-export function benchStock(save: Pick<SaveV4, 'items' | 'farm'>, grade: number): BenchStock[] {
-  return Object.entries(save.items).flatMap(([id, row]) => (benchTakes(save.farm.chapter, id) && goodOf(id)!.grade === grade
+export function benchStock(save: Pick<SaveV4, 'items' | 'buildings'>, grade: number): BenchStock[] {
+  const mining = miningOpen(save)
+  return Object.entries(save.items).flatMap(([id, row]) => (benchTakes(mining, id) && goodOf(id)!.grade === grade
     ? row.flatMap((count, i): BenchStock[] => (count > 0 ? [{ id, stars: i + 1, count, value: starPrice(id, i + 1) }] : []))
     : [])).sort((a, b) => a.value - b.value || a.stars - b.stars || (CATALOGUE.get(a.id) ?? 0) - (CATALOGUE.get(b.id) ?? 0))
 }
 
 /** The three a grade's ring would take now: the lowest-value goods first, any family, any mix; null when
  * fewer than three are held. */
-export function benchPick(save: Pick<SaveV4, 'items' | 'farm'>, grade: number): BenchInput[] | null {
+export function benchPick(save: Pick<SaveV4, 'items' | 'buildings'>, grade: number): BenchInput[] | null {
   const pick: BenchInput[] = []
   for (const s of benchStock(save, grade)) for (let n = 0; n < s.count && pick.length < RING_INPUTS; n++) pick.push({ id: s.id, stars: s.stars })
   return pick.length === RING_INPUTS ? pick : null
 }
 
 /** The grades whose ring you can make now, lowest first (the sheet's rows). */
-export const benchGrades = (save: Pick<SaveV4, 'items' | 'farm'>): number[] => RING_IDS.map((_, i) => i + 1).filter((g) => benchPick(save, g) !== null)
+export const benchGrades = (save: Pick<SaveV4, 'items' | 'buildings'>): number[] => RING_IDS.map((_, i) => i + 1).filter((g) => benchPick(save, g) !== null)
 
 /** The bench's refusals, in the player's words. */
 export const BENCH_WORDS = {
   closed: 'The ring bench opens with your first Romance 8.',
   three: 'Three refined goods of one grade.',
-  mining: 'Ingots, blocks and cut gems open with chapter 3.',
+  mining: 'Ingots, blocks and cut gems open when the Smelter and the Cutter are built.',
   today: 'One ring a day.',
   short: 'Not enough in the Warehouse.',
 } as const
@@ -91,7 +96,7 @@ export function benchRefusal(save: SaveV4, inputs: readonly BenchInput[]): strin
   if (save.today.ring > 0) return BENCH_WORDS.today
   const goods = inputs.map((i) => goodOf(i.id))
   if (inputs.length !== RING_INPUTS || goods.some((g) => !g || !g.refined) || new Set(goods.map((g) => g?.grade)).size !== 1) return BENCH_WORDS.three
-  if (inputs.some((i) => !benchTakes(save.farm.chapter, i.id))) return BENCH_WORDS.mining
+  if (inputs.some((i) => !benchTakes(miningOpen(save), i.id))) return BENCH_WORDS.mining
   const need = new Map<string, number>()
   for (const i of inputs) need.set(`${i.id}@${i.stars}`, (need.get(`${i.id}@${i.stars}`) ?? 0) + 1)
   for (const [key, n] of need) {

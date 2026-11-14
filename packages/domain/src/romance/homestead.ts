@@ -4,8 +4,12 @@
 //                 rooms         costs                       opens
 //   the Farmhouse 2             —                           day 1 (the farmer's own home)
 //   House 1       2, 4 extended 8,000g · extension 4,000g   the first wedding
-//   House 2–6     2 / 4         20,000 · 10,000 … 160,000 · 80,000   the house before it built
+//   House 2–6     2 / 4         20,000 · 10,000 … 160,000 · 80,000   the n-th wedding, the house before it built
 //   all           26 rooms      408,000g, 612,000g extended
+//
+// The homestead grows with your life with the Umas: house *n* opens with the *n*-th wedding, and its rows on the map
+// open with the married: the first (the Farmhouse, Houses 1–2) from day 1, the second (Houses 3–5) with three married,
+// the third (House 6) with six.
 //
 // A house stands at once and is named there (1–20 characters, the farmer's letters rule); an extension adds two rooms at
 // once. At her wedding a spouse takes a free room (her closest friend's house when it has room, else the first with room,
@@ -37,8 +41,8 @@ export const HOUSES = HOUSE_COSTS.length
 export const houseCost = (n: number): number => HOUSE_COSTS[n - 1] ?? 0
 export const extensionCost = (n: number): number => EXTENSION_COSTS[n - 1] ?? 0
 
-/** The next lot: its house's number, its price and whether it may be built now (House 1 from the first
- * wedding, each later one once the one before stands, which it does by the time it's next); null once all six stand. */
+/** The next lot: its house's number, its price and whether it may be built now (house *n* from the *n*-th wedding, the
+ * one before it standing, which it does by the time it's next); null once all six stand. */
 export interface Lot {
   n: number
   cost: number
@@ -47,16 +51,20 @@ export interface Lot {
 export function nextLot(save: Pick<SaveV4, 'homestead' | 'love'>): Lot | null {
   const n = save.homestead.houses.length
   if (n > HOUSES) return null
-  return { n, cost: houseCost(n), open: n > 1 || marriedCount(save) >= 1 }
+  return { n, cost: houseCost(n), open: marriedCount(save) >= n }
 }
 
+const ORDINALS = ['', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth']
+/** "Opens with your first wedding.", "… your third wedding.": what house *n* waits for. */
+export const houseOpensWords = (n: number): string => `Opens with your ${ORDINALS[n] ?? `${n}th`} wedding.`
+
 /** Builds and names the next house: it stands at once, two rooms, its name the letters rule's (1–20). Refused
- * before the first wedding (`locked`), once all six stand (`bad-job`), for a name outside the rule or another house's
+ * before its wedding (`locked`), once all six stand (`bad-job`), for a name outside the rule or another house's
  * (`bad-job`), and when gold is short (`no-gold`). */
 export function buildHouse(save: SaveV4, raw: string): SaveV4 {
   const lot = nextLot(save)
   if (!lot) throw new SaveRuleError('bad-job', 'Every lot has its house.')
-  if (!lot.open) throw new SaveRuleError('locked', 'Opens with your first wedding.')
+  if (!lot.open) throw new SaveRuleError('locked', houseOpensWords(lot.n))
   const issue = houseNameIssue(raw)
   if (issue) throw new SaveRuleError('bad-job', issue)
   const name = cleanFarmerName(raw)
@@ -110,11 +118,17 @@ export const HOMESTEAD_PLACES: readonly HomesteadPlace[] = Array.from({ length: 
   row: HOMESTEAD_FIRST_ROW + Math.floor(n / 3), col: n % 3, frame: n === 0 ? 'farmhouse' : 'homestead-house',
   opens: n === 0 ? { by: 'start' } : { by: 'house', n },
 }))
-/** The homestead's places the map shows: the Farmhouse, every house built and the next lot; later lots wait, so
- * the map grows a row at a time. */
-export const homesteadShown = (save: Pick<SaveV4, 'homestead'>): HomesteadPlace[] => HOMESTEAD_PLACES.filter((p) => p.n <= save.homestead.houses.length)
+/** The married each homestead row waits for: the first (the Farmhouse, Houses 1–2) none, the second (Houses 3–5)
+ * three, the third (House 6) six. */
+export const HOMESTEAD_ROW_MARRIED: readonly number[] = [0, 3, 6]
+/** Whether a homestead row (1–3) is open: enough married. */
+export const homesteadRowOpen = (save: Pick<SaveV4, 'love'>, row: number): boolean => marriedCount(save) >= (HOMESTEAD_ROW_MARRIED[row - 1] ?? Infinity)
+/** The homestead's places the map shows: every place in an open row (built or a lot), and every house built; so the
+ * map grows a row at a time. */
+export const homesteadShown = (save: Pick<SaveV4, 'homestead' | 'love'>): HomesteadPlace[] =>
+  HOMESTEAD_PLACES.filter((p) => p.n < save.homestead.houses.length || homesteadRowOpen(save, Math.floor(p.n / 3) + 1))
 /** The homestead's rows on the map now: one to three. */
-export const homesteadRows = (save: Pick<SaveV4, 'homestead'>): number => Math.ceil(homesteadShown(save).length / 3)
+export const homesteadRows = (save: Pick<SaveV4, 'homestead' | 'love'>): number => Math.ceil(homesteadShown(save).length / 3)
 
 // --- Rooms -------------------------------------------------------------------------------------
 

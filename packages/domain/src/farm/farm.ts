@@ -12,6 +12,6 @@ export const DORM_MAX_LEVEL = BEDS.length
 export const bedsAt = (level: number): number => BEDS[Math.min(DORM_MAX_LEVEL, Math.max(1, level)) - 1]!
 
 /** The points each Farm Rank asks, 1–10. */
-export const FARM_RANK_POINTS: readonly number[] = [0, 150, 500, 1200, 2400, 4000, 6500, 10000, 15000, 22000]
+export const FARM_RANK_POINTS: readonly number[] = [0, 150, 250, 950, 2150, 3750, 6250, 9750, 14750, 21750]
 /** The Farm Rank a farm's points reach. */
 export const farmRankOf = (points: number): number => FARM_RANK_POINTS.filter((p) => points >= p).length || 1

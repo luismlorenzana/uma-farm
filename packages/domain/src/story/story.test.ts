@@ -1,9 +1,8 @@
-// Farm Rank and chapter 1: the Farm Rank's thresholds and points, the Diary's
-// milestones and rows paying once, chapter 1's goals from their counters and its completion at night with its authored
-// arrival, and the two scenes playing once with Umas only in roles. Invented ids and an invented cast; the night runs with
-// test kinds.
+// The farm's progress: the Farm Rank's thresholds and points (income and resources only), the Diary's milestones and
+// rows paying once, the night's goals check, and the opening playing once with no Uma in it. Invented ids and an
+// invented cast; the night runs with test kinds.
 import { describe, expect, it } from 'vitest'
-import { farmPointsOf, farmRankOpens, nextFarmRank, payDiary } from '../farm/diary'
+import { checkGoalsNight, depthsTonight, farmPointsOf, farmRankOpens, nextFarmRank, payDiary } from '../farm/diary'
 import { FARM_RANK_POINTS, farmRankOf } from '../farm/farm'
 import { DIARY_ROWS, MILESTONES, ROW_GOLD } from '../farm/milestones'
 import type { Activity, Rank } from '../farm/ranks'
@@ -16,21 +15,19 @@ import { newLove, newRosterUma, newSave, type SaveV4 } from '../save/v4'
 import type { Arrival, Calling, CastEntry } from './authored'
 import { STAND_IN_CAST } from './authored.fixture'
 import { CAST, CAST_IDS } from './cast'
-import { CLOSING_SCENE, OPENING_SCENE, SCENES, sceneLines } from './chapter-1'
-import { CHAPTER_1_GOALS, checkGoalsNight, depthsTonight, goalStates } from './chapters'
-import { readScene, SCENE_IDS, sceneDue } from './scenes'
+import { OPENING_SCENE, openingScene, sceneLines } from './opening'
+import { readScene, sceneDue } from './scenes'
 
 const AT = '2026-11-09T10:00:00.000Z'
 const LATER = '2026-11-09T21:30:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
 const entry = (characterId: string, calling: Calling, arrives: Arrival): CastEntry => ({ characterId, outfitId: `${characterId}01`, arrives, calling, paragraph: 'Invented.' })
-/** An invented cast: the three on the farm, and 1030, chapter 1's authored arrival. */
+/** An invented cast: the three on the farm. */
 const STORY: NonNullable<NightContext['story']> = {
   cast: {
     ...STAND_IN_CAST, opening: ['1001', '1002', '1003'],
-    umas: [entry('1001', 'farming', { kind: 'opening' }), entry('1002', 'foraging', { kind: 'opening' }), entry('1003', 'fishing', { kind: 'opening' }),
-      entry('1030', 'mining', { kind: 'chapter', chapter: 1 })],
+    umas: [entry('1001', 'farming', { kind: 'opening' }), entry('1002', 'foraging', { kind: 'opening' }), entry('1003', 'fishing', { kind: 'opening' })],
   },
   bibles: new Map(), ties: { version: 1, ties: [] },
 }
@@ -50,10 +47,8 @@ function farm(day = 1, counts: Record<string, number> = {}): SaveV4 {
 const ranked = (save: SaveV4, id: string, activity: Activity, rank: Rank): SaveV4 => ({
   ...save, roster: { ...save.roster, [id]: { ...save.roster[id]!, ranks: { ...save.roster[id]!.ranks, [activity]: { points: [0, 40, 160, 400, 900, 2000][rank]!, rank, challenge: 0 } } } },
 })
-/** Every goal of chapter 1 met but the Farm Rank: 9 harvested, 10,000g shipped, 10 home, two kinds, a Hand. */
-const ready = (harvested = 9): SaveV4 => ranked({
-  ...farm(7, { [GOLD_SHIPPED]: 10_000, 'plots-harvested': harvested, 'home:forest': 6, 'home:fishery': 4 }), crops: { carrot: 20, potato: 2 },
-}, '1001', 'farming', 1)
+/** A farm one night from Farm Rank 2: 10,000g shipped and a Hand, their milestones not paid yet. */
+const ready = (): SaveV4 => ranked({ ...farm(7, { [GOLD_SHIPPED]: 10_000, 'plots-harvested': 9 }), crops: { carrot: 20, potato: 2 } }, '1001', 'farming', 1)
 const made = (kind: 'forage' | 'fish', item: string, items = 3): MadeTonight =>
   ({ outfitId: '1001', place: kind === 'forage' ? 'forest' : 'fishery', request: { kind, item, count: 1 }, items: Array.from({ length: items }, () => 'pine-log@1') })
 
@@ -64,24 +59,28 @@ describe('the Farm Rank', () => {
       if (at > 0) expect(farmRankOf(at - 1)).toBe(i)
     })
     expect(farmRankOf(1e9)).toBe(10)
+    expect(FARM_RANK_POINTS).toEqual([0, 150, 250, 950, 2150, 3750, 6250, 9750, 14750, 21750])
     expect(nextFarmRank(0)).toEqual({ rank: 2, points: 150 })
-    expect(nextFarmRank(21_999)).toEqual({ rank: 10, points: 22_000 })
-    expect(nextFarmRank(22_000)).toBeNull()
+    expect(nextFarmRank(21_749)).toEqual({ rank: 10, points: 21_750 })
+    expect(nextFarmRank(21_750)).toBeNull()
   })
 
-  it('counts 1 a 100g shipped, 5 a good shipped once, 25 a milestone and 250 a chapter done', () => {
+  it('counts income and resources only: 1 a 100g shipped, 5 a good shipped once, 25 a milestone', () => {
     const save: SaveV4 = {
       ...farm(1, { [GOLD_SHIPPED]: 12_399 }), diary: { shipped: { carrot: 9, carp: 1, tomato: 0 }, milestones: ['shipped:10000', 'row:vegetables'], records: {}, read: [] },
     }
-    expect(farmPointsOf({ ...save, farm: { ...save.farm, chapter: 2 } })).toEqual({ shipped: 123, entries: 10, milestones: 25, chapters: 250, total: 408 })
+    expect(farmPointsOf(save)).toEqual({ shipped: 123, entries: 10, milestones: 25, total: 158 })
     expect(farmPointsOf(newSave('u1', AT)).total).toBe(0)
   })
 
-  it('opens what the rules gate on it: land, beds, seeds and stations', () => {
-    expect(farmRankOpens(1)).toEqual(['Dorm level 2 (5 beds)']) // tier-1 seeds and Block A are the start's
-    expect(farmRankOpens(2)).toEqual(['Block B (800g)', 'Dorm level 3 (7 beds)', 'New seeds at the shop'])
-    expect(farmRankOpens(3)).toEqual(['Dorm level 4 (9 beds)', 'The Sawmill (1,500g)', 'The Smokehouse (2,000g)'])
-    expect(farmRankOpens(4)).toEqual(['Block C (3,000g)', 'Dorm level 5 (11 beds)', 'New seeds at the shop'])
+  it('opens what the rules gate on it: the places to build, land, beds and seeds', () => {
+    expect(farmRankOpens(1)).toEqual(['The Mill to build (1,000g · 20 logs)', 'Dorm level 2 (5 beds)']) // tier-1 seeds and Block A are the start's
+    expect(farmRankOpens(2)).toEqual(['The Coop to build (not built yet)', 'Block B (800g)', 'Dorm level 3 (7 beds)', 'New seeds at the shop'])
+    expect(farmRankOpens(3)).toEqual([
+      'The Sawmill to build (1,500g · 40 logs)', 'The Barn to build (not built yet)', 'The Smokehouse to build (2,000g · 30 logs · 20 fish)', 'Dorm level 4 (9 beds)',
+    ])
+    expect(farmRankOpens(4)).toEqual(['The Mine to build (not built yet)', 'The Smelter to build (not built yet)', 'Block C (3,000g)', 'Dorm level 5 (11 beds)', 'New seeds at the shop'])
+    expect(farmRankOpens(6)).toEqual(['The Dock to build (20,000g · 80 planks)', 'The Boat to build (30,000g · 60 planks · 30 fillets)', 'Block D (8,000g)', 'Dorm level 7 (17 beds)'])
     expect(farmRankOpens(8).some((o) => o.startsWith('Dorm'))).toBe(false) // the Dorm for 20 tops out at level 8, Farm Rank 7
     expect(farmRankOpens(10)).toEqual(['The farm’s gold crest'])
   })
@@ -92,7 +91,7 @@ describe('the Farm Rank', () => {
     // 100 Carrots at 70g (Spring's demand) pay 7,000g: 70 points, and 5 for the entry.
     expect(morning.farm.points).toBe(75)
     expect(morning.summary!.news.filter((n) => n.kind === 'farm-rank')).toEqual([])
-    const more = night({ ...morning, summary: null, bin: { 'emperor-pumpkin': [40, 0, 0, 0, 0] } })
+    const more = night({ ...morning, summary: null, bin: { 'emperor-pumpkin': [20, 0, 0, 0, 0] } })
     expect(farmRankOf(more.farm.points)).toBe(2)
     expect(more.summary!.news).toContainEqual({ kind: 'farm-rank', rank: 2 })
   })
@@ -160,65 +159,28 @@ describe('the Diary', () => {
   })
 })
 
-describe('chapter 1', () => {
-  it('counts each goal from its counter, or the save', () => {
-    const save = { ...farm(3, { 'plots-harvested': 4, [GOLD_SHIPPED]: 620, 'home:forest': 2, 'home:fishery': 1 }), crops: { carrot: 4 } }
-    expect(goalStates(save)!.map((g) => [g.goal.id, g.have, g.done])).toEqual([
-      ['harvest', 4, false], ['ship', 620, false], ['bring-home', 3, false], ['second-crop', 1, false], ['rank-hand', 0, false], ['farm-rank', 1, false],
-    ])
-    expect(goalStates(ready())!.filter((g) => !g.done).map((g) => g.goal.id)).toEqual(['farm-rank'])
-    expect(CHAPTER_1_GOALS.map((g) => g.text)).toEqual([
-      'Plant and harvest 9 crops', 'Ship 1,000g at the bin', 'Bring home 10 things from the Woods or the Pond', 'Grow a second kind of crop',
-      'Rank an Uma up to Hand', 'Reach Farm Rank 2',
-    ])
-  })
-
-  it('completes the night its last goal is met: 500g, the Mill\'s plans, its authored arrival and 250 points; chapter 2 opens', () => {
-    const save = ready()
-    const morning = night(save)
-    // The night pays 10,000g's and Hand's milestones (300g each), reaching Farm Rank 2 (100 + 25 + 25 = 150), the last goal.
-    expect(morning.farm.chapter).toBe(2)
-    expect(morning.gold).toBe(500 + 300 + 300 + 500)
-    expect(morning.buildings.mill).toBe(0)
-    expect(morning.roster['1030']).toMatchObject({ joined: 8 })
-    expect(morning.love['1030']).toBeDefined()
-    expect(morning.dorm.home).not.toContain('1030') // three beds, all taken: she joins away
-    expect(morning.summary!.hearts).toEqual([{ kind: 'arrived', id: '1030', home: false }])
-    expect(morning.farm.points).toBe(150 + 250)
-    expect(morning.farm.goals).toEqual(morning.farm.counts)
-    expect(morning.summary!.news).toEqual([
-      { kind: 'chapter', chapter: 1 }, { kind: 'farm-rank', rank: 2 }, { kind: 'milestone', id: 'shipped:10000' }, { kind: 'milestone', id: 'rank:hand' },
-    ])
-    expect(parseSaveV4(json(morning), 'save', TEST_KINDS)).toEqual(morning)
-    // Chapter 2's goals come with the workshops: the Diary says Soon, and nothing completes again.
-    expect(goalStates(morning)).toBeNull()
-    expect(night({ ...morning, summary: null }).farm.chapter).toBe(2)
-  })
-
-  it('waits while a goal is short, and completes the night it is met', () => {
-    const short = night(ready(8))
-    expect(short.farm.chapter).toBe(1)
-    expect(short.buildings.mill).toBeUndefined()
-    expect(short.summary!.news).not.toContainEqual({ kind: 'chapter', chapter: 1 })
-    // The ninth harvest comes in the day; that night completes it.
-    const harvested = { ...short, summary: null, farm: { ...short.farm, counts: { ...short.farm.counts, 'plots-harvested': 9 } } }
-    expect(night(harvested).farm.chapter).toBe(2)
-  })
-
-  it('pays no plans it already holds, and no arrival when the cast names none for the chapter', () => {
-    const { save, tonight } = checkGoalsNight({ ...ready(), buildings: { ...ready().buildings, mill: 1 } }, [])
-    expect(tonight.chapter).toBe(1)
-    expect(save.buildings.mill).toBe(1)
-    expect(Object.keys(save.roster)).toEqual(['1001', '1002', '1003'])
-  })
-
-  it('refuses a goal line it does not know', () => {
+describe('the night\'s goals', () => {
+  it('pays the Diary and recomputes the Farm Rank, with no chapter to complete', () => {
     const morning = night(ready())
-    const bad = (line: unknown) => () => parseSaveV4(json({ ...morning, summary: { ...morning.summary!, news: [line] } }), 'save', TEST_KINDS)
-    expect(bad({ kind: 'milestone', id: 'shipped:5' })).toThrow('unknown milestone')
-    expect(bad({ kind: 'farm-rank', rank: 1 })).toThrow('expected 2–10')
-    expect(bad({ kind: 'chapter', chapter: 9 })).toThrow('expected 1–8')
-    expect(bad({ kind: 'chapter', chapter: 1, gold: 500 })).toThrow('unknown keys gold')
+    // 10,000g's and Hand's milestones (300g each) reach Farm Rank 2 (100 + 25 + 25 = 150).
+    expect(morning.gold).toBe(500 + 300 + 300)
+    expect(morning.farm.points).toBe(150)
+    expect(morning.buildings.mill).toBeUndefined()
+    expect(Object.keys(morning.roster)).toEqual(['1001', '1002', '1003'])
+    expect(morning.summary!.news).toEqual([{ kind: 'farm-rank', rank: 2 }, { kind: 'milestone', id: 'shipped:10000' }, { kind: 'milestone', id: 'rank:hand' }])
+    expect(parseSaveV4(json(morning), 'save', TEST_KINDS)).toEqual(morning)
+    expect(checkGoalsNight(morning, []).tonight).toEqual({ paid: [], ranks: [] })
+  })
+
+  it('reads an older v4\'s "chapter done" line and drops it, and refuses a goal line it does not know', () => {
+    const morning = night(ready())
+    const parse = (news: unknown[]) => parseSaveV4(json({ ...morning, summary: { ...morning.summary!, news } }), 'save', TEST_KINDS)
+    expect(parse([{ kind: 'chapter', chapter: 1 }, { kind: 'farm-rank', rank: 2 }]).summary!.news).toEqual([{ kind: 'farm-rank', rank: 2 }])
+    expect(() => parse([{ kind: 'milestone', id: 'shipped:5' }])).toThrow('unknown milestone')
+    expect(() => parse([{ kind: 'farm-rank', rank: 1 }])).toThrow('expected 2–10')
+    expect(() => parse([{ kind: 'chapter', chapter: 9 }])).toThrow('expected 1–8')
+    expect(() => parse([{ kind: 'built', place: 'fields' }])).toThrow('expected a place you build')
+    expect(parse([{ kind: 'built', place: 'mill' }]).summary!.news).toEqual([{ kind: 'built', place: 'mill' }])
   })
 })
 
@@ -234,26 +196,20 @@ describe('the scenes', () => {
     expect(read.diary.read).toEqual(['scene:1:open'])
   })
 
-  it('closes the morning after the chapter, once the summary is put away, once', () => {
-    const morning = night(ready())
-    expect(sceneDue(morning)).toBeNull() // the summary first
-    const put = { ...morning, summary: null }
-    expect(sceneDue(put)).toBe('scene:1:close')
-    // Then the chapter's arrival walks in with her own scene.
-    expect(sceneDue(readScene(put, 'scene:1:close'))).toBe('arrival:1030')
-    expect(SCENE_IDS.every((id) => SCENES[id].id === id)).toBe(true)
+  it('ends on the road with the Umas the opening brings', () => {
+    expect(openingScene(3).beats.at(-1)!.line).toBe('Three Umas come up the road.')
+    expect(openingScene(1).beats.at(-1)!.line).toBe('An Uma comes up the road.')
+    expect(openingScene(0).beats).toHaveLength(OPENING_SCENE.beats.length - 1)
+    expect(sceneLines(OPENING_SCENE).every((l) => l.speaker.kind !== 'uma')).toBe(true)
+    // An older v4's closing scene in the Diary's read list means nothing now.
+    const named = { ...newSave('u1', AT), farmer: { name: 'Robin' }, summary: null }
+    expect(sceneDue({ ...named, diary: { ...named.diary, read: ['scene:1:open', 'scene:1:close'] } })).toBeNull()
   })
 
-  it('fills the newest hand\'s role with chapter 1\'s arrival, and drops it when nobody fills it', () => {
-    expect(sceneLines(OPENING_SCENE, '1040').some((l) => l.speaker.kind === 'uma')).toBe(false)
-    expect(sceneLines(CLOSING_SCENE, '1040').filter((l) => l.speaker.kind === 'uma')).toEqual([{ speaker: { kind: 'uma', outfitId: '1040' }, line: CLOSING_SCENE.beats[6]!.line }])
-    expect(sceneLines(CLOSING_SCENE, null)).toHaveLength(CLOSING_SCENE.beats.length - 1)
-  })
-
-  it('holds no Uma name: Umas speak only in roles, and the only names filled in are {name} and {farmer}', () => {
-    const texts = [...OPENING_SCENE.beats, ...CLOSING_SCENE.beats].map((b) => b.line)
-    for (const beat of [...OPENING_SCENE.beats, ...CLOSING_SCENE.beats]) expect(['cast', 'newest-hand', 'narrator']).toContain(beat.speaker.kind)
-    for (const text of texts) expect(text.replace(/\{name\}|\{farmer\}/g, '')).not.toMatch(/[{}]/)
+  it('holds no Uma name: the cast and the narrator speak, and the only name filled in is {farmer}', () => {
+    const texts = OPENING_SCENE.beats.map((b) => b.line)
+    for (const beat of OPENING_SCENE.beats) expect(['cast', 'narrator']).toContain(beat.speaker.kind)
+    for (const text of texts) expect(text.replace(/\{farmer\}/g, '')).not.toMatch(/[{}]/)
     // Every capitalised word is the cast's, a place or good of the farm's, or plain English: a name from master data
     // would be none of these.
     const cast = CAST_IDS.flatMap((id) => CAST[id].name.split(' '))

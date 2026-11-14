@@ -204,9 +204,9 @@ export function tendsSideBySide(save: Pick<FarmSave, 'bonds' | 'fields'>, block:
 
 /** Her share of side by side's extras at a place tonight: 10% beside a 3+-heart partner who also worked there
  * today, else none; **20% in her element** (Friendship 8, at her line's place, with the pack). */
-export function extrasShare(save: Pick<FarmSave, 'bonds'> & Partial<Pick<SaveV4, 'love' | 'farm'>>, id: string, place: string, worked: readonly { outfitId: string; place: string }[], story: PerkPack | null = null): number {
+export function extrasShare(save: Pick<FarmSave, 'bonds'> & Partial<Pick<SaveV4, 'love' | 'buildings'>>, id: string, place: string, worked: readonly { outfitId: string; place: string }[], story: PerkPack | null = null): number {
   if (!besideAny(save, id, worked.filter((w) => w.place === place).map((w) => w.outfitId))) return 0
-  const element = story && save.love && save.farm && inElement({ love: save.love, farm: save.farm }, story, id, place)
+  const element = story && save.love && save.buildings && inElement({ love: save.love, buildings: save.buildings }, story, id, place)
   return round2((element ? IN_ELEMENT : SIDE_BY_SIDE) - 1)
 }
 const round2 = (n: number): number => Math.round(n * 100) / 100

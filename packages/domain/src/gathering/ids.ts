@@ -10,7 +10,7 @@ import { parseStockKey } from '../save/warehouse'
 /** The forest's areas, deepest last. */
 export const FOREST_AREAS = ['woods', 'hills', 'old-forest', 'mountain', 'misty-vale', 'world-tree'] as const
 export type ForestAreaId = typeof FOREST_AREAS[number]
-/** The Fishery's spots: the five freshwater ones and the two at sea (chapter 7). */
+/** The Fishery's spots: the five freshwater ones and the two at sea (the Dock's and the Boat's). */
 export const FISHING_SPOTS = ['pond', 'river', 'lake', 'falls', 'moon-pool', 'sea-pier', 'deep-sea'] as const
 export type FishingSpotId = typeof FISHING_SPOTS[number]
 export const AREA_NAMES: Readonly<Record<ForestAreaId, string>> = {

@@ -73,7 +73,7 @@ export interface WhereRow {
   name: string
   /** This season's goods, most common first. */
   goods: string[]
-  /** "From Hand", "Chapter 7", or null when she can go. */
+  /** "From Hand", "Needs the Dock", or null when she can go. */
   lock: string | null
   /** "About 5 a day · G1–G2". */
   note: string
@@ -88,7 +88,7 @@ export function whereRows(save: FarmSave, place: GatherPlace, outfitId: string |
   const perDay = outfitId ? haulDays(save, outfitId, place, talentOf, 1)[0] : undefined
   return ids.map((id) => {
     const refusal = placeLock(save, place, id, rank)
-    const lock = refusal === null ? null : refusal.data?.chapter ? `Chapter ${refusal.data.chapter}` : refusal.data?.rank ? `From ${refusal.data.rank}` : 'Locked'
+    const lock = refusal === null ? null : refusal.data?.place ? `Needs the ${refusal.data.place}` : refusal.data?.rank ? `From ${refusal.data.rank}` : 'Locked'
     const grades = place === 'forest' ? `G${FOREST[id as keyof typeof FOREST].grades.join('–G')}` : null
     const note = [perDay === undefined ? null : `About ${perDay} a day`, grades].filter(Boolean).join(' · ')
     return { id, name: whereName(place, id), goods: sharesOn(place, id, save.calendar.day).map(([good]) => good), lock, note }
@@ -181,7 +181,7 @@ export function haulWords(got: Pick<LoopCollected, 'goods' | 'sizes'>): string |
 export function helpLines(place: WorkPlaceId): string[] {
   if (isGatherPlace(place)) {
     const what = place === 'forest' ? 'wood, mushrooms, herbs and the season’s finds' : 'fish, by the season'
-    const opens = place === 'forest' ? 'Her foraging rank opens deeper areas (the Hills at Hand)' : 'Her fishing rank opens new spots (the River at Hand); the sea waits for chapter 7'
+    const opens = place === 'forest' ? 'Her foraging rank opens deeper areas (the Hills at Hand)' : 'Her fishing rank opens new spots (the River at Hand); the sea waits for the Dock, the Deep Sea for the Boat'
     return [
       `An Uma brings home ${what}: ${place === 'forest' ? 5 : 3} a day at Novice, more with her rank, talent and tools.`,
       `${opens}. Deeper places give better goods.`,

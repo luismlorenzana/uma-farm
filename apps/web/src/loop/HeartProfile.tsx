@@ -28,6 +28,7 @@ import {
   type HeartsPack, type NextCard, type PerkView, type RingView, type TieRow,
 } from './hearts-view'
 import { LoveActs } from './Love'
+import { opensWhenBuilt } from './love-words'
 import { WorkFacts, WorkSide } from './RosterAlbum'
 import type { LoopUmaRow } from './roster-view'
 import { umaBadges } from './UmaMarks'
@@ -224,7 +225,7 @@ function NextSection({ card, advice = null, play = null, ask = null, bench = fal
       {card.perk && (
         <p className="text-[13px]" data-next-perk>
           <span className="text-ink-soft">Perk · </span>{card.perk.words}
-          {card.perk.opens !== null && <span className="text-ink-faint"> · Opens with chapter {card.perk.opens}</span>}
+          {card.perk.opens !== null && <span className="text-ink-faint"> · {opensWhenBuilt(card.perk.opens)}</span>}
         </p>
       )}
       {card.hint && <p className="text-[13px]" data-next-hint><span className="text-ink-soft">Event · </span>{card.hint}</p>}
@@ -266,7 +267,7 @@ function PerksSection({ perks }: { perks: readonly PerkView[] }) {
   const reached = reachedWords(perks)
   const next = perks.find((p) => p.state === 'next')
   const now = perks.filter((p) => p.state === 'reached' && p.now !== null)
-  const label = (p: PerkView) => `${p.rung.toUpperCase()} · ${p.words}${p.opens !== null ? ` · Opens with chapter ${p.opens}` : ''}`
+  const label = (p: PerkView) => `${p.rung.toUpperCase()} · ${p.words}${p.opens !== null ? ` · ${opensWhenBuilt(p.opens)}` : ''}`
   return (
     <Section title="Perks">
       <div className="space-y-1 text-[13px]" data-perks>
@@ -291,7 +292,7 @@ function PerksSection({ perks }: { perks: readonly PerkView[] }) {
               <li key={p.id} className={`flex gap-2 px-3 py-1.5 ${p.state === 'ahead' ? 'text-ink-faint' : ''} ${p.state === 'next' ? 'font-semibold' : ''}`} data-perk={p.id} data-state={p.state}>
                 <span className="w-7 shrink-0 tabular-nums">{p.rung.toUpperCase()}</span>
                 <span className="min-w-0 flex-1">
-                  {p.words}{p.opens !== null && <span className="text-ink-faint"> · Opens with chapter {p.opens}</span>}
+                  {p.words}{p.opens !== null && <span className="text-ink-faint"> · {opensWhenBuilt(p.opens)}</span>}
                   {p.now && <span className="block text-[12px] font-normal text-ink-soft" data-perk-now-words>Now · {p.now}</span>}
                 </span>
                 {p.state === 'reached' && <span className="shrink-0 text-success">✓</span>}

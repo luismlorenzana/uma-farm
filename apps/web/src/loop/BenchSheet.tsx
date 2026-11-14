@@ -1,5 +1,5 @@
 // The ring bench, `?sheet=bench` from the Forge's quick look: one row a grade you can make now with the three goods it would take (a tap on one swaps it for another of the
-// grade's goods), "→ Iron Ring"; the recipe greyed "Opens with chapter 3"; her bonus once married; and **Make an Iron
+// grade's goods), "→ Iron Ring"; the recipe greyed until the Smelter and the Cutter stand; her bonus once married; and **Make an Iron
 // Ring · 1 a day** in the thumb zone. A made ring is ★1 in the Warehouse; the bench says "One ring a day." until tomorrow.
 // Also the Forge's quick look once the bench stands (`BenchPeek`). Loaded on demand.
 import { benchOpen, BENCH_WORDS, goodName, ringName, type BenchInput, type SaveV4 } from '@farm/domain'
@@ -40,7 +40,7 @@ function Bench({ save, onClose }: { save: SaveV4; onClose: () => void }) {
   const grade = chosen !== null && rows.some((r) => r.grade === chosen) ? chosen : rows[0]?.grade ?? null
   const row = rows.find((r) => r.grade === grade) ?? null
   const madeToday = save.today.ring > 0
-  const forge = forgeRecipeWords(save.farm.chapter)
+  const forge = forgeRecipeWords(save)
   const make = async () => {
     if (!row || busy) return
     setBusy(true)

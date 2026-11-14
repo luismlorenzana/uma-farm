@@ -5,12 +5,11 @@ import { FISHING_SPOTS, FOREST_AREAS } from '../gathering/ids'
 import { GOOD_FAMILIES, GOODS, RING_FAMILY, RING_IDS, type GoodFamily } from '../goods/ids'
 import { RANKS, type Rank } from './ranks'
 
-/** Farm Rank points: 1 per 100g shipped, 5 a Diary entry, 25 a milestone, 250 a chapter done. Festivals (150 /
+/** Farm Rank points: income and resources only: 1 per 100g shipped, 5 a Diary entry, 25 a milestone. Festivals (150 /
  * 75 / 25) and decorations (1 per 100g) come later. */
 export const GOLD_PER_POINT = 100
 export const ENTRY_POINTS = 5
 export const MILESTONE_POINTS = 25
-export const CHAPTER_POINTS = 250
 
 /** A milestone: what reaches it, and the gold it pays once. Each is worth `MILESTONE_POINTS`. */
 export type Milestone =

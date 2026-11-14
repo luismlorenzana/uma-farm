@@ -16,15 +16,20 @@
 //     9    mentor                          footrace
 //    10    her keepsake, ×1.10 rank points the proposal
 //
-// A perk that works at her line's place says "Opens with chapter n" while that place waits for its chapter: a
-// miner's +10% before chapter 3, a cook's before the Kitchen. Loaded with the romance's screens.
+// A perk that works at her line's place says "Opens when the Kitchen is built" (or her place) while that place isn't
+// built: a miner's +10% before the Mine, a cook's before the Kitchen. Loaded with the romance's screens.
+import { placeBuilt, type FarmPlaceId } from '../farm/places'
 import type { Activity } from '../farm/ranks'
+import type { FarmSave } from '../save/v4'
 import { castEntry, type StoryPack } from '../story/pack'
 import { favouriteOf } from '../story/placeholders'
 
-/** The activities whose places open with a chapter: a working setup there waits for it, and so does a perk at her
- * line's place. Here so the perks' terms never import `ready.ts` (and `ready.ts` reads it from here). */
-export const ACTIVITY_CHAPTER: Readonly<Partial<Record<Activity, number>>> = { ranch: 2, mining: 3, cooking: 4, expeditions: 5, serving: 6, forging: 7 }
+/** The activities whose place is built, not there from the start: a working setup there waits for it, and so does a
+ * perk at her line's place. The ranch's is the Coop, the first of its two; forging's is the Forge's merge game. Here so
+ * the perks' terms never import `ready.ts` (and `ready.ts` reads it from here). */
+export const ACTIVITY_PLACE: Readonly<Partial<Record<Activity, FarmPlaceId>>> = {
+  ranch: 'coop', mining: 'mine', cooking: 'kitchen', expeditions: 'expeditions', serving: 'restaurant', forging: 'forge',
+}
 
 /** Her line as the perks say it: her favourite activity, with a quarry calling's mining at the Quarry. */
 export type PerkLine = Exclude<Activity, 'expeditions'> | 'quarry'
@@ -37,7 +42,7 @@ export type PerkId =
   | 'proposal'
   | 'breakfast' | 'morning-item-2' | 'dream' | 'night-chore-3' | 'vow-renewal'
 
-/** A level and its perk. `place`: it works at her line's place, so it waits for that place's chapter. */
+/** A level and its perk. `place`: it works at her line's place, so it waits for that place to be built. */
 export interface PerkDef {
   rung: string
   id: PerkId
@@ -131,9 +136,9 @@ export function perkWords(id: PerkId, line: PerkLine): string {
   }
 }
 
-/** The chapter her line's place opens with (the ranch 2, the Mine and the Quarry 3, the Kitchen 4, the Restaurant 6,
- * the Forge 7), or null for a place open from the start. */
-export const lineChapter = (line: PerkLine): number | null => ACTIVITY_CHAPTER[line === 'quarry' ? 'mining' : line] ?? null
+/** The place her line needs built (the Coop, the Mine, the Quarry, the Kitchen, the Restaurant, the Forge), or null for
+ * a place open from the start. */
+export const linePlace = (line: PerkLine): FarmPlaceId | null => (line === 'quarry' ? 'quarry' : ACTIVITY_PLACE[line] ?? null)
 
 /** Her line as the perks read it: her favourite (`favouriteOf`), a quarry calling's mining at the Quarry. Null for
  * someone the pack doesn't hold. */
@@ -143,17 +148,17 @@ export function perkLineOf(pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string)
   return line === 'mining' && castEntry(pack, id)?.calling === 'quarry' ? 'quarry' : line
 }
 
-/** One level's perk for her: its words and, for a perk at her line's place, the chapter it waits for. */
+/** One level's perk for her: its words and, for a perk at her line's place, the place it waits for. */
 export interface Perk extends PerkDef {
   words: string
-  /** "Opens with chapter n": her line's place waits for chapter `opens`; null when it works now. */
-  opens: number | null
+  /** "Opens when the Kitchen is built": her line's place, not built yet; null when it works now. */
+  opens: FarmPlaceId | null
 }
 
-/** Every perk on her route for her line, in order, at the farm's chapter. */
-export function perksFor(line: PerkLine, chapter: number): Perk[] {
-  const waits = lineChapter(line)
-  return PERKS.map((p) => ({ ...p, words: perkWords(p.id, line), opens: p.place && waits !== null && chapter < waits ? waits : null }))
+/** Every perk on her route for her line, in order, on this farm. */
+export function perksFor(line: PerkLine, save: Pick<FarmSave, 'buildings'>): Perk[] {
+  const waits = linePlace(line)
+  return PERKS.map((p) => ({ ...p, words: perkWords(p.id, line), opens: p.place && waits !== null && !placeBuilt(save, waits) ? waits : null }))
 }
 
 /** The perk a rung brings, or null for a waiting rung (the confession, the proposal's and the wedding's waits). */

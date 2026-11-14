@@ -1,8 +1,8 @@
 # The road to a full game
 
 **Start here.** This page says what the farm is, where it stands, what "a full game" means for it, and the phases that
-get it there. How the game works today is in [game-mechanics.md](game-mechanics.md). The progression this roadmap
-builds is in [design/progression.md](design/progression.md). How it's built is in
+get it there. How the game works today is in [game-mechanics.md](game-mechanics.md), the farm's progression in [the
+farm's progress](game-mechanics.md#the-farms-progress). How it's built is in
 [technical/architecture.md](technical/architecture.md), and the cloud in
 [technical/infrastructure.md](technical/infrastructure.md). The page view is [pages/roadmap.html](pages/roadmap.html).
 
@@ -31,7 +31,7 @@ builds is in [design/progression.md](design/progression.md). How it's built is i
 
 | Part | State | What changes |
 |---|---|---|
-| **The farm's loop** | **Deployed** (save v4, one build) | The days, the Fields, the forest and the Fishery, the Mill, the Sawmill and the Smokehouse, goods and the bin, talents and ranks, the roster, the Farm Rank, chapter 1. **Being reworked:** the farm by building (F64) |
+| **The farm's loop** | **Deployed** (save v4, one build) | The days, the Fields, the forest and the Fishery, the Mill, the Sawmill and the Smokehouse, goods and the bin, talents and ranks, the roster, the Farm Rank. **The farm grows by building:** no global chapters; the Farm Rank from income and goods offers each place, built with gold and goods; the Dock and the Boat open the sea; weddings open houses; the Diary's projects |
 | **The romance** | **Deployed, part of the one game** | Hearts, heart events and plays, evenings, perks, the ring and the wedding, married life, the homestead, bonds. Its cast arrives as the story pack says. **Being reworked:** the town and meeting replace arrivals (F66, F67), and her chapters frame her route (F68) |
 | **The story** | **Being written** | In the Farm Story Sandbox on this Mac. The pack is open: every part optional, any number of characters, notes instead of blocks, and any pack releases. [The story pack's menu](story-pack.md) lists what the game reads, with the welcome list, her trigger to meet and her chapters |
 | **The HD-2D farm** | **Opt-in preview** | The farm and its Umas on the shared HD-2D stage (Account → HD-2D farm). The 2D Hub is still Home. A working Uma doesn't nod yet: uma-stage 0.5.0 can now play it |
@@ -93,7 +93,6 @@ town, each with her own story.
 
 | Step | What | Packet |
 |---|---|---|
-| 1.4 **The farm grows by building** | No global chapters. Farm Rank comes from income and goods; places are built with gold and goods; weddings open houses; the farm's projects | [F64](handoff/tasks/F64-farm-by-building.md) |
 | 1.5 **The lean start** | Name your farmer, a few lines, then the farm | [F65](handoff/tasks/F65-lean-start.md) |
 | 1.6 **The town** | Every character in town, a different few out each day, talk, the People list | [F66](handoff/tasks/F66-the-town.md) |
 | 1.7 **Meeting her** | Her trigger starts her story; the welcome list comes in the first days; the beds cap who lives on the farm | [F67](handoff/tasks/F67-meeting-her.md) |
@@ -184,6 +183,6 @@ The farm sends items to uma-quest, uma-rpg and uma-racer, one way. It's parked u
 
 - **The farm starts over on your phone:** open uma-farm.web.app, see the start-over card, start the new farm, and play a
   day.
-- **Say go on the rest of Phase 1,** from F64 (the farm grows by building).
+- **Say go on the rest of Phase 1,** from F65 (the lean start).
 - **Keep writing the story** however you like.
 - **The HD-2D farm on your phone,** when you have a minute.

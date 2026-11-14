@@ -12,7 +12,7 @@ import type { FarmSave } from './v4'
 /** The most of one line a purchase takes. */
 export const MAX_BUY = 99
 
-/** A line in the shop: a Warehouse id it sells at ★1, its price each, and what opens it (a Farm Rank, a chapter), or
+/** A line in the shop: a Warehouse id it sells at ★1, its price each, and what opens it (a Farm Rank), or
  * day 1. */
 export interface ShopLine {
   id: string

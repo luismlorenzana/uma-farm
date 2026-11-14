@@ -47,8 +47,8 @@ function inCastOrder(pack: Pick<StoryPack, 'cast'>, ids: readonly string[]): str
 // --- Night chores -----------------------------------------------------------------------------------------
 
 /** The lines whose night chores act now: farming (step 2), foraging and fishing (step 4). Mining, the ranch,
- * cooking, serving and forging bring theirs with their places; until then their profile says "Opens with
- * chapter n". */
+ * cooking, serving and forging bring theirs with their places; until then their profile says "Opens when the Mine is
+ * built" (or her place). */
 export const CHORE_LINES: readonly PerkLine[] = ['farming', 'foraging', 'fishing']
 /** A farming chore's growth on one block. */
 export const CHORE_GROWTH = 0.25
@@ -233,7 +233,7 @@ const worked = (save: SaveV4, ids: readonly string[]): string[] => ids.filter((w
 
 /** The grade of her line's best place: the top grade of the deepest forest area anyone has worked (a
  * forager's), of the deepest fishing spot (a fisher's), of the shop's vegetables at its highest open seed tier (a
- * farmer's); 1 for mining, the ranch and the workshops until their chapters. */
+ * farmer's); 1 for mining, the ranch and the workshops until their games are built. */
 export function lineGrade(save: SaveV4, pack: PerkPack, id: string): number {
   switch (perkLineOf(pack, id)) {
     case 'foraging': return Math.max(...worked(save, FOREST_AREAS).map((a) => FOREST[a as ForestAreaId].grades[1]))
@@ -259,7 +259,7 @@ export function signatureDish(save: SaveV4, pack: PerkPack, id: string): string 
 }
 
 /** Friendship 4's perk, as `playEvent` gives it: her signature dish's recipe into `workshops.recipes` (the
- * Kitchen's list, which the Kitchen reads from chapter 4), once, and its id kept on her route (`love.dish`) for her
+ * Kitchen's list, which the Kitchen reads once it's built), once, and its id kept on her route (`love.dish`) for her
  * profile. A recipe the farm knows already stays once. Pure. */
 export function giveSignatureDish(save: SaveV4, pack: PerkPack, id: string): { save: SaveV4; dish: string } {
   const love = save.love[id]
@@ -277,7 +277,7 @@ export const BREAKFAST_DAYS = 1
 /**
  * Breakfast, a spouse's S1 perk on a morning in her house (the house morning calls it): every Uma on
  * the farm (home or housed) with no well-fed days left starts the day well fed for one day. A meal running is never
- * shortened or extended, and a breakfast isn't a staff meal (no count moves: chapter 4's goal stays the Kitchen's). Each
+ * shortened or extended, and a breakfast isn't a staff meal (no count moves: the staff meal stays the Kitchen's). Each
  * pair it feeds earns +5 bond (`addBond`, Romance 4's ×1.5 inside). Pure; never stamps.
  */
 export function breakfast(save: SaveV4, pack: Pick<StoryPack, 'ties'>): { save: SaveV4; fed: string[] } {

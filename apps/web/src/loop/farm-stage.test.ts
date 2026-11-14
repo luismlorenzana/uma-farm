@@ -14,7 +14,7 @@ function v4(houses: number, open = false): SaveV4 {
   const built = Array.from({ length: houses }, (_, i) => ({ name: `Home ${i + 1}`, extended: false }))
   return {
     ...save, farmer: { name: 'Robin' },
-    farm: open ? { ...save.farm, chapter: 9, points: 30_000 } : save.farm,
+    farm: open ? { ...save.farm, points: 30_000 } : save.farm,
     buildings: open ? { ...save.buildings, mill: 1, sawmill: 1, smokehouse: 1, forge: 1 } : save.buildings,
     homestead: { ...save.homestead, houses: [FARMHOUSE, ...built], slept: [0, ...built.map(() => 0)] },
   }
@@ -22,10 +22,10 @@ function v4(houses: number, open = false): SaveV4 {
 const marker = (kind: FarmMarker['kind'], id: string, x = 0, z = 0): PickHit => ({ ref: { kind: 'marker', marker: { kind, id, x, z } }, at: { x, y: 1, z }, depth: 1 })
 
 describe('taps', () => {
-  const plots = farmPlots(v4(3))
+  const plots = farmPlots(v4(1))
   const places = [
     { id: 'fields', to: '/?peek=fields' }, { id: 'mill', to: '/?peek=mill' }, { id: 'warehouse', to: '/warehouse' }, { id: 'gate', to: '/?peek=gate' },
-    { id: 'house-1', to: '/?sheet=homestead&house=1' }, { id: 'house-4', to: '/?sheet=homestead&house=4' },
+    { id: 'dock', to: '/?peek=dock' }, { id: 'house-1', to: '/?sheet=homestead&house=1' }, { id: 'house-2', to: '/?sheet=homestead&house=2' },
   ]
   it('opens a place by its marker, a slot\'s place, the Gate, a building, a prop\'s plot, a lot\'s sheet, nearest first', () => {
     expect(tapTarget([marker('place', 'mill')], null, plots, places)).toEqual({ id: 'mill', to: '/?peek=mill' })
@@ -33,13 +33,14 @@ describe('taps', () => {
     expect(tapTarget([marker('gate', 'gate')], null, plots, places)?.to).toBe('/?peek=gate')
     expect(tapTarget([{ ref: { kind: 'building', id: 'warehouse' }, at: { x: 4, y: 2, z: 21 }, depth: 2 }], null, plots, places)?.to).toBe('/warehouse')
     expect(tapTarget([{ ref: { kind: 'prop', name: 'crop-sprout', tile: { x: 0, z: 0 } }, at: { x: 0, y: 1, z: 0 }, depth: 1 }], null, plots, places)?.to).toBe('/?peek=fields')
-    expect(tapTarget([marker('lot', 'house-4')], null, plots, places)?.to).toBe('/?sheet=homestead&house=4')
+    expect(tapTarget([marker('lot', 'house-2')], null, plots, places)?.to).toBe('/?sheet=homestead&house=2')
     // A figure and a path point open nothing themselves: what's under them does.
     expect(tapTarget([{ ref: { kind: 'figure', id: 'x' }, at: { x: 4, y: 1, z: 2 }, depth: 0.5 }, marker('place', 'mill')], null, plots, places)?.id).toBe('mill')
   })
-  it('falls back to the plot of the ground under the finger, never the open ground', () => {
+  it('falls back to the plot of the ground under the finger, the Dock beside the Gate among them', () => {
     expect(tapTarget([], { x: 4, z: 3 }, plots, places)?.id).toBe('mill')
-    expect(tapTarget([], { x: 7, z: 25 }, plots, places)).toBeNull()
+    expect(tapTarget([], { x: 7, z: 25 }, plots, places)?.id).toBe('dock')
+    expect(tapTarget([], { x: 7, z: 25 }, plots, places.filter((p) => p.id !== 'dock'))).toBeNull()
     expect(tapTarget([], { x: 4, z: 30 }, plots, places)?.id).toBe('house-1')
     expect(tapTarget([], null, plots, places)).toBeNull()
   })

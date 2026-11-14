@@ -116,22 +116,24 @@ afterEach(async () => {
 })
 
 describe('the homestead on the map', () => {
-  it('adds the Farmhouse and the next lot after the yard, the town edge last; a built house\'s pips are its residents', () => {
+  it('adds the Farmhouse and the first row\'s lots after the yard, the town edge last; a built house\'s pips are its residents', () => {
     const one = wedOne()
     const layout = homesteadLayout(one)
     expect(layout).toEqual({ tiles: FARM_MAP_TILES + 4, townRow: 9 })
     const places = homesteadPlaces(one, layout, new Set([ONE]))
-    expect(places.map((p) => [p.id, p.name, p.locked])).toEqual([['farmhouse', 'Farmhouse', false], ['house-1', 'Build · 8,000g', true]])
+    expect(places.map((p) => [p.id, p.name, p.locked])).toEqual([['farmhouse', 'Farmhouse', false], ['house-1', 'Build · 8,000g', true], ['house-2', 'House 2', true]])
+    expect(places[2]!.label).toBe('House 2, locked: Opens with your second wedding')
     expect(places[0]!.pips?.map((p) => [p.state, p.badge])).toEqual([['busy', '♥'], ['free', undefined]])
     expect(places[0]!.to).toBe('/?sheet=homestead&house=0')
     const shop = FARM_PLACES.find((p) => p.id === 'shop')!
     expect(placeOnV4(shop, layout)).toEqual({ row: 9, col: 0 })
     expect(placeOnV4(FARM_PLACES.find((p) => p.id === 'dorm')!, layout)).toMatchObject({ row: 6, col: 2 })
-    // Before the first wedding the lot waits; with three houses built the map holds two homestead rows.
+    // Before the first wedding the lot waits; with two houses built and one married the map holds one homestead row: the
+    // second's lots show from three married.
     expect(homesteadPlaces(farm(), homesteadLayout(farm()), new Set())[1]).toMatchObject({ name: 'House 1', locked: true, label: 'House 1, locked: Opens with your first wedding' })
     const three = { ...one, homestead: { ...one.homestead, houses: [...one.homestead.houses, { name: 'Rose Cottage', extended: false }, { name: 'Willow House', extended: true }], slept: [0, 0, 0] } }
-    expect(homesteadLayout(three).townRow).toBe(10)
-    expect(homesteadPlaces(three, homesteadLayout(three), new Set()).map((p) => p.id)).toEqual(['farmhouse', 'house-1', 'house-2', 'house-3'])
+    expect(homesteadLayout(three).townRow).toBe(9)
+    expect(homesteadPlaces(three, homesteadLayout(three), new Set()).map((p) => p.id)).toEqual(['farmhouse', 'house-1', 'house-2'])
   })
 
   it('places the eight rows on 36 tiles before the homestead grows them', () => {
@@ -157,7 +159,7 @@ describe('the homestead\'s sheet', () => {
     expect(save().homestead.houses[1]).toEqual({ name: 'Rose Cottage', extended: false })
     expect(save().gold).toBe(42_000)
     expect($$('[data-house-name]').map((n) => n.textContent)).toEqual(['Farmhouse', 'Rose Cottage'])
-    expect($('[data-lot="2"] [data-action="build"]')?.textContent).toBe('Build · 20,000g')
+    expect($('[data-lot="2"] [data-lot-locked]')?.textContent).toBe('Opens with your second wedding. · Build · 20,000g')
     // A move: her face, then a free room in Rose Cottage.
     await click($(`[data-house="0"] [data-room="${ONE}"]`))
     expect($('[data-homestead-note]')?.textContent).toContain('tap a free room')

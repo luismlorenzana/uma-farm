@@ -16,7 +16,6 @@ export const PAGES = [
   { doc: 'technical/architecture.md', page: 'architecture.html', title: 'Architecture' },
   { doc: 'technical/infrastructure.md', page: 'infrastructure.html', title: 'Infrastructure' },
   { doc: 'handoff/README.md', page: 'handoff.html', title: 'Open work' },
-  { doc: 'design/progression.md', page: 'progression.html', title: 'Progression' },
   { doc: 'design/her-look.md', page: 'her-look.html', title: 'Her look' },
   { doc: 'story-pack.md', page: 'story-pack.html', title: 'Story pack' },
   { doc: 'design/kit-farm.md', page: 'kit-farm.html', title: 'Farm kit' },

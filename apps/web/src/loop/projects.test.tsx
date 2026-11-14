@@ -1,9 +1,10 @@
-// Farm Rank and chapter 1 as rendered: the Diary's chapter card with each goal's count, the Farm
-// Rank's chip and sheet, the morning's chapter, rank and milestone lines, and the closing scene the morning after the
-// chapter completes, once the summary is put away, with the chapter's authored arrival as your newest hand. Invented
-// outfits (the album fixture) and a cast of them built from the stand-in pack; the server is a stub.
+// The farm grows by building, as rendered: the Diary's projects (what you can build now with what it lacks, the next
+// rank's offers, the milestones with the Umas), a place's Build card in its quick look, paying for the Mill and seeing it
+// stand the next morning with its "Built overnight" line, "Not built yet" for a place whose game isn't built, the Farm
+// Rank's chip and sheet, and the morning's goal lines. Invented outfits (the album fixture) and a cast of them built from
+// the stand-in pack; the server is a stub.
 import 'fake-indexeddb/auto'
-import { CAST, GOLD_SHIPPED, newLove, newRosterUma, newSave, STAND_IN_FILES, storyPackFrom, type MorningSummary, type SaveV4, type StoryPack } from '@farm/domain'
+import { GOLD_SHIPPED, newLove, newRosterUma, newSave, STAND_IN_FILES, storyPackFrom, type MorningSummary, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -33,8 +34,9 @@ const { useGame, resetGame } = await import('../save/game')
 const { FarmAccountBar } = await import('../shell/Bars')
 const { Shell } = await import('../shell/Shell')
 const { default: DiaryPage } = await import('./DiaryPage')
+const { default: FarmRoute } = await import('./FarmMap')
 const { default: LoopSheets } = await import('./LoopSheets')
-const { dismissSummary, endTheDay } = await import('./actions')
+const { endTheDay } = await import('./actions')
 const { summaryParts } = await import('./summary-words')
 
 /** Aster, Beryl and Cinder plain; Dune, Ember and Fable strong at everything. */
@@ -43,14 +45,14 @@ fixture.view = (await albumFixture(undefined, [
   { star5: [160, 160, 160, 160, 160] }, { star5: [160, 160, 160, 160, 160] }, { star5: [160, 160, 160, 160, 160] },
 ])).view
 
-/** A cast of the invented outfits: Aster, Beryl and Cinder the opening three, Dune chapter 1's arrival. */
+/** A cast of the invented outfits: Aster, Beryl and Cinder the opening three. */
 const standIn = storyPackFrom(STAND_IN_FILES)
 const entry = (from: number, characterId: string, arrives: StoryPack['cast']['umas'][number]['arrives']) => ({ ...standIn.cast.umas[from]!, characterId, outfitId: characterId, arrives })
 fixture.pack = {
   ...standIn, bibles: new Map(), ties: { ...standIn.ties, ties: [] },
   cast: {
     ...standIn.cast, opening: ['81001', '81002', '81003'],
-    umas: [entry(0, '81001', { kind: 'opening' }), entry(1, '81002', { kind: 'opening' }), entry(2, '81003', { kind: 'opening' }), entry(2, '81004', { kind: 'chapter', chapter: 1 })],
+    umas: [entry(0, '81001', { kind: 'opening' }), entry(1, '81002', { kind: 'opening' }), entry(2, '81003', { kind: 'opening' })],
   },
 }
 
@@ -68,8 +70,6 @@ function farm(counts: Record<string, number> = {}, hand = false): SaveV4 {
     dorm: { level: 1, home: ['81001', '81002', '81003'], swaps: [] }, diary: { ...base.diary, read: ['scene:1:open'] }, farm: { ...base.farm, counts },
   }
 }
-/** Every goal met but the Farm Rank, which tonight's milestones reach. */
-const ready = (): SaveV4 => ({ ...farm({ [GOLD_SHIPPED]: 10_000, 'plots-harvested': 9, 'home:forest': 6, 'home:fishery': 4 }, true), crops: { carrot: 20, potato: 2 } })
 
 let host: HTMLDivElement
 let root: Root
@@ -115,29 +115,74 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-describe("the Diary's chapter card", () => {
-  it('shows chapter 1, its six goals with their counts, a check on each met, and the reward', async () => {
-    useGame.setState({ save: { ...farm({ 'plots-harvested': 4, [GOLD_SHIPPED]: 620, 'home:forest': 3 }, true), crops: { carrot: 4 } } })
+describe("the Diary's projects", () => {
+  it('lists the Mill to build now with what it lacks, the next rank\'s offers, and the milestones with the Umas', async () => {
+    useGame.setState({ save: { ...farm(), gold: 600, items: { 'pine-log': [8, 0, 0, 0, 0] } } })
     await render(<DiaryPage />, '/diary')
-    expect($('[data-chapter="1"]')?.textContent).toContain('A Field Again')
-    expect($$('[data-goal]').map((g) => [g.dataset.goal, g.querySelector('[data-count]')?.textContent, g.dataset.done ?? null])).toEqual([
-      ['harvest', '4 / 9', null], ['ship', '620g / 1,000g', null], ['bring-home', '3 / 10', null], ['second-crop', '1 / 2 kinds', null],
-      ['rank-hand', 'Done', 'true'], ['farm-rank', 'Farm Rank 1 / 2', null],
+    expect($$('[data-project]').map((p) => [p.dataset.project, p.querySelector('[data-state]')?.textContent])).toEqual([['mill', 'Need 400g and 12 logs more']])
+    expect($('[data-project="mill"]')?.textContent).toContain('1,000g · 20 logs')
+    expect($('[data-project="mill"]')?.getAttribute('href')).toBe('/?peek=mill')
+    expect($('[data-next-offers]')?.textContent).toContain('At Farm Rank 2 · 150 points')
+    expect($$('[data-offer]').map((o) => o.textContent)).toEqual(['CoopNot built yet'])
+    expect($$('[data-milestone]').map((m) => [m.dataset.milestone, m.querySelector('[data-count]')?.textContent])).toEqual([
+      ['bench', 'Not yet'], ['house', '0 / 1 married'], ['row', '0 / 3 married'], ['row', '0 / 6 married'], ['board', '3 / 5 met'],
     ])
-    expect($('[data-met]')?.textContent).toBe('1 of 6')
-    expect(host.textContent).toContain('Reward: +500g, the Mill’s plans, a new hand, 250 Farm Rank points')
+    expect(host.textContent).toContain('Your first wedding')
     expect($('[data-rank-link]')?.getAttribute('href')).toBe('/diary?sheet=rank')
   })
 
-  it("says chapter 2 is soon once chapter 1 is done, and lists the milestones paid", async () => {
-    const done = farm()
-    useGame.setState({ save: { ...done, farm: { ...done.farm, chapter: 2 }, diary: { ...done.diary, milestones: ['shipped:10000', 'depth:hills'], shipped: { carrot: 3 } } } })
+  it('says Build when it can, "Builds tonight" once paid, and names what\'s offered but not built yet', async () => {
+    useGame.setState({ save: { ...farm(), gold: 5000, items: { 'pine-log': [60, 0, 0, 0, 0] } } })
     await render(<DiaryPage />, '/diary')
-    expect($('[data-chapter="2"]')?.textContent).toContain('Feathers and Fences')
-    expect($('[data-soon]')?.textContent).toBe('Soon')
-    expect($('[data-done-chapter]')?.textContent).toBe('Chapter 1 done · +500g, the Mill’s plans, a new hand, 250 Farm Rank points')
+    expect($('[data-project="mill"] [data-state]')?.textContent).toBe('Build ›')
+    useGame.setState({ save: { ...farm(), farm: { ...farm().farm, points: 300, builds: ['sawmill'] }, buildings: { dorm: 1, mill: 1 } } })
+    await render(<DiaryPage />, '/diary')
+    expect($$('[data-project]').map((p) => [p.dataset.project, p.querySelector('[data-state]')?.textContent])).toEqual([['sawmill', 'Builds tonight'], ['smokehouse', 'Need 1,500g, 30 logs and 20 fish more']])
+    expect($('[data-waiting]')?.textContent).toBe('Not built yet: the Coop, the Barn')
+    expect($$('[data-offer]').map((o) => o.dataset.offer)).toEqual(['mine', 'smelter'])
+  })
+
+  it('lists the milestones paid so far', async () => {
+    const done = farm()
+    useGame.setState({ save: { ...done, diary: { ...done.diary, milestones: ['shipped:10000', 'depth:hills'], shipped: { carrot: 3 } } } })
+    await render(<DiaryPage />, '/diary')
     expect($$('[data-milestones] li').map((li) => li.textContent)).toEqual(['10,000g shipped · +300g', 'First haul from the Hills · +500g'])
     expect($('[data-entries]')?.textContent).toBe('1 goods shipped so far')
+  })
+})
+
+describe('building a place', () => {
+  it('offers the Mill in its quick look, builds it overnight, and says so in the morning', async () => {
+    useGame.setState({ save: { ...farm(), gold: 1200, items: { 'pine-log': [25, 0, 0, 0, 0] } } })
+    await render(<FarmRoute />, '/?peek=mill')
+    const card = await find('[data-build="mill"]')
+    expect([...card.querySelectorAll('[data-cost]')].map((c) => c.textContent)).toEqual(['✓1,000g1,200g held', '✓20 logs25 held'])
+    await click($('[data-build="mill"] [data-action="build"]'))
+    expect(save()).toMatchObject({ gold: 200, farm: { builds: ['mill'] }, items: { 'pine-log': [5, 0, 0, 0, 0] } })
+    expect((await find('[data-build-note]')).textContent).toBe('The Mill stands tomorrow.')
+    expect($('[data-build="mill"] [data-build-lock]')?.textContent).toBe('Builds tonight')
+    expect(await endTheDay(7)).toBe(true)
+    expect(save().buildings.mill).toBe(1)
+    expect(save().summary!.news).toContainEqual({ kind: 'built', place: 'mill' })
+    expect(summaryParts(save().summary!).find((p) => p.section === 'news')!.lines[0]).toEqual({ key: 'built:mill', text: 'Built overnight · the Mill', to: '/?peek=mill', tag: 'Built' })
+  })
+
+  it('shows a place whose game isn\'t built yet as "Not built yet", which can\'t be bought', async () => {
+    useGame.setState({ save: { ...farm(), gold: 99_999, farm: { ...farm().farm, points: 300 } } })
+    await render(<FarmRoute />, '/?peek=coop')
+    const card = await find('[data-build="coop"]')
+    expect(card.dataset.lock).toBe('game')
+    expect(card.querySelector('[data-build-lock]')).toBeNull()
+    const button = card.querySelector('[data-action="build"]') as HTMLButtonElement
+    expect(button.textContent).toBe('Not built yet')
+    expect(button.disabled).toBe(true)
+  })
+
+  it('offers the Boat at the Dock once the Dock stands', async () => {
+    useGame.setState({ save: { ...farm(), gold: 99_999, farm: { ...farm().farm, points: 5000 }, buildings: { dorm: 1, dock: 1 } } })
+    await render(<FarmRoute />, '/?peek=dock')
+    await find('[data-build="boat"]')
+    expect($('[data-dock-open]')?.textContent).toContain('The Sea Pier is open at the Fishery.')
   })
 })
 
@@ -152,52 +197,22 @@ describe('the Farm Rank', () => {
     expect($('[data-rank-sheet="1"]')).not.toBeNull()
     expect($('[data-points]')?.textContent).toBe('47 points')
     expect($('[data-next]')?.textContent).toBe('103 more for Farm Rank 2 (150)')
-    expect($$('[data-opens] li').map((li) => li.textContent)).toEqual(['Block B (800g)', 'Dorm level 3 (7 beds)', 'New seeds at the shop'])
-    expect($$('[data-source]').map((li) => li.textContent)).toEqual(['Shipping · 1 per 100g42', 'Diary entries · 5 each5', 'Milestones · 25 each0', 'Chapters · 250 each0'])
+    expect($$('[data-opens] li').map((li) => li.textContent)).toEqual(['The Coop to build (not built yet)', 'Block B (800g)', 'Dorm level 3 (7 beds)', 'New seeds at the shop'])
+    expect($$('[data-source]').map((li) => li.textContent)).toEqual(['Shipping · 1 per 100g42', 'Diary entries · 5 each5', 'Milestones · 25 each0'])
   })
 })
 
 describe("the morning's goal lines", () => {
-  it('names the chapter done, the Farm Rank and what it opens, and each milestone with its gold', () => {
+  it('names a place built overnight, the Farm Rank and what it opens, and each milestone with its gold', () => {
     const summary: MorningSummary = {
       day: 8, bin: [], work: [], ranks: [], hearts: [], nudges: [],
-      news: [{ kind: 'chapter', chapter: 1 }, { kind: 'farm-rank', rank: 2 }, { kind: 'milestone', id: 'rank:hand' }, { kind: 'milestone', id: 'row:woods:refined' }],
+      news: [{ kind: 'built', place: 'boat' }, { kind: 'farm-rank', rank: 2 }, { kind: 'milestone', id: 'rank:hand' }, { kind: 'milestone', id: 'row:woods:refined' }],
     }
     expect(summaryParts(summary)[0]!.lines).toEqual([
-      { key: 'chapter', text: 'Chapter 1 done · +500g, the Mill’s plans, a new hand, 250 Farm Rank points', to: '/diary', tag: 'Chapter' },
-      { key: 'farm-rank:2', text: 'Farm Rank 2 · Block B (800g), Dorm level 3 (7 beds), New seeds at the shop', to: '/?sheet=rank', tag: 'Farm Rank' },
+      { key: 'built:boat', text: 'Built overnight · the Boat', to: '/?peek=dock', tag: 'Built' },
+      { key: 'farm-rank:2', text: 'Farm Rank 2 · The Coop to build (not built yet), Block B (800g), Dorm level 3 (7 beds), New seeds at the shop', to: '/?sheet=rank', tag: 'Farm Rank' },
       { key: 'milestone:rank:hand', text: 'First Uma at Hand · +300g', to: '/diary', tag: 'Milestone' },
       { key: 'milestone:row:woods:refined', text: 'Woods, refined: every grade shipped · +500g', to: '/diary', tag: 'Milestone' },
     ])
-  })
-})
-
-describe('chapter 1 completes, and the closing scene plays the next morning', () => {
-  it('ends the day into chapter 2 with the reward and its arrival, then plays the closing scene after the summary, once', async () => {
-    useGame.setState({ save: ready() })
-    expect(await endTheDay(7)).toBe(true)
-    expect(save()).toMatchObject({ calendar: { day: 8 }, farm: { chapter: 2, points: 400 }, buildings: { mill: 0 }, gold: 500 + 300 + 300 + 500 })
-    const recruit = Object.keys(save().roster).find((id) => !['81001', '81002', '81003'].includes(id))!
-    expect(recruit).toBe('81004')
-    expect(save().summary!.news.slice(0, 2)).toEqual([{ kind: 'chapter', chapter: 1 }, { kind: 'farm-rank', rank: 2 }])
-    await renderShell()
-    await settle()
-    expect($('[data-scene]')).toBeNull() // the summary comes first
-    await act(async () => { await dismissSummary() })
-    await find('[data-scene="scene:1:close"] [data-beat]')
-    const lines: [string, string][] = []
-    while ($('[data-beat]')) {
-      lines.push([$('[data-speaker]')?.textContent ?? '', $('[data-line]')!.textContent!])
-      await click($('[data-beat]'))
-    }
-    const name = fixture.view!.album.get(recruit)!.name
-    expect(lines).toContainEqual([name, `“I’m ${name}. I heard this farm is coming back to life. May I stay?”`])
-    expect(lines).toContainEqual([CAST['ben-carver'].name, '“A mill. Build it beside the Fields, and your grain comes back as flour.”'])
-    expect($('[data-chapter-card="2"]')?.textContent).toContain('Feathers and Fences')
-    await click($('[data-action="start-day"]'))
-    expect(save().diary.read).toEqual(['scene:1:open', 'scene:1:close'])
-    expect(path).toBe('/')
-    // Her own arrival scene comes next.
-    expect((await find('[data-scene]')).dataset.scene).toBe('arrival:81004')
   })
 })

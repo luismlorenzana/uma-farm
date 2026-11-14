@@ -15,8 +15,8 @@
 // work, a date game, a gift, helping another Uma), every choice carries its visible heart gain and its tone, an event may
 // hold a short `play` moment the farmer acts out, a beat may unlock something shown on a card, and a beat carries the hint
 // her profile shows while it's next. Nothing is missable and nothing waits on the calendar: a rung is ready when her bar
-// is full, plus at most one setup the player controls (she works a place today, an item is in the Warehouse, a bond, a
-// chapter), never an hour, the weather, a season or a festival. Routes run side by side and end in a spouse ladder.
+// is full, plus at most one setup the player controls (she works a place today, an item is in the Warehouse, a bond),
+// never an hour, the weather, a season or a festival. Routes run side by side and end in a spouse ladder.
 import { FARM_PLACE_IDS, type FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity } from '../farm/ranks'
 import { isGoodId } from '../goods/ids'
@@ -64,7 +64,6 @@ export type DateGame = typeof DATE_GAMES[number]
 /** How she comes to the farm today. Meeting her (her `meet` trigger) takes over when the town lands. */
 export type Arrival =
   | { kind: 'opening' }
-  | { kind: 'chapter'; chapter: number }
   | { kind: 'festival'; festival: Festival; year?: number }
   | { kind: 'beds'; dormLevel: number }
   | { kind: 'event'; after: string }
@@ -106,7 +105,7 @@ export interface CastEntry {
   /** The one outfit she plays as. */
   outfitId?: string
   calling?: Calling
-  /** How she comes to the farm today (the opening, a chapter, a festival, the Dorm's beds, after an event). */
+  /** How she comes to the farm today (the opening, a festival, the Dorm's beds, after an event). */
   arrives?: Arrival
   /** Only where master data's character set has none: it wins where present. */
   birthday?: CastBirthday
@@ -147,7 +146,6 @@ export type Trigger =
   | { kind: 'working'; activity: Activity }
   | { kind: 'item'; good: string }
   | { kind: 'bond'; with: string; level: number }
-  | { kind: 'chapter'; chapter: number }
 
 /** What the farmer and she do in the event: the game part. */
 export type Together =
@@ -637,7 +635,6 @@ function readArrival(v: unknown): Arrival | undefined {
   if (!isObject(v)) return undefined
   switch (v.kind) {
     case 'opening': return { kind: 'opening' }
-    case 'chapter': return isInt(v.chapter, 1) ? { kind: 'chapter', chapter: v.chapter } : undefined
     case 'festival':
       if (!oneOf(FESTIVALS, v.festival) || (v.year !== undefined && !isInt(v.year, 1))) return undefined
       return v.year === undefined ? { kind: 'festival', festival: v.festival } : { kind: 'festival', festival: v.festival, year: v.year as number }
@@ -696,13 +693,14 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
     const entry = kept<CastEntry>(u, {
       outfitId: field(u, 'outfitId', (v) => (typeof v === 'string' && CHARACTER_ID.test(v) ? v : undefined), it, f, 'is an outfit id'),
       calling: field(u, 'calling', (v) => (oneOf(CALLINGS, v) ? v : undefined), it, f, `is one of ${CALLINGS.join(', ')}`),
-      arrives: field(u, 'arrives', readArrival, it, f, 'is the opening, a chapter, a festival (and a year), the Dorm’s beds, or after an event'),
+      arrives: isObject(u.arrives) && u.arrives.kind === 'chapter'
+        ? (f.notes.push(`${it}: the farm has no chapters, so a chapter arrival never comes; she waits to be met`), undefined)
+        : field(u, 'arrives', readArrival, it, f, 'is the opening, a festival (and a year), the Dorm’s beds, or after an event'),
       birthday: field(u, 'birthday', (v) => (realDate(v) ? { month: v.month, day: v.day } : undefined), it, f, 'is { month: 1–12, day } on a real date'),
       meet: u.meet === undefined ? undefined : readTrigger(u.meet, `${it} meet`, f, sub),
       chapters: u.chapters === undefined ? undefined : readChapters(u.chapters, it, f, sub),
     })
     if (u.outfitId == null) f.notes.push(`${it}: no outfit, so she plays her default outfit from master data`)
-    if (entry.arrives?.kind === 'chapter' && entry.arrives.chapter > 8) f.notes.push(`${it}: chapter ${entry.arrives.chapter} isn’t one the farm reaches`)
     if (entry.arrives?.kind === 'beds' && entry.arrives.dormLevel > 8) f.notes.push(`${it}: the Dorm has 8 levels, so level ${entry.arrives.dormLevel} never comes`)
     if (u.paragraph !== undefined && typeof u.paragraph === 'string') f.notes.push(...lineNotes(u.paragraph, it, false))
     return [entry]
@@ -767,10 +765,8 @@ function readBeatTrigger(v: unknown, ctx: StoryContext, isGood: (id: string) => 
       if (!ctx.umas.has(v.with)) f.notes.push(`${at}: a bond with ${v.with}, who isn’t in the cast, never forms`)
       if (v.level > 5) f.notes.push(`${at}: bonds reach level 5, so level ${v.level} never holds`)
       return { kind: 'bond', with: v.with, level: v.level }
-    case 'chapter':
-      if (!isInt(v.chapter, 1)) return undefined
-      if (v.chapter > 8) f.notes.push(`${at}: chapter ${v.chapter} isn’t one the farm reaches`)
-      return { kind: 'chapter', chapter: v.chapter }
+    // The farm's global chapters are gone: her bar alone readies the rung.
+    case 'chapter': f.notes.push(`${at}: the farm has no chapters, so her bar alone readies it`); return { kind: 'hearts' }
     default: return undefined
   }
 }
@@ -820,7 +816,7 @@ function readBeats(v: unknown, ctx: StoryContext, isGood: (id: string) => boolea
       return undefined
     }
     return [kept<Beat>(b, {
-      trigger: field(b, 'trigger', (t) => readBeatTrigger(t, ctx, isGood, proposed, bt, f), bt, f, 'is hearts, working, item, bond or chapter (never a clock, the weather, a season or a festival)'),
+      trigger: field(b, 'trigger', (t) => readBeatTrigger(t, ctx, isGood, proposed, bt, f), bt, f, 'is hearts, working, item or bond (never a clock, the weather, a season or a festival)'),
       place: field(b, 'place', (p) => (oneOf(STORY_PLACES, p) ? p : undefined), bt, f, 'is one of the game’s places'),
       together: field(b, 'together', (t) => readTogether(t, ctx, isGood, bt, f), bt, f, 'is talk, work, date, gift or help'),
       unlock: field(b, 'unlock', (u) => readUnlock(u, isGood, proposed, bt, f), bt, f, 'is an item, a place or a perk in words'),

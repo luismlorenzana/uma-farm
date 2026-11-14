@@ -1,33 +1,14 @@
-// The goals' words: a chapter's reward, a Farm Rank and what it opens, a Diary milestone or row, a goal's count.
-// The save holds ids and counts; these say them, for the morning, the Diary and the rank's sheet. Loaded on demand with
-// those screens. Pure, so the screens and the tests read the same.
+// The goals' words: a Farm Rank and what it opens, a Diary milestone or row, a place built overnight, and the milestones
+// with the Umas. The save holds ids and counts; these say them, for the morning, the Diary's projects and the rank's sheet.
+// Loaded on demand with those screens. Pure, so the screens and the tests read the same.
 import {
-  AREA_NAMES, CHAPTER_POINTS, chapterArrival, chapterOf, diaryRowOf, FAMILY_NAMES, farmRankOpens, milestoneOf, paidGold, RANKS, SPOT_NAMES, type ForestAreaId,
-  type FishingSpotId, type GoalState, type StoryPack,
+  AREA_NAMES, diaryRowOf, FAMILY_NAMES, farmPlace, farmRankOpens, milestoneOf, paidGold, RANKS, SPOT_NAMES, type ForestAreaId, type FishingSpotId, type UmaMilestone,
 } from '@farm/domain'
 
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
-const BUILDING_PLANS: Readonly<Record<string, string>> = { mill: 'the Mill’s plans' }
+const ORDINALS = ['', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth']
 
-/** Whether a chapter's reward brings a new hand: its hand is the cast's authored arrival for that chapter, so none when
- * the cast has none, or before the pack loads. Never who: the words stay "a new hand". */
-export function chapterHand(story: Pick<StoryPack, 'cast'> | null, chapter: number): boolean {
-  const recruit = chapterOf(chapter)?.reward?.recruit ?? false
-  return recruit && story !== null && chapterArrival(story, chapter) !== null
-}
-
-/** A chapter's reward in a line: "+500g, the Mill's plans, a new hand, 250 Farm Rank points"; without the hand when it
- * brings none (`chapterHand`). */
-export function rewardWords(chapter: number, hand = chapterOf(chapter)?.reward?.recruit ?? false): string {
-  const reward = chapterOf(chapter)?.reward
-  if (!reward) return ''
-  return [`+${gold(reward.gold)}`, ...reward.plans.map((b) => BUILDING_PLANS[b] ?? `${b} plans`), ...(hand ? ['a new hand'] : []), `${CHAPTER_POINTS} Farm Rank points`].join(', ')
-}
-
-/** "Chapter 1 done · +500g, the Mill's plans, a new hand, 250 Farm Rank points". */
-export const chapterDoneWords = (chapter: number, hand?: boolean): string => `Chapter ${chapter} done · ${rewardWords(chapter, hand)}`
-
-/** "Farm Rank 2 · Block B (800g), Dorm level 3 (7 beds), New seeds at the shop". */
+/** "Farm Rank 2 · The Coop to build (not built yet), Block B (800g), Dorm level 3 (7 beds), New seeds at the shop". */
 export const farmRankWords = (rank: number): string => {
   const opens = farmRankOpens(rank)
   return opens.length > 0 ? `Farm Rank ${rank} · ${opens.join(', ')}` : `Farm Rank ${rank}`
@@ -52,11 +33,17 @@ export function milestoneName(id: string): string {
 /** A milestone or row paid tonight: "10,000g shipped · +300g". */
 export const milestoneWords = (id: string): string => `${milestoneName(id)} · +${gold(paidGold(id))}`
 
-/** A goal's count in its own unit: "4 / 9", "620g / 1,000g", "Farm Rank 1 / 2", "Done". */
-export function goalCount({ goal, have, done }: GoalState): string {
-  if (goal.id === 'rank-hand') return done ? 'Done' : 'Not yet'
-  if (goal.id === 'ship') return `${gold(have)} / ${gold(goal.need)}`
-  if (goal.id === 'farm-rank') return `Farm Rank ${have} / ${goal.need}`
-  if (goal.id === 'second-crop') return `${have} / ${goal.need} kinds`
-  return `${have} / ${goal.need}`
+/** A place built overnight: "Built overnight · the Mill". */
+export const builtWords = (place: string): string => `Built overnight · the ${farmPlace(place)?.name ?? place}`
+
+/** A milestone with the Umas in words: what it opens, what it waits for, and how far along: "House 1 · Your first
+ * wedding · 0 / 1". */
+export function umaMilestoneWords(m: UmaMilestone): { what: string; need: string; count: string } {
+  const count = `${m.have} / ${m.need}`
+  switch (m.kind) {
+    case 'bench': return { what: 'The ring bench', need: 'The first Romance 8', count: m.done ? 'Done' : 'Not yet' }
+    case 'house': return { what: `House ${m.n}`, need: `Your ${ORDINALS[m.n] ?? `${m.n}th`} wedding`, count: `${count} married` }
+    case 'row': return { what: `The homestead’s ${ORDINALS[m.row]} row`, need: `${m.need} married`, count: `${count} married` }
+    case 'board': return { what: 'The Requests board', need: `${m.need} Umas met`, count: `${count} met` }
+  }
 }

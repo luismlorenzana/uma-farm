@@ -1,21 +1,20 @@
 // The scene player: a full-screen sheet over the farm. A bust (a cast
 // member's lettered disc until the busts ship, or an Uma's from master data through uma-kit's `UmaBust`), the speaker's
-// name and one line; a tap goes on, and **Skip** ends it. The chapter scenes' lines are data (`@farm/domain`'s
-// `story/chapter-1.ts`): the opening ends as its Umas come up the road (reading it brings them: the pack's `openingOf`,
-// any number; with none it ends on chapter 1's card), and the closing scene's newest hand is chapter 1's authored
-// arrival, then chapter 2's card. Each plays once (`diary.read`). It loads master data itself, for the Umas' names and
-// busts, since a new account's boot doesn't wait for it; Skip works without it.
+// name and one line; a tap goes on, and **Skip** ends it. The opening's lines are data (`@farm/domain`'s
+// `story/opening.ts`): it ends as its Umas come up the road (reading it brings them: the pack's `openingOf`, any number;
+// with none it ends on the first day's card). It plays once (`diary.read`). It loads master data itself, for the Umas'
+// names and busts, since a new account's boot doesn't wait for it; Skip works without it.
 //
 // It also plays each Uma's **arrival scene** from the story pack, the format's steps: `say` (her
 // bust, the line with `{farmer}` filled, the emote as a word), `narrate`, `thought` (italic), `place` (the title line),
 // `wait`, `flag` and `choice`, whose options show their gain before the tap (+30 for the best, +10 for the rest). Skip
 // jumps to the choice, never past it, so every arrival pays +50 and its choice (an arrival the pack writes without one
-// pays +50 alone); the last of the opening's Umas ends on chapter 1's card and **Plant the carrots**. Its frame and steps
+// pays +50 alone); the last of the opening's Umas ends on the first day's card and **Plant the carrots**. Its frame and steps
 // also play the pair conversations (`PairPlayer.tsx`). Loaded on demand. The ring bench's scene (`scene:bench`) plays
 // here too, its player loaded on demand (`BenchScene.tsx`).
 import {
-  ARRIVAL_POINTS, arrivalOf, BENCH_SCENE, CAST, CAST_IDS, castInitial, chapterArrival, CHAPTER_1_GOALS, chapterOf, chapterScene, choicePoints, eventOf, farmPlace, openingOf,
-  pathFlags, placeholderEvent, sceneLines, sceneSteps, withFarmer, type CastId, type ChapterSceneId, type ChoiceOption, type SaveV4, type SceneId, type SceneLine, type Step,
+  ARRIVAL_POINTS, arrivalOf, BENCH_SCENE, CAST, CAST_IDS, castInitial, choicePoints, eventOf, farmPlace, openingOf, openingScene,
+  pathFlags, placeholderEvent, sceneLines, sceneSteps, withFarmer, type CastId, type ChoiceOption, type OpeningSceneId, type SaveV4, type SceneId, type SceneLine, type Step,
 } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -26,7 +25,6 @@ import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { finishArrivalScene, readSceneOnce } from './actions'
-import { chapterHand, rewardWords } from './goal-words'
 
 /** Each speaking cast member's disc colour, until the busts. */
 const CAST_COLOR: Readonly<Partial<Record<CastId, string>>> = { 'hollis-pryor': '#6b5aa6', 'marta-quill': '#c4573a', 'ben-carver': '#7a8b3a', 'ida-stone': '#8a5a3c' }
@@ -49,7 +47,7 @@ export default function ScenePlayer({ scene }: { scene: SceneId }) {
   if (scene === BENCH_SCENE) return <Suspense fallback={null}><BenchScene save={save} /></Suspense>
   const arrival = arrivalOf(scene)
   if (arrival) return <ArrivalPlayer save={save} id={arrival} />
-  return <ChapterScenePlayer scene={scene as ChapterSceneId} />
+  return <OpeningPlayer scene={scene as OpeningSceneId} />
 }
 
 /** The sheet's frame: the title line, Skip, and what plays. The pair conversations play in it too. */
@@ -67,13 +65,13 @@ export function Frame({ title, label, scene, onSkip, skipping, children }: { tit
   )
 }
 
-function ChapterScenePlayer({ scene }: { scene: ChapterSceneId }) {
+function OpeningPlayer({ scene }: { scene: OpeningSceneId }) {
   const save = useLoopSave()
   const story = useStory()
   const navigate = useNavigate()
   const [leaving, setLeaving] = useState(false)
   if (!save) return null
-  const data = chapterScene(scene, story ? openingOf(story).length : undefined)
+  const data = openingScene(story ? openingOf(story).length : undefined)
   /** Played through or skipped: the scene is read, once, and the farm goes on where `to` says. */
   const finish = (to: string | null) => {
     if (leaving) return
@@ -88,23 +86,19 @@ function ChapterScenePlayer({ scene }: { scene: ChapterSceneId }) {
   )
 }
 
-function Play({ scene, master, onDone }: { scene: ChapterSceneId; master: MasterView; onDone: (to: string | null) => void }) {
+function Play({ scene, master, onDone }: { scene: OpeningSceneId; master: MasterView; onDone: (to: string | null) => void }) {
   const save = useLoopSave()!
   const story = useStory()
-  const lines = useMemo(() => {
-    // The closing scene's newest hand is chapter 1's authored arrival, or nobody.
-    const newest = story ? chapterArrival(story, 1)?.characterId ?? null : null
-    return sceneLines(chapterScene(scene, story ? openingOf(story).length : undefined), newest)
-    // The roles are filled once, when the scene starts: a save changing under it doesn't recast it.
-  }, [scene]) // eslint-disable-line react-hooks/exhaustive-deps
+  // The lines are read once, when the scene starts.
+  const lines = useMemo(() => sceneLines(openingScene(story ? openingOf(story).length : undefined)), [scene]) // eslint-disable-line react-hooks/exhaustive-deps
   const [at, setAt] = useState(0)
   const nameOf = (id: string): string => master.album.get(id)?.name ?? 'An Uma'
   const farmer = save.farmer.name
   if (at >= lines.length) {
     // The opening ends as its Umas come up the road: reading it brings them, and their arrivals play next. An opening
-    // that brings nobody ends on chapter 1's card, as the last arrival would.
-    if (scene === 'scene:1:open' && (!story || openingOf(story).length > 0)) return <ReadOn onDone={() => onDone(null)} />
-    return <ChapterCard scene={scene} onDone={onDone} />
+    // that brings nobody ends on the first day's card, as the last arrival would.
+    if (!story || openingOf(story).length > 0) return <ReadOn onDone={() => onDone(null)} />
+    return <FirstDayCard onPlant={() => onDone('/fields')} />
   }
   const line = lines[at]!
   return (
@@ -142,53 +136,17 @@ function Bust({ line, nameOf }: { line: SceneLine; nameOf: (id: string) => strin
   )
 }
 
-/** Chapter 1's card: its six goals and the first tap, planting. Its reward names a new hand only when the cast has a
- * chapter-1 arrival. */
-export function ChapterOneCard({ onPlant }: { onPlant: () => void }) {
-  const chapter = chapterOf(1)!
-  const hand = useChapterHand(1)
+/** The first day's card, where the opening ends: the seeds waiting, and the first tap, planting. */
+export function FirstDayCard({ onPlant }: { onPlant: () => void }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 px-4 pb-4" data-chapter-card={1}>
+    <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 px-4 pb-4" data-first-day>
       <div className="rounded-md border border-hairline bg-panel p-4 shadow-2">
-        <p className="text-micro text-ink-soft">Chapter 1</p>
-        <h2 className="font-display text-[22px] font-bold">{chapter.title}</h2>
-        <ol className="mt-2 space-y-1.5">
-          {CHAPTER_1_GOALS.map((goal, i) => (
-            <li key={goal.id} className="flex gap-2 text-[15px]"><span className="w-4 shrink-0 font-semibold text-ink-faint">{i + 1}</span>{goal.text}</li>
-          ))}
-        </ol>
-        <p className="pt-2 text-[13px] text-ink-soft" data-reward>Reward: {rewardWords(1, hand)}.</p>
+        <h2 className="font-display text-[22px] font-bold">Day 1</h2>
+        <p className="pt-1 text-[15px] text-ink-soft">Nine Carrot seeds wait in the Fields.</p>
       </div>
       <Button className="w-full" onClick={onPlant} data-action="plant">Plant the carrots</Button>
     </div>
   )
-}
-
-/** The scene's last card: chapter 1's six goals and the first tap, planting; or the chapter's reward and
- * chapter 2's line. */
-function ChapterCard({ scene, onDone }: { scene: ChapterSceneId; onDone: (to: string | null) => void }) {
-  const hand = useChapterHand(1)
-  if (scene === 'scene:1:open') return <ChapterOneCard onPlant={() => onDone('/fields')} />
-  const next = chapterOf(2)!
-  return (
-    <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 px-4 pb-4" data-chapter-card={2}>
-      <div className="rounded-md border border-hairline bg-panel p-4 shadow-2">
-        <p className="text-micro text-ink-soft">Chapter 1 done</p>
-        <p className="text-[15px]" data-reward>{rewardWords(1, hand)}</p>
-        <p className="text-micro pt-3 text-ink-soft">Chapter 2</p>
-        <h2 className="font-display text-[22px] font-bold">{next.title}</h2>
-        <p className="text-[15px] text-ink-soft">Soon</p>
-      </div>
-      <Button className="w-full" onClick={() => onDone('/')} data-action="start-day">Start the day</Button>
-    </div>
-  )
-}
-
-/** Whether chapter `n`'s reward brings a new hand on this save and pack. */
-function useChapterHand(chapter: number): boolean {
-  const save = useLoopSave()
-  const story = useStory()
-  return chapterHand(story, chapter)
 }
 
 // --- Her arrival scene ----------------------------------------------------------------------------------
@@ -257,7 +215,7 @@ function Arrival({ save, id, steps, master, lastOpening }: { save: SaveV4; id: s
   const title = place ? `${name} arrives · ${placeName(place)}` : `${name} arrives`
   return (
     <Frame title={title} label={`${name} arrives`} scene={`arrival:${id}`} onSkip={skip} skipping={leaving || (done && lastOpening)}>
-      {done ? (lastOpening ? <ChapterOneCard onPlant={() => finish('/fields')} /> : <Welcome onDone={() => finish(null)} id={id} name={name} points={earned} />)
+      {done ? (lastOpening ? <FirstDayCard onPlant={() => finish('/fields')} /> : <Welcome onDone={() => finish(null)} id={id} name={name} points={earned} />)
         : step && 'choice' in step && choiceAt === cursor ? (
           <Choice id={id} name={name} options={step.choice} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />
         ) : step ? (

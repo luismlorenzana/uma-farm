@@ -14,11 +14,11 @@ import type { HeartLine, MorningSummary } from '../night/summary'
 import { bool, count, int, list, object, oneOf, parseAccount, record, text } from './parse'
 import {
   counts, day, fail, KEY, member, outfit, parseBinLines, parseBonds, parseBoard, parseBuildings, parseDiary, parseDig, parseDorm, parseExpeditions,
-  parseFarm, parseFields, parseNewsLines, parseNudges, parseRanch, parseRankLines, parseRanks, parseTools, parseWarehouse, parseWork, parseWorkLines,
+  legacyChapter, parseFarm, parseFields, parseNewsLines, parseNudges, parseRanch, parseRankLines, parseRanks, parseTools, parseWarehouse, parseWork, parseWorkLines,
   parseWorkshops, unique, type LoopRequestKinds,
 } from './parse-loop'
 import {
-  EVENING_KINDS, eveningsOn, FARMHOUSE, FESTIVAL_NIGHT, FINALE_MARRIED, FURNITURE_PIECES, invitesFor, LOVE_STAGES, marriedCount, MAX_HOUSES, residentsOf, roomsOf, vowsOn,
+  type BuildingId, EVENING_KINDS, eveningsOn, FARMHOUSE, FESTIVAL_NIGHT, FINALE_MARRIED, FURNITURE_PIECES, invitesFor, LOVE_STAGES, marriedCount, MAX_HOUSES, residentsOf, roomsOf, vowsOn,
   isDishId, pairKey, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUma, type SaveV4, type TodayV4,
 } from './v4'
 
@@ -335,7 +335,23 @@ function parseSummaryV4(value: unknown, path: string, today: number, roster: Rea
   }
 }
 
-/** Parses a save v4. `kinds` is the work kinds' requests (`LOOP_REQUESTS`; tests pass their own kinds). */
+/** The places each global chapter opened, before the farm grew by building: chapter 2 the Coop and the Barn, 3 the
+ * Mine, the Smelter, the Quarry and the Cutter, 4 the Kitchen, 5 the expedition post, 6 the Restaurant, 7 the Forge and
+ * the sea (the dock and the boat). */
+const CHAPTER_OPENED: readonly (readonly BuildingId[])[] = [
+  [], [], ['coop', 'barn'], ['mine', 'smelter', 'quarry', 'cutter'], ['kitchen'], ['expeditions'], ['restaurant'], ['forge', 'dock', 'boat'],
+]
+
+/** An older v4's buildings with what its chapter had opened standing: a place a chapter opened stays open, built
+ * (`buildings[id]` at least 1). Chapter 1's Mill plans (`buildings.mill` 0) are an unbuilt Mill now. */
+export function chapterOpened(buildings: SaveV4['buildings'], chapter: number): SaveV4['buildings'] {
+  const opened = CHAPTER_OPENED.slice(0, chapter + 1).flat().filter((id) => (buildings[id] ?? 0) < 1)
+  return opened.length === 0 ? buildings : { ...buildings, ...Object.fromEntries(opened.map((id) => [id, 1])) }
+}
+
+/** Parses a save v4. `kinds` is the work kinds' requests (`LOOP_REQUESTS`; tests pass their own kinds). An older v4's
+ * `farm.chapter` and `farm.goals` are ignored, what its chapter opened kept standing (`chapterOpened`); its missing
+ * `farm.builds` is none. */
 export function parseSaveV4(value: unknown, path = 'save', kinds: LoopRequestKinds = LOOP_REQUESTS): SaveV4 {
   const o = object(value, path, SAVE_V4_KEYS)
   if (o.version !== 4) fail(`${path}.version`, 'expected 4')
@@ -343,7 +359,7 @@ export function parseSaveV4(value: unknown, path = 'save', kinds: LoopRequestKin
   const today = day(c.day, `${path}.calendar.day`)
   const roster = parseRoster(o.roster, `${path}.roster`, today)
   const ids = new Set(Object.keys(roster))
-  const buildings = parseBuildings(o.buildings, `${path}.buildings`)
+  const buildings = chapterOpened(parseBuildings(o.buildings, `${path}.buildings`), legacyChapter(o.farm))
   const homestead = parseHomestead(o.homestead, `${path}.homestead`, today, ids)
   const arrivals = unique(list(o.arrivals, `${path}.arrivals`, 0, ids.size).map((v, i) => member(v, `${path}.arrivals.${i}`, ids)), `${path}.arrivals`)
   const love = parseLoveAll(o.love, `${path}.love`, ids, today, homestead.houses.length)

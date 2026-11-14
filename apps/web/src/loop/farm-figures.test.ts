@@ -91,7 +91,7 @@ describe('who stands on the farm', () => {
   })
 
   it('faces the place\'s work: toward a building beside her, else into the place; the idle face the camera', () => {
-    const design = farmDesign({ ...farm(), farm: { ...farm().farm, chapter: 2, points: 1300 }, buildings: { dorm: 1, mill: 1 } })
+    const design = farmDesign({ ...farm(), farm: { ...farm().farm, points: 1300 }, buildings: { dorm: 1, mill: 1 } })
     const mill = (n: number) => design.markers.find((m) => m.id === `mill-${n}`)!
     expect([1, 2, 3, 4].map((n) => slotFacing(design, mill(n)))).toEqual(['right', 'right', 'right', 'back'])
     const forest = design.markers.find((m) => m.id === 'forest-1')!
@@ -107,15 +107,14 @@ describe('the idle Umas\' spots', () => {
   const ok = standable(design, blocks)
   const spots = yardSpots(design, plots, ok)
 
-  it('are the Dorm\'s apron, middle first, the path in front of it, the path row on to the bin, then the open ground', () => {
+  it('are the Dorm\'s apron, middle first, the path in front of it, then the path row on to the bin', () => {
     const dorm = plots.find((p) => p.id === 'dorm')!
     expect(spots.slice(0, 6)).toEqual([
       { x: dorm.x + 1, z: dorm.z + 2 }, { x: dorm.x, z: dorm.z + 2 }, { x: dorm.x + 2, z: dorm.z + 2 },
       { x: dorm.x + 1, z: dorm.z + 3 }, { x: dorm.x, z: dorm.z + 3 }, { x: dorm.x + 2, z: dorm.z + 3 },
     ])
     expect(spots.slice(6, 12)).toEqual([5, 4, 3, 2, 1, 0].map((x) => ({ x, z: dorm.z + 3 })))
-    // The open ground's free tiles: its flowers, not its bush or the Gate's fence.
-    expect(spots.slice(12)).toEqual([{ x: 6, z: 24 }, { x: 7, z: 24 }, { x: 6, z: 25 }, { x: 7, z: 25 }, { x: 8, z: 25 }, { x: 7, z: 26 }, { x: 8, z: 26 }])
+    expect(spots).toHaveLength(12)
     expect(spots.every(ok)).toBe(true)
   })
 

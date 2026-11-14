@@ -74,16 +74,13 @@ function frontOf(plot: Pick<FarmPlot, 'x' | 'z'>, ok: (t: Tile) => boolean): Til
   return [2, 3].flatMap((lz) => [1, 0, 2].map((lx) => ({ x: plot.x + lx, z: plot.z + lz }))).filter(ok)
 }
 
-/** The yard's idle spots: the Dorm's apron and the path in front of it, the path row on toward the bin, then the open
- * ground beside the Gate. */
+/** The yard's idle spots: the Dorm's apron and the path in front of it, then the path row on toward the bin. */
 export function yardSpots(design: FarmDesign, plots: readonly FarmPlot[], ok: (t: Tile) => boolean): Tile[] {
   const dorm = plots.find((p) => p.id === 'dorm')
   if (!dorm) return []
   const path = Array.from({ length: dorm.x }, (_, i) => ({ x: dorm.x - 1 - i, z: dorm.z + 3 })).filter(ok)
-  const open = plots.find((p) => p.kind === 'open')
-  const ground = open ? [0, 1, 2].flatMap((lz) => [0, 1, 2].map((lx) => ({ x: open.x + lx, z: open.z + lz }))).filter(ok) : []
   const seen = new Set<string>()
-  return [...frontOf(dorm, ok), ...path, ...ground].filter((t) => !seen.has(key(t)) && seen.add(key(t)))
+  return [...frontOf(dorm, ok), ...path].filter((t) => !seen.has(key(t)) && seen.add(key(t)))
 }
 
 /** A house's idle spots: its apron, then the path in front of it. */

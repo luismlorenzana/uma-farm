@@ -3,7 +3,7 @@
 // place scores full, the other half, and none at all nothing. Her place is her line's when it's open today, else a seeded
 // one from the farm places her beats use. Two forks (an event, about 20 s) give 50, 75 or 100; four (an evening, about
 // 50 s) give 50–100 in eighths. Pure.
-import { FARM_PLACES, placeOpen, type FarmPlaceId } from '../../farm/places'
+import { MAP_PLACES, placeOpen, type FarmPlaceId } from '../../farm/places'
 import type { FarmSave } from '../../save/v4'
 import { type StoryPack } from '../../story/pack'
 import { linePlaces, routeBeats } from '../../story/placeholders'
@@ -24,11 +24,11 @@ export interface WalkPlan {
 }
 
 /** Today's open farm places a walk passes. */
-export const walkPlacesOpen = (save: Pick<FarmSave, 'farm'>): FarmPlaceId[] => FARM_PLACES.filter((p) => placeOpen(save, p) && !OFF_PATH.has(p.id)).map((p) => p.id)
+export const walkPlacesOpen = (save: Pick<FarmSave, 'farm' | 'buildings' | 'roster'>): FarmPlaceId[] => MAP_PLACES.filter((p) => placeOpen(save, p) && !OFF_PATH.has(p.id)).map((p) => p.id)
 
 /** The place she loves on a walk: her line's first place when it's open today, else a seeded one of the open
  * farm places her beats use, else the Fields. */
-export function walkFavourite(save: Pick<FarmSave, 'farm'>, pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string, seed: Seed): FarmPlaceId {
+export function walkFavourite(save: Pick<FarmSave, 'farm' | 'buildings' | 'roster'>, pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string, seed: Seed): FarmPlaceId {
   const open = new Set(walkPlacesOpen(save))
   const line = linePlaces(pack, id).find((p) => open.has(p))
   if (line) return line

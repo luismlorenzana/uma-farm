@@ -120,7 +120,7 @@ field the game doesn't read is kept for the story.
 | `birthday` | `{ "month": 1–12, "day": … }` on a real date, when master data has none | Master data's birthday, or none |
 | `meet` | **Her trigger to meet,** from the trigger menu below. Read now; meeting her (F67) acts on it | Talk with her on three different days |
 | `chapters` | **Her chapters,** below. Read now; her chapters' screens (F68) act on them | The four default chapters |
-| `arrives` | How she comes to the farm today: `opening`, a `chapter`, a `festival` (and a `year`), the Dorm's `beds`, or after an `event`. Meeting her (F67) replaces it | She doesn't come to the farm on her own until meeting her lands (unless the opening brings her) |
+| `arrives` | How she comes to the farm today: `opening`, a `festival` (and a `year`), the Dorm's `beds`, or after an `event`. A `chapter` arrival is noted and dropped: the farm has no global chapters. Meeting her (F67) replaces it | She doesn't come to the farm on her own until meeting her lands (unless the opening brings her) |
 | `paragraph` | The story's own: the sandbox shows it | Nothing |
 
 ### The trigger menu
@@ -219,7 +219,7 @@ another id is kept for the story (a note).
 
 | Field | What it does in play | Without it |
 |---|---|---|
-| `trigger` | Its setup besides her full bar: `hearts`, she's `working` an activity, an `item` is in the Warehouse, a `bond` with someone reaches a level, a `chapter`. Never a clock, the weather, a season or a festival | Her full bar only |
+| `trigger` | Its setup besides her full bar: `hearts`, she's `working` an activity, an `item` is in the Warehouse, a `bond` with someone reaches a level. A `chapter` setup is noted and read as her full bar: the farm has no global chapters. Never a clock, the weather, a season or a festival | Her full bar only |
 | `place` | Where it plays, on her Next card and the Memory | No place shown |
 | `together` | What you do together: `talk`, `work` an activity, a `date` game (fishing, cooking, stargazing, footrace, dance, picnic, market, boat, walk, crafting), a `gift` of a good, or `help` someone. A work, a date or a gift adds a play when the event scripts none | No play added: the best choice taken is the grade |
 | `beat` | Its Memory's caption | The game's card's first line ("A quiet afternoon with her.") |

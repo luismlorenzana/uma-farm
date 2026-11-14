@@ -137,12 +137,12 @@ describe('the forest\'s page', () => {
 })
 
 describe('the Fishery\'s page', () => {
-  it('fishes the Pond, offers the River from Hand and the sea from chapter 7, and measures the catch', async () => {
+  it('fishes the Pond, offers the River from Hand and the sea once the Dock stands, and measures the catch', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
     await render(page('fishery'), `/fishery${jobQuery({ slot: 0 })}`)
     expect($$('[data-where]').filter((b) => !(b as HTMLButtonElement).disabled).map((b) => b.getAttribute('data-where'))).toEqual(['pond'])
     expect($('[data-where="river"]')?.textContent).toContain('From Hand')
-    expect($('[data-where="sea-pier"]')?.textContent).toContain('Chapter 7')
+    expect($('[data-where="sea-pier"]')?.textContent).toContain('Needs the Dock')
     expect($('[data-where="pond"]')?.textContent).toContain('About 3 a day')
     await click('[data-action="job-submit"]')
     expect(save().work['101']!.entries[0]!.outputs).toHaveLength(3)
@@ -157,17 +157,21 @@ describe('the Fishery\'s page', () => {
 })
 
 describe('the stations', () => {
-  it('locks an unbuilt Sawmill until Farm Rank 3, builds it, and saws a day of logs', async () => {
+  it('locks an unbuilt Sawmill until Farm Rank 3, builds it overnight, and saws a day of logs', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: { ...farm(), gold: 2000 } })
     await render(page('sawmill'), '/sawmill')
-    expect($('[data-build-lock]')?.textContent).toBe('Opens at Farm Rank 3.')
+    expect($('[data-build-lock]')?.textContent).toBe('Opens at Farm Rank 3')
     expect(($('[data-action="build"]') as HTMLButtonElement).disabled).toBe(true)
-    useGame.setState({ save: { ...farm(), gold: 2000, farm: { ...farm().farm, points: 500 }, items: { 'pine-log': [12, 0, 3, 0, 0] } } })
+    useGame.setState({ save: { ...farm(), gold: 2000, farm: { ...farm().farm, points: 250 }, items: { 'pine-log': [40, 0, 0, 0, 0] } } })
     await render(page('sawmill'), '/sawmill')
-    expect($('[data-action="build"]')?.textContent).toBe('Build · 1,500g')
+    expect($('[data-action="build"]')?.textContent).toBe('Build · 1,500g · 40 logs')
     await click('[data-action="build"]')
-    expect(save()).toMatchObject({ gold: 500, buildings: { sawmill: 1 } })
-    expect($('[data-work-note]')?.textContent).toBe('The Sawmill is built.')
+    expect(save()).toMatchObject({ gold: 500, farm: { builds: ['sawmill'] } })
+    expect($('[data-work-note]')?.textContent).toBe('The Sawmill stands tomorrow.')
+    expect(await endTheDay(1)).toBe(true)
+    useGame.setState({ save: { ...save(), summary: null, items: { 'pine-log': [12, 0, 3, 0, 0] } } })
+    expect(save().buildings.sawmill).toBe(1)
+    await render(page('sawmill'), '/sawmill')
     expect($('[data-stats]')?.textContent).toBe('Foraging · 4 slots')
 
     await render(page('sawmill'), `/sawmill${jobQuery({ slot: 0 })}`)
@@ -176,7 +180,7 @@ describe('the stations', () => {
     await click('[data-size="8"]')
     await click('[data-action="job-submit"]')
     expect(save().items['pine-log']).toEqual([4, 0, 3, 0, 0])
-    expect(await endTheDay(1)).toBe(true)
+    expect(await endTheDay(2)).toBe(true)
     await render(page('sawmill'), '/sawmill')
     await click('[data-action="collect"]')
     expect(save().items['pine-plank']).toEqual([8, 0, 0, 0, 0])
@@ -199,7 +203,7 @@ describe('the quick look on the farm map', () => {
     await click('[data-kit="peek-row"] button')
     expect(path).toBe(`/forest${jobQuery({ slot: 0 })}`)
     await render(<WorkPlacePeek save={{ ...save(), gold: 100, farm: { ...save().farm, points: 500 } }} place="smokehouse" />, '/?peek=smokehouse')
-    expect($('[data-build-lock]')?.textContent).toBe('Need 1,900g more.')
+    expect($('[data-build-lock]')?.textContent).toBe('Need 1,900g, 30 logs and 20 fish more')
   })
 })
 
@@ -214,7 +218,7 @@ describe('the work screens\' view (pure)', () => {
     const save = farm()
     expect(gatherSizes(save, 'forest', '101', talentsD)).toEqual([5, 10, 15, 20])
     expect([daysFor(5, [5, 10, 15, 20]), daysFor(6, [5, 10, 15, 20]), daysFor(99, [5, 10, 15, 20])]).toEqual([1, 2, 4])
-    expect(whereRows(save, 'fishery', '101', talentsD).map((r) => r.lock)).toEqual([null, 'From Hand', 'From Skilled', 'From Expert', 'From Legend', 'Chapter 7', 'Chapter 7'])
+    expect(whereRows(save, 'fishery', '101', talentsD).map((r) => r.lock)).toEqual([null, 'From Hand', 'From Skilled', 'From Expert', 'From Legend', 'Needs the Dock', 'Needs the Boat'])
     expect(requestWords({ kind: 'forage', item: 'old-forest', count: 2 }, 1)).toEqual({ name: 'Old Forest', item: 'maple-log' })
     expect(requestWords({ kind: 'planks', item: 'pine-plank@3', count: 8 }, 1)).toEqual({ name: 'Pine Plank ★3', item: 'pine-plank@3', count: 8 })
     const held = { ...save, items: { apple: [5, 0, 0, 0, 0] } } as SaveV4

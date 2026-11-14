@@ -20,7 +20,7 @@ import {
   daySeconds, fishSize, haulCount, haulsTonight, loopKinds, LOOP_KINDS, pickShare, planHaul, planStation, sizeRecord, sizeSkill, stationDays, termsOf,
   type WorkTerms,
 } from './kinds'
-import { buildStation, stationLock, stationOptions } from './stations'
+import { stationOptions } from './stations'
 import { FISH_SIZES, FISHERY, FOREST } from './tables'
 
 const AT = '2026-11-09T10:00:00.000Z'
@@ -130,10 +130,14 @@ describe('a day\'s haul', () => {
     expect(haulCount('fishery', terms({ talent: 0 }))).toBe(3)
   })
 
-  it('refuses the Hills at Novice and opens them at Hand; refuses the Sea Pier before chapter 7', () => {
+  it('refuses the Hills at Novice and opens them at Hand; the Sea Pier before the Dock, the Deep Sea before the Boat', () => {
     expect(() => start(farm(), job('forest', forage('hills')))).toThrow('Opens at Hand.')
     expect(start(ranked(farm(), '101', 'foraging', 1), job('forest', forage('hills'))).work['101']!.entries).toHaveLength(1)
-    expect(() => start(ranked(farm(), '101', 'fishing', 5), job('fishery', fish('sea-pier')))).toThrow('Opens with Chapter 7.')
+    expect(() => start(ranked(farm(), '101', 'fishing', 5), job('fishery', fish('sea-pier')))).toThrow('Needs the Dock.')
+    const dock = { ...ranked(farm(), '101', 'fishing', 5), buildings: { dorm: 1, dock: 1 } }
+    expect(start(dock, job('fishery', fish('sea-pier'))).work['101']!.entries).toHaveLength(1)
+    expect(() => start(dock, job('fishery', fish('deep-sea')))).toThrow('Needs the Boat.')
+    expect(start({ ...dock, buildings: { dorm: 1, dock: 1, boat: 1 } }, job('fishery', fish('deep-sea'))).work['101']!.entries).toHaveLength(1)
     expect(() => start(ranked(farm(), '101', 'fishing', 4), job('fishery', fish('moon-pool')))).toThrow('Opens at Legend.')
     expect(() => start(farm(), job('forest', fish('pond')))).toThrow()
   })
@@ -297,21 +301,6 @@ describe('the stations', () => {
     expect(() => start(save, job('sawmill', { kind: 'planks', item: 'pine-plank@1', count: 8 }))).toThrow('Short 3 Pine Log.')
     expect(() => start({ ...save, buildings: { dorm: 1 } }, job('sawmill', { kind: 'planks', item: 'pine-plank@1', count: 5 }))).toThrow('Build it first.')
     expect(() => start(save, job('sawmill', { kind: 'smoking', item: 'carp-fillet@1', count: 1 }))).toThrow()
-  })
-
-  it('builds the Mill only with its plans, the Sawmill from Farm Rank 3 with 1,500g', () => {
-    const save = { ...farm(), gold: 5000 }
-    expect(() => buildStation(save, 'mill')).toThrow('Needs the Mill’s plans')
-    expect(buildStation({ ...save, buildings: { ...save.buildings, mill: 0 } }, 'mill')).toMatchObject({ gold: 3800, buildings: { mill: 1 } })
-    expect(() => buildStation(save, 'sawmill')).toThrow('Opens at Farm Rank 3.')
-    const fr3 = { ...save, farm: { ...save.farm, points: 500 } }
-    expect(stationLock({ ...fr3, gold: 1000 }, 'sawmill')).toEqual({ by: 'gold', short: 500 })
-    expect(() => buildStation({ ...fr3, gold: 1000 }, 'sawmill')).toThrow(SaveRuleError)
-    const built = buildStation(fr3, 'sawmill')
-    expect(built).toMatchObject({ gold: 3500, buildings: { sawmill: 1 } })
-    expect(built.account).toEqual(fr3.account)
-    expect(() => buildStation(built, 'sawmill')).toThrow('Built already.')
-    expect(buildStation(fr3, 'smokehouse').gold).toBe(3000)
   })
 
   it('offers what the Warehouse holds, job by job, at each star', () => {

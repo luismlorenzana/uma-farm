@@ -13,7 +13,7 @@
 import {
   ACTIVITY_NAMES, bedsAt, EVENINGS, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, rungName, SEASON_NAMES, SUMMARY_SECTIONS, type FarmPlaceId, type FestivalId, type HeartLine, type MorningSummary, type SummarySection,
 } from '@farm/domain'
-import { chapterDoneWords, farmRankWords, milestoneWords } from './goal-words'
+import { builtWords, farmRankWords, milestoneWords } from './goal-words'
 import { readParam, type PairWords } from './hearts-view'
 import { challengeWords } from './roster-view'
 import { plural } from './words'
@@ -26,7 +26,7 @@ export interface SummaryLine {
   /** Where its tap goes: the place's quick look or screen, the calendar or the roster. */
   to: string
   /** A mark after the words: "In demand" on a sale the season lifted; "Rank up" and "Points full"; "New";
-   *"Chapter", "Farm Rank" and "Milestone". */
+   * "Built", "Farm Rank" and "Milestone". */
   tag?: string
   /** Her invitation's id: the card draws Yes, tonight and Another day under the line. */
   invite?: string
@@ -66,12 +66,10 @@ export interface ReadyNow {
 /** The morning summary as the card shows it: its sections in order, empty ones hidden, each line a tap.
  * §4 Hearts also shows while someone is `ready`. */
 export function summaryParts(summary: MorningSummary, nameOf: NameOf = someone, ready: readonly ReadyNow[] = [], pairs: PairWords | null = null,
-  home: HomeWords = NO_HOME, hand?: ChapterHand): SummaryPart[] {
+  home: HomeWords = NO_HOME): SummaryPart[] {
   const sections = SUMMARY_SECTIONS.filter((section) => (section === 'hearts' ? summary.hearts.length + ready.length + home.household.length > 0 : summary[section].length > 0))
-  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs, home, hand) }))
+  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs, home) }))
 }
-/** Whether a chapter done tonight brought a new hand (`chapterHand`); without it, the chapter's own reward says. */
-export type ChapterHand = (chapter: number) => boolean
 
 /** What the homestead's lines read beyond the summary, from the save and the pack as the card shows: a house's name,
  * the house line (drawn live), and the household's Ready offers. None before the pack loads. */
@@ -185,7 +183,7 @@ function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, hom
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 
 function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: NameOf, ready: readonly ReadyNow[], pairs: PairWords | null,
-  home: HomeWords, hand?: ChapterHand): SummaryLine[] {
+  home: HomeWords): SummaryLine[] {
   switch (section) {
     case 'bin': {
       // Each good and star with its count and gold, the demand marked, then the total.
@@ -209,13 +207,13 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
         }
       })
     case 'news':
-      // The season and festivals; the chapter done, a Farm Rank and what it opens, the Diary's milestones; the
+      // The season and festivals; a place built overnight, a Farm Rank and what it opens, the Diary's milestones; the
       // household's milestones; the Dorm's beds and swaps home.
       return summary.news.map((line): SummaryLine => {
         switch (line.kind) {
           case 'season': return { key: 'season', text: `${SEASON_NAMES[line.season]} begins`, to: '/?sheet=calendar' }
           case 'festival': return { key: `festival:${line.when}`, text: `${festivalName(line.festival)} ${line.when}`, to: peek('festival') }
-          case 'chapter': return { key: 'chapter', text: chapterDoneWords(line.chapter, hand?.(line.chapter)), to: '/diary', tag: 'Chapter' }
+          case 'built': return { key: `built:${line.place}`, text: builtWords(line.place), to: peek(farmPlace(line.place)?.on ?? line.place), tag: 'Built' }
           case 'farm-rank': return { key: `farm-rank:${line.rank}`, text: farmRankWords(line.rank), to: '/?sheet=rank', tag: 'Farm Rank' }
           case 'milestone': return { key: `milestone:${line.id}`, text: milestoneWords(line.id), to: '/diary', tag: 'Milestone' }
           case 'dorm': return { key: 'dorm', text: `Dorm level ${line.level} · ${bedsAt(line.level)} beds`, to: DORM }

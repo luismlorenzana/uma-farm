@@ -1,20 +1,21 @@
 // The Diary's counts and the Farm Rank's points. Each good shipped once is an
 // entry; a family's ten raw or ten refined goods shipped once is a row, paying 500g once; milestones pay their gold once.
 // All of it is checked at night step 8 (`checkGoals`) and paid that night, and the Farm Rank's points are recomputed
-// from the save there: ⌊gold shipped ÷ 100⌋ + 5 × entries + 25 × milestones + 250 × chapters done. Loaded with the night
-// and the screens.
+// from the save there, from income and resources only: ⌊gold shipped ÷ 100⌋ + 5 × entries + 25 × milestones. Loaded
+// with the night and the screens.
 import { BLOCK_RULES, cropLevelOf } from '../fields/fields'
 import { CROPS, SHOP_SEEDS } from '../fields/crops'
-import { STATION_RULES } from '../gathering/tables'
-import { STATIONS } from '../gathering/ids'
+import { FISHING_SPOTS, FOREST_AREAS } from '../gathering/ids'
+import type { MadeTonight } from '../gathering/kinds'
 import { isGoodOrRingId } from '../goods/ids'
 import { GOLD_SHIPPED } from '../save/bin'
 import { earnGold } from '../save/gold'
 import { BLOCK_IDS, type FarmSave } from '../save/v4'
 import { DORM_LEVELS } from './dorm'
+import { buildCostWords, offeredAt } from './builds'
 import { FARM_RANK_POINTS, farmRankOf } from './farm'
 import {
-  CHAPTER_POINTS, DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, milestoneOf, ROW_GOLD, type DiaryRow, type Milestone,
+  DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, milestoneOf, ROW_GOLD, type DiaryRow, type Milestone,
 } from './milestones'
 
 /** The goods shipped at least once: the Diary's entries, a ring among them. */
@@ -23,23 +24,18 @@ export const diaryEntries = (save: Pick<FarmSave, 'diary'>): number => Object.en
 /** The milestones paid so far (rows aren't milestones). */
 export const milestonesPaid = (save: Pick<FarmSave, 'diary'>): number => save.diary.milestones.filter((id) => milestoneOf(id) !== undefined).length
 
-/** The chapters done: every chapter before the current one. */
-export const chaptersDone = (save: Pick<FarmSave, 'farm'>): number => save.farm.chapter - 1
-
 /** Each source of the Farm Rank's points on this save. */
 export interface FarmPoints {
   shipped: number
   entries: number
   milestones: number
-  chapters: number
   total: number
 }
 export function farmPointsOf(save: Pick<FarmSave, 'farm' | 'diary'>): FarmPoints {
   const shipped = Math.floor((save.farm.counts[GOLD_SHIPPED] ?? 0) / GOLD_PER_POINT)
   const entries = ENTRY_POINTS * diaryEntries(save)
   const milestones = MILESTONE_POINTS * milestonesPaid(save)
-  const chapters = CHAPTER_POINTS * chaptersDone(save)
-  return { shipped, entries, milestones, chapters, total: shipped + entries + milestones + chapters }
+  return { shipped, entries, milestones, total: shipped + entries + milestones }
 }
 
 /** The save with its Farm Rank's points recomputed. */
@@ -55,17 +51,16 @@ export function nextFarmRank(points: number): { rank: number; points: number } |
   return at === undefined ? null : { rank: rank + 1, points: at }
 }
 
-/** What a Farm Rank opens in the game as built: more of what's open, read from the rules that gate
- * on it: the Fields' blocks, the Dorm's levels (the Dorm for 20), the shop's seeds (tier 1
- * is the start's) and the stations. Rank 10 is the farm's gold crest. */
+/** What a Farm Rank opens in the game as built, read from the rules that gate on it: the Fields' blocks, the Dorm's
+ * levels (the Dorm for 20), the shop's seeds (tier 1 is the start's) and the places it offers to build, a place whose
+ * game isn't built yet as "not built yet". Rank 10 is the farm's gold crest. */
 export function farmRankOpens(rank: number): string[] {
   const blocks = BLOCK_IDS.filter((id) => { const o = BLOCK_RULES[id].opens; return o.by === 'farm-rank' && o.rank === rank })
     .map((id) => `Block ${id} (${BLOCK_RULES[id].cost.toLocaleString('en-US')}g)`)
   const dorm = DORM_LEVELS.filter((l) => l.level > 1 && l.farmRank === rank).map((l) => `Dorm level ${l.level} (${l.beds} beds)`)
   const seeds = rank > 1 && Object.values(SHOP_SEEDS).some((crops) => crops.some((crop) => CROPS[crop].tier === rank)) ? ['New seeds at the shop'] : []
-  const stations = STATIONS.filter((s) => { const o = STATION_RULES[s].opens; return o.by === 'farm-rank' && o.rank === rank })
-    .map((s) => `The ${s === 'sawmill' ? 'Sawmill' : s === 'smokehouse' ? 'Smokehouse' : 'Mill'} (${STATION_RULES[s].cost.toLocaleString('en-US')}g)`)
-  return [...blocks, ...dorm, ...seeds, ...stations, ...(rank === FARM_RANK_POINTS.length ? ['The farm’s gold crest'] : [])]
+  const builds = offeredAt(rank).map((p) => `The ${p.name} to build (${p.opens.game ? buildCostWords(p) : 'not built yet'})`)
+  return [...builds, ...blocks, ...dorm, ...seeds, ...(rank === FARM_RANK_POINTS.length ? ['The farm’s gold crest'] : [])]
 }
 
 /** The forest areas and fishing spots a haul came home from tonight (night step 4's `notes.made`): depth milestones. */
@@ -100,3 +95,27 @@ export function payDiary<S extends FarmSave>(save: S, depths: DepthsTonight = ne
 
 /** The gold a paid id brought: a milestone's, or a row's 500g. */
 export const paidGold = (id: string): number => milestoneOf(id)?.gold ?? ROW_GOLD
+
+/** The forest areas and fishing spots a haul came home from tonight. */
+export function depthsTonight(made: readonly MadeTonight[]): DepthsTonight {
+  const places: readonly string[] = [...FOREST_AREAS, ...FISHING_SPOTS]
+  return new Set(made.filter((m) => m.items.length > 0 && (m.request.kind === 'forage' || m.request.kind === 'fish') && places.includes(m.request.item)).map((m) => m.request.item))
+}
+
+/** What step 8's goals did tonight, for the morning. */
+export interface GoalsTonight {
+  /** Milestones and rows paid tonight. */
+  paid: string[]
+  /** Farm Ranks reached tonight, lowest first. */
+  ranks: number[]
+}
+
+/** Night step 8's `checkGoals`: the Diary pays what's reached, and the Farm Rank is recomputed. */
+export function checkGoalsNight<S extends FarmSave>(save: S, made: readonly MadeTonight[]): { save: S; tonight: GoalsTonight } {
+  const before = farmRankOf(save.farm.points)
+  const { save: paid, paid: ids } = payDiary(save, depthsTonight(made))
+  const next = withFarmPoints(paid)
+  const after = farmRankOf(next.farm.points)
+  const ranks = Array.from({ length: Math.max(0, after - before) }, (_, i) => before + 1 + i)
+  return { save: next, tonight: { paid: ids, ranks } }
+}

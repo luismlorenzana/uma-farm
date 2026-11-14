@@ -1,15 +1,18 @@
 // The perks' words: one perk a level, 25 in all, templated by her line;
-// "Opens with chapter n" for a perk at a place that waits for its chapter. Invented ids only: the stand-ins and casts of
+// "Opens when the Mine is built" (her place) for a perk at a place not built yet. Invented ids only: the stand-ins and casts of
 // 9000004 onward built here.
 import { describe, expect, it } from 'vitest'
 import type { CastEntry } from '../story/authored'
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { STAND_IN_FILES } from '../story/stand-in'
 import { ROUTE_RUNGS, WAITING_RUNGS, NIGHT_RUNGS } from './love'
-import { lineChapter, PERK_LINES, perkLineOf, perkOf, PERKS, perksFor, perkWords, type PerkLine } from './perks'
+import { linePlace, PERK_LINES, perkLineOf, perkOf, PERKS, perksFor, perkWords, type PerkLine } from './perks'
+import type { FarmPlaceId } from '../farm/places'
 
 const PACK = storyPackFrom(STAND_IN_FILES)
-const words = (line: PerkLine, chapter = 1) => Object.fromEntries(perksFor(line, chapter).map((p) => [p.rung, p.words]))
+/** A farm's buildings with these places built. */
+const built = (...ids: FarmPlaceId[]) => ({ buildings: { dorm: 1, ...Object.fromEntries(ids.map((id) => [id, 1])) } })
+const words = (line: PerkLine) => Object.fromEntries(perksFor(line, built()).map((p) => [p.rung, p.words]))
 
 describe('the perks', () => {
   it('has one perk on every level of her route, and none on a waiting rung', () => {
@@ -29,10 +32,10 @@ describe('the perks', () => {
     })
     expect(words('foraging')).toMatchObject({ f3: '+10% at the forest', f6: 'One item from the forest each night', f9: 'Mentor: +10% rank points for Umas at the forest' })
     expect(words('fishing')).toMatchObject({ f3: '+10% at the Fishery', f6: 'One fish from the Fishery each night', s2: 'A ★3+ fish every 2nd morning, and each morning in her house' })
-    expect(words('mining', 3)).toMatchObject({ f3: '+10% at the Mine', f6: 'One ore from the Mine each night', r2: 'A ★2+ ore every 4th morning' })
-    expect(words('quarry', 3)).toMatchObject({ f3: '+10% at the Quarry', f6: 'One stone or gem from the Quarry each night', r2: 'A ★2+ stone or gem every 4th morning' })
-    expect(words('ranch', 2)).toMatchObject({ f3: '+10% at the ranch', f6: '+5 affection to her pen each night', r2: 'A ★2+ egg, milk or fleece every 4th morning' })
-    expect(words('cooking', 4)).toMatchObject({ f3: '+10% at the Kitchen', f6: 'One more dish on the Kitchen’s next play', r2: 'A ★2+ dish every 4th morning' })
+    expect(words('mining')).toMatchObject({ f3: '+10% at the Mine', f6: 'One ore from the Mine each night', r2: 'A ★2+ ore every 4th morning' })
+    expect(words('quarry')).toMatchObject({ f3: '+10% at the Quarry', f6: 'One stone or gem from the Quarry each night', r2: 'A ★2+ stone or gem every 4th morning' })
+    expect(words('ranch')).toMatchObject({ f3: '+10% at the ranch', f6: '+5 affection to her pen each night', r2: 'A ★2+ egg, milk or fleece every 4th morning' })
+    expect(words('cooking')).toMatchObject({ f3: '+10% at the Kitchen', f6: 'One more dish on the Kitchen’s next play', r2: 'A ★2+ dish every 4th morning' })
     // The levels that don't depend on her line read the same for everyone.
     for (const line of PERK_LINES) {
       expect(words(line)).toMatchObject({
@@ -42,16 +45,16 @@ describe('the perks', () => {
     }
   })
 
-  it('says "Opens with chapter 3" for a miner’s perks at her place until chapter 3', () => {
-    const at = (line: PerkLine, chapter: number) => Object.fromEntries(perksFor(line, chapter).map((p) => [p.rung, p.opens]))
-    expect(at('mining', 1)).toMatchObject({ f3: 3, f6: 3, f8: 3, f9: 3, r5: 3, r7: 3, s3: 3, s4: 3, f1: null, f5: null, r2: null })
-    expect(at('quarry', 2).f3).toBe(3)
-    expect(at('mining', 3).f3).toBeNull()
-    expect(at('forging', 6).f3).toBe(7)
-    expect(at('ranch', 1).f6).toBe(2)
+  it('says "Opens when the Mine is built" for a miner’s perks at her place until it stands', () => {
+    const at = (line: PerkLine, ...ids: FarmPlaceId[]) => Object.fromEntries(perksFor(line, built(...ids)).map((p) => [p.rung, p.opens]))
+    expect(at('mining')).toMatchObject({ f3: 'mine', f6: 'mine', f8: 'mine', f9: 'mine', r5: 'mine', r7: 'mine', s3: 'mine', s4: 'mine', f1: null, f5: null, r2: null })
+    expect(at('quarry', 'mine').f3).toBe('quarry')
+    expect(at('mining', 'mine').f3).toBeNull()
+    expect(at('forging').f3).toBe('forge')
+    expect(at('ranch').f6).toBe('coop')
     // The Fields, the forest and the Fishery are open from day 1.
-    for (const line of ['farming', 'foraging', 'fishing'] as const) expect(perksFor(line, 1).every((p) => p.opens === null)).toBe(true)
-    expect([lineChapter('mining'), lineChapter('quarry'), lineChapter('cooking'), lineChapter('serving'), lineChapter('farming')]).toEqual([3, 3, 4, 6, null])
+    for (const line of ['farming', 'foraging', 'fishing'] as const) expect(perksFor(line, built()).every((p) => p.opens === null)).toBe(true)
+    expect([linePlace('mining'), linePlace('quarry'), linePlace('cooking'), linePlace('serving'), linePlace('farming')]).toEqual(['mine', 'quarry', 'kitchen', 'restaurant', null])
   })
 
   it('reads her line from the pack: her favourite, a quarry calling at the Quarry', () => {

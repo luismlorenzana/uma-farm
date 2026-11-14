@@ -11,8 +11,8 @@ export const MAIN_JS_BUDGET = 180_000
  * farm's pages, its sheets, its actions and the night; the Fields' page, rules and crop table, and the morning's words;
  * the talents, the rank rules and their table, the roster's rows and the Umas' marks; the work operations and their
  * env, the forest's, the Fishery's and the stations' tables, kinds and build rule, and their screens; the Dorm's rules
- * and page, the Gate's quick look and the chats' fallback lines; and the Diary's counts, the chapters, the scenes'
- * lines, the scene player and the goals' words; and the name sheet, the story pack with its placeholders, the format
+ * and page, the Gate's quick look and the chats' fallback lines; and the Diary's counts, building and the farm's
+ * projects with the Build card, the opening's lines, the scene player and the goals' words; and the name sheet, the story pack with its placeholders, the format
  * and validator, arrivals and her points; and her route
  * on her sheet with its words, the acts, praise, birthdays and anniversaries, Ready and bond hearts; and the Hearts
  * tab, her profile, the shared roster album, the stand-in marks, the tab's view model and the perks' words; and the
@@ -57,8 +57,9 @@ export const LAZY_MODULES = [
   'src/loop/DormPage.tsx',
   'src/loop/GatePeek.tsx',
   'domain/src/farm/diary.ts',
-  'domain/src/story/chapters.ts',
-  'domain/src/story/chapter-1.ts',
+  'domain/src/farm/builds.ts',
+  'src/loop/BuildCard.tsx',
+  'domain/src/story/opening.ts',
   'domain/src/story/cast.ts',
   'src/loop/ScenePlayer.tsx',
   'src/loop/goal-words.ts',
