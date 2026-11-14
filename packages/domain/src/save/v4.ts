@@ -412,7 +412,7 @@ export function newRosterUma(day: number): RosterUma {
 /** The Farmhouse: house 0, there from day 1 (its rule amended). */
 export const FARMHOUSE: House = { name: 'Farmhouse', extended: false }
 
-/** Day 1 on v4: 500g, 9 Carrot seeds, Block A of 9 tilled plots, the Dorm at level 1 (3 beds), the Farmhouse, the farmer's name empty, nobody on the roster: the name sheet, then the opening's lines, which bring day 1's helper. */
+/** Day 1 on v4: 500g, 9 Carrot seeds, Block A of 9 tilled plots, the Dorm at level 1 (3 beds), the Farmhouse, the farmer's name empty, nobody on the roster: the name sheet, then the opening's lines, and day 1's visitor at the Gate. */
 export function newSave(uid: string, now: string): SaveV4 {
   return {
     version: 4,

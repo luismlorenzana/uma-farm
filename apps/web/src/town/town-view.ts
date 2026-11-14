@@ -2,7 +2,7 @@
 // lives in town and the town's people, met or not, with where she is today), its search and its two sorts, and the talk
 // sheet's words. Names come through `nameOf` (master data's and the pack's, at run time). Loaded with the town's screen.
 import {
-  atHome, CAST, talkedToday, tieLineOf, townDay, townLineOf, townOf, townsfolk, townTalksOf, withFarmer, type SaveV4, type SpotId, type StoryPack, type TownDay,
+  atHome, CAST, gateVisitor, talkedToday, tieLineOf, townDay, townLineOf, townOf, townsfolk, townTalksOf, withFarmer, type SaveV4, type SpotId, type StoryPack, type TownDay,
   type TownPersonPlayed, type TownSpotPlayed,
 } from '@farm/domain'
 
@@ -25,8 +25,9 @@ export function spotViews(day: TownDay, pack: StoryPack): SpotView[] {
 const inSentence = (name: string): string => name.replace(/^The /, 'the ')
 
 /** Where she is today, in the People list's words. */
-export function whereWords(where: { kind: 'spot'; name: string } | { kind: 'keeps'; name: string } | { kind: 'farm' } | { kind: 'home' } | { kind: 'town' }): string {
+export function whereWords(where: { kind: 'spot'; name: string } | { kind: 'keeps'; name: string } | { kind: 'farm' } | { kind: 'home' } | { kind: 'town' } | { kind: 'gate' }): string {
   switch (where.kind) {
+    case 'gate': return 'At the Gate today'
     case 'spot': return `At ${inSentence(where.name)} today`
     case 'keeps': return `At ${inSentence(where.name)}, most days`
     case 'farm': return 'On the farm'
@@ -60,13 +61,14 @@ export function peopleRows(save: SaveV4, pack: StoryPack, day: TownDay, nameOf: 
   const town = townOf(pack)
   const spotName = new Map(town.spots.map((s) => [s.id, s.name]))
   const kept = new Map(town.spots.flatMap((s): [string, TownSpotPlayed][] => (s.keeper ? [[s.keeper, s]] : [])))
+  const visitor = gateVisitor(save, pack)
   const folk = townsfolk(pack).map((id): PersonRow => {
     const spot = day.where.get(id) ?? null
     const met = !!save.roster[id]
     const farm = met && atHome(save, id)
     return {
       id, name: nameOf(id), spot, met, farm, talks: townTalksOf(save, id)?.talks ?? 0, today: talkedToday(save, id), role: null,
-      where: whereWords(farm ? { kind: 'farm' } : spot ? { kind: 'spot', name: spotName.get(spot)! } : { kind: 'home' }),
+      where: whereWords(farm ? { kind: 'farm' } : spot ? { kind: 'spot', name: spotName.get(spot)! } : id === visitor ? { kind: 'gate' } : { kind: 'home' }),
     }
   })
   const people = town.people.map((p): PersonRow => {

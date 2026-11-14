@@ -152,9 +152,8 @@ describe('a talk in town', () => {
     expect([...townDay(s, PACK).where]).toEqual([...before.where].filter(([id]) => id !== A))
   })
 
-  it('meets a welcomer in town on her first talk, and a spot trigger only at her spot', () => {
-    const w = outOn(save(2), W2)
-    expect(talkToHer(w.save, PACK, W2).met).toBe(true)
+  it('keeps the welcome list out of town until met (she comes to the Gate), and meets a spot trigger only at her spot', () => {
+    for (let day = 1; day <= 40; day++) expect(townDay(save(day), PACK).where.has(W2)).toBe(false)
     let s = save(2)
     for (;;) {
       const at = outOn(s, B, s.calendar.day + 1)

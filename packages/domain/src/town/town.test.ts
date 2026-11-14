@@ -100,10 +100,12 @@ describe('the day\'s draw', () => {
     const moved = townDay({ ...farm, dorm: { ...farm.dorm, home: [...home, mover!] } }, p)
     expect(moved.where.has(mover!)).toBe(false)
     expect([...moved.where]).toEqual([...day.where].filter(([id]) => id !== mover))
-    // A few: everyone out but the day's Gate visitor (the welcome list's first).
-    const few = storyOf(readStoryPack({ umas: {}, routes: {}, cast: { umas: ids(5, 9_000_001).map((characterId) => ({ characterId })) } }).pack, null)
-    expect(count(townDay(save(), few))).toBe(4)
-    expect(townDay(save(), few).where.has('9000001')).toBe(false)
+    // A few: the welcome list (the cast's five) comes to the Gate, so none is out until she's met.
+    const few = storyOf(readStoryPack({ umas: {}, routes: {}, cast: { umas: ids(7, 9_000_001).map((characterId) => ({ characterId })) } }).pack, null)
+    expect([...townDay(save(), few).where.keys()].sort()).toEqual(['9000006', '9000007'])
+    // Met and living in town (no bed), a welcomer is out like anyone; the day's visitor, met today, is not.
+    const met = { ...save(), roster: { 9000002: newRosterUma(3), 9000001: newRosterUma(5) } }
+    expect([...townDay(met, few).where.keys()].sort()).toEqual(['9000002', '9000006', '9000007'])
   })
 
   it('puts her at her favourite spot more often', () => {

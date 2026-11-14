@@ -472,7 +472,7 @@ function townSpots(): string {
 function townDraw(): string {
   return table(['', 'The rule'], [
     ['At each spot', `Up to ${SPOT_ROOM} a day: ${SPOT_ROOM * SPOT_IDS.length} in all, the rest at home`],
-    ['Who’s out', 'Everyone in town but the town’s people and today’s visitor at the Gate, in the order of `draw(uid, day, \'town:<id>\', 0)`, lowest first, until every spot is full; an Uma living on the farm keeps her place, unseen, so the day never shifts when someone moves in'],
+    ['Who’s out', 'Everyone in town but the town’s people and the welcome list not met yet (they come to the Gate; the day’s visitor stays out of town that day), in the order of `draw(uid, day, \'town:<id>\', 0)`, lowest first, until every spot is full; an Uma living on the farm keeps her place, unseen, so the day never shifts when someone moves in'],
     ['Where she stands', `Her favourite spot (her cast entry’s \`spot\`) while it has room, ${Math.round(FAVOURITE_SPOT * 100)}% of the time (\`draw(…, 1)\`); else a spot with room (\`draw(…, 2)\`)`],
     ['A talk', 'Once a day each: her talks so far and the last day, in the save’s `town`. It costs nothing and takes no time, and it meets her when it meets her trigger'],
     ['Her line', `One a day (\`draw(uid, day, 'town-line:<id>', 0)\`) of her bible’s \`townLines\`, else the game’s ${PLACEHOLDER_TOWN_LINES.length}: ${PLACEHOLDER_TOWN_LINES.join(' ')}`],

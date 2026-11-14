@@ -39,7 +39,7 @@ const { homeWords, sleepViews } = await import('./homestead-view')
 const { summaryParts } = await import('./summary-words')
 const { setAskBeforeEnd } = await import('./ask')
 
-/** The stand-in's three home, ties seeded, as the old opening brought them: the opening now brings only day 1's helper. */
+/** The stand-in's three home, ties seeded, as if met: the opening brings nobody, and day 1's visitor waits at the Gate. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
   ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : meet(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'

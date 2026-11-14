@@ -1717,7 +1717,8 @@ trigger, is how her story begins: see [meeting her](#meeting-her).
 #### Who's out today
 
 - **Everyone in town:** master data's characters and the pack's sisters, less the town's people (they keep their spots),
-  today's visitor at the Gate, and the Umas living on the farm (they're at the farm; each keeps her place in the draw,
+  the welcome list not met yet (she comes to the Gate on her morning; the day's visitor stays out of town that day), and
+  the Umas living on the farm (they're at the farm; each keeps her place in the draw,
   unseen, so the day's town never shifts when someone moves in). One you've met who lives in town is out like anyone.
 - **A draw seeded by the player and the day,** so the same day always shows the same town, and tomorrow a different few.
   The rest are at home.
@@ -1727,7 +1728,7 @@ trigger, is how her story begins: see [meeting her](#meeting-her).
 |  | The rule |
 |---|---|
 | At each spot | Up to 4 a day: 24 in all, the rest at home |
-| Who’s out | Everyone in town but the town’s people and today’s visitor at the Gate, in the order of `draw(uid, day, 'town:<id>', 0)`, lowest first, until every spot is full; an Uma living on the farm keeps her place, unseen, so the day never shifts when someone moves in |
+| Who’s out | Everyone in town but the town’s people and the welcome list not met yet (they come to the Gate; the day’s visitor stays out of town that day), in the order of `draw(uid, day, 'town:<id>', 0)`, lowest first, until every spot is full; an Uma living on the farm keeps her place, unseen, so the day never shifts when someone moves in |
 | Where she stands | Her favourite spot (her cast entry’s `spot`) while it has room, 60% of the time (`draw(…, 1)`); else a spot with room (`draw(…, 2)`) |
 | A talk | Once a day each: her talks so far and the last day, in the save’s `town`. It costs nothing and takes no time, and it meets her when it meets her trigger |
 | Her line | One a day (`draw(uid, day, 'town-line:<id>', 0)`) of her bible’s `townLines`, else the game’s 6: “Oh, hello! Out for a walk too?” “Lovely day for it, isn’t it?” “You’re from the farm up the road, aren’t you?” “I come here when I need to think.” “Good to see you, {farmer}.” “Busy day? Mine’s only just starting.” |
@@ -1767,10 +1768,11 @@ whatever it leaves, the game's own plays:
 - **A keeper's sheet:** her role, what she does and the spot she keeps, and her ties with the cast, each with its line.
   Talking with her counts nothing: the town's people have no story to begin.
 - **People:** everyone in town and the town's people, each with her face and name and where she is today ("At the
-  Café today", "At home", "On the farm", "At the Café, most days" for a keeper, "In town"), the days talked, and **Met**
+  Café today", "At home", "On the farm", "At the Gate today" for the day's visitor, "At the Café, most days" for a
+  keeper, "In town"), the days talked, and **Met**
   for anyone you've met, on the farm or in town. **Find by name** (any case, accents aside) and a sort: **Met first**
-  (met, then talked most, then by name) or **Name**. One at home says "At home today. Look for her another day."; one on
-  the farm links her profile.
+  (met, then talked most, then by name) or **Name**. One at home says "At home today. Look for her another day."; the
+  day's visitor "She’s at the Gate today." with **The Gate ›**; one on the farm links her profile.
 - **Lean:** faces load as they scroll into view.
 
 #### The save
@@ -2717,10 +2719,10 @@ her chapters come next. There's no cap on how many you meet: the Dorm's beds cap
 - **The welcome list** (the pack's `welcome`, else the cast's first five) meets you on her first talk, whatever her
   trigger. From day 1, **one a morning** visits the Gate, in the list's order: today's visitor is the list's first not
   met before today, so the next comes the morning after the one before her is met, and one you don't greet waits there
-  the next day too. She isn't out in town while she's the day's visitor. The Gate wears **Visiting**; its quick look
-  says "‹name› is at the Gate." with **Say hello**, her first talk (it counts in `town`), which meets her. Day 1's
-  visitor is the farm's first helper: with three beds, she moves in and works the farm that day. Met in town first
-  (her first talk there meets her too), she never visits; the Gate goes on to the next.
+  the next day too. Her meeting scene is her Gate visit, so she isn't out in town until she's met. The Gate wears
+  **Visiting**; its quick look says "‹name› is at the Gate." with **Say hello**, her first talk (it counts in `town`),
+  which meets her. Day 1's visitor is the farm's first helper: with three beds, she moves in and works the farm that
+  day.
 - **When it's checked**, by kind:
 
 <!-- live:meet-kinds -->

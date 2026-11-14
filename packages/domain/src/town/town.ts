@@ -4,12 +4,13 @@
 // to talk: her line for the day (the pack's, else the game's), and a talk counts once a day, toward her trigger to meet
 // (`romance/meeting.ts`). Talking costs nothing and takes no time. Pure.
 //
-//   the order     everyone in town but today's Gate visitor, by draw(uid, day, 'town:<id>', 0), lowest first
+//   the order     everyone in town but the welcome list not met yet, by draw(uid, day, 'town:<id>', 0), lowest first
 //   her spot      her favourite, while it has room, when draw(…, 1) < 0.6; else one with room by draw(…, 2)
 //   the day       full when each spot holds four, or when everyone's out
 //   on the farm   an Uma living on the farm keeps her place in the draw, unseen: so the day's town never shifts when
 //                 someone moves in. One you've met who lives in town is out like anyone else
-//   the Gate      the welcome list's next visitor is at the Gate today (`gateVisitor`), never in town
+//   the Gate      the welcome list comes to the Gate, one a morning (`gateVisitor`): none of it is out in town until
+//                 met (her meeting scene is her Gate visit), and the day's visitor not that day either
 import { draw } from '../farm/draw'
 import { SaveRuleError } from '../save/rules'
 import { atHome, type SaveV4, type TownTalks } from '../save/v4'
@@ -52,13 +53,15 @@ export interface TownDay {
   readonly where: ReadonlyMap<string, SpotId>
 }
 
-/** The town on the save's day: the seeded draw over everyone in town but today's Gate visitor; an Uma living on the farm
- * keeps her place, unseen. The same day always shows the same town, whoever moves in. */
+/** The town on the save's day: the seeded draw over everyone in town but the welcome list not met yet and today's Gate
+ * visitor; an Uma living on the farm keeps her place, unseen. The same day always shows the same town, whoever moves
+ * in. */
 export function townDay(save: Pick<SaveV4, 'account' | 'calendar' | 'roster' | 'dorm' | 'love'>, pack: TownPack): TownDay {
   const uid = save.account.uid
   const day = save.calendar.day
   const visitor = gateVisitor(save, pack)
-  const out = townsfolk(pack).filter((id) => id !== visitor)
+  const coming = new Set(welcomeVisitors(pack).filter((id) => id === visitor || !save.roster[id]))
+  const out = townsfolk(pack).filter((id) => !coming.has(id))
     .map((id) => [id, draw(uid, day, `town:${id}`, 0)] as const)
     .sort(([a, x], [b, y]) => x - y || a.localeCompare(b))
   const spots = new Map<SpotId, string[]>(SPOT_IDS.map((id) => [id, []]))

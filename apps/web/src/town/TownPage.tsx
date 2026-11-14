@@ -8,7 +8,7 @@
 // a gift (one good from the Warehouse): it meets her when her trigger is a gift she likes. One you've met is marked Met,
 // with her profile; one at home, or on the farm, says so. A keeper's sheet shows her role and her ties. Faces load as
 // they scroll into view. Names and faces are master data's and the pack's, at run time. Loaded on demand.
-import { atHome, CAST, DISLIKED_LINE, talkedToday, townDay, townOf, type SaveV4, type StoryPack, type Taste, type TownDay } from '@farm/domain'
+import { atHome, CAST, DISLIKED_LINE, gateVisitor, talkedToday, townDay, townOf, type SaveV4, type StoryPack, type Taste, type TownDay } from '@farm/domain'
 import { FaceTile, UmaBust } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Sheet, Tabs } from '@luismlorenzana/uma-kit/ui'
@@ -219,7 +219,9 @@ function TalkSheet({ id, save, pack, day, nameOf, onClose }: { id: string; save:
             <p className="text-center text-[14px]" data-on-farm>She lives on the farm now. <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></p>
           ) : (
             <>
-              <p className="text-center text-[14px] text-ink-soft" data-at-home>At home today. Look for her another day.</p>
+              {!save.roster[id] && gateVisitor(save, pack) === id
+                ? <p className="text-center text-[14px]" data-at-gate>She’s at the Gate today. <Link to="/?peek=gate" className="font-semibold text-accent-strong underline">The Gate ›</Link></p>
+                : <p className="text-center text-[14px] text-ink-soft" data-at-home>At home today. Look for her another day.</p>}
               {save.roster[id] && <MetLine id={id} />}
             </>
           )}
