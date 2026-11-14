@@ -29,14 +29,14 @@ The pack is a folder of JSON files in `content/story/`. Every file is optional.
 
 | File | What it holds | Without it |
 |---|---|---|
-| `cast.json` | Who the pack holds, in its order, and what's given of each | Master data's first five characters, on the default story |
+| `cast.json` | Who the pack holds, in its order, and what's given of each: her outfit, her life in town (home, job, routine), her chapters | Master data's first five characters, on the default story |
 | `ties.json` | The ties between characters | No ties |
 | `umas/<characterId>.json` | Her bible: her favourite line, gifts, route beats, chats, town lines and more | Her calling gives her line (else her stats in master data), she loves her line's favourite good and finds the rest neutral, she talks in the default story's lines and in town in the game's |
 | `routes/<characterId>.json` | Her scripted events, by id: the rungs, her life's events, her occasions and the evenings' scenes | Each plays the default story's, which pays as a written one does |
 | `pairs/<a>-<b>.json` | A tie's conversations, by bond level | Two short lines, one each, at every level |
 | `household.json` | The household scenes, house lines and the finale | The game's short cards; house lines come from her temperament |
-| `opening.json` | The opening: the start's lines, after the farmer's name | The game's three short lines |
-| `town.json` | The town's people (Umas in the town's roles) and its six spots | Master data's characters fill the roles; the game's own six spots |
+| `opening.json` | The opening: the start's lines, after the farmer's name | The game's two short lines |
+| `town.json` | The town's people (Umas in the town's roles), its six spots, and the homes and workplaces the story adds to the town map | Master data's characters fill the roles; the game's own six spots and four shops |
 | `world.json` | The world: the town's, the farm's and the region's names, the farm's history, the festivals, the story's holidays and minor days, each place's name and line, a line for each season, and Town notes | The game's own words: its five festivals, its places' names and lines, no days of the story's own, and no Town notes |
 
 Any other file (`world.md`, `world-book.md`, `tags.json`, `reviews.json`, notes, drafts) is the story's own. The sandbox shows some of
@@ -61,6 +61,8 @@ What an error skips, by where it is:
 | One of the town's people with no `characterId`, or listed twice | That person (the later one) |
 | A town person's role someone already has, a spot's `keeper` who isn't one of the town's people | That field |
 | A town spot whose `id` isn't one of the six, or listed twice | That spot (the later one) |
+| A town location with no `id` (lowercase words joined by `-`), no `name`, an id twice or one of the game's own | That location (the later one) |
+| Her `home`, her job's `at` or a routine stop's `at` that isn't a location of the town map; a `days` or `seasons` that isn't a list of days of the season (1–12) or seasons | That field, or that stop: what plays without it plays |
 | A field the game can't use (a calling, place or trigger that isn't on the menu, a birthday that isn't a real date) | That field: what plays without it plays |
 | A chat line or a house line too long for its screen | That line |
 | A step in an event the game can't play (a line too long, a choice with no options, a flag the save can't keep) | That event |
@@ -91,8 +93,9 @@ Each limit is what its screen shows. A longer line is an error.
 | Her keepsake's name, and its line | 40, and 160 |
 | Her pet name for you | 24 |
 | A town line | 160 |
-| A sister's name, a town spot's name | 40 |
-| A town spot's line, what one of the town's people does | 160 |
+| A sister's name, a town spot's name, a town location's name | 40 |
+| A town spot's line, what one of the town's people does, a town location's line | 160 |
+| Her job, in words (`job.what`) | 60 |
 | An unlock's perk, in words | 200 |
 | A chapter's title | 40 |
 | A flag's name | 64, in lowercase letters, digits and `- . : _` (the save keeps it) |
@@ -117,19 +120,17 @@ The owner's standing direction for anything on screen (the placeholder and schoo
 
 ```json
 {
-  "welcome": ["9000007", "9000002"],
-  "umas": [{ "characterId": "9000001", "spot": "cafe" }, { "characterId": "9000002", "outfitId": "900000201" }, { "characterId": "s900000202", "name": "Her name" }]
+  "umas": [{ "characterId": "9000001", "spot": "cafe", "home": "blue-cottage" }, { "characterId": "9000002", "outfitId": "900000201" }, { "characterId": "s900000202", "name": "Her name" }]
 }
 ```
 
 | Field | What it does in play | Without it |
 |---|---|---|
 | `umas` | The cast, in its order: every character the pack holds. The order breaks ties wherever the game needs one | Master data's first five characters, by id |
-| `welcome` | **The welcome list:** who comes to the farm in the first days, in order, any number. From day 1, one a morning visits the Gate (the first on day 1, the next the morning after the one before her is met), and each meets you on her first talk, whatever her trigger. Her arrival scene is her Gate visit. Day 1's is the farm's first helper | The first five of the cast, in its order (sisters aside) |
+| `welcome` | **Retired** (the owner, 2026-11-14: no welcome week). Nobody comes to the Gate: you meet everyone by introducing yourself in town. A `welcome` is still read, and noted as retired; it acts on nothing | — |
 | `version`, `export`, `ranker` | The story's own (the sandbox's) | Nothing |
 
-A `welcome` id that isn't in the cast is a note, and she never visits the Gate. A cast file's old `opening` list is
-noted and dropped: the opening brings nobody, and the welcome list visits the Gate.
+A cast file's old `opening` list is noted and dropped: the opening brings nobody.
 
 ### Each character
 
@@ -141,10 +142,13 @@ else is optional, and any field the game doesn't read is kept for the story.
 | `characterId` | Who she is | The character is skipped (an error) |
 | `outfitId` | The one outfit she plays as: her face, bust, talents and temperament | Her default outfit from master data: her first original one |
 | `calling` | Her line when her bible gives none: `farming`, `foraging`, `fishing`, `mining`, or `quarry` (mining at the Quarry) | Her bible's `favouriteLine`; with neither, the work her stats in master data suit best |
-| `spot` | **Her favourite of the town's spots** (`plaza`, `market`, `cafe`, `harbour`, `library`, `track`): she's out there more often than anywhere else | None: she's out at any spot alike |
+| `spot` | **Her favourite of the town's spots** (`plaza`, `market`, `cafe`, `harbour`, `library`, `track`): when today's draw puts her out, she's there more often than anywhere else | None: she's out at any spot alike |
+| `home` | **Her home,** a location of the town map (below): where she is on a day nothing else in her life holds | None |
+| `job` | **Her part-time job** and where it is: `{ "what": "Bakes the morning bread", "at": "bakery", "days": [1, 2, 3, 4, 5, 6] }`. She's there on its days | None |
+| `routine` | **Where she is, when:** a list of stops, each `{ "at": "library", "days": [3, 9], "seasons": ["spring"] }`. The first that holds today wins, before her job and her home | None: her job, then her home, then today's draw |
 | `name` | **A sister's name** (read for a sister only): master data has none for her | Her elder's name, as her sister |
 | `birthday` | `{ "month": 1–12, "day": … }` on a real date, when master data has none | Master data's birthday, or none |
-| `meet` | **Her trigger to meet,** from the trigger menu below: when it's met, her story begins ([meeting her](game-mechanics.md#meeting-her)). Not read for the welcome list's, who meet you on their first talk | Talk with her on three different days |
+| `meet` | **Retired** (no welcome week): you meet her by introducing yourself in town ([meeting her](game-mechanics.md#meeting-her)). A `meet` is still read (an error in it is still an error) and noted once, as retired; it acts on nothing | — |
 | `chapters` | **Her chapters,** below: they frame her route on her profile, the People page and the morning ([her chapters](game-mechanics.md#her-chapters)) | The four default chapters |
 | `arrives` | **Retired:** meeting her replaced it. Any `arrives` is noted and dropped; her `meet` says when you meet her (a festival, another's event and a Farm Rank are on the menu), and the Dorm's levels bring beds only | — |
 | `paragraph` | The story's own: the sandbox shows it | Nothing |
@@ -153,21 +157,55 @@ else is optional, and any field the game doesn't read is kept for the story.
 
 A sister is an outfit of an Uma, presented as a character of her own, with her own name and profile: the Uma Ranker's,
 named `s<outfitId>` (`s` and her outfit's id). The pack takes her id wherever it takes a character's: the cast, the
-welcome list, a tie's `a` or `b`, her bible `umas/s<outfitId>.json`, her route `routes/s<outfitId>.json` and a pair's file.
+retired welcome list, a tie's `a` or `b`, her bible `umas/s<outfitId>.json`, her route `routes/s<outfitId>.json` and a pair's file.
 
 - **Her face, bust, talents and temperament** are her outfit's, from master data: an `outfitId` on her entry is ignored
   (a note).
 - **Her name** is her entry's `name`, from the pack's private release at run time, never git. Without one, she shows
   as her elder's sister (a note).
-- **She lives in town** and is out there like everyone else, and is met like anyone: by her `meet`, else three days'
-  talks. Met, she moves into the Dorm while a bed is free, as anyone does. The default welcome list leaves sisters out;
-  a pack's `welcome` may name one.
+- **She lives in town** and is out there like everyone else, with her own `home`, `job` and `routine` if you give her
+  them, and is met like anyone: by introducing yourself in town.
+
+### Her life in town
+
+Every Uma is a retired racer with a life in town: a home, a part-time job, the places she likes. Three optional fields
+on her cast entry say where she is, when, and the town map lists who's at each place **now** ([who's
+where](game-mechanics.md#whos-where)). Days are turns and nothing reads a clock, so "when" is days of the season and
+seasons:
+
+```json
+{
+  "characterId": "9000001",
+  "home": "blue-cottage",
+  "job": { "what": "Bakes the morning bread", "at": "bakery", "days": [1, 2, 3, 4, 5, 6, 7, 8] },
+  "routine": [
+    { "at": "library", "days": [9, 10] },
+    { "at": "harbour", "seasons": ["summer"], "days": [11, 12] }
+  ]
+}
+```
+
+| Field | Its shape | What it does |
+|---|---|---|
+| `home` | A location id | She's at home on a day nothing else holds: you can visit her there |
+| `job` | `{ "what", "at", "days", "seasons" }`: `what` her job in a few words (60 at most; under her name in town), `at` a location id, `days` days of the season (1–12) and `seasons`, each optional (every day, every season) | She's at work on its days, "at work" on the People list |
+| `routine` | A list of stops, each `{ "at", "days", "seasons" }` | Its first stop that holds today wins. A stop with neither `days` nor `seasons` holds every day, so the stops after it never do (a note) |
+
+- **The order each day:** her routine's first stop that holds, else her job on its days, else her home. With none of
+  them for today, today's draw places her at one of the six spots, or at home off the map, as it does anyone the story
+  says nothing of.
+- **A location** is one of the town map's: the six spots (`plaza`, `market`, `cafe`, `harbour`, `library`, `track`),
+  the four shops and offices (`store`, `rancher`, `mayor`, `smith`), or one `town.json` adds ([below](#the-towns-locations)).
+  One the map doesn't hold is an error that skips the field (or the stop).
+- **Families and crews** can share a home: name the same location.
+- Her goals and objectives live in her bible, as before.
 
 ### The trigger menu
 
-One menu for her trigger to meet (`meet`) and a chapter's gate (`gate`). Each is an object with its `kind`. A gate
-takes what the farm holds (`built`, `farm-rank`, `shipped`, `event`), a `season` or a `festival`; the town's kinds
-(`talks`, `gift`, `spot`) are meeting her own, so a gate of one is an error and the chapter plays without it:
+One menu for a chapter's gate (`gate`) and a Town note's `unlock` (and the retired `meet`, still read). Each is an object
+with its `kind`. A gate takes what the farm holds (`built`, `farm-rank`, `shipped`, `event`), a `season` or a
+`festival`; the town's kinds (`talks`, `gift`, `spot`) were meeting her own, so a gate of one is an error and the chapter
+plays without it:
 
 | Spelling | Meaning |
 |---|---|
@@ -183,11 +221,7 @@ takes what the farm holds (`built`, `farm-rank`, `shipped`, `event`), a `season`
 | `{ "kind": "event", "after": "9000002:f3" }` | After another character's event plays (`<characterId>:<event>`, or an event id: anyone's). `<characterId>:arrival` is after her meeting |
 
 A trigger that isn't on the menu is an error: the default plays. One that can never hold (Farm Rank 12, a good the game
-doesn't have yet) is a note. A character on the welcome list meets you on her first talk, whatever her trigger.
-
-**When each is checked** in play: talks, a spot, a season and a festival on a talk in town; a gift on a gift in town
-(after that day's talk; it spends the good); a Farm Rank, a place built, a good shipped and another's event on a talk or
-a gift, and every night, so she's met the morning after it holds. Her meeting scene plays as soon as she's met.
+doesn't have yet) is a note.
 
 ### Her chapters
 
@@ -288,7 +322,7 @@ another id is kept for the story (a note).
 ## Her route: `routes/<characterId>.json`
 
 ```json
-{ "events": [{ "id": "arrival", "steps": [{ "narrate": "Someone new leans on the Gate." }, { "say": "9000004", "line": "Is this the farm?" }] }] }
+{ "events": [{ "id": "arrival", "steps": [{ "narrate": "Someone new looks up from the market stall." }, { "say": "9000004", "line": "You’re from the farm, aren’t you?" }] }] }
 ```
 
 Each event is one of the game's, by its `id`, with its `steps`. Any number of events, in any order. An event with an
@@ -400,28 +434,32 @@ The start's lines: after the farmer's name, they play one to a tap, then the far
 the first line. Any length the story wants.
 
 ```json
-{ "about": "The first morning.", "steps": [{ "narrate": "Morning on the farm." }, { "thought": "Someone's already at the Gate." }] }
+{ "about": "The first morning.", "steps": [{ "narrate": "Morning on the farm." }, { "thought": "The fields can wait a minute." }] }
 ```
 
 | Field | What it does in play | Without it |
 |---|---|---|
-| `steps` | The lines, in a route's steps: `narrate`, `say` (anyone in the cast or the town's people), `thought` and `wait`, and `place` for the title line ("Day 1 · Gate"). Each line has a scene's limit (400) and `{farmer}` | The game's three short lines: the farm, its nine Carrot seeds, and someone waiting at the Gate |
+| `steps` | The lines, in a route's steps: `narrate`, `say` (anyone in the cast or the town's people), `thought` and `wait`, and `place` for the title line ("Day 1 · Gate"). Each line has a scene's limit (400) and `{farmer}` | The game's two short lines: the farm, and its nine Carrot seeds |
 | `about` | The story's own: kept, never shown | Nothing |
 
 - **No picks:** a `choice`, a `play`, a `flag` or a `when` is an error that skips that step; the rest plays.
-- **With no line left** (every step skipped, or only pauses), the game's three play (a note).
-- **What the opening brings:** nobody. As it ends (read or skipped), the welcome list's first is at the Gate, day 1's
-  visitor; Say hello there meets her, she moves in as the farm's first helper, and her arrival scene plays. A line that
-  tells the farmer someone is waiting at the Gate reads true.
+- **With no line left** (every step skipped, or only pauses), the game's two play (a note).
+- **What the opening brings:** nobody, and nobody comes to the Gate (no welcome week): as it ends, the farm opens on
+  day 1 with everyone in town, met by introducing yourself there. A line that tells the farmer someone is waiting at
+  the Gate no longer reads true: the opening wants an ending of its own.
 
 ## The town: `town.json`
 
-The town's people and its six spots. Every part is optional.
+The town's people, its six spots, and the locations the story adds to the town map. Every part is optional.
 
 ```json
 {
   "people": [{ "characterId": "9000101", "does": "Keeps the smithy down in town.", "game": "ida-stone" }],
-  "spots": [{ "id": "cafe", "name": "The Café", "blurb": "Tea, cake and a seat by the window.", "keeper": "9000101" }]
+  "spots": [{ "id": "cafe", "name": "The Café", "blurb": "Tea, cake and a seat by the window.", "keeper": "9000101" }],
+  "locations": [
+    { "id": "blue-cottage", "name": "The Blue Cottage", "line": "Shutters the colour of the sea.", "kind": "home" },
+    { "id": "bakery", "name": "The Bakery", "line": "Warm bread from first light.", "kind": "work" }
+  ]
 }
 ```
 
@@ -447,9 +485,22 @@ the cast (a note), so every role is filled.
 | `id` | Which spot: `plaza`, `market`, `cafe`, `harbour`, `library` or `track`. A cast entry's `spot` and a `spot` trigger name them | The spot is skipped (an error) |
 | `name` | Its name on the town's screen | The game's: The Plaza, The Market, The Café, The Harbour, The Library, The Hilltop Track |
 | `blurb` | Its line under the name | The game's line |
-| `keeper` | Who's usually there: one of the town's people, by her `characterId` or her role's id | The game's keeper for it: the mayor, the shopkeeper, the cook, the captain, the guide, the courier |
+| `keeper` | Who's there, at her post: one of the town's people, by her `characterId` or her role's id. A keeper `town.json` names stands at the spot, before her role's shop | The game's keeper for it: the mayor, the shopkeeper, the cook, the captain, the guide, the courier. The mayor and the shopkeeper are at their office and their store, so the game's plaza and market show no keeper |
 
 A spot `town.json` doesn't name plays the game's own (a note).
+
+### The town's locations
+
+The town map holds the six spots and the game's four shops and offices (`store` the general store, `rancher` the
+rancher's, `mayor` the mayor's office, `smith` the smithy, each kept by its role's Uma). `locations` adds the story's
+own: the homes and workplaces its Umas' `home`, `job` and `routine` name, and any other spot.
+
+| Field | What it does in play | Without it |
+|---|---|---|
+| `id` | Its id, lowercase words joined by `-` (40 at most), named by a cast entry's `home`, `job.at` or a routine's `at`. Not one of the game's own | The location is skipped (an error) |
+| `name` | Its name on the town map | The location is skipped (an error) |
+| `line` | Its line, under its name where you are | None |
+| `kind` | `home`, `work` or `spot`: the map's group (Homes, Workplaces, Elsewhere) | `spot` |
 
 ## The world: `world.json`
 
@@ -482,7 +533,7 @@ block nothing. Any other field is kept for the story.
 
 | Part | What it does in play | Without it |
 |---|---|---|
-| `names.town` | The town's name: the Town on the map (its place's own `name` first) and its screen's title, the opening's title line, the Gate's "Meet everyone else in *Fernwick*", the morning's "Met *name* · in *Fernwick*", and the Diary's "The farm" page | "Town" on the map and its screen; "in town" in the words |
+| `names.town` | The town's name: the Town on the map (its place's own `name` first) and its screen's title, the opening's title line, the Gate's "Meet everyone else in *Fernwick*", and the Diary's "The farm" page | "Town" on the map and its screen; "in town" in the words |
 | `names.farm` | The farm's name: the opening's title line ("Day 1 · Thistle Farm, Fernwick") and the Diary's "The farm" page | "The farm"; the opening's title line says "Day 1" |
 | `names.region` | Under the farm's name on the Diary's "The farm" page, after the town | None |
 | `history` | A few lines of the farm's past: the Diary's first page, **"The farm"**. `{farmer}` is filled | None: the page shows the names alone, and with no names either there's no page |
@@ -543,16 +594,16 @@ title in the Diary's list, its lines (`{farmer}` filled), and what unlocks it, f
 | Unlock | Holds | Checked |
 |---|---|---|
 | None | From the start: the note is known as soon as the pack plays | — |
-| `{ "kind": "event", "after": "9000001:arrival" }` | **Meeting someone:** her meeting scene has played (any event of anyone's, as the menu reads it) | A talk or a gift in town, Say hello at the Gate, and every night |
-| `{ "kind": "spot", "spot": "cafe" }` | **A spot visited:** a talk with anyone out at that spot | A talk in town |
-| `{ "kind": "season", "season": "winter" }` | All that season | A talk, a gift, Say hello, and every night: the first morning of the season |
-| `{ "kind": "festival", "festival": "lantern-walk" }` | On that festival's day (the game's or the story's own, as the story puts it) | A talk, a gift, Say hello, and every night: the festival's morning |
-| `{ "kind": "farm-rank", "rank": 4 }`, `{ "kind": "built", "place": "mill" }`, `{ "kind": "shipped", "good": "carrot", "count": 50 }` | What the farm holds | A talk, a gift, Say hello, and every night |
+| `{ "kind": "event", "after": "9000001:arrival" }` | **Meeting someone:** her meeting scene has played (any event of anyone's, as the menu reads it) | An introduction, a talk or a gift in town, and every night |
+| `{ "kind": "spot", "spot": "cafe" }` | **A spot visited:** an introduction or a talk with anyone at that spot | An introduction or a talk in town |
+| `{ "kind": "season", "season": "winter" }` | All that season | An introduction, a talk, a gift, and every night: the first morning of the season |
+| `{ "kind": "festival", "festival": "lantern-walk" }` | On that festival's day (the game's or the story's own, as the story puts it) | An introduction, a talk, a gift, and every night: the festival's morning |
+| `{ "kind": "farm-rank", "rank": 4 }`, `{ "kind": "built", "place": "mill" }`, `{ "kind": "shipped", "good": "carrot", "count": 50 }` | What the farm holds | An introduction, a talk, a gift, and every night |
 
-- **Talks and a gift** are meeting her own: as an unlock they're an error, and the note is known from the start.
+- **Talks and a gift** were meeting her own: as an unlock they're an error, and the note is known from the start.
 - **Each unlocks once and stays.** The save keeps only the ids unlocked, never a word of the note: a note the pack
   later drops is gone from the list, and one it brings back returns.
-- **Where it shows:** the Diary's **Town notes**, in the file's order, each a tap to read; a talk or Say hello that
+- **Where it shows:** the Diary's **Town notes**, in the file's order, each a tap to read; an introduction, a talk or a gift that
   unlocks one says "Town note · *title* ›" there and then; the night's are named the next morning in New today ("*title*",
   tagged **Town note**, or "*title* +2 more"), a tap opening the note in the Diary.
 
@@ -592,8 +643,8 @@ writing session, on the machine where the story is written (macOS or Windows). I
 |---|---|---|
 | Her outfit, calling, birthday, bible, route, ties, pairs, household, the opening | Yes | Yes, today |
 | A scene's `outfit`, a line's `emote` | Yes | Yes, today: [the dialogue engine](game-mechanics.md#the-dialogue-engine) dresses her and changes her face, for the Umas whose portraits are published |
-| The town's people and spots, her favourite spot, her town lines, a sister's name | Yes | Yes, today: [the town](game-mechanics.md#the-town) |
-| The welcome list, her trigger to meet | Yes | Yes, today: [meeting her](game-mechanics.md#meeting-her) |
+| The town's people, spots and locations, her favourite spot, her home, job and routine, her town lines, a sister's name | Yes | Yes, today: [the town](game-mechanics.md#the-town) |
+| The welcome list, her trigger to meet | Yes, noted as retired | No: retired with the welcome week; you meet her by introducing yourself ([meeting her](game-mechanics.md#meeting-her)) |
 | The world: names, history, festivals, places, seasons, Town notes | Yes | Yes, today: [the world](game-mechanics.md#the-world-in-the-pack) |
 | Her chapters and their gates | Yes | Yes, today: [her chapters](game-mechanics.md#her-chapters) |
 | What plays when a part is missing | The default story for every read | Yes, today: [what plays without the story](game-mechanics.md#what-plays-without-the-story) |

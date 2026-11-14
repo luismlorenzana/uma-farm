@@ -1,4 +1,4 @@
-// "Town note · ‹title› ›": the line a talk in town or Say hello at the Gate shows when it unlocks a Town note, a tap to
+// "Town note · ‹title› ›": the line an introduction, a talk or a gift in town shows when it unlocks a Town note, a tap to
 // read it in the Diary. The night's notes are the morning's. Light: the town's screen and the Gate's quick look show it.
 import { townNoteOf, type StoryPack } from '@farm/domain'
 import { Link } from 'react-router'

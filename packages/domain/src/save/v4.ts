@@ -396,12 +396,15 @@ export function residentsOf(save: Pick<SaveV4, 'love'>, house: number): Characte
 export const vowsOn = (homestead: Pick<Homestead, 'finale'>, day: number): boolean =>
   homestead.finale > 0 && day > homestead.finale && (day - homestead.finale) % DAYS_PER_YEAR === 0
 
-/** Her talks in town: how many days you've talked with her, and the last. One a day counts. */
+/** You and her, by day: how many days you've talked with her, the last, and the last day you gave her a gift. Met or not
+ * is the roster's. */
 export interface TownTalks {
   /** Days you've talked with her, in all. */
   talks: number
-  /** The last day you talked with her: a talk on it counts no more. */
+  /** The last day you talked with her: a talk on it counts no more; 0 before any. */
   last: number
+  /** The last day you gave her a gift; 0 before any. An older v5 has none: 0. */
+  gift: number
 }
 /** Whom the town holds talks for: a character id, or a sister's (`s<outfitId>`). */
 export const TOWN_ID = /^s?[1-9]\d{0,11}$/
@@ -449,7 +452,8 @@ export interface SaveV5 {
   /** Arrival scenes played or skipped, in the order they played. */
   arrivals: CharacterId[]
   summary: MorningSummary | null
-  /** Your talks in town, by character: her talks so far and the last day. An older v4 has none. */
+  /** You and each Uma, by character: her talks so far, the last day you talked and the last you gave her a gift. An
+   * older v4 has none. */
   town: Record<string, TownTalks>
 }
 
@@ -469,7 +473,7 @@ export function newRosterUma(day: number): RosterUma {
 /** The Farmhouse: house 0, there from day 1 (its rule amended). */
 export const FARMHOUSE: House = { name: 'Farmhouse', extended: false }
 
-/** Day 1 on v5: 500g, 9 Carrot seeds, the field overgrown but for a cleared patch of nine, a day of actions, the Dorm at level 1 (3 beds), the Farmhouse, the farmer's name empty, nobody on the roster: the name sheet, then the opening's lines, and day 1's visitor at the Gate. */
+/** Day 1 on v5: 500g, 9 Carrot seeds, the field overgrown but for a cleared patch of nine, a day of actions, the Dorm at level 1 (3 beds), the Farmhouse, the farmer's name empty, nobody on the roster: the name sheet, then the opening's lines; everyone is in town, to meet by introducing yourself. */
 export function newSave(uid: string, now: string): SaveV5 {
   return {
     version: 5,

@@ -14,7 +14,7 @@ import { BOARD_MET, buildCostWords, buildGoodsWords } from '../farm/builds'
 import { NIGHT_STEPS } from '../night/end-day'
 import { CROPS, SHOP_SEEDS } from '../fields/crops'
 import { CLEAR_FINDS, cropLevelStart, GROUND_NAMES, harvestQuality, MAX_CROP_LEVEL, seedsBackChance, stagesOf } from '../fields/fields'
-import { ACTIONS, BIRTHDAY_ACTIONS, DAY_ACTIONS, FESTIVAL_ACTIONS, NEW_YEAR_ACTIONS } from '../farm/actions'
+import { ACTIONS, BIRTHDAY_ACTIONS, DAY_ACTIONS, FESTIVAL_ACTIONS, NEW_YEAR_ACTIONS, type ActionId } from '../farm/actions'
 import { CHOP_LOGS, FORAGE_HAUL, reachOf } from '../gathering/hauls'
 import { LOAD_SIZE } from '../gathering/stations'
 import {
@@ -34,7 +34,6 @@ import { DORM_LEVELS } from '../farm/dorm'
 import { farmRankOpens } from '../farm/diary'
 import { DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, ROW_GOLD, type Milestone } from '../farm/milestones'
 import { CAST, CAST_IDS } from '../story/cast'
-import { MEET_KINDS } from '../romance/meeting'
 import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER, costOf, LADDER_COLOURS, ROUTE_POINTS, rungName, SPOUSE_COST } from '../romance/love'
 import { GIFT_POINTS_V4, giftStars, LOVE_POINTS } from '../romance/acts'
 import { farmBirthday } from '../romance/days'
@@ -50,7 +49,8 @@ import { dateOf } from '../farm/calendar'
 import { FARMER_NAME_MAX } from '../romance/farmer'
 import { storyPackFrom } from '../story/pack'
 import { favouriteOf, PLACEHOLDER_SPOTS, PLACEHOLDER_TOWN_LINES } from '../story/placeholders'
-import { FAVOURITE_SPOT, SPOT_ROOM } from '../town/town'
+import { MENU_RULES } from '../town/menu'
+import { FAVOURITE_SPOT, SHOPS, SPOT_ROOM } from '../town/town'
 import { SPOT_IDS } from '../story/authored'
 import { BOND_HEARTS, BOND_POINTS, bondHearts, CLOSEST_BOND, SHARED_LINE, SIDE_BY_SIDE, SIDE_BY_SIDE_HEARTS, TIE_SEEDS } from '../farm/bonds'
 import { STAND_IN_FILES } from '../story/stand-in'
@@ -77,7 +77,7 @@ import { DISH_WORDS, dishName, goodName, RING_GOODS } from '../goods/ids'
 import { BIG_EVENTS, EVENING_SCENES, EVENT_LIMITS, LIFE_EVENTS, OCCASIONS, RUNGS, type Route, type Step, type Together, type UmaBible } from '../story/authored'
 import { DEFAULT_EVENINGS, DEFAULT_EVENTS, DEFAULT_GIFT_REACTIONS, DEFAULT_GOODS, DEFAULT_MEALS, DEFAULT_MORNINGS, DEFAULT_TALKS, TALK_STAGES, WORK_WORDS } from '../story/default-story'
 import { TASTES } from '../romance/chats'
-import { ordinal, PLACEHOLDER_MOMENTS, PLACEHOLDER_OPENING, PLACEHOLDER_TABLE, tieKind, tieStrength, WEDDING_DEFAULTS, welcomeOf } from '../story/placeholders'
+import { PLACEHOLDER_MOMENTS, PLACEHOLDER_OPENING, PLACEHOLDER_TABLE, tieKind, tieStrength, WEDDING_DEFAULTS } from '../story/placeholders'
 
 type Cell = string | number
 /** A Markdown table; pipes in cells are escaped. */
@@ -452,15 +452,28 @@ function townSpots(): string {
   return table(['Spot (`spot`)', 'The game’s name', 'Its line', 'Kept by'], SPOT_IDS.map((id) => [`\`${id}\``, PLACEHOLDER_SPOTS[id].name, PLACEHOLDER_SPOTS[id].blurb,
     CAST[PLACEHOLDER_SPOTS[id].keeper].role]))
 }
-/** The day's draw, and the game's own town lines. */
+/** Who's where today: the story's places first, then the day's draw; and the game's own town lines. */
 function townDraw(): string {
   return table(['', 'The rule'], [
-    ['At each spot', `Up to ${SPOT_ROOM} a day: ${SPOT_ROOM * SPOT_IDS.length} in all, the rest at home`],
-    ['Who’s out', 'Everyone in town but the town’s people and the welcome list not met yet (they come to the Gate; the day’s visitor stays out of town that day), in the order of `draw(uid, day, \'town:<id>\', 0)`, lowest first, until every spot is full; an Uma living on the farm keeps her place, unseen, so the day never shifts when someone moves in'],
+    ['Her story', 'Her routine’s first stop that holds today (its `days` of the season and its `seasons`), else her `job` on its days, else her `home`: she’s there'],
+    ['The draw', `Everyone else in town, in the order of \`draw(uid, day, 'town:<id>', 0)\`, lowest first: up to ${SPOT_ROOM} at each of the ${SPOT_IDS.length} spots (${SPOT_ROOM * SPOT_IDS.length} in all; those the story places there stand besides them), the rest at home`],
     ['Where she stands', `Her favourite spot (her cast entry’s \`spot\`) while it has room, ${Math.round(FAVOURITE_SPOT * 100)}% of the time (\`draw(…, 1)\`); else a spot with room (\`draw(…, 2)\`)`],
-    ['A talk', 'Once a day each: her talks so far and the last day, in the save’s `town`. It costs nothing and takes no time, and it meets her when it meets her trigger'],
+    ['On the farm', 'An Uma living on the farm is at the farm, never in town; in the draw she keeps her place, unseen, so the day never shifts when someone moves in'],
+    ['The town’s people', 'Each at her post: her role’s shop or office, else the spot she keeps'],
     ['Her line', `One a day (\`draw(uid, day, 'town-line:<id>', 0)\`) of her bible’s \`townLines\`, else the game’s ${PLACEHOLDER_TOWN_LINES.length}: ${PLACEHOLDER_TOWN_LINES.join(' ')}`],
   ])
+}
+/** The town's shops and offices: each one's id, name, line and the role at its post. */
+function townShops(): string {
+  return table(['Location', 'Its name', 'Its line', 'At her post'], Object.values(SHOPS).map((s) => [`\`${s.id}\``, s.name, s.line, CAST[s.keeper].role]))
+}
+/** Her menu: each item, its cost, and when it's open. */
+function herMenuBlock(): string {
+  return table(['Item', 'Cost', 'When'], MENU_RULES.map((r) => [r.label, r.action === null ? '—' : actionWords(r.action), r.when]))
+}
+const actionWords = (id: ActionId): string => {
+  const cost = ACTIONS.find((a) => a.id === id)!.cost
+  return `${cost} action${cost === 1 ? '' : 's'}`
 }
 /** The town's roles, and who plays each without `town.json`. */
 function castBlock(): string {
@@ -476,14 +489,11 @@ const speakerWords = (beat: Beat): string => {
 function scenesBlock(): string {
   const kind = (step: Step): [string, string] => 'narrate' in step ? ['Narration', step.narrate] : 'thought' in step ? ['Your thought', step.thought]
     : 'say' in step ? [step.say, step.line] : 'wait' in step ? ['A pause', `${step.wait} ms`] : ['—', '—']
-  return table(['#', 'Kind', 'Line'], PLACEHOLDER_OPENING.map((step, i) => [i + 1, ...kind(step)]))
+  // The game's opening less its Gate line, retired with the welcome week (`openingOf`).
+  return table(['#', 'Kind', 'Line'], PLACEHOLDER_OPENING.slice(0, -1).map((step, i) => [i + 1, ...kind(step)]))
 }
 // --- Meeting her ------------------------------------------------------------------------------
 
-/** The trigger menu: what meets her, and when it's checked. */
-function meetKinds(): string {
-  return table(['Trigger (`meet`)', 'What meets her', 'Checked'], MEET_KINDS.map((k) => [`\`${k.kind}\``, k.meets, k.checked]))
-}
 /** What her meeting scene pays. */
 function arrivalPay(): string {
   return table(['Her meeting scene', 'Points into her bar'], [
@@ -507,7 +517,7 @@ function defaultStoryBlock(): string {
   return table(['Piece', 'What the default holds', 'Replaced by the story’s'], [
     ['Her talks', `${talks}: ${DEFAULT_TALKS.friend.steady.length} for each stage (${TALK_STAGES.join(', ')}) and temperament (${TEMPERAMENTS.join(', ')})`, 'Her bible’s `chats` set for the stage'],
     ['Her gift reactions', `${DEFAULT_GIFT_REACTIONS.loved.length} for each taste (${TASTES.join(', ')})`, '—'],
-    ['Her meeting', 'At the Gate (the welcome list’s), or in town, where you introduce yourself', 'Her route’s `arrival`'],
+    ['Her meeting', 'In town, where you introduce yourself', 'Her route’s `arrival`'],
     ['Her events', `Every rung (${RUNGS.length}), and her life’s: ${scenes(LIFE_EVENTS)}`, 'Her route’s event of that id'],
     ['Her occasions', scenes(OCCASIONS), 'Her route’s event of that id'],
     ['The evenings’ scenes', scenes(EVENING_SCENES), 'Her route’s event of that id'],
@@ -543,13 +553,13 @@ function routeCosts(): string {
 function lovePoints(): string {
   const gift = (['loved', 'liked', 'neutral', 'disliked'] as const).map((t) => `${cap(t)} ${GIFT_POINTS_V4[t] > 0 ? '+' : ''}${GIFT_POINTS_V4[t]}`).join(', ')
   return table(['Act', 'Points', 'Limit', 'Paid by'], [
-    ['Chat (tap her)', `+${LOVE_POINTS.chat}`, 'Once a day each, on the farm or in town', '`chatV4`'],
-    ['Gift (one good, its stars your choice)', `${gift}; × (1 + 0.1 a star above ★1)`, 'One a day each; ×3 on her birthday', '`giftV4`'],
+    ['Talk (her menu, or Chat on her profile)', `+${LOVE_POINTS.chat}`, 'One action; once a day each, on the farm or in town', '`chatV4`'],
+    ['Gift (one good, its stars your choice)', `${gift}; × (1 + 0.1 a star above ★1)`, 'One action; one a day each; ×3 on her birthday', '`giftV4`'],
     ['Praise (a ★3+ day’s work, a rank-up, a Fine play)', `+${LOVE_POINTS.praise}`, 'Once a day, when earned', '`praiseV4`'],
     ['Her line (she worked it today)', `+${LOVE_POINTS.line}`, 'Paid at night, step 6', '`payLines`'],
     ['A festival together (its team or entry)', `+${LOVE_POINTS.festival}`, 'Once a festival a year each', '`festivalTogether` (festivals aren’t built yet)'],
     ['Her arrival scene', `+${ARRIVAL_POINTS}, and its choice (+${CHOICE_OTHER} or +${CHOICE_BEST})`, 'Once', '`finishArrival`'],
-    ['A heart event', '+50, its choices and its play’s grade', 'One of hers a day', '`playEvent`'],
+    ['A heart event', '+50, its choices and its play’s grade', 'One action (a special day’s event actions first); one of hers a day', '`playEvent`'],
     ['The evening (a hangout from F2, a date from R1)', `Fine +${EVENING_GRADE_POINTS.fine}, Great +${EVENING_GRADE_POINTS.great}, Perfect +${EVENING_GRADE_POINTS.perfect}; ×${EVENING_FACTOR} in her favourite kind, on her birthday and on her anniversary, each once`, `One evening a day across all the Umas; two on some days from ${TWO_EVENINGS_MARRIED} married`, '`spendEvening`'],
     ['An invitation said yes', `+${INVITE_POINTS}`, 'With her first evening that day', '`spendEvening`'],
     ['A house morning', '+30 each resident', 'The house you slept in', '`houseMorning`, night step 9'],
@@ -726,10 +736,8 @@ function signatureDishes(): string {
 /** The stand-in pack in git: the dev server's and the tests' cast. */
 function standIn(): string {
   const pack = storyPackFrom(STAND_IN_FILES)
-  const welcome = welcomeOf(pack)
-  const listed = (id: string): string => (welcome.indexOf(id) === 0 ? '1st: day 1’s visitor' : welcome.includes(id) ? ordinal(welcome.indexOf(id) + 1) : '—')
-  return table(['Character', 'Outfit', 'Calling', 'Favourite line', 'Welcome list', 'Bible', 'Scripted'], pack.cast.umas.map((u) => [
-    u.characterId, u.outfitId ?? '—', u.calling ?? '—', favouriteOf(pack, u.characterId) ?? '—', listed(u.characterId), pack.bibles.has(u.characterId) ? 'Yes' : 'No (her calling stands in)',
+  return table(['Character', 'Outfit', 'Calling', 'Favourite line', 'Bible', 'Scripted'], pack.cast.umas.map((u) => [
+    u.characterId, u.outfitId ?? '—', u.calling ?? '—', favouriteOf(pack, u.characterId) ?? '—', pack.bibles.has(u.characterId) ? 'Yes' : 'No (her calling stands in)',
     `${pack.scripted.get(u.characterId)?.size ?? 0} of 27`,
   ]))
 }
@@ -1007,7 +1015,7 @@ function furnitureBlock(): string {
 
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'farm-ranks': farmRanks,
-    'meet-kinds': meetKinds, 'arrival-pay': arrivalPay, placeholders: placeholdersBlock, 'placeholder-moments': placeholderMoments,
+    'arrival-pay': arrivalPay, placeholders: placeholdersBlock, 'placeholder-moments': placeholderMoments,
     'default-story': defaultStoryBlock, 'default-outfits': defaultOutfits, 'stand-in': standIn, 'farmer-name': farmerName,
     'route-costs': routeCosts, 'love-points': lovePoints, 'gift-stars': giftStarsBlock, 'birthday-map': birthdayMap, 'ready-rules': readyRules,
     'ready-waits': readyWaits, 'default-chapters': defaultChapters, 'chapter-gates': chapterGates, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor, 'perk-words': perkWordsBlock,
@@ -1027,6 +1035,6 @@ export function renderBlock(key: string): string | null {
     stations, 'station-recipes': stationRecipes,
     'dorm-levels': dormLevels,
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,
-    'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-draw': townDraw }
+    'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-draw': townDraw, 'town-shops': townShops, 'her-menu': herMenuBlock }
   return blocks_[key]?.() ?? null
 }

@@ -64,15 +64,18 @@ export * from './farm/diary'
 export * from './farm/builds'
 export * from './story/cast'
 export * from './story/scenes'
-// The town: who lives there, the day's draw at its six spots, a talk once a day, and her line.
+// The town map: its locations, who lives there and who's where today (the story's places, else the day's draw), and her
+// line.
 export * from './town/town'
+// Her menu: what you can do with her, each item at its cost in actions, and why one isn't open.
+export * from './town/menu'
 // Town notes: the world's short pieces, unlocked once by their trigger at a talk, a visit or the night, and kept.
 export * from './town/notes'
 
 // The romance: save v5 (the new farm over an older save, the keys, the romance's slots) and its strict parse, the
 // farmer's name, the story pack at runtime with the invented stand-in, the one `outfitOf` resolver, her favourite line
-// and tastes, the chats' fallback lines, meeting her (her trigger, the welcome list at the Gate, the night's meetings,
-// the invite to the farm), her meeting scene's pay. The
+// and tastes, the chats' fallback lines, meeting her (introducing yourself in town, the invite to the farm), her meeting
+// scene's pay. The
 // story's format and validator export by name: their `SEASONS` and `FESTIVALS` are the story's words, not the
 // calendar's.
 export * from './save/v4'
@@ -141,7 +144,7 @@ export * from './story/stand-in'
 // 22 expressions and their fallbacks, a portrait kit's pick for a line, and the portraits' manifest.
 export * from './story/look'
 // The story's one reader: errors only for what the game can't read, each skipping its part; notes for the rest. The
-// menu's defaults (the welcome list, her trigger to meet, her chapters) are `placeholders.ts`'s.
+// menu's defaults (her chapters; the retired welcome list and trigger to meet, still read) are `placeholders.ts`'s.
 export {
   ANSWERS, answerAt, ARRIVAL, BIG_EVENTS, bibleTagNotes, CALLINGS, CHARACTER_ID, CHAT_SETS, DATE_GAMES, EMOTES, EVENT_LIMITS,
   eventNotes, EVENING_SCENES, FARMING_PLAYS, GATE_KINDS, HOUSE_LINE_MAX, LIFE_EVENTS, OCCASIONS, STORY_EVENTS, HOUSEHOLD_SCENES, LADDERS, LINE_LIMITS, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies,
@@ -154,4 +157,7 @@ export type {
   TownNote, TownPerson, TownSpot, Trigger, UmaBible,
   Unlock, WeddingPlan, Wish, World, WorldFestival, WorldNames, WorldPlace,
 } from './story/authored'
+// Her life in town (the town map's locations, her home, her job and her routine), as the reader reads them.
+export { GAME_LOCATIONS, LOCATION_KINDS, SHOP_IDS } from './story/authored'
+export type { HerJob, LifeWhen, LocationKind, RoutineStop, ShopId, TownLocation } from './story/authored'
 

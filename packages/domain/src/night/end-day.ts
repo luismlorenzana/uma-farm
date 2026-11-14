@@ -13,8 +13,7 @@
 // wired for the farmhands. The romance's steps sit among them: step 2 waters a dry tile for each farmer's night chore;
 // step 4 pays side by side's extras (`nightExtras`); step 6 reads favourites from the story pack and her friendship's factor, ticks bonds
 // (`tickBonds`) and pays her line +10 (`payLine`); step 7 clears the whole `today`; step 8 is `raiseBuildings` →
-// `settleDorm` → `checkGoals` → `meetUmas` (everyone in town whose trigger the farm now holds, her ties seeded) →
-// `unlockTownNotes` (the world's Town notes whose unlock holds on the morning's date, named in §5); step 9 notes
+// `settleDorm` → `checkGoals` → `unlockTownNotes` (the world's Town notes whose unlock holds on the morning's date, named in §5); step 9 notes
 // praise earned overnight, birthdays and anniversaries today and tomorrow with the anniversary's item (`heartsMorning`),
 // draws the morning's invitations (`drawInvitations`), and its §4 is Hearts, with the invitations, the chapters opened
 // (`chaptersOpened`), side by side and the bond hearts reached. The perks: step 2's farming chores, step 4's perks'
@@ -37,7 +36,6 @@ import { payBin } from '../save/bin'
 import type { LoopPlaceId } from '../save/parse-v4'
 import { touched } from '../save/save'
 import { payLines } from '../romance/acts'
-import { meetTonight } from '../romance/meeting'
 import { chaptersOpened } from '../romance/chapters'
 import { drawInvites } from '../romance/evening'
 import { openBench } from '../romance/bench'
@@ -65,7 +63,7 @@ export interface NightContext {
   /** Each Uma's talent in an activity: rank points (step 6), her night chores' and morning items' stars. D for
    * everyone when left out (tests). */
   readonly talentOf?: TalentOf
-  /** The story pack: the night's favourites, her line's places, her trigger to meet and anniversary items, and the
+  /** The story pack: the night's favourites, her line's places, the Town notes and anniversary items, and the
    * ties (their seeds, her closest friend), with the town (its people, master data's characters). A night without it
    * meets no one, reads no favourites, ticks no bonds and pays no line. */
   readonly story?: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> & Partial<Pick<StoryPack, 'town' | 'master' | 'world'>>
@@ -102,8 +100,6 @@ export interface NightNotes {
   readonly built: readonly FarmPlaceId[]
   /** Step 8: the Diary's milestones and rows paid, and Farm Ranks reached. */
   readonly goals: GoalsTonight
-  /** Step 8: who the night met: in the Dorm (home), or living in town. */
-  readonly arrived: readonly { id: string; home: boolean }[]
   /** Step 8: the Town notes the night unlocked, by id. */
   readonly townNotes: readonly string[]
   /** Step 6: who was paid +10 for a day at her line. */
@@ -140,7 +136,7 @@ export interface NightNotes {
 /** A night's notes before its first step. */
 export const emptyNotes = (): NightNotes => ({
   sold: [], worked: [], made: [], grew: 0, ripened: 0, loads: [], withered: [], ranks: [], dorm: null, home: [],
-  built: [], goals: { paid: [], ranks: [] }, arrived: [], townNotes: [], lines: [], days: [], extras: [], bonds: [], invites: [], chores: [], perks: [], items: [], house: null, levels: [],
+  built: [], goals: { paid: [], ranks: [] }, townNotes: [], lines: [], days: [], extras: [], bonds: [], invites: [], chores: [], perks: [], items: [], house: null, levels: [],
   household: [], houseLine: null, houseItems: [], moved: [], misses: null, vows: null,
 })
 
@@ -276,16 +272,7 @@ export const settleDorm: NightStep = (night) => {
   return { ...night, save, notes: { ...night.notes, dorm: raised, home } }
 }
 
-/** Step 8, after the goals: everyone in town not met yet whose trigger the farm holds tonight (a Farm Rank, a place
- * built, a good shipped, another's event) is met, the cast's order first: home while a bed is free, else she lives in
- * town. Her meeting scene plays in the morning. A night without the pack meets no one. */
-export const meetUmas: NightStep = (night) => {
-  if (!night.context.story) return night
-  const { save, met } = meetTonight(night.save, night.context.story)
-  return { ...night, save, notes: { ...night.notes, arrived: met } }
-}
-
-/** Step 8, after meeting her: the world's Town notes whose unlock holds on the morning's date (a season, a festival,
+/** Step 8, after the goals: the world's Town notes whose unlock holds on the morning's date (a season, a festival,
  * a Farm Rank, a place built, a good shipped, another's event) unlock, each once; the morning names them. A night
  * without the pack unlocks none. */
 export const unlockTownNotes: NightStep = (night) => {
@@ -513,7 +500,6 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 8, name: 'raiseBuildings', run: raiseBuildings, what: 'Places built: every place paid for yesterday stands this morning (`buildings[id] = 1`), each one news' },
   { step: 8, name: 'settleDorm', run: settleDorm, what: 'The Dorm’s level bought takes effect; swaps arrive, each Uma in town coming home in the place of one leaving' },
   { step: 8, name: 'checkGoals', run: checkGoals, what: 'The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources' },
-  { step: 8, name: 'meetUmas', run: meetUmas, what: 'Meeting her: everyone in town not met yet whose trigger the farm now holds (a Farm Rank, a place built, a good shipped, another’s event; never the welcome list’s) is met, the cast’s order first: home while a bed is free, else she lives in town; each of her ties with someone met starts at its seed (strength 3 → 150, 2 → 50)' },
   { step: 8, name: 'unlockTownNotes', run: unlockTownNotes, what: 'Town notes: each of the world’s notes not yet unlocked whose unlock holds on the morning’s date (a season, a festival, a Farm Rank, a place built, a good shipped, another’s event) unlocks, once; the morning names them' },
   { step: 8, name: 'openRingBench', run: openRingBench, what: 'The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and the smith’s scene is due in the morning' },
   { step: 8, name: 'householdMilestones', run: householdMilestones, what: 'Household milestones: as the married count passes 1, 5, 10, 15 and 20, each is news once; 5 brings the furniture set, 20 the finale’s morning; household scenes are Ready from this morning' },

@@ -24,15 +24,15 @@ describe('the packs an open story releases', () => {
     expect(errors).toEqual([])
     expect(pack.cast).not.toHaveProperty('opening')
     expect(pack.cast.umas.some((u) => 'arrives' in u)).toBe(false)
-    expect(notes).toContain('cast.json: opening: the opening brings nobody: the welcome list visits the Gate, one a morning, so the list is dropped')
-    expect(notes).toContain(`cast.json: Uma 4 (${id(4)}): arrives is retired: her meet says how you meet her, so it’s dropped`)
+    expect(notes).toContain('cast.json: opening: the opening brings nobody, so the list is dropped')
+    expect(notes).toContain(`cast.json: Uma 4 (${id(4)}): arrives is retired: you meet her by introducing yourself in town, so it’s dropped`)
     expect(firstVisitorOf(pack)).toBe(id(1))
     expect(notes).toContain(`umas/${id(4)}.json: no bible yet, so her calling or her stats give her line, she loves her line’s favourite good, and she talks the default story’s lines`)
     expect(notes).toContain(`routes/${id(5)}.json: no route yet, so her meeting scene and her events play the default story’s, which pay as written ones do`)
     expect(pack.cast.umas).toHaveLength(5)
   })
 
-  it('forty characters: the welcome list is the first five, each meets on three days\' talks and has the four chapters', () => {
+  it('forty characters: the retired welcome list reads the first five, and each has the four chapters', () => {
     const { pack, errors, notes } = read({ cast: castOf(40, (i) => ({ outfitId: `${id(i + 1)}01` })) })
     expect(errors).toEqual([])
     expect(pack.cast.umas).toHaveLength(40)
@@ -40,9 +40,8 @@ describe('the packs an open story releases', () => {
     expect(meetOf(pack, id(40))).toEqual(DEFAULT_MEET)
     expect(meetOf(pack, id(40))).toEqual({ kind: 'talks', days: 3 })
     expect(chaptersOf(pack, id(17))).toBe(DEFAULT_CHAPTERS)
-    // The welcome list's first is day 1's visitor at the Gate; the other 35 are met in town.
-    expect(firstVisitorOf(pack)).toBe(id(1))
-    expect(notes).toContain(`cast.json: ${id(1)}, the welcome list’s first, is day 1’s visitor at the Gate, and the farm’s first helper`)
+    // Nobody comes to the Gate: the retired welcome list is read, and every one of the forty is met in town.
+    expect(notes.some((n) => n.includes('Gate'))).toBe(false)
   })
 
   it('a single character with no routes, no ties and no bible', () => {
@@ -52,12 +51,11 @@ describe('the packs an open story releases', () => {
     expect(pack.ties.ties).toEqual([])
     expect(notes).toEqual([
       `cast.json: Uma 1 (${id(1)}): no outfit, so she plays her default outfit from master data`,
-      'opening.json: no opening yet, so the game’s own three lines play',
+      'opening.json: no opening yet, so the game’s own lines play',
       'world.json: no world yet, so the game’s own names, festivals, places and seasons play, and there are no Town notes',
       `umas/${id(1)}.json: no bible yet, so her calling or her stats give her line, she loves her line’s favourite good, and she talks the default story’s lines`,
       `routes/${id(1)}.json: no route yet, so her meeting scene and her events play the default story’s, which pay as written ones do`,
       `cast.json: ${id(1)} has no calling and no bible’s favouriteLine, so her line is the work her stats in master data suit best`,
-      `cast.json: ${id(1)}, the welcome list’s first, is day 1’s visitor at the Gate, and the farm’s first helper`,
     ])
   })
 
@@ -178,11 +176,11 @@ describe('the opening: opening.json', () => {
     const picks = read({ ...clone(STAND_IN_FILES), opening: { steps: [{ choice: [{ text: 'A.' }] }, { wait: 300 }] } })
     expect(picks.notes).toContain('opening.json: No lines, so the game’s own opening plays')
     expect(picks.pack.opening).toBeNull()
-    expect(openingOf(picks.pack)).toEqual(PLACEHOLDER_OPENING)
+    expect(openingOf(picks.pack)).toEqual(PLACEHOLDER_OPENING.slice(0, 2))
     const shapeless = read({ ...clone(STAND_IN_FILES), opening: ['Morning.'] })
     expect(shapeless.errors).toEqual(['opening.json: Not an opening (an object with a steps list); the game’s own opening plays'])
     expect(shapeless.files).not.toHaveProperty('opening')
-    expect(openingOf(shapeless.pack)).toEqual(PLACEHOLDER_OPENING)
+    expect(openingOf(shapeless.pack)).toEqual(PLACEHOLDER_OPENING.slice(0, 2))
   })
 
   it('the game\'s own three are short and plain: {farmer} the only placeholder', () => {

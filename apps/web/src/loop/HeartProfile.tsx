@@ -3,7 +3,7 @@
 // then on its Hearts side the route as one track (F ◆ R ◇ S), the Next card (the rung, its perk, its place and setup in
 // her bible's hint, the bar and what's banked, and what it waits for), Perks (reached ✓, the next, the rest greyed), Gifts
 // as learnt (others +10), Ties (her bonds' hearts), Memories' count and her ring once given; on its Work side the sheet
-// (her nine activities). Chat +15, Gift and Praise +20 sit at the panel's foot; Hearts | Work under her face, held at
+// (her nine activities). Chat and Gift (an action each) and Praise +20 sit at the panel's foot; Hearts | Work under her face, held at
 // the panel's top as it scrolls. Each section shows only
 // what exists: **Play · 1 ›** (her event costs an action) on the Next card when her event is Ready (what a setup needs said when it isn't, and **Ask
 // her** after her confession's "Not yet"), and Memories' album (`?album=`); Evening ›, the perks' effects,
@@ -287,7 +287,7 @@ function NextSection({ card, advice = null, play = null, ask = null, bench = fal
         </div>
       )}
       <p className={`text-[14px] ${card.ready ? 'font-bold' : 'font-semibold text-ink-soft'}`} style={card.ready ? { color: colour } : undefined} data-next-words={card.waits ?? 'ready'}>
-        {card.waits === 'away' ? <Link to="/dorm" className="text-accent-strong underline">{card.words}</Link> : card.words}
+        {card.words}
       </p>
       {advice && <p className="text-[13px] text-ink-soft" data-setup-advice>{advice}</p>}
       {bench && <Link to="/?sheet=bench" state={{ back: true }} className="block min-h-11 py-2 text-[14px] font-semibold text-accent-strong" data-action="to-bench">Make one at the Forge’s bench ›</Link>}

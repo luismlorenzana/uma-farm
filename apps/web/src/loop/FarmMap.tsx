@@ -4,14 +4,13 @@
 // one action each. Tap the woods' edge to forage or chop, the pond's to fish, a station to start a load (their menus in
 // the side panel, `/?peek=forest|fishery|<station>`), the bin to ship. A place's quick look opens in the side panel
 // too: what it is, and what opens it while it's locked; a place to build with its Build card (`BuildCard.tsx`; the
-// Dock's with the Boat's once it stands); the Gate's holds the welcome list's visitor of the day, with Say hello, and
-// wears **Visiting** while she waits. After a night the morning summary opens over the map until the player starts the
+// Dock's with the Boat's once it stands); the Gate's says the town is where you meet everyone. After a night the morning summary opens over the map until the player starts the
 // day; its Hearts section lists who's Ready, read live; its bond hearts carry Read while a conversation waits, which
 // plays over the morning (`?read=`); an invitation's line carries Yes, tonight and Another day; the Forge's quick look
 // is the ring bench's once it stands. A place's name and its quick look's line are the pack's `world.json` where it
 // gives them, else the game's own (`placeWordsOf`). Loaded on demand.
 import {
-  chapterTitle, farmPlace, gateVisitor, herChapters, homesteadShown, isBuildPlace, placeBuilt, placeOpen, placeWordsOf, stationBuilt, STATIONS,
+  chapterTitle, farmPlace, herChapters, homesteadShown, isBuildPlace, placeBuilt, placeOpen, placeWordsOf, stationBuilt, STATIONS,
   type BuildPlace, type FarmPlace, type FarmSave, type StationId,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
@@ -113,9 +112,6 @@ function FarmScreen({ save, peek, tile }: { save: FarmSave; peek: FarmPlace | un
   const master = useMaster()
   const nameOf = (id: string) => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma'
   const { lots, road, cols } = mapLots(homesteadShown(save))
-  // The welcome list's visitor of the day, waiting at the Gate for her hello.
-  const visiting = story ? gateVisitor(save, story) : null
-  const atGate = visiting !== null && !save.roster[visiting]
   const covered = peek !== undefined || tile !== null || params.get('sheet') !== null
   const peekWords = peek ? placeWordsOf(story, peek.id) : null
   const tilePath = (i: number) => {
@@ -204,12 +200,11 @@ function FarmScreen({ save, peek, tile }: { save: FarmSave; peek: FarmPlace | un
             const place = farmPlace(lot.id)!
             const { name } = placeWordsOf(story, place.id)
             const lock = lockOf(save, place)
-            const visitor = place.id === 'gate' && atGate && lock === null
             const load = isStation(place.id) && stationBuilt(save, place.id) ? save.loads[place.id] : undefined
-            const tag = visitor ? 'Visiting' : load ? 'Ready tomorrow' : null
+            const tag = load ? 'Ready tomorrow' : null
             return (
               <Link key={place.id} to={placeLink(save, place)} {...hop} className="absolute flex flex-col items-center justify-end gap-0.5 pb-1" style={at(lot.area, cell)}
-                aria-label={lock ? `${name}, locked: ${lock}` : visitor ? `${name}, someone is visiting` : tag ? `${name}, ${tag.toLowerCase()}` : name}
+                aria-label={lock ? `${name}, locked: ${lock}` : tag ? `${name}, ${tag.toLowerCase()}` : name}
                 data-place={place.id} data-locked={lock !== null || undefined}>
                 <BuildingArt frame={place.frame} size={cell * 1.35} dim={lock !== null} />
                 <span className="flex max-w-full items-center gap-0.5 truncate rounded-full bg-panel/90 px-1.5 text-[11px] font-semibold shadow-1">

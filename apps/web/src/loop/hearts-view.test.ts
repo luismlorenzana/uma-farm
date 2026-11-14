@@ -95,10 +95,10 @@ describe('the rows', () => {
     const note = (id: string) => rows.find((r) => r.id === id)!.note
     expect(note(ONE)).toBe('Ready · Friendship 2 · the Fields')
     // 9000002 is away; 9000003's short bar says it all, her unscripted route playing the game's cards.
-    expect(note(TWO)).toBe('Invite her to the farm to play her events')
+    expect(note(TWO)).toBe('Lives in town: find her there')
     expect(note(THREE)).toBeNull()
     const scripted = heartRows(away, ALL, nameOf)
-    expect(scripted.find((r) => r.id === TWO)!.note).toBe('Invite her to the farm to play her events')
+    expect(scripted.find((r) => r.id === TWO)!.note).toBe('Lives in town: find her there')
     expect(scripted.find((r) => r.id === THREE)!.note).toBeNull()
     expect(rowNote({ rung: 'f3', ready: false, waits: { kind: 'today' } }, { points: 280, cost: 280 }, true, null, nameOf)).toBe('Friendship 3 · tomorrow: one event a day')
     expect([placeWords('fields'), placeWords('forest'), placeWords('pond-night'), placeWords('festival')]).toEqual(['the Fields', 'the forest', 'the Pond at night', 'the festival ground'])
@@ -134,12 +134,12 @@ describe('her profile', () => {
   it('says each of her waits on the Next card', () => {
     const at = (waits: Readiness['waits'], rung: string | null = 'r5') => nextWords({ rung, ready: waits === null, waits }, { points: 300, cost: 360 }, nameOf)
     expect([
-      at(null), at({ kind: 'bar' }), at({ kind: 'day' }, 'confession'), at({ kind: 'ring' }, 'proposal'), at({ kind: 'away' }), at({ kind: 'today' }),
+      at(null), at({ kind: 'bar' }), at({ kind: 'day' }, 'confession'), at({ kind: 'ring' }, 'proposal'), at({ kind: 'today' }),
       at({ kind: 'setup', setup: { kind: 'working', activity: 'fishing' } }), at({ kind: 'setup', setup: { kind: 'item', good: 'carrot' } }),
       at({ kind: 'setup', setup: { kind: 'bond', with: TWO, level: 3 } }), at({ kind: 'opens', place: 'mine' }),
       at({ kind: 'night' }, 's2'), at({ kind: 'friend' }, 'confession'), at({ kind: 'done' }, null),
     ]).toEqual([
-      'Ready', '60 to go', 'Tomorrow', 'Needs a ring', 'Invite her to the farm', 'Tomorrow: one event a day', 'The Fishery, when she works there', 'With Carrot in the Warehouse',
+      'Ready', '60 to go', 'Tomorrow', 'Needs a ring', 'Tomorrow: one event a day', 'The Fishery, when she works there', 'With Carrot in the Warehouse',
       'Bond 3 with Stand-in 2', 'Opens when the Mine is built', 'Comes tonight', 'She said “Not yet”', 'Her route is complete',
     ])
   })

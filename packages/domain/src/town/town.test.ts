@@ -1,16 +1,24 @@
-// The town: who lives there, the town's people in their roles, the day's draw at the six spots, a talk once a day, and
-// her line. Invented ids only: a master data of 120 characters, 9200001–9200120, sisters `s9200001xx`, and a town.json
-// of invented people and spots.
+// The town map: who lives there, the town's people in their roles and at their posts, the locations (the six spots, the
+// shops and offices, the story's homes and workplaces), who's where (the story's routine, job and home, else the day's
+// draw at the six spots), her menu, and her line. Invented ids only: a master data of 120 characters, 9200001–9200120,
+// sisters `s9200001xx`, and a town.json of invented people, spots and locations.
 import { describe, expect, it } from 'vitest'
+import { goToTown, GAME_DAYS } from '../farm/actions'
+import { farmDay } from '../farm/calendar'
+import { chatV4, giftV4 } from '../romance/acts'
+import { introduce, inviteToFarm, meet } from '../romance/meeting'
+import { parseSaveV5 } from '../save/parse-v4'
 import { newRosterUma, newSave, type SaveV4 } from '../save/v4'
-import { SaveRuleError } from '../save/rules'
+import { addGoods } from '../save/warehouse'
 import { CAST_IDS } from '../story/cast'
-import { SPOT_IDS } from '../story/authored'
+import { SHOP_IDS, SPOT_IDS, type CastEntry } from '../story/authored'
 import { storyOf, townOf, PLACEHOLDER_SPOTS, PLACEHOLDER_TOWN_LINES, speakerId, isTownPerson } from '../story/placeholders'
 import { readStoryPack, type StoryPack } from '../story/pack'
-import { FAVOURITE_SPOT, SPOT_ROOM, talkedToday, talkInTown, townDay, townLineOf, townsfolk, townTalksOf } from './town'
+import { herMenu } from './menu'
+import { FAVOURITE_SPOT, giftedToday, lifeHolds, SHOPS, SPOT_ROOM, talkedToday, townDay, townLineOf, townLocations, townsfolk, townTalksOf } from './town'
 
 const AT = '2026-11-13T10:00:00.000Z'
+const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const ids = (n: number, from = 9_200_001) => Array.from({ length: n }, (_, i) => String(from + i))
 const EVERYONE = ids(120)
 /** An invented master data: 120 characters, each with one outfit. */
@@ -20,13 +28,18 @@ const MASTER = { outfits: new Map(EVERYONE.map((id) => [id, `${id}01`])), lines:
 const pack = (files: Partial<Parameters<typeof readStoryPack>[0]> = {}): StoryPack =>
   storyOf(readStoryPack({ umas: {}, routes: {}, ...files }).pack, MASTER)
 const save = (day = 5, more: Partial<SaveV4> = {}): SaveV4 => ({ ...newSave('u-town', AT), calendar: { day }, ...more })
-const count = (d: ReturnType<typeof townDay>) => [...d.spots.values()].reduce((n, list) => n + list.length, 0)
+const drawn = (d: ReturnType<typeof townDay>) => [...d.by.values()].filter((by) => by === 'draw').length
 
-/** A town.json: fourteen people, one a role, and the six spots. */
+/** A town.json: fourteen people, one a role, the six spots, and three locations of the story's own. */
 const PEOPLE = ids(14, 9_200_101)
 const TOWN = {
   people: PEOPLE.map((characterId, i) => ({ characterId, does: `Invented role ${i + 1}.`, game: CAST_IDS[i] })),
   spots: SPOT_IDS.map((id, i) => ({ id, name: `Invented spot ${i + 1}`, blurb: 'An invented line.', keeper: PEOPLE[i] })),
+  locations: [
+    { id: 'blue-cottage', name: 'The Blue Cottage', line: 'An invented home.', kind: 'home' },
+    { id: 'bakery', name: 'The Bakery', kind: 'work' },
+    { id: 'old-pier', name: 'The Old Pier' },
+  ],
 }
 
 describe('who lives in town', () => {
@@ -68,16 +81,94 @@ describe('who lives in town', () => {
   })
 })
 
+describe('the map', () => {
+  it('holds the six spots, the four shops and offices, then the story\'s locations, each of the town\'s people at one post', () => {
+    const p = pack({ town: TOWN })
+    const map = townLocations(p)
+    expect(map.map((l) => l.id)).toEqual([...SPOT_IDS, ...SHOP_IDS, 'blue-cottage', 'bakery', 'old-pier'])
+    expect(map.map((l) => l.group)).toEqual([...SPOT_IDS.map(() => 'spot'), ...SHOP_IDS.map(() => 'shop'), 'home', 'work', 'spot'])
+    expect(map.find((l) => l.id === 'blue-cottage')).toMatchObject({ name: 'The Blue Cottage', line: 'An invented home.', keeper: null })
+    // One post each: town.json's keepers at their spots first, so the mayor, the shopkeeper and the rancher it puts at
+    // the plaza, the market and the harbour leave their counters; the smith keeps the smithy.
+    const at = (id: string) => map.find((l) => l.id === id)!.keeper
+    expect(SPOT_IDS.map(at)).toEqual(PEOPLE.slice(0, 6))
+    expect(SHOP_IDS.map(at)).toEqual([null, null, null, townOf(p).byRole.get(SHOPS.smith.keeper)])
+    const posts = map.flatMap((l) => (l.keeper ? [l.keeper] : []))
+    expect(new Set(posts).size).toBe(posts.length)
+    // With no town.json: each role's shop first, so the plaza's mayor and the market's shopkeeper are at their counters.
+    const game = townLocations(pack())
+    const own = townOf(pack())
+    expect(game.find((l) => l.id === 'store')!.keeper).toBe(own.byRole.get('marta-quill'))
+    expect(game.find((l) => l.id === 'mayor')!.keeper).toBe(own.byRole.get('hollis-pryor'))
+    expect(game.find((l) => l.id === 'plaza')!.keeper).toBeNull()
+    expect(game.find((l) => l.id === 'cafe')!.keeper).toBe(own.byRole.get('rosa-bell'))
+  })
+
+  it('reads the story\'s locations from town.json: an id of its own and a name, else an error that skips it', () => {
+    const read = readStoryPack({
+      umas: {}, routes: {}, cast: { umas: [] }, ties: { ties: [] },
+      town: { locations: [{ id: 'plaza', name: 'Twice' }, { id: 'Bad Id', name: 'x' }, { id: 'no-name' }, { id: 'ok-place', name: 'A place', kind: 'castle' }] },
+    })
+    expect(read.pack.town?.locations?.map((l) => l.id)).toEqual(['ok-place'])
+    expect(read.errors.filter((e) => e.startsWith('town.json: Location'))).toHaveLength(4)
+  })
+})
+
+describe('her life in town', () => {
+  const life = (entry: Partial<CastEntry>) => pack({ cast: { umas: [{ characterId: '9200007', ...entry }] }, town: TOWN })
+
+  it('her routine\'s first stop that holds, else her job on its days, else her home: the story places her, whatever the draw', () => {
+    const p = life({
+      home: 'blue-cottage',
+      job: { what: 'Bakes the morning bread', at: 'bakery', days: [1, 2, 3, 4, 5, 6] },
+      routine: [{ at: 'library', days: [3], seasons: ['spring'] }, { at: 'old-pier', seasons: ['summer'] }],
+    })
+    const where = (day: number) => [townDay(save(day), p).where.get('9200007'), townDay(save(day), p).by.get('9200007')]
+    expect(where(farmDay({ year: 1, season: 'spring', day: 3 }))).toEqual(['library', 'routine'])
+    expect(where(farmDay({ year: 1, season: 'spring', day: 4 }))).toEqual(['bakery', 'job'])
+    expect(where(farmDay({ year: 1, season: 'spring', day: 9 }))).toEqual(['blue-cottage', 'home'])
+    expect(where(farmDay({ year: 1, season: 'summer', day: 3 }))).toEqual(['old-pier', 'routine'])
+    expect(where(farmDay({ year: 2, season: 'autumn', day: 2 }))).toEqual(['bakery', 'job'])
+    expect(lifeHolds({ days: [3], seasons: ['spring'] }, farmDay({ year: 3, season: 'spring', day: 3 }))).toBe(true)
+  })
+
+  it('one with no home is placed by the draw when nothing holds; the story\'s stand besides the draw\'s four', () => {
+    const p = life({ job: { at: 'cafe', seasons: ['winter'] } })
+    const winter = farmDay({ year: 1, season: 'winter', day: 5 })
+    const day = townDay(save(winter), p)
+    expect(day.where.get('9200007')).toBe('cafe')
+    expect(day.by.get('9200007')).toBe('job')
+    expect(drawn(day)).toBe(SPOT_ROOM * SPOT_IDS.length)
+    expect(day.at.get('cafe')).toHaveLength(SPOT_ROOM + 1)
+    const spring = townDay(save(5), p)
+    expect(spring.by.get('9200007') ?? 'home').not.toBe('job')
+  })
+
+  it('reads her fields, each error skipping its own: a location the map doesn\'t hold, a day off the season', () => {
+    const read = readStoryPack({
+      umas: {}, routes: {}, ties: { ties: [] }, town: TOWN,
+      cast: { umas: [{ characterId: '9200007', home: 'nowhere', job: { what: 'Waits tables', at: 'cafe', days: [0] }, routine: [{ at: 'bakery', days: [2] }, { at: 'moon' }, { at: 'track' }] }] },
+    })
+    const entry = read.pack.cast.umas[0]!
+    expect(entry.home).toBeUndefined()
+    expect(entry.job).toEqual({ what: 'Waits tables', at: 'cafe' })
+    expect(entry.routine).toEqual([{ at: 'bakery', days: [2] }, { at: 'track' }])
+    expect(read.errors.filter((e) => e.startsWith('cast.json'))).toHaveLength(3)
+    expect(read.notes.some((n) => n.includes('routine 3: no days or seasons'))).toBe(true)
+  })
+})
+
 describe('the day\'s draw', () => {
   const p = pack({ town: TOWN })
 
   it('puts up to four at each spot, about two dozen in all, the same town all day', () => {
     const day = townDay(save(), p)
-    for (const spot of SPOT_IDS) expect(day.spots.get(spot)!.length).toBe(SPOT_ROOM)
-    expect(count(day)).toBe(24)
+    for (const spot of SPOT_IDS) expect(day.at.get(spot)!.length).toBe(SPOT_ROOM)
+    expect(day.where.size).toBe(24)
     expect(townDay(save(), p)).toEqual(day)
-    for (const [id, spot] of day.where) expect(day.spots.get(spot)).toContain(id)
+    for (const [id, spot] of day.where) expect(day.at.get(spot)).toContain(id)
     for (const id of PEOPLE) expect(day.where.has(id)).toBe(false)
+    for (const id of [...SHOP_IDS, 'blue-cottage']) expect(day.at.get(id)).toEqual([])
   })
 
   it('shows a different set tomorrow, and another player a different town', () => {
@@ -100,16 +191,10 @@ describe('the day\'s draw', () => {
     const moved = townDay({ ...farm, dorm: { ...farm.dorm, home: [...home, mover!] } }, p)
     expect(moved.where.has(mover!)).toBe(false)
     expect([...moved.where]).toEqual([...day.where].filter(([id]) => id !== mover))
-    // A few: the welcome list (the cast's five) comes to the Gate, so none is out until she's met.
-    const few = storyOf(readStoryPack({ umas: {}, routes: {}, cast: { umas: ids(7, 9_000_001).map((characterId) => ({ characterId })) } }).pack, null)
-    expect([...townDay(save(), few).where.keys()].sort()).toEqual(['9000006', '9000007'])
-    // Met and living in town (no bed), a welcomer is out like anyone; the day's visitor, met today, is not.
-    const met = { ...save(), roster: { 9000002: newRosterUma(3), 9000001: newRosterUma(5) } }
-    expect([...townDay(met, few).where.keys()].sort()).toEqual(['9000002', '9000006', '9000007'])
   })
 
   it('puts her at her favourite spot more often', () => {
-    const favourite = pack({ cast: { umas: [{ characterId: '9200007', spot: 'library' }], welcome: ['9200001'] }, town: TOWN })
+    const favourite = pack({ cast: { umas: [{ characterId: '9200007', spot: 'library' }] }, town: TOWN })
     let out = 0
     let there = 0
     for (let d = 1; d <= 400; d++) {
@@ -123,37 +208,63 @@ describe('the day\'s draw', () => {
     expect(there / out).toBeGreaterThan(2 / SPOT_IDS.length)
     expect(FAVOURITE_SPOT).toBeGreaterThan(0.5)
   })
-})
-
-describe('a talk in town', () => {
-  const p = pack({ town: TOWN })
-  const day = townDay(save(), p)
-  const [first] = [...day.where.keys()]
-
-  it('counts once a day, and again the next', () => {
-    const once = talkInTown(save(), p, first!)
-    expect(townTalksOf(once, first!)).toEqual({ talks: 1, last: 5 })
-    expect(talkedToday(once, first!)).toBe(true)
-    expect(talkInTown(once, p, first!)).toBe(once)
-    // Tomorrow she's out or not by the draw; on a day she's out, the talk counts again.
-    const next = Array.from({ length: 30 }, (_, i) => 6 + i).find((d) => townDay(save(d), p).where.has(first!))!
-    const again = talkInTown({ ...once, calendar: { day: next } }, p, first!)
-    expect(townTalksOf(again, first!)).toEqual({ talks: 2, last: next })
-    // Nothing else moves, and the save's time isn't stamped.
-    expect({ ...again, town: once.town, calendar: once.calendar }).toEqual(once)
-  })
-
-  it('needs her out in town today', () => {
-    const home = PEOPLE.find((id) => !day.where.has(id))!
-    expect(() => talkInTown(save(), p, home)).toThrow(SaveRuleError)
-    const away = EVERYONE.find((id) => !day.where.has(id) && !PEOPLE.includes(id))!
-    expect(() => talkInTown(save(), p, away)).toThrow('She isn’t out in town today.')
-  })
 
   it('says her line: the pack\'s town lines, else the game\'s, the same all day', () => {
+    const [first] = [...townDay(save(), p).where.keys()]
     expect(PLACEHOLDER_TOWN_LINES).toContain(townLineOf(save(), p, first!))
     expect(townLineOf(save(), p, first!)).toBe(townLineOf(save(), p, first!))
     const own = readStoryPack({ umas: { 9200001: { townLines: ['An invented hello.'] } }, routes: {}, cast: { umas: [{ characterId: '9200001' }] } }).pack
     expect(townLineOf(save(), own, '9200001')).toBe('An invented hello.')
+  })
+})
+
+describe('her menu', () => {
+  const p = pack({ town: TOWN, cast: { umas: [{ characterId: '9200007', job: { at: 'cafe' } }] } })
+  const inTown = (s: SaveV4) => goToTown(s)
+
+  it('before you\'ve met: introduce yourself, one action, while you\'re in town and she\'s there', () => {
+    expect(herMenu(save(), p, '9200007', GAME_DAYS).map((i) => [i.id, i.cost, i.why])).toEqual([['introduce', 1, 'Go into town first.']])
+    expect(herMenu(inTown(save()), p, '9200007', GAME_DAYS).map((i) => [i.id, i.open])).toEqual([['introduce', true]])
+    expect(herMenu(inTown(save()), p, PEOPLE[0]!, GAME_DAYS)).toEqual([])
+  })
+
+  it('once met: talk, a gift, her evening, the invitation to work (coming), and her event when Ready', () => {
+    const met = introduce(inTown(save()), p, '9200007')
+    const menu = herMenu(met, p, '9200007', GAME_DAYS)
+    expect(menu.map((i) => i.id)).toEqual(['talk', 'gift', 'hangout', 'work'])
+    expect(menu.find((i) => i.id === 'talk')).toMatchObject({ cost: 1, open: true })
+    expect(menu.find((i) => i.id === 'gift')).toMatchObject({ cost: 1, open: false, why: 'Nothing in the Warehouse to give' })
+    expect(menu.find((i) => i.id === 'hangout')).toMatchObject({ cost: null, open: false, why: 'From Friendship 2' })
+    expect(menu.find((i) => i.id === 'work')).toMatchObject({ open: false, why: 'Coming with the farmhands' })
+  })
+
+  it('a talk and a gift each cost an action, once a day each, and the save keeps her last talk and gift day', () => {
+    const met = introduce(inTown(save()), p, '9200007')
+    const stocked = { ...met, items: addGoods(met.items, 'carrot', 1, 2) }
+    const talked = chatV4(stocked, '9200007').save
+    expect(talked.today.actions).toBe(stocked.today.actions + 1)
+    expect(talkedToday(talked, '9200007')).toBe(true)
+    expect(townTalksOf(talked, '9200007')).toEqual({ talks: 1, last: 5, gift: 0 })
+    const given = giftV4(talked, p, '9200007', 'carrot', 1).save
+    expect(given.today.actions).toBe(talked.today.actions + 1)
+    expect(giftedToday(given, '9200007')).toBe(true)
+    expect(townTalksOf(given, '9200007')).toEqual({ talks: 1, last: 5, gift: 5 })
+    const menu = herMenu(given, p, '9200007', GAME_DAYS)
+    expect(menu.find((i) => i.id === 'talk')).toMatchObject({ open: false, done: true, why: 'Talked today ✓' })
+    expect(menu.find((i) => i.id === 'gift')).toMatchObject({ open: false, done: true, why: 'Gift given today ✓' })
+    expect(() => chatV4(given, '9200007')).toThrow('You’ve talked today.')
+    expect(given.account.updatedAt).toBe(AT)
+    expect(parseSaveV5(json(given))).toEqual(given)
+    // With no actions left, both are refused.
+    const spent = { ...met, items: stocked.items, today: { ...met.today, actions: 10 } }
+    expect(() => chatV4(spent, '9200007')).toThrow('No actions left today.')
+    expect(herMenu(spent, p, '9200007', GAME_DAYS).find((i) => i.id === 'talk')!.why).toBe('No actions left today.')
+  })
+
+  it('her evening is the evening as built: a hangout from Friendship 2 for one who lives on the farm', () => {
+    const met = meet(save(), '9200007', p).save
+    const friend: SaveV4 = { ...met, love: { ...met.love, 9200007: { ...met.love['9200007']!, level: 2 } } }
+    expect(herMenu(friend, p, '9200007', GAME_DAYS).find((i) => i.id === 'hangout')!.why).toBe('She lives in town: invite her to the farm')
+    expect(herMenu(inviteToFarm(friend, '9200007'), p, '9200007', GAME_DAYS).find((i) => i.id === 'hangout')).toMatchObject({ open: true })
   })
 })

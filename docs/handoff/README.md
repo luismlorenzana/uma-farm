@@ -23,11 +23,15 @@ opens the year on one screen, each day with its festival, New Year's, the story'
 anniversaries and the faces of the Umas with an event that day; her event costs an action, a special day's event
 actions first, so several Umas' events fit a festival; and the occasion scenes play on their days (New Year's from the
 second year, the Flower Show, the Fishing Derby's night) ([the calendar](../game-mechanics.md#the-calendar-screen)).
+**The town map (F78) is built,** in review: a map you walk
+around in landscape, who's at each place now (the story's `home`, `job` and `routine`, else the day's draw), the town's
+people at their posts, and her menu at the design's costs: introduce yourself, talk and give a gift, an action each, her
+evening as built, her event when it's Ready; no welcome week ([the town](../game-mechanics.md#the-town)).
 
 | Piece | Who | State |
 |---|---|---|
 | F77 **A day of actions, and the farm loop** | Claude | Built, in review: the pull request `feat/f77-actions-and-farm-loop` |
-| [F78](tasks/F78-town-map.md) **The town map** | Claude | After F77 |
+| F78 **The town map** | Claude | Built, in review: the pull request `feat/f78-town-map` |
 | [F79](tasks/F79-uma-loop.md) **The Uma loop** | Claude | After F78 |
 | [F80](tasks/F80-farmhands.md) **Farmhands** | Claude | After F77 and F79 |
 | [F81](tasks/F81-economy.md) **Upkeep and loans** | Claude | After F77 |
@@ -49,7 +53,8 @@ The table above is the queue. A packet is deleted when it ships, and git keeps t
 | **Once F82 is deployed, open the calendar:** tap the date, look across a season and its faces, and on the Flower Show play two Umas' scenes with the festival's event actions | [uma-farm.web.app](https://uma-farm.web.app), and [the calendar](../game-mechanics.md#the-calendar-screen) |
 | **Once F77 is deployed, play three days:** start the new farm on the card, clear, till, plant and water, forage and fish, start a load and ship, run out of actions and end the day | [uma-farm.web.app](https://uma-farm.web.app), and [the day's rules](../game-mechanics.md#a-day-ten-actions) |
 | **The default Uma's look:** meet an Uma without art and play a talk and an event: the blank bust's faces and the default story | [uma-farm.web.app](https://uma-farm.web.app) |
-| **Write the story and ship it.** F40 lists what the rework changes for it: the protagonist is a man, there's no welcome week, and her life in town | [F40](tasks/F40-story-authoring.md) |
+| **Once F78 is deployed, go into town and meet three Umas you choose:** walk between the places, introduce yourself, talk and give a gift, each an action | [uma-farm.web.app](https://uma-farm.web.app), and [the town](../game-mechanics.md#the-town) |
+| **Write the story and ship it.** F40 lists what the rework changes for it: the protagonist is a man, there's no welcome week, and her life in town (`home`, `job`, `routine`, and `town.json`'s `locations`) | [F40](tasks/F40-story-authoring.md) |
 | **The next Umas' art:** hand [F69](tasks/F69-bust-art-spec.md) to the character art session | Uma Character Art |
 
 ## Across the repos

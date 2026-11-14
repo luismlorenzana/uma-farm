@@ -52,7 +52,7 @@ export default function HeartsPage() {
           {view === 'hearts' ? (
             <HelpButton title="Hearts" label="About hearts">
               <p>Her bar fills as you chat (+15), praise her work (+20) and give gifts, and from a day at her favourite line (+10). Points past a full bar are banked, never lost.</p>
-              <p>Everyone you’ve met is here. You meet her in town: by talking with her on a few days, or as her story says. The welcome list comes to the Gate in the first days.</p>
+              <p>Everyone you’ve met is here. You meet her in town, by introducing yourself: everyone lives there from day one.</p>
               <p>A full bar makes her next event Ready (● Ready). Some also need a setup, such as working a place that day. She must live on the farm: invite her from town when a bed is free.</p>
               <p>Each Uma plays one of her events a day, and each level comes when its event plays.</p>
               <p>Her story runs in chapters, from meeting her to married life. A chapter may wait for the farm first, such as a place built; her profile says what it needs.</p>
@@ -151,7 +151,7 @@ function HeartsList({ rows, onOpen }: { rows: readonly HeartRow[]; onOpen: (id: 
       </div>
       {shown.length === 0 && (
         <p className="py-4 text-[14px] text-ink-soft" data-hearts-empty>
-          {rows.length === 0 ? <>No one yet. Say hello at the Gate, or meet someone in <Link to="/town" className="font-semibold text-accent-strong underline">town</Link>.</> : 'No one here yet.'}
+          {rows.length === 0 ? <>No one yet. Go into <Link to="/town" className="font-semibold text-accent-strong underline">town</Link> and introduce yourself.</> : 'No one here yet.'}
         </p>
       )}
       <ul className="grid @xl:grid-cols-2 @xl:gap-x-6" data-heart-rows>

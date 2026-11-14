@@ -4,7 +4,7 @@
 // +20 after a rank-up overnight, and the morning's birthday line. The invented stand-in pack (9000001's birthday is Spring
 // 4 in its cast) and invented outfits; the server is a stub.
 import 'fake-indexeddb/auto'
-import { meet, newSave, readScene, type SaveV4, type StoryPack } from '@farm/domain'
+import { inviteToFarm, meet, newSave, readScene, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes } from 'react-router'
@@ -32,7 +32,7 @@ const { summaryParts } = await import('./summary-words')
 
 /** The stand-in's three home, ties seeded, as if met: the opening brings nobody, and day 1's visitor waits at the Gate. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
-  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : meet(s, id, pack).save), save)
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : inviteToFarm(meet(s, id, pack).save, id)), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const ONE = '9000001'
 const THREE = '9000003'
@@ -112,7 +112,7 @@ describe('her profile on v4', () => {
   it('chats once a day for +15, with her line and the "+N" over her face', async () => {
     await render(<HeartsPage />, `/hearts?uma=${ONE}`)
     const chat = await find('[data-action="chat"]')
-    expect(chat.textContent).toBe('Chat +15')
+    expect(chat.textContent).toBe('Chat · 1')
     await click(chat)
     await until(() => save().love[ONE]!.points === 15)
     expect((await find('[data-love-float]')).textContent).toBe('+15')
@@ -176,12 +176,12 @@ describe('what her next event waits for, in words', () => {
     const { readyWords } = await import('./love-words')
     const at = (waits: Parameters<typeof readyWords>[0]['waits'], rung: string | null = 'r5') => readyWords({ rung, ready: false, waits }, { points: 300, cost: 360 }, () => 'Stand-in 2')
     expect([
-      at({ kind: 'bar' }), at({ kind: 'day' }, 'confession'), at({ kind: 'ring' }, 'proposal'), at({ kind: 'away' }), at({ kind: 'today' }),
+      at({ kind: 'bar' }), at({ kind: 'day' }, 'confession'), at({ kind: 'ring' }, 'proposal'), at({ kind: 'today' }),
       at({ kind: 'setup', setup: { kind: 'working', activity: 'fishing' } }), at({ kind: 'setup', setup: { kind: 'item', good: 'carrot' } }),
       at({ kind: 'setup', setup: { kind: 'bond', with: '9000002', level: 3 } }), at({ kind: 'opens', place: 'mine' }),
       at({ kind: 'night' }, 's2'), at({ kind: 'friend' }, 'confession'), at({ kind: 'done' }, null),
     ]).toEqual([
-      'Romance 5 · 60 to go', 'Her confession · Ready tomorrow', 'The proposal · Needs a ring', 'Romance 5 · Invite her to the farm', 'Romance 5 · tomorrow: one event a day',
+      'Romance 5 · 60 to go', 'Her confession · Ready tomorrow', 'The proposal · Needs a ring', 'Romance 5 · tomorrow: one event a day',
       'Romance 5 · the Fishery, when she works there', 'Romance 5 · with Carrot in the Warehouse', 'Romance 5 · bond 3 with Stand-in 2', 'Romance 5 · Opens when the Mine is built',
       'Spouse 2 · comes tonight', 'Her confession · she said “Not yet”', 'Her route is complete',
     ])

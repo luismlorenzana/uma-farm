@@ -39,6 +39,16 @@ export const TIE_KINDS = ['friends', 'rivals', 'mentor', 'teammates', 'sisters',
  * `placeholders.ts`'; the story's `town.json` may name them). */
 export const SPOT_IDS = ['plaza', 'market', 'cafe', 'harbour', 'library', 'track'] as const
 export type SpotId = typeof SPOT_IDS[number]
+/** The town's shops and offices, each kept by one of the town's people at her post: the general store, the rancher's,
+ * the mayor's office and the smithy. */
+export const SHOP_IDS = ['store', 'rancher', 'mayor', 'smith'] as const
+export type ShopId = typeof SHOP_IDS[number]
+/** The game's own locations on the town map: the six spots, then the shops and offices. `town.json`'s `locations` add
+ * the homes and workplaces the story writes. */
+export const GAME_LOCATIONS: readonly string[] = [...SPOT_IDS, ...SHOP_IDS]
+/** What a location of the story's own is, for the map's grouping: a home, a workplace, or another spot. */
+export const LOCATION_KINDS = ['home', 'work', 'spot'] as const
+export type LocationKind = typeof LOCATION_KINDS[number]
 /** The ladders a beat sits on: her arrival, then the route's six. */
 export const LADDERS = ['arrival', 'friendship', 'confession', 'romance', 'proposal', 'wedding', 'spouse'] as const
 /** The emote menu: the 22 expressions (`look.ts`), each falling back to its nearest while her art hasn't drawn it. */
@@ -119,6 +129,12 @@ export interface HerChapter { title?: string; events?: string[]; gate?: StoryTri
 
 /** A birthday as a date: month 1–12 and a real day of it. */
 export interface CastBirthday { month: number; day: number }
+/** When a place in her life holds: on these days of the season (1–12) and in these seasons; either left out is every one. */
+export interface LifeWhen { days?: number[]; seasons?: Season[] }
+/** Her part-time job: what she does, in a few words, and where (a location of the town map), on its days. */
+export interface HerJob extends LifeWhen { what?: string; at: string }
+/** One stop of her routine: where she is (a location of the town map), when. */
+export interface RoutineStop extends LifeWhen { at: string }
 /** One character of the cast. Only her `characterId` (master data's) is needed; everything else is optional. */
 export interface CastEntry {
   characterId: string
@@ -133,6 +149,12 @@ export interface CastEntry {
   chapters?: HerChapter[]
   /** Her favourite of the town's spots: she's out there more often than elsewhere. */
   spot?: SpotId
+  /** Her home: a location of the town map (`town.json`'s, usually), where she is when nothing else holds. */
+  home?: string
+  /** Her part-time job, and where it is. */
+  job?: HerJob
+  /** Where she is, when: the first stop that holds today wins, before her job and her home. */
+  routine?: RoutineStop[]
   /** A sister's name (a sister's id is `s<outfitId>`): master data has none for her, so the pack gives it. */
   name?: string
   /** A short paragraph about her: the story's own (the sandbox shows it). */
@@ -163,8 +185,11 @@ export interface TownPerson { characterId: string; does?: string; game?: string 
 /** One of the town's spots, by its id: its name, a line about it, and its keeper (one of the town's people, by her
  * character id or her role's id), who's usually there. */
 export interface TownSpot { id: SpotId; name?: string; blurb?: string; keeper?: string }
-/** town.json: the town's people and its spots. Every part optional. */
-export interface Town { version?: 1; people?: TownPerson[]; spots?: TownSpot[] }
+/** A location the story adds to the town map: a home, a workplace or another spot, by an id of its own (lowercase words
+ * joined by `-`), with its name and a line. */
+export interface TownLocation { id: string; name: string; line?: string; kind?: LocationKind }
+/** town.json: the town's people, its spots, and the locations the story adds. Every part optional. */
+export interface Town { version?: 1; people?: TownPerson[]; spots?: TownSpot[]; locations?: TownLocation[] }
 
 // --- Her bible ----------------------------------------------------------------------------------------------------------
 
@@ -404,8 +429,10 @@ export const LINE_LIMITS = {
   townLine: 160,
   /** A sister's name, a town spot's name, and world.json's names (the town, the farm, the region, a place, a festival). */
   name: 40,
-  /** A town spot's line, and what one of the town's people does. */
+  /** A town spot's line, what one of the town's people does, and a location's line. */
   townBlurb: 160,
+  /** Her part-time job, in a few words, under her name in town. */
+  job: 60,
   /** A house's morning line. */
   houseLine: 120,
   /** Her profile's Next card. */
@@ -473,6 +500,8 @@ export interface StoryContext {
   town?: ReadonlySet<string>
   /** The story's own festivals, by id (`world.json`'s): a `festival` trigger may name one. */
   festivals?: ReadonlySet<string>
+  /** The town map's locations, by id (the game's and `town.json`'s): her `home`, her job's and her routine's `at` name one. */
+  locations?: ReadonlySet<string>
 }
 
 /** A line's words: `{farmer}` is the only placeholder, and nothing reads as school. Notes. */
@@ -766,9 +795,61 @@ function readChapters(v: unknown, at: string, f: Findings, ctx: StoryContext): H
   return out
 }
 
-/** cast.json: who the pack holds, in its order, each with what's given of her; the welcome list. A character is master
- * data's (her `characterId`) or a sister (`s<outfitId>`, with her `name`). */
-export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'exported' | 'town' | 'festivals'> = {}): Read<Cast> {
+/** When a place in her life holds, read: its `days` (of the season, 1–12) and `seasons`, each optional. An error skips
+ * the field it's in, and the stop holds on every day or season without it. */
+function readWhen(raw: Record<string, unknown>, at: string, f: Findings): LifeWhen {
+  return {
+    days: field(raw, 'days', (v) => (Array.isArray(v) && v.length > 0 && v.every((d) => isInt(d, 1, DAYS_PER_SEASON)) ? [...new Set(v as number[])].sort((a, b) => a - b) : undefined),
+      at, f, `is a list of days of the season, 1–${DAYS_PER_SEASON}`),
+    seasons: field(raw, 'seasons', (v) => (Array.isArray(v) && v.length > 0 && v.every((x) => oneOf(SEASONS, x)) ? [...new Set(v as Season[])] : undefined),
+      at, f, `is a list of seasons: ${SEASONS.join(', ')}`),
+  }
+}
+
+/** A location of the town map, by id: the game's six spots and four shops, or one `town.json` adds. With no context
+ * (a cast read alone), the game's and any well-formed id read. */
+function readLocation(v: unknown, at: string, f: Findings, ctx: Pick<StoryContext, 'locations'>): string | undefined {
+  if (typeof v === 'string' && (ctx.locations ? ctx.locations.has(v) : GAME_LOCATIONS.includes(v) || WORLD_ID.test(v))) return v
+  f.errors.push(`${at}: ${String(v)} isn’t a location of the town map (${GAME_LOCATIONS.join(', ')}, or one of town.json’s locations); skipped`)
+  return undefined
+}
+
+/** Her life in town, read: her `home`, her `job` and her `routine`. An error skips the field (or the routine's stop)
+ * it's in; she's placed by today's draw wherever the story says nothing. */
+function readLife(u: Record<string, unknown>, it: string, f: Findings, ctx: Pick<StoryContext, 'locations'>): Pick<CastEntry, 'home' | 'job' | 'routine'> {
+  const home = u.home === undefined ? undefined : readLocation(u.home, `${it} home`, f, ctx)
+  let job: HerJob | undefined
+  if (u.job !== undefined) {
+    if (!isObject(u.job)) f.errors.push(`${it} job: { what, at, days, seasons }; skipped`)
+    else {
+      const place = readLocation(u.job.at, `${it} job`, f, ctx)
+      const what = u.job.what === undefined ? undefined : shown(u.job.what, LINE_LIMITS.job, `${it} job`, f, 'what') ? u.job.what as string
+        : (f.errors[f.errors.length - 1] += '; skipped', undefined)
+      if (place !== undefined) job = kept<HerJob>(u.job, { at: place, what, ...readWhen(u.job, `${it} job`, f) })
+    }
+  }
+  let routine: RoutineStop[] | undefined
+  if (u.routine !== undefined) {
+    if (!Array.isArray(u.routine)) f.errors.push(`${it} routine: a list of stops, each { at, days, seasons }; skipped`)
+    else {
+      routine = (u.routine as unknown[]).flatMap((stop, k): RoutineStop[] => {
+        const where = `${it} routine ${k + 1}`
+        if (!isObject(stop)) { f.errors.push(`${where}: a stop is { at, days, seasons }; skipped`); return [] }
+        const place = readLocation(stop.at, where, f, ctx)
+        if (place === undefined) return []
+        const when = readWhen(stop, where, f)
+        if (when.days === undefined && when.seasons === undefined) f.notes.push(`${where}: no days or seasons, so it holds every day and the stops after it never do`)
+        return [kept<RoutineStop>(stop, { at: place, ...when })]
+      })
+    }
+  }
+  return { home, job, routine }
+}
+
+/** cast.json: who the pack holds, in its order, each with what's given of her and her life in town. A character is master
+ * data's (her `characterId`) or a sister (`s<outfitId>`, with her `name`). The welcome list and her trigger to meet are
+ * retired (meeting her is introducing yourself in town): both are still read, and noted. */
+export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'exported' | 'town' | 'festivals' | 'locations'> = {}): Read<Cast> {
   const f = findings()
   if (raw === undefined) { f.notes.push('No cast: the pack holds no characters'); return { value: { umas: [] }, ...f } }
   if (!isObject(raw)) { f.errors.push('Not a cast file (an object with umas); no characters are read'); return { value: { umas: [] }, ...f } }
@@ -793,7 +874,7 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
     if (sister && u.outfitId != null && u.outfitId !== sisterOutfit(id)) f.notes.push(`${it}: a sister plays her own outfit, ${sisterOutfit(id)}; outfitId is ignored`)
     if (!sister && u.name !== undefined) f.notes.push(`${it}: her name is master data’s; a name is read for a sister only`)
     if (sister && u.name === undefined) f.notes.push(`${it}: a sister with no name shows as her elder’s sister`)
-    if (u.arrives !== undefined) f.notes.push(`${it}: arrives is retired: her meet says how you meet her, so it’s dropped`)
+    if (u.arrives !== undefined) f.notes.push(`${it}: arrives is retired: you meet her by introducing yourself in town, so it’s dropped`)
     const entry = kept<CastEntry>(u, {
       outfitId: sister ? undefined : field(u, 'outfitId', (v) => (typeof v === 'string' && CHARACTER_ID.test(v) ? v : undefined), it, f, 'is an outfit id'),
       spot: field(u, 'spot', (v) => (oneOf(SPOT_IDS, v) ? v : undefined), it, f, `is one of the town’s spots: ${SPOT_IDS.join(', ')}`),
@@ -807,6 +888,7 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
       birthday: field(u, 'birthday', (v) => (realDate(v) ? { month: v.month, day: v.day } : undefined), it, f, 'is { month: 1–12, day } on a real date'),
       meet: u.meet === undefined ? undefined : readTrigger(u.meet, `${it} meet`, f, sub),
       chapters: u.chapters === undefined ? undefined : readChapters(u.chapters, it, f, sub),
+      ...readLife(u, it, f, ctx),
     })
     if (u.outfitId == null && !sister) f.notes.push(`${it}: no outfit, so she plays her default outfit from master data`)
     if (u.paragraph !== undefined && typeof u.paragraph === 'string') f.notes.push(...lineNotes(u.paragraph, it))
@@ -819,7 +901,10 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
     for (const id of ids ?? []) if (!cast.has(id)) f.notes.push(`${key}: ${id} isn’t in the cast; ${words}`)
     return ids
   }
-  if (raw.opening !== undefined) f.notes.push('opening: the opening brings nobody: the welcome list visits the Gate, one a morning, so the list is dropped')
+  if (raw.opening !== undefined) f.notes.push('opening: the opening brings nobody, so the list is dropped')
+  if (raw.welcome !== undefined) f.notes.push('welcome: the welcome list is retired: nobody comes to the Gate, and you meet everyone by introducing yourself in town; it’s read and acts on nothing')
+  const meets = umas.filter((u) => u.meet !== undefined).length
+  if (meets > 0) f.notes.push(`meet is retired: you meet everyone by introducing yourself in town; ${meets === 1 ? 'one character’s is' : `${meets} characters’ are`} read and act${meets === 1 ? 's' : ''} on nothing`)
   const value = kept<Cast>(raw, {
     umas,
     opening: undefined,
@@ -864,8 +949,8 @@ export function checkTies(raw: unknown, ctx: StoryContext): Read<Ties> {
 
 // --- The town -----------------------------------------------------------------------------------------------------------
 
-/** town.json: the town's people (each an Uma from master data, by her character id, in a role of the game's) and its
- * spots (by the game's ids), each part read on its own. A person or a spot with an error is skipped; a field with one
+/** town.json: the town's people (each an Uma from master data, by her character id, in a role of the game's), its
+ * spots (by the game's ids) and the locations the story adds (homes, workplaces, spots), each part read on its own. A person or a spot with an error is skipped; a field with one
  * is dropped, and the game's own fills it (`townOf`). */
 export function checkTown(raw: unknown): Read<Town | null> {
   const f = findings()
@@ -926,9 +1011,34 @@ export function checkTown(raw: unknown): Read<Town | null> {
       if (missing.length > 0) f.notes.push(`spots: ${missing.join(', ')} ${missing.length === 1 ? 'isn’t' : 'aren’t'} named, so the game’s own ${missing.length === 1 ? 'plays' : 'play'}`)
     }
   }
+  let locations: TownLocation[] | undefined
+  if (raw.locations !== undefined) {
+    if (!Array.isArray(raw.locations)) f.errors.push('locations is a list; skipped')
+    else {
+      const seen = new Set<string>(GAME_LOCATIONS)
+      locations = (raw.locations as unknown[]).flatMap((v, i): TownLocation[] => {
+        const at = `Location ${i + 1}`
+        if (!isObject(v) || typeof v.id !== 'string' || !WORLD_ID.test(v.id) || v.id.length > LINE_LIMITS.name) {
+          f.errors.push(`${at}: no id (lowercase words joined by -, at most ${LINE_LIMITS.name} characters); skipped`)
+          return []
+        }
+        const it = `Location ${v.id}`
+        if (seen.has(v.id)) {
+          f.errors.push(`${it}: ${GAME_LOCATIONS.includes(v.id) ? 'one of the game’s own locations already' : 'listed twice'}; skipped`)
+          return []
+        }
+        if (!shown(v.name, LINE_LIMITS.name, it, f, 'name')) { f.errors[f.errors.length - 1] += '; skipped'; return [] }
+        seen.add(v.id)
+        const line = v.line === undefined ? undefined : shown(v.line, LINE_LIMITS.townBlurb, it, f, 'line') ? v.line as string
+          : (f.errors[f.errors.length - 1] += '; skipped', undefined)
+        const kind = field(v, 'kind', (x) => (oneOf(LOCATION_KINDS, x) ? x : undefined), it, f, `is one of ${LOCATION_KINDS.join(', ')}`)
+        return [kept<TownLocation>(v, { name: v.name, line, kind })]
+      })
+    }
+  }
   const unfilled = CAST_IDS.filter((id) => !roles.has(id))
   if (unfilled.length > 0) f.notes.push(`people: no one plays ${unfilled.join(', ')}, so master data fills ${unfilled.length === 1 ? 'it' : 'them'}`)
-  return { value: kept<Town>(raw, { people, spots }), ...f }
+  return { value: kept<Town>(raw, { people, spots, locations }), ...f }
 }
 
 // --- Her bible ----------------------------------------------------------------------------------------------------------

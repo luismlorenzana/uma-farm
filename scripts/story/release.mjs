@@ -181,7 +181,7 @@ export async function buildRelease({ from = SOURCE, out = OUT, builtAt = new Dat
     pairs: Object.keys(index.pairs).length,
     household: files.household !== undefined,
     opening: files.opening?.steps.length ?? 0,
-    town: files.town ? { people: files.town.people?.length ?? 0, spots: files.town.spots?.length ?? 0 } : null,
+    town: files.town ? { people: files.town.people?.length ?? 0, spots: files.town.spots?.length ?? 0, locations: files.town.locations?.length ?? 0 } : null,
     world: files.world ? { festivals: files.world.festivals?.length ?? 0, places: Object.keys(files.world.places ?? {}).length, notes: files.world.notes?.length ?? 0 } : null,
     skipped: errors.length,
     notes: notes.length,
@@ -209,7 +209,7 @@ async function main() {
   const builtAt = process.env.SOURCE_DATE_EPOCH ? new Date(Number(process.env.SOURCE_DATE_EPOCH) * 1000).toISOString() : undefined
   const { summary: s, errors, notes } = await buildRelease({ from, out, ...(builtAt ? { builtAt } : {}) })
   console.log(`Story release ${s.release}${standIn ? ' (the stand-in)' : ''}: ${s.files} files, ${(s.bytes / 1024).toFixed(1)} KB → ${out.startsWith(ROOT) ? relative(ROOT, out) : out}`)
-  console.log(`  ${s.cast} character${s.cast === 1 ? '' : 's'}, ${s.bibles} bible${s.bibles === 1 ? '' : 's'}; ${s.routes} routes scripting ${s.events} events (bibles hold ${s.beats} beats); ${s.pairs} pairs; household ${s.household ? 'yes' : 'not yet'}; opening ${s.opening > 0 ? `${s.opening} step${s.opening === 1 ? '' : 's'}` : 'the game’s own'}; town ${s.town ? `${s.town.people} people, ${s.town.spots} spots` : 'the game’s own'}; world ${s.world ? `${s.world.festivals} festivals, ${s.world.places} places, ${s.world.notes} Town notes` : 'the game’s own'}`)
+  console.log(`  ${s.cast} character${s.cast === 1 ? '' : 's'}, ${s.bibles} bible${s.bibles === 1 ? '' : 's'}; ${s.routes} routes scripting ${s.events} events (bibles hold ${s.beats} beats); ${s.pairs} pairs; household ${s.household ? 'yes' : 'not yet'}; opening ${s.opening > 0 ? `${s.opening} step${s.opening === 1 ? '' : 's'}` : 'the game’s own'}; town ${s.town ? `${s.town.people} people, ${s.town.spots} spots, ${s.town.locations} locations` : 'the game’s own'}; world ${s.world ? `${s.world.festivals} festivals, ${s.world.places} places, ${s.world.notes} Town notes` : 'the game’s own'}`)
   if (errors.length > 0) console.log(`\nSkipped, since the game can't read them (${errors.length}); the rest of the pack is in:\n${errors.map((e) => `  - ${e}`).join('\n')}`)
   if (notes.length > 0) console.log(`\nNotes (${notes.length}), which block nothing:\n${groupNotes(notes).map((n) => `  - ${n}`).join('\n')}`)
   if (number !== undefined) {

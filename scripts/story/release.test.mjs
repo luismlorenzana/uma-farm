@@ -149,8 +149,8 @@ test('releases a single character with no routes, ties or bible', async (t) => {
   assert.deepEqual(errors, [])
   assert.deepEqual(index.scripted, {})
   assert.deepEqual(index.pairs, {})
-  assert.equal(notes.length, 7)
-  assert.ok(notes.includes('opening.json: no opening yet, so the game’s own three lines play'))
+  assert.equal(notes.length, 6)
+  assert.ok(notes.includes('opening.json: no opening yet, so the game’s own lines play'))
   assert.ok(notes.includes('world.json: no world yet, so the game’s own names, festivals, places and seasons play, and there are no Town notes'))
   assert.equal(index.files.opening, undefined)
   assert.equal(index.files.world, undefined)
@@ -200,7 +200,7 @@ test('releases the town and a sister: town.json as the game reads it, her bible 
   assert.deepEqual(Object.keys(index.files).filter((n) => n === 'town' || n.startsWith('uma-')), ['town', `uma-${sister}`])
   const released = JSON.parse(await readFile(join(out, index.files.town.path), 'utf8'))
   assert.deepEqual(released, { people: [town.people[0], { characterId: id(102) }], spots: [town.spots[0]] })
-  assert.deepEqual(summary.town, { people: 2, spots: 1 })
+  assert.deepEqual(summary.town, { people: 2, spots: 1, locations: 0 })
 })
 
 test('releases the world: world.json as the game reads it, a broken part skipped, a cast trigger naming its own festival', async (t) => {

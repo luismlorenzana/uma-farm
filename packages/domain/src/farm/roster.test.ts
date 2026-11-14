@@ -111,13 +111,14 @@ describe('joining the roster', () => {
     expect(() => joinRoster(two.save, '1030')).toThrow('She’s on the roster already.')
   })
 
-  it('names who joined in the night in the morning\'s Hearts, home or away', () => {
+  it('names anyone who joined in the night in the morning\'s Hearts (the night meets nobody now); met, she lives in town', () => {
     const save = farm(['1001', '1002'], 2)
-    // A stand-in for the night's arrivals: two join, the second with no bed free.
+    // A stand-in for a night's arrivals: two join, each living in town.
     const arrivals = { run: (n: Night) => ({ ...n, save: meet(meet(n.save, '1030').save, '1031').save }) }
     const morning = runNight(save, CONTEXT, [arrivals, { run: buildSummary }])
-    expect(morning.summary!.hearts).toEqual([{ kind: 'arrived', id: '1030', home: true }, { kind: 'arrived', id: '1031', home: false }])
-    expect(morning.dorm.home).toHaveLength(bedsAt(1))
+    expect(morning.summary!.hearts).toEqual([{ kind: 'arrived', id: '1030', home: false }, { kind: 'arrived', id: '1031', home: false }])
+    expect(morning.dorm.home).toHaveLength(2)
+    expect(bedsAt(1)).toBe(3)
     expect(parseSaveV5(json(morning))).toEqual(morning)
     expect(emptyNotes()).toMatchObject({ dorm: null, home: [] })
   })

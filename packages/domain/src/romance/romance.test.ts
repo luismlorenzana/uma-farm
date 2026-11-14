@@ -1,5 +1,5 @@
 // The authored start: the stand-in pack read and validated,
-// the opening's lines, the welcome list at the Gate one a morning (Say hello meets her), her meeting scene's +50 and
+// the opening's lines (nobody comes to the Gate: you meet her in town), her meeting scene's +50 and
 // choice, her favourite line and tastes from the pack, and the farmer's name. Invented ids only: the
 // stand-ins 9000001–9000003, and casts of 9000004 onward built here. Nothing is drawn: every Uma is the cast's.
 import { describe, expect, it } from 'vitest'
@@ -12,11 +12,10 @@ const { parseSaveV5 } = await import('../save/parse-v4')
 const { checkCast, checkBible, checkRoute, RUNGS } = await import('../story/authored')
 const { STAND_IN_BIBLE, STAND_IN_CAST, STAND_INS } = await import('../story/authored.fixture')
 const { readScene, sceneDue } = await import('../story/scenes')
-const { gateVisitor } = await import('../town/town')
 const { readStoryPack, storyPackFrom } = await import('../story/pack')
 const { favouriteOf, firstVisitorOf, linePlaces, openingOf, outfitOf, placeholderEvent, PLACEHOLDER_OPENING, tasteOf } = await import('../story/placeholders')
 const { STAND_IN_FILES } = await import('../story/stand-in')
-const { sayHello } = await import('./meeting')
+const { meet } = await import('./meeting')
 const { joinCast } = await import('./meeting.fixture')
 const { choicePoints, finishArrival, pathFlags, sceneSteps } = await import('./love')
 const { cleanFarmerName, farmerNameIssue, nameFarmer, withFarmer } = await import('./farmer')
@@ -98,39 +97,30 @@ describe('the opening\'s lines and day 1\'s visitor', () => {
     expect(firstVisitorOf({ cast: { umas: [] } })).toBeNull()
   })
 
-  it('plays the pack\'s opening, any length; else the game\'s three, without the Gate\'s line when nobody is coming', () => {
+  it('plays the pack\'s opening, any length; else the game\'s, without the Gate\'s line: nobody comes to the Gate', () => {
     expect(openingOf(PACK)).toEqual(STAND_IN_FILES.opening && (STAND_IN_FILES.opening as { steps: unknown[] }).steps)
     expect(openingOf(PACK)).toHaveLength(4)
-    expect(openingOf({ ...PACK, opening: null })).toEqual(PLACEHOLDER_OPENING)
     expect(PLACEHOLDER_OPENING).toHaveLength(3)
+    expect(openingOf({ ...PACK, opening: null })).toEqual(PLACEHOLDER_OPENING.slice(0, 2))
     expect(openingOf({ cast: { umas: [] }, opening: null })).toEqual(PLACEHOLDER_OPENING.slice(0, 2))
   })
 
-  it('the opening brings nobody: day 1\'s visitor waits at the Gate, and Say hello meets her, home at Friendship 0', () => {
-    const umas = [...json(STAND_IN_CAST).umas, ...['9000004', '9000005', '9000006'].map((characterId) => ({ characterId }))]
-    const six: StoryPack = { ...PACK, cast: { umas } }
+  it('the opening brings nobody: the roster starts empty, and introducing yourself in town meets her at Friendship 0', () => {
     const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' } }
     expect(sceneDue(fresh)).toBe('scene:1:open')
     expect(sceneDue({ ...fresh, farmer: { name: '' } })).toBeNull()
     const read = readScene(fresh, 'scene:1:open')
     expect(read.roster).toEqual({})
-    expect(gateVisitor(read, six)).toBe('9000001')
-    const met = sayHello(read, six, '9000001')
+    expect(sceneDue(read, STAND_INS)).toBeNull()
+    const met = meet(read, '9000001', PACK).save
     expect(Object.keys(met.roster)).toEqual(['9000001'])
-    expect(met.dorm.home).toEqual(['9000001'])
+    expect(met.dorm.home).toEqual([])
     expect(met.roster['9000001']!.joined).toBe(1)
-    expect(met.town['9000001']).toEqual({ talks: 1, last: 1 })
     expect(met.love['9000001']).toEqual({ stage: 'friendship', level: 0, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [] })
     expect(met.account.updatedAt).toBe(AT)
     expect(parseSaveV5(json(met))).toEqual(met)
-    // Her meeting scene is due at once, and she stays the day's visitor.
+    // Her meeting scene is due at once.
     expect(sceneDue(met, STAND_INS)).toBe('arrival:9000001')
-    expect(gateVisitor(met, six)).toBe('9000001')
-    expect(() => sayHello(met, six, '9000001')).toThrow('You’ve met her already.')
-    expect(() => sayHello(read, six, '9000002')).toThrow('She isn’t at the Gate.')
-    // The pack's welcome list names who: its first in the cast.
-    expect(gateVisitor(read, { ...PACK, cast: cast({ welcome: ['9000003'] }) })).toBe('9000003')
-    expect(gateVisitor(read, { ...PACK, cast: { umas: [] } })).toBeNull()
   })
 
   it('an arrival written with no choice pays +50 alone', () => {
@@ -139,24 +129,7 @@ describe('the opening\'s lines and day 1\'s visitor', () => {
   })
 })
 
-describe('the welcome list at the Gate', () => {
-  it('one a morning: the next comes the morning after the one before her is met; one not met waits', () => {
-    const fresh = readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open')
-    expect(gateVisitor(fresh, PACK)).toBe('9000001')
-    // Not met on day 1: she's still there on day 2.
-    expect(gateVisitor({ ...fresh, calendar: { day: 2 } }, PACK)).toBe('9000001')
-    const one = sayHello(fresh, PACK, '9000001')
-    expect(gateVisitor(one, PACK)).toBe('9000001')
-    const day2 = { ...one, calendar: { day: 2 } }
-    expect(gateVisitor(day2, PACK)).toBe('9000002')
-    const two = sayHello(day2, PACK, '9000002')
-    expect(gateVisitor({ ...two, calendar: { day: 3 } }, PACK)).toBe('9000003')
-    const three = sayHello({ ...two, calendar: { day: 3 } }, PACK, '9000003')
-    expect(gateVisitor({ ...three, calendar: { day: 4 } }, PACK)).toBeNull()
-    // With three beds, all three live on the farm.
-    expect(three.dorm.home).toEqual([...STAND_INS])
-  })
-
+describe('meeting scenes', () => {
   it('plays the meeting scenes in the order you met them once the summary is put away', () => {
     const save = farm(2)
     expect(sceneDue(save, STAND_INS)).toBe('arrival:9000001')
@@ -167,13 +140,12 @@ describe('the welcome list at the Gate', () => {
     expect(sceneDue(farm(1), STAND_INS)).toBe('arrival:9000001')
   })
 
-  it('runs meetUmas after the goals, and twelve nights meet nobody whose trigger the farm doesn\'t hold', () => {
+  it('twelve nights meet nobody: you meet everyone by introducing yourself in town', () => {
     let save = farm(1)
     for (let i = 0; i < 12; i++) save = endDay(save, context(), LATER)
     expect(save.calendar.day).toBe(13)
     expect(Object.keys(save.roster).sort()).toEqual([...STAND_INS])
-    const names = NIGHT_STEPS.map((s) => s.name)
-    expect(names.indexOf('meetUmas')).toBe(names.indexOf('checkGoals') + 1)
+    expect(NIGHT_STEPS.map((s) => s.name)).not.toContain('meetUmas')
     expect(parseSaveV5(json(save))).toEqual(save)
   })
 })

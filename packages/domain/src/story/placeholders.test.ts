@@ -39,7 +39,7 @@ describe('the story with no pack', () => {
     expect(story.cast.umas.map((u) => u.characterId)).toEqual(ids(5))
     expect(welcomeOf(story)).toEqual(ids(5))
     expect(firstVisitorOf(story)).toBe('9100001')
-    expect(openingOf(story)).toEqual(PLACEHOLDER_OPENING)
+    expect(openingOf(story)).toEqual(PLACEHOLDER_OPENING.slice(0, 2))
     expect(outfitOf(story, '9100001')).toBe('910000101')
     expect(ids(5).map((id) => favouriteOf(story, id))).toEqual(['farming', 'foraging', 'fishing', 'mining', 'ranch'])
     expect(linePlaces(story, '9100004')).toEqual(['mine', 'smelter'])
@@ -101,10 +101,11 @@ describe('the game\'s own words', () => {
     expect((confession[answerAt(confession)] as Extract<Step, { choice: unknown }>).choice.map((o) => o.answer)).toEqual(['yes', 'not-yet'])
     const wedding = placeholderEvent(ONE, 'wedding')
     expect((wedding[answerAt(wedding)] as Extract<Step, { choice: unknown }>).choice).toHaveLength(3)
-    const gate = placeholderEvent(ONE, 'arrival')
-    expect(gate.slice(0, 2)).toEqual([{ place: 'gate' }, { narrate: PLACEHOLDER_MOMENTS.arrival }])
-    expect(gate.filter((s) => 'choice' in s)).toHaveLength(1)
-    expect(placeholderEvent(ONE, 'arrival', true)[0]).toEqual({ place: 'town' })
+    // Her meeting is the town's, where you introduce yourself: nobody comes to the Gate.
+    const meeting = placeholderEvent(ONE, 'arrival', true)
+    expect(meeting.slice(0, 2)).toEqual([{ place: 'town' }, { narrate: PLACEHOLDER_MOMENTS.arrival }])
+    expect(meeting.filter((s) => 'choice' in s)).toHaveLength(1)
+    expect(placeholderEvent(ONE, 'arrival')).toEqual(meeting)
   })
 
   it('play the pack\'s event where it has one, else the card; a written arrival with no choice gets the hello', async () => {

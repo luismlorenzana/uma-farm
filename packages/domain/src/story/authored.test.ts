@@ -11,6 +11,8 @@ const clone = <T>(v: T): T => structuredClone(v)
 const speakers = new Set<string>([STAND_IN, 'hollis-pryor'])
 const clean = { errors: [], notes: [] }
 
+const RETIRED_MEET = 'meet is retired: you meet everyone by introducing yourself in town; one character’s is read and acts on nothing'
+
 describe('the stand-in story reads clean', () => {
   it('every file, with nothing skipped and nothing noted', () => {
     expect(checkCast(STAND_IN_CAST)).toMatchObject(clean)
@@ -48,9 +50,9 @@ describe('the cast', () => {
     const read = checkCast(cast)
     expect(read.errors).toEqual([])
     expect(read.notes).toEqual([
-      'Uma 2 (9000002): arrives is retired: her meet says how you meet her, so it’s dropped',
-      'Uma 3 (9000003): arrives is retired: her meet says how you meet her, so it’s dropped',
-      'opening: the opening brings nobody: the welcome list visits the Gate, one a morning, so the list is dropped',
+      'Uma 2 (9000002): arrives is retired: you meet her by introducing yourself in town, so it’s dropped',
+      'Uma 3 (9000003): arrives is retired: you meet her by introducing yourself in town, so it’s dropped',
+      'opening: the opening brings nobody, so the list is dropped',
     ])
     expect(read.value).not.toHaveProperty('opening')
     expect(read.value.umas[1]).not.toHaveProperty('arrives')
@@ -82,6 +84,7 @@ describe('the cast', () => {
     expect(read.errors).toEqual(['welcome 4: x isn’t one of character ids; skipped'])
     expect(read.notes).toEqual([
       'Uma 3 (9000003): not in the Studio export',
+      'welcome: the welcome list is retired: nobody comes to the Gate, and you meet everyone by introducing yourself in town; it’s read and acts on nothing',
       'welcome: 9000002 is listed twice; once is kept',
       'welcome: 9000009 isn’t in the cast; she has no cast entry yet',
     ])
@@ -97,14 +100,15 @@ describe('the menu: her trigger to meet and her chapters', () => {
       { kind: 'festival', festival: 'harvest-cup' }, { kind: 'farm-rank', rank: 4 }, { kind: 'built', place: 'kitchen' }, { kind: 'shipped', good: 'carrot', count: 50 },
       { kind: 'event', after: '9000002:f3' },
     ]
-    for (const meet of triggers) expect(entry({ meet })).toMatchObject({ ...clean, value: { umas: [{ meet }] } })
+    // Her trigger to meet is retired: read all the same, and noted once.
+    for (const meet of triggers) expect(entry({ meet })).toMatchObject({ errors: [], notes: [RETIRED_MEET], value: { umas: [{ meet }] } })
   })
   it('skips a trigger it can\'t read, and notes one that never holds', () => {
     expect(entry({ meet: { kind: 'talks', days: 0 } }).errors).toEqual(['Uma 1 (9000001) meet: talks names its days, from 1; skipped'])
     expect(entry({ meet: { kind: 'weather', sky: 'rain' } }).errors).toEqual(['Uma 1 (9000001) meet: a trigger is one of talks, gift, spot, season, festival, farm-rank, built, shipped, event; skipped'])
     expect(entry({ meet: { kind: 'built', place: 'castle' } }).value.umas[0]).not.toHaveProperty('meet')
-    expect(entry({ meet: { kind: 'farm-rank', rank: 12 } }).notes).toEqual(['Uma 1 (9000001) meet: Farm Rank 12 is past the top, 10, so it never holds'])
-    expect(entry({ meet: { kind: 'shipped', good: 'moon-cake', count: 3 } }).notes).toEqual(['Uma 1 (9000001) meet: moon-cake isn’t a good in the game yet, so it can’t be shipped'])
+    expect(entry({ meet: { kind: 'farm-rank', rank: 12 } }).notes).toEqual(['Uma 1 (9000001) meet: Farm Rank 12 is past the top, 10, so it never holds', RETIRED_MEET])
+    expect(entry({ meet: { kind: 'shipped', good: 'moon-cake', count: 3 } }).notes).toEqual(['Uma 1 (9000001) meet: moon-cake isn’t a good in the game yet, so it can’t be shipped', RETIRED_MEET])
   })
   it('reads her chapters: titles, her events in them, a gate from the same menu; notes rungs outside them', () => {
     const chapters = [

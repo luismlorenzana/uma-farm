@@ -377,8 +377,9 @@ export function chapterOpened(buildings: SaveV5['buildings'], chapter: number): 
 /** The most characters the town's talks hold: master data's and the pack's sisters, with room to spare. */
 const MAX_TOWN = 2000
 
-/** Your talks in town: each a character's (or a sister's) days talked, from 1, and the last day, no later than today.
- * An older v4 has none: none. */
+/** You and each Uma: a character's (or a sister's) days talked, the last day talked (0 before any) and the last day
+ * you gave her a gift (0 before any; an older v5's has none: 0), none after today. Grows in place: no migration, and
+ * `updatedAt` never moves. An older v4 has none: none. */
 function parseTown(value: unknown, path: string, today: number): Record<string, TownTalks> {
   if (value === undefined) return {}
   const raw = record(value, path)
@@ -388,11 +389,12 @@ function parseTown(value: unknown, path: string, today: number): Record<string, 
   for (const id of ids) {
     const at = `${path}.${id}`
     if (!TOWN_ID.test(id)) fail(at, 'expected a character id or a sister’s')
-    const o = object(raw[id], at, ['talks', 'last'])
-    const talks = int(o.talks, `${at}.talks`, 1, today)
-    const last = day(o.last, `${at}.last`)
-    if (last > today) fail(`${at}.last`, 'after today')
-    out[id] = { talks, last }
+    const o = object(raw[id], at, ['talks', 'last', 'gift'])
+    const talks = int(o.talks, `${at}.talks`, 0, today)
+    const last = int(o.last, `${at}.last`, 0, today)
+    if ((talks > 0) !== (last > 0)) fail(`${at}.talks`, 'expected days talked with the last day talked, or neither')
+    const gift = o.gift === undefined ? 0 : int(o.gift, `${at}.gift`, 0, today)
+    out[id] = { talks, last, gift }
   }
   return out
 }

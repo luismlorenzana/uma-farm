@@ -1,10 +1,10 @@
 // The lean start as rendered: a fresh account's name sheet, then the opening's lines with `{farmer}` filled (the pack's
-// four, or the game's three in three taps), Skip from the first line, then Home on day 1 with day 1's visitor at the
-// Gate; Say hello meets her, and her meeting scene plays (Skip landing on the choice, the gains on the buttons, +50 and
-// the choice paid once); the Gate's words after it, and the Dorm for 20. The stand-ins aren't in master data: their
+// four, or the game's two in two taps), Skip from the first line, then Home on day 1 with nobody met; introducing yourself
+// in town meets her, and her meeting scene plays (Skip landing on the choice, the gains on the buttons, +50 and the
+// choice paid once); the Gate's words (everyone lives in town), and the Dorm for 20. The stand-ins aren't in master data: their
 // faces are lettered discs. Invented outfits (the album fixture) and the invented stand-in pack; the server is a stub.
 import 'fake-indexeddb/auto'
-import { newSave, readScene, sayHello, type SaveV4, type StoryPack } from '@farm/domain'
+import { meet, newSave, readScene, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -115,7 +115,7 @@ async function readOpening(): Promise<string[]> {
 }
 
 describe('a fresh farm on v4', () => {
-  it('names the farmer, plays the pack\'s opening, and opens Home on day 1 with day 1\'s visitor at the Gate', async () => {
+  it('names the farmer, plays the pack\'s opening, and opens Home on day 1 with nobody met', async () => {
     await renderShell()
     const field = await find('[data-name-field]') as HTMLInputElement
     const go = $('[data-action="name"]') as HTMLButtonElement
@@ -140,7 +140,7 @@ describe('a fresh farm on v4', () => {
     await until(() => save().diary.read.includes('scene:1:open'))
     await settle()
 
-    // Home on day 1: no scene, no card. Day 1's visitor waits at the Gate for her hello; nobody is met yet.
+    // Home on day 1: no scene, no card, and nobody met yet: everyone is in town.
     expect(path).toBe('/')
     expect($('[data-scene]')).toBeNull()
     expect(save().calendar.day).toBe(1)
@@ -148,7 +148,7 @@ describe('a fresh farm on v4', () => {
     expect(save().arrivals).toEqual([])
   })
 
-  it('the game\'s own opening: three lines, and Home on the third tap', async () => {
+  it('the game\'s own opening: two lines (nobody comes to the Gate), and Home on the second tap', async () => {
     const pack = await storyReady() as { opening: StoryPack['opening'] }
     const opening = pack.opening
     pack.opening = null
@@ -159,7 +159,6 @@ describe('a fresh farm on v4', () => {
       expect(lines).toEqual([
         'Morning, Robin. The farm is yours now, weeds and all.',
         'One block is tilled, and nine Carrot seeds wait in the Fields.',
-        'And someone is already waiting at the Gate.',
       ])
       await until(() => save().diary.read.includes('scene:1:open'))
       await settle()
@@ -183,19 +182,14 @@ describe('a fresh farm on v4', () => {
     expect(save().roster).toEqual({})
   })
 
-  it('Say hello at the Gate meets day 1\'s visitor: she moves in, her meeting scene plays, +50 and the choice paid once', async () => {
-    useGame.setState({ save: readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open') })
-    await render(<GatePeek save={save()} />)
-    expect($('[data-peek="gate"]')?.dataset.visitor).toBe('9000001')
-    expect($('[data-peek="gate"]')?.textContent).toContain('Stand-in 1 is at the Gate.')
-    await click($('[data-action="hello"]'))
-    await until(() => !!save().roster['9000001'])
-    expect(save().dorm.home).toEqual(['9000001'])
-    expect(save().town['9000001']).toEqual({ talks: 1, last: 1 })
+  it('introducing yourself meets her: her meeting scene plays, +50 and the choice paid once, and she lives in town', async () => {
+    const pack = await storyReady()
+    useGame.setState({ save: meet(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open'), '9000001', pack).save })
+    expect(save().dorm.home).toEqual([])
 
     await renderShell('/')
     await find('[data-scene="arrival:9000001"] [data-beat]')
-    expect($('[data-scene-title]')?.textContent).toBe('Meeting Stand-in 1 · Gate')
+    expect($('[data-scene-title]')?.textContent).toMatch(/^Meeting Stand-in 1/)
     await click($('[data-action="skip"]'))
     expect($$('[data-option]').map((o) => o.dataset.gain)).toEqual(['30', '10'])
     await click($('[data-action="skip"]')) // never past the choice
@@ -205,18 +199,13 @@ describe('a fresh farm on v4', () => {
     await click($('[data-beat]'))
     await click($('[data-beat]'))
     expect($('[data-arrival-done]')?.dataset.points).toBe('80')
-    expect($('[data-lives]')?.textContent).toBe('She moves into the Dorm.')
+    expect($('[data-lives]')?.textContent).toBe('She lives in town: find her there.')
     await click($('[data-action="welcome"]'))
     await until(() => save().arrivals.includes('9000001'))
     expect(save().love['9000001']).toMatchObject({ points: 80, flags: ['first-row'] })
     await settle()
     expect(path).toBe('/')
     expect($('[data-scene]')).toBeNull()
-    // Met: the Gate asks no more today, and the next comes tomorrow.
-    await render(<GatePeek save={save()} />)
-    expect($('[data-action="hello"]')).toBeNull()
-    expect($('[data-came]')?.textContent).toBe('Stand-in 1 came by today.')
-    expect($('[data-next-visitor]')?.textContent).toBe('Someone new comes tomorrow.')
   })
 })
 
@@ -226,7 +215,7 @@ describe('an open pack\'s placeholders', () => {
     const route = pack.route
     pack.route = async (id) => (id === '9000001' ? { events: [{ id: 'arrival', steps: [{ narrate: 'Someone new leans on the Gate.' }] }] } : route(id))
     try {
-      useGame.setState({ save: sayHello(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open'), pack, '9000001') })
+      useGame.setState({ save: meet(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open'), '9000001', pack).save })
       await renderShell('/')
       await find('[data-scene="arrival:9000001"] [data-beat]')
       await click($('[data-beat]'))
@@ -254,24 +243,15 @@ describe('a face master data lacks', () => {
   })
 })
 
-describe('the Gate and the Dorm on v4', () => {
-  it('the welcome list one a morning: today\'s visitor, the next tomorrow, then the town', async () => {
+describe('the Gate and the Dorm', () => {
+  it('nobody comes to the Gate: its quick look says everyone lives in town', async () => {
     const pack = await storyReady()
     const named: SaveV4 = readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open')
-    // Not met on day 1: she's still at the Gate on day 2.
-    await render(<GatePeek save={{ ...named, calendar: { day: 2 } }} />)
-    expect($('[data-peek="gate"]')?.dataset.visitor).toBe('9000001')
-    const one = sayHello(named, pack, '9000001')
-    await render(<GatePeek save={{ ...one, calendar: { day: 2 } }} />)
-    expect($('[data-peek="gate"]')?.dataset.visitor).toBe('9000002')
-    expect($('[data-action="hello"]')).not.toBeNull()
-    const two = sayHello({ ...one, calendar: { day: 2 } }, pack, '9000002')
-    const three = sayHello({ ...two, calendar: { day: 3 } }, pack, '9000003')
-    await render(<GatePeek save={three} />)
+    await render(<GatePeek save={named} />)
+    expect($('[data-everyone]')?.textContent).toBe('Everyone lives in town.')
+    expect($('[data-action="hello"]')).toBeNull()
+    await render(<GatePeek save={meet(named, '9000001', pack).save} />)
     expect($('[data-everyone]')?.textContent).toBe('Meet everyone else in town.')
-    await render(<GatePeek save={{ ...three, calendar: { day: 4 } }} />)
-    expect($('[data-peek="gate"]')?.dataset.visitor).toBeUndefined()
-    expect($('[data-everyone]')).not.toBeNull()
   })
 
   it('shows the Dorm for 20\'s eight levels', async () => {
@@ -289,7 +269,7 @@ describe('the cast keeps everyone on the farm', () => {
     const { meet, eventOf, placeholderEvent, readiness } = await import('@farm/domain')
     const { castIds, storyPack } = await import('../story/story')
     const pack = await storyReady()
-    const farm = meet(sayHello(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open'), pack, '9000001'), '9000099', pack).save
+    const farm = meet(meet(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open'), '9000001', pack).save, '9000099', pack).save
     expect(castIds()).not.toContain('9000099')
     await act(async () => useGame.setState({ save: farm }))
     expect(castIds()).toEqual(['9000001', '9000002', '9000003', '9000099'])

@@ -179,18 +179,14 @@ describe('the ties\' seeds', () => {
     expect(parseSaveV5(json(morning))).toEqual(morning)
   })
 
-  it('seeds an Uma met at night, listed that morning only', () => {
+  it('seeds an Uma met in town at once; the night meets nobody, whatever her retired trigger', () => {
     const pack = packWithFour('fishing', { version: 1, ties: [...STAND_IN_TIES.ties] })
-    // The welcome list is the stand-ins', so the fourth is met by her trigger.
     const cast: Cast = { ...pack.cast, welcome: [ONE, TWO, THREE], umas: pack.cast.umas.map((u) => (u.characterId === FOUR ? { ...u, meet: { kind: 'built', place: 'mill' } } : u)) }
     const strong: StoryPack = { ...pack, cast, ties: { version: 1, ties: pack.ties.ties.map((t) => (t.b === FOUR && t.a === TWO ? { ...t, strength: 3 } : t)) } }
     const bought: SaveV4 = { ...farm(5, strong), buildings: { dorm: 4, mill: 1 } }
-    expect(runNight({ ...bought, buildings: { dorm: 4 } }, context(strong)).roster[FOUR]).toBeUndefined()
-    const night = runNight(bought, context(strong))
-    expect(night.roster[FOUR]).toBeDefined()
-    expect(bondOf(night, TWO, FOUR)).toBe(150)
-    expect(night.summary!.hearts).toEqual([{ kind: 'arrived', id: FOUR, home: true }, { kind: 'bond', a: TWO, b: FOUR, hearts: 2 }])
-    expect(runNight(night, context(strong)).summary!.hearts.filter((h) => h.kind === 'bond')).toEqual([])
+    expect(runNight(bought, context(strong)).roster[FOUR]).toBeUndefined()
+    const met = meet(bought, FOUR, strong).save
+    expect(bondOf(met, TWO, FOUR)).toBe(150)
   })
 })
 

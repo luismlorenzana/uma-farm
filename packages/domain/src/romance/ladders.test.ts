@@ -388,14 +388,15 @@ describe('the rank-point factor', () => {
 describe('Ready', () => {
   const full = (save: SaveV4, id: string = ONE) => withLove(save, id, { points: 200 })
 
-  it('needs all four: her bar full, home, no event today, its setup met', () => {
+  it('needs her bar full, no event today and its setup met, wherever she lives', () => {
     const save = full(farm(3))
     expect(readiness(save, PACK, ONE)).toEqual({ rung: 'f1', ready: true, waits: null })
     expect(readiness(withLove(save, ONE, { points: 199 }), PACK, ONE).waits).toEqual({ kind: 'bar' })
-    expect(readiness({ ...save, dorm: { ...save.dorm, home: [TWO, THREE] } }, PACK, ONE).waits).toEqual({ kind: 'away' })
+    // Living in town, her event is Ready all the same: it plays from her menu in town.
+    expect(readiness({ ...save, dorm: { ...save.dorm, home: [TWO, THREE] } }, PACK, ONE).ready).toBe(true)
     expect(readiness({ ...save, today: { ...save.today, events: [ONE] } }, PACK, ONE).waits).toEqual({ kind: 'today' })
     expect(readiness(withLove(save, ONE, { last: 3 }), PACK, ONE).waits).toEqual({ kind: 'today' })
-    expect(() => readiness(save, PACK, '9000009')).toThrow('She isn’t on the farm.')
+    expect(() => readiness(save, PACK, '9000009')).toThrow('You haven’t met her yet.')
   })
 
   it('reads each setup kind: working, an item, a bond, a chapter; a place before its chapter opens with it', () => {
@@ -439,7 +440,7 @@ describe('Ready', () => {
   })
 
   it('documents every wait, in the order it\'s said', () => {
-    expect(WAIT_ORDER.map((w) => w.kind).sort()).toEqual(['away', 'bar', 'day', 'done', 'friend', 'gate', 'night', 'opens', 'ring', 'setup', 'today'])
+    expect(WAIT_ORDER.map((w) => w.kind).sort()).toEqual(['bar', 'day', 'done', 'friend', 'gate', 'night', 'opens', 'ring', 'setup', 'today'])
   })
 })
 

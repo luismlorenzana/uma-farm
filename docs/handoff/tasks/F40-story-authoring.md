@@ -121,9 +121,12 @@ The owner reworked the game ([the game's design](../../design/game-design.md)). 
   player's eyes.
 - **No welcome week.** The player goes to the Umas he wants to meet, introducing himself in town, and nobody comes to
   the Gate on her own.
-  - `welcome` and `meet` retire once [F78](F78-town-map.md) lands; her chapters' gates stay.
+  - `welcome` and `meet` are retired with the town map: still read, noted as retired, acting on nothing; her chapters'
+    gates stay ([the story pack's menu](../../story-pack.md#the-cast-castjson)).
   - The opening's last line ("someone's waiting at the Gate") wants a new ending.
-- **Her life in town:** each Uma is a retired racer with her own life. New optional fields say where she is ([F78](F78-town-map.md)):
+- **Her life in town:** each Uma is a retired racer with her own life. New optional fields say where she is, and the town
+  map plays them ([her life in town](../../story-pack.md#her-life-in-town); `town.json`'s `locations` add the homes and
+  workplaces they name):
   - `home`;
   - `job`: her part-time job and where it is;
   - `routine`: where she is, when.

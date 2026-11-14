@@ -73,7 +73,7 @@ describe('the cast\'s spots and sisters', () => {
     expect(read.notes).toEqual(expect.arrayContaining([
       'Uma 2 (9300002): her name is master data’s; a name is read for a sister only',
       `Uma 3 (${SISTER}): a sister plays her own outfit, 930000102; outfitId is ignored`,
-      `Uma 3 (${SISTER}): arrives is retired: her meet says how you meet her, so it’s dropped`,
+      `Uma 3 (${SISTER}): arrives is retired: you meet her by introducing yourself in town, so it’s dropped`,
       'Uma 4 (s930000301): a sister with no name shows as her elder’s sister',
     ]))
     expect(read.value.umas.map((u) => [u.characterId, u.spot, u.name])).toEqual([
@@ -149,20 +149,25 @@ describe('a tie with one of the town\'s people', () => {
 describe('the save\'s talks in town', () => {
   const day = (n: number): SaveV4 => ({ ...newSave('u1', AT), calendar: { day: n } })
 
-  it('loads an older v4 with none as none, and round-trips them', () => {
+  it('loads an older v4 with none as none, an older v5\'s with no gift day as none, and round-trips them', () => {
     const older = json(day(9)) as Partial<SaveV4>
     delete older.town
     expect(parseSaveV5(older).town).toEqual({})
     expect(parseSaveV5(older).account).toEqual(day(9).account)
-    const talked = { ...day(9), town: { 9300001: { talks: 3, last: 9 }, [SISTER]: { talks: 1, last: 4 } } }
+    const older5 = { ...day(9), town: { 9300001: { talks: 3, last: 9 }, [SISTER]: { talks: 1, last: 4 } } }
+    expect(parseSaveV5(json(older5)).town).toEqual({ 9300001: { talks: 3, last: 9, gift: 0 }, [SISTER]: { talks: 1, last: 4, gift: 0 } })
+    expect(parseSaveV5(json(older5)).account).toEqual(day(9).account)
+    const talked = { ...day(9), town: { 9300001: { talks: 3, last: 9, gift: 8 }, [SISTER]: { talks: 0, last: 0, gift: 4 } } }
     expect(parseSaveV5(json(talked))).toEqual(talked)
   })
 
   it('refuses an id off the form, a talk after today, and none counted', () => {
     const refuse = (town: unknown, message: string) => expect(() => parseSaveV5({ ...json(day(9)), town })).toThrow(message)
     refuse({ abc: { talks: 1, last: 2 } }, 'save.town.abc: expected a character id or a sister’s')
-    refuse({ 9300001: { talks: 1, last: 10 } }, 'save.town.9300001.last: after today')
+    refuse({ 9300001: { talks: 1, last: 10 } }, 'save.town.9300001.last: expected 0–9')
+    refuse({ 9300001: { talks: 1, last: 2, gift: 10 } }, 'save.town.9300001.gift: expected 0–9')
     refuse({ 9300001: { talks: 0, last: 2 } }, 'save.town.9300001.talks')
+    refuse({ 9300001: { talks: 2, last: 0 } }, 'save.town.9300001.talks')
     refuse({ 9300001: { talks: 1, last: 2, spot: 'cafe' } }, 'save.town.9300001: unknown keys spot')
   })
 })
