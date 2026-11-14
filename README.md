@@ -11,6 +11,7 @@ arrive. The farm is moving onto an HD-2D stage (an opt-in preview today).
 | Path | What |
 |---|---|
 | [docs/roadmap.md](docs/roadmap.md) | **Start here:** where the farm stands, what a full game means, and the phases to it ([page](docs/pages/roadmap.html)) |
+| [docs/design/game-design.md](docs/design/game-design.md) | What the game is to play: the fantasy, a sitting, the rhythm, the arc, the first real season ([page](docs/pages/game-design.html)) |
 | [docs/game-mechanics.md](docs/game-mechanics.md) | How the game works today, with its tables generated from the code ([page](docs/pages/game-mechanics.html)) |
 | [docs/handoff/README.md](docs/handoff/README.md) | What's being built now, the open packets, and the owner's steps ([page](docs/pages/handoff.html)) |
 | [docs/technical/architecture.md](docs/technical/architecture.md) | The app, the API, the save and its sync, builds, deploy, local setup ([page](docs/pages/architecture.html)) |

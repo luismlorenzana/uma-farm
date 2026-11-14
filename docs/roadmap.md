@@ -102,7 +102,7 @@ at the end of every session ([F40](handoff/tasks/F40-story-authoring.md)).
 | Step | What | Who |
 |---|---|---|
 | 1.19 **The World Book** | The story's private book of the world, with "For the game", shipped with every pack and read before any design | The story session ([F40](handoff/tasks/F40-story-authoring.md)); read on [Uma Story's World page](https://uma-platform.web.app/story/farm/world), live |
-| 1.20 **The game's design** | One clear document: what you want when you open the app, a session, a day, a week, a season, how the Umas and the farm feed each other, and what the first real season holds, drawing on the World Book | Claude, for your review |
+| 1.20 **The game's design** | A first pass is written: [design/game-design.md](design/game-design.md), the fantasy, pillars, a sitting, the rhythm, the two halves, the arc, the first real season, and six questions to settle. Next: the owner's rework | Claude, with the owner |
 
 **Track B, the HD-2D farm:**
 

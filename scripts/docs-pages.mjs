@@ -12,6 +12,7 @@ const OUT = join(DOCS, 'pages')
 /** Each doc with a page: its path under docs/, the page's name, and its title in the bar. */
 export const PAGES = [
   { doc: 'roadmap.md', page: 'roadmap.html', title: 'Roadmap' },
+  { doc: 'design/game-design.md', page: 'game-design.html', title: 'Game design' },
   { doc: 'game-mechanics.md', page: 'game-mechanics.html', title: 'Game mechanics' },
   { doc: 'technical/architecture.md', page: 'architecture.html', title: 'Architecture' },
   { doc: 'technical/infrastructure.md', page: 'infrastructure.html', title: 'Infrastructure' },
