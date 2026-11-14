@@ -4084,8 +4084,7 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
 - **Hearts | Work:** the Work side is her work sheet: her favourite line, the day she joined, where she is, "Farmhand
   since Spring 3 · her tasks" (a tap to the work board) once she works the farm, her ten aptitudes (each level, a bar to
   the next and the trick it opened; "where she'd start" before she's a farmhand: see [aptitude](#aptitude)), and her
-  nine activities with talent, rank, points and the next challenge. A farmhand's Hearts side has **Her tasks on the work
-  board ›** under her acts.
+  nine activities with talent, rank, points and the next challenge.
 
 ### Her chapters
 
