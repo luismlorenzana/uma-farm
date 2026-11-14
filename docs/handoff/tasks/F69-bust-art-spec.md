@@ -17,8 +17,7 @@ Draw her the same way in every outfit, with the same pose and angle, so her face
 
 | Outfit | Notes |
 |---|---|
-| **Her own** | As in her full art |
-| **Spring** | Light layers, a cardigan or a light jacket, her colours in pastel |
+| **Spring** | Her default outfit, the one she wears unless another fits: light layers, a cardigan or a light jacket, her colours in pastel |
 | **Summer** | A sundress or light top, airy |
 | **Autumn** | A knit sweater, a scarf, warm tones |
 | **Winter** | A coat, a scarf, a winter accessory |
@@ -93,9 +92,9 @@ order.
 
 ## Order
 
-1. **The pilot:** the two Umas with the new full art, in their own outfit with every core and romance expression, then
+1. **The pilot:** the two Umas with the new full art, in their spring outfit with every core and romance expression, then
    their other outfits. The owner reviews them in Uma Character Art, and the format is settled from there.
-2. **The welcome list's five:** her own outfit and the core expressions first, then the romance ones, then the other
+2. **The welcome list's five:** her spring outfit and the core expressions first, then the romance ones, then the other
    outfits.
 3. **The rest, in the Uma Ranker's order.**
 

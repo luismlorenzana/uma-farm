@@ -1,7 +1,7 @@
 # Her look: outfits and expressions
 
-**A plan, for the owner's go (2026-11-13).** Each Uma gets a wardrobe (her own outfit, four seasonal outfits, a kimono,
-a dinner dress, a wedding dress and pajamas) and busts that change expression in dialogue. ChatGPT draws a bust for each
+**A plan, for the owner's go (2026-11-13).** Each Uma gets a wardrobe (four seasonal outfits, spring her default, a
+kimono, a dinner dress, a wedding dress and pajamas) and busts that change expression in dialogue. ChatGPT draws a bust for each
 outfit and a face for each expression; the game puts the face over the bust. The page view is
 [her-look.html](../pages/her-look.html).
 
@@ -44,18 +44,18 @@ same style, as busts and faces.
 
 | Outfit | Shows in | Default rule |
 |---|---|---|
-| **Her own** | Everything, and always on the HD-2D farm's sprites | When nothing else applies, or when the outfit asked for isn't drawn yet |
-| **Spring, summer, autumn, winter** | Daytime scenes, talks and heart events | The season of the day |
+| **Spring** | Her default: daytime in spring, and whenever nothing else applies or the outfit asked for isn't drawn yet | The season of the day, and the fallback |
+| **Summer, autumn, winter** | Daytime scenes, talks and heart events in that season | The season of the day |
 | **Kimono** | Festival nights, and the year's first day | Festival night in summer and winter (the Fishing Derby's and the Harvest Cup's nights), and New Year's visit. The story may name other days |
 | **Dinner dress** | "Dinner in town", a new date kind; the proposal if the story sets it at dinner; anniversary dinners | Dinner in town opens with Romance 3 |
 | **Wedding dress** | The wedding, its replay in Memories, the first anniversary's scene | Always at the wedding |
 | **Pajamas** | "A night in", a new evening kind for night visits; the household's night scenes | A night in opens with Romance 6, and at home once married. Tender, never explicit |
 
 - **What a scene wears:** the scene's own choice if the story names one (`outfit` on an event or scene); else the
-  default rule above; else her own outfit.
-- **Placeholders hold:** an outfit not yet drawn for her shows her own bust, so a story can use an outfit before its art
+  default rule above; else spring.
+- **Placeholders hold:** an outfit not yet drawn for her shows her spring bust, so a story can use an outfit before its art
   exists.
-- **The sprites stay as they are:** her chibi set is her own outfit everywhere on the HD-2D farm. Seasonal sprite sets
+- **The sprites stay as they are:** her chibi set (master data's) is what she wears everywhere on the HD-2D farm. Seasonal sprite sets
   would multiply the heaviest art for little gain; it's a later choice, if ever.
 - **Her profile:** a Wardrobe row shows the outfits drawn for her, and which one she's wearing today.
 
@@ -77,7 +77,7 @@ same style, as busts and faces.
   cached on the device.
 - **Fallbacks:**
   - a face not drawn yet shows its fallback (the table below), ending at the bust's own neutral face;
-  - a bust not drawn yet for that outfit shows her own outfit's bust;
+  - a bust not drawn yet for that outfit shows her spring bust;
   - an Uma with none shows her single master-data bust, as today.
 
 ### The expressions
@@ -115,7 +115,7 @@ comes when there's time. [F69](../handoff/tasks/F69-bust-art-spec.md) describes 
 
 | Piece | Count |
 |---|---|
-| Busts | Her own, four seasons, kimono, dinner dress, wedding dress, pajamas: 9 |
+| Busts | Four seasons (spring the default), kimono, dinner dress, wedding dress, pajamas: 8 |
 | Faces | 10 core, 6 romance, 6 extra: 22 |
 
 **Order:**
@@ -123,7 +123,7 @@ comes when there's time. [F69](../handoff/tasks/F69-bust-art-spec.md) describes 
 2. the welcome list's five;
 3. the rest in the Uma Ranker's order.
 
-Her own bust and the core faces come first for each, then the seasons, then the special outfits.
+Her spring bust and the core faces come first for each, then the seasons, then the special outfits.
 
 ## The work
 

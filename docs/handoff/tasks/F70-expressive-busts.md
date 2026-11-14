@@ -30,10 +30,10 @@ she's wearing.
 4. **Fallbacks, in order:**
    1. the expression's fallback chain ([the table](../../design/her-look.md#the-expressions)), ending at the bust's own
       neutral face;
-   2. no bust for that outfit: her own outfit's bust;
+   2. no bust for that outfit: her spring bust;
    3. none for her at all: her single master-data bust;
    4. no bust: her lettered disc.
-5. **Her outfit:** `own` until F71 picks one.
+5. **Her outfit:** spring until F71 picks one.
 6. **Reduced motion:** the face swaps without a fade.
 
 ## Do

@@ -110,13 +110,13 @@ town, each with her own story.
 | 1.12 **The HD-2D farm becomes Home** | After your phone look: the switch and the 2D Hub go | Claude |
 | 1.13 **The cast's busts** | The town cast's portraits | ChatGPT ([F25](handoff/tasks/F25-art-m4.md)) |
 
-**Track C, her look** ([design](design/her-look.md)): a wardrobe for each Uma (her own outfit, four seasons, a kimono, a
+**Track C, her look** ([design](design/her-look.md)): a wardrobe for each Uma (four seasons, spring her default, a kimono, a
 dinner dress, a wedding dress, pajamas), and busts that change expression: a face for each expression over a bust for
 each outfit.
 
 | Step | What | Who |
 |---|---|---|
-| 1.14 **The bust art** | Her outfits (9) and her expressions (22); the pilot first: the two Umas with the new full art | ChatGPT ([F69](handoff/tasks/F69-bust-art-spec.md)); the delivery's private art family is requested of uma-platform |
+| 1.14 **The bust art** | Her outfits (8) and her expressions (22); the pilot first: the two Umas with the new full art | ChatGPT ([F69](handoff/tasks/F69-bust-art-spec.md)); the delivery's private art family is requested of uma-platform |
 | 1.15 **Busts that change expression** | The game puts the face over the bust; the story's `emote` picks the face | Claude ([F70](handoff/tasks/F70-expressive-busts.md)) |
 | 1.16 **Her wardrobe** | The occasion picks the outfit; Dinner in town and A night in join the evenings | Claude ([F71](handoff/tasks/F71-her-wardrobe.md)) |
 
