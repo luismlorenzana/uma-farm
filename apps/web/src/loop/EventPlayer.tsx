@@ -10,7 +10,7 @@
 // (`PlaySheet.tsx`); then **the level-up card**, and the confession's Yes **the stage-up screen**.
 //
 // Three ways in, each a param over any page (portaled above the sheets, z-60): `?event=<id>` plays her Ready event (her
-// row's ● Ready, her profile's **Play ›**, the morning's Ready line); `?ask=<id>` her confession's last choice again
+// row's ● Ready, her profile's **Play · 1 ›**, the morning's Ready line); `?ask=<id>` her confession's last choice again
 // (**Ask her**, once a day, paying nothing); `?memory=<id>:<rung>[@<n>]` replays a Memory from the top or its nth choice
 // point, every option open, nothing paid or saved. The script loads on demand (`eventOf`: her route's, else the default
 // story's for the rung, in her name); Skip, Auto and Log work while it does. A play without a prompt shows its game's. Nothing is saved until the end: `playEvent` then commits once, stamped. Skip jumps to the next
@@ -22,7 +22,7 @@
 // reception (a dish in the Warehouse, or the bakery's cake), then **the wedding night** (`WeddingNight.tsx`: her route's,
 // else the default story's, in its outfit, fading to morning), and closes on the Married stage-up.
 import {
-  askSteps, beatOf, canAsk, choicePointsOf, eventMoments, extraPlay, goodName, heldRings, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
+  actionCost, askSteps, beatOf, canAsk, canSpendForEvent, choicePointsOf, eventMoments, extraPlay, GAME_DAYS, goodName, heldRings, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
   readiness, receptionDishes, replaySteps, ringGrade, ringPercent, rungName, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
   type Answer, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryOutfit, type StoryPack,
 } from '@farm/domain'
@@ -39,7 +39,7 @@ import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { herEventOf, namer } from '../story/people'
-import { useStory } from '../story/story'
+import { useSpecialDays, useStory } from '../story/story'
 import { askHerOnce, playHerEvent } from './event-actions'
 import { LevelUpCard, StageUpScreen } from './EventCards'
 import { eventTitle, guestsLine, optionWords, PICKER_WORDS, placeCard, receptionWords, type PlaceCard } from './event-view'
@@ -89,6 +89,9 @@ export default function EventPlayer() {
   // The event's own outfit, when the story names one.
   const [outfit, setOutfit] = useState<StoryOutfit | undefined>(undefined)
   const [gone, setGone] = useState(false)
+  // Her event costs an action (a special day's event actions first): with none left, it says so before it plays.
+  const [spent, setSpent] = useState(false)
+  const special = useSpecialDays()
   const close = () => leave(without(location))
   useEffect(() => {
     if (req || !asked || !save || !story) return
@@ -97,7 +100,9 @@ export default function EventPlayer() {
     if (!love || !save.roster[asked.id]) return fail()
     if (asked.mode === 'event') {
       const state = readiness(save, story, asked.id)
-      return state.ready && state.rung ? setReq({ ...asked, rung: state.rung }) : fail()
+      if (!state.ready || !state.rung) return fail()
+      if (!canSpendForEvent(save, actionCost('event'), special ?? GAME_DAYS)) return setSpent(true)
+      return setReq({ ...asked, rung: state.rung })
     }
     if (asked.mode === 'ask') return canAsk(save, asked.id) ? setReq({ ...asked, rung: 'confession' }) : fail()
     const rung = asked.rung!
@@ -119,9 +124,23 @@ export default function EventPlayer() {
     if (gone || !asked) close()
   }, [gone, asked]) // eslint-disable-line react-hooks/exhaustive-deps
   if (!asked || gone || !save) return null
+  if (spent) return createPortal(<NoActions onClose={close} />, document.body)
   return createPortal(
     <Player req={req} steps={steps} outfit={outfit} save={save} pack={story} onClose={close} />,
     document.body,
+  )
+}
+
+/** Her event with no action left today, of either kind: said before it plays, with Back. */
+function NoActions({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-[60] flex items-center justify-center bg-page/95 px-4" role="dialog" aria-modal="true" aria-label="No actions left" data-no-actions>
+      <div className="w-full max-w-sm space-y-3 rounded-md border border-hairline bg-panel p-4 shadow-2">
+        <p className="font-display text-[18px] font-semibold">No actions left today.</p>
+        <p className="text-[14px] text-ink-soft">Her event takes one action. End the day, and it’s still Ready tomorrow.</p>
+        <Button className="w-full" onClick={onClose} data-action="back">Back</Button>
+      </div>
+    </div>
   )
 }
 

@@ -83,14 +83,18 @@ export interface StoryNews {
   number: number
 }
 
-/** §5 New today: a new story release; the season's first day, or a festival today or tomorrow (one of the game's five,
- * or of the story's own, by its id: its name is the pack's, read as the card shows); the Town notes the night unlocked;
+/** §5 New today: a new story release; the season's first day; New Year's, a festival (one of the game's five, or of the
+ * story's own, by its id: its name is the pack's, read as the card shows) and the story's holidays and minor days (by id),
+ * today or tomorrow; the Town notes the night unlocked;
  * the goals' news: a place built overnight, a Farm Rank reached, a Diary milestone or row paid; the household's
  * milestones; and the Dorm's news: its new level in effect and Umas a swap brought home. Arrivals are §4's. */
 export type NewsLine =
   | StoryNews
   | { kind: 'season'; season: Season }
+  | { kind: 'new-year'; when: 'today' | 'tomorrow' }
   | { kind: 'festival'; festival: string; when: 'today' | 'tomorrow' }
+  /** The story's holidays and minor days, by id, in the order the calendar lists them: their names are the pack's. */
+  | { kind: 'days'; ids: string[]; when: 'today' | 'tomorrow' }
   /** The Town notes the night unlocked, by id, in world.json's order: their titles are the pack's. */
   | { kind: 'notes'; ids: string[] }
   | { kind: 'built'; place: FarmPlaceId }

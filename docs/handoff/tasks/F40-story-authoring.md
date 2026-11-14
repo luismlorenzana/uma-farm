@@ -142,7 +142,7 @@ The owner reworked the game ([the game's design](../../design/game-design.md)). 
   | The story asked | Answer |
   |---|---|
   | The occasion scenes (dinners, nights in, the wedding night) | [F79](F79-uma-loop.md) |
-  | New Year's, the Fishing Derby night, the Flower Show | [F82](F82-calendar.md), which also reads a `days` list of the story's holidays |
+  | New Year's, the Fishing Derby night, the Flower Show | The calendar plays `new-year`, `derby-night` and `flower-show` on their days, and reads world.json's `days` list of the story's holidays and minor days ([the menu](../../story-pack.md#the-storys-days)) |
   | An outfit on every scene, and the occasions' outfits | the dialogue engine ([its rules](../../game-mechanics.md#outfits-by-context)) |
   | The world on screen | Shipped as [F73](../../game-mechanics.md#the-world-in-the-pack); it shows once a release carries `world.json` (Release 1 didn't) |
   | Group scenes | Later |

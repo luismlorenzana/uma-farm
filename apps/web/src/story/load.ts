@@ -6,7 +6,8 @@
 // invented stand-in is the tests' only (`VITE_FARM_STORY=stand-in`, Vitest's): no production build holds it
 // (`scripts/check-size.mjs`'s `DEV_ONLY_MODULES`). Loaded on demand, with the pack, so none of it reaches the initial JS.
 import {
-  castEntry, isCastId, isSister, masterCastFrom, outfitOf, sisterNameOf, speakerId, STAND_IN_FILES, storyOf, storyPackFrom, type MasterCast, type MasterOutfit, type StoryPack,
+  birthdaysOf, castEntry, festivalsOf, isCastId, isSister, masterCastFrom, outfitOf, sisterNameOf, speakerId, STAND_IN_FILES, storyOf, storyPackFrom, type MasterCast, type MasterOutfit,
+  type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import type { OutfitRowBase } from '@luismlorenzana/uma-kit/roster'
 import { CONTENT } from '../content/client'
@@ -19,6 +20,9 @@ import { unknownName } from './story'
  * `useStoryYear`), loaded with the seam. */
 export { festivalsOf, withCast } from '@farm/domain'
 
+/** Master data's birthdays as the pack loaded with them: the special days read them through the cast. */
+let birthdays: MasterView['birthdays'] = new Map()
+
 /** The story the game plays: the release farm-api serves, or no pack when it serves none, with master data's
  * placeholders. Both wait for master data, as the boot does. A shipped release new to this device waits for the
  * morning's "New story arrived" (`news.ts`). In the tests, the invented stand-in alone. */
@@ -26,8 +30,12 @@ export async function loadStoryPack(): Promise<StoryPack> {
   if (import.meta.env.DEV && import.meta.env.VITE_FARM_STORY === 'stand-in') return storyPackFrom(STAND_IN_FILES)
   const arrived = (index: { number?: number }) => { if (index.number) keepArrived({ number: index.number }) }
   const [pack, view] = await Promise.all([loadReleasedPack(CONTENT, deviceIndexStore(), { missing: async () => null, arrived }), masterReady()])
+  birthdays = view.birthdays
   return storyOf(pack, masterCast(view))
 }
+
+/** The special days: the year's festivals (the story's) and the cast's birthdays (her cast entry's, else master data's). */
+export const specialDaysOf = (pack: StoryPack): SpecialDays => ({ festivals: festivalsOf(pack), birthdays: birthdaysOf(pack, birthdays) })
 
 /** What master data gives the placeholders: each character's default outfit and each outfit's line from its stats. */
 export function masterCast(view: Pick<MasterView, 'outfits' | 'stats'>): MasterCast {

@@ -8,19 +8,23 @@
 // id is its own outfit. The album's art and master data's view (`setMasterLens`) read through it, so faces, busts, names,
 // talents, temperaments and pickers all follow her cast entry. Everyone on the farm stays in the cast (`keepOnCast`).
 // The year's festivals (`festivalsOf`, the story's when its world moves or adds them) are kept here too, worked out by
-// the loaded seam, so the bars' date chip names the story's festival without the placeholders in the initial JS.
-import type { Festival, StoryPack } from '@farm/domain'
+// the loaded seam, so the bars' date chip names the story's festival without the placeholders in the initial JS; and
+// the special days (the year's festivals and the met Umas' birthdays, master data's through the cast), so the bar's
+// actions chip shows a special day's event actions the same way.
+import type { Festival, SpecialDays, StoryPack } from '@farm/domain'
 import { useSyncExternalStore } from 'react'
 
 let pack: StoryPack | null = null
 let resolve: (id: string) => string = (id) => id
 let loading: Promise<StoryPack> | null = null
 let year: readonly Festival[] | undefined
+let special: SpecialDays | undefined
 /** The loaded seam's own pieces, kept for `keepOnCast`. */
 let seam: {
   install: (pack: StoryPack) => (id: string) => string
   withCast: (pack: StoryPack, ids: readonly string[]) => StoryPack
   festivalsOf: (pack: StoryPack) => readonly Festival[]
+  specialDaysOf: (pack: StoryPack) => SpecialDays
 } | null = null
 const listeners = new Set<() => void>()
 
@@ -36,6 +40,7 @@ export const castIds = (): string[] => pack?.cast.umas.map((u) => u.characterId)
 function turnOn(next: StoryPack): void {
   resolve = seam!.install(next)
   year = seam!.festivalsOf(next)
+  special = seam!.specialDaysOf(next)
   pack = next
   for (const listener of listeners) listener()
 }
@@ -43,9 +48,9 @@ function turnOn(next: StoryPack): void {
 /** Loads the pack once (the boot and the night wait on it, as they do on master data) and turns the resolver on. A
  * failure lets the next call try again. Resolves the pack as it stands now (`keepOnCast` may have grown its cast). */
 export function storyReady(): Promise<StoryPack> {
-  loading ??= import('./load').then(async ({ loadStoryPack, installStory, withCast, festivalsOf }) => {
+  loading ??= import('./load').then(async ({ loadStoryPack, installStory, withCast, festivalsOf, specialDaysOf }) => {
     const loaded = await loadStoryPack()
-    seam = { install: installStory, withCast, festivalsOf }
+    seam = { install: installStory, withCast, festivalsOf, specialDaysOf }
     turnOn(loaded)
     return loaded
   }).catch((error: unknown) => {
@@ -78,6 +83,16 @@ export function useStoryYear(): readonly Festival[] | undefined {
     listeners.add(listener)
     return () => listeners.delete(listener)
   }, () => year, () => year)
+}
+
+/** The special days once the pack loads: the year's festivals and the met Umas' birthdays, for the event actions. */
+export const specialDays = (): SpecialDays | undefined => special
+/** The special days in React: undefined until the pack loads. */
+export function useSpecialDays(): SpecialDays | undefined {
+  return useSyncExternalStore((listener) => {
+    listeners.add(listener)
+    return () => listeners.delete(listener)
+  }, () => special, () => special)
 }
 
 /** A name for a character master data doesn't hold: the stand-ins' invented range (9000001 on) reads "Stand-in 1",

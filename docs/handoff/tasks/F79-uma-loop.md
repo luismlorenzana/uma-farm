@@ -46,7 +46,8 @@ life … cooking meals, and every night I would pickup one Uma to spend the nigh
      in the morning she greets you, a short scene in pajamas through F75, from the story or the default;
    - her married life's events and the household's scenes stay as built.
 6. **The occasion scenes the story wrote play on their occasion:** `dinner-in-town` and `a-night-in` as those evenings;
-   `wedding-night` on the wedding night. The rest are in F82.
+   `wedding-night` on the wedding night. The calendar plays New Year's, the Flower Show and the Fishing Derby's night
+   ([the calendar](../../game-mechanics.md#the-calendar-screen)).
 
 **Already in from F76:** the default story writes every piece this packet plays, read through one lookup per piece
 (`packages/domain/src/story/placeholders.ts`): `talkStageOf` (the six stages, `farmhand` as a flag to set),

@@ -362,7 +362,7 @@ export function parseRankLines(value: unknown, path: string, roster: ReadonlySet
 }
 
 /** §5's kinds: the roster's arrivals are §4's hearts. */
-const NEWS_KINDS = ['story', 'season', 'festival', 'notes', 'chapter', 'built', 'farm-rank', 'milestone', 'dorm', 'home', 'household'] as const
+const NEWS_KINDS = ['story', 'season', 'new-year', 'festival', 'days', 'notes', 'chapter', 'built', 'farm-rank', 'milestone', 'dorm', 'home', 'household'] as const
 /** A festival's id in the news: one of the game's five, or one of the story's own (its world.json is the pack's, so the
  * save reads the id's shape only). */
 const FESTIVAL_NEWS_ID = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
@@ -371,9 +371,9 @@ const HOUSEHOLD_NEWS = [1, 5, 10, 15, 20] as const
 
 /** §5 New today. An older v4's "chapter done" line (the global chapters') is read and dropped. */
 export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet<string>): NewsLine[] {
-  // A new story release, the season and festivals, the goals' news, the Dorm's new level and Umas home from a swap, and
-  // the household's.
-  const read = list(value, path, 0, 1 + 8 + 1 + MAX_GOAL_NEWS + 2 + HOUSEHOLD_NEWS.length).map((v, i): NewsLine | null => {
+  // A new story release, the season, New Year's, festivals and the story's days (today and tomorrow), the goals' news,
+  // the Dorm's new level and Umas home from a swap, and the household's.
+  const read = list(value, path, 0, 1 + 8 + 4 + 1 + MAX_GOAL_NEWS + 2 + HOUSEHOLD_NEWS.length).map((v, i): NewsLine | null => {
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, NEWS_KINDS)
     switch (kind) {
@@ -396,6 +396,13 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
         const festival = typeof f.festival === 'string' && FESTIVAL_NEWS_ID.test(f.festival) && f.festival.length <= 40 ? f.festival : fail(`${at}.festival`, 'expected a festival’s id')
         return { kind, festival, when: oneOf(f.when, `${at}.when`, ['today', 'tomorrow'] as const) }
       }
+      case 'new-year': return { kind, when: oneOf(object(v, at, ['kind', 'when']).when, `${at}.when`, ['today', 'tomorrow'] as const) }
+      // The story's holidays and minor days, by id.
+      case 'days': {
+        const d = object(v, at, ['kind', 'ids', 'when'])
+        const ids = list(d.ids, `${at}.ids`, 1, 40).map((id, j) => (typeof id === 'string' && FESTIVAL_NEWS_ID.test(id) && id.length <= 40 ? id : fail(`${at}.ids.${j}`, 'expected a day’s id')))
+        return { kind, ids: unique(ids, `${at}.ids`), when: oneOf(d.when, `${at}.when`, ['today', 'tomorrow'] as const) }
+      }
       // The Town notes the night unlocked.
       case 'notes': {
         const ids = keys(object(v, at, ['kind', 'ids']).ids, `${at}.ids`)
@@ -414,7 +421,7 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
     }
   })
   return unique(read.filter((n): n is NewsLine => n !== null), path, (n) => (n.kind === 'story' || n.kind === 'season' || n.kind === 'notes' || n.kind === 'dorm' || n.kind === 'home' ? n.kind
-    : n.kind === 'festival' ? `festival:${n.when}` : n.kind === 'built' ? `built:${n.place}` : n.kind === 'farm-rank' ? `farm-rank:${n.rank}`
+    : n.kind === 'festival' || n.kind === 'new-year' || n.kind === 'days' ? `${n.kind}:${n.when}` : n.kind === 'built' ? `built:${n.place}` : n.kind === 'farm-rank' ? `farm-rank:${n.rank}`
       : n.kind === 'milestone' ? `milestone:${n.id}` : `household:${n.married}`))
 }
 

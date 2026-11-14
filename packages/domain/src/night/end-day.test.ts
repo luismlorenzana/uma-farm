@@ -82,7 +82,7 @@ describe('the night', () => {
 describe('the calendar turns', () => {
   it('turns Spring into Summer after day 12, and the year after day 48', () => {
     expect(night(farm(12))).toMatchObject({ calendar: { day: 13 }, summary: { day: 13, news: [{ kind: 'season', season: 'summer' }] } })
-    expect(night(farm(48))).toMatchObject({ calendar: { day: 49 }, summary: { day: 49, news: [{ kind: 'season', season: 'spring' }] } })
+    expect(night(farm(48))).toMatchObject({ calendar: { day: 49 }, summary: { day: 49, news: [{ kind: 'season', season: 'spring' }, { kind: 'new-year', when: 'today' }] } })
     expect(night(farm(5)).summary!.news).toEqual([])
   })
 
@@ -90,7 +90,15 @@ describe('the calendar turns', () => {
     expect(night(farm(8)).summary!.news).toEqual([{ kind: 'festival', festival: 'flower-show', when: 'tomorrow' }])
     expect(night(farm(9)).summary!.news).toEqual([{ kind: 'festival', festival: 'flower-show', when: 'today' }])
     expect(night(farm(46)).summary!.news).toEqual([{ kind: 'festival', festival: 'harvest-cup', when: 'tomorrow' }])
-    expect(night(farm(47)).summary!.news).toEqual([{ kind: 'festival', festival: 'harvest-cup', when: 'today' }])
+    expect(night(farm(47)).summary!.news).toEqual([{ kind: 'festival', festival: 'harvest-cup', when: 'today' }, { kind: 'new-year', when: 'tomorrow' }])
+  })
+
+  it('names New Year’s the day before and on the day, and keeps the lines through a save', () => {
+    const eve = night(farm(47))
+    const morning = night(eve)
+    expect(morning.summary!.news).toEqual([{ kind: 'season', season: 'spring' }, { kind: 'new-year', when: 'today' }])
+    expect(parseSaveV5(JSON.parse(JSON.stringify(eve)))).toEqual(eve)
+    expect(parseSaveV5(JSON.parse(JSON.stringify(morning)))).toEqual(morning)
   })
 
   it('clears the whole of today: the actions, the town, chats, gifts and the rest', () => {

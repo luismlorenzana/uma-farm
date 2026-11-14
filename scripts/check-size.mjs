@@ -24,7 +24,8 @@ export const MAIN_JS_BUDGET = 180_000
  * bench's rules, sheet, view, actions and scene, and the wedding's rules; and the homestead's and the household's
  * rules, the homestead's sheet, view, actions and map rows, the morning's house answer, the night level's card and the
  * household player; and the story pack's delivery, its index and released pack; and the names of anyone in town, the
- * town's rules, its screen, its view and its talk; and the Book. Paths match a module id exactly or as its suffix. */
+ * town's rules, its screen, its view and its talk; and the Book; and the calendar screen, its words, the occasion player,
+ * the occasions' rules and the calendar's days. Paths match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
   'phaser/dist/phaser.esm.js',
   '@luismlorenzana/uma-kit/dist/hub/scene/createHubGame.js',
@@ -135,6 +136,11 @@ export const LAZY_MODULES = [
   'src/town/town-view.ts',
   'src/town/town-actions.ts',
   'src/book/BookPage.tsx',
+  'src/loop/CalendarScreen.tsx',
+  'src/loop/calendar-view.ts',
+  'src/loop/OccasionPlayer.tsx',
+  'domain/src/romance/occasions.ts',
+  'domain/src/romance/calendar-days.ts',
 ]
 
 /** Modules no production build may hold at all: the invented stand-in pack is the tests' only. A path ending in `/` is a

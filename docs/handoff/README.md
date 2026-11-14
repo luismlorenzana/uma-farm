@@ -18,7 +18,11 @@ every Uma without her story plays the complete default story, from meeting her t
 life, each piece replaced the moment hers lands ([what plays without the story](../game-mechanics.md#what-plays-without-the-story)).
 **A day of actions (F77) is built,** in review: ten actions a day, the tile farm worked by hand with daily watering,
 one-action foraging, chopping and fishing, a station's one load, a crate shipped for one action, and going into town for
-the shop; save v5, so a farm from before it starts over.
+the shop; save v5, so a farm from before it starts over. **The calendar (F82) is built,** in review: the bar's date
+opens the year on one screen, each day with its festival, New Year's, the story's holidays and minor days, birthdays,
+anniversaries and the faces of the Umas with an event that day; her event costs an action, a special day's event
+actions first, so several Umas' events fit a festival; and the occasion scenes play on their days (New Year's from the
+second year, the Flower Show, the Fishing Derby's night) ([the calendar](../game-mechanics.md#the-calendar-screen)).
 
 | Piece | Who | State |
 |---|---|---|
@@ -27,7 +31,7 @@ the shop; save v5, so a farm from before it starts over.
 | [F79](tasks/F79-uma-loop.md) **The Uma loop** | Claude | After F78 |
 | [F80](tasks/F80-farmhands.md) **Farmhands** | Claude | After F77 and F79 |
 | [F81](tasks/F81-economy.md) **Upkeep and loans** | Claude | After F77 |
-| [F82](tasks/F82-calendar.md) **The calendar** | Claude | After F77 |
+| F82 **The calendar** | Claude | Built, in review: the pull request `feat/f82-calendar` |
 | [F83](tasks/F83-ranch-and-mine.md) **The ranch and the mine** | Claude | After F77 and F80 |
 | [F69](tasks/F69-bust-art-spec.md) **The bust art**, the next Umas | ChatGPT | The pilot is done; the rest in the Ranker's order |
 | [F40](tasks/F40-story-authoring.md) **The story**, and its ship routine | The story session | Release 1 shipped; Release 2 brings `world.json` |
@@ -42,6 +46,7 @@ The table above is the queue. A packet is deleted when it ships, and git keeps t
 |---|---|
 | **The landscape phone check:** open the app sideways and visit every screen; held upright, it asks you to turn it | [uma-farm.web.app](https://uma-farm.web.app) |
 | **The dialogue engine's phone check:** meet the pilot's Umas and watch their faces and outfits change | [uma-farm.web.app](https://uma-farm.web.app) |
+| **Once F82 is deployed, open the calendar:** tap the date, look across a season and its faces, and on the Flower Show play two Umas' scenes with the festival's event actions | [uma-farm.web.app](https://uma-farm.web.app), and [the calendar](../game-mechanics.md#the-calendar-screen) |
 | **Once F77 is deployed, play three days:** start the new farm on the card, clear, till, plant and water, forage and fish, start a load and ship, run out of actions and end the day | [uma-farm.web.app](https://uma-farm.web.app), and [the day's rules](../game-mechanics.md#a-day-ten-actions) |
 | **The default Uma's look:** meet an Uma without art and play a talk and an event: the blank bust's faces and the default story | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story and ship it.** F40 lists what the rework changes for it: the protagonist is a man, there's no welcome week, and her life in town | [F40](tasks/F40-story-authoring.md) |

@@ -30,10 +30,10 @@ export const ART_NAMES: Readonly<Record<Exclude<StoryOutfit, 'season'>, ArtOutfi
 /** A story outfit's art name on a season (for `season`). */
 export const artOutfit = (outfit: StoryOutfit, season: Season): ArtOutfit => (outfit === 'season' ? ART_NAMES[season] : ART_NAMES[outfit])
 
-/** The moments a scene can be in, as its player knows them (an event's rung and beat, a household scene; later the
- * evenings' and the calendar's occasion scenes hand theirs). */
+/** The moments a scene can be in, as its player knows them (an event's rung and beat, a household scene, the calendar's
+ * occasion scenes; later the evenings' hand theirs). */
 export const MOMENTS = [
-  'wedding', 'wedding-night', 'dinner', 'festival-night', 'picnic', 'tea', 'spring-festival', 'night-in', 'sleepless', 'work', 'shore',
+  'wedding', 'wedding-night', 'dinner', 'festival-night', 'new-year', 'picnic', 'tea', 'spring-festival', 'night-in', 'sleepless', 'work', 'shore',
 ] as const
 export type Moment = typeof MOMENTS[number]
 
@@ -42,7 +42,7 @@ export const MOMENT_OUTFITS: readonly { moments: readonly Moment[]; outfit: Stor
   { moments: ['wedding'], outfit: 'wedding', words: 'A wedding' },
   { moments: ['wedding-night'], outfit: 'wedding-night', words: 'Its night' },
   { moments: ['dinner'], outfit: 'dinner', words: 'A dinner' },
-  { moments: ['festival-night'], outfit: 'kimono', words: 'A festival night' },
+  { moments: ['festival-night', 'new-year'], outfit: 'kimono', words: 'A festival night, or New Year’s' },
   { moments: ['picnic', 'tea', 'spring-festival'], outfit: 'garden-party', words: 'A picnic, a tea or the spring festival' },
   { moments: ['night-in', 'sleepless'], outfit: 'pajamas', words: 'A night in, or a night she can’t sleep' },
   { moments: ['work'], outfit: 'work', words: 'Her work' },

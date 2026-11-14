@@ -110,6 +110,10 @@ export * from './romance/plays/walk'
 export * from './romance/plays/choose'
 export * from './romance/plays/which'
 export * from './romance/events'
+// The calendar: the occasion scenes on their days (New Year's, the Flower Show, the Fishing Derby's night), and each
+// day's entries with the faces of the Umas who have an event on it; read live, never stored.
+export * from './romance/occasions'
+export * from './romance/calendar-days'
 // The evening: the kinds by ladder and game, her favourite kind, the slots and festival night, the
 // evening's points and its card, the morning's invitations and their answers, and when Tonight opens.
 export * from './romance/evening'

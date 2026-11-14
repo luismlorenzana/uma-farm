@@ -43,7 +43,7 @@ describe('the default story: every piece has its default', () => {
     expect([...Object.keys(DEFAULT_EVENTS), ...Object.keys(DEFAULT_EVENINGS)].sort()).toEqual([...STORY_EVENTS].sort())
     expect(RUNGS.every((r) => defaultSceneOf(r) === DEFAULT_EVENTS[r])).toBe(true)
     expect(defaultSceneOf(ARRIVAL, true)).toBe(DEFAULT_TOWN_MEETING)
-    expect([LIFE_EVENTS.length, OCCASIONS.length, EVENING_SCENES.length]).toEqual([4, 7, 19])
+    expect([LIFE_EVENTS.length, OCCASIONS.length, EVENING_SCENES.length]).toEqual([4, 8, 19])
   })
 
   it('writes a scene for each hangout kind and each date kind, and the two evenings of their own', () => {

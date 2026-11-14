@@ -7,7 +7,8 @@
 // divisible by 4 from 10 married, and festival night once at most: the story says which days are festivals) with the
 // evening kinds, and its invitations are one (two from 10 married), each a different Uma, asking for a date game. The
 // day's actions and event actions are counts (the budget is the rules', so an upgrade never breaks a save), and the areas
-// and spots worked today their ids, each once. The Diary's Town notes are ids.
+// and spots worked today their ids, each once; today's occasion scenes, when any played, the roster Umas who played one.
+// The Diary's Town notes are ids.
 import { dateOf, FESTIVAL_IDS } from '../farm/calendar'
 import { cleanFarmerName, farmerNameIssue, houseNameIssue } from '../romance/farmer'
 import { isCropId, isGoodId, isGoodOrRingId, type CropId } from '../goods/ids'
@@ -152,7 +153,7 @@ const inviteKind = (v: unknown, at: string): InviteKind => (v === FESTIVAL_NIGHT
 /** `today`: the evenings within the day's slots (`evenings` regular ones, and festival
  * night once at most), and `invites` invitations, each a different Uma. */
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
-  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception'])
+  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const slots = eveningsOn(day, married)
   const evenings = list(o.evenings, `${path}.evenings`, 0, slots + 1).map((v, i) => {
@@ -169,7 +170,10 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
     town: bool(o.town, `${path}.town`),
     gathered: unique(list(o.gathered, `${path}.gathered`, 0, GATHER_IDS.length).map((v, i) => oneOf(v, `${path}.gathered.${i}`, GATHER_IDS)), `${path}.gathered`),
     chats: umas(o.chats, `${path}.chats`), gifts: umas(o.gifts, `${path}.gifts`), praise: umas(o.praise, `${path}.praise`),
-    praised: umas(o.praised, `${path}.praised`), events: umas(o.events, `${path}.events`), asked: umas(o.asked, `${path}.asked`),
+    praised: umas(o.praised, `${path}.praised`), events: umas(o.events, `${path}.events`),
+    // Today's occasion scenes: absent until one plays (a save from before the calendar has none).
+    ...(o.occasions === undefined ? {} : { occasions: umas(o.occasions, `${path}.occasions`) }),
+    asked: umas(o.asked, `${path}.asked`),
     evenings,
     invites: unique(list(o.invites, `${path}.invites`, 0, invitesFor(married)).map((v, i) => {
       const at = `${path}.invites.${i}`

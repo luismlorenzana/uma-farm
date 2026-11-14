@@ -37,7 +37,7 @@ The pack is a folder of JSON files in `content/story/`. Every file is optional.
 | `household.json` | The household scenes, house lines and the finale | The game's short cards; house lines come from her temperament |
 | `opening.json` | The opening: the start's lines, after the farmer's name | The game's three short lines |
 | `town.json` | The town's people (Umas in the town's roles) and its six spots | Master data's characters fill the roles; the game's own six spots |
-| `world.json` | The world: the town's, the farm's and the region's names, the farm's history, the festivals, each place's name and line, a line for each season, and Town notes | The game's own words: its five festivals, its places' names and lines, and no Town notes |
+| `world.json` | The world: the town's, the farm's and the region's names, the farm's history, the festivals, the story's holidays and minor days, each place's name and line, a line for each season, and Town notes | The game's own words: its five festivals, its places' names and lines, no days of the story's own, and no Town notes |
 
 Any other file (`world.md`, `world-book.md`, `tags.json`, `reviews.json`, notes, drafts) is the story's own. The sandbox shows some of
 them; the game never reads them, and a release never includes them.
@@ -301,11 +301,16 @@ one you leave out plays the default.**
 | `f1` … `f10`, `confession`, `r1` … `r10`, `proposal`, `wedding`, `s1`, `s3`, `s5` | Her route's rungs | When she's Ready; they pay |
 | `wedding-night` | The wedding night: tender, fading to morning, in the wedding night outfit unless you name another | Right after the wedding, before the Married card |
 | `moving-in`, `s2`, `s4` | Moving in, married life 2 and 4 | When the Uma loop (F79) gives them their moment |
-| `birthday`, `new-year`, `flower-show`, `fishing-derby`, `cooking-contest`, `animal-show`, `harvest-cup` | Her occasions: her birthday, New Year's and the five festivals | When the calendar (F82) plays them on their day |
+| `new-year`, `flower-show`, `derby-night` | Her occasion scenes: New Year's, the Flower Show and the Fishing Derby's night | On their day, from the calendar, with each Uma you've met: New Year's from the second year, the two festivals where the story puts them ([occasion scenes](game-mechanics.md#occasion-scenes)) |
+| `birthday`, `fishing-derby`, `cooking-contest`, `animal-show`, `harvest-cup` | Her other occasions: her birthday, the Fishing Derby's day and the other festivals | Read and kept; they play when their moments are built |
 | `hangout-<kind>`, `date-<kind>`, `dinner-in-town`, `a-night-in` | An evening's scene: a hangout's for walk, fishing, picnic, market, cooking and festival; a date's for every kind | When the evenings (F79) play their lines |
 
 The rungs pay as written (below). The rest pay nothing: their choices are wording only, and the usual sizes don't apply
 to them. Any other id is a note, kept for the story.
+
+**An occasion scene** costs the player one action (a special day's event actions first) and pays nothing. It plays once
+a day with each Uma, whatever her stage, so write it for a friend and a wife alike. Without an `outfit` she wears the
+kimono at New Year's and on the derby night, and the garden party dress at the Flower Show.
 
 ### The scene's outfit
 
@@ -461,6 +466,10 @@ block nothing. Any other field is kept for the story.
     { "id": "flower-show", "name": "Bloom Fair" },
     { "id": "lantern-walk", "name": "Lantern Walk", "season": "summer", "day": 4, "happens": "Paper lanterns float down the river." }
   ],
+  "days": [
+    { "id": "first-bell", "name": "The first bell", "kind": "holiday", "season": "spring", "day": 1, "line": "The bell rings twelve times at midnight." },
+    { "id": "market-day", "name": "Market day", "day": [4, 8, 12], "line": "Stalls fill the square." }
+  ],
   "places": { "gate": { "line": "The old gate, latched at last." }, "fields": { "name": "Low Fields" } },
   "seasons": { "spring": "The thaw runs off the hills.", "winter": "Frost on the fence rails." },
   "notes": [
@@ -478,6 +487,7 @@ block nothing. Any other field is kept for the story.
 | `names.region` | Under the farm's name on the Diary's "The farm" page, after the town | None |
 | `history` | A few lines of the farm's past: the Diary's first page, **"The farm"**. `{farmer}` is filled | None: the page shows the names alone, and with no names either there's no page |
 | `festivals` | The year's festivals: the calendar, the date chip, the morning's "*Festival* tomorrow" and "today", festival night, and `festival` triggers and gates | The game's five, on their days |
+| `days` | The story's holidays and minor days: the calendar marks each day and lists them with their lines, and the morning says "*Market day* tomorrow" and "today" | None |
 | `places` | By place id: each place's `name` (the map, its quick look's title, its Build card's "The *name* stands tomorrow.") and its one `line` (its quick look) | The game's own name and line |
 | `seasons` | By season: a line under "*Spring* begins" on the morning that opens it | "Spring begins" alone |
 | `notes` | **Town notes:** a list in the Diary that fills as you play, each unlocked once by its `unlock` and kept; the morning names the night's | None |
@@ -499,6 +509,24 @@ Each festival is `{ "id", "name", "season", "day", "happens" }`, its day a seaso
   holds is skipped, and that festival keeps the game's day. Then the story's own, in the file's order: one on a day
   already held is skipped.
 - The calendar lists each with its `happens` under it.
+
+### The story's days
+
+`days` is a list of the story's holidays and minor days: its customs, the valley's small days, a market. Each is
+`{ "id", "name", "kind", "season", "day", "line" }`:
+
+| Field | What it is | Without it |
+|---|---|---|
+| `id` | Lowercase words joined by `-`, at most 40 characters, each once | The day is skipped |
+| `name` | On the calendar's day and in the morning, at most 40 characters | The day is skipped |
+| `kind` | `holiday` (a ribbon on the calendar, listed first) or `minor` (a dot) | `minor` |
+| `season` | `spring`, `summer`, `autumn` or `winter` | Every season |
+| `day` | Its day of the season, 1–12, or a list of them (`[4, 8, 12]` for a weekly market) | The day is skipped |
+| `line` | What happens, under its name on the calendar, at most 160 characters | None |
+
+- **A day is the story's own:** it may share a festival's day or another day's. It's marked and said, and plays nothing
+  of its own; the special days that give event actions are New Year's, the festivals and her birthday.
+- **The morning** names the day's and the next day's: "*Market day* today", or "*Market day* +1 more tomorrow".
 
 ### The places
 
@@ -570,4 +598,6 @@ writing session, on the machine where the story is written (macOS or Windows). I
 | Her chapters and their gates | Yes | Yes, today: [her chapters](game-mechanics.md#her-chapters) |
 | What plays when a part is missing | The default story for every read | Yes, today: [what plays without the story](game-mechanics.md#what-plays-without-the-story) |
 | The wedding night (`wedding-night`) | Yes | Yes, today: after the wedding |
-| Moving in, married life 2 and 4, her occasions, the evenings' scenes | Yes | When the Uma loop (F79) and the calendar (F82) land; the default story writes each until then |
+| Her occasion scenes: `new-year`, `flower-show`, `derby-night` | Yes | Yes, today: on their days, from the calendar ([occasion scenes](game-mechanics.md#occasion-scenes)) |
+| The world's `days` | Yes | Yes, today: [the calendar](game-mechanics.md#the-calendar-screen) and the morning |
+| Moving in, married life 2 and 4, her other occasions, the evenings' scenes | Yes | When the Uma loop (F79) and the festivals land; the default story writes each until then |

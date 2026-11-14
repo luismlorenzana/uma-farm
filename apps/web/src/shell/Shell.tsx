@@ -9,7 +9,7 @@
 // `?memory=`, and her Memories' album at `?album=`; the evening at `?evening=` (Tonight's picker, or her kinds sheet, the
 // play and its card); the ring bench at `?sheet=bench` from the Forge's quick look; the homestead at
 // `?sheet=homestead`, a night level's card at `?level=<id>:<s2|s4>` and a household scene or the finale at
-// `?household=<id>` (`&replay=1` from the Diary).
+// `?household=<id>` (`&replay=1` from the Diary); an occasion scene at `?occasion=<id>`, from the calendar's day.
 import { sceneDue } from '@farm/domain'
 import { AppFrame, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { lazy, Suspense } from 'react'
@@ -31,6 +31,7 @@ const BenchSheet = lazy(() => import('../loop/BenchSheet'))
 const HomesteadSheet = lazy(() => import('../loop/HomesteadSheet'))
 const NightLevel = lazy(() => import('../loop/NightLevel'))
 const HouseholdPlayer = lazy(() => import('../loop/HouseholdPlayer'))
+const OccasionPlayer = lazy(() => import('../loop/OccasionPlayer'))
 
 const SHEETS = ['end', 'calendar', 'bin', 'shop', 'rank'] as const
 type LoopSheet = typeof SHEETS[number]
@@ -50,6 +51,7 @@ export function Shell() {
   const evening = search.get('evening')
   const level = search.get('level')
   const household = search.get('household')
+  const occasion = search.get('occasion')
   const farm = useGame((s) => s.save !== null)
   const free = farm && !naming && !scene
   return (
@@ -72,6 +74,7 @@ export function Shell() {
           {sheet === 'homestead' && free && <Suspense fallback={null}><HomesteadSheet /></Suspense>}
           {level && free && !read && !playing && <Suspense fallback={null}><NightLevel key={level} value={level} /></Suspense>}
           {household && free && !read && !playing && <Suspense fallback={null}><HouseholdPlayer key={household} value={household} replay={search.get('replay') === '1'} /></Suspense>}
+          {occasion && free && !read && !playing && <Suspense fallback={null}><OccasionPlayer key={occasion} id={occasion} /></Suspense>}
         </>
       }
     >

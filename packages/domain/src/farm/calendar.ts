@@ -92,6 +92,14 @@ export function nextFestival(day: number, year: readonly Festival[] = FESTIVALS)
   throw new RangeError(`No festival after day ${day}`)
 }
 
+/** New Year's: each year's Spring 1. Its event actions come every year; its occasion scenes from the second (year 1's is
+ * the farm's first morning). */
+export const NEW_YEAR_NAME = 'New Year’s'
+export const isNewYear = (day: number): boolean => {
+  const date = dateOf(day)
+  return date.season === 'spring' && date.day === 1
+}
+
 /** A season's first day: new seeds, fish and demand. */
 export const isSeasonStart = (day: number): boolean => dateOf(day).day === 1
 /** A season's last day: tonight, crops out of season wither. */

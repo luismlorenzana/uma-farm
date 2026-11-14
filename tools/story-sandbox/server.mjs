@@ -181,7 +181,8 @@ function worldPlayed(v, pack, game) {
   })
   const seasons = ['spring', 'summer', 'autumn', 'winter'].map((season) => ({ season, line: v.seasonLineOf(pack, season) }))
   return {
-    parts: v.worldWrittenOf(pack), names: v.worldNamesOf(pack), history: v.historyOf(pack), festivals: v.festivalsOf(pack), places, seasons, notes: v.townNotesOf(pack),
+    parts: v.worldWrittenOf(pack), names: v.worldNamesOf(pack), history: v.historyOf(pack), festivals: v.festivalsOf(pack), days: v.storyDaysOf(pack), places, seasons,
+    notes: v.townNotesOf(pack),
   }
 }
 

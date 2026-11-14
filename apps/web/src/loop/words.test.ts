@@ -38,7 +38,7 @@ describe('the morning summary', () => {
       ] },
       { section: 'news', title: 'New today', lines: [
         { key: 'season', text: 'Summer begins', to: '/?sheet=calendar' },
-        { key: 'festival:tomorrow', text: 'Fishing Derby tomorrow', to: '/?peek=festival' },
+        { key: 'festival:tomorrow', text: 'Fishing Derby tomorrow', to: '/?sheet=calendar' },
       ] },
       { section: 'nudges', title: 'Today', lines: [{ key: 'water', text: '3 tiles to water', to: '/' }] },
     ])

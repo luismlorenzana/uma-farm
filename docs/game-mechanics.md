@@ -5,7 +5,8 @@ the same commit, and where it and the code ever differ, the code wins and this d
 [game-mechanics.html](pages/game-mechanics.html); where the game is going is in [the roadmap](roadmap.md).
 
 **What's live and what isn't.** The deployed game is one game on **save v5**: a day of ten actions on a tile farm the
-farmer works by hand, its places, the farm growing by building, and the **romance** (Part 3), played from the story
+farmer works by hand, its places, the farm growing by building, the calendar with its special days and occasion scenes,
+and the **romance** (Part 3), played from the story
 pack, and played whole without one: wherever the pack is silent, the default story plays, and every Uma without
 portraits plays on the blank bust (see [What plays without the story](#what-plays-without-the-story)). The game is
 laid out **sideways**, for a phone held in landscape (see [the frame](#the-frame-landscape)). A save from before v5
@@ -47,9 +48,11 @@ prose here; change a table by changing the rule.
 
 A farm day is a turn of **ten actions**. The farmer works the farm alone, by hand: each tile cleared, tilled, planted,
 watered or harvested, each forage, chop or catch, each load started at a station, each crate shipped and going into
-town takes one. Nothing on the farm moves until you end the day, whether the app is open, closed or left alone for a
-week. Ending the day runs the night: the bin pays, watered crops grow a stage, the stations' loads finish and the date
-turns. The morning opens on a card of what the night brought, and ten actions again.
+town takes one, and so does each of the Umas' events. Special days (New Year's, a festival, her birthday) add actions
+for events only, and the calendar shows the year: its festivals, birthdays and the faces of the Umas with an event each
+day. Nothing on the farm moves until you end the day, whether the app is open, closed or left alone for a week. Ending
+the day runs the night: the bin pays, watered crops grow a stage, the stations' loads finish and the date turns. The
+morning opens on a card of what the night brought, and ten actions again.
 
 ```
  the day: 10 actions, one a tap                    End the day ──► the night, in order
@@ -95,19 +98,21 @@ The year's seasons, with their days in year 1 and their festivals:
 - **The date chip** in the bar shows the season's mark and the date ("Spring 3"); without the mark it draws a dot in
   the season's colour (Spring green, Summer gold, Autumn orange, Winter blue). Its spoken name is the whole date and the
   next festival: "Calendar: Spring 3, year 1 · Flower Show in 7 days". A tap opens the calendar.
-- **The calendar** shows the day and the year ("Spring 3 · Year 1"); the four seasons with this one marked; the season's
-  12 days, past days faded, today in the accent colour and a festival day ringed with a trophy; the season's festivals
-  ("Flower Show · Spring 10"), each with what happens at it under it when the story says; the next festival with its
-  countdown ("Flower Show · Spring 10 · in 7 days"); and the day of the year ("Day 3 of 48. Days move only when you end
-  them.").
+- **The calendar** is a screen of its own: the year at a glance, each day with what it holds and the faces of the Umas
+  who have an event on it ([the calendar screen](#the-calendar-screen)).
 - **The next festival** is the first one on or after today, running on into the next year: on Spring 10 it's the Flower
   Show, today; on Spring 11 it's the Fishing Derby on Summer 10, in 11 days.
+- **New Year's** is each year's Spring 1. From the second year it's a special day: three actions for events, and her
+  New Year's scene with each Uma you've met. Year 1's is the farm's first morning, and nothing more.
 
 #### Festivals
 
-Each season's 10th day holds its festival, and Winter 12, the year's last day, also holds the Harvest Cup. Festivals are
-dates only: the calendar marks them, the morning says "Flower Show tomorrow" the day before and "Flower Show today" on
-the day, and the Festival ground on the map stays locked ("Opens soon"). No contest is played and no prize is given.
+Each season's 10th day holds its festival, and Winter 12, the year's last day, also holds the Harvest Cup. A festival
+is a special day: the calendar marks it, the morning says "Flower Show tomorrow" the day before and "Flower Show today ·
++3 for events" on the day, it gives three actions for events, and the Flower Show and the Fishing Derby's night play
+their occasion scene with each Uma you've met ([occasion scenes](#occasion-scenes)). The Festival ground on the map
+stays locked ("Opens soon"): no contest is played, no prize is given, and joining one (three actions, with its own
+events) comes with the contests.
 
 **The story's festivals.** The pack's `world.json` may rename, move or add festivals ([the world in the
 pack](#the-world-in-the-pack)); the year is then the story's everywhere: the calendar, the date chip, the morning,
@@ -121,20 +126,110 @@ festival night, and `festival` triggers and gates.
 A festival day also opens a festival night for the evening, and once the household's finale is reached, the Festival
 of Vows returns on its day each year. Both are the romance's.
 
+#### The calendar screen
+
+The bar's date opens the calendar over the whole screen; looking is free, and Close (or Back) returns to the page under
+it. The days are read live from the save as it stands and the story's year, never stored.
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│ Spring 3 · Year 1     [Spring] Summer  Autumn  Winter                   ⏱7 ♥+3    ✕ │
+│ ┌────┬────┬────┬────┬────┬────┐  ┌─────────────────────────────────────────────────┐ │
+│ │1 ✦ │2   │3   │4  •│5   │6   │  │ Spring 10 · in 7 days                           │ │
+│ │New │    │    │Mkt │    │    │  │ ♥ +3 actions for events                         │ │
+│ │Yr  │    │ ●  │ ●● │    │    │  │ 🏆 Flower Show                                  │ │
+│ ├────┼────┼────┼────┼────┼────┤  │    (what happens at it, the story's line)       │ │
+│ │7   │8  •│9   │10🏆│11  │12 •│  │ With an event, as things stand                  │ │
+│ │    │Mkt │    │Flwr│    │Mkt │  │ (face) Name · Flower Show                       │ │
+│ │    │    │    │●●+3│    │    │  │ (face) Name · Flower Show · Likely ready        │ │
+│ └────┴────┴────┴────┴────┴────┘  │ Next festival: … · Day 3 of 48                  │ │
+│                                  └─────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **On top:** the date and the year; the four seasons, this one marked, each a tap away; the day's actions left, with a
+  special day's event actions after them (♥+3); and Close.
+- **The season's 12 days** as a grid of six by two. Each day shows its number and its marks: a festival's trophy (and a
+  ring in the season's colour), New Year's spark, a holiday's ribbon, a minor day's dot. Under them its one label (the
+  festival, else New Year's, else the story's first holiday or minor day) and a special day's event actions (♥+3).
+  Along its foot, the faces of the Umas with an event that day: three, or two and "+n". Today is in the accent colour,
+  and days gone by are faded.
+- **The chosen day's panel** (today when the calendar opens): its heading ("Spring 10 · in 7 days"); a special day's
+  event actions ("+3 actions for events", today "2 of 3 actions left for events"); New Year's; its festival, with what
+  happens at it when the story says; the story's holidays and minor days, each with its line; then everyone with an
+  event that day, her face, her name and why. On a day ahead the list is "With an event, as things stand". At its foot,
+  the next festival with its countdown, and the day of the year ("Day 3 of 48. Days move only when you end them.").
+- **Today's rows play:** **Play · 1** for her occasion scene (or "No actions" with none left of either kind), and
+  **Event ›** for her Ready event. Those who've played today's occasion are listed under it ("Played today: …").
+
+**A day holds:**
+
+| Entry | When | From |
+|---|---|---|
+| New Year's | Each year's Spring 1 | The game |
+| Its festival | The game's five on their days, or the story's year | The game's, or `world.json`'s `festivals` |
+| The story's holidays and minor days | The days the story names: in one season, or in every season | `world.json`'s `days` ([the story pack's menu](story-pack.md#the-storys-days)) |
+| An occasion scene | New Year's from the second year, the Flower Show, the Fishing Derby | The story's scene, else the default story's |
+| Birthdays | Each met Uma's birthday | Her cast entry's, else master data's ([birthdays](#birthdays-and-anniversaries)) |
+| Anniversaries | Each spouse's wedding day of the year, from the second year | Her wedding's day |
+| Event actions | New Year's from the second year, a festival, each met Uma's birthday | [The day's budget](#a-day-ten-actions) |
+
+**The faces: who has an event that day.** Each met Uma once, with every reason she's there:
+
+| Reason | Today | A day ahead | A day gone by |
+|---|---|---|---|
+| **The occasion** | The day's occasion scene, until she's played it | The day's occasion scene | — |
+| **Her birthday** | Yes | Yes | Yes |
+| **Your anniversary** | Yes | Yes | Yes |
+| **Her event** | Ready now ("Ready") | Ready on that date as the save stands, the date moved and nothing played ("Likely ready"), her face faint in the day's cell | — |
+
+- **A day ahead is a best guess.** It reads the save as it stands with the date moved: a bar already full shows on
+  every day ahead until she plays it, a waiting rung (the confession, the proposal, the wedding) from the day after the
+  rung before, and a chapter's season or festival gate on its days. Points she hasn't earned yet don't show.
+- **The order:** the date's own faces first (an occasion, a birthday, an anniversary), then those only Ready; each in the
+  cast's order.
+
+#### Occasion scenes
+
+On three days of the year, each Uma you've met has a scene with you: the story's for her, else the default story's.
+
+<!-- live:occasions -->
+| Occasion | The story’s event | Its day | She wears, unless the scene names an outfit |
+|---|---|---|---|
+| New Year’s | `new-year` | New Year’s, each year’s Spring 1, from the second year | `kimono` (`new-year`) |
+| Flower Show | `flower-show` | The Flower Show’s day, wherever the story puts it | `garden-party` (`spring-festival`) |
+| Fishing Derby night | `derby-night` | The Fishing Derby’s day, wherever the story puts it: its night | `kimono` (`festival-night`) |
+<!-- /live -->
+
+- **Who:** everyone you've met, home on the farm or living in town: the festival is in town, and everyone's there.
+- **Its cost:** one action, the day's event actions first. It pays nothing: its choices are wording only, as every
+  scene past the rungs.
+- **Once a day with each:** played, her face leaves the day's list. The day is once a year, so it's once a year.
+- **It isn't her heart event:** it doesn't need her Ready, and it doesn't stop her event today.
+- **Where it plays:** the calendar's day panel, **Play · 1**; on the dialogue engine, her face line by line, in the
+  scene's own outfit when the story names one, else the occasion's ([outfits by context](#outfits-by-context)). Its end
+  or Skip spends the action.
+- **The rest of her occasions** (her birthday, the Fishing Derby's day scene, the Cooking Contest, the Animal Show and
+  the Harvest Cup) are written and read, and wait for their own moments.
+
 #### A day: ten actions
 
 - **The day holds 10 actions.** The bar's actions chip counts what's left ("7/10"), every button that spends one says so
   ("Water · 1 action", "Fish · 1"), and a side panel says "7 actions left of 10". With none left, an action is refused
   ("No actions left today.") and its buttons are greyed.
 - **One tap of work is one action:** a tile cleared, tilled, planted, watered or harvested; a forage, a chop or a catch;
-  a station's load started; a crate shipped; going into town. Looking is free, and so are building a place, the Dorm,
-  talks, gifts, her events and the evening; the shop is free once you're in town.
+  a station's load started; a crate shipped; going into town; her event, or an occasion scene with her. Looking is free,
+  and so are building a place, the Dorm, talks, gifts and the evening; the shop is free once you're in town.
 - **Going into town** takes one action and opens the town and its shop for the rest of the day.
 - **The last action** opens a card over whatever page it was spent on, once: "Out of actions · The day's work is done."
   with **End the day** and **Not yet** (to build or spend the evening first). The day never ends by itself.
-- **Special days** grant actions for events only, on top of the ten: New Year's, each festival, and the birthday of each
-  Uma you've met. The save counts them apart (`today.eventActions`), and nothing shows or spends them yet: they wait for
-  the festivals' and the town's events.
+- **Special days** grant actions for events only, on top of the ten: New Year's from the second year, each festival, and
+  the birthday of each Uma you've met. The bar shows them after the day's own (♥+3), and so does the calendar. Her
+  event and an occasion scene spend them **before the day's own**, so on a festival with the ten spent, three more of
+  the Umas' events still fit. The save counts them apart (`today.eventActions`).
+- **Her event costs one action:** the special day's event actions first, then the day's. With none left of either, her
+  Play says "No actions left today." before it plays, and she stays Ready for tomorrow. Ask her, a Memory and the
+  wedding night take none.
 - **Nothing reads the device's clock.** A load is ready the next morning and a watered tile grows at night, so reopening
   the app moves nothing.
 - **Your changes are stamped with the real time**, which syncing between devices compares; that stamp never moves the
@@ -146,7 +241,7 @@ The day's budget and the special days' event actions:
 |  | Actions |
 |---|---|
 | Every day | 10 |
-| New Year’s (each year’s Spring 1) | +3 for events |
+| New Year’s (each year’s Spring 1, from the second year) | +3 for events |
 | A festival day | +3 for events |
 | Each birthday of an Uma you’ve met | +1 for events |
 <!-- /live -->
@@ -179,8 +274,8 @@ belong to, and until then cost nothing or aren't there yet:
 | The Umas | Give a gift | 1 | With the town map |
 | The Umas | Invite her to work | 1 | With the Uma loop |
 | The Umas | A hangout or a date | 2 | With the Uma loop |
-| The Umas | Her event, when it’s ready | 1 | With the town map |
-| A festival | Join it; it opens its own events | 3 | With the calendar |
+| The Umas | Her event, when it’s ready, or an occasion scene with her | 1 | Now |
+| A festival | Join it; it opens its own events | 3 | With the festivals’ contests |
 | The household | Cook a meal for the household | 1 | With the Uma loop |
 | The household | Choose tonight’s companion, at the day’s end | Free | With the Uma loop |
 <!-- /live -->
@@ -311,7 +406,7 @@ line is a tap to its place.
 | Work done | Each station's load done, "Sawmill · Pine Plank ★1 × 8"; the field's growth, "The field · 5 crops grew · 2 ripe"; what withered, "The field · 3 Onion withered" | The station's panel; the farm map |
 | Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full** | Her profile's Work side |
 | Hearts | Who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", or in the town the world names, tagged **New**), a chapter that opened ("A new chapter with *Name* · Together", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
-| New today | First, "New story arrived · *its note*", tagged **New**, the morning after a new story release reaches the phone ([below](#how-the-app-gets-the-pack)); "Summer begins", the world's line for the season under it; "Flower Show tomorrow" or "today" (the story's name for it); the Town notes the night unlocked, "*title*" (or "*title* +2 more"), tagged **Town note**; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The People page; the calendar; the Festival ground; the note in the Diary; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
+| New today | First, "New story arrived · *its note*", tagged **New**, the morning after a new story release reaches the phone ([below](#how-the-app-gets-the-pack)); "Summer begins", the world's line for the season under it; today's, then tomorrow's: "New Year's today · +3 for events", "Flower Show tomorrow" or "today · +3 for events" (the story's name for it), and the story's holidays and minor days, "Market day tomorrow" (or "Market day +1 more"); the Town notes the night unlocked, "*title*" (or "*title* +2 more"), tagged **Town note**; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The People page; the calendar (the season, New Year's, the festival and the story's days); the note in the Diary; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
 | Today | "3 tiles to water" (the growing tiles this morning); "9 tiles to plant" (empty tilled tiles that the season's seeds you hold could fill) | The farm map |
 
 Hearts shows whenever it has a line or someone is Ready. The romance describes its lines.
@@ -490,12 +585,13 @@ app asks for landscape.
 
 A thin bar along the top of the page, always there. From the left:
 - **The date chip**, the season's mark, the day and the season ("3 Spring"; its spoken name "Calendar: Spring 3, year
-  1 …"), opens the calendar.
+  1 …"), opens [the calendar](#the-calendar-screen).
 - **The gold chip**, the gold coin and your gold ("Gold: 1,240g. The bin"), opens the shipping bin.
 - **The sync chip** shows only while offline ("Offline") or paused ("Sync paused"), and opens Account.
 
 At its right end:
-- **Actions left**, a stopwatch and "7/10" ("Actions left: 7 of 10"), greyed at 0. It opens nothing.
+- **Actions left**, a stopwatch and "7/10" ("Actions left: 7 of 10"), greyed at 0. On a special day the event actions
+  left follow in rose, a heart and "+3" ("Actions left: 0 of 10, and 3 for events"). It opens nothing.
 - **End the day:** see [End the day](#end-the-day).
 - **Menu:** every place.
 
@@ -2344,10 +2440,10 @@ The Diary tab (`/diary`) holds the world's pages, the farm's projects, the Farm 
 ### The dialogue engine
 
 One engine plays every scene: the opening, meeting her, the ring bench's scene, heart events (and Ask her, and a Memory
-replayed), the wedding night, pair conversations, and the household's scenes and the finale. The evenings and the plays
-have no lines yet; the evenings' and the calendar's own scenes (dinners, nights in, the festival nights) will play on it
-as their packets land, handing it their moment, and the default story already writes each one
-([what plays without the story](#what-plays-without-the-story)). The story's steps are the same in every scene (`say`, `narrate`, `thought`,
+replayed), the wedding night, pair conversations, the household's scenes and the finale, and the calendar's occasion
+scenes ([occasion scenes](#occasion-scenes)). The evenings and the plays have no lines yet; the evenings' own scenes
+(dinners, nights in) will play on it as their packet lands, handing it their moment, and the default story already
+writes each one ([what plays without the story](#what-plays-without-the-story)). The story's steps are the same in every scene (`say`, `narrate`, `thought`,
 `choice`, `play`, …).
 
 ```
@@ -2403,14 +2499,14 @@ shows her first in the art's order: spring.
 | 1 | A wedding (`wedding`) | `wedding` | `wedding` |
 | 2 | Its night (`wedding-night`) | `wedding-night` | `wedding-night` |
 | 3 | A dinner (`dinner`) | `dinner` | `dinner` |
-| 4 | A festival night (`festival-night`) | `kimono` | `kimono` |
+| 4 | A festival night, or New Year’s (`festival-night`, `new-year`) | `kimono` | `kimono` |
 | 5 | A picnic, a tea or the spring festival (`picnic`, `tea`, `spring-festival`) | `garden-party` | `garden-party` |
 | 6 | A night in, or a night she can’t sleep (`night-in`, `sleepless`) | `pajamas` | `pajamas-playful` |
 | 7 | Her work (`work`) | `work` | `farm-work` |
 | 8 | The summer shore (`shore`) | `swimsuit` | `swimsuit` |
 | 9 | Else | `season` | The day’s season’s |
 
-A wedding’s guests wear the moment’s other outfit (`wedding` and `wedding-night` are the scene’s own Umas’ only). The heart events’ moments: the wedding rung, a beat whose `together` is work, a picnic date, and `sea-pier` in summer. A household scene is a dinner and the finale a festival night; the other moments are the evenings’ and the calendar’s scenes’ to hand in.
+A wedding’s guests wear the moment’s other outfit (`wedding` and `wedding-night` are the scene’s own Umas’ only). The heart events’ moments: the wedding rung, a beat whose `together` is work, a picnic date, and `sea-pier` in summer. A household scene is a dinner and the finale a festival night; the calendar’s occasion scenes hand in New Year’s, the spring festival and festival night; the other moments are the evenings’ to hand in.
 <!-- /live -->
 
 **The story's outfit ids** and the art's names for them:
@@ -2608,7 +2704,7 @@ chapters along her route.
 
 The pack's `world.json` puts the world the story builds on screen; every part is optional, and anything missing keeps the
 game's own words ([the story pack's menu](story-pack.md#the-world-worldjson) has its exact shape). The domain reads it
-through the placeholders' lookups: `worldNamesOf`, `historyOf`, `festivalsOf`, `placeWordsOf`, `seasonLineOf` and
+through the placeholders' lookups: `worldNamesOf`, `historyOf`, `festivalsOf`, `storyDaysOf`, `placeWordsOf`, `seasonLineOf` and
 `townNotesOf`.
 
 | Part | In play | Without it |
@@ -2618,6 +2714,7 @@ through the placeholders' lookups: `worldNamesOf`, `historyOf`, `festivalsOf`, `
 | The region's name | The Diary's "The farm", after the town | None |
 | The farm's history | The Diary's "The farm" page | None |
 | The festivals | Renamed, moved or added: the calendar, the date chip, the morning, festival night, `festival` triggers and gates ([festivals](#festivals)) | The game's five |
+| The story's days | Its holidays and minor days, on the calendar with their lines, and the morning's "*Market day* tomorrow" and "today" ([the calendar screen](#the-calendar-screen)) | None |
 | A place's name and line | The map, its quick look, its Build card | The game's own |
 | A season's line | Under "*Spring* begins" on the season's first morning | "Spring begins" alone |
 | Town notes | The Diary's Town notes, filling as you play; the morning names the night's ([below](#town-notes)) | None |
@@ -2765,7 +2862,7 @@ Every ladder, event, perk, evening, proposal, wedding and household runs end to 
 | Her gift reactions | 3 for each taste (loved, liked, neutral, disliked) | — |
 | Her meeting | At the Gate (the welcome list’s), or in town, where you introduce yourself | Her route’s `arrival` |
 | Her events | Every rung (27), and her life’s: `wedding-night`, `moving-in`, `s2`, `s4` | Her route’s event of that id |
-| Her occasions | `birthday`, `new-year`, `flower-show`, `fishing-derby`, `cooking-contest`, `animal-show`, `harvest-cup` | Her route’s event of that id |
+| Her occasions | `birthday`, `new-year`, `flower-show`, `fishing-derby`, `derby-night`, `cooking-contest`, `animal-show`, `harvest-cup` | Her route’s event of that id |
 | The evenings’ scenes | `hangout-walk`, `hangout-fishing`, `hangout-picnic`, `hangout-market`, `hangout-cooking`, `hangout-festival`, `date-walk`, `date-fishing`, `date-picnic`, `date-market`, `date-cooking`, `date-crafting`, `date-stargazing`, `date-dance`, `date-boat`, `date-footrace`, `date-festival`, `dinner-in-town`, `a-night-in` | Her route’s event of that id |
 | The night’s companion | 3 morning greetings for each temperament | — |
 | Meals | 3 lines for breakfast and 3 for dinner | — |
@@ -2783,7 +2880,7 @@ The default scenes that name their outfit (the rest wear the moment's, by [outfi
 | `birthday` | `dinner` |
 | `new-year` | `kimono` |
 | `flower-show` | `garden-party` |
-| `fishing-derby` | `kimono` |
+| `derby-night` | `kimono` |
 | `harvest-cup` | `kimono` |
 | `hangout-picnic` | `garden-party` |
 | `hangout-festival` | `kimono` |
@@ -2799,9 +2896,12 @@ The default scenes that name their outfit (the rest wear the moment's, by [outfi
 - **The wedding night** plays right after the wedding's card, before the Married stage-up: her route's `wedding-night`,
   else the default's, in the wedding night outfit on a night backdrop, tender and fading to morning. It pays nothing
   and saves nothing; Skip ends it.
-- **What waits for its packet:** moving in, married life 2 and 4, the occasions, the evenings' scenes, the morning
-  greetings and the meal lines are written and read through the same lookup (`eventOf`, `morningGreetingsOf`,
-  `mealLinesOf`); they play when the Uma loop (F79) and the calendar (F82) give them their moment.
+- **The occasions the calendar plays:** New Year's from the second year, the Flower Show and the Fishing Derby's night
+  (`derby-night`), each on its day with everyone you've met ([occasion scenes](#occasion-scenes)).
+- **What waits for its packet:** moving in, married life 2 and 4, the other occasions (her birthday, the Fishing Derby's
+  day, the Cooking Contest, the Animal Show, the Harvest Cup), the evenings' scenes, the morning greetings and the meal
+  lines are written and read through the same lookup (`eventOf`, `morningGreetingsOf`, `mealLinesOf`); they play when the
+  Uma loop (F79) gives them their moment, or the festivals theirs.
 
 Every other part of the story, and what plays without it:
 
@@ -2816,7 +2916,7 @@ Every other part of the story, and what plays without it:
 | Her meeting scene | The default story’s: at the Gate for the welcome list, in town (you introduce yourself) for anyone else; it pays as a written one does. A written one with no choice gets the hello |
 | A heart event | The default story’s: her moment, her lines with their faces and your reply; its points and rewards pay as written |
 | The wedding night, moving in, married life 2 and 4 | The default story’s: the wedding night in its outfit, tender and fading to morning; they pay nothing |
-| Her occasions | The default story’s 7: her birthday, the five festivals and New Year’s |
+| Her occasions | The default story’s 8: her birthday, the five festivals, the Fishing Derby’s night and New Year’s |
 | Her evenings’ scenes | The default story’s 19: a hangout’s and a date’s for each kind, Dinner in town and A night in |
 | Her morning greetings and meal lines | The default story’s: 3 greetings for each temperament, and 3 lines for each meal |
 | A play’s prompt | Its game’s: “Cast the line together.” |
@@ -2842,6 +2942,7 @@ Every other part of the story, and what plays without it:
 | The town’s, the farm’s and the region’s names | “Town” on the map, “The farm” in the Diary, no region; the opening names none |
 | The farm’s history | None |
 | The festivals | The game’s 5: Flower Show, Fishing Derby, Cooking Contest, Animal Show, Harvest Cup, on each season’s 10th day and Winter 12 |
+| The story’s holidays and minor days | None: the calendar shows the festivals, New Year’s, birthdays and anniversaries |
 | A place’s name and line | The map’s own name, and its quick look’s line |
 | A season’s line | None: the morning says “Spring begins” alone |
 | Town notes | None |
@@ -3191,13 +3292,15 @@ season, 0–2) + ⌈min(day, 31) ÷ 8⌉, held to 1–4.
 | February | Winter 9 | Winter 10 | Winter 11 | Winter 12 |
 <!-- /live -->
 
-- **On her birthday** a gift pays ×3 and an evening ×1.5. The morning says so the day before and on the day. Two Umas
-  may share a birthday; a birthday on a festival day is both.
+- **On her birthday** a gift pays ×3 and an evening ×1.5, and the day gives one action for events. The morning says so
+  the day before and on the day, and the calendar shows her face on it. Two Umas may share a birthday; a birthday on a
+  festival day is both.
 - **Her anniversary** is her wedding's day of the year, from a year after the wedding on (every 48 days after it). That
   day every act pays ×2 (the evening ×1.5 instead), and that morning **she leaves a ★5 item of her line** in the
   Warehouse, on the farm or in town: a crop of the season for a farmer, a good of her foraging rank's deepest open area this season
   for a forager, a fish of her deepest open spot for a fisher, and a crop of the season for any line whose place isn't
-  built yet, so an anniversary is never empty. The morning says so the day before and on the day.
+  built yet, so an anniversary is never empty. The morning says so the day before and on the day, and the calendar shows
+  her face on it.
 
 #### Ready
 
@@ -3239,8 +3342,11 @@ A setup is never an hour, the weather, a season or a festival; her chapter's gat
   chapters](#her-chapters).
 - **Her bond setup** reads bond hearts (50, 150, 300, 500 and 750 points). **The proposal's ring** is any ring in the
   Warehouse.
-- **Ready is read live,** never stored, since it changes by the day: her Hearts row, her profile, the morning's Ready lines
-  and her pip on the map all read it as they show.
+- **Ready is read live,** never stored, since it changes by the day: her Hearts row, her profile, the morning's Ready lines,
+  her pip on the map and the calendar's faces all read it as they show. The calendar reads a day ahead the same way,
+  from the save as it stands with the date moved ([the calendar screen](#the-calendar-screen)).
+- **Ready is hers, the action is yours:** Ready never reads the day's actions, and playing her event costs one (the
+  special day's event actions first; [a day of ten actions](#a-day-ten-actions)).
 
 #### The People page
 
@@ -3671,8 +3777,10 @@ built" (her place) and nothing now.
 
 A level is its event. Once her next event is Ready it waits for you, for good: **nothing fires on its own.**
 
-- **Three ways in:** her Hearts row's **● Ready**, her profile's **Play ›**, and the morning's Ready line (its **Play**
-  tag). Each opens the event player over the page.
+- **Four ways in:** her Hearts row's **● Ready**, her profile's **Play · 1 ›**, the morning's Ready line (its **Play**
+  tag) and the calendar's **Event ›**. Each opens the event player over the page.
+- **It costs one action,** a special day's event actions first, spent as it's saved. With no action left of either
+  kind, the player says "No actions left today." before it plays.
 - **Her script or the game's card.** Her route's event for the rung loads on demand; a rung the pack doesn't script
   plays the game's short card (her moment, her line, your reply), which pays as a written event does. A play with no
   prompt shows its game's ("Cast the line together.").
@@ -4613,6 +4721,9 @@ sits outside the opening screens, so it shows even when the app stopped while op
   arrived" line is only on a morning after a new release, her chapter is read from her route, and the save takes
   festival night on any day (once at most) and a festival's news by any festival's id, since the story says which days
   hold one.
+- **v5 grows in place with the calendar:** `today.occasions` (who played today's occasion scene) is written only once
+  one plays, and a save without it has played none; the morning's New Year's and story days' lines are two more kinds of
+  news. Nothing migrates, and `updatedAt` never moves for it.
 - **Nothing goes silently:** a phone save with unsynced play is kept first as a "Before the new farm" safety copy (if it
   can't be kept, nothing changes and the card says so, with the button to try again). The new farm syncs up as it is,
   and the first time the server stores a v5 over the older save it copies the older one, whole, to a backup

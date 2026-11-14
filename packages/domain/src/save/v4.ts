@@ -324,6 +324,9 @@ export interface TodayV4 {
   praised: CharacterId[]
   /** Whose event played today (one a day each). */
   events: CharacterId[]
+  /** Who played today's occasion scene with you (New Year's, the Flower Show, the Fishing Derby's night), once a day
+   * each. Absent until one plays: the save grows it in place. */
+  occasions?: CharacterId[]
   /** Whom you asked again after her confession's "Not yet" today: Ask her once a day, never her event. */
   asked: CharacterId[]
   /** Evenings spent today: one a slot, in the order played. */
