@@ -183,14 +183,15 @@ export const STAGE_WORDS: Readonly<Record<StageUp, { title: string; line: string
   married: { title: 'Married', line: 'Your wedding is done. Her bar turns gold.' },
 }
 
-/** The line under the Married screen: "Married 1/20 · next household scene at 5"; on a milestone's own wedding,
- * what opens tomorrow: "Married 5/20 · household scene 1 tomorrow", "Married 20/20 · the Great Harvest tomorrow". */
-export function marriedWords(married: number, cast: number): string {
+/** The line under the Married screen, N everyone you've met: "Married 1/20 · next household scene at 5"; on a
+ * milestone's own wedding, what opens tomorrow: "Married 5/20 · household scene 1 tomorrow", "Married 20/20 · the Great
+ * Harvest tomorrow". */
+export function marriedWords(married: number, met: number): string {
   const scene = [5, 10, 15].indexOf(married)
-  if (scene >= 0) return `Married ${married}/${cast} · household scene ${scene + 1} tomorrow`
-  if (married === 20) return `Married ${married}/${cast} · the Great Harvest tomorrow`
+  if (scene >= 0) return `Married ${married}/${met} · household scene ${scene + 1} tomorrow`
+  if (married === 20) return `Married ${married}/${met} · the Great Harvest tomorrow`
   const next = nextHousehold(married)
-  return `Married ${married}/${cast}${next === null ? '' : next >= 20 ? ` · the finale at ${next}` : ` · next household scene at ${next}`}`
+  return `Married ${married}/${met}${next === null ? '' : next >= 20 ? ` · the finale at ${next}` : ` · next household scene at ${next}`}`
 }
 
 // --- The wedding --------------------------------------------------------------------------------------

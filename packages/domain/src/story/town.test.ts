@@ -4,12 +4,12 @@
 // stand-ins 9000001–9000003, invented characters 9300001 on and invented sisters `s93000xxxx`.
 import { describe, expect, it } from 'vitest'
 import { closestFriend, seedTies } from '../farm/bonds'
-import { arrive } from '../romance/arrivals'
+import { meet } from '../romance/meeting'
 import { parseSaveV4 } from '../save/parse-v4'
 import { newSave, pairKey, type SaveV4 } from '../save/v4'
 import { checkCast, checkTies, checkTown, SPOT_IDS, STORY_ID } from './authored'
 import { readStoryPack } from './pack'
-import { firstHelperOf, outfitOf, sisterNameOf, storyOf, welcomeOf, writtenOf } from './placeholders'
+import { firstVisitorOf, outfitOf, sisterNameOf, storyOf, welcomeOf, writtenOf } from './placeholders'
 
 const AT = '2026-11-13T10:00:00.000Z'
 const SISTER = 's930000102'
@@ -73,7 +73,7 @@ describe('the cast\'s spots and sisters', () => {
     expect(read.notes).toEqual(expect.arrayContaining([
       'Uma 2 (9300002): her name is master data’s; a name is read for a sister only',
       `Uma 3 (${SISTER}): a sister plays her own outfit, 930000102; outfitId is ignored`,
-      `Uma 3 (${SISTER}): a sister lives in town; she can’t come to the farm yet, so her arrival is dropped`,
+      `Uma 3 (${SISTER}): arrives is retired: her meet says how you meet her, so it’s dropped`,
       'Uma 4 (s930000301): a sister with no name shows as her elder’s sister',
     ]))
     expect(read.value.umas.map((u) => [u.characterId, u.spot, u.name])).toEqual([
@@ -85,14 +85,15 @@ describe('the cast\'s spots and sisters', () => {
     expect(STORY_ID.test('s0123')).toBe(false)
   })
 
-  it('plays a sister\'s own outfit and her name, never as day 1\'s helper', () => {
+  it('plays a sister\'s own outfit and her name; the default welcome list leaves her out, a pack\'s may name her', () => {
     const pack = storyOf(readStoryPack({ umas: {}, routes: {}, cast: { umas: [{ characterId: SISTER, name: 'Invented Sister' }, { characterId: 's930000301' }, { characterId: '9300001' }] } }).pack, null)
     expect(outfitOf(pack, SISTER)).toBe('930000102')
     expect(sisterNameOf(pack, SISTER, 'Her Elder')).toBe('Invented Sister')
     expect(sisterNameOf(pack, 's930000301', 'Her Elder')).toBe('Her Elder’s sister')
     expect(sisterNameOf(pack, 's930000301', null)).toBeNull()
     expect(welcomeOf(pack)).toEqual(['9300001'])
-    expect(firstHelperOf({ cast: { ...pack.cast, welcome: [SISTER, '9300001'] } })).toBe('9300001')
+    expect(firstVisitorOf(pack)).toBe('9300001')
+    expect(firstVisitorOf({ cast: { ...pack.cast, welcome: [SISTER, '9300001'] } })).toBe(SISTER)
     expect(writtenOf(pack, SISTER).find((p) => p.part === 'Her name')).toEqual({ part: 'Her name', written: true, plays: 'Invented Sister' })
     expect(writtenOf(pack, '9300001').some((p) => p.part === 'Her name')).toBe(false)
   })
@@ -138,7 +139,7 @@ describe('a tie with one of the town\'s people', () => {
   it('is never her closest friend, and seeds no bond', () => {
     const pack = readStoryPack(files).pack
     let save: SaveV4 = { ...newSave('u1', AT), calendar: { day: 3 }, farmer: { name: 'Robin' } }
-    for (const id of ['9000001', '9000002']) save = arrive(save, id, pack).save
+    for (const id of ['9000001', '9000002']) save = meet(save, id, pack).save
     expect(closestFriend(pack, save, '9000001')).toBe('9000002')
     expect(seedTies(save, pack, '9000001').bonds).toEqual(save.bonds)
     expect(Object.keys(save.bonds)).toEqual([])

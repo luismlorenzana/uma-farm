@@ -19,7 +19,7 @@ import { BENCH_SCENE_LINES } from '../story/bench'
 import { storyPackFrom } from '../story/pack'
 import { BENCH_SCENE, readScene, sceneDue } from '../story/scenes'
 import { STAND_IN_FILES } from '../story/stand-in'
-import { joinCast } from './arrivals.fixture'
+import { joinCast } from './meeting.fixture'
 import {
   BENCH_WORDS, benchDue, benchGrades, benchOpen, benchPick, benchStock, betterRings, forgeRecipe, giveRing, heldRings, makeRing, MAKE_BONUS, ringPercent,
   type BenchInput,

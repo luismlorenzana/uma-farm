@@ -73,7 +73,8 @@ export * from './town/town'
 
 // The romance: save v4 (the new farm over an older save, the keys, the romance's slots) and its strict parse, the
 // farmer's name, the story pack at runtime with the invented stand-in, the one `outfitOf` resolver, her favourite line
-// and tastes, the chats' fallback lines, authored arrivals at night step 8 and day 1's helper, her arrival scene's pay. The
+// and tastes, the chats' fallback lines, meeting her (her trigger, the welcome list at the Gate, the night's meetings,
+// the invite to the farm), her meeting scene's pay. The
 // story's format and validator export by name: their `SEASONS` and `FESTIVALS` are the story's words, not the
 // calendar's.
 export * from './save/v4'
@@ -81,7 +82,7 @@ export * from './save/parse-v4'
 export * from './romance/farmer'
 export * from './romance/chats'
 export * from './romance/love'
-export * from './romance/arrivals'
+export * from './romance/meeting'
 // The ladders and points: costs, bars and `advance`; chats, gifts by her tastes, praise, her
 // line and festivals together; birthdays, anniversaries and an item of her line; when her next event is Ready; bond
 // hearts for Ready's bond setup.
@@ -137,7 +138,7 @@ export {
   stepFindings, STORY_PLACES, tagNotes, TONES, TRIGGER_KINDS, unscriptedBeats, WISHES,
 } from './story/authored'
 export type {
-  Answer, Arrival, Beat as RouteBeat, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, DateGame, Emote, Finale, Findings, Gifts, HerChapter, Household, HouseholdAt,
+  Answer, Beat as RouteBeat, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, DateGame, Emote, Finale, Findings, Gifts, HerChapter, Household, HouseholdAt,
   HouseholdScene, Keepsake, Ladder, Opening, OptionGives, PairConversations, Play, Read, Route, SpotId, Step, StoryContext, StoryPlace, StoryTrigger, Tie, TieKind, Ties, Together, Tone, Town,
   TownPerson, TownSpot, Trigger, UmaBible,
   Unlock, WeddingPlan, Wish,

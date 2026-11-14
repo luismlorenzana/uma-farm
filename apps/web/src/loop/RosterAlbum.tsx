@@ -1,4 +1,4 @@
-// The roster's album, the Hearts tab's Work view: everyone on the roster, home or away, as album cards on uma-kit's album
+// The roster's album, the Hearts tab's Work view: everyone you've met, on the farm or in town, as album cards on uma-kit's album
 // chrome. Each card has her favourite line's mark and her best talent on her face, the page's corner mark (her level
 // words), and her best rank (or her rank and talent in the activity sorted by); away, it
 // says so. The filters are where she is, her talent and rank in each activity and her favourite line; the sorts her talent
@@ -42,7 +42,7 @@ export function RosterAlbum({ save, rows: base, corner }: { save: FarmSave; rows
   const sortLabel = activity ? `${ACTIVITY_NAMES[activity]} ${query.sort === 'points' ? 'rank points' : 'talent'}` : query.sort === 'name' ? 'name' : 'joined'
   return (
     <>
-      <p className="pb-2 text-[13px] text-ink-soft">{view.home.length} on the farm{view.away > 0 ? ` · ${view.away} away` : ''} · by {sortLabel}</p>
+      <p className="pb-2 text-[13px] text-ink-soft">{view.home.length} on the farm{view.away > 0 ? ` · ${view.away} in town` : ''} · by {sortLabel}</p>
       <AlbumChrome
         compact
         title="Roster"
@@ -63,13 +63,13 @@ export function RosterAlbum({ save, rows: base, corner }: { save: FarmSave; rows
             return (
               <li key={row.id}>
                 <button type="button" onClick={() => navigate(withParam(location, 'uma', row.id), { state: { back: true } })} data-away={row.home ? undefined : true}
-                  className="flex w-full min-w-0 flex-col items-center gap-0.5 text-center" data-uma={row.id} aria-label={`${row.name}, ${first}${row.home ? '' : ', away'}`}>
+                  className="flex w-full min-w-0 flex-col items-center gap-0.5 text-center" data-uma={row.id} aria-label={`${row.name}, ${first}${row.home ? '' : ', in town'}`}>
                   <FaceTile outfitId={row.id} size={72} badges={{ ...umaBadges(row), ...corner?.(row) }} label={row.name} className={row.home ? '' : 'opacity-60'} />
                   <span className="w-full truncate text-[13px] font-semibold text-ink">{row.name}</span>
                   <span className="w-full truncate text-[12px] text-ink-soft" data-card-rank>{first}</span>
                   {row.home
                     ? second && <span className="w-full truncate text-[11px] text-ink-faint" data-card-note>{second}</span>
-                    : <span className="w-full truncate text-[11px] font-semibold text-ink-soft" data-card-away>Away</span>}
+                    : <span className="w-full truncate text-[11px] font-semibold text-ink-soft" data-card-away>In town</span>}
                 </button>
               </li>
             )
@@ -86,7 +86,7 @@ export function WorkFacts({ row }: { row: LoopUmaRow }) {
     <div className="min-w-0 text-[13px] text-ink-soft">
       {row.favourite && <p data-favourite-line={row.favourite}>Favourite · {ACTIVITY_NAMES[row.favourite]} (×1.2 rank points)</p>}
       <p>Joined {shortDate(row.joined)}</p>
-      <p data-where={row.home ? 'home' : 'away'}>{row.home ? 'On the farm' : <>Away · <Link to="/dorm" className="font-semibold text-accent-strong underline">swap at the Dorm</Link></>}</p>
+      <p data-where={row.home ? 'home' : 'away'}>{row.home ? 'On the farm' : <>In town · <Link to="/dorm" className="font-semibold text-accent-strong underline">the Dorm</Link></>}</p>
     </div>
   )
 }

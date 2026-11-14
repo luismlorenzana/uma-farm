@@ -3,7 +3,7 @@
 // §4 is Hearts, in its own order: the Ready lines read live, up to
 // three and "+N more"; the invitation with Yes, tonight and Another day; the house's morning; birthdays and
 // anniversaries, today and tomorrow
-//; levels reached overnight and arrivals' scenes waiting; side by side's extras and bond hearts with
+//; levels reached overnight and those the night met ("Met ‹name› · in town"); side by side's extras and bond hearts with
 // Read. A Ready line plays her event over the morning (`?event=`); the rest open her profile on the
 // Hearts tab (`/hearts?uma=`), a pair's Read its conversations (`?read=`), side
 // by side the Warehouse; the Dorm's beds are the Dorm for 20's. It also has the house's morning (with its house line,
@@ -96,7 +96,7 @@ export const umaSheet = (id: string, view?: 'work'): string => `/hearts?${view ?
 /** The morning's Ready lines: up to three, then "+N more". */
 export const READY_LINES = 3
 /** The order of §4 Hearts, by line kind: (1) Ready, (2) the invitation, (3) the house's morning with the
- * morning items and night chores, (4) birthdays and anniversaries, (5) levels reached overnight and arrivals,
+ * morning items and night chores, (4) birthdays and anniversaries, (5) levels reached overnight and those met,
  * (6) the perks' extras, side by side and bond hearts. A new stored kind takes its place here and its words in
  * `heartLine`; within a place the night's order holds. */
 export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = {
@@ -173,7 +173,7 @@ function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, hom
       key: `anniversary:${line.id}`, to,
       text: line.when === 'today' ? `♥ ${name}’s anniversary${line.item ? ` · ★5 ${goodName(line.item)} left for you` : ''}` : `♥ Tomorrow: ${name}’s anniversary`,
     }
-    case 'arrived': return { key: `arrived:${line.id}`, to, text: `${name} arrived${line.home ? '' : ' · away'}`, tag: 'New' }
+    case 'arrived': return { key: `arrived:${line.id}`, to, text: `Met ${name}${line.home ? ' · moved in' : ' · in town'}`, tag: 'New' }
     case 'item': return { key: `item:${line.id}`, to, text: `♥ ${name} left you ${starredGoods(line.items)}` }
     case 'moved': return { key: `moved:${line.id}`, to, text: `⌂ ${name} moved into ${home.houseName(line.house)}` }
     case 'level': return { key: `level:${line.id}`, to: `/?level=${line.id}:${line.rung}`, text: `♥ ${name} · ${rungName(line.rung)}, reached overnight`, tag: 'New' }

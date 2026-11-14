@@ -202,7 +202,7 @@ function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLo
   const weddingAt = wedding ? (mode === 'event' ? chosenPlace : weddingPlaceOf(save.love[id]?.flags ?? [])) : null
   const place = weddingAt ?? shown.slice(0, cursor + 1).reduce<string | null>((p, s) => ('place' in s ? s.place : p), beat?.place ?? null)
   const where = place ? ` · ${placeWords(place)}` : ''
-  const title = mode === 'replay' ? `Memory · ${rung === 'arrival' ? 'Her arrival' : rungName(rung)}${where}` : mode === 'ask' ? `Ask her${where}` : eventTitle(place, rung)
+  const title = mode === 'replay' ? `Memory · ${rung === 'arrival' ? 'Meeting her' : rungName(rung)}${where}` : mode === 'ask' ? `Ask her${where}` : eventTitle(place, rung)
 
   // The end: an event is saved once; Ask her's answer once; a replay saves nothing.
   const finishing = useRef(false)
@@ -260,7 +260,7 @@ function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLo
         {phase === 'card' && (error || !card || !love
           ? <EndNote text={error ?? 'That didn’t save. Try again.'} onDone={onClose} />
           : <LevelUpCard card={card} id={id} name={name} love={love} pack={pack} farmer={save.farmer.name} onContinue={() => (card.stage ? setPhase('stage') : onClose())} />)}
-        {phase === 'stage' && love && <StageUpScreen stage={card?.stage ?? 'romance'} id={id} love={love} pack={pack} married={card?.stage === 'married' ? marriedOf(save, pack) : null} save={save} onContinue={onClose} />}
+        {phase === 'stage' && love && <StageUpScreen stage={card?.stage ?? 'romance'} id={id} love={love} pack={pack} married={card?.stage === 'married' ? marriedOf(save) : null} save={save} onContinue={onClose} />}
         {phase === 'asked' && <EndNote text={error ?? (answer === 'not-yet' ? `${name} smiles. “Whenever you’re ready.” Ask again tomorrow.` : '')} onDone={onClose} />}
         {phase === 'replayed' && <EndNote text="A Memory, replayed. Replays give no points." onDone={onClose} />}
         {log && <LogSheet lines={lines} onClose={() => onLog(false)} />}

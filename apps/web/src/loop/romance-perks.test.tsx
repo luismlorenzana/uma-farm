@@ -4,7 +4,7 @@
 // stand-in pack (9000001–9000003) and a 9000004 built here; master data and the server are stubs.
 import 'fake-indexeddb/auto'
 import {
-  arrive, newSave, pairKey, readScene, STAND_IN_FILES, storyPackFrom, type Cast, type HarvestReceipt, type Love, type SaveV4, type StoryPack, type Ties,
+  meet, newSave, pairKey, readScene, STAND_IN_FILES, storyPackFrom, type Cast, type HarvestReceipt, type Love, type SaveV4, type StoryPack, type Ties,
 } from '@farm/domain'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -34,7 +34,7 @@ const { receiptWords } = await import('./FieldsPage')
 
 /** The stand-in's three home, ties seeded, as the old opening brought them: the opening now brings only day 1's helper. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
-  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : arrive(s, id, pack).save), save)
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : meet(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const [ONE, TWO, THREE, FOUR] = ['9000001', '9000002', '9000003', '9000004']
 const NAMES: Record<string, string> = { [ONE]: 'Stand-in 1', [TWO]: 'Stand-in 2', [THREE]: 'Stand-in 3', [FOUR]: 'Stand-in 4' }
@@ -117,7 +117,7 @@ describe('her profile\'s perks', () => {
 
   it('leaves a miner\'s line perks "Opens when the Mine is built", with nothing now', () => {
     const cast: Cast = { ...json(STAND_IN_FILES.cast as Cast) }
-    cast.umas = [...cast.umas, { characterId: FOUR, outfitId: '900000401', arrives: { kind: 'beds', dormLevel: 4 }, calling: 'mining', paragraph: 'Invented.' }]
+    cast.umas = [...cast.umas, { characterId: FOUR, outfitId: '900000401', calling: 'mining', paragraph: 'Invented.' }]
     const ties: Ties = { version: 1, ties: [...json(STAND_IN_FILES.ties as Ties).ties, { a: TWO, b: FOUR, kind: 'friends', strength: 1, line: 'They met here.', history: 'Invented.' }, { a: THREE, b: FOUR, kind: 'other', strength: 1, line: 'Neighbours.', history: 'Invented.' }] }
     const pack = storyPackFrom({ ...STAND_IN_FILES, cast, ties })
     const base = farm({}, pack)
@@ -140,7 +140,7 @@ describe('the morning and the screens\' words', () => {
       ['✉ Stand-in 1: “Walk at dusk tonight?”', `/hearts?uma=${ONE}`],
       ['♥ Stand-in 2 left you ★3 Shiitake', `/hearts?uma=${TWO}`],
       ['Night chores · 3 items · +0.25 growth', '/warehouse'],
-      ['Stand-in 3 arrived', `/hearts?uma=${THREE}`],
+      ['Met Stand-in 3 · moved in', `/hearts?uma=${THREE}`],
       ['Perks · +2 items', '/warehouse'],
       ['Side by side · +1 item', '/warehouse'],
     ])

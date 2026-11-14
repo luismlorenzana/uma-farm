@@ -40,43 +40,38 @@ describe('the cast', () => {
     expect(checkCast({ umas: [] })).toMatchObject(clean)
     expect(checkCast(undefined)).toMatchObject({ value: { umas: [] }, errors: [], notes: ['No cast: the pack holds no characters'] })
   })
-  it('notes an opening list or an opening arrival, which the start no longer has, and drops them', () => {
+  it('notes an opening list or an arrival of any kind, which meeting her replaced, and drops them', () => {
     const cast = clone(STAND_IN_CAST) as unknown as { opening?: string[]; umas: Record<string, unknown>[] }
     cast.opening = ['9000002', '9000001']
     cast.umas[1]!.arrives = { kind: 'opening' }
+    cast.umas[2]!.arrives = { kind: 'festival', festival: 'moon-dance' }
     const read = checkCast(cast)
     expect(read.errors).toEqual([])
     expect(read.notes).toEqual([
-      'Uma 2 (9000002): the opening brings nobody now (the welcome list’s first joins as it ends), so an opening arrival is dropped',
-      'opening: the opening brings nobody now (the welcome list’s first joins as it ends), so the list is dropped',
+      'Uma 2 (9000002): arrives is retired: her meet says how you meet her, so it’s dropped',
+      'Uma 3 (9000003): arrives is retired: her meet says how you meet her, so it’s dropped',
+      'opening: the opening brings nobody: the welcome list visits the Gate, one a morning, so the list is dropped',
     ])
     expect(read.value).not.toHaveProperty('opening')
     expect(read.value.umas[1]).not.toHaveProperty('arrives')
-  })
-  it('notes a chapter arrival, which the farm no longer has, and drops it', () => {
-    const cast = clone(STAND_IN_CAST) as unknown as { umas: Record<string, unknown>[] }
-    cast.umas[2]!.arrives = { kind: 'chapter', chapter: 1 }
-    const read = checkCast(cast)
-    expect(read.errors).toEqual([])
-    expect(read.notes).toContain('Uma 3 (9000003): the farm has no chapters, so a chapter arrival never comes; she waits to be met')
     expect(read.value.umas[2]).not.toHaveProperty('arrives')
   })
   it('skips only the character it can\'t read; a broken field skips that field', () => {
     const cast = clone(STAND_IN_CAST) as unknown as { umas: Record<string, unknown>[] }
     cast.umas.push({ characterId: 'Nine' }, { characterId: '9000001', calling: 'farming' })
     cast.umas[1]!.calling = 'juggling'
-    cast.umas[2]!.arrives = { kind: 'festival', festival: 'moon-dance' }
+    cast.umas[2]!.spot = 'moon'
     const read = checkCast(cast)
     expect(read.errors).toEqual([
       'Uma 2 (9000002): calling is one of farming, foraging, fishing, mining, quarry; skipped',
-      'Uma 3 (9000003): arrives is a festival (and a year), the Dorm’s beds, or after an event; skipped',
+      'Uma 3 (9000003): spot is one of the town’s spots: plaza, market, cafe, harbour, library, track; skipped',
       'Uma 4: no characterId (master data’s id, a positive integer, or a sister’s s<outfitId>); skipped',
       'Uma 5 (9000001): listed twice; the later one is skipped',
     ])
     expect(read.value.umas.map((u) => u.characterId)).toEqual([...STAND_INS])
     expect(read.value.umas[1]).not.toHaveProperty('calling')
     expect(read.value.umas[1]!.outfitId).toBe('900000201')
-    expect(read.value.umas[2]).not.toHaveProperty('arrives')
+    expect(read.value.umas[2]).not.toHaveProperty('spot')
   })
   it('keeps the fields the game doesn\'t read, for the story', () => {
     const cast = { ...clone(STAND_IN_CAST), mood: 'sunny', umas: [{ characterId: '9000001', voice: 'low', paragraph: 'Hers.' }] }

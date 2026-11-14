@@ -1,6 +1,6 @@
 // Heart events: `playEvent` at every stage,
-// the choices' gains and costs, flags and `when`, the confession's Yes and Not yet, Ask her, an event arrival after the
-// event it names, and Memories' replays. Invented ids only: the stand-ins 9000001–9000003 and 9000004 built here.
+// the choices' gains and costs, flags and `when`, the confession's Yes and Not yet, Ask her, meeting someone after the
+// event her trigger names, and Memories' replays. Invented ids only: the stand-ins 9000001–9000003 and 9000004 built here.
 import { describe, expect, it } from 'vitest'
 import { DAYS_PER_YEAR } from '../farm/calendar'
 import { setTender, plant } from '../fields/fields'
@@ -15,8 +15,8 @@ import { storyPackFrom, type StoryPack } from '../story/pack'
 import { STAND_IN_FILES } from '../story/stand-in'
 import { startLoopJob } from '../save/loop-work'
 import { TEST_KINDS } from '../night/kinds.fixture'
-import { arrivalsTonight } from './arrivals'
-import { joinCast } from './arrivals.fixture'
+import { meetTonight } from './meeting'
+import { joinCast } from './meeting.fixture'
 import {
   askHer, askSteps, canAsk, choicePointsOf, EVENT_POINTS, extraPlay, optionViews, pathPlays, playEvent, replaySteps, takeLowest, type EventOutcome, type PlayScore,
 } from './events'
@@ -233,14 +233,14 @@ describe('the confession', () => {
     expect(askSteps([{ narrate: 'No answer.' }])).toEqual([])
   })
 
-  it('an event arrival comes the night after the event it names', () => {
-    const cast: Cast = json(PACK.cast)
-    cast.umas.push({ characterId: '9000004', outfitId: '900000401', arrives: { kind: 'event', after: `${ONE}:f1` }, calling: 'fishing', paragraph: 'Invented.' })
+  it('an event trigger meets her the night after the event it names', () => {
+    const cast: Cast = { ...json(PACK.cast), welcome: ['9000001', '9000002', '9000003'] }
+    cast.umas.push({ characterId: '9000004', outfitId: '900000401', meet: { kind: 'event', after: `${ONE}:f1` }, calling: 'fishing', paragraph: 'Invented.' })
     const pack: StoryPack = { ...PACK, cast }
     const save = readyFor(farm(), 'friendship', 0, 'f1')
-    expect(arrivalsTonight(save, pack).arrived).toEqual([])
+    expect(meetTonight(save, pack).met).toEqual([])
     const played = playEvent(save, pack, ONE, outcome('f1', [0], [{ kind: 'pick', score: 100 }])).save
-    expect(arrivalsTonight(played, pack).arrived).toEqual([{ id: '9000004', home: false }])
+    expect(meetTonight(played, pack).met).toEqual([{ id: '9000004', home: false }])
   })
 })
 

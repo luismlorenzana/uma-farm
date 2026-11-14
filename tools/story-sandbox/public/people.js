@@ -40,12 +40,9 @@ const calling = (c) => (c ? h('span', { class: 'chip dot', vars: { '--c': CALLIN
 const kindOf = (t) => t.kind ?? 'other'
 const strengthOf = (t) => t.strength ?? 1
 const FESTIVAL = { 'flower-show': 'the Flower Show', 'fishing-derby': 'the Fishing Derby', 'cooking-contest': 'the Cooking Contest', 'animal-show': 'the Animal Show', 'harvest-cup': 'the Harvest Cup' }
+/** An old `arrives` on a cast entry: retired, so the chip says her `meet` decides now. */
 export function arrivalWords(a) {
-  if (!a) return ''
-  if (a.kind === 'chapter') return `Chapter ${a.chapter}’s recruit`
-  if (a.kind === 'festival') return `At ${FESTIVAL[a.festival] ?? a.festival}${a.year ? `, year ${a.year}` : ''}`
-  if (a.kind === 'beds') return `When the Dorm reaches level ${a.dormLevel}`
-  return `After ${a.after}`
+  return a ? 'arrives: retired, her meet decides' : ''
 }
 const issuesList = (issues) => (issues?.length ? h('ul', { class: 'issues' }, issues.map((i) => h('li', { text: i }))) : null)
 const noStory = () => h('div', { class: 'note-box' }, h('b', { text: 'No story yet. ' }), 'The private story files go in content/story/: any of world.md, cast.json, ties.json, umas/, routes/, pairs/, household.json, opening.json and town.json. Every part is optional (docs/story-pack.md).')
@@ -220,6 +217,25 @@ function placeholderPanel(id) {
       h('td', { class: 'small', text: p.plays }))))))
 }
 
+/** The welcome list as the game reads it: the cast's `welcome`, else the cast's first five (sisters aside). */
+function welcomeList() {
+  const cast = D.story?.cast?.data ?? {}
+  const named = Array.isArray(cast.welcome) ? cast.welcome : []
+  if (named.length > 0) return named
+  const size = D.data.game.authored?.defaults?.welcome ?? 5
+  return (cast.umas ?? []).map((u) => u.characterId).filter((id) => !String(id).startsWith('s')).slice(0, size)
+}
+/** 1st, 2nd, 3rd, 4th… */
+const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`
+
+/** Her trigger in words: the welcome list meets on her first talk, at the Gate on her morning; anyone else, the pack's
+ * trigger, else the game's default (marked). */
+function triggerWords(entry, meet) {
+  const at = welcomeList().indexOf(entry.characterId)
+  if (at >= 0) return `Her first talk: the welcome list’s ${ordinal(at + 1)}, at the Gate on morning ${at + 1}${entry.meet ? ` (her meet, ${meetWords(entry.meet).toLowerCase()}, isn’t needed)` : ''}`
+  return `${meetWords(meet)}${entry.meet ? '' : ' (the default)'}`
+}
+
 /** Her trigger to meet and her chapters: the pack's, else the game's defaults (marked). */
 function menuPanel(entry) {
   const defaults = D.data.game.authored?.defaults ?? {}
@@ -227,10 +243,10 @@ function menuPanel(entry) {
   const chapters = entry.chapters?.length ? entry.chapters : defaults.chapters ?? []
   return h('div', { class: 'panel' }, h('h3', { text: 'Meeting her and her chapters' }),
     h('dl', { class: 'kv' },
-      h('dt', { text: 'Her trigger to meet' }), h('dd', { text: `${meetWords(meet)}${entry.meet ? '' : ' (the default)'}` }),
+      h('dt', { text: 'Her trigger to meet' }), h('dd', { text: triggerWords(entry, meet) }),
       h('dt', { text: 'Her chapters' }), h('dd', { text: entry.chapters?.length ? `${entry.chapters.length}, the story’s` : `${chapters.length}, the defaults` })),
     h('ol', { class: 'list small' }, chapters.map((c, i) => h('li', {}, h('b', { text: c.title ?? `Chapter ${i + 1}` }), ` · ${(c.events ?? []).join(', ') || 'no events'}`, c.gate ? h('span', { class: 'muted', text: ` · waits for: ${meetWords(c.gate)}` }) : null))),
-    h('p', { class: 'muted small', text: 'Read today; meeting her in town and her chapters’ screens act on them.' }))
+    h('p', { class: 'muted small', text: 'Her trigger acts in the game today; her chapters’ screens come next.' }))
 }
 
 /** Her 27 rungs as a ladder you can see: her arrival scene, friendship 1–10, the confession, romance 1–10,

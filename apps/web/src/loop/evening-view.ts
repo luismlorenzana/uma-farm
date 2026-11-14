@@ -130,7 +130,7 @@ export function eveningButton(save: SaveV4, id: string): { open: boolean; text: 
   if (kindsNow(save, id).length > 0) return { open: true, text: 'Evening ›' }
   if (save.today.evenings.some((e) => e.with === id)) return { open: false, text: 'Evening ✓' }
   if (eveningRole(love) === null) return { open: false, text: `Evening · F${HANGOUT_FROM}` }
-  if (!homeTonight(save, id)) return { open: false, text: 'Away tonight' }
+  if (!homeTonight(save, id)) return { open: false, text: 'In town' }
   return { open: false, text: 'Evening spent' }
 }
 

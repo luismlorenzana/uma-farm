@@ -82,7 +82,7 @@ export function StageUpScreen({ stage, id, love, pack, married = null, save = nu
   love: Love
   pack: Pick<StoryPack, 'cast' | 'bibles'>
   /** Married's count and the cast's size, for its line. */
-  married?: { married: number; cast: number } | null
+  married?: { married: number; met: number } | null
   /** The save now: Married's room step reads the homestead. */
   save?: SaveV4 | null
   onContinue: () => void
@@ -108,7 +108,7 @@ export function StageUpScreen({ stage, id, love, pack, married = null, save = nu
       </section>
       {stage === 'romance' && love.points > 0 && <p className="text-center text-[14px] tabular-nums" style={{ color: colour }}>+{love.points.toLocaleString('en-US')} banked toward Romance 1</p>}
       {stage === 'married' && love.points > 0 && <p className="text-center text-[14px] tabular-nums" style={{ color: colour }}>+{love.points.toLocaleString('en-US')} toward Spouse 1</p>}
-      {stage === 'married' && married && <p className="text-center font-display text-[16px] font-bold" data-married-line={married.married}>{marriedWords(married.married, married.cast)}</p>}
+      {stage === 'married' && married && <p className="text-center font-display text-[16px] font-bold" data-married-line={married.married}>{marriedWords(married.married, married.met)}</p>}
       {stage === 'married' && save && <RoomStep save={save} id={id} />}
       <Button className="w-full" onClick={onContinue} data-action="continue">Continue</Button>
     </div>

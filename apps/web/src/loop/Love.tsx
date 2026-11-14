@@ -2,7 +2,7 @@
 // line for the day), Gift (the picker with each good's points for her today, or "?") and Praise +20 while earned, 48 pt in
 // the profile's thumb zone. What an act paid goes up to the profile (`onPaid`), which floats it from her face; a note
 // says it ("She likes it. +36"). **Evening ›** is there too (her evening at `?evening=<id>`, or why not:
-// "Evening ✓", "Evening · F2", "Away tonight", "Evening spent"), so Chat, Gift and Evening sit side by side and
+// "Evening ✓", "Evening · F2", "In town", "Evening spent"), so Chat, Gift and Evening sit side by side and
 // Praise +20 takes the row under them. Loaded on demand with the Hearts tab.
 import {
   birthdaysOf, canPraise, chatLineV4, DISLIKED_LINE, FAMILY_NAMES, GOOD_FAMILIES, giftPreview, goodName, goodOf, LOVE_POINTS, type SaveV4, type StoryPack,
@@ -87,7 +87,7 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
 
 /** The gift picker: every good in the Warehouse at each star held, by family, seeds left out, each with its points
  * for her today at those stars, or "?" where her taste for it isn't known yet. A tap gives one. */
-function GiftPicker({ save, id, name, points, onGive, onClose }: {
+export function GiftPicker({ save, id, name, points, onGive, onClose }: {
   save: SaveV4
   id: string
   name: string

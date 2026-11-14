@@ -26,7 +26,7 @@ import { isGoodId } from '../goods/ids'
 import type { Taste } from '../romance/chats'
 import { pairKey } from '../save/v4'
 import {
-  ARRIVAL, FAVOURITE_LINES, HOUSEHOLD_SCENES, isSister, RUNGS, sisterOutfit, SPOT_IDS, type Arrival, type Beat, type Calling, type Cast, type ChoiceOption, type DateGame, type Finale, type Gifts,
+  ARRIVAL, FAVOURITE_LINES, HOUSEHOLD_SCENES, isSister, RUNGS, sisterOutfit, SPOT_IDS, type Beat, type Calling, type Cast, type ChoiceOption, type DateGame, type Finale, type Gifts,
   type HerChapter, type Household, type HouseholdAt, type HouseholdScene, type Keepsake, type PairConversations, type Play, type SpotId, type Step, type StoryPlace, type StoryTrigger,
   type Tie, type TieKind, type UmaBible, type Wish,
 } from './authored'
@@ -88,7 +88,7 @@ export function masterCastFrom(outfits: readonly MasterOutfit[]): MasterCast {
 export const DEFAULT_WELCOME = 5
 
 /** The cast while the pack names nobody: master data's first five characters (the welcome list's size), so a farm with
- * no story still has hands on day 1. Meeting her in town brings everyone else when it lands. */
+ * no story still has visitors at the Gate from day 1. Everyone else is met in town. */
 export function placeholderCast(master: MasterCast | null): Cast {
   return { umas: [...(master?.outfits.keys() ?? [])].slice(0, DEFAULT_WELCOME).map((characterId) => ({ characterId })) }
 }
@@ -190,7 +190,8 @@ export const DEFAULT_CHAPTERS: readonly Required<Pick<HerChapter, 'title' | 'eve
 ]
 
 /** The welcome list: who comes to the farm in the first days, in order. The pack's `welcome`, else the first five of the
- * cast, in its order, sisters aside (a sister can't come to the farm yet). Meeting her in town acts on it. */
+ * cast, in its order, sisters aside. From day 1 one a morning visits the Gate (`gateVisitor`) and meets you on her first
+ * talk. */
 export function welcomeOf(pack: Pick<StoryPack, 'cast'>): string[] {
   const named = pack.cast.welcome ?? []
   return named.length > 0 ? [...named] : castOrder(pack).filter((id) => !isSister(id)).slice(0, DEFAULT_WELCOME)
@@ -199,20 +200,26 @@ export function welcomeOf(pack: Pick<StoryPack, 'cast'>): string[] {
 /** Her trigger to meet: her cast entry's `meet`, else talking with her on three different days. */
 export const meetOf = (pack: Pick<StoryPack, 'cast'>, id: string): StoryTrigger => castEntry(pack, id)?.meet ?? DEFAULT_MEET
 
+/** Whether she's on the welcome list: she meets you on her first talk, whatever her trigger. */
+export const onWelcomeList = (pack: Pick<StoryPack, 'cast'>, id: string): boolean => welcomeOf(pack).includes(id)
+
 /** Her chapters: her cast entry's, else the four default ones. Her chapters' screens act on them. */
 export function chaptersOf(pack: Pick<StoryPack, 'cast'>, id: string): readonly HerChapter[] {
   const own = castEntry(pack, id)?.chapters ?? []
   return own.length > 0 ? own : DEFAULT_CHAPTERS
 }
 
-/** Day 1's first helper: the welcome list's first character in the cast, or null with nobody. She joins as the opening
- * ends (`joinFirstHelper`), so the farm has someone to work, until meeting her in town brings the welcome list one a
- * morning. */
-export function firstHelperOf(pack: Pick<StoryPack, 'cast'>): string | null {
-  return welcomeOf(pack).find((id) => !isSister(id) && castEntry(pack, id) !== undefined) ?? null
+/** The welcome list as it visits, in its order: each one in the cast, and none of the town's people (they keep their
+ * spots). From day 1, one a morning comes to the Gate (`gateVisitor`). */
+export function welcomeVisitors(pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town'>>): string[] {
+  return welcomeOf(pack).filter((id) => castEntry(pack, id) !== undefined && !isTownPerson(pack, id))
 }
 
-/** The opening's lines when the pack writes none: three, short, ending on someone at the Gate (day 1's first helper). */
+/** Day 1's visitor, the farm's first helper: the welcome list's first who visits, or null with nobody. She waits at the
+ * Gate from the opening's end, and moves in when you say hello. */
+export const firstVisitorOf = (pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town'>>): string | null => welcomeVisitors(pack)[0] ?? null
+
+/** The opening's lines when the pack writes none: three, short, ending on someone at the Gate (day 1's visitor). */
 export const PLACEHOLDER_OPENING: readonly Step[] = [
   { narrate: 'Morning, {farmer}. The farm is yours now, weeds and all.' },
   { narrate: 'One block is tilled, and nine Carrot seeds wait in the Fields.' },
@@ -221,14 +228,10 @@ export const PLACEHOLDER_OPENING: readonly Step[] = [
 
 /** The opening's lines, in order: the pack's `opening.json`, else the game's three (without the Gate's line when nobody
  * is coming). They play once, on day 1, after the farmer's name; then Home. */
-export function openingOf(pack: Pick<StoryPack, 'cast' | 'opening'>): readonly Step[] {
+export function openingOf(pack: Pick<StoryPack, 'cast' | 'opening'> & Partial<Pick<StoryPack, 'town'>>): readonly Step[] {
   if (pack.opening) return pack.opening.steps
-  return firstHelperOf(pack) === null ? PLACEHOLDER_OPENING.slice(0, -1) : PLACEHOLDER_OPENING
+  return firstVisitorOf(pack) === null ? PLACEHOLDER_OPENING.slice(0, -1) : PLACEHOLDER_OPENING
 }
-
-/** How she comes to the farm today: her cast entry's `arrives`, else none: the opening brings the welcome list's first,
- * and meeting her in town brings everyone else when it lands. */
-export const arrivesOf = (pack: Pick<StoryPack, 'cast'>, id: string): Arrival | null => castEntry(pack, id)?.arrives ?? null
 
 // === Her route: beats, events and her words =============================================================================
 
@@ -289,16 +292,30 @@ export const PLACEHOLDER_HELLO: readonly ChoiceOption[] = [
   { text: 'Hello! Come on in.', tone: 'playful', friendship: 1 },
 ]
 
+/** Meeting her in town when her route writes no arrival scene: the moment, her line and your reply, as the Gate's two
+ * lines and a hello pay. The welcome list's meet you at the Gate instead. */
+export const PLACEHOLDER_TOWN_MEETING: readonly Step[] = [
+  { place: 'town' },
+  { narrate: 'You get talking, and the time slips by.' },
+]
+export const PLACEHOLDER_TOWN_LINE = 'I’m glad we got talking, {farmer}. Tell me about your farm sometime?'
+export const PLACEHOLDER_TOWN_HELLO: readonly ChoiceOption[] = [
+  { text: 'I’d like that. Come and see it.', tone: 'warm', friendship: 2 },
+  { text: 'Only if you tell me about you.', tone: 'playful', friendship: 1 },
+]
+
 const ladderOfRung = (rung: string): keyof typeof HER_LINES => (rung.startsWith('s') ? 'spouse' : rung.startsWith('r') ? 'romance' : 'friendship')
 
 /** The game's own short card for a rung the pack doesn't script: her moment, her line and your reply, so it pays as a
  * written event does (+50, the reply's +30 or +10, and its grade). The big rungs keep their shape: her confession's reply
  * holds Yes and Not yet, the proposal's says yes, the wedding's last choice is the vows. Her arrival is two lines and a
- * hello. Every line is short and original, and `{farmer}` is the only placeholder. */
-export function placeholderEvent(id: string, rung: string): Step[] {
+ * hello at the Gate (the welcome list's), or met in town (`inTown`, anyone else), two lines and a reply there. Every line
+ * is short and original, and `{farmer}` is the only placeholder. */
+export function placeholderEvent(id: string, rung: string, inTown = false): Step[] {
   const moment: Step = { narrate: PLACEHOLDER_MOMENTS[rung] ?? PLACEHOLDER_MOMENTS.f1! }
   switch (rung) {
     case ARRIVAL:
+      if (inTown) return [...PLACEHOLDER_TOWN_MEETING, { say: id, line: PLACEHOLDER_TOWN_LINE }, { choice: [...PLACEHOLDER_TOWN_HELLO] }]
       return [{ place: 'gate' }, moment, { say: id, line: 'Hi! Is this the farm? I’d love to help out.' }, { choice: [...PLACEHOLDER_HELLO] }]
     case 'confession':
       return [moment, { say: id, line: 'I like you, {farmer}. More than a friend. Do you feel the same?', emote: 'shy' }, {
@@ -330,11 +347,12 @@ export function placeholderEvent(id: string, rung: string): Step[] {
 const hasChoice = (steps: readonly Step[]): boolean => steps.some((s) => ('choice' in s) || ('when' in s && (hasChoice(s.then) || hasChoice(s.else ?? []))))
 
 /** An event the game plays: the pack's for her rung, else the game's own card. Her written arrival with no choice gets
- * the hello, so it pays as one with a choice does. `written` says which. */
+ * the hello, so it pays as one with a choice does. Her unwritten arrival is the Gate's for the welcome list, else the
+ * town's (with the cast to tell). `written` says which. */
 export interface PlayedEvent { id: string; steps: readonly Step[]; written: boolean }
-export async function eventOf(pack: Pick<StoryPack, 'route'>, id: string, rung: string): Promise<PlayedEvent> {
+export async function eventOf(pack: Pick<StoryPack, 'route'> & Partial<Pick<StoryPack, 'cast'>>, id: string, rung: string): Promise<PlayedEvent> {
   const steps = (await pack.route(id))?.events.find((e) => e.id === rung)?.steps
-  if (!steps) return { id: rung, steps: placeholderEvent(id, rung), written: false }
+  if (!steps) return { id: rung, steps: placeholderEvent(id, rung, rung === ARRIVAL && pack.cast !== undefined && !welcomeOf({ cast: pack.cast }).includes(id)), written: false }
   return { id: rung, steps: rung === ARRIVAL && !hasChoice(steps) ? [...steps, { choice: [...PLACEHOLDER_HELLO] }] : steps, written: true }
 }
 
@@ -633,6 +651,7 @@ export function writtenOf(pack: Pick<StoryPack, 'cast' | 'bibles' | 'scripted' |
   const household = pack.household
   const beats = [...(household?.scenes ?? []).filter((s) => s.each?.[id]), ...(household?.finale?.each?.[id] ? [household.finale] : [])].length
   const part = (name: string, written: boolean, writtenWords: string, plays: string): StoryPart => ({ part: name, written, plays: written ? writtenWords : plays })
+  const welcome = welcomeOf(pack).indexOf(id)
   return [
     part('Her outfit', !!entry?.outfitId, `Outfit ${entry?.outfitId ?? ''}`, 'Her default outfit from master data, with her name'),
     part('Her favourite line', !!(bible?.favouriteLine ?? entry?.calling), bible?.favouriteLine ?? entry?.calling ?? '', 'Her line from master data’s stats'),
@@ -642,7 +661,9 @@ export function writtenOf(pack: Pick<StoryPack, 'cast' | 'bibles' | 'scripted' |
     part('Her meeting scene', scripted.has(ARRIVAL), 'Her arrival scene', 'Two short lines and a hello'),
     part('Her events', writtenEvents === events.length, `All ${events.length}`, `${writtenEvents} of ${events.length} written; the rest play a short card that pays as written`),
     part('Her chapters', (entry?.chapters?.length ?? 0) > 0, `${entry?.chapters?.length ?? 0}, the story’s`, `The four defaults: ${DEFAULT_CHAPTERS.map((c) => c.title).join(', ')}`),
-    part('Her trigger to meet', !!entry?.meet, 'The story’s', 'Talk with her on three different days'),
+    welcome >= 0
+      ? part('Her trigger to meet', pack.cast.welcome !== undefined && pack.cast.welcome.length > 0, `Her first talk: the welcome list’s ${ordinal(welcome + 1)}, at the Gate`, `Her first talk: the welcome list’s ${ordinal(welcome + 1)} (the cast’s first ${DEFAULT_WELCOME}), at the Gate`)
+      : part('Her trigger to meet', !!entry?.meet, 'The story’s', 'Talk with her on three different days'),
     part('Her favourite spot', !!entry?.spot, `${entry?.spot ? PLACEHOLDER_SPOTS[entry.spot].name : ''}`, 'None: she’s out at any spot alike'),
     part('Her town lines', (bible?.townLines?.length ?? 0) > 0, `${bible?.townLines?.length ?? 0}, hers`, `The game’s ${PLACEHOLDER_TOWN_LINES.length} short lines`),
     ...(isSister(id) ? [part('Her name', !!entry?.name, entry?.name ?? '', 'Her elder’s name, as her sister')] : []),
@@ -656,13 +677,16 @@ export function writtenOf(pack: Pick<StoryPack, 'cast' | 'bibles' | 'scripted' |
   ]
 }
 
+/** 1st, 2nd, 3rd, 4th…: a place in a list, in words. */
+export const ordinal = (n: number): string => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`
+
 /** The placeholders, as the manual lists them: what the story can give, and what plays without it. */
 export const PLACEHOLDER_TABLE: readonly { gives: string; without: string }[] = [
   { gives: 'The cast', without: `Master data’s first ${DEFAULT_WELCOME} characters, in its order (the welcome list’s size)` },
   { gives: 'The opening', without: 'Three short lines: the farm, its nine Carrot seeds, and someone waiting at the Gate (that line only when someone is coming)' },
   { gives: 'Her name and outfit', without: 'Her master-data name and default outfit (her first original one)' },
   { gives: 'Her chat lines, by stage', without: `${PLACEHOLDER_CHATS.friend.length} short lines a stage, written for the game (before Friendship 1, her temperament’s)` },
-  { gives: 'Her meeting scene', without: 'Two short lines and a hello; it pays as a written one does. A written one with no choice gets the hello' },
+  { gives: 'Her meeting scene', without: 'Two short lines and a hello, at the Gate for the welcome list, in town for anyone else; it pays as a written one does. A written one with no choice gets the hello' },
   { gives: 'A heart event', without: 'A short card: her moment, her line and your reply; its points and rewards pay as written' },
   { gives: 'A play’s prompt', without: 'Its game’s: “Cast the line together.”' },
   { gives: 'Her chapters', without: DEFAULT_CHAPTERS.map((c) => `“${c.title}”`).join(', ') },
@@ -678,7 +702,7 @@ export const PLACEHOLDER_TABLE: readonly { gives: string; without: string }[] = 
   { gives: 'A pair’s conversation', without: 'Two short lines, one each, at every bond level of a tie; it pays nothing, as written' },
   { gives: 'A household scene or the finale', without: 'A short card: a line, each spouse’s line, a line; the finale’s dance. It pays nothing, as written' },
   { gives: 'Her house lines', without: 'Her temperament’s' },
-  { gives: 'Her arrival', without: 'None: the welcome list’s first joins as the opening ends; meeting her in town brings the rest when it lands' },
+  { gives: 'The welcome list', without: `The cast’s first ${DEFAULT_WELCOME}, in its order: one a morning at the Gate from day 1, each met on her first talk` },
   { gives: 'The town’s people', without: `Master data’s characters fill the ${CAST_IDS.length} roles, from the last in its order, never one of the cast` },
   { gives: 'The town’s spots', without: `The game’s ${SPOT_IDS.length}: ${SPOT_IDS.map((id) => PLACEHOLDER_SPOTS[id].name).join(', ')}` },
   { gives: 'Her favourite spot', without: 'None: she’s out at any spot alike' },

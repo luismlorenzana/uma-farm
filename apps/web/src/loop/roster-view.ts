@@ -1,7 +1,7 @@
 // The roster's cards: the Umas on the farm as album rows with their talents and ranks, the
 // filters (talent and rank in each activity, favourite line) and the sorts (talent score and rank points in an activity,
 // joined, name), the words on a card, and one Uma's nine activities for her sheet. The Hearts tab's Work view and every
-// Uma picker (the Fields' tender, the jobs, the swaps) read these. They cover everyone on the roster, home or away. Her
+// Uma picker (the Fields' tender, the jobs, the swaps) read these. They cover everyone you've met, on the farm or in town. Her
 // favourite line is the story pack's. Pure but for the pack, which boot has loaded before any screen.
 import {
   atHome, farmHome,
@@ -21,7 +21,7 @@ export interface LoopUma {
 
 export interface RosterView {
   home: LoopUma[]
-  /** Umas on the roster on their off-season. */
+  /** Umas you've met who live in town. */
   away: number
 }
 
@@ -58,7 +58,7 @@ export interface LoopUmaRow extends UmaPickerRow {
   /** Her favourite activity: her favourite line's, from the story pack. */
   favourite: Activity | null
   joined: number
-  /** On the farm, or away on her off-season. */
+  /** On the farm, or living in town. */
   home: boolean
 }
 
@@ -83,9 +83,9 @@ export const UMA_FACETS: readonly FacetDef[] = [
   ...ACTIVITIES.map((a): FacetDef => ({ key: rankFacet(a), label: `${ACTIVITY_NAMES[a]} rank`, group: 'Rank', kind: 'enum', options: RANKS.map((label, r) => ({ value: String(r), label })) })),
 ]
 
-/** Where she is: on the farm or away. The roster's filter; pickers list only the Umas home. */
+/** Where she is: on the farm or in town. The roster's filter; pickers list only the Umas home. */
 export const WHERE_FACET: FacetDef = {
-  key: 'where', label: 'Where', group: 'Where', kind: 'enum', options: [{ value: 'home', label: 'On the farm' }, { value: 'away', label: 'Away' }],
+  key: 'where', label: 'Where', group: 'Where', kind: 'enum', options: [{ value: 'home', label: 'On the farm' }, { value: 'away', label: 'In town' }],
 }
 /** The roster's filters: where she is, then the pickers'. */
 export const ROSTER_FACETS: readonly FacetDef[] = [WHERE_FACET, ...UMA_FACETS]

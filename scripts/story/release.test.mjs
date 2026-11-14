@@ -112,13 +112,13 @@ test('releases a partial pack with notes: bibles and arrival scenes missing, rou
   assert.equal(summary.notes, notes.length)
 })
 
-test('releases five characters in any order, an old opening list and opening arrivals dropped, with notes only', async (t) => {
+test('releases five characters in any order, an old opening list and retired arrivals dropped, with notes only', async (t) => {
   const umas = [4, 2, 5, 1, 3].map((n) => ({ characterId: id(n), outfitId: `${id(n)}01`, calling: ['quarry', 'fishing', 'farming', 'mining', 'foraging'][n - 1], arrives: { kind: 'opening' } }))
   const from = await packOf(t, { 'cast.json': { opening: umas.map((u) => u.characterId), umas } })
   const out = await temp(t)
   const { index, errors, notes } = await buildRelease({ from, out, builtAt: BUILT_AT })
   assert.deepEqual(errors, [])
-  assert.ok(notes.some((n) => n.startsWith('cast.json: opening: the opening brings nobody now')), notes.join('\n'))
+  assert.ok(notes.some((n) => n.startsWith('cast.json: opening: the opening brings nobody')), notes.join('\n'))
   const cast = JSON.parse(await readFile(join(out, index.files.cast.path), 'utf8'))
   assert.equal(cast.opening, undefined)
   assert.deepEqual(cast.umas.map((u) => u.characterId), [id(4), id(2), id(5), id(1), id(3)])

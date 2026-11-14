@@ -1,44 +1,51 @@
-// The Gate's quick look: the Gate is where the cast walks in. Day 1's helper waits here after the opening: her name and
-// **Say hello**, which plays her arrival scene (`?hello=<id>`). Then it says what brings the next arrivals, never who,
-// or that everyone is here. Loaded with the farm map.
-import { atTheGate, FESTIVALS, nextArrivals, type Arrival, type FarmSave } from '@farm/domain'
+// The Gate's quick look: the welcome list comes here, one a morning from day 1 (`gateVisitor`). Today's visitor, not met
+// yet: her face, "‹name› is at the Gate." and **Say hello**, her first talk, which meets her and moves her in while a bed
+// is free; her meeting scene plays next. Once met: "‹name› came by today." Then "Someone new comes tomorrow." while the
+// welcome list has more, else "Meet everyone else in town." with the Town. Loaded with the farm map.
+import { gateVisitor, welcomeVisitors, type FarmSave } from '@farm/domain'
+import { FaceTile } from '@luismlorenzana/uma-kit/album'
+import { useState } from 'react'
 import { Link } from 'react-router'
 import { useMaster } from '../master/master'
-import { castIds, useStory } from '../story/story'
+import { namer } from '../story/people'
+import { useStory } from '../story/story'
+import { sayHelloAtGate } from './actions'
 
-/** What brings an arrival, in the Gate's words: "the Dorm's level 4", "the Fishing Derby". */
-export function arrivalWords(arrival: Arrival): string {
-  switch (arrival.kind) {
-    case 'beds': return `the Dorm’s level ${arrival.dormLevel}`
-    case 'festival': return `the ${FESTIVALS.find((f) => f.id === arrival.festival)?.name ?? arrival.festival}${arrival.year && arrival.year > 1 ? `, year ${arrival.year}` : ''}`
-    case 'event': return 'a story event'
-  }
-}
-
-/** Who waits at the Gate, each with Say hello; then up to three triggers, most likely first, or everyone here. */
+/** Today's visitor and Say hello; then who comes next, never who. */
 export function GatePeek({ save }: { save: FarmSave }) {
   const story = useStory()
   const master = useMaster()
-  const next = story ? nextArrivals(save, story) : []
-  const waiting = story ? story.cast.umas.filter((u) => !save.roster[u.characterId]).length : 0
-  const visitors = atTheGate(save, castIds())
-  const nameOf = (id: string): string => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'Someone'
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const visitor = story ? gateVisitor(save, story) : null
+  const waiting = visitor !== null && !save.roster[visitor]
+  const more = story ? welcomeVisitors(story).some((id) => id !== visitor && !save.roster[id]) : false
+  const nameOf = namer(master.status === 'ready' ? master.view : null, story)
+  const hello = (id: string) => {
+    if (busy) return
+    setBusy(true)
+    setError(null)
+    sayHelloAtGate(id).catch((err: unknown) => setError(err instanceof Error ? err.message : 'That didn’t work. Try again.')).finally(() => setBusy(false))
+  }
   return (
-    <div className="space-y-1 p-4" data-peek="gate" data-arrivals={next.length}>
-      {visitors.map((id) => (
-        <div key={id} className="space-y-2 pb-2" data-visitor={id}>
-          <p className="text-[15px] font-semibold">{nameOf(id)} is waiting at the Gate.</p>
-          <Link to={`/?hello=${id}`} className="font-display grid min-h-12 place-items-center rounded-md bg-accent text-[16px] font-bold text-accent-ink" data-action="hello">
+    <div className="space-y-2 p-4" data-peek="gate" data-visitor={visitor ?? undefined} data-waiting={waiting || undefined}>
+      {visitor && waiting && (
+        <div className="space-y-2 pb-1">
+          <p className="flex items-center gap-3 text-[15px] font-semibold">
+            <FaceTile outfitId={visitor} size={48} label={nameOf(visitor)} round />
+            <span className="min-w-0 flex-1">{nameOf(visitor)} is at the Gate.</span>
+          </p>
+          <button type="button" onClick={() => hello(visitor)} disabled={busy} data-action="hello"
+            className="font-display grid min-h-12 w-full place-items-center rounded-md bg-accent text-[16px] font-bold text-accent-ink disabled:opacity-60">
             Say hello ›
-          </Link>
+          </button>
+          {error && <p role="status" className="text-[13px] font-semibold text-danger">{error}</p>}
         </div>
-      ))}
-      {story && waiting === 0 ? <p className="text-[15px] font-semibold" data-everyone>Everyone is here.</p> : (
-        <>
-          <p className="text-[15px] font-semibold">Umas arrive here.</p>
-          {next.length > 0 && <p className="text-[14px] text-ink-soft" data-next-arrivals>Next: {next.map(arrivalWords).join(' · ')}</p>}
-        </>
       )}
+      {visitor && !waiting && <p className="text-[15px] font-semibold" data-came>{nameOf(visitor)} came by today.</p>}
+      {!waiting && (more
+        ? <p className="text-[14px] text-ink-soft" data-next-visitor>Someone new comes tomorrow.</p>
+        : <p className="text-[14px] text-ink-soft" data-everyone>Meet everyone else in <Link to="/town" className="font-semibold text-accent-strong underline">town</Link>.</p>)}
     </div>
   )
 }

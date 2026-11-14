@@ -65,15 +65,8 @@ export type DateGame = typeof DATE_GAMES[number]
 
 // --- The cast and the ties ----------------------------------------------------------------------------------------------
 
-/** How she comes to the farm today. Meeting her (her `meet` trigger) takes over when the town lands. The opening brings
- * nobody: the welcome list's first joins as it ends (`firstHelperOf`), so an `opening` arrival is noted and dropped. */
-export type Arrival =
-  | { kind: 'festival'; festival: Festival; year?: number }
-  | { kind: 'beds'; dormLevel: number }
-  | { kind: 'event'; after: string }
-
 /** The trigger menu: how her story begins (her `meet`), and what one of her chapters may ask of the farm (its `gate`).
- * One menu for both; read by the pack, acted on when meeting her and her chapters land. */
+ * One menu for both. Meeting her (`romance/meeting.ts`) acts on `meet`; her chapters' screens act on `gate`. */
 export type StoryTrigger =
   /** Talk with her on this many different days. */
   | { kind: 'talks'; days: number }
@@ -109,8 +102,6 @@ export interface CastEntry {
   /** The one outfit she plays as. */
   outfitId?: string
   calling?: Calling
-  /** How she comes to the farm today (a festival, the Dorm's beds, after an event). */
-  arrives?: Arrival
   /** Only where master data's character set has none: it wins where present. */
   birthday?: CastBirthday
   /** Her trigger to meet, from the trigger menu. */
@@ -671,18 +662,6 @@ const MONTH_DAYS = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 /** A birthday on a real date: `{ month: 1–12, day }`, February's 29 allowed (a birthday has no year). */
 const realDate = (v: unknown): v is CastBirthday => isObject(v) && isInt(v.month, 1, 12) && isInt(v.day, 1, MONTH_DAYS[(v.month as number) - 1]!)
 
-function readArrival(v: unknown): Arrival | undefined {
-  if (!isObject(v)) return undefined
-  switch (v.kind) {
-    case 'festival':
-      if (!oneOf(FESTIVALS, v.festival) || (v.year !== undefined && !isInt(v.year, 1))) return undefined
-      return v.year === undefined ? { kind: 'festival', festival: v.festival } : { kind: 'festival', festival: v.festival, year: v.year as number }
-    case 'beds': return isInt(v.dormLevel, 1) ? { kind: 'beds', dormLevel: v.dormLevel } : undefined
-    case 'event': return isText(v.after) && v.after.length <= LINE_LIMITS.id ? { kind: 'event', after: v.after } : undefined
-    default: return undefined
-  }
-}
-
 function readChapters(v: unknown, at: string, f: Findings, ctx: StoryContext): HerChapter[] | undefined {
   if (!Array.isArray(v)) { f.errors.push(`${at}: chapters is a list; skipped`); return undefined }
   const placed = new Map<string, number>()
@@ -735,7 +714,7 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
     if (sister && u.outfitId != null && u.outfitId !== sisterOutfit(id)) f.notes.push(`${it}: a sister plays her own outfit, ${sisterOutfit(id)}; outfitId is ignored`)
     if (!sister && u.name !== undefined) f.notes.push(`${it}: her name is master data’s; a name is read for a sister only`)
     if (sister && u.name === undefined) f.notes.push(`${it}: a sister with no name shows as her elder’s sister`)
-    if (sister && u.arrives !== undefined) f.notes.push(`${it}: a sister lives in town; she can’t come to the farm yet, so her arrival is dropped`)
+    if (u.arrives !== undefined) f.notes.push(`${it}: arrives is retired: her meet says how you meet her, so it’s dropped`)
     const entry = kept<CastEntry>(u, {
       outfitId: sister ? undefined : field(u, 'outfitId', (v) => (typeof v === 'string' && CHARACTER_ID.test(v) ? v : undefined), it, f, 'is an outfit id'),
       spot: field(u, 'spot', (v) => (oneOf(SPOT_IDS, v) ? v : undefined), it, f, `is one of the town’s spots: ${SPOT_IDS.join(', ')}`),
@@ -745,17 +724,12 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
         return undefined
       }, it, f, `is 1–${LINE_LIMITS.name} characters`) : u.name as string | undefined,
       calling: field(u, 'calling', (v) => (oneOf(CALLINGS, v) ? v : undefined), it, f, `is one of ${CALLINGS.join(', ')}`),
-      arrives: sister ? undefined : isObject(u.arrives) && u.arrives.kind === 'chapter'
-        ? (f.notes.push(`${it}: the farm has no chapters, so a chapter arrival never comes; she waits to be met`), undefined)
-        : isObject(u.arrives) && u.arrives.kind === 'opening'
-          ? (f.notes.push(`${it}: the opening brings nobody now (the welcome list’s first joins as it ends), so an opening arrival is dropped`), undefined)
-          : field(u, 'arrives', readArrival, it, f, 'is a festival (and a year), the Dorm’s beds, or after an event'),
+      arrives: undefined,
       birthday: field(u, 'birthday', (v) => (realDate(v) ? { month: v.month, day: v.day } : undefined), it, f, 'is { month: 1–12, day } on a real date'),
       meet: u.meet === undefined ? undefined : readTrigger(u.meet, `${it} meet`, f, sub),
       chapters: u.chapters === undefined ? undefined : readChapters(u.chapters, it, f, sub),
     })
     if (u.outfitId == null && !sister) f.notes.push(`${it}: no outfit, so she plays her default outfit from master data`)
-    if (entry.arrives?.kind === 'beds' && entry.arrives.dormLevel > 8) f.notes.push(`${it}: the Dorm has 8 levels, so level ${entry.arrives.dormLevel} never comes`)
     if (u.paragraph !== undefined && typeof u.paragraph === 'string') f.notes.push(...lineNotes(u.paragraph, it, false))
     return [entry]
   })
@@ -766,7 +740,7 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
     for (const id of ids ?? []) if (!cast.has(id)) f.notes.push(`${key}: ${id} isn’t in the cast; ${words}`)
     return ids
   }
-  if (raw.opening !== undefined) f.notes.push('opening: the opening brings nobody now (the welcome list’s first joins as it ends), so the list is dropped')
+  if (raw.opening !== undefined) f.notes.push('opening: the opening brings nobody: the welcome list visits the Gate, one a morning, so the list is dropped')
   const value = kept<Cast>(raw, {
     umas,
     opening: undefined,

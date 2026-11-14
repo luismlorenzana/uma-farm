@@ -35,7 +35,7 @@
   - **Who:** any character in master data, by her `characterId`.
   - **The welcome list:** the pack names who welcomes the farmer in the first days. It can be any number, in order,
     and the first five in the cast are the default.
-  - **Her trigger:** how her story begins is the story's choice, from the trigger menu ([F67](F67-meeting-her.md)),
+  - **Her trigger:** how her story begins is the story's choice, from the trigger menu ([meeting her](../../game-mechanics.md#meeting-her)),
     or the default: three days' talks in town.
   - **Her chapters:** how many, their titles and which of her events each holds are the story's choice too, all
     optional ([F68](F68-her-chapters.md)); with none, she has four default chapters.

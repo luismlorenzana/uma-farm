@@ -88,16 +88,26 @@ describe('the day\'s draw', () => {
     expect(other).not.toEqual(today)
   })
 
-  it('leaves the Umas on the farm at the farm, and fills what it can with few', () => {
-    const roster = Object.fromEntries(ids(30).map((id) => [id, newRosterUma(1)]))
-    const day = townDay(save(5, { roster }), p)
-    for (const id of ids(30)) expect(day.where.has(id)).toBe(false)
+  it('leaves the Umas on the farm at the farm, unseen in their places; one met who lives in town is out like anyone', () => {
+    const roster = Object.fromEntries(ids(60).map((id) => [id, newRosterUma(1)]))
+    const home = ids(20)
+    const farm = save(5, { roster, dorm: { level: 8, home, swaps: [] } })
+    const day = townDay(farm, p)
+    for (const id of home) expect(day.where.has(id)).toBe(false)
+    expect(ids(40, 9_200_021).some((id) => day.where.has(id))).toBe(true)
+    // One who moves in today leaves her spot, and nobody else moves.
+    const [mover] = ids(40, 9_200_021).filter((id) => day.where.has(id))
+    const moved = townDay({ ...farm, dorm: { ...farm.dorm, home: [...home, mover!] } }, p)
+    expect(moved.where.has(mover!)).toBe(false)
+    expect([...moved.where]).toEqual([...day.where].filter(([id]) => id !== mover))
+    // A few: everyone out but the day's Gate visitor (the welcome list's first).
     const few = storyOf(readStoryPack({ umas: {}, routes: {}, cast: { umas: ids(5, 9_000_001).map((characterId) => ({ characterId })) } }).pack, null)
-    expect(count(townDay(save(), few))).toBe(5)
+    expect(count(townDay(save(), few))).toBe(4)
+    expect(townDay(save(), few).where.has('9000001')).toBe(false)
   })
 
   it('puts her at her favourite spot more often', () => {
-    const favourite = pack({ cast: { umas: [{ characterId: '9200007', spot: 'library' }] }, town: TOWN })
+    const favourite = pack({ cast: { umas: [{ characterId: '9200007', spot: 'library' }], welcome: ['9200001'] }, town: TOWN })
     let out = 0
     let there = 0
     for (let d = 1; d <= 400; d++) {

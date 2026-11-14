@@ -4,7 +4,7 @@
 // nothing; the morning's Ready line plays her event. The invented stand-in pack (9000001–9000003) and invented outfits;
 // master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { costOf, arrive, newSave, readScene, type Love, type SaveV4, type StoryPack } from '@farm/domain'
+import { costOf, meet, newSave, readScene, type Love, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -35,7 +35,7 @@ const { heartsLines } = await import('./summary-words')
 
 /** The stand-in's three home, ties seeded, as the old opening brought them: the opening now brings only day 1's helper. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
-  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : arrive(s, id, pack).save), save)
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : meet(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 const save = (): SaveV4 => useGame.getState().save as SaveV4

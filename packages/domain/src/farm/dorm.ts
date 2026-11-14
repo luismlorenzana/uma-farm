@@ -1,9 +1,9 @@
-// The Dorm and the off-season: beds cap who lives and works on
-// the farm at once, 3 → 20. A level is bought at the Dorm (`buildings.dorm`, gold spent now) and takes effect the next
-// morning (`dorm.level`, night step 8). The roster grows past the beds: an Uma beyond them is away on her off-season,
-// keeping her ranks and her route, earning nothing. A swap brings one away home for one idle at home, the next
-// morning; swaps are free and unlimited. The Dorm's levels 4–8 each bring an authored arrival. Loaded with the loop's
-// screens and the night.
+// The Dorm: beds cap who lives and works on the farm at once, 3 → 20. A level is bought at the Dorm (`buildings.dorm`,
+// gold spent now) and takes effect the next morning (`dorm.level`, night step 8). The roster is everyone you've met, and
+// it grows past the beds: one beyond them lives in town as a friend, keeping her ranks and her route, earning nothing.
+// Invite to the farm (`romance/meeting.ts`) brings her into a free bed; a swap brings one from town home for one idle at
+// home, the next morning, free and unlimited. The Dorm's levels bring beds only. Loaded with the loop's screens and the
+// night.
 import { isBusy } from '../fields/fields'
 import { LOOP_KINDS } from '../gathering/kinds'
 import { spendGold } from '../save/gold'
@@ -25,8 +25,6 @@ export interface DormLevel {
 }
 /** The Dorm for 20: its eight levels. */
 export const DORM_LEVELS: readonly DormLevel[] = BEDS.map((beds, i) => ({ level: i + 1, beds, cost: DORM_COSTS[i]!, farmRank: DORM_FARM_RANKS[i]! }))
-/** The levels that bring an authored arrival: 4–8. */
-export const ARRIVAL_DORM_LEVELS: readonly number[] = [4, 5, 6, 7, 8]
 
 /** The level bought: the next morning's level. */
 export const dormBought = (save: Pick<FarmSave, 'buildings'>): number => save.buildings.dorm ?? 1
@@ -61,8 +59,8 @@ export function swapBlock(save: FarmSave, outfitId: OutfitId, kinds: LoopKinds =
   return isBusy(save, outfitId, kinds) ? 'Working' : null
 }
 
-/** Swaps an Uma home for one away: the one home must have no running job and tend nothing; the one
- * away arrives the next morning, in her place. Until then the one leaving can't take work. Free and unlimited. */
+/** Swaps an Uma home for one living in town: the one home must have no running job and tend nothing; the one in town
+ * arrives the next morning, in her place. Until then the one leaving can't take work. Free and unlimited. */
 export function swapDorm<S extends FarmSave>(save: S, out: OutfitId, into: OutfitId, kinds: LoopKinds = LOOP_KINDS): S {
   if (!save.roster[out] || !save.dorm.home.includes(out)) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
   if (!save.roster[into]) throw new SaveRuleError('not-owned', 'She isn’t on the roster.')
@@ -82,8 +80,8 @@ export function cancelSwap<S extends FarmSave>(save: S, out: OutfitId): S {
   return { ...save, dorm: { ...save.dorm, swaps: save.dorm.swaps.filter((s) => s.out !== out) } }
 }
 
-/** An Uma joins the roster today: home while a bed is free this morning, else away on her off-season. Her route starts
- * with her arrival (`arrive`). */
+/** An Uma joins the roster today, the day you met her: home while a bed is free this morning, else she lives in town.
+ * Her route starts with meeting her (`meet`). */
 export function joinRoster<S extends FarmSave>(save: S, id: OutfitId): { save: S; home: boolean } {
   if (save.roster[id]) throw new SaveRuleError('bad-job', 'She’s on the roster already.')
   const home = freeBeds(save) > 0
@@ -91,7 +89,7 @@ export function joinRoster<S extends FarmSave>(save: S, id: OutfitId): { save: S
   return { save: { ...save, roster: { ...save.roster, [id]: newRosterUma(save.calendar.day) }, dorm }, home }
 }
 
-/** Night step 8: the level bought takes effect, then each swap: the Uma leaving goes away and the one
+/** Night step 8: the level bought takes effect, then each swap: the Uma leaving goes to town and the one
  * arriving comes home in her place. A tender who isn't home after it is cleared (none can be: a tender can't swap out). */
 export function settleDormNight<S extends FarmSave>(save: S): { save: S; raised: number | null; home: OutfitId[] } {
   const level = Math.min(DORM_MAX_LEVEL, Math.max(save.dorm.level, dormBought(save)))

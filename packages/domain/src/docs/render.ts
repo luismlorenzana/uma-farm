@@ -27,11 +27,11 @@ import { FISH_SIZES, FISHERY, FOREST, HAUL_BASE, STATION_JOB_RULES, TOOL_YIELD, 
 import { farmPlace } from '../farm/places'
 import { starShares } from '../goods/stars'
 import { BLOCK_IDS, pairKey } from '../save/v4'
-import { ARRIVAL_DORM_LEVELS, DORM_LEVELS } from '../farm/dorm'
+import { DORM_LEVELS } from '../farm/dorm'
 import { farmRankOpens } from '../farm/diary'
 import { DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, ROW_GOLD, type Milestone } from '../farm/milestones'
 import { CAST, CAST_IDS } from '../story/cast'
-import { ARRIVAL_KINDS } from '../romance/arrivals'
+import { MEET_KINDS } from '../romance/meeting'
 import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER, costOf, LADDER_COLOURS, ROUTE_POINTS, rungName, SPOUSE_COST } from '../romance/love'
 import { DISLIKED_LINE, GIFT_POINTS_V4, giftStars, LOVE_POINTS } from '../romance/acts'
 import { farmBirthday } from '../romance/days'
@@ -68,7 +68,7 @@ import { EXTENDED_ROOMS, FINALE_MARRIED, HOUSE_ROOMS } from '../save/v4'
 import { BENCH_SCENE_LINES, type Beat } from '../story/bench'
 import { DISH_WORDS, dishName, goodName, RING_GOODS } from '../goods/ids'
 import { BIG_EVENTS, EVENT_LIMITS, RUNGS, type Route, type Step, type Together, type UmaBible } from '../story/authored'
-import { PLACEHOLDER_MOMENTS, PLACEHOLDER_OPENING, PLACEHOLDER_TABLE, tieKind, tieStrength, WEDDING_DEFAULTS, welcomeOf } from '../story/placeholders'
+import { ordinal, PLACEHOLDER_MOMENTS, PLACEHOLDER_OPENING, PLACEHOLDER_TABLE, tieKind, tieStrength, WEDDING_DEFAULTS, welcomeOf } from '../story/placeholders'
 
 type Cell = string | number
 /** A Markdown table; pipes in cells are escaped. */
@@ -424,12 +424,12 @@ function stationRecipes(): string {
 
 // --- The roster -----------------------------------------------------------------------------------------------
 
-/** The Dorm for 20: its eight levels, their beds, costs and Farm Ranks, and the levels that bring an arrival. */
+/** The Dorm for 20: its eight levels, their beds, costs and Farm Ranks. */
 function dormLevels(): string {
   let total = 0
-  return table(['Level', 'Beds', 'Costs', 'Farm Rank', 'Cumulative', 'Brings'], DORM_LEVELS.map((l) => {
+  return table(['Level', 'Beds', 'Costs', 'Farm Rank', 'Cumulative'], DORM_LEVELS.map((l) => {
     total += l.cost
-    return [l.level, l.beds, l.cost ? g(l.cost) : '—', l.farmRank || '—', g(total), ARRIVAL_DORM_LEVELS.includes(l.level) ? 'An arrival' : '—']
+    return [l.level, l.beds, l.cost ? g(l.cost) : '—', l.farmRank || '—', g(total)]
   }))
 }
 // --- The Farm Rank, the Diary and the cast ---------------------------------------------------------------------
@@ -472,9 +472,9 @@ function townSpots(): string {
 function townDraw(): string {
   return table(['', 'The rule'], [
     ['At each spot', `Up to ${SPOT_ROOM} a day: ${SPOT_ROOM * SPOT_IDS.length} in all, the rest at home`],
-    ['Who’s out', 'Everyone in town but the Umas on the farm and the town’s people, in the order of `draw(uid, day, \'town:<id>\', 0)`, lowest first, until every spot is full'],
+    ['Who’s out', 'Everyone in town but the town’s people and today’s visitor at the Gate, in the order of `draw(uid, day, \'town:<id>\', 0)`, lowest first, until every spot is full; an Uma living on the farm keeps her place, unseen, so the day never shifts when someone moves in'],
     ['Where she stands', `Her favourite spot (her cast entry’s \`spot\`) while it has room, ${Math.round(FAVOURITE_SPOT * 100)}% of the time (\`draw(…, 1)\`); else a spot with room (\`draw(…, 2)\`)`],
-    ['A talk', 'Once a day each: her talks so far and the last day, in the save’s `town`. It costs nothing and takes no time'],
+    ['A talk', 'Once a day each: her talks so far and the last day, in the save’s `town`. It costs nothing and takes no time, and it meets her when it meets her trigger'],
     ['Her line', `One a day (\`draw(uid, day, 'town-line:<id>', 0)\`) of her bible’s \`townLines\`, else the game’s ${PLACEHOLDER_TOWN_LINES.length}: ${PLACEHOLDER_TOWN_LINES.join(' ')}`],
   ])
 }
@@ -494,15 +494,15 @@ function scenesBlock(): string {
     : 'say' in step ? [step.say, step.line] : 'wait' in step ? ['A pause', `${step.wait} ms`] : ['—', '—']
   return table(['#', 'Kind', 'Line'], PLACEHOLDER_OPENING.map((step, i) => [i + 1, ...kind(step)]))
 }
-// --- Arrivals ---------------------------------------------------------------------------------
+// --- Meeting her ------------------------------------------------------------------------------
 
-/** The four kinds of arrival. */
-function arrivals(): string {
-  return table(['Arrival', 'When she arrives', 'Checked'], ARRIVAL_KINDS.map((a) => [`\`${a.kind}\``, a.when, a.where]))
+/** The trigger menu: what meets her, and when it's checked. */
+function meetKinds(): string {
+  return table(['Trigger (`meet`)', 'What meets her', 'Checked'], MEET_KINDS.map((k) => [`\`${k.kind}\``, k.meets, k.checked]))
 }
-/** What her arrival scene pays. */
+/** What her meeting scene pays. */
 function arrivalPay(): string {
-  return table(['Her arrival scene', 'Points into her bar'], [
+  return table(['Her meeting scene', 'Points into her bar'], [
     ['Played or skipped to its end', `+${ARRIVAL_POINTS}`], ['Its choice: the option with the highest authored gain (each one tied at the top)', `+${CHOICE_BEST}`],
     ['Its choice: any other option', `+${CHOICE_OTHER}`], ['Written with no choice', 'The game’s hello is added, so its choice pays as above'],
     ['Written with more than one choice', 'The first pays; the rest are words only'],
@@ -535,7 +535,7 @@ function routeCosts(): string {
 function lovePoints(): string {
   const gift = (['loved', 'liked', 'neutral', 'disliked'] as const).map((t) => `${cap(t)} ${GIFT_POINTS_V4[t] > 0 ? '+' : ''}${GIFT_POINTS_V4[t]}`).join(', ')
   return table(['Act', 'Points', 'Limit', 'Paid by'], [
-    ['Chat (tap her)', `+${LOVE_POINTS.chat}`, 'Once a day each, home or away', '`chatV4`'],
+    ['Chat (tap her)', `+${LOVE_POINTS.chat}`, 'Once a day each, on the farm or in town', '`chatV4`'],
     ['Gift (one good, its stars your choice)', `${gift}; × (1 + 0.1 a star above ★1)`, 'One a day each; ×3 on her birthday', '`giftV4`'],
     ['Praise (a ★3+ day’s work, a rank-up, a Fine play)', `+${LOVE_POINTS.praise}`, 'Once a day, when earned', '`praiseV4`'],
     ['Her line (she worked it today)', `+${LOVE_POINTS.line}`, 'Paid at night, step 6', '`payLines`'],
@@ -694,7 +694,7 @@ function signatureDishes(): string {
 function standIn(): string {
   const pack = storyPackFrom(STAND_IN_FILES)
   const welcome = welcomeOf(pack)
-  const listed = (id: string): string => (welcome.indexOf(id) === 0 ? '1st: joins as the opening ends' : welcome.includes(id) ? `${welcome.indexOf(id) + 1}${['st', 'nd', 'rd'][welcome.indexOf(id)] ?? 'th'}` : '—')
+  const listed = (id: string): string => (welcome.indexOf(id) === 0 ? '1st: day 1’s visitor' : welcome.includes(id) ? ordinal(welcome.indexOf(id) + 1) : '—')
   return table(['Character', 'Outfit', 'Calling', 'Favourite line', 'Welcome list', 'Bible', 'Scripted'], pack.cast.umas.map((u) => [
     u.characterId, u.outfitId ?? '—', u.calling ?? '—', favouriteOf(pack, u.characterId) ?? '—', listed(u.characterId), pack.bibles.has(u.characterId) ? 'Yes' : 'No (her calling stands in)',
     `${pack.scripted.get(u.characterId)?.size ?? 0} of 27`,
@@ -954,7 +954,7 @@ function furnitureBlock(): string {
 
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'farm-ranks': farmRanks,
-    arrivals, 'arrival-pay': arrivalPay, placeholders: placeholdersBlock, 'placeholder-moments': placeholderMoments, 'stand-in': standIn, 'farmer-name': farmerName,
+    'meet-kinds': meetKinds, 'arrival-pay': arrivalPay, placeholders: placeholdersBlock, 'placeholder-moments': placeholderMoments, 'stand-in': standIn, 'farmer-name': farmerName,
     'route-costs': routeCosts, 'love-points': lovePoints, 'gift-stars': giftStarsBlock, 'birthday-map': birthdayMap, 'ready-rules': readyRules,
     'ready-waits': readyWaits, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor, 'perk-words': perkWordsBlock,
     'perk-effects': perkEffects, 'perk-lines': perkLines, 'perk-caps': perkCaps, 'signature-dish': signatureDishes,

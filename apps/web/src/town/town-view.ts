@@ -2,7 +2,7 @@
 // lives in town and the town's people, met or not, with where she is today), its search and its two sorts, and the talk
 // sheet's words. Names come through `nameOf` (master data's and the pack's, at run time). Loaded with the town's screen.
 import {
-  CAST, talkedToday, tieLineOf, townDay, townLineOf, townOf, townsfolk, townTalksOf, withFarmer, type SaveV4, type SpotId, type StoryPack, type TownDay,
+  atHome, CAST, talkedToday, tieLineOf, townDay, townLineOf, townOf, townsfolk, townTalksOf, withFarmer, type SaveV4, type SpotId, type StoryPack, type TownDay,
   type TownPersonPlayed, type TownSpotPlayed,
 } from '@farm/domain'
 
@@ -43,8 +43,10 @@ export interface PersonRow {
   where: string
   /** Her spot today, when she's out (or the spot she keeps). */
   spot: SpotId | null
-  /** On the farm: you've met her. */
+  /** You've met her: she's on the farm, or lives in town as a friend. */
   met: boolean
+  /** She lives on the farm. */
+  farm: boolean
   /** Days you've talked with her in town. */
   talks: number
   /** Whether you talked with her today. */
@@ -61,15 +63,16 @@ export function peopleRows(save: SaveV4, pack: StoryPack, day: TownDay, nameOf: 
   const folk = townsfolk(pack).map((id): PersonRow => {
     const spot = day.where.get(id) ?? null
     const met = !!save.roster[id]
+    const farm = met && atHome(save, id)
     return {
-      id, name: nameOf(id), spot, met, talks: townTalksOf(save, id)?.talks ?? 0, today: talkedToday(save, id), role: null,
-      where: whereWords(met ? { kind: 'farm' } : spot ? { kind: 'spot', name: spotName.get(spot)! } : { kind: 'home' }),
+      id, name: nameOf(id), spot, met, farm, talks: townTalksOf(save, id)?.talks ?? 0, today: talkedToday(save, id), role: null,
+      where: whereWords(farm ? { kind: 'farm' } : spot ? { kind: 'spot', name: spotName.get(spot)! } : { kind: 'home' }),
     }
   })
   const people = town.people.map((p): PersonRow => {
     const keeps = kept.get(p.characterId)
     return {
-      id: p.characterId, name: nameOf(p.characterId), spot: keeps?.id ?? null, met: false, talks: 0, today: false, role: p.role ? CAST[p.role].role : p.does,
+      id: p.characterId, name: nameOf(p.characterId), spot: keeps?.id ?? null, met: false, farm: false, talks: 0, today: false, role: p.role ? CAST[p.role].role : p.does,
       where: whereWords(keeps ? { kind: 'keeps', name: keeps.name } : { kind: 'town' }),
     }
   })
@@ -85,7 +88,7 @@ export function findPeople(rows: readonly PersonRow[], query: string): PersonRow
   return q === '' ? [...rows] : rows.filter((r) => fold(r.name).includes(q))
 }
 
-/** The People list's sorts: met first (on the farm, then talked most, then by name), or by name. */
+/** The People list's sorts: met first (on the farm or in town), then talked most, then by name; or by name. */
 export const PEOPLE_SORTS = [{ value: 'met', label: 'Met first' }, { value: 'name', label: 'Name' }] as const
 export type PeopleSort = typeof PEOPLE_SORTS[number]['value']
 export function sortPeople(rows: readonly PersonRow[], by: PeopleSort): PersonRow[] {

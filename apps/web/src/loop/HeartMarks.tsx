@@ -57,9 +57,9 @@ export function InviteChip() {
   )
 }
 
-/** "Away" on her off-season. */
+/** "In town": met, and living in town until a bed is free. */
 export function AwayChip() {
-  return <span className="inline-flex shrink-0 items-center rounded-full bg-sunken px-1.5 text-[11px] leading-5 font-semibold text-ink-soft" data-away-chip>Away</span>
+  return <span className="inline-flex shrink-0 items-center rounded-full bg-sunken px-1.5 text-[11px] leading-5 font-semibold whitespace-nowrap text-ink-soft" data-away-chip>In town</span>
 }
 
 /** The route as one track: F1–F10, ◆, R1–R10, ◇, ◇, S1–S5 in one row, two under 375 pt. Played rungs are

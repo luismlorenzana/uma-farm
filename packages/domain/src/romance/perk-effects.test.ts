@@ -22,8 +22,8 @@ import { STAND_IN_BIBLE, STAND_IN_CAST, STAND_IN_TIES, STAND_INS } from '../stor
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { readScene } from '../story/scenes'
 import { STAND_IN_FILES } from '../story/stand-in'
-import { arrive } from './arrivals'
-import { joinCast } from './arrivals.fixture'
+import { meet } from './meeting'
+import { joinCast } from './meeting.fixture'
 import { playEvent } from './events'
 import { advance } from './love'
 import { perksFor } from './perks'
@@ -52,11 +52,11 @@ const spouse = (level: number, more: Partial<Love> = {}): Partial<Love> => ({ st
 const withBond = (save: SaveV4, a: string, b: string, points: number): SaveV4 => ({ ...save, bonds: { ...save.bonds, [pairKey(a, b)]: points } })
 /** The stand-in pack with a fourth Uma (no bible: her calling stands in), tied to two others. */
 function packWithFour(calling: 'farming' | 'foraging' | 'fishing' | 'mining' | 'quarry'): StoryPack {
-  const cast: Cast = { ...json(STAND_IN_CAST), umas: [...json(STAND_IN_CAST).umas, { characterId: FOUR, outfitId: '900000401', arrives: { kind: 'beds', dormLevel: 4 }, calling, paragraph: 'Invented.' }] }
+  const cast: Cast = { ...json(STAND_IN_CAST), umas: [...json(STAND_IN_CAST).umas, { characterId: FOUR, outfitId: '900000401', calling, paragraph: 'Invented.' }] }
   const ties: Ties = { version: 1, ties: [...json(STAND_IN_TIES).ties, { a: TWO, b: FOUR, kind: 'friends', strength: 1, line: 'They met here.', history: 'Invented.' }, { a: THREE, b: FOUR, kind: 'other', strength: 1, line: 'Neighbours.', history: 'Invented.' }] }
   return storyPackFrom({ ...STAND_IN_FILES, cast, ties })
 }
-const withFour = (pack: StoryPack, day = 3): SaveV4 => arrive(farm(day, pack), FOUR, pack).save
+const withFour = (pack: StoryPack, day = 3): SaveV4 => meet(farm(day, pack), FOUR, pack).save
 /** `n` married on the farm's love (the household's count), invented ids that aren't on the roster. */
 const married = (save: SaveV4, n: number): SaveV4 => ({
   ...save, love: { ...save.love, ...Object.fromEntries(Array.from({ length: n }, (_, i) => [String(9100001 + i), { ...save.love[ONE]!, stage: 'spouse' as const, level: 0, wed: 1 }])) },

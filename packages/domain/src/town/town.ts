@@ -1,18 +1,21 @@
 // The town: every character of master data's lives there, once each, and the pack's sisters, less the town's people,
-// who keep its spots, and the Umas living on the farm. Each day a draw seeded by the player and the day puts up to four
-// of them at each of the six spots, about two dozen in all; the rest are at home. A character the pack gives a favourite
-// spot is there more often. Tap one to talk: her line for the day (the pack's, else the game's), and a talk counts once a
-// day, toward her trigger to meet (F67 acts on it). Talking costs nothing and takes no time. Pure.
+// who keep its spots. Each day a draw seeded by the player and the day puts up to four of them at each of the six spots,
+// about two dozen in all; the rest are at home. A character the pack gives a favourite spot is there more often. Tap one
+// to talk: her line for the day (the pack's, else the game's), and a talk counts once a day, toward her trigger to meet
+// (`romance/meeting.ts`). Talking costs nothing and takes no time. Pure.
 //
-//   the order     everyone in town by draw(uid, day, 'town:<id>', 0), lowest first
+//   the order     everyone in town but today's Gate visitor, by draw(uid, day, 'town:<id>', 0), lowest first
 //   her spot      her favourite, while it has room, when draw(…, 1) < 0.6; else one with room by draw(…, 2)
 //   the day       full when each spot holds four, or when everyone's out
+//   on the farm   an Uma living on the farm keeps her place in the draw, unseen: so the day's town never shifts when
+//                 someone moves in. One you've met who lives in town is out like anyone else
+//   the Gate      the welcome list's next visitor is at the Gate today (`gateVisitor`), never in town
 import { draw } from '../farm/draw'
 import { SaveRuleError } from '../save/rules'
-import type { SaveV4, TownTalks } from '../save/v4'
+import { atHome, type SaveV4, type TownTalks } from '../save/v4'
 import { SPOT_IDS, type SpotId } from '../story/authored'
 import type { StoryPack } from '../story/pack'
-import { favouriteSpotOf, townLinesOf, townOf } from '../story/placeholders'
+import { favouriteSpotOf, townLinesOf, townOf, welcomeVisitors } from '../story/placeholders'
 
 /** How many stand at a spot at once. */
 export const SPOT_ROOM = 4
@@ -30,6 +33,16 @@ export function townsfolk(pack: TownPack): string[] {
   return [...master, ...pack.cast.umas.map((u) => u.characterId).filter((id) => !known.has(id))].filter((id) => !people.has(id))
 }
 
+/** Today's visitor at the Gate: the welcome list's first (in its order) not met before today. One a morning: the next
+ * comes the morning after the one before her is met, so day 1's is the list's first. She stays the day's visitor once met
+ * today; null once the whole list was met before today. */
+export function gateVisitor(save: Pick<SaveV4, 'calendar' | 'roster'>, pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town'>>): string | null {
+  return welcomeVisitors(pack).find((id) => {
+    const met = save.roster[id]
+    return !met || met.joined === save.calendar.day
+  }) ?? null
+}
+
 /** One day in town: who's at each spot, and where each one out is. */
 export interface TownDay {
   readonly day: number
@@ -39,12 +52,13 @@ export interface TownDay {
   readonly where: ReadonlyMap<string, SpotId>
 }
 
-/** The town on the save's day: the seeded draw over everyone in town but the Umas on the farm. The same day always
- * shows the same town. */
-export function townDay(save: Pick<SaveV4, 'account' | 'calendar' | 'roster'>, pack: TownPack): TownDay {
+/** The town on the save's day: the seeded draw over everyone in town but today's Gate visitor; an Uma living on the farm
+ * keeps her place, unseen. The same day always shows the same town, whoever moves in. */
+export function townDay(save: Pick<SaveV4, 'account' | 'calendar' | 'roster' | 'dorm' | 'love'>, pack: TownPack): TownDay {
   const uid = save.account.uid
   const day = save.calendar.day
-  const out = townsfolk(pack).filter((id) => !save.roster[id])
+  const visitor = gateVisitor(save, pack)
+  const out = townsfolk(pack).filter((id) => id !== visitor)
     .map((id) => [id, draw(uid, day, `town:${id}`, 0)] as const)
     .sort(([a, x], [b, y]) => x - y || a.localeCompare(b))
   const spots = new Map<SpotId, string[]>(SPOT_IDS.map((id) => [id, []]))
@@ -58,6 +72,12 @@ export function townDay(save: Pick<SaveV4, 'account' | 'calendar' | 'roster'>, p
     spots.get(spot)!.push(id)
     where.set(id, spot)
   }
+  // Who lives on the farm keeps her place, unseen.
+  for (const [id, spot] of where) {
+    if (!save.roster[id] || !atHome(save, id)) continue
+    where.delete(id)
+    spots.set(spot, spots.get(spot)!.filter((x) => x !== id))
+  }
   return { day, spots, where }
 }
 
@@ -67,7 +87,8 @@ export const townTalksOf = (save: Pick<SaveV4, 'town'>, id: string): TownTalks |
 export const talkedToday = (save: Pick<SaveV4, 'town' | 'calendar'>, id: string): boolean => save.town[id]?.last === save.calendar.day
 
 /** A talk with her in town: one more day talked, once a day. She must be out today. Costs nothing, takes no time, and
- * never stamps: the app's action does. A second talk the same day changes nothing. */
+ * never stamps: the app's action does. A second talk the same day changes nothing. Meeting her on it is
+ * `romance/meeting.ts`'s `talkToHer`. */
 export function talkInTown(save: SaveV4, pack: TownPack, id: string): SaveV4 {
   if (!townDay(save, pack).where.has(id)) throw new SaveRuleError('not-owned', 'She isn’t out in town today.')
   if (talkedToday(save, id)) return save

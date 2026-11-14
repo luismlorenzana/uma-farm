@@ -3,7 +3,7 @@
 //
 //   1 the bin pays · 2 crops grow · 3 animals · 4 jobs move a day on and hauls count ·
 //   5 workshops reset · 6 ranks, bonds and well fed · 7 crops wither and the calendar turns
-//   · 8 places built, the Dorm and arrivals, the Diary and the Farm Rank · 9 the morning summary
+//   · 8 places built, the Dorm, the Diary and the Farm Rank, meeting her · 9 the morning summary
 //
 // Every draw a step makes is `draw(uid, day, what, n)`, so the same save always gives the same morning. The player's
 // change is stamped once, with real time, after the ninth step.
@@ -11,7 +11,7 @@
 // The romance's steps sit among them: step 2 grows a tended block ×1.1 side by side; step 4 pays side by side's extras
 // after the hauls (`nightExtras`); step 6 reads favourites from the story pack and her friendship's factor, ticks bonds
 // (`tickBonds`) and pays her line +10 (`payLine`); step 7 clears the whole `today`; step 8 is `raiseBuildings` →
-// `settleDorm` → `arriveUmas` (authored arrivals, their ties seeded) → `checkGoals`; step 9 notes
+// `settleDorm` → `checkGoals` → `meetUmas` (everyone in town whose trigger the farm now holds, her ties seeded); step 9 notes
 // praise earned overnight, birthdays and anniversaries today and tomorrow with the anniversary's item (`heartsMorning`),
 // draws the morning's invitations (`drawInvitations`), and its §4 is Hearts, with the invitations, side by side and the
 // bond hearts reached. The perks: step 2's farming chores and a farmer in her element, step 4's perks' extras
@@ -35,7 +35,7 @@ import { settleLoopWork } from '../save/loop-work'
 import { LOOP_WORK_PLACES, type LoopKinds, type LoopPlaceId } from '../save/parse-v4'
 import { touched } from '../save/save'
 import { payLines } from '../romance/acts'
-import { arrivalsTonight } from '../romance/arrivals'
+import { meetTonight } from '../romance/meeting'
 import { drawInvites } from '../romance/evening'
 import { openBench } from '../romance/bench'
 import { serveReception } from '../romance/wedding'
@@ -64,10 +64,10 @@ export interface NightContext {
   /** Each Uma's talent in an activity: tending's growth (step 2), a queued job's plan when it starts at the
    * boundary (step 7) and rank points (step 6). D for everyone when left out (tests). */
   readonly talentOf?: TalentOf
-  /** The story pack: the night's favourites, her line's places, authored arrivals and anniversary items, and the
-   * ties (their seeds, her closest friend). A night without it arrives no one, reads no favourites, ticks no bonds
-   * and pays no line. */
-  readonly story?: Pick<StoryPack, 'cast' | 'bibles' | 'ties'>
+  /** The story pack: the night's favourites, her line's places, her trigger to meet and anniversary items, and the
+   * ties (their seeds, her closest friend), with the town (its people, master data's characters). A night without it
+   * meets no one, reads no favourites, ticks no bonds and pays no line. */
+  readonly story?: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> & Partial<Pick<StoryPack, 'town' | 'master'>>
   /** Each cast Uma's birthday as a day of the farm's year: master data's character set through the cast
    * (`birthdaysOf`). None when left out. */
   readonly birthdays?: Birthdays
@@ -102,7 +102,7 @@ export interface NightNotes {
   readonly built: readonly FarmPlaceId[]
   /** Step 8: the Diary's milestones and rows paid, and Farm Ranks reached. */
   readonly goals: GoalsTonight
-  /** Step 8: the cast Umas who arrived. */
+  /** Step 8: who the night met: in the Dorm (home), or living in town. */
   readonly arrived: readonly { id: string; home: boolean }[]
   /** Step 6: who was paid +10 for a day at her line. */
   readonly lines: readonly { id: string; points: number }[]
@@ -327,12 +327,13 @@ export const settleDorm: NightStep = (night) => {
   return { ...night, save, notes: { ...night.notes, dorm: raised, home } }
 }
 
-/** Step 8, after the Dorm: every cast Uma not on the roster whose authored arrival holds joins, in the cast's order,
- * home while a bed is free, else away. A night without the pack arrives no one. */
-export const arriveUmas: NightStep = (night) => {
+/** Step 8, after the goals: everyone in town not met yet whose trigger the farm holds tonight (a Farm Rank, a place
+ * built, a good shipped, another's event) is met, the cast's order first: home while a bed is free, else she lives in
+ * town. Her meeting scene plays in the morning. A night without the pack meets no one. */
+export const meetUmas: NightStep = (night) => {
   if (!night.context.story) return night
-  const { save, arrived } = arrivalsTonight(night.save, night.context.story)
-  return { ...night, save, notes: { ...night.notes, arrived } }
+  const { save, met } = meetTonight(night.save, night.context.story)
+  return { ...night, save, notes: { ...night.notes, arrived: met } }
 }
 
 /** Step 8: the Diary pays the milestones and rows reached (a depth milestone by tonight's hauls), and the Farm Rank's
@@ -426,14 +427,13 @@ function goalNews(notes: NightNotes): NewsLine[] {
   ]
 }
 
-/** The Dorm's news: its new level, and Umas home from a swap (arrivals are §4's). */
+/** The Dorm's news: its new level, and Umas home from a swap (the night's meetings are §4's). */
 function dormNews({ notes }: Night): Extract<NewsLine, { kind: 'dorm' | 'home' }>[] {
   return [...(notes.dorm !== null ? [{ kind: 'dorm' as const, level: notes.dorm }] : []), ...(notes.home.length > 0 ? [{ kind: 'home' as const, umas: [...notes.home] }] : [])]
 }
 
-/** §4 Hearts: this morning's invitations, birthdays and anniversaries today and tomorrow (`heartsMorning`), then everyone who joined tonight,
- *the arrivals at step 8 in the cast's order, home or away (her arrival scene
- * waits for the farm to open); then this morning's items and the night's chores; then the perks' extras, side by
+/** §4 Hearts: this morning's invitations, birthdays and anniversaries today and tomorrow (`heartsMorning`), then everyone the
+ * night met at step 8, in the cast's order, home or in town (her meeting scene waits for the farm to open); then this morning's items and the night's chores; then the perks' extras, side by
  * side's extras and the bond hearts reached since the last morning. */
 function heartLines(night: Night): HeartLine[] {
   const { save, before, context } = night
@@ -547,9 +547,9 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 7, name: 'witherCrops', run: witherCrops, what: 'On a season’s last night, crops still growing that don’t grow in the next season wither; Ready crops wait' },
   { step: 7, name: 'turnCalendar', run: turnCalendar, what: 'The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception' },
   { step: 8, name: 'raiseBuildings', run: raiseBuildings, what: 'Places built: every place paid for yesterday stands this morning (`buildings[id] = 1`), each one news' },
-  { step: 8, name: 'settleDorm', run: settleDorm, what: 'The Dorm’s level bought takes effect; swaps arrive, each Uma away coming home in the place of one leaving' },
-  { step: 8, name: 'arriveUmas', run: arriveUmas, what: 'Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50)' },
+  { step: 8, name: 'settleDorm', run: settleDorm, what: 'The Dorm’s level bought takes effect; swaps arrive, each Uma in town coming home in the place of one leaving' },
   { step: 8, name: 'checkGoals', run: checkGoals, what: 'The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources' },
+  { step: 8, name: 'meetUmas', run: meetUmas, what: 'Meeting her: everyone in town not met yet whose trigger the farm now holds (a Farm Rank, a place built, a good shipped, another’s event; never the welcome list’s) is met, the cast’s order first: home while a bed is free, else she lives in town; each of her ties with someone met starts at its seed (strength 3 → 150, 2 → 50)' },
   { step: 8, name: 'openRingBench', run: openRingBench, what: 'The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and the smith’s scene is due in the morning' },
   { step: 8, name: 'householdMilestones', run: householdMilestones, what: 'Household milestones: as the married count passes 1, 5, 10, 15 and 20, each is news once; 5 brings the furniture set, 20 the finale’s morning; household scenes are Ready from this morning' },
   { step: 9, name: 'serveTheReception', run: serveTheReception, what: 'A wedding’s reception: everyone on the farm well fed from tomorrow for its days (a dish ★1–2 one, ★3–4 two, ★5 three; the bakery’s cake one), never shortening a meal already running' },

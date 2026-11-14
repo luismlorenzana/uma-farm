@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { BEDS, bedsAt } from '../farm/farm'
 import { DORM_LEVELS, buyDorm, freeBeds, nextDorm, settleDormNight } from '../farm/dorm'
 import { farmRankOpens } from '../farm/diary'
-import { arrive } from '../romance/arrivals'
+import { meet } from '../romance/meeting'
 import { parseSave, parseStored, type OlderSave } from './save'
 import { parseSaveV4 } from './parse-v4'
 import { freshV4, newLove, newSave, type SaveV4 } from './v4'
@@ -18,7 +18,7 @@ const account = { uid: 'u1', createdAt: CREATED, updatedAt: UPDATED }
 /** A v4 farm on `day` with the stand-ins home and their routes begun. */
 function farm(day = 3): SaveV4 {
   let save: SaveV4 = { ...newSave('u1', AT), calendar: { day }, farmer: { name: 'Robin' } }
-  for (const id of ['9000001', '9000002', '9000003']) save = arrive(save, id).save
+  for (const id of ['9000001', '9000002', '9000003']) save = meet(save, id).save
   return save
 }
 

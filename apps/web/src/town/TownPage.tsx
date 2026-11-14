@@ -4,9 +4,11 @@
 // - **People:** everyone who lives in town and the town's people, met or not, with where she is today, a search by name,
 //   and a sort, met first or by name.
 // Tap one out today (`?talk=<id>`) to talk: her face, her name and her line for the day; the talk counts once a day,
-// toward her trigger to meet. One at home, or on the farm, says so. A keeper's sheet shows her role and her ties. Faces
-// load as they scroll into view. Names and faces are master data's and the pack's, at run time. Loaded on demand.
-import { CAST, talkedToday, townDay, townOf, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
+// toward her trigger to meet, and a talk that meets it plays her meeting scene at once. One you haven't met can be given
+// a gift (one good from the Warehouse): it meets her when her trigger is a gift she likes. One you've met is marked Met,
+// with her profile; one at home, or on the farm, says so. A keeper's sheet shows her role and her ties. Faces load as
+// they scroll into view. Names and faces are master data's and the pack's, at run time. Loaded on demand.
+import { atHome, CAST, DISLIKED_LINE, talkedToday, townDay, townOf, type SaveV4, type StoryPack, type Taste, type TownDay } from '@farm/domain'
 import { FaceTile, UmaBust } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Sheet, Tabs } from '@luismlorenzana/uma-kit/ui'
@@ -17,7 +19,8 @@ import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { namer } from '../story/people'
 import { storyReady, useStory } from '../story/story'
-import { talkInTownOnce } from './town-actions'
+import { GiftPicker } from '../loop/Love'
+import { giftInTownOnce, talkInTownOnce } from './town-actions'
 import { findPeople, keeperTies, peopleRows, PEOPLE_SORTS, sortPeople, spotViews, talkWords, type PeopleSort, type SpotView } from './town-view'
 
 type View = 'today' | 'people'
@@ -52,7 +55,8 @@ function About() {
   return (
     <>
       <p>Everyone lives in town. Each day a few are out at the town’s spots, up to four at each; the rest are at home. Tomorrow, a different few.</p>
-      <p>Tap one to talk. A talk costs nothing and counts once a day for each: talking on enough days is how her story begins.</p>
+      <p>Tap one to talk. A talk costs nothing and counts once a day for each: talking with her on three days is how most stories begin. Some begin another way: at a spot, in a season, with a gift she likes, or as the farm grows.</p>
+      <p>Once you’ve met her, she moves into the Dorm while a bed is free; else she lives in town until you invite her.</p>
       <p>People lists everyone, met or not, and where she is today. Some are more often at a favourite spot.</p>
     </>
   )
@@ -168,7 +172,7 @@ function People({ save, pack, day, nameOf, onOpen }: { save: SaveV4; pack: Story
           {rows.map((r) => (
             <li key={r.id}>
               <button type="button" onClick={() => onOpen(r.id)} className="flex min-h-14 w-full items-center gap-3 px-3 py-1.5 text-left"
-                data-person-row={r.id} data-where={r.met ? 'farm' : r.spot ?? 'home'}>
+                data-person-row={r.id} data-where={r.farm ? 'farm' : r.spot ?? 'home'}>
                 <Face id={r.id} size={40} name={r.name} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[15px] font-semibold">{r.name}</span>
@@ -202,16 +206,58 @@ function TalkSheet({ id, save, pack, day, nameOf, onClose }: { id: string; save:
   const name = nameOf(id)
   return (
     <Sheet open onClose={onClose} title={name} label={`${name} in town`}>
-      <div className="space-y-3 pb-2" data-talk={id} data-at={spot ?? (save.roster[id] ? 'farm' : person ? 'keeper' : 'home')}>
+      <div className="space-y-3 pb-2" data-talk={id} data-at={spot ?? (save.roster[id] && atHome(save, id) ? 'farm' : person ? 'keeper' : 'home')} data-met={save.roster[id] ? true : undefined}>
         <div className="flex justify-center"><UmaBust outfitId={id} label={name} size={168} /></div>
         {error && <p role="status" className="rounded-md bg-danger/10 px-3 py-2 text-[14px] font-semibold text-danger">{error}</p>}
         {person ? <KeeperWords id={id} pack={pack} nameOf={nameOf} />
-          : spotOf ? <TalkLines save={save} pack={pack} id={id} spot={spotOf.name} keeper={spotOf.keeper} nameOf={nameOf} />
-            : save.roster[id] ? (
-              <p className="text-center text-[14px]" data-on-farm>She lives on the farm now. <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></p>
-            ) : <p className="text-center text-[14px] text-ink-soft" data-at-home>At home today. Look for her another day.</p>}
+          : spotOf ? (
+            <>
+              <TalkLines save={save} pack={pack} id={id} spot={spotOf.name} keeper={spotOf.keeper} nameOf={nameOf} />
+              {save.roster[id] ? <MetLine id={id} /> : talkedToday(save, id) && <TownGift save={save} id={id} name={name} />}
+            </>
+          ) : save.roster[id] && atHome(save, id) ? (
+            <p className="text-center text-[14px]" data-on-farm>She lives on the farm now. <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></p>
+          ) : (
+            <>
+              <p className="text-center text-[14px] text-ink-soft" data-at-home>At home today. Look for her another day.</p>
+              {save.roster[id] && <MetLine id={id} />}
+            </>
+          )}
       </div>
     </Sheet>
+  )
+}
+
+/** One you've met who lives in town: Met, and her profile (where Invite to the farm is). */
+function MetLine({ id }: { id: string }) {
+  return (
+    <p className="flex items-center justify-center gap-2 text-[14px]" data-met-line>
+      <span className="rounded-full bg-[#e0567a]/12 px-2 text-[12px] font-semibold text-[#c2385e]">Met</span>
+      <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link>
+    </p>
+  )
+}
+
+const TOWN_TASTE: Readonly<Record<Taste, string>> = { loved: 'She loves it!', liked: 'She likes it.', neutral: 'She thanks you.', disliked: DISLIKED_LINE }
+
+/** A gift for one you haven't met, after today's talk: one good from the Warehouse. It meets her when her trigger is a
+ * gift she likes (her meeting scene plays next); else she thanks you, by her taste. */
+function TownGift({ save, id, name }: { save: SaveV4; id: string; name: string }) {
+  const [giving, setGiving] = useState(false)
+  const [note, setNote] = useState<string | null>(null)
+  const give = (item: string, stars: number) => {
+    setGiving(false)
+    giftInTownOnce(id, item, stars).then((r) => setNote(r.met ? null : TOWN_TASTE[r.taste]), (err: unknown) => setNote(err instanceof Error ? err.message : 'That didn’t work. Try again.'))
+  }
+  return (
+    <div className="space-y-1" data-town-gift>
+      <button type="button" onClick={() => setGiving(true)} data-action="town-gift"
+        className="grid min-h-11 w-full place-items-center rounded-md border border-hairline bg-panel text-[15px] font-semibold">
+        Give a gift
+      </button>
+      {note && <p role="status" className="text-center text-[13px] font-semibold text-ink-soft" data-town-gift-note>{note}</p>}
+      {giving && <GiftPicker save={save} id={id} name={name} points={() => null} onGive={give} onClose={() => setGiving(false)} />}
+    </div>
   )
 }
 

@@ -109,11 +109,11 @@ These are notes, and the owner's standing direction for anything on screen:
 | Field | What it does in play | Without it |
 |---|---|---|
 | `umas` | The cast, in its order: every character the pack holds. The order breaks ties wherever the game needs one | Master data's first five characters, by id |
-| `welcome` | **The welcome list:** who comes to the farm in the first days, in order, any number. Its first (in the cast) joins as the opening ends: day 1's helper, waiting at the Gate. Meeting her in town (F67) brings the rest | The first five of the cast, in its order |
+| `welcome` | **The welcome list:** who comes to the farm in the first days, in order, any number. From day 1, one a morning visits the Gate (the first on day 1, the next the morning after the one before her is met), and each meets you on her first talk, whatever her trigger. Her arrival scene is her Gate visit. Day 1's is the farm's first helper | The first five of the cast, in its order (sisters aside) |
 | `version`, `export`, `ranker` | The story's own (the sandbox's) | Nothing |
 
-A `welcome` id that isn't in the cast is a note. A cast file's old `opening` list is noted and dropped: the opening
-brings only the welcome list's first.
+A `welcome` id that isn't in the cast is a note, and she never visits the Gate. A cast file's old `opening` list is
+noted and dropped: the opening brings nobody, and the welcome list visits the Gate.
 
 ### Each character
 
@@ -128,9 +128,9 @@ else is optional, and any field the game doesn't read is kept for the story.
 | `spot` | **Her favourite of the town's spots** (`plaza`, `market`, `cafe`, `harbour`, `library`, `track`): she's out there more often than anywhere else | None: she's out at any spot alike |
 | `name` | **A sister's name** (read for a sister only): master data has none for her | Her elder's name, as her sister |
 | `birthday` | `{ "month": 1–12, "day": … }` on a real date, when master data has none | Master data's birthday, or none |
-| `meet` | **Her trigger to meet,** from the trigger menu below. Read now; meeting her (F67) acts on it | Talk with her on three different days |
+| `meet` | **Her trigger to meet,** from the trigger menu below: when it's met, her story begins ([meeting her](game-mechanics.md#meeting-her)). Not read for the welcome list's, who meet you on their first talk | Talk with her on three different days |
 | `chapters` | **Her chapters,** below. Read now; her chapters' screens (F68) act on them | The four default chapters |
-| `arrives` | How she comes to the farm today: a `festival` (and a `year`), the Dorm's `beds`, or after an `event`. A `chapter` or `opening` arrival is noted and dropped: the farm has no global chapters, and the opening brings only the welcome list's first. Meeting her (F67) replaces it | She doesn't come to the farm on her own until meeting her lands (unless she's the welcome list's first) |
+| `arrives` | **Retired:** meeting her replaced it. Any `arrives` is noted and dropped; her `meet` says when you meet her (a festival, another's event and a Farm Rank are on the menu), and the Dorm's levels bring beds only | — |
 | `paragraph` | The story's own: the sandbox shows it | Nothing |
 
 ### Sisters
@@ -143,8 +143,9 @@ welcome list, a tie's `a` or `b`, her bible `umas/s<outfitId>.json`, her route `
   (a note).
 - **Her name** is her entry's `name`, from the pack's private release at run time, never git. Without one, she shows
   as her elder's sister (a note).
-- **She lives in town** and is out there like everyone else. She can't come to the farm yet: an `arrives` on her entry is
-  dropped (a note), and the welcome list's first is never a sister. Meeting her (F67) brings her.
+- **She lives in town** and is out there like everyone else, and is met like anyone: by her `meet`, else three days'
+  talks. Met, she moves into the Dorm while a bed is free, as anyone does. The default welcome list leaves sisters out;
+  a pack's `welcome` may name one.
 
 ### The trigger menu
 
@@ -161,10 +162,14 @@ One menu for her trigger to meet (`meet`) and a chapter's gate (`gate`). Each is
 | `{ "kind": "farm-rank", "rank": 4 }` | Reach a Farm Rank, 1–10 |
 | `{ "kind": "built", "place": "kitchen" }` | Have one of the farm's places built |
 | `{ "kind": "shipped", "good": "carrot", "count": 50 }` | Ship this many of a good, in all |
-| `{ "kind": "event", "after": "9000002:f3" }` | After another character's event plays (`<characterId>:<event>`, or an event id: anyone's) |
+| `{ "kind": "event", "after": "9000002:f3" }` | After another character's event plays (`<characterId>:<event>`, or an event id: anyone's). `<characterId>:arrival` is after her meeting |
 
 A trigger that isn't on the menu is an error: the default plays. One that can never hold (Farm Rank 12, a good the game
-doesn't have yet) is a note. A character on the welcome list meets you on her first talk, whatever her trigger (F67).
+doesn't have yet) is a note. A character on the welcome list meets you on her first talk, whatever her trigger.
+
+**When each is checked** in play: talks, a spot, a season and a festival on a talk in town; a gift on a gift in town
+(after that day's talk; it spends the good); a Farm Rank, a place built, a good shipped and another's event on a talk or
+a gift, and every night, so she's met the morning after it holds. Her meeting scene plays as soon as she's met.
 
 ### Her chapters
 
@@ -342,9 +347,9 @@ the first line. Any length the story wants.
 
 - **No picks:** a `choice`, a `play`, a `flag` or a `when` is an error that skips that step; the rest plays.
 - **With no line left** (every step skipped, or only pauses), the game's three play (a note).
-- **What the opening brings:** as it ends (read or skipped), the welcome list's first joins the farm, home, so day 1
-  has a helper. She waits at the Gate, and her arrival scene plays when you say hello there. A line that tells the
-  farmer someone is waiting at the Gate reads true.
+- **What the opening brings:** nobody. As it ends (read or skipped), the welcome list's first is at the Gate, day 1's
+  visitor; Say hello there meets her, she moves in as the farm's first helper, and her arrival scene plays. A line that
+  tells the farmer someone is waiting at the Gate reads true.
 
 ## The town: `town.json`
 
@@ -397,6 +402,6 @@ A spot `town.json` doesn't name plays the game's own (a note).
 |---|---|---|
 | Her outfit, calling, birthday, bible, route, ties, pairs, household, the opening | Yes | Yes, today |
 | The town's people and spots, her favourite spot, her town lines, a sister's name | Yes | Yes, today: [the town](game-mechanics.md#the-town) |
-| The welcome list, her trigger to meet | Yes | Its first, today: day 1's helper. The rest when meeting her lands (F67) |
+| The welcome list, her trigger to meet | Yes | Yes, today: [meeting her](game-mechanics.md#meeting-her) |
 | Her chapters and their gates | Yes | When her chapters land (F68) |
 | What plays when a part is missing | Placeholders for every read | Yes, today: [what plays without the story](game-mechanics.md#what-plays-without-the-story) |
