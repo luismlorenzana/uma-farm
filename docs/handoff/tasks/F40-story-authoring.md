@@ -113,11 +113,49 @@ The world building informs the game too, in two ways:
   them up from there into its own packets.
 - **Private as always:** the World Book names real characters, so it never goes in git.
 
+## The rework (2026-11-14): what changes for the story
+
+The owner reworked the game ([the game's design](../../design/game-design.md)). For the story:
+
+- **The protagonist is a man.** The old rule (never gendered, every line "you") is lifted. He's still never drawn: the
+  player's eyes.
+- **No welcome week.** The player goes to the Umas he wants to meet, introducing himself in town, and nobody comes to
+  the Gate on her own.
+  - `welcome` and `meet` retire once [F78](F78-town-map.md) lands; her chapters' gates stay.
+  - The opening's last line ("someone's waiting at the Gate") wants a new ending.
+- **Her life in town:** each Uma is a retired racer with her own life. New optional fields say where she is ([F78](F78-town-map.md)):
+  - `home`;
+  - `job`: her part-time job and where it is;
+  - `routine`: where she is, when.
+
+  Her goals and objectives live in her bible as before.
+- **The Uma loop's stages** ([F79](F79-uma-loop.md)): acquaintance, friend, farmhand, sweetheart, engaged, married. New
+  scenes the story may write:
+  - the invitation to work;
+  - moving in;
+  - the night's companion's morning greetings;
+  - the household's meals.
+
+  The wedding night already has its own.
+- **"For the game", answered:**
+
+  | The story asked | Answer |
+  |---|---|
+  | The occasion scenes (dinners, nights in, the wedding night) | [F79](F79-uma-loop.md) |
+  | New Year's, the Fishing Derby night, the Flower Show | [F82](F82-calendar.md), which also reads a `days` list of the story's holidays |
+  | An outfit on every scene, and the occasions' outfits | [F75](F75-dialogue-engine.md), the dialogue engine |
+  | The world on screen | Shipped as [F73](../../game-mechanics.md#the-world-in-the-pack); it shows once a release carries `world.json` (Release 1 didn't) |
+  | Group scenes | Later |
+
+- **The default Uma** ([F76](F76-default-uma.md)): the game writes a complete default story for every Uma. Hers replaces
+  it piece by piece, so ship whatever's written.
+
 ## What the game itself assumes
 
 These are the owner's standing direction for anything that reaches the screen:
 - adults only, tender and never explicit;
-- the farmer is "you": named by the player, never drawn and never gendered;
+- **the protagonist is a man** (the owner, 2026-11-14): named by the player, never drawn; lines may say he, her
+  husband, the groom;
 - a gift names a good the game has (`goods/ids.ts`); a new good is a request to the game, not a rule.
 
 ## Privacy

@@ -25,6 +25,10 @@ Draw her the same way in every outfit, with the same pose and angle, so her face
 | **Dinner** | An elegant evening dress, for a dinner date |
 | **Wedding** | A white wedding dress and veil |
 | **Pajamas** | Soft, modest pajamas or a nightgown, hair loose, for night visits |
+| **Work clothes** | For farm work: practical, her colours |
+| **Garden party** | A light party dress, for the spring festival, picnics and teas |
+| **Wedding night** | Tender and modest, for the night after her wedding |
+| **Swimsuit** | For the summer shore, modest |
 
 She keeps her own look in every outfit: her colours, her accessories, her personality. Every Uma is drawn as an adult,
 and every outfit is tasteful: the dresses and the pajamas are modest, never revealing.
@@ -92,11 +96,11 @@ order.
 
 ## Order
 
-1. **The pilot:** the two Umas with the new full art, in their spring outfit with every core and romance expression, then
-   their other outfits. The owner reviews them in Uma Character Art, and the format is settled from there.
-2. **The welcome list's five:** her spring outfit and the core expressions first, then the romance ones, then the other
-   outfits.
-3. **The rest, in the Uma Ranker's order.**
+1. **The pilot is done:** the two Umas with the new full art have 12 outfit portraits and 15 faces each, published in
+   Uma Character Art's Farm Life. The game's dialogue engine ([F75](F75-dialogue-engine.md)) is built on them. The six
+   extra faces (crying, teasing, smug, embarrassed, startled, dreamy) can follow for both.
+2. **Next, in the Uma Ranker's order:** her spring outfit and the core faces first, then the romance faces, then the
+   other outfits. Until an Uma has her art, the game shows a blank bust ([F76](F76-default-uma.md)).
 
 ## Where they go
 
@@ -106,5 +110,5 @@ under "Dialogue Busts".
 
 ## Done when
 
-The pilot's two Umas are in Uma Character Art, in every outfit and every core and romance expression, and the owner has
-approved them.
+Each Uma is in Uma Character Art, in every outfit and every core and romance face, approved by the owner. The pilot's
+two already are.

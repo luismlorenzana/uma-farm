@@ -19,7 +19,6 @@ export const PAGES = [
   { doc: 'handoff/README.md', page: 'handoff.html', title: 'Open work' },
   { doc: 'design/her-look.md', page: 'her-look.html', title: 'Her look' },
   { doc: 'story-pack.md', page: 'story-pack.html', title: 'Story pack' },
-  { doc: 'design/kit-farm.md', page: 'kit-farm.html', title: 'Farm kit' },
 ]
 
 const REPO = 'https://github.com/luismlorenzana/uma-farm/blob/main/'

@@ -127,17 +127,17 @@ Her spring bust and the core faces come first for each, then the seasons, then t
 
 ## The work
 
+Folded into the owner's rework ([the game's design](game-design.md), 2026-11-14):
+
 | Packet | What | Who |
 |---|---|---|
-| [F69](../handoff/tasks/F69-bust-art-spec.md) | **The bust art:** her outfits and her expressions, described for the art session; the pilot first | ChatGPT (character art) |
-| uma-platform request | **A private art family for the busts and faces,** delivered like the sprite sets: in master data's private release, keyed by character, names never in git | uma-platform session (requested 2026-11-13) |
-| [F70](../handoff/tasks/F70-expressive-busts.md) | **Busts that change expression:** the game puts the face over the bust, the story's `emote` picks the face, every fallback | Claude |
-| [F71](../handoff/tasks/F71-her-wardrobe.md) | **Her wardrobe:** the outfit rules, the scene's `outfit`, the two new evening kinds (Dinner in town, A night in), the profile's Wardrobe | Claude |
+| [F69](../handoff/tasks/F69-bust-art-spec.md) | **The bust art:** her outfits and faces. The pilot is done (12 outfit portraits and 15 faces for each of two Umas); the rest follow | ChatGPT (character art) |
+| [F75](../handoff/tasks/F75-dialogue-engine.md) | **The dialogue engine:** the face over the outfit's portrait, the story's `emote` picks the face, outfits by context, every fallback; the art's private family asked of uma-platform | Claude |
+| [F76](../handoff/tasks/F76-default-uma.md) | **The default Uma:** a blank bust with 22 faces for every Uma without art | Claude |
+| [F79](../handoff/tasks/F79-uma-loop.md) | **The evenings:** Dinner in town and A night in, the wedding night, the night's companion | Claude |
 
-**Order:**
-- F69 can start now with the pilot, and the uma-platform request goes with it;
-- F70 follows once the pilot's busts and faces are published;
-- F71 follows F70 (her chapters, F68, have shipped).
+The wardrobe now has 12 outfits, matching the art: the four seasons (spring the default), work clothes, the garden party
+dress, the kimono, the dinner dress, the wedding dress, the wedding night outfit, pajamas and the swimsuit.
 
 **For the story:**
 - the `emote` menu grows to the 22 expressions;

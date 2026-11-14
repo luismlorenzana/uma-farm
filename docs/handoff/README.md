@@ -5,51 +5,37 @@ it works today is in [the game mechanics](../game-mechanics.md). The page view i
 
 ## Now
 
-The farm is in the roadmap's **Phase 1, one game, built around the Umas**, on two tracks, one piece at a time each. The
-deployed site is the work in progress: saves can start over whenever the game needs it.
+**The rework** (the owner, 2026-11-14): the game turns landscape, with a day of actions, a farm loop in the classic
+farm-life spirit, farmhands who take the work over, a navigable town, the dialogue engine, upkeep and loans, a visible
+calendar, and a default Uma. The design is [game-design.md](../design/game-design.md), and the steps are in
+[the roadmap](../roadmap.md#the-rework-2026-11-14). Built one at a time, each merged and deployed before the next.
 
-| Track | Piece | Who | State |
-|---|---|---|---|
-| **Game's frame** | **Done.** Shipped: placeholders everywhere, the farm grows by building ([the farm's progress](../game-mechanics.md#the-farms-progress)), the lean start ([the opening](../game-mechanics.md#the-opening)), the town ([the town](../game-mechanics.md#the-town)), meeting her ([meeting her](../game-mechanics.md#meeting-her)), and her chapters ([her chapters](../game-mechanics.md#her-chapters)). Next: the workshops (Phase 2) | Claude | Waits for your go |
-| **HD-2D farm** | **Done:** the working nod. An Uma at work drawn as a sprite nods every 4–7 seconds, seeded by her id, none with reduced motion, on uma-stage's `emote` ([the Umas on the farm](../game-mechanics.md#the-umas-on-the-farm)). Next on this track: the kit's second wave, then the farm reaches the Hub | Claude | Shipped |
-| **Story's way in** | **Done:** the world in the pack. `world.json` names the town, the farm and the region, gives the farm's history (the Diary's "The farm"), renames, moves or adds festivals (a game festival keeps its rule under the story's name), words each place and season, and holds Town notes that unlock once at a talk, a visit or the night ([the world in the pack](../game-mechanics.md#the-world-in-the-pack)). Before it: ship the story (`pnpm story:ship`). Next on this track: the World Book with "For the game" | Claude | Shipped |
-| **Story's way in** | **The ship routine and the World Book:** ship at the end of every writing session (`pnpm story:ship --note "…"`; the first real ship is yours); keep the World Book with "For the game" | The story session | [F40](tasks/F40-story-authoring.md) |
-| **Design** | **The game's design:** one clear document for your review, drawing on the World Book | Claude | Next (F72 is in) |
-| **HD-2D farm** | **The kit's second wave:** the 30 frames the stand-in still draws, painted in code | Claude, in a uma-platform session | [F9](tasks/F9-kit-farm.md): waits for your go |
-| **Story** | **Free authoring:** the world, the backgrounds, the characters, however the story wants. The pack is open: every part optional, notes instead of blocks | You and the story session | [F40](tasks/F40-story-authoring.md): how it reaches the game; [the pack's menu](../story-pack.md) |
-| **Her look** | **The bust art:** her outfits (8) and her expressions (22); the pilot is the two Umas with the new full art | ChatGPT | [F69](tasks/F69-bust-art-spec.md): ready to hand over |
-| **Her look** | Busts that change expression, then her wardrobe | Claude | [F70](tasks/F70-expressive-busts.md) after F69's pilot, [F71](tasks/F71-her-wardrobe.md) after F70 |
+| Piece | Who | State |
+|---|---|---|
+| [F74](tasks/F74-landscape.md) **Landscape** | Claude | Next, on your go |
+| [F75](tasks/F75-dialogue-engine.md) **The dialogue engine** | Claude | After F74 |
+| [F76](tasks/F76-default-uma.md) **The default Uma** | Claude | After F75 |
+| [F77](tasks/F77-actions-and-farm-loop.md) **A day of actions, and the farm loop** | Claude | After F74 |
+| [F78](tasks/F78-town-map.md) **The town map** | Claude | After F77 |
+| [F79](tasks/F79-uma-loop.md) **The Uma loop** | Claude | After F76 and F78 |
+| [F80](tasks/F80-farmhands.md) **Farmhands** | Claude | After F77 and F79 |
+| [F81](tasks/F81-economy.md) **Upkeep and loans** | Claude | After F77 |
+| [F82](tasks/F82-calendar.md) **The calendar** | Claude | After F75 and F77 |
+| [F83](tasks/F83-ranch-and-mine.md) **The ranch and the mine** | Claude | After F77 and F80 |
+| [F69](tasks/F69-bust-art-spec.md) **The bust art**, the next Umas | ChatGPT | The pilot is done; the rest in the Ranker's order |
+| [F40](tasks/F40-story-authoring.md) **The story**, and its ship routine | The story session | Release 1 shipped; Release 2 brings `world.json` |
 
 ## Open packets
 
-A packet is written when a piece is next and deleted when it ships. Git keeps the history.
-
-| Packet | What | Who |
-|---|---|---|
-| [F69](tasks/F69-bust-art-spec.md) | The bust art: her outfits and her expressions; the pilot first | ChatGPT |
-| [F70](tasks/F70-expressive-busts.md) | Busts that change expression: the game puts the face over the bust; the story's `emote` picks the face | Claude |
-| [F71](tasks/F71-her-wardrobe.md) | Her wardrobe: the occasion picks the outfit; Dinner in town and A night in | Claude |
-| [F9](tasks/F9-kit-farm.md) | The farm kit's art, drawn in code: wave 2 (wave 1 shipped and is pinned) | Claude, in a uma-platform session |
-| [F40](tasks/F40-story-authoring.md) | The story: free authoring, and how it reaches the game | The story session, and you |
+The table above is the queue. A packet is deleted when it ships, and git keeps the history.
 
 ## Your steps
 
 | What | Where |
 |---|---|
-| **Her look:** read [her-look.md](../design/her-look.md), and hand [F69](tasks/F69-bust-art-spec.md) to the character art session. The bust family's request is sent to uma-platform (2026-11-13) | [her-look.md](../design/her-look.md) |
-| **The farm starts over on your phone:** open the site, see the start-over card, start the new farm, and play a day | [uma-farm.web.app](https://uma-farm.web.app) |
-| **The farm with no story on your phone:** master data's first five are the welcome list, one a morning at the Gate, and every event, chat and scene plays the game's own short words until the story fills them | [uma-farm.web.app](https://uma-farm.web.app) |
-| **The farm grows by building on your phone:** after the deploy, open the Diary's projects, build the Mill at the Mill's quick look, end the day and see it stand. A live farm keeps loading: what its chapter had opened stays open | [uma-farm.web.app](https://uma-farm.web.app) |
-| **The lean start on your phone:** on a new farm (a fresh account, or the start-over card), name your farmer, read the lines, and you're on Home in three taps (Skip works from the first line). The Gate wears **Visiting**: open it and **Say hello** to day 1's visitor, who moves in. A live farm keeps loading and never replays its opening. The pack's own `opening.json` plays once a release with it is published | [uma-farm.web.app](https://uma-farm.web.app) |
-| **The town on your phone:** after the deploy, tap the Town at the foot of the farm map (below the Shop's row). See about two dozen out at the six spots, tap one to talk (her line, "Your first talk"), tap her again (no second count today), and find anyone in People. Tomorrow, a different few. Once the story's `town.json` and the sisters are in a published release, its fourteen people keep the spots by their master-data names, and the sisters are out with everyone else | [uma-farm.web.app](https://uma-farm.web.app) |
-| **Meeting her on your phone:** after the deploy, open the Gate, **Say hello** to the morning's visitor (her scene plays, and she moves in), end the day and see the next one there. In the Town, talk with one on three days: on the third her scene plays and she moves in while a bed is free, else she lives in town (her profile's **Invite to the farm** once a bed frees). A live farm keeps loading: everyone on it counts as met, and a day-1 helper never greeted has her scene play once | [uma-farm.web.app](https://uma-farm.web.app) |
-| **Her chapters on your phone:** after the deploy, open an Uma's profile on the Hearts tab: her four chapters (her own once the story writes them), the one she's in with its events, and what opens the next; her row says "Ch. 1 · Getting to know her". The morning after her confession says "A new chapter with ‹name› · Together". A live farm keeps loading | [uma-farm.web.app](https://uma-farm.web.app) |
-| **The world on your phone:** once the story ships a `world.json` (`pnpm story:ship`), open the site: the map's Town wears the town's name, the calendar shows the story's festivals, a place's quick look its line, and the Diary opens on "The farm" and Town notes. Meet someone whose note the story ties to her, end the day, and the morning names it. With no `world.json`, the game reads as before | [uma-farm.web.app](https://uma-farm.web.app) |
-| **The story's first ship on your phone:** once the story session runs `pnpm story:ship` on its machine, open the site. Your farm's next morning says "New story arrived" with its note (once), and Account shows "Story · Release 1" with its date. A new farm plays the story's opening | [uma-farm.web.app](https://uma-farm.web.app) |
-| **Say go on the workshops** (Phase 2), which her chapters unblock | [roadmap.md](../roadmap.md#phase-2-the-whole-farm) |
-| **The HD-2D farm on your phone:** turn on Account → HD-2D farm, put an Uma to work and watch her walk, see an Uma at work drawn as a sprite nod every few seconds, end the day, tap her bubble in the morning. Then say how the walk, the nod and the bubble feel, and whether the pips can go | [uma-farm.web.app](https://uma-farm.web.app) |
-| **Write the story** however you like | The Farm Story Sandbox on this Mac (`pnpm stories`) |
-| **The kit's second wave:** your go, when you want it | [F9](tasks/F9-kit-farm.md) |
+| **Say go on F74,** landscape | [roadmap.md](../roadmap.md#the-rework-2026-11-14) |
+| **Write the story and ship it.** F40 lists what the rework changes for it: the protagonist is a man, there's no welcome week, and her life in town | [F40](tasks/F40-story-authoring.md) |
+| **The next Umas' art:** hand [F69](tasks/F69-bust-art-spec.md) to the character art session | Uma Character Art |
 
 ## Across the repos
 

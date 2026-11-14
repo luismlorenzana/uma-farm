@@ -16,7 +16,7 @@ arrive. The farm is moving onto an HD-2D stage (an opt-in preview today).
 | [docs/handoff/README.md](docs/handoff/README.md) | What's being built now, the open packets, and the owner's steps ([page](docs/pages/handoff.html)) |
 | [docs/technical/architecture.md](docs/technical/architecture.md) | The app, the API, the save and its sync, builds, deploy, local setup ([page](docs/pages/architecture.html)) |
 | [docs/technical/infrastructure.md](docs/technical/infrastructure.md) | Every cloud value ([page](docs/pages/infrastructure.html)) |
-| [docs/design/kit-farm.md](docs/design/kit-farm.md) | The HD-2D farm kit's art contract ([page](docs/pages/kit-farm.html)) |
+| [docs/design/her-look.md](docs/design/her-look.md) | Her outfits and the 22 expressions the busts show ([page](docs/pages/her-look.html)) |
 | `docs/story/` | The story's original drafts, read by the Farm Story Sandbox |
 | [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md) | How to work here |
 

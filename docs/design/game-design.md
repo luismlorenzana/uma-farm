@@ -1,6 +1,6 @@
 # The game's design
 
-**Second pass: the owner's rework (2026-11-14), for the owner to iterate on.** What the farm is to play, rebuilt
+**Second pass: the owner's rework (2026-11-14), with the owner's answers folded in.** What the farm is to play, rebuilt
 around the owner's input:
 - a landscape game with a farm map and a navigable town;
 - a dialogue engine with busts, faces and outfits;
@@ -53,16 +53,33 @@ A thin bar is always visible: the day and season, the actions left, and the gold
 
 ## A day: limited actions
 
-- **The protagonist has a set number of actions a day.** The starting proposal is 10. More come from the farm's
-  upgrades and the household.
-- **One action each:**
-  - **farm work:** till a tile, plant it, water it, harvest it, feed or care for an animal, collect eggs or milk, fish
-    once, forage once, mine one floor's face, process at a station, ship a load;
-  - **the valley:** go into town, introduce yourself, talk, give a gift, a hangout, a date, an invitation to work.
+- **The protagonist** (a man, the player's own) has **10 actions a day** to start. More come from the farm's upgrades and
+  the household.
 - **Free:** looking. The map, the calendar, the book and menus cost nothing.
 - **The day ends** when the actions run out or you end it. The night settles everything, as it does today.
-- **Special days give extra event actions:** New Year's, the festivals, her birthday. On those days you can play
-  several Umas' events even past the usual budget, so a holiday's scenes all fit.
+- **Special days give extra event actions:** New Year's, the festivals, her birthday. On those days you can play several
+  Umas' events past the usual budget, so a holiday's scenes all fit.
+
+**What costs an action** (the owner: "propose everything that takes actions"):
+
+| Where | Action | Cost |
+|---|---|---|
+| **The fields** | Clear a tile (weeds, a stone, a stump), till it, plant it, water it, harvest it | 1 each |
+| | Water a row, once a farmhand or you have the aptitude | 1 |
+| **Animals** | Feed, brush or care for one, collect eggs, milk or wool, let them out or bring them in | 1 each |
+| | Buy an animal (at the rancher's) | Free, once in town |
+| **The woods and the water** | Forage once, chop a log, fish once | 1 each |
+| **The mine** | Work a face once; take the stairs | 1 / free |
+| **Stations** | Start a load (flour, planks, fillets, ingots, cut gems) | 1 |
+| **The bin** | Ship what you choose | 1 |
+| **The town** | Go into town | 1 |
+| | Shop, order a build, borrow or repay at the mayor's office | Free, once in town |
+| **The Umas** | Introduce yourself, talk, give a gift, invite her to work | 1 each |
+| | A hangout or a date | 2 |
+| | Her event, when it's ready | 1 |
+| **A festival** | Join it | 3, and it opens its own events |
+| **The household** (married life) | Cook a meal for the household (breakfast or dinner: the farm works better well fed) | 1 |
+| | Choose tonight's companion | Free, at the day's end |
 
 ## The farm loop
 
@@ -123,7 +140,7 @@ In the spirit of the classic farm-life games, with the owner's additions.
 | **Proposal** | Her romance at its height, and a ring | The wedding |
 | **Wedding**, then **the wedding night** | The day you set | A tender scene that fades to morning |
 | **Moving in** | After the wedding | She moves to the farm: your home, or a house built for her |
-| **Married life** | Living together | Her married life's events, the household's scenes, more of her actions for the farm |
+| **Married life** | Living together | Her married life's events and the household's scenes. More of her actions for the farm. **Cooking meals** for the household. **The night's companion:** each night you choose one Uma to spend it with, tender and never explicit, and she greets you in the morning |
 
 **What's kept:**
 - the whole romance: her ladders, points, events and plays, perks, evenings, the ring, the wedding, houses, the
@@ -131,8 +148,8 @@ In the spirit of the classic farm-life games, with the owner's additions.
 - her chapters, framing her story along these stages.
 
 **What changes:**
-- meeting becomes **introducing yourself**, an action in town, with every Uma there from day one; the welcome week
-  becomes the first Umas you happen to meet, unless the owner keeps it;
+- meeting becomes **introducing yourself**, an action in town, with every Uma there from day one. **There's no welcome
+  week** (the owner: "I will go to the Umas I want to meet"): nobody comes to the Gate on her own;
 - **farmhand** is a new stage between friend and sweetheart;
 - the wedding night and moving in become stages of their own.
 
@@ -217,7 +234,7 @@ Story packs and art will take a long time to land, so every Uma plays fully befo
   - married life's events.
 
   These are written once for the game, warm and short, with her name, her favourite things and her temperament filled
-  in. They're replaced piece by piece as her story pack lands.
+  in. The protagonist is a man. They're replaced piece by piece as her story pack lands.
 - **This builds on what's there:** today's placeholders become this default, much richer.
 
 ## Keep, build on, replace
@@ -258,18 +275,14 @@ Story packs and art will take a long time to land, so every Uma plays fully befo
 **After step 5, a day can be played end to end.** Each step is built, merged and deployed in turn, with a phone check
 at steps 2, 4, 5 and 7.
 
-## To confirm with the owner
+## Settled with the owner (2026-11-14)
 
-1. **The protagonist.** The story's rule so far is that the farmer is never gendered or drawn, and every line says
-   "you". The rework calls him "him". Is the protagonist a man now? Every line the story writes depends on it.
-2. **The welcome week.** Keep the five who come to the Gate in the first week, or meet everyone by introducing yourself
-   in town?
-3. **Two lines cut short in the notes:** "other things that take actions: going on …" and "After married life …". What
-   was the rest?
-4. **The numbers to start from:**
-   - 10 actions a day for the protagonist, 3 for a farmhand;
-   - a married Uma gives the farm more;
-   - upkeep a little each day per building and resident.
-
-   All are to be tuned by playing.
-5. **The farm map's look:** a clean tile map now, the HD-2D look when it's ready. Agreed?
+1. **The protagonist is a man.** The story's old rule (the farmer never gendered, every line "you") is lifted: lines may
+   say he, her husband, the groom. He's still never drawn: the player's eyes.
+2. **No welcome week.** You go to the Umas you want to meet; nobody comes to the Gate on her own. The opening ends with
+   the farm, not a visitor.
+3. **Everything that takes an action** is in the table above, and married life adds cooking meals and the night's
+   companion, who greets you in the morning.
+4. **The numbers:** 10 actions a day for the protagonist, 3 for a farmhand, more once married, and a little daily upkeep
+   per building and resident, all tuned by playing.
+5. **The farm map's look:** a clean tile map now, the HD-2D look when uma-platform's look path is ready.

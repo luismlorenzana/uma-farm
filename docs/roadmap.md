@@ -92,18 +92,20 @@ visible calendar, and a default Uma so every character plays fully. **The design
 [design/game-design.md](design/game-design.md)** ([page](pages/game-design.html)), with its keep, build-on and replace
 table. Its steps, in order:
 
-| Step | What |
-|---|---|
-| 1 | **Landscape:** the app sideways; the bar, screens, sheets and menus |
-| 2 | **The dialogue engine:** busts, faces and outfits by context, on the pilot's published kits; a blank bust for the rest |
-| 3 | **The default Uma:** a full default story and profile for every Uma without her own |
-| 4 | **A day of actions, and the farm loop:** the action budget; fields as tiles with daily watering; one-action fishing and foraging; shipping |
-| 5 | **The town map:** locations, who's there now, her menu |
-| 6 | **The Uma loop:** acquaintance gifts, hangouts, farmhand, the wedding night, moving in |
-| 7 | **Umas at work:** farmhands' daily actions, the work board, aptitudes that grow with practice |
-| 8 | **The economy:** upkeep and loans |
-| 9 | **The calendar:** the calendar screen, faces on event days, special days |
-| 10 | **The ranch and the mine,** in the farm loop's style |
+| Step | What | Packet |
+|---|---|---|
+| 1 | **Landscape:** the app sideways; the bar, the rail, side panels; the HD-2D portrait preview retires | [F74](handoff/tasks/F74-landscape.md) |
+| 2 | **The dialogue engine:** busts, faces and outfits by context, on the pilot's published kits | [F75](handoff/tasks/F75-dialogue-engine.md) |
+| 3 | **The default Uma:** a blank bust and profile, and a complete default story, for every Uma without her own | [F76](handoff/tasks/F76-default-uma.md) |
+| 4 | **A day of actions, and the farm loop:** 10 actions; the tile farm with daily watering; one-action gathering; stations; shipping | [F77](handoff/tasks/F77-actions-and-farm-loop.md) |
+| 5 | **The town map:** locations, who's there now, introductions, her menu | [F78](handoff/tasks/F78-town-map.md) |
+| 6 | **The Uma loop:** acquaintance, friend, farmhand, sweetheart, the wedding night, moving in, married life with meals and the night's companion | [F79](handoff/tasks/F79-uma-loop.md) |
+| 7 | **Farmhands:** her part-time job, then her farm actions; the work board; aptitudes that grow with practice | [F80](handoff/tasks/F80-farmhands.md) |
+| 8 | **Upkeep and loans** | [F81](handoff/tasks/F81-economy.md) |
+| 9 | **The calendar:** faces on event days, special days, the story's holidays and occasion scenes | [F82](handoff/tasks/F82-calendar.md) |
+| 10 | **The ranch and the mine,** in the farm loop's style | [F83](handoff/tasks/F83-ranch-and-mine.md) |
+
+After step 5 a day can be played end to end. Phone checks follow steps 1, 2, 4, 5 and 7.
 
 **What it changes below:**
 - Phase 1's HD-2D track pauses: the portrait preview retires, and the farm map is a landscape tile map until
@@ -111,7 +113,7 @@ table. Its steps, in order:
 - Her look (Track C) folds into step 2: the pilot's art is published, F70 becomes the dialogue engine, and F71 becomes
   its outfits by context.
 
-Packets are written once the owner confirms the design's five open points.
+The owner settled the design's open points on 2026-11-14, so the packets are written.
 
 ### Phase 1: One game, built around the Umas
 
@@ -133,29 +135,15 @@ at the end of every session ([F40](handoff/tasks/F40-story-authoring.md)).
 | 1.19 **The World Book** | The story's private book of the world, with "For the game", shipped with every pack and read before any design | The story session ([F40](handoff/tasks/F40-story-authoring.md)); read on [Uma Story's World page](https://uma-platform.web.app/story/farm/world), live |
 | 1.20 **The game's design** | A first pass is written: [design/game-design.md](design/game-design.md), the fantasy, pillars, a sitting, the rhythm, the two halves, the arc, the first real season, and six questions to settle. Next: the owner's rework | Claude, with the owner |
 
-**Track B, the HD-2D farm:**
-
-| Step | What | Who |
-|---|---|---|
-| 1.10 **The kit's second wave** | The 30 frames still drawn by the stand-in, painted in code | Claude, in a uma-platform session ([F9](handoff/tasks/F9-kit-farm.md)) |
-| 1.11 **The HD-2D farm reaches the Hub** | Everything the Hub does, on the stage: every place, the build sheets, the homestead's rows, the town | Claude |
-| 1.12 **The HD-2D farm becomes Home** | After your phone look: the switch and the 2D Hub go | Claude |
-
-**Track C, her look** ([design](design/her-look.md)): a wardrobe for each Uma (four seasons, spring her default, a kimono, a
-dinner dress, a wedding dress, pajamas), and busts that change expression: a face for each expression over a bust for
-each outfit.
-
-| Step | What | Who |
-|---|---|---|
-| 1.14 **The bust art** | Her outfits (8) and her expressions (22); the pilot first: the two Umas with the new full art | ChatGPT ([F69](handoff/tasks/F69-bust-art-spec.md)); the delivery's private art family is requested of uma-platform |
-| 1.15 **Busts that change expression** | The game puts the face over the bust; the story's `emote` picks the face | Claude ([F70](handoff/tasks/F70-expressive-busts.md)) |
-| 1.16 **Her wardrobe** | The occasion picks the outfit; Dinner in town and A night in join the evenings | Claude ([F71](handoff/tasks/F71-her-wardrobe.md)) |
+**Tracks B and C,** the HD-2D farm and her look, are folded into the rework above:
+- the portrait HD-2D preview retires with landscape ([F74](handoff/tasks/F74-landscape.md));
+- the busts and outfits become the dialogue engine ([F75](handoff/tasks/F75-dialogue-engine.md)), on the pilot's art
+  ([F69](handoff/tasks/F69-bust-art-spec.md), done for two Umas).
 
 **Your steps:**
-- write the story, freely;
-- a phone check after the town and meeting land;
-- the HD-2D farm on your phone;
-- the bust art: hand [F69](handoff/tasks/F69-bust-art-spec.md) to the character art session, and approve the pilot.
+- write the story, freely, and ship it;
+- the phone checks the rework asks for;
+- hand [F69](handoff/tasks/F69-bust-art-spec.md) to the character art session for the next Umas.
 
 ### Phase 2: The whole farm
 
