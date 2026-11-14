@@ -1,16 +1,19 @@
-// The evening: the day's one scarce choice. One evening a day across all the Umas, a **hangout** with an Uma at
-// Friendship 2 or more, a **date** from Romance 1, or any kind with a spouse, played as one of the date games at its
-// evening length (the heart events' plays), graded and never failed:
+// The evening: the day's one scarce choice. One evening a day across all the Umas, a **hangout** with a friend (an Uma at
+// Friendship 3 or more), a **date** with a sweetheart from Romance 1, or any kind with a spouse, played as one of the date
+// games at its evening length (the heart events' plays), graded and never failed, then her scene for it (`eveningScene`:
+// the story's, else the default's). It takes **2 of the day's actions**. Two evenings of their own join the date games:
+// **Dinner in town** (a date from Romance 3) and **A night in** (a date from Romance 6, at home once married).
 //
 //   Fine 60 · Great 100 · Perfect 150, × 1.5 in her favourite kind, × 1.5 on her birthday, × 1.5 on her anniversary
 //   (each once, multiplied, rounded half up; on her anniversary the evening takes ×1.5 in place of the day's ×2)
 //
 // **The slots:** one evening a day; a second on days divisible by 4 from 10 married; and on a festival day (the year's,
 // the story's when it moves or adds festivals: `festivalsOf`), **festival night**, its own slot that only its kind fills. **Invitations:** each morning (night step 9) at most one
-// Uma invites you, two from 10 married, drawn by `draw(uid, day, 'invite', n)` among the Umas at Friendship 2+ who are
+// Uma invites you, two from 10 married, drawn by `draw(uid, day, 'invite', n)` among the Umas at Friendship 3+ who are
 // home and whose favourite kind is open to them today, weighted `1 + min(14, days since her last evening)`. **Yes**
 // makes her Tonight's evening and pays **+20** with it; **Another day** costs nothing. **Tonight** opens while a slot
 // is free and someone can spend it. Pure; the app stamps.
+import { actionCost, actionsLeft, spend } from '../farm/actions'
 import { festivalOn, FESTIVALS, type Festival } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { SaveRuleError } from '../save/rules'
@@ -19,7 +22,8 @@ import {
 } from '../save/v4'
 import type { DateGame } from '../story/authored'
 import { castOrder, type StoryPack } from '../story/pack'
-import { festivalsOf, routeBeats } from '../story/placeholders'
+import type { Moment } from '../story/look'
+import { eveningSceneId, festivalsOf, routeBeats } from '../story/placeholders'
 import { addLove, bar, dayFactor, isAnniversary, roundPoints, type Bar } from './love'
 import { EVENING_GRADE_POINTS, GRADES, gradeOf, type Grade } from './plays/grade'
 import { PLAY_MAP, type PlayAs } from './plays/which'
@@ -50,13 +54,19 @@ export interface EveningKindDef {
   question: string | null
 }
 
+/** The two evenings of their own, which aren't date games, each play as a Pick: Dinner in town (the menu), A night in
+ * (the night's tea and blankets). */
+const playFor = (k: EveningKind): PlayAs => (k === FESTIVAL_NIGHT ? PLAY_MAP.walk : k === 'dinner' || k === 'night-in' ? PLAY_MAP.picnic : PLAY_MAP[k])
 const kind = (k: EveningKind, name: string, short: string, hangout: number | null, date: number, question: string | null, waits: EveningKindDef['waits'] = null): EveningKindDef => ({
-  kind: k, name, short, hangout, date, play: PLAY_MAP[k === FESTIVAL_NIGHT ? 'walk' : k], waits, question,
+  kind: k, name, short, hangout, date, play: playFor(k), waits, question,
 })
 
-/** Friendship 2 opens hangouts (her F2 perk); Romance 1 dates (R1). */
-export const HANGOUT_FROM = 2
+/** Friendship 3 opens hangouts (a friend, her F3 perk); Romance 1 dates (a sweetheart's, R1). */
+export const HANGOUT_FROM = 3
 export const DATE_FROM = 1
+/** Dinner in town opens at Romance 3, A night in at Romance 6. */
+export const DINNER_FROM = 3
+export const NIGHT_IN_FROM = 6
 
 /** The evening kinds, in their order, festival night last. */
 export const EVENINGS: Readonly<Record<EveningKind, EveningKindDef>> = {
@@ -67,8 +77,10 @@ export const EVENINGS: Readonly<Record<EveningKind, EveningKindDef>> = {
   cooking: kind('cooking', 'Cooking together', 'Cooking', HANGOUT_FROM, DATE_FROM, 'Cook with me tonight?', 'kitchen'),
   crafting: kind('crafting', 'Crafting', 'Crafting', null, DATE_FROM, 'Make something with me tonight?'),
   stargazing: kind('stargazing', 'Stargazing at the overlook', 'Stargazing', null, 3, 'Stargazing tonight?'),
+  dinner: kind('dinner', 'Dinner in town', 'Dinner', null, DINNER_FROM, 'Dinner in town tonight?'),
   dance: kind('dance', 'Dancing', 'Dancing', null, 6, 'Dance with me tonight?'),
   boat: kind('boat', 'A boat on the lake', 'Boat', null, 6, 'A boat on the lake tonight?'),
+  'night-in': kind('night-in', 'A night in', 'Night in', null, NIGHT_IN_FROM, 'A night in tonight?'),
   footrace: kind('footrace', 'A footrace', 'Footrace', null, 9, 'Race me tonight?', 'footrace'),
   festival: kind('festival', 'Festival night', 'Walk', HANGOUT_FROM, DATE_FROM, null),
 }
@@ -77,12 +89,37 @@ export const EVENINGS: Readonly<Record<EveningKind, EveningKindDef>> = {
 export const kindBuilt = (k: EveningKind): boolean => EVENINGS[k].waits === null
 /** Festival night is its own slot. */
 export const isFestivalNight = (k: EveningKind): k is typeof FESTIVAL_NIGHT => k === FESTIVAL_NIGHT
-/** The date games an evening plays as, in the kinds' order: every kind but festival night. */
-export const EVENING_GAMES: readonly InviteKind[] = EVENING_KINDS.filter((k): k is InviteKind => k !== FESTIVAL_NIGHT)
+/** The date games an evening plays as, in the kinds' order: every kind but festival night and the two evenings of their
+ * own (Dinner in town, A night in). */
+export const EVENING_GAMES: readonly InviteKind[] = EVENING_KINDS.filter((k): k is InviteKind => k !== FESTIVAL_NIGHT && k !== 'dinner' && k !== 'night-in')
+
+/** An evening's cost: 2 of the day's actions (the cost table's hangout or date). Never a special day's event actions. */
+export const eveningCost = (): number => actionCost('hangout')
+/** Whether the day has the 2 actions an evening takes. */
+export const eveningAffordable = (save: Pick<SaveV4, 'calendar' | 'today'>): boolean => actionsLeft(save) >= eveningCost()
+
+/** Her scene for an evening (the story's event of that id, else the default story's): Dinner in town's and A night in's
+ * own, else `hangout-<kind>` for a friend and `date-<kind>` for a sweetheart or a spouse. */
+export function eveningScene(role: EveningRole, k: EveningKind): string {
+  if (k === 'dinner') return 'dinner-in-town'
+  if (k === 'night-in') return 'a-night-in'
+  return eveningSceneId(k, role)
+}
+/** The moment an evening's scene is in, for her outfit when the scene names none: a picnic, a dinner, a night in, a
+ * festival night; else the day's season. */
+export function eveningMoments(k: EveningKind): Moment[] {
+  switch (k) {
+    case 'picnic': return ['picnic']
+    case 'dinner': return ['dinner']
+    case 'night-in': return ['night-in']
+    case 'festival': return ['festival-night']
+    default: return []
+  }
+}
 
 // --- Who ------------------------------------------------------------------------------------------
 
-/** What an evening with her is: a hangout (Friendship 2 to her confession's wait, and Romance 0), a date (Romance 1 to the
+/** What an evening with her is: a hangout (Friendship 3 to her confession's wait, and Romance 0), a date (Romance 1 to the
  * wedding's wait) or a spouse's (every kind her ladders opened). */
 export type EveningRole = 'hangout' | 'date' | 'spouse'
 export const ROLE_WORDS: Readonly<Record<EveningRole, string>> = { hangout: 'A hangout', date: 'A date', spouse: 'An evening at home' }
@@ -97,7 +134,7 @@ function ladders(love: Pick<Love, 'stage' | 'level'>): { friendship: number; rom
   }
 }
 
-/** Her role tonight, or null below Friendship 2. */
+/** Her role tonight, or null below Friendship 3. */
 export function eveningRole(love: Pick<Love, 'stage' | 'level'>): EveningRole | null {
   if (love.stage === 'spouse') return 'spouse'
   const { friendship, romance } = ladders(love)
@@ -179,7 +216,7 @@ export function eveningMarks(save: Pick<SaveV4, 'calendar' | 'love' | 'today'> &
 
 /** The kinds she can play now, in their order, each open to her by her ladders, its game built and
  * its slot free (festival night only on a festival day). Empty when she isn't on the farm, isn't home or is below
- * Friendship 2. */
+ * Friendship 3. Whether the day has the 2 actions is `eveningAffordable`'s. */
 export function kindsNow(save: SaveV4, id: string, year: readonly Festival[] = FESTIVALS): EveningKind[] {
   const love = save.love[id]
   if (!love || !save.roster[id] || !homeTonight(save, id) || eveningRole(love) === null) return []
@@ -187,14 +224,16 @@ export function kindsNow(save: SaveV4, id: string, year: readonly Festival[] = F
   return EVENING_KINDS.filter((k) => (isFestivalNight(k) ? left.festival : left.evenings > 0 && kindBuilt(k) && kindOpens(love, k)))
 }
 
-/** Who can spend an evening now (Tonight's picker): the Umas with a kind to play, in the cast's order. */
+/** Who can spend an evening now (Tonight's picker): the Umas with a kind to play, in the cast's order; none when the day
+ * hasn't the 2 actions an evening takes. */
 export function eveningUmas(save: SaveV4, pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'world'>>): string[] {
+  if (!eveningAffordable(save)) return []
   const year = festivalsOf(pack)
   return byCast(pack, Object.keys(save.roster)).filter((id) => kindsNow(save, id, year).length > 0)
 }
 
-/** Whether Tonight opens: a slot is free and someone can spend it, or anyone is married, so a
- * house waits to be picked (Sleep at). */
+/** Whether Tonight opens: a slot is free and someone can spend it (the day has its 2 actions), or anyone is married, so
+ * tonight's companion waits to be picked. */
 export const tonightOpens = (save: SaveV4, pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'world'>>): boolean => marriedCount(save) > 0 || eveningUmas(save, pack).length > 0
 
 /** Roster ids in the cast's order, then numerically (the stand-in's and any id the pack doesn't hold). */
@@ -268,16 +307,17 @@ export interface EveningCard {
 export const eveningSeed = (uid: string, day: number, id: string, k: EveningKind) => (n: number): number => draw(uid, day, `evening:${id}:${k}`, n)
 
 /**
- * An evening with her, played: its `score` (0–100) graded and paid through `addLove` with her factors,
- * the invitation's +20 when she asked and you said yes (her first evening today), `love.evening` today and the slot spent.
- * Refused when she can't spend it now (off the farm, away, below Friendship 2, the kind not open or its slot spent).
- * `birthday` is hers today (master data's, read by the app). Never stamps.
+ * An evening with her, played: its 2 actions spent, its `score` (0–100) graded and paid through `addLove` with her
+ * factors, the invitation's +20 when she asked and you said yes (her first evening today), `love.evening` today and the
+ * slot spent. Refused when she can't spend it now (off the farm, away, below Friendship 3, the kind not open or its slot
+ * spent) and when the day hasn't the 2 actions (`no-actions`). `birthday` is hers today (master data's, read by the app).
+ * Never stamps.
  */
 export function spendEvening(save: SaveV4, pack: Pick<StoryPack, 'bibles'> & Partial<Pick<StoryPack, 'world'>>, id: string, k: EveningKind, score: number, birthday = false): { save: SaveV4; card: EveningCard } {
   const love = save.love[id]
   if (!love || !save.roster[id]) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
   if (!homeTonight(save, id)) throw new SaveRuleError('locked', 'She’s away tonight.')
-  if (eveningRole(love) === null) throw new SaveRuleError('locked', 'Evenings open at Friendship 2.')
+  if (eveningRole(love) === null) throw new SaveRuleError('locked', `Evenings open at Friendship ${HANGOUT_FROM}.`)
   if (!(EVENING_KINDS as readonly string[]).includes(k)) throw new SaveRuleError('bad-count', 'Not an evening.')
   const year = festivalsOf(pack)
   if (!kindsNow(save, id, year).includes(k)) {
@@ -289,7 +329,8 @@ export function spendEvening(save: SaveV4, pack: Pick<StoryPack, 'bibles'> & Par
   const grade = gradeOf(score)
   const factors = eveningFactors(save, pack, id, k, birthday)
   const due = inviteDue(save, id)
-  const played = addLove(save, id, EVENING_GRADE_POINTS[grade] * factorOf(factors), 'evening')
+  const paidFor = spend(save, 'hangout')
+  const played = addLove(paidFor, id, EVENING_GRADE_POINTS[grade] * factorOf(factors), 'evening')
   const asked = due ? addLove(played.save, id, INVITE_POINTS, 'invite') : { save: played.save, paid: 0 }
   const after = asked.save
   const her = { ...after.love[id]!, evening: save.calendar.day }
@@ -310,7 +351,7 @@ export function inviteWeight(save: Pick<SaveV4, 'calendar' | 'love' | 'roster'>,
   return 1 + Math.min(INVITE_WEIGHT_DAYS, Math.max(0, save.calendar.day - since))
 }
 
-/** Who may invite you this morning: home, at Friendship 2 or more, her favourite kind open to her and built.
+/** Who may invite you this morning: home, at Friendship 3 or more, her favourite kind open to her and built.
  * In the cast's order. */
 export function inviteCandidates(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>): string[] {
   return byCast(pack, Object.keys(save.roster)).filter((id) => {

@@ -36,12 +36,19 @@ build, a Dorm level or a house is short of gold, ordered in the same tap (a 10% 
 Book shows the upkeep beside the last seven nights' income; the projects list shows each loan and when it clears
 ([upkeep and loans](../game-mechanics.md#upkeep-and-loans)). A simulated first year pays its way: the Mill early on a
 loan, never a short night, a fifth of the income to upkeep.
+**The Uma loop (F79) is built,** in review: her stage from acquaintance to married on her profile and her menu (a friend
+at Friendship 3, a farmhand once you invite her to work, an action), hangouts and dates at two actions with her scene
+after the play, Dinner in town (Romance 3) and A night in (Romance 6), moving in after the wedding night, and married
+life's meals (breakfast or dinner, an action each: everyone well fed and +10) and the night's companion, chosen at
+Tonight, who greets you in the morning in pajamas. Talks, gifts and the invitation to work need her in front of you: on
+the farm, or in town where she is today; her Ready event plays from anywhere ([the Uma
+loop](../game-mechanics.md#the-uma-loop)).
 
 | Piece | Who | State |
 |---|---|---|
 | F77 **A day of actions, and the farm loop** | Claude | Built, in review: the pull request `feat/f77-actions-and-farm-loop` |
 | F78 **The town map** | Claude | Built, in review: the pull request `feat/f78-town-map` |
-| [F79](tasks/F79-uma-loop.md) **The Uma loop** | Claude | After F78 |
+| F79 **The Uma loop** | Claude | Built, in review: the pull request `feat/f79-uma-loop` |
 | [F80](tasks/F80-farmhands.md) **Farmhands** | Claude | After F77 and F79 |
 | F81 **Upkeep and loans** | Claude | Built, in review: the pull request `feat/f81-economy` |
 | F82 **The calendar** | Claude | Built, in review: the pull request `feat/f82-calendar` |
@@ -65,6 +72,7 @@ The table above is the queue. A packet is deleted when it ships, and git keeps t
 | **The default Uma's look:** meet an Uma without art and play a talk and an event: the blank bust's faces and the default story | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Once F81 is deployed, borrow toward the Mill:** with 20 logs held, go into town, open the mayor's office, tap **Borrow · Build**; end the day and see the Mill stand, then watch the Book's money and the morning's loan line until it clears | [uma-farm.web.app](https://uma-farm.web.app), and [upkeep and loans](../game-mechanics.md#upkeep-and-loans) |
 | **Once F78 is deployed, go into town and meet three Umas you choose:** walk between the places, introduce yourself, talk and give a gift, each an action | [uma-farm.web.app](https://uma-farm.web.app), and [the town](../game-mechanics.md#the-town) |
+| **Once F79 is deployed, take one Uma to married life:** meet her, befriend her, invite her to work, a hangout and a date (two actions each), Dinner in town; after the wedding, watch the wedding night and moving in, cook a meal, choose tonight's companion and see her greet you in the morning | [uma-farm.web.app](https://uma-farm.web.app), and [the Uma loop](../game-mechanics.md#the-uma-loop) |
 | **Write the story and ship it.** F40 lists what the rework changes for it: the protagonist is a man, there's no welcome week, and her life in town (`home`, `job`, `routine`, and `town.json`'s `locations`) | [F40](tasks/F40-story-authoring.md) |
 | **The next Umas' art:** hand [F69](tasks/F69-bust-art-spec.md) to the character art session | Uma Character Art |
 

@@ -2,11 +2,13 @@
 // is free and someone can spend it (a house is picked too). From the top: **Evening**, today's slot as "with Stand-in 2
 // · Walk ✓" once spent, the Uma who said yes with **Play ›**, else **Pick someone ›** (skippable); festival night's own
 // row on a festival day; then the nudge's line ("4 actions left · 2 dry") and **End the day** / **Back**. End the
-// day never waits on the evening. Picking and playing open the evening's player over it (`?evening=`), so Back from
-// the card lands here again. Once anyone is married, **Sleep at** sits between the evening and the nudge's line: the
-// Farmhouse and each house with someone home ("· 3 home"), ☕ when a resident's breakfast is on tomorrow, "8 nights"
-// for one you haven't slept in lately, and on a birthday-alone wisher's birthday "Her room"; the pick (else the house
-// slept in least lately) is marked, and a tap picks it at once. End the day never waits on it. Loaded on demand.
+// day never waits on the evening. An evening takes 2 of the day's actions. Picking and playing open the evening's player
+// over it (`?evening=`), so Back from the card lands here again. Once anyone is married, **Tonight with** sits between the
+// evening and the nudge's line: the night's companion, one spouse with a room, each row her face, her name and her
+// house, ☕ when her house's breakfast is on tomorrow, "8 nights" for a house you haven't slept in lately, and on a
+// birthday-alone wisher's birthday "her birthday, just you two"; the pick (else the night's default) is marked, and a tap
+// picks her at once: her house is tonight's. She greets you in the morning. End the day never waits on it. Loaded on
+// demand.
 import { birthdaysOf, daySetState, marriedCount, type SaveV4, type StoryPack } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -15,8 +17,8 @@ import { Link, useLocation } from 'react-router'
 import { MasterGate } from '../master/MasterGate'
 import { tonightRows, type TonightRow } from './evening-view'
 import { InviteChip } from './HeartMarks'
-import { sleepTonight } from './homestead-actions'
-import { sleepViews, type SleepView } from './homestead-view'
+import { chooseTonight } from './homestead-actions'
+import { companionViews, type CompanionView } from './homestead-view'
 import { useState } from 'react'
 import { nudgeWords, shortDate } from './words'
 
@@ -48,10 +50,7 @@ export default function Tonight({ save, pack, pending, error, onEnd, onBack }: {
               <ul className="divide-y divide-hairline rounded-md border border-hairline" aria-label="The evening">
                 {tonightRows(save, pack, (id) => master.album.get(id)?.name ?? 'An Uma').map((row, i) => <li key={`${row.slot}:${i}`}><EveningRow row={row} /></li>)}
               </ul>
-              {marriedCount(save) > 0 && (
-                <SleepAt rows={sleepViews(save, pack, birthdaysOf(pack, master.birthdays), (id) => master.album.get(id)?.name ?? 'An Uma')}
-                  nameOf={(id) => master.album.get(id)?.name ?? 'An Uma'} />
-              )}
+              {marriedCount(save) > 0 && <TonightWith rows={companionViews(save, pack, birthdaysOf(pack, master.birthdays), (id) => master.album.get(id)?.name ?? 'An Uma')} />}
             </>
           )}
         </MasterGate>
@@ -95,38 +94,37 @@ function EveningRow({ row }: { row: TonightRow }) {
   }
 }
 
-/** Sleep at: one row a house, the pick marked; a tap picks it at once. */
-function SleepAt({ rows, nameOf }: { rows: readonly SleepView[]; nameOf: (id: string) => string }) {
+/** Tonight with: the night's companion, one spouse with a room a row, the pick marked; a tap picks her at once. Two to
+ * a row where they fit. */
+function TonightWith({ rows }: { rows: readonly CompanionView[] }) {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const pick = (row: SleepView) => {
+  const pick = (row: CompanionView) => {
     if (row.picked || busy) return
     setBusy(true)
     setError(null)
-    sleepTonight(row.house, row.alone).catch((e: unknown) => setError(e instanceof Error ? e.message : 'That didn’t work.')).finally(() => setBusy(false))
+    chooseTonight(row.id, row.alone).catch((e: unknown) => setError(e instanceof Error ? e.message : 'That didn’t work.')).finally(() => setBusy(false))
   }
   return (
-    <section aria-label="Sleep at" data-sleep-at>
-      <h3 className="text-micro pb-1">Sleep at</h3>
-      <ul className="divide-y divide-hairline rounded-md border border-hairline" role="radiogroup" aria-label="Sleep at">
+    <section aria-label="Tonight with" data-tonight-with>
+      <h3 className="text-micro pb-1">Tonight with</h3>
+      {rows.length === 0 && <p className="text-[13px] text-ink-soft" data-no-companion>No one has a room yet: build a house.</p>}
+      <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2" role="radiogroup" aria-label="Tonight with">
         {rows.map((row) => (
-          <li key={row.key}>
+          <li key={row.id}>
             <button type="button" role="radio" aria-checked={row.picked} disabled={busy} onClick={() => pick(row)}
-              className="flex min-h-12 w-full items-center gap-2 px-3 text-left" data-sleep={row.key} data-picked={row.picked || undefined}>
+              className={`flex min-h-14 w-full items-center gap-2.5 rounded-md border px-2.5 text-left ${row.picked ? 'border-[#c2385e] bg-[#c2385e]/8' : 'border-hairline bg-panel'}`}
+              data-companion={row.id} data-picked={row.picked || undefined}>
+              <FaceTile outfitId={row.id} size={40} label={row.name} round />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[15px] font-semibold">{row.name}</span>
+                <span className="flex items-center gap-1 truncate text-[12px] text-ink-soft">
+                  <UiMark mark={row.house === 0 && !row.alone ? 'homestead/farmhouse' : 'homestead/house'} fallback={<span aria-hidden>⌂</span>} />
+                  <span className="truncate">{row.home}{row.breakfast ? ' · ☕' : ''}{row.nights ? ` · ${row.nights}` : ''}</span>
+                </span>
+              </span>
               <span aria-hidden className={`grid size-5 shrink-0 place-items-center rounded-full border-2 ${row.picked ? 'border-[#c2385e]' : 'border-hairline-strong'}`}>
                 {row.picked && <span className="size-2.5 rounded-full bg-[#c2385e]" />}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-1.5">
-                  <UiMark mark={row.house === 0 && !row.alone ? 'homestead/farmhouse' : 'homestead/house'} fallback={<span aria-hidden>⌂</span>} />
-                  <span className="truncate text-[15px] font-semibold">{row.name}</span>
-                </span>
-                <span className="block truncate text-[13px] text-ink-soft">
-                  {row.home}{row.breakfast ? ' · ☕' : ''}{row.nights ? ` · ${row.nights}` : ''}
-                </span>
-              </span>
-              <span className="flex shrink-0 -space-x-2">
-                {row.residents.slice(0, 4).map((id) => <FaceTile key={id} outfitId={id} size={28} label={nameOf(id)} round />)}
               </span>
             </button>
           </li>

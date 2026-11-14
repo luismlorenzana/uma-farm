@@ -147,10 +147,10 @@ describe('her profile', () => {
   it('builds the Next card: the rung, its perk, her bible’s hint, the bar and what it waits for', () => {
     const ready = nextCard(farm({ [ONE]: { level: 1, points: 300 } }), PACK, ONE, nameOf)
     expect(ready).toMatchObject({
-      rung: 'f2', title: 'Next: Friendship 2', perk: { words: 'Hangouts in the evening', opens: null }, hint: 'The Fields, while she works them.',
+      rung: 'f2', title: 'Next: Friendship 2', perk: { words: '+10% at the Fields', opens: null }, hint: 'The Fields, while she works them.',
       bar: { points: 240, cost: 240, banked: 60 }, words: 'Ready', ready: true,
     })
-    expect(nextCard(farm({ [ONE]: { level: 2, points: 30 } }), PACK, ONE, nameOf)).toMatchObject({ perk: { words: '+10% at the Fields' }, words: '250 to go', waits: 'bar' })
+    expect(nextCard(farm({ [ONE]: { level: 2, points: 30 } }), PACK, ONE, nameOf)).toMatchObject({ perk: { words: 'Hangouts in the evening' }, words: '250 to go', waits: 'bar' })
     // 9000002 has no bible: no hint, her calling's perks; her unscripted Friendship 1 waits only on her bar.
     expect(nextCard(farm(), PACK, TWO, nameOf)).toMatchObject({ title: 'Next: Friendship 1', hint: null, perk: { words: 'Her loved gift shown; her own chats' }, waits: 'bar' })
     expect(nextCard(farm({ [ONE]: { stage: 'spouse', level: 5 } }), PACK, ONE, nameOf)).toMatchObject({ rung: null, title: 'Her route is complete', perk: null, words: 'Her route is complete' })

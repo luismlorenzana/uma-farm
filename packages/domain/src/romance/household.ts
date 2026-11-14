@@ -2,7 +2,8 @@
 // house, shared houses' bonds, the spouse ladder's night levels, the household milestones, the house's morning with its
 // house line, the household scenes, the finale and the Festival of Vows.
 //
-//   before step 1  tonight's house is noted (`slept`): your pick, else the house slept in least lately
+//   before step 1  tonight's house and companion are noted (`slept`, her `night`): your pick of her (her house), else
+//                  the house slept in least lately and its resident who's been your companion least lately
 //   step 6         +10 bond a night to each pair sharing a house; a spouse at S1 or S3 whose 600 is full reaches S2 or S4
 //   step 8         the married count passing 1, 5, 10, 15 and 20: news, the furniture set at 5, the finale's day at 20
 //   step 9         the house's morning: each resident +30, her breakfast (S1) if no meal runs, one more morning item each
@@ -24,6 +25,7 @@ import type { StoryPack } from '../story/pack'
 import { beatOf, placeholderHouseholdBeat } from '../story/placeholders'
 import { lineGood } from './days'
 import { defaultHouse, missesYou } from './homestead'
+import { companionTonight } from './loop'
 import { addLove, advance, bar } from './love'
 import type { EventCard } from './events'
 import { perkOf } from './perks'
@@ -39,21 +41,26 @@ export const HOUSE_ITEM_N = 2
 
 // --- Before step 1: the night's house ----------------------------------------------------------------------
 
-/** The house slept in tonight, and whose room it is on a birthday-alone night. */
+/** The house slept in tonight, whose room it is on a birthday-alone night, and the night's companion, who greets you in
+ * the morning (null with no one in that house). */
 export interface NightHouse {
   house: number
   alone: string | null
+  companion: string | null
 }
 
-/** Before step 1: once anyone is married, tonight's house is noted, your pick or else the default (the
- * house slept in least lately), its night the evening's day; the pick clears for tomorrow's. Before the first wedding, nothing. */
+/** Before step 1: once anyone is married, tonight's house and companion are noted: your pick of her (her house), else
+ * the default (the house slept in least lately, and its resident who's been your companion least lately), its night the
+ * evening's day, and hers (`love.night`); the picks clear for tomorrow's. Before the first wedding, nothing. */
 export function noteTheNight(save: SaveV4): { save: SaveV4; night: NightHouse | null } {
   if (marriedCount(save) === 0) return { save, night: null }
-  const h = save.homestead
+  const companion = companionTonight(save)
+  const { companion: _picked, ...h } = save.homestead
   const house = h.tonight ?? defaultHouse(save)
   const alone = h.tonight === null || h.alone === null || save.love[h.alone]?.house !== house ? null : h.alone
   const slept = h.slept.map((d, i) => (i === house ? save.calendar.day : d))
-  return { save: { ...save, homestead: { ...h, tonight: null, alone: null, slept } }, night: { house, alone } }
+  const love = companion === null ? save.love : { ...save.love, [companion]: { ...save.love[companion]!, night: save.calendar.day } }
+  return { save: { ...save, love, homestead: { ...h, tonight: null, alone: null, slept } }, night: { house, alone, companion } }
 }
 
 // --- Step 6: shared houses and night levels ---------------------------------------------------------

@@ -3,22 +3,28 @@
 // kind and ✉. `?evening=<characterId>` is her profile's **Evening ›** (and a picked row): her kinds sheet, each open kind
 // with her three numbers today ("Perfect +225", ★ her favourite ×1.5, +20 when she asked), the ones her ladder hasn't
 // opened greyed with their rung; then the play at its evening length (`PlaySheet`, seeded by the day, her and the kind)
-// over everything; then the card: the grade, the sum and her bar, one **Continue**. Nothing is saved until the play ends:
-// `spendEvening` commits once, stamped. Loaded on demand.
+// over everything; then her scene for it on the dialogue engine (the story's `hangout-<kind>`, `date-<kind>`,
+// `dinner-in-town` or `a-night-in`, else the default's, in the moment's outfit: a picnic's, a dinner's, a night in's, a
+// festival night's), Skip to the end; then the card: the grade, the sum and her bar, one **Continue**. An evening takes 2
+// of the day's actions. Nothing is saved until the play ends: `spendEvening` commits once, stamped. Loaded on demand.
 import {
-  birthdaysOf, EVENINGS, eveningSeed, GRADE_NAMES, isAnniversary, isBirthday, LADDER_COLOURS, ladderOf, levelWords, type EveningCard, type EveningKind, type SaveV4,
-  type StoryPack,
+  birthdaysOf, eveningCost, eveningMoments, eveningRole, EVENINGS, eveningScene, eveningSeed, GRADE_NAMES, isAnniversary, isBirthday, LADDER_COLOURS, ladderOf, levelWords,
+  type EveningCard, type EveningKind, type EveningRole, type PlayedEvent, type SaveV4, type StoryPack,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useNavigate, useSearchParams } from 'react-router'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
+import { SceneLookProvider } from '../dialogue/Bust'
 import { useLoopSave } from '../save/game'
+import { herEventOf, namer } from '../story/people'
 import { useStory } from '../story/story'
+import { LifeScene } from './LifeScene'
+import { Frame } from './ScenePlayer'
 import { spendHerEvening } from './evening-actions'
 import { cardSum, inviteBonus, kindRows, paysWords, pickRows, roleWords, type KindRow } from './evening-view'
 import { InviteChip } from './HeartMarks'
@@ -83,7 +89,7 @@ function Picker({ save, pack, master, onPick, onClose }: { save: SaveV4; pack: S
   )
 }
 
-type Phase = { at: 'kinds' } | { at: 'play'; kind: EveningKind } | { at: 'card'; card: EveningCard }
+type Phase = { at: 'kinds' } | { at: 'play'; kind: EveningKind } | { at: 'scene'; card: EveningCard } | { at: 'card'; card: EveningCard }
 
 /** Her evening: the kinds sheet, the play, the card. */
 function Her({ id, save, pack, master, onClose }: { id: string; save: SaveV4; pack: StoryPack; master: MasterView; onClose: () => void }) {
@@ -92,6 +98,8 @@ function Her({ id, save, pack, master, onClose }: { id: string; save: SaveV4; pa
   const name = nameIn(master)(id)
   const birthday = useMemo(() => isBirthday(birthdaysOf(pack, master.birthdays), id, save.calendar.day), [pack, master, id, save.calendar.day])
   const love = save.love[id]
+  // Her role as the evening starts: her scene is a hangout's, a date's or a spouse's.
+  const [role] = useState<EveningRole | null>(() => (love ? eveningRole(love) : null))
   if (!love || !save.roster[id]) return null
   const colour = LADDER_COLOURS[ladderOf(love.stage)]
   if (phase.at === 'play') {
@@ -100,9 +108,12 @@ function Her({ id, save, pack, master, onClose }: { id: string; save: SaveV4; pa
         onLeave={onClose}
         onDone={(score) => {
           setError(null)
-          spendHerEvening(id, phase.kind, score).then((card) => setPhase({ at: 'card', card }), (err: unknown) => setError(err instanceof Error ? err.message : 'That didn’t work.'))
+          spendHerEvening(id, phase.kind, score).then((card) => setPhase({ at: 'scene', card }), (err: unknown) => setError(err instanceof Error ? err.message : 'That didn’t work.'))
         }} />
     )
+  }
+  if (phase.at === 'scene') {
+    return <EveningScene save={save} pack={pack} master={master} id={id} name={name} role={role ?? 'hangout'} kind={phase.card.kind} onDone={() => setPhase({ at: 'card', card: phase.card })} />
   }
   if (phase.at === 'card') return <CardLayer card={phase.card} name={name} colour={colour} onContinue={onClose} />
   const rows = kindRows(save, pack, id, birthday)
@@ -123,7 +134,7 @@ function Her({ id, save, pack, master, onClose }: { id: string; save: SaveV4; pa
         <ul className="space-y-1.5">
           {rows.map((row) => <li key={row.kind}><KindButton row={row} onPick={() => setPhase({ at: 'play', kind: row.kind })} /></li>)}
         </ul>
-        <p className="text-[12px] text-ink-faint">One evening a day. ★ her favourite kind pays ×1.5. Never failed: a miss is a Fine.</p>
+        <p className="text-[12px] text-ink-faint">One evening a day, {eveningCost()} actions. ★ her favourite kind pays ×1.5. Never failed: a miss is a Fine.</p>
       </div>
     </Sheet>
   )
@@ -156,6 +167,32 @@ function PlayLayer({ save, pack, id, kind, name, birthday, error, onDone, onLeav
       <button type="button" onClick={onLeave} aria-label="Leave the evening" className="absolute top-2 right-2 z-20 grid size-11 place-items-center rounded-full bg-panel/90 text-[18px] text-ink-soft shadow-1" data-action="leave-evening">✕</button>
       {error && <p role="alert" className="absolute inset-x-4 bottom-6 z-20 rounded-md bg-panel p-3 text-center text-[14px] text-danger shadow-2" data-evening-error>{error}</p>}
     </div>,
+    document.body,
+  )
+}
+
+/** Her scene for the evening, after its play, over everything: the story's, else the default's, in the moment's outfit.
+ * Skip or its end goes on to the card. */
+function EveningScene({ save, pack, master, id, name, role, kind, onDone }: {
+  save: SaveV4; pack: StoryPack; master: MasterView; id: string; name: string; role: EveningRole; kind: EveningKind; onDone: () => void
+}) {
+  const [event, setEvent] = useState<PlayedEvent | null>(null)
+  useEffect(() => {
+    let live = true
+    void herEventOf(pack, id, eveningScene(role, kind)).then((found) => live && setEvent(found), () => live && onDone())
+    return () => { live = false }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const title = `${EVENINGS[kind].name} · ${name}`
+  return createPortal(
+    <Frame title={title} label={title} scene={`evening:${kind}:${id}`} onSkip={onDone} skipping={false}>
+      {event
+        ? (
+          <SceneLookProvider value={{ own: event.outfit, moments: eveningMoments(kind), day: save.calendar.day, leads: [id] }}>
+            <LifeScene id={id} steps={event.steps} nameOf={namer(master, pack)} farmer={save.farmer.name} onDone={onDone} data={{ 'data-evening-scene': eveningScene(role, kind) }} />
+          </SceneLookProvider>
+        )
+        : <div className="flex-1" />}
+    </Frame>,
     document.body,
   )
 }

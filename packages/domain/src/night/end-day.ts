@@ -310,8 +310,9 @@ export const serveTheReception: NightStep = (night) => {
   return { ...night, save: serveReception(night.save, night.before.today.reception).save }
 }
 
-/** Before step 1: once anyone is married, tonight's house is noted, your pick from
- * Tonight's Sleep at or else the house slept in least lately, and the pick clears for tomorrow. */
+/** Before step 1: once anyone is married, tonight's house and companion are noted, your pick of her from Tonight (her
+ * house) or else the house slept in least lately and its resident who's been your companion least lately, and the picks
+ * clear for tomorrow. */
 export const noteTonight: NightStep = (night) => {
   const { save, night: house } = noteTheNight(night.save)
   return { ...night, save, notes: { ...night.notes, house } }
@@ -392,7 +393,8 @@ function dormNews({ notes }: Night): Extract<NewsLine, { kind: 'dorm' | 'home' }
   return [...(notes.dorm !== null ? [{ kind: 'dorm' as const, level: notes.dorm }] : []), ...(notes.home.length > 0 ? [{ kind: 'home' as const, umas: [...notes.home] }] : [])]
 }
 
-/** §4 Hearts: this morning's invitations, birthdays and anniversaries today and tomorrow (`heartsMorning`), then everyone the
+/** §4 Hearts: the night's companion, who greets you this morning; this morning's invitations, birthdays and anniversaries
+ * today and tomorrow (`heartsMorning`), then everyone the
  * night met at step 8, in the cast's order, home or in town (her meeting scene waits for the farm to open), and each
  * chapter that opened this morning (`chaptersOpened`); then this morning's items and the night's chores; then the perks'
  * extras, side by side's extras and the bond hearts reached since the last morning. */
@@ -408,6 +410,7 @@ function heartLines(night: Night): HeartLine[] {
   const items = new Map<string, string[]>()
   for (const line of [...night.notes.items, ...night.notes.houseItems]) items.set(line.id, [...(items.get(line.id) ?? []), ...line.items])
   return [
+    ...(night.notes.house?.companion ? [{ kind: 'morning' as const, id: night.notes.house.companion }] : []),
     ...night.notes.invites,
     ...night.notes.days,
     ...(night.notes.vows ? [night.notes.vows] : []),
@@ -447,7 +450,7 @@ export const morningItems: NightStep = (night) => {
 }
 
 /** Step 9, after `heartsMorning`: this morning's invitations, one (two from 10 married),
- * drawn by weight among the Umas home at Friendship 2+ whose favourite kind is open to them, into `today.invites`
+ * drawn by weight among the Umas home at Friendship 3+ whose favourite kind is open to them, into `today.invites`
  * unanswered and §4's second place. A night without the pack draws none. */
 export const drawInvitations: NightStep = (night) => {
   if (!night.context.story) return night
@@ -492,7 +495,7 @@ export interface NightStepDef {
 
 /** The night's steps, in order. */
 export const NIGHT_STEPS: readonly NightStepDef[] = [
-  { step: 1, name: 'noteTonight', run: noteTonight, what: 'Before the bin, once anyone is married: tonight’s house is noted (its last night slept is today), your pick from Sleep at or else the house slept in least lately; the pick clears for tomorrow' },
+  { step: 1, name: 'noteTonight', run: noteTonight, what: 'Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning' },
   { step: 1, name: 'payTheBin', run: payTheBin, what: 'The bin pays: everything shipped today, at price × stars × demand' },
   { step: 1, name: 'settleTheAccounts', run: settleTheAccounts, what: 'The accounts: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the upkeep, with anything owed: what gold there is pays, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid' },
   { step: 2, name: 'growCrops', run: growCrops, what: 'Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day' },
@@ -521,7 +524,7 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 9, name: 'vowsMorning', run: vowsMorning, what: 'The Festival of Vows: on the finale’s day of the year, each later year, every spouse +50 and a festival night tonight' },
   { step: 9, name: 'heartsMorning', run: heartsMorning, what: 'Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse' },
   { step: 9, name: 'morningItems', run: morningItems, what: 'Morning items: each Uma on the farm leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+)' },
-  { step: 9, name: 'drawInvitations', run: drawInvitations, what: 'Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, \'invite\', n)` among those home at Friendship 2+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14)' },
+  { step: 9, name: 'drawInvitations', run: drawInvitations, what: 'Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, \'invite\', n)` among those home at Friendship 3+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14)' },
   { step: 9, name: 'buildSummary', run: buildSummary, what: 'The morning summary, from what changed; §4 Hearts lists the invitations, the Festival of Vows, the night’s levels, the house’s morning, rooms taken and a house that misses you, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning; §5 the household milestones' },
 ]
 

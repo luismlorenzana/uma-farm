@@ -1,17 +1,18 @@
 // Her menu in town (`?uma=<id>`), on the dialogue engine: her bust on the left (her portrait in the day's outfit with
 // her face changing as she answers; else her master-data bust), and on the right her name, where she is, her line in the
-// engine's line box, and her menu, each item with its cost in actions:
+// engine's line box, and her menu, each item with its cost in actions. How she stands with you is her stage in the Uma
+// loop with her ladder's level ("Farmhand · F5", `stageWords`):
 // - **Introduce yourself · 1 action** while you haven't met: she's met, and her meeting scene plays over the town;
 // - **Talk · 1** (once a day, +15): her line for the day, her face happy;
 // - **Give a gift · 1** (once a day): the gift picker, then her reaction, her face by her taste;
-// - **Hangout** (a friend) or **Date** (a sweetheart): her evening as built, or why not;
-// - **Invite her to work**: coming with the farmhands;
+// - **Hangout · 2** (a friend) or **Date · 2** (a sweetheart, a spouse): her evening, or why not;
+// - **Invite her to work · 1** (a friend, once): she's a farmhand from today;
 // - **Her event · 1** once it's Ready (the event player, over the town).
 // One of the town's people gets her post instead: her role, what she does, her ties, and her post's menu. One not out now
 // says so; one who lives on the farm links her profile. A talk, a gift or an introduction that unlocks a Town note says
 // so. Loaded with the town's screen.
 import {
-  atHome, CAST, chatLineV4, GAME_DAYS, giftLineV4, herMenu, levelWords, townLineOf, townLocation, townLocations, townOf, type Expression, type MenuItem, type SaveV4,
+  atHome, CAST, chatLineV4, GAME_DAYS, giftLineV4, herMenu, stageWords, townLineOf, townLocation, townLocations, townOf, type Expression, type MenuItem, type SaveV4,
   type ShopId, type StoryPack, type Taste, type TownDay,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -25,7 +26,7 @@ import { GiftPicker } from '../loop/Love'
 import { talentTable } from '../loop/talents'
 import { outfitFor, useSpecialDays } from '../story/story'
 import { NoteFound } from './NoteFound'
-import { giftOnce, introduceOnce, talkOnce } from './town-actions'
+import { giftOnce, introduceOnce, talkOnce, workOnce } from './town-actions'
 import { hereWords, keeperTies, postMenu } from './town-view'
 
 type NameOf = (id: string) => string
@@ -98,6 +99,11 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
         setNotes(r.notes)
       })
       case 'gift': return setGiving(true)
+      case 'work': return act(async () => {
+        await workOnce(id)
+        setSaid({ line: 'The farm? I’d love to. Count me in.', emote: 'happy' })
+        setNote('Farmhand ✓')
+      })
       default: return undefined
     }
   }
@@ -115,7 +121,7 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
       <div className="flex shrink-0 items-baseline gap-2">
         {/* Her name is the line box's speaker; with no line, it's here. */}
         {!(at || onFarm) && <p className="font-display min-w-0 truncate text-[18px] font-bold" data-her-name>{name}</p>}
-        <p className="shrink-0 text-[13px] font-semibold text-[#c2385e]" data-standing>{love ? levelWords(love) : 'Not met yet'}</p>
+        <p className="shrink-0 text-[13px] font-semibold text-[#c2385e]" data-standing>{love ? stageWords(save, id) : 'Not met yet'}</p>
         {note && <p role="status" className="ml-auto shrink-0 text-[14px] font-bold text-[#c2385e]" data-paid>{note}</p>}
       </div>
       {at || onFarm ? (

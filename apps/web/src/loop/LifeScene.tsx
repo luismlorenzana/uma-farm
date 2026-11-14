@@ -1,0 +1,135 @@
+// Her life's short scenes on the dialogue engine, the Uma loop's: the wedding night's and moving in's (inside the event
+// player, after the wedding), an evening's (inside the evening, after its play), and over any page at `?life=`:
+//   `?life=morning:<id>`        the night's companion greets you, in pajamas, a short scene: right after the night, and
+//                                from the morning's ☾ line (her temperament's greeting, the same all morning);
+//   `?life=moving-in:<id>`      moving in: her route's `moving-in`, else the default story's, from the morning's
+//                                "moved into" line (a spouse who waited for a room);
+//   `?life=breakfast:<id>`,     a meal's scene: one spouse's line as you sit down, after you cook it.
+//   `?life=dinner:<id>`
+// She stays on the stage through the narration with the face of her last line; a choice is wording only. They pay
+// nothing and save nothing; Skip, or the end, closes. Portaled above the sheets (z-60). Loaded on demand.
+import { greetingScene, mealScene, sceneSteps, type Meal, type Moment, type SaveV4, type Step, type StoryOutfit, type StoryPack } from '@farm/domain'
+import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { useLocation } from 'react-router'
+import { SceneLookProvider } from '../dialogue/Bust'
+import { lastSay, Line, nextSay } from '../dialogue/Line'
+import { Stage } from '../dialogue/Stage'
+import { MasterGate } from '../master/MasterGate'
+import type { MasterView } from '../master/master'
+import { useLoopSave } from '../save/game'
+import { herEventOf, namer } from '../story/people'
+import { outfitFor, useStory } from '../story/story'
+import { Frame, silent, WordingChoice } from './ScenePlayer'
+import { talentTable } from './talents'
+
+/** A night's backdrop: a lamp-lit room after dark (the wedding night). */
+export const NIGHT_BACKDROP = <span aria-hidden className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, #1d2742 0%, #3b3358 65%, #6b4a5e 100%)' }} data-backdrop="night" />
+/** The morning's backdrop: soft light through the curtains (the night's companion's greeting). */
+export const MORNING_BACKDROP = <span aria-hidden className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, #f6e3c8 0%, #f3cfc0 60%, #d9b3c4 100%)' }} data-backdrop="morning" />
+
+/**
+ * A short scene's steps, played: each line with the speaker's bust; she (`id`) stays on the stage through narration with
+ * her last line's face; a choice is wording only, its `then` spliced in. `onDone` at its end.
+ */
+export function LifeScene({ id, steps, nameOf, farmer, backdrop = null, onDone, data = {} }: {
+  id: string; steps: readonly Step[]; nameOf: (who: string) => string; farmer: string; backdrop?: ReactNode; onDone: () => void
+  data?: { [key: `data-${string}`]: string | number | boolean | undefined }
+}) {
+  const [picks, setPicks] = useState<number[]>([])
+  const [at, setAt] = useState(0)
+  const shown = useMemo(() => sceneSteps(steps, picks), [steps, picks])
+  let cursor = at
+  while (cursor < shown.length && silent(shown[cursor]!)) cursor++
+  const step = shown[cursor]
+  const done = cursor >= shown.length
+  useEffect(() => {
+    if (done) onDone()
+  }, [done]) // eslint-disable-line react-hooks/exhaustive-deps
+  if (!step) return <div className="flex-1" />
+  const before = shown.slice(0, cursor)
+  const speaker = 'say' in step ? step.say : null
+  const bust = speaker ?? id
+  const emote = 'say' in step ? step.emote ?? null : lastSay(before, id)?.emote ?? null
+  if ('choice' in step) {
+    return <WordingChoice options={step.choice} farmer={farmer} bust={{ who: bust, name: nameOf(bust), emote }} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />
+  }
+  return (
+    <Stage bust={{ who: bust, name: nameOf(bust), emote }} backdrop={backdrop} next={nextSay(shown, cursor + 1)} onTap={() => setAt(cursor + 1)} data={data}>
+      <Line key={cursor} step={step} nameOf={nameOf} farmer={farmer} onNext={() => setAt(cursor + 1)} beat={cursor} typed />
+    </Stage>
+  )
+}
+
+// --- `?life=` -------------------------------------------------------------------------------------------------------
+
+export type LifeKind = 'morning' | 'moving-in' | Meal
+const LIFE = /^(morning|moving-in|breakfast|dinner):(s?\d{1,12})$/
+/** What `?life=` asks for: its kind and her id. */
+export function parseLife(value: string | null): { kind: LifeKind; id: string } | null {
+  const m = value ? LIFE.exec(value) : null
+  return m ? { kind: m[1] as LifeKind, id: m[2]! } : null
+}
+/** The link that plays one: `?life=<kind>:<id>`. */
+export const lifeParam = (kind: LifeKind, id: string): string => `${kind}:${id}`
+
+/** A scene's titles and look by its kind. */
+const TITLES: Readonly<Record<LifeKind, string>> = { morning: 'Morning', 'moving-in': 'Moving in', breakfast: 'Breakfast', dinner: 'Dinner' }
+const MOMENTS: Readonly<Record<LifeKind, Moment[]>> = { morning: ['night-in'], 'moving-in': [], breakfast: [], dinner: [] }
+
+/** The scene `?life=` plays: its steps (her route's moving-in is read on demand), with her outfit when it names one. */
+async function stepsFor(kind: LifeKind, save: SaveV4, story: StoryPack, master: MasterView, id: string): Promise<{ steps: readonly Step[]; outfit?: StoryOutfit }> {
+  const name = namer(master, story)(id)
+  switch (kind) {
+    case 'morning': return { steps: greetingScene(save, story, id, talentTable(master).get(outfitFor(id))?.temperament ?? 'steady', name), outfit: 'pajamas' }
+    case 'moving-in': {
+      const event = await herEventOf(story, id, 'moving-in')
+      return { steps: event.steps, ...(event.outfit ? { outfit: event.outfit } : {}) }
+    }
+    default: return { steps: mealScene(save, story, id, kind, name) }
+  }
+}
+
+export default function LifePlayer({ value }: { value: string }) {
+  const save = useLoopSave()
+  const story = useStory()
+  const location = useLocation()
+  const leave = useLeave()
+  const asked = parseLife(value)
+  const close = () => leave(withParam(location, 'life', null))
+  useEffect(() => {
+    if (save && (!asked || !save.roster[asked.id])) close()
+  }, [save, asked?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  if (!save || !story || !asked || !save.roster[asked.id]) return null
+  return createPortal(
+    <MasterGate skeleton={<div className="fixed inset-0 z-[60] bg-page" />}>
+      {(master) => <Played kind={asked.kind} id={asked.id} save={save} story={story} master={master} onClose={close} />}
+    </MasterGate>,
+    document.body,
+  )
+}
+
+function Played({ kind, id, save, story, master, onClose }: { kind: LifeKind; id: string; save: SaveV4; story: StoryPack; master: MasterView; onClose: () => void }) {
+  // Read once, as it starts: the morning's greeting and a meal's line are the day's draw.
+  const [scene, setScene] = useState<{ steps: readonly Step[]; outfit?: StoryOutfit } | null>(null)
+  useEffect(() => {
+    let live = true
+    void stepsFor(kind, save, story, master, id).then((found) => live && setScene(found), () => live && onClose())
+    return () => { live = false }
+  }, [kind, id]) // eslint-disable-line react-hooks/exhaustive-deps
+  const nameOf = namer(master, story)
+  const title = `${TITLES[kind]} · ${nameOf(id)}`
+  return (
+    <Frame title={title} label={title} scene={`life:${kind}:${id}`} onSkip={onClose} skipping={false}>
+      {scene
+        ? (
+          <SceneLookProvider value={{ own: scene.outfit, moments: MOMENTS[kind], day: save.calendar.day, leads: [id] }}>
+            <LifeScene id={id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} backdrop={kind === 'morning' ? MORNING_BACKDROP : null} onDone={onClose}
+              data={{ 'data-life': kind }} />
+          </SceneLookProvider>
+        )
+        : <div className="flex-1" />}
+    </Frame>
+  )
+}

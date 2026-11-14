@@ -2,11 +2,14 @@
 // line for the day), Gift (one action: the picker with each good's points for her today, or "?") and Praise +20 while earned, 48 pt in
 // the profile's thumb zone. What an act paid goes up to the profile (`onPaid`), which floats it from her face; a note
 // says it, a gift in her words by her taste (the default story's: "‹name› smiles. “Peach? That’s lovely.” +36"). **Evening ›** is there too (her evening at `?evening=<id>`, or why not:
-// "Evening ✓", "Evening · F2", "In town", "Evening spent"), so Chat, Gift and Evening sit side by side and
-// Praise +20 takes the row under them. Loaded on demand with the Hearts tab.
+// "Evening ✓", "Evening · F3", "In town", "Evening spent"; an evening takes 2 actions), so Chat, Gift and Evening sit side
+// by side and Praise +20 takes the row under them. **Where you meet her:** Chat, Gift and **Invite her to work · 1** (a
+// friend, once) need her in front of you: on the farm when she lives there, else in town where she is today, once you've
+// gone into town (`whereYouMeet`); otherwise a line says where she is, a tap to her in town ("At the Café today ›"), or
+// "At home today". Her Ready event (Play · 1 on the Next card) plays from anywhere. Loaded on demand with the Hearts tab.
 import {
-  actionsLeft, birthdaysOf, canPraise, chatLineV4, FAMILY_NAMES, festivalsOf, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, LOVE_POINTS, type SaveV4, type StoryPack,
-  type Temperament,
+  actionsLeft, birthdaysOf, canPraise, chatLineV4, FAMILY_NAMES, festivalsOf, FRIEND_FROM, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, isFarmhand, LOVE_POINTS, townLocation,
+  whereYouMeet, workBlock, type SaveV4, type StoryPack, type Temperament,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
@@ -14,6 +17,7 @@ import { useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import type { MasterView } from '../master/master'
+import { workOnce } from '../town/town-actions'
 import { chatHer, giftHer, praiseHer } from './actions'
 import { eveningButton } from './evening-view'
 import { gain } from './love-words'
@@ -25,7 +29,7 @@ const fill = (line: string, name: string, farmer: string): string => line.split(
 /** Chat, Gift and Praise, with today's chat line and the last act's note above them. */
 export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: {
   save: SaveV4
-  pack: Pick<StoryPack, 'bibles' | 'cast'> & Partial<Pick<StoryPack, 'world' | 'master'>>
+  pack: Pick<StoryPack, 'bibles' | 'cast'> & Partial<Pick<StoryPack, 'world' | 'master' | 'town'>>
   id: string
   name: string
   temperament: Temperament | null
@@ -38,12 +42,16 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
   const [giving, setGiving] = useState(false)
   const location = useLocation()
   const birthdays = useMemo(() => birthdaysOf(pack, master.birthdays), [pack, master])
+  // Where you'd find her now: talks, gifts and the invitation to work need her in front of you.
+  const meet = useMemo(() => whereYouMeet(save, pack, id), [save, pack, id])
   if (!save.love[id]) return null
   const talked = save.today.chats.includes(id)
   const gave = save.today.gifts.includes(id)
   const praise = canPraise(save, id)
-  // A talk and a gift each take an action.
-  const out = actionsLeft(save) === 0
+  // A talk and a gift each take an action, with her in front of you.
+  const out = actionsLeft(save) === 0 || !meet.here
+  const work = workBlock(save, id)
+  const invite = !isFarmhand(save, id) && work !== `From Friendship ${FRIEND_FROM}` && work !== 'Meet her first.'
   const evening = eveningButton(save, id, festivalsOf(pack))
   const line = talked ? fill(chatLineV4(save, pack, id, temperament ?? 'steady'), name, save.farmer.name) : null
   const paid = (points: number, words: string) => {
@@ -56,6 +64,7 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
     <div className="space-y-2" data-love={id}>
       {line && <p className="rounded-md bg-sunken/70 px-3 py-2 text-[14px] italic" data-chat-line>{line}</p>}
       {(note || error) && <p role="status" className={`text-[13px] font-semibold ${error ? 'text-danger' : 'text-success'}`} data-love-note>{error ?? note}</p>}
+      {!meet.here && <MeetLine pack={pack} id={id} at={meet.at} />}
       <div className="grid grid-cols-3 gap-2">
         <Button variant="secondary" size="md" className="px-2!" disabled={talked || out} data-action="chat" aria-label={talked ? 'Chat done today' : `Chat, +${LOVE_POINTS.chat}, 1 action`}
           onClick={() => void chatHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥`), fail)}>
@@ -71,6 +80,12 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
           <Button variant="secondary" size="md" className="px-2! text-[14px]!" disabled data-action="evening">{evening.text}</Button>
         )}
       </div>
+      {invite && (
+        <Button variant="secondary" size="md" className="w-full" disabled={work !== null || !meet.here} data-action="invite-work"
+          onClick={() => void workOnce(id).then(() => { setError(null); setNote('Farmhand ✓ She works the farm from today.') }, fail)}>
+          Invite her to work · 1
+        </Button>
+      )}
       {praise && (
         <Button size="md" className="w-full" data-action="praise" onClick={() => void praiseHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥ Well done!`), fail)}>
           Praise +{LOVE_POINTS.praise}
@@ -87,6 +102,19 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
           }} />
       )}
     </div>
+  )
+}
+
+/** Where she is when she isn't in front of you: in town today at her place (a tap goes to her there; "go into town" first
+ * if you haven't), or at home. */
+function MeetLine({ pack, id, at }: { pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town' | 'master'>>; id: string; at: string | null }) {
+  const place = at ? townLocation(pack, at)?.name ?? null : null
+  if (!at) return <p className="text-[13px] text-ink-soft" data-meet="home">At home today. Talk with her in town another day.</p>
+  return (
+    <p className="flex min-h-11 items-center justify-between gap-2 text-[13px] text-ink-soft" data-meet={at}>
+      <span>In town today, at {place ?? 'her place'}. Talks and gifts are in person.</span>
+      <Link to={`/town?at=${at}&uma=${id}`} state={{ back: true }} className="shrink-0 font-semibold text-accent-strong underline" data-action="find-her">Find her ›</Link>
+    </p>
   )
 }
 

@@ -62,12 +62,12 @@ export const ACTIONS: readonly ActionRule[] = [
   rule('introduce', 'The Umas', 'Introduce yourself', 1),
   rule('talk', 'The Umas', 'Talk', 1),
   rule('gift', 'The Umas', 'Give a gift', 1),
-  rule('invite', 'The Umas', 'Invite her to work', 1, 'the Uma loop'),
-  rule('hangout', 'The Umas', 'A hangout or a date', 2, 'the Uma loop'),
+  rule('invite', 'The Umas', 'Invite her to work', 1),
+  rule('hangout', 'The Umas', 'A hangout or a date', 2),
   rule('event', 'The Umas', 'Her event, when it’s ready, or an occasion scene with her', 1),
   rule('festival', 'A festival', 'Join it; it opens its own events', 3, 'the festivals’ contests'),
-  rule('cook', 'The household', 'Cook a meal for the household', 1, 'the Uma loop'),
-  rule('companion', 'The household', 'Choose tonight’s companion, at the day’s end', 0, 'the Uma loop'),
+  rule('cook', 'The household', 'Cook a meal for the household: breakfast or dinner', 1),
+  rule('companion', 'The household', 'Choose tonight’s companion, at the day’s end', 0),
 ]
 const BY_ID = new Map(ACTIONS.map((a) => [a.id, a]))
 /** An action's cost. */

@@ -27,15 +27,15 @@ describe('the perks', () => {
 
   it('templates each line’s place, chore and morning item', () => {
     expect(words('farming')).toMatchObject({
-      f3: '+10% at the Fields', f6: 'Waters a dry tile each night', r2: 'A ★2+ crop of the season every 4th morning', r5: '+10% more at the Fields (+20%)',
+      f2: '+10% at the Fields', f6: 'Waters a dry tile each night', r2: 'A ★2+ crop of the season every 4th morning', r5: '+10% more at the Fields (+20%)',
       s3: 'Her dream; +5% for anyone at the Fields',
     })
-    expect(words('foraging')).toMatchObject({ f3: '+10% at the forest', f6: 'One item from the forest each night', f9: 'Mentor: +10% rank points for Umas at the forest' })
-    expect(words('fishing')).toMatchObject({ f3: '+10% at the Fishery', f6: 'One fish from the Fishery each night', s2: 'A ★3+ fish every 2nd morning, and each morning in her house' })
-    expect(words('mining')).toMatchObject({ f3: '+10% at the Mine', f6: 'One ore from the Mine each night', r2: 'A ★2+ ore every 4th morning' })
-    expect(words('quarry')).toMatchObject({ f3: '+10% at the Quarry', f6: 'One stone or gem from the Quarry each night', r2: 'A ★2+ stone or gem every 4th morning' })
-    expect(words('ranch')).toMatchObject({ f3: '+10% at the ranch', f6: '+5 affection to her pen each night', r2: 'A ★2+ egg, milk or fleece every 4th morning' })
-    expect(words('cooking')).toMatchObject({ f3: '+10% at the Kitchen', f6: 'One more dish on the Kitchen’s next play', r2: 'A ★2+ dish every 4th morning' })
+    expect(words('foraging')).toMatchObject({ f2: '+10% at the forest', f6: 'One item from the forest each night', f9: 'Mentor: +10% rank points for Umas at the forest' })
+    expect(words('fishing')).toMatchObject({ f2: '+10% at the Fishery', f6: 'One fish from the Fishery each night', s2: 'A ★3+ fish every 2nd morning, and each morning in her house' })
+    expect(words('mining')).toMatchObject({ f2: '+10% at the Mine', f6: 'One ore from the Mine each night', r2: 'A ★2+ ore every 4th morning' })
+    expect(words('quarry')).toMatchObject({ f2: '+10% at the Quarry', f6: 'One stone or gem from the Quarry each night', r2: 'A ★2+ stone or gem every 4th morning' })
+    expect(words('ranch')).toMatchObject({ f2: '+10% at the ranch', f6: '+5 affection to her pen each night', r2: 'A ★2+ egg, milk or fleece every 4th morning' })
+    expect(words('cooking')).toMatchObject({ f2: '+10% at the Kitchen', f6: 'One more dish on the Kitchen’s next play', r2: 'A ★2+ dish every 4th morning' })
     // The levels that don't depend on her line read the same for everyone.
     for (const line of PERK_LINES) {
       expect(words(line)).toMatchObject({
@@ -47,10 +47,10 @@ describe('the perks', () => {
 
   it('says "Opens when the Mine is built" for a miner’s perks at her place until it stands', () => {
     const at = (line: PerkLine, ...ids: FarmPlaceId[]) => Object.fromEntries(perksFor(line, built(...ids)).map((p) => [p.rung, p.opens]))
-    expect(at('mining')).toMatchObject({ f3: 'mine', f6: 'mine', f8: 'mine', f9: 'mine', r5: 'mine', r7: 'mine', s3: 'mine', s4: 'mine', f1: null, f5: null, r2: null })
-    expect(at('quarry', 'mine').f3).toBe('quarry')
-    expect(at('mining', 'mine').f3).toBeNull()
-    expect(at('forging').f3).toBe('forge')
+    expect(at('mining')).toMatchObject({ f2: 'mine', f6: 'mine', f8: 'mine', f9: 'mine', r5: 'mine', r7: 'mine', s3: 'mine', s4: 'mine', f1: null, f5: null, r2: null })
+    expect(at('quarry', 'mine').f2).toBe('quarry')
+    expect(at('mining', 'mine').f2).toBeNull()
+    expect(at('forging').f2).toBe('forge')
     expect(at('ranch').f6).toBe('coop')
     // The Fields, the forest and the Fishery are open from day 1.
     for (const line of ['farming', 'foraging', 'fishing'] as const) expect(perksFor(line, built()).every((p) => p.opens === null)).toBe(true)

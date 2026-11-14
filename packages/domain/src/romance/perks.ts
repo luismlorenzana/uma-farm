@@ -6,8 +6,8 @@
 //
 //   Level  Friendship                      Romance                          Spouse
 //     1    her loved gift shown, her chats dates, her pet name              breakfast in her house
-//     2    hangouts                        a morning item every 4th morning  a morning item every 2nd morning
-//     3    +10% at her line                stargazing                       her dream, +5% for the crew
+//     2    +10% at her line                a morning item every 4th morning  a morning item every 2nd morning
+//     3    hangouts (she's a friend)       stargazing                       her dream, +5% for the crew
 //     4    her signature dish              ×1.5 bond with her closest friend a third night chore
 //     5    ×1.05 rank points               +10% more at her line (+20%)     vow renewal, her keepsake grows
 //     6    a night chore                   dance and boat
@@ -53,8 +53,8 @@ export interface PerkDef {
  * wedding's waits) bring no perk of their own. */
 export const PERKS: readonly PerkDef[] = [
   { rung: 'f1', id: 'tastes-loved', place: false },
-  { rung: 'f2', id: 'hangouts', place: false },
-  { rung: 'f3', id: 'line-10', place: true },
+  { rung: 'f2', id: 'line-10', place: true },
+  { rung: 'f3', id: 'hangouts', place: false },
   { rung: 'f4', id: 'signature-dish', place: false },
   { rung: 'f5', id: 'rank-105', place: false },
   { rung: 'f6', id: 'night-chore', place: true },

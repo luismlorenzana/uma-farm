@@ -35,6 +35,7 @@ const { storyReady } = await import('../story/story')
 const { castLens, masterCast } = await import('../story/load')
 const { namer } = await import('../story/people')
 const { default: TownPage } = await import('./TownPage')
+const { default: HeartsPage } = await import('../loop/HeartsPage')
 const { findPeople, peopleRows, sortPeople } = await import('./town-view')
 const { loopMenuGroups } = await import('../shell/MenuSheet')
 
@@ -238,10 +239,10 @@ describe('the town', () => {
     expect($('[data-lives]')?.textContent).toBe('She lives in town: find her there.')
     await click($('[data-action="welcome"]'))
     await until(() => save().arrivals.includes(SISTER))
-    // Met: talk, a gift, her hangout (from Friendship 2), and the invitation to work, coming.
+    // Met: talk, a gift, her hangout and the invitation to work (both from Friendship 3).
     await find('[data-menu="talk gift hangout work"]')
-    expect($('[data-standing]')?.textContent).toBe('New friend')
-    expect($('[data-item="work"]')?.dataset.why).toBe('Coming with the farmhands')
+    expect($('[data-standing]')?.textContent).toBe('Acquaintance · F0')
+    expect($('[data-item="work"]')?.dataset.why).toBe('From Friendship 3')
     await click($('[data-action="menu-talk"]'))
     await until(() => save().today.chats.includes(SISTER))
     expect(save().today.actions).toBe(2)
@@ -293,6 +294,37 @@ describe('the town', () => {
     await render(<TownPage />, '/town?view=people')
     await type(await find('[data-search]'), 'nobody')
     expect($('[data-none]')?.textContent).toBe('No one by that name.')
+  })
+
+  it('invites a friend to work from her menu, an action; her profile talks and gifts only where you meet her', async () => {
+    const love = { stage: 'friendship' as const, level: 3, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [] }
+    const met: SaveV4 = { ...farm(), roster: { 90001: newRosterUma(1) }, love: { 90001: love }, arrivals: ['90001'] }
+    const at = townDay(met, fixture.pack!).where.get('90001')!
+    useGame.setState({ uid: 'u1', status: 'ready', save: met })
+    await render(<TownPage />, `/town?at=${at}&uma=90001`)
+    await find('[data-her-menu="90001"]')
+    expect($('[data-standing]')?.textContent).toBe('Friend · F3')
+    expect($('[data-item="hangout"]')?.dataset.why).toBe('She lives in town: invite her to the farm')
+    expect($('[data-item="work"]')?.textContent).toBe('Invite her to work · 1')
+    await click($('[data-action="menu-work"]'))
+    await until(() => save().roster['90001']?.farmhand === 5)
+    expect(save().today.actions).toBe(1)
+    await until(() => $('[data-standing]')?.textContent === 'Farmhand · F3')
+    expect($('[data-item="work"]')?.dataset.why).toBe('Works the farm ✓')
+    // Her profile: in town today with her out, she's in front of you, so Chat is open.
+    await render(<HeartsPage />, '/hearts?uma=90001')
+    const chat = await find('[data-profile-actions] [data-action="chat"]') as HTMLButtonElement
+    expect(chat.disabled).toBe(false)
+    expect($('[data-stage-name]')?.textContent).toBe('Farmhand')
+    expect($('[data-meet]')).toBeNull()
+    // Before going into town: Chat and Gift wait, and a line says where she is, a tap to her there.
+    useGame.setState({ save: { ...save(), today: { ...save().today, town: false } } })
+    await settle()
+    expect(($('[data-profile-actions] [data-action="chat"]') as HTMLButtonElement).disabled).toBe(true)
+    expect(($('[data-profile-actions] [data-action="gift"]') as HTMLButtonElement).disabled).toBe(true)
+    expect($('[data-meet]')?.dataset.meet).toBe(at)
+    await click($('[data-action="find-her"]'))
+    expect(path).toBe(`/town?at=${at}&uma=90001`)
   })
 
   it('says one who lives on the farm is there, with her profile', async () => {

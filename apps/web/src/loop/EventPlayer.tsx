@@ -20,7 +20,8 @@
 // stage-up; **the wedding** asks the place first (her three, each with its place card), plays the authored event on that
 // place's card with the guests' faces and a line of narration (its own place steps give way to the chosen one), then the
 // reception (a dish in the Warehouse, or the bakery's cake), then **the wedding night** (`WeddingNight.tsx`: her route's,
-// else the default story's, in its outfit, fading to morning), and closes on the Married stage-up.
+// else the default story's, in its outfit, fading to morning), then **moving in** to the room she took (her route's
+// `moving-in`, else the default's), and closes on the Married stage-up.
 import {
   actionCost, askSteps, beatOf, canAsk, canSpendForEvent, choicePointsOf, eventMoments, extraPlay, GAME_DAYS, goodName, heldRings, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
   readiness, receptionDishes, replaySteps, ringGrade, ringPercent, rungName, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
@@ -183,7 +184,7 @@ function Shell({ title, auto, onAuto, onSkip, onLog, skipping = false, children 
   )
 }
 
-type Phase = 'scene' | 'reception' | 'saving' | 'card' | 'night' | 'stage' | 'asked' | 'replayed'
+type Phase = 'scene' | 'reception' | 'saving' | 'card' | 'night' | 'moving' | 'stage' | 'asked' | 'replayed'
 
 function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, log, onLog, skipAsked, onClose }: {
   req: Request & { rung: string }; steps: readonly Step[]; outfit: StoryOutfit | undefined; save: SaveV4; pack: StoryPack; master: MasterView; auto: boolean; onAuto: () => void
@@ -281,16 +282,21 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
   if (mode === 'event' && wedding && chosenPlace === null) {
     return <Shell title={eventTitle(null, rung)} auto={auto} onAuto={onAuto} onSkip={() => undefined} onLog={() => onLog(true)} skipping><PlacePicker places={weddingPlaces(pack, id)} day={save.calendar.day} onPick={setChosenPlace} /></Shell>
   }
-  if (phase === 'card' || phase === 'night' || phase === 'stage' || phase === 'asked' || phase === 'replayed' || phase === 'saving' || phase === 'reception') {
+  // After the wedding night, moving in, when she took a room (one still waiting moves in the morning a room is free).
+  const afterNight = () => setPhase(save.love[id]?.house !== undefined ? 'moving' : 'stage')
+  if (phase === 'card' || phase === 'night' || phase === 'moving' || phase === 'stage' || phase === 'asked' || phase === 'replayed' || phase === 'saving' || phase === 'reception') {
+    const living = phase === 'night' || phase === 'moving'
     return (
-      <Shell title={phase === 'night' ? `The wedding night · ${name}` : title} auto={auto} onAuto={onAuto} onSkip={phase === 'night' ? () => setPhase('stage') : () => undefined}
-        onLog={() => onLog(true)} skipping={phase !== 'night'}>
+      <Shell title={phase === 'night' ? `The wedding night · ${name}` : phase === 'moving' ? `Moving in · ${name}` : title} auto={auto} onAuto={onAuto}
+        onSkip={phase === 'night' ? afterNight : phase === 'moving' ? () => setPhase('stage') : () => undefined}
+        onLog={() => onLog(true)} skipping={!living}>
         {phase === 'saving' && <Waiting />}
         {phase === 'reception' && <ReceptionPicker save={save} onPick={commitEvent} />}
         {phase === 'card' && (error || !card || !love
           ? <EndNote text={error ?? 'That didn’t save. Try again.'} onDone={onClose} />
           : <LevelUpCard card={card} id={id} name={name} love={love} pack={pack} farmer={save.farmer.name} onContinue={() => (card.stage ? setPhase(card.stage === 'married' && mode === 'event' ? 'night' : 'stage') : onClose())} />)}
-        {phase === 'night' && <WeddingNight save={save} id={id} onDone={() => setPhase('stage')} />}
+        {phase === 'night' && <WeddingNight key="night" save={save} id={id} onDone={afterNight} />}
+        {phase === 'moving' && <WeddingNight key="moving" save={save} id={id} event="moving-in" onDone={() => setPhase('stage')} />}
         {phase === 'stage' && love && <StageUpScreen stage={card?.stage ?? 'romance'} id={id} love={love} pack={pack} married={card?.stage === 'married' ? marriedOf(save) : null} save={save} onContinue={onClose} />}
         {phase === 'asked' && <EndNote text={error ?? (answer === 'not-yet' ? `${name} smiles. “Whenever you’re ready.” Ask again tomorrow.` : '')} onDone={onClose} />}
         {phase === 'replayed' && <EndNote text="A Memory, replayed. Replays give no points." onDone={onClose} />}

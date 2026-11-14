@@ -209,7 +209,7 @@ describe('the night', () => {
     save = moveSpouse(moveSpouse(save, ONE, 0), TWO, 1)
     expect(defaultHouse(save)).toBe(0) // both never: the lower number
     const night1 = noteTheNight(save)
-    expect(night1.night).toEqual({ house: 0, alone: null })
+    expect(night1.night).toEqual({ house: 0, alone: null, companion: ONE })
     expect(night1.save.homestead.slept).toEqual([30, 0])
     expect(defaultHouse(night1.save)).toBe(1)
     const picked = sleepAt(night1.save, 0)

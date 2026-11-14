@@ -271,6 +271,11 @@ describe('the wedding', () => {
     expect($('[data-wedding-night] [data-portrait]')?.dataset.portrait).toBe('wedding-night')
     expect($('[data-step] [data-line]')?.dataset.line).toBe('The guests have gone home. The house is quiet, and the lamps are low.')
     await click($('[data-action="skip"]'))
+    // Moving in, the morning after: she took the Farmhouse's room at the wedding; the default story's scene. Skip ends it.
+    await find('[data-moving-in]')
+    expect($('[data-event-title]')?.textContent).toBe('Moving in · Stand-in 1')
+    expect($('[data-step] [data-line]')?.dataset.line).toBe('A cart of her things rolls up the lane to the farm.')
+    await click($('[data-action="skip"]'))
     await find('[data-stage-up="married"]')
     const date = dateOf(DAY)
     expect($$('[data-opens] li').map((l) => l.textContent)).toEqual([

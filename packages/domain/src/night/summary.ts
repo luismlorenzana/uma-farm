@@ -242,12 +242,18 @@ export interface VowsLine {
   spouses: number
   paid: number
 }
-/** §4's stored lines: invitations, birthdays and anniversaries and the Festival of Vows, then arrivals,
- * the night's levels and the chapters opened, then the house's morning, a move-in and a house that misses you, morning items
- * and night chores, then the perks' extras, side by side and bond hearts. Ready lines aren't stored: they
- * change by day, so the app reads them live (`readiness`). */
-export type HeartLine = InviteLine | BirthdayLine | AnniversaryLine | ArrivedLine | ItemLine | ChoresLine | PerksLine | SideLine | BondLine | HouseLine | HouseMissesLine
-  | MovedLine | LevelLine | VowsLine | ChapterLine
+/** §4 Hearts: the night's companion, who greets you this morning (a short scene in pajamas, her greeting drawn live).
+ * Once a morning, first of the stored lines. */
+export interface MorningLine {
+  kind: 'morning'
+  id: string
+}
+/** §4's stored lines: the night's companion's morning, invitations, birthdays and anniversaries and the Festival of
+ * Vows, then arrivals, the night's levels and the chapters opened, then the house's morning, a move-in and a house that
+ * misses you, morning items and night chores, then the perks' extras, side by side and bond hearts. Ready lines aren't
+ * stored: they change by day, so the app reads them live (`readiness`). */
+export type HeartLine = MorningLine | InviteLine | BirthdayLine | AnniversaryLine | ArrivedLine | ItemLine | ChoresLine | PerksLine | SideLine | BondLine | HouseLine
+  | HouseMissesLine | MovedLine | LevelLine | VowsLine | ChapterLine
 
 /** The morning summary: its seven sections. */
 export interface MorningSummary {

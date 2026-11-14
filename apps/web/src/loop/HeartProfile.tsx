@@ -1,5 +1,6 @@
 // Her profile, a wide sheet over the Hearts tab at `?uma=<characterId>`. From the top: her
-// face (the "+N" an act paid floats up from it), her level in words and her ● Ready chip, her line, birthday and house;
+// face (the "+N" an act paid floats up from it), her stage in the Uma loop (Acquaintance, Friend, Farmhand, Sweetheart,
+// Engaged, Married), her level in words and her ● Ready chip, her line, birthday and house;
 // then on its Hearts side the route as one track (F ◆ R ◇ S), the Next card (the rung, its perk, its place and setup in
 // her bible's hint, the bar and what's banked, and what it waits for), Perks (reached ✓, the next, the rest greyed), Gifts
 // as learnt (others +10), Ties (her bonds' hearts), Memories' count and her ring once given; on its Work side the sheet
@@ -16,7 +17,9 @@
 // farm** under her face: she moves into a free Dorm bed at once; with none free, "No bed free" and the Dorm. **Chapters**,
 // under the Next card: her chapters (the pack's or the four defaults), the one she's in with its events played and to
 // come, a gate's words ("Opens when the Kitchen is built"), and what opens the next. Loaded on demand.
-import { atHome, birthdaysOf, canAsk, inviteBlock, LADDER_COLOURS, ladderOf, levelWords, readiness, type SaveV4, type StoryPack, type Temperament } from '@farm/domain'
+import {
+  atHome, birthdaysOf, canAsk, inviteBlock, LADDER_COLOURS, ladderOf, levelWords, readiness, STAGE_NAMES, umaStage, type SaveV4, type StoryPack, type Temperament,
+} from '@farm/domain'
 import { inviteHer } from './actions'
 import { giveBetterRing } from './bench-actions'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
@@ -67,6 +70,7 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
   const name = nameOf(id)
   const card = nextCard(save, pack, id, nameOf)
   const colour = LADDER_COLOURS[ladderOf(love.stage)]
+  const stage = umaStage(save, id)
   return (
     <Sheet
       open
@@ -88,6 +92,7 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
         </span>
         <div className="min-w-0 flex-1 space-y-0.5">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            {stage && <span className="rounded-full px-2 py-0.5 text-[12px] font-bold" style={{ color: colour, background: `${colour}1f` }} data-stage-name={stage}>{STAGE_NAMES[stage]}</span>}
             <span className="text-[15px] font-semibold" style={{ color: colour }} data-level-words>{levelWords(love)}</span>
             {card.ready && <ReadyChip colour={colour} />}
           </p>

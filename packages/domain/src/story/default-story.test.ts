@@ -48,7 +48,7 @@ describe('the default story: every piece has its default', () => {
 
   it('writes a scene for each hangout kind and each date kind, and the two evenings of their own', () => {
     const hangouts = EVENING_KINDS.filter((k) => EVENINGS[k].hangout !== null).map((k) => `hangout-${k}`)
-    const dates = EVENING_KINDS.map((k) => `date-${k}`)
+    const dates = EVENING_KINDS.filter((k) => k !== 'dinner' && k !== 'night-in').map((k) => `date-${k}`)
     expect([...EVENING_SCENES].sort()).toEqual([...hangouts, ...dates, 'dinner-in-town', 'a-night-in'].sort())
   })
 

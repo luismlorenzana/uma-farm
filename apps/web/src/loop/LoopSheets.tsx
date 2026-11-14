@@ -2,7 +2,8 @@
 // `?sheet=calendar`, the calendar screen from the bar's date (`CalendarScreen.tsx`, on demand); `?sheet=bin`, the shipping bin from the map or the gold
 // chip; `?sheet=shop`, the shop; `?sheet=rank`, the Farm Rank from its chip. Each opens over the page it was tapped on,
 // so Back closes it. Loaded on demand when one opens. End the day opens **Tonight** while an evening slot is free and
-// someone can spend it, and the night is a fade to dusk and back up on the morning (`night-fade.ts`).
+// someone can spend it (or anyone is married: the night's companion), and the night is a fade to dusk and back up on the
+// morning (`night-fade.ts`), where the night's companion greets you (`?life=morning:<id>`).
 import {
   daySetState, ENTRY_POINTS, FARM_RANK_POINTS, farmPointsOf, farmRankOf, farmRankOpens, GOLD_PER_POINT, MILESTONE_POINTS, nextFarmRank, tonightOpens,
 } from '@farm/domain'
@@ -10,7 +11,7 @@ import { useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { useLoopSave } from '../save/game'
+import { useGame, useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { endTheDay } from './actions'
 import { BinSheet, ShopSheet } from './GoodsSheets'
@@ -74,7 +75,9 @@ function EndDay() {
     setError(null)
     const night = async () => {
       await endTheDay(day.current!)
-      navigate('/', { replace: true })
+      // The night's companion greets you as the morning comes up, over the morning's card.
+      const greets = useGame.getState().save?.summary?.hearts.find((h) => h.kind === 'morning')
+      navigate(greets ? `/?life=morning:${greets.id}` : '/', { replace: true })
     }
     try {
       await withNightFade(night, reduced)

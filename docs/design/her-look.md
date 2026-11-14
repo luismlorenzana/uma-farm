@@ -135,7 +135,7 @@ Folded into the owner's rework ([the game's design](game-design.md), 2026-11-14)
 | [F69](../handoff/tasks/F69-bust-art-spec.md) | **The bust art:** her outfits and faces. The pilot is done (12 outfit portraits and 15 faces for each of two Umas); the rest follow | ChatGPT (character art) |
 | F75, done | **The dialogue engine:** the face over the outfit's portrait, the story's `emote` picks the face, outfits by context, every fallback, on master data's `dialogue-portraits` family ([the rules](../game-mechanics.md#the-dialogue-engine)) | Claude |
 | F76, done | **The default Uma:** a blank bust with 22 faces for every Uma without art, and the default story ([the blank bust](../game-mechanics.md#the-blank-bust)) | Claude |
-| [F79](../handoff/tasks/F79-uma-loop.md) | **The evenings:** Dinner in town and A night in, the wedding night, the night's companion | Claude |
+| F79, done | **The evenings:** Dinner in town and A night in, the wedding night, the night's companion in pajamas ([the Uma loop](../game-mechanics.md#the-uma-loop)) | Claude |
 
 The wardrobe now has 12 outfits, matching the art: the four seasons (spring the default), work clothes, the garden party
 dress, the kimono, the dinner dress, the wedding dress, the wedding night outfit, pajamas and the swimsuit.
