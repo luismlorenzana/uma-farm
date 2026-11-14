@@ -102,7 +102,9 @@ The world building informs the game too, in two ways:
   - **"For the game":** what the story wants the game to support, one item each, with why.
 
   The game's sessions read it before designing anything (`pnpm story:pull farm` on the Mac), and the owner reads it on
-  uma-platform's Uma Story site. "For the game" replaces scattering requests across packets: the game's side picks
+  Uma Story's World page, https://uma-platform.web.app/story/farm/world (owner only; live since uma-platform's P167),
+  where "For the game" stands apart as "What the story asks of the game". `story:push farm` reads the drafts from
+  `../uma-farm/content/story`, or from `STORY_FARM_DIR`; `story:ship` sets it for you. "For the game" replaces scattering requests across packets: the game's side picks
   them up from there into its own packets.
 - **Private as always:** the World Book names real characters, so it never goes in git.
 

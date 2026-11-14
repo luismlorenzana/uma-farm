@@ -101,7 +101,7 @@ morning says "New story arrived". The story session ships at the end of every se
 | Step | What | Who |
 |---|---|---|
 | 1.18 **The world in the pack** | `world.json`: the town's and the farm's names, the history, festivals, places, seasons, and Town notes that unlock as you play | Claude ([F73](handoff/tasks/F73-world-in-the-pack.md)) |
-| 1.19 **The World Book** | The story's private book of the world, with "For the game", shipped with every pack and read before any design | The story session ([F40](handoff/tasks/F40-story-authoring.md)); a World page on Uma Story, asked of uma-platform |
+| 1.19 **The World Book** | The story's private book of the world, with "For the game", shipped with every pack and read before any design | The story session ([F40](handoff/tasks/F40-story-authoring.md)); read on [Uma Story's World page](https://uma-platform.web.app/story/farm/world), live |
 | 1.20 **The game's design** | One clear document: what you want when you open the app, a session, a day, a week, a season, how the Umas and the farm feed each other, and what the first real season holds, drawing on the World Book | Claude, for your review |
 
 **Track B, the HD-2D farm:**
