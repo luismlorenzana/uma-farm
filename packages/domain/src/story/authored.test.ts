@@ -213,9 +213,6 @@ describe('the scripted steps', () => {
     ], 'Event', speakers)
     expect(f.errors).toEqual(['Event, step 6: its narration is 401 characters; the screen shows 400'])
     expect(f.notes).toEqual([
-      'Event, step 1: “sir” genders the farmer',
-      'Event, step 2, option 1: “husband” genders the farmer',
-      'Event, step 3: “bride” genders the farmer',
       'Event, step 5: {name} shows as written ({farmer} is the one placeholder)',
       'Event, step 5: “classmates” reads as school',
     ])
@@ -280,7 +277,12 @@ describe('a route', () => {
   it('takes a partial route, an event not in her bible, and one off the rungs (a note)', () => {
     const route = clone(STAND_IN_ROUTE)
     route.events = [...route.events.filter((e) => e.id !== 'wedding'), { id: 'f11', steps: [{ narrate: 'Extra.' }, { choice: [{ text: 'Go on.', friendship: 5 }, { text: 'Stop.' }] }] }]
-    expect(checkRoute(route, STAND_IN, null, ctx)).toMatchObject({ errors: [], notes: ['Event f11: not a rung the game plays; kept for the story'] })
+    expect(checkRoute(route, STAND_IN, null, ctx)).toMatchObject({
+      errors: [], notes: ['Event f11: not one of the game’s events (its rungs, her life’s, her occasions, the evenings’ scenes); kept for the story'],
+    })
+    // Her life's events, occasions and evenings' scenes are the game's: no note, and their choices are wording only.
+    const life = { events: [...route.events, { id: 'wedding-night', steps: [{ narrate: 'Night.' }, { choice: [{ text: 'Stay.' }, { text: 'Rest.' }] }] }] }
+    expect(checkRoute(life, STAND_IN, null, ctx).notes.filter((n) => n.includes('wedding-night'))).toEqual([])
   })
   it('notes an event outside its usual size; each choice and play pays', () => {
     expect(routeWith('f1', [say('Hi.'), choose(), play(), play()]).notes).toEqual(['Event f1: 2 plays, more than the usual 1; each pays'])
@@ -331,7 +333,6 @@ describe('the tag sheet (the sandbox\'s): notes only', () => {
       'Tags 9000001: loved moon-cake isn’t a good; mark it proposed if it’s a new one',
       'Tags 9000002: unknown season',
       'Tags 9000002: a one-line reason for favouriteLine',
-      'Tags 9000002 loved: “husband” genders the farmer',
       'Tags 9000002: twice',
     ])
   })

@@ -1,12 +1,12 @@
 // Her acts on her profile (on the Hearts tab): Chat +15 (then her
 // line for the day), Gift (the picker with each good's points for her today, or "?") and Praise +20 while earned, 48 pt in
 // the profile's thumb zone. What an act paid goes up to the profile (`onPaid`), which floats it from her face; a note
-// says it ("She likes it. +36"). **Evening ›** is there too (her evening at `?evening=<id>`, or why not:
+// says it, a gift in her words by her taste (the default story's: "‹name› smiles. “Peach? That’s lovely.” +36"). **Evening ›** is there too (her evening at `?evening=<id>`, or why not:
 // "Evening ✓", "Evening · F2", "In town", "Evening spent"), so Chat, Gift and Evening sit side by side and
 // Praise +20 takes the row under them. Loaded on demand with the Hearts tab.
 import {
-  birthdaysOf, canPraise, chatLineV4, DISLIKED_LINE, FAMILY_NAMES, festivalsOf, GOOD_FAMILIES, giftPreview, goodName, goodOf, LOVE_POINTS, type SaveV4, type StoryPack,
-  type Taste, type Temperament,
+  birthdaysOf, canPraise, chatLineV4, FAMILY_NAMES, festivalsOf, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, LOVE_POINTS, type SaveV4, type StoryPack,
+  type Temperament,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
@@ -18,15 +18,14 @@ import { chatHer, giftHer, praiseHer } from './actions'
 import { eveningButton } from './evening-view'
 import { gain } from './love-words'
 
-const TASTE_WORDS: Readonly<Record<Taste, string>> = { loved: 'She loves it!', liked: 'She likes it.', neutral: 'Thank you.', disliked: DISLIKED_LINE }
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
-/** A line with its placeholders filled: `{farmer}` (the format's only one) and `{name}` (the temperament lines'). */
+/** A line with its placeholders filled: `{farmer}` (the format's only one) and `{name}` (the default story's). */
 const fill = (line: string, name: string, farmer: string): string => line.split('{farmer}').join(farmer || 'you').split('{name}').join(name)
 
 /** Chat, Gift and Praise, with today's chat line and the last act's note above them. */
 export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: {
   save: SaveV4
-  pack: Pick<StoryPack, 'bibles' | 'cast'> & Partial<Pick<StoryPack, 'world'>>
+  pack: Pick<StoryPack, 'bibles' | 'cast'> & Partial<Pick<StoryPack, 'world' | 'master'>>
   id: string
   name: string
   temperament: Temperament | null
@@ -78,7 +77,10 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
         <GiftPicker save={save} id={id} name={name} points={(good, stars) => giftPreview(save, pack, id, good, stars, birthdays)} onClose={() => setGiving(false)}
           onGive={(item, stars) => {
             setGiving(false)
-            giftHer(id, item, stars).then((r) => paid(r.paid, r.taste === 'disliked' ? DISLIKED_LINE : `${TASTE_WORDS[r.taste]} ${gain(r.paid)}`), fail)
+            giftHer(id, item, stars).then((r) => {
+              const said = fill(giftLineV4(save, pack, id, r.taste, item), name, save.farmer.name)
+              paid(r.paid, r.paid > 0 ? `${said} ${gain(r.paid)}` : said)
+            }, fail)
           }} />
       )}
     </div>

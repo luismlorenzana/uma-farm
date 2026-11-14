@@ -130,7 +130,10 @@ describe('her profile on v4', () => {
     await click($('[data-gift="carrot@3"]'))
     await until(() => save().love[ONE]!.points === 36)
     expect(save().love[ONE]!.known).toEqual(['carrot'])
-    expect((await find('[data-love-note]')).textContent).toBe('She likes it. +36')
+    // She says it in her words, by her taste (the default story's liked line), with what it paid.
+    const note = (await find('[data-love-note]')).textContent!
+    expect(note).toMatch(/\+36$/)
+    expect(note).not.toMatch(/[{}]/)
     expect($('[data-love-float]')?.textContent).toBe('+36')
     expect(($('[data-action="gift"]') as HTMLButtonElement).disabled).toBe(true)
   })

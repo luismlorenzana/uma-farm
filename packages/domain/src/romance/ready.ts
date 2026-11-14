@@ -9,7 +9,7 @@
 //   5 her chapter is open: when her next event is her chapter's first, the chapter's gate holds, if it has one
 //
 // A setup is never an hour, the weather, a season or a festival, and nothing waits on the story: an event the pack
-// doesn't script plays the game's own short card (`placeholders.ts`). Her chapter may ask the farm for something first
+// doesn't script plays the default story's (`placeholders.ts`). Her chapter may ask the farm for something first
 // (`chapters.ts`): its gate holds back its first event, and may be a season or a festival. What isn't met is said:
 // `waits` names the first thing in the way, in this order: the route done; S2 and S4, which come at night; a "Not yet"
 // at her confession; her chapter's gate; a working setup at a place not built yet; the bar or the day; the ring; in town

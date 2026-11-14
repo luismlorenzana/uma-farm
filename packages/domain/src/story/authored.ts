@@ -50,11 +50,26 @@ export const DATE_GAMES = ['fishing', 'cooking', 'stargazing', 'footrace', 'danc
 
 /** The rungs the game plays an event at: her arrival scene ("event zero"), ten friendship events, the confession, ten
  * romance events, the proposal, the wedding, and three on the spouse ladder after it (S1, S3, S5). The story writes any of
- * them, in any order; the rest play the game's own short card (`placeholders.ts`). */
+ * them, in any order; the rest play the default story's (`default-story.ts`). */
 export const ARRIVAL = 'arrival'
 export const RUNGS: readonly string[] = [
   ARRIVAL, ...Array.from({ length: 10 }, (_, i) => `f${i + 1}`), 'confession', ...Array.from({ length: 10 }, (_, i) => `r${i + 1}`), 'proposal', 'wedding', 's1', 's3', 's5',
 ]
+/** Her life's events past the rungs: the wedding night, moving in, and married life 2 and 4. They pay nothing. */
+export const LIFE_EVENTS = ['wedding-night', 'moving-in', 's2', 's4'] as const
+/** Her occasions, on their day: her birthday, New Year's and the game's five festivals. They pay nothing. */
+export const OCCASIONS = ['birthday', 'new-year', 'flower-show', 'fishing-derby', 'cooking-contest', 'animal-show', 'harvest-cup'] as const
+/** The evenings' scenes: a hangout's for each kind a friend can spend (`hangout-<kind>`), a date's for each kind
+ * (`date-<kind>`), and the two evenings of their own, Dinner in town and A night in. Lines only: the evening's play is
+ * its game. */
+export const EVENING_SCENES = [
+  'hangout-walk', 'hangout-fishing', 'hangout-picnic', 'hangout-market', 'hangout-cooking', 'hangout-festival',
+  'date-walk', 'date-fishing', 'date-picnic', 'date-market', 'date-cooking', 'date-crafting', 'date-stargazing', 'date-dance', 'date-boat', 'date-footrace',
+  'date-festival', 'dinner-in-town', 'a-night-in',
+] as const
+/** Every event a route may write: the rungs, her life's events, her occasions and the evenings' scenes. Each one it
+ * leaves out plays the default story's (`default-story.ts`). */
+export const STORY_EVENTS: readonly string[] = [...RUNGS, ...LIFE_EVENTS, ...OCCASIONS, ...EVENING_SCENES]
 
 export type StoryPlace = typeof STORY_PLACES[number]
 export type Festival = typeof FESTIVALS[number]
@@ -427,16 +442,7 @@ export const STORY_ID = /^(s?)[1-9]\d*$/
 /** A flag's name, as the save keeps it. */
 const FLAG = /^[a-z0-9][a-z0-9:._-]{0,63}$/
 
-/** Words that would gender the farmer: never in the farmer's own words, nor anyone's words to them. */
-const GENDERED = /\b(husband|wife|boyfriend|girlfriend|groom|sir|mister|mr|mrs|ms|ma'?am|madam|lad|lass|fella|gal|guy)\b/i
-/** The farmer's own lines may not call themself a bride either (an Uma may be one). */
-const GENDERED_FARMER = /\b(bride)\b/i
-/** Whether a line genders the farmer: the words above, in anyone's lines; `bride` too in the farmer's own. Returns the
- * word, or null. */
-export function gendersFarmer(text: string, farmer = true): string | null {
-  return (text.match(GENDERED) ?? (farmer ? text.match(GENDERED_FARMER) : null))?.[0] ?? null
-}
-/** Nothing that reads under 18. */
+/** Nothing that reads under 18. (The protagonist is a man: a line may say he, her husband, the groom.) */
 const SCHOOLISH = /\b(senpai|kouhai|classmates?|homework|high school|middle school|school uniform|schoolgirls?)\b/i
 const PLACEHOLDER = /\{([^{}]*)\}/g
 
@@ -460,22 +466,20 @@ export interface StoryContext {
   festivals?: ReadonlySet<string>
 }
 
-/** A line's words: `{farmer}` is the only placeholder, no word genders the farmer, nothing reads as school. Notes. */
-function lineNotes(text: string, where: string, farmer: boolean): string[] {
+/** A line's words: `{farmer}` is the only placeholder, and nothing reads as school. Notes. */
+function lineNotes(text: string, where: string): string[] {
   const notes: string[] = []
   for (const [, name] of text.matchAll(PLACEHOLDER)) if (name !== 'farmer') notes.push(`${where}: {${name}} shows as written ({farmer} is the one placeholder)`)
-  const gendered = text.match(GENDERED) ?? (farmer ? text.match(GENDERED_FARMER) : null)
-  if (gendered) notes.push(`${where}: “${gendered[0]}” genders the farmer`)
   const school = text.match(SCHOOLISH)
   if (school) notes.push(`${where}: “${school[0]}” reads as school`)
   return notes
 }
 
 /** Text the game shows: present, within its screen's length (errors otherwise), and its words' notes. */
-function shown(v: unknown, max: number, at: string, f: Findings, farmer = false, what = 'line'): v is string {
+function shown(v: unknown, max: number, at: string, f: Findings, what = 'line'): v is string {
   if (!isText(v)) { f.errors.push(`${at}: no ${what}`); return false }
   if (v.length > max) { f.errors.push(`${at}: its ${what} is ${v.length} characters; the screen shows ${max}`); return false }
-  f.notes.push(...lineNotes(v, at, farmer))
+  f.notes.push(...lineNotes(v, at))
   return true
 }
 
@@ -555,7 +559,9 @@ function readTrigger(v: unknown, at: string, f: Findings, ctx: StoryContext): St
 // --- Steps --------------------------------------------------------------------------------------------------------------
 
 /** Who may speak in a run of steps, and which goods exist. */
-interface StepContext { speakers: ReadonlySet<string>; isGood: (id: string) => boolean }
+/** Who may speak, which goods exist, and whether the scene pays nothing (its choices wording only: her life's events, her
+ * occasions, the evenings' scenes). */
+interface StepContext { speakers: ReadonlySet<string>; isGood: (id: string) => boolean; wording?: boolean }
 
 function checkSteps(steps: unknown, where: string, sc: StepContext, f: Findings, nested = false): void {
   if (!Array.isArray(steps)) { f.errors.push(`${where}: steps are a list`); return }
@@ -576,7 +582,7 @@ function checkSteps(steps: unknown, where: string, sc: StepContext, f: Findings,
       options.forEach((o, k) => {
         const ot = `${at}, option ${k + 1}`
         if (!isObject(o)) { f.errors.push(`${ot}: not an option`); return }
-        shown(o.text, LINE_LIMITS.option, ot, f, true, 'text')
+        shown(o.text, LINE_LIMITS.option, ot, f, 'text')
         if (o.tone !== undefined && !oneOf(TONES, o.tone)) f.notes.push(`${ot}: the tone ${String(o.tone)} isn’t one of ${TONES.join(', ')}`)
         for (const key of ['friendship', 'romance'] as const) {
           const v = o[key]
@@ -594,18 +600,18 @@ function checkSteps(steps: unknown, where: string, sc: StepContext, f: Findings,
         if (o.answer !== undefined && !oneOf(ANSWERS, o.answer)) f.errors.push(`${ot}: answer is yes or not-yet`)
       })
       const gains = (o: unknown) => (isObject(o) ? (Number(o.friendship) || 0) + (Number(o.romance) || 0) : 0)
-      if (options.length > 1 && !options.some((o) => gains(o) > 0)) f.notes.push(`${at}: no option gains hearts, so each pays the best (+30)`)
+      if (!sc.wording && options.length > 1 && !options.some((o) => gains(o) > 0)) f.notes.push(`${at}: no option gains hearts, so each pays the best (+30)`)
     } else if ('play' in step) {
       const p = step.play
       if (!isObject(p) || !(oneOf(DATE_GAMES, p.game) || oneOf(ACTIVITIES, p.game))) { f.errors.push(`${at}: a play names its game (a date game or an activity)`); return }
-      if (p.prompt !== undefined) shown(p.prompt, LINE_LIMITS.prompt, at, f, false, 'prompt')
+      if (p.prompt !== undefined) shown(p.prompt, LINE_LIMITS.prompt, at, f, 'prompt')
       if (p.as !== undefined && (p.game !== 'farming' || !oneOf(FARMING_PLAYS, p.as))) f.notes.push(`${at}: as (pick or rhythm) is a farming play’s; it’s ignored here`)
       if (p.good !== undefined) checkSteps(p.good, `${at} good`, sc, f, true)
       if (p.miss !== undefined) checkSteps(p.miss, `${at} miss`, sc, f, true)
     } else if ('narrate' in step) {
-      shown(step.narrate, LINE_LIMITS.line, at, f, false, 'narration')
+      shown(step.narrate, LINE_LIMITS.line, at, f, 'narration')
     } else if ('thought' in step) {
-      shown(step.thought, LINE_LIMITS.line, at, f, true, 'thought')
+      shown(step.thought, LINE_LIMITS.line, at, f, 'thought')
     } else if ('wait' in step) {
       if (typeof step.wait !== 'number' || !Number.isFinite(step.wait)) f.errors.push(`${at}: wait is a number of ms`)
       else if (step.wait <= 0 || step.wait > 5000) f.notes.push(`${at}: a wait of ${step.wait} ms plays as 0–5000`)
@@ -692,11 +698,12 @@ export function eventNotes(id: string, steps: unknown, bible: UmaBible | null, w
     if (all.some(hasAnswer)) notes.push(`${where}: only the confession’s answers count`)
     return notes
   }
+  // The usual sizes are a heart event's: her life's events, her occasions and the evenings' scenes pay nothing.
   const limits = BIG_EVENTS.includes(id) ? EVENT_LIMITS.big : EVENT_LIMITS.heart
-  if (counts.choices[0] < limits.choices[0] || counts.choices[1] > limits.choices[1]) {
+  if (RUNGS.includes(id) && (counts.choices[0] < limits.choices[0] || counts.choices[1] > limits.choices[1])) {
     notes.push(`${where}: ${counts.choices[0] === counts.choices[1] ? counts.choices[0] : `${counts.choices[0]}–${counts.choices[1]}`} choice points on a path, outside the usual ${limits.choices[0]}–${limits.choices[1]}; each pays`)
   }
-  if (counts.plays[1] > limits.plays) notes.push(`${where}: ${plural(counts.plays[1], 'play')}, more than the usual ${limits.plays}; each pays`)
+  if (RUNGS.includes(id) && counts.plays[1] > limits.plays) notes.push(`${where}: ${plural(counts.plays[1], 'play')}, more than the usual ${limits.plays}; each pays`)
   const gifts = bible?.gifts ? [bible.gifts.loved, ...(bible.gifts.liked ?? []), ...(bible.gifts.disliked ?? [])] : null
   for (const o of all.flatMap((s) => ('choice' in s && Array.isArray(s.choice) ? s.choice.filter(isObject) : []))) {
     if (typeof o.reveals === 'string' && gifts && !gifts.includes(o.reveals)) notes.push(`${where}: reveals ${o.reveals}, which isn’t one of her gifts (she finds it neutral)`)
@@ -728,7 +735,7 @@ function readChapters(v: unknown, at: string, f: Findings, ctx: StoryContext): H
   const out = v.flatMap((raw, i): HerChapter[] => {
     const ct = `${at}, chapter ${i + 1}`
     if (!isObject(raw)) { f.errors.push(`${ct}: not a chapter; skipped`); return [] }
-    const title = raw.title === undefined ? undefined : shown(raw.title, LINE_LIMITS.chapterTitle, ct, f, false, 'title') ? raw.title : (f.errors[f.errors.length - 1] += '; skipped', undefined)
+    const title = raw.title === undefined ? undefined : shown(raw.title, LINE_LIMITS.chapterTitle, ct, f, 'title') ? raw.title : (f.errors[f.errors.length - 1] += '; skipped', undefined)
     const events = raw.events === undefined ? undefined : idList(raw.events, `${ct} events`, f, (id) => id.length > 0, 'her rungs')
     for (const id of events ?? []) {
       if (!RUNGS.includes(id)) f.notes.push(`${ct}: ${id} isn’t a rung the game plays`)
@@ -782,7 +789,7 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
       outfitId: sister ? undefined : field(u, 'outfitId', (v) => (typeof v === 'string' && CHARACTER_ID.test(v) ? v : undefined), it, f, 'is an outfit id'),
       spot: field(u, 'spot', (v) => (oneOf(SPOT_IDS, v) ? v : undefined), it, f, `is one of the town’s spots: ${SPOT_IDS.join(', ')}`),
       name: sister ? field(u, 'name', (v) => {
-        if (shown(v, LINE_LIMITS.name, `${it} name`, f, false, 'name')) return v
+        if (shown(v, LINE_LIMITS.name, `${it} name`, f, 'name')) return v
         f.errors.pop()
         return undefined
       }, it, f, `is 1–${LINE_LIMITS.name} characters`) : u.name as string | undefined,
@@ -793,7 +800,7 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
       chapters: u.chapters === undefined ? undefined : readChapters(u.chapters, it, f, sub),
     })
     if (u.outfitId == null && !sister) f.notes.push(`${it}: no outfit, so she plays her default outfit from master data`)
-    if (u.paragraph !== undefined && typeof u.paragraph === 'string') f.notes.push(...lineNotes(u.paragraph, it, false))
+    if (u.paragraph !== undefined && typeof u.paragraph === 'string') f.notes.push(...lineNotes(u.paragraph, it))
     return [entry]
   })
   const cast = new Set(umas.map((u) => u.characterId))
@@ -876,7 +883,7 @@ export function checkTown(raw: unknown): Read<Town | null> {
           else if (roles.has(p.game)) f.errors.push(`${it}: game ${p.game} is someone else’s role already; skipped`)
           else { roles.add(p.game); game = p.game }
         }
-        const does = p.does === undefined ? undefined : shown(p.does, LINE_LIMITS.townBlurb, `${it} does`, f, false, 'line') ? p.does as string
+        const does = p.does === undefined ? undefined : shown(p.does, LINE_LIMITS.townBlurb, `${it} does`, f, 'line') ? p.does as string
           : (f.errors[f.errors.length - 1] += '; skipped', undefined)
         return [kept<TownPerson>(p, { game: game ?? (isCastId(String(p.game)) ? undefined : p.game as string | undefined), does })]
       })
@@ -896,7 +903,7 @@ export function checkTown(raw: unknown): Read<Town | null> {
         seen.add(v.id)
         const text = (key: 'name' | 'blurb', max: number): string | undefined => {
           if (v[key] === undefined) return undefined
-          if (shown(v[key], max, `${it} ${key}`, f, false, key)) return v[key] as string
+          if (shown(v[key], max, `${it} ${key}`, f, key)) return v[key] as string
           f.errors[f.errors.length - 1] += '; skipped'
           return undefined
         }
@@ -977,7 +984,7 @@ function readBeats(v: unknown, ctx: StoryContext, isGood: (id: string) => boolea
     if (!RUNGS.includes(b.id)) f.notes.push(`${bt}: not a rung the game plays (${RUNGS.join(', ')}); kept for the story`)
     const text = (key: 'beat' | 'hint', max: number, what: string): string | undefined => {
       if (b[key] === undefined) return undefined
-      if (shown(b[key], max, `${bt} ${key}`, f, false, what)) return b[key] as string
+      if (shown(b[key], max, `${bt} ${key}`, f, what)) return b[key] as string
       f.errors[f.errors.length - 1] += '; skipped'
       return undefined
     }
@@ -1030,7 +1037,7 @@ function readKeepsake(v: unknown, f: Findings): Keepsake | undefined {
   if (!isObject(v)) return undefined
   const text = (key: 'name' | 'line', max: number): string | undefined => {
     if (v[key] === undefined) return undefined
-    if (shown(v[key], max, `keepsake.${key}`, f, false, key)) return v[key] as string
+    if (shown(v[key], max, `keepsake.${key}`, f, key)) return v[key] as string
     f.errors[f.errors.length - 1] += '; skipped'
     return undefined
   }
@@ -1064,7 +1071,7 @@ export function checkBible(raw: unknown, id: string, ctx: StoryContext): Read<Um
       : undefined), 'townLines', f, 'is a list of lines'),
     keepsake: field(raw, 'keepsake', (v) => readKeepsake(v, f), 'keepsake', f, 'is { name, line }'),
     petName: field(raw, 'petName', (v) => {
-      if (!shown(v, LINE_LIMITS.petName, 'petName', f, true, 'name')) { f.errors.pop(); return undefined }
+      if (!shown(v, LINE_LIMITS.petName, 'petName', f, 'name')) { f.errors.pop(); return undefined }
       if (/[{}]/.test(v)) f.notes.push('petName: no placeholder (it’s what she calls you)')
       return v
     }, 'petName', f, `is 1–${LINE_LIMITS.petName} characters`),
@@ -1102,7 +1109,7 @@ export function tagNotes(tags: unknown, ctx: StoryContext): string[] {
     for (const key of ['favouriteLine', 'season', 'festival', 'loved'] as const) {
       const reason = reasons[key]
       if (!isText(reason)) notes.push(`${at}: a one-line reason for ${key}`)
-      else notes.push(...lineNotes(reason, `${at} ${key}`, false))
+      else notes.push(...lineNotes(reason, `${at} ${key}`))
     }
   }
   return notes
@@ -1130,17 +1137,17 @@ export function checkRoute(raw: unknown, id: string, bible: UmaBible | null, ctx
     if (ids.has(e.id)) { f.errors.push(`${where}: twice; the later one is skipped`); return [] }
     ids.add(e.id)
     const own = findings()
-    checkSteps(e.steps, where, sc, own)
+    checkSteps(e.steps, where, RUNGS.includes(e.id) ? sc : { ...sc, wording: true }, own)
     f.notes.push(...own.notes)
     if (own.errors.length > 0) {
       f.errors.push(...own.errors.map((x, k) => (k === own.errors.length - 1 ? `${x} (the event is skipped)` : x)))
       return []
     }
-    if (!RUNGS.includes(e.id)) f.notes.push(`${where}: not a rung the game plays; kept for the story`)
+    if (!STORY_EVENTS.includes(e.id)) f.notes.push(`${where}: not one of the game’s events (its rungs, her life’s, her occasions, the evenings’ scenes); kept for the story`)
     f.notes.push(...eventNotes(e.id, e.steps, bible))
     return [kept<Route['events'][number]>(e, { outfit: readOutfit(e.outfit, where, f) })]
   })
-  if (events.length > 0 && !events.some((e) => e.id === ARRIVAL)) f.notes.push('No arrival scene: the game’s own short one plays')
+  if (events.length > 0 && !events.some((e) => e.id === ARRIVAL)) f.notes.push('No arrival scene: the default story’s meeting plays')
   return { value: kept<Route>(raw, { events }), ...f }
 }
 
@@ -1290,7 +1297,7 @@ export function checkOpening(raw: unknown, ctx: StoryContext): Read<Opening | nu
 
 /** Text the game shows, or undefined with its error ending "; skipped": the field goes, the game's own words play. */
 function worldText(v: unknown, max: number, at: string, f: Findings, what = 'line'): string | undefined {
-  if (shown(v, max, at, f, false, what)) return v
+  if (shown(v, max, at, f, what)) return v
   f.errors[f.errors.length - 1] += '; skipped'
   return undefined
 }
@@ -1370,7 +1377,7 @@ function readNotes(v: unknown, f: Findings, ctx: StoryContext): TownNote[] | und
     const it = `Note ${raw.id}`
     if (seen.has(raw.id)) { f.errors.push(`${it}: listed twice; the later one is skipped`); return [] }
     seen.add(raw.id)
-    if (!shown(raw.title, LINE_LIMITS.noteTitle, it, f, false, 'title')) { f.errors[f.errors.length - 1] += '; the note is skipped'; return [] }
+    if (!shown(raw.title, LINE_LIMITS.noteTitle, it, f, 'title')) { f.errors[f.errors.length - 1] += '; the note is skipped'; return [] }
     if (!Array.isArray(raw.lines)) { f.errors.push(`${it}: lines is a list; the note is skipped`); return [] }
     const lines = (raw.lines as unknown[]).flatMap((line, k) => {
       const t = worldText(line, LINE_LIMITS.worldText, `${it}, line ${k + 1}`, f)

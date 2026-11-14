@@ -12,16 +12,17 @@
 // Three ways in, each a param over any page (portaled above the sheets, z-60): `?event=<id>` plays her Ready event (her
 // row's ● Ready, her profile's **Play ›**, the morning's Ready line); `?ask=<id>` her confession's last choice again
 // (**Ask her**, once a day, paying nothing); `?memory=<id>:<rung>[@<n>]` replays a Memory from the top or its nth choice
-// point, every option open, nothing paid or saved. The script loads on demand (`eventOf`: her route's, else the game's
-// own short card for the rung); Skip, Auto and Log work while it does. A play without a prompt shows its game's. Nothing is saved until the end: `playEvent` then commits once, stamped. Skip jumps to the next
+// point, every option open, nothing paid or saved. The script loads on demand (`eventOf`: her route's, else the default
+// story's for the rung, in her name); Skip, Auto and Log work while it does. A play without a prompt shows its game's. Nothing is saved until the end: `playEvent` then commits once, stamped. Skip jumps to the next
 // choice or play, never past one. Loaded on demand.
 //
 // **the proposal** first asks which ring (the best grade preselected), then plays, and closes on the Engaged
 // stage-up; **the wedding** asks the place first (her three, each with its place card), plays the authored event on that
 // place's card with the guests' faces and a line of narration (its own place steps give way to the chosen one), then the
-// reception (a dish in the Warehouse, or the bakery's cake), and closes on the Married stage-up.
+// reception (a dish in the Warehouse, or the bakery's cake), then **the wedding night** (`WeddingNight.tsx`: her route's,
+// else the default story's, in its outfit, fading to morning), and closes on the Married stage-up.
 import {
-  askSteps, beatOf, canAsk, choicePointsOf, eventMoments, eventOf, extraPlay, goodName, heldRings, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
+  askSteps, beatOf, canAsk, choicePointsOf, eventMoments, extraPlay, goodName, heldRings, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
   readiness, receptionDishes, replaySteps, ringGrade, ringPercent, rungName, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
   type Answer, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryOutfit, type StoryPack,
 } from '@farm/domain'
@@ -37,7 +38,7 @@ import { Stage } from '../dialogue/Stage'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
-import { namer } from '../story/people'
+import { herEventOf, namer } from '../story/people'
 import { useStory } from '../story/story'
 import { askHerOnce, playHerEvent } from './event-actions'
 import { LevelUpCard, StageUpScreen } from './EventCards'
@@ -46,6 +47,7 @@ import { marriedOf, placeWords } from './hearts-view'
 import { ItemIcon } from '../items/ItemIcon'
 import { BuildingArt, PlaySheet, playSpec } from './PlaySheet'
 import { silent } from './ScenePlayer'
+import { WeddingNight } from './WeddingNight'
 
 type Mode = 'event' | 'ask' | 'replay'
 interface Request { mode: Mode; id: string; rung: string | null; from: number | null }
@@ -105,7 +107,7 @@ export default function EventPlayer() {
   useEffect(() => {
     if (!req || !story) return
     let live = true
-    void eventOf(story, req.id, req.rung).then(({ steps: found, outfit: own }) => {
+    void herEventOf(story, req.id, req.rung).then(({ steps: found, outfit: own }) => {
       if (!live) return
       const from = req.from ? choicePointsOf(found)[req.from - 1] ?? null : null
       setOutfit(own)
@@ -162,7 +164,7 @@ function Shell({ title, auto, onAuto, onSkip, onLog, skipping = false, children 
   )
 }
 
-type Phase = 'scene' | 'reception' | 'saving' | 'card' | 'stage' | 'asked' | 'replayed'
+type Phase = 'scene' | 'reception' | 'saving' | 'card' | 'night' | 'stage' | 'asked' | 'replayed'
 
 function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, log, onLog, skipAsked, onClose }: {
   req: Request & { rung: string }; steps: readonly Step[]; outfit: StoryOutfit | undefined; save: SaveV4; pack: StoryPack; master: MasterView; auto: boolean; onAuto: () => void
@@ -260,14 +262,16 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
   if (mode === 'event' && wedding && chosenPlace === null) {
     return <Shell title={eventTitle(null, rung)} auto={auto} onAuto={onAuto} onSkip={() => undefined} onLog={() => onLog(true)} skipping><PlacePicker places={weddingPlaces(pack, id)} day={save.calendar.day} onPick={setChosenPlace} /></Shell>
   }
-  if (phase === 'card' || phase === 'stage' || phase === 'asked' || phase === 'replayed' || phase === 'saving' || phase === 'reception') {
+  if (phase === 'card' || phase === 'night' || phase === 'stage' || phase === 'asked' || phase === 'replayed' || phase === 'saving' || phase === 'reception') {
     return (
-      <Shell title={title} auto={auto} onAuto={onAuto} onSkip={() => undefined} onLog={() => onLog(true)} skipping>
+      <Shell title={phase === 'night' ? `The wedding night · ${name}` : title} auto={auto} onAuto={onAuto} onSkip={phase === 'night' ? () => setPhase('stage') : () => undefined}
+        onLog={() => onLog(true)} skipping={phase !== 'night'}>
         {phase === 'saving' && <Waiting />}
         {phase === 'reception' && <ReceptionPicker save={save} onPick={commitEvent} />}
         {phase === 'card' && (error || !card || !love
           ? <EndNote text={error ?? 'That didn’t save. Try again.'} onDone={onClose} />
-          : <LevelUpCard card={card} id={id} name={name} love={love} pack={pack} farmer={save.farmer.name} onContinue={() => (card.stage ? setPhase('stage') : onClose())} />)}
+          : <LevelUpCard card={card} id={id} name={name} love={love} pack={pack} farmer={save.farmer.name} onContinue={() => (card.stage ? setPhase(card.stage === 'married' && mode === 'event' ? 'night' : 'stage') : onClose())} />)}
+        {phase === 'night' && <WeddingNight save={save} id={id} onDone={() => setPhase('stage')} />}
         {phase === 'stage' && love && <StageUpScreen stage={card?.stage ?? 'romance'} id={id} love={love} pack={pack} married={card?.stage === 'married' ? marriedOf(save) : null} save={save} onContinue={onClose} />}
         {phase === 'asked' && <EndNote text={error ?? (answer === 'not-yet' ? `${name} smiles. “Whenever you’re ready.” Ask again tomorrow.` : '')} onDone={onClose} />}
         {phase === 'replayed' && <EndNote text="A Memory, replayed. Replays give no points." onDone={onClose} />}

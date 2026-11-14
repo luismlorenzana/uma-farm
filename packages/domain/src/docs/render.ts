@@ -36,7 +36,7 @@ import { DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES,
 import { CAST, CAST_IDS } from '../story/cast'
 import { MEET_KINDS } from '../romance/meeting'
 import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER, costOf, LADDER_COLOURS, ROUTE_POINTS, rungName, SPOUSE_COST } from '../romance/love'
-import { DISLIKED_LINE, GIFT_POINTS_V4, giftStars, LOVE_POINTS } from '../romance/acts'
+import { GIFT_POINTS_V4, giftStars, LOVE_POINTS } from '../romance/acts'
 import { farmBirthday } from '../romance/days'
 import { READY_CONDITIONS, WAIT_ORDER } from '../romance/ready'
 import { chapterTitle, GATE_RULES, gateWords, herChapters } from '../romance/chapters'
@@ -72,7 +72,9 @@ import { HOUSE_ITEM_N, HOUSE_POINTS, HOUSE_TEMPLATES, VOWS_POINTS } from '../rom
 import { EXTENDED_ROOMS, FINALE_MARRIED, HOUSE_ROOMS } from '../save/v4'
 import { BENCH_SCENE_LINES, type Beat } from '../story/bench'
 import { DISH_WORDS, dishName, goodName, RING_GOODS } from '../goods/ids'
-import { BIG_EVENTS, EVENT_LIMITS, RUNGS, type Route, type Step, type Together, type UmaBible } from '../story/authored'
+import { BIG_EVENTS, EVENING_SCENES, EVENT_LIMITS, LIFE_EVENTS, OCCASIONS, RUNGS, type Route, type Step, type Together, type UmaBible } from '../story/authored'
+import { DEFAULT_EVENINGS, DEFAULT_EVENTS, DEFAULT_GIFT_REACTIONS, DEFAULT_GOODS, DEFAULT_MEALS, DEFAULT_MORNINGS, DEFAULT_TALKS, TALK_STAGES, WORK_WORDS } from '../story/default-story'
+import { TASTES } from '../romance/chats'
 import { ordinal, PLACEHOLDER_MOMENTS, PLACEHOLDER_OPENING, PLACEHOLDER_TABLE, tieKind, tieStrength, WEDDING_DEFAULTS, welcomeOf } from '../story/placeholders'
 
 type Cell = string | number
@@ -488,8 +490,32 @@ function arrivalPay(): string {
 function placeholdersBlock(): string {
   return table(['What the story can give', 'What plays without it'], PLACEHOLDER_TABLE.map((p) => [p.gives, p.without]))
 }
+/** Her lines in their order (every activity but expeditions). */
+const LINE_ORDER = ACTIVITIES.filter((a) => a !== 'expeditions')
+/** The default story, piece by piece: what it holds and what replaces it. */
+function defaultStoryBlock(): string {
+  const talks = TALK_STAGES.length * TEMPERAMENTS.length * DEFAULT_TALKS.friend.steady.length
+  const scenes = (ids: readonly string[]) => ids.map((id) => `\`${id}\``).join(', ')
+  return table(['Piece', 'What the default holds', 'Replaced by the story’s'], [
+    ['Her talks', `${talks}: ${DEFAULT_TALKS.friend.steady.length} for each stage (${TALK_STAGES.join(', ')}) and temperament (${TEMPERAMENTS.join(', ')})`, 'Her bible’s `chats` set for the stage'],
+    ['Her gift reactions', `${DEFAULT_GIFT_REACTIONS.loved.length} for each taste (${TASTES.join(', ')})`, '—'],
+    ['Her meeting', 'At the Gate (the welcome list’s), or in town, where you introduce yourself', 'Her route’s `arrival`'],
+    ['Her events', `Every rung (${RUNGS.length}), and her life’s: ${scenes(LIFE_EVENTS)}`, 'Her route’s event of that id'],
+    ['Her occasions', scenes(OCCASIONS), 'Her route’s event of that id'],
+    ['The evenings’ scenes', scenes(EVENING_SCENES), 'Her route’s event of that id'],
+    ['The night’s companion', `${DEFAULT_MORNINGS.steady.length} morning greetings for each temperament`, '—'],
+    ['Meals', `${DEFAULT_MEALS.breakfast.length} lines for breakfast and ${DEFAULT_MEALS.dinner.length} for dinner`, '—'],
+    ['Her favourite good (`{good}`), the gift she loves', LINE_ORDER.map((a) => `${ACTIVITY_NAMES[a]} ${goodName(DEFAULT_GOODS[a])}`).join(', '), 'Her bible’s loved gift'],
+    ['Her line’s work (`{work}`)', LINE_ORDER.map((a) => `${ACTIVITY_NAMES[a]} “${WORK_WORDS[a]}”`).join(', '), 'Her line (her bible’s, her calling’s)'],
+  ])
+}
+/** The default story's scenes that name their outfit. */
+function defaultOutfits(): string {
+  const named = [...Object.entries(DEFAULT_EVENTS), ...Object.entries(DEFAULT_EVENINGS)].filter(([, scene]) => scene.outfit)
+  return table(['Scene', 'Her outfit'], named.map(([id, scene]) => [`\`${id}\``, `\`${scene.outfit}\``]))
+}
 function placeholderMoments(): string {
-  return table(['Rung', 'The card’s first line (and its Memory’s caption)'], RUNGS.map((r) => [r === 'arrival' ? 'Her meeting scene' : rungName(r), PLACEHOLDER_MOMENTS[r] ?? '—']))
+  return table(['Rung', 'The default event’s first line (and its Memory’s caption)'], RUNGS.map((r) => [r === 'arrival' ? 'Her meeting scene' : rungName(r), PLACEHOLDER_MOMENTS[r] ?? '—']))
 }
 // --- The ladders and points ----------------------------------------------------------------------------------
 const whole = (n: number) => n.toLocaleString('en-US')
@@ -530,7 +556,7 @@ function giftStarsBlock(): string {
   return table(['Her taste', ...stars.map((n) => `★${n}`)], [
     ...tastes.map((t) => [cap(t), ...stars.map((n) => pay(t, n, false))]),
     ...(['loved', 'liked', 'neutral'] as const).map((t) => [`${cap(t)}, on her birthday (×3)`, ...stars.map((n) => pay(t, n, true))]),
-  ]) + `\n\nA disliked gift pays 0 and she says one line: “${DISLIKED_LINE}”`
+  ]) + `\n\nA disliked gift pays 0 and never takes points away. She says one of the default story’s lines for her taste (“${DEFAULT_GIFT_REACTIONS.disliked[0]}”).`
 }
 /** A real date's farm day. */
 function birthdayMap(): string {
@@ -973,7 +999,8 @@ function furnitureBlock(): string {
 
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'farm-ranks': farmRanks,
-    'meet-kinds': meetKinds, 'arrival-pay': arrivalPay, placeholders: placeholdersBlock, 'placeholder-moments': placeholderMoments, 'stand-in': standIn, 'farmer-name': farmerName,
+    'meet-kinds': meetKinds, 'arrival-pay': arrivalPay, placeholders: placeholdersBlock, 'placeholder-moments': placeholderMoments,
+    'default-story': defaultStoryBlock, 'default-outfits': defaultOutfits, 'stand-in': standIn, 'farmer-name': farmerName,
     'route-costs': routeCosts, 'love-points': lovePoints, 'gift-stars': giftStarsBlock, 'birthday-map': birthdayMap, 'ready-rules': readyRules,
     'ready-waits': readyWaits, 'default-chapters': defaultChapters, 'chapter-gates': chapterGates, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor, 'perk-words': perkWordsBlock,
     'perk-effects': perkEffects, 'perk-lines': perkLines, 'perk-caps': perkCaps, 'signature-dish': signatureDishes,

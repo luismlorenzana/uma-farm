@@ -12,7 +12,6 @@ import { sayHello } from '../romance/meeting'
 import { gateVisitor } from '../town/town'
 import { joinCast } from '../romance/meeting.fixture'
 import { chatLineV4, chatV4, giftV4 } from '../romance/acts'
-import { CHAT_LINES } from '../romance/chats'
 import { birthdaysOf } from '../romance/days'
 import { askHer, askSteps, playEvent, type EventCard, type EventOutcome } from '../romance/events'
 import { householdPlay, householdReady, readHousehold } from '../romance/household'
@@ -25,7 +24,8 @@ import { newSave, type SaveV4 } from '../save/v4'
 import { addGoods } from '../save/warehouse'
 import type { Step } from './authored'
 import {
-  chaptersOf, DEFAULT_CHAPTERS, eventOf, favouriteOf, householdOf, openingOf, outfitOf, PLACEHOLDER_CHATS, PLACEHOLDER_MOMENTS, PLACEHOLDER_OPENING, storyOf, weddingPlaces,
+  chaptersOf, DEFAULT_CHAPTERS, defaultTalksOf, eventOf, favouriteOf, householdOf, openingOf, outfitOf, PLACEHOLDER_MOMENTS, PLACEHOLDER_OPENING, storyOf, talkStageOf,
+  weddingPlaces,
 } from './placeholders'
 import { MASTER, MASTER_BIRTHDAYS } from './placeholders.fixture'
 import { readScene } from './scenes'
@@ -82,11 +82,10 @@ describe('a farm with no story pack', () => {
     for (let day = 1; day <= 60; day++) {
       expect(save.calendar.day).toBe(day)
       for (const id of FIVE) {
-        // A chat (her temperament's line before Friendship 1, the stage's placeholder lines after it) and a gift.
+        // A chat (the default story's talk for her stage and temperament) and a gift.
         const love = save.love[id]!
         const line = chatLineV4(save, STORY, id, 'steady')
-        if (love.stage === 'friendship' && love.level === 0) expect(CHAT_LINES.steady).toContain(line)
-        else expect([...PLACEHOLDER_CHATS.friend, ...PLACEHOLDER_CHATS.partner, ...PLACEHOLDER_CHATS.spouse]).toContain(line)
+        expect(defaultTalksOf(STORY, id, talkStageOf(love), 'steady')).toContain(line)
         if (love.stage !== 'spouse' || love.level < 5) {
           save = chatV4(save, id).save
           chats++

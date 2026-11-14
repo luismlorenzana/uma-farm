@@ -6,8 +6,8 @@ import { describe, expect, it } from 'vitest'
 import { dateOf, DAYS_PER_YEAR } from '../farm/calendar'
 import { loveRankFactor, rankPointsForDay, tickRankRules } from '../farm/rank-rules'
 import { TALENT_D } from '../farm/talents'
-import { CHAT_LINES } from './chats'
-import { PLACEHOLDER_CHATS } from '../story/placeholders'
+import { DEFAULT_GIFT_REACTIONS, DEFAULT_TALKS } from '../story/default-story'
+import { defaultTalksOf, giftReactionsOf } from '../story/placeholders'
 import { SHOP_SEEDS } from '../fields/crops'
 import { FOREST } from '../gathering/tables'
 import { goodCount, addGoods } from '../save/warehouse'
@@ -19,7 +19,7 @@ import { STAND_IN_BIBLE, STAND_IN_CAST, STAND_INS } from '../story/authored.fixt
 import { readScene } from '../story/scenes'
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { STAND_IN_FILES } from '../story/stand-in'
-import { canPraise, chatLineV4, chatSet, chatV4, DISLIKED_LINE, festivalTogether, giftPreview, giftV4, payLines, praiseV4, tasteKnown } from './acts'
+import { canPraise, chatLineV4, chatSet, chatV4, festivalTogether, giftLineV4, giftPreview, giftV4, payLines, praiseV4, tasteKnown } from './acts'
 import { joinCast } from './meeting.fixture'
 import { BOND_HEARTS, bondHearts } from '../farm/bonds'
 import { ANNIVERSARY_STARS, birthdaysOf, dayOfYear, farmBirthday, heartDays, isBirthday, lineGood, NO_BIRTHDAYS } from './days'
@@ -156,14 +156,15 @@ describe('points and banking', () => {
 })
 
 describe('chats', () => {
-  it('pays +15 once a day, home or away, with her temperament\'s lines before F1 and her set by stage from F1 (else the stage\'s placeholders), the same all day', () => {
+  it('pays +15 once a day, home or away, with her set by stage from F1, else the default story\'s talks by her stage and temperament, the same all day', () => {
     let save = farm(3)
     save = { ...save, dorm: { ...save.dorm, home: [ONE, TWO] } } // 9000003 away
     const talked = chatV4(save, THREE)
     expect(talked.paid).toBe(15)
     expect(() => chatV4(talked.save, THREE)).toThrow('You’ve talked today.')
     const line = chatLineV4(save, PACK, ONE, 'steady')
-    expect(CHAT_LINES.steady).toContain(line)
+    expect(defaultTalksOf(PACK, ONE, 'acquaintance', 'steady')).toContain(line)
+    expect(line).not.toMatch(/\{(good|work)\}/)
     expect(chatLineV4(talked.save, PACK, ONE, 'steady')).toBe(line)
     const chats = STAND_IN_BIBLE.chats!
     expect(chats.friend).toContain(chatLineV4(withLove(save, ONE, { level: 1 }), PACK, ONE, 'steady'))
@@ -171,11 +172,16 @@ describe('chats', () => {
     expect(chats.partner).toContain(chatLineV4(withLove(save, ONE, { stage: 'romance', level: 1 }), PACK, ONE, 'steady'))
     expect(chats.spouse).toContain(chatLineV4(withLove(save, ONE, { stage: 'spouse', level: 0, wed: 1 }), PACK, ONE, 'steady'))
     expect([chatSet(newLove()), chatSet({ stage: 'romance', level: 0 }), chatSet({ stage: 'wedding', level: 10 })]).toEqual([null, 'friend', 'partner'])
-    // Without her own chats (9000002 has no bible) she says the stage's placeholder lines from F1; her temperament's before it.
-    expect(PLACEHOLDER_CHATS.friend).toContain(chatLineV4(withLove(save, TWO, { level: 3 }), PACK, TWO, 'bold'))
-    expect(PLACEHOLDER_CHATS.partner).toContain(chatLineV4(withLove(save, TWO, { stage: 'romance', level: 2 }), PACK, TWO, 'bold'))
-    expect(PLACEHOLDER_CHATS.spouse).toContain(chatLineV4(withLove(save, TWO, { stage: 'spouse', level: 1, wed: 1 }), PACK, TWO, 'bold'))
-    expect(CHAT_LINES.bold).toContain(chatLineV4(save, PACK, TWO, 'bold'))
+    // Without her own chats (9000002, a forager, has no bible) she says the default story's talks for her stage.
+    const talks = (stage: Parameters<typeof defaultTalksOf>[2]) => defaultTalksOf(PACK, TWO, stage, 'bold')
+    expect(talks('acquaintance')).toContain(chatLineV4(save, PACK, TWO, 'bold'))
+    expect(talks('friend')).toContain(chatLineV4(withLove(save, TWO, { level: 3 }), PACK, TWO, 'bold'))
+    expect(talks('farmhand')).toContain(chatLineV4(withLove(save, TWO, { level: 3 }), PACK, TWO, 'bold', true))
+    expect(talks('sweetheart')).toContain(chatLineV4(withLove(save, TWO, { stage: 'romance', level: 2 }), PACK, TWO, 'bold'))
+    expect(talks('engaged')).toContain(chatLineV4(withLove(save, TWO, { stage: 'wedding', level: 10 }), PACK, TWO, 'bold'))
+    expect(talks('married')).toContain(chatLineV4(withLove(save, TWO, { stage: 'spouse', level: 1, wed: 1 }), PACK, TWO, 'bold'))
+    expect(defaultTalksOf(PACK, TWO, 'friend', 'steady').join(' ')).toContain('Chestnut')
+    expect(DEFAULT_TALKS.friend.bold).toHaveLength(talks('friend').length)
   })
 })
 
@@ -189,7 +195,8 @@ describe('gifts', () => {
     expect(() => giftV4(liked.save, PACK, ONE, 'limestone', 1)).toThrow('One gift a day.')
     const disliked = giftV4(save, PACK, ONE, 'limestone', 1)
     expect([disliked.paid, disliked.taste, disliked.save.love[ONE]!.points]).toEqual([0, 'disliked', 0])
-    expect(DISLIKED_LINE).toBe('She thanks you, a little puzzled.')
+    expect(giftReactionsOf(PACK, ONE, 'disliked', 'limestone')).toContain(giftLineV4(save, PACK, ONE, 'disliked', 'limestone'))
+    expect(DEFAULT_GIFT_REACTIONS.loved.map((l) => l.replaceAll('{gift}', 'Peach'))).toContain(giftLineV4(save, PACK, TWO, 'loved', 'peach'))
     expect(giftV4(save, PACK, ONE, 'pine-log', 1).paid).toBe(10)
     // Her birthday, Spring 4 in the stand-in cast: ×3.
     const birthday = give(farm(4), 'golden-carrot', 5)
@@ -465,7 +472,6 @@ describe('the format\'s chats', () => {
     expect(read.notes).toEqual([
       'chats.extra: not a chat set the game reads (friend, partner, spouse); kept',
       'chats.partner 1: {name} shows as written ({farmer} is the one placeholder)',
-      'chats.partner 2: “sir” genders the farmer',
     ])
     expect(read.value!.chats).toEqual({ friend: ['One.', 'Two.'], partner: ['Hi, {name}.', 'Yes, sir.'], spouse: ['A.', 'B.', 'C.'], extra: [] })
   })

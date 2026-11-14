@@ -1,16 +1,20 @@
-// The placeholders: what the game plays wherever the story pack is silent, and the one lookup that reads "the pack's, or
-// the placeholder". Nothing is gated on the story: every ladder, event, perk, evening, proposal, wedding and household
-// plays end to end on these, and a pack only adds words, scenes and her own chapters. They read as the game's own voice,
-// short and plain, with no "placeholder" label in play; the Farm Story Sandbox marks them per character (`writtenOf`).
+// The default story's home: what the game plays wherever the story pack is silent, and the one lookup that reads "the
+// pack's, or the default". Nothing is gated on the story: every ladder, event, perk, evening, proposal, wedding and
+// household plays end to end on these, and a pack replaces them piece by piece (an event, a scene, her talks, her tastes),
+// anything it leaves out staying the default. They read as the game's own voice, with no "placeholder" label in play; the
+// Farm Story Sandbox marks them per character (`writtenOf`). The default story's words are `default-story.ts`; this
+// module fills them in for her (her name, her favourite good, her line's work) and picks between hers and the default.
 //
 //   the cast                 the pack's; with none, master data's first five (the welcome list's size)
 //   the opening              three short lines: the farm, its nine Carrot seeds, and someone waiting at the Gate
 //   her name and outfit      master data's name and her default outfit (`MasterCast`, read at boot)
-//   her chats, by stage      a few short lines a stage (before Friendship 1, her temperament's, as always)
-//   her meeting scene        two short lines and a hello, paying as a written one does
-//   a heart event or play    a short card with her line and a reply; its points and rewards pay as written
+//   her talks, by stage      the default story's, by her stage and temperament (her bible's chat set where it has one)
+//   her gift reactions       the default story's, by her taste
+//   her meeting scene        the default story's, at the Gate or in town, paying as a written one does
+//   her events               the default story's for every rung, the wedding night, moving in and married life 2 and 4,
+//                            each paying as written; her occasions and evenings' scenes the same
 //   her chapters             four: "Getting to know her", "Together", "The wedding", "Married life"
-//   her line, her tastes     her line from master data's stats; every gift neutral
+//   her line, her tastes     her line from master data's stats; her favourite good (by her line) loved, the rest neutral
 //   her birthday             master data's, or none
 //   pet name, keepsake, ring's words, wedding places, a tie's kind and line, a play's prompt     plain defaults
 //   pairs and household      a short card that pays as written (nothing)
@@ -28,16 +32,20 @@
 // Every read of the pack goes through a function here. Pure; loaded with the story pack.
 import { FESTIVALS, festivalDayOfYear, isFestivalId, type Festival, type Season } from '../farm/calendar'
 import type { Activity } from '../farm/ranks'
-import { activityScore, talentScores, type TalentOutfit } from '../farm/talents'
-import { isGoodId } from '../goods/ids'
+import { activityScore, talentScores, type TalentOutfit, type Temperament } from '../farm/talents'
+import { goodName, isGoodId } from '../goods/ids'
 import type { Taste } from '../romance/chats'
-import { pairKey } from '../save/v4'
+import { pairKey, type Love } from '../save/v4'
 import {
-  ARRIVAL, FAVOURITE_LINES, HOUSEHOLD_SCENES, isSister, RUNGS, sisterOutfit, SPOT_IDS, type Beat, type Calling, type Cast, type ChoiceOption, type DateGame, type Finale, type Gifts,
+  ARRIVAL, EVENING_SCENES, FAVOURITE_LINES, HOUSEHOLD_SCENES, isSister, RUNGS, sisterOutfit, SPOT_IDS, type Beat, type Calling, type Cast, type ChoiceOption, type DateGame, type Finale, type Gifts,
   type HerChapter, type Household, type HouseholdAt, type HouseholdScene, type Keepsake, type PairConversations, type Play, type SpotId, type Step, type StoryPlace, type StoryTrigger,
   type Tie, type TieKind, type TownNote, type UmaBible, type Wish,
 } from './authored'
 import { CAST, CAST_IDS, isCastId, type CastId } from './cast'
+import {
+  DEFAULT_EVENINGS, DEFAULT_EVENTS, DEFAULT_GIFT_REACTIONS, DEFAULT_GOOD, DEFAULT_GOODS, DEFAULT_LIFE_EVENTS, DEFAULT_MEALS, DEFAULT_MORNINGS, DEFAULT_OCCASIONS, DEFAULT_TALKS,
+  DEFAULT_TOWN_MEETING, DEFAULT_WORK, HER, WORK_WORDS, type DefaultScene, type TalkStage,
+} from './default-story'
 import type { StoryOutfit } from './look'
 import { castEntry, castOrder, type StoryPack } from './pack'
 import { farmPlace, type FarmPlaceId } from '../farm/places'
@@ -163,18 +171,80 @@ export function linePlaces(pack: Pick<StoryPack, 'cast' | 'bibles' | 'master'>, 
   }
 }
 
-/** Her gifts: her bible's, else none (every gift neutral). */
-export const giftsOf = (pack: Pick<StoryPack, 'bibles'>, id: string): Gifts => pack.bibles.get(id)?.gifts ?? {}
+/** A pack as her words read it: her bible, and her cast entry and master data when there are any. */
+type HerPack = Pick<StoryPack, 'bibles'> & Partial<Pick<StoryPack, 'cast' | 'master'>>
+/** Her favourite line when the pack may hold no cast (a test's, or a read before the cast): `favouriteOf`'s rule. */
+const lineOfPartial = (pack: HerPack, id: string): Activity | null =>
+  favouriteOf({ cast: pack.cast ?? { umas: [] }, bibles: pack.bibles, ...(pack.master ? { master: pack.master } : {}) }, id)
 
-/** What she thinks of a good as a gift: her bible's loved, liked and disliked, any number of each; everything else
- * neutral. A proposed good counts once it exists in `goods/ids.ts`; until then that slot is neutral. No bible: neutral. */
-export function tasteOf(pack: Pick<StoryPack, 'bibles'>, id: string, good: string, isGood: (id: string) => boolean = isGoodId): Taste {
+/** Her favourite good: her bible's loved one, else the default story's for her line (`DEFAULT_GOODS`): what `{good}` says,
+ * and the gift she loves while her story gives no tastes. */
+export function favouriteGoodOf(pack: HerPack, id: string): string {
+  const loved = pack.bibles.get(id)?.gifts?.loved
+  if (loved) return loved
+  const line = lineOfPartial(pack, id)
+  return line ? DEFAULT_GOODS[line] : DEFAULT_GOOD
+}
+
+/** Her tastes: her bible's when it names any (loved, liked or disliked), else the default story's: her favourite good
+ * loved, everything else neutral. */
+export function giftsOf(pack: HerPack, id: string): Gifts {
+  const own = pack.bibles.get(id)?.gifts
+  if (own && (own.loved || (own.liked?.length ?? 0) > 0 || (own.disliked?.length ?? 0) > 0)) return own
+  return { ...own, loved: favouriteGoodOf(pack, id) }
+}
+
+/** What she thinks of a good as a gift: her tastes (`giftsOf`), loved, liked and disliked, any number of each; everything
+ * else neutral. A proposed good counts once it exists in `goods/ids.ts`; until then that slot is neutral. */
+export function tasteOf(pack: HerPack, id: string, good: string, isGood: (id: string) => boolean = isGoodId): Taste {
   const gifts = giftsOf(pack, id)
   if (!isGood(good)) return 'neutral'
   if (gifts.loved === good) return 'loved'
   if (gifts.liked?.includes(good)) return 'liked'
   if (gifts.disliked?.includes(good)) return 'disliked'
   return 'neutral'
+}
+
+// === Her words: what the default story fills in =========================================================================
+
+/** What the default story says of her: her name (`{name}`), her favourite good (`{good}`, by its name) and her line's work
+ * (`{work}`). `{farmer}` fills as a line shows. */
+export interface HerWords { readonly name: string; readonly good: string; readonly work: string }
+
+/** Her words for the default story: her name as the screen knows it ("She" when none is given), her favourite good's name
+ * and her line's work. */
+export function herWordsOf(pack: HerPack, id: string, name = 'She'): HerWords {
+  const line = lineOfPartial(pack, id)
+  return { name, good: goodName(favouriteGoodOf(pack, id)), work: line ? WORK_WORDS[line] : DEFAULT_WORK }
+}
+
+/** A default line with her words in: `{name}`, `{good}`, `{work}`, and `{gift}` (a gift's name) when given. `{farmer}`
+ * stays, to fill as it shows; a word not given stays too. */
+export function fillHer(text: string, words: Partial<HerWords> & { gift?: string }): string {
+  let out = text
+  if (words.name !== undefined) out = out.replaceAll('{name}', words.name)
+  if (words.good !== undefined) out = out.replaceAll('{good}', words.good)
+  if (words.work !== undefined) out = out.replaceAll('{work}', words.work)
+  if (words.gift !== undefined) out = out.replaceAll('{gift}', words.gift)
+  return out
+}
+
+/** A default scene's steps for her: `@her` her id, every line with her words in. */
+export function fillScene(steps: readonly Step[], id: string, words: HerWords): Step[] {
+  const text = (t: string) => fillHer(t, words)
+  const one = (s: Step): Step => {
+    if ('say' in s) return { ...s, say: s.say === HER ? id : s.say, line: text(s.line) }
+    if ('narrate' in s) return { narrate: text(s.narrate) }
+    if ('thought' in s) return { thought: text(s.thought) }
+    if ('choice' in s) return { choice: s.choice.map((o) => ({ ...o, text: text(o.text), ...(o.then ? { then: fillScene(o.then, id, words) } : {}) })) }
+    if ('when' in s) return { ...s, then: fillScene(s.then, id, words), ...(s.else ? { else: fillScene(s.else, id, words) } : {}) }
+    if ('play' in s) {
+      const p = s.play
+      return { play: { ...p, ...(p.good ? { good: fillScene(p.good, id, words) } : {}), ...(p.miss ? { miss: fillScene(p.miss, id, words) } : {}) } }
+    }
+    return s
+  }
+  return steps.map(one)
 }
 
 /** Her birthday as a date: her cast entry's, else master data's character set's, else none. */
@@ -250,127 +320,61 @@ export const routeBeats = (pack: Pick<StoryPack, 'bibles'>, id: string): readonl
  * its own, no hint and no unlock. */
 export const beatOf = (pack: Pick<StoryPack, 'bibles'>, id: string, rung: string): Beat | undefined => routeBeats(pack, id).find((b) => b.id === rung)
 
-/** A heart event's moment, by rung: the card's first line, and its Memory's caption when her beat gives none. */
-export const PLACEHOLDER_MOMENTS: Readonly<Record<string, string>> = {
-  arrival: 'Someone new is waiting at the Gate.',
-  f1: 'A quiet afternoon with her.',
-  f2: 'She shows you her favourite corner of the farm.',
-  f3: 'You share a snack on the fence rail.',
-  f4: 'She asks how the farm came to be yours.',
-  f5: 'You work side by side until the light turns gold.',
-  f6: 'She laughs at a joke you didn’t mean to make.',
-  f7: 'A long walk home, talking the whole way.',
-  f8: 'She tells you something she hasn’t told anyone here.',
-  f9: 'You mend a broken gate together.',
-  f10: 'She waits for you at the end of the day.',
-  confession: 'She asks you to stay after everyone else has gone.',
-  r1: 'Your first evening together, just the two of you.',
-  r2: 'She holds your hand all the way home.',
-  r3: 'A picnic for two, with far too much food.',
-  r4: 'She leans on your shoulder and watches the clouds.',
-  r5: 'You cook supper together and only burn a little.',
-  r6: 'A slow dance with no music at all.',
-  r7: 'She saves you the best seat by the fire.',
-  r8: 'You count the stars until you both lose track.',
-  r9: 'She talks about the years ahead, and you’re in all of them.',
-  r10: 'A quiet night when nothing needs saying.',
-  proposal: 'You find a quiet moment and hold out the ring.',
-  wedding: 'The bell rings, and everyone you love is here.',
-  s1: 'Your first morning at home together.',
-  s3: 'A lazy afternoon with nowhere to be.',
-  s5: 'You renew your vows on a quiet evening.',
+/** The default story's scene for an event id: her meeting (the Gate's, or the town's `inTown`), a rung, her life's events
+ * past the rungs, her occasions and the evenings' scenes. An id it doesn't hold plays Friendship 1's. */
+export function defaultSceneOf(event: string, inTown = false): DefaultScene {
+  if (event === ARRIVAL && inTown) return DEFAULT_TOWN_MEETING
+  return DEFAULT_EVENTS[event] ?? DEFAULT_EVENINGS[event] ?? DEFAULT_EVENTS.f1!
 }
 
-/** Her lines on a placeholder card, by ladder; a rung picks one by its number. */
-const HER_LINES = {
-  friendship: ['I’m glad I came here.', 'Same time tomorrow?', 'You’re easy to talk to, {farmer}.'],
-  romance: ['I like us.', 'Stay a little longer?', 'Every day’s better with you in it, {farmer}.'],
-  spouse: ['This is my favourite part of the day.', 'I’d choose you again. Every time.', 'Home is wherever you are.'],
-} as const
+/** A heart event's moment, by rung: the default event's first line, and its Memory's caption when her beat gives none. */
+export const PLACEHOLDER_MOMENTS: Readonly<Record<string, string>> = Object.fromEntries(RUNGS.map((rung) => [rung, defaultSceneOf(rung).moment]))
 
-/** Your replies on a placeholder card, by ladder: the warmer one pays +30, the other +10, as a written choice does. */
-const REPLIES: Readonly<Record<keyof typeof HER_LINES, readonly [ChoiceOption, ChoiceOption]>> = {
-  friendship: [{ text: 'I’m glad too.', tone: 'warm', friendship: 2 }, { text: 'Anytime.', tone: 'playful', friendship: 1 }],
-  romance: [{ text: 'I’m not going anywhere.', tone: 'warm', romance: 2 }, { text: 'Only if you share the blanket.', tone: 'playful', romance: 1 }],
-  spouse: [{ text: 'And I’d choose you.', tone: 'warm', romance: 2 }, { text: 'Tea first, then forever.', tone: 'playful', romance: 1 }],
-}
-
-/** Her meeting scene's hello: your answer, which pays as a written arrival's choice does (+30 the warmer, +10 the other). */
+/** Her meeting scene's hello for a written arrival with no choice: your answer, which pays as a written arrival's choice
+ * does (+30 the warmer, +10 the other). */
 export const PLACEHOLDER_HELLO: readonly ChoiceOption[] = [
   { text: 'Welcome! We’re glad you came.', tone: 'warm', friendship: 2 },
   { text: 'Hello! Come on in.', tone: 'playful', friendship: 1 },
 ]
 
-/** Meeting her in town when her route writes no arrival scene: the moment, her line and your reply, as the Gate's two
- * lines and a hello pay. The welcome list's meet you at the Gate instead. */
-export const PLACEHOLDER_TOWN_MEETING: readonly Step[] = [
-  { place: 'town' },
-  { narrate: 'You get talking, and the time slips by.' },
-]
-export const PLACEHOLDER_TOWN_LINE = 'I’m glad we got talking, {farmer}. Tell me about your farm sometime?'
-export const PLACEHOLDER_TOWN_HELLO: readonly ChoiceOption[] = [
-  { text: 'I’d like that. Come and see it.', tone: 'warm', friendship: 2 },
-  { text: 'Only if you tell me about you.', tone: 'playful', friendship: 1 },
-]
-
-const ladderOfRung = (rung: string): keyof typeof HER_LINES => (rung.startsWith('s') ? 'spouse' : rung.startsWith('r') ? 'romance' : 'friendship')
-
-/** The game's own short card for a rung the pack doesn't script: her moment, her line and your reply, so it pays as a
- * written event does (+50, the reply's +30 or +10, and its grade). The big rungs keep their shape: her confession's reply
- * holds Yes and Not yet, the proposal's says yes, the wedding's last choice is the vows. Her arrival is two lines and a
- * hello at the Gate (the welcome list's), or met in town (`inTown`, anyone else), two lines and a reply there. Every line
- * is short and original, and `{farmer}` is the only placeholder. */
-export function placeholderEvent(id: string, rung: string, inTown = false): Step[] {
-  const moment: Step = { narrate: PLACEHOLDER_MOMENTS[rung] ?? PLACEHOLDER_MOMENTS.f1! }
-  switch (rung) {
-    case ARRIVAL:
-      if (inTown) return [...PLACEHOLDER_TOWN_MEETING, { say: id, line: PLACEHOLDER_TOWN_LINE }, { choice: [...PLACEHOLDER_TOWN_HELLO] }]
-      return [{ place: 'gate' }, moment, { say: id, line: 'Hi! Is this the farm? I’d love to help out.' }, { choice: [...PLACEHOLDER_HELLO] }]
-    case 'confession':
-      return [moment, { say: id, line: 'I like you, {farmer}. More than a friend. Do you feel the same?', emote: 'shy' }, {
-        choice: [
-          { text: 'I do. I really do.', tone: 'warm', romance: 2, answer: 'yes', then: [{ say: id, line: 'Then let’s see where this goes.', emote: 'happy' }] },
-          { text: 'Can we take it slowly?', tone: 'honest', friendship: 1, answer: 'not-yet', then: [{ say: id, line: 'Okay. I’ll be right here.', emote: 'tender' }] },
-        ],
-      }]
-    case 'proposal':
-      return [moment, { say: id, line: 'Yes. Of course, yes.', emote: 'happy' }, {
-        choice: [{ text: 'I love you.', tone: 'warm', romance: 2 }, { text: 'You had me worried for a second.', tone: 'playful', romance: 1 }],
-      }]
-    case 'wedding':
-      return [moment, { say: id, line: 'I’m ready. Are you?', emote: 'tender' }, {
-        choice: [
-          { text: 'Always.', tone: 'warm', romance: 2 },
-          { text: 'I promise to keep you laughing.', tone: 'playful', romance: 1 },
-          { text: 'I’ll be here, every day.', tone: 'honest', romance: 1 },
-        ],
-      }]
-  }
-  const ladder = ladderOfRung(rung)
-  const lines = HER_LINES[ladder]
-  const n = Number(rung.slice(1)) || 1
-  return [moment, { say: id, line: lines[(n - 1) % lines.length]! }, { choice: [...REPLIES[ladder]] }]
+/** The default story's event for an id the pack doesn't script, filled in for her (`words`; her name "She" without one).
+ * A rung pays as a written event does (+50, the reply's +30 or +10, and its grade); the big rungs keep their shape: her
+ * confession's reply holds Yes and Not yet, the proposal's says yes, the wedding's last choice is the vows. Her arrival is
+ * the Gate's for the welcome list, or met in town (`inTown`, anyone else); either holds one choice. Her life's events, her
+ * occasions and the evenings' scenes pay nothing: their choices are wording only. */
+export function placeholderEvent(id: string, rung: string, inTown = false, words: HerWords = { name: 'She', good: goodName(DEFAULT_GOOD), work: DEFAULT_WORK }): Step[] {
+  return fillScene(defaultSceneOf(rung, inTown).steps, id, words)
 }
 
 /** Whether steps hold a choice anywhere a path can reach. */
 const hasChoice = (steps: readonly Step[]): boolean => steps.some((s) => ('choice' in s) || ('when' in s && (hasChoice(s.then) || hasChoice(s.else ?? []))))
 
-/** An event the game plays: the pack's for her rung, else the game's own card. Her written arrival with no choice gets
- * the hello, so it pays as one with a choice does. Her unwritten arrival is the Gate's for the welcome list, else the
- * town's (with the cast to tell). `written` says which; `outfit` is the written event's own, if it names one (the game's
- * card wears the moment's). */
+/** An event the game plays: her route's for the id (a rung, her life's events, an occasion, an evening's scene), else the
+ * default story's, filled in for her (her `name` as the screen knows it, her favourite good, her line's work). Her written
+ * arrival with no choice gets the hello, so it pays as one with a choice does. Her unwritten arrival is the Gate's for the
+ * welcome list, else the town's (with the cast to tell). `written` says which; `outfit` is the event's own when it names
+ * one (the default's names it for the wedding night, a picnic, a festival night, a dinner, a night in), else the moment's
+ * plays. */
 export interface PlayedEvent { id: string; steps: readonly Step[]; written: boolean; outfit?: StoryOutfit }
-export async function eventOf(pack: Pick<StoryPack, 'route'> & Partial<Pick<StoryPack, 'cast'>>, id: string, rung: string): Promise<PlayedEvent> {
+export async function eventOf(pack: Pick<StoryPack, 'route'> & Partial<Pick<StoryPack, 'cast' | 'bibles' | 'master'>>, id: string, rung: string, name?: string): Promise<PlayedEvent> {
   const event = (await pack.route(id))?.events.find((e) => e.id === rung)
   const steps = event?.steps
-  if (!steps) return { id: rung, steps: placeholderEvent(id, rung, rung === ARRIVAL && pack.cast !== undefined && !welcomeOf({ cast: pack.cast }).includes(id)), written: false }
+  if (!steps) {
+    const inTown = rung === ARRIVAL && pack.cast !== undefined && !welcomeOf({ cast: pack.cast }).includes(id)
+    const scene = defaultSceneOf(rung, inTown)
+    const words = herWordsOf({ bibles: pack.bibles ?? new Map(), ...(pack.cast ? { cast: pack.cast } : {}), ...(pack.master ? { master: pack.master } : {}) }, id, name)
+    return { id: rung, steps: placeholderEvent(id, rung, inTown, words), written: false, ...(scene.outfit ? { outfit: scene.outfit } : {}) }
+  }
   return {
     id: rung, steps: rung === ARRIVAL && !hasChoice(steps) ? [...steps, { choice: [...PLACEHOLDER_HELLO] }] : steps, written: true,
     ...(event.outfit ? { outfit: event.outfit } : {}),
   }
 }
 
-/** Her Memory's caption for a rung: her beat's, else the card's moment. */
+/** An evening's scene id: `hangout-<kind>` for a friend, `date-<kind>` for a sweetheart or a spouse. */
+export const eveningSceneId = (kind: string, role: 'hangout' | 'date' | 'spouse'): string => `${role === 'hangout' ? 'hangout' : 'date'}-${kind}`
+
+/** Her Memory's caption for a rung: her beat's, else the default event's moment. */
 export const captionOf = (pack: Pick<StoryPack, 'bibles'>, id: string, rung: string): string =>
   beatOf(pack, id, rung)?.beat ?? PLACEHOLDER_MOMENTS[rung] ?? PLACEHOLDER_MOMENTS.f1!
 
@@ -402,35 +406,49 @@ export const PLAY_PROMPTS: Readonly<Record<Activity | DateGame, string>> = {
 /** A play's prompt: the pack's, else its game's. */
 export const promptOf = (play: Pick<Play, 'game' | 'prompt'>): string => play.prompt ?? PLAY_PROMPTS[play.game]
 
-/** Her chat lines from Friendship 1, by stage, when her bible gives none: short, warm and her own to fill (`{name}` her
- * name, `{farmer}` yours). Before Friendship 1 she speaks her temperament's lines. */
-export const PLACEHOLDER_CHATS: Readonly<Record<'friend' | 'partner' | 'spouse', readonly string[]>> = {
-  friend: [
-    '“Morning! I saved you a spot by the fence.”',
-    '{name} waves. “Busy day? Me too. Let’s get through it together.”',
-    '“I like it here. The farm feels like it’s waking up.”',
-    '{name} smiles. “Thanks for checking on me, {farmer}.”',
-    '“Tell me how your day goes later, okay?”',
-  ],
-  partner: [
-    '{name} brightens when she sees you. “There you are.”',
-    '“I kept thinking about you all morning, {farmer}.”',
-    '{name} squeezes your hand. “Okay. Now I’m ready for the day.”',
-    '“Walk with me later? Just the two of us.”',
-    '“You make the hard days easy. Did you know that?”',
-  ],
-  spouse: [
-    '“Good morning. I made too much tea again.”',
-    '{name} straightens your collar. “There. Now you’re ready.”',
-    '“Home feels like home because you’re in it.”',
-    '{name} laughs softly. “Every day with you is a good one.”',
-    '“Don’t work too hard. Come back to me in one piece.”',
-  ],
+/** Her stage in the Uma loop, as her talks follow it: an acquaintance to Friendship 2, a friend from Friendship 3 through
+ * the confession's wait (a farmhand once she works the farm: `farmhand`), a sweetheart from the confession through the
+ * proposal's wait, engaged until the wedding, then married. */
+export function talkStageOf(love: Pick<Love, 'stage' | 'level'>, farmhand = false): TalkStage {
+  switch (love.stage) {
+    case 'friendship': return love.level <= 2 ? 'acquaintance' : farmhand ? 'farmhand' : 'friend'
+    case 'confession': return farmhand ? 'farmhand' : 'friend'
+    case 'romance': case 'proposal': return 'sweetheart'
+    case 'wedding': return 'engaged'
+    case 'spouse': return 'married'
+  }
 }
-/** Her chat lines for a stage: her bible's set when it holds any, else the stage's placeholders. */
+
+/** Her bible's chat lines for a set (from Friendship 1: `friend`, `partner`, `spouse`), or none. */
 export function chatLinesOf(pack: Pick<StoryPack, 'bibles'>, id: string, set: 'friend' | 'partner' | 'spouse'): readonly string[] {
-  const own = pack.bibles.get(id)?.chats?.[set] ?? []
-  return own.length > 0 ? own : PLACEHOLDER_CHATS[set]
+  return pack.bibles.get(id)?.chats?.[set] ?? []
+}
+
+/** The default story's talks for her stage and temperament, with her favourite good and her line's work in (`{name}` and
+ * `{farmer}` fill as they show). */
+export function defaultTalksOf(pack: HerPack, id: string, stage: TalkStage, temperament: Temperament): readonly string[] {
+  const { good, work } = herWordsOf(pack, id)
+  return DEFAULT_TALKS[stage][temperament].map((line) => fillHer(line, { good, work }))
+}
+
+/** What she says to a gift, by her taste: the default story's lines, with the gift's name, her favourite good and her
+ * line's work in (`{name}` and `{farmer}` fill as they show). */
+export function giftReactionsOf(pack: HerPack, id: string, taste: Taste, gift: string): readonly string[] {
+  const { good, work } = herWordsOf(pack, id)
+  return DEFAULT_GIFT_REACTIONS[taste].map((line) => fillHer(line, { good, work, gift: goodName(gift) }))
+}
+
+/** The night's companion's morning greetings (the default story's, by her temperament), with her words in but `{name}` and
+ * `{farmer}`, which fill as they show. */
+export function morningGreetingsOf(pack: HerPack, id: string, temperament: Temperament): readonly string[] {
+  const { good, work } = herWordsOf(pack, id)
+  return DEFAULT_MORNINGS[temperament].map((line) => fillHer(line, { good, work }))
+}
+
+/** Her lines at the household's meals (the default story's), with her words in but `{name}` and `{farmer}`. */
+export function mealLinesOf(pack: HerPack, id: string, meal: 'breakfast' | 'dinner'): readonly string[] {
+  const { good, work } = herWordsOf(pack, id)
+  return DEFAULT_MEALS[meal].map((line) => fillHer(line, { good, work }))
 }
 
 /** Her keepsake when her bible gives none: plain words. */
@@ -742,8 +760,11 @@ export function writtenOf(pack: Pick<StoryPack, 'cast' | 'bibles' | 'scripted' |
   const entry = castEntry(pack, id)
   const bible: UmaBible | undefined = pack.bibles.get(id)
   const scripted = pack.scripted.get(id) ?? new Set<string>()
-  const events = RUNGS.filter((r) => r !== ARRIVAL)
+  const events = [...RUNGS.filter((r) => r !== ARRIVAL), ...DEFAULT_LIFE_EVENTS]
   const writtenEvents = events.filter((r) => scripted.has(r)).length
+  const occasions = DEFAULT_OCCASIONS.filter((o) => scripted.has(o)).length
+  const evenings = EVENING_SCENES
+  const writtenEvenings = evenings.filter((e) => scripted.has(e)).length
   const chats = (['friend', 'partner', 'spouse'] as const).filter((set) => (bible?.chats?.[set] ?? []).length > 0)
   const ties = pack.ties.ties.filter((t) => t.a === id || t.b === id)
   const pairLevelsWritten = ties.reduce((n, t) => n + (pack.pairs.get(pairKey(t.a, t.b))?.size ?? 0), 0)
@@ -754,11 +775,13 @@ export function writtenOf(pack: Pick<StoryPack, 'cast' | 'bibles' | 'scripted' |
   return [
     part('Her outfit', !!entry?.outfitId, `Outfit ${entry?.outfitId ?? ''}`, 'Her default outfit from master data, with her name'),
     part('Her favourite line', !!(bible?.favouriteLine ?? entry?.calling), bible?.favouriteLine ?? entry?.calling ?? '', 'Her line from master data’s stats'),
-    part('Her tastes', !!(bible?.gifts?.loved || bible?.gifts?.liked?.length || bible?.gifts?.disliked?.length), 'Her bible’s gifts', 'Every gift neutral'),
+    part('Her tastes', !!(bible?.gifts?.loved || bible?.gifts?.liked?.length || bible?.gifts?.disliked?.length), 'Her bible’s gifts', 'The default story’s: her favourite good (by her line) loved, the rest neutral'),
     part('Her birthday', !!entry?.birthday, 'The cast’s date', 'Master data’s, or none'),
-    part('Her chats', chats.length === 3, 'Friend, partner and spouse', chats.length > 0 ? `Her ${chats.join(' and ')} lines; the game’s for the rest` : 'The game’s short lines for each stage'),
-    part('Her meeting scene', scripted.has(ARRIVAL), 'Her arrival scene', 'Two short lines and a hello'),
-    part('Her events', writtenEvents === events.length, `All ${events.length}`, `${writtenEvents} of ${events.length} written; the rest play a short card that pays as written`),
+    part('Her chats', chats.length === 3, 'Friend, partner and spouse', chats.length > 0 ? `Her ${chats.join(' and ')} lines; the default story’s talks for the rest` : 'The default story’s talks, by her stage and temperament'),
+    part('Her meeting scene', scripted.has(ARRIVAL), 'Her arrival scene', 'The default story’s meeting, at the Gate or in town'),
+    part('Her events', writtenEvents === events.length, `All ${events.length}`, `${writtenEvents} of ${events.length} written; the rest play the default story’s, paying as written`),
+    part('Her occasions', occasions === DEFAULT_OCCASIONS.length, `All ${DEFAULT_OCCASIONS.length}`, `${occasions} of ${DEFAULT_OCCASIONS.length} written; the rest the default story’s`),
+    part('Her evenings', writtenEvenings === evenings.length, `All ${evenings.length}`, `${writtenEvenings} of ${evenings.length} written; the rest the default story’s`),
     part('Her chapters', (entry?.chapters?.length ?? 0) > 0, `${entry?.chapters?.length ?? 0}, the story’s`, `The four defaults: ${DEFAULT_CHAPTERS.map((c) => c.title).join(', ')}`),
     welcome >= 0
       ? part('Her trigger to meet', pack.cast.welcome !== undefined && pack.cast.welcome.length > 0, `Her first talk: the welcome list’s ${ordinal(welcome + 1)}, at the Gate`, `Her first talk: the welcome list’s ${ordinal(welcome + 1)} (the cast’s first ${DEFAULT_WELCOME}), at the Gate`)
@@ -784,14 +807,19 @@ export const PLACEHOLDER_TABLE: readonly { gives: string; without: string }[] = 
   { gives: 'The cast', without: `Master data’s first ${DEFAULT_WELCOME} characters, in its order (the welcome list’s size)` },
   { gives: 'The opening', without: 'Three short lines: the farm, its nine Carrot seeds, and someone waiting at the Gate (that line only when someone is coming)' },
   { gives: 'Her name and outfit', without: 'Her master-data name and default outfit (her first original one)' },
-  { gives: 'Her chat lines, by stage', without: `${PLACEHOLDER_CHATS.friend.length} short lines a stage, written for the game (before Friendship 1, her temperament’s)` },
-  { gives: 'Her meeting scene', without: 'Two short lines and a hello, at the Gate for the welcome list, in town for anyone else; it pays as a written one does. A written one with no choice gets the hello' },
-  { gives: 'A heart event', without: 'A short card: her moment, her line and your reply; its points and rewards pay as written' },
+  { gives: 'Her chat lines, by stage', without: `The default story’s talks: ${DEFAULT_TALKS.friend.steady.length} a stage (acquaintance, friend, farmhand, sweetheart, engaged, married) for each of her ${Object.keys(DEFAULT_TALKS.friend).length} temperaments` },
+  { gives: 'Her gift reactions', without: `The default story’s: ${DEFAULT_GIFT_REACTIONS.loved.length} lines for each taste (loved, liked, neutral, disliked)` },
+  { gives: 'Her meeting scene', without: 'The default story’s: at the Gate for the welcome list, in town (you introduce yourself) for anyone else; it pays as a written one does. A written one with no choice gets the hello' },
+  { gives: 'A heart event', without: 'The default story’s: her moment, her lines with their faces and your reply; its points and rewards pay as written' },
+  { gives: 'The wedding night, moving in, married life 2 and 4', without: 'The default story’s: the wedding night in its outfit, tender and fading to morning; they pay nothing' },
+  { gives: 'Her occasions', without: `The default story’s ${DEFAULT_OCCASIONS.length}: her birthday, the five festivals and New Year’s` },
+  { gives: 'Her evenings’ scenes', without: `The default story’s ${EVENING_SCENES.length}: a hangout’s and a date’s for each kind, Dinner in town and A night in` },
+  { gives: 'Her morning greetings and meal lines', without: `The default story’s: ${DEFAULT_MORNINGS.steady.length} greetings for each temperament, and ${DEFAULT_MEALS.breakfast.length} lines for each meal` },
   { gives: 'A play’s prompt', without: 'Its game’s: “Cast the line together.”' },
   { gives: 'Her chapters', without: DEFAULT_CHAPTERS.map((c) => `“${c.title}”`).join(', ') },
   { gives: 'Her trigger to meet', without: 'Talk with her on three different days' },
   { gives: 'Her favourite line', without: 'Her line from master data: the work her stats suit best' },
-  { gives: 'Her tastes', without: 'Every gift neutral' },
+  { gives: 'Her tastes', without: 'Her favourite good loved (by her line: a Peach for farming, a Seashell for fishing…), every other gift neutral' },
   { gives: 'Her birthday', without: 'Master data’s, or none' },
   { gives: 'Her pet name for you', without: 'Your name' },
   { gives: 'Her keepsake', without: `“${PLACEHOLDER_KEEPSAKE.name}”, with a plain line` },

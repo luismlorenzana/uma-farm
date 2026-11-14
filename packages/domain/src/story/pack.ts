@@ -185,10 +185,10 @@ export function readStoryPack(files: PackFiles, isGood: (id: string) => boolean 
 function castNotes(pack: StoryPack): string[] {
   const notes: string[] = []
   for (const { characterId: id } of pack.cast.umas) {
-    if (!pack.bibles.has(id)) notes.push(`umas/${id}.json: no bible yet, so her calling or her stats give her line, every gift is neutral, and her chats are the game’s for each stage`)
+    if (!pack.bibles.has(id)) notes.push(`umas/${id}.json: no bible yet, so her calling or her stats give her line, she loves her line’s favourite good, and she talks the default story’s lines`)
     const scripted = pack.scripted.get(id)
-    if (!scripted) notes.push(`routes/${id}.json: no route yet, so her meeting scene and her events play the game’s own short cards, which pay as written ones do`)
-    else if (!scripted.has(ARRIVAL)) notes.push(`routes/${id}.json: no arrival scene, so the game’s own short one plays`)
+    if (!scripted) notes.push(`routes/${id}.json: no route yet, so her meeting scene and her events play the default story’s, which pay as written ones do`)
+    else if (!scripted.has(ARRIVAL)) notes.push(`routes/${id}.json: no arrival scene, so the default story’s meeting plays`)
     if (favouriteOf(pack, id) === null) notes.push(`cast.json: ${id} has no calling and no bible’s favouriteLine, so her line is the work her stats in master data suit best`)
   }
   const first = firstVisitorOf(pack)

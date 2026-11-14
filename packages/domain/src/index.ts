@@ -123,9 +123,12 @@ export * from './romance/homestead'
 export * from './romance/household'
 export * from './story/bench'
 export * from './story/pack'
-// The placeholders: what plays wherever the pack is silent, and the one lookup that reads "the pack's, or the
-// placeholder" (her outfit, line, tastes, chats, events, chapters, keepsake, pairs, household and the rest).
+// The default story's home: what plays wherever the pack is silent, and the one lookup that reads "the pack's, or the
+// default" (her outfit, line, tastes, talks, events, chapters, keepsake, pairs, household and the rest).
 export * from './story/placeholders'
+// The default story's words: her talks by stage and temperament, gift reactions, every event, occasion and evening's
+// scene, morning greetings and meal lines. Loaded with the story pack.
+export * from './story/default-story'
 // The story pack's release: `story.json` and its hash-named files, and the pack a release holds, its routes
 // and pairs read on demand.
 export * from './story/release'
@@ -137,7 +140,7 @@ export * from './story/look'
 // menu's defaults (the welcome list, her trigger to meet, her chapters) are `placeholders.ts`'s.
 export {
   ANSWERS, answerAt, ARRIVAL, BIG_EVENTS, bibleTagNotes, CALLINGS, CHARACTER_ID, CHAT_SETS, DATE_GAMES, EMOTES, EVENT_LIMITS,
-  eventNotes, FARMING_PLAYS, GATE_KINDS, gendersFarmer, HOUSE_LINE_MAX, HOUSEHOLD_SCENES, LADDERS, LINE_LIMITS, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies,
+  eventNotes, EVENING_SCENES, FARMING_PLAYS, GATE_KINDS, HOUSE_LINE_MAX, LIFE_EVENTS, OCCASIONS, STORY_EVENTS, HOUSEHOLD_SCENES, LADDERS, LINE_LIMITS, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies,
   checkTown, checkWorld, isSister, NOTE_KINDS, OPENING_STEPS, RUNGS, SISTER_ID, sisterOutfit, SPOT_IDS, STORY_ID, WORLD_ID,
   stepFindings, STORY_PLACES, tagNotes, TONES, TRIGGER_KINDS, unscriptedBeats, WISHES,
 } from './story/authored'

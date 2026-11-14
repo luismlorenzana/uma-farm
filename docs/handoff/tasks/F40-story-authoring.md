@@ -147,8 +147,9 @@ The owner reworked the game ([the game's design](../../design/game-design.md)). 
   | The world on screen | Shipped as [F73](../../game-mechanics.md#the-world-in-the-pack); it shows once a release carries `world.json` (Release 1 didn't) |
   | Group scenes | Later |
 
-- **The default Uma** ([F76](F76-default-uma.md)): the game writes a complete default story for every Uma. Hers replaces
-  it piece by piece, so ship whatever's written.
+- **The default Uma** (F76, done): the game plays a complete default story for every Uma. Hers replaces it piece by
+  piece (an event by its id, her chat set by stage, her tastes), so ship whatever's written
+  ([the story pack's menu](../../story-pack.md#her-route-routescharacteridjson) lists the event ids it reads).
 
 ## What the game itself assumes
 

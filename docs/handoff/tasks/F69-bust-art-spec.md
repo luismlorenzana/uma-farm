@@ -100,7 +100,7 @@ order.
    Uma Character Art's Farm Life. The game's dialogue engine ([its rules](../../game-mechanics.md#the-dialogue-engine)) is built on them. The six
    extra faces (crying, teasing, smug, embarrassed, startled, dreamy) can follow for both.
 2. **Next, in the Uma Ranker's order:** her spring outfit and the core faces first, then the romance faces, then the
-   other outfits. Until an Uma has her art, the game shows a blank bust ([F76](F76-default-uma.md)).
+   other outfits. Until an Uma has her art, the game shows the blank bust ([the blank bust](../../game-mechanics.md#the-blank-bust)).
 
 ## Where they go
 

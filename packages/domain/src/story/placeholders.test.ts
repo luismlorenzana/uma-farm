@@ -2,12 +2,12 @@
 // game's own words checked by the story's own reader. Invented ids only: the stand-in's 9000001–9000003, and an invented
 // master data of six characters, 9100001–9100006 (`placeholders.fixture.ts`).
 import { describe, expect, it } from 'vitest'
-import { gendersFarmer, checkHousehold, checkPair, checkRoute, HOUSEHOLD_SCENES, LINE_LIMITS, RUNGS, type Step } from './authored'
+import { checkHousehold, checkPair, checkRoute, HOUSEHOLD_SCENES, LINE_LIMITS, RUNGS, type Step } from './authored'
 import { STAND_IN_BIBLE, STAND_INS } from './authored.fixture'
 import { storyPackFrom } from './pack'
 import {
   BOND_LEVELS, captionOf, chaptersOf, chatLinesOf, DEFAULT_CHAPTERS, engravingOf, eventOf, favouriteOf, giftsOf, householdOf, keepsakeOf, lineFromStats, linePlaces,
-  firstVisitorOf, masterCastFrom, meetOf, noPack, openingOf, outfitOf, pairConversationsOf, petNameOf, PLACEHOLDER_CHATS, PLACEHOLDER_ENGRAVING, PLACEHOLDER_HELLO, PLACEHOLDER_KEEPSAKE,
+  firstVisitorOf, herWordsOf, masterCastFrom, meetOf, noPack, openingOf, outfitOf, pairConversationsOf, petNameOf, PLACEHOLDER_ENGRAVING, PLACEHOLDER_HELLO, PLACEHOLDER_KEEPSAKE,
   PLACEHOLDER_MOMENTS, PLACEHOLDER_OPENING, PLACEHOLDER_PET_NAME, PLACEHOLDER_TABLE, placeholderEvent, placeholderHouseholdBeat, PLAY_PROMPTS, promptOf, storyOf, tasteOf, tieKind, tieLineOf,
   tieStrength, weddingPlaces, welcomeOf, withCast, writtenOf,
 } from './placeholders'
@@ -46,8 +46,11 @@ describe('the story with no pack', () => {
     expect(chaptersOf(story, '9100001')).toBe(DEFAULT_CHAPTERS)
     expect(DEFAULT_CHAPTERS.map((c) => c.title)).toEqual(['Getting to know her', 'Together', 'The wedding', 'Married life'])
     expect(meetOf(story, '9100002')).toEqual({ kind: 'talks', days: 3 })
+    // Her tastes: the default story's, her favourite good (by her line) loved and the rest neutral.
     expect(tasteOf(story, '9100001', 'carrot')).toBe('neutral')
-    expect(giftsOf(story, '9100001')).toEqual({})
+    expect(tasteOf(story, '9100001', 'peach')).toBe('loved')
+    expect(giftsOf(story, '9100001')).toEqual({ loved: 'peach' })
+    expect(ids(5).map((id) => giftsOf(story, id).loved)).toEqual(['peach', 'chestnut', 'seashell', 'amethyst', 'honey'])
     // Without master data (a test that leaves it out), nobody: the farm needs master data to open.
     expect(storyOf(null, null).cast.umas).toEqual([])
     expect(outfitOf(storyOf(null, null), '9100001')).toBe('9100001')
@@ -73,22 +76,13 @@ describe('the story with no pack', () => {
 })
 
 describe('the game\'s own words', () => {
-  it('give every rung a card the story\'s reader takes whole: no errors, lines within their screens, no gendered word', () => {
+  it('give every rung the default story\'s event, which the story\'s reader takes whole: no errors, no notes', () => {
     const route = { events: RUNGS.map((rung) => ({ id: rung, steps: placeholderEvent(ONE, rung) })) }
     const read = checkRoute(route, ONE, null, { umas: new Set([ONE]) })
     expect(read.errors).toEqual([])
     expect(read.notes).toEqual([])
     expect(read.value!.events.map((e) => e.id)).toEqual(RUNGS)
     expect(Object.keys(PLACEHOLDER_MOMENTS)).toEqual(RUNGS)
-    const words = (steps: readonly Step[]): string[] => steps.flatMap((s) => ('say' in s ? [s.line] : 'narrate' in s ? [s.narrate] : 'choice' in s ? s.choice.flatMap((o) => [o.text, ...words(o.then ?? [])]) : []))
-    for (const rung of RUNGS) for (const line of words(placeholderEvent(ONE, rung))) expect(gendersFarmer(line)).toBeNull()
-    for (const set of ['friend', 'partner', 'spouse'] as const) {
-      expect(PLACEHOLDER_CHATS[set].length).toBeGreaterThanOrEqual(3)
-      for (const line of PLACEHOLDER_CHATS[set]) {
-        expect(line.length).toBeLessThanOrEqual(LINE_LIMITS.chat)
-        expect(gendersFarmer(line)).toBeNull()
-      }
-    }
     expect(Object.values(PLAY_PROMPTS).every((p) => p.length <= LINE_LIMITS.prompt)).toBe(true)
     expect(PLACEHOLDER_KEEPSAKE.name.length).toBeLessThanOrEqual(LINE_LIMITS.keepsakeName)
     expect(PLACEHOLDER_KEEPSAKE.line.length).toBeLessThanOrEqual(LINE_LIMITS.keepsakeLine)
@@ -107,14 +101,21 @@ describe('the game\'s own words', () => {
     expect((confession[answerAt(confession)] as Extract<Step, { choice: unknown }>).choice.map((o) => o.answer)).toEqual(['yes', 'not-yet'])
     const wedding = placeholderEvent(ONE, 'wedding')
     expect((wedding[answerAt(wedding)] as Extract<Step, { choice: unknown }>).choice).toHaveLength(3)
-    expect(placeholderEvent(ONE, 'arrival')).toEqual([{ place: 'gate' }, { narrate: PLACEHOLDER_MOMENTS.arrival }, { say: ONE, line: 'Hi! Is this the farm? I’d love to help out.' },
-      { choice: [...PLACEHOLDER_HELLO] }])
+    const gate = placeholderEvent(ONE, 'arrival')
+    expect(gate.slice(0, 2)).toEqual([{ place: 'gate' }, { narrate: PLACEHOLDER_MOMENTS.arrival }])
+    expect(gate.filter((s) => 'choice' in s)).toHaveLength(1)
+    expect(placeholderEvent(ONE, 'arrival', true)[0]).toEqual({ place: 'town' })
   })
 
   it('play the pack\'s event where it has one, else the card; a written arrival with no choice gets the hello', async () => {
     expect(await eventOf(PACK, ONE, 'f3')).toMatchObject({ id: 'f3', written: true })
     const card = await eventOf(PACK, TWO, 'f3')
-    expect(card).toEqual({ id: 'f3', steps: placeholderEvent(TWO, 'f3'), written: false })
+    expect(card).toEqual({ id: 'f3', steps: placeholderEvent(TWO, 'f3', false, herWordsOf(PACK, TWO)), written: false })
+    // Her name, her favourite good and her line's work fill in; `{farmer}` stays for the screen.
+    const named = await eventOf(PACK, TWO, 'f2', 'Robin')
+    expect(JSON.stringify(named.steps)).toContain('a day of foraging')
+    expect(JSON.stringify(named.steps)).not.toMatch(/\{(name|good|work)\}/)
+    expect((await eventOf(PACK, TWO, 'wedding-night')).outfit).toBe('wedding-night')
     const silent = { ...PACK, route: async () => ({ events: [{ id: 'arrival', steps: [{ narrate: 'Someone waves.' }] as Step[] }] }) }
     const arrival = await eventOf(silent, TWO, 'arrival')
     expect(arrival.written).toBe(true)
@@ -124,7 +125,7 @@ describe('the game\'s own words', () => {
 
   it('fill her words: chats by stage, keepsake, pet name, ring\'s words, captions, wedding places and a play\'s prompt', () => {
     expect(chatLinesOf(PACK, ONE, 'friend')).toEqual(STAND_IN_BIBLE.chats!.friend)
-    expect(chatLinesOf(PACK, TWO, 'partner')).toBe(PLACEHOLDER_CHATS.partner)
+    expect(chatLinesOf(PACK, TWO, 'partner')).toEqual([])
     expect(keepsakeOf(PACK, TWO)).toEqual(PLACEHOLDER_KEEPSAKE)
     expect(keepsakeOf(PACK, ONE).name).toBe(STAND_IN_BIBLE.keepsake!.name)
     expect(petNameOf(PACK, TWO)).toBe(PLACEHOLDER_PET_NAME)
@@ -165,10 +166,11 @@ describe('what\'s written and what\'s a placeholder (the sandbox\'s marks)', () 
     const two = writtenOf(PACK, TWO)
     expect(one.map((p) => p.part)).toEqual(two.map((p) => p.part))
     const part = (parts: typeof one, name: string) => parts.find((p) => p.part === name)!
-    expect(part(one, 'Her events')).toMatchObject({ written: true })
-    expect(part(two, 'Her events')).toEqual({ part: 'Her events', written: false, plays: '0 of 26 written; the rest play a short card that pays as written' })
+    expect(part(one, 'Her events')).toMatchObject({ written: false, plays: '26 of 30 written; the rest play the default story’s, paying as written' })
+    expect(part(two, 'Her events')).toEqual({ part: 'Her events', written: false, plays: '0 of 30 written; the rest play the default story’s, paying as written' })
     expect(part(two, 'Her meeting scene').written).toBe(true)
-    expect(part(two, 'Her chats')).toMatchObject({ written: false, plays: 'The game’s short lines for each stage' })
+    expect(part(two, 'Her chats')).toMatchObject({ written: false, plays: 'The default story’s talks, by her stage and temperament' })
+    expect(part(two, 'Her occasions')).toMatchObject({ written: false, plays: '0 of 7 written; the rest the default story’s' })
     expect(part(two, 'Her chapters').plays).toContain('Getting to know her')
     expect(part(one, 'Her pet name for you')).toMatchObject({ written: true })
     expect(writtenOf(noPack(), '9100001').every((p) => !p.written)).toBe(true)

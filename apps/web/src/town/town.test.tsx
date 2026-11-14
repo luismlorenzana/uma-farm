@@ -220,7 +220,7 @@ describe('the town', () => {
     expect(save().dorm.home).toEqual([SISTER])
     await find(`[data-scene="arrival:${SISTER}"]`)
     expect($('[data-scene-title]')?.textContent).toBe('Meeting Invented Sister · Town')
-    expect($('[data-line]')?.textContent).toBe('You get talking, and the time slips by.')
+    expect($('[data-line]')?.textContent).toBe('You introduce yourself, and the time slips by.')
   })
 
   it('marks one met who lives in town, and offers a gift to one not met after the talk', async () => {

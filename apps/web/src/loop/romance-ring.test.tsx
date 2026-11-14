@@ -4,7 +4,7 @@
 // ring and better ring, and the Forge before the bench. The invented stand-in pack
 // (9000001–9000003) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { dateOf, farmPlace, gendersFarmer, meet, newSave, readScene, SEASON_NAMES, type Love, type SaveV4, type StoryPack } from '@farm/domain'
+import { dateOf, farmPlace, meet, newSave, readScene, SEASON_NAMES, type Love, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -230,7 +230,7 @@ describe('the proposal', () => {
 })
 
 describe('the wedding', () => {
-  it('asks the place, plays on its card with the guests, then the reception (the bakery\'s cake), and closes on Married', async () => {
+  it('asks the place, plays on its card with the guests, then the reception (the bakery\'s cake), the wedding night, and closes on Married', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm({ stage: 'wedding', level: 10, points: 0, last: DAY - 1, ring: 3 }, bench) })
     await render(<HeartsPage />, `/hearts?event=${ONE}`)
     await find('[data-place-picker]')
@@ -264,6 +264,13 @@ describe('the wedding', () => {
     expect(save().love[ONE]!.flags).toEqual(expect.arrayContaining(['wedding:fields', 'vow:3']))
     expect(save().today.reception).toBe(1)
     await click($('[data-action="continue"]'))
+    // The wedding night: the default story's (her route writes none), in its outfit, fading to morning; Skip ends it.
+    await find('[data-wedding-night]')
+    expect($('[data-event-title]')?.textContent).toBe('The wedding night · Stand-in 1')
+    await until(() => $('[data-wedding-night] [data-portrait]') !== null)
+    expect($('[data-wedding-night] [data-portrait]')?.dataset.portrait).toBe('wedding-night')
+    expect($('[data-step] [data-line]')?.dataset.line).toBe('The guests have gone home. The house is quiet, and the lamps are low.')
+    await click($('[data-action="skip"]'))
     await find('[data-stage-up="married"]')
     const date = dateOf(DAY)
     expect($$('[data-opens] li').map((l) => l.textContent)).toEqual([
@@ -318,13 +325,13 @@ describe('her ring on her profile', () => {
 })
 
 describe('the words', () => {
-  it('never gender the farmer', () => {
+  it('fill everything but your name; the protagonist is a man, so the groom may be named', () => {
     const words = [
       ...Object.values(BENCH_TEXT).flat(), makeWords(3), withArticle('Orichalcum Ring'), ...Object.values(STAGE_WORDS).flatMap((w) => [w.title, w.line]),
       ...Object.values(PICKER_WORDS), CAKE_WORDS, guestsLine([]), guestsLine(['A']), marriedWords(1, 20), marriedWords(19, 20),
       ...stageOpens('engaged', 'farming', { ring: 3 }), ...stageOpens('married', 'fishing', { ring: 3, wed: 21 }),
     ]
-    expect(words.filter((w) => gendersFarmer(w))).toEqual([])
+    expect(words.filter((w) => /\{(?!farmer\})/.test(w))).toEqual([])
     // A milestone's own wedding says what opens tomorrow.
     expect([makeWords(10), marriedWords(19, 20), marriedWords(20, 20), marriedWords(5, 20)]).toEqual([
       'Make an Orichalcum Ring · 1 a day', 'Married 19/20 · the finale at 20', 'Married 20/20 · the Great Harvest tomorrow', 'Married 5/20 · household scene 1 tomorrow',

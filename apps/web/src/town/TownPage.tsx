@@ -10,7 +10,7 @@
 // with her profile; one at home, or on the farm, says so. A keeper's sheet shows her role and her ties. Faces load as
 // they scroll into view. Names and faces are master data's and the pack's, at run time. Its title is the town's name
 // when the world gives one. A talk or a gift that unlocks a Town note says so, a tap to the Diary. Loaded on demand.
-import { atHome, CAST, DISLIKED_LINE, gateVisitor, placeNameOf, talkedToday, townDay, townOf, type SaveV4, type StoryPack, type Taste, type TownDay } from '@farm/domain'
+import { atHome, CAST, gateVisitor, giftLineV4, placeNameOf, talkedToday, townDay, townOf, withFarmer, type SaveV4, type StoryPack, type TownDay } from '@farm/domain'
 import { FaceTile, UmaBust } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Sheet, Tabs } from '@luismlorenzana/uma-kit/ui'
@@ -260,8 +260,6 @@ function MetLine({ id }: { id: string }) {
   )
 }
 
-const TOWN_TASTE: Readonly<Record<Taste, string>> = { loved: 'She loves it!', liked: 'She likes it.', neutral: 'She thanks you.', disliked: DISLIKED_LINE }
-
 /** A gift for one you haven't met, after today's talk: one good from the Warehouse. It meets her when her trigger is a
  * gift she likes (her meeting scene plays next); else she thanks you, by her taste. */
 function TownGift({ save, pack, id, name }: { save: SaveV4; pack: StoryPack; id: string; name: string }) {
@@ -271,7 +269,8 @@ function TownGift({ save, pack, id, name }: { save: SaveV4; pack: StoryPack; id:
   const give = (item: string, stars: number) => {
     setGiving(false)
     giftInTownOnce(id, item, stars).then((r) => {
-      setNote(r.met ? null : TOWN_TASTE[r.taste])
+      // She says it in her words, by her taste (the default story's).
+      setNote(r.met ? null : withFarmer(giftLineV4(save, pack, id, r.taste, item), save.farmer.name).replaceAll('{name}', name))
       setNotes(r.notes)
     }, (err: unknown) => setNote(err instanceof Error ? err.message : 'That didn’t work. Try again.'))
   }

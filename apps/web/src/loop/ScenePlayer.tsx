@@ -18,7 +18,7 @@
 // conversations (`PairPlayer.tsx`) and the household's scenes. Loaded on demand. The ring bench's scene (`scene:bench`)
 // plays here too, its player loaded on demand (`BenchScene.tsx`).
 import {
-  ARRIVAL_POINTS, arrivalOf, atHome, BENCH_SCENE, choicePoints, eventOf, farmPlace, onWelcomeList, openingOf, pathFlags, placeholderEvent, sceneSteps,
+  ARRIVAL_POINTS, arrivalOf, atHome, BENCH_SCENE, choicePoints, farmPlace, onWelcomeList, openingOf, pathFlags, placeholderEvent, sceneSteps,
   withFarmer, worldNamesOf, type ChoiceOption, type OpeningSceneId, type PlayedEvent, type SaveV4, type SceneId, type Step, type WorldNamesPlayed,
 } from '@farm/domain'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -30,7 +30,7 @@ import { Stage } from '../dialogue/Stage'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
-import { namer } from '../story/people'
+import { herEventOf, namer } from '../story/people'
 import { useStory } from '../story/story'
 import { finishArrivalScene, readSceneOnce } from './actions'
 
@@ -127,9 +127,9 @@ function ArrivalPlayer({ save, id }: { save: SaveV4; id: string }) {
   useEffect(() => {
     if (!story) return
     let live = true
-    // Her route's arrival scene, else the game's two lines and a hello (the Gate's, or the town's); offline with her route
-    // not cached yet, the same.
-    void eventOf(story, id, 'arrival').then((found) => live && setEvent(found), () => live && setEvent({ steps: placeholderEvent(id, 'arrival', !onWelcomeList(story, id)) }))
+    // Her route's arrival scene, else the default story's meeting (the Gate's, or the town's), in her name; offline with
+    // her route not cached yet, the default's.
+    void herEventOf(story, id, 'arrival').then((found) => live && setEvent(found), () => live && setEvent({ steps: placeholderEvent(id, 'arrival', !onWelcomeList(story, id)) }))
     return () => { live = false }
   }, [story, id])
   if (!event) return null

@@ -46,17 +46,23 @@ function load(id: string): void {
   })
 }
 
-/** Her portraits once read (null while they load, and when she has none). */
-export function usePortraitsOf(id: string | null): DialoguePortraits | null {
+/** Her portraits as read: `loading` until they are (from her first moment on a stage), null when she has none. */
+export function usePortraitsState(id: string | null): DialoguePortraits | null | 'loading' {
   const value = useSyncExternalStore(
     (listener) => {
       listeners.add(listener)
       return () => listeners.delete(listener)
     },
-    () => (id ? read.get(id) ?? null : null),
+    () => (id ? (read.has(id) ? read.get(id)! : 'loading') : null),
     () => null,
   )
   useEffect(() => { if (id) load(id) }, [id])
+  return value
+}
+
+/** Her portraits once read (null while they load, and when she has none). */
+export function usePortraitsOf(id: string | null): DialoguePortraits | null {
+  const value = usePortraitsState(id)
   return value === 'loading' ? null : value
 }
 

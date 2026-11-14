@@ -9,10 +9,14 @@ and what plays when it's missing. It's a menu, not a checklist:
 - **a partial pack is the normal case,** and any pack can be released.
 
 Write only what you want the game to show. Everything else in `content/story/` is yours: the game never reads it.
-**Whatever you leave out, the game plays a placeholder for:** plain, short words of its own that play whole and pay as
-written ones do, so nothing waits on the story (the full list is in
-[what plays without the story](game-mechanics.md#what-plays-without-the-story)). The Farm Story Sandbox marks, for each
-character, what's written and what's still a placeholder. How your work reaches the game is in
+**Whatever you leave out, the game plays its default story:** a complete story every Uma plays from day one (talks
+by stage and temperament, gift reactions, every event from meeting her to married life, the wedding night, her
+occasions, the evenings' scenes, morning greetings and meals), written once for the game with her name, her favourite
+good and her line's work filled in. It plays whole and pays as written ones do, so nothing waits on the story (the
+full list is in [what plays without the story](game-mechanics.md#what-plays-without-the-story)). **Your writing replaces
+it piece by piece:** her chat set for a stage replaces the default talks for it, an event of an id replaces that
+event, her gifts replace her default tastes, and anything you haven't written stays the default, so ship whatever's
+written. The Farm Story Sandbox marks, for each character, what's written and what's still the default. How your work reaches the game is in
 [F40](handoff/tasks/F40-story-authoring.md); how the game plays is in
 [the game mechanics](game-mechanics.md#the-cast-and-the-story-pack). The page view is
 [story-pack.html](pages/story-pack.html).
@@ -25,10 +29,10 @@ The pack is a folder of JSON files in `content/story/`. Every file is optional.
 
 | File | What it holds | Without it |
 |---|---|---|
-| `cast.json` | Who the pack holds, in its order, and what's given of each | Master data's first five characters, on placeholders |
+| `cast.json` | Who the pack holds, in its order, and what's given of each | Master data's first five characters, on the default story |
 | `ties.json` | The ties between characters | No ties |
-| `umas/<characterId>.json` | Her bible: her favourite line, gifts, route beats, chats, town lines and more | Her calling gives her line (else her stats in master data), every gift is neutral, she chats and talks in town in the game's lines |
-| `routes/<characterId>.json` | Her scripted events, by rung | Her meeting scene and every event play the game's own short cards, which pay as written ones do |
+| `umas/<characterId>.json` | Her bible: her favourite line, gifts, route beats, chats, town lines and more | Her calling gives her line (else her stats in master data), she loves her line's favourite good and finds the rest neutral, she talks in the default story's lines and in town in the game's |
+| `routes/<characterId>.json` | Her scripted events, by id: the rungs, her life's events, her occasions and the evenings' scenes | Each plays the default story's, which pays as a written one does |
 | `pairs/<a>-<b>.json` | A tie's conversations, by bond level | Two short lines, one each, at every level |
 | `household.json` | The household scenes, house lines and the finale | The game's short cards; house lines come from her temperament |
 | `opening.json` | The opening: the start's lines, after the farmer's name | The game's three short lines |
@@ -45,7 +49,7 @@ The game's reader, shared by the game, the release and the Farm Story Sandbox, f
 | | What it is | What happens |
 |---|---|---|
 | **An error** | Only what the game can't read: a file that isn't JSON or isn't the shape the game reads, a value the game can't use where it reads it, or a line longer than its screen | **It skips the one part it's in,** and the rest of the pack plays. The part is the smallest that can go: a line in a list, a field, a beat, an event, a level, a tie, a character, or at most one file |
-| **A note** | Everything else: something not written yet, an unusual count, a word that genders the farmer, a bible and the tag sheet that disagree | **Nothing.** Notes block nothing; they tell you what plays instead |
+| **A note** | Everything else: something not written yet, an unusual count, a bible and the tag sheet that disagree | **Nothing.** Notes block nothing; they tell you what plays instead |
 
 What an error skips, by where it is:
 
@@ -100,11 +104,11 @@ Each limit is what its screen shows. A longer line is an error.
 
 ### The words
 
-These are notes, and the owner's standing direction for anything on screen:
+The owner's standing direction for anything on screen (the placeholder and school are notes):
 
 - `{farmer}` is the one placeholder: the farmer's name, filled as the line shows. Any other `{…}` shows as written.
-- No word genders the farmer (husband, wife, boyfriend, girlfriend, groom, sir and the like, in anyone's lines; bride in
-  the farmer's own).
+- **The protagonist is a man** (the owner, 2026-11-14): named by the player, never drawn. A line may say he, her
+  husband, the groom; no word about him is a note any more.
 - Nothing reads as school.
 
 ## The cast: `cast.json`
@@ -249,13 +253,13 @@ The file's name says whose bible it is. A `characterId` inside that disagrees is
 | Field | What it does in play | Without it |
 |---|---|---|
 | `favouriteLine` | Her favourite work: `farming`, `ranch`, `mining`, `fishing`, `foraging`, `cooking`, `serving` or `forging`. ×1.2 rank points there, +10 a night, her perks at her line's places | Her calling's line |
-| `gifts.loved`, `gifts.liked`, `gifts.disliked` | Her tastes, any number of each: a goods id each. A good not in the game yet is neutral until it is | Every gift neutral |
+| `gifts.loved`, `gifts.liked`, `gifts.disliked` | Her tastes, any number of each: a goods id each. A good not in the game yet is neutral until it is. Her loved good is also what the default story's lines call her favourite | The default story's: her line's favourite good loved (a Peach for farming, a Seashell for fishing…), the rest neutral |
 | `gifts.proposed` | The story's list of goods it would like added: a request to the game | Nothing |
 | `route` | Her beats, by rung (below) | Each event plays with the game's defaults |
-| `chats.friend`, `chats.partner`, `chats.spouse` | Her chat lines by stage, any number, one a day: friend from Friendship 1 to the confession, partner from Romance 1 to the wedding, spouse after it | The game's five short lines for that stage |
+| `chats.friend`, `chats.partner`, `chats.spouse` | Her chat lines by stage, any number, one a day: friend from Friendship 1 to the confession, partner from Romance 1 to the wedding, spouse after it | The default story's talks for her stage (acquaintance, friend, farmhand, sweetheart, engaged, married) and her temperament |
 | `townLines` | What she says when you talk with her in town, any number, one a day, `{farmer}` your name | The game's six short lines |
 | `keepsake.name`, `keepsake.line` | The keepsake she gives at Friendship 10, on her profile | "Her keepsake", with a plain line |
-| `petName` | What she calls you from Romance 1, on her profile. Never gendered, no placeholder | Your name |
+| `petName` | What she calls you from Romance 1, on her profile. No placeholder | Your name |
 | `wedding.places` | Where your wedding may be held, any number, the first first: the game's places | Her wedding beat's place and the farm's: the chapel bell, the Fields, the overlook |
 | `wishes` | `own-house` (she's happiest alone in her house) and `birthday-alone` (her birthday morning is hers) | Neither |
 | `now`, `whyTheFarm`, `dream`, `blurb`, `laughs`, `hurts`, `season`, `festival`, `outfitId` | The story's own: the sandbox shows them | Nothing |
@@ -287,8 +291,21 @@ another id is kept for the story (a note).
 { "events": [{ "id": "arrival", "steps": [{ "narrate": "Someone new leans on the Gate." }, { "say": "9000004", "line": "Is this the farm?" }] }] }
 ```
 
-Each event is a rung's, by its `id`, with its `steps`. Any number of events, in any order. An event with an error is
-skipped, and the rest of her route plays.
+Each event is one of the game's, by its `id`, with its `steps`. Any number of events, in any order. An event with an
+error is skipped, and the rest of her route plays. **Each one you write replaces the default story's of that id; each
+one you leave out plays the default.**
+
+| `id` | What it is | When it plays |
+|---|---|---|
+| `arrival` | Meeting her | As soon as she's met |
+| `f1` … `f10`, `confession`, `r1` … `r10`, `proposal`, `wedding`, `s1`, `s3`, `s5` | Her route's rungs | When she's Ready; they pay |
+| `wedding-night` | The wedding night: tender, fading to morning, in the wedding night outfit unless you name another | Right after the wedding, before the Married card |
+| `moving-in`, `s2`, `s4` | Moving in, married life 2 and 4 | When the Uma loop (F79) gives them their moment |
+| `birthday`, `new-year`, `flower-show`, `fishing-derby`, `cooking-contest`, `animal-show`, `harvest-cup` | Her occasions: her birthday, New Year's and the five festivals | When the calendar (F82) plays them on their day |
+| `hangout-<kind>`, `date-<kind>`, `dinner-in-town`, `a-night-in` | An evening's scene: a hangout's for walk, fishing, picnic, market, cooking and festival; a date's for every kind | When the evenings (F79) play their lines |
+
+The rungs pay as written (below). The rest pay nothing: their choices are wording only, and the usual sizes don't apply
+to them. Any other id is a note, kept for the story.
 
 ### The scene's outfit
 
@@ -551,4 +568,6 @@ writing session, on the machine where the story is written (macOS or Windows). I
 | The welcome list, her trigger to meet | Yes | Yes, today: [meeting her](game-mechanics.md#meeting-her) |
 | The world: names, history, festivals, places, seasons, Town notes | Yes | Yes, today: [the world](game-mechanics.md#the-world-in-the-pack) |
 | Her chapters and their gates | Yes | Yes, today: [her chapters](game-mechanics.md#her-chapters) |
-| What plays when a part is missing | Placeholders for every read | Yes, today: [what plays without the story](game-mechanics.md#what-plays-without-the-story) |
+| What plays when a part is missing | The default story for every read | Yes, today: [what plays without the story](game-mechanics.md#what-plays-without-the-story) |
+| The wedding night (`wedding-night`) | Yes | Yes, today: after the wedding |
+| Moving in, married life 2 and 4, her occasions, the evenings' scenes | Yes | When the Uma loop (F79) and the calendar (F82) land; the default story writes each until then |

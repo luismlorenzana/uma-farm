@@ -4,19 +4,22 @@
 //   1. her portraits, when master data holds them: the outfit's base (else her first in Farm Life's order: spring) with
 //      the face over it at that base's face position, unscaled, straight alpha (the browser's own compositing); only the
 //      face swaps from line to line, fading in (at once with reduced motion);
-//   2. else her master-data bust, without faces, the emote as uma-art's bubble beside it;
+//   2. else the blank bust (`blank.tsx`): her silhouette in the outfit's colours, her hair her theme colour's, and a face
+//      for every one of the 22 expressions, laid over it as a portrait's face is. It comes before her master-data bust,
+//      which has no faces: a scene's point is her face changing line by line, and every Uma without portraits looks
+//      alike on the stage until hers are drawn. Her master-data bust and face stay on cards, lists and her profile;
 //   3. a role no one plays: its lettered disc.
-// F76 adds the blank bust between 1 and 2. Loaded with the players.
-import emoteIndex from '@luismlorenzana/uma-art/emote/atlas.json'
-import emoteUrl from '@luismlorenzana/uma-art/emote/atlas.png?url'
-import { CAST, dressOf, fallbackChain, isCastId, type CastId, type Expression, type SceneLook } from '@farm/domain'
+// While her portraits load, the panel holds her place, so a pilot's bust never flashes blank. Loaded with the players.
+import { CAST, dressOf, faceFor, isCastId, isSister, sisterOutfit, type CastId, type SceneLook } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { useArtUrl, type ArtSource } from '@luismlorenzana/uma-kit/content'
 import { useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { useMaster } from '../master/master'
 import { whoIs } from '../story/people'
 import { useStory } from '../story/story'
-import { portraitArt, portraitPick, usePortraitsOf, usePreload, type PortraitPick } from './portraits'
+import { BLANK_BASE, BlankBust, blankTint, type BlankTint } from './blank'
+import { portraitArt, portraitPick, usePortraitsState, usePreload, type PortraitPick } from './portraits'
 
 // --- The scene's look ---------------------------------------------------------------------------------------------------
 
@@ -25,13 +28,24 @@ const LookContext = createContext<SceneLook>({ day: 1 })
 export const SceneLookProvider = LookContext.Provider
 export const useSceneLook = (): SceneLook => useContext(LookContext)
 
-/** What a speaker shows for a line: who she is once roles are filled, and her portrait's pick (null without portraits). */
-export function useBustPick(who: string | null, emote: unknown): { id: string | null; pick: PortraitPick | null } {
+/** What a speaker shows for a line: who she is once roles are filled, her portrait's pick (null without portraits), and
+ * whether her portraits are still loading. */
+export function useBustPick(who: string | null, emote: unknown): { id: string | null; pick: PortraitPick | null; loading: boolean } {
   const story = useStory()
   const look = useSceneLook()
   const id = who === null ? null : whoIs(story, who)
-  const portraits = usePortraitsOf(id && !isCastId(id) ? id : null)
-  return { id, pick: portraits && id ? portraitPick(portraits, dressOf(look, id), emote) : null }
+  const portraits = usePortraitsState(id && !isCastId(id) ? id : null)
+  const ready = portraits !== 'loading' ? portraits : null
+  return { id, pick: ready && id ? portraitPick(ready, dressOf(look, id), emote) : null, loading: portraits === 'loading' }
+}
+
+/** Her tint on the blank bust: her character's theme colours from master data (a sister's, her outfit's character's),
+ * else a tone by her id. */
+export function useBlankTint(id: string): BlankTint {
+  const master = useMaster()
+  const view = master.status === 'ready' ? master.view : null
+  const character = isSister(id) ? view?.outfits.get(sisterOutfit(id))?.characterId ?? null : id
+  return blankTint(id, character ? view?.colors?.get(character) : null)
 }
 
 /** The next line's base and face, loaded and decoded while this line shows. */
@@ -53,18 +67,22 @@ export function RoleDisc({ id, size }: { id: CastId; size: number }) {
   )
 }
 
-/** Anyone's bust as she speaks: her portrait (as tall as its panel) in the scene's outfit with the line's face, else her
- * master-data bust with the emote's bubble, else a role's disc. */
+/** Anyone's bust as she speaks: her portrait (as tall as its panel) in the scene's outfit with the line's face, else the
+ * blank bust in that outfit with the line's face, else a role's disc. */
 export function SceneBust({ who, name, emote = null, size }: { who: string; name: string; emote?: string | null; size: number }) {
-  const { id, pick } = useBustPick(who, emote)
+  const { id, pick, loading } = useBustPick(who, emote)
   if (id && isCastId(id)) return <RoleDisc id={id} size={Math.round(size * 0.74)} />
   if (pick) return <Portrait key={`${id}:${pick.base.path}`} pick={pick} art={portraitArt()} label={name} height="100%" />
-  return (
-    <span className="relative inline-flex" data-bust-art="master">
-      <UmaBust outfitId={id ?? who} label={name} size={size} />
-      {emote && <EmoteBubble emote={emote} />}
-    </span>
-  )
+  if (loading) return <span aria-hidden className="block shrink-0" style={{ height: '100%', aspectRatio: `${BLANK_BASE.width} / ${BLANK_BASE.height}` }} data-bust-art="loading" />
+  return <SceneBlank id={id ?? who} name={name} emote={emote} />
+}
+
+/** The blank bust in the scene's outfit, with the line's face: every one of the 22 is drawn, so the emote shows as written
+ * (an unknown one as neutral). */
+function SceneBlank({ id, name, emote }: { id: string; name: string; emote: string | null }) {
+  const look = useSceneLook()
+  const tint = useBlankTint(id)
+  return <BlankBust outfit={dressOf(look, id)} expression={faceFor(emote, () => true)} tint={tint} label={name} />
 }
 
 /** Anyone's master-data bust outside a scene (a sheet's small one): a role's disc while no one plays it. */
@@ -124,33 +142,3 @@ export function Portrait({ pick, art, label, height }: { pick: PortraitPick; art
 }
 /** The face's fade, in ms. */
 export const FADE_MS = 140
-
-// --- The emote's bubble (no faces) --------------------------------------------------------------------------------------
-
-/** uma-art's bubbles, by the expression that has its own. */
-const OWN_BUBBLE: Readonly<Partial<Record<Expression, string>>> = {
-  happy: 'emote/music', laughing: 'emote/music', shy: 'emote/sweat', sad: 'emote/ellipsis', angry: 'emote/anger', surprised: 'emote/exclaim',
-  thinking: 'emote/question', tender: 'emote/heart', sleepy: 'emote/zzz',
-}
-/** An emote's bubble beside a bust without faces: its own, else its nearest's by the expressions' fallbacks; none for
- * neutral or an unknown emote. */
-export const bubbleOf = (emote: unknown): string | null => fallbackChain(emote).map((e) => OWN_BUBBLE[e]).find((b) => b !== undefined) ?? null
-
-type EmoteFrames = { width: number; height: number; frames: Record<string, { x: number; y: number; w: number; h: number }> }
-/** The emote's bubble, top right of a bust without faces. */
-export function EmoteBubble({ emote }: { emote: string }) {
-  const bubble = bubbleOf(emote)
-  const index = emoteIndex as unknown as EmoteFrames
-  const frame = bubble ? index.frames[bubble] : undefined
-  if (!bubble) return null
-  const scale = 0.75
-  return (
-    <span role="img" aria-label={emote} className="absolute -top-2 -right-2" data-emote={emote} data-emote-frame={bubble}
-      style={frame ? {
-        width: frame.w * scale, height: frame.h * scale, backgroundImage: `url(${emoteUrl})`, backgroundSize: `${index.width * scale}px ${index.height * scale}px`,
-        backgroundPosition: `-${frame.x * scale}px -${frame.y * scale}px`, backgroundRepeat: 'no-repeat',
-      } : undefined}>
-      {!frame && emote}
-    </span>
-  )
-}

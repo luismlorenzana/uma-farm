@@ -401,7 +401,7 @@ describe('the format\'s keepsake and pet name', () => {
     expect(checkBible({ ...json(STAND_IN_BIBLE), keepsake: { line: 'Only a line.' } }, '9000001', ctx).value!.keepsake).toEqual({ line: 'Only a line.' })
     expect(bad({ petName: 'x'.repeat(25) })).toEqual(['petName is 1–24 characters; skipped'])
     expect(bad({ petName: '{farmer}' })).toEqual(['petName: no placeholder (it’s what she calls you)'])
-    expect(bad({ petName: 'Bride' })).toEqual(['petName: “Bride” genders the farmer'])
+    expect(bad({ petName: 'Husband' })).toEqual([])
   })
 })
 
