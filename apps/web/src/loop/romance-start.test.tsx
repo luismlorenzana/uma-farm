@@ -170,7 +170,7 @@ describe('a fresh farm on v4', () => {
   })
 })
 
-describe('an open pack\'s stopgaps', () => {
+describe('an open pack\'s placeholders', () => {
   it('an opening that brings nobody leaves out its last line and ends on chapter 1\'s card', async () => {
     const pack = await storyReady() as { cast: Cast }
     const cast = pack.cast
@@ -194,7 +194,7 @@ describe('an open pack\'s stopgaps', () => {
     }
   })
 
-  it('an arrival written with no choice plays to its end and pays +50 alone', async () => {
+  it('an arrival written with no choice plays to its end, then the game\'s hello, paying as one with a choice does', async () => {
     const pack = await storyReady()
     const route = pack.route
     pack.route = async (id) => (id === '9000001' ? { events: [{ id: 'arrival', steps: [{ narrate: 'Someone new leans on the Gate.' }] }] } : route(id))
@@ -203,10 +203,12 @@ describe('an open pack\'s stopgaps', () => {
       await renderShell()
       await find('[data-scene="arrival:9000001"] [data-beat]')
       await click($('[data-beat]'))
-      expect($('[data-arrival-done]')?.dataset.points).toBe('50')
+      expect($$('[data-option]').map((b) => b.dataset.gain)).toEqual(['30', '10'])
+      await click($('[data-option="0"]'))
+      expect($('[data-arrival-done]')?.dataset.points).toBe('80')
       await click($('[data-action="welcome"]'))
       await until(() => save().arrivals.includes('9000001'))
-      expect(save().love['9000001']!.points).toBe(50)
+      expect(save().love['9000001']!.points).toBe(80)
     } finally {
       pack.route = route
     }
@@ -251,5 +253,21 @@ describe('the Gate and the Dorm on v4', () => {
     expect($$('[data-ladder-level]').map((li) => li.dataset.ladderLevel)).toEqual(['1', '2', '3', '4', '5', '6', '7', '8'])
     expect($('[data-ladder-level="8"]')?.textContent).toContain('20 beds')
     expect($('[data-next-level]')?.textContent).toBe('Level 2 · 5 beds')
+  })
+})
+
+describe('the cast keeps everyone on the farm', () => {
+  it('adds an Uma the pack doesn\'t hold, from a save, to the cast: her events play the game\'s cards', async () => {
+    const { arrive, eventOf, placeholderEvent, readiness } = await import('@farm/domain')
+    const { castIds, storyPack } = await import('../story/story')
+    const pack = await storyReady()
+    const farm = arrive(joinOpening(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open'), pack), '9000099', pack).save
+    expect(castIds()).not.toContain('9000099')
+    await act(async () => useGame.setState({ save: farm }))
+    expect(castIds()).toEqual(['9000001', '9000002', '9000003', '9000099'])
+    expect(await storyReady()).toBe(storyPack())
+    const kept = storyPack()!
+    expect(readiness({ ...farm, love: { ...farm.love, '9000099': { ...farm.love['9000099']!, points: 200 } } }, kept, '9000099')).toMatchObject({ rung: 'f1' })
+    expect((await eventOf(kept, '9000099', 'f1')).steps).toEqual(placeholderEvent('9000099', 'f1'))
   })
 })

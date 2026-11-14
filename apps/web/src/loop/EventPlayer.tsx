@@ -10,8 +10,8 @@
 // Three ways in, each a param over any page (portaled above the sheets, z-60): `?event=<id>` plays her Ready event (her
 // row's ● Ready, her profile's **Play ›**, the morning's Ready line); `?ask=<id>` her confession's last choice again
 // (**Ask her**, once a day, paying nothing); `?memory=<id>:<rung>[@<n>]` replays a Memory from the top or its nth choice
-// point, every option open, nothing paid or saved. The script loads on demand (`route(id)`); Skip, Auto and Log work while
-// it does. Nothing is saved until the end: `playEvent` then commits once, stamped. Skip jumps to the next
+// point, every option open, nothing paid or saved. The script loads on demand (`eventOf`: her route's, else the game's
+// own short card for the rung); Skip, Auto and Log work while it does. A play without a prompt shows its game's. Nothing is saved until the end: `playEvent` then commits once, stamped. Skip jumps to the next
 // choice or play, never past one. Loaded on demand.
 //
 // **the proposal** first asks which ring (the best grade preselected), then plays, and closes on the Engaged
@@ -21,8 +21,8 @@
 import emoteIndex from '@luismlorenzana/uma-art/emote/atlas.json'
 import emoteUrl from '@luismlorenzana/uma-art/emote/atlas.png?url'
 import {
-  askSteps, beatOf, CAST, CAST_IDS, canAsk, choicePointsOf, extraPlay, FALLBACK_ARRIVAL, goodName, heldRings, optionViews, pathPlays, playOf, playSeed, readiness,
-  receptionDishes, replaySteps, ringGrade, ringPercent, rungName, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
+  askSteps, beatOf, CAST, CAST_IDS, canAsk, choicePointsOf, eventOf, extraPlay, goodName, heldRings, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
+  readiness, receptionDishes, replaySteps, ringGrade, ringPercent, rungName, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
   type Answer, type CastId, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryPack,
 } from '@farm/domain'
 import { FaceTile, UmaBust } from '@luismlorenzana/uma-kit/album'
@@ -101,10 +101,8 @@ export default function EventPlayer() {
   useEffect(() => {
     if (!req || !story) return
     let live = true
-    void story.route(req.id).then((route) => {
+    void eventOf(story, req.id, req.rung).then(({ steps: found }) => {
       if (!live) return
-      const found = route?.events.find((e) => e.id === req.rung)?.steps ?? (req.rung === 'arrival' ? FALLBACK_ARRIVAL : null)
-      if (!found) return setGone(true)
       const from = req.from ? choicePointsOf(found)[req.from - 1] ?? null : null
       setSteps(req.mode === 'ask' ? askSteps(found) : req.mode === 'replay' ? replaySteps(found, from) : found)
     }, () => live && setGone(true))
@@ -196,9 +194,11 @@ function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLo
   const playsBefore = before.filter((s) => 'play' in s).length
   const choiceNow = step && 'choice' in step && choicesBefore >= picks.length ? step.choice : null
   const playNow: { as: PlayAs; prompt: string | null } | null = step && 'play' in step && mode !== 'ask' && playsBefore >= plays.length
-    ? { as: playOf((step as { play: Play }).play), prompt: (step as { play: Play }).play.prompt ?? null } : null
+    ? { as: playOf((step as { play: Play }).play), prompt: promptOf((step as { play: Play }).play) } : null
   const ended = cursor >= shown.length
-  const extraNow = ended && extra && plays.length < pathPlays(shown, null).length + 1 ? { as: extra, prompt: null } : null
+  const together = beat?.together
+  const extraPrompt = together?.kind === 'work' ? PLAY_PROMPTS[together.activity] : together?.kind === 'date' ? PLAY_PROMPTS[together.game] : null
+  const extraNow = ended && extra && plays.length < pathPlays(shown, null).length + 1 ? { as: extra, prompt: extraPrompt } : null
   const name = nameOf(id)
   const weddingAt = wedding ? (mode === 'event' ? chosenPlace : weddingPlaceOf(save.love[id]?.flags ?? [])) : null
   const place = weddingAt ?? shown.slice(0, cursor + 1).reduce<string | null>((p, s) => ('place' in s ? s.place : p), beat?.place ?? null)

@@ -16,7 +16,8 @@
 // only with the pack. Loaded with the night and the romance's screens.
 import type { FarmPlaceId } from '../farm/places'
 import { marriedCount, type Love, type SaveV4 } from '../save/v4'
-import { linePlaces, type StoryPack } from '../story/pack'
+import { type StoryPack } from '../story/pack'
+import { linePlaces } from '../story/placeholders'
 import { nextRung, ROUTE_RUNGS } from './love'
 import { lineChapter, perkLineOf } from './perks'
 

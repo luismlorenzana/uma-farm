@@ -10,14 +10,16 @@
 //
 // Arrivals are state checked at night step 8 (`arrivalsTonight`, the night's `arriveUmas`, after the Dorm settles): every cast Uma not on the roster whose
 // arrival holds joins, in the cast's order, home while a bed is free, else away; a trigger already passed (a later wave's)
-// holds the next night. Each joins once: the roster guards it. A cast Uma with no arrival (the pack's is optional) and not
-// in the opening waits off the farm until meeting her in town lands. Loaded with the night and the screens.
+// holds the next night. Each joins once: the roster guards it. A cast Uma with no arrival (`arrivesOf`: the pack's is
+// optional, and its placeholder is none) and not in the opening waits off the farm until meeting her in town lands; with
+// no pack, the opening brings the placeholders' cast, master data's first five. Loaded with the night and the screens.
 import { seedTies } from '../farm/bonds'
 import { farmDay, FESTIVALS, type FestivalId } from '../farm/calendar'
 import { joinRoster } from '../farm/dorm'
 import { newLove, type SaveV4 } from '../save/v4'
 import type { Arrival, CastEntry } from '../story/authored'
-import { castEntry, openingOf, type StoryPack } from '../story/pack'
+import { castEntry, type StoryPack } from '../story/pack'
+import { arrivesOf, openingOf } from '../story/placeholders'
 
 /** The five kinds of arrival, as the manual lists them. */
 export const ARRIVAL_KINDS: readonly { kind: Arrival['kind']; when: string; where: string }[] = [
@@ -67,7 +69,8 @@ export function arrivalsTonight(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ti
   let next = save
   const arrived: { id: string; home: boolean }[] = []
   for (const entry of pack.cast.umas) {
-    if (next.roster[entry.characterId] || !entry.arrives || !arrivalHolds(next, entry.arrives)) continue
+    const arrival = arrivesOf(pack, entry.characterId)
+    if (next.roster[entry.characterId] || !arrival || !arrivalHolds(next, arrival)) continue
     const joined = arrive(next, entry.characterId, pack)
     next = joined.save
     arrived.push({ id: entry.characterId, home: joined.home })
@@ -84,13 +87,16 @@ export function joinOpening(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>
 
 /** The chapter's authored arrival: the first cast Uma whose arrival is chapter `n`, or null. */
 export function chapterArrival(pack: Pick<StoryPack, 'cast'>, chapter: number): CastEntry | null {
-  return pack.cast.umas.find((u) => u.arrives?.kind === 'chapter' && u.arrives.chapter === chapter) ?? null
+  return pack.cast.umas.find((u) => { const arrival = arrivesOf(pack, u.characterId); return arrival?.kind === 'chapter' && arrival.chapter === chapter }) ?? null
 }
 
 /** What brings the next arrivals, never who: up to three triggers still waiting, most likely first: the
  * chapter's end, the Dorm's next arrival level, the next festivals by date, then events. Empty when everyone is here. */
 export function nextArrivals(save: SaveV4, pack: Pick<StoryPack, 'cast'>, max = 3): Arrival[] {
-  const waiting = pack.cast.umas.flatMap((u) => (!save.roster[u.characterId] && u.arrives && u.arrives.kind !== 'opening' ? [u.arrives] : []))
+  const waiting = pack.cast.umas.flatMap((u) => {
+    const arrival = arrivesOf(pack, u.characterId)
+    return !save.roster[u.characterId] && arrival && arrival.kind !== 'opening' ? [arrival] : []
+  })
   const key = (a: Arrival): string => JSON.stringify(a)
   const seen = new Set<string>()
   const unique = waiting.filter((a) => (seen.has(key(a)) ? false : (seen.add(key(a)), true)))

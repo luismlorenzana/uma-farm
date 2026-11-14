@@ -14,8 +14,8 @@
 // also play the pair conversations (`PairPlayer.tsx`). Loaded on demand. The ring bench's scene (`scene:bench`) plays
 // here too, its player loaded on demand (`BenchScene.tsx`).
 import {
-  ARRIVAL_POINTS, arrivalOf, BENCH_SCENE, CAST, CAST_IDS, castInitial, chapterArrival, CHAPTER_1_GOALS, chapterOf, chapterScene, choicePoints, FALLBACK_ARRIVAL, farmPlace, openingOf,
-  pathFlags, sceneLines, sceneSteps, withFarmer, type CastId, type ChapterSceneId, type ChoiceOption, type SaveV4, type SceneId, type SceneLine, type Step,
+  ARRIVAL_POINTS, arrivalOf, BENCH_SCENE, CAST, CAST_IDS, castInitial, chapterArrival, CHAPTER_1_GOALS, chapterOf, chapterScene, choicePoints, eventOf, farmPlace, openingOf,
+  pathFlags, placeholderEvent, sceneLines, sceneSteps, withFarmer, type CastId, type ChapterSceneId, type ChoiceOption, type SaveV4, type SceneId, type SceneLine, type Step,
 } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -202,10 +202,10 @@ function ArrivalPlayer({ save, id }: { save: SaveV4; id: string }) {
   const story = useStory()
   const [steps, setSteps] = useState<readonly Step[] | null>(null)
   useEffect(() => {
+    if (!story) return
     let live = true
-    void (story ? story.route(id) : Promise.resolve(null)).then((route) => {
-      if (live) setSteps(route?.events.find((e) => e.id === 'arrival')?.steps ?? FALLBACK_ARRIVAL)
-    }, () => live && setSteps(FALLBACK_ARRIVAL))
+    // Her route's arrival scene, else the game's two lines and a hello; offline with her route not cached yet, the hello.
+    void eventOf(story, id, 'arrival').then((event) => live && setSteps(event.steps), () => live && setSteps(placeholderEvent(id, 'arrival')))
     return () => { live = false }
   }, [story, id])
   if (!steps) return null
@@ -241,7 +241,7 @@ function Arrival({ save, id, steps, master, lastOpening }: { save: SaveV4; id: s
     if (leaving) return
     const choice = shown.find((s): s is { choice: ChoiceOption[] } => 'choice' in s)
     const pick = picks[0]
-    // An arrival the pack writes with no choice pays +50 alone; with one, its first choice pays too.
+    // Her arrival always holds a choice (a written one without gets the hello): its first choice pays with the +50.
     if (choice && pick === undefined) return
     setLeaving(true)
     if (to) navigate(to)

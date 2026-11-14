@@ -121,16 +121,16 @@ export function heartsLines(hearts: readonly HeartLine[], ready: readonly ReadyN
 /** The ♥♥ of a pair's line: two hearts for two Umas, whatever the level. */
 export const PAIR_MARK = '♥♥'
 
-/** A bond heart in words: "♥♥ Stand-in 1 & Stand-in 2 · bond 2" with **Read** while an authored
- * conversation waits (its tap plays them); without one, the tie's line, or "<a> and <b> are closer now" for a pair the
- * ties don't hold. */
+/** A bond heart in words: "♥♥ Stand-in 1 & Stand-in 2 · bond 2" with **Read** while a tie's conversation waits (its
+ * tap plays them, the pack's or the game's card), the heart alone once read, or "<a> and <b> are closer now" for a pair
+ * the ties don't hold. */
 function bondLine(line: Extract<HeartLine, { kind: 'bond' }>, nameOf: NameOf, pairs: PairWords | null): SummaryLine {
   const [a, b] = [nameOf(line.a), nameOf(line.b)]
   const key = `bond:${line.a}:${line.b}`
   const to = umaSheet(line.a)
   const unread = pairs?.unread(line.a, line.b, line.hearts) ?? []
   if (unread.length > 0) return { key, to: `/?read=${readParam(line.a, line.b, unread)}`, text: `${PAIR_MARK} ${a} & ${b} · bond ${line.hearts}`, tag: 'Read' }
-  if (pairs?.authored(line.a, line.b)) return { key, to, text: `${PAIR_MARK} ${a} & ${b} · bond ${line.hearts}` }
+  if (pairs?.talks(line.a, line.b)) return { key, to, text: `${PAIR_MARK} ${a} & ${b} · bond ${line.hearts}` }
   const tie = pairs?.tieLine(line.a, line.b) ?? null
   return tie
     ? { key, to, text: `${PAIR_MARK} ${a} & ${b} · bond ${line.hearts} · ${tie}` }

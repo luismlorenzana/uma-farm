@@ -128,15 +128,15 @@ describe('the story pack from farm-api', () => {
     await expect(loadReleasedPack(client(server(release), memoryCache()), memoryStore())).rejects.toThrow('story.json: version is 1')
   })
 
-  it('plays the stand-in only where asked when farm-api serves no pack (the dev server), else the last index or Try again', async () => {
+  it('plays no pack where asked when farm-api serves none (nothing published), else the last index or Try again', async () => {
     const api = server()
     const cache = memoryCache()
     const store = memoryStore()
     await loadReleasedPack(client(api, cache), store)
     api.state.none = true
-    const standIn = vi.fn(async () => storyPackFrom(STAND_IN_FILES))
-    await loadReleasedPack(client(api, cache), store, { missing: standIn })
-    expect(standIn).toHaveBeenCalledOnce()
+    const none = vi.fn(async () => null)
+    expect(await loadReleasedPack(client(api, cache), store, { missing: none })).toBeNull()
+    expect(none).toHaveBeenCalledOnce()
     expect((await loadReleasedPack(client(api, cache), store)).cast).toEqual(storyPackFrom(STAND_IN_FILES).cast)
     await expect(loadReleasedPack(client(api, cache), memoryStore())).rejects.toMatchObject({ status: 404 })
   })

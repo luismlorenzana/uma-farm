@@ -12,8 +12,8 @@ export const MAIN_JS_BUDGET = 180_000
  * the talents, the rank rules and their table, the roster's rows and the Umas' marks; the work operations and their
  * env, the forest's, the Fishery's and the stations' tables, kinds and build rule, and their screens; the Dorm's rules
  * and page, the Gate's quick look and the chats' fallback lines; and the Diary's counts, the chapters, the scenes'
- * lines, the scene player and the goals' words; and the name sheet, the story pack with the stand-in, the format and
- * validator, arrivals and her points; and her route
+ * lines, the scene player and the goals' words; and the name sheet, the story pack with its placeholders, the format
+ * and validator, arrivals and her points; and her route
  * on her sheet with its words, the acts, praise, birthdays and anniversaries, Ready and bond hearts; and the Hearts
  * tab, her profile, the shared roster album, the stand-in marks, the tab's view model and the perks' words; and the
  * pair player and the Diary's Conversations (with bonds' rules in `farm/bonds.ts`); and the event player, the five
@@ -66,6 +66,7 @@ export const LAZY_MODULES = [
   'src/story/load.ts',
   'domain/src/story/stand-in.ts',
   'domain/src/story/pack.ts',
+  'domain/src/story/placeholders.ts',
   'domain/src/story/authored.ts',
   'domain/src/romance/arrivals.ts',
   'domain/src/romance/love.ts',
@@ -177,6 +178,17 @@ export async function checkStage(distDir) {
   return { files: sized, precached: precached.length }
 }
 
+/** Modules no production build may hold at all: the invented stand-in pack is the tests' only. A path ending in `/` is a
+ * folder. */
+export const DEV_ONLY_MODULES = ['domain/src/story/stand-in.ts', 'domain/src/story/stand-in/']
+
+/** The dev-only modules any chunk renders. */
+export function devOnlyInBuild(chunks, devOnly = DEV_ONLY_MODULES) {
+  return Object.entries(chunks).flatMap(([file, modules]) => modules
+    .filter((id) => devOnly.some((path) => (path.endsWith('/') ? id.includes(`/${path}`) || id.startsWith(path) : id === path || id.endsWith(`/${path}`))))
+    .map((id) => `${id} (${file})`))
+}
+
 export function entrySrc(html) {
   const scripts = [...html.matchAll(/<script\b[^>]*>/gi)].filter(([tag]) => /\btype\s*=\s*["']module["']/i.test(tag))
   const sources = scripts.flatMap(([tag]) => {
@@ -231,6 +243,8 @@ export async function checkSize(distDir, budget = MAIN_JS_BUDGET, lazy = LAZY_MO
   }
   const leaked = lazyInInitial(chunks, files, lazy)
   if (leaked.length > 0) throw new Error(`Initial JS renders modules that load on demand: ${leaked.join(', ')}`)
+  const devOnly = devOnlyInBuild(chunks)
+  if (devOnly.length > 0) throw new Error(`The build holds the tests' stand-in: ${devOnly.join(', ')}`)
   return { entry, mainGzip, initialGzip, files: sizes, lazy: lazy.length }
 }
 

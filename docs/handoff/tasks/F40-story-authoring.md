@@ -25,8 +25,9 @@
   `pairs/<a>-<b>.json` and `household.json`, in the shapes `packages/domain/src/story/authored.ts` reads.
   - [The story pack's menu](../../story-pack.md) lists everything the game can read. Every item is optional, and each
     comes with what plays when it's missing.
-  - Write into the pack only what you want the game to show. Anything missing plays as the game's own (placeholders for
-    every read come with [F63](F63-story-placeholders.md)), and each new pack adds what it has.
+  - Write into the pack only what you want the game to show. Anything missing plays as the game's own placeholder
+    ([what plays without the story](../../game-mechanics.md#what-plays-without-the-story)), and each new pack adds what
+    it has. The sandbox marks, for each character, what's written and what's still a placeholder.
 - **The checker blocks nothing.** Errors are only what the game can't read (a file that isn't JSON, a value it can't
   use, a line longer than its screen), and each skips only the part it's in. Everything else is a note. No counts or
   orders are fixed: any opening, any number of lines, gifts or wedding places, any arrival scene.

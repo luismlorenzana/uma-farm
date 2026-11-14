@@ -1,8 +1,9 @@
 // An open pack, read whole: any number of characters in any order, every part optional, notes instead of blocks, and an
 // error that skips only its part. Invented ids only: the stand-in's 9000001–9000003 and more in its range.
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CHAPTERS, DEFAULT_MEET, RUNGS, type Cast, type Route } from './authored'
-import { chaptersOf, meetOf, openingOf, readStoryPack, storyPackFrom, welcomeOf, type PackFiles } from './pack'
+import { RUNGS, type Cast, type Route } from './authored'
+import { readStoryPack, storyPackFrom, type PackFiles } from './pack'
+import { chaptersOf, DEFAULT_CHAPTERS, DEFAULT_MEET, meetOf, openingOf, welcomeOf } from './placeholders'
 import { STAND_IN_FILES } from './stand-in'
 
 const clone = <T>(v: T): T => structuredClone(v)
@@ -22,8 +23,8 @@ describe('the packs an open story releases', () => {
     const { pack, errors, notes } = read({ ...clone(STAND_IN_FILES), cast })
     expect(errors).toEqual([])
     expect(openingOf(pack)).toEqual([id(4), id(2), id(5), id(1), id(3)])
-    expect(notes).toContain(`umas/${id(4)}.json: no bible yet, so her calling gives her line, her tastes are neutral, and her chats are her temperament’s`)
-    expect(notes).toContain(`routes/${id(5)}.json: no route yet, so her arrival is the game’s own short scene and her events wait (“Her story is still being written”)`)
+    expect(notes).toContain(`umas/${id(4)}.json: no bible yet, so her calling or her stats give her line, every gift is neutral, and her chats are the game’s for each stage`)
+    expect(notes).toContain(`routes/${id(5)}.json: no route yet, so her meeting scene and her events play the game’s own short cards, which pay as written ones do`)
     expect(pack.cast.umas).toHaveLength(5)
   })
 
@@ -47,10 +48,10 @@ describe('the packs an open story releases', () => {
     expect(pack.scripted.size).toBe(0)
     expect(pack.ties.ties).toEqual([])
     expect(notes).toEqual([
-      `cast.json: Uma 1 (${id(1)}): no outfit, so she shows as a lettered disc`,
-      `umas/${id(1)}.json: no bible yet, so her calling gives her line, her tastes are neutral, and her chats are her temperament’s`,
-      `routes/${id(1)}.json: no route yet, so her arrival is the game’s own short scene and her events wait (“Her story is still being written”)`,
-      `cast.json: ${id(1)} has no favourite line (no calling, no bible’s favouriteLine), so no perk works at her line`,
+      `cast.json: Uma 1 (${id(1)}): no outfit, so she plays her default outfit from master data`,
+      `umas/${id(1)}.json: no bible yet, so her calling or her stats give her line, every gift is neutral, and her chats are the game’s for each stage`,
+      `routes/${id(1)}.json: no route yet, so her meeting scene and her events play the game’s own short cards, which pay as written ones do`,
+      `cast.json: ${id(1)} has no calling and no bible’s favouriteLine, so her line is the work her stats in master data suit best`,
       `cast.json: no opening, so the welcome list comes up the road at the opening (${id(1)})`,
     ])
   })

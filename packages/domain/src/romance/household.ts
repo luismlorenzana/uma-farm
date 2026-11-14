@@ -10,7 +10,7 @@
 //                  Vows: every spouse +50 and a festival night
 //
 // Household scenes (5, 10, 15) and the finale (20) are Ready offers from the morning after, never auto-played; they pay
-// nothing. Every draw is `draw(uid, day, what, n)`. Pure. Loaded with the night and the romance's screens.
+// nothing. Each plays the pack's words where it has them and the game's short card where it doesn't (`householdOf`). Every draw is `draw(uid, day, what, n)`. Pure. Loaded with the night and the romance's screens.
 import { addBond, BOND_POINTS } from '../farm/bonds'
 import { draw } from '../farm/draw'
 import { talentsD, type TalentOf, type Temperament } from '../farm/talents'
@@ -20,6 +20,7 @@ import { FINALE_MARRIED, FURNITURE_PIECES, HOUSEHOLD_MILESTONES, marriedCount, r
 import { addGoods, stockKey } from '../save/warehouse'
 import type { Finale, Household, HouseholdAt, Step } from '../story/authored'
 import type { StoryPack } from '../story/pack'
+import { beatOf, placeholderHouseholdBeat } from '../story/placeholders'
 import { lineGood } from './days'
 import { defaultHouse, missesYou } from './homestead'
 import { addLove, advance, bar } from './love'
@@ -102,7 +103,7 @@ export function nightLevelCard(save: Pick<SaveV4, 'love'>, pack: Pick<StoryPack,
     id, rung, event: 0, choices: [], plays: [], chosen: null, sum: 0, paid: 0, carried: 0, learnt: [], taken: [], perk: perkOf(rung)?.id ?? null, recipe: null, memory: null,
     unlock: null, answer: null, stage: null, ring: null, wedding: null, line: null, night: true,
     next: after.rung === null ? null : {
-      rung: after.rung, cost: after.cost, points: after.points, banked: after.banked, hint: pack.bibles.get(id)?.route?.find((b) => b.id === after.rung)?.hint ?? null,
+      rung: after.rung, cost: after.cost, points: after.points, banked: after.banked, hint: beatOf(pack, id, after.rung)?.hint ?? null,
       perk: perkOf(after.rung)?.id ?? null,
     },
   }
@@ -250,12 +251,10 @@ export const householdTitle = (id: HouseholdId): string => (id === 'finale' ? 'T
 export const householdReached = (save: Pick<SaveV4, 'homestead'>, id: HouseholdId): boolean =>
   id === 'finale' ? save.homestead.finale > 0 : save.homestead.married >= householdAt(id)
 
-/** The household's Ready offers: each scene and the finale reached, written in the pack, and not yet played.
- * Never auto-played. */
-export function householdReady(save: Pick<SaveV4, 'homestead' | 'diary'>, household: Household | null): HouseholdId[] {
-  if (!household) return []
-  return HOUSEHOLD_IDS.filter((id) => householdReached(save, id) && !save.diary.read.includes(id)
-    && (id === 'finale' ? household.finale !== undefined : (household.scenes ?? []).some((s) => `household:${s.at}` === id)))
+/** The household's Ready offers: each scene and the finale reached and not yet played, the pack's or the game's own
+ * (`householdOf`). Never auto-played. */
+export function householdReady(save: Pick<SaveV4, 'homestead' | 'diary'>): HouseholdId[] {
+  return HOUSEHOLD_IDS.filter((id) => householdReached(save, id) && !save.diary.read.includes(id))
 }
 
 /** The spouses on the farm's roster, in wedding order: who a household scene's `each` plays for. */
@@ -264,8 +263,8 @@ export function spousesInOrder(save: Pick<SaveV4, 'love' | 'roster'>): string[] 
     .sort((a, b) => (save.love[a]!.wed ?? 0) - (save.love[b]!.wed ?? 0) || Number(a) - Number(b))
 }
 
-/** A household scene as it plays: `open`, each spouse's `each` in wedding order (one without hers is skipped,
- * partial), then `close`; the finale's play after its `open`. */
+/** A household scene as it plays: `open`, each spouse's `each` in wedding order (one without hers says her one line),
+ * then `close`; the finale's play after its `open`. */
 export interface HouseholdPlay {
   id: HouseholdId
   title: string
@@ -279,9 +278,9 @@ export function householdPlay(save: Pick<SaveV4, 'love' | 'roster'>, household: 
   const scene = id === 'finale' ? household.finale : household.scenes?.find((s) => `household:${s.at}` === id)
   if (!scene) return null
   const spouses = spousesInOrder(save)
-  // Every part is optional in the pack: a missing `open` or `close` plays as nothing, and the finale without its play
-  // goes straight on.
-  const beats = spouses.flatMap((who) => (scene.each?.[who] ? [{ who, steps: scene.each[who]! }] : []))
+  // `householdOf` fills a missing `open`, `close` and the finale's play; a spouse without her beat says her one line.
+  const at = id === 'finale' ? 'finale' : (householdAt(id) as HouseholdAt)
+  const beats = spouses.map((who) => ({ who, steps: scene.each?.[who] ?? placeholderHouseholdBeat(at, who) }))
   return {
     id, title: householdTitle(id), spouses, play: id === 'finale' ? household.finale?.play ?? null : null,
     parts: [{ who: null, steps: scene.open ?? [] }, ...beats, { who: null, steps: scene.close ?? [] }],

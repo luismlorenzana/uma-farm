@@ -17,7 +17,8 @@ import { goodOf, isSeedId } from '../goods/ids'
 import { SaveRuleError } from '../save/rules'
 import type { Love, SaveV4 } from '../save/v4'
 import { takeGoods } from '../save/warehouse'
-import { linePlaces, tasteOf, type StoryPack } from '../story/pack'
+import { type StoryPack } from '../story/pack'
+import { chatLinesOf, giftsOf, linePlaces, tasteOf } from '../story/placeholders'
 import { NO_BIRTHDAYS, isBirthday, type Birthdays } from './days'
 import { addLove, dayFactor, nextRung, roundPoints, type LovePaid } from './love'
 
@@ -60,14 +61,13 @@ export function chatSet(love: Pick<Love, 'stage' | 'level'>): ChatSet | null {
   }
 }
 
-/** Today's line from her: her authored set for her stage from Friendship 1, else (before it, or a bible with
- * no `chats`) her temperament's `CHAT_LINES`; drawn by the account, the day and her id, so it's the same all day. The
- * app fills `{farmer}` and `{name}`. */
+/** Today's line from her: from Friendship 1 her set for her stage, her bible's or the stage's placeholders
+ * (`chatLinesOf`); before it, her temperament's `CHAT_LINES`. Drawn by the account, the day and her id, so it's the same
+ * all day. The app fills `{farmer}` and `{name}`. */
 export function chatLineV4(save: Pick<SaveV4, 'account' | 'calendar' | 'love'>, pack: Pick<StoryPack, 'bibles'>, id: string, temperament: Temperament): string {
   const love = save.love[id]
   const set = love ? chatSet(love) : null
-  const authored = set ? pack.bibles.get(id)?.chats?.[set] : undefined
-  const lines = authored && authored.length > 0 ? authored : CHAT_LINES[temperament]
+  const lines = set ? chatLinesOf(pack, id, set) : CHAT_LINES[temperament]
   return lines[Math.floor(draw(save.account.uid, save.calendar.day, `chat:${id}`, 0) * lines.length)]!
 }
 
@@ -78,7 +78,7 @@ export function chatLineV4(save: Pick<SaveV4, 'account' | 'calendar' | 'love'>, 
 export function tasteKnown(pack: Pick<StoryPack, 'bibles'>, love: Pick<Love, 'stage' | 'level' | 'known'>, id: string, good: string): boolean {
   if (love.known.includes(good)) return true
   const reached = (level: number) => love.stage !== 'friendship' || love.level >= level
-  return reached(7) || (reached(1) && pack.bibles.get(id)?.gifts?.loved === good)
+  return reached(7) || (reached(1) && giftsOf(pack, id).loved === good)
 }
 
 /** A gift's points for her today: her taste's base × its stars × 3 on her birthday × 2 on her anniversary,

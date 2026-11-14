@@ -3,7 +3,7 @@
 // room in words, Tonight's Sleep at rows, the morning's house lines and the household's Ready offers. Pure, so the screens
 // and the tests read the same. Loaded on demand.
 import {
-  extensionCost, FURNITURE, householdReady, householdTitle, houseLineOf, HOUSES, isHouseholdId, marriedCount, nextLot, residentsOf,
+  extensionCost, FURNITURE, householdOf, householdReady, householdTitle, houseLineOf, HOUSES, isHouseholdId, marriedCount, nextLot, residentsOf,
   roomsInAll, roomsOf, sleepRows, tonightsHouse, waitingForRooms, withFarmer, type Birthdays, type HouseholdId, type SaveV4, type StoryPack, type Temperament,
 } from '@farm/domain'
 import { NO_HOME, type HomeWords } from './summary-words'
@@ -125,18 +125,19 @@ export function homeWords(save: SaveV4, pack: Pick<StoryPack, 'household'>, name
   return {
     houseName: (n) => save.homestead.houses[n]?.name ?? NO_HOME.houseName(n),
     houseLine: (line) => {
-      const said = houseLineOf(save.account.uid, save.calendar.day, line.umas, pack.household, temperamentOf, nameOf)
+      const said = houseLineOf(save.account.uid, save.calendar.day, line.umas, householdOf(pack), temperamentOf, nameOf)
       return said === null ? null : said.authored ? `${nameOf(said.id)}: “${withFarmer(said.text, save.farmer.name)}”` : said.text
     },
-    household: householdLines(save, pack),
+    household: householdLines(save),
   }
 }
 
 // --- The household's offers -----------------------------------------------------------------------------
 
-/** The household's Ready offers for the morning and the Hearts header: "⌂ Household scene 1 · Ready". */
-export function householdLines(save: SaveV4, pack: Pick<StoryPack, 'household'>): { id: HouseholdId; text: string; to: string }[] {
-  return householdReady(save, pack.household).map((id) => ({ id, text: `⌂ ${householdTitle(id)} · Ready`, to: `/?household=${id}` }))
+/** The household's Ready offers for the morning and the Hearts header: "⌂ Household scene 1 · Ready", the pack's or
+ * the game's own. */
+export function householdLines(save: SaveV4): { id: HouseholdId; text: string; to: string }[] {
+  return householdReady(save).map((id) => ({ id, text: `⌂ ${householdTitle(id)} · Ready`, to: `/?household=${id}` }))
 }
 
 /** `?household=<id>` and its replay flag. */

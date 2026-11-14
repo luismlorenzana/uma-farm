@@ -115,6 +115,8 @@ async function storyState(game) {
   const pairs = Object.entries(read.files.pairs).map(([name, pair]) => entry(`pairs/${name}.json`, pair))
   // Each character's findings, from every file of hers and the cast's lines that name her.
   const own = {}
+  // Each character as the game plays her: every part the pack writes, and every part a placeholder plays instead.
+  const written = {}
   for (const { characterId: id } of read.files.cast.umas) {
     const cast = found('cast.json')
     const hers = (list) => list.filter((line) => line.includes(`(${id})`) || line.startsWith(`${id} `))
@@ -122,6 +124,7 @@ async function storyState(game) {
       errors: [...hers(cast.errors), ...found(`umas/${id}.json`).errors, ...found(`routes/${id}.json`).errors],
       notes: [...hers(cast.notes), ...found(`umas/${id}.json`).notes, ...found(`routes/${id}.json`).notes],
     }
+    written[id] = v.writtenOf(read.pack, id)
   }
   const all = { errors: [...unreadable, ...read.errors], notes: [...read.notes, ...(tags?.notes ?? []).map((n) => `tags.json: ${n}`)] }
   return {
@@ -135,6 +138,7 @@ async function storyState(game) {
     // The household's scenes, house lines and finale.
     household: read.files.household ? entry('household.json', read.files.household) : null,
     own,
+    written,
     // Every finding, and the files read whole that the game skipped (a file that isn't JSON or isn't the shape).
     check: all,
     // The menu's defaults, and the welcome list as the game reads it.

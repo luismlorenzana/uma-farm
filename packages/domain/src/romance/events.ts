@@ -20,8 +20,9 @@ import { SaveRuleError } from '../save/rules'
 import type { SaveV4 } from '../save/v4'
 import { addGoods, goodCount, takeGoods } from '../save/warehouse'
 import type { Warehouse } from '../save/v4'
-import { answerAt, type Answer, type Beat, type ChoiceOption, type OptionGives, type Play, type Step, type Together, type Unlock } from '../story/authored'
-import { tasteOf, type StoryPack } from '../story/pack'
+import { answerAt, type Answer, type ChoiceOption, type OptionGives, type Play, type Step, type Together, type Unlock } from '../story/authored'
+import { type StoryPack } from '../story/pack'
+import { beatOf, captionOf, tasteOf, weddingPlaces } from '../story/placeholders'
 import type { Taste } from './chats'
 import { addLove, advance, bar, CHOICE_BEST, choicePoints, pathFlags, walkScene } from './love'
 import { perkOf, type PerkId } from './perks'
@@ -30,7 +31,7 @@ import { choosePlan, chooseScore } from './plays/choose'
 import { EVENT_GRADE_POINTS, gradeOf, playSeed, type Grade, type PlayKind } from './plays/grade'
 import { playOf, togetherPlay, type PlayAs } from './plays/which'
 import { readiness } from './ready'
-import { receptionOf, vowFlag, weddingGuests, weddingPlaceFlag, weddingPlaces, type Reception } from './wedding'
+import { receptionOf, vowFlag, weddingGuests, weddingPlaceFlag, type Reception } from './wedding'
 import { takeRoom } from './homestead'
 
 /** Every event pays +50 on completion. */
@@ -158,7 +159,7 @@ export interface EventCard {
   perk: PerkId | null
   /** Friendship 4's signature dish: the recipe it put in the Kitchen's list, a dish id; null otherwise. */
   recipe: string | null
-  /** The Memory's caption: her beat's line. */
+  /** The Memory's caption: her beat's line, else the card's moment. */
   memory: string | null
   unlock: Unlock | null
   /** The confession's answer. */
@@ -178,9 +179,6 @@ export interface EventCard {
    * its perk; null once her route is complete. */
   next: { rung: string; cost: number; points: number; banked: number; hint: string | null; perk: PerkId | null } | null
 }
-
-/** The beat a rung plays, from her bible. */
-export const beatOf = (pack: Pick<StoryPack, 'bibles'>, id: string, rung: string): Beat | undefined => pack.bibles.get(id)?.route?.find((b) => b.id === rung)
 
 /**
  * Her Ready event, played to its end: +50, each choice and each play's grade (or, with no
@@ -287,7 +285,7 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
     save: next,
     card: {
       id, rung, event: EVENT_POINTS, choices: points, plays: lines, chosen, sum, paid: pay.paid, carried: Math.max(0, carried), learnt: [...new Set(learnt)], taken,
-      perk: perkOf(rung)?.id ?? null, recipe: dish?.dish ?? null, memory: beat?.beat ?? null, unlock, answer: rung === 'confession' ? answer ?? 'yes' : null,
+      perk: perkOf(rung)?.id ?? null, recipe: dish?.dish ?? null, memory: captionOf(pack, id, rung), unlock, answer: rung === 'confession' ? answer ?? 'yes' : null,
       stage: rung === 'confession' && !notYet ? 'romance' : rung === 'proposal' ? 'engaged' : rung === 'wedding' ? 'married' : null, ring, wedding, line: say?.line ?? null,
       next: after.rung === null ? null : {
         rung: after.rung, cost: after.cost, points: after.points, banked: after.banked, hint: beatOf(pack, id, after.rung)?.hint ?? null, perk: perkOf(after.rung)?.id ?? null,

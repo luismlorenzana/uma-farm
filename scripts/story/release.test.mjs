@@ -104,9 +104,9 @@ test('releases a partial pack with notes: bibles and arrival scenes missing, rou
   const { index, errors, notes, summary } = await buildRelease({ from, out: await temp(t), builtAt: BUILT_AT })
   assert.deepEqual(errors, [])
   assert.deepEqual(Object.keys(index.scripted), ['9000001', '9000002'])
-  assert.ok(notes.includes('umas/9000002.json: no bible yet, so her calling gives her line, her tastes are neutral, and her chats are her temperament’s'), notes.join('\n'))
+  assert.ok(notes.includes('umas/9000002.json: no bible yet, so her calling or her stats give her line, every gift is neutral, and her chats are the game’s for each stage'), notes.join('\n'))
   assert.ok(notes.includes('routes/9000001.json: no arrival scene, so the game’s own short one plays'), notes.join('\n'))
-  assert.ok(notes.includes('routes/9000003.json: no route yet, so her arrival is the game’s own short scene and her events wait (“Her story is still being written”)'), notes.join('\n'))
+  assert.ok(notes.includes('routes/9000003.json: no route yet, so her meeting scene and her events play the game’s own short cards, which pay as written ones do'), notes.join('\n'))
   assert.equal(summary.notes, notes.length)
 })
 

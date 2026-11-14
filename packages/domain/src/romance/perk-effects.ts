@@ -31,7 +31,8 @@ import type { ItemLine } from '../night/summary'
 import { DISH_FAMILIES, isDishId, type BlockId } from '../save/v4'
 import type { SaveV4 } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
-import { castOrder, favouriteOf, type StoryPack } from '../story/pack'
+import { castOrder, type StoryPack } from '../story/pack'
+import { favouriteOf, giftsOf } from '../story/placeholders'
 import { deepestOpen, lineGood } from './days'
 import { perkLineOf, type PerkLine } from './perks'
 import { atHerLine, choresOf, hasPerk, homeOrHoused, keepsakeQuality, linePlaceOpen, morningDue, morningRule, routeIndex, type PerkPack } from './perk-terms'
@@ -251,7 +252,7 @@ export function lineGrade(save: SaveV4, pack: PerkPack, id: string): number {
 /** Her signature dish: her loved good when it's a dish, taken as is; else her line's dish kind at the grade
  * of her line's best place now. */
 export function signatureDish(save: SaveV4, pack: PerkPack, id: string): string {
-  const loved = pack.bibles.get(id)?.gifts?.loved
+  const loved = giftsOf(pack, id).loved
   if (loved !== undefined && isDishId(loved)) return loved
   const line = perkLineOf(pack, id) ?? 'farming'
   return dishId(LINE_DISH[line], lineGrade(save, pack, id))

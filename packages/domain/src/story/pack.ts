@@ -3,20 +3,18 @@
 // characters is fine, and a part with an error is skipped while the rest plays, so reading a pack never fails. The
 // scripts load on demand through `route(id)`, a pair's conversations through `pair(a, b)`, and the pack says which levels
 // each pair holds. The household file (household scenes, house lines and the finale) is read with the pack, since the
-// night's house lines need it. The dev server reads the stand-in (`stand-in.ts`) through the web's one loader seam.
+// night's house lines need it. The tests read the invented stand-in (`stand-in.ts`).
 //
-// Her outfit, her favourite line, its places and her tastes are read here, never from master data's strategy or a goods
-// family; so are the menu's welcome list, her trigger to meet and her chapters, with their defaults.
-import type { FarmPlaceId } from '../farm/places'
-import type { Activity } from '../farm/ranks'
-import type { Taste } from '../romance/chats'
+// Every read of it goes through `placeholders.ts`: the pack's, or the placeholder. There her outfit, her favourite line
+// and its places, her tastes, the welcome list, her trigger to meet and her chapters are read, never from master data's
+// strategy or a goods family; and with no pack at all, master data's first five play on placeholders.
 import { isGoodId } from '../goods/ids'
 import { pairKey } from '../save/v4'
 import {
-  ARRIVAL, CHARACTER_ID, DEFAULT_CHAPTERS, DEFAULT_MEET, DEFAULT_WELCOME, checkBible, checkCast, checkHousehold, checkPair, checkRoute, checkTies, type Calling, type Cast,
-  type CastEntry, type Findings, type HerChapter, type Household, type PairConversations, type Read, type Route, type StoryContext, type StoryTrigger, type Ties,
-  type UmaBible, type Wish,
+  ARRIVAL, CHARACTER_ID, checkBible, checkCast, checkHousehold, checkPair, checkRoute, checkTies, type Cast, type CastEntry, type Findings, type Household, type PairConversations,
+  type Read, type Route, type StoryContext, type Ties, type UmaBible,
 } from './authored'
+import { favouriteOf, openingOf, type MasterCast } from './placeholders'
 
 /** A pack's files as a release holds them (`cast.json`, `ties.json`, `umas/<id>.json`, `routes/<id>.json` and
  * `pairs/<a>-<b>.json`, its name the two in `pairKey` order), unchecked. Any may be missing. */
@@ -49,6 +47,9 @@ export interface StoryPack {
   pair(a: string, b: string): Promise<PairConversations | null>
   /** The household: its scenes, house lines and the finale; null until it's written. */
   readonly household: Household | null
+  /** What master data gives the placeholders (her default outfit, her line from her stats), once the app has read it;
+   * none in the tests that leave it out. */
+  readonly master?: MasterCast
 }
 
 /** A release the game can't read: an index that isn't one, or a file that isn't what the index says. Never a pack's
@@ -149,11 +150,11 @@ export function readStoryPack(files: PackFiles, isGood: (id: string) => boolean 
 function castNotes(pack: StoryPack): string[] {
   const notes: string[] = []
   for (const { characterId: id } of pack.cast.umas) {
-    if (!pack.bibles.has(id)) notes.push(`umas/${id}.json: no bible yet, so her calling gives her line, her tastes are neutral, and her chats are her temperament’s`)
+    if (!pack.bibles.has(id)) notes.push(`umas/${id}.json: no bible yet, so her calling or her stats give her line, every gift is neutral, and her chats are the game’s for each stage`)
     const scripted = pack.scripted.get(id)
-    if (!scripted) notes.push(`routes/${id}.json: no route yet, so her arrival is the game’s own short scene and her events wait (“Her story is still being written”)`)
+    if (!scripted) notes.push(`routes/${id}.json: no route yet, so her meeting scene and her events play the game’s own short cards, which pay as written ones do`)
     else if (!scripted.has(ARRIVAL)) notes.push(`routes/${id}.json: no arrival scene, so the game’s own short one plays`)
-    if (favouriteOf(pack, id) === null) notes.push(`cast.json: ${id} has no favourite line (no calling, no bible’s favouriteLine), so no perk works at her line`)
+    if (favouriteOf(pack, id) === null) notes.push(`cast.json: ${id} has no calling and no bible’s favouriteLine, so her line is the work her stats in master data suit best`)
   }
   const opening = new Set(openingOf(pack))
   if (pack.cast.opening === undefined && !pack.cast.umas.some((u) => u.arrives?.kind === 'opening') && opening.size > 0) {
@@ -170,88 +171,9 @@ export function storyPackFrom(files: PackFiles, isGood: (id: string) => boolean 
   return readStoryPack(files, isGood).pack
 }
 
-/** Her wishes for married life: her bible's, none without one. */
-export const wishesOf = (pack: Pick<StoryPack, 'bibles'>, id: string): readonly Wish[] => pack.bibles.get(id)?.wishes ?? []
-
 // --- Her place in the cast ----------------------------------------------------------------------------------
 
 /** Her cast entry, or undefined for a character the pack doesn't hold. */
 export const castEntry = (pack: Pick<StoryPack, 'cast'>, id: string): CastEntry | undefined => pack.cast.umas.find((u) => u.characterId === id)
 /** The cast's character ids, in the cast's order. */
 export const castOrder = (pack: Pick<StoryPack, 'cast'>): string[] => pack.cast.umas.map((u) => u.characterId)
-
-/** The one resolver: the outfit a roster id plays as. The roster's key is her character id and the cast names her
- * outfit; anything else (no pack, someone the cast doesn't hold, no outfit named) is its own outfit. Faces, busts, names,
- * talents, temperaments and pickers all meet master data through it. */
-export const outfitOf = (pack: Pick<StoryPack, 'cast'> | null, id: string): string => (pack ? castEntry(pack, id)?.outfitId : undefined) ?? id
-
-// --- The menu's welcome list, her trigger and her chapters ----------------------------------------------------------
-
-/** The welcome list: who comes to the farm in the first days, in order. The pack's `welcome`, else the first five of the
- * cast, in its order. Meeting her in town acts on it. */
-export function welcomeOf(pack: Pick<StoryPack, 'cast'>): string[] {
-  const named = pack.cast.welcome ?? []
-  return named.length > 0 ? [...named] : castOrder(pack).slice(0, DEFAULT_WELCOME)
-}
-
-/** Her trigger to meet: her cast entry's `meet`, else talking with her on three different days. */
-export const meetOf = (pack: Pick<StoryPack, 'cast'>, id: string): StoryTrigger => castEntry(pack, id)?.meet ?? DEFAULT_MEET
-
-/** Her chapters: her cast entry's, else the four default ones ("Getting to know her", "Together", "The wedding",
- * "Married life"). Her chapters' screens act on them. */
-export function chaptersOf(pack: Pick<StoryPack, 'cast'>, id: string): readonly HerChapter[] {
-  const own = castEntry(pack, id)?.chapters ?? []
-  return own.length > 0 ? own : DEFAULT_CHAPTERS
-}
-
-/** Who comes up the road at the opening, in order: the cast's `opening`, else those whose arrival is the opening, else
- * the welcome list; only characters in the cast. Until meeting her lands, this keeps the opening's hands on the farm. */
-export function openingOf(pack: Pick<StoryPack, 'cast'>): string[] {
-  const inCast = (id: string) => castEntry(pack, id) !== undefined
-  if (pack.cast.opening) return pack.cast.opening.filter(inCast)
-  const arriving = pack.cast.umas.filter((u) => u.arrives?.kind === 'opening').map((u) => u.characterId)
-  return arriving.length > 0 ? arriving : welcomeOf(pack).filter(inCast)
-}
-
-// --- Her favourite line -----------------------------------------------------------------------------
-
-/** Her calling's activity: quarry is mining, at the Quarry. */
-export const CALLING_ACTIVITY: Readonly<Record<Calling, Activity>> = { farming: 'farming', foraging: 'foraging', fishing: 'fishing', mining: 'mining', quarry: 'mining' }
-
-/** Her favourite line: her bible's `favouriteLine`, else her calling's (a missing bible: the stand-in's forager and
- * fisher). Null for someone the pack doesn't hold, or gives neither. */
-export function favouriteOf(pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string): Activity | null {
-  const line = pack.bibles.get(id)?.favouriteLine
-  if (line) return line
-  const calling = castEntry(pack, id)?.calling
-  return calling ? CALLING_ACTIVITY[calling] : null
-}
-
-/** Her line's places: where her perks work and her events default to. A miner's are the Mine and the
- * Smelter, or the Quarry and the Cutter when her calling is `quarry`. */
-export function linePlaces(pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string): FarmPlaceId[] {
-  switch (favouriteOf(pack, id)) {
-    case 'farming': return ['fields']
-    case 'foraging': return ['forest', 'sawmill']
-    case 'fishing': return ['fishery', 'smokehouse']
-    case 'mining': return castEntry(pack, id)?.calling === 'quarry' ? ['quarry', 'cutter'] : ['mine', 'smelter']
-    case 'ranch': return ['coop', 'barn']
-    case 'cooking': return ['kitchen']
-    case 'serving': return ['restaurant']
-    case 'forging': return ['forge']
-    default: return []
-  }
-}
-
-// --- Her tastes -------------------------------------------------------------------------------------
-
-/** What she thinks of a good as a gift: her bible's loved, liked and disliked, any number of each; everything else
- * neutral. A proposed good counts once it exists in `goods/ids.ts`; until then that slot is neutral. No bible: neutral. */
-export function tasteOf(pack: Pick<StoryPack, 'bibles'>, id: string, good: string, isGood: (id: string) => boolean = isGoodId): Taste {
-  const gifts = pack.bibles.get(id)?.gifts
-  if (!gifts || !isGood(good)) return 'neutral'
-  if (gifts.loved === good) return 'loved'
-  if (gifts.liked?.includes(good)) return 'liked'
-  if (gifts.disliked?.includes(good)) return 'disliked'
-  return 'neutral'
-}

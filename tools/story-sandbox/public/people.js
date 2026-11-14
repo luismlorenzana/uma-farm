@@ -136,6 +136,7 @@ export function characterView(id, onReview) {
         entry.paragraph ? h('p', { class: 'logline', text: entry.paragraph }) : null,
         h('div', { class: 'row small' }, prev ? h('a', { href: `#/c/${prev.characterId}`, text: `← ${umaName(prev.characterId)}` }) : null, next ? h('a', { href: `#/c/${next.characterId}`, text: `${umaName(next.characterId)} →` }) : null),
         tagPanel(id),
+        placeholderPanel(id),
         menuPanel(entry),
         h('div', { class: 'panel' }, h('div', { class: 'row' }, h('h3', { text: 'Her route' }), h('span', { class: 'muted small', text: bible ? `umas/${id}.json` : 'Her bible can name any of these rungs; none is required' }), routeProgress(id)), ladder(id, bible)),
         bible ? biblePanel(bible) : null,
@@ -151,6 +152,21 @@ export function characterView(id, onReview) {
     h('div', { class: 'section-head' }, h('h2', { text: 'Review' })),
     reviewPanel(`cast/${id}`, st.own?.[id] ?? { errors: [], notes: [] }, bible ? bible.file : 'content/story/cast.json', onReview, 'Nothing to note: what’s written of her reads whole.'),
   )
+}
+
+/** Her parts as the game plays them: each written by the pack, or a placeholder (what plays instead), marked. */
+function placeholderPanel(id) {
+  const parts = D.story?.written?.[id] ?? []
+  if (!parts.length) return null
+  const placeholders = parts.filter((p) => !p.written).length
+  return h('div', { class: 'panel', 'data-written': id },
+    h('div', { class: 'row' }, h('h3', { text: 'In the game' }),
+      h('span', { class: `chip ${placeholders ? '' : 'dot'}`, text: `${parts.length - placeholders} written · ${placeholders} placeholder${placeholders === 1 ? '' : 's'}` })),
+    h('p', { class: 'muted small', text: 'What the pack writes of her, and what plays instead where it doesn’t. Placeholders play whole and pay as written: nothing waits on the story.' }),
+    h('table', { class: 'written' }, h('tbody', {}, parts.map((p) => h('tr', { class: p.written ? 'is-written' : 'is-placeholder' },
+      h('th', { text: p.part }),
+      h('td', {}, h('span', { class: `chip ${p.written ? 'dot' : 'placeholder'}`, text: p.written ? 'Written' : 'Placeholder' })),
+      h('td', { class: 'small', text: p.plays }))))))
 }
 
 /** Her trigger to meet and her chapters: the pack's, else the game's defaults (marked). */

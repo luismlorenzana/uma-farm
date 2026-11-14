@@ -1,41 +1,58 @@
 // The story pack in the app: loaded once, on demand, through one
-// seam (`load.ts`'s `loadStoryPack`: the private pack's release, or on the dev server the invented stand-in). Light on
-// purpose, since the shell, the store and the album's art read it: the pack, its reader and the stand-in load lazily.
+// seam (`load.ts`'s `loadStoryPack`: the private pack's release, or no pack, each with master data's placeholders; the
+// tests' invented stand-in). Light on purpose, since the shell, the store and the album's art read it: the pack, its
+// reader and the placeholders load lazily.
 //
 // `outfitFor` is the one resolver where a roster id meets master data: the roster's key is her character id and the
-// pack's cast names her outfit (the domain's `outfitOf`); before the pack loads, an id is its own outfit. The album's art and master data's view (`setMasterLens`) read through it, so faces,
-// busts, names, talents, temperaments and pickers all follow her cast entry.
+// pack's cast names her outfit, else master data's default for her (the domain's `outfitOf`); before the pack loads, an
+// id is its own outfit. The album's art and master data's view (`setMasterLens`) read through it, so faces, busts, names,
+// talents, temperaments and pickers all follow her cast entry. Everyone on the farm stays in the cast (`keepOnCast`).
 import type { StoryPack } from '@farm/domain'
 import { useSyncExternalStore } from 'react'
 
 let pack: StoryPack | null = null
 let resolve: (id: string) => string = (id) => id
 let loading: Promise<StoryPack> | null = null
+/** The loaded seam's own pieces, kept for `keepOnCast`. */
+let seam: { install: (pack: StoryPack) => (id: string) => string; withCast: (pack: StoryPack, ids: readonly string[]) => StoryPack } | null = null
 const listeners = new Set<() => void>()
 
 /** The pack once loaded, else null. */
 export const storyPack = (): StoryPack | null => pack
-/** The outfit a roster id plays as: her cast entry's, else the id itself. */
+/** The outfit a roster id plays as: her cast entry's, else master data's default for her, else the id itself. */
 export const outfitFor = (id: string): string => resolve(id)
 /** Whether an id is one of the cast's (a roster key). */
 export const inCast = (id: string): boolean => pack?.cast.umas.some((u) => u.characterId === id) ?? false
 /** The cast's character ids, in arrival order: the scenes' tie-break (`sceneDue`). */
 export const castIds = (): string[] => pack?.cast.umas.map((u) => u.characterId) ?? []
 
+function turnOn(next: StoryPack): void {
+  resolve = seam!.install(next)
+  pack = next
+  for (const listener of listeners) listener()
+}
+
 /** Loads the pack once (the boot and the night wait on it, as they do on master data) and turns the resolver on. A
- * failure lets the next call try again. */
+ * failure lets the next call try again. Resolves the pack as it stands now (`keepOnCast` may have grown its cast). */
 export function storyReady(): Promise<StoryPack> {
-  loading ??= import('./load').then(async ({ loadStoryPack, installStory }) => {
+  loading ??= import('./load').then(async ({ loadStoryPack, installStory, withCast }) => {
     const loaded = await loadStoryPack()
-    resolve = installStory(loaded)
-    pack = loaded
-    for (const listener of listeners) listener()
+    seam = { install: installStory, withCast }
+    turnOn(loaded)
     return loaded
   }).catch((error: unknown) => {
     loading = null
     throw error
   })
-  return loading
+  return loading.then(() => pack!)
+}
+
+/** Keeps everyone on the farm in the cast: an Uma on the roster the pack doesn't hold (one a release dropped, or one
+ * from an older story) joins it bare and plays on placeholders, her name and face her master data's (or a lettered
+ * disc). The store calls it as a save comes in; nothing changes when the cast holds them all. */
+export function keepOnCast(ids: readonly string[]): void {
+  if (!pack || !seam || ids.every((id) => inCast(id))) return
+  turnOn(seam.withCast(pack, ids))
 }
 
 /** The pack in React: null until it loads. */
@@ -47,7 +64,7 @@ export function useStory(): StoryPack | null {
 }
 
 /** A name for a character master data doesn't hold: the stand-ins' invented range (9000001 on) reads "Stand-in 1",
- * anyone else (a character a release drops) "An Uma". */
+ * anyone else "An Uma". */
 export function unknownName(id: string): string {
   const n = Number(id) - 9_000_000
   return Number.isSafeInteger(n) && n > 0 && n < 1_000_000 ? `Stand-in ${n}` : 'An Uma'

@@ -131,10 +131,16 @@ Sheets and scenes are query parameters on the page under them:
   (1.5 s later), the page becoming visible, the network returning, and boot with a device save. The player-facing rules
   are in the mechanics document's save section.
 - **Master data** (`src/master/master.ts`): a small external store read with `useSyncExternalStore`: the release's
-  manifest, the album's rows of every outfit with a stable id, stats, birthdays and the art index, through the content
-  client from `/api/master`, seen through the story pack's cast once it loads.
-- **The story pack** (`src/story/story.ts`): loaded once, by boot. `outfitFor` resolves a roster key (a character id) to
-  her outfit.
+  manifest, the album's rows of every outfit with a stable id, stats, birthdays, each outfit's character and variant, and
+  the art index, through the content client from `/api/master`, seen through the story pack's cast once it loads.
+- **The story pack** (`src/story/story.ts`): loaded once, by boot, with master data's placeholders (the domain's
+  `storyOf`: each character's default outfit, and each outfit's line from its stats); the boot waits for both.
+  `outfitFor` resolves a roster key (a character id) to her outfit: the cast's, else her default. As a save comes in, an
+  Uma on its roster the cast doesn't hold joins the cast bare (`keepOnCast`) and plays on placeholders.
+- **The placeholders** (`packages/domain/src/story/placeholders.ts`): every read of the pack goes through one lookup,
+  the pack's or the placeholder (her outfit, line, tastes, birthday, chats, events, meeting scene, chapters, keepsake, pet
+  name, ring's words, wedding places, ties and pairs, household, a play's prompt). `writtenOf` says, for each character,
+  what's written and what's a placeholder: the Story Sandbox's marks.
 - **Device preferences** go through uma-kit's prefs under the `farm.` prefix (the appearance, `farm.stage`). The story's
   last good index is `farm.story-index` in `localStorage`.
 
@@ -383,8 +389,10 @@ The game's story is a private pack: never in git, never in the bundle.
   - each file read with the same reader, a part with an error skipped; only a hash that doesn't match, or a route or
     pair that isn't what the index lists, fails the load;
   - the index is kept on the device only once the pack it names has loaded;
-  - a 404 for `story.json` (nothing published yet, or no release on the dev server) plays the invented stand-in, so a
-    farm always opens; `VITE_FARM_STORY=stand-in` forces it in the tests. It loads on demand, never in the initial JS.
+  - a 404 for `story.json` (nothing published yet, or no release on the dev server) plays no pack: master data's first
+    five on placeholders, so a farm always opens and plays whole;
+  - the invented stand-in is the tests' only (`VITE_FARM_STORY=stand-in`, dev only); `DEV_ONLY_MODULES` keeps it out of
+    every production build.
 
 ## Build, CI and deploy
 
@@ -435,7 +443,8 @@ pnpm lint && pnpm test && pnpm build
   browser's `uma-farm` database.
 - **Master data** comes from `../uma-platform/content/release` (`MASTER_DIR` points elsewhere). **The story pack**
   comes from `content/story-release/` (`STORY_DIR`): `pnpm story:release` fills it, `pnpm story:release --stand-in`
-  fills it with the stand-in, and with nothing there the dev server plays the stand-in.
+  fills it with the stand-in, and with nothing there the dev server plays no pack, on placeholders, as a fresh phone
+  does.
 - **The owner guard locally:** run the built API with `ALLOWED_EMAIL` set and no `AUTH_MODE`.
 - **The Story Sandbox** (`tools/story-sandbox`, [its README](../../tools/story-sandbox/README.md)): `pnpm stories` serves
   http://127.0.0.1:4321, a local page for reading, playing and reviewing the story. It reads the private

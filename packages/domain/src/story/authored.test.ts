@@ -36,7 +36,7 @@ describe('the cast', () => {
     const read = checkCast({ umas: [{ characterId: '9000003' }, { characterId: '9000001' }] })
     expect(read.errors).toEqual([])
     expect(read.value.umas).toEqual([{ characterId: '9000003' }, { characterId: '9000001' }])
-    expect(read.notes).toEqual(['Uma 1 (9000003): no outfit, so she shows as a lettered disc', 'Uma 2 (9000001): no outfit, so she shows as a lettered disc'])
+    expect(read.notes).toEqual(['Uma 1 (9000003): no outfit, so she plays her default outfit from master data', 'Uma 2 (9000001): no outfit, so she plays her default outfit from master data'])
     expect(checkCast({ umas: [] })).toMatchObject(clean)
     expect(checkCast(undefined)).toMatchObject({ value: { umas: [] }, errors: [], notes: ['No cast: the pack holds no characters'] })
   })

@@ -18,10 +18,11 @@
 import {
   homeOf, NEEDS_ROOM, OWN_HOUSE_WISH,
   atHome,
-  ACTIVITY_NAMES, bar, benchOpen, betterRings, bondHearts, bondOf, castOrder, choresTonight, closestFriend, dateOf, dishName, favouriteOf, farmPlace, GIFT_POINTS_V4, goodName, hasPerk, homeOrHoused,
-  invitedNow, isGoodId, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, keepsakeQuality, LADDER_COLOURS, ladderOf, levelWords, linePlaces, morningRule, morningsToItem, nextBondHeart,
-  pairLevels, pairName, pairOf, PERK_PLACE, perkLineOf, perksFor, readiness, readLevels, ringGrade, ringName, ringPercent, romanceTerms, ROUTE_RUNGS, routeIndex, rungName, SEASON_NAMES, SIDE_BY_SIDE_HEARTS,
-  tasteKnown, tieKind, tiesOf, tieStrength, unreadLevels, WAITING_RUNGS,
+  ACTIVITY_NAMES, bar, beatOf, benchOpen, betterRings, bondHearts, bondOf, castOrder, choresTonight, closestFriend, dateOf, dishName, engravingOf, favouriteOf, farmPlace, giftsOf,
+  GIFT_POINTS_V4, goodName, hasPerk, homeOrHoused, invitedNow, isGoodId, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, keepsakeOf, keepsakeQuality, LADDER_COLOURS, ladderOf, levelWords,
+  linePlaces, morningRule, morningsToItem, nextBondHeart, pairLevels, pairName, pairOf, PERK_PLACE, perkLineOf, perksFor, petNameOf, readiness, readLevels, ringGrade, ringName,
+  ringPercent, romanceTerms, ROUTE_RUNGS, routeIndex, rungName, SEASON_NAMES, SIDE_BY_SIDE_HEARTS, tasteKnown, tieKind, tieLineOf, tiesOf, tieStrength, unreadLevels, WAITING_RUNGS,
+  withFarmer,
   type Bar, type Birthdays, type LadderName, type Love, type LoveStage, type Perk, type PerkId, type Readiness, type SaveV4, type StoryPack, type TieKind, type Wait,
 } from '@farm/domain'
 import { nextWords, readyWords } from './love-words'
@@ -49,7 +50,7 @@ export function placeWords(place: string): string {
 /** Where her next event plays: her bible's beat for the rung, in words; null without one, and for the wedding, whose place
  * you choose. */
 export function beatPlace(pack: Pick<StoryPack, 'bibles'>, id: string, rung: string | null): string | null {
-  const beat = rung && rung !== 'wedding' ? pack.bibles.get(id)?.route?.find((b) => b.id === rung) : undefined
+  const beat = rung && rung !== 'wedding' ? beatOf(pack, id, rung) : undefined
   return beat?.place ? placeWords(beat.place) : null
 }
 
@@ -130,7 +131,7 @@ export interface HeartRow {
   chatted: boolean
   gifted: boolean
   /** The most useful line under the bar: her Ready rung and its place, what her setup needs, "Swap her home to play her
-   * events", "Her story is still being written"; null when her bar says it all. */
+   * events"; null when her bar says it all. */
   note: string | null
   filters: readonly HeartFilter[]
   /** Her next rung's place on the route (28 once complete): the sort's least progress. */
@@ -262,7 +263,7 @@ export function nextCard(save: SaveV4, pack: HeartsPack, id: string, nameOf: Nam
   const now = bar(love)
   const line = perkLineOf(pack, id)
   const perk = now.rung && line ? perksFor(line, save.farm.chapter).find((p) => p.rung === now.rung) ?? null : null
-  const hint = now.rung && state.waits?.kind !== 'unwritten' ? pack.bibles.get(id)?.route?.find((b) => b.id === now.rung)?.hint ?? null : null
+  const hint = now.rung ? beatOf(pack, id, now.rung)?.hint ?? null : null
   return {
     rung: now.rung, title: now.rung ? `Next: ${rungName(now.rung)}` : 'Her route is complete', perk, hint, bar: now, words: nextWords(state, now, nameOf),
     ready: state.ready, waits: state.waits?.kind ?? null,
@@ -320,36 +321,28 @@ export function perkNow(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' | 
       return partners.length > 0 ? `Beside ${partners.slice(0, 2).join(' or ')}` : 'No 3-heart friend yet'
     }
     case 'keepsake': {
-      const name = pack.bibles.get(id)?.keepsake?.name ?? 'Her keepsake'
+      const name = keepsakeOf(pack, id).name
       const quality = place ? keepsakeQuality(save, pack, id, place) : 0
       return quality > 0 ? `${name} · +${quality} quality at ${PERK_PLACE[line]}` : name
     }
-    case 'dates': {
-      const pet = pack.bibles.get(id)?.petName
-      return pet ? `She calls you “${pet}”` : null
-    }
+    case 'dates': return `She calls you “${withFarmer(petNameOf(pack, id), save.farmer.name)}”`
     case 'closest-bond': {
       const friend = closestFriend(pack, save, id)
       return friend ? `With ${nameOf(friend)}` : null
     }
-    case 'engraving': {
-      const words = engravingOf(pack, id)
-      return words ? `“${words}”` : null
-    }
+    case 'engraving': return `“${engravingOf(pack, id)}”`
     default: return null
   }
 }
 
 // --- Her ring ---------------------------------------------------------------------------
 
-/** Her ring's engraving: her Romance 8 beat's line, her Memory's caption, so no new field. */
-export const engravingOf = (pack: Pick<StoryPack, 'bibles'>, id: string): string | null => pack.bibles.get(id)?.route?.find((b) => b.id === 'r8')?.beat ?? null
-
 /** Her profile's Ring: the engraving from Romance 8 ("Her ring will read", then "Her ring reads"), her
  * ring and its bonus at her line (once married, or "once you're married"), and the rings in the Warehouse she'd take
  * instead. Null before Romance 8. */
 export interface RingView {
-  engraving: string | null
+  /** Her Romance 8 beat's caption, else plain words (`engravingOf`). */
+  engraving: string
   /** "Her ring will read" before the proposal, "Her ring reads" after. */
   reads: string
   ring: { grade: number; name: string; bonus: string } | null
@@ -393,12 +386,12 @@ export function perkList(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' |
 export function friendLoved(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'ties'>, id: string): { friend: string; good: string } | null {
   if (!hasPerk(save.love[id], 'f7')) return null
   const friend = closestFriend(pack, save, id)
-  const good = friend ? pack.bibles.get(friend)?.gifts?.loved : undefined
+  const good = friend ? giftsOf(pack, friend).loved : undefined
   return friend && good && isGoodId(good) ? { friend, good } : null
 }
 
-/** What she's given you that stays on her profile: her pet name for you from Romance 1, her keepsake from
- * Friendship 10 (its name and her line about it, generic without a bible's), grown from Spouse 5. */
+/** What she's given you that stays on her profile: her pet name for you from Romance 1 (your name without her bible's),
+ * her keepsake from Friendship 10 (its name and her line about it, plain without her bible's), grown from Spouse 5. */
 export interface FromHer {
   petName: string | null
   keepsake: { name: string; line: string | null; quality: number; place: string } | null
@@ -406,11 +399,11 @@ export interface FromHer {
 export function fromHer(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string): FromHer {
   const love = save.love[id]
   const line = perkLineOf(pack, id)
-  const bible = pack.bibles.get(id)
+  const own = keepsakeOf(pack, id)
   const keepsake = hasPerk(love, 'f10') && line
-    ? { name: bible?.keepsake?.name ?? 'Her keepsake', line: bible?.keepsake?.line ?? null, quality: hasPerk(love, 's5') ? KEEPSAKE_GROWN : KEEPSAKE_QUALITY, place: PERK_PLACE[line] }
+    ? { name: own.name, line: own.line, quality: hasPerk(love, 's5') ? KEEPSAKE_GROWN : KEEPSAKE_QUALITY, place: PERK_PLACE[line] }
     : null
-  return { petName: hasPerk(love, 'r1') ? bible?.petName ?? null : null, keepsake }
+  return { petName: hasPerk(love, 'r1') ? withFarmer(petNameOf(pack, id), save.farmer.name) : null, keepsake }
 }
 
 /** A good in words, for the friend's loved gift. */
@@ -436,11 +429,10 @@ export interface GiftSlot {
   points: number
 }
 /** Her gifts: her loved good from Friendship 1, the others once given, all from Friendship 7, and "Others
- * +10". No bible: no slots, every gift +10. A slot whose good isn't in the game yet is left out. */
+ * +10". No tastes written: no slots, every gift +10. A slot whose good isn't in the game yet is left out. */
 export function giftSlots(pack: Pick<StoryPack, 'bibles'>, love: Pick<Love, 'stage' | 'level' | 'known'>, id: string): { slots: GiftSlot[]; others: number } {
-  const gifts = pack.bibles.get(id)?.gifts
+  const gifts = giftsOf(pack, id)
   const others = GIFT_POINTS_V4.neutral
-  if (!gifts) return { slots: [], others }
   const slot = (taste: GiftSlot['taste'], good: string): GiftSlot[] =>
     isGoodId(good) ? [{ taste, good: tasteKnown(pack, love, id, good) ? good : null, points: GIFT_POINTS_V4[taste] }] : []
   return { slots: [...(gifts.loved ? slot('loved', gifts.loved) : []), ...(gifts.liked ?? []).flatMap((g) => slot('liked', g)), ...(gifts.disliked ?? []).flatMap((g) => slot('disliked', g))], others }
@@ -503,16 +495,16 @@ export function parseReadParam(value: string | null): { a: string; b: string; le
 export interface PairWords {
   /** The authored levels opened and unread, up to `hearts`. */
   unread(a: string, b: string, hearts: number): number[]
-  /** Whether the pack holds any of the pair's conversations. */
-  authored(a: string, b: string): boolean
+  /** Whether the pair has conversations: a tie's (the pack's, or the game's card at each level). */
+  talks(a: string, b: string): boolean
   /** Their tie's line, or null for a pair the ties don't hold. */
   tieLine(a: string, b: string): string | null
 }
-export function pairWords(save: Pick<SaveV4, 'bonds' | 'diary'>, pack: Pick<StoryPack, 'ties' | 'pairs'>): PairWords {
+export function pairWords(save: Pick<SaveV4, 'bonds' | 'diary'>, pack: Pick<StoryPack, 'ties'>): PairWords {
   return {
     unread: (a, b, hearts) => unreadLevels(save, pack, a, b, hearts),
-    authored: (a, b) => pairLevels(pack, a, b).size > 0,
-    tieLine: (a, b) => pack.ties.ties.find((t) => (t.a === a && t.b === b) || (t.a === b && t.b === a))?.line ?? null,
+    talks: (a, b) => pairLevels(pack, a, b).size > 0,
+    tieLine: (a, b) => tieLineOf(pack, a, b),
   }
 }
 
@@ -538,7 +530,7 @@ export function conversationRows(save: Pick<SaveV4, 'bonds' | 'diary' | 'roster'
     const points = bondOf(save, a, b)
     const hearts = bondHearts(points)
     if (hearts === 0 || !save.roster[a] || !save.roster[b]) return []
-    return [{ a, b, hearts, points, read: readLevels(save, a, b), unread: unreadLevels(save, pack, a, b), line: words.authored(a, b) ? null : words.tieLine(a, b) }]
+    return [{ a, b, hearts, points, read: readLevels(save, a, b), unread: unreadLevels(save, pack, a, b), line: words.talks(a, b) ? null : words.tieLine(a, b) }]
   }).sort((x, y) => y.hearts - x.hearts || y.points - x.points || Math.min(rank(x.a), rank(x.b)) - Math.min(rank(y.a), rank(y.b))
     || Math.max(rank(x.a), rank(x.b)) - Math.max(rank(y.a), rank(y.b)))
 }

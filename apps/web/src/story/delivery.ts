@@ -44,16 +44,18 @@ const statusOf = (error: unknown): number | null => {
   return typeof status === 'number' ? status : null
 }
 
-export interface LoadOptions {
-  /** What to play when the server holds no pack at all (a 404 for `story.json`): the stand-in. */
-  missing?: () => Promise<StoryPack>
+export interface LoadOptions<M> {
+  /** What to play when the server holds no pack at all (a 404 for `story.json`): the game's, no pack (null), so the
+   * placeholders play. Without it, a 404 falls back on the last index, as any failure does. */
+  missing?: () => Promise<M>
 }
 
 /**
  * The released pack: the index fresh from the server, else (offline, or the server failing) the last good one kept on
- * the device; then its files, verified and read. The index is kept once the pack it names has loaded.
+ * the device; then its files, verified and read. The index is kept once the pack it names has loaded. With `missing`,
+ * a server that holds no pack plays what it gives.
  */
-export async function loadReleasedPack(client: Pick<ContentClient, 'pack'>, store: IndexStore, { missing }: LoadOptions = {}): Promise<StoryPack> {
+export async function loadReleasedPack<M = never>(client: Pick<ContentClient, 'pack'>, store: IndexStore, { missing }: LoadOptions<M> = {}): Promise<StoryPack | M> {
   let index: StoryIndex
   let fresh = true
   try {

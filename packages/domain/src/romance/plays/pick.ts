@@ -3,7 +3,8 @@
 // share of 100, a tap on one that isn't costs 10, never below 0, and the rounds score their mean. An event plays one
 // round (about 15 s); an evening three (45 s). An Uma without a bible stars her line's first goods. Pure.
 import { goodOf, GOODS, isGoodId } from '../../goods/ids'
-import { favouriteOf, type StoryPack } from '../../story/pack'
+import { type StoryPack } from '../../story/pack'
+import { favouriteOf, giftsOf } from '../../story/placeholders'
 import { clampScore, meanScore, pickIndex, shuffled, type PlayLength, type Seed } from './grade'
 
 export const PICK_ROUNDS: Readonly<Record<PlayLength, number>> = { event: 1, evening: 3 }
@@ -35,10 +36,10 @@ const LINE_GOODS: Readonly<Record<string, readonly string[]>> = {
 /** Her favourites and the rest: her loved and liked goods, else her line's first goods; the rest are the
  * other raw goods of the same families, grades 1–5. */
 export function pickGoods(pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string): { favourites: string[]; others: string[] } {
-  const gifts = pack.bibles.get(id)?.gifts
-  const own = gifts ? [gifts.loved, ...(gifts.liked ?? [])].filter((g): g is string => g !== undefined && isGoodId(g)) : []
+  const gifts = giftsOf(pack, id)
+  const own = [gifts.loved, ...(gifts.liked ?? [])].filter((g): g is string => g !== undefined && isGoodId(g))
   const favourites = own.length > 0 ? own : [...(LINE_GOODS[favouriteOf(pack, id) ?? 'farming'] ?? LINE_GOODS.farming!)].filter(isGoodId)
-  const avoid = new Set([...favourites, ...(gifts?.disliked ?? [])])
+  const avoid = new Set([...favourites, ...(gifts.disliked ?? [])])
   const families = new Set(favourites.map((g) => goodOf(g)?.family))
   const others = GOODS.filter((g) => families.has(g.family) && !g.refined && g.grade <= 5 && !avoid.has(g.id)).map((g) => g.id)
   return { favourites, others: others.length > 0 ? others : GOODS.filter((g) => !g.refined && g.grade <= 3 && !avoid.has(g.id)).map((g) => g.id).slice(0, 12) }

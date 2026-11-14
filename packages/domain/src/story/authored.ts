@@ -43,7 +43,7 @@ export const DATE_GAMES = ['fishing', 'cooking', 'stargazing', 'footrace', 'danc
 
 /** The rungs the game plays an event at: her arrival scene ("event zero"), ten friendship events, the confession, ten
  * romance events, the proposal, the wedding, and three on the spouse ladder after it (S1, S3, S5). The story writes any of
- * them, in any order; the rest wait ("Her story is still being written"). */
+ * them, in any order; the rest play the game's own short card (`placeholders.ts`). */
 export const ARRIVAL = 'arrival'
 export const RUNGS: readonly string[] = [
   ARRIVAL, ...Array.from({ length: 10 }, (_, i) => `f${i + 1}`), 'confession', ...Array.from({ length: 10 }, (_, i) => `r${i + 1}`), 'proposal', 'wedding', 's1', 's3', 's5',
@@ -91,23 +91,12 @@ export type StoryTrigger =
   /** After another character's event plays: `<characterId>:<eventId>`, or an event id (anyone's). */
   | { kind: 'event'; after: string }
 export const TRIGGER_KINDS = ['talks', 'gift', 'spot', 'season', 'festival', 'farm-rank', 'built', 'shipped', 'event'] as const
-/** Her trigger to meet when the pack gives none: talk with her on three different days. */
-export const DEFAULT_MEET: StoryTrigger = { kind: 'talks', days: 3 }
 /** The Farm Rank's top. */
 const TOP_FARM_RANK = 10
 
 /** One of her chapters: its title, the rungs of hers it holds (in order), and optionally a gate from the trigger menu
  * that the farm meets before its events can play. */
 export interface HerChapter { title?: string; events?: string[]; gate?: StoryTrigger }
-/** Her chapters when the pack gives none: four, along the route's backbone. */
-export const DEFAULT_CHAPTERS: readonly Required<Pick<HerChapter, 'title' | 'events'>>[] = [
-  { title: 'Getting to know her', events: RUNGS.slice(0, RUNGS.indexOf('confession') + 1) },
-  { title: 'Together', events: RUNGS.slice(RUNGS.indexOf('r1'), RUNGS.indexOf('proposal') + 1) },
-  { title: 'The wedding', events: ['wedding'] },
-  { title: 'Married life', events: ['s1', 's3', 's5'] },
-]
-/** The welcome list when the pack names none: the first five of the cast, in its order. */
-export const DEFAULT_WELCOME = 5
 
 /** A birthday as a date: month 1–12 and a real day of it. */
 export interface CastBirthday { month: number; day: number }
@@ -145,13 +134,9 @@ export interface Cast {
  * with `from` the id uma-quest's relationships give it (filled once they exist); or `story`, born on the farm. */
 export const TIE_SOURCES = ['real', 'story'] as const
 export type TieSource = typeof TIE_SOURCES[number]
-/** A tie between two characters. Only `a` and `b` are needed: a tie's kind reads "Close" without one, its strength 1. */
+/** A tie between two characters. Only `a` and `b` are needed: the rest has its placeholder (`placeholders.ts`). */
 export interface Tie { a: string; b: string; kind?: TieKind; strength?: 1 | 2 | 3; line?: string; history?: string; source?: TieSource; from?: string }
 export interface Ties { version?: 1; ties: Tie[] }
-/** A tie's strength, 1 without one. */
-export const tieStrength = (tie: Pick<Tie, 'strength'>): 1 | 2 | 3 => tie.strength ?? 1
-/** A tie's kind, `other` ("Close") without one. */
-export const tieKind = (tie: Pick<Tie, 'kind'>): TieKind => tie.kind ?? 'other'
 
 // --- Her bible ----------------------------------------------------------------------------------------------------------
 
@@ -716,7 +701,7 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
       meet: u.meet === undefined ? undefined : readTrigger(u.meet, `${it} meet`, f, sub),
       chapters: u.chapters === undefined ? undefined : readChapters(u.chapters, it, f, sub),
     })
-    if (u.outfitId == null) f.notes.push(`${it}: no outfit, so she shows as a lettered disc`)
+    if (u.outfitId == null) f.notes.push(`${it}: no outfit, so she plays her default outfit from master data`)
     if (entry.arrives?.kind === 'chapter' && entry.arrives.chapter > 8) f.notes.push(`${it}: chapter ${entry.arrives.chapter} isn’t one the farm reaches`)
     if (entry.arrives?.kind === 'beds' && entry.arrives.dormLevel > 8) f.notes.push(`${it}: the Dorm has 8 levels, so level ${entry.arrives.dormLevel} never comes`)
     if (u.paragraph !== undefined && typeof u.paragraph === 'string') f.notes.push(...lineNotes(u.paragraph, it, false))

@@ -120,16 +120,19 @@ export * from './romance/homestead'
 export * from './romance/household'
 export * from './story/bench'
 export * from './story/pack'
+// The placeholders: what plays wherever the pack is silent, and the one lookup that reads "the pack's, or the
+// placeholder" (her outfit, line, tastes, chats, events, chapters, keepsake, pairs, household and the rest).
+export * from './story/placeholders'
 // The story pack's release: `story.json` and its hash-named files, and the pack a release holds, its routes
 // and pairs read on demand.
 export * from './story/release'
 export * from './story/stand-in'
 // The story's one reader: errors only for what the game can't read, each skipping its part; notes for the rest. The
-// menu's defaults (the welcome list, her trigger to meet, her chapters) are read by `pack.ts`.
+// menu's defaults (the welcome list, her trigger to meet, her chapters) are `placeholders.ts`'s.
 export {
-  ANSWERS, answerAt, ARRIVAL, BIG_EVENTS, bibleTagNotes, CALLINGS, CHARACTER_ID, CHAT_SETS, DATE_GAMES, DEFAULT_CHAPTERS, DEFAULT_MEET, DEFAULT_WELCOME, EMOTES, EVENT_LIMITS,
+  ANSWERS, answerAt, ARRIVAL, BIG_EVENTS, bibleTagNotes, CALLINGS, CHARACTER_ID, CHAT_SETS, DATE_GAMES, EMOTES, EVENT_LIMITS,
   eventNotes, FARMING_PLAYS, gendersFarmer, HOUSE_LINE_MAX, HOUSEHOLD_SCENES, LADDERS, LINE_LIMITS, checkBible, checkCast, checkHousehold, checkPair, checkRoute, checkTies, RUNGS,
-  stepFindings, STORY_PLACES, tagNotes, tieKind, tieStrength, TONES, TRIGGER_KINDS, unscriptedBeats, WISHES,
+  stepFindings, STORY_PLACES, tagNotes, TONES, TRIGGER_KINDS, unscriptedBeats, WISHES,
 } from './story/authored'
 export type {
   Answer, Arrival, Beat as RouteBeat, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, DateGame, Emote, Finale, Findings, Gifts, HerChapter, Household, HouseholdAt,

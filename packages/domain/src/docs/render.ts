@@ -33,7 +33,7 @@ import { CAST, CAST_IDS } from '../story/cast'
 import { CHAPTER_1_GOALS, CHAPTERS } from '../story/chapters'
 import { CLOSING_SCENE, OPENING_SCENE, type Beat } from '../story/chapter-1'
 import { ARRIVAL_KINDS } from '../romance/arrivals'
-import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER, costOf, LADDER_COLOURS, ROUTE_POINTS, SPOUSE_COST } from '../romance/love'
+import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER, costOf, LADDER_COLOURS, ROUTE_POINTS, rungName, SPOUSE_COST } from '../romance/love'
 import { DISLIKED_LINE, GIFT_POINTS_V4, giftStars, LOVE_POINTS } from '../romance/acts'
 import { farmBirthday } from '../romance/days'
 import { READY_CONDITIONS, WAIT_ORDER } from '../romance/ready'
@@ -45,7 +45,8 @@ import { BREAKFAST_DAYS, CHORE_GROWTH, CHORE_LINES, dishId, LINE_DISH, MENTOR_PO
 import { loveRankFactor } from '../farm/rank-rules'
 import { dateOf } from '../farm/calendar'
 import { FARMER_NAME_MAX } from '../romance/farmer'
-import { favouriteOf, storyPackFrom } from '../story/pack'
+import { storyPackFrom } from '../story/pack'
+import { favouriteOf } from '../story/placeholders'
 import { BOND_HEARTS, BOND_POINTS, bondHearts, CLOSEST_BOND, SHARED_LINE, SIDE_BY_SIDE, SIDE_BY_SIDE_HEARTS, TIE_SEEDS } from '../farm/bonds'
 import { STAND_IN_FILES } from '../story/stand-in'
 import { CAST_COUNT, CAST_MEET } from '../romance/plays/cast'
@@ -59,13 +60,14 @@ import { EVENT_POINTS } from '../romance/events'
 import { DATE_FROM, EVENING_FACTOR, eveningPoints, EVENINGS, favouriteKind, HANGOUT_FROM, INVITE_POINTS, INVITE_WEIGHT_DAYS, ROLE_WORDS, type EveningWait } from '../romance/evening'
 import { invitesFor, SECOND_EVENING_EVERY, TWO_EVENINGS_MARRIED } from '../save/v4'
 import { BENCH_WORDS, benchTakes, forgeRecipe, MAKE_BONUS, MINING_CHAPTER, RING_INPUTS, ringPercent } from '../romance/bench'
-import { CAKE_DAYS, HOUSEHOLD_AT, receptionDays, WEDDING_DEFAULTS, WEDDING_FRIENDS } from '../romance/wedding'
+import { CAKE_DAYS, HOUSEHOLD_AT, receptionDays, WEDDING_FRIENDS } from '../romance/wedding'
 import { EXTENSION_COSTS, FURNITURE, HOMESTEAD_PLACES, HOUSE_COSTS, MISSES_NIGHTS } from '../romance/homestead'
 import { HOUSE_ITEM_N, HOUSE_POINTS, HOUSE_TEMPLATES, VOWS_POINTS } from '../romance/household'
 import { EXTENDED_ROOMS, FINALE_MARRIED, HOUSE_ROOMS } from '../save/v4'
 import { BENCH_SCENE_LINES } from '../story/bench'
 import { DISH_WORDS, dishName, goodName, RING_GOODS } from '../goods/ids'
-import { BIG_EVENTS, EVENT_LIMITS, tieKind, tieStrength, type Route, type Together, type UmaBible } from '../story/authored'
+import { BIG_EVENTS, EVENT_LIMITS, RUNGS, type Route, type Together, type UmaBible } from '../story/authored'
+import { PLACEHOLDER_MOMENTS, PLACEHOLDER_TABLE, tieKind, tieStrength, WEDDING_DEFAULTS } from '../story/placeholders'
 
 type Cell = string | number
 /** A Markdown table; pipes in cells are escaped. */
@@ -480,8 +482,18 @@ function arrivals(): string {
 function arrivalPay(): string {
   return table(['Her arrival scene', 'Points into her bar'], [
     ['Played or skipped to its end', `+${ARRIVAL_POINTS}`], ['Its choice: the option with the highest authored gain (each one tied at the top)', `+${CHOICE_BEST}`],
-    ['Its choice: any other option', `+${CHOICE_OTHER}`], ['Written with no choice', 'Nothing more'], ['Written with more than one choice', 'The first pays; the rest are words only'],
+    ['Its choice: any other option', `+${CHOICE_OTHER}`], ['Written with no choice', 'The game’s hello is added, so its choice pays as above'],
+    ['Written with more than one choice', 'The first pays; the rest are words only'],
   ])
+}
+
+// --- The placeholders --------------------------------------------------------------------------------------
+
+function placeholdersBlock(): string {
+  return table(['What the story can give', 'What plays without it'], PLACEHOLDER_TABLE.map((p) => [p.gives, p.without]))
+}
+function placeholderMoments(): string {
+  return table(['Rung', 'The card’s first line (and its Memory’s caption)'], RUNGS.map((r) => [r === 'arrival' ? 'Her meeting scene' : rungName(r), PLACEHOLDER_MOMENTS[r] ?? '—']))
 }
 // --- The ladders and points ----------------------------------------------------------------------------------
 const whole = (n: number) => n.toLocaleString('en-US')
@@ -915,7 +927,7 @@ function furnitureBlock(): string {
 
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'farm-ranks': farmRanks,
-    arrivals, 'arrival-pay': arrivalPay, 'stand-in': standIn, 'farmer-name': farmerName,
+    arrivals, 'arrival-pay': arrivalPay, placeholders: placeholdersBlock, 'placeholder-moments': placeholderMoments, 'stand-in': standIn, 'farmer-name': farmerName,
     'route-costs': routeCosts, 'love-points': lovePoints, 'gift-stars': giftStarsBlock, 'birthday-map': birthdayMap, 'ready-rules': readyRules,
     'ready-waits': readyWaits, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor, 'perk-words': perkWordsBlock,
     'perk-effects': perkEffects, 'perk-lines': perkLines, 'perk-caps': perkCaps, 'signature-dish': signatureDishes,

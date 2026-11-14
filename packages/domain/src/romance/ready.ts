@@ -7,10 +7,11 @@
 //   4 its one setup is met, if it has one: she works a named place today, a named good is in the Warehouse, her bond with
 //     a named Uma has reached a level, a chapter has been reached
 //
-// Never an hour, the weather, a season or a festival. What isn't met is said: `waits` names the first thing in the way, in
-// this order: the route done; S2 and S4, which come at night; an event the pack doesn't script yet; a "Not yet" at her
-// confession; a setup that opens with a chapter (a chapter setup, or a place before its chapter); the bar or the day; the
-// ring; away; today; the setup. Read live: Ready changes by day, so the morning never stores it.
+// Never an hour, the weather, a season or a festival, and never the story: an event the pack doesn't script plays the
+// game's own short card (`placeholders.ts`). What isn't met is said: `waits` names the first thing in the way, in this
+// order: the route done; S2 and S4, which come at night; a "Not yet" at her confession; a setup that opens with a chapter
+// (a chapter setup, or a place before its chapter); the bar or the day; the ring; away; today; the setup. Read live: Ready
+// changes by day, so the morning never stores it.
 import { statusOf } from '@luismlorenzana/uma-work'
 import { workNow } from '../farm/calendar'
 import { bondHearts } from '../farm/bonds'
@@ -24,6 +25,7 @@ import type { SaveV4 } from '../save/v4'
 import { goodCount } from '../save/warehouse'
 import type { Trigger } from '../story/authored'
 import type { StoryPack } from '../story/pack'
+import { beatOf } from '../story/placeholders'
 import { bar, NIGHT_RUNGS, WAITING_RUNGS } from './love'
 import { ACTIVITY_CHAPTER } from './perks'
 
@@ -47,8 +49,6 @@ export type Wait =
   | { kind: 'setup'; setup: Setup }
   /** A chapter not reached, or a place not open before its chapter. */
   | { kind: 'opens'; chapter: number }
-  /** The pack doesn't script her event yet: "Her story is still being written". */
-  | { kind: 'unwritten' }
   /** S2 and S4 have no event: they come at night once their bar fills. */
   | { kind: 'night' }
   /** She said "Not yet" at her confession: you ask her again from her profile. */
@@ -67,7 +67,6 @@ export const READY_CONDITIONS: readonly { condition: string; unmet: string }[] =
 export const WAIT_ORDER: readonly { kind: Wait['kind']; when: string }[] = [
   { kind: 'done', when: 'Her route is complete (S5 has played)' },
   { kind: 'night', when: 'S2 or S4, bar full: no event, the level comes at night; short of it, `bar`' },
-  { kind: 'unwritten', when: 'The pack doesn’t script the event yet: “Her story is still being written”' },
   { kind: 'friend', when: 'She said “Not yet” at her confession: you ask her again from her profile' },
   { kind: 'opens', when: 'A chapter setup not reached, or a working setup at a place before its chapter' },
   { kind: 'bar', when: 'Her bar isn’t full for the rung' },
@@ -112,7 +111,7 @@ function opensWith(save: SaveV4, trigger: Trigger): number | null {
 
 /** Her next event's state. Home is `dorm.home`, or a spouse in her house (`atHome`). Refused for
  * someone not on the farm. */
-export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'scripted'>, id: string): Readiness {
+export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string): Readiness {
   const love = save.love[id]
   if (!love || !save.roster[id]) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
   const now = bar(love)
@@ -120,9 +119,8 @@ export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'script
   const wait = (w: Wait): Readiness => ({ rung, ready: false, waits: w })
   if (rung === null) return wait({ kind: 'done' })
   if (NIGHT_RUNGS.includes(rung)) return wait({ kind: now.full ? 'night' : 'bar' })
-  if (!pack.scripted.get(id)?.has(rung)) return wait({ kind: 'unwritten' })
   if (love.stage === 'confession' && love.friend) return wait({ kind: 'friend' })
-  const trigger: Trigger = pack.bibles.get(id)?.route?.find((b) => b.id === rung)?.trigger ?? { kind: 'hearts' }
+  const trigger: Trigger = beatOf(pack, id, rung)?.trigger ?? { kind: 'hearts' }
   const chapter = opensWith(save, trigger)
   if (chapter !== null) return wait({ kind: 'opens', chapter })
   const day = save.calendar.day
