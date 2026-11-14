@@ -115,7 +115,7 @@ dinner dress, a wedding dress, pajamas), and busts composed in layers so any exp
 
 | Step | What | Who |
 |---|---|---|
-| 1.14 **The bust art** | Layers, 18 expressions, 9 outfits; the pilot first: the two Umas with the new full art | ChatGPT ([F69](handoff/tasks/F69-bust-art-spec.md)); the delivery is a uma-platform request |
+| 1.14 **The bust art** | Layers, 18 expressions, 9 outfits; the pilot first: the two Umas with the new full art | ChatGPT ([F69](handoff/tasks/F69-bust-art-spec.md)); the delivery's private art family is requested of uma-platform |
 | 1.15 **Busts that change expression** | The game composes the layers; the story's `emote` picks the face | Claude ([F70](handoff/tasks/F70-expressive-busts.md)) |
 | 1.16 **Her wardrobe** | The occasion picks the outfit; Dinner in town and A night in join the evenings | Claude ([F71](handoff/tasks/F71-her-wardrobe.md)) |
 

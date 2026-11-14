@@ -1,6 +1,6 @@
 # F69 — The bust art: layers, expressions and outfits
 
-**ChatGPT (character art) · L, in batches · Needs: the owner's go, and uma-platform's bust family for delivery ·
+**ChatGPT (character art) · L, in batches · Needs: uma-platform's private bust family for delivery (requested 2026-11-13) ·
 Unblocks: F70, F71 · Design: [her-look.md](../../design/her-look.md)**
 
 > Busts for dialogue, drawn in layers so the game can put any expression on any outfit. One head pose per Uma, a face

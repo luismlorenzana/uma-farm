@@ -41,7 +41,7 @@ A packet is written when a piece is next and deleted when it ships. Git keeps th
 
 | What | Where |
 |---|---|
-| **Her look:** read [her-look.md](../design/her-look.md), hand [F69](tasks/F69-bust-art-spec.md) to the character art session, and say go on uma-platform's bust family | [her-look.md](../design/her-look.md) |
+| **Her look:** read [her-look.md](../design/her-look.md), and hand [F69](tasks/F69-bust-art-spec.md) to the character art session. The bust family's request is sent to uma-platform (2026-11-13) | [her-look.md](../design/her-look.md) |
 | **The farm starts over on your phone:** open the site, see the start-over card, start the new farm, and play a day | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Say go on the rest of Phase 1,** from F63 | [roadmap.md](../roadmap.md#phase-1-one-game-built-around-the-umas) |
 | **The HD-2D farm on your phone:** turn on Account → HD-2D farm, put an Uma to work and watch her walk, end the day, tap her bubble in the morning. Then say how the walk and the bubble feel, and whether the pips can go | [uma-farm.web.app](https://uma-farm.web.app) |
