@@ -94,8 +94,8 @@ function EveningRow({ row }: { row: TonightRow }) {
   }
 }
 
-/** Tonight with: the night's companion, one spouse with a room a row, the pick marked; a tap picks her at once. Two to
- * a row where they fit. */
+/** Tonight with: the night's companion, one spouse with a room a row, the pick marked; a tap picks her at once.
+ * Her house shows in full under her name. */
 function TonightWith({ rows }: { rows: readonly CompanionView[] }) {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -109,7 +109,7 @@ function TonightWith({ rows }: { rows: readonly CompanionView[] }) {
     <section aria-label="Tonight with" data-tonight-with>
       <h3 className="text-micro pb-1">Tonight with</h3>
       {rows.length === 0 && <p className="text-[13px] text-ink-soft" data-no-companion>No one has a room yet: build a house.</p>}
-      <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2" role="radiogroup" aria-label="Tonight with">
+      <ul className="grid grid-cols-1 gap-1.5" role="radiogroup" aria-label="Tonight with">
         {rows.map((row) => (
           <li key={row.id}>
             <button type="button" role="radio" aria-checked={row.picked} disabled={busy} onClick={() => pick(row)}
