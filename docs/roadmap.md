@@ -124,7 +124,9 @@ fleeces collected by the building and starred by their hearts; the Mine and the 
 floors each, their stairs found by the faces and taken free; the Smelter and the Cutter; and the Coop's care and a
 dig's face on the work board. A simulated two years with the Coop and the Mine pays their way
 ([the ranch](game-mechanics.md#the-ranch), [the Mine and the Quarry](game-mechanics.md#the-mine-and-the-quarry)).
-Phone checks follow steps 1, 2, 4, 5, 7 and 10.
+Phone checks follow steps 1, 2, 4, 5, 7 and 10. What the pieces left half done is
+[F85, the rework's loose ends](handoff/tasks/F85-rework-loose-ends.md): the ranch's and mining's perks, the invitation's
+scene, married life's second and fourth levels, and the eggs' and milk's icons.
 
 **What it changes below:**
 - Phase 1's HD-2D track pauses: the portrait preview is retired, and the farm map becomes a landscape tile map until
@@ -181,7 +183,7 @@ How each workshop is built:
 - **Planned fresh, one at a time,** live from its first day, opened by Farm Rank and its build, with placeholders where
   the story hasn't reached.
 - **Its art:** the kit's frames and icons drawn in code by Claude; its people drawn by ChatGPT.
-- **The save:** v4 grows in place while the game is being built; a new version comes only when a save shape must change
+- **The save:** v5 grows in place while the game is being built; a new version comes only when a save shape must change
   in a way old fields can't carry, with a migration or a fresh start.
 
 ### Phase 3: Feel and polish
@@ -221,12 +223,7 @@ The farm sends items to uma-quest, uma-rpg and uma-racer, one way. It's parked u
 
 ## Your steps now
 
-- **The farm starts over on your phone:** open uma-farm.web.app, see the start-over card, start the new farm, and play a
-  day.
-- **Her chapters on your phone:** open an Uma's profile and see her four chapters, the one she's in, and what opens the
-  next; the morning after her confession says "A new chapter with ‹name›".
-- **Say go on the workshops** (Phase 2), which her chapters unblock.
-- **Meeting her on your phone:** say hello at the Gate each morning, and meet someone in town on her third day.
-- **The town on your phone:** open the Town at the foot of the farm map, talk to a few, find someone in People.
-- **Keep writing the story** however you like.
-- **Landscape on your phone:** open the app sideways and visit every screen; held upright it asks you to turn it.
+- **Play the rework on your phone:** the checks are listed one per piece in [the handoff's steps](handoff/README.md#your-steps),
+  from starting the new farm to a night's companion, the ranch and the mine.
+- **Keep writing the story** however you like, and ship it ([F40](handoff/tasks/F40-story-authoring.md)).
+- **Say go on Phase 2's workshops** (the Kitchen first) once the rework plays well.

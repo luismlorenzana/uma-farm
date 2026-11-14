@@ -75,6 +75,7 @@ Mine never runs short, and each pays more than its nights cost ([the ranch](../g
 
 | Piece | Who | State |
 |---|---|---|
+| [F85](tasks/F85-rework-loose-ends.md) **The rework's loose ends** | Claude | Next: the ranch's and mining's perks, the invitation's scene, Spouse 2 and 4's events, the eggs' icons |
 | [F69](tasks/F69-bust-art-spec.md) **The bust art**, the next Umas | ChatGPT | The pilot is done; the rest in the Ranker's order |
 | [F40](tasks/F40-story-authoring.md) **The story**, and its ship routine | The story session | Release 1 shipped; Release 2 brings `world.json` |
 
