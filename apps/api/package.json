@@ -6,7 +6,7 @@
   "scripts": {
     "build": "nest build",
     "start": "node dist/main.js",
-    "dev": "AUTH_MODE=disabled PORT=8101 nest start --watch",
+    "dev": "pnpm --filter @farm/domain build && AUTH_MODE=disabled PORT=8101 nest start --watch",
     "lint": "tsc --noEmit",
     "test": "vitest run"
   },
