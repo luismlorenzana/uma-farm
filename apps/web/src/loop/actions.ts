@@ -1,8 +1,9 @@
 // The loop's actions on the day: End the day and dismiss the morning; the day's actions: a tile cleared, tilled,
 // planted, watered and harvested, a forage, a log chopped, a catch, a station's load, a crate shipped and going into
 // town; the goods: take back and buy; paying for a place to build, and the mayor's office's loans; the roster: the Dorm's levels and swaps; the scenes,
-// read once; the farmer's name, the opening, Invite to the farm, and meeting scenes; her illustrations seen; the chat and the gift (an action
-// each) and praise; and the pair conversations read. Each reads the save right before its rule runs (as
+// read once; the farmer's name, the opening, Invite to the farm, and meeting scenes; her illustrations seen; the chat and
+// the gift (an action each) and praise; the pair conversations read; and a farmhand's tasks on the work board (free).
+// Each reads the save right before its rule runs (as
 // `edit`), commits it to the store and the device, and syncs; a refused rule throws its words. The night reads the
 // talents from master data, so it waits for it. Loaded on demand with the loop's screens, so the night's code stays out
 // of the initial JS.
@@ -11,7 +12,7 @@ import {
   touched, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, inviteToFarm, nameFarmer,
   type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair,
   chop, clearTile, fish, forage, goToTown, harvestTile, plantTile, shipCrate, startLoad, tillTile, waterTile,
-  type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId, seeIllustration,
+  type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId, seeIllustration, setTasks, type FarmTask,
 } from '@farm/domain'
 import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'
@@ -145,6 +146,9 @@ export async function readSceneOnce(id: OpeningSceneId): Promise<void> {
 
 /** Invite to the farm: one you've met who lives in town moves into a free Dorm bed now. */
 export const inviteHer = (id: string) => change((s) => inviteToFarm(s, id))
+
+/** A farmhand's tasks on the work board, in your order: free. */
+export const setHandTasks = (id: string, tasks: readonly FarmTask[]) => change((s) => setTasks(s, id, tasks))
 
 // --- The start ------------------------------------------------------------------------------------------------
 

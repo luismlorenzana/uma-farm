@@ -37,10 +37,10 @@ afterEach(() => vi.useRealTimers())
 describe('the night', () => {
   it('runs nine steps in order, each a named function', () => {
     expect(NIGHT_STEPS.map((s) => `${s.step} ${s.name}`)).toEqual([
-      '1 noteTonight', '1 payTheBin', '1 settleTheAccounts', '2 growCrops', '3 tendAnimals', '4 finishTheLoads', '4 nightExtras', '4 nightChores', '5 resetWorkshops',
+      '1 noteTonight', '1 payTheBin', '1 settleTheAccounts', '2 farmhandsWork', '2 growCrops', '3 tendAnimals', '4 finishTheLoads', '4 nightExtras', '4 nightChores', '5 resetWorkshops',
       '6 tickRanks', '6 tickBonds', '6 payLine', '6 shareTheHouses', '6 levelAtNight', '6 countWellFed', '7 witherCrops', '7 turnCalendar',
       '8 raiseBuildings', '8 settleDorm', '8 checkGoals', '8 unlockTownNotes', '8 openRingBench', '8 householdMilestones',
-      '9 serveTheReception', '9 houseMorningStep', '9 moveInRooms', '9 vowsMorning', '9 heartsMorning', '9 morningItems', '9 drawInvitations', '9 buildSummary',
+      '9 serveTheReception', '9 houseMorningStep', '9 moveInRooms', '9 vowsMorning', '9 heartsMorning', '9 morningItems', '9 drawInvitations', '9 noteTheFed', '9 buildSummary',
     ])
   })
 

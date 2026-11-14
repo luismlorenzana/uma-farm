@@ -59,8 +59,15 @@ export function startLoad<S extends FarmSave>(save: S, station: StationId, item:
   if (!at || !input || !job || STATION_JOBS[job].station !== station) throw new SaveRuleError('bad-job', 'It doesn’t make that.')
   if (!Number.isInteger(count) || count < 1 || count > LOAD_SIZE) throw new SaveRuleError('bad-count', `A load is 1 to ${LOAD_SIZE}.`)
   if ((save.items[input]?.[at.stars - 1] ?? 0) < count) throw new SaveRuleError('no-items', 'Not enough in the Warehouse.')
-  const spent = spend(save, 'load')
-  return { ...spent, items: takeGoods(spent.items, input, at.stars, count), loads: { ...spent.loads, [station]: { item, count } } }
+  return loadAt(spend(save, 'load'), station, item, count, count)
+}
+
+/** A load itself, spending nothing, checked by its caller: `inputs` of the raw good leave the Warehouse now, and `out` of
+ * the output at its stars come in the next morning (a farmhand's yield can bring more out than goes in). */
+export function loadAt<S extends FarmSave>(save: S, station: StationId, item: string, inputs: number, out: number): S {
+  const at = parseStockKey(item)!
+  const input = goodOf(at.id)!.input!
+  return { ...save, items: takeGoods(save.items, input, at.stars, inputs), loads: { ...save.loads, [station]: { item, count: out } } }
 }
 
 /** A load done overnight: where, what and how many. */

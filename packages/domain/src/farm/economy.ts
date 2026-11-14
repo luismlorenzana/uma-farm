@@ -4,7 +4,8 @@
 //   the night, step 1   the bin pays ──► each loan takes its share of the night's income ──► the upkeep is charged
 //                                                                                              │
 //   upkeep a night      15g each place built and each house · 5g each Dorm bed past the first three · 10g each Uma
-//                       living on the farm (the Dorm's and the spouses in their houses). The start's own places are free.
+//                       living on the farm (the Dorm's and the spouses in their houses) or working it (the farmhands,
+//                       wherever they live), once each. The start's own places are free.
 //   short of upkeep     what gold there is pays, the rest is owed; the first short night warns in the morning, and from
 //                       the second the farmhands work at half pace (`halfPace`) until it's paid. Nobody leaves, and
 //                       nothing is lost: gold never goes below 0.
@@ -43,15 +44,17 @@ export interface Upkeep {
   houses: number
   /** The Dorm's beds past the first three, at the level in effect. */
   beds: number
-  /** The Umas living on the farm: the Dorm's, and the spouses in their houses. */
+  /** The Umas living on the farm (the Dorm's, and the spouses in their houses) or working it (the farmhands, wherever
+   * they live), each once. */
   residents: number
   gold: number
 }
-export function upkeepOf(save: Pick<FarmSave, 'buildings' | 'homestead' | 'dorm' | 'love'>): Upkeep {
+export function upkeepOf(save: Pick<FarmSave, 'buildings' | 'homestead' | 'dorm' | 'love' | 'roster'>): Upkeep {
   const places = BUILD_PLACES.filter((p) => placeBuilt(save, p.id)).length
   const houses = Math.max(0, save.homestead.houses.length - 1)
   const beds = Math.max(0, bedsAt(save.dorm.level) - FREE_BEDS)
-  const residents = farmHome(save).length
+  const hands = Object.keys(save.roster).filter((id) => save.roster[id]!.farmhand !== undefined)
+  const residents = new Set([...farmHome(save), ...hands]).size
   return { places, houses, beds, residents, gold: (places + houses) * UPKEEP_BUILDING + beds * UPKEEP_BED + residents * UPKEEP_RESIDENT }
 }
 
@@ -65,7 +68,7 @@ export function averageIncome(save: Pick<FarmSave, 'farm'>): number {
 /** From this many short nights in a row, the farmhands work at half pace. The first warns. */
 export const HALF_PACE_FROM = 2
 /** Whether the farmhands work at half pace: upkeep owed since the second short night in a row, until it's paid. The
- * farmhands' day (with the farmhands) reads it through `atPace`; the farmer's own ten are never touched. */
+ * farmhands' day reads it through `atPace` (`farm/farmhands.ts`); the farmer's own ten are never touched. */
 export const halfPace = (save: Pick<FarmSave, 'farm'>): boolean => save.farm.short >= HALF_PACE_FROM
 /** A farmhand's actions at the farm's pace: half, rounded down, at half pace, never below one. */
 export const atPace = (actions: number, save: Pick<FarmSave, 'farm'>): number =>

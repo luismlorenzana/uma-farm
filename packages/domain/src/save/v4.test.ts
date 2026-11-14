@@ -106,7 +106,10 @@ describe('the v5 parse', () => {
     refuse((s) => { s.today.gathered = ['woods', 'woods'] }, 'save.today.gathered.1: repeated')
     refuse((s) => { s.today.gathered = ['moon'] }, /save.today.gathered.0: expected one of/)
     refuse((s) => { s.loads = { mill: { item: 'pine-plank@1', count: 2 } } }, 'save.loads.mill.item: expected a good this station makes, at its stars')
-    refuse((s) => { s.loads = { mill: { item: 'wheat-flour@1', count: 9 } } }, 'save.loads.mill.count: expected 1–8')
+    // A farmhand's load can be bigger: up to 12 in, more out at her yield.
+    save.loads = { mill: { item: 'wheat-flour@2', count: 14 } }
+    expect(parseSaveV5(json(save)).loads).toEqual(save.loads)
+    refuse((s) => { s.loads = { mill: { item: 'wheat-flour@1', count: 21 } } }, 'save.loads.mill.count: expected 1–20')
     refuse((s) => { s.loads = { forge: { item: 'wheat-flour@1', count: 1 } } }, /save.loads.forge: expected one of/)
   })
 

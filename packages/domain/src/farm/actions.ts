@@ -47,7 +47,7 @@ export const ACTIONS: readonly ActionRule[] = [
   rule('plant', 'The fields', 'Plant a tile', 1),
   rule('water', 'The fields', 'Water a tile', 1),
   rule('harvest', 'The fields', 'Harvest a tile', 1),
-  rule('water-row', 'The fields', 'Water a row, with the aptitude', 1, 'farmhands'),
+  rule('water-row', 'The fields', 'Water a row: a farmhand’s trick, from Watering 6', 1),
   rule('animal', 'Animals', 'Feed, brush or care for one; collect eggs, milk or wool; let them out or bring them in', 1, 'the ranch'),
   rule('buy-animal', 'Animals', 'Buy an animal, at the rancher’s in town', 0, 'the ranch'),
   rule('forage', 'The woods and the water', 'Forage once', 1),

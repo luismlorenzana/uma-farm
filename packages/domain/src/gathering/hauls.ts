@@ -67,24 +67,39 @@ export interface Haul {
   items: string[]
 }
 
+/** Who gathers: the farmer (his terms: a Novice, a D talent, the farm's Axe or Rod), or a farmhand: her quality
+ * points, how many a haul brings (a forage's finds, a chop's logs, a cast's fish), and her catch's lean. */
+export interface Gatherer {
+  q: number
+  count: number
+  skill: number
+}
+/** The farmer's at a place: ★1 with the Basic tools, a forage's two finds, a chop's two logs, one fish a cast. */
+export function farmerGatherer(save: Pick<FarmSave, 'tools'>, place: GatherPlace, count: number): Gatherer {
+  const terms = farmerTerms(save, place)
+  return { q: gatherQuality(terms, false), count, skill: sizeSkill(terms) }
+}
+
 /** Forages an area: one action, one haul of its season's finds (`draw(uid, day, 'forage:<area>', n)` for each good and
  * `'forage-stars:<area>'` for its stars, numbered from the farm's count home from the forest). Refused where his reach
  * doesn't go yet (`locked`). */
 export function forage<S extends FarmSave>(save: S, area: string): { save: S; haul: Haul } {
   open(save, 'forest', area)
-  const spent = spend(save, 'forage')
-  const before = spent.farm.counts[HOME_COUNT.forest] ?? 0
-  const q = gatherQuality(farmerTerms(spent, 'forest'), false)
-  let items = spent.items
+  return forageAt(spend(save, 'forage'), area, farmerGatherer(save, 'forest', FORAGE_HAUL))
+}
+/** A forage itself, spending nothing: the farmer's action and a farmhand's work share it. */
+export function forageAt<S extends FarmSave>(save: S, area: string, by: Gatherer): { save: S; haul: Haul } {
+  const before = save.farm.counts[HOME_COUNT.forest] ?? 0
+  let items = save.items
   const got: string[] = []
-  for (let k = 0; k < FORAGE_HAUL; k++) {
-    const good = pickOn(spent, 'forest', area, `forage:${area}`, before + k)
-    const stars = starsOn(spent, q, `forage-stars:${area}`, before + k)
+  for (let k = 0; k < by.count; k++) {
+    const good = pickOn(save, 'forest', area, `forage:${area}`, before + k)
+    const stars = starsOn(save, by.q, `forage-stars:${area}`, before + k)
     items = addGoods(items, good, stars, 1)
     got.push(stockKey(good, stars))
   }
   return {
-    save: { ...spent, items, today: { ...spent.today, gathered: gathered(spent, area) }, farm: { ...spent.farm, counts: bump(spent.farm.counts, HOME_COUNT.forest, got.length) } },
+    save: { ...save, items, today: { ...save.today, gathered: gathered(save, area) }, farm: { ...save.farm, counts: bump(save.farm.counts, HOME_COUNT.forest, got.length) } },
     haul: { where: area, items: got },
   }
 }
@@ -93,20 +108,22 @@ export function forage<S extends FarmSave>(save: S, area: string): { save: S; ha
  * so far). Refused where his reach doesn't go yet. */
 export function chop<S extends FarmSave>(save: S, area: string): { save: S; haul: Haul } {
   open(save, 'forest', area)
-  const spent = spend(save, 'chop')
-  const before = spent.farm.counts[LOGS_CHOPPED] ?? 0
-  const woods = sharesOn('forest', area, spent.calendar.day).filter(([id]) => goodOf(id)?.family === 'woods')
-  const q = gatherQuality(farmerTerms(spent, 'forest'), false)
-  let items = spent.items
+  return chopAt(spend(save, 'chop'), area, farmerGatherer(save, 'forest', CHOP_LOGS))
+}
+/** A chop itself, spending nothing. */
+export function chopAt<S extends FarmSave>(save: S, area: string, by: Gatherer): { save: S; haul: Haul } {
+  const before = save.farm.counts[LOGS_CHOPPED] ?? 0
+  const woods = sharesOn('forest', area, save.calendar.day).filter(([id]) => goodOf(id)?.family === 'woods')
+  let items = save.items
   const got: string[] = []
-  for (let k = 0; k < CHOP_LOGS; k++) {
-    const log = pickShare(woods, draw(spent.account.uid, spent.calendar.day, `chop:${area}`, before + k))
-    const stars = starsOn(spent, q, `chop-stars:${area}`, before + k)
+  for (let k = 0; k < by.count; k++) {
+    const log = pickShare(woods, draw(save.account.uid, save.calendar.day, `chop:${area}`, before + k))
+    const stars = starsOn(save, by.q, `chop-stars:${area}`, before + k)
     items = addGoods(items, log, stars, 1)
     got.push(stockKey(log, stars))
   }
-  const counts = bump(bump(spent.farm.counts, LOGS_CHOPPED, got.length), HOME_COUNT.forest, got.length)
-  return { save: { ...spent, items, today: { ...spent.today, gathered: gathered(spent, area) }, farm: { ...spent.farm, counts } }, haul: { where: area, items: got } }
+  const counts = bump(bump(save.farm.counts, LOGS_CHOPPED, got.length), HOME_COUNT.forest, got.length)
+  return { save: { ...save, items, today: { ...save.today, gathered: gathered(save, area) }, farm: { ...save.farm, counts } }, haul: { where: area, items: got } }
 }
 
 /** Fishes a spot: one action, one catch of its season's fish (`draw(uid, day, 'fish:<spot>', n)`, its stars
@@ -114,22 +131,27 @@ export function chop<S extends FarmSave>(save: S, area: string): { save: S; haul
  * the biggest of each kind is kept in `diary.records`. Refused where his reach doesn't go yet. */
 export function fish<S extends FarmSave>(save: S, spot: string): { save: S; haul: Haul; caught: Measured } {
   open(save, 'fishery', spot)
-  const spent = spend(save, 'fish')
-  const before = spent.farm.counts[HOME_COUNT.fishery] ?? 0
-  const terms = farmerTerms(spent, 'fishery')
-  const good = pickOn(spent, 'fishery', spot, `fish:${spot}`, before)
-  const stars = starsOn(spent, gatherQuality(terms, false), `fish-stars:${spot}`, before)
-  const cm = fishSize(good, sizeSkill(terms), draw(spent.account.uid, spent.calendar.day, 'size:farmer', before))
-  const best = spent.diary.records[sizeRecord(good)] ?? 0
-  const records = cm > best ? { ...spent.diary.records, [sizeRecord(good)]: cm } : spent.diary.records
-  return {
-    save: {
-      ...spent, items: addGoods(spent.items, good, stars, 1), today: { ...spent.today, gathered: gathered(spent, spot) },
-      farm: { ...spent.farm, counts: bump(spent.farm.counts, HOME_COUNT.fishery, 1) }, diary: { ...spent.diary, records },
-    },
-    haul: { where: spot, items: [stockKey(good, stars)] },
-    caught: { fish: good, stars, cm, record: cm > best },
+  const done = fishAt(spend(save, 'fish'), spot, farmerGatherer(save, 'fishery', 1))
+  return { save: done.save, haul: done.haul, caught: done.caught[0]! }
+}
+/** A cast itself, spending nothing: `by.count` fish, each measured as it lands. */
+export function fishAt<S extends FarmSave>(save: S, spot: string, by: Gatherer): { save: S; haul: Haul; caught: Measured[] } {
+  let next = save
+  const caught: Measured[] = []
+  for (let k = 0; k < by.count; k++) {
+    const before = next.farm.counts[HOME_COUNT.fishery] ?? 0
+    const good = pickOn(next, 'fishery', spot, `fish:${spot}`, before)
+    const stars = starsOn(next, by.q, `fish-stars:${spot}`, before)
+    const cm = fishSize(good, by.skill, draw(next.account.uid, next.calendar.day, 'size:farmer', before))
+    const best = next.diary.records[sizeRecord(good)] ?? 0
+    const records = cm > best ? { ...next.diary.records, [sizeRecord(good)]: cm } : next.diary.records
+    next = {
+      ...next, items: addGoods(next.items, good, stars, 1), today: { ...next.today, gathered: gathered(next, spot) },
+      farm: { ...next.farm, counts: bump(next.farm.counts, HOME_COUNT.fishery, 1) }, diary: { ...next.diary, records },
+    }
+    caught.push({ fish: good, stars, cm, record: cm > best })
   }
+  return { save: next, haul: { where: spot, items: caught.map((c) => stockKey(c.fish, c.stars)) }, caught }
 }
 
 /** The areas or spots in their order, each with its name, the Farm Rank it opens at and what holds it back now. */

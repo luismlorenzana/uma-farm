@@ -95,7 +95,6 @@ table. Its steps, in order:
 
 | Step | What | Packet |
 |---|---|---|
-| 7 | **Farmhands:** her part-time job, then her farm actions; the work board; aptitudes that grow with practice | [F80](handoff/tasks/F80-farmhands.md) |
 | 10 | **The ranch and the mine,** in the farm loop's style | [F83](handoff/tasks/F83-ranch-and-mine.md) |
 
 Step 1, landscape, is done: the app sideways, the bar and the rail, side panels, and the portrait HD-2D preview
@@ -119,6 +118,10 @@ life's meals and the night's companion, who greets you in the morning ([the Uma 
 Step 11, illustrations, is built: her big moments open onto her illustration full screen (meeting her, a summer date at
 the shore, the confession, the wedding, the wedding night, a night in and the morning after), the story can name one,
 and a gallery on her profile keeps each one seen ([her illustrations](game-mechanics.md#her-illustrations)).
+Step 7, farmhands, is built: a friend invited to work does her part-time job, then 3 actions a day (more settled in,
+married and well fed; half at half pace) on the tasks you set on the Book's work board, overnight before the crops grow;
+an aptitude for each task, from her talent and raised by practice, brings more goods, better stars and tricks; and a
+simulated year with two farmhands pays their 10g a night many times over ([farmhands](game-mechanics.md#farmhands)).
 Phone checks follow steps 1, 2, 4, 5 and 7.
 
 **What it changes below:**

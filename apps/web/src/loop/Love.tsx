@@ -86,6 +86,11 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
           Invite her to work · 1
         </Button>
       )}
+      {isFarmhand(save, id) && (
+        <Link to="/book" state={{ back: true }} className="flex min-h-11 items-center justify-center rounded-md border border-hairline text-[14px] font-semibold text-accent-strong" data-action="her-tasks">
+          Her tasks on the work board ›
+        </Link>
+      )}
       {praise && (
         <Button size="md" className="w-full" data-action="praise" onClick={() => void praiseHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥ Well done!`), fail)}>
           Praise +{LOVE_POINTS.praise}

@@ -6,7 +6,7 @@ import type { FarmPlaceId } from '../farm/places'
 import type { Activity, Rank } from '../farm/ranks'
 import type { StationId } from '../gathering/ids'
 import type { CropId } from '../goods/ids'
-import type { OutfitId } from '../save/v4'
+import type { AptitudeId, OutfitId, TaskKind } from '../save/v4'
 import type { InviteKind } from '../save/v4'
 
 /** §1 The bin: a good at one star that sold tonight, how many, the gold they made, and whether the
@@ -54,8 +54,24 @@ export interface LoadLine {
   count: number
 }
 
-/** §2's lines: the stations' loads, then the field's growth, then what withered (in section order). */
-export type WorkLine = LoadLine | FieldGrew | CropsWithered
+/** §2 Work done, first: a farmhand's day, after her part-time job (its words the pack's, read as the card shows): her
+ * actions today and how many she spent, whether at half pace and whether well fed (+1), what she did by task (tiles
+ * harvested, watered, planted, cleared or tilled; loads started; hauls, logs chopped and catches) and the goods it
+ * brought into the Warehouse. */
+export interface FarmhandLine {
+  kind: 'farmhand'
+  id: string
+  actions: number
+  spent: number
+  half: boolean
+  fed: boolean
+  done: Partial<Record<TaskKind, number>>
+  items: number
+}
+
+/** §2's lines: the farmhands' days, the stations' loads, then the field's growth, then what withered (in section
+ * order). */
+export type WorkLine = FarmhandLine | LoadLine | FieldGrew | CropsWithered
 
 /** §3 Ranks: she reached a rank in an activity tonight. */
 export interface RankUp {
@@ -77,8 +93,17 @@ export interface PointsFull {
   challenge: number
 }
 
-/** §3's lines: rank-ups, then points full. */
-export type RankLine = RankUp | PointsFull
+/** §3 Ranks: her aptitude in a task reached a level tonight, by her practice. */
+export interface AptitudeUp {
+  kind: 'aptitude'
+  outfitId: OutfitId
+  aptitude: AptitudeId
+  /** The level she reached, 2–10. */
+  level: number
+}
+
+/** §3's lines: rank-ups, then points full, then aptitudes up. */
+export type RankLine = RankUp | PointsFull | AptitudeUp
 
 /** §5 New today: a household milestone reached, as the married count passed 1, 5, 10, 15 or 20. */
 export interface HouseholdNews {

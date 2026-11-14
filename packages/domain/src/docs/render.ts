@@ -13,6 +13,11 @@ import { BUILD_PLACES, FARM_PLACES, MAP_PLACES, TOWN_FIRST_ROW, type FarmPlace, 
 import { BOARD_MET, buildCostWords, buildGoodsWords } from '../farm/builds'
 import { FREE_BEDS, HALF_PACE_FROM, LOAN_FEE, LOAN_LIMITS, LOAN_NIGHTS, LOAN_STEP, TWO_LOANS_FROM, UPKEEP_BED, UPKEEP_BUILDING, UPKEEP_RESIDENT } from '../farm/economy'
 import { NIGHT_STEPS } from '../night/end-day'
+import {
+  APTITUDE_ACTIVITY, APTITUDE_NAMES, APTITUDE_POINTS, aptitudeLevelOf, aptitudeQuality, aptitudeYield, BIG_LOAD, FED_ACTIONS, HAND_ACTIONS, OPEN_TASKS, SETTLED_ACTIONS,
+  SETTLED_AFTER, SPOUSE_ACTIONS, TALENT_START, TASK_NAMES, tilesAnAction, TRICK_AT, TRICKS,
+} from '../farm/farmhands'
+import { TASK_KINDS, TILE_TASKS, type AptitudeId, type TaskKind, type TileTaskKind } from '../save/v4'
 import { CROPS, SHOP_SEEDS } from '../fields/crops'
 import { CLEAR_FINDS, cropLevelStart, GROUND_NAMES, harvestQuality, MAX_CROP_LEVEL, seedsBackChance, stagesOf } from '../fields/fields'
 import { ACTIONS, BIRTHDAY_ACTIONS, DAY_ACTIONS, FESTIVAL_ACTIONS, NEW_YEAR_ACTIONS, type ActionId } from '../farm/actions'
@@ -345,7 +350,7 @@ function rankGives(): string {
 /** The activity a day at each place pays. */
 function placeActivity(): string {
   const places = Object.entries(PLACE_ACTIVITY).map(([place, activity]) => [farmPlace(place)?.name ?? place, ACTIVITY_NAMES[activity]])
-  return table(['Where she worked', 'Pays rank points in'], [['The Fields, tending a block with a growing plot', ACTIVITY_NAMES.farming], ...places])
+  return table(['Where she worked', 'Pays rank points in'], [['The Fields: harvesting, watering, planting, clearing and tilling', ACTIVITY_NAMES.farming], ...places])
 }
 
 // --- The forest, the Fishery and the stations ---------------------------------------------------------------------
@@ -419,10 +424,65 @@ function upkeepBlock(): string {
     ['Each place built (the Mill, the Sawmill, the Smokehouse, the Dock, the Boat, and each later one)', g(UPKEEP_BUILDING), 'The start’s own places'],
     ['Each house built on the homestead', g(UPKEEP_BUILDING), 'The Farmhouse'],
     [`Each Dorm bed past the first ${FREE_BEDS}, at the level in effect`, g(UPKEEP_BED), `Level 1’s ${FREE_BEDS} beds`],
-    ['Each Uma living on the farm: home in the Dorm, or a spouse in her house', g(UPKEEP_RESIDENT), 'Those who live in town'],
+    ['Each Uma living on the farm or working it: home in the Dorm, a spouse in her house, or a farmhand wherever she lives; once each', g(UPKEEP_RESIDENT), 'Those who live in town and don’t work the farm'],
     ['Short of it', 'What gold there is pays; the rest is owed with tomorrow’s', `The first short night warns; from night ${HALF_PACE_FROM} in a row, half pace until it’s paid`],
   ])
 }
+// --- Farmhands -------------------------------------------------------------------------------------------------
+/** A farmhand's actions a day, by why, and half pace. */
+function farmhandDay(): string {
+  return table(['', 'Her actions'], [
+    ['A farmhand’s day, after her part-time job', String(HAND_ACTIONS)],
+    [`Settled in: from ${SETTLED_AFTER} days after you invited her (a season)`, `+${SETTLED_ACTIONS}`],
+    ['Once she’s your spouse', `+${SPOUSE_ACTIONS}`],
+    ['Well fed this morning: a household meal the day before, a wedding’s reception, a spouse’s breakfast', `+${FED_ACTIONS}`],
+    [`Half pace: from the ${HALF_PACE_FROM === 2 ? 'second' : `${HALF_PACE_FROM}th`} short night of upkeep in a row, until it’s paid`, 'Half of them all, rounded down, never below 1'],
+  ])
+}
+/** The work board's tasks: what each works over, an action, when it stops, its aptitude and the activity it reads. */
+function workBoard(): string {
+  const rows: Cell[][] = TASK_KINDS.map((kind) => {
+    const aptitude = kind === 'load' ? 'mill' : kind
+    const over = (TILE_TASKS as readonly string[]).includes(kind) ? 'Tiles you choose (the board offers the field’s rows)' : kind === 'load' ? 'A built station' : kind === 'fish' ? 'A spot the farm reaches' : 'An area the farm reaches'
+    const each: Record<TaskKind, string> = {
+      harvest: `A ripe tile, its crops by her stars; ${tilesAt('harvest', TRICK_AT.harvestTwo)}`,
+      water: `A dry growing tile; ${tilesAt('water', TRICK_AT.waterTwo)}; every dry tile of hers in one row from Watering ${TRICK_AT.waterRow}`,
+      plant: `An empty tilled tile, the seed named or any held for the season, own seeds first, that ripens in time; ${tilesAt('plant', TRICK_AT.plantTwo)}`,
+      till: `A step on a tile: clears an overgrown one, tills a cleared one; both in one from Clearing ${TRICK_AT.tillInOne}`,
+      load: `A load of the good the station holds most of, up to ${LOAD_SIZE} (${BIG_LOAD} from level ${TRICK_AT.bigLoad})`,
+      forage: `A haul of ${FORAGE_HAUL} finds (${FORAGE_HAUL + 1} from Foraging ${TRICK_AT.forageThree})`,
+      chop: `${CHOP_LOGS} logs (${CHOP_LOGS + 1} from Chopping ${TRICK_AT.chopThree})`,
+      fish: `A cast: one fish (two casts from Fishing ${TRICK_AT.castTwo})`,
+    }
+    const stops = OPEN_TASKS.includes(kind) ? 'Never: her gathering shares what’s left, a turn each' : kind === 'load' ? 'Once the station holds today’s load' : 'When none of its tiles needs it'
+    return [TASK_NAMES[kind], over, each[kind], stops, kind === 'load' ? 'Milling, Sawing or Smoking, by station' : APTITUDE_NAMES[aptitude as AptitudeId], ACTIVITY_NAMES[APTITUDE_ACTIVITY[aptitude as AptitudeId]] + (kind === 'load' ? ', foraging or fishing' : '')]
+  })
+  return table(['Task', 'Over', 'An action', 'It stops', 'Aptitude', 'Reads'], [...rows,
+    ['Care for the coop or the barn', 'Its animals', 'Comes with the ranch', '—', '—', 'Ranch'],
+    ['Work a face', 'The mine’s or the quarry’s floor', 'Comes with the mine', '—', '—', 'Mining']])
+}
+const tilesAt = (kind: TileTaskKind, level: number): string => `${tilesAnAction(kind, level)} tiles an action from ${APTITUDE_NAMES[kind]} ${level}`
+/** Aptitude's levels: the points each starts at, and what it gives. */
+function aptitudeLevels(): string {
+  const levels = APTITUDE_POINTS.map((_, i) => i + 1)
+  return table(['Level', ...levels.map(String)], [
+    ['Points', ...APTITUDE_POINTS.map((p) => p.toLocaleString('en-US'))],
+    ['Quality', ...levels.map((l) => (l === 1 ? '+0' : `+${per(aptitudeQuality(l))}`))],
+    ['Yield', ...levels.map((l) => `×${aptitudeYield(l).toFixed(2)}`)],
+  ])
+}
+/** Where an aptitude starts: her talent in its activity. */
+function aptitudeStart(): string {
+  return table(['Talent', ...TALENT_GRADES], [
+    ['Head start', ...TALENT_START.map(String)],
+    ['Level', ...TALENT_START.map((p) => String(aptitudeLevelOf(p)))],
+  ])
+}
+/** The tricks, by aptitude and level. */
+function tricksBlock(): string {
+  return table(['Aptitude', 'From level', 'The trick'], TRICKS.map((t) => [APTITUDE_NAMES[t.aptitude], t.level, t.what]))
+}
+
 /** The mayor's office's loans: the limit and the loans at once by Farm Rank, and the terms. */
 function loansBlock(): string {
   const ranks = LOAN_LIMITS.map((_, i) => String(i + 1))
@@ -816,7 +876,7 @@ function tieSeeds(): string {
 function sideBySide(): string {
   const share = Math.round((SIDE_BY_SIDE - 1) * 100)
   return table(['Where', `Beside a ${SIDE_BY_SIDE_HEARTS}-heart partner`, 'How'], [
-    ['A work place (gathering, a station)', `+${share}% of her night’s items`, 'Night step 4 (`nightExtras`): copies of the items her work finished tonight, the same goods and stars, `share × n` whole and one more by `draw(uid, day, \'bond:<id>\', 0)`, each picked by `draw(…, k)`; into the Warehouse. Her partner worked the same place today. None until the farmhands work'],
+    ['A work place (gathering, a station)', `+${share}% of her night’s items`, 'Night step 4 (`nightExtras`): copies of the items her work finished tonight, the same goods and stars, `share × n` whole and one more by `draw(uid, day, \'bond:<id>\', 0)`, each picked by `draw(…, k)`; into the Warehouse. Her partner worked the same place today'],
   ])
 }
 
@@ -1091,6 +1151,7 @@ export function renderBlock(key: string): string | null {
     'place-activity': placeActivity, 'forest-areas': forestAreas, 'fishing-spots': fishingSpots, 'fish-sizes': fishSizes, 'farmer-hauls': farmerHauls,
     stations, 'station-recipes': stationRecipes,
     'dorm-levels': dormLevels, upkeep: upkeepBlock, loans: loansBlock,
+    'farmhand-day': farmhandDay, 'work-board': workBoard, 'aptitude-levels': aptitudeLevels, 'aptitude-start': aptitudeStart, tricks: tricksBlock,
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,
     'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-draw': townDraw, 'town-shops': townShops, 'her-menu': herMenuBlock }
   return blocks_[key]?.() ?? null

@@ -60,6 +60,9 @@ export interface LoopUmaRow extends UmaPickerRow {
   joined: number
   /** On the farm, or living in town. */
   home: boolean
+  /** Her practice at each aptitude's task, and the day she started working the farm (null before you invite her). */
+  practice: RosterUma['practice']
+  farmhand: number | null
 }
 
 /** Her step in an activity: master data's, or D. */
@@ -101,7 +104,7 @@ export function umaRows(save: FarmSave, ids: readonly string[], names: ReadonlyM
     const favourite = story ? favouriteOf(story, id) : null
     const row: LoopUmaRow = {
       id, name, releasedAt: base?.releasedAt ?? '', level: null, search: name.toLowerCase(), facets: {}, sorts: {},
-      talents: talents?.get(id) ?? null, ranks: uma.ranks, favourite, joined: uma.joined, home: atHome(save, id),
+      talents: talents?.get(id) ?? null, ranks: uma.ranks, favourite, joined: uma.joined, home: atHome(save, id), practice: uma.practice, farmhand: uma.farmhand ?? null,
     }
     const facets: Record<string, readonly string[]> = { favourite: favourite ? [favourite] : [], where: [row.home ? 'home' : 'away'] }
     for (const a of ACTIVITIES) {

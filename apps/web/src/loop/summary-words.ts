@@ -16,13 +16,14 @@
 // name where she's met in town.
 import {
   ACTIVITY_NAMES, bedsAt, EVENINGS, farmPlace, FESTIVAL_ACTIONS, FESTIVALS, festivalNameOf, festivalsOf, goodName, itemNameOf, NEW_YEAR_ACTIONS, NEW_YEAR_NAME, placeNameOf, RANKS, rungName,
-  SEASON_NAMES, seasonLineOf, sectionOf, storyDayNameOf, SUMMARY_SECTIONS, townNoteOf, worldNamesOf, type FarmPlaceId, type HeartLine, type MorningSummary, type Season, type StoryPack,
+  SEASON_NAMES, seasonLineOf, sectionOf, storyDayNameOf, SUMMARY_SECTIONS, townNoteOf, tricksAt, worldNamesOf, type FarmPlaceId, type HeartLine, type MorningSummary, type Season, type StoryPack,
   type SummarySection,
 } from '@farm/domain'
 import { builtWords, farmRankWords, milestoneWords } from './goal-words'
 import { moneyLines } from './money-words'
 import { readParam, type PairWords } from './hearts-view'
 import { challengeWords } from './roster-view'
+import { aptitudeWords, nightWords } from '../book/board-words'
 import { plural } from './words'
 
 /** What the world's lines read from the pack as the card shows: a festival's name, a season's line, a Town note's title,
@@ -95,6 +96,8 @@ export const FIELDS = '/'
 
 /** The Dorm's page. */
 export const DORM = '/dorm'
+/** The work board, in the Book. */
+export const BOARD = '/book'
 /** The farm's book: its money. */
 export const BOOK = '/book'
 
@@ -267,9 +270,14 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
       // The loans' shares, the upkeep, a short night (a warning) or the owed paid: each a tap to the Book.
       return moneyLines(summary.money ?? [], { place: world.place, house: home.houseName }).map((line): SummaryLine => ({ ...line, to: BOOK }))
     case 'work':
-      // The stations' loads, which open the station; the field's growth and what withered, which open the farm.
+      // The farmhands' days, which open the work board; the stations' loads, which open the station; the field's growth
+      // and what withered, which open the farm.
       return summary.work.map((line): SummaryLine => {
         switch (line.kind) {
+          case 'farmhand': return {
+            key: `farmhand:${line.id}`, to: BOARD, text: `${nameOf(line.id)} · ${nightWords(line)}`,
+            ...(line.half ? { tag: 'Half pace', warn: true } : line.fed ? { tag: 'Well fed' } : line.spent === 0 ? { tag: 'No tasks' } : {}),
+          }
           case 'load': {
             const [id, stars] = line.item.split('@')
             return { key: `load:${line.station}`, to: peek(line.station), text: `${farmPlace(line.station)?.name ?? line.station} · ${goodName(id!)} ★${stars} × ${line.count}` }
@@ -312,8 +320,14 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
         : { key: 'seeds', text: `${plural(line.tiles, 'tile')} to plant`, to: FIELDS })
     case 'ranks':
       // "Name · Farming Hand" for a rank-up; "Name · Farming · Harvest 30 crops she tended · 12/30" when her points
-      // filled and the challenge waits, naming the challenge in its own words with her count. Each opens her sheet.
-      return summary.ranks.map((line): SummaryLine => line.kind === 'rank-up'
+      // filled and the challenge waits, naming the challenge in its own words with her count; "Name · Watering 3" for an
+      // aptitude reached, with its trick when one opened. Each opens her sheet.
+      return summary.ranks.map((line): SummaryLine => line.kind === 'aptitude'
+        ? {
+          key: `aptitude:${line.outfitId}:${line.aptitude}`, to: umaSheet(line.outfitId, 'work'), tag: 'Aptitude',
+          text: [`${nameOf(line.outfitId)} · ${aptitudeWords(line.aptitude, line.level)}`, ...tricksAt(line.aptitude, line.level).open.filter((t) => t.level === line.level).map((t) => t.what)].join(' · '),
+        }
+        : line.kind === 'rank-up'
         ? { key: `rank-up:${line.outfitId}:${line.activity}`, to: umaSheet(line.outfitId, 'work'), text: `${nameOf(line.outfitId)} · ${ACTIVITY_NAMES[line.activity]} ${RANKS[line.rank]}`, tag: 'Rank up' }
         : {
           key: `full:${line.outfitId}:${line.activity}`, to: umaSheet(line.outfitId, 'work'), tag: 'Points full',

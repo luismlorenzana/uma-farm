@@ -178,7 +178,7 @@ describe('the line effects', () => {
     // One Pine Log made: 0.1 expected, so an account whose draw is under 0.1 gets one.
     const uid = Array.from({ length: 300 }, (_, i) => `u${i}`).find((u) => draw(u, 3, `perk:${TWO}`, 0) < 0.1)!
     const save: SaveV4 = { ...base, account: { ...base.account, uid } }
-    const after = nightWorking(save, [{ outfitId: TWO, place: 'forest' }], [{ ...made(TWO, 1), place: 'forest', request: { kind: 'forage', item: 'woods', count: 1 } }])
+    const after = nightWorking(save, [{ outfitId: TWO, place: 'forest' }], [{ ...made(TWO, 1), place: 'forest' }])
     expect(after.summary!.hearts).toContainEqual({ kind: 'perks', items: 1 })
     expect(goodCount(after.items, 'pine-log') - goodCount(save.items, 'pine-log')).toBe(1)
     // Nobody but the farmer works the farm yet: a night pays none.

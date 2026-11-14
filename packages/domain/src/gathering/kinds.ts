@@ -12,7 +12,7 @@ import { countRound } from '../farm/round'
 import { talentQuality, talentYield, type TalentOf, type TalentStep } from '../farm/talents'
 import { drawStars, quality, toolQuality, WELL_FED_QUALITY } from '../goods/stars'
 import type { LoopPlaceId } from '../save/parse-v4'
-import type { LoopWorkRequest, OutfitId, ToolId } from '../save/v4'
+import type { OutfitId, ToolId } from '../save/v4'
 import { keepsakeQuality, type PerkPack } from '../romance/perk-terms'
 import type { FishingSpotId, ForestAreaId, StationId } from './ids'
 import { FISH_SIZES, FISHERY, FOREST, HAUL_BASE, STATION_RATE, TOOL_YIELD, WELL_FED_YIELD, type Share } from './tables'
@@ -127,14 +127,15 @@ export function stationRate(terms: WorkTerms, k: number, multiDay: boolean): num
 
 // --- The night: what the Umas' work brought in tonight ------------------------------------------------
 
-/** Items an Uma's work finished tonight: who, where, the request and the goods (stock keys). Nobody but the farmer
- * works the farm until the farmhands come, so the night has none; the romance's night steps read it for them. */
+/** Items a farmhand's work brought in tonight: who, where (the Fields, a gathering place or a station) and the goods
+ * (stock keys). The romance's night steps read it: side by side, the perks' extras and praise. */
 export interface MadeTonight {
   outfitId: OutfitId
-  place: LoopPlaceId
-  request: LoopWorkRequest
+  place: WorkPlace
   items: string[]
 }
+/** Where an Uma works a day: the Fields, or one of the loop's work places. */
+export type WorkPlace = LoopPlaceId | 'fields'
 
 /** A seeded pick of a place's season's goods: `draw(uid, day, what, n)`. */
 export const pickOn = (save: Pick<FarmSave, 'account' | 'calendar'>, place: GatherPlace, where: string, what: string, n: number): string =>

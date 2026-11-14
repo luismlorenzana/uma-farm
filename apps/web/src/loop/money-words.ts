@@ -44,7 +44,7 @@ export function upkeepLines(upkeep: Upkeep): { key: string; text: string; gold: 
     { key: 'places', text: plural(upkeep.places, 'place built', 'places built'), gold: upkeep.places * UPKEEP_BUILDING },
     { key: 'houses', text: plural(upkeep.houses, 'house'), gold: upkeep.houses * UPKEEP_BUILDING },
     { key: 'beds', text: `${plural(upkeep.beds, 'Dorm bed')} past the first three`, gold: upkeep.beds * UPKEEP_BED },
-    { key: 'residents', text: `${plural(upkeep.residents, 'Uma', 'Umas')} on the farm`, gold: upkeep.residents * UPKEEP_RESIDENT },
+    { key: 'residents', text: `${plural(upkeep.residents, 'Uma', 'Umas')} on or working the farm`, gold: upkeep.residents * UPKEEP_RESIDENT },
   ].filter((line) => line.gold > 0)
 }
 

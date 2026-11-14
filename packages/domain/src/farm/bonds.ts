@@ -9,8 +9,8 @@
 //   The ties' seeds when both are on the farm: strength 3 → 150, 2 → 50, 1 → 0
 //   Side by side at 3 hearts: +10% of a night's items as extras (step 4)
 //
-// The farmer works the farm alone until the farmhands come, so the night's work pays (the same place, side by side)
-// find nobody for now.
+// The night's work pays (the same place, side by side) read the farmhands' work (`farm/farmhands.ts`): the farmer's own
+// counts for no Uma.
 //
 // Each new heart opens a tie's pair's conversation: the pack's (`pairs`), else the game's short card, read once into
 // `diary.read` as `pair:<a>-<b>:<hearts>`. Bond points are whole: each pay rounds once, half up. Loaded with the

@@ -3,7 +3,7 @@
 //
 //   1 her bar is full for the rung, or for a waiting rung it's the day after the rung before (the proposal: and a ring)
 //   2 she hasn't played an event today
-//   3 its one setup is met, if it has one: she works a named place today (met every day until the farmhands come), a
+//   3 its one setup is met, if it has one: she works a named place today (met every day), a
 //     named good is in the Warehouse, her bond with a named Uma has reached a level
 //   4 her chapter is open: when her next event is her chapter's first, the chapter's gate holds, if it has one
 //
@@ -86,8 +86,8 @@ export interface Readiness {
   waits: Wait | null
 }
 
-/** Whether her day's work setup is met. The farmer works the farm alone until the farmhands come, so no Uma works a
- * place yet: a working setup holds every day, and her event never waits on work she can't do. */
+/** Whether her day's work setup is met. Only a farmhand works the farm, and only overnight: a working setup holds every
+ * day, so her event never waits on work she may not do. */
 export function worksToday(_save: SaveV4, _id: string, _activity: Activity): boolean {
   return true
 }

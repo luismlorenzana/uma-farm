@@ -178,7 +178,23 @@ describe('her profile', () => {
     expect(path).toBe(`/hearts?uma=${ONE}&view=work`)
     expect($('[data-profile]')?.dataset.side).toBe('work')
     expect($$('[data-work-side] [data-activity]')).toHaveLength(9)
+    // Her aptitudes, one a task: where she'd start (no farmhand yet), a D talent's level 2 everywhere.
+    expect($$('[data-aptitudes] [data-aptitude]').map((a) => `${a.dataset.aptitude} ${a.dataset.level}`)).toEqual([
+      'harvest 2', 'water 2', 'plant 2', 'till 2', 'forage 2', 'chop 2', 'fish 2', 'mill 2', 'sawmill 2', 'smokehouse 2',
+    ])
+    expect($('[data-aptitudes] h3')?.textContent).toBe('Aptitudes · where she’d start')
     expect($('[data-page="hearts"]')?.dataset.view).toBe('work')
+  })
+
+  it('shows a farmhand\'s aptitudes as her practice raises them, and links her tasks', async () => {
+    const s = farm()
+    useGame.setState({ save: { ...s, roster: { ...s.roster, [ONE]: { ...s.roster[ONE]!, farmhand: 1, practice: { water: 25 } } } } })
+    await render(<HeartsPage />, `/hearts?view=work&uma=${ONE}`)
+    await find('[data-aptitudes]')
+    expect($('[data-aptitude="water"]')?.dataset.level).toBe('3')
+    expect($('[data-aptitude="water"]')?.textContent).toContain('Two tiles an action')
+    expect($('[data-aptitudes] h3')?.textContent).toBe('Aptitudes')
+    expect($('[data-farmhand] a')?.getAttribute('href')).toBe('/book')
   })
 
   it('shows her level in the corner of each card in the Work view', async () => {
