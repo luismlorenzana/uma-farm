@@ -295,7 +295,7 @@ function PlacePeek({ save, place }: { save: FarmSave; place: FarmPlace }) {
   )
 }
 
-/** The morning summary: one card after every night, its sections in order with the empty ones
+/** The morning summary: one wide card after every night, its sections in order with the empty ones
  * hidden, each line a tap to its place. "Start the day" puts it away; a tap on a line leaves it for later. */
 function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   const summary = save.summary
@@ -328,6 +328,7 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
     <Sheet
       open={open}
       onClose={() => void dismissSummary()}
+      size="wide"
       title={`Morning · ${shortDate(summary.day)}`}
       label="The morning summary"
       footer={<Button className="w-full" onClick={() => void dismissSummary()} data-action="start-day">Start the day</Button>}

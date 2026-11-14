@@ -4,6 +4,7 @@
 // data and the server are stubs.
 import 'fake-indexeddb/auto'
 import { bareTile, newLove, newRosterUma, newSave, type SaveV4 } from '@farm/domain'
+import { KitStage } from '@luismlorenzana/uma-kit/ui'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -86,7 +87,7 @@ afterEach(async () => {
 describe('End the day', () => {
   it('shows the actions left in the bar, asks in one line what\'s left, and ends the day on End anyway', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(3) })
-    await render(<FarmBar />)
+    await render(<KitStage layout="landscape"><FarmBar /></KitStage>)
     expect(host.querySelector('[data-bar-chip="actions"]')?.getAttribute('aria-label')).toBe('Actions left: 7 of 10')
     expect(host.querySelector('[data-bar-chip="actions"]')?.textContent).toBe('7/10')
     const end = host.querySelector('a[aria-label="End the day: 7 actions left · 1 dry"]')
@@ -126,7 +127,7 @@ describe('End the day', () => {
 
   it('reads "All set" once the day\'s actions are spent, and ends at once', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(10) })
-    await render(<FarmBar />)
+    await render(<KitStage layout="landscape"><FarmBar /></KitStage>)
     const end = host.querySelector('a[aria-label="All set"]')
     expect(end).not.toBeNull()
     expect(end?.querySelector('[data-glow]')).not.toBeNull() // the halo when nothing waits

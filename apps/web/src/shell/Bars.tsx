@@ -1,54 +1,31 @@
-// The landscape frame's two bars. uma-kit's AccountBar and BottomBar draw a landscape stage's rails the other way round
-// (the account and chips down the left, the actions down the right), so until the kit has the farm's layout (a thin bar
-// on top, the pages down the left) the farm draws its own from the kit's pieces: its chip, its marks, its numbers and
-// its icons.
-// - **The bar,** on top: the date and season (the calendar), the day's actions left, the gold (the bin) and the sync
-//   chip when something isn't synced; at its right end, End the day and the Menu. When the day's last action is spent,
-//   End the day opens by itself ("Out of actions").
+// The landscape frame's two bars, on uma-kit's landscape variants for a left rail and a top bar: `AccountBar
+// landscape="bar"` across the top of the page and `BottomBar side="left"` down the left edge, in `AppFrame
+// landscape="rail-and-bar"` (Shell.tsx).
+// - **The bar,** on top: the kit's chips, the date and season (the calendar) and the gold (the bin), and its sync chip
+//   while offline or paused; at its right end the farm's own pair, the day's actions left and End the day, then the
+//   kit's Menu. The actions left open nothing and grey at 0, so they aren't one of the kit's chips, which are links. When
+//   the day's last action is spent, End the day opens by itself ("Out of actions").
 // - **The rail,** down the left: Farm · Town · People · Book · Diary. A farm place's page (the Warehouse, the Dorm …)
 //   keeps Farm lit.
-import { actionsLeft, dateOf, dayActions, daySetState, type DaySet, type FarmSave, type Festival, type Season } from '@farm/domain'
-import { withParam } from '@luismlorenzana/uma-kit/shell'
+import { actionsLeft, dateOf, dayActions, daySetState, SEASON_NAMES, type DaySet, type FarmSave, type Season } from '@farm/domain'
+import { AccountBar, BottomBar, withParam, type AccountBarProps, type BarTab, type CurrencyChip } from '@luismlorenzana/uma-kit/shell'
 import {
-  AnimatedNumber, BookIcon, Button, CarrotIcon, CoinIcon, HeartIcon, MenuIcon, MoonIcon, OfflineIcon, Sheet, StopwatchIcon, UiMark, useReducedMotionSetting, VenueIcon,
+  BookIcon, Button, CarrotIcon, CoinIcon, HeartIcon, MoonIcon, Sheet, StopwatchIcon, useReducedMotionSetting, VenueIcon,
   type IconComponent,
 } from '@luismlorenzana/uma-kit/ui'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
-import { dateLabel, nudgeWords, SEASON_COLOR, shortDate } from '../loop/words'
-import { useGame, useLoopSave } from '../save/game'
+import { dateLabel, nudgeWords, SEASON_COLOR } from '../loop/words'
+import { useGame, useLoopSave, type SyncStatus } from '../save/game'
 import { useStoryYear } from '../story/story'
 import { GoldCoin } from './Gold'
 
-/** A season's dot: the date's mark until uma-art's season marks ship. */
+/** A season's dot: the date's mark where the pinned uma-art has no season mark. */
 function SeasonDot({ season }: { season: Season }) {
   return <span aria-hidden className="inline-block size-3 rounded-full ring-1 ring-ink/15" style={{ background: SEASON_COLOR[season] }} />
 }
 
-/** The kit's bar chip: a 44 pt link around a 32 pt pill. */
-function BarChip({ to, label, children, className = '', data }: { to: string; label: string; children: ReactNode; className?: string; data?: string }) {
-  return (
-    <Link to={to} state={{ back: true }} aria-label={label} className="flex min-h-11 min-w-11 shrink-0 items-center justify-center" data-bar-chip={data}>
-      <span aria-hidden className={`flex h-8 items-center gap-1 rounded-full border border-hairline bg-panel/90 px-2 text-[13px] text-ink shadow-1 ${className}`}>
-        {children}
-      </span>
-    </Link>
-  )
-}
-
 const blank = <span className="inline-block h-3 w-5 rounded-full bg-sunken" />
-
-/** The date and the season; its name says the year and the next festival (the story's year, once the pack is in). */
-function DateChip({ day, year }: { day: number | null; year: readonly Festival[] | undefined }) {
-  const location = useLocation()
-  const season = day === null ? 'spring' : dateOf(day).season
-  return (
-    <BarChip to={withParam(location, 'sheet', 'calendar')} label={day === null ? 'Calendar' : `Calendar: ${dateLabel(day, year)}`} data="date">
-      <UiMark mark={`season/${season}`} fallback={<SeasonDot season={season} />} />
-      <span className="font-display font-semibold whitespace-nowrap">{day === null ? blank : shortDate(day)}</span>
-    </BarChip>
-  )
-}
 
 /** The day's actions left, of the day's budget; faint once they're spent. */
 function ActionsChip({ save }: { save: FarmSave | null }) {
@@ -100,29 +77,9 @@ export function OutOfActions() {
   )
 }
 
-/** Gold: uma-art's coin (a plain "g" until it ships) and the farm's gold; it opens the bin. */
-function GoldChip({ gold }: { gold: number | null }) {
-  const location = useLocation()
-  return (
-    <BarChip to={withParam(location, 'sheet', 'bin')} label={gold === null ? 'Gold' : `Gold: ${gold.toLocaleString('en-US')}g. The bin`} data="gold">
-      <UiMark mark="currency/gold" fallback={<GoldCoin />} />
-      <span className="font-display font-semibold">{gold === null ? blank : <AnimatedNumber value={gold} />}</span>
-    </BarChip>
-  )
-}
-
-/** The sync chip, only while offline or paused; it opens Account. */
-function SyncChip() {
-  const sync = useGame((s) => s.sync)
-  if (sync !== 'offline' && sync !== 'error') return null
-  return sync === 'offline'
-    ? <BarChip to="/account" label="Offline: changes sync when you’re back" className="text-ink-soft" data="sync"><OfflineIcon size={16} /><span className="text-[12px] font-semibold whitespace-nowrap">Offline</span></BarChip>
-    : <BarChip to="/account" label="Sync paused" className="text-ink-soft" data="sync"><span className="text-[12px] font-semibold whitespace-nowrap">Sync paused</span></BarChip>
-}
-
 /**
- * End the day, at the bar's right end: "All set", with a soft halo (still under reduced motion), once the day's actions
- * are spent; else "End day". It reads the save at its day, never the clock. Its name says what's left for VoiceOver.
+ * End the day, by the Menu: "All set", with a soft halo (still under reduced motion), once the day's actions are spent;
+ * else "End day". It reads the save at its day, never the clock. Its name says what's left for VoiceOver.
  */
 function EndDay({ set }: { set: DaySet | null }) {
   const location = useLocation()
@@ -140,35 +97,40 @@ function EndDay({ set }: { set: DaySet | null }) {
   )
 }
 
-/** The Menu, "Every place". */
-function MenuButton() {
-  const location = useLocation()
-  return (
-    <Link to={withParam(location, 'sheet', 'menu')} state={{ back: true }} aria-label="Every place"
-      className="flex min-h-11 shrink-0 items-center gap-1 px-2 text-ink-soft" data-bar-menu>
-      <MenuIcon size={20} />
-      <span className="text-[12px] font-semibold">Menu</span>
-    </Link>
-  )
+/** The kit's sync chip, only while offline or paused; it opens Account. */
+function syncChip(sync: SyncStatus): AccountBarProps['sync'] {
+  if (sync === 'offline') return { state: 'offline', text: 'Offline', label: 'Offline: changes sync when you’re back', to: '/account' }
+  if (sync === 'error') return { state: 'paused', text: 'Sync paused', label: 'Sync paused', to: '/account' }
+  return undefined
 }
 
-/** The bar: thin, always on top of the page. */
+/** The bar: thin, always on top of the page. The date's chip reads the day and its season ("3 Spring") by the season's
+ * mark, and its name the whole date with the year and the next festival (the story's year, once the pack is in). */
 export function FarmBar() {
+  const location = useLocation()
   const day = useGame((s) => s.save?.calendar.day ?? null)
   const gold = useGame((s) => s.save?.gold ?? null)
+  const sync = useGame((s) => s.sync)
   const year = useStoryYear()
   const save = useLoopSave()
   const set = save ? daySetState(save) : null
+  const date = day === null ? null : dateOf(day)
+  const season = date?.season ?? 'spring'
+  const chips: CurrencyChip[] = [
+    {
+      key: 'date', mark: `season/${season}`, fallback: <SeasonDot season={season} />, value: date?.day ?? null,
+      extra: date ? ` ${SEASON_NAMES[date.season]}` : undefined,
+      to: withParam(location, 'sheet', 'calendar'), label: day === null ? 'Calendar' : `Calendar: ${dateLabel(day, year)}`,
+    },
+    {
+      key: 'gold', mark: 'currency/gold', fallback: <GoldCoin />, value: gold,
+      to: withParam(location, 'sheet', 'bin'), label: gold === null ? 'Gold' : `Gold: ${gold.toLocaleString('en-US')}g. The bin`,
+    },
+  ]
   return (
-    <header className="pr-safe relative z-20 flex shrink-0 items-center gap-0.5 border-b border-hairline bg-panel/95 pl-1 backdrop-blur" data-farm-bar>
-      <DateChip day={day} year={year} />
-      <ActionsChip save={save} />
-      <GoldChip gold={gold} />
-      <SyncChip />
-      <span className="min-w-0 flex-1" />
-      <EndDay set={set} />
-      <MenuButton />
-    </header>
+    <AccountBar landscape="bar" chips={chips} sync={syncChip(sync)}
+      actions={<><ActionsChip save={save} /><EndDay set={set} /></>}
+      menu={{ to: withParam(location, 'sheet', 'menu'), label: 'Every place', text: 'Menu' }} />
   )
 }
 
@@ -192,22 +154,9 @@ export function railPageOf(pathname: string): RailPage | null {
   return 'farm'
 }
 
-/** The rail: the five pages, down the left edge by the thumb. The active one shows by its marker on the rail's inner
- * edge and its two-tone icon, as the kit's rail does. */
+/** The rail: the five pages, down the left edge by the thumb; the active one shows by the kit's marker on the rail's
+ * inner edge and its two-tone icon. */
 export function FarmRail({ page }: { page: RailPage | null }) {
-  return (
-    <nav aria-label="Pages" className="pt-safe pb-safe pl-safe relative z-20 flex shrink-0 flex-col justify-center gap-0.5 border-r border-hairline bg-panel" data-farm-rail>
-      {RAIL.map(({ key, to, label, Icon }) => {
-        const active = page === key
-        return (
-          <Link key={key} to={to} aria-label={label} aria-current={active ? 'page' : undefined} data-rail={key}
-            className="relative flex h-14 w-16 flex-col items-center justify-center gap-0.5 px-1">
-            {active && <span aria-hidden className="absolute top-1/2 right-0 h-8 w-[3px] -translate-y-1/2 rounded-l-full bg-accent" />}
-            <Icon size={24} variant={active ? 'duotone' : 'line'} className={active ? 'text-ink' : 'text-ink-faint'} />
-            <span className={`max-w-full truncate text-[11px] font-semibold ${active ? 'text-ink' : 'text-ink-faint'}`}>{label}</span>
-          </Link>
-        )
-      })}
-    </nav>
-  )
+  const tabs: BarTab[] = RAIL.map((tab) => ({ ...tab, active: page === tab.key }))
+  return <BottomBar side="left" tabs={tabs} label="Pages" />
 }

@@ -3,7 +3,7 @@
 // nothing finishes while the app is closed; the server's push is untouched. It also holds **Your name**, the farmer's,
 // under the name sheet's rule; a safety copy from before v4 lists as Kept, without a Restore, since restoring it would
 // only start over again. It also holds the **Story** row: the story release the game plays, by its ship's number and
-// date, or "No story yet". On a wide screen its panels sit in two columns (index.css).
+// date, or "No story yet". On a page at least 36rem wide its panels sit in two columns (the kit's `columns={2}`).
 import { cleanFarmerName, FARMER_PLACEHOLDER, farmerNameIssue, SAVE_VERSION, versionOf } from '@farm/domain'
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { AccountPage } from '@luismlorenzana/uma-kit/places'
@@ -89,8 +89,9 @@ export function AccountView() {
   useEffect(() => seeReplaced(), [])
   // The frame clips its page, so Account scrolls itself.
   return (
-    <div className="@container absolute inset-0 overflow-y-auto overscroll-contain" data-page="account">
+    <div className="absolute inset-0 overflow-y-auto overscroll-contain" data-page="account">
       <AccountPage
+        columns={2}
         info={[
           { label: 'Signed in', value: auth.user?.email ?? auth.user?.name ?? 'Local' },
           { label: 'Save', value: syncWords(state) },

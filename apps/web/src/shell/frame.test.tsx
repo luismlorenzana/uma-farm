@@ -1,7 +1,8 @@
-// The landscape frame: the thin bar on top (the date and season, the day's actions left, the gold, End the day
-// and the Menu), the rail down the left (Farm · Town · People · Book · Diary, the farm's places keeping Farm lit), the
-// whole shell on uma-kit's landscape stage (its sheets come in from the right), the Book's cards, and the card that
-// asks for the phone sideways. Invented ids; master data and the server are stubs.
+// The landscape frame on uma-kit's rail-and-bar variants: the thin bar on top (the date and season, the gold, the day's
+// actions left, End the day and the Menu), the rail down the left (Farm · Town · People · Book · Diary, the farm's
+// places keeping Farm lit), the whole shell on uma-kit's landscape stage (its sheets come in from the right), Account's
+// two columns, the Book's cards, and the card that asks for the phone sideways. Invented ids; master data, sign-in and
+// the server are stubs.
 import 'fake-indexeddb/auto'
 import { newLove, newRosterUma, newSave, type SaveV4 } from '@farm/domain'
 import { KitStage } from '@luismlorenzana/uma-kit/ui'
@@ -15,12 +16,17 @@ vi.mock('../api/client', async () => {
   const actual = await vi.importActual<typeof import('../api/client')>('../api/client')
   return { ...actual, saveApi: { load: vi.fn(async () => ({ revision: 0, save: null })), put: vi.fn(async (_: number, save: unknown) => ({ revision: 1, save })) } }
 })
+vi.mock('@luismlorenzana/uma-kit/auth', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@luismlorenzana/uma-kit/auth')>(),
+  useAuth: () => ({ ready: true, authRequired: true, user: { uid: 'u1', name: 'Robin', email: null }, error: null, signIn: async () => undefined, signOut: async () => undefined, idToken: async () => null }),
+}))
 
 const { useGame, resetGame } = await import('../save/game')
 const { FarmBar, FarmRail, railPageOf } = await import('./Bars')
 const { Shell } = await import('./Shell')
 const { default: BookPage } = await import('../book/BookPage')
 const { Upright, UPRIGHT_WORDS } = await import('../app/Upright')
+const { AccountView } = await import('../home/AccountView')
 
 const AT = '2026-11-14T10:00:00.000Z'
 function farm(): SaveV4 {
@@ -54,32 +60,52 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
+/** The farm on its stage, as Root.tsx puts it: the kit draws its landscape variants only there. */
+const onStage = (node: ReactNode) => <KitStage layout="landscape">{node}</KitStage>
+const bar = '[data-kit="account-bar"]'
+const rail = 'nav[aria-label="Pages"]'
+
 describe('the bar', () => {
-  it('reads the date and season, the actions left, the gold, then End the day and the Menu', async () => {
-    await render(<FarmBar />, '/fields')
-    const chips = $$('[data-farm-bar] [data-bar-chip]').map((el) => el.getAttribute('data-bar-chip'))
-    expect(chips).toEqual(['date', 'actions', 'gold'])
-    const date = $('[data-bar-chip="date"]')!
-    expect(date.textContent).toBe('Spring 3')
+  it('reads the date and season and the gold, then the actions left, End the day and the Menu', async () => {
+    await render(onStage(<FarmBar />), '/fields')
+    expect($(bar)?.getAttribute('data-variant')).toBe('bar')
+    // From the left: the kit's chips, then at the right end the farm's actions left and End the day, then the Menu.
+    expect($$(`${bar} [aria-label]`).map((el) => el.getAttribute('aria-label')!.split(':')[0]))
+      .toEqual(['Calendar', 'Gold', 'Actions left', 'End the day', 'Every place'])
+    const date = $(`${bar} a[aria-label^="Calendar"]`)!
+    expect(date.textContent).toBe('3 Spring')
     expect(date.getAttribute('href')).toBe('/fields?sheet=calendar')
     expect(date.getAttribute('aria-label')).toMatch(/^Calendar: Spring 3, year 1/)
-    // The day's actions left, of its ten: nothing to tap.
-    expect($('[data-bar-chip="actions"]')?.getAttribute('aria-label')).toBe('Actions left: 10 of 10')
-    expect($('[data-bar-chip="actions"]')?.tagName).toBe('SPAN')
-    expect($('[data-bar-chip="gold"]')?.getAttribute('aria-label')).toBe('Gold: 1,240g. The bin')
-    expect($('[data-bar-chip="gold"]')?.getAttribute('href')).toBe('/fields?sheet=bin')
-    expect($('[data-bar-end]')?.getAttribute('href')).toBe('/fields?sheet=end')
-    expect($('[data-bar-menu]')?.getAttribute('href')).toBe('/fields?sheet=menu')
-    expect($('[data-bar-menu]')?.getAttribute('aria-label')).toBe('Every place')
+    expect($(`${bar} a[aria-label^="Gold"]`)?.getAttribute('aria-label')).toBe('Gold: 1,240g. The bin')
+    expect($(`${bar} a[aria-label^="Gold"]`)?.getAttribute('href')).toBe('/fields?sheet=bin')
+    // The day's actions left, of its ten, by End the day: nothing to tap.
+    const actions = $('[data-kit="bar-actions"] > [data-bar-chip="actions"]')!
+    expect(actions.getAttribute('aria-label')).toBe('Actions left: 10 of 10')
+    expect(actions.tagName).toBe('SPAN')
+    expect(actions.nextElementSibling?.getAttribute('href')).toBe('/fields?sheet=end')
+    expect($('[data-kit="bar-menu"]')?.getAttribute('href')).toBe('/fields?sheet=menu')
+    expect($('[data-kit="bar-menu"]')?.getAttribute('aria-label')).toBe('Every place')
+  })
+
+  it('greys the actions left once they are spent', async () => {
+    const spent = farm()
+    useGame.setState({ save: { ...spent, today: { ...spent.today, actions: 10 } } })
+    await render(onStage(<FarmBar />))
+    expect($('[data-bar-chip="actions"]')?.getAttribute('aria-label')).toBe('Actions left: 0 of 10')
+    expect($('[data-bar-chip="actions"] > span')?.className).toContain('text-ink-faint')
   })
 
   it('shows the sync chip only while offline or paused', async () => {
-    await render(<FarmBar />)
-    expect($('[data-bar-chip="sync"]')).toBeNull()
+    const sync = () => $(`${bar} a[href="/account"]`)
+    await render(onStage(<FarmBar />))
+    expect(sync()).toBeNull()
     await act(async () => useGame.setState({ sync: 'offline' }))
-    await render(<FarmBar />, '/town')
-    expect($('[data-bar-chip="sync"]')?.getAttribute('href')).toBe('/account')
-    expect($('[data-bar-chip="sync"]')?.textContent).toBe('Offline')
+    await render(onStage(<FarmBar />), '/town')
+    expect(sync()?.getAttribute('aria-label')).toBe('Offline: changes sync when you’re back')
+    expect(sync()?.textContent).toBe('Offline')
+    await act(async () => useGame.setState({ sync: 'error' }))
+    expect(sync()?.getAttribute('aria-label')).toBe('Sync paused')
+    expect(sync()?.textContent).toBe('Sync paused')
   })
 })
 
@@ -89,27 +115,38 @@ describe('the rail', () => {
       .toEqual(['farm', 'farm', 'farm', 'farm', 'farm', 'town', 'people', 'people', 'book', 'diary', null])
   })
 
-  it('draws the five pages, the lit one marked for VoiceOver', async () => {
-    await render(<FarmRail page="book" />, '/book')
-    expect($$('[data-farm-rail] a').map((a) => [a.getAttribute('data-rail'), a.getAttribute('href')]))
-      .toEqual([['farm', '/'], ['town', '/town'], ['people', '/hearts'], ['book', '/book'], ['diary', '/diary']])
-    expect($$('[data-farm-rail] a[aria-current="page"]').map((a) => a.getAttribute('data-rail'))).toEqual(['book'])
+  it('draws the five pages down the left, the lit one marked for VoiceOver', async () => {
+    await render(onStage(<FarmRail page="book" />), '/book')
+    expect($(rail)?.getAttribute('data-side')).toBe('left')
+    expect($$(`${rail} a`).map((a) => [a.textContent, a.getAttribute('href')]))
+      .toEqual([['Farm', '/'], ['Town', '/town'], ['People', '/hearts'], ['Book', '/book'], ['Diary', '/diary']])
+    expect($$(`${rail} a[aria-current="page"]`).map((a) => a.textContent)).toEqual(['Book'])
   })
 })
 
 describe('the shell on the landscape stage', () => {
-  it('is a row: the rail, then the bar over the page; the Menu comes in from the right', async () => {
-    await render(<KitStage layout="landscape"><Routes><Route element={<Shell />}><Route path="*" element={<p data-test-page>Page</p>} /></Route></Routes></KitStage>, '/town?sheet=menu')
+  it('is a rail and a bar: the rail down the left, then the bar over the page; the Menu comes in from the right', async () => {
+    await render(onStage(<Routes><Route element={<Shell />}><Route path="*" element={<p data-test-page>Page</p>} /></Route></Routes>), '/town?sheet=menu')
     const frame = $('[data-kit="frame"]')!
     expect(frame.getAttribute('data-layout')).toBe('landscape')
-    expect(frame.firstElementChild?.hasAttribute('data-farm-rail')).toBe(true)
-    expect($('[data-farm-frame] > [data-farm-bar]')).not.toBeNull()
-    expect($('[data-farm-page] [data-test-page]')).not.toBeNull()
-    expect($('[data-kit="bottom-bar"]')).toBeNull()
-    expect($('[data-farm-rail] a[aria-current="page"]')?.getAttribute('data-rail')).toBe('town')
+    expect(frame.getAttribute('data-arrangement')).toBe('rail-and-bar')
+    expect(frame.firstElementChild?.matches(rail)).toBe(true)
+    // The rail clears the left safe area, so nothing in the column beside it clears it again.
+    const column = $('[data-kit="frame-column"]') as HTMLElement
+    expect(column.style.getPropertyValue('--inset-left')).toBe('0px')
+    expect(column.firstElementChild?.matches(bar)).toBe(true)
+    expect($('[data-kit="frame-column"] [data-farm-page] [data-test-page]')).not.toBeNull()
+    expect($(`${rail} a[aria-current="page"]`)?.textContent).toBe('Town')
     // The kit's sheet on a landscape stage is a panel from the right edge.
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)) })
     expect($('[data-kit="sheet"]')?.getAttribute('data-placement')).toBe('side')
+  })
+})
+
+describe('Account', () => {
+  it('sits in the kit\'s two columns once the page is wide enough', async () => {
+    await render(onStage(<AccountView />), '/account')
+    expect($('[data-page="account"] [data-kit="account-columns"] [data-kit="account"]')?.getAttribute('data-columns')).toBe('2')
   })
 })
 

@@ -1,4 +1,4 @@
-// Her profile, a sheet over the Hearts tab at `?uma=<characterId>`. From the top: her
+// Her profile, a wide sheet over the Hearts tab at `?uma=<characterId>`. From the top: her
 // face (the "+N" an act paid floats up from it), her level in words and her ● Ready chip, her line, birthday and house;
 // then on its Hearts side the route as one track (F ◆ R ◇ S), the Next card (the rung, its perk, its place and setup in
 // her bible's hint, the bar and what's banked, and what it waits for), Perks (reached ✓, the next, the rest greyed), Gifts
@@ -71,6 +71,7 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
     <Sheet
       open
       onClose={onClose}
+      size="wide"
       title={name}
       label={`${name}: her profile`}
       footer={

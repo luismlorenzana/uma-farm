@@ -34,7 +34,7 @@ uma-platform, never in a copy here.
 | Package | Version | Used by | For |
 |---|---|---|---|
 | `@farm/domain` | workspace | web, api | The rules and the save (below) |
-| `@luismlorenzana/uma-kit` | 0.19.0 | web | Theme and appearance, the landscape stage (`KitStage`), the app frame, its side panels and the quick look's panel, boot gates, Google sign-in, the content client, the update prompt, the Hub map, the album |
+| `@luismlorenzana/uma-kit` | 0.20.0 | web | Theme and appearance, the landscape stage (`KitStage`), the app frame with its left rail and top bar (0.20.0's landscape variants), its side panels (regular and wide) and the quick look's panel, boot gates, Google sign-in, the content client, the update prompt, the Hub map, the album |
 | `@luismlorenzana/uma-art` | 2.27.0 | web | The bar's, map's, item and emote art |
 | `@luismlorenzana/uma-data` | 1.7.0 | web, domain | Master data's types and readers (the `dialogue-portraits` family from 1.7.0); test fixtures from `/testing` |
 | `@luismlorenzana/uma-work` | 0.1.0 | web, domain | The Warehouse's stock types (the work engine's screens are retired with the work board) |
@@ -96,7 +96,7 @@ Sheets and scenes are query parameters on the page under them:
 | Folder | What |
 |---|---|
 | `src/app/` | Root and the start-over card, the upright card, the router, the build id, the Firebase config |
-| `src/shell/` | uma-kit's `AppFrame` as a row: the rail (Farm · Town · People · Book · Diary), the bar (date, actions left, gold, sync chip, End the day, Menu), the Menu's panel, the sync warning |
+| `src/shell/` | uma-kit's `AppFrame` as a rail and a bar: the rail (`BottomBar side="left"`: Farm · Town · People · Book · Diary), the bar (`AccountBar landscape="bar"`: date, gold, sync chip, then actions left, End the day, Menu), the Menu's panel, the sync warning |
 | `src/home/` | Account |
 | `src/book/` | The farm's book |
 | `src/town/` | The Town |
@@ -191,17 +191,23 @@ Database `uma-farm`, schema version 1, loaded on demand when device I/O starts.
 The game is laid out sideways, designed at 844 × 390 and checked at 667 × 375.
 
 - **uma-kit's landscape stage.** `Root.tsx` wraps the app in `KitStage layout="landscape"` (turn 0) inside a fixed
-  full-screen box. On it, uma-kit's `AppFrame` is a row; every `Sheet` is a panel from the right edge
-  (`data-placement="side"`, `min(26rem, 62cqw)` wide, portalled into the stage's layer); the quick look's `PeekPanel`
-  keeps clear of the right inset. The stage is a size container, so the panels size by it.
-- **The shell** (`shell/Shell.tsx`) gives `AppFrame` the rail as its `top` (on a landscape stage, the left rail's slot)
-  and no `bottom`; the page column holds the bar, the sync warning and the page, which keeps clear of the right and
-  bottom safe areas.
-- **The bar and the rail are the farm's** (`shell/Bars.tsx`), built from the kit's pieces (its chip's look, `UiMark`,
-  `AnimatedNumber`, its icons). The kit's own `AccountBar` and `BottomBar` draw a landscape stage's rails the other way
-  round (the account and chips down the left, the actions down the right); the farm asked uma-platform for its layout.
+  full-screen box. On it, every `Sheet` is a panel from the right edge (`data-placement="side"`, portalled into the
+  stage's layer): `min(26rem, 62cqw)` wide, or `min(34rem, 75cqw)` with `size="wide"` for the content-heavy ones (her
+  profile, the morning summary, the homestead). The quick look's `PeekPanel` keeps clear of the right inset. The stage
+  is a size container, so the panels size by it. The update prompt (`UpdateNotice clearSides`) keeps clear of the side
+  insets as well as the top one.
+- **The frame is the kit's left rail and top bar,** uma-kit 0.20.0's opt-in landscape variants. `shell/Shell.tsx`
+  passes `AppFrame landscape="rail-and-bar"` the rail as its `bottom` (a full-height rail down the left edge) and the bar
+  as its `top` (across the page column). The rail clears the left safe area, so the column zeroes `--inset-left`. Under
+  the bar sit the sync warning and the page, which keeps clear of the right and bottom safe areas itself (`pr-safe
+  pb-safe`).
+- **The bar** (`shell/Bars.tsx`) is `AccountBar landscape="bar"`: the kit's chips, the date (the season's mark, the day
+  and the season's name) and the gold, and its sync chip while offline or paused; in its `actions` slot the farm's own
+  actions-left chip (it opens nothing and greys at 0, so it isn't a kit chip, which is a link) and End the day; then the
+  kit's Menu. **The rail** is `BottomBar side="left"`: the five pages, labels under the icons, the active marker on its
+  inner edge.
 - **Two columns where they fit** come from container queries (`@container` on the page, `@lg:` / `@xl:` on its lists);
-  Account's two columns from `index.css`, over the kit's `AccountPage`.
+  Account's from the kit's `AccountPage columns={2}` (two CSS columns on a page at least 36rem wide).
 - **Scenes** stay full-screen fixed layers, laid out as rows on the dialogue engine's `Stage` (`dialogue/Stage.tsx`: her
   bust left on an optional backdrop, the line or the choices right) for the opening, meeting her, the bench scene, heart
   events (the place card as the backdrop), and the pair and household players; the level-up and stage-up cards and the
