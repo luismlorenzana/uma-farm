@@ -3,8 +3,8 @@
 **uma-farm · Claude · M · Needs: F69's pilot published (uma-platform's bust family) · Unblocks: F71 · Design:
 [her-look.md](../../design/her-look.md#busts-that-change-expression)**
 
-> The game composes a bust from layers: her outfit's body, her head, an expression's face and her hair. The story's
-> `emote` picks the face, and every missing piece falls back.
+> The game puts an expression's face over her outfit's bust. The story's `emote` picks the face, and every missing
+> piece falls back.
 
 ## Why
 
@@ -14,30 +14,31 @@ she's wearing.
 ## Decided
 
 1. **Reading the art:**
-   - the bust layers come from master data's private release, uma-platform's bust family (F69's delivery), keyed by
-     character and piece;
-   - the game reads its manifest at run time;
+   - the busts and faces come from master data's private release, uma-platform's bust family (F69's delivery), keyed by
+     character;
+   - each Uma's manifest gives her busts, her faces and the face square's position;
    - no name or art enters git.
 2. **Composing:**
-   - the layers are stacked images, absolutely placed, in [her-look.md](../../design/her-look.md#the-layers)'s order;
+   - the outfit's bust, with the expression's face square placed over it at the manifest's position;
    - a changed expression swaps only the face;
-   - pieces are cached on the device by hash, and the next scene line's face is preloaded.
+   - both are cached on the device by hash, and the next line's face is preloaded.
 3. **The emote menu grows to the 18 expressions:**
    - the story's eight keep their names;
    - `docs/story-pack.md` lists them all, with what each looks like;
    - an unknown name shows its word as today.
 4. **Fallbacks, in order:**
-   1. the expression's fallback chain ([the table](../../design/her-look.md#the-expressions));
-   2. `neutral`;
-   3. no layers for her at all: her single master-data bust;
+   1. the expression's fallback chain ([the table](../../design/her-look.md#the-expressions)), ending at the bust's own
+      neutral face;
+   2. no bust for that outfit: her own outfit's bust;
+   3. none for her at all: her single master-data bust;
    4. no bust: her lettered disc.
 5. **Her outfit:** `own` until F71 picks one.
 6. **Reduced motion:** the face swaps without a fade.
 
 ## Do
 
-1. **The uma-platform request,** with the owner's go: a private bust family in master data's release, the manifest's
-   shape, and its delivery like the sprite sets.
+1. **Read uma-platform's bust family** (requested 2026-11-13): its manifest type in `@luismlorenzana/uma-data`, pinned at
+   the release that carries the pilot.
 2. **The domain:** the 18 expressions, their fallback chains, and the pack's `emote` menu, with tests.
 3. **The web:** the composed bust in the scene, event and pair players, its cache and preload.
 4. [The game mechanics](../../game-mechanics.md) and `docs/story-pack.md`.
@@ -46,8 +47,9 @@ she's wearing.
 
 - `pnpm lint`, `pnpm test` and `pnpm build` pass, and the main JS stays ≤ 180 KB gzip (the compositor loads with the
   players).
-- With the pilot's layers, a scene shows each of the 18 expressions on her own outfit, and a missing face falls back.
-- An Uma with no layers shows her single bust, as today.
+- With the pilot's busts and faces, a scene shows each of the 18 expressions on every outfit, and a missing face falls
+  back.
+- An Uma with none shows her single bust, as today.
 
 ## Deliver
 

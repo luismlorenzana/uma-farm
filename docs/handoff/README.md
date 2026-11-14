@@ -14,7 +14,7 @@ deployed site is the work in progress: saves can start over whenever the game ne
 | **HD-2D farm** | **The working nod:** an Uma at work nods every 4–7 seconds, seeded by her id, none with reduced motion, on uma-stage 0.5.0's `emote` | Claude | Next on this track: small, no packet |
 | **HD-2D farm** | **The kit's second wave:** the 30 frames the stand-in still draws, painted in code | Claude, in a uma-platform session | [F9](tasks/F9-kit-farm.md): waits for your go |
 | **Story** | **Free authoring:** the world, the backgrounds, the characters, however the story wants. The pack is open: every part optional, notes instead of blocks | You and the story session | [F40](tasks/F40-story-authoring.md): how it reaches the game; [the pack's menu](../story-pack.md) |
-| **Her look** | **The bust art:** layers, 18 expressions, 9 outfits; the pilot is the two Umas with the new full art | ChatGPT | [F69](tasks/F69-bust-art-spec.md): ready to hand over |
+| **Her look** | **The bust art:** a bust per outfit (9) and a face per expression (18); the pilot is the two Umas with the new full art | ChatGPT | [F69](tasks/F69-bust-art-spec.md): ready to hand over |
 | **Her look** | Busts that change expression, then her wardrobe | Claude | [F70](tasks/F70-expressive-busts.md) after F69's pilot, [F71](tasks/F71-her-wardrobe.md) after F68 and F70 |
 | **Art** | **The town cast's busts** | ChatGPT | [F25](tasks/F25-art-m4.md), part B; the town's people become Umas (F66), so this may fold into F69 |
 
@@ -30,8 +30,8 @@ A packet is written when a piece is next and deleted when it ships. Git keeps th
 | [F66](tasks/F66-the-town.md) | The town: every character there, a different few out each day, talk, the People list | Claude |
 | [F67](tasks/F67-meeting-her.md) | Meeting her: triggers start a character's story; the welcome list comes early; beds cap who lives on the farm | Claude |
 | [F68](tasks/F68-her-chapters.md) | Her chapters: from the story or four defaults, with optional farm gates | Claude |
-| [F69](tasks/F69-bust-art-spec.md) | The bust art: six layers, 18 expressions, 9 outfits, files and delivery; the pilot first | ChatGPT |
-| [F70](tasks/F70-expressive-busts.md) | Busts that change expression: the game composes the layers; the story's `emote` picks the face | Claude |
+| [F69](tasks/F69-bust-art-spec.md) | The bust art: a bust per outfit, a face per expression, files and delivery; the pilot first | ChatGPT |
+| [F70](tasks/F70-expressive-busts.md) | Busts that change expression: the game puts the face over the bust; the story's `emote` picks the face | Claude |
 | [F71](tasks/F71-her-wardrobe.md) | Her wardrobe: the occasion picks the outfit; Dinner in town and A night in | Claude |
 | [F9](tasks/F9-kit-farm.md) | The farm kit's art, drawn in code: wave 2 (wave 1 shipped and is pinned) | Claude, in a uma-platform session |
 | [F25](tasks/F25-art-m4.md) | The town cast's busts (part B; part A shipped) | ChatGPT |

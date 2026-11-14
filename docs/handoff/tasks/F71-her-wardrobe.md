@@ -26,7 +26,7 @@ visits, with story content for each.
       | A night in, and the household's night scenes | Pajamas |
 
    3. else `own`;
-   4. an outfit with no layers drawn for her falls back to `own`.
+   4. an outfit with no bust drawn for her falls back to `own`.
 3. **Two new evening kinds:**
    - **Dinner in town:** a date, from Romance 3; plays as Pick; her invitation is "Dinner in town tonight?"
    - **A night in:** a date, from Romance 6, and at home once married; plays as a scene, not a game; tender, never
@@ -46,7 +46,7 @@ visits, with story content for each.
 ## Done when
 
 - `pnpm lint`, `pnpm test` and `pnpm build` pass.
-- With the pilot's layers:
+- With the pilot's busts:
   - a summer day's talk shows her summer outfit;
   - a summer festival night shows the kimono;
   - Dinner in town shows the dinner dress;

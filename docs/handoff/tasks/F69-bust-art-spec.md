@@ -1,67 +1,46 @@
-# F69 — The bust art: layers, expressions and outfits
+# F69 — The bust art: a bust per outfit, a face per expression
 
 **ChatGPT (character art) · L, in batches · Needs: uma-platform's private bust family for delivery (requested 2026-11-13) ·
 Unblocks: F70, F71 · Design: [her-look.md](../../design/her-look.md)**
 
-> Busts for dialogue, drawn in layers so the game can put any expression on any outfit. One head pose per Uma, a face
-> layer per expression, a body layer per outfit. This packet is the full spec for the character art session.
+> Two kinds of pictures for each Uma: **a bust for each outfit**, and **a face for each expression**. The game puts the
+> face over the bust, so any expression shows on any outfit. That's 9 busts and 17 faces per Uma (her neutral face is the bust's own), not 162 pictures.
 
 ## Why
 
-Scenes show one bust per outfit today, with no expressions. The owner wants:
+Scenes show one still bust per outfit today, with no expressions. The owner wants:
 - dialogue and romance events to show her feelings;
 - her outfit to change with the season and the occasion: a kimono, a dinner dress, a wedding dress and pajamas.
 
-Drawing every expression on every outfit would be 18 × 9 pictures per Uma. Drawing them as layers needs 18 faces plus 9
-outfits, and the game composes the rest.
+## What to draw
 
-## Style
+### 1. A bust for each outfit
 
-- **Match the new full character art** (the two pilot Umas' art in Uma Character Art): the same line, colour and
-  rendering, cut to a bust.
-- **Pose and framing:**
-  - three-quarter view, facing slightly to the viewer's left, eyes to the viewer;
-  - head and shoulders down to mid-chest;
-  - her Uma ears always in frame.
-- **Lighting:**
-  - soft light from the top left, the same on every layer;
-  - no cast shadow;
-  - no background, frame or glow.
-- **Every Uma is drawn as an adult.** Every outfit is tasteful: the pajamas and the dresses are modest, never revealing.
+- **Framing:** her head and shoulders, down to mid-chest, ears included. She looks at the viewer with her calm, neutral
+  face.
+- **Style:** the same as her new full character art.
+- **Background:** transparent, with no shadow or frame.
+- **The same head in every outfit.** In all nine busts, her head is the same size, at the same spot, at the same angle,
+  with the same bangs. Only what's below the neck (and anything she wears on her head) changes. This is what lets one set
+  of faces fit every outfit.
+- **Same size:** every bust of an Uma is the same picture size, 1024 × 1280 is a good default, with her head near the
+  top.
 
-## The canvas
+### 2. A face for each expression
 
-- **Format:** 1024 × 1280 PNG, RGBA, sRGB, transparent background.
-- **Every layer is the full canvas, already in place.** Stacking the files in layer order must give the finished bust,
-  with no offsets.
-- **Placement:**
-  - her head's top sits about 100 px from the top;
-  - her chin about 600 px down;
-  - she's centred horizontally;
-  - the body runs off the bottom edge.
-- **Clean edges:** anti-aliased, no stray pixels outside the drawing, no white fringe.
-
-## The layers, back to front
-
-| # | Layer | One per | Holds | Must not hold |
-|---|---|---|---|---|
-| 1 | `back` (optional) | Outfit | A veil's back, a hood, ornaments behind the head | Anything in front of her |
-| 2 | `body` | Outfit | Shoulders, chest, arms, neck | Her head |
-| 3 | `head` | Uma (or an outfit's restyled hair) | Her face's skin and nose, the back of her hair, her ears | Eyes, brows, mouth, bangs |
-| 4 | `face` | Uma × expression | Eyes (iris, highlights, lashes), brows, mouth, and that expression's blush, tears or sweat | Hair, skin outside the features |
-| 5 | `hair` | Uma (or an outfit's restyled hair) | Bangs and the locks that fall over her face and shoulders | The back of her hair |
-| 6 | `front` (optional) | Outfit | A hat, a kanzashi, a veil's front, a nightcap | — |
-
-- **The head never moves.** Every `head`, `face` and `hair` of an Uma shares one pose and one position, so every face
-  fits every outfit. Only the body below the neck changes between outfits.
-- **An outfit may restyle her hair:** an updo with the kimono, loose hair with pajamas. It does so with its own `head`
-  and `hair`, in the same pose.
+- **A square picture of just her face,** for example 512 × 512. It runs from her brow to her chin and from cheek to
+  cheek, with her bangs as they fall over her forehead. It's drawn to sit exactly over the face of her bust.
+- **Its edges blend into the bust:** soft or clean, so no seam shows where it meets her hair and skin. Outside her face
+  it's transparent.
+- **Drawn once, on her own bust,** and it fits all nine because her head never changes.
+- **Where it goes:** note once, per Uma, where the face square sits on her busts: its left and top edge, in pixels. It's
+  the same for every outfit.
 
 ## The expressions (18)
 
 | Expression | Looks like | Set |
 |---|---|---|
-| `neutral` | Calm, mouth relaxed | Core |
+| `neutral` | Calm, mouth relaxed (the bust's own face, so no extra picture is needed) | Core |
 | `happy` | Warm smile, eyes open | Core |
 | `laughing` | Eyes closed in a smile, mouth open | Core |
 | `surprised` | Eyes wide, brows up, mouth open | Core |
@@ -86,44 +65,41 @@ Each expression is in her character: a reserved Uma's `happy` is quieter than a 
 
 | Outfit | Notes |
 |---|---|
-| `own` | Her own outfit, as in master data and her full art |
+| `own` | Her own outfit, as in her full art |
 | `spring` | Light layers, a cardigan or a light jacket, her colours in pastel |
 | `summer` | A sundress or light top, airy |
 | `autumn` | A knit sweater, a scarf, warm tones |
 | `winter` | A coat, a scarf, a winter accessory |
-| `kimono` | A festival kimono with its obi; hair up, with a kanzashi on `front` |
+| `kimono` | A festival kimono with its obi; hair up at the back, with a kanzashi; bangs as always |
 | `dinner` | An elegant evening dress for a dinner date |
-| `wedding` | A white wedding dress; the veil split into `back` and `front` |
-| `pajamas` | Soft, modest pajamas or a nightgown; hair loose |
+| `wedding` | A white wedding dress and veil, the veil clear of her face |
+| `pajamas` | Soft, modest pajamas or a nightgown; hair loose at the back; bangs as always |
 
-She keeps her own look in every outfit: her colours, her accessories, her personality. The story's tags (her favourite
-season, her loved gift) are good hints.
+She keeps her own look in every outfit: her colours, her accessories, her personality. Every Uma is drawn as an adult,
+and every outfit is tasteful: the pajamas and the dresses are modest, never revealing.
 
 ## Files and delivery
 
 - **One folder per Uma,** named by her character id. A sister is named `s<outfitId>`.
 - **The files:**
-  - `head.png` and `hair.png`;
-  - `face-<expression>.png`;
-  - `body-<outfit>.png`;
-  - `back-<outfit>.png` and `front-<outfit>.png` where used;
-  - `head-<outfit>.png` and `hair-<outfit>.png` for a restyled outfit;
-  - `manifest.json`, listing every file with its layer, outfit or expression, size, SHA-256 and approval date.
-- **Never in git:** the busts show real franchise characters. They're approved by the owner in a local gallery and
-  published privately through uma-platform's bust family, which uma-platform adds on request, like the sprite sets and
-  the universe looks.
-- **A review sheet per Uma:** every outfit with `neutral`, and every expression on `own`, so a misfit shows at a glance.
+  - `bust-<outfit>.png` for each outfit drawn;
+  - `face-<expression>.png` for each expression drawn;
+  - `manifest.json`, which lists each file with its outfit or expression and its approval date, and gives the face
+    square's position: `{ "face": { "left": …, "top": …, "size": … } }`.
+- **Never in git:** these are real franchise characters. They're approved by the owner and published privately through
+  uma-platform's bust family, like the sprite sets and the universe looks.
+- **A review sheet per Uma:** every bust with her neutral face, and every face on her own bust, so a misfit shows at a
+  glance.
 
 ## Order
 
-1. **The pilot:** the two Umas with the new full art, with every piece. They set the bar; the owner approves them before
-   the rest start.
-2. **The welcome list's five:** core faces and `own` first, then the seasons, then the special outfits.
-3. **The rest, in the Uma Ranker's order:** core faces and `own` first.
+1. **The pilot:** the two Umas with the new full art, with every bust and every face. They set the bar, and the owner
+   approves them before the rest start.
+2. **The welcome list's five:** her own bust and the core faces first, then the seasons, then the special outfits.
+3. **The rest, in the Uma Ranker's order:** her own bust and the core faces first.
 
 ## Done when
 
-- The pilot's two Umas have every piece, the stack test is clean (every face on every body), and the owner has approved
-  their review sheets.
-- They're published through uma-platform's bust family.
-- Each later batch follows the same checks.
+- The pilot's two Umas have every bust and face.
+- Every face sits cleanly on every bust.
+- The owner has approved their review sheets, and they're published through uma-platform's bust family.

@@ -1,8 +1,8 @@
 # Her look: outfits and expressions
 
 **A plan, for the owner's go (2026-11-13).** Each Uma gets a wardrobe (her own outfit, four seasonal outfits, a kimono,
-a dinner dress, a wedding dress and pajamas) and busts that change expression in dialogue. The bust is composed in the
-game from layers: the outfit's body, her head, and an expression's face. The page view is
+a dinner dress, a wedding dress and pajamas) and busts that change expression in dialogue. ChatGPT draws a bust for each
+outfit and a face for each expression; the game puts the face over the bust. The page view is
 [her-look.html](../pages/her-look.html).
 
 ## What came in
@@ -30,7 +30,7 @@ uma-platform's **Uma Character Art** (https://uma-platform.web.app/art) holds, f
   published).
 
 Two Umas have the new full character art, and bust-type art packets are on their way. This plan builds on that art: the
-same style, cut to busts in layers.
+same style, as busts and faces.
 
 ### What the farm shows today
 
@@ -61,26 +61,21 @@ same style, cut to busts in layers.
 
 ## Busts that change expression
 
-### The layers
+### A bust per outfit, a face per expression
 
-A bust is six layers, back to front. Every layer is a full canvas, already in place, so the game only stacks them.
-
-| # | Layer | One per | Holds |
-|---|---|---|---|
-| 1 | `back` (optional) | Outfit | What sits behind her: a veil's back, a hood, hair ornaments behind the head |
-| 2 | `body` | Outfit | Shoulders, chest, arms and neck, in that outfit |
-| 3 | `head` | Uma, or an outfit that restyles her hair | Her face's skin and nose, the back of her hair, and her ears: **no eyes, brows or mouth** |
-| 4 | `face` | Uma × expression | Eyes, brows, mouth, and the expression's marks: blush, tears, sweat |
-| 5 | `hair` | Uma, or an outfit that restyles her hair | Her bangs and the locks that fall over her face, so they sit over the eyes and brows |
-| 6 | `front` (optional) | Outfit | What sits over her hair: a hat, a kanzashi, a veil's front, a nightcap |
-
-- **One head pose per Uma:** the head never moves between outfits or expressions, so every face fits every body. Only
-  the body below the neck changes with the outfit.
-- **An outfit may restyle her hair** (an updo for the kimono, loose hair for pajamas) with its own `head` and `hair`,
-  drawn in the same pose, so the faces still fit.
-- **The game composes them:** it stacks the layers, caches the result by its parts' hashes, and swaps only the face when
-  the expression changes. Any missing layer falls back: no `face` for that expression means her nearest one (the table
-  below), and no layers at all means her single master-data bust.
+- **The bust:** her head and shoulders in one outfit, with her calm neutral face, on a transparent background. One for
+  each outfit.
+- **The face:** a square picture of just her face (brow to chin, cheek to cheek, with her bangs) in one expression,
+  drawn to sit exactly over the face of her bust. One for each expression.
+- **Why one set of faces fits every outfit:** her head is the same in every bust (same size, spot, angle and bangs).
+  Only what's below the neck, and what she wears on her head, changes with the outfit.
+- **Where the face goes:** recorded once per Uma, the face square's left and top edge on her busts.
+- **The game composes them:** the bust, with the face square over it, swapped when the expression changes. Both are
+  cached on the device.
+- **Fallbacks:**
+  - a face not drawn yet shows its fallback (the table below), ending at the bust's own neutral face;
+  - a bust not drawn yet for that outfit shows her own outfit's bust;
+  - an Uma with none shows her single master-data bust, as today.
 
 ### The expressions
 
@@ -114,29 +109,28 @@ Optional later, per expression: a `-talk` face with the mouth open, for a talkin
 
 | Piece | Count |
 |---|---|
-| `head` and `hair` | 1 each, plus any outfit's restyled hair |
-| `face` | 10 core, 6 romance, 2 extra: 18 |
-| Outfit layers (`body`, and `back`/`front` where needed) | Her own, four seasons, kimono, dinner dress, wedding dress, pajamas: 9 outfits |
+| Busts | Her own, four seasons, kimono, dinner dress, wedding dress, pajamas: 9 |
+| Faces | 9 core (neutral is the bust's own), 6 romance, 2 extra: 17 |
 
 **Order:**
 1. the two Umas with the new full art, as the pilot that sets the spec;
 2. the welcome list's five;
 3. the rest in the Uma Ranker's order.
 
-Core faces and her own outfit come first for each, then the seasons, then the special outfits.
+Her own bust and the core faces come first for each, then the seasons, then the special outfits.
 
 ## The work
 
 | Packet | What | Who |
 |---|---|---|
-| [F69](../handoff/tasks/F69-bust-art-spec.md) | **The bust art spec:** layers, canvas, alignment, the 18 expressions, the 9 outfits, file names, delivery, the pilot | ChatGPT (character art) |
-| uma-platform request | **A private art family for bust layers,** delivered like the sprite sets: in master data's private release, keyed by character and outfit, names never in git | uma-platform session, on the owner's go |
-| [F70](../handoff/tasks/F70-expressive-busts.md) | **Busts that change expression:** the game composes the layers, the story's `emote` picks the face, every fallback | Claude |
+| [F69](../handoff/tasks/F69-bust-art-spec.md) | **The bust art:** a bust per outfit, a face per expression, the 18 expressions, the 9 outfits, files, delivery, the pilot | ChatGPT (character art) |
+| uma-platform request | **A private art family for the busts and faces,** delivered like the sprite sets: in master data's private release, keyed by character, names never in git | uma-platform session (requested 2026-11-13) |
+| [F70](../handoff/tasks/F70-expressive-busts.md) | **Busts that change expression:** the game puts the face over the bust, the story's `emote` picks the face, every fallback | Claude |
 | [F71](../handoff/tasks/F71-her-wardrobe.md) | **Her wardrobe:** the outfit rules, the scene's `outfit`, the two new evening kinds (Dinner in town, A night in), the profile's Wardrobe | Claude |
 
 **Order:**
 - F69 can start now with the pilot, and the uma-platform request goes with it;
-- F70 follows once the pilot's layers are published;
+- F70 follows once the pilot's busts and faces are published;
 - F71 follows F68 and F70.
 
 **For the story:**
