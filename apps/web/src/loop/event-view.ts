@@ -201,14 +201,14 @@ export function guestsLine(names: readonly string[]): string {
   const list = names.length === 1 ? names[0]! : `${names.slice(0, -1).join(', ')} and ${names.at(-1)!}`
   return `${list} came, in ${names.length === 1 ? 'her' : 'their'} best.`
 }
-/** The reception in words: "Carp Grill ★3 · everyone well fed 2 days", "Marta’s bakery sends a cake · everyone well fed 1 day". */
+/** The reception in words: "Carp Grill ★3 · everyone well fed 2 days", "the town’s bakery sends a cake · everyone well fed 1 day". */
 export function receptionWords(dish: string | null, stars: number | null, days: number): string {
   const fed = `everyone well fed ${days} day${days === 1 ? '' : 's'}`
-  return dish ? `${goodName(dish)} ★${stars} · ${fed}` : `Marta’s bakery sends a cake · ${fed}`
+  return dish ? `${goodName(dish)} ★${stars} · ${fed}` : `the town’s bakery sends a cake · ${fed}`
 }
-/** Marta's cake, the reception with no dish in the Warehouse. */
+/** the bakery's cake, the reception with no dish in the Warehouse. */
 export const CAKE_WORDS = receptionWords(null, null, CAKE_DAYS)
-/** The level-up card's wedding line: "The Fields · Marta’s bakery sends a cake · everyone well fed 1 day". */
+/** The level-up card's wedding line: "The Fields · the town’s bakery sends a cake · everyone well fed 1 day". */
 export const weddingWords = (w: WeddingCard): string => `${cap(placeWords(w.place))} · ${receptionWords(w.dish, w.stars, w.days)}`
 /** The level-up card's ring line: "Iron Ring · hers now". */
 export const ringGivenWords = (ring: string): string => `${goodName(ring)} · hers now`
@@ -220,8 +220,8 @@ export const PICKER_WORDS = {
   ringHelp: 'Any ring makes the proposal. Once you’re married, hers adds +1% at her line a grade.',
   reception: 'The reception',
   receptionHelp: 'Everyone on the farm is well fed from tomorrow.',
-  noDish: 'No dish in the Warehouse yet, so Marta’s bakery sends a cake: a simple meal, everyone well fed for a day.',
-  cake: 'Serve Marta’s cake · 1 day',
+  noDish: 'No dish in the Warehouse yet, so the town’s bakery sends a cake: a simple meal, everyone well fed for a day.',
+  cake: 'Serve the bakery’s cake · 1 day',
 } as const
 
 // --- Setups -----------------------------------------------------------------------------------------------------

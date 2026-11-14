@@ -12,8 +12,8 @@ import { clampScore, pickIndex, type PlayLength, type Seed } from './grade'
 export const WALK_FORKS: Readonly<Record<PlayLength, number>> = { event: 2, evening: 4 }
 /** Each fork waits this long for a turn (no turn: nothing). */
 export const WALK_FORK_MS = 8000
-/** Not on the walk: the Gate and the town edge are where it starts and ends. */
-const OFF_PATH: ReadonlySet<FarmPlaceId> = new Set(['gate', 'shop', 'festival', 'expeditions', 'board'])
+/** Not on the walk: the Gate and the town are where it starts and ends. */
+const OFF_PATH: ReadonlySet<FarmPlaceId> = new Set(['gate', 'shop', 'festival', 'expeditions', 'board', 'town'])
 
 export type Turn = 'left' | 'right'
 export interface WalkFork { left: FarmPlaceId; right: FarmPlaceId }

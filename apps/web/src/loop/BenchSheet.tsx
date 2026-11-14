@@ -11,7 +11,10 @@ import { ItemIcon } from '../items/ItemIcon'
 import { useLoopSave } from '../save/game'
 import { makeRingOnce } from './bench-actions'
 import { BENCH_TEXT, benchRows, forgePairWords, forgeRecipeWords, makeWords, pickWords, swapOptions, type BenchRow } from './bench-view'
-import { CastBust } from './ScenePlayer'
+import { useMaster } from '../master/master'
+import { namer } from '../story/people'
+import { useStory } from '../story/story'
+import { PersonBust } from './ScenePlayer'
 
 const RING = '#b58a2a'
 
@@ -40,6 +43,10 @@ function Bench({ save, onClose }: { save: SaveV4; onClose: () => void }) {
   const grade = chosen !== null && rows.some((r) => r.grade === chosen) ? chosen : rows[0]?.grade ?? null
   const row = rows.find((r) => r.grade === grade) ?? null
   const madeToday = save.today.ring > 0
+  // The town's smith, who keeps the bench: her name from master data, the role's words without it.
+  const master = useMaster()
+  const story = useStory()
+  const smith = namer(master.status === 'ready' ? master.view : null, story)('ida-stone')
   const forge = forgeRecipeWords(save)
   const make = async () => {
     if (!row || busy) return
@@ -73,9 +80,9 @@ function Bench({ save, onClose }: { save: SaveV4; onClose: () => void }) {
     >
       <div className="space-y-3 pb-2" data-bench>
         <div className="flex items-center gap-3">
-          <CastBust id="ida-stone" size={44} />
+          <PersonBust who="ida-stone" name={smith} size={60} />
           <div className="min-w-0 flex-1">
-            <p className="text-[14px] font-semibold">Ida Stone</p>
+            <p className="text-[14px] font-semibold" data-smith>{smith}</p>
             <p className="text-[13px] text-ink-soft">{BENCH_TEXT.rule}</p>
           </div>
           <HelpButton title="The ring bench" label="About the ring bench">

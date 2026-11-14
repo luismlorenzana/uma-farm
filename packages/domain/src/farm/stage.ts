@@ -1,7 +1,7 @@
 // The farm on the HD-2D stage: the save as a farm design
 // for uma-stage's band stage. Portrait, 9 tiles across: three 3 × 3 plots a band and a path row under each, the map's
 // rows from `MAP_PLACES` (gather → process → make, left to right), the homestead's 1–3 rows after the yard, and the
-// town edge last. Each place is the kit's recipe (walls, roof, width × storeys, door,
+// town edge and the Town last. Each place is the kit's recipe (walls, roof, width × storeys, door,
 // mounted pieces and landmarks); a place not yet standing is the kit's overgrown lot; crops by the kit's families. It
 // only reads the save: the stage never changes a rule or the save. Typed from `@luismlorenzana/uma-stage/formats`
 // (types only, so neither the rules nor farm-api load the stage). Pure.
@@ -22,7 +22,7 @@ import type { CropId } from '../goods/ids'
 import { homesteadShown } from '../romance/homestead'
 import { readyAt } from '../fields/crops'
 import { BLOCK_IDS, PLOTS_PER_BLOCK, type BlockId, type FarmSave, type Plot } from '../save/v4'
-import { FARM_MAP_ROWS, MAP_PLACES, placeOpen, type FarmPlace, type FarmPlaceId } from './places'
+import { MAP_PLACES, placeOpen, TOWN_FIRST_ROW, type FarmPlace, type FarmPlaceId } from './places'
 
 /** The farm's width in tiles, a plot's side and a band's depth. */
 export const FARM_STAGE_TILES = 9
@@ -116,13 +116,13 @@ const homeRows = (save: FarmSave): number => Math.ceil(homesteadShown(save).leng
 /** Every plot on the stage, top to bottom, left to right: the map's rows, the homestead's, then the town edge. */
 export function farmPlots(save: FarmSave): FarmPlot[] {
   const home = homeRows(save)
-  const bandOf = (row: number, group: FarmPlace['group']): number => (group === 'town' ? FARM_MAP_ROWS - 1 + home : row - 1)
+  const bandOf = (row: number, group: FarmPlace['group']): number => (group === 'town' ? row - 1 + home : row - 1)
   const at = (band: number, col: number) => ({ x: col * FARM_PLOT, z: band * FARM_BAND, band, col })
   const plots: FarmPlot[] = MAP_PLACES.map((place) => ({ id: place.id, kind: 'place', ...at(bandOf(place.row, place.group), place.col), standing: placeStands(save, place), place }))
   if (home > 0) {
     for (const house of homesteadShown(save)) {
       const built = house.n < save.homestead.houses.length
-      plots.push({ id: house.id, kind: built ? 'house' : 'lot', ...at(FARM_MAP_ROWS - 1 + Math.floor(house.n / FARM_PLOT), house.n % FARM_PLOT), standing: built, house: house.n })
+      plots.push({ id: house.id, kind: built ? 'house' : 'lot', ...at(TOWN_FIRST_ROW - 1 + Math.floor(house.n / FARM_PLOT), house.n % FARM_PLOT), standing: built, house: house.n })
     }
   }
   return plots.sort((a, b) => a.z - b.z || a.x - b.x)
@@ -211,6 +211,8 @@ function placeRecipe(id: FarmPlaceId): Recipe {
     }
     case 'festival': return { ground: ['Lvv', 'Lvv', 'vvv'], props: [['bunting', 1, 1], ['flagpole', 2, 0]], slots: [] }
     case 'expeditions': return { ground: ['ggg', 'ggg', 'ggg'], building: house(1, 2, 'plank', 'shingle', 1, { column: 0 }), props: [['flagpole', 0, 0], ['signpost', 0, 1]], slots: [] }
+    // The Town, a plain place for now: the spine's path on into town, a signpost at its edge.
+    case 'town': return { ground: ['ppp', 'ppp', 'ppp'], props: [['signpost', 2, 2], ['lantern', 0, 0]], slots: [] }
   }
 }
 

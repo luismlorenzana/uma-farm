@@ -18,7 +18,7 @@
 import {
   homeOf, NEEDS_ROOM, OWN_HOUSE_WISH,
   atHome,
-  ACTIVITY_NAMES, bar, beatOf, benchOpen, betterRings, bondHearts, bondOf, castOrder, choresTonight, closestFriend, dateOf, dishName, engravingOf, favouriteOf, farmPlace, giftsOf,
+  ACTIVITY_NAMES, bar, beatOf, benchOpen, betterRings, bondHearts, bondOf, castOrder, choresTonight, closestFriend, dateOf, dishName, engravingOf, favouriteOf, farmPlace, giftsOf, isTownPerson,
   GIFT_POINTS_V4, goodName, hasPerk, homeOrHoused, invitedNow, isGoodId, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, keepsakeOf, keepsakeQuality, LADDER_COLOURS, ladderOf, levelWords,
   linePlaces, morningRule, morningsToItem, nextBondHeart, pairLevels, pairName, pairOf, PERK_PLACE, perkLineOf, perksFor, petNameOf, readiness, readLevels, ringGrade, ringName,
   ringPercent, romanceTerms, ROUTE_RUNGS, routeIndex, rungName, SEASON_NAMES, SIDE_BY_SIDE_HEARTS, tasteKnown, tieKind, tieLineOf, tiesOf, tieStrength, unreadLevels, WAITING_RUNGS,
@@ -458,23 +458,31 @@ export interface TieRow {
   here: boolean
   /** Her place in `ties.json`, the last tie-break. */
   order: number
-  /** Her closest friend: the first row. */
+  /** Her closest friend: the first row with someone who can share the farm. */
   closest: boolean
   /** Their authored conversations opened and not read yet, lowest first: **Read** plays them. */
   unread: number[]
+  /** One of the town's people: the tie builds no bond, and its line shows instead of hearts. */
+  town: boolean
+  /** The tie's line, for one of the town's people; null otherwise. */
+  line: string | null
 }
 
 /**
  * Her ties from the pack, in `tiesOf`'s order, the one `closestFriend` reads: the strongest, then the most
- * bond points, then the ties' order, her closest friend first. The hearts are `bondHearts` of today's `save.bonds`, so they
- * move as bonds grow; a pair's conversations opened and unread show **Read**.
+ * bond points, then the ties' order, her closest friend marked. The hearts are `bondHearts` of today's `save.bonds`, so
+ * they move as bonds grow; a pair's conversations opened and unread show **Read**. A tie with one of the town's people
+ * shows its line: it builds no bond.
  */
-export function tieRows(save: Pick<SaveV4, 'bonds' | 'roster' | 'diary'>, pack: Pick<StoryPack, 'ties' | 'pairs'>, id: string): TieRow[] {
-  return tiesOf(pack, save, id).map(({ tie, with: other, points, order }, i): TieRow => {
+export function tieRows(save: Pick<SaveV4, 'bonds' | 'roster' | 'diary'>, pack: Pick<StoryPack, 'ties' | 'pairs'> & Partial<Pick<StoryPack, 'town'>>, id: string): TieRow[] {
+  const closest = closestFriend(pack, save, id)
+  return tiesOf(pack, save, id).map(({ tie, with: other, points, order }): TieRow => {
     const here = Boolean(save.roster[other])
+    const town = isTownPerson(pack, other)
     return {
       with: other, kind: tieKind(tie), words: TIE_WORDS[tieKind(tie)], strength: tieStrength(tie), points, hearts: bondHearts(points), next: nextBondHeart(points), here, order,
-      closest: i === 0, unread: here && save.roster[id] ? unreadLevels(save, pack, id, other) : [],
+      closest: other === closest, town, line: town ? tieLineOf(pack, id, other) : null,
+      unread: here && save.roster[id] ? unreadLevels(save, pack, id, other) : [],
     }
   })
 }

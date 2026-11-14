@@ -20,7 +20,7 @@
 import { FARM_PLACE_IDS, type FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity } from '../farm/ranks'
 import { isGoodId } from '../goods/ids'
-import { CAST_IDS } from './cast'
+import { CAST_IDS, isCastId } from './cast'
 
 /** The farm's places plus the romance's own backdrops. */
 export const STORY_PLACES = [
@@ -33,6 +33,10 @@ export const CALLINGS = ['farming', 'foraging', 'fishing', 'mining', 'quarry'] a
 /** Her favourite work: any activity but expeditions, which are a party's, not one Uma's. */
 export const FAVOURITE_LINES = ACTIVITIES.filter((a): a is Exclude<Activity, 'expeditions'> => a !== 'expeditions')
 export const TIE_KINDS = ['friends', 'rivals', 'mentor', 'teammates', 'sisters', 'other'] as const
+/** The town's spots: where its people stand, and where a character is out on a day (the town's own names are
+ * `placeholders.ts`'; the story's `town.json` may name them). */
+export const SPOT_IDS = ['plaza', 'market', 'cafe', 'harbour', 'library', 'track'] as const
+export type SpotId = typeof SPOT_IDS[number]
 /** The ladders a beat sits on: her arrival, then the route's six. */
 export const LADDERS = ['arrival', 'friendship', 'confession', 'romance', 'proposal', 'wedding', 'spouse'] as const
 export const EMOTES = ['happy', 'shy', 'sad', 'angry', 'surprised', 'thinking', 'laughing', 'tender'] as const
@@ -76,7 +80,7 @@ export type StoryTrigger =
   /** Give her a gift she likes, or this good. */
   | { kind: 'gift'; good?: string }
   /** Talk with her at one of the town's spots. */
-  | { kind: 'spot'; spot: string }
+  | { kind: 'spot'; spot: SpotId }
   /** Talk with her in a season. */
   | { kind: 'season'; season: Season }
   /** Talk with her on a festival. */
@@ -113,6 +117,10 @@ export interface CastEntry {
   meet?: StoryTrigger
   /** Her chapters. */
   chapters?: HerChapter[]
+  /** Her favourite of the town's spots: she's out there more often than elsewhere. */
+  spot?: SpotId
+  /** A sister's name (a sister's id is `s<outfitId>`): master data has none for her, so the pack gives it. */
+  name?: string
   /** A short paragraph about her: the story's own (the sandbox shows it). */
   paragraph?: string
 }
@@ -134,6 +142,15 @@ export type TieSource = typeof TIE_SOURCES[number]
 /** A tie between two characters. Only `a` and `b` are needed: the rest has its placeholder (`placeholders.ts`). */
 export interface Tie { a: string; b: string; kind?: TieKind; strength?: 1 | 2 | 3; line?: string; history?: string; source?: TieSource; from?: string }
 export interface Ties { version?: 1; ties: Tie[] }
+
+/** One of the town's people: an Uma from master data, by her character id, in one of the town's roles (`game`, a role
+ * id of `cast.ts`), with what she does in a line. She lives in town, never on the farm. */
+export interface TownPerson { characterId: string; does?: string; game?: string }
+/** One of the town's spots, by its id: its name, a line about it, and its keeper (one of the town's people, by her
+ * character id or her role's id), who's usually there. */
+export interface TownSpot { id: SpotId; name?: string; blurb?: string; keeper?: string }
+/** town.json: the town's people and its spots. Every part optional. */
+export interface Town { version?: 1; people?: TownPerson[]; spots?: TownSpot[] }
 
 // --- Her bible ----------------------------------------------------------------------------------------------------------
 
@@ -193,6 +210,8 @@ export interface UmaBible {
    * the confession, `partner` from Romance 1 to the wedding, `spouse` after it. Without one she keeps her temperament's
    * lines. */
   chats?: ChatSets
+  /** What she says when you talk with her in town, any number: one a day. Without them, the game's short lines. */
+  townLines?: string[]
   /** Her keepsake: a named item she gives at Friendship 10, its name and her line about it, shown on her profile. Its
    * effect is the template's: +0.25 quality at her line, +0.5 from S5. Without a name her profile says "Her keepsake". */
   keepsake?: Keepsake
@@ -326,6 +345,12 @@ export const LINE_LIMITS = {
   prompt: 120,
   /** A chat line. */
   chat: 160,
+  /** A line on the town's talk sheet. */
+  townLine: 160,
+  /** A sister's name, and a town spot's name. */
+  name: 40,
+  /** A town spot's line, and what one of the town's people does. */
+  townBlurb: 160,
   /** A house's morning line. */
   houseLine: 120,
   /** Her profile's Next card. */
@@ -353,6 +378,15 @@ export const HOUSE_LINE_MAX = LINE_LIMITS.houseLine
 
 /** A character id, as master data and the save hold it: a positive integer. */
 export const CHARACTER_ID = /^[1-9]\d*$/
+/** A sister's id: `s` and her outfit's id. A sister is an outfit of an Uma, presented as a character of her own; master
+ * data has no character for her, so her name is the pack's and her art her outfit's. */
+export const SISTER_ID = /^s[1-9]\d*$/
+/** Whether an id is a sister's. */
+export const isSister = (id: string): boolean => SISTER_ID.test(id)
+/** A sister's outfit: her id without its `s`. */
+export const sisterOutfit = (id: string): string => id.slice(1)
+/** Anyone the pack may hold: a character id, or a sister's. */
+export const STORY_ID = /^(s?)[1-9]\d*$/
 /** A flag's name, as the save keeps it. */
 const FLAG = /^[a-z0-9][a-z0-9:._-]{0,63}$/
 
@@ -383,6 +417,8 @@ export interface StoryContext {
   isGood?: (id: string) => boolean
   /** The Studio export's characters (the sandbox's): a cast character outside it is a note. */
   exported?: ReadonlySet<string>
+  /** The town's people, by character id (`town.json`'s): they speak in any scene, and a tie may name one. */
+  town?: ReadonlySet<string>
 }
 
 /** A line's words: `{farmer}` is the only placeholder, no word genders the farmer, nothing reads as school. Notes. */
@@ -450,7 +486,7 @@ function readTrigger(v: unknown, at: string, f: Findings, ctx: StoryContext): St
       if (!isGood(v.good)) f.notes.push(`${at}: ${v.good} isn’t a good in the game yet`)
       return { kind: 'gift', good: v.good }
     case 'spot':
-      if (!isText(v.spot) || v.spot.length > LINE_LIMITS.id) return bad('a spot names one of the town’s spots')
+      if (!oneOf(SPOT_IDS, v.spot)) return bad(`a spot names one of the town’s spots: ${SPOT_IDS.join(', ')}`)
       return { kind: 'spot', spot: v.spot }
     case 'season':
       if (!oneOf(SEASONS, v.season)) return bad(`a season is one of ${SEASONS.join(', ')}`)
@@ -488,7 +524,7 @@ function checkSteps(steps: unknown, where: string, sc: StepContext, f: Findings,
     if (!isObject(step)) { f.errors.push(`${at}: not a step`); return }
     if ('say' in step) {
       if (!isText(step.say)) f.errors.push(`${at}: say names who speaks`)
-      else if (!sc.speakers.has(step.say)) f.notes.push(`${at}: ${step.say} isn’t one who speaks here (one outside the cast shows as “An Uma”)`)
+      else if (!sc.speakers.has(step.say)) f.notes.push(`${at}: ${step.say} isn’t one who speaks here (one outside the cast and the town’s people shows as “An Uma”)`)
       shown(step.line, LINE_LIMITS.line, at, f)
       if (step.emote !== undefined && !oneOf(EMOTES, step.emote)) f.notes.push(`${at}: the emote ${String(step.emote)} shows as its word (the menu’s are ${EMOTES.join(', ')})`)
     } else if ('choice' in step) {
@@ -672,8 +708,9 @@ function readChapters(v: unknown, at: string, f: Findings, ctx: StoryContext): H
   return out
 }
 
-/** cast.json: who the pack holds, in its order, each with what's given of her; the welcome list. */
-export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'exported'> = {}): Read<Cast> {
+/** cast.json: who the pack holds, in its order, each with what's given of her; the welcome list. A character is master
+ * data's (her `characterId`) or a sister (`s<outfitId>`, with her `name`). */
+export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'exported' | 'town'> = {}): Read<Cast> {
   const f = findings()
   if (raw === undefined) { f.notes.push('No cast: the pack holds no characters'); return { value: { umas: [] }, ...f } }
   if (!isObject(raw)) { f.errors.push('Not a cast file (an object with umas); no characters are read'); return { value: { umas: [] }, ...f } }
@@ -684,8 +721,8 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
   const sub: StoryContext = { ...ctx, umas: new Set(list.flatMap((x) => (isObject(x) && typeof x.characterId === 'string' ? [x.characterId] : []))) }
   const umas = list.flatMap((u, i): CastEntry[] => {
     const at = `Uma ${i + 1}`
-    if (!isObject(u) || typeof u.characterId !== 'string' || !CHARACTER_ID.test(u.characterId)) {
-      f.errors.push(`${at}: no characterId (master data’s id, a positive integer); skipped`)
+    if (!isObject(u) || typeof u.characterId !== 'string' || !STORY_ID.test(u.characterId)) {
+      f.errors.push(`${at}: no characterId (master data’s id, a positive integer, or a sister’s s<outfitId>); skipped`)
       return []
     }
     const id = u.characterId
@@ -693,10 +730,22 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
     if (seen.has(id)) { f.errors.push(`${it}: listed twice; the later one is skipped`); return [] }
     seen.add(id)
     if (ctx.exported && !ctx.exported.has(id)) f.notes.push(`${it}: not in the Studio export`)
+    const sister = isSister(id)
+    if (ctx.town?.has(id)) f.notes.push(`${it}: she’s one of the town’s people too, so she keeps her role in town and is never out among the rest`)
+    if (sister && u.outfitId != null && u.outfitId !== sisterOutfit(id)) f.notes.push(`${it}: a sister plays her own outfit, ${sisterOutfit(id)}; outfitId is ignored`)
+    if (!sister && u.name !== undefined) f.notes.push(`${it}: her name is master data’s; a name is read for a sister only`)
+    if (sister && u.name === undefined) f.notes.push(`${it}: a sister with no name shows as her elder’s sister`)
+    if (sister && u.arrives !== undefined) f.notes.push(`${it}: a sister lives in town; she can’t come to the farm yet, so her arrival is dropped`)
     const entry = kept<CastEntry>(u, {
-      outfitId: field(u, 'outfitId', (v) => (typeof v === 'string' && CHARACTER_ID.test(v) ? v : undefined), it, f, 'is an outfit id'),
+      outfitId: sister ? undefined : field(u, 'outfitId', (v) => (typeof v === 'string' && CHARACTER_ID.test(v) ? v : undefined), it, f, 'is an outfit id'),
+      spot: field(u, 'spot', (v) => (oneOf(SPOT_IDS, v) ? v : undefined), it, f, `is one of the town’s spots: ${SPOT_IDS.join(', ')}`),
+      name: sister ? field(u, 'name', (v) => {
+        if (shown(v, LINE_LIMITS.name, `${it} name`, f, false, 'name')) return v
+        f.errors.pop()
+        return undefined
+      }, it, f, `is 1–${LINE_LIMITS.name} characters`) : u.name as string | undefined,
       calling: field(u, 'calling', (v) => (oneOf(CALLINGS, v) ? v : undefined), it, f, `is one of ${CALLINGS.join(', ')}`),
-      arrives: isObject(u.arrives) && u.arrives.kind === 'chapter'
+      arrives: sister ? undefined : isObject(u.arrives) && u.arrives.kind === 'chapter'
         ? (f.notes.push(`${it}: the farm has no chapters, so a chapter arrival never comes; she waits to be met`), undefined)
         : isObject(u.arrives) && u.arrives.kind === 'opening'
           ? (f.notes.push(`${it}: the opening brings nobody now (the welcome list’s first joins as it ends), so an opening arrival is dropped`), undefined)
@@ -705,7 +754,7 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
       meet: u.meet === undefined ? undefined : readTrigger(u.meet, `${it} meet`, f, sub),
       chapters: u.chapters === undefined ? undefined : readChapters(u.chapters, it, f, sub),
     })
-    if (u.outfitId == null) f.notes.push(`${it}: no outfit, so she plays her default outfit from master data`)
+    if (u.outfitId == null && !sister) f.notes.push(`${it}: no outfit, so she plays her default outfit from master data`)
     if (entry.arrives?.kind === 'beds' && entry.arrives.dormLevel > 8) f.notes.push(`${it}: the Dorm has 8 levels, so level ${entry.arrives.dormLevel} never comes`)
     if (u.paragraph !== undefined && typeof u.paragraph === 'string') f.notes.push(...lineNotes(u.paragraph, it, false))
     return [entry]
@@ -713,7 +762,7 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
   const cast = new Set(umas.map((u) => u.characterId))
   const listed = (key: 'welcome', words: string): string[] | undefined => {
     if (raw[key] === undefined) return undefined
-    const ids = idList(raw[key], key, f, (id) => CHARACTER_ID.test(id), 'character ids')
+    const ids = idList(raw[key], key, f, (id) => STORY_ID.test(id), 'character ids')
     for (const id of ids ?? []) if (!cast.has(id)) f.notes.push(`${key}: ${id} isn’t in the cast; ${words}`)
     return ids
   }
@@ -728,7 +777,9 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
 
 // --- The ties -----------------------------------------------------------------------------------------------------------
 
-/** ties.json: each tie between two characters, once; its kind, strength and line when given. */
+/** ties.json: each tie between two characters, once; its kind, strength and line when given. Either may be a sister
+ * (`s<outfitId>`) or one of the town's people: a tie with one of them builds no bond, since she never lives on the farm,
+ * and its line shows on both profiles. */
 export function checkTies(raw: unknown, ctx: StoryContext): Read<Ties> {
   const f = findings()
   if (raw === undefined) return { value: { ties: [] }, ...f }
@@ -736,14 +787,17 @@ export function checkTies(raw: unknown, ctx: StoryContext): Read<Ties> {
   const pairs = new Set<string>()
   const ties = (raw.ties as unknown[]).flatMap((t, i): Tie[] => {
     const at = `Tie ${i + 1}`
-    if (!isObject(t) || typeof t.a !== 'string' || typeof t.b !== 'string' || !CHARACTER_ID.test(t.a) || !CHARACTER_ID.test(t.b) || t.a === t.b) {
+    if (!isObject(t) || typeof t.a !== 'string' || typeof t.b !== 'string' || !STORY_ID.test(t.a) || !STORY_ID.test(t.b) || t.a === t.b) {
       f.errors.push(`${at}: a tie names two different characters, a and b; skipped`)
       return []
     }
     const key = [t.a, t.b].sort().join('|')
     if (pairs.has(key)) { f.errors.push(`${at}: ${t.a} and ${t.b} are tied already; skipped`); return [] }
     pairs.add(key)
-    for (const side of [t.a, t.b]) if (!ctx.umas.has(side)) f.notes.push(`${at}: ${side} isn’t in the cast, so the tie never starts`)
+    for (const side of [t.a, t.b]) {
+      if (ctx.town?.has(side)) f.notes.push(`${at}: ${side} is one of the town’s people, so the tie builds no bond; its line shows on both profiles`)
+      else if (!ctx.umas.has(side)) f.notes.push(`${at}: ${side} isn’t in the cast, so the tie never starts`)
+    }
     const line = t.line === undefined ? undefined : shown(t.line, LINE_LIMITS.tieLine, at, f) ? t.line : undefined
     if (t.line !== undefined && line === undefined) f.errors[f.errors.length - 1] += '; the line is skipped'
     return [kept<Tie>(t, {
@@ -753,6 +807,75 @@ export function checkTies(raw: unknown, ctx: StoryContext): Read<Ties> {
     })]
   })
   return { value: kept<Ties>(raw, { ties }), ...f }
+}
+
+// --- The town -----------------------------------------------------------------------------------------------------------
+
+/** town.json: the town's people (each an Uma from master data, by her character id, in a role of the game's) and its
+ * spots (by the game's ids), each part read on its own. A person or a spot with an error is skipped; a field with one
+ * is dropped, and the game's own fills it (`townOf`). */
+export function checkTown(raw: unknown): Read<Town | null> {
+  const f = findings()
+  if (!isObject(raw)) { f.errors.push('Not a town (an object with people and spots); the game’s own plays'); return { value: null, ...f } }
+  const ids = new Set<string>()
+  const roles = new Set<string>()
+  let people: TownPerson[] | undefined
+  if (raw.people !== undefined) {
+    if (!Array.isArray(raw.people)) f.errors.push('people is a list; skipped')
+    else {
+      people = (raw.people as unknown[]).flatMap((p, i): TownPerson[] => {
+        const at = `Person ${i + 1}`
+        if (!isObject(p) || typeof p.characterId !== 'string' || !CHARACTER_ID.test(p.characterId)) {
+          f.errors.push(`${at}: no characterId (master data’s id, a positive integer); skipped`)
+          return []
+        }
+        const id = p.characterId
+        const it = `${at} (${id})`
+        if (ids.has(id)) { f.errors.push(`${it}: listed twice; the later one is skipped`); return [] }
+        ids.add(id)
+        let game: string | undefined
+        if (p.game !== undefined) {
+          if (typeof p.game !== 'string' || !isCastId(p.game)) f.notes.push(`${it}: game ${String(p.game)} isn’t one of the town’s roles (${CAST_IDS.join(', ')}); she’s one of the town’s people all the same`)
+          else if (roles.has(p.game)) f.errors.push(`${it}: game ${p.game} is someone else’s role already; skipped`)
+          else { roles.add(p.game); game = p.game }
+        }
+        const does = p.does === undefined ? undefined : shown(p.does, LINE_LIMITS.townBlurb, `${it} does`, f, false, 'line') ? p.does as string
+          : (f.errors[f.errors.length - 1] += '; skipped', undefined)
+        return [kept<TownPerson>(p, { game: game ?? (isCastId(String(p.game)) ? undefined : p.game as string | undefined), does })]
+      })
+    }
+  }
+  const keepers = new Set([...ids, ...CAST_IDS])
+  let spots: TownSpot[] | undefined
+  if (raw.spots !== undefined) {
+    if (!Array.isArray(raw.spots)) f.errors.push('spots is a list; skipped')
+    else {
+      const seen = new Set<string>()
+      spots = (raw.spots as unknown[]).flatMap((v, i): TownSpot[] => {
+        const at = `Spot ${i + 1}`
+        if (!isObject(v) || !oneOf(SPOT_IDS, v.id)) { f.errors.push(`${at}: id is one of the town’s spots (${SPOT_IDS.join(', ')}); skipped`); return [] }
+        const it = `Spot ${v.id}`
+        if (seen.has(v.id)) { f.errors.push(`${it}: twice; the later one is skipped`); return [] }
+        seen.add(v.id)
+        const text = (key: 'name' | 'blurb', max: number): string | undefined => {
+          if (v[key] === undefined) return undefined
+          if (shown(v[key], max, `${it} ${key}`, f, false, key)) return v[key] as string
+          f.errors[f.errors.length - 1] += '; skipped'
+          return undefined
+        }
+        const name = text('name', LINE_LIMITS.name)
+        const blurb = text('blurb', LINE_LIMITS.townBlurb)
+        const keeper = v.keeper === undefined ? undefined : typeof v.keeper === 'string' && keepers.has(v.keeper) ? v.keeper
+          : (f.errors.push(`${it}: keeper ${String(v.keeper)} isn’t one of the town’s people (her characterId or her role); skipped`), undefined)
+        return [kept<TownSpot>(v, { name, blurb, keeper })]
+      })
+      const missing = SPOT_IDS.filter((id) => !seen.has(id))
+      if (missing.length > 0) f.notes.push(`spots: ${missing.join(', ')} ${missing.length === 1 ? 'isn’t' : 'aren’t'} named, so the game’s own ${missing.length === 1 ? 'plays' : 'play'}`)
+    }
+  }
+  const unfilled = CAST_IDS.filter((id) => !roles.has(id))
+  if (unfilled.length > 0) f.notes.push(`people: no one plays ${unfilled.join(', ')}, so master data fills ${unfilled.length === 1 ? 'it' : 'them'}`)
+  return { value: kept<Town>(raw, { people, spots }), ...f }
 }
 
 // --- Her bible ----------------------------------------------------------------------------------------------------------
@@ -899,6 +1022,9 @@ export function checkBible(raw: unknown, id: string, ctx: StoryContext): Read<Um
     gifts,
     route: raw.route === undefined ? undefined : readBeats(raw.route, ctx, isGood, proposed, f),
     chats: field(raw, 'chats', (v) => readChats(v, f), 'chats', f, 'is { friend, partner, spouse }'),
+    townLines: field(raw, 'townLines', (v) => (Array.isArray(v)
+      ? v.filter((line, i) => shown(line, LINE_LIMITS.townLine, `townLines ${i + 1}`, f) || (f.errors[f.errors.length - 1] += '; skipped', false))
+      : undefined), 'townLines', f, 'is a list of lines'),
     keepsake: field(raw, 'keepsake', (v) => readKeepsake(v, f), 'keepsake', f, 'is { name, line }'),
     petName: field(raw, 'petName', (v) => {
       if (!shown(v, LINE_LIMITS.petName, 'petName', f, true, 'name')) { f.errors.pop(); return undefined }
@@ -959,7 +1085,7 @@ export function checkRoute(raw: unknown, id: string, bible: UmaBible | null, ctx
   if (!isObject(raw) || !Array.isArray(raw.events)) { f.errors.push('Not a route (an object with an events list); none is read'); return { value: null, ...f } }
   if (raw.characterId !== undefined && raw.characterId !== id) f.notes.push(`its characterId is ${String(raw.characterId)}; the game reads it as ${id}’s, by its file’s name`)
   if (!ctx.umas.has(id)) f.notes.push(`${id} isn’t in the cast, so the game never plays her route`)
-  const sc: StepContext = { speakers: new Set<string>([...ctx.umas, ...CAST_IDS]), isGood: ctx.isGood ?? isGoodId }
+  const sc: StepContext = { speakers: new Set<string>([...ctx.umas, ...CAST_IDS, ...(ctx.town ?? [])]), isGood: ctx.isGood ?? isGoodId }
   const ids = new Set<string>()
   const events = (raw.events as unknown[]).flatMap((e, i): Route['events'] => {
     if (!isObject(e) || !isText(e.id)) { f.errors.push(`Event ${i + 1}: no id; skipped`); return [] }
@@ -1021,7 +1147,7 @@ export function checkHousehold(raw: unknown, ctx: StoryContext): Read<Household 
   const f = findings()
   if (!isObject(raw)) { f.errors.push('Not a household (an object); none is read'); return { value: null, ...f } }
   const isGood = ctx.isGood ?? isGoodId
-  const town: StepContext = { speakers: new Set<string>(CAST_IDS), isGood }
+  const town: StepContext = { speakers: new Set<string>([...CAST_IDS, ...(ctx.town ?? [])]), isGood }
   /** A run of steps on its own: its findings in `f`, undefined (skipped) with an error. */
   const run = (steps: unknown, where: string, sc: StepContext): Step[] | undefined => {
     if (steps === undefined) return undefined
@@ -1039,7 +1165,7 @@ export function checkHousehold(raw: unknown, ctx: StoryContext): Read<Household 
     const out: Record<string, Step[]> = {}
     for (const [id, steps] of Object.entries(v)) {
       if (!ctx.umas.has(id)) f.notes.push(`${where}, ${id}: not in the cast, so it never plays`)
-      const read = run(steps, `${where}, ${id}`, { speakers: new Set([id, ...CAST_IDS]), isGood })
+      const read = run(steps, `${where}, ${id}`, { speakers: new Set([id, ...CAST_IDS, ...(ctx.town ?? [])]), isGood })
       if (read) out[id] = read
     }
     return out
@@ -1098,7 +1224,7 @@ export function checkHousehold(raw: unknown, ctx: StoryContext): Read<Household 
 export function checkOpening(raw: unknown, ctx: StoryContext): Read<Opening | null> {
   const f = findings()
   if (!isObject(raw) || !Array.isArray(raw.steps)) { f.errors.push('Not an opening (an object with a steps list); the game’s own opening plays'); return { value: null, ...f } }
-  const sc: StepContext = { speakers: new Set<string>([...ctx.umas, ...CAST_IDS]), isGood: ctx.isGood ?? isGoodId }
+  const sc: StepContext = { speakers: new Set<string>([...ctx.umas, ...CAST_IDS, ...(ctx.town ?? [])]), isGood: ctx.isGood ?? isGoodId }
   const steps = (raw.steps as unknown[]).filter((step, i) => {
     const at = `Step ${i + 1}`
     if (isObject(step) && !OPENING_STEPS.some((kind) => kind in step) && ['choice', 'play', 'flag', 'when'].some((kind) => kind in step)) {

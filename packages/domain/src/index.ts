@@ -62,12 +62,14 @@ export * from './farm/dorm'
 
 // The farm's progress: the Diary's milestones and rows, the Farm Rank's points and what each rank opens, the night's
 // goals check; building (each place's cost, paying, standing the next morning), the milestones with the Umas and the
-// farm's projects; the town's cast, and which scene plays now (the opening's lines are the pack's, `openingOf`).
+// farm's projects; the town's roles, and which scene plays now (the opening's lines are the pack's, `openingOf`).
 export * from './farm/milestones'
 export * from './farm/diary'
 export * from './farm/builds'
 export * from './story/cast'
 export * from './story/scenes'
+// The town: who lives there, the day's draw at its six spots, a talk once a day, and her line.
+export * from './town/town'
 
 // The romance: save v4 (the new farm over an older save, the keys, the romance's slots) and its strict parse, the
 // farmer's name, the story pack at runtime with the invented stand-in, the one `outfitOf` resolver, her favourite line
@@ -110,7 +112,7 @@ export * from './romance/events'
 // evening's points and its card, the morning's invitations and their answers, and when Tonight opens.
 export * from './romance/evening'
 // The ring bench, the proposal and the wedding: the rings' bench at the Forge, her ring's grade and
-// a better ring, the proposal's ring, the wedding's place, reception and guests, and Ida Stone's scene.
+// a better ring, the proposal's ring, the wedding's place, reception and guests, and the smith's scene.
 export * from './romance/bench'
 export * from './romance/wedding'
 // Married life: the homestead's houses, rooms and moves, Sleep at, the night's house and its morning,
@@ -131,12 +133,13 @@ export * from './story/stand-in'
 export {
   ANSWERS, answerAt, ARRIVAL, BIG_EVENTS, bibleTagNotes, CALLINGS, CHARACTER_ID, CHAT_SETS, DATE_GAMES, EMOTES, EVENT_LIMITS,
   eventNotes, FARMING_PLAYS, gendersFarmer, HOUSE_LINE_MAX, HOUSEHOLD_SCENES, LADDERS, LINE_LIMITS, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies,
-  OPENING_STEPS, RUNGS,
+  checkTown, isSister, OPENING_STEPS, RUNGS, SISTER_ID, sisterOutfit, SPOT_IDS, STORY_ID,
   stepFindings, STORY_PLACES, tagNotes, TONES, TRIGGER_KINDS, unscriptedBeats, WISHES,
 } from './story/authored'
 export type {
   Answer, Arrival, Beat as RouteBeat, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, DateGame, Emote, Finale, Findings, Gifts, HerChapter, Household, HouseholdAt,
-  HouseholdScene, Keepsake, Ladder, Opening, OptionGives, PairConversations, Play, Read, Route, Step, StoryContext, StoryPlace, StoryTrigger, Tie, TieKind, Ties, Together, Tone, Trigger, UmaBible,
+  HouseholdScene, Keepsake, Ladder, Opening, OptionGives, PairConversations, Play, Read, Route, SpotId, Step, StoryContext, StoryPlace, StoryTrigger, Tie, TieKind, Ties, Together, Tone, Town,
+  TownPerson, TownSpot, Trigger, UmaBible,
   Unlock, WeddingPlan, Wish,
 } from './story/authored'
 

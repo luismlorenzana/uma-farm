@@ -15,7 +15,7 @@ import {
   BEAT_HEARTS, BOND_HEARTS, BUBBLE_LINE_LIMIT, CONVERSATION_TARGET, DISTANCES, LAYERS, SAMPLE_CREW, SCENE_LINE_LIMIT, SPEAKERS,
   crossCheck, parseBeats, parseChapter, parseConversations,
 } from './lib/model.mjs'
-import { packUmas, parseCastPack } from './lib/pack.mjs'
+import { packPeople, packUmas, parseCastPack } from './lib/pack.mjs'
 import { storyCounts } from './lib/counts.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -81,10 +81,14 @@ async function storyState(game) {
   if (household !== undefined) files.household = household
   const opening = await json('opening.json')
   if (opening !== undefined) files.opening = opening
+  const town = await json('town.json')
+  if (town !== undefined) files.town = town
   const tagSheet = await json('tags.json')
   const story = {
     pack: pack ? { id: pack.id, exportedAt: pack.exportedAt } : null,
     umas,
+    // Every character of the cast pack, any board's: the town's people's names and faces.
+    people: pack ? packPeople(pack) : [],
     world: await maybeText(join(content, 'world.md')),
     hasCast: files.cast !== undefined,
   }
@@ -141,6 +145,10 @@ async function storyState(game) {
     household: read.files.household ? entry('household.json', read.files.household) : null,
     // The opening's lines, as the game plays them on day 1.
     opening: read.files.opening ? entry('opening.json', read.files.opening) : null,
+    // The town: the pack's town.json, and the town as the game plays it (its roles, its people and its six spots; with
+    // no master data here, a role town.json leaves is master data's in the game).
+    town: read.files.town ? entry('town.json', read.files.town) : null,
+    townPlayed: (({ people, spots }) => ({ people, spots }))(v.townOf(read.pack)),
     own,
     written,
     // Every finding, and the files read whole that the game skipped (a file that isn't JSON or isn't the shape).

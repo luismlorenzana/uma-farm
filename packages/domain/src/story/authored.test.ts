@@ -70,7 +70,7 @@ describe('the cast', () => {
     expect(read.errors).toEqual([
       'Uma 2 (9000002): calling is one of farming, foraging, fishing, mining, quarry; skipped',
       'Uma 3 (9000003): arrives is a festival (and a year), the Dorm’s beds, or after an event; skipped',
-      'Uma 4: no characterId (master data’s id, a positive integer); skipped',
+      'Uma 4: no characterId (master data’s id, a positive integer, or a sister’s s<outfitId>); skipped',
       'Uma 5 (9000001): listed twice; the later one is skipped',
     ])
     expect(read.value.umas.map((u) => u.characterId)).toEqual([...STAND_INS])
@@ -259,7 +259,7 @@ describe('the scripted steps', () => {
   })
   it('a speaker outside the scene\'s, an unknown place, an emote off the menu and a long wait are notes', () => {
     expect(stepFindings([{ say: 'farmer', line: 'Hi.', emote: 'smug' }, { place: 'moon' }, { wait: 9000 }], 'E', speakers).notes).toEqual([
-      'E, step 1: farmer isn’t one who speaks here (one outside the cast shows as “An Uma”)',
+      'E, step 1: farmer isn’t one who speaks here (one outside the cast and the town’s people shows as “An Uma”)',
       'E, step 1: the emote smug shows as its word (the menu’s are happy, shy, sad, angry, surprised, thinking, laughing, tender)',
       'E, step 2: moon isn’t one of the game’s places; its title line shows the words',
       'E, step 3: a wait of 9000 ms plays as 0–5000',

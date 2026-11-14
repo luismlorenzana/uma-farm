@@ -13,6 +13,7 @@ import { useLocation } from 'react-router'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
+import { namer } from '../story/people'
 import { useStory } from '../story/story'
 import { readPairOnce } from './actions'
 import { parseReadParam } from './hearts-view'
@@ -57,7 +58,8 @@ function Conversations({ save, pair, levels, master, leaving, onDone }: {
   save: SaveV4; pair: PairConversations; levels: PairConversations['levels']; master: MasterView; leaving: boolean; onDone: () => void
 }) {
   const [index, setIndex] = useState(0)
-  const nameOf = (id: string): string => master.album.get(id)?.name ?? 'An Uma'
+  const story = useStory()
+  const nameOf = namer(master, story)
   const level = levels[index]
   if (!level) return null
   const next = () => (index + 1 < levels.length ? setIndex(index + 1) : onDone())

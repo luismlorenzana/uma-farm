@@ -27,11 +27,12 @@ The pack is a folder of JSON files in `content/story/`. Every file is optional.
 |---|---|---|
 | `cast.json` | Who the pack holds, in its order, and what's given of each | Master data's first five characters, on placeholders |
 | `ties.json` | The ties between characters | No ties |
-| `umas/<characterId>.json` | Her bible: her favourite line, gifts, route beats, chats and more | Her calling gives her line (else her stats in master data), every gift is neutral, she chats in the game's lines for each stage |
+| `umas/<characterId>.json` | Her bible: her favourite line, gifts, route beats, chats, town lines and more | Her calling gives her line (else her stats in master data), every gift is neutral, she chats and talks in town in the game's lines |
 | `routes/<characterId>.json` | Her scripted events, by rung | Her meeting scene and every event play the game's own short cards, which pay as written ones do |
 | `pairs/<a>-<b>.json` | A tie's conversations, by bond level | Two short lines, one each, at every level |
 | `household.json` | The household scenes, house lines and the finale | The game's short cards; house lines come from her temperament |
 | `opening.json` | The opening: the start's lines, after the farmer's name | The game's three short lines |
+| `town.json` | The town's people (Umas in the town's roles) and its six spots | Master data's characters fill the roles; the game's own six spots |
 
 Any other file (`world.md`, `tags.json`, `reviews.json`, notes, drafts) is the story's own. The sandbox shows some of
 them; the game never reads them, and a release never includes them.
@@ -52,6 +53,9 @@ What an error skips, by where it is:
 | A file that isn't JSON | That file |
 | A file that isn't the shape the game reads (a cast that isn't an object, a route with no `events` list) | That file |
 | A character with no `characterId`, or one listed twice | That character (the later one) |
+| One of the town's people with no `characterId`, or listed twice | That person (the later one) |
+| A town person's role someone already has, a spot's `keeper` who isn't one of the town's people | That field |
+| A town spot whose `id` isn't one of the six, or listed twice | That spot (the later one) |
 | A field the game can't use (a calling, place or trigger that isn't on the menu, a birthday that isn't a real date) | That field: what plays without it plays |
 | A chat line or a house line too long for its screen | That line |
 | A step in an event the game can't play (a line too long, a choice with no options, a flag the save can't keep) | That event |
@@ -75,6 +79,9 @@ Each limit is what its screen shows. A longer line is an error.
 | A tie's line | 400 |
 | Her keepsake's name, and its line | 40, and 160 |
 | Her pet name for you | 24 |
+| A town line | 160 |
+| A sister's name, a town spot's name | 40 |
+| A town spot's line, what one of the town's people does | 160 |
 | An unlock's perk, in words | 200 |
 | A chapter's title | 40 |
 | A flag's name | 64, in lowercase letters, digits and `- . : _` (the save keeps it) |
@@ -95,7 +102,7 @@ These are notes, and the owner's standing direction for anything on screen:
 ```json
 {
   "welcome": ["9000007", "9000002"],
-  "umas": [{ "characterId": "9000001" }, { "characterId": "9000002", "outfitId": "900000201" }]
+  "umas": [{ "characterId": "9000001", "spot": "cafe" }, { "characterId": "9000002", "outfitId": "900000201" }, { "characterId": "s900000202", "name": "Her name" }]
 }
 ```
 
@@ -110,19 +117,34 @@ brings only the welcome list's first.
 
 ### Each character
 
-Only her `characterId` is needed: master data's id for her, a positive integer. Everything else is optional, and any
-field the game doesn't read is kept for the story.
+Only her `characterId` is needed: master data's id for her, a positive integer, or a sister's id (below). Everything
+else is optional, and any field the game doesn't read is kept for the story.
 
 | Field | What it does in play | Without it |
 |---|---|---|
 | `characterId` | Who she is | The character is skipped (an error) |
 | `outfitId` | The one outfit she plays as: her face, bust, talents and temperament | Her default outfit from master data: her first original one |
 | `calling` | Her line when her bible gives none: `farming`, `foraging`, `fishing`, `mining`, or `quarry` (mining at the Quarry) | Her bible's `favouriteLine`; with neither, the work her stats in master data suit best |
+| `spot` | **Her favourite of the town's spots** (`plaza`, `market`, `cafe`, `harbour`, `library`, `track`): she's out there more often than anywhere else | None: she's out at any spot alike |
+| `name` | **A sister's name** (read for a sister only): master data has none for her | Her elder's name, as her sister |
 | `birthday` | `{ "month": 1–12, "day": … }` on a real date, when master data has none | Master data's birthday, or none |
 | `meet` | **Her trigger to meet,** from the trigger menu below. Read now; meeting her (F67) acts on it | Talk with her on three different days |
 | `chapters` | **Her chapters,** below. Read now; her chapters' screens (F68) act on them | The four default chapters |
 | `arrives` | How she comes to the farm today: a `festival` (and a `year`), the Dorm's `beds`, or after an `event`. A `chapter` or `opening` arrival is noted and dropped: the farm has no global chapters, and the opening brings only the welcome list's first. Meeting her (F67) replaces it | She doesn't come to the farm on her own until meeting her lands (unless she's the welcome list's first) |
 | `paragraph` | The story's own: the sandbox shows it | Nothing |
+
+### Sisters
+
+A sister is an outfit of an Uma, presented as a character of her own, with her own name and profile: the Uma Ranker's,
+named `s<outfitId>` (`s` and her outfit's id). The pack takes her id wherever it takes a character's: the cast, the
+welcome list, a tie's `a` or `b`, her bible `umas/s<outfitId>.json`, her route `routes/s<outfitId>.json` and a pair's file.
+
+- **Her face, bust, talents and temperament** are her outfit's, from master data: an `outfitId` on her entry is ignored
+  (a note).
+- **Her name** is her entry's `name`, from the pack's private release at run time, never git. Without one, she shows
+  as her elder's sister (a note).
+- **She lives in town** and is out there like everyone else. She can't come to the farm yet: an `arrives` on her entry is
+  dropped (a note), and the welcome list's first is never a sister. Meeting her (F67) brings her.
 
 ### The trigger menu
 
@@ -133,7 +155,7 @@ One menu for her trigger to meet (`meet`) and a chapter's gate (`gate`). Each is
 | `{ "kind": "talks", "days": 3 }` | Talk with her on this many different days |
 | `{ "kind": "gift" }` | Give her a gift she likes |
 | `{ "kind": "gift", "good": "carrot" }` | Give her this good |
-| `{ "kind": "spot", "spot": "plaza" }` | Talk with her at one of the town's spots (the town, F66, names them) |
+| `{ "kind": "spot", "spot": "plaza" }` | Talk with her at one of the town's spots: `plaza`, `market`, `cafe`, `harbour`, `library` or `track` |
 | `{ "kind": "season", "season": "winter" }` | Talk with her in a season: `spring`, `summer`, `autumn` or `winter` |
 | `{ "kind": "festival", "festival": "harvest-cup" }` | Talk with her on a festival: `flower-show`, `fishing-derby`, `cooking-contest`, `animal-show` or `harvest-cup` |
 | `{ "kind": "farm-rank", "rank": 4 }` | Reach a Farm Rank, 1–10 |
@@ -178,11 +200,14 @@ A rung in two chapters plays in the first (a note); rungs in none of her chapter
 { "ties": [{ "a": "9000001", "b": "9000002", "kind": "friends", "strength": 3, "line": "Old friends." }] }
 ```
 
-A tie needs only its two characters, `a` and `b`. A pair tied twice keeps the first.
+A tie needs only its two characters, `a` and `b`. A pair tied twice keeps the first. Either may be a sister
+(`s<outfitId>`), or one of the town's people (`town.json`'s): a tie with one of the town's people **builds no bond**,
+since she never lives on the farm, and is never her closest friend; its line shows on both profiles (the cast Uma's
+Ties, and the town person's sheet in town), and on the talk sheet when the cast Uma stands at the spot she keeps.
 
 | Field | What it does in play | Without it |
 |---|---|---|
-| `a`, `b` | The two characters. A tie to someone outside the cast never starts (a note) | The tie is skipped (an error) |
+| `a`, `b` | The two characters: a character id, a sister's, or one of the town's people's. A tie to someone outside the cast and the town never starts (a note) | The tie is skipped (an error) |
 | `kind` | Its word on her profile: `friends`, `rivals`, `mentor`, `teammates`, `sisters`, or `other` ("Close") | "Close" |
 | `strength` | 1–3: the bond it starts at when both are on the farm (0, 50 or 150 points), and her closest friends | 1: known, starting at 0 |
 | `line` | Its line on her profile | "Closer now" |
@@ -201,6 +226,7 @@ The file's name says whose bible it is. A `characterId` inside that disagrees is
 | `gifts.proposed` | The story's list of goods it would like added: a request to the game | Nothing |
 | `route` | Her beats, by rung (below) | Each event plays with the game's defaults |
 | `chats.friend`, `chats.partner`, `chats.spouse` | Her chat lines by stage, any number, one a day: friend from Friendship 1 to the confession, partner from Romance 1 to the wedding, spouse after it | The game's five short lines for that stage |
+| `townLines` | What she says when you talk with her in town, any number, one a day, `{farmer}` your name | The game's six short lines |
 | `keepsake.name`, `keepsake.line` | The keepsake she gives at Friendship 10, on her profile | "Her keepsake", with a plain line |
 | `petName` | What she calls you from Romance 1, on her profile. Never gendered, no placeholder | Your name |
 | `wedding.places` | Where your wedding may be held, any number, the first first: the game's places | Her wedding beat's place and the farm's: the chapel bell, the Fields, the overlook |
@@ -241,7 +267,7 @@ skipped, and the rest of her route plays.
 
 | Step | What it plays |
 |---|---|
-| `{ "say": "<who>", "line": "…", "emote": "happy" }` | A line, with the speaker's bust. Who speaks: anyone in the cast or the town's people (an id outside them shows as "An Uma", a note). The emote shows as its word: `happy`, `shy`, `sad`, `angry`, `surprised`, `thinking`, `laughing`, `tender` |
+| `{ "say": "<who>", "line": "…", "emote": "happy" }` | A line, with the speaker's bust. Who speaks: anyone in the cast, or one of the town's people by her character id or her role's (`ida-stone`): her master-data name and bust show (an id outside them shows as "An Uma", a note). The emote shows as its word: `happy`, `shy`, `sad`, `angry`, `surprised`, `thinking`, `laughing`, `tender` |
 | `{ "narrate": "…" }` | Narration, in italics |
 | `{ "thought": "…" }` | The farmer's thought, in italics |
 | `{ "wait": 600 }` | A pause, in ms, 0–5000 |
@@ -320,6 +346,43 @@ the first line. Any length the story wants.
   has a helper. She waits at the Gate, and her arrival scene plays when you say hello there. A line that tells the
   farmer someone is waiting at the Gate reads true.
 
+## The town: `town.json`
+
+The town's people and its six spots. Every part is optional.
+
+```json
+{
+  "people": [{ "characterId": "9000101", "does": "Keeps the smithy down in town.", "game": "ida-stone" }],
+  "spots": [{ "id": "cafe", "name": "The Café", "blurb": "Tea, cake and a seat by the window.", "keeper": "9000101" }]
+}
+```
+
+### The town's people
+
+Each is an Uma from master data, by her `characterId`, in one of the game's fourteen roles. Her name and bust come from
+master data at run time, so no name is in the pack's words. She lives in town, never on the farm, never among those out
+for a talk, and keeps her spots.
+
+| Field | What it does in play | Without it |
+|---|---|---|
+| `characterId` | Who she is: master data's id | The person is skipped (an error) |
+| `game` | **Her role,** by the game's id: `hollis-pryor` (the mayor), `marta-quill` (the shopkeeper), `ben-carver` (the farm's last keeper), `dale-hart` (the rancher), `gus-talbot` (the old miner), `rosa-bell` (the cook), `juno-park` (the guide), `ida-stone` (the smith), `nils-berg` (the captain), `wren-ashby` and `cole-varga` (the two rivals), `courier`, `musician`, `bell-keeper`. A scene's `say` by the role speaks as her. A role taken already is an error that skips the field; one not on the list is a note: she's one of the town's people all the same | A role of the story's own |
+| `does` | What she does, in a line, on her sheet in town | Her role's words |
+
+A role no one in `town.json` plays goes to one of master data's characters, from the last in its order, never one of
+the cast (a note), so every role is filled.
+
+### The spots
+
+| Field | What it does in play | Without it |
+|---|---|---|
+| `id` | Which spot: `plaza`, `market`, `cafe`, `harbour`, `library` or `track`. A cast entry's `spot` and a `spot` trigger name them | The spot is skipped (an error) |
+| `name` | Its name on the town's screen | The game's: The Plaza, The Market, The Café, The Harbour, The Library, The Hilltop Track |
+| `blurb` | Its line under the name | The game's line |
+| `keeper` | Who's usually there: one of the town's people, by her `characterId` or her role's id | The game's keeper for it: the mayor, the shopkeeper, the cook, the captain, the guide, the courier |
+
+A spot `town.json` doesn't name plays the game's own (a note).
+
 ## Releasing a pack
 
 - **`pnpm story:release`** reads `content/story/` with the game's own reader and writes the release. Any pack releases:
@@ -333,6 +396,7 @@ the first line. Any length the story wants.
 | Item | Read now | Acts in play |
 |---|---|---|
 | Her outfit, calling, birthday, bible, route, ties, pairs, household, the opening | Yes | Yes, today |
+| The town's people and spots, her favourite spot, her town lines, a sister's name | Yes | Yes, today: [the town](game-mechanics.md#the-town) |
 | The welcome list, her trigger to meet | Yes | Its first, today: day 1's helper. The rest when meeting her lands (F67) |
 | Her chapters and their gates | Yes | When her chapters land (F68) |
 | What plays when a part is missing | Placeholders for every read | Yes, today: [what plays without the story](game-mechanics.md#what-plays-without-the-story) |

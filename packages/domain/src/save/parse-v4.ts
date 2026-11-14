@@ -19,7 +19,7 @@ import {
 } from './parse-loop'
 import {
   type BuildingId, EVENING_KINDS, eveningsOn, FARMHOUSE, FESTIVAL_NIGHT, FINALE_MARRIED, FURNITURE_PIECES, invitesFor, LOVE_STAGES, marriedCount, MAX_HOUSES, residentsOf, roomsOf, vowsOn,
-  isDishId, pairKey, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUma, type SaveV4, type TodayV4,
+  isDishId, pairKey, TOWN_ID, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUma, type SaveV4, type TodayV4, type TownTalks,
 } from './v4'
 
 export { isRosterId, LOOP_SLOTS, LOOP_WORK_PLACES } from './parse-loop'
@@ -27,7 +27,7 @@ export type { LoopKind, LoopKinds, LoopPlaceId, LoopRequestKind, LoopRequestKind
 
 export const SAVE_V4_KEYS = [
   'version', 'account', 'farmer', 'calendar', 'gold', 'today', 'roster', 'love', 'dorm', 'items', 'bin', 'work', 'fields', 'crops', 'ranch', 'places',
-  'buildings', 'tools', 'workshops', 'expeditions', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'summary',
+  'buildings', 'tools', 'workshops', 'expeditions', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'summary', 'town',
 ] as const
 
 /** Events a route can hold: her arrival and 26 rungs, with room for later waves' extras. */
@@ -349,9 +349,32 @@ export function chapterOpened(buildings: SaveV4['buildings'], chapter: number): 
   return opened.length === 0 ? buildings : { ...buildings, ...Object.fromEntries(opened.map((id) => [id, 1])) }
 }
 
+/** The most characters the town's talks hold: master data's and the pack's sisters, with room to spare. */
+const MAX_TOWN = 2000
+
+/** Your talks in town: each a character's (or a sister's) days talked, from 1, and the last day, no later than today.
+ * An older v4 has none: none. */
+function parseTown(value: unknown, path: string, today: number): Record<string, TownTalks> {
+  if (value === undefined) return {}
+  const raw = record(value, path)
+  const ids = Object.keys(raw)
+  if (ids.length > MAX_TOWN) fail(path, `at most ${MAX_TOWN}`)
+  const out: Record<string, TownTalks> = {}
+  for (const id of ids) {
+    const at = `${path}.${id}`
+    if (!TOWN_ID.test(id)) fail(at, 'expected a character id or a sister’s')
+    const o = object(raw[id], at, ['talks', 'last'])
+    const talks = int(o.talks, `${at}.talks`, 1, today)
+    const last = day(o.last, `${at}.last`)
+    if (last > today) fail(`${at}.last`, 'after today')
+    out[id] = { talks, last }
+  }
+  return out
+}
+
 /** Parses a save v4. `kinds` is the work kinds' requests (`LOOP_REQUESTS`; tests pass their own kinds). An older v4's
  * `farm.chapter` and `farm.goals` are ignored, what its chapter opened kept standing (`chapterOpened`); its missing
- * `farm.builds` is none. */
+ * `farm.builds` is none, and its missing `town` none. */
 export function parseSaveV4(value: unknown, path = 'save', kinds: LoopRequestKinds = LOOP_REQUESTS): SaveV4 {
   const o = object(value, path, SAVE_V4_KEYS)
   if (o.version !== 4) fail(`${path}.version`, 'expected 4')
@@ -395,6 +418,7 @@ export function parseSaveV4(value: unknown, path = 'save', kinds: LoopRequestKin
     memories: parseMemories(o.memories, `${path}.memories`, ids),
     arrivals,
     summary: o.summary === null ? null : parseSummaryV4(o.summary, `${path}.summary`, today, ids, homestead.houses.length),
+    town: parseTown(o.town, `${path}.town`, today),
   }
   parseRooms(save, path)
   return save

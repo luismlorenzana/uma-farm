@@ -1,5 +1,6 @@
-// The farm map as data: where each of the 24 places on the map stands, and why one is locked. The
-// map is uma-kit's Hub, eight rows of three laid on its tile grid, taller than a phone's screen, so it scrolls.
+// The farm map as data: where each of the 25 places on the map stands, and why one is locked. The
+// map is uma-kit's Hub, eight rows of three and the Town below them, laid on its tile grid, taller than a phone's
+// screen, so it scrolls.
 import { FARM_MAP_ROWS, farmRankOf, placeBuilt, placeOpen, type FarmPlace, type FarmPlaceId, type PlaceOpens, type FarmSave } from '@farm/domain'
 // The bench's state is read straight from the save here (`buildings.forge`), so the map's light
 // module never pulls the bench's rules.
@@ -8,7 +9,8 @@ import type { PlaceAt } from '@luismlorenzana/uma-kit/hub'
 /** The places whose screens have landed, each with where a tap on it goes: the bin and shop (their sheets
  * over the farm) and Warehouse; the Fields (their quick look, which opens `/fields`); the forest, Fishery and three
  * stations (their quick looks, which open their pages); the Dorm (its page), the Gate (its quick look, the visitor
- * waiting) and the Dock (its quick look, with the Boat to build). Until then a place shows "Soon". */
+ * waiting), the Dock (its quick look, with the Boat to build) and the Town (its screen). Until then a place shows
+ * "Soon". */
 export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlaceId, string>([
   ['fields', '/?peek=fields'],
   ['forest', '/?peek=forest'],
@@ -22,6 +24,7 @@ export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlace
   ['dorm', '/dorm'],
   ['gate', '/?peek=gate'],
   ['dock', '/?peek=dock'],
+  ['town', '/town'],
 ])
 
 /** Where a tap on a place goes: its screen once it's open and landed, else its quick look. The Forge's ring bench
@@ -35,7 +38,7 @@ const TOP_TILES = 3
 const ROW_TILES = 4
 /** A map's height in tiles for its rows, with room under the last for its name and the help button beside it. */
 export const mapTilesFor = (rows: number): number => TOP_TILES + (rows - 1) * ROW_TILES + 5
-/** The map's height in tiles: the eight rows (36 × 24 px on a phone). The homestead's rows add to it. */
+/** The map's height in tiles: the nine rows (40 × 24 px on a phone). The homestead's rows add to it. */
 export const FARM_MAP_TILES = mapTilesFor(FARM_MAP_ROWS)
 const COLUMNS = [0.2, 0.5, 0.8] as const
 

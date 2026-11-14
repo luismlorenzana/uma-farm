@@ -17,15 +17,15 @@
 // **the proposal** first asks which ring (the best grade preselected), then plays, and closes on the Engaged
 // stage-up; **the wedding** asks the place first (her three, each with its place card), plays the authored event on that
 // place's card with the guests' faces and a line of narration (its own place steps give way to the chosen one), then the
-// reception (a dish in the Warehouse, or Marta's cake), and closes on the Married stage-up.
+// reception (a dish in the Warehouse, or the bakery's cake), and closes on the Married stage-up.
 import emoteIndex from '@luismlorenzana/uma-art/emote/atlas.json'
 import emoteUrl from '@luismlorenzana/uma-art/emote/atlas.png?url'
 import {
-  askSteps, beatOf, CAST, CAST_IDS, canAsk, choicePointsOf, eventOf, extraPlay, goodName, heldRings, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
+  askSteps, beatOf, canAsk, choicePointsOf, eventOf, extraPlay, goodName, heldRings, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
   readiness, receptionDishes, replaySteps, ringGrade, ringPercent, rungName, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
-  type Answer, type CastId, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryPack,
+  type Answer, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryPack,
 } from '@farm/domain'
-import { FaceTile, UmaBust } from '@luismlorenzana/uma-kit/album'
+import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -34,6 +34,7 @@ import { useLocation, useSearchParams } from 'react-router'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
+import { namer } from '../story/people'
 import { useStory } from '../story/story'
 import { askHerOnce, playHerEvent } from './event-actions'
 import { LevelUpCard, StageUpScreen } from './EventCards'
@@ -41,7 +42,7 @@ import { EMOTE_BUBBLE, eventTitle, guestsLine, optionWords, PICKER_WORDS, placeC
 import { marriedOf, placeWords } from './hearts-view'
 import { ItemIcon } from '../items/ItemIcon'
 import { BuildingArt, PlaySheet, playSpec } from './PlaySheet'
-import { CastBust, silent } from './ScenePlayer'
+import { PersonBust, silent } from './ScenePlayer'
 
 type Mode = 'event' | 'ask' | 'replay'
 interface Request { mode: Mode; id: string; rung: string | null; from: number | null }
@@ -69,8 +70,6 @@ function without(location: { pathname: string; search: string }): string {
   const search = params.toString()
   return `${location.pathname}${search ? `?${search}` : ''}`
 }
-
-const isCast = (id: string): id is CastId => (CAST_IDS as readonly string[]).includes(id)
 
 export default function EventPlayer() {
   const [params] = useSearchParams()
@@ -162,7 +161,7 @@ function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLo
   log: boolean; onLog: (open: boolean) => void; skipAsked: number; onClose: () => void
 }) {
   const { id, rung, mode } = req
-  const nameOf = (who: string): string => (isCast(who) ? CAST[who].name : master.album.get(who)?.name ?? 'An Uma')
+  const nameOf = namer(master, pack)
   // The proposal's ring and the wedding's place, chosen before the scene; the wedding's reception after it.
   const [ring, setRing] = useState<string | null>(null)
   const [chosenPlace, setChosenPlace] = useState<string | null>(null)
@@ -269,16 +268,16 @@ function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLo
     )
   }
 
-  // The bust: whoever's speaking, if she's an Uma; else hers. Her emote beside it.
+  // The bust: whoever's speaking (one of the town's people too); else hers. Her emote beside it.
   const speaker = step && 'say' in step ? step.say : null
-  const bustId = speaker && !isCast(speaker) ? speaker : id
+  const bustId = speaker ?? id
   // At a choice, the line before it stays in the bubble, and her emote with it.
   const context = choiceNow ? [...before].reverse().find((s) => 'say' in s || 'narrate' in s || 'thought' in s) ?? null : null
   const said = step && 'say' in step ? step : context && 'say' in context ? context : null
   const emote = said && said.say === bustId ? said.emote ?? null : null
   return (
     <Shell title={title} auto={auto} onAuto={onAuto} onSkip={skip} onLog={() => onLog(true)}>
-      <PlaceCardView place={place} day={save.calendar.day} bust={bustId} bustName={nameOf(bustId)} castSpeaker={speaker && isCast(speaker) ? speaker : null} emote={emote}
+      <PlaceCardView place={place} day={save.calendar.day} bust={bustId} bustName={nameOf(bustId)} emote={emote}
         guests={guests} nameOf={nameOf} />
       <div className="flex min-h-0 flex-1 flex-col justify-end gap-2 px-4 pt-2 pb-4">
         {choiceNow ? (
@@ -358,7 +357,7 @@ function PlacePicker({ places, day, onPick }: { places: readonly string[]; day: 
   )
 }
 
-/** The reception: a dish in the Warehouse, its well-fed days on the button, or Marta's cake with none. */
+/** The reception: a dish in the Warehouse, its well-fed days on the button, or the bakery's cake with none. */
 function ReceptionPicker({ save, onPick }: { save: SaveV4; onPick: (reception: Reception) => void }) {
   const dishes = receptionDishes(save)
   return (
@@ -384,8 +383,8 @@ function ReceptionPicker({ save, onPick }: { save: SaveV4; onPick: (reception: R
 
 /** The place card: its frame on its ground, her bust and her emote bubble; a wedding's guests' faces along its
  * top. */
-function PlaceCardView({ place, day, bust, bustName, castSpeaker, emote, guests = [], nameOf }: {
-  place: string | null; day: number; bust: string; bustName: string; castSpeaker: CastId | null; emote: keyof typeof EMOTE_BUBBLE | null; guests?: readonly string[]
+function PlaceCardView({ place, day, bust, bustName, emote, guests = [], nameOf }: {
+  place: string | null; day: number; bust: string; bustName: string; emote: keyof typeof EMOTE_BUBBLE | null; guests?: readonly string[]
   nameOf?: (id: string) => string
 }) {
   const card = placeCard(place ?? 'fields', day)
@@ -398,8 +397,8 @@ function PlaceCardView({ place, day, bust, bustName, castSpeaker, emote, guests 
         </span>
       )}
       <span className="absolute bottom-6 left-4"><BuildingArt frame={card.frame} scale={3} /></span>
-      <span className="absolute right-2 bottom-0" data-bust={castSpeaker ? 'cast' : bust}>
-        {castSpeaker ? <CastBust id={castSpeaker} size={150} /> : <UmaBust outfitId={bust} label={bustName} size={190} />}
+      <span className="absolute right-2 bottom-0" data-bust={bust}>
+        <PersonBust who={bust} name={bustName} size={190} />
       </span>
       {emote && <EmoteBubble emote={emote} />}
     </div>

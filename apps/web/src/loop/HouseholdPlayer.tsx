@@ -7,7 +7,7 @@
 // on the game's last stage-up card, "The Great Harvest", with every spouse's face. The end or Skip reads it once
 // (`diary.read`); a replay marks nothing. Portaled above the kit's sheets (z-60). Loaded on demand.
 import {
-  CAST, CAST_IDS, householdOf, householdPlay, householdReady, playOf, promptOf, playSeed, sceneSteps, withFarmer, type CastId, type ChoiceOption, type HouseholdId, type HouseholdPlay, type SaveV4,
+  householdOf, householdPlay, householdReady, playOf, promptOf, playSeed, sceneSteps, withFarmer, type ChoiceOption, type HouseholdId, type HouseholdPlay, type SaveV4,
   type Step, type StoryPack,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
@@ -19,13 +19,12 @@ import { useLocation } from 'react-router'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
+import { namer } from '../story/people'
 import { useStory } from '../story/story'
 import { readHouseholdOnce } from './homestead-actions'
 import { parseHouseholdParam } from './homestead-view'
 import { PlaySheet, playSpec } from './PlaySheet'
 import { Frame, placeName, silent, StepView } from './ScenePlayer'
-
-const isCast = (id: string): id is CastId => (CAST_IDS as readonly string[]).includes(id)
 
 export default function HouseholdPlayer({ value, replay }: { value: string; replay: boolean }) {
   const save = useLoopSave()
@@ -72,7 +71,7 @@ function Scene({ save, pack, id, play, master, replay, leaving, onDone }: {
   }, [play])
   const [index, setIndex] = useState(0)
   const [place, setPlace] = useState<string>(id === 'finale' ? 'festival' : 'fields')
-  const nameOf = (who: string): string => (isCast(who) ? CAST[who].name : master.album.get(who)?.name ?? 'An Uma')
+  const nameOf = namer(master, pack)
   const part = parts[index]
   const next = () => (index + 1 < parts.length ? setIndex(index + 1) : onDone())
   if (!part) return null

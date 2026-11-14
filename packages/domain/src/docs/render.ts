@@ -9,7 +9,7 @@ import { itemNameOf } from '../items/lines'
 import { inDemand, priceOf, STARS, starFactor, starPrice } from '../goods/prices'
 import { DEMAND, FAMILY_FACTOR, LADDER, REFINED_FACTOR, type LadderFamily } from '../goods/rule'
 import { DAYS_PER_SEASON, farmDay, FESTIVALS, SEASON_NAMES, SEASONS } from '../farm/calendar'
-import { BUILD_PLACES, FARM_MAP_ROWS, FARM_PLACES, MAP_PLACES, type FarmPlace, type PlaceOpens } from '../farm/places'
+import { BUILD_PLACES, FARM_MAP_ROWS, FARM_PLACES, MAP_PLACES, TOWN_FIRST_ROW, type FarmPlace, type PlaceOpens } from '../farm/places'
 import { BOARD_MET, buildCostWords, buildGoodsWords } from '../farm/builds'
 import { NIGHT_STEPS } from '../night/end-day'
 import { CROPS, nightsToReady, SHOP_SEEDS } from '../fields/crops'
@@ -45,7 +45,9 @@ import { loveRankFactor } from '../farm/rank-rules'
 import { dateOf } from '../farm/calendar'
 import { FARMER_NAME_MAX } from '../romance/farmer'
 import { storyPackFrom } from '../story/pack'
-import { favouriteOf } from '../story/placeholders'
+import { favouriteOf, PLACEHOLDER_SPOTS, PLACEHOLDER_TOWN_LINES } from '../story/placeholders'
+import { FAVOURITE_SPOT, SPOT_ROOM } from '../town/town'
+import { SPOT_IDS } from '../story/authored'
 import { BOND_HEARTS, BOND_POINTS, bondHearts, CLOSEST_BOND, SHARED_LINE, SIDE_BY_SIDE, SIDE_BY_SIDE_HEARTS, TIE_SEEDS } from '../farm/bonds'
 import { STAND_IN_FILES } from '../story/stand-in'
 import { CAST_COUNT, CAST_MEET } from '../romance/plays/cast'
@@ -104,7 +106,7 @@ const opensWords = (opens: PlaceOpens): string => {
     case 'later': return 'Not built yet'
   }
 }
-/** The map's eight rows, and each place's building and what opens it. */
+/** The map's nine rows, and each place's building and what opens it. */
 function farmMap(): string {
   const rows = Array.from({ length: FARM_MAP_ROWS }, (_, r) => {
     const row = MAP_PLACES.filter((p) => p.row === r + 1)
@@ -461,13 +463,28 @@ function milestonesBlock(): string {
 function diaryRows(): string {
   return table(['Row', 'Id', 'Its ten goods', 'Gold'], DIARY_ROWS.map((r) => [`${FAMILY_NAMES[r.family]}${r.refined ? ', refined' : ''}`, `\`${r.id}\``, r.goods.map((id) => itemNameOf(id)).join(', '), g(ROW_GOLD)]))
 }
-/** The town's cast. */
+/** The town's own six spots: each one's id, name, line and the role that keeps it. */
+function townSpots(): string {
+  return table(['Spot (`spot`)', 'The game’s name', 'Its line', 'Kept by'], SPOT_IDS.map((id) => [`\`${id}\``, PLACEHOLDER_SPOTS[id].name, PLACEHOLDER_SPOTS[id].blurb,
+    CAST[PLACEHOLDER_SPOTS[id].keeper].role]))
+}
+/** The day's draw, and the game's own town lines. */
+function townDraw(): string {
+  return table(['', 'The rule'], [
+    ['At each spot', `Up to ${SPOT_ROOM} a day: ${SPOT_ROOM * SPOT_IDS.length} in all, the rest at home`],
+    ['Who’s out', 'Everyone in town but the Umas on the farm and the town’s people, in the order of `draw(uid, day, \'town:<id>\', 0)`, lowest first, until every spot is full'],
+    ['Where she stands', `Her favourite spot (her cast entry’s \`spot\`) while it has room, ${Math.round(FAVOURITE_SPOT * 100)}% of the time (\`draw(…, 1)\`); else a spot with room (\`draw(…, 2)\`)`],
+    ['A talk', 'Once a day each: her talks so far and the last day, in the save’s `town`. It costs nothing and takes no time'],
+    ['Her line', `One a day (\`draw(uid, day, 'town-line:<id>', 0)\`) of her bible’s \`townLines\`, else the game’s ${PLACEHOLDER_TOWN_LINES.length}: ${PLACEHOLDER_TOWN_LINES.join(' ')}`],
+  ])
+}
+/** The town's roles, and who plays each without `town.json`. */
 function castBlock(): string {
-  return table(['Who', 'Is', 'Bust'], CAST_IDS.map((id) => [CAST[id].name, CAST[id].is, `\`${CAST[id].art}\``]))
+  return table(['Role', 'Id (`game`)', 'Does'], CAST_IDS.map((id) => [CAST[id].role, `\`${id}\``, CAST[id].is]))
 }
 const speakerWords = (beat: Beat): string => {
   switch (beat.speaker.kind) {
-    case 'cast': return CAST[beat.speaker.id].name
+    case 'cast': return CAST[beat.speaker.id].role
     case 'narrator': return '(narration)'
   }
 }
@@ -861,7 +878,7 @@ function ringsBlock(): string {
 /** The bench's rule, its refusals, and what the merge game will add. */
 function benchRecipe(): string {
   return table(['', 'The ring bench'], [
-    ['Opens', 'The night after the first Romance 8 event anyone plays: `buildings.forge = 0`, and Ida Stone’s scene the next morning'],
+    ['Opens', 'The night after the first Romance 8 event anyone plays: `buildings.forge = 0`, and the smith’s scene the next morning'],
     ['A ring of grade g', `${RING_INPUTS} refined goods of grade g, any family, any mix; the mining families’ (ingots, blocks, cut gems) once the Smelter and the Cutter stand`],
     ['Cost', 'The goods only: no gold, no game, no assistant, no score'],
     ['Out', 'The ring, ★1 (a Rough make), into the Warehouse'],
@@ -870,7 +887,7 @@ function benchRecipe(): string {
     ['Refusals', Object.values(BENCH_WORDS).map((w) => `“${w}”`).join(' · ')],
   ])
 }
-/** Ida Stone's scene at the bench, beat by beat. */
+/** The smith's scene at the bench, beat by beat. */
 function benchScene(): string {
   return `**${BENCH_SCENE_LINES.title}** (\`${BENCH_SCENE_LINES.id}\`)\n\n${table(['#', 'Who', 'Line'], BENCH_SCENE_LINES.beats.map((b, i) => [i + 1, speakerWords(b), b.line]))}`
 }
@@ -878,7 +895,7 @@ function benchScene(): string {
 function receptionBlock(): string {
   return table(['The reception', 'Well fed from tomorrow, everyone on the farm'], [
     ...[1, 2, 3, 4, 5].map((stars) => [`A ★${stars} dish`, `${receptionDays(stars)} day${receptionDays(stars) === 1 ? '' : 's'}`]),
-    ['No dish in the Warehouse: Marta’s bakery sends a cake', `${CAKE_DAYS} day (a Rough meal)`],
+    ['No dish in the Warehouse: the town’s bakery sends a cake', `${CAKE_DAYS} day (a Rough meal)`],
   ]) + `\n\nA meal already running is never shortened. **The guests:** every spouse on the farm, then her ${WEDDING_FRIENDS} closest friends on the farm (by bond); they have no lines. **The places:** her bible’s \`wedding.places\`, else her wedding beat’s place and ${WEDDING_DEFAULTS.map((p) => `\`${p}\``).join(', ')}, three different. **Household milestones** at ${HOUSEHOLD_AT.join(', ')} married.`
 }
 
@@ -899,7 +916,9 @@ function homesteadMap(): string {
     const married = HOMESTEAD_ROW_MARRIED[row - HOMESTEAD_PLACES[0]!.row] ?? 0
     return [`${row}`, here.map((p) => `${p.name} (\`${p.frame}\`)`).join(' · '), married === 0 ? 'Day 1' : `${married} married`]
   })
-  return table(['Row', 'Places', 'Shows from'], [...rows, ['After the last shown', 'The town edge: Shop · Festival ground · Expedition post', 'Day 1']])
+  const town = (row: number) => MAP_PLACES.filter((p) => p.row === row).map((p) => p.name).join(' · ')
+  return table(['Row', 'Places', 'Shows from'], [...rows,
+    ['After the last shown', `The town edge: ${town(TOWN_FIRST_ROW)}`, 'Day 1'], ['Then', `The Town, in the middle: ${town(TOWN_FIRST_ROW + 1)}`, 'Day 1']])
 }
 /** The household milestones. */
 function householdMilestonesBlock(): string {
@@ -952,6 +971,6 @@ export function renderBlock(key: string): string | null {
     'haul-day': haulDay, 'haul-factors': haulFactors, 'gather-quality': gatherQualities, stations, 'station-day': stationDay, 'station-recipes': stationRecipes,
     'dorm-levels': dormLevels,
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,
-    'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock }
+    'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-draw': townDraw }
   return blocks_[key]?.() ?? null
 }

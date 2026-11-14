@@ -174,7 +174,7 @@ describe('the opening: opening.json', () => {
   it('a speaker outside the cast is a note; with no line left, or a file that isn\'t the shape, the game\'s own plays', () => {
     const outside = read({ ...clone(STAND_IN_FILES), opening: { steps: [{ say: '9000099', line: 'Hello there.' }] } })
     expect(outside.errors).toEqual([])
-    expect(outside.notes).toContain('opening.json: Step 1: 9000099 isn’t one who speaks here (one outside the cast shows as “An Uma”)')
+    expect(outside.notes).toContain('opening.json: Step 1: 9000099 isn’t one who speaks here (one outside the cast and the town’s people shows as “An Uma”)')
     const picks = read({ ...clone(STAND_IN_FILES), opening: { steps: [{ choice: [{ text: 'A.' }] }, { wait: 300 }] } })
     expect(picks.notes).toContain('opening.json: No lines, so the game’s own opening plays')
     expect(picks.pack.opening).toBeNull()

@@ -16,6 +16,7 @@ function s(tag, attrs = {}, ...kids) {
 export function indexStory(story) {
   D.story = story
   D.uma = new Map((story?.umas ?? []).map((u) => [u.id, u]))
+  D.person = new Map((story?.people ?? []).map((u) => [u.id, u]))
   D.castOf = new Map((story?.cast?.data?.umas ?? []).map((u, i) => [u.characterId, { ...u, order: i + 1 }]))
   D.bibleOf = new Map((story?.bibles ?? []).map((b) => [b.data.characterId, b]))
   D.routeOf = new Map((story?.routes ?? []).map((r) => [r.data.characterId, r]))
@@ -47,7 +48,7 @@ export function arrivalWords(a) {
   return `After ${a.after}`
 }
 const issuesList = (issues) => (issues?.length ? h('ul', { class: 'issues' }, issues.map((i) => h('li', { text: i }))) : null)
-const noStory = () => h('div', { class: 'note-box' }, h('b', { text: 'No story yet. ' }), 'The private story files go in content/story/: any of world.md, cast.json, ties.json, umas/, routes/, pairs/, household.json and opening.json. Every part is optional (docs/story-pack.md).')
+const noStory = () => h('div', { class: 'note-box' }, h('b', { text: 'No story yet. ' }), 'The private story files go in content/story/: any of world.md, cast.json, ties.json, umas/, routes/, pairs/, household.json, opening.json and town.json. Every part is optional (docs/story-pack.md).')
 
 /** What the game's reader found: errors, which skip only their part (the rest plays), and notes, which block nothing. */
 export function findingsBox(found, title = '') {

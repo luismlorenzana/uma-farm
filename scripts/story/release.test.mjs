@@ -176,6 +176,31 @@ test('releases the opening as the game reads it: any length, a step it can\'t pl
   assert.equal(again.index.files.opening, undefined)
 })
 
+test('releases the town and a sister: town.json as the game reads it, her bible by her id, a tie with one of the town\'s people', async (t) => {
+  const sister = `s${id(1)}02`
+  const town = {
+    people: [{ characterId: id(101), game: 'ida-stone', does: 'Invented smith.' }, { characterId: id(102), game: 'ida-stone' }],
+    spots: [{ id: 'cafe', name: 'Invented Café', keeper: id(101) }, { id: 'moon' }],
+  }
+  const from = await packOf(t, {
+    'cast.json': { umas: [{ characterId: id(1), spot: 'cafe' }, { characterId: sister, name: 'Invented Sister' }] },
+    'ties.json': { ties: [{ a: id(1), b: id(101), line: 'Invented.' }, { a: id(1), b: sister, kind: 'sisters' }] },
+    [`umas/${sister}.json`]: { townLines: ['An invented hello.'] },
+    'town.json': town,
+  })
+  const out = await temp(t)
+  const { index, errors, notes, summary } = await buildRelease({ from, out, builtAt: BUILT_AT })
+  assert.deepEqual(errors, [
+    `town.json: Person 2 (${id(102)}): game ida-stone is someone else’s role already; skipped`,
+    'town.json: Spot 2: id is one of the town’s spots (plaza, market, cafe, harbour, library, track); skipped',
+  ])
+  assert.ok(notes.includes(`ties.json: Tie 1: ${id(101)} is one of the town’s people, so the tie builds no bond; its line shows on both profiles`), notes.join('\n'))
+  assert.deepEqual(Object.keys(index.files).filter((n) => n === 'town' || n.startsWith('uma-')), ['town', `uma-${sister}`])
+  const released = JSON.parse(await readFile(join(out, index.files.town.path), 'utf8'))
+  assert.deepEqual(released, { people: [town.people[0], { characterId: id(102) }], spots: [town.spots[0]] })
+  assert.deepEqual(summary.town, { people: 2, spots: 1 })
+})
+
 test('a pack with one broken event loses only that event', async (t) => {
   const from = await pack(t, async (dir) => {
     const route = await readJson(join(dir, 'routes/9000001.json'))

@@ -1,4 +1,4 @@
-// The ring bench's actions: a ring made, a better ring given and Ida Stone's scene read, each one
+// The ring bench's actions: a ring made, a better ring given and the smith's scene read, each one
 // player's change over the save as it is now, committed once and stamped; a refused rule throws its words. Apart from
 // `actions.ts` so the bench's rules load with its sheet. Loaded on demand.
 import { BENCH_SCENE, giveRing, makeRing, readScene, touched, type BenchInput, type SaveV4 } from '@farm/domain'
@@ -23,7 +23,7 @@ export async function giveBetterRing(id: string, ring: string): Promise<void> {
   await commit(touched(giveRing(current(), id, ring), now()))
 }
 
-/** Ida Stone's scene, played through or skipped: read once. */
+/** the smith's scene, played through or skipped: read once. */
 export async function readBenchScene(): Promise<void> {
   const save = current()
   if (save.diary.read.includes(BENCH_SCENE)) return

@@ -1,5 +1,6 @@
-// The scene player: a full-screen sheet over the farm. A bust (a cast member's lettered disc until the busts ship, or an
-// Uma's from master data through uma-kit's `UmaBust`), the speaker's name and one line; a tap goes on, and **Skip** ends
+// The scene player: a full-screen sheet over the farm. A bust (an Uma's from master data through uma-kit's `UmaBust`:
+// the cast's, a sister's, or the town's people's, each role played by an Uma; a role's lettered disc while no one plays
+// it), the speaker's name and one line; a tap goes on, and **Skip** ends
 // it. It plays **the opening's lines** on day 1, after the farmer's name: the pack's `opening.json`, else the game's three
 // (`openingOf`), one to a tap, `{farmer}` filled. Played through or skipped from its first line, it's read once
 // (`diary.read`), day 1's helper joins and waits at the Gate, and the farm opens on Home: three taps for the game's own.
@@ -13,7 +14,7 @@
 // also play the pair conversations (`PairPlayer.tsx`). Loaded on demand. The ring bench's scene (`scene:bench`) plays
 // here too, its player loaded on demand (`BenchScene.tsx`).
 import {
-  ARRIVAL_POINTS, arrivalOf, BENCH_SCENE, CAST, CAST_IDS, castInitial, choicePoints, eventOf, farmPlace, openingOf, pathFlags, placeholderEvent, sceneSteps,
+  ARRIVAL_POINTS, arrivalOf, BENCH_SCENE, CAST, choicePoints, eventOf, farmPlace, isCastId, openingOf, pathFlags, placeholderEvent, sceneSteps,
   withFarmer, type CastId, type ChoiceOption, type OpeningSceneId, type SaveV4, type SceneId, type Step,
 } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
@@ -24,22 +25,28 @@ import { useLocation, useNavigate } from 'react-router'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
+import { namer, whoIs } from '../story/people'
 import { useStory } from '../story/story'
 import { finishArrivalScene, readSceneOnce } from './actions'
 
-/** Each speaking cast member's disc colour, until the busts. */
-const CAST_COLOR: Readonly<Partial<Record<CastId, string>>> = { 'hollis-pryor': '#6b5aa6', 'marta-quill': '#c4573a', 'ben-carver': '#7a8b3a', 'ida-stone': '#8a5a3c' }
 const BenchScene = lazy(() => import('./BenchScene'))
-const isCast = (id: string): id is CastId => (CAST_IDS as readonly string[]).includes(id)
 
-/** A cast member's bust: the art once it ships, a lettered disc until then. */
-export function CastBust({ id, size }: { id: CastId; size: number }) {
+/** A role's lettered disc, while no one plays it (with no master data): its word's first letter. */
+export function RoleDisc({ id, size }: { id: CastId; size: number }) {
   return (
-    <span aria-hidden className="font-display flex shrink-0 items-center justify-center rounded-full font-bold text-white shadow-2 ring-4 ring-white/70"
-      style={{ width: size, height: size, fontSize: size * 0.42, background: CAST_COLOR[id] ?? '#6f6a63' }} data-cast={id}>
-      {castInitial(id)}
+    <span aria-hidden className="font-display flex shrink-0 items-center justify-center rounded-full bg-[#6f6a63] font-bold text-white shadow-2 ring-4 ring-white/70"
+      style={{ width: size, height: size, fontSize: size * 0.42 }} data-cast={id}>
+      {CAST[id].role.replace(/^The /, '').charAt(0).toUpperCase()}
     </span>
   )
+}
+
+/** Anyone's bust as she speaks: an Uma's from master data (the cast's, a sister's, or one of the town's people's, a
+ * role going to the Uma who plays it), or a role's disc while no one plays it. */
+export function PersonBust({ who, name, size }: { who: string; name: string; size: number }) {
+  const story = useStory()
+  const id = whoIs(story, who)
+  return isCastId(id) ? <RoleDisc id={id} size={Math.round(size * 0.74)} /> : <UmaBust outfitId={id} label={name} size={size} />
 }
 
 export default function ScenePlayer({ scene }: { scene: SceneId }) {
@@ -97,7 +104,7 @@ function OpeningPlayer({ scene }: { scene: OpeningSceneId }) {
       {lines && !step ? <Done onDone={finish} /> : step ? (
         <MasterGate>{(master) => (
           <StepView key={cursor} step={step} at={cursor} count={shown.slice(0, cursor).filter((s) => !silent(s)).length} total={shown.filter((s) => !silent(s)).length}
-            nameOf={(who) => (isCast(who) ? CAST[who].name : master.album.get(who)?.name ?? 'An Uma')} farmer={save.farmer.name} onNext={() => setAt(cursor + 1)} />
+            nameOf={namer(master, story)} farmer={save.farmer.name} onNext={() => setAt(cursor + 1)} />
         )}</MasterGate>
       ) : <div className="flex-1" />}
     </Frame>
@@ -140,7 +147,8 @@ function Arrival({ save, id, steps, master }: { save: SaveV4; id: string; steps:
   const [at, setAt] = useState(0)
   const [leaving, setLeaving] = useState(false)
   const shown = useMemo(() => sceneSteps(steps, picks), [steps, picks])
-  const nameOf = (who: string): string => (isCast(who) ? CAST[who].name : master.album.get(who)?.name ?? 'An Uma')
+  const story = useStory()
+  const nameOf = namer(master, story)
   const name = nameOf(id)
   // The first visible step from `from`, past the silent ones; and the title line, the last place before it.
   const visible = (from: number): number => {
@@ -211,8 +219,8 @@ export function StepView({ step, at, count, total, nameOf, farmer, onNext }: {
   const kind = 'say' in step ? 'say' : 'thought' in step ? 'thought' : 'narrate'
   return (
     <button type="button" onClick={onNext} className="flex min-h-0 flex-1 flex-col items-center justify-end gap-4 px-4 pb-4 text-left" aria-label="Next" data-beat={at} data-step={kind}>
-      <div className="flex min-h-0 flex-1 items-end justify-center" data-bust={speaker ? (isCast(speaker) ? 'cast' : 'uma') : 'narrator'}>
-        {speaker && (isCast(speaker) ? <CastBust id={speaker} size={176} /> : <UmaBust outfitId={speaker} label={nameOf(speaker)} size={240} />)}
+      <div className="flex min-h-0 flex-1 items-end justify-center" data-bust={speaker ? (isCastId(speaker) ? 'cast' : 'uma') : 'narrator'} data-who={speaker ?? undefined}>
+        {speaker && <PersonBust who={speaker} name={nameOf(speaker)} size={240} />}
       </div>
       <div className="w-full rounded-md border border-hairline bg-panel p-4 shadow-2" aria-live="polite">
         {speaker && (

@@ -16,7 +16,7 @@ export const BENCH_TEXT = {
   none: 'Nothing to make yet. Three refined goods of one grade make a ring: planks from the Sawmill, fillets from the Smokehouse, flour from the Mill.',
   made: 'One ring a day. Come back tomorrow.',
   help: [
-    'Ida Stone opened the old Forge as a ring bench: three refined goods of one grade make a ring of that grade. No gold, one ring a day.',
+    'The town’s smith opened the old Forge as a ring bench: three refined goods of one grade make a ring of that grade. No gold, one ring a day.',
     'Any ring makes the proposal Ready once she’s at Romance 10. Once she’s your spouse, her ring adds +1% at her line a grade.',
     'Give her a better ring from her profile any day: she keeps the best, and the old one comes back to the Warehouse.',
   ],

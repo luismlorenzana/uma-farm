@@ -97,7 +97,7 @@ export function umaFor(key) {
 }
 
 // ── Discs: a lettered disc a person, until the busts ship ───────────────────────────
-export const castInitial = (name) => name.replace(/^(Mayor|Old|Captain) /, '').charAt(0)
+export const castInitial = (name) => name.replace(/^The /, '').charAt(0).toUpperCase()
 export function castDisc(id, size = 40) {
   const c = D.cast.get(id)
   return h('span', { class: 'disc', title: c?.name ?? id, vars: { '--c': CAST_COLOR[id] ?? '#6f6a63', '--s': `${size}px` }, text: c ? castInitial(c.name) : '?' })
@@ -287,24 +287,51 @@ export function reviewPanel(item, issues, file, onReview, clean) {
 
 // ── Cast ─────────────────────────────────────────────────────────────────────
 export function castView() {
-  const lines = new Map(), scenesBy = new Map()
-  for (const e of D.data.chapters) for (const s of e.chapter.scenes) for (const b of s.beats) {
-    if (b.speaker.kind !== 'cast') continue
-    lines.set(b.speaker.id, (lines.get(b.speaker.id) ?? 0) + 1)
-    scenesBy.set(b.speaker.id, new Set([...(scenesBy.get(b.speaker.id) ?? []), `${e.chapter.chapter}`]))
-  }
   const roleUse = new Map()
   for (const e of D.data.chapters) for (const s of e.chapter.scenes) for (const b of s.beats) if (b.speaker.kind !== 'cast' && b.speaker.kind !== 'narrator') {
     const key = roleKey(b.speaker)
     roleUse.set(key, new Set([...(roleUse.get(key) ?? []), e.chapter.chapter]))
   }
+  const st = D.story
+  const played = st?.townPlayed ?? { people: [], spots: [] }
+  const byRole = new Map(played.people.filter((p) => p.role).map((p) => [p.role, p]))
+  const keeps = new Map(played.spots.filter((x) => x.keeper).map((x) => [x.keeper, x]))
+  const own = new Set((st?.town?.data?.spots ?? []).map((x) => x.id))
+  const found = st?.town ? [...(st.town.errors ?? []).map((e) => `Skipped: ${e}`), ...(st.town.notes ?? [])] : []
+  /** One of the town's people: her face and name from the cast pack (any board's), else her id. */
+  const who = (id) => {
+    const u = D.person?.get(id)
+    return h('span', { class: 'row' },
+      u?.images?.face ? h('img', { class: 'face', src: u.images.face, alt: u.name, loading: 'lazy' }) : h('span', { class: 'face initials', text: (u?.name ?? '?').charAt(0) }),
+      h('span', {}, h('b', { text: u?.name ?? id }), u ? h('span', { class: 'muted small', text: ` ${id}` }) : null))
+  }
+  const extra = played.people.filter((p) => !p.role)
   return h('div', {},
     h('h1', { text: 'The town' }),
-    h('p', { class: 'muted', text: 'The town is original: its people speak by name and their lines live in git. Umas appear only in roles the game fills from master data at run time, so here an invented crew plays them. The Umas themselves, and the other boards’ characters, are on the Characters page.' }),
-    h('div', { class: 'section-head' }, h('h2', { text: 'The town’s cast' }), h('span', { class: 'muted small', text: 'Lettered discs, not the game’s busts' })),
-    h('div', { class: 'townsfolk' }, D.data.game.cast.map((c) => h('div', { class: `person ${lines.get(c.id) ? '' : 'quiet'}` }, castDisc(c.id, 52),
-      h('div', {}, h('div', { class: 'name', text: c.name }), h('div', { class: 'is', text: c.is }),
-        h('div', { class: 'lines', text: `From chapter ${c.from}${lines.get(c.id) ? ` · ${lines.get(c.id)} lines in chapter ${[...scenesBy.get(c.id)].join(', ')}` : ' · no lines yet'}` }))))),
+    h('p', { class: 'muted', text: 'The town’s people are Umas. town.json names who plays each of the game’s fourteen roles, by her characterId (people[].game is the role); the game shows her master-data name and bust, and a scene’s say by her (or by her role) speaks as her. A role town.json leaves goes to one of master data’s characters in the game. The spots are where people stand: each keeper is usually there, and a cast entry’s spot is her favourite. The menu is docs/story-pack.md.' }),
+    st?.town ? null : h('div', { class: 'note-box' }, h('b', { text: 'No town.json yet. ' }), 'The game plays its own six spots, and master data’s characters fill the roles.'),
+    found.length ? h('details', { class: 'note-box' }, h('summary', {}, h('b', { text: `town.json · ${found.length} found` })), h('ul', { class: 'list small' }, found.map((n) => h('li', { text: n })))) : null,
+    h('div', { class: 'section-head' }, h('h2', { text: 'The town’s people' }), h('span', { class: 'muted small', text: `${played.people.length} named by town.json` })),
+    h('div', { class: 'panel' }, h('table', { class: 'table' },
+      h('tr', {}, ['Role', 'Played by', 'Does', 'Keeps'].map((x) => h('th', { text: x }))),
+      D.data.game.cast.map((c) => {
+        const p = byRole.get(c.id)
+        return h('tr', {},
+          h('td', {}, h('b', { text: c.role ?? c.name }), h('div', { class: 'muted small' }, h('code', { text: c.id }))),
+          h('td', {}, p ? who(p.characterId) : h('span', { class: 'muted', text: 'Master data’s, in the game' })),
+          h('td', { text: p?.does ?? c.is }),
+          h('td', { text: p && keeps.get(p.characterId) ? keeps.get(p.characterId).name : '—' }))
+      }),
+      extra.map((p) => h('tr', {},
+        h('td', {}, h('span', { class: 'muted', text: 'The story’s own' })), h('td', {}, who(p.characterId)), h('td', { text: p.does }),
+        h('td', { text: keeps.get(p.characterId)?.name ?? '—' }))))),
+    h('div', { class: 'section-head' }, h('h2', { text: 'The spots' }), h('span', { class: 'muted small', text: 'A spot trigger names one by its id' })),
+    h('div', { class: 'panel' }, h('table', { class: 'table' },
+      h('tr', {}, ['Spot', 'Name', 'Its line', 'Keeper', 'From'].map((x) => h('th', { text: x }))),
+      played.spots.map((x) => h('tr', {},
+        h('td', {}, h('code', { text: x.id })), h('td', {}, h('b', { text: x.name })), h('td', { text: x.blurb }),
+        h('td', {}, x.keeper ? who(x.keeper) : h('span', { class: 'muted', text: 'Master data’s, in the game' })),
+        h('td', {}, h('span', { class: `badge ${own.has(x.id) ? 'game' : 'new'}`, text: own.has(x.id) ? 'town.json' : 'the game’s own' })))))),
     h('div', { class: 'section-head' }, h('h2', { text: 'Umas in roles' })),
     h('div', { class: 'panel' }, h('table', { class: 'table' },
       h('tr', {}, ['Role', 'Who fills it in the game', 'In the game today', 'Used in chapters'].map((x) => h('th', { text: x }))),

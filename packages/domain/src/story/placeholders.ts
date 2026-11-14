@@ -14,6 +14,10 @@
 //   her birthday             master data's, or none
 //   pet name, keepsake, ring's words, wedding places, a tie's kind and line, a play's prompt     plain defaults
 //   pairs and household      a short card that pays as written (nothing)
+//   the town's people        master data's characters fill the roles the pack leaves, from the last in its order
+//   the town's spots         the game's six: the Plaza, the Market, the Café, the Harbour, the Library, the Hilltop Track
+//   her town line            a few short lines, one a day; her favourite spot: none
+//   a sister's name          her elder's name, as her sister
 //
 // Every read of the pack goes through a function here. Pure; loaded with the story pack.
 import type { Activity } from '../farm/ranks'
@@ -22,10 +26,11 @@ import { isGoodId } from '../goods/ids'
 import type { Taste } from '../romance/chats'
 import { pairKey } from '../save/v4'
 import {
-  ARRIVAL, FAVOURITE_LINES, HOUSEHOLD_SCENES, RUNGS, type Arrival, type Beat, type Calling, type Cast, type ChoiceOption, type DateGame, type Finale, type Gifts, type HerChapter,
-  type Household, type HouseholdAt, type HouseholdScene, type Keepsake, type PairConversations, type Play, type Step, type StoryPlace, type StoryTrigger, type Tie, type TieKind,
-  type UmaBible, type Wish,
+  ARRIVAL, FAVOURITE_LINES, HOUSEHOLD_SCENES, isSister, RUNGS, sisterOutfit, SPOT_IDS, type Arrival, type Beat, type Calling, type Cast, type ChoiceOption, type DateGame, type Finale, type Gifts,
+  type HerChapter, type Household, type HouseholdAt, type HouseholdScene, type Keepsake, type PairConversations, type Play, type SpotId, type Step, type StoryPlace, type StoryTrigger,
+  type Tie, type TieKind, type UmaBible, type Wish,
 } from './authored'
+import { CAST, CAST_IDS, isCastId, type CastId } from './cast'
 import { castEntry, castOrder, type StoryPack } from './pack'
 import type { FarmPlaceId } from '../farm/places'
 
@@ -91,7 +96,9 @@ export function placeholderCast(master: MasterCast | null): Cast {
 const EMPTY_ROUTES = async () => null
 /** No pack at all: nothing written, every read its placeholder. */
 export function noPack(): StoryPack {
-  return { cast: { umas: [] }, ties: { ties: [] }, bibles: new Map(), scripted: new Map(), route: EMPTY_ROUTES, pairs: new Map(), pair: EMPTY_ROUTES, household: null, opening: null }
+  return {
+    cast: { umas: [] }, ties: { ties: [] }, bibles: new Map(), scripted: new Map(), route: EMPTY_ROUTES, pairs: new Map(), pair: EMPTY_ROUTES, household: null, opening: null, town: null,
+  }
 }
 
 /** The story the game plays: the pack (or none) with master data's placeholders. A pack whose cast names nobody plays the
@@ -110,10 +117,11 @@ export function withCast(pack: StoryPack, ids: readonly string[]): StoryPack {
 
 // === Her name and outfit, her line, her tastes ==========================================================================
 
-/** The one resolver: the outfit a roster id plays as. The cast names her outfit; else master data's default for her
- * character; else (someone master data doesn't hold) the id itself, a lettered disc. Faces, busts, names, talents,
- * temperaments and pickers all meet master data through it. */
+/** The one resolver: the outfit a roster id plays as. A sister plays her own (her id's); the cast names her outfit;
+ * else master data's default for her character; else (someone master data doesn't hold) the id itself, a lettered disc.
+ * Faces, busts, names, talents, temperaments and pickers all meet master data through it. */
 export function outfitOf(pack: Pick<StoryPack, 'cast' | 'master'> | null, id: string): string {
+  if (isSister(id)) return sisterOutfit(id)
   return (pack ? castEntry(pack, id)?.outfitId ?? pack.master?.outfits.get(id) : undefined) ?? id
 }
 
@@ -182,10 +190,10 @@ export const DEFAULT_CHAPTERS: readonly Required<Pick<HerChapter, 'title' | 'eve
 ]
 
 /** The welcome list: who comes to the farm in the first days, in order. The pack's `welcome`, else the first five of the
- * cast, in its order. Meeting her in town acts on it. */
+ * cast, in its order, sisters aside (a sister can't come to the farm yet). Meeting her in town acts on it. */
 export function welcomeOf(pack: Pick<StoryPack, 'cast'>): string[] {
   const named = pack.cast.welcome ?? []
-  return named.length > 0 ? [...named] : castOrder(pack).slice(0, DEFAULT_WELCOME)
+  return named.length > 0 ? [...named] : castOrder(pack).filter((id) => !isSister(id)).slice(0, DEFAULT_WELCOME)
 }
 
 /** Her trigger to meet: her cast entry's `meet`, else talking with her on three different days. */
@@ -201,7 +209,7 @@ export function chaptersOf(pack: Pick<StoryPack, 'cast'>, id: string): readonly 
  * ends (`joinFirstHelper`), so the farm has someone to work, until meeting her in town brings the welcome list one a
  * morning. */
 export function firstHelperOf(pack: Pick<StoryPack, 'cast'>): string | null {
-  return welcomeOf(pack).find((id) => castEntry(pack, id) !== undefined) ?? null
+  return welcomeOf(pack).find((id) => !isSister(id) && castEntry(pack, id) !== undefined) ?? null
 }
 
 /** The opening's lines when the pack writes none: three, short, ending on someone at the Gate (day 1's first helper). */
@@ -500,6 +508,112 @@ export function householdOf(pack: Pick<StoryPack, 'household'>): Household {
   return { ...own, scenes, finale }
 }
 
+// === The town ============================================================================================================
+
+/** The town's own spots, by id, when `town.json` names none: each one's name, its line, and the role that keeps it. */
+export const PLACEHOLDER_SPOTS: Readonly<Record<SpotId, { name: string; blurb: string; keeper: CastId }>> = {
+  plaza: { name: 'The Plaza', blurb: 'The fountain at the heart of the town. Everyone passes through.', keeper: 'hollis-pryor' },
+  market: { name: 'The Market', blurb: 'The season’s stalls, open from first light.', keeper: 'marta-quill' },
+  cafe: { name: 'The Café', blurb: 'Tea, cake and a seat by the window.', keeper: 'rosa-bell' },
+  harbour: { name: 'The Harbour', blurb: 'Boats, nets and the salt wind off the sea.', keeper: 'nils-berg' },
+  library: { name: 'The Library', blurb: 'Quiet rooms, and old maps of the roads past the town.', keeper: 'juno-park' },
+  track: { name: 'The Hilltop Track', blurb: 'A running track above the rooftops.', keeper: 'courier' },
+}
+
+/** One of the town's people as the game plays her: an Uma of master data's, in a role. */
+export interface TownPersonPlayed {
+  readonly characterId: string
+  /** Her role, or null for one of the story's own. */
+  readonly role: CastId | null
+  /** What she does: the pack's line, else her role's. */
+  readonly does: string
+  /** Whether the pack names her; else master data fills her role. */
+  readonly written: boolean
+}
+/** One of the town's spots as the game plays it. */
+export interface TownSpotPlayed {
+  readonly id: SpotId
+  readonly name: string
+  readonly blurb: string
+  /** Her character id: one of the town's people, usually there; null when no one plays the role. */
+  readonly keeper: string | null
+}
+/** The town as the game plays it: its people, each role filled, and its six spots. */
+export interface TownPlayed {
+  readonly people: readonly TownPersonPlayed[]
+  readonly spots: readonly TownSpotPlayed[]
+  /** Who plays each role, by role id. */
+  readonly byRole: ReadonlyMap<CastId, string>
+  /** Her character id → her, for each of the town's people. */
+  readonly byId: ReadonlyMap<string, TownPersonPlayed>
+}
+
+type TownPack = Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town' | 'master'>>
+const towns = new WeakMap<object, TownPlayed>()
+
+/** The town as the game plays it: the pack's people and spots, and placeholders wherever it's silent. A role no one in
+ * `town.json` plays goes to one of master data's characters, from the last in its order, never one of the cast or of the
+ * town's people already; with no master data, no one plays it (a scene names the role: "The smith"). A spot's name, line
+ * and keeper are the pack's, else the game's own. Read once a pack. */
+export function townOf(pack: TownPack): TownPlayed {
+  const known = towns.get(pack)
+  if (known) return known
+  const own = pack.town?.people ?? []
+  const people: TownPersonPlayed[] = own.map((p) => {
+    const role = p.game !== undefined && isCastId(String(p.game)) ? p.game as CastId : null
+    return { characterId: p.characterId, role, does: p.does ?? (role ? CAST[role].is : 'Lives in town'), written: true }
+  })
+  const taken = new Set([...people.map((p) => p.characterId), ...pack.cast.umas.map((u) => u.characterId)])
+  const free = [...(pack.master?.outfits.keys() ?? [])].filter((id) => !taken.has(id)).reverse()
+  for (const role of CAST_IDS) {
+    if (people.some((p) => p.role === role)) continue
+    const id = free.shift()
+    if (id !== undefined) people.push({ characterId: id, role, does: CAST[role].is, written: false })
+  }
+  const byRole = new Map(people.flatMap((p): [CastId, string][] => (p.role ? [[p.role, p.characterId]] : [])))
+  const byId = new Map(people.map((p) => [p.characterId, p]))
+  const keeperOf = (keeper: string | undefined): string | null => (keeper === undefined ? null : byId.has(keeper) ? keeper : isCastId(keeper) ? byRole.get(keeper) ?? null : null)
+  const spots = SPOT_IDS.map((id): TownSpotPlayed => {
+    const spot = pack.town?.spots?.find((x) => x.id === id)
+    const game = PLACEHOLDER_SPOTS[id]
+    return { id, name: spot?.name ?? game.name, blurb: spot?.blurb ?? game.blurb, keeper: keeperOf(spot?.keeper ?? game.keeper) }
+  })
+  const town: TownPlayed = { people, spots, byRole, byId }
+  towns.set(pack, town)
+  return town
+}
+
+/** Whether she's one of the town's people the pack names: a tie with her builds no bond. */
+export const isTownPerson = (pack: Partial<Pick<StoryPack, 'town'>>, id: string): boolean => (pack.town?.people ?? []).some((p) => p.characterId === id)
+
+/** Who a scene's `say` is: one of the town's roles goes to the Uma who plays it (else stays the role), anyone else is
+ * herself. */
+export const speakerId = (pack: TownPack, who: string): string => (isCastId(who) ? townOf(pack).byRole.get(who) ?? who : who)
+
+/** Her favourite spot: her cast entry's `spot`, else none. */
+export const favouriteSpotOf = (pack: Pick<StoryPack, 'cast'>, id: string): SpotId | null => castEntry(pack, id)?.spot ?? null
+
+/** What she says when you talk with her in town and her bible gives no `townLines`: short, `{farmer}` your name. */
+export const PLACEHOLDER_TOWN_LINES: readonly string[] = [
+  '“Oh, hello! Out for a walk too?”',
+  '“Lovely day for it, isn’t it?”',
+  '“You’re from the farm up the road, aren’t you?”',
+  '“I come here when I need to think.”',
+  '“Good to see you, {farmer}.”',
+  '“Busy day? Mine’s only just starting.”',
+]
+/** Her town lines: her bible's `townLines` when it holds any, else the game's. One plays a day. */
+export function townLinesOf(pack: Pick<StoryPack, 'bibles'>, id: string): readonly string[] {
+  const own = pack.bibles.get(id)?.townLines ?? []
+  return own.length > 0 ? own : PLACEHOLDER_TOWN_LINES
+}
+
+/** A sister's name: her cast entry's, else her elder's (`elder`, master data's name for her outfit's character) as her
+ * sister; null when she has neither. */
+export function sisterNameOf(pack: Pick<StoryPack, 'cast'>, id: string, elder: string | null): string | null {
+  return castEntry(pack, id)?.name ?? (elder ? `${elder}’s sister` : null)
+}
+
 // === What's written, and what plays instead (the sandbox's) =============================================================
 
 /** One part of a character as the game plays it: written by the pack, or its placeholder (what plays instead). */
@@ -529,6 +643,9 @@ export function writtenOf(pack: Pick<StoryPack, 'cast' | 'bibles' | 'scripted' |
     part('Her events', writtenEvents === events.length, `All ${events.length}`, `${writtenEvents} of ${events.length} written; the rest play a short card that pays as written`),
     part('Her chapters', (entry?.chapters?.length ?? 0) > 0, `${entry?.chapters?.length ?? 0}, the story’s`, `The four defaults: ${DEFAULT_CHAPTERS.map((c) => c.title).join(', ')}`),
     part('Her trigger to meet', !!entry?.meet, 'The story’s', 'Talk with her on three different days'),
+    part('Her favourite spot', !!entry?.spot, `${entry?.spot ? PLACEHOLDER_SPOTS[entry.spot].name : ''}`, 'None: she’s out at any spot alike'),
+    part('Her town lines', (bible?.townLines?.length ?? 0) > 0, `${bible?.townLines?.length ?? 0}, hers`, `The game’s ${PLACEHOLDER_TOWN_LINES.length} short lines`),
+    ...(isSister(id) ? [part('Her name', !!entry?.name, entry?.name ?? '', 'Her elder’s name, as her sister')] : []),
     part('Her pet name for you', !!bible?.petName, `“${bible?.petName ?? ''}”`, 'Your name'),
     part('Her keepsake', !!(bible?.keepsake?.name && bible.keepsake.line), bible?.keepsake?.name ?? '', `“${PLACEHOLDER_KEEPSAKE.name}”, with a plain line`),
     part('Her ring’s words', !!beatOf(pack, id, 'r8')?.beat, 'Her Romance 8 caption', `“${PLACEHOLDER_ENGRAVING}”`),
@@ -562,4 +679,9 @@ export const PLACEHOLDER_TABLE: readonly { gives: string; without: string }[] = 
   { gives: 'A household scene or the finale', without: 'A short card: a line, each spouse’s line, a line; the finale’s dance. It pays nothing, as written' },
   { gives: 'Her house lines', without: 'Her temperament’s' },
   { gives: 'Her arrival', without: 'None: the welcome list’s first joins as the opening ends; meeting her in town brings the rest when it lands' },
+  { gives: 'The town’s people', without: `Master data’s characters fill the ${CAST_IDS.length} roles, from the last in its order, never one of the cast` },
+  { gives: 'The town’s spots', without: `The game’s ${SPOT_IDS.length}: ${SPOT_IDS.map((id) => PLACEHOLDER_SPOTS[id].name).join(', ')}` },
+  { gives: 'Her favourite spot', without: 'None: she’s out at any spot alike' },
+  { gives: 'Her town line', without: `${PLACEHOLDER_TOWN_LINES.length} short lines, one a day` },
+  { gives: 'A sister’s name', without: 'Her elder’s name, as her sister' },
 ]
