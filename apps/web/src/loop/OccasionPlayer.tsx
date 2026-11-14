@@ -2,11 +2,13 @@
 // dialogue engine: New Year's (from the second year), the Flower Show or the Fishing Derby's night (`occasionOn`). It
 // plays her route's event of that id, else the default story's, in her name (`herEventOf`); she wears the scene's own
 // outfit when the story names one, else the occasion's moment's (the kimono at New Year's and the derby night, the garden
-// party dress at the Flower Show), and she stays on the stage through the narration. A choice is wording only. Its end, or Skip, spends its action (the day's event actions
+// party dress at the Flower Show), and she stays on the stage through the narration; her illustration shows where the
+// story names one. A choice is wording only. Its end, or Skip, spends its action (the day's event actions
 // first) and marks her played today (`playOccasion`); it pays nothing. With no occasion with her today it closes; with
 // no action left it says so before it plays. Portaled above the kit's sheets (z-60). Loaded on demand.
 import {
-  actionCost, canSpendForEvent, festivalsOf, GAME_DAYS, occasionMoments, occasionName, occasionWith, sceneSteps, type PlayedEvent, type PlayedOccasion, type SaveV4, type Step,
+  actionCost, canSpendForEvent, festivalsOf, GAME_DAYS, illustrationAt, occasionMoments, occasionName, occasionWith, sceneSteps, type PlayedEvent, type PlayedOccasion, type SaveV4,
+  type Step,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -14,6 +16,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router'
 import { SceneLookProvider } from '../dialogue/Bust'
+import { ArtCue } from '../dialogue/Illustration'
 import { lastSay, Line, nextSay } from '../dialogue/Line'
 import { Stage } from '../dialogue/Stage'
 import { MasterGate } from '../master/MasterGate'
@@ -101,6 +104,8 @@ function Scene({ save, id, title, steps, nameOf, leaving, onDone }: {
   const emote = step && 'say' in step ? step.emote ?? null : lastSay(before, id)?.emote ?? null
   return (
     <Frame title={place ? `${title} · ${placeName(place)}` : title} label={title} scene={`occasion:${id}`} onSkip={onDone} skipping={leaving}>
+      {/* Her illustration where the story names one. */}
+      <ArtCue owner={id} ask={step ? illustrationAt(shown, cursor) : null} steps={steps} />
       {step && 'choice' in step ? (
         <WordingChoice options={step.choice} farmer={save.farmer.name} bust={{ ...last, name: nameOf(last.who) }}
           onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />

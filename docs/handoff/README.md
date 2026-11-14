@@ -43,12 +43,17 @@ life's meals (breakfast or dinner, an action each: everyone well fed and +10) an
 Tonight, who greets you in the morning in pajamas. Talks, gifts and the invitation to work need her in front of you: on
 the farm, or in town where she is today; her Ready event plays from anywhere ([the Uma
 loop](../game-mechanics.md#the-uma-loop)).
+**Illustrations (F84) are in:** at her big moments the scene opens onto her illustration, full screen in landscape,
+the text box over its lower edge and no bust while it's up: meeting her, a summer date at the shore, her confession
+(the question, then her yes), the wedding, the wedding night as it begins and as it fades, a night in, and the morning
+after the night's companion; the story can name one with an `illustration` step. Each one seen joins her gallery for
+good, which her profile opens; the rest show locked with their titles. The first Uma's nine are master data's (uma-data
+1.8.0); an Uma without any plays as before ([her illustrations](../game-mechanics.md#her-illustrations)).
 
 | Piece | Who | State |
 |---|---|---|
-| [F80](tasks/F80-farmhands.md) **Farmhands** | Claude | Next, beside F84 |
+| [F80](tasks/F80-farmhands.md) **Farmhands** | Claude | Next |
 | [F83](tasks/F83-ranch-and-mine.md) **The ranch and the mine** | Claude | After F80 |
-| [F84](tasks/F84-illustrations.md) **Illustrations** | Claude | Next, beside F80: the first Uma's scenes are in uma-data 1.8.0 |
 | [F69](tasks/F69-bust-art-spec.md) **The bust art**, the next Umas | ChatGPT | The pilot is done; the rest in the Ranker's order |
 | [F40](tasks/F40-story-authoring.md) **The story**, and its ship routine | The story session | Release 1 shipped; Release 2 brings `world.json` |
 
@@ -68,6 +73,7 @@ The table above is the queue. A packet is deleted when it ships, and git keeps t
 | **Borrow toward the Mill:** with 20 logs held, go into town, open the mayor's office, tap **Borrow · Build**; end the day and see the Mill stand, then watch the Book's money and the morning's loan line until it clears | [uma-farm.web.app](https://uma-farm.web.app), and [upkeep and loans](../game-mechanics.md#upkeep-and-loans) |
 | **Go into town and meet three Umas you choose:** walk between the places, introduce yourself, talk and give a gift, each an action | [uma-farm.web.app](https://uma-farm.web.app), and [the town](../game-mechanics.md#the-town) |
 | **Take one Uma to married life:** meet her, befriend her, invite her to work, a hangout and a date (two actions each), Dinner in town; after the wedding, watch the wedding night and moving in, cook a meal, choose tonight's companion and see her greet you in the morning | [uma-farm.web.app](https://uma-farm.web.app), and [the Uma loop](../game-mechanics.md#the-uma-loop) |
+| **Her illustrations' phone check:** meet the first Uma and see her greeting full screen; play her confession, both moods; open her profile's Gallery and see it fill as you go | [uma-farm.web.app](https://uma-farm.web.app), and [her illustrations](../game-mechanics.md#her-illustrations) |
 | **Write the story and ship it.** F40 lists what the rework changes for it: the protagonist is a man, there's no welcome week, and her life in town (`home`, `job`, `routine`, and `town.json`'s `locations`) | [F40](tasks/F40-story-authoring.md) |
 | **The next Umas' art:** hand [F69](tasks/F69-bust-art-spec.md) to the character art session | Uma Character Art |
 

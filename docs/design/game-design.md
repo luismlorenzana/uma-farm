@@ -191,6 +191,9 @@ In the spirit of the classic farm-life games, with the owner's additions.
   - pajamas at night;
   - the swimsuit at the summer shore.
 - **Special events** can set any outfit.
+- **Her big moments, full screen:** meeting her, a day at the beach, the confession, the wedding, the wedding night, a
+  quiet evening in and the morning after open onto her illustration, the text box over its lower edge. Each one seen
+  is kept in a gallery on her profile.
 
 ## The economy
 

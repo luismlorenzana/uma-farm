@@ -5,10 +5,12 @@
 // opened greyed with their rung; then the play at its evening length (`PlaySheet`, seeded by the day, her and the kind)
 // over everything; then her scene for it on the dialogue engine (the story's `hangout-<kind>`, `date-<kind>`,
 // `dinner-in-town` or `a-night-in`, else the default's, in the moment's outfit: a picnic's, a dinner's, a night in's, a
-// festival night's), Skip to the end; then the card: the grade, the sum and her bar, one **Continue**. An evening takes 2
-// of the day's actions. Nothing is saved until the play ends: `spendEvening` commits once, stamped. Loaded on demand.
+// festival night's; A night in's opens on her illustration for it), Skip to the end; then the card: the grade, the sum
+// and her bar, one **Continue**. An evening takes 2 of the day's actions. Nothing is saved until the play ends:
+// `spendEvening` commits once, stamped. Loaded on demand.
 import {
-  birthdaysOf, eveningCost, eveningMoments, eveningRole, EVENINGS, eveningScene, eveningSeed, GRADE_NAMES, isAnniversary, isBirthday, LADDER_COLOURS, ladderOf, levelWords,
+  birthdaysOf, eveningCost, eveningIllustration, eveningMoments, eveningRole, EVENINGS, eveningScene, eveningSeed, GRADE_NAMES, isAnniversary, isBirthday, LADDER_COLOURS,
+  ladderOf, levelWords,
   type EveningCard, type EveningKind, type EveningRole, type PlayedEvent, type SaveV4, type StoryPack,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
@@ -188,7 +190,8 @@ function EveningScene({ save, pack, master, id, name, role, kind, onDone }: {
       {event
         ? (
           <SceneLookProvider value={{ own: event.outfit, moments: eveningMoments(kind), day: save.calendar.day, leads: [id] }}>
-            <LifeScene id={id} steps={event.steps} nameOf={namer(master, pack)} farmer={save.farmer.name} onDone={onDone} data={{ 'data-evening-scene': eveningScene(role, kind) }} />
+            <LifeScene id={id} steps={event.steps} nameOf={namer(master, pack)} farmer={save.farmer.name} onDone={onDone} illustrated={eveningIllustration(eveningScene(role, kind))}
+              data={{ 'data-evening-scene': eveningScene(role, kind) }} />
           </SceneLookProvider>
         )
         : <div className="flex-1" />}

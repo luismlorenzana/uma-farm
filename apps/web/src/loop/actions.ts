@@ -1,7 +1,7 @@
 // The loop's actions on the day: End the day and dismiss the morning; the day's actions: a tile cleared, tilled,
 // planted, watered and harvested, a forage, a log chopped, a catch, a station's load, a crate shipped and going into
 // town; the goods: take back and buy; paying for a place to build, and the mayor's office's loans; the roster: the Dorm's levels and swaps; the scenes,
-// read once; the farmer's name, the opening, Invite to the farm, and meeting scenes; the chat and the gift (an action
+// read once; the farmer's name, the opening, Invite to the farm, and meeting scenes; her illustrations seen; the chat and the gift (an action
 // each) and praise; and the pair conversations read. Each reads the save right before its rule runs (as
 // `edit`), commits it to the store and the device, and syncs; a refused rule throws its words. The night reads the
 // talents from master data, so it waits for it. Loaded on demand with the loop's screens, so the night's code stays out
@@ -11,7 +11,7 @@ import {
   touched, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, inviteToFarm, nameFarmer,
   type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair,
   chop, clearTile, fish, forage, goToTown, harvestTile, plantTile, shipCrate, startLoad, tillTile, waterTile,
-  type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId,
+  type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId, seeIllustration,
 } from '@farm/domain'
 import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'
@@ -156,6 +156,14 @@ export async function finishArrivalScene(id: string, played: ArrivalPlayed): Pro
   const save = loopSave()
   if (!save || save.arrivals.includes(id)) return
   await change((s) => finishArrival(s, id, played))
+}
+
+/** Her illustration seen, full screen in a scene: it joins her gallery for good, a player's change once. Already in (or
+ * she isn't on the roster): nothing to save. */
+export async function seeIllustrationOnce(id: string, scene: string): Promise<void> {
+  const save = loopSave()
+  if (!save || seeIllustration(save, id, scene) === save) return
+  await change((s) => seeIllustration(s, id, scene))
 }
 
 // --- Her route ----------------------------------------------------------------------------------------------

@@ -17,7 +17,7 @@ export const MAIN_JS_BUDGET = 180_000
  * on her sheet with its words, the acts, praise, birthdays and anniversaries, Ready and bond hearts; and the Hearts
  * tab, her profile, the shared roster album, the stand-in marks, the tab's view model and the perks' words; and the
  * pair player and the Diary's Conversations (with bonds' rules in `farm/bonds.ts`); and the event player with the
- * wedding night and the blank bust, the five
+ * wedding night and the blank bust, her illustrations full screen and her gallery, the five
  * plays' rules and their sheet, the level-up and stage-up cards, the events' rules and actions, her Memories' album and
  * the Diary's shelf, with uma-art's emote atlas; and the evening's rules, its words, its actions, its player, Tonight,
  * the morning's invitation answers and the night's fade; and the perks' terms and effects; and the ring
@@ -89,6 +89,10 @@ export const LAZY_MODULES = [
   'src/loop/EventPlayer.tsx',
   'src/loop/WeddingNight.tsx',
   'src/dialogue/blank.tsx',
+  'src/dialogue/Illustration.tsx',
+  'domain/src/story/illustrations.ts',
+  'src/dialogue/illustrations.ts',
+  'src/loop/Gallery.tsx',
   'src/loop/PlaySheet.tsx',
   'src/loop/EventCards.tsx',
   'src/loop/event-view.ts',

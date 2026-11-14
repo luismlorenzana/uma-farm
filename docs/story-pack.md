@@ -375,6 +375,7 @@ outfit not drawn for her yet shows her spring portrait, so the story can name on
 | `{ "thought": "…" }` | The farmer's thought, in italics |
 | `{ "wait": 600 }` | A pause, in ms, 0–5000 |
 | `{ "place": "fishery" }` | The title line's place from here on |
+| `{ "illustration": "<her scene's id>" }` | Her illustration, full screen, from here on: one of her scenes by its id (master data's, as uma-platform's illustrations page lists hers), up until the next `illustration` step or the scene's end; `none` takes it down and brings her bust back. In her route's events only (anywhere else it's a note, and nothing shows). A scene that names one plays only its own; one that names none plays the game's moments (meeting her, a summer date at the shore, the confession's question and her yes, the wedding, the wedding night as it begins and as it fades, a night in, the morning after the night's companion: [her illustrations](game-mechanics.md#her-illustrations)). An id she has no scene for shows her bust; a value that isn't an id (lowercase words joined by `-`) is a note |
 | `{ "flag": "shared-lunch" }` | A flag she keeps: wording only, for a later `when` |
 | `{ "when": "shared-lunch", "then": […], "else": […] }` | Steps for while the flag is set, `else` otherwise |
 | `{ "choice": [ … ] }` | A choice, any number of options (two or three read best) |
@@ -646,6 +647,7 @@ writing session, on the machine where the story is written (macOS or Windows). I
 |---|---|---|
 | Her outfit, calling, birthday, bible, route, ties, pairs, household, the opening | Yes | Yes, today |
 | A scene's `outfit`, a line's `emote` | Yes | Yes, today: [the dialogue engine](game-mechanics.md#the-dialogue-engine) dresses her and changes her face, for the Umas whose portraits are published |
+| An `illustration` step | Yes | Yes, today: her illustration full screen, for the Umas whose illustrations are published ([her illustrations](game-mechanics.md#her-illustrations)) |
 | The town's people, spots and locations, her favourite spot, her home, job and routine, her town lines, a sister's name | Yes | Yes, today: [the town](game-mechanics.md#the-town) |
 | The welcome list, her trigger to meet | Yes, noted as retired | No: retired with the welcome week; you meet her by introducing yourself ([meeting her](game-mechanics.md#meeting-her)) |
 | The world: names, history, festivals, places, seasons, Town notes | Yes | Yes, today: [the world](game-mechanics.md#the-world-in-the-pack) |

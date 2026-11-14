@@ -23,6 +23,8 @@ import { ACTIVITIES, type Activity } from '../farm/ranks'
 import { isGoodId } from '../goods/ids'
 import { CAST_IDS, isCastId } from './cast'
 import { EXPRESSION_IDS, isStoryOutfit, STORY_OUTFITS, type Expression, type StoryOutfit } from './look'
+import { ILLUSTRATION_ID } from '../save/gallery'
+import { NO_ILLUSTRATION } from './illustrations'
 
 /** The farm's places plus the romance's own backdrops. */
 export const STORY_PLACES = [
@@ -316,6 +318,9 @@ export type Step =
   | { wait: number }
   | { place: StoryPlace }
   | { flag: string }
+  /** Her illustration, full screen, from here on (`illustrations.ts`): one of her scenes by id, or `none` to take it
+   * down. Her route's events only. */
+  | { illustration: string }
   /** Its steps play only while the flag is set, `else` otherwise: flags change wording only. */
   | { when: string; then: Step[]; else?: Step[] }
 /** An event's, a pair level's, a household scene's and the finale's `outfit` is the scene's own: one of the story's
@@ -606,7 +611,11 @@ function readTrigger(v: unknown, at: string, f: Findings, ctx: StoryContext): St
 /** Who may speak in a run of steps, and which goods exist. */
 /** Who may speak, which goods exist, and whether the scene pays nothing (its choices wording only: her life's events, her
  * occasions, the evenings' scenes). */
-interface StepContext { speakers: ReadonlySet<string>; isGood: (id: string) => boolean; wording?: boolean }
+interface StepContext {
+  speakers: ReadonlySet<string>; isGood: (id: string) => boolean; wording?: boolean
+  /** Her own scenes (her route's events), where an `illustration` step shows one of hers. */
+  hers?: boolean
+}
 
 function checkSteps(steps: unknown, where: string, sc: StepContext, f: Findings, nested = false): void {
   if (!Array.isArray(steps)) { f.errors.push(`${where}: steps are a list`); return }
@@ -663,6 +672,11 @@ function checkSteps(steps: unknown, where: string, sc: StepContext, f: Findings,
     } else if ('place' in step) {
       if (typeof step.place !== 'string') f.errors.push(`${at}: place names a place`)
       else if (!oneOf(STORY_PLACES, step.place)) f.notes.push(`${at}: ${step.place} isn’t one of the game’s places; its title line shows the words`)
+    } else if ('illustration' in step) {
+      const v = step.illustration
+      if (typeof v !== 'string') f.errors.push(`${at}: illustration names one of her scenes by id, or none`)
+      else if (!sc.hers) f.notes.push(`${at}: an illustration shows in her route’s events only, so nothing shows here`)
+      else if (v !== NO_ILLUSTRATION && !ILLUSTRATION_ID.test(v)) f.notes.push(`${at}: ${v} isn’t a scene’s id (lowercase words joined by -), so nothing shows`)
     } else if ('flag' in step) {
       if (typeof step.flag !== 'string' || !FLAG.test(step.flag)) f.errors.push(`${at}: a flag is lowercase letters, digits and - . : _ (up to ${LINE_LIMITS.flag}), as the save keeps it`)
     } else if ('when' in step) {
@@ -1269,7 +1283,7 @@ export function checkRoute(raw: unknown, id: string, bible: UmaBible | null, ctx
   if (!isObject(raw) || !Array.isArray(raw.events)) { f.errors.push('Not a route (an object with an events list); none is read'); return { value: null, ...f } }
   if (raw.characterId !== undefined && raw.characterId !== id) f.notes.push(`its characterId is ${String(raw.characterId)}; the game reads it as ${id}’s, by its file’s name`)
   if (!ctx.umas.has(id)) f.notes.push(`${id} isn’t in the cast, so the game never plays her route`)
-  const sc: StepContext = { speakers: new Set<string>([...ctx.umas, ...CAST_IDS, ...(ctx.town ?? [])]), isGood: ctx.isGood ?? isGoodId }
+  const sc: StepContext = { speakers: new Set<string>([...ctx.umas, ...CAST_IDS, ...(ctx.town ?? [])]), isGood: ctx.isGood ?? isGoodId, hers: true }
   const ids = new Set<string>()
   const events = (raw.events as unknown[]).flatMap((e, i): Route['events'] => {
     if (!isObject(e) || !isText(e.id)) { f.errors.push(`Event ${i + 1}: no id; skipped`); return [] }

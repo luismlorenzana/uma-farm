@@ -8,9 +8,10 @@
 // evening kinds, and its invitations are one (two from 10 married), each a different Uma, asking for a date game. The
 // day's actions and event actions are counts (the budget is the rules', so an upgrade never breaks a save), and the areas
 // and spots worked today their ids, each once; today's occasion scenes, when any played, the roster Umas who played one.
-// The Diary's Town notes are ids.
+// The Diary's Town notes are ids. Her gallery names roster Umas, each with her scenes seen by id.
 import { dateOf, FESTIVAL_IDS } from '../farm/calendar'
 import { cleanFarmerName, farmerNameIssue, houseNameIssue } from '../romance/farmer'
+import { GALLERY_MAX, ILLUSTRATION_ID } from './gallery'
 import { isCropId, isGoodId, isGoodOrRingId, type CropId } from '../goods/ids'
 import { FISHING_SPOTS, FOREST_AREAS } from '../gathering/ids'
 import { isStockId, parseStockKey } from './warehouse'
@@ -31,7 +32,7 @@ export type { LoopPlaceId } from './parse-loop'
 
 export const SAVE_V5_KEYS = [
   'version', 'account', 'farmer', 'calendar', 'gold', 'today', 'roster', 'love', 'dorm', 'items', 'bin', 'fields', 'loads', 'crops', 'ranch', 'places',
-  'buildings', 'tools', 'workshops', 'expeditions', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'summary', 'town',
+  'buildings', 'tools', 'workshops', 'expeditions', 'bonds', 'board', 'diary', 'farm', 'homestead', 'memories', 'arrivals', 'gallery', 'summary', 'town',
 ] as const
 
 /** The most actions a day can hold: well past any budget the farm grows to. */
@@ -152,6 +153,19 @@ function parseMemories(value: unknown, path: string, roster: ReadonlySet<string>
     const at = `${path}.${id}`
     member(id, at, roster)
     out[id] = unique(list(raw, at, 0, MAX_MEMORIES).map((v, i) => (typeof v === 'string' && KEY.test(v) ? v : fail(`${at}.${i}`, 'expected an event id'))), at)
+  }
+  return out
+}
+
+/** Her gallery, by roster Uma: her illustrations seen, each a scene's id once (`ILLUSTRATION_ID`), at most
+ * `GALLERY_MAX`. Grows in place: an older v5 has none, and `updatedAt` never moves. */
+function parseGallery(value: unknown, path: string, roster: ReadonlySet<string>): Record<string, string[]> {
+  if (value === undefined) return {}
+  const out: Record<string, string[]> = {}
+  for (const [id, raw] of Object.entries(record(value, path))) {
+    const at = `${path}.${id}`
+    member(id, at, roster)
+    out[id] = unique(list(raw, at, 0, GALLERY_MAX).map((v, i) => (typeof v === 'string' && ILLUSTRATION_ID.test(v) ? v : fail(`${at}.${i}`, 'expected a scene id'))), at)
   }
   return out
 }
@@ -420,7 +434,7 @@ function parseTown(value: unknown, path: string, today: number): Record<string, 
 }
 
 /** Parses a save v5. A `farm.chapter` and `farm.goals` (the global chapters') are ignored, what the chapter opened kept
- * standing (`chapterOpened`); a missing `farm.builds` is none, a missing `town` none, missing accounts (`farm.loans`,
+ * standing (`chapterOpened`); a missing `farm.builds` is none, a missing `town` or `gallery` none, missing accounts (`farm.loans`,
  * `owed`, `short`, `income`) none, and a morning without its upkeep section (`summary.money`) has none. */
 export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
   const o = object(value, path, SAVE_V5_KEYS)
@@ -464,6 +478,7 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
     homestead,
     memories: parseMemories(o.memories, `${path}.memories`, ids),
     arrivals,
+    gallery: parseGallery(o.gallery, `${path}.gallery`, ids),
     summary: o.summary === null ? null : parseSummary(o.summary, `${path}.summary`, today, ids, homestead.houses.length),
     town: parseTown(o.town, `${path}.town`, today),
   }

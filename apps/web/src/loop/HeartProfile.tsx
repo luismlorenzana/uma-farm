@@ -7,7 +7,8 @@
 // (her nine activities). Chat and Gift (an action each) and Praise +20 sit at the panel's foot; Hearts | Work under her face, held at
 // the panel's top as it scrolls. Each section shows only
 // what exists: **Play · 1 ›** (her event costs an action) on the Next card when her event is Ready (what a setup needs said when it isn't, and **Ask
-// her** after her confession's "Not yet"), and Memories' album (`?album=`); Evening ›, the perks' effects,
+// her** after her confession's "Not yet"), Memories' album (`?album=`) and, for an Uma with illustrations, her Gallery
+// (`?gallery=`: "3 of 9"); Evening ›, the perks' effects,
 // the ring and her house. Ties: her closest friend first and marked, each bond's hearts and the points to
 // the next, and **Read** for a pair's conversation opened and unread. Perks: each reached perk with what it does now,
 // her closest friend's loved gift in Gifts from Friendship 7, and **From her**: her pet name for you from Romance 1 and her
@@ -18,7 +19,7 @@
 // under the Next card: her chapters (the pack's or the four defaults), the one she's in with its events played and to
 // come, a gate's words ("Opens when the Kitchen is built"), and what opens the next. Loaded on demand.
 import {
-  atHome, birthdaysOf, canAsk, inviteBlock, LADDER_COLOURS, ladderOf, levelWords, readiness, STAGE_NAMES, umaStage, type SaveV4, type StoryPack, type Temperament,
+  atHome, birthdaysOf, canAsk, galleryOf, inviteBlock, LADDER_COLOURS, ladderOf, levelWords, readiness, STAGE_NAMES, umaStage, type SaveV4, type StoryPack, type Temperament,
 } from '@farm/domain'
 import { inviteHer } from './actions'
 import { giveBetterRing } from './bench-actions'
@@ -27,6 +28,7 @@ import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Sheet, Tabs } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
+import { useIllustrationsOf } from '../dialogue/illustrations'
 import { ItemIcon } from '../items/ItemIcon'
 import type { MasterView } from '../master/master'
 import { nameOfAnyone } from '../story/people'
@@ -178,8 +180,27 @@ function HeartsSide({ save, pack, id, card, nameOf }: { save: SaveV4; pack: Hear
           <span className="font-semibold text-accent-strong">Album ›</span>
         </Link>
       </Section>
+      <GallerySection save={save} id={id} />
       {ring && <RingSection id={id} ring={ring} />}
     </div>
+  )
+}
+
+/** Her Gallery: her illustrations seen of all hers ("3 of 9"), and **Open ›** (`?gallery=`). Only for an Uma master data
+ * holds illustrations for (her manifest, read once; nothing is fetched for anyone else). */
+function GallerySection({ save, id }: { save: SaveV4; id: string }) {
+  const location = useLocation()
+  const ills = useIllustrationsOf(id)
+  if (!ills) return null
+  const seen = galleryOf(save, id)
+  const unlocked = ills.scenes.filter((s) => seen.includes(s.id)).length
+  return (
+    <Section title="Gallery">
+      <Link to={withParam(location, 'gallery', id)} state={{ back: true }} className="flex min-h-11 items-center justify-between text-[14px]" data-gallery-count={unlocked} data-action="gallery">
+        <span className="tabular-nums">{unlocked} of {ills.scenes.length}</span>
+        <span className="font-semibold text-accent-strong">Open ›</span>
+      </Link>
+    </Section>
   )
 }
 

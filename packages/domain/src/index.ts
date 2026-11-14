@@ -149,6 +149,10 @@ export * from './story/stand-in'
 // Her look in a scene (the dialogue engine's rules): outfits by context, the story's outfit ids and the art's names, the
 // 22 expressions and their fallbacks, a portrait kit's pick for a line, and the portraits' manifest.
 export * from './story/look'
+// Her illustrations in a scene: the story's `illustration` step and the default mapping's cues by moment, and her
+// gallery of the scenes seen.
+export * from './story/illustrations'
+export * from './save/gallery'
 // The story's one reader: errors only for what the game can't read, each skipping its part; notes for the rest. The
 // menu's defaults (her chapters; the retired welcome list and trigger to meet, still read) are `placeholders.ts`'s.
 export {
