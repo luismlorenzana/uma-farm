@@ -4,6 +4,7 @@
 // short and plain, with no "placeholder" label in play; the Farm Story Sandbox marks them per character (`writtenOf`).
 //
 //   the cast                 the pack's; with none, master data's first five (the welcome list's size)
+//   the opening              three short lines: the farm, its nine Carrot seeds, and someone waiting at the Gate
 //   her name and outfit      master data's name and her default outfit (`MasterCast`, read at boot)
 //   her chats, by stage      a few short lines a stage (before Friendship 1, her temperament's, as always)
 //   her meeting scene        two short lines and a hello, paying as a written one does
@@ -90,7 +91,7 @@ export function placeholderCast(master: MasterCast | null): Cast {
 const EMPTY_ROUTES = async () => null
 /** No pack at all: nothing written, every read its placeholder. */
 export function noPack(): StoryPack {
-  return { cast: { umas: [] }, ties: { ties: [] }, bibles: new Map(), scripted: new Map(), route: EMPTY_ROUTES, pairs: new Map(), pair: EMPTY_ROUTES, household: null }
+  return { cast: { umas: [] }, ties: { ties: [] }, bibles: new Map(), scripted: new Map(), route: EMPTY_ROUTES, pairs: new Map(), pair: EMPTY_ROUTES, household: null, opening: null }
 }
 
 /** The story the game plays: the pack (or none) with master data's placeholders. A pack whose cast names nobody plays the
@@ -196,17 +197,29 @@ export function chaptersOf(pack: Pick<StoryPack, 'cast'>, id: string): readonly 
   return own.length > 0 ? own : DEFAULT_CHAPTERS
 }
 
-/** Who comes up the road at the opening, in order: the cast's `opening`, else those whose arrival is the opening, else
- * the welcome list; only characters in the cast. Until meeting her lands, this keeps the opening's hands on the farm. */
-export function openingOf(pack: Pick<StoryPack, 'cast'>): string[] {
-  const inCast = (id: string) => castEntry(pack, id) !== undefined
-  if (pack.cast.opening) return pack.cast.opening.filter(inCast)
-  const arriving = pack.cast.umas.filter((u) => u.arrives?.kind === 'opening').map((u) => u.characterId)
-  return arriving.length > 0 ? arriving : welcomeOf(pack).filter(inCast)
+/** Day 1's first helper: the welcome list's first character in the cast, or null with nobody. She joins as the opening
+ * ends (`joinFirstHelper`), so the farm has someone to work, until meeting her in town brings the welcome list one a
+ * morning. */
+export function firstHelperOf(pack: Pick<StoryPack, 'cast'>): string | null {
+  return welcomeOf(pack).find((id) => castEntry(pack, id) !== undefined) ?? null
 }
 
-/** How she comes to the farm today: her cast entry's `arrives`, else none: the opening brings the welcome list, and
- * meeting her in town brings everyone else when it lands. */
+/** The opening's lines when the pack writes none: three, short, ending on someone at the Gate (day 1's first helper). */
+export const PLACEHOLDER_OPENING: readonly Step[] = [
+  { narrate: 'Morning, {farmer}. The farm is yours now, weeds and all.' },
+  { narrate: 'One block is tilled, and nine Carrot seeds wait in the Fields.' },
+  { narrate: 'And someone is already waiting at the Gate.' },
+]
+
+/** The opening's lines, in order: the pack's `opening.json`, else the game's three (without the Gate's line when nobody
+ * is coming). They play once, on day 1, after the farmer's name; then Home. */
+export function openingOf(pack: Pick<StoryPack, 'cast' | 'opening'>): readonly Step[] {
+  if (pack.opening) return pack.opening.steps
+  return firstHelperOf(pack) === null ? PLACEHOLDER_OPENING.slice(0, -1) : PLACEHOLDER_OPENING
+}
+
+/** How she comes to the farm today: her cast entry's `arrives`, else none: the opening brings the welcome list's first,
+ * and meeting her in town brings everyone else when it lands. */
 export const arrivesOf = (pack: Pick<StoryPack, 'cast'>, id: string): Arrival | null => castEntry(pack, id)?.arrives ?? null
 
 // === Her route: beats, events and her words =============================================================================
@@ -529,6 +542,7 @@ export function writtenOf(pack: Pick<StoryPack, 'cast' | 'bibles' | 'scripted' |
 /** The placeholders, as the manual lists them: what the story can give, and what plays without it. */
 export const PLACEHOLDER_TABLE: readonly { gives: string; without: string }[] = [
   { gives: 'The cast', without: `Master data’s first ${DEFAULT_WELCOME} characters, in its order (the welcome list’s size)` },
+  { gives: 'The opening', without: 'Three short lines: the farm, its nine Carrot seeds, and someone waiting at the Gate (that line only when someone is coming)' },
   { gives: 'Her name and outfit', without: 'Her master-data name and default outfit (her first original one)' },
   { gives: 'Her chat lines, by stage', without: `${PLACEHOLDER_CHATS.friend.length} short lines a stage, written for the game (before Friendship 1, her temperament’s)` },
   { gives: 'Her meeting scene', without: 'Two short lines and a hello; it pays as a written one does. A written one with no choice gets the hello' },
@@ -547,5 +561,5 @@ export const PLACEHOLDER_TABLE: readonly { gives: string; without: string }[] = 
   { gives: 'A pair’s conversation', without: 'Two short lines, one each, at every bond level of a tie; it pays nothing, as written' },
   { gives: 'A household scene or the finale', without: 'A short card: a line, each spouse’s line, a line; the finale’s dance. It pays nothing, as written' },
   { gives: 'Her house lines', without: 'Her temperament’s' },
-  { gives: 'Her arrival', without: 'None: the opening brings the welcome list; meeting her in town brings the rest when it lands' },
+  { gives: 'Her arrival', without: 'None: the welcome list’s first joins as the opening ends; meeting her in town brings the rest when it lands' },
 ]

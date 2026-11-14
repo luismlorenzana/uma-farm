@@ -41,14 +41,13 @@ const strengthOf = (t) => t.strength ?? 1
 const FESTIVAL = { 'flower-show': 'the Flower Show', 'fishing-derby': 'the Fishing Derby', 'cooking-contest': 'the Cooking Contest', 'animal-show': 'the Animal Show', 'harvest-cup': 'the Harvest Cup' }
 export function arrivalWords(a) {
   if (!a) return ''
-  if (a.kind === 'opening') return 'The opening'
   if (a.kind === 'chapter') return `Chapter ${a.chapter}’s recruit`
   if (a.kind === 'festival') return `At ${FESTIVAL[a.festival] ?? a.festival}${a.year ? `, year ${a.year}` : ''}`
   if (a.kind === 'beds') return `When the Dorm reaches level ${a.dormLevel}`
   return `After ${a.after}`
 }
 const issuesList = (issues) => (issues?.length ? h('ul', { class: 'issues' }, issues.map((i) => h('li', { text: i }))) : null)
-const noStory = () => h('div', { class: 'note-box' }, h('b', { text: 'No story yet. ' }), 'The private story files go in content/story/: any of world.md, cast.json, ties.json, umas/, routes/, pairs/ and household.json. Every part is optional (docs/story-pack.md).')
+const noStory = () => h('div', { class: 'note-box' }, h('b', { text: 'No story yet. ' }), 'The private story files go in content/story/: any of world.md, cast.json, ties.json, umas/, routes/, pairs/, household.json and opening.json. Every part is optional (docs/story-pack.md).')
 
 /** What the game's reader found: errors, which skip only their part (the rest plays), and notes, which block nothing. */
 export function findingsBox(found, title = '') {
@@ -106,7 +105,7 @@ export function charactersView() {
     h('div', { class: 'cast-list' }, cast.umas.map((u, i) => {
       const ties = D.tiesOf.get(u.characterId) ?? []
       const own = st.own?.[u.characterId]
-      return h('a', { class: `cast-row ${u.arrives?.kind === 'opening' ? 'opening' : ''}`, href: `#/c/${encodeURIComponent(u.characterId)}` },
+      return h('a', { class: 'cast-row', href: `#/c/${encodeURIComponent(u.characterId)}` },
         h('span', { class: 'order', text: i + 1 }), face(u.characterId, 'lg'),
         h('div', { class: 'cast-text' },
           h('div', { class: 'row' }, h('b', { text: umaName(u.characterId) }), calling(u.calling), D.welcome.has(u.characterId) ? h('span', { class: 'chip', text: 'welcome list' }) : null,

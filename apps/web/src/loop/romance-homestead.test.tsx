@@ -5,7 +5,7 @@
 // pack (9000001–9000003) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
 import {
-  FARM_PLACES, joinOpening, moveSpouse, newLove, newRosterUma, newSave, readScene, type HouseLine, type Love, type SaveV4, type StoryPack,
+  FARM_PLACES, arrive, moveSpouse, newLove, newRosterUma, newSave, readScene, type HouseLine, type Love, type SaveV4, type StoryPack,
 } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -39,15 +39,18 @@ const { homeWords, sleepViews } = await import('./homestead-view')
 const { summaryParts } = await import('./summary-words')
 const { setAskBeforeEnd } = await import('./ask')
 
+/** The stand-in's three home, ties seeded, as the old opening brought them: the opening now brings only day 1's helper. */
+const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : arrive(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const DAY = 30
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 
-/** A named farm on day 30, the opening three home and their arrivals played; `love` by id. */
+/** A named farm on day 30, the stand-in's three home (`joinStandIns`) and their arrivals played; `love` by id. */
 function farm(love: Record<string, Partial<Love>> = {}, more: Partial<SaveV4> = {}): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day: DAY }, gold: 50_000 }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), fixture.pack!)
+  const joined = joinStandIns(readScene(fresh, 'scene:1:open'), fixture.pack!)
   const loves = Object.fromEntries(Object.entries(love).map(([id, l]) => [id, { ...joined.love[id]!, ...l }]))
   return { ...joined, arrivals: [ONE, TWO, THREE], today: { ...joined.today, bonds: {} }, love: { ...joined.love, ...loves }, ...more }
 }

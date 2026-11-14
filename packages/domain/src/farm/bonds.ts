@@ -308,7 +308,7 @@ export const pairOf = (key: string): [string, string] => key.split(':') as [stri
 /**
  * The morning's bond hearts: one line a pair whose hearts rose since the last morning, at its highest,
  * in the cast's order (then by id). Each pair's hearts before are what `today.bonds` noted when it first moved (a seed when
- * the opening brings the three, or anything a day pays), else last night's; so a seed is a new heart, and so is one paid
+ * an Uma joins, or anything a day pays), else last night's; so a seed is a new heart, and so is one paid
  * tonight. Night step 9 reads it, then empties `today.bonds` for the day ahead.
  */
 export function newBondHearts(before: SaveV4, after: SaveV4, order: readonly string[] = []): BondLine[] {

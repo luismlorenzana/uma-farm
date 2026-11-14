@@ -7,8 +7,8 @@ import { STAND_IN_BIBLE, STAND_INS } from './authored.fixture'
 import { storyPackFrom } from './pack'
 import {
   BOND_LEVELS, captionOf, chaptersOf, chatLinesOf, DEFAULT_CHAPTERS, engravingOf, eventOf, favouriteOf, giftsOf, householdOf, keepsakeOf, lineFromStats, linePlaces,
-  masterCastFrom, meetOf, noPack, openingOf, outfitOf, pairConversationsOf, petNameOf, PLACEHOLDER_CHATS, PLACEHOLDER_ENGRAVING, PLACEHOLDER_HELLO, PLACEHOLDER_KEEPSAKE,
-  PLACEHOLDER_MOMENTS, PLACEHOLDER_PET_NAME, PLACEHOLDER_TABLE, placeholderEvent, placeholderHouseholdBeat, PLAY_PROMPTS, promptOf, storyOf, tasteOf, tieKind, tieLineOf,
+  firstHelperOf, masterCastFrom, meetOf, noPack, openingOf, outfitOf, pairConversationsOf, petNameOf, PLACEHOLDER_CHATS, PLACEHOLDER_ENGRAVING, PLACEHOLDER_HELLO, PLACEHOLDER_KEEPSAKE,
+  PLACEHOLDER_MOMENTS, PLACEHOLDER_OPENING, PLACEHOLDER_PET_NAME, PLACEHOLDER_TABLE, placeholderEvent, placeholderHouseholdBeat, PLAY_PROMPTS, promptOf, storyOf, tasteOf, tieKind, tieLineOf,
   tieStrength, weddingPlaces, welcomeOf, withCast, writtenOf,
 } from './placeholders'
 import { MASTER, MASTER_OUTFITS, NONE, stat } from './placeholders.fixture'
@@ -38,7 +38,8 @@ describe('the story with no pack', () => {
     const story = storyOf(null, MASTER)
     expect(story.cast.umas.map((u) => u.characterId)).toEqual(ids(5))
     expect(welcomeOf(story)).toEqual(ids(5))
-    expect(openingOf(story)).toEqual(ids(5))
+    expect(firstHelperOf(story)).toBe('9100001')
+    expect(openingOf(story)).toEqual(PLACEHOLDER_OPENING)
     expect(outfitOf(story, '9100001')).toBe('910000101')
     expect(ids(5).map((id) => favouriteOf(story, id))).toEqual(['farming', 'foraging', 'fishing', 'mining', 'ranch'])
     expect(linePlaces(story, '9100004')).toEqual(['mine', 'smelter'])

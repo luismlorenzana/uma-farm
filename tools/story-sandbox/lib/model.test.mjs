@@ -163,7 +163,7 @@ test('the repo’s drafts pass their checks against the game’s story as built'
   const { loadGame } = await import('./game.mjs')
   const built = await loadGame(join(repo, 'packages/domain/src'))
   assert.equal(built.error, undefined)
-  assert.ok(built.scenes['scene:1:open'] && !built.scenes['scene:1:close'], 'the opening loads from the domain, and no chapter scene')
+  assert.deepEqual(built.scenes, {}, 'no chapter scene: the opening is the pack\'s opening.json')
   const folder = join(repo, 'docs/story')
   const read = async (path) => JSON.parse(await readFile(path, 'utf8'))
   const chapters = []

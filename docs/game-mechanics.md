@@ -1546,14 +1546,14 @@ Each family's goods, raw and refined, at ★1 and ★5, out of demand; in demand
 
 ## Part 2 — The Umas and the farm's progress
 
-Umas join the farm when the story says: the opening brings three, and the rest arrive with a festival, a Dorm level or
-another Uma's event. The Dorm's beds cap who lives and works on the farm at once. Every Uma has a talent, G to S, in each
+Umas join the farm when the story says: day 1's helper, the welcome list's first, as the opening ends, and the rest with
+a festival, a Dorm level or another Uma's event. The Dorm's beds cap who lives and works on the farm at once. Every Uma has a talent, G to S, in each
 of nine activities, read from her stats, and climbs six ranks in each by working and meeting a challenge. The farm
 climbs a ladder of its own, the Farm Rank, from what it earns and grows, and grows by building: the rank offers each
 place, and you build it with gold and the farm's goods. There are no global chapters and no farm-wide story.
 
 ```
- day 1: your name ──► the opening scene ──► the opening three arrive ──► home (3 beds) ──► the farm's projects
+ day 1: your name ──► the opening's lines ──► Home: day 1's helper home (3 beds), waiting at the Gate ──► the projects
                                                                           │
  the Dorm: Upgrade · 1,000g ── night ──► 5 beds ──────────────────────────┤ Dorm levels 4–8 each bring an arrival
                                                                           │
@@ -1570,9 +1570,11 @@ Umas on the farm can work or tend; chats and gifts reach everyone on the roster,
 
 #### How Umas join
 
-Every Uma on the farm is one of the story pack's cast, and each walks in when her authored arrival says: the opening
-three when the opening scene is read, then the rest with a festival, a Dorm level or another Uma's event. She joins home while a bed is free, else away, at Friendship 0. Nothing is drawn. The arrivals and their scenes
-are the romance's: see [the opening, the farmer's name, and arrivals](#the-opening-the-farmers-name-and-arrivals).
+Every Uma on the farm is one of the story pack's cast, and each walks in when the story says: day 1's helper, the welcome
+list's first, as the opening ends; then the rest with a festival, a Dorm level or another Uma's event. She joins home
+while a bed is free, else away, at Friendship 0. Nothing is drawn. Until meeting her in town lands, the rest of the
+welcome list waits off the farm. The arrivals and their scenes are the romance's: see
+[the opening, the farmer's name, and arrivals](#the-opening-the-farmers-name-and-arrivals).
 
 #### The Dorm's levels and beds
 
@@ -1993,7 +1995,7 @@ The Diary counts what the farm has shipped and pays for it.
 - **When they pay:** milestones and rows are checked at night step 8 and paid that night, their gold with the bin's,
   milestones first in their list order, then rows. Each is listed in the morning's New today ("10,000g shipped · +300g",
   "Woods: every grade shipped · +500g"), tagged Milestone, opening the Diary.
-- **Umas on the roster** counts the whole roster, the opening three included, so a fifth Uma pays 300g.
+- **Umas on the roster** counts the whole roster, day 1's helper included, so a fifth Uma pays 300g.
 - **Depth** counts each forest area and fishing spot past the first. It pays the first night a haul comes home from
   there; the Woods and the Pond are open on day 1 and pay none.
 - **Ranks** pay for the first Uma to reach each rank in any activity.
@@ -2216,8 +2218,8 @@ no plot. An Uma's own lines are her arrival scene and her events, from the story
 | Cole Varga | Rival: Varga Ranch, animals and fishing | `cast/cole-varga` |
 <!-- /live -->
 
-- The opening speaks three of the cast (the Mayor, Marta Quill and Old Ben Carver); Ida Stone speaks at the ring bench.
-  The others have no lines yet.
+- Ida Stone speaks at the ring bench. The others have no lines yet; the opening is the story's, and any of the town's
+  people may speak in it.
 - Each cast member shows as a coloured disc with the first letter of their given name.
 
 #### The scenes
@@ -2225,33 +2227,24 @@ no plot. An Uma's own lines are her arrival scene and her events, from the story
 Each scene plays once: played through or skipped, it's marked read and never plays again. Which scene plays now:
 
 - **Nothing plays until the farmer is named.**
-- **The opening, "The Overgrown Farm",** on day 1, once you're named. The Mayor greets you by name, Old Ben gives the
-  nine Carrot seeds, Marta shows the shop and the bin, and the opening's Umas come up the road: its last line counts
-  them ("Three Umas come up the road." for the stand-in's three; "An Uma comes up the road." for one). Reading it or
-  skipping it brings them, and each then plays her own arrival scene, the last ending on the first day's card. An
-  opening that brings nobody drops that line and ends on the first day's card.
+- **The opening's lines,** on day 1, once you're named: the pack's `opening.json`, any length, else the game's three
+  (below). Reading them or skipping them brings day 1's helper, and the farm opens on Home: no card, no tutorial.
 - **The ring bench's scene,** the morning after the first Romance 8 event, once the summary is put away: after the
   opening, before arrivals.
-- **Arrival scenes,** after those, in the order the Umas joined.
+- **Arrival scenes,** after those, in the order the Umas joined. Day 1's helper's is the exception: she waits at the
+  Gate, and hers plays from the Gate's quick look, never on its own.
 
 #### The opening's lines
 
-The lines, one to a tap:
+The pack's `opening.json` is the opening, at any length (see [the opening](#the-opening)). Without one, the game's own
+three play, one to a tap; the last only when someone is coming (day 1's helper):
 
 <!-- live:scenes -->
-**The Overgrown Farm** (`scene:1:open`)
-
-| # | Who | Line |
+| # | Kind | Line |
 |---|---|---|
-| 1 | (narration) | Morning at the farm gate. The weeds stand as high as the fence. |
-| 2 | Mayor Hollis Pryor | “Welcome, {farmer}! I’m Hollis Pryor, mayor of the town down the road.” |
-| 3 | Mayor Hollis Pryor | “This farm has stood empty since Old Ben retired. The whole town hopes you can wake it up.” |
-| 4 | Old Ben Carver | “I kept one block tilled, just in case. Here: nine Carrot seeds to start you off.” |
-| 5 | Old Ben Carver | “A tended row grows faster. Tap a plot, then pick who tends it.” |
-| 6 | Marta Quill | “Marta Quill, from the general store at the town edge. The shop is open whenever you need seeds.” |
-| 7 | Marta Quill | “And that’s the shipping bin. Anything you put in pays tonight.” |
-| 8 | Mayor Hollis Pryor | “You’ll want help with all this. I hear some is on its way.” |
-| 9 | (narration) | Three Umas come up the road. |
+| 1 | Narration | Morning, {farmer}. The farm is yours now, weeds and all. |
+| 2 | Narration | One block is tilled, and nine Carrot seeds wait in the Fields. |
+| 3 | Narration | And someone is already waiting at the Gate. |
 <!-- /live -->
 
 Ida Stone first appears at the ring bench. The romance part covers the bench; its scene's lines are:
@@ -2298,9 +2291,9 @@ The Diary tab (`/diary`) holds the farm's projects, the Farm Rank and the milest
   line (narration in italics); and "Tap to go on · 3/12". A tap anywhere goes on.
 - **It loads master data itself** (names and busts), since a new farm's boot doesn't wait for it. **Skip** works
   without it, and skipping marks the scene read.
-- **The opening ends** as the three come up the road: reading it brings them, and their arrival scenes play next. The
-  third ends on **the first day's card:** "Day 1 · Nine Carrot seeds wait in the Fields." and **Plant the carrots**,
-  which opens the Fields.
+- **The opening** plays its lines with the title line "Day 1" (with a place once a `place` step names one: "Day 1 ·
+  Gate"), "Tap to go on · 1/3". Its last tap, or **Skip** on any line from the first, reads it, brings day 1's helper
+  and opens **Home**: three taps after the name for the game's own three.
 - The same player plays the arrival scenes and the ring bench's scene; heart events play in their own player. The
   romance part covers them.
 
@@ -2326,12 +2319,13 @@ game reads, what it does in play, and what plays when it's missing.
 
 | File | Holds | Without it |
 |---|---|---|
-| Cast | The cast, in its order: each character's id and, optionally, her outfit, calling, birthday, trigger to meet, chapters and arrival; the welcome list; the opening | No characters |
+| Cast | The cast, in its order: each character's id and, optionally, her outfit, calling, birthday, trigger to meet, chapters and arrival; the welcome list | No characters |
 | Ties | Each tie: two characters and, optionally, its kind, a strength of 1–3 and a line | No ties |
 | Her bible (one per Uma) | Optionally her favourite line, gifts (loved, liked, disliked, any number each), her route's beats, chat sets, keepsake, pet name, wedding places and wishes. Her profile texts, season and festival are the story's own | Her calling's line (else her stats'), neutral tastes, the game's chat lines for each stage |
 | Her route (one per Uma) | Her scripted events, by rung, any of them | Her meeting scene and every event play the game's own short cards, which pay as written ones do |
 | A pair's conversations | Conversations at bond levels 1–5 for a tie's two Umas | The game's two-line card at each level |
 | The household | Household scenes at 5, 10 and 15 married, house lines and the finale, every part optional | The game's short cards; house lines from her temperament |
+| The opening | The start's lines, any number: said, narrated, thought, pauses and the title line's place | The game's three lines |
 
 **One reader, two kinds of findings.** The game, the release and the Farm Story Sandbox read a pack with one reader
 (`readStoryPack`):
@@ -2390,7 +2384,7 @@ The domain reads them through `welcomeOf`, `meetOf` and `chaptersOf`, each with 
 #### The pack at runtime
 
 The game holds the cast, the ties, each bible by character id, the event ids each route scripts, the bond levels each
-tie's pair has a conversation at, and the household. Routes and pairs' conversations load on demand, the first time
+tie's pair has a conversation at, the household and the opening. Routes and pairs' conversations load on demand, the first time
 they're needed.
 
 - **Read, never refused.** Every part is read on its own: a part with an error is skipped and the rest plays, so a pack
@@ -2424,15 +2418,16 @@ The repo carries an invented stand-in pack in the private pack's layout, so the 
 character, name or line. It's the tests' only: no production build holds it, and the dev server plays no pack unless a
 release is there (`pnpm story:release --stand-in` writes one). Its first Uma, a farmer, has her whole route and every
 optional field; the forager and the fisher have only their arrival scenes and no bible, so the placeholders and the
-calling's line are exercised. None of the three outfits is in master data, so all three show lettered discs. The three
+calling's line are exercised. Its opening is four invented lines, three narrated and then the farmer's thought, ending
+on someone at the Gate; it names no welcome list, so its first is day 1's helper. None of the three outfits is in master data, so all three show lettered discs. The three
 stand-ins:
 
 <!-- live:stand-in -->
-| Character | Outfit | Calling | Favourite line | Arrives | Bible | Scripted |
+| Character | Outfit | Calling | Favourite line | Welcome list | Bible | Scripted |
 |---|---|---|---|---|---|---|
-| 9000001 | 900000101 | farming | farming | opening | Yes | 27 of 27 |
-| 9000002 | 900000201 | foraging | foraging | opening | No (her calling stands in) | 1 of 27 |
-| 9000003 | 900000301 | fishing | fishing | opening | No (her calling stands in) | 1 of 27 |
+| 9000001 | 900000101 | farming | farming | 1st: joins as the opening ends | Yes | 27 of 27 |
+| 9000002 | 900000201 | foraging | foraging | 2nd | No (her calling stands in) | 1 of 27 |
+| 9000003 | 900000301 | fishing | fishing | 3rd | No (her calling stands in) | 1 of 27 |
 <!-- /live -->
 
 #### How the app gets the pack
@@ -2447,7 +2442,7 @@ stand-ins:
   holding an older index still reads it.
 - **farm-api serves it** to the owner only: the index fresh on every read, the hash-named files cached for good, and
   nothing else (404).
-- **On the phone,** the boot reads the index, then the cast, the ties, the bibles and the household; each route and pair
+- **On the phone,** the boot reads the index, then the cast, the ties, the bibles, the household and the opening; each route and pair
   loads when it's first needed. Every file is checked against the index's hash and kept in the content cache, so a
   release's file downloads once. The boot and the night wait for the pack, as they wait for master data.
 - **The last good index stays on the phone.** When the index can't be read (offline, or the server failing), the boot
@@ -2470,6 +2465,7 @@ every ladder, event, perk, evening, proposal, wedding and household runs end to 
 | What the story can give | What plays without it |
 |---|---|
 | The cast | Master data’s first 5 characters, in its order (the welcome list’s size) |
+| The opening | Three short lines: the farm, its nine Carrot seeds, and someone waiting at the Gate (that line only when someone is coming) |
 | Her name and outfit | Her master-data name and default outfit (her first original one) |
 | Her chat lines, by stage | 5 short lines a stage, written for the game (before Friendship 1, her temperament’s) |
 | Her meeting scene | Two short lines and a hello; it pays as a written one does. A written one with no choice gets the hello |
@@ -2488,12 +2484,12 @@ every ladder, event, perk, evening, proposal, wedding and household runs end to 
 | A pair’s conversation | Two short lines, one each, at every bond level of a tie; it pays nothing, as written |
 | A household scene or the finale | A short card: a line, each spouse’s line, a line; the finale’s dance. It pays nothing, as written |
 | Her house lines | Her temperament’s |
-| Her arrival | None: the opening brings the welcome list; meeting her in town brings the rest when it lands |
+| Her arrival | None: the welcome list’s first joins as the opening ends; meeting her in town brings the rest when it lands |
 <!-- /live -->
 
 - **No pack at all** (none published, or a pack whose cast names nobody): the cast is master data's first five
-  characters by id, the welcome list's size, each in her default outfit with her master-data name. They come up the
-  road at the opening. Everyone else waits for meeting her in town.
+  characters by id, the welcome list's size, each in her default outfit with her master-data name. The game's three
+  lines open the farm, and master data's first is day 1's helper. Everyone else waits for meeting her in town.
 - **Her line from master data** is the work her stats suit best, by the talents' one rule: each activity reads one stat
   (Stamina farming, Guts the ranch, Power mining, Wit fishing, Speed foraging), and a tie goes to the first in that
   order. A line whose places aren't built yet waits as a written one does ("Opens when the Mine is built").
@@ -2566,38 +2562,47 @@ No pronouns and no gender are asked, and the farmer is never drawn: lines say "y
 
 #### The opening
 
-Day 1 runs in this order:
+A new farm takes under a minute: your name, a few lines, and you're on the farm. Day 1 runs in this order:
+
+```
+ the name sheet ──► the opening's lines, one to a tap ──► Home, day 1
+                     the pack's opening.json, any length;      day 1's helper home, waiting at the Gate:
+                     else the game's three                     the Gate's quick look → Say hello → her arrival scene
+                     Skip from the first line ─────────────────┘
+```
 
 1. **The name sheet.** Nothing else plays while the farmer is unnamed.
-2. **"The Overgrown Farm".** The Mayor at the gate welcomes you by name, Old Ben gives the nine Carrot seeds and
-   explains the tended row, Marta shows the shop and the bin, and three Umas come up the road.
-3. **Reading it or skipping it brings the opening's Umas,** any number, in order: the cast file's `opening`, else those
-   whose arrival is the opening, else the welcome list (with no pack, master data's first five). They're home in the Dorm at Friendship 0 while a bed is free
-   (day 1 has three), the rest away, their ties seeded. Its last line counts them ("An Uma comes up the road.", "Five
-   Umas come up the road.").
-4. **Each one's arrival scene,** in the cast's order. The last ends on the first day's card, "Day 1 · Nine Carrot seeds
-   wait in the Fields.", and **Plant the carrots**, which opens the Fields. An opening that brings nobody ends on that
-   card itself.
+2. **The opening's lines:** the pack's `opening.json` (any number of steps: said, narrated, thought, pauses and the
+   title line's place), else [the game's three](#the-openings-lines). `{farmer}` is filled as each shows.
+3. **Its last tap, or Skip on any line from the first,** reads it once and opens **Home** on day 1: three taps after
+   the name for the game's own three. No picks, no card, no tutorial.
+4. **Day 1's helper joins** as it's read: the welcome list's first in the cast (with no pack, master data's first),
+   home in the Dorm at Friendship 0, so the farm has someone to work. Nobody else comes then: the rest of the welcome
+   list waits off the farm until meeting her in town brings them one a morning. A cast with nobody brings nobody, and
+   the game's opening drops its Gate line.
+5. **She waits at the Gate.** The Gate on the map wears a **Waiting** badge, and its quick look says "‹name› is
+   waiting at the Gate." with **Say hello**, which plays her arrival scene. It never plays on its own, any day; she
+   works the farm meanwhile.
 
-Nothing is picked or drawn. The farm has no global chapters, so the opening is the town's welcome, never a plot; its
-lines are in [the opening's lines](#the-openings-lines).
+Nothing is picked or drawn. The farm has no global chapters, so the opening is the farm's first morning, never a plot.
+A farm whose opening was already read never plays it again, and keeps everyone it has.
 
 #### Arrivals
 
-Each Uma's arrival is her cast entry's, and it's optional. The four kinds, and when each one is checked (a cast entry
-that still names a chapter arrival is noted and dropped: the farm has no chapters, so she waits to be met):
+Each Uma's arrival is her cast entry's, and it's optional. The three kinds, and when each one is checked (a cast entry
+that still names a chapter arrival, or an opening arrival, is noted and dropped: the farm has no chapters, and the
+opening brings only day 1's helper, so she waits to be met; a cast file's old `opening` list is dropped the same way):
 
 <!-- live:arrivals -->
 | Arrival | When she arrives | Checked |
 |---|---|---|
-| `opening` | The opening scene, day 1: read or skipped, it brings the opening’s Umas: the cast file’s `opening` list, else those whose arrival is the opening, else the welcome list | The opening scene |
 | `festival` | The morning of that festival’s day in its year (year 1 unless the cast names one), built or not | Night step 8, `arriveUmas` |
 | `beds` | The morning the Dorm’s level *n* takes effect (levels 4–8) | Night step 8, `arriveUmas` |
 | `event` | The morning after another Uma’s named event plays (`<characterId>:<eventId>`, or an event id: anyone’s) | Night step 8, `arriveUmas` |
 <!-- /live -->
 
-- **No arrival:** a cast Uma with none, and not in the opening, stays off the farm until meeting her in town brings her.
-  Her arrival has no placeholder: the opening already brings the welcome list.
+- **No arrival:** a cast Uma with none, other than day 1's helper, stays off the farm until meeting her in town brings
+  her. Her arrival has no placeholder: the opening brings day 1's helper, and meeting her brings the rest.
 - **A state, checked each night** at step 8, after the Dorm settles: every cast Uma not on the roster whose arrival holds
   joins. A trigger already passed holds too, so she arrives that night.
 - **She joins** home while a bed is free, else away on her off-season (the Dorm's swap brings her home), at Friendship 0
@@ -2606,7 +2611,8 @@ that still names a chapter arrival is noted and dropped: the farm has no chapter
 - **In the cast's order** when several arrive the same night, and **once each.**
 - **A Dorm-level arrival** may name any level 2–8; the design gives levels 4–8 one each. The Dorm's page marks a level
   that will bring someone ("Level 4 · 9 beds · someone new arrives"), never who.
-- **The Gate** is where she walks in. Its quick look says "Umas arrive here." and what brings the next arrivals, never
+- **The Gate** is where she walks in. Its quick look first lists day 1's helper while she waits there ("‹name› is
+  waiting at the Gate." and **Say hello**), then says "Umas arrive here." and what brings the next arrivals, never
   who, up to three: the next Dorm level and the next festival by date first, then a story event, then the rest ("Next:
   the Dorm's level 4 · the Fishing Derby · a story event"). Once
   the whole cast is here it says "Everyone is here."
@@ -2615,15 +2621,16 @@ that still names a chapter arrival is noted and dropped: the farm has no chapter
 #### Her arrival scene
 
 Her arrival scene plays the next time the farm opens with the morning summary put away: after the opening and the ring
-bench's scene, in the order the Umas joined (by day, then the cast's order). The scene player shows
+bench's scene, in the order the Umas joined (by day, then the cast's order). **Day 1's helper's** plays from the Gate
+instead: its quick look's **Say hello** (`?hello=‹id›`), whenever you go, and never on its own; an Uma who joined on
+day 1 on an older farm and hasn't been welcomed waits there too. The scene player shows
 her lines with her bust (or her disc) and `{farmer}` filled, her emote as a word, narration, thoughts in italics, a title
 line ("Stand-in 1 arrives · Gate"), pauses, flags (wording only) and **her choice**: usually one; written with none she
 pays +50 alone, and with more the first pays.
 
 - **Each option shows its gain on the button** before the tap.
 - **Skip** jumps to the choice, never past it; after the choice, to the end. So every arrival pays.
-- It ends on her bust, "♥ +80" (or +60) and **Welcome, ‹her name›**; the last of the opening's Umas ends on the first
-  day's card instead.
+- It ends on her bust, "♥ +80" (or +60) and **Welcome, ‹her name›**, and the farm stays where it was.
 
 What it pays into her Friendship 1 bar:
 
@@ -3878,8 +3885,8 @@ Each pair of Umas on the farm holds **bond points**, whole, that **never fall.**
 **conversation**.
 
 ```
- day 1: the opening brings the three ──► their ties seed: Stand-in 1 & 2 at 150 (♥♥), Stand-in 1 & 3 at 50 (♥)
-   │                                      the next morning: "♥♥ Stand-in 1 & Stand-in 2 · bond 2 · Read"
+ Stand-in 2 joins Stand-in 1 ──► their tie seeds: Stand-in 1 & 2 at 150 (♥♥); Stand-in 3 joins: 1 & 3 at 50 (♥)
+   │                                the next morning: "♥♥ Stand-in 1 & Stand-in 2 · bond 2 · Read"
    ▼
  two Umas at the forest all day ──► that night: +10 a pair (+15 if both favour foraging; ×1.5 more at Romance 4)
    │                                 290 → 300: ♥♥♥, the morning lists "bond 3"

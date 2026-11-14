@@ -1,9 +1,9 @@
 // An open pack, read whole: any number of characters in any order, every part optional, notes instead of blocks, and an
 // error that skips only its part. Invented ids only: the stand-in's 9000001–9000003 and more in its range.
 import { describe, expect, it } from 'vitest'
-import { RUNGS, type Cast, type Route } from './authored'
+import { LINE_LIMITS, RUNGS, type Cast, type Route } from './authored'
 import { readStoryPack, storyPackFrom, type PackFiles } from './pack'
-import { chaptersOf, DEFAULT_CHAPTERS, DEFAULT_MEET, meetOf, openingOf, welcomeOf } from './placeholders'
+import { chaptersOf, DEFAULT_CHAPTERS, DEFAULT_MEET, firstHelperOf, meetOf, openingOf, PLACEHOLDER_OPENING, welcomeOf } from './placeholders'
 import { STAND_IN_FILES } from './stand-in'
 
 const clone = <T>(v: T): T => structuredClone(v)
@@ -18,11 +18,15 @@ const castOf = (n: number, entry: (i: number) => Record<string, unknown> = () =>
 const read = (files: Partial<PackFiles>) => readStoryPack({ umas: {}, routes: {}, ...files })
 
 describe('the packs an open story releases', () => {
-  it('five opening characters, in any order, with any callings', () => {
-    const cast: Cast = { ...castOf(5, (i) => ({ outfitId: `${id(i + 1)}01`, calling: CALLINGS[(i * 2) % 5], arrives: { kind: 'opening' } })), opening: [id(4), id(2), id(5), id(1), id(3)] }
+  it('five characters with any callings; an old opening list and opening arrivals are noted and dropped', () => {
+    const cast = { ...castOf(5, (i) => ({ outfitId: `${id(i + 1)}01`, calling: CALLINGS[(i * 2) % 5], arrives: { kind: 'opening' } })), opening: [id(4), id(2), id(5), id(1), id(3)] } as Cast
     const { pack, errors, notes } = read({ ...clone(STAND_IN_FILES), cast })
     expect(errors).toEqual([])
-    expect(openingOf(pack)).toEqual([id(4), id(2), id(5), id(1), id(3)])
+    expect(pack.cast).not.toHaveProperty('opening')
+    expect(pack.cast.umas.some((u) => 'arrives' in u)).toBe(false)
+    expect(notes).toContain('cast.json: opening: the opening brings nobody now (the welcome list’s first joins as it ends), so the list is dropped')
+    expect(notes).toContain(`cast.json: Uma 4 (${id(4)}): the opening brings nobody now (the welcome list’s first joins as it ends), so an opening arrival is dropped`)
+    expect(firstHelperOf(pack)).toBe(id(1))
     expect(notes).toContain(`umas/${id(4)}.json: no bible yet, so her calling or her stats give her line, every gift is neutral, and her chats are the game’s for each stage`)
     expect(notes).toContain(`routes/${id(5)}.json: no route yet, so her meeting scene and her events play the game’s own short cards, which pay as written ones do`)
     expect(pack.cast.umas).toHaveLength(5)
@@ -36,9 +40,10 @@ describe('the packs an open story releases', () => {
     expect(meetOf(pack, id(40))).toEqual(DEFAULT_MEET)
     expect(meetOf(pack, id(40))).toEqual({ kind: 'talks', days: 3 })
     expect(chaptersOf(pack, id(17))).toBe(DEFAULT_CHAPTERS)
-    // No opening and no arrivals: the welcome list comes up the road; the other 35 wait for meeting her in town.
-    expect(openingOf(pack)).toEqual([1, 2, 3, 4, 5].map(id))
-    expect(notes).toContain(`cast.json: no opening, so the welcome list comes up the road at the opening (${[1, 2, 3, 4, 5].map(id).join(', ')})`)
+    // No arrivals: the welcome list's first joins as the opening ends; the other 39 wait for meeting her in town.
+    expect(firstHelperOf(pack)).toBe(id(1))
+    expect(notes).toContain(`cast.json: ${id(1)}, the welcome list’s first, joins as the opening ends: day 1’s helper until meeting her in town lands`)
+    expect(notes.find((n) => n.includes('have no arrival'))).toContain(`${id(2)}, `)
     expect(notes.find((n) => n.includes('have no arrival'))).toContain(id(40))
   })
 
@@ -49,10 +54,11 @@ describe('the packs an open story releases', () => {
     expect(pack.ties.ties).toEqual([])
     expect(notes).toEqual([
       `cast.json: Uma 1 (${id(1)}): no outfit, so she plays her default outfit from master data`,
+      'opening.json: no opening yet, so the game’s own three lines play',
       `umas/${id(1)}.json: no bible yet, so her calling or her stats give her line, every gift is neutral, and her chats are the game’s for each stage`,
       `routes/${id(1)}.json: no route yet, so her meeting scene and her events play the game’s own short cards, which pay as written ones do`,
       `cast.json: ${id(1)} has no calling and no bible’s favouriteLine, so her line is the work her stats in master data suit best`,
-      `cast.json: no opening, so the welcome list comes up the road at the opening (${id(1)})`,
+      `cast.json: ${id(1)}, the welcome list’s first, joins as the opening ends: day 1’s helper until meeting her in town lands`,
     ])
   })
 
@@ -61,7 +67,10 @@ describe('the packs an open story releases', () => {
     expect(errors).toEqual([])
     expect(pack.cast).toEqual({ umas: [] })
     expect(welcomeOf(pack)).toEqual([])
-    expect(openingOf(pack)).toEqual([])
+    expect(firstHelperOf(pack)).toBeNull()
+    expect(pack.opening).toBeNull()
+    // Nobody is coming, so the game's opening leaves out its Gate line.
+    expect(openingOf(pack)).toEqual(PLACEHOLDER_OPENING.slice(0, 2))
   })
 
   it('a pack with one broken event loses only that event', async () => {
@@ -98,9 +107,10 @@ describe('the packs an open story releases', () => {
     expect(again.files).toEqual(first.files)
   })
 
-  it('the stand-in reads as before: its opening three, its bibles and routes', () => {
+  it('the stand-in reads as before: its opening\'s four lines, its first as day 1\'s helper, its bibles and routes', () => {
     const pack = storyPackFrom(STAND_IN_FILES)
-    expect(openingOf(pack)).toEqual([1, 2, 3].map(id))
+    expect(openingOf(pack).map((step) => Object.keys(step)[0])).toEqual(['narrate', 'narrate', 'narrate', 'thought'])
+    expect(firstHelperOf(pack)).toBe(id(1))
     expect([...pack.bibles.keys()]).toEqual([id(1)])
     expect([...pack.scripted.get(id(1))!]).toEqual(RUNGS)
   })
@@ -119,7 +129,7 @@ describe('the menu\'s welcome list, her trigger and her chapters', () => {
     expect(meetOf(pack, id(4))).toEqual({ kind: 'talks', days: 3 })
     expect(chaptersOf(pack, id(3))).toEqual([{ title: 'Before', events: ['arrival', 'f1'] }, { title: 'After', events: ['f2'], gate: { kind: 'farm-rank', rank: 3 } }])
     expect(chaptersOf(pack, id(4)).map((c) => c.title)).toEqual(['Getting to know her', 'Together', 'The wedding', 'Married life'])
-    expect(openingOf(pack)).toEqual([id(7), id(3)])
+    expect(firstHelperOf(pack)).toBe(id(7))
   })
 
   it('the four default chapters hold every rung once, from meeting her to married life', () => {
@@ -133,5 +143,52 @@ describe('the menu\'s welcome list, her trigger and her chapters', () => {
     expect(errors).toEqual([`cast.json: Uma 1 (${id(1)}) meet: talks names its days, from 1; skipped`])
     expect(welcomeOf(pack)).toEqual([1, 2, 3, 4, 5].map(id))
     expect(meetOf(pack, id(1))).toEqual(DEFAULT_MEET)
+  })
+})
+
+describe('the opening: opening.json', () => {
+  it('reads its lines in a route\'s steps, any length, with a scene\'s limits; a step it can\'t play or read is skipped, the rest play', () => {
+    const steps = [
+      { narrate: 'Morning comes up over the fence.' },
+      { say: id(1), line: '“You must be {farmer}.”', emote: 'happy' },
+      { place: 'gate' },
+      { wait: 600 },
+      { choice: [{ text: 'Hello.' }, { text: 'Hi.' }] },
+      { say: id(2), line: 'x'.repeat(LINE_LIMITS.line + 1) },
+      { flag: 'met-at-gate' },
+      { thought: 'Time to get to work, girlfriend.' },
+      ...Array.from({ length: 12 }, (_, i) => ({ narrate: `Line ${i + 1}.` })),
+    ]
+    const { pack, errors, notes } = read({ ...clone(STAND_IN_FILES), opening: { about: 'Invented.', steps } })
+    expect(errors).toEqual([
+      'opening.json: Step 5: the opening plays lines only (say, narrate, thought, wait, place), never a pick; skipped',
+      `opening.json: Step 6: its line is ${LINE_LIMITS.line + 1} characters; the screen shows ${LINE_LIMITS.line}; skipped`,
+      'opening.json: Step 7: the opening plays lines only (say, narrate, thought, wait, place), never a pick; skipped',
+    ])
+    expect(notes).toContain('opening.json: Step 8: “girlfriend” genders the farmer')
+    expect(pack.opening!.about).toBe('Invented.')
+    expect(openingOf(pack)).toHaveLength(steps.length - 3)
+    expect(openingOf(pack)[1]).toEqual({ say: id(1), line: '“You must be {farmer}.”', emote: 'happy' })
+  })
+
+  it('a speaker outside the cast is a note; with no line left, or a file that isn\'t the shape, the game\'s own plays', () => {
+    const outside = read({ ...clone(STAND_IN_FILES), opening: { steps: [{ say: '9000099', line: 'Hello there.' }] } })
+    expect(outside.errors).toEqual([])
+    expect(outside.notes).toContain('opening.json: Step 1: 9000099 isn’t one who speaks here (one outside the cast shows as “An Uma”)')
+    const picks = read({ ...clone(STAND_IN_FILES), opening: { steps: [{ choice: [{ text: 'A.' }] }, { wait: 300 }] } })
+    expect(picks.notes).toContain('opening.json: No lines, so the game’s own opening plays')
+    expect(picks.pack.opening).toBeNull()
+    expect(openingOf(picks.pack)).toEqual(PLACEHOLDER_OPENING)
+    const shapeless = read({ ...clone(STAND_IN_FILES), opening: ['Morning.'] })
+    expect(shapeless.errors).toEqual(['opening.json: Not an opening (an object with a steps list); the game’s own opening plays'])
+    expect(shapeless.files).not.toHaveProperty('opening')
+    expect(openingOf(shapeless.pack)).toEqual(PLACEHOLDER_OPENING)
+  })
+
+  it('the game\'s own three are short and plain: {farmer} the only placeholder, no word that genders the farmer', () => {
+    const { errors, notes } = read({ ...clone(STAND_IN_FILES), opening: { steps: PLACEHOLDER_OPENING } })
+    expect(errors).toEqual([])
+    expect(notes.filter((n) => n.startsWith('opening.json'))).toEqual([])
+    for (const step of PLACEHOLDER_OPENING) expect('narrate' in step && step.narrate.length).toBeLessThanOrEqual(80)
   })
 })

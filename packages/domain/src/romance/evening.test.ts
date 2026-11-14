@@ -12,7 +12,7 @@ import type { UmaBible } from '../story/authored'
 import { readScene } from '../story/scenes'
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { STAND_IN_FILES } from '../story/stand-in'
-import { joinOpening } from './arrivals'
+import { joinCast } from './arrivals.fixture'
 import {
   answerInvite, drawInvites, EVENING_GAMES, eveningMarks, eveningPoints, eveningPreview, eveningRole, EVENINGS, eveningSeed, eveningSlots, eveningUmas, favouriteKind,
   homeTonight, inviteCandidates, invitedNow, inviteDue, invitePoints, inviteWeight, kindBuilt, kindOpens, kindsNow, slotsLeft, spendEvening, tonightOpens,
@@ -25,10 +25,10 @@ const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ kinds: TEST_KINDS, story })
 
-/** A named farm on `day`, the opening read: the stand-ins home at Friendship 0. */
+/** A named farm on `day`, the opening read: the stand-ins home (`joinCast`) at Friendship 0. */
 function farm(day = 3): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
+  const joined = joinCast(readScene(fresh, 'scene:1:open'), PACK)
   return { ...joined, today: { ...joined.today, bonds: {} } }
 }
 const withLove = (save: SaveV4, love: Partial<Love>, id = ONE): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })

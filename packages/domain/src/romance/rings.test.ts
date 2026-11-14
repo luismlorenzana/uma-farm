@@ -19,7 +19,7 @@ import { BENCH_SCENE_LINES } from '../story/bench'
 import { storyPackFrom } from '../story/pack'
 import { BENCH_SCENE, readScene, sceneDue } from '../story/scenes'
 import { STAND_IN_FILES } from '../story/stand-in'
-import { joinOpening } from './arrivals'
+import { joinCast } from './arrivals.fixture'
 import {
   BENCH_WORDS, benchDue, benchGrades, benchOpen, benchPick, benchStock, betterRings, forgeRecipe, giveRing, heldRings, makeRing, MAKE_BONUS, ringPercent,
   type BenchInput,
@@ -40,10 +40,10 @@ const [ONE, TWO, THREE]: readonly string[] = STAND_INS
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const context = (): NightContext => ({ kinds: TEST_KINDS, story: PACK })
 
-/** A named farm on `day`, the opening read and the stand-ins home at Friendship 0. */
+/** A named farm on `day`, the opening read and the stand-ins home (`joinCast`) at Friendship 0. */
 function farm(day = 3): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
+  const joined = joinCast(readScene(fresh, 'scene:1:open'), PACK)
   return { ...joined, today: { ...joined.today, bonds: {} } }
 }
 const withLove = (save: SaveV4, love: Partial<Love>, id = ONE): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })

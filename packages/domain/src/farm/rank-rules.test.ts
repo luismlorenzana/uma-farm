@@ -23,7 +23,7 @@ import { TALENT_D, talentQuality, type TalentStep } from './talents'
 const AT = '2026-11-09T10:00:00.000Z'
 const LATER = '2026-11-09T21:30:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
-const entry = (characterId: string, calling: Calling): CastEntry => ({ characterId, outfitId: `${characterId}01`, arrives: { kind: 'opening' }, calling, paragraph: 'Invented.' })
+const entry = (characterId: string, calling: Calling): CastEntry => ({ characterId, outfitId: `${characterId}01`, calling, paragraph: 'Invented.' })
 /** 101 calls farming, 202 foraging, 303 mining: their favourite lines (no bibles: the calling stands in). */
 const STORY: NonNullable<NightContext['story']> = {
   cast: { ...STAND_IN_CAST, umas: [entry('101', 'farming'), entry('202', 'foraging'), entry('303', 'mining')] }, bibles: new Map(), ties: { version: 1, ties: [] },

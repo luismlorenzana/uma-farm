@@ -1,23 +1,24 @@
-// The story pack at runtime: the cast, the ties, the bibles by character id and which events each route scripts, read
-// by the story's one reader (`authored.ts`) as the game reads it. The pack is open: every part is optional, any number of
+// The story pack at runtime: the cast, the ties, the bibles by character id, which events each route scripts and the
+// opening's lines, read by the story's one reader (`authored.ts`) as the game reads it. The pack is open: every part is optional, any number of
 // characters is fine, and a part with an error is skipped while the rest plays, so reading a pack never fails. The
 // scripts load on demand through `route(id)`, a pair's conversations through `pair(a, b)`, and the pack says which levels
 // each pair holds. The household file (household scenes, house lines and the finale) is read with the pack, since the
 // night's house lines need it. The tests read the invented stand-in (`stand-in.ts`).
 //
 // Every read of it goes through `placeholders.ts`: the pack's, or the placeholder. There her outfit, her favourite line
-// and its places, her tastes, the welcome list, her trigger to meet and her chapters are read, never from master data's
+// and its places, her tastes, the welcome list, the opening, her trigger to meet and her chapters are read, never from master data's
 // strategy or a goods family; and with no pack at all, master data's first five play on placeholders.
 import { isGoodId } from '../goods/ids'
 import { pairKey } from '../save/v4'
 import {
-  ARRIVAL, CHARACTER_ID, checkBible, checkCast, checkHousehold, checkPair, checkRoute, checkTies, type Cast, type CastEntry, type Findings, type Household, type PairConversations,
-  type Read, type Route, type StoryContext, type Ties, type UmaBible,
+  ARRIVAL, CHARACTER_ID, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies, type Cast, type CastEntry, type Findings, type Household,
+  type Opening, type PairConversations, type Read, type Route, type StoryContext, type Ties, type UmaBible,
 } from './authored'
-import { favouriteOf, openingOf, type MasterCast } from './placeholders'
+import { favouriteOf, firstHelperOf, type MasterCast } from './placeholders'
 
-/** A pack's files as a release holds them (`cast.json`, `ties.json`, `umas/<id>.json`, `routes/<id>.json` and
- * `pairs/<a>-<b>.json`, its name the two in `pairKey` order), unchecked. Any may be missing. */
+/** A pack's files as a release holds them (`cast.json`, `ties.json`, `umas/<id>.json`, `routes/<id>.json`,
+ * `pairs/<a>-<b>.json`, its name the two in `pairKey` order, `household.json` and `opening.json`), unchecked. Any may be
+ * missing. */
 export interface PackFiles {
   /** `cast.json`; none plays an empty cast. */
   cast?: unknown
@@ -29,6 +30,8 @@ export interface PackFiles {
   pairs?: Readonly<Record<string, unknown>>
   /** `household.json`; none until it's written. */
   household?: unknown
+  /** `opening.json`; none plays the game's own opening. */
+  opening?: unknown
 }
 
 export interface StoryPack {
@@ -47,6 +50,8 @@ export interface StoryPack {
   pair(a: string, b: string): Promise<PairConversations | null>
   /** The household: its scenes, house lines and the finale; null until it's written. */
   readonly household: Household | null
+  /** The opening's lines, played once on day 1; null until they're written (the game's own play: `openingOf`). */
+  readonly opening: Opening | null
   /** What master data gives the placeholders (her default outfit, her line from her stats), once the app has read it;
    * none in the tests that leave it out. */
   readonly master?: MasterCast
@@ -127,6 +132,8 @@ export function readStoryPack(files: PackFiles, isGood: (id: string) => boolean 
     }
   }
   const household = files.household === undefined ? null : take('household.json', checkHousehold(files.household, ctx))
+  const opening = files.opening === undefined ? null : take('opening.json', checkOpening(files.opening, ctx))
+  if (files.opening === undefined) notes.push('opening.json: no opening yet, so the game’s own three lines play')
   const pack: StoryPack = {
     cast,
     ties,
@@ -136,11 +143,12 @@ export function readStoryPack(files: PackFiles, isGood: (id: string) => boolean 
     pairs: new Map([...pairs].map(([key, pair]) => [key, new Set(pair.levels.map((l) => l.hearts))])),
     pair: async (a, b) => pairs.get(pairKey(a, b)) ?? null,
     household,
+    opening,
   }
   notes.push(...castNotes(pack))
   return {
     pack,
-    files: { cast, ties, umas: Object.fromEntries(bibles), routes: Object.fromEntries(routes), pairs: pairFiles, ...(household ? { household } : {}) },
+    files: { cast, ties, umas: Object.fromEntries(bibles), routes: Object.fromEntries(routes), pairs: pairFiles, ...(household ? { household } : {}), ...(opening ? { opening } : {}) },
     errors,
     notes,
   }
@@ -156,13 +164,11 @@ function castNotes(pack: StoryPack): string[] {
     else if (!scripted.has(ARRIVAL)) notes.push(`routes/${id}.json: no arrival scene, so the game’s own short one plays`)
     if (favouriteOf(pack, id) === null) notes.push(`cast.json: ${id} has no calling and no bible’s favouriteLine, so her line is the work her stats in master data suit best`)
   }
-  const opening = new Set(openingOf(pack))
-  if (pack.cast.opening === undefined && !pack.cast.umas.some((u) => u.arrives?.kind === 'opening') && opening.size > 0) {
-    notes.push(`cast.json: no opening, so the welcome list comes up the road at the opening (${[...opening].join(', ')})`)
-  }
-  const never = pack.cast.umas.filter((u) => !opening.has(u.characterId) && u.arrives === undefined).map((u) => u.characterId)
-  if (never.length === 1) notes.push(`cast.json: ${never[0]} has no arrival and isn’t in the opening, so she doesn’t come to the farm until meeting her in town lands`)
-  if (never.length > 1) notes.push(`cast.json: ${never.join(', ')} have no arrival and aren’t in the opening, so they don’t come to the farm until meeting her in town lands`)
+  const first = firstHelperOf(pack)
+  if (first !== null) notes.push(`cast.json: ${first}, the welcome list’s first, joins as the opening ends: day 1’s helper until meeting her in town lands`)
+  const never = pack.cast.umas.filter((u) => u.characterId !== first && u.arrives === undefined).map((u) => u.characterId)
+  if (never.length === 1) notes.push(`cast.json: ${never[0]} has no arrival and isn’t the welcome list’s first, so she doesn’t come to the farm until meeting her in town lands`)
+  if (never.length > 1) notes.push(`cast.json: ${never.join(', ')} have no arrival and aren’t the welcome list’s first, so they don’t come to the farm until meeting her in town lands`)
   return notes
 }
 

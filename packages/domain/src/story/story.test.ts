@@ -1,5 +1,5 @@
 // The farm's progress: the Farm Rank's thresholds and points (income and resources only), the Diary's milestones and
-// rows paying once, the night's goals check, and the opening playing once with no Uma in it. Invented ids and an
+// rows paying once, the night's goals check, and the opening playing once, the game's own lines with no Uma in them. Invented ids and an
 // invented cast; the night runs with test kinds.
 import { describe, expect, it } from 'vitest'
 import { checkGoalsNight, depthsTonight, farmPointsOf, farmRankOpens, nextFarmRank, payDiary } from '../farm/diary'
@@ -12,29 +12,25 @@ import { TEST_KINDS } from '../night/kinds.fixture'
 import { GOLD_SHIPPED } from '../save/bin'
 import { parseSaveV4 } from '../save/parse-v4'
 import { newLove, newRosterUma, newSave, type SaveV4 } from '../save/v4'
-import type { Arrival, Calling, CastEntry } from './authored'
+import type { Calling, CastEntry } from './authored'
 import { STAND_IN_CAST } from './authored.fixture'
-import { CAST, CAST_IDS } from './cast'
-import { OPENING_SCENE, openingScene, sceneLines } from './opening'
+import { PLACEHOLDER_OPENING } from './placeholders'
 import { readScene, sceneDue } from './scenes'
 
 const AT = '2026-11-09T10:00:00.000Z'
 const LATER = '2026-11-09T21:30:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
-const entry = (characterId: string, calling: Calling, arrives: Arrival): CastEntry => ({ characterId, outfitId: `${characterId}01`, arrives, calling, paragraph: 'Invented.' })
+const entry = (characterId: string, calling: Calling): CastEntry => ({ characterId, outfitId: `${characterId}01`, calling, paragraph: 'Invented.' })
 /** An invented cast: the three on the farm. */
 const STORY: NonNullable<NightContext['story']> = {
-  cast: {
-    ...STAND_IN_CAST, opening: ['1001', '1002', '1003'],
-    umas: [entry('1001', 'farming', { kind: 'opening' }), entry('1002', 'foraging', { kind: 'opening' }), entry('1003', 'fishing', { kind: 'opening' })],
-  },
+  cast: { ...STAND_IN_CAST, umas: [entry('1001', 'farming'), entry('1002', 'foraging'), entry('1003', 'fishing')] },
   bibles: new Map(), ties: { version: 1, ties: [] },
 }
 const CONTEXT: NightContext = { kinds: TEST_KINDS, story: STORY }
 const night = (save: SaveV4) => endDay(save, CONTEXT, LATER)
 
-/** The farmer named and the opening three home on `day`, their arrivals and the opening scene read, with `counts`. */
+/** The farmer named and the three home on `day`, their arrivals and the opening scene read, with `counts`. */
 function farm(day = 1, counts: Record<string, number> = {}): SaveV4 {
   const save = newSave('u1', AT)
   const ids = ['1001', '1002', '1003']
@@ -196,27 +192,21 @@ describe('the scenes', () => {
     expect(read.diary.read).toEqual(['scene:1:open'])
   })
 
-  it('ends on the road with the Umas the opening brings', () => {
-    expect(openingScene(3).beats.at(-1)!.line).toBe('Three Umas come up the road.')
-    expect(openingScene(1).beats.at(-1)!.line).toBe('An Uma comes up the road.')
-    expect(openingScene(0).beats).toHaveLength(OPENING_SCENE.beats.length - 1)
-    expect(sceneLines(OPENING_SCENE).every((l) => l.speaker.kind !== 'uma')).toBe(true)
-    // An older v4's closing scene in the Diary's read list means nothing now.
+  it('reads an older v4\'s closing scene in the Diary\'s read list as nothing now', () => {
     const named = { ...newSave('u1', AT), farmer: { name: 'Robin' }, summary: null }
     expect(sceneDue({ ...named, diary: { ...named.diary, read: ['scene:1:open', 'scene:1:close'] } })).toBeNull()
   })
 
-  it('holds no Uma name: the cast and the narrator speak, and the only name filled in is {farmer}', () => {
-    const texts = OPENING_SCENE.beats.map((b) => b.line)
-    for (const beat of OPENING_SCENE.beats) expect(['cast', 'narrator']).toContain(beat.speaker.kind)
+  it('the game\'s own opening holds no name: three narrated lines, the only name filled in {farmer}', () => {
+    expect(PLACEHOLDER_OPENING).toHaveLength(3)
+    const texts = PLACEHOLDER_OPENING.map((step) => ('narrate' in step ? step.narrate : ''))
     for (const text of texts) expect(text.replace(/\{farmer\}/g, '')).not.toMatch(/[{}]/)
-    // Every capitalised word is the cast's, a place or good of the farm's, or plain English: a name from master data
-    // would be none of these.
-    const cast = CAST_IDS.flatMap((id) => CAST[id].name.split(' '))
-    const farmWords = ['Umas', 'Carrot', 'Gate', 'Fields', 'Ben', 'Old']
-    const english = ['Morning', 'The', 'Welcome', 'I', 'This', 'Here', 'A', 'Tap', 'And', 'Anything', 'Word', 'Keep', 'Build', 'May', 'That', 'He', 'You', 'Three',
-      'Marta']
-    const allowed = new Set([...cast, ...farmWords, ...english])
+    expect(texts.at(-1)).toContain('the Gate')
+    // Every capitalised word is a place or good of the farm's, or plain English: a name from master data would be none
+    // of these.
+    const farmWords = ['Carrot', 'Gate', 'Fields']
+    const english = ['Morning', 'The', 'One', 'And']
+    const allowed = new Set([...farmWords, ...english])
     const words = texts.flatMap((t) => t.match(/\b[A-Z][a-z]*/g) ?? [])
     expect(words.filter((w) => !allowed.has(w))).toEqual([])
   })

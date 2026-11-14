@@ -45,20 +45,17 @@ fixture.view = (await albumFixture(undefined, [
   { star5: [160, 160, 160, 160, 160] }, { star5: [160, 160, 160, 160, 160] }, { star5: [160, 160, 160, 160, 160] },
 ])).view
 
-/** A cast of the invented outfits: Aster, Beryl and Cinder the opening three. */
+/** A cast of the invented outfits: Aster, Beryl and Cinder, on the farm from day 1. */
 const standIn = storyPackFrom(STAND_IN_FILES)
-const entry = (from: number, characterId: string, arrives: StoryPack['cast']['umas'][number]['arrives']) => ({ ...standIn.cast.umas[from]!, characterId, outfitId: characterId, arrives })
+const entry = (from: number, characterId: string) => ({ ...standIn.cast.umas[from]!, characterId, outfitId: characterId })
 fixture.pack = {
   ...standIn, bibles: new Map(), ties: { ...standIn.ties, ties: [] },
-  cast: {
-    ...standIn.cast, opening: ['81001', '81002', '81003'],
-    umas: [entry(0, '81001', { kind: 'opening' }), entry(1, '81002', { kind: 'opening' }), entry(2, '81003', { kind: 'opening' })],
-  },
+  cast: { ...standIn.cast, umas: [entry(0, '81001'), entry(1, '81002'), entry(2, '81003')] },
 }
 
 const AT = '2026-11-09T10:00:00.000Z'
 const save = (): SaveV4 => useGame.getState().save as SaveV4
-/** The opening three home on day 7, the farmer named, the opening and their arrivals read, with `counts`; Aster at
+/** The three home on day 7, the farmer named, the opening and their arrivals read, with `counts`; Aster at
  * Farming Hand when `hand`. */
 function farm(counts: Record<string, number> = {}, hand = false): SaveV4 {
   const base = newSave('u1', AT)

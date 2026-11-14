@@ -1,4 +1,5 @@
-// A run with no story pack at all: days 1 to 60 on placeholders alone. The opening brings master data's first five, each
+// A run with no story pack at all: days 1 to 60 on placeholders alone. The opening plays the game's three lines and
+// brings master data's first; the other four of the first five join as meeting her in town will bring them. Each
 // meets you with the game's two lines and a hello, and every rung after plays the game's own card: friendship, a
 // confession (one "Not yet", then Ask her), romance, the proposal with a ring, the wedding with its vows, married life at
 // night and in its events, and the household's first scene at five married. Nothing waits on the story, and every save
@@ -7,7 +8,8 @@
 import { describe, expect, it } from 'vitest'
 import { runNight, type NightContext } from '../night/end-day'
 import { TEST_KINDS } from '../night/kinds.fixture'
-import { joinOpening } from '../romance/arrivals'
+import { joinFirstHelper } from '../romance/arrivals'
+import { joinCast } from '../romance/arrivals.fixture'
 import { chatLineV4, chatV4, giftV4 } from '../romance/acts'
 import { CHAT_LINES } from '../romance/chats'
 import { birthdaysOf } from '../romance/days'
@@ -22,7 +24,7 @@ import { newSave, type SaveV4 } from '../save/v4'
 import { addGoods } from '../save/warehouse'
 import type { Step } from './authored'
 import {
-  chaptersOf, DEFAULT_CHAPTERS, eventOf, favouriteOf, householdOf, openingOf, outfitOf, PLACEHOLDER_CHATS, PLACEHOLDER_MOMENTS, storyOf, weddingPlaces,
+  chaptersOf, DEFAULT_CHAPTERS, eventOf, favouriteOf, householdOf, openingOf, outfitOf, PLACEHOLDER_CHATS, PLACEHOLDER_MOMENTS, PLACEHOLDER_OPENING, storyOf, weddingPlaces,
 } from './placeholders'
 import { MASTER, MASTER_BIRTHDAYS } from './placeholders.fixture'
 import { readScene } from './scenes'
@@ -47,10 +49,13 @@ function picksFor(steps: readonly Step[], id: string, rung: string): number[] {
 
 describe('a farm with no story pack', () => {
   it('plays days 1 to 60 on placeholders: arrivals, events, a confession, a wedding and the household\'s first scene', async () => {
-    // Day 1: the farmer's name, the Dorm's second level bought (five beds), the opening read: master data's first five.
+    // Day 1: the farmer's name, the Dorm's second level bought (five beds), the opening read: the game's three lines, and
+    // master data's first joins; the other four join here, as meeting her in town will bring them.
     let save: SaveV4 = nameFarmer({ ...newSave('u1', AT), buildings: { ...newSave('u1', AT).buildings, dorm: 2 }, dorm: { level: 2, home: [], swaps: [] } }, 'Robin')
-    expect(openingOf(STORY)).toEqual(FIVE)
-    save = joinOpening(readScene(save, 'scene:1:open'), STORY)
+    expect(openingOf(STORY)).toEqual(PLACEHOLDER_OPENING)
+    save = joinFirstHelper(readScene(save, 'scene:1:open'), STORY)
+    expect(Object.keys(save.roster)).toEqual(['9100001'])
+    save = joinCast(save, STORY)
     expect(Object.keys(save.roster).sort()).toEqual(FIVE)
     expect(save.dorm.home).toEqual(FIVE)
     expect(FIVE.map((id) => outfitOf(STORY, id))).toEqual(['910000101', '910000201', '910000301', '910000401', '910000501'])

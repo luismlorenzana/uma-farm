@@ -15,7 +15,7 @@ import { storyPackFrom, type StoryPack } from '../story/pack'
 import { householdOf, placeholderHouseholdBeat, wishesOf } from '../story/placeholders'
 import { readScene } from '../story/scenes'
 import { STAND_IN_FILES } from '../story/stand-in'
-import { joinOpening } from './arrivals'
+import { joinCast } from './arrivals.fixture'
 import { birthdaysOf } from './days'
 import { eveningSlots, homeTonight, slotsLeft, tonightOpens } from './evening'
 import { playEvent } from './events'
@@ -36,10 +36,10 @@ const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const BIRTHDAYS = birthdaysOf(PACK, new Map())
 const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ kinds: TEST_KINDS, story, birthdays: BIRTHDAYS })
 
-/** A named farm on `day`, the opening read and the stand-ins home at Friendship 0, rich enough to build. */
+/** A named farm on `day`, the opening read and the stand-ins home (`joinCast`) at Friendship 0, rich enough to build. */
 function farm(day = 30, gold = 1_000_000): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day }, gold }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
+  const joined = joinCast(readScene(fresh, 'scene:1:open'), PACK)
   return { ...joined, today: { ...joined.today, bonds: {} } }
 }
 const withLove = (save: SaveV4, id: string, love: Partial<Love>): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })

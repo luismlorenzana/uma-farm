@@ -31,7 +31,6 @@ import { ARRIVAL_DORM_LEVELS, DORM_LEVELS } from '../farm/dorm'
 import { farmRankOpens } from '../farm/diary'
 import { DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, ROW_GOLD, type Milestone } from '../farm/milestones'
 import { CAST, CAST_IDS } from '../story/cast'
-import { OPENING_SCENE, type Beat } from '../story/opening'
 import { ARRIVAL_KINDS } from '../romance/arrivals'
 import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER, costOf, LADDER_COLOURS, ROUTE_POINTS, rungName, SPOUSE_COST } from '../romance/love'
 import { DISLIKED_LINE, GIFT_POINTS_V4, giftStars, LOVE_POINTS } from '../romance/acts'
@@ -64,10 +63,10 @@ import { CAKE_DAYS, HOUSEHOLD_AT, receptionDays, WEDDING_FRIENDS } from '../roma
 import { EXTENSION_COSTS, FURNITURE, HOMESTEAD_PLACES, HOMESTEAD_ROW_MARRIED, HOUSE_COSTS, MISSES_NIGHTS } from '../romance/homestead'
 import { HOUSE_ITEM_N, HOUSE_POINTS, HOUSE_TEMPLATES, VOWS_POINTS } from '../romance/household'
 import { EXTENDED_ROOMS, FINALE_MARRIED, HOUSE_ROOMS } from '../save/v4'
-import { BENCH_SCENE_LINES } from '../story/bench'
+import { BENCH_SCENE_LINES, type Beat } from '../story/bench'
 import { DISH_WORDS, dishName, goodName, RING_GOODS } from '../goods/ids'
-import { BIG_EVENTS, EVENT_LIMITS, RUNGS, type Route, type Together, type UmaBible } from '../story/authored'
-import { PLACEHOLDER_MOMENTS, PLACEHOLDER_TABLE, tieKind, tieStrength, WEDDING_DEFAULTS } from '../story/placeholders'
+import { BIG_EVENTS, EVENT_LIMITS, RUNGS, type Route, type Step, type Together, type UmaBible } from '../story/authored'
+import { PLACEHOLDER_MOMENTS, PLACEHOLDER_OPENING, PLACEHOLDER_TABLE, tieKind, tieStrength, WEDDING_DEFAULTS, welcomeOf } from '../story/placeholders'
 
 type Cell = string | number
 /** A Markdown table; pipes in cells are escaped. */
@@ -472,9 +471,11 @@ const speakerWords = (beat: Beat): string => {
     case 'narrator': return '(narration)'
   }
 }
-/** The opening, beat by beat. */
+/** The game's own opening, line by line: what plays when the pack has no `opening.json`. */
 function scenesBlock(): string {
-  return [OPENING_SCENE].map((scene) => `**${scene.title}** (\`${scene.id}\`)\n\n${table(['#', 'Who', 'Line'], scene.beats.map((b, i) => [i + 1, speakerWords(b), b.line || '—']))}`).join('\n\n')
+  const kind = (step: Step): [string, string] => 'narrate' in step ? ['Narration', step.narrate] : 'thought' in step ? ['Your thought', step.thought]
+    : 'say' in step ? [step.say, step.line] : 'wait' in step ? ['A pause', `${step.wait} ms`] : ['—', '—']
+  return table(['#', 'Kind', 'Line'], PLACEHOLDER_OPENING.map((step, i) => [i + 1, ...kind(step)]))
 }
 // --- Arrivals ---------------------------------------------------------------------------------
 
@@ -675,8 +676,10 @@ function signatureDishes(): string {
 /** The stand-in pack in git: the dev server's and the tests' cast. */
 function standIn(): string {
   const pack = storyPackFrom(STAND_IN_FILES)
-  return table(['Character', 'Outfit', 'Calling', 'Favourite line', 'Arrives', 'Bible', 'Scripted'], pack.cast.umas.map((u) => [
-    u.characterId, u.outfitId ?? '—', u.calling ?? '—', favouriteOf(pack, u.characterId) ?? '—', u.arrives?.kind ?? '—', pack.bibles.has(u.characterId) ? 'Yes' : 'No (her calling stands in)',
+  const welcome = welcomeOf(pack)
+  const listed = (id: string): string => (welcome.indexOf(id) === 0 ? '1st: joins as the opening ends' : welcome.includes(id) ? `${welcome.indexOf(id) + 1}${['st', 'nd', 'rd'][welcome.indexOf(id)] ?? 'th'}` : '—')
+  return table(['Character', 'Outfit', 'Calling', 'Favourite line', 'Welcome list', 'Bible', 'Scripted'], pack.cast.umas.map((u) => [
+    u.characterId, u.outfitId ?? '—', u.calling ?? '—', favouriteOf(pack, u.characterId) ?? '—', listed(u.characterId), pack.bibles.has(u.characterId) ? 'Yes' : 'No (her calling stands in)',
     `${pack.scripted.get(u.characterId)?.size ?? 0} of 27`,
   ]))
 }

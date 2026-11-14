@@ -5,18 +5,10 @@
     "exportedAt": "2026-01-01T00:00:00Z",
     "tier": "SS"
   },
-  "opening": [
-    "9000001",
-    "9000002",
-    "9000003"
-  ],
   "umas": [
     {
       "characterId": "9000001",
       "outfitId": "900000101",
-      "arrives": {
-        "kind": "opening"
-      },
       "calling": "farming",
       "paragraph": "Stand-in one came to grow things.",
       "birthday": {
@@ -27,18 +19,12 @@
     {
       "characterId": "9000002",
       "outfitId": "900000201",
-      "arrives": {
-        "kind": "opening"
-      },
       "calling": "foraging",
       "paragraph": "Stand-in two came for the woods."
     },
     {
       "characterId": "9000003",
       "outfitId": "900000301",
-      "arrives": {
-        "kind": "opening"
-      },
       "calling": "fishing",
       "paragraph": "Stand-in three came for the quiet."
     }

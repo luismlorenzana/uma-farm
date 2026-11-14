@@ -2,13 +2,14 @@
 // menu sheet (`?sheet=menu`). End the day (`?sheet=end`) and calendar (`?sheet=calendar`); the bin
 // (`?sheet=bin`) and shop (`?sheet=shop`); the Farm Rank (`?sheet=rank`). Each is loaded when one opens. While the
 // farmer is unnamed, the name sheet covers everything, the game's first screen; then a scene due plays over everything
-// (the opening, the ring bench's, then the arrival scenes). Over any page,
+// (the opening, the ring bench's, then the arrival scenes), or `?hello=<id>` plays the arrival scene of day 1's helper,
+// who waits at the Gate (its quick look asks). Over any page,
 // once no scene is due: `?read=<a>-<b>:<levels>` plays a pair's conversations; the event player at `?event=`, `?ask=` or
 // `?memory=`, and her Memories' album at `?album=`; the evening at `?evening=` (Tonight's picker, or her kinds sheet, the
 // play and its card); the ring bench at `?sheet=bench` from the Forge's quick look; the homestead at
 // `?sheet=homestead`, a night level's card at `?level=<id>:<s2|s4>` and a household scene or the finale at
 // `?household=<id>` (`&replay=1` from the Diary).
-import { sceneDue } from '@farm/domain'
+import { gateScene, sceneDue } from '@farm/domain'
 import { AppFrame, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { lazy, Suspense } from 'react'
 import { Outlet, useLocation, useSearchParams } from 'react-router'
@@ -42,7 +43,8 @@ export function Shell() {
   const sheet = search.get('sheet')
   const naming = useGame((s) => s.save?.farmer.name === '')
   useStory() // a scene's order waits for the pack
-  const scene = useGame((s) => (s.save ? sceneDue(s.save, castIds()) : null))
+  const hello = search.get('hello')
+  const scene = useGame((s) => (s.save ? sceneDue(s.save, castIds()) ?? gateScene(s.save, hello) : null))
   const read = search.get('read')
   const playing = search.get('event') ?? search.get('ask') ?? search.get('memory')
   const album = search.get('album')

@@ -22,7 +22,8 @@ import { STAND_IN_BIBLE, STAND_IN_CAST, STAND_IN_TIES, STAND_INS } from '../stor
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { readScene } from '../story/scenes'
 import { STAND_IN_FILES } from '../story/stand-in'
-import { arrive, joinOpening } from './arrivals'
+import { arrive } from './arrivals'
+import { joinCast } from './arrivals.fixture'
 import { playEvent } from './events'
 import { advance } from './love'
 import { perksFor } from './perks'
@@ -42,7 +43,7 @@ const context = (story: NightContext['story'] = PACK): NightContext => ({ kinds:
 
 /** A named farm on `day`, the opening read: 9000001 (a farmer), 9000002 (a forager) and 9000003 (a fisher) home. */
 function farm(day = 3, pack: Pick<StoryPack, 'cast' | 'ties'> = PACK): SaveV4 {
-  const save = joinOpening(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack)
+  const save = joinCast(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack)
   return { ...save, today: { ...save.today, bonds: {} } }
 }
 const withLove = (save: SaveV4, id: string, love: Partial<Love>): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })

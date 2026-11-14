@@ -30,7 +30,7 @@
 - **Places don't change with work:** the Umas at their slots and the kit's Ready bubbles show what's happening. Only
   crops grow, and they're drawn by **family** (12 ripe shapes for 27 crops), not one by one.
 - **A place that isn't open yet is an overgrown lot:** weeds, brambles and a broken fence, cleared when it opens. That's
-  the farm's own opening, "The Overgrown Farm", and it lets wave 1 ship without the later places' pieces.
+  the farm as the start finds it, weeds and all, and it lets wave 1 ship without the later places' pieces.
 - **Two waves:**
   - **wave 1** (87 frames, shipped) is everything chapter 1 opens, and the romance's homestead: the Fields, the forest,
     the Fishery, the three stations, the yard, the Shop and the homestead;
