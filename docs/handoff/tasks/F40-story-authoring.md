@@ -38,7 +38,8 @@
   - **Her trigger:** how her story begins is the story's choice, from the trigger menu ([meeting her](../../game-mechanics.md#meeting-her)),
     or the default: three days' talks in town.
   - **Her chapters:** how many, their titles and which of her events each holds are the story's choice too, all
-    optional ([F68](F68-her-chapters.md)); with none, she has four default chapters.
+    optional, with an optional farm gate each ([her chapters](../../game-mechanics.md#her-chapters)); with none, she has
+    four default chapters.
 - **Going live:** when the owner wants a pack in the game, `pnpm story:release` builds it (it prints what it skipped and
   the notes), and Claude publishes it (`pnpm story:publish`) to the farm's private bucket. Any pack can go; a partial one
   is normal.

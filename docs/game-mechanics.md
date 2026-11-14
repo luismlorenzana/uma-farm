@@ -248,7 +248,7 @@ line is a tap to its place.
 | The bin | Each good and star sold, "Salmon ★2 × 3 · 495g", tagged **In demand** when the season lifted it; then "Total · 545g" | The bin |
 | Work done | Jobs that ended tonight, by place, "Forest · 2 jobs done · 9 items" (each job's whole haul); the night's best catch, "Best catch · Rainbow Koi ★2"; plots that turned Ready, by block, "Block A · 9 crops ready"; what withered, "Block A · 3 Onion withered" | The place's quick look; the Fishery's quick look; the Fields |
 | Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full** | Her profile's Work side |
-| Hearts | Who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
+| Hearts | Who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", tagged **New**), a chapter that opened ("A new chapter with *Name* · Together", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
 | New today | "Summer begins"; "Flower Show tomorrow" or "today"; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The calendar; the Festival ground; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
 | Today | "2 Umas idle"; "9 plots to plant" (empty plots that the season's seeds you hold could fill today) | The Hearts tab's Work view; the Fields |
 
@@ -2471,16 +2471,17 @@ an error otherwise.
 
 #### The menu's welcome list, her trigger and her chapters
 
-The cast file also gives, all optional, three things: the welcome list and her trigger act now ([meeting
-her](#meeting-her)); her chapters act when their screens land:
+The cast file also gives, all optional, three things, all acting now: the welcome list and her trigger ([meeting
+her](#meeting-her)), and her chapters ([her chapters](#her-chapters)):
 
 | Item | What it is | Without it |
 |---|---|---|
 | **The welcome list** (`welcome`) | Who visits the Gate in the first days, one a morning, in order, any number; each meets you on her first talk | The first five of the cast, in its order |
 | **Her trigger to meet** (`meet`) | From the trigger menu: talks on *n* days, a gift, a town spot, a season, a festival, a Farm Rank, a place built, a good shipped, or after another character's event | Talk with her on three different days |
-| **Her chapters** (`chapters`) | Their titles, which of her rungs each holds, and an optional gate from the same menu | Four: "Getting to know her" (her arrival, F1–F10, the confession), "Together" (R1–R10, the proposal), "The wedding", "Married life" (S1, S3, S5) |
+| **Her chapters** (`chapters`) | Their titles, which of her rungs each holds, and an optional gate from the same menu (the farm's kinds, a season or a festival) | Four: "Getting to know her" (her arrival, F1–F10, the confession), "Together" (R1–R10, the proposal), "The wedding", "Married life" (S1, S3, S5) |
 
-The domain reads them through `welcomeOf`, `meetOf` and `chaptersOf`, each with its default.
+The domain reads them through `welcomeOf`, `meetOf` and `chaptersOf`, each with its default; `herChapters` lays her
+chapters along her route.
 
 #### The pack at runtime
 
@@ -2702,8 +2703,8 @@ A farm whose opening was already read never plays it again, and keeps everyone i
 #### Meeting her
 
 Every character lives in town, and her story begins when her trigger is met. From then on she has the whole romance:
-her ladders, heart events, perks, evenings, the proposal, the wedding and married life; she shows on the Hearts tab;
-her chapters come next. There's no cap on how many you meet: the Dorm's beds cap only who lives on the farm.
+her ladders, heart events, perks, evenings, the proposal, the wedding and married life, in [her own
+chapters](#her-chapters); she shows on the Hearts tab. There's no cap on how many you meet: the Dorm's beds cap only who lives on the farm.
 
 ```
  the welcome list ──► the Gate, one a morning from day 1 ──► Say hello: her first talk ──┐
@@ -2946,7 +2947,7 @@ season, 0–2) + ⌈min(day, 31) ÷ 8⌉, held to 1–4.
 
 #### Ready
 
-Her next event is **Ready** when all four of these hold:
+Her next event is **Ready** when all five of these hold:
 
 <!-- live:ready-rules -->
 | # | Ready needs | Not met |
@@ -2955,9 +2956,11 @@ Her next event is **Ready** when all four of these hold:
 | 2 | She’s home (on the Dorm’s list, or a spouse in her house) | `away`: “Invite her to the farm” |
 | 3 | She hasn’t played one of her events today | `today` |
 | 4 | Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level | `setup`; `opens` for the ranch, mining, cooking, expeditions, serving or forging before their place is built (the Coop, the Mine, the Kitchen, the expedition post, the Restaurant, the Forge) |
+| 5 | Her chapter is open: when her next event is the first of her chapter, the chapter’s gate holds, if it has one (a place built, a Farm Rank, a good shipped, another’s event, a season or a festival) | `gate`: “Opens when the Kitchen is built” |
 <!-- /live -->
 
-Never an hour, the weather, a season or a festival. When she isn't Ready, the first of these in the way is the one shown:
+A setup is never an hour, the weather, a season or a festival; her chapter's gate may be a season or a festival (see
+[her chapters](#her-chapters)). When she isn't Ready, the first of these in the way is the one shown:
 
 <!-- live:ready-waits -->
 | Order | `waits` | When |
@@ -2965,18 +2968,20 @@ Never an hour, the weather, a season or a festival. When she isn't Ready, the fi
 | 1 | `done` | Her route is complete (S5 has played) |
 | 2 | `night` | S2 or S4, bar full: no event, the level comes at night; short of it, `bar` |
 | 3 | `friend` | She said “Not yet” at her confession: you ask her again from her profile |
-| 4 | `opens` | A working setup at a place not built yet |
-| 5 | `bar` | Her bar isn’t full for the rung |
-| 6 | `day` | A waiting rung, on the day the rung before played |
-| 7 | `ring` | The proposal, with no ring in the Warehouse |
-| 8 | `away` | She lives in town |
-| 9 | `today` | She played one of her events today |
-| 10 | `setup` | Its day setup isn’t met today |
+| 4 | `gate` | Her next event opens her chapter, and its gate doesn’t hold yet |
+| 5 | `opens` | A working setup at a place not built yet |
+| 6 | `bar` | Her bar isn’t full for the rung |
+| 7 | `day` | A waiting rung, on the day the rung before played |
+| 8 | `ring` | The proposal, with no ring in the Warehouse |
+| 9 | `away` | She lives in town |
+| 10 | `today` | She played one of her events today |
+| 11 | `setup` | Its day setup isn’t met today |
 <!-- /live -->
 
 - **A setup** is her bible's beat's setup for the rung; an Uma without a bible has none. A working setup at a place not
   built yet shows "Opens when the Mine is built" (her place) ahead of a short bar. A pack's beat that still names a
-  chapter setup is noted and read as her bar alone: the farm has no chapters.
+  chapter setup is noted and read as her bar alone: the farm has no global chapters, and a gate goes on one of [her
+  chapters](#her-chapters).
 - **Her bond setup** reads bond hearts (50, 150, 300, 500 and 750 points). **The proposal's ring** is any ring in the
   Warehouse.
 - **Ready is read live,** never stored, since it changes by the day: her Hearts row, her profile, the morning's Ready lines
@@ -2994,25 +2999,26 @@ words** ("F7", "R4", "S2") in each face's corner. `/roster` lands on the Work vi
 │ [ Hearts ]  Work                         │
 │ [Ready 1] [Friends 3] [Partners] [Married] [In town]
 ├──────────────────────────────────────────┤
-│ (face) Stand-in 1                ● Ready │
+│ (face) Stand-in 1  Ch. 1 · Getting… ● Ready │  her chapter at a glance
 │        New friend ♥ ▣□□□□□□□□□  200/200  │  the ladder's hearts, the next filling
 │        Ready · Friendship 1 · the Fields · +2 banked   ✓chat
 ├──────────────────────────────────────────┤
-│ (face) Stand-in 3                        │
+│ (face) Stand-in 3  Ch. 1 · Getting to…   │
 │        New friend ♥ ▣□□□□□□□□□   80/200  │
 │                                          │
 └──────────────────────────────────────────┘
 ```
 
-- **A row:** her face, her name and chips (**✉** while her invitation stands, unanswered or said yes and not yet spent;
-  **In town**), and at its end **● Ready** in her stage's colour, which plays her event; a tap elsewhere opens her profile.
+- **A row:** her face, her name, **her chapter at a glance** ("Ch. 2 · Together"; "Married life ✓" once her last has
+  closed) and chips (**✉** while her invitation stands, unanswered or said yes and not yet spent; **In town**), and at its
+  end **● Ready** in her stage's colour, which plays her event; a tap elsewhere opens her profile.
   Under it, her level in words, a filling heart, **her ladder's hearts as a bar** (ten for friendship and romance, five
   as a spouse: the levels played full, the next filling by points over its cost, the rest empty) and "points/cost". A
   waiting rung shows every heart full with its mark, **◆** her confession or **◇** the proposal and the wedding, and
   "Tomorrow" or "Ready".
 - **The row's line:** Ready, her rung and where it plays ("Ready · Romance 5 · the Pond at night"); in town, "Invite her
   to the farm to play her events"; a short bar, nothing more (the bar says it); otherwise what her next event waits for ("Friendship 3
-  · the Fields, when she works there"); with none of these, a spouse's house ("Rose Cottage") or "Needs a room". Then "+N banked" (cut first on a narrow row), and today's **✓chat** and **✓gift**.
+  · the Fields, when she works there", or her chapter's gate: "Friendship 7 · Opens when the Kitchen is built"); with none of these, a spouse's house ("Rose Cottage") or "Needs a room". Then "+N banked" (cut first on a narrow row), and today's **✓chat** and **✓gift**.
 - **The sort:** Ready first, then the least progress (her next rung's place on the route, then her points), then the
   cast's order.
 - **The filters,** one at a time, each with its count: **Ready**; **Friends** (friendship, and her confession's wait);
@@ -3021,8 +3027,8 @@ words** ("F7", "R4", "S2") in each face's corner. `/roster` lands on the Work vi
 - **The header:** "Married n/N", N everyone you've met (3 with the stand-ins); a household scene or the finale's chip while one
   is Ready ("⌂ Scene 1 ›", "⌂ Harvest ›"); and **☾ Evening** with a mark a slot today, **○** free or **●** spent, the
   evenings first and then festival night's.
-- **The (i)** has five lines: how her bar fills and banks; Ready and setups; one event a day; gifts and tastes; and the
-  evening ("One evening a day with someone home: a hangout from Friendship 2, a date from Romance 1. Fine +60, Great +100,
+- **The (i)** has six lines: how her bar fills and banks; Ready and setups; one event a day; her chapters ("A chapter
+  may wait for the farm first"); gifts and tastes; and the evening ("One evening a day with someone home: a hangout from Friendship 2, a date from Romance 1. Fine +60, Great +100,
   Perfect +150, ×1.5 in her favourite kind, and +20 when she asked you.").
 
 #### Her profile
@@ -3043,6 +3049,13 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
 │ │ ████████████████████  200 / 200  +2 banked
 │ │ Ready                                  ││
 │ └────────────────────────────────────────┘│
+│ Chapters                                 │
+│  1 Getting to know her              1/12 │  the one she's in, in her ladder's colour
+│    [✓ Meeting] [F1] [F2] … [Confession]  │  its events, played ✓ and to come
+│  2 Together                         0/11 │
+│  3 The wedding                       0/1 │
+│  4 Married life                      0/3 │
+│ Next · Together · After her confession   │  what opens the next (and its gate)
 │ Perks   F1–F10 ✓ · R1 ✓                  │
 │         F3  +10% chance of an extra crop │  what each reached perk does now
 │         Next · R2 · …     All 25 perks   │
@@ -3068,7 +3081,8 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
   line's place waits); her beat's hint for the rung (where and how it opens); the bar with "points / cost" and "+N banked"; and what it
   waits for: "Ready", "123 to go", "Tomorrow", "Needs a ring", "Invite her to the farm" (a link to the Dorm), "Tomorrow: one event
   a day", "The Fields, when she works there", "With Carrot in the Warehouse", "Bond 3 with Stand-in 2", "Opens when the
-  Mine is built", "She said “Not yet”", "Comes tonight", and once her route is done "Her route is complete". It never waits
+  Mine is built", "Opens when the Kitchen is built" (her chapter's gate), "She said “Not yet”", "Comes tonight", and
+  once her route is done "Her route is complete". It never waits
   on the story: an event the pack doesn't script plays the game's card.
   - **Play ›** (48 pt, in her ladder's colour) plays her Ready event.
   - **A setup not met** says what to do: "Assign her to the Fishery, then come back.", "Have her tend a block on the
@@ -3076,6 +3090,11 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
     until bond 3."
   - **After a Not yet,** **Ask her ›**, once a day ("You asked her today. Ask again tomorrow.").
   - **While the proposal needs a ring** and the ring bench stands, **Make one at the Forge's bench ›**.
+- **Chapters:** [her chapters](#her-chapters), each with its number (✓ once every event has played), its title and its
+  events played of all ("3/12"). The one she's in is in her ladder's colour, with its events as chips, played ✓ and to
+  come; a chapter whose gate doesn't hold yet says what it needs ("Opens when the Kitchen is built"). Under them, what
+  opens the next: "Next · Kitchen days · After Friendship 6 · Opens when the Kitchen is built". Once her route is
+  complete: "Her last chapter is closed. Life at home goes on."
 - **Perks:** the reached ones by ladder ("F1–F10 ✓ · R1–R4 ✓"), what each reached one does now, the next, and **All 25
   perks** on a tap (reached ✓ with "Now · …", the next in bold, the rest greyed).
 - **From her:** her pet name for you from Romance 1 ("Calls you “Sprout”"; without her bible's, your own name), and her
@@ -3097,6 +3116,73 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
   under them while she's earned it. What an act pays floats up from her face, and a note says it ("She likes it. +36").
 - **Hearts | Work:** the Work side is her work sheet: her favourite line, the day she joined, where she is, and her nine
   activities with talent, rank, points and the next challenge.
+
+### Her chapters
+
+Each Uma's story is hers, in her own chapters, from the day you meet her to married life. There's no farm-wide story.
+Her chapters frame her route; the backbone stays as built (her arrival, friendship F1–F10 and the confession, romance
+R1–R10, the proposal and the wedding, married life S1–S5), and so do the points, the perks and the evenings along it.
+
+```
+ her cast entry's `chapters` ──► her chapters along her route ──► the one she's in: the chapter holding her next rung
+   (else the four defaults)       in the order of their first events      │
+                                                                          ▼
+ a chapter's gate (optional) ──► holds back its first event ──► Ready says "gate": "Opens when the Kitchen is built"
+                                    │ the gate holds and the rung before has played
+                                    ▼
+                        the chapter opens ──► the morning: "A new chapter with ‹name› · Kitchen days"
+                                    │ its events play as Ready allows
+                                    ▼
+                        Spouse 5 ──► her last chapter closes; the household goes on after it
+```
+
+- **Her chapters** are her cast entry's `chapters`: how many, their titles, which of her rungs each holds and an
+  optional gate ([the story pack's menu](story-pack.md#her-chapters)). With none, the four defaults:
+
+<!-- live:default-chapters -->
+| # | Chapter | Its events |
+|---|---|---|
+| 1 | Getting to know her | Her meeting scene, F1–F10, her confession |
+| 2 | Together | R1–R10, the proposal |
+| 3 | The wedding | The wedding |
+| 4 | Married life | S1, S3, S5 |
+<!-- /live -->
+
+- **Along her route:** a chapter's events are its rungs in the route's order, and her chapters run in the order of their
+  first events. A rung the pack leaves out counts in the chapter before it along the route (else the first), a rung in
+  two counts in the first, and a chapter holding no rung the game plays is left out. A chapter without a title shows
+  as "Chapter 2". S2 and S4, which have no event, count with S1 and S3.
+- **The one she's in** is the chapter holding her next rung. **A chapter opens when its first event can play:** the
+  rung before it has played and its gate holds.
+- **A chapter's gate** asks the farm for something, from [the trigger menu](story-pack.md#the-trigger-menu): a place
+  built, a Farm Rank, a good shipped, another's event, a season or a festival (the town's kinds, talks, a gift and a
+  spot, are meeting her own: a gate of one is an error, and skipped). Until it holds, the chapter's first event waits,
+  whatever her bar: Ready's `gate` says it ahead of a short bar. Once that event has played the chapter is open, and its
+  other events follow as Ready allows, even when a season's or a festival's day has passed. A gate on the chapter
+  holding her meeting scene never holds the scene back (her `meet` says when she's met): it holds her first event.
+
+<!-- live:chapter-gates -->
+| Gate (`gate`) | Holds | Her profile says |
+|---|---|---|
+| `built` | This place of the farm is built: it stands the night after it’s paid for | “Opens when the Kitchen is built” |
+| `farm-rank` | The Farm Rank reaches this rank, at night | “Opens at Farm Rank 4” |
+| `shipped` | This many of a good shipped, in all: the bin pays at night | “Opens when you’ve shipped 50 Carrot” |
+| `event` | Another character’s event has played (`<characterId>:<event>`; `arrival` is her meeting scene), or an event id: anyone’s | “Opens after Stand-in 2’s Friendship 3” |
+| `season` | This season: from its first morning to its last | “Opens in Winter” |
+| `festival` | This festival’s day, any year | “Opens on the Harvest Cup” |
+<!-- /live -->
+
+- **Where you see them:**
+  - **her profile's Chapters:** every chapter, the one she's in with its events played and to come, a gate's words,
+    and what opens the next ([her profile](#her-profile));
+  - **the Hearts tab:** her chapter at a glance on her row, "Ch. 2 · Together" ([the Hearts tab](#the-hearts-tab));
+  - **the morning:** "A new chapter with ‹name› · Together", tagged **New**, the morning one opens: the morning after
+    the event before it played (one event a day, so its first can't play sooner), or the morning its gate begins to
+    hold. Her first chapter opens with meeting her, which the morning says as "Met ‹name›".
+- **Her ending:** her last chapter closes when Spouse 5 plays, in married life. The household's scenes, the evenings and
+  the house go on after it.
+- **The save holds nothing new for them:** her chapter is worked out from her route and the gates as it shows. The
+  morning's line keeps her id and the chapter's number; its title is read from the pack.
 
 ### Perks
 
@@ -4512,7 +4598,8 @@ sits outside the opening screens, so it shows even when the app stopped while op
   chapter had opened stays open, built (chapter 2's Coop and Barn). Chapter 1's Mill plans (`buildings.mill` 0) are an
   unbuilt Mill, offered at Farm Rank 1. Only the account carries over, its "last changed" time with it, so the farmer's
   name is the new farm's first change. Then the opening runs as on any new farm. A v4 from before the town has no
-  `town`: it loads with no talks.
+  `town`: it loads with no talks. A v4 from before her chapters loads as it is: her chapter is read from her route, and
+  only a new morning holds a "new chapter" line.
 - **Nothing goes silently:** a phone save with unsynced play is kept first as a "Before the new farm" safety copy (if it
   can't be kept, nothing changes and the card says so, with the button to try again). The new farm syncs up as it is,
   and the first time the server stores a v4 over the older save it copies the older one, whole, to a backup.

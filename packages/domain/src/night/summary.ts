@@ -122,6 +122,13 @@ export interface ArrivedLine {
   id: string
   home: boolean
 }
+/** §4 Hearts: one of her chapters opened this morning, its first event able to play (`chaptersOpened`): "A new chapter
+ * with ‹name›". `chapter` is its number along her route; its title is the pack's, read as the card shows. */
+export interface ChapterLine {
+  kind: 'chapter'
+  id: string
+  chapter: number
+}
 /** §4 Hearts: her birthday today or tomorrow, a ★ line the day before and on the day. */
 export interface BirthdayLine {
   kind: 'birthday'
@@ -218,12 +225,12 @@ export interface VowsLine {
   spouses: number
   paid: number
 }
-/** §4's stored lines: invitations, birthdays and anniversaries and the Festival of Vows, then arrivals
- * and the night's levels, then the house's morning, a move-in and a house that misses you, morning items
+/** §4's stored lines: invitations, birthdays and anniversaries and the Festival of Vows, then arrivals,
+ * the night's levels and the chapters opened, then the house's morning, a move-in and a house that misses you, morning items
  * and night chores, then the perks' extras, side by side and bond hearts. Ready lines aren't stored: they
  * change by day, so the app reads them live (`readiness`). */
 export type HeartLine = InviteLine | BirthdayLine | AnniversaryLine | ArrivedLine | ItemLine | ChoresLine | PerksLine | SideLine | BondLine | HouseLine | HouseMissesLine
-  | MovedLine | LevelLine | VowsLine
+  | MovedLine | LevelLine | VowsLine | ChapterLine
 
 /** The morning summary: its six sections. */
 export interface MorningSummary {

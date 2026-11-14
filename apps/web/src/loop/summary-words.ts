@@ -3,7 +3,8 @@
 // §4 is Hearts, in its own order: the Ready lines read live, up to
 // three and "+N more"; the invitation with Yes, tonight and Another day; the house's morning; birthdays and
 // anniversaries, today and tomorrow
-//; levels reached overnight and those the night met ("Met ‹name› · in town"); side by side's extras and bond hearts with
+//; levels reached overnight, those the night met ("Met ‹name› · in town") and her chapter opened ("A new chapter with
+// ‹name› · Together", its title the pack's, read live); side by side's extras and bond hearts with
 // Read. A Ready line plays her event over the morning (`?event=`); the rest open her profile on the
 // Hearts tab (`/hearts?uma=`), a pair's Read its conversations (`?read=`), side
 // by side the Warehouse; the Dorm's beds are the Dorm for 20's. It also has the house's morning (with its house line,
@@ -66,10 +67,14 @@ export interface ReadyNow {
 /** The morning summary as the card shows it: its sections in order, empty ones hidden, each line a tap.
  * §4 Hearts also shows while someone is `ready`. */
 export function summaryParts(summary: MorningSummary, nameOf: NameOf = someone, ready: readonly ReadyNow[] = [], pairs: PairWords | null = null,
-  home: HomeWords = NO_HOME): SummaryPart[] {
+  home: HomeWords = NO_HOME, chapterOf: ChapterOf = noChapter): SummaryPart[] {
   const sections = SUMMARY_SECTIONS.filter((section) => (section === 'hearts' ? summary.hearts.length + ready.length + home.household.length > 0 : summary[section].length > 0))
-  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs, home) }))
+  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs, home, chapterOf) }))
 }
+
+/** Her chapter's title by its number, from the pack as the card shows; null before the pack loads. */
+export type ChapterOf = (id: string, n: number) => string | null
+const noChapter: ChapterOf = () => null
 
 /** What the homestead's lines read beyond the summary, from the save and the pack as the card shows: a house's name,
  * the house line (drawn live), and the household's Ready offers. None before the pack loads. */
@@ -96,16 +101,17 @@ export const umaSheet = (id: string, view?: 'work'): string => `/hearts?${view ?
 /** The morning's Ready lines: up to three, then "+N more". */
 export const READY_LINES = 3
 /** The order of §4 Hearts, by line kind: (1) Ready, (2) the invitation, (3) the house's morning with the
- * morning items and night chores, (4) birthdays and anniversaries, (5) levels reached overnight and those met,
- * (6) the perks' extras, side by side and bond hearts. A new stored kind takes its place here and its words in
- * `heartLine`; within a place the night's order holds. */
+ * morning items and night chores, (4) birthdays and anniversaries, (5) levels reached overnight, those met and her
+ * chapters opened, (6) the perks' extras, side by side and bond hearts. A new stored kind takes its place here and its
+ * words in `heartLine`; within a place the night's order holds. */
 export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = {
-  invite: 2, house: 3, moved: 3, misses: 3, item: 3, chores: 3, birthday: 4, anniversary: 4, vows: 4, level: 5, arrived: 5, perks: 6, side: 6, bond: 6,
+  invite: 2, house: 3, moved: 3, misses: 3, item: 3, chores: 3, birthday: 4, anniversary: 4, vows: 4, level: 5, arrived: 5, chapter: 5, perks: 6, side: 6, bond: 6,
 }
 
 /** §4 Hearts: the Ready lines, then the stored lines in that order. `pairs` says which bond
  * lines have a conversation to Read; without it (the pack loading) they say the heart alone. */
-export function heartsLines(hearts: readonly HeartLine[], ready: readonly ReadyNow[], nameOf: NameOf, pairs: PairWords | null = null, home: HomeWords = NO_HOME): SummaryLine[] {
+export function heartsLines(hearts: readonly HeartLine[], ready: readonly ReadyNow[], nameOf: NameOf, pairs: PairWords | null = null, home: HomeWords = NO_HOME,
+  chapterOf: ChapterOf = noChapter): SummaryLine[] {
   const now = ready.slice(0, READY_LINES).map((r): SummaryLine => ({
     key: `ready:${r.id}`, to: `/?event=${r.id}`, tag: 'Play', text: `● Ready · ${nameOf(r.id)} · ${rungName(r.rung)}${r.place ? ` · ${r.place}` : ''}`,
   }))
@@ -113,7 +119,7 @@ export function heartsLines(hearts: readonly HeartLine[], ready: readonly ReadyN
   // The household's Ready offers, read live, after her Ready lines.
   const household = home.household.map((h): SummaryLine => ({ key: `household:${h.id}`, to: h.to, tag: 'Play', text: h.text }))
   const stored = hearts.map((line, i) => ({ line, i })).sort((a, b) => HEARTS_ORDER[a.line.kind] - HEARTS_ORDER[b.line.kind] || a.i - b.i)
-  return [...now, ...more, ...household, ...stored.map(({ line }) => heartLine(line, nameOf, pairs, home))]
+  return [...now, ...more, ...household, ...stored.map(({ line }) => heartLine(line, nameOf, pairs, home, chapterOf))]
 }
 
 /** The ♥♥ of a pair's line: two hearts for two Umas, whatever the level. */
@@ -152,7 +158,7 @@ export function houseWords(line: Extract<HeartLine, { kind: 'house' }>, nameOf: 
 }
 
 /** A stored §4 line in words, opening her profile. */
-function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, home: HomeWords = NO_HOME): SummaryLine {
+function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, home: HomeWords = NO_HOME, chapterOf: ChapterOf = noChapter): SummaryLine {
   if (line.kind === 'side') return { key: 'side', to: '/warehouse', text: `Side by side · +${plural(line.items, 'item')}` }
   // The house's morning (its house line under it), a house that misses you, the Festival of Vows.
   if (line.kind === 'house') {
@@ -177,13 +183,17 @@ function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, hom
     case 'item': return { key: `item:${line.id}`, to, text: `♥ ${name} left you ${starredGoods(line.items)}` }
     case 'moved': return { key: `moved:${line.id}`, to, text: `⌂ ${name} moved into ${home.houseName(line.house)}` }
     case 'level': return { key: `level:${line.id}`, to: `/?level=${line.id}:${line.rung}`, text: `♥ ${name} · ${rungName(line.rung)}, reached overnight`, tag: 'New' }
+    case 'chapter': {
+      const title = chapterOf(line.id, line.chapter)
+      return { key: `chapter:${line.id}`, to, text: `A new chapter with ${name}${title ? ` · ${title}` : ''}`, tag: 'New' }
+    }
   }
 }
 
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 
 function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: NameOf, ready: readonly ReadyNow[], pairs: PairWords | null,
-  home: HomeWords): SummaryLine[] {
+  home: HomeWords, chapterOf: ChapterOf): SummaryLine[] {
   switch (section) {
     case 'bin': {
       // Each good and star with its count and gold, the demand marked, then the total.
@@ -237,6 +247,6 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
           text: `${nameOf(line.outfitId)} · ${ACTIVITY_NAMES[line.activity]} · ${challengeWords(line.activity, line.rank - 1, line.challenge) ?? RANKS[line.rank]}`,
         })
     case 'hearts':
-      return heartsLines(summary.hearts, ready, nameOf, pairs, home)
+      return heartsLines(summary.hearts, ready, nameOf, pairs, home, chapterOf)
   }
 }

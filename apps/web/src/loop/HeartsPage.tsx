@@ -1,7 +1,7 @@
 // `/hearts`: the Umas' tab.
 // Two views: **Hearts** (the default) and **Work** (`?view=work`, the roster's album moved whole, each card's corner her
-// level words). The Hearts view is one 72 pt row an Uma you've met: her face, name and chips (● Ready, ✉ an invitation,
-// In town), her
+// level words). The Hearts view is one 72 pt row an Uma you've met: her face, name, her chapter at a glance ("Ch. 2 ·
+// Together") and chips (● Ready, ✉ an invitation, In town), her
 // level and her ladder's hearts as a bar in the stage's colour with the filling heart and "points/cost", then the most
 // useful line, what's banked and today's chat and gift ticks. Ready rows first, then the least progress, then the
 // cast's order; filter chips with their counts (`?filter=`); the header's "Married n/N" (N everyone you've met), the
@@ -21,7 +21,7 @@ import { useStory } from '../story/story'
 import { EVENING_HELP, headerMarks } from './evening-view'
 import { AwayChip, FillingHeart, HeartSegments, InviteChip, ReadyChip } from './HeartMarks'
 import { HeartProfile, type ProfileSide } from './HeartProfile'
-import { filterCounts, HEART_FILTERS, heartRows, isHeartFilter, levelShort, marriedOf, type HeartRow, type HeartsPack } from './hearts-view'
+import { filterCounts, glanceWords, HEART_FILTERS, heartRows, isHeartFilter, levelShort, marriedOf, type HeartRow, type HeartsPack } from './hearts-view'
 import { RosterAlbum, useRosterRows } from './RosterAlbum'
 import { SEASON_COLOR } from './words'
 
@@ -55,6 +55,7 @@ export default function HeartsPage() {
               <p>Everyone you’ve met is here. You meet her in town: by talking with her on a few days, or as her story says. The welcome list comes to the Gate in the first days.</p>
               <p>A full bar makes her next event Ready (● Ready). Some also need a setup, such as working a place that day. She must live on the farm: invite her from town when a bed is free.</p>
               <p>Each Uma plays one of her events a day, and each level comes when its event plays.</p>
+              <p>Her story runs in chapters, from meeting her to married life. A chapter may wait for the farm first, such as a place built; her profile says what it needs.</p>
               <p>Gifts: loved +60, liked +30, others +10, disliked 0, and more for more stars. Her loved gift shows from Friendship 1; the rest as you learn them, and all from Friendship 7.</p>
               <p>{EVENING_HELP}</p>
             </HelpButton>
@@ -174,7 +175,8 @@ function HeartRowView({ row, onOpen }: { row: HeartRow; onOpen: () => void }) {
       <FaceTile outfitId={row.id} size={56} label={row.name} className={row.home ? '' : 'opacity-60'} />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex items-center gap-1.5">
-          <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-ink">{row.name}</span>
+          <span className="min-w-0 max-w-[60%] shrink-0 truncate text-[15px] font-semibold text-ink">{row.name}</span>
+          <span className="min-w-0 flex-1 truncate text-[12px] text-ink-soft" data-row-chapter={row.chapter.n}>{glanceWords(row.chapter)}</span>
           {row.invited && <InviteChip />}
           {!row.home && <AwayChip />}
         </span>

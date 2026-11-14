@@ -66,7 +66,8 @@ export type DateGame = typeof DATE_GAMES[number]
 // --- The cast and the ties ----------------------------------------------------------------------------------------------
 
 /** The trigger menu: how her story begins (her `meet`), and what one of her chapters may ask of the farm (its `gate`).
- * One menu for both. Meeting her (`romance/meeting.ts`) acts on `meet`; her chapters' screens act on `gate`. */
+ * One menu for both, a gate taking the farm's kinds, a season and a festival (`GATE_KINDS`). Meeting her
+ * (`romance/meeting.ts`) acts on `meet`; her chapters (`romance/chapters.ts`) on `gate`. */
 export type StoryTrigger =
   /** Talk with her on this many different days. */
   | { kind: 'talks'; days: number }
@@ -87,6 +88,9 @@ export type StoryTrigger =
   /** After another character's event plays: `<characterId>:<eventId>`, or an event id (anyone's). */
   | { kind: 'event'; after: string }
 export const TRIGGER_KINDS = ['talks', 'gift', 'spot', 'season', 'festival', 'farm-rank', 'built', 'shipped', 'event'] as const
+/** The kinds a chapter's gate takes: what the farm holds, a season and a festival. The town's (talks, a gift, a spot)
+ * are meeting her own: a gate of one is skipped. */
+export const GATE_KINDS: readonly StoryTrigger['kind'][] = ['built', 'farm-rank', 'shipped', 'event', 'season', 'festival']
 /** The Farm Rank's top. */
 const TOP_FARM_RANK = 10
 
@@ -676,7 +680,10 @@ function readChapters(v: unknown, at: string, f: Findings, ctx: StoryContext): H
       else placed.set(id, i + 1)
     }
     if (events !== undefined && events.length === 0) f.notes.push(`${ct}: it holds no events`)
-    const gate = raw.gate === undefined ? undefined : readTrigger(raw.gate, `${ct} gate`, f, ctx)
+    const read = raw.gate === undefined ? undefined : readTrigger(raw.gate, `${ct} gate`, f, ctx)
+    const gate = read && !GATE_KINDS.includes(read.kind)
+      ? (f.errors.push(`${ct} gate: a chapter’s gate is one of ${GATE_KINDS.join(', ')} (${read.kind} is meeting her own); skipped`), undefined)
+      : read
     if (raw.title === undefined) f.notes.push(`${ct}: no title`)
     return [kept<HerChapter>(raw, { title, events, gate })]
   })
@@ -869,7 +876,7 @@ function readBeatTrigger(v: unknown, ctx: StoryContext, isGood: (id: string) => 
       if (v.level > 5) f.notes.push(`${at}: bonds reach level 5, so level ${v.level} never holds`)
       return { kind: 'bond', with: v.with, level: v.level }
     // The farm's global chapters are gone: her bar alone readies the rung.
-    case 'chapter': f.notes.push(`${at}: the farm has no chapters, so her bar alone readies it`); return { kind: 'hearts' }
+    case 'chapter': f.notes.push(`${at}: the farm has no global chapters (a gate goes on one of hers), so her bar alone readies it`); return { kind: 'hearts' }
     default: return undefined
   }
 }

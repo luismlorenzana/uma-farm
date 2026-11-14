@@ -15,6 +15,9 @@
 // in 3 mornings"), her closest friend's loved gift in Gifts from Friendship 7 (`friendLoved`), and her pet name and
 // keepsake once reached (`fromHer`). Her Ring (`ringView`: the engraving from Romance 8, her ring and its bonus, and
 // the better rings in the Warehouse) and R8's engraving in her perks.
+//
+// Her chapters (`romance/chapters.ts`): the row's chapter at a glance (`chapterGlance`), and her profile's Chapters
+// (`chaptersView`): each with its events played and to come, the one she's in, a gate's words, and what opens the next.
 import {
   homeOf, NEEDS_ROOM, OWN_HOUSE_WISH,
   atHome,
@@ -22,7 +25,7 @@ import {
   GIFT_POINTS_V4, goodName, hasPerk, homeOrHoused, invitedNow, isGoodId, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, keepsakeOf, keepsakeQuality, LADDER_COLOURS, ladderOf, levelWords,
   linePlaces, morningRule, morningsToItem, nextBondHeart, pairLevels, pairName, pairOf, PERK_PLACE, perkLineOf, perksFor, petNameOf, readiness, readLevels, ringGrade, ringName,
   ringPercent, romanceTerms, ROUTE_RUNGS, routeIndex, rungName, SEASON_NAMES, SIDE_BY_SIDE_HEARTS, tasteKnown, tieKind, tieLineOf, tiesOf, tieStrength, unreadLevels, WAITING_RUNGS,
-  withFarmer,
+  withFarmer, ARRIVAL, chapterBegun, chapterNow, chapterTitle, gateHolds, gateWords, rungPlayed, rungShort,
   type Bar, type Birthdays, type LadderName, type Love, type LoveStage, type Perk, type PerkId, type Readiness, type SaveV4, type StoryPack, type TieKind, type Wait,
 } from '@farm/domain'
 import { nextWords, readyWords } from './love-words'
@@ -139,6 +142,8 @@ export interface HeartRow {
   points: number
   /** Her place in the cast's order. */
   order: number
+  /** Her chapter at a glance. */
+  chapter: ChapterGlance
 }
 
 /** The line under her bar. */
@@ -173,7 +178,7 @@ export function heartRows(save: SaveV4, pack: HeartsPack, nameOf: NameOf): Heart
       invited: invitedNow(save, id), chatted: save.today.chats.includes(id), gifted: save.today.gifts.includes(id),
       note: rowNote(state, now, home, state.ready ? beatPlace(pack, id, state.rung) : null, nameOf) ?? roomNote(save, pack, id),
       filters: [...(state.ready ? ['ready' as const] : []), STAGE_FILTER[love.stage], ...(home ? [] : ['away' as const])],
-      progress: routeIndex(love), points: love.points, order: order < 0 ? cast.length : order,
+      progress: routeIndex(love), points: love.points, order: order < 0 ? cast.length : order, chapter: chapterGlance(save, pack, id),
     }]
   }).sort(heartOrder)
 }
@@ -188,6 +193,68 @@ export function filterCounts(rows: readonly Pick<HeartRow, 'filters'>[]): Record
 /** The header: "Married n/N", N everyone you've met (the roster: on the farm or in town). */
 export function marriedOf(save: Pick<SaveV4, 'love' | 'roster'>): { married: number; met: number } {
   return { married: Object.values(save.love).filter((l) => l.stage === 'spouse').length, met: Object.keys(save.roster).length }
+}
+
+// --- Her chapters ------------------------------------------------------------------------------------------
+
+/** Her chapter on her Hearts row: its number of how many, its title, and whether her last has closed. */
+export interface ChapterGlance {
+  n: number
+  of: number
+  title: string
+  /** Her route is complete: her last chapter closed in married life. */
+  closed: boolean
+}
+export function chapterGlance(save: SaveV4, pack: Pick<StoryPack, 'cast'>, id: string): ChapterGlance {
+  const now = chapterNow(save, pack, id)
+  const at = now.current ?? now.chapters.at(-1)!
+  return { n: at.n, of: now.chapters.length, title: chapterTitle(at), closed: now.current === null }
+}
+/** The row's words: "Ch. 2 · Together", or "Married life ✓" once her last has closed. */
+export const glanceWords = (glance: ChapterGlance): string => (glance.closed ? `${glance.title} ✓` : `Ch. ${glance.n} · ${glance.title}`)
+
+/** One of her chapters on her profile. */
+export interface ChapterView {
+  n: number
+  title: string
+  /** Every event played; the one she's in; or still to come. */
+  state: 'done' | 'current' | 'ahead'
+  /** Its events, played or to come: "Meeting", "F3", "Confession". */
+  events: { rung: string; label: string; played: boolean }[]
+  played: number
+  /** What its gate needs while it doesn't hold and nothing of it has played: "Opens when the Kitchen is built". */
+  gate: string | null
+}
+/** Her profile's Chapters: each chapter, the one she's in, and what opens the next (its title, the event before it and
+ * its gate); `closed` once her route is complete. */
+export interface ChaptersView {
+  chapters: ChapterView[]
+  next: { title: string; after: string; gate: string | null } | null
+  closed: boolean
+}
+/** "After Friendship 6", "After her confession", "After the proposal", "After meeting her". */
+export const afterWords = (rung: string): string =>
+  rung === ARRIVAL ? 'After meeting her' : WAITING_RUNGS.includes(rung) ? `After ${rungName(rung).toLowerCase()}` : `After ${rungName(rung)}`
+
+export function chaptersView(save: SaveV4, pack: Pick<StoryPack, 'cast'>, id: string, nameOf: NameOf): ChaptersView {
+  const now = chapterNow(save, pack, id)
+  const love = save.love[id]!
+  const chapters = now.chapters.map((c): ChapterView => {
+    const events = c.events.map((rung) => ({ rung, label: rungShort(rung), played: rungPlayed(save, id, rung) }))
+    const played = events.filter((e) => e.played).length
+    const state = c.n === now.current?.n ? 'current' : now.current === null || played === events.length ? 'done' : 'ahead'
+    const gate = state !== 'done' && c.gate && !chapterBegun(c, love) && !gateHolds(save, c.gate) ? gateWords(c.gate, nameOf) : null
+    return { n: c.n, title: chapterTitle(c), state, events, played, gate }
+  })
+  const at = now.current ? now.chapters.indexOf(now.current) : -1
+  const following = at >= 0 ? now.chapters[at + 1] : undefined
+  const first = following?.events.find((r) => r !== ARRIVAL)
+  const before = first ? ROUTE_RUNGS[ROUTE_RUNGS.indexOf(first) - 1] ?? ARRIVAL : null
+  return {
+    chapters,
+    next: following && before ? { title: chapterTitle(following), after: afterWords(before), gate: chapters[at + 1]!.gate } : null,
+    closed: now.current === null,
+  }
 }
 
 // --- Ready, live ---------------------------------------------------------------------------------

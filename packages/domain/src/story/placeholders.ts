@@ -203,7 +203,7 @@ export const meetOf = (pack: Pick<StoryPack, 'cast'>, id: string): StoryTrigger 
 /** Whether she's on the welcome list: she meets you on her first talk, whatever her trigger. */
 export const onWelcomeList = (pack: Pick<StoryPack, 'cast'>, id: string): boolean => welcomeOf(pack).includes(id)
 
-/** Her chapters: her cast entry's, else the four default ones. Her chapters' screens act on them. */
+/** Her chapters: her cast entry's, else the four default ones. `romance/chapters.ts` plays them along her route. */
 export function chaptersOf(pack: Pick<StoryPack, 'cast'>, id: string): readonly HerChapter[] {
   const own = castEntry(pack, id)?.chapters ?? []
   return own.length > 0 ? own : DEFAULT_CHAPTERS

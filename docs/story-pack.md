@@ -129,7 +129,7 @@ else is optional, and any field the game doesn't read is kept for the story.
 | `name` | **A sister's name** (read for a sister only): master data has none for her | Her elder's name, as her sister |
 | `birthday` | `{ "month": 1–12, "day": … }` on a real date, when master data has none | Master data's birthday, or none |
 | `meet` | **Her trigger to meet,** from the trigger menu below: when it's met, her story begins ([meeting her](game-mechanics.md#meeting-her)). Not read for the welcome list's, who meet you on their first talk | Talk with her on three different days |
-| `chapters` | **Her chapters,** below. Read now; her chapters' screens (F68) act on them | The four default chapters |
+| `chapters` | **Her chapters,** below: they frame her route on her profile, the Hearts tab and the morning ([her chapters](game-mechanics.md#her-chapters)) | The four default chapters |
 | `arrives` | **Retired:** meeting her replaced it. Any `arrives` is noted and dropped; her `meet` says when you meet her (a festival, another's event and a Farm Rank are on the menu), and the Dorm's levels bring beds only | — |
 | `paragraph` | The story's own: the sandbox shows it | Nothing |
 
@@ -149,7 +149,9 @@ welcome list, a tie's `a` or `b`, her bible `umas/s<outfitId>.json`, her route `
 
 ### The trigger menu
 
-One menu for her trigger to meet (`meet`) and a chapter's gate (`gate`). Each is an object with its `kind`:
+One menu for her trigger to meet (`meet`) and a chapter's gate (`gate`). Each is an object with its `kind`. A gate
+takes what the farm holds (`built`, `farm-rank`, `shipped`, `event`), a `season` or a `festival`; the town's kinds
+(`talks`, `gift`, `spot`) are meeting her own, so a gate of one is an error and the chapter plays without it:
 
 | Spelling | Meaning |
 |---|---|
@@ -174,7 +176,9 @@ a gift, and every night, so she's met the morning after it holds. Her meeting sc
 ### Her chapters
 
 Her story is hers, in her own chapters, from meeting her to married life. A chapter groups her events along the game's
-backbone: friendship F1–F10 and the confession, romance R1–R10, the proposal and the wedding, then married life.
+backbone: friendship F1–F10 and the confession, romance R1–R10, the proposal and the wedding, then married life. Her
+profile lists them with the one she's in, the Hearts tab shows her chapter on her row, and the morning a chapter opens
+says "A new chapter with ‹name›" ([her chapters](game-mechanics.md#her-chapters)).
 
 ```json
 "chapters": [
@@ -185,12 +189,18 @@ backbone: friendship F1–F10 and the confession, romance R1–R10, the proposal
 
 | Field | What it does in play | Without it |
 |---|---|---|
-| `title` | Its title on her profile | No title (a note) |
-| `events` | Her rungs it holds, in order | It holds none (a note) |
-| `gate` | What the farm must have first, from the trigger menu. Until it holds, her events in it wait: "Opens when the Kitchen is built" | It opens when its first event can play |
+| `title` | Its title on her profile, the Hearts tab and the morning | "Chapter 2" (a note) |
+| `events` | Her rungs it holds: they play in the route's order, whatever order you list them in | It holds none, and is left out (a note) |
+| `gate` | What the farm must have first, from the trigger menu (the farm's kinds, a season or a festival). Until it holds, the chapter's first event waits, and her profile says what's needed: "Opens when the Kitchen is built". Once that event has played, the rest follow | It opens when its first event can play: the rung before it has played |
 
-A rung in two chapters plays in the first (a note); rungs in none of her chapters are listed in a note. With no
-`chapters`, she has the four defaults:
+- **Her chapters run in the order of their first events** along the route, whatever their order in the file.
+- **A rung in two chapters** plays in the first (a note). **Rungs in none** are listed in a note, and still play: each
+  counts in the chapter before it along the route (or the first).
+- **A gate on the chapter holding her arrival** never holds her meeting scene back (her `meet` says when she's met): it
+  holds her first event after it.
+- **Her last chapter closes** when Spouse 5 plays; the household's scenes go on after it.
+
+With no `chapters`, or none that holds a rung the game plays, she has the four defaults:
 
 | Chapter | Its events |
 |---|---|
@@ -403,5 +413,5 @@ A spot `town.json` doesn't name plays the game's own (a note).
 | Her outfit, calling, birthday, bible, route, ties, pairs, household, the opening | Yes | Yes, today |
 | The town's people and spots, her favourite spot, her town lines, a sister's name | Yes | Yes, today: [the town](game-mechanics.md#the-town) |
 | The welcome list, her trigger to meet | Yes | Yes, today: [meeting her](game-mechanics.md#meeting-her) |
-| Her chapters and their gates | Yes | When her chapters land (F68) |
+| Her chapters and their gates | Yes | Yes, today: [her chapters](game-mechanics.md#her-chapters) |
 | What plays when a part is missing | Placeholders for every read | Yes, today: [what plays without the story](game-mechanics.md#what-plays-without-the-story) |

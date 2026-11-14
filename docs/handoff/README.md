@@ -10,12 +10,12 @@ deployed site is the work in progress: saves can start over whenever the game ne
 
 | Track | Piece | Who | State |
 |---|---|---|---|
-| **Game's frame** | Her chapters. Shipped: placeholders everywhere, the farm grows by building ([the farm's progress](../game-mechanics.md#the-farms-progress)), the lean start ([the opening](../game-mechanics.md#the-opening)), the town ([the town](../game-mechanics.md#the-town)), and meeting her ([meeting her](../game-mechanics.md#meeting-her)) | Claude | [F68](tasks/F68-her-chapters.md) |
+| **Game's frame** | **Done.** Shipped: placeholders everywhere, the farm grows by building ([the farm's progress](../game-mechanics.md#the-farms-progress)), the lean start ([the opening](../game-mechanics.md#the-opening)), the town ([the town](../game-mechanics.md#the-town)), meeting her ([meeting her](../game-mechanics.md#meeting-her)), and her chapters ([her chapters](../game-mechanics.md#her-chapters)). Next: the workshops (Phase 2) | Claude | Waits for your go |
 | **HD-2D farm** | **The working nod:** an Uma at work nods every 4–7 seconds, seeded by her id, none with reduced motion, on uma-stage 0.5.0's `emote` | Claude | Next on this track: small, no packet |
 | **HD-2D farm** | **The kit's second wave:** the 30 frames the stand-in still draws, painted in code | Claude, in a uma-platform session | [F9](tasks/F9-kit-farm.md): waits for your go |
 | **Story** | **Free authoring:** the world, the backgrounds, the characters, however the story wants. The pack is open: every part optional, notes instead of blocks | You and the story session | [F40](tasks/F40-story-authoring.md): how it reaches the game; [the pack's menu](../story-pack.md) |
 | **Her look** | **The bust art:** her outfits (8) and her expressions (22); the pilot is the two Umas with the new full art | ChatGPT | [F69](tasks/F69-bust-art-spec.md): ready to hand over |
-| **Her look** | Busts that change expression, then her wardrobe | Claude | [F70](tasks/F70-expressive-busts.md) after F69's pilot, [F71](tasks/F71-her-wardrobe.md) after F68 and F70 |
+| **Her look** | Busts that change expression, then her wardrobe | Claude | [F70](tasks/F70-expressive-busts.md) after F69's pilot, [F71](tasks/F71-her-wardrobe.md) after F70 |
 
 ## Open packets
 
@@ -23,7 +23,6 @@ A packet is written when a piece is next and deleted when it ships. Git keeps th
 
 | Packet | What | Who |
 |---|---|---|
-| [F68](tasks/F68-her-chapters.md) | Her chapters: from the story or four defaults, with optional farm gates | Claude |
 | [F69](tasks/F69-bust-art-spec.md) | The bust art: her outfits and her expressions; the pilot first | ChatGPT |
 | [F70](tasks/F70-expressive-busts.md) | Busts that change expression: the game puts the face over the bust; the story's `emote` picks the face | Claude |
 | [F71](tasks/F71-her-wardrobe.md) | Her wardrobe: the occasion picks the outfit; Dinner in town and A night in | Claude |
@@ -41,7 +40,8 @@ A packet is written when a piece is next and deleted when it ships. Git keeps th
 | **The lean start on your phone:** on a new farm (a fresh account, or the start-over card), name your farmer, read the lines, and you're on Home in three taps (Skip works from the first line). The Gate wears **Visiting**: open it and **Say hello** to day 1's visitor, who moves in. A live farm keeps loading and never replays its opening. The pack's own `opening.json` plays once a release with it is published | [uma-farm.web.app](https://uma-farm.web.app) |
 | **The town on your phone:** after the deploy, tap the Town at the foot of the farm map (below the Shop's row). See about two dozen out at the six spots, tap one to talk (her line, "Your first talk"), tap her again (no second count today), and find anyone in People. Tomorrow, a different few. Once the story's `town.json` and the sisters are in a published release, its fourteen people keep the spots by their master-data names, and the sisters are out with everyone else | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Meeting her on your phone:** after the deploy, open the Gate, **Say hello** to the morning's visitor (her scene plays, and she moves in), end the day and see the next one there. In the Town, talk with one on three days: on the third her scene plays and she moves in while a bed is free, else she lives in town (her profile's **Invite to the farm** once a bed frees). A live farm keeps loading: everyone on it counts as met, and a day-1 helper never greeted has her scene play once | [uma-farm.web.app](https://uma-farm.web.app) |
-| **Say go on the rest of Phase 1,** from F68 | [roadmap.md](../roadmap.md#phase-1-one-game-built-around-the-umas) |
+| **Her chapters on your phone:** after the deploy, open an Uma's profile on the Hearts tab: her four chapters (her own once the story writes them), the one she's in with its events, and what opens the next; her row says "Ch. 1 · Getting to know her". The morning after her confession says "A new chapter with ‹name› · Together". A live farm keeps loading | [uma-farm.web.app](https://uma-farm.web.app) |
+| **Say go on the workshops** (Phase 2), which her chapters unblock | [roadmap.md](../roadmap.md#phase-2-the-whole-farm) |
 | **The HD-2D farm on your phone:** turn on Account → HD-2D farm, put an Uma to work and watch her walk, end the day, tap her bubble in the morning. Then say how the walk and the bubble feel, and whether the pips can go | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story** however you like | The Farm Story Sandbox on this Mac (`pnpm stories`) |
 | **The kit's second wave:** your go, when you want it | [F9](tasks/F9-kit-farm.md) |

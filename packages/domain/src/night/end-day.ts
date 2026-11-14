@@ -13,10 +13,10 @@
 // (`tickBonds`) and pays her line +10 (`payLine`); step 7 clears the whole `today`; step 8 is `raiseBuildings` →
 // `settleDorm` → `checkGoals` → `meetUmas` (everyone in town whose trigger the farm now holds, her ties seeded); step 9 notes
 // praise earned overnight, birthdays and anniversaries today and tomorrow with the anniversary's item (`heartsMorning`),
-// draws the morning's invitations (`drawInvitations`), and its §4 is Hearts, with the invitations, side by side and the
-// bond hearts reached. The perks: step 2's farming chores and a farmer in her element, step 4's perks' extras
-// (`nightExtras`) and gathering chores (`nightChores`), step 6's mentor, and step 9's morning items (`morningItems`),
-// with their Hearts lines. The ring and the wedding: step 8 sets the ring bench the night after the first Romance 8
+// draws the morning's invitations (`drawInvitations`), and its §4 is Hearts, with the invitations, the chapters opened
+// (`chaptersOpened`), side by side and the bond hearts reached. The perks: step 2's farming chores and a farmer in her
+// element, step 4's perks' extras (`nightExtras`) and gathering chores (`nightChores`), step 6's mentor, and step 9's
+// morning items (`morningItems`), with their Hearts lines. The ring and the wedding: step 8 sets the ring bench the night after the first Romance 8
 // (`openRingBench`), and step 9 serves a wedding's reception (`serveTheReception`) before anything else. Married life:
 // before step 1 tonight's house is noted (`noteTheNight`); step 6 pays shared houses' bonds (`shareHouses`) and levels
 // S2 and S4 (`levelAtNight`); step 8 notes the household milestones (`householdMilestones`); step 9 gives the house's
@@ -36,6 +36,7 @@ import { LOOP_WORK_PLACES, type LoopKinds, type LoopPlaceId } from '../save/pars
 import { touched } from '../save/save'
 import { payLines } from '../romance/acts'
 import { meetTonight } from '../romance/meeting'
+import { chaptersOpened } from '../romance/chapters'
 import { drawInvites } from '../romance/evening'
 import { openBench } from '../romance/bench'
 import { serveReception } from '../romance/wedding'
@@ -433,8 +434,9 @@ function dormNews({ notes }: Night): Extract<NewsLine, { kind: 'dorm' | 'home' }
 }
 
 /** §4 Hearts: this morning's invitations, birthdays and anniversaries today and tomorrow (`heartsMorning`), then everyone the
- * night met at step 8, in the cast's order, home or in town (her meeting scene waits for the farm to open); then this morning's items and the night's chores; then the perks' extras, side by
- * side's extras and the bond hearts reached since the last morning. */
+ * night met at step 8, in the cast's order, home or in town (her meeting scene waits for the farm to open), and each
+ * chapter that opened this morning (`chaptersOpened`); then this morning's items and the night's chores; then the perks'
+ * extras, side by side's extras and the bond hearts reached since the last morning. */
 function heartLines(night: Night): HeartLine[] {
   const { save, before, context } = night
   const order = context.story ? castOrder(context.story) : []
@@ -453,6 +455,7 @@ function heartLines(night: Night): HeartLine[] {
     ...night.notes.levels,
     ...Object.keys(save.roster).filter((id) => !before.roster[id]).sort((a, b) => rank(a) - rank(b) || Number(a) - Number(b))
       .map((id): HeartLine => ({ kind: 'arrived', id, home: save.dorm.home.includes(id) })),
+    ...(context.story ? chaptersOpened(before, save, context.story, order) : []).map(({ id, chapter }): HeartLine => ({ kind: 'chapter', id, chapter })),
     ...(night.notes.houseLine ? [night.notes.houseLine] : []),
     ...night.notes.moved,
     ...(night.notes.misses ? [night.notes.misses] : []),
