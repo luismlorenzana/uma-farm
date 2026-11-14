@@ -2494,7 +2494,8 @@ they're needed.
   outfit (its face, bust, talents and temperament), and her name is the pack's cast entry's `name`, never in git (without
   one, her elder's name as her sister). She lives in town; she can't join the farm until meeting her lands.
 - **Anyone in town** meets master data through the same resolver: one of the town's people, or any other character,
-  plays her default outfit; a role, the Uma who plays it. A character with no outfit shows master data's character face.
+  plays her default outfit; a role, the Uma who plays it. A character with no outfit shows master data's character face,
+  else her name's letters on a disc.
 - **A character master data doesn't hold** shows a lettered disc (her name's first letter and its number, "S1") and reads
   D talents in every activity. The stand-ins are named "Stand-in 1" to "Stand-in 3"; any other unknown character is "An
   Uma".
