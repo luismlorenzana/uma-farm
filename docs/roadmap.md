@@ -84,6 +84,35 @@ workshop stands on the stage. Phase 4's error reports and save safety are small 
   This roadmap says where it's going.
 - Code and files with no purpose are removed, and comments no longer point at deleted documents.
 
+## The rework (2026-11-14)
+
+The owner's rework turns the game landscape, gives the day a budget of actions, and puts a classic farm-life loop at its
+heart, with Umas who take the farm over and get better at it, a navigable town, a dialogue engine, upkeep and loans, a
+visible calendar, and a default Uma so every character plays fully. **The design is
+[design/game-design.md](design/game-design.md)** ([page](pages/game-design.html)), with its keep, build-on and replace
+table. Its steps, in order:
+
+| Step | What |
+|---|---|
+| 1 | **Landscape:** the app sideways; the bar, screens, sheets and menus |
+| 2 | **The dialogue engine:** busts, faces and outfits by context, on the pilot's published kits; a blank bust for the rest |
+| 3 | **The default Uma:** a full default story and profile for every Uma without her own |
+| 4 | **A day of actions, and the farm loop:** the action budget; fields as tiles with daily watering; one-action fishing and foraging; shipping |
+| 5 | **The town map:** locations, who's there now, her menu |
+| 6 | **The Uma loop:** acquaintance gifts, hangouts, farmhand, the wedding night, moving in |
+| 7 | **Umas at work:** farmhands' daily actions, the work board, aptitudes that grow with practice |
+| 8 | **The economy:** upkeep and loans |
+| 9 | **The calendar:** the calendar screen, faces on event days, special days |
+| 10 | **The ranch and the mine,** in the farm loop's style |
+
+**What it changes below:**
+- Phase 1's HD-2D track pauses: the portrait preview retires, and the farm map is a landscape tile map until
+  uma-platform's look path is ready.
+- Her look (Track C) folds into step 2: the pilot's art is published, F70 becomes the dialogue engine, and F71 becomes
+  its outfits by context.
+
+Packets are written once the owner confirms the design's five open points.
+
 ### Phase 1: One game, built around the Umas
 
 **Goal:** the deployed game is one game: built whole, played live, its farm growing by building, its people met in

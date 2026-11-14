@@ -1,152 +1,275 @@
 # The game's design
 
-**A first pass, for the owner to rework (2026-11-14).** What the farm is to play: the fantasy, what you do in a sitting,
-a day, a season and a year, how the farm and the Umas feed each other, and what the first real season holds. It draws
-on the story's World Book, which stays private: this page names no character and none of the story's places. How each
-system works in detail is in [the game mechanics](../game-mechanics.md); what's next to build is in
-[the roadmap](../roadmap.md). The page view is [game-design.html](../pages/game-design.html).
+**Second pass: the owner's rework (2026-11-14), for the owner to iterate on.** What the farm is to play, rebuilt
+around the owner's input:
+- a landscape game with a farm map and a navigable town;
+- a dialogue engine with busts, faces and outfits;
+- a day of limited actions, and a farming loop in the spirit of the classic farm-life games;
+- Umas who take the farm's work over and get better at it;
+- upkeep and loans;
+- a calendar you can see;
+- the Uma loop from meeting to married life;
+- a default Uma, so every character plays fully before her story and art land.
+
+It builds on what exists wherever it can, and says plainly where something is replaced. It names no character and none
+of the story's places. How each built system works today is in [the game mechanics](../game-mechanics.md). The page
+view is [game-design.html](../pages/game-design.html).
 
 ## The game in one line
 
-**You take over a farm gone to weed in a quiet valley, and the Umas who come there to start over help you bring it back,
-while you fall in love with one of them, then build a home with her, and with the others who stay.**
-
-## The fantasy
-
-- **A second life, for everyone.** Racing is years behind the Umas. Each comes to the valley for a reason of her own:
-  rest, a trade to learn, a person, the quiet. You're a newcomer too, which is why they open up to you.
-- **A place that remembers.** The farm took in racing stables every summer, and the valley still runs its own race on
-  the old hilltop track at the year's end. Bringing the farm back brings the valley's old life back with it.
-- **Tender, never explicit.** Grown women, warm stories, fades to morning. The farmer is "you": never drawn, never
-  gendered.
+**You take over a farm gone to weed in a quiet valley. Day by day you work it with your own hands, meet the retired
+racers who've made the valley their home, bring them onto the farm, where they take the work over and grow better at
+it, and fall in love, until your days belong to the people more than the fields.**
 
 ## Pillars
 
 | Pillar | What it means in play |
 |---|---|
-| **Her story first** | Every Uma has her own chapters, from meeting to married life. The farm's goals are her story's next steps ("Opens when the Quarry is built") |
-| **A farm that grows with you** | No global plot. Income and goods raise the Farm Rank; the rank offers places; you build them. Each new place is new work, new goods and a door in someone's story |
-| **A valley of everyone** | Every character lives in town from day 1. You choose whom to talk to; her story begins when you've met her her way |
-| **Short sittings, a long life** | A day is a turn you end when you like: a few minutes on a phone. Seasons, festivals and years give it a rhythm |
-| **Always playable** | The story arrives over time; anything unwritten still plays and pays. Nothing waits for a finished book |
+| **Your day is precious** | A day holds a fixed number of actions. Every farm task and every outing costs one. What you spend them on is the game |
+| **From fields to people** | At first you do the farm's work yourself. As Umas join the farm they take it over, and your actions turn to the valley: talks, gifts, hangouts, dates |
+| **Practice makes her better** | Every Uma can do every task, and the more she does one the better she gets at it: more yield, better quality, fewer actions |
+| **Her life is her own** | Every Uma is a retired racer with a life in town: a place, a part-time job, goals of her own (the story's). The farm is one part of her day |
+| **A farm that must pay its way** | Buildings and residents cost upkeep. Loans let you build ahead, and the daily work pays them back |
+| **Always complete** | Every Uma plays her whole story from day one, from a default the game provides, replaced piece by piece as her story and art arrive |
 
-## A sitting: about five minutes on the phone
+## The screens (landscape)
 
-```text
- the morning ──► the work board ──► the valley ──► the evening ──► End the day
- what happened    who works where    talk, gift,     one hangout     the night settles
- overnight,       today; collect     meet, visit     or date, if     work, growth, the
- who's new,       what's ready;      a spot; her     someone's free  bin's gold, the
- a new chapter    build if you can   event if Ready                  rank, and who's met
-```
+The whole game turns to **landscape**: the phone held sideways.
 
-1. **The morning** tells you what the night did: the bin's gold, the harvest, a place built, a Farm Rank reached, who
-   met you, a new chapter, a new story arrived.
-2. **The work board:** each Uma on the farm takes a job (the Fields, the woods, the pond, a station) or tends a block of
-   the Fields. Jobs take days; Ready work is collected with a tap. A building you can afford is one tap away.
-3. **The valley:** the Gate's visitor in the first week; the town's spots, where a few of everyone are out each day; a
-   talk or a gift; her heart event when it's Ready (one a day for each Uma).
-4. **The evening:** one each day, with someone free: a hangout from early friendship, a date once you're together.
-5. **End the day:** the night settles everything. Nothing happens while the app is closed.
-
-## The rhythm
-
-| Scale | What it holds |
+| Screen | What it is |
 |---|---|
-| **A day** | One turn: the morning, the board, the valley, the evening, the night |
-| **A week** (the first) | The welcome week: one Uma at the Gate each morning, each with her first chapter on the farm as it starts |
-| **A season** (12 days) | Its crops and catches, its festival on the 10th, its own line in the morning; a season's last day withers what isn't harvested |
-| **A year** (48 days) | Four festivals and the valley's race on the year's last day; birthdays, anniversaries, New Year's from the second year |
-| **The long game** | Every place built, every house, the household's years, and as many of the valley's stories as you choose to follow |
+| **The farm** | The farm as a map you look across: fields as tiles you till, plant, water and harvest; the coop and barn; the woods' edge and the pond; the mine's mouth; the buildings. Tap a tile or a place to act on it |
+| **The town** | A town map you move around: the plaza, the market, the café, the harbour, the library, the hilltop track, and the homes and spots the story adds. Each location shows **who's there now**; tap one to interact |
+| **A scene** | The dialogue engine: her bust in the outfit the moment calls for, her face changing line by line, choices at the bottom |
+| **The calendar** | The season's days at a glance: festivals, birthdays, her events, with the faces of the Umas who have something that day |
+| **The farm's book** | Money, upkeep and loans; the work board; the people; the Diary |
 
-## Two halves that feed each other
+A thin bar is always visible: the day and season, the actions left, and the gold.
 
-```text
-            ┌──────────────── THE FARM ────────────────┐
-            │  work ─► goods ─► the bin's gold         │
-            │     ▲                 │                  │
-            │     │                 ▼                  │
-            │  new places ◄─ build ◄─ Farm Rank        │
-            └───────▲───────────────────────┬──────────┘
-         her perks,  │                       │ a place built opens
-         more hands, │                       │ her next chapter
-         a home      │                       ▼
-            ┌───────┴──────── THE UMAS ────────────────┐
-            │  meet ─► friendship ─► confession ─►     │
-            │  romance ─► proposal ─► wedding ─►       │
-            │  married life ─► the household           │
-            └──────────────────────────────────────────┘
-```
+**On the look:**
+- the farm map starts as a clean, readable tile map, built to be fast and clear for acting on single tiles;
+- the HD-2D stage comes later, when uma-platform's new look path reaches the bar the owner wants;
+- the old portrait HD-2D preview, and the programmer art drawn for it, retire.
 
-- **The farm pays for the romance:** a place built is often the gate to her next chapter, and a ring needs the farm's
-  ingots and gems.
-- **The romance pays the farm:** the Umas are the farm's hands; each level of hers brings a perk at her line's work; a
-  spouse's breakfast feeds the farm; each wedding opens a house, and the houses open the homestead's rows.
-- **The town ties them:** you meet the valley in town, and the town's own people mark each new place: a surveyor walks
-  the new mine, the smith lights the forge, the cook is the restaurant's first guest.
+## A day: limited actions
 
-## The arc
+- **The protagonist has a set number of actions a day.** The starting proposal is 10. More come from the farm's
+  upgrades and the household.
+- **One action each:**
+  - **farm work:** till a tile, plant it, water it, harvest it, feed or care for an animal, collect eggs or milk, fish
+    once, forage once, mine one floor's face, process at a station, ship a load;
+  - **the valley:** go into town, introduce yourself, talk, give a gift, a hangout, a date, an invitation to work.
+- **Free:** looking. The map, the calendar, the book and menus cost nothing.
+- **The day ends** when the actions run out or you end it. The night settles everything, as it does today.
+- **Special days give extra event actions:** New Year's, the festivals, her birthday. On those days you can play
+  several Umas' events even past the usual budget, so a holiday's scenes all fit.
 
-| Stretch | Roughly | What you're doing | What you're working toward |
-|---|---|---|---|
-| **Arriving** | The first season | The welcome week; planting, the woods and the pond; the first Mill; the first festival; first friendships | Farm Rank 2–3, the first chapters, a full Dorm |
-| **Growing** | The first year | The Sawmill and the Smokehouse, the ranch, the mine; meeting the valley; confessions and first dates | The first big build the story points at (the Quarry), the first proposal |
-| **Settling** | The second year | Weddings, houses, the Kitchen and the Restaurant; the valley's race with a team whose bonds carry them | The homestead, the forge, the Uma whose story waits longest |
-| **Living** | After | The household's years, everyone else's stories, records, the festivals' yearly round | Whatever the valley still holds |
+## The farm loop
 
-## The first real season: what "playable" means
+In the spirit of the classic farm-life games, with the owner's additions.
 
-The target for the game's first good version. Every piece below has to be real: your cast and story, real busts, a
-farm screen that looks right.
-
-| Days | What happens |
-|---|---|
-| **1** | Your name; the opening's four lines (the farm's last keeper hands you the key); the first Uma waiting at the Gate. She's the farm's first helper. Plant the carrots |
-| **2–5** | One welcomer each morning, each a scene at the Gate that nods at the mornings before it. The work board fills; the woods and the pond open up |
-| **3–9** | The town: talks at its six spots; the first Umas met by their own triggers; the first heart events; the first evenings |
-| **≈ 6–9** | The first build: the Mill. The Diary's projects show what's next |
-| **10** | The spring festival: a garden party, a judged entry, the first outings of the year |
-| **11–12** | The season's end: what's not harvested withers; summer's line in the morning; Farm Rank 2–3 |
-
-**At the end of the first season you should have:**
-- the welcome five on the farm, and a few more met;
-- one or two Umas in their second chapter;
-- the Mill and maybe the Sawmill built;
-- a clear next goal the story points at.
-
-## How it looks and sounds
-
-- **Today:** the farm map in 2D; busts in scenes; the town's screen. The HD-2D farm stays an opt-in preview until it
-  reaches the look the owner wants. Work on it waits for uma-platform's new look path, rather than more programmer art.
-- **Next:**
-  - **busts that change expression:** 22 faces over each outfit, the pilot already drawn;
-  - **a wardrobe by occasion:** the four seasons, work clothes, a garden party dress, a kimono, a dinner dress, a
-    wedding dress, a wedding night outfit and pajamas;
-  - **the world's words on screen:** the valley's names, places, festivals, seasons and Town notes;
-  - **sound:** none yet.
-
-## What's built, what the first season still needs
-
-| Built and live | Missing for the first good season | Later |
+| Area | Your actions | What the day does |
 |---|---|---|
-| The day loop, the Fields, the woods and the pond, the Mill, Sawmill and Smokehouse; goods, the bin, gold; talents and ranks | **Your story on the phone:** Release 2, with the world; a way to start a new farm | The workshops' games: the ranch, the mine and quarry, the kitchen's cooking game, the restaurant, the forge |
-| Building by Farm Rank; the Diary's projects; milestones with the Umas | **The occasion scenes the story wrote:** dinners, nights in, festival nights, New Year's, the wedding night | Expeditions |
-| The town; meeting by trigger; the welcome week; her chapters | **Outfits on scenes,** and the occasion's outfit by default | Group scenes for families and crews |
-| The whole romance: ladders, events, plays, perks, evenings, the ring, the wedding, the household, bonds | **Expressive busts** (the pilot's faces) | The HD-2D farm at the new look |
-| Placeholders for anything unwritten; the story shipped by one command | **A first-run that teaches itself; sound; a balance pass on the first season** | Parcels to the other games |
+| **The fields** | Till a tile, plant seeds, water it (every day), harvest it | Watered crops grow a stage each night; dry ones don't; a season's end withers what's left |
+| **Animals** (the coop and the barn) | Feed, brush or care, collect eggs or milk or wool | Cared-for animals grow fond and give better goods; animals left unfed grow unhappy |
+| **Fishing** | Cast once at the pond or the bay | The season and the spot decide the catch |
+| **Foraging** | Search the woods or the hills once | The season's finds |
+| **Mining** | Work a floor's face once; the stairs go deeper | Ore, stone and gems, rarer with depth |
+| **Stations** | Process a load: grain to flour, logs to planks, fish to fillets, ore to ingots | Ready the next morning |
+| **Shipping** | Put goods in the bin | Paid that night |
 
-## Questions to settle in the rework
+**What's built and kept:**
+- the crops and their seasons, the prices and stars;
+- the forest areas and fishing spots and their finds;
+- the stations' recipes, the bin and the night's settling;
+- building places by Farm Rank.
 
-These shape everything below them, so they come first:
+**What changes:**
+- **the fields** become tiles acted on one at a time, with daily watering, instead of blocks an Uma tends for days;
+- **gathering** becomes one action for one haul, instead of jobs that last days;
+- **the ranch and the mine,** never built, are built this way.
 
-1. **Who are you to them?** Today you can marry more than one Uma: each wedding opens a house. Is that the game: one
-   true love, or a household of several?
-2. **What's the pressure?** There's no energy, no deadline and no failure: a day ends when you say. Is a gentle limit
-   wanted (hours in a day, a season's goals), or is the calm the point?
-3. **How much farming?** The farm can be a light frame for the stories or a deep game of its own (the workshops'
-   minigames, expeditions). Which matters more in a sitting?
-4. **How many stories at once?** A hundred characters in town, five welcomers fully written. Is the game about a few
-   deep routes or many light ones?
-5. **What does a year end with?** The valley's race on the year's last day could be the yearly finale. Is it a
-   competition, a celebration or a story beat?
-6. **What's the look?** The 2D map, the HD-2D stage, or something else: which matters most for the game to feel finished?
+## Umas at work
+
+- **Inviting her:** once you're friends, you can invite an Uma to work on the farm. She's then a **farmhand**.
+- **Her day:**
+  - she keeps her own life: her **part-time job** in town (the story says what it is) comes first;
+  - then she gives the farm **a few actions a day**, 3 to start, more as she settles in and once you're married;
+  - the actions go to the tasks on the **work board**.
+- **The work board:** you set each farmhand's tasks: water these tiles, care for the coop, fish, mine. Every Uma can do
+  every task.
+- **Aptitude:** each task has a level for each Uma that grows with practice. A higher level means more yield, better
+  stars, a task done in fewer actions, and new tricks (watering a row at once).
+  - **What's kept:** today's talents and rank points become the start: her stats set where each aptitude begins, and
+    work raises it.
+- **You're freed:** as farmhands take the farm's tasks, the board fills, your own actions turn to the valley, and the
+  game becomes about the people.
+
+## The Uma loop
+
+```text
+ meet ─► acquaintance ─► friend ─► farmhand ─► sweetheart ─► proposal ─► wedding ─► wedding night ─► moving in ─► married life
+         (gifts)         (hangouts) (works the   (dates)                                                 (her room, or
+                                    farm)                                                                 a house)
+```
+
+| Stage | How you reach it | What it opens |
+|---|---|---|
+| **Meet** | Introduce yourself to her in town. Every Uma is in town from day one | Talks, and gifts |
+| **Acquaintance** | Talks and gifts | Friend gifts move her toward friendship |
+| **Friend** | Her friendship grows | Hangouts; her friendship events |
+| **Farmhand** | Invite her to work, as a friend | She works the farm part-time; her aptitudes grow |
+| **Sweetheart** | Her confession | Dates; her romance events |
+| **Proposal** | Her romance at its height, and a ring | The wedding |
+| **Wedding**, then **the wedding night** | The day you set | A tender scene that fades to morning |
+| **Moving in** | After the wedding | She moves to the farm: your home, or a house built for her |
+| **Married life** | Living together | Her married life's events, the household's scenes, more of her actions for the farm |
+
+**What's kept:**
+- the whole romance: her ladders, points, events and plays, perks, evenings, the ring, the wedding, houses, the
+  household, bonds between Umas;
+- her chapters, framing her story along these stages.
+
+**What changes:**
+- meeting becomes **introducing yourself**, an action in town, with every Uma there from day one; the welcome week
+  becomes the first Umas you happen to meet, unless the owner keeps it;
+- **farmhand** is a new stage between friend and sweetheart;
+- the wedding night and moving in become stages of their own.
+
+## The town
+
+- **A town map,** navigable in landscape: walk between locations by tapping them.
+- **Who's where:** each Uma has her own place and routine from the story: where she works, where she likes to be, when.
+  Each location lists who's there **now**. With no routine written for her, the game places her by today's draw.
+- **Tap an Uma** for her menu. Each item costs an action:
+  - introduce yourself;
+  - talk;
+  - give a gift;
+  - invite to a hangout or a date;
+  - invite to work on the farm;
+  - her event, when it's ready.
+- **The town's people,** the shopkeepers and the mayor, are at their posts, with their own menus: buy seeds, sell,
+  build, borrow.
+
+## The dialogue engine
+
+- **Every scene** (meetings, talks, events, hangouts, dates, festivals, the wedding) plays through one engine:
+  - her **bust** in the right outfit;
+  - her **face** changing with each line's emote;
+  - the speaker's name;
+  - **choices**;
+  - for some scenes, a backdrop of the place.
+- **The art:**
+  - the pilot is complete: 12 outfit portraits and 15 faces each, for the two Umas with full art;
+  - each face sits over each outfit's portrait;
+  - neutral is the portrait's own face;
+  - a face the art hasn't drawn yet shows its nearest one.
+- **Outfits by context:** the scene's own outfit when the story names one, else the moment's:
+  - work clothes at work;
+  - the season's outfit on an ordinary day;
+  - the garden party dress at the spring festival, a picnic or a tea;
+  - the kimono on festival nights and New Year's;
+  - the dinner dress at dinners;
+  - the wedding dress, then the wedding night outfit;
+  - pajamas at night;
+  - the swimsuit at the summer shore.
+- **Special events** can set any outfit.
+
+## The economy
+
+- **Income:** the bin's sales each night, and the stations' goods sold.
+- **Upkeep:** each building, each Dorm room and each resident costs a little gold each day. The book shows the daily
+  total against an average day's income, so the farm has to grow its work to grow its people.
+  - **Short of upkeep:** a warning first. Then the farm runs at half pace (fewer actions for farmhands) until it's paid.
+    No one leaves, and nothing is lost.
+- **Loans:** borrow from the town (the mayor's office) to build a place or a house ahead of the gold. Repaid a little
+  each day from the night's income. One loan at a time, then two as the Farm Rank grows; a small fee.
+- **Goals:** each loan is a goal: the projects list shows what's owed and when it's clear.
+
+## The calendar
+
+- **Always in reach:** a calendar screen, and the bar's date opens it.
+- **Every day shows:**
+  - its festival;
+  - birthdays;
+  - the occasion scenes the story wrote for it (New Year's, the festival nights, the flower show);
+  - **the faces of the Umas who have an event that day.**
+- **More events:**
+  - the story's holidays and customs (the year's first bell, market days, the valley's minor days) from the world file;
+  - weather days later.
+- **Special days** lift the action budget for events (above).
+
+## The default Uma
+
+Story packs and art will take a long time to land, so every Uma plays fully before hers does:
+
+- **A blank bust and profile:**
+  - **the bust:** a soft silhouette of an Uma (ears, hair, shoulders) in each outfit's colours;
+  - **the face:** a simple face for each of the 22 expressions;
+  - **the profile:** a plain profile card;
+  - all drawn by Claude in code, and replaced the moment her art is published.
+- **A default story, complete:**
+  - talks for every stage, by her temperament;
+  - reactions to gifts;
+  - hangouts and dates;
+  - an event for every step from meeting to married life, the proposal and the wedding night included;
+  - festival and birthday scenes;
+  - married life's events.
+
+  These are written once for the game, warm and short, with her name, her favourite things and her temperament filled
+  in. They're replaced piece by piece as her story pack lands.
+- **This builds on what's there:** today's placeholders become this default, much richer.
+
+## Keep, build on, replace
+
+| System today | In the rework |
+|---|---|
+| The save, sync, the cloud, the story pack and its shipping, the world file | **Kept** |
+| Days as turns, the night's settling, the morning summary | **Kept**, with an action budget added |
+| Crops, prices, the bin, stations' recipes, forest areas, fishing spots | **Kept** as the farm loop's content |
+| The fields' blocks and tending; gathering jobs in days | **Replaced** by tile actions and one-action hauls |
+| The work board (jobs by place) | **Built on:** farmhands' tasks with a daily action budget |
+| Talents and ranks | **Built on:** they start each aptitude, which grows with practice |
+| Building by Farm Rank, the projects list | **Kept**, with loans and upkeep added |
+| The town screen and its spots | **Built on:** a navigable town map, routines from the story |
+| Meeting by triggers; the welcome week | **Changed:** introductions in town; the welcome week is the owner's call |
+| The romance: ladders, events, evenings, perks, the ring, weddings, houses, household | **Kept**, re-staged into the new loop with farmhand, wedding night and moving in |
+| Her chapters | **Kept** |
+| Busts in scenes; the scene, event and pair players | **Replaced** by the dialogue engine |
+| Placeholders | **Built on** into the full default Uma |
+| The portrait app layout | **Replaced** by landscape |
+| The HD-2D portrait preview and its kit | **Retired**, until the new look path |
+
+## The rework, in order
+
+| Step | What | Why this order |
+|---|---|---|
+| **1. Landscape** | The app turns sideways: the bar, the screens, sheets and menus | Everything after is drawn in it |
+| **2. The dialogue engine** | Busts, faces, outfits by context; the pilot's kits; the blank bust | The art is ready, and every scene runs through it |
+| **3. The default Uma** | The full default story and profile | Every Uma plays fully from then on |
+| **4. A day of actions, and the farm loop** | The action budget; fields as tiles with watering; one-action fishing and foraging; shipping | The heart of a day |
+| **5. The town map** | Locations, who's there now, her menu | Where the people are |
+| **6. The Uma loop** | Acquaintance gifts, hangouts, farmhand, the wedding night, moving in | The people's arc |
+| **7. Umas at work** | Farmhands' daily actions, the work board, aptitudes | The shift from fields to people |
+| **8. The economy** | Upkeep and loans | The farm must pay its way |
+| **9. The calendar** | The calendar screen, faces on event days, special days | Seeing the year |
+| **10. The ranch and the mine** | Animals and floors in the farm loop's style | The rest of the farm |
+
+**After step 5, a day can be played end to end.** Each step is built, merged and deployed in turn, with a phone check
+at steps 2, 4, 5 and 7.
+
+## To confirm with the owner
+
+1. **The protagonist.** The story's rule so far is that the farmer is never gendered or drawn, and every line says
+   "you". The rework calls him "him". Is the protagonist a man now? Every line the story writes depends on it.
+2. **The welcome week.** Keep the five who come to the Gate in the first week, or meet everyone by introducing yourself
+   in town?
+3. **Two lines cut short in the notes:** "other things that take actions: going on …" and "After married life …". What
+   was the rest?
+4. **The numbers to start from:**
+   - 10 actions a day for the protagonist, 3 for a farmhand;
+   - a married Uma gives the farm more;
+   - upkeep a little each day per building and resident.
+
+   All are to be tuned by playing.
+5. **The farm map's look:** a clean tile map now, the HD-2D look when it's ready. Agreed?
