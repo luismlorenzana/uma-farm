@@ -111,7 +111,7 @@ export const FARM_PLACES: readonly FarmPlace[] = [
   place('warehouse', 'Warehouse', 'yard', 6, 1, 'warehouse', 'Everything the farm holds, by stars.', START),
   place('dorm', 'Dorm', 'yard', 6, 2, 'dorm', 'Beds for the Umas on the farm.', START),
   place('board', 'Requests board', 'yard', 7, 0, 'card-library', 'The town’s requests.', { by: 'met', umas: 5 }, true),
-  place('gate', 'Gate', 'yard', 7, 1, 'scenario-gate', 'The welcome list visits here, one a morning.', START),
+  place('gate', 'Gate', 'yard', 7, 1, 'scenario-gate', 'The farm’s gate. Everyone you meet lives in town.', START),
   place('dock', 'Dock', 'yard', 7, 2, 'ley-spring', 'A pier on the sea: the Sea Pier’s fish.', build(6, 20000, [planks(80)], true), true),
   place('shop', 'Shop', 'town', 8, 0, 'exchange', 'Seeds for the season.', START),
   place('festival', 'Festival ground', 'town', 8, 1, 'racecourse', 'A festival on each season’s 10th day.', { by: 'later' }),

@@ -1,15 +1,13 @@
-// A run with no story pack at all: days 1 to 60 on placeholders alone. The opening plays the game's three lines, and
-// master data's first waits at the Gate: Say hello meets her; the other four of the first five are met here, as the
-// Gate brings them one a morning. Each
+// A run with no story pack at all: days 1 to 60 on placeholders alone. The opening plays the game's lines, and the first
+// five of master data are met here, as introducing yourself in town meets each (and invited to the farm). Each
 // meets you with the game's two lines and a hello, and every rung after plays the game's own card: friendship, a
 // confession (one "Not yet", then Ask her), romance, the proposal with a ring, the wedding with its vows, married life at
 // night and in its events, and the household's first scene at five married. Nothing waits on the story, and every save
-// along the way parses. A generous player: each day she chats, gives a gift and tops up each bar, then plays whatever is
-// Ready. Invented master data (`placeholders.fixture.ts`); the night runs whole.
+// along the way parses. A generous player with hands to spare: each day she chats, gives a gift and tops up each bar, then
+// plays whatever is Ready (each act's action is given back here: the budget isn't what this run tests). Invented master
+// data (`placeholders.fixture.ts`); the night runs whole.
 import { describe, expect, it } from 'vitest'
 import { runNight, type NightContext } from '../night/end-day'
-import { sayHello } from '../romance/meeting'
-import { gateVisitor } from '../town/town'
 import { joinCast } from '../romance/meeting.fixture'
 import { chatLineV4, chatV4, giftV4 } from '../romance/acts'
 import { birthdaysOf } from '../romance/days'
@@ -30,6 +28,8 @@ import {
 import { MASTER, MASTER_BIRTHDAYS } from './placeholders.fixture'
 import { readScene } from './scenes'
 
+/** The day's actions given back: this run plays the story, not the budget. */
+const hands = (save: SaveV4): SaveV4 => ({ ...save, today: { ...save.today, actions: 0 } })
 const AT = '2026-11-13T09:00:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const STORY = storyOf(null, MASTER)
@@ -50,14 +50,12 @@ function picksFor(steps: readonly Step[], id: string, rung: string): number[] {
 
 describe('a farm with no story pack', () => {
   it('plays days 1 to 60 on placeholders: arrivals, events, a confession, a wedding and the household\'s first scene', async () => {
-    // Day 1: the farmer's name, the Dorm's second level bought (five beds), the opening read: the game's three lines, and
-    // master data's first at the Gate, met by Say hello; the other four are met here, as the Gate brings them.
+    // Day 1: the farmer's name, the Dorm's second level bought (five beds), the opening read (the game's two lines), and
+    // master data's first five met here, as introducing yourself meets each, and invited to the farm.
     let save: SaveV4 = nameFarmer({ ...newSave('u1', AT), buildings: { ...newSave('u1', AT).buildings, dorm: 2 }, dorm: { level: 2, home: [], swaps: [] } }, 'Robin')
-    expect(openingOf(STORY)).toEqual(PLACEHOLDER_OPENING)
+    expect(openingOf(STORY)).toEqual(PLACEHOLDER_OPENING.slice(0, 2))
     save = readScene(save, 'scene:1:open')
-    expect(gateVisitor(save, STORY)).toBe('9100001')
-    save = sayHello(save, STORY, '9100001')
-    expect(Object.keys(save.roster)).toEqual(['9100001'])
+    expect(Object.keys(save.roster)).toEqual([])
     save = joinCast(save, STORY)
     expect(Object.keys(save.roster).sort()).toEqual(FIVE)
     expect(save.dorm.home).toEqual(FIVE)
@@ -86,8 +84,10 @@ describe('a farm with no story pack', () => {
         const love = save.love[id]!
         const line = chatLineV4(save, STORY, id, 'steady')
         expect(defaultTalksOf(STORY, id, talkStageOf(love), 'steady')).toContain(line)
+        save = hands(save)
         if (love.stage !== 'spouse' || love.level < 5) {
           save = chatV4(save, id).save
+          save = hands(save)
           chats++
           save = giftV4({ ...save, items: addGoods(save.items, 'carrot', 1, 1) }, STORY, id, 'carrot', 1).save
         }
@@ -113,7 +113,7 @@ describe('a farm with no story pack', () => {
           ...(state.rung === 'proposal' ? { ring: 'ring-g1' } : {}),
           ...(state.rung === 'wedding' ? { place: weddingPlaces(STORY, id)[0]!, reception: receptionDishes(save)[0] ?? null } : {}),
         }
-        const played = playEvent(save, STORY, id, outcome)
+        const played = playEvent(hands(save), STORY, id, outcome)
         expect(played.card.memory).toBe(PLACEHOLDER_MOMENTS[state.rung])
         save = played.save
         cards.push(played.card)

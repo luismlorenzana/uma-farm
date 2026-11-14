@@ -1,12 +1,12 @@
-// The town as rendered: the Town on the farm map's last row opening `/town`; going in for one of the day's actions; its
-// six spots with their keepers and the day's few; a talk that counts once a day; the People list finding anyone by
-// name, with where she is today; a sister by the pack's name and her own outfit's face; one of the town's people with
-// her role and her tie's line; and a scene's line by the town's smith in her master-data name; a talk that meets her
-// trigger playing her meeting scene, one met who lives in town marked Met, and a gift for one not met. Invented outfits
-// (the album fixture: 90001–90006, named Aster to Fable) and an invented pack with a town.json; master data and the
-// server are stubs.
+// The town map as rendered: the Town on the farm map's last row opening `/town`; going in for one of the day's actions;
+// the map's places in their groups, walking between them free, who's at each now; an Uma with a routine where it says;
+// her menu on the dialogue engine: introducing yourself (her meeting scene plays), a talk and a gift, each an action;
+// one of the town's people at her post with her post's menu and her ties; the People list finding anyone by name, with
+// where she is today; and a scene's line by the town's smith in her master-data name. Invented outfits (the album
+// fixture: 90001–90006, named Aster to Fable) and an invented pack with a town.json; master data and the server are
+// stubs.
 import 'fake-indexeddb/auto'
-import { newRosterUma, newSave, readScene, readStoryPack, storyOf, townDay, type SaveV4, type StoryPack } from '@farm/domain'
+import { addGoods, farmDay, newRosterUma, newSave, readScene, readStoryPack, storyOf, townDay, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -40,20 +40,23 @@ const { loopMenuGroups } = await import('../shell/MenuSheet')
 
 const AT = '2026-11-13T10:00:00.000Z'
 const SISTER = 's81002'
-/** The pack: Aster (90001) favours the café; Fable (90006) is the town's smith and keeps the café, tied to Aster; a
- * sister of Beryl's (her outfit 81002) is in the cast by her own name. The roles town.json leaves go to master data's
- * others, from the last: Ember (90005) the mayor, Dune the shopkeeper, Cinder the farm's last keeper, Beryl the rancher;
- * the rest stay unplayed. So Aster and the sister live in town. The welcome list names no one in the cast, so nobody
- * visits the Gate and both are out. */
+/** The pack: Aster (90001) favours the café and, by her routine, bakes at the bakery on each season's 4th; Fable (90006)
+ * is the town's smith and keeps the café, tied to Aster; a sister of Beryl's (her outfit 81002) is in the cast by her own
+ * name. The roles town.json leaves go to master data's others, from the last: Ember (90005) the mayor, Dune the
+ * shopkeeper, Cinder the farm's last keeper, Beryl the rancher; the rest stay unplayed. So Aster and the sister live in
+ * town, and with so few both are out every day. */
 const FILES = {
-  cast: { umas: [{ characterId: '90001', spot: 'cafe' }, { characterId: SISTER, name: 'Invented Sister' }], welcome: ['90099'] },
+  cast: { umas: [{ characterId: '90001', spot: 'cafe', routine: [{ at: 'bakery', days: [4] }] }, { characterId: SISTER, name: 'Invented Sister' }] },
   ties: { ties: [{ a: '90001', b: '90006', line: 'Invented tie line.' }] },
   umas: { 90001: { townLines: ['An invented hello, {farmer}.'] } }, routes: {},
-  town: { people: [{ characterId: '90006', game: 'ida-stone', does: 'Invented smith.' }], spots: [{ id: 'cafe', name: 'Invented Café', keeper: '90006' }] },
+  town: {
+    people: [{ characterId: '90006', game: 'ida-stone', does: 'Invented smith.' }], spots: [{ id: 'cafe', name: 'Invented Café', keeper: '90006' }],
+    locations: [{ id: 'bakery', name: 'Invented Bakery', line: 'Warm bread.', kind: 'work' }],
+  },
 }
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 /** A farm already in town today (going in takes one of the day's actions). */
-const farm = (day = 4): SaveV4 => {
+const farm = (day = 5): SaveV4 => {
   const base = readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open')
   return { ...base, calendar: { day }, today: { ...base.today, town: true } }
 }
@@ -139,57 +142,104 @@ describe('the town', () => {
     expect($('[data-action="shop"]')).not.toBeNull()
   })
 
-  it('shows the day\'s six spots with their keepers and the few out; a talk counts once a day', async () => {
+  it('shows the map\'s places in their groups; walking between them is free, and each lists who\'s there now', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
     await render(<TownPage />, '/town')
-    await find('[data-town-today]')
-    expect($$('[data-spot]').map((s) => s.dataset.spot)).toEqual(['plaza', 'market', 'cafe', 'harbour', 'library', 'track'])
-    // With so few, everyone who lives in town is out: Aster and the sister.
+    await find('[data-town-map]')
+    expect($$('[data-map-group]').map((g) => g.dataset.mapGroup)).toEqual(['spots', 'shops', 'work'])
+    expect($$('[data-location]').map((l) => l.dataset.location)).toEqual(['plaza', 'market', 'cafe', 'harbour', 'library', 'track', 'store', 'rancher', 'mayor', 'smith', 'bakery'])
+    // You arrive at the Plaza.
+    expect($('[data-location][data-at]')?.dataset.location).toBe('plaza')
+    expect($('[data-place-name]')?.textContent).toBe('The Plaza')
+    // Both who live in town are out, somewhere; the counts add up.
     expect($('[data-out]')?.dataset.out).toBe('2')
-    expect($$('[data-person]').map((p) => p.dataset.person).sort()).toEqual(['90001', SISTER])
-    expect($('[data-spot="cafe"] h2')?.textContent).toBe('Invented Café')
-    expect($('[data-spot="cafe"] [data-keeper]')?.textContent).toBe('Fable · The smith')
-    expect($('[data-spot="plaza"] h2')?.textContent).toBe('The Plaza')
-    expect($('[data-spot="plaza"] [data-keeper]')?.textContent).toBe('Ember · The mayor')
-    expect($('[data-spot="harbour"] [data-keeper]')).toBeNull()
-    const sister = $(`[data-person="${SISTER}"]`)
-    expect(sister?.textContent).toBe('Invented Sister')
-    // Tap her: the sheet, her line, and the talk counted once.
-    const first = $('[data-person]')!
-    const id = first.dataset.person!
-    await click(first)
-    await find(`[data-talk="${id}"]`)
-    expect(path).toBe(`/town?talk=${id}`)
-    await until(() => save().town[id]?.talks === 1)
-    expect(save().town[id]).toEqual({ talks: 1, last: 4 })
-    await until(() => $('[data-talks]')?.textContent === 'Talked 1 day · today ✓')
-    // Again today: the sheet, and nothing counted or saved.
-    const updated = save().account.updatedAt
-    await render(<TownPage />, `/town?talk=${id}`)
-    await find(`[data-talk="${id}"]`)
-    await settle()
-    expect(save().town[id]).toEqual({ talks: 1, last: 4 })
-    expect(save().account.updatedAt).toBe(updated)
+    expect($$('[data-location]').reduce((n, l) => n + Number(l.dataset.hereCount), 0)).toBe(2)
+    const sister = townDay(farm(), fixture.pack!).where.get(SISTER)!
+    await click($(`[data-location="${sister}"]`))
+    expect(path).toBe(`/town?at=${sister}`)
+    expect(save().today.actions).toBe(0)
+    expect($$('[data-place-panel] [data-person]').map((p) => p.dataset.person)).toContain(SISTER)
+    expect($(`[data-person="${SISTER}"]`)?.textContent).toBe('Invented Sister')
+    // The café: Fable keeps it, at her post.
+    await click($('[data-location="cafe"]'))
+    expect($('[data-place-name]')?.textContent).toBe('Invented Café')
+    expect($('[data-keeper]')?.textContent).toBe('Fable · The smith')
+    // The general store: its keeper sells seeds; the mayor's office takes build orders and loans, later.
+    await click($('[data-location="store"]'))
+    expect($('[data-keeper]')?.textContent).toBe('Dune · The shopkeeper')
+    expect($('[data-post-item="seeds"]')?.getAttribute('href')).toBe('/town?at=store&sheet=shop')
+    await click($('[data-location="mayor"]'))
+    expect($('[data-keeper]')?.textContent).toBe('Ember · The mayor')
+    expect($$('[data-post-item]').map((p) => p.dataset.why)).toEqual(['Coming with upkeep and loans', 'Coming with upkeep and loans'])
+    // The plaza's keeper is at her office, so the plaza shows none.
+    await click($('[data-location="plaza"]'))
+    expect($('[data-keeper]')).toBeNull()
   })
 
-  it('says Aster\'s own line, and her tie with the café\'s keeper there', async () => {
-    const day = Array.from({ length: 60 }, (_, i) => i + 1).find((d) => townDay(farm(d), fixture.pack!).where.get('90001') === 'cafe')!
+  it('puts an Uma with a routine where it says', async () => {
+    const day = farmDay({ year: 1, season: 'summer', day: 4 })
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(day) })
-    await render(<TownPage />, '/town?talk=90001')
-    await find('[data-talk="90001"]')
-    expect($('[data-talk-line]')?.textContent).toBe('An invented hello, Robin.')
-    expect($('[data-talk-spot]')?.textContent).toBe('Invented Café')
-    expect($('[data-talk-tie="90006"]')?.textContent).toBe('Fable · Invented tie line.')
+    await render(<TownPage />, '/town?at=bakery')
+    await find('[data-place-panel="bakery"]')
+    expect($('[data-location="bakery"]')?.dataset.hereCount).toBe('1')
+    expect($$('[data-place-panel] [data-person]').map((p) => p.dataset.person)).toEqual(['90001'])
   })
 
-  it('opens a keeper\'s sheet with her role and her ties, never counting a talk', async () => {
+  it('introduce yourself, talk and give a gift, each an action: her meeting scene plays, and the save keeps the days', async () => {
+    const day = 5
+    const at = townDay(farm(day), fixture.pack!).where.get(SISTER)!
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...farm(day), items: addGoods(farm(day).items, 'carrot', 1, 1) } })
+    await render(<TownPage />, `/town?at=${at}`)
+    await click(await find(`[data-person="${SISTER}"]`))
+    expect(path).toBe(`/town?at=${at}&uma=${SISTER}`)
+    await find(`[data-her-menu="${SISTER}"]`)
+    expect($('[data-standing]')?.textContent).toBe('Not met yet')
+    expect($('[data-menu]')?.dataset.menu).toBe('introduce')
+    expect($('[data-item="introduce"]')?.textContent).toBe('Introduce yourself · 1 action')
+    await click($('[data-action="menu-introduce"]'))
+    await until(() => !!save().roster[SISTER])
+    expect(save().today.actions).toBe(1)
+    expect(save().dorm.home).toEqual([])
+    // Her meeting scene plays over the town: the default's, in town.
+    await find(`[data-scene="arrival:${SISTER}"]`)
+    expect($('[data-scene-title]')?.textContent).toBe('Meeting Invented Sister · Town')
+    await click($('[data-action="skip"]'))
+    await click($('[data-option="0"]'))
+    for (let i = 0; i < 10 && !$('[data-arrival-done]'); i++) await click($('[data-beat]'))
+    expect($('[data-lives]')?.textContent).toBe('She lives in town: find her there.')
+    await click($('[data-action="welcome"]'))
+    await until(() => save().arrivals.includes(SISTER))
+    // Met: talk, a gift, her hangout (from Friendship 2), and the invitation to work, coming.
+    await find('[data-menu="talk gift hangout work"]')
+    expect($('[data-standing]')?.textContent).toBe('New friend')
+    expect($('[data-item="work"]')?.dataset.why).toBe('Coming with the farmhands')
+    await click($('[data-action="menu-talk"]'))
+    await until(() => save().today.chats.includes(SISTER))
+    expect(save().today.actions).toBe(2)
+    expect(save().town[SISTER]).toEqual({ talks: 1, last: day, gift: 0 })
+    await until(() => $('[data-paid]')?.textContent === '+15 ♥')
+    expect($('[data-item="talk"]')?.dataset.why).toBe('Talked today ✓')
+    await click($('[data-action="menu-gift"]'))
+    await click(await find('[data-gift="carrot@1"]'))
+    await until(() => save().today.gifts.includes(SISTER))
+    expect(save().today.actions).toBe(3)
+    expect(save().town[SISTER]).toEqual({ talks: 1, last: day, gift: day })
+    await until(() => $('[data-item="gift"]')?.dataset.why === 'Gift given today ✓')
+    // Back to where she is.
+    await click($('[data-action="back"]'))
+    expect($('[data-her-menu]')).toBeNull()
+  })
+
+  it('opens a keeper at her post: her role and her ties, and counts nothing', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
-    await render(<TownPage />, '/town?talk=90006')
-    await find('[data-talk="90006"]')
-    expect($('[data-keeper-role]')?.textContent).toBe('The smithInvented smith. · Invented Café')
+    await render(<TownPage />, '/town?uma=90006')
+    await find('[data-keeper-menu="90006"]')
+    expect($('[data-her-where]')?.textContent).toBe('Invented Café')
+    expect($('[data-keeper-role]')?.textContent).toBe('The smithInvented smith.')
     expect($('[data-keeper-tie="90001"]')?.textContent).toBe('Aster · Invented tie line.')
     await settle()
     expect(save().town).toEqual({})
+    expect(save().today.actions).toBe(0)
   })
 
   it('lists everyone in People, met or not, with where she is today, and finds anyone by name', async () => {
@@ -202,47 +252,27 @@ describe('the town', () => {
     const rows = $$('[data-person-row]')
     expect(rows[0]?.dataset.personRow).toBe('90001')
     expect(rows[0]?.textContent).toBe('AsterOn the farmMet')
-    expect($(`[data-person-row="${SISTER}"]`)?.textContent).toMatch(/^Invented SisterAt the [A-Za-z ]+ today$|^Invented SisterAt Invented Café today$/)
+    expect($(`[data-person-row="${SISTER}"]`)?.textContent).toMatch(/^Invented SisterAt [A-Za-z ’]+ today$/)
     expect($('[data-person-row="90006"]')?.textContent).toBe('FableAt Invented Café, most days · The smith')
-    expect($('[data-person-row="90002"]')?.textContent).toBe('BerylIn town · The rancher')
+    expect($('[data-person-row="90002"]')?.textContent).toBe('BerylAt the Rancher’s, most days · The rancher')
     await type($('[data-search]'), 'invented sis')
     expect($$('[data-person-row]').map((r) => r.dataset.personRow)).toEqual([SISTER])
-    await type($('[data-search]'), 'nobody')
+    // A tap goes to her, where she is.
+    await click($(`[data-person-row="${SISTER}"]`))
+    expect(path).toContain(`uma=${SISTER}`)
+    expect(path).toContain(`at=${townDay(met, fixture.pack!).where.get(SISTER)}`)
+    await render(<TownPage />, '/town?view=people')
+    await type(await find('[data-search]'), 'nobody')
     expect($('[data-none]')?.textContent).toBe('No one by that name.')
   })
 
-  it('a talk on her third day meets her: her meeting scene plays, and she moves in', async () => {
-    const day = Array.from({ length: 60 }, (_, i) => i + 2).find((d) => townDay(farm(d), fixture.pack!).where.has(SISTER))!
-    useGame.setState({ uid: 'u1', status: 'ready', save: { ...farm(day), town: { [SISTER]: { talks: 2, last: day - 1 } } } })
-    await render(<TownPage />, `/town?talk=${SISTER}`)
-    await until(() => !!save().roster[SISTER])
-    expect(save().town[SISTER]).toEqual({ talks: 3, last: day })
-    expect(save().dorm.home).toEqual([SISTER])
-    await find(`[data-scene="arrival:${SISTER}"]`)
-    expect($('[data-scene-title]')?.textContent).toBe('Meeting Invented Sister · Town')
-    expect($('[data-line]')?.textContent).toBe('You introduce yourself, and the time slips by.')
-  })
-
-  it('marks one met who lives in town, and offers a gift to one not met after the talk', async () => {
-    const day = Array.from({ length: 60 }, (_, i) => i + 1).find((d) => {
-      const where = townDay(farm(d), fixture.pack!).where
-      return where.has('90001') && where.has(SISTER)
-    })!
-    // Aster met, living in town (no bed: three others home); her scene already played.
-    const met: SaveV4 = { ...farm(day), roster: { 90001: newRosterUma(1) }, arrivals: ['90001'], love: { 90001: { stage: 'friendship', level: 0, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [] } } }
+  it('says one who lives on the farm is there, with her profile', async () => {
+    const love = { stage: 'friendship' as const, level: 0, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [] }
+    const met = { ...farm(), roster: { 90001: newRosterUma(1) }, dorm: { level: 1, home: ['90001'], swaps: [] }, love: { 90001: love } }
     useGame.setState({ uid: 'u1', status: 'ready', save: met })
-    await render(<TownPage />, '/town?talk=90001')
-    await find('[data-talk="90001"]')
-    expect($('[data-talk="90001"]')?.dataset.met).toBe('true')
-    expect($('[data-met-line]')?.textContent).toBe('MetHer profile ›')
-    expect($('[data-action="town-gift"]')).toBeNull()
-    await render(<TownPage />, '/town?view=people')
-    await find('[data-people]')
-    expect($('[data-person-row="90001"]')?.dataset.where).not.toBe('farm')
-    expect($('[data-person-row="90001"] [data-met]')).not.toBeNull()
-    // The sister, not met: after the talk, Give a gift.
-    await render(<TownPage />, `/town?talk=${SISTER}`)
-    await find('[data-action="town-gift"]')
+    await render(<TownPage />, '/town?uma=90001')
+    await find('[data-on-farm]')
+    expect($('[data-on-farm]')?.textContent).toBe('She lives on the farm. Her profile ›')
   })
 
   it('sorts by name, and searches without minding case or accents', () => {

@@ -1,8 +1,7 @@
 // Which scene plays now: nothing while the farmer is unnamed (the name sheet covers everything); then the opening's
 // lines; then the ring bench's scene, `scene:bench`, once the bench stands (`buildings.forge` set, the night after the
 // first Romance 8) and the morning summary is put away; then each meeting scene, `arrival:<id>`, in the order you met
-// them, once the summary is put away: right after a talk that met her (in town, or Say hello at the Gate), or the morning
-// after the night met her. The opening and the bench's scene go in `diary.read`, a meeting scene in `arrivals`. Light on
+// them, once the summary is put away: right after you introduce yourself in town. The opening and the bench's scene go in `diary.read`, a meeting scene in `arrivals`. Light on
 // purpose: the shell reads it, and the scenes' lines and the player load on demand; the opening's lines are the pack's
 // (`openingOf`), the bench scene's `story/bench.ts`'.
 import type { FarmSave } from '../save/v4'
@@ -42,7 +41,7 @@ export function sceneDue(save: DueSave, order: readonly string[] = []): SceneId 
 }
 
 /** The save with the opening (or the bench scene) read, played through or skipped. Never stamps: the app's action
- * does. Day 1's visitor waits at the Gate (`gateVisitor`). */
+ * does. Nobody waits at the Gate: everyone is met in town. */
 export function readScene<S extends FarmSave>(save: S, id: OpeningSceneId | typeof BENCH_SCENE): S {
   return save.diary.read.includes(id) ? save : { ...save, diary: { ...save.diary, read: [...save.diary.read, id] } }
 }

@@ -33,7 +33,7 @@ const lines = (steps: readonly Step[]): string[] => steps.flatMap((s) => ('say' 
   : 'choice' in s ? s.choice.flatMap((o) => [o.text, ...lines(o.then ?? [])]) : 'when' in s ? [...lines(s.then), ...lines(s.else ?? [])] : []))
 const says = (steps: readonly Step[]): Extract<Step, { say: string }>[] => steps.flatMap((s) => ('say' in s ? [s]
   : 'choice' in s ? s.choice.flatMap((o) => says(o.then ?? [])) : []))
-/** Every default scene, by id: the route's rungs (the Gate's meeting), the town's meeting, her life's, her occasions and
+/** Every default scene, by id: the route's rungs (the town's meeting as `arrival`), the town's meeting, her life's, her occasions and
  * the evenings'. */
 const SCENES: [string, DefaultScene][] = [...Object.entries(DEFAULT_EVENTS), ['arrival (in town)', DEFAULT_TOWN_MEETING], ...Object.entries(DEFAULT_EVENINGS)]
 

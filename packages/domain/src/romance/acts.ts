@@ -2,13 +2,14 @@
 // her line at night and a festival together. Each pays through `addLove`, so the day's factors apply once (a gift ×3 on
 // her birthday, every act ×2 on her anniversary) and each says what it paid, for the "+N" that floats from her face.
 //
-//   Chat      +15                                   once a day each, on the farm or in town
-//   Gift      loved 60 · liked 30 · neutral 10 · disliked 0, × (1 + 0.1 a star above ★1)   one a day each
+//   Chat      +15                                   one action, once a day each, on the farm or in town
+//   Gift      loved 60 · liked 30 · neutral 10 · disliked 0, × (1 + 0.1 a star above ★1)   one action, one a day each
 //   Praise    +20                                   once a day, when she's earned it (`praise.ts`)
 //   Her line  +10                                   night step 6, a day at one of her line's places
 //   Festival  +50                                   once a festival a year, on its team or entry (festivals call it)
 //
 // Loaded with the romance's screens and the night.
+import { spend } from '../farm/actions'
 import { draw } from '../farm/draw'
 import type { Taste } from './chats'
 import type { FestivalId } from '../farm/calendar'
@@ -38,11 +39,21 @@ function loveOf(save: SaveV4, id: string): Love {
 
 // --- Chats ------------------------------------------------------------------------------------------
 
-/** A chat (tap her): +15, once a day each, on the farm or in town. */
+/** The save with today marked in her town record: a talk (one more day talked) or a gift. */
+function markDay(save: SaveV4, id: string, what: 'talk' | 'gift'): SaveV4 {
+  const day = save.calendar.day
+  const was = save.town[id] ?? { talks: 0, last: 0, gift: 0 }
+  const now = what === 'talk' ? { ...was, talks: was.talks + (was.last === day ? 0 : 1), last: day } : { ...was, gift: day }
+  return { ...save, town: { ...save.town, [id]: now } }
+}
+
+/** A talk (tap her, or Talk on her menu in town): one action and +15, once a day each, on the farm or in town. Her
+ * town record counts the day talked. */
 export function chatV4(save: SaveV4, id: string): LovePaid {
   loveOf(save, id)
   if (save.today.chats.includes(id)) throw new SaveRuleError('busy', 'You’ve talked today.')
-  return addLove({ ...save, today: { ...save.today, chats: [...save.today.chats, id] } }, id, LOVE_POINTS.chat, 'chat')
+  const spent = markDay(spend(save, 'talk'), id, 'talk')
+  return addLove({ ...spent, today: { ...spent.today, chats: [...spent.today.chats, id] } }, id, LOVE_POINTS.chat, 'chat')
 }
 
 /** Her authored chat sets (its format). */
@@ -106,8 +117,8 @@ export function giftPreview(save: Pick<SaveV4, 'calendar' | 'love'>, pack: Pick<
   return giftPoints(save, id, tasteOf(pack, id, good), stars, isBirthday(birthdays, id, save.calendar.day))
 }
 
-/** A gift: one good from the Warehouse at the stars you choose, once a day each, on the farm or in town. Seeds aren't
- * gifts. Her taste (`tasteOf`) sets the points; the good's taste is learnt. Disliked pays 0, never a loss. */
+/** A gift: one action, and one good from the Warehouse at the stars you choose, once a day each, on the farm or in town.
+ * Her town record keeps the day. Seeds aren't gifts. Her taste (`tasteOf`) sets the points; the good's taste is learnt. Disliked pays 0, never a loss. */
 export function giftV4(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string, item: string, stars: number, birthdays: Birthdays = NO_BIRTHDAYS): LovePaid & { taste: Taste } {
   const love = loveOf(save, id)
   if (save.today.gifts.includes(id)) throw new SaveRuleError('busy', 'One gift a day.')
@@ -115,7 +126,8 @@ export function giftV4(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string
   const items = takeGoods(save.items, item, stars, 1)
   const taste = tasteOf(pack, id, item)
   const learnt: Love = love.known.includes(item) ? love : { ...love, known: [...love.known, item] }
-  const given: SaveV4 = { ...save, items, today: { ...save.today, gifts: [...save.today.gifts, id] }, love: { ...save.love, [id]: learnt } }
+  const spent = markDay(spend(save, 'gift'), id, 'gift')
+  const given: SaveV4 = { ...spent, items, today: { ...spent.today, gifts: [...spent.today.gifts, id] }, love: { ...spent.love, [id]: learnt } }
   return { ...addLove(given, id, GIFT_POINTS_V4[taste] * giftStars(stars), 'gift', isBirthday(birthdays, id, save.calendar.day)), taste }
 }
 

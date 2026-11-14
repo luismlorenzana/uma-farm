@@ -95,7 +95,6 @@ table. Its steps, in order:
 
 | Step | What | Packet |
 |---|---|---|
-| 5 | **The town map:** locations, who's there now, introductions, her menu | [F78](handoff/tasks/F78-town-map.md) |
 | 6 | **The Uma loop:** acquaintance, friend, farmhand, sweetheart, the wedding night, moving in, married life with meals and the night's companion | [F79](handoff/tasks/F79-uma-loop.md) |
 | 7 | **Farmhands:** her part-time job, then her farm actions; the work board; aptitudes that grow with practice | [F80](handoff/tasks/F80-farmhands.md) |
 | 8 | **Upkeep and loans** | [F81](handoff/tasks/F81-economy.md) |
@@ -109,7 +108,9 @@ for every Uma without hers, replaced piece by piece ([what plays without the
 story](game-mechanics.md#what-plays-without-the-story)). Step 9, the calendar, is built: the year on one screen with
 the faces of the Umas who have an event each day, special days' event actions spent on her events, and the occasion
 scenes on their days ([the calendar](game-mechanics.md#the-calendar-screen)).
-After step 5 a day can be played end to end. Phone checks follow steps 1, 2, 4, 5 and 7.
+Step 5, the town map, is done: a map you walk around in landscape, who's at each place now (the story's home, job and
+routine, else the day's draw), and her menu at the design's costs, meeting her by introducing yourself, with no welcome
+week ([the town](game-mechanics.md#the-town)). A day can now be played end to end. Phone checks follow steps 1, 2, 4, 5 and 7.
 
 **What it changes below:**
 - Phase 1's HD-2D track pauses: the portrait preview is retired, and the farm map becomes a landscape tile map until

@@ -7,7 +7,7 @@
 //
 //   talks           six stages (acquaintance, friend, farmhand, sweetheart, engaged, married), five temperaments each
 //   gift reactions  loved, liked, neutral, disliked (`{gift}` the good given)
-//   her events      meeting her (at the Gate, or in town), Friendship 1–10, the confession, Romance 1–10, the proposal,
+//   her events      meeting her (in town), Friendship 1–10, the confession, Romance 1–10, the proposal,
 //                   the wedding, the wedding night, moving in, married life 1–5
 //   occasions       her birthday, the five festivals and the Fishing Derby's night, New Year's
 //   evenings        a scene for each hangout and date kind, Dinner in town and A night in
@@ -272,15 +272,6 @@ export const DEFAULT_GIFT_REACTIONS: Readonly<Record<Taste, readonly string[]>> 
 
 // --- Her events ---------------------------------------------------------------------------------------------------------
 
-/** Meeting her at the Gate (the welcome list's): her moment, her lines and your hello. */
-const GATE_MEETING = scene('Someone new is waiting at the Gate.', [
-  say('Hi! Is this the farm? I heard someone took the old place on.', 'happy'),
-  say('I had to come and see for myself. It’s lovely. A little wild, but lovely.', 'surprised'),
-  say('I’m good at {work}, if you ever need a hand.', 'determined'),
-  choose('friendship', ['Welcome! We’re glad you came.', say('Then I’ll be around. A lot, probably.', 'laughing')],
-    ['Hello! Come on in.', say('Don’t mind if I do.', 'happy')]),
-], { place: 'gate' })
-
 /** Meeting her in town: you introduce yourself. */
 export const DEFAULT_TOWN_MEETING: DefaultScene = scene('You introduce yourself, and the time slips by.', [
   say('Oh! You’re the one who took on the farm up the road.', 'surprised'),
@@ -290,10 +281,10 @@ export const DEFAULT_TOWN_MEETING: DefaultScene = scene('You introduce yourself,
     ['Only if you tell me about you.', say('Deal. But you go first.', 'teasing')]),
 ], { place: 'town' })
 
-/** Her events by id: the route's rungs (her meeting at the Gate as `arrival`), then the wedding night, moving in and married
+/** Her events by id: the route's rungs (her meeting in town as `arrival`), then the wedding night, moving in and married
  * life 2 and 4 (the rungs are S1, S3 and S5), then her occasions. */
 export const DEFAULT_EVENTS: Readonly<Record<string, DefaultScene>> = {
-  arrival: GATE_MEETING,
+  arrival: DEFAULT_TOWN_MEETING,
   f1: scene('A quiet afternoon with her.', [
     say('It’s so quiet out here. I didn’t know I needed quiet.', 'thinking'),
     say('In town everything moves so fast. Here I can hear myself think.', 'tender'),

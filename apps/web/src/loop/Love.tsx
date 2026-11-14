@@ -1,11 +1,11 @@
-// Her acts on her profile (on the Hearts tab): Chat +15 (then her
-// line for the day), Gift (the picker with each good's points for her today, or "?") and Praise +20 while earned, 48 pt in
+// Her acts on her profile (on the Hearts tab): Chat (one action, +15; then her
+// line for the day), Gift (one action: the picker with each good's points for her today, or "?") and Praise +20 while earned, 48 pt in
 // the profile's thumb zone. What an act paid goes up to the profile (`onPaid`), which floats it from her face; a note
 // says it, a gift in her words by her taste (the default story's: "‹name› smiles. “Peach? That’s lovely.” +36"). **Evening ›** is there too (her evening at `?evening=<id>`, or why not:
 // "Evening ✓", "Evening · F2", "In town", "Evening spent"), so Chat, Gift and Evening sit side by side and
 // Praise +20 takes the row under them. Loaded on demand with the Hearts tab.
 import {
-  birthdaysOf, canPraise, chatLineV4, FAMILY_NAMES, festivalsOf, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, LOVE_POINTS, type SaveV4, type StoryPack,
+  actionsLeft, birthdaysOf, canPraise, chatLineV4, FAMILY_NAMES, festivalsOf, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, LOVE_POINTS, type SaveV4, type StoryPack,
   type Temperament,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -42,6 +42,8 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
   const talked = save.today.chats.includes(id)
   const gave = save.today.gifts.includes(id)
   const praise = canPraise(save, id)
+  // A talk and a gift each take an action.
+  const out = actionsLeft(save) === 0
   const evening = eveningButton(save, id, festivalsOf(pack))
   const line = talked ? fill(chatLineV4(save, pack, id, temperament ?? 'steady'), name, save.farmer.name) : null
   const paid = (points: number, words: string) => {
@@ -55,10 +57,11 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
       {line && <p className="rounded-md bg-sunken/70 px-3 py-2 text-[14px] italic" data-chat-line>{line}</p>}
       {(note || error) && <p role="status" className={`text-[13px] font-semibold ${error ? 'text-danger' : 'text-success'}`} data-love-note>{error ?? note}</p>}
       <div className="grid grid-cols-3 gap-2">
-        <Button variant="secondary" size="md" className="px-2!" disabled={talked} data-action="chat" onClick={() => void chatHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥`), fail)}>
-          {talked ? 'Chat ✓' : `Chat +${LOVE_POINTS.chat}`}
+        <Button variant="secondary" size="md" className="px-2!" disabled={talked || out} data-action="chat" aria-label={talked ? 'Chat done today' : `Chat, +${LOVE_POINTS.chat}, 1 action`}
+          onClick={() => void chatHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥`), fail)}>
+          {talked ? 'Chat ✓' : 'Chat · 1'}
         </Button>
-        <Button variant="secondary" size="md" className="px-2!" disabled={gave} onClick={() => setGiving(true)} data-action="gift">{gave ? 'Gift ✓' : 'Gift'}</Button>
+        <Button variant="secondary" size="md" className="px-2!" disabled={gave || out} onClick={() => setGiving(true)} data-action="gift">{gave ? 'Gift ✓' : 'Gift · 1'}</Button>
         {evening.open ? (
           <Link to={withParam(location, 'evening', id)} state={{ back: true }} data-action="evening"
             className="font-display inline-flex min-h-12 items-center justify-center gap-1 rounded-sm bg-[#c2385e] px-2 text-[15px] font-semibold tracking-tight text-white shadow-1">

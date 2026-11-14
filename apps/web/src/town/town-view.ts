@@ -1,39 +1,52 @@
-// The town's screen as data: the day's spots with their keepers and their few, the People list's rows (everyone who
-// lives in town and the town's people, met or not, with where she is today), its search and its two sorts, and the talk
-// sheet's words. Names come through `nameOf` (master data's and the pack's, at run time). Loaded with the town's screen.
+// The town map as data: its locations in their groups (the six spots, the shops and offices, the story's homes and
+// workplaces), who's at each now and who keeps it, the People list's rows (everyone who lives in town and the town's
+// people, met or not, with where she is today), its search and its two sorts, a keeper's post and its menu, and her ties.
+// Names come through `nameOf` (master data's and the pack's, at run time). Loaded with the town's screen.
 import {
-  atHome, CAST, gateVisitor, talkedToday, tieLineOf, townDay, townLineOf, townOf, townsfolk, townTalksOf, withFarmer, type SaveV4, type SpotId, type StoryPack, type TownDay,
-  type TownPersonPlayed, type TownSpotPlayed,
+  atHome, CAST, herJobOf, talkedToday, tieLineOf, townLocations, townOf, townsfolk, townTalksOf, type HereBy, type SaveV4, type ShopId, type StoryPack, type TownDay,
+  type TownLocationPlayed, type TownPersonPlayed,
 } from '@farm/domain'
 
 type NameOf = (id: string) => string
 
-/** One spot today: its name and line, its keeper, and who's out there. */
-export interface SpotView {
-  spot: TownSpotPlayed
+/** One location now: where it is, who's there, and who keeps it. */
+export interface LocationView {
+  loc: TownLocationPlayed
+  here: readonly string[]
   keeper: TownPersonPlayed | null
-  out: readonly string[]
 }
 
-/** The day's six spots, in the town's order. */
-export function spotViews(day: TownDay, pack: StoryPack): SpotView[] {
+/** Every location of the map, in its order, with who's there now. */
+export function locationViews(day: TownDay, pack: StoryPack): LocationView[] {
   const town = townOf(pack)
-  return town.spots.map((spot) => ({ spot, keeper: spot.keeper ? town.byId.get(spot.keeper) ?? null : null, out: day.spots.get(spot.id) ?? [] }))
+  return townLocations(pack).map((loc) => ({ loc, here: day.at.get(loc.id) ?? [], keeper: loc.keeper ? town.byId.get(loc.keeper) ?? null : null }))
 }
+
+/** The map's groups, each a heading and its locations: the town's spots, its shops and offices, then the story's homes,
+ * workplaces and spots (a group shows only when it holds any). */
+export interface MapGroup { key: 'spots' | 'shops' | 'homes' | 'work' | 'places'; title: string; places: LocationView[] }
+export function mapGroups(views: readonly LocationView[]): MapGroup[] {
+  const of = (keys: readonly string[]) => views.filter((v) => keys.includes(v.loc.group))
+  return ([
+    { key: 'spots', title: 'Around town', places: views.filter((v) => v.loc.group === 'spot' && isGameSpot(v.loc.id)) },
+    { key: 'shops', title: 'Shops and offices', places: of(['shop']) },
+    { key: 'work', title: 'Workplaces', places: of(['work']) },
+    { key: 'homes', title: 'Homes', places: of(['home']) },
+    { key: 'places', title: 'Elsewhere', places: views.filter((v) => v.loc.group === 'spot' && !isGameSpot(v.loc.id)) },
+  ] satisfies MapGroup[]).filter((g) => g.places.length > 0)
+}
+const GAME_SPOTS = new Set(['plaza', 'market', 'cafe', 'harbour', 'library', 'track'])
+const isGameSpot = (id: string): boolean => GAME_SPOTS.has(id)
 
 /** "the Café" from "The Café"; a name without an article as it is. */
 const inSentence = (name: string): string => name.replace(/^The /, 'the ')
 
-/** Where she is today, in the People list's words. */
-export function whereWords(where: { kind: 'spot'; name: string } | { kind: 'keeps'; name: string } | { kind: 'farm' } | { kind: 'home' } | { kind: 'town' } | { kind: 'gate' }): string {
-  switch (where.kind) {
-    case 'gate': return 'At the Gate today'
-    case 'spot': return `At ${inSentence(where.name)} today`
-    case 'keeps': return `At ${inSentence(where.name)}, most days`
-    case 'farm': return 'On the farm'
-    case 'home': return 'At home'
-    case 'town': return 'In town'
-  }
+/** Why she's where she is, in a few words under her name: at work (her job's words when the story gives them), at home,
+ * or nothing (her routine's stop, or the draw: she's simply there). */
+export function hereWords(pack: StoryPack, id: string, by: HereBy | undefined): string | null {
+  if (by === 'job') return herJobOf(pack, id)?.what ?? 'At work'
+  if (by === 'home') return 'At home'
+  return null
 }
 
 /** One row of the People list. */
@@ -42,13 +55,13 @@ export interface PersonRow {
   name: string
   /** Where she is today, in words. */
   where: string
-  /** Her spot today, when she's out (or the spot she keeps). */
-  spot: SpotId | null
-  /** You've met her: she's on the farm, or lives in town as a friend. */
+  /** Her location today, when she's out (or the location she keeps). */
+  at: string | null
+  /** You've met her: she's on the farm, or lives in town. */
   met: boolean
   /** She lives on the farm. */
   farm: boolean
-  /** Days you've talked with her in town. */
+  /** Days you've talked with her. */
   talks: number
   /** Whether you talked with her today. */
   today: boolean
@@ -59,23 +72,21 @@ export interface PersonRow {
 /** Everyone in the People list: everyone who lives in town (the Umas on the farm among them), then the town's people. */
 export function peopleRows(save: SaveV4, pack: StoryPack, day: TownDay, nameOf: NameOf): PersonRow[] {
   const town = townOf(pack)
-  const spotName = new Map(town.spots.map((s) => [s.id, s.name]))
-  const kept = new Map(town.spots.flatMap((s): [string, TownSpotPlayed][] => (s.keeper ? [[s.keeper, s]] : [])))
-  const visitor = gateVisitor(save, pack)
+  const locations = townLocations(pack)
+  const named = new Map(locations.map((l) => [l.id, l.name]))
+  const post = new Map(locations.flatMap((l): [string, string][] => (l.keeper ? [[l.keeper, l.id]] : [])))
   const folk = townsfolk(pack).map((id): PersonRow => {
-    const spot = day.where.get(id) ?? null
+    const at = day.where.get(id) ?? null
     const met = !!save.roster[id]
     const farm = met && atHome(save, id)
-    return {
-      id, name: nameOf(id), spot, met, farm, talks: townTalksOf(save, id)?.talks ?? 0, today: talkedToday(save, id), role: null,
-      where: whereWords(farm ? { kind: 'farm' } : spot ? { kind: 'spot', name: spotName.get(spot)! } : id === visitor ? { kind: 'gate' } : { kind: 'home' }),
-    }
+    const where = farm ? 'On the farm' : at ? `At ${inSentence(named.get(at)!)}${day.by.get(id) === 'job' ? ', at work' : ''} today` : 'At home'
+    return { id, name: nameOf(id), at, met, farm, talks: townTalksOf(save, id)?.talks ?? 0, today: talkedToday(save, id), role: null, where }
   })
   const people = town.people.map((p): PersonRow => {
-    const keeps = kept.get(p.characterId)
+    const at = post.get(p.characterId) ?? null
     return {
-      id: p.characterId, name: nameOf(p.characterId), spot: keeps?.id ?? null, met: false, farm: false, talks: 0, today: false, role: p.role ? CAST[p.role].role : p.does,
-      where: whereWords(keeps ? { kind: 'keeps', name: keeps.name } : { kind: 'town' }),
+      id: p.characterId, name: nameOf(p.characterId), at, met: false, farm: false, talks: 0, today: false, role: p.role ? CAST[p.role].role : p.does,
+      where: at ? `At ${inSentence(named.get(at)!)}, most days` : 'In town',
     }
   })
   return [...folk, ...people]
@@ -99,20 +110,18 @@ export function sortPeople(rows: readonly PersonRow[], by: PeopleSort): PersonRo
   return [...rows].sort((a, b) => Number(b.met) - Number(a.met) || b.talks - a.talks || Number(!!a.role) - Number(!!b.role) || byName(a, b))
 }
 
-/** The talk sheet's words for her today: her line (`{farmer}` filled), her talks after this one, and her tie's line
- * with the spot's keeper when she has one (where it fits: they're both there). */
-export interface TalkWords {
-  line: string
-  talks: string
-  tie: { with: string; line: string } | null
-}
-export function talkWords(save: SaveV4, pack: StoryPack, id: string, keeper: string | null): TalkWords {
-  const talks = townTalksOf(save, id)?.talks ?? 0
-  const tie = keeper ? tieLineOf(pack, id, keeper) : null
-  return {
-    line: withFarmer(townLineOf(save, pack, id), save.farmer.name),
-    talks: talks === 0 ? 'Your first talk' : `Talked ${talks} ${talks === 1 ? 'day' : 'days'}${talkedToday(save, id) ? ' · today ✓' : ''}`,
-    tie: tie && keeper ? { with: keeper, line: tie } : null,
+/** A post's menu: what its keeper offers. The general store sells seeds (the shop); the mayor's office takes build
+ * orders and loans, and the rancher sells animals, both coming later. */
+export interface PostItem { key: string; label: string; to: string | null; why: string | null }
+export function postMenu(shop: ShopId): PostItem[] {
+  switch (shop) {
+    case 'store': return [{ key: 'seeds', label: 'Buy seeds', to: 'shop', why: null }]
+    case 'mayor': return [
+      { key: 'build', label: 'Order a build', to: null, why: 'Coming with upkeep and loans' },
+      { key: 'loan', label: 'Borrow or repay', to: null, why: 'Coming with upkeep and loans' },
+    ]
+    case 'rancher': return [{ key: 'animal', label: 'Buy an animal', to: null, why: 'Coming with the ranch' }]
+    case 'smith': return []
   }
 }
 
@@ -123,6 +132,3 @@ export function keeperTies(pack: StoryPack, id: string): { with: string; line: s
     return { with: other, line: tieLineOf(pack, id, other) ?? '' }
   })
 }
-
-/** The day's town, read once a save and a pack. */
-export const townToday = (save: SaveV4, pack: StoryPack): TownDay => townDay(save, pack)

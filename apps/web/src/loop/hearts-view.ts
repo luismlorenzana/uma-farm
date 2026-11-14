@@ -150,8 +150,7 @@ export interface HeartRow {
 export function rowNote(state: Readiness, now: Pick<Bar, 'points' | 'cost'>, home: boolean, place: string | null, nameOf: NameOf, year?: readonly Festival[]): string | null {
   if (state.ready) return `Ready · ${rungName(state.rung!)}${place ? ` · ${place}` : ''}`
   const kind = state.waits!.kind
-  if (kind === 'away' || (!home && kind === 'bar')) return 'Invite her to the farm to play her events'
-  if (kind === 'bar') return null
+  if (kind === 'bar') return home ? null : 'Lives in town: find her there'
   return readyWords(state, now, nameOf, year)
 }
 

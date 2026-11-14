@@ -1,24 +1,25 @@
 // When her next event is Ready: written with the ladders, since the
-// Ready chips, sort and filter read it before the events play. All five:
+// Ready chips, sort and filter read it before the events play. All four:
 //
 //   1 her bar is full for the rung, or for a waiting rung it's the day after the rung before (the proposal: and a ring)
-//   2 she's home (in town shows "Invite her to the farm")
-//   3 she hasn't played an event today
-//   4 its one setup is met, if it has one: she works a named place today (met every day until the farmhands come), a
+//   2 she hasn't played an event today
+//   3 its one setup is met, if it has one: she works a named place today (met every day until the farmhands come), a
 //     named good is in the Warehouse, her bond with a named Uma has reached a level
-//   5 her chapter is open: when her next event is her chapter's first, the chapter's gate holds, if it has one
+//   4 her chapter is open: when her next event is her chapter's first, the chapter's gate holds, if it has one
+//
+// Where she lives doesn't matter: her event plays from her menu in town or from her profile, an action each.
 //
 // A setup is never an hour, the weather, a season or a festival, and nothing waits on the story: an event the pack
 // doesn't script plays the default story's (`placeholders.ts`). Her chapter may ask the farm for something first
 // (`chapters.ts`): its gate holds back its first event, and may be a season or a festival. What isn't met is said:
 // `waits` names the first thing in the way, in this order: the route done; S2 and S4, which come at night; a "Not yet"
-// at her confession; her chapter's gate; a working setup at a place not built yet; the bar or the day; the ring; in town
-// (`away`); today; the setup. Read live: Ready changes by day, so the morning never stores it.
+// at her confession; her chapter's gate; a working setup at a place not built yet; the bar or the day; the ring; today;
+// the setup. Read live: Ready changes by day, so the morning never stores it.
 import { bondHearts } from '../farm/bonds'
 import { RING_IDS } from '../goods/ids'
 import type { Activity } from '../farm/ranks'
 import { SaveRuleError } from '../save/rules'
-import { atHome, pairKey } from '../save/v4'
+import { pairKey } from '../save/v4'
 import type { SaveV4 } from '../save/v4'
 import { goodCount } from '../save/warehouse'
 import type { StoryTrigger, Trigger } from '../story/authored'
@@ -41,8 +42,6 @@ export type Wait =
   | { kind: 'day' }
   /** The proposal: a ring in the Warehouse. */
   | { kind: 'ring' }
-  /** She lives in town (met, no bed of hers): "Invite her to the farm". */
-  | { kind: 'away' }
   /** She played one of her events today. */
   | { kind: 'today' }
   /** Its setup, not met today. */
@@ -58,10 +57,9 @@ export type Wait =
   /** Her route is complete. */
   | { kind: 'done' }
 
-/** The five conditions, as the manual lists them. */
+/** The four conditions, as the manual lists them. */
 export const READY_CONDITIONS: readonly { condition: string; unmet: string }[] = [
   { condition: 'Her bar is full for the rung; a waiting rung (the confession, the proposal, the wedding) is Ready the day after the rung before, and the proposal needs a ring in the Warehouse', unmet: '`bar`, `day`, `ring`' },
-  { condition: 'She’s home (on the Dorm’s list, or a spouse in her house)', unmet: '`away`: “Invite her to the farm”' },
   { condition: 'She hasn’t played one of her events today', unmet: '`today`' },
   { condition: 'Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level', unmet: '`setup`; `opens` for the ranch, mining, cooking, expeditions, serving or forging before their place is built (the Coop, the Mine, the Kitchen, the expedition post, the Restaurant, the Forge)' },
   { condition: 'Her chapter is open: when her next event is the first of her chapter, the chapter’s gate holds, if it has one (a place built, a Farm Rank, a good shipped, another’s event, a season or a festival)', unmet: '`gate`: “Opens when the Kitchen is built”' },
@@ -76,7 +74,6 @@ export const WAIT_ORDER: readonly { kind: Wait['kind']; when: string }[] = [
   { kind: 'bar', when: 'Her bar isn’t full for the rung' },
   { kind: 'day', when: 'A waiting rung, on the day the rung before played' },
   { kind: 'ring', when: 'The proposal, with no ring in the Warehouse' },
-  { kind: 'away', when: 'She lives in town' },
   { kind: 'today', when: 'She played one of her events today' },
   { kind: 'setup', when: 'Its day setup isn’t met today' },
 ]
@@ -110,11 +107,10 @@ function opensWith(save: SaveV4, trigger: Trigger): FarmPlaceId | null {
   return place !== null && !placeBuilt(save, place) ? place : null
 }
 
-/** Her next event's state. Home is `dorm.home`, or a spouse in her house (`atHome`). Refused for
- * someone not on the farm. */
+/** Her next event's state, wherever she lives. Refused for someone you haven't met. */
 export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'cast'> & Partial<Pick<StoryPack, 'world'>>, id: string): Readiness {
   const love = save.love[id]
-  if (!love || !save.roster[id]) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
+  if (!love || !save.roster[id]) throw new SaveRuleError('not-owned', 'You haven’t met her yet.')
   const now = bar(love)
   const rung = now.rung
   const wait = (w: Wait): Readiness => ({ rung, ready: false, waits: w })
@@ -129,7 +125,6 @@ export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'cast'>
   const day = save.calendar.day
   if (WAITING_RUNGS.includes(rung) ? day <= love.last : !now.full) return wait({ kind: WAITING_RUNGS.includes(rung) ? 'day' : 'bar' })
   if (rung === 'proposal' && !RING_IDS.some((ring) => goodCount(save.items, ring) > 0)) return wait({ kind: 'ring' })
-  if (!atHome(save, id)) return wait({ kind: 'away' })
   if (save.today.events.includes(id) || love.last === day) return wait({ kind: 'today' })
   if ((trigger.kind === 'working' || trigger.kind === 'item' || trigger.kind === 'bond') && !setupMet(save, id, trigger)) return wait({ kind: 'setup', setup: trigger })
   return { rung, ready: true, waits: null }

@@ -3,7 +3,7 @@
 // the right and bottom ones (the notch's side and the home indicator). End the day (`?sheet=end`) and calendar (`?sheet=calendar`); the bin
 // (`?sheet=bin`) and shop (`?sheet=shop`); the Farm Rank (`?sheet=rank`). Each is loaded when one opens. While the
 // farmer is unnamed, the name sheet covers everything, the game's first screen; then a scene due plays over everything
-// (the opening, the ring bench's, then the meeting scenes: right after a talk met her, in town or at the Gate). Over any
+// (the opening, the ring bench's, then the meeting scenes: right after you introduce yourself in town). Over any
 // page,
 // once no scene is due: `?read=<a>-<b>:<levels>` plays a pair's conversations; the event player at `?event=`, `?ask=` or
 // `?memory=`, and her Memories' album at `?album=`; the evening at `?evening=` (Tonight's picker, or her kinds sheet, the

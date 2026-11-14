@@ -5,7 +5,7 @@
 // `opening.json`, else the game's three (`openingOf`), one to a tap, `{farmer}` filled, in the day's season. Its title
 // line names where you are when the world names it ("Day 1 · ‹farm›, ‹town›", `openingTitle`), until a `place` step
 // names a place. Played through or skipped from its first line, it's read once (`diary.read`), and the farm opens on
-// Home, day 1's visitor waiting at the Gate: three taps for the game's own.
+// Home: two taps for the game's own.
 // It loads master data itself, for the Umas' names and busts; Skip works without it.
 //
 // It also plays the scene of **meeting her** (her arrival scene) from the story pack, the format's steps: `say` (her
@@ -13,12 +13,12 @@
 // line), `wait`, `flag` and `choice`, whose options show their gain before the tap (+30 for the best, +10 for the
 // rest). She wears the scene's own `outfit` when the story names one, else the day's season. Skip jumps to the choice,
 // never past it, so every meeting pays +50 and its choice (one the pack writes without one pays +50 alone). It plays as
-// soon as she's met: after Say hello at the Gate, a talk or a gift in town that met her, or the morning after the night
-// met her. It ends on where she lives: the Dorm, or town while no bed is free. Its frame and steps also play the pair
+// soon as she's met: right after you introduce yourself in town. It ends on where she lives: in town, where you met
+// her. Its frame and steps also play the pair
 // conversations (`PairPlayer.tsx`) and the household's scenes. Loaded on demand. The ring bench's scene (`scene:bench`)
 // plays here too, its player loaded on demand (`BenchScene.tsx`).
 import {
-  ARRIVAL_POINTS, arrivalOf, atHome, BENCH_SCENE, choicePoints, farmPlace, onWelcomeList, openingOf, pathFlags, placeholderEvent, sceneSteps,
+  ARRIVAL_POINTS, arrivalOf, atHome, BENCH_SCENE, choicePoints, farmPlace, openingOf, pathFlags, placeholderEvent, sceneSteps,
   withFarmer, worldNamesOf, type ChoiceOption, type OpeningSceneId, type PlayedEvent, type SaveV4, type SceneId, type Step, type WorldNamesPlayed,
 } from '@farm/domain'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -127,9 +127,9 @@ function ArrivalPlayer({ save, id }: { save: SaveV4; id: string }) {
   useEffect(() => {
     if (!story) return
     let live = true
-    // Her route's arrival scene, else the default story's meeting (the Gate's, or the town's), in her name; offline with
-    // her route not cached yet, the default's.
-    void herEventOf(story, id, 'arrival').then((found) => live && setEvent(found), () => live && setEvent({ steps: placeholderEvent(id, 'arrival', !onWelcomeList(story, id)) }))
+    // Her route's arrival scene, else the default story's meeting in town, in her name; offline with her route not cached
+    // yet, the default's.
+    void herEventOf(story, id, 'arrival').then((found) => live && setEvent(found), () => live && setEvent({ steps: placeholderEvent(id, 'arrival', true) }))
     return () => { live = false }
   }, [story, id])
   if (!event) return null
@@ -190,12 +190,13 @@ function Arrival({ save, id, steps, master }: { save: SaveV4; id: string; steps:
   )
 }
 
-/** Meeting her ends: her points are in, and where she lives says so: the Dorm, or town while no bed is free. She smiles. */
+/** Meeting her ends: her points are in, and where she lives says so: in town, where you met her (or the farm, for one
+ * who lives there). She smiles. */
 function Welcome({ id, name, points, home, onDone }: { id: string; name: string; points: number; home: boolean; onDone: () => void }) {
   return (
     <Stage bust={{ who: id, name, emote: 'happy' }} data={{ 'data-arrival-done': true, 'data-points': points, 'data-home': home }}>
       <p className="text-center text-[15px] font-semibold text-[#c2385e]">♥ +{points}</p>
-      <p className="text-center text-[14px] text-ink-soft" data-lives>{home ? 'She moves into the Dorm.' : 'No bed free: she lives in town for now.'}</p>
+      <p className="text-center text-[14px] text-ink-soft" data-lives>{home ? 'She lives on the farm.' : 'She lives in town: find her there.'}</p>
       <Button className="w-full" onClick={onDone} data-action="welcome">Welcome, {name}</Button>
     </Stage>
   )

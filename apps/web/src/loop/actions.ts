@@ -1,14 +1,14 @@
 // The loop's actions on the day: End the day and dismiss the morning; the day's actions: a tile cleared, tilled,
 // planted, watered and harvested, a forage, a log chopped, a catch, a station's load, a crate shipped and going into
 // town; the goods: take back and buy; paying for a place to build; the roster: the Dorm's levels and swaps; the scenes,
-// read once; the farmer's name, the opening, Say hello to the Gate's visitor, Invite to the farm, and meeting scenes;
-// the chat, gift and praise; and the pair conversations read. Each reads the save right before its rule runs (as
+// read once; the farmer's name, the opening, Invite to the farm, and meeting scenes; the chat and the gift (an action
+// each) and praise; and the pair conversations read. Each reads the save right before its rule runs (as
 // `edit`), commits it to the store and the device, and syncs; a refused rule throws its words. The night reads the
 // talents from master data, so it waits for it. Loaded on demand with the loop's screens, so the night's code stays out
 // of the initial JS.
 import {
   payBuild, buyDorm, cancelSwap, swapDorm, buy, endDay, readScene, SaveRuleError, shopLines, takeBack,
-  touched, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, inviteToFarm, nameFarmer, sayHello, unlockNotes,
+  touched, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, inviteToFarm, nameFarmer,
   type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair,
   chop, clearTile, fish, forage, goToTown, harvestTile, plantTile, shipCrate, startLoad, tillTile, waterTile,
   type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId,
@@ -24,7 +24,7 @@ const nowIso = () => new Date().toISOString()
 
 /**
  * Ends `day`: the night's nine steps over the save as it is now, stamped once. It waits for master data (the talents and
- * birthdays) and the story pack (favourites and her trigger to meet), which the night reads; a second tap, or a save that
+ * birthdays) and the story pack (favourites, the Town notes), which the night reads; a second tap, or a save that
  * already moved past `day`, changes nothing. A story release new to this device goes in the morning's New today, once.
  */
 export async function endTheDay(day: number): Promise<boolean> {
@@ -130,25 +130,12 @@ export const cancelDormSwap = (out: string) => change((s) => cancelSwap(s, out))
 
 // --- The scenes -----------------------------------------------------------------------------------------------
 
-/** The opening played through or skipped: it goes in `diary.read`, once, a player's change. Day 1's visitor (the
- * welcome list's first) waits at the Gate. */
+/** The opening played through or skipped: it goes in `diary.read`, once, a player's change. Nobody waits at the Gate:
+ * everyone is met in town. */
 export async function readSceneOnce(id: OpeningSceneId): Promise<void> {
   const save = loopSave()
   if (!save || save.diary.read.includes(id)) return
   await change((s) => readScene(s, id))
-}
-
-/** Say hello to today's visitor at the Gate: her first talk meets her, and she moves in while a bed is free. Her meeting
- * scene plays next. The visit also unlocks the Town notes whose unlock holds now; their ids come back. */
-export async function sayHelloAtGate(id: string): Promise<string[]> {
-  const story = await storyReady()
-  let unlocked: string[] = []
-  await change((s) => {
-    const r = unlockNotes(sayHello(s, story, id), story, { at: 'gate' })
-    unlocked = r.unlocked
-    return r.save
-  })
-  return unlocked
 }
 
 /** Invite to the farm: one you've met who lives in town moves into a free Dorm bed now. */
@@ -178,9 +165,9 @@ async function loveAct<T extends LovePaid>(rule: (save: SaveV4) => T): Promise<O
   })
   return done!
 }
-/** A chat: +15, once a day each, on the farm or in town. */
+/** A chat (Talk): one action and +15, once a day each, on the farm or in town. */
 export const chatHer = (id: string) => loveAct((s) => chatV4(s, id))
-/** A gift of one good at its stars: her taste from the pack, ×3 on her birthday (master data's, read
+/** A gift of one good at its stars, one action: her taste from the pack, ×3 on her birthday (master data's, read
  * through the cast), so it waits for both. */
 export async function giftHer(id: string, item: string, stars: number) {
   const [view, pack] = await Promise.all([masterReady(), storyReady()])

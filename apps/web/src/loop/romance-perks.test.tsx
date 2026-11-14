@@ -3,9 +3,7 @@
 // the morning's item, chores and perks lines, the harvest's "from perks" and the level-up card's recipe. The invented
 // stand-in pack (9000001–9000003) and a 9000004 built here; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import {
-  meet, newSave, pairKey, readScene, STAND_IN_FILES, storyPackFrom, type Cast, type Love, type SaveV4, type StoryPack, type Ties,
-} from '@farm/domain'
+import { inviteToFarm, meet, newSave, pairKey, readScene, STAND_IN_FILES, storyPackFrom, type Cast, type Love, type SaveV4, type StoryPack, type Ties } from '@farm/domain'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes } from 'react-router'
@@ -33,7 +31,7 @@ const { heartsLines } = await import('./summary-words')
 
 /** The stand-in's three home, ties seeded, as if met: the opening brings nobody, and day 1's visitor waits at the Gate. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
-  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : meet(s, id, pack).save), save)
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : inviteToFarm(meet(s, id, pack).save, id)), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const [ONE, TWO, THREE, FOUR] = ['9000001', '9000002', '9000003', '9000004']
 const NAMES: Record<string, string> = { [ONE]: 'Stand-in 1', [TWO]: 'Stand-in 2', [THREE]: 'Stand-in 3', [FOUR]: 'Stand-in 4' }

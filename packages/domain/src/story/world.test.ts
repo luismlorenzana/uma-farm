@@ -252,7 +252,7 @@ describe('the year’s festivals from the story', () => {
     expect(eveningSlots(cup, year).festival?.id).toBe('harvest-cup')
     expect(eveningSlots({ ...cup, calendar: { day: day('winter', 12) } }, year).festival).toBeNull()
     expect(eveningSlots(farm(day('summer', 4)), year).festival?.name).toBe('Lantern Walk')
-    const talk = { at: 'town', spot: 'cafe' } as const
+    const talk = { at: 'town', place: 'cafe' } as const
     expect(triggerHolds(cup, { kind: 'festival', festival: 'harvest-cup' }, 1, talk, year)).toBe(true)
     expect(triggerHolds(cup, { kind: 'festival', festival: 'harvest-cup' }, 1, talk)).toBe(false)
     expect(gateHolds(farm(day('summer', 4)), { kind: 'festival', festival: 'lantern-walk' }, year)).toBe(true)
@@ -278,26 +278,26 @@ describe('Town notes', () => {
     expect(knownNotes(farm(), null)).toEqual([])
   })
 
-  it('unlocks a spot’s note on a talk there, and nowhere else', () => {
+  it('unlocks a spot’s note on a talk or an introduction there, and nowhere else', () => {
     const s = farm()
-    expect(unlockNotes(s, PACK, { at: 'town', spot: 'plaza' })).toEqual({ save: s, unlocked: [] })
+    expect(unlockNotes(s, PACK, { at: 'town', place: 'plaza' })).toEqual({ save: s, unlocked: [] })
     expect(unlockNotes(s, PACK, { at: 'night' }).unlocked).toEqual([])
-    const talked = unlockNotes(s, PACK, { at: 'town', spot: 'cafe' })
+    const talked = unlockNotes(s, PACK, { at: 'town', place: 'cafe' })
     expect(talked.unlocked).toEqual(['cafe-window'])
     expect(talked.save.diary.notes).toEqual(['cafe-window'])
     // Once, and it stays.
-    expect(unlockNotes(talked.save, PACK, { at: 'town', spot: 'cafe' })).toEqual({ save: talked.save, unlocked: [] })
+    expect(unlockNotes(talked.save, PACK, { at: 'town', place: 'cafe' })).toEqual({ save: talked.save, unlocked: [] })
   })
 
   it('checks each kind as meeting her does: a season or a festival on its days, the farm’s kinds any time', () => {
     const year = festivalsOf(PACK)
     const s = farm(day('summer', 4))
     expect(noteHolds(s, { kind: 'festival', festival: 'lantern-walk' }, { at: 'night' }, year)).toBe(true)
-    expect(noteHolds(s, { kind: 'season', season: 'summer' }, { at: 'gate' }, year)).toBe(true)
+    expect(noteHolds(s, { kind: 'season', season: 'summer' }, { at: 'town', place: 'plaza' }, year)).toBe(true)
     expect(noteHolds(s, { kind: 'season', season: 'winter' }, { at: 'night' }, year)).toBe(false)
     expect(noteHolds(s, { kind: 'built', place: 'mill' }, { at: 'night' }, year)).toBe(false)
-    expect(noteHolds({ ...s, buildings: { ...s.buildings, mill: 1 } }, { kind: 'built', place: 'mill' }, { at: 'gate' }, year)).toBe(true)
-    expect(noteHolds(s, { kind: 'talks', days: 1 }, { at: 'town', spot: 'cafe' }, year)).toBe(false)
+    expect(noteHolds({ ...s, buildings: { ...s.buildings, mill: 1 } }, { kind: 'built', place: 'mill' }, { at: 'town', place: 'plaza' }, year)).toBe(true)
+    expect(noteHolds(s, { kind: 'talks', days: 1 }, { at: 'town', place: 'cafe' }, year)).toBe(false)
   })
 
   it('unlocks at night on meeting someone, and the morning names it; the save keeps its id and loads again', () => {
@@ -333,7 +333,7 @@ describe('a world that names nothing plays as before', () => {
   it('keeps the game’s five festivals, its places’ words, no season lines and no notes', () => {
     const plain = withWorld({} satisfies World)
     expect(festivalsOf(plain)).toBe(FESTIVALS)
-    expect(placeWordsOf(plain, 'gate').line).toBe('The welcome list visits here, one a morning.')
+    expect(placeWordsOf(plain, 'gate').line).toBe('The farm’s gate. Everyone you meet lives in town.')
     expect(seasonLineOf(plain, 'spring')).toBeNull()
     expect(townNotesOf(plain)).toEqual([])
   })

@@ -6,16 +6,16 @@
 // night's house lines need it. The tests read the invented stand-in (`stand-in.ts`).
 //
 // Every read of it goes through `placeholders.ts`: the pack's, or the placeholder. There her outfit, her favourite line
-// and its places, her tastes, the welcome list, the opening, her trigger to meet and her chapters are read, never from master data's
+// and its places, her tastes, the opening, her life in town and her chapters are read, never from master data's
 // strategy or a goods family; and with no pack at all, master data's first five play on placeholders.
 import { isGoodId } from '../goods/ids'
 import { pairKey } from '../save/v4'
 import {
-  ARRIVAL, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies, checkTown, checkWorld, STORY_ID, type Cast, type CastEntry, type Findings,
+  ARRIVAL, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies, checkTown, checkWorld, GAME_LOCATIONS, STORY_ID, type Cast, type CastEntry, type Findings,
   type Household, type Opening, type PairConversations, type Read, type Route, type StoryContext, type Ties, type Town, type UmaBible, type World,
 } from './authored'
 import { isFestivalId } from '../farm/calendar'
-import { favouriteOf, firstVisitorOf, type MasterCast } from './placeholders'
+import { favouriteOf, type MasterCast } from './placeholders'
 import type { StoryRelease } from './release'
 
 /** A pack's files as a release holds them (`cast.json`, `ties.json`, `umas/<id>.json`, `routes/<id>.json`,
@@ -84,6 +84,10 @@ export class StoryPackError extends Error {
 /** The town's people the pack names, by character id. */
 export const townPeopleOf = (pack: Partial<Pick<StoryPack, 'town'>>): ReadonlySet<string> => new Set((pack.town?.people ?? []).map((p) => p.characterId))
 
+/** The town map's locations by id: the game's six spots and four shops, and the ones `town.json` adds. */
+export const locationIdsOf = (pack: Partial<Pick<StoryPack, 'town'>>): ReadonlySet<string> =>
+  new Set([...GAME_LOCATIONS, ...(pack.town?.locations ?? []).map((l) => l.id)])
+
 /** The reader's context a read cast gives: its character ids, the town's people, and which goods exist. */
 export const packContext = (pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town'>>, isGood: (id: string) => boolean = isGoodId): StoryContext =>
   ({ umas: new Set(pack.cast.umas.map((u) => u.characterId)), isGood, town: townPeopleOf(pack) })
@@ -126,7 +130,7 @@ export function readStoryPack(files: PackFiles, isGood: (id: string) => boolean 
   // The world first: a cast's festival trigger may name one of the story's own festivals.
   const world = files.world === undefined ? null : take('world.json', checkWorld(files.world, { isGood }))
   const festivals = new Set((world?.festivals ?? []).map((e) => e.id).filter((id) => !isFestivalId(id)))
-  const cast = take('cast.json', checkCast(files.cast, { isGood, town: townPeopleOf({ town }), festivals, ...(exported ? { exported } : {}) }))
+  const cast = take('cast.json', checkCast(files.cast, { isGood, town: townPeopleOf({ town }), festivals, locations: locationIdsOf({ town }), ...(exported ? { exported } : {}) }))
   const ctx = packContext({ cast, town }, isGood)
   const ties = take('ties.json', checkTies(files.ties, ctx))
   const bibles = new Map<string, UmaBible>()
@@ -153,7 +157,7 @@ export function readStoryPack(files: PackFiles, isGood: (id: string) => boolean 
   }
   const household = files.household === undefined ? null : take('household.json', checkHousehold(files.household, ctx))
   const opening = files.opening === undefined ? null : take('opening.json', checkOpening(files.opening, ctx))
-  if (files.opening === undefined) notes.push('opening.json: no opening yet, so the game’s own three lines play')
+  if (files.opening === undefined) notes.push('opening.json: no opening yet, so the game’s own lines play')
   if (files.world === undefined) notes.push('world.json: no world yet, so the game’s own names, festivals, places and seasons play, and there are no Town notes')
   const pack: StoryPack = {
     cast,
@@ -191,8 +195,6 @@ function castNotes(pack: StoryPack): string[] {
     else if (!scripted.has(ARRIVAL)) notes.push(`routes/${id}.json: no arrival scene, so the default story’s meeting plays`)
     if (favouriteOf(pack, id) === null) notes.push(`cast.json: ${id} has no calling and no bible’s favouriteLine, so her line is the work her stats in master data suit best`)
   }
-  const first = firstVisitorOf(pack)
-  if (first !== null) notes.push(`cast.json: ${first}, the welcome list’s first, is day 1’s visitor at the Gate, and the farm’s first helper`)
   return notes
 }
 

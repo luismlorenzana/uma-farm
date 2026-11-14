@@ -13,7 +13,6 @@ import { readScene } from '../story/scenes'
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { STAND_IN_FILES } from '../story/stand-in'
 import { beatOf } from '../story/placeholders'
-import { meetTonight } from './meeting'
 import { joinCast } from './meeting.fixture'
 import {
   askHer, askSteps, canAsk, choicePointsOf, EVENT_POINTS, extraPlay, optionViews, pathPlays, playEvent, replaySteps, takeLowest, type EventOutcome, type PlayScore,
@@ -223,16 +222,6 @@ describe('the confession', () => {
     expect(ask.some((s) => 'play' in s)).toBe(false)
     expect('choice' in ask[2]! && ask[2].choice.map((o: ChoiceOption) => o.answer)).toEqual(['yes', 'not-yet'])
     expect(askSteps([{ narrate: 'No answer.' }])).toEqual([])
-  })
-
-  it('an event trigger meets her the night after the event it names', () => {
-    const cast: Cast = { ...json(PACK.cast), welcome: ['9000001', '9000002', '9000003'] }
-    cast.umas.push({ characterId: '9000004', outfitId: '900000401', meet: { kind: 'event', after: `${ONE}:f1` }, calling: 'fishing', paragraph: 'Invented.' })
-    const pack: StoryPack = { ...PACK, cast }
-    const save = readyFor(farm(), 'friendship', 0, 'f1')
-    expect(meetTonight(save, pack).met).toEqual([])
-    const played = playEvent(save, pack, ONE, outcome('f1', [0], [{ kind: 'pick', score: 100 }])).save
-    expect(meetTonight(played, pack).met).toEqual([{ id: '9000004', home: false }])
   })
 })
 
