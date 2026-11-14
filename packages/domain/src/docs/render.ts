@@ -63,6 +63,7 @@ import { RHYTHM_BEATS, RHYTHM_EXTRA, RHYTHM_LEAD, RHYTHM_MARK_WORDS, RHYTHM_PERI
 import { WALK_FORK_MS, WALK_FORKS } from '../romance/plays/walk'
 import { PLAY_MAP, playOf, togetherPlay, type PlayAs } from '../romance/plays/which'
 import { ART_NAMES, EXPRESSIONS, fallbackChain, MOMENT_OUTFITS, PERSONAL_OUTFITS, SHORE_PLACES, STORY_OUTFITS, type StoryOutfit } from '../story/look'
+import { ILLUSTRATED_MOMENTS, ILLUSTRATED_SCENES, ILLUSTRATION_RULES } from '../story/illustrations'
 import { EVENT_POINTS } from '../romance/events'
 import { OCCASION_RULES, occasionName } from '../romance/occasions'
 import { momentOutfit } from '../story/look'
@@ -1056,7 +1057,14 @@ function houseMorningBlock(): string {
 /** The house lines' templates by temperament, for an Uma the pack writes none for. */
 function houseLines(): string {
   return table(['Temperament', 'House lines (`{name}` hers)'], TEMPERAMENTS.map((t) => [t[0]!.toUpperCase() + t.slice(1), HOUSE_TEMPLATES[t].join('<br>')]))
+}/** Her illustrations: the default mapping, each scene with its moments and where each is up. */
+function illustrationRules(): string {
+  return table(['The scene', 'Her illustration’s moment', 'Up'], ILLUSTRATED_SCENES.map((k) => {
+    const r = ILLUSTRATION_RULES[k]
+    return [r.scene, r.moments.map((m) => `\`${m}\``).join(', then '), r.where]
+  })) + `\n\nThe moments, in story order: ${ILLUSTRATED_MOMENTS.map((m) => `\`${m}\``).join(', ')}. A scene that names an illustration of its own (\`{ "illustration": "<id>" }\`) plays only its own; a moment she has no scene for shows her bust, as before.`
 }
+
 /** The furniture set's five pieces. */
 function furnitureBlock(): string {
   return FURNITURE.map((f, i) => `${i + 1}. ${f}`).join('\n')
@@ -1073,7 +1081,7 @@ export function renderBlock(key: string): string | null {
     plays: playsBlock, 'play-map': playMap, 'play-grades': playGrades, 'play-windows': playWindows, 'event-pay': eventPay, 'stand-in-route': standInRoute,
     'evening-kinds': eveningKinds, 'evening-points': eveningPointsBlock, 'uma-stages': umaStagesBlock, 'married-life': marriedLifeBlock, 'evening-slots': eveningSlotsBlock,
     rings: ringsBlock, 'bench-recipe': benchRecipe, reception: receptionBlock, 'bench-scene': benchScene,
-    'outfit-rules': outfitRules, 'outfit-ids': outfitIds, expressions: expressionsBlock,
+    'outfit-rules': outfitRules, 'outfit-ids': outfitIds, expressions: expressionsBlock, 'illustration-rules': illustrationRules,
     houses: housesBlock, 'homestead-map': homesteadMap, 'household-milestones': householdMilestonesBlock, 'house-morning': houseMorningBlock, 'house-lines': houseLines,
     furniture: furnitureBlock,
     calendar, occasions: occasionsBlock, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,

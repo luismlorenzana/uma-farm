@@ -2680,7 +2680,8 @@ occasion scenes ([occasion scenes](#occasion-scenes)), and the Uma loop's: each 
 hangout's, a date's, Dinner in town's and A night in's, handing in their moment: a picnic, a dinner, a night in, a
 festival night), the night's companion's morning greeting (pajamas) and a meal's line ([the Uma loop](#the-uma-loop)).
 The plays have no lines. The story's steps are the same in every scene (`say`, `narrate`, `thought`, `choice`, `play`,
-…).
+…). At her big moments the scene opens onto **her illustration, full screen** ([her illustrations](#her-illustrations)),
+and each one seen is kept in **her gallery** ([her gallery](#her-gallery)).
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -2850,6 +2851,90 @@ so it needs no release and is replaced the moment her portraits are published.
 - **The blank profile:** where master data has no face for her (a stand-in, or one it doesn't hold), lists and cards
   show the same head and shoulders on her colour, with her letters ("S1"). Where master data has her face and name,
   those show, as before.
+
+#### Her illustrations
+
+At her big moments the scene opens onto **a full-screen illustration**. Master data's private `illustrations` family
+holds them, keyed by her character id: her scenes in the art's order, each with its title, its outfit and its moment
+(1672 × 941, from Uma Character Art's Farm Life universe). The first Uma's nine are published. **An Uma without any
+plays every scene on her bust and face, exactly as before.**
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ Meeting ‹her name› · Gate                                       Skip │  the title line, light on a soft shade
+│                                                                      │
+│                  her illustration, the whole screen                  │  the picture fills the screen; no bust
+│                                                                      │  while it's up
+│    ╭────────────────────────────────────────────────────────────╮    │
+│    │ ‹her name›                                                 │    │  the text box over its lower edge:
+│    │ Her line, in white on the dark glass.                      │    │  dark glass, her name in rose, the line
+│    │                                         Tap to go on · 3/6 │    │  in white, narration in italics
+│    ╰────────────────────────────────────────────────────────────╯    │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+- **How it shows:** the picture fills the whole screen in landscape, behind the title line (light over a soft shade)
+  and the text box. **The text box** sits over the picture's lower edge: dark translucent glass, up to 46 rem wide, her
+  name in rose, her line in white, narration and thoughts in italics. At a choice the line before it and the options
+  sit in the same box, the options side by side where they fit. **No bust** while it's up.
+- **A tap** goes on as usual: on the line (and in the scenes where a tap on her bust goes on, a tap on the picture).
+  Skip, Auto and Log work as before; a play's sheet sits over the picture.
+- **It fades** in as it comes up, from one picture to the next, and out as it goes down (450 ms); with reduced motion it
+  simply swaps. While her picture loads the screen holds a dark ground, so her bust never flashes before it; a picture
+  that can't load (offline, and never seen on this phone) shows her bust.
+- **Each loads only when its scene starts:** her manifest the first time a scene of hers cues one (or her gallery
+  opens), then every picture the scene can show, checked against the release and cached on the phone by its hash, so a
+  scene plays offline once seen. Nothing is fetched for an Uma the art index doesn't list.
+- **Tender, never explicit:** the owner approved every scene, and they show as published.
+- **The scene ends on her bust:** the meeting's Welcome card, an event's card and the stage-ups show her bust as before;
+  the picture fades out.
+- **Which, and when.** The story names one with a step in her route's events, `{ "illustration": "<her scene's id>" }`:
+  up from there until the next such step (`none` takes it down) or the scene's end ([the story
+  pack's steps](story-pack.md#steps)). A scene that names one plays only its own. Every other scene of hers plays **the
+  default mapping**, each moment showing her first scene for it:
+
+<!-- live:illustration-rules -->
+| The scene | Her illustration’s moment | Up |
+|---|---|---|
+| Her meeting scene (`arrival`) | `meeting` | From its start to its end |
+| A summer date at the shore: her heart event at the sea pier in summer, from Romance 1 on (her Romance and Spouse rungs and the proposal) | `beach` | From its start to its end |
+| Her confession (`confession`, and Ask her) | `confession`, then `confession-yes` | `confession` at the question: her lines that lead into her answer’s choice, and the choice. `confession-yes` from her Yes to the end; a Not yet takes it down |
+| The wedding (`wedding`) | `wedding` | From its start to its end |
+| The wedding night (`wedding-night`) | `wedding-night`, then `wedding-night-end` | `wedding-night` from its start. `wedding-night-end` as it fades: from the lines after its last choice (else that choice’s answers; with no choice, its last line) to the end |
+| A night in’s evening scene (`a-night-in`) | `night-in` | From its start to its end |
+| The night’s companion’s morning greeting | `companion` | Before her greeting: the morning’s narration, until her first line |
+
+The moments, in story order: `meeting`, `beach`, `confession`, `confession-yes`, `wedding`, `wedding-night`, `wedding-night-end`, `night-in`, `companion`. A scene that names an illustration of its own (`{ "illustration": "<id>" }`) plays only its own; a moment she has no scene for shows her bust, as before.
+<!-- /live -->
+
+- **The next Umas** join the same way, with no farm release: when the art pipeline publishes their splash art, the farm
+  sends uma-platform each scene's moment, and master data carries them.
+
+#### Her gallery
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ ‹her name› · Gallery                                     3 of 9    ✕ │
+│ ┌────────────────┐  ┌────────────────┐  ┌────────────────┐           │
+│ │  (her picture) │  │ ░ silhouette ░ │  │  (her picture) │           │  16:9 tiles in the art's order
+│ └────────────────┘  └────────────────┘  └────────────────┘           │
+│ Its title           Its title, muted    Its title                    │
+│ ┌────────────────┐  ┌────────────────┐  ┌────────────────┐           │
+│ │ ░ silhouette ░ │  │ ░ silhouette ░ │  │ ░ silhouette ░ │           │  locked: an Uma's head and shoulders
+│ └────────────────┘  └────────────────┘  └────────────────┘           │  on a dark tile, and a lock
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+- **Unlocked for good:** each illustration shown in a scene joins her gallery, once, kept in the save (`gallery`: her
+  scenes' ids in the order first seen). A Memory replayed counts too: you've seen it.
+- **Her profile's Gallery** says "3 of 9" with **Open ›** (`?gallery=<id>`), for an Uma with illustrations only.
+- **The gallery** opens full screen on a dark page: her name, "3 of 9" and ✕; every scene of hers in the art's order,
+  three to a row (two on a narrow phone), each a 16:9 tile with its title under it. **A seen one** shows its picture;
+  **the rest** show a locked silhouette (an Uma's head and shoulders on a dark tile, with a lock) and their titles,
+  muted.
+- **A tap on a seen one** opens it full screen: the whole picture on black, its title and "1 / 3" at the foot, ‹ › (or
+  a swipe, or the arrow keys) to her other seen ones, ✕ (or Escape) back to the grid.
+- Titles and pictures are master data's, read at runtime; a seen one's picture comes from the phone's cache.
 
 ### The cast and the story pack
 
@@ -3332,6 +3417,8 @@ and with more the first pays.
 
 - **Each option shows its gain on the button** before the tap.
 - **Skip** jumps to the choice, never past it; after the choice, to the end. So every meeting pays.
+- **With her illustrations** it opens on her meeting's picture, full screen, its lines and her choice over it
+  ([her illustrations](#her-illustrations)).
 - It ends on her bust, smiling, "♥ +80" (or +60), where she lives ("She lives in town: find her there.", or "She lives
   on the farm." for one already there) and **Welcome, ‹her name›**, and the town stays where it was.
 
@@ -3452,7 +3539,8 @@ invitation to work, the evenings at two actions, moving in, the household's meal
 - **Tender, never shown:** the night is the fade, nothing more.
 - **In the morning** she greets you: as the morning comes up, a short scene in pajamas on a morning backdrop, her
   greeting her bible's `mornings`, else the default story's for her temperament, drawn by the day
-  (`?life=morning:<id>`). It pays nothing and saves nothing. The morning's first Hearts line, "☾ Morning with *Name*"
+  (`?life=morning:<id>`). With her illustrations the morning's narration plays over `companion`, before her greeting
+  on her bust. It pays nothing and saves nothing (a picture seen joins her gallery). The morning's first Hearts line, "☾ Morning with *Name*"
   (**Play**), plays it again.
 - **The save:** your pick is `homestead.companion` (with `homestead.tonight` her house) until the night, which notes her
   (`love[id].night`, the night she was last your companion) and clears it.
@@ -3721,6 +3809,7 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
 │ Gifts   Loved ? +60 · Liked ??? +30 · Disliked ?? 0 · Others +10
 │ Ties    Stand-in 2 · Friends ♥♥ · Stand-in 3 · Rivals
 │ Memories 0 of 26                         │
+│ Gallery  3 of 9                  Open ›  │  an Uma with illustrations
 │ Ring    Her ring will read: ‘…’          │  from Romance 8
 ├──────────────────────────────────────────┤
 │ In town today, at the Café.   Find her › │  not in front of you: where she is
@@ -3767,6 +3856,8 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
   marked **Closest**; the points to the next heart ("Friends · 150/300"); **Read** while a conversation of theirs is
   opened and unread; "Not here yet" for an Uma not on the farm.
 - **Memories:** her count ("15 of 26") and **Album ›**.
+- **Gallery:** for an Uma with illustrations, the ones seen of all hers ("3 of 9") and **Open ›** ([her
+  gallery](#her-gallery)).
 - **Ring:** from Romance 8, "Her ring will read: ‘…’" (the engraving, her Romance 8 beat's caption); from the proposal,
   her ring with its bonus ("Iron Ring · +3% at the Fields once you're married", then "+3% at the Fields"), "Her ring
   reads: ‘…’", and **Give her the ‹ring› ›** for each better ring in the Warehouse.
@@ -4313,6 +4404,8 @@ choice points, its **last choice point** holding one Yes and one Not yet. Either
   1 can play the same day if her bar is full and she hasn't played an event today. Yes clears the Not yet and shows
   Partners; Not yet: "Whenever you're ready. Ask again tomorrow."
 - She always confesses. An author may have her say "not yet" in an earlier scene's words, at no cost.
+- **With her illustrations,** her question (her lines into the answer, and the answer's choice) shows `confession`, her
+  Yes shows `confession-yes` to the end, and a Not yet brings her bust back. Ask her shows them too.
 
 #### Memories
 
@@ -4322,8 +4415,9 @@ the wedding) and **Spouse** (Spouse 1, 3 and 5). Played tiles show their caption
 locked. **Her arrival ›** replays her arrival scene.
 
 - **A replay** starts from the top or from any choice point picked from its list ("Choice 1 · “Show me which ones.”"). It
-  plays with its plays, **every option is open** (no cost, no gain shown), **nothing is paid, taken or saved,** and it
-  ends "A Memory, replayed. Replays give no points."
+  plays with its plays and her illustrations, **every option is open** (no cost, no gain shown), **nothing is paid,
+  taken or saved** (but an illustration seen joins her gallery), and it ends "A Memory, replayed. Replays give no
+  points."
 - **The Diary's shelf** lists each Uma on the farm with "n of 26", opening her album, and the household scenes and the
   finale once played.
 
@@ -4475,7 +4569,8 @@ An invitation’s draw: `draw(uid, day, 'invite', n)` among the Umas home at Fri
   Walk) on a dusk wash, seeded by the day, her id and the kind. A ✕ leaves it, spending nothing: **nothing is saved until
   it ends.**
 - **Her scene** follows the play, over everything, titled with the kind and her name ("Walk at dusk · Stand-in 2"): her
-  lines on the dialogue engine, she on the stage throughout; **Skip** goes on to the card.
+  lines on the dialogue engine, she on the stage throughout; **Skip** goes on to the card. A night in's plays over her
+  `night-in` illustration, when she has one.
 - **The card:** the kind "with ‹her name›", the grade, the sum ("+150 Perfect × 1.5 her favourite = +225", "+20 for
   saying yes", "= +245 toward Friendship 4 (+40 banked)") and her bar in her ladder's colour, then **Continue**. The
   evening commits once, as the play ends: its two actions, the points, her last evening's day, and the slot spent.
@@ -4633,8 +4728,11 @@ A meal already running is never shortened. **The guests:** every spouse on the f
   in one day feed the farm by the longer reception.
 - **The words** of the bench, the proposal and the wedding say spouse, partner, vows, your wedding and you; the
   protagonist is a man, so a line may say the groom.
+- **With her illustrations** the wedding plays over its picture, `wedding`, from the guests' line to the vows' answer
+  (the place card and the guests' faces give way to it).
 - **The wedding night** follows the wedding's card, before the Married stage-up: her route's `wedding-night`, else the
-  default story's, in the wedding night outfit, tender and fading to morning. It pays nothing and saves nothing.
+  default story's, in the wedding night outfit, tender and fading to morning. It pays nothing and saves nothing. With
+  her illustrations it opens on `wedding-night`, and `wedding-night-end` comes up as it fades, after its last choice.
 - **Moving in** follows it, the morning after, before the Married stage-up: her route's `moving-in`, else the default
   story's ("A cart of her things rolls up the lane to the farm."), titled "Moving in · ‹her name›", as she moves to the
   farm: into the room she took at the wedding, in your home or a house built for her (rooms and moves below). One with
@@ -5072,6 +5170,8 @@ sits outside the opening screens, so it shows even when the app stopped while op
   (the night she was last your companion; none, never) and the morning's "☾ Morning with" line (`morning`); and an
   evening may be Dinner in town (`dinner`) or A night in (`night-in`). Nothing migrates, and `updatedAt` never moves for
   it.
+- **v5 grows in place with the illustrations:** `gallery` (her illustrations seen, by her id: the scenes' ids in the
+  order first seen) is new; a save without it has seen none. Nothing migrates, and `updatedAt` never moves for it.
 - **Nothing goes silently:** a phone save with unsynced play is kept first as a "Before the new farm" safety copy (if it
   can't be kept, nothing changes and the card says so, with the button to try again). The new farm syncs up as it is,
   and the first time the server stores a v5 over the older save it copies the older one, whole, to a backup

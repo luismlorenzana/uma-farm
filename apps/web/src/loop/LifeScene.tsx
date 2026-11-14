@@ -6,14 +6,19 @@
 //                                "moved into" line (a spouse who waited for a room);
 //   `?life=breakfast:<id>`,     a meal's scene: one spouse's line as you sit down, after you cook it.
 //   `?life=dinner:<id>`
-// She stays on the stage through the narration with the face of her last line; a choice is wording only. They pay
-// nothing and save nothing; Skip, or the end, closes. Portaled above the sheets (z-60). Loaded on demand.
-import { greetingScene, mealScene, sceneSteps, type Meal, type Moment, type SaveV4, type Step, type StoryOutfit, type StoryPack } from '@farm/domain'
+// She stays on the stage through the narration with the face of her last line; a choice is wording only. Her
+// illustrations show full screen where the story names one, and by the default mapping: the wedding night's two, a night
+// in's, and the night's companion's before her morning greeting. They pay nothing and save nothing (an illustration seen
+// joins her gallery); Skip, or the end, closes. Portaled above the sheets (z-60). Loaded on demand.
+import {
+  greetingScene, illustrate, illustrationAt, mealScene, sceneSteps, type IllustratedScene, type Meal, type Moment, type SaveV4, type Step, type StoryOutfit, type StoryPack,
+} from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router'
 import { SceneLookProvider } from '../dialogue/Bust'
+import { ArtCue } from '../dialogue/Illustration'
 import { lastSay, Line, nextSay } from '../dialogue/Line'
 import { Stage } from '../dialogue/Stage'
 import { MasterGate } from '../master/MasterGate'
@@ -33,12 +38,16 @@ export const MORNING_BACKDROP = <span aria-hidden className="absolute inset-0" s
  * A short scene's steps, played: each line with the speaker's bust; she (`id`) stays on the stage through narration with
  * her last line's face; a choice is wording only, its `then` spliced in. `onDone` at its end.
  */
-export function LifeScene({ id, steps, nameOf, farmer, backdrop = null, onDone, data = {} }: {
+export function LifeScene({ id, steps: written, nameOf, farmer, backdrop = null, illustrated = null, onDone, data = {} }: {
   id: string; steps: readonly Step[]; nameOf: (who: string) => string; farmer: string; backdrop?: ReactNode; onDone: () => void
+  /** Which of her illustrated scenes this is (the wedding night, a night in, the morning greeting): her illustrations by
+   * the default mapping, unless the story names its own. */
+  illustrated?: IllustratedScene | null
   data?: { [key: `data-${string}`]: string | number | boolean | undefined }
 }) {
   const [picks, setPicks] = useState<number[]>([])
   const [at, setAt] = useState(0)
+  const steps = useMemo(() => illustrate(illustrated, written), [written, illustrated])
   const shown = useMemo(() => sceneSteps(steps, picks), [steps, picks])
   let cursor = at
   while (cursor < shown.length && silent(shown[cursor]!)) cursor++
@@ -47,18 +56,23 @@ export function LifeScene({ id, steps, nameOf, farmer, backdrop = null, onDone, 
   useEffect(() => {
     if (done) onDone()
   }, [done]) // eslint-disable-line react-hooks/exhaustive-deps
-  if (!step) return <div className="flex-1" />
+  // Her illustration while it's up (the story's own, or the default mapping's); down at the end.
+  const art = <ArtCue owner={id} ask={step ? illustrationAt(shown, cursor) : null} steps={steps} />
+  if (!step) return <>{art}<div className="flex-1" /></>
   const before = shown.slice(0, cursor)
   const speaker = 'say' in step ? step.say : null
   const bust = speaker ?? id
   const emote = 'say' in step ? step.emote ?? null : lastSay(before, id)?.emote ?? null
   if ('choice' in step) {
-    return <WordingChoice options={step.choice} farmer={farmer} bust={{ who: bust, name: nameOf(bust), emote }} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />
+    return <>{art}<WordingChoice options={step.choice} farmer={farmer} bust={{ who: bust, name: nameOf(bust), emote }} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} /></>
   }
   return (
-    <Stage bust={{ who: bust, name: nameOf(bust), emote }} backdrop={backdrop} next={nextSay(shown, cursor + 1)} onTap={() => setAt(cursor + 1)} data={data}>
-      <Line key={cursor} step={step} nameOf={nameOf} farmer={farmer} onNext={() => setAt(cursor + 1)} beat={cursor} typed />
-    </Stage>
+    <>
+      {art}
+      <Stage bust={{ who: bust, name: nameOf(bust), emote }} backdrop={backdrop} next={nextSay(shown, cursor + 1)} onTap={() => setAt(cursor + 1)} data={data}>
+        <Line key={cursor} step={step} nameOf={nameOf} farmer={farmer} onNext={() => setAt(cursor + 1)} beat={cursor} typed />
+      </Stage>
+    </>
   )
 }
 
@@ -126,7 +140,7 @@ function Played({ kind, id, save, story, master, onClose }: { kind: LifeKind; id
         ? (
           <SceneLookProvider value={{ own: scene.outfit, moments: MOMENTS[kind], day: save.calendar.day, leads: [id] }}>
             <LifeScene id={id} steps={scene.steps} nameOf={nameOf} farmer={save.farmer.name} backdrop={kind === 'morning' ? MORNING_BACKDROP : null} onDone={onClose}
-              data={{ 'data-life': kind }} />
+              illustrated={kind === 'morning' ? 'companion' : null} data={{ 'data-life': kind }} />
           </SceneLookProvider>
         )
         : <div className="flex-1" />}

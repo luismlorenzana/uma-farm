@@ -16,15 +16,17 @@
 // soon as she's met: right after you introduce yourself in town. It ends on where she lives: in town, where you met
 // her. Its frame and steps also play the pair
 // conversations (`PairPlayer.tsx`) and the household's scenes. Loaded on demand. The ring bench's scene (`scene:bench`)
-// plays here too, its player loaded on demand (`BenchScene.tsx`).
+// plays here too, its player loaded on demand (`BenchScene.tsx`). The frame hosts her illustration
+// (`dialogue/Illustration.tsx`): her meeting opens on hers, full screen, when she has one, and ends on her bust.
 import {
-  ARRIVAL_POINTS, arrivalOf, atHome, BENCH_SCENE, choicePoints, farmPlace, openingOf, pathFlags, placeholderEvent, sceneSteps,
+  ARRIVAL_POINTS, arrivalOf, atHome, BENCH_SCENE, choicePoints, farmPlace, illustrate, illustrationAt, openingOf, pathFlags, placeholderEvent, sceneSteps,
   withFarmer, worldNamesOf, type ChoiceOption, type OpeningSceneId, type PlayedEvent, type SaveV4, type SceneId, type Step, type WorldNamesPlayed,
 } from '@farm/domain'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { SceneLookProvider } from '../dialogue/Bust'
+import { ArtCue, ArtHost, useArtHeader } from '../dialogue/Illustration'
 import { lastSay, Line, nextSay } from '../dialogue/Line'
 import { Stage } from '../dialogue/Stage'
 import { MasterGate } from '../master/MasterGate'
@@ -32,7 +34,7 @@ import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { herEventOf, namer } from '../story/people'
 import { useStory } from '../story/story'
-import { finishArrivalScene, readSceneOnce } from './actions'
+import { finishArrivalScene, readSceneOnce, seeIllustrationOnce } from './actions'
 
 const BenchScene = lazy(() => import('./BenchScene'))
 
@@ -50,14 +52,23 @@ export default function ScenePlayer({ scene }: { scene: SceneId }) {
 export function Frame({ title, label, scene, onSkip, skipping, children }: { title: string; label: string; scene: string; onSkip: () => void; skipping: boolean; children: React.ReactNode }) {
   return (
     <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={label} data-scene={scene}>
-      <header className="flex min-h-12 items-center justify-between gap-2 px-4">
-        <p className="text-micro text-ink-soft" data-scene-title>{title}</p>
-        <button type="button" onClick={onSkip} disabled={skipping} className="min-h-11 rounded-full px-4 text-[15px] font-semibold text-ink-soft" data-action="skip">
-          Skip
-        </button>
-      </header>
-      {children}
+      <ArtHost onSeen={seeIllustrationOnce}>
+        <FrameHeader title={title} onSkip={onSkip} skipping={skipping} />
+        {children}
+      </ArtHost>
     </div>
+  )
+}
+
+/** The frame's title line and Skip: light over her illustration. */
+function FrameHeader({ title, onSkip, skipping }: { title: string; onSkip: () => void; skipping: boolean }) {
+  return (
+    <header className={`flex min-h-12 items-center justify-between gap-2 px-4 ${useArtHeader()}`}>
+      <p className="text-micro text-ink-soft" data-scene-title>{title}</p>
+      <button type="button" onClick={onSkip} disabled={skipping} className="min-h-11 rounded-full px-4 text-[15px] font-semibold text-ink-soft" data-action="skip">
+        Skip
+      </button>
+    </header>
   )
 }
 
@@ -118,8 +129,8 @@ function Done({ onDone }: { onDone: () => void }) {
 
 /** A story place as the title line says it: a farm place's name, else its words ("pond-night" → "Pond night"). */
 export const placeName = (place: string): string => farmPlace(place)?.name ?? `${place.charAt(0).toUpperCase()}${place.slice(1).replaceAll('-', ' ')}`
-/** Steps that show nothing of their own: they set the title line, or a flag. */
-export const silent = (step: Step): boolean => 'place' in step || 'flag' in step
+/** Steps that show nothing of their own: they set the title line, a flag, or her illustration. */
+export const silent = (step: Step): boolean => 'place' in step || 'flag' in step || 'illustration' in step
 
 function ArrivalPlayer({ save, id }: { save: SaveV4; id: string }) {
   const story = useStory()
@@ -140,10 +151,12 @@ function ArrivalPlayer({ save, id }: { save: SaveV4; id: string }) {
   )
 }
 
-function Arrival({ save, id, steps, master }: { save: SaveV4; id: string; steps: readonly Step[]; master: MasterView }) {
+function Arrival({ save, id, steps: written, master }: { save: SaveV4; id: string; steps: readonly Step[]; master: MasterView }) {
   const [picks, setPicks] = useState<number[]>([])
   const [at, setAt] = useState(0)
   const [leaving, setLeaving] = useState(false)
+  // Her meeting opens on her illustration for it, when she has one (the story's own, if it names any).
+  const steps = useMemo(() => illustrate('meeting', written), [written])
   const shown = useMemo(() => sceneSteps(steps, picks), [steps, picks])
   const story = useStory()
   const nameOf = namer(master, story)
@@ -180,6 +193,8 @@ function Arrival({ save, id, steps, master }: { save: SaveV4; id: string; steps:
   const herLast = lastSay(shown.slice(0, cursor), id)?.emote ?? null
   return (
     <Frame title={title} label={`Meeting ${name}`} scene={`arrival:${id}`} onSkip={skip} skipping={leaving}>
+      {/* Her illustration while the scene plays; down at its end, where she smiles. */}
+      <ArtCue owner={id} ask={done ? null : illustrationAt(shown, cursor)} steps={steps} />
       {done ? <Welcome onDone={finish} id={id} name={name} points={earned} home={atHome(save, id)} />
         : step && 'choice' in step && choiceAt === cursor ? (
           <Choice id={id} name={name} emote={herLast} options={step.choice} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />

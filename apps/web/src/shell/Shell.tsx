@@ -10,7 +10,8 @@
 // play and its card); the ring bench at `?sheet=bench` from the Forge's quick look; the homestead at
 // `?sheet=homestead`, a night level's card at `?level=<id>:<s2|s4>` and a household scene or the finale at
 // `?household=<id>` (`&replay=1` from the Diary); an occasion scene at `?occasion=<id>`, from the calendar's day; her life's
-// short scenes at `?life=<kind>:<id>` (the night's companion's morning greeting, moving in, a meal's line).
+// short scenes at `?life=<kind>:<id>` (the night's companion's morning greeting, moving in, a meal's line); her gallery of
+// illustrations at `?gallery=<id>`, from her profile.
 import { sceneDue } from '@farm/domain'
 import { AppFrame, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { lazy, Suspense } from 'react'
@@ -34,6 +35,7 @@ const NightLevel = lazy(() => import('../loop/NightLevel'))
 const HouseholdPlayer = lazy(() => import('../loop/HouseholdPlayer'))
 const OccasionPlayer = lazy(() => import('../loop/OccasionPlayer'))
 const LifePlayer = lazy(() => import('../loop/LifeScene'))
+const Gallery = lazy(() => import('../loop/Gallery'))
 
 const SHEETS = ['end', 'calendar', 'bin', 'shop', 'rank'] as const
 type LoopSheet = typeof SHEETS[number]
@@ -55,6 +57,7 @@ export function Shell() {
   const household = search.get('household')
   const occasion = search.get('occasion')
   const life = search.get('life')
+  const gallery = search.get('gallery')
   const farm = useGame((s) => s.save !== null)
   const free = farm && !naming && !scene
   return (
@@ -79,6 +82,7 @@ export function Shell() {
           {household && free && !read && !playing && <Suspense fallback={null}><HouseholdPlayer key={household} value={household} replay={search.get('replay') === '1'} /></Suspense>}
           {occasion && free && !read && !playing && <Suspense fallback={null}><OccasionPlayer key={occasion} id={occasion} /></Suspense>}
           {life && free && !read && !playing && <Suspense fallback={null}><LifePlayer key={life} value={life} /></Suspense>}
+          {gallery && free && !read && !playing && <Suspense fallback={null}><Gallery key={gallery} id={gallery} /></Suspense>}
         </>
       }
     >

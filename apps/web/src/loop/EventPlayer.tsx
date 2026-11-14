@@ -22,8 +22,13 @@
 // reception (a dish in the Warehouse, or the bakery's cake), then **the wedding night** (`WeddingNight.tsx`: her route's,
 // else the default story's, in its outfit, fading to morning), then **moving in** to the room she took (her route's
 // `moving-in`, else the default's), and closes on the Married stage-up.
+//
+// Her illustrations show full screen in its frame (`dialogue/Illustration.tsx`) where the story names one, and by the
+// default mapping: her confession's question and her yes, the wedding, a summer date at the shore; and the wedding
+// night's two. Each one seen joins her gallery.
 import {
-  actionCost, askSteps, beatOf, canAsk, canSpendForEvent, choicePointsOf, eventMoments, extraPlay, GAME_DAYS, goodName, heldRings, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
+  actionCost, askSteps, beatOf, canAsk, canSpendForEvent, choicePointsOf, eventIllustration, eventMoments, extraPlay, firstPlace, GAME_DAYS, goodName, heldRings, illustrate, illustrationAt,
+  optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
   readiness, receptionDishes, replaySteps, ringGrade, ringPercent, rungName, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
   type Answer, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryOutfit, type StoryPack,
 } from '@farm/domain'
@@ -34,6 +39,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useSearchParams } from 'react-router'
 import { SceneLookProvider } from '../dialogue/Bust'
+import { ArtCue, ArtHost, useArtHeader } from '../dialogue/Illustration'
 import { lastSay, Line, nextSay } from '../dialogue/Line'
 import { Stage } from '../dialogue/Stage'
 import { MasterGate } from '../master/MasterGate'
@@ -41,6 +47,7 @@ import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { herEventOf, namer } from '../story/people'
 import { useSpecialDays, useStory } from '../story/story'
+import { seeIllustrationOnce } from './actions'
 import { askHerOnce, playHerEvent } from './event-actions'
 import { LevelUpCard, StageUpScreen } from './EventCards'
 import { eventTitle, guestsLine, optionWords, PICKER_WORDS, placeCard, receptionWords, type PlaceCard } from './event-view'
@@ -173,14 +180,23 @@ function Shell({ title, auto, onAuto, onSkip, onLog, skipping = false, children 
 }) {
   return (
     <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={title} data-event-player>
-      <header className="flex min-h-12 items-center gap-1 pr-2 pl-4">
-        <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink-soft" data-event-title>{title}</p>
-        <button type="button" onClick={onAuto} aria-pressed={auto} className={`min-h-11 rounded-full px-3 text-[14px] font-semibold ${auto ? 'bg-[#c2385e]/15 text-[#c2385e]' : 'text-ink-soft'}`} data-action="auto">Auto</button>
-        <button type="button" onClick={onSkip} disabled={skipping} className="min-h-11 rounded-full px-3 text-[14px] font-semibold text-ink-soft" data-action="skip">Skip</button>
-        <button type="button" onClick={onLog} className="min-h-11 rounded-full px-3 text-[14px] font-semibold text-ink-soft" data-action="log">Log</button>
-      </header>
-      <div className="relative flex min-h-0 flex-1 flex-col">{children}</div>
+      <ArtHost onSeen={seeIllustrationOnce}>
+        <ShellHeader title={title} auto={auto} onAuto={onAuto} onSkip={onSkip} onLog={onLog} skipping={skipping} />
+        <div className="relative flex min-h-0 flex-1 flex-col">{children}</div>
+      </ArtHost>
     </div>
+  )
+}
+
+/** The title line with Auto, Skip and Log: light over her illustration. */
+function ShellHeader({ title, auto, onAuto, onSkip, onLog, skipping }: { title: string; auto: boolean; onAuto: () => void; onSkip: () => void; onLog: () => void; skipping: boolean }) {
+  return (
+    <header className={`flex min-h-12 items-center gap-1 pr-2 pl-4 ${useArtHeader()}`}>
+      <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink-soft" data-event-title>{title}</p>
+      <button type="button" onClick={onAuto} aria-pressed={auto} className={`min-h-11 rounded-full px-3 text-[14px] font-semibold ${auto ? 'bg-[#c2385e]/15 text-[#c2385e]' : 'text-ink-soft'}`} data-action="auto">Auto</button>
+      <button type="button" onClick={onSkip} disabled={skipping} className="min-h-11 rounded-full px-3 text-[14px] font-semibold text-ink-soft" data-action="skip">Skip</button>
+      <button type="button" onClick={onLog} className="min-h-11 rounded-full px-3 text-[14px] font-semibold text-ink-soft" data-action="log">Log</button>
+    </header>
   )
 }
 
@@ -198,7 +214,11 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
   const wedding = rung === 'wedding' && mode !== 'ask'
   // The guests, settled as the wedding starts (she isn't a spouse yet), and their line before its first.
   const guests = useMemo(() => (wedding && mode === 'event' ? weddingGuests(save, pack, id) : []), []) // eslint-disable-line react-hooks/exhaustive-deps
-  const steps = useMemo((): readonly Step[] => (wedding
+  const beat = beatOf(pack, id, rung)
+  // Her illustrations, by the default mapping (her confession, the wedding, a summer date at the shore) unless the story
+  // names its own. The shore is where the event plays: her beat's place, else its first place step.
+  const illustrated = eventIllustration({ rung, place: beat?.place ?? firstPlace(script), day: save.calendar.day })
+  const steps = useMemo((): readonly Step[] => illustrate(illustrated, wedding
     ? [...(mode === 'event' ? [{ narrate: guestsLine(guests.map(nameOf)) } as Step] : []), ...script.filter((s) => !('place' in s))]
     : script), [script]) // eslint-disable-line react-hooks/exhaustive-deps
   const [picks, setPicks] = useState<number[]>([])
@@ -210,7 +230,6 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
   const [error, setError] = useState<string | null>(null)
   // Her flags as the scene starts: a `when` reads them (and any the scene sets on the way).
   const flags = useMemo(() => save.love[id]?.flags ?? [], []) // eslint-disable-line react-hooks/exhaustive-deps
-  const beat = beatOf(pack, id, rung)
   const extra = mode === 'ask' ? null : extraPlay(steps, beat?.together)
   const path = useMemo(() => walkScene(steps, picks, mode === 'ask' ? { flags } : { flags, plays: plays.map((p) => p.score >= 60) }), [steps, picks, plays, flags, mode])
   const shown = path.steps
@@ -318,6 +337,8 @@ function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, l
   const look = { own: outfit, moments: eventMoments({ rung, together: beat?.together ?? null, place, day: save.calendar.day }), day: save.calendar.day, leads: [id] }
   return (
     <Shell title={title} auto={auto} onAuto={onAuto} onSkip={skip} onLog={() => onLog(true)}>
+      {/* Her illustration while it's up; the play's sheet sits over it. */}
+      <ArtCue owner={id} ask={ended && !extraNow ? null : illustrationAt(shown, cursor)} steps={steps} />
       {/* Landscape: the place card with her bust on the left, her line and the choices on the right. */}
       <SceneLookProvider value={look}>
         <Stage bust={{ who: bustId, name: nameOf(bustId), emote }} backdrop={<PlaceBackdrop card={placed} guests={guests} nameOf={nameOf} />}

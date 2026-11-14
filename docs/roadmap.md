@@ -97,7 +97,6 @@ table. Its steps, in order:
 |---|---|---|
 | 7 | **Farmhands:** her part-time job, then her farm actions; the work board; aptitudes that grow with practice | [F80](handoff/tasks/F80-farmhands.md) |
 | 10 | **The ranch and the mine,** in the farm loop's style | [F83](handoff/tasks/F83-ranch-and-mine.md) |
-| 11 | **Illustrations:** her big moments full screen (the first Uma's nine are published), and a gallery on her profile | [F84](handoff/tasks/F84-illustrations.md) |
 
 Step 1, landscape, is done: the app sideways, the bar and the rail, side panels, and the portrait HD-2D preview
 retired. Step 2, the dialogue engine, is done: every scene on one engine, the pilot's portraits from master data with
@@ -117,6 +116,9 @@ week ([the town](game-mechanics.md#the-town)). A day can now be played end to en
 stage from acquaintance to married (friend at Friendship 3, farmhand once invited to work), hangouts and dates at two
 actions with her scene after the play, Dinner in town and A night in, moving in after the wedding night, and married
 life's meals and the night's companion, who greets you in the morning ([the Uma loop](game-mechanics.md#the-uma-loop)).
+Step 11, illustrations, is built: her big moments open onto her illustration full screen (meeting her, a summer date at
+the shore, the confession, the wedding, the wedding night, a night in and the morning after), the story can name one,
+and a gallery on her profile keeps each one seen ([her illustrations](game-mechanics.md#her-illustrations)).
 Phone checks follow steps 1, 2, 4, 5 and 7.
 
 **What it changes below:**

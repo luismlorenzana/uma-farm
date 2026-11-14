@@ -55,3 +55,11 @@
   from { opacity: 1; }
   to { opacity: 0; }
 }
+
+/* Her illustration's text box (`dialogue/Illustration.tsx`, `Stage.tsx`): its own words are light on its dark glass, each
+   part takes a row, and a choice's options sit side by side where they fit, so the picture stays in view. */
+[data-art-box] > * { flex: 1 1 100%; min-width: 0; }
+[data-art-box] [data-choice] { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+[data-art-box] [data-choice] > * { flex: 1 1 100%; margin: 0; }
+[data-art-box] [data-option], [data-art-box] [data-choice] > [data-option] { flex: 1 1 13rem; width: auto; }
+[data-art-box] :is(.text-ink, .text-ink-soft, .text-ink-faint):not([data-option], [data-option] *) { color: rgb(255 255 255 / 0.78); }

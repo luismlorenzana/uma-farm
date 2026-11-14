@@ -1,7 +1,8 @@
 // The wedding night and moving in, played inside the event player right after the wedding, before the Married stage-up:
 // - **the wedding night**: her route's `wedding-night` event, else the default story's, on the dialogue engine. She wears
 //   its outfit (the wedding night's, unless her story names another), on a night backdrop; she stays on the stage through
-//   the narration with the face of her last line. Tender and never explicit: it fades to morning;
+//   the narration with the face of her last line. With her illustrations it shows `wedding-night`, then
+//   `wedding-night-end` as it fades. Tender and never explicit: it fades to morning;
 // - **moving in**, the morning after: her route's `moving-in`, else the default story's, as she moves into the room she
 //   took (your home, or a house built for her). One who's still waiting for a room moves in the morning a room is free,
 //   and the morning's line plays it then (`?life=moving-in:<id>`).
@@ -37,7 +38,7 @@ export function WeddingNight({ save, id, event: which = 'wedding-night', onDone 
     <SceneLookProvider value={{ own: event.outfit ?? look.own, moments: look.moments, day: save.calendar.day, leads: [id] }}>
       <MasterGate>
         {(master) => (
-          <LifeScene key={which} id={id} steps={event.steps} nameOf={namer(master, story)} farmer={save.farmer.name} onDone={onDone}
+          <LifeScene key={which} id={id} steps={event.steps} nameOf={namer(master, story)} farmer={save.farmer.name} onDone={onDone} illustrated={which === 'wedding-night' ? 'wedding-night' : null}
             backdrop={which === 'wedding-night' ? NIGHT_BACKDROP : null} data={which === 'wedding-night' ? { 'data-wedding-night': true } : { 'data-moving-in': true }} />
         )}
       </MasterGate>

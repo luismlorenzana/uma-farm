@@ -14,7 +14,7 @@
   "dependencies": {
     "@farm/domain": "workspace:*",
     "@luismlorenzana/uma-art": "2.27.0",
-    "@luismlorenzana/uma-data": "1.7.0",
+    "@luismlorenzana/uma-data": "1.8.0",
     "@luismlorenzana/uma-kit": "0.20.0",
     "@luismlorenzana/uma-work": "0.1.0",
     "dexie": "^4.4.6",

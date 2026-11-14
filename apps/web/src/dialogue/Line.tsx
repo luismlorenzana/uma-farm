@@ -5,6 +5,7 @@
 import { withFarmer, type Step } from '@farm/domain'
 import { useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useRef, useState } from 'react'
+import { useArtMode } from './Illustration'
 
 /** A step's words, kind and speaker as a line shows them. */
 export function lineOf(step: Step, farmer: string): { kind: 'say' | 'narrate' | 'thought' | 'other'; speaker: string | null; text: string } {
@@ -79,15 +80,17 @@ export function Line({ step, nameOf, farmer, onNext, onHold, typed = false, auto
     else onNext()
   }
   const footer = still ? null : typed ? (full ? `Tap to go on${onHold ? ' · hold to skip' : ''}` : 'Tap to finish') : `Tap to go on${count ? ` · ${count.at}/${count.of}` : ''}`
+  // Over her illustration the text box is the stage's: the line sits in it, light on its dark glass.
+  const art = useArtMode() !== 'none'
   return (
     <button type="button" onClick={tap} onPointerDown={down} onPointerUp={up} onPointerCancel={up} onPointerLeave={up} disabled={still}
-      className="w-full shrink-0 rounded-md border border-hairline bg-panel p-4 text-left shadow-2 disabled:opacity-100" aria-label={still ? undefined : 'Next'}
+      className={`w-full shrink-0 text-left disabled:opacity-100 ${art ? 'px-0.5' : 'rounded-md border border-hairline bg-panel p-4 shadow-2'}`} aria-label={still ? undefined : 'Next'}
       data-beat={beat} data-step={kind} aria-live="polite">
-      {speaker && <p className="font-display text-[15px] font-bold text-accent" data-speaker>{nameOf(speaker)}</p>}
-      <p className={`pt-0.5 leading-snug ${typed ? 'line-clamp-3 min-h-[3lh] text-[16px]' : 'text-[17px]'} ${kind === 'say' ? 'text-ink' : 'text-ink-soft italic'}`} data-line={text}>
+      {speaker && <p className={`font-display text-[15px] font-bold ${art ? 'text-[#ffb8cb]' : 'text-accent'}`} data-speaker>{nameOf(speaker)}</p>}
+      <p className={`pt-0.5 leading-snug ${typed ? `line-clamp-3 text-[16px] ${art ? (still ? '' : 'min-h-[2lh]') : 'min-h-[3lh]'}` : 'text-[17px]'} ${kind === 'say' ? (art ? 'text-white' : 'text-ink') : `${art ? 'text-white/80' : 'text-ink-soft'} italic`}`} data-line={text}>
         {text.slice(0, chars)}
       </p>
-      {footer && <p className="pt-1 text-right text-[12px] text-ink-faint">{footer}</p>}
+      {footer && <p className={`pt-1 text-right text-[12px] ${art ? 'text-white/55' : 'text-ink-faint'}`}>{footer}</p>}
     </button>
   )
 }

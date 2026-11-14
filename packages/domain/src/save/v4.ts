@@ -488,6 +488,9 @@ export interface SaveV5 {
   memories: Record<CharacterId, string[]>
   /** Arrival scenes played or skipped, in the order they played. */
   arrivals: CharacterId[]
+  /** Her gallery, by character: the ids of her illustrations seen, in the order first seen, each kept for good (the
+   * pictures and titles are master data's). An older v5 has none. */
+  gallery: Record<CharacterId, string[]>
   summary: MorningSummary | null
   /** You and each Uma, by character: her talks so far, the last day you talked and the last you gave her a gift. An
    * older v4 has none. */
@@ -540,6 +543,7 @@ export function newSave(uid: string, now: string): SaveV5 {
     homestead: { houses: [FARMHOUSE], tonight: null, alone: null, slept: [0], furniture: [], married: 0, finale: 0 },
     memories: {},
     arrivals: [],
+    gallery: {},
     summary: null,
     town: {},
   }
