@@ -8,9 +8,10 @@
 //   short of upkeep     what gold there is pays, the rest is owed; the first short night warns in the morning, and from
 //                       the second the farmhands work at half pace (`halfPace`) until it's paid. Nobody leaves, and
 //                       nothing is lost: gold never goes below 0.
-//   loans               at the mayor's office, in town: borrow what a build or a house is short of gold (rounded up to
-//                       100g), up to the Farm Rank's limit; one loan at a time, two from Farm Rank 4; a 10% fee; each
-//                       night's income repays up to a tenth of it, before upkeep; repay the rest at the office any time.
+//   loans               at the mayor's office, in town: borrow what a place, the Dorm's next level or a house is short
+//                       of gold (rounded up to 100g), up to the Farm Rank's limit; one loan at a time, two from Farm
+//                       Rank 4; a 10% fee; each night's income repays up to a tenth of it, before upkeep; repay the
+//                       rest at the office any time.
 //
 // The book keeps the bin's pay on each of the last seven nights, so the Book can set an average day's income beside the
 // daily upkeep. Ordering a build stays where it is (its Build card, free, no town needed): the office adds the loan.
