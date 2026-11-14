@@ -14,12 +14,12 @@
 //
 // A perk at her line's place works only once that place is built ("Opens when the Kitchen is built"). The shared rules call these
 // only with the pack. Loaded with the night and the romance's screens.
-import { placeBuilt, type FarmPlaceId } from '../farm/places'
+import type { FarmPlaceId } from '../farm/places'
 import { marriedCount, type Love, type SaveV4 } from '../save/v4'
 import { type StoryPack } from '../story/pack'
 import { linePlaces } from '../story/placeholders'
 import { nextRung, ROUTE_RUNGS } from './love'
-import { linePlace, perkLineOf } from './perks'
+import { perkLineOpen, perkLineOf } from './perks'
 
 /** What the perks read of the story pack: her favourite line (her bible, else her calling) and so her line's places. */
 export type PerkPack = Pick<StoryPack, 'cast' | 'bibles'>
@@ -43,12 +43,10 @@ export const homeOrHoused = (save: Pick<SaveV4, 'dorm' | 'love'>, id: string): b
   return save.dorm.home.includes(id) || (love?.stage === 'spouse' && love.house !== undefined)
 }
 
-/** Whether her line's place is open on this farm: open from the start, or built. */
+/** Whether her line's place is open on this farm: open from the start, or built (the ranch's, the Coop or the Barn). */
 export function linePlaceOpen(save: Pick<SaveV4, 'buildings'>, pack: PerkPack, id: string): boolean {
   const line = perkLineOf(pack, id)
-  if (line === null) return false
-  const place = linePlace(line)
-  return place === null || placeBuilt(save, place)
+  return line !== null && perkLineOpen(save, line)
 }
 
 /** Whether `place` is one of her line's places (the Fields, the forest and the Sawmill, the Fishery and the

@@ -2,8 +2,8 @@
 // Written from uma-art 2.21.0's `items/atlas.json`: every good's id, family and grade are uma-art's own, so names and
 // icons come from ids as today (a web test checks each id is on the atlas). 284 goods: 27 crops and 10 flours, the
 // forest's 113, mining's 60, fishing's 20, expeditions' 30, and the ranch's: uma-art's fibers (20, the Barn's wool and
-// fleeces and their cloth) and the Coop's and the Barn's eggs and milk (4). The eggs and milk are the farm's own ids, drawn
-// in code until uma-art draws them (`EGGS_MILK`); every other id is uma-art's. The dishes' and the Forge's goods join
+// fleeces and their cloth) and the Coop's and the Barn's eggs and milk (4, `EGGS_MILK`, on uma-art's atlas from 2.30.0 as
+// the `ranch` kind's `eggs-milk` line). The dishes' and the Forge's goods join
 // with their screens. Each gets its price ★1 by the one rule (`rule.ts`) and a refined good its input.
 //
 // **The rings** are the catalogue's own family: the ten, `ring-g1` …
@@ -13,8 +13,8 @@
 import { itemNameOf } from '../items/lines'
 import { CROP_PRICES, ladderPrice, refinedPrice, type LadderFamily } from './rule'
 
-/** The families the 284 goods come from: uma-art's fifteen, then the ranch's eggs and milk (the farm's own until uma-art
- * draws them). */
+/** The families the 284 goods come from: uma-art's fifteen, then the ranch's eggs and milk (uma-art's `eggs-milk` line,
+ * a family of the farm's). */
 export const GOOD_FAMILIES = [
   'grains', 'vegetables', 'herbs-spices', 'nuts-seeds', 'sweets', 'fruits', 'mushrooms', 'woods',
   'ores', 'stones', 'crystals', 'fish', 'fibers', 'hides-scales', 'bones-horns', 'essences', 'eggs-milk',
@@ -32,7 +32,7 @@ export const FAMILY_NAMES: Readonly<Record<GoodFamily, string>> = {
   'bones-horns': 'Bones and horns', essences: 'Essences', 'eggs-milk': 'Eggs and milk', rings: 'Rings',
 }
 
-/** The ranch's eggs and milk: the farm's own ids, G1 → G4, drawn in code until uma-art's items atlas has them. */
+/** The ranch's eggs and milk, G1 → G4: on uma-art's items atlas from 2.30.0, row 38. */
 export const EGGS_MILK = ['egg', 'milk', 'duck-egg', 'goat-milk'] as const
 
 /** Each family's ten raw ids, G1 → G10, and their refined forms where the farm keeps them (the vegetables' refined forms

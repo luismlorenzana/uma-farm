@@ -4,6 +4,8 @@
 //                                from the morning's ☾ line (her temperament's greeting, the same all morning);
 //   `?life=moving-in:<id>`      moving in: her route's `moving-in`, else the default story's, from the morning's
 //                                "moved into" line (a spouse who waited for a room);
+//   `?life=invited-to-work:<id>` the invitation to work: her route's `invited-to-work`, else the default story's (at the
+//                                farm gate, in the day's outfit), right after you invite her, the action spent;
 //   `?life=breakfast:<id>`,     a meal's scene: one spouse's line as you sit down, after you cook it.
 //   `?life=dinner:<id>`
 // She stays on the stage through the narration with the face of her last line; a choice is wording only. Her
@@ -36,10 +38,10 @@ export const MORNING_BACKDROP = <span aria-hidden className="absolute inset-0" s
 
 /**
  * A short scene's steps, played: each line with the speaker's bust; she (`id`) stays on the stage through narration with
- * her last line's face; a choice is wording only, its `then` spliced in. `onDone` at its end.
+ * her last line's face; a choice is wording only, its `then` spliced in. `onDone` at its end, with the steps as played.
  */
 export function LifeScene({ id, steps: written, nameOf, farmer, backdrop = null, illustrated = null, onDone, data = {} }: {
-  id: string; steps: readonly Step[]; nameOf: (who: string) => string; farmer: string; backdrop?: ReactNode; onDone: () => void
+  id: string; steps: readonly Step[]; nameOf: (who: string) => string; farmer: string; backdrop?: ReactNode; onDone: (played: readonly Step[]) => void
   /** Which of her illustrated scenes this is (the wedding night, a night in, the morning greeting): her illustrations by
    * the default mapping, unless the story names its own. */
   illustrated?: IllustratedScene | null
@@ -54,7 +56,7 @@ export function LifeScene({ id, steps: written, nameOf, farmer, backdrop = null,
   const step = shown[cursor]
   const done = cursor >= shown.length
   useEffect(() => {
-    if (done) onDone()
+    if (done) onDone(shown)
   }, [done]) // eslint-disable-line react-hooks/exhaustive-deps
   // Her illustration while it's up (the story's own, or the default mapping's); down at the end.
   const art = <ArtCue owner={id} ask={step ? illustrationAt(shown, cursor) : null} steps={steps} />
@@ -78,8 +80,8 @@ export function LifeScene({ id, steps: written, nameOf, farmer, backdrop = null,
 
 // --- `?life=` -------------------------------------------------------------------------------------------------------
 
-export type LifeKind = 'morning' | 'moving-in' | Meal
-const LIFE = /^(morning|moving-in|breakfast|dinner):(s?\d{1,12})$/
+export type LifeKind = 'morning' | 'moving-in' | 'invited-to-work' | Meal
+const LIFE = /^(morning|moving-in|invited-to-work|breakfast|dinner):(s?\d{1,12})$/
 /** What `?life=` asks for: its kind and her id. */
 export function parseLife(value: string | null): { kind: LifeKind; id: string } | null {
   const m = value ? LIFE.exec(value) : null
@@ -89,16 +91,17 @@ export function parseLife(value: string | null): { kind: LifeKind; id: string } 
 export const lifeParam = (kind: LifeKind, id: string): string => `${kind}:${id}`
 
 /** A scene's titles and look by its kind. */
-const TITLES: Readonly<Record<LifeKind, string>> = { morning: 'Morning', 'moving-in': 'Moving in', breakfast: 'Breakfast', dinner: 'Dinner' }
-const MOMENTS: Readonly<Record<LifeKind, Moment[]>> = { morning: ['night-in'], 'moving-in': [], breakfast: [], dinner: [] }
+const TITLES: Readonly<Record<LifeKind, string>> = { morning: 'Morning', 'moving-in': 'Moving in', 'invited-to-work': 'Invited to work', breakfast: 'Breakfast', dinner: 'Dinner' }
+const MOMENTS: Readonly<Record<LifeKind, Moment[]>> = { morning: ['night-in'], 'moving-in': [], 'invited-to-work': [], breakfast: [], dinner: [] }
 
-/** The scene `?life=` plays: its steps (her route's moving-in is read on demand), with her outfit when it names one. */
+/** The scene `?life=` plays: its steps (her route's moving-in and invitation are read on demand), with her outfit when it
+ * names one. */
 async function stepsFor(kind: LifeKind, save: SaveV4, story: StoryPack, master: MasterView, id: string): Promise<{ steps: readonly Step[]; outfit?: StoryOutfit }> {
   const name = namer(master, story)(id)
   switch (kind) {
     case 'morning': return { steps: greetingScene(save, story, id, talentTable(master).get(outfitFor(id))?.temperament ?? 'steady', name), outfit: 'pajamas' }
-    case 'moving-in': {
-      const event = await herEventOf(story, id, 'moving-in')
+    case 'moving-in': case 'invited-to-work': {
+      const event = await herEventOf(story, id, kind)
       return { steps: event.steps, ...(event.outfit ? { outfit: event.outfit } : {}) }
     }
     default: return { steps: mealScene(save, story, id, kind, name) }

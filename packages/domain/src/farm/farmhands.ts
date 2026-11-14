@@ -326,9 +326,9 @@ function digger(save: FarmSave, id: string, dig: DigId, level: number, fed: bool
 }
 
 /** The animals' care, one action: a hungry animal fed (two from Animal care 3) while the silo holds feed, else grass cut
- * on a weeds tile for it; then the building's goods collected, at her aptitude's quality; then an animal cared for (two
- * from Animal care 5), +1 fondness a level above 1. Null once all are fed, collected and cared for. */
-function careStep(save: FarmSave, home: Extract<FarmTask, { kind: 'care' }>['home'], level: number): Step | null {
+ * on a weeds tile for it; then the building's goods collected, at her aptitude's quality and her keepsake there; then an
+ * animal cared for (two from Animal care 5), +1 fondness a level above 1. Null once all are fed, collected and cared for. */
+function careStep(save: FarmSave, id: string, home: Extract<FarmTask, { kind: 'care' }>['home'], level: number, story: PerkPack | null): Step | null {
   if (!homeBuilt(save, home)) return null
   const animals = animalsIn(save, home)
   const hungry = animals.filter((a) => !a.fed)
@@ -338,7 +338,7 @@ function careStep(save: FarmSave, home: Extract<FarmTask, { kind: 'care' }>['hom
   }
   if (hungry.length > 0 && grassLock(save) === null && save.fields.tiles.some((t) => t.ground === 'weeds')) return { save: grassAt(save).save, n: 0, items: [], events: [] }
   if (readyIn(save, home) > 0) {
-    const done = collectAt(save, home, aptitudeQuality(level))
+    const done = collectAt(save, home, round6(aptitudeQuality(level) + keepsakeAt(save, story, id, home)))
     return { save: done.save, n: 0, items: done.collected.items, events: [] }
   }
   const lonely = animals.filter((a) => !a.cared).slice(0, level >= TRICK_AT.careTwo ? 2 : 1)
@@ -429,7 +429,7 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       const done = fishAt(save, task.spot, by)
       return { save: done.save, n: done.caught.length, items: done.haul.items, events: [{ activity: 'fishing', event: { kind: 'catch', spot: task.spot as FishingSpotId, fish: done.caught.length } }] }
     }
-    case 'care': return careStep(save, task.home, level)
+    case 'care': return careStep(save, id, task.home, level, story)
     case 'mine': {
       if (!digBuilt(save, task.dig)) return null
       const done = faceAt(save, task.dig, digger(save, id, task.dig, level, fed, talentOf, story))

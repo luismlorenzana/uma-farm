@@ -6,7 +6,8 @@
 // - **Talk · 1** (once a day, +15): her line for the day, her face happy;
 // - **Give a gift · 1** (once a day): the gift picker, then her reaction, her face by her taste;
 // - **Hangout · 2** (a friend) or **Date · 2** (a sweetheart, a spouse): her evening, or why not;
-// - **Invite her to work · 1** (a friend, once): she's a farmhand from today;
+// - **Invite her to work · 1** (a friend, once): she's a farmhand from today, and her scene plays over the town
+//   (`?life=invited-to-work:<id>`: her route's, else the default story's at the farm gate);
 // - **Her event · 1** once it's Ready (the event player, over the town).
 // One of the town's people gets her post instead: her role, what she does, her ties, and her post's menu. One not out now
 // says so; one who lives on the farm links her profile. A talk, a gift or an introduction that unlocks a Town note says
@@ -17,7 +18,7 @@ import {
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { SceneLookProvider } from '../dialogue/Bust'
 import { Line } from '../dialogue/Line'
 import { Stage } from '../dialogue/Stage'
@@ -63,6 +64,7 @@ export function HerMenu({ id, save, pack, master, day, nameOf, onClose }: {
 /** One of the cast, or anyone who lives in town: her line on the engine, and her menu. */
 function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: string; save: SaveV4; pack: StoryPack; master: MasterView; at: string | null; nameOf: NameOf }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const [said, setSaid] = useState<{ line: string; emote: Expression } | null>(null)
   const [note, setNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -103,6 +105,8 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
         await workOnce(id)
         setSaid({ line: 'The farm? I’d love to. Count me in.', emote: 'happy' })
         setNote('Farmhand ✓')
+        // Her scene plays over the town, the action spent.
+        navigate(withParam(location, 'life', `invited-to-work:${id}`), { state: { back: true } })
       })
       default: return undefined
     }

@@ -105,16 +105,12 @@ export function workFace<S extends FarmSave>(save: S, dig: DigId): { save: S; fa
 export function faceAt<S extends FarmSave>(save: S, dig: DigId, by: Digger): { save: S; face: Face } {
   const at = save.places[dig]
   const floor = digFloor(at)
-  const grade = gradeAt(floor)
   const before = save.farm.counts[dugCount(dig)] ?? 0
   const u = (what: string, k: number) => draw(save.account.uid, save.calendar.day, `${what}:${dig}`, before + k)
   let items = save.items
   const got: string[] = []
   for (let k = 0; k < by.count; k++) {
-    const step = pick(GRADE_SHARES, u('dig', k))
-    const g = Math.min(10, Math.max(1, grade + step))
-    const family = pick(DIG_FINDS[dig], u('dig-kind', k))
-    const good = GOODS.find((x) => x.family === family && !x.refined && x.grade === g)!.id
+    const good = findOn(dig, floor, u('dig', k), u('dig-kind', k))
     const stars = drawStars(by.q, u('dig-stars', k))
     items = addGoods(items, good, stars, 1)
     got.push(stockKey(good, stars))
@@ -137,6 +133,17 @@ export function takeStairs<S extends FarmSave>(save: S, dig: DigId): S {
   const floor = digFloor(save.places[dig]) + 1
   return { ...spend(save, 'stairs'), places: { ...save.places, [dig]: { deepest: floor, stairs: 0 } } }
 }
+
+/** One find on a floor, by two draws in [0, 1): its grade by `grade` (the floor's 70%, the one below 20%, the one above
+ * 10%), its family by `kind` (the Quarry's stone 70% or gem 30%). A face's finds and a miner's night chores draw it. */
+export function findOn(dig: DigId, floor: number, grade: number, kind: number): string {
+  const g = Math.min(10, Math.max(1, gradeAt(floor) + pick(GRADE_SHARES, grade)))
+  const family = pick(DIG_FINDS[dig], kind)
+  return GOODS.find((x) => x.family === family && !x.refined && x.grade === g)!.id
+}
+
+/** A floor's top grade: the highest its faces find (the grade above the floor's, held to G10). */
+export const floorTopGrade = (floor: number): number => Math.min(10, gradeAt(floor) + Math.max(...GRADE_SHARES.map(([step]) => step)))
 
 /** A share's pick by a draw `u` in [0, 1). */
 function pick<T>(shares: readonly (readonly [T, number])[], u: number): T {

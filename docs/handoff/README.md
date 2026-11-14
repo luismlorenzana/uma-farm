@@ -69,13 +69,19 @@ finds (ores; stones and gems), a grade every three floors, and its faces find th
 the Farm Rank reaches; the deepest floor is kept. The Smelter and the Cutter take loads like the other stations, and the
 Mill weaves wool into cloth. On the work board, a farmhand cares for the Coop or the Barn (feed, collect, care) or works
 a dig's face, with the Animal care and Mining aptitudes and their tricks. The catalogue grows to 284 goods: uma-art's
-fibers, and the eggs and milk, drawn in code until uma-art's atlas has them. A simulated two years with the Coop and the
-Mine never runs short, and each pays more than its nights cost ([the ranch](../game-mechanics.md#the-ranch),
+fibers, and the eggs and milk. A simulated two years with the Coop and the Mine never runs short, and each pays more
+than its nights cost ([the ranch](../game-mechanics.md#the-ranch),
 [the Mine and the Quarry](../game-mechanics.md#the-mine-and-the-quarry)).
+**The rework's loose ends (F85) are in:** a ranch Uma's and a miner's perks act once their places stand, as every
+line's do: the goods she collects at the Coop or the Barn and her faces at the Mine or the Quarry (and her Smelter or
+Cutter batch) come home ×1.1 at Friendship 2, ×1.2 at Romance 5; a rancher's night chores give her building's animals
++5 fondness each, a miner's bring a find from the deepest floor; her morning items are her line's goods, and her
+signature dish's grade is her line's best place's ([at her line](../game-mechanics.md#at-her-line)). Inviting a friend to
+work plays her scene, her route's `invited-to-work` or the default's at the farm gate; Spouse 2 and 4 play their scene
+from the morning's line, then the card. The eggs and milk show uma-art 2.30.0's icons.
 
 | Piece | Who | State |
 |---|---|---|
-| [F85](tasks/F85-rework-loose-ends.md) **The rework's loose ends** | Claude | Next: the ranch's and mining's perks, the invitation's scene, Spouse 2 and 4's events, the eggs' icons |
 | [F69](tasks/F69-bust-art-spec.md) **The bust art**, the next Umas | ChatGPT | The pilot is done; the rest in the Ranker's order |
 | [F40](tasks/F40-story-authoring.md) **The story**, and its ship routine | The story session | Release 1 shipped; Release 2 brings `world.json` |
 
@@ -96,6 +102,7 @@ The table above is the queue. A packet is deleted when it ships, and git keeps t
 | **Go into town and meet three Umas you choose:** walk between the places, introduce yourself, talk and give a gift, each an action | [uma-farm.web.app](https://uma-farm.web.app), and [the town](../game-mechanics.md#the-town) |
 | **Hire two Umas, set their tasks, and spend a day only in town:** invite two friends to work, give one the field's watering and the other a spot to fish on the Book's work board, then go into town and spend the day there; the next morning, see what they did, and over the days watch their aptitudes rise on their profiles | [uma-farm.web.app](https://uma-farm.web.app), and [farmhands](../game-mechanics.md#farmhands) |
 | **The ranch and the mine:** at Farm Rank 2, build the Coop; go into town and buy a chicken and some fodder at the rancher's; feed it and care for it, end the day, and collect its egg in the morning. At Farm Rank 4, build the Mine, work three floors (two faces a floor find the stairs; take them, free). Then set one farmhand to the Coop's care and another to the Mine's face on the Book's work board, end the day, and see the morning report their work | [uma-farm.web.app](https://uma-farm.web.app), and [the ranch](../game-mechanics.md#the-ranch) and [the Mine and the Quarry](../game-mechanics.md#the-mine-and-the-quarry) |
+| **The loose ends' look:** invite a friend to work and watch her scene at the farm gate; with a ranch Uma caring for the Coop, see the morning's "Perks" line now and then; and the eggs' and milk's icons in the Warehouse | [uma-farm.web.app](https://uma-farm.web.app), and [the invitation to work](../game-mechanics.md#the-invitation-to-work) |
 | **Take one Uma to married life:** meet her, befriend her, invite her to work, a hangout and a date (two actions each), Dinner in town; after the wedding, watch the wedding night and moving in, cook a meal, choose tonight's companion and see her greet you in the morning | [uma-farm.web.app](https://uma-farm.web.app), and [the Uma loop](../game-mechanics.md#the-uma-loop) |
 | **Her illustrations' phone check:** meet the first Uma and see her greeting full screen; play her confession, both moods; open her profile's Gallery and see it fill as you go | [uma-farm.web.app](https://uma-farm.web.app), and [her illustrations](../game-mechanics.md#her-illustrations) |
 | **Write the story and ship it.** F40 lists what the rework changes for it: the protagonist is a man, there's no welcome week, and her life in town (`home`, `job`, `routine`, and `town.json`'s `locations`) | [F40](tasks/F40-story-authoring.md) |

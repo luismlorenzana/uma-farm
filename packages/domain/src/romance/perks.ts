@@ -92,7 +92,7 @@ export const NIGHT_CHORE: Readonly<Record<PerkLine, string>> = {
   fishing: 'One fish from the Fishery each night',
   mining: 'One ore from the Mine each night',
   quarry: 'One stone or gem from the Quarry each night',
-  ranch: '+5 affection to her pen each night',
+  ranch: '+5 fondness to her animals each night',
   cooking: 'One more dish on the Kitchen’s next play',
   serving: 'One more cover on the Restaurant’s next shift',
   forging: '5% back on the Forge’s next tool',
@@ -140,6 +140,14 @@ export function perkWords(id: PerkId, line: PerkLine): string {
  * a place open from the start. */
 export const linePlace = (line: PerkLine): FarmPlaceId | null => (line === 'quarry' ? 'quarry' : ACTIVITY_PLACE[line] ?? null)
 
+/** Whether her line's place is open on this farm: open from the start, or built. The ranch's opens with either of its
+ * two, the Coop or the Barn. */
+export function perkLineOpen(save: Pick<FarmSave, 'buildings'>, line: PerkLine): boolean {
+  if (line === 'ranch') return placeBuilt(save, 'coop') || placeBuilt(save, 'barn')
+  const place = linePlace(line)
+  return place === null || placeBuilt(save, place)
+}
+
 /** Her line as the perks read it: her favourite (`favouriteOf`), a quarry calling's mining at the Quarry. Null for
  * someone the pack doesn't hold. */
 export function perkLineOf(pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string): PerkLine | null {
@@ -158,7 +166,8 @@ export interface Perk extends PerkDef {
 /** Every perk on her route for her line, in order, on this farm. */
 export function perksFor(line: PerkLine, save: Pick<FarmSave, 'buildings'>): Perk[] {
   const waits = linePlace(line)
-  return PERKS.map((p) => ({ ...p, words: perkWords(p.id, line), opens: p.place && waits !== null && !placeBuilt(save, waits) ? waits : null }))
+  const open = perkLineOpen(save, line)
+  return PERKS.map((p) => ({ ...p, words: perkWords(p.id, line), opens: p.place && waits !== null && !open ? waits : null }))
 }
 
 /** The perk a rung brings, or null for a waiting rung (the confession, the proposal's and the wedding's waits). */

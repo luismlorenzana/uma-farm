@@ -161,8 +161,8 @@ export function characterView(id, onReview) {
 }
 
 // ── Her scenes and her pair talks, to read ─────────────────────────────────────
-const RUNG_ORDER = ['arrival', ...Array.from({ length: 10 }, (_, i) => `f${i + 1}`), 'confession', ...Array.from({ length: 10 }, (_, i) => `r${i + 1}`), 'proposal', 'wedding', 'wedding-night', 's1', 's3', 's5']
-const EVENT_LABEL = { arrival: 'Arrival', confession: 'Confession', proposal: 'Proposal', wedding: 'Wedding', 'wedding-night': 'The wedding night', 'dinner-in-town': 'Dinner in town', 'a-night-in': 'A night in', 'new-year': 'The year’s first day', 'flower-show': 'The Flower Show', 'derby-night': 'The Fishing Derby’s night',
+const RUNG_ORDER = ['arrival', ...Array.from({ length: 10 }, (_, i) => `f${i + 1}`), 'invited-to-work', 'confession', ...Array.from({ length: 10 }, (_, i) => `r${i + 1}`), 'proposal', 'wedding', 'wedding-night', 's1', 's3', 's5']
+const EVENT_LABEL = { arrival: 'Arrival', 'invited-to-work': 'Invited to work', confession: 'Confession', proposal: 'Proposal', wedding: 'Wedding', 'wedding-night': 'The wedding night', 'dinner-in-town': 'Dinner in town', 'a-night-in': 'A night in', 'new-year': 'The year’s first day', 'flower-show': 'The Flower Show', 'derby-night': 'The Fishing Derby’s night',
   'fishing-derby': 'The Fishing Derby', 'cooking-contest': 'The Cooking Contest', 'harvest-moon': 'The harvest moon', 'animal-show': 'The Animal Show',
   'harvest-cup': 'The Harvest Cup', 'harvest-cup-night': 'The Harvest Cup’s night', 'blossom-viewing': 'Blossom viewing', 'wishing-night': 'The wishing night',
   'first-cold-evening': 'The first cold evening', 'first-snow': 'The first snow', 'longest-night': 'The longest night', 'sweets-day': 'The sweets day',

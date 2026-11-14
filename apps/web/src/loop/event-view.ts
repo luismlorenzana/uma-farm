@@ -99,8 +99,11 @@ export const gradeWords = (score: number, length: PlayLength = 'event'): string 
 
 /** The sum: "+50 event · +30 choice · +15 Great = +95 toward Friendship 2 (+40 banked)". */
 export function sumWords(card: EventCard): string {
-  // A night level has no event; her 600 filled.
-  if (card.night) return `Her bar filled overnight: no event, the level comes by itself${card.next ? ` · now toward ${rungName(card.next.rung)}` : ''}`
+  // A night level: her 600 filled, and her scene played before the card (with none to play, "no event").
+  if (card.night) {
+    const next = card.next ? ` · now toward ${rungName(card.next.rung)}` : ''
+    return card.scene ? `Her bar filled overnight${next}` : `Her bar filled overnight: no event, the level comes by itself${next}`
+  }
   const choices = card.choices.reduce((a, b) => a + b, 0)
   const parts = [
     `+${card.event} event`,

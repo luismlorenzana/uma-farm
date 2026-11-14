@@ -176,8 +176,10 @@ export interface EventCard {
   wedding: WeddingCard | null
   /** Her last line of the event. */
   line: string | null
-  /** A level reached at night (S2, S4): no event, her bar's 600 filled. */
+  /** A level reached at night (S2, S4): her bar's 600 filled. */
   night?: true
+  /** A night level whose scene played first: her route's `s2` or `s4`, else the default story's. */
+  scene?: true
   /** The next rung: its cost, her points toward it and what's banked past it, its place and setup (her beat's hint) and
    * its perk; null once her route is complete. */
   next: { rung: string; cost: number; points: number; banked: number; hint: string | null; perk: PerkId | null } | null

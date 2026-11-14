@@ -7,7 +7,7 @@
 //                   S1, S3 and S5. A chapter's events are its rungs in the route's order, and the chapters run in the order
 //                   of their first events. A rung the pack leaves out counts in the chapter before it (else the first); a
 //                   rung in two counts in the first; a chapter holding none is left out
-//   the one she's   the chapter holding her next rung (S2 and S4, which have no event, count with S1 and S3). None once
+//   the one she's   the chapter holding her next rung (S2 and S4, which come at night, count with S1 and S3). None once
 //   in              her route is complete: her last chapter closes in married life, and the household goes on after it
 //   its gate        the farm's, from the trigger menu: a place built, a Farm Rank, a good shipped, another's event, a
 //                   season or a festival. It holds back the chapter's first event (her meeting scene aside: her `meet`

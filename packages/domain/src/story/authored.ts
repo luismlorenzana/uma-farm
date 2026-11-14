@@ -67,8 +67,9 @@ export const ARRIVAL = 'arrival'
 export const RUNGS: readonly string[] = [
   ARRIVAL, ...Array.from({ length: 10 }, (_, i) => `f${i + 1}`), 'confession', ...Array.from({ length: 10 }, (_, i) => `r${i + 1}`), 'proposal', 'wedding', 's1', 's3', 's5',
 ]
-/** Her life's events past the rungs: the wedding night, moving in, and married life 2 and 4. They pay nothing. */
-export const LIFE_EVENTS = ['wedding-night', 'moving-in', 's2', 's4'] as const
+/** Her life's events past the rungs: the invitation to work, the wedding night, moving in, and married life 2 and 4. They
+ * pay nothing. */
+export const LIFE_EVENTS = ['invited-to-work', 'wedding-night', 'moving-in', 's2', 's4'] as const
 /** Her occasions, on their day: her birthday, New Year's, the game's five festivals and the Fishing Derby's night
  * (`derby-night`). They pay nothing. The calendar plays `new-year`, `flower-show` and `derby-night` (`romance/occasions.ts`). */
 export const OCCASIONS = ['birthday', 'new-year', 'flower-show', 'fishing-derby', 'derby-night', 'cooking-contest', 'animal-show', 'harvest-cup'] as const

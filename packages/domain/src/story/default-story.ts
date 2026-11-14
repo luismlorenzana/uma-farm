@@ -8,7 +8,7 @@
 //   talks           six stages (acquaintance, friend, farmhand, sweetheart, engaged, married), five temperaments each
 //   gift reactions  loved, liked, neutral, disliked (`{gift}` the good given)
 //   her events      meeting her (in town), Friendship 1–10, the confession, Romance 1–10, the proposal,
-//                   the wedding, the wedding night, moving in, married life 1–5
+//                   the wedding, the wedding night, moving in, married life 1–5; the invitation to work
 //   occasions       her birthday, the five festivals and the Fishing Derby's night, New Year's
 //   evenings        a scene for each hangout and date kind, Dinner in town and A night in
 //   married life    the night's companion's morning greetings, by temperament; lines for meals
@@ -281,8 +281,8 @@ export const DEFAULT_TOWN_MEETING: DefaultScene = scene('You introduce yourself,
     ['Only if you tell me about you.', say('Deal. But you go first.', 'teasing')]),
 ], { place: 'town' })
 
-/** Her events by id: the route's rungs (her meeting in town as `arrival`), then the wedding night, moving in and married
- * life 2 and 4 (the rungs are S1, S3 and S5), then her occasions. */
+/** Her events by id: the route's rungs (her meeting in town as `arrival`), then her life's (the invitation to work, the
+ * wedding night, moving in and married life 2 and 4; the rungs are S1, S3 and S5), then her occasions. */
 export const DEFAULT_EVENTS: Readonly<Record<string, DefaultScene>> = {
   arrival: DEFAULT_TOWN_MEETING,
   f1: scene('A quiet afternoon with her.', [
@@ -435,6 +435,14 @@ export const DEFAULT_EVENTS: Readonly<Record<string, DefaultScene>> = {
     },
     narrate('The bell rings again, and the whole valley cheers.'),
   ]),
+  // Her life's events. The invitation to work: at the farm gate, in the day's outfit (her everyday one), as she starts.
+  'invited-to-work': scene('She meets you at the farm gate, sleeves already rolled up.', [
+    say('You really want me on the farm? Then I’m in. Obviously.', 'happy'),
+    say('I’ll keep my job in town, mind. The rest of the day is the farm’s.', 'determined'),
+    choose(null, ['Glad to have you.', say('Glad to be had. Show me where the tools live.', 'laughing')],
+      ['Think you can keep up?', say('Think you can keep up with me?', 'teasing')]),
+    say('Put my tasks on the board. I’ll see to them after my shift.', 'smug'),
+  ], { place: 'gate' }),
   'wedding-night': scene('The guests have gone home. The house is quiet, and the lamps are low.', [
     say('It’s just us now.', 'shy'),
     say('I keep looking at you, and I can’t believe you’re my husband.', 'flustered'),

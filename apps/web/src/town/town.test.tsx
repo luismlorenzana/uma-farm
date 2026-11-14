@@ -309,6 +309,13 @@ describe('the town', () => {
     await click($('[data-action="menu-work"]'))
     await until(() => save().roster['90001']?.farmhand === 5)
     expect(save().today.actions).toBe(1)
+    // Her scene plays over the town, the action spent: the default story's, at the farm gate.
+    await find('[data-life="invited-to-work"]')
+    expect(decodeURIComponent(path)).toBe(`/town?at=${at}&uma=90001&life=invited-to-work:90001`)
+    expect($('[data-scene-title]')?.textContent).toMatch(/^Invited to work · /)
+    expect($('[data-scene="life:invited-to-work:90001"] [data-line]')?.dataset.line).toBe('She meets you at the farm gate, sleeves already rolled up.')
+    await click($('[data-action="skip"]'))
+    await until(() => !path.includes('life='))
     await until(() => $('[data-standing]')?.textContent === 'Farmhand · F3')
     expect($('[data-item="work"]')?.dataset.why).toBe('Works the farm ✓')
     // Her profile: in town today with her out, she's in front of you, so Chat is open.

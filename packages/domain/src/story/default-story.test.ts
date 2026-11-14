@@ -43,7 +43,7 @@ describe('the default story: every piece has its default', () => {
     expect([...Object.keys(DEFAULT_EVENTS), ...Object.keys(DEFAULT_EVENINGS)].sort()).toEqual([...STORY_EVENTS].sort())
     expect(RUNGS.every((r) => defaultSceneOf(r) === DEFAULT_EVENTS[r])).toBe(true)
     expect(defaultSceneOf(ARRIVAL, true)).toBe(DEFAULT_TOWN_MEETING)
-    expect([LIFE_EVENTS.length, OCCASIONS.length, EVENING_SCENES.length]).toEqual([4, 8, 19])
+    expect([LIFE_EVENTS.length, OCCASIONS.length, EVENING_SCENES.length]).toEqual([5, 8, 19])
   })
 
   it('writes a scene for each hangout kind and each date kind, and the two evenings of their own', () => {
@@ -162,6 +162,18 @@ describe('her words fill in, and her own story replaces each piece', () => {
     expect([at('friendship', 0), at('friendship', 2), at('friendship', 3), at('friendship', 3, true), at('confession', 10), at('romance', 0), at('proposal', 10),
       at('wedding', 10), at('spouse', 2)]).toEqual(['acquaintance', 'acquaintance', 'friend', 'farmhand', 'friend', 'sweetheart', 'sweetheart', 'engaged', 'married'])
     expect(talkStageOf(newLove())).toBe('acquaintance')
+  })
+
+  it('plays her invitation to work: her route\'s `invited-to-work`, else the default\'s at the farm gate in the day\'s outfit', async () => {
+    const scene = DEFAULT_EVENTS['invited-to-work']!
+    expect(scene.outfit).toBeUndefined()
+    expect(scene.steps[0]).toEqual({ place: 'gate' })
+    const played = await eventOf(storyPackFrom(STAND_IN_FILES), TWO, 'invited-to-work', 'Robin')
+    expect(played).toMatchObject({ id: 'invited-to-work', written: false })
+    expect(played.outfit).toBeUndefined()
+    expect(says(played.steps).every((s) => s.say === TWO)).toBe(true)
+    const own = { ...storyPackFrom(STAND_IN_FILES), route: async () => ({ events: [{ id: 'invited-to-work', steps: [{ narrate: 'She says yes.' }] as Step[] }] }) }
+    expect(await eventOf(own, TWO, 'invited-to-work')).toEqual({ id: 'invited-to-work', steps: [{ narrate: 'She says yes.' }], written: true })
   })
 
   it('her route\'s event replaces the default\'s; the rest stay default', async () => {

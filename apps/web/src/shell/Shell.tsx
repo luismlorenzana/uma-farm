@@ -8,9 +8,9 @@
 // once no scene is due: `?read=<a>-<b>:<levels>` plays a pair's conversations; the event player at `?event=`, `?ask=` or
 // `?memory=`, and her Memories' album at `?album=`; the evening at `?evening=` (Tonight's picker, or her kinds sheet, the
 // play and its card); the ring bench at `?sheet=bench` from the Forge's quick look; the homestead at
-// `?sheet=homestead`, a night level's card at `?level=<id>:<s2|s4>` and a household scene or the finale at
+// `?sheet=homestead`, a night level's scene and card at `?level=<id>:<s2|s4>` and a household scene or the finale at
 // `?household=<id>` (`&replay=1` from the Diary); an occasion scene at `?occasion=<id>`, from the calendar's day; her life's
-// short scenes at `?life=<kind>:<id>` (the night's companion's morning greeting, moving in, a meal's line); her gallery of
+// short scenes at `?life=<kind>:<id>` (the night's companion's morning greeting, moving in, the invitation to work, a meal's line); her gallery of
 // illustrations at `?gallery=<id>`, from her profile.
 import { sceneDue } from '@farm/domain'
 import { AppFrame, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
