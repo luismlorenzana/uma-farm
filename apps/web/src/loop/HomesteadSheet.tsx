@@ -2,18 +2,20 @@
 // map (`&house=<n>` marks its row): one row a house, its mark, its name, its rooms (a face ▣ or a free room ▢) and its count;
 // **Extend · 4,000g** on a built house; the next lot with a name field (grey "Rose Cottage") and **Build · 8,000g**, or
 // "Need 300g more", or "Opens with your first wedding"; the lots after it in one line; "Needs a room: …"; moves (tap a face,
-// then a free room or another face to swap); "Shared houses: +10 bond a night a pair."; and the furniture set from 5
-// married, a piece a row and the house it stands in. "Married n/N" in the header. Loaded on demand.
-import { houseNameIssue, HOUSE_NAME_MAX, houseOpensWords, type SaveV4 } from '@farm/domain'
+// then a free room or another face to swap); "Shared houses: +10 bond a night a pair."; the household's **Meals** once
+// anyone is married (**Breakfast · 1** and **Dinner · 1**, each once a day: everyone on the farm and every farmhand well fed
+// through tomorrow and +10 each, then one spouse's line as you sit down, `?life=<meal>:<id>`); and the furniture set from
+// 5 married, a piece a row and the house it stands in. "Married n/N" in the header. Loaded on demand.
+import { houseNameIssue, HOUSE_NAME_MAX, houseOpensWords, marriedCount, MEAL_DAYS, MEAL_NAMES, MEAL_POINTS, mealBlock, MEALS, mealEaters, type Meal, type SaveV4 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
-import { useLocation, useSearchParams } from 'react-router'
+import { useLocation, useNavigate, useSearchParams } from 'react-router'
 import { MasterGate } from '../master/MasterGate'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
-import { buildHouseNamed, extendHouseOnce, moveSpouseTo, placePiece, swapSpouseRooms } from './homestead-actions'
+import { buildHouseNamed, cookTheMeal, extendHouseOnce, moveSpouseTo, placePiece, swapSpouseRooms } from './homestead-actions'
 import { furnitureRows, HOMESTEAD_TEXT, homesteadView, priceWords, type HouseRow } from './homestead-view'
 
 const ROSE = '#c2385e'
@@ -39,6 +41,13 @@ type Picked = { id: string; house: number } | null
 
 function Homestead({ save, focus, onClose }: { save: SaveV4; focus: number | null; onClose: () => void }) {
   const pack = useStory()
+  const navigate = useNavigate()
+  const location = useLocation()
+  /** A meal cooked, then one spouse's line as you sit down, over the sheet. */
+  const cook = async (meal: Meal) => {
+    const { speaker } = await cookTheMeal(meal)
+    if (speaker) navigate(withParam(location, 'life', `${meal}:${speaker}`), { state: { back: true } })
+  }
   const [picked, setPicked] = useState<Picked>(null)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
@@ -99,6 +108,7 @@ function Homestead({ save, focus, onClose }: { save: SaveV4; focus: number | nul
               </ul>
               <p className="text-[14px]" data-needs>{view.needs}</p>
               <p className="text-[13px] text-ink-soft">{HOMESTEAD_TEXT.shared}</p>
+              {marriedCount(save) > 0 && <Meals save={save} busy={busy} onCook={(meal) => void act(() => cook(meal))} />}
               {save.homestead.furniture.length > 0 && <Furniture save={save} busy={busy} onPlace={(piece, house) => void act(() => placePiece(piece, house))} />}
             </div>
           </Sheet>
@@ -167,6 +177,28 @@ function LotLine({ lot, busy, onBuild }: { lot: { n: number; cost: number; open:
         </>
       ) : <p className="text-[13px] text-ink-faint" data-lot-locked>{houseOpensWords(lot.n)} · {priceWords('Build', lot.cost, 0)}</p>}
     </form>
+  )
+}
+
+/** The household's meals: breakfast and dinner, an action each, once each a day; who eats, and what a meal does. */
+function Meals({ save, busy, onCook }: { save: SaveV4; busy: boolean; onCook: (meal: Meal) => void }) {
+  const eaters = mealEaters(save).length
+  return (
+    <section className="space-y-1" aria-label="Meals" data-meals>
+      <h3 className="text-micro">Meals</h3>
+      <div className="grid grid-cols-2 gap-2">
+        {MEALS.map((meal) => {
+          const why = mealBlock(save, meal)
+          const made = (save.today.meals ?? []).includes(meal)
+          return (
+            <Button key={meal} variant={made ? 'secondary' : 'primary'} size="md" disabled={busy || why !== null} onClick={() => onCook(meal)} data-action={`cook-${meal}`} data-why={why ?? undefined}>
+              {made ? `${MEAL_NAMES[meal]} ✓` : `${MEAL_NAMES[meal]} · 1`}
+            </Button>
+          )
+        })}
+      </div>
+      <p className="text-[12px] text-ink-faint">{eaters} at the table: everyone on the farm and every farmhand, well fed for {MEAL_DAYS} days and +{MEAL_POINTS} each.</p>
+    </section>
   )
 }
 

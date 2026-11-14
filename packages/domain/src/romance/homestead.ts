@@ -172,9 +172,15 @@ function moveBlock(save: SaveV4, id: string): string | null {
   return null
 }
 
-/** Her room tonight is hers only while she's in tonight's house: a move clears it. */
-const keepAlone = (homestead: SaveV4['homestead'], moved: readonly string[]): SaveV4['homestead'] =>
-  homestead.alone !== null && moved.includes(homestead.alone) ? { ...homestead, alone: null } : homestead
+/** Her room tonight is hers only while she's in tonight's house, and so is tonight's companion: a move clears either
+ * (the night then takes its default). */
+function keepAlone(homestead: SaveV4['homestead'], moved: readonly string[]): SaveV4['homestead'] {
+  const alone = homestead.alone !== null && moved.includes(homestead.alone)
+  const companion = homestead.companion !== undefined && moved.includes(homestead.companion)
+  if (!alone && !companion) return homestead
+  const { companion: _, ...rest } = homestead
+  return { ...(companion ? rest : homestead), alone: alone ? null : homestead.alone }
+}
 
 /** Moves a spouse to a free room in another house, at once and free; from her Dorm bed, she leaves the Dorm and
  * frees it. Refused for someone not a spouse, a swap waiting, her own house, a house not built or one with no room free. */
@@ -327,15 +333,17 @@ export function sleepRows(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, birthda
   return [...houses, ...rooms]
 }
 
-/** Sleep at: tonight's house, or her room on her birthday; a player's change. Refused for a house not built,
- * and for her room on any other night or for someone not in that house. */
+/** Sleep at: tonight's house, or her room on her birthday; a player's change (the morning's "misses you" Tonight ›). Tonight's
+ * companion is then that house's resident the night picks (`companionTonight`). Refused for a house not built, and for
+ * her room on any other night or for someone not in that house. */
 export function sleepAt(save: SaveV4, house: number, alone: string | null = null, birthdays: Birthdays | null = null): SaveV4 {
   if (!save.homestead.houses[house]) throw new SaveRuleError('bad-job', 'That house isn’t built.')
   if (alone !== null && (save.love[alone]?.house !== house || (birthdays !== null && !isBirthday(birthdays, alone, save.calendar.day)))) {
     throw new SaveRuleError('bad-job', 'Her room is hers on her birthday.')
   }
-  if (save.homestead.tonight === house && save.homestead.alone === alone) return save
-  return { ...save, homestead: { ...save.homestead, tonight: house, alone } }
+  if (save.homestead.tonight === house && save.homestead.alone === alone && save.homestead.companion === undefined) return save
+  const { companion: _, ...rest } = save.homestead
+  return { ...save, homestead: { ...rest, tonight: house, alone } }
 }
 
 // --- The furniture set -------------------------------------------------------------------------------

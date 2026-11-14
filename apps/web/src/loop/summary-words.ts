@@ -154,12 +154,12 @@ export const umaSheet = (id: string, view?: 'work'): string => `/hearts?${view ?
 
 /** The morning's Ready lines: up to three, then "+N more". */
 export const READY_LINES = 3
-/** The order of §4 Hearts, by line kind: (1) Ready, (2) the invitation, (3) the house's morning with the
+/** The order of §4 Hearts, by line kind: (1) Ready, and the night's companion's morning first of all, (2) the invitation, (3) the house's morning with the
  * morning items and night chores, (4) birthdays and anniversaries, (5) levels reached overnight, those met and her
  * chapters opened, (6) the perks' extras, side by side and bond hearts. A new stored kind takes its place here and its
  * words in `heartLine`; within a place the night's order holds. */
 export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = {
-  invite: 2, house: 3, moved: 3, misses: 3, item: 3, chores: 3, birthday: 4, anniversary: 4, vows: 4, level: 5, arrived: 5, chapter: 5, perks: 6, side: 6, bond: 6,
+  morning: 0, invite: 2, house: 3, moved: 3, misses: 3, item: 3, chores: 3, birthday: 4, anniversary: 4, vows: 4, level: 5, arrived: 5, chapter: 5, perks: 6, side: 6, bond: 6,
 }
 
 /** §4 Hearts: the Ready lines, then the stored lines in that order. `pairs` says which bond
@@ -173,7 +173,10 @@ export function heartsLines(hearts: readonly HeartLine[], ready: readonly ReadyN
   // The household's Ready offers, read live, after her Ready lines.
   const household = home.household.map((h): SummaryLine => ({ key: `household:${h.id}`, to: h.to, tag: 'Play', text: h.text }))
   const stored = hearts.map((line, i) => ({ line, i })).sort((a, b) => HEARTS_ORDER[a.line.kind] - HEARTS_ORDER[b.line.kind] || a.i - b.i)
-  return [...now, ...more, ...household, ...stored.map(({ line }) => heartLine(line, nameOf, pairs, home, chapterOf, town))]
+  // The night's companion's morning comes first of all, before the Ready lines.
+  const words = ({ line }: { line: HeartLine }) => heartLine(line, nameOf, pairs, home, chapterOf, town)
+  const morning = stored.filter(({ line }) => line.kind === 'morning')
+  return [...morning.map(words), ...now, ...more, ...household, ...stored.filter(({ line }) => line.kind !== 'morning').map(words)]
 }
 
 /** The ♥♥ of a pair's line: two hearts for two Umas, whatever the level. */
@@ -236,7 +239,9 @@ function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, hom
     }
     case 'arrived': return { key: `arrived:${line.id}`, to, text: `Met ${name}${line.home ? ' · moved in' : ` · in ${town ?? 'town'}`}`, tag: 'New' }
     case 'item': return { key: `item:${line.id}`, to, text: `♥ ${name} left you ${starredGoods(line.items)}` }
-    case 'moved': return { key: `moved:${line.id}`, to, text: `⌂ ${name} moved into ${home.houseName(line.house)}` }
+    // Her moving in plays from the line, and the morning's greeting from the night's companion's.
+    case 'moved': return { key: `moved:${line.id}`, to: `/?life=moving-in:${line.id}`, text: `⌂ ${name} moved into ${home.houseName(line.house)}`, tag: 'Play' }
+    case 'morning': return { key: 'morning', to: `/?life=morning:${line.id}`, text: `☾ Morning with ${name}`, tag: 'Play' }
     case 'level': return { key: `level:${line.id}`, to: `/?level=${line.id}:${line.rung}`, text: `♥ ${name} · ${rungName(line.rung)}, reached overnight`, tag: 'New' }
     case 'chapter': {
       const title = chapterOf(line.id, line.chapter)

@@ -263,6 +263,8 @@ export interface Love {
   morning?: number
   /** Her signature dish: the recipe her Friendship 4 gave, a dish id, so her profile can name it. */
   dish?: string
+  /** The last night she was your night's companion (a spouse's); absent before any. The save grows it in place. */
+  night?: number
 }
 
 /** An Uma on the roster. Talents aren't saved: they're read from master data each boot. */
@@ -272,15 +274,19 @@ export interface RosterUma {
   ranks: Record<Activity, RankState>
   /** Well-fed days left. */
   wellFed: number
+  /** The day you invited her to work the farm: she's a farmhand from then on. Absent before (the save grows it in
+   * place); the farmhands' work reads it. */
+  farmhand?: number
 }
 
-/** The evening's kinds: the ten date games, then festival night, its own slot on a
+/** The evening's kinds: the ten date games, Dinner in town and A night in, then festival night, its own slot on a
  * festival day. The rules, names and plays are `romance/evening.ts`'s; the ids live here so the save's parse stays light. */
-export const EVENING_KINDS = ['walk', 'fishing', 'picnic', 'market', 'cooking', 'crafting', 'stargazing', 'dance', 'boat', 'footrace', 'festival'] as const
+export const EVENING_KINDS = ['walk', 'fishing', 'picnic', 'market', 'cooking', 'crafting', 'stargazing', 'dinner', 'dance', 'boat', 'night-in', 'footrace', 'festival'] as const
 export type EveningKind = typeof EVENING_KINDS[number]
 /** Festival night: a walk at the festival ground, the festival day's second evening. */
 export const FESTIVAL_NIGHT = 'festival' satisfies EveningKind
-/** A kind an invitation asks for: her favourite date game, never festival night. */
+/** A kind an invitation asks for: her favourite date game, never festival night (and never the two evenings of their
+ * own, Dinner in town and A night in, which are no one's favourite). */
 export type InviteKind = Exclude<EveningKind, typeof FESTIVAL_NIGHT>
 /** Two evenings and two invitations from this many married… */
 export const TWO_EVENINGS_MARRIED = 10
@@ -341,7 +347,14 @@ export interface TodayV4 {
   /** Today's wedding reception: the well-fed days it gives everyone on the farm tomorrow (1–3), applied at
    * night step 9; 0 with no wedding today. */
   reception: number
+  /** The household's meals cooked today, each once: breakfast, dinner. Absent until one is cooked: the save grows it in
+   * place. */
+  meals?: Meal[]
 }
+
+/** The household's meals: one of each a day, once anyone is married. */
+export const MEALS = ['breakfast', 'dinner'] as const
+export type Meal = typeof MEALS[number]
 
 /** A day's `today` before anything's done (newSave; night step 7 clears to it). */
 export const newTodayV4 = (): TodayV4 => ({ actions: 0, eventActions: 0, town: false, gathered: [], chats: [], gifts: [], praise: [], praised: [], events: [], asked: [], evenings: [], invites: [], bonds: {}, ring: 0, reception: 0 })
@@ -371,6 +384,9 @@ export interface Homestead {
   /** The morning the finale came (the morning after the 20th wedding), the Festival of Vows' day of the year; 0
    * before. */
   finale: number
+  /** Tonight's companion, your pick at the day's end: a spouse with a room, whose house is `tonight`. Absent before a
+   * pick (the night takes the default then, and clears it); the save grows it in place. */
+  companion?: CharacterId
 }
 
 /** A house's rooms: two, four once extended. */

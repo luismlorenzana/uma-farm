@@ -14,7 +14,8 @@ import { CAST_IDS } from '../story/cast'
 import { SHOP_IDS, SPOT_IDS, type CastEntry } from '../story/authored'
 import { storyOf, townOf, PLACEHOLDER_SPOTS, PLACEHOLDER_TOWN_LINES, speakerId, isTownPerson } from '../story/placeholders'
 import { readStoryPack, type StoryPack } from '../story/pack'
-import { herMenu } from './menu'
+import { inviteToWork } from '../romance/loop'
+import { herMenu, whereYouMeet } from './menu'
 import { FAVOURITE_SPOT, giftedToday, lifeHolds, SHOPS, SPOT_ROOM, talkedToday, townDay, townLineOf, townLocations, townsfolk, townTalksOf } from './town'
 
 const AT = '2026-11-13T10:00:00.000Z'
@@ -228,14 +229,41 @@ describe('her menu', () => {
     expect(herMenu(inTown(save()), p, PEOPLE[0]!, GAME_DAYS)).toEqual([])
   })
 
-  it('once met: talk, a gift, her evening, the invitation to work (coming), and her event when Ready', () => {
+  it('once met: talk, a gift, her evening (2 actions), the invitation to work (1), and her event when Ready', () => {
     const met = introduce(inTown(save()), p, '9200007')
     const menu = herMenu(met, p, '9200007', GAME_DAYS)
     expect(menu.map((i) => i.id)).toEqual(['talk', 'gift', 'hangout', 'work'])
     expect(menu.find((i) => i.id === 'talk')).toMatchObject({ cost: 1, open: true })
     expect(menu.find((i) => i.id === 'gift')).toMatchObject({ cost: 1, open: false, why: 'Nothing in the Warehouse to give' })
-    expect(menu.find((i) => i.id === 'hangout')).toMatchObject({ cost: null, open: false, why: 'From Friendship 2' })
-    expect(menu.find((i) => i.id === 'work')).toMatchObject({ open: false, why: 'Coming with the farmhands' })
+    expect(menu.find((i) => i.id === 'hangout')).toMatchObject({ cost: 2, open: false, why: 'From Friendship 3' })
+    expect(menu.find((i) => i.id === 'work')).toMatchObject({ cost: 1, open: false, why: 'From Friendship 3' })
+  })
+
+  it('invites a friend to work, once, for an action: she\'s a farmhand from today, at any stage after', () => {
+    const met = introduce(inTown(save()), p, '9200007')
+    const friend: SaveV4 = { ...met, love: { ...met.love, 9200007: { ...met.love['9200007']!, level: 3 } } }
+    expect(herMenu(friend, p, '9200007', GAME_DAYS).find((i) => i.id === 'work')).toMatchObject({ cost: 1, open: true, done: false })
+    const hired = inviteToWork(friend, '9200007')
+    expect(hired.today.actions).toBe(friend.today.actions + 1)
+    expect(hired.roster['9200007']!.farmhand).toBe(5)
+    expect(herMenu(hired, p, '9200007', GAME_DAYS).find((i) => i.id === 'work')).toMatchObject({ open: false, done: true, why: 'Works the farm ✓' })
+    expect(() => inviteToWork(hired, '9200007')).toThrow('She works the farm already.')
+    expect(() => inviteToWork(met, '9200007')).toThrow('Invite her once she’s a friend: Friendship 3.')
+    expect(() => inviteToWork({ ...friend, today: { ...friend.today, actions: 10 } }, '9200007')).toThrow('No actions left today.')
+    expect(hired.account.updatedAt).toBe(AT)
+    expect(parseSaveV5(json(hired))).toEqual(hired)
+    expect(() => parseSaveV5(json({ ...hired, roster: { ...hired.roster, 9200007: { ...hired.roster['9200007']!, farmhand: 6 } } }))).toThrow('farmhand')
+  })
+
+  it('meets her where she\'s in front of you: on the farm when she lives there, else in town where she is today, once you\'re there', () => {
+    const day = townDay(save(), p)
+    const out = day.where.get('9200007')!
+    const met = meet(save(), '9200007', p).save
+    expect(whereYouMeet(met, p, '9200007')).toEqual({ here: false, farm: false, at: out })
+    expect(whereYouMeet(goToTown(met), p, '9200007')).toEqual({ here: true, farm: false, at: out })
+    expect(whereYouMeet(inviteToFarm(met, '9200007'), p, '9200007')).toEqual({ here: true, farm: true, at: null })
+    const home = [...EVERYONE].find((id) => !day.where.has(id) && !PEOPLE.includes(id))!
+    expect(whereYouMeet(goToTown(save()), p, home)).toEqual({ here: false, farm: false, at: null })
   })
 
   it('a talk and a gift each cost an action, once a day each, and the save keeps her last talk and gift day', () => {
@@ -261,10 +289,12 @@ describe('her menu', () => {
     expect(herMenu(spent, p, '9200007', GAME_DAYS).find((i) => i.id === 'talk')!.why).toBe('No actions left today.')
   })
 
-  it('her evening is the evening as built: a hangout from Friendship 2 for one who lives on the farm', () => {
+  it('her evening: a hangout from Friendship 3 for one who lives on the farm, 2 actions', () => {
     const met = meet(save(), '9200007', p).save
-    const friend: SaveV4 = { ...met, love: { ...met.love, 9200007: { ...met.love['9200007']!, level: 2 } } }
+    const friend: SaveV4 = { ...met, love: { ...met.love, 9200007: { ...met.love['9200007']!, level: 3 } } }
     expect(herMenu(friend, p, '9200007', GAME_DAYS).find((i) => i.id === 'hangout')!.why).toBe('She lives in town: invite her to the farm')
-    expect(herMenu(inviteToFarm(friend, '9200007'), p, '9200007', GAME_DAYS).find((i) => i.id === 'hangout')).toMatchObject({ open: true })
+    const home = inviteToFarm(friend, '9200007')
+    expect(herMenu(home, p, '9200007', GAME_DAYS).find((i) => i.id === 'hangout')).toMatchObject({ cost: 2, open: true })
+    expect(herMenu({ ...home, today: { ...home.today, actions: 9 } }, p, '9200007', GAME_DAYS).find((i) => i.id === 'hangout')).toMatchObject({ open: false, why: 'That takes 2 actions.' })
   })
 })

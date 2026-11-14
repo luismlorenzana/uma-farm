@@ -1,9 +1,11 @@
 // The homestead's actions: a house built and named, a house extended, a spouse moved or two
-// swapped, tonight's house picked, a piece of furniture placed, the morning's "misses you" put away, and a household scene
-// read, each one player's change over the save as it is now, committed once and stamped; a refused rule throws its words.
+// swapped, tonight's house picked, tonight's companion chosen, a meal cooked, a piece of furniture placed, the morning's
+// "misses you" put away, and a household scene read, each one player's change over the save as it is now, committed once
+// and stamped; a refused rule throws its words.
 // Apart from `actions.ts` so the homestead's rules load with its sheet. Loaded on demand.
 import {
-  anotherNight, birthdaysOf, buildHouse, extendHouse, moveSpouse, placeFurniture, readHousehold, sleepAt, swapRooms, touched, type HouseholdId, type SaveV4,
+  anotherNight, birthdaysOf, buildHouse, chooseCompanion, cookMeal, extendHouse, mealSpeaker, moveSpouse, placeFurniture, readHousehold, sleepAt, swapRooms, touched, type HouseholdId,
+  type Meal, type SaveV4,
 } from '@farm/domain'
 import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'
@@ -33,6 +35,22 @@ export const swapSpouseRooms = (a: string, b: string): Promise<void> => change((
 export async function sleepTonight(house: number, alone: string | null = null): Promise<void> {
   const birthdays = alone === null ? null : await Promise.all([masterReady(), storyReady()]).then(([view, pack]) => birthdaysOf(pack, view.birthdays))
   await change((s) => sleepAt(s, house, alone, birthdays))
+}
+/** Tonight's companion: a spouse with a room, her house tonight's; `alone` her room on her birthday (master data's,
+ * through the cast). */
+export async function chooseTonight(id: string, alone = false): Promise<void> {
+  const birthdays = alone ? await Promise.all([masterReady(), storyReady()]).then(([view, pack]) => birthdaysOf(pack, view.birthdays)) : null
+  await change((s) => chooseCompanion(s, id, alone, birthdays))
+}
+/** A meal cooked for the household: one action. Whose line plays as you sit down, and the points it paid in all. */
+export async function cookTheMeal(meal: Meal): Promise<{ speaker: string | null; paid: number }> {
+  let paid = 0
+  await change((s) => {
+    const done = cookMeal(s, meal)
+    paid = done.paid
+    return done.save
+  })
+  return { speaker: mealSpeaker(current(), meal), paid }
 }
 /** A piece of the furniture set placed in a house, or taken out. */
 export const placePiece = (piece: number, house: number | null): Promise<void> => change((s) => placeFurniture(s, piece, house))

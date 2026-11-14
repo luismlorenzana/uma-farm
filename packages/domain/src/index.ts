@@ -123,6 +123,9 @@ export * from './romance/calendar-days'
 // The evening: the kinds by ladder and game, her favourite kind, the slots and festival night, the
 // evening's points and its card, the morning's invitations and their answers, and when Tonight opens.
 export * from './romance/evening'
+// The Uma loop: her stage (acquaintance, friend, farmhand, sweetheart, engaged, married) and what each opens, the
+// invitation to work, the household's meals and the night's companion with her morning greeting.
+export * from './romance/loop'
 // The ring bench, the proposal and the wedding: the rings' bench at the Forge, her ring's grade and
 // a better ring, the proposal's ring, the wedding's place, reception and guests, and the smith's scene.
 export * from './romance/bench'

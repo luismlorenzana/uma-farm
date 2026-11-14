@@ -1,10 +1,11 @@
-// The homestead as the screens show it (Sleep at): the
+// The homestead as the screens show it: the
 // homestead sheet's rows (a house a row with its rooms, Build or Extend with its price, the next lot, the lots after), her
-// room in words, Tonight's Sleep at rows, the morning's house lines and the household's Ready offers. Pure, so the screens
+// room in words, Tonight's companion rows, the morning's house lines and the household's Ready offers. Pure, so the screens
 // and the tests read the same. Loaded on demand.
 import {
-  extensionCost, FURNITURE, householdOf, householdReady, householdTitle, houseLineOf, HOUSES, isHouseholdId, marriedCount, nextLot, residentsOf,
-  roomsInAll, roomsOf, sleepRows, tonightsHouse, waitingForRooms, withFarmer, type Birthdays, type HouseholdId, type SaveV4, type StoryPack, type Temperament,
+  breakfastTomorrow, companions, companionTonight, extensionCost, FURNITURE, householdOf, householdReady, householdTitle, houseLineOf, HOUSES, isBirthday, isHouseholdId, marriedCount,
+  missesYou, nextLot, nightsAway, residentsOf, roomsInAll, roomsOf, waitingForRooms, wantsBirthdayAlone, withFarmer, type Birthdays, type HouseholdId, type SaveV4, type StoryPack,
+  type Temperament,
 } from '@farm/domain'
 import { NO_HOME, type HomeWords } from './summary-words'
 
@@ -87,33 +88,35 @@ export function furnitureRows(save: SaveV4): { piece: number; name: string; hous
   }))
 }
 
-// --- Tonight's Sleep at ------------------------------------------------------------------------------
+// --- Tonight's companion ------------------------------------------------------------------------------
 
-export interface SleepView {
-  key: string
-  house: number
-  alone: string | null
+/** One of Tonight's companion rows: a spouse with a room, her house, ☕ when her house's breakfast is on tomorrow, "9
+ * nights" once her house hasn't seen you for 8 or more, and "just you two" on a birthday-alone wisher's birthday. */
+export interface CompanionView {
+  id: string
   name: string
-  residents: string[]
-  /** "· 2 home", "· Stand-in 1's room". */
+  house: number
+  /** Her house's name; "Her room · her birthday" on a birthday-alone night. */
   home: string
   breakfast: boolean
   /** "8 nights" once 8 or more. */
   nights: string | null
+  /** Her room tonight, hers alone: she wishes her birthday alone with you, and it's today. */
+  alone: boolean
   picked: boolean
 }
-/** Sleep at's rows: the Farmhouse and each house with someone home, ☕ and "8 nights", and her room on her
- * birthday; the pick, else the default, marked. */
-export function sleepViews(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, birthdays: Birthdays, nameOf: NameOf): SleepView[] {
-  const now = tonightsHouse(save)
-  return sleepRows(save, pack, birthdays).map((row) => ({
-    key: row.alone ? `room:${row.alone}` : `house:${row.house}`, house: row.house, alone: row.alone,
-    name: row.alone ? 'Her room' : row.name,
-    residents: row.residents,
-    home: row.alone ? `· ${nameOf(row.alone)}, just you two` : row.residents.length === 0 ? '· your own home' : `· ${row.residents.length} home`,
-    breakfast: row.breakfast, nights: row.nights === null ? null : `${row.nights} nights`,
-    picked: row.house === now.house && row.alone === now.alone,
-  }))
+/** Tonight's companion rows, in wedding order; the pick, else the night's default, marked. */
+export function companionViews(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, birthdays: Birthdays, nameOf: NameOf): CompanionView[] {
+  const now = companionTonight(save)
+  return companions(save).map((id): CompanionView => {
+    const house = save.love[id]!.house!
+    const alone = wantsBirthdayAlone(pack, id) && isBirthday(birthdays, id, save.calendar.day)
+    const away = missesYou(save, house) ? nightsAway(save, house) : null
+    return {
+      id, name: nameOf(id), house, home: alone ? 'Her room · her birthday, just you two' : save.homestead.houses[house]?.name ?? 'Farmhouse',
+      breakfast: breakfastTomorrow(save, house), nights: away === null ? null : `${away} nights`, alone, picked: now === id,
+    }
+  })
 }
 
 // --- The morning ------------------------------------------------------------------------------------------

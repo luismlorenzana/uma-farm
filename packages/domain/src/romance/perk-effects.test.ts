@@ -90,22 +90,22 @@ describe('the romance term and its caps', () => {
   // 9000002 is a forager (her calling): the forest and the Sawmill are her line's places.
   const forager = (love: Partial<Love>) => withLove(farm(), TWO, love)
 
-  it('pays F3 +10% and R5 +20% at her line only; her ring only once married', () => {
-    expect(romanceBonus(forager(at('friendship', 2)), PACK, TWO, 'forest')).toBe(0)
-    expect(romanceBonus(forager(at('friendship', 3)), PACK, TWO, 'forest')).toBeCloseTo(0.1, 9)
-    expect(romanceBonus(forager(at('friendship', 3)), PACK, TWO, 'sawmill')).toBeCloseTo(0.1, 9)
-    expect(romanceBonus(forager(at('friendship', 3)), PACK, TWO, 'fishery')).toBe(0)
+  it('pays F2 +10% and R5 +20% at her line only; her ring only once married', () => {
+    expect(romanceBonus(forager(at('friendship', 1)), PACK, TWO, 'forest')).toBe(0)
+    expect(romanceBonus(forager(at('friendship', 2)), PACK, TWO, 'forest')).toBeCloseTo(0.1, 9)
+    expect(romanceBonus(forager(at('friendship', 2)), PACK, TWO, 'sawmill')).toBeCloseTo(0.1, 9)
+    expect(romanceBonus(forager(at('friendship', 2)), PACK, TWO, 'fishery')).toBe(0)
     expect(romanceBonus(forager(at('romance', 5)), PACK, TWO, 'forest')).toBeCloseTo(0.2, 9)
     expect(romanceBonus(forager(at('proposal', 10, { ring: 8 })), PACK, TWO, 'forest')).toBeCloseTo(0.2, 9)
     expect(romanceBonus(forager(spouse(0, { ring: 8 })), PACK, TWO, 'forest')).toBeCloseTo(0.28, 9)
   })
 
-  it('holds her own at 35%: F3, R5 and a +15% ring are 35%, a bigger ring is held', () => {
+  it('holds her own at 35%: F2, R5 and a +15% ring are 35%, a bigger ring is held', () => {
     expect(romanceTerms(forager(spouse(0, { ring: 15 })), PACK, TWO, 'forest')).toMatchObject({ line: 0.2, ring: 0.15, own: 0.35, held: false })
     expect(romanceTerms(forager(spouse(0, { ring: 20 })), PACK, TWO, 'forest')).toMatchObject({ own: 0.35, total: 0.35, held: true })
   })
 
-  it('the worked forager: F3, R5, a grade-8 ring, a dream at the forest and 15 married come to +43%, held to +40%', () => {
+  it('the worked forager: F2, R5, a grade-8 ring, a dream at the forest and 15 married come to +43%, held to +40%', () => {
     const pack = packWithFour('foraging')
     let save = withLove(withFour(pack), TWO, spouse(0, { ring: 8 }))
     save = { ...withLove(save, FOUR, spouse(3)), memories: { ...save.memories, [FOUR]: ['s3'] } }
@@ -146,7 +146,7 @@ describe('the romance term and its caps', () => {
 })
 
 describe('the line effects', () => {
-  it('lifts a forager\'s night items ×1.1 at F3 and ×1.2 at R5: an exact count over a seeded sample, the same goods and stars', () => {
+  it('lifts a forager\'s night items ×1.1 at F2 and ×1.2 at R5: an exact count over a seeded sample, the same goods and stars', () => {
     for (const [love, share] of [[at('friendship', 3), 0.1], [at('romance', 5), 0.2]] as const) {
       let total = 0
       let expected = 0

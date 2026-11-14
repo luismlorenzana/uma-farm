@@ -5,7 +5,7 @@
 // are `perk-effects.ts`'s.
 //
 //   The romance term on any one job, one capped number:
-//     her own   F3 +10%, R5 +10%, her ring +1–15% once married, at her line's place      held to +35%
+//     her own   F2 +10%, R5 +10%, her ring +1–15% once married, at her line's place      held to +35%
 //     the crew  the best dream at this place +5% (never summed), the household +5% at 5
 //               married and +5% more at 15                                               held to +15%
 //     together                                                                           held to +40%
@@ -73,7 +73,7 @@ export const ROMANCE_CAP = 0.4
 
 const round6 = (n: number): number => Math.round(n * 1e6) / 1e6
 
-/** The romance term's parts on one job, each as a share: `line` (F3 + R5) and `ring` before her cap, `own`
+/** The romance term's parts on one job, each as a share: `line` (F2 + R5) and `ring` before her cap, `own`
  * after it; `dream` and `household` before the crew's cap, `crew` after it; `total` the sum held to 40%. `held` says a cap
  * cut something. */
 export interface RomanceTerms {
@@ -102,13 +102,13 @@ export function dreamAt(save: Pick<SaveV4, 'love' | 'memories' | 'buildings'>, p
   return Object.keys(save.love).some((d) => dreamActs(save, d) && atHerLine(save, pack, d, place)) ? DREAM_BONUS : 0
 }
 
-/** The romance term on `id`'s work at `place`: her own (F3 and R5 at her line's place, her ring once
+/** The romance term on `id`'s work at `place`: her own (F2 and R5 at her line's place, her ring once
  * married) held to 35%, the crew's (the best dream at this place, the household by `marriedCount`) held to 15%, the sum
  * held to 40%. Her own counts only at her line's place, open; the crew's anywhere an Uma works. */
 export function romanceTerms(save: Pick<SaveV4, 'love' | 'memories' | 'buildings'>, pack: PerkPack, id: string, place: string): RomanceTerms {
   const love = save.love[id]
   const mine = atHerLine(save, pack, id, place)
-  const line = mine ? (hasPerk(love, 'f3') ? LINE_BONUS : 0) + (hasPerk(love, 'r5') ? LINE_BONUS : 0) : 0
+  const line = mine ? (hasPerk(love, 'f2') ? LINE_BONUS : 0) + (hasPerk(love, 'r5') ? LINE_BONUS : 0) : 0
   const ring = mine ? ringBonus(love) : 0
   const own = Math.min(OWN_CAP, round6(line + ring))
   const dream = dreamAt(save, pack, place)

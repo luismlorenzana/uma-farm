@@ -66,7 +66,9 @@ import { ART_NAMES, EXPRESSIONS, fallbackChain, MOMENT_OUTFITS, PERSONAL_OUTFITS
 import { EVENT_POINTS } from '../romance/events'
 import { OCCASION_RULES, occasionName } from '../romance/occasions'
 import { momentOutfit } from '../story/look'
-import { DATE_FROM, EVENING_FACTOR, eveningPoints, EVENINGS, favouriteKind, HANGOUT_FROM, INVITE_POINTS, INVITE_WEIGHT_DAYS, ROLE_WORDS, type EveningWait } from '../romance/evening'
+import { DATE_FROM, EVENING_FACTOR, eveningCost, eveningMoments, eveningPoints, EVENINGS, eveningScene, favouriteKind, HANGOUT_FROM, INVITE_POINTS, INVITE_WEIGHT_DAYS, ROLE_WORDS, type EveningWait } from '../romance/evening'
+import { MEAL_DAYS, MEAL_NAMES, MEAL_POINTS, STAGE_NAMES, STAGE_RULES } from '../romance/loop'
+import { MEALS } from '../save/v4'
 import { invitesFor, SECOND_EVENING_EVERY, TWO_EVENINGS_MARRIED } from '../save/v4'
 import { BENCH_WORDS, benchTakes, forgeRecipe, MAKE_BONUS, RING_INPUTS, ringPercent } from '../romance/bench'
 import { CAKE_DAYS, HOUSEHOLD_AT, receptionDays, WEDDING_FRIENDS } from '../romance/wedding'
@@ -546,8 +548,8 @@ function defaultStoryBlock(): string {
     ['Her events', `Every rung (${RUNGS.length}), and her life’s: ${scenes(LIFE_EVENTS)}`, 'Her route’s event of that id'],
     ['Her occasions', scenes(OCCASIONS), 'Her route’s event of that id'],
     ['The evenings’ scenes', scenes(EVENING_SCENES), 'Her route’s event of that id'],
-    ['The night’s companion', `${DEFAULT_MORNINGS.steady.length} morning greetings for each temperament`, '—'],
-    ['Meals', `${DEFAULT_MEALS.breakfast.length} lines for breakfast and ${DEFAULT_MEALS.dinner.length} for dinner`, '—'],
+    ['The night’s companion', `${DEFAULT_MORNINGS.steady.length} morning greetings for each temperament`, 'Her bible’s `mornings`'],
+    ['Meals', `${DEFAULT_MEALS.breakfast.length} lines for breakfast and ${DEFAULT_MEALS.dinner.length} for dinner`, 'Her bible’s `meals` (`breakfast`, `dinner`)'],
     ['Her favourite good (`{good}`), the gift she loves', LINE_ORDER.map((a) => `${ACTIVITY_NAMES[a]} ${goodName(DEFAULT_GOODS[a])}`).join(', '), 'Her bible’s loved gift'],
     ['Her line’s work (`{work}`)', LINE_ORDER.map((a) => `${ACTIVITY_NAMES[a]} “${WORK_WORDS[a]}”`).join(', '), 'Her line (her bible’s, her calling’s)'],
   ])
@@ -578,16 +580,17 @@ function routeCosts(): string {
 function lovePoints(): string {
   const gift = (['loved', 'liked', 'neutral', 'disliked'] as const).map((t) => `${cap(t)} ${GIFT_POINTS_V4[t] > 0 ? '+' : ''}${GIFT_POINTS_V4[t]}`).join(', ')
   return table(['Act', 'Points', 'Limit', 'Paid by'], [
-    ['Talk (her menu, or Chat on her profile)', `+${LOVE_POINTS.chat}`, 'One action; once a day each, on the farm or in town', '`chatV4`'],
-    ['Gift (one good, its stars your choice)', `${gift}; × (1 + 0.1 a star above ★1)`, 'One action; one a day each; ×3 on her birthday', '`giftV4`'],
+    ['Talk (her menu, or Chat on her profile)', `+${LOVE_POINTS.chat}`, 'One action; once a day each, where you meet her: on the farm, or in town where she is today', '`chatV4`'],
+    ['Gift (one good, its stars your choice)', `${gift}; × (1 + 0.1 a star above ★1)`, 'One action; one a day each, where you meet her; ×3 on her birthday', '`giftV4`'],
     ['Praise (a ★3+ day’s work, a rank-up, a Fine play)', `+${LOVE_POINTS.praise}`, 'Once a day, when earned', '`praiseV4`'],
     ['Her line (she worked it today)', `+${LOVE_POINTS.line}`, 'Paid at night, step 6', '`payLines`'],
     ['A festival together (its team or entry)', `+${LOVE_POINTS.festival}`, 'Once a festival a year each', '`festivalTogether` (festivals aren’t built yet)'],
     ['Her arrival scene', `+${ARRIVAL_POINTS}, and its choice (+${CHOICE_OTHER} or +${CHOICE_BEST})`, 'Once', '`finishArrival`'],
     ['A heart event', '+50, its choices and its play’s grade', 'One action (a special day’s event actions first); one of hers a day', '`playEvent`'],
-    ['The evening (a hangout from F2, a date from R1)', `Fine +${EVENING_GRADE_POINTS.fine}, Great +${EVENING_GRADE_POINTS.great}, Perfect +${EVENING_GRADE_POINTS.perfect}; ×${EVENING_FACTOR} in her favourite kind, on her birthday and on her anniversary, each once`, `One evening a day across all the Umas; two on some days from ${TWO_EVENINGS_MARRIED} married`, '`spendEvening`'],
+    [`The evening (a hangout from F${HANGOUT_FROM}, a date from R${DATE_FROM}; 2 actions)`, `Fine +${EVENING_GRADE_POINTS.fine}, Great +${EVENING_GRADE_POINTS.great}, Perfect +${EVENING_GRADE_POINTS.perfect}; ×${EVENING_FACTOR} in her favourite kind, on her birthday and on her anniversary, each once`, `One evening a day across all the Umas; two on some days from ${TWO_EVENINGS_MARRIED} married`, '`spendEvening`'],
     ['An invitation said yes', `+${INVITE_POINTS}`, 'With her first evening that day', '`spendEvening`'],
     ['A house morning', '+30 each resident', 'The house you slept in', '`houseMorning`, night step 9'],
+    ['A household meal (breakfast or dinner)', `+${MEAL_POINTS} each who eats it`, 'One action each, once each a day, from your first wedding', '`cookMeal`'],
     ['**On her anniversary**', `×2 on every act but the evening (×${EVENING_FACTOR} instead)`, 'From year 2 of her marriage', '`addLove`'],
   ])
 }
@@ -734,7 +737,7 @@ function perkCaps(): string {
   const own = Math.min(OWN_CAP, 2 * LINE_BONUS + 0.08)
   const crew = Math.min(CREW_CAP, DREAM_BONUS + householdBonus(15))
   const caps = table(['What', 'Cap', 'How'], [
-    [`Her own line bonuses: F3 +${sharePct(LINE_BONUS)}, R5 +${sharePct(LINE_BONUS)}, her ring +1–15% once married`, `+${sharePct(OWN_CAP)}`, 'At her line’s place only (`romanceTerms`)'],
+    [`Her own line bonuses: F2 +${sharePct(LINE_BONUS)}, R5 +${sharePct(LINE_BONUS)}, her ring +1–15% once married`, `+${sharePct(OWN_CAP)}`, 'At her line’s place only (`romanceTerms`)'],
     [`The crew’s: a dream’s +${sharePct(DREAM_BONUS)} (the best at a place, never summed), the household’s ${HOUSEHOLD.map((h) => `+${sharePct(h.bonus)} at ${h.married}`).join(' and ')} married`, `+${sharePct(CREW_CAP)}`, 'Anyone working the place (the household anywhere)'],
     ['All romance bonuses on any one job, added', `+${sharePct(ROMANCE_CAP)}`, 'The romance term (`romanceBonus`)'],
     [`In her element (×${IN_ELEMENT})`, 'Outside the cap', 'The bond term (`extrasShare`)'],
@@ -897,16 +900,37 @@ const WAITS_WORDS: Readonly<Record<EveningWait, string>> = { kitchen: 'Not yet: 
 /** The kinds by ladder and game, whether each is offered, and each one's invitation. */
 function eveningKinds(): string {
   const pack = storyPackFrom(STAND_IN_FILES)
-  return table(['Kind', 'As a hangout', 'As a date', 'Plays as', 'Offered', 'Her invitation'], Object.values(EVENINGS).map((d) => [
+  const own = (k: string) => k === 'dinner' || k === 'night-in'
+  const scenes = (d: (typeof EVENINGS)[keyof typeof EVENINGS]) => (own(d.kind) ? `\`${eveningScene('date', d.kind)}\`` : d.hangout === null ? `\`${eveningScene('date', d.kind)}\`` : `\`${eveningScene('hangout', d.kind)}\`, \`${eveningScene('date', d.kind)}\``)
+  return table(['Kind', 'As a hangout', 'As a date', 'Plays as', 'Her scene', 'Offered', 'Her invitation'], Object.values(EVENINGS).map((d) => [
     d.name,
     d.kind === 'festival' ? `Festival days, F${HANGOUT_FROM}` : d.hangout === null ? '—' : `F${d.hangout}`,
     d.kind === 'festival' ? `Festival days, R${DATE_FROM}` : `R${d.date}`,
     d.kind === 'festival' ? 'Walk, at the festival ground' : playWords(d.play),
+    scenes(d) + (eveningMoments(d.kind).length > 0 ? ` (${eveningMoments(d.kind).map((m) => `\`${m}\``).join(', ')})` : ''),
     d.waits ? WAITS_WORDS[d.waits] : 'Yes',
-    d.question ? `“${d.question}”` : '— (never asked for)',
+    own(d.kind) ? '— (no one’s favourite)' : d.question ? `“${d.question}”` : '— (never asked for)',
   ])) + `
 
-Who: ${ROLE_WORDS.hangout.toLowerCase()} from Friendship ${HANGOUT_FROM} (her confession’s wait and Romance 0 included), ${ROLE_WORDS.date.toLowerCase()} from Romance ${DATE_FROM} (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse; she must be home. The stand-in’s favourite kinds: ${['9000001', '9000002', '9000003'].map((id) => `${id} ${favouriteKind(pack, id)}`).join(', ')}.`
+Who: ${ROLE_WORDS.hangout.toLowerCase()} from Friendship ${HANGOUT_FROM} (her confession’s wait and Romance 0 included), ${ROLE_WORDS.date.toLowerCase()} from Romance ${DATE_FROM} (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse (“${ROLE_WORDS.spouse}”); she must be home. Each takes ${eveningCost()} of the day’s actions. The stand-in’s favourite kinds: ${['9000001', '9000002', '9000003'].map((id) => `${id} ${favouriteKind(pack, id)}`).join(', ')}.`
+}
+
+/** The Uma loop's stages: how you reach each and what it opens. */
+function umaStagesBlock(): string {
+  return table(['Stage', 'How you reach it', 'What it opens'], STAGE_RULES.map((r) => [STAGE_NAMES[r.stage], r.range, r.opens]))
+}
+/** Married life's own acts: the household's meals and the night's companion. */
+function marriedLifeBlock(): string {
+  return table(['', 'Married life'], [
+    ['A meal', `${MEALS.map((m) => MEAL_NAMES[m]).join(' or ')}: ${actionWords('cook')}, each once a day, from your first wedding`],
+    ['Who eats', 'Everyone on the farm (the Dorm and the houses) and every farmhand'],
+    ['What a meal does', `Everyone it feeds well fed for ${MEAL_DAYS} days (today and tomorrow; a meal running longer is never shortened), and +${MEAL_POINTS} to each (\`addLove\`, an anniversary’s ×2 applies)`],
+    ['Its scene', 'One spouse’s meal line (`draw(uid, day, \'meal:<meal>\', 0)`): her bible’s `meals`, else the default story’s, on the dialogue engine'],
+    ['The night’s companion', 'At Tonight, one spouse with a room: free. Her house is tonight’s house, so its morning is as built'],
+    ['Without a pick', 'Tonight’s house (the morning’s “misses you” Tonight ›, else the house slept in least lately), and its resident who’s been your companion least lately'],
+    ['Her room', 'A birthday-alone wisher chosen on her birthday: her morning hers alone'],
+    ['The morning', 'She greets you: a short scene in pajamas, her bible’s `mornings`, else her temperament’s default greeting (`draw(uid, day, \'morning:<id>\', 0)`); then first in Hearts with ☾'],
+  ])
 }
 /** What an evening pays, each factor once. */
 function eveningPointsBlock(): string {
@@ -1009,7 +1033,7 @@ function homesteadMap(): string {
 /** The household milestones. */
 function householdMilestonesBlock(): string {
   return table(['Married', 'Opens'], [
-    ['1', 'The homestead (House 1 to build); the night’s house (Sleep at); anniversaries'],
+    ['1', 'The homestead (House 1 to build); the night’s companion and her house; the household’s meals; anniversaries'],
     ['5', 'Household scene 1; the furniture set (five pieces); +5% items crew-wide'],
     ['10', 'Household scene 2; two evenings every fourth day; two invitations a morning'],
     ['15', 'Household scene 3; +5% more items crew-wide'],
@@ -1047,7 +1071,7 @@ export function renderBlock(key: string): string | null {
     'perk-effects': perkEffects, 'perk-lines': perkLines, 'perk-caps': perkCaps, 'signature-dish': signatureDishes,
     'bond-points': bondPoints, 'bond-hearts': bondHeartsBlock, 'tie-seeds': tieSeeds, 'side-by-side': sideBySide,
     plays: playsBlock, 'play-map': playMap, 'play-grades': playGrades, 'play-windows': playWindows, 'event-pay': eventPay, 'stand-in-route': standInRoute,
-    'evening-kinds': eveningKinds, 'evening-points': eveningPointsBlock, 'evening-slots': eveningSlotsBlock,
+    'evening-kinds': eveningKinds, 'evening-points': eveningPointsBlock, 'uma-stages': umaStagesBlock, 'married-life': marriedLifeBlock, 'evening-slots': eveningSlotsBlock,
     rings: ringsBlock, 'bench-recipe': benchRecipe, reception: receptionBlock, 'bench-scene': benchScene,
     'outfit-rules': outfitRules, 'outfit-ids': outfitIds, expressions: expressionsBlock,
     houses: housesBlock, 'homestead-map': homesteadMap, 'household-milestones': householdMilestonesBlock, 'house-morning': houseMorningBlock, 'house-lines': houseLines,

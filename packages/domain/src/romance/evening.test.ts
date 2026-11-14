@@ -13,7 +13,7 @@ import { storyPackFrom, type StoryPack } from '../story/pack'
 import { STAND_IN_FILES } from '../story/stand-in'
 import { joinCast } from './meeting.fixture'
 import {
-  answerInvite, drawInvites, EVENING_GAMES, eveningMarks, eveningPoints, eveningPreview, eveningRole, EVENINGS, eveningSeed, eveningSlots, eveningUmas, favouriteKind,
+  answerInvite, drawInvites, EVENING_GAMES, eveningAffordable, eveningCost, eveningMarks, eveningMoments, eveningPoints, eveningScene, eveningPreview, eveningRole, EVENINGS, eveningSeed, eveningSlots, eveningUmas, favouriteKind,
   homeTonight, inviteCandidates, invitedNow, inviteDue, invitePoints, inviteWeight, kindBuilt, kindOpens, kindsNow, slotsLeft, spendEvening, tonightOpens,
 } from './evening'
 import { bar } from './love'
@@ -32,8 +32,8 @@ function farm(day = 3): SaveV4 {
 }
 const withLove = (save: SaveV4, love: Partial<Love>, id = ONE): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })
 const at = (stage: Love['stage'], level: number): Pick<Love, 'stage' | 'level'> => ({ stage, level })
-/** All three stand-ins at Friendship 2. */
-const friends = (save: SaveV4): SaveV4 => [ONE, TWO, THREE].reduce((s, id) => withLove(s, { level: 2 }, id), save)
+/** All three stand-ins at Friendship 3 (friends). */
+const friends = (save: SaveV4): SaveV4 => [ONE, TWO, THREE].reduce((s, id) => withLove(s, { level: 3 }, id), save)
 /** `n` invented spouses, 9000004 onward, home: what the household milestones count. */
 function married(save: SaveV4, n: number): SaveV4 {
   const ids = Array.from({ length: n }, (_, i) => String(9000004 + i))
@@ -54,10 +54,10 @@ function packWith(games: readonly string[]): Pick<StoryPack, 'cast' | 'bibles'> 
 }
 
 describe('who', () => {
-  it('Friendship 1 can\'t; Friendship 2 is a hangout through her confession\'s wait and Romance 0; Romance 1 a date through the wedding\'s wait; a spouse', () => {
+  it('an acquaintance (Friendship 0–2) can\'t; a friend (Friendship 3) is a hangout through her confession\'s wait and Romance 0; Romance 1 a date through the wedding\'s wait; a spouse', () => {
     expect(eveningRole(at('friendship', 0))).toBeNull()
-    expect(eveningRole(at('friendship', 1))).toBeNull()
-    expect(eveningRole(at('friendship', 2))).toBe('hangout')
+    expect(eveningRole(at('friendship', 2))).toBeNull()
+    expect(eveningRole(at('friendship', 3))).toBe('hangout')
     expect(eveningRole(at('confession', 10))).toBe('hangout')
     expect(eveningRole(at('romance', 0))).toBe('hangout')
     expect(eveningRole(at('romance', 1))).toBe('date')
@@ -67,46 +67,74 @@ describe('who', () => {
   })
 
   it('she must be home: away, nothing is open to her; a spouse in her house is home', () => {
-    const save = withLove(farm(), { level: 2 })
+    const save = withLove(farm(), { level: 3 })
     expect(kindsNow(save, ONE)).toEqual(['walk', 'fishing', 'picnic', 'market'])
     const away = { ...save, dorm: { ...save.dorm, home: [TWO, THREE] } }
     expect(homeTonight(away, ONE)).toBe(false)
     expect(kindsNow(away, ONE)).toEqual([])
     expect(() => spendEvening(away, PACK, ONE, 'walk', 90)).toThrow('She’s away tonight.')
     expect(homeTonight(withLove(away, { stage: 'spouse', level: 0, wed: 1, house: 0 }), ONE)).toBe(true)
-    expect(kindsNow(withLove(save, { level: 1 }), ONE)).toEqual([])
-    expect(() => spendEvening(withLove(save, { level: 1 }), PACK, ONE, 'walk', 90)).toThrow('Evenings open at Friendship 2.')
+    expect(kindsNow(withLove(save, { level: 2 }), ONE)).toEqual([])
+    expect(() => spendEvening(withLove(save, { level: 2 }), PACK, ONE, 'walk', 90)).toThrow('Evenings open at Friendship 3.')
   })
 })
 
 describe('the kinds', () => {
-  it('opens by her ladder: hangouts at F2, crafting at R1, stargazing at R3, dance and boat at R6; cooking and the footrace aren\'t offered', () => {
+  it('opens by her ladder: hangouts at F3, crafting at R1, stargazing at R3, dance and boat at R6; cooking and the footrace aren\'t offered', () => {
     const open = (love: Pick<Love, 'stage' | 'level'>) => EVENING_GAMES.filter((k) => kindOpens(love, k) && kindBuilt(k))
-    expect(open(at('friendship', 2))).toEqual(['walk', 'fishing', 'picnic', 'market'])
+    expect(open(at('friendship', 3))).toEqual(['walk', 'fishing', 'picnic', 'market'])
     expect(open(at('romance', 1))).toEqual(['walk', 'fishing', 'picnic', 'market', 'crafting'])
     expect(open(at('romance', 3))).toEqual(['walk', 'fishing', 'picnic', 'market', 'crafting', 'stargazing'])
     expect(open(at('romance', 6))).toEqual(['walk', 'fishing', 'picnic', 'market', 'crafting', 'stargazing', 'dance', 'boat'])
     expect(open(at('spouse', 0))).toEqual(['walk', 'fishing', 'picnic', 'market', 'crafting', 'stargazing', 'dance', 'boat'])
-    // Opened by the ladder but not built: cooking from F2, the footrace from R9.
-    expect(kindOpens(at('friendship', 2), 'cooking')).toBe(true)
+    // Opened by the ladder but not built: cooking from F3, the footrace from R9.
+    expect(kindOpens(at('friendship', 3), 'cooking')).toBe(true)
     expect(kindOpens(at('romance', 9), 'footrace')).toBe(true)
     expect([kindBuilt('cooking'), kindBuilt('footrace')]).toEqual([false, false])
     expect(kindsNow(withLove(farm(), { stage: 'spouse', level: 3, wed: 1 }), ONE)).not.toContain('footrace')
+    // The two evenings of their own: dates only, Dinner in town from R3 and A night in from R6; a spouse's every evening.
+    expect(EVENING_GAMES).not.toContain('dinner')
+    expect([kindOpens(at('romance', 2), 'dinner'), kindOpens(at('romance', 3), 'dinner'), kindOpens(at('confession', 10), 'dinner')]).toEqual([false, true, false])
+    expect([kindOpens(at('romance', 5), 'night-in'), kindOpens(at('romance', 6), 'night-in'), kindOpens(at('spouse', 0), 'night-in')]).toEqual([false, true, true])
+    expect(kindsNow(withLove(farm(), { stage: 'romance', level: 6 }), ONE)).toEqual(['walk', 'fishing', 'picnic', 'market', 'crafting', 'stargazing', 'dinner', 'dance', 'boat', 'night-in'])
+  })
+
+  it('names each evening\'s scene and its moment: a hangout\'s, a date\'s, and the two of their own', () => {
+    expect(eveningScene('hangout', 'walk')).toBe('hangout-walk')
+    expect(eveningScene('date', 'walk')).toBe('date-walk')
+    expect(eveningScene('spouse', 'boat')).toBe('date-boat')
+    expect(eveningScene('spouse', 'festival')).toBe('date-festival')
+    expect(eveningScene('date', 'dinner')).toBe('dinner-in-town')
+    expect(eveningScene('spouse', 'night-in')).toBe('a-night-in')
+    expect([eveningMoments('dinner'), eveningMoments('night-in'), eveningMoments('picnic'), eveningMoments('festival'), eveningMoments('walk')])
+      .toEqual([['dinner'], ['night-in'], ['picnic'], ['festival-night'], []])
+  })
+
+  it('takes 2 of the day\'s actions, never a special day\'s event actions; short of them it\'s refused and Tonight has no one', () => {
+    const save = withLove(farm(), { level: 3 })
+    expect(eveningCost()).toBe(2)
+    expect(spendEvening(save, PACK, ONE, 'walk', 60).save.today.actions).toBe(2)
+    const short = { ...save, today: { ...save.today, actions: 9 } }
+    expect(eveningAffordable(short)).toBe(false)
+    expect(() => spendEvening(short, PACK, ONE, 'walk', 60)).toThrow('That takes 2 actions.')
+    expect(eveningUmas(short, PACK)).toEqual([])
+    expect(tonightOpens(short, PACK)).toBe(false)
+    expect(eveningAffordable({ ...save, today: { ...save.today, actions: 8 } })).toBe(true)
   })
 
   it('plays each kind as the map has it, festival night as a walk', () => {
     expect(Object.fromEntries(Object.values(EVENINGS).map((d) => [d.kind, `${d.play.kind}${d.play.mark ? `:${d.play.mark}` : ''}`]))).toEqual({
-      walk: 'walk', fishing: 'cast', picnic: 'pick', market: 'pick', cooking: 'rhythm:pot', crafting: 'rhythm:hands', stargazing: 'pick', dance: 'rhythm:step',
+      walk: 'walk', fishing: 'cast', picnic: 'pick', market: 'pick', cooking: 'rhythm:pot', crafting: 'rhythm:hands', stargazing: 'pick', dinner: 'pick', 'night-in': 'pick', dance: 'rhythm:step',
       boat: 'rhythm:oar', footrace: 'rhythm:track', festival: 'walk',
     })
   })
 
-  it('offers festival night only on a festival day, from Friendship 2, in its own slot', () => {
+  it('offers festival night only on a festival day, from Friendship 3, in its own slot', () => {
     expect(festivalOn(10)?.id).toBe('flower-show')
-    const festival = withLove(farm(10), { level: 2 })
+    const festival = withLove(farm(10), { level: 3 })
     expect(kindsNow(festival, ONE)).toEqual(['walk', 'fishing', 'picnic', 'market', 'festival'])
-    expect(kindsNow(withLove(farm(11), { level: 2 }), ONE)).not.toContain('festival')
-    expect(kindsNow(withLove(farm(10), { level: 1 }), ONE)).toEqual([])
+    expect(kindsNow(withLove(farm(11), { level: 3 }), ONE)).not.toContain('festival')
+    expect(kindsNow(withLove(farm(10), { level: 2 }), ONE)).toEqual([])
     // The evening spent, festival night is still free; festival night spent, the evening still is.
     const evening = spendEvening(festival, PACK, ONE, 'walk', 70).save
     expect(kindsNow(evening, ONE)).toEqual(['festival'])
@@ -152,7 +180,7 @@ describe('the points', () => {
     expect(after.today.evenings).toEqual([{ with: ONE, kind: 'stargazing' }])
     expect(after.account.updatedAt).toBe(save.account.updatedAt)
     expect(() => spendEvening(after, PACK, TWO, 'walk', 50)).toThrow()
-    expect(() => spendEvening(withLove(after, { level: 2 }, TWO), PACK, TWO, 'walk', 50)).toThrow('Tonight’s evening is spent.')
+    expect(() => spendEvening(withLove(after, { level: 3 }, TWO), PACK, TWO, 'walk', 50)).toThrow('Tonight’s evening is spent.')
     expect(() => spendEvening(save, PACK, ONE, 'dance', 50)).toThrow('Not open to her yet.')
     expect(() => spendEvening(save, PACK, ONE, 'walk', 101)).toThrow('A play scores 0–100.')
   })
@@ -191,7 +219,7 @@ describe('the slots', () => {
   })
 
   it('an Uma may spend the day\'s second slot too; the +20 comes with her first evening only', () => {
-    const save = { ...withLove(married(farm(48), 10), { level: 2 }), today: { ...farm().today, invites: [{ id: ONE, kind: 'stargazing' as const, answer: 'yes' as const }] } }
+    const save = { ...withLove(married(farm(48), 10), { level: 3 }), today: { ...farm().today, invites: [{ id: ONE, kind: 'stargazing' as const, answer: 'yes' as const }] } }
     expect(inviteDue(save, ONE)).toBe(true)
     const first = spendEvening(save, PACK, ONE, 'walk', 10)
     expect(first.card.invite).toBe(20)
@@ -201,7 +229,7 @@ describe('the slots', () => {
 })
 
 describe('invitations', () => {
-  it('none from an Uma below F2, away, or whose favourite kind isn\'t open to her; one a morning', () => {
+  it('none from an Uma below F3, away, or whose favourite kind isn\'t open to her; one a morning', () => {
     expect(inviteCandidates(farm(), PACK)).toEqual([])
     // 9000001's favourite, stargazing, opens at R3; the stand-in's forager and fisher favour walk.
     const save = friends(farm())
@@ -266,15 +294,15 @@ describe('invitations', () => {
 
 describe('Tonight\'s rule', () => {
   it('opens with a free slot and someone to spend it; otherwise the old rule stands', () => {
-    expect(tonightOpens(farm(), PACK)).toBe(false) // nobody at Friendship 2
-    const save = withLove(farm(), { level: 2 }, TWO)
+    expect(tonightOpens(farm(), PACK)).toBe(false) // nobody at Friendship 3
+    const save = withLove(farm(), { level: 3 }, TWO)
     expect(eveningUmas(save, PACK)).toEqual([TWO])
     expect(tonightOpens(save, PACK)).toBe(true)
     expect(tonightOpens({ ...save, dorm: { ...save.dorm, home: [ONE, THREE] } }, PACK)).toBe(false)
     const spent = spendEvening(save, PACK, TWO, 'market', 40).save
     expect(tonightOpens(spent, PACK)).toBe(false)
     // A festival day keeps it open for festival night.
-    const festival = spendEvening(withLove(farm(10), { level: 2 }, TWO), PACK, TWO, 'walk', 40).save
+    const festival = spendEvening(withLove(farm(10), { level: 3 }, TWO), PACK, TWO, 'walk', 40).save
     expect(tonightOpens(festival, PACK)).toBe(true)
   })
 })
@@ -297,7 +325,7 @@ describe('the night and the save', () => {
   })
 
   it('parses evenings within the day\'s slots and invitations for a date game, and refuses the rest', () => {
-    const save = withLove(farm(10), { level: 2 }, TWO)
+    const save = withLove(farm(10), { level: 3 }, TWO)
     const ok = spendEvening(spendEvening(save, PACK, TWO, 'walk', 50).save, PACK, TWO, 'festival', 50).save
     expect(parseSaveV5(json(ok))).toEqual(ok)
     const bad = (today: Partial<SaveV4['today']>, day = 10) => () => parseSaveV5(json({ ...save, calendar: { day }, today: { ...save.today, ...today } }))

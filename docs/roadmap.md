@@ -95,7 +95,6 @@ table. Its steps, in order:
 
 | Step | What | Packet |
 |---|---|---|
-| 6 | **The Uma loop:** acquaintance, friend, farmhand, sweetheart, the wedding night, moving in, married life with meals and the night's companion | [F79](handoff/tasks/F79-uma-loop.md) |
 | 7 | **Farmhands:** her part-time job, then her farm actions; the work board; aptitudes that grow with practice | [F80](handoff/tasks/F80-farmhands.md) |
 | 10 | **The ranch and the mine,** in the farm loop's style | [F83](handoff/tasks/F83-ranch-and-mine.md) |
 | 11 | **Illustrations:** her big moments full screen (the first Uma's nine are published), and a gallery on her profile | [F84](handoff/tasks/F84-illustrations.md) |
@@ -114,7 +113,11 @@ night's income; the Book sets the upkeep beside the income, and a simulated firs
 ([upkeep and loans](game-mechanics.md#upkeep-and-loans)).
 Step 5, the town map, is done: a map you walk around in landscape, who's at each place now (the story's home, job and
 routine, else the day's draw), and her menu at the design's costs, meeting her by introducing yourself, with no welcome
-week ([the town](game-mechanics.md#the-town)). A day can now be played end to end. Phone checks follow steps 1, 2, 4, 5 and 7.
+week ([the town](game-mechanics.md#the-town)). A day can now be played end to end. Step 6, the Uma loop, is built: her
+stage from acquaintance to married (friend at Friendship 3, farmhand once invited to work), hangouts and dates at two
+actions with her scene after the play, Dinner in town and A night in, moving in after the wedding night, and married
+life's meals and the night's companion, who greets you in the morning ([the Uma loop](game-mechanics.md#the-uma-loop)).
+Phone checks follow steps 1, 2, 4, 5 and 7.
 
 **What it changes below:**
 - Phase 1's HD-2D track pauses: the portrait preview is retired, and the farm map becomes a landscape tile map until

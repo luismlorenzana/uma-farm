@@ -23,7 +23,7 @@ import {
 } from './parse-loop'
 import {
   type BuildingId, EVENING_KINDS, eveningsOn, FARMHOUSE, FESTIVAL_NIGHT, FIELD_TILES, FINALE_MARRIED, FURNITURE_PIECES, invitesFor, LOVE_STAGES, marriedCount, MAX_HOUSES, residentsOf, roomsOf,
-  isDishId, pairKey, TOWN_ID, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUma, type SaveV5, type TodayV4, type TownTalks,
+  isDishId, MEALS, pairKey, TOWN_ID, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUma, type SaveV5, type TodayV4, type TownTalks,
 } from './v4'
 
 export { isRosterId, LOOP_SLOTS, LOOP_WORK_PLACES } from './parse-loop'
@@ -49,10 +49,16 @@ function parseRoster(value: unknown, path: string, today: number): Record<string
   for (const [id, raw] of Object.entries(record(value, path))) {
     const at = `${path}.${id}`
     outfit(id, at)
-    const u = object(raw, at, ['joined', 'ranks', 'wellFed'])
+    const u = object(raw, at, ['joined', 'ranks', 'wellFed', 'farmhand'])
     const joined = day(u.joined, `${at}.joined`)
     if (joined > today) fail(`${at}.joined`, 'after today')
     out[id] = { joined, ranks: parseRanks(u.ranks, `${at}.ranks`), wellFed: count(u.wellFed, `${at}.wellFed`) }
+    // The day she started working the farm: absent before you invite her (the save grows it in place).
+    if (u.farmhand !== undefined) {
+      const hired = day(u.farmhand, `${at}.farmhand`)
+      if (hired > today || hired < joined) fail(`${at}.farmhand`, 'expected a day from the day she joined to today')
+      out[id].farmhand = hired
+    }
   }
   return out
 }
@@ -64,7 +70,7 @@ const pastDay = (value: unknown, path: string, today: number): number => {
   return d
 }
 
-const LOVE_KEYS = ['stage', 'level', 'points', 'last', 'friend', 'ring', 'wed', 'house', 'known', 'flags', 'evening', 'festivals', 'morning', 'dish'] as const
+const LOVE_KEYS = ['stage', 'level', 'points', 'last', 'friend', 'ring', 'wed', 'house', 'known', 'flags', 'evening', 'festivals', 'morning', 'dish', 'night'] as const
 
 /** Her level's range on each stage: friendship and romance 0–9 (the tenth event moves her on), 10 while a
  * waiting rung waits, spouse 0–5. */
@@ -122,6 +128,11 @@ function parseLove(value: unknown, path: string, today: number, houses: number):
     if (stage === 'friendship' && love.level < 4) fail(`${path}.dish`, 'only from Friendship 4 on')
     love.dish = typeof o.dish === 'string' && isDishId(o.dish) ? o.dish : fail(`${path}.dish`, 'unknown dish')
   }
+  if (o.night !== undefined) {
+    // The last night she was your companion: a spouse's, absent before any.
+    if (stage !== 'spouse') fail(`${path}.night`, 'only a spouse')
+    love.night = pastDay(o.night, `${path}.night`, today)
+  }
   return love
 }
 
@@ -153,7 +164,7 @@ const inviteKind = (v: unknown, at: string): InviteKind => (v === FESTIVAL_NIGHT
 /** `today`: the evenings within the day's slots (`evenings` regular ones, and festival
  * night once at most), and `invites` invitations, each a different Uma. */
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
-  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception'])
+  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const slots = eveningsOn(day, married)
   const evenings = list(o.evenings, `${path}.evenings`, 0, slots + 1).map((v, i) => {
@@ -185,6 +196,8 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
     // The ring made today (its grade, 0 none) and the reception's well-fed days (0 none).
     ring: int(o.ring, `${path}.ring`, 0, 10),
     reception: int(o.reception, `${path}.reception`, 0, 3),
+    // The household's meals cooked today, each once: absent until one is cooked (the save grows it in place).
+    ...(o.meals === undefined ? {} : { meals: unique(list(o.meals, `${path}.meals`, 0, MEALS.length).map((v, i) => oneOf(v, `${path}.meals.${i}`, MEALS)), `${path}.meals`) }),
   }
 }
 
@@ -206,7 +219,7 @@ function parseBondHeartsToday(value: unknown, path: string, roster: ReadonlySet<
  * the night last saw, and the finale's morning (no later than today, only from 20 married). Who lives where is `love.house`,
  * checked with the roster (`parseRooms`). */
 function parseHomestead(value: unknown, path: string, today: number, roster: ReadonlySet<string>): Homestead {
-  const o = object(value, path, ['houses', 'tonight', 'alone', 'slept', 'furniture', 'married', 'finale'])
+  const o = object(value, path, ['houses', 'tonight', 'alone', 'slept', 'furniture', 'married', 'finale', 'companion'])
   const houses = list(o.houses, `${path}.houses`, 1, MAX_HOUSES).map((v, i) => {
     const at = `${path}.houses.${i}`
     const h = object(v, at, ['name', 'extended'])
@@ -226,7 +239,10 @@ function parseHomestead(value: unknown, path: string, today: number, roster: Rea
   const finale = pastDay(o.finale, `${path}.finale`, today)
   if (finale > 0 && married < FINALE_MARRIED) fail(`${path}.finale`, `only from ${FINALE_MARRIED} married`)
   if (furniture.length > 0 && married < 5) fail(`${path}.furniture`, 'only from 5 married')
-  return { houses, tonight, alone, slept, furniture, married, finale }
+  // Tonight's companion: your pick, with tonight's house (hers); absent before a pick (the save grows it in place).
+  const companion = o.companion === undefined ? undefined : member(o.companion, `${path}.companion`, roster)
+  if (companion !== undefined && tonight === null) fail(`${path}.companion`, 'her house is tonight’s house')
+  return { houses, tonight, alone, slept, furniture, married, finale, ...(companion === undefined ? {} : { companion }) }
 }
 
 /** Who lives where: no house holds more residents than its rooms; a spouse in a house has no Dorm
@@ -240,8 +256,9 @@ function parseRooms(save: Pick<SaveV5, 'love' | 'dorm' | 'homestead'>, path: str
     if (love.house === undefined) continue
     if (save.dorm.home.includes(id) || save.dorm.swaps.some((s) => s.in === id)) fail(`${path}.love.${id}.house`, 'a spouse in her house has no Dorm bed')
   }
-  const { alone, tonight, married } = save.homestead
+  const { alone, tonight, married, companion } = save.homestead
   if (alone !== null && save.love[alone]?.house !== tonight) fail(`${path}.homestead.alone`, 'expected a spouse in tonight’s house')
+  if (companion !== undefined && save.love[companion]?.house !== tonight) fail(`${path}.homestead.companion`, 'expected a spouse in tonight’s house')
   if (married > marriedCount(save)) fail(`${path}.homestead.married`, 'more than are married')
 }
 
@@ -276,7 +293,9 @@ function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>, 
   const pairs = (roster.size * (roster.size - 1)) / 2
   return unique(list(value, path, 0, roster.size * 8 + pairs + 6).map((v, i): HeartLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['invite', 'arrived', 'birthday', 'anniversary', 'item', 'chores', 'perks', 'side', 'bond', 'house', 'misses', 'moved', 'level', 'vows', 'chapter'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['morning', 'invite', 'arrived', 'birthday', 'anniversary', 'item', 'chores', 'perks', 'side', 'bond', 'house', 'misses', 'moved', 'level', 'vows', 'chapter'] as const)
+    // The night's companion, who greets you this morning.
+    if (kind === 'morning') return { kind, id: member(object(v, at, ['kind', 'id']).id, `${at}.id`, roster) }
     if (kind === 'chapter') {
       const o = object(v, at, ['kind', 'id', 'chapter'])
       return { kind, id: member(o.id, `${at}.id`, roster), chapter: int(o.chapter, `${at}.chapter`, 1, MAX_CHAPTERS) }
@@ -347,7 +366,7 @@ function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>, 
     }
     const a = object(v, at, ['kind', 'id', 'home'])
     return { kind: 'arrived', id: member(a.id, `${at}.id`, roster), home: bool(a.home, `${at}.home`) }
-  }), path, (h) => (h.kind === 'bond' ? `bond:${h.a}:${h.b}` : h.kind === 'side' || h.kind === 'chores' || h.kind === 'perks' || h.kind === 'house' || h.kind === 'misses' || h.kind === 'vows' ? h.kind : `${h.kind}:${h.id}`))
+  }), path, (h) => (h.kind === 'bond' ? `bond:${h.a}:${h.b}` : h.kind === 'side' || h.kind === 'chores' || h.kind === 'perks' || h.kind === 'house' || h.kind === 'misses' || h.kind === 'vows' || h.kind === 'morning' ? h.kind : `${h.kind}:${h.id}`))
 }
 
 function parseSummary(value: unknown, path: string, today: number, roster: ReadonlySet<string>, houses: number): MorningSummary {

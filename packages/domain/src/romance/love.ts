@@ -130,7 +130,7 @@ export const LADDER_COLOURS: Readonly<Record<LadderName, string>> = { friendship
 // --- Points ---------------------------------------------------------------------
 
 /** What paid points into her bar: each act of the points table. */
-export type LoveSource = 'chat' | 'gift' | 'praise' | 'line' | 'festival' | 'arrival' | 'event' | 'evening' | 'invite' | 'house'
+export type LoveSource = 'chat' | 'gift' | 'praise' | 'line' | 'festival' | 'arrival' | 'event' | 'evening' | 'invite' | 'house' | 'meal'
 
 /** A gift on her birthday pays ×3. */
 export const BIRTHDAY_GIFT = 3

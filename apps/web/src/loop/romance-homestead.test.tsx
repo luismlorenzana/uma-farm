@@ -1,5 +1,5 @@
 // Married life on screen: the homestead's rows on the map,
-// building and naming House 1 on the homestead's sheet, a move and a swap, the wedding's room on Married, Tonight's Sleep at,
+// building and naming House 1 on the homestead's sheet, a move and a swap, the wedding's room on Married, Tonight's companion,
 // the morning's house line and "misses you", a night level's card, a household scene played and read, and her room on her
 // profile. The invented stand-in
 // pack (9000001–9000003) and invented outfits; master data and the server are stubs.
@@ -33,7 +33,7 @@ const { Shell } = await import('../shell/Shell')
 const { default: HeartsPage } = await import('./HeartsPage')
 const { mapLots } = await import('./farm-map')
 const { houseLot } = await import('./homestead-map')
-const { homeWords, sleepViews } = await import('./homestead-view')
+const { companionViews, homeWords } = await import('./homestead-view')
 const { summaryParts } = await import('./summary-words')
 const { setAskBeforeEnd } = await import('./ask')
 
@@ -186,37 +186,97 @@ describe('the homestead\'s sheet', () => {
   })
 })
 
-describe('Tonight\'s Sleep at', () => {
+describe('Tonight\'s companion', () => {
   beforeEach(() => {
     const items = new Map<string, string>()
     vi.stubGlobal('localStorage', { getItem: (k: string) => items.get(k) ?? null, setItem: (k: string, v: string) => void items.set(k, v), removeItem: (k: string) => void items.delete(k) })
     setAskBeforeEnd(true)
   })
 
-  it('opens once anyone is married, the default marked; a tap picks the house at once', async () => {
+  it('opens once anyone is married, the default marked; a tap picks her at once, and her house is tonight\'s', async () => {
     let one = wedOne({ level: 1 })
     one = { ...one, homestead: { ...one.homestead, houses: [...one.homestead.houses, { name: 'Rose Cottage', extended: false }], slept: [DAY - 1, 0] } }
     one = moveSpouse({ ...one, love: { ...one.love, [TWO]: { ...one.love[TWO]!, stage: 'spouse', level: 0, points: 0, wed: 3 } } }, TWO, 1)
     useGame.setState({ uid: 'u1', status: 'ready', save: one })
     await render(<p />, '/?sheet=end')
-    await find('[data-sleep-at]')
-    expect($$('[data-sleep]').map((r) => [r.dataset.sleep, r.textContent])).toEqual([
-      ['house:0', '⌂Farmhouse· 1 home · ☕'],
-      ['house:1', '⌂Rose Cottage· 1 home'],
+    await find('[data-tonight-with]')
+    expect($$('[data-companion]').map((r) => [r.dataset.companion, r.textContent])).toEqual([
+      [ONE, 'Stand-in 1⌂Farmhouse · ☕'],
+      [TWO, 'Stand-in 2⌂Rose Cottage'],
     ])
-    // Rose Cottage never slept in: the default.
-    expect($('[data-sleep][data-picked]')?.dataset.sleep).toBe('house:1')
-    await click($('[data-sleep="house:0"]'))
-    await until(() => save().homestead.tonight === 0)
-    expect($('[data-sleep][data-picked]')?.dataset.sleep).toBe('house:0')
+    // Rose Cottage never slept in: its resident is the default.
+    expect($('[data-companion][data-picked]')?.dataset.companion).toBe(TWO)
+    await click($(`[data-companion="${ONE}"]`))
+    await until(() => save().homestead.companion === ONE)
+    expect(save().homestead.tonight).toBe(0)
+    expect($('[data-companion][data-picked]')?.dataset.companion).toBe(ONE)
     expect($('[data-end-line]')).not.toBeNull()
   })
 
-  it('offers her room on a birthday-alone wisher\'s birthday', () => {
+  it('makes it her room on a birthday-alone wisher\'s birthday', () => {
     const one = wedOne()
     const birthdays = new Map([[ONE, one.calendar.day]])
-    const rows = sleepViews(one, fixture.pack!, birthdays, () => 'Stand-in 1')
-    expect(rows.map((r) => [r.key, r.name, r.home])).toEqual([['house:0', 'Farmhouse', '· 1 home'], [`room:${ONE}`, 'Her room', '· Stand-in 1, just you two']])
+    const rows = companionViews(one, fixture.pack!, birthdays, () => 'Stand-in 1')
+    expect(rows.map((r) => [r.id, r.home, r.alone, r.picked])).toEqual([[ONE, 'Her room · her birthday, just you two', true, true]])
+    expect(companionViews(one, fixture.pack!, new Map(), () => 'Stand-in 1').map((r) => [r.home, r.alone])).toEqual([['Farmhouse', false]])
+  })
+})
+
+describe('married life: the night\'s companion and the household\'s meals', () => {
+  beforeEach(() => {
+    const items = new Map<string, string>()
+    vi.stubGlobal('localStorage', { getItem: (k: string) => items.get(k) ?? null, setItem: (k: string, v: string) => void items.set(k, v), removeItem: (k: string) => void items.delete(k) })
+    setAskBeforeEnd(true)
+  })
+
+  it('ends the day with her as the night\'s companion, and she greets you in the morning in a short scene', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: wedOne() })
+    await render(<p />, '/?sheet=end')
+    await find(`[data-companion="${ONE}"][data-picked]`)
+    await click($('[data-action="end-day"]'))
+    await until(() => save().calendar.day === DAY + 1, 300)
+    // The morning comes up on her greeting: in pajamas, her temperament's line.
+    await find('[data-life="morning"]')
+    expect(path).toBe(`/?life=morning:${ONE}`)
+    expect($('[data-scene-title]')?.textContent).toBe('Morning · Stand-in 1')
+    await until(() => $('[data-life="morning"] [data-portrait]') !== null)
+    expect($('[data-life="morning"] [data-portrait]')?.dataset.portrait).toBe('pajamas-playful')
+    expect(save().love[ONE]!.night).toBe(DAY)
+    await click($('[data-action="skip"]'))
+    await until(() => path === '/')
+    // The morning's first line: a tap plays her greeting again.
+    const parts = summaryParts(save().summary!, () => 'Stand-in 1', [], null, homeWords(save(), fixture.pack!, () => 'Stand-in 1', () => 'steady'))
+    expect(parts.find((p) => p.section === 'hearts')!.lines[0]).toMatchObject({ key: 'morning', text: '☾ Morning with Stand-in 1', to: `/?life=morning:${ONE}`, tag: 'Play' })
+  }, 20_000)
+
+  it('cooks a meal from the homestead: an action, everyone at the table fed and pleased, and her line as you sit down', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: wedOne() })
+    await render(<p />, '/?sheet=homestead')
+    await find('[data-meals]')
+    expect($('[data-action="cook-breakfast"]')?.textContent).toBe('Breakfast · 1')
+    const before = save().love[TWO]!.points
+    await click($('[data-action="cook-breakfast"]'))
+    await until(() => (save().today.meals ?? []).includes('breakfast'))
+    expect(save().today.actions).toBe(1)
+    expect(save().love[TWO]!.points - before).toBe(10)
+    expect(save().roster[THREE]!.wellFed).toBe(2)
+    await find('[data-life="breakfast"]')
+    expect(decodeURIComponent(path)).toBe(`/?sheet=homestead&life=breakfast:${ONE}`)
+    expect($('[data-scene-title]')?.textContent).toBe('Breakfast · Stand-in 1')
+    await click($('[data-action="skip"]'))
+    await until(() => path === '/?sheet=homestead')
+    expect($('[data-action="cook-breakfast"]')?.textContent).toBe('Breakfast ✓')
+    expect(($('[data-action="cook-breakfast"]') as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('plays her moving in from the morning\'s line when she took a room overnight', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: wedOne() })
+    await render(<p />, `/?life=moving-in:${ONE}`)
+    await find('[data-life="moving-in"]')
+    expect($('[data-scene-title]')?.textContent).toBe('Moving in · Stand-in 1')
+    expect($('[data-step] [data-line]')?.dataset.line).toBe('A cart of her things rolls up the lane to the farm.')
+    const parts = summaryParts({ day: DAY, bin: [], work: [], ranks: [], hearts: [{ kind: 'moved', id: ONE, house: 0 }], news: [], nudges: [] }, () => 'Stand-in 1', [], null, homeWords(wedOne(), fixture.pack!, () => 'Stand-in 1', () => 'steady'))
+    expect(parts.find((p) => p.section === 'hearts')!.lines[0]).toMatchObject({ text: '⌂ Stand-in 1 moved into Farmhouse', to: `/?life=moving-in:${ONE}`, tag: 'Play' })
   })
 })
 

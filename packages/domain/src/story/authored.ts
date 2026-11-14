@@ -251,6 +251,11 @@ export interface UmaBible {
   chats?: ChatSets
   /** What she says when you talk with her in town, any number: one a day. Without them, the game's short lines. */
   townLines?: string[]
+  /** Her morning greetings as the night's companion (married life), any number: one a morning. Narration before the
+   * first quote, then what she says inside the quotes. Without them, the default story's for her temperament. */
+  mornings?: string[]
+  /** Her lines at the household's meals, any number of each: one as you sit down. Without them, the default story's. */
+  meals?: Meals
   /** Her keepsake: a named item she gives at Friendship 10, its name and her line about it, shown on her profile. Its
    * effect is the template's: +0.25 quality at her line, +0.5 from S5. Without a name her profile says "Her keepsake". */
   keepsake?: Keepsake
@@ -262,6 +267,8 @@ export interface UmaBible {
   /** Her wishes for married life: `own-house` and `birthday-alone`. */
   wishes?: Wish[]
 }
+/** Her lines at the household's meals: breakfast and dinner. */
+export interface Meals { breakfast?: string[]; dinner?: string[] }
 /** Her wishes. */
 export const WISHES = ['own-house', 'birthday-alone'] as const
 export type Wish = typeof WISHES[number]
@@ -425,7 +432,7 @@ export const LINE_LIMITS = {
   prompt: 120,
   /** A chat line. */
   chat: 160,
-  /** A line on the town's talk sheet. */
+  /** A line on the town's talk sheet, a morning greeting and a meal's line. */
   townLine: 160,
   /** A sister's name, a town spot's name, and world.json's names (the town, the farm, the region, a place, a festival). */
   name: 40,
@@ -1163,6 +1170,20 @@ function readKeepsake(v: unknown, f: Findings): Keepsake | undefined {
   return kept<Keepsake>(v, { name: text('name', LINE_LIMITS.keepsakeName), line: text('line', LINE_LIMITS.keepsakeLine) })
 }
 
+/** A list of short lines (her town lines, her morning greetings, a meal's), each at most a talk sheet's: one that isn't is
+ * skipped. */
+function readLines(v: unknown, at: string, f: Findings): string[] | undefined {
+  return Array.isArray(v) ? v.filter((line, i) => shown(line, LINE_LIMITS.townLine, `${at} ${i + 1}`, f) || (f.errors[f.errors.length - 1] += '; skipped', false)) : undefined
+}
+
+function readMeals(v: unknown, f: Findings): Meals | undefined {
+  if (!isObject(v)) return undefined
+  return kept<Meals>(v, {
+    breakfast: v.breakfast === undefined ? undefined : readLines(v.breakfast, 'meals.breakfast', f),
+    dinner: v.dinner === undefined ? undefined : readLines(v.dinner, 'meals.dinner', f),
+  })
+}
+
 function readWedding(v: unknown, f: Findings): WeddingPlan | undefined {
   if (!isObject(v) || !Array.isArray(v.places)) return undefined
   const places = idList(v.places, 'wedding.places', f, (p) => oneOf(STORY_PLACES, p), 'the game’s places') as StoryPlace[] | undefined
@@ -1185,9 +1206,9 @@ export function checkBible(raw: unknown, id: string, ctx: StoryContext): Read<Um
     gifts,
     route: raw.route === undefined ? undefined : readBeats(raw.route, ctx, isGood, proposed, f),
     chats: field(raw, 'chats', (v) => readChats(v, f), 'chats', f, 'is { friend, partner, spouse }'),
-    townLines: field(raw, 'townLines', (v) => (Array.isArray(v)
-      ? v.filter((line, i) => shown(line, LINE_LIMITS.townLine, `townLines ${i + 1}`, f) || (f.errors[f.errors.length - 1] += '; skipped', false))
-      : undefined), 'townLines', f, 'is a list of lines'),
+    townLines: field(raw, 'townLines', (v) => readLines(v, 'townLines', f), 'townLines', f, 'is a list of lines'),
+    mornings: field(raw, 'mornings', (v) => readLines(v, 'mornings', f), 'mornings', f, 'is a list of lines'),
+    meals: field(raw, 'meals', (v) => readMeals(v, f), 'meals', f, 'is { breakfast, dinner }'),
     keepsake: field(raw, 'keepsake', (v) => readKeepsake(v, f), 'keepsake', f, 'is { name, line }'),
     petName: field(raw, 'petName', (v) => {
       if (!shown(v, LINE_LIMITS.petName, 'petName', f, 'name')) { f.errors.pop(); return undefined }

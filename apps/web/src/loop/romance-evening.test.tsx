@@ -95,6 +95,11 @@ async function walkPerfect(forks: number) {
     await click($(`[data-turn][data-place="${loves}"]`))
   }
 }
+/** Her scene after the evening's play: Skip goes on to the card. */
+async function skipScene() {
+  await find('[data-evening-scene]')
+  await click($('[data-action="skip"]'))
+}
 /** Starts a play and lets it run out with no taps: never failed, a Fine. */
 async function runOut() {
   await click(await find('[data-action="play-start"]'))
@@ -128,19 +133,20 @@ afterEach(async () => {
 
 describe('an evening from her profile', () => {
   it('shows her kinds with her numbers, plays a Walk at its evening length, and pays it on the card once', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: farm({ [TWO]: { level: 2 } }) })
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm({ [TWO]: { level: 3 } }) })
     const before = save().account.updatedAt
     await render(<HeartsPage />, `/hearts?uma=${TWO}`)
     expect($('[data-evening-marks]')?.dataset.eveningMarks).toBe('○')
     const button = await find('[data-profile-actions] [data-action="evening"]')
-    expect(button.textContent).toContain('Evening ›')
+    expect(button.textContent).toContain('Evening · 2 ›')
     await click(button)
     expect(path).toBe(`/hearts?uma=${TWO}&evening=${TWO}`)
     await find(`[data-evening-kinds="${TWO}"]`)
-    expect($('[data-evening-role]')?.textContent).toBe('A hangout · Friend · F2')
+    expect($('[data-evening-role]')?.textContent).toBe('A hangout · Friend · F3')
     // Open now, then greyed by her ladder; cooking and the footrace aren't offered.
     expect($$('[data-kind]').map((k) => [k.dataset.kind, k.dataset.locked ?? null])).toEqual([
-      ['walk', null], ['fishing', null], ['picnic', null], ['market', null], ['crafting', 'At Romance 1'], ['stargazing', 'At Romance 3'], ['dance', 'At Romance 6'], ['boat', 'At Romance 6'],
+      ['walk', null], ['fishing', null], ['picnic', null], ['market', null], ['crafting', 'At Romance 1'], ['stargazing', 'At Romance 3'], ['dinner', 'At Romance 3'],
+      ['dance', 'At Romance 6'], ['boat', 'At Romance 6'], ['night-in', 'At Romance 6'],
     ])
     // The stand-in's forager has no bible: her favourite is walk, ×1.5.
     expect($('[data-kind="walk"]')?.dataset.favourite).toBe('true')
@@ -156,12 +162,18 @@ describe('an evening from her profile', () => {
     await find('[data-play-result="perfect"]')
     expect($('[data-play-result]')?.textContent).toContain('Perfect · +225')
     await click($('[data-action="play-done"]'))
+    // Her scene for it, on the dialogue engine: a friend's walk, the default story's; it takes 2 of the day's actions.
+    await find('[data-evening-scene="hangout-walk"]')
+    expect($('[data-scene-title]')?.textContent).toBe('Walk at dusk · Stand-in 2')
+    expect($('[data-step] [data-line]')?.dataset.line).toBe('You walk the lanes as the light goes.')
+    expect(save().today.actions).toBe(2)
+    await click($('[data-action="skip"]'))
     const card = await find('[data-evening-card="walk"]')
     expect(card.dataset.grade).toBe('perfect')
     expect($('[data-card-play]')?.textContent).toBe('+150 Perfect × 1.5 her favourite = +225')
     expect($('[data-card-invite]')).toBeNull()
-    expect($('[data-card-total]')?.textContent).toBe('= +225 toward Friendship 3')
-    expect($('[data-card-bar]')?.dataset.cardBar).toBe('225/280')
+    expect($('[data-card-total]')?.textContent).toBe('= +225 toward Friendship 4')
+    expect($('[data-card-bar]')?.dataset.cardBar).toBe('225/320')
     expect(save().love[TWO]).toMatchObject({ points: 225, evening: 3 })
     expect(save().today.evenings).toEqual([{ with: TWO, kind: 'walk' }])
     expect(save().account.updatedAt).not.toBe(before)
@@ -172,11 +184,11 @@ describe('an evening from her profile', () => {
     expect($('[data-evening-marks]')?.dataset.eveningMarks).toBe('●')
   })
 
-  it('says why not on her profile: below Friendship 2, and once the evening is spent with someone else', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: { ...farm({ [TWO]: { level: 2 } }), today: { ...farm().today, evenings: [{ with: TWO, kind: 'walk' }] } } })
+  it('says why not on her profile: below Friendship 3, and once the evening is spent with someone else', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...farm({ [TWO]: { level: 3 } }), today: { ...farm().today, evenings: [{ with: TWO, kind: 'walk' }] } } })
     await render(<HeartsPage />, `/hearts?uma=${ONE}`)
-    expect((await find('[data-profile-actions] [data-action="evening"]')).textContent).toBe('Evening · F2')
-    useGame.setState({ save: { ...save(), love: { ...save().love, [ONE]: { ...save().love[ONE]!, level: 2 } } } })
+    expect((await find('[data-profile-actions] [data-action="evening"]')).textContent).toBe('Evening · F3')
+    useGame.setState({ save: { ...save(), love: { ...save().love, [ONE]: { ...save().love[ONE]!, level: 3 } } } })
     await settle()
     expect($('[data-profile-actions] [data-action="evening"]')?.textContent).toBe('Evening spent')
   })
@@ -186,7 +198,7 @@ describe('the morning\'s invitation', () => {
   it('words her line, and Yes makes her Tonight\'s evening with +20; the row\'s ✉ stands until it\'s spent', async () => {
     expect(heartsLines([{ kind: 'invite', id: TWO, evening: 'walk' }, { kind: 'birthday', id: ONE, when: 'today' }], [], (id) => (id === TWO ? 'Stand-in 2' : 'Stand-in 1'))
       .map((l) => [l.text, l.invite ?? null])).toEqual([['✉ Stand-in 2: “Walk at dusk tonight?”', TWO], ['★ Stand-in 1’s birthday today', null]])
-    const morning = farm({ [TWO]: { level: 2 }, [THREE]: { level: 2 } })
+    const morning = farm({ [TWO]: { level: 3 }, [THREE]: { level: 3 } })
     useGame.setState({ uid: 'u1', status: 'ready', save: { ...morning, today: { ...morning.today, invites: [{ id: TWO, kind: 'walk', answer: null }] } } })
     await render(<><InviteAnswer id={TWO} /><HeartsPage /></>, '/hearts')
     expect($(`[data-heart-row="${TWO}"] [data-invite-chip]`)).not.toBeNull()
@@ -208,10 +220,11 @@ describe('the morning\'s invitation', () => {
     await find('[data-play="cast"][data-length="evening"]')
     await runOut()
     await click($('[data-action="play-done"]'))
+    await skipScene()
     await find('[data-evening-card="fishing"]')
     expect($('[data-card-play]')?.textContent).toBe('+60 Fine')
     expect($('[data-card-invite]')?.textContent).toBe('+20 for saying yes')
-    expect($('[data-card-total]')?.textContent).toBe('= +80 toward Friendship 3')
+    expect($('[data-card-total]')?.textContent).toBe('= +80 toward Friendship 4')
     expect(save().love[TWO]!.points).toBe(80)
     await click($('[data-action="evening-done"]'))
     await until(() => !$('[data-evening-card]'))
@@ -219,7 +232,7 @@ describe('the morning\'s invitation', () => {
   })
 
   it('Another day costs nothing', async () => {
-    const morning = farm({ [TWO]: { level: 2 } })
+    const morning = farm({ [TWO]: { level: 3 } })
     useGame.setState({ uid: 'u1', status: 'ready', save: { ...morning, today: { ...morning.today, invites: [{ id: TWO, kind: 'walk', answer: null }] } } })
     await render(<><InviteAnswer id={TWO} /><HeartsPage /></>, '/hearts')
     await click(await find('[data-action="invite-no"]'))
@@ -238,7 +251,7 @@ describe('Tonight', () => {
   })
 
   it('opens with a free slot: Pick someone › to her evening, then back on Tonight with "with … ✓"; End the day fades to the morning', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: farm({ [TWO]: { level: 2 } }) })
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm({ [TWO]: { level: 3 } }) })
     await render(<p />, '/?sheet=end')
     await find('[data-tonight="3"]')
     expect($('[data-end-line]')?.textContent).toBe('10 actions left')
@@ -253,6 +266,7 @@ describe('Tonight', () => {
     await click(await find('[data-kind="picnic"]'))
     await runOut()
     await click($('[data-action="play-done"]'))
+    await skipScene()
     await find('[data-evening-card="picnic"]')
     expect($('[data-card-play]')?.textContent).toBe('+60 Fine')
     await click($('[data-action="evening-done"]'))
@@ -260,6 +274,7 @@ describe('Tonight', () => {
     expect(path).toBe('/?sheet=end')
     const spent = await find('[data-evening-row="evening"][data-state="spent"]')
     expect(spent.textContent).toContain('with Stand-in 2 · Picnic ✓')
+    expect($('[data-end-line]')?.textContent).toBe('8 actions left')
     expect(save().calendar.day).toBe(3)
     // End the day: the dusk comes down, the night runs under it, the morning comes up.
     await click($('[data-action="end-day"]'))
@@ -280,7 +295,7 @@ describe('Tonight', () => {
   })
 
   it('on a festival day, shows festival night beside a spent evening, and the header\'s marks', async () => {
-    const day = farm({ [TWO]: { level: 2 }, [THREE]: { level: 2 } }, 10)
+    const day = farm({ [TWO]: { level: 3 }, [THREE]: { level: 3 } }, 10)
     useGame.setState({ uid: 'u1', status: 'ready', save: { ...day, today: { ...day.today, evenings: [{ with: TWO, kind: 'walk' }] } } })
     await render(<p />, '/?sheet=end')
     await find('[data-tonight="10"]')

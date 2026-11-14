@@ -132,19 +132,20 @@ The owner reworked the game ([the game's design](../../design/game-design.md)). 
   - `routine`: where she is, when.
 
   Her goals and objectives live in her bible as before.
-- **The Uma loop's stages** ([F79](F79-uma-loop.md)): acquaintance, friend, farmhand, sweetheart, engaged, married. New
-  scenes the story may write:
-  - the invitation to work;
-  - moving in;
-  - the night's companion's morning greetings;
-  - the household's meals.
+- **The Uma loop's stages** ([the Uma loop](../../game-mechanics.md#the-uma-loop), built): acquaintance, friend,
+  farmhand, sweetheart, engaged, married. What the story may write for it:
+  - moving in (`moving-in`, a route event: it plays after the wedding night);
+  - the evenings' scenes (`hangout-<kind>`, `date-<kind>`, `dinner-in-town`, `a-night-in`: after each evening's play);
+  - the night's companion's morning greetings (her bible's `mornings`);
+  - the household's meals (her bible's `meals.breakfast` and `meals.dinner`);
+  - the invitation to work plays one line for now; a scene of its own is a later call.
 
   The wedding night already has its own.
 - **"For the game", answered:**
 
   | The story asked | Answer |
   |---|---|
-  | The occasion scenes (dinners, nights in, the wedding night) | [F79](F79-uma-loop.md) |
+  | The occasion scenes (dinners, nights in, the wedding night) | Built: Dinner in town and A night in are evenings with their scenes, the wedding night and moving in follow the wedding ([the Uma loop](../../game-mechanics.md#the-uma-loop)) |
   | New Year's, the Fishing Derby night, the Flower Show | The calendar plays `new-year`, `derby-night` and `flower-show` on their days, and reads world.json's `days` list of the story's holidays and minor days ([the menu](../../story-pack.md#the-storys-days)) |
   | An outfit on every scene, and the occasions' outfits | the dialogue engine ([its rules](../../game-mechanics.md#outfits-by-context)) |
   | The world on screen | Shipped as [F73](../../game-mechanics.md#the-world-in-the-pack); it shows once a release carries `world.json` (Release 1 didn't) |

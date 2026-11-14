@@ -37,6 +37,7 @@ prose here; change a table by changing the rule.
   - [What plays without the story](#what-plays-without-the-story)
   - [The opening, the farmer's name, and meeting her](#the-opening-the-farmers-name-and-meeting-her)
   - [Her favourite line and tastes](#her-favourite-line-and-tastes)
+  - [The Uma loop](#the-uma-loop)
   - [Her route](#her-route)
   - [Perks](#perks)
   - [Heart events and plays](#heart-events-and-plays)
@@ -221,9 +222,10 @@ On three days of the year, each Uma you've met has a scene with you: the story's
   ("Water · 1 action", "Fish · 1"), and a side panel says "7 actions left of 10". With none left, an action is refused
   ("No actions left today.") and its buttons are greyed.
 - **One tap of work is one action:** a tile cleared, tilled, planted, watered or harvested; a forage, a chop or a catch;
-  a station's load started; a crate shipped; going into town; and with the Umas, introducing yourself, a talk, a gift,
-  her event, or an occasion scene with her. Looking is free, and so are building a place, the Dorm, walking between the
-  town's places and the evening; the shop is free once you're in town.
+  a station's load started; a crate shipped; going into town; with the Umas, introducing yourself, a talk, a gift, the
+  invitation to work, her event, or an occasion scene with her; and once married, a household meal. **A hangout or a
+  date takes two.** Looking is free, and so are building a place, the Dorm, walking between the town's places and
+  choosing tonight's companion; the shop is free once you're in town.
 - **Going into town** takes one action and opens the town and its shop for the rest of the day.
 - **The last action** opens a card over whatever page it was spent on, once: "Out of actions · The day's work is done."
   with **End the day** and **Not yet** (to build or spend the evening first). The day never ends by itself.
@@ -232,8 +234,9 @@ On three days of the year, each Uma you've met has a scene with you: the story's
   event and an occasion scene spend them **before the day's own**, so on a festival with the ten spent, three more of
   the Umas' events still fit. The save counts them apart (`today.eventActions`).
 - **Her event costs one action:** the special day's event actions first, then the day's. With none left of either, her
-  Play says "No actions left today." before it plays, and she stays Ready for tomorrow. Ask her, a Memory and the
-  wedding night take none.
+  Play says "No actions left today." before it plays, and she stays Ready for tomorrow. Ask her, a Memory, the
+  wedding night, moving in and the night's companion's morning greeting take none. An evening never spends a special
+  day's event actions: its two are the day's own.
 - **Nothing reads the device's clock.** A load is ready the next morning and a watered tile grows at night, so reopening
   the app moves nothing.
 - **Your changes are stamped with the real time**, which syncing between devices compares; that stamp never moves the
@@ -276,12 +279,12 @@ belong to, and until then cost nothing or aren't there yet:
 | The Umas | Introduce yourself | 1 | Now |
 | The Umas | Talk | 1 | Now |
 | The Umas | Give a gift | 1 | Now |
-| The Umas | Invite her to work | 1 | With the Uma loop |
-| The Umas | A hangout or a date | 2 | With the Uma loop |
+| The Umas | Invite her to work | 1 | Now |
+| The Umas | A hangout or a date | 2 | Now |
 | The Umas | Her event, when it’s ready, or an occasion scene with her | 1 | Now |
 | A festival | Join it; it opens its own events | 3 | With the festivals’ contests |
-| The household | Cook a meal for the household | 1 | With the Uma loop |
-| The household | Choose tonight’s companion, at the day’s end | Free | With the Uma loop |
+| The household | Cook a meal for the household: breakfast or dinner | 1 | Now |
+| The household | Choose tonight’s companion, at the day’s end | Free | Now |
 <!-- /live -->
 
 #### End the day
@@ -311,10 +314,11 @@ either can't load, the sheet says so with **Try again**.
 
 **"Ask before ending the day"** is a switch in the Menu: on by default, kept on the device and never in the save.
 
-**Tonight.** The tap first opens **Tonight** whenever an evening can be spent with someone or anyone is married: the
-evening's row, where you sleep once married, the nudge's line, and **End the day** / **Back**. Ending the day never
-waits on the evening. The night plays as a fade: the screen dims to dusk and the morning comes up from it (a plain cut
-with reduced motion). Tonight is the romance's.
+**Tonight.** The tap first opens **Tonight** whenever an evening can be spent with someone (the day has the two actions
+it takes) or anyone is married: the evening's row, the night's companion once married, the nudge's line, and **End the
+day** / **Back**. Ending the day never waits on the evening. The night plays as a fade: the screen dims to dusk and the
+morning comes up from it (a plain cut with reduced motion); once married, it comes up on the night's companion greeting
+you ([the night's companion](#the-nights-companion)). Tonight is the romance's.
 
 #### The night, step by step
 
@@ -353,7 +357,7 @@ The steps as the game lists them:
 <!-- live:night -->
 | Step | Function | What happens |
 |---|---|---|
-| 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house is noted (its last night slept is today), your pick from Sleep at or else the house slept in least lately; the pick clears for tomorrow |
+| 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning |
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand |
 | 1 | `settleTheAccounts` | The accounts: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the upkeep, with anything owed: what gold there is pays, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid |
 | 2 | `growCrops` | Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day |
@@ -382,7 +386,7 @@ The steps as the game lists them:
 | 9 | `vowsMorning` | The Festival of Vows: on the finale’s day of the year, each later year, every spouse +50 and a festival night tonight |
 | 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse |
 | 9 | `morningItems` | Morning items: each Uma on the farm leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+) |
-| 9 | `drawInvitations` | Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, 'invite', n)` among those home at Friendship 2+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14) |
+| 9 | `drawInvitations` | Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, 'invite', n)` among those home at Friendship 3+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14) |
 | 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists the invitations, the Festival of Vows, the night’s levels, the house’s morning, rooms taken and a house that misses you, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning; §5 the household milestones |
 <!-- /live -->
 
@@ -411,7 +415,7 @@ line is a tap to its place.
 | Upkeep and loans | Each loan's share, "Loan for the Mill · 55g repaid · 440g left" ("· no sales, nothing repaid" on a night with no sales; "· cleared", tagged **Cleared**); "Upkeep · 45g" (or "5g of 45g" when short); a short night, "Short of upkeep · 40g owed", tagged **Warning** in red, and from the second in a row "· farmhands at half pace", tagged **Half pace**; "Upkeep paid up · 85g owed", tagged **Paid**. Hidden on a night with nothing charged | The Book |
 | Work done | Each station's load done, "Sawmill · Pine Plank ★1 × 8"; the field's growth, "The field · 5 crops grew · 2 ripe"; what withered, "The field · 3 Onion withered" | The station's panel; the farm map |
 | Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full** | Her profile's Work side |
-| Hearts | Who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", or in the town the world names, tagged **New**), a chapter that opened ("A new chapter with *Name* · Together", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
+| Hearts | First, once married, "☾ Morning with *Name*" (the night's companion, **Play** her greeting); who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", or in the town the world names, tagged **New**), a chapter that opened ("A new chapter with *Name* · Together", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
 | New today | First, "New story arrived · *its note*", tagged **New**, the morning after a new story release reaches the phone ([below](#how-the-app-gets-the-pack)); "Summer begins", the world's line for the season under it; today's, then tomorrow's: "New Year's today · +3 for events", "Flower Show tomorrow" or "today · +3 for events" (the story's name for it), and the story's holidays and minor days, "Market day tomorrow" (or "Market day +1 more"); the Town notes the night unlocked, "*title*" (or "*title* +2 more"), tagged **Town note**; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The People page; the calendar (the season, New Year's, the festival and the story's days); the note in the Diary; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
 | Today | "3 tiles to water" (the growing tiles this morning); "9 tiles to plant" (empty tilled tiles that the season's seeds you hold could fill) | The farm map |
 
@@ -983,8 +987,9 @@ Each fish's size range, its price and its fillet's:
 #### Well fed
 
 Well fed is a number of days on an Uma. It counts down by one each night, and a new meal only raises it to the meal's
-own length; it never stacks. A wedding's reception and a spouse's breakfast feed the Umas (the romance's); nothing else
-does yet, and it lifts nothing while the farmer works alone.
+own length; it never stacks. A wedding's reception, a spouse's breakfast and the household's meals (once married,
+[cooked by you](#the-households-meals): everyone on the farm and every farmhand, for today and tomorrow) feed the Umas;
+nothing else does yet, and it lifts nothing while the farmer works alone. The farmhands' work will read it.
 
 #### The woods' and the pond's panels
 
@@ -1870,8 +1875,8 @@ meet her by introducing yourself (see [meeting her](#meeting-her)).
  the farm map ──► the Town: Go into town · 1 action (the town and its shop open for the day)
                     the map: its places (the six spots, the shops and offices, the story's workplaces and homes)
                       tap a place (free) ──► who's here now, with faces · its keeper at her post, and her post's menu
-                        tap an Uma ──► her menu: Introduce yourself · 1 │ Talk · 1 │ Give a gift · 1 │ Hangout or Date
-                                                 │ Invite her to work (coming) │ Her event · 1, when it's Ready
+                        tap an Uma ──► her menu: Introduce yourself · 1 │ Talk · 1 │ Give a gift · 1 │ Hangout or Date · 2
+                                                 │ Invite her to work · 1 │ Her event · 1, when it's Ready
                     People: everyone, met or not, where she is today · find by name · met first or by name
 ```
 
@@ -1948,9 +1953,10 @@ The shops and offices are the game's own, each kept by one of the town's people:
 
 Tap an Uma (`?uma=<id>`) for her menu, on [the dialogue engine](#the-dialogue-engine): her bust on the left (her portrait
 in the day's outfit, her face changing as she answers; else her master-data bust), and on the right her name, how she
-stands with you ("Not met yet", "New friend", "Friend · F3", …), where she is (the place, and her job's words when
-she's at work), her line in the engine's line box, and her menu. Each item says its cost; one that isn't open is greyed
-with why. **Back** returns to the map.
+stands with you (her stage in [the Uma loop](#the-uma-loop) with her ladder's level: "Not met yet", "Acquaintance · F1",
+"Friend · F3", "Farmhand · F5", "Sweetheart · R4", "Engaged", "Married · S2"), where she is (the place, and her job's
+words when she's at work), her line in the engine's line box, and her menu. Each item says its cost; one that isn't
+open is greyed with why. **Back** returns to the map.
 
 <!-- live:her-menu -->
 | Item | Cost | When |
@@ -1958,9 +1964,9 @@ with why. **Back** returns to the map.
 | Introduce yourself | 1 action | You haven’t met her: in town today, where she is now. She’s met, and her meeting scene plays |
 | Talk | 1 action | Met: once a day each, +15. Her line for the day plays on the dialogue engine |
 | Give a gift | 1 action | Met: once a day each, one good from the Warehouse at the stars you choose; her reaction plays on the dialogue engine |
-| Hangout | — | A friend (Friendship 2 and up): her evening as built, free until the Uma loop charges it |
-| Date | — | A sweetheart (Romance 1 and up) or a spouse: her evening as built, free until the Uma loop charges it |
-| Invite her to work | — | Shown, coming with the farmhands |
+| Hangout | 2 actions | A friend (Friendship 3 and up) who lives on the farm: her evening, its play and her scene |
+| Date | 2 actions | A sweetheart (Romance 1 and up) or a spouse, on the farm: her evening, Dinner in town and A night in among its kinds |
+| Invite her to work | 1 action | A friend (Friendship 3 and up), once: she’s a farmhand from today |
 | Her event | 1 action | Met, when her next event is Ready; a special day’s event actions pay first |
 <!-- /live -->
 
@@ -1972,11 +1978,13 @@ with why. **Back** returns to the map.
   scene plays over the town at once ([her meeting scene](#her-meeting-scene)).
 - **Talk** and **Give a gift** are the romance's acts: +15, and her taste's points (see [her route](#her-route)),
   floating as "+15 ♥" by her name. They're the same acts as Chat and Gift on her profile, each an action there too,
-  once a day each wherever you do them.
-- **Her evening** (**Hangout** for a friend, **Date** for a sweetheart or a spouse) opens her evening as built while
-  it's open to her ([the evening](#the-evening)); otherwise it says why: "From Friendship 2", "She lives in town: invite
-  her to the farm", "Spent this evening ✓". The Uma loop gives it its cost and the stages' rules.
-- **Invite her to work** shows, and waits for the farmhands.
+  once a day each wherever you do them, and only **where you meet her** (below).
+- **Her evening** (**Hangout · 2** for a friend, **Date · 2** for a sweetheart or a spouse) opens her evening while
+  it's open to her and the day has its two actions ([the evening](#the-evening)); otherwise it says why: "From
+  Friendship 3", "She lives in town: invite her to the farm", "Spent this evening ✓", "That takes 2 actions.".
+- **Invite her to work · 1**, once she's a friend (Friendship 3): she's a **farmhand** from today, and keeps her life in
+  town. It says "Farmhand ✓" and her line ("The farm? I'd love to. Count me in."); then "Works the farm ✓". The
+  farmhands' work (their actions on the farm's tasks) reads it.
 - **Her event** shows once it's Ready, wherever she lives, and opens the event player over the town; it takes an
   action (a special day's event actions first), and with none left it doesn't start.
 - **Not out now:** "At home today. Look for her another day." (with her profile once met); one who lives on the farm:
@@ -1988,6 +1996,14 @@ with why. **Back** returns to the map.
   nothing and costs nothing.
 - **A Town note** an introduction, a talk or a gift unlocks says "Town note · *title* ›" there, a tap to it in the
   Diary: an introduction or a talk at a spot visits it ([Town notes](#town-notes)).
+
+**Where you meet her** (the talk-and-gift rule): you talk with her, give her a gift and invite her to work only where
+she's in front of you: **on the farm** when she lives there (the Dorm, or a spouse's house), else **in town where she is
+today**, once you've gone into town. Her menu in town is always where she is; her profile follows the same rule
+([her profile](#her-profile)). **Her Ready event plays from anywhere** (her menu, her profile, the morning's Ready line,
+the calendar). Why: going into town takes one of the day's actions and the map shows who's where, so the town is where
+the day's talks happen, and an Uma on the farm is always in front of you; an event is her route's milestone, offered by
+the morning, the calendar and the People page, so a day she's at home never strands it.
 
 #### The town's screen
 
@@ -2659,11 +2675,12 @@ The Diary tab (`/diary`) holds the world's pages, the farm's projects, the Farm 
 ### The dialogue engine
 
 One engine plays every scene: the opening, meeting her, the ring bench's scene, heart events (and Ask her, and a Memory
-replayed), the wedding night, pair conversations, the household's scenes and the finale, and the calendar's occasion
-scenes ([occasion scenes](#occasion-scenes)). The evenings and the plays have no lines yet; the evenings' own scenes
-(dinners, nights in) will play on it as their packet lands, handing it their moment, and the default story already
-writes each one ([what plays without the story](#what-plays-without-the-story)). The story's steps are the same in every scene (`say`, `narrate`, `thought`,
-`choice`, `play`, …).
+replayed), the wedding night and moving in, pair conversations, the household's scenes and the finale, the calendar's
+occasion scenes ([occasion scenes](#occasion-scenes)), and the Uma loop's: each evening's scene after its play (a
+hangout's, a date's, Dinner in town's and A night in's, handing in their moment: a picnic, a dinner, a night in, a
+festival night), the night's companion's morning greeting (pajamas) and a meal's line ([the Uma loop](#the-uma-loop)).
+The plays have no lines. The story's steps are the same in every scene (`say`, `narrate`, `thought`, `choice`, `play`,
+…).
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -3090,8 +3107,8 @@ Every ladder, event, perk, evening, proposal, wedding and household runs end to 
 | Her events | Every rung (27), and her life’s: `wedding-night`, `moving-in`, `s2`, `s4` | Her route’s event of that id |
 | Her occasions | `birthday`, `new-year`, `flower-show`, `fishing-derby`, `derby-night`, `cooking-contest`, `animal-show`, `harvest-cup` | Her route’s event of that id |
 | The evenings’ scenes | `hangout-walk`, `hangout-fishing`, `hangout-picnic`, `hangout-market`, `hangout-cooking`, `hangout-festival`, `date-walk`, `date-fishing`, `date-picnic`, `date-market`, `date-cooking`, `date-crafting`, `date-stargazing`, `date-dance`, `date-boat`, `date-footrace`, `date-festival`, `dinner-in-town`, `a-night-in` | Her route’s event of that id |
-| The night’s companion | 3 morning greetings for each temperament | — |
-| Meals | 3 lines for breakfast and 3 for dinner | — |
+| The night’s companion | 3 morning greetings for each temperament | Her bible’s `mornings` |
+| Meals | 3 lines for breakfast and 3 for dinner | Her bible’s `meals` (`breakfast`, `dinner`) |
 | Her favourite good (`{good}`), the gift she loves | Farming Peach, Ranch Honey, Mining Amethyst, Fishing Seashell, Foraging Chestnut, Cooking Cinnamon, Serving Chocolate, Forging Garnet | Her bible’s loved gift |
 | Her line’s work (`{work}`) | Farming “farming”, Ranch “tending the animals”, Mining “mining”, Fishing “fishing”, Foraging “foraging”, Cooking “cooking”, Serving “serving”, Forging “forging” | Her line (her bible’s, her calling’s) |
 <!-- /live -->
@@ -3116,18 +3133,22 @@ The default scenes that name their outfit (the rest wear the moment's, by [outfi
 | `a-night-in` | `pajamas` |
 <!-- /live -->
 
-- **Her stage, as her talks follow it,** is the Uma loop's ([F79](handoff/tasks/F79-uma-loop.md) builds the rest):
-  acquaintance to Friendship 2; friend from Friendship 3 through the confession's wait (farmhand once she works the
-  farm); sweetheart from the confession through the proposal's wait; engaged until the wedding; married after it.
+- **Her stage, as her talks follow it,** is [the Uma loop](#the-uma-loop)'s: acquaintance to Friendship 2; friend from
+  Friendship 3 through the confession's wait (farmhand once you've invited her to work); sweetheart from the confession
+  through the proposal's wait; engaged until the wedding; married after it.
 - **The wedding night** plays right after the wedding's card, before the Married stage-up: her route's `wedding-night`,
-  else the default's, in the wedding night outfit on a night backdrop, tender and fading to morning. It pays nothing
-  and saves nothing; Skip ends it.
+  else the default's, in the wedding night outfit on a night backdrop, tender and fading to morning. Then **moving in**,
+  her route's `moving-in`, else the default's, as she moves into the room she took; one who waited for a room plays it
+  from the morning's "moved into" line. They pay nothing and save nothing; Skip ends each.
+- **The evenings' scenes** play after each evening's play: her route's `hangout-<kind>` (a friend's), `date-<kind>` (a
+  sweetheart's or a spouse's), `dinner-in-town` and `a-night-in`, else the default's ([the evening](#the-evening)).
+- **The night's companion's greeting and the meals' lines** are her bible's `mornings` and `meals` when written, else the
+  default story's (`morningGreetingsOf`, `mealLinesOf`), drawn by the day ([married life](#the-households-meals)).
 - **The occasions the calendar plays:** New Year's from the second year, the Flower Show and the Fishing Derby's night
   (`derby-night`), each on its day with everyone you've met ([occasion scenes](#occasion-scenes)).
-- **What waits for its packet:** moving in, married life 2 and 4, the other occasions (her birthday, the Fishing Derby's
-  day, the Cooking Contest, the Animal Show, the Harvest Cup), the evenings' scenes, the morning greetings and the meal
-  lines are written and read through the same lookup (`eventOf`, `morningGreetingsOf`, `mealLinesOf`); they play when the
-  Uma loop (F79) gives them their moment, or the festivals theirs.
+- **What waits for its moment:** married life 2 and 4 (they come at night, with no event), the other occasions (her
+  birthday, the Fishing Derby's day, the Cooking Contest, the Animal Show, the Harvest Cup): written and read through the
+  same lookup (`eventOf`); they play when the festivals give them their moment.
 
 Every other part of the story, and what plays without it:
 
@@ -3358,6 +3379,84 @@ plays.
 - **Her tastes show** in steps: her loved good from Friendship 1; any good once you've given it, or once an event's option
   or a Choose play has revealed it; every taste from Friendship 7.
 
+### The Uma loop
+
+From meeting her to married life, in the owner's stages. Her points, events, plays, perks, the ring and the wedding are
+[her route](#her-route) as built; the loop names the stage she's at, says what each opens, and adds its own acts: the
+invitation to work, the evenings at two actions, moving in, the household's meals and the night's companion
+(`romance/loop.ts`).
+
+```
+ meet ─► acquaintance ─► friend ─────► farmhand ─────► sweetheart ─► engaged ─► married
+ (town)  talks, gifts    hangouts · 2   invited to      dates · 2     the        the wedding night, moving in;
+         (1 each)        invite to      work · 1        Dinner in     wedding    meals · 1; the night's companion,
+                         work · 1       (she keeps her  town (R3),               who greets you in the morning
+                                        life in town)   A night in (R6)
+```
+
+#### The stages
+
+<!-- live:uma-stages -->
+| Stage | How you reach it | What it opens |
+|---|---|---|
+| Acquaintance | Met (you introduced yourself), Friendship 0–2 | Talks and gifts, an action each |
+| Friend | Friendship 3 and up | Hangouts (2 actions); the invitation to work (1 action) |
+| Farmhand | A friend you’ve invited to work | She works the farm part-time (the farmhands’ work); her farmhand talks |
+| Sweetheart | From her confession’s yes (Romance 0) | Dates (2 actions) from Romance 1; Dinner in town from Romance 3, A night in from Romance 6 |
+| Engaged | After the proposal | The wedding |
+| Married | After the wedding | The wedding night and moving in; the household’s meals; the night’s companion |
+<!-- /live -->
+
+- **Her stage** shows on her profile, by her level ("Farmhand" beside "Friend · F5"), and on her menu in town ("Farmhand ·
+  F5"). It's read from her ladders and one flag, never stored on its own: her ladder's stage, and `roster[id].farmhand`,
+  the day you invited her to work.
+- **A farmhand** is a farmhand while she's a friend; from her confession on, her ladder's stage shows, and she keeps
+  working the farm. Her talks follow her stage ([what plays without the story](#what-plays-without-the-story)).
+- **Hangouts open at Friend**, Friendship 3, her "Hangouts" perk; **dates at Romance 1**, her "Dates" perk. A sweetheart
+  at Romance 0 (the day after her confession's yes) still has hangouts.
+
+#### The invitation to work
+
+- **Invite her to work · 1**, on her menu in town or her profile, once she's a friend and where you meet her; once.
+- She's a **farmhand** from today and keeps her life in town (the Dorm is only where she sleeps if you invite her to the
+  farm). The farmhands' work (her actions a day on the farm's tasks, and her aptitudes) reads the flag; until it's
+  built, the flag is her stage and her talks.
+
+#### The household's meals
+
+<!-- live:married-life -->
+|  | Married life |
+|---|---|
+| A meal | Breakfast or Dinner: 1 action, each once a day, from your first wedding |
+| Who eats | Everyone on the farm (the Dorm and the houses) and every farmhand |
+| What a meal does | Everyone it feeds well fed for 2 days (today and tomorrow; a meal running longer is never shortened), and +10 to each (`addLove`, an anniversary’s ×2 applies) |
+| Its scene | One spouse’s meal line (`draw(uid, day, 'meal:<meal>', 0)`): her bible’s `meals`, else the default story’s, on the dialogue engine |
+| The night’s companion | At Tonight, one spouse with a room: free. Her house is tonight’s house, so its morning is as built |
+| Without a pick | Tonight’s house (the morning’s “misses you” Tonight ›, else the house slept in least lately), and its resident who’s been your companion least lately |
+| Her room | A birthday-alone wisher chosen on her birthday: her morning hers alone |
+| The morning | She greets you: a short scene in pajamas, her bible’s `mornings`, else her temperament’s default greeting (`draw(uid, day, 'morning:<id>', 0)`); then first in Hearts with ☾ |
+<!-- /live -->
+
+- **Where:** the homestead's sheet (a house's tap on the map), **Meals**: **Breakfast · 1** and **Dinner · 1**, once each
+  a day ("Breakfast ✓"), and how many are at the table.
+- **As you sit down,** one spouse's line plays on the dialogue engine, in the day's outfit (`?life=breakfast:<id>`).
+- **Well fed** counts down by one each night, so a meal today still feeds everyone tomorrow ([well fed](#well-fed)).
+
+#### The night's companion
+
+- **Tonight with**, on Tonight once anyone is married: one row a spouse with a room, her face, her name and her house,
+  ☕ when her house's breakfast is on tomorrow, "9 nights" for a house you haven't slept in for 8 or more, and on a
+  birthday-alone wisher's birthday "Her room · her birthday, just you two". The pick, else the night's default, is
+  marked; a tap picks her at once, free. **Her house is tonight's house**, so its morning is as built
+  ([the night's house and its morning](#the-nights-house-and-its-morning)).
+- **Tender, never shown:** the night is the fade, nothing more.
+- **In the morning** she greets you: as the morning comes up, a short scene in pajamas on a morning backdrop, her
+  greeting her bible's `mornings`, else the default story's for her temperament, drawn by the day
+  (`?life=morning:<id>`). It pays nothing and saves nothing. The morning's first Hearts line, "☾ Morning with *Name*"
+  (**Play**), plays it again.
+- **The save:** your pick is `homestead.companion` (with `homestead.tonight` her house) until the night, which notes her
+  (`love[id].night`, the night she was last your companion) and clears it.
+
 ### Her route
 
 #### Stages and costs
@@ -3416,16 +3515,17 @@ applies the day's factors and says what it paid. The acts, what each pays and ho
 <!-- live:love-points -->
 | Act | Points | Limit | Paid by |
 |---|---|---|---|
-| Talk (her menu, or Chat on her profile) | +15 | One action; once a day each, on the farm or in town | `chatV4` |
-| Gift (one good, its stars your choice) | Loved +60, Liked +30, Neutral +10, Disliked 0; × (1 + 0.1 a star above ★1) | One action; one a day each; ×3 on her birthday | `giftV4` |
+| Talk (her menu, or Chat on her profile) | +15 | One action; once a day each, where you meet her: on the farm, or in town where she is today | `chatV4` |
+| Gift (one good, its stars your choice) | Loved +60, Liked +30, Neutral +10, Disliked 0; × (1 + 0.1 a star above ★1) | One action; one a day each, where you meet her; ×3 on her birthday | `giftV4` |
 | Praise (a ★3+ day’s work, a rank-up, a Fine play) | +20 | Once a day, when earned | `praiseV4` |
 | Her line (she worked it today) | +10 | Paid at night, step 6 | `payLines` |
 | A festival together (its team or entry) | +50 | Once a festival a year each | `festivalTogether` (festivals aren’t built yet) |
 | Her arrival scene | +50, and its choice (+10 or +30) | Once | `finishArrival` |
 | A heart event | +50, its choices and its play’s grade | One action (a special day’s event actions first); one of hers a day | `playEvent` |
-| The evening (a hangout from F2, a date from R1) | Fine +60, Great +100, Perfect +150; ×1.5 in her favourite kind, on her birthday and on her anniversary, each once | One evening a day across all the Umas; two on some days from 10 married | `spendEvening` |
+| The evening (a hangout from F3, a date from R1; 2 actions) | Fine +60, Great +100, Perfect +150; ×1.5 in her favourite kind, on her birthday and on her anniversary, each once | One evening a day across all the Umas; two on some days from 10 married | `spendEvening` |
 | An invitation said yes | +20 | With her first evening that day | `spendEvening` |
 | A house morning | +30 each resident | The house you slept in | `houseMorning`, night step 9 |
+| A household meal (breakfast or dinner) | +10 each who eats it | One action each, once each a day, from your first wedding | `cookMeal` |
 | **On her anniversary** | ×2 on every act but the evening (×1.5 instead) | From year 2 of her marriage | `addLove` |
 <!-- /live -->
 
@@ -3584,8 +3684,8 @@ default) and **Work**, the roster's album with **her level in words** ("F7", "R4
   is Ready ("⌂ Scene 1 ›", "⌂ Harvest ›"); and **☾ Evening** with a mark a slot today, **○** free or **●** spent, the
   evenings first and then festival night's.
 - **The (i)** has six lines: how her bar fills and banks; Ready and setups; one event a day; her chapters ("A chapter
-  may wait for the farm first"); gifts and tastes; and the evening ("One evening a day with someone home: a hangout from Friendship 2, a date from Romance 1. Fine +60, Great +100,
-  Perfect +150, ×1.5 in her favourite kind, and +20 when she asked you.").
+  may wait for the farm first"); gifts and tastes; and the evening ("One evening a day with someone home, 2 actions: a hangout from Friendship 3, a date from Romance 1. Fine
+  +60, Great +100, Perfect +150, ×1.5 in her favourite kind, and +20 when she asked you.").
 
 #### Her profile
 
@@ -3597,7 +3697,7 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
 ```
 ┌──────────────────────────────────────────┐
 │ Stand-in 1                             ✕ │
-│ (face) New friend  ● Ready               │  the "+N" floats up from her face
+│ (face) [Acquaintance] New friend ● Ready │  her stage, then her level; the "+N" floats from her face
 │        Farming · ★ Spring 4              │  her line, birthday and house
 │ [ Hearts ]  Work                         │  held at the panel's top as it scrolls
 │ ▣□□□□□□□□□◇□□□□□□□□□□◇◇□□□□□             │  the route as one track
@@ -3623,12 +3723,15 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
 │ Memories 0 of 26                         │
 │ Ring    Her ring will read: ‘…’          │  from Romance 8
 ├──────────────────────────────────────────┤
-│ [ Chat · 1 ] [ Gift · 1 ] [ ☾ Evening › ]│  48 pt, the panel's foot
+│ In town today, at the Café.   Find her › │  not in front of you: where she is
+│ [ Chat · 1 ] [ Gift · 1 ] [☾ Evening · 2 ›]  48 pt, the panel's foot
+│ [   Invite her to work · 1   ]           │  a friend, not yet working the farm
 │ [        Praise +20        ]             │  while she's earned it
 └──────────────────────────────────────────┘
 ```
 
-- **Her heading:** her face, her level in words in her stage's colour, her **● Ready** chip; under them her favourite
+- **Her heading:** her face, her stage in the Uma loop as a chip ("Acquaintance", "Friend", "Farmhand", "Sweetheart",
+  "Engaged", "Married"), her level in words in her stage's colour, her **● Ready** chip; under them her favourite
   line, her birthday as a farm day ("★ Spring 4") and her house once she has one. A spouse waiting for a room says "Needs
   a room", and an own-house wisher sharing or waiting says softly "She'd love her own house".
 - **The route as one track:** F1–F10, ◆, R1–R10, ◇, ◇, S1–S5 (28 steps), the played ones filled in their ladder's
@@ -3668,9 +3771,17 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
   her ring with its bonus ("Iron Ring · +3% at the Fields once you're married", then "+3% at the Fields"), "Her ring
   reads: ‘…’", and **Give her the ‹ring› ›** for each better ring in the Warehouse.
 - **The actions,** 48 pt in the sheet's foot: **Chat · 1** (an action, +15; then her line for the day; "Chat ✓" once
-  done), **Gift · 1** (an action: the picker; "Gift ✓"), both greyed with no actions left, **☾ Evening ›** while she can spend one (otherwise greyed with why: "Evening ✓" spent with her,
-  "Evening · F2" below Friendship 2, "In town", "Evening spent" with someone else), and **Praise +20** on the row
-  under them while she's earned it. What an act pays floats up from her face, and a note says it ("She likes it. +36").
+  done), **Gift · 1** (an action: the picker; "Gift ✓"), both greyed with no actions left or when she isn't in front of
+  you, **☾ Evening · 2 ›** while she can spend one and the day has its two actions (otherwise greyed with why: "Evening ✓"
+  spent with her, "Evening · F3" below Friendship 3, "In town", "Evening spent" with someone else, "Evening · 2" short of
+  the actions), **Invite her to work · 1** on the row under them while she's a friend not yet working the farm, and
+  **Praise +20** while she's earned it. What an act pays floats up from her face, and a note says it ("She likes it.
+  +36").
+- **Where you meet her:** Chat, Gift and Invite her to work need her in front of you ([where you meet
+  her](#her-menu)): she lives on the farm, or you've gone into town today and she's out there. Otherwise a line above them
+  says where she is, "In town today, at the Café. Talks and gifts are in person." with **Find her ›** (her menu where she
+  is, `/town?at=<place>&uma=<id>`, where going into town comes first), or "At home today. Talk with her in town another
+  day.". **Play · 1 action ›** (her Ready event) works from anywhere.
 - **Hearts | Work:** the Work side is her work sheet: her favourite line, the day she joined, where she is, and her nine
   activities with talent, rank, points and the next challenge.
 
@@ -3761,8 +3872,8 @@ shows what the place-bound ones say for every line.
 | Level | Perk id | Words (a forager’s) | At her line’s place |
 |---|---|---|---|
 | F1 | `tastes-loved` | Her loved gift shown; her own chats |  |
-| F2 | `hangouts` | Hangouts in the evening |  |
-| F3 | `line-10` | +10% at the forest | Yes: “Opens when the Kitchen is built” (her place) until it’s built |
+| F2 | `line-10` | +10% at the forest | Yes: “Opens when the Kitchen is built” (her place) until it’s built |
+| F3 | `hangouts` | Hangouts in the evening |  |
 | F4 | `signature-dish` | Her signature dish’s recipe |  |
 | F5 | `rank-105` | ×1.05 rank points |  |
 | F6 | `night-chore` | One item from the forest each night | Yes: “Opens when the Kitchen is built” (her place) until it’s built |
@@ -3807,8 +3918,8 @@ Each perk, what it does, and where in the day it acts:
 | Level | Perk | What it does | Where it acts |
 |---|---|---|---|
 | F1 | Her loved gift shown; her own chats | Her loved gift shows on her profile; she speaks her authored chats | Her profile, Chat |
-| F2 | Hangouts in the evening | The evening opens: hangouts | Tonight |
-| F3 | +10% at the forest | +10% at her line: copies of her night’s items there (a farmer: a tended plot’s chance of an extra crop) | Night step 4, a harvest |
+| F2 | +10% at the forest | +10% at her line: copies of her night’s items there (a farmer: a tended plot’s chance of an extra crop) | Night step 4, a harvest |
+| F3 | Hangouts in the evening | The evening opens: hangouts | Tonight |
 | F4 | Her signature dish’s recipe | Her signature dish’s recipe into the Kitchen’s list, once | `playEvent` |
 | F5 | ×1.05 rank points | ×1.05 her rank points | Night step 6 |
 | F6 | One item from the forest each night | One night chore | Night steps 2 and 4 |
@@ -3869,7 +3980,7 @@ Every romance bonus on one job is one capped number:
 <!-- live:perk-caps -->
 | What | Cap | How |
 |---|---|---|
-| Her own line bonuses: F3 +10%, R5 +10%, her ring +1–15% once married | +35% | At her line’s place only (`romanceTerms`) |
+| Her own line bonuses: F2 +10%, R5 +10%, her ring +1–15% once married | +35% | At her line’s place only (`romanceTerms`) |
 | The crew’s: a dream’s +5% (the best at a place, never summed), the household’s +5% at 5 and +5% at 15 married | +15% | Anyone working the place (the household anywhere) |
 | All romance bonuses on any one job, added | +40% | The romance term (`romanceBonus`) |
 | In her element (×1.2) | Outside the cap | The bond term (`extrasShare`) |
@@ -4254,39 +4365,48 @@ and its branch, three setups, three kinds of unlock, and a confession with two p
 
 ### The evening
 
-The day has **one evening across all the Umas,** spent any time in the day from her profile (**☾ Evening ›**) or
-Tonight's row; an evening left empty costs nothing. It's a short play together at its evening length, graded **Fine,
-Great or Perfect** and never failed, that pays well, and more in her favourite kind.
+The day has **one evening across all the Umas,** spent any time in the day from her profile (**☾ Evening · 2 ›**), her
+menu in town or Tonight's row; an evening left empty costs nothing. **It takes 2 of the day's actions** (never a special
+day's event actions). It's a short play together at its evening length, graded **Fine, Great or Perfect** and never
+failed, that pays well, and more in her favourite kind; then **her scene for it** on the dialogue engine; then the card.
 
 #### Who and the kinds
 
-- **Who:** a **hangout** with an Uma at Friendship 2 or more (her confession's wait and Romance 0 included), a **date**
-  from Romance 1 (the proposal's and the wedding's waits included), and **every kind** with a spouse ("An evening at
-  home"). She must be **home** tonight: on the Dorm's list, or a spouse in her house.
-- **The kinds** are the ten date games, opened by her ladder and by their game. **Cooking together** and **the
-  footrace** wait for their games, so they aren't offered yet (a favourite kind not offered still counts as hers, and she
-  doesn't invite you to it). **Festival night** is a festival day's own slot.
+- **Who:** a **hangout** with a friend, an Uma at Friendship 3 or more (her confession's wait and Romance 0 included), a
+  **date** with a sweetheart from Romance 1 (the proposal's and the wedding's waits included), and **every kind** with a
+  spouse ("An evening at home"). She must be **home** tonight: on the Dorm's list, or a spouse in her house.
+- **The kinds** are the ten date games and two evenings of their own, opened by her ladder and by their game:
+  **Dinner in town** (a date from Romance 3, in the dinner dress) and **A night in** (a date from Romance 6, in pajamas;
+  at home once married), each played as a Pick. **Cooking together** and **the footrace** wait for their games, so they
+  aren't offered yet (a favourite kind not offered still counts as hers, and she doesn't invite you to it). **Festival
+  night** is a festival day's own slot.
+- **Her scene:** after the play, her route's scene for it, else the default story's: `hangout-<kind>` for a friend,
+  `date-<kind>` for a sweetheart or a spouse, `dinner-in-town` and `a-night-in` for the two of their own; in its own
+  outfit when it names one, else the moment's (a picnic's garden party dress, the dinner dress, pajamas, the kimono on
+  festival night; else the day's season). Its choices are wording only, and Skip goes on to the card.
 - **Her favourite kind** is the date game her bible's beats use most; **walk** on a tie at the top, or with no date beats
   (or no bible). It pays ×1.5 and it's what her invitations ask for. Festival night is never her favourite.
 
 The kinds, the rung that opens each, and how each plays:
 
 <!-- live:evening-kinds -->
-| Kind | As a hangout | As a date | Plays as | Offered | Her invitation |
-|---|---|---|---|---|---|
-| Walk at dusk | F2 | R1 | Walk | Yes | “Walk at dusk tonight?” |
-| Fishing at the Pond | F2 | R1 | Cast | Yes | “Fishing tonight?” |
-| A picnic | F2 | R1 | Pick | Yes | “A picnic tonight?” |
-| The market in town | F2 | R1 | Pick | Yes | “The market in town tonight?” |
-| Cooking together | F2 | R1 | Rhythm with the pot (the fallback until its game ships) | Not yet: waits for the Kitchen | “Cook with me tonight?” |
-| Crafting | — | R1 | Rhythm with your hands | Yes | “Make something with me tonight?” |
-| Stargazing at the overlook | — | R3 | Pick | Yes | “Stargazing tonight?” |
-| Dancing | — | R6 | Rhythm with her step | Yes | “Dance with me tonight?” |
-| A boat on the lake | — | R6 | Rhythm with the oar | Yes | “A boat on the lake tonight?” |
-| A footrace | — | R9 | Rhythm with the track (the fallback until its game ships) | Not yet: waits for the footrace | “Race me tonight?” |
-| Festival night | Festival days, F2 | Festival days, R1 | Walk, at the festival ground | Yes | — (never asked for) |
+| Kind | As a hangout | As a date | Plays as | Her scene | Offered | Her invitation |
+|---|---|---|---|---|---|---|
+| Walk at dusk | F3 | R1 | Walk | `hangout-walk`, `date-walk` | Yes | “Walk at dusk tonight?” |
+| Fishing at the Pond | F3 | R1 | Cast | `hangout-fishing`, `date-fishing` | Yes | “Fishing tonight?” |
+| A picnic | F3 | R1 | Pick | `hangout-picnic`, `date-picnic` (`picnic`) | Yes | “A picnic tonight?” |
+| The market in town | F3 | R1 | Pick | `hangout-market`, `date-market` | Yes | “The market in town tonight?” |
+| Cooking together | F3 | R1 | Rhythm with the pot (the fallback until its game ships) | `hangout-cooking`, `date-cooking` | Not yet: waits for the Kitchen | “Cook with me tonight?” |
+| Crafting | — | R1 | Rhythm with your hands | `date-crafting` | Yes | “Make something with me tonight?” |
+| Stargazing at the overlook | — | R3 | Pick | `date-stargazing` | Yes | “Stargazing tonight?” |
+| Dinner in town | — | R3 | Pick | `dinner-in-town` (`dinner`) | Yes | — (no one’s favourite) |
+| Dancing | — | R6 | Rhythm with her step | `date-dance` | Yes | “Dance with me tonight?” |
+| A boat on the lake | — | R6 | Rhythm with the oar | `date-boat` | Yes | “A boat on the lake tonight?” |
+| A night in | — | R6 | Pick | `a-night-in` (`night-in`) | Yes | — (no one’s favourite) |
+| A footrace | — | R9 | Rhythm with the track (the fallback until its game ships) | `date-footrace` | Not yet: waits for the footrace | “Race me tonight?” |
+| Festival night | Festival days, F3 | Festival days, R1 | Walk, at the festival ground | `hangout-festival`, `date-festival` (`festival-night`) | Yes | — (never asked for) |
 
-Who: a hangout from Friendship 2 (her confession’s wait and Romance 0 included), a date from Romance 1 (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse; she must be home. The stand-in’s favourite kinds: 9000001 stargazing, 9000002 walk, 9000003 walk.
+Who: a hangout from Friendship 3 (her confession’s wait and Romance 0 included), a date from Romance 1 (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse (“An evening at home”); she must be home. Each takes 2 of the day’s actions. The stand-in’s favourite kinds: 9000001 stargazing, 9000002 walk, 9000003 walk.
 <!-- /live -->
 
 #### The points
@@ -4317,12 +4437,12 @@ Today's evening slots and this morning's invitations:
 | From 10 married | 2 on days divisible by 4, else 1 | — | 2 |
 | A festival day (Spring 10, Summer 10, Autumn 10, Winter 10, Winter 12) | As any day | 1 more, its own slot: only festival night fills it | As any day |
 
-An invitation’s draw: `draw(uid, day, 'invite', n)` among the Umas home at Friendship 2+ whose favourite kind is open to them, each weighted 1 + the days since her last evening (or since she arrived), up to 14; a second invitation is never the first’s Uma.
+An invitation’s draw: `draw(uid, day, 'invite', n)` among the Umas home at Friendship 3+ whose favourite kind is open to them, each weighted 1 + the days since her last evening (or since she arrived), up to 14; a second invitation is never the first’s Uma.
 <!-- /live -->
 
 - **The slots:** one evening a day; from 10 married, a second on days divisible by 4. **Festival night** is its own slot
   on a festival day (and on the Festival of Vows), filled only by its kind: a walk at the festival ground with anyone at
-  Friendship 2 or more. An Uma may spend more than one slot in a day; the invitation's +20 comes with her first.
+  Friendship 3 or more, 2 actions like any evening. An Uma may spend more than one slot in a day; the invitation's +20 comes with her first.
 - **Invitations:** each morning one Uma (two from 10 married, never the same one twice) asks you for her favourite kind
   tonight. **Yes, tonight** makes her Tonight's evening (refused once the evening is spent); **Another day** costs
   nothing, and she may ask again another morning. Each is answered once, and yesterday's clear at night.
@@ -4332,7 +4452,7 @@ An invitation’s draw: `draw(uid, day, 'invite', n)` among the Umas home at Fri
 ```
 ┌──────────────────────────────────────────┐  her profile's Evening ›
 │ An evening with Stand-in 2             ✕ │
-│ (face) A hangout · Friend · F2           │
+│ (face) A hangout · Friend · F3           │
 │        ✉ She asked you: +20 with the evening
 ├──────────────────────────────────────────┤
 │ [walk] Walk at dusk ★                    │  her favourite, ×1.5
@@ -4341,21 +4461,24 @@ An invitation’s draw: `draw(uid, day, 'invite', n)` among the Umas home at Fri
 │        Fine +60 · Great +100 · Perfect +150
 │ [pick] A picnic · [pick] The market in town
 │ ░ Crafting           At Romance 1        │  greyed: her ladder hasn't opened it
-│ ░ Stargazing at the overlook  At Romance 3
-│ ░ Dancing · A boat on the lake  At Romance 6
+│ ░ Stargazing at the overlook · Dinner in town  At Romance 3
+│ ░ Dancing · A boat on the lake · A night in  At Romance 6
+│ One evening a day, 2 actions. ★ …        │
 └──────────────────────────────────────────┘
 ```
 
 - **Her kinds sheet:** her role and level, the invitation's +20 when she asked and you said yes, "★ Her birthday: ×1.5
   tonight"; the kinds open to her now in order (festival night last on a festival day), each with its play's mark and her
   three numbers today, ★ and a rose edge on her favourite; then the kinds her ladder hasn't opened, greyed with their
-  rung. A tap plays it.
+  rung. A tap plays it. Short of the two actions, the open kinds are greyed too ("Takes 2 actions").
 - **The play** is the event's play at its evening length (three casts, three rounds of Pick or Rhythm, four forks of
   Walk) on a dusk wash, seeded by the day, her id and the kind. A ✕ leaves it, spending nothing: **nothing is saved until
   it ends.**
+- **Her scene** follows the play, over everything, titled with the kind and her name ("Walk at dusk · Stand-in 2"): her
+  lines on the dialogue engine, she on the stage throughout; **Skip** goes on to the card.
 - **The card:** the kind "with ‹her name›", the grade, the sum ("+150 Perfect × 1.5 her favourite = +225", "+20 for
-  saying yes", "= +245 toward Friendship 3 (+40 banked)") and her bar in her ladder's colour, then **Continue**. It
-  commits once: the points, her last evening's day, and the slot spent.
+  saying yes", "= +245 toward Friendship 4 (+40 banked)") and her bar in her ladder's colour, then **Continue**. The
+  evening commits once, as the play ends: its two actions, the points, her last evening's day, and the slot spent.
 - **Tonight's picker:** the Umas who can spend an evening now, a yes first, then an unanswered invitation, then the cast's
   order, each with her level, ★ her favourite kind and ✉.
 
@@ -4368,28 +4491,35 @@ An invitation’s draw: `draw(uid, day, 'invite', n)` among the Umas home at Fri
 │                         Someone else ›   │
 │ ☾ Evening   [     Pick someone ›     ]   │  (or) free
 │ ☾ Festival night [ Pick someone › ]      │  a festival day's own row
+│ ☾ Evening   An evening takes 2 actions   │  (or) short of the actions
+│ Tonight with                             │  once anyone is married
+│ (face) Stand-in 1 ⌂ Farmhouse · ☕     ◉  │  the pick, else the night's default
+│ (face) Stand-in 2 ⌂ Rose Cottage       ○  │
 ├──────────────────────────────────────────┤
 │ 4 actions left · 2 dry                   │
 │        [ Back ]   [ End the day ]        │
 └──────────────────────────────────────────┘
 ```
 
-- **Tonight** is End the day's sheet whenever a slot is free and someone can spend it, or anyone is
-  married (then **Sleep at** sits between the evening rows and the day's what's-left line). Otherwise the day ends as it
+- **Tonight** is End the day's sheet whenever a slot is free and someone can spend it (the day has the two actions), or
+  anyone is married (then **Tonight with**, [the night's companion](#the-nights-companion), sits between the evening
+  rows and the day's what's-left line). Otherwise the day ends as it
   does without the romance: at once when all is set, or after the one line. Whether Tonight opens is settled once, as the
   sheet opens, so coming back from a played evening shows its row ✓ and never ends the day by itself. **End the day never
   waits on the evening.**
 - **The night is a fade:** End the day dims the whole screen to dusk (`#2b3557`, 450 ms), the night runs under it with
-  nothing shown, and the morning comes up from it (650 ms); with reduced motion, a plain cut. A failed night lifts it at
-  once and says **Try again**.
+  nothing shown, and the morning comes up from it (650 ms); with reduced motion, a plain cut; once married, it comes up on
+  the night's companion's greeting (`?life=morning:<id>`), over the morning's card. A failed night lifts it at once and
+  says **Try again**.
 - **The morning's invitation:** "✉ Stand-in 2: “Walk at dusk tonight?”" with **Yes, tonight** and **Another day**; said
   yes, "Tonight ✓" with **Play ›** (her evening over the morning); declined, "Another day". Her row's ✉ stands while it's
   unanswered, or yes and not yet spent.
 
 ### The ring, the wedding, and married life
 
-The proposal needs a ring, so the old Forge opens early as a ring bench with no game. After the wedding a
-spouse moves into the homestead, and married life goes on to the household's finale.
+The proposal needs a ring, so the old Forge opens early as a ring bench with no game. After the wedding comes the
+wedding night, then she moves in (the homestead), and married life goes on to the household's finale, with the
+household's meals and the night's companion ([the Uma loop](#the-uma-loop)) along the way.
 
 ```
  an Uma's first Romance 8 event ──that night──► the Forge stands as the ring bench
@@ -4402,6 +4532,8 @@ spouse moves into the homestead, and married life goes on to the household's fin
    ▼
  the next day, or any day after ──► the wedding: where? (her three) ──► played there, guests and vows
    │                                  ──► the reception (a dish, or the bakery's cake) ──► Married: a spouse at S0
+   ▼
+ the wedding night (fading to morning) ──► moving in (her room) ──► the Married card
    ▼
  her room at once · that night everyone on the farm is well fed from tomorrow · her ring +1% a grade at her line
 ```
@@ -4503,6 +4635,13 @@ A meal already running is never shortened. **The guests:** every spouse on the f
   protagonist is a man, so a line may say the groom.
 - **The wedding night** follows the wedding's card, before the Married stage-up: her route's `wedding-night`, else the
   default story's, in the wedding night outfit, tender and fading to morning. It pays nothing and saves nothing.
+- **Moving in** follows it, the morning after, before the Married stage-up: her route's `moving-in`, else the default
+  story's ("A cart of her things rolls up the lane to the farm."), titled "Moving in · ‹her name›", as she moves to the
+  farm: into the room she took at the wedding, in your home or a house built for her (rooms and moves below). One with
+  no room free waits for one and moves in the morning a room is free; that morning's "⌂ ‹her name› moved into ‹house›"
+  (**Play**) plays her moving in. It pays nothing and saves nothing; Skip ends it. Living on the farm, she's in the
+  night's upkeep like any Uma there, spouses included (10g a night, [upkeep](#upkeep)); one who lived in town adds it
+  as she moves in.
 
 #### The homestead
 
@@ -4584,13 +4723,17 @@ The homestead's rows on the map:
 
 #### The night's house and its morning
 
-- **Sleep at** (Tonight, once anyone is married, so Tonight then opens every night): the Farmhouse and each house with
-  someone home ("· 3 home"), **☕** when a resident at Spouse 1+ would serve breakfast tomorrow (someone's meal ends tonight
-  and no reception is coming), and the nights since ("9 nights") on one you haven't slept in for 8 nights or more. Preselected is **the
-  house slept in least lately** (one never slept in first; ties the lower number); with no one housed, the Farmhouse. On a
-  **birthday-alone** wisher's birthday, **"Her room"** too ("· ‹her name›, just you two"). A tap picks it at once; End the
-  day never waits on it.
-- **That night**, before the bin, the house is noted as slept in and the pick clears for tomorrow. Later in the night each
+- **Tonight's house is the night's companion's** (Tonight, once anyone is married, so Tonight then opens every night):
+  **Tonight with** picks a spouse with a room, and her house is tonight's ([the night's
+  companion](#the-nights-companion)). Each row shows her house, **☕** when a resident at Spouse 1+ would serve breakfast
+  there tomorrow (someone's meal ends tonight and no reception is coming), and the nights since ("9 nights") for a house
+  you haven't slept in for 8 nights or more. Without a pick the night takes **the house slept in least lately** (one
+  never slept in first; ties the lower number; with no one housed, the Farmhouse) and its resident who's been your
+  companion least lately. On a **birthday-alone** wisher's birthday her row is **"Her room"** ("her birthday, just you
+  two"): picked, her morning is hers alone. A tap picks her at once; End the day never waits on it. The morning's "misses
+  you" **Tonight ›** picks a house (its resident who's been your companion least lately goes with it).
+- **That night**, before the bin, the house and the companion are noted (the house's night slept, her `night`) and the
+  picks clear for tomorrow. In the morning she greets you. Later in the night each
   pair sharing a house earns **+10 bond**, and a spouse at Spouse 1 or 3 whose 600 is full reaches **Spouse 2 or 4,** with
   no event (Spouse 2 starts her every-2nd-morning count). Spouse 3 and 5 are always events.
 - **The morning is that house's:**
@@ -4634,7 +4777,7 @@ header always says **"Married n/N"**.
 <!-- live:household-milestones -->
 | Married | Opens |
 |---|---|
-| 1 | The homestead (House 1 to build); the night’s house (Sleep at); anniversaries |
+| 1 | The homestead (House 1 to build); the night’s companion and her house; the household’s meals; anniversaries |
 | 5 | Household scene 1; the furniture set (five pieces); +5% items crew-wide |
 | 10 | Household scene 2; two evenings every fourth day; two invitations a morning |
 | 15 | Household scene 3; +5% more items crew-wide |
@@ -4792,9 +4935,10 @@ authored arrival joins with her ties seeded, and the night clears the whole of t
 
 | Order | Lines |
 |---|---|
+| 0 | **The night's companion**, once married: "☾ Morning with Stand-in 1", with **Play** (her greeting again; it played as the morning came up) |
 | 1 | **Ready**, read live: up to three in the People page's order ("● Ready · Stand-in 1 · Friendship 1 · the Fields", with **Play**), then "+2 more" (People filtered on Ready); then the household's Ready offers ("⌂ Household scene 1 · Ready", with **Play**) |
 | 2 | This morning's invitations, with **Yes, tonight** and **Another day** |
-| 3 | The house's morning ("⌂ Farmhouse · Stand-in 1 · ♥ +30 · ☕ 3 fed · +1 item") with its house line under it; a spouse who moved into a room; "‹house› misses you" with **Tonight ›** and **Another night**; morning items ("♥ Stand-in 2 left you ★3 Shiitake"); the night's chores |
+| 3 | The house's morning ("⌂ Farmhouse · Stand-in 1 · ♥ +30 · ☕ 3 fed · +1 item") with its house line under it; a spouse who moved into a room ("⌂ Stand-in 2 moved into Rose Cottage", with **Play**: her moving in); "‹house› misses you" with **Tonight ›** and **Another night**; morning items ("♥ Stand-in 2 left you ★3 Shiitake"); the night's chores |
 | 4 | Birthdays and anniversaries, today's before tomorrow's, birthdays first ("★ Stand-in 1's birthday today", "♥ Stand-in 1's anniversary · ★5 Carrot left for you"); the Festival of Vows |
 | 5 | Levels reached overnight ("♥ Stand-in 1 · Spouse 2, reached overnight", **New**, opening her card) |
 | 6 | The perks' extras ("Perks · +2 items"), then side by side ("Side by side · +3 items"), then each pair's bond hearts |
@@ -4922,6 +5066,12 @@ sits outside the opening screens, so it shows even when the app stopped while op
 - **v5 grows in place with the calendar:** `today.occasions` (who played today's occasion scene) is written only once
   one plays, and a save without it has played none; the morning's New Year's and story days' lines are two more kinds of
   news. Nothing migrates, and `updatedAt` never moves for it.
+- **v5 grows in place with the Uma loop:** each field is written only once it's used, and a save without it reads as
+  before: `roster[id].farmhand` (the day you invited her to work; none, no farmhand), `today.meals` (the household's
+  meals cooked today; none, none), `homestead.companion` (tonight's pick; none, the night's default), `love[id].night`
+  (the night she was last your companion; none, never) and the morning's "☾ Morning with" line (`morning`); and an
+  evening may be Dinner in town (`dinner`) or A night in (`night-in`). Nothing migrates, and `updatedAt` never moves for
+  it.
 - **Nothing goes silently:** a phone save with unsynced play is kept first as a "Before the new farm" safety copy (if it
   can't be kept, nothing changes and the card says so, with the button to try again). The new farm syncs up as it is,
   and the first time the server stores a v5 over the older save it copies the older one, whole, to a backup

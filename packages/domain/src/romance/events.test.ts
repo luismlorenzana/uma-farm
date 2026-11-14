@@ -47,7 +47,7 @@ describe('playEvent', () => {
     const { save: after, card } = playEvent(save, PACK, ONE, outcome('f1', [0], [{ kind: 'pick', score: 95 }]))
     expect(card).toMatchObject({ rung: 'f1', event: EVENT_POINTS, choices: [30], plays: [{ kind: 'pick', score: 95, grade: 'perfect', points: 30 }], chosen: null, sum: 110, paid: 110, carried: 40 })
     expect(after.love[ONE]).toMatchObject({ stage: 'friendship', level: 1, points: 150, last: 3 })
-    expect(card.next).toEqual({ rung: 'f2', cost: 240, points: 150, banked: 0, hint: 'The Fields, while she works them.', perk: 'hangouts' })
+    expect(card.next).toEqual({ rung: 'f2', cost: 240, points: 150, banked: 0, hint: 'The Fields, while she works them.', perk: 'line-10' })
     expect(card).toMatchObject({ perk: 'tastes-loved', memory: 'First rows, side by side.', line: 'Same time tomorrow?', stage: null, answer: null })
     expect(after.today.events).toEqual([ONE])
     expect(after.memories[ONE]).toEqual(['f1'])

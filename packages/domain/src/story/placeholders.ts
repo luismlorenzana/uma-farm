@@ -437,15 +437,20 @@ export function giftReactionsOf(pack: HerPack, id: string, taste: Taste, gift: s
   return DEFAULT_GIFT_REACTIONS[taste].map((line) => fillHer(line, { good, work, gift: goodName(gift) }))
 }
 
-/** The night's companion's morning greetings (the default story's, by her temperament), with her words in but `{name}` and
- * `{farmer}`, which fill as they show. */
+/** The night's companion's morning greetings: her bible's `mornings` when it holds any, else the default story's for her
+ * temperament, with her words in but `{name}` and `{farmer}`, which fill as they show. */
 export function morningGreetingsOf(pack: HerPack, id: string, temperament: Temperament): readonly string[] {
+  const own = pack.bibles.get(id)?.mornings ?? []
+  if (own.length > 0) return own
   const { good, work } = herWordsOf(pack, id)
   return DEFAULT_MORNINGS[temperament].map((line) => fillHer(line, { good, work }))
 }
 
-/** Her lines at the household's meals (the default story's), with her words in but `{name}` and `{farmer}`. */
+/** Her lines at the household's meals: her bible's `meals` for that meal when it holds any, else the default story's,
+ * with her words in but `{name}` and `{farmer}`. */
 export function mealLinesOf(pack: HerPack, id: string, meal: 'breakfast' | 'dinner'): readonly string[] {
+  const own = pack.bibles.get(id)?.meals?.[meal] ?? []
+  if (own.length > 0) return own
   const { good, work } = herWordsOf(pack, id)
   return DEFAULT_MEALS[meal].map((line) => fillHer(line, { good, work }))
 }
@@ -820,6 +825,9 @@ export function writtenOf(pack: Pick<StoryPack, 'cast' | 'bibles' | 'scripted' |
       'None: today’s draw places her'),
     part('Her favourite spot', !!entry?.spot, `${entry?.spot ? PLACEHOLDER_SPOTS[entry.spot].name : ''}`, 'None: she’s out at any spot alike'),
     part('Her town lines', (bible?.townLines?.length ?? 0) > 0, `${bible?.townLines?.length ?? 0}, hers`, `The game’s ${PLACEHOLDER_TOWN_LINES.length} short lines`),
+    part('Her morning greetings', (bible?.mornings?.length ?? 0) > 0, `${bible?.mornings?.length ?? 0}, hers`, 'The default story’s, by her temperament'),
+    part('Her meal lines', (bible?.meals?.breakfast?.length ?? 0) > 0 && (bible?.meals?.dinner?.length ?? 0) > 0, 'Breakfast and dinner, hers',
+      'The default story’s, where hers are missing'),
     ...(isSister(id) ? [part('Her name', !!entry?.name, entry?.name ?? '', 'Her elder’s name, as her sister')] : []),
     part('Her pet name for you', !!bible?.petName, `“${bible?.petName ?? ''}”`, 'Your name'),
     part('Her keepsake', !!(bible?.keepsake?.name && bible.keepsake.line), bible?.keepsake?.name ?? '', `“${PLACEHOLDER_KEEPSAKE.name}”, with a plain line`),

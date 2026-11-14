@@ -292,6 +292,8 @@ The file's name says whose bible it is. A `characterId` inside that disagrees is
 | `route` | Her beats, by rung (below) | Each event plays with the game's defaults |
 | `chats.friend`, `chats.partner`, `chats.spouse` | Her chat lines by stage, any number, one a day: friend from Friendship 1 to the confession, partner from Romance 1 to the wedding, spouse after it | The default story's talks for her stage (acquaintance, friend, farmhand, sweetheart, engaged, married) and her temperament |
 | `townLines` | What she says when you talk with her in town, any number, one a day, `{farmer}` your name | The game's six short lines |
+| `mornings` | Her morning greetings as the night's companion (married life), any number, one a morning: narration before the first quote, then what she says inside the quotes (`{name}` hers, `{farmer}` yours). It plays in pajamas, the morning after you choose her ([the night's companion](game-mechanics.md#the-nights-companion)) | The default story's three for her temperament |
+| `meals.breakfast`, `meals.dinner` | Her lines at the household's meals, any number of each, one as you sit down (the same shape as `mornings`) | The default story's three for each meal |
 | `keepsake.name`, `keepsake.line` | The keepsake she gives at Friendship 10, on her profile | "Her keepsake", with a plain line |
 | `petName` | What she calls you from Romance 1, on her profile. No placeholder | Your name |
 | `wedding.places` | Where your wedding may be held, any number, the first first: the game's places | Her wedding beat's place and the farm's: the chapel bell, the Fields, the overlook |
@@ -334,10 +336,11 @@ one you leave out plays the default.**
 | `arrival` | Meeting her | As soon as she's met |
 | `f1` … `f10`, `confession`, `r1` … `r10`, `proposal`, `wedding`, `s1`, `s3`, `s5` | Her route's rungs | When she's Ready; they pay |
 | `wedding-night` | The wedding night: tender, fading to morning, in the wedding night outfit unless you name another | Right after the wedding, before the Married card |
-| `moving-in`, `s2`, `s4` | Moving in, married life 2 and 4 | When the Uma loop (F79) gives them their moment |
+| `moving-in` | Moving in: she moves to the farm, into your home or a house built for her | Right after the wedding night, before the Married card, once she has a room; one who waits for a room plays it from the morning she moves in ("moved into", **Play**) |
+| `s2`, `s4` | Married life 2 and 4 | Read and kept: those levels come at night with no event |
 | `new-year`, `flower-show`, `derby-night` | Her occasion scenes: New Year's, the Flower Show and the Fishing Derby's night | On their day, from the calendar, with each Uma you've met: New Year's from the second year, the two festivals where the story puts them ([occasion scenes](game-mechanics.md#occasion-scenes)) |
 | `birthday`, `fishing-derby`, `cooking-contest`, `animal-show`, `harvest-cup` | Her other occasions: her birthday, the Fishing Derby's day and the other festivals | Read and kept; they play when their moments are built |
-| `hangout-<kind>`, `date-<kind>`, `dinner-in-town`, `a-night-in` | An evening's scene: a hangout's for walk, fishing, picnic, market, cooking and festival; a date's for every kind | When the evenings (F79) play their lines |
+| `hangout-<kind>`, `date-<kind>`, `dinner-in-town`, `a-night-in` | An evening's scene: a hangout's for walk, fishing, picnic, market, cooking and festival; a date's for every kind; Dinner in town's and A night in's own | After each evening's play, before its card: a friend's `hangout-<kind>`, a sweetheart's or a spouse's `date-<kind>`, and the two evenings of their own (Dinner in town from Romance 3, A night in from Romance 6) ([the evening](game-mechanics.md#the-evening)) |
 
 The rungs pay as written (below). The rest pay nothing: their choices are wording only, and the usual sizes don't apply
 to them. Any other id is a note, kept for the story.
@@ -651,4 +654,5 @@ writing session, on the machine where the story is written (macOS or Windows). I
 | The wedding night (`wedding-night`) | Yes | Yes, today: after the wedding |
 | Her occasion scenes: `new-year`, `flower-show`, `derby-night` | Yes | Yes, today: on their days, from the calendar ([occasion scenes](game-mechanics.md#occasion-scenes)) |
 | The world's `days` | Yes | Yes, today: [the calendar](game-mechanics.md#the-calendar-screen) and the morning |
-| Moving in, married life 2 and 4, her other occasions, the evenings' scenes | Yes | When the Uma loop (F79) and the festivals land; the default story writes each until then |
+| Moving in (`moving-in`), the evenings' scenes, her `mornings` and `meals` | Yes | Yes, today: after the wedding night, after each evening's play, the morning after you choose her as the night's companion, and as you sit down to a meal ([the Uma loop](game-mechanics.md#the-uma-loop)) |
+| Married life 2 and 4 (`s2`, `s4`), her other occasions | Yes | S2 and S4 come at night with no event; the other occasions when the festivals land. The default story writes each until then |
