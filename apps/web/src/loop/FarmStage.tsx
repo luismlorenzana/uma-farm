@@ -6,11 +6,13 @@
 // its quick look; the season is the light; a place's open sheet fades the roofs in front
 // of its slots; Home opens on the first Ready place's band and keeps its scroll this session. One canvas engine: the
 // Hub's Phaser scene never loads here. Battery: saver on, and the loop stops when the stage says it's at rest
-// (uma-stage 0.4.0's `onSettled`), and while the app or Home is hidden.
+// (uma-stage's `onSettled`), and while the app or Home is hidden.
 //
 // The Umas are on it (`farm-figures.ts`): each where the save says she is, a sprite when her outfit's set is live
 // (at most 8, `figure-looks.ts`) and a standee otherwise; she walks to her slot when put to work here, runs home when
-// recalled, and everyone is placed at once at boot, in the morning and after a sync. A Ready Uma has
+// recalled, and everyone is placed at once at boot, in the morning and after a sync. A live sprite at work nods every 4–7
+// s, seeded by her id (uma-stage's `emote`; none with reduced motion): a timer wakes the loop for each nod, and it rests
+// again once she's back to her stance. A Ready Uma has
 // a bubble at her head: a tap collects, and only she counts for the fade, so nothing is faded at rest
 // (uma-stage's `setFadeFigures`). A tap on her opens her sheet. Loaded on demand, with three.js, only when the
 // preview switch is on.
@@ -26,13 +28,13 @@ import { useMaster } from '../master/master'
 import { madeHere } from '../save/game'
 import { outfitFor } from '../story/story'
 import { collectJob, harvestBlock } from './actions'
-import { farmFigures, figureMoves, idleTiles, keepFigures, keptFigures, moveMode, type FarmFigure, type FigureMove } from './farm-figures'
+import { farmFigures, figureMoves, idleTiles, keepFigures, keptFigures, moveMode, NodClock, nodders, type FarmFigure, type FigureMove } from './farm-figures'
 import { KIT_WAIT_MS, loadFarmKit, readyFarmKit, standInKit, type FarmKit } from './farm-kit'
 import {
   bandCentre, fadeMarkers, groundTile, LONG_PRESS_MS, overlayBox, peekLink, rememberCentre, rememberedCentre, SEASON_EASE_MS, SEASON_GRADES, startPlot,
   tapTarget,
 } from './farm-stage'
-import { faceNow, faceOf, setKey, setLoader } from './figure-looks'
+import { faceNow, faceOf, NOD, setKey, setLoader } from './figure-looks'
 import { umaSheet } from './summary-words'
 import { itemWords, requestWords } from './work-view'
 
@@ -105,6 +107,8 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
   const bubbled = useRef(new Set<string>())
   /** The faces this stage has asked for, by outfit; each one that arrives re-draws her standee. */
   const asked = useRef(new Set<string>())
+  /** The working nod's timers, made with each stage. */
+  const nods = useRef<NodClock | null>(null)
   const [faceTick, setFaceTick] = useState(0)
   const blocks = useMemo(() => {
     const frames = kit?.loaded.kit.frames ?? standInFarmAtlas().frames
@@ -116,8 +120,8 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     const m = design.markers.find((marker) => marker.kind === 'gate')
     return m ? { x: m.x, z: m.z } : { x: Math.floor(design.cells[0]!.length / 2), z: design.cells.length - 1 }
   }, [design])
-  const latest = useRef({ plots, places, design, kit, figures, save, gate, view })
-  latest.current = { plots, places, design, kit, figures, save, gate, view }
+  const latest = useRef({ plots, places, design, kit, figures, save, gate, view, reducedMotion })
+  latest.current = { plots, places, design, kit, figures, save, gate, view, reducedMotion }
   const [boxes, setBoxes] = useState<Record<string, Box>>({})
   const boxesNow = useRef(boxes)
   boxesNow.current = boxes
@@ -214,6 +218,27 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     placeBubbles()
   }
 
+  // --- The working nod: a timer wakes the loop for each nod, and `onSettled` waits for it to end. --------------------
+
+  /** Her nod, as the clock calls it: played if the stage takes it (a live sprite standing still whose set has one), and
+   * only then does the loop wake. */
+  const nod = (id: string) => {
+    const s = stage.current, l = loop.current
+    if (!s || l.hidden || l.paused) return
+    void s.emote(id, NOD)
+    if (s.debug.figures.some((f) => f.id === id && f.emote === NOD)) wake()
+  }
+  /** Who nods, on the clock: each Uma at work standing at her slot with a sprite set, while the app and Home show and the
+   * stage isn't paused; nobody with reduced motion. */
+  const nodNow = () => {
+    const l = loop.current
+    const ids = nodders(applied.current ?? [], (id) => {
+      const standing = onStage.current.get(id)
+      return standing && { target: standing.target, walking: walks.current.has(id), set: standing.set !== null }
+    }, latest.current.reducedMotion)
+    nods.current?.set(ids, stage.current !== null && !l.hidden && !l.paused)
+  }
+
   // --- The figures ------------------------------------------------------------------------------
 
   /** How an Uma looks now: her set's key and loader, and her face as decoded so far (one starts loading if it hasn't). */
@@ -254,11 +279,12 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
       if (stage.current !== s || onStage.current.get(id)?.token !== token) return
       if (!arrived && rebuilds.current !== issued) { go(s, id, to, facing, run, then); return }
       walks.current.delete(id)
-      // Arrived (or no way): she stands on her tile facing her work.
+      // Arrived (or no way): she stands on her tile facing her work, and nods there now and then.
       s.placeFigure(id, to, facing)
       refreshLook(s, id)
       then?.()
       wake()
+      nodNow()
     })
   }
 
@@ -339,6 +365,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
       s.setFadeFigures((f) => bubbled.current.has(f.id))
     }
     wake()
+    nodNow()
   }
 
   // The stage: made once, sized to Home's page between the bars, disposed when Home goes (its scroll kept).
@@ -347,6 +374,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     // The settled frame is drawn when `onSettled` runs: the loop stops just after, outside the stage's own frame.
     const s = new BandStage(el, { saver: true, fit: 'width', fade: { markers: [] }, onFirstFrame: () => setDrawn(true), onSettled: () => void window.setTimeout(rest, 0) })
     stage.current = s
+    nods.current = new NodClock(nod)
     built.current = false
     graded.current = false
     applied.current = keptFigures()?.figures ?? null
@@ -369,18 +397,21 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
       loop.current.hidden = document.visibilityState === 'hidden'
       if (loop.current.hidden) sleep()
       else wake()
+      nodNow()
     }
     document.addEventListener('visibilitychange', visibility)
     if (import.meta.env.DEV) {
       (window as unknown as { __farmStage?: unknown }).__farmStage = {
         stage: s, get kit() { return latest.current.kit?.name ?? null }, get design() { return latest.current.design }, get plots() { return latest.current.plots },
         get figures() { return latest.current.figures }, get onStage() { return [...onStage.current.keys()] }, get walking() { return [...walks.current] },
-        get running() { return loop.current.running },
+        get running() { return loop.current.running }, get nodding() { return nods.current?.armed ?? [] },
       }
     }
     return () => {
       document.removeEventListener('visibilitychange', visibility)
       observer?.disconnect()
+      nods.current?.stop()
+      nods.current = null
       sleep()
       rememberCentre(s.bandCamera.centre)
       // What the farm shows, kept for Home's next visit: anyone still walking where she walked from.
@@ -436,6 +467,7 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     if (!s) return
     for (const id of onStage.current.keys()) refreshLook(s, id)
     wake()
+    nodNow()
   }, [view, faceTick])
 
   // The season's light: at once on load, eased over a second when a morning brings the next.
@@ -453,12 +485,16 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     wake()
   }, [open])
 
-  // A full-screen sheet or scene over Home: the stage rests until it closes.
+  // A full-screen sheet or scene over Home: the stage rests until it closes, and nobody nods.
   useEffect(() => {
     loop.current.paused = paused
     if (paused) sleep()
     else wake()
+    nodNow()
   }, [paused])
+
+  // Reduced motion: no nods.
+  useEffect(() => { nodNow() }, [reducedMotion])
 
   // The chips and bubbles follow the camera; React only re-renders them when a model or a box changes.
   useEffect(() => { loop.current.lastCentre = Number.NaN; placeChips(); placeBubbles() })

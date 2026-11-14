@@ -11,7 +11,7 @@ deployed site is the work in progress: saves can start over whenever the game ne
 | Track | Piece | Who | State |
 |---|---|---|---|
 | **Game's frame** | **Done.** Shipped: placeholders everywhere, the farm grows by building ([the farm's progress](../game-mechanics.md#the-farms-progress)), the lean start ([the opening](../game-mechanics.md#the-opening)), the town ([the town](../game-mechanics.md#the-town)), meeting her ([meeting her](../game-mechanics.md#meeting-her)), and her chapters ([her chapters](../game-mechanics.md#her-chapters)). Next: the workshops (Phase 2) | Claude | Waits for your go |
-| **HD-2D farm** | **The working nod:** an Uma at work nods every 4–7 seconds, seeded by her id, none with reduced motion, on uma-stage 0.5.0's `emote` | Claude | Next on this track: small, no packet |
+| **HD-2D farm** | **Done:** the working nod. An Uma at work drawn as a sprite nods every 4–7 seconds, seeded by her id, none with reduced motion, on uma-stage's `emote` ([the Umas on the farm](../game-mechanics.md#the-umas-on-the-farm)). Next on this track: the kit's second wave, then the farm reaches the Hub | Claude | Shipped |
 | **HD-2D farm** | **The kit's second wave:** the 30 frames the stand-in still draws, painted in code | Claude, in a uma-platform session | [F9](tasks/F9-kit-farm.md): waits for your go |
 | **Story** | **Free authoring:** the world, the backgrounds, the characters, however the story wants. The pack is open: every part optional, notes instead of blocks | You and the story session | [F40](tasks/F40-story-authoring.md): how it reaches the game; [the pack's menu](../story-pack.md) |
 | **Her look** | **The bust art:** her outfits (8) and her expressions (22); the pilot is the two Umas with the new full art | ChatGPT | [F69](tasks/F69-bust-art-spec.md): ready to hand over |
@@ -42,14 +42,15 @@ A packet is written when a piece is next and deleted when it ships. Git keeps th
 | **Meeting her on your phone:** after the deploy, open the Gate, **Say hello** to the morning's visitor (her scene plays, and she moves in), end the day and see the next one there. In the Town, talk with one on three days: on the third her scene plays and she moves in while a bed is free, else she lives in town (her profile's **Invite to the farm** once a bed frees). A live farm keeps loading: everyone on it counts as met, and a day-1 helper never greeted has her scene play once | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Her chapters on your phone:** after the deploy, open an Uma's profile on the Hearts tab: her four chapters (her own once the story writes them), the one she's in with its events, and what opens the next; her row says "Ch. 1 · Getting to know her". The morning after her confession says "A new chapter with ‹name› · Together". A live farm keeps loading | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Say go on the workshops** (Phase 2), which her chapters unblock | [roadmap.md](../roadmap.md#phase-2-the-whole-farm) |
-| **The HD-2D farm on your phone:** turn on Account → HD-2D farm, put an Uma to work and watch her walk, end the day, tap her bubble in the morning. Then say how the walk and the bubble feel, and whether the pips can go | [uma-farm.web.app](https://uma-farm.web.app) |
+| **The HD-2D farm on your phone:** turn on Account → HD-2D farm, put an Uma to work and watch her walk, see an Uma at work drawn as a sprite nod every few seconds, end the day, tap her bubble in the morning. Then say how the walk, the nod and the bubble feel, and whether the pips can go | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story** however you like | The Farm Story Sandbox on this Mac (`pnpm stories`) |
 | **The kit's second wave:** your go, when you want it | [F9](tasks/F9-kit-farm.md) |
 
 ## Across the repos
 
 - **uma-platform** holds the shared pieces: master data, uma-kit, uma-work, uma-server, uma-art, and the HD-2D stage
-  `@luismlorenzana/uma-stage`. The farm pins 0.4.0; 0.5.0 adds `emote` for the nod. Shared changes go there as requests
+  `@luismlorenzana/uma-stage`. The farm pins 0.6.0: 0.5.0's `emote` plays the nod, and 0.6.0's opt-in `/look` isn't
+  used yet. Shared changes go there as requests
   ([change protocol](https://github.com/luismlorenzana/uma-platform/blob/main/docs/change-protocol.md)).
 - **The art split:** ChatGPT draws character art (Uma sprites, poses, busts, portraits). Claude draws everything else in
   code (items, UI marks, buildings, the HD-2D kits) in a uma-platform session.

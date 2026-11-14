@@ -36,7 +36,7 @@ uma-platform, never in a copy here.
 |---|---|---|---|
 | `@farm/domain` | workspace | web, api | The rules and the save (below) |
 | `@luismlorenzana/uma-kit` | 0.19.0 | web | Theme and appearance, the app frame and bars, boot gates, Google sign-in, the content client, the update prompt, the Hub map, the album, the work screens |
-| `@luismlorenzana/uma-stage` | 0.4.0 | web; domain (dev, types only) | The HD-2D band stage and its stand-in farm kit; the domain's design types and its test's checks (`/formats`, three-free) |
+| `@luismlorenzana/uma-stage` | 0.6.0 | web; domain (dev, types only) | The HD-2D band stage and its stand-in farm kit, and `emote` for the working nod (0.5.0); the domain's design types and its test's checks (`/formats`, three-free). 0.6.0 only adds the opt-in `/look` entry, which the farm doesn't import: its stage chunk is byte for byte 0.5.0's |
 | `@luismlorenzana/uma-art` | 2.27.0 | web | The bars', map's, item and emote art; the `kit-farm` kit |
 | `@luismlorenzana/uma-data` | 1.4.0 | web, domain | Master data's types and readers; test fixtures from `/testing` |
 | `@luismlorenzana/uma-work` | 0.1.0 | web, domain | The work engine: slots, queues and entries |
@@ -197,18 +197,19 @@ The preview's code and art download only for a device with the switch on, then s
 | Module | What |
 |---|---|
 | `src/app/stage-switch.ts`, `stage-boot.ts` | The device switch (`farm.stage`) and `?stage=1`/`0` at boot; small, in the main chunk |
-| `src/loop/FarmStage.tsx` | Home on a `BandStage` (saver on, fit to width): the world, the kit, overlays, taps, the season's grade, the fade, the figures, the loop that stops at rest |
+| `src/loop/FarmStage.tsx` | Home on a `BandStage` (saver on, fit to width): the world, the kit, overlays, taps, the season's grade, the fade, the figures and their nods, the loop that stops at rest |
 | `src/loop/farm-stage.ts` | Pure helpers: the season grades, what a tap opens, the band Home opens on, the fade's markers, the remembered scroll |
 | `src/loop/farm-kit.ts` | Loads `kit-farm` once a session and copies the stand-in's frames for what it lacks onto its page |
-| `src/loop/farm-figures.ts` | Pure: who stands where, their bubbles, and the moves between two readings |
-| `src/loop/figure-looks.ts` | An Uma's sprite set (loaded when the stage's cap lets it go live) and her standee's face |
+| `src/loop/farm-figures.ts` | Pure: who stands where, their bubbles, the moves between two readings, and who nods with her seeded gaps; and the nods' timers (`NodClock`) |
+| `src/loop/figure-looks.ts` | An Uma's sprite set (loaded when the stage's cap lets it go live), its nod action, and her standee's face |
 | `packages/domain/src/farm/stage.ts` | The save as the stage's farm design: plots, recipes, markers and crops |
 
 - **The domain imports uma-stage's types only** (`@luismlorenzana/uma-stage/formats`, a dev dependency), so the API
   never loads it. The domain's test builds every design on the stand-in farm kit with `farmProblems`, the check the stage
   refuses a world on.
 - **For debugging,** a dev build exposes `window.__farmStage` (the stage, the kit's name, the design, the plots, the
-  figures, who's on the stage, who's walking, whether the loop runs). The stage's root carries `data-farm-stage`
+  figures, who's on the stage, who's walking, whether the loop runs, whose nod timers run). The stage's own
+  `debug.figures` shows each figure's `sprite`, `action` and `emote`. The stage's root carries `data-farm-stage`
   (`loading`, `drawn`) and `data-kit-name`.
 
 ### The build and its flags

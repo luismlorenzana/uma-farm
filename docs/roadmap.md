@@ -34,7 +34,7 @@ farm's progress](game-mechanics.md#the-farms-progress). How it's built is in
 | **The farm's loop** | **Deployed** (save v4, one build) | The days, the Fields, the forest and the Fishery, the Mill, the Sawmill and the Smokehouse, goods and the bin, talents and ranks, the roster, the Farm Rank. **The farm grows by building:** no global chapters; the Farm Rank from income and goods offers each place, built with gold and goods; the Dock and the Boat open the sea; weddings open houses; the Diary's projects. **The town:** every character lives there, a different few out at its six spots each day; talk once a day; the People list. **Meeting her:** her trigger (three days' talks by default) starts her story; the welcome list visits the Gate one a morning; the beds cap who lives on the farm, the rest live in town until invited |
 | **The romance** | **Deployed, part of the one game** | Hearts, heart events and plays, evenings, perks, the ring and the wedding, married life, the homestead, bonds. Everyone you meet has the whole romance from the day you meet her, in **her own chapters**: the story's or four defaults, a chapter's gate asking the farm for a place, a rank, a good, an event, a season or a festival |
 | **The story** | **Being written** | In the Farm Story Sandbox on this Mac. The pack is open: every part optional, any number of characters, notes instead of blocks, and any pack releases. [The story pack's menu](story-pack.md) lists what the game reads, with the welcome list, her trigger to meet and her chapters |
-| **The HD-2D farm** | **Opt-in preview** | The farm and its Umas on the shared HD-2D stage (Account → HD-2D farm). The 2D Hub is still Home. A working Uma doesn't nod yet: uma-stage 0.5.0 can now play it |
+| **The HD-2D farm** | **Opt-in preview** | The farm and its Umas on the shared HD-2D stage (Account → HD-2D farm). The 2D Hub is still Home. An Uma at work nods every 4–7 seconds |
 | **Art** | **Mixed** | The farm kit's first wave is painted; its second wave is still the stand-in's frames. Umas whose outfits have no sprite set show as cards with their faces. The town's people are Umas, with master data's busts |
 | **The workshops** | **Not built** | The ranch, the Mine and the Quarry, the Kitchen and its cooking game, expeditions, the Restaurant and the Forge's games |
 | **Sound** | **None** | No music and no sound effects |
@@ -97,7 +97,6 @@ your go.
 
 | Step | What | Who |
 |---|---|---|
-| 1.9 **The working nod** | An Uma at work nods every 4–7 seconds, on uma-stage 0.5.0 | Claude |
 | 1.10 **The kit's second wave** | The 30 frames still drawn by the stand-in, painted in code | Claude, in a uma-platform session ([F9](handoff/tasks/F9-kit-farm.md)) |
 | 1.11 **The HD-2D farm reaches the Hub** | Everything the Hub does, on the stage: every place, the build sheets, the homestead's rows, the town | Claude |
 | 1.12 **The HD-2D farm becomes Home** | After your phone look: the switch and the 2D Hub go | Claude |
