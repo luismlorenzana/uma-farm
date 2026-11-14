@@ -82,9 +82,9 @@ export function doneWords(done: Partial<Record<TaskKind, number>>): string[] {
 }
 
 /** A farmhand's night in words, as the morning and the board's "Tonight" say it: her actions spent, what she did and the
- * goods it brought; "nothing to do" when she spent none. */
+ * goods it brought; with none spent, "No tasks: set her tasks" or "Nothing to do tonight". */
 export function nightWords(line: FarmhandLine): string {
-  if (line.spent === 0) return 'Nothing to do: set her tasks'
+  if (line.spent === 0) return line.tasks === 0 ? 'No tasks: set her tasks' : 'Nothing to do tonight'
   const did = doneWords(line.done)
   return [`${line.spent} of ${plural(line.actions, 'action')}`, ...did, ...(line.items > 0 ? [`+${plural(line.items, 'good')}`] : [])].join(' · ')
 }

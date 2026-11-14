@@ -415,7 +415,7 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
     }
     let open = tasks.filter((t) => OPEN_TASKS.includes(t.kind))
     while (left > 0 && open.length > 0) open = open.filter((task) => left > 0 && work(task))
-    out.lines.push({ kind: 'farmhand', id, actions: hand.actions, spent: hand.actions - left, half: hand.half, fed: hand.fed > 0, done, items })
+    out.lines.push({ kind: 'farmhand', id, actions: hand.actions, spent: hand.actions - left, half: hand.half, fed: hand.fed > 0, tasks: tasks.length, done, items })
     // Her place today: where she spent the most actions, the first she worked on a tie.
     const top = [...spentAt].reduce<[WorkPlace, number] | null>((best, at) => (best === null || at[1] > best[1] ? at : best), null)
     if (top) {

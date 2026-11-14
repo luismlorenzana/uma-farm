@@ -55,9 +55,9 @@ export interface LoadLine {
 }
 
 /** §2 Work done, first: a farmhand's day, after her part-time job (its words the pack's, read as the card shows): her
- * actions today and how many she spent, whether at half pace and whether well fed (+1), what she did by task (tiles
- * harvested, watered, planted, cleared or tilled; loads started; hauls, logs chopped and catches) and the goods it
- * brought into the Warehouse. */
+ * actions today and how many she spent, whether at half pace and whether well fed (+1), the tasks on her board, what she
+ * did by task (tiles harvested, watered, planted, cleared or tilled; loads started; hauls, logs chopped and catches) and
+ * the goods it brought into the Warehouse. */
 export interface FarmhandLine {
   kind: 'farmhand'
   id: string
@@ -65,6 +65,7 @@ export interface FarmhandLine {
   spent: number
   half: boolean
   fed: boolean
+  tasks: number
   done: Partial<Record<TaskKind, number>>
   items: number
 }

@@ -143,8 +143,8 @@ describe('her night', () => {
     // Three actions each: A waters three tiles (Watering 2: a tile an action), B casts three times.
     expect(morning.fields.tiles.filter((t) => t.growth === 1)).toHaveLength(3)
     expect(morning.summary!.work.slice(0, 2)).toEqual([
-      { kind: 'farmhand', id: A, actions: 3, spent: 3, half: false, fed: false, done: { water: 3 }, items: 0 },
-      { kind: 'farmhand', id: B, actions: 3, spent: 3, half: false, fed: false, done: { fish: 3 }, items: 3 },
+      { kind: 'farmhand', id: A, actions: 3, spent: 3, half: false, fed: false, tasks: 1, done: { water: 3 }, items: 0 },
+      { kind: 'farmhand', id: B, actions: 3, spent: 3, half: false, fed: false, tasks: 1, done: { fish: 3 }, items: 3 },
     ])
     expect(morning.summary!.work[2]).toEqual({ kind: 'grew', tiles: 3, ripe: 0 })
     expect(Object.keys(morning.items).filter((id) => id === 'carp' || id === 'trout').length).toBeGreaterThan(0)

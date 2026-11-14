@@ -88,9 +88,10 @@ describe('the board\'s words', () => {
     expect(jobWords(cast([{ characterId: '42', spot: 'harbour' }]), '42')).toBe('Helps out at the Harbour')
     expect(jobWords(pack, '9000001')).toBe('A job in town')
     expect(doneWords({ water: 3, fish: 2, forage: 1, load: 1 })).toEqual(['watered 3 tiles', 'started 1 load', 'foraged once', 'caught 2 fish'])
-    const line: FarmhandLine = { kind: 'farmhand', id: A, actions: 4, spent: 4, half: false, fed: true, done: { water: 6, fish: 1 }, items: 1 }
+    const line: FarmhandLine = { kind: 'farmhand', id: A, actions: 4, spent: 4, half: false, fed: true, tasks: 2, done: { water: 6, fish: 1 }, items: 1 }
     expect(nightWords(line)).toBe('4 of 4 actions · watered 6 tiles · caught 1 fish · +1 good')
-    expect(nightWords({ ...line, spent: 0, done: {}, items: 0 })).toBe('Nothing to do: set her tasks')
+    expect(nightWords({ ...line, spent: 0, done: {}, items: 0 })).toBe('Nothing to do tonight')
+    expect(nightWords({ ...line, spent: 0, tasks: 0, done: {}, items: 0 })).toBe('No tasks: set her tasks')
   })
 })
 
@@ -106,7 +107,7 @@ describe('the work board in the Book', () => {
     expect([...card.querySelectorAll('[data-task] [data-task-words]')].map((t) => t.textContent)).toEqual(['Water · 9 tiles'])
     expect([...card.querySelectorAll('[data-task] [data-task-aptitude]')].map((t) => t.textContent)).toEqual(['Watering 2'])
     expect($(`[data-hand="${B}"] [data-no-tasks]`)).not.toBeNull()
-    expect($(`[data-hand="${B}"] [data-tonight]`)?.textContent).toBe('Tonight · Nothing to do: set her tasks')
+    expect($(`[data-hand="${B}"] [data-tonight]`)?.textContent).toBe('Tonight · No tasks: set her tasks')
   })
 
   it('says how to get a farmhand, with none', async () => {
@@ -144,8 +145,8 @@ describe('the morning', () => {
   it('reports each farmhand\'s night and the aptitudes she reached, each a tap to the board or her profile', () => {
     const parts = summaryParts(summary({
       work: [
-        { kind: 'farmhand', id: A, actions: 4, spent: 4, half: false, fed: true, done: { water: 3, fish: 1 }, items: 1 },
-        { kind: 'farmhand', id: B, actions: 1, spent: 1, half: true, fed: false, done: { chop: 1 }, items: 2 },
+        { kind: 'farmhand', id: A, actions: 4, spent: 4, half: false, fed: true, tasks: 2, done: { water: 3, fish: 1 }, items: 1 },
+        { kind: 'farmhand', id: B, actions: 1, spent: 1, half: true, fed: false, tasks: 1, done: { chop: 1 }, items: 2 },
         { kind: 'grew', tiles: 3, ripe: 0 },
       ],
       ranks: [{ kind: 'aptitude', outfitId: A, aptitude: 'water', level: 3 }],

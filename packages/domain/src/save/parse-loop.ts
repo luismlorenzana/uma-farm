@@ -11,7 +11,7 @@ import { GOOD_IDS, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, 
 import type { BinSale, MoneyLine, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
 import { amount, bool, count, int, list, object, oneOf, record, SaveParseError, type Obj } from './parse'
 import {
-  ANIMAL_HOME, ANIMAL_KINDS, APTITUDE_IDS, TASK_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOUSE_LOAN, INCOME_NIGHTS, isDishId, MAX_LOANS, pairKey,
+  ANIMAL_HOME, ANIMAL_KINDS, APTITUDE_IDS, MAX_TASKS, TASK_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOUSE_LOAN, INCOME_NIGHTS, isDishId, MAX_LOANS, pairKey,
   REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig, type DormSwap,
   type Expedition, type Extra, type FestivalResult, type Loan, type RankState, type SaveV5, type StarCounts, type StationLoad, type Tile,
   type ToolId, type ToolTier, type Warehouse, type WorkshopId,
@@ -388,10 +388,11 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, ['farmhand', 'load', 'grew', 'withered'] as const)
     if (kind === 'farmhand') {
-      const f = object(v, at, ['kind', 'id', 'actions', 'spent', 'half', 'fed', 'done', 'items'])
+      const f = object(v, at, ['kind', 'id', 'actions', 'spent', 'half', 'fed', 'tasks', 'done', 'items'])
       const actions = int(f.actions, `${at}.actions`, 0, MAX_HAND_ACTIONS)
       return {
         kind, id: member(f.id, `${at}.id`, roster), actions, spent: int(f.spent, `${at}.spent`, 0, actions), half: bool(f.half, `${at}.half`), fed: bool(f.fed, `${at}.fed`),
+        tasks: int(f.tasks, `${at}.tasks`, 0, MAX_TASKS),
         done: counts(f.done, `${at}.done`, (k) => (TASK_KINDS as readonly string[]).includes(k), 'unknown task'), items: count(f.items, `${at}.items`),
       }
     }

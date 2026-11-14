@@ -276,7 +276,7 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
         switch (line.kind) {
           case 'farmhand': return {
             key: `farmhand:${line.id}`, to: BOARD, text: `${nameOf(line.id)} · ${nightWords(line)}`,
-            ...(line.half ? { tag: 'Half pace', warn: true } : line.fed ? { tag: 'Well fed' } : line.spent === 0 ? { tag: 'No tasks' } : {}),
+            ...(line.half ? { tag: 'Half pace', warn: true } : line.fed ? { tag: 'Well fed' } : line.tasks === 0 ? { tag: 'No tasks' } : {}),
           }
           case 'load': {
             const [id, stars] = line.item.split('@')

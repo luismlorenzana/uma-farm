@@ -80,7 +80,7 @@ function HandCard({ save, id, name, pack, talentOf, onAdd }: {
         <FaceTile outfitId={id} size={44} label={name} round />
         <span className="min-w-0 flex-1">
           <Link to={`/hearts?view=work&uma=${id}`} state={{ back: true }} className="block truncate text-[15px] font-semibold text-ink">{name}</Link>
-          <span className="block truncate text-[12px] text-ink-soft" data-job>{pack ? jobWords(pack, id) : 'A job in town'}, then the farm · since {shortDate(uma.farmhand!)}</span>
+          <span className="block truncate text-[12px] text-ink-soft" data-job title={`Farmhand since ${shortDate(uma.farmhand!)}`}>{pack ? jobWords(pack, id) : 'A job in town'}, then the farm</span>
         </span>
         <span className="shrink-0 text-right" data-actions={day.actions}>
           <span className="font-display block text-[20px] leading-none font-bold tabular-nums">{day.actions}</span>
@@ -180,7 +180,7 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
         {tile ? (
           <fieldset>
             <legend className="text-micro pb-1">The field’s rows</legend>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5 [&>button]:justify-start">
               <Chip selected={rows.length === FIELD_ROWS} aria-pressed={rows.length === FIELD_ROWS} onClick={() => setRows(rows.length === FIELD_ROWS ? [] : Array.from({ length: FIELD_ROWS }, (_, r) => r + 1))} data-row="all">
                 Whole field
               </Chip>
@@ -188,7 +188,10 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
                 const on = rows.includes(row)
                 return (
                   <Chip key={row} selected={on} aria-pressed={on} onClick={() => setRows(on ? rows.filter((x) => x !== row) : [...rows, row].sort())} data-row={row}>
-                    Row {row} <span className="text-[11px] text-ink-soft">· {rowCount(save, kind as TileTaskKind, row)} {ROW_WORDS[kind as TileTaskKind]}</span>
+                    <span className="block text-left leading-tight">
+                      <span className="block">Row {row}</span>
+                      <span className="block text-[11px] text-ink-soft">{rowCount(save, kind as TileTaskKind, row)} {ROW_WORDS[kind as TileTaskKind]}</span>
+                    </span>
                   </Chip>
                 )
               })}
