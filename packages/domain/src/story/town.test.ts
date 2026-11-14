@@ -73,13 +73,14 @@ describe('the cast\'s spots and sisters', () => {
     expect(read.notes).toEqual(expect.arrayContaining([
       'Uma 2 (9300002): her name is master data’s; a name is read for a sister only',
       `Uma 3 (${SISTER}): a sister plays her own outfit, 930000102; outfitId is ignored`,
-      `Uma 3 (${SISTER}): a sister lives in town; she can’t come to the farm yet`,
+      `Uma 3 (${SISTER}): a sister lives in town; she can’t come to the farm yet, so her arrival is dropped`,
       'Uma 4 (s930000301): a sister with no name shows as her elder’s sister',
     ]))
     expect(read.value.umas.map((u) => [u.characterId, u.spot, u.name])).toEqual([
       ['9300001', 'cafe', undefined], ['9300002', undefined, 'Ignored'], [SISTER, 'library', 'Invented Sister'], ['s930000301', undefined, undefined],
     ])
     expect(read.value.umas[2]).not.toHaveProperty('outfitId')
+    expect(read.value.umas[2]).not.toHaveProperty('arrives')
     expect(STORY_ID.test(SISTER)).toBe(true)
     expect(STORY_ID.test('s0123')).toBe(false)
   })

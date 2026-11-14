@@ -735,7 +735,7 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
     if (sister && u.outfitId != null && u.outfitId !== sisterOutfit(id)) f.notes.push(`${it}: a sister plays her own outfit, ${sisterOutfit(id)}; outfitId is ignored`)
     if (!sister && u.name !== undefined) f.notes.push(`${it}: her name is master data’s; a name is read for a sister only`)
     if (sister && u.name === undefined) f.notes.push(`${it}: a sister with no name shows as her elder’s sister`)
-    if (sister && u.arrives !== undefined) f.notes.push(`${it}: a sister lives in town; she can’t come to the farm yet`)
+    if (sister && u.arrives !== undefined) f.notes.push(`${it}: a sister lives in town; she can’t come to the farm yet, so her arrival is dropped`)
     const entry = kept<CastEntry>(u, {
       outfitId: sister ? undefined : field(u, 'outfitId', (v) => (typeof v === 'string' && CHARACTER_ID.test(v) ? v : undefined), it, f, 'is an outfit id'),
       spot: field(u, 'spot', (v) => (oneOf(SPOT_IDS, v) ? v : undefined), it, f, `is one of the town’s spots: ${SPOT_IDS.join(', ')}`),
@@ -745,7 +745,7 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
         return undefined
       }, it, f, `is 1–${LINE_LIMITS.name} characters`) : u.name as string | undefined,
       calling: field(u, 'calling', (v) => (oneOf(CALLINGS, v) ? v : undefined), it, f, `is one of ${CALLINGS.join(', ')}`),
-      arrives: isObject(u.arrives) && u.arrives.kind === 'chapter'
+      arrives: sister ? undefined : isObject(u.arrives) && u.arrives.kind === 'chapter'
         ? (f.notes.push(`${it}: the farm has no chapters, so a chapter arrival never comes; she waits to be met`), undefined)
         : isObject(u.arrives) && u.arrives.kind === 'opening'
           ? (f.notes.push(`${it}: the opening brings nobody now (the welcome list’s first joins as it ends), so an opening arrival is dropped`), undefined)

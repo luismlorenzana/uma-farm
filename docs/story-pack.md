@@ -144,7 +144,7 @@ welcome list, a tie's `a` or `b`, her bible `umas/s<outfitId>.json`, her route `
 - **Her name** is her entry's `name`, from the pack's private release at run time, never git. Without one, she shows
   as her elder's sister (a note).
 - **She lives in town** and is out there like everyone else. She can't come to the farm yet: an `arrives` on her entry is
-  a note, and the welcome list's first is never a sister. Meeting her (F67) brings her.
+  dropped (a note), and the welcome list's first is never a sister. Meeting her (F67) brings her.
 
 ### The trigger menu
 
