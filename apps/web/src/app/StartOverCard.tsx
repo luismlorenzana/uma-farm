@@ -1,5 +1,6 @@
-// The start-over card: uma-kit's first-launch step, shown when boot found a save from before v4. One line and one
-// button; the button makes the new farm (`startOver`), and the farm opens on its first screen, the farmer's name.
+// The start-over card: uma-kit's first-launch step, shown when boot found a save from before v5 (v4's farm of blocks
+// among them). One line and one button; the button makes the new farm (`startOver`), and the farm opens on its first
+// screen, the farmer's name.
 import { useState } from 'react'
 import { startOver } from '../save/game'
 

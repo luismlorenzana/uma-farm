@@ -16,7 +16,7 @@ import { lazy, Suspense } from 'react'
 import { Outlet, useLocation, useSearchParams } from 'react-router'
 import { useGame } from '../save/game'
 import { castIds, useStory } from '../story/story'
-import { FarmBar, FarmRail, railPageOf } from './Bars'
+import { FarmBar, FarmRail, OutOfActions, railPageOf } from './Bars'
 import { MenuSheet } from './MenuSheet'
 import { SyncWarning } from './SyncWarning'
 
@@ -58,6 +58,7 @@ export function Shell() {
       overlays={
         <>
           <MenuSheet open={sheet === 'menu'} onClose={() => leave(withParam(location, 'sheet', null))} />
+          {free && <OutOfActions />}
           {isLoopSheet(sheet) && !naming && !scene && <Suspense fallback={null}><LoopSheets key={sheet} sheet={sheet} /></Suspense>}
           {naming && <Suspense fallback={null}><NameSheet /></Suspense>}
           {scene && <Suspense fallback={null}><ScenePlayer key={scene} scene={scene} /></Suspense>}

@@ -96,7 +96,6 @@ table. Its steps, in order:
 | Step | What | Packet |
 |---|---|---|
 | 3 | **The default Uma:** a blank bust and profile, and a complete default story, for every Uma without her own | [F76](handoff/tasks/F76-default-uma.md) |
-| 4 | **A day of actions, and the farm loop:** 10 actions; the tile farm with daily watering; one-action gathering; stations; shipping | [F77](handoff/tasks/F77-actions-and-farm-loop.md) |
 | 5 | **The town map:** locations, who's there now, introductions, her menu | [F78](handoff/tasks/F78-town-map.md) |
 | 6 | **The Uma loop:** acquaintance, friend, farmhand, sweetheart, the wedding night, moving in, married life with meals and the night's companion | [F79](handoff/tasks/F79-uma-loop.md) |
 | 7 | **Farmhands:** her part-time job, then her farm actions; the work board; aptitudes that grow with practice | [F80](handoff/tasks/F80-farmhands.md) |

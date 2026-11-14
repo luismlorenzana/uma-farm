@@ -1,77 +1,61 @@
-// The farm: `/`. uma-kit's Hub map in eight rows of three, the core
-// loop's rows, on uma-art's buildings; taller than a phone's screen, it scrolls, with the help button and the Collect all
-// pill fixed. A place's quick look opens in the side panel (`/?peek=<place>`): what it is, and what opens it while it's
-// locked, a place to build with its Build card (`BuildCard.tsx`; the Dock's with the Boat's once it stands); the Gate's
-// holds the welcome list's visitor of the day, with Say hello, and wears **Visiting** while she waits. After a night the morning summary opens over the map until the
-// player starts the day. A Ready Uma's pip carries ♥ wherever the map draws her and the morning's Hearts section lists
-// who's Ready, both read live; its bond hearts carry Read while a conversation waits, which plays over the morning
-// (`?read=`); an invitation's line carries Yes, tonight and Another day; the Forge's quick look is the ring bench's once
-// it stands. The map grows the homestead's rows after the yard, the town edge moving below them (`homestead-map.tsx`).
-// Each place's name and quick look's line are the pack's `world.json` where it gives them, else the game's own
-// (`placeWordsOf`); the Town takes the town's name.
-// Loaded on demand.
+// The farm: `/`. A landscape tile map you look across, wider than the screen, so it scrolls sideways: the woods' edge,
+// the field's tiles over the pond's edge, a path, the farm's places on their lots (the yard, the homestead, the stations
+// and the rest) and the road to town. Tap a tile for its actions (`/?tile=<n>`): clear, till, plant, water, harvest,
+// one action each. Tap the woods' edge to forage or chop, the pond's to fish, a station to start a load (their menus in
+// the side panel, `/?peek=forest|fishery|<station>`), the bin to ship. A place's quick look opens in the side panel
+// too: what it is, and what opens it while it's locked; a place to build with its Build card (`BuildCard.tsx`; the
+// Dock's with the Boat's once it stands); the Gate's holds the welcome list's visitor of the day, with Say hello, and
+// wears **Visiting** while she waits. After a night the morning summary opens over the map until the player starts the
+// day; its Hearts section lists who's Ready, read live; its bond hearts carry Read while a conversation waits, which
+// plays over the morning (`?read=`); an invitation's line carries Yes, tonight and Another day; the Forge's quick look
+// is the ring bench's once it stands. A place's name and its quick look's line are the pack's `world.json` where it
+// gives them, else the game's own (`placeWordsOf`). Loaded on demand.
 import {
-  chapterTitle, farmEnv, farmPlace, gateVisitor, herChapters, isBuildPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, MAP_PLACES, placeBuilt, placeOpen, placeWordsOf, readyPlots, workNow, type BuildPlace,
-  type FarmPlace, type LoopPlaceId, type FarmSave,
+  chapterTitle, farmPlace, gateVisitor, herChapters, homesteadShown, isBuildPlace, placeBuilt, placeOpen, placeWordsOf, stationBuilt, STATIONS,
+  type BuildPlace, type FarmPlace, type FarmSave, type StationId,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
-import { ART_TILE, artScale, HubMap, hubDpr, PALETTES, type HubMapPlace, type PageGround, type PipModel } from '@luismlorenzana/uma-kit/hub'
-import { FloatingPill, PeekPanel, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { Button, HelpButton, Sheet, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
-import { workView, type WorkView } from '@luismlorenzana/uma-kit/work'
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { PeekPanel, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
+import { Button, CloseIcon, HelpButton, LockedIcon, Sheet } from '@luismlorenzana/uma-kit/ui'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
 import { masterReady, useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
-import { collectFarm, dismissSummary } from './actions'
-import { FARM_MAP_TILES, lockOf, placeAt, placeLink } from './farm-map'
-import { FieldsPeek, fieldsPips } from './FieldsPeek'
+import { dismissSummary } from './actions'
+import { BuildingArt, TileArt, Trees, Water } from './farm-art'
+import { CELL, FIELD, lockOf, MAP_ROWS, mapLots, MIN_CELL, placeLink, POND, tileArea, WOODS, type Area } from './farm-map'
+import { tileLabel, tileView } from './farm-view'
+import { GatherPanel, StationPanel, TilePanel } from './FarmPanels'
 import { GatePeek } from './GatePeek'
 import { pairWords, readyLines } from './hearts-view'
+import { houseLot } from './homestead-map'
 import { homeWords } from './homestead-view'
 import { NO_HOME, NO_WORLD, summaryParts, worldWords, type ChapterOf, type NoteOf } from './summary-words'
-import { farmingTalents, useTalents } from './talents'
+import { useTalents } from './talents'
 import { shortDate, theName } from './words'
-import { WorkPlacePeek } from './WorkPlace'
-import { isWorkScreen } from './work-view'
 
-const GROUND: PageGround = { id: 'farm', tiles: 'farmlands', palette: PALETTES.farmlands! }
 const InviteAnswer = lazy(() => import('./InviteAnswer'))
 const BenchPeek = lazy(() => import('./BenchSheet').then((m) => ({ default: m.BenchPeek })))
 const HouseAnswer = lazy(() => import('./HouseAnswer'))
 const BuildCard = lazy(() => import('./BuildCard').then((m) => ({ default: m.BuildCard })))
-type HomesteadMap = typeof import('./homestead-map')
 
-/** The homestead's map module, loaded on demand; null until it's in. */
-function useHomesteadMap(): HomesteadMap | null {
-  const [module, setModule] = useState<HomesteadMap | null>(null)
-  useEffect(() => {
-    if (module === null) void import('./homestead-map').then(setModule)
-  }, [module])
-  return module
-}
-const WORK_PLACES: ReadonlySet<string> = new Set(LOOP_WORK_PLACES)
+const isStation = (id: string): id is StationId => (STATIONS as readonly string[]).includes(id)
 
-/** `/`, with an optional `?peek=<place>` quick look. An unknown place drops the panel. */
+/** `/`, with an optional `?tile=<n>` (a tile's actions) or `?peek=<place>` (a quick look). An unknown one drops the
+ * panel. */
 export default function FarmRoute() {
   const [params] = useSearchParams()
   const location = useLocation()
   const save = useLoopSave()
   const peekId = params.get('peek')
   const peek = farmPlace(peekId)
-  if (peekId !== null && !peek) return <Navigate to={withParam(location, 'peek', null)} replace />
+  const tileParam = params.get('tile')
+  const tile = tileParam === null ? null : Number(tileParam)
+  if (peekId !== null && (!peek || peek.id === 'fields')) return <Navigate to={withParam(location, 'peek', null)} replace />
+  if (save && tile !== null && !(Number.isInteger(tile) && tile >= 0 && tile < save.fields.tiles.length)) return <Navigate to={withParam(location, 'tile', null)} replace />
   if (!save) return null
-  return <FarmScreen save={save} peek={peek} />
-}
-
-/** A work place's slot pips: who works there, ringed by her job's progress, or free dots; a Ready Uma's carries ♥. */
-function pipsOf(place: FarmPlace, work: WorkView, hearts: ReadonlySet<string>): PipModel[] | undefined {
-  if (!WORK_PLACES.has(place.id)) return undefined
-  return work.cards(place.id).map((card): PipModel => card.kind === 'free' ? { state: 'free' } : {
-    state: card.running ? 'busy' : 'ready', progress: card.progress, queued: card.queue.length,
-    face: <FaceTile outfitId={card.outfitId} size={24} label="Working Uma" round />, ...(hearts.has(card.outfitId) ? { badge: '♥' } : {}),
-  })
+  return <FarmScreen save={save} peek={peek} tile={tile} />
 }
 
 /** Who's Ready today, read live; nobody before the pack loads. */
@@ -80,37 +64,34 @@ function useReadyNow(save: FarmSave) {
   return useMemo(() => (pack ? readyLines(save, pack) : []), [save, pack])
 }
 
-/** One tap collects every finished job on the farm and harvests every Ready plot. */
-function CollectAll({ ready }: { ready: number }) {
-  const [note, setNote] = useState<string | null>(null)
-  if (ready === 0 && !note) return null
-  return (
-    <FloatingPill
-      text={note ?? `Collect all · ${ready} ready`}
-      onClick={() => {
-        if (ready === 0) return
-        void collectFarm().then((items) => {
-          setNote(items > 0 ? `+${items} collected` : 'Collected')
-          setTimeout(() => setNote(null), 2200)
-        }, () => {
-          setNote('Try again')
-          setTimeout(() => setNote(null), 2200)
-        })
-      }}
-    />
-  )
+/** A cell's size: the map's seven rows fill the page's height, 40 to 52 points. */
+function useCell(): [React.RefObject<HTMLDivElement | null>, number] {
+  const ref = useRef<HTMLDivElement | null>(null)
+  const [cell, setCell] = useState(CELL)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const fit = () => setCell(Math.max(MIN_CELL, Math.min(52, Math.floor(el.clientHeight / MAP_ROWS))))
+    fit()
+    const observer = new ResizeObserver(fit)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  return [ref, cell]
 }
 
-/** How the farm works, behind the help button (N9), at the map's foot on the left. */
+const at = (area: Area, cell: number): CSSProperties => ({ left: area.col * cell, top: area.row * cell, width: area.cols * cell, height: area.rows * cell })
+
+/** How the farm works, behind the help button, at the map's foot on the left. */
 function FarmHelp() {
   return (
     <div className="absolute bottom-3 left-3 z-20">
       <div className="rounded-full border border-hairline-strong bg-panel/95 shadow-3" data-farm-help>
         <HelpButton title="The farm" label="How the farm works">
-          <p>A day is a turn: nothing moves until you end it, even with the app closed.</p>
-          <p>Plant the Fields, put your Umas to work, then tap End the day. Jobs and crops take whole days.</p>
-          <p>The night settles everything at once, and the morning shows what it brought.</p>
-          <p>The farm grows by building: the Farm Rank offers a place, and you build it with gold and the farm’s goods. It stands the next morning. The rows run gathering, its station, then the ranch or a workshop; the yard and the town are below.</p>
+          <p>A day holds 10 actions. Each task costs one: clear, till, plant, water or harvest a tile; forage, chop or fish; start a load; ship a crate; go into town.</p>
+          <p>Looking is free, and so is building; the shop is free once you’re in town.</p>
+          <p>A watered tile grows a stage at night; a dry one doesn’t. A season’s end withers what still grows.</p>
+          <p>When the actions run out, end the day: the night pays the bin and the morning shows what grew.</p>
           <p>Tap the date for the calendar and the year’s festivals.</p>
         </HelpButton>
       </div>
@@ -118,89 +99,180 @@ function FarmHelp() {
   )
 }
 
-function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefined }) {
+function FarmScreen({ save, peek, tile }: { save: FarmSave; peek: FarmPlace | undefined; tile: number | null }) {
   // The night reads master data: load it with the farm, so End the day doesn't wait for it. A failure shows
   // when the day ends, with Try again.
   useEffect(() => void masterReady().catch(() => undefined), [])
   const [params] = useSearchParams()
   const location = useLocation()
   const leave = useLeave()
-  const reducedMotion = useReducedMotionSetting()
-  const talents = useTalents()
-  const farming = useMemo(() => farmingTalents(talents.of), [talents.of])
-  const tile = ART_TILE * artScale(hubDpr())
-  const ready = useMemo(() => loopReadyWork(save), [save])
+  const [scroll, cell] = useCell()
   const readyNow = useReadyNow(save)
   const hearts = useMemo(() => new Set(readyNow.map((r) => r.id)), [readyNow])
-  const plots = readyPlots(save)
   const story = useStory()
-  const env = useMemo(() => farmEnv(loopKinds(talents.of, story)), [talents.of, story])
-  const work = useMemo(() => workView(loopWorld(save), workNow(save), env), [save, env])
-  const homestead = useHomesteadMap()
   const master = useMaster()
-  const layout = homestead ? homestead.homesteadLayout(save) : null
-  // The map waits for the homestead's rows, so the town edge never jumps.
-  const waiting = layout === null
+  const nameOf = (id: string) => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma'
+  const { lots, road, cols } = mapLots(homesteadShown(save))
   // The welcome list's visitor of the day, waiting at the Gate for her hello.
   const visiting = story ? gateVisitor(save, story) : null
   const atGate = visiting !== null && !save.roster[visiting]
-  const places: HubMapPlace[] = [...MAP_PLACES.map((place): HubMapPlace => {
-    const { name } = placeWordsOf(story, place.id)
-    const lock = lockOf(save, place)
-    const visitor = place.id === 'gate' && atGate && lock === null
-    const slots = place.id === 'fields' ? plots : ready.get(place.id as LoopPlaceId) ?? 0
-    const pips = place.id === 'fields' ? fieldsPips(save, farming, hearts) : pipsOf(place, work, hearts)
-    const busy = pips?.some((p) => p.state !== 'free') ?? false
-    return {
-      id: place.id, name, frame: place.frame, at: layout && homestead ? placeAt(homestead.placeOnV4(place, layout), layout.tiles) : placeAt(place),
-      to: placeLink(save, place),
-      label: lock ? `${name}, locked: ${lock}` : visitor ? `${name}, someone is visiting` : slots > 0 ? `${name}, ready to collect` : name,
-      locked: lock !== null, ready: visitor ? 'Visiting' : slots > 0 ? 'Ready' : undefined,
-      ...(pips && (lock === null || busy) ? { pips, pipsAt: 'arch' as const } : {}),
-    }
-  }), ...(layout && homestead
-    ? homestead.homesteadPlaces(save, layout, hearts, (id) => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma') : [])]
-  const covered = peek !== undefined || params.get('sheet') !== null
+  const covered = peek !== undefined || tile !== null || params.get('sheet') !== null
   const peekWords = peek ? placeWordsOf(story, peek.id) : null
-  const total = [...ready.values()].reduce((a, b) => a + b, plots)
+  const tilePath = (i: number) => {
+    const next = new URLSearchParams(location.search)
+    next.delete('peek')
+    next.set('tile', String(i))
+    return `/?${next}`
+  }
+  const close = () => {
+    const next = new URLSearchParams(location.search)
+    next.delete('peek')
+    next.delete('tile')
+    const rest = next.toString()
+    leave(`/${rest ? `?${rest}` : ''}`)
+  }
+  // A tile's panel covers the map's right side: the map scrolls so the tile stays in view beside it.
+  useEffect(() => {
+    const el = scroll.current
+    if (tile === null || !el) return
+    const area = tileArea(tile)
+    const left = area.col * cell
+    const panel = Math.min(280, el.clientWidth * 0.45)
+    const room = el.clientWidth - panel - 8
+    if (left < el.scrollLeft) el.scrollTo({ left: Math.max(0, left - cell), behavior: 'smooth' })
+    else if (left + cell > el.scrollLeft + room) el.scrollTo({ left: left + 2 * cell - room, behavior: 'smooth' })
+  }, [tile, cell, scroll])
+  // From an open tile, the next tap replaces it, so closing goes back to the farm as it was before the first tile.
+  const hop = tile !== null ? { replace: true, state: location.state as unknown } : { state: { back: true } as unknown }
+  const woods = placeWordsOf(story, 'forest')
+  const pond = placeWordsOf(story, 'fishery')
   return (
     <>
-      <div className="absolute inset-0 overflow-y-auto overscroll-contain" data-farm-scroll>
-        <div className="relative h-full" style={{ minHeight: (layout?.tiles ?? FARM_MAP_TILES) * tile }}>
-          {!waiting && <HubMap
-            label="Farm map"
-            page="farm"
-            pages={['farm']}
-            onPage={() => undefined}
-            ground={GROUND}
-            places={places}
-            covered={covered || save.summary !== null}
-            reducedMotion={reducedMotion}
-            canvas={import.meta.env.DEV && params.has('canvas')}
-            debug={import.meta.env.DEV}
-          />}
+      <div ref={scroll} className="absolute inset-0 overflow-x-auto overflow-y-hidden overscroll-contain" data-farm-scroll>
+        <div className="relative" style={{ width: cols * cell, height: MAP_ROWS * cell, background: '#9cc27a' }} data-farm-map data-cell={cell}>
+          {/* The woods' edge: forage and chop. */}
+          <Link to="/?peek=forest" {...hop} aria-label={`${woods.name}: forage or chop`} className="absolute" style={at(WOODS, cell)} data-place="forest">
+            <Trees />
+            <span className="absolute inset-x-0 top-2 flex flex-col items-center gap-0.5">
+              <BuildingArt frame="forest" size={cell * 1.2} />
+              <span className="rounded-full bg-panel/90 px-1.5 text-[11px] font-semibold shadow-1">{woods.name}</span>
+            </span>
+          </Link>
+          {/* The pond's edge: fish. */}
+          <Link to="/?peek=fishery" {...hop} aria-label={`${pond.name}: fish`} className="absolute" style={at(POND, cell)} data-place="fishery">
+            <Water />
+            <span className="absolute inset-0 flex items-center justify-center gap-2">
+              <BuildingArt frame="fishery" size={cell * 1.1} />
+              <span className="rounded-full bg-panel/90 px-1.5 text-[11px] font-semibold shadow-1">{pond.name}</span>
+            </span>
+          </Link>
+          {/* The field: a tap a tile. */}
+          <div aria-hidden className="absolute rounded-[4px] ring-2 ring-[#6b4a2b]/40" style={at(FIELD, cell)} />
+          <ul className="contents" aria-label="The field">
+            {save.fields.tiles.map((t, i) => (
+              <li key={i} className="absolute p-[1.5px]" style={at(tileArea(i), cell)}>
+                <Link to={tilePath(i)} {...hop} aria-label={tileLabel(save, i)} aria-current={tile === i ? 'true' : undefined}
+                  className={`relative block size-full rounded-[3px] ${tile === i ? 'z-10 outline-[3px] outline-offset-1 outline-white outline-solid' : ''}`} data-tile={i}
+                  data-crop={t.crop ?? undefined} data-ready={t.ready || undefined}>
+                  <TileArt tile={t} cell={cell} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {/* The farm's places on their lots. */}
+          {lots.map((lot) => {
+            if (lot.kind === 'house') {
+              const house = houseLot(save, lot.place, nameOf)
+              return (
+                <Link key={house.id} to={house.to} {...hop} aria-label={house.label} className="absolute flex flex-col items-center justify-end gap-0.5 pb-1"
+                  style={at(lot.area, cell)} data-place={house.id} data-locked={house.locked || undefined}>
+                  <BuildingArt frame={house.frame} size={cell * 1.35} dim={house.locked} />
+                  <span className="max-w-full truncate rounded-full bg-panel/90 px-1.5 text-[11px] font-semibold shadow-1">{house.name}</span>
+                  {house.residents.length > 0 && (
+                    <span className="absolute top-1 right-1 flex -space-x-1.5">
+                      {house.residents.map((id) => (
+                        <span key={id} className="relative">
+                          <FaceTile outfitId={id} size={20} label={nameOf(id)} round />
+                          {hearts.has(id) && <span aria-hidden className="absolute -top-1 -right-1 text-[10px] text-danger">♥</span>}
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                </Link>
+              )
+            }
+            const place = farmPlace(lot.id)!
+            const { name } = placeWordsOf(story, place.id)
+            const lock = lockOf(save, place)
+            const visitor = place.id === 'gate' && atGate && lock === null
+            const load = isStation(place.id) && stationBuilt(save, place.id) ? save.loads[place.id] : undefined
+            const tag = visitor ? 'Visiting' : load ? 'Ready tomorrow' : null
+            return (
+              <Link key={place.id} to={placeLink(save, place)} {...hop} className="absolute flex flex-col items-center justify-end gap-0.5 pb-1" style={at(lot.area, cell)}
+                aria-label={lock ? `${name}, locked: ${lock}` : visitor ? `${name}, someone is visiting` : tag ? `${name}, ${tag.toLowerCase()}` : name}
+                data-place={place.id} data-locked={lock !== null || undefined}>
+                <BuildingArt frame={place.frame} size={cell * 1.35} dim={lock !== null} />
+                <span className="flex max-w-full items-center gap-0.5 truncate rounded-full bg-panel/90 px-1.5 text-[11px] font-semibold shadow-1">
+                  {lock && <LockedIcon size={14} />}{name}
+                </span>
+                {tag && <span className="absolute top-1 rounded-full bg-success px-1.5 text-[10px] font-bold text-ink-on-dark shadow-1" data-tag>{tag}</span>}
+              </Link>
+            )
+          })}
+          {/* The road to town. */}
+          <Link to="/town" aria-label="The road to town" className="absolute flex flex-col items-center justify-center gap-1 bg-[#cdb48a] text-[11px] font-bold text-[#5b4325]"
+            style={at(road, cell)} data-place="road">
+            <span aria-hidden className="text-[18px]">›</span>
+            <span className="[writing-mode:vertical-rl]">To town</span>
+          </Link>
         </div>
       </div>
       <FarmHelp />
-      <CollectAll ready={total} />
+      {tile !== null && <TileSheet save={save} tile={tile} onClose={close} />}
       {peek && peekWords && (
         <PeekPanel
           key={peek.id}
           title={peekWords.name}
           about={<p>{peekWords.line}</p>}
-          onClose={() => leave(withParam(location, 'peek', null))}
+          onClose={close}
           words={{ close: 'Close', about: `About ${theName(peekWords.name)}`, backTo: 'Back to the farm' }}
           focusKey={`[data-place="${peek.id}"]`}
         >
           {peek.id === 'forge' && lockOf(save, peek) === null ? <Suspense fallback={null}><BenchPeek save={save} /></Suspense>
-            : peek.id === 'fields' && lockOf(save, peek) === null ? <FieldsPeek save={save} talentOf={farming} />
-            : peek.id === 'gate' && lockOf(save, peek) === null ? <GatePeek save={save} />
-              : isWorkScreen(peek.id) && placeOpen(save, peek) ? <WorkPlacePeek save={save} place={peek.id} />
-                : <PlacePeek save={save} place={peek} />}
+            : peek.id === 'forest' || peek.id === 'fishery' ? <GatherPanel save={save} place={peek.id} />
+              : peek.id === 'gate' && lockOf(save, peek) === null ? <GatePeek save={save} />
+                : isStation(peek.id) && placeOpen(save, peek) && stationBuilt(save, peek.id) ? <StationPanel save={save} station={peek.id} />
+                  : <PlacePeek save={save} place={peek} />}
         </PeekPanel>
       )}
       <Morning save={save} open={!covered} />
     </>
+  )
+}
+
+/** A tile's panel down the right edge, with no veil over the map, so a tap on another tile moves it there: tile after
+ * tile without closing it. Close or Escape puts it away. */
+function TileSheet({ save, tile, onClose }: { save: FarmSave; tile: number; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+  const view = tileView(save, tile)
+  return (
+    <aside aria-label={`${view.title}, ${view.where}`} className="pr-safe absolute inset-y-0 right-0 z-30 flex w-[280px] max-w-[45%] flex-col border-l border-hairline bg-panel shadow-3" data-tile-sheet={tile}>
+      <header className="flex min-h-11 items-center gap-2 border-b border-hairline pl-4">
+        <h2 className="font-display min-w-0 flex-1 truncate text-[17px] font-bold">{view.title}</h2>
+        <button type="button" onClick={onClose} aria-label="Close" className="grid size-11 shrink-0 place-items-center text-ink-soft" data-action="close-tile">
+          <CloseIcon size={20} />
+        </button>
+      </header>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <TilePanel save={save} index={tile} />
+      </div>
+    </aside>
   )
 }
 
@@ -216,8 +288,8 @@ function PlacePeek({ save, place }: { save: FarmSave; place: FarmPlace }) {
     <div className="space-y-2 p-4" data-peek={place.id} data-lock={lock ?? undefined}>
       {note && <p role="status" className="text-[13px] font-semibold text-success" data-build-note>{note}</p>}
       {lock && !build && <p className="text-[15px] font-semibold">{lock === 'Soon' ? 'Opens soon' : `Opens with ${lock}`}</p>}
-      {build === boat && <p className="text-[14px]" data-dock-open>The Sea Pier is open at the Fishery. The Boat takes you to the Deep Sea.</p>}
-      {place.id === 'dock' && placeBuilt(save, 'boat') && <p className="text-[14px]" data-dock-open>The Sea Pier and the Deep Sea are open at the Fishery.</p>}
+      {build === boat && <p className="text-[14px]" data-dock-open>The Sea Pier is open at the pond’s edge. The Boat takes you to the Deep Sea.</p>}
+      {place.id === 'dock' && placeBuilt(save, 'boat') && <p className="text-[14px]" data-dock-open>The Sea Pier and the Deep Sea are open at the pond’s edge.</p>}
       {build ? <Suspense fallback={null}><BuildCard save={save} place={build} say={setNote} /></Suspense> : <p className="text-[14px] text-ink-soft" data-place-line>{line}</p>}
     </div>
   )

@@ -5,7 +5,7 @@
 // invented stand-in pack (9000001–9000003, the stand-in pair's five invented
 // conversations) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { meet, newBlock, newSave, pairKey, readScene, type Block, type MorningSummary, type SaveV4, type StoryPack } from '@farm/domain'
+import { meet, newSave, pairKey, readScene, type MorningSummary, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -33,7 +33,6 @@ const { castLens } = await import('../story/load')
 const { Shell } = await import('../shell/Shell')
 const { default: HeartsPage } = await import('./HeartsPage')
 const { default: DiaryPage } = await import('./DiaryPage')
-const { default: FieldsPage } = await import('./FieldsPage')
 const { conversationRows, pairWords, parseReadParam, readParam, tieRows } = await import('./hearts-view')
 const { heartsLines } = await import('./summary-words')
 
@@ -211,13 +210,4 @@ describe('as rendered', () => {
     expect(save()).toBe(before)
   })
 
-  it('says side by side on a block whose tender has a 3-heart partner tending another', async () => {
-    const s = farm()
-    const growing = (id: 'A' | 'B', tender: string): Block => ({ ...newBlock(id), tender, plots: newBlock(id).plots.map((p, i) => (i === 0 ? { ...p, crop: 'carrot' } : p)) })
-    useGame.setState({ save: { ...s, fields: { blocks: [growing('A', ONE), growing('B', TWO)] }, bonds: { ...s.bonds, [pairKey(ONE, TWO)]: 300 } } })
-    await render(<FieldsPage />, '/fields')
-    await find('[data-block="A"] [data-growth]')
-    expect($('[data-block="A"] [data-growth]')?.dataset.side).toBe('true')
-    expect($('[data-block="A"] [data-growth]')?.textContent).toMatch(/side by side$/)
-  })
 })

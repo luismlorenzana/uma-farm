@@ -1,51 +1,38 @@
-// The forest, the Fishery and the stations: the tables, a day's haul, the
-// stations' rate, building them, the catch's sizes, the night's hauls and the save's parse. Invented ids, the
-// loop's own kinds.
-import { endsAt } from '@luismlorenzana/uma-work'
+// The forest, the Fishery and the stations: the tables, the farmer's one-action hauls (forage, chop, fish) and his
+// reach by the Farm Rank, a catch's size and records, the depth milestones, an Uma's haul rules kept for the farmhands,
+// and the stations' loads, done overnight. Invented ids only.
 import { describe, expect, it } from 'vitest'
-import { DAY_MS } from '../farm/calendar'
-import { PLACE_ACTIVITY } from '../farm/rank-rules'
+import { actionsLeft } from '../farm/actions'
+import { FARM_RANK_POINTS } from '../farm/farm'
 import type { Rank } from '../farm/ranks'
-import { talentsD, type TalentOf, type TalentStep } from '../farm/talents'
 import { goodOf, isGoodId } from '../goods/ids'
-import { endDay, NIGHT_STEPS, runNight, tickRanks, type NightStep } from '../night/end-day'
-import { collectLoopAll, collectLoopWorker, editLoopQueue, startLoopJob, type LoopJobInput } from '../save/loop-work'
-import { loopReadyWork } from '../save/work-readings'
-import { parseSaveV4 } from '../save/parse-v4'
+import { endDay } from '../night/end-day'
+import { parseSaveV5 } from '../save/parse-v4'
 import { SaveRuleError } from '../save/rules'
-import { newLove, newRosterUma, newSave, type LoopWorkRequest, type SaveV4 } from '../save/v4'
-import { loopWorld } from '../work/loop-env'
-import { FISHING_SPOTS, FOREST_AREAS, LOOP_REQUESTS, STATION_JOB_IDS, stationJobOf } from './ids'
-import {
-  daySeconds, fishSize, haulCount, haulsTonight, loopKinds, LOOP_KINDS, pickShare, planHaul, planStation, sizeRecord, sizeSkill, stationDays, termsOf,
-  type WorkTerms,
-} from './kinds'
-import { stationOptions } from './stations'
+import { newSave, type SaveV4 } from '../save/v4'
+import { parseStockKey } from '../save/warehouse'
+import { CHOP_LOGS, chop, FARMER_REACH, fish, forage, FORAGE_HAUL, LOGS_CHOPPED, reachList, reachLock } from './hauls'
+import { FISHING_SPOTS, FOREST_AREAS, STATION_JOB_IDS, stationJobOf } from './ids'
+import { fishSize, haulCount, HOME_COUNT, pickShare, placeLock, sizeRecord, sizeSkill, type WorkTerms } from './kinds'
+import { finishLoads, LOAD_SIZE, startLoad, stationOptions } from './stations'
 import { FISH_SIZES, FISHERY, FOREST } from './tables'
 
 const AT = '2026-11-09T10:00:00.000Z'
 const LATER = '2026-11-09T21:30:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
-/** Everyone at one talent step. */
-const at = (step: TalentStep): TalentOf => () => step
-const C = at(4)
-
-/** Two Umas home on `day`, Novice everywhere. */
-function farm(day = 1): SaveV4 {
-  const save = newSave('u1', AT)
-  return {
-    ...save, calendar: { day }, roster: { 101: newRosterUma(1), 202: newRosterUma(1) }, love: { 101: newLove(), 202: newLove() },
-    dorm: { level: 1, home: ['101', '202'], swaps: [] },
+const farm = (day = 1, uid = 'u1'): SaveV4 => ({ ...newSave(uid, AT), calendar: { day } })
+const atRank = (save: SaveV4, rank: number): SaveV4 => ({ ...save, farm: { ...save.farm, points: FARM_RANK_POINTS[rank - 1]! } })
+const rested = (save: SaveV4): SaveV4 => ({ ...save, today: { ...save.today, actions: 0 } })
+const terms = (t: Partial<WorkTerms> = {}): WorkTerms => ({ rank: 0, talent: 4, tool: 1, wellFed: 0, ...t })
+const count = (items: readonly string[]) => items.length
+const reason = (run: () => unknown): string | null => {
+  try {
+    run()
+    return null
+  } catch (err) {
+    return err instanceof SaveRuleError ? err.reason : String(err)
   }
 }
-const ranked = (save: SaveV4, id: string, activity: 'foraging' | 'fishing' | 'farming', rank: Rank): SaveV4 =>
-  ({ ...save, roster: { ...save.roster, [id]: { ...save.roster[id]!, ranks: { ...save.roster[id]!.ranks, [activity]: { points: 0, rank, challenge: 0 } } } } })
-const job = (place: LoopJobInput['place'], request: LoopWorkRequest, outfitId = '101', slot = 0): LoopJobInput => ({ outfitId, place, slot, request })
-const forage = (item: string, count = 1): LoopWorkRequest => ({ kind: 'forage', item, count })
-const fish = (item: string, count = 1): LoopWorkRequest => ({ kind: 'fish', item, count })
-const start = (save: SaveV4, input: LoopJobInput, talentOf: TalentOf = C) => startLoopJob(save, input, AT, loopKinds(talentOf))
-const night = (save: SaveV4, talentOf: TalentOf = C) => endDay(save, { talentOf }, LATER)
-const terms = (t: Partial<WorkTerms> = {}): WorkTerms => ({ rank: 0, talent: 4, tool: 1, wellFed: 0, ...t })
 
 describe('the tables', () => {
   it('lists every area and spot by season, each season\'s shares adding up to 100, every good in the catalogue', () => {
@@ -79,30 +66,6 @@ describe('the tables', () => {
     }
   })
 
-  it('draws the Woods in Spring at its shares over a seeded sample: woods 40%, mushrooms 30%, herbs 15%, sweets 15%, G1/G2 about 65/35', () => {
-    let save = farm(1)
-    const by: Record<string, number> = {}
-    const grades = [0, 0]
-    // 400 days of a Novice forager in the Woods, all in Spring's first day draws (the seeds differ by account).
-    for (let i = 0; i < 400; i++) {
-      save = { ...save, account: { ...save.account, uid: `u${i}` } }
-      const plan = planHaul(save, '101', 'forest', forage('woods'), 0, 0, talentsD)
-      if (!Array.isArray(plan)) throw new Error('refused')
-      for (const item of plan) {
-        const good = goodOf(('item' in item.output ? item.output.item : '').split('@')[0]!)!
-        by[good.family] = (by[good.family] ?? 0) + 1
-        grades[good.grade - 1]! += 1
-      }
-    }
-    const total = grades[0]! + grades[1]!
-    expect(total).toBe(2000)
-    expect(by.woods! / total).toBeCloseTo(0.4, 1)
-    expect(by.mushrooms! / total).toBeCloseTo(0.3, 1)
-    expect(by['herbs-spices']! / total).toBeCloseTo(0.15, 1)
-    expect(by.sweets! / total).toBeCloseTo(0.15, 1)
-    expect(Math.abs(grades[0]! / total - 0.66)).toBeLessThan(0.03)
-  })
-
   it('picks a good by its shares', () => {
     const shares = FOREST.woods.seasons.spring
     expect(pickShare(shares, 0)).toBe('pine-log')
@@ -112,195 +75,160 @@ describe('the tables', () => {
   })
 })
 
-describe('a day\'s haul', () => {
-  it('brings a Novice C forager in the Woods 5 items a day, and a Hand C angler at the River 4', () => {
-    expect(haulCount('forest', terms())).toBe(5)
-    expect(haulCount('fishery', terms({ rank: 1 }))).toBe(4)
-    const woods = start(farm(), job('forest', forage('woods')))
-    expect(woods.work['101']!.entries[0]!.outputs).toHaveLength(5)
-    const river = start(ranked(farm(), '202', 'fishing', 1), job('fishery', fish('river'), '202'))
-    expect(river.work['202']!.entries[0]!.outputs).toHaveLength(4)
+describe('the farmer\'s hauls', () => {
+  it('forages one haul of the area\'s season\'s finds for one action, straight into the Warehouse', () => {
+    const { save, haul } = forage(farm(), 'woods')
+    expect(count(haul.items)).toBe(FORAGE_HAUL)
+    for (const item of haul.items) {
+      const at = parseStockKey(item)!
+      expect(FOREST.woods.seasons.spring.map(([id]) => id)).toContain(at.id)
+      expect(at.stars).toBe(1)
+    }
+    expect(Object.values(save.items).reduce((n, row) => n + row.reduce((a, b) => a + b, 0), 0)).toBe(9 + FORAGE_HAUL)
+    expect(save.farm.counts[HOME_COUNT.forest]).toBe(FORAGE_HAUL)
+    expect(save.today.gathered).toEqual(['woods'])
+    expect(actionsLeft(save)).toBe(9)
+    expect(save.account).toEqual(farm().account)
   })
 
-  it('lifts the haul by rank, talent, tool and well fed', () => {
-    expect([0, 1, 2, 3, 4, 5].map((rank) => haulCount('forest', terms({ rank: rank as Rank, talent: 3 })))).toEqual([5, 6, 7, 8, 9, 10])
-    expect(haulCount('forest', terms({ talent: 7, rank: 5, tool: 5, wellFed: 1 }))).toBe(24)
-    expect(haulCount('forest', terms({ wellFed: 1 }), 0)).toBe(7)
-    expect(haulCount('forest', terms({ wellFed: 1 }), 1)).toBe(5)
-    expect(haulCount('fishery', terms({ talent: 0 }))).toBe(3)
+  it('draws each haul anew, the same from the same save, at the area\'s shares over a sample', () => {
+    const one = forage(farm(), 'woods')
+    expect(forage(json(farm()), 'woods')).toEqual(one)
+    const two = forage(one.save, 'woods')
+    expect(two.save.farm.counts[HOME_COUNT.forest]).toBe(2 * FORAGE_HAUL)
+    expect(two.save.today.gathered).toEqual(['woods'])
+    // Ten hauls a day over 100 farms: woods 40%, mushrooms 30%, herbs 15%, sweets 15%.
+    const by: Record<string, number> = {}
+    let total = 0
+    for (let n = 0; n < 100; n++) {
+      let save = farm(1, `u${n}`)
+      for (let k = 0; k < 10; k++) {
+        const got = forage(save, 'woods')
+        save = got.save
+        for (const item of got.haul.items) {
+          by[goodOf(parseStockKey(item)!.id)!.family] = (by[goodOf(parseStockKey(item)!.id)!.family] ?? 0) + 1
+          total++
+        }
+      }
+    }
+    expect(by.woods! / total).toBeCloseTo(0.4, 1)
+    expect(by.mushrooms! / total).toBeCloseTo(0.3, 1)
   })
 
-  it('refuses the Hills at Novice and opens them at Hand; the Sea Pier before the Dock, the Deep Sea before the Boat', () => {
-    expect(() => start(farm(), job('forest', forage('hills')))).toThrow('Opens at Hand.')
-    expect(start(ranked(farm(), '101', 'foraging', 1), job('forest', forage('hills'))).work['101']!.entries).toHaveLength(1)
-    expect(() => start(ranked(farm(), '101', 'fishing', 5), job('fishery', fish('sea-pier')))).toThrow('Needs the Dock.')
-    const dock = { ...ranked(farm(), '101', 'fishing', 5), buildings: { dorm: 1, dock: 1 } }
-    expect(start(dock, job('fishery', fish('sea-pier'))).work['101']!.entries).toHaveLength(1)
-    expect(() => start(dock, job('fishery', fish('deep-sea')))).toThrow('Needs the Boat.')
-    expect(start({ ...dock, buildings: { dorm: 1, dock: 1, boat: 1 } }, job('fishery', fish('deep-sea'))).work['101']!.entries).toHaveLength(1)
-    expect(() => start(ranked(farm(), '101', 'fishing', 4), job('fishery', fish('moon-pool')))).toThrow('Opens at Legend.')
-    expect(() => start(farm(), job('forest', fish('pond')))).toThrow()
+  it('chops two logs of the area\'s woods for one action', () => {
+    const { save, haul } = chop(farm(), 'woods')
+    expect(count(haul.items)).toBe(CHOP_LOGS)
+    for (const item of haul.items) expect(['pine-log', 'birch-log']).toContain(parseStockKey(item)!.id)
+    expect(save.farm.counts[LOGS_CHOPPED]).toBe(CHOP_LOGS)
+    expect(actionsLeft(save)).toBe(9)
   })
 
-  it('plans each day\'s items to end at its morning, a job up to four days, starred goods drawn from the day', () => {
-    const save = start(farm(), job('forest', forage('woods', 3)))
-    const entry = save.work['101']!.entries[0]!
-    expect(entry.outputs).toHaveLength(15)
-    expect(entry.seconds.slice(0, 5).reduce((a, b) => a + b, 0)).toBe(86_400)
-    expect(endsAt(entry)).toBe(3 * DAY_MS)
-    expect(entry.outputs.every((o) => 'item' in o && /^[a-z-]+@[12]$/.test(o.item))).toBe(true)
-    expect(() => start(farm(), job('forest', forage('woods', 5)))).toThrow('A job is 1 to 4 days.')
-    expect(daySeconds(7).reduce((a, b) => a + b, 0)).toBe(86_400)
+  it('fishes one catch for one action, measured as it lands, and keeps the biggest of each kind', () => {
+    const { save, haul, caught } = fish(farm(), 'pond')
+    expect(count(haul.items)).toBe(1)
+    expect(['carp', 'trout']).toContain(caught.fish)
+    const [min, max] = FISH_SIZES[caught.fish]!
+    expect(caught.cm).toBeGreaterThanOrEqual(min)
+    expect(caught.cm).toBeLessThanOrEqual(max)
+    expect(caught.record).toBe(true)
+    expect(save.diary.records[sizeRecord(caught.fish)]).toBe(caught.cm)
+    expect(save.items[caught.fish]).toEqual([1, 0, 0, 0, 0])
+    expect(save.farm.counts[HOME_COUNT.fishery]).toBe(1)
+    expect(save.today.gathered).toEqual(['pond'])
+    expect(fish(json(farm()), 'pond')).toEqual(fish(farm(), 'pond'))
+    // A record only rises.
+    let next = save
+    for (let k = 0; k < 9; k++) next = fish(next, 'pond').save
+    for (const [key, cm] of Object.entries(save.diary.records)) expect(next.diary.records[key]).toBeGreaterThanOrEqual(cm)
+    expect(next.farm.counts[HOME_COUNT.fishery]).toBe(10)
+    expect(reason(() => fish(next, 'pond'))).toBe('no-actions')
   })
 
-  it('plans the same haul from the same save twice', () => {
-    const save = farm(5)
-    expect(start(save, job('forest', forage('woods', 2)))).toEqual(start(json(save), job('forest', forage('woods', 2))))
-    const other = { ...save, account: { ...save.account, uid: 'u2' } }
-    expect(start(other, job('forest', forage('woods', 2))).work['101']!.entries[0]!.outputs).not.toEqual(start(save, job('forest', forage('woods', 2))).work['101']!.entries[0]!.outputs)
+  it('reaches deeper with the Farm Rank, the sea once its place stands', () => {
+    expect(FARMER_REACH).toEqual([1, 2, 4, 6, 8, 10])
+    const save = farm()
+    expect(reachLock(save, 'forest', 'woods')).toBeNull()
+    expect(reachLock(save, 'forest', 'hills')).toBe('Opens at Farm Rank 2.')
+    expect(reason(() => forage(save, 'hills'))).toBe('locked')
+    expect(reachLock(atRank(save, 2), 'forest', 'hills')).toBeNull()
+    expect(reachLock(atRank(save, 2), 'forest', 'old-forest')).toBe('Opens at Farm Rank 4.')
+    expect(reachLock(atRank(save, 10), 'forest', 'world-tree')).toBeNull()
+    expect(reachLock(save, 'fishery', 'river')).toBe('Opens at Farm Rank 2.')
+    expect(reachLock(atRank(save, 6), 'fishery', 'sea-pier')).toBe('Needs the Dock.')
+    expect(reachLock({ ...atRank(save, 6), buildings: { ...save.buildings, dock: 1 } }, 'fishery', 'sea-pier')).toBeNull()
+    expect(reachLock(atRank(save, 8), 'fishery', 'deep-sea')).toBe('Needs the Boat.')
+    expect(reachLock(save, 'forest', 'moon')).toBe('Not here.')
+    expect(reachList(save, 'forest').map((a) => [a.id, a.rank, a.lock === null])).toEqual([
+      ['woods', 1, true], ['hills', 2, false], ['old-forest', 4, false], ['mountain', 6, false], ['misty-vale', 8, false], ['world-tree', 10, false],
+    ])
   })
 
-  it('plans with her talent from master data: an S forager brings more than a G one', () => {
-    expect(start(farm(), job('forest', forage('woods')), at(7)).work['101']!.entries[0]!.outputs).toHaveLength(6)
-    expect(start(farm(), job('forest', forage('woods')), at(0)).work['101']!.entries[0]!.outputs).toHaveLength(4)
-  })
-
-  it('plans a queued day at the boundary with the rank and talent the night gives', () => {
-    const save = editLoopQueue(start(farm(), job('forest', forage('woods'))), { outfitId: '101', add: { request: forage('woods'), building: 'forest' } }, AT, loopKinds(C))
-    // Step 6 stands in: everyone who worked today reaches Expert foraging.
-    const ranks: NightStep = (n) => ({ ...n, save: n.notes.worked.reduce((s, w) => ranked(s, w.outfitId, 'foraging', 3), n.save as SaveV4) })
-    const morning = runNight(save, { talentOf: at(7) }, NIGHT_STEPS.map((s) => (s.run === tickRanks ? { ...s, run: ranks } : s)))
-    const [first, second] = morning.work['101']!.entries
-    expect(first!.outputs).toHaveLength(5)
-    // Expert ×1.5 and S ×1.2: round(5 × 1.5 × 1.2) = 9.
-    expect(second).toMatchObject({ startedAt: DAY_MS, fromQueue: true })
-    expect(second!.outputs).toHaveLength(9)
-  })
-
-  it('gives a well-fed forager ×1.25 items a day and +0.25 quality, and no time', () => {
-    const fed: SaveV4 = { ...farm(), roster: { ...farm().roster, 101: { ...newRosterUma(1), wellFed: 1 } } }
-    const save = start(fed, job('forest', forage('woods', 2)))
-    const entry = save.work['101']!.entries[0]!
-    expect(entry.outputs).toHaveLength(7 + 5)
-    expect(night(save).work['101']!.entries[0]!.acceleratedMs).toBe(0)
+  it('pays a depth milestone the night after the first haul past the Woods or the Pond', () => {
+    const save = atRank(farm(), 2)
+    const hills = endDay(forage(save, 'hills').save, {}, LATER)
+    expect(hills.diary.milestones).toContain('depth:hills')
+    expect(hills.today.gathered).toEqual([])
+    const woods = endDay(forage(save, 'woods').save, {}, LATER)
+    expect(woods.diary.milestones.filter((m) => m.startsWith('depth:'))).toEqual([])
+    expect(parseSaveV5(json(hills))).toEqual(hills)
   })
 })
 
-describe('collecting a haul', () => {
-  it('fills the Warehouse by stars and counts what came home', () => {
-    const morning = night(start(farm(), job('forest', forage('woods'))))
-    const got = collectLoopWorker(morning, '101', LATER, loopKinds(C))
-    expect(got.items).toBe(5)
-    expect(Object.values(got.save.items).flat().reduce((a, b) => a + b, 0)).toBe(5 + 9)
-    expect(got.save.farm.counts['home:forest']).toBe(5)
-    expect(got.goods).toHaveLength(5)
-    expect(got.save.account.updatedAt).toBe(LATER)
+describe('an Uma\'s haul, kept for the farmhands', () => {
+  it('brings a Novice C forager in the Woods 5 items a day, lifted by rank, talent, tool and well fed', () => {
+    expect(haulCount('forest', terms())).toBe(5)
+    expect(haulCount('fishery', terms({ rank: 1 }))).toBe(4)
+    expect([0, 1, 2, 3, 4, 5].map((rank) => haulCount('forest', terms({ rank: rank as Rank, talent: 3 })))).toEqual([5, 6, 7, 8, 9, 10])
+    expect(haulCount('forest', terms({ wellFed: 1 }), 0)).toBe(7)
   })
 
-  it('measures each fish in its range, the same every time, and keeps the biggest of each kind', () => {
-    const save = ranked(farm(), '101', 'fishing', 1)
-    const morning = night(start(save, job('fishery', fish('river', 2))))
-    const got = collectLoopWorker(morning, '101', LATER, loopKinds(C))
-    expect(got.sizes).toHaveLength(4)
-    for (const s of got.sizes) {
-      const [min, max] = FISH_SIZES[s.fish]!
-      expect(s.cm).toBeGreaterThanOrEqual(min)
-      expect(s.cm).toBeLessThanOrEqual(max)
-    }
-    expect(collectLoopWorker(json(morning), '101', LATER, loopKinds(C)).sizes).toEqual(got.sizes)
-    for (const fishId of new Set(got.sizes.map((s) => s.fish))) {
-      expect(got.save.diary.records[sizeRecord(fishId)]).toBe(Math.max(...got.sizes.filter((s) => s.fish === fishId).map((s) => s.cm)))
-    }
-    expect(got.save.farm.counts['home:fishery']).toBe(4)
-    // The next day's catch is measured on from the farm's count, and a record only rises.
-    const next = collectLoopWorker(night(got.save), '101', LATER, loopKinds(C))
-    expect(next.save.farm.counts['home:fishery']).toBe(8)
-    for (const [key, cm] of Object.entries(got.save.diary.records)) expect(next.save.diary.records[key]).toBeGreaterThanOrEqual(cm)
+  it('reaches by her rank, the sea by its place', () => {
+    const save = farm()
+    expect(placeLock(save, 'forest', 'hills', 0)).toBe('Opens at Hand.')
+    expect(placeLock(save, 'forest', 'hills', 1)).toBeNull()
+    expect(placeLock(save, 'fishery', 'sea-pier', 1)).toBe('Needs the Dock.')
   })
 
-  it('grows sizes with her skill: k = 1 + 0.25 × rank + 0.1 × talent + 0.05 × Rod', () => {
+  it('grows sizes with skill: k = 1 + 0.25 × rank + 0.1 × talent + 0.05 × Rod', () => {
     expect(sizeSkill({ rank: 0, talent: 3, tool: 1 })).toBeCloseTo(1.35)
     expect(sizeSkill({ rank: 5, talent: 7, tool: 5 })).toBeCloseTo(3.2)
     for (const u of [0.1, 0.5, 0.9]) expect(fishSize('carp', 3.2, u)).toBeGreaterThan(fishSize('carp', 1.35, u))
     expect(fishSize('carp', 1.35, 0)).toBe(20)
     expect(fishSize('tuna', 2, 0.999999)).toBeCloseTo(250, 0)
   })
-
-  it('collects everything at a place in one tap', () => {
-    const two = start(start(farm(), job('forest', forage('woods'))), job('forest', forage('woods'), '202', 1))
-    const morning = night(two)
-    expect(loopReadyWork(morning).get('forest')).toBe(2)
-    const all = collectLoopAll(morning, LATER, ['forest'], loopKinds(C))
-    expect(all.items).toBe(10)
-    expect(all.save.farm.counts['home:forest']).toBe(10)
-  })
 })
 
-describe('the night\'s hauls', () => {
-  it('counts catches and items toward her next rank\'s challenge, at the right places', () => {
-    const save = start(start(ranked(farm(), '202', 'fishing', 1), job('forest', forage('woods'))), job('fishery', fish('river'), '202'))
-    const morning = night(save)
-    expect(morning.roster['101']!.ranks.foraging.challenge).toBe(5)
-    expect(morning.roster['202']!.ranks.fishing.challenge).toBe(4)
-    // The Woods don't count toward Skilled's "20 in the Hills"; the Hills do.
-    const hand = ranked(ranked(farm(), '101', 'foraging', 1), '202', 'fishing', 2)
-    const woods = night(start(hand, job('forest', forage('woods'))))
-    expect(woods.roster['101']!.ranks.foraging.challenge).toBe(0)
-    const hills = night(start(hand, job('forest', forage('hills'))))
-    expect(hills.roster['101']!.ranks.foraging.challenge).toBe(6)
-    const lake = night(start(hand, job('fishery', fish('lake'), '202')))
-    // Skilled C at the Lake: round(3 × 1.3 × 1.05) = 4, toward Expert's "10 at the Lake".
-    expect(lake.roster['202']!.ranks.fishing.challenge).toBe(4)
+describe('the stations\' loads', () => {
+  const built = (save: SaveV4): SaveV4 => ({ ...save, buildings: { ...save.buildings, mill: 1, sawmill: 1 } })
+
+  it('starts a load for one action, its inputs taken now, ready the next morning in the Warehouse', () => {
+    const save = built({ ...farm(), items: { 'pine-log': [10, 0, 3, 0, 0] } })
+    const loaded = startLoad(save, 'sawmill', 'pine-plank@3', 3)
+    expect(loaded.items['pine-log']).toEqual([10, 0, 0, 0, 0])
+    expect(loaded.loads).toEqual({ sawmill: { item: 'pine-plank@3', count: 3 } })
+    expect(actionsLeft(loaded)).toBe(9)
+    expect(parseSaveV5(json(loaded))).toEqual(loaded)
+    const morning = endDay(loaded, {}, LATER)
+    expect(morning.items['pine-plank']).toEqual([0, 0, 3, 0, 0])
+    expect(morning.loads).toEqual({})
+    expect(morning.summary!.work).toEqual([{ kind: 'load', station: 'sawmill', item: 'pine-plank@3', count: 3 }])
+    expect(parseSaveV5(json(morning))).toEqual(morning)
   })
 
-  it('counts a multi-day job each night it makes items, and names the night\'s best catch', () => {
-    const save = ranked(farm(), '101', 'fishing', 1)
-    const one = night(start(save, job('fishery', fish('river', 2))))
-    expect(one.roster['101']!.ranks.fishing.challenge).toBe(4)
-    expect(one.summary!.work).toEqual([expect.objectContaining({ kind: 'catch' })])
-    expect(night(one).roster['101']!.ranks.fishing.challenge).toBe(8)
-    expect(parseSaveV4(json(one))).toEqual(one)
-    const { best } = haulsTonight(save, [{ outfitId: '101', place: 'fishery', request: fish('pond'), items: ['carp@3', 'rainbow-koi@1', 'trout@5'] }])
-    expect(best).toEqual({ id: 'rainbow-koi', stars: 1 })
-  })
-
-  it('pays rank points for a day of gathering in its activity (step 6)', () => {
-    const morning = night(start(farm(), job('forest', forage('woods'))))
-    expect(morning.roster['101']!.ranks.foraging.points).toBeCloseTo(11)
-    expect(PLACE_ACTIVITY.sawmill).toBe('foraging')
-  })
-})
-
-describe('the stations', () => {
-  const sawmill = (save: SaveV4): SaveV4 => ({ ...save, buildings: { ...save.buildings, sawmill: 1, mill: 1, smokehouse: 1 } })
-
-  it('saws a Hand C forager\'s 10 logs a day, ★3 logs into ★3 planks', () => {
-    const save = sawmill(ranked({ ...farm(), items: { 'pine-log': [0, 0, 12, 0, 0] } }, '101', 'foraging', 1))
-    expect(stationDays('planks', terms({ rank: 1 }), 12)).toEqual([10, 2])
-    const started = start(save, job('sawmill', { kind: 'planks', item: 'pine-plank@3', count: 10 }))
-    expect(started.items['pine-log']).toEqual([0, 0, 2, 0, 0])
-    expect(endsAt(started.work['101']!.entries[0]!)).toBe(DAY_MS)
-    const got = collectLoopWorker(night(started), '101', LATER, loopKinds(C))
-    expect(got.save.items['pine-plank']).toEqual([0, 0, 10, 0, 0])
-  })
-
-  it('takes two nights for a 2-day preserves job, and gains a quarter day a night well fed', () => {
-    const save = sawmill({ ...farm(), items: { apple: [8, 0, 0, 0, 0] } })
-    const started = start(save, job('mill', { kind: 'preserves', item: 'apple-preserve@1', count: 8 }))
-    expect(endsAt(started.work['101']!.entries[0]!)).toBe(2 * DAY_MS)
-    expect(loopReadyWork(night(started)).get('mill')).toBe(1)
-    expect(night(started).work['101']!.entries[0]!.outputs).toHaveLength(8)
-    const two = night(night(started))
-    expect(collectLoopWorker(two, '101', LATER, loopKinds(C)).save.items['apple-preserve']).toEqual([8, 0, 0, 0, 0])
-    const fed: SaveV4 = { ...started, roster: { ...started.roster, 101: { ...started.roster['101']!, wellFed: 1 } } }
-    expect(night(fed).work['101']!.entries[0]!.acceleratedMs).toBe(DAY_MS / 4)
-  })
-
-  it('refuses a job longer than the Warehouse holds as short, and one at an unbuilt station', () => {
-    const save = sawmill({ ...farm(), items: { 'pine-log': [5, 0, 0, 0, 0] } })
-    expect(() => start(save, job('sawmill', { kind: 'planks', item: 'pine-plank@1', count: 8 }))).toThrow('Short 3 Pine Log.')
-    expect(() => start({ ...save, buildings: { dorm: 1 } }, job('sawmill', { kind: 'planks', item: 'pine-plank@1', count: 5 }))).toThrow('Build it first.')
-    expect(() => start(save, job('sawmill', { kind: 'smoking', item: 'carp-fillet@1', count: 1 }))).toThrow()
+  it('holds one load a station a day, up to 8, and refuses what it can\'t make or the Warehouse can\'t cover', () => {
+    const save = built({ ...farm(), items: { 'pine-log': [12, 0, 0, 0, 0], wheat: [9, 0, 0, 0, 0] } })
+    expect(LOAD_SIZE).toBe(8)
+    expect(reason(() => startLoad(save, 'sawmill', 'pine-plank@1', 9))).toBe('bad-count')
+    expect(reason(() => startLoad(save, 'sawmill', 'pine-plank@1', 0))).toBe('bad-count')
+    expect(reason(() => startLoad(save, 'sawmill', 'pine-plank@2', 1))).toBe('no-items')
+    expect(reason(() => startLoad(save, 'sawmill', 'wheat-flour@1', 1))).toBe('bad-job')
+    expect(reason(() => startLoad(save, 'smokehouse', 'carp-fillet@1', 1))).toBe('locked')
+    const loaded = startLoad(save, 'sawmill', 'pine-plank@1', 8)
+    expect(reason(() => startLoad(loaded, 'sawmill', 'pine-plank@1', 1))).toBe('busy')
+    // Another station works beside it, the same day.
+    const both = startLoad(loaded, 'mill', 'wheat-flour@1', 8)
+    expect(finishLoads(both).done.map((d) => d.station)).toEqual(['mill', 'sawmill'])
+    expect(finishLoads(farm()).save).toEqual(farm())
   })
 
   it('offers what the Warehouse holds, job by job, at each star', () => {
@@ -315,48 +243,17 @@ describe('the stations', () => {
   it('maps every refined good with a station to one job, and the vegetables to none', () => {
     expect(stationJobOf('wheat-flour')).toBe('flour')
     expect(stationJobOf('honey')).toBe('sugars-oils')
-    expect(stationJobOf('peanut-butter')).toBe('sugars-oils')
     expect(stationJobOf('apple-preserve')).toBe('preserves')
     expect(stationJobOf('dried-shiitake')).toBe('drying')
-    expect(stationJobOf('ground-ginger')).toBe('drying')
     expect(stationJobOf('carp-fillet')).toBe('smoking')
     expect(stationJobOf('copper-ingot')).toBeNull()
     expect(stationJobOf('carrot')).toBeNull()
     expect(STATION_JOB_IDS).toHaveLength(6)
   })
 
-  it('plans with the station\'s activity: the Mill reads farming', () => {
-    const save = sawmill(ranked({ ...farm(), items: { wheat: [20, 0, 0, 0, 0] } }, '101', 'farming', 2))
-    const plan = planStation(save, '101', 'flour', { kind: 'flour', item: 'wheat-flour@1', count: 20 }, 'mill', C)
-    // Skilled ×1.3, C ×1.05: round(8 × 1.365) = 11 a day.
-    expect(Array.isArray(plan) && plan.length).toBe(20)
-    expect(termsOf(save, '101', 'farming', C, null)).toEqual({ rank: 2, talent: 4, tool: 1, wellFed: 0 })
-    expect(stationDays('flour', terms({ rank: 2 }), 20)).toEqual([11, 9])
+  it('makes preserves overnight too', () => {
+    const save = built({ ...farm(), items: { apple: [4, 0, 0, 0, 0] } })
+    const morning = endDay(rested(startLoad(save, 'mill', 'apple-preserve@1', 4)), {}, LATER)
+    expect(morning.items['apple-preserve']).toEqual([4, 0, 0, 0, 0])
   })
 })
-
-describe('the save', () => {
-  it('parses every kind\'s request at its place, an entry with more items than days, and refuses the rest', () => {
-    const save = sawmill2(start(farm(), job('forest', forage('woods', 2))))
-    expect(parseSaveV4(json(save))).toEqual(save)
-    const bad = (request: unknown, building = 'forest') => () => parseSaveV4(json({ ...save, work: { 101: { ...save.work['101']!, slot: { building, slot: 0 }, entries: [{ ...save.work['101']!.entries[0]!, request }] } } }))
-    expect(bad({ kind: 'forage', item: 'woods', count: 5 })).toThrow('save.work.101.entries.0.request.count')
-    expect(bad({ kind: 'forage', item: 'beach', count: 1 })).toThrow('save.work.101.entries.0.request.item')
-    expect(bad({ kind: 'fish', item: 'pond', count: 1 })).toThrow('not worked at this place')
-    expect(bad({ kind: 'planks', item: 'pine-plank@2', count: 5 }, 'sawmill')).not.toThrow()
-    expect(bad({ kind: 'planks', item: 'dried-shiitake@2', count: 5 }, 'sawmill')).toThrow('save.work.101.entries.0.request.item')
-    expect(bad({ kind: 'planks', item: 'pine-plank@2', count: 101 }, 'sawmill')).toThrow('request.count')
-    expect(Object.keys(LOOP_REQUESTS)).toEqual(Object.keys(LOOP_KINDS))
-    expect(LOOP_KINDS.preserves!.multiDay).toBe(true)
-    expect(Object.entries(LOOP_KINDS).filter(([, k]) => k.multiDay).map(([id]) => id)).toEqual(['preserves'])
-  })
-
-  it('reads the world without changing the save', () => {
-    const save = farm()
-    expect(loopWorld(save).save).toBe(save)
-  })
-})
-
-function sawmill2(save: SaveV4): SaveV4 {
-  return { ...save, buildings: { ...save.buildings, sawmill: 1 } }
-}

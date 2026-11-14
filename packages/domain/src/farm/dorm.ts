@@ -1,15 +1,12 @@
 // The Dorm: beds cap who lives and works on the farm at once, 3 → 20. A level is bought at the Dorm (`buildings.dorm`,
 // gold spent now) and takes effect the next morning (`dorm.level`, night step 8). The roster is everyone you've met, and
 // it grows past the beds: one beyond them lives in town as a friend, keeping her ranks and her route, earning nothing.
-// Invite to the farm (`romance/meeting.ts`) brings her into a free bed; a swap brings one from town home for one idle at
+// Invite to the farm (`romance/meeting.ts`) brings her into a free bed; a swap brings one from town home for one at
 // home, the next morning, free and unlimited. The Dorm's levels bring beds only. Loaded with the loop's screens and the
 // night.
-import { isBusy } from '../fields/fields'
-import { LOOP_KINDS } from '../gathering/kinds'
 import { spendGold } from '../save/gold'
-import type { LoopKinds } from '../save/parse-v4'
 import { SaveRuleError } from '../save/rules'
-import { housed, leaving, newRosterUma, tendedBlock, type FarmSave, type OutfitId } from '../save/v4'
+import { housed, leaving, newRosterUma, type FarmSave, type OutfitId } from '../save/v4'
 import { BEDS, bedsAt, DORM_MAX_LEVEL, farmRankOf } from './farm'
 
 /** Each level's cost and the Farm Rank it needs (level 1 comes with the farm). */
@@ -50,27 +47,20 @@ export function buyDorm<S extends FarmSave>(save: S): S {
 /** She arrives tomorrow: a swap brings her home. */
 export const arriving = (save: Pick<FarmSave, 'dorm'>, outfitId: OutfitId): boolean => save.dorm.swaps.some((s) => s.in === outfitId)
 
-/** Why an Uma home can't be swapped out today, or null: she leaves already, tends a block or holds a running
- * job (`isBusy`). */
-export function swapBlock(save: FarmSave, outfitId: OutfitId, kinds: LoopKinds = LOOP_KINDS): string | null {
-  if (leaving(save, outfitId)) return 'Leaves tomorrow'
-  const block = tendedBlock(save, outfitId)
-  if (block) return `Tends Block ${block}`
-  return isBusy(save, outfitId, kinds) ? 'Working' : null
+/** Why an Uma home can't be swapped out today, or null: she leaves already. */
+export function swapBlock(save: FarmSave, outfitId: OutfitId): string | null {
+  return leaving(save, outfitId) ? 'Leaves tomorrow' : null
 }
 
-/** Swaps an Uma home for one living in town: the one home must have no running job and tend nothing; the one in town
- * arrives the next morning, in her place. Until then the one leaving can't take work. Free and unlimited. */
-export function swapDorm<S extends FarmSave>(save: S, out: OutfitId, into: OutfitId, kinds: LoopKinds = LOOP_KINDS): S {
+/** Swaps an Uma home for one living in town: the one in town arrives the next morning, in her place. Free and
+ * unlimited. */
+export function swapDorm<S extends FarmSave>(save: S, out: OutfitId, into: OutfitId): S {
   if (!save.roster[out] || !save.dorm.home.includes(out)) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
   if (!save.roster[into]) throw new SaveRuleError('not-owned', 'She isn’t on the roster.')
   if (save.dorm.home.includes(into)) throw new SaveRuleError('bad-job', 'She’s on the farm already.')
   if (housed(save, into)) throw new SaveRuleError('bad-job', 'She lives in her house.')
   if (arriving(save, into)) throw new SaveRuleError('busy', 'She arrives tomorrow.')
   if (leaving(save, out)) throw new SaveRuleError('busy', 'She leaves tomorrow.')
-  const block = tendedBlock(save, out)
-  if (block) throw new SaveRuleError('busy', `She tends Block ${block}.`)
-  if (isBusy(save, out, kinds)) throw new SaveRuleError('busy', 'She’s working.')
   return { ...save, dorm: { ...save.dorm, swaps: [...save.dorm.swaps, { out, in: into }] } }
 }
 
@@ -90,15 +80,13 @@ export function joinRoster<S extends FarmSave>(save: S, id: OutfitId): { save: S
 }
 
 /** Night step 8: the level bought takes effect, then each swap: the Uma leaving goes to town and the one
- * arriving comes home in her place. A tender who isn't home after it is cleared (none can be: a tender can't swap out). */
+ * arriving comes home in her place. */
 export function settleDormNight<S extends FarmSave>(save: S): { save: S; raised: number | null; home: OutfitId[] } {
   const level = Math.min(DORM_MAX_LEVEL, Math.max(save.dorm.level, dormBought(save)))
   const into = new Map(save.dorm.swaps.map((s) => [s.out, s.in]))
   const home = save.dorm.home.map((id) => into.get(id) ?? id)
-  // A spouse in her house tends on.
-  const blocks = save.fields.blocks.map((b) => (b.tender !== null && !home.includes(b.tender) && !housed(save, b.tender) ? { ...b, tender: null } : b))
   return {
-    save: { ...save, dorm: { level, home, swaps: [] }, fields: { blocks } },
+    save: { ...save, dorm: { level, home, swaps: [] } },
     raised: level > save.dorm.level ? level : null,
     home: save.dorm.swaps.map((s) => s.in),
   }

@@ -87,7 +87,7 @@ export const PERK_PLACE: Readonly<Record<PerkLine, string>> = {
 
 /** A night chore by her line: what the F6 perk brings each night. */
 export const NIGHT_CHORE: Readonly<Record<PerkLine, string>> = {
-  farming: '+0.25 growth on a block each night',
+  farming: 'Waters a dry tile each night',
   foraging: 'One item from the forest each night',
   fishing: 'One fish from the Fishery each night',
   mining: 'One ore from the Mine each night',

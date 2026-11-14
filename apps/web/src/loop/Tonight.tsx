@@ -1,7 +1,7 @@
 // Tonight: End the day's sheet while an evening slot
 // is free and someone can spend it (a house is picked too). From the top: **Evening**, today's slot as "with Stand-in 2
 // · Walk ✓" once spent, the Uma who said yes with **Play ›**, else **Pick someone ›** (skippable); festival night's own
-// row on a festival day; then the nudge's line ("2 Umas idle · 3 to collect") and **End the day** / **Back**. End the
+// row on a festival day; then the nudge's line ("4 actions left · 2 dry") and **End the day** / **Back**. End the
 // day never waits on the evening. Picking and playing open the evening's player over it (`?evening=`), so Back from
 // the card lands here again. Once anyone is married, **Sleep at** sits between the evening and the nudge's line: the
 // Farmhouse and each house with someone home ("· 3 home"), ☕ when a resident's breakfast is on tomorrow, "8 nights"

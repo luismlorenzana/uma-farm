@@ -1,6 +1,6 @@
-// The goods as rendered: gold beside the date, opening the bin; shipping from the Warehouse's
-// pick mode and from a good's sheet; Ship all; Take back in the bin's sheet; the night paying it into the morning; and
-// the shop's frame buying with gold. Master data and the server are stubs; the story pack is the stand-in.
+// The goods as rendered: gold beside the date, opening the bin; a crate picked in the Warehouse's pick mode and shipped
+// for one action, and Ship all from a good's sheet; Take back in the bin's sheet; the night paying it into the morning;
+// and the shop, in town, buying with gold. Master data and the server are stubs; the story pack is the stand-in.
 import 'fake-indexeddb/auto'
 import { farmDay, newSave, shopLines, type SaveV4, type ShopLine } from '@farm/domain'
 import { act, type ReactNode } from 'react'
@@ -84,28 +84,40 @@ describe('gold in the bar', () => {
 })
 
 describe('shipping', () => {
-  it('ships one a tap in pick mode, takes a line back in the bin, and the night pays the rest into the morning', async () => {
+  it('picks a crate in pick mode, ships it for one action, takes a line back in the bin, and the night pays the rest into the morning', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: stocked() })
     await render(<WarehousePage />, '/warehouse?pick=bin')
-    expect($('[data-pick-bar]')?.textContent).toContain('Tap a star to ship one.')
+    expect($('[data-pick-bar]')?.textContent).toContain('Tap a star to put one in the crate.')
     expect($('[data-shelf-rows]')?.getAttribute('data-shelf-rows')).toBe('woods')
+    expect(($('[data-action="ship-crate"]') as HTMLButtonElement).disabled).toBe(true)
     await click('[data-shelf="fish"]')
-    await click('[data-ship="salmon@1"]')
-    await click('[data-ship="salmon@1"]')
-    await click('[data-ship="salmon@2"]')
+    await click('[data-pick="salmon@1"]')
+    await click('[data-pick="salmon@1"]')
+    await click('[data-pick="salmon@2"]')
+    // The crate is picked, not shipped: nothing moves until Ship.
+    expect($('[data-crate]')?.getAttribute('data-crate')).toBe('3')
+    expect($('[data-pick-bar]')?.textContent).toContain('Crate: 3 · about 425g')
+    expect(($('[data-pick="salmon@1"]') as HTMLButtonElement).disabled).toBe(true)
+    expect(save().bin).toEqual({})
+    expect(save().today.actions).toBe(0)
+    await click('[data-action="ship-crate"]')
     expect(save().bin).toEqual({ salmon: [2, 1, 0, 0, 0] })
     expect(save().items.salmon).toEqual([0, 1, 0, 0, 0])
+    expect(save().today.actions).toBe(1)
     expect(save().account.updatedAt).toBe('2026-11-09T20:00:00.000Z')
-    expect($('[data-pick-bar] [data-estimate]')?.textContent).toBe('In the bin: about 425g tonight')
-    expect(($('[data-ship="salmon@1"]') as HTMLButtonElement).disabled).toBe(true)
+    // Then back to the bin.
+    for (let i = 0; i < 20 && path !== '/?sheet=bin'; i++) await settle()
+    expect(path).toBe('/?sheet=bin')
 
     await render(<LoopSheets sheet="bin" />, '/?sheet=bin')
     expect($('[data-estimate]')?.textContent).toBe('About 425g tonight')
     expect([...document.body.querySelectorAll('[data-bin-line]')].map((li) => li.getAttribute('data-bin-line'))).toEqual(['salmon@1', 'salmon@2'])
     expect($('[data-bin-line="salmon@1"]')?.textContent).toContain('Salmon ★1 × 2260gIn demand')
+    // Taking back is free.
     await click('[data-bin-line="salmon@1"] [data-action="take-back"]')
     expect(save().bin).toEqual({ salmon: [0, 1, 0, 0, 0] })
     expect(save().items.salmon).toEqual([2, 1, 0, 0, 0])
+    expect(save().today.actions).toBe(1)
     expect($('[data-estimate]')?.textContent).toBe('About 165g tonight')
     await click('[data-action="ship"]')
     expect(path).toBe('/warehouse?pick=bin')
@@ -117,11 +129,12 @@ describe('shipping', () => {
     expect(host.querySelector('a[aria-label="Gold: 665g. The bin"]')).not.toBeNull()
   })
 
-  it('ships every star with Ship all, and from a good\'s sheet', async () => {
+  it('puts a good\'s every star in with All, and ships all of one from its sheet, one action each', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: stocked() })
     await render(<WarehousePage />, '/warehouse?pick=bin')
     await click('[data-shelf="fish"]')
-    await click('[data-item="salmon"] [data-action="ship-all"]')
+    await click('[data-item="salmon"] [data-action="pick-all"]')
+    await click('[data-action="ship-crate"]')
     expect(save().bin).toEqual({ salmon: [2, 2, 0, 0, 0] })
     expect(save().items.salmon).toBeUndefined()
 
@@ -130,9 +143,21 @@ describe('shipping', () => {
     await click('[data-item="pine-log"]')
     expect($('[data-good="pine-log"]')?.textContent).toContain('Woods · G1 · raw')
     expect($('[data-good="pine-log"]')?.textContent).toContain('Refines into Pine Plank')
-    await click('[data-good="pine-log"] [data-ship="pine-log@1"]')
-    expect(save().bin['pine-log']).toEqual([1, 0, 0, 0, 0])
-    expect(save().items['pine-log']).toEqual([2, 0, 0, 0, 0])
+    expect($('[data-action="ship-all"]')?.textContent).toContain('1 action')
+    await click('[data-action="ship-all"]')
+    expect(save().bin['pine-log']).toEqual([3, 0, 0, 0, 0])
+    expect(save().items['pine-log']).toBeUndefined()
+    expect(save().today.actions).toBe(2)
+  })
+
+  it('won\'t ship once the day\'s actions are spent', async () => {
+    const spent = stocked()
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...spent, today: { ...spent.today, actions: 10 } } })
+    await render(<WarehousePage />, '/warehouse?pick=bin')
+    await click('[data-shelf="fish"]')
+    await click('[data-pick="salmon@1"]')
+    expect(($('[data-action="ship-crate"]') as HTMLButtonElement).disabled).toBe(true)
+    expect(save().bin).toEqual({})
   })
 
   it('shows the seeds, and no way to ship them', async () => {
@@ -140,12 +165,26 @@ describe('shipping', () => {
     await render(<WarehousePage />, '/warehouse?pick=bin')
     await click('[data-shelf="seeds"]')
     expect($('[data-item="seed-carrot"]')?.textContent).toContain('Carrot seeds')
-    expect($('[data-ship^="seed-carrot"]') ?? $('[data-item="seed-carrot"] [data-action="ship-all"]')).toBeNull()
+    expect($('[data-pick^="seed-carrot"]') ?? $('[data-item="seed-carrot"] [data-action="pick-all"]')).toBeNull()
   })
 })
 
 describe('the shop', () => {
-  const SPRING = () => newSave('u1', AT)
+  /** Spring 1, gone into town. */
+  const SPRING = (): SaveV4 => {
+    const save = newSave('u1', AT)
+    return { ...save, today: { ...save.today, town: true } }
+  }
+
+  it('is in town: one action goes in, and it stays open for the day', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: newSave('u1', AT) })
+    await render(<LoopSheets sheet="shop" />, '/?sheet=shop')
+    expect($('[data-row]')).toBeNull()
+    expect($('[data-into-town]')?.textContent).toContain('The shop is in town.')
+    await click('[data-action="into-town"]')
+    expect(save().today).toMatchObject({ town: true, actions: 1 })
+    expect(document.body.querySelectorAll('[data-row]').length).toBeGreaterThan(0)
+  })
 
   it('sells the season\'s seeds, a shut tier showing its Farm Rank', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: SPRING() })

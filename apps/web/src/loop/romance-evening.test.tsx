@@ -241,7 +241,7 @@ describe('Tonight', () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm({ [TWO]: { level: 2 } }) })
     await render(<p />, '/?sheet=end')
     await find('[data-tonight="3"]')
-    expect($('[data-end-line]')?.textContent).toBe('3 Umas idle')
+    expect($('[data-end-line]')?.textContent).toBe('10 actions left')
     const free = $('[data-evening-row="evening"]')!
     expect(free.dataset.state).toBe('free')
     await click(free.querySelector('[data-action="pick-someone"]') as HTMLElement)

@@ -1,13 +1,12 @@
 // The Hearts tab's view model: the rows' sort, filters and counts, the bar's
 // segments and a waiting rung's mark, the profile's track, Next card, perks, gifts and ties, the morning's Hearts section
-// in the summary's order with live Ready lines, and the ♥ on a Ready tender's pip. The invented stand-in pack
+// in the summary's order with live Ready lines. The invented stand-in pack
 // (9000001–9000003), with every rung scripted where a test needs several Umas Ready; no network.
 import {
-  newBlock, newLove, newRosterUma, newSave, pairKey, readiness, ROUTE_RUNGS, STAND_IN_FILES, storyPackFrom, talentD, type HerChapter, type Love, type MorningSummary,
+  newLove, newRosterUma, newSave, pairKey, readiness, ROUTE_RUNGS, STAND_IN_FILES, storyPackFrom, type HerChapter, type Love, type MorningSummary,
   type Readiness, type SaveV4,
 } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
-import { fieldsPips } from './FieldsPeek'
 import {
   chaptersView, filterCounts, giftSlots, glanceWords, heartBar, heartRows, levelShort, marriedOf, nextCard, perkList, placeWords, readyLines, reachedWords, routeTrack, rowNote, tieRows,
   type HeartsPack,
@@ -292,12 +291,3 @@ describe('her chapters', () => {
   })
 })
 
-describe('the pips’ badge', () => {
-  it('puts ♥ on a Ready tender’s pip in place of her block’s letter', () => {
-    const block = { ...newBlock('A'), tender: ONE }
-    block.plots[0] = { crop: 'carrot', growth: 1, ready: false, regrowing: false, own: false }
-    const save: SaveV4 = { ...farm(), fields: { blocks: [block] } }
-    expect(fieldsPips(save, talentD).map((p) => p.badge)).toEqual(['A'])
-    expect(fieldsPips(save, talentD, new Set([ONE])).map((p) => p.badge)).toEqual(['♥'])
-  })
-})

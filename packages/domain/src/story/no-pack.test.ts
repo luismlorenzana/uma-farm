@@ -8,7 +8,6 @@
 // Ready. Invented master data (`placeholders.fixture.ts`); the night runs whole.
 import { describe, expect, it } from 'vitest'
 import { runNight, type NightContext } from '../night/end-day'
-import { TEST_KINDS } from '../night/kinds.fixture'
 import { sayHello } from '../romance/meeting'
 import { gateVisitor } from '../town/town'
 import { joinCast } from '../romance/meeting.fixture'
@@ -21,7 +20,7 @@ import { addLove, costOf, finishArrival, pathFlags, walkScene, WAITING_RUNGS } f
 import { readiness } from '../romance/ready'
 import { receptionDishes } from '../romance/wedding'
 import { nameFarmer } from '../romance/farmer'
-import { parseSaveV4 } from '../save/parse-v4'
+import { parseSaveV5 } from '../save/parse-v4'
 import { newSave, type SaveV4 } from '../save/v4'
 import { addGoods } from '../save/warehouse'
 import type { Step } from './authored'
@@ -35,7 +34,7 @@ const AT = '2026-11-13T09:00:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const STORY = storyOf(null, MASTER)
 const FIVE = ['9100001', '9100002', '9100003', '9100004', '9100005']
-const context: NightContext = { kinds: TEST_KINDS, story: STORY, birthdays: birthdaysOf(STORY, MASTER_BIRTHDAYS) }
+const context: NightContext = { story: STORY, birthdays: birthdaysOf(STORY, MASTER_BIRTHDAYS) }
 /** The one who says "Not yet" at her confession first. */
 const SHY = '9100002'
 
@@ -129,7 +128,7 @@ describe('a farm with no story pack', () => {
         households.push(hid)
       }
       save = runNight({ ...save, summary: null }, context)
-      expect(parseSaveV4(json(save))).toEqual(save)
+      expect(parseSaveV5(json(save))).toEqual(save)
     }
 
     // Every rung of every Uma played on placeholders, Spouse 2 and 4 at night; all five married by day 60.

@@ -69,8 +69,8 @@ const SECTION_TITLE: Readonly<Record<SummarySection, string>> = {
   bin: 'The bin', work: 'Work done', ranks: 'Ranks', hearts: 'Hearts', news: 'New today', nudges: 'Today',
 }
 const peek = (place: FarmPlaceId): string => `/?peek=${place}`
-/** The Fields' page. */
-export const FIELDS = '/fields'
+/** The field: the farm map, where its tiles are. */
+export const FIELDS = '/'
 
 /** The Dorm's page. */
 export const DORM = '/dorm'
@@ -172,9 +172,9 @@ function bondLine(line: Extract<HeartLine, { kind: 'bond' }>, nameOf: NameOf, pa
     : { key, to, text: `${PAIR_MARK} ${a} and ${b} are closer now · bond ${line.hearts}` }
 }
 
-/** The night's chores in words: "Night chores · 3 items", "Night chores · 2 items · +0.5 growth". */
-export function choresWords(items: number, growth: number): string {
-  return ['Night chores', ...(items > 0 ? [plural(items, 'item')] : []), ...(growth > 0 ? [`+${growth} growth`] : [])].join(' · ')
+/** The night's chores in words: "Night chores · 3 items", "Night chores · 2 items · 1 tile watered". */
+export function choresWords(items: number, watered: number): string {
+  return ['Night chores', ...(items > 0 ? [plural(items, 'item')] : []), ...(watered > 0 ? [`${plural(watered, 'tile')} watered`] : [])].join(' · ')
 }
 /** Goods at their stars in words: "★2 Shiitake", "★2 Shiitake and ★3 Carp". */
 const starredGoods = (keys: readonly string[]): string => keys.map((key) => {
@@ -200,7 +200,7 @@ function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, hom
   if (line.kind === 'misses') return { key: 'misses', to: `/?sheet=homestead&house=${line.house}`, text: `⌂ ${home.houseName(line.house)} misses you`, misses: line.house }
   if (line.kind === 'vows') return { key: 'vows', to: '/hearts?filter=married', text: `♥ The Festival of Vows · ${plural(line.spouses, 'spouse')} · ♥ +${line.paid} · festival night tonight` }
   if (line.kind === 'perks') return { key: 'perks', to: '/warehouse', text: `Perks · +${plural(line.items, 'item')}` }
-  if (line.kind === 'chores') return { key: 'chores', to: line.items > 0 ? '/warehouse' : FIELDS, text: choresWords(line.items, line.growth) }
+  if (line.kind === 'chores') return { key: 'chores', to: line.items > 0 ? '/warehouse' : FIELDS, text: choresWords(line.items, line.watered) }
   if (line.kind === 'bond') return bondLine(line, nameOf, pairs)
   const name = nameOf(line.id)
   const to = umaSheet(line.id)
@@ -236,16 +236,15 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
       return [...sold, { key: 'sold:total', to: '/?sheet=bin', text: `Total · ${gold(summary.bin.reduce((sum, sale) => sum + sale.gold, 0))}` }]
     }
     case 'work':
-      // Jobs by place; crops ready by block and what withered, which open the Fields.
+      // The stations' loads, which open the station; the field's growth and what withered, which open the farm.
       return summary.work.map((line): SummaryLine => {
         switch (line.kind) {
-          case 'jobs': return {
-            key: `jobs:${line.place}`, to: peek(line.place),
-            text: `${farmPlace(line.place)?.name ?? line.place} · ${plural(line.jobs, 'job')} done · ${plural(line.items, 'item')}`,
+          case 'load': {
+            const [id, stars] = line.item.split('@')
+            return { key: `load:${line.station}`, to: peek(line.station), text: `${farmPlace(line.station)?.name ?? line.station} · ${goodName(id!)} ★${stars} × ${line.count}` }
           }
-          case 'catch': return { key: 'catch', to: peek('fishery'), text: `Best catch · ${goodName(line.id)} ★${line.stars}` }
-          case 'crops': return { key: `crops:${line.block}`, to: FIELDS, text: `Block ${line.block} · ${plural(line.plots, 'crop')} ready` }
-          case 'withered': return { key: `withered:${line.block}:${line.crop}`, to: FIELDS, text: `Block ${line.block} · ${line.plots} ${itemNameOf(line.crop)} withered` }
+          case 'grew': return { key: 'grew', to: FIELDS, text: `The field · ${plural(line.tiles, 'crop')} grew${line.ripe > 0 ? ` · ${line.ripe} ripe` : ''}` }
+          case 'withered': return { key: `withered:${line.crop}`, to: FIELDS, text: `The field · ${line.tiles} ${itemNameOf(line.crop)} withered` }
         }
       })
     case 'news':
@@ -272,9 +271,9 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
         }
       })
     case 'nudges':
-      return summary.nudges.map((line) => line.kind === 'idle'
-        ? { key: 'idle', text: `${plural(line.umas.length, 'Uma')} idle`, to: '/hearts?view=work' }
-        : { key: 'seeds', text: `${plural(line.plots, 'plot')} to plant`, to: FIELDS })
+      return summary.nudges.map((line) => line.kind === 'water'
+        ? { key: 'water', text: `${plural(line.tiles, 'tile')} to water`, to: FIELDS }
+        : { key: 'seeds', text: `${plural(line.tiles, 'tile')} to plant`, to: FIELDS })
     case 'ranks':
       // "Name · Farming Hand" for a rank-up; "Name · Farming · Harvest 30 crops she tended · 12/30" when her points
       // filled and the challenge waits, naming the challenge in its own words with her count. Each opens her sheet.

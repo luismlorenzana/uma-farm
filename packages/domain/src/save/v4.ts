@@ -1,15 +1,21 @@
-// Save v4: the farm's one save. Every farm starts on it, and any older save the app meets starts over as a fresh v4
-// (`freshV4`), its `account` copied whole, so `updatedAt` moves only with the player's first change (the farmer's name).
-// The new farm is made in the app, never in `parseSave`: the API reads an older save's version and account only, and
-// never makes a save. v4 grows in place while the game is being built; a shape old fields can't carry is v5.
+// Save v5: the farm's one save. Every farm starts on it, and any older save the app meets (v1 to v4) starts over as a
+// fresh v5 (`freshV5`), its `account` copied whole, so `updatedAt` moves only with the player's first change (the
+// farmer's name). The new farm is made in the app, never in `parseSave`: the API reads an older save's version and account
+// only, and never makes a save. v5 is v4 with the fields as tiles the farmer works by hand, a day of actions, and the
+// stations' loads; the Umas' work rows and the Fields' blocks are gone. It grows in place while the game is being built.
+//
+// The module keeps its name, and the type its old name as an alias (`SaveV4`), so the code that reads the save didn't
+// move with the version.
 //
 // The roster, the Dorm, work, bonds, `love`, `today`, `memories` and `arrivals` are keyed by character id. Her outfit is
 // a lookup in the story pack (`outfitOf`, `story/pack.ts`).
-import type { ItemRequest, WorkRow } from '@luismlorenzana/uma-work'
+import type { ItemRequest } from '@luismlorenzana/uma-work'
 import { DAYS_PER_YEAR } from '../farm/calendar'
+import { draw } from '../farm/draw'
 import { START_GOLD, START_SEEDS } from '../farm/farm'
 import type { FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
+import type { StationId } from '../gathering/ids'
 import { seedId, type CropId } from '../goods/ids'
 import type { MorningSummary } from '../night/summary'
 import type { Account, OlderSave } from './save'
@@ -36,26 +42,70 @@ export interface DormSwap {
   in: OutfitId
 }
 
-/** A work request: the common item request where the loop's kinds have no request of their own. */
+/** A work request: an area or a spot and a count, or a station's output at its stars. What the Umas' work names (the
+ * night's `made`), kept for the farmhands. */
 export type LoopWorkRequest = ItemRequest
 
-export const BLOCK_IDS = ['A', 'B', 'C', 'D'] as const
-export type BlockId = typeof BLOCK_IDS[number]
-export const PLOTS_PER_BLOCK = 9
+// --- The field: a grid of tiles ----------------------------------------------------------------------------------
 
-export interface Plot {
+/** The field's grid: 8 tiles across, 5 down, numbered row by row from the top left. */
+export const FIELD_COLUMNS = 8
+export const FIELD_ROWS = 5
+export const FIELD_TILES = FIELD_COLUMNS * FIELD_ROWS
+/** What covers a tile: weeds, a stone or a stump to clear, cleared ground, or tilled soil. */
+export const GROUNDS = ['weeds', 'stone', 'stump', 'clear', 'tilled'] as const
+export type Ground = typeof GROUNDS[number]
+/** The three things a tile can be overgrown with. */
+export const OVERGROWN = ['weeds', 'stone', 'stump'] as const
+export type Overgrowth = typeof OVERGROWN[number]
+export const isOvergrown = (ground: Ground): ground is Overgrowth => (OVERGROWN as readonly string[]).includes(ground)
+
+/** One tile of the field. A crop grows only on tilled soil; `growth` is the watered nights it has grown (a stage a
+ * night), and `watered` says it was watered today, so it grows tonight. */
+export interface Tile {
+  ground: Ground
   crop: CropId | null
   growth: number
   ready: boolean
   regrowing: boolean
-  /** Planted from her own seeds. */
+  /** Planted from own seeds. */
   own: boolean
+  watered: boolean
 }
 
-export interface Block {
-  id: BlockId
-  tender: OutfitId | null
-  plots: Plot[]
+/** The patch cleared on day 1: three by three at the field's top left, by the farmhouse. */
+export const START_CLEAR: readonly number[] = [0, 1, 2].flatMap((row) => [0, 1, 2].map((col) => row * FIELD_COLUMNS + col))
+/** What the rest of the field starts overgrown with, by share in percent: weeds the most, then stones, then stumps. */
+export const OVERGROWTH_SHARES: readonly (readonly [Overgrowth, number])[] = [['weeds', 55], ['stone', 25], ['stump', 20]]
+
+/** A tile with nothing on it but its ground. */
+export const bareTile = (ground: Ground): Tile => ({ ground, crop: null, growth: 0, ready: false, regrowing: false, own: false, watered: false })
+
+/** Day 1's field: the cleared patch, and every other tile overgrown by the account's seeded draw
+ * (`draw(uid, 0, 'ground', i)`), so a farm always starts on the same field. */
+export function startField(uid: string): Tile[] {
+  return Array.from({ length: FIELD_TILES }, (_, i) => {
+    if (START_CLEAR.includes(i)) return bareTile('clear')
+    let at = draw(uid, 0, 'ground', i) * 100
+    for (const [ground, share] of OVERGROWTH_SHARES) {
+      if (at < share) return bareTile(ground)
+      at -= share
+    }
+    return bareTile('weeds')
+  })
+}
+
+/** Ready tiles in the field: the map's badge and the Menu's count. */
+export const readyTiles = (save: Pick<SaveV5, 'fields'>): number => save.fields.tiles.filter((t) => t.ready).length
+/** Tiles growing a crop that aren't watered today. */
+export const dryTiles = (save: Pick<SaveV5, 'fields'>): number => save.fields.tiles.filter((t) => t.crop !== null && !t.ready && !t.watered).length
+
+// --- The stations' loads -----------------------------------------------------------------------------------------
+
+/** A load at a station: its output at its stars (`<output>@<stars>`) and how many, ready the next morning. */
+export interface StationLoad {
+  item: string
+  count: number
 }
 
 export const ANIMAL_KINDS = ['chicken', 'duck', 'cow', 'goat', 'sheep', 'alpaca', 'cashmere-goat'] as const
@@ -150,16 +200,6 @@ export interface FestivalResult {
   score: number
   place: 1 | 2 | 3
 }
-
-/** A plot with nothing planted. */
-export const emptyPlot = (): Plot => ({ crop: null, growth: 0, ready: false, regrowing: false, own: false })
-/** A block of nine empty plots. */
-export const newBlock = (id: BlockId): Block => ({ id, tender: null, plots: Array.from({ length: PLOTS_PER_BLOCK }, emptyPlot) })
-/** Ready plots on the farm, every block: the map's badge, Collect all and the nudge's "to collect". */
-export const readyPlots = (save: Pick<SaveV4, 'fields'>): number => save.fields.blocks.reduce((n, b) => n + b.plots.filter((p) => p.ready).length, 0)
-/** The block an Uma tends, or null: a tender is busy, so she can't take an uma-work job. */
-export const tendedBlock = (save: Pick<SaveV4, 'fields'>, outfitId: OutfitId): BlockId | null =>
-  save.fields.blocks.find((b) => b.tender === outfitId)?.id ?? null
 
 /** She leaves the farm tomorrow: a swap at the Dorm takes her out. */
 export const leaving = (save: { dorm: { swaps: readonly DormSwap[] } }, outfitId: OutfitId): boolean => save.dorm.swaps.some((s) => s.out === outfitId)
@@ -267,6 +307,15 @@ export interface Invite {
 
 /** Today's once-a-day acts, cleared each night, and the bond hearts the morning compares. */
 export interface TodayV4 {
+  /** The day's actions spent: the farm's tasks and outings (`farm/actions.ts`). */
+  actions: number
+  /** A special day's event actions spent: only events spend them. */
+  eventActions: number
+  /** Gone into town today: the town and its shop are open for the rest of the day. */
+  town: boolean
+  /** The forest areas and fishing spots worked today, each once, in order: the Diary's depth milestones read them at
+   * night. */
+  gathered: string[]
   chats: CharacterId[]
   gifts: CharacterId[]
   /** Who earned praise today, overnight or by day. */
@@ -292,7 +341,7 @@ export interface TodayV4 {
 }
 
 /** A day's `today` before anything's done (newSave; night step 7 clears to it). */
-export const newTodayV4 = (): TodayV4 => ({ chats: [], gifts: [], praise: [], praised: [], events: [], asked: [], evenings: [], invites: [], bonds: {}, ring: 0, reception: 0 })
+export const newTodayV4 = (): TodayV4 => ({ actions: 0, eventActions: 0, town: false, gathered: [], chats: [], gifts: [], praise: [], praised: [], events: [], asked: [], evenings: [], invites: [], bonds: {}, ring: 0, reception: 0 })
 
 /** A house on the homestead: house 0 is the Farmhouse (two rooms, never extended), houses 1–6 are
  * appended as they're built, each named by you. */
@@ -354,9 +403,9 @@ export interface TownTalks {
 /** Whom the town holds talks for: a character id, or a sister's (`s<outfitId>`). */
 export const TOWN_ID = /^s?[1-9]\d{0,11}$/
 
-/** Save v4: the farm's one save. */
-export interface SaveV4 {
-  version: 4
+/** Save v5: the farm's one save. */
+export interface SaveV5 {
+  version: 5
   /** As stored: the wipe never changes it, and only a player's change moves `updatedAt`. */
   account: Account
   /** '' until the name sheet. */
@@ -371,9 +420,10 @@ export interface SaveV4 {
   dorm: { level: number; home: CharacterId[]; swaps: DormSwap[] }
   items: Warehouse
   bin: Warehouse
-  /** uma-work's rows; `outfitId` holds her character id, the roster's key. */
-  work: Record<CharacterId, WorkRow<LoopWorkRequest>>
-  fields: { blocks: Block[] }
+  /** The field's tiles, row by row (`FIELD_COLUMNS` across). */
+  fields: { tiles: Tile[] }
+  /** Each station's load started today, ready the next morning. */
+  loads: Partial<Record<StationId, StationLoad>>
   crops: Partial<Record<CropId, number>>
   ranch: { animals: Animal[] }
   places: { mine: Dig; quarry: Dig }
@@ -400,8 +450,10 @@ export interface SaveV4 {
   town: Record<string, TownTalks>
 }
 
-/** The save the game plays: v4. */
-export type FarmSave = SaveV4
+/** The save's old name, kept so the code that reads the save didn't move with the version: the same type. */
+export type SaveV4 = SaveV5
+/** The save the game plays: v5. */
+export type FarmSave = SaveV5
 
 /** Her route the day she joins: Friendship 0, no points. */
 export const newLove = (): Love => ({ stage: 'friendship', level: 0, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [] })
@@ -414,10 +466,10 @@ export function newRosterUma(day: number): RosterUma {
 /** The Farmhouse: house 0, there from day 1 (its rule amended). */
 export const FARMHOUSE: House = { name: 'Farmhouse', extended: false }
 
-/** Day 1 on v4: 500g, 9 Carrot seeds, Block A of 9 tilled plots, the Dorm at level 1 (3 beds), the Farmhouse, the farmer's name empty, nobody on the roster: the name sheet, then the opening's lines, and day 1's visitor at the Gate. */
-export function newSave(uid: string, now: string): SaveV4 {
+/** Day 1 on v5: 500g, 9 Carrot seeds, the field overgrown but for a cleared patch of nine, a day of actions, the Dorm at level 1 (3 beds), the Farmhouse, the farmer's name empty, nobody on the roster: the name sheet, then the opening's lines, and day 1's visitor at the Gate. */
+export function newSave(uid: string, now: string): SaveV5 {
   return {
-    version: 4,
+    version: 5,
     account: { uid, createdAt: now, updatedAt: now },
     farmer: { name: '' },
     calendar: { day: 1 },
@@ -428,8 +480,8 @@ export function newSave(uid: string, now: string): SaveV4 {
     dorm: { level: 1, home: [], swaps: [] },
     items: { [seedId('carrot')]: [START_SEEDS, 0, 0, 0, 0] },
     bin: {},
-    work: {},
-    fields: { blocks: [newBlock('A')] },
+    fields: { tiles: startField(uid) },
+    loads: {},
     crops: {},
     ranch: { animals: [] },
     places: { mine: { deepest: 0, stairs: 0 }, quarry: { deepest: 0, stairs: 0 } },
@@ -449,8 +501,8 @@ export function newSave(uid: string, now: string): SaveV4 {
   }
 }
 
-/** The new farm over an older save: day 1 on v4, its `account` copied whole (uid, `createdAt`, `updatedAt`), so the
+/** The new farm over an older save: day 1 on v5, its `account` copied whole (uid, `createdAt`, `updatedAt`), so the
  * conflict rule still sees the player's last change and the first upload isn't stamped. Pure. */
-export function freshV4(older: Pick<OlderSave, 'account'>): SaveV4 {
+export function freshV5(older: Pick<OlderSave, 'account'>): SaveV5 {
   return { ...newSave(older.account.uid, older.account.createdAt), account: { ...older.account } }
 }

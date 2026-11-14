@@ -23,7 +23,7 @@ value (the project, the services, the database, the buckets, the accounts and th
         │  POST /api/push/tick every five minutes, with an OIDC token (the job is paused)
    Cloud Scheduler
 
-   packages/domain   @farm/domain: the rules, and the save (v4) and its parse; pure TypeScript with no I/O. The web reads its source; the API reads its CommonJS build.
+   packages/domain   @farm/domain: the rules, and the save (v5) and its parse; pure TypeScript with no I/O. The web reads its source; the API reads its CommonJS build.
 ```
 
 ### Packages and versions
@@ -34,10 +34,10 @@ uma-platform, never in a copy here.
 | Package | Version | Used by | For |
 |---|---|---|---|
 | `@farm/domain` | workspace | web, api | The rules and the save (below) |
-| `@luismlorenzana/uma-kit` | 0.19.0 | web | Theme and appearance, the landscape stage (`KitStage`), the app frame, its side panels and the quick look's panel, boot gates, Google sign-in, the content client, the update prompt, the Hub map, the album, the work screens |
+| `@luismlorenzana/uma-kit` | 0.19.0 | web | Theme and appearance, the landscape stage (`KitStage`), the app frame, its side panels and the quick look's panel, boot gates, Google sign-in, the content client, the update prompt, the Hub map, the album |
 | `@luismlorenzana/uma-art` | 2.27.0 | web | The bar's, map's, item and emote art |
 | `@luismlorenzana/uma-data` | 1.7.0 | web, domain | Master data's types and readers (the `dialogue-portraits` family from 1.7.0); test fixtures from `/testing` |
-| `@luismlorenzana/uma-work` | 0.1.0 | web, domain | The work engine: slots, queues and entries |
+| `@luismlorenzana/uma-work` | 0.1.0 | web, domain | The Warehouse's stock types (the work engine's screens are retired with the work board) |
 | `@luismlorenzana/uma-server` | 0.2.0 | api | The owner guard, the master data proxy, the private pack route |
 
 | Elsewhere | Versions |
@@ -65,7 +65,7 @@ uma-platform, never in a copy here.
 
 - **`src/main.tsx`** sets uma-kit's device-key prefix (`farm.`), the appearance, the update watcher and the API's
   token, and mounts the providers: motion, uma-art's atlases for the bar and the map, Firebase auth, the content client,
-  the album's art and the work screens' item icons, then the router.
+  and the album's art, then the router.
 - **`src/app/Root.tsx`** puts the whole app on uma-kit's landscape stage (`KitStage layout="landscape"`, not turned, in a
   fixed full-screen box), with uma-kit's `BootGates` (splash → Google sign-in → boot → the app) and its `UpdateNotice`
   beside them, so a boot that stopped still offers the new build; and, outside the stage, the upright card
@@ -75,10 +75,8 @@ uma-platform, never in a copy here.
 
 | Path | Page |
 |---|---|
-| `/` | Home: the Hub map (`loop/FarmMap.tsx`) |
-| `/forest`, `/fishery`, `/mill`, `/sawmill`, `/smokehouse` | A work place (`loop/WorkPlace.tsx`) |
-| `/fields` | The Fields |
-| `/warehouse` | The Warehouse; `?pick=bin` ships from it |
+| `/` | Home: the farm's tile map (`loop/FarmMap.tsx`; `?tile=<n>` a tile's panel) |
+| `/warehouse` | The Warehouse; `?pick=bin` picks a crate to ship |
 | `/dorm` | The Dorm |
 | `/diary` | The Diary |
 | `/hearts` | People, the Umas' page (`?view=work` the roster's album, `?uma=<id>` her profile) |
@@ -89,7 +87,8 @@ uma-platform, never in a copy here.
 | anything else | Redirects to `/` |
 
 Sheets and scenes are query parameters on the page under them:
-- **`?peek=<place>`**, a place's quick look;
+- **`?tile=<n>`**, a field tile's panel; **`?peek=<place>`**, a place's quick look or panel (the woods' edge, the
+  pond's, a station);
 - **`?sheet=`** `menu`, `end`, `calendar`, `bin`, `shop`, `rank`, `homestead` (with `&house=<n>`) and `bench`;
 - **full-screen scenes** `?event=`, `?ask=`, `?memory=`, `?album=`, `?read=`, `?evening=`, `?level=` and
   `?household=`.
@@ -119,13 +118,13 @@ Sheets and scenes are query parameters on the page under them:
     stamps `account.updatedAt`; a player's action stamps it with `touched`.
 - **Boot** (`boot(uid)`) waits for the story pack, then opens the device save, else the server's, else starts a new
   farm (`newSave`), and resolves `{ startOver }`:
-  - a v4 plays as it is;
-  - a save older than v4 (read as its version and account) stops at uma-kit's first-launch step, the start-over card
-    (`app/StartOverCard.tsx`), with nothing written; its button (`startOver`) keeps a dirty device save as a `wiped`
-    safety copy (the raw row, `readStoredRow`), then commits `freshV4`, unstamped, so it uploads and the next boot reads
-    v4;
-  - a save newer than v4 throws `NEWER_SAVE_WORDS` (below).
-- **What a sync plays** (`playable`): a v4 as it is, an older save as the same fresh v4 (uploaded on the next pass), a
+  - a v5 plays as it is;
+  - a save older than v5 (read as its version and account; a v4 of blocks and jobs too) stops at uma-kit's
+    first-launch step, the start-over card (`app/StartOverCard.tsx`), with nothing written; its button (`startOver`)
+    keeps a dirty device save as a `wiped` safety copy (the raw row, `readStoredRow`), then commits `freshV5`,
+    unstamped, so it uploads and the next boot reads v5;
+  - a save newer than v5 throws `NEWER_SAVE_WORDS` (below).
+- **What a sync plays** (`playable`): a v5 as it is, an older save as the same fresh v5 (uploaded on the next pass), a
   newer one refused before any upload.
 - **Sync** (`syncNow`, `reconcile.ts`): one pass reads `GET /api/save`, then `reconcile` decides to adopt, push or do
   nothing; a push sends `PUT /api/save` with its base revision, and a 409 reconciles against the stored envelope it
@@ -295,7 +294,7 @@ stay in place, so notifications can come back without new plumbing.
 | Document | Fields | Written |
 |---|---|---|
 | `saves/{uid}` | `revision`; `save`, as JSON text (Firestore refuses a list inside a list); `updatedAt`, the server's time | Each accepted upload, in a transaction |
-| `saveBackups/{uid}-v{n}` | The stored `saves/{uid}` document as it was, whole, and `backedUpAt` | In the same transaction, when an upload's version is higher than the stored version `n`: the first v4 over an older save backs that one up (`saveBackups/{uid}-v3` for the owner's) |
+| `saveBackups/{uid}-v{n}` | The stored `saves/{uid}` document as it was, whole, and `backedUpAt` | In the same transaction, when an upload's version is higher than the stored version `n`: the first v5 over an older save backs that one up (`saveBackups/{uid}-v4` for a farm of blocks, `-v3` for an older one) |
 | `saveRescues/{uid}` | `upload` (JSON text, exactly as sent), `reason`, `rescuedAt` | Each refused upload; the newest only |
 | `push/{uid}` | `subscriptions` (the newest five), `active` (any subscriptions), `schedule`, `checkedAt` (ms), `updatedAt` | The push routes and the tick, each setting only its own fields |
 
@@ -305,9 +304,9 @@ save } }`, written atomically (a temporary file, then a rename) with calls seria
 
 ### Revisions and refusals
 
-- **`GET /api/save`** returns the stored save parsed (`parseStored`): a v4 whole, a save from before v4 as its version and
+- **`GET /api/save`** returns the stored save parsed (`parseStored`): a v5 whole, a save from before v5 as its version and
   account only (the rest stays in the document, unread).
-- **`PUT /api/save`** takes exactly `{ baseRevision, save }`. The API parses the save strictly as v4 (`parseSavePut`) and
+- **`PUT /api/save`** takes exactly `{ baseRevision, save }`. The API parses the save strictly as v5 (`parseSavePut`) and
   checks that `save.account.uid` is the caller's. It stores the save as `baseRevision + 1` when the stored revision is
   `baseRevision` and the save's version isn't older than the stored one, and answers the new envelope.
 - **A 409** carries `{ message: 'revision conflict', current }`, the stored envelope, so the app can reconcile and retry.
@@ -316,7 +315,7 @@ save } }`, written atomically (a temporary file, then a rename) with calls seria
 |---|---|---|
 | Accepted | 200, the new envelope | — |
 | Stale revision, same or newer version | 409 with `current` | No: the app just syncs again |
-| A version older than v4 (an old cached build's) | 400, "expected 4" | Yes: it may hold play that can never be uploaded |
+| A version older than v5 (an old cached build's) | 400, "expected 5" | Yes: it may hold play that can never be uploaded |
 | A version older than the stored one | 409 with `current` | Yes |
 | A save the parse refuses (shape, unknown keys, ids, a newer version) | 400, with the failing path | Yes |
 | Another account's save | 400 | Yes |
@@ -329,17 +328,19 @@ A rescue that fails to write is logged and never hides why the upload was refuse
 | Version | What | Who writes it |
 |---|---|---|
 | 1–3 | Older formats, from before the farm started over | Nothing: read as `{ version, account }` (`OlderSave`) |
-| 4 | The farm: the farmer's name, the loop, love, the homestead, memories, arrivals, rosters keyed by character id | The app (`SAVE_VERSION`) |
+| 4 | The farm of blocks, the work board's and the stations' jobs | Nothing: read as `{ version, account }`, and started over |
+| 5 | The farm: the farmer's name, the field's tiles, the stations' loads, the day's actions (`today.actions`, `today.eventActions`, `today.town`), love, the homestead, memories, arrivals, rosters keyed by character id | The app (`SAVE_VERSION`) |
 
-- **`parseSave`** (`packages/domain/src/save/save.ts`) parses a v4 strictly (`parse-v4.ts`, with `parse-loop.ts`'s
-  parts): unknown keys and bad ids are refused, each error with its path (`SaveParseError`). It refuses any other version:
-  what an upload must be. **`parseStored`** reads what's stored, on the server or the device: a v4 by `parseSave`, a
-  v1–v3 as its version and account only, a newer one refused.
-- **The new farm runs in the app, never on the server:** `freshV4` (`save/v4.ts`) makes day 1 on v4 with `account`
-  copied whole, committed unstamped, so it uploads with `updatedAt` unchanged and the next boot reads v4; a dirty device
-  save it replaces is kept first as a `wiped` safety copy.
-- **v4 grows in place while the game is being built;** a shape old fields can't carry is v5, with a migration or a new
-  start.
+- **`parseSave`** (`packages/domain/src/save/save.ts`) parses a v5 strictly (`parseSaveV5` in `parse-v4.ts`, with
+  `parse-loop.ts`'s parts): unknown keys and bad ids are refused, each error with its path (`SaveParseError`). It
+  refuses any other version: what an upload must be. **`parseStored`** reads what's stored, on the server or the
+  device: a v5 by `parseSave`, a v1–v4 as its version and account only, a newer one refused.
+- **The new farm runs in the app, never on the server:** `freshV5` (`save/v4.ts`, the file keeping its name) makes day
+  1 on v5 with `account` copied whole, committed unstamped, so it uploads with `updatedAt` unchanged and the next boot
+  reads v5; a dirty device save it replaces is kept first as a `wiped` safety copy.
+- **Why v5 and not a v4 change:** blocks became tiles and jobs became the day's actions, which a played v4 can't carry;
+  a new version lets the start-over card, the safety copy, the server's backup and an older build's refusal do the work.
+  v5 grows in place while the game is being built; a shape its fields can't carry is v6.
 - **Only a player's change moves `account.updatedAt`** (`touched`). The conflict rule (`resolveConflict`) compares it:
   the newer wins whole, a tie keeps the device's.
 - **The production-save rules:** never move `save.account.updatedAt` by hand; no server ever writes into a save; a stale
@@ -451,15 +452,15 @@ agreement. Every value the deploy reads is in [infrastructure.md](infrastructure
 ```bash
 NODE_AUTH_TOKEN=$(gh auth token) pnpm install   # @luismlorenzana/* come from GitHub Packages
 pnpm api    # :8101, auth off (uid local-dev); saves in apps/api/.data/save.json; push in memory and off
-pnpm web    # :5194, /api proxied to :8101; the game on save v4
+pnpm web    # :5194, /api proxied to :8101; the game on save v5
 pnpm lint && pnpm test && pnpm build
 ```
 
 - **[`.claude/launch.json`](../../.claude/launch.json)** starts `farm-api` (:8101), `farm-web` (:5194) and
   `farm-story-sandbox` (:4321) in the preview pane.
-- **The dev server plays the game** as production does, on save v4. `VITE_FARM_STORY=stand-in pnpm web` plays the
+- **The dev server plays the game** as production does, on save v5. `VITE_FARM_STORY=stand-in pnpm web` plays the
   stand-in whatever farm-api holds. The dev server is open on the LAN (`host: true`), so a phone can load it directly.
-- **The dev save** is `apps/api/.data/save.json`, its last refused upload beside it. A dev save from before v4 shows the
+- **The dev save** is `apps/api/.data/save.json`, its last refused upload beside it. A dev save from before v5 shows the
   start-over card like any other; the local store keeps no backup of it. To start afresh, reset that file and the
   browser's `uma-farm` database.
 - **Master data** comes from `../uma-platform/content/release` (`MASTER_DIR` points elsewhere). **The story pack**

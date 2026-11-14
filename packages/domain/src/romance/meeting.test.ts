@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest'
 import { FESTIVAL_DAY, farmDay } from '../farm/calendar'
 import { FARM_RANK_POINTS } from '../farm/farm'
-import { parseSaveV4 } from '../save/parse-v4'
+import { parseSaveV5 } from '../save/parse-v4'
 import { SaveRuleError } from '../save/rules'
 import { addGoods } from '../save/warehouse'
 import { newSave, type SaveV4 } from '../save/v4'
@@ -145,7 +145,7 @@ describe('a talk in town', () => {
     expect(s.love[A]).toMatchObject({ stage: 'friendship', level: 0, points: 0 })
     expect(sceneDue(s)).toBe(`arrival:${A}`)
     expect(s.account.updatedAt).toBe(AT)
-    expect(parseSaveV4(json(s))).toEqual(s)
+    expect(parseSaveV5(json(s))).toEqual(s)
     // On the farm now, she's no longer seen in town, and nobody else there moves.
     const before = townDay({ ...s, dorm: { ...s.dorm, home: [] } }, PACK)
     expect(townDay(s, PACK).where.has(A)).toBe(false)
@@ -183,7 +183,7 @@ describe('a talk in town', () => {
     expect(invited.dorm.home).toEqual([W1, W2, B, A])
     expect(inviteBlock(invited, A)).toBe('She lives on the farm.')
     expect(inviteBlock(invited, C)).toBe('You haven’t met her yet.')
-    expect(parseSaveV4(json(invited))).toEqual(invited)
+    expect(parseSaveV5(json(invited))).toEqual(invited)
   })
 })
 
@@ -246,13 +246,13 @@ describe('a sister, and an older save', () => {
     const met = meet(s, SISTER, PACK).save
     expect(met.roster[SISTER]).toBeDefined()
     expect(met.dorm.home).toEqual([SISTER])
-    expect(parseSaveV4(json(met))).toEqual(met)
+    expect(parseSaveV5(json(met))).toEqual(met)
   })
 
   it('an older v4\'s roster counts as met: it loads as it was, no time moved', () => {
     const older = json(meet(meet(save(9), W1, PACK).save, A, PACK).save) as unknown as Record<string, unknown>
     delete older.town
-    const loaded = parseSaveV4(older)
+    const loaded = parseSaveV5(older)
     expect(Object.keys(loaded.roster)).toEqual([W1, A])
     expect(loaded.account.updatedAt).toBe(AT)
     expect(gateVisitor(loaded, PACK)).toBe(W1)

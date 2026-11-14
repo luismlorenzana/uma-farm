@@ -1,5 +1,5 @@
 // Getting in (uma-kit's gates): splash → sign-in → boot → the app. The farm's boot opens the device save, else the
-// server's, else starts a new account. A save from before v4 stops at the first-launch step, the start-over card, whose
+// server's, else starts a new account. A save from before v5 stops at the first-launch step, the start-over card, whose
 // button starts the new farm. Nothing waits on the network once a device save exists.
 //
 // The whole app sits on uma-kit's landscape stage (`KitStage`, not turned): the frame is a row, and every sheet is a
@@ -39,7 +39,7 @@ export function Root() {
       throw error
     }
     setNewer(false)
-    // A save from before v4: the start-over card is the first-launch step.
+    // A save from before v5: the start-over card is the first-launch step.
     return { firstLaunch: result.startOver }
   }, [])
   // Never run a production build signed out: every API call would fail.

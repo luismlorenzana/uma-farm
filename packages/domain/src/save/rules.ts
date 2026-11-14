@@ -2,10 +2,12 @@
 // A rule the player broke, with a reason a screen can switch on and words it can show. uma-rpg's tiers, parties and fights
 // stay behind. `no-gold` is the loop's: a purchase the farm can't pay for; `no-price` something the bin
 // doesn't take, a seed; `locked` something not open yet (a Farm Rank, a place to build). The Fields add
-// `out-of-season` (a seed planted outside its seasons) and `not-ready` (a plot harvested before it's Ready).
+// `out-of-season` (a seed planted outside its seasons) and `not-ready` (a tile harvested before it's Ready). The day adds
+// `no-actions`: the day's actions are spent.
 
 export type SaveRuleReason =
   | 'not-owned' | 'bad-slot' | 'no-items' | 'bad-count' | 'busy' | 'bad-job' | 'no-gold' | 'no-price' | 'locked' | 'out-of-season' | 'not-ready'
+  | 'no-actions'
 
 export class SaveRuleError extends Error {
   readonly reason: SaveRuleReason

@@ -37,8 +37,11 @@ export const theName = (name: string): string => (/^the\s/i.test(name) ? name : 
 /** "1 Uma", "3 Umas". */
 export const plural = (n: number, one: string, many = `${one}s`): string => `${n} ${n === 1 ? one : many}`
 
-/** The nudge's one line: "2 Umas idle · 3 to collect", or "All set". */
-export function nudgeWords(set: Pick<DaySet, 'idle' | 'collect'>): string {
-  const parts = [...(set.idle.length > 0 ? [`${plural(set.idle.length, 'Uma')} idle`] : []), ...(set.collect > 0 ? [`${set.collect} to collect`] : [])]
-  return parts.length > 0 ? parts.join(' · ') : 'All set'
+/** "1 action", "3 actions". */
+export const actionWords = (n: number): string => plural(n, 'action')
+
+/** The nudge's one line: "4 actions left · 2 dry · 1 ripe", or "All set". */
+export function nudgeWords(set: Pick<DaySet, 'left' | 'dry' | 'ripe'>): string {
+  if (set.left === 0) return 'All set'
+  return [`${actionWords(set.left)} left`, ...(set.dry > 0 ? [`${set.dry} dry`] : []), ...(set.ripe > 0 ? [`${set.ripe} ripe`] : [])].join(' · ')
 }

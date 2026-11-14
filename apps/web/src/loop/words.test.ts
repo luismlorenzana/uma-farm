@@ -17,10 +17,9 @@ describe('the date', () => {
 
 describe('the nudge', () => {
   it('says what\'s left in one line', () => {
-    expect(nudgeWords({ idle: ['1', '2'], collect: 3 })).toBe('2 Umas idle · 3 to collect')
-    expect(nudgeWords({ idle: ['1'], collect: 0 })).toBe('1 Uma idle')
-    expect(nudgeWords({ idle: [], collect: 1 })).toBe('1 to collect')
-    expect(nudgeWords({ idle: [], collect: 0 })).toBe('All set')
+    expect(nudgeWords({ left: 4, dry: 2, ripe: 1 })).toBe('4 actions left · 2 dry · 1 ripe')
+    expect(nudgeWords({ left: 1, dry: 0, ripe: 0 })).toBe('1 action left')
+    expect(nudgeWords({ left: 0, dry: 3, ripe: 0 })).toBe('All set')
   })
 })
 
@@ -28,20 +27,20 @@ describe('the morning summary', () => {
   it('words each line with its tap, in order, hiding empty sections', () => {
     const summary: MorningSummary = {
       day: 13, bin: [], ranks: [], hearts: [],
-      nudges: [{ kind: 'idle', umas: ['101'] }],
+      nudges: [{ kind: 'water', tiles: 3 }],
       news: [{ kind: 'season', season: 'summer' }, { kind: 'festival', festival: 'fishing-derby', when: 'tomorrow' }],
-      work: [{ kind: 'jobs', place: 'forest', jobs: 2, items: 9 }, { kind: 'jobs', place: 'mill', jobs: 1, items: 1 }],
+      work: [{ kind: 'load', station: 'mill', item: 'wheat-flour@2', count: 8 }, { kind: 'load', station: 'sawmill', item: 'pine-plank@1', count: 1 }],
     }
     expect(summaryParts(summary)).toEqual([
       { section: 'work', title: 'Work done', lines: [
-        { key: 'jobs:forest', text: 'Forest · 2 jobs done · 9 items', to: '/?peek=forest' },
-        { key: 'jobs:mill', text: 'Mill · 1 job done · 1 item', to: '/?peek=mill' },
+        { key: 'load:mill', text: 'Mill · Wheat Flour ★2 × 8', to: '/?peek=mill' },
+        { key: 'load:sawmill', text: 'Sawmill · Pine Plank ★1 × 1', to: '/?peek=sawmill' },
       ] },
       { section: 'news', title: 'New today', lines: [
         { key: 'season', text: 'Summer begins', to: '/?sheet=calendar' },
         { key: 'festival:tomorrow', text: 'Fishing Derby tomorrow', to: '/?peek=festival' },
       ] },
-      { section: 'nudges', title: 'Today', lines: [{ key: 'idle', text: '1 Uma idle', to: '/hearts?view=work' }] },
+      { section: 'nudges', title: 'Today', lines: [{ key: 'water', text: '3 tiles to water', to: '/' }] },
     ])
     expect(summaryParts({ ...summary, work: [], news: [], nudges: [] })).toEqual([])
   })
@@ -62,21 +61,21 @@ describe('the morning\'s bin', () => {
 })
 
 
-describe('the morning\'s Fields', () => {
-  it('lists crops ready by block, what withered, and plots to plant, each opening the Fields', () => {
+describe('the morning\'s field', () => {
+  it('says what grew and ripened, what withered, and tiles to plant, each opening the farm', () => {
     const summary: MorningSummary = {
       day: 25, bin: [], ranks: [], hearts: [], news: [],
-      work: [{ kind: 'crops', block: 'A', plots: 9 }, { kind: 'crops', block: 'B', plots: 1 }, { kind: 'withered', block: 'A', crop: 'tomato', plots: 3 }],
-      nudges: [{ kind: 'seeds', plots: 4 }],
+      work: [{ kind: 'grew', tiles: 9, ripe: 2 }, { kind: 'withered', crop: 'tomato', tiles: 3 }],
+      nudges: [{ kind: 'seeds', tiles: 4 }],
     }
     expect(summaryParts(summary)).toEqual([
       { section: 'work', title: 'Work done', lines: [
-        { key: 'crops:A', text: 'Block A · 9 crops ready', to: '/fields' },
-        { key: 'crops:B', text: 'Block B · 1 crop ready', to: '/fields' },
-        { key: 'withered:A:tomato', text: 'Block A · 3 Tomato withered', to: '/fields' },
+        { key: 'grew', text: 'The field · 9 crops grew · 2 ripe', to: '/' },
+        { key: 'withered:tomato', text: 'The field · 3 Tomato withered', to: '/' },
       ] },
-      { section: 'nudges', title: 'Today', lines: [{ key: 'seeds', text: '4 plots to plant', to: '/fields' }] },
+      { section: 'nudges', title: 'Today', lines: [{ key: 'seeds', text: '4 tiles to plant', to: '/' }] },
     ])
+    expect(summaryParts({ ...summary, work: [{ kind: 'grew', tiles: 1, ripe: 0 }] })[0]!.lines[0]!.text).toBe('The field · 1 crop grew')
   })
 })
 

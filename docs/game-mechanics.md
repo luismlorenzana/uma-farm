@@ -4,11 +4,11 @@ How uma-farm works today, as the code runs it. This is the one description of th
 the same commit, and where it and the code ever differ, the code wins and this document is fixed. The page view is
 [game-mechanics.html](pages/game-mechanics.html); where the game is going is in [the roadmap](roadmap.md).
 
-**What's live and what isn't.** The deployed game is one game on **save v4**: the farm's loop, its places, the farm
-growing by building, and the **romance** (Part 3), played from the story pack, and played whole without one: wherever the pack is silent, a
-placeholder plays (see [What plays without the story](#what-plays-without-the-story)). The game is laid out
-**sideways**, for a phone held in landscape (see [the frame](#the-frame-landscape)). A save from before v4 starts over
-(see [Save versions](#save-versions)).
+**What's live and what isn't.** The deployed game is one game on **save v5**: a day of ten actions on a tile farm the
+farmer works by hand, its places, the farm growing by building, and the **romance** (Part 3), played from the story
+pack, and played whole without one: wherever the pack is silent, a placeholder plays (see [What plays without the
+story](#what-plays-without-the-story)). The game is laid out **sideways**, for a phone held in landscape (see [the
+frame](#the-frame-landscape)). A save from before v5 starts over (see [Save versions](#save-versions)).
 
 **The tables are generated.** Every table between `<!-- live:… -->` markers is written from the rules by
 `packages/domain/src/docs/render.ts`. A test fails when one is stale, and `pnpm docs:update` rewrites them. Edit the
@@ -19,7 +19,7 @@ prose here; change a table by changing the rule.
 - **[Part 1 — The farm's days and work](#part-1--the-farms-days-and-work)**
   - [The calendar and the day](#the-calendar-and-the-day)
   - [The farm map and the bars](#the-farm-map-and-the-bars)
-  - [The Fields](#the-fields)
+  - [The field](#the-field)
   - [Gathering](#gathering)
   - [The stations](#the-stations)
   - [Goods and gold](#goods-and-gold)
@@ -44,22 +44,25 @@ prose here; change a table by changing the rule.
 
 ## Part 1 — The farm's days and work
 
-A farm day is a turn. Nothing on the farm moves until you end the day, whether the app is open, closed or left alone for
-a week. In the day you plant and harvest the Fields, send Umas to the forest, the Fishery and the stations, collect what
-they bring home, ship goods and spend gold. Ending the day runs the night: the bin pays, crops grow, jobs move a day on,
-Umas rank up and the date turns. The morning opens on a card of what the night brought.
+A farm day is a turn of **ten actions**. The farmer works the farm alone, by hand: each tile cleared, tilled, planted,
+watered or harvested, each forage, chop or catch, each load started at a station, each crate shipped and going into
+town takes one. Nothing on the farm moves until you end the day, whether the app is open, closed or left alone for a
+week. Ending the day runs the night: the bin pays, watered crops grow a stage, the stations' loads finish and the date
+turns. The morning opens on a card of what the night brought, and ten actions again.
 
 ```
- the day: nothing moves on its own              End the day ──► the night, in order
-   plant · tend · harvest       the Fields                       1 the bin pays
-   start · queue · collect      the work places                  2 crops grow
-   ship · take back             the bin                          3 animals (none on the farm)
-   buy seeds, land, stations    gold                             4 jobs move a day on; hauls count
-                                                                 5 workshops (none open)
- the morning: the summary card ◄──────────────────────────────── 6 rank points and rank-ups
-   the bin · work done · ranks · hearts · new today · today      7 crops wither; the date turns
-   [Start the day] ──► the next day                              8 the Dorm, the goals, meeting her
-                                                                 9 the morning summary
+ the day: 10 actions, one a tap                    End the day ──► the night, in order
+   clear · till · plant · water · harvest   a tile               1 the bin pays
+   forage · chop                    the woods' edge              2 watered crops grow a stage
+   fish                             the pond's edge              3 animals (none on the farm)
+   start a load                     a station                    4 the stations' loads finish
+   ship a crate                     the bin                      5 workshops (none open)
+   go into town                     the road (the shop, the town) 6 ranks and bonds (nobody works yet)
+   free: building, the Dorm, talks, the evening                  7 crops wither; the date turns
+                                                                 8 the Dorm, the goals, meeting her
+ the morning: the summary card ◄──────────────────────────────── 9 the morning summary
+   the bin · work done · hearts · new today · today
+   [Start the day] ──► the next day, ten actions again
 ```
 
 ### The calendar and the day
@@ -72,8 +75,8 @@ Four seasons of 12 days make a 48-day year. Day 1 is Spring 1 of year 1, and day
 - **its day of the season:** ((*d* − 1) mod 12) + 1.
 
 The season sets:
-- **what you can plant** and which seeds the shop sells (the Fields);
-- **what the forest and the Fishery bring home** (Gathering);
+- **what you can plant** and which seeds the shop sells (the field);
+- **what the woods' edge and the pond's edge bring home** (Gathering);
 - **which goods are in demand** at the bin (Goods and gold);
 - **what withers**: on a season's last night, growing crops that don't grow in the next season wither.
 
@@ -117,44 +120,94 @@ festival night, and `festival` triggers and gates.
 A festival day also opens a festival night for the evening, and once the household's finale is reached, the Festival
 of Vows returns on its day each year. Both are the romance's.
 
-#### Work is measured in days
+#### A day: ten actions
 
-- **The work clock is the calendar.** Day *d* starts at (*d* − 1) whole days on the work clock, and every work action
-  you take that day (start, queue, collect, recall, repeat) happens at that moment. Nothing reads the device's clock for
-  work, so reopening the app moves nothing.
-- **Jobs last whole days.** A gathering job runs 1 to 4 days; a station job runs as many days as her rate needs (at
-  least 2 for preserves). A day's work is done by the next morning.
-- **Crops grow by the night:** 1 growth a night untended, more with a tender.
-- **A queue means "keep at this for N days".** Up to three jobs wait behind the running one, at the same place; each
-  starts the moment the one before ends, at a night's boundary.
-- **The screens speak in days:** "Tomorrow", "In 2 days", "1 day", "3 days", "stopped yesterday". Nothing shows hours.
+- **The day holds 10 actions.** The bar's actions chip counts what's left ("7/10"), every button that spends one says so
+  ("Water · 1 action", "Fish · 1"), and a side panel says "7 actions left of 10". With none left, an action is refused
+  ("No actions left today.") and its buttons are greyed.
+- **One tap of work is one action:** a tile cleared, tilled, planted, watered or harvested; a forage, a chop or a catch;
+  a station's load started; a crate shipped; going into town. Looking is free, and so are building a place, the Dorm,
+  talks, gifts, her events and the evening; the shop is free once you're in town.
+- **Going into town** takes one action and opens the town and its shop for the rest of the day.
+- **The last action** opens a card over whatever page it was spent on, once: "Out of actions · The day's work is done."
+  with **End the day** and **Not yet** (to build or spend the evening first). The day never ends by itself.
+- **Special days** grant actions for events only, on top of the ten: New Year's, each festival, and the birthday of each
+  Uma you've met. The save counts them apart (`today.eventActions`), and nothing shows or spends them yet: they wait for
+  the festivals' and the town's events.
+- **Nothing reads the device's clock.** A load is ready the next morning and a watered tile grows at night, so reopening
+  the app moves nothing.
 - **Your changes are stamped with the real time**, which syncing between devices compares; that stamp never moves the
   date.
+
+The day's budget and the special days' event actions:
+
+<!-- live:day-budget -->
+|  | Actions |
+|---|---|
+| Every day | 10 |
+| New Year’s (each year’s Spring 1) | +3 for events |
+| A festival day | +3 for events |
+| Each birthday of an Uma you’ve met | +1 for events |
+<!-- /live -->
+
+Every action in the game's design, with its cost. "Now" is charged today; the rest come with the part of the game they
+belong to, and until then cost nothing or aren't there yet:
+
+<!-- live:actions -->
+| Where | Action | Cost | Charged |
+|---|---|---|---|
+| The fields | Clear a tile: weeds, a stone or a stump | 1 | Now |
+| The fields | Till a tile | 1 | Now |
+| The fields | Plant a tile | 1 | Now |
+| The fields | Water a tile | 1 | Now |
+| The fields | Harvest a tile | 1 | Now |
+| The fields | Water a row, with the aptitude | 1 | With farmhands |
+| Animals | Feed, brush or care for one; collect eggs, milk or wool; let them out or bring them in | 1 | With the ranch |
+| Animals | Buy an animal, at the rancher’s in town | Free | With the ranch |
+| The woods and the water | Forage once | 1 | Now |
+| The woods and the water | Chop a log | 1 | Now |
+| The woods and the water | Fish once | 1 | Now |
+| The mine | Work a face once | 1 | With the mine |
+| The mine | Take the stairs | Free | With the mine |
+| Stations | Start a load | 1 | Now |
+| The bin | Ship what you choose | 1 | Now |
+| The town | Go into town | 1 | Now |
+| The town | Shop, order a build, borrow or repay, once in town | Free | Now |
+| The Umas | Introduce yourself | 1 | With the town map |
+| The Umas | Talk | 1 | With the town map |
+| The Umas | Give a gift | 1 | With the town map |
+| The Umas | Invite her to work | 1 | With the Uma loop |
+| The Umas | A hangout or a date | 2 | With the Uma loop |
+| The Umas | Her event, when it’s ready | 1 | With the town map |
+| A festival | Join it; it opens its own events | 3 | With the calendar |
+| The household | Cook a meal for the household | 1 | With the Uma loop |
+| The household | Choose tonight’s companion, at the day’s end | Free | With the Uma loop |
+<!-- /live -->
 
 #### End the day
 
 **End the day**, the gold button at the bar's right end, ends the day.
 
-**The nudge.** The button reads **All set** and glows when nothing waits (a still glow under reduced motion); otherwise
-it reads **End day** with a count on it. Its spoken name says what's left: "End the day: 2 Umas idle · 3 to collect".
+**The nudge.** The button reads **All set** and glows once the day's actions are spent (a still glow under reduced
+motion); before that it reads **End day**. Its spoken name says what's left: "End the day: 4 actions left · 2 dry · 1
+ripe".
 
 | Counts as | When |
 |---|---|
-| Has work | She holds a running job, or she tends a block that has a growing plot |
-| Idle | She's on the farm with no work. An Uma whose job has ended with nothing queued is idle until she has work again; tending an empty or all-Ready block is idle. An Uma leaving tomorrow on a swap isn't counted |
-| To collect | Each Uma with finished items not yet collected (a running job's finished days included), and each Ready plot |
-| The count | Idle Umas plus things to collect |
+| Actions left | The day's ten less those spent |
+| Dry | A tile growing a crop, not ripe and not watered today: it won't grow tonight |
+| Ripe | A ripe tile waiting to be harvested |
 
-The nudge reads the save as the day started, so every device shows the same count.
+The nudge reads the save as it stands, so every device shows the same.
 
 **The tap** opens the End-the-day sheet over whatever page you're on:
 - **All set, or the Menu's "Ask before ending the day" switched off:** the day ends at once.
-- **Otherwise** one line says what's left, "2 Umas idle · 3 to collect", with **End anyway** and **Back**.
+- **Otherwise** one line says what's left, "4 actions left · 2 dry", with **End anyway** and **Back**.
 
 Either way the morning opens on the farm map. The tap holds the day it was meant for: a second tap, or a save that
 another device has already moved on, ends nothing more. The night reads the game's master data (each Uma's talents and
-birthday) and the story pack (her favourite line, her trigger to meet, the ties), which the farm loads as it opens; if either
-can't load, the sheet says so with **Try again**. The game never ends a day by itself.
+birthday) and the story pack (her favourite line, her trigger to meet, the ties), which the farm loads as it opens; if
+either can't load, the sheet says so with **Try again**.
 
 **"Ask before ending the day"** is a switch in the Menu: on by default, kept on the device and never in the save.
 
@@ -170,22 +223,20 @@ The night is one fixed run of steps over the save:
 1. **The bin pays.** Everything shipped today pays at its price × stars × demand on the day it was shipped, so a
    season's last night still pays that season's demand. Gold rises and the bin empties. Before it, once anyone is
    married, tonight's house is noted.
-2. **Crops grow.** Each planted plot that isn't Ready grows by its block's rate, and a plot whose growth reaches its
-   days − 0.5 turns Ready. A tender whose block had a growing plot worked tonight. A tended block grows ×1.1 side by
-   side and ×1.2 for a farmer in her element, and farmers' night chores add +0.25 growth each.
+2. **Crops grow.** Each growing tile watered today grows one stage, and one whose stages reach its days − 0.5 turns
+   ripe; a dry tile doesn't grow. A farmer Uma's night chores each water a dry growing tile first. Then every tile dries
+   for the next day.
 3. **Animals.** Nothing changes: no animals live on the farm.
-4. **Jobs move a day on.** A well-fed Uma's running multi-day job first gains a quarter day. Then the night reads what
-   finishes by the morning: each day's haul, each station batch, each job that ends. Tonight's hauls count toward each
-   forager's and angler's rank challenge, and the night's best catch is noted. Side by side's and the perks' extra items
-   and foragers' and fishers' night chores go straight into the Warehouse.
+4. **The stations' loads finish.** Every load started today is done: its goods go into the Warehouse at their stars and
+   the station is free for the morning. Side by side's and the perks' extras and foragers' and fishers' night chores go
+   straight into the Warehouse too.
 5. **Workshops.** Nothing changes: no workshop is open.
-6. **Ranks.** Every Uma who worked today earns a day's rank points in that work's activity, once a night, with her
-   friendship's and a mentor's factors; then every Uma whose points and challenge are both met ranks up, one rank a
-   night. Bonds tick, her line pays +10, shared houses pay, spouses level, and well-fed days count down by one.
+6. **Ranks and bonds.** Every Uma who worked today earns a day's rank points and ranks up where her challenge is met;
+   bonds tick and her line pays. Nobody works yet (the farmer works alone, and the farmhands come later), so none of
+   these move. Shared houses pay, spouses level, and well-fed days count down by one.
 7. **The date turns.** On a season's last night, growing crops that don't grow next season wither first. Then the date
-   moves on and the work clock with it: finished jobs turn Ready, and queued jobs start, planned with tonight's ranks. A
-   queued job whose inputs the Warehouse can't cover stops its queue. The whole of today's record clears: chats, gifts,
-   praise, events, evenings and invitations.
+   moves on, and the whole of today's record clears: the day's actions and event actions, going into town, the places
+   worked, chats, gifts, praise, events, evenings and invitations.
 8. **The farm's news.** The places paid for yesterday stand; a Dorm level you bought takes effect and swaps arrive; the
    Diary pays its milestones and rows and the Farm Rank is recomputed; anyone in town whose trigger the farm now holds
    is met; the ring bench opens the night after the first Romance 8, and the household's milestones are noted.
@@ -203,21 +254,20 @@ The steps as the game lists them:
 |---|---|---|
 | 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house is noted (its last night slept is today), your pick from Sleep at or else the house slept in least lately; the pick clears for tomorrow |
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand |
-| 2 | `growCrops` | Crops grow: 1 a night untended, the tender’s rate tended, ×1.1 side by side (her tender has a 3-heart partner tending another growing block), ×1.2 for a farmer in her element (Friendship 8); a farmer’s night chores add +0.25 growth each to the untended block with the most growing plots, else hers; plots that reach their days − 0.5 turn Ready |
+| 2 | `growCrops` | Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day |
 | 3 | `tendAnimals` | Animals: nothing happens until the ranch is built |
-| 4 | `moveJobs` | Jobs move a day on: a quarter day for the well fed, then what finishes by the morning is read |
-| 4 | `countHauls` | Tonight’s hauls count toward each forager’s and angler’s challenge; the best catch is noted |
-| 4 | `nightExtras` | Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again (20% in her element), seeded copies straight into the Warehouse; then the perks’ extras: the bond term × the romance term of the same items (her line’s +10% and +20%, her ring, a dream, the household; held to 40%), their own seeded copies |
+| 4 | `finishTheLoads` | Stations: every load started today is done, its goods into the Warehouse at their stars, the station free for the morning |
+| 4 | `nightExtras` | Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again (20% in her element), seeded copies straight into the Warehouse; then the perks’ extras: the bond term × the romance term of the same items (her line’s +10% and +20%, her ring, a dream, the household; held to 40%), their own seeded copies. None until the farmhands work |
 | 4 | `nightChores` | Night chores: a forager’s bring one item each from her rank’s deepest forest area this season, a fisher’s one fish each from her deepest spot, at a day’s haul’s stars, into the Warehouse; 1 from F6, 2 from R7, 3 from S4, on the farm only |
 | 5 | `resetWorkshops` | Each workshop may be played again tomorrow |
-| 6 | `tickRanks` | Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met |
-| 6 | `tickBonds` | Bonds: +10 to each pair who worked one place today (the Fields’ tenders together), once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend |
-| 6 | `payLine` | Her line: +10 to each Uma who worked today at one of her line’s places (a tended block for a farmer), once a night |
+| 6 | `tickRanks` | Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met. None until the farmhands work |
+| 6 | `tickBonds` | Bonds: +10 to each pair who worked one place today, once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend. None until the farmhands work |
+| 6 | `payLine` | Her line: +10 to each Uma who worked today at one of her line’s places, once a night. None until the farmhands work |
 | 6 | `shareTheHouses` | Shared houses: +10 bond a night to each pair of spouses with rooms in the same house |
 | 6 | `levelAtNight` | Spouse levels: a spouse at S1 or S3 whose 600 is full reaches S2 or S4, no event (S2 starts her every-2nd-morning item); never S3 or S5 |
 | 6 | `countWellFed` | The well-fed days count down |
-| 7 | `witherCrops` | On a season’s last night, crops still growing that don’t grow in the next season wither; Ready crops wait |
-| 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception |
+| 7 | `witherCrops` | On a season’s last night, crops still growing that don’t grow in the next season wither, their soil left tilled; ripe crops wait |
+| 7 | `turnCalendar` | The date moves; the whole of `today` clears: the day’s actions and event actions, going into town, the areas worked, chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception |
 | 8 | `raiseBuildings` | Places built: every place paid for yesterday stands this morning (`buildings[id] = 1`), each one news |
 | 8 | `settleDorm` | The Dorm’s level bought takes effect; swaps arrive, each Uma in town coming home in the place of one leaving |
 | 8 | `checkGoals` | The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources |
@@ -237,8 +287,7 @@ The steps as the game lists them:
 
 - **Every draw is seeded** by the account, the day and what's drawn, so ending the same save on two devices gives the
   same morning. The save holds no random state.
-- **Rank-ups show in the morning,** never mid-night. A rank reached tonight already counts for a queued job that starts
-  at tonight's boundary, since the date turns after the ranks.
+- **Rank-ups show in the morning,** never mid-night (none until the farmhands work).
 - **The night is one change.** Its steps write nothing on their own; the save is stamped once, with the real time, after
   step 9.
 - Ranks, the Dorm, the goals and meeting her are described with the Umas and the farm's progress, and the romance's steps
@@ -258,11 +307,11 @@ line is a tap to its place.
 | Section | Lines | A tap opens |
 |---|---|---|
 | The bin | Each good and star sold, "Salmon ★2 × 3 · 495g", tagged **In demand** when the season lifted it; then "Total · 545g" | The bin |
-| Work done | Jobs that ended tonight, by place, "Forest · 2 jobs done · 9 items" (each job's whole haul); the night's best catch, "Best catch · Rainbow Koi ★2"; plots that turned Ready, by block, "Block A · 9 crops ready"; what withered, "Block A · 3 Onion withered" | The place's quick look; the Fishery's quick look; the Fields |
+| Work done | Each station's load done, "Sawmill · Pine Plank ★1 × 8"; the field's growth, "The field · 5 crops grew · 2 ripe"; what withered, "The field · 3 Onion withered" | The station's panel; the farm map |
 | Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full** | Her profile's Work side |
 | Hearts | Who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", or in the town the world names, tagged **New**), a chapter that opened ("A new chapter with *Name* · Together", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
 | New today | First, "New story arrived · *its note*", tagged **New**, the morning after a new story release reaches the phone ([below](#how-the-app-gets-the-pack)); "Summer begins", the world's line for the season under it; "Flower Show tomorrow" or "today" (the story's name for it); the Town notes the night unlocked, "*title*" (or "*title* +2 more"), tagged **Town note**; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The People page; the calendar; the Festival ground; the note in the Diary; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
-| Today | "2 Umas idle"; "9 plots to plant" (empty plots that the season's seeds you hold could fill today) | The People page's Work view; the Fields |
+| Today | "3 tiles to water" (the growing tiles this morning); "9 tiles to plant" (empty tilled tiles that the season's seeds you hold could fill) | The farm map |
 
 Hearts shows whenever it has a line or someone is Ready. The romance describes its lines.
 
@@ -275,27 +324,41 @@ card reads "Off: days are turns".
 
 #### Home: the farm map
 
-The farm map is Home: 25 places, eight rows of three and the Town alone in the middle of a ninth, on farmland. It fills
-the page beside the rail, its three columns across the phone's width, and scrolls up and down, three rows or so in view.
-Rows 1 to 5 each run a gathering place, its station, then the ranch or a workshop; rows 6 and 7 are the yard; row 8 is
-the town edge, and the Town stands below it, at the end of the Gate's path. The help button (bottom left) and the
-Collect all pill stay put as it scrolls. A tile farm replaces it with the day's actions.
+The farm map is Home: a landscape tile map you look across, seven cells tall (a cell is 44 points, 40 on a short screen)
+and wider than the screen, so it scrolls sideways. From the left: the woods' edge, the field's 40 tiles over the pond's
+edge, a path, then the farm's places on lots of two by two, three to a column, and the road to town at the far end.
 
-The rows, and each place's building and what opens it (the Boat is moored at the Dock and drawn there):
+```
+ ◄────────────────────────────── scrolls sideways ──────────────────────────────►
+ ┌────────┬─────────────────┬─┬───────────┬───────────┬────────────┬─────────┬────┐
+ │        │ ▣ ▣ ▣ ≈ ≈ ○ ≈ ▲ │ │ Shipping  │ Farmhouse │ Mill       │ Gate    │    │
+ │ the    │ ▣ ▣ ▣ ≈ ○ ≈ ≈ ≈ │p│ bin       │           │            │         │ To │
+ │ woods' │ ▣ ▣ ▣ ≈ ≈ ▲ ≈ ○ │a│ Warehouse │ a house   │ Sawmill    │ Board   │    │
+ │ edge   │ ≈ ○ ≈ ≈ ≈ ≈ ▲ ≈ │t│           │           │            │         │town│
+ │        │ ≈ ≈ ≈ ▲ ≈ ≈ ≈ ○ │h│ Dorm      │ a house   │ Smokehouse │ Dock    │    │
+ │        │ the pond's edge │ │           │           │            │ …and 4  │    │
+ │        │                 │ │           │           │            │ columns │    │
+ └────────┴─────────────────┴─┴───────────┴───────────┴────────────┴─────────┴────┘
+   ▣ cleared on day 1 · ≈ weeds · ○ a stone · ▲ a stump: the rest of the field is the account's own draw
+```
+
+- **The woods' edge** (two columns down the left side) is where you forage and chop; **the pond's edge** (under the
+  field) is where you fish. Both are drawn with the forest's and the Fishery's art and take the world's names when it
+  gives them.
+- **The field** is eight tiles across and five down, each drawn as what's on it: weeds, a stone, a stump, cleared
+  ground, tilled soil (darker, with a droplet, once watered), then the crop: seeds, a sprout, its own icon growing, and
+  ringed once ripe (see [the field](#the-field)).
+- **The lots,** column by column: the yard (the Shipping bin, the Warehouse, the Dorm); the homestead's houses (the
+  Farmhouse and two lots from day 1, more columns as the household grows); the stations (the Mill, the Sawmill, the
+  Smokehouse); the Gate, the Requests board and the Dock; the ranch (the Coop, the Barn, the Kitchen); the Mine, the
+  Smelter and the Restaurant; the Quarry, the Cutter and the Forge.
+- **The road to town** closes the map: a tap opens the town's screen. The town's places (the shop, the festival ground,
+  the expedition post, the town itself) are in town, and the Menu lists them.
+- **Opening a tile or a place** scrolls the map so the tile stays in view beside its panel.
+
+Each place's building and what opens it (the Boat is moored at the Dock and drawn there):
 
 <!-- live:farm-map -->
-| Row | Left | Centre | Right |
-|---|---|---|---|
-| 1 | Fields | Mill | Coop |
-| 2 | Forest | Sawmill | Barn |
-| 3 | Fishery | Smokehouse | Kitchen |
-| 4 | Mine | Smelter | Restaurant |
-| 5 | Quarry | Cutter | Forge |
-| 6 | Shipping bin | Warehouse | Dorm |
-| 7 | Requests board | Gate | Dock |
-| 8 | Shop | Festival ground | Expedition post |
-| 9 | — | Town | — |
-
 | Place | Building (uma-art) | Opens |
 |---|---|---|
 | Fields | `vegetable-garden` | Day 1 |
@@ -326,19 +389,20 @@ The rows, and each place's building and what opens it (the Boat is moored at the
 | Boat | At the Dock | Farm Rank 6, then built after the Dock |
 <!-- /live -->
 
-What a tap on a place does:
+What a tap does:
 
-| Place | A tap opens |
+| Where | A tap opens |
 |---|---|
-| The Fields | Their quick look, which opens the Fields' page |
-| The Forest, the Fishery, the Mill, the Sawmill, the Smokehouse | The place's quick look, which opens its page |
+| A field tile | Its panel, at the right: what's on it, how far it's grown, and its one action (`/?tile=<n>`). Another tile's tap moves the panel to it |
+| The woods' edge | Its panel: each area in reach, with its season's finds, **Forage · 1** and **Chop · 1** |
+| The pond's edge | Its panel: each spot in reach, with its season's fish and **Fish · 1** |
+| The Mill, the Sawmill, the Smokehouse, built | Its panel: today's load, or what it can make, each with **Load 8** (or all that's held, if fewer) |
 | The Shipping bin | The bin's sheet |
-| The Shop | The shop's sheet |
 | The Warehouse | The Warehouse |
 | The Dorm | The Dorm's page |
 | The Gate | Its quick look: the welcome list's visitor of the day, and Say hello |
 | The Dock | Its quick look: its Build card, then the Boat's |
-| The Town | The town's screen: who's out today, and the People list (see [the town](#the-town)) |
+| The road to town | The town's screen: Go into town · 1 action, then who's out today and the People list (see [the town](#the-town)) |
 | Every other place | Its quick look: what it is, and what opens it; a place to build, its Build card |
 
 **Locks.** A locked place shows a lock, and its quick look says why:
@@ -352,27 +416,19 @@ What a tap on a place does:
 - **The Forge** opens as the ring bench the night after the first Romance 8 event ("Opens with your first Romance 8"
   before that); its merge game is a build at Farm Rank 8, not built yet.
 
-**Pips.** A half arch of pips hangs over each work place, one a slot: a working Uma's face ringed by her job's progress
-(with her queued jobs counted), a Ready Uma's face, or a free dot. The Fields have one pip a block bought: its tender's
-face, ringed by the block's growth toward Ready and marked with the block's letter, or a dot for an untended block. A
-Ready Uma's pip carries ♥ wherever the map draws her. A locked place with nobody working shows none.
+**Tags.** A station with a load today says **Ready tomorrow**; the Gate says **Visiting** while the welcome list's
+visitor waits. A ripe tile shows its crop ripe, and the Menu counts the ripe tiles.
 
-**Ready.** A place with something to collect says **Ready**: a work place while any of its Umas has finished items, the
-Fields while any plot is Ready.
-
-**Collect all.** While anything waits, a floating pill reads "Collect all · 5 ready" (each Uma with finished items, plus
-each Ready plot). One tap collects every finished job on the farm into the Warehouse and harvests every Ready plot of
-every block, then says "+23 collected" for a moment.
-
-**The help button** says how the farm works in five short lines: a day is a turn; plant, put Umas to work and end the
-day; the night settles everything; the farm grows by building, the Farm Rank offering each place; tap the date for the
-calendar.
+**The help button** says how the farm works in five short lines: a day holds 10 actions, one a task; looking and
+building are free, and the shop once you're in town; a watered tile grows a stage at night and a season's end withers
+what still grows; when the actions run out, end the day; tap the date for the calendar.
 
 **The morning card** covers the map after each night until you put it away.
 
-**The homestead's rows** sit after the yard (the Farmhouse and two lots from day 1, the second row from three married,
-the third from six; three to a row) with the town's two rows moved below them, so the map grows a row at a time. The Gate is where the welcome list visits, one a morning, and wears **Visiting** while one waits. Both are the
-romance's.
+**The homestead's columns** sit after the yard (the Farmhouse and two lots from day 1, the second column from three
+married, the third from six; three to a column), the other lots moving along, so the map grows a column at a time. A
+house carries its residents' faces, with ♥ for one Ready. The Gate is where the welcome list visits, one a morning, and
+wears **Visiting** while one waits. Both are the romance's.
 
 #### Quick looks
 
@@ -384,11 +440,10 @@ them, else the game's own; the Town takes the town's name ([the world in the pac
   logs · 25 held", a check when there's enough), what stands in the way ("Opens at Farm Rank 3", "Need 400g and 12 logs
   more", "Not built yet", "Builds tonight") and **Build · 1,000g · 20 logs**; after paying, "The Mill stands tomorrow."
   (the place by the world's name)
-- **The Dock, built:** "The Sea Pier is open at the Fishery. The Boat takes you to the Deep Sea." and the Boat's Build
-  card; with both built, "The Sea Pier and the Deep Sea are open at the Fishery."
-- **The Fields:** a row a block, **Harvest all** and **Open the Fields** (see The Fields).
-- **The Forest, the Fishery and a built station:** its line ("Foraging · 4 slots"), its four slot rows, any stopped
-  queues, and **Open the Forest** (see Gathering).
+- **The Dock, built:** "The Sea Pier is open at the pond's edge. The Boat takes you to the Deep Sea." and the Boat's
+  Build card; with both built, "The Sea Pier and the Deep Sea are open at the pond's edge."
+- **The woods' edge, the pond's edge and a built station:** their panels (above; see [Gathering](#gathering) and [the
+  stations](#the-stations)), each closing with the day's actions left.
 - **A station not built:** what it does, and its Build card (see The stations).
 - **The Gate:** today's visitor ("‹name› is at the Gate." and **Say hello**); once met, "‹name› came by today.";
   then "Someone new comes tomorrow." while the welcome list has more, else "Meet everyone else in town." (the town by
@@ -403,7 +458,7 @@ app asks for landscape.
 
 ```
 ┌──────┬──────────────────────────────────────────────────────────────┐
-│      │ ● Spring 3  ⏱ —  ● 1,240             [ ☾ End day ³ ]  ☰ Menu │  the bar
+│      │ ● Spring 3  ⏱ 7/10  ● 1,240            [ ☾ End day ]  ☰ Menu │  the bar
 │ Farm ├──────────────────────────────────────────────────────────────┤
 │ Town │                                                              │
 │People│                     the page                  ┌─────────────┤
@@ -421,16 +476,18 @@ app asks for landscape.
 - **Scenes are full screen:** the opening, meeting her, the event, pair and household players, the evening's plays and
   cards, a level reached overnight. Each is laid out sideways: her bust on the left, the lines and the choices on the
   right; a play's name and legend on its left, the play on its right.
-- **Lists sit in two columns** where they fit: the Hearts rows and the Town's People, the Town's spots, the work slots,
-  the Warehouse's goods, the Dorm's and the Diary's panels, the Book's cards and Account's panels; the Fields' blocks
-  put their nine plots beside the block's head; the Work view's faces sit five or six across.
+- **Lists sit in two columns** where they fit: the Hearts rows and the Town's People, the Town's spots, the
+  Warehouse's goods, the Dorm's and the Diary's panels, the Book's cards and Account's panels; the Work view's faces sit
+  five or six across.
+- **The farm map's panels** (a tile's, the woods', the pond's, a station's) sit at the right without dimming the map, so
+  the next tile is one tap away.
 - **Safe areas:** the rail keeps clear of the notch's side, and the page of the other side and the home indicator.
 
 #### The bar
 
 A thin bar along the top of the page, always there. From the left:
 - **The date chip**, the season's mark and the date ("Spring 3"), opens the calendar.
-- **Actions left**, a dashed chip with "—": the day's budget of actions isn't counted yet, so it opens nothing.
+- **Actions left**, a stopwatch and "7/10" ("Actions left: 7 of 10"), greyed at 0. It opens nothing.
 - **The gold chip**, the gold coin and your gold ("Gold: 1,240g. The bin"), opens the shipping bin.
 - **The sync chip** shows only while offline ("Offline") or paused ("Sync paused"), and opens Account.
 - **End the day**, at the right end: see [End the day](#end-the-day).
@@ -439,7 +496,7 @@ A thin bar along the top of the page, always there. From the left:
 #### The rail
 
 **Farm · Town · People · Book · Diary**, down the left edge. The page you're on is lit: a marker on the rail's inner edge
-and its two-tone icon. A farm place's page (the Fields, the forest, the Warehouse, the Dorm …) keeps Farm lit.
+and its two-tone icon. A farm place's page (the Warehouse, the Dorm …) keeps Farm lit.
 - **Farm:** the farm map.
 - **Town:** the town's screen (see [the town](#the-town)).
 - **People:** everyone you've met, on the farm or in town, by their route; its Work view is the roster's album, with their
@@ -463,73 +520,90 @@ The farm's accounts at a glance, six cards, each a tap to its place:
 #### The Menu
 
 "Every place" lists the 25 places on the map in six groups (Gathering, Stations, The ranch, Workshops, The yard, The town), each
-with its Ready count (the Fields count Ready plots) and locked ones marked; a tap goes where a tap on the map goes. Then
+with its count (the Fields count their ripe tiles) and locked ones marked; a tap goes where a tap on the map goes (the
+Fields to the map itself). Then
 Account, the "Ask before ending the day" switch, and the build's number.
 
-### The Fields
+### The field
 
-Farming is hands-on. You buy seeds at the shop, tap a plot to plant and tap a Ready plot to harvest. An Uma who tends a
-block makes it grow faster and its crops better. Harvests sometimes give seeds back, and every harvest raises the crop's
-level on the farm.
+Farming is by hand, one tile and one action at a time. The field starts overgrown, with a small patch cleared: you clear
+a tile, till it, plant a seed, water it each day it grows, and harvest it once it's ripe. A watered tile grows one stage
+a night; a dry one waits. Harvests sometimes give a seed back, and every harvest raises the crop's level on the farm.
 
 ```
- the shop ──buy──► seeds at ★1 ──plant, in season──► a growing plot
-                                                       │ each night: + its block's rate (1 untended, 1.25–1.9 tended)
-                                                       ▼ its growth reaches its days − 0.5
-                                                     Ready ──tap──► each crop draws its stars, into the Warehouse
-                                                                    crop points +1 (+2 from own seeds)
-                                                                    the tender's challenge counts
-                                                                    5–35%: an own seed back
-                                                                    a regrowing crop starts again at 0, in season
- a season's last night: growing crops that don't grow next season wither; Ready ones wait
+ weeds · a stone · a stump ──clear · 1──► cleared ──till · 1──► tilled ──plant · 1 (in season)──► a crop, stage 0
+   (a stone leaves a Limestone ★1,                                                                    │
+    a stump a Pine Log ★1)                                  water · 1 ──► watered: tonight it grows a stage
+                                                                                                       ▼ its stages reach its days − 0.5
+ the tile stays tilled ◄── harvest · 1: each crop draws its stars into the Warehouse ◄────────────── ripe
+                           crop points +1 (+2 from own seeds) · 5%: an own seed back
+                           a regrowing crop starts again at stage 0, in season
+ a season's last night: growing crops that don't grow next season wither, the soil left tilled; ripe ones wait
 ```
+
+#### The field's tiles
+
+The field is a grid of 40 tiles, eight across and five down, beside the woods' edge and over the pond's. On day 1 a
+patch of nine at its top left is cleared; every other tile is overgrown, drawn once for the account (`draw(uid, 0,
+'ground', i)`), so a farm always starts on the same field. Each tile holds its ground (weeds, a stone, a stump, cleared
+or tilled), its crop, its stage, whether it's ripe, regrowing or from own seeds, and whether it's watered today.
+
+<!-- live:field -->
+|  | The field |
+|---|---|
+| Tiles | 40: 8 across, 5 down |
+| Cleared on day 1 | 9, three by three at the top left |
+| Weeds | 55% of the rest; clearing leaves nothing |
+| A stone | 25% of the rest; clearing leaves a Limestone ★1 |
+| A stump | 20% of the rest; clearing leaves a Pine Log ★1 |
+<!-- /live -->
 
 #### The crops
 
 There are 27 crops: 22 from the shop, and 5 rare ones whose seeds the shop never sells and nothing on the farm hands
 out. A crop is planted only in its seasons. In the table, "Shop" is the Farm Rank its seed sells from, "Seed" its price,
-and "Days" the nights to Ready untended, with a Novice tender and with an Expert. "Yield" is the crops a plot gives each
-harvest, "Regrows" how soon a regrowing crop is Ready again, "Price ★1" what one sells for, and "Refined at" the station
+and "Stages" the watered nights from planting to ripe. "Yield" is the crops a tile gives each harvest, "Regrows" how
+many watered nights a regrowing crop takes to ripen again, "Price ★1" what one sells for, and "Refined at" the station
 that turns it into a good worth ×1.5.
 
 <!-- live:crops -->
-| Crop | Id | Seasons | Shop | Seed | Days: untended · Novice · Expert | Yield | Regrows | Price ★1 | Refined at |
+| Crop | Id | Seasons | Shop | Seed | Stages | Yield | Regrows | Price ★1 | Refined at |
 |---|---|---|---|---|---|---|---|---|---|
-| Carrot | `carrot` | Spring | Farm Rank 1 | 20g | 4 · 3 · 3 | 1 | — | 60g | — |
-| Potato | `potato` | Spring | Farm Rank 1 | 35g | 6 · 5 · 4 | 2 | — | 55g | — |
-| Mint | `mint` | Spring | Farm Rank 1 | 40g | 4 · 3 · 3 | 1 | every 3 | 45g | Dried Mint (Sawmill) |
-| Onion | `onion` | Spring, Autumn | Farm Rank 2 | 30g | 5 · 4 · 3 | 1 | — | 100g | — |
-| Cabbage | `cabbage` | Spring, Winter | Farm Rank 2 | 90g | 8 · 6 · 5 | 1 | — | 260g | — |
-| Asparagus | `asparagus` | Spring | Farm Rank 4 | 150g | 10 · 8 · 7 | 1 | — | 480g | — |
-| Tomato | `tomato` | Summer | Farm Rank 1 | 50g | 7 · 6 · 5 | 1 | every 3 | 70g | — |
-| Basil | `basil` | Summer | Farm Rank 1 | 40g | 4 · 3 · 3 | 1 | every 3 | 45g | Dried Basil (Sawmill) |
-| Bell Pepper | `bell-pepper` | Summer | Farm Rank 1 | 60g | 6 · 5 · 4 | 1 | every 3 | 60g | — |
-| Eggplant | `eggplant` | Summer | Farm Rank 2 | 70g | 6 · 5 · 4 | 1 | every 4 | 95g | — |
-| Sunflower Seed | `sunflower-seed` | Summer | Farm Rank 2 | 70g | 8 · 6 · 5 | 3 | — | 75g | Sunflower Oil (Mill) |
-| Corn | `corn` | Summer, Autumn | Farm Rank 4 | 80g | 9 · 7 · 6 | 1 | every 4 | 140g | Cornmeal (Mill) |
-| Wheat | `wheat` | Autumn | Farm Rank 1 | 25g | 5 · 4 · 3 | 2 | — | 40g | Wheat Flour (Mill) |
-| Peanut | `peanut` | Autumn | Farm Rank 1 | 30g | 4 · 3 · 3 | 2 | — | 35g | Peanut Butter (Mill) |
-| Rice | `rice` | Autumn | Farm Rank 1 | 35g | 6 · 5 · 4 | 2 | — | 50g | Polished Rice (Mill) |
-| Sugar Beet | `sugar-beet` | Autumn | Farm Rank 2 | 40g | 6 · 5 · 4 | 1 | — | 120g | Beet Sugar (Mill) |
-| Emperor Pumpkin | `emperor-pumpkin` | Autumn | Farm Rank 4 | 250g | 10 · 8 · 7 | 1 | — | 600g | — |
-| Buckwheat | `buckwheat` | Winter | Farm Rank 1 | 30g | 4 · 3 · 3 | 1 | — | 75g | Buckwheat Flour (Mill) |
-| Oats | `oats` | Winter | Farm Rank 1 | 25g | 5 · 4 · 3 | 2 | — | 40g | Rolled Oats (Mill) |
-| Barley | `barley` | Winter | Farm Rank 1 | 30g | 5 · 4 · 3 | 2 | — | 45g | Pearl Barley (Mill) |
-| Rye | `rye` | Winter | Farm Rank 2 | 40g | 6 · 5 · 4 | 2 | — | 60g | Rye Flour (Mill) |
-| Ginger | `ginger` | Winter | Farm Rank 4 | 120g | 9 · 7 · 6 | 2 | — | 200g | Ground Ginger (Sawmill) |
-| Golden Carrot | `golden-carrot` | Spring | Rare | — | 6 · 5 · 4 | 1 | — | 600g | — |
-| Sunwheat | `sunwheat` | Summer | Rare | — | 7 · 6 · 5 | 2 | — | 260g | Sunwheat Flour (Mill) |
-| Moonrice | `moonrice` | Autumn | Rare | — | 7 · 6 · 5 | 2 | — | 240g | Moonrice Flour (Mill) |
-| Wild Rice | `wild-rice` | Summer | Rare | — | 6 · 5 · 4 | 2 | — | 160g | Hulled Wild Rice (Mill) |
-| Mandrake | `mandrake` | Winter | Rare | — | 8 · 6 · 5 | 1 | — | 520g | Mandrake Powder (Sawmill) |
+| Carrot | `carrot` | Spring | Farm Rank 1 | 20g | 4 | 1 | — | 60g | — |
+| Potato | `potato` | Spring | Farm Rank 1 | 35g | 6 | 2 | — | 55g | — |
+| Mint | `mint` | Spring | Farm Rank 1 | 40g | 4 | 1 | every 3 | 45g | Dried Mint (Sawmill) |
+| Onion | `onion` | Spring, Autumn | Farm Rank 2 | 30g | 5 | 1 | — | 100g | — |
+| Cabbage | `cabbage` | Spring, Winter | Farm Rank 2 | 90g | 8 | 1 | — | 260g | — |
+| Asparagus | `asparagus` | Spring | Farm Rank 4 | 150g | 10 | 1 | — | 480g | — |
+| Tomato | `tomato` | Summer | Farm Rank 1 | 50g | 7 | 1 | every 3 | 70g | — |
+| Basil | `basil` | Summer | Farm Rank 1 | 40g | 4 | 1 | every 3 | 45g | Dried Basil (Sawmill) |
+| Bell Pepper | `bell-pepper` | Summer | Farm Rank 1 | 60g | 6 | 1 | every 3 | 60g | — |
+| Eggplant | `eggplant` | Summer | Farm Rank 2 | 70g | 6 | 1 | every 4 | 95g | — |
+| Sunflower Seed | `sunflower-seed` | Summer | Farm Rank 2 | 70g | 8 | 3 | — | 75g | Sunflower Oil (Mill) |
+| Corn | `corn` | Summer, Autumn | Farm Rank 4 | 80g | 9 | 1 | every 4 | 140g | Cornmeal (Mill) |
+| Wheat | `wheat` | Autumn | Farm Rank 1 | 25g | 5 | 2 | — | 40g | Wheat Flour (Mill) |
+| Peanut | `peanut` | Autumn | Farm Rank 1 | 30g | 4 | 2 | — | 35g | Peanut Butter (Mill) |
+| Rice | `rice` | Autumn | Farm Rank 1 | 35g | 6 | 2 | — | 50g | Polished Rice (Mill) |
+| Sugar Beet | `sugar-beet` | Autumn | Farm Rank 2 | 40g | 6 | 1 | — | 120g | Beet Sugar (Mill) |
+| Emperor Pumpkin | `emperor-pumpkin` | Autumn | Farm Rank 4 | 250g | 10 | 1 | — | 600g | — |
+| Buckwheat | `buckwheat` | Winter | Farm Rank 1 | 30g | 4 | 1 | — | 75g | Buckwheat Flour (Mill) |
+| Oats | `oats` | Winter | Farm Rank 1 | 25g | 5 | 2 | — | 40g | Rolled Oats (Mill) |
+| Barley | `barley` | Winter | Farm Rank 1 | 30g | 5 | 2 | — | 45g | Pearl Barley (Mill) |
+| Rye | `rye` | Winter | Farm Rank 2 | 40g | 6 | 2 | — | 60g | Rye Flour (Mill) |
+| Ginger | `ginger` | Winter | Farm Rank 4 | 120g | 9 | 2 | — | 200g | Ground Ginger (Sawmill) |
+| Golden Carrot | `golden-carrot` | Spring | Rare | — | 6 | 1 | — | 600g | — |
+| Sunwheat | `sunwheat` | Summer | Rare | — | 7 | 2 | — | 260g | Sunwheat Flour (Mill) |
+| Moonrice | `moonrice` | Autumn | Rare | — | 7 | 2 | — | 240g | Moonrice Flour (Mill) |
+| Wild Rice | `wild-rice` | Summer | Rare | — | 6 | 2 | — | 160g | Hulled Wild Rice (Mill) |
+| Mandrake | `mandrake` | Winter | Rare | — | 8 | 1 | — | 520g | Mandrake Powder (Sawmill) |
 <!-- /live -->
 
 #### The shop's seeds
 
-The shop sells the season's six seeds: the first three from day 1, the next two from Farm Rank 2 and the last from Farm
-Rank 4. A line shut by its rank still shows, with "From Farm Rank 2". The list changes on a season's first day and never
-runs out. Onion sells in Spring and Autumn and Cabbage in Spring and Winter; Corn sells in Summer only, though it grows
-on into Autumn. Seeds go into the Warehouse at ★1, and never sell at the bin.
+The shop, in town, sells the season's six seeds: the first three from day 1, the next two from Farm Rank 2 and the last
+from Farm Rank 4. A line shut by its rank still shows, with "From Farm Rank 2". The list changes on a season's first
+day and never runs out. Onion sells in Spring and Autumn and Cabbage in Spring and Winter; Corn sells in Summer only,
+though it grows on into Autumn. Seeds go into the Warehouse at ★1, and never sell at the bin.
 
 The season's seeds by the Farm Rank that opens them:
 
@@ -542,117 +616,85 @@ The season's seeds by the Farm Rank that opens them:
 | Winter | Buckwheat 30g, Oats 25g, Barley 30g | Rye 40g, Cabbage 90g | Ginger 120g |
 <!-- /live -->
 
-#### Blocks
+#### A tile's actions
 
-The Fields are four blocks of nine plots. Block A is tilled on day 1. The others are bought on the Fields' page once the
-Farm Rank is reached, and come tilled and empty; a block is refused before its rank ("Opens at Farm Rank 2."), when gold
-is short, and once it's yours.
+A tap on a tile opens its panel: its ground or crop, where it is ("Row 2, tile 3"), a line on what it takes next, its
+one action, and the day's actions left. Each action is one of the day's ten, and says what it did:
 
-The blocks, what opens each and what it costs:
-
-<!-- live:blocks -->
-| Block | Plots | Opens at | Costs |
+| On the tile | Its line | The action | What it does |
 |---|---|---|---|
-| A | 9 | Day 1 | — |
-| B | 9 | Farm Rank 2 | 800g |
-| C | 9 | Farm Rank 4 | 3,000g |
-| D | 9 | Farm Rank 6 | 8,000g |
-<!-- /live -->
+| Weeds, a stone, a stump | "Clear it to till it. It leaves a Limestone." | **Clear · 1 action** | Cleared ground; a stone leaves a Limestone ★1 and a stump a Pine Log ★1 in the Warehouse ("Cleared · +1 Pine Log") |
+| Cleared ground | "Till it to plant it." | **Till · 1 action** | Tilled soil |
+| Tilled soil, empty | "Plant a seed, then water it." | **Plant**, on a row for each seed held | The seed leaves the Warehouse and the crop starts at stage 0 |
+| A growing crop, dry | "2 of 4 nights · dry: water it to grow tonight" | **Water · 1 action** | Watered: it grows a stage tonight ("Watered: it grows tonight") |
+| A growing crop, watered | "2 of 4 nights · watered: it grows tonight" | None | — |
+| A ripe crop | "Ripe: harvest it." | **Harvest · 1 action** | Its crops into the Warehouse ("+2 Potato · 1 seed back") |
 
-#### Planting
+- **Refused, with why:** clearing what's clear ("It's clear already."), tilling what's overgrown ("Clear it first.") or
+  tilled, planting untilled ground ("Till it first.") or a planted tile, a seed out of season ("Tomato grows in
+  Summer."), watering nothing ("Nothing grows there."), a ripe crop or a tile watered today ("Watered today."),
+  harvesting what isn't ripe ("Not ripe yet."), and anything with no actions left.
+- **Planting:** the panel lists each seed held that plants today, own seeds first, with its count and "4 watered nights
+  to ripe", or "Won't ripen this season" when the season ends first. With none: "No seeds for Spring." and **Seeds at
+  the shop, in town**. The first planting of a crop adds it to the farm's crops at level 1.
+- **Own seeds** come back from harvests and are kept apart from the shop's; a tile planted from them raises the crop's
+  level twice as fast.
+- **On a season's last day** a growing tile that won't ripen by the morning says "Withers tonight: it won't ripen before
+  the season ends."
+- **Every draw is seeded** by the account, the day and the tile, so a harvest replays the same on every device.
+- The farm counts tiles cleared, planted and harvested (`farm.counts`).
 
-- **One plot:** tap an empty plot, then a seed. A seed plants only in its crop's seasons ("Tomato grows in Summer."),
-  and leaves the Warehouse.
-- **Plant all:** fills every empty plot of a block with one crop, your own seeds first and then the shop's, until the
-  plots or the seeds run out.
-- **Own seeds** come back from harvests and are kept apart from the shop's. A plot planted from own seeds carries a
-  green dot, and its harvests raise the crop's level twice as fast.
-- **The first planting** of a crop adds it to the farm's crops at level 1.
+#### Growing
 
-#### Tending
-
-A block's tender is an Uma who stays on it, night after night, until you move her. Each block takes one tender.
-
-- **Who may tend:** an Uma on the farm with no running job who isn't leaving tomorrow on a swap ("She isn't on the
-  farm.", "She's working.", "She leaves tomorrow."). Picking the tender of another block moves her.
-- **Busy both ways:** a tender can't take a job anywhere ("She tends Block A."), and an Uma with a running job can't
-  tend.
-- **She works a night only while her block has a growing plot.** Then she earns a day of farming rank points and has
-  work for the nudge. Tending an empty or all-Ready block is idle.
-- **Her farming rank and talent** set her block's growth, its crops' stars and its chance of seeds back.
-
-**Growth a night:** untended, **1**; tended, **(her rank's rate + her talent's) × the Watering Can × 1.25 while she's
-well fed**.
-
-| Term | Values |
-|---|---|
-| Her rank's rate | Novice 1.25, Hand 1.35, Skilled 1.45, Expert 1.55, Master 1.65, Legend 1.75 |
-| Her farming talent | +0.05 at B, +0.10 at A, +0.15 at S; nothing below B |
-| The Watering Can | +10% a tier above Basic |
-| Well fed | ×1.25 |
-
-A crop turns **Ready once its growth reaches its days − 0.5**, so tending rounds to the nearest night: a 4-day Carrot
-takes 4 nights untended and 3 tended; a 10-day Asparagus takes 8 with a Novice and 7 with an Expert. Growth is kept to a
-millionth, so 3 × 1.35 reaches 4.05.
-
-Every farm has Basic tools, and nothing on the farm upgrades them, so the Watering Can and the Hoe add nothing in play.
-
-Growth by the tender's rank and talent, the stars a D tender's harvests draw at crop level 1, and the chance of seeds
-back:
-
-<!-- live:tending -->
-| Tender | Growth, G | Growth, D | Growth, C | Growth, B | Growth, A | Growth, S | Stars, a D tender | Seeds back |
-|---|---|---|---|---|---|---|---|---|
-| Untended | 1 | 1 | 1 | 1 | 1 | 1 | ★1 100% | 5% |
-| Novice | 1.25 | 1.25 | 1.25 | 1.3 | 1.35 | 1.4 | ★1 75%, ★2 25% | 10% |
-| Hand | 1.35 | 1.35 | 1.35 | 1.4 | 1.45 | 1.5 | ★1 25%, ★2 75% | 15% |
-| Skilled | 1.45 | 1.45 | 1.45 | 1.5 | 1.55 | 1.6 | ★2 75%, ★3 25% | 20% |
-| Expert | 1.55 | 1.55 | 1.55 | 1.6 | 1.65 | 1.7 | ★2 25%, ★3 75% | 25% |
-| Master | 1.65 | 1.65 | 1.65 | 1.7 | 1.75 | 1.8 | ★3 75%, ★4 25% | 30% |
-| Legend | 1.75 | 1.75 | 1.75 | 1.8 | 1.85 | 1.9 | ★3 25%, ★4 75% | 35% |
-<!-- /live -->
+- **A watered tile grows one stage a night** (night step 2), and turns **ripe once its stages reach its days − 0.5**: a
+  4-day Carrot is ripe after four watered nights, a 10-day Asparagus after ten. A dry tile doesn't grow, and loses
+  nothing.
+- **Every tile dries overnight,** so a crop takes one Water a day it grows: a Carrot costs a plant, four waters and a
+  harvest, six actions for its one crop.
+- **Ripe crops wait** as long as you like, and are never watered.
+- **A farmer Uma's night chores** water a dry growing tile each (see [the romance in the field](#the-romance-in-the-field)).
 
 #### Harvesting
 
-Tap a Ready plot to harvest it. **Harvest all** does a block on the Fields' page, and every block in the quick look and
-with Collect all.
+- **Each crop draws its own stars.** A tile gives its yield in crops, and each draws its stars from the harvest's
+  quality points: the crop's level (+0.1 a level above 1) and the Hoe (+0.25 a tier above Basic). At crop level 1
+  that's always ★1. Every farm has the Basic Hoe, and nothing on the farm upgrades it yet.
+- **Seeds back:** each harvest may drop one own seed of its crop: 5%, and +5% a Hoe tier above Basic.
+- **Crop points:** each harvested tile adds 1 point to its crop, or 2 if it was planted from own seeds.
+- **The tile stays tilled** and empty, ready to plant again.
 
-- **Each crop draws its own stars.** A plot gives its yield in crops, and each draws its stars from the harvest's
-  quality points.
-- **Quality, tended:** her rank (+0.5 a rank, Novice 0 to Legend 2.5), her talent (G −0.75 to S +1, D 0), +0.25 for
-  being tended, the crop's level (+0.1 a level above 1), the Hoe (+0.25 a tier above Basic) and +0.25 while she's well
-  fed.
-- **Quality, untended:** only the crop's level and the Hoe. At crop level 1 that's always ★1.
-- **The tender at harvest counts.** Stars, seeds back and the challenge read whoever tends the block when you harvest,
-  not who tended it as it grew; a block with nobody on it harvests untended.
-- **Seeds back:** each harvested plot may drop one own seed of its crop: 5% untended; tended, 10% at Novice and +5% a
-  rank (35% at Legend); and +5% a Hoe tier above Basic either way.
-- **Crop points:** each harvested plot adds 1 point to its crop, or 2 if it was planted from own seeds.
-- **The challenge:** the crops harvested count toward the tender's next farming rank's challenge (below).
-- **The note** says what came home: "+9 Carrot (★1 × 7, ★2 × 2) · 1 seed back".
-- **Every draw is seeded** by the account, the day and the plot, so a harvest replays the same on every device.
-- The farm counts plots planted and harvested (`farm.counts`).
+A harvest's stars by the crop's level, and the chance of a seed back:
+
+<!-- live:harvest-stars -->
+| Crop level | Quality | Stars | Seed back |
+|---|---|---|---|
+| 1 | +0 | ★1 100% | 5% |
+| 2 | +0.1 | ★1 90%, ★2 10% | 5% |
+| 4 | +0.3 | ★1 70%, ★2 30% | 5% |
+| 6 | +0.5 | ★1 50%, ★2 50% | 5% |
+| 8 | +0.7 | ★1 30%, ★2 70% | 5% |
+| 10 | +0.9 | ★1 10%, ★2 90% | 5% |
+<!-- /live -->
 
 #### Regrowing
 
-Mint, Tomato, Basil and Bell Pepper regrow every 3 days, Eggplant and Corn every 4. After a harvest the plot keeps its
-crop and starts again from 0, turning Ready at its regrow days − 0.5 at the block's rate, so tending speeds regrowth
-too. It keeps its seed's kind, own or the shop's, for its crop points. Out of its season a regrowing crop doesn't start
-again: a Ready Tomato harvested on Autumn 1 leaves the plot empty.
+Mint, Tomato, Basil and Bell Pepper regrow in 3 watered nights, Eggplant and Corn in 4. After a harvest the tile keeps
+its crop and starts again at stage 0, so it needs watering again. It keeps its seed's kind, own or the shop's, for its
+crop points. Out of its season a regrowing crop doesn't start again: a ripe Tomato harvested on Autumn 1 leaves the tile
+empty.
 
 #### Withering
 
 On a season's last night, after the night's growth and before the date turns, every crop still growing (a regrowing one
-too) that doesn't grow in the next season withers, and its plot empties. Ready crops never wither: they wait to be
-harvested. Only Corn (Summer into Autumn) and Cabbage (Winter into Spring) carry over. Onion grows in Spring and Autumn,
-which don't meet, so a growing Onion withers at the end of both. On a season's last day the Fields mark each plot that
-won't be Ready by the morning and will wither: "Withers tonight".
+too) that doesn't grow in the next season withers, and its tile is left tilled and empty. Ripe crops never wither: they
+wait to be harvested. Only Corn (Summer into Autumn) and Cabbage (Winter into Spring) carry over. Onion grows in Spring
+and Autumn, which don't meet, so a growing Onion withers at the end of both.
 
 #### Crop levels
 
 Each crop has a level from 1 to 10 on the farm, from its crop points. Going from level *L* to *L* + 1 takes 20 × *L*
-points, and each level above 1 adds +0.1 quality to the crop's harvests, tended or not. A harvest's stars use the crop's
-level before its own points are added.
+points, and each level above 1 adds +0.1 quality to the crop's harvests. A harvest's stars use the crop's level before
+its own points are added.
 
 The points each level starts at, and its quality:
 
@@ -665,9 +707,8 @@ The points each level starts at, and its quality:
 
 #### Farming's challenges
 
-Each farming rank needs its points and its challenge. The challenge counts at harvest, for the block's tender, from her
-last rank-up, and stops at its target; "crops" are crops harvested, not plots, so a Potato plot counts 2. The rank-up
-itself comes at night. Ranks are described with the Umas and the farm's progress.
+Each Uma's farming rank needs its points and its challenge. They wait for the farmhands: the farmer works the field
+alone, and his harvests count toward no Uma's challenge. Ranks are described with the Umas and the farm's progress.
 
 The challenge toward each farming rank:
 
@@ -681,217 +722,111 @@ The challenge toward each farming rank:
 | Legend | 1st at a Flower Show with a crop she tended | A festival win (festivals aren’t built yet) |
 <!-- /live -->
 
-The Legend challenge can't be met while festivals are dates only.
+#### The field at night
 
-#### The Fields at night
-
-- **Step 2:** every planted plot that isn't Ready grows by its block's rate tonight; one that reaches its days − 0.5
-  turns Ready. Ready plots stop growing and wait. A tender whose block had a growing plot worked the night.
+- **Step 2:** every growing tile watered today grows a stage; one whose stages reach its days − 0.5 turns ripe. Then
+  every tile dries.
 - **Step 7:** on a season's last night, crops that don't grow next season wither.
-- **The morning** lists plots that turned Ready by block ("Block A · 9 crops ready"), then what withered ("Block A · 3
-  Onion withered"), each opening the Fields; and under Today, "9 plots to plant" while seeds you hold for the season
-  could fill empty plots.
+- **The morning** says "The field · 5 crops grew · 2 ripe", then what withered ("The field · 3 Onion withered"), each
+  opening the farm map; and under Today, "5 tiles to water" while crops grow, and "9 tiles to plant" while seeds you
+  hold for the season could fill empty tilled tiles.
 
-#### The Fields' screens
+#### The romance in the field
 
-- **The quick look:** a row a block, with its tender's face (a dash untended, a lock for a block not bought) and its
-  line: "9 growing · ready in 2 nights", "3 ready", "Empty", or a block not bought's "Farm Rank 2 · 800g". Under them,
-  **Harvest all · 3** (every block) and **Open the Fields**.
-- **The Fields' page:** four block cards, A to D.
-  - **A block you own:** "Block A" and "Tended · 1.25 a night" or "Untended · 1 a night"; **Plant all** while a plot is
-    empty and **Harvest all · 3** while one is Ready; its tender's row (face, name, "Hand · B · Farming") with **Stop**
-    and **Change**, or "No tender · Grows 1 a night, at ★1" with **Tend**; and its 3 × 3 plots.
-  - **A plot:** empty (a dashed "+": a tap plants), growing (the crop, "2 nights" and a growth bar, or "Withers
-    tonight": a tap shows it), or Ready (a tap harvests). A green dot marks own seeds.
-  - **A block not bought:** "Opens at Farm Rank 2", "Need 300g more" or "9 plots", with **Buy · 800g**.
-- **The plant sheet:** each seed you hold that plants today, own seeds first, with its count, "Ready in 4 nights
-  untended", its yield and its regrowth. Plant all lists each crop with all its seeds. With none: "No seeds for Spring."
-  and **Shop**.
-- **A growing plot's sheet:** the crop; "Ready in 2 nights" (or "Withers tonight", with why); the block and plot,
-  "regrowing" and "own seeds" when so; who tends it and the block's rate; its yield and regrowth.
-- **The tender's picker:** the Umas on the farm, each with her farming rank and talent ("Hand · B"), or "Tends Block B"
-  or "Leaves tomorrow", free ones first, then by farming. A working Uma shows "Working" and can't be picked.
-- **The help (i)** says how the Fields work in five lines.
-
-#### The romance in the Fields
-
-The romance adds to the Fields; its perks and bonds are the romance's.
-- **Side by side:** a tended block grows ×1.1 while its tender has a partner she has 3+ bond hearts with tending another
-  block that has a growing plot (×1.2 for a farmer in her element, at Friendship 8). Its card adds "· side by side", and
-  its plots' nights left count it.
-- **Night chores:** each of a farmer's chores adds +0.25 growth tonight to the untended block with the most growing
-  plots, else to her own while it grows; the morning says "Night chores · +0.5 growth".
-- **An extra crop:** each harvested plot of a tended block has a chance of one more crop at the plot's stars, equal to
-  the romance term on its tender's work there (held to 40%). The note says "· 1 from perks". An untended harvest gets
-  none.
-- **Her keepsake** (Friendship 10): +0.25 quality on her block's harvests when the Fields are her line's place (+0.5
-  from Spouse 5).
-- **Praise:** a ★3+ crop from the block she tends earns her praise for the day.
-- **Bonds:** two tenders earn bond points together at night, the Fields counting as one place.
-- **A spouse in her house** is on the farm, so she may tend.
+The romance's perks reach the field only through the night: the farmer works it alone, so the perks that ride on an
+Uma's work there (side by side, an extra crop, her keepsake on her harvests, bonds at work) wait for the farmhands.
+- **Night chores:** each of a farmer Uma's chores waters a dry growing tile tonight, a seeded pick, so it grows; the
+  morning says "Night chores · 2 tiles watered".
+- **Praise:** a ★3+ crop doesn't earn anyone praise while the farmer harvests alone.
 
 ### Gathering
 
-The forest and the Fishery are where Umas go for days at a time. Each day of a job brings home a haul, ready the next
-morning, and an Uma's rank opens deeper places, whose goods are worth more.
+The farmer gathers by hand at the farm's edges: the woods' edge, where he forages and chops, and the pond's edge, where
+he fishes. Each is one action and brings its goods home at once, straight into the Warehouse. The Farm Rank opens deeper
+areas and spots, whose goods are worth more.
 
 ```
- the job sheet: Who ──► Where (her rank opens it) ──► How many days (1–4)
-     │ planned at the start: each day's items = round(base × rank × talent × tool × well fed),
-     │ each good and its stars drawn
-     ▼
- the night: a day's haul is done ──► it counts toward her challenge; the best catch is noted
-     ▼
- the morning: Ready ──Collect──► the Warehouse at its stars; each fish measured: "+5 · ★1 × 4, ★2 × 1"
+ the woods' edge ──Forage · 1──► 2 of the area's season's finds  ─┐
+                 ──Chop · 1────► 2 logs of the area's woods       ├─► the Warehouse, at their stars, now
+ the pond's edge ──Fish · 1────► 1 fish, measured as it lands    ─┘   (a record when it's the biggest of its kind)
+ the Farm Rank opens each deeper area and spot (the sea's also wait for the Dock and the Boat)
 ```
 
-#### A gathering job
+#### A forage, a chop, a catch
 
-- **A job is 1 to 4 days** at one forest area or one fishing spot, in one of the place's four slots. Up to three more
-  jobs can queue behind it at the same place.
-- **The haul is planned when the job starts:** each day's items from her rank, talent, tool and well-fed days as they
-  stand then, each good and its stars drawn and seeded by the account and the day, so the same save always plans the
-  same haul. A rank-up mid-job doesn't change it. A queued job is planned when it starts, at the night's boundary, with
-  that night's ranks.
-- **Each day's haul is ready the next morning**, and can be collected while the job runs on.
-- **Her rank opens deeper places:** an area or spot her rank hasn't opened is refused ("Opens at Hand."). The sea's two
-  spots also wait for their place built: the Sea Pier for the Dock ("Needs the Dock."), the Deep Sea for the Boat
-  ("Needs the Boat."), both offered at Farm Rank 6.
-- **Who may go:** an Uma on the farm who isn't tending a block ("She tends Block A."), isn't leaving tomorrow, and isn't
-  busy ("She is busy for another 2 days.").
-- **Starting a job** for an Uma with finished work collects it first.
-- **Repeat** starts her last job again this morning, in her slot or another free one there; on a finished job it
-  collects and repeats in one tap.
-- **Recall** collects what's finished, ends her job and drops her queue; she's free at once, and Repeat won't restart a
-  recalled job.
-- **A stopped queue:** when a queued job can't start, the rest of the queue stops and shows as a card ("Forest · stopped
-  yesterday") with Restart and Dismiss.
-- **A day at the forest** earns foraging rank points, a day at the Fishery fishing points.
+- **One action, one haul,** at one area or one spot, as often as the day's actions allow. What it brings goes into the
+  Warehouse at once, and the panel says so: "Foraged · +Pine Log, Shiitake", "Chopped · +Pine Log, Birch Log", "Carp ★1
+  · 38.4 cm".
+- **What comes:** each good drawn by its share in the area's or the spot's season (below), its stars from the farmer's
+  quality, a Novice with a D talent and the farm's Axe or Rod: ★1 with the Basic tools every farm has.
+- **His reach is the Farm Rank's:** each depth an Uma's rank opened (Novice to Legend) opens for the farmer at Farm Rank
+  1, 2, 4, 6, 8 and 10. An area or spot past his reach shows greyed with "Opens at Farm Rank 2". The sea's two spots
+  also wait for their place built: the Sea Pier for the Dock ("Needs the Dock"), the Deep Sea for the Boat ("Needs the
+  Boat"), both offered at Farm Rank 6.
+- **Every draw is seeded** by the account, the day and the farm's lifetime count of what came home from there, so each
+  haul draws anew and every device draws alike.
+- **The farm counts** what comes home from the woods and the pond and the logs chopped (`farm.counts`), and notes each
+  area and spot worked today (`today.gathered`): the Diary pays 500g the first night one past the Woods or the Pond is
+  worked.
+
+What each action brings:
+
+<!-- live:farmer-hauls -->
+| Action | Brings | Stars, with the Basic Axe or Rod | Counted |
+|---|---|---|---|
+| Forage an area | 2 of its season’s finds, each by its share | ★1 100% | `home:forest` |
+| Chop at an area | 2 logs of its season’s woods, each by its share | ★1 100% | `logs-chopped` and `home:forest` |
+| Fish a spot | One fish of its season’s, by its share, measured as it lands (k = 1.35) | ★1 100% | `home:fishery` |
+<!-- /live -->
 
 #### The forest's areas
 
 Six areas, each yielding its family's two grades about 65/35: woods 40%, mushrooms 30%, herbs and spices 15%, and the
 season's family 15% (Spring sweets, Summer fruits, Autumn nuts and seeds, Winter more mushrooms). Seven crops are forest
 goods too (Basil, Mint, Ginger, Mandrake, Peanut, Sunflower Seed and Sugar Beet): gathered, each is the same good as
-harvested, at the crop's price.
+harvested, at the crop's price. Chopping draws only the area's woods.
 
-Each area's rank, grades and goods by season, with their shares:
+Each area's Farm Rank for the farmer (and the rank an Uma needs, for the farmhands), its grades and its goods by season,
+with their shares:
 
 <!-- live:forest-areas -->
-| Area | Id | Opens at | Grades | Spring | Summer | Autumn | Winter |
-|---|---|---|---|---|---|---|---|
-| The Woods | `woods` | Novice | G1–G2 | Pine Log 26%, Button Mushroom 20%, Birch Log 14%, Shiitake 10%, Basil 10%, Honeycomb 10%, Mint 5%, Sugarcane 5% | Pine Log 26%, Button Mushroom 20%, Birch Log 14%, Shiitake 10%, Basil 10%, Apple 10%, Mint 5%, Pear 5% | Pine Log 26%, Button Mushroom 20%, Birch Log 14%, Shiitake 10%, Basil 10%, Peanut 10%, Mint 5%, Sunflower Seed 5% | Button Mushroom 29%, Pine Log 26%, Shiitake 16%, Birch Log 14%, Basil 10%, Mint 5% |
-| The Hills | `hills` | Hand | G3–G4 | Cedar Log 26%, Oyster Mushroom 20%, Maple Log 14%, Enoki 10%, Rosemary 10%, Sugar Beet 10%, Thyme 5%, Maple Sap 5% | Cedar Log 26%, Oyster Mushroom 20%, Maple Log 14%, Enoki 10%, Rosemary 10%, Peach 10%, Thyme 5%, Plum 5% | Cedar Log 26%, Oyster Mushroom 20%, Maple Log 14%, Enoki 10%, Rosemary 10%, Sesame 10%, Thyme 5%, Walnut 5% | Oyster Mushroom 29%, Cedar Log 26%, Enoki 16%, Maple Log 14%, Rosemary 10%, Thyme 5% |
-| The Old Forest | `old-forest` | Skilled | G4–G5 | Maple Log 26%, Enoki 20%, Oak Log 14%, Chanterelle 10%, Thyme 10%, Maple Sap 10%, Ginger 5%, Cacao Pod 5% | Maple Log 26%, Enoki 20%, Oak Log 14%, Chanterelle 10%, Thyme 10%, Plum 10%, Ginger 5%, Orange 5% | Maple Log 26%, Enoki 20%, Oak Log 14%, Chanterelle 10%, Thyme 10%, Walnut 10%, Ginger 5%, Chestnut 5% | Enoki 29%, Maple Log 26%, Chanterelle 16%, Oak Log 14%, Thyme 10%, Ginger 5% |
-| The Mountain | `mountain` | Expert | G6–G7 | Cherry Log 26%, Porcini 20%, Mahogany Log 14%, Morel 10%, Peppercorn 10%, Vanilla Pod 10%, Cinnamon 5%, Agave Heart 5% | Cherry Log 26%, Porcini 20%, Mahogany Log 14%, Morel 10%, Peppercorn 10%, Grape 10%, Cinnamon 5%, Mango 5% | Cherry Log 26%, Porcini 20%, Mahogany Log 14%, Morel 10%, Peppercorn 10%, Almond 10%, Cinnamon 5%, Pistachio 5% | Porcini 29%, Cherry Log 26%, Morel 16%, Mahogany Log 14%, Peppercorn 10%, Cinnamon 5% |
-| The Misty Vale | `misty-vale` | Master | G8–G9 | Ebony Log 26%, Truffle 20%, Elderwood Log 14%, Glowcap 10%, Saffron 10%, Palm Sap 10%, Mandrake 5%, Fairy Honeycomb 5% | Ebony Log 26%, Truffle 20%, Elderwood Log 14%, Glowcap 10%, Saffron 10%, Pomegranate 10%, Mandrake 5%, Starpeach 5% | Ebony Log 26%, Truffle 20%, Elderwood Log 14%, Glowcap 10%, Saffron 10%, Macadamia 10%, Mandrake 5%, Thundernut 5% | Truffle 29%, Ebony Log 26%, Glowcap 16%, Elderwood Log 14%, Saffron 10%, Mandrake 5% |
-| The World Tree | `world-tree` | Legend | G9–G10 | Elderwood Log 26%, Glowcap 20%, Yggdrasil Branch 14%, King Reishi 10%, Mandrake 10%, Fairy Honeycomb 10%, Phoenix Pepper 5%, Ambrosia Blossom 5% | Elderwood Log 26%, Glowcap 20%, Yggdrasil Branch 14%, King Reishi 10%, Mandrake 10%, Starpeach 10%, Phoenix Pepper 5%, Golden Apple 5% | Elderwood Log 26%, Glowcap 20%, Yggdrasil Branch 14%, King Reishi 10%, Mandrake 10%, Thundernut 10%, Phoenix Pepper 5%, Worldseed 5% | Glowcap 29%, Elderwood Log 26%, King Reishi 16%, Yggdrasil Branch 14%, Mandrake 10%, Phoenix Pepper 5% |
+| Area | Id | Opens at | An Uma at | Grades | Spring | Summer | Autumn | Winter |
+|---|---|---|---|---|---|---|---|---|
+| The Woods | `woods` | Farm Rank 1 | Novice | G1–G2 | Pine Log 26%, Button Mushroom 20%, Birch Log 14%, Shiitake 10%, Basil 10%, Honeycomb 10%, Mint 5%, Sugarcane 5% | Pine Log 26%, Button Mushroom 20%, Birch Log 14%, Shiitake 10%, Basil 10%, Apple 10%, Mint 5%, Pear 5% | Pine Log 26%, Button Mushroom 20%, Birch Log 14%, Shiitake 10%, Basil 10%, Peanut 10%, Mint 5%, Sunflower Seed 5% | Button Mushroom 29%, Pine Log 26%, Shiitake 16%, Birch Log 14%, Basil 10%, Mint 5% |
+| The Hills | `hills` | Farm Rank 2 | Hand | G3–G4 | Cedar Log 26%, Oyster Mushroom 20%, Maple Log 14%, Enoki 10%, Rosemary 10%, Sugar Beet 10%, Thyme 5%, Maple Sap 5% | Cedar Log 26%, Oyster Mushroom 20%, Maple Log 14%, Enoki 10%, Rosemary 10%, Peach 10%, Thyme 5%, Plum 5% | Cedar Log 26%, Oyster Mushroom 20%, Maple Log 14%, Enoki 10%, Rosemary 10%, Sesame 10%, Thyme 5%, Walnut 5% | Oyster Mushroom 29%, Cedar Log 26%, Enoki 16%, Maple Log 14%, Rosemary 10%, Thyme 5% |
+| The Old Forest | `old-forest` | Farm Rank 4 | Skilled | G4–G5 | Maple Log 26%, Enoki 20%, Oak Log 14%, Chanterelle 10%, Thyme 10%, Maple Sap 10%, Ginger 5%, Cacao Pod 5% | Maple Log 26%, Enoki 20%, Oak Log 14%, Chanterelle 10%, Thyme 10%, Plum 10%, Ginger 5%, Orange 5% | Maple Log 26%, Enoki 20%, Oak Log 14%, Chanterelle 10%, Thyme 10%, Walnut 10%, Ginger 5%, Chestnut 5% | Enoki 29%, Maple Log 26%, Chanterelle 16%, Oak Log 14%, Thyme 10%, Ginger 5% |
+| The Mountain | `mountain` | Farm Rank 6 | Expert | G6–G7 | Cherry Log 26%, Porcini 20%, Mahogany Log 14%, Morel 10%, Peppercorn 10%, Vanilla Pod 10%, Cinnamon 5%, Agave Heart 5% | Cherry Log 26%, Porcini 20%, Mahogany Log 14%, Morel 10%, Peppercorn 10%, Grape 10%, Cinnamon 5%, Mango 5% | Cherry Log 26%, Porcini 20%, Mahogany Log 14%, Morel 10%, Peppercorn 10%, Almond 10%, Cinnamon 5%, Pistachio 5% | Porcini 29%, Cherry Log 26%, Morel 16%, Mahogany Log 14%, Peppercorn 10%, Cinnamon 5% |
+| The Misty Vale | `misty-vale` | Farm Rank 8 | Master | G8–G9 | Ebony Log 26%, Truffle 20%, Elderwood Log 14%, Glowcap 10%, Saffron 10%, Palm Sap 10%, Mandrake 5%, Fairy Honeycomb 5% | Ebony Log 26%, Truffle 20%, Elderwood Log 14%, Glowcap 10%, Saffron 10%, Pomegranate 10%, Mandrake 5%, Starpeach 5% | Ebony Log 26%, Truffle 20%, Elderwood Log 14%, Glowcap 10%, Saffron 10%, Macadamia 10%, Mandrake 5%, Thundernut 5% | Truffle 29%, Ebony Log 26%, Glowcap 16%, Elderwood Log 14%, Saffron 10%, Mandrake 5% |
+| The World Tree | `world-tree` | Farm Rank 10 | Legend | G9–G10 | Elderwood Log 26%, Glowcap 20%, Yggdrasil Branch 14%, King Reishi 10%, Mandrake 10%, Fairy Honeycomb 10%, Phoenix Pepper 5%, Ambrosia Blossom 5% | Elderwood Log 26%, Glowcap 20%, Yggdrasil Branch 14%, King Reishi 10%, Mandrake 10%, Starpeach 10%, Phoenix Pepper 5%, Golden Apple 5% | Elderwood Log 26%, Glowcap 20%, Yggdrasil Branch 14%, King Reishi 10%, Mandrake 10%, Thundernut 10%, Phoenix Pepper 5%, Worldseed 5% | Glowcap 29%, Elderwood Log 26%, King Reishi 16%, Yggdrasil Branch 14%, Mandrake 10%, Phoenix Pepper 5% |
 <!-- /live -->
 
 #### The Fishery's spots
 
-Seven spots, each with its fish by season and their shares:
+Seven spots, each with its fish by season and their shares, and the Farm Rank that opens it for the farmer:
 
 <!-- live:fishing-spots -->
-| Spot | Id | Opens at | Spring | Summer | Autumn | Winter |
-|---|---|---|---|---|---|---|
-| The Pond | `pond` | Novice | Carp 60%, Trout 40% | Carp 98%, Rainbow Koi 2% | Carp 60%, Trout 40% | Carp 70%, Trout 30% |
-| The River | `river` | Hand | Trout 40%, Carp 20%, Salmon 40% | Eel 40%, Trout 40%, Carp 20% | Salmon 50%, Trout 50% | Trout 60%, Salmon 20%, Carp 20% |
-| The Lake | `lake` | Skilled | Salmon 50%, Trout 20%, Eel 30% | Eel 50%, Salmon 47%, Rainbow Koi 3% | Salmon 50%, Eel 30%, Silverfin 20% | Silverfin 20%, Trout 30%, Salmon 50% |
-| The Falls | `falls` | Expert | Eel 50%, Salmon 25%, Silverfin 20%, Rainbow Koi 5% | Eel 60%, Silverfin 30%, Rainbow Koi 10% | Silverfin 30%, Salmon 40%, Eel 25%, Rainbow Koi 5% | Silverfin 40%, Trout 50%, Rainbow Koi 10% |
-| The Moon Pool | `moon-pool` | Legend | Rainbow Koi 60%, Silverfin 40% | Rainbow Koi 60%, Silverfin 40% | Rainbow Koi 60%, Silverfin 40% | Rainbow Koi 60%, Silverfin 40% |
-| The Sea Pier | `sea-pier` | Hand + the Dock built | Sardine 60%, Sea Bream 40% | Sardine 50%, Mackerel 20%, Sea Bream 30% | Mackerel 60%, Sea Bream 40% | Mackerel 70%, Sardine 30% |
-| The Deep Sea | `deep-sea` | Master + the Boat built | Tuna 50%, Silverfin 40%, Rainbow Koi 10% | Tuna 60%, Silverfin 30%, Sea Bream 10% | Tuna 50%, Silverfin 40%, Rainbow Koi 10% | Tuna 60%, Silverfin 40% |
+| Spot | Id | Opens at | An Uma at | Spring | Summer | Autumn | Winter |
+|---|---|---|---|---|---|---|---|
+| The Pond | `pond` | Farm Rank 1 | Novice | Carp 60%, Trout 40% | Carp 98%, Rainbow Koi 2% | Carp 60%, Trout 40% | Carp 70%, Trout 30% |
+| The River | `river` | Farm Rank 2 | Hand | Trout 40%, Carp 20%, Salmon 40% | Eel 40%, Trout 40%, Carp 20% | Salmon 50%, Trout 50% | Trout 60%, Salmon 20%, Carp 20% |
+| The Lake | `lake` | Farm Rank 4 | Skilled | Salmon 50%, Trout 20%, Eel 30% | Eel 50%, Salmon 47%, Rainbow Koi 3% | Salmon 50%, Eel 30%, Silverfin 20% | Silverfin 20%, Trout 30%, Salmon 50% |
+| The Falls | `falls` | Farm Rank 6 | Expert | Eel 50%, Salmon 25%, Silverfin 20%, Rainbow Koi 5% | Eel 60%, Silverfin 30%, Rainbow Koi 10% | Silverfin 30%, Salmon 40%, Eel 25%, Rainbow Koi 5% | Silverfin 40%, Trout 50%, Rainbow Koi 10% |
+| The Moon Pool | `moon-pool` | Farm Rank 10 | Legend | Rainbow Koi 60%, Silverfin 40% | Rainbow Koi 60%, Silverfin 40% | Rainbow Koi 60%, Silverfin 40% | Rainbow Koi 60%, Silverfin 40% |
+| The Sea Pier | `sea-pier` | Farm Rank 2 + the Dock built | Hand | Sardine 60%, Sea Bream 40% | Sardine 50%, Mackerel 20%, Sea Bream 30% | Mackerel 60%, Sea Bream 40% | Mackerel 70%, Sardine 30% |
+| The Deep Sea | `deep-sea` | Farm Rank 8 + the Boat built | Master | Tuna 50%, Silverfin 40%, Rainbow Koi 10% | Tuna 60%, Silverfin 30%, Sea Bream 10% | Tuna 50%, Silverfin 40%, Rainbow Koi 10% | Tuna 60%, Silverfin 40% |
 <!-- /live -->
-
-#### What a day brings home
-
-Items a day = round(base × rank × talent × tool × well fed), rounded half up and never below 1. The base is 5 in the
-forest and 3 at the Fishery; the tool is the Axe in the forest and the Rod at the Fishery, every one Basic today; well
-fed counts on each day she's well fed.
-
-The factors:
-
-<!-- live:haul-factors -->
-| Factor | Values |
-|---|---|
-| Base, at Novice | The forest 5, the Fishery 3 |
-| Rank | ×1 · ×1.15 · ×1.3 · ×1.5 · ×1.7 · ×2 |
-| Talent, G → S | ×0.85 · ×0.9 · ×0.95 · ×1 · ×1.05 · ×1.1 · ×1.15 · ×1.2 |
-| Tool (the Axe, the Rod), Basic → Mythril | ×1 · ×1.15 · ×1.3 · ×1.45 · ×1.6 |
-| Well fed | ×1.25 |
-<!-- /live -->
-
-Items a day with the Basic tool, by rank and talent:
-
-<!-- live:haul-day -->
-| Rank | Yield | Forest D | Forest C | Forest S | Fishery D | Fishery C | Fishery S | Forest C, well fed |
-|---|---|---|---|---|---|---|---|---|
-| Novice | ×1 | 5 | 5 | 6 | 3 | 3 | 4 | 7 |
-| Hand | ×1.15 | 6 | 6 | 7 | 3 | 4 | 4 | 8 |
-| Skilled | ×1.3 | 7 | 7 | 8 | 4 | 4 | 5 | 9 |
-| Expert | ×1.5 | 8 | 8 | 9 | 5 | 5 | 5 | 10 |
-| Master | ×1.7 | 9 | 9 | 10 | 5 | 5 | 6 | 11 |
-| Legend | ×2 | 10 | 11 | 12 | 6 | 6 | 7 | 13 |
-<!-- /live -->
-
-Worked: a Novice C forager in the Woods brings round(5 × 1 × 1.05) = **5** a day; a Hand C angler at the River brings
-round(3 × 1.15 × 1.05) = **4**.
-
-#### Stars
-
-Every gathered good draws its own stars from her quality points: +0.5 a rank (Novice 0 to Legend 2.5), her talent (G
-−0.75 to S +1, D 0), +0.25 a tool tier above Basic, and +0.25 on a day she's well fed. How stars are drawn is under
-Goods and gold.
-
-Quality and stars by rank, with the Basic tool:
-
-<!-- live:gather-quality -->
-| Rank | Q at D | Q at C | Q at S | Stars at C | Stars at C, well fed |
-|---|---|---|---|---|---|
-| Novice | 0 | 0.25 | 1 | ★1 75%, ★2 25% | ★1 50%, ★2 50% |
-| Hand | 0.5 | 0.75 | 1.5 | ★1 25%, ★2 75% | ★2 100% |
-| Skilled | 1 | 1.25 | 2 | ★2 75%, ★3 25% | ★2 50%, ★3 50% |
-| Expert | 1.5 | 1.75 | 2.5 | ★2 25%, ★3 75% | ★3 100% |
-| Master | 2 | 2.25 | 3 | ★3 75%, ★4 25% | ★3 50%, ★4 50% |
-| Legend | 2.5 | 2.75 | 3.5 | ★3 25%, ★4 75% | ★4 100% |
-<!-- /live -->
-
-#### Well fed
-
-Well fed is a number of days on an Uma. It counts down by one each night, and a new meal only raises it to the meal's
-own length; it never stacks.
-
-| Where | Well fed gives |
-|---|---|
-| A gathering job | ×1.25 items and +0.25 quality on each day of the job she'll be well fed, counted from its start |
-| A 1-day station job | ×1.25 her rate on each day she'll be well fed |
-| A multi-day job (the Mill's preserves) | A quarter day a night: each night she's well fed, her running job moves a quarter day further, so more of the batch is done each morning and four such nights save a day |
-| A tended block | ×1.25 growth on a night she's well fed, and +0.25 quality on a harvest while she is |
-| Rank points | ×1.25 on a day she's well fed |
-
-A wedding's reception and a spouse's breakfast feed the Umas (the romance's); nothing else does yet.
-
-#### Collecting
-
-- **Collect** (a slot's button, **Collect here** on the page, or **Collect all** on the map) puts her finished goods in
-  the Warehouse at their stars and says what came home: "+5 · ★1 × 4, ★2 × 1". Finished goods wait as long as you like.
-- **Her slot frees** once her job is over and collected.
-- **The farm counts** what comes home from the forest and the Fishery (`farm.counts`).
-- **The Diary** pays 500g the first time a haul comes from each area past the Woods and each spot past the Pond, on the
-  night the haul is done.
 
 #### Catch sizes and records
 
-Each fish is measured when it's collected:
+Each fish is measured as it lands:
 
 - **Size** = min + (max − min) × u^(8 ÷ k), in cm to a tenth.
-- **k** = 1 + 0.25 × her fishing rank (Novice 0 to Legend 5) + 0.1 × her fishing talent's step (G 0 to S 7) + 0.05 × the
-  Rod's tier, all as they stand at the collect. A rank-up before you collect lands bigger fish.
-- **u** is seeded by the account, the collect's day, the Uma and the fish's place in the farm's catches, so the same
-  collect always measures the same.
-- **Records:** the farm keeps the biggest of each kind. The collect's note names the biggest fish it brought, "Carp 41.2
-  cm, a record" when it beats the farm's record. No screen lists the records.
+- **k** = 1 + 0.25 × the fisher's rank (Novice 0 to Legend 5) + 0.1 × the talent's step (G 0 to S 7) + 0.05 × the Rod's
+  tier: the farmer's is the table's above.
+- **u** is seeded by the account, the day and the farm's count of fish home, so the same catch always measures
+  the same.
+- **Records:** the farm keeps the biggest of each kind, and a catch that beats it says "…, a record". No screen lists
+  the records.
 
 Each fish's size range, its price and its fillet's:
 
@@ -910,129 +845,74 @@ Each fish's size range, its price and its fillet's:
 | Rainbow Koi | `rainbow-koi` | 40–100 cm | 390g | Rainbow Koi Fillet | 585g |
 <!-- /live -->
 
-Better anglers land bigger fish: u^(8 ÷ k) leans small, less so as k grows. Her k by rank and talent, and the average
-catch it gives:
+#### Well fed
 
-<!-- live:size-skill -->
-| Rank | k at D | k at C | k at S | Average at C | A Carp at C, on average |
-|---|---|---|---|---|---|
-| Novice | 1.35 | 1.45 | 1.75 | 15% | 26.1 cm |
-| Hand | 1.6 | 1.7 | 2 | 18% | 27.0 cm |
-| Skilled | 1.85 | 1.95 | 2.25 | 20% | 27.8 cm |
-| Expert | 2.1 | 2.2 | 2.5 | 22% | 28.6 cm |
-| Master | 2.35 | 2.45 | 2.75 | 23% | 29.4 cm |
-| Legend | 2.6 | 2.7 | 3 | 25% | 30.1 cm |
-<!-- /live -->
+Well fed is a number of days on an Uma. It counts down by one each night, and a new meal only raises it to the meal's
+own length; it never stacks. A wedding's reception and a spouse's breakfast feed the Umas (the romance's); nothing else
+does yet, and it lifts nothing while the farmer works alone.
 
-#### The night's hauls
+#### The woods' and the pond's panels
 
-- **Step 4** reads every day's haul that finished tonight.
-- **Each haul counts toward its Uma's next rank's challenge,** items in an area for foraging and fish at a spot for
-  fishing, whether or not it's collected. Each challenge reads only what it asks: "Catch 10 fish at the River" counts
-  the River's. They count before step 6, so a challenge met tonight ranks her up tonight.
-- **The best catch** is the most valuable fish caught tonight at its stars (out of demand; more stars on a tie): the
-  morning's "Best catch · Rainbow Koi ★2", which opens the Fishery's quick look.
-- **Work done** lists the jobs that ended tonight by place, "Forest · 1 job done · 5 items", with each job's whole haul.
-  A job still running isn't listed, though its day's haul is ready to collect.
-
-#### The forest's and the Fishery's screens
-
-- **The quick look:** "Foraging · 4 slots" (or "Fishing · 4 slots"), the four slot rows (a free one opens the job
-  sheet), any stopped queues, and **Open the Forest**.
-- **The page:** its line and **Collect here** while anything's ready; the four slot rows with Collect, Repeat, the queue
-  and Recall; stopped queues; and the job sheet.
-  - **Who:** the Umas on the farm, each with her rank and talent in the activity ("Hand · B"), free ones first, then by
-    rank. A tender shows "Tends Block A" and an Uma leaving tomorrow "Leaves tomorrow", and neither can be picked. With
-    nobody free: "No Uma is free."
-  - **Where:** every area or spot with this season's goods, those her rank hasn't opened greyed ("From Hand"), the sea's
-    before its place stands ("Needs the Dock"), each with "About 5 a day" for her and, in the forest, its grades ("G1–G2"). It opens on the deepest place she
-    can go.
-  - **How many:** in days, as her haul after 1, 2, 3 or 4 days ("×5 · 1 day", "×10 · 2 days"), with "10 to bring home".
-- **Days, never hours:** what's left ("Tomorrow", "In 2 days"), a job's length ("1 day"), a stopped queue's age ("Forest
-  · stopped yesterday").
-- **The help (i)** says how the place works in four or five lines.
+- **A tap on the woods' edge** opens its panel at the right: each forest area with its name, its season's finds as
+  icons, and **Forage · 1** and **Chop · 1**, or why it's shut ("Opens at Farm Rank 2"); then the day's actions left.
+- **A tap on the pond's edge** opens the same for its spots, with **Fish · 1**.
+- **The help (i)** of the map says how the day's actions work.
 
 #### The romance in gathering
 
-- **Her keepsake** (Friendship 10) adds +0.25 quality to a haul at her line's place as it's planned (+0.5 from Spouse
-  5). A forager's line is the forest and the Sawmill, a fisher's the Fishery and the Smokehouse.
-- **Side by side's extras:** at night, an Uma whose work finished items tonight where a partner she has 3+ bond hearts
-  with also worked today gets 10% of them again (20% in her element), as seeded copies straight into the Warehouse.
-  Stations count too.
-- **The perks' extras:** a share of the same items by the romance term (held to 40%, and lifted by side by side's factor
-  where it applies), as their own copies.
+The perks that ride on an Uma's work (side by side, the perks' extras, her keepsake on a haul, bonds at work) wait for
+the farmhands. One reaches the Warehouse every night:
 - **Night chores:** a forager brings one item a chore from her deepest open area this season, a fisher one fish from her
-  deepest open spot, at a day's haul's stars, straight into the Warehouse (1 chore from Friendship 6, 2 from Romance 7,
-  3 from Spouse 4).
-- **The planned hauls are untouched;** the morning's Hearts section says "Side by side · +3 items", "Perks · +2 items"
-  and "Night chores · 3 items". The perks are the romance's.
+  deepest open spot, at a day's haul's stars, straight into the Warehouse (1 chore from Friendship 6, 2 from Romance 7, 3
+  from Spouse 4). The morning's Hearts section says "Night chores · 3 items". The perks are the romance's.
 
 ### The stations
 
 A station turns one raw good into its refined form, one for one, keeping its stars; the refined good sells for ×1.5.
-Three stations work: the Mill beside the Fields, the Sawmill beside the Forest and the Smokehouse beside the Fishery.
-The Smelter and the Cutter stand beside the Mine and the Quarry, and wait for mining's game: "Not built yet".
+Three stations work: the Mill, the Sawmill and the Smokehouse, on the farm map's stations column. The Smelter and the
+Cutter wait for mining's game: "Not built yet".
+
+```
+ a built station ──Load · 1──► up to 8 of one good at one star leave the Warehouse
+                               ──the night──► the same count of its refined form, at those stars, into the Warehouse
+ one load a station a day; it's free again in the morning
+```
 
 #### Building a station
 
 A station is built like every place (see [Building](#building)): the Farm Rank offers it (the Mill at 1, the Sawmill and
-the Smokehouse at 3), you pay its gold and goods at its quick look or its page, and it stands the next morning. A station
-is built once: it has four slots and no upgrades.
+the Smokehouse at 3), you pay its gold and goods at its quick look, and it stands the next morning. Building takes no
+action.
 
-Each station's place, the rank it uses, its cost, what opens it and its jobs:
+Each station, what builds it, what opens it, its jobs and a load:
 
 <!-- live:stations -->
-| Station | At | Rank used | Builds for | Opens | Jobs |
-|---|---|---|---|---|---|
-| Mill | Fields | Farming | 1,000g · 20 logs | Farm Rank 1 | Flour (1 day): grains · Sugars and oils (1 day): sweets, nuts and seeds · Preserves (2 days): fruits |
-| Sawmill | Forest | Foraging | 1,500g · 40 logs | Farm Rank 3 | Planks (1 day): woods · Drying (1 day): mushrooms, herbs and spices |
-| Smokehouse | Fishery | Fishing | 2,000g · 30 logs · 20 fish | Farm Rank 3 | Smoking (1 day): fish |
-<!-- /live -->
-
-#### Station jobs and rates
-
-- **A job is items:** one output at one star, 1 to 100 of them, each taking one of its raw good at the same stars. The
-  inputs leave the Warehouse when the job starts; a job bigger than the Warehouse holds is refused ("Short 3 Pine
-  Log."). **Recall** collects what's made and gives back the inputs of everything not yet made.
-- **Her rate** is round(8 × her rank × her talent × well fed) items a day, rounded half up, from her rank and talent in
-  the station's activity: farming at the Mill, foraging at the Sawmill, fishing at the Smokehouse. A day at a station
-  earns that activity's rank points.
-- **Days:** a 1-day job fills each day at that day's rate (10 logs at 10 a day is 1 day; 12 is 2 days), each day's batch
-  ready the next morning. Preserves take at least 2 days: the batch spreads evenly over the larger of 2 and ⌈items ÷ her
-  rate⌉ days.
-- **Well fed** lifts a 1-day job's rate ×1.25 on her well-fed days; the preserves gain a quarter day a night instead.
-- **Queues** work as at the forest: a queued job takes its inputs when it starts, and if the Warehouse can't cover it
-  then, the queue stops.
-- **Work done** in the morning counts a station's jobs that ended tonight, like the forest's.
-
-Items a day by rank and talent:
-
-<!-- live:station-day -->
-| Rank | D | C | S | C, well fed |
+| Station | Builds for | Opens | Jobs | A load |
 |---|---|---|---|---|
-| Novice | 8 | 8 | 10 | 11 |
-| Hand | 9 | 10 | 11 | 12 |
-| Skilled | 10 | 11 | 12 | 14 |
-| Expert | 12 | 13 | 14 | 16 |
-| Master | 14 | 14 | 16 | 18 |
-| Legend | 16 | 17 | 19 | 21 |
+| Mill | 1,000g · 20 logs | Farm Rank 1 | Flour: grains · Sugars and oils: sweets, nuts and seeds · Preserves: fruits | 1 to 8, ready the next morning |
+| Sawmill | 1,500g · 40 logs | Farm Rank 3 | Planks: woods · Drying: mushrooms, herbs and spices | 1 to 8, ready the next morning |
+| Smokehouse | 2,000g · 30 logs · 20 fish | Farm Rank 3 | Smoking: fish | 1 to 8, ready the next morning |
 <!-- /live -->
 
-Worked: a Hand C forager saws round(8 × 1.15 × 1.05) = **10** logs a day, and ★3 logs make ★3 planks.
+#### A load
 
-#### The stations' screens
+- **One action starts a load** of 1 to 8 of one good at one star: its inputs leave the Warehouse now. A load bigger
+  than the Warehouse holds is refused ("Not enough in the Warehouse."), and so is one the station doesn't make ("It
+  doesn't make that.").
+- **It's ready the next morning:** night step 4 puts the same count of the refined good, at the same stars, into the
+  Warehouse, and the station is free again.
+- **One load a station a day:** a second is refused ("It's busy until morning."). Each built station can take its own.
+- **Work done** in the morning lists each load done: "Sawmill · Pine Plank ★1 × 8", opening the station's panel.
 
-- **Not built:** the quick look and the page say what it does ("Turns logs, mushrooms or herbs into goods worth half
-  again as much, keeping their stars.") and show its Build card: what stands in the way ("Opens at Farm Rank 3", "Need
-  300g and 12 logs more", "Builds tonight") and **Build · 1,500g · 40 logs**.
-- **Built:** it works like the forest, with its line ("Foraging · 4 slots"), the slot rows, **Collect here**, stopped
-  queues and the job sheet.
-- **What:** its jobs ("Planks", "Drying"), each with what the Warehouse holds for it at each star ("Pine Plank ★3 · 12
-  held"). With nothing: "Nothing to process yet: bring logs, mushrooms or herbs home first." (the Mill asks for grain,
-  sweets, nuts or fruit, the Smokehouse for fish).
-- **How many:** a day's batch at her rate ("×8 · 1 day"; the preserves' two days), twice that, and all held, at most
-  100, with "8 to make".
-- **The help (i)** says how it works in three or four lines.
+#### The stations' panels
+
+- **Not built:** the quick look says what it does ("Turns logs, mushrooms or herbs into goods worth half again as much,
+  keeping their stars.") and shows its Build card: what stands in the way ("Opens at Farm Rank 3", "Need 300g and 12
+  logs more", "Builds tonight") and **Build · 1,500g · 40 logs**.
+- **Built:** its panel lists what it can make now, each output at its stars with its input and what's held ("Pine Plank
+  ★1 · From Pine Log · 12 held") and **Load 8** (or all that's held, if fewer); with nothing: "Nothing to process yet:
+  bring its goods home first." Once loaded: "Pine Plank ★1 × 8 · Ready tomorrow morning", and the map tags it **Ready
+  tomorrow**.
 
 #### Recipes
 
@@ -1320,18 +1200,19 @@ The ten rings, their grades, prices and bonuses are in [the ring, the wedding, a
 
 #### The shipping bin
 
-The bin takes anything with a price, at any time in the day, and pays at night. There's no cap on selling, and nothing
-is ever bought back.
+The bin takes anything with a price and pays at night. There's no cap on selling, and nothing is ever bought back.
 
-- **Ship:** from the Warehouse into today's bin: a tap on a star ships one, and **Ship all** ships every star of a good.
+- **Ship a crate · 1 action:** pick what to ship in the Warehouse's pick mode, as many goods and stars as you like, and
+  one action puts the whole crate in today's bin. Shipping again the same day is another crate and another action.
   Seeds and dishes don't sell ("That doesn't sell").
-- **Take back:** a whole line from the bin back to the Warehouse, any time until the night. After the night, a sale is
-  final.
+- **Ship all · 1 action:** a good's sheet in the Warehouse ships every star of it as one crate.
+- **Take back:** a whole line from the bin back to the Warehouse, free, any time until the night. After the night, a
+  sale is final.
 - **The estimate:** "About 1,240g tonight", at today's prices.
 - **The bin's sheet** (from the bin on the map, the gold chip or a morning line): "About 1,240g tonight", today's lines
-  (icon, "Carrot ★2 × 3", the line's gold, **In demand**), each with **Take back**, and **Ship**, which opens the
-  Warehouse to pick from. Empty, it says "Empty" and "Tap Ship to put goods in. They pay tonight." Its help (i) says the
-  rule in three lines.
+  (icon, "Carrot ★2 × 3", the line's gold, **In demand**), each with **Take back**, and **Ship · 1 action**, which opens
+  the Warehouse to pick a crate. Empty, it says "Empty" and "Tap Ship to pick goods. They pay tonight." Its help (i)
+  says the rule in three lines.
 
 **At night (step 1):**
 - each good and star pays price × stars × demand on the day it was shipped, rounded to 5g a unit, × the count;
@@ -1348,17 +1229,19 @@ is the night's own and is never priced again.
 Gold is whole and never goes below 0; a purchase short of gold is refused ("Need 30g more"). A new farm starts with 500g
 and 9 Carrot seeds.
 - **Earned:** the bin, and the Diary's milestones and collection rows.
-- **Spent:** seeds at the shop, blocks on the Fields' page, places to build at their quick looks, Dorm levels at the
-  Dorm, and houses on the homestead.
+- **Spent:** seeds at the shop, places to build at their quick looks, Dorm levels at the Dorm, and houses on the
+  homestead.
 
 The gold chip in the bar shows the coin and your gold, and opens the bin.
 
 #### The shop
 
-The shop's sheet lists the season's six seeds, each with its icon, name and price and, while shut, its gate ("From Farm
-Rank 2"). A tap opens a buy sheet: ×1, ×5, ×10, ×25 or a typed count, up to 99, and **Buy 9 · 180g**, held back with
-"Need 30g more" when gold is short. What you buy goes in the Warehouse at ★1. The shop checks its lines again as you
-buy, so a sheet left open past a season's turn can't buy last season's seeds. Land, beds and stations are bought at
+The shop is in town: its sheet (from the town's **Shop**, the Menu, or a tile's **Seeds at the shop, in town**) first
+asks you to go in, "The shop is in town." with **Go into town · 1 action**; once you're in town today, it's open, free,
+for the rest of the day. It lists the season's six seeds, each with its icon, name and price and, while shut, its gate
+("From Farm Rank 2"). A tap opens a buy sheet: ×1, ×5, ×10, ×25 or a typed count, up to 99, and **Buy 9 · 180g**, held
+back with "Need 30g more" when gold is short. What you buy goes in the Warehouse at ★1. The shop checks its lines again
+as you buy, so a sheet left open past a season's turn can't buy last season's seeds. Beds and stations are bought at
 their own places.
 
 #### The Warehouse
@@ -1372,11 +1255,13 @@ The Warehouse holds everything the farm owns, by stars: each good has five count
   on Nuts and seeds).
 - **Each good:** its icon, name, **In demand**, its total, and its five stars, each with its count and today's price.
 - **A good's sheet:** its family, grade and form ("Fish · G5 · raw"), what it refines into or from, "+20% this season"
-  when in demand, its five stars (a tap on one ships one) and **Ship all · 665g**. Seeds say "Seeds: they don't sell"; a
-  dish says "A dish: for a meal"; a ring's form is "made at the ring bench".
-- **Pick mode** (from the bin's **Ship**): "Ship to the bin". Each star ships one, each good has **Ship all**, and a bar
-  says "In the bin: about 1,240g tonight" (or "Tap a star to ship one.") with **Done**, back to the bin. It opens on the
-  first tab holding something that sells.
+  when in demand, its five stars and **Ship all · 665g · 1 action**. Seeds say "Seeds: they don't sell"; a dish says "A
+  dish: for a meal"; a ring's form is "made at the ring bench".
+- **Pick mode** (from the bin's **Ship**): "Ship to the bin". A tap on a star puts one in the crate (marked "+2" on the
+  star, its count what's left), **All** puts every star of a good in, and a bar says "Crate: 3 · about 425g" with
+  **Clear** and **Ship · 1 action**, which ships the crate and goes back to the bin. With nothing picked it says "Tap a
+  star to put one in the crate." (or what's in the bin tonight). It opens on the first tab holding something that
+  sells.
 
 #### Every family's prices
 
@@ -1624,15 +1509,15 @@ no farm-wide story.
  the town: talk with her on 3 days (or her trigger) ──► met ──► a bed free? ──► the Dorm, working
                                                                     └── no ──► she lives in town ── a bed frees ──► Invite to the farm
  the Dorm: Upgrade · 1,000g ── night ──► 5 beds (beds only)
- swap: one idle Uma home ⇄ one in town ── night ──► she's home
+ swap: one Uma home ⇄ one in town ── night ──► she's home
 ```
 
 ### The roster
 
 The roster is everyone you've met, and her `joined` the day you met her. Who is **home** (on the farm) is capped by the
 Dorm's beds; everyone else on the roster **lives in town** as a friend. A spouse in her house is on the farm too,
-without a Dorm bed. Only Umas on the farm can work or tend, and play their events and evenings; chats and gifts reach
-everyone you've met, on the farm or in town.
+without a Dorm bed. Only Umas on the farm play their events and evenings (and will work, once the farmhands come);
+chats and gifts reach everyone you've met, on the farm or in town.
 
 #### How Umas join
 
@@ -1672,23 +1557,19 @@ The Dorm for 20: its eight levels, their beds, what each costs, and the Farm Ran
 
 #### Living in town, and swaps
 
-Everyone on the roster past the beds **lives in town**. She keeps her ranks and her route, and earns nothing: no work, no
-tending, no rank points, no events or evenings. Chats and gifts still reach her, and she's out in town on her days like
+Everyone on the roster past the beds **lives in town**. She keeps her ranks and her route, and earns nothing: no rank
+points, no events or evenings. Chats and gifts still reach her, and she's out in town on her days like
 anyone (see [the town](#the-town)).
 
 - **A swap** sends one Uma home to town and brings one from town home in her place. It is free and unlimited, and it
   happens the next morning: the one leaving goes to town and the one arriving takes her bed.
-- **Who can go to town:** an Uma home with no running job who tends no block. Refused: a working Uma ("She's working."), a
-  tender ("She tends Block A."), one already leaving ("She leaves tomorrow."), anyone not home ("She isn't on the
-  farm.").
+- **Who can go to town:** any Uma home. Refused: one already leaving ("She leaves tomorrow.") and anyone not home ("She
+  isn't on the farm.").
 - **Who can come home:** anyone on the roster who lives in town and isn't already arriving ("She arrives tomorrow."). One home
   already is refused ("She's on the farm already."), and so is a spouse in her house ("She lives in her house.").
-- **Leaving tomorrow:** until the night, an Uma a swap takes out can't take a job, a queue or a block ("She leaves
-  tomorrow."). The pickers show her greyed out with "Leaves tomorrow", and she doesn't count as idle. Work she has
-  finished can still be collected.
+- **Leaving tomorrow:** until the night, the swap picker shows an Uma a swap takes out greyed out with "Leaves
+  tomorrow".
 - **Calling off:** a swap can be called off any time before the night; she stays.
-- At night, a tender who isn't home after the swaps loses her block (none can be: a tender can't swap out). A spouse in
-  her house tends on.
 
 #### The night's roster step and the morning's news
 
@@ -1710,8 +1591,6 @@ season, festival, built, Farm Rank, milestone and household lines:
 
 Those the night met are listed under **Hearts** ("Met {name} · moved in", or "· in town" with no bed). `{name}` is her
 name, from master data.
-The morning's **Today** section counts idle Umas ("2 Umas idle", opening the People page's Work view): an Uma on the farm
-with no running job, tending no growing block, and not leaving tomorrow.
 
 #### The roster's screens
 
@@ -1723,10 +1602,9 @@ with no running job, tending no growing block, and not leaving tomorrow.
     Dorm is at its top level.";
   - **Levels:** the eight, each "Built", "Tomorrow", or its cost and Farm Rank;
   - **Tomorrow:** each swap as two faces with "… arrives tomorrow" and **Call off**;
-  - **On the farm · n:** each Uma with her best rank and what she's doing (Idle, Working, Tends Block A, Leaves
-    tomorrow);
+  - **On the farm · n:** each Uma with her best rank and "Idle" (nobody works yet) or "Leaves tomorrow";
   - **Swap** (or "Swap · nobody in town"), enabled when someone home can go and someone in town can come: a picker over
-    the Umas home ("Who goes to town?", busy ones greyed out with why), then over those in town ("Who comes home for
+    the Umas home ("Who goes to town?", one leaving greyed out with why), then over those in town ("Who comes home for
     {name}?");
   - **In town · n:** each Uma with "In town" or "Arrives tomorrow", or "Nobody you’ve met lives in town." Every row opens
     her profile.
@@ -1749,12 +1627,6 @@ with no running job, tending no growing block, and not leaving tomorrow.
     favourite mark on her favourite, "Hand · 52 / 160" (her points alone at Legend), and a line below: "Next: Catch 10
     fish at the River · 3/10", "Points full · …", or "Ranks up tonight · …". A challenge whose target is 1 shows without
     a count.
-- **The pickers for a place** (the Fields' tender, a job's Uma): the Umas home, each card her rank and talent in the
-  place's activity ("Hand · B"), the same face marks, the filters above (without Where), and the sorts "<Activity>
-  talent", "<Activity> points", Joined and Name. They open ordered by the place's activity: rank, then points, then talent
-  score, then name. In the tender's picker a working Uma or one leaving tomorrow is shown but can't be picked (a
-  tender of another block can, and moves here), and working Umas sort last. In a job's picker a tender or an Uma leaving
-  tomorrow can't be picked.
 
 The Hearts view, her profile's Hearts side, Chat and Gift are the romance's: see [the People page](#the-people-page) and
 [her profile](#her-profile).
@@ -1840,14 +1712,18 @@ whatever it leaves, the game's own plays:
 #### The save
 
 The save's `town` holds, per character (a character id, or a sister's `s<outfitId>`), her talks so far and the last day
-talked: nothing else. Say hello at the Gate counts there as a talk. A v4 from before the town loads as it was, with no
-talks. Who you've met is the roster (`roster[id].joined` the day you met her).
+talked: nothing else. Say hello at the Gate counts there as a talk. Who you've met is the roster (`roster[id].joined` the day you met her).
 
 ### Talents and ranks
 
 Every Uma is a specialist. Her **talent** in each activity, G to S, is read from her own stats by one rule, the same for
 everyone; it's why one Uma suits the Fields and another the Pond. Her **rank** in each activity, Novice to Legend, is
 earned by working and meeting a challenge; ranks are how the farm goes deeper and better.
+
+**Nobody works yet.** The farmer works the farm alone: the work board, multi-day jobs and the Fields' tenders are
+retired, and the Umas come back to work as the farmhands, later. Until then no Uma earns rank points or counts toward a
+challenge, her ranks stand where they are, and the farmer's own reach is the Farm Rank's. The rules below are the
+ranks' own, kept for the farmhands.
 
 #### Talents
 
@@ -1903,10 +1779,10 @@ Each grade is a step, G 0 to S 7, and each step lifts her work:
 | Expedition power | +0 | +2 | +4 | +6 | +8 | +10 | +12 | +14 |
 <!-- /live -->
 
-- **Yield** multiplies what her gathering and station jobs bring.
+- **Yield** multiplies what her gathering and station work brings.
 - **Quality points** add to the star draw of what she makes or grows.
 - **Rank points** multiply every pay of rank points.
-- **Tended growth** adds to a block's growth a night when she tends it (B and up only).
+- **Tended growth** was a block's growth a night under her care (B and up only), kept for the farmhands.
 - Affection a day (the ranch) and expedition power are defined, but the ranch and expeditions aren't open in play.
 
 #### Rank points
@@ -1952,8 +1828,8 @@ Points go on past a threshold while the challenge waits; they also keep counting
 
 #### Who worked today
 
-An Uma works a day when a job of hers runs through it, or when she tends a block with a growing plot (a tender of an
-empty or all-Ready block earns nothing). Where she worked sets the activity it pays:
+Nobody works a day yet: the farmer works alone. When the farmhands come, where an Uma worked sets the activity it
+pays:
 
 <!-- live:place-activity -->
 | Where she worked | Pays rank points in |
@@ -1970,8 +1846,7 @@ empty or all-Ready block earns nothing). Where she worked sets the activity it p
 | Cutter | Mining |
 <!-- /live -->
 
-- **One day pays one activity:** her job's if she has one, else her tending's. An Uma can't hold both anyway: a tender
-  can't take a job, and a working Uma can't tend.
+- **One day pays one activity.**
 - An Uma living in town earns nothing.
 - The Mine, the Quarry, the Smelter and the Cutter wait for mining's game, so in play only farming, foraging and
   fishing earn rank points.
@@ -1997,17 +1872,15 @@ your rank allows", so ranking up is how the farm goes deeper. The challenge towa
 
 - **One challenge at a time:** her count is toward her next rank's challenge only, from her joining or her last rank-up
   in that activity. It stops at the target and resets to 0 at the rank-up.
-- **What counts it:** a harvest counts toward the block's tender at the moment of harvest (its crops, by star and the
-  crop's level). A forest haul's items and a catch's fish count toward the forager's and the angler's challenges, by
-  area and spot, at night step 4 as they finish, so a challenge met tonight ranks her up tonight. Each challenge
-  reads only its own kind of event; an Uma off the roster or at Legend counts nothing.
+- **What counts it:** her own work, once the farmhands work. The farmer's harvests, hauls and catches count toward no
+  Uma's challenge. Each challenge reads only its own kind of event; an Uma off the roster or at Legend counts nothing.
 - **In play:** only farming's, foraging's and fishing's challenges are counted. The others wait for places that aren't
   open. Farming's and fishing's Legend challenges are festival wins, and no festival is held, so those two climbs stop
   at Master; foraging can reach Legend.
 
 #### Rank-ups at night
 
-Night step 6, before the day's jobs settle into tomorrow:
+Night step 6:
 
 1. **Points:** each Uma who worked earns a day's points in its activity, with her factors as she worked (well fed is
    read before the night counts it down).
@@ -2018,7 +1891,7 @@ Night step 6, before the day's jobs settle into tomorrow:
    challenge still to meet. It's said once, the night they fill (or the night a rank-up leaves the next rank already
    full); her sheet keeps saying "Points full" until she ranks up.
 
-A rank reached tonight already lifts tomorrow's work, including a queued job that starts at tonight's boundary.
+A rank reached tonight lifts her work from tomorrow.
 
 The morning's **Ranks** section lists the night's lines, each opening her sheet:
 
@@ -2040,11 +1913,11 @@ The morning's **Ranks** section lists the night's lines, each opening her sheet:
 | Legend | ×2 | 1.75 | +2.5 | Floor 30 · The World Tree · The Moon Pool | 60 | 35% | +15 | ×1.5 |
 <!-- /live -->
 
-- **Yield** multiplies her gathering and station jobs.
-- **Tended growth** is a block's growth a night when she tends it, before her talent and the Watering Can.
+- **Yield** multiplies her gathering and station work.
+- **Tended growth** was a block's growth a night under her care, kept for the farmhands.
 - **Quality** adds to the star draw of what she grows or makes.
 - **Deepest** is the last area, spot and floor her rank lets her work.
-- **Seeds back** is a tended harvest's chance of a seed, before the Hoe.
+- **Seeds back** is her harvest's chance of a seed, before the Hoe.
 - Expedition power, affection a day and workshop yield are defined for places that aren't open in play.
 
 #### Her favourite line
@@ -2071,7 +1944,7 @@ The Diary's **projects** gather them: what you can build now, what the next rank
 Umas.
 
 ```
- the day: plant, tend, gather, ship ──► the Farm Rank offers a place ──► its Build card: gold + goods ──► Build
+ the day: plant, water, gather, ship ──► the Farm Rank offers a place ──► its Build card: gold + goods ──► Build
                                                                                                          │
  End the day ──► night step 8: ─────────────────────────────────────────────────────────────────────────┘
                    1. the places paid for stand ("Built overnight · the Mill")
@@ -2102,9 +1975,9 @@ today counts tonight. Where the points come from:
 | A milestone | 25 | `diary.milestones` |
 <!-- /live -->
 
-Festivals and decorations add nothing in play: neither exists. The points each rank needs, tuned by
-[the pacing's simulation](#the-pacing) so the ranks come at the pace they came at when each global chapter added 250
-points:
+Festivals and decorations add nothing in play: neither exists. The points each rank needs, tuned when Umas worked the
+farm so the ranks came at the pace they came at when each global chapter added 250 points (the farmer's pace alone is
+[the simulated first season](#the-pacing)'s, and retuning waits for the farmhands):
 
 <!-- live:farm-ranks -->
 | Farm Rank | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
@@ -2119,15 +1992,15 @@ Dorm's levels, the shop's seed tiers), so the sheet and the morning can't drift 
 | Farm Rank | Points | Opens |
 |---|---|---|
 | 1 | 0 | Block A and tier-1 seeds (the start), The Mill to build (1,000g · 20 logs), Dorm level 2 (5 beds) |
-| 2 | 150 | The Coop to build (not built yet), Block B (800g), Dorm level 3 (7 beds), New seeds at the shop |
+| 2 | 150 | The Coop to build (not built yet), The Hills, The River, The Sea Pier (with the Dock), Dorm level 3 (7 beds), New seeds at the shop |
 | 3 | 250 | The Sawmill to build (1,500g · 40 logs), The Barn to build (not built yet), The Smokehouse to build (2,000g · 30 logs · 20 fish), Dorm level 4 (9 beds) |
-| 4 | 950 | The Mine to build (not built yet), The Smelter to build (not built yet), Block C (3,000g), Dorm level 5 (11 beds), New seeds at the shop |
+| 4 | 950 | The Mine to build (not built yet), The Smelter to build (not built yet), The Old Forest, The Lake, Dorm level 5 (11 beds), New seeds at the shop |
 | 5 | 2,150 | The Kitchen to build (not built yet), The Quarry to build (not built yet), The Cutter to build (not built yet), Dorm level 6 (14 beds) |
-| 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), Block D (8,000g), Dorm level 7 (17 beds) |
+| 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), The Mountain, The Falls, Dorm level 7 (17 beds) |
 | 7 | 6,250 | The Restaurant to build (not built yet), The Expedition post to build (not built yet), Dorm level 8 (20 beds) |
-| 8 | 9,750 | The Forge to build (not built yet) |
+| 8 | 9,750 | The Forge to build (not built yet), The Misty Vale, The Deep Sea (with the Boat) |
 | 9 | 14,750 |  |
-| 10 | 21,750 | The farm’s gold crest |
+| 10 | 21,750 | The World Tree, The Moon Pool, The farm’s gold crest |
 <!-- /live -->
 
 - **A rank-up is news:** the morning's New today says "Farm Rank 2 · The Coop to build (not built yet), Block B (800g),
@@ -2305,37 +2178,28 @@ The Diary's **Projects** card gathers what's next:
 
 #### The pacing
 
-A test (`packages/domain/src/farm/pacing.test.ts`) plays a run to Farm Rank 8 on the game's own rules: a plain bot,
-everyone talent D, master data's first five on the farm from day 1 and one more with each Dorm level from 4. Each morning
-it collects and harvests, buys the Dorm's level 2 and the Fields' blocks, pays for every place it can (those whose games
-aren't built yet too, as when they will be), tends Block A, plants the season's best seeds, saws planks and smokes
-fillets while a build waits for them, sends everyone else to the forest and the Fishery at her deepest, and ships the
-rest. It checks:
-- **each Farm Rank comes at the pace it came at with the chapters' 250 points** (counting chapter 1's, done the night
-  its six goals were met, against the thresholds of then), within 15% (at least 4 days);
-- **each place is offered at its Farm Rank** (the Boat after the Dock);
-- **each place is affordable within about a season of its offer:** paid within 16 days (a season and four days) and
-  standing the next morning.
+A test (`packages/domain/src/farm/season.test.ts`) plays the first season on the game's own rules, the farmer alone, by a
+plain bot, ten actions a day. Each morning it harvests what's ripe, waters what grows, plants the tilled soil it has
+seeds for, tills and clears a little more while fewer than five tiles grow, ships once there's a crate's worth, goes
+into town for seeds when they run out, and spends what's left fishing and foraging. It checks:
+- **every day spends exactly its ten actions,** and every morning has ten again;
+- **watered crops grow and dry ones don't,** and something is harvested;
+- **the season's last night withers what's left** (only Corn and Cabbage carry over);
+- **the bin pays:** over 1,000g shipped, gold above the 500g start, and Farm Rank points earned;
+- **every morning's save parses** as v5.
 
-The run as tuned (a season is 12 days):
+The run as it stands (`SEASON=1` prints it):
 
-| Farm Rank | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
-|---|---|---|---|---|---|---|---|
-| Reached on day | 12 | 16 | 44 | 74 | 108 | 140 | 180 |
+| Spring | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Planted and watered | 0 | 5 | 0 | 0 | 0 | 2 | 2 | 1 | 0 | 0 | 0 | 0 |
+| Watered, besides the day's plantings | 0 | 0 | 5 | 5 | 5 | 0 | 2 | 4 | 5 | 3 | 1 | 0 |
+| Harvested | 0 | 0 | 0 | 0 | 0 | 5 | 0 | 0 | 0 | 2 | 2 | 1 |
+| Gold, morning | 500 | 500 | 500 | 780 | 965 | 1,200 | 1,760 | 1,760 | 1,785 | 1,785 | 2,330 | 2,675 |
 
-| Place | Offered | Built | Place | Offered | Built |
-|---|---|---|---|---|---|
-| Mill | 1 | 8 | Quarry | 74 | 81 |
-| Coop | 12 | 23 | Cutter | 74 | 75 |
-| Sawmill | 16 | 18 | Kitchen | 74 | 88 |
-| Barn | 16 | 30 | Dock | 108 | 109 |
-| Smokehouse | 16 | 26 | Boat | 109 | 117 |
-| Mine | 44 | 52 | Expedition post | 140 | 141 |
-| Smelter | 44 | 45 | Restaurant | 140 | 151 |
-| | | | Forge | 180 | 181 |
-
-`PACING=1` prints the run. Goods are the early bind and gold the late one: by Farm Rank 7 the farm ships about 7,000g a
-day.
+Summer 1 opens on 3,060g, 2,740g shipped, 10 tiles harvested and 82 Farm Rank points. Fishing and foraging carry the
+season: an action at the water or the woods pays about what a Carrot's whole run of six actions does, so the farm's
+balance waits on the farmhands and the tools.
 
 #### The night's goals check
 
@@ -2465,10 +2329,10 @@ The Diary tab (`/diary`) holds the world's pages, the farm's projects, the Farm 
 
 ## Part 3 — Hearts: the cast and the romance
 
-> **The romance is the game's.** It plays on save v4 from the story pack, and with placeholders wherever the pack is
+> **The romance is the game's.** It plays on save v5 from the story pack, and with placeholders wherever the pack is
 > silent: anyone in town can be met, the welcome list (the pack's, or with no pack master data's first five) at the Gate
 > in the first days, and **People** is the rail's third page (Farm · Town · People · Book · Diary), with the
-> roster's album as its Work view. A save from before v4 starts over as a new farm (see
+> roster's album as its Work view. A save from before v5 starts over as a new farm (see
 > [Save versions](#save-versions)).
 
 ### The dialogue engine
@@ -3016,10 +2880,9 @@ chapters](#her-chapters); she shows on the People page. There's no cap on how ma
   anyone: the roster takes her id.
 - **The morning** names one the night met in the Hearts section, "Met ‹name› · moved in" (or "· in town") with **New**,
   a tap opening her profile.
-- **An older v4** loads as it was: everyone on its roster counts as met, the day she joined the day you met her. A day-1
-  helper of the lean start who was never greeted has her meeting scene play the next time the farm opens. The retired
-  `arrives` of a cast entry (a festival, the Dorm's beds, after an event) is noted and dropped: her `meet` says when you
-  meet her, and the Dorm's levels bring beds only.
+- **Everyone on the roster counts as met,** the day she joined the day you met her. The retired `arrives` of a cast
+  entry (a festival, the Dorm's beds, after an event) is noted and dropped: her `meet` says when you meet her, and the
+  Dorm's levels bring beds only.
 
 #### Her meeting scene
 
@@ -3173,11 +3036,11 @@ A disliked gift pays 0 and she says one line: “She thanks you, a little puzzle
 - **The gift picker** lists the Warehouse by family, each good at each star held, with **its points for her today**
   (the birthday's ×3 and the anniversary's ×2 included), or **"?"** where her taste for it isn't known.
 - **Praise:** she earns it for the day when her work that finished overnight made a ★3+ item, when she ranked up last
-  night, or when a harvest today from the block she tends gave a ★3+ crop. Assisting a Fine-or-better workshop play is a
+  night, or (once the farmhands work) when a harvest of hers today gave a ★3+ crop. Assisting a Fine-or-better workshop play is a
   cause too, but nothing pays that cause yet. **Praise +20** shows on her profile only while earned and
   unpaid, pays once, and both lists clear at night.
-- **Her line:** at night, +10 to each Uma who worked today at one of her line's places (a running job there, or for a
-  farmer a tended block with a growing plot). One a night each; a day elsewhere pays nothing.
+- **Her line:** at night, +10 to each Uma who worked today at one of her line's places. One a night each; a day
+  elsewhere pays nothing. Nobody works until the farmhands come, so it pays nothing yet.
 - **A festival together:** +50 to each Uma on a festival's team or entry, once a festival a year each. The rule is
   written, but no festival pays it yet.
 
@@ -3245,8 +3108,9 @@ A setup is never an hour, the weather, a season or a festival; her chapter's gat
 | 11 | `setup` | Its day setup isn’t met today |
 <!-- /live -->
 
-- **A setup** is her bible's beat's setup for the rung; an Uma without a bible has none. A working setup at a place not
-  built yet shows "Opens when the Mine is built" (her place) ahead of a short bar. A pack's beat that still names a
+- **A setup** is her bible's beat's setup for the rung; an Uma without a bible has none. A working setup ("she works
+  the Fishery today") is met every day while the farmer works alone, so her event never waits on work she can't do; at
+  a place not built yet it shows "Opens when the Mine is built" (her place) ahead of a short bar. A pack's beat that still names a
   chapter setup is noted and read as her bar alone: the farm has no global chapters, and a gate goes on one of [her
   chapters](#her-chapters).
 - **Her bond setup** reads bond hearts (50, 150, 300, 500 and 750 points). **The proposal's ring** is any ring in the
@@ -3354,9 +3218,8 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
   once her route is done "Her route is complete". It never waits
   on the story: an event the pack doesn't script plays the game's card.
   - **Play ›** (48 pt, in her ladder's colour) plays her Ready event.
-  - **A setup not met** says what to do: "Assign her to the Fishery, then come back.", "Have her tend a block on the
-    Fields, then come back.", "Put Carrot in the Warehouse, then come back.", "Let her and Stand-in 2 work side by side
-    until bond 3."
+  - **A setup not met** says what to do: "Put Carrot in the Warehouse, then come back.", "Let her and Stand-in 2 work
+    side by side until bond 3."
   - **After a Not yet,** **Ask her ›**, once a day ("You asked her today. Ask again tomorrow.").
   - **While the proposal needs a ring** and the ring bench stands, **Make one at the Forge's bench ›**.
 - **Chapters:** [her chapters](#her-chapters), each with its number (✓ once every event has played), its title and its
@@ -3459,6 +3322,10 @@ A perk comes with every level, 25 in all, and every perk acts. **A perk is read 
 rung's perk once its event has played (S2 and S4 once they've come at night). Only her signature dish writes anything to
 the save.
 
+**While the farmer works alone,** the perks that ride on an Uma's own work (the romance term on a harvest or a haul,
+side by side, her line's pay, the mentor, bonds at work) have nothing to act on, and wait for the farmhands. The night
+chores, morning items, meals, her keepsake on her chores and the household's act as written.
+
 #### The perks' words
 
 The words are templates by her favourite line. A perk that works at her line's place says **"Opens when the Kitchen is
@@ -3496,7 +3363,7 @@ shows what the place-bound ones say for every line.
 
 | Her line | Her place | +10% (F3) | A night chore (F6) | A morning item (R2) | Opens with |
 |---|---|---|---|---|---|
-| Farming | the Fields | +10% at the Fields | +0.25 growth on a block each night | A ★2+ crop of the season | Day 1 |
+| Farming | the Fields | +10% at the Fields | Waters a dry tile each night | A ★2+ crop of the season | Day 1 |
 | Foraging | the forest | +10% at the forest | One item from the forest each night | A ★2+ good from the forest | Day 1 |
 | Fishing | the Fishery | +10% at the Fishery | One fish from the Fishery each night | A ★2+ fish | Day 1 |
 | Mining (the Mine) | the Mine | +10% at the Mine | One ore from the Mine each night | A ★2+ ore | When the Mine is built |
@@ -3549,7 +3416,7 @@ places aren't built yet, so their perks wait, and a morning item of theirs is a 
 <!-- live:perk-lines -->
 | Her line | +10% at her line (F3, R5) | A night chore (F6, R7, S4) | A morning item (R2, S2) | Acts |
 |---|---|---|---|---|
-| Farming | Each plot she tends: +10% chance of an extra crop at harvest, at the plot’s stars | +0.25 growth on the untended block with the most growing plots, else hers (step 2) | A ★2+ crop of the season | Yes |
+| Farming | Each plot she tends: +10% chance of an extra crop at harvest, at the plot’s stars | Waters one dry growing tile (step 2) | A ★2+ crop of the season | Yes |
 | Foraging | Her haul ×1.1, and her Sawmill batch ×1.1 | One item from her rank’s deepest area this season, at a day’s haul’s stars (step 4) | A ★2+ good from the forest | Yes |
 | Fishing | Her catch ×1.1, and her Smokehouse batch ×1.1 | One fish from her deepest spot this season, at a day’s haul’s stars (step 4) | A ★2+ fish | Yes |
 | Mining (the Mine) | Her haul ×1.1, and her Smelter batch ×1.1 | One ore from her deepest floor | A ★2+ ore (a crop of the season until its place opens) | Not yet: once the Mine’s game is built |
@@ -3567,9 +3434,8 @@ places aren't built yet, so their perks wait, and a morning item of theirs is a 
   term of the same items (her own bonuses only at her line's place, the crew's anywhere), as seeded copies (the same goods
   and stars) straight into the Warehouse. A forager's Sawmill batch and a fisher's Smokehouse batch count as her line.
   The job's own plan never changes.
-- **Farming pays at harvest:** each harvested plot of a tended block has its tender's romance term at the Fields as the
-  chance of **one extra crop** at the plot's stars (her own bonuses when farming is her line, plus the crew's). An
-  untended block gets nothing. A harvest's note says it: "+3 Carrot (★1 × 2, ★2 × 1) · 1 from perks · 1 seed back".
+- **Farming would pay at harvest,** an extra crop by her romance term on her own harvests; the farmer harvests alone,
+  so the field's harvests get none until the farmhands work.
 
 #### The romance term and its caps
 
@@ -3602,8 +3468,8 @@ Worked: a married forager with F3, R5 and a grade-8 ring has +28% of her own (28
 
 - **1 from Friendship 6, 2 from Romance 7, 3 from Spouse 4,** never more, for an Uma on the farm (home in the Dorm, or a
   spouse in her house) whose line's place is open. **One in town does none.** Each chore is its own seeded pick.
-- **Farming** (at night, as crops grow): **+0.25 growth** on the untended block with the most growing plots (a tie by a
-  seeded pick), else on the block she tends while it has a growing plot; it joins that block's rate tonight.
+- **Farming** (at night, as crops grow): each chore waters one dry growing tile, a seeded pick, so it grows a stage
+  tonight; with none dry, the chore does nothing. The morning says "Night chores · 2 tiles watered".
 - **Foraging and fishing** (at night, after the hauls): one item from her rank's **deepest open forest area** this
   season, or one fish from her **deepest open spot**, by the season's shares, at the stars a day's haul there would have
   (her rank, talent, tool, well fed and keepsake), straight into the Warehouse.
@@ -3620,16 +3486,16 @@ Worked: a married forager with F3, R5 and a grade-8 ring has +28% of her own (28
 
 #### The mentor
 
-At night, at each place worked today (the Fields' tenders count as one place), an Uma at **Friendship 9** whose line's
-place it is mentors the others who worked there: **×1.10 rank points** for the day. **One mentor a place:** the most
+At night, at each place worked today (none until the farmhands work), an Uma at **Friendship 9** whose line's place it
+is mentors the others who worked there: **×1.10 rank points** for the day. **One mentor a place:** the most
 hearts (the furthest along her route), then the cast's order, then her id. She earns no bonus herself; a second Friendship
 9 Uma there is mentored too.
 
 #### Her keepsake
 
 From **Friendship 10** her keepsake adds **+0.25 quality** to her work at her line's place, **+0.5 from Spouse 5** (her
-vow renewal), and nowhere else. It's read when her job is planned, when the block she tends is harvested, and by her night
-chores and morning items. Its name and her line about it are her bible's (without one, "Her keepsake" and a plain line,
+vow renewal), and nowhere else. It's read by her night chores and morning items, and by her work once the farmhands
+work. Its name and her line about it are her bible's (without one, "Her keepsake" and a plain line,
 “Keep it close. It’s for luck.”). It shows on her
 profile under From her, never in the Warehouse.
 
@@ -3872,7 +3738,7 @@ The event also gives:
 │ Next: Friendship 6 · 400 points          │
 │ 150 / 400                                │
 │ The Fields, with a Carrot in the Wareh…  │  the next beat's hint
-│ Opens: +0.25 growth on a block each night│  the next rung's perk
+│ Opens: Waters a dry tile each night      │  the next rung's perk
 │              [ Continue ]                │
 └──────────────────────────────────────────┘
 ```
@@ -4078,7 +3944,7 @@ An invitation’s draw: `draw(uid, day, 'invite', n)` among the Umas home at Fri
 │ ☾ Evening   [     Pick someone ›     ]   │  (or) free
 │ ☾ Festival night [ Pick someone › ]      │  a festival day's own row
 ├──────────────────────────────────────────┤
-│ 2 Umas idle · 3 to collect               │
+│ 4 actions left · 2 dry                   │
 │        [ Back ]   [ End the day ]        │
 └──────────────────────────────────────────┘
 ```
@@ -4379,7 +4245,8 @@ decorations draw them:
 
 Each pair of Umas on the farm holds **bond points**, whole, that **never fall.** They grow when two share a place, five
 **bond hearts** come at fixed thresholds, the authored ties **seed** them, and each new heart opens the pair's
-**conversation**.
+**conversation**. While the farmer works alone, bonds grow from the ties' seeds and shared houses only: work together
+waits for the farmhands.
 
 ```
  Stand-in 2 joins Stand-in 1 ──► their tie seeds: Stand-in 1 & 2 at 150 (♥♥); Stand-in 3 joins: 1 & 3 at 50 (♥)
@@ -4461,8 +4328,7 @@ At 3 bond hearts two Umas work **side by side:**
 <!-- live:side-by-side -->
 | Where | Beside a 3-heart partner | How |
 |---|---|---|
-| A work place (gathering, a station) | +10% of her night’s items | Night step 4 (`nightExtras`), after the hauls: copies of the items her work finished tonight, the same goods and stars, `share × n` whole and one more by `draw(uid, day, 'bond:<id>', 0)`, each picked by `draw(…, k)`; into the Warehouse. Her partner worked the same place today |
-| The Fields | Tended growth ×1.1 | Night step 2 (`blockGrowth`): her partner tends another block with a growing plot |
+| A work place (gathering, a station) | +10% of her night’s items | Night step 4 (`nightExtras`): copies of the items her work finished tonight, the same goods and stars, `share × n` whole and one more by `draw(uid, day, 'bond:<id>', 0)`, each picked by `draw(…, k)`; into the Warehouse. Her partner worked the same place today. None until the farmhands work |
 <!-- /live -->
 
 - **Why at night:** a day's haul is planned when its job starts, so a bonus at planning would miss a partner who starts
@@ -4522,7 +4388,7 @@ section after it.
 - **A sync follows** 1.5 seconds after the last change, when the app comes back to the foreground, when the network
   returns, and as the app opens.
 - **Opening the app:** splash, then Google sign-in, then the farm. The app opens the phone's save for this account; with
-  none, the server's; with none there either, a new farm on day 1. A save from before v4 stops at the start-over card
+  none, the server's; with none there either, a new farm on day 1. A save from before v5 stops at the start-over card
   first (see [Save versions](#save-versions)).
 - **The app waits for the story pack** as it opens; if the pack can't load, the app stops and offers Try again.
 - **A new phone needs the server once.** Offline with no save on the phone, the app stops with "The game couldn't open on
@@ -4552,7 +4418,7 @@ and every page says **"A newer save replaced this device's changes. They're kept
 If the copy can't be kept, nothing is replaced and the sync pauses.
 
 **A refused upload.** The server stores what the app sends and never edits a save. It refuses:
-- a save it can't read (a bad shape, unknown keys, or a version other than v4: an old build's older save);
+- a save it can't read (a bad shape, unknown keys, or a version other than v5: an old build's older save);
 - a save belonging to another account;
 - a save of an older version than the one it holds.
 
@@ -4590,7 +4456,7 @@ Account lists the newest five safety copies this phone keeps for the account, ea
 
 - **Restore** puts a copy back as the newest change, so it uploads over the server's. The save it replaces becomes a
   "Before a restore" copy first, so a restore can be undone.
-- A copy this build can't play does nothing on Restore. A copy older than v4 shows **Kept** instead of Restore, since
+- A copy this build can't play does nothing on Restore. A copy older than v5 shows **Kept** instead of Restore, since
   restoring it would only start a new farm again.
 
 #### The update prompt
@@ -4603,34 +4469,35 @@ sits outside the opening screens, so it shows even when the app stopped while op
 
 | Version | What it is | What a player meets |
 |---|---|---|
-| v4 | The farm: the one save | Every new farm starts on it, and the app plays and writes it |
-| v1, v2, v3 | Older formats, from before the farm started over | **The start-over card,** then a new farm on v4 |
-| Newer than v4 | — | Refused: this build doesn't read it |
+| v5 | The farm: the one save, its field a grid of tiles and its day a budget of actions | Every new farm starts on it, and the app plays and writes it |
+| v4 | The farm of blocks and Umas' jobs, before the day of actions | **The start-over card,** then a new farm on v5 |
+| v1, v2, v3 | Older formats, from before the farm started over the first time | **The start-over card,** then a new farm on v5 |
+| Newer than v5 | — | Refused: this build doesn't read it |
 
-- **The start-over card.** When the phone's save, or on a new phone the server's, is older than v4, the opening stops at
+- **Why a new version, not a v4 change.** The field's blocks became tiles, the work board's jobs and the stations'
+  multi-day jobs became the day's actions and a station's one load, and `today` counts the actions: a played v4 can't
+  be read as a tile farm. A new version lets the rules that already guard an older save do the work: the start-over
+  card, the safety copy, the server's backup, and an older build refusing a v5 rather than misreading it.
+- **The start-over card.** When the phone's save, or on a new phone the server's, is older than v5, the opening stops at
   one card: **"Your farm starts over"**, "This version of the game begins a new farm on day 1.", and **Start the new
   farm**. Nothing changes until the button is tapped.
-- **The new farm** is day 1 on v4: 500g, 9 Carrot seeds, Block A, the Dorm at level 1, the Farmhouse, nobody on the
-  roster and the farmer's name empty.
-- **v4 grows in place.** A v4 from before the farm grew by building still loads: its `farm.chapter` and `farm.goals` are
-  read and ignored, its missing `farm.builds` is none, a morning's "chapter done" line is dropped, and every place its
-  chapter had opened stays open, built (chapter 2's Coop and Barn). Chapter 1's Mill plans (`buildings.mill` 0) are an
-  unbuilt Mill, offered at Farm Rank 1. Only the account carries over, its "last changed" time with it, so the farmer's
-  name is the new farm's first change. Then the opening runs as on any new farm. A v4 from before the town has no
-  `town`: it loads with no talks. A v4 from before her chapters loads as it is: her chapter is read from her route, and
-  only a new morning holds a "new chapter" line. A morning's "New story arrived" line is new too: a save from before it
-  simply has none, and only a morning after a new release holds one (its release's number). A v4 from before the world
-  has no `diary.notes`: it loads with no Town notes unlocked, and its "last changed" time stays as it was. The save
-  takes festival night on any day (once at most) and a festival's news by any festival's id, since the story says
-  which days hold one.
+- **The new farm** is day 1 on v5: 500g, 9 Carrot seeds, the field overgrown but for its cleared patch of nine, no
+  station loads, ten actions, the Dorm at level 1, the Farmhouse, nobody on the roster and the farmer's name empty.
+  Only the account carries over, its "last changed" time with it, so the farmer's name is the new farm's first change.
+  Then the opening runs as on any new farm.
+- **v5 reads what v4 grew into:** a save with no `diary.notes` loads with no Town notes unlocked, a morning's "New story
+  arrived" line is only on a morning after a new release, her chapter is read from her route, and the save takes
+  festival night on any day (once at most) and a festival's news by any festival's id, since the story says which days
+  hold one.
 - **Nothing goes silently:** a phone save with unsynced play is kept first as a "Before the new farm" safety copy (if it
   can't be kept, nothing changes and the card says so, with the button to try again). The new farm syncs up as it is,
-  and the first time the server stores a v4 over the older save it copies the older one, whole, to a backup.
+  and the first time the server stores a v5 over the older save it copies the older one, whole, to a backup
+  (`saveBackups/{uid}-v4` for a v4). The server never writes into a save.
 - **An older save met later** (the server's in a sync, or in a conflict) becomes the same new farm and uploads.
 
 #### A newer save on an older build
 
-A save newer than v4 comes only from a newer build. When this one meets it:
+A save newer than v5 comes only from a newer build. When this one meets it:
 - **As it opens** (the phone's save, or on a new phone the server's): the opening screen says **"This save is from a
   newer version of the farm."** with Try again, and the app asks for the new build at once, so the update prompt comes
   up; Restart brings a build that can play it.

@@ -1,7 +1,7 @@
 // Talents in the app: computed from master data's stats once a release, for every outfit, and
 // kept with that release's view (one view a release hash), so the night, the harvests and the screens all read the same
 // table. The API never needs them. Loaded on demand with the loop's screens.
-import { talentResolver, talentsD, talentsOf, type FarmingTalentOf, type TalentOf, type Talents } from '@farm/domain'
+import { talentResolver, talentsD, talentsOf, type TalentOf, type Talents } from '@farm/domain'
 import { useMaster, type MasterView } from '../master/master'
 
 const TABLES = new WeakMap<MasterView['stats'], ReadonlyMap<string, Talents>>()
@@ -28,9 +28,6 @@ export function talentsFor(view: Pick<MasterView, 'stats'>): TalentOf {
   }
   return of
 }
-/** Her farming talent: what the Fields' rules take (the hook). */
-export const farmingTalents = (of: TalentOf): FarmingTalentOf => (outfitId) => of(outfitId, 'farming')
-
 /** The release's talents and table once master data has loaded; D for everyone and no table until then (the screens
  * redraw when it lands). */
 export function useTalents(): { of: TalentOf; table: ReadonlyMap<string, Talents> | null } {

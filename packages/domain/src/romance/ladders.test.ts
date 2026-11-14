@@ -8,14 +8,11 @@ import { loveRankFactor, rankPointsForDay, tickRankRules } from '../farm/rank-ru
 import { TALENT_D } from '../farm/talents'
 import { CHAT_LINES } from './chats'
 import { PLACEHOLDER_CHATS } from '../story/placeholders'
-import { harvest, plant, setTender } from '../fields/fields'
 import { SHOP_SEEDS } from '../fields/crops'
 import { FOREST } from '../gathering/tables'
 import { goodCount, addGoods } from '../save/warehouse'
 import { endDay, runNight, type NightContext } from '../night/end-day'
-import { TEST_KINDS } from '../night/kinds.fixture'
-import { startLoopJob } from '../save/loop-work'
-import { parseSaveV4 } from '../save/parse-v4'
+import { parseSaveV5 } from '../save/parse-v4'
 import { newLove, newSave, pairKey, type Love, type SaveV4 } from '../save/v4'
 import { checkBible, checkCast, type Cast, type CastEntry, type Trigger, type UmaBible } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_IN_CAST, STAND_INS } from '../story/authored.fixture'
@@ -30,7 +27,7 @@ import {
   addLove, advance, bar, costOf, dayFactor, isAnniversary, LADDER_COLOURS, ladderOf, levelWords, nextRung, NIGHT_RUNGS, ROUTE_POINTS, ROUTE_RUNGS, rungName,
   WAITING_RUNGS,
 } from './love'
-import { earnPraise } from './praise'
+import { earnPraise, praiseOvernight } from './praise'
 import { RING_IDS } from '../goods/ids'
 import { readiness, WAIT_ORDER } from './ready'
 
@@ -40,7 +37,7 @@ const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const PACK = storyPackFrom(STAND_IN_FILES)
 const [ONE, TWO, THREE] = STAND_INS
 const BIRTHDAYS = birthdaysOf(PACK, new Map())
-const context = (birthdays = BIRTHDAYS, story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ kinds: TEST_KINDS, story, birthdays })
+const context = (birthdays = BIRTHDAYS, story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ story, birthdays })
 
 /** A named farm on `day`, the opening read and the stand-ins home (`joinCast`) at Friendship 0., their ties seeded and
  * already listed on an earlier morning, so a night's Hearts show only its own lines. */
@@ -118,10 +115,11 @@ describe('points and banking', () => {
   it('plays the worked days: +75, +55, +55, +45 make Friendship 1 Ready on day 3 at 230; it plays and F2 shows 117 of 240', () => {
     let save = farm(1)
     save = addLove(save, ONE, 75, 'arrival').save
-    save = setTender(plant(save, 'A', 0, 'seed-carrot'), 'A', ONE, TEST_KINDS)
     for (const day of [1, 2]) {
       save = chatV4(give(save, 'carrot'), ONE).save
       save = giftV4(save, PACK, ONE, 'carrot', 1).save
+      // A day at her line's place, the Fields, as a farmhand's will: +10.
+      save = payLines(save, PACK, [], [{ outfitId: ONE }]).save
       save = endDay(save, context(), LATER)
       expect(save.calendar.day).toBe(day + 1)
     }
@@ -137,7 +135,7 @@ describe('points and banking', () => {
     save = addLove(save, ONE, 87, 'event').save
     expect(bar(save.love[ONE]!)).toEqual({ rung: 'f2', points: 117, cost: 240, banked: 0, full: false })
     expect(levelWords(save.love[ONE]!)).toBe('Friend · F1')
-    expect(parseSaveV4(json(save))).toEqual(save)
+    expect(parseSaveV5(json(save))).toEqual(save)
   })
 
   it('banks points past a full bar, carries them over, never decays, and adds nothing once S5 has played', () => {
@@ -219,23 +217,17 @@ describe('gifts', () => {
     save = withLove(save, ONE, { level: 7 })
     expect(giftPreview(save, PACK, ONE, 'limestone', 1)).toBe(0)
     expect(giftPreview(save, PACK, ONE, 'pine-log', 4)).toBe(13)
-    expect(parseSaveV4(json(save))).toEqual(save)
+    expect(parseSaveV5(json(save))).toEqual(save)
   })
 })
 
 describe('praise', () => {
-  it('is earned by a ★3+ harvest from her block, pays +20 once, and clears at night', () => {
-    let save = setTender(plant(farm(3), 'A', 0, 'seed-carrot'), 'A', ONE, TEST_KINDS)
-    save.fields.blocks[0]!.plots[0] = { ...save.fields.blocks[0]!.plots[0]!, growth: 4, ready: true }
+  it('is earned by her ★3+ work, pays +20 once, and clears at night', () => {
+    const save = farm(3)
     expect(canPraise(save, ONE)).toBe(false)
     expect(() => praiseV4(save, ONE)).toThrow('Nothing to praise yet today.')
-    // A Legend's crops are ★3 or better.
-    const legend = { ...save, roster: { ...save.roster, [ONE]: { ...save.roster[ONE]!, ranks: { ...save.roster[ONE]!.ranks, farming: { points: 0, rank: 5 as const, challenge: 0 } } } } }
-    const picked = harvest(legend, 'A', 0)
-    expect(picked.receipt.stars.slice(2).reduce((a, b) => a + b)).toBeGreaterThan(0)
+    const picked = { save: earnPraise(save, ONE) }
     expect(picked.save.today.praise).toEqual([ONE])
-    // A Novice's crops here are ★1 or ★2: no praise.
-    expect(harvest(save, 'A', 0).save.today.praise).toEqual([])
     const paid = praiseV4(picked.save, ONE)
     expect(paid.paid).toBe(20)
     expect(canPraise(paid.save, ONE)).toBe(false)
@@ -249,15 +241,14 @@ describe('praise', () => {
 
   it('is earned overnight by a ★3+ item from her work, or a rank-up', () => {
     let save = farm(3)
-    // 9000002 gathers at the forest at foraging rank 2: a ★3 Pine Log by morning.
-    save = { ...save, roster: { ...save.roster, [TWO]: { ...save.roster[TWO]!, ranks: { ...save.roster[TWO]!.ranks, foraging: { points: 0, rank: 2 as const, challenge: 0 } } } } }
-    save = startLoopJob(save, { outfitId: TWO, place: 'forest', slot: 0, request: { kind: 'gather', item: 'pine-log', count: 1 } }, AT, TEST_KINDS)
+    // 9000002's work made a ★3 Pine Log tonight, as a farmhand's will.
+    expect(praiseOvernight(save, [{ outfitId: TWO, items: ['pine-log@3'] }], []).today.praise).toEqual([TWO])
     // 9000003's fishing points are full and her challenge met: she ranks up tonight.
     save = { ...save, roster: { ...save.roster, [THREE]: { ...save.roster[THREE]!, ranks: { ...save.roster[THREE]!.ranks, fishing: { points: 100, rank: 0 as const, challenge: 30 } } } } }
     const morning = runNight(save, context())
     expect(morning.summary!.ranks).toContainEqual({ kind: 'rank-up', outfitId: THREE, activity: 'fishing', rank: 1 })
-    expect(morning.today.praise).toEqual([TWO, THREE])
-    expect(parseSaveV4(json(morning), 'save', TEST_KINDS)).toEqual(morning)
+    expect(morning.today.praise).toEqual([THREE])
+    expect(parseSaveV5(json(morning))).toEqual(morning)
   })
 })
 
@@ -270,10 +261,8 @@ describe('her line at night', () => {
     expect(who).toEqual([{ id: ONE, points: 10 }, { id: TWO, points: 10 }])
     expect(paid.love[THREE]!.points).toBe(0)
     expect(payLines(save, PACK, [{ outfitId: ONE, place: 'mill' }], []).paid).toEqual([])
-    // At night: 9000002 at the forest is paid at step 6.
-    const working = startLoopJob(save, { outfitId: TWO, place: 'forest', slot: 0, request: { kind: 'gather', item: 'pine-log', count: 2 } }, AT, TEST_KINDS)
-    expect(runNight(working, context()).love[TWO]!.points).toBe(10)
-    expect(runNight(working, { ...context(), story: undefined }).love[TWO]!.points).toBe(0)
+    // At night nobody works the farm but the farmer yet: none is paid.
+    expect(runNight(save, context()).love[TWO]!.points).toBe(0)
   })
 })
 
@@ -284,7 +273,7 @@ describe('a festival together', () => {
     expect(once.paid).toEqual([{ id: ONE, points: 50 }, { id: TWO, points: 50 }])
     expect(once.save.love[ONE]!.festivals).toEqual(['flower-show:1'])
     expect(festivalTogether(once.save, [ONE], 'flower-show', 1).paid).toEqual([])
-    expect(parseSaveV4(json(once.save))).toEqual(once.save)
+    expect(parseSaveV5(json(once.save))).toEqual(once.save)
   })
 })
 
@@ -318,7 +307,7 @@ describe('birthdays', () => {
     const day = runNight(eve, context())
     expect(day.summary!.hearts).toEqual([{ kind: 'birthday', id: ONE, when: 'today' }])
     expect(runNight(day, context()).summary!.hearts).toEqual([])
-    expect(parseSaveV4(json(day))).toEqual(day)
+    expect(parseSaveV5(json(day))).toEqual(day)
     // Without master data's birthdays (or the cast's), no line.
     expect(runNight(farm(2), context(NO_BIRTHDAYS)).summary!.hearts).toEqual([])
   })
@@ -355,7 +344,7 @@ describe('anniversaries', () => {
     const item = (line as { item: string }).item
     expect(SHOP_SEEDS[dateOf(day.calendar.day).season]).toContain(item) // a farmer's: a crop of the season
     expect(day.items[item]![ANNIVERSARY_STARS - 1]).toBe(1)
-    expect(parseSaveV4(json(day))).toEqual(day)
+    expect(parseSaveV5(json(day))).toEqual(day)
   })
 
   it('picks a forager\'s good from her deepest area, and a ★5 crop when her line\'s place isn\'t open', () => {
@@ -404,14 +393,9 @@ describe('Ready', () => {
 
   it('reads each setup kind: working, an item, a bond, a chapter; a place before its chapter opens with it', () => {
     const save = full(farm(3))
-    const forest = packWithTrigger({ kind: 'working', activity: 'foraging' })
-    expect(readiness(save, forest, ONE).waits).toEqual({ kind: 'setup', setup: { kind: 'working', activity: 'foraging' } })
-    const working = startLoopJob(save, { outfitId: ONE, place: 'forest', slot: 0, request: { kind: 'gather', item: 'pine-log', count: 1 } }, AT, TEST_KINDS)
-    expect(readiness(working, forest, ONE).ready).toBe(true)
-    const fields = packWithTrigger({ kind: 'working', activity: 'farming' })
-    expect(readiness(save, fields, ONE).ready).toBe(false)
-    const tending = setTender(plant(save, 'A', 0, 'seed-carrot'), 'A', ONE, TEST_KINDS)
-    expect(readiness(tending, fields, ONE).ready).toBe(true)
+    // A working setup holds every day while the farmer works the farm alone.
+    expect(readiness(save, packWithTrigger({ kind: 'working', activity: 'foraging' }), ONE).ready).toBe(true)
+    expect(readiness(save, packWithTrigger({ kind: 'working', activity: 'farming' }), ONE).ready).toBe(true)
     const item = packWithTrigger({ kind: 'item', good: 'golden-carrot' })
     expect(readiness(save, item, ONE).waits).toMatchObject({ kind: 'setup' })
     expect(readiness(give(save, 'golden-carrot', 4), item, ONE).ready).toBe(true)
@@ -421,7 +405,7 @@ describe('Ready', () => {
     expect(BOND_HEARTS.map(bondHearts)).toEqual([1, 2, 3, 4, 5])
     const mine = packWithTrigger({ kind: 'working', activity: 'mining' })
     expect(readiness(withLove(save, ONE, { points: 0 }), mine, ONE).waits).toEqual({ kind: 'opens', place: 'mine' })
-    expect(readiness({ ...save, buildings: { ...save.buildings, mine: 1 } }, mine, ONE).waits).toMatchObject({ kind: 'setup' })
+    expect(readiness({ ...save, buildings: { ...save.buildings, mine: 1 } }, mine, ONE).ready).toBe(true)
   })
 
   it('makes a waiting rung Ready the day after the rung before, the proposal only with a ring', () => {
@@ -459,8 +443,8 @@ describe('the morning\'s Hearts lines', () => {
       { kind: 'birthday', id: ONE, when: 'today' }, { kind: 'anniversary', id: TWO, when: 'today', item: 'carrot' },
       { kind: 'anniversary', id: THREE, when: 'tomorrow', item: null }, { kind: 'arrived', id: ONE, home: true },
     ] }
-    expect(parseSaveV4(json(save)).summary).toEqual(save.summary)
-    const refuse = (hearts: unknown[], message: string) => expect(() => parseSaveV4({ ...json(save), summary: { ...json(save.summary), hearts } })).toThrow(message)
+    expect(parseSaveV5(json(save)).summary).toEqual(save.summary)
+    const refuse = (hearts: unknown[], message: string) => expect(() => parseSaveV5({ ...json(save), summary: { ...json(save.summary), hearts } })).toThrow(message)
     refuse([{ kind: 'birthday', id: '9000009', when: 'today' }], 'save.summary.hearts.0.id: expected an Uma on the roster')
     refuse([{ kind: 'birthday', id: ONE, when: 'today' }, { kind: 'birthday', id: ONE, when: 'tomorrow' }], 'save.summary.hearts.1: repeated')
     refuse([{ kind: 'birthday', id: ONE, when: 'today', words: 'Hi' }], 'save.summary.hearts.0: unknown keys words')

@@ -179,7 +179,7 @@ describe('building a place', () => {
     useGame.setState({ save: { ...farm(), gold: 99_999, farm: { ...farm().farm, points: 5000 }, buildings: { dorm: 1, dock: 1 } } })
     await render(<FarmRoute />, '/?peek=dock')
     await find('[data-build="boat"]')
-    expect($('[data-dock-open]')?.textContent).toContain('The Sea Pier is open at the Fishery.')
+    expect($('[data-dock-open]')?.textContent).toContain('The Sea Pier is open at the pond’s edge.')
   })
 })
 
@@ -195,7 +195,7 @@ describe('the Farm Rank', () => {
     expect($('[data-rank-sheet="1"]')).not.toBeNull()
     expect($('[data-points]')?.textContent).toBe('47 points')
     expect($('[data-next]')?.textContent).toBe('103 more for Farm Rank 2 (150)')
-    expect($$('[data-opens] li').map((li) => li.textContent)).toEqual(['The Coop to build (not built yet)', 'Block B (800g)', 'Dorm level 3 (7 beds)', 'New seeds at the shop'])
+    expect($$('[data-opens] li').map((li) => li.textContent)).toEqual(['The Coop to build (not built yet)', 'The Hills', 'The River', 'The Sea Pier (with the Dock)', 'Dorm level 3 (7 beds)', 'New seeds at the shop'])
     expect($$('[data-source]').map((li) => li.textContent)).toEqual(['Shipping · 1 per 100g42', 'Diary entries · 5 each5', 'Milestones · 25 each0'])
   })
 })
@@ -208,7 +208,7 @@ describe("the morning's goal lines", () => {
     }
     expect(summaryParts(summary)[0]!.lines).toEqual([
       { key: 'built:boat', text: 'Built overnight · the Boat', to: '/?peek=dock', tag: 'Built' },
-      { key: 'farm-rank:2', text: 'Farm Rank 2 · The Coop to build (not built yet), Block B (800g), Dorm level 3 (7 beds), New seeds at the shop', to: '/?sheet=rank', tag: 'Farm Rank' },
+      { key: 'farm-rank:2', text: 'Farm Rank 2 · The Coop to build (not built yet), The Hills, The River, The Sea Pier (with the Dock), Dorm level 3 (7 beds), New seeds at the shop', to: '/?sheet=rank', tag: 'Farm Rank' },
       { key: 'milestone:rank:hand', text: 'First Uma at Hand · +300g', to: '/diary', tag: 'Milestone' },
       { key: 'milestone:row:woods:refined', text: 'Woods, refined: every grade shipped · +500g', to: '/diary', tag: 'Milestone' },
     ])

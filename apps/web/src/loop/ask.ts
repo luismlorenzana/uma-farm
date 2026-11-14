@@ -1,5 +1,5 @@
 // The Menu's switch: "Ask before ending the day". A device setting under uma-kit's `farm.` keys,
-// never in the save. On by default; off, End the day ends at once even with Umas idle.
+// never in the save. On by default; off, End the day ends at once even with actions left.
 import { kitKey, readPref, subscribePrefs, writePref } from '@luismlorenzana/uma-kit/ui'
 import { useSyncExternalStore } from 'react'
 

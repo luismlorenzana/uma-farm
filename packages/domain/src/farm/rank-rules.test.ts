@@ -1,14 +1,15 @@
 // Ranks: rank points a day, the challenges, rank-ups at night, what a
-// rank gives and the favourite line. Invented ids and test kinds (`kinds.fixture.ts`); favourites from an invented cast.
+// rank gives and the favourite line. Invented ids; favourites from an invented cast. Nobody but the farmer works the
+// farm until the farmhands come, so the night's tests set who worked today themselves (`notes.worked`).
 import { describe, expect, it } from 'vitest'
-import { harvestAll, harvestQuality, plantAll, seedsBackChance, setTender, tendedGrowth } from '../fields/fields'
+import { harvestQuality, seedsBackChance } from '../fields/fields'
 import { cropLevelQuality, quality, TENDED_QUALITY } from '../goods/stars'
-import { endDay, type NightContext } from '../night/end-day'
-import { TEST_KINDS } from '../night/kinds.fixture'
+import { NIGHT_STEPS, runNight, type NightContext, type NightStep } from '../night/end-day'
 import type { RankLine } from '../night/summary'
-import { startLoopJob } from '../save/loop-work'
-import { parseSaveV4 } from '../save/parse-v4'
-import { newLove, newRosterUma, newSave, type Love, type Plot, type RankState, type SaveV4 } from '../save/v4'
+import type { LoopPlaceId } from '../save/parse-v4'
+import { parseSaveV5 } from '../save/parse-v4'
+import { touched } from '../save/save'
+import { newLove, newRosterUma, newSave, type Love, type RankState, type SaveV4 } from '../save/v4'
 import type { Calling, CastEntry } from '../story/authored'
 import { STAND_IN_CAST } from '../story/authored.fixture'
 import {
@@ -28,7 +29,7 @@ const entry = (characterId: string, calling: Calling): CastEntry => ({ character
 const STORY: NonNullable<NightContext['story']> = {
   cast: { ...STAND_IN_CAST, umas: [entry('101', 'farming'), entry('202', 'foraging'), entry('303', 'mining')] }, bibles: new Map(), ties: { version: 1, ties: [] },
 }
-const CONTEXT: NightContext = { kinds: TEST_KINDS, story: STORY }
+const CONTEXT: NightContext = { story: STORY }
 
 function farm(day = 1): SaveV4 {
   const save = newSave('u1', AT)
@@ -38,14 +39,19 @@ function farm(day = 1): SaveV4 {
   }
 }
 const withLove = (save: SaveV4, id: string, love: Partial<Love>): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })
-const night = (save: SaveV4, context: NightContext = CONTEXT) => endDay(save, context, LATER)
-const nights = (save: SaveV4, n: number, context: NightContext = CONTEXT) => Array.from({ length: n }).reduce<SaveV4>((s) => night(s, context), save)
+type Worked = { outfitId: string; place: LoopPlaceId }
+/** The night, with who worked today set before its steps (the Mill's work is farming's). */
+const night = (save: SaveV4, context: NightContext = CONTEXT, worked: readonly Worked[] = []) => {
+  const working: NightStep = (n) => ({ ...n, notes: { ...n.notes, worked } })
+  return touched(runNight(save, context, [{ run: working }, ...NIGHT_STEPS]), LATER)
+}
+const nights = (save: SaveV4, n: number, worked: readonly Worked[] = []) => Array.from({ length: n }).reduce<SaveV4>((s) => night(s, CONTEXT, worked), save)
 const withRank = (save: SaveV4, id: string, activity: Activity, state: Partial<RankState>, more: Partial<SaveV4['roster'][string]> = {}): SaveV4 => {
   const uma = save.roster[id]!
   return { ...save, roster: { ...save.roster, [id]: { ...uma, ...more, ranks: { ...uma.ranks, [activity]: { ...uma.ranks[activity], ...state } } } } }
 }
-/** Block A planted with nine Carrots and tended by 101. */
-const tended = (save = farm()) => setTender(plantAll(save, 'A', 'carrot'), 'A', '101')
+/** 101 farming today, as a farmhand at the Mill will. */
+const FARMING: readonly Worked[] = [{ outfitId: '101', place: 'mill' }]
 const D_TERMS: TermsOf = () => ({ talent: TALENT_D, favourite: false })
 
 describe('rank points a day', () => {
@@ -97,11 +103,11 @@ describe('rank points a day', () => {
 
 describe('rank-ups at night', () => {
   it('lets points go on past a threshold and waits for the challenge, saying so once', () => {
-    let save = withRank(tended(), '101', 'farming', { points: 35 })
-    save = night(save)
+    let save = withRank(farm(), '101', 'farming', { points: 35 })
+    save = night(save, CONTEXT, FARMING)
     expect(save.roster['101']!.ranks.farming).toEqual({ points: 47, rank: 0, challenge: 0 })
     expect(save.summary!.ranks).toEqual([{ kind: 'full', outfitId: '101', activity: 'farming', rank: 1, challenge: 0 }])
-    save = night(save)
+    save = night(save, CONTEXT, FARMING)
     expect(save.roster['101']!.ranks.farming).toEqual({ points: 59, rank: 0, challenge: 0 })
     expect(save.summary!.ranks).toEqual([])
   })
@@ -114,7 +120,7 @@ describe('rank-ups at night', () => {
     save = night(save)
     expect(save.roster['101']!.ranks.farming).toEqual({ points: 41, rank: 1, challenge: 0 })
     expect(save.summary!.ranks).toEqual([{ kind: 'rank-up', outfitId: '101', activity: 'farming', rank: 1 }])
-    expect(parseSaveV4(json(save), 'save', TEST_KINDS)).toEqual(save)
+    expect(parseSaveV5(json(save))).toEqual(save)
   })
 
   it('takes one rank a night, one challenge at a time, and says when the next one\'s points are already full', () => {
@@ -153,21 +159,20 @@ describe('rank-ups at night', () => {
 })
 
 describe('who worked today', () => {
-  it('pays a tender whose block has a growing plot, and never a tender of an empty block', () => {
-    const empty = setTender(farm(), 'A', '101')
-    expect(night(empty).roster['101']!.ranks.farming.points).toBe(0)
-    // 101's favourite is farming: 10 × 1.2.
-    expect(night(tended()).roster['101']!.ranks.farming.points).toBe(12)
-    // A C talent in her favourite line: 10 × 1.1 × 1.2.
-    expect(night(tended(), { ...CONTEXT, talentOf: (_id, a) => (a === 'farming' ? 4 : 3) }).roster['101']!.ranks.farming.points).toBe(13.2)
-    // Outside her favourite: 202 tends (she calls foraging).
-    expect(night(setTender(plantAll(farm(), 'A', 'carrot'), 'A', '202')).roster['202']!.ranks.farming.points).toBe(10)
+  it('pays nobody while the farmer works the farm alone', () => {
+    const after = night(farm())
+    for (const uma of Object.values(after.roster)) expect(Object.values(uma.ranks).every((r) => r.points === 0)).toBe(true)
   })
 
-  it('pays a running job in its place\'s activity: the forest foraging, the Mill farming', () => {
+  it('pays an Uma who worked today in her place\'s activity, ×1.2 in her favourite line', () => {
     expect(PLACE_ACTIVITY).toMatchObject({ forest: 'foraging', sawmill: 'foraging', fishery: 'fishing', smokehouse: 'fishing', mill: 'farming', mine: 'mining' })
-    const save = startLoopJob(farm(), { outfitId: '202', place: 'forest', slot: 0, request: { kind: 'gather', item: 'pine-log', count: 1 } }, AT, TEST_KINDS)
-    const after = night(save)
+    // 101's favourite is farming: 10 × 1.2.
+    expect(night(farm(), CONTEXT, FARMING).roster['101']!.ranks.farming.points).toBe(12)
+    // A C talent in her favourite line: 10 × 1.1 × 1.2.
+    expect(night(farm(), { ...CONTEXT, talentOf: (_id, a) => (a === 'farming' ? 4 : 3) }, FARMING).roster['101']!.ranks.farming.points).toBe(13.2)
+    // Outside her favourite: 202 at the Mill (she calls foraging).
+    expect(night(farm(), CONTEXT, [{ outfitId: '202', place: 'mill' }]).roster['202']!.ranks.farming.points).toBe(10)
+    const after = night(farm(), CONTEXT, [{ outfitId: '202', place: 'forest' }])
     expect(after.roster['202']!.ranks.foraging.points).toBe(12)
     expect(after.roster['303']!.ranks).toEqual(farm().roster['303']!.ranks)
   })
@@ -180,25 +185,17 @@ describe('who worked today', () => {
   })
 
   it('lifts the points for the well fed and for her friendship, read before the night counts well fed down', () => {
-    const fed = withRank(tended(), '202', 'farming', {}, { wellFed: 1 })
-    const both = setTender(fed, 'A', '202')
-    const after = night(both)
+    const at = [{ outfitId: '202', place: 'mill' as const }]
+    const after = night(withRank(farm(), '202', 'farming', {}, { wellFed: 1 }), CONTEXT, at)
     expect(after.roster['202']!.ranks.farming.points).toBe(12.5)
     expect(after.roster['202']!.wellFed).toBe(0)
-    const fond = setTender(withLove(tended(), '202', { level: 5 }), 'A', '202')
-    expect(night(fond).roster['202']!.ranks.farming.points).toBe(10.5)
-  })
-
-  it('reads talents through the night: an S tender grows her block 1.4 a night', () => {
-    const save = tended()
-    const growth = (talent: TalentStep) => night(save, { ...CONTEXT, talentOf: () => talent }).fields.blocks[0]!.plots[0]!.growth
-    expect([growth(3), growth(7)]).toEqual([1.25, 1.4])
+    expect(night(withLove(farm(), '202', { level: 5 }), CONTEXT, at).roster['202']!.ranks.farming.points).toBe(10.5)
   })
 
   it('gives the same morning from the same save', () => {
-    const save = withRank(tended(), '101', 'farming', { points: 35 })
-    expect(night(json(save))).toEqual(night(save))
-    expect(nights(save, 3).roster['101']!.ranks.farming.points).toBe(71)
+    const save = withRank(farm(), '101', 'farming', { points: 35 })
+    expect(night(json(save), CONTEXT, FARMING)).toEqual(night(save, CONTEXT, FARMING))
+    expect(nights(save, 3, FARMING).roster['101']!.ranks.farming.points).toBe(71)
   })
 })
 
@@ -239,19 +236,10 @@ describe('the challenges', () => {
     expect(count('farming', 0, { kind: 'catch', spot: 'pond', fish: 3 })).toBe(0)
   })
 
-  it('counts a tended harvest for the tender, by her rank, and none untended', () => {
-    const ripe = (save: SaveV4): SaveV4 => {
-      const plot: Plot = { crop: 'carrot', growth: 3.5, ready: true, regrowing: false, own: false }
-      return { ...save, fields: { blocks: save.fields.blocks.map((b) => ({ ...b, plots: b.plots.map(() => ({ ...plot })) })) } }
-    }
-    expect(harvestAll(setTender(ripe(farm()), 'A', '101')).save.roster['101']!.ranks.farming.challenge).toBe(9)
-    expect(harvestAll(ripe(farm())).save.roster['101']!.ranks.farming.challenge).toBe(0)
-    // A real talent reaches the stars: an S tender's harvest is a full point better than a D's.
-    const s = harvestAll(setTender(ripe(farm()), 'A', '101'), ['A'], () => 7).receipt.stars
-    const d = harvestAll(setTender(ripe(farm()), 'A', '101'), ['A'], () => 3).receipt.stars
-    const mean = (stars: number[]) => stars.reduce((sum, n, i) => sum + n * (i + 1), 0) / 9
-    expect(mean(s)).toBeGreaterThan(mean(d))
-    expect(s[0]).toBe(0)
+  it('counts a harvest for the Uma who made it, by her rank', () => {
+    expect(countChallenge(farm(), '101', 'farming', { kind: 'harvest', stars: [1, 1, 1, 1, 1, 1, 1, 1, 1], level: 1 }).roster['101']!.ranks.farming.challenge).toBe(9)
+    // A real talent reaches the stars: an S worker's harvest is a full point better than a D's.
+    expect(harvestQuality({ rank: 0, talent: 7, wellFed: false }, 1) - harvestQuality({ rank: 0, talent: 3, wellFed: false }, 1)).toBe(1)
   })
 })
 
@@ -260,8 +248,7 @@ describe('what a rank gives', () => {
     expect(RANK_BENEFITS.map((b) => b.yield)).toEqual([1, 1.15, 1.3, 1.5, 1.7, 2])
     expect(RANK_BENEFITS.map((b) => [b.expeditionPower, b.affection, b.workshopYield])).toEqual([[10, 0, 1], [20, 3, 1.1], [30, 6, 1.2], [40, 9, 1.3], [50, 12, 1.4], [60, 15, 1.5]])
     const ranks = [0, 1, 2, 3, 4, 5] as Rank[]
-    expect(ranks.map((r) => tendedGrowth(r, TALENT_D))).toEqual(RANK_BENEFITS.map((b) => b.tendedGrowth))
-    expect(ranks.map((r) => tendedGrowth(r, TALENT_D))).toEqual([1.25, 1.35, 1.45, 1.55, 1.65, 1.75])
+    expect(RANK_BENEFITS.map((b) => b.tendedGrowth)).toEqual([1.25, 1.35, 1.45, 1.55, 1.65, 1.75])
     expect(ranks.map((r) => seedsBackChance(r))).toEqual([0.1, 0.15, 0.2, 0.25, 0.3, 0.35])
     expect(ranks.map(rankQuality)).toEqual([0, 0.5, 1, 1.5, 2, 2.5])
     expect(ranks.map((r) => harvestQuality({ rank: r, talent: TALENT_D, wellFed: false }, 1))).toEqual(ranks.map((r) => quality({ rank: rankQuality(r), care: TENDED_QUALITY, cropLevel: cropLevelQuality(1) })))
