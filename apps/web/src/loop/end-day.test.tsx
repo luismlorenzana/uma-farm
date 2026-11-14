@@ -19,6 +19,7 @@ const { FarmBottomBar } = await import('../shell/Bars')
 const { default: LoopSheets } = await import('./LoopSheets')
 const { endTheDay, dismissSummary } = await import('./actions')
 const { setAskBeforeEnd } = await import('./ask')
+const { arrivedRelease, keepArrived } = await import('../story/news')
 const { storyReady } = await import('../story/story')
 // The night and End the day's sheet read the story pack: the stand-in, loaded once.
 await storyReady()
@@ -131,5 +132,15 @@ describe('End the day', () => {
     vi.setSystemTime(new Date('2026-11-09T20:05:00.000Z'))
     await dismissSummary()
     expect(save()).toMatchObject({ summary: null, account: { updatedAt: '2026-11-09T20:05:00.000Z' } })
+  })
+
+  it('says a story release new to the device the next morning, first in New today, once', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
+    keepArrived({ number: 3 })
+    expect(await endTheDay(1)).toBe(true)
+    expect(save().summary!.news[0]).toEqual({ kind: 'story', number: 3 })
+    expect(arrivedRelease()).toBeNull()
+    expect(await endTheDay(2)).toBe(true)
+    expect(save().summary!.news.some((line) => line.kind === 'story')).toBe(false)
   })
 })

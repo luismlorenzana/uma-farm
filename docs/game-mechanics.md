@@ -249,7 +249,7 @@ line is a tap to its place.
 | Work done | Jobs that ended tonight, by place, "Forest · 2 jobs done · 9 items" (each job's whole haul); the night's best catch, "Best catch · Rainbow Koi ★2"; plots that turned Ready, by block, "Block A · 9 crops ready"; what withered, "Block A · 3 Onion withered" | The place's quick look; the Fishery's quick look; the Fields |
 | Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full** | Her profile's Work side |
 | Hearts | Who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", tagged **New**), a chapter that opened ("A new chapter with *Name* · Together", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
-| New today | "Summer begins"; "Flower Show tomorrow" or "today"; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The calendar; the Festival ground; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
+| New today | First, "New story arrived · *its note*", tagged **New**, the morning after a new story release reaches the phone ([below](#how-the-app-gets-the-pack)); "Summer begins"; "Flower Show tomorrow" or "today"; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The Hearts tab; the calendar; the Festival ground; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
 | Today | "2 Umas idle"; "9 plots to plant" (empty plots that the season's seeds you hold could fill today) | The Hearts tab's Work view; the Fields |
 
 Hearts shows whenever it has a line or someone is Ready. The romance describes its lines.
@@ -2546,8 +2546,12 @@ stand-ins:
   the pack has none). It writes each file minified, named with the first 8 hex of its SHA-256
   (`story/<name>.<hash8>.json`), and an index, `story.json`: every file with its path, size and hash, the event ids each
   route scripts, and the bond levels each pair holds. The same pack gives the same release.
-- **The publish** uploads the hash-named files first and the index last, to a private bucket. Old files stay, so a phone
-  holding an older index still reads it.
+- **The ship** (`pnpm story:ship`, run where the story is written) checks the pack, builds the release, publishes it and
+  backs the drafts up. Every ship is **numbered** (one more than the release the bucket held, or 1), **dated**, and has
+  a **note** saying what's new (one line, 160 characters at most). The publish uploads the hash-named files first and
+  the index last, to a private bucket. Old files stay, so a phone holding an older index still reads it, and a rollback
+  publishes an earlier index again under a new number, its note "Rolled back to *n*". A pack the bucket already plays
+  isn't published again.
 - **farm-api serves it** to the owner only: the index fresh on every read, the hash-named files cached for good, and
   nothing else (404).
 - **On the phone,** the boot reads the index, then the cast, the ties, the bibles, the household and the opening; each route and pair
@@ -2560,6 +2564,15 @@ stand-ins:
 - **No pack published plays no pack:** when farm-api serves none at all (a 404 for the index), the game plays with no
   pack, on placeholders: master data's first five are the cast, so a fresh farm opens and plays whole. The boot waits
   for master data as well as the index, since the placeholders read it.
+- **"New story arrived."** A fresh index whose number isn't the one the phone kept last is a new release. Once its pack
+  has loaded, the phone keeps its number (`farm.story-news`, a few bytes) until the next night, which opens the
+  morning's New today with **"New story arrived · *its note*"**, tagged **New**; a tap opens the Hearts tab. It shows
+  once a release on each phone; a release that arrives before the night replaces the one waiting. The save keeps the
+  line's number only, never the note: the card reads the note from the release the game plays, and says "New story
+  arrived" alone for another one. A new farm starts with none waiting, since its opening plays the story. An offline
+  boot on the kept index, and a release published unnumbered (`story:publish`), say nothing.
+- **Account's Story row** shows the release the game plays: **"Release 4, 14 Nov 2026"** (its number and the day it
+  shipped; an unnumbered one by its id and build date), or **"No story yet"** when none plays.
 
 ### What plays without the story
 
@@ -4562,7 +4575,8 @@ lost; nothing restores it automatically. The phone keeps its changes, and Accoun
 | The server holds everything | Synced | — |
 | Never synced | Not synced yet | — |
 
-- Account also shows **Last synced**, the build and master data's release. The chip opens Account.
+- Account also shows **Last synced**, the build, master data's release and the story's (**Story**: "Release 4, 14 Nov
+  2026", or "No story yet"). Account scrolls, so its last rows clear the bottom bar. The chip opens Account.
 - **"Not backed up since …"** shows on every page once a sync has failed (not merely offline) with changes waiting and
   the last good sync is ten minutes old or more: "Not backed up since 8 Nov, 14:05. Your progress is only on this
   device." It opens Account.
@@ -4608,7 +4622,8 @@ sits outside the opening screens, so it shows even when the app stopped while op
   unbuilt Mill, offered at Farm Rank 1. Only the account carries over, its "last changed" time with it, so the farmer's
   name is the new farm's first change. Then the opening runs as on any new farm. A v4 from before the town has no
   `town`: it loads with no talks. A v4 from before her chapters loads as it is: her chapter is read from her route, and
-  only a new morning holds a "new chapter" line.
+  only a new morning holds a "new chapter" line. A morning's "New story arrived" line is new too: a save from before it
+  simply has none, and only a morning after a new release holds one (its release's number).
 - **Nothing goes silently:** a phone save with unsynced play is kept first as a "Before the new farm" safety copy (if it
   can't be kept, nothing changes and the card says so, with the button to try again). The new farm syncs up as it is,
   and the first time the server stores a v4 over the older save it copies the older one, whole, to a backup.

@@ -183,6 +183,15 @@ describe('the morning summary', () => {
     expect(summarySections(morning.summary!)).toEqual(['work', 'news', 'nudges'])
   })
 
+  it('says a new story release first in New today, by its number only, when the device brings one', () => {
+    const save = farm(12)
+    const morning = endDay(save, { ...CONTEXT, release: { number: 3 } }, LATER)
+    expect(morning.summary!.news).toEqual([{ kind: 'story', number: 3 }, { kind: 'season', season: 'summer' }])
+    expect(parseSaveV4(json(morning)).summary).toEqual(morning.summary)
+    expect(endDay(save, { ...CONTEXT, release: null }, LATER).summary!.news).toEqual([{ kind: 'season', season: 'summer' }])
+    expect(night(morning).summary!.news).toEqual([])
+  })
+
   it('is replaced each night, and has no nudge when everyone works', () => {
     const save = editLoopQueue(start(farm(3), '101', gather()), { outfitId: '101', add: { request: gather(), building: 'forest' } }, AT, TEST_KINDS)
     const busy: SaveV4 = { ...save, dorm: { ...save.dorm, home: ['101'] }, items: { wheat: [5, 0, 0, 0, 0] } }

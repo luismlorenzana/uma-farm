@@ -114,3 +114,20 @@ describe('the morning\'s Dorm news', () => {
     expect(summaryParts({ ...summary, news: [{ kind: 'home', umas: ['101', '202'] }] })[0]!.lines[0]!.text).toBe('2 Umas are home')
   })
 })
+
+describe('the morning\'s new story', () => {
+  it('opens New today with "New story arrived" and the release\'s note, read by its number, tagged New, a tap to the Hearts tab', () => {
+    const summary: MorningSummary = {
+      day: 8, bin: [], work: [], ranks: [], hearts: [], nudges: [],
+      news: [{ kind: 'story', number: 4 }, { kind: 'season', season: 'summer' }],
+    }
+    const noteOf = (n: number) => (n === 4 ? 'An invented chapter.' : null)
+    expect(summaryParts(summary, undefined, [], null, undefined, undefined, noteOf)).toEqual([{ section: 'news', title: 'New today', lines: [
+      { key: 'story', text: 'New story arrived · An invented chapter.', to: '/hearts', tag: 'New' },
+      { key: 'season', text: 'Summer begins', to: '/?sheet=calendar' },
+    ] }])
+    // Another release's number, or the pack still loading: the words alone.
+    expect(summaryParts({ ...summary, news: [{ kind: 'story', number: 5 }] }, undefined, [], null, undefined, undefined, noteOf)[0]!.lines[0]!.text).toBe('New story arrived')
+    expect(summaryParts(summary)[0]!.lines[0]!.text).toBe('New story arrived')
+  })
+})

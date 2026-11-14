@@ -470,17 +470,20 @@ export function parseRankLines(value: unknown, path: string, roster: ReadonlySet
 }
 
 /** §5's kinds: the roster's arrivals are §4's hearts. */
-const NEWS_KINDS = ['season', 'festival', 'chapter', 'built', 'farm-rank', 'milestone', 'dorm', 'home', 'household'] as const
+const NEWS_KINDS = ['story', 'season', 'festival', 'chapter', 'built', 'farm-rank', 'milestone', 'dorm', 'home', 'household'] as const
 /** The household milestones a morning may announce. */
 const HOUSEHOLD_NEWS = [1, 5, 10, 15, 20] as const
 
 /** §5 New today. An older v4's "chapter done" line (the global chapters') is read and dropped. */
 export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet<string>): NewsLine[] {
-  // The season and festivals, the goals' news, the Dorm's new level and Umas home from a swap, and the household's.
-  const read = list(value, path, 0, 8 + MAX_GOAL_NEWS + 2 + HOUSEHOLD_NEWS.length).map((v, i): NewsLine | null => {
+  // A new story release, the season and festivals, the goals' news, the Dorm's new level and Umas home from a swap, and
+  // the household's.
+  const read = list(value, path, 0, 1 + 8 + MAX_GOAL_NEWS + 2 + HOUSEHOLD_NEWS.length).map((v, i): NewsLine | null => {
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, NEWS_KINDS)
     switch (kind) {
+      // A story release that reached the device: its ship's number (its note is the release's, never the save's).
+      case 'story': return { kind, number: int(object(v, at, ['kind', 'number']).number, `${at}.number`, 1, Number.MAX_SAFE_INTEGER) }
       case 'chapter': int(object(v, at, ['kind', 'chapter']).chapter, `${at}.chapter`, 1, 8); return null
       // A place built overnight, a Farm Rank reached (2–10), a Diary milestone or row paid.
       case 'built': {
@@ -509,7 +512,7 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
       }
     }
   })
-  return unique(read.filter((n): n is NewsLine => n !== null), path, (n) => (n.kind === 'season' || n.kind === 'dorm' || n.kind === 'home' ? n.kind
+  return unique(read.filter((n): n is NewsLine => n !== null), path, (n) => (n.kind === 'story' || n.kind === 'season' || n.kind === 'dorm' || n.kind === 'home' ? n.kind
     : n.kind === 'festival' ? `festival:${n.when}` : n.kind === 'built' ? `built:${n.place}` : n.kind === 'farm-rank' ? `farm-rank:${n.rank}`
       : n.kind === 'milestone' ? `milestone:${n.id}` : `household:${n.married}`))
 }

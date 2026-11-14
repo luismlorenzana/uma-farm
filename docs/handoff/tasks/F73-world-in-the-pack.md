@@ -1,6 +1,6 @@
 # F73 — The world in the pack: `world.json` and Town notes
 
-**uma-farm · Claude · M · Needs: F72 · [Roadmap](../../roadmap.md#phase-1-one-game-built-around-the-umas)**
+**uma-farm · Claude · M · Needs: nothing (`story:ship` is in) · [Roadmap](../../roadmap.md#phase-1-one-game-built-around-the-umas)**
 
 > The world the story builds reaches the screen: the town's and the farm's names, the farm's history, the festivals,
 > every place's description, a line for each season, and **Town notes**, short pieces of the world that unlock as you

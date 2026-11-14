@@ -6,7 +6,7 @@ import { createHash, webcrypto } from 'node:crypto'
 import { STAND_IN_FILES, storyFileName, storyFilePath, storyPackFrom, type StoryIndex } from '@farm/domain'
 import { createContentClient, type ContentCache } from '@luismlorenzana/uma-kit/content'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { deviceIndexStore, LAST_INDEX_KEY, loadReleasedPack, type IndexStore } from './delivery'
+import { deviceIndexStore, isNewRelease, LAST_INDEX_KEY, loadReleasedPack, type IndexStore } from './delivery'
 
 const sha256 = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex')
 
@@ -139,6 +139,50 @@ describe('the story pack from farm-api', () => {
     expect(none).toHaveBeenCalledOnce()
     expect((await loadReleasedPack(client(api, cache), store)).cast).toEqual(storyPackFrom(STAND_IN_FILES).cast)
     await expect(loadReleasedPack(client(api, cache), memoryStore())).rejects.toMatchObject({ status: 404 })
+  })
+})
+
+describe('a new release on the device', () => {
+  it('tells a fresh shipped index whose number the last index kept here does not have, once it loads; never an offline one', async () => {
+    const shipped = (number?: number) => {
+      const release = standInRelease()
+      const index: StoryIndex = { ...release.index, ...(number ? { number, shippedAt: '2026-11-14T09:00:00.000Z', note: 'An invented chapter.' } : {}) }
+      release.bytes.set('story.json', new TextEncoder().encode(JSON.stringify(index)))
+      return { index, bytes: release.bytes }
+    }
+    const cache = memoryCache()
+    const store = memoryStore()
+    const arrived = vi.fn()
+    // Built or published without a number: nothing to say.
+    await loadReleasedPack(client(server(shipped()), cache), store, { arrived })
+    expect(arrived).not.toHaveBeenCalled()
+    // Release 1 reaches the device, then again (seen), then release 2.
+    const first = await loadReleasedPack(client(server(shipped(1)), cache), store, { arrived })
+    expect(first.release).toEqual({ id: 'abcdef12', builtAt: '2026-11-12T00:00:00.000Z', number: 1, shippedAt: '2026-11-14T09:00:00.000Z', note: 'An invented chapter.' })
+    await loadReleasedPack(client(server(shipped(1)), cache), store, { arrived })
+    await loadReleasedPack(client(server(shipped(2)), cache), store, { arrived })
+    expect(arrived.mock.calls.map(([index]) => (index as StoryIndex).number)).toEqual([1, 2])
+    expect((store.kept as StoryIndex).number).toBe(2)
+    // Offline, the last index plays and nothing is told.
+    const api = server(shipped(3))
+    api.state.offline = true
+    await loadReleasedPack(client(api, cache), store, { arrived })
+    expect(arrived).toHaveBeenCalledTimes(2)
+    // A tampered file loads nothing, so nothing arrives.
+    const tampered = server(shipped(4))
+    tampered.state.tamper = tampered.release.index.files.ties!.path
+    await expect(loadReleasedPack(client(tampered, memoryCache()), store, { arrived })).rejects.toThrow('Content hash mismatch')
+    expect(arrived).toHaveBeenCalledTimes(2)
+  })
+
+  it('counts a number the last index lacks as new, the same number as seen', () => {
+    const { index } = standInRelease()
+    expect(isNewRelease(index, null)).toBe(false)
+    expect(isNewRelease({ ...index, number: 1 }, null)).toBe(true)
+    expect(isNewRelease({ ...index, number: 1 }, index)).toBe(true)
+    expect(isNewRelease({ ...index, number: 1 }, { ...index, number: 1 })).toBe(false)
+    expect(isNewRelease({ ...index, number: 3 }, { ...index, number: 2 })).toBe(true)
+    expect(isNewRelease({ ...index, number: 3 }, 'broken')).toBe(true)
   })
 })
 

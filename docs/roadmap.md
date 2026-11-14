@@ -94,10 +94,12 @@ start, the town, meeting her, and [her chapters](game-mechanics.md#her-chapters)
 your go.
 
 **Track D, the story's way in** (2026-11-14): the story reaches the game regularly, and the world building with it.
+The ship is in: `pnpm story:ship` checks, releases, publishes and backs up in one command, numbered with a note, and the
+morning says "New story arrived". The story session ships at the end of every session
+([F40](handoff/tasks/F40-story-authoring.md)).
 
 | Step | What | Who |
 |---|---|---|
-| 1.17 **Ship the story** | `pnpm story:ship` where the story is written: check, release, publish, back up; numbered releases with a note; "New story arrived" in the morning | Claude ([F72](handoff/tasks/F72-story-ship.md)); then the story session ships at the end of every session |
 | 1.18 **The world in the pack** | `world.json`: the town's and the farm's names, the history, festivals, places, seasons, and Town notes that unlock as you play | Claude ([F73](handoff/tasks/F73-world-in-the-pack.md)) |
 | 1.19 **The World Book** | The story's private book of the world, with "For the game", shipped with every pack and read before any design | The story session ([F40](handoff/tasks/F40-story-authoring.md)); a World page on Uma Story, asked of uma-platform |
 | 1.20 **The game's design** | One clear document: what you want when you open the app, a session, a day, a week, a season, how the Umas and the farm feed each other, and what the first real season holds, drawing on the World Book | Claude, for your review |

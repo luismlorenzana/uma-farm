@@ -5,7 +5,9 @@
 // household load at boot (the night reads the household's lines); routes and pairs on demand. The last good index stays
 // on the device, so an offline boot plays the last version. Each file is read by the game's one reader, which skips a part it
 // can't read and keeps the rest; a release that can't load (no index, a hash mismatch, a route or pair that isn't what the
-// index lists) throws, and the boot gate offers Try again. Loaded with `load.ts`, on demand.
+// index lists) throws, and the boot gate offers Try again. A fresh index of a shipped release this device hasn't seen
+// (its number isn't the last index's) is told to the morning's "New story arrived" (`news.ts`). Loaded with `load.ts`,
+// on demand.
 import { parseStoryIndex, releasedStoryPack, STORY_INDEX, type StoryIndex, type StoryPack } from '@farm/domain'
 import type { ContentClient } from '@luismlorenzana/uma-kit/content'
 
@@ -48,14 +50,23 @@ export interface LoadOptions<M> {
   /** What to play when the server holds no pack at all (a 404 for `story.json`): the game's, no pack (null), so the
    * placeholders play. Without it, a 404 falls back on the last index, as any failure does. */
   missing?: () => Promise<M>
+  /** Told when a fresh index new to this device has loaded: a shipped one (numbered) whose number isn't the last index's
+   * kept here. The morning says "New story arrived" for it, once. */
+  arrived?: (index: StoryIndex) => void
+}
+
+/** Whether a fresh index is a release this device hasn't seen: shipped (numbered), and not the last index kept's number. */
+export function isNewRelease(index: StoryIndex, last: unknown): boolean {
+  if (index.number === undefined) return false
+  return typeof last !== 'object' || last === null || (last as { number?: unknown }).number !== index.number
 }
 
 /**
  * The released pack: the index fresh from the server, else (offline, or the server failing) the last good one kept on
- * the device; then its files, verified and read. The index is kept once the pack it names has loaded. With `missing`,
- * a server that holds no pack plays what it gives.
+ * the device; then its files, verified and read. The index is kept once the pack it names has loaded; a fresh one new to
+ * the device is told to `arrived` first. With `missing`, a server that holds no pack plays what it gives.
  */
-export async function loadReleasedPack<M = never>(client: Pick<ContentClient, 'pack'>, store: IndexStore, { missing }: LoadOptions<M> = {}): Promise<StoryPack | M> {
+export async function loadReleasedPack<M = never>(client: Pick<ContentClient, 'pack'>, store: IndexStore, { missing, arrived }: LoadOptions<M> = {}): Promise<StoryPack | M> {
   let index: StoryIndex
   let fresh = true
   try {
@@ -68,6 +79,9 @@ export async function loadReleasedPack<M = never>(client: Pick<ContentClient, 'p
     fresh = false
   }
   const pack = await releasedStoryPack(index, async (_name, file) => json(await client.pack(file.path, file)))
-  if (fresh) store.write(index)
+  if (fresh) {
+    if (arrived && isNewRelease(index, store.read())) arrived(index)
+    store.write(index)
+  }
   return pack
 }

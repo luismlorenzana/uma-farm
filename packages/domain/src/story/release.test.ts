@@ -4,7 +4,7 @@
 import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import { storyPackFrom, StoryPackError } from './pack'
-import { parseStoryIndex, releasedStoryPack, storyFileName, storyFilePath, type StoryIndex } from './release'
+import { parseStoryIndex, releasedStoryPack, shippedIndex, storyFileName, storyFilePath, storyReleaseOf, type StoryIndex } from './release'
 import { STAND_IN_FILES } from './stand-in'
 
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
@@ -51,6 +51,22 @@ describe('story.json', () => {
       'story.json: Bad Name is { path: story/Bad Name.<hash8>.json, bytes, sha256 }',
       'story.json: no ties',
     ])
+  })
+
+  it('reads a ship\'s number, date and note, each optional, and checks them when there', () => {
+    const { index } = release()
+    expect(storyReleaseOf(parseStoryIndex(clone(index)))).toEqual({ id: '0123abcd', builtAt: '2026-11-12T00:00:00.000Z', number: null, shippedAt: null, note: null })
+    const shipped = shippedIndex(index, { number: 4, shippedAt: '2026-11-14T09:00:00.000Z', note: 'An invented chapter.' })
+    expect(parseStoryIndex(clone(shipped))).toEqual({ ...index, number: 4, shippedAt: '2026-11-14T09:00:00.000Z', note: 'An invented chapter.' })
+    expect(storyReleaseOf(shipped)).toMatchObject({ number: 4, note: 'An invented chapter.' })
+    // A rollback numbers an earlier index again: the new number and note replace the old.
+    expect(shippedIndex(shipped, { number: 5, shippedAt: '2026-11-15T09:00:00.000Z', note: null })).toEqual({ ...index, number: 5, shippedAt: '2026-11-15T09:00:00.000Z' })
+    expect(issuesOf(() => parseStoryIndex({ ...clone(index), number: 0, shippedAt: 'soon', note: 'x'.repeat(161) }))).toEqual([
+      'story.json: number is a whole number from 1',
+      'story.json: shippedAt is a date',
+      'story.json: note is one line of at most 160 characters',
+    ])
+    expect(issuesOf(() => parseStoryIndex({ ...clone(index), number: 1.5, note: 'Two\nlines' }))).toHaveLength(2)
   })
 
   it('refuses a route or pair listed one way and not the other', () => {

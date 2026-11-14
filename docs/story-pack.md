@@ -398,13 +398,35 @@ the cast (a note), so every role is filled.
 
 A spot `town.json` doesn't name plays the game's own (a note).
 
-## Releasing a pack
+## Shipping
 
-- **`pnpm story:release`** reads `content/story/` with the game's own reader and writes the release. Any pack releases:
-  it lists what it skipped (the errors) and the notes, and refuses only when there's no pack folder.
-- **What's released** is the pack as the game reads it: every broken part already skipped, every other field kept.
-- **`pnpm story:publish`** sends a release to the farm's private bucket when the owner wants a pack in the game. Claude
-  runs it.
+**`pnpm story:ship --note "what's new, in one line"`** puts the pack on the owner's phone. Run it at the end of every
+writing session, on the machine where the story is written (macOS or Windows). In order:
+
+| Step | What happens |
+|---|---|
+| 1. Check | Reads `content/story/` with the game's own reader and prints what it skips (the errors) and the notes. Nothing blocks |
+| 2. Release | Builds the release into the ignored `content/story-release/`: the pack as the game reads it, every broken part already skipped, every other field kept |
+| 3. Publish | Numbers the release (one more than the bucket's current one, or 1), dates it and gives it its note, then uploads the new hash-named files first and `story.json` last to the farm's private bucket |
+| 4. Back up | `pnpm story:push farm` in the sibling `../uma-platform` checkout, when it's there; skipped with a note when it isn't |
+| 5. Say | The release's number, its date and its note |
+
+- **The note** is `--note "…"`, else the first line of `ship.md` in the pack's folder, else none. It's one line of at
+  most 160 characters, since the morning shows it; a longer one stops the ship before anything is uploaded.
+- **On the phone:** the next morning on an existing farm opens New today with **"New story arrived · *your note*"**,
+  once a release, and Account shows **Story: Release *n*, *date***. A new farm meets the story in its opening.
+- **Nothing new, nothing published:** a pack the bucket already plays keeps its number, and the drafts are still
+  backed up. A ship that stopped partway is safe to run again.
+- **`--dry-run`** reads the bucket (the number, which files are there) and lists what it would upload, uploading
+  nothing.
+- **Rolling back:** `pnpm story:ship --release <n>` publishes release *n*'s index again, numbered anew, with the note
+  "Rolled back to *n*". The bucket keeps every file and the last ten indexes.
+- **The machine:** gcloud is called with the environment only, never changing the account or its configuration.
+  `STORY_GCLOUD_CONFIG` names the configuration (default `default`), `STORY_GCLOUD_PROJECT` the project (`uma-rpg`),
+  `STORY_BUCKET` the bucket (`uma-farm-content`) and `STORY_PLATFORM_DIR` the uma-platform checkout
+  (`../uma-platform`).
+- **The steps alone:** `pnpm story:release` builds the release (any pack releases; it refuses only when there's no pack
+  folder), and `pnpm story:publish` uploads it, unnumbered, so the morning doesn't announce it. The ship is the routine.
 
 ## What reads now, and what acts on it later
 

@@ -13,6 +13,7 @@ import {
 } from '@farm/domain'
 import { create } from 'zustand'
 import { conflictEnvelope, saveApi } from '../api/client'
+import { forgetArrived } from '../story/news'
 import { keepOnCast, storyReady } from '../story/story'
 import { addSafetyCopy, readSafetyCopy, readSaveRow, readStoredRow, removeSafetyCopy, writeSaveRow } from './db'
 import { reconcile } from './reconcile'
@@ -124,6 +125,8 @@ export async function boot(uid: string): Promise<{ startOver: boolean }> {
       return { startOver: false }
     }
     useGame.setState({ status: 'ready', revision: remote.revision })
+    // A new farm meets the story in its opening: no "New story arrived" the first morning.
+    forgetArrived()
     await commit(freshSave(uid))
     return { startOver: false }
   } catch (err) {
@@ -148,6 +151,7 @@ export async function startOver(): Promise<void> {
   }
   olderFound = null
   useGame.setState({ status: 'ready', revision: found.revision, dirty: found.dirty, lastSyncedAt: found.lastSyncedAt })
+  forgetArrived()
   await commit(freshV4(found.save))
 }
 

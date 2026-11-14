@@ -123,6 +123,12 @@ describe('the v4 parse', () => {
     refuse((s) => { s.summary = { ...json(save.summary), hearts: [{ kind: 'arrived', id: '9000009', home: true }] } }, 'save.summary.hearts.0.id: expected an Uma on the roster')
     refuse((s) => { s.summary = { ...json(save.summary), hearts: [{ kind: 'arrived', id: '9000002', home: true, words: 'Hi' }] } }, 'save.summary.hearts.0: unknown keys words')
     refuse((s) => { s.summary = { ...json(save.summary), bonds: [] } }, 'save.summary: unknown keys bonds')
+    // A new story release's line: its ship's number only, never the story's words.
+    const story = { ...json(save.summary!), news: [{ kind: 'story', number: 2 }, { kind: 'dorm', level: 2 }] }
+    expect(parseSaveV4(json({ ...save, summary: story })).summary).toEqual(story)
+    refuse((s) => { s.summary = { ...story, news: [{ kind: 'story', number: 0 }] } }, 'save.summary.news.0.number: expected 1–9007199254740991')
+    refuse((s) => { s.summary = { ...story, news: [{ kind: 'story', number: 2, note: 'Invented.' }] } }, 'save.summary.news.0: unknown keys note')
+    refuse((s) => { s.summary = { ...story, news: [{ kind: 'story', number: 2 }, { kind: 'story', number: 3 }] } }, /save.summary.news/)
   })
 })
 

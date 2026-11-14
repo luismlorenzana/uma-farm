@@ -13,6 +13,9 @@
 //   pnpm story:release                  content/story → content/story-release
 //   pnpm story:release --stand-in       the invented stand-in in git, for the dev server
 //   pnpm story:release --from <dir> --out <dir>
+//   pnpm story:release --number <n> [--note "…"]   the local index numbered as a ship numbers it, for the dev server
+//
+// A built release has no number: `pnpm story:ship` (ship.mjs) numbers, dates and notes the index as it publishes it.
 //
 // Needs Node with type stripping (22.18 or later).
 import { createHash } from 'node:crypto'
@@ -33,7 +36,9 @@ export const STAND_IN = join(DOMAIN, 'story/stand-in')
 if (!process.features?.typescript) throw new Error('This Node reads no TypeScript: the release needs Node 22.18 or later (type stripping).')
 register(pathToFileURL(join(ROOT, 'tools/story-sandbox/lib/resolve-ts.mjs')))
 const { readStoryPack } = await import(pathToFileURL(join(DOMAIN, 'story/pack.ts')).href)
-const { parseStoryIndex, releasedStoryPack, STORY_INDEX, STORY_NAME, storyFileName, storyFilePath } = await import(pathToFileURL(join(DOMAIN, 'story/release.ts')).href)
+const { parseStoryIndex, releasedStoryPack, shippedIndex, STORY_INDEX, STORY_NAME, STORY_NOTE_MAX, storyFileName, storyFilePath } = await import(pathToFileURL(join(DOMAIN, 'story/release.ts')).href)
+/** The game's own index reader and a ship's stamp, for the ship (`ship.mjs`). */
+export { parseStoryIndex, shippedIndex, STORY_INDEX, STORY_NOTE_MAX }
 
 /** A pack the release refuses (no pack folder, or an index it can't write), with every reason. */
 export class ReleaseRefused extends Error {
@@ -179,18 +184,34 @@ export async function buildRelease({ from = SOURCE, out = OUT, builtAt = new Dat
   return { index, summary, errors, notes }
 }
 
+/** Writes `story.json` in `out` numbered, dated and with its note, as a ship publishes it; its files stay. */
+export async function stampRelease(out, ship) {
+  const index = shippedIndex(parseStoryIndex(JSON.parse(await readFile(join(out, STORY_INDEX), 'utf8'))), ship)
+  await writeFile(join(out, `${STORY_INDEX}.part`), `${JSON.stringify(index)}\n`)
+  await rename(join(out, `${STORY_INDEX}.part`), join(out, STORY_INDEX))
+  return index
+}
+
 async function main() {
   const args = process.argv.slice(2)
-  const option = (flag) => { const i = args.indexOf(flag); return i >= 0 ? resolve(args[i + 1] ?? '') : undefined }
+  const text = (flag) => { const i = args.indexOf(flag); return i >= 0 ? (args[i + 1] ?? '') : undefined }
+  const option = (flag) => { const value = text(flag); return value === undefined ? undefined : resolve(value) }
   const standIn = args.includes('--stand-in')
   const from = option('--from') ?? process.env.STORY_FROM ?? (standIn ? STAND_IN : SOURCE)
   const out = option('--out') ?? process.env.STORY_OUT ?? OUT
+  const number = text('--number')
+  if (number !== undefined && !/^[1-9]\d*$/.test(number)) throw new ReleaseRefused([`--number is a whole number from 1, not "${number}"`])
   const builtAt = process.env.SOURCE_DATE_EPOCH ? new Date(Number(process.env.SOURCE_DATE_EPOCH) * 1000).toISOString() : undefined
   const { summary: s, errors, notes } = await buildRelease({ from, out, ...(builtAt ? { builtAt } : {}) })
   console.log(`Story release ${s.release}${standIn ? ' (the stand-in)' : ''}: ${s.files} files, ${(s.bytes / 1024).toFixed(1)} KB → ${out.startsWith(ROOT) ? relative(ROOT, out) : out}`)
   console.log(`  ${s.cast} character${s.cast === 1 ? '' : 's'}, ${s.bibles} bible${s.bibles === 1 ? '' : 's'}; ${s.routes} routes scripting ${s.events} events (bibles hold ${s.beats} beats); ${s.pairs} pairs; household ${s.household ? 'yes' : 'not yet'}; opening ${s.opening > 0 ? `${s.opening} step${s.opening === 1 ? '' : 's'}` : 'the game’s own'}; town ${s.town ? `${s.town.people} people, ${s.town.spots} spots` : 'the game’s own'}`)
   if (errors.length > 0) console.log(`\nSkipped, since the game can't read them (${errors.length}); the rest of the pack is in:\n${errors.map((e) => `  - ${e}`).join('\n')}`)
   if (notes.length > 0) console.log(`\nNotes (${notes.length}), which block nothing:\n${groupNotes(notes).map((n) => `  - ${n}`).join('\n')}`)
+  if (number !== undefined) {
+    const note = text('--note')?.trim() || null
+    const index = await stampRelease(out, { number: Number(number), shippedAt: new Date().toISOString(), note }).catch((e) => { throw new ReleaseRefused(e.issues ?? [e.message]) })
+    console.log(`\nNumbered locally as release ${index.number}${index.note ? `: ${index.note}` : ''} (the dev server's; only a ship numbers what the phone plays)`)
+  }
 }
 
 /** Notes that differ only in a character's id, as one line with the ids: "… (37: 9000004, 9000005, …)". */

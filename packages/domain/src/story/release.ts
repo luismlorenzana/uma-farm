@@ -6,6 +6,8 @@
 //
 // A release holds the pack as read: every part with an error already skipped, so the game reads it whole. The game reads
 // it with the same reader all the same, and refuses only an index it can't read or a file that isn't what the index says.
+// A ship (`scripts/story/ship.mjs`) numbers the index, dates it and gives it a note (`shippedIndex`); the reader takes an
+// index without them, as one only built or published.
 import { isGoodId } from '../goods/ids'
 import { pairKey } from '../save/v4'
 import { checkRoute, type PairConversations, type Route } from './authored'
@@ -59,6 +61,36 @@ export interface StoryIndex {
   scripted: Record<string, string[]>
   /** The bond levels each pair's file holds, by its name (`<a>-<b>`), so the morning knows which levels have words. */
   pairs: Record<string, number[]>
+  /** The ship's number: one more than the bucket's index before it (`pnpm story:ship`). None on a release only built
+   * or published by `story:publish`. */
+  number?: number
+  /** When it was shipped (ISO). */
+  shippedAt?: string
+  /** What's new, in a line: the ship's `--note`, `ship.md`'s first line, or "Rolled back to n". None when nothing says. */
+  note?: string
+}
+
+/** A ship's note at most, one line: what the morning's "New story arrived" shows. */
+export const STORY_NOTE_MAX = 160
+
+/** The release a pack came from, as the game shows it: its id and dates, and the ship's number and note when shipped. */
+export interface StoryRelease {
+  id: string
+  builtAt: string
+  number: number | null
+  shippedAt: string | null
+  note: string | null
+}
+
+/** The release an index names. */
+export const storyReleaseOf = (index: StoryIndex): StoryRelease => ({
+  id: index.release, builtAt: index.builtAt, number: index.number ?? null, shippedAt: index.shippedAt ?? null, note: index.note ?? null,
+})
+
+/** An index as a ship publishes it: numbered, dated, and with its note (none dropped). Its files stay as they are. */
+export function shippedIndex(index: StoryIndex, ship: { number: number; shippedAt: string; note: string | null }): StoryIndex {
+  const { version, release, builtAt, files, scripted, pairs } = index
+  return parseStoryIndex({ version, release, builtAt, files, scripted, pairs, number: ship.number, shippedAt: ship.shippedAt, ...(ship.note ? { note: ship.note } : {}) })
 }
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -72,6 +104,12 @@ export function parseStoryIndex(value: unknown): StoryIndex {
   if (value.version !== 1) issues.push('story.json: version is 1')
   if (typeof value.release !== 'string' || !/^[a-f0-9]{8}$/.test(value.release)) issues.push('story.json: release is 8 hex')
   if (!isText(value.builtAt)) issues.push('story.json: no builtAt')
+  // A ship's number, date and note: each optional, checked when there.
+  if (value.number !== undefined && (!Number.isSafeInteger(value.number) || (value.number as number) < 1)) issues.push('story.json: number is a whole number from 1')
+  if (value.shippedAt !== undefined && (!isText(value.shippedAt) || Number.isNaN(Date.parse(value.shippedAt)))) issues.push('story.json: shippedAt is a date')
+  if (value.note !== undefined && (!isText(value.note) || value.note.length > STORY_NOTE_MAX || /[\r\n]/.test(value.note))) {
+    issues.push(`story.json: note is one line of at most ${STORY_NOTE_MAX} characters`)
+  }
   const files = isObject(value.files) ? value.files : {}
   if (!isObject(value.files)) issues.push('story.json: no files')
   for (const [name, file] of Object.entries(files)) {
@@ -170,5 +208,6 @@ export async function releasedStoryPack(index: StoryIndex, read: ReadStoryFile, 
     household: base.household,
     opening: base.opening,
     town: base.town ?? null,
+    release: storyReleaseOf(index),
   }
 }

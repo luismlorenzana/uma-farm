@@ -47,8 +47,9 @@ Node 22+ and pnpm 10. The `@luismlorenzana/*` packages come from GitHub Packages
 | `pnpm web` | The web app on :5194, `/api` proxied to :8101 |
 | `pnpm docs:update` | Regenerate the mechanics document's tables from the rules, then the HTML pages in `docs/pages/` |
 | `pnpm stories` | The Farm Story Sandbox on http://127.0.0.1:4321 (`pnpm stories:import-pack` brings uma-quest's pictures) |
-| `pnpm story:release` | The story pack's release: reads the ignored `content/story/` as the game does (any pack releases; it prints what it skipped and the notes) and writes `content/story-release/` (`--stand-in` releases the invented stand-in) |
-| `pnpm story:publish` | The release, uploaded to the private `gs://uma-farm-content` with the scoped gcloud (`--dry-run` lists it) |
+| `pnpm story:release` | The story pack's release: reads the ignored `content/story/` as the game does (any pack releases; it prints what it skipped and the notes) and writes `content/story-release/` (`--stand-in` releases the invented stand-in; `--number <n> [--note "…"]` numbers the local index, for the dev server's "New story arrived") |
+| `pnpm story:ship` | The story's routine, where it's written (macOS or Windows): check, release, publish (numbered one past the bucket's, dated, with `--note` or `ship.md`'s first line; files first, `story.json` last), then `story:push farm` in `../uma-platform` when it's there. `--dry-run` reads the bucket and uploads nothing; `--release <n>` rolls back. gcloud is scoped by `STORY_GCLOUD_CONFIG` (default `default`) and `STORY_GCLOUD_PROJECT` (`uma-rpg`); the bucket is `STORY_BUCKET` (`uma-farm-content`) |
+| `pnpm story:publish` | The publish step alone, unnumbered: the release, uploaded to the private `gs://uma-farm-content` with the scoped gcloud (`--dry-run` lists it) |
 
 The preview pane starts both from `.claude/launch.json` (`farm-api`, `farm-web`). To try the guard locally, run the
 built API with `ALLOWED_EMAIL` set and no `AUTH_MODE`. farm-api serves the story pack's release from

@@ -31,7 +31,7 @@ import { FieldsPeek, fieldsPips } from './FieldsPeek'
 import { GatePeek } from './GatePeek'
 import { pairWords, readyLines } from './hearts-view'
 import { homeWords } from './homestead-view'
-import { NO_HOME, summaryParts, type ChapterOf } from './summary-words'
+import { NO_HOME, summaryParts, type ChapterOf, type NoteOf } from './summary-words'
 import { farmingTalents, useTalents } from './talents'
 import { shortDate } from './words'
 import { WorkPlacePeek } from './WorkPlace'
@@ -254,7 +254,9 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
       return chapter ? chapterTitle(chapter) : null
     }
   }, [pack])
-  const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home, chapterOf) : []), [summary, nameOf, ready, pairs, home, chapterOf])
+  // A new story release's note, from the release the game plays.
+  const noteOf = useMemo((): NoteOf | undefined => (pack ? (n) => (pack.release?.number === n ? pack.release.note : null) : undefined), [pack])
+  const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home, chapterOf, noteOf) : []), [summary, nameOf, ready, pairs, home, chapterOf, noteOf])
   if (!summary) return null
   return (
     <Sheet
