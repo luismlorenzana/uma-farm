@@ -2530,8 +2530,8 @@ game reads, what it does in play, and what plays when it's missing.
 |---|---|---|
 | Cast | The cast, in its order: each character's id (a sister's `s<outfitId>`, with her name) and, optionally, her outfit, calling, birthday, favourite spot, trigger to meet, chapters and arrival; the welcome list | No characters |
 | Ties | Each tie: two characters (a sister, or one of the town's people, among them) and, optionally, its kind, a strength of 1–3 and a line | No ties |
-| Her bible (one per Uma) | Optionally her favourite line, gifts (loved, liked, disliked, any number each), her route's beats, chat sets, town lines, keepsake, pet name, wedding places and wishes. Her profile texts, season and festival are the story's own | Her calling's line (else her stats'), neutral tastes, the game's chat and town lines |
-| Her route (one per Uma) | Her scripted events, by rung, any of them | Her meeting scene and every event play the game's own short cards, which pay as written ones do |
+| Her bible (one per Uma) | Optionally her favourite line, gifts (loved, liked, disliked, any number each), her route's beats, chat sets, town lines, keepsake, pet name, wedding places and wishes. Her profile texts, season and festival are the story's own | Her calling's line (else her stats'), the default story's tastes (her line's favourite good loved) and talks, the game's town lines |
+| Her route (one per Uma) | Her scripted events, by id (the rungs, her life's events, her occasions, the evenings' scenes), any of them | Each plays the default story's, which pays as a written one does |
 | A pair's conversations | Conversations at bond levels 1–5 for a tie's two Umas | The game's two-line card at each level |
 | The household | Household scenes at 5, 10 and 15 married, house lines and the finale, every part optional | The game's short cards; house lines from her temperament |
 | The opening | The start's lines, any number: said, narrated, thought, pauses and the title line's place | The game's three lines |

@@ -12,8 +12,8 @@
 // Three ways in, each a param over any page (portaled above the sheets, z-60): `?event=<id>` plays her Ready event (her
 // row's ● Ready, her profile's **Play ›**, the morning's Ready line); `?ask=<id>` her confession's last choice again
 // (**Ask her**, once a day, paying nothing); `?memory=<id>:<rung>[@<n>]` replays a Memory from the top or its nth choice
-// point, every option open, nothing paid or saved. The script loads on demand (`eventOf`: her route's, else the game's
-// own short card for the rung); Skip, Auto and Log work while it does. A play without a prompt shows its game's. Nothing is saved until the end: `playEvent` then commits once, stamped. Skip jumps to the next
+// point, every option open, nothing paid or saved. The script loads on demand (`eventOf`: her route's, else the default
+// story's for the rung, in her name); Skip, Auto and Log work while it does. A play without a prompt shows its game's. Nothing is saved until the end: `playEvent` then commits once, stamped. Skip jumps to the next
 // choice or play, never past one. Loaded on demand.
 //
 // **the proposal** first asks which ring (the best grade preselected), then plays, and closes on the Engaged

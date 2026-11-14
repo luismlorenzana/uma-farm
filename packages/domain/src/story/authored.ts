@@ -50,7 +50,7 @@ export const DATE_GAMES = ['fishing', 'cooking', 'stargazing', 'footrace', 'danc
 
 /** The rungs the game plays an event at: her arrival scene ("event zero"), ten friendship events, the confession, ten
  * romance events, the proposal, the wedding, and three on the spouse ladder after it (S1, S3, S5). The story writes any of
- * them, in any order; the rest play the game's own short card (`placeholders.ts`). */
+ * them, in any order; the rest play the default story's (`default-story.ts`). */
 export const ARRIVAL = 'arrival'
 export const RUNGS: readonly string[] = [
   ARRIVAL, ...Array.from({ length: 10 }, (_, i) => `f${i + 1}`), 'confession', ...Array.from({ length: 10 }, (_, i) => `r${i + 1}`), 'proposal', 'wedding', 's1', 's3', 's5',
@@ -1147,7 +1147,7 @@ export function checkRoute(raw: unknown, id: string, bible: UmaBible | null, ctx
     f.notes.push(...eventNotes(e.id, e.steps, bible))
     return [kept<Route['events'][number]>(e, { outfit: readOutfit(e.outfit, where, f) })]
   })
-  if (events.length > 0 && !events.some((e) => e.id === ARRIVAL)) f.notes.push('No arrival scene: the game’s own short one plays')
+  if (events.length > 0 && !events.some((e) => e.id === ARRIVAL)) f.notes.push('No arrival scene: the default story’s meeting plays')
   return { value: kept<Route>(raw, { events }), ...f }
 }
 
