@@ -6,7 +6,8 @@ import { describe, expect, it } from 'vitest'
 import { blockGrowth, plant, setTender } from '../fields/fields'
 import { runNight, type NightContext } from '../night/end-day'
 import { TEST_KINDS } from '../night/kinds.fixture'
-import { joinOpening, arrive } from '../romance/arrivals'
+import { arrive } from '../romance/arrivals'
+import { joinCast } from '../romance/arrivals.fixture'
 import { startLoopJob } from '../save/loop-work'
 import { parseSaveV4 } from '../save/parse-v4'
 import { SaveParseError } from '../save/parse'
@@ -32,9 +33,9 @@ const [ONE, TWO, THREE] = STAND_INS
 const FOUR = '9000004'
 const context = (story: NightContext['story'] = PACK): NightContext => ({ kinds: TEST_KINDS, story, talentOf: () => TALENT_D })
 
-/** A named farm on `day` with the opening read: the stand-ins home, their ties seeded. */
+/** A named farm on `day` with the opening read: the stand-ins home (`joinCast`), their ties seeded. */
 function opened(day = 1, pack: Pick<StoryPack, 'cast' | 'ties'> = PACK): SaveV4 {
-  return joinOpening(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack)
+  return joinCast(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack)
 }
 /** The same, the seeds listed on an earlier morning, so a night's Hearts show only its own. */
 const farm = (day = 3, pack: Pick<StoryPack, 'cast' | 'ties'> = PACK): SaveV4 => {

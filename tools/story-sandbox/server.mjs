@@ -79,6 +79,8 @@ async function storyState(game) {
   const files = { cast: await json('cast.json'), ties: await json('ties.json'), umas: await folder('umas'), routes: await folder('routes'), pairs: await folder('pairs') }
   const household = await json('household.json')
   if (household !== undefined) files.household = household
+  const opening = await json('opening.json')
+  if (opening !== undefined) files.opening = opening
   const tagSheet = await json('tags.json')
   const story = {
     pack: pack ? { id: pack.id, exportedAt: pack.exportedAt } : null,
@@ -137,6 +139,8 @@ async function storyState(game) {
     pairs,
     // The household's scenes, house lines and finale.
     household: read.files.household ? entry('household.json', read.files.household) : null,
+    // The opening's lines, as the game plays them on day 1.
+    opening: read.files.opening ? entry('opening.json', read.files.opening) : null,
     own,
     written,
     // Every finding, and the files read whole that the game skipped (a file that isn't JSON or isn't the shape).

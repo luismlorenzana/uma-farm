@@ -61,9 +61,9 @@ export type DateGame = typeof DATE_GAMES[number]
 
 // --- The cast and the ties ----------------------------------------------------------------------------------------------
 
-/** How she comes to the farm today. Meeting her (her `meet` trigger) takes over when the town lands. */
+/** How she comes to the farm today. Meeting her (her `meet` trigger) takes over when the town lands. The opening brings
+ * nobody: the welcome list's first joins as it ends (`firstHelperOf`), so an `opening` arrival is noted and dropped. */
 export type Arrival =
-  | { kind: 'opening' }
   | { kind: 'festival'; festival: Festival; year?: number }
   | { kind: 'beds'; dormLevel: number }
   | { kind: 'event'; after: string }
@@ -105,7 +105,7 @@ export interface CastEntry {
   /** The one outfit she plays as. */
   outfitId?: string
   calling?: Calling
-  /** How she comes to the farm today (the opening, a festival, the Dorm's beds, after an event). */
+  /** How she comes to the farm today (a festival, the Dorm's beds, after an event). */
   arrives?: Arrival
   /** Only where master data's character set has none: it wins where present. */
   birthday?: CastBirthday
@@ -122,9 +122,7 @@ export interface Cast {
   version?: 1
   export?: { file: string; exportedAt: string; tier: string }
   ranker?: CastRanker
-  /** Who comes up the road at the opening, in order: any number. */
-  opening?: string[]
-  /** Who comes to the farm in the first days, in order: any number. */
+  /** Who comes to the farm in the first days, in order: any number. The first joins as the opening ends. */
   welcome?: string[]
   /** The cast, in its order. */
   umas: CastEntry[]
@@ -286,6 +284,12 @@ export interface Household {
   houseLines?: Record<string, string[]>
   finale?: Finale
 }
+
+/** opening.json: the start's lines, played once on day 1 after the farmer's name, then Home. Lines only, in a route's
+ * steps (`say`, `narrate`, `thought`, `wait`, and `place` for the title line), any number. `about` is the story's own. */
+export interface Opening { about?: string; steps: Step[] }
+/** The steps the opening plays: lines and pauses, never a pick. */
+export const OPENING_STEPS = ['say', 'narrate', 'thought', 'wait', 'place'] as const
 
 // --- The tag sheet (the sandbox's) --------------------------------------------------------------------------------------
 
@@ -634,7 +638,6 @@ const realDate = (v: unknown): v is CastBirthday => isObject(v) && isInt(v.month
 function readArrival(v: unknown): Arrival | undefined {
   if (!isObject(v)) return undefined
   switch (v.kind) {
-    case 'opening': return { kind: 'opening' }
     case 'festival':
       if (!oneOf(FESTIVALS, v.festival) || (v.year !== undefined && !isInt(v.year, 1))) return undefined
       return v.year === undefined ? { kind: 'festival', festival: v.festival } : { kind: 'festival', festival: v.festival, year: v.year as number }
@@ -669,7 +672,7 @@ function readChapters(v: unknown, at: string, f: Findings, ctx: StoryContext): H
   return out
 }
 
-/** cast.json: who the pack holds, in its order, each with what's given of her; the opening and the welcome list. */
+/** cast.json: who the pack holds, in its order, each with what's given of her; the welcome list. */
 export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'exported'> = {}): Read<Cast> {
   const f = findings()
   if (raw === undefined) { f.notes.push('No cast: the pack holds no characters'); return { value: { umas: [] }, ...f } }
@@ -695,7 +698,9 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
       calling: field(u, 'calling', (v) => (oneOf(CALLINGS, v) ? v : undefined), it, f, `is one of ${CALLINGS.join(', ')}`),
       arrives: isObject(u.arrives) && u.arrives.kind === 'chapter'
         ? (f.notes.push(`${it}: the farm has no chapters, so a chapter arrival never comes; she waits to be met`), undefined)
-        : field(u, 'arrives', readArrival, it, f, 'is the opening, a festival (and a year), the Dorm’s beds, or after an event'),
+        : isObject(u.arrives) && u.arrives.kind === 'opening'
+          ? (f.notes.push(`${it}: the opening brings nobody now (the welcome list’s first joins as it ends), so an opening arrival is dropped`), undefined)
+          : field(u, 'arrives', readArrival, it, f, 'is a festival (and a year), the Dorm’s beds, or after an event'),
       birthday: field(u, 'birthday', (v) => (realDate(v) ? { month: v.month, day: v.day } : undefined), it, f, 'is { month: 1–12, day } on a real date'),
       meet: u.meet === undefined ? undefined : readTrigger(u.meet, `${it} meet`, f, sub),
       chapters: u.chapters === undefined ? undefined : readChapters(u.chapters, it, f, sub),
@@ -706,15 +711,16 @@ export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'expo
     return [entry]
   })
   const cast = new Set(umas.map((u) => u.characterId))
-  const listed = (key: 'opening' | 'welcome', words: string): string[] | undefined => {
+  const listed = (key: 'welcome', words: string): string[] | undefined => {
     if (raw[key] === undefined) return undefined
     const ids = idList(raw[key], key, f, (id) => CHARACTER_ID.test(id), 'character ids')
     for (const id of ids ?? []) if (!cast.has(id)) f.notes.push(`${key}: ${id} isn’t in the cast; ${words}`)
     return ids
   }
+  if (raw.opening !== undefined) f.notes.push('opening: the opening brings nobody now (the welcome list’s first joins as it ends), so the list is dropped')
   const value = kept<Cast>(raw, {
     umas,
-    opening: listed('opening', 'the opening skips her'),
+    opening: undefined,
     welcome: listed('welcome', 'she has no cast entry yet'),
   })
   return { value, ...f }
@@ -1082,4 +1088,33 @@ export function checkHousehold(raw: unknown, ctx: StoryContext): Read<Household 
     }
   }
   return { value: kept<Household>(raw, { scenes, houseLines, finale }), ...f }
+}
+
+// --- The opening --------------------------------------------------------------------------------------------------------
+
+/** opening.json: the start's lines, each step read on its own with a scene's line limits. A step the opening can't play
+ * (a choice, a play, a flag, a branch: the start has no picks) or can't read is skipped, the rest play. With no line
+ * left, none is read and the game's own opening plays. Anyone in the cast or the town's people may speak. */
+export function checkOpening(raw: unknown, ctx: StoryContext): Read<Opening | null> {
+  const f = findings()
+  if (!isObject(raw) || !Array.isArray(raw.steps)) { f.errors.push('Not an opening (an object with a steps list); the game’s own opening plays'); return { value: null, ...f } }
+  const sc: StepContext = { speakers: new Set<string>([...ctx.umas, ...CAST_IDS]), isGood: ctx.isGood ?? isGoodId }
+  const steps = (raw.steps as unknown[]).filter((step, i) => {
+    const at = `Step ${i + 1}`
+    if (isObject(step) && !OPENING_STEPS.some((kind) => kind in step) && ['choice', 'play', 'flag', 'when'].some((kind) => kind in step)) {
+      f.errors.push(`${at}: the opening plays lines only (${OPENING_STEPS.join(', ')}), never a pick; skipped`)
+      return false
+    }
+    const own = findings()
+    checkSteps([step], 'Opening', sc, own)
+    f.notes.push(...own.notes.map((n) => n.replace('Opening, step 1', at)))
+    if (own.errors.length === 0) return true
+    f.errors.push(...own.errors.map((e) => `${e.replace('Opening, step 1', at)}; skipped`))
+    return false
+  }) as Step[]
+  if (steps.filter((s) => !('place' in s) && !('wait' in s)).length === 0) {
+    f.notes.push('No lines, so the game’s own opening plays')
+    return { value: null, ...f }
+  }
+  return { value: kept<Opening>(raw, { steps }), ...f }
 }

@@ -2,9 +2,19 @@
 // event, Ida Stone, the town's smith, comes up from town and opens the old Forge as a ring bench; the Forge's
 // merge game, built later, lights its fire. The lines are original and short, one to a tap, and stay in git; they
 // say "you" and never gender the farmer. It plays once, as `scene:bench` in `diary.read`. Loaded on demand with its player.
-import type { Beat } from './opening'
 import type { CastId } from './cast'
 import { BENCH_SCENE } from './scenes'
+
+/** Who speaks a beat of the town's scene: one of the town's cast, or the narrator. */
+export type Speaker =
+  | { readonly kind: 'cast'; readonly id: CastId }
+  | { readonly kind: 'narrator' }
+
+/** One line of the town's scene, one to a tap; `{farmer}` is your name. */
+export interface Beat {
+  readonly speaker: Speaker
+  readonly line: string
+}
 
 const cast = (id: CastId, line: string): Beat => ({ speaker: { kind: 'cast', id }, line })
 const narrator = (line: string): Beat => ({ speaker: { kind: 'narrator' }, line })

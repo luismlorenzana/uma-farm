@@ -4,7 +4,7 @@
 // track, Next card, perks, gifts and ties, switching to Work; the Work view's album with her level in each card's
 // corner. The invented stand-in pack and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { joinOpening, newSave, pairKey, readScene, type SaveV4, type StoryPack } from '@farm/domain'
+import { arrive, newSave, pairKey, readScene, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation, useRoutes } from 'react-router'
@@ -30,14 +30,17 @@ const { FarmBottomBar } = await import('../shell/Bars')
 const { ROUTES } = await import('../app/router')
 const { default: HeartsPage } = await import('./HeartsPage')
 
+/** The stand-in's three home, ties seeded, as the old opening brought them: the opening now brings only day 1's helper. */
+const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : arrive(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 
-/** A named farm on day 3, the opening three home, 9000001 Ready for Friendship 1 with 2 banked. */
+/** A named farm on day 3, the stand-in's three home (`joinStandIns`), 9000001 Ready for Friendship 1 with 2 banked. */
 function farm(): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day: 3 } }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), fixture.pack!)
+  const joined = joinStandIns(readScene(fresh, 'scene:1:open'), fixture.pack!)
   return {
     ...joined, arrivals: [ONE, TWO, THREE], items: { ...joined.items, carrot: [0, 0, 1, 0, 0] },
     love: { ...joined.love, [ONE]: { ...joined.love[ONE]!, points: 202 }, [TWO]: { ...joined.love[TWO]!, points: 90 } },

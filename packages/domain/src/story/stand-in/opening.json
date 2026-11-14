@@ -1,0 +1,17 @@
+{
+  "about": "The stand-in's opening: invented lines, three narrated and then the farmer's thought, ending on someone at the Gate.",
+  "steps": [
+    {
+      "narrate": "Spring wind over an empty farm. The fence leans; the weeds don’t."
+    },
+    {
+      "narrate": "The keys came in a letter with your name on it, {farmer}."
+    },
+    {
+      "narrate": "And at the Gate, someone is already waiting."
+    },
+    {
+      "thought": "Then I’d better go and say hello."
+    }
+  ]
+}

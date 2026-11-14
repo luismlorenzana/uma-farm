@@ -59,7 +59,7 @@ describe('the perks', () => {
 
   it('reads her line from the pack: her favourite, a quarry calling at the Quarry', () => {
     expect([perkLineOf(PACK, '9000001'), perkLineOf(PACK, '9000002'), perkLineOf(PACK, '9000003'), perkLineOf(PACK, '9999999')]).toEqual(['farming', 'foraging', 'fishing', null])
-    const miner = (id: string, calling: CastEntry['calling']): CastEntry => ({ characterId: id, outfitId: `${id}01`, arrives: { kind: 'opening' }, calling, paragraph: 'Invented.' })
+    const miner = (id: string, calling: CastEntry['calling']): CastEntry => ({ characterId: id, outfitId: `${id}01`, calling, paragraph: 'Invented.' })
     const pack: Pick<StoryPack, 'cast' | 'bibles'> = { cast: { ...PACK.cast, umas: [miner('9000004', 'mining'), miner('9000005', 'quarry')] }, bibles: new Map() }
     expect([perkLineOf(pack, '9000004'), perkLineOf(pack, '9000005')]).toEqual(['mining', 'quarry'])
     expect(perkWords('line-10', 'quarry')).toBe('+10% at the Quarry')

@@ -1,7 +1,7 @@
 // The story pack's release: the private pack ships as hash-named files and
 // one index, `story.json`, laid out as the bucket is and served by farm-api at `/api/content/…` behind the owner guard.
-// `scripts/story/release.mjs` writes them; the web reads the index at boot, then the cast, the ties, the bibles and the
-// household, and each route and pair on demand, every file verified by its hash in uma-kit's content cache. The format
+// `scripts/story/release.mjs` writes them; the web reads the index at boot, then the cast, the ties, the bibles, the
+// household and the opening, and each route and pair on demand, every file verified by its hash in uma-kit's content cache. The format
 // is here, beside `readStoryPack`, so the release script and the game read one definition. Nothing private is in it.
 //
 // A release holds the pack as read: every part with an error already skipped, so the game reads it whole. The game reads
@@ -21,6 +21,8 @@ export const storyFileName = {
   cast: 'cast',
   ties: 'ties',
   household: 'household',
+  /** The opening's lines, `opening.json`. */
+  opening: 'opening',
   /** Her bible, `umas/<id>.json`. */
   uma: (id: string): string => `uma-${id}`,
   /** Her scripted events, `routes/<id>.json`. */
@@ -100,7 +102,7 @@ export type ReadStoryFile = (name: string, file: StoryFile) => Promise<unknown>
 const sameList = (a: readonly (string | number)[], b: readonly (string | number)[]): boolean => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort())
 
 /**
- * The pack a release holds: its cast, ties, bibles and household read at once, as `readStoryPack` reads them (a part with
+ * The pack a release holds: its cast, ties, bibles, household and opening read at once, as `readStoryPack` reads them (a part with
  * an error skipped); its routes and pairs listed by the index and read on demand, each read as it loads and refused when
  * it doesn't hold what the index says. A file that fails to load rejects that call and is read again next time. Throws
  * `StoryPackError` only for an index naming a pair out of its numeric order.
@@ -108,12 +110,12 @@ const sameList = (a: readonly (string | number)[], b: readonly (string | number)
 export async function releasedStoryPack(index: StoryIndex, read: ReadStoryFile, isGood: (id: string) => boolean = isGoodId): Promise<StoryPack> {
   const file = (name: string) => read(name, index.files[name]!)
   const umaIds = Object.keys(index.files).filter((n) => n.startsWith('uma-')).map((n) => n.slice(4))
-  const [cast, ties, household, ...bibles] = await Promise.all([
-    file(storyFileName.cast), file(storyFileName.ties),
-    storyFileName.household in index.files ? file(storyFileName.household) : Promise.resolve(undefined),
+  const optional = (name: string): Promise<unknown> => (name in index.files ? file(name) : Promise.resolve(undefined))
+  const [cast, ties, household, opening, ...bibles] = await Promise.all([
+    file(storyFileName.cast), file(storyFileName.ties), optional(storyFileName.household), optional(storyFileName.opening),
     ...umaIds.map((id) => file(storyFileName.uma(id))),
   ])
-  const base = readStoryPack({ cast, ties, umas: Object.fromEntries(umaIds.map((id, i) => [id, bibles[i]])), routes: {}, household }, isGood).pack
+  const base = readStoryPack({ cast, ties, umas: Object.fromEntries(umaIds.map((id, i) => [id, bibles[i]])), routes: {}, household, opening }, isGood).pack
   const ctx = packContext(base, isGood)
   const tied = tiedPairs(base.ties)
   const issues = Object.keys(index.pairs).flatMap((name) => {
@@ -164,5 +166,6 @@ export async function releasedStoryPack(index: StoryIndex, read: ReadStoryFile, 
     pairs: new Map(Object.entries(index.pairs).map(([name, levels]) => [name.replace('-', ':'), new Set(levels)])),
     pair,
     household: base.household,
+    opening: base.opening,
   }
 }

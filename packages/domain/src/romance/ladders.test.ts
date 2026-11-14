@@ -23,7 +23,7 @@ import { readScene } from '../story/scenes'
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { STAND_IN_FILES } from '../story/stand-in'
 import { canPraise, chatLineV4, chatSet, chatV4, DISLIKED_LINE, festivalTogether, giftPreview, giftV4, payLines, praiseV4, tasteKnown } from './acts'
-import { joinOpening } from './arrivals'
+import { joinCast } from './arrivals.fixture'
 import { BOND_HEARTS, bondHearts } from '../farm/bonds'
 import { ANNIVERSARY_STARS, birthdaysOf, dayOfYear, farmBirthday, heartDays, isBirthday, lineGood, NO_BIRTHDAYS } from './days'
 import {
@@ -42,11 +42,11 @@ const [ONE, TWO, THREE] = STAND_INS
 const BIRTHDAYS = birthdaysOf(PACK, new Map())
 const context = (birthdays = BIRTHDAYS, story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ kinds: TEST_KINDS, story, birthdays })
 
-/** A named farm on `day`, the opening read and the stand-ins home at Friendship 0., their ties seeded and
+/** A named farm on `day`, the opening read and the stand-ins home (`joinCast`) at Friendship 0., their ties seeded and
  * already listed on an earlier morning, so a night's Hearts show only its own lines. */
 function farm(day = 1): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
+  const joined = joinCast(readScene(fresh, 'scene:1:open'), PACK)
   return { ...joined, today: { ...joined.today, bonds: {} } }
 }
 /** Her route set by hand. */
@@ -327,7 +327,7 @@ describe('birthdays', () => {
 describe('anniversaries', () => {
   const wed = 5
   const married = (day: number, id = ONE, pack = PACK) => {
-    const base = pack === PACK ? farm(day) : joinOpening(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack)
+    const base = pack === PACK ? farm(day) : joinCast(readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }, 'scene:1:open'), pack)
     return withLove(base, id, { stage: 'spouse', level: 1, wed, points: 0 })
   }
 

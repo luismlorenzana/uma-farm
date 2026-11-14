@@ -25,7 +25,7 @@
   ],
   "reward": "500g, the Mill’s plans, a recruit and 250 Farm Rank points",
   "item": null,
-  "source": "The farm has no global chapters: the game plays this chapter's opening only, as the start (packages/domain/src/story/opening.ts)",
+  "source": "The farm has no global chapters, and the start is the story pack's opening (content/story/opening.json): the game plays none of this chapter",
   "scenes": [
     {
       "id": "scene:1:open",

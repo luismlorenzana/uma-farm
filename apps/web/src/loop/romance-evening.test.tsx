@@ -4,7 +4,7 @@
 // End the day's fade to the morning. The invented stand-in pack (9000001–9000003) and invented outfits; master data and
 // the server are stubs.
 import 'fake-indexeddb/auto'
-import { joinOpening, newSave, readScene, type Love, type SaveV4, type StoryPack } from '@farm/domain'
+import { arrive, newSave, readScene, type Love, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -35,14 +35,17 @@ const { default: InviteAnswer } = await import('./InviteAnswer')
 const { heartsLines } = await import('./summary-words')
 const { setAskBeforeEnd } = await import('./ask')
 
+/** The stand-in's three home, ties seeded, as the old opening brought them: the opening now brings only day 1's helper. */
+const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : arrive(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 
-/** A named farm on `day`, the opening three home with their arrivals played; each at the `love` given. */
+/** A named farm on `day`, the stand-in's three home (`joinStandIns`) with their arrivals played; each at the `love` given. */
 function farm(loves: Record<string, Partial<Love>> = {}, day = 3): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), fixture.pack!)
+  const joined = joinStandIns(readScene(fresh, 'scene:1:open'), fixture.pack!)
   const love = Object.fromEntries(Object.entries(joined.love).map(([id, l]) => [id, { ...l, ...loves[id] }]))
   return { ...joined, arrivals: [ONE, TWO, THREE], today: { ...joined.today, bonds: {} }, love }
 }

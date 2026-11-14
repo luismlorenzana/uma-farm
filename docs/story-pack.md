@@ -31,6 +31,7 @@ The pack is a folder of JSON files in `content/story/`. Every file is optional.
 | `routes/<characterId>.json` | Her scripted events, by rung | Her meeting scene and every event play the game's own short cards, which pay as written ones do |
 | `pairs/<a>-<b>.json` | A tie's conversations, by bond level | Two short lines, one each, at every level |
 | `household.json` | The household scenes, house lines and the finale | The game's short cards; house lines come from her temperament |
+| `opening.json` | The opening: the start's lines, after the farmer's name | The game's three short lines |
 
 Any other file (`world.md`, `tags.json`, `reviews.json`, notes, drafts) is the story's own. The sandbox shows some of
 them; the game never reads them, and a release never includes them.
@@ -56,6 +57,7 @@ What an error skips, by where it is:
 | A step in an event the game can't play (a line too long, a choice with no options, a flag the save can't keep) | That event |
 | A step in a pair's conversation | That bond level |
 | A step in a household scene | That scene's part (its `open`, `close` or one spouse's beat) |
+| A step in the opening (a line too long, a choice, a play, a flag or a branch: the opening has no picks) | That step: the rest of the opening plays |
 
 ### Line lengths
 
@@ -63,7 +65,7 @@ Each limit is what its screen shows. A longer line is an error.
 
 | Text | At most |
 |---|---|
-| A line in a scene: said, narrated or thought | 400 characters |
+| A line in a scene or the opening: said, narrated or thought | 400 characters |
 | A choice's option | 160 |
 | A play's prompt | 120 |
 | A chat line | 160 |
@@ -93,7 +95,6 @@ These are notes, and the owner's standing direction for anything on screen:
 ```json
 {
   "welcome": ["9000007", "9000002"],
-  "opening": ["9000004", "9000002"],
   "umas": [{ "characterId": "9000001" }, { "characterId": "9000002", "outfitId": "900000201" }]
 }
 ```
@@ -101,11 +102,11 @@ These are notes, and the owner's standing direction for anything on screen:
 | Field | What it does in play | Without it |
 |---|---|---|
 | `umas` | The cast, in its order: every character the pack holds. The order breaks ties wherever the game needs one | Master data's first five characters, by id |
-| `welcome` | **The welcome list:** who comes to the farm in the first days, in order, any number. Read now; meeting her in town (F67) brings them | The first five of the cast, in its order |
-| `opening` | Who comes up the road at the opening, in order, any number. Read now; it retires with the lean start (F65) | Those whose `arrives` is the opening; else the welcome list. With nobody, the opening ends on chapter 1's card |
+| `welcome` | **The welcome list:** who comes to the farm in the first days, in order, any number. Its first (in the cast) joins as the opening ends: day 1's helper, waiting at the Gate. Meeting her in town (F67) brings the rest | The first five of the cast, in its order |
 | `version`, `export`, `ranker` | The story's own (the sandbox's) | Nothing |
 
-A `welcome` or `opening` id that isn't in the cast is a note.
+A `welcome` id that isn't in the cast is a note. A cast file's old `opening` list is noted and dropped: the opening
+brings only the welcome list's first.
 
 ### Each character
 
@@ -120,7 +121,7 @@ field the game doesn't read is kept for the story.
 | `birthday` | `{ "month": 1–12, "day": … }` on a real date, when master data has none | Master data's birthday, or none |
 | `meet` | **Her trigger to meet,** from the trigger menu below. Read now; meeting her (F67) acts on it | Talk with her on three different days |
 | `chapters` | **Her chapters,** below. Read now; her chapters' screens (F68) act on them | The four default chapters |
-| `arrives` | How she comes to the farm today: `opening`, a `festival` (and a `year`), the Dorm's `beds`, or after an `event`. A `chapter` arrival is noted and dropped: the farm has no global chapters. Meeting her (F67) replaces it | She doesn't come to the farm on her own until meeting her lands (unless the opening brings her) |
+| `arrives` | How she comes to the farm today: a `festival` (and a `year`), the Dorm's `beds`, or after an `event`. A `chapter` or `opening` arrival is noted and dropped: the farm has no global chapters, and the opening brings only the welcome list's first. Meeting her (F67) replaces it | She doesn't come to the farm on her own until meeting her lands (unless she's the welcome list's first) |
 | `paragraph` | The story's own: the sandbox shows it | Nothing |
 
 ### The trigger menu
@@ -299,6 +300,26 @@ note).
 | `houseLines` | `{ "<id>": ["…"] }`: a spouse's morning lines in her house, any number | Her temperament's lines |
 | `finale` | The Great Harvest: `open`, `play`, `each`, `close` | The game's short card, with a dance |
 
+## The opening: `opening.json`
+
+The start's lines: after the farmer's name, they play one to a tap, then the farm opens on Home on day 1. Skip works from
+the first line. Any length the story wants.
+
+```json
+{ "about": "The first morning.", "steps": [{ "narrate": "Morning on the farm." }, { "thought": "Someone's already at the Gate." }] }
+```
+
+| Field | What it does in play | Without it |
+|---|---|---|
+| `steps` | The lines, in a route's steps: `narrate`, `say` (anyone in the cast or the town's people), `thought` and `wait`, and `place` for the title line ("Day 1 · Gate"). Each line has a scene's limit (400) and `{farmer}` | The game's three short lines: the farm, its nine Carrot seeds, and someone waiting at the Gate |
+| `about` | The story's own: kept, never shown | Nothing |
+
+- **No picks:** a `choice`, a `play`, a `flag` or a `when` is an error that skips that step; the rest plays.
+- **With no line left** (every step skipped, or only pauses), the game's three play (a note).
+- **What the opening brings:** as it ends (read or skipped), the welcome list's first joins the farm, home, so day 1
+  has a helper. She waits at the Gate, and her arrival scene plays when you say hello there. A line that tells the
+  farmer someone is waiting at the Gate reads true.
+
 ## Releasing a pack
 
 - **`pnpm story:release`** reads `content/story/` with the game's own reader and writes the release. Any pack releases:
@@ -311,7 +332,7 @@ note).
 
 | Item | Read now | Acts in play |
 |---|---|---|
-| Her outfit, calling, birthday, bible, route, ties, pairs, household | Yes | Yes, today |
-| The welcome list, her trigger to meet | Yes | When meeting her lands (F67) |
+| Her outfit, calling, birthday, bible, route, ties, pairs, household, the opening | Yes | Yes, today |
+| The welcome list, her trigger to meet | Yes | Its first, today: day 1's helper. The rest when meeting her lands (F67) |
 | Her chapters and their gates | Yes | When her chapters land (F68) |
 | What plays when a part is missing | Placeholders for every read | Yes, today: [what plays without the story](game-mechanics.md#what-plays-without-the-story) |

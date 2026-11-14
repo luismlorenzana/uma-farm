@@ -22,7 +22,7 @@ export const DISTANCES = ['sprint', 'mile', 'medium', 'long']
 export const CONVERSATION_TARGET = { any: 20, place: 2 }
 const PLACEHOLDERS = { scene: ['name'], beat: ['name', 'farm'], conversation: ['a', 'b', 'place', 'item', 'farm'] }
 
-/** Who may speak a scene's beat. `game` marks the kinds uma-farm's scene player fills today (`story/opening.ts`). */
+/** Who may speak a scene's beat. `game` marks the kinds uma-farm's scene players fill today (the ring bench's, `story/bench.ts`). */
 export const SPEAKERS = {
   cast: { game: true, uma: false, about: 'One of the town’s cast, by id: their disc and their name' },
   narrator: { game: true, uma: false, about: 'Narration: no speaker, in italics' },

@@ -11,7 +11,7 @@
 // stage instead (`FarmStage.tsx`, its own chunk with three.js), with the Umas on it from the same work view and Ready
 // hearts as the pips; off, the Hub is as it was. Loaded on demand.
 import {
-  farmEnv, farmPlace, isBuildPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, MAP_PLACES, placeBuilt, placeOpen, readyPlots, workNow, type BuildPlace,
+  atTheGate, farmEnv, farmPlace, isBuildPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, MAP_PLACES, placeBuilt, placeOpen, readyPlots, workNow, type BuildPlace,
   type FarmPlace, type LoopPlaceId, type FarmSave,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
@@ -146,16 +146,19 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   const layout = homestead ? homestead.homesteadLayout(save) : null
   // The map waits for the homestead's rows, so the town edge never jumps.
   const waiting = layout === null
+  // Day 1's helper, waiting at the Gate for her hello.
+  const atGate = atTheGate(save).length > 0
   const places: HubMapPlace[] = [...MAP_PLACES.map((place): HubMapPlace => {
     const lock = lockOf(save, place)
+    const visitor = place.id === 'gate' && atGate && lock === null
     const slots = place.id === 'fields' ? plots : ready.get(place.id as LoopPlaceId) ?? 0
     const pips = place.id === 'fields' ? fieldsPips(save, farming, hearts) : pipsOf(place, work, hearts)
     const busy = pips?.some((p) => p.state !== 'free') ?? false
     return {
       id: place.id, name: place.name, frame: place.frame, at: layout && homestead ? placeAt(homestead.placeOnV4(place, layout), layout.tiles) : placeAt(place),
       to: placeLink(save, place),
-      label: lock ? `${place.name}, locked: ${lock}` : slots > 0 ? `${place.name}, ready to collect` : place.name,
-      locked: lock !== null, ready: slots > 0 ? 'Ready' : undefined,
+      label: lock ? `${place.name}, locked: ${lock}` : visitor ? `${place.name}, someone is waiting` : slots > 0 ? `${place.name}, ready to collect` : place.name,
+      locked: lock !== null, ready: visitor ? 'Waiting' : slots > 0 ? 'Ready' : undefined,
       ...(pips && (lock === null || busy) ? { pips, pipsAt: 'arch' as const } : {}),
     }
   }), ...(layout && homestead

@@ -1,5 +1,5 @@
 // The authored start: the stand-in pack read and validated,
-// the opening three joining when the opening is read, authored arrivals at night step 8 and with chapter 1, her arrival
+// the opening's lines and day 1's helper joining as it ends and waiting at the Gate, authored arrivals at night step 8, her arrival
 // scene's +50 and choice, her favourite line and tastes from the pack, and the farmer's name. Invented ids only: the
 // stand-ins 9000001–9000003, and casts of 9000004 onward built here. Nothing is drawn: every Uma is the cast's.
 import { describe, expect, it } from 'vitest'
@@ -12,11 +12,12 @@ const { newSave } = await import('../save/v4')
 const { parseSaveV4 } = await import('../save/parse-v4')
 const { checkCast, checkBible, checkRoute, RUNGS } = await import('../story/authored')
 const { STAND_IN_BIBLE, STAND_IN_CAST, STAND_INS } = await import('../story/authored.fixture')
-const { readScene, sceneDue } = await import('../story/scenes')
+const { atTheGate, gateScene, readScene, sceneDue } = await import('../story/scenes')
 const { readStoryPack, storyPackFrom } = await import('../story/pack')
-const { favouriteOf, linePlaces, openingOf, outfitOf, placeholderEvent, tasteOf } = await import('../story/placeholders')
+const { favouriteOf, firstHelperOf, linePlaces, openingOf, outfitOf, placeholderEvent, PLACEHOLDER_OPENING, tasteOf } = await import('../story/placeholders')
 const { STAND_IN_FILES } = await import('../story/stand-in')
-const { arrive, arrivalsTonight, festivalArrivalDay, joinOpening, nextArrivals } = await import('./arrivals')
+const { arrive, arrivalsTonight, festivalArrivalDay, joinFirstHelper, nextArrivals } = await import('./arrivals')
+const { joinCast } = await import('./arrivals.fixture')
 const { choicePoints, finishArrival, pathFlags, sceneSteps } = await import('./love')
 const { cleanFarmerName, farmerNameIssue, nameFarmer, withFarmer } = await import('./farmer')
 
@@ -36,17 +37,18 @@ function packWith(...more: Omit<CastEntry, 'paragraph' | 'outfitId'>[]): StoryPa
   return { ...PACK, cast }
 }
 const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK) => ({ kinds: TEST_KINDS, story })
-/** A named farm on `day`, the opening read and the stand-ins home., their ties seeded and
+/** A named farm on `day`, the opening read and the stand-ins home (`joinCast`), their ties seeded and
  * already listed on an earlier morning, so a night's Hearts show only its own lines. */
 function farm(day = 2): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
+  const joined = joinCast(readScene(fresh, 'scene:1:open'), PACK)
   return { ...joined, today: { ...joined.today, bonds: {} } }
 }
 
 describe('the stand-in pack', () => {
   it('validates, its forager\'s and fisher\'s routes partial, and names every outfit', () => {
-    expect(PACK.cast.opening).toEqual([...STAND_INS])
+    expect(PACK.cast.welcome).toBeUndefined()
+    expect(PACK.opening!.steps).toHaveLength(4)
     expect([...PACK.bibles.keys()]).toEqual(['9000001'])
     expect([...PACK.scripted.get('9000001')!]).toEqual(RUNGS)
     expect([...PACK.scripted.get('9000002')!]).toEqual(['arrival'])
@@ -86,32 +88,44 @@ describe('the stand-in pack', () => {
   })
 })
 
-describe('an open opening', () => {
+describe('the opening\'s lines and day 1\'s helper', () => {
   const cast = (more: Partial<Cast>): Cast => ({ ...json(STAND_IN_CAST), ...more })
-  it('brings the cast\'s opening in its order, any number; else who arrives at it; else the welcome list', () => {
-    expect(openingOf(PACK)).toEqual([...STAND_INS])
-    expect(openingOf({ cast: cast({ opening: ['9000003', '9000001'] }) })).toEqual(['9000003', '9000001'])
-    const { opening: _opening, ...without } = json(STAND_IN_CAST)
-    expect(openingOf({ cast: { ...without, umas: without.umas.map((u, i) => (i === 1 ? u : { ...u, arrives: { kind: 'beds' as const, dormLevel: 4 } })) } })).toEqual(['9000002'])
-    expect(openingOf({ cast: { ...without, umas: without.umas.map(({ arrives: _a, ...u }) => u) } })).toEqual([...STAND_INS])
-    expect(openingOf({ cast: { ...without, umas: without.umas.map(({ arrives: _a, ...u }) => u), welcome: ['9000002'] } })).toEqual(['9000002'])
-    expect(openingOf({ cast: cast({ opening: [] }) })).toEqual([])
+  it('day 1\'s helper is the welcome list\'s first in the cast; nobody with no cast', () => {
+    expect(firstHelperOf(PACK)).toBe('9000001')
+    expect(firstHelperOf({ cast: cast({ welcome: ['9000003', '9000002'] }) })).toBe('9000003')
+    expect(firstHelperOf({ cast: cast({ welcome: ['9000099', '9000002'] }) })).toBe('9000002')
+    expect(firstHelperOf({ cast: { umas: [] } })).toBeNull()
   })
 
-  it('joins any number at the opening, the rest away when the beds are full; and nobody joins an empty one', () => {
-    // No opening and no arrivals: the welcome list, the first five, comes up the road.
-    const umas = [...json(STAND_IN_CAST).umas.map(({ arrives: _a, ...u }) => u), ...['9000004', '9000005', '9000006'].map((characterId) => ({ characterId }))]
-    const five: StoryPack = { ...PACK, cast: { umas } }
+  it('plays the pack\'s opening, any length; else the game\'s three, without the Gate\'s line when nobody is coming', () => {
+    expect(openingOf(PACK)).toEqual(STAND_IN_FILES.opening && (STAND_IN_FILES.opening as { steps: unknown[] }).steps)
+    expect(openingOf(PACK)).toHaveLength(4)
+    expect(openingOf({ ...PACK, opening: null })).toEqual(PLACEHOLDER_OPENING)
+    expect(PLACEHOLDER_OPENING).toHaveLength(3)
+    expect(openingOf({ cast: { umas: [] }, opening: null })).toEqual(PLACEHOLDER_OPENING.slice(0, 2))
+  })
+
+  it('joins day 1\'s helper only, home at Friendship 0, once; the rest wait off the farm; nobody joins an empty cast', () => {
+    // Five on the welcome list and one more: only the first joins as the opening ends.
+    const umas = [...json(STAND_IN_CAST).umas, ...['9000004', '9000005', '9000006'].map((characterId) => ({ characterId }))]
+    const six: StoryPack = { ...PACK, cast: { umas } }
     const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' } }
-    const read = joinOpening(readScene(fresh, 'scene:1:open'), five)
-    expect(Object.keys(read.roster)).toEqual([...STAND_INS, '9000004', '9000005'])
-    expect(read.dorm.home).toEqual([...STAND_INS])
+    expect(sceneDue(fresh)).toBe('scene:1:open')
+    expect(sceneDue({ ...fresh, farmer: { name: '' } })).toBeNull()
+    const read = joinFirstHelper(readScene(fresh, 'scene:1:open'), six)
+    expect(Object.keys(read.roster)).toEqual(['9000001'])
+    expect(read.dorm.home).toEqual(['9000001'])
+    expect(read.roster['9000001']!.joined).toBe(1)
+    expect(read.love['9000001']).toEqual({ stage: 'friendship', level: 0, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [] })
+    expect(joinFirstHelper(read, six)).toBe(read)
+    expect(read.account.updatedAt).toBe(AT)
     expect(parseSaveV4(json(read))).toEqual(read)
-    const none = joinOpening(readScene(fresh, 'scene:1:open'), { ...PACK, cast: cast({ opening: [] }) })
-    expect(Object.keys(none.roster)).toEqual([])
+    // The pack's welcome list names who: its first in the cast.
+    const third = joinFirstHelper(readScene(fresh, 'scene:1:open'), { ...PACK, cast: cast({ welcome: ['9000003'] }) })
+    expect(Object.keys(third.roster)).toEqual(['9000003'])
+    expect(Object.keys(joinFirstHelper(readScene(fresh, 'scene:1:open'), { ...PACK, cast: { umas: [] } }).roster)).toEqual([])
     // A cast Uma with no arrival waits off the farm; the night passes her by.
-    expect(read.roster['9000006']).toBeUndefined()
-    expect(arrivalsTonight(read, five).arrived).toEqual([])
+    expect(arrivalsTonight(read, six).arrived).toEqual([])
   })
 
   it('an arrival written with no choice pays +50 alone', () => {
@@ -121,25 +135,34 @@ describe('an open opening', () => {
 })
 
 describe('the opening and arrivals', () => {
-  it('reading the opening joins the opening three home, once, each at Friendship 0', () => {
+  it('day 1\'s helper waits at the Gate: her arrival scene plays from there, never on its own, any day', () => {
     const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' } }
-    expect(sceneDue(fresh)).toBe('scene:1:open')
-    expect(sceneDue({ ...fresh, farmer: { name: '' } })).toBeNull()
-    const read = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
-    expect(Object.keys(read.roster)).toEqual([...STAND_INS])
-    expect(read.dorm.home).toEqual([...STAND_INS])
-    expect(read.love['9000002']).toEqual({ stage: 'friendship', level: 0, points: 0, last: 0, known: [], flags: [], evening: 0, festivals: [] })
-    expect(joinOpening(read, PACK)).toBe(read)
-    expect(read.account.updatedAt).toBe(AT)
-    expect(parseSaveV4(json(read))).toEqual(read)
+    const read = joinFirstHelper(readScene(fresh, 'scene:1:open'), PACK)
+    expect(sceneDue(read, STAND_INS)).toBeNull()
+    expect(atTheGate(read, STAND_INS)).toEqual(['9000001'])
+    expect(gateScene(read, '9000001')).toBe('arrival:9000001')
+    expect(gateScene(read, '9000002')).toBeNull()
+    expect(gateScene(read, null)).toBeNull()
+    // Still at the Gate days later, and never due on her own.
+    const later = { ...read, calendar: { day: 5 } }
+    expect(sceneDue(later, STAND_INS)).toBeNull()
+    expect(atTheGate(later)).toEqual(['9000001'])
+    const welcomed = finishArrival(read, '9000001', { choice: 30, flags: [] })
+    expect(atTheGate(welcomed)).toEqual([])
+    expect(gateScene(welcomed, '9000001')).toBeNull()
+    expect(welcomed.love['9000001']!.points).toBe(80)
   })
 
-  it('plays the arrival scenes in the cast\'s order, after the opening, once the summary is put away', () => {
-    const save = farm(1)
-    expect(sceneDue(save, PACK.cast.opening)).toBe('arrival:9000001')
+  it('plays the arrival scenes in the cast\'s order once the summary is put away; a day-1 Uma waits at the Gate instead', () => {
+    const save = farm(2)
+    expect(sceneDue(save, STAND_INS)).toBe('arrival:9000001')
     const first = finishArrival(save, '9000001', { choice: 30, flags: [] })
-    expect(sceneDue(first, PACK.cast.opening)).toBe('arrival:9000002')
-    expect(sceneDue({ ...first, summary: { day: 1, bin: [], work: [], ranks: [], hearts: [], news: [], nudges: [] } }, PACK.cast.opening)).toBeNull()
+    expect(sceneDue(first, STAND_INS)).toBe('arrival:9000002')
+    expect(sceneDue({ ...first, summary: { day: 2, bin: [], work: [], ranks: [], hearts: [], news: [], nudges: [] } }, STAND_INS)).toBeNull()
+    // An older farm whose three joined on day 1 with their scenes unplayed: they wait at the Gate, in the cast's order.
+    const older = farm(1)
+    expect(sceneDue(older, STAND_INS)).toBeNull()
+    expect(atTheGate(older, STAND_INS)).toEqual([...STAND_INS])
   })
 
   it('joins a festival\'s Uma the morning of its day, a beds Uma the morning its level takes effect, and an event\'s the morning after', () => {

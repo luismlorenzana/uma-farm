@@ -4,9 +4,9 @@ import assert from 'node:assert/strict'
 import { storyCounts } from './counts.mjs'
 
 const cast = { umas: [
-  { characterId: 'u1', calling: 'farming', arrives: { kind: 'opening' } },
-  { characterId: 'u2', calling: 'farming', arrives: { kind: 'chapter', chapter: 2 } },
-  { characterId: 'u3', calling: 'fishing', arrives: { kind: 'opening' } },
+  { characterId: 'u1', calling: 'farming', arrives: { kind: 'festival', festival: 'flower-show' } },
+  { characterId: 'u2', calling: 'farming', arrives: { kind: 'beds', dormLevel: 4 } },
+  { characterId: 'u3', calling: 'fishing', arrives: { kind: 'festival', festival: 'fishing-derby' } },
 ] }
 const tag = (characterId, favouriteLine, season, festival, loved) => ({ characterId, favouriteLine, season, festival, loved })
 const tags = { tags: [tag('u1', 'farming', 'spring', 'flower-show', 'apple'), tag('u2', 'cooking', 'spring', 'cooking-contest', 'apple')] }
@@ -19,7 +19,7 @@ test('counts by calling, arrival and tag, each with its Umas, the biggest first'
   const c = storyCounts({ cast, tags, ties, rungs })
   assert.equal(c.umas, 3)
   assert.deepEqual(c.byCalling, { farming: ['u1', 'u2'], fishing: ['u3'] })
-  assert.deepEqual(c.arrivals, { opening: ['u1', 'u3'], chapter: ['u2'] })
+  assert.deepEqual(c.arrivals, { festival: ['u1', 'u3'], beds: ['u2'] })
   assert.equal(c.tagged, 2)
   assert.deepEqual(c.bySeason, { spring: ['u1', 'u2'] })
   assert.deepEqual(c.byLoved, { apple: ['u1', 'u2'] })
@@ -48,6 +48,6 @@ test('counts an open cast: a character with only her id is in the cast, and in n
   const c = storyCounts({ cast: { umas: [...cast.umas, { characterId: 'u4' }] }, rungs })
   assert.equal(c.umas, 4)
   assert.deepEqual(c.byCalling, { farming: ['u1', 'u2'], fishing: ['u3'] })
-  assert.deepEqual(c.arrivals, { opening: ['u1', 'u3'], chapter: ['u2'] })
+  assert.deepEqual(c.arrivals, { festival: ['u1', 'u3'], beds: ['u2'] })
   assert.deepEqual(c.eventsPer.find((e) => e.id === 'u4'), { id: 'u4', bible: false, scripted: 0, of: 3 })
 })

@@ -4,7 +4,7 @@
 // +20 after a rank-up overnight, and the morning's birthday line. The invented stand-in pack (9000001's birthday is Spring
 // 4 in its cast) and invented outfits; the server is a stub.
 import 'fake-indexeddb/auto'
-import { joinOpening, newSave, readScene, type SaveV4, type StoryPack } from '@farm/domain'
+import { arrive, newSave, readScene, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes } from 'react-router'
@@ -30,16 +30,19 @@ const { default: HeartsPage } = await import('./HeartsPage')
 const { endTheDay } = await import('./actions')
 const { summaryParts } = await import('./summary-words')
 
+/** The stand-in's three home, ties seeded, as the old opening brought them: the opening now brings only day 1's helper. */
+const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : arrive(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const ONE = '9000001'
 const THREE = '9000003'
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 
-/** A named farm on `day`, the opening three home (their ties seeded and listed on an earlier morning), with goods in
+/** A named farm on `day`, the stand-in's three home (`joinStandIns`, their ties seeded and listed on an earlier morning), with goods in
  * the Warehouse. */
 function farm(day = 2): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), fixture.pack!)
+  const joined = joinStandIns(readScene(fresh, 'scene:1:open'), fixture.pack!)
   return { ...joined, today: { ...joined.today, bonds: {} }, arrivals: [ONE, '9000002', THREE], items: { ...joined.items, carrot: [0, 0, 1, 0, 0], 'golden-carrot': [1, 0, 0, 0, 0], limestone: [1, 0, 0, 0, 0] } }
 }
 const withLove = (s: SaveV4, id: string, love: Partial<SaveV4['love'][string]>): SaveV4 => ({ ...s, love: { ...s.love, [id]: { ...s.love[id]!, ...love } } })

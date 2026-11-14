@@ -15,7 +15,8 @@ import { storyPackFrom, type StoryPack } from '../story/pack'
 import { STAND_IN_FILES } from '../story/stand-in'
 import { startLoopJob } from '../save/loop-work'
 import { TEST_KINDS } from '../night/kinds.fixture'
-import { arrivalsTonight, joinOpening } from './arrivals'
+import { arrivalsTonight } from './arrivals'
+import { joinCast } from './arrivals.fixture'
 import {
   askHer, askSteps, canAsk, choicePointsOf, EVENT_POINTS, extraPlay, optionViews, pathPlays, playEvent, replaySteps, takeLowest, type EventOutcome, type PlayScore,
 } from './events'
@@ -29,10 +30,10 @@ const PACK = storyPackFrom(STAND_IN_FILES)
 const ONE = '9000001'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
-/** A named farm on `day`, the opening read and the stand-ins home at Friendship 0. */
+/** A named farm on `day`, the opening read and the stand-ins home (`joinCast`) at Friendship 0. */
 function farm(day = 3): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day } }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), PACK)
+  const joined = joinCast(readScene(fresh, 'scene:1:open'), PACK)
   return { ...joined, today: { ...joined.today, bonds: {} } }
 }
 const withLove = (save: SaveV4, love: Partial<Love>, id = ONE): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })

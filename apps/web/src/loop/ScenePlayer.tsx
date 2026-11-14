@@ -1,25 +1,26 @@
-// The scene player: a full-screen sheet over the farm. A bust (a cast
-// member's lettered disc until the busts ship, or an Uma's from master data through uma-kit's `UmaBust`), the speaker's
-// name and one line; a tap goes on, and **Skip** ends it. The opening's lines are data (`@farm/domain`'s
-// `story/opening.ts`): it ends as its Umas come up the road (reading it brings them: the pack's `openingOf`, any number;
-// with none it ends on the first day's card). It plays once (`diary.read`). It loads master data itself, for the Umas'
-// names and busts, since a new account's boot doesn't wait for it; Skip works without it.
+// The scene player: a full-screen sheet over the farm. A bust (a cast member's lettered disc until the busts ship, or an
+// Uma's from master data through uma-kit's `UmaBust`), the speaker's name and one line; a tap goes on, and **Skip** ends
+// it. It plays **the opening's lines** on day 1, after the farmer's name: the pack's `opening.json`, else the game's three
+// (`openingOf`), one to a tap, `{farmer}` filled. Played through or skipped from its first line, it's read once
+// (`diary.read`), day 1's helper joins and waits at the Gate, and the farm opens on Home: three taps for the game's own.
+// It loads master data itself, for the Umas' names and busts; Skip works without it.
 //
 // It also plays each Uma's **arrival scene** from the story pack, the format's steps: `say` (her
 // bust, the line with `{farmer}` filled, the emote as a word), `narrate`, `thought` (italic), `place` (the title line),
 // `wait`, `flag` and `choice`, whose options show their gain before the tap (+30 for the best, +10 for the rest). Skip
 // jumps to the choice, never past it, so every arrival pays +50 and its choice (an arrival the pack writes without one
-// pays +50 alone); the last of the opening's Umas ends on the first day's card and **Plant the carrots**. Its frame and steps
+// pays +50 alone). Day 1's helper's plays from the Gate (`?hello=<id>`, dropped as it ends). Its frame and steps
 // also play the pair conversations (`PairPlayer.tsx`). Loaded on demand. The ring bench's scene (`scene:bench`) plays
 // here too, its player loaded on demand (`BenchScene.tsx`).
 import {
-  ARRIVAL_POINTS, arrivalOf, BENCH_SCENE, CAST, CAST_IDS, castInitial, choicePoints, eventOf, farmPlace, openingOf, openingScene,
-  pathFlags, placeholderEvent, sceneLines, sceneSteps, withFarmer, type CastId, type ChoiceOption, type OpeningSceneId, type SaveV4, type SceneId, type SceneLine, type Step,
+  ARRIVAL_POINTS, arrivalOf, BENCH_SCENE, CAST, CAST_IDS, castInitial, choicePoints, eventOf, farmPlace, openingOf, pathFlags, placeholderEvent, sceneSteps,
+  withFarmer, type CastId, type ChoiceOption, type OpeningSceneId, type SaveV4, type SceneId, type Step,
 } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
+import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
@@ -69,84 +70,44 @@ function OpeningPlayer({ scene }: { scene: OpeningSceneId }) {
   const save = useLoopSave()
   const story = useStory()
   const navigate = useNavigate()
+  const location = useLocation()
   const [leaving, setLeaving] = useState(false)
+  // The lines are read once, when the opening starts (the pack is in by then: the boot waits for it).
+  const [lines, setLines] = useState<readonly Step[] | null>(() => (story ? openingOf(story) : null))
+  useEffect(() => {
+    if (!lines && story) setLines(openingOf(story))
+  }, [lines, story])
+  const [at, setAt] = useState(0)
   if (!save) return null
-  const data = openingScene(story ? openingOf(story).length : undefined)
-  /** Played through or skipped: the scene is read, once, and the farm goes on where `to` says. */
-  const finish = (to: string | null) => {
+  /** Played through or skipped: the opening is read, once, day 1's helper joins, and the farm opens on Home. */
+  const finish = () => {
     if (leaving) return
     setLeaving(true)
-    if (to) navigate(to)
+    if (location.pathname !== '/') navigate('/', { replace: true })
     void readSceneOnce(scene).catch(() => setLeaving(false))
   }
+  const shown = lines ?? []
+  let cursor = at
+  while (cursor < shown.length && silent(shown[cursor]!)) cursor++
+  const place = shown.slice(0, cursor + 1).reduce<string | null>((p, s) => ('place' in s ? s.place : p), null)
+  const title = place ? `Day 1 · ${placeName(place)}` : 'Day 1'
+  const step = lines ? shown[cursor] : undefined
   return (
-    <Frame title={data.title} label={data.title} scene={scene} onSkip={() => finish(null)} skipping={leaving}>
-      <MasterGate>{(master) => <Play scene={scene} master={master} onDone={finish} />}</MasterGate>
+    <Frame title={title} label="The opening" scene={scene} onSkip={finish} skipping={leaving}>
+      {lines && !step ? <Done onDone={finish} /> : step ? (
+        <MasterGate>{(master) => (
+          <StepView key={cursor} step={step} at={cursor} count={shown.slice(0, cursor).filter((s) => !silent(s)).length} total={shown.filter((s) => !silent(s)).length}
+            nameOf={(who) => (isCast(who) ? CAST[who].name : master.album.get(who)?.name ?? 'An Uma')} farmer={save.farmer.name} onNext={() => setAt(cursor + 1)} />
+        )}</MasterGate>
+      ) : <div className="flex-1" />}
     </Frame>
   )
 }
 
-function Play({ scene, master, onDone }: { scene: OpeningSceneId; master: MasterView; onDone: (to: string | null) => void }) {
-  const save = useLoopSave()!
-  const story = useStory()
-  // The lines are read once, when the scene starts.
-  const lines = useMemo(() => sceneLines(openingScene(story ? openingOf(story).length : undefined)), [scene]) // eslint-disable-line react-hooks/exhaustive-deps
-  const [at, setAt] = useState(0)
-  const nameOf = (id: string): string => master.album.get(id)?.name ?? 'An Uma'
-  const farmer = save.farmer.name
-  if (at >= lines.length) {
-    // The opening ends as its Umas come up the road: reading it brings them, and their arrivals play next. An opening
-    // that brings nobody ends on the first day's card, as the last arrival would.
-    if (!story || openingOf(story).length > 0) return <ReadOn onDone={() => onDone(null)} />
-    return <FirstDayCard onPlant={() => onDone('/fields')} />
-  }
-  const line = lines[at]!
-  return (
-    <button type="button" onClick={() => setAt(at + 1)} className="flex min-h-0 flex-1 flex-col items-center justify-end gap-4 px-4 pb-4 text-left"
-      aria-label="Next" data-beat={at}>
-      <Bust line={line} nameOf={nameOf} />
-      <div className="w-full rounded-md border border-hairline bg-panel p-4 shadow-2" aria-live="polite">
-        {line.speaker.kind !== 'narrator' && <p className="font-display text-[15px] font-bold text-accent" data-speaker>{speakerName(line, nameOf)}</p>}
-        <p className={`pt-1 text-[17px] leading-snug ${line.speaker.kind === 'narrator' ? 'text-ink-soft italic' : 'text-ink'}`} data-line>
-          {withFarmer(line.speaker.kind === 'uma' ? line.line.replaceAll('{name}', nameOf(line.speaker.outfitId)) : line.line, farmer)}
-        </p>
-        <p className="pt-2 text-right text-[12px] text-ink-faint">Tap to go on · {at + 1}/{lines.length}</p>
-      </div>
-    </button>
-  )
-}
-
-/** The opening's end: the scene is read, which brings the three, and the first arrival plays. */
-function ReadOn({ onDone }: { onDone: () => void }) {
+/** The opening's end: the last tap reads it and opens Home. */
+function Done({ onDone }: { onDone: () => void }) {
   useEffect(() => onDone(), []) // eslint-disable-line react-hooks/exhaustive-deps
   return <div className="flex-1" />
-}
-
-function speakerName(line: SceneLine, nameOf: (id: string) => string): string {
-  return line.speaker.kind === 'cast' ? CAST[line.speaker.id].name : line.speaker.kind === 'uma' ? nameOf(line.speaker.outfitId) : ''
-}
-
-function Bust({ line, nameOf }: { line: SceneLine; nameOf: (id: string) => string }) {
-  const { speaker } = line
-  return (
-    <div className="flex min-h-0 flex-1 items-end justify-center" data-bust={speaker.kind}>
-      {speaker.kind === 'cast' && <CastBust id={speaker.id} size={176} />}
-      {speaker.kind === 'uma' && <UmaBust outfitId={speaker.outfitId} label={nameOf(speaker.outfitId)} size={240} />}
-    </div>
-  )
-}
-
-/** The first day's card, where the opening ends: the seeds waiting, and the first tap, planting. */
-export function FirstDayCard({ onPlant }: { onPlant: () => void }) {
-  return (
-    <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 px-4 pb-4" data-first-day>
-      <div className="rounded-md border border-hairline bg-panel p-4 shadow-2">
-        <h2 className="font-display text-[22px] font-bold">Day 1</h2>
-        <p className="pt-1 text-[15px] text-ink-soft">Nine Carrot seeds wait in the Fields.</p>
-      </div>
-      <Button className="w-full" onClick={onPlant} data-action="plant">Plant the carrots</Button>
-    </div>
-  )
 }
 
 // --- Her arrival scene ----------------------------------------------------------------------------------
@@ -168,16 +129,13 @@ function ArrivalPlayer({ save, id }: { save: SaveV4; id: string }) {
   }, [story, id])
   if (!steps) return null
   return (
-    <MasterGate>{(master) => <Arrival save={save} id={id} steps={steps} master={master} lastOpening={!!story && isLastOpening(save, openingOf(story), id)} />}</MasterGate>
+    <MasterGate>{(master) => <Arrival save={save} id={id} steps={steps} master={master} />}</MasterGate>
   )
 }
 
-/** The last of the opening's Umas: the others' arrivals have played. */
-const isLastOpening = (save: Pick<SaveV4, 'arrivals'>, opening: readonly string[], id: string): boolean =>
-  opening.includes(id) && opening.every((o) => o === id || save.arrivals.includes(o))
-
-function Arrival({ save, id, steps, master, lastOpening }: { save: SaveV4; id: string; steps: readonly Step[]; master: MasterView; lastOpening: boolean }) {
+function Arrival({ save, id, steps, master }: { save: SaveV4; id: string; steps: readonly Step[]; master: MasterView }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [picks, setPicks] = useState<number[]>([])
   const [at, setAt] = useState(0)
   const [leaving, setLeaving] = useState(false)
@@ -195,14 +153,15 @@ function Arrival({ save, id, steps, master, lastOpening }: { save: SaveV4; id: s
   const step = shown[cursor]
   const done = cursor >= shown.length
   const choiceAt = shown.findIndex((s, i) => 'choice' in s && picks.length <= shown.slice(0, i).filter((x) => 'choice' in x).length)
-  const finish = (to: string | null) => {
+  const finish = () => {
     if (leaving) return
     const choice = shown.find((s): s is { choice: ChoiceOption[] } => 'choice' in s)
     const pick = picks[0]
     // Her arrival always holds a choice (a written one without gets the hello): its first choice pays with the +50.
     if (choice && pick === undefined) return
     setLeaving(true)
-    if (to) navigate(to)
+    // Played from the Gate: the farm stays where it is, without the Gate's ask.
+    if (new URLSearchParams(location.search).has('hello')) navigate(withParam(location, 'hello', null), { replace: true })
     void finishArrivalScene(id, { choice: choice && pick !== undefined ? choicePoints(choice.choice)[pick]! : 0, flags: pathFlags(shown) }).catch(() => setLeaving(false))
   }
   // Skip: to her choice, never past it; once chosen, to the end.
@@ -214,8 +173,8 @@ function Arrival({ save, id, steps, master, lastOpening }: { save: SaveV4; id: s
   const earned = ARRIVAL_POINTS + (chosen && picks[0] !== undefined ? choicePoints(chosen.choice)[picks[0]]! : 0)
   const title = place ? `${name} arrives · ${placeName(place)}` : `${name} arrives`
   return (
-    <Frame title={title} label={`${name} arrives`} scene={`arrival:${id}`} onSkip={skip} skipping={leaving || (done && lastOpening)}>
-      {done ? (lastOpening ? <FirstDayCard onPlant={() => finish('/fields')} /> : <Welcome onDone={() => finish(null)} id={id} name={name} points={earned} />)
+    <Frame title={title} label={`${name} arrives`} scene={`arrival:${id}`} onSkip={skip} skipping={leaving}>
+      {done ? <Welcome onDone={finish} id={id} name={name} points={earned} />
         : step && 'choice' in step && choiceAt === cursor ? (
           <Choice id={id} name={name} options={step.choice} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />
         ) : step ? (

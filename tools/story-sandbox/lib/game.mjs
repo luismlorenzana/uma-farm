@@ -1,6 +1,6 @@
-// The story as the game has it: @farm/domain's TypeScript read in place with Node's type stripping, so the sandbox
-// shows the opening exactly as it plays. The farm has no global chapters: the opening (`story/opening.ts`) is the only
-// town scene the game plays. It reads the town's cast, the opening's `scene:1:open`, the farm's places, the
+// The story as the game has it: @farm/domain's TypeScript read in place with Node's type stripping. The farm has no
+// global chapters and plays no town scene of its own: the opening's lines are the pack's `opening.json` (else the
+// game's three, `placeholders.ts`), so no chapter scene loads here. It reads the town's cast, the farm's places, the
 // temperaments and the activities. Nothing is copied: edit a story file and the next request reads it again. Needs Node's type stripping
 // (`--experimental-strip-types` before Node 22.18; `pnpm stories` passes it).
 import { register } from 'node:module'

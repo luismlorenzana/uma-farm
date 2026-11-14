@@ -8,7 +8,7 @@
 // error (a file that isn't JSON, a value the game can't read, a line longer than its screen) is skipped and listed, the
 // rest kept; the notes (what isn't written yet, and what plays instead) are listed and block nothing. It refuses only
 // when there's no pack folder, or its index can't be written. Only the pack's files are read (cast, ties, umas/, routes/,
-// pairs/, household): the sandbox's notes, reviews and the cast pack's images beside them never leave the folder.
+// pairs/, household, opening): the sandbox's notes, reviews and the cast pack's images beside them never leave the folder.
 //
 //   pnpm story:release                  content/story → content/story-release
 //   pnpm story:release --stand-in       the invented stand-in in git, for the dev server
@@ -79,6 +79,8 @@ export async function readPack(from) {
   }
   const household = await json(join(from, 'household.json'), errors, from)
   if (household !== undefined) files.household = household
+  const opening = await json(join(from, 'opening.json'), errors, from)
+  if (opening !== undefined) files.opening = opening
   return { files, errors }
 }
 
@@ -94,6 +96,7 @@ const byId = (a, b) => (Number(a) - Number(b)) || a.localeCompare(b)
 function releaseFiles(files) {
   const out = [[storyFileName.cast, files.cast], [storyFileName.ties, files.ties]]
   if (files.household !== undefined) out.push([storyFileName.household, files.household])
+  if (files.opening !== undefined) out.push([storyFileName.opening, files.opening])
   for (const id of Object.keys(files.umas).sort(byId)) out.push([storyFileName.uma(id), files.umas[id]])
   for (const id of Object.keys(files.routes).sort(byId)) out.push([storyFileName.route(id), files.routes[id]])
   for (const name of Object.keys(files.pairs).sort()) out.push([storyFileName.pair(name), files.pairs[name]])
@@ -165,6 +168,7 @@ export async function buildRelease({ from = SOURCE, out = OUT, builtAt = new Dat
     beats,
     pairs: Object.keys(index.pairs).length,
     household: files.household !== undefined,
+    opening: files.opening?.steps.length ?? 0,
     skipped: errors.length,
     notes: notes.length,
   }
@@ -180,7 +184,7 @@ async function main() {
   const builtAt = process.env.SOURCE_DATE_EPOCH ? new Date(Number(process.env.SOURCE_DATE_EPOCH) * 1000).toISOString() : undefined
   const { summary: s, errors, notes } = await buildRelease({ from, out, ...(builtAt ? { builtAt } : {}) })
   console.log(`Story release ${s.release}${standIn ? ' (the stand-in)' : ''}: ${s.files} files, ${(s.bytes / 1024).toFixed(1)} KB → ${out.startsWith(ROOT) ? relative(ROOT, out) : out}`)
-  console.log(`  ${s.cast} character${s.cast === 1 ? '' : 's'}, ${s.bibles} bible${s.bibles === 1 ? '' : 's'}; ${s.routes} routes scripting ${s.events} events (bibles hold ${s.beats} beats); ${s.pairs} pairs; household ${s.household ? 'yes' : 'not yet'}`)
+  console.log(`  ${s.cast} character${s.cast === 1 ? '' : 's'}, ${s.bibles} bible${s.bibles === 1 ? '' : 's'}; ${s.routes} routes scripting ${s.events} events (bibles hold ${s.beats} beats); ${s.pairs} pairs; household ${s.household ? 'yes' : 'not yet'}; opening ${s.opening > 0 ? `${s.opening} step${s.opening === 1 ? '' : 's'}` : 'the game’s own'}`)
   if (errors.length > 0) console.log(`\nSkipped, since the game can't read them (${errors.length}); the rest of the pack is in:\n${errors.map((e) => `  - ${e}`).join('\n')}`)
   if (notes.length > 0) console.log(`\nNotes (${notes.length}), which block nothing:\n${groupNotes(notes).map((n) => `  - ${n}`).join('\n')}`)
 }

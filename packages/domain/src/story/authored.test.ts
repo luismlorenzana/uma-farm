@@ -32,7 +32,7 @@ describe('the stand-in story reads clean', () => {
 })
 
 describe('the cast', () => {
-  it('needs only a character id: any number of characters, in any order, with no opening three', () => {
+  it('needs only a character id: any number of characters, in any order, with no fixed few', () => {
     const read = checkCast({ umas: [{ characterId: '9000003' }, { characterId: '9000001' }] })
     expect(read.errors).toEqual([])
     expect(read.value.umas).toEqual([{ characterId: '9000003' }, { characterId: '9000001' }])
@@ -40,10 +40,18 @@ describe('the cast', () => {
     expect(checkCast({ umas: [] })).toMatchObject(clean)
     expect(checkCast(undefined)).toMatchObject({ value: { umas: [] }, errors: [], notes: ['No cast: the pack holds no characters'] })
   })
-  it('takes the opening in any order and any number, a farmer or not', () => {
-    const cast = clone(STAND_IN_CAST)
+  it('notes an opening list or an opening arrival, which the start no longer has, and drops them', () => {
+    const cast = clone(STAND_IN_CAST) as unknown as { opening?: string[]; umas: Record<string, unknown>[] }
     cast.opening = ['9000002', '9000001']
-    expect(checkCast(cast)).toMatchObject({ ...clean, value: { opening: ['9000002', '9000001'] } })
+    cast.umas[1]!.arrives = { kind: 'opening' }
+    const read = checkCast(cast)
+    expect(read.errors).toEqual([])
+    expect(read.notes).toEqual([
+      'Uma 2 (9000002): the opening brings nobody now (the welcome list’s first joins as it ends), so an opening arrival is dropped',
+      'opening: the opening brings nobody now (the welcome list’s first joins as it ends), so the list is dropped',
+    ])
+    expect(read.value).not.toHaveProperty('opening')
+    expect(read.value.umas[1]).not.toHaveProperty('arrives')
   })
   it('notes a chapter arrival, which the farm no longer has, and drops it', () => {
     const cast = clone(STAND_IN_CAST) as unknown as { umas: Record<string, unknown>[] }
@@ -61,7 +69,7 @@ describe('the cast', () => {
     const read = checkCast(cast)
     expect(read.errors).toEqual([
       'Uma 2 (9000002): calling is one of farming, foraging, fishing, mining, quarry; skipped',
-      'Uma 3 (9000003): arrives is the opening, a festival (and a year), the Dorm’s beds, or after an event; skipped',
+      'Uma 3 (9000003): arrives is a festival (and a year), the Dorm’s beds, or after an event; skipped',
       'Uma 4: no characterId (master data’s id, a positive integer); skipped',
       'Uma 5 (9000001): listed twice; the later one is skipped',
     ])
@@ -74,7 +82,7 @@ describe('the cast', () => {
     const cast = { ...clone(STAND_IN_CAST), mood: 'sunny', umas: [{ characterId: '9000001', voice: 'low', paragraph: 'Hers.' }] }
     expect(checkCast(cast).value).toEqual(cast)
   })
-  it('notes a welcome or opening id that isn\'t in the cast, and a character outside the Studio export', () => {
+  it('notes a welcome id that isn\'t in the cast, and a character outside the Studio export', () => {
     const read = checkCast({ ...clone(STAND_IN_CAST), welcome: ['9000002', '9000009', '9000002', 'x'] }, { exported: new Set(['9000001', '9000002']) })
     expect(read.errors).toEqual(['welcome 4: x isn’t one of character ids; skipped'])
     expect(read.notes).toEqual([

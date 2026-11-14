@@ -4,7 +4,7 @@
 // ring and better ring, and the Forge before the bench. The invented stand-in pack
 // (9000001–9000003) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { dateOf, farmPlace, gendersFarmer, joinOpening, newSave, readScene, SEASON_NAMES, type Love, type SaveV4, type StoryPack } from '@farm/domain'
+import { dateOf, farmPlace, gendersFarmer, arrive, newSave, readScene, SEASON_NAMES, type Love, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -37,16 +37,19 @@ const { BENCH_TEXT, makeWords, withArticle } = await import('./bench-view')
 const { CAKE_WORDS, guestsLine, marriedWords, PICKER_WORDS, STAGE_WORDS, stageOpens } = await import('./event-view')
 const { warehouseTabs } = await import('./goods-view')
 
+/** The stand-in's three home, ties seeded, as the old opening brought them: the opening now brings only day 1's helper. */
+const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : arrive(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const DAY = 21
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 
-/** A named farm on day 21, the opening three home and their arrivals played; 9000001 at `love`. With the bench standing,
+/** A named farm on day 21, the stand-in's three home (`joinStandIns`) and their arrivals played; 9000001 at `love`. With the bench standing,
  * Ida Stone's scene is read unless `more` brings its own Diary. */
 function farm(love: Partial<Love> = {}, more: Partial<SaveV4> = {}): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day: DAY } }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), fixture.pack!)
+  const joined = joinStandIns(readScene(fresh, 'scene:1:open'), fixture.pack!)
   const out = { ...joined, arrivals: [ONE, TWO, THREE], today: { ...joined.today, bonds: {} }, love: { ...joined.love, [ONE]: { ...joined.love[ONE]!, ...love } }, ...more }
   return out.buildings.forge !== undefined && !more.diary ? readScene(out, 'scene:bench') : out
 }

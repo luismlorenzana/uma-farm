@@ -5,7 +5,7 @@
 // invented stand-in pack (9000001–9000003, the stand-in pair's five invented
 // conversations) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { joinOpening, newBlock, newSave, pairKey, readScene, type Block, type MorningSummary, type SaveV4, type StoryPack } from '@farm/domain'
+import { arrive, newBlock, newSave, pairKey, readScene, type Block, type MorningSummary, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -37,17 +37,20 @@ const { default: FieldsPage } = await import('./FieldsPage')
 const { conversationRows, pairWords, parseReadParam, readParam, tieRows } = await import('./hearts-view')
 const { heartsLines } = await import('./summary-words')
 
+/** The stand-in's three home, ties seeded, as the old opening brought them: the opening now brings only day 1's helper. */
+const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : arrive(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 const NAMES: Record<string, string> = { [ONE]: 'Stand-in 1', [TWO]: 'Stand-in 2', [THREE]: 'Stand-in 3' }
 const nameOf = (id: string) => NAMES[id] ?? 'An Uma'
 
-/** A named farm on day 2: the opening three home and their arrivals played, their ties seeded on day 1 (9000001 and
+/** A named farm on day 2: the stand-in's three home (`joinStandIns`) and their arrivals played, their ties seeded on day 1 (9000001 and
  * 9000002 at 150, 9000001 and 9000003 at 50). */
 function farm(): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day: 2 } }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), fixture.pack!)
+  const joined = joinStandIns(readScene(fresh, 'scene:1:open'), fixture.pack!)
   return { ...joined, arrivals: [ONE, TWO, THREE], today: { ...joined.today, bonds: {} } }
 }
 

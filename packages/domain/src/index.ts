@@ -62,17 +62,16 @@ export * from './farm/dorm'
 
 // The farm's progress: the Diary's milestones and rows, the Farm Rank's points and what each rank opens, the night's
 // goals check; building (each place's cost, paying, standing the next morning), the milestones with the Umas and the
-// farm's projects; the town's cast, which scene plays now, and the opening.
+// farm's projects; the town's cast, and which scene plays now (the opening's lines are the pack's, `openingOf`).
 export * from './farm/milestones'
 export * from './farm/diary'
 export * from './farm/builds'
 export * from './story/cast'
 export * from './story/scenes'
-export * from './story/opening'
 
 // The romance: save v4 (the new farm over an older save, the keys, the romance's slots) and its strict parse, the
 // farmer's name, the story pack at runtime with the invented stand-in, the one `outfitOf` resolver, her favourite line
-// and tastes, the chats' fallback lines, authored arrivals at night step 8, her arrival scene's pay, and the opening. The
+// and tastes, the chats' fallback lines, authored arrivals at night step 8 and day 1's helper, her arrival scene's pay. The
 // story's format and validator export by name: their `SEASONS` and `FESTIVALS` are the story's words, not the
 // calendar's.
 export * from './save/v4'
@@ -131,12 +130,13 @@ export * from './story/stand-in'
 // menu's defaults (the welcome list, her trigger to meet, her chapters) are `placeholders.ts`'s.
 export {
   ANSWERS, answerAt, ARRIVAL, BIG_EVENTS, bibleTagNotes, CALLINGS, CHARACTER_ID, CHAT_SETS, DATE_GAMES, EMOTES, EVENT_LIMITS,
-  eventNotes, FARMING_PLAYS, gendersFarmer, HOUSE_LINE_MAX, HOUSEHOLD_SCENES, LADDERS, LINE_LIMITS, checkBible, checkCast, checkHousehold, checkPair, checkRoute, checkTies, RUNGS,
+  eventNotes, FARMING_PLAYS, gendersFarmer, HOUSE_LINE_MAX, HOUSEHOLD_SCENES, LADDERS, LINE_LIMITS, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies,
+  OPENING_STEPS, RUNGS,
   stepFindings, STORY_PLACES, tagNotes, TONES, TRIGGER_KINDS, unscriptedBeats, WISHES,
 } from './story/authored'
 export type {
   Answer, Arrival, Beat as RouteBeat, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, DateGame, Emote, Finale, Findings, Gifts, HerChapter, Household, HouseholdAt,
-  HouseholdScene, Keepsake, Ladder, OptionGives, PairConversations, Play, Read, Route, Step, StoryContext, StoryPlace, StoryTrigger, Tie, TieKind, Ties, Together, Tone, Trigger, UmaBible,
+  HouseholdScene, Keepsake, Ladder, Opening, OptionGives, PairConversations, Play, Read, Route, Step, StoryContext, StoryPlace, StoryTrigger, Tie, TieKind, Ties, Together, Tone, Trigger, UmaBible,
   Unlock, WeddingPlan, Wish,
 } from './story/authored'
 

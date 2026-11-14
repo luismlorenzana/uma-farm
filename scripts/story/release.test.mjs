@@ -45,7 +45,7 @@ test('releases the stand-in: every file minified, hash-named and listed in story
   const out = await temp(t)
   const { index, summary, errors } = await buildRelease({ from: STAND_IN, out, builtAt: BUILT_AT })
   assert.deepEqual(errors, [])
-  assert.deepEqual(Object.keys(index.files), ['cast', 'household', 'pair-9000001-9000002', 'route-9000001', 'route-9000002', 'route-9000003', 'ties', 'uma-9000001'])
+  assert.deepEqual(Object.keys(index.files), ['cast', 'household', 'opening', 'pair-9000001-9000002', 'route-9000001', 'route-9000002', 'route-9000003', 'ties', 'uma-9000001'])
   assert.deepEqual(await readJson(join(out, 'story.json')), index)
   assert.equal(index.version, 1)
   assert.equal(index.builtAt, BUILT_AT)
@@ -61,7 +61,9 @@ test('releases the stand-in: every file minified, hash-named and listed in story
     assert.ok(!bytes.toString().includes('\n'), `${name} is minified`)
   }
   assert.deepEqual(JSON.parse(await readFile(join(out, index.files['uma-9000001'].path), 'utf8')), await readJson(join(STAND_IN, 'umas/9000001.json')))
-  assert.equal(summary.files, 8)
+  assert.deepEqual(JSON.parse(await readFile(join(out, index.files.opening.path), 'utf8')), await readJson(join(STAND_IN, 'opening.json')))
+  assert.equal(summary.files, 9)
+  assert.equal(summary.opening, 4)
 })
 
 test('writes scripted and pairs, so the game knows what each route and pair holds before loading it', async (t) => {
@@ -110,15 +112,17 @@ test('releases a partial pack with notes: bibles and arrival scenes missing, rou
   assert.equal(summary.notes, notes.length)
 })
 
-test('releases five opening characters in any order, with notes only', async (t) => {
+test('releases five characters in any order, an old opening list and opening arrivals dropped, with notes only', async (t) => {
   const umas = [4, 2, 5, 1, 3].map((n) => ({ characterId: id(n), outfitId: `${id(n)}01`, calling: ['quarry', 'fishing', 'farming', 'mining', 'foraging'][n - 1], arrives: { kind: 'opening' } }))
   const from = await packOf(t, { 'cast.json': { opening: umas.map((u) => u.characterId), umas } })
   const out = await temp(t)
   const { index, errors, notes } = await buildRelease({ from, out, builtAt: BUILT_AT })
   assert.deepEqual(errors, [])
-  assert.ok(notes.length > 0)
+  assert.ok(notes.some((n) => n.startsWith('cast.json: opening: the opening brings nobody now')), notes.join('\n'))
   const cast = JSON.parse(await readFile(join(out, index.files.cast.path), 'utf8'))
-  assert.deepEqual(cast.opening, [id(4), id(2), id(5), id(1), id(3)])
+  assert.equal(cast.opening, undefined)
+  assert.deepEqual(cast.umas.map((u) => u.characterId), [id(4), id(2), id(5), id(1), id(3)])
+  assert.ok(cast.umas.every((u) => u.arrives === undefined))
   assert.deepEqual(index.files.ties ? Object.keys(index.files).sort() : [], ['cast', 'ties'], 'an empty ties file stands in for a missing one')
 })
 
@@ -145,7 +149,31 @@ test('releases a single character with no routes, ties or bible', async (t) => {
   assert.deepEqual(errors, [])
   assert.deepEqual(index.scripted, {})
   assert.deepEqual(index.pairs, {})
-  assert.equal(notes.length, 5)
+  assert.equal(notes.length, 6)
+  assert.ok(notes.includes('opening.json: no opening yet, so the game’s own three lines play'))
+  assert.equal(index.files.opening, undefined)
+})
+
+test('releases the opening as the game reads it: any length, a step it can\'t play skipped and listed', async (t) => {
+  const steps = [
+    { narrate: 'Morning over the fence.' }, { say: id(1), line: '“You made it, {farmer}.”' }, { choice: [{ text: 'Hello.' }] },
+    { thought: 'Someone is already at the Gate.' }, { narrate: 'x'.repeat(401) },
+  ]
+  const from = await packOf(t, { 'cast.json': { umas: [{ characterId: id(1) }] }, 'opening.json': { about: 'Invented.', steps } })
+  const out = await temp(t)
+  const { index, errors, summary } = await buildRelease({ from, out, builtAt: BUILT_AT })
+  assert.deepEqual(errors, [
+    'opening.json: Step 3: the opening plays lines only (say, narrate, thought, wait, place), never a pick; skipped',
+    'opening.json: Step 5: its narration is 401 characters; the screen shows 400; skipped',
+  ])
+  const opening = JSON.parse(await readFile(join(out, index.files.opening.path), 'utf8'))
+  assert.deepEqual(opening, { about: 'Invented.', steps: [steps[0], steps[1], steps[3]] })
+  assert.equal(summary.opening, 3)
+  // A file the game can't read at all isn't released: the game's own opening plays.
+  const broken = await packOf(t, { 'cast.json': { umas: [{ characterId: id(1) }] }, 'opening.json': '{ not json' })
+  const again = await buildRelease({ from: broken, out: await temp(t), builtAt: BUILT_AT })
+  assert.deepEqual(again.errors.map((e) => e.split(' (')[0]), ['opening.json: not JSON'])
+  assert.equal(again.index.files.opening, undefined)
 })
 
 test('a pack with one broken event loses only that event', async (t) => {
@@ -199,7 +227,7 @@ test('reads only the pack: the sandbox notes, reviews and the cast pack beside i
   })
   const out = await temp(t)
   const { index } = await buildRelease({ from, out, builtAt: BUILT_AT })
-  assert.ok(Object.keys(index.files).every((n) => /^(cast|ties|household|uma-\d+|route-\d+|pair-\d+-\d+)$/.test(n)))
+  assert.ok(Object.keys(index.files).every((n) => /^(cast|ties|household|opening|uma-\d+|route-\d+|pair-\d+-\d+)$/.test(n)))
   assert.deepEqual((await readdir(out)).sort(), ['story', 'story.json'])
 })
 
@@ -218,7 +246,7 @@ test('publish: the release first, then the hash-named files, then story.json, wi
   })
   const said = run()
   const index = await readJson(join(out, 'story.json'))
-  assert.match(said, new RegExp(`Published release ${index.release}: 8 files and story.json to gs://uma-farm-content`))
+  assert.match(said, new RegExp(`Published release ${index.release}: 9 files and story.json to gs://uma-farm-content`))
   const calls = (await readFile(log, 'utf8')).trim().split('\n')
   assert.deepEqual(calls, [
     `default|uma-rpg|storage rsync ${out}/story gs://uma-farm-content/story --checksums-only --cache-control=private, max-age=31536000, immutable --content-type=application/json`,

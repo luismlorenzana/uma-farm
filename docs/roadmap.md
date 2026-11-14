@@ -93,7 +93,6 @@ town, each with her own story.
 
 | Step | What | Packet |
 |---|---|---|
-| 1.5 **The lean start** | Name your farmer, a few lines, then the farm | [F65](handoff/tasks/F65-lean-start.md) |
 | 1.6 **The town** | Every character in town, a different few out each day, talk, the People list | [F66](handoff/tasks/F66-the-town.md) |
 | 1.7 **Meeting her** | Her trigger starts her story; the welcome list comes in the first days; the beds cap who lives on the farm | [F67](handoff/tasks/F67-meeting-her.md) |
 | 1.8 **Her chapters** | Her own chapters, from the story or four defaults, with optional farm gates, on her profile and the Hearts tab | [F68](handoff/tasks/F68-her-chapters.md) |
@@ -183,6 +182,6 @@ The farm sends items to uma-quest, uma-rpg and uma-racer, one way. It's parked u
 
 - **The farm starts over on your phone:** open uma-farm.web.app, see the start-over card, start the new farm, and play a
   day.
-- **Say go on the rest of Phase 1,** from F65 (the lean start).
+- **Say go on the rest of Phase 1,** from F66 (the town).
 - **Keep writing the story** however you like.
 - **The HD-2D farm on your phone,** when you have a minute.

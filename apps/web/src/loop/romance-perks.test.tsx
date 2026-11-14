@@ -4,7 +4,7 @@
 // stand-in pack (9000001–9000003) and a 9000004 built here; master data and the server are stubs.
 import 'fake-indexeddb/auto'
 import {
-  joinOpening, newSave, pairKey, readScene, STAND_IN_FILES, storyPackFrom, type Cast, type HarvestReceipt, type Love, type SaveV4, type StoryPack, type Ties,
+  arrive, newSave, pairKey, readScene, STAND_IN_FILES, storyPackFrom, type Cast, type HarvestReceipt, type Love, type SaveV4, type StoryPack, type Ties,
 } from '@farm/domain'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -32,16 +32,19 @@ const { friendLoved, fromHer, perkList } = await import('./hearts-view')
 const { heartsLines } = await import('./summary-words')
 const { receiptWords } = await import('./FieldsPage')
 
+/** The stand-in's three home, ties seeded, as the old opening brought them: the opening now brings only day 1's helper. */
+const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : arrive(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const [ONE, TWO, THREE, FOUR] = ['9000001', '9000002', '9000003', '9000004']
 const NAMES: Record<string, string> = { [ONE]: 'Stand-in 1', [TWO]: 'Stand-in 2', [THREE]: 'Stand-in 3', [FOUR]: 'Stand-in 4' }
 const nameOf = (id: string) => NAMES[id] ?? 'An Uma'
 const json = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 
-/** A named farm on day 13, the opening three home, each with her love as given. */
+/** A named farm on day 13, the stand-in's three home (`joinStandIns`), each with her love as given. */
 function farm(loves: Partial<Record<string, Partial<Love>>> = {}, pack: Pick<StoryPack, 'cast' | 'ties'> = fixture.pack!): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day: 13 } }
-  const joined = joinOpening(readScene(fresh, 'scene:1:open'), pack)
+  const joined = joinStandIns(readScene(fresh, 'scene:1:open'), pack)
   return {
     ...joined, arrivals: [ONE, TWO, THREE], bonds: { ...joined.bonds, [pairKey(ONE, TWO)]: 300 },
     love: Object.fromEntries(Object.entries(joined.love).map(([id, love]) => [id, { ...love, ...loves[id] }])),
