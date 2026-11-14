@@ -5,13 +5,13 @@
 //   Fine 60 · Great 100 · Perfect 150, × 1.5 in her favourite kind, × 1.5 on her birthday, × 1.5 on her anniversary
 //   (each once, multiplied, rounded half up; on her anniversary the evening takes ×1.5 in place of the day's ×2)
 //
-// **The slots:** one evening a day; a second on days divisible by 4 from 10 married; and on a festival day,
-// **festival night**, its own slot that only its kind fills. **Invitations:** each morning (night step 9) at most one
+// **The slots:** one evening a day; a second on days divisible by 4 from 10 married; and on a festival day (the year's,
+// the story's when it moves or adds festivals: `festivalsOf`), **festival night**, its own slot that only its kind fills. **Invitations:** each morning (night step 9) at most one
 // Uma invites you, two from 10 married, drawn by `draw(uid, day, 'invite', n)` among the Umas at Friendship 2+ who are
 // home and whose favourite kind is open to them today, weighted `1 + min(14, days since her last evening)`. **Yes**
 // makes her Tonight's evening and pays **+20** with it; **Another day** costs nothing. **Tonight** opens while a slot
 // is free and someone can spend it. Pure; the app stamps.
-import { festivalOn, type Festival } from '../farm/calendar'
+import { festivalOn, FESTIVALS, type Festival } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { SaveRuleError } from '../save/rules'
 import {
@@ -19,7 +19,7 @@ import {
 } from '../save/v4'
 import type { DateGame } from '../story/authored'
 import { castOrder, type StoryPack } from '../story/pack'
-import { routeBeats } from '../story/placeholders'
+import { festivalsOf, routeBeats } from '../story/placeholders'
 import { addLove, bar, dayFactor, isAnniversary, roundPoints, type Bar } from './love'
 import { EVENING_GRADE_POINTS, GRADES, gradeOf, type Grade } from './plays/grade'
 import { PLAY_MAP, type PlayAs } from './plays/which'
@@ -145,8 +145,8 @@ export interface EveningSlots {
   /** The Festival of Vows today: festival night's slot. */
   vows: boolean
 }
-export const eveningSlots = (save: Pick<SaveV4, 'calendar' | 'love'> & Partial<Pick<SaveV4, 'homestead'>>): EveningSlots => ({
-  evenings: eveningsOn(save.calendar.day, marriedCount(save)), festival: festivalOn(save.calendar.day),
+export const eveningSlots = (save: Pick<SaveV4, 'calendar' | 'love'> & Partial<Pick<SaveV4, 'homestead'>>, year: readonly Festival[] = FESTIVALS): EveningSlots => ({
+  evenings: eveningsOn(save.calendar.day, marriedCount(save)), festival: festivalOn(save.calendar.day, year),
   vows: save.homestead !== undefined && vowsOn(save.homestead, save.calendar.day),
 })
 
@@ -155,8 +155,8 @@ export interface SlotsLeft {
   evenings: number
   festival: boolean
 }
-export function slotsLeft(save: Pick<SaveV4, 'calendar' | 'love' | 'today'>): SlotsLeft {
-  const slots = eveningSlots(save)
+export function slotsLeft(save: Pick<SaveV4, 'calendar' | 'love' | 'today'> & Partial<Pick<SaveV4, 'homestead'>>, year: readonly Festival[] = FESTIVALS): SlotsLeft {
+  const slots = eveningSlots(save, year)
   const spent = save.today.evenings.filter((e) => !isFestivalNight(e.kind)).length
   return { evenings: Math.max(0, slots.evenings - spent), festival: (slots.festival !== null || slots.vows) && !save.today.evenings.some((e) => isFestivalNight(e.kind)) }
 }
@@ -167,8 +167,8 @@ export interface EveningMark {
   slot: 'evening' | 'festival'
   spent: Evening | null
 }
-export function eveningMarks(save: Pick<SaveV4, 'calendar' | 'love' | 'today'>): EveningMark[] {
-  const slots = eveningSlots(save)
+export function eveningMarks(save: Pick<SaveV4, 'calendar' | 'love' | 'today'> & Partial<Pick<SaveV4, 'homestead'>>, year: readonly Festival[] = FESTIVALS): EveningMark[] {
+  const slots = eveningSlots(save, year)
   const spent = save.today.evenings.filter((e) => !isFestivalNight(e.kind))
   const night = save.today.evenings.find((e) => isFestivalNight(e.kind)) ?? null
   return [
@@ -180,21 +180,22 @@ export function eveningMarks(save: Pick<SaveV4, 'calendar' | 'love' | 'today'>):
 /** The kinds she can play now, in their order, each open to her by her ladders, its game built and
  * its slot free (festival night only on a festival day). Empty when she isn't on the farm, isn't home or is below
  * Friendship 2. */
-export function kindsNow(save: SaveV4, id: string): EveningKind[] {
+export function kindsNow(save: SaveV4, id: string, year: readonly Festival[] = FESTIVALS): EveningKind[] {
   const love = save.love[id]
   if (!love || !save.roster[id] || !homeTonight(save, id) || eveningRole(love) === null) return []
-  const left = slotsLeft(save)
+  const left = slotsLeft(save, year)
   return EVENING_KINDS.filter((k) => (isFestivalNight(k) ? left.festival : left.evenings > 0 && kindBuilt(k) && kindOpens(love, k)))
 }
 
 /** Who can spend an evening now (Tonight's picker): the Umas with a kind to play, in the cast's order. */
-export function eveningUmas(save: SaveV4, pack: Pick<StoryPack, 'cast'>): string[] {
-  return byCast(pack, Object.keys(save.roster)).filter((id) => kindsNow(save, id).length > 0)
+export function eveningUmas(save: SaveV4, pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'world'>>): string[] {
+  const year = festivalsOf(pack)
+  return byCast(pack, Object.keys(save.roster)).filter((id) => kindsNow(save, id, year).length > 0)
 }
 
 /** Whether Tonight opens: a slot is free and someone can spend it, or anyone is married, so a
  * house waits to be picked (Sleep at). */
-export const tonightOpens = (save: SaveV4, pack: Pick<StoryPack, 'cast'>): boolean => marriedCount(save) > 0 || eveningUmas(save, pack).length > 0
+export const tonightOpens = (save: SaveV4, pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'world'>>): boolean => marriedCount(save) > 0 || eveningUmas(save, pack).length > 0
 
 /** Roster ids in the cast's order, then numerically (the stand-in's and any id the pack doesn't hold). */
 function byCast(pack: Pick<StoryPack, 'cast'>, ids: readonly string[]): string[] {
@@ -272,14 +273,15 @@ export const eveningSeed = (uid: string, day: number, id: string, k: EveningKind
  * Refused when she can't spend it now (off the farm, away, below Friendship 2, the kind not open or its slot spent).
  * `birthday` is hers today (master data's, read by the app). Never stamps.
  */
-export function spendEvening(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string, k: EveningKind, score: number, birthday = false): { save: SaveV4; card: EveningCard } {
+export function spendEvening(save: SaveV4, pack: Pick<StoryPack, 'bibles'> & Partial<Pick<StoryPack, 'world'>>, id: string, k: EveningKind, score: number, birthday = false): { save: SaveV4; card: EveningCard } {
   const love = save.love[id]
   if (!love || !save.roster[id]) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
   if (!homeTonight(save, id)) throw new SaveRuleError('locked', 'She’s away tonight.')
   if (eveningRole(love) === null) throw new SaveRuleError('locked', 'Evenings open at Friendship 2.')
   if (!(EVENING_KINDS as readonly string[]).includes(k)) throw new SaveRuleError('bad-count', 'Not an evening.')
-  if (!kindsNow(save, id).includes(k)) {
-    const left = slotsLeft(save)
+  const year = festivalsOf(pack)
+  if (!kindsNow(save, id, year).includes(k)) {
+    const left = slotsLeft(save, year)
     if (isFestivalNight(k) ? !left.festival : left.evenings === 0) throw new SaveRuleError('locked', isFestivalNight(k) ? 'Festival night is spent.' : 'Tonight’s evening is spent.')
     throw new SaveRuleError('locked', 'Not open to her yet.')
   }

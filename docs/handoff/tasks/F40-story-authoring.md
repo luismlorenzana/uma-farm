@@ -85,16 +85,21 @@ The owner wants the story to reach the game regularly. So:
 
 The world building informs the game too, in two ways:
 
-- **What the player sees: `content/story/world.json` in the pack**, every part optional ([F73](F73-world-in-the-pack.md)
-  builds the game's side):
-  - the town's and the farm's names;
-  - the farm's history;
-  - the festivals (name, day, what happens);
-  - each place's name and line;
-  - a line for each season;
-  - **Town notes**: short pieces of the world that unlock as the farmer meets people and visits places.
+- **What the player sees: `content/story/world.json` in the pack**, every part optional, and the game reads it today:
+  - the town's, the farm's and the region's names: the map, the town's screen, the opening's title line, the morning
+    and the Diary;
+  - the farm's history: the Diary's first page, "The farm";
+  - the festivals (name, day as a season and a day, what happens): rename, move or add them. One of the game's five
+    keeps its game rule under the story's name, wherever it falls (its festival night, its triggers, its contest when
+    the festivals are built); one of the story's own is a festival day. One festival a day;
+  - each place's name and line: the map, its quick look and its Build card;
+  - a line for each season: under "Spring begins" on its first morning;
+  - **Town notes**: short pieces of the world, each unlocked once by a trigger from the menu (meeting someone, a spot
+    visited, a season, a festival, a place built, a Farm Rank, a good shipped) at a talk, a visit or the night, and
+    kept. The Diary lists them; the morning names the night's.
 
-  `docs/story-pack.md` lists the exact shape once F73 lands.
+  [The story pack's menu](../../story-pack.md#the-world-worldjson) has the exact shape, and the Farm Story Sandbox's
+  World page shows what the game will use of it, beside the world bible. `pnpm story:ship` carries it with the pack.
 - **What shapes the game: the World Book,** `content/story/world-book.md`, kept up to date and shipped with every pack
   (it travels with `story:push farm`). It holds:
   - the world bible and its history;

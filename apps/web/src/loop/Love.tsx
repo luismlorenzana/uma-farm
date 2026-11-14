@@ -5,7 +5,7 @@
 // "Evening ✓", "Evening · F2", "In town", "Evening spent"), so Chat, Gift and Evening sit side by side and
 // Praise +20 takes the row under them. Loaded on demand with the Hearts tab.
 import {
-  birthdaysOf, canPraise, chatLineV4, DISLIKED_LINE, FAMILY_NAMES, GOOD_FAMILIES, giftPreview, goodName, goodOf, LOVE_POINTS, type SaveV4, type StoryPack,
+  birthdaysOf, canPraise, chatLineV4, DISLIKED_LINE, FAMILY_NAMES, festivalsOf, GOOD_FAMILIES, giftPreview, goodName, goodOf, LOVE_POINTS, type SaveV4, type StoryPack,
   type Taste, type Temperament,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -26,7 +26,7 @@ const fill = (line: string, name: string, farmer: string): string => line.split(
 /** Chat, Gift and Praise, with today's chat line and the last act's note above them. */
 export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: {
   save: SaveV4
-  pack: Pick<StoryPack, 'bibles' | 'cast'>
+  pack: Pick<StoryPack, 'bibles' | 'cast'> & Partial<Pick<StoryPack, 'world'>>
   id: string
   name: string
   temperament: Temperament | null
@@ -43,7 +43,7 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
   const talked = save.today.chats.includes(id)
   const gave = save.today.gifts.includes(id)
   const praise = canPraise(save, id)
-  const evening = eveningButton(save, id)
+  const evening = eveningButton(save, id, festivalsOf(pack))
   const line = talked ? fill(chatLineV4(save, pack, id, temperament ?? 'steady'), name, save.farmer.name) : null
   const paid = (points: number, words: string) => {
     setError(null)

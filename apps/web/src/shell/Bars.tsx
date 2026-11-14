@@ -1,13 +1,14 @@
 // The farm's top and bottom bars on uma-kit (as uma-rpg's): the account's initial, which opens Account, and the sync chip;
 // the date chip, which opens the calendar; the gold chip, which opens the bin; and the Farm Rank's chip, which
 // opens its sheet. The bottom bar: Farm · Hearts · End the day (raised) · Diary · Menu.
-import { dateOf, daySetState, farmRankOf, type Season } from '@farm/domain'
+import { dateOf, daySetState, farmRankOf, type Festival, type Season } from '@farm/domain'
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { AccountBar, BottomBar, withParam, type BarTab, type CurrencyChip } from '@luismlorenzana/uma-kit/shell'
 import { BookIcon, CarrotIcon, HeartIcon, MoonIcon } from '@luismlorenzana/uma-kit/ui'
 import { useLocation, type Location } from 'react-router'
 import { dateLabel, nudgeWords, SEASON_COLOR } from '../loop/words'
 import { useGame, useLoopSave } from '../save/game'
+import { useStoryYear } from '../story/story'
 import { GoldCoin } from './Gold'
 
 export type BarPage = 'farm' | 'hearts' | 'diary'
@@ -17,12 +18,13 @@ function SeasonDot({ season }: { season: Season }) {
   return <span aria-hidden className="inline-block size-3 rounded-full ring-1 ring-ink/15" style={{ background: SEASON_COLOR[season] }} />
 }
 
-/** The date: the season's mark and the day of the season; its name says the year and the next festival. */
-function dateChip(day: number | null, location: Location): CurrencyChip {
+/** The date: the season's mark and the day of the season; its name says the year and the next festival (the story's
+ * year, once the pack is in). */
+function dateChip(day: number | null, location: Location, year: readonly Festival[] | undefined): CurrencyChip {
   const season = day === null ? 'spring' : dateOf(day).season
   return {
     key: 'date', mark: `season/${season}`, fallback: <SeasonDot season={season} />, value: day === null ? null : dateOf(day).day,
-    to: withParam(location, 'sheet', 'calendar'), label: day === null ? 'Calendar' : `Calendar: ${dateLabel(day)}`,
+    to: withParam(location, 'sheet', 'calendar'), label: day === null ? 'Calendar' : `Calendar: ${dateLabel(day, year)}`,
   }
 }
 
@@ -60,12 +62,13 @@ export function FarmAccountBar() {
   const day = useGame((s) => s.save?.calendar.day ?? null)
   const gold = useGame((s) => s.save?.gold ?? null)
   const points = useGame((s) => s.save?.farm.points ?? null)
+  const year = useStoryYear()
   const name = auth.user?.name ?? auth.user?.email ?? 'Farm'
   return (
     <AccountBar
       initial={name.slice(0, 1).toUpperCase()}
       account={{ to: '/account', label: `Account: ${name}` }}
-      chips={[dateChip(day, location), goldChip(gold, location), rankChip(points, location)]}
+      chips={[dateChip(day, location, year), goldChip(gold, location), rankChip(points, location)]}
       sync={sync === 'offline' ? { state: 'offline', text: 'Offline', label: 'Offline: changes sync when you’re back', to: '/account' }
         : sync === 'error' ? { state: 'paused', text: 'Sync paused', label: 'Sync paused', to: '/account' } : undefined}
     />

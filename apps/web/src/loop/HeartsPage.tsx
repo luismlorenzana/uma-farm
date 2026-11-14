@@ -8,7 +8,7 @@
 // evening's marks (○ free,
 // ● spent, festival night's in its season's colour) and the (i). Her profile opens
 // from either view at `?uma=<characterId>`, on the side the view names. Loaded on demand.
-import { festivalOn, householdReady, householdTitle, ladderOf, type LadderName, type SaveV4 } from '@farm/domain'
+import { festivalOn, festivalsOf, householdReady, householdTitle, ladderOf, type LadderName, type SaveV4 } from '@farm/domain'
 import { FaceTile, type FaceTileBadges } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Chip, HelpButton, Tabs, UiMark } from '@luismlorenzana/uma-kit/ui'
@@ -79,9 +79,10 @@ export default function HeartsPage() {
  * night's in its festival's season colour. */
 function EveningMarks({ save }: { save: SaveV4 }) {
   const master = useMaster()
+  const year = festivalsOf(useStory())
   const nameOf = (id: string) => (master.status === 'ready' ? master.view.album.get(id)?.name ?? 'An Uma' : 'An Uma')
-  const marks = headerMarks(save, nameOf)
-  const festival = festivalOn(save.calendar.day)
+  const marks = headerMarks(save, nameOf, year)
+  const festival = festivalOn(save.calendar.day, year)
   return (
     <span className="flex shrink-0 items-center gap-1 text-[13px] font-semibold text-ink-soft" data-evening-marks={marks.map((m) => (m.spent ? '●' : '○')).join('')}>
       <UiMark mark="hearts/evening" fallback={<span aria-hidden>☾</span>} />

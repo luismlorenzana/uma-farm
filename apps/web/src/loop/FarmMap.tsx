@@ -7,11 +7,13 @@
 // who's Ready, both read live; its bond hearts carry Read while a conversation waits, which plays over the morning
 // (`?read=`); an invitation's line carries Yes, tonight and Another day; the Forge's quick look is the ring bench's once
 // it stands. The map grows the homestead's rows after the yard, the town edge moving below them (`homestead-map.tsx`).
+// Each place's name and quick look's line are the pack's `world.json` where it gives them, else the game's own
+// (`placeWordsOf`); the Town takes the town's name.
 // With the preview switch on (Account → HD-2D farm), the same places draw on the shared HD-2D
 // stage instead (`FarmStage.tsx`, its own chunk with three.js), with the Umas on it from the same work view and Ready
 // hearts as the pips; off, the Hub is as it was. Loaded on demand.
 import {
-  chapterTitle, farmEnv, farmPlace, gateVisitor, herChapters, isBuildPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, MAP_PLACES, placeBuilt, placeOpen, readyPlots, workNow, type BuildPlace,
+  chapterTitle, farmEnv, farmPlace, gateVisitor, herChapters, isBuildPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, MAP_PLACES, placeBuilt, placeOpen, placeWordsOf, readyPlots, workNow, type BuildPlace,
   type FarmPlace, type LoopPlaceId, type FarmSave,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
@@ -31,9 +33,9 @@ import { FieldsPeek, fieldsPips } from './FieldsPeek'
 import { GatePeek } from './GatePeek'
 import { pairWords, readyLines } from './hearts-view'
 import { homeWords } from './homestead-view'
-import { NO_HOME, summaryParts, type ChapterOf, type NoteOf } from './summary-words'
+import { NO_HOME, NO_WORLD, summaryParts, worldWords, type ChapterOf, type NoteOf } from './summary-words'
 import { farmingTalents, useTalents } from './talents'
-import { shortDate } from './words'
+import { shortDate, theName } from './words'
 import { WorkPlacePeek } from './WorkPlace'
 import { isWorkScreen } from './work-view'
 
@@ -116,7 +118,7 @@ function FarmHelp() {
           <p>Plant the Fields, put your Umas to work, then tap End the day. Jobs and crops take whole days.</p>
           <p>The night settles everything at once, and the morning shows what it brought.</p>
           <p>The farm grows by building: the Farm Rank offers a place, and you build it with gold and the farm’s goods. It stands the next morning. The rows run gathering, its station, then the ranch or a workshop; the yard and the town are below.</p>
-          <p>Tap the date for the calendar: a festival on each season’s 10th day.</p>
+          <p>Tap the date for the calendar and the year’s festivals.</p>
         </HelpButton>
       </div>
     </div>
@@ -150,21 +152,23 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   const visiting = story ? gateVisitor(save, story) : null
   const atGate = visiting !== null && !save.roster[visiting]
   const places: HubMapPlace[] = [...MAP_PLACES.map((place): HubMapPlace => {
+    const { name } = placeWordsOf(story, place.id)
     const lock = lockOf(save, place)
     const visitor = place.id === 'gate' && atGate && lock === null
     const slots = place.id === 'fields' ? plots : ready.get(place.id as LoopPlaceId) ?? 0
     const pips = place.id === 'fields' ? fieldsPips(save, farming, hearts) : pipsOf(place, work, hearts)
     const busy = pips?.some((p) => p.state !== 'free') ?? false
     return {
-      id: place.id, name: place.name, frame: place.frame, at: layout && homestead ? placeAt(homestead.placeOnV4(place, layout), layout.tiles) : placeAt(place),
+      id: place.id, name, frame: place.frame, at: layout && homestead ? placeAt(homestead.placeOnV4(place, layout), layout.tiles) : placeAt(place),
       to: placeLink(save, place),
-      label: lock ? `${place.name}, locked: ${lock}` : visitor ? `${place.name}, someone is visiting` : slots > 0 ? `${place.name}, ready to collect` : place.name,
+      label: lock ? `${name}, locked: ${lock}` : visitor ? `${name}, someone is visiting` : slots > 0 ? `${name}, ready to collect` : name,
       locked: lock !== null, ready: visitor ? 'Visiting' : slots > 0 ? 'Ready' : undefined,
       ...(pips && (lock === null || busy) ? { pips, pipsAt: 'arch' as const } : {}),
     }
   }), ...(layout && homestead
     ? homestead.homesteadPlaces(save, layout, hearts, (id) => (master.status === 'ready' ? master.view.album.get(id)?.name : undefined) ?? 'An Uma') : [])]
   const covered = peek !== undefined || params.get('sheet') !== null
+  const peekWords = peek ? placeWordsOf(story, peek.id) : null
   const total = [...ready.values()].reduce((a, b) => a + b, plots)
   const stage = useStageOn()
   return (
@@ -192,13 +196,13 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
       </div>}
       <FarmHelp />
       <CollectAll ready={total} />
-      {peek && (
+      {peek && peekWords && (
         <PeekPanel
           key={peek.id}
-          title={peek.name}
-          about={<p>{peek.blurb}</p>}
+          title={peekWords.name}
+          about={<p>{peekWords.line}</p>}
           onClose={() => leave(withParam(location, 'peek', null))}
-          words={{ close: 'Close', about: `About the ${peek.name}`, backTo: 'Back to the farm' }}
+          words={{ close: 'Close', about: `About ${theName(peekWords.name)}`, backTo: 'Back to the farm' }}
           focusKey={`[data-place="${peek.id}"]`}
         >
           {peek.id === 'forge' && lockOf(save, peek) === null ? <Suspense fallback={null}><BenchPeek save={save} /></Suspense>
@@ -217,6 +221,7 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
  * until it stands. The Dock, once built, offers the Boat. */
 function PlacePeek({ save, place }: { save: FarmSave; place: FarmPlace }) {
   const [note, setNote] = useState<string | null>(null)
+  const { line } = placeWordsOf(useStory(), place.id)
   const lock = lockOf(save, place)
   const boat = farmPlace('boat') as BuildPlace
   const build = isBuildPlace(place) && !placeBuilt(save, place.id) ? place : place.id === 'dock' && !placeBuilt(save, 'boat') ? boat : null
@@ -226,7 +231,7 @@ function PlacePeek({ save, place }: { save: FarmSave; place: FarmPlace }) {
       {lock && !build && <p className="text-[15px] font-semibold">{lock === 'Soon' ? 'Opens soon' : `Opens with ${lock}`}</p>}
       {build === boat && <p className="text-[14px]" data-dock-open>The Sea Pier is open at the Fishery. The Boat takes you to the Deep Sea.</p>}
       {place.id === 'dock' && placeBuilt(save, 'boat') && <p className="text-[14px]" data-dock-open>The Sea Pier and the Deep Sea are open at the Fishery.</p>}
-      {build ? <Suspense fallback={null}><BuildCard save={save} place={build} say={setNote} /></Suspense> : <p className="text-[14px] text-ink-soft">{place.blurb}</p>}
+      {build ? <Suspense fallback={null}><BuildCard save={save} place={build} say={setNote} /></Suspense> : <p className="text-[14px] text-ink-soft" data-place-line>{line}</p>}
     </div>
   )
 }
@@ -256,7 +261,9 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   }, [pack])
   // A new story release's note, from the release the game plays.
   const noteOf = useMemo((): NoteOf | undefined => (pack ? (n) => (pack.release?.number === n ? pack.release.note : null) : undefined), [pack])
-  const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home, chapterOf, noteOf) : []), [summary, nameOf, ready, pairs, home, chapterOf, noteOf])
+  // The world's words: festivals' names, the season's line, the Town notes' titles and the town's name.
+  const world = useMemo(() => (pack ? worldWords(pack) : NO_WORLD), [pack])
+  const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home, chapterOf, noteOf, world) : []), [summary, nameOf, ready, pairs, home, chapterOf, noteOf, world])
   if (!summary) return null
   return (
     <Sheet

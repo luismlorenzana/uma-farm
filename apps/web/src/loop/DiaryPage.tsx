@@ -1,4 +1,5 @@
-// `/diary`: the Diary tab holds the farm's projects until its own screen comes. The projects: what you can build now,
+// `/diary`: the Diary tab. First the world's pages when the pack writes them (`WorldPages.tsx`): **The farm**, its name
+// and history, and **Town notes**, the pieces of the world found so far (`?note=<id>` opens one). Then the projects: what you can build now,
 // each with its cost and what you still lack (a tap opens its quick look and Build card); what the next Farm Rank
 // offers; and the milestones with the Umas, each with how far along you are. Below, the Farm Rank (opening its sheet)
 // and the milestones paid so far; each Uma's **Memories** (her album at `?album=`) and the pairs' **Conversations**
@@ -9,6 +10,7 @@ import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
 import { useLoopSave } from '../save/game'
 import { milestoneWords, umaMilestoneWords } from './goal-words'
+import WorldPages from './WorldPages'
 
 const Conversations = lazy(() => import('./Conversations'))
 const MemoriesShelf = lazy(() => import('./MemoriesShelf'))
@@ -28,6 +30,7 @@ export default function DiaryPage() {
           <p>Conversations keeps what each pair has said as their bond grew. Replay any you’ve read.</p>
         </HelpButton>
       </div>
+      <WorldPages save={save} />
       <Projects save={save} />
       <Link to="/diary?sheet=rank" className="flex min-h-11 items-center justify-between rounded-md border border-hairline bg-panel px-3 text-[15px]" data-rank-link>
         <span className="font-semibold">Farm Rank</span>

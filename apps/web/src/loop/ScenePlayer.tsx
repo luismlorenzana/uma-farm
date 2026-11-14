@@ -2,8 +2,10 @@
 // the cast's, a sister's, or the town's people's, each role played by an Uma; a role's lettered disc while no one plays
 // it), the speaker's name and one line; a tap goes on, and **Skip** ends
 // it. It plays **the opening's lines** on day 1, after the farmer's name: the pack's `opening.json`, else the game's three
-// (`openingOf`), one to a tap, `{farmer}` filled. Played through or skipped from its first line, it's read once
-// (`diary.read`), and the farm opens on Home, day 1's visitor waiting at the Gate: three taps for the game's own.
+// (`openingOf`), one to a tap, `{farmer}` filled. Its title line names where you are when the world names it ("Day 1 ·
+// ‹farm›, ‹town›", `openingTitle`), until a `place` step names a place. Played through or skipped from its first line,
+// it's read once (`diary.read`), and the farm opens on Home, day 1's visitor waiting at the Gate: three taps for the
+// game's own.
 // It loads master data itself, for the Umas' names and busts; Skip works without it.
 //
 // It also plays the scene of **meeting her** (her arrival scene) from the story pack, the format's steps: `say` (her
@@ -16,7 +18,7 @@
 // here too, its player loaded on demand (`BenchScene.tsx`).
 import {
   ARRIVAL_POINTS, arrivalOf, atHome, BENCH_SCENE, CAST, choicePoints, eventOf, farmPlace, isCastId, onWelcomeList, openingOf, pathFlags, placeholderEvent, sceneSteps,
-  withFarmer, type CastId, type ChoiceOption, type OpeningSceneId, type SaveV4, type SceneId, type Step,
+  withFarmer, worldNamesOf, type CastId, type ChoiceOption, type OpeningSceneId, type SaveV4, type SceneId, type Step, type WorldNamesPlayed,
 } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -97,7 +99,7 @@ function OpeningPlayer({ scene }: { scene: OpeningSceneId }) {
   let cursor = at
   while (cursor < shown.length && silent(shown[cursor]!)) cursor++
   const place = shown.slice(0, cursor + 1).reduce<string | null>((p, s) => ('place' in s ? s.place : p), null)
-  const title = place ? `Day 1 · ${placeName(place)}` : 'Day 1'
+  const title = openingTitle(place, worldNamesOf(story))
   const step = lines ? shown[cursor] : undefined
   return (
     <Frame title={title} label="The opening" scene={scene} onSkip={finish} skipping={leaving}>
@@ -109,6 +111,14 @@ function OpeningPlayer({ scene }: { scene: OpeningSceneId }) {
       ) : <div className="flex-1" />}
     </Frame>
   )
+}
+
+/** The opening's title line: "Day 1 · Gate" once a `place` step names one; before it, where you are as the world names
+ * it ("Day 1 · Thistle Farm, Fernwick": the farm's name and the town's, either alone), else "Day 1". */
+export function openingTitle(place: string | null, names: Pick<WorldNamesPlayed, 'farm' | 'town'>): string {
+  if (place) return `Day 1 · ${placeName(place)}`
+  const where = [names.farm, names.town].filter((n): n is string => n !== null)
+  return where.length > 0 ? `Day 1 · ${where.join(', ')}` : 'Day 1'
 }
 
 /** The opening's end: the last tap reads it and opens Home. */

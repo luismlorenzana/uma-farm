@@ -1,4 +1,4 @@
-// The authored story in the sandbox: the world bible, the cast in its order, each Uma's page with her route as a
+// The authored story in the sandbox: the world (what the game will use of world.json, and the world bible), the cast in its order, each Uma's page with her route as a
 // visible ladder (27 rungs: her arrival, friendship 1–10, the confession, romance 1–10, the proposal, the wedding,
 // spouse 1, 3 and 5), her trigger to meet and her chapters, and the ties as one graph. What the game's reader found shows
 // as errors (skipped: the game can't read them) and notes (they block nothing), each with a count.
@@ -45,7 +45,7 @@ export function arrivalWords(a) {
   return a ? 'arrives: retired, her meet decides' : ''
 }
 const issuesList = (issues) => (issues?.length ? h('ul', { class: 'issues' }, issues.map((i) => h('li', { text: i }))) : null)
-const noStory = () => h('div', { class: 'note-box' }, h('b', { text: 'No story yet. ' }), 'The private story files go in content/story/: any of world.md, cast.json, ties.json, umas/, routes/, pairs/, household.json, opening.json and town.json. Every part is optional (docs/story-pack.md).')
+const noStory = () => h('div', { class: 'note-box' }, h('b', { text: 'No story yet. ' }), 'The private story files go in content/story/: any of world.md, world.json, cast.json, ties.json, umas/, routes/, pairs/, household.json, opening.json and town.json. Every part is optional (docs/story-pack.md).')
 
 /** What the game's reader found: errors, which skip only their part (the rest plays), and notes, which block nothing. */
 export function findingsBox(found, title = '') {
@@ -80,7 +80,11 @@ function meetWords(m) {
     case 'gift': return m.good ? `Give her ${m.good}` : 'Give her a gift she likes'
     case 'spot': return `Talk with her at ${m.spot}`
     case 'season': return `Talk with her in ${m.season}`
-    case 'festival': return `Talk with her on ${FESTIVAL[m.festival] ?? m.festival}`
+    case 'festival': {
+      // One of the story's own, or one it renames: the year's name for it.
+      const named = D.story?.worldPlayed?.festivals?.find((f) => f.id === m.festival && f.name)?.name
+      return `Talk with her on ${named ? (/^the\s/i.test(named) ? named : `the ${named}`) : FESTIVAL[m.festival] ?? m.festival}`
+    }
     case 'farm-rank': return `Reach Farm Rank ${m.rank}`
     case 'built': return `Build the ${m.place}`
     case 'shipped': return `Ship ${m.count} ${m.good}`
@@ -399,10 +403,64 @@ function ring(ties) {
 // ── The world bible ──────────────────────────────────────────────────────────
 export function worldView(onReview) {
   const st = D.story
-  if (!st?.world) return h('div', {}, h('h1', { text: 'The world' }), noStory())
-  return h('div', {}, layers(), h('div', { class: 'panel prose md' }, markdown(st.world)),
-    h('div', { class: 'section-head' }, h('h2', { text: 'Review' })),
-    reviewPanel('world', [], 'content/story/world.md', onReview, 'The world bible has no automatic checks: your read is the check.'))
+  if (!st?.world && !st?.worldFile && !st?.worldPlayed) return h('div', {}, h('h1', { text: 'The world' }), noStory())
+  return h('div', {}, h('h1', { text: 'The world' }), st.cast ? layers() : null,
+    worldInGame(st),
+    st.world ? h('div', {}, h('div', { class: 'section-head' }, h('h2', { text: 'The world bible' }), h('span', { class: 'muted small', text: 'content/story/world.md · the story’s own: the game never reads it' })),
+      h('div', { class: 'panel prose md' }, markdown(st.world)),
+      h('div', { class: 'section-head' }, h('h2', { text: 'Review' })),
+      reviewPanel('world', [], 'content/story/world.md', onReview, 'The world bible has no automatic checks: your read is the check.')) : null)
+}
+
+const SEASON_WORDS = { spring: 'Spring', summer: 'Summer', autumn: 'Autumn', winter: 'Winter' }
+const RULE_WORDS = { 'flower-show': 'the Flower Show’s', 'fishing-derby': 'the Fishing Derby’s', 'cooking-contest': 'the Cooking Contest’s', 'animal-show': 'the Animal Show’s', 'harvest-cup': 'the Harvest Cup’s' }
+const writtenChip = (written) => h('span', { class: `chip ${written ? 'dot' : 'placeholder'}`, text: written ? 'Written' : 'The game’s' })
+
+/** A Town note's unlock in words: meeting someone is another's arrival; none is known from the start. */
+function unlockWords(u) {
+  if (!u) return 'Known from the start'
+  if (u.kind === 'event' && /:arrival$/.test(u.after)) return `On meeting ${umaName(u.after.split(':')[0])}`
+  if (u.kind === 'spot') return `A talk at the town’s ${u.spot}`
+  if (u.kind === 'festival') return `On ${D.story?.worldPlayed?.festivals?.find((f) => f.id === u.festival)?.name ?? u.festival}’s day`
+  return meetWords(u)
+}
+
+/** What the game will use of the world: world.json's, else the game's own words, part by part. */
+function worldInGame(st) {
+  const w = st.worldPlayed
+  if (!w) return st.error ? h('div', { class: 'error-box', text: st.error }) : null
+  const file = st.worldFile
+  return h('div', { class: 'stack', 'data-world-in-game': '' },
+    h('div', { class: 'section-head' }, h('h2', { text: 'In the game' }), h('span', { class: 'muted small', text: file ? 'content/story/world.json, as the game reads it' : 'No world.json yet: the game’s own words' })),
+    findingsBox(file, 'world.json'),
+    h('div', { class: 'panel' },
+      h('table', { class: 'written' }, h('tbody', {}, w.parts.map((p) => h('tr', { class: p.written ? 'is-written' : 'is-placeholder' },
+        h('th', { text: p.part }), h('td', {}, writtenChip(p.written)), h('td', { class: 'small', text: p.plays })))))),
+    h('div', { class: 'panel' }, h('h3', { text: 'Names and the farm’s history' }),
+      h('dl', { class: 'kv' },
+        h('dt', { text: 'The town' }), h('dd', { text: w.names.town ?? '— (“Town” on the map)' }),
+        h('dt', { text: 'The farm' }), h('dd', { text: w.names.farm ?? '— (“The farm”)' }),
+        h('dt', { text: 'The region' }), h('dd', { text: w.names.region ?? '—' })),
+      w.history.length ? h('div', { class: 'stack small' }, h('p', { class: 'muted', text: 'The Diary’s “The farm” page:' }), w.history.map((line) => h('p', { text: line }))) : h('p', { class: 'muted small', text: 'No history: the Diary’s “The farm” page shows the names only.' })),
+    h('div', { class: 'panel' }, h('h3', { text: 'The year’s festivals' }),
+      h('p', { class: 'muted small', text: 'In the year’s order, as the calendar, the morning and festival night use them. One of the game’s keeps its rule wherever it falls.' }),
+      h('table', { class: 'table' }, h('thead', {}, h('tr', {}, ['Day', 'Name', 'Its rule', 'What happens'].map((t) => h('th', { text: t })))),
+        h('tbody', {}, w.festivals.map((f) => h('tr', { 'data-festival': f.id },
+          h('td', { text: `${SEASON_WORDS[f.season]} ${f.day}` }), h('td', {}, h('b', { text: f.name }), h('span', { class: 'muted small', text: ` · ${f.id}` })),
+          h('td', { class: 'small', text: f.rule ? `${RULE_WORDS[f.rule]} game rule` : 'The story’s own: a festival day' }),
+          h('td', { class: 'small', text: f.happens ?? '—' })))))),
+    h('div', { class: 'panel' }, h('h3', { text: 'Places' }),
+      h('p', { class: 'muted small', text: 'Each place’s name on the map and its quick look’s line.' }),
+      h('table', { class: 'table' }, h('thead', {}, h('tr', {}, ['Place', 'Name', 'Line'].map((t) => h('th', { text: t })))),
+        h('tbody', {}, w.places.map((p) => h('tr', { class: p.written.name || p.written.line ? '' : 'muted' },
+          h('td', { class: 'small', text: p.id }), h('td', {}, p.name, ' ', writtenChip(p.written.name)), h('td', { class: 'small' }, p.line, ' ', writtenChip(p.written.line))))))),
+    h('div', { class: 'panel' }, h('h3', { text: 'The seasons' }),
+      h('dl', { class: 'kv' }, w.seasons.flatMap((s) => [h('dt', { text: `${SEASON_WORDS[s.season]} begins` }), h('dd', { class: s.line ? '' : 'muted', text: s.line ?? '— (the morning says it alone)' })]))),
+    h('div', { class: 'panel' }, h('h3', { text: `Town notes · ${w.notes.length}` }),
+      w.notes.length ? h('div', { class: 'stack' }, w.notes.map((n) => h('details', { 'data-note': n.id },
+        h('summary', {}, h('b', { text: n.title }), h('span', { class: 'muted small', text: ` · ${unlockWords(n.unlock)} · ${n.id}` })),
+        h('div', { class: 'stack small' }, n.lines.map((line) => h('p', { text: line }))))))
+        : h('p', { class: 'muted small', text: 'None: the Diary has no Town notes.' })))
 }
 
 /** A small Markdown reader for the world bible: headings, quotes, lists, tables, bold, italics and code. */

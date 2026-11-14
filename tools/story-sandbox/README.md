@@ -12,9 +12,9 @@ pnpm stories               # http://127.0.0.1:4321
 - **No dependencies:** Node 22's `http` and the page as plain modules. `pnpm stories` passes `--experimental-strip-types`
   so the sandbox reads `@farm/domain` in place (Node 22.18 and later need no flag).
 - **What it reads, on every request** (edit a file, come back to the page):
-  - **The authored story, private, in the ignored `content/story/`:** `world.md`, `cast.json`, `ties.json`, `tags.json`
-    (the tag sheet), `umas/<id>.json`, `routes/<id>.json`, `pairs/<a>-<b>.json`, `household.json`, `opening.json` and
-    `town.json`, every one optional,
+  - **The authored story, private, in the ignored `content/story/`:** `world.md`, `world.json`, `cast.json`, `ties.json`,
+    `tags.json` (the tag sheet), `umas/<id>.json`, `routes/<id>.json`, `pairs/<a>-<b>.json`, `household.json`,
+    `opening.json` and `town.json`, every one optional,
     read by the game's own reader (`story/pack.ts`'s `readStoryPack`, as the game and the release read it), and
     `pack/<id>/` for the Umas' pictures. [`docs/story-pack.md`](../../docs/story-pack.md) is the menu of what it reads.
   - **Two kinds of findings, each with a count:** **errors**, only what the game can't read, each skipping the one part
@@ -30,7 +30,10 @@ pnpm stories               # http://127.0.0.1:4321
   defaults, her route as a 27-rung ladder with how much is scripted, her bible, her ties and their sources, and her
   errors and notes) · Relationships (the ties as a ring
   and a table) · Counts (callings, favourite lines, seasons, festivals, loved goods, arrivals, ties an Uma, and as
-  the layers fill, gifts, pairs and scripted events, each with its Umas; `lib/counts.mjs`) · World (the world bible) ·
+  the layers fill, gifts, pairs and scripted events, each with its Umas; `lib/counts.mjs`) · World (**In the game**:
+  what the game will use of `world.json`, each part written or the game's own: the names and the farm's history, the
+  year's festivals in order with the rule each keeps, every place's name and line, the seasons' lines and the Town
+  notes with their unlocks, and world.json's errors and notes; then the world bible) ·
   Chapters and their scene player · Town (the town's people, each role and the Uma who plays it, with her face and name
   from the cast pack, any board's, and the six spots with their keepers, from `town.json` or the game's own) · Bonds ·
   Farm · Format.

@@ -15,8 +15,9 @@ import { deviceIndexStore, loadReleasedPack } from './delivery'
 import { keepArrived } from './news'
 import { unknownName } from './story'
 
-/** Keeps a roster's Umas on the cast (`story.ts`'s `keepOnCast`), loaded with the seam. */
-export { withCast } from '@farm/domain'
+/** Keeps a roster's Umas on the cast (`story.ts`'s `keepOnCast`), and the year's festivals (`story.ts`'s
+ * `useStoryYear`), loaded with the seam. */
+export { festivalsOf, withCast } from '@farm/domain'
 
 /** The story the game plays: the release farm-api serves, or no pack when it serves none, with master data's
  * placeholders. Both wait for master data, as the boot does. A shipped release new to this device waits for the

@@ -70,6 +70,8 @@ export * from './story/cast'
 export * from './story/scenes'
 // The town: who lives there, the day's draw at its six spots, a talk once a day, and her line.
 export * from './town/town'
+// Town notes: the world's short pieces, unlocked once by their trigger at a talk, a visit or the night, and kept.
+export * from './town/notes'
 
 // The romance: save v4 (the new farm over an older save, the keys, the romance's slots) and its strict parse, the
 // farmer's name, the story pack at runtime with the invented stand-in, the one `outfitOf` resolver, her favourite line
@@ -137,13 +139,13 @@ export * from './story/stand-in'
 export {
   ANSWERS, answerAt, ARRIVAL, BIG_EVENTS, bibleTagNotes, CALLINGS, CHARACTER_ID, CHAT_SETS, DATE_GAMES, EMOTES, EVENT_LIMITS,
   eventNotes, FARMING_PLAYS, GATE_KINDS, gendersFarmer, HOUSE_LINE_MAX, HOUSEHOLD_SCENES, LADDERS, LINE_LIMITS, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies,
-  checkTown, isSister, OPENING_STEPS, RUNGS, SISTER_ID, sisterOutfit, SPOT_IDS, STORY_ID,
+  checkTown, checkWorld, isSister, NOTE_KINDS, OPENING_STEPS, RUNGS, SISTER_ID, sisterOutfit, SPOT_IDS, STORY_ID, WORLD_ID,
   stepFindings, STORY_PLACES, tagNotes, TONES, TRIGGER_KINDS, unscriptedBeats, WISHES,
 } from './story/authored'
 export type {
   Answer, Beat as RouteBeat, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, DateGame, Emote, Finale, Findings, Gifts, HerChapter, Household, HouseholdAt,
   HouseholdScene, Keepsake, Ladder, Opening, OptionGives, PairConversations, Play, Read, Route, SpotId, Step, StoryContext, StoryPlace, StoryTrigger, Tie, TieKind, Ties, Together, Tone, Town,
-  TownPerson, TownSpot, Trigger, UmaBible,
-  Unlock, WeddingPlan, Wish,
+  TownNote, TownPerson, TownSpot, Trigger, UmaBible,
+  Unlock, WeddingPlan, Wish, World, WorldFestival, WorldNames, WorldPlace,
 } from './story/authored'
 

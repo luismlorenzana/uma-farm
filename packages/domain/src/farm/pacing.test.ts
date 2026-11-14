@@ -179,7 +179,7 @@ interface Run {
 }
 
 function simulate(): Run {
-  let save: SaveV4 = { ...newSave('pacing', AT), farmer: { name: 'Sim' }, diary: { shipped: {}, milestones: [], records: {}, read: ['scene:1:open'] } }
+  let save: SaveV4 = { ...newSave('pacing', AT), farmer: { name: 'Sim' }, diary: { shipped: {}, milestones: [], records: {}, read: ['scene:1:open'], notes: [] } }
   save = crew(save)
   const run: Run = { ranks: { 1: 1 }, before: { 1: 1 }, offered: {}, built: {}, days: 0, shipped: 0 }
   let chapterOne = false

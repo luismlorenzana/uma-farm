@@ -1,7 +1,7 @@
 // The morning summary: data, never sentences. The night's last step builds it from what
 // changed and the app words it, each line a tap to its place. It's replaced each night and set to null when the player
 // dismisses it. Six sections, in order; an empty one is hidden. A new line kind is a new part of the save's parse.
-import type { FestivalId, Season } from '../farm/calendar'
+import type { Season } from '../farm/calendar'
 import type { FarmPlaceId } from '../farm/places'
 import type { Activity, Rank } from '../farm/ranks'
 import type { CropId } from '../goods/ids'
@@ -93,13 +93,16 @@ export interface StoryNews {
   number: number
 }
 
-/** §5 New today: a new story release; the season's first day, or a festival today or tomorrow; the goals' news: a place
- * built overnight, a Farm Rank reached, a Diary milestone or row paid; the household's milestones; and the Dorm's
- * news: its new level in effect and Umas a swap brought home. Arrivals are §4's. */
+/** §5 New today: a new story release; the season's first day, or a festival today or tomorrow (one of the game's five,
+ * or of the story's own, by its id: its name is the pack's, read as the card shows); the Town notes the night unlocked;
+ * the goals' news: a place built overnight, a Farm Rank reached, a Diary milestone or row paid; the household's
+ * milestones; and the Dorm's news: its new level in effect and Umas a swap brought home. Arrivals are §4's. */
 export type NewsLine =
   | StoryNews
   | { kind: 'season'; season: Season }
-  | { kind: 'festival'; festival: FestivalId; when: 'today' | 'tomorrow' }
+  | { kind: 'festival'; festival: string; when: 'today' | 'tomorrow' }
+  /** The Town notes the night unlocked, by id, in world.json's order: their titles are the pack's. */
+  | { kind: 'notes'; ids: string[] }
   | { kind: 'built'; place: FarmPlaceId }
   | { kind: 'farm-rank'; rank: number }
   | { kind: 'milestone'; id: string }

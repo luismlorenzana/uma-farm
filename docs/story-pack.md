@@ -33,8 +33,9 @@ The pack is a folder of JSON files in `content/story/`. Every file is optional.
 | `household.json` | The household scenes, house lines and the finale | The game's short cards; house lines come from her temperament |
 | `opening.json` | The opening: the start's lines, after the farmer's name | The game's three short lines |
 | `town.json` | The town's people (Umas in the town's roles) and its six spots | Master data's characters fill the roles; the game's own six spots |
+| `world.json` | The world: the town's, the farm's and the region's names, the farm's history, the festivals, each place's name and line, a line for each season, and Town notes | The game's own words: its five festivals, its places' names and lines, and no Town notes |
 
-Any other file (`world.md`, `tags.json`, `reviews.json`, notes, drafts) is the story's own. The sandbox shows some of
+Any other file (`world.md`, `world-book.md`, `tags.json`, `reviews.json`, notes, drafts) is the story's own. The sandbox shows some of
 them; the game never reads them, and a release never includes them.
 
 ### Errors and notes
@@ -62,6 +63,12 @@ What an error skips, by where it is:
 | A step in a pair's conversation | That bond level |
 | A step in a household scene | That scene's part (its `open`, `close` or one spouse's beat) |
 | A step in the opening (a line too long, a choice, a play, a flag or a branch: the opening has no picks) | That step: the rest of the opening plays |
+| A world name, a history line, a place's name or line, a season's line, or what happens at a festival, that the game can't read | That name or line: the game's own words play |
+| A festival with no `id`, an id twice, or one of the story's own without its name, season and day | That festival (the later one) |
+| A festival moved onto a day another festival holds | Its move: one of the game's keeps the game's day; one of the story's own is skipped |
+| A place id that isn't one of the farm's, or a season that isn't one of the four | That entry |
+| A Town note with no `id`, an id twice, no title, or no line the game can read | That note (the later one) |
+| A Town note's `unlock` that isn't on its menu | That unlock: the note is known from the start |
 
 ### Line lengths
 
@@ -85,6 +92,11 @@ Each limit is what its screen shows. A longer line is an error.
 | An unlock's perk, in words | 200 |
 | A chapter's title | 40 |
 | A flag's name | 64, in lowercase letters, digits and `- . : _` (the save keeps it) |
+| The town's, the farm's and the region's names, a place's name, a festival's name | 40 |
+| A place's line, a season's line, what happens at a festival | 160 |
+| A line of the farm's history, a line of a Town note | 400 |
+| A Town note's title | 40 |
+| A Town note's id, a festival of the story's own's id | 64 and 40, in lowercase words joined by `-` (the save keeps them) |
 
 ### The words
 
@@ -160,7 +172,7 @@ takes what the farm holds (`built`, `farm-rank`, `shipped`, `event`), a `season`
 | `{ "kind": "gift", "good": "carrot" }` | Give her this good |
 | `{ "kind": "spot", "spot": "plaza" }` | Talk with her at one of the town's spots: `plaza`, `market`, `cafe`, `harbour`, `library` or `track` |
 | `{ "kind": "season", "season": "winter" }` | Talk with her in a season: `spring`, `summer`, `autumn` or `winter` |
-| `{ "kind": "festival", "festival": "harvest-cup" }` | Talk with her on a festival: `flower-show`, `fishing-derby`, `cooking-contest`, `animal-show` or `harvest-cup` |
+| `{ "kind": "festival", "festival": "harvest-cup" }` | Talk with her on a festival: `flower-show`, `fishing-derby`, `cooking-contest`, `animal-show` or `harvest-cup`, or one of the story's own (`world.json`), on its day as the story puts it |
 | `{ "kind": "farm-rank", "rank": 4 }` | Reach a Farm Rank, 1–10 |
 | `{ "kind": "built", "place": "kitchen" }` | Have one of the farm's places built |
 | `{ "kind": "shipped", "good": "carrot", "count": 50 }` | Ship this many of a good, in all |
@@ -398,6 +410,88 @@ the cast (a note), so every role is filled.
 
 A spot `town.json` doesn't name plays the game's own (a note).
 
+## The world: `world.json`
+
+The world the story builds, on screen. **Every part is optional,** and anything missing keeps the game's own words. A
+part with an error is skipped (the smallest part: a name, a line, a festival, a place, a note), the rest plays, and notes
+block nothing. Any other field is kept for the story.
+
+```json
+{
+  "names": { "town": "Fernwick", "farm": "Thistle Farm", "region": "the Marrow Vale" },
+  "history": ["Three families farmed this hill before you.", "The last of them left the gate unlatched."],
+  "festivals": [
+    { "id": "harvest-cup", "name": "The Long Run", "season": "winter", "day": 11, "happens": "Everyone races the ridge road at dawn." },
+    { "id": "flower-show", "name": "Bloom Fair" },
+    { "id": "lantern-walk", "name": "Lantern Walk", "season": "summer", "day": 4, "happens": "Paper lanterns float down the river." }
+  ],
+  "places": { "gate": { "line": "The old gate, latched at last." }, "fields": { "name": "Low Fields" } },
+  "seasons": { "spring": "The thaw runs off the hills.", "winter": "Frost on the fence rails." },
+  "notes": [
+    { "id": "old-well", "title": "The old well", "lines": ["Nobody remembers who dug it."] },
+    { "id": "first-friend", "title": "A first friend", "lines": ["She knew the farm before you did."], "unlock": { "kind": "event", "after": "9000001:arrival" } },
+    { "id": "cafe-window", "title": "The café window", "lines": ["The best seat faces the hills."], "unlock": { "kind": "spot", "spot": "cafe" } }
+  ]
+}
+```
+
+| Part | What it does in play | Without it |
+|---|---|---|
+| `names.town` | The town's name: the Town on the map (its place's own `name` first) and its screen's title, the opening's title line, the Gate's "Meet everyone else in *Fernwick*", the morning's "Met *name* · in *Fernwick*", and the Diary's "The farm" page | "Town" on the map and its screen; "in town" in the words |
+| `names.farm` | The farm's name: the opening's title line ("Day 1 · Thistle Farm, Fernwick") and the Diary's "The farm" page | "The farm"; the opening's title line says "Day 1" |
+| `names.region` | Under the farm's name on the Diary's "The farm" page, after the town | None |
+| `history` | A few lines of the farm's past: the Diary's first page, **"The farm"**. `{farmer}` is filled | None: the page shows the names alone, and with no names either there's no page |
+| `festivals` | The year's festivals: the calendar, the date chip, the morning's "*Festival* tomorrow" and "today", festival night, and `festival` triggers and gates | The game's five, on their days |
+| `places` | By place id: each place's `name` (the map, its quick look's title, its Build card's "The *name* stands tomorrow.") and its one `line` (its quick look) | The game's own name and line |
+| `seasons` | By season: a line under "*Spring* begins" on the morning that opens it | "Spring begins" alone |
+| `notes` | **Town notes:** a list in the Diary that fills as you play, each unlocked once by its `unlock` and kept; the morning names the night's | None |
+
+### The festivals
+
+Each festival is `{ "id", "name", "season", "day", "happens" }`, its day a season and a day of it, 1–12.
+
+- **One of the game's five, by its id** (`flower-show`, `fishing-derby`, `cooking-contest`, `animal-show`,
+  `harvest-cup`): renamed by its `name`, moved by its `season` and `day` (each defaulting to the game's), and
+  `happens` says what happens. **It keeps its game rule under the story's name, wherever it falls:** its festival night,
+  the morning's news, a `festival` trigger or gate naming its id, and the contest its rank challenge counts (the Flower
+  Show's, the Fishing Derby's, the Cooking Contest's, the Animal Show's) when the festivals are built. A moved one plays
+  all of it on its new day, every year, and none on its old one. The game's five are never removed.
+- **Any other id is one of the story's own,** added: it needs its `name`, `season` and `day`. It's a festival day: the
+  calendar marks it, the morning says it, festival night opens, and a `festival` trigger or gate may name its id. It has
+  no contest.
+- **One festival a day.** The game's five take their days first (where the story puts them); a move onto a day another
+  holds is skipped, and that festival keeps the game's day. Then the story's own, in the file's order: one on a day
+  already held is skipped.
+- The calendar lists each with its `happens` under it.
+
+### The places
+
+`places` is an object by place id: `fields`, `mill`, `coop`, `forest`, `sawmill`, `barn`, `fishery`, `smokehouse`,
+`kitchen`, `mine`, `smelter`, `restaurant`, `quarry`, `cutter`, `forge`, `bin`, `warehouse`, `dorm`, `board`, `gate`,
+`dock`, `shop`, `festival`, `expeditions`, `town` and `boat`. Each holds an optional `name` and an optional `line`; one
+it leaves out keeps the game's own. The Town's name falls back on `names.town`, then "Town".
+
+### Town notes
+
+A note is `{ "id", "title", "lines", "unlock" }`: its id (lowercase words joined by `-`, which the save keeps), its
+title in the Diary's list, its lines (`{farmer}` filled), and what unlocks it, from the trigger menu:
+
+| Unlock | Holds | Checked |
+|---|---|---|
+| None | From the start: the note is known as soon as the pack plays | — |
+| `{ "kind": "event", "after": "9000001:arrival" }` | **Meeting someone:** her meeting scene has played (any event of anyone's, as the menu reads it) | A talk or a gift in town, Say hello at the Gate, and every night |
+| `{ "kind": "spot", "spot": "cafe" }` | **A spot visited:** a talk with anyone out at that spot | A talk in town |
+| `{ "kind": "season", "season": "winter" }` | All that season | A talk, a gift, Say hello, and every night: the first morning of the season |
+| `{ "kind": "festival", "festival": "lantern-walk" }` | On that festival's day (the game's or the story's own, as the story puts it) | A talk, a gift, Say hello, and every night: the festival's morning |
+| `{ "kind": "farm-rank", "rank": 4 }`, `{ "kind": "built", "place": "mill" }`, `{ "kind": "shipped", "good": "carrot", "count": 50 }` | What the farm holds | A talk, a gift, Say hello, and every night |
+
+- **Talks and a gift** are meeting her own: as an unlock they're an error, and the note is known from the start.
+- **Each unlocks once and stays.** The save keeps only the ids unlocked, never a word of the note: a note the pack
+  later drops is gone from the list, and one it brings back returns.
+- **Where it shows:** the Diary's **Town notes**, in the file's order, each a tap to read; a talk or Say hello that
+  unlocks one says "Town note · *title* ›" there and then; the night's are named the next morning in New today ("*title*",
+  tagged **Town note**, or "*title* +2 more"), a tap opening the note in the Diary.
+
 ## Shipping
 
 **`pnpm story:ship --note "what's new, in one line"`** puts the pack on the owner's phone. Run it at the end of every
@@ -435,5 +529,6 @@ writing session, on the machine where the story is written (macOS or Windows). I
 | Her outfit, calling, birthday, bible, route, ties, pairs, household, the opening | Yes | Yes, today |
 | The town's people and spots, her favourite spot, her town lines, a sister's name | Yes | Yes, today: [the town](game-mechanics.md#the-town) |
 | The welcome list, her trigger to meet | Yes | Yes, today: [meeting her](game-mechanics.md#meeting-her) |
+| The world: names, history, festivals, places, seasons, Town notes | Yes | Yes, today: [the world](game-mechanics.md#the-world-in-the-pack) |
 | Her chapters and their gates | Yes | Yes, today: [her chapters](game-mechanics.md#her-chapters) |
 | What plays when a part is missing | Placeholders for every read | Yes, today: [what plays without the story](game-mechanics.md#what-plays-without-the-story) |

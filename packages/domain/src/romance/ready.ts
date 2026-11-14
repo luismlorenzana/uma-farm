@@ -119,7 +119,7 @@ function opensWith(save: SaveV4, trigger: Trigger): FarmPlaceId | null {
 
 /** Her next event's state. Home is `dorm.home`, or a spouse in her house (`atHome`). Refused for
  * someone not on the farm. */
-export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'cast'>, id: string): Readiness {
+export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'cast'> & Partial<Pick<StoryPack, 'world'>>, id: string): Readiness {
   const love = save.love[id]
   if (!love || !save.roster[id]) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
   const now = bar(love)

@@ -4,7 +4,7 @@
 // so Back closes it. Loaded on demand when one opens. End the day opens **Tonight** while an evening slot is free and
 // someone can spend it, and the night is a fade to dusk and back up on the morning (`night-fade.ts`).
 import {
-  DAYS_PER_SEASON, DAYS_PER_YEAR, daySetState, dateOf, ENTRY_POINTS, FARM_RANK_POINTS, farmPointsOf, farmRankOf, farmRankOpens, FESTIVALS,
+  DAYS_PER_SEASON, DAYS_PER_YEAR, daySetState, dateOf, ENTRY_POINTS, FARM_RANK_POINTS, farmPointsOf, farmRankOf, farmRankOpens, festivalsOf,
   GOLD_PER_POINT, MILESTONE_POINTS, nextFarmRank, nextFestival, SEASON_NAMES, SEASONS, tonightOpens,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -105,17 +105,20 @@ function EndDay() {
   )
 }
 
-/** The calendar: the year and the season, the season's 12 days with today and its festival marked, and
- * the next festival with its countdown. */
+/** The calendar: the year and the season, the season's 12 days with today and its festivals marked, each festival with
+ * what happens at it (the story's line), and the next festival with its countdown. The festivals are the year's: the
+ * game's five, or the story's (`festivalsOf`: renamed, moved or added). */
 function CalendarSheet() {
   const save = useLoopSave()
   const close = useClose()
+  const story = useStory()
+  const year = festivalsOf(story)
   if (!save) return null
   const day = save.calendar.day
   const date = dateOf(day)
   const first = day - date.day + 1
-  const festivals = FESTIVALS.filter((f) => f.season === date.season)
-  const next = nextFestival(day)
+  const festivals = year.filter((f) => f.season === date.season)
+  const next = nextFestival(day, year)
   return (
     <Sheet open onClose={close} title={`${shortDate(day)} · Year ${date.year}`} label="Calendar">
       <div className="space-y-4 pb-2" data-calendar>
@@ -145,9 +148,12 @@ function CalendarSheet() {
             )
           })}
         </ol>
-        <ul className="space-y-1 text-[14px]">
+        <ul className="space-y-1.5 text-[14px]">
           {festivals.map((f) => (
-            <li key={f.id} className="flex items-center gap-2"><TrophyIcon size={16} /> {f.name} · {SEASON_NAMES[f.season]} {f.day}</li>
+            <li key={f.id} data-festival-row={f.id}>
+              <span className="flex items-center gap-2"><TrophyIcon size={16} /> {f.name} · {SEASON_NAMES[f.season]} {f.day}</span>
+              {f.happens && <span className="block pl-6 text-[13px] text-ink-soft" data-festival-happens>{f.happens}</span>}
+            </li>
           ))}
         </ul>
         <div className="rounded-md border border-hairline p-3">
