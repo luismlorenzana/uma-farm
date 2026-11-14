@@ -11,7 +11,7 @@
 // stage instead (`FarmStage.tsx`, its own chunk with three.js), with the Umas on it from the same work view and Ready
 // hearts as the pips; off, the Hub is as it was. Loaded on demand.
 import {
-  farmEnv, farmPlace, gateVisitor, isBuildPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, MAP_PLACES, placeBuilt, placeOpen, readyPlots, workNow, type BuildPlace,
+  chapterTitle, farmEnv, farmPlace, gateVisitor, herChapters, isBuildPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, MAP_PLACES, placeBuilt, placeOpen, readyPlots, workNow, type BuildPlace,
   type FarmPlace, type LoopPlaceId, type FarmSave,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
@@ -31,7 +31,7 @@ import { FieldsPeek, fieldsPips } from './FieldsPeek'
 import { GatePeek } from './GatePeek'
 import { pairWords, readyLines } from './hearts-view'
 import { homeWords } from './homestead-view'
-import { NO_HOME, summaryParts } from './summary-words'
+import { NO_HOME, summaryParts, type ChapterOf } from './summary-words'
 import { farmingTalents, useTalents } from './talents'
 import { shortDate } from './words'
 import { WorkPlacePeek } from './WorkPlace'
@@ -246,7 +246,15 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   // The homestead's lines.
   const home = useMemo(() => (pack ? homeWords(save, pack, nameOf, (id) => talents.table?.get(id)?.temperament ?? 'steady') : NO_HOME),
     [save, pack, nameOf, talents.table])
-  const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home) : []), [summary, nameOf, ready, pairs, home])
+  // A chapter's title by its number, from her chapters in the pack.
+  const chapterOf = useMemo((): ChapterOf | undefined => {
+    if (!pack) return undefined
+    return (id, n) => {
+      const chapter = herChapters(pack, id)[n - 1]
+      return chapter ? chapterTitle(chapter) : null
+    }
+  }, [pack])
+  const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home, chapterOf) : []), [summary, nameOf, ready, pairs, home, chapterOf])
   if (!summary) return null
   return (
     <Sheet

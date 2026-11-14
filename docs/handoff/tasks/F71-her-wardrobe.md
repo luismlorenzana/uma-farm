@@ -1,6 +1,6 @@
 # F71 — Her wardrobe
 
-**uma-farm · Claude · M · Needs: F68, F70 · Design: [her-look.md](../../design/her-look.md#her-wardrobe)**
+**uma-farm · Claude · M · Needs: F70 · Design: [her-look.md](../../design/her-look.md#her-wardrobe)**
 
 > Each Uma has four seasonal outfits (spring her default), a kimono, a dinner dress, a wedding dress and pajamas. The
 > occasion picks what a scene shows, the story can choose, and an outfit not drawn yet falls back to spring.

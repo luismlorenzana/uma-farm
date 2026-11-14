@@ -246,17 +246,26 @@ function itemKey(v: unknown, at: string): string {
   return parsed && isGoodId(parsed.id) ? (v as string) : fail(at, 'expected <good>@<stars>')
 }
 
+/** A chapter's number on a morning line: at most one chapter a rung with an event, her arrival's and the 26 others
+ * (`RUNGS`, kept out of the save's parser so the story's reader loads on demand). */
+const MAX_CHAPTERS = 27
+
 /** §4 Hearts:
- * invitations, arrivals, birthdays, anniversaries and morning items, each an Uma on the roster, once a kind each; an
+ * invitations, arrivals, birthdays, anniversaries, morning items and chapters opened, each an Uma on the roster, once a
+ * kind each (a chapter numbered 1–27); an
  * invitation asks for a date game; an anniversary's item is a good on the day and null the day before; a morning item 1–3
  * goods at their stars; the night's chores once, items and growth (quarters), one of them more than 0; the perks' extras
  * once, 1+ items; side by side once, 1+ items; bond hearts 1–5 once a pair, two roster Umas in `pairKey` order. */
 function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>, houses: number): HeartLine[] {
   const when = (v: unknown, at: string) => oneOf(v, at, ['today', 'tomorrow'] as const)
   const pairs = (roster.size * (roster.size - 1)) / 2
-  return unique(list(value, path, 0, roster.size * 7 + pairs + 6).map((v, i): HeartLine => {
+  return unique(list(value, path, 0, roster.size * 8 + pairs + 6).map((v, i): HeartLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['invite', 'arrived', 'birthday', 'anniversary', 'item', 'chores', 'perks', 'side', 'bond', 'house', 'misses', 'moved', 'level', 'vows'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['invite', 'arrived', 'birthday', 'anniversary', 'item', 'chores', 'perks', 'side', 'bond', 'house', 'misses', 'moved', 'level', 'vows', 'chapter'] as const)
+    if (kind === 'chapter') {
+      const o = object(v, at, ['kind', 'id', 'chapter'])
+      return { kind, id: member(o.id, `${at}.id`, roster), chapter: int(o.chapter, `${at}.chapter`, 1, MAX_CHAPTERS) }
+    }
     // The house's morning, a house that misses you, a move-in, a night level, the Festival of Vows.
     if (kind === 'house') {
       const o = object(v, at, ['kind', 'house', 'umas', 'paid', 'breakfast', 'items'])

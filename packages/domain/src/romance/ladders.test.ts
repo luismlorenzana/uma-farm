@@ -448,7 +448,7 @@ describe('Ready', () => {
   })
 
   it('documents every wait, in the order it\'s said', () => {
-    expect(WAIT_ORDER.map((w) => w.kind).sort()).toEqual(['away', 'bar', 'day', 'done', 'friend', 'night', 'opens', 'ring', 'setup', 'today'])
+    expect(WAIT_ORDER.map((w) => w.kind).sort()).toEqual(['away', 'bar', 'day', 'done', 'friend', 'gate', 'night', 'opens', 'ring', 'setup', 'today'])
   })
 })
 

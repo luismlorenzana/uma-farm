@@ -1,7 +1,7 @@
 // The Hearts tab as rendered: the bar (Farm · Hearts · End the day · Diary · Menu); `/roster` landing on the Work view
 // with her `?uma=` kept; the Hearts
-// rows with 9000001 Ready first, the filter chips with their counts and Friends; her profile from a row with its
-// track, Next card, perks, gifts and ties, switching to Work; the Work view's album with her level in each card's
+// rows with 9000001 Ready first and her chapter, the filter chips with their counts and Friends; her profile from a row
+// with its track, Next card, chapters, perks, gifts and ties, switching to Work; the Work view's album with her level in each card's
 // corner. The invented stand-in pack and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
 import { meet, newSave, pairKey, readScene, type SaveV4, type StoryPack } from '@farm/domain'
@@ -126,6 +126,7 @@ describe('the Hearts view', () => {
     expect(first.querySelector('[data-segments]')?.getAttribute('data-segments')).toBe('▣□□□□□□□□□')
     expect(first.querySelector('[data-points]')?.textContent).toBe('200/200')
     expect(first.querySelector('[data-note]')?.textContent).toBe('Ready · Friendship 1 · the Fields · +2 banked')
+    expect(first.querySelector('[data-row-chapter]')?.textContent).toBe('Ch. 1 · Getting to know her')
     // 9000002's route isn't scripted: her short bar says it all.
     expect($(`[data-heart-row="${TWO}"] [data-note]`)?.textContent).toBe('')
     expect($('[data-married]')?.textContent).toBe('Married 0/3')
@@ -167,6 +168,12 @@ describe('her profile', () => {
     expect($('[data-gift-group="others"]')?.textContent).toBe('Others+10')
     expect($$('[data-tie]').map((t) => [t.dataset.tie, t.dataset.hearts])).toEqual([[TWO, '2'], [THREE, '0']])
     expect($('[data-memories]')?.textContent).toBe('0 of 26Album ›')
+    // Her chapters: the four defaults, the first under way, its events played and to come, and what opens the next.
+    expect($$('[data-chapters] [data-chapter]').map((c) => [c.dataset.chapter, c.dataset.state, c.querySelector('[data-chapter-title]')?.textContent])).toEqual([
+      ['1', 'current', 'Getting to know her'], ['2', 'ahead', 'Together'], ['3', 'ahead', 'The wedding'], ['4', 'ahead', 'Married life'],
+    ])
+    expect($$('[data-chapter-events] [data-event]').map((e) => e.textContent).slice(0, 3)).toEqual(['✓ Meeting', 'F1', 'F2'])
+    expect($('[data-chapter-next]')?.textContent).toBe('Next · Together · After her confession')
     await click($$('[data-profile-actions] [role="tab"]').find((t) => t.textContent === 'Work'))
     expect(path).toBe(`/hearts?uma=${ONE}&view=work`)
     expect($('[data-profile]')?.dataset.side).toBe('work')

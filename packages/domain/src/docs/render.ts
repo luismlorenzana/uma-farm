@@ -36,6 +36,7 @@ import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER, costOf, LADDER_COLOURS, ROUT
 import { DISLIKED_LINE, GIFT_POINTS_V4, giftStars, LOVE_POINTS } from '../romance/acts'
 import { farmBirthday } from '../romance/days'
 import { READY_CONDITIONS, WAIT_ORDER } from '../romance/ready'
+import { chapterTitle, GATE_RULES, gateWords, herChapters } from '../romance/chapters'
 import { linePlace, MORNING_GOOD, NIGHT_CHORE, PERK_LINES, PERK_PLACE, PERKS, perkWords, type PerkId, type PerkLine } from '../romance/perks'
 import {
   CREW_CAP, DREAM_BONUS, HOUSEHOLD, householdBonus, IN_ELEMENT, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, LINE_BONUS, MAX_CHORES, MORNING_ITEMS, OWN_CAP, ROMANCE_CAP,
@@ -570,6 +571,31 @@ function birthdayMap(): string {
 function readyRules(): string {
   return table(['#', 'Ready needs', 'Not met'], READY_CONDITIONS.map((c, i) => [i + 1, c.condition, c.unmet]))
 }
+/** Her chapters with no pack's: the four defaults and the events each holds. */
+function defaultChapters(): string {
+  const words = (events: readonly string[]): string => {
+    const out: string[] = []
+    let run: string[] = []
+    const flush = () => {
+      if (run.length > 0) out.push(run.length > 2 ? `${run[0]!.toUpperCase()}–${run.at(-1)!.toUpperCase()}` : run.map((r) => r.toUpperCase()).join(', '))
+      run = []
+    }
+    for (const rung of events) {
+      const last = run.at(-1)
+      if (/^[fr]\d+$/.test(rung) && (!last || (last[0] === rung[0] && Number(last.slice(1)) + 1 === Number(rung.slice(1))))) { run.push(rung); continue }
+      flush()
+      if (/^[fr]\d+$/.test(rung)) run.push(rung)
+      else out.push(rung === 'arrival' ? 'her meeting scene' : /^s\d$/.test(rung) ? rung.toUpperCase() : rung === 'confession' ? 'her confession' : `the ${rung}`)
+    }
+    flush()
+    return cap(out.join(', '))
+  }
+  return table(['#', 'Chapter', 'Its events'], herChapters({ cast: { umas: [] } }, '1').map((c) => [c.n, chapterTitle(c), words(c.events)]))
+}
+/** A chapter's gate: each kind it takes, when it holds, and what her profile says while it doesn't. */
+function chapterGates(): string {
+  return table(['Gate (`gate`)', 'Holds', 'Her profile says'], GATE_RULES.map((g) => [`\`${g.example.kind}\``, g.holds, `“${gateWords(g.example, () => 'Stand-in 2')}”`]))
+}
 function readyWaits(): string {
   return table(['Order', '`waits`', 'When'], WAIT_ORDER.map((w, i) => [i + 1, `\`${w.kind}\``, w.when]))
 }
@@ -956,7 +982,7 @@ export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'farm-ranks': farmRanks,
     'meet-kinds': meetKinds, 'arrival-pay': arrivalPay, placeholders: placeholdersBlock, 'placeholder-moments': placeholderMoments, 'stand-in': standIn, 'farmer-name': farmerName,
     'route-costs': routeCosts, 'love-points': lovePoints, 'gift-stars': giftStarsBlock, 'birthday-map': birthdayMap, 'ready-rules': readyRules,
-    'ready-waits': readyWaits, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor, 'perk-words': perkWordsBlock,
+    'ready-waits': readyWaits, 'default-chapters': defaultChapters, 'chapter-gates': chapterGates, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor, 'perk-words': perkWordsBlock,
     'perk-effects': perkEffects, 'perk-lines': perkLines, 'perk-caps': perkCaps, 'signature-dish': signatureDishes,
     'bond-points': bondPoints, 'bond-hearts': bondHeartsBlock, 'tie-seeds': tieSeeds, 'side-by-side': sideBySide,
     plays: playsBlock, 'play-map': playMap, 'play-grades': playGrades, 'play-windows': playWindows, 'event-pay': eventPay, 'stand-in-route': standInRoute,

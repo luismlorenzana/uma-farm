@@ -90,6 +90,9 @@ export * from './romance/acts'
 export * from './romance/praise'
 export * from './romance/days'
 export * from './romance/ready'
+// Her chapters: the pack's or the four defaults along her route, the one she's in, a chapter's gate, and the morning one
+// opens; read live, never stored.
+export * from './romance/chapters'
 export * from './farm/bonds'
 // The perks' words: each level's perk id and its words by her line, for her profile, and the effects that make them
 // act.
@@ -133,7 +136,7 @@ export * from './story/stand-in'
 // menu's defaults (the welcome list, her trigger to meet, her chapters) are `placeholders.ts`'s.
 export {
   ANSWERS, answerAt, ARRIVAL, BIG_EVENTS, bibleTagNotes, CALLINGS, CHARACTER_ID, CHAT_SETS, DATE_GAMES, EMOTES, EVENT_LIMITS,
-  eventNotes, FARMING_PLAYS, gendersFarmer, HOUSE_LINE_MAX, HOUSEHOLD_SCENES, LADDERS, LINE_LIMITS, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies,
+  eventNotes, FARMING_PLAYS, GATE_KINDS, gendersFarmer, HOUSE_LINE_MAX, HOUSEHOLD_SCENES, LADDERS, LINE_LIMITS, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies,
   checkTown, isSister, OPENING_STEPS, RUNGS, SISTER_ID, sisterOutfit, SPOT_IDS, STORY_ID,
   stepFindings, STORY_PLACES, tagNotes, TONES, TRIGGER_KINDS, unscriptedBeats, WISHES,
 } from './story/authored'

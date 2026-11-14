@@ -32,7 +32,7 @@ farm's progress](game-mechanics.md#the-farms-progress). How it's built is in
 | Part | State | What changes |
 |---|---|---|
 | **The farm's loop** | **Deployed** (save v4, one build) | The days, the Fields, the forest and the Fishery, the Mill, the Sawmill and the Smokehouse, goods and the bin, talents and ranks, the roster, the Farm Rank. **The farm grows by building:** no global chapters; the Farm Rank from income and goods offers each place, built with gold and goods; the Dock and the Boat open the sea; weddings open houses; the Diary's projects. **The town:** every character lives there, a different few out at its six spots each day; talk once a day; the People list. **Meeting her:** her trigger (three days' talks by default) starts her story; the welcome list visits the Gate one a morning; the beds cap who lives on the farm, the rest live in town until invited |
-| **The romance** | **Deployed, part of the one game** | Hearts, heart events and plays, evenings, perks, the ring and the wedding, married life, the homestead, bonds. Everyone you meet has the whole romance from the day you meet her. **Next:** her chapters frame her route (F68) |
+| **The romance** | **Deployed, part of the one game** | Hearts, heart events and plays, evenings, perks, the ring and the wedding, married life, the homestead, bonds. Everyone you meet has the whole romance from the day you meet her, in **her own chapters**: the story's or four defaults, a chapter's gate asking the farm for a place, a rank, a good, an event, a season or a festival |
 | **The story** | **Being written** | In the Farm Story Sandbox on this Mac. The pack is open: every part optional, any number of characters, notes instead of blocks, and any pack releases. [The story pack's menu](story-pack.md) lists what the game reads, with the welcome list, her trigger to meet and her chapters |
 | **The HD-2D farm** | **Opt-in preview** | The farm and its Umas on the shared HD-2D stage (Account → HD-2D farm). The 2D Hub is still Home. A working Uma doesn't nod yet: uma-stage 0.5.0 can now play it |
 | **Art** | **Mixed** | The farm kit's first wave is painted; its second wave is still the stand-in's frames. Umas whose outfits have no sprite set show as cards with their faces. The town's people are Umas, with master data's busts |
@@ -89,11 +89,9 @@ workshop stands on the stage. Phase 4's error reports and save safety are small 
 **Goal:** the deployed game is one game: built whole, played live, its farm growing by building, its people met in
 town, each with her own story.
 
-**Track A, the game's frame,** in this order. Each is a small packet, built, merged and deployed in turn.
-
-| Step | What | Packet |
-|---|---|---|
-| 1.8 **Her chapters** | Her own chapters, from the story or four defaults, with optional farm gates, on her profile and the Hearts tab | [F68](handoff/tasks/F68-her-chapters.md) |
+**Track A, the game's frame,** is done: one build on v4, placeholders everywhere, the farm grows by building, the lean
+start, the town, meeting her, and [her chapters](game-mechanics.md#her-chapters). The workshops (Phase 2) come next, on
+your go.
 
 **Track B, the HD-2D farm:**
 
@@ -179,7 +177,9 @@ The farm sends items to uma-quest, uma-rpg and uma-racer, one way. It's parked u
 
 - **The farm starts over on your phone:** open uma-farm.web.app, see the start-over card, start the new farm, and play a
   day.
-- **Say go on the rest of Phase 1,** from F68 (her chapters).
+- **Her chapters on your phone:** open an Uma's profile and see her four chapters, the one she's in, and what opens the
+  next; the morning after her confession says "A new chapter with ‹name›".
+- **Say go on the workshops** (Phase 2), which her chapters unblock.
 - **Meeting her on your phone:** say hello at the Gate each morning, and meet someone in town on her third day.
 - **The town on your phone:** open the Town at the foot of the farm map, talk to a few, find someone in People.
 - **Keep writing the story** however you like.

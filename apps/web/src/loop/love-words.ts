@@ -1,7 +1,7 @@
 // Her route in words: what her next event waits for, as her
 // Hearts row says it (`readyWords`, with the rung) and as her profile's Next card says it (`nextWords`, under the rung's
 // name). Pure, so the screens and the tests read the same. Loaded on demand with the Hearts tab.
-import { farmPlace, goodName, rungName, type Activity, type Bar, type FarmPlaceId, type Readiness } from '@farm/domain'
+import { farmPlace, gateWords, goodName, rungName, type Activity, type Bar, type FarmPlaceId, type Readiness } from '@farm/domain'
 
 /** "Opens when the Kitchen is built": a place she waits for. */
 export const opensWhenBuilt = (place: FarmPlaceId): string => `Opens when the ${farmPlace(place)?.name ?? place} is built`
@@ -13,7 +13,8 @@ export const WORK_PLACE: Readonly<Record<Activity, string>> = {
 }
 
 /** Her next event's state in a line: "Friendship 2 · Ready", "Friendship 2 · 123 to go", "Friendship 3 · the Fields, when
- * she works there", "Opens when the Mine is built". `nameOf` names a bond's other Uma. */
+ * she works there", "Opens when the Mine is built", her chapter's gate ("Friendship 7 · Opens when the Kitchen is built").
+ * `nameOf` names a bond's other Uma, or a gate's. */
 export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, nameOf: (id: string) => string): string {
   const rung = state.rung ? rungName(state.rung) : ''
   const at = (words: string) => `${rung} · ${words}`
@@ -23,6 +24,7 @@ export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, 
     case 'done': return 'Her route is complete'
     case 'friend': return at('she said “Not yet”')
     case 'night': return at('comes tonight')
+    case 'gate': return at(gateWords(waits.gate, nameOf))
     case 'opens': return at(opensWhenBuilt(waits.place))
     case 'bar': return at(`${(bar.cost - bar.points).toLocaleString('en-US')} to go`)
     case 'day': return at('Ready tomorrow')
@@ -47,6 +49,7 @@ export function nextWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, n
     case 'done': return 'Her route is complete'
     case 'friend': return 'She said “Not yet”'
     case 'night': return 'Comes tonight'
+    case 'gate': return gateWords(waits.gate, nameOf)
     case 'opens': return opensWhenBuilt(waits.place)
     case 'bar': return `${(bar.cost - bar.points).toLocaleString('en-US')} to go`
     case 'day': return 'Tomorrow'

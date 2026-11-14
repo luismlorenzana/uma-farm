@@ -3,15 +3,16 @@
 // in the summary's order with live Ready lines, and the ♥ on a Ready tender's pip. The invented stand-in pack
 // (9000001–9000003), with every rung scripted where a test needs several Umas Ready; no network.
 import {
-  newBlock, newLove, newRosterUma, newSave, pairKey, ROUTE_RUNGS, STAND_IN_FILES, storyPackFrom, talentD, type Love, type MorningSummary, type Readiness, type SaveV4,
+  newBlock, newLove, newRosterUma, newSave, pairKey, readiness, ROUTE_RUNGS, STAND_IN_FILES, storyPackFrom, talentD, type HerChapter, type Love, type MorningSummary,
+  type Readiness, type SaveV4,
 } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { fieldsPips } from './FieldsPeek'
 import {
-  filterCounts, giftSlots, heartBar, heartRows, levelShort, marriedOf, nextCard, perkList, placeWords, readyLines, reachedWords, routeTrack, rowNote, tieRows,
+  chaptersView, filterCounts, giftSlots, glanceWords, heartBar, heartRows, levelShort, marriedOf, nextCard, perkList, placeWords, readyLines, reachedWords, routeTrack, rowNote, tieRows,
   type HeartsPack,
 } from './hearts-view'
-import { nextWords } from './love-words'
+import { nextWords, readyWords } from './love-words'
 import { heartsLines, summaryParts, umaSheet } from './summary-words'
 
 const PACK = storyPackFrom(STAND_IN_FILES)
@@ -225,6 +226,69 @@ describe('the morning’s Hearts section', () => {
 
   it('sends her links to her profile on the Hearts tab, on its Work side for her ranks', () => {
     expect([umaSheet(ONE), umaSheet(ONE, 'work')]).toEqual([`/hearts?uma=${ONE}`, `/hearts?view=work&uma=${ONE}`])
+  })
+})
+
+describe('her chapters', () => {
+  /** Six chapters for 9000001, a Kitchen gate on the third. */
+  const SIX: HerChapter[] = [
+    { title: 'A new face', events: ['arrival', 'f1', 'f2', 'f3'] },
+    { title: 'Fields', events: ['f4', 'f5', 'f6'] },
+    { title: 'Kitchen days', events: ['f7', 'f8', 'f9', 'f10'], gate: { kind: 'built', place: 'kitchen' } },
+    { title: 'Hand in hand', events: ['confession', 'r1', 'r2', 'r3', 'r4', 'r5'] },
+    { title: 'Promises', events: ['r6', 'r7', 'r8', 'r9', 'r10', 'proposal'] },
+    { title: 'Home', events: ['wedding', 's1', 's3', 's5'] },
+  ]
+  const six: HeartsPack = { ...PACK, cast: { ...PACK.cast, umas: PACK.cast.umas.map((u) => (u.characterId === ONE ? { ...u, chapters: SIX } : u)) } }
+  const met = (save: SaveV4): SaveV4 => ({ ...save, arrivals: [ONE, TWO, THREE] })
+
+  it('with no pack’s, shows the four defaults, the first under way', () => {
+    const view = chaptersView(met(farm({ [ONE]: { level: 2 } })), PACK, ONE, nameOf)
+    expect(view.chapters.map((c) => [c.n, c.title, c.state, `${c.played}/${c.events.length}`])).toEqual([
+      [1, 'Getting to know her', 'current', '3/12'], [2, 'Together', 'ahead', '0/11'], [3, 'The wedding', 'ahead', '0/1'], [4, 'Married life', 'ahead', '0/3'],
+    ])
+    expect(view.chapters[0]!.events.slice(0, 4).map((e) => [e.label, e.played])).toEqual([['Meeting', true], ['F1', true], ['F2', true], ['F3', false]])
+    expect(view.chapters[0]!.events.at(-1)!.label).toBe('Confession')
+    expect(view.next).toEqual({ title: 'Together', after: 'After her confession', gate: null })
+    expect(view.closed).toBe(false)
+    expect(heartRows(farm(), PACK, nameOf).map((r) => glanceWords(r.chapter))).toEqual(['Ch. 1 · Getting to know her', 'Ch. 1 · Getting to know her', 'Ch. 1 · Getting to know her'])
+  })
+
+  it('with the pack’s six, the third waits for the Kitchen: her row, her Next card and her chapters say so', () => {
+    const save = met(farm({ [ONE]: { level: 6, points: 440 } }))
+    const view = chaptersView(save, six, ONE, nameOf)
+    expect(view.chapters.map((c) => c.title)).toEqual(SIX.map((c) => c.title))
+    expect(view.chapters.map((c) => c.state)).toEqual(['done', 'done', 'current', 'ahead', 'ahead', 'ahead'])
+    expect(view.chapters[2]!.gate).toBe('Opens when the Kitchen is built')
+    expect(view.next).toEqual({ title: 'Hand in hand', after: 'After Friendship 10', gate: null })
+    const state = readiness(save, six, ONE)
+    expect(state.waits).toEqual({ kind: 'gate', gate: { kind: 'built', place: 'kitchen' } })
+    expect(nextWords(state, { points: 440, cost: 440 }, nameOf)).toBe('Opens when the Kitchen is built')
+    expect(readyWords(state, { points: 440, cost: 440 }, nameOf)).toBe('Friendship 7 · Opens when the Kitchen is built')
+    const row = heartRows(save, six, nameOf).find((r) => r.id === ONE)!
+    expect([glanceWords(row.chapter), row.note]).toEqual(['Ch. 3 · Kitchen days', 'Friendship 7 · Opens when the Kitchen is built'])
+    // Built, she's Ready and the gate's words go.
+    const kitchen = { ...save, buildings: { ...save.buildings, kitchen: 1 } }
+    expect(readiness(kitchen, six, ONE).ready).toBe(true)
+    expect(chaptersView(kitchen, six, ONE, nameOf).chapters[2]!.gate).toBeNull()
+    // Two chapters ahead, the next's gate is in the Next line.
+    expect(chaptersView(met(farm({ [ONE]: { level: 4 } })), six, ONE, nameOf).next).toEqual({ title: 'Kitchen days', after: 'After Friendship 6', gate: 'Opens when the Kitchen is built' })
+  })
+
+  it('closes her last chapter once her route is complete', () => {
+    const view = chaptersView(met(farm({ [ONE]: { stage: 'spouse', level: 5 } })), PACK, ONE, nameOf)
+    expect(view.chapters.every((c) => c.state === 'done')).toBe(true)
+    expect([view.next, view.closed]).toEqual([null, true])
+    expect(glanceWords(heartRows(farm({ [ONE]: { stage: 'spouse', level: 5 } }), PACK, nameOf).find((r) => r.id === ONE)!.chapter)).toBe('Married life ✓')
+  })
+
+  it('says “A new chapter with ‹name›” on the morning one opens, with its title once the pack is in', () => {
+    const summary: MorningSummary = { day: 5, bin: [], work: [], ranks: [], hearts: [{ kind: 'arrived', id: THREE, home: true }, { kind: 'chapter', id: ONE, chapter: 2 }], news: [], nudges: [] }
+    const titled = summaryParts(summary, nameOf, [], null, undefined, (_id, n) => (n === 2 ? 'Together' : null)).find((p) => p.section === 'hearts')!.lines
+    expect(titled.map((l) => [l.text, l.to, l.tag])).toEqual([
+      ['Met Stand-in 3 · moved in', `/hearts?uma=${THREE}`, 'New'], ['A new chapter with Stand-in 1 · Together', `/hearts?uma=${ONE}`, 'New'],
+    ])
+    expect(heartsLines(summary.hearts, [], nameOf)[1]!.text).toBe('A new chapter with Stand-in 1')
   })
 })
 

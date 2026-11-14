@@ -12,8 +12,9 @@
 // keepsake from Friendship 10. **Ring**: from Romance 8 the engraving her ring will carry (her R8 beat's line), from
 // the proposal her ring and its bonus at her line, and **Give her the Cobalt Ring** for any better one in the Warehouse (the
 // old one comes back); "Needs a ring" links to the Forge's bench. One you've met who lives in town has **Invite to the
-// farm** under her face: she moves into a free Dorm bed at once; with none free, "No bed free" and the Dorm. Loaded on
-// demand.
+// farm** under her face: she moves into a free Dorm bed at once; with none free, "No bed free" and the Dorm. **Chapters**,
+// under the Next card: her chapters (the pack's or the four defaults), the one she's in with its events played and to
+// come, a gate's words ("Opens when the Kitchen is built"), and what opens the next. Loaded on demand.
 import { atHome, birthdaysOf, canAsk, inviteBlock, LADDER_COLOURS, ladderOf, levelWords, readiness, type SaveV4, type StoryPack, type Temperament } from '@farm/domain'
 import { inviteHer } from './actions'
 import { giveBetterRing } from './bench-actions'
@@ -28,8 +29,8 @@ import { nameOfAnyone } from '../story/people'
 import { memoryCount, setupAdvice } from './event-view'
 import { ReadyChip, RouteTrack } from './HeartMarks'
 import {
-  friendLoved, fromHer, giftSlots, lovedWords, nextCard, perkList, profileLine, reachedWords, readParam, ringView, routeTrack, rungLadder, tieRows, type FromHer, type GiftSlot,
-  type HeartsPack, type NextCard, type PerkView, type RingView, type TieRow,
+  chaptersView, friendLoved, fromHer, giftSlots, lovedWords, nextCard, perkList, profileLine, reachedWords, readParam, ringView, routeTrack, rungLadder, tieRows, type FromHer, type GiftSlot,
+  type ChaptersView, type HeartsPack, type NextCard, type PerkView, type RingView, type TieRow,
 } from './hearts-view'
 import { LoveActs } from './Love'
 import { opensWhenBuilt } from './love-words'
@@ -143,12 +144,14 @@ function HeartsSide({ save, pack, id, card, nameOf }: { save: SaveV4; pack: Hear
   const played = track.filter((c) => c.state === 'played').length
   const advice = setupAdvice(readiness(save, pack, id).waits, nameOf)
   const ring = ringView(save, pack, id)
+  const chapters = chaptersView(save, pack, id, nameOf)
   return (
     <div className="space-y-4 pb-2">
       <RouteTrack cells={track} label={`Her route: ${played} of ${track.length} played${card.rung ? `, ${card.title.toLowerCase()}` : ''}`} />
       <NextSection card={card} advice={advice} bench={card.waits === 'ring' && ring?.bench === true}
         play={card.ready ? withParam(location, 'event', id) : null}
         ask={card.waits === 'friend' ? (canAsk(save, id) ? withParam(location, 'ask', id) : 'asked') : null} />
+      <ChaptersSection view={chapters} colour={LADDER_COLOURS[ladderOf(love.stage)]} />
       {perks.length > 0 && <PerksSection perks={perks} />}
       {(hers.petName || hers.keepsake) && <FromHerSection hers={hers} />}
       <GiftsSection gifts={gifts} friend={friend ? lovedWords(friend.friend, friend.good, nameOf) : null} friendGood={friend?.good ?? null} />
@@ -295,6 +298,49 @@ function NextSection({ card, advice = null, play = null, ask = null, bench = fal
         </Link>
       )}
     </section>
+  )
+}
+
+/** Her chapters: each with its number (✓ once told), title and events played of all; the one she's in in her ladder's
+ * colour with its events as chips, played ✓ and to come; a gate's words while it waits; then what opens the next, or,
+ * once her route is complete, her last chapter closed. */
+function ChaptersSection({ view, colour }: { view: ChaptersView; colour: string }) {
+  const current = view.chapters.find((c) => c.state === 'current')?.n ?? null
+  return (
+    <Section title="Chapters">
+      <ol className="divide-y divide-hairline rounded-md border border-hairline" data-chapters={view.chapters.length} data-current={current ?? 'closed'}>
+        {view.chapters.map((c) => (
+          <li key={c.n} className="space-y-1 px-3 py-2" data-chapter={c.n} data-state={c.state}>
+            <p className="flex min-h-6 items-center gap-2 text-[14px]">
+              <span className={`w-5 shrink-0 text-center tabular-nums ${c.state === 'done' ? 'text-success' : 'text-ink-soft'}`} aria-hidden>{c.state === 'done' ? '✓' : c.n}</span>
+              <span className={`min-w-0 flex-1 truncate ${c.state === 'current' ? 'font-bold' : c.state === 'ahead' ? 'text-ink-faint' : ''}`}
+                style={c.state === 'current' ? { color: colour } : undefined} data-chapter-title>
+                {c.title}
+              </span>
+              <span className="shrink-0 text-[12px] text-ink-soft tabular-nums" aria-label={`${c.played} of ${c.events.length} played`}>{c.played}/{c.events.length}</span>
+            </p>
+            {c.state === 'current' && (
+              <ul className="flex flex-wrap gap-1 pl-7" aria-label="Its events" data-chapter-events>
+                {c.events.map((e) => (
+                  <li key={e.rung} className={`rounded-full px-2 py-0.5 text-[12px] font-semibold ${e.played ? 'text-white' : 'border border-hairline-strong text-ink-soft'}`}
+                    style={e.played ? { background: colour } : undefined} data-event={e.rung} data-played={e.played || undefined}>
+                    {e.played ? `✓ ${e.label}` : e.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {c.gate && !(view.next && c.n === (current ?? 0) + 1) && <p className="pl-7 text-[12px] font-semibold text-ink-soft" data-chapter-gate>{c.gate}</p>}
+          </li>
+        ))}
+      </ol>
+      {view.next && (
+        <p className="pt-1.5 text-[13px]" data-chapter-next>
+          <span className="text-ink-soft">Next · </span><span className="font-semibold">{view.next.title}</span>
+          <span className="text-ink-soft"> · {view.next.after}{view.next.gate ? ` · ${view.next.gate}` : ''}</span>
+        </p>
+      )}
+      {view.closed && <p className="pt-1.5 text-[13px] text-ink-soft" data-chapters-closed>Her last chapter is closed. Life at home goes on.</p>}
+    </Section>
   )
 }
 

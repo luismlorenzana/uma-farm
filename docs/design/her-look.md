@@ -137,7 +137,7 @@ Her spring bust and the core faces come first for each, then the seasons, then t
 **Order:**
 - F69 can start now with the pilot, and the uma-platform request goes with it;
 - F70 follows once the pilot's busts and faces are published;
-- F71 follows F68 and F70.
+- F71 follows F70 (her chapters, F68, have shipped).
 
 **For the story:**
 - the `emote` menu grows to the 22 expressions;
