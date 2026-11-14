@@ -69,8 +69,9 @@ same style, as busts and faces.
   drawn to sit exactly over the face of her bust. One for each expression.
 - **Why one set of faces fits every outfit:** her head is the same in every bust (same size, spot, angle and bangs).
   Only what's below the neck, and what she wears on her head, changes with the outfit.
-- **Where the face goes:** recorded once per Uma, the face square's left and top edge on her busts.
-- **The game composes them:** the bust, with the face square over it, swapped when the expression changes. Both are
+- **The format is settled later:** sizes, and how a face sits on a bust, are worked out once the pilot's pictures are in
+  Uma Character Art.
+- **The game composes them:** the bust, with the face over it, swapped when the expression changes. Both are
   cached on the device.
 - **Fallbacks:**
   - a face not drawn yet shows its fallback (the table below), ending at the bust's own neutral face;
@@ -79,38 +80,41 @@ same style, as busts and faces.
 
 ### The expressions
 
-Eighteen, in three sets. **Core** is needed for every Uma who speaks; **romance** for every Uma with a route; **extra**
-comes later. The story's `emote` names them, and an unknown or undrawn one shows its fallback.
+Twenty-two, in three sets. **Core** is needed for every Uma who speaks; **romance** for every Uma with a route; **extra**
+comes when there's time. [F69](../handoff/tasks/F69-bust-art-spec.md) describes each one for the art. The story's
+`emote` names them, and an unknown or undrawn one shows its fallback.
 
-| Expression | Looks like | Used for | Falls back to | Set |
-|---|---|---|---|---|
-| `neutral` | Calm, mouth relaxed | Plain talk, the default | — | Core |
-| `happy` | Warm smile, eyes open | Greetings, good news, gifts liked | `neutral` | Core |
-| `laughing` | Eyes closed in a smile, mouth open | Jokes, festival fun | `happy` | Core |
-| `surprised` | Eyes wide, brows up, mouth open | News, gifts, reveals | `neutral` | Core |
-| `thinking` | Eyes aside, mouth small | Plans, puzzles, choices | `neutral` | Core |
-| `sad` | Brows up and in, eyes down, mouth down | Bad news, missing someone | `neutral` | Core |
-| `angry` | Brows down, a frown | Rivalry, a wrong done | `neutral` | Core |
-| `worried` | Uneasy brows, small sweat drop | Nerves, a hard day, races | `sad` | Core |
-| `determined` | Focused eyes, a set smile | Work, races, a promise | `happy` | Core |
-| `pout` | Puffed cheek, eyes aside | Playful annoyance, teasing back | `angry` | Core |
-| `shy` | Eyes averted, light blush | Compliments, first dates | `happy` | Romance |
-| `tender` | Soft eyes, small smile, light blush | Quiet moments, evenings | `happy` | Romance |
-| `flustered` | Deep blush, wavy mouth, eyes darting | The confession, a near kiss | `shy` | Romance |
-| `loving` | Half-lidded soft eyes, warm smile, blush | Saying yes, after the confession, married life | `tender` | Romance |
-| `tearful-joy` | Happy tears, smiling | The proposal, the wedding | `loving` | Romance |
-| `sleepy` | Half-closed eyes, a yawn or small smile | Night visits, early mornings | `tender` | Romance |
-| `crying` | Tears, brows up | Real sorrow, farewells | `sad` | Extra |
-| `teasing` | One eye closed (a wink), a sly smile | Flirting, tricks | `happy` | Extra |
-
-Optional later, per expression: a `-talk` face with the mouth open, for a talking flap, and a `blink` face shared by all.
+| Expression | Set | Falls back to |
+|---|---|---|
+| `neutral` | Core | — |
+| `happy` | Core | `neutral` |
+| `laughing` | Core | `happy` |
+| `surprised` | Core | `neutral` |
+| `thinking` | Core | `neutral` |
+| `sad` | Core | `neutral` |
+| `angry` | Core | `neutral` |
+| `worried` | Core | `sad` |
+| `determined` | Core | `happy` |
+| `pouting` | Core | `angry` |
+| `shy` | Romance | `happy` |
+| `tender` | Romance | `happy` |
+| `flustered` | Romance | `shy` |
+| `loving` | Romance | `tender` |
+| `tearful-joy` | Romance | `loving` |
+| `sleepy` | Romance | `tender` |
+| `crying` | Extra | `sad` |
+| `teasing` | Extra | `happy` |
+| `smug` | Extra | `determined` |
+| `embarrassed` | Extra | `flustered` |
+| `startled` | Extra | `surprised` |
+| `dreamy` | Extra | `tender` |
 
 ### What one Uma needs
 
 | Piece | Count |
 |---|---|
 | Busts | Her own, four seasons, kimono, dinner dress, wedding dress, pajamas: 9 |
-| Faces | 9 core (neutral is the bust's own), 6 romance, 2 extra: 17 |
+| Faces | 10 core, 6 romance, 6 extra: 22 |
 
 **Order:**
 1. the two Umas with the new full art, as the pilot that sets the spec;
@@ -123,7 +127,7 @@ Her own bust and the core faces come first for each, then the seasons, then the 
 
 | Packet | What | Who |
 |---|---|---|
-| [F69](../handoff/tasks/F69-bust-art-spec.md) | **The bust art:** a bust per outfit, a face per expression, the 18 expressions, the 9 outfits, files, delivery, the pilot | ChatGPT (character art) |
+| [F69](../handoff/tasks/F69-bust-art-spec.md) | **The bust art:** her outfits and her expressions, described for the art session; the pilot first | ChatGPT (character art) |
 | uma-platform request | **A private art family for the busts and faces,** delivered like the sprite sets: in master data's private release, keyed by character, names never in git | uma-platform session (requested 2026-11-13) |
 | [F70](../handoff/tasks/F70-expressive-busts.md) | **Busts that change expression:** the game puts the face over the bust, the story's `emote` picks the face, every fallback | Claude |
 | [F71](../handoff/tasks/F71-her-wardrobe.md) | **Her wardrobe:** the outfit rules, the scene's `outfit`, the two new evening kinds (Dinner in town, A night in), the profile's Wardrobe | Claude |
@@ -134,7 +138,7 @@ Her own bust and the core faces come first for each, then the seasons, then the 
 - F71 follows F68 and F70.
 
 **For the story:**
-- the `emote` menu grows to the 18 expressions;
+- the `emote` menu grows to the 22 expressions;
 - a scene or event may name an `outfit`;
 - night visits and dinner dates become evening scenes the story can write.
 

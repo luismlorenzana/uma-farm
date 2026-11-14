@@ -116,7 +116,7 @@ each outfit.
 
 | Step | What | Who |
 |---|---|---|
-| 1.14 **The bust art** | A bust per outfit (9) and a face per expression (18); the pilot first: the two Umas with the new full art | ChatGPT ([F69](handoff/tasks/F69-bust-art-spec.md)); the delivery's private art family is requested of uma-platform |
+| 1.14 **The bust art** | Her outfits (9) and her expressions (22); the pilot first: the two Umas with the new full art | ChatGPT ([F69](handoff/tasks/F69-bust-art-spec.md)); the delivery's private art family is requested of uma-platform |
 | 1.15 **Busts that change expression** | The game puts the face over the bust; the story's `emote` picks the face | Claude ([F70](handoff/tasks/F70-expressive-busts.md)) |
 | 1.16 **Her wardrobe** | The occasion picks the outfit; Dinner in town and A night in join the evenings | Claude ([F71](handoff/tasks/F71-her-wardrobe.md)) |
 
