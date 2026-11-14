@@ -149,9 +149,11 @@ test('releases a single character with no routes, ties or bible', async (t) => {
   assert.deepEqual(errors, [])
   assert.deepEqual(index.scripted, {})
   assert.deepEqual(index.pairs, {})
-  assert.equal(notes.length, 6)
+  assert.equal(notes.length, 7)
   assert.ok(notes.includes('opening.json: no opening yet, so the game’s own three lines play'))
+  assert.ok(notes.includes('world.json: no world yet, so the game’s own names, festivals, places and seasons play, and there are no Town notes'))
   assert.equal(index.files.opening, undefined)
+  assert.equal(index.files.world, undefined)
 })
 
 test('releases the opening as the game reads it: any length, a step it can\'t play skipped and listed', async (t) => {
@@ -199,6 +201,31 @@ test('releases the town and a sister: town.json as the game reads it, her bible 
   const released = JSON.parse(await readFile(join(out, index.files.town.path), 'utf8'))
   assert.deepEqual(released, { people: [town.people[0], { characterId: id(102) }], spots: [town.spots[0]] })
   assert.deepEqual(summary.town, { people: 2, spots: 1 })
+})
+
+test('releases the world: world.json as the game reads it, a broken part skipped, a cast trigger naming its own festival', async (t) => {
+  const world = {
+    names: { town: 'Invented Town', farm: 'Invented Farm' },
+    festivals: [{ id: 'harvest-cup', name: 'Invented Race', season: 'winter', day: 10 }, { id: 'kite-day', name: 'Kite Day', season: 'spring', day: 4 }],
+    places: { gate: { line: 'An invented gate.' }, orchard: { name: 'Nowhere' } },
+    notes: [{ id: 'first-note', title: 'An invented note', lines: ['A line.'], unlock: { kind: 'event', after: `${id(1)}:arrival` } }],
+  }
+  const from = await packOf(t, {
+    'cast.json': { umas: [{ characterId: id(1) }, { characterId: id(2), meet: { kind: 'festival', festival: 'kite-day' } }] },
+    'world.json': world,
+  })
+  const out = await temp(t)
+  const { index, errors, summary } = await buildRelease({ from, out, builtAt: BUILT_AT })
+  assert.deepEqual(errors, [
+    'world.json: Festival harvest-cup: Winter 10 holds another festival; its move is skipped, so it keeps the game’s day, Winter 12',
+    'world.json: Place orchard: not one of the farm’s places (fields, mill, coop, forest, sawmill, barn, fishery, smokehouse, kitchen, mine, smelter, restaurant, quarry, cutter, forge, bin, warehouse, dorm, board, gate, dock, shop, festival, expeditions, town, boat); skipped',
+  ])
+  assert.ok(index.files.world, 'world.json is in the release')
+  const released = JSON.parse(await readFile(join(out, index.files.world.path), 'utf8'))
+  assert.deepEqual(released, { ...world, festivals: [{ id: 'harvest-cup', name: 'Invented Race' }, world.festivals[1]], places: { gate: world.places.gate } })
+  const cast = JSON.parse(await readFile(join(out, index.files.cast.path), 'utf8'))
+  assert.deepEqual(cast.umas[1].meet, { kind: 'festival', festival: 'kite-day' })
+  assert.deepEqual(summary.world, { festivals: 2, places: 1, notes: 1 })
 })
 
 test('a pack with one broken event loses only that event', async (t) => {

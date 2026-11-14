@@ -303,7 +303,9 @@ describe('the night and the save', () => {
     expect(parseSaveV4(json(ok))).toEqual(ok)
     const bad = (today: Partial<SaveV4['today']>, day = 10) => () => parseSaveV4(json({ ...save, calendar: { day }, today: { ...save.today, ...today } }))
     expect(bad({ evenings: [{ with: TWO, kind: 'walk' }, { with: ONE, kind: 'fishing' }] })).toThrow('at most 1 evening')
-    expect(bad({ evenings: [{ with: TWO, kind: 'festival' }] }, 11)).toThrow('festival night only on a festival day')
+    // Festival night once a day at most: the story may move or add festivals, so the save reads it on any day.
+    expect(parseSaveV4(json({ ...save, calendar: { day: 11 }, today: { ...save.today, evenings: [{ with: TWO, kind: 'festival' }] } })).today.evenings).toHaveLength(1)
+    expect(bad({ evenings: [{ with: TWO, kind: 'festival' }, { with: ONE, kind: 'festival' }] })).toThrow('festival night once a day at most')
     expect(bad({ evenings: [{ with: TWO, kind: 'tea' as never }] })).toThrow()
     expect(bad({ invites: [{ id: TWO, kind: 'festival' as never, answer: null }] })).toThrow('expected a date game')
     expect(bad({ invites: [{ id: TWO, kind: 'walk', answer: null }, { id: ONE, kind: 'walk', answer: null }] })).toThrow()

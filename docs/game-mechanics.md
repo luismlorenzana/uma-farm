@@ -92,8 +92,9 @@ The year's seasons, with their days in year 1 and their festivals:
   next festival: "Calendar: Spring 3, year 1 · Flower Show in 7 days". A tap opens the calendar.
 - **The calendar** shows the day and the year ("Spring 3 · Year 1"); the four seasons with this one marked; the season's
   12 days, past days faded, today in the accent colour and a festival day ringed with a trophy; the season's festivals
-  ("Flower Show · Spring 10"); the next festival with its countdown ("Flower Show · Spring 10 · in 7 days"); and the day
-  of the year ("Day 3 of 48. Days move only when you end them.").
+  ("Flower Show · Spring 10"), each with what happens at it under it when the story says; the next festival with its
+  countdown ("Flower Show · Spring 10 · in 7 days"); and the day of the year ("Day 3 of 48. Days move only when you end
+  them.").
 - **The next festival** is the first one on or after today, running on into the next year: on Spring 10 it's the Flower
   Show, today; on Spring 11 it's the Fishing Derby on Summer 10, in 11 days.
 
@@ -102,6 +103,15 @@ The year's seasons, with their days in year 1 and their festivals:
 Each season's 10th day holds its festival, and Winter 12, the year's last day, also holds the Harvest Cup. Festivals are
 dates only: the calendar marks them, the morning says "Flower Show tomorrow" the day before and "Flower Show today" on
 the day, and the Festival ground on the map stays locked ("Opens soon"). No contest is played and no prize is given.
+
+**The story's festivals.** The pack's `world.json` may rename, move or add festivals ([the world in the
+pack](#the-world-in-the-pack)); the year is then the story's everywhere: the calendar, the date chip, the morning,
+festival night, and `festival` triggers and gates.
+- **One of the game's five keeps its game rule under the story's name, wherever it falls:** its festival night, its news,
+  the triggers and gates naming it, and the contest its rank challenge counts once the festivals are built. A moved one
+  plays all of it on its new day every year, and none on its old day.
+- **One of the story's own** is a festival day and nothing more: marked, said, its night, and its triggers.
+- **One festival a day:** a move onto a day another holds is skipped, and that festival keeps the game's day.
 
 A festival day also opens a festival night for the evening, and once the household's finale is reached, the Festival
 of Vows returns on its day each year. Both are the romance's.
@@ -211,6 +221,7 @@ The steps as the game lists them:
 | 8 | `settleDorm` | The Dorm’s level bought takes effect; swaps arrive, each Uma in town coming home in the place of one leaving |
 | 8 | `checkGoals` | The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources |
 | 8 | `meetUmas` | Meeting her: everyone in town not met yet whose trigger the farm now holds (a Farm Rank, a place built, a good shipped, another’s event; never the welcome list’s) is met, the cast’s order first: home while a bed is free, else she lives in town; each of her ties with someone met starts at its seed (strength 3 → 150, 2 → 50) |
+| 8 | `unlockTownNotes` | Town notes: each of the world’s notes not yet unlocked whose unlock holds on the morning’s date (a season, a festival, a Farm Rank, a place built, a good shipped, another’s event) unlocks, once; the morning names them |
 | 8 | `openRingBench` | The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and the smith’s scene is due in the morning |
 | 8 | `householdMilestones` | Household milestones: as the married count passes 1, 5, 10, 15 and 20, each is news once; 5 brings the furniture set, 20 the finale’s morning; household scenes are Ready from this morning |
 | 9 | `serveTheReception` | A wedding’s reception: everyone on the farm well fed from tomorrow for its days (a dish ★1–2 one, ★3–4 two, ★5 three; the bakery’s cake one), never shortening a meal already running |
@@ -248,8 +259,8 @@ line is a tap to its place.
 | The bin | Each good and star sold, "Salmon ★2 × 3 · 495g", tagged **In demand** when the season lifted it; then "Total · 545g" | The bin |
 | Work done | Jobs that ended tonight, by place, "Forest · 2 jobs done · 9 items" (each job's whole haul); the night's best catch, "Best catch · Rainbow Koi ★2"; plots that turned Ready, by block, "Block A · 9 crops ready"; what withered, "Block A · 3 Onion withered" | The place's quick look; the Fishery's quick look; the Fields |
 | Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full** | Her profile's Work side |
-| Hearts | Who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", tagged **New**), a chapter that opened ("A new chapter with *Name* · Together", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
-| New today | First, "New story arrived · *its note*", tagged **New**, the morning after a new story release reaches the phone ([below](#how-the-app-gets-the-pack)); "Summer begins"; "Flower Show tomorrow" or "today"; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The Hearts tab; the calendar; the Festival ground; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
+| Hearts | Who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", or in the town the world names, tagged **New**), a chapter that opened ("A new chapter with *Name* · Together", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
+| New today | First, "New story arrived · *its note*", tagged **New**, the morning after a new story release reaches the phone ([below](#how-the-app-gets-the-pack)); "Summer begins", the world's line for the season under it; "Flower Show tomorrow" or "today" (the story's name for it); the Town notes the night unlocked, "*title*" (or "*title* +2 more"), tagged **Town note**; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The Hearts tab; the calendar; the Festival ground; the note in the Diary; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
 | Today | "2 Umas idle"; "9 plots to plant" (empty plots that the season's seeds you hold could fill today) | The Hearts tab's Work view; the Fields |
 
 Hearts shows whenever it has a line or someone is Ready. The romance describes its lines.
@@ -366,11 +377,14 @@ part.
 
 #### Quick looks
 
-A quick look is a side panel over the map: the place's name, its one-line description, and what you can do there.
+A quick look is a side panel over the map: the place's name, its one-line description, and what you can do there. A
+place's name (on the map, on the HD-2D stage and in its quick look) and its line are the world's when `world.json` gives
+them, else the game's own; the Town takes the town's name ([the world in the pack](#the-world-in-the-pack)).
 - **A locked place:** "Opens with 5 Umas met" (or "Opens soon"), and its description.
 - **A place to build, not standing:** its Build card: its cost in gold and goods, each with what the farm holds ("20
   logs · 25 held", a check when there's enough), what stands in the way ("Opens at Farm Rank 3", "Need 400g and 12 logs
   more", "Not built yet", "Builds tonight") and **Build · 1,000g · 20 logs**; after paying, "The Mill stands tomorrow."
+  (the place by the world's name)
 - **The Dock, built:** "The Sea Pier is open at the Fishery. The Boat takes you to the Deep Sea." and the Boat's Build
   card; with both built, "The Sea Pier and the Deep Sea are open at the Fishery."
 - **The Fields:** a row a block, **Harvest all** and **Open the Fields** (see The Fields).
@@ -378,8 +392,9 @@ A quick look is a side panel over the map: the place's name, its one-line descri
   queues, and **Open the Forest** (see Gathering).
 - **A station not built:** what it does, and its Build card (see The stations).
 - **The Gate:** today's visitor ("‹name› is at the Gate." and **Say hello**); once met, "‹name› came by today.";
-  then "Someone new comes tomorrow." while the welcome list has more, else "Meet everyone else in town." (see
-  [meeting her](#meeting-her)).
+  then "Someone new comes tomorrow." while the welcome list has more, else "Meet everyone else in town." (the town by
+  its name when the world gives one; see [meeting her](#meeting-her)). A hello that unlocks a Town note says "Town note
+  · *title* ›", a tap to it in the Diary.
 - **The Forge,** once the ring bench stands: the bench's quick look (see the romance).
 
 #### The top bar
@@ -1752,7 +1767,8 @@ whatever it leaves, the game's own plays:
 
 #### The town's screen
 
-- **The Town** on the farm map opens `/town`, loaded on demand: **Today** and **People** in tabs (`?view=people`).
+- **The Town** on the farm map opens `/town`, loaded on demand: **Today** and **People** in tabs (`?view=people`). Its
+  title is the town's name when the world gives one, else "Town".
 - **Today:** "24 out today · a different few tomorrow"; each spot a card with its name, its line, the few out there
   (their faces and names, ✓ on one you've talked with today), and its keeper at its foot, her name and her role ("· The
   smith"). An empty spot says "No one’s here today."
@@ -1760,6 +1776,8 @@ whatever it leaves, the game's own plays:
   name), and "Your first talk", then "Talked 3 days · today ✓". The tap is the talk: it counts once a day, costs nothing
   and takes no time. When she's tied to the spot's keeper, the tie's line shows with the keeper's face.
 - **A talk that meets her trigger** plays her meeting scene at once, over the town (see [meeting her](#meeting-her)).
+- **A talk or a gift that unlocks a Town note** says "Town note · *title* ›" on the sheet, a tap to it in the Diary: a
+  talk at a spot visits it ([Town notes](#town-notes)).
 - **Give a gift**, under the talk, for one you haven't met: one good from the Warehouse at its stars (its points show
   "?"). It meets her when her trigger is a gift she likes or the good it names; else she says "She likes it.", "She
   thanks you." and the like, and the good is spent all the same.
@@ -2365,8 +2383,12 @@ The town's smith first appears at the ring bench, by her master-data name. The r
 
 #### The Diary tab
 
-The Diary tab (`/diary`) holds the farm's projects, the Farm Rank and the milestones.
+The Diary tab (`/diary`) holds the world's pages, the farm's projects, the Farm Rank and the milestones.
 
+- **The farm** (first, when the world names the farm, the town or the region, or gives a history): the farm's name
+  (else "The farm"), the town and the region under it, and the farm's history, a paragraph a line.
+- **Town notes** (when the world writes any): the notes you know, in the pack's order, each a tap to read its lines
+  (`?note=<id>` opens one, as the morning's line does), "None yet." before the first, and "2 of 5 found".
 - **Projects:** what to build now, what's not built yet, the next rank's offers and the milestones with the Umas (see
   [the farm's projects](#the-farms-projects)).
 - **Farm Rank · 400 points ›** opens the rank's sheet.
@@ -2391,8 +2413,8 @@ The Diary tab (`/diary`) holds the farm's projects, the Farm Rank and the milest
   line (narration in italics); and "Tap to go on · 3/12". A tap anywhere goes on.
 - **It loads master data itself** (names and busts), since a new farm's boot doesn't wait for it. **Skip** works
   without it, and skipping marks the scene read.
-- **The opening** plays its lines with the title line "Day 1" (with a place once a `place` step names one: "Day 1 ·
-  Gate"), "Tap to go on · 1/3". Its last tap, or **Skip** on any line from the first, reads it and opens **Home**:
+- **The opening** plays its lines with the title line "Day 1" (the world's farm and town after it when it names them,
+  "Day 1 · Thistle Farm, Fernwick"; a place once a `place` step names one: "Day 1 · Gate"), "Tap to go on · 1/3". Its last tap, or **Skip** on any line from the first, reads it and opens **Home**:
   three taps after the name for the game's own three.
 - The same player plays the meeting scenes and the ring bench's scene; heart events play in their own player. The
   romance part covers them.
@@ -2427,6 +2449,7 @@ game reads, what it does in play, and what plays when it's missing.
 | The household | Household scenes at 5, 10 and 15 married, house lines and the finale, every part optional | The game's short cards; house lines from her temperament |
 | The opening | The start's lines, any number: said, narrated, thought, pauses and the title line's place | The game's three lines |
 | The town | The town's people (each an Uma of master data's in a role) and its six spots (name, line, keeper) | Master data fills the roles; the game's own six spots |
+| The world | The town's, the farm's and the region's names, the farm's history, the festivals, each place's name and line, a line for each season, and Town notes ([below](#the-world-in-the-pack)) | The game's own words: its five festivals, its places' names and lines, and no Town notes |
 
 **One reader, two kinds of findings.** The game, the release and the Farm Story Sandbox read a pack with one reader
 (`readStoryPack`):
@@ -2483,10 +2506,56 @@ her](#meeting-her)), and her chapters ([her chapters](#her-chapters)):
 The domain reads them through `welcomeOf`, `meetOf` and `chaptersOf`, each with its default; `herChapters` lays her
 chapters along her route.
 
+#### The world in the pack
+
+The pack's `world.json` puts the world the story builds on screen; every part is optional, and anything missing keeps the
+game's own words ([the story pack's menu](story-pack.md#the-world-worldjson) has its exact shape). The domain reads it
+through the placeholders' lookups: `worldNamesOf`, `historyOf`, `festivalsOf`, `placeWordsOf`, `seasonLineOf` and
+`townNotesOf`.
+
+| Part | In play | Without it |
+|---|---|---|
+| The town's name | The Town on the map and its screen's title, the opening's title line, the Gate's "Meet everyone else in *Fernwick*", the morning's "Met *name* · in *Fernwick*", the Diary's "The farm" | "Town" on the map and its screen; "in town" |
+| The farm's name | The opening's title line, the Diary's "The farm" | "The farm"; the opening says "Day 1" |
+| The region's name | The Diary's "The farm", after the town | None |
+| The farm's history | The Diary's "The farm" page | None |
+| The festivals | Renamed, moved or added: the calendar, the date chip, the morning, festival night, `festival` triggers and gates ([festivals](#festivals)) | The game's five |
+| A place's name and line | The map (and the HD-2D stage), its quick look, its Build card | The game's own |
+| A season's line | Under "*Spring* begins" on the season's first morning | "Spring begins" alone |
+| Town notes | The Diary's Town notes, filling as you play; the morning names the night's ([below](#town-notes)) | None |
+
+#### Town notes
+
+Short pieces of the world that unlock as you play. Each unlocks once and stays.
+
+```
+ world.json's notes ──► no unlock ──────────────────────────────► known from the start
+                    └─► an unlock from the menu ──► it holds at a talk, a gift, Say hello ──► "Town note · title ›" there
+                                                    └─ or at night (step 8) ─────────────────► the morning names it
+                                                                         both ──► the Diary's Town notes, kept
+```
+
+| Unlock | Holds | Checked |
+|---|---|---|
+| None | From the start | — |
+| `event` (`<characterId>:arrival` is meeting her) | That event has played | A talk or a gift in town, Say hello at the Gate, and every night |
+| `spot` | A talk with anyone out at that town spot: a visit | A talk in town |
+| `season` | All that season | A talk, a gift, Say hello, and every night |
+| `festival` | That festival's day, as the story puts it | A talk, a gift, Say hello, and every night |
+| `farm-rank`, `built`, `shipped` | What the farm holds | A talk, a gift, Say hello, and every night |
+
+- **The night** checks after meeting her (step 8, `unlockTownNotes`) on the morning's date, so a season's note comes with
+  its first morning, a festival's with its morning, and one for meeting someone the night after her meeting scene.
+- **The save** keeps only the ids unlocked, in the order they unlocked (`diary.notes`); the words are the pack's. A note
+  with no unlock never enters the save. A note the pack drops leaves the list; one it brings back returns.
+- **The Diary** lists the notes you know in the pack's order, each a tap to read; **the morning** names the night's in
+  New today, the first by its title ("*title* +2 more"), tagged **Town note**; **a talk, a gift or Say hello** that
+  unlocks one says "Town note · *title* ›" there and then.
+
 #### The pack at runtime
 
 The game holds the cast, the ties, each bible by character id, the event ids each route scripts, the bond levels each
-tie's pair has a conversation at, the household, the opening and the town. Routes and pairs' conversations load on demand, the first time
+tie's pair has a conversation at, the household, the opening, the town and the world. Routes and pairs' conversations load on demand, the first time
 they're needed.
 
 - **Read, never refused.** Every part is read on its own: a part with an error is skipped and the rest plays, so a pack
@@ -2554,7 +2623,8 @@ stand-ins:
   isn't published again.
 - **farm-api serves it** to the owner only: the index fresh on every read, the hash-named files cached for good, and
   nothing else (404).
-- **On the phone,** the boot reads the index, then the cast, the ties, the bibles, the household and the opening; each route and pair
+- **On the phone,** the boot reads the index, then the cast, the ties, the bibles, the household, the opening, the town
+  and the world; each route and pair
   loads when it's first needed. Every file is checked against the index's hash and kept in the content cache, so a
   release's file downloads once. The boot and the night wait for the pack, as they wait for master data.
 - **The last good index stays on the phone.** When the index can't be read (offline, or the server failing), the boot
@@ -2611,6 +2681,12 @@ every ladder, event, perk, evening, proposal, wedding and household runs end to 
 | Her favourite spot | None: she’s out at any spot alike |
 | Her town line | 6 short lines, one a day |
 | A sister’s name | Her elder’s name, as her sister |
+| The town’s, the farm’s and the region’s names | “Town” on the map, “The farm” in the Diary, no region; the opening names none |
+| The farm’s history | None |
+| The festivals | The game’s 5: Flower Show, Fishing Derby, Cooking Contest, Animal Show, Harvest Cup, on each season’s 10th day and Winter 12 |
+| A place’s name and line | The map’s own name, and its quick look’s line |
+| A season’s line | None: the morning says “Spring begins” alone |
+| Town notes | None |
 <!-- /live -->
 
 - **No pack at all** (none published, or a pack whose cast names nobody): the cast is master data's first five
@@ -2701,7 +2777,9 @@ A new farm takes under a minute: your name, a few lines, and you're on the farm.
 
 1. **The name sheet.** Nothing else plays while the farmer is unnamed.
 2. **The opening's lines:** the pack's `opening.json` (any number of steps: said, narrated, thought, pauses and the
-   title line's place), else [the game's three](#the-openings-lines). `{farmer}` is filled as each shows.
+   title line's place), else [the game's three](#the-openings-lines). `{farmer}` is filled as each shows. The title
+   line names where you are when the world names it, "Day 1 · Thistle Farm, Fernwick" (the farm, the town, or either
+   alone), until a `place` step names a place ("Day 1 · Gate"); else "Day 1".
 3. **Its last tap, or Skip on any line from the first,** reads it once and opens **Home** on day 1: three taps after
    the name for the game's own three. No picks, no card, no tutorial.
 4. **Day 1's visitor waits at the Gate:** the welcome list's first in the cast (with no pack, master data's first).
@@ -4623,7 +4701,10 @@ sits outside the opening screens, so it shows even when the app stopped while op
   name is the new farm's first change. Then the opening runs as on any new farm. A v4 from before the town has no
   `town`: it loads with no talks. A v4 from before her chapters loads as it is: her chapter is read from her route, and
   only a new morning holds a "new chapter" line. A morning's "New story arrived" line is new too: a save from before it
-  simply has none, and only a morning after a new release holds one (its release's number).
+  simply has none, and only a morning after a new release holds one (its release's number). A v4 from before the world
+  has no `diary.notes`: it loads with no Town notes unlocked, and its "last changed" time stays as it was. The save
+  takes festival night on any day (once at most) and a festival's news by any festival's id, since the story says
+  which days hold one.
 - **Nothing goes silently:** a phone save with unsynced play is kept first as a "Before the new farm" safety copy (if it
   can't be kept, nothing changes and the card says so, with the button to try again). The new farm syncs up as it is,
   and the first time the server stores a v4 over the older save it copies the older one, whole, to a backup.

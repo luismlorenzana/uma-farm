@@ -1,18 +1,23 @@
 // A place's Build card: its cost in gold and the farm's goods, each with what the farm holds, what still stands in the
 // way, and **Build · 1,000g · 20 logs**. Paying takes the gold and the cheapest goods now; the place stands the next
 // morning ("Builds tonight" until then). A place whose game isn't built yet shows what it'll cost and "Not built yet",
-// and can't be bought. In a place's quick look, the stations' pages and the Dock's (the Boat after it). Loaded on demand.
-import { buildCostWords, buildGoodsWords, buildLock, buildLockWords, buildNeeds, type BuildPlace, type FarmSave } from '@farm/domain'
+// and can't be bought. In a place's quick look, the stations' pages and the Dock's (the Boat after it). The place is named
+// as the map names it (the pack's `world.json`, else the game's own). Loaded on demand.
+import { buildCostWords, buildGoodsWords, buildLock, buildLockWords, buildNeeds, placeNameOf, type BuildPlace, type FarmSave } from '@farm/domain'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
+import { useStory } from '../story/story'
 import { buildPlace } from './actions'
+import { theName } from './words'
 
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
+const upper = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1)
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
 
 /** A place's cost, what's held, the lock and Build. `say` puts a line in the screen's note. */
 export function BuildCard({ save, place, say }: { save: FarmSave; place: BuildPlace; say: (text: string) => void }) {
   const [busy, setBusy] = useState(false)
+  const name = placeNameOf(useStory(), place.id)
   const lock = buildLock(save, place.id)
   // "Not built yet" is the button's own words; paid today, the cost is spent and only "Builds tonight" shows.
   const why = lock?.by === 'game' ? null : buildLockWords(lock)
@@ -46,7 +51,7 @@ export function BuildCard({ save, place, say }: { save: FarmSave; place: BuildPl
         <Button className="w-full" disabled={lock !== null || busy} data-action="build"
           onClick={() => {
             setBusy(true)
-            buildPlace(place.id).then(() => say(`The ${place.name} stands tomorrow.`), (err: unknown) => say(errorWords(err))).finally(() => setBusy(false))
+            buildPlace(place.id).then(() => say(`${upper(theName(name))} stands tomorrow.`), (err: unknown) => say(errorWords(err))).finally(() => setBusy(false))
           }}>
           {lock?.by === 'game' ? 'Not built yet' : `Build · ${buildCostWords(place)}`}
         </Button>

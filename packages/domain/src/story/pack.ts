@@ -1,5 +1,5 @@
-// The story pack at runtime: the cast, the ties, the bibles by character id, which events each route scripts and the
-// opening's lines, read by the story's one reader (`authored.ts`) as the game reads it. The pack is open: every part is optional, any number of
+// The story pack at runtime: the cast, the ties, the bibles by character id, which events each route scripts, the
+// opening's lines and the world (`world.json`: names, history, festivals, places, seasons and Town notes), read by the story's one reader (`authored.ts`) as the game reads it. The pack is open: every part is optional, any number of
 // characters is fine, and a part with an error is skipped while the rest plays, so reading a pack never fails. The
 // scripts load on demand through `route(id)`, a pair's conversations through `pair(a, b)`, and the pack says which levels
 // each pair holds. The household file (household scenes, house lines and the finale) is read with the pack, since the
@@ -11,9 +11,10 @@
 import { isGoodId } from '../goods/ids'
 import { pairKey } from '../save/v4'
 import {
-  ARRIVAL, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies, checkTown, STORY_ID, type Cast, type CastEntry, type Findings,
-  type Household, type Opening, type PairConversations, type Read, type Route, type StoryContext, type Ties, type Town, type UmaBible,
+  ARRIVAL, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies, checkTown, checkWorld, STORY_ID, type Cast, type CastEntry, type Findings,
+  type Household, type Opening, type PairConversations, type Read, type Route, type StoryContext, type Ties, type Town, type UmaBible, type World,
 } from './authored'
+import { isFestivalId } from '../farm/calendar'
 import { favouriteOf, firstVisitorOf, type MasterCast } from './placeholders'
 import type { StoryRelease } from './release'
 
@@ -35,6 +36,8 @@ export interface PackFiles {
   opening?: unknown
   /** `town.json`; none plays the game's own town, its people from master data. */
   town?: unknown
+  /** `world.json`; none plays the game's own words: its names, festivals, places' lines and seasons, and no Town notes. */
+  world?: unknown
 }
 
 export interface StoryPack {
@@ -57,6 +60,9 @@ export interface StoryPack {
   readonly opening: Opening | null
   /** The town's people and spots; none until it's written (the game's own: `townOf`). */
   readonly town?: Town | null
+  /** The world: names, history, festivals, places, seasons and Town notes; none until it's written (the game's own words:
+   * `placeholders.ts`' lookups). */
+  readonly world?: World | null
   /** What master data gives the placeholders (her default outfit, her line from her stats), once the app has read it;
    * none in the tests that leave it out. */
   readonly master?: MasterCast
@@ -102,7 +108,7 @@ export function checkPairFile(name: string, raw: unknown, tied: ReadonlySet<stri
  * the check found, each named by its file. */
 export interface PackRead extends Findings {
   pack: StoryPack
-  files: PackFiles & { cast: Cast; ties: Ties; town?: Town }
+  files: PackFiles & { cast: Cast; ties: Ties; town?: Town; world?: World }
 }
 
 /** Reads a pack's files: every part on its own, a part with an error skipped, the rest kept; never throws. The notes
@@ -117,7 +123,10 @@ export function readStoryPack(files: PackFiles, isGood: (id: string) => boolean 
     return read.value
   }
   const town = files.town === undefined ? null : take('town.json', checkTown(files.town))
-  const cast = take('cast.json', checkCast(files.cast, { isGood, town: townPeopleOf({ town }), ...(exported ? { exported } : {}) }))
+  // The world first: a cast's festival trigger may name one of the story's own festivals.
+  const world = files.world === undefined ? null : take('world.json', checkWorld(files.world, { isGood }))
+  const festivals = new Set((world?.festivals ?? []).map((e) => e.id).filter((id) => !isFestivalId(id)))
+  const cast = take('cast.json', checkCast(files.cast, { isGood, town: townPeopleOf({ town }), festivals, ...(exported ? { exported } : {}) }))
   const ctx = packContext({ cast, town }, isGood)
   const ties = take('ties.json', checkTies(files.ties, ctx))
   const bibles = new Map<string, UmaBible>()
@@ -145,6 +154,7 @@ export function readStoryPack(files: PackFiles, isGood: (id: string) => boolean 
   const household = files.household === undefined ? null : take('household.json', checkHousehold(files.household, ctx))
   const opening = files.opening === undefined ? null : take('opening.json', checkOpening(files.opening, ctx))
   if (files.opening === undefined) notes.push('opening.json: no opening yet, so the game’s own three lines play')
+  if (files.world === undefined) notes.push('world.json: no world yet, so the game’s own names, festivals, places and seasons play, and there are no Town notes')
   const pack: StoryPack = {
     cast,
     ties,
@@ -156,6 +166,7 @@ export function readStoryPack(files: PackFiles, isGood: (id: string) => boolean 
     household,
     opening,
     town,
+    world,
   }
   notes.push(...castNotes(pack))
   return {
@@ -163,6 +174,7 @@ export function readStoryPack(files: PackFiles, isGood: (id: string) => boolean 
     files: {
       cast, ties, umas: Object.fromEntries(bibles), routes: Object.fromEntries(routes), pairs: pairFiles, ...(household ? { household } : {}), ...(opening ? { opening } : {}),
       ...(town ? { town } : {}),
+      ...(world ? { world } : {}),
     },
     errors,
     notes,

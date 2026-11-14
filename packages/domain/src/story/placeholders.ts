@@ -18,8 +18,15 @@
 //   the town's spots         the game's six: the Plaza, the Market, the Café, the Harbour, the Library, the Hilltop Track
 //   her town line            a few short lines, one a day; her favourite spot: none
 //   a sister's name          her elder's name, as her sister
+//   the world's names        the town is "Town" on the map, the farm "The farm"; no region
+//   the farm's history       none: the Diary's "The farm" page shows only what's named
+//   the festivals            the game's five, on their days: each season's 10th, and the Harvest Cup on Winter 12
+//   a place's name and line  the map's own name and its quick look's line
+//   a season's line          none: the morning says "Spring begins" alone
+//   Town notes               none
 //
 // Every read of the pack goes through a function here. Pure; loaded with the story pack.
+import { FESTIVALS, festivalDayOfYear, isFestivalId, type Festival, type Season } from '../farm/calendar'
 import type { Activity } from '../farm/ranks'
 import { activityScore, talentScores, type TalentOutfit } from '../farm/talents'
 import { isGoodId } from '../goods/ids'
@@ -28,11 +35,11 @@ import { pairKey } from '../save/v4'
 import {
   ARRIVAL, FAVOURITE_LINES, HOUSEHOLD_SCENES, isSister, RUNGS, sisterOutfit, SPOT_IDS, type Beat, type Calling, type Cast, type ChoiceOption, type DateGame, type Finale, type Gifts,
   type HerChapter, type Household, type HouseholdAt, type HouseholdScene, type Keepsake, type PairConversations, type Play, type SpotId, type Step, type StoryPlace, type StoryTrigger,
-  type Tie, type TieKind, type UmaBible, type Wish,
+  type Tie, type TieKind, type TownNote, type UmaBible, type Wish,
 } from './authored'
 import { CAST, CAST_IDS, isCastId, type CastId } from './cast'
 import { castEntry, castOrder, type StoryPack } from './pack'
-import type { FarmPlaceId } from '../farm/places'
+import { farmPlace, type FarmPlaceId } from '../farm/places'
 
 // === What master data gives ==============================================================================================
 
@@ -98,6 +105,7 @@ const EMPTY_ROUTES = async () => null
 export function noPack(): StoryPack {
   return {
     cast: { umas: [] }, ties: { ties: [] }, bibles: new Map(), scripted: new Map(), route: EMPTY_ROUTES, pairs: new Map(), pair: EMPTY_ROUTES, household: null, opening: null, town: null,
+    world: null,
   }
 }
 
@@ -632,6 +640,91 @@ export function sisterNameOf(pack: Pick<StoryPack, 'cast'>, id: string, elder: s
   return castEntry(pack, id)?.name ?? (elder ? `${elder}’s sister` : null)
 }
 
+// === The world ===========================================================================================================
+
+/** A pack as the world's lookups read it: its `world.json`, if any. */
+type WorldPack = Partial<Pick<StoryPack, 'world'>> | null | undefined
+
+/** The game's own names where world.json gives none: the Town on the map, and "The farm". There's no region. */
+export const PLACEHOLDER_NAMES = { town: 'Town', farm: 'The farm' } as const
+
+/** The world's names as world.json gives them: the town's, the farm's and the region's, each null where it's silent (the
+ * screens say their own words there). */
+export interface WorldNamesPlayed { readonly town: string | null; readonly farm: string | null; readonly region: string | null }
+export function worldNamesOf(pack: WorldPack): WorldNamesPlayed {
+  const names = pack?.world?.names
+  return { town: names?.town ?? null, farm: names?.farm ?? null, region: names?.region ?? null }
+}
+
+/** The farm's history, a few lines: world.json's, else none. */
+export const historyOf = (pack: WorldPack): readonly string[] => pack?.world?.history ?? []
+
+const years = new WeakMap<object, readonly Festival[]>()
+/** The year's festivals, in the year's order: the game's five, each under world.json's name and on its day where it gives
+ * them (its game rule kept, wherever it falls), and the story's own after them; without world.json, the game's five
+ * (`FESTIVALS`). The reader keeps one a day. Read once a pack. */
+export function festivalsOf(pack: WorldPack): readonly Festival[] {
+  const world = pack?.world
+  const own = world?.festivals ?? []
+  if (!world || own.length === 0) return FESTIVALS
+  const known = years.get(world)
+  if (known) return known
+  const game = FESTIVALS.map((f): Festival => {
+    const w = own.find((e) => e.id === f.id)
+    return w ? { ...f, name: w.name ?? f.name, season: w.season ?? f.season, day: w.day ?? f.day, happens: w.happens ?? null } : f
+  })
+  const added = own.filter((e) => !isFestivalId(e.id) && e.name !== undefined && e.season !== undefined && e.day !== undefined)
+    .map((e): Festival => ({ id: e.id, name: e.name!, season: e.season!, day: e.day!, rule: null, happens: e.happens ?? null }))
+  const year = [...game, ...added].sort((a, b) => festivalDayOfYear(a) - festivalDayOfYear(b))
+  years.set(world, year)
+  return year
+}
+
+/** A festival's name by its id: the year's; else the game's own (a festival the story has since dropped); else plain
+ * words. */
+export const festivalNameOf = (year: readonly Festival[], id: string): string =>
+  year.find((f) => f.id === id)?.name ?? FESTIVALS.find((f) => f.id === id)?.name ?? 'A festival'
+
+/** A place's words: world.json's name and its one line, each else the game's own (the map's name, the quick look's
+ * line). The Town is named by the world's town where its place gives no name. */
+export function placeWordsOf(pack: WorldPack, id: FarmPlaceId): { name: string; line: string } {
+  const game = farmPlace(id)!
+  const own = pack?.world?.places?.[id]
+  const name = own?.name ?? (id === 'town' ? pack?.world?.names?.town : undefined) ?? game.name
+  return { name, line: own?.line ?? game.blurb }
+}
+/** A place's name: `placeWordsOf`'s. */
+export const placeNameOf = (pack: WorldPack, id: FarmPlaceId): string => placeWordsOf(pack, id).name
+
+/** A season's line on the morning that opens it: world.json's, else none (the game's "Spring begins" alone). */
+export const seasonLineOf = (pack: WorldPack, season: Season): string | null => pack?.world?.seasons?.[season] ?? null
+
+/** The Town notes, in world.json's order; none without it. */
+export const townNotesOf = (pack: WorldPack): readonly TownNote[] => pack?.world?.notes ?? []
+/** A Town note by its id; undefined for one the pack no longer holds. */
+export const townNoteOf = (pack: WorldPack, id: string): TownNote | undefined => townNotesOf(pack).find((n) => n.id === id)
+
+/** Each part of the world the game reads, written by the pack or its placeholder: the Farm Story Sandbox's World page. */
+export function worldWrittenOf(pack: WorldPack): StoryPart[] {
+  const world = pack?.world
+  const names = worldNamesOf(pack)
+  const festivals = world?.festivals ?? []
+  const places = Object.keys(world?.places ?? {})
+  const seasons = Object.keys(world?.seasons ?? {})
+  const notes = townNotesOf(pack)
+  const part = (name: string, written: boolean, writtenWords: string, plays: string): StoryPart => ({ part: name, written, plays: written ? writtenWords : plays })
+  return [
+    part('The town’s name', names.town !== null, names.town ?? '', `“${PLACEHOLDER_NAMES.town}” on the map; the opening and the town say no name`),
+    part('The farm’s name', names.farm !== null, names.farm ?? '', `“${PLACEHOLDER_NAMES.farm}”`),
+    part('The region’s name', names.region !== null, names.region ?? '', 'None'),
+    part('The farm’s history', historyOf(pack).length > 0, `${historyOf(pack).length} line${historyOf(pack).length === 1 ? '' : 's'}`, 'None: the Diary’s “The farm” page shows only the names'),
+    part('The festivals', festivals.length > 0, `${festivals.filter((e) => isFestivalId(e.id)).length} of the game’s renamed or moved, ${festivals.filter((e) => !isFestivalId(e.id)).length} of the story’s own`, `The game’s ${FESTIVALS.length}: ${FESTIVALS.map((f) => f.name).join(', ')}`),
+    part('The places’ words', places.length > 0, `${places.length} place${places.length === 1 ? '' : 's'}; the rest the game’s own`, 'The game’s own names and lines'),
+    part('The seasons’ lines', seasons.length > 0, `${seasons.length} of 4; the rest “… begins” alone`, '“Spring begins” alone'),
+    part('Town notes', notes.length > 0, `${notes.length}, ${notes.filter((n) => !n.unlock).length} known from the start`, 'None'),
+  ]
+}
+
 // === What's written, and what plays instead (the sandbox's) =============================================================
 
 /** One part of a character as the game plays it: written by the pack, or its placeholder (what plays instead). */
@@ -708,4 +801,10 @@ export const PLACEHOLDER_TABLE: readonly { gives: string; without: string }[] = 
   { gives: 'Her favourite spot', without: 'None: she’s out at any spot alike' },
   { gives: 'Her town line', without: `${PLACEHOLDER_TOWN_LINES.length} short lines, one a day` },
   { gives: 'A sister’s name', without: 'Her elder’s name, as her sister' },
+  { gives: 'The town’s, the farm’s and the region’s names', without: `“${PLACEHOLDER_NAMES.town}” on the map, “${PLACEHOLDER_NAMES.farm}” in the Diary, no region; the opening names none` },
+  { gives: 'The farm’s history', without: 'None' },
+  { gives: 'The festivals', without: `The game’s ${FESTIVALS.length}: ${FESTIVALS.map((f) => f.name).join(', ')}, on each season’s 10th day and Winter 12` },
+  { gives: 'A place’s name and line', without: 'The map’s own name, and its quick look’s line' },
+  { gives: 'A season’s line', without: 'None: the morning says “Spring begins” alone' },
+  { gives: 'Town notes', without: 'None' },
 ]

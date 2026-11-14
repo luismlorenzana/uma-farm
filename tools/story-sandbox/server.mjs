@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // The Farm Story Sandbox: a local-only page for reading, playing and checking uma-farm's story
 // (tools/story-sandbox/README.md). It binds to loopback and reads, on every request:
-// - the private authored story in content/story/ (the world, the cast, the ties, the bibles, routes and pairs),
+// - the private authored story in content/story/ (the world bible and world.json, the cast, the ties, the bibles,
+//   routes and pairs),
 //   read by the game's own reader (`story/pack.ts`'s `readStoryPack`): errors skip only their part and notes block
 //   nothing, as in the game and the release; with the Umas' faces from the cast pack;
 // - the chapter drafts in docs/story/ (original, in git) and the game's story in @farm/domain.
@@ -83,6 +84,8 @@ async function storyState(game) {
   if (opening !== undefined) files.opening = opening
   const town = await json('town.json')
   if (town !== undefined) files.town = town
+  const world = await json('world.json')
+  if (world !== undefined) files.world = world
   const tagSheet = await json('tags.json')
   const story = {
     pack: pack ? { id: pack.id, exportedAt: pack.exportedAt } : null,
@@ -149,6 +152,10 @@ async function storyState(game) {
     // no master data here, a role town.json leaves is master data's in the game).
     town: read.files.town ? entry('town.json', read.files.town) : null,
     townPlayed: (({ people, spots }) => ({ people, spots }))(v.townOf(read.pack)),
+    // The world: the pack's world.json, and the world as the game plays it (its names, history, the year's festivals,
+    // every place's name and line, the seasons' lines and the Town notes, each the pack's or the game's own).
+    worldFile: read.files.world ? entry('world.json', read.files.world) : null,
+    worldPlayed: worldPlayed(v, read.pack, game),
     own,
     written,
     // Every finding, and the files read whole that the game skipped (a file that isn't JSON or isn't the shape).
@@ -163,6 +170,20 @@ async function storyState(game) {
   }
 }
 
+
+/** The world as the game will use it: each part written by world.json or the game's own words, every place and season
+ * listed, and the year's festivals in order with the rule each keeps. */
+function worldPlayed(v, pack, game) {
+  const places = (game.places ?? []).map((p) => {
+    const words = v.placeWordsOf(pack, p.id)
+    const own = pack.world?.places?.[p.id] ?? {}
+    return { id: p.id, ...words, written: { name: own.name !== undefined || (p.id === 'town' && pack.world?.names?.town !== undefined), line: own.line !== undefined } }
+  })
+  const seasons = ['spring', 'summer', 'autumn', 'winter'].map((season) => ({ season, line: v.seasonLineOf(pack, season) }))
+  return {
+    parts: v.worldWrittenOf(pack), names: v.worldNamesOf(pack), history: v.historyOf(pack), festivals: v.festivalsOf(pack), places, seasons, notes: v.townNotesOf(pack),
+  }
+}
 
 async function state() {
   const { validator, ...game } = await loadGame(domain)

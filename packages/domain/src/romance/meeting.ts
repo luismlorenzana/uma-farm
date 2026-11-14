@@ -16,7 +16,7 @@
 //
 // The town's people keep their spots and are never met. A sister (`s<outfitId>`) is met like anyone.
 import { seedTies } from '../farm/bonds'
-import { dateOf, festivalOn } from '../farm/calendar'
+import { dateOf, festivalOn, FESTIVALS, type Festival } from '../farm/calendar'
 import { freeBeds, joinRoster } from '../farm/dorm'
 import { farmRankOf } from '../farm/farm'
 import { placeBuilt } from '../farm/places'
@@ -26,13 +26,13 @@ import { atHome, newLove, type SaveV4 } from '../save/v4'
 import { takeGoods } from '../save/warehouse'
 import type { SpotId, StoryTrigger } from '../story/authored'
 import { castOrder, type StoryPack } from '../story/pack'
-import { meetOf, onWelcomeList, tasteOf, townOf } from '../story/placeholders'
+import { festivalsOf, meetOf, onWelcomeList, tasteOf, townOf } from '../story/placeholders'
 import { gateVisitor, talkedToday, talkInTown, townDay, townsfolk } from '../town/town'
 import type { Taste } from './chats'
 
-/** The pack meeting reads: the cast and its ties, the bibles (tastes), and the town (its people, master data's
- * characters). */
-export type MeetPack = Pick<StoryPack, 'cast' | 'ties' | 'bibles'> & Partial<Pick<StoryPack, 'town' | 'master'>>
+/** The pack meeting reads: the cast and its ties, the bibles (tastes), the town (its people, master data's
+ * characters), and the world (the year's festivals). */
+export type MeetPack = Pick<StoryPack, 'cast' | 'ties' | 'bibles'> & Partial<Pick<StoryPack, 'town' | 'master' | 'world'>>
 
 /** How her trigger is checked: on a talk in town (at a spot) or at the Gate, on a gift in town, or at night. */
 export type MeetHow =
@@ -67,14 +67,15 @@ export function eventPlayed(save: Pick<SaveV4, 'memories' | 'arrivals'>, after: 
 }
 
 /** Whether a trigger holds for her now, as `how` sees it. A talk in town checks every kind but a gift; at the Gate, the
- * same with no spot; a gift checks a gift and the farm's kinds; the night only the farm's kinds. */
-export function triggerHolds(save: SaveV4, trigger: StoryTrigger, talks: number, how: MeetHow): boolean {
+ * same with no spot; a gift checks a gift and the farm's kinds; the night only the farm's kinds. `year` is the year's
+ * festivals: the game's five, or the story's (`festivalsOf`). */
+export function triggerHolds(save: SaveV4, trigger: StoryTrigger, talks: number, how: MeetHow, year: readonly Festival[] = FESTIVALS): boolean {
   const talk = how.at === 'town' || how.at === 'gate'
   switch (trigger.kind) {
     case 'talks': return talk && talks >= trigger.days
     case 'spot': return how.at === 'town' && how.spot === trigger.spot
     case 'season': return talk && dateOf(save.calendar.day).season === trigger.season
-    case 'festival': return talk && festivalOn(save.calendar.day)?.id === trigger.festival
+    case 'festival': return talk && festivalOn(save.calendar.day, year)?.id === trigger.festival
     case 'gift': return how.at === 'gift' && (trigger.good ? how.good === trigger.good : how.taste === 'liked' || how.taste === 'loved')
     case 'farm-rank': return farmRankOf(save.farm.points) >= trigger.rank
     case 'built': return placeBuilt(save, trigger.place)
@@ -88,7 +89,7 @@ export function triggerHolds(save: SaveV4, trigger: StoryTrigger, talks: number,
 export function meetsHer(save: SaveV4, pack: MeetPack, id: string, how: MeetHow): boolean {
   if (save.roster[id] || townOf(pack).byId.has(id)) return false
   if (onWelcomeList(pack, id)) return how.at === 'town' || how.at === 'gate'
-  return triggerHolds(save, meetOf(pack, id), save.town[id]?.talks ?? 0, how)
+  return triggerHolds(save, meetOf(pack, id), save.town[id]?.talks ?? 0, how, festivalsOf(pack))
 }
 
 /** You've met her: she joins the roster today (`joinRoster`: home in the Dorm while a bed is free, else she lives in

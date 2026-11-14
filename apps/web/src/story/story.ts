@@ -7,14 +7,21 @@
 // pack's cast names her outfit, else master data's default for her (the domain's `outfitOf`); before the pack loads, an
 // id is its own outfit. The album's art and master data's view (`setMasterLens`) read through it, so faces, busts, names,
 // talents, temperaments and pickers all follow her cast entry. Everyone on the farm stays in the cast (`keepOnCast`).
-import type { StoryPack } from '@farm/domain'
+// The year's festivals (`festivalsOf`, the story's when its world moves or adds them) are kept here too, worked out by
+// the loaded seam, so the bars' date chip names the story's festival without the placeholders in the initial JS.
+import type { Festival, StoryPack } from '@farm/domain'
 import { useSyncExternalStore } from 'react'
 
 let pack: StoryPack | null = null
 let resolve: (id: string) => string = (id) => id
 let loading: Promise<StoryPack> | null = null
+let year: readonly Festival[] | undefined
 /** The loaded seam's own pieces, kept for `keepOnCast`. */
-let seam: { install: (pack: StoryPack) => (id: string) => string; withCast: (pack: StoryPack, ids: readonly string[]) => StoryPack } | null = null
+let seam: {
+  install: (pack: StoryPack) => (id: string) => string
+  withCast: (pack: StoryPack, ids: readonly string[]) => StoryPack
+  festivalsOf: (pack: StoryPack) => readonly Festival[]
+} | null = null
 const listeners = new Set<() => void>()
 
 /** The pack once loaded, else null. */
@@ -28,6 +35,7 @@ export const castIds = (): string[] => pack?.cast.umas.map((u) => u.characterId)
 
 function turnOn(next: StoryPack): void {
   resolve = seam!.install(next)
+  year = seam!.festivalsOf(next)
   pack = next
   for (const listener of listeners) listener()
 }
@@ -35,9 +43,9 @@ function turnOn(next: StoryPack): void {
 /** Loads the pack once (the boot and the night wait on it, as they do on master data) and turns the resolver on. A
  * failure lets the next call try again. Resolves the pack as it stands now (`keepOnCast` may have grown its cast). */
 export function storyReady(): Promise<StoryPack> {
-  loading ??= import('./load').then(async ({ loadStoryPack, installStory, withCast }) => {
+  loading ??= import('./load').then(async ({ loadStoryPack, installStory, withCast, festivalsOf }) => {
     const loaded = await loadStoryPack()
-    seam = { install: installStory, withCast }
+    seam = { install: installStory, withCast, festivalsOf }
     turnOn(loaded)
     return loaded
   }).catch((error: unknown) => {
@@ -61,6 +69,15 @@ export function useStory(): StoryPack | null {
     listeners.add(listener)
     return () => listeners.delete(listener)
   }, () => pack, () => pack)
+}
+
+/** The year's festivals in React: the story's (`festivalsOf`) once the pack loads; undefined before, which the calendar
+ * reads as the game's five. */
+export function useStoryYear(): readonly Festival[] | undefined {
+  return useSyncExternalStore((listener) => {
+    listeners.add(listener)
+    return () => listeners.delete(listener)
+  }, () => year, () => year)
 }
 
 /** A name for a character master data doesn't hold: the stand-ins' invented range (9000001 on) reads "Stand-in 1",

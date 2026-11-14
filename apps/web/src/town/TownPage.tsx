@@ -7,8 +7,9 @@
 // toward her trigger to meet, and a talk that meets it plays her meeting scene at once. One you haven't met can be given
 // a gift (one good from the Warehouse): it meets her when her trigger is a gift she likes. One you've met is marked Met,
 // with her profile; one at home, or on the farm, says so. A keeper's sheet shows her role and her ties. Faces load as
-// they scroll into view. Names and faces are master data's and the pack's, at run time. Loaded on demand.
-import { atHome, CAST, DISLIKED_LINE, gateVisitor, talkedToday, townDay, townOf, type SaveV4, type StoryPack, type Taste, type TownDay } from '@farm/domain'
+// they scroll into view. Names and faces are master data's and the pack's, at run time. Its title is the town's name
+// when the world gives one. A talk or a gift that unlocks a Town note says so, a tap to the Diary. Loaded on demand.
+import { atHome, CAST, DISLIKED_LINE, gateVisitor, placeNameOf, talkedToday, townDay, townOf, type SaveV4, type StoryPack, type Taste, type TownDay } from '@farm/domain'
 import { FaceTile, UmaBust } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Sheet, Tabs } from '@luismlorenzana/uma-kit/ui'
@@ -20,6 +21,7 @@ import { useLoopSave } from '../save/game'
 import { namer } from '../story/people'
 import { storyReady, useStory } from '../story/story'
 import { GiftPicker } from '../loop/Love'
+import { NoteFound } from './NoteFound'
 import { giftInTownOnce, talkInTownOnce } from './town-actions'
 import { findPeople, keeperTies, peopleRows, PEOPLE_SORTS, sortPeople, spotViews, talkWords, type PeopleSort, type SpotView } from './town-view'
 
@@ -40,7 +42,7 @@ export default function TownPage() {
   const setView = (next: View) => navigate(withParam(location, 'view', next === 'people' ? 'people' : null), { replace: true, state: location.state })
   return (
     <div className="absolute inset-0 flex flex-col" data-page="town" data-view={view}>
-      <PlaceHeader title="Town" onBack={() => leave('/')} about={<About />} words={{ back: 'Back to the farm', about: 'About the town' }} />
+      <PlaceHeader title={placeNameOf(pack, 'town')} onBack={() => leave('/')} about={<About />} words={{ back: 'Back to the farm', about: 'About the town' }} />
       <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain" data-town-scroll>
         <div className="space-y-3 px-4 pt-3 pb-24">
           <Tabs label="Views" value={view} onChange={setView} options={[{ value: 'today', label: 'Today' }, { value: 'people', label: 'People' }]} />
@@ -199,9 +201,12 @@ function TalkSheet({ id, save, pack, day, nameOf, onClose }: { id: string; save:
   const spot = day.where.get(id) ?? null
   const spotOf = spot ? town.spots.find((s) => s.id === spot)! : null
   const [error, setError] = useState<string | null>(null)
+  const [notes, setNotes] = useState<string[]>([])
   // Tapping her is the talk: it counts once a day, as the sheet opens.
   useEffect(() => {
-    if (spot !== null && !talkedToday(save, id)) void talkInTownOnce(id).catch((err: unknown) => setError(err instanceof Error ? err.message : 'That didn’t work. Try again.'))
+    if (spot !== null && !talkedToday(save, id)) {
+      talkInTownOnce(id).then((r) => setNotes(r.notes), (err: unknown) => setError(err instanceof Error ? err.message : 'That didn’t work. Try again.'))
+    }
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
   const name = nameOf(id)
   return (
@@ -209,11 +214,12 @@ function TalkSheet({ id, save, pack, day, nameOf, onClose }: { id: string; save:
       <div className="space-y-3 pb-2" data-talk={id} data-at={spot ?? (save.roster[id] && atHome(save, id) ? 'farm' : person ? 'keeper' : 'home')} data-met={save.roster[id] ? true : undefined}>
         <div className="flex justify-center"><UmaBust outfitId={id} label={name} size={168} /></div>
         {error && <p role="status" className="rounded-md bg-danger/10 px-3 py-2 text-[14px] font-semibold text-danger">{error}</p>}
+        <NoteFound ids={notes} pack={pack} />
         {person ? <KeeperWords id={id} pack={pack} nameOf={nameOf} />
           : spotOf ? (
             <>
               <TalkLines save={save} pack={pack} id={id} spot={spotOf.name} keeper={spotOf.keeper} nameOf={nameOf} />
-              {save.roster[id] ? <MetLine id={id} /> : talkedToday(save, id) && <TownGift save={save} id={id} name={name} />}
+              {save.roster[id] ? <MetLine id={id} /> : talkedToday(save, id) && <TownGift save={save} pack={pack} id={id} name={name} />}
             </>
           ) : save.roster[id] && atHome(save, id) ? (
             <p className="text-center text-[14px]" data-on-farm>She lives on the farm now. <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></p>
@@ -244,12 +250,16 @@ const TOWN_TASTE: Readonly<Record<Taste, string>> = { loved: 'She loves it!', li
 
 /** A gift for one you haven't met, after today's talk: one good from the Warehouse. It meets her when her trigger is a
  * gift she likes (her meeting scene plays next); else she thanks you, by her taste. */
-function TownGift({ save, id, name }: { save: SaveV4; id: string; name: string }) {
+function TownGift({ save, pack, id, name }: { save: SaveV4; pack: StoryPack; id: string; name: string }) {
   const [giving, setGiving] = useState(false)
   const [note, setNote] = useState<string | null>(null)
+  const [notes, setNotes] = useState<string[]>([])
   const give = (item: string, stars: number) => {
     setGiving(false)
-    giftInTownOnce(id, item, stars).then((r) => setNote(r.met ? null : TOWN_TASTE[r.taste]), (err: unknown) => setNote(err instanceof Error ? err.message : 'That didn’t work. Try again.'))
+    giftInTownOnce(id, item, stars).then((r) => {
+      setNote(r.met ? null : TOWN_TASTE[r.taste])
+      setNotes(r.notes)
+    }, (err: unknown) => setNote(err instanceof Error ? err.message : 'That didn’t work. Try again.'))
   }
   return (
     <div className="space-y-1" data-town-gift>
@@ -258,6 +268,7 @@ function TownGift({ save, id, name }: { save: SaveV4; id: string; name: string }
         Give a gift
       </button>
       {note && <p role="status" className="text-center text-[13px] font-semibold text-ink-soft" data-town-gift-note>{note}</p>}
+      <NoteFound ids={notes} pack={pack} />
       {giving && <GiftPicker save={save} id={id} name={name} points={() => null} onGive={give} onClose={() => setGiving(false)} />}
     </div>
   )

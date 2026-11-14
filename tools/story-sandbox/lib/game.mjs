@@ -71,6 +71,9 @@ export async function loadGame(src) {
       validator: {
         readStoryPack: pack.readStoryPack, tagNotes: authored.tagNotes, bibleTagNotes: authored.bibleTagNotes, unscriptedBeats: authored.unscriptedBeats,
         writtenOf: placeholders.writtenOf, townOf: placeholders.townOf,
+        // The world as the game plays it: the pack's world.json, else the game's own words.
+        worldWrittenOf: placeholders.worldWrittenOf, worldNamesOf: placeholders.worldNamesOf, historyOf: placeholders.historyOf, festivalsOf: placeholders.festivalsOf,
+        placeWordsOf: placeholders.placeWordsOf, seasonLineOf: placeholders.seasonLineOf, townNotesOf: placeholders.townNotesOf,
       },
     }
   } catch (error) {

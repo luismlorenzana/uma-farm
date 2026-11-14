@@ -30,24 +30,38 @@ export const workNow = (save: { calendar: { day: number } }): number => (save.ca
 
 /** The day of a season each festival falls on: the 10th, and the Harvest Cup on Winter's last. */
 export const FESTIVAL_DAY = 10
+/** The game's five festivals, by id: each carries a game rule (its contest, its night), kept whatever the story calls it. */
 export const FESTIVAL_IDS = ['flower-show', 'fishing-derby', 'cooking-contest', 'animal-show', 'harvest-cup'] as const
 export type FestivalId = typeof FESTIVAL_IDS[number]
+/** Whether an id is one of the game's five festivals. */
+export const isFestivalId = (id: string): id is FestivalId => (FESTIVAL_IDS as readonly string[]).includes(id)
 
+/** A festival of the year: the game's five, under the story's names and on its days when `world.json` moves them, and
+ * the story's own (`story/placeholders.ts`' `festivalsOf`). */
 export interface Festival {
-  id: FestivalId
+  /** One of the game's five (`FestivalId`), or one of the story's own. */
+  id: string
   name: string
   season: Season
   /** Its day of the season, 1–12. */
   day: number
+  /** The game rule it keeps: its own id for one of the game's five, wherever the story puts it and whatever it calls
+   * it; null for one of the story's own, which is a festival day and nothing more. */
+  rule: FestivalId | null
+  /** What happens, in a line: the story's; null for the game's own words. */
+  happens: string | null
 }
 
-/** The five festivals, in the year's order. They are dates only here; their events come with the romance. */
+const game = (id: FestivalId, name: string, season: Season, day: number): Festival => ({ id, name, season, day, rule: id, happens: null })
+
+/** The game's five festivals, in the year's order: the year when the story names none. They are dates and festival
+ * nights here; their contests come later. */
 export const FESTIVALS: readonly Festival[] = [
-  { id: 'flower-show', name: 'Flower Show', season: 'spring', day: FESTIVAL_DAY },
-  { id: 'fishing-derby', name: 'Fishing Derby', season: 'summer', day: FESTIVAL_DAY },
-  { id: 'cooking-contest', name: 'Cooking Contest', season: 'autumn', day: FESTIVAL_DAY },
-  { id: 'animal-show', name: 'Animal Show', season: 'winter', day: FESTIVAL_DAY },
-  { id: 'harvest-cup', name: 'Harvest Cup', season: 'winter', day: DAYS_PER_SEASON },
+  game('flower-show', 'Flower Show', 'spring', FESTIVAL_DAY),
+  game('fishing-derby', 'Fishing Derby', 'summer', FESTIVAL_DAY),
+  game('cooking-contest', 'Cooking Contest', 'autumn', FESTIVAL_DAY),
+  game('animal-show', 'Animal Show', 'winter', FESTIVAL_DAY),
+  game('harvest-cup', 'Harvest Cup', 'winter', DAYS_PER_SEASON),
 ]
 
 /** The farm day of a date: year 1's Spring 1 is day 1. */
@@ -55,20 +69,25 @@ export function farmDay(date: FarmDate): number {
   return (date.year - 1) * DAYS_PER_YEAR + SEASONS.indexOf(date.season) * DAYS_PER_SEASON + date.day
 }
 
-/** The festival on a farm day, or null. */
-export function festivalOn(day: number): Festival | null {
+/** A festival's place in the year: its day of the year, 1–48. */
+export const festivalDayOfYear = (f: Pick<Festival, 'season' | 'day'>): number => farmDay({ year: 1, season: f.season, day: f.day })
+
+/** The festival on a farm day, or null. `year` is the year's festivals: the game's five, or the story's (`festivalsOf`). */
+export function festivalOn(day: number, year: readonly Festival[] = FESTIVALS): Festival | null {
   const date = dateOf(day)
-  return FESTIVALS.find((f) => f.season === date.season && f.day === date.day) ?? null
+  return year.find((f) => f.season === date.season && f.day === date.day) ?? null
 }
 
 /** The next festival on or after a farm day: the festival, its farm day and the days until it (0 when it's today). */
-export function nextFestival(day: number): { festival: Festival; day: number; inDays: number } {
-  const { year } = dateOf(day)
-  for (const y of [year, year + 1]) {
-    for (const festival of FESTIVALS) {
-      const on = farmDay({ year: y, season: festival.season, day: festival.day })
-      if (on >= day) return { festival, day: on, inDays: on - day }
+export function nextFestival(day: number, year: readonly Festival[] = FESTIVALS): { festival: Festival; day: number; inDays: number } {
+  const { year: y } = dateOf(day)
+  let best: { festival: Festival; day: number } | null = null
+  for (const n of [y, y + 1]) {
+    for (const festival of year) {
+      const on = farmDay({ year: n, season: festival.season, day: festival.day })
+      if (on >= day && (best === null || on < best.day)) best = { festival, day: on }
     }
+    if (best) return { ...best, inDays: best.day - day }
   }
   throw new RangeError(`No festival after day ${day}`)
 }

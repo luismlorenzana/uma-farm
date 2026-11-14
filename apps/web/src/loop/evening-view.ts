@@ -1,14 +1,15 @@
 // The evening in words: the kinds sheet's rows with each one's
 // three numbers for her today, the picker's rows, Tonight's Evening rows, the Hearts header's marks, the card's sum and
-// the profile's Evening button. Pure, so the screens and the tests read the same. Loaded on demand.
+// the profile's Evening button. Festival night follows the year's festivals (the story's, `festivalsOf`). Pure, so the
+// screens and the tests read the same. Loaded on demand.
 import {
-  DATE_FROM, EVENING_KINDS, EVENINGS, eveningMarks, eveningPreview, eveningRole, eveningUmas, favouriteKind, GRADE_NAMES, GRADES, HANGOUT_FROM, homeTonight, invitedNow,
+  DATE_FROM, EVENING_KINDS, EVENINGS, eveningMarks, eveningPreview, eveningRole, eveningUmas, favouriteKind, festivalsOf, GRADE_NAMES, GRADES, HANGOUT_FROM, homeTonight, invitedNow,
   inviteDue, invitePoints, isFestivalNight, kindBuilt, kindOpens, kindsNow, levelWords, ROLE_WORDS, rungName, slotsLeft, type EveningCard, type EveningKind,
-  type Grade, type PlayKind, type SaveV4, type StoryPack,
+  type Festival, type Grade, type PlayKind, type SaveV4, type StoryPack,
 } from '@farm/domain'
 
 type NameOf = (id: string) => string
-type Pack = Pick<StoryPack, 'cast' | 'bibles'>
+type Pack = Pick<StoryPack, 'cast' | 'bibles'> & Partial<Pick<StoryPack, 'world'>>
 
 /** A kind on her kinds sheet: open now (with its three numbers), or waiting for her ladder ("At Romance 3"). */
 export interface KindRow {
@@ -27,9 +28,10 @@ export interface KindRow {
 export function kindRows(save: SaveV4, pack: Pack, id: string, birthday: boolean): KindRow[] {
   const love = save.love[id]
   if (!love) return []
-  const now = new Set(kindsNow(save, id))
+  const year = festivalsOf(pack)
+  const now = new Set(kindsNow(save, id, year))
   const favourite = favouriteKind(pack, id)
-  const left = slotsLeft(save)
+  const left = slotsLeft(save, year)
   const rows = EVENING_KINDS.flatMap((kind): KindRow[] => {
     const def = EVENINGS[kind]
     const row = { kind, name: def.name, play: def.play.kind, pays: eveningPreview(save, pack, id, kind, birthday), favourite: kind === favourite }
@@ -80,15 +82,16 @@ export type TonightRow =
   | { slot: 'evening' | 'festival'; state: 'none'; text: string }
 export function tonightRows(save: SaveV4, pack: Pack, nameOf: NameOf): TonightRow[] {
   const someone = eveningUmas(save, pack)
+  const year = festivalsOf(pack)
   let yesShown = false
-  return eveningMarks(save).map((mark): TonightRow => {
+  return eveningMarks(save, year).map((mark): TonightRow => {
     if (mark.spent) return { slot: mark.slot, state: 'spent', with: mark.spent.with, text: `with ${nameOf(mark.spent.with)} · ${EVENINGS[mark.spent.kind].short} ✓` }
     const yes = mark.slot === 'evening' && !yesShown ? save.today.invites.find((i) => i.answer === 'yes' && inviteDue(save, i.id) && someone.includes(i.id)) : undefined
     if (yes) {
       yesShown = true
       return { slot: mark.slot, state: 'invited', with: yes.id, text: `${nameOf(yes.id)} · ${EVENINGS[yes.kind].short}` }
     }
-    const can = someone.some((id) => kindsNow(save, id).some((k) => (mark.slot === 'festival' ? isFestivalNight(k) : !isFestivalNight(k))))
+    const can = someone.some((id) => kindsNow(save, id, year).some((k) => (mark.slot === 'festival' ? isFestivalNight(k) : !isFestivalNight(k))))
     return can ? { slot: mark.slot, state: 'free', text: 'Pick someone ›' } : { slot: mark.slot, state: 'none', text: 'No one free tonight' }
   })
 }
@@ -100,8 +103,8 @@ export interface HeaderMark {
   festival: boolean
   label: string
 }
-export function headerMarks(save: SaveV4, nameOf: NameOf): HeaderMark[] {
-  return eveningMarks(save).map((m, i) => ({
+export function headerMarks(save: SaveV4, nameOf: NameOf, year?: readonly Festival[]): HeaderMark[] {
+  return eveningMarks(save, year).map((m, i) => ({
     key: `${m.slot}:${i}`, spent: m.spent !== null, festival: m.slot === 'festival',
     label: `${m.slot === 'festival' ? 'Festival night' : 'Evening'}: ${m.spent ? `spent with ${nameOf(m.spent.with)}` : 'free'}`,
   }))
@@ -124,10 +127,10 @@ export function cardSum(card: EveningCard): { play: string; invite: string | nul
 export const EVENING_HELP = `One evening a day with someone home: a hangout from Friendship ${HANGOUT_FROM}, a date from Romance ${DATE_FROM}. Fine +60, Great +100, Perfect +150, ×1.5 in her favourite kind, and +20 when she asked you.`
 
 /** What her profile's Evening button says: "Evening ›" while she can spend one, else why not. */
-export function eveningButton(save: SaveV4, id: string): { open: boolean; text: string } {
+export function eveningButton(save: SaveV4, id: string, year?: readonly Festival[]): { open: boolean; text: string } {
   const love = save.love[id]
   if (!love) return { open: false, text: 'Evening' }
-  if (kindsNow(save, id).length > 0) return { open: true, text: 'Evening ›' }
+  if (kindsNow(save, id, year).length > 0) return { open: true, text: 'Evening ›' }
   if (save.today.evenings.some((e) => e.with === id)) return { open: false, text: 'Evening ✓' }
   if (eveningRole(love) === null) return { open: false, text: `Evening · F${HANGOUT_FROM}` }
   if (!homeTonight(save, id)) return { open: false, text: 'In town' }

@@ -17,6 +17,7 @@
 // her profile shows while it's next. Nothing is missable and nothing waits on the calendar: a rung is ready when her bar
 // is full, plus at most one setup the player controls (she works a place today, an item is in the Warehouse, a bond),
 // never an hour, the weather, a season or a festival. Routes run side by side and end in a spouse ladder.
+import { DAYS_PER_SEASON, FESTIVALS as GAME_FESTIVALS, festivalDayOfYear, isFestivalId, SEASON_NAMES } from '../farm/calendar'
 import { FARM_PLACE_IDS, type FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity } from '../farm/ranks'
 import { isGoodId } from '../goods/ids'
@@ -77,8 +78,8 @@ export type StoryTrigger =
   | { kind: 'spot'; spot: SpotId }
   /** Talk with her in a season. */
   | { kind: 'season'; season: Season }
-  /** Talk with her on a festival. */
-  | { kind: 'festival'; festival: Festival }
+  /** Talk with her on a festival: one of the game's five, or one of the story's own (`world.json`'s). */
+  | { kind: 'festival'; festival: string }
   /** Reach a Farm Rank. */
   | { kind: 'farm-rank'; rank: number }
   /** Have a place built. */
@@ -305,6 +306,37 @@ export interface Opening { about?: string; steps: Step[] }
 /** The steps the opening plays: lines and pauses, never a pick. */
 export const OPENING_STEPS = ['say', 'narrate', 'thought', 'wait', 'place'] as const
 
+// --- The world ------------------------------------------------------------------------------------------------------
+
+/** world.json's names: the town's, the farm's and the region's. Each optional; the game's own words play without. */
+export interface WorldNames { town?: string; farm?: string; region?: string }
+/** A festival as world.json gives it. One of the game's five by its id is renamed or moved, keeping its game rule; any
+ * other id is one of the story's own, added, and needs its name and its day. Its day is a season and a day, 1–12. */
+export interface WorldFestival { id: string; name?: string; season?: Season; day?: number; happens?: string }
+/** A place's words in world.json: its name and its one line, each optional. */
+export interface WorldPlace { name?: string; line?: string }
+/** A Town note: a short piece of the world, unlocked once by its trigger from the menu (`NOTE_KINDS`) and kept. One
+ * without an unlock is known from the start. */
+export interface TownNote { id: string; title: string; lines: string[]; unlock?: StoryTrigger }
+/** world.json: the world the story builds, every part optional. */
+export interface World {
+  version?: 1
+  names?: WorldNames
+  /** The farm's past, a few lines: the Diary's first page, "The farm". */
+  history?: string[]
+  festivals?: WorldFestival[]
+  places?: Partial<Record<FarmPlaceId, WorldPlace>>
+  /** A line for each season, on the morning that opens it. */
+  seasons?: Partial<Record<Season, string>>
+  notes?: TownNote[]
+}
+/** The trigger kinds a Town note's unlock takes: a spot visited (a talk there), a season, a festival, and what the farm
+ * holds (a Farm Rank, a place built, a good shipped, another's event: `<characterId>:arrival` is meeting her). Talks
+ * and a gift are meeting her own. */
+export const NOTE_KINDS: readonly StoryTrigger['kind'][] = ['spot', 'season', 'festival', 'farm-rank', 'built', 'shipped', 'event']
+/** A festival of the story's own, and a Town note: an id in lowercase words joined by `-`. */
+export const WORLD_ID = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
+
 // --- The tag sheet (the sandbox's) --------------------------------------------------------------------------------------
 
 /** One Uma's tags: her favourite line, season, festival and loved gift, each with a one-line reason from her career and
@@ -342,7 +374,7 @@ export const LINE_LIMITS = {
   chat: 160,
   /** A line on the town's talk sheet. */
   townLine: 160,
-  /** A sister's name, and a town spot's name. */
+  /** A sister's name, a town spot's name, and world.json's names (the town, the farm, the region, a place, a festival). */
   name: 40,
   /** A town spot's line, and what one of the town's people does. */
   townBlurb: 160,
@@ -361,6 +393,12 @@ export const LINE_LIMITS = {
   perk: 200,
   /** A chapter's title on her profile. */
   chapterTitle: 40,
+  /** A place's line in its quick look, a season's on its morning, and what happens at a festival. */
+  worldLine: 160,
+  /** A line of the farm's history, or of a Town note. */
+  worldText: 400,
+  /** A Town note's title, as the Diary lists it. */
+  noteTitle: 40,
   /** A flag's name, as the save keeps it. */
   flag: 64,
   /** A town spot's id, and an event's `<characterId>:<eventId>`. */
@@ -414,6 +452,8 @@ export interface StoryContext {
   exported?: ReadonlySet<string>
   /** The town's people, by character id (`town.json`'s): they speak in any scene, and a tie may name one. */
   town?: ReadonlySet<string>
+  /** The story's own festivals, by id (`world.json`'s): a `festival` trigger may name one. */
+  festivals?: ReadonlySet<string>
 }
 
 /** A line's words: `{farmer}` is the only placeholder, no word genders the farmer, nothing reads as school. Notes. */
@@ -487,8 +527,10 @@ function readTrigger(v: unknown, at: string, f: Findings, ctx: StoryContext): St
       if (!oneOf(SEASONS, v.season)) return bad(`a season is one of ${SEASONS.join(', ')}`)
       return { kind: 'season', season: v.season }
     case 'festival':
-      if (!oneOf(FESTIVALS, v.festival)) return bad(`a festival is one of ${FESTIVALS.join(', ')}`)
-      return { kind: 'festival', festival: v.festival }
+      if (!oneOf(FESTIVALS, v.festival) && !(typeof v.festival === 'string' && ctx.festivals?.has(v.festival))) {
+        return bad(`a festival is one of ${[...FESTIVALS, ...(ctx.festivals ?? [])].join(', ')}`)
+      }
+      return { kind: 'festival', festival: v.festival as string }
     case 'farm-rank':
       if (!isInt(v.rank, 1)) return bad('farm-rank names a rank, from 1')
       if (v.rank > TOP_FARM_RANK) f.notes.push(`${at}: Farm Rank ${v.rank} is past the top, ${TOP_FARM_RANK}, so it never holds`)
@@ -696,7 +738,7 @@ function readChapters(v: unknown, at: string, f: Findings, ctx: StoryContext): H
 
 /** cast.json: who the pack holds, in its order, each with what's given of her; the welcome list. A character is master
  * data's (her `characterId`) or a sister (`s<outfitId>`, with her `name`). */
-export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'exported' | 'town'> = {}): Read<Cast> {
+export function checkCast(raw: unknown, ctx: Pick<StoryContext, 'isGood' | 'exported' | 'town' | 'festivals'> = {}): Read<Cast> {
   const f = findings()
   if (raw === undefined) { f.notes.push('No cast: the pack holds no characters'); return { value: { umas: [] }, ...f } }
   if (!isObject(raw)) { f.errors.push('Not a cast file (an object with umas); no characters are read'); return { value: { umas: [] }, ...f } }
@@ -1224,4 +1266,166 @@ export function checkOpening(raw: unknown, ctx: StoryContext): Read<Opening | nu
     return { value: null, ...f }
   }
   return { value: kept<Opening>(raw, { steps }), ...f }
+}
+
+// --- The world ----------------------------------------------------------------------------------------------------------
+
+/** Text the game shows, or undefined with its error ending "; skipped": the field goes, the game's own words play. */
+function worldText(v: unknown, max: number, at: string, f: Findings, what = 'line'): string | undefined {
+  if (shown(v, max, at, f, false, what)) return v
+  f.errors[f.errors.length - 1] += '; skipped'
+  return undefined
+}
+
+/** A day in words: "Winter 10". */
+const dayWords = (d: { season: Season; day: number }): string => `${SEASON_NAMES[d.season]} ${d.day}`
+
+/** The festivals: one of the game's five by its id, renamed or moved (its rule kept); any other id one of the story's
+ * own, with its name and day. One a day: the game's five where the story puts them, a move onto a day another holds
+ * skipped (that festival keeps the game's day), then the story's own in the file's order, one on a day held skipped. */
+function readFestivals(v: unknown, f: Findings): WorldFestival[] | undefined {
+  if (!Array.isArray(v)) { f.errors.push('festivals is a list; skipped'); return undefined }
+  const seen = new Set<string>()
+  const read = v.flatMap((raw, i): WorldFestival[] => {
+    if (!isObject(raw) || typeof raw.id !== 'string' || !(isFestivalId(raw.id) || (WORLD_ID.test(raw.id) && raw.id.length <= LINE_LIMITS.name))) {
+      f.errors.push(`Festival ${i + 1}: id is one of the game’s festivals (${FESTIVALS.join(', ')}) or one of the story’s own, in lowercase words joined by -; skipped`)
+      return []
+    }
+    const id = raw.id
+    const it = `Festival ${id}`
+    if (seen.has(id)) { f.errors.push(`${it}: listed twice; the later one is skipped`); return [] }
+    seen.add(id)
+    const name = raw.name === undefined ? undefined : worldText(raw.name, LINE_LIMITS.name, `${it} name`, f, 'name')
+    const season = field(raw, 'season', (s) => (oneOf(SEASONS, s) ? s : undefined), it, f, `is one of ${SEASONS.join(', ')}`)
+    const day = field(raw, 'day', (d) => (isInt(d, 1, DAYS_PER_SEASON) ? d : undefined), it, f, `is a day of the season, 1–${DAYS_PER_SEASON}`)
+    const happens = raw.happens === undefined ? undefined : worldText(raw.happens, LINE_LIMITS.worldLine, `${it} happens`, f)
+    if (!isFestivalId(id) && (name === undefined || season === undefined || day === undefined)) {
+      f.errors.push(`${it}: a festival of the story’s own needs its name, its season and its day; skipped`)
+      return []
+    }
+    return [kept<WorldFestival>(raw, { name, season, day, happens })]
+  })
+  // The game's five, one a day: a move that lands on a day another holds goes back to the game's day.
+  const byId = new Map(read.map((e) => [e.id, e]))
+  const moved = (id: string): boolean => { const e = byId.get(id); return e !== undefined && (e.season !== undefined || e.day !== undefined) }
+  const dayOf = (g: (typeof GAME_FESTIVALS)[number]) => { const e = byId.get(g.id); return { season: e?.season ?? g.season, day: e?.day ?? g.day } }
+  for (let clash = true; clash;) {
+    clash = false
+    const on = new Map<number, string[]>()
+    for (const g of GAME_FESTIVALS) {
+      const at = festivalDayOfYear(dayOf(g))
+      on.set(at, [...(on.get(at) ?? []), g.id])
+    }
+    for (const ids of on.values()) {
+      if (ids.length < 2) continue
+      // An unmoved festival keeps its day; else the first moved there does.
+      const keep = ids.find((id) => !moved(id)) ?? ids[0]!
+      for (const id of ids.filter((x) => x !== keep && moved(x))) {
+        const g = GAME_FESTIVALS.find((x) => x.id === id)!
+        f.errors.push(`Festival ${id}: ${dayWords(dayOf(g))} holds another festival; its move is skipped, so it keeps the game’s day, ${dayWords(g)}`)
+        byId.set(id, kept<WorldFestival>(byId.get(id)! as unknown as Record<string, unknown>, { season: undefined, day: undefined }))
+        clash = true
+      }
+    }
+  }
+  const held = new Set(GAME_FESTIVALS.map((g) => festivalDayOfYear(dayOf(g))))
+  return read.flatMap((e): WorldFestival[] => {
+    if (isFestivalId(e.id)) return [byId.get(e.id)!]
+    const at = festivalDayOfYear({ season: e.season!, day: e.day! })
+    if (held.has(at)) { f.errors.push(`Festival ${e.id}: ${dayWords({ season: e.season!, day: e.day! })} holds another festival; skipped`); return [] }
+    held.add(at)
+    return [e]
+  })
+}
+
+/** The Town notes: each with its id, title and lines, and its unlock from `NOTE_KINDS`. A note with an error in its id,
+ * its title or every line is skipped; a line with one is dropped; an unlock with one is dropped, and the note is known
+ * from the start, as one with none is. */
+function readNotes(v: unknown, f: Findings, ctx: StoryContext): TownNote[] | undefined {
+  if (!Array.isArray(v)) { f.errors.push('notes is a list; skipped'); return undefined }
+  const seen = new Set<string>()
+  return v.flatMap((raw, i): TownNote[] => {
+    if (!isObject(raw) || typeof raw.id !== 'string' || !WORLD_ID.test(raw.id) || raw.id.length > LINE_LIMITS.flag) {
+      f.errors.push(`Note ${i + 1}: no id (lowercase words joined by -, at most ${LINE_LIMITS.flag} characters: the save keeps it); skipped`)
+      return []
+    }
+    const it = `Note ${raw.id}`
+    if (seen.has(raw.id)) { f.errors.push(`${it}: listed twice; the later one is skipped`); return [] }
+    seen.add(raw.id)
+    if (!shown(raw.title, LINE_LIMITS.noteTitle, it, f, false, 'title')) { f.errors[f.errors.length - 1] += '; the note is skipped'; return [] }
+    if (!Array.isArray(raw.lines)) { f.errors.push(`${it}: lines is a list; the note is skipped`); return [] }
+    const lines = (raw.lines as unknown[]).flatMap((line, k) => {
+      const t = worldText(line, LINE_LIMITS.worldText, `${it}, line ${k + 1}`, f)
+      return t === undefined ? [] : [t]
+    })
+    if (lines.length === 0) { f.errors.push(`${it}: no line left; the note is skipped`); return [] }
+    let unlock: StoryTrigger | undefined
+    if (raw.unlock === undefined) f.notes.push(`${it}: no unlock, so it’s in the Diary from the start`)
+    else {
+      const read = readTrigger(raw.unlock, `${it} unlock`, f, ctx)
+      if (read === undefined) f.errors[f.errors.length - 1] += ', so the note is in the Diary from the start'
+      else if (!NOTE_KINDS.includes(read.kind)) {
+        f.errors.push(`${it} unlock: a note’s unlock is one of ${NOTE_KINDS.join(', ')} (${read.kind} is meeting her own); skipped, so the note is in the Diary from the start`)
+      } else unlock = read
+    }
+    return [kept<TownNote>(raw, { title: raw.title, lines, unlock })]
+  })
+}
+
+/**
+ * world.json: the world the story builds, each part read on its own: the names (the town, the farm, the region), the
+ * farm's history, the festivals, the places' words, the seasons' lines and the Town notes. A part with an error is
+ * skipped, and an entry or a field with one dropped: the game's own words play there. The festivals keep one a day
+ * (`readFestivals`); a Town note's unlock is from the trigger menu's `NOTE_KINDS`, and one with none is known from the
+ * start. Notes block nothing.
+ */
+export function checkWorld(raw: unknown, ctx: Pick<StoryContext, 'isGood'> = {}): Read<World | null> {
+  const f = findings()
+  if (!isObject(raw)) { f.errors.push('Not a world (an object); the game’s own words play'); return { value: null, ...f } }
+  let names: WorldNames | undefined
+  if (raw.names !== undefined) {
+    const n = raw.names
+    if (!isObject(n)) f.errors.push('names is an object (town, farm, region); skipped')
+    else {
+      names = kept<WorldNames>(n, Object.fromEntries((['town', 'farm', 'region'] as const)
+        .map((k) => [k, n[k] === undefined ? undefined : worldText(n[k], LINE_LIMITS.name, `names.${k}`, f, 'name')])))
+    }
+  }
+  let history: string[] | undefined
+  if (raw.history !== undefined) {
+    if (!Array.isArray(raw.history)) f.errors.push('history is a list of lines; skipped')
+    else history = (raw.history as unknown[]).flatMap((line, i) => { const t = worldText(line, LINE_LIMITS.worldText, `history, line ${i + 1}`, f); return t === undefined ? [] : [t] })
+  }
+  const festivals = raw.festivals === undefined ? undefined : readFestivals(raw.festivals, f)
+  let places: World['places']
+  if (raw.places !== undefined) {
+    const p = raw.places
+    if (!isObject(p)) f.errors.push('places is an object, by place id; skipped')
+    else {
+      places = Object.fromEntries(Object.entries(p).flatMap(([id, v]): [string, WorldPlace][] => {
+        const at = `Place ${id}`
+        if (!oneOf(FARM_PLACE_IDS, id)) { f.errors.push(`${at}: not one of the farm’s places (${FARM_PLACE_IDS.join(', ')}); skipped`); return [] }
+        if (!isObject(v)) { f.errors.push(`${at}: an object with a name and a line; skipped`); return [] }
+        return [[id, kept<WorldPlace>(v, {
+          name: v.name === undefined ? undefined : worldText(v.name, LINE_LIMITS.name, `${at} name`, f, 'name'),
+          line: v.line === undefined ? undefined : worldText(v.line, LINE_LIMITS.worldLine, `${at} line`, f),
+        })]]
+      }))
+    }
+  }
+  let seasons: World['seasons']
+  if (raw.seasons !== undefined) {
+    const s = raw.seasons
+    if (!isObject(s)) f.errors.push('seasons is an object, by season; skipped')
+    else {
+      seasons = Object.fromEntries(Object.entries(s).flatMap(([season, line]): [string, string][] => {
+        if (!oneOf(SEASONS, season)) { f.errors.push(`Season ${season}: not one of ${SEASONS.join(', ')}; skipped`); return [] }
+        const t = worldText(line, LINE_LIMITS.worldLine, `Season ${season}`, f)
+        return t === undefined ? [] : [[season, t]]
+      }))
+    }
+  }
+  const own = new Set((festivals ?? []).filter((e) => !isFestivalId(e.id)).map((e) => e.id))
+  const notes = raw.notes === undefined ? undefined : readNotes(raw.notes, f, { umas: new Set(), ...ctx, festivals: own })
+  return { value: kept<World>(raw, { names, history, festivals, places, seasons, notes }), ...f }
 }

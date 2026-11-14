@@ -25,13 +25,13 @@ import {
   GIFT_POINTS_V4, goodName, hasPerk, homeOrHoused, invitedNow, isGoodId, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, keepsakeOf, keepsakeQuality, LADDER_COLOURS, ladderOf, levelWords,
   linePlaces, morningRule, morningsToItem, nextBondHeart, pairLevels, pairName, pairOf, PERK_PLACE, perkLineOf, perksFor, petNameOf, readiness, readLevels, ringGrade, ringName,
   ringPercent, romanceTerms, ROUTE_RUNGS, routeIndex, rungName, SEASON_NAMES, SIDE_BY_SIDE_HEARTS, tasteKnown, tieKind, tieLineOf, tiesOf, tieStrength, unreadLevels, WAITING_RUNGS,
-  withFarmer, ARRIVAL, chapterBegun, chapterNow, chapterTitle, gateHolds, gateWords, rungPlayed, rungShort,
-  type Bar, type Birthdays, type LadderName, type Love, type LoveStage, type Perk, type PerkId, type Readiness, type SaveV4, type StoryPack, type TieKind, type Wait,
+  withFarmer, ARRIVAL, chapterBegun, chapterNow, chapterTitle, festivalsOf, gateHolds, gateWords, rungPlayed, rungShort,
+  type Bar, type Festival, type Birthdays, type LadderName, type Love, type LoveStage, type Perk, type PerkId, type Readiness, type SaveV4, type StoryPack, type TieKind, type Wait,
 } from '@farm/domain'
 import { nextWords, readyWords } from './love-words'
 
 /** The pack as the tab reads it. */
-export type HeartsPack = Pick<StoryPack, 'cast' | 'ties' | 'bibles' | 'scripted' | 'pairs'>
+export type HeartsPack = Pick<StoryPack, 'cast' | 'ties' | 'bibles' | 'scripted' | 'pairs'> & Partial<Pick<StoryPack, 'world'>>
 /** An Uma's name from master data. */
 export type NameOf = (id: string) => string
 
@@ -147,12 +147,12 @@ export interface HeartRow {
 }
 
 /** The line under her bar. */
-export function rowNote(state: Readiness, now: Pick<Bar, 'points' | 'cost'>, home: boolean, place: string | null, nameOf: NameOf): string | null {
+export function rowNote(state: Readiness, now: Pick<Bar, 'points' | 'cost'>, home: boolean, place: string | null, nameOf: NameOf, year?: readonly Festival[]): string | null {
   if (state.ready) return `Ready · ${rungName(state.rung!)}${place ? ` · ${place}` : ''}`
   const kind = state.waits!.kind
   if (kind === 'away' || (!home && kind === 'bar')) return 'Invite her to the farm to play her events'
   if (kind === 'bar') return null
-  return readyWords(state, now, nameOf)
+  return readyWords(state, now, nameOf, year)
 }
 
 /** Her place along the route: the domain's, read here for the sort and the perks. */
@@ -176,7 +176,7 @@ export function heartRows(save: SaveV4, pack: HeartsPack, nameOf: NameOf): Heart
     return [{
       id, name: nameOf(id), level: levelWords(love), stage: love.stage, bar: now, heart: heartBar(love, state), state, home,
       invited: invitedNow(save, id), chatted: save.today.chats.includes(id), gifted: save.today.gifts.includes(id),
-      note: rowNote(state, now, home, state.ready ? beatPlace(pack, id, state.rung) : null, nameOf) ?? roomNote(save, pack, id),
+      note: rowNote(state, now, home, state.ready ? beatPlace(pack, id, state.rung) : null, nameOf, festivalsOf(pack)) ?? roomNote(save, pack, id),
       filters: [...(state.ready ? ['ready' as const] : []), STAGE_FILTER[love.stage], ...(home ? [] : ['away' as const])],
       progress: routeIndex(love), points: love.points, order: order < 0 ? cast.length : order, chapter: chapterGlance(save, pack, id),
     }]
@@ -236,14 +236,15 @@ export interface ChaptersView {
 export const afterWords = (rung: string): string =>
   rung === ARRIVAL ? 'After meeting her' : WAITING_RUNGS.includes(rung) ? `After ${rungName(rung).toLowerCase()}` : `After ${rungName(rung)}`
 
-export function chaptersView(save: SaveV4, pack: Pick<StoryPack, 'cast'>, id: string, nameOf: NameOf): ChaptersView {
+export function chaptersView(save: SaveV4, pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'world'>>, id: string, nameOf: NameOf): ChaptersView {
   const now = chapterNow(save, pack, id)
+  const year = festivalsOf(pack)
   const love = save.love[id]!
   const chapters = now.chapters.map((c): ChapterView => {
     const events = c.events.map((rung) => ({ rung, label: rungShort(rung), played: rungPlayed(save, id, rung) }))
     const played = events.filter((e) => e.played).length
     const state = c.n === now.current?.n ? 'current' : now.current === null || played === events.length ? 'done' : 'ahead'
-    const gate = state !== 'done' && c.gate && !chapterBegun(c, love) && !gateHolds(save, c.gate) ? gateWords(c.gate, nameOf) : null
+    const gate = state !== 'done' && c.gate && !chapterBegun(c, love) && !gateHolds(save, c.gate, year) ? gateWords(c.gate, nameOf, year) : null
     return { n: c.n, title: chapterTitle(c), state, events, played, gate }
   })
   const at = now.current ? now.chapters.indexOf(now.current) : -1
@@ -332,7 +333,7 @@ export function nextCard(save: SaveV4, pack: HeartsPack, id: string, nameOf: Nam
   const perk = now.rung && line ? perksFor(line, save).find((p) => p.rung === now.rung) ?? null : null
   const hint = now.rung ? beatOf(pack, id, now.rung)?.hint ?? null : null
   return {
-    rung: now.rung, title: now.rung ? `Next: ${rungName(now.rung)}` : 'Her route is complete', perk, hint, bar: now, words: nextWords(state, now, nameOf),
+    rung: now.rung, title: now.rung ? `Next: ${rungName(now.rung)}` : 'Her route is complete', perk, hint, bar: now, words: nextWords(state, now, nameOf, festivalsOf(pack)),
     ready: state.ready, waits: state.waits?.kind ?? null,
   }
 }

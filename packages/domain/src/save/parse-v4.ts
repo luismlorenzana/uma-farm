@@ -3,10 +3,11 @@
 // or a sister's `s<outfitId>` (the API has no story pack or master data): the roster is everyone you've met, her `joined`
 // the day you met her; `love` holds exactly the roster's keys, each in range; `memories` and
 // `arrivals` name roster Umas; the farmer's name is empty or within its rule; the Dorm is on its eight levels. Each
-// part of the romance adds the checks for what it fills. Today's evenings fill the
-// day's slots (one, two on days divisible by 4 from 10 married, festival night's on a festival day) with the evening
-// kinds, and its invitations are one (two from 10 married), each a different Uma, asking for a date game.
-import { dateOf, FESTIVAL_IDS, festivalOn } from '../farm/calendar'
+// part of the romance adds the checks for what it fills. Today's evenings fill the day's slots (one, two on days
+// divisible by 4 from 10 married, and festival night once at most: the story says which days are festivals) with the
+// evening kinds, and its invitations are one (two from 10 married), each a different Uma, asking for a date game. The
+// Diary's Town notes are ids, an older v4's none.
+import { dateOf, FESTIVAL_IDS } from '../farm/calendar'
 import { cleanFarmerName, farmerNameIssue, houseNameIssue } from '../romance/farmer'
 import { isCropId, isGoodId, isGoodOrRingId, type CropId } from '../goods/ids'
 import { isStockId, parseStockKey } from './warehouse'
@@ -19,7 +20,7 @@ import {
   parseWorkshops, unique, type LoopRequestKinds,
 } from './parse-loop'
 import {
-  type BuildingId, EVENING_KINDS, eveningsOn, FARMHOUSE, FESTIVAL_NIGHT, FINALE_MARRIED, FURNITURE_PIECES, invitesFor, LOVE_STAGES, marriedCount, MAX_HOUSES, residentsOf, roomsOf, vowsOn,
+  type BuildingId, EVENING_KINDS, eveningsOn, FARMHOUSE, FESTIVAL_NIGHT, FINALE_MARRIED, FURNITURE_PIECES, invitesFor, LOVE_STAGES, marriedCount, MAX_HOUSES, residentsOf, roomsOf,
   isDishId, pairKey, TOWN_ID, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUma, type SaveV4, type TodayV4, type TownTalks,
 } from './v4'
 
@@ -142,9 +143,9 @@ const eveningKind = (v: unknown, at: string): EveningKind => oneOf(v, at, EVENIN
 /** An invitation's kind: a date game, never festival night. */
 const inviteKind = (v: unknown, at: string): InviteKind => (v === FESTIVAL_NIGHT ? fail(at, 'expected a date game') : eveningKind(v, at) as InviteKind)
 
-/** `today`: the evenings within the day's slots (`evenings` regular ones, festival
- * night's on a festival day), and `invites` invitations, each a different Uma. */
-function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number, vows: boolean): TodayV4 {
+/** `today`: the evenings within the day's slots (`evenings` regular ones, and festival
+ * night once at most), and `invites` invitations, each a different Uma. */
+function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
   const o = object(value, path, ['chats', 'gifts', 'praise', 'praised', 'events', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const slots = eveningsOn(day, married)
@@ -153,8 +154,9 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
     return { with: member(e.with, `${path}.evenings.${i}.with`, roster), kind: eveningKind(e.kind, `${path}.evenings.${i}.kind`) }
   })
   const nights = evenings.filter((e) => e.kind === FESTIVAL_NIGHT).length
-  // The Festival of Vows brings a festival night too.
-  if (nights > (festivalOn(day) || vows ? 1 : 0)) fail(`${path}.evenings`, 'festival night only on a festival day, once')
+  // Festival night once a day at most. Which days hold a festival is the story's (`festivalsOf`: it may move or add
+  // them), so the save reads any day's; the evening's rule spends it only on a festival day or the Festival of Vows.
+  if (nights > 1) fail(`${path}.evenings`, 'festival night once a day at most')
   if (evenings.length - nights > slots) fail(`${path}.evenings`, `expected at most ${slots} evening${slots === 1 ? '' : 's'} today`)
   return {
     chats: umas(o.chats, `${path}.chats`), gifts: umas(o.gifts, `${path}.gifts`), praise: umas(o.praise, `${path}.praise`),
@@ -402,7 +404,7 @@ export function parseSaveV4(value: unknown, path = 'save', kinds: LoopRequestKin
     farmer: parseFarmer(o.farmer, `${path}.farmer`),
     calendar: { day: today },
     gold: count(o.gold, `${path}.gold`),
-    today: parseToday(o.today, `${path}.today`, ids, today, marriedCount({ love }), vowsOn(homestead, today)),
+    today: parseToday(o.today, `${path}.today`, ids, today, marriedCount({ love })),
     roster,
     love,
     dorm: parseDorm(o.dorm, `${path}.dorm`, ids, buildings.dorm),

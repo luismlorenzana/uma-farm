@@ -14,13 +14,13 @@
 //                   says when that plays); once that has played the chapter is open, and the rest follow as Ready allows
 //   opens           a chapter opens when its first event can play: the rung before it has played and its gate holds. The
 //                   night notes the morning it does (`chaptersOpened`: "A new chapter with ‹name›")
-import { dateOf, festivalOn, FESTIVALS, SEASON_NAMES } from '../farm/calendar'
+import { dateOf, festivalOn, FESTIVALS, SEASON_NAMES, type Festival } from '../farm/calendar'
 import { farmPlace } from '../farm/places'
 import { goodName } from '../goods/ids'
 import type { Love, SaveV4 } from '../save/v4'
 import { ARRIVAL, RUNGS, type HerChapter, type StoryTrigger } from '../story/authored'
 import type { StoryPack } from '../story/pack'
-import { chaptersOf, DEFAULT_CHAPTERS } from '../story/placeholders'
+import { chaptersOf, DEFAULT_CHAPTERS, festivalNameOf, festivalsOf } from '../story/placeholders'
 import { NIGHT_RUNGS, nextRung, ROUTE_RUNGS, rungName } from './love'
 import { eventPlayed, triggerHolds } from './meeting'
 import { routeIndex } from './perk-terms'
@@ -90,11 +90,12 @@ export const chapterBegun = (chapter: Pick<Chapter, 'events'>, love: Pick<Love, 
   chapter.events.some((r) => r !== ARRIVAL && placeOf(r) < routeIndex(love))
 
 /** Whether a chapter's gate holds now: a place built, a Farm Rank, a good shipped and another's event as meeting her
- * reads them; a season or a festival on its days. The town's kinds aren't a gate's (the reader skips them): they hold. */
-export function gateHolds(save: SaveV4, gate: StoryTrigger): boolean {
+ * reads them; a season or a festival on its days (`year`'s: the game's five, or the story's). The town's kinds aren't a
+ * gate's (the reader skips them): they hold. */
+export function gateHolds(save: SaveV4, gate: StoryTrigger, year: readonly Festival[] = FESTIVALS): boolean {
   switch (gate.kind) {
     case 'season': return dateOf(save.calendar.day).season === gate.season
-    case 'festival': return festivalOn(save.calendar.day)?.id === gate.festival
+    case 'festival': return festivalOn(save.calendar.day, year)?.id === gate.festival
     case 'farm-rank': case 'built': case 'shipped': case 'event': return triggerHolds(save, gate, 0, { at: 'night' })
     default: return true
   }
@@ -108,19 +109,19 @@ export interface ChapterNow {
   /** Its gate while it doesn't hold and her next rung is its first event; null otherwise. */
   waits: StoryTrigger | null
 }
-export function chapterNow(save: SaveV4, pack: Pick<StoryPack, 'cast'>, id: string): ChapterNow {
+export function chapterNow(save: SaveV4, pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'world'>>, id: string): ChapterNow {
   const chapters = herChapters(pack, id)
   const love = save.love[id]
   const rung = love ? nextRung(love) : null
   const current = rung === null ? null : chapterAt(chapters, rung)
-  const held = love && rung !== null && current?.gate && !NIGHT_RUNGS.includes(rung) && !chapterBegun(current, love) && !gateHolds(save, current.gate)
+  const held = love && rung !== null && current?.gate && !NIGHT_RUNGS.includes(rung) && !chapterBegun(current, love) && !gateHolds(save, current.gate, festivalsOf(pack))
   return { chapters, current, waits: held ? current!.gate : null }
 }
 
 /** Whether a gate held at the day's start, read at night from the day as it was left: every kind but another's event
  * changes only at night; an event gate held if its event had played before today. */
-function heldAtDawn(day: SaveV4, gate: StoryTrigger): boolean {
-  if (gate.kind !== 'event') return gateHolds(day, gate)
+function heldAtDawn(day: SaveV4, gate: StoryTrigger, year: readonly Festival[]): boolean {
+  if (gate.kind !== 'event') return gateHolds(day, gate, year)
   const today = (u: string, ev: string): boolean => (ev === ARRIVAL
     ? day.roster[u]?.joined === day.calendar.day
     : day.today.events.includes(u) && day.memories[u]?.at(-1) === ev)
@@ -136,8 +137,9 @@ function heldAtDawn(day: SaveV4, gate: StoryTrigger): boolean {
  * today (her event, or Ask her's Yes), a night level moved her into it, or its gate began to hold. Her first chapter opens
  * with meeting her, which the morning says on its own. In `order` (the cast's), then by id.
  */
-export function chaptersOpened(day: SaveV4, morning: SaveV4, pack: Pick<StoryPack, 'cast'>, order: readonly string[] = []): { id: string; chapter: number }[] {
+export function chaptersOpened(day: SaveV4, morning: SaveV4, pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'world'>>, order: readonly string[] = []): { id: string; chapter: number }[] {
   const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length)
+  const year = festivalsOf(pack)
   return Object.keys(morning.roster).sort((a, b) => rank(a) - rank(b) || Number(a) - Number(b)).flatMap((id) => {
     const love = morning.love[id]
     const was = day.love[id]
@@ -146,7 +148,7 @@ export function chaptersOpened(day: SaveV4, morning: SaveV4, pack: Pick<StoryPac
     const chapter = now.current
     if (!chapter || now.waits || chapterBegun(chapter, love)) return []
     const moved = (day.today.events.includes(id) || day.today.asked.includes(id)) && !was.friend
-    const opened = chapterNow(day, pack, id).current?.n !== chapter.n || (chapter.gate !== null && !heldAtDawn(day, chapter.gate)) || moved
+    const opened = chapterNow(day, pack, id).current?.n !== chapter.n || (chapter.gate !== null && !heldAtDawn(day, chapter.gate, year)) || moved
     return opened ? [{ id, chapter: chapter.n }] : []
   })
 }
@@ -170,16 +172,19 @@ export const chapterTitle = (chapter: Pick<Chapter, 'n' | 'title'>): string => c
 /** An event in a gate's words: "Friendship 3", "confession", "wedding". */
 const eventWords = (event: string): string => (event === 'confession' || event === 'proposal' || event === 'wedding' ? event : ROUTE_RUNGS.includes(event) ? rungName(event) : event)
 
+/** A festival's name after "on" or "at": "the Harvest Cup", or a name of the story's that brings its own "The". */
+export const theFestival = (name: string): string => (/^the\s/i.test(name) ? name : `the ${name}`)
+
 /** What a gate asks, in her profile's words: "Opens when the Kitchen is built", "Opens at Farm Rank 4", "Opens when
  * you’ve shipped 50 Carrot", "Opens after Stand-in 2’s Friendship 3", "Opens in Winter", "Opens on the Harvest Cup".
- * `nameOf` names another character. */
-export function gateWords(gate: StoryTrigger, nameOf: (id: string) => string = (id) => id): string {
+ * `nameOf` names another character; a festival is named as `year` names it (the story's, `festivalsOf`). */
+export function gateWords(gate: StoryTrigger, nameOf: (id: string) => string = (id) => id, year: readonly Festival[] = FESTIVALS): string {
   switch (gate.kind) {
     case 'built': return `Opens when the ${farmPlace(gate.place)?.name ?? gate.place} is built`
     case 'farm-rank': return `Opens at Farm Rank ${gate.rank}`
     case 'shipped': return `Opens when you’ve shipped ${gate.count.toLocaleString('en-US')} ${goodName(gate.good)}`
     case 'season': return `Opens in ${SEASON_NAMES[gate.season]}`
-    case 'festival': return `Opens on the ${FESTIVALS.find((f) => f.id === gate.festival)?.name ?? gate.festival}`
+    case 'festival': return `Opens on ${theFestival(festivalNameOf(year, gate.festival))}`
     case 'event': {
       const at = gate.after.indexOf(':')
       if (at <= 0) return gate.after === ARRIVAL ? 'Opens once you meet someone new' : `Opens after anyone’s ${eventWords(gate.after)}`

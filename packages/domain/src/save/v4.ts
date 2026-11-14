@@ -384,7 +384,9 @@ export interface SaveV4 {
   /** Bond points by pair: `pairKey` of character ids. */
   bonds: Record<string, number>
   board: BoardRequest[]
-  diary: { shipped: Record<string, number>; milestones: string[]; records: Record<string, number>; read: string[] }
+  /** What's shipped, the milestones paid, the records, the scenes read, and the Town notes unlocked (their ids, in the
+   * order they unlocked: the words are the pack's). An older v4 has no `notes`: none. */
+  diary: { shipped: Record<string, number>; milestones: string[]; records: Record<string, number>; read: string[]; notes: string[] }
   /** The Farm Rank's points, festivals, lifetime counters, and the places paid for today, standing tomorrow morning
    * (`builds`, in the order paid). */
   farm: { points: number; festivals: FestivalResult[]; counts: Record<string, number>; builds: FarmPlaceId[] }
@@ -437,7 +439,7 @@ export function newSave(uid: string, now: string): SaveV4 {
     expeditions: [],
     bonds: {},
     board: [],
-    diary: { shipped: {}, milestones: [], records: {}, read: [] },
+    diary: { shipped: {}, milestones: [], records: {}, read: [], notes: [] },
     farm: { points: 0, festivals: [], counts: {}, builds: [] },
     homestead: { houses: [FARMHOUSE], tonight: null, alone: null, slept: [0], furniture: [], married: 0, finale: 0 },
     memories: {},

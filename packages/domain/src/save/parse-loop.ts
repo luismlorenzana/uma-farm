@@ -2,7 +2,7 @@
 // by form: the API has no master data or story pack, and an id a later release drops still parses. Internal to `save/`:
 // `parse-v4.ts` composes these and re-exports the public names (the work places, their slots and the kinds' types).
 import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkKindRules, WorkOutput, WorkRow } from '@luismlorenzana/uma-work'
-import { FESTIVAL_IDS, SEASONS } from '../farm/calendar'
+import { SEASONS } from '../farm/calendar'
 import { bedsAt, DORM_MAX_LEVEL, FARM_RANK_POINTS } from '../farm/farm'
 import { DIARY_ROWS, isDiaryPaidId, MILESTONES } from '../farm/milestones'
 import { BUILD_PLACES, farmPlace, isBuildPlace, type FarmPlaceId } from '../farm/places'
@@ -377,12 +377,14 @@ export function keys(value: unknown, path: string): string[] {
 
 /** The Diary: what's shipped is the catalogue's goods and the rings. */
 export function parseDiary(value: unknown, path: string): SaveV4['diary'] {
-  const o = object(value, path, ['shipped', 'milestones', 'records', 'read'])
+  const o = object(value, path, ['shipped', 'milestones', 'records', 'read', 'notes'])
   return {
     shipped: counts(o.shipped, `${path}.shipped`, isGoodOrRingId, 'unknown good'),
     milestones: keys(o.milestones, `${path}.milestones`),
     records: counts(o.records, `${path}.records`, (k) => KEY.test(k), 'expected an id', amount),
     read: keys(o.read, `${path}.read`),
+    // The Town notes unlocked: an older v4 has none.
+    notes: o.notes === undefined ? [] : keys(o.notes, `${path}.notes`),
   }
 }
 
@@ -470,7 +472,10 @@ export function parseRankLines(value: unknown, path: string, roster: ReadonlySet
 }
 
 /** §5's kinds: the roster's arrivals are §4's hearts. */
-const NEWS_KINDS = ['story', 'season', 'festival', 'chapter', 'built', 'farm-rank', 'milestone', 'dorm', 'home', 'household'] as const
+const NEWS_KINDS = ['story', 'season', 'festival', 'notes', 'chapter', 'built', 'farm-rank', 'milestone', 'dorm', 'home', 'household'] as const
+/** A festival's id in the news: one of the game's five, or one of the story's own (its world.json is the pack's, so the
+ * save reads the id's shape only). */
+const FESTIVAL_NEWS_ID = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
 /** The household milestones a morning may announce. */
 const HOUSEHOLD_NEWS = [1, 5, 10, 15, 20] as const
 
@@ -478,7 +483,7 @@ const HOUSEHOLD_NEWS = [1, 5, 10, 15, 20] as const
 export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet<string>): NewsLine[] {
   // A new story release, the season and festivals, the goals' news, the Dorm's new level and Umas home from a swap, and
   // the household's.
-  const read = list(value, path, 0, 1 + 8 + MAX_GOAL_NEWS + 2 + HOUSEHOLD_NEWS.length).map((v, i): NewsLine | null => {
+  const read = list(value, path, 0, 1 + 8 + 1 + MAX_GOAL_NEWS + 2 + HOUSEHOLD_NEWS.length).map((v, i): NewsLine | null => {
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, NEWS_KINDS)
     switch (kind) {
@@ -498,7 +503,13 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
       case 'season': return { kind, season: oneOf(object(v, at, ['kind', 'season']).season, `${at}.season`, SEASONS) }
       case 'festival': {
         const f = object(v, at, ['kind', 'festival', 'when'])
-        return { kind, festival: oneOf(f.festival, `${at}.festival`, FESTIVAL_IDS), when: oneOf(f.when, `${at}.when`, ['today', 'tomorrow'] as const) }
+        const festival = typeof f.festival === 'string' && FESTIVAL_NEWS_ID.test(f.festival) && f.festival.length <= 40 ? f.festival : fail(`${at}.festival`, 'expected a festival’s id')
+        return { kind, festival, when: oneOf(f.when, `${at}.when`, ['today', 'tomorrow'] as const) }
+      }
+      // The Town notes the night unlocked.
+      case 'notes': {
+        const ids = keys(object(v, at, ['kind', 'ids']).ids, `${at}.ids`)
+        return { kind, ids: ids.length > 0 ? ids : fail(`${at}.ids`, 'expected a note’s id') }
       }
       case 'dorm': return { kind, level: int(object(v, at, ['kind', 'level']).level, `${at}.level`, 2, DORM_MAX_LEVEL) }
       case 'home': {
@@ -512,7 +523,7 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
       }
     }
   })
-  return unique(read.filter((n): n is NewsLine => n !== null), path, (n) => (n.kind === 'story' || n.kind === 'season' || n.kind === 'dorm' || n.kind === 'home' ? n.kind
+  return unique(read.filter((n): n is NewsLine => n !== null), path, (n) => (n.kind === 'story' || n.kind === 'season' || n.kind === 'notes' || n.kind === 'dorm' || n.kind === 'home' ? n.kind
     : n.kind === 'festival' ? `festival:${n.when}` : n.kind === 'built' ? `built:${n.place}` : n.kind === 'farm-rank' ? `farm-rank:${n.rank}`
       : n.kind === 'milestone' ? `milestone:${n.id}` : `household:${n.married}`))
 }

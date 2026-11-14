@@ -53,6 +53,7 @@ describe('the packs an open story releases', () => {
     expect(notes).toEqual([
       `cast.json: Uma 1 (${id(1)}): no outfit, so she plays her default outfit from master data`,
       'opening.json: no opening yet, so the game’s own three lines play',
+      'world.json: no world yet, so the game’s own names, festivals, places and seasons play, and there are no Town notes',
       `umas/${id(1)}.json: no bible yet, so her calling or her stats give her line, every gift is neutral, and her chats are the game’s for each stage`,
       `routes/${id(1)}.json: no route yet, so her meeting scene and her events play the game’s own short cards, which pay as written ones do`,
       `cast.json: ${id(1)} has no calling and no bible’s favouriteLine, so her line is the work her stats in master data suit best`,

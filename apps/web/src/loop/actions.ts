@@ -10,7 +10,7 @@ import {
   BLOCK_IDS, payBuild, buyDorm, cancelSwap, swapDorm, buy, buyBlock, collectLoopAll, collectLoopWorker, dismissLoopStopped, editLoopQueue, endDay, harvest, harvestAll, loopKinds, plant,
   plantAll, readScene, recallLoopWorker, receiptItems, repeatLoopJob, restartLoopStopped, SaveRuleError, setTender, ship, shipAll, shopLines, startLoopJob, takeBack,
   touched, type BlockId, type CropId, type FarmingTalentOf, type HarvestReceipt, type LoopCollected, type LoopJobInput, type LoopKinds, type LoopPlaceId,
-  type LoopWorkRequest, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, inviteToFarm, nameFarmer, sayHello,
+  type LoopWorkRequest, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, inviteToFarm, nameFarmer, sayHello, unlockNotes,
   type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair, type StoryPack,
 } from '@farm/domain'
 import type { QueueInput } from '@luismlorenzana/uma-work'
@@ -214,10 +214,16 @@ export async function readSceneOnce(id: OpeningSceneId): Promise<void> {
 }
 
 /** Say hello to today's visitor at the Gate: her first talk meets her, and she moves in while a bed is free. Her meeting
- * scene plays next. */
-export async function sayHelloAtGate(id: string): Promise<void> {
+ * scene plays next. The visit also unlocks the Town notes whose unlock holds now; their ids come back. */
+export async function sayHelloAtGate(id: string): Promise<string[]> {
   const story = await storyReady()
-  await change((s) => sayHello(s, story, id))
+  let unlocked: string[] = []
+  await change((s) => {
+    const r = unlockNotes(sayHello(s, story, id), story, { at: 'gate' })
+    unlocked = r.unlocked
+    return r.save
+  })
+  return unlocked
 }
 
 /** Invite to the farm: one you've met who lives in town moves into a free Dorm bed now. */

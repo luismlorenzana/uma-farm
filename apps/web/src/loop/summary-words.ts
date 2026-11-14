@@ -11,16 +11,38 @@
 // read live), a move-in, a house that misses you (Tonight › and Another night under it), a night level (her level-up
 // card at `?level=`), the Festival of Vows, the household's Ready offers (live, after the Ready lines) and §5's
 // household milestones. §5 opens with "New story arrived" once a release, its note the release's (read live by its
-// number), a tap to the Hearts tab.
+// number), a tap to the Hearts tab. The world's words are the pack's, read live (`WorldWords`): a festival's name, the
+// season's line under "Spring begins", the Town notes the night unlocked (a tap opens them in the Diary), and the town's
+// name where she's met in town.
 import {
-  ACTIVITY_NAMES, bedsAt, EVENINGS, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, rungName, SEASON_NAMES, SUMMARY_SECTIONS, type FarmPlaceId, type FestivalId, type HeartLine, type MorningSummary, type SummarySection,
+  ACTIVITY_NAMES, bedsAt, EVENINGS, farmPlace, FESTIVALS, festivalNameOf, festivalsOf, goodName, itemNameOf, RANKS, rungName, SEASON_NAMES, seasonLineOf, SUMMARY_SECTIONS, townNoteOf,
+  worldNamesOf, type FarmPlaceId, type HeartLine, type MorningSummary, type Season, type StoryPack, type SummarySection,
 } from '@farm/domain'
 import { builtWords, farmRankWords, milestoneWords } from './goal-words'
 import { readParam, type PairWords } from './hearts-view'
 import { challengeWords } from './roster-view'
 import { plural } from './words'
 
-const festivalName = (id: FestivalId): string => FESTIVALS.find((f) => f.id === id)!.name
+/** What the world's lines read from the pack as the card shows: a festival's name, a season's line, a Town note's title
+ * and the town's name. The game's own words before the pack loads, and without `world.json`. */
+export interface WorldWords {
+  festival: (id: string) => string
+  seasonLine: (season: Season) => string | null
+  noteTitle: (id: string) => string | null
+  town: string | null
+}
+export const NO_WORLD: WorldWords = { festival: (id) => festivalNameOf(FESTIVALS, id), seasonLine: () => null, noteTitle: () => null, town: null }
+/** The world's words from the pack. */
+export function worldWords(pack: Partial<Pick<StoryPack, 'world'>> | null): WorldWords {
+  const year = festivalsOf(pack)
+  return { festival: (id) => festivalNameOf(year, id), seasonLine: (s) => seasonLineOf(pack, s), noteTitle: (id) => townNoteOf(pack, id)?.title ?? null, town: worldNamesOf(pack).town }
+}
+
+/** §5's Town notes in words: the first's title, "+2 more" after it, each a tap to the Diary's Town notes. */
+export function notesNews(ids: readonly string[], world: WorldWords): SummaryLine {
+  const title = world.noteTitle(ids[0]!) ?? 'A Town note'
+  return { key: 'notes', to: `/diary?note=${ids[0]!}`, text: ids.length > 1 ? `${title} +${ids.length - 1} more` : title, tag: ids.length > 1 ? 'Town notes' : 'Town note' }
+}
 
 export interface SummaryLine {
   key: string
@@ -68,9 +90,9 @@ export interface ReadyNow {
 /** The morning summary as the card shows it: its sections in order, empty ones hidden, each line a tap.
  * §4 Hearts also shows while someone is `ready`. */
 export function summaryParts(summary: MorningSummary, nameOf: NameOf = someone, ready: readonly ReadyNow[] = [], pairs: PairWords | null = null,
-  home: HomeWords = NO_HOME, chapterOf: ChapterOf = noChapter, noteOf: NoteOf = noNote): SummaryPart[] {
+  home: HomeWords = NO_HOME, chapterOf: ChapterOf = noChapter, noteOf: NoteOf = noNote, world: WorldWords = NO_WORLD): SummaryPart[] {
   const sections = SUMMARY_SECTIONS.filter((section) => (section === 'hearts' ? summary.hearts.length + ready.length + home.household.length > 0 : summary[section].length > 0))
-  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs, home, chapterOf, noteOf) }))
+  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs, home, chapterOf, noteOf, world) }))
 }
 
 /** A story release's note by its ship's number, from the release the game plays as the card shows; null for another
@@ -120,7 +142,7 @@ export const HEARTS_ORDER: Readonly<Record<HeartLine['kind'], number>> = {
 /** §4 Hearts: the Ready lines, then the stored lines in that order. `pairs` says which bond
  * lines have a conversation to Read; without it (the pack loading) they say the heart alone. */
 export function heartsLines(hearts: readonly HeartLine[], ready: readonly ReadyNow[], nameOf: NameOf, pairs: PairWords | null = null, home: HomeWords = NO_HOME,
-  chapterOf: ChapterOf = noChapter): SummaryLine[] {
+  chapterOf: ChapterOf = noChapter, town: string | null = null): SummaryLine[] {
   const now = ready.slice(0, READY_LINES).map((r): SummaryLine => ({
     key: `ready:${r.id}`, to: `/?event=${r.id}`, tag: 'Play', text: `● Ready · ${nameOf(r.id)} · ${rungName(r.rung)}${r.place ? ` · ${r.place}` : ''}`,
   }))
@@ -128,7 +150,7 @@ export function heartsLines(hearts: readonly HeartLine[], ready: readonly ReadyN
   // The household's Ready offers, read live, after her Ready lines.
   const household = home.household.map((h): SummaryLine => ({ key: `household:${h.id}`, to: h.to, tag: 'Play', text: h.text }))
   const stored = hearts.map((line, i) => ({ line, i })).sort((a, b) => HEARTS_ORDER[a.line.kind] - HEARTS_ORDER[b.line.kind] || a.i - b.i)
-  return [...now, ...more, ...household, ...stored.map(({ line }) => heartLine(line, nameOf, pairs, home, chapterOf))]
+  return [...now, ...more, ...household, ...stored.map(({ line }) => heartLine(line, nameOf, pairs, home, chapterOf, town))]
 }
 
 /** The ♥♥ of a pair's line: two hearts for two Umas, whatever the level. */
@@ -166,8 +188,9 @@ export function houseWords(line: Extract<HeartLine, { kind: 'house' }>, nameOf: 
   return [`⌂ ${houseName(line.house)}`, who, `♥ +${line.paid}`, ...(line.breakfast > 0 ? [`☕ ${line.breakfast} fed`] : []), ...(line.items > 0 ? [`+${plural(line.items, 'item')}`] : [])].join(' · ')
 }
 
-/** A stored §4 line in words, opening her profile. */
-function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, home: HomeWords = NO_HOME, chapterOf: ChapterOf = noChapter): SummaryLine {
+/** A stored §4 line in words, opening her profile. One met who lives in town is "in town", or in the town the world
+ * names. */
+function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, home: HomeWords = NO_HOME, chapterOf: ChapterOf = noChapter, town: string | null = null): SummaryLine {
   if (line.kind === 'side') return { key: 'side', to: '/warehouse', text: `Side by side · +${plural(line.items, 'item')}` }
   // The house's morning (its house line under it), a house that misses you, the Festival of Vows.
   if (line.kind === 'house') {
@@ -188,7 +211,7 @@ function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, hom
       key: `anniversary:${line.id}`, to,
       text: line.when === 'today' ? `♥ ${name}’s anniversary${line.item ? ` · ★5 ${goodName(line.item)} left for you` : ''}` : `♥ Tomorrow: ${name}’s anniversary`,
     }
-    case 'arrived': return { key: `arrived:${line.id}`, to, text: `Met ${name}${line.home ? ' · moved in' : ' · in town'}`, tag: 'New' }
+    case 'arrived': return { key: `arrived:${line.id}`, to, text: `Met ${name}${line.home ? ' · moved in' : ` · in ${town ?? 'town'}`}`, tag: 'New' }
     case 'item': return { key: `item:${line.id}`, to, text: `♥ ${name} left you ${starredGoods(line.items)}` }
     case 'moved': return { key: `moved:${line.id}`, to, text: `⌂ ${name} moved into ${home.houseName(line.house)}` }
     case 'level': return { key: `level:${line.id}`, to: `/?level=${line.id}:${line.rung}`, text: `♥ ${name} · ${rungName(line.rung)}, reached overnight`, tag: 'New' }
@@ -202,7 +225,7 @@ function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, hom
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 
 function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: NameOf, ready: readonly ReadyNow[], pairs: PairWords | null,
-  home: HomeWords, chapterOf: ChapterOf, noteOf: NoteOf): SummaryLine[] {
+  home: HomeWords, chapterOf: ChapterOf, noteOf: NoteOf, world: WorldWords): SummaryLine[] {
   switch (section) {
     case 'bin': {
       // Each good and star with its count and gold, the demand marked, then the total.
@@ -226,13 +249,18 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
         }
       })
     case 'news':
-      // A story release new to the device, with its note; the season and festivals; a place built overnight, a Farm Rank
-      // and what it opens, the Diary's milestones; the household's milestones; the Dorm's beds and swaps home.
+      // A story release new to the device, with its note; the season (its line under it) and festivals; the Town notes
+      // the night unlocked; a place built overnight, a Farm Rank and what it opens, the Diary's milestones; the
+      // household's milestones; the Dorm's beds and swaps home.
       return summary.news.map((line): SummaryLine => {
         switch (line.kind) {
           case 'story': return { key: 'story', text: storyNewsWords(noteOf(line.number)), to: '/hearts', tag: 'New' }
-          case 'season': return { key: 'season', text: `${SEASON_NAMES[line.season]} begins`, to: '/?sheet=calendar' }
-          case 'festival': return { key: `festival:${line.when}`, text: `${festivalName(line.festival)} ${line.when}`, to: peek('festival') }
+          case 'season': {
+            const quote = world.seasonLine(line.season)
+            return { key: 'season', text: `${SEASON_NAMES[line.season]} begins`, to: '/?sheet=calendar', ...(quote ? { quote } : {}) }
+          }
+          case 'festival': return { key: `festival:${line.when}`, text: `${world.festival(line.festival)} ${line.when}`, to: peek('festival') }
+          case 'notes': return notesNews(line.ids, world)
           case 'built': return { key: `built:${line.place}`, text: builtWords(line.place), to: peek(farmPlace(line.place)?.on ?? line.place), tag: 'Built' }
           case 'farm-rank': return { key: `farm-rank:${line.rank}`, text: farmRankWords(line.rank), to: '/?sheet=rank', tag: 'Farm Rank' }
           case 'milestone': return { key: `milestone:${line.id}`, text: milestoneWords(line.id), to: '/diary', tag: 'Milestone' }
@@ -257,6 +285,6 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
           text: `${nameOf(line.outfitId)} · ${ACTIVITY_NAMES[line.activity]} · ${challengeWords(line.activity, line.rank - 1, line.challenge) ?? RANKS[line.rank]}`,
         })
     case 'hearts':
-      return heartsLines(summary.hearts, ready, nameOf, pairs, home, chapterOf)
+      return heartsLines(summary.hearts, ready, nameOf, pairs, home, chapterOf, world.town)
   }
 }
