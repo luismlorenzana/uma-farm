@@ -79,6 +79,7 @@
     ]
   },
   "finale": {
+    "outfit": "kimono",
     "open": [
       { "place": "festival" },
       { "narrate": "The whole valley comes up the festival road for the Great Harvest. Every table is borrowed and every lantern lit." },

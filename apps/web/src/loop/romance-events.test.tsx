@@ -5,6 +5,7 @@
 // master data and the server are stubs.
 import 'fake-indexeddb/auto'
 import { costOf, meet, newSave, readScene, type Love, type SaveV4, type StoryPack } from '@farm/domain'
+import { syntheticDialoguePortraits } from '@luismlorenzana/uma-data/testing'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -32,6 +33,7 @@ const { castLens } = await import('../story/load')
 const { Shell } = await import('../shell/Shell')
 const { default: HeartsPage } = await import('./HeartsPage')
 const { heartsLines } = await import('./summary-words')
+const { setPortraitSource } = await import('../dialogue/portraits')
 
 /** The stand-in's three home, ties seeded, as if met: the opening brings nobody, and day 1's visitor waits at the Gate. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
@@ -278,6 +280,39 @@ describe('Memories', () => {
     await tapUntil('[data-end-note]')
     expect($('[data-end-note]')?.textContent).toContain('Replays give no points.')
     expect(JSON.stringify(save())).toBe(before)
+  })
+})
+
+describe('her bust on the dialogue engine', () => {
+  // Master data's synthetic family for the farmer stand-in only: four outfits, four faces (fake pictures).
+  const PORTRAITS = syntheticDialoguePortraits(Number(ONE), ['spring', 'farm-work', 'fall', 'garden-party'], ['happy', 'determined', 'thinking', 'shy'])
+  beforeEach(() => setPortraitSource({ portraitsOf: async (id) => (id === ONE ? PORTRAITS : null), art: { artUrl: async (p) => `blob:${p}`, hold: () => () => undefined } }))
+  afterEach(() => setPortraitSource(null))
+
+  it('wears the event’s own outfit, else its moment’s, else the day’s season; her face changes line by line', async () => {
+    const played = farm()
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...played, memories: { [ONE]: ['f1', 'f2', 'f5', 'confession', 'r1'] } } })
+    // f2 names work; the confession autumn (on a spring day); f1 is her work; r1 a picnic; f5 a walk on a spring day.
+    for (const [rung, outfit] of [['f2', 'farm-work'], ['confession', 'fall'], ['f1', 'farm-work'], ['r1', 'garden-party'], ['f5', 'spring']] as const) {
+      await render(<HeartsPage />, `/hearts?memory=${ONE}:${rung}`)
+      await until(() => $('[data-portrait]') !== null)
+      expect([rung, $('[data-portrait]')?.dataset.portrait]).toEqual([rung, outfit])
+    }
+    await render(<HeartsPage />, `/hearts?memory=${ONE}:f2`)
+    await until(() => $('[data-portrait]') !== null)
+    // Her first line is narration: her own face; then her line's.
+    expect($('[data-step]')?.dataset.step).toBe('narrate')
+    expect($('[data-portrait]')?.dataset.expression).toBe('neutral')
+    await tapUntil('[data-portrait-face="determined"]')
+    expect($('[data-portrait]')?.dataset.portrait).toBe('farm-work')
+  })
+  it('an Uma without portraits shows her master-data bust, the emote’s bubble beside it', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
+    await render(<HeartsPage />, `/hearts?memory=${TWO}:arrival`)
+    await tapUntil('[data-step="say"]')
+    expect($('[data-portrait]')).toBeNull()
+    expect($('[data-bust-art="master"]')).not.toBeNull()
+    expect($('[data-emote]')?.dataset.emoteFrame).toBe('emote/music')
   })
 })
 

@@ -1,11 +1,13 @@
 // The event player: her heart event as a full-screen sheet over
-// today's map, the scene player grown. From the top: the title ("The Fields · Friendship 1") with **Auto**, **Skip**
-// and **Log** away from the taps; **the place card** (~45%: the place's uma-art frame on its season's ground, or a
-// romance backdrop's borrowed frame and tint), her bust from master data (a lettered disc for a stand-in) and **an emote
-// bubble** beside it (uma-art's `emote` family); **her bubble** below, at most three lines, typed out: a tap finishes the
-// line, the next goes on, a hold skips; **choices** full width at 48 pt in the thumb zone, each with its gain (+30 the
-// best, +10 the rest, a ♥ on a romantic one, its cost or "Need 1 Basil", "· learns a like"); **the play** as a sheet in
-// the middle (`PlaySheet.tsx`); then **the level-up card**, and the confession's Yes **the stage-up screen**.
+// today's map, played on the dialogue engine (`dialogue/`). From the top: the title ("The Fields · Friendship 1") with
+// **Auto**, **Skip** and **Log** away from the taps; on the left **the place card** (the place's uma-art frame on its
+// season's ground, or a romance backdrop's borrowed frame and tint) behind **her bust**: her portrait in the event's
+// outfit (its own when the story names one, else its moment's: her wedding, her work, a picnic, the summer shore; else
+// the day's season), her face the line's emote; without portraits her master-data bust with the emote's bubble (a
+// lettered disc for a stand-in); on the right **her line**, at most three lines, typed out: a tap finishes the line,
+// the next goes on, a hold skips; **choices** at 48 pt in the thumb zone, each with its gain (+30 the best, +10 the
+// rest, a ♥ on a romantic one, its cost or "Need 1 Basil", "· learns a like"); **the play** as a sheet in the middle
+// (`PlaySheet.tsx`); then **the level-up card**, and the confession's Yes **the stage-up screen**.
 //
 // Three ways in, each a param over any page (portaled above the sheets, z-60): `?event=<id>` plays her Ready event (her
 // row's ● Ready, her profile's **Play ›**, the morning's Ready line); `?ask=<id>` her confession's last choice again
@@ -18,19 +20,20 @@
 // stage-up; **the wedding** asks the place first (her three, each with its place card), plays the authored event on that
 // place's card with the guests' faces and a line of narration (its own place steps give way to the chosen one), then the
 // reception (a dish in the Warehouse, or the bakery's cake), and closes on the Married stage-up.
-import emoteIndex from '@luismlorenzana/uma-art/emote/atlas.json'
-import emoteUrl from '@luismlorenzana/uma-art/emote/atlas.png?url'
 import {
-  askSteps, beatOf, canAsk, choicePointsOf, eventOf, extraPlay, goodName, heldRings, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
+  askSteps, beatOf, canAsk, choicePointsOf, eventMoments, eventOf, extraPlay, goodName, heldRings, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
   readiness, receptionDishes, replaySteps, ringGrade, ringPercent, rungName, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
-  type Answer, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryPack,
+  type Answer, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryOutfit, type StoryPack,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave } from '@luismlorenzana/uma-kit/shell'
-import { Button, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
+import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useSearchParams } from 'react-router'
+import { SceneLookProvider } from '../dialogue/Bust'
+import { lastSay, Line, nextSay } from '../dialogue/Line'
+import { Stage } from '../dialogue/Stage'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
@@ -38,11 +41,11 @@ import { namer } from '../story/people'
 import { useStory } from '../story/story'
 import { askHerOnce, playHerEvent } from './event-actions'
 import { LevelUpCard, StageUpScreen } from './EventCards'
-import { EMOTE_BUBBLE, eventTitle, guestsLine, optionWords, PICKER_WORDS, placeCard, receptionWords } from './event-view'
+import { eventTitle, guestsLine, optionWords, PICKER_WORDS, placeCard, receptionWords, type PlaceCard } from './event-view'
 import { marriedOf, placeWords } from './hearts-view'
 import { ItemIcon } from '../items/ItemIcon'
 import { BuildingArt, PlaySheet, playSpec } from './PlaySheet'
-import { PersonBust, silent } from './ScenePlayer'
+import { silent } from './ScenePlayer'
 
 type Mode = 'event' | 'ask' | 'replay'
 interface Request { mode: Mode; id: string; rung: string | null; from: number | null }
@@ -81,6 +84,8 @@ export default function EventPlayer() {
   // The request is settled once, when it starts: an event stops being Ready the moment it's saved.
   const [req, setReq] = useState<(Request & { rung: string }) | null>(null)
   const [steps, setSteps] = useState<readonly Step[] | null>(null)
+  // The event's own outfit, when the story names one.
+  const [outfit, setOutfit] = useState<StoryOutfit | undefined>(undefined)
   const [gone, setGone] = useState(false)
   const close = () => leave(without(location))
   useEffect(() => {
@@ -100,9 +105,10 @@ export default function EventPlayer() {
   useEffect(() => {
     if (!req || !story) return
     let live = true
-    void eventOf(story, req.id, req.rung).then(({ steps: found }) => {
+    void eventOf(story, req.id, req.rung).then(({ steps: found, outfit: own }) => {
       if (!live) return
       const from = req.from ? choicePointsOf(found)[req.from - 1] ?? null : null
+      setOutfit(own)
       setSteps(req.mode === 'ask' ? askSteps(found) : req.mode === 'replay' ? replaySteps(found, from) : found)
     }, () => live && setGone(true))
     return () => { live = false }
@@ -112,13 +118,15 @@ export default function EventPlayer() {
   }, [gone, asked]) // eslint-disable-line react-hooks/exhaustive-deps
   if (!asked || gone || !save) return null
   return createPortal(
-    <Player req={req} steps={steps} save={save} pack={story} onClose={close} />,
+    <Player req={req} steps={steps} outfit={outfit} save={save} pack={story} onClose={close} />,
     document.body,
   )
 }
 
 /** The frame, and the scene once its script and master data are in. */
-function Player({ req, steps, save, pack, onClose }: { req: (Request & { rung: string }) | null; steps: readonly Step[] | null; save: SaveV4; pack: StoryPack | null; onClose: () => void }) {
+function Player({ req, steps, outfit, save, pack, onClose }: {
+  req: (Request & { rung: string }) | null; steps: readonly Step[] | null; outfit: StoryOutfit | undefined; save: SaveV4; pack: StoryPack | null; onClose: () => void
+}) {
   const [auto, setAuto] = useState(false)
   const [log, setLog] = useState(false)
   const [skipAsked, setSkipAsked] = useState(0)
@@ -128,7 +136,7 @@ function Player({ req, steps, save, pack, onClose }: { req: (Request & { rung: s
     <MasterGate skeleton={<Shell title={loadingTitle} auto={auto} onAuto={() => setAuto(!auto)} onSkip={() => setSkipAsked((n) => n + 1)} onLog={() => setLog(true)}><Waiting /></Shell>}>
       {(master) => loading
         ? <Shell title={loadingTitle} auto={auto} onAuto={() => setAuto(!auto)} onSkip={() => setSkipAsked((n) => n + 1)} onLog={() => setLog(true)}><Waiting />{log && <LogSheet lines={[]} onClose={() => setLog(false)} />}</Shell>
-        : <Scene req={req} steps={steps} save={save} pack={pack} master={master} auto={auto} onAuto={() => setAuto(!auto)} log={log} onLog={setLog} skipAsked={skipAsked} onClose={onClose} />}
+        : <Scene req={req} steps={steps} outfit={outfit} save={save} pack={pack} master={master} auto={auto} onAuto={() => setAuto(!auto)} log={log} onLog={setLog} skipAsked={skipAsked} onClose={onClose} />}
     </MasterGate>
   )
 }
@@ -156,8 +164,8 @@ function Shell({ title, auto, onAuto, onSkip, onLog, skipping = false, children 
 
 type Phase = 'scene' | 'reception' | 'saving' | 'card' | 'stage' | 'asked' | 'replayed'
 
-function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLog, skipAsked, onClose }: {
-  req: Request & { rung: string }; steps: readonly Step[]; save: SaveV4; pack: StoryPack; master: MasterView; auto: boolean; onAuto: () => void
+function Scene({ req, steps: script, outfit, save, pack, master, auto, onAuto, log, onLog, skipAsked, onClose }: {
+  req: Request & { rung: string }; steps: readonly Step[]; outfit: StoryOutfit | undefined; save: SaveV4; pack: StoryPack; master: MasterView; auto: boolean; onAuto: () => void
   log: boolean; onLog: (open: boolean) => void; skipAsked: number; onClose: () => void
 }) {
   const { id, rung, mode } = req
@@ -268,30 +276,33 @@ function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLo
     )
   }
 
-  // The bust: whoever's speaking (one of the town's people too); else hers. Her emote beside it.
+  // The bust: whoever's speaking (one of the town's people too), her face the line's emote; else hers, with the face of
+  // her last line (a narration or a choice doesn't change it).
   const speaker = step && 'say' in step ? step.say : null
   const bustId = speaker ?? id
-  // At a choice, the line before it stays in the bubble, and her emote with it.
+  // At a choice, the line before it stays in the bubble.
   const context = choiceNow ? [...before].reverse().find((s) => 'say' in s || 'narrate' in s || 'thought' in s) ?? null : null
-  const said = step && 'say' in step ? step : context && 'say' in context ? context : null
-  const emote = said && said.say === bustId ? said.emote ?? null : null
+  const emote = step && 'say' in step ? step.emote ?? null : lastSay(before, bustId)?.emote ?? null
+  const placed = placeCard(place ?? 'fields', save.calendar.day)
+  // She wears the event's own outfit when the story names one, else its moment's (her wedding, her work, a picnic, the
+  // summer shore), else the day's season. A wedding's guests wear the day's.
+  const look = { own: outfit, moments: eventMoments({ rung, together: beat?.together ?? null, place, day: save.calendar.day }), day: save.calendar.day, leads: [id] }
   return (
     <Shell title={title} auto={auto} onAuto={onAuto} onSkip={skip} onLog={() => onLog(true)}>
-      {/* Landscape: the place card on the left, her bubble and the choices on the right. */}
-      <div className="flex min-h-0 flex-1 flex-row" data-scene-row>
-        <PlaceCardView place={place} day={save.calendar.day} bust={bustId} bustName={nameOf(bustId)} emote={emote}
-          guests={guests} nameOf={nameOf} />
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-end gap-2 overflow-y-auto px-4 pt-2 pb-4">
+      {/* Landscape: the place card with her bust on the left, her line and the choices on the right. */}
+      <SceneLookProvider value={look}>
+        <Stage bust={{ who: bustId, name: nameOf(bustId), emote }} backdrop={<PlaceBackdrop card={placed} guests={guests} nameOf={nameOf} />}
+          panel={{ 'data-place-card': placed.place, 'data-frame': placed.frame }} next={activePlay || choiceNow ? null : nextSay(shown, cursor + 1)}>
           {choiceNow ? (
             <>
-              {context && <Bubble key={`c${cursor}`} step={context} nameOf={nameOf} farmer={save.farmer.name} still onNext={() => undefined} onHold={skip} auto={false} />}
+              {context && <Line key={`c${cursor}`} step={context} nameOf={nameOf} farmer={save.farmer.name} still onNext={() => undefined} typed />}
               <Choices mode={mode} options={choiceNow} save={save} pack={pack} id={id} farmer={save.farmer.name} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />
             </>
           ) : step && !activePlay ? (
-            <Bubble key={cursor} step={step} nameOf={nameOf} farmer={save.farmer.name} onNext={() => setAt(cursor + 1)} onHold={skip} auto={auto} />
+            <Line key={cursor} step={step} nameOf={nameOf} farmer={save.farmer.name} onNext={() => setAt(cursor + 1)} onHold={skip} auto={auto} typed />
           ) : <div className="flex-1" />}
-        </div>
-      </div>
+        </Stage>
+      </SceneLookProvider>
       {activePlay && (
         <PlaySheet key={`p${plays.length}`} spec={playSpec(save, pack, id, activePlay.as, 'event', seed(plays.length))} title={activePlay.prompt ?? undefined} name={name} replay={mode === 'replay'}
           onDone={(result) => { setPlays([...plays, { kind: activePlay.as.kind, ...result }]); if (playNow) setAt(cursor + 1) }} />
@@ -384,94 +395,18 @@ function ReceptionPicker({ save, onPick }: { save: SaveV4; onPick: (reception: R
   )
 }
 
-/** The place card: its frame on its ground, her bust and her emote bubble; a wedding's guests' faces along its
+/** The place card, the stage's backdrop behind her bust: its frame on its ground, and a wedding's guests' faces along its
  * top. */
-function PlaceCardView({ place, day, bust, bustName, emote, guests = [], nameOf }: {
-  place: string | null; day: number; bust: string; bustName: string; emote: keyof typeof EMOTE_BUBBLE | null; guests?: readonly string[]
-  nameOf?: (id: string) => string
-}) {
-  const card = placeCard(place ?? 'fields', day)
+function PlaceBackdrop({ card, guests, nameOf }: { card: PlaceCard; guests: readonly string[]; nameOf: (id: string) => string }) {
   return (
-    <div className="relative mb-4 ml-4 w-[44%] max-w-[440px] shrink-0 self-stretch overflow-hidden rounded-lg border border-hairline"
-      style={{ background: `linear-gradient(to bottom, ${card.night ? '#1d2742' : '#fdf8ee'} 0%, ${card.ground} 70%)` }} data-place-card={card.place} data-frame={card.frame}>
+    <span aria-hidden className="absolute inset-0" style={{ background: `linear-gradient(to bottom, ${card.night ? '#1d2742' : '#fdf8ee'} 0%, ${card.ground} 70%)` }}>
       {guests.length > 0 && (
-        <span className="absolute top-2 left-2 flex -space-x-1.5" data-guests={guests.join(',')}>
-          {guests.map((g) => <FaceTile key={g} outfitId={g} size={32} label={nameOf?.(g) ?? 'A guest'} round />)}
+        <span className="absolute top-2 left-2 z-10 flex -space-x-1.5" data-guests={guests.join(',')}>
+          {guests.map((g) => <FaceTile key={g} outfitId={g} size={32} label={nameOf(g)} round />)}
         </span>
       )}
       <span className="absolute bottom-6 left-4"><BuildingArt frame={card.frame} scale={3} /></span>
-      <span className="absolute right-2 bottom-0" data-bust={bust}>
-        <PersonBust who={bust} name={bustName} size={190} />
-      </span>
-      {emote && <EmoteBubble emote={emote} />}
-    </div>
-  )
-}
-
-type EmoteFrames = { width: number; height: number; frames: Record<string, { x: number; y: number; w: number; h: number }> }
-/** uma-art's emote bubble beside her bust: music happy or laughing, sweat shy, ellipsis sad, anger angry,
- * exclaim surprised, question thinking, heart tender. */
-function EmoteBubble({ emote }: { emote: keyof typeof EMOTE_BUBBLE }) {
-  const index = emoteIndex as unknown as EmoteFrames
-  const frame = index.frames[EMOTE_BUBBLE[emote]]
-  const scale = 0.75
-  return (
-    <span role="img" aria-label={emote} className="absolute top-3 right-40" data-emote={emote} data-emote-frame={EMOTE_BUBBLE[emote]}
-      style={frame ? {
-        width: frame.w * scale, height: frame.h * scale, backgroundImage: `url(${emoteUrl})`, backgroundSize: `${index.width * scale}px ${index.height * scale}px`,
-        backgroundPosition: `-${frame.x * scale}px -${frame.y * scale}px`, backgroundRepeat: 'no-repeat',
-      } : undefined}>
-      {!frame && emote}
     </span>
-  )
-}
-
-/** Her bubble: at most three lines, typed out; a tap finishes the line, the next goes on, a hold skips; Auto goes
- * on after a reading pause. A `wait` goes on by itself. */
-function Bubble({ step, nameOf, farmer, onNext, onHold, auto, still = false }: {
-  step: Step; nameOf: (id: string) => string; farmer: string; onNext: () => void; onHold: () => void; auto: boolean; still?: boolean
-}) {
-  const reduced = useReducedMotionSetting()
-  const wait = 'wait' in step ? Math.min(5000, Math.max(0, step.wait)) : null
-  const speaker = 'say' in step ? step.say : null
-  const kind = 'say' in step ? 'say' : 'thought' in step ? 'thought' : 'narrate' in step ? 'narrate' : 'other'
-  const text = withFarmer('say' in step ? step.line : 'narrate' in step ? step.narrate : 'thought' in step ? step.thought : '…', farmer)
-  const [chars, setChars] = useState(reduced || still ? text.length : 0)
-  const full = chars >= text.length
-  useEffect(() => {
-    if (full) return
-    const timer = setInterval(() => setChars((n) => Math.min(text.length, n + 2)), 30)
-    return () => clearInterval(timer)
-  }, [full, text.length])
-  useEffect(() => {
-    if (wait === null) return
-    const timer = setTimeout(onNext, wait)
-    return () => clearTimeout(timer)
-  }, [wait]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!auto || !full || still || wait !== null) return
-    const timer = setTimeout(onNext, 1200 + 35 * text.length)
-    return () => clearTimeout(timer)
-  }, [auto, full]) // eslint-disable-line react-hooks/exhaustive-deps
-  const hold = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const held = useRef(false)
-  const down = () => {
-    held.current = false
-    hold.current = setTimeout(() => { held.current = true; onHold() }, 550)
-  }
-  const up = () => { if (hold.current) clearTimeout(hold.current) }
-  const tap = () => {
-    if (still || held.current) return
-    if (!full) setChars(text.length)
-    else onNext()
-  }
-  return (
-    <button type="button" onClick={tap} onPointerDown={down} onPointerUp={up} onPointerCancel={up} onPointerLeave={up} disabled={still}
-      className="w-full rounded-md border border-hairline bg-panel p-4 text-left shadow-2 disabled:opacity-100" aria-label={still ? undefined : 'Next'} data-step={kind} aria-live="polite">
-      {speaker && <p className="font-display text-[15px] font-bold text-accent" data-speaker>{nameOf(speaker)}</p>}
-      <p className={`line-clamp-3 min-h-[3lh] pt-0.5 text-[16px] leading-snug ${kind === 'say' ? 'text-ink' : 'text-ink-soft italic'}`} data-line={text}>{text.slice(0, chars)}</p>
-      {!still && <p className="pt-1 text-right text-[12px] text-ink-faint">{full ? 'Tap to go on · hold to skip' : 'Tap to finish'}</p>}
-    </button>
   )
 }
 

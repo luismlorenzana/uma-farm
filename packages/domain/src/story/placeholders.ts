@@ -38,6 +38,7 @@ import {
   type Tie, type TieKind, type TownNote, type UmaBible, type Wish,
 } from './authored'
 import { CAST, CAST_IDS, isCastId, type CastId } from './cast'
+import type { StoryOutfit } from './look'
 import { castEntry, castOrder, type StoryPack } from './pack'
 import { farmPlace, type FarmPlaceId } from '../farm/places'
 
@@ -356,12 +357,17 @@ const hasChoice = (steps: readonly Step[]): boolean => steps.some((s) => ('choic
 
 /** An event the game plays: the pack's for her rung, else the game's own card. Her written arrival with no choice gets
  * the hello, so it pays as one with a choice does. Her unwritten arrival is the Gate's for the welcome list, else the
- * town's (with the cast to tell). `written` says which. */
-export interface PlayedEvent { id: string; steps: readonly Step[]; written: boolean }
+ * town's (with the cast to tell). `written` says which; `outfit` is the written event's own, if it names one (the game's
+ * card wears the moment's). */
+export interface PlayedEvent { id: string; steps: readonly Step[]; written: boolean; outfit?: StoryOutfit }
 export async function eventOf(pack: Pick<StoryPack, 'route'> & Partial<Pick<StoryPack, 'cast'>>, id: string, rung: string): Promise<PlayedEvent> {
-  const steps = (await pack.route(id))?.events.find((e) => e.id === rung)?.steps
+  const event = (await pack.route(id))?.events.find((e) => e.id === rung)
+  const steps = event?.steps
   if (!steps) return { id: rung, steps: placeholderEvent(id, rung, rung === ARRIVAL && pack.cast !== undefined && !welcomeOf({ cast: pack.cast }).includes(id)), written: false }
-  return { id: rung, steps: rung === ARRIVAL && !hasChoice(steps) ? [...steps, { choice: [...PLACEHOLDER_HELLO] }] : steps, written: true }
+  return {
+    id: rung, steps: rung === ARRIVAL && !hasChoice(steps) ? [...steps, { choice: [...PLACEHOLDER_HELLO] }] : steps, written: true,
+    ...(event.outfit ? { outfit: event.outfit } : {}),
+  }
 }
 
 /** Her Memory's caption for a rung: her beat's, else the card's moment. */

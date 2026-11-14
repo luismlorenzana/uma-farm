@@ -10,18 +10,19 @@ farm-life spirit, farmhands who take the work over, a navigable town, the dialog
 calendar, and a default Uma. The design is [game-design.md](../design/game-design.md), and the steps are in
 [the roadmap](../roadmap.md#the-rework-2026-11-14). Built one at a time, each merged and deployed before the next.
 **Landscape (F74) is in:** the app plays sideways, with the bar, the rail and side panels, and the portrait HD-2D
-preview is retired.
+preview is retired. **The dialogue engine (F75) is in:** every scene plays on one engine, the pilot's two Umas show
+their portraits from master data, their faces change with each line's emote and their outfits follow the scene
+([the dialogue engine](../game-mechanics.md#the-dialogue-engine)); every other Uma shows her master-data bust until F76.
 
 | Piece | Who | State |
 |---|---|---|
-| [F75](tasks/F75-dialogue-engine.md) **The dialogue engine** | Claude | Next, on your go |
-| [F76](tasks/F76-default-uma.md) **The default Uma** | Claude | After F75 |
+| [F76](tasks/F76-default-uma.md) **The default Uma** | Claude | Next |
 | [F77](tasks/F77-actions-and-farm-loop.md) **A day of actions, and the farm loop** | Claude | Ready |
 | [F78](tasks/F78-town-map.md) **The town map** | Claude | After F77 |
 | [F79](tasks/F79-uma-loop.md) **The Uma loop** | Claude | After F76 and F78 |
 | [F80](tasks/F80-farmhands.md) **Farmhands** | Claude | After F77 and F79 |
 | [F81](tasks/F81-economy.md) **Upkeep and loans** | Claude | After F77 |
-| [F82](tasks/F82-calendar.md) **The calendar** | Claude | After F75 and F77 |
+| [F82](tasks/F82-calendar.md) **The calendar** | Claude | After F77 |
 | [F83](tasks/F83-ranch-and-mine.md) **The ranch and the mine** | Claude | After F77 and F80 |
 | [F69](tasks/F69-bust-art-spec.md) **The bust art**, the next Umas | ChatGPT | The pilot is done; the rest in the Ranker's order |
 | [F40](tasks/F40-story-authoring.md) **The story**, and its ship routine | The story session | Release 1 shipped; Release 2 brings `world.json` |
@@ -35,7 +36,7 @@ The table above is the queue. A packet is deleted when it ships, and git keeps t
 | What | Where |
 |---|---|
 | **The landscape phone check:** open the app sideways and visit every screen; held upright, it asks you to turn it | [uma-farm.web.app](https://uma-farm.web.app) |
-| **Say go on F75,** the dialogue engine | [roadmap.md](../roadmap.md#the-rework-2026-11-14) |
+| **The dialogue engine's phone check:** meet the pilot's Umas and watch their faces and outfits change | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story and ship it.** F40 lists what the rework changes for it: the protagonist is a man, there's no welcome week, and her life in town | [F40](tasks/F40-story-authoring.md) |
 | **The next Umas' art:** hand [F69](tasks/F69-bust-art-spec.md) to the character art session | Uma Character Art |
 

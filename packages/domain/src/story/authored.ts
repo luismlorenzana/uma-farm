@@ -22,6 +22,7 @@ import { FARM_PLACE_IDS, type FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity } from '../farm/ranks'
 import { isGoodId } from '../goods/ids'
 import { CAST_IDS, isCastId } from './cast'
+import { EXPRESSION_IDS, isStoryOutfit, STORY_OUTFITS, type Expression, type StoryOutfit } from './look'
 
 /** The farm's places plus the romance's own backdrops. */
 export const STORY_PLACES = [
@@ -40,7 +41,8 @@ export const SPOT_IDS = ['plaza', 'market', 'cafe', 'harbour', 'library', 'track
 export type SpotId = typeof SPOT_IDS[number]
 /** The ladders a beat sits on: her arrival, then the route's six. */
 export const LADDERS = ['arrival', 'friendship', 'confession', 'romance', 'proposal', 'wedding', 'spouse'] as const
-export const EMOTES = ['happy', 'shy', 'sad', 'angry', 'surprised', 'thinking', 'laughing', 'tender'] as const
+/** The emote menu: the 22 expressions (`look.ts`), each falling back to its nearest while her art hasn't drawn it. */
+export const EMOTES: readonly Expression[] = EXPRESSION_IDS
 export const TONES = ['warm', 'playful', 'honest'] as const
 
 /** The date games: short shared activities a date is played as. */
@@ -60,7 +62,7 @@ export type Season = typeof SEASONS[number]
 export type Calling = typeof CALLINGS[number]
 export type TieKind = typeof TIE_KINDS[number]
 export type Ladder = typeof LADDERS[number]
-export type Emote = typeof EMOTES[number]
+export type Emote = Expression
 export type Tone = typeof TONES[number]
 export type DateGame = typeof DATE_GAMES[number]
 
@@ -268,8 +270,10 @@ export type Step =
   | { flag: string }
   /** Its steps play only while the flag is set, `else` otherwise: flags change wording only. */
   | { when: string; then: Step[]; else?: Step[] }
-export interface Route { characterId?: string; events: { id: string; steps: Step[] }[] }
-export interface PairConversations { a: string; b: string; levels: { hearts: number; place?: StoryPlace; steps: Step[] }[] }
+/** An event's, a pair level's, a household scene's and the finale's `outfit` is the scene's own: one of the story's
+ * outfit ids (`look.ts`), `season` the day's. Without one the scene wears the moment's. */
+export interface Route { characterId?: string; events: { id: string; outfit?: StoryOutfit; steps: Step[] }[] }
+export interface PairConversations { a: string; b: string; levels: { hearts: number; place?: StoryPlace; outfit?: StoryOutfit; steps: Step[] }[] }
 
 /** The usual sizes of an event, which a note compares against: a heart event's 1–2 choice points on every path and one
  * play at most; the confession's, the proposal's and the wedding's 1–3 and three. The game plays any. */
@@ -289,9 +293,9 @@ export const HOUSEHOLD_SCENES = [5, 10, 15] as const
 export type HouseholdAt = typeof HOUSEHOLD_SCENES[number]
 /** A household scene: `open`, then each married Uma's `each` in wedding order, then `close`. `open` and `close` speak
  * through narration and the town's cast, since who is married varies; her `each` is hers. It pays nothing. */
-export interface HouseholdScene { at: HouseholdAt; open?: Step[]; each?: Record<string, Step[]>; close?: Step[] }
+export interface HouseholdScene { at: HouseholdAt; outfit?: StoryOutfit; open?: Step[]; each?: Record<string, Step[]>; close?: Step[] }
 /** The finale, the Great Harvest: `open`, its play, each spouse's beat in wedding order, then `close`. */
-export interface Finale { open?: Step[]; play?: Play; each?: Record<string, Step[]>; close?: Step[] }
+export interface Finale { outfit?: StoryOutfit; open?: Step[]; play?: Play; each?: Record<string, Step[]>; close?: Step[] }
 /** household.json: built for a household the author can't know in advance. Every part optional. */
 export interface Household {
   scenes?: HouseholdScene[]
@@ -563,7 +567,7 @@ function checkSteps(steps: unknown, where: string, sc: StepContext, f: Findings,
       if (!isText(step.say)) f.errors.push(`${at}: say names who speaks`)
       else if (!sc.speakers.has(step.say)) f.notes.push(`${at}: ${step.say} isn’t one who speaks here (one outside the cast and the town’s people shows as “An Uma”)`)
       shown(step.line, LINE_LIMITS.line, at, f)
-      if (step.emote !== undefined && !oneOf(EMOTES, step.emote)) f.notes.push(`${at}: the emote ${String(step.emote)} shows as its word (the menu’s are ${EMOTES.join(', ')})`)
+      if (step.emote !== undefined && !oneOf(EMOTES, step.emote)) f.notes.push(`${at}: the emote ${String(step.emote)} isn’t one of the menu’s ${EMOTES.length}, so her face shows neutral`)
     } else if ('choice' in step) {
       const options = step.choice
       if (!Array.isArray(options) || options.length === 0) { f.errors.push(`${at}: a choice lists its options`); return }
@@ -624,6 +628,16 @@ export function stepFindings(steps: unknown, where: string, speakers: ReadonlySe
   const f = findings()
   checkSteps(steps, where, { speakers, isGood }, f)
   return f
+}
+
+/** A scene's own `outfit`, read: one of the story's outfit ids, else undefined (the moment's plays): a note for an id
+ * the menu doesn't hold, an error for a value that isn't an id. */
+function readOutfit(v: unknown, at: string, f: Findings): StoryOutfit | undefined {
+  if (v === undefined || v === null) return undefined
+  if (typeof v !== 'string') { f.errors.push(`${at}: outfit is one of the story’s outfit ids; skipped`); return undefined }
+  if (isStoryOutfit(v)) return v
+  f.notes.push(`${at}: the outfit ${v} isn’t one of ${STORY_OUTFITS.join(', ')}, so the moment’s plays`)
+  return undefined
 }
 
 /** Every step of a scripted event, `then`, `good` and `miss` included. */
@@ -1124,7 +1138,7 @@ export function checkRoute(raw: unknown, id: string, bible: UmaBible | null, ctx
     }
     if (!RUNGS.includes(e.id)) f.notes.push(`${where}: not a rung the game plays; kept for the story`)
     f.notes.push(...eventNotes(e.id, e.steps, bible))
-    return [kept<Route['events'][number]>(e, {})]
+    return [kept<Route['events'][number]>(e, { outfit: readOutfit(e.outfit, where, f) })]
   })
   if (events.length > 0 && !events.some((e) => e.id === ARRIVAL)) f.notes.push('No arrival scene: the game’s own short one plays')
   return { value: kept<Route>(raw, { events }), ...f }
@@ -1156,7 +1170,7 @@ export function checkPair(raw: unknown, ctx: StoryContext): Read<PairConversatio
     if (allSteps(l.steps).some(hasAnswer)) f.notes.push(`${at}: only the confession’s answers count`)
     const place = l.place === undefined ? undefined : oneOf(STORY_PLACES, l.place) ? l.place : undefined
     if (l.place !== undefined && place === undefined) f.errors.push(`${at}: place is one of the game’s places; skipped`)
-    return [kept<PairConversations['levels'][number]>(l, { place })]
+    return [kept<PairConversations['levels'][number]>(l, { place, outfit: readOutfit(l.outfit, at, f) })]
   })
   if (levels.length === 0) f.notes.push('No conversation at any bond level')
   return { value: kept<PairConversations>(raw, { levels }), ...f }
@@ -1204,7 +1218,9 @@ export function checkHousehold(raw: unknown, ctx: StoryContext): Read<Household 
         if (!(HOUSEHOLD_SCENES as readonly number[]).includes(scene.at)) { f.notes.push(`${where}: the game plays household scenes at ${HOUSEHOLD_SCENES.join(', ')} married; skipped`); return [] }
         if (ats.has(scene.at)) { f.errors.push(`${where}: written twice; the later one is skipped`); return [] }
         ats.add(scene.at)
-        return [kept<HouseholdScene>(scene, { open: run(scene.open, `${where} open`, town), each: each(scene.each, `${where} each`), close: run(scene.close, `${where} close`, town) })]
+        return [kept<HouseholdScene>(scene, {
+          outfit: readOutfit(scene.outfit, where, f), open: run(scene.open, `${where} open`, town), each: each(scene.each, `${where} each`), close: run(scene.close, `${where} close`, town),
+        })]
       })
     }
   }
@@ -1233,7 +1249,9 @@ export function checkHousehold(raw: unknown, ctx: StoryContext): Read<Household 
         if (own.errors.length > 0) f.errors.push(...own.errors.map((x) => `${x}; the play is skipped`))
         else play = v.play as Play
       }
-      finale = kept<Finale>(v, { open: run(v.open, 'The finale open', town), play, each: each(v.each, 'The finale each'), close: run(v.close, 'The finale close', town) })
+      finale = kept<Finale>(v, {
+        outfit: readOutfit(v.outfit, 'The finale', f), open: run(v.open, 'The finale open', town), play, each: each(v.each, 'The finale each'), close: run(v.close, 'The finale close', town),
+      })
     }
   }
   return { value: kept<Household>(raw, { scenes, houseLines, finale }), ...f }

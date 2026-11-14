@@ -14,7 +14,7 @@ import { BENCH_TEXT, benchRows, forgePairWords, forgeRecipeWords, makeWords, pic
 import { useMaster } from '../master/master'
 import { namer } from '../story/people'
 import { useStory } from '../story/story'
-import { PersonBust } from './ScenePlayer'
+import { PersonBust } from '../dialogue/Bust'
 
 const RING = '#b58a2a'
 

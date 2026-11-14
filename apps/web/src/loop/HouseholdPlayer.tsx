@@ -2,13 +2,14 @@
 // household:10 | household:15 | finale>` over any page, from the morning's "⌂ Household scene 1 · Ready", the Hearts
 // header or the Diary's Memories shelf (`&replay=1`). It plays `open`, then each spouse's beat in wedding order, then
 // `close`, the pack's where it has them and the game's short card where it doesn't (`householdOf`: a line, each spouse's
-// line, a line, the finale's dance), in the scene player's frame and steps; a choice is wording only.
+// line, a line, the finale's dance), in the scene player's frame and steps on the dialogue engine; a choice is wording
+// only. Every spouse wears the scene's own `outfit` when the story names one, else the dinner dress (the finale: the
+// kimono).
 // The finale plays its dance after `open` (the play sheet, its grade shown without points: it pays nothing) and ends
 // on the game's last stage-up card, "The Great Harvest", with every spouse's face. The end or Skip reads it once
 // (`diary.read`); a replay marks nothing. Portaled above the kit's sheets (z-60). Loaded on demand.
 import {
-  householdOf, householdPlay, householdReady, playOf, promptOf, playSeed, sceneSteps, withFarmer, type ChoiceOption, type HouseholdId, type HouseholdPlay, type SaveV4,
-  type Step, type StoryPack,
+  householdOf, householdPlay, householdReady, playOf, promptOf, playSeed, sceneSteps, type HouseholdId, type HouseholdPlay, type SaveV4, type Step, type StoryPack,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -16,6 +17,8 @@ import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router'
+import { SceneLookProvider } from '../dialogue/Bust'
+import { lastSay } from '../dialogue/Line'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
@@ -24,7 +27,7 @@ import { useStory } from '../story/story'
 import { readHouseholdOnce } from './homestead-actions'
 import { parseHouseholdParam } from './homestead-view'
 import { PlaySheet, playSpec } from './PlaySheet'
-import { Frame, placeName, SCENE_BUST, SCENE_ROW, silent, StepView } from './ScenePlayer'
+import { Frame, placeName, silent, StepView, WordingChoice } from './ScenePlayer'
 
 export default function HouseholdPlayer({ value, replay }: { value: string; replay: boolean }) {
   const save = useLoopSave()
@@ -86,9 +89,13 @@ function Scene({ save, pack, id, play, master, replay, leaving, onDone }: {
   }
   if (part.kind === 'card') return <GreatHarvest spouses={play.spouses} nameOf={nameOf} replay={replay} onDone={onDone} />
   if (part.kind !== 'steps') return null
+  // Every spouse wears the scene's own outfit when the story names one, else its moment's: a household scene is a supper
+  // (the dinner dress), the finale a festival night (the kimono).
   return (
-    <Part key={index} title={play.title} scene={`${id}:${index}`} steps={part.steps} place={place} onPlace={setPlace} nameOf={nameOf} farmer={save.farmer.name}
-      leaving={leaving} onSkip={onDone} onDone={next} />
+    <SceneLookProvider value={{ own: play.outfit, moments: play.moments, day: save.calendar.day, leads: play.spouses }}>
+      <Part key={index} title={play.title} scene={`${id}:${index}`} steps={part.steps} place={place} onPlace={setPlace} nameOf={nameOf} farmer={save.farmer.name}
+        leaving={leaving} onSkip={onDone} onDone={next} />
+    </SceneLookProvider>
   )
 }
 
@@ -111,34 +118,17 @@ function Part({ title, scene, steps, place, onPlace, nameOf, farmer, leaving, on
   useEffect(() => {
     if (done) onDone()
   }, [done]) // eslint-disable-line react-hooks/exhaustive-deps
-  const visible = shown.filter((s) => !silent(s))
-  const count = shown.slice(0, cursor).filter((s) => !silent(s)).length
+  // A choice is wording only: the last one to speak stays on the stage.
+  const last = lastSay(shown.slice(0, cursor))
   return (
     <Frame title={`${title} · ${placeName(here)}`} label={title} scene={scene} onSkip={onSkip} skipping={leaving}>
       {step && 'choice' in step ? (
-        <Choice options={step.choice} farmer={farmer} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />
+        <WordingChoice options={step.choice} farmer={farmer} bust={last ? { ...last, name: nameOf(last.who) } : null}
+          onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />
       ) : step ? (
-        <StepView key={cursor} step={step} at={cursor} count={count} total={visible.length} nameOf={nameOf} farmer={farmer} onNext={() => setAt(cursor + 1)} />
+        <StepView key={cursor} steps={shown} at={cursor} nameOf={nameOf} farmer={farmer} onNext={() => setAt(cursor + 1)} />
       ) : <div className="flex-1" />}
     </Frame>
-  )
-}
-
-/** A choice in a household scene: wording only, no gain (it pays nothing). */
-function Choice({ options, farmer, onPick }: { options: readonly ChoiceOption[]; farmer: string; onPick: (i: number) => void }) {
-  return (
-    <div className={SCENE_ROW} data-choice>
-      <div className={SCENE_BUST} />
-      <div className="flex max-h-full min-w-0 flex-1 flex-col justify-end gap-3 overflow-y-auto">
-        <p className="text-[13px] text-ink-soft">You</p>
-        {options.map((option, i) => (
-          <button key={i} type="button" onClick={() => onPick(i)} data-option={i}
-            className="flex min-h-12 w-full shrink-0 items-center rounded-md border border-hairline bg-panel px-4 py-2 text-left text-[15px] shadow-1">
-            {withFarmer(option.text, farmer)}
-          </button>
-        ))}
-      </div>
-    </div>
   )
 }
 

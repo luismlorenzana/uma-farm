@@ -253,9 +253,9 @@ describe('the scripted steps', () => {
     expect(stepFindings([], 'E', speakers).errors).toEqual(['E: no steps'])
   })
   it('a speaker outside the scene\'s, an unknown place, an emote off the menu and a long wait are notes', () => {
-    expect(stepFindings([{ say: 'farmer', line: 'Hi.', emote: 'smug' }, { place: 'moon' }, { wait: 9000 }], 'E', speakers).notes).toEqual([
+    expect(stepFindings([{ say: 'farmer', line: 'Hi.', emote: 'smirking' }, { place: 'moon' }, { wait: 9000 }], 'E', speakers).notes).toEqual([
       'E, step 1: farmer isn’t one who speaks here (one outside the cast and the town’s people shows as “An Uma”)',
-      'E, step 1: the emote smug shows as its word (the menu’s are happy, shy, sad, angry, surprised, thinking, laughing, tender)',
+      'E, step 1: the emote smirking isn’t one of the menu’s 22, so her face shows neutral',
       'E, step 2: moon isn’t one of the game’s places; its title line shows the words',
       'E, step 3: a wait of 9000 ms plays as 0–5000',
     ])
