@@ -3,7 +3,8 @@
 // counts, a short night's warning or half pace, and the loans with what's owed and when each clears. Then the cards,
 // each a tap to its place: the gold (the bin), the Farm Rank (its sheet), the goods held (the Warehouse), who lives and
 // works on the farm (the People page's Work view, and the Dorm's beds) and what can be built now (the Diary's projects).
-// The work board joins it with the farmhands. Its cards sit two to a row where they fit. Loaded on demand.
+// Between them, the work board (`WorkBoard`): each farmhand's day and tasks. Its cards sit two to a row where they fit.
+// Loaded on demand.
 import {
   averageIncome, bedsAt, farmProjects, farmRankOf, halfPace, INCOME_NIGHTS, loansOwed, stockTotal, upkeepOf, type FarmSave,
 } from '@farm/domain'
@@ -14,6 +15,7 @@ import { Link, useLocation } from 'react-router'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { gold, loanWords, projectName, projectNames, upkeepLines } from '../loop/money-words'
+import { WorkBoard } from './WorkBoard'
 
 const n = (value: number): string => value.toLocaleString('en-US')
 
@@ -52,14 +54,15 @@ function Book({ save }: { save: FarmSave }) {
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-display text-[22px] font-bold text-ink">Book</h1>
         <HelpButton title="The farm’s book" label="About the book">
-          <p>The farm’s accounts at a glance: its money, its gold, its Farm Rank, what it holds, who lives on it and what you can build.</p>
-          <p>Each night, after the bin pays, the farm pays its upkeep: a little for each place and house you’ve built, each Dorm bed past the first three, and each Uma living on the farm.</p>
+          <p>The farm’s accounts at a glance: its money, the work board, its gold, its Farm Rank, what it holds, who lives on it and what you can build.</p>
+          <p>Each night, after the bin pays, the farm pays its upkeep: a little for each place and house you’ve built, each Dorm bed past the first three, and each Uma living on the farm or working it.</p>
           <p>Short of it, the rest is owed. The first short night warns you; from the second, the farmhands work at half pace until it’s paid. Nobody leaves, and nothing is lost.</p>
           <p>The mayor’s office in town lends toward a build. Each night’s income repays a little, before the upkeep.</p>
           <p>Tap a card to open its place.</p>
         </HelpButton>
       </div>
       <Money save={save} />
+      <WorkBoard save={save} />
       <ul className="grid gap-2 @lg:grid-cols-2 @3xl:grid-cols-3" data-book-cards>
         <Card to={withParam(location, 'sheet', 'bin')} title="Gold" figure={`${n(save.gold)}g`} line="The bin pays tonight" data="gold" />
         <Card to={withParam(location, 'sheet', 'rank')} title="Farm Rank" figure={rank} line={`${n(save.farm.points)} points`} data="rank" />

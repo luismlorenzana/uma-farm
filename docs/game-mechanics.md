@@ -5,8 +5,9 @@ the same commit, and where it and the code ever differ, the code wins and this d
 [game-mechanics.html](pages/game-mechanics.html); where the game is going is in [the roadmap](roadmap.md).
 
 **What's live and what isn't.** The deployed game is one game on **save v5**: a day of ten actions on a tile farm the
-farmer works by hand, its places, the farm growing by building, upkeep and the mayor's office's loans, the calendar with
-its special days and occasion scenes, and the **romance** (Part 3), played from the story
+farmer works by hand, and the **farmhands** who work it with him overnight on the tasks he sets (see
+[Farmhands](#farmhands)), its places, the farm growing by building, upkeep and the mayor's office's loans, the calendar
+with its special days and occasion scenes, and the **romance** (Part 3), played from the story
 pack, and played whole without one: wherever the pack is silent, the default story plays, and every Uma without
 portraits plays on the blank bust (see [What plays without the story](#what-plays-without-the-story)). The game is
 laid out **sideways**, for a phone held in landscape (see [the frame](#the-frame-landscape)). A save from before v5
@@ -29,6 +30,7 @@ prose here; change a table by changing the rule.
 - **[Part 2 — The Umas and the farm's progress](#part-2--the-umas-and-the-farms-progress)**
   - [The roster](#the-roster)
   - [The town](#the-town)
+  - [Farmhands](#farmhands)
   - [Talents and ranks](#talents-and-ranks)
   - [The farm's progress](#the-farms-progress)
 - **[Part 3 — Hearts: the cast and the romance](#part-3--hearts-the-cast-and-the-romance)**
@@ -48,23 +50,25 @@ prose here; change a table by changing the rule.
 
 ## Part 1 — The farm's days and work
 
-A farm day is a turn of **ten actions**. The farmer works the farm alone, by hand: each tile cleared, tilled, planted,
+A farm day is a turn of **ten actions**. The farmer works the farm by hand: each tile cleared, tilled, planted,
 watered or harvested, each forage, chop or catch, each load started at a station, each crate shipped and going into
-town takes one, and so does each of the Umas' events. Special days (New Year's, a festival, her birthday) add actions
+town takes one, and so does each of the Umas' events. The farmhands, friends he's invited to work, add their own
+actions overnight on the tasks he sets on the work board, so as they take the farm's work over his own day turns to the
+people. Special days (New Year's, a festival, her birthday) add actions
 for events only, and the calendar shows the year: its festivals, birthdays and the faces of the Umas with an event each
 day. Nothing on the farm moves until you end the day, whether the app is open, closed or left alone for a week. Ending
-the day runs the night: the bin pays, the loans take their share and the upkeep is charged, watered crops grow a stage,
-the stations' loads finish and the date turns. The morning opens on a card of what the night brought, and ten actions
+the day runs the night: the bin pays, the loans take their share and the upkeep is charged, the farmhands work, watered
+crops grow a stage, the stations' loads finish and the date turns. The morning opens on a card of what the night brought, and ten actions
 again.
 
 ```
  the day: 10 actions, one a tap                    End the day ──► the night, in order
    clear · till · plant · water · harvest   a tile               1 the bin pays; loans, then upkeep
-   forage · chop                    the woods' edge              2 watered crops grow a stage
+   forage · chop                    the woods' edge              2 the farmhands work; watered crops grow
    fish                             the pond's edge              3 animals (none on the farm)
    start a load                     a station                    4 the stations' loads finish
    ship a crate                     the bin                      5 workshops (none open)
-   go into town                     the road (the shop, the town, 6 ranks and bonds (nobody works yet)
+   go into town                     the road (the shop, the town, 6 ranks and bonds (the farmhands')
                                     the mayor's office)
    free: building, the Dorm, talks, the evening                  7 crops wither; the date turns
                                                                  8 the Dorm, the goals, meeting her
@@ -264,7 +268,7 @@ belong to, and until then cost nothing or aren't there yet:
 | The fields | Plant a tile | 1 | Now |
 | The fields | Water a tile | 1 | Now |
 | The fields | Harvest a tile | 1 | Now |
-| The fields | Water a row, with the aptitude | 1 | With farmhands |
+| The fields | Water a row: a farmhand’s trick, from Watering 6 | 1 | Now |
 | Animals | Feed, brush or care for one; collect eggs, milk or wool; let them out or bring them in | 1 | With the ranch |
 | Animals | Buy an animal, at the rancher’s in town | Free | With the ranch |
 | The woods and the water | Forage once | 1 | Now |
@@ -328,17 +332,19 @@ The night is one fixed run of steps over the save:
    season's last night still pays that season's demand. Gold rises and the bin empties. Before it, once anyone is
    married, tonight's house is noted. **Then the accounts:** the bin's pay joins the last seven nights' income, each
    loan takes its share of it, and the upkeep is charged (see [upkeep and loans](#upkeep-and-loans)).
-2. **Crops grow.** Each growing tile watered today grows one stage, and one whose stages reach its days − 0.5 turns
-   ripe; a dry tile doesn't grow. A farmer Uma's night chores each water a dry growing tile first. Then every tile dries
-   for the next day.
+2. **The farmhands work, then crops grow.** First each farmhand, in the order you invited her, after her part-time
+   job, spends her actions today on her tasks on the work board (see [Farmhands](#farmhands)): her watering grows
+   tonight, her harvests and hauls go into the Warehouse at once, and a load she starts finishes at step 4. Then each
+   growing tile watered today grows one stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn't
+   grow. A farmer Uma's night chores each water a dry growing tile first. Then every tile dries for the next day.
 3. **Animals.** Nothing changes: no animals live on the farm.
 4. **The stations' loads finish.** Every load started today is done: its goods go into the Warehouse at their stars and
    the station is free for the morning. Side by side's and the perks' extras and foragers' and fishers' night chores go
    straight into the Warehouse too.
 5. **Workshops.** Nothing changes: no workshop is open.
-6. **Ranks and bonds.** Every Uma who worked today earns a day's rank points and ranks up where her challenge is met;
-   bonds tick and her line pays. Nobody works yet (the farmer works alone, and the farmhands come later), so none of
-   these move. Shared houses pay, spouses level, and well-fed days count down by one.
+6. **Ranks and bonds.** Every farmhand who worked today earns a day's rank points in her place's activity and ranks
+   up where her challenge is met; farmhands at the same place tick their bonds, and her line pays. Shared houses pay,
+   spouses level, and well-fed days count down by one.
 7. **The date turns.** On a season's last night, growing crops that don't grow next season wither first. Then the date
    moves on, and the whole of today's record clears: the day's actions and event actions, going into town, the places
    worked, chats, gifts, praise, events, evenings and invitations.
@@ -360,15 +366,16 @@ The steps as the game lists them:
 | 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning |
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand |
 | 1 | `settleTheAccounts` | The accounts: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the upkeep, with anything owed: what gold there is pays, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid |
+| 2 | `farmhandsWork` | The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s and the loads first, in your order, then her gathering, a turn each; a point of practice an action, her goods into the Warehouse, her place today where she spent the most |
 | 2 | `growCrops` | Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day |
 | 3 | `tendAnimals` | Animals: nothing happens until the ranch is built |
 | 4 | `finishTheLoads` | Stations: every load started today is done, its goods into the Warehouse at their stars, the station free for the morning |
-| 4 | `nightExtras` | Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again (20% in her element), seeded copies straight into the Warehouse; then the perks’ extras: the bond term × the romance term of the same items (her line’s +10% and +20%, her ring, a dream, the household; held to 40%), their own seeded copies. None until the farmhands work |
+| 4 | `nightExtras` | Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again (20% in her element), seeded copies straight into the Warehouse; then the perks’ extras: the bond term × the romance term of the same items (her line’s +10% and +20%, her ring, a dream, the household; held to 40%), their own seeded copies |
 | 4 | `nightChores` | Night chores: a forager’s bring one item each from her rank’s deepest forest area this season, a fisher’s one fish each from her deepest spot, at a day’s haul’s stars, into the Warehouse; 1 from F6, 2 from R7, 3 from S4, on the farm only |
 | 5 | `resetWorkshops` | Each workshop may be played again tomorrow |
-| 6 | `tickRanks` | Rank points for every Uma who worked, one activity each, ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met. None until the farmhands work |
-| 6 | `tickBonds` | Bonds: +10 to each pair who worked one place today, once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend. None until the farmhands work |
-| 6 | `payLine` | Her line: +10 to each Uma who worked today at one of her line’s places, once a night. None until the farmhands work |
+| 6 | `tickRanks` | Rank points for every farmhand who worked, one activity each (her place today’s), ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met |
+| 6 | `tickBonds` | Bonds: +10 to each pair of farmhands who worked one place today, once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend |
+| 6 | `payLine` | Her line: +10 to each farmhand who worked today at one of her line’s places, once a night |
 | 6 | `shareTheHouses` | Shared houses: +10 bond a night to each pair of spouses with rooms in the same house |
 | 6 | `levelAtNight` | Spouse levels: a spouse at S1 or S3 whose 600 is full reaches S2 or S4, no event (S2 starts her every-2nd-morning item); never S3 or S5 |
 | 6 | `countWellFed` | The well-fed days count down |
@@ -387,12 +394,14 @@ The steps as the game lists them:
 | 9 | `heartsMorning` | Praise earned overnight (a ★3+ item, a rank-up); birthdays and anniversaries today and tomorrow, an anniversary leaving a ★5 item of her line in the Warehouse |
 | 9 | `morningItems` | Morning items: each Uma on the farm leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+) |
 | 9 | `drawInvitations` | Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, 'invite', n)` among those home at Friendship 3+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14) |
-| 9 | `buildSummary` | The morning summary, from what changed; §4 Hearts lists the invitations, the Festival of Vows, the night’s levels, the house’s morning, rooms taken and a house that misses you, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning; §5 the household milestones |
+| 9 | `noteTheFed` | The farmhands well fed this morning are noted (`today.fed`): each works one more action today |
+| 9 | `buildSummary` | The morning summary, from what changed; §2 Work done opens with each farmhand’s day, §3 Ranks closes with the aptitudes that reached a level; §4 Hearts lists the invitations, the Festival of Vows, the night’s levels, the house’s morning, rooms taken and a house that misses you, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning; §5 the household milestones |
 <!-- /live -->
 
 - **Every draw is seeded** by the account, the day and what's drawn, so ending the same save on two devices gives the
   same morning. The save holds no random state.
-- **Rank-ups show in the morning,** never mid-night (none until the farmhands work).
+- **Rank-ups show in the morning,** never mid-night, and so do the aptitudes a farmhand reached.
+- **The farmhands well fed this morning** are noted last of all (`today.fed`): each works one more action today.
 - **The night is one change.** Its steps write nothing on their own; the save is stamped once, with the real time, after
   step 9.
 - Ranks, the Dorm, the goals and meeting her are described with the Umas and the farm's progress, and the romance's steps
@@ -413,8 +422,8 @@ line is a tap to its place.
 |---|---|---|
 | The bin | Each good and star sold, "Salmon ★2 × 3 · 495g", tagged **In demand** when the season lifted it; then "Total · 545g" | The bin |
 | Upkeep and loans | Each loan's share, "Loan for the Mill · 55g repaid · 440g left" ("· no sales, nothing repaid" on a night with no sales; "· cleared", tagged **Cleared**); "Upkeep · 45g" (or "5g of 45g" when short); a short night, "Short of upkeep · 40g owed", tagged **Warning** in red, and from the second in a row "· farmhands at half pace", tagged **Half pace**; "Upkeep paid up · 85g owed", tagged **Paid**. Hidden on a night with nothing charged | The Book |
-| Work done | Each station's load done, "Sawmill · Pine Plank ★1 × 8"; the field's growth, "The field · 5 crops grew · 2 ripe"; what withered, "The field · 3 Onion withered" | The station's panel; the farm map |
-| Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full** | Her profile's Work side |
+| Work done | First each farmhand's night, "*Name* · 4 of 4 actions · watered 6 tiles · caught 1 fish · +1 good", tagged **Well fed** when she had her extra action, **Half pace** in red at half pace, or **No tasks** with "No tasks: set her tasks" ("Nothing to do tonight" when her tasks found nothing); then each station's load done, "Sawmill · Pine Plank ★1 × 8"; the field's growth, "The field · 5 crops grew · 2 ripe"; what withered, "The field · 3 Onion withered" | The work board in the Book; the station's panel; the farm map |
+| Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full**; an aptitude a farmhand reached, "*Name* · Watering 3 · Two tiles an action" (with the trick that level opens), tagged **Aptitude** | Her profile's Work side |
 | Hearts | First, once married, "☾ Morning with *Name*" (the night's companion, **Play** her greeting); who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", or in the town the world names, tagged **New**), a chapter that opened ("A new chapter with *Name* · Together", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
 | New today | First, "New story arrived · *its note*", tagged **New**, the morning after a new story release reaches the phone ([below](#how-the-app-gets-the-pack)); "Summer begins", the world's line for the season under it; today's, then tomorrow's: "New Year's today · +3 for events", "Flower Show tomorrow" or "today · +3 for events" (the story's name for it), and the story's holidays and minor days, "Market day tomorrow" (or "Market day +1 more"); the Town notes the night unlocked, "*title*" (or "*title* +2 more"), tagged **Town note**; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The People page; the calendar (the season, New Year's, the festival and the story's days); the note in the Diary; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
 | Today | "3 tiles to water" (the growing tiles this morning); "9 tiles to plant" (empty tilled tiles that the season's seeds you hold could fill) | The farm map |
@@ -643,6 +652,9 @@ The farm's accounts at a glance. First **the money** (see [upkeep and loans](#up
 - **Loans:** each with what's owed, its share a night and when it clears; "None. The mayor's office in town lends toward
   a build." with none.
 
+Then **the work board**: a card for each farmhand with her job, her actions today, what she'll do tonight and her tasks
+in your order, and **Add a task** (see [the work board](#the-work-board)); with none, how to get one.
+
 Then six cards, each a tap to its place:
 
 | Card | Shows | A tap opens |
@@ -654,7 +666,7 @@ Then six cards, each a tap to its place:
 | Dorm | Beds used of beds | The Dorm |
 | To build | The places offered at this Farm Rank | The Diary's projects |
 
-Its help says how the upkeep, a short night and the loans work, in four lines.
+Its help says how the upkeep, a short night and the loans work, in four lines; the board's says how the farmhands work.
 
 #### The Menu
 
@@ -846,8 +858,8 @@ The points each level starts at, and its quality:
 
 #### Farming's challenges
 
-Each Uma's farming rank needs its points and its challenge. They wait for the farmhands: the farmer works the field
-alone, and his harvests count toward no Uma's challenge. Ranks are described with the Umas and the farm's progress.
+Each Uma's farming rank needs its points and its challenge. A farmhand's harvests count toward hers; the farmer's own
+count toward no Uma's challenge. Ranks are described with the Umas and the farm's progress.
 
 The challenge toward each farming rank:
 
@@ -872,11 +884,12 @@ The challenge toward each farming rank:
 
 #### The romance in the field
 
-The romance's perks reach the field only through the night: the farmer works it alone, so the perks that ride on an
-Uma's work there (side by side, an extra crop, her keepsake on her harvests, bonds at work) wait for the farmhands.
+The romance's perks reach the field through the night and through the farmhands: side by side's and the perks' extras
+copy a farmhand's harvest, her keepsake lifts her harvests' stars at her line's place, and farmhands who work the field
+the same day build their bond ([farmhands](#farmhands)). The farmer's own harvests get none.
 - **Night chores:** each of a farmer Uma's chores waters a dry growing tile tonight, a seeded pick, so it grows; the
   morning says "Night chores · 2 tiles watered".
-- **Praise:** a ★3+ crop doesn't earn anyone praise while the farmer harvests alone.
+- **Praise:** a ★3+ crop a farmhand harvests earns her praise; the farmer's earn no one's.
 
 ### Gathering
 
@@ -989,7 +1002,9 @@ Each fish's size range, its price and its fillet's:
 Well fed is a number of days on an Uma. It counts down by one each night, and a new meal only raises it to the meal's
 own length; it never stacks. A wedding's reception, a spouse's breakfast and the household's meals (once married,
 [cooked by you](#the-households-meals): everyone on the farm and every farmhand, for today and tomorrow) feed the Umas;
-nothing else does yet, and it lifts nothing while the farmer works alone. The farmhands' work will read it.
+nothing else does yet. **A farmhand well fed this morning works one more action today** (once a meal, the day after
+it's cooked: [her day](#her-day)), and while she's well fed (the meal's day and the next) her work is too: +0.25
+quality, ×1.25 a haul's count and ×1.25 rank points.
 
 #### The woods' and the pond's panels
 
@@ -1660,7 +1675,7 @@ Every night, after the bin pays and the loans take their share, the farm pays it
 | Each place built (the Mill, the Sawmill, the Smokehouse, the Dock, the Boat, and each later one) | 15g | The start’s own places |
 | Each house built on the homestead | 15g | The Farmhouse |
 | Each Dorm bed past the first 3, at the level in effect | 5g | Level 1’s 3 beds |
-| Each Uma living on the farm: home in the Dorm, or a spouse in her house | 10g | Those who live in town |
+| Each Uma living on the farm or working it: home in the Dorm, a spouse in her house, or a farmhand wherever she lives; once each | 10g | Those who live in town and don’t work the farm |
 | Short of it | What gold there is pays; the rest is owed with tomorrow’s | The first short night warns; from night 2 in a row, half pace until it’s paid |
 <!-- /live -->
 
@@ -1672,8 +1687,8 @@ Every night, after the bin pays and the loans take their share, the farm pays it
   upkeep. The short nights in a row are counted (`farm.short`):
   - **the first** warns in the morning ("Short of upkeep · 40g owed", tagged Warning);
   - **from the second**, the farmhands work at **half pace** until it's paid ("· farmhands at half pace"): half their
-    actions, rounded down, never below one (`atPace`). The farmer's own ten are never touched. The farmhands come later,
-    so for now half pace is a flag the farmhands' day reads (`halfPace`), tested on the rules;
+    actions, rounded down, never below one (`atPace`), from the day after the second short night
+    ([her day](#her-day)). The farmer's own ten are never touched;
   - **paid:** a night whose gold covers all that's owed and its own upkeep pays it, says "Upkeep paid up", and the count
     goes back to 0.
   - Nobody leaves, and nothing is lost: no one moves out, no building stops, no good is taken.
@@ -1749,7 +1764,7 @@ no farm-wide story.
 
 The roster is everyone you've met, and her `joined` the day you met her. Who is **home** (on the farm) is capped by the
 Dorm's beds; everyone else on the roster **lives in town** as a friend. A spouse in her house is on the farm too,
-without a Dorm bed. Only Umas on the farm spend evenings (and will work, once the farmhands come); talks,
+without a Dorm bed. Only Umas on the farm spend evenings; a farmhand works the farm wherever she lives; talks,
 gifts and her events reach everyone you've met, on the farm or in town, an action each.
 
 #### How Umas join
@@ -1833,7 +1848,7 @@ season, festival, built, Farm Rank, milestone and household lines:
     Dorm is at its top level.";
   - **Levels:** the eight, each "Built", "Tomorrow", or its cost and Farm Rank;
   - **Tomorrow:** each swap as two faces with "… arrives tomorrow" and **Call off**;
-  - **On the farm · n:** each Uma with her best rank and "Idle" (nobody works yet) or "Leaves tomorrow";
+  - **On the farm · n:** each Uma with her best rank and "Farmhand", "Idle" (not working the farm) or "Leaves tomorrow";
   - **Swap** (or "Swap · nobody in town"), enabled when someone home can go and someone in town can come: a picker over
     the Umas home ("Who goes to town?", one leaving greyed out with why), then over those in town ("Who comes home for
     {name}?");
@@ -1983,8 +1998,8 @@ open is greyed with why. **Back** returns to the map.
   it's open to her and the day has its two actions ([the evening](#the-evening)); otherwise it says why: "From
   Friendship 3", "She lives in town: invite her to the farm", "Spent this evening ✓", "That takes 2 actions.".
 - **Invite her to work · 1**, once she's a friend (Friendship 3): she's a **farmhand** from today, and keeps her life in
-  town. It says "Farmhand ✓" and her line ("The farm? I'd love to. Count me in."); then "Works the farm ✓". The
-  farmhands' work (their actions on the farm's tasks) reads it.
+  town. It says "Farmhand ✓" and her line ("The farm? I'd love to. Count me in."); then "Works the farm ✓". Set her
+  tasks on the work board in the Book ([farmhands](#farmhands)).
 - **Her event** shows once it's Ready, wherever she lives, and opens the event player over the town; it takes an
   action (a special day's event actions first), and with none left it doesn't start.
 - **Not out now:** "At home today. Look for her another day." (with her profile once met); one who lives on the farm:
@@ -2024,16 +2039,171 @@ you've talked (`talks`), the last day you talked (`last`) and the last day you g
 any. Met or not is the roster (`roster[id].joined` the day you met her). The gift day grows v5 in place: an older v5's
 record reads it as 0, and nothing moves `updatedAt`.
 
+### Farmhands
+
+A friend you invite to work is a **farmhand** ([the invitation to work](#the-invitation-to-work)). She keeps her life in
+town: her part-time job comes first, then she gives the farm a few actions a day on the tasks you set her on the **work
+board**, in the Book. She works them overnight, before the crops grow, so the morning says what she did. Any Uma can do
+any task, and each task has an **aptitude**: a level for her that starts from her talents and rises with every action she
+spends on it, bringing more goods, better stars and new tricks. As the farmhands take the farm's work over, your own ten
+actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
+
+```
+ your day (10 actions)                 the night, step 2, first: each farmhand in the order you invited her
+   invite her to work · 1 (a friend)     her part-time job (the story's, else a job in town)
+   the Book: the work board (free)       then her actions today: 3, +1 settled in, +2 a spouse, +1 well fed this morning,
+     her tasks, in your order              all at the farm's pace (half, from the second short night of upkeep)
+     harvest · water · plant ·           the field's tasks and the loads first, in your order, each until it's done
+     clear and till   (the field's rows)  then her gathering shares what's left, a turn each
+     load (a station)                    every action: a point of practice in its aptitude; her goods into the Warehouse
+     forage · chop (an area)             her place today (where she spent the most) pays rank points, bonds, her line
+     fish (a spot)                     then the crops grow: her watering counts tonight
+ the morning: Work done · "Name · 4 of 4 actions · watered 6 tiles · caught 1 fish · +1 good"; Ranks · "Name · Watering 3"
+```
+
+#### Her day
+
+<!-- live:farmhand-day -->
+|  | Her actions |
+|---|---|
+| A farmhand’s day, after her part-time job | 3 |
+| Settled in: from 12 days after you invited her (a season) | +1 |
+| Once she’s your spouse | +2 |
+| Well fed this morning: a household meal the day before, a wedding’s reception, a spouse’s breakfast | +1 |
+| Half pace: from the second short night of upkeep in a row, until it’s paid | Half of them all, rounded down, never below 1 |
+<!-- /live -->
+
+- **Her part-time job first:** the story's `job` for her ([her life in town](#her-life-in-town)), its words or where it
+  is ("Waits tables", "Works at the Bakery"); else the game's default, a job near her favourite spot ("Helps out at the
+  Café"), else "A job in town". It costs the farm nothing: it's why she's in town by day, and the board says it.
+- **Settled in** is a season after you invited her (`roster[id].farmhand`, the day you did). **Married:** once she's
+  your spouse.
+- **Well fed this morning:** a household meal you cook today keeps everyone well fed today and tomorrow
+  ([well fed](#well-fed)); the night after the meal's day notes the farmhands still well fed as the morning comes
+  (`today.fed`), and each works one more action that day. So a meal gives one more action the next day, once: two meals
+  the same day still give one, and a meal every day gives one every day. A wedding's reception and a spouse's breakfast,
+  which feed the farm from the morning, give it that day.
+- **Half pace** reads the day as it was left: the night that counts the second short night still works at full pace, and
+  the next day's is half ([upkeep](#upkeep)).
+- **She costs 10g a night** of upkeep, once, wherever she lives (in town, the Dorm or her house).
+- **The farmer's ten are never touched.** A task on her board is hers: you don't spend your actions on it.
+
+#### The work board
+
+The Book's **Work board** has a card for each farmhand, in the order they work: her face and name (a tap opens her
+profile's Work side), her job and the day she started, her actions today with what adds to them ("+1 settled in", "+1
+well fed", "half pace" in red), **Tonight**, what she'll do as the farm stands now ("3 of 3 actions · watered 3 tiles"),
+and her tasks in your order, each with her aptitude's level ("Water · rows 1 and 2 · Watering 2"), **↑** to move it up
+and **✕** to remove it. **Add a task** (up to six) opens a side panel: what, then where (the field's rows, each with what
+it holds for that task now, or the whole field; the seed to plant, or any in season; a built station; an area or a spot
+the farm reaches, the rest greyed with why), and **Add · Water · rows 1 and 2**. Setting tasks is free and takes effect
+tonight; they repeat each day until you change them. With no farmhands: "No farmhands yet. Once she's a friend
+(Friendship 3), invite her to work: her menu in town."
+
+<!-- live:work-board -->
+| Task | Over | An action | It stops | Aptitude | Reads |
+|---|---|---|---|---|---|
+| Harvest | Tiles you choose (the board offers the field’s rows) | A ripe tile, its crops by her stars; 2 tiles an action from Harvesting 5 | When none of its tiles needs it | Harvesting | Farming |
+| Water | Tiles you choose (the board offers the field’s rows) | A dry growing tile; 2 tiles an action from Watering 3; every dry tile of hers in one row from Watering 6 | When none of its tiles needs it | Watering | Farming |
+| Plant | Tiles you choose (the board offers the field’s rows) | An empty tilled tile, the seed named or any held for the season, own seeds first, that ripens in time; 2 tiles an action from Planting 4 | When none of its tiles needs it | Planting | Farming |
+| Clear and till | Tiles you choose (the board offers the field’s rows) | A step on a tile: clears an overgrown one, tills a cleared one; both in one from Clearing 4 | When none of its tiles needs it | Clearing | Farming |
+| Load | A built station | A load of the good the station holds most of, up to 8 (12 from level 5) | Once the station holds today’s load | Milling, Sawing or Smoking, by station | Farming, foraging or fishing |
+| Forage | An area the farm reaches | A haul of 2 finds (3 from Foraging 5) | Never: her gathering shares what’s left, a turn each | Foraging | Foraging |
+| Chop | An area the farm reaches | 2 logs (3 from Chopping 5) | Never: her gathering shares what’s left, a turn each | Chopping | Foraging |
+| Fish | A spot the farm reaches | A cast: one fish (two casts from Fishing 6) | Never: her gathering shares what’s left, a turn each | Fishing | Fishing |
+| Care for the coop or the barn | Its animals | Comes with the ranch | — | — | Ranch |
+| Work a face | The mine’s or the quarry’s floor | Comes with the mine | — | — | Mining |
+<!-- /live -->
+
+- **Her night, in order:** the field's tasks and the loads first, in your order, each until it's done for the day or her
+  actions run out; then her gathering tasks share what's left, a turn each. With nothing left to do she idles, and the
+  morning says "Nothing to do tonight" (or "No tasks: set her tasks", tagged **No tasks**, with an empty board).
+- **Two farmhands on the same tiles** don't double up: the second finds them watered.
+- **Her reach is the farm's:** the areas and spots the Farm Rank opens for the farmer (the sea's once their place
+  stands), whatever her rank.
+- **Her work's terms:** a harvest draws its stars from the crop's level and the Hoe, her farming rank and talent, her
+  care (+0.25), well fed (+0.25), her keepsake at her line's place and her aptitude; a haul's from her rank, talent, the
+  tool, well fed, her keepsake and her aptitude. A haul's count is the task's × her rank's yield × her talent's × the
+  tool's × well fed's (×1.25) × her aptitude's, the fraction drawn. Her seeds back are her rank's
+  ([what a rank gives](#what-a-rank-gives)). A load comes out at the input's stars, × her aptitude's yield.
+- **What it counts:** each action is a point of practice in its aptitude. Her harvests, hauls and catches count toward
+  her challenges ([the challenges](#the-challenges)), and the farm's lifetime counts, records and the Diary's depth
+  milestones count her work as the farmer's. Her place today (where she spent the most actions, the first on a tie) pays
+  her a day's rank points ([rank points](#rank-points)), bonds with the farmhands who worked it too, her line's +10 and a
+  mentor's ×1.10; her goods are side by side's and the perks' to copy, and a ★3+ good earns her praise.
+- **Every draw is seeded** by the account, the day and the farm's counts, so a night replays the same on every device.
+
+#### Aptitude
+
+An aptitude is a level from 1 to 10 for each task, for each Uma, read from three parts and never stored as a level:
+- **her head start,** by her talent in the task's activity (her stats: [talents](#talents));
+- **her rank points** in that activity: a point for every 20 ([rank points](#rank-points));
+- **her practice:** a point for each action she spends on the task (`roster[id].practice`).
+
+The points each level starts at, and what it gives (quality on her goods' stars, yield on their count):
+
+<!-- live:aptitude-levels -->
+| Level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Points | 0 | 10 | 30 | 60 | 100 | 150 | 210 | 280 | 360 | 450 |
+| Quality | +0 | +0.1 | +0.2 | +0.3 | +0.4 | +0.5 | +0.6 | +0.7 | +0.8 | +0.9 |
+| Yield | ×1.00 | ×1.05 | ×1.10 | ×1.15 | ×1.20 | ×1.25 | ×1.30 | ×1.35 | ×1.40 | ×1.45 |
+<!-- /live -->
+
+Her head start by her talent:
+
+<!-- live:aptitude-start -->
+| Talent | G | F | E | D | C | B | A | S |
+|---|---|---|---|---|---|---|---|---|
+| Head start | 0 | 0 | 5 | 10 | 20 | 30 | 45 | 60 |
+| Level | 1 | 1 | 1 | 2 | 2 | 3 | 3 | 4 |
+<!-- /live -->
+
+The tricks, and the level each opens at:
+
+<!-- live:tricks -->
+| Aptitude | From level | The trick |
+|---|---|---|
+| Harvesting | 5 | Two tiles an action |
+| Watering | 3 | Two tiles an action |
+| Watering | 6 | A row an action: every dry tile of hers in one row |
+| Planting | 4 | Two tiles an action |
+| Clearing | 4 | An overgrown tile cleared and tilled in one action |
+| Foraging | 5 | A haul of 3 finds |
+| Chopping | 5 | 3 logs a chop |
+| Fishing | 6 | Two casts an action |
+| Milling | 5 | A load of up to 12 |
+| Sawing | 5 | A load of up to 12 |
+| Smoking | 5 | A load of up to 12 |
+<!-- /live -->
+
+- **A row an action** is the design's "Water a row": at Watering 6 one action waters every dry tile of hers in the first
+  row that has one.
+- **Rising over days:** three actions a day on one task take a D talent's Watering from 2 to 3 in about a week, and to 6
+  (the row) in about a year (the simulated year's field hand reaches it in Winter); the morning says each level reached ("*Name* · Watering 3 · Two tiles an
+  action", tagged **Aptitude**).
+- **Her profile's Work side** lists her ten aptitudes with their level, a bar to the next and the trick it opened (or the
+  next to come); before she's a farmhand it says "Aptitudes · where she'd start".
+
+#### The save
+
+Each farmhand's board is `roster[id].tasks` (in your order, at most six: the field's over a list of its tiles, planting
+one crop or any; a station's load; an area's forage or chop; a spot's catch), and each Uma's practice is
+`roster[id].practice` (actions spent, by aptitude). The farmhands well fed this morning are `today.fed`. They grow v5 in
+place: a save from before them reads as no tasks, no practice and nobody well fed, and nothing moves `updatedAt` for it.
+A farmhand's load may be bigger than the farmer's, so a station's load holds 1 to 20.
+
 ### Talents and ranks
 
 Every Uma is a specialist. Her **talent** in each activity, G to S, is read from her own stats by one rule, the same for
 everyone; it's why one Uma suits the Fields and another the Pond. Her **rank** in each activity, Novice to Legend, is
 earned by working and meeting a challenge; ranks are how the farm goes deeper and better.
 
-**Nobody works yet.** The farmer works the farm alone: the work board, multi-day jobs and the Fields' tenders are
-retired, and the Umas come back to work as the farmhands, later. Until then no Uma earns rank points or counts toward a
-challenge, her ranks stand where they are, and the farmer's own reach is the Farm Rank's. The rules below are the
-ranks' own, kept for the farmhands.
+**The farmhands work.** An Uma earns rank points and counts toward her challenges by working the farm as a farmhand
+([farmhands](#farmhands)): one day's points a night in her place's activity, and her harvests, hauls and catches toward
+her challenges. One who doesn't work stays where she is. The farmer's own work counts toward no Uma's ranks, and his
+reach (and a farmhand's) is the Farm Rank's. Her talent also sets where each of her aptitudes starts, and her rank
+points add to them.
 
 #### Talents
 
@@ -2092,7 +2262,8 @@ Each grade is a step, G 0 to S 7, and each step lifts her work:
 - **Yield** multiplies what her gathering and station work brings.
 - **Quality points** add to the star draw of what she makes or grows.
 - **Rank points** multiply every pay of rank points.
-- **Tended growth** was a block's growth a night under her care (B and up only), kept for the farmhands.
+- **Tended growth** was a block's growth a night under her care (B and up only); the field's tiles grow a stage a
+  watered night, so nothing reads it now.
 - Affection a day (the ranch) and expedition power are defined, but the ranch and expeditions aren't open in play.
 
 #### Rank points
@@ -2138,13 +2309,13 @@ Points go on past a threshold while the challenge waits; they also keep counting
 
 #### Who worked today
 
-Nobody works a day yet: the farmer works alone. When the farmhands come, where an Uma worked sets the activity it
-pays:
+A farmhand's day pays one activity: her place today's, where she spent the most actions (the first she worked on a
+tie):
 
 <!-- live:place-activity -->
 | Where she worked | Pays rank points in |
 |---|---|
-| The Fields, tending a block with a growing plot | Farming |
+| The Fields: harvesting, watering, planting, clearing and tilling | Farming |
 | Forest | Foraging |
 | Sawmill | Foraging |
 | Fishery | Fishing |
@@ -2224,7 +2395,7 @@ The morning's **Ranks** section lists the night's lines, each opening her sheet:
 <!-- /live -->
 
 - **Yield** multiplies her gathering and station work.
-- **Tended growth** was a block's growth a night under her care, kept for the farmhands.
+- **Tended growth** was a block's growth a night under her care; nothing reads it now.
 - **Quality** adds to the star draw of what she grows or makes.
 - **Deepest** is the last area, spot and floor her rank lets her work.
 - **Seeds back** is her harvest's chance of a seed, before the Hoe.
@@ -2287,7 +2458,7 @@ today counts tonight. Where the points come from:
 
 Festivals and decorations add nothing in play: neither exists. The points each rank needs, tuned when Umas worked the
 farm so the ranks came at the pace they came at when each global chapter added 250 points (the farmer's pace alone is
-[the simulated first season](#the-pacing)'s, and retuning waits for the farmhands):
+[the simulated first season](#the-pacing)'s, and two farmhands reach Farm Rank 3 by Summer's end: see the pacing):
 
 <!-- live:farm-ranks -->
 | Farm Rank | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
@@ -2499,7 +2670,7 @@ it has seeds for, tills and clears a little more while fewer than five tiles gro
 spends what's left fishing, foraging and chopping (chopping first while the next build waits for logs). It builds as it
 goes: **the Mill on a loan** from the mayor's office as soon as it holds the logs, then **the Dorm's second level** from
 Autumn, then the Farm Rank 3 stations. Two Umas live on the farm from Summer, three from Autumn and four from Winter,
-though nobody works it but the farmer yet. Every night charges the upkeep and the loan's share. It checks:
+though none of them works it. Every night charges the upkeep and the loan's share. It checks:
 - **every day spends exactly its ten actions,** and every morning has ten again;
 - **watered crops grow and dry ones don't,** and something is harvested;
 - **the season's last night withers what's left** (only Corn and Cabbage carry over);
@@ -2536,10 +2707,47 @@ The year, season by season (the morning after each season's last night):
 - **A small surplus:** the year's upkeep is 1,970g against 9,390g shipped, a fifth. Autumn is the leanest season, with
   three Umas home and nobody working but the farmer: its upkeep takes 45% of its income and it still clears 805g.
 - **Year 2 opens** on 4,250g, 9,390g shipped, 47 tiles harvested and 168 Farm Rank points (Farm Rank 2). The farmer
-  alone doesn't reach Farm Rank 3 (250) in a year, so the Sawmill and the Smokehouse wait for the farmhands' pace.
+  alone doesn't reach Farm Rank 3 (250) in a year, so the Sawmill and the Smokehouse wait for the farmhands.
 - **Fishing and foraging still carry the farm:** an action at the water or the woods pays about what a Carrot's whole
   run of six actions does. The upkeep doesn't make that bite (the farm never runs short), so the prices stand until
-  the farmhands and the tools.
+  the tools.
+
+##### With two farmhands
+
+The same test plays the same year a second time with **two farmhands**, friends from town invited to work on Spring 2,
+who live in town and cost 10g of upkeep each a night from then on. One waters the whole field; the other forages and
+fishes at the deepest area and spot the farm reaches (the Hills and the River from Farm Rank 2). Both have a D talent
+everywhere. The farmer keeps a field twice the size (ten tiles growing), plants and harvests it himself, waters only
+what she won't reach tonight (as the board's Tonight shows), gathers no more than the four actions a day he did alone,
+and spends the rest of his day with the people in town. It checks:
+- **their upkeep is paid every night:** never a short night, never half pace, two more on the upkeep than alone;
+- **they work every night from Spring 2,** three actions or more between them, and each morning reports them;
+- **every season earns more than its upkeep and loans take, and more than the farmer alone's;** the year ships more and
+  ends richer, and the loan clears;
+- **his own day is freed:** his watering is less than half of what it was alone, more crops grow, and over two of his
+  actions a day go to the people;
+- **their aptitudes rise:** the field hand reaches Watering 6 (a row an action) by the year's end, and the gatherer
+  Foraging 4 and Fishing 4;
+- **every morning's save parses** as v5.
+
+| Season | The bin paid | Upkeep | The loan's shares | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
+|---|---|---|---|---|---|---|---|---|
+| Spring | 4,055g | 325g | 175g | 3,555g | 0 | 3,075g | 35g (the Mill, two farmhands) | 1 |
+| Summer | 8,865g | 660g | 45g | 8,160g | 0 | 13,075g | 55g (and two Umas home) | 3 |
+| Autumn | 7,235g | 1,010g | — | 6,225g | 0 | 14,560g | 105g (the Dorm's level 2, the Sawmill, the Smokehouse) | 3 |
+| Winter | 12,150g | 1,380g | — | 10,770g | 0 | 24,790g | 115g (four home) | 3 |
+
+- **They pay their way many times over:** their 20g a night is 940g of the year's 3,375g upkeep, against 32,305g shipped
+  (3.4 times the farmer alone's 9,390g). The farmhands spent 318 actions in the year; the farmer watered 21 tiles (156
+  alone) and spent 103 actions with the people.
+- **The farm grows faster:** Farm Rank 3 by Summer's end, the Dorm's second level, the Sawmill and the Smokehouse in Autumn
+  on his own gold, and 613 Farm Rank points by Year 2.
+- **Where it comes from:** the gatherer works the Hills and the River once Farm Rank 2 opens them, where a haul is worth
+  two or three of the Woods', and her foraging rank reaches Skilled (×1.3 yield, +1 quality) on her challenges. The field hand
+  waters what he plants; her farming rank stays Novice, since she never harvests.
+- **No retune:** a farmhand's 10g a night stays the resident's. They pay their way by a wide margin, so neither the
+  upkeep nor the yields changed with them. Balance (Phase 3) is where a farmhand's wage or her three actions would move,
+  if your play finds the farm grows too fast.
 
 #### The night's goals check
 
@@ -3397,7 +3605,7 @@ meet: the Dorm's beds cap only who lives on the farm.
   people is never met: she keeps her role.
 - **Met:** she joins the roster that day (`roster[id].joined`) at Friendship 0 with 0 points and **lives in town**,
   where you find her for a talk, a gift and her events; **Invite to the farm** on her profile moves her into a free Dorm
-  bed at once, for her evenings (and the farm's work, once the farmhands come). Each of her ties with someone met starts
+  bed at once, for her evenings (the farm's work is the invitation to work's, wherever she lives). Each of her ties with someone met starts
   at its seed.
 - **Her meeting scene** plays at once, over the town, after the introduction.
 - **Retired with the welcome week:** the Gate's visitor one a morning, Say hello, her trigger to meet (talks on three
@@ -3506,8 +3714,8 @@ invitation to work, the evenings at two actions, moving in, the household's meal
 
 - **Invite her to work · 1**, on her menu in town or her profile, once she's a friend and where you meet her; once.
 - She's a **farmhand** from today and keeps her life in town (the Dorm is only where she sleeps if you invite her to the
-  farm). The farmhands' work (her actions a day on the farm's tasks, and her aptitudes) reads the flag; until it's
-  built, the flag is her stage and her talks.
+  farm). From tonight she works the tasks you set her on the work board, after her part-time job, and her aptitudes
+  grow ([farmhands](#farmhands)). The flag is also her stage and her talks.
 
 #### The household's meals
 
@@ -3644,11 +3852,11 @@ A disliked gift pays 0 and never takes points away. She says one of the default 
 - **The gift picker** lists the Warehouse by family, each good at each star held, with **its points for her today**
   (the birthday's ×3 and the anniversary's ×2 included), or **"?"** where her taste for it isn't known.
 - **Praise:** she earns it for the day when her work that finished overnight made a ★3+ item, when she ranked up last
-  night, or (once the farmhands work) when a harvest of hers today gave a ★3+ crop. Assisting a Fine-or-better workshop play is a
+  night, or when a farmhand's harvest or haul tonight gave a ★3+ good. Assisting a Fine-or-better workshop play is a
   cause too, but nothing pays that cause yet. **Praise +20** shows on her profile only while earned and
   unpaid, pays once, and both lists clear at night.
 - **Her line:** at night, +10 to each Uma who worked today at one of her line's places. One a night each; a day
-  elsewhere pays nothing. Nobody works until the farmhands come, so it pays nothing yet.
+  elsewhere pays nothing. Only farmhands work, so only they earn it.
 - **A festival together:** +50 to each Uma on a festival's team or entry, once a festival a year each. The rule is
   written, but no festival pays it yet.
 
@@ -3718,7 +3926,7 @@ A setup is never an hour, the weather, a season or a festival; her chapter's gat
 <!-- /live -->
 
 - **A setup** is her bible's beat's setup for the rung; an Uma without a bible has none. A working setup ("she works
-  the Fishery today") is met every day while the farmer works alone, so her event never waits on work she can't do; at
+  the Fishery today") is met every day, farmhand or not, so her event never waits on work she may not do; at
   a place not built yet it shows "Opens when the Mine is built" (her place) ahead of a short bar. A pack's beat that still names a
   chapter setup is noted and read as her bar alone: the farm has no global chapters, and a gate goes on one of [her
   chapters](#her-chapters).
@@ -3873,8 +4081,10 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
   says where she is, "In town today, at the Café. Talks and gifts are in person." with **Find her ›** (her menu where she
   is, `/town?at=<place>&uma=<id>`, where going into town comes first), or "At home today. Talk with her in town another
   day.". **Play · 1 action ›** (her Ready event) works from anywhere.
-- **Hearts | Work:** the Work side is her work sheet: her favourite line, the day she joined, where she is, and her nine
-  activities with talent, rank, points and the next challenge.
+- **Hearts | Work:** the Work side is her work sheet: her favourite line, the day she joined, where she is, "Farmhand
+  since Spring 3 · her tasks" (a tap to the work board) once she works the farm, her ten aptitudes (each level, a bar to
+  the next and the trick it opened; "where she'd start" before she's a farmhand: see [aptitude](#aptitude)), and her
+  nine activities with talent, rank, points and the next challenge.
 
 ### Her chapters
 
@@ -3949,9 +4159,10 @@ A perk comes with every level, 25 in all, and every perk acts. **A perk is read 
 rung's perk once its event has played (S2 and S4 once they've come at night). Only her signature dish writes anything to
 the save.
 
-**While the farmer works alone,** the perks that ride on an Uma's own work (the romance term on a harvest or a haul,
-side by side, her line's pay, the mentor, bonds at work) have nothing to act on, and wait for the farmhands. The night
-chores, morning items, meals, her keepsake on her chores and the household's act as written.
+**The perks that ride on an Uma's own work** (the romance term on a harvest or a haul, side by side, her line's pay, the
+mentor, her keepsake on her work, bonds at work) act on a farmhand's ([farmhands](#farmhands)); an Uma who doesn't work
+the farm gets none of them. The night chores, morning items, meals, her keepsake on her chores and the household's act
+as written.
 
 #### The perks' words
 
@@ -4061,8 +4272,8 @@ places aren't built yet, so their perks wait, and a morning item of theirs is a 
   term of the same items (her own bonuses only at her line's place, the crew's anywhere), as seeded copies (the same goods
   and stars) straight into the Warehouse. A forager's Sawmill batch and a fisher's Smokehouse batch count as her line.
   The job's own plan never changes.
-- **Farming would pay at harvest,** an extra crop by her romance term on her own harvests; the farmer harvests alone,
-  so the field's harvests get none until the farmhands work.
+- **Farming pays on a farmhand's harvests** the same way: her harvested crops are her night's items at the Fields, so
+  the perks' extras copy them by her romance term at night. The farmer's own harvests get none.
 
 #### The romance term and its caps
 
@@ -4113,7 +4324,7 @@ Worked: a married forager with F3, R5 and a grade-8 ring has +28% of her own (28
 
 #### The mentor
 
-At night, at each place worked today (none until the farmhands work), an Uma at **Friendship 9** whose line's place it
+At night, at each place farmhands worked today, an Uma at **Friendship 9** whose line's place it
 is mentors the others who worked there: **×1.10 rank points** for the day. **One mentor a place:** the most
 hearts (the furthest along her route), then the cast's order, then her id. She earns no bonus herself; a second Friendship
 9 Uma there is mentored too.
@@ -4913,8 +5124,8 @@ decorations draw them:
 
 Each pair of Umas on the farm holds **bond points**, whole, that **never fall.** They grow when two share a place, five
 **bond hearts** come at fixed thresholds, the authored ties **seed** them, and each new heart opens the pair's
-**conversation**. While the farmer works alone, bonds grow from the ties' seeds and shared houses only: work together
-waits for the farmhands.
+**conversation**. Farmhands who work the same place the same day build theirs at night; the ties' seeds and shared
+houses build the rest.
 
 ```
  Stand-in 2 joins Stand-in 1 ──► their tie seeds: Stand-in 1 & 2 at 150 (♥♥); Stand-in 3 joins: 1 & 3 at 50 (♥)
@@ -4996,7 +5207,7 @@ At 3 bond hearts two Umas work **side by side:**
 <!-- live:side-by-side -->
 | Where | Beside a 3-heart partner | How |
 |---|---|---|
-| A work place (gathering, a station) | +10% of her night’s items | Night step 4 (`nightExtras`): copies of the items her work finished tonight, the same goods and stars, `share × n` whole and one more by `draw(uid, day, 'bond:<id>', 0)`, each picked by `draw(…, k)`; into the Warehouse. Her partner worked the same place today. None until the farmhands work |
+| A work place (gathering, a station) | +10% of her night’s items | Night step 4 (`nightExtras`): copies of the items her work finished tonight, the same goods and stars, `share × n` whole and one more by `draw(uid, day, 'bond:<id>', 0)`, each picked by `draw(…, k)`; into the Warehouse. Her partner worked the same place today |
 <!-- /live -->
 
 - **Why at night:** a day's haul is planned when its job starts, so a bonus at planning would miss a partner who starts
@@ -5172,6 +5383,10 @@ sits outside the opening screens, so it shows even when the app stopped while op
   it.
 - **v5 grows in place with the illustrations:** `gallery` (her illustrations seen, by her id: the scenes' ids in the
   order first seen) is new; a save without it has seen none. Nothing migrates, and `updatedAt` never moves for it.
+- **v5 grows in place with the farmhands:** `roster[id].tasks` (her board; none, no tasks), `roster[id].practice` (her
+  actions by aptitude; none, none) and `today.fed` (the farmhands well fed this morning; none, nobody) are written only
+  once used; the morning's farmhand (`farmhand`) and aptitude (`aptitude`) lines are new kinds; and a station's load may
+  hold up to 20 (a farmhand's bigger load at her yield). Nothing migrates, and `updatedAt` never moves for it.
 - **Nothing goes silently:** a phone save with unsynced play is kept first as a "Before the new farm" safety copy (if it
   can't be kept, nothing changes and the card says so, with the button to try again). The new farm syncs up as it is,
   and the first time the server stores a v5 over the older save it copies the older one, whole, to a backup

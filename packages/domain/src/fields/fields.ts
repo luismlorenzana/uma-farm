@@ -109,14 +109,18 @@ function inSeason(save: Pick<FarmSave, 'calendar'>, crop: CropId): void {
 /** Clears an overgrown tile: one action. A stump leaves a Pine Log and a stone a Limestone, ★1, in the Warehouse.
  * Refused on cleared ground or soil (`bad-slot`). */
 export function clearTile<S extends FarmSave>(save: S, index: number): { save: S; found: string | null } {
+  if (!isOvergrown(tileAt(save, index).ground)) throw new SaveRuleError('bad-slot', 'It’s clear already.')
+  return clearGround(spend(save, 'clear'), index)
+}
+/** The clearing itself, spending nothing: the farmer's action and a farmhand's work share it. */
+export function clearGround<S extends FarmSave>(save: S, index: number): { save: S; found: string | null } {
   const tile = tileAt(save, index)
   if (!isOvergrown(tile.ground)) throw new SaveRuleError('bad-slot', 'It’s clear already.')
   const found = CLEAR_FINDS[tile.ground]
-  const spent = spend(save, 'clear')
   return {
     save: {
-      ...spent, fields: withTile(spent, index, bareTile('clear')), ...(found ? { items: addGoods(spent.items, found, 1, 1) } : {}),
-      farm: { ...spent.farm, counts: bump(spent.farm.counts, TILES_CLEARED) },
+      ...save, fields: withTile(save, index, bareTile('clear')), ...(found ? { items: addGoods(save.items, found, 1, 1) } : {}),
+      farm: { ...save.farm, counts: bump(save.farm.counts, TILES_CLEARED) },
     },
     found,
   }
@@ -125,39 +129,61 @@ export function clearTile<S extends FarmSave>(save: S, index: number): { save: S
 /** Tills cleared ground: one action. Refused on an overgrown tile (`bad-slot`: clear it first) and on soil already
  * tilled. */
 export function tillTile<S extends FarmSave>(save: S, index: number): S {
-  const tile = tileAt(save, index)
+  tillable(tileAt(save, index))
+  return tillGround(spend(save, 'till'), index)
+}
+function tillable(tile: Tile): void {
   if (isOvergrown(tile.ground)) throw new SaveRuleError('bad-slot', 'Clear it first.')
   if (tile.ground === 'tilled') throw new SaveRuleError('bad-slot', 'It’s tilled already.')
-  const spent = spend(save, 'till')
-  return { ...spent, fields: withTile(spent, index, bareTile('tilled')) }
+}
+/** The tilling itself, spending nothing. */
+export function tillGround<S extends FarmSave>(save: S, index: number): S {
+  tillable(tileAt(save, index))
+  return { ...save, fields: withTile(save, index, bareTile('tilled')) }
 }
 
 /** Plants one seed (`seed-<crop>` or `seed-<crop>-own`) in empty tilled soil: one action, in its crop's seasons only,
  * the seed from the Warehouse, the crop's entry in `crops` made on its first planting. */
 export function plantTile<S extends FarmSave>(save: S, index: number, seed: string): S {
+  sowable(save, index, seed)
+  takeGoods(save.items, seed, 1, 1)
+  return sowTile(spend(save, 'plant'), index, seed)
+}
+function sowable(save: FarmSave, index: number, seed: string): void {
   const tile = tileAt(save, index)
   const what = seedOf(seed)
   if (!what) throw new SaveRuleError('no-items', 'That isn’t a seed.')
   if (tile.ground !== 'tilled') throw new SaveRuleError('bad-slot', 'Till it first.')
   if (tile.crop !== null) throw new SaveRuleError('bad-slot', 'It’s planted.')
   inSeason(save, what.crop)
+}
+/** The planting itself, spending nothing. */
+export function sowTile<S extends FarmSave>(save: S, index: number, seed: string): S {
+  sowable(save, index, seed)
+  const what = seedOf(seed)!
   const items = takeGoods(save.items, seed, 1, 1)
-  const spent = spend(save, 'plant')
   return {
-    ...spent, items, fields: withTile(spent, index, { ...bareTile('tilled'), crop: what.crop, own: what.own }),
-    crops: { ...spent.crops, [what.crop]: spent.crops[what.crop] ?? 0 }, farm: { ...spent.farm, counts: bump(spent.farm.counts, TILES_PLANTED) },
+    ...save, items, fields: withTile(save, index, { ...bareTile('tilled'), crop: what.crop, own: what.own }),
+    crops: { ...save.crops, [what.crop]: save.crops[what.crop] ?? 0 }, farm: { ...save.farm, counts: bump(save.farm.counts, TILES_PLANTED) },
   }
 }
 
 /** Waters a growing tile: one action; it grows a stage tonight. Refused with nothing growing, once it's ripe and once
  * it's watered today. */
 export function waterTile<S extends FarmSave>(save: S, index: number): S {
-  const tile = tileAt(save, index)
+  wettable(tileAt(save, index))
+  return wetTile(spend(save, 'water'), index)
+}
+function wettable(tile: Tile): void {
   if (tile.crop === null) throw new SaveRuleError('bad-slot', 'Nothing grows there.')
   if (tile.ready) throw new SaveRuleError('bad-slot', 'It’s ripe: harvest it.')
   if (tile.watered) throw new SaveRuleError('bad-slot', 'Watered today.')
-  const spent = spend(save, 'water')
-  return { ...spent, fields: withTile(spent, index, { ...tile, watered: true }) }
+}
+/** The watering itself, spending nothing. */
+export function wetTile<S extends FarmSave>(save: S, index: number): S {
+  const tile = tileAt(save, index)
+  wettable(tile)
+  return { ...save, fields: withTile(save, index, { ...tile, watered: true }) }
 }
 
 /** What a harvest brought: crops by star and an own seed back. */
@@ -170,36 +196,63 @@ export interface HarvestReceipt {
 /** A receipt's crops, every star. */
 export const receiptItems = (receipt: Pick<HarvestReceipt, 'stars'>): number => receipt.stars.reduce((a, b) => a + b, 0)
 
+/** Who harvests: the farmer (none), or a farmhand with her terms, her aptitude's quality and yield, and her seeds back. */
+export interface Reaper {
+  terms: HarvestTerms
+  /** Her aptitude's quality points, on top of her terms. */
+  extra: number
+  /** Her yield: × the crop's yield, the fraction drawn. */
+  yield: number
+  /** Her chance of a seed back (`seedsBackChance` by her rank, and the Hoe). */
+  seedsBack: number
+}
+
 /** Harvests a ripe tile: one action. Each crop of its yield draws its stars (`draw(uid, day, 'harvest:<i>', n)`) into
  * the Warehouse, an own seed may come back (`'seeds:<i>'`), the crop gains its points, and a regrowing crop starts
  * again in season; otherwise the tile stays tilled and empty. */
 export function harvestTile<S extends FarmSave>(save: S, index: number): { save: S; receipt: HarvestReceipt } {
-  const tile = tileAt(save, index)
+  reapable(tileAt(save, index))
+  return reapTile(spend(save, 'harvest'), index, null)
+}
+function reapable(tile: Tile): void {
   if (tile.crop === null || !tile.ready) throw new SaveRuleError('not-ready', tile.crop === null ? 'Nothing grows there.' : 'Not ripe yet.')
-  const crop = CROPS[tile.crop]
-  const spent = spend(save, 'harvest')
-  const { uid } = spent.account
-  const day = spent.calendar.day
-  const points = spent.crops[crop.id] ?? 0
-  const q = harvestQuality(null, cropLevelOf(points), spent.tools.hoe)
-  const stars = Array.from({ length: crop.yield }, (_, n) => drawStars(q, draw(uid, day, `harvest:${index}`, n)))
+}
+/** The harvest itself, spending nothing, by the farmer (`null`) or a farmhand. A farmhand's yield above ×1 draws its
+ * fraction (`draw(uid, day, 'harvest-more:<i>', 0)`). */
+export function reapTile<S extends FarmSave>(save: S, index: number, reaper: Reaper | null): { save: S; receipt: HarvestReceipt } {
+  const tile = tileAt(save, index)
+  reapable(tile)
+  const crop = CROPS[tile.crop!]
+  const { uid } = save.account
+  const day = save.calendar.day
+  const points = save.crops[crop.id] ?? 0
+  const q = harvestQuality(reaper?.terms ?? null, cropLevelOf(points), save.tools.hoe) + (reaper?.extra ?? 0)
+  const many = reaper ? drawnCount(crop.yield * reaper.yield, draw(uid, day, `harvest-more:${index}`, 0)) : crop.yield
+  const stars = Array.from({ length: many }, (_, n) => drawStars(q, draw(uid, day, `harvest:${index}`, n)))
   const receipt: HarvestReceipt = { crop: crop.id, stars: [0, 0, 0, 0, 0], seeds: 0 }
-  let items = stars.reduce((all, s) => addGoods(all, crop.id, s, 1), spent.items)
+  let items = stars.reduce((all, s) => addGoods(all, crop.id, s, 1), save.items)
   for (const s of stars) receipt.stars[s - 1]! += 1
-  if (draw(uid, day, `seeds:${index}`, 0) < seedsBackChance(null, spent.tools.hoe)) {
+  if (draw(uid, day, `seeds:${index}`, 0) < (reaper?.seedsBack ?? seedsBackChance(null, save.tools.hoe))) {
     items = addGoods(items, seedId(crop.id, true), 1, 1)
     receipt.seeds = 1
   }
   // A regrowing crop starts again at 0 while it's in season; otherwise the soil is left empty, still tilled.
-  const regrows = crop.regrows !== null && growsIn(crop.id, seasonOf(spent))
+  const regrows = crop.regrows !== null && growsIn(crop.id, seasonOf(save))
   const next: Tile = regrows ? { ...bareTile('tilled'), crop: crop.id, regrowing: true, own: tile.own } : bareTile('tilled')
   return {
     save: {
-      ...spent, items, fields: withTile(spent, index, next), crops: { ...spent.crops, [crop.id]: points + cropPointsOf(tile.own) },
-      farm: { ...spent.farm, counts: bump(spent.farm.counts, TILES_HARVESTED) },
+      ...save, items, fields: withTile(save, index, next), crops: { ...save.crops, [crop.id]: points + cropPointsOf(tile.own) },
+      farm: { ...save.farm, counts: bump(save.farm.counts, TILES_HARVESTED) },
     },
     receipt,
   }
+}
+
+/** A count from an expected `n`: its whole part, and one more when the draw `u` falls under its fraction; never below 1
+ * for a positive `n`. */
+export function drawnCount(n: number, u: number): number {
+  const whole = Math.floor(n + 1e-9)
+  return Math.max(n > 0 ? 1 : 0, whole + (u < n - whole - 1e-9 ? 1 : 0))
 }
 
 // --- What a screen and the morning read ----------------------------------------------------------------------------

@@ -9,13 +9,12 @@
 //
 // The roster, the Dorm, work, bonds, `love`, `today`, `memories` and `arrivals` are keyed by character id. Her outfit is
 // a lookup in the story pack (`outfitOf`, `story/pack.ts`).
-import type { ItemRequest } from '@luismlorenzana/uma-work'
 import { DAYS_PER_YEAR } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { START_GOLD, START_SEEDS } from '../farm/farm'
 import type { FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
-import type { StationId } from '../gathering/ids'
+import type { FishingSpotId, ForestAreaId, StationId } from '../gathering/ids'
 import { seedId, type CropId } from '../goods/ids'
 import type { MorningSummary } from '../night/summary'
 import type { Account, OlderSave } from './save'
@@ -41,10 +40,6 @@ export interface DormSwap {
   out: OutfitId
   in: OutfitId
 }
-
-/** A work request: an area or a spot and a count, or a station's output at its stars. What the Umas' work names (the
- * night's `made`), kept for the farmhands. */
-export type LoopWorkRequest = ItemRequest
 
 // --- The field: a grid of tiles ----------------------------------------------------------------------------------
 
@@ -267,6 +262,29 @@ export interface Love {
   night?: number
 }
 
+// --- The work board: a farmhand's tasks, and her aptitudes ---------------------------------------------------------
+
+/** The work board's tasks, as the farm has them today: the field's (a list of its tiles), a station's load, a forest
+ * area's forage or chop, a fishing spot's catch. The ranch's care and the mine's faces come with them. */
+export const TASK_KINDS = ['harvest', 'water', 'plant', 'till', 'load', 'forage', 'chop', 'fish'] as const
+export type TaskKind = typeof TASK_KINDS[number]
+/** The field's tasks, each over a list of tiles. */
+export const TILE_TASKS = ['harvest', 'water', 'plant', 'till'] as const
+export type TileTaskKind = typeof TILE_TASKS[number]
+/** One task on a farmhand's board: the field's over its tiles (planting one crop, or any in season), a station's load,
+ * an area's forage or chop, a spot's catch. It repeats each day until you change it. */
+export type FarmTask =
+  | { kind: Exclude<TileTaskKind, 'plant'>; tiles: number[] }
+  | { kind: 'plant'; tiles: number[]; crop?: CropId }
+  | { kind: 'load'; station: StationId }
+  | { kind: 'forage' | 'chop'; area: ForestAreaId }
+  | { kind: 'fish'; spot: FishingSpotId }
+/** The most tasks one farmhand's board holds. */
+export const MAX_TASKS = 6
+/** Her aptitudes: one for each task, a station's load one for each station. */
+export const APTITUDE_IDS = ['harvest', 'water', 'plant', 'till', 'forage', 'chop', 'fish', 'mill', 'sawmill', 'smokehouse'] as const
+export type AptitudeId = typeof APTITUDE_IDS[number]
+
 /** An Uma on the roster. Talents aren't saved: they're read from master data each boot. */
 export interface RosterUma {
   /** The day she joined. */
@@ -277,6 +295,11 @@ export interface RosterUma {
   /** The day you invited her to work the farm: she's a farmhand from then on. Absent before (the save grows it in
    * place); the farmhands' work reads it. */
   farmhand?: number
+  /** Her tasks on the work board, in your order: a farmhand's. Absent before you set any (the save grows it in place). */
+  tasks?: FarmTask[]
+  /** The actions she has spent on each aptitude's task: her practice. Her level is read from it with her talent and
+   * rank points (`farm/farmhands.ts`). Absent before her first (the save grows it in place). */
+  practice?: Partial<Record<AptitudeId, number>>
 }
 
 /** The evening's kinds: the ten date games, Dinner in town and A night in, then festival night, its own slot on a
@@ -350,6 +373,9 @@ export interface TodayV4 {
   /** The household's meals cooked today, each once: breakfast, dinner. Absent until one is cooked: the save grows it in
    * place. */
   meals?: Meal[]
+  /** The farmhands well fed this morning, by id: each works one more action today. The night notes them as the morning
+   * comes (step 9); absent with none (the save grows it in place). */
+  fed?: CharacterId[]
 }
 
 /** The household's meals: one of each a day, once anyone is married. */

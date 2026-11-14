@@ -30,7 +30,7 @@ evening as built, her event when it's Ready; no welcome week ([the town](../game
 **Upkeep and loans (F81) is in:** each night, after the bin pays, the loans take their share of the
 night's income and the upkeep is charged (15g a place or house built, 5g a Dorm bed past the first three, 10g an Uma
 living on the farm; a new farm owes nothing); short of it, the rest is owed, the morning warns, and from the second
-short night the farmhands work at half pace (a flag F80 reads) until it's paid. The mayor's office in town lends what a
+short night the farmhands work at half pace until it's paid. The mayor's office in town lends what a
 build, a Dorm level or a house is short of gold, ordered in the same tap (a 10% fee, a tenth a night from income, up to
 1,000g at Farm Rank 1, two loans from Farm Rank 4). Ordering a build with your own gold stays on its card, free. The
 Book shows the upkeep beside the last seven nights' income; the projects list shows each loan and when it clears
@@ -49,11 +49,19 @@ the text box over its lower edge and no bust while it's up: meeting her, a summe
 after the night's companion; the story can name one with an `illustration` step. Each one seen joins her gallery for
 good, which her profile opens; the rest show locked with their titles. The first Uma's nine are master data's (uma-data
 1.8.0); an Uma without any plays as before ([her illustrations](../game-mechanics.md#her-illustrations)).
+**Farmhands (F80) are in:** a friend you invite to work does her part-time job in town, then gives the farm 3 actions a
+day (+1 settled in a season on, +2 once she's your spouse, +1 the day after a household meal; half at half pace) on the
+tasks you set on the Book's work board: harvest, water, plant, clear and till over the field's rows, a station's load, a
+forest area's forage or chop, a fishing spot's catch. She works them overnight before the crops grow, and the morning
+reports her work. Each task has an aptitude from 1 to 10, started by her talent and raised by each action, with more
+goods, better stars and tricks (two tiles an action, a row watered in one, a bigger haul, two casts, a bigger load); her
+profile's Work side shows them. Her work pays her rank points, bonds, her line and the perks' extras as an Uma's work
+does, and she costs 10g of upkeep a night wherever she lives. A simulated year with two farmhands pays its way many
+times over: 3.4 times the farmer alone's shipments, Farm Rank 3 by Summer's end ([farmhands](../game-mechanics.md#farmhands)).
 
 | Piece | Who | State |
 |---|---|---|
-| [F80](tasks/F80-farmhands.md) **Farmhands** | Claude | Next |
-| [F83](tasks/F83-ranch-and-mine.md) **The ranch and the mine** | Claude | After F80 |
+| [F83](tasks/F83-ranch-and-mine.md) **The ranch and the mine** | Claude | Next: the coop's care and the mine's faces join the work board |
 | [F69](tasks/F69-bust-art-spec.md) **The bust art**, the next Umas | ChatGPT | The pilot is done; the rest in the Ranker's order |
 | [F40](tasks/F40-story-authoring.md) **The story**, and its ship routine | The story session | Release 1 shipped; Release 2 brings `world.json` |
 
@@ -72,6 +80,7 @@ The table above is the queue. A packet is deleted when it ships, and git keeps t
 | **The default Uma's look:** meet an Uma without art and play a talk and an event: the blank bust's faces and the default story | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Borrow toward the Mill:** with 20 logs held, go into town, open the mayor's office, tap **Borrow · Build**; end the day and see the Mill stand, then watch the Book's money and the morning's loan line until it clears | [uma-farm.web.app](https://uma-farm.web.app), and [upkeep and loans](../game-mechanics.md#upkeep-and-loans) |
 | **Go into town and meet three Umas you choose:** walk between the places, introduce yourself, talk and give a gift, each an action | [uma-farm.web.app](https://uma-farm.web.app), and [the town](../game-mechanics.md#the-town) |
+| **Hire two Umas, set their tasks, and spend a day only in town:** invite two friends to work, give one the field's watering and the other a spot to fish on the Book's work board, then go into town and spend the day there; the next morning, see what they did, and over the days watch their aptitudes rise on their profiles | [uma-farm.web.app](https://uma-farm.web.app), and [farmhands](../game-mechanics.md#farmhands) |
 | **Take one Uma to married life:** meet her, befriend her, invite her to work, a hangout and a date (two actions each), Dinner in town; after the wedding, watch the wedding night and moving in, cook a meal, choose tonight's companion and see her greet you in the morning | [uma-farm.web.app](https://uma-farm.web.app), and [the Uma loop](../game-mechanics.md#the-uma-loop) |
 | **Her illustrations' phone check:** meet the first Uma and see her greeting full screen; play her confession, both moods; open her profile's Gallery and see it fill as you go | [uma-farm.web.app](https://uma-farm.web.app), and [her illustrations](../game-mechanics.md#her-illustrations) |
 | **Write the story and ship it.** F40 lists what the rework changes for it: the protagonist is a man, there's no welcome week, and her life in town (`home`, `job`, `routine`, and `town.json`'s `locations`) | [F40](tasks/F40-story-authoring.md) |

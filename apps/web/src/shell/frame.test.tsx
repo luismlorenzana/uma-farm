@@ -172,7 +172,7 @@ describe('the Book', () => {
     expect(figures).toEqual([
       ['upkeep', '35g', 'After the bin pays'], ['income', '120g', 'Average of the last 5 nights'], ['left', '+40g', 'Less upkeep and loans'],
     ])
-    expect($$('[data-part]').map((p) => p.textContent)).toEqual(['1 place built15g', '2 Umas on the farm20g'])
+    expect($$('[data-part]').map((p) => p.textContent)).toEqual(['1 place built15g', '2 Umas on or working the farm20g'])
     expect($$('[data-night]').map((b) => b.getAttribute('data-night'))).toEqual(['0', '300', '200', '0', '100'])
     expect($('[data-upkeep-line]')).not.toBeNull()
     expect($('[data-short]')?.textContent).toBe('Short of upkeep · 40g owed · farmhands at half pace until it’s paid')

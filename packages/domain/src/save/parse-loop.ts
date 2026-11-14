@@ -11,7 +11,7 @@ import { GOOD_IDS, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, 
 import type { BinSale, MoneyLine, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
 import { amount, bool, count, int, list, object, oneOf, record, SaveParseError, type Obj } from './parse'
 import {
-  ANIMAL_HOME, ANIMAL_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOUSE_LOAN, INCOME_NIGHTS, isDishId, MAX_LOANS, pairKey,
+  ANIMAL_HOME, ANIMAL_KINDS, APTITUDE_IDS, MAX_TASKS, TASK_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOUSE_LOAN, INCOME_NIGHTS, isDishId, MAX_LOANS, pairKey,
   REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig, type DormSwap,
   type Expedition, type Extra, type FestivalResult, type Loan, type RankState, type SaveV5, type StarCounts, type StationLoad, type Tile,
   type ToolId, type ToolTier, type Warehouse, type WorkshopId,
@@ -165,8 +165,9 @@ export function parseLoads(value: unknown, path: string): Partial<Record<Station
   }
   return out
 }
-/** The most a load takes (the stations' `LOAD_SIZE`, a Novice's day). */
-const MAX_LOAD = 8
+/** The most a load holds: a farmhand's biggest load (12 at the trick's level) at her best yield, with room. The
+ * farmer's are 1–8. */
+const MAX_LOAD = 20
 
 export function parseRanch(value: unknown, path: string, roster: ReadonlySet<string>): SaveV5['ranch'] {
   const o = object(value, path, ['animals'])
@@ -377,13 +378,24 @@ export function parseMoneyLines(value: unknown, path: string): MoneyLine[] {
   }), path, (m) => (m.kind === 'loan' ? `loan:${m.for}` : m.kind))
 }
 
-/** §2 Work done: each station's load once (an output it makes at its stars, 1–8); the field's growth once (tiles that
- * grew, 1 or more, and how many of them turned ripe); a crop that withered once, on 1 or more tiles. */
-export function parseWorkLines(value: unknown, path: string): WorkLine[] {
+/** §2 Work done: each farmhand's day once (an Uma on the roster: her actions and those spent, half pace and well fed,
+ * what she did by task and the goods it brought); each station's load once (an output it makes at its stars, 1 up to a
+ * farmhand's biggest); the field's growth once (tiles that grew, 1 or more, and how many of them turned ripe); a crop
+ * that withered once, on 1 or more tiles. */
+export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet<string>): WorkLine[] {
   const tiles = (value: unknown, at: string, min = 1) => int(value, at, min, FIELD_TILES)
-  return unique(list(value, path, 0, STATIONS.length + 1 + FIELD_TILES).map((v, i): WorkLine => {
+  return unique(list(value, path, 0, roster.size + STATIONS.length + 1 + FIELD_TILES).map((v, i): WorkLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['load', 'grew', 'withered'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['farmhand', 'load', 'grew', 'withered'] as const)
+    if (kind === 'farmhand') {
+      const f = object(v, at, ['kind', 'id', 'actions', 'spent', 'half', 'fed', 'tasks', 'done', 'items'])
+      const actions = int(f.actions, `${at}.actions`, 0, MAX_HAND_ACTIONS)
+      return {
+        kind, id: member(f.id, `${at}.id`, roster), actions, spent: int(f.spent, `${at}.spent`, 0, actions), half: bool(f.half, `${at}.half`), fed: bool(f.fed, `${at}.fed`),
+        tasks: int(f.tasks, `${at}.tasks`, 0, MAX_TASKS),
+        done: counts(f.done, `${at}.done`, (k) => (TASK_KINDS as readonly string[]).includes(k), 'unknown task'), items: count(f.items, `${at}.items`),
+      }
+    }
     if (kind === 'load') {
       const l = object(v, at, ['kind', 'station', 'item', 'count'])
       const station = oneOf(l.station, `${at}.station`, STATIONS)
@@ -402,18 +414,25 @@ export function parseWorkLines(value: unknown, path: string): WorkLine[] {
     const c = object(v, at, ['kind', 'crop', 'tiles'])
     const crop = typeof c.crop === 'string' && isCropId(c.crop) ? c.crop : fail(`${at}.crop`, 'unknown crop')
     return { kind, crop, tiles: tiles(c.tiles, `${at}.tiles`) }
-  }), path, (w) => (w.kind === 'load' ? `load:${w.station}` : w.kind === 'grew' ? 'grew' : `withered:${w.crop}`))
+  }), path, (w) => (w.kind === 'farmhand' ? `farmhand:${w.id}` : w.kind === 'load' ? `load:${w.station}` : w.kind === 'grew' ? 'grew' : `withered:${w.crop}`))
 }
+/** The most actions a farmhand's day can hold: well past any she grows to. */
+const MAX_HAND_ACTIONS = 30
 
-/** §3 Ranks: rank-ups, then points full, each an Uma on the roster in an activity, a rank Hand–Legend; once each. */
+/** §3 Ranks: rank-ups, then points full, each an Uma on the roster in an activity, a rank Hand–Legend; then aptitudes
+ * up, an Uma on the roster in an aptitude, a level 2–10; once each. */
 export function parseRankLines(value: unknown, path: string, roster: ReadonlySet<string>): RankLine[] {
-  return unique(list(value, path, 0, 2 * ACTIVITIES.length * roster.size).map((v, i): RankLine => {
+  return unique(list(value, path, 0, (2 * ACTIVITIES.length + APTITUDE_IDS.length) * roster.size).map((v, i): RankLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['rank-up', 'full'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['rank-up', 'full', 'aptitude'] as const)
+    if (kind === 'aptitude') {
+      const a = object(v, at, ['kind', 'outfitId', 'aptitude', 'level'])
+      return { kind, outfitId: member(a.outfitId, `${at}.outfitId`, roster), aptitude: oneOf(a.aptitude, `${at}.aptitude`, APTITUDE_IDS), level: int(a.level, `${at}.level`, 2, 10) }
+    }
     const r = object(v, at, kind === 'full' ? ['kind', 'outfitId', 'activity', 'rank', 'challenge'] : ['kind', 'outfitId', 'activity', 'rank'])
     const line = { outfitId: member(r.outfitId, `${at}.outfitId`, roster), activity: oneOf(r.activity, `${at}.activity`, ACTIVITIES), rank: int(r.rank, `${at}.rank`, 1, 5) as Rank }
     return kind === 'full' ? { kind, ...line, challenge: count(r.challenge, `${at}.challenge`) } : { kind, ...line }
-  }), path, (r) => `${r.kind}:${r.outfitId}:${r.activity}`)
+  }), path, (r) => `${r.kind}:${r.outfitId}:${r.kind === 'aptitude' ? r.aptitude : r.activity}`)
 }
 
 /** §5's kinds: the roster's arrivals are §4's hearts. */

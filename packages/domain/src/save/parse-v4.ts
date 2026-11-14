@@ -13,7 +13,7 @@ import { dateOf, FESTIVAL_IDS } from '../farm/calendar'
 import { cleanFarmerName, farmerNameIssue, houseNameIssue } from '../romance/farmer'
 import { GALLERY_MAX, ILLUSTRATION_ID } from './gallery'
 import { isCropId, isGoodId, isGoodOrRingId, type CropId } from '../goods/ids'
-import { FISHING_SPOTS, FOREST_AREAS } from '../gathering/ids'
+import { FISHING_SPOTS, FOREST_AREAS, STATIONS } from '../gathering/ids'
 import { isStockId, parseStockKey } from './warehouse'
 import type { HeartLine, MorningSummary } from '../night/summary'
 import { bool, count, int, list, object, oneOf, parseAccount, record, text } from './parse'
@@ -25,6 +25,7 @@ import {
 import {
   type BuildingId, EVENING_KINDS, eveningsOn, FARMHOUSE, FESTIVAL_NIGHT, FIELD_TILES, FINALE_MARRIED, FURNITURE_PIECES, invitesFor, LOVE_STAGES, marriedCount, MAX_HOUSES, residentsOf, roomsOf,
   isDishId, MEALS, pairKey, TOWN_ID, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUma, type SaveV5, type TodayV4, type TownTalks,
+  APTITUDE_IDS, MAX_TASKS, TASK_KINDS, type FarmTask,
 } from './v4'
 
 export { isRosterId, LOOP_SLOTS, LOOP_WORK_PLACES } from './parse-loop'
@@ -50,7 +51,7 @@ function parseRoster(value: unknown, path: string, today: number): Record<string
   for (const [id, raw] of Object.entries(record(value, path))) {
     const at = `${path}.${id}`
     outfit(id, at)
-    const u = object(raw, at, ['joined', 'ranks', 'wellFed', 'farmhand'])
+    const u = object(raw, at, ['joined', 'ranks', 'wellFed', 'farmhand', 'tasks', 'practice'])
     const joined = day(u.joined, `${at}.joined`)
     if (joined > today) fail(`${at}.joined`, 'after today')
     out[id] = { joined, ranks: parseRanks(u.ranks, `${at}.ranks`), wellFed: count(u.wellFed, `${at}.wellFed`) }
@@ -60,8 +61,31 @@ function parseRoster(value: unknown, path: string, today: number): Record<string
       if (hired > today || hired < joined) fail(`${at}.farmhand`, 'expected a day from the day she joined to today')
       out[id].farmhand = hired
     }
+    // Her tasks on the work board (a farmhand's) and her practice: absent before any (the save grows them in place).
+    if (u.tasks !== undefined) {
+      if (out[id].farmhand === undefined) fail(`${at}.tasks`, 'only a farmhand’s')
+      out[id].tasks = list(u.tasks, `${at}.tasks`, 0, MAX_TASKS).map((t, i) => parseTask(t, `${at}.tasks.${i}`))
+    }
+    if (u.practice !== undefined) out[id].practice = counts(u.practice, `${at}.practice`, (k) => (APTITUDE_IDS as readonly string[]).includes(k), 'unknown aptitude')
   }
   return out
+}
+
+/** One task on her board: the field's over its tiles (each once, on the field; planting one crop or any), a station's
+ * load, a forest area's forage or chop, a fishing spot's catch. */
+function parseTask(value: unknown, path: string): FarmTask {
+  const kind = oneOf(record(value, path).kind, `${path}.kind`, TASK_KINDS)
+  switch (kind) {
+    case 'harvest': case 'water': case 'till': case 'plant': {
+      const o = object(value, path, kind === 'plant' ? ['kind', 'tiles', 'crop'] : ['kind', 'tiles'])
+      const tiles = unique(list(o.tiles, `${path}.tiles`, 1, FIELD_TILES).map((v, i) => int(v, `${path}.tiles.${i}`, 0, FIELD_TILES - 1)), `${path}.tiles`)
+      if (kind !== 'plant') return { kind, tiles }
+      return o.crop === undefined ? { kind, tiles } : { kind, tiles, crop: typeof o.crop === 'string' && isCropId(o.crop) ? o.crop : fail(`${path}.crop`, 'unknown crop') }
+    }
+    case 'load': return { kind, station: oneOf(object(value, path, ['kind', 'station']).station, `${path}.station`, STATIONS) }
+    case 'forage': case 'chop': return { kind, area: oneOf(object(value, path, ['kind', 'area']).area, `${path}.area`, FOREST_AREAS) }
+    case 'fish': return { kind, spot: oneOf(object(value, path, ['kind', 'spot']).spot, `${path}.spot`, FISHING_SPOTS) }
+  }
 }
 
 /** A day of hers that can't be after today: 0 is "never". */
@@ -178,7 +202,7 @@ const inviteKind = (v: unknown, at: string): InviteKind => (v === FESTIVAL_NIGHT
 /** `today`: the evenings within the day's slots (`evenings` regular ones, and festival
  * night once at most), and `invites` invitations, each a different Uma. */
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
-  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals'])
+  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const slots = eveningsOn(day, married)
   const evenings = list(o.evenings, `${path}.evenings`, 0, slots + 1).map((v, i) => {
@@ -212,6 +236,8 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
     reception: int(o.reception, `${path}.reception`, 0, 3),
     // The household's meals cooked today, each once: absent until one is cooked (the save grows it in place).
     ...(o.meals === undefined ? {} : { meals: unique(list(o.meals, `${path}.meals`, 0, MEALS.length).map((v, i) => oneOf(v, `${path}.meals.${i}`, MEALS)), `${path}.meals`) }),
+    // The farmhands well fed this morning: absent with none (the save grows it in place).
+    ...(o.fed === undefined ? {} : { fed: umas(o.fed, `${path}.fed`) }),
   }
 }
 
@@ -388,7 +414,7 @@ function parseSummary(value: unknown, path: string, today: number, roster: Reado
   if (o.day !== today) fail(`${path}.day`, 'expected today: a summary is the morning it opens on')
   return {
     day: today, bin: parseBinLines(o.bin, `${path}.bin`), ...(o.money === undefined ? {} : { money: parseMoneyLines(o.money, `${path}.money`) }),
-    work: parseWorkLines(o.work, `${path}.work`), ranks: parseRankLines(o.ranks, `${path}.ranks`, roster),
+    work: parseWorkLines(o.work, `${path}.work`, roster), ranks: parseRankLines(o.ranks, `${path}.ranks`, roster),
     hearts: parseHearts(o.hearts, `${path}.hearts`, roster, houses), news: parseNewsLines(o.news, `${path}.news`, roster),
     nudges: parseNudges(o.nudges, `${path}.nudges`),
   }

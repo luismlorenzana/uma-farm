@@ -3,7 +3,7 @@
 // lives in town, and **Swap**: pick one home with nothing to do, then one in town; she arrives tomorrow, and a swap can
 // be called off until then. One in town moves in at once with Invite to the farm on her profile, while a bed is free. The
 // pickers are uma-kit's, over the roster's rows. It's the Dorm for 20: eight levels, beds only. Loaded on demand.
-import { atHome, arriving, bedsAt, dormBought, DORM_LEVELS, freeBeds, leaving, nextDorm, swapBlock, type FarmSave } from '@farm/domain'
+import { atHome, arriving, bedsAt, dormBought, DORM_LEVELS, freeBeds, isFarmhand, leaving, nextDorm, swapBlock, type FarmSave } from '@farm/domain'
 import { FaceTile, UmaPicker } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -63,7 +63,7 @@ function Dorm({ save }: { save: FarmSave }) {
     if (leaving(save, id)) return 'Leaves tomorrow'
     if (arriving(save, id)) return 'Arrives tomorrow'
     if (!save.dorm.home.includes(id)) return 'In town'
-    return swapBlock(save, id) ?? 'Idle'
+    return swapBlock(save, id) ?? (isFarmhand(save, id) ? 'Farmhand' : 'Idle')
   }
   const swapRows = (ids: readonly string[]): SwapRow[] => ids.flatMap((id) => {
     const row = byId.get(id)
