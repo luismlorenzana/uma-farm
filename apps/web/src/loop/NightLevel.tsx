@@ -32,7 +32,7 @@ export default function NightLevel({ value }: { value: string }) {
   }, [gone]) // eslint-disable-line react-hooks/exhaustive-deps
   if (!card || !asked || !save || !pack) return null
   return createPortal(
-    <div className="pt-safe pb-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label="A level reached overnight" data-night-level={asked.rung}>
+    <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label="A level reached overnight" data-night-level={asked.rung}>
       <header className="flex min-h-12 items-center px-4"><p className="text-[13px] font-semibold text-ink-soft">Overnight</p></header>
       <MasterGate skeleton={null}>
         {(master) => <LevelUpCard card={card} id={asked.id} name={master.album.get(asked.id)?.name ?? 'An Uma'} love={save.love[asked.id]!} pack={pack} farmer={save.farmer.name} onContinue={close} />}

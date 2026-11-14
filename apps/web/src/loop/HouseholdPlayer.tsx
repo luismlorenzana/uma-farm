@@ -24,7 +24,7 @@ import { useStory } from '../story/story'
 import { readHouseholdOnce } from './homestead-actions'
 import { parseHouseholdParam } from './homestead-view'
 import { PlaySheet, playSpec } from './PlaySheet'
-import { Frame, placeName, silent, StepView } from './ScenePlayer'
+import { Frame, placeName, SCENE_BUST, SCENE_ROW, silent, StepView } from './ScenePlayer'
 
 export default function HouseholdPlayer({ value, replay }: { value: string; replay: boolean }) {
   const save = useLoopSave()
@@ -79,7 +79,7 @@ function Scene({ save, pack, id, play, master, replay, leaving, onDone }: {
     const first = play.spouses[0] ?? Object.keys(save.roster)[0]!
     const spec = playSpec(save, pack, first, playOf(play.play), 'event', playSeed(save.account.uid, save.calendar.day, first, 'finale'))
     return (
-      <div className="pt-safe pb-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={play.title} data-household-play>
+      <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={play.title} data-household-play>
         <PlaySheet spec={spec} title={`${play.title} · ${promptOf(play.play)}`} name={nameOf(first)} replay={replay} unpaid="For the joy of it: the Great Harvest pays nothing." onDone={next} />
       </div>
     )
@@ -127,14 +127,17 @@ function Part({ title, scene, steps, place, onPlace, nameOf, farmer, leaving, on
 /** A choice in a household scene: wording only, no gain (it pays nothing). */
 function Choice({ options, farmer, onPick }: { options: readonly ChoiceOption[]; farmer: string; onPick: (i: number) => void }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 px-4 pb-4" data-choice>
-      <p className="text-[13px] text-ink-soft">You</p>
-      {options.map((option, i) => (
-        <button key={i} type="button" onClick={() => onPick(i)} data-option={i}
-          className="flex min-h-12 w-full items-center rounded-md border border-hairline bg-panel px-4 py-2 text-left text-[15px] shadow-1">
-          {withFarmer(option.text, farmer)}
-        </button>
-      ))}
+    <div className={SCENE_ROW} data-choice>
+      <div className={SCENE_BUST} />
+      <div className="flex max-h-full min-w-0 flex-1 flex-col justify-end gap-3 overflow-y-auto">
+        <p className="text-[13px] text-ink-soft">You</p>
+        {options.map((option, i) => (
+          <button key={i} type="button" onClick={() => onPick(i)} data-option={i}
+            className="flex min-h-12 w-full shrink-0 items-center rounded-md border border-hairline bg-panel px-4 py-2 text-left text-[15px] shadow-1">
+            {withFarmer(option.text, farmer)}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
@@ -142,8 +145,8 @@ function Choice({ options, farmer, onPick }: { options: readonly ChoiceOption[];
 /** The game's last stage-up card: "The Great Harvest", every spouse's face, and the year's Festival of Vows. */
 function GreatHarvest({ spouses, nameOf, replay, onDone }: { spouses: readonly string[]; nameOf: (id: string) => string; replay: boolean; onDone: () => void }) {
   return (
-    <div className="pt-safe pb-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label="The Great Harvest" data-great-harvest>
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pt-6 pb-4">
+    <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label="The Great Harvest" data-great-harvest>
+      <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-3 overflow-y-auto px-4 pt-6 pb-4">
         <p className="font-display text-center text-[26px] font-bold text-[#d9a227]">The Great Harvest</p>
         <p className="text-center text-[14px] text-ink-soft">Every spouse, every row, one long table. The farm goes on.</p>
         <ul className="flex flex-wrap justify-center gap-2 py-2" aria-label="Your household" data-household-faces={spouses.length}>

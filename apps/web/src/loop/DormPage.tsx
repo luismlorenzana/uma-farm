@@ -80,8 +80,8 @@ function Dorm({ save }: { save: FarmSave }) {
   return (
     <div className="absolute inset-0 flex flex-col" data-page="dorm">
       <PlaceHeader title="Dorm" onBack={() => leave('/')} about={<About />} words={{ back: 'Back to the farm', about: 'About the Dorm' }} />
-      <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="space-y-3 px-4 pt-3 pb-24">
+      <main className="@container min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="space-y-3 px-4 pt-3 pb-6 @xl:columns-2 @xl:gap-3 [&>*]:break-inside-avoid">
           {(note || error) && (
             <p role="status" className={`rounded-md px-3 py-2 text-[14px] font-semibold ${error ? 'bg-danger/10 text-danger' : 'bg-success/15 text-success'}`} data-dorm-note>
               {error ?? note}

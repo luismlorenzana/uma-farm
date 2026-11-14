@@ -98,7 +98,7 @@ function Fields({ save }: { save: FarmSave }) {
     <div className="absolute inset-0 flex flex-col" data-page="fields">
       <PlaceHeader title="Fields" onBack={() => leave('/')} about={<About />} words={{ back: 'Back to the farm', about: 'About the Fields' }} />
       <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="space-y-3 px-4 pt-3 pb-24">
+        <div className="space-y-3 px-4 pt-3 pb-6">
           {(note || error) && (
             <p role="status" className={`rounded-md px-3 py-2 text-[14px] font-semibold ${error ? 'bg-danger/10 text-danger' : 'bg-success/15 text-success'}`} data-fields-note>
               {error ?? note}
@@ -143,35 +143,40 @@ function BlockCard({ save, block, master, talentOf, onPlot, onPlantAll, onHarves
 }) {
   const name = block.tender ? master?.album.get(block.tender)?.name ?? 'Uma' : null
   return (
-    <section className="space-y-2 rounded-md border border-hairline bg-panel p-3" data-block={block.id} aria-label={`Block ${block.id}`}>
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <h2 className="font-display text-[17px] font-bold">Block {block.id}</h2>
-          <p className="text-[12px] text-ink-soft" data-growth={block.growth} data-side={block.side || undefined}>{block.tender ? 'Tended' : 'Untended'} · {growthWords(block.growth)}{block.side ? ' · side by side' : ''}</p>
+    <section className="@container rounded-md border border-hairline bg-panel p-3" data-block={block.id} aria-label={`Block ${block.id}`}>
+      {/* Wide, the plots sit beside the block's head and tender instead of under them. */}
+      <div className="flex flex-col gap-2 @lg:flex-row @lg:items-start @lg:gap-3">
+        <div className="min-w-0 space-y-2 @lg:flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h2 className="font-display text-[17px] font-bold">Block {block.id}</h2>
+              <p className="text-[12px] text-ink-soft" data-growth={block.growth} data-side={block.side || undefined}>{block.tender ? 'Tended' : 'Untended'} · {growthWords(block.growth)}{block.side ? ' · side by side' : ''}</p>
+            </div>
+            <div className="flex shrink-0 gap-1.5">
+              {block.empty > 0 && <Button variant="secondary" size="sm" onClick={onPlantAll} data-action="plant-all">Plant all</Button>}
+              {block.ready > 0 && <Button size="sm" onClick={onHarvestAll} data-action="harvest-all">Harvest all · {block.ready}</Button>}
+            </div>
+          </div>
+          <div className="flex min-h-12 items-center gap-2.5 rounded-md bg-sunken/60 px-2 py-1" data-tender={block.tender ?? ''}>
+            {block.tender
+              ? <FaceTile outfitId={block.tender} size={36} label={name ?? 'Uma'} round />
+              : <span aria-hidden className="grid size-9 place-items-center rounded-full border border-dashed border-hairline-strong text-ink-faint">—</span>}
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[14px] font-semibold">{name ?? 'No tender'}</span>
+              <span className="block text-[12px] text-ink-soft">{block.tender ? `${tenderRank(save, block.tender, talentOf)} · Farming` : 'Grows 1 a night, at ★1'}</span>
+            </span>
+            {block.tender && <Button variant="tertiary" size="sm" onClick={onStop} data-action="stop-tending">Stop</Button>}
+            <Button variant="secondary" size="sm" onClick={onTend} data-action="tend">{block.tender ? 'Change' : 'Tend'}</Button>
+          </div>
         </div>
-        <div className="flex shrink-0 gap-1.5">
-          {block.empty > 0 && <Button variant="secondary" size="sm" onClick={onPlantAll} data-action="plant-all">Plant all</Button>}
-          {block.ready > 0 && <Button size="sm" onClick={onHarvestAll} data-action="harvest-all">Harvest all · {block.ready}</Button>}
-        </div>
+        <ol className="grid grid-cols-3 gap-2 @lg:w-[16rem] @lg:shrink-0" aria-label={`Block ${block.id}'s plots`}>
+          {block.plots.map((plot) => (
+            <li key={plot.index}>
+              <PlotButton plot={plot} onClick={() => onPlot(plot)} />
+            </li>
+          ))}
+        </ol>
       </div>
-      <div className="flex min-h-12 items-center gap-2.5 rounded-md bg-sunken/60 px-2 py-1" data-tender={block.tender ?? ''}>
-        {block.tender
-          ? <FaceTile outfitId={block.tender} size={36} label={name ?? 'Uma'} round />
-          : <span aria-hidden className="grid size-9 place-items-center rounded-full border border-dashed border-hairline-strong text-ink-faint">—</span>}
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-[14px] font-semibold">{name ?? 'No tender'}</span>
-          <span className="block text-[12px] text-ink-soft">{block.tender ? `${tenderRank(save, block.tender, talentOf)} · Farming` : 'Grows 1 a night, at ★1'}</span>
-        </span>
-        {block.tender && <Button variant="tertiary" size="sm" onClick={onStop} data-action="stop-tending">Stop</Button>}
-        <Button variant="secondary" size="sm" onClick={onTend} data-action="tend">{block.tender ? 'Change' : 'Tend'}</Button>
-      </div>
-      <ol className="grid grid-cols-3 gap-2" aria-label={`Block ${block.id}'s plots`}>
-        {block.plots.map((plot) => (
-          <li key={plot.index}>
-            <PlotButton plot={plot} onClick={() => onPlot(plot)} />
-          </li>
-        ))}
-      </ol>
     </section>
   )
 }

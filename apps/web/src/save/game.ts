@@ -160,16 +160,9 @@ export function resetGame(): void {
   useGame.setState(INITIAL)
 }
 
-/** The save this device's last change committed. */
-let committed: FarmSave | null = null
-/** Whether a save is the one this device's last change made (the HD-2D farm walks the Umas a change made here moved,
- * and places everyone at once for a save from the server or the device's boot). A sync's push keeps the object. */
-export const madeHere = (save: FarmSave): boolean => save === committed
-
 /** Every change goes through here: on screen, on the device, then to the server. It never stamps `updatedAt`: a player's
  * change arrives stamped by its rule. */
 export async function commit(save: FarmSave): Promise<void> {
-  committed = save
   useGame.setState({ save, dirty: true })
   await persist()
   scheduleSync()

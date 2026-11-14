@@ -24,14 +24,14 @@ export default function NameSheet() {
     nameTheFarmer(name).catch((err: unknown) => setError(err instanceof Error ? err.message : 'That didn’t work. Try again.')).finally(() => setPending(false))
   }
   return (
-    <div className="pt-safe pb-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label="Your name" data-name-sheet>
+    <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label="Your name" data-name-sheet>
       <header className="flex items-start justify-end px-4 pt-3">
         <HelpButton title="Your name" label="About your name">
           <p>The town and the Umas call you by it. Letters, spaces, apostrophes and hyphens; up to {FARMER_NAME_MAX}.</p>
           <p>You can change it any time from Menu → Account.</p>
         </HelpButton>
       </header>
-      <form className="flex min-h-0 flex-1 flex-col justify-center gap-3 px-6 pb-24" onSubmit={(event) => { event.preventDefault(); submit() }}>
+      <form className="mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col justify-center gap-3 px-6 pb-12" onSubmit={(event) => { event.preventDefault(); submit() }}>
         <label htmlFor="farmer-name" className="font-display text-[24px] leading-tight font-bold">What should they call you?</label>
         <input id="farmer-name" value={name} onChange={(event) => { setName(event.target.value); setTouched(true); setError(null) }} placeholder={FARMER_PLACEHOLDER}
           autoComplete="off" autoCapitalize="words" spellCheck={false} maxLength={40} enterKeyHint="done" aria-describedby="farmer-name-why"

@@ -8,9 +8,9 @@ value (the project, the services, the database, the buckets, the accounts and th
 
 ```
  iPhone (Home Screen web app)
-   └─ apps/web   React 19 + Vite 7 + Tailwind 4 + Zustand + Dexie; uma-kit for the theme, the frame and bars, sign-in,
-                 content loading, the update prompt, the Hub map (Phaser, on demand), the album and the work screens;
-                 uma-stage's HD-2D band stage (three.js, on demand) for Home's preview
+   └─ apps/web   React 19 + Vite 7 + Tailwind 4 + Zustand + Dexie, laid out in landscape; uma-kit for the theme, the
+                 landscape stage, the frame and side panels, sign-in, content loading, the update prompt, the Hub map
+                 (Phaser, on demand), the album and the work screens
         │  /api/**  (Firebase Hosting rewrites it to Cloud Run)
         ▼
    apps/api      NestJS 11 on Cloud Run, every route behind uma-server's owner guard unless it checks its own token
@@ -23,8 +23,7 @@ value (the project, the services, the database, the buckets, the accounts and th
         │  POST /api/push/tick every five minutes, with an OIDC token (the job is paused)
    Cloud Scheduler
 
-   packages/domain   @farm/domain: the rules, the save (v4) and its parse, and the farm's design for the stage;
-                     pure TypeScript with no I/O. The web reads its source; the API reads its CommonJS build.
+   packages/domain   @farm/domain: the rules, and the save (v4) and its parse; pure TypeScript with no I/O. The web reads its source; the API reads its CommonJS build.
 ```
 
 ### Packages and versions
@@ -35,9 +34,8 @@ uma-platform, never in a copy here.
 | Package | Version | Used by | For |
 |---|---|---|---|
 | `@farm/domain` | workspace | web, api | The rules and the save (below) |
-| `@luismlorenzana/uma-kit` | 0.19.0 | web | Theme and appearance, the app frame and bars, boot gates, Google sign-in, the content client, the update prompt, the Hub map, the album, the work screens |
-| `@luismlorenzana/uma-stage` | 0.6.0 | web; domain (dev, types only) | The HD-2D band stage and its stand-in farm kit, and `emote` for the working nod (0.5.0); the domain's design types and its test's checks (`/formats`, three-free). 0.6.0 only adds the opt-in `/look` entry, which the farm doesn't import: its stage chunk is byte for byte 0.5.0's |
-| `@luismlorenzana/uma-art` | 2.27.0 | web | The bars', map's, item and emote art; the `kit-farm` kit |
+| `@luismlorenzana/uma-kit` | 0.19.0 | web | Theme and appearance, the landscape stage (`KitStage`), the app frame, its side panels and the quick look's panel, boot gates, Google sign-in, the content client, the update prompt, the Hub map, the album, the work screens |
+| `@luismlorenzana/uma-art` | 2.27.0 | web | The bar's, map's, item and emote art |
 | `@luismlorenzana/uma-data` | 1.4.0 | web, domain | Master data's types and readers; test fixtures from `/testing` |
 | `@luismlorenzana/uma-work` | 0.1.0 | web, domain | The work engine: slots, queues and entries |
 | `@luismlorenzana/uma-server` | 0.2.0 | api | The owner guard, the master data proxy, the private pack route |
@@ -45,7 +43,7 @@ uma-platform, never in a copy here.
 | Elsewhere | Versions |
 |---|---|
 | Workspace | Node 22 or later, pnpm 10.33.0, Turborepo ^2.10.13, TypeScript ~5.9.3, Vitest ^3.2.7 |
-| Web | react and react-dom ^19.3.0, react-router ^7.18.3, zustand ^5.0.15, dexie ^4.4.6, firebase ^12.19.0, motion ^12.43.0, workbox-window ^7.4.0; **three 0.187.0** and **phaser 4.2.1** pinned; vite ^7.3.6, vite-plugin-pwa ^1.3.0, tailwindcss ^4.3.3 |
+| Web | react and react-dom ^19.3.0, react-router ^7.18.3, zustand ^5.0.15, dexie ^4.4.6, firebase ^12.19.0, motion ^12.43.0, workbox-window ^7.4.0; **phaser 4.2.1** pinned; vite ^7.3.6, vite-plugin-pwa ^1.3.0, tailwindcss ^4.3.3 |
 | API | @nestjs/common, core and platform-express ^11.2.4, @nestjs/config ^4.0.4, firebase-admin ^13.10.0, @google-cloud/storage ^7.22.0, google-auth-library ^11.2.0, web-push ^3.6.7 |
 
 ### The rules of the codebase
@@ -65,25 +63,28 @@ uma-platform, never in a copy here.
 
 ### Entry and routing
 
-- **`src/main.tsx`** imports `app/stage-boot.ts` first (it reads `?stage=` before the router does), then sets uma-kit's
-  device-key prefix (`farm.`), the appearance, the update watcher and the API's token, and mounts the providers: motion,
-  uma-art's atlases for the bars and the map, Firebase auth, the content client, the album's art and the work screens'
-  item icons, then the router.
-- **`src/app/Root.tsx`** holds uma-kit's `BootGates` (splash → Google sign-in → boot → the app) and its `UpdateNotice`
-  beside them, so a boot that stopped still offers the new build. It starts the sync triggers and turns the newer-save
+- **`src/main.tsx`** sets uma-kit's device-key prefix (`farm.`), the appearance, the update watcher and the API's
+  token, and mounts the providers: motion, uma-art's atlases for the bar and the map, Firebase auth, the content client,
+  the album's art and the work screens' item icons, then the router.
+- **`src/app/Root.tsx`** puts the whole app on uma-kit's landscape stage (`KitStage layout="landscape"`, not turned, in a
+  fixed full-screen box), with uma-kit's `BootGates` (splash → Google sign-in → boot → the app) and its `UpdateNotice`
+  beside them, so a boot that stopped still offers the new build; and, outside the stage, the upright card
+  (`app/Upright.tsx`). It starts the sync triggers and turns the newer-save
   error into its own words (below). A production build without its sign-in config refuses to run.
 - **`src/app/router.tsx`:** every page inside the shell, and every page but Account loaded on demand.
 
 | Path | Page |
 |---|---|
-| `/` | Home: the Hub map (`loop/FarmMap.tsx`), or the HD-2D stage with the preview on |
+| `/` | Home: the Hub map (`loop/FarmMap.tsx`) |
 | `/forest`, `/fishery`, `/mill`, `/sawmill`, `/smokehouse` | A work place (`loop/WorkPlace.tsx`) |
 | `/fields` | The Fields |
 | `/warehouse` | The Warehouse; `?pick=bin` ships from it |
 | `/dorm` | The Dorm |
 | `/diary` | The Diary |
-| `/hearts` | The Hearts tab (`?view=work` the roster's album, `?uma=<id>` her profile) |
+| `/hearts` | People, the Umas' page (`?view=work` the roster's album, `?uma=<id>` her profile) |
 | `/roster` | Redirects to `/hearts?view=work`, keeping `?uma=` |
+| `/town` | The Town (`town/TownPage.tsx`; `?view=people` everyone in town, `?talk=<id>` a talk) |
+| `/book` | The farm's book (`book/BookPage.tsx`) |
 | `/account` | Account, in the main chunk |
 | anything else | Redirects to `/` |
 
@@ -91,14 +92,16 @@ Sheets and scenes are query parameters on the page under them:
 - **`?peek=<place>`**, a place's quick look;
 - **`?sheet=`** `menu`, `end`, `calendar`, `bin`, `shop`, `rank`, `homestead` (with `&house=<n>`) and `bench`;
 - **full-screen scenes** `?event=`, `?ask=`, `?memory=`, `?album=`, `?read=`, `?evening=`, `?level=` and
-  `?household=`, under which the HD-2D stage rests.
+  `?household=`.
 
 | Folder | What |
 |---|---|
-| `src/app/` | Root and the start-over card, the router, the build id, the Firebase config, the stage switch and its boot |
-| `src/shell/` | uma-kit's `AppFrame`: the account bar (date, gold, Farm Rank, sync chip), the bottom bar, the Menu sheet, the sync warning |
+| `src/app/` | Root and the start-over card, the upright card, the router, the build id, the Firebase config |
+| `src/shell/` | uma-kit's `AppFrame` as a row: the rail (Farm · Town · People · Book · Diary), the bar (date, actions left, gold, sync chip, End the day, Menu), the Menu's panel, the sync warning |
 | `src/home/` | Account |
-| `src/loop/` | The farm: its pages, sheets, scenes, actions and views, and the HD-2D stage |
+| `src/book/` | The farm's book |
+| `src/town/` | The Town |
+| `src/loop/` | The farm: its pages, sheets, scenes, actions and views |
 | `src/save/` | Dexie, the store and its sync |
 | `src/master/` | Master data |
 | `src/story/` | The story pack's loader |
@@ -113,8 +116,6 @@ Sheets and scenes are query parameters on the page under them:
   changes.
   - **Every change goes through `commit(save)`:** the store, then the device, then a sync 1.5 s later. `commit` never
     stamps `account.updatedAt`; a player's action stamps it with `touched`.
-  - **`madeHere(save)`** says whether a save is the one this device's last commit made. The HD-2D stage walks the Umas
-    for those, and places everyone at once for any other.
 - **Boot** (`boot(uid)`) waits for the story pack, then opens the device save, else the server's, else starts a new
   farm (`newSave`), and resolves `{ startOver }`:
   - a v4 plays as it is;
@@ -141,7 +142,7 @@ Sheets and scenes are query parameters on the page under them:
   the pack's or the placeholder (her outfit, line, tastes, birthday, chats, events, meeting scene, chapters, keepsake, pet
   name, ring's words, wedding places, ties and pairs, household, a play's prompt). `writtenOf` says, for each character,
   what's written and what's a placeholder: the Story Sandbox's marks.
-- **Device preferences** go through uma-kit's prefs under the `farm.` prefix (the appearance, `farm.stage`). The story's
+- **Device preferences** go through uma-kit's prefs under the `farm.` prefix (the appearance). The story's
   last good index is `farm.story-index` in `localStorage`.
 
 ### Dexie
@@ -162,8 +163,9 @@ Database `uma-farm`, schema version 1, loaded on demand when device I/O starts.
 
 - **`vite-plugin-pwa`** with `registerType: 'prompt'`: a new service worker waits, and uma-kit's `watchAppUpdates` and
   `UpdateNotice` show **Update ready** with **Restart**. Nothing reloads by itself.
-- **The manifest:** Uma Farm, standalone, portrait, `#0f1620`; the icons are drawn by `scripts/draw-icons.mjs`.
-- **The precache:** `**/*.{js,css,html,svg,png,woff2}` up to 3 MB a file, except `assets/stage/**`. Navigation falls back
+- **The manifest:** Uma Farm, standalone, landscape, `#0f1620`; the icons are drawn by `scripts/draw-icons.mjs`. iOS
+  doesn't lock a Home Screen app's orientation, so the upright card covers the game while the phone is held upright.
+- **The precache:** `**/*.{js,css,html,svg,png,woff2}` up to 3 MB a file. Navigation falls back
   to `/index.html`, but never for `/api/` or `/__/` (Firebase Hosting's sign-in handler). `push-sw.js` is imported into
   the service worker.
 - **Runtime caches:**
@@ -172,45 +174,32 @@ Database `uma-farm`, schema version 1, loaded on demand when device I/O starts.
 |---|---|---|
 | `farm-master-files` | `/api/master/files/`, `/api/master/manifests/` | Cache first, 4,000 entries |
 | `farm-master-channel` | `/api/master/channels/` | Network first, 4 s timeout |
-| `farm-stage` | Same-origin `/assets/stage/` | Cache first, 16 entries; only a 200 that isn't HTML is kept |
 
 - uma-kit's content client also keeps the files it has verified by hash (master data's and the story pack's) in its own
   Cache Storage, `farm-master`.
 - **Hosting's headers** (`firebase.json`): `/assets/**` immutable for a year; `/`, extensionless paths, `index.html`,
   `sw.js`, `registerSW.js`, `manifest.webmanifest` and `workbox-*.js` no-cache.
 
-### The HD-2D stage, out of the precache
+### The landscape frame
 
-The preview's code and art download only for a device with the switch on, then stay for offline play.
+The game is laid out sideways, designed at 844 × 390 and checked at 667 × 375.
 
-- **The build puts them in `assets/stage/`.** `vite.config.ts`'s `STAGE_MODULE` matches three.js, uma-stage and the
-  stage's own modules; any chunk holding one builds as `assets/stage/[name]-[hash].js`. `STAGE_ASSET` matches uma-art's
-  `kit-farm`, whose page builds as `assets/stage/kit-farm-[hash].png`.
-- **The precache skips that folder** (`globIgnores`), and the `farm-stage` runtime route caches each file the first time
-  it loads.
-- **Only the lazy chunk imports them.** `FarmMap.tsx` imports `FarmStage` lazily, and only with the switch on;
-  `farm-kit.ts` is the only module that imports the kit's files.
-- **`scripts/check-size.mjs` checks it** (`checkStage`): the build fails if the service worker precaches a stage file,
-  has no runtime route for `/assets/stage/`, or a chunk outside the stage imports a stage chunk statically, or if there's
-  no stage chunk at all. It prints each stage file's size.
-
-| Module | What |
-|---|---|
-| `src/app/stage-switch.ts`, `stage-boot.ts` | The device switch (`farm.stage`) and `?stage=1`/`0` at boot; small, in the main chunk |
-| `src/loop/FarmStage.tsx` | Home on a `BandStage` (saver on, fit to width): the world, the kit, overlays, taps, the season's grade, the fade, the figures and their nods, the loop that stops at rest |
-| `src/loop/farm-stage.ts` | Pure helpers: the season grades, what a tap opens, the band Home opens on, the fade's markers, the remembered scroll |
-| `src/loop/farm-kit.ts` | Loads `kit-farm` once a session and copies the stand-in's frames for what it lacks onto its page |
-| `src/loop/farm-figures.ts` | Pure: who stands where, their bubbles, the moves between two readings, and who nods with her seeded gaps; and the nods' timers (`NodClock`) |
-| `src/loop/figure-looks.ts` | An Uma's sprite set (loaded when the stage's cap lets it go live), its nod action, and her standee's face |
-| `packages/domain/src/farm/stage.ts` | The save as the stage's farm design: plots, recipes, markers and crops |
-
-- **The domain imports uma-stage's types only** (`@luismlorenzana/uma-stage/formats`, a dev dependency), so the API
-  never loads it. The domain's test builds every design on the stand-in farm kit with `farmProblems`, the check the stage
-  refuses a world on.
-- **For debugging,** a dev build exposes `window.__farmStage` (the stage, the kit's name, the design, the plots, the
-  figures, who's on the stage, who's walking, whether the loop runs, whose nod timers run). The stage's own
-  `debug.figures` shows each figure's `sprite`, `action` and `emote`. The stage's root carries `data-farm-stage`
-  (`loading`, `drawn`) and `data-kit-name`.
+- **uma-kit's landscape stage.** `Root.tsx` wraps the app in `KitStage layout="landscape"` (turn 0) inside a fixed
+  full-screen box. On it, uma-kit's `AppFrame` is a row; every `Sheet` is a panel from the right edge
+  (`data-placement="side"`, `min(26rem, 62cqw)` wide, portalled into the stage's layer); the quick look's `PeekPanel`
+  keeps clear of the right inset. The stage is a size container, so the panels size by it.
+- **The shell** (`shell/Shell.tsx`) gives `AppFrame` the rail as its `top` (on a landscape stage, the left rail's slot)
+  and no `bottom`; the page column holds the bar, the sync warning and the page, which keeps clear of the right and
+  bottom safe areas.
+- **The bar and the rail are the farm's** (`shell/Bars.tsx`), built from the kit's pieces (its chip's look, `UiMark`,
+  `AnimatedNumber`, its icons). The kit's own `AccountBar` and `BottomBar` draw a landscape stage's rails the other way
+  round (the account and chips down the left, the actions down the right); the farm asked uma-platform for its layout.
+- **Two columns where they fit** come from container queries (`@container` on the page, `@lg:` / `@xl:` on its lists);
+  Account's two columns from `index.css`, over the kit's `AccountPage`.
+- **Scenes** stay full-screen fixed layers, laid out as rows: `ScenePlayer.tsx`'s `SCENE_ROW` and `SCENE_BUST` (her bust
+  left, the lines right) for the opening, meeting her, the pair and household players and the bench scene; the event
+  player's place card left and bubble right; the level-up and stage-up cards and the plays in two columns.
+- **The upright card** (`app/Upright.tsx`) shows by CSS alone (Tailwind's `portrait:`), at z 1000 outside the stage.
 
 ### The build and its flags
 
@@ -230,13 +219,12 @@ serves it.
 - **180,000 bytes gzip** for the entry chunk and for the whole initial JS (the HTML's entry and everything it imports
   statically). Dynamic imports don't count.
 - **`LAZY_MODULES`** may never render in the initial JS: Phaser and the Hub's scene, the farm's pages, sheets, scenes,
-  actions and night, the romance's rules and screens, the story's delivery, three.js, uma-stage, the stage Home and
-  its helpers, and the kit's atlas. A module matches by path or suffix. Which modules each chunk renders comes from
+  actions and night, the romance's rules and screens, the story's delivery, the town and the Book. A module matches by
+  path or suffix. Which modules each chunk renders comes from
   `dist/.vite/chunks.json`, written by the `chunkModules` plugin in `vite.config.ts` (never deployed or precached).
 - **`DEV_ONLY_MODULES`:** the invented stand-in story pack may be in no chunk of any build.
-- **`checkStage`**, above.
 
-It prints the main and initial JS against the budget, and each stage file. Its own tests are
+It prints the main and initial JS against the budget. Its own tests are
 `scripts/check-size.test.mjs`.
 
 ## The API

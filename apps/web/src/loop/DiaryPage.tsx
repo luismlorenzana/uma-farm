@@ -19,8 +19,8 @@ export default function DiaryPage() {
   const save = useLoopSave()
   if (!save) return null
   return (
-    <main className="absolute inset-0 space-y-3 overflow-y-auto overscroll-contain p-4 pb-24" data-page="diary">
-      <div className="flex items-center justify-between gap-2">
+    <main className="@container absolute inset-0 overflow-y-auto overscroll-contain p-4" data-page="diary">
+      <div className="flex items-center justify-between gap-2 pb-3">
         <h1 className="font-display text-[22px] font-bold text-ink">Diary</h1>
         <HelpButton title="The Diary" label="About the Diary">
           <p>The farm grows by building. The Farm Rank offers places, and you build each with gold and the farm’s goods. It stands the next morning.</p>
@@ -30,15 +30,18 @@ export default function DiaryPage() {
           <p>Conversations keeps what each pair has said as their bond grew. Replay any you’ve read.</p>
         </HelpButton>
       </div>
-      <WorldPages save={save} />
-      <Projects save={save} />
-      <Link to="/diary?sheet=rank" className="flex min-h-11 items-center justify-between rounded-md border border-hairline bg-panel px-3 text-[15px]" data-rank-link>
-        <span className="font-semibold">Farm Rank</span>
-        <span className="text-ink-soft">{save.farm.points.toLocaleString('en-US')} points ›</span>
-      </Link>
-      <Milestones save={save} />
-      <Suspense fallback={null}><MemoriesShelf save={save} /></Suspense>
-      <Suspense fallback={null}><Conversations save={save} /></Suspense>
+      {/* Its panels sit in two columns where they fit. */}
+      <div className="space-y-3 @xl:columns-2 @xl:gap-3 [&>*]:break-inside-avoid">
+        <WorldPages save={save} />
+        <Projects save={save} />
+        <Link to="/diary?sheet=rank" className="flex min-h-11 items-center justify-between rounded-md border border-hairline bg-panel px-3 text-[15px]" data-rank-link>
+          <span className="font-semibold">Farm Rank</span>
+          <span className="text-ink-soft">{save.farm.points.toLocaleString('en-US')} points ›</span>
+        </Link>
+        <Milestones save={save} />
+        <Suspense fallback={null}><MemoriesShelf save={save} /></Suspense>
+        <Suspense fallback={null}><Conversations save={save} /></Suspense>
+      </div>
     </main>
   )
 }

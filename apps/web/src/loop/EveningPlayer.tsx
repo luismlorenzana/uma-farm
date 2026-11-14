@@ -151,7 +151,7 @@ function PlayLayer({ save, pack, id, kind, name, birthday, error, onDone, onLeav
   const spec = useMemo(() => playSpec(save, pack, id, def.play, 'evening', eveningSeed(save.account.uid, save.calendar.day, id, kind)), [save.account.uid, save.calendar.day, id, kind]) // eslint-disable-line react-hooks/exhaustive-deps
   const pays = useMemo(() => kindRows(save, pack, id, birthday).find((r) => r.kind === kind)?.pays, [kind]) // eslint-disable-line react-hooks/exhaustive-deps
   return createPortal(
-    <div className="pt-safe pb-safe fixed inset-0 z-[60] bg-[#2b3557]/70" data-evening-play={kind}>
+    <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-[60] bg-[#2b3557]/70" data-evening-play={kind}>
       <PlaySheet spec={spec} title={def.name} name={name} pays={pays} onDone={(r) => onDone(r.score)} />
       <button type="button" onClick={onLeave} aria-label="Leave the evening" className="absolute top-2 right-2 z-20 grid size-11 place-items-center rounded-full bg-panel/90 text-[18px] text-ink-soft shadow-1" data-action="leave-evening">✕</button>
       {error && <p role="alert" className="absolute inset-x-4 bottom-6 z-20 rounded-md bg-panel p-3 text-center text-[14px] text-danger shadow-2" data-evening-error>{error}</p>}
@@ -166,8 +166,8 @@ function CardLayer({ card, name, colour, onContinue }: { card: EveningCard; name
   const def = EVENINGS[card.kind]
   const share = card.bar.cost > 0 ? Math.min(1, card.bar.points / card.bar.cost) : 1
   return createPortal(
-    <div className="pt-safe pb-safe fixed inset-0 z-[60] flex items-center justify-center bg-[#2b3557]/70 px-3" data-evening-card={card.kind} data-grade={card.grade}>
-      <section role="dialog" aria-label={`${def.name} with ${name}`} className="w-full max-w-md space-y-3 rounded-lg border border-hairline bg-panel p-4 text-center shadow-3">
+    <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-[60] flex items-center justify-center bg-[#2b3557]/70 px-3" data-evening-card={card.kind} data-grade={card.grade}>
+      <section role="dialog" aria-label={`${def.name} with ${name}`} className="max-h-full w-full max-w-md space-y-3 overflow-y-auto rounded-lg border border-hairline bg-panel p-4 text-center shadow-3">
         <header className="flex items-center justify-center gap-2">
           <UiMark mark="hearts/evening" scale={2} fallback={<span aria-hidden>☾</span>} />
           <h2 className="font-display text-[18px] font-bold">{def.name}</h2>

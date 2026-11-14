@@ -57,7 +57,7 @@ export function RosterAlbum({ save, rows: base, corner }: { save: FarmSave; rows
         onQueryChange={setQuery}
         onParameterChange={setParameter}
       >
-        <ul className="grid grid-cols-3 gap-x-2 gap-y-3 pt-2" data-roster-cards>
+        <ul className="grid grid-cols-3 gap-x-2 gap-y-3 pt-2 @lg:grid-cols-5 @2xl:grid-cols-6" data-roster-cards>
           {shown.map((row) => {
             const [first, second] = cardLines(row, activity, query.sort === 'points')
             return (

@@ -73,24 +73,30 @@ export function PlaySheet({ spec, title, name, replay = false, unpaid = null, pa
     setPhase('done')
   }
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 px-3" data-play={spec.kind} data-length={spec.length} data-phase={phase}>
-      <section role="dialog" aria-label={title ?? playTitle(spec.kind, spec.length)} className="w-full max-w-md space-y-3 rounded-lg border border-hairline bg-panel p-4 shadow-3">
-        <header className="flex items-center gap-2">
-          <UiMark mark={`play/${spec.kind}`} scale={2} />
-          <h2 className="font-display min-w-0 flex-1 text-[17px] font-bold" data-play-title>{title ?? playTitle(spec.kind, spec.length)}</h2>
-        </header>
-        {phase === 'intro' && <Intro spec={spec} name={name} onStart={() => setPhase('play')} />}
-        {phase === 'play' && <PlayBody spec={spec} name={name} onEnd={end} />}
-        {phase === 'done' && result && (
-          <div className="space-y-3 text-center" data-play-result={gradeOf(result.score)} data-score={result.score}>
-            <p className="font-display text-[26px] font-bold text-[#c2385e]">
-              {replay || unpaid ? GRADE_NAMES[gradeOf(result.score)] : pays ? `${GRADE_NAMES[gradeOf(result.score)]} · +${pays[gradeOf(result.score)]}` : gradeWords(result.score, spec.length)}
-            </p>
-            {result.learns !== undefined && <p className="text-[14px] text-ink-soft">{result.learns ? `You chose ${goodName(result.learns)}.` : 'Nothing chosen.'}</p>}
-            <Button className="w-full" onClick={() => onDone(result)} data-action="play-done">Continue</Button>
-          </div>
-        )}
-        <p className="text-center text-[12px] text-ink-faint" data-legend>{replay ? 'A replay: nothing pays.' : unpaid ?? gradeLegend(spec.length, pays)}</p>
+    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 p-3" data-play={spec.kind} data-length={spec.length} data-phase={phase}>
+      {/* Landscape: the play's name and its legend on the left, the play on the right. */}
+      <section role="dialog" aria-label={title ?? playTitle(spec.kind, spec.length)}
+        className="max-h-full w-full max-w-md space-y-3 overflow-y-auto rounded-lg border border-hairline bg-panel p-4 shadow-3 sm:flex sm:max-w-2xl sm:items-center sm:gap-5 sm:space-y-0">
+        <div className="space-y-3 sm:w-[38%] sm:shrink-0">
+          <header className="flex items-center gap-2">
+            <UiMark mark={`play/${spec.kind}`} scale={2} />
+            <h2 className="font-display min-w-0 flex-1 text-[17px] font-bold" data-play-title>{title ?? playTitle(spec.kind, spec.length)}</h2>
+          </header>
+          <p className="text-center text-[12px] text-ink-faint sm:text-left" data-legend>{replay ? 'A replay: nothing pays.' : unpaid ?? gradeLegend(spec.length, pays)}</p>
+        </div>
+        <div className="min-w-0 flex-1">
+          {phase === 'intro' && <Intro spec={spec} name={name} onStart={() => setPhase('play')} />}
+          {phase === 'play' && <PlayBody spec={spec} name={name} onEnd={end} />}
+          {phase === 'done' && result && (
+            <div className="space-y-3 text-center" data-play-result={gradeOf(result.score)} data-score={result.score}>
+              <p className="font-display text-[26px] font-bold text-[#c2385e]">
+                {replay || unpaid ? GRADE_NAMES[gradeOf(result.score)] : pays ? `${GRADE_NAMES[gradeOf(result.score)]} · +${pays[gradeOf(result.score)]}` : gradeWords(result.score, spec.length)}
+              </p>
+              {result.learns !== undefined && <p className="text-[14px] text-ink-soft">{result.learns ? `You chose ${goodName(result.learns)}.` : 'Nothing chosen.'}</p>}
+              <Button className="w-full" onClick={() => onDone(result)} data-action="play-done">Continue</Button>
+            </div>
+          )}
+        </div>
       </section>
     </div>
   )
@@ -244,13 +250,13 @@ function PickPlay({ spec, onEnd }: { spec: Extract<PlaySpec, { kind: 'pick' }>; 
   return (
     <div className="space-y-2" data-round={round}>
       {spec.plan.rounds.length > 1 && <p className="text-center text-[13px] text-ink-soft">Round {round + 1} of {spec.plan.rounds.length}</p>}
-      <div className="mx-auto grid max-w-[320px] grid-cols-3 gap-2" data-field>
+      <div className="mx-auto grid max-w-[320px] grid-cols-3 gap-2 sm:max-w-[240px]" data-field>
         {Array.from({ length: 9 }, (_, cell) => {
           const shown = showing.find(({ p }) => p.cell === cell)
           const hit = shown ? hits[shown.i] : undefined
           return (
             <button key={cell} type="button" onPointerDown={(e) => { e.preventDefault(); tap(cell) }} aria-label={shown ? `${goodName(shown.p.good)}${shown.p.star ? ', starred' : ''}` : 'Empty'}
-              className={`relative grid aspect-square min-h-20 touch-none place-items-center rounded-md border select-none ${hit === 'right' ? 'border-success bg-success/15' : hit === 'wrong' ? 'border-danger bg-danger/10' : 'border-hairline bg-sunken'}`}
+              className={`relative grid aspect-square min-h-18 touch-none place-items-center rounded-md border select-none ${hit === 'right' ? 'border-success bg-success/15' : hit === 'wrong' ? 'border-danger bg-danger/10' : 'border-hairline bg-sunken'}`}
               data-cell={cell} data-good={shown?.p.good} data-star={shown?.p.star || undefined}>
               {shown && <ItemIcon id={shown.p.good} size={48} />}
               {shown?.p.star && <span aria-hidden className="absolute top-1 right-1.5 text-[16px] text-[#d9a227]">★</span>}

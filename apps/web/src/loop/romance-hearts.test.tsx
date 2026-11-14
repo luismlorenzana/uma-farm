@@ -26,7 +26,7 @@ const { albumFixture } = await import('../album/testing')
 const { useGame, resetGame } = await import('../save/game')
 const { storyReady } = await import('../story/story')
 const { castLens } = await import('../story/load')
-const { FarmBottomBar } = await import('../shell/Bars')
+const { FarmRail } = await import('../shell/Bars')
 const { ROUTES } = await import('../app/router')
 const { default: HeartsPage } = await import('./HeartsPage')
 
@@ -76,7 +76,7 @@ const click = async (el: HTMLElement | null | undefined) => {
   await act(async () => el!.click())
   await settle()
 }
-const tabs = () => $$('nav[data-kit="bottom-bar"] a').map((a) => [a.textContent?.replace(/\d+$/, ''), a.getAttribute('href')])
+const tabs = () => $$('nav[data-farm-rail] a').map((a) => [a.textContent, a.getAttribute('href')])
 
 beforeEach(async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
@@ -97,12 +97,12 @@ afterEach(async () => {
 })
 
 describe('the bar and the routes', () => {
-  it('reads Farm · Hearts · End the day · Diary · Menu, with no badge on Hearts', async () => {
-    await render(<FarmBottomBar page="hearts" />, '/hearts')
-    expect(tabs()).toEqual([['Farm', '/'], ['Hearts', '/hearts'], ['End day', '/hearts?sheet=end'], ['Diary', '/diary'], ['Menu', '/hearts?sheet=menu']])
-    const hearts = $('nav[data-kit="bottom-bar"] a[href="/hearts"]')!
-    expect(hearts.getAttribute('aria-current')).toBe('page')
-    expect(hearts.getAttribute('aria-label')).toBe('Hearts')
+  it('reads Farm · Town · People · Book · Diary down the rail, People lit on the Hearts page', async () => {
+    await render(<FarmRail page="people" />, '/hearts')
+    expect(tabs()).toEqual([['Farm', '/'], ['Town', '/town'], ['People', '/hearts'], ['Book', '/book'], ['Diary', '/diary']])
+    const people = $('nav[data-farm-rail] a[href="/hearts"]')!
+    expect(people.getAttribute('aria-current')).toBe('page')
+    expect(people.getAttribute('aria-label')).toBe('People')
   })
 
   it('sends /roster to the Work view, her profile kept', async () => {
@@ -174,7 +174,7 @@ describe('her profile', () => {
     ])
     expect($$('[data-chapter-events] [data-event]').map((e) => e.textContent).slice(0, 3)).toEqual(['✓ Meeting', 'F1', 'F2'])
     expect($('[data-chapter-next]')?.textContent).toBe('Next · Together · After her confession')
-    await click($$('[data-profile-actions] [role="tab"]').find((t) => t.textContent === 'Work'))
+    await click($$('[data-profile-sides] [role="tab"]').find((t) => t.textContent === 'Work'))
     expect(path).toBe(`/hearts?uma=${ONE}&view=work`)
     expect($('[data-profile]')?.dataset.side).toBe('work')
     expect($$('[data-work-side] [data-activity]')).toHaveLength(9)

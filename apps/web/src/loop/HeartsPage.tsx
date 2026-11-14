@@ -1,4 +1,4 @@
-// `/hearts`: the Umas' tab.
+// `/hearts`: the Umas' page, People on the rail.
 // Two views: **Hearts** (the default) and **Work** (`?view=work`, the roster's album moved whole, each card's corner her
 // level words). The Hearts view is one 72 pt row an Uma you've met: her face, name, her chapter at a glance ("Ch. 2 ·
 // Together") and chips (● Ready, ✉ an invitation, In town), her
@@ -37,9 +37,9 @@ export default function HeartsPage() {
   const setView = (next: ProfileSide) => navigate(withParam(location, 'view', next === 'work' ? 'work' : null), { replace: true, state: location.state })
   const married = marriedOf(save)
   return (
-    <main className="absolute inset-0 overflow-y-auto overscroll-contain px-4 pt-4 pb-28" data-page="hearts" data-view={view}>
+    <main className="@container absolute inset-0 overflow-y-auto overscroll-contain px-4 pt-4 pb-6" data-page="hearts" data-view={view}>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pb-2">
-        <h1 className="font-display text-[22px] font-bold text-ink">Hearts</h1>
+        <h1 className="font-display text-[22px] font-bold text-ink">People</h1>
         <span className="text-[13px] font-semibold text-ink-soft tabular-nums" data-married={`${married.married}/${married.met}`}>Married {married.married}/{married.met}</span>
         {pack && householdReady(save).slice(0, 1).map((id) => (
           <Link key={id} to={`/hearts?household=${id}`} state={{ back: true }} aria-label={`${householdTitle(id)}: Ready`}
@@ -154,8 +154,8 @@ function HeartsList({ rows, onOpen }: { rows: readonly HeartRow[]; onOpen: (id: 
           {rows.length === 0 ? <>No one yet. Say hello at the Gate, or meet someone in <Link to="/town" className="font-semibold text-accent-strong underline">town</Link>.</> : 'No one here yet.'}
         </p>
       )}
-      <ul className="divide-y divide-hairline" data-heart-rows>
-        {shown.map((row) => <li key={row.id}><HeartRowView row={row} onOpen={() => onOpen(row.id)} /></li>)}
+      <ul className="grid @xl:grid-cols-2 @xl:gap-x-6" data-heart-rows>
+        {shown.map((row) => <li key={row.id} className="border-b border-hairline"><HeartRowView row={row} onOpen={() => onOpen(row.id)} /></li>)}
       </ul>
     </>
   )

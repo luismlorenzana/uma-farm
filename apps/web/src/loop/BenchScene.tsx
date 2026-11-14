@@ -11,7 +11,7 @@ import { useMaster } from '../master/master'
 import { namer } from '../story/people'
 import { useStory } from '../story/story'
 import { readBenchScene } from './bench-actions'
-import { Frame, PersonBust } from './ScenePlayer'
+import { Frame, PersonBust, SCENE_BUST, SCENE_ROW } from './ScenePlayer'
 
 export default function BenchScene({ save }: { save: SaveV4 }) {
   const navigate = useNavigate()
@@ -31,18 +31,18 @@ export default function BenchScene({ save }: { save: SaveV4 }) {
   return (
     <Frame title={BENCH_SCENE_LINES.title} label={BENCH_SCENE_LINES.title} scene={BENCH_SCENE} onSkip={() => (at < beats.length ? setAt(beats.length) : finish(null))} skipping={leaving}>
       {beat ? (
-        <button type="button" onClick={() => setAt(at + 1)} className="flex min-h-0 flex-1 flex-col items-center justify-end gap-4 px-4 pb-4 text-left" aria-label="Next" data-beat={at}>
-          <div className="flex min-h-0 flex-1 items-end justify-center" data-bust={beat.speaker.kind}>
+        <button type="button" onClick={() => setAt(at + 1)} className={`${SCENE_ROW} text-left`} aria-label="Next" data-beat={at}>
+          <div className={SCENE_BUST} data-bust={beat.speaker.kind}>
             {beat.speaker.kind === 'cast' && <PersonBust who={beat.speaker.id} name={nameOf(beat.speaker.id)} size={240} />}
           </div>
-          <div className="w-full rounded-md border border-hairline bg-panel p-4 shadow-2" aria-live="polite">
+          <div className="min-w-0 flex-1 rounded-md border border-hairline bg-panel p-4 shadow-2" aria-live="polite">
             {beat.speaker.kind === 'cast' && <p className="font-display text-[15px] font-bold text-accent" data-speaker>{nameOf(beat.speaker.id)}</p>}
             <p className={`pt-1 text-[17px] leading-snug ${beat.speaker.kind === 'narrator' ? 'text-ink-soft italic' : 'text-ink'}`} data-line>{withFarmer(beat.line, save.farmer.name)}</p>
             <p className="pt-2 text-right text-[12px] text-ink-faint">Tap to go on · {at + 1}/{beats.length}</p>
           </div>
         </button>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 px-4 pb-4" data-bench-card>
+        <div className="mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col justify-end gap-3 px-4 pb-4" data-bench-card>
           <div className="space-y-1.5 rounded-md border border-hairline bg-panel p-4 shadow-2">
             <p className="flex items-center gap-2 font-display text-[22px] font-bold"><UiMark mark="farm/ring-bench" scale={2} fallback={<span aria-hidden>◎</span>} /> The ring bench is open</p>
             <p className="text-[15px]">A ring of any grade from three refined goods of that grade. No gold, one ring a day.</p>

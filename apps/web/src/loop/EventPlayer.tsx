@@ -142,7 +142,7 @@ function Shell({ title, auto, onAuto, onSkip, onLog, skipping = false, children 
   title: string; auto: boolean; onAuto: () => void; onSkip: () => void; onLog: () => void; skipping?: boolean; children: React.ReactNode
 }) {
   return (
-    <div className="pt-safe pb-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={title} data-event-player>
+    <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={title} data-event-player>
       <header className="flex min-h-12 items-center gap-1 pr-2 pl-4">
         <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink-soft" data-event-title>{title}</p>
         <button type="button" onClick={onAuto} aria-pressed={auto} className={`min-h-11 rounded-full px-3 text-[14px] font-semibold ${auto ? 'bg-[#c2385e]/15 text-[#c2385e]' : 'text-ink-soft'}`} data-action="auto">Auto</button>
@@ -277,17 +277,20 @@ function Scene({ req, steps: script, save, pack, master, auto, onAuto, log, onLo
   const emote = said && said.say === bustId ? said.emote ?? null : null
   return (
     <Shell title={title} auto={auto} onAuto={onAuto} onSkip={skip} onLog={() => onLog(true)}>
-      <PlaceCardView place={place} day={save.calendar.day} bust={bustId} bustName={nameOf(bustId)} emote={emote}
-        guests={guests} nameOf={nameOf} />
-      <div className="flex min-h-0 flex-1 flex-col justify-end gap-2 px-4 pt-2 pb-4">
-        {choiceNow ? (
-          <>
-            {context && <Bubble key={`c${cursor}`} step={context} nameOf={nameOf} farmer={save.farmer.name} still onNext={() => undefined} onHold={skip} auto={false} />}
-            <Choices mode={mode} options={choiceNow} save={save} pack={pack} id={id} farmer={save.farmer.name} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />
-          </>
-        ) : step && !activePlay ? (
-          <Bubble key={cursor} step={step} nameOf={nameOf} farmer={save.farmer.name} onNext={() => setAt(cursor + 1)} onHold={skip} auto={auto} />
-        ) : <div className="flex-1" />}
+      {/* Landscape: the place card on the left, her bubble and the choices on the right. */}
+      <div className="flex min-h-0 flex-1 flex-row" data-scene-row>
+        <PlaceCardView place={place} day={save.calendar.day} bust={bustId} bustName={nameOf(bustId)} emote={emote}
+          guests={guests} nameOf={nameOf} />
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-end gap-2 overflow-y-auto px-4 pt-2 pb-4">
+          {choiceNow ? (
+            <>
+              {context && <Bubble key={`c${cursor}`} step={context} nameOf={nameOf} farmer={save.farmer.name} still onNext={() => undefined} onHold={skip} auto={false} />}
+              <Choices mode={mode} options={choiceNow} save={save} pack={pack} id={id} farmer={save.farmer.name} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />
+            </>
+          ) : step && !activePlay ? (
+            <Bubble key={cursor} step={step} nameOf={nameOf} farmer={save.farmer.name} onNext={() => setAt(cursor + 1)} onHold={skip} auto={auto} />
+          ) : <div className="flex-1" />}
+        </div>
       </div>
       {activePlay && (
         <PlaySheet key={`p${plays.length}`} spec={playSpec(save, pack, id, activePlay.as, 'event', seed(plays.length))} title={activePlay.prompt ?? undefined} name={name} replay={mode === 'replay'}
@@ -311,7 +314,7 @@ function RingPicker({ save, onPick, onClose }: { save: SaveV4; onPick: (ring: st
         <h2 className="font-display text-[22px] font-bold">{PICKER_WORDS.ring}</h2>
         <p className="text-[14px] text-ink-soft">{PICKER_WORDS.ringHelp}</p>
       </div>
-      <ul className="space-y-2">
+      <ul className="grid gap-2 sm:grid-cols-2">
         {rings.map((r) => (
           <li key={r}>
             <button type="button" onClick={() => setChosen(r)} aria-pressed={r === chosen} data-ring={r}
@@ -337,7 +340,7 @@ function PlacePicker({ places, day, onPick }: { places: readonly string[]; day: 
         <h2 className="font-display text-[22px] font-bold">{PICKER_WORDS.place}</h2>
         <p className="text-[14px] text-ink-soft">{PICKER_WORDS.placeHelp}</p>
       </div>
-      <ul className="space-y-2">
+      <ul className="grid gap-2 sm:grid-cols-3">
         {places.map((p) => {
           const card = placeCard(p, day)
           return (
@@ -389,7 +392,7 @@ function PlaceCardView({ place, day, bust, bustName, emote, guests = [], nameOf 
 }) {
   const card = placeCard(place ?? 'fields', day)
   return (
-    <div className="relative mx-4 h-[42dvh] max-h-[360px] min-h-[220px] shrink-0 overflow-hidden rounded-lg border border-hairline"
+    <div className="relative mb-4 ml-4 w-[44%] max-w-[440px] shrink-0 self-stretch overflow-hidden rounded-lg border border-hairline"
       style={{ background: `linear-gradient(to bottom, ${card.night ? '#1d2742' : '#fdf8ee'} 0%, ${card.ground} 70%)` }} data-place-card={card.place} data-frame={card.frame}>
       {guests.length > 0 && (
         <span className="absolute top-2 left-2 flex -space-x-1.5" data-guests={guests.join(',')}>
@@ -522,8 +525,8 @@ function logLines(steps: readonly Step[], picks: readonly number[], nameOf: (id:
 /** The log, drawn inside the player's layer (the kit's sheets sit under it). */
 function LogSheet({ lines, onClose }: { lines: readonly { who: string; text: string }[]; onClose: () => void }) {
   return (
-    <div className="absolute inset-0 z-20 flex flex-col justify-end bg-black/40" onClick={onClose}>
-      <section role="dialog" aria-label="The lines so far" onClick={(e) => e.stopPropagation()} className="max-h-[75%] overflow-y-auto rounded-t-lg border-t border-hairline bg-panel px-4 pt-2 pb-6 shadow-3">
+    <div className="absolute inset-0 z-20 flex justify-end bg-black/40" onClick={onClose}>
+      <section role="dialog" aria-label="The lines so far" onClick={(e) => e.stopPropagation()} className="h-full w-[min(26rem,62%)] overflow-y-auto rounded-l-lg border-l border-hairline bg-panel px-4 pt-2 pb-6 shadow-3">
         <header className="sticky top-0 flex min-h-12 items-center justify-between bg-panel">
           <h2 className="font-display text-[17px] font-bold">Log</h2>
           <button type="button" onClick={onClose} className="min-h-11 rounded-full px-3 text-[14px] font-semibold text-ink-soft" data-action="close-log">Close</button>

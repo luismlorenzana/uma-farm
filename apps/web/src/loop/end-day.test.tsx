@@ -1,4 +1,4 @@
-// End the day as rendered: the raised tab's words and count, the one-line sheet with End
+// End the day as rendered: the bar's words and count, the one-line sheet with End
 // anyway and Back, ending at once when all is set or the Menu's switch is off, the night's fade and the morning summary
 // after, and a second tap ending nothing more. Invented ids and the stand-in pack; master data and the server are stubs.
 import 'fake-indexeddb/auto'
@@ -15,7 +15,7 @@ vi.mock('../api/client', async () => {
 })
 
 const { useGame, resetGame } = await import('../save/game')
-const { FarmBottomBar } = await import('../shell/Bars')
+const { FarmBar } = await import('../shell/Bars')
 const { default: LoopSheets } = await import('./LoopSheets')
 const { endTheDay, dismissSummary } = await import('./actions')
 const { setAskBeforeEnd } = await import('./ask')
@@ -86,12 +86,12 @@ afterEach(async () => {
 })
 
 describe('End the day', () => {
-  it('counts idle Umas on the raised tab, asks in one line, and ends the day on End anyway', async () => {
+  it('counts idle Umas on End the day in the bar, asks in one line, and ends the day on End anyway', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
-    await render(<FarmBottomBar page="farm" />)
+    await render(<FarmBar />)
     const end = host.querySelector('a[aria-label="End the day: 3 Umas idle"]')
     expect(end?.getAttribute('href')).toBe('/?sheet=end')
-    expect(end?.textContent).toContain('3') // uma-kit 0.19.0 draws the count on the raised disc
+    expect(end?.textContent).toContain('3') // the count on its badge
     expect(end?.querySelector('[data-glow]')).toBeNull()
     expect(host.textContent).toContain('End day')
     await render(<LoopSheets sheet="end" />, '/?sheet=end')
@@ -106,10 +106,10 @@ describe('End the day', () => {
 
   it('reads "All set" when every Uma works, and ends at once', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm(true) })
-    await render(<FarmBottomBar page="farm" />)
+    await render(<FarmBar />)
     const end = host.querySelector('a[aria-label="All set"]')
     expect(end).not.toBeNull()
-    expect(end?.querySelector('[data-glow]')).not.toBeNull() // the kit's halo when nothing waits
+    expect(end?.querySelector('[data-glow]')).not.toBeNull() // the halo when nothing waits
     await render(<LoopSheets sheet="end" />, '/?sheet=end')
     await settle()
     expect(document.body.querySelector('[data-end-line]')).toBeNull()

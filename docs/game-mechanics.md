@@ -6,8 +6,9 @@ the same commit, and where it and the code ever differ, the code wins and this d
 
 **What's live and what isn't.** The deployed game is one game on **save v4**: the farm's loop, its places, the farm
 growing by building, and the **romance** (Part 3), played from the story pack, and played whole without one: wherever the pack is silent, a
-placeholder plays (see [What plays without the story](#what-plays-without-the-story)). The **HD-2D farm** (Part 4) is
-an opt-in preview. A save from before v4 starts over (see [Save versions](#save-versions)).
+placeholder plays (see [What plays without the story](#what-plays-without-the-story)). The game is laid out
+**sideways**, for a phone held in landscape (see [the frame](#the-frame-landscape)). A save from before v4 starts over
+(see [Save versions](#save-versions)).
 
 **The tables are generated.** Every table between `<!-- live:… -->` markers is written from the rules by
 `packages/domain/src/docs/render.ts`. A test fails when one is stale, and `pnpm docs:update` rewrites them. Edit the
@@ -37,8 +38,7 @@ prose here; change a table by changing the rule.
   - [Heart events and plays](#heart-events-and-plays)
   - [The evening](#the-evening)
   - [The ring, the wedding, and married life](#the-ring-the-wedding-and-married-life)
-- **[Part 4 — The HD-2D farm and the save](#part-4--the-hd-2d-farm-and-the-save)**
-  - [The HD-2D farm (an opt-in preview)](#the-hd-2d-farm-an-opt-in-preview)
+- **[Part 4 — The save](#part-4--the-save)**
   - [The save, as a player meets it](#the-save-as-a-player-meets-it)
 
 ## Part 1 — The farm's days and work
@@ -87,7 +87,7 @@ The year's seasons, with their days in year 1 and their festivals:
 | Winter | 37–48 | Animal Show, Winter 10 (day 46); Harvest Cup, Winter 12 (day 48) |
 <!-- /live -->
 
-- **The date chip** in the top bar shows the season's mark and the day of the season; without the mark it draws a dot in
+- **The date chip** in the bar shows the season's mark and the date ("Spring 3"); without the mark it draws a dot in
   the season's colour (Spring green, Summer gold, Autumn orange, Winter blue). Its spoken name is the whole date and the
   next festival: "Calendar: Spring 3, year 1 · Flower Show in 7 days". A tap opens the calendar.
 - **The calendar** shows the day and the year ("Spring 3 · Year 1"); the four seasons with this one marked; the season's
@@ -132,10 +132,10 @@ of Vows returns on its day each year. Both are the romance's.
 
 #### End the day
 
-The raised moon disc in the middle of the bottom bar ends the day.
+**End the day**, the gold button at the bar's right end, ends the day.
 
-**The nudge.** The disc reads **All set** and glows when nothing waits; otherwise it reads **End day** with a count on
-it. Its spoken name says what's left: "End the day: 2 Umas idle · 3 to collect".
+**The nudge.** The button reads **All set** and glows when nothing waits (a still glow under reduced motion); otherwise
+it reads **End day** with a count on it. Its spoken name says what's left: "End the day: 2 Umas idle · 3 to collect".
 
 | Counts as | When |
 |---|---|
@@ -260,8 +260,8 @@ line is a tap to its place.
 | Work done | Jobs that ended tonight, by place, "Forest · 2 jobs done · 9 items" (each job's whole haul); the night's best catch, "Best catch · Rainbow Koi ★2"; plots that turned Ready, by block, "Block A · 9 crops ready"; what withered, "Block A · 3 Onion withered" | The place's quick look; the Fishery's quick look; the Fields |
 | Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full** | Her profile's Work side |
 | Hearts | Who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", or in the town the world names, tagged **New**), a chapter that opened ("A new chapter with *Name* · Together", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
-| New today | First, "New story arrived · *its note*", tagged **New**, the morning after a new story release reaches the phone ([below](#how-the-app-gets-the-pack)); "Summer begins", the world's line for the season under it; "Flower Show tomorrow" or "today" (the story's name for it); the Town notes the night unlocked, "*title*" (or "*title* +2 more"), tagged **Town note**; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The Hearts tab; the calendar; the Festival ground; the note in the Diary; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
-| Today | "2 Umas idle"; "9 plots to plant" (empty plots that the season's seeds you hold could fill today) | The Hearts tab's Work view; the Fields |
+| New today | First, "New story arrived · *its note*", tagged **New**, the morning after a new story release reaches the phone ([below](#how-the-app-gets-the-pack)); "Summer begins", the world's line for the season under it; "Flower Show tomorrow" or "today" (the story's name for it); the Town notes the night unlocked, "*title*" (or "*title* +2 more"), tagged **Town note**; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The People page; the calendar; the Festival ground; the note in the Diary; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
+| Today | "2 Umas idle"; "9 plots to plant" (empty plots that the season's seeds you hold could fill today) | The People page's Work view; the Fields |
 
 Hearts shows whenever it has a line or someone is Ready. The romance describes its lines.
 
@@ -274,10 +274,11 @@ card reads "Off: days are turns".
 
 #### Home: the farm map
 
-The farm map is Home: 25 places, eight rows of three and the Town alone in the middle of a ninth, on farmland, taller
-than a phone's screen, so it scrolls up and down. Rows 1 to 5 each run a gathering place, its station, then the ranch or
-a workshop; rows 6 and 7 are the yard; row 8 is the town edge, and the Town stands below it, at the end of the Gate's
-path. The help button (bottom left) and the Collect all pill stay put as it scrolls.
+The farm map is Home: 25 places, eight rows of three and the Town alone in the middle of a ninth, on farmland. It fills
+the page beside the rail, its three columns across the phone's width, and scrolls up and down, three rows or so in view.
+Rows 1 to 5 each run a gathering place, its station, then the ranch or a workshop; rows 6 and 7 are the yard; row 8 is
+the town edge, and the Town stands below it, at the end of the Gate's path. The help button (bottom left) and the
+Collect all pill stay put as it scrolls. A tile farm replaces it with the day's actions.
 
 The rows, and each place's building and what opens it (the Boat is moored at the Dock and drawn there):
 
@@ -372,13 +373,10 @@ calendar.
 the third from six; three to a row) with the town's two rows moved below them, so the map grows a row at a time. The Gate is where the welcome list visits, one a morning, and wears **Visiting** while one waits. Both are the
 romance's.
 
-The HD-2D farm, an opt-in preview set in Account on each device, draws this same farm on an HD-2D stage; it has its own
-part.
-
 #### Quick looks
 
 A quick look is a side panel over the map: the place's name, its one-line description, and what you can do there. A
-place's name (on the map, on the HD-2D stage and in its quick look) and its line are the world's when `world.json` gives
+place's name (on the map and in its quick look) and its line are the world's when `world.json` gives
 them, else the game's own; the Town takes the town's name ([the world in the pack](#the-world-in-the-pack)).
 - **A locked place:** "Opens with 5 Umas met" (or "Opens soon"), and its description.
 - **A place to build, not standing:** its Build card: its cost in gold and goods, each with what the farm holds ("20
@@ -397,24 +395,69 @@ them, else the game's own; the Town takes the town's name ([the world in the pac
   · *title* ›", a tap to it in the Diary.
 - **The Forge,** once the ring bench stands: the bench's quick look (see the romance).
 
-#### The top bar
+#### The frame (landscape)
 
-From the left:
-- **Your initial** opens Account.
-- **The date chip** opens the calendar.
+The game is laid out for a phone held sideways: designed at 844 × 390 points and checked at 667 × 375. The installed
+app asks for landscape.
+
+```
+┌──────┬──────────────────────────────────────────────────────────────┐
+│      │ ● Spring 3  ⏱ —  ● 1,240             [ ☾ End day ³ ]  ☰ Menu │  the bar
+│ Farm ├──────────────────────────────────────────────────────────────┤
+│ Town │                                                              │
+│People│                     the page                  ┌─────────────┤
+│ Book │                                               │ a sheet, as │
+│ Diary│                                               │ a panel from│
+│      │                                               │ the right   │
+└──────┴───────────────────────────────────────────────┴─────────────┘
+```
+
+- **Held upright,** a card covers the game: "Turn your phone sideways · Uma Farm plays in landscape". Nothing underneath
+  moves or reloads, and turning the phone back shows the game as it was.
+- **Sheets are side panels** that slide in from the right edge, over the page, the page dimmed behind: the Menu, the
+  morning, the calendar, the bin and the shop, the Farm Rank, her profile, her Memories, the pickers, a talk in town and
+  every other sheet. A swipe right, a tap on the dimmed page or the close button closes one.
+- **Scenes are full screen:** the opening, meeting her, the event, pair and household players, the evening's plays and
+  cards, a level reached overnight. Each is laid out sideways: her bust on the left, the lines and the choices on the
+  right; a play's name and legend on its left, the play on its right.
+- **Lists sit in two columns** where they fit: the Hearts rows and the Town's People, the Town's spots, the work slots,
+  the Warehouse's goods, the Dorm's and the Diary's panels, the Book's cards and Account's panels; the Fields' blocks
+  put their nine plots beside the block's head; the Work view's faces sit five or six across.
+- **Safe areas:** the rail keeps clear of the notch's side, and the page of the other side and the home indicator.
+
+#### The bar
+
+A thin bar along the top of the page, always there. From the left:
+- **The date chip**, the season's mark and the date ("Spring 3"), opens the calendar.
+- **Actions left**, a dashed chip with "—": the day's budget of actions isn't counted yet, so it opens nothing.
 - **The gold chip**, the gold coin and your gold ("Gold: 1,240g. The bin"), opens the shipping bin.
-- **The Farm Rank chip**, its crest and the rank ("Farm Rank 2: 300 points"), opens the Farm Rank's sheet.
 - **The sync chip** shows only while offline ("Offline") or paused ("Sync paused"), and opens Account.
-
-#### The bottom bar
-
-**Farm · Hearts · End the day · Diary · Menu.**
-- **Farm:** the farm map.
-- **Hearts:** everyone you've met, on the farm or in town, by their route; its Work view is the roster's album, with their
-  talents and ranks. `/roster` lands on the Work view.
-- **End the day:** the raised moon disc.
-- **Diary:** the farm's projects, the Farm Rank, the milestones, each Uma's Memories and the pairs' Conversations.
+- **End the day**, at the right end: see [End the day](#end-the-day).
 - **Menu:** every place.
+
+#### The rail
+
+**Farm · Town · People · Book · Diary**, down the left edge. The page you're on is lit: a marker on the rail's inner edge
+and its two-tone icon. A farm place's page (the Fields, the forest, the Warehouse, the Dorm …) keeps Farm lit.
+- **Farm:** the farm map.
+- **Town:** the town's screen (see [the town](#the-town)).
+- **People:** everyone you've met, on the farm or in town, by their route; its Work view is the roster's album, with their
+  talents and ranks (see [the People page](#the-people-page)). `/roster` lands on the Work view.
+- **Book:** the farm's book (below).
+- **Diary:** the farm's projects, the Farm Rank, the milestones, each Uma's Memories and the pairs' Conversations.
+
+#### The Book
+
+The farm's accounts at a glance, six cards, each a tap to its place:
+
+| Card | Shows | A tap opens |
+|---|---|---|
+| Gold | The farm's gold | The bin |
+| Farm Rank | The rank and its points | The Farm Rank's sheet |
+| Goods | Every good the Warehouse holds | The Warehouse |
+| Umas on the farm | Who lives on the farm, and how many you've met | People's Work view |
+| Dorm | Beds used of beds | The Dorm |
+| To build | The places offered at this Farm Rank | The Diary's projects |
 
 #### The Menu
 
@@ -1307,7 +1350,7 @@ and 9 Carrot seeds.
 - **Spent:** seeds at the shop, blocks on the Fields' page, places to build at their quick looks, Dorm levels at the
   Dorm, and houses on the homestead.
 
-The gold chip in the top bar shows the coin and your gold, and opens the bin.
+The gold chip in the bar shows the coin and your gold, and opens the bin.
 
 #### The shop
 
@@ -1666,7 +1709,7 @@ season, festival, built, Farm Rank, milestone and household lines:
 
 Those the night met are listed under **Hearts** ("Met {name} · moved in", or "· in town" with no bed). `{name}` is her
 name, from master data.
-The morning's **Today** section counts idle Umas ("2 Umas idle", opening the Hearts tab's Work view): an Uma on the farm
+The morning's **Today** section counts idle Umas ("2 Umas idle", opening the People page's Work view): an Uma on the farm
 with no running job, tending no growing block, and not leaving tomorrow.
 
 #### The roster's screens
@@ -1687,7 +1730,7 @@ with no running job, tending no growing block, and not leaving tomorrow.
   - **In town · n:** each Uma with "In town" or "Arrives tomorrow", or "Nobody you’ve met lives in town." Every row opens
     her profile.
 - **The Gate** (its quick look on the map): the welcome list's visitor of the day (see [meeting her](#meeting-her)).
-- **The roster** is the Hearts tab's **Work** view (`/hearts?view=work`; `/roster` lands there): everyone on the roster,
+- **The roster** is the People page's **Work** view (`/hearts?view=work`; `/roster` lands there): everyone on the roster,
   on the farm or in town, as an album of cards in three columns, under the line "3 on the farm · 2 in town · by joined".
   - **Her face** carries her favourite line's mark top left (a Carrot farming, a Pine Log foraging, a Carp fishing,
     Copper Ore mining, on a light disc), her best talent's grade bottom right on a coloured chip (S gold, A coral, B
@@ -1712,7 +1755,7 @@ with no running job, tending no growing block, and not leaving tomorrow.
   tender of another block can, and moves here), and working Umas sort last. In a job's picker a tender or an Uma leaving
   tomorrow can't be picked.
 
-The Hearts view, her profile's Hearts side, Chat and Gift are the romance's: see [the Hearts tab](#the-hearts-tab) and
+The Hearts view, her profile's Hearts side, Chat and Gift are the romance's: see [the People page](#the-people-page) and
 [her profile](#her-profile).
 
 ### The town
@@ -2397,20 +2440,19 @@ The Diary tab (`/diary`) holds the world's pages, the farm's projects, the Farm 
 - **Memories** (each Uma's) and **Conversations** (the pairs'): the romance part covers them.
 - Its help says how building, the milestones with the Umas, the Diary's milestones, Memories and Conversations work.
 
-#### The Farm Rank's chip and sheet
+#### The Farm Rank's card and sheet
 
-- **The chip** is the account bar's third, after the date and the gold: the Farm Rank's crest (a green "FR" shield
-  when the art can't load) and the rank. It reads "Farm Rank 2: 400 points" to a screen reader, and a tap opens the
-  sheet.
+- **The card** is the Book's second, after the gold: the rank and its points ("1 · 47 points"); a tap opens the sheet.
+  The Diary's Farm Rank row opens it too.
 - **The sheet** opens over any page: "Farm Rank 2", the points, a bar to the next rank with "50 more for Farm Rank 3
   (250)" (or "The top rank"), what the next rank opens (the places to build first), and the points so far by source:
   Shipping (1 per 100g), Diary entries (5 each), Milestones (25 each). Its help explains where points come from.
 
 #### The scene player
 
-- **A full-screen sheet** over the farm and its bars: the scene's title and **Skip** at the top; a bust (a cast
-  member's disc, an Uma's bust from master data, none for narration); the speaker's name in the accent colour and the
-  line (narration in italics); and "Tap to go on · 3/12". A tap anywhere goes on.
+- **A full-screen sheet** over the farm and its bars: the scene's title and **Skip** at the top; on the left a bust (a
+  cast member's disc, an Uma's bust from master data, none for narration); on the right the speaker's name in the accent
+  colour and the line (narration in italics), and "Tap to go on · 3/12". A tap anywhere goes on.
 - **It loads master data itself** (names and busts), since a new farm's boot doesn't wait for it. **Skip** works
   without it, and skipping marks the scene read.
 - **The opening** plays its lines with the title line "Day 1" (the world's farm and town after it when it names them,
@@ -2423,8 +2465,8 @@ The Diary tab (`/diary`) holds the world's pages, the farm's projects, the Farm 
 
 > **The romance is the game's.** It plays on save v4 from the story pack, and with placeholders wherever the pack is
 > silent: anyone in town can be met, the welcome list (the pack's, or with no pack master data's first five) at the Gate
-> in the first days, and **Hearts** is the bottom bar's second tab (Farm · Hearts · End the day · Diary ·
-> Menu), with the roster's album as its Work view. A save from before v4 starts over as a new farm (see
+> in the first days, and **People** is the rail's third page (Farm · Town · People · Book · Diary), with the
+> roster's album as its Work view. A save from before v4 starts over as a new farm (see
 > [Save versions](#save-versions)).
 
 ### The cast and the story pack
@@ -2520,7 +2562,7 @@ through the placeholders' lookups: `worldNamesOf`, `historyOf`, `festivalsOf`, `
 | The region's name | The Diary's "The farm", after the town | None |
 | The farm's history | The Diary's "The farm" page | None |
 | The festivals | Renamed, moved or added: the calendar, the date chip, the morning, festival night, `festival` triggers and gates ([festivals](#festivals)) | The game's five |
-| A place's name and line | The map (and the HD-2D stage), its quick look, its Build card | The game's own |
+| A place's name and line | The map, its quick look, its Build card | The game's own |
 | A season's line | Under "*Spring* begins" on the season's first morning | "Spring begins" alone |
 | Town notes | The Diary's Town notes, filling as you play; the morning names the night's ([below](#town-notes)) | None |
 
@@ -2636,7 +2678,7 @@ stand-ins:
   for master data as well as the index, since the placeholders read it.
 - **"New story arrived."** A fresh index whose number isn't the one the phone kept last is a new release. Once its pack
   has loaded, the phone keeps its number (`farm.story-news`, a few bytes) until the next night, which opens the
-  morning's New today with **"New story arrived · *its note*"**, tagged **New**; a tap opens the Hearts tab. It shows
+  morning's New today with **"New story arrived · *its note*"**, tagged **New**; a tap opens the People page. It shows
   once a release on each phone; a release that arrives before the night replaces the one waiting. The save keeps the
   line's number only, never the note: the card reads the note from the release the game plays, and says "New story
   arrived" alone for another one. A new farm starts with none waiting, since its opening plays the story. An offline
@@ -2795,7 +2837,7 @@ A farm whose opening was already read never plays it again, and keeps everyone i
 
 Every character lives in town, and her story begins when her trigger is met. From then on she has the whole romance:
 her ladders, heart events, perks, evenings, the proposal, the wedding and married life, in [her own
-chapters](#her-chapters); she shows on the Hearts tab. There's no cap on how many you meet: the Dorm's beds cap only who lives on the farm.
+chapters](#her-chapters); she shows on the People page. There's no cap on how many you meet: the Dorm's beds cap only who lives on the farm.
 
 ```
  the welcome list ──► the Gate, one a morning from day 1 ──► Say hello: her first talk ──┐
@@ -3078,15 +3120,16 @@ A setup is never an hour, the weather, a season or a festival; her chapter's gat
 - **Ready is read live,** never stored, since it changes by the day: her Hearts row, her profile, the morning's Ready lines
   and her pip on the map all read it as they show.
 
-#### The Hearts tab
+#### The People page
 
-**Hearts** is the Umas' tab: one row an Uma you've met, on the farm or in town, a filter row, and her profile on a tap. It
-has no badge. Its two views ride in the URL: Hearts (the default) and **Work**, the roster's album with **her level in
-words** ("F7", "R4", "S2") in each face's corner. `/roster` lands on the Work view.
+**People** (`/hearts`, the rail's third page) is the Umas' page: one row an Uma you've met, on the farm or in town, two to
+a row where they fit, a filter row, and her profile on a tap. It has no badge. Its two views ride in the URL: Hearts (the
+default) and **Work**, the roster's album with **her level in words** ("F7", "R4", "S2") in each face's corner.
+`/roster` lands on the Work view.
 
 ```
 ┌──────────────────────────────────────────┐
-│ Hearts  Married 0/3  ☾ Evening ○     (i) │  ○ free, ● spent: a mark a slot today
+│ People  Married 0/3  ☾ Evening ○     (i) │  ○ free, ● spent: a mark a slot today
 │ [ Hearts ]  Work                         │
 │ [Ready 1] [Friends 3] [Partners] [Married] [In town]
 ├──────────────────────────────────────────┤
@@ -3124,7 +3167,8 @@ words** ("F7", "R4", "S2") in each face's corner. `/roster` lands on the Work vi
 
 #### Her profile
 
-Her profile is a sheet over the tab, opened from her row, a Work card, the morning's lines, the Dorm's list and the town.
+Her profile is a side panel over the page, opened from her row, a Work card, the morning's lines, the Dorm's list and
+the town.
 Each part shows only what exists; nothing says "Soon". One who lives in town has, under her face, **Lives in town** and
 **Invite to the farm** while a bed is free (she moves in at once), else "No bed free." and **The Dorm ›**.
 
@@ -3133,6 +3177,7 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
 │ Stand-in 1                             ✕ │
 │ (face) New friend  ● Ready               │  the "+N" floats up from her face
 │        Farming · ★ Spring 4              │  her line, birthday and house
+│ [ Hearts ]  Work                         │  held at the panel's top as it scrolls
 │ ▣□□□□□□□□□◇□□□□□□□□□□◇◇□□□□□             │  the route as one track
 │ ┌ Next: Friendship 1 ────────────────────┐│
 │ │ Perk · Her loved gift shown; her own chats
@@ -3156,9 +3201,8 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
 │ Memories 0 of 26                         │
 │ Ring    Her ring will read: ‘…’          │  from Romance 8
 ├──────────────────────────────────────────┤
-│ [ Chat +15 ] [ Gift ] [ ☾ Evening › ]    │  48 pt, in the thumb zone
+│ [ Chat +15 ] [ Gift ] [ ☾ Evening › ]    │  48 pt, the panel's foot
 │ [        Praise +20        ]             │  while she's earned it
-│ [ Hearts ]  Work                         │
 └──────────────────────────────────────────┘
 ```
 
@@ -3266,7 +3310,7 @@ R1–R10, the proposal and the wedding, married life S1–S5), and so do the poi
 - **Where you see them:**
   - **her profile's Chapters:** every chapter, the one she's in with its events played and to come, a gate's words,
     and what opens the next ([her profile](#her-profile));
-  - **the Hearts tab:** her chapter at a glance on her row, "Ch. 2 · Together" ([the Hearts tab](#the-hearts-tab));
+  - **the People page:** her chapter at a glance on her row, "Ch. 2 · Together" ([the People page](#the-people-page));
   - **the morning:** "A new chapter with ‹name› · Together", tagged **New**, the morning one opens: the morning after
     the event before it played (one event a day, so its first can't play sooner), or the morning its gate begins to
     hold. Her first chapter opens with meeting her, which the morning says as "Met ‹name›".
@@ -3514,23 +3558,20 @@ A level is its event. Once her next event is Ready it waits for you, for good: *
 - **One of hers a day:** after one plays she isn't Ready again until tomorrow, however full her bar.
 
 ```
-┌──────────────────────────────────────────┐
-│ The Fields · Friendship 1  Auto Skip Log │  the place and the rung; the controls away from the taps
-│ ╭──────────────────────────────────────╮ │
-│ │  (the Fields' frame)        ♪ (bust) │ │  the place card: its frame on the season's
-│ │  on spring's ground                  │ │  ground, her bust, the emote bubble beside it
-│ ╰──────────────────────────────────────╯ │
-│ ┌──────────────────────────────────────┐ │
-│ │ Stand-in 1                           │ │  her bubble: three lines at most, typed out
-│ │ Hello, Robin. Some of these are      │ │
-│ │ ready. Help me pick?                 │ │
-│ └──────────────────────────────────────┘ │
-│ [ Show me which ones.             +30 ]  │  48 pt choices, each with its gain
-│ [ Race you to the end of the row. +10 ]  │
-└──────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│ The Fields · Friendship 1                             Auto  Skip  Log │  the controls away from the taps
+│ ╭────────────────────────────╮                                       │
+│ │                  ♪         │  ┌─────────────────────────────────┐  │  her bubble: three lines at
+│ │ (the Fields'       (bust)  │  │ Stand-in 1                      │  │  most, typed out
+│ │  frame)                    │  │ Hello, Robin. Some of these are │  │
+│ │ on spring's ground         │  │ ready. Help me pick?            │  │
+│ │                            │  └─────────────────────────────────┘  │
+│ │                            │  [ Show me which ones.         +30 ]  │  48 pt choices, each with its
+│ ╰────────────────────────────╯  [ Race you to the end of the row. +10 ] gain
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-- **The place card** fills the top: a farm place's building frame on the season's ground (spring `#dcefc7`, summer
+- **The place card** fills the left: a farm place's building frame on the season's ground (spring `#dcefc7`, summer
   `#f6e7b0`, autumn `#f2d3b0`, winter `#e3ebf3`), or a romance backdrop's borrowed frame and tint. A place step changes it
   mid-scene, and the title follows: "The Fields · Friendship 1", "The Pond at night · Romance 5". The speaker's bust is
   master data's (one of the town's people's too; a lettered disc for a stand-in, or for a role no one plays).
@@ -4318,7 +4359,7 @@ authored arrival joins with her ties seeded, and the night clears the whole of t
 
 | Order | Lines |
 |---|---|
-| 1 | **Ready**, read live: up to three in the tab's order ("● Ready · Stand-in 1 · Friendship 1 · the Fields", with **Play**), then "+2 more" (the tab filtered on Ready); then the household's Ready offers ("⌂ Household scene 1 · Ready", with **Play**) |
+| 1 | **Ready**, read live: up to three in the People page's order ("● Ready · Stand-in 1 · Friendship 1 · the Fields", with **Play**), then "+2 more" (People filtered on Ready); then the household's Ready offers ("⌂ Household scene 1 · Ready", with **Play**) |
 | 2 | This morning's invitations, with **Yes, tonight** and **Another day** |
 | 3 | The house's morning ("⌂ Farmhouse · Stand-in 1 · ♥ +30 · ☕ 3 fed · +1 item") with its house line under it; a spouse who moved into a room; "‹house› misses you" with **Tonight ›** and **Another night**; morning items ("♥ Stand-in 2 left you ★3 Shiitake"); the night's chores |
 | 4 | Birthdays and anniversaries, today's before tomorrow's, birthdays first ("★ Stand-in 1's birthday today", "♥ Stand-in 1's anniversary · ★5 Carrot left for you"); the Festival of Vows |
@@ -4330,270 +4371,7 @@ Uma is there. **There's no pop-up per event:** the morning, her ● Ready chip a
 her are the romance's only signals, and pips stay their places' taps. The household milestones are news in the morning's
 section after it.
 
-## Part 4 — The HD-2D farm and the save
-
-### The HD-2D farm (an opt-in preview)
-
-Home can draw the farm on the shared HD-2D stage: flat painted pieces in a lit 3D diorama, seen from above at an angle.
-It's a preview, off by default and set per device. With it off, Home is the usual farm map. The stage only shows the
-save: no rule reads the switch, and nothing on the stage changes a count or the save.
-
-#### Turning it on
-
-- **Account → HD-2D farm (preview)** is a switch, labelled "This device only". Home follows it as soon as it's flipped.
-- **`?stage=1` in the address** turns it on as the app opens, and **`?stage=0`** turns it off. The app then drops the
-  parameter from the address, so a reload keeps the device's choice.
-- **The choice is kept on the device**, with the app's other device preferences. Where the browser blocks storage (a
-  private window), it reads as off.
-- **Nothing downloads until it's on.** The stage's code (with its 3D engine) and its art load the first time Home draws
-  with the switch on. Once loaded they stay on the phone, so the stage works offline from then on. A player with the
-  switch off never downloads them.
-- **One engine at a time:** with the switch on, Home doesn't load the usual map's engine.
-
-#### The farm, laid out from the save
-
-The stage builds the whole farm from the save, and rebuilds it whenever the save changes (a crop grows, a place opens, a
-house is built). The camera, and every walk whose path still stands, carry across a rebuild.
-
-- **Portrait, 9 tiles across**, fitted to the phone's width. The camera looks down at 35° and pans up and down only; a
-  flick glides to the nearest band and settles there.
-- **Bands of three plots.** A band is three 3 × 3 plots side by side, one per column, with a path row under them: 4
-  tiles deep. In each plot the back two rows hold the building (or the place's ground and landmarks), and the front row is
-  the **apron**, where the place's Umas work and its name hangs.
-- **Lanes.** Each column keeps a lane of path at one edge where its plot's layout leaves room: the left column at its
-  right edge, the middle and right columns at their left edges. Buildings stand flush to the other side. The lanes and the
-  path rows join every apron to the Gate.
-- **The Gate's plot is all path:** the spine from the yard down to the town, the Gate's arch over its apron, fences on
-  either side.
-- **Ground levels:** the ground is level 1; the Fishery's pond and the Quarry's pit sit a level down, and the Mine's back
-  row is a rock wall.
-
-```
-  x 0 ─── 2 │ 3 ─── 5 │ 6 ─── 8
-  ┌─────────┬─────────┬─────────┐
-  │ bldg  L │ L  bldg │ L  bldg │  back row     the building (flush away from the lane),
-  │ bldg  L │ L  bldg │ L  bldg │  back row     or the place's ground and landmarks
-  │  apron  │  apron  │  apron  │  front row    where Umas work; the name pill hangs under it
-  ├─────────┴─────────┴─────────┤
-  │ path ────────────────────── │  path row     under every band
-  └─────────────────────────────┘
-   L = the lane, laid as path where the plot leaves it free
-```
-
-**The bands, top to bottom:**
-
-| Band | Left | Middle | Right |
-|---|---|---|---|
-| 1 | Fields | Mill | Coop |
-| 2 | Forest | Sawmill | Barn |
-| 3 | Fishery | Smokehouse | Kitchen |
-| 4 | Mine | Smelter | Restaurant |
-| 5 | Quarry | Cutter | Forge |
-| 6 | Shipping bin | Warehouse | Dorm |
-| 7 | Requests board | Gate | Open ground |
-| Homestead | Farmhouse · Houses 1–6 and the next lot, three a band | | |
-| Last | Shop | Festival ground | Expedition post |
-
-The homestead's one to three bands sit between the yard and the town, so the farm is 36, 40 or 44 tiles deep, the town
-edge last.
-
-**Each place is a recipe:** walls, roof, width × storeys and door, with one or two landmarks, so each place reads
-differently from its neighbours. No signs and no words are painted on the farm.
-
-| Place | What stands | Ground and landmarks | Where its Umas work |
-|---|---|---|---|
-| Fields | No building | Tilled soil; a scarecrow in the middle and the crops on the other eight tiles | One tender per owned block: the apron's three tiles, then one behind its right end |
-| Mill | Plaster, thatch, 2 wide, 1 storey; sails on its front | Grass | The lane's three tiles and the apron's middle |
-| Coop | Plank, shingle, 2 wide, 1 storey | Paddock; a trough | — |
-| Forest | No building | Forest floor; three trees, a stump, a mushroom patch, a herb patch | The apron's three tiles and one behind its right end |
-| Sawmill | Plank, shingle, 2 wide, 1 storey, open-fronted (windows, no door) | Grass; a log pile | The lane's three tiles and the apron's middle |
-| Barn | Plank, red roof, 3 wide, 2 storeys, double doors | Paddock; a hay bale | — |
-| Fishery | No building | A pond over the back two rows' left two tiles, reeds, a dock | The apron's three tiles and one behind its right end |
-| Smokehouse | Plank, slate, 2 wide, 1 storey | Grass; a smoker | The lane's three tiles and the apron's middle |
-| Kitchen | Plaster, red roof, 2 wide, 1 storey; a chimney, a herb box under the window | Grass | — |
-| Mine | No building | A rock wall across the back row; the mine's mouth, an ore cart, a lantern | The apron's three tiles and the mine's mouth |
-| Smelter | Stone, slate, 2 wide, 1 storey | Grass; a furnace | The lane's three tiles and the apron's middle |
-| Restaurant | Plaster, shingle, 3 wide, 2 storeys; an awning | Paving; a café table | — |
-| Quarry | No building | A pit over the back two rows' left two tiles, two rocks, a stone stack | The apron's three tiles and one behind its right end |
-| Cutter | Stone, slate, 2 wide, 1 storey | Grass; a grindstone | The lane's three tiles and the apron's middle |
-| Forge | Stone, slate, 2 wide, 1 storey; a forge chimney | Grass; an anvil, and the ring bench beside it | — |
-| Shipping bin | No building | Grass; a sack, a barrel, the bin | — |
-| Warehouse | Plank, red roof, 3 wide, 2 storeys, double doors | Grass; crates | — |
-| Dorm | Plaster, red roof, 3 wide, 2 storeys; flower boxes under two windows | Grass | — (the yard's idle Umas start on its apron) |
-| Requests board | No building | Grass; the notice board | — |
-| Gate | No building | All path; the arch, fences either side | — |
-| Shop | Plaster, shingle, 2 wide, 1 storey; a shop door | Paving; a stall awning | — |
-| Festival ground | No building | Paving; bunting, a flagpole | — |
-| Expedition post | Plank, shingle, 2 wide, 1 storey | Grass; a flagpole, a signpost | — |
-| Open ground | No building | Grass, flowers, a bush | — (idle Umas when the yard is full) |
-
-A place's work slots face the work: an Uma at a slot beside a building faces it, and one in front of it faces into it.
-
-**When a place stands.** A place's recipe stands from day 1, or once it's built (the morning after it's paid), or for
-the Requests board once five Umas are met. The Forge stands once its ring bench does. The Dock stands beside the Gate,
-a pier over the water; the Boat moors there and isn't drawn on its own. Until then the plot is an **overgrown lot:** two clumps of weeds, brambles and a broken
-fence on grass, its lane left clear, with the place's name and lock over it. A place can stand and still be locked: one
-that's open but has no screen yet keeps its lock, which says "Soon".
-
-**The homestead.** The Farmhouse is a 3-wide, 2-storey plaster house with a red roof, a
-chimney, flower boxes under two windows and a porch. Every other house is the same cottage: plaster and thatch, 2 wide,
-1 storey, a chimney and a flower box, its door on the lane's side. The houses fill the homestead's bands three to a band
-(the Farmhouse, House 1 and House 2 first; Houses 3–5; House 6). The built houses show, and so does the next lot, marked
-by stakes, so the farm grows a band at a time.
-
-**The Fields' crops.** The soil's eight tiles around the scarecrow show the first eight plots in the Fields' own order:
-Block A's plots 1 to 8. The other blocks' plots aren't drawn. A plot shows nothing while empty, a sprout while young, a
-growing crop from half its growth to Ready, and its family's ripe crop once Ready. The morning after plots wither, as
-many of the block's empty plots show a withered crop as the morning summary lists, for as long as the summary is up.
-
-| Ripe family | Crops |
-|---|---|
-| Root | Carrot, Potato, Onion, Sugar Beet, Ginger, Peanut, Golden Carrot, Mandrake |
-| Leafy | Cabbage |
-| Herb | Mint, Basil |
-| Grain | Wheat, Oats, Barley, Rye, Buckwheat, Sunwheat |
-| Rice | Rice, Moonrice, Wild Rice |
-| Staked, red | Tomato |
-| Staked, green | Bell Pepper |
-| Staked, purple | Eggplant |
-| Corn | Corn |
-| Sunflower | Sunflower Seed |
-| Spear | Asparagus |
-| Gourd | Emperor Pumpkin |
-
-#### The kit
-
-The farm is painted with the `kit-farm` art kit: one 2048 × 2048 page of 87 frames, loaded the first time the stage
-shows. The farm names every piece it draws, and the names are the contract: a piece the kit doesn't paint yet is drawn
-from the stage's own flat **stand-in kit** under the same name, copied onto the kit's page so the farm builds from one
-page. The stand-in draws the 30 pieces the kit doesn't paint:
-
-- the stone walls, windows and door (the Smelter, the Cutter and the Forge);
-- the Mine's rock wall, its mouth and the ore cart;
-- the Quarry's pit, its rocks and the stone stack;
-- the grindstone, the furnace, the anvil, the forge chimney, the ring bench, the awning, the café table and the herb box;
-- the paddock, the trough and the hay bale;
-- the notice board, the signpost, the flagpole and the bunting.
-
-On a first load, Home waits up to a second and a half for the kit's page, draws the stand-in alone if it hasn't
-arrived, and swaps to the kit when it does. If the kit can't be read or its page fails, the stand-in draws the farm for
-the rest of the session.
-
-#### Names, locks, badges and pips
-
-Over the stage sit the same models the usual map's places carry, following the camera:
-
-- **The name pill** hangs under each plot's apron. A locked place has the lock in its pill and its name greyed.
-- **The Ready badge** sits at the plot's foot while the place has finished work to collect (or, on the Fields, a Ready
-  plot).
-- **The pips** hang in a half arch over the plot: each working Uma's face ringed by her job's progress, or a free dot;
-  the Fields' tenders; a house's residents and its free rooms.
-- The open ground has none. Overlays off screen hide.
-- **Collect all**, the help button, the quick look and the morning summary sit over the stage as they do over the map.
-
-#### Taps
-
-- **A tap opens what the usual map's place opens:** the place's screen, its quick look, its sheet (the shipping bin, the
-  shop), or, for a house or the next lot, the homestead's sheet at that house. The tap takes whatever is drawn nearest
-  under the finger (a building, a landmark, a crop or the apron), else the plot of the ground under it. A path or the open
-  ground opens nothing.
-- **A tap on an Uma opens her profile** on the Hearts tab. An Uma drawn in front
-  of a building wins the tap.
-- **A long-press** (half a second, without moving) opens any place's quick look, the Warehouse's and the Dorm's too; on a
-  house it opens the homestead's sheet, as a tap does.
-- **A drag pans** and never taps. The phone's own long-press menu is turned off on the stage.
-- For VoiceOver, every place and every Uma on the farm is also a link, to where a tap on it goes.
-
-#### Light, fade and the camera
-
-- **The season is the light.** Spring is fresh and soft, summer bright and warm, autumn an amber tint with the lamps a
-  little lit, winter cold and pale with the lamps stronger. The sky behind the farm's top and sides takes the season's
-  colour. When a morning brings a new season, the light eases over a second (at once with reduced motion).
-- **What stands in front fades only for what you're looking at.** At rest nothing is faded, except that a roof or a tree
-  in front of an Uma with a Ready bubble fades so she shows through. With a place's quick look open, a roof or a tree in
-  front of that place's work slots fades to about a third.
-- **The camera opens** with the band of the first place showing a Ready badge (in map order) at the top of the view,
-  else the Fields'. It keeps its place between visits to Home for the rest of the session. A new screen size settles it on
-  a band again.
-- If the stage refuses to build the farm, Home shows the error in a line over it.
-
-#### The Umas on the farm
-
-The places keep one look; the Umas show the work. Days are turns, so nobody moves while the app is closed: the farm
-shows where the save puts everyone now.
-
-**Who stands where.** The same Umas the pips show:
-- **At work:** every Uma whose job holds a slot stands on that slot, facing her work; every tender stands on her block's
-  slot on the Fields.
-- **Idle:** everyone else on the farm stands in the yard, facing you. The spots fill in this order: the Dorm's apron
-  (middle, left, right), the path in front of it (middle, left, right), the path row on toward the shipping bin, then
-  the free tiles of the open ground beside the Gate. A tile under a building or a solid landmark, or in water, rock or the
-  pit, is never a spot. With more Umas than spots, they share spots from the first. An idle Uma keeps her spot while it's still
-  free, so putting one Uma to work never shuffles the others.
-- **A spouse in her house** stands on her house's apron, then on the path in front of it.
-- **Nobody who lives in town.**
-
-**How they move.**
-- **At the app's start, on a new morning, and when a sync brings a save this phone didn't make, everyone stands where
-  she belongs at once.** The counts never wait on a walk.
-- **A change made on this phone the same day moves only who moved:** an Uma put to work (from a quick look, a place's
-  page or the Fields) walks from where she stood to her slot; one recalled, or collected with nothing queued next, runs
-  home; one who joins the farm walks in from the Gate; one who leaves runs out of it. Walking is 3 tiles a second,
-  running 5.4.
-- **A walk started away from Home plays when Home comes back:** Home keeps what it last showed for the session, so a job
-  started on a place's page walks her to her slot on return. One still walking when Home closed walks again from where
-  she set out.
-- **A walk a rebuild can't keep** (a crop grows, a place opens) starts again from where she stands. One with no way
-  through stands on her tile at once.
-
-**Ready bubbles.** A round card with a tail over a Ready Uma's head, rising as it appears (no rise with reduced motion):
-- **Her work's item** when she has something to collect (a station's output; the Forest's or the Fishery's haul each
-  morning of a longer job). A place has as many bubbles as it has slots with something to collect.
-- **The crop** over a tender whose block has a Ready plot.
-- **♥** in the corner of either when her heart event is Ready too, or **♥ alone** over an Uma with nothing to
-  collect.
-- Nothing while she simply works.
-
-**A bubble's tap** (a 44 pt target, kept inside the stage's edges):
-- **Her work's bubble collects her work.** The items rise in an arc to the Warehouse (up to three icons and the count;
-  none with reduced motion), then she starts her queued job or runs home.
-- **A crop bubble harvests her block,** the crop and its count rising the same way.
-- **A ♥ bubble plays her event.**
-- A collect the rules refuse changes nothing, and the bubble stays.
-
-**How they look.**
-- **A sprite** for an Uma whose outfit has a sprite set in master data, once her set is live. At most **8 sets are live
-  at once**, for the Umas in view nearest the middle of the view; a set that's live stays live while one of its Umas is in
-  view, and the rest wait as standees until a set frees up. Sets download the first time they're needed and stay on the
-  phone.
-- **A standee** for everyone else, and for an Uma while her set loads: her face on an upright card on a small wooden base,
-  gliding with a small bob. A plain card shows until her face arrives, or when master data has none.
-- An Uma's look comes from her outfit in the story pack's cast.
-
-**The working nod.** An Uma at work nods now and then: her sprite set's nod, played once, then back to her stance.
-- **Who:** only an Uma at work (a worker on her slot, a tender on her block's slot) standing there as a live sprite. A
-  standee, an Uma walking or running, and an idle Uma don't nod.
-- **When:** every 4 to 7 seconds, a gap drawn afresh each time from a seed of her id, so the Umas at work never nod in
-  step and each keeps her own rhythm every visit. Her first nod comes one gap after she stands at her slot (or Home
-  opens).
-- **With reduced motion,** nobody nods.
-- A walk, a placing, her set changing or the farm being rebuilt around her cuts a nod short.
-
-#### Battery
-
-- The stage runs at 30 frames a second.
-- **The loop stops at rest.** It runs only while something moves (a finger, the camera, a walk, a fade, a set loading,
-  the light easing, a nod) and stops once the stage reports it's still, no finger is down and nobody walks; the still
-  frame is drawn once.
-- **Between nods the stage rests.** A timer wakes the loop for each nod, only when the stage takes it (a live sprite
-  standing still), and the loop stops again once she's back to her stance.
-- It also stops while the app is in the background, and while a full-screen scene or sheet covers Home (an event, a
-  conversation, the evening, a level-up, the household and the like). No nod timer runs then, or once Home is left.
-
-#### Not there yet
-
-- **The farm-work animations** (Umas digging, fishing, hammering) aren't built.
-- **The workshops' games** (the Kitchen, the Restaurant and the Forge) aren't built, on the stage or off it.
+## Part 4 — The save
 
 ### The save, as a player meets it
 
@@ -4643,7 +4421,7 @@ lost; nothing restores it automatically. The phone keeps its changes, and Accoun
 
 #### What the app says
 
-| State | Account's "Save" row | The account bar's chip |
+| State | Account's "Save" row | The bar's sync chip |
 |---|---|---|
 | Syncing | Syncing… | — |
 | Offline | Offline · saved on this phone | Offline |
@@ -4654,7 +4432,7 @@ lost; nothing restores it automatically. The phone keeps its changes, and Accoun
 | Never synced | Not synced yet | — |
 
 - Account also shows **Last synced**, the build, master data's release and the story's (**Story**: "Release 4, 14 Nov
-  2026", or "No story yet"). Account scrolls, so its last rows clear the bottom bar. The chip opens Account.
+  2026", or "No story yet"). Account scrolls, its panels two to a row where they fit. The chip opens Account.
 - **"Not backed up since …"** shows on every page once a sync has failed (not merely offline) with changes waiting and
   the last good sync is ten minutes old or more: "Not backed up since 8 Nov, 14:05. Your progress is only on this
   device." It opens Account.

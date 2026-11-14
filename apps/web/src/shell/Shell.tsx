@@ -1,5 +1,6 @@
-// The shell (uma-kit's AppFrame, unchanged): the top bar, the page between, the bottom bar in the thumb zone, and the
-// menu sheet (`?sheet=menu`). End the day (`?sheet=end`) and calendar (`?sheet=calendar`); the bin
+// The shell (uma-kit's AppFrame on the landscape stage, a row): the rail down the left, then the page under the thin bar,
+// and the menu's panel (`?sheet=menu`). The page keeps clear of the right and bottom safe areas (the notch's side and the
+// home indicator). End the day (`?sheet=end`) and calendar (`?sheet=calendar`); the bin
 // (`?sheet=bin`) and shop (`?sheet=shop`); the Farm Rank (`?sheet=rank`). Each is loaded when one opens. While the
 // farmer is unnamed, the name sheet covers everything, the game's first screen; then a scene due plays over everything
 // (the opening, the ring bench's, then the meeting scenes: right after a talk met her, in town or at the Gate). Over any
@@ -15,7 +16,7 @@ import { lazy, Suspense } from 'react'
 import { Outlet, useLocation, useSearchParams } from 'react-router'
 import { useGame } from '../save/game'
 import { castIds, useStory } from '../story/story'
-import { FarmAccountBar, FarmBottomBar, type BarPage } from './Bars'
+import { FarmBar, FarmRail, railPageOf } from './Bars'
 import { MenuSheet } from './MenuSheet'
 import { SyncWarning } from './SyncWarning'
 
@@ -31,7 +32,6 @@ const HomesteadSheet = lazy(() => import('../loop/HomesteadSheet'))
 const NightLevel = lazy(() => import('../loop/NightLevel'))
 const HouseholdPlayer = lazy(() => import('../loop/HouseholdPlayer'))
 
-const PAGES: Readonly<Record<string, BarPage>> = { '/': 'farm', '/hearts': 'hearts', '/diary': 'diary' }
 const SHEETS = ['end', 'calendar', 'bin', 'shop', 'rank'] as const
 type LoopSheet = typeof SHEETS[number]
 const isLoopSheet = (sheet: string | null): sheet is LoopSheet => (SHEETS as readonly (string | null)[]).includes(sheet)
@@ -54,8 +54,7 @@ export function Shell() {
   const free = farm && !naming && !scene
   return (
     <AppFrame
-      top={<><FarmAccountBar /><SyncWarning /></>}
-      bottom={<FarmBottomBar page={PAGES[location.pathname] ?? null} />}
+      top={<FarmRail page={railPageOf(location.pathname)} />}
       overlays={
         <>
           <MenuSheet open={sheet === 'menu'} onClose={() => leave(withParam(location, 'sheet', null))} />
@@ -73,7 +72,15 @@ export function Shell() {
         </>
       }
     >
-      <Outlet />
+      <div className="flex h-full flex-col" data-farm-frame>
+        <FarmBar />
+        <SyncWarning />
+        <div className="pr-safe pb-safe relative min-h-0 flex-1">
+          <div className="relative h-full" data-farm-page>
+            <Outlet />
+          </div>
+        </div>
+      </div>
     </AppFrame>
   )
 }

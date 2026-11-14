@@ -3,7 +3,8 @@
 // then on its Hearts side the route as one track (F ◆ R ◇ S), the Next card (the rung, its perk, its place and setup in
 // her bible's hint, the bar and what's banked, and what it waits for), Perks (reached ✓, the next, the rest greyed), Gifts
 // as learnt (others +10), Ties (her bonds' hearts), Memories' count and her ring once given; on its Work side the sheet
-// (her nine activities). Chat +15, Gift and Praise +20 sit in the thumb zone with Hearts | Work. Each section shows only
+// (her nine activities). Chat +15, Gift and Praise +20 sit at the panel's foot; Hearts | Work under her face, held at
+// the panel's top as it scrolls. Each section shows only
 // what exists: **Play ›** on the Next card when her event is Ready (what a setup needs said when it isn't, and **Ask
 // her** after her confession's "Not yet"), and Memories' album (`?album=`); Evening ›, the perks' effects,
 // the ring and her house. Ties: her closest friend first and marked, each bond's hearts and the points to
@@ -73,10 +74,9 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
       title={name}
       label={`${name}: her profile`}
       footer={
-        <div className="space-y-2" data-profile-actions>
+        <div data-profile-actions>
           <LoveActs save={save} pack={pack} id={id} name={name} temperament={temperament} master={master}
             onPaid={(points) => setFloat((f) => ({ points, key: (f?.key ?? 0) + 1 }))} />
-          <Tabs label="Her profile" value={side} onChange={onSide} options={[{ value: 'hearts', label: 'Hearts' }, { value: 'work', label: 'Work' }]} />
         </div>
       }
     >
@@ -92,6 +92,10 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
           </p>
           {side === 'hearts' ? <p className="text-[13px] text-ink-soft" data-profile-line>{profileLine(save, pack, id, birthdays).join(' · ')}</p> : row && <WorkFacts row={row} />}
         </div>
+      </div>
+      {/* Hearts | Work under her face, held at the panel's top as it scrolls, so the acts' row is the whole foot. */}
+      <div className="sticky top-0 z-10 -mx-4 bg-panel px-4 pb-3" data-profile-sides>
+        <Tabs label="Her profile" value={side} onChange={onSide} options={[{ value: 'hearts', label: 'Hearts' }, { value: 'work', label: 'Work' }]} />
       </div>
       {!atHome(save, id) && <InviteCard save={save} id={id} />}
       {side === 'work'
