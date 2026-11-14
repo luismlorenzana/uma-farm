@@ -12,9 +12,14 @@ deployed site is the work in progress: saves can start over whenever the game ne
 |---|---|---|---|
 | **Game's frame** | **Done.** Shipped: placeholders everywhere, the farm grows by building ([the farm's progress](../game-mechanics.md#the-farms-progress)), the lean start ([the opening](../game-mechanics.md#the-opening)), the town ([the town](../game-mechanics.md#the-town)), meeting her ([meeting her](../game-mechanics.md#meeting-her)), and her chapters ([her chapters](../game-mechanics.md#her-chapters)). Next: the workshops (Phase 2) | Claude | Waits for your go |
 | **HD-2D farm** | **Done:** the working nod. An Uma at work drawn as a sprite nods every 4–7 seconds, seeded by her id, none with reduced motion, on uma-stage's `emote` ([the Umas on the farm](../game-mechanics.md#the-umas-on-the-farm)). Next on this track: the kit's second wave, then the farm reaches the Hub | Claude | Shipped |
+| **Story's way in** | **Ship the story** (`pnpm story:ship`, numbered releases, "New story arrived"), then **the world in the pack** (`world.json`, Town notes) | Claude | [F72](tasks/F72-story-ship.md) next, then [F73](tasks/F73-world-in-the-pack.md) |
+| **Story's way in** | **The ship routine and the World Book:** ship at the end of every writing session; keep the World Book with "For the game" | The story session | [F40](tasks/F40-story-authoring.md) |
+| **Design** | **The game's design:** one clear document for your review, drawing on the World Book | Claude | After F72 |
 | **HD-2D farm** | **The kit's second wave:** the 30 frames the stand-in still draws, painted in code | Claude, in a uma-platform session | [F9](tasks/F9-kit-farm.md): waits for your go |
 | **Story** | **Free authoring:** the world, the backgrounds, the characters, however the story wants. The pack is open: every part optional, notes instead of blocks | You and the story session | [F40](tasks/F40-story-authoring.md): how it reaches the game; [the pack's menu](../story-pack.md) |
-| **Her look** | **The bust art:** her outfits (8) and her expressions (22); the pilot is the two Umas with the new full art | ChatGPT | [F69](tasks/F69-bust-art-spec.md): ready to hand over |
+| **Her look** | **The bust art:** her outfits (8) and her expressions (22); the pilot is the two Umas with the new full art | ChatGPT | [F72](tasks/F72-story-ship.md) | Ship the story: one command where it's written, numbered releases, the morning's "New story arrived" | Claude |
+| [F73](tasks/F73-world-in-the-pack.md) | The world in the pack: names, history, festivals, places, seasons, Town notes | Claude |
+| [F69](tasks/F69-bust-art-spec.md): ready to hand over |
 | **Her look** | Busts that change expression, then her wardrobe | Claude | [F70](tasks/F70-expressive-busts.md) after F69's pilot, [F71](tasks/F71-her-wardrobe.md) after F70 |
 
 ## Open packets

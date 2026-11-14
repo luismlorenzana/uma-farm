@@ -40,9 +40,49 @@
   - **Her chapters:** how many, their titles and which of her events each holds are the story's choice too, all
     optional, with an optional farm gate each ([her chapters](../../game-mechanics.md#her-chapters)); with none, she has
     four default chapters.
-- **Going live:** when the owner wants a pack in the game, `pnpm story:release` builds it (it prints what it skipped and
-  the notes), and Claude publishes it (`pnpm story:publish`) to the farm's private bucket. Any pack can go; a partial one
-  is normal.
+- **Going live:** see the ship routine below. Any pack can go; a partial one is normal.
+
+## The ship routine (from 2026-11-14)
+
+The owner wants the story to reach the game regularly. So:
+
+- **At the end of every writing session, ship:** `pnpm story:ship --note "what's new, in one line"`, run where the story
+  is written.
+  - It checks the pack (notes only), builds the release, publishes it to the farm's private bucket, and backs the
+    drafts up to uma-platform (`story:push farm`).
+  - The phone picks it up on its next open, and the morning says "New story arrived" with your note.
+  - Until [F72](F72-story-ship.md) lands, `pnpm story:release` then `pnpm story:publish` do the same, minus the number,
+    the note and the backup.
+- **The machine:** gcloud signed in with the owner's account. `STORY_GCLOUD_CONFIG` names its configuration if it isn't
+  `default`.
+- **Ship partial work freely.** A pack only ever adds to what the game already plays, and a rollback is
+  `pnpm story:ship --release <n>`.
+- **The owner can ask for a ship at any time** ("ship it").
+
+## The World Book (from 2026-11-14)
+
+The world building informs the game too, in two ways:
+
+- **What the player sees: `content/story/world.json` in the pack**, every part optional ([F73](F73-world-in-the-pack.md)
+  builds the game's side):
+  - the town's and the farm's names;
+  - the farm's history;
+  - the festivals (name, day, what happens);
+  - each place's name and line;
+  - a line for each season;
+  - **Town notes**: short pieces of the world that unlock as the farmer meets people and visits places.
+
+  `docs/story-pack.md` lists the exact shape once F73 lands.
+- **What shapes the game: the World Book,** `content/story/world-book.md`, kept up to date and shipped with every pack
+  (it travels with `story:push farm`). It holds:
+  - the world bible and its history;
+  - every character's background, the families and crews, the town and its places;
+  - **"For the game":** what the story wants the game to support, one item each, with why.
+
+  The game's sessions read it before designing anything (`pnpm story:pull farm` on the Mac), and the owner reads it on
+  uma-platform's Uma Story site. "For the game" replaces scattering requests across packets: the game's side picks
+  them up from there into its own packets.
+- **Private as always:** the World Book names real characters, so it never goes in git.
 
 ## What the game itself assumes
 
