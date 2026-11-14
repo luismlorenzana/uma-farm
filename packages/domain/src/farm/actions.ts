@@ -17,7 +17,7 @@ export const DAY_ACTIONS = 10
 
 /** Every action the design prices. */
 export const ACTION_IDS = [
-  'clear', 'till', 'plant', 'water', 'harvest', 'water-row',
+  'clear', 'till', 'plant', 'water', 'harvest', 'water-row', 'grass',
   'animal', 'buy-animal',
   'forage', 'chop', 'fish',
   'mine', 'stairs',
@@ -48,13 +48,14 @@ export const ACTIONS: readonly ActionRule[] = [
   rule('water', 'The fields', 'Water a tile', 1),
   rule('harvest', 'The fields', 'Harvest a tile', 1),
   rule('water-row', 'The fields', 'Water a row: a farmhand’s trick, from Watering 6', 1),
-  rule('animal', 'Animals', 'Feed, brush or care for one; collect eggs, milk or wool; let them out or bring them in', 1, 'the ranch'),
-  rule('buy-animal', 'Animals', 'Buy an animal, at the rancher’s in town', 0, 'the ranch'),
+  rule('grass', 'The fields', 'Cut grass on a weeds tile, for the silo', 1),
+  rule('animal', 'Animals', 'Feed one, or care for one; collect a building’s eggs, milk or wool', 1),
+  rule('buy-animal', 'Animals', 'Buy an animal or fodder, at the rancher’s in town', 0),
   rule('forage', 'The woods and the water', 'Forage once', 1),
   rule('chop', 'The woods and the water', 'Chop a log', 1),
   rule('fish', 'The woods and the water', 'Fish once', 1),
-  rule('mine', 'The mine', 'Work a face once', 1, 'the mine'),
-  rule('stairs', 'The mine', 'Take the stairs', 0, 'the mine'),
+  rule('mine', 'The mine and the quarry', 'Work a face once', 1),
+  rule('stairs', 'The mine and the quarry', 'Take the stairs, once found', 0),
   rule('load', 'Stations', 'Start a load', 1),
   rule('ship', 'The bin', 'Ship what you choose', 1),
   rule('town', 'The town', 'Go into town', 1),

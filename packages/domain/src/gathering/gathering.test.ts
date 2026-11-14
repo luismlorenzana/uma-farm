@@ -246,9 +246,13 @@ describe('the stations\' loads', () => {
     expect(stationJobOf('apple-preserve')).toBe('preserves')
     expect(stationJobOf('dried-shiitake')).toBe('drying')
     expect(stationJobOf('carp-fillet')).toBe('smoking')
-    expect(stationJobOf('copper-ingot')).toBeNull()
+    expect(stationJobOf('copper-ingot')).toBe('smelting')
+    expect(stationJobOf('cut-quartz')).toBe('cutting')
+    expect(stationJobOf('limestone-block')).toBe('blocks')
+    expect(stationJobOf('wool-cloth')).toBe('weaving')
     expect(stationJobOf('carrot')).toBeNull()
-    expect(STATION_JOB_IDS).toHaveLength(6)
+    expect(stationJobOf('egg')).toBeNull()
+    expect(STATION_JOB_IDS).toHaveLength(10)
   })
 
   it('makes preserves overnight too', () => {

@@ -67,9 +67,10 @@ export function mapLots(shown: readonly HomesteadPlace[]): { lots: Lot[]; road: 
 export const tileArea = (index: number): Area => ({ col: FIELD.col + (index % FIELD_COLUMNS), row: FIELD.row + Math.floor(index / FIELD_COLUMNS), cols: 1, rows: 1 })
 
 /** The places whose screens have landed, each with where a tap on it goes: the bin and shop (their sheets over the farm)
- * and the Warehouse; the woods' edge, the pond's edge and the three stations (their menus, in the side panel); the Dorm
- * (its page), the Gate (its quick look, the visitor waiting), the Dock (its quick look, with the Boat to build) and the
- * Town (its screen). The field is its tiles. Until then a place shows "Soon". */
+ * and the Warehouse; the woods' edge, the pond's edge, the five stations, the Coop and the Barn, the Mine and the Quarry
+ * (their menus, in the side panel); the Dorm (its page), the Gate (its quick look, the visitor waiting), the Dock (its
+ * quick look, with the Boat to build) and the Town (its screen). The field is its tiles. Until then a place shows
+ * "Soon". */
 export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlaceId, string>([
   ['fields', '/'],
   ['forest', '/?peek=forest'],
@@ -77,6 +78,12 @@ export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlace
   ['mill', '/?peek=mill'],
   ['sawmill', '/?peek=sawmill'],
   ['smokehouse', '/?peek=smokehouse'],
+  ['smelter', '/?peek=smelter'],
+  ['cutter', '/?peek=cutter'],
+  ['coop', '/?peek=coop'],
+  ['barn', '/?peek=barn'],
+  ['mine', '/?peek=mine'],
+  ['quarry', '/?peek=quarry'],
   ['bin', '/?sheet=bin'],
   ['shop', '/?sheet=shop'],
   ['warehouse', '/warehouse'],

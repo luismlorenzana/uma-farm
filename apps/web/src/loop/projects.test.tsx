@@ -120,7 +120,7 @@ describe("the Diary's projects", () => {
     expect($('[data-project="mill"]')?.textContent).toContain('1,000g · 20 logs')
     expect($('[data-project="mill"]')?.getAttribute('href')).toBe('/?peek=mill')
     expect($('[data-next-offers]')?.textContent).toContain('At Farm Rank 2 · 150 points')
-    expect($$('[data-offer]').map((o) => o.textContent)).toEqual(['CoopNot built yet'])
+    expect($$('[data-offer]').map((o) => o.textContent)).toEqual(['Coop2,000g · 30 logs · 20 vegetables'])
     expect($$('[data-milestone]').map((m) => [m.dataset.milestone, m.querySelector('[data-count]')?.textContent])).toEqual([
       ['bench', 'Not yet'], ['house', '0 / 1 married'], ['row', '0 / 3 married'], ['row', '0 / 6 married'], ['board', '3 / 5 met'],
     ])
@@ -150,8 +150,11 @@ describe("the Diary's projects", () => {
     expect($('[data-project="mill"] [data-state]')?.textContent).toBe('Build ›')
     useGame.setState({ save: { ...farm(), farm: { ...farm().farm, points: 300, builds: ['sawmill'] }, buildings: { dorm: 1, mill: 1 } } })
     await render(<DiaryPage />, '/diary')
-    expect($$('[data-project]').map((p) => [p.dataset.project, p.querySelector('[data-state]')?.textContent])).toEqual([['sawmill', 'Builds tonight'], ['smokehouse', 'Need 1,500g, 30 logs and 20 fish more']])
-    expect($('[data-waiting]')?.textContent).toBe('Not built yet: the Coop, the Barn')
+    expect($$('[data-project]').map((p) => [p.dataset.project, p.querySelector('[data-state]')?.textContent])).toEqual([
+      ['coop', 'Need 1,500g, 30 logs and 20 vegetables more'], ['sawmill', 'Builds tonight'], ['barn', 'Need 3,000g, 30 logs and 20 vegetables more'],
+      ['smokehouse', 'Need 1,500g, 30 logs and 20 fish more'],
+    ])
+    expect($('[data-waiting]')).toBeNull()
     expect($$('[data-offer]').map((o) => o.dataset.offer)).toEqual(['mine', 'smelter'])
   })
 
@@ -181,9 +184,9 @@ describe('building a place', () => {
   })
 
   it('shows a place whose game isn\'t built yet as "Not built yet", which can\'t be bought', async () => {
-    useGame.setState({ save: { ...farm(), gold: 99_999, farm: { ...farm().farm, points: 300 } } })
-    await render(<FarmRoute />, '/?peek=coop')
-    const card = await find('[data-build="coop"]')
+    useGame.setState({ save: { ...farm(), gold: 99_999, farm: { ...farm().farm, points: 2200 } } })
+    await render(<FarmRoute />, '/?peek=kitchen')
+    const card = await find('[data-build="kitchen"]')
     expect(card.dataset.lock).toBe('game')
     expect(card.querySelector('[data-build-lock]')).toBeNull()
     const button = card.querySelector('[data-action="build"]') as HTMLButtonElement
@@ -211,7 +214,10 @@ describe('the Farm Rank', () => {
     expect($('[data-rank-sheet="1"]')).not.toBeNull()
     expect($('[data-points]')?.textContent).toBe('47 points')
     expect($('[data-next]')?.textContent).toBe('103 more for Farm Rank 2 (150)')
-    expect($$('[data-opens] li').map((li) => li.textContent)).toEqual(['The Coop to build (not built yet)', 'The Hills', 'The River', 'The Sea Pier (with the Dock)', 'Dorm level 3 (7 beds)', 'New seeds at the shop'])
+    expect($$('[data-opens] li').map((li) => li.textContent)).toEqual([
+      'The Coop to build (2,000g · 30 logs · 20 vegetables)', 'The Hills', 'The River', 'The Sea Pier (with the Dock)', 'Chickens at the rancher’s', 'Dorm level 3 (7 beds)',
+      'New seeds at the shop',
+    ])
     expect($$('[data-source]').map((li) => li.textContent)).toEqual(['Shipping · 1 per 100g42', 'Diary entries · 5 each5', 'Milestones · 25 each0'])
   })
 })
@@ -224,7 +230,10 @@ describe("the morning's goal lines", () => {
     }
     expect(summaryParts(summary)[0]!.lines).toEqual([
       { key: 'built:boat', text: 'Built overnight · the Boat', to: '/?peek=dock', tag: 'Built' },
-      { key: 'farm-rank:2', text: 'Farm Rank 2 · The Coop to build (not built yet), The Hills, The River, The Sea Pier (with the Dock), Dorm level 3 (7 beds), New seeds at the shop', to: '/?sheet=rank', tag: 'Farm Rank' },
+      {
+        key: 'farm-rank:2', to: '/?sheet=rank', tag: 'Farm Rank',
+        text: 'Farm Rank 2 · The Coop to build (2,000g · 30 logs · 20 vegetables), The Hills, The River, The Sea Pier (with the Dock), Chickens at the rancher’s, Dorm level 3 (7 beds), New seeds at the shop',
+      },
       { key: 'milestone:rank:hand', text: 'First Uma at Hand · +300g', to: '/diary', tag: 'Milestone' },
       { key: 'milestone:row:woods:refined', text: 'Woods, refined: every grade shipped · +500g', to: '/diary', tag: 'Milestone' },
     ])

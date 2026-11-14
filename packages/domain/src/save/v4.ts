@@ -2,7 +2,8 @@
 // fresh v5 (`freshV5`), its `account` copied whole, so `updatedAt` moves only with the player's first change (the
 // farmer's name). The new farm is made in the app, never in `parseSave`: the API reads an older save's version and account
 // only, and never makes a save. v5 is v4 with the fields as tiles the farmer works by hand, a day of actions, and the
-// stations' loads; the Umas' work rows and the Fields' blocks are gone. It grows in place while the game is being built.
+// stations' loads; the Umas' work rows and the Fields' blocks are gone. It grows in place while the game is being built:
+// the ranch's animals and silo and the digs' floors read an older shape leniently (`parseRanch`, `parseDig`).
 //
 // The module keeps its name, and the type its old name as an alias (`SaveV4`), so the code that reads the save didn't
 // move with the version.
@@ -103,30 +104,47 @@ export interface StationLoad {
   count: number
 }
 
+// --- The ranch and the mine -----------------------------------------------------------------------------------------
+
+/** The ranch's animals: the Coop's two, then the Barn's five. Their prices and goods are the ranch's (`ranch/ranch.ts`). */
 export const ANIMAL_KINDS = ['chicken', 'duck', 'cow', 'goat', 'sheep', 'alpaca', 'cashmere-goat'] as const
 export type AnimalKind = typeof ANIMAL_KINDS[number]
+/** The ranch's two buildings. */
+export const RANCH_HOMES = ['coop', 'barn'] as const
+export type RanchHome = typeof RANCH_HOMES[number]
 /** Where each kind lives. */
-export const ANIMAL_HOME: Readonly<Record<AnimalKind, 'coop' | 'barn'>> = {
+export const ANIMAL_HOME: Readonly<Record<AnimalKind, RanchHome>> = {
   chicken: 'coop', duck: 'coop', cow: 'barn', goat: 'barn', sheep: 'barn', alpaca: 'barn', 'cashmere-goat': 'barn',
 }
+/** Fondness runs 0–200: a heart every 20, ten hearts at the top. */
+export const MAX_FONDNESS = 200
+/** The most animals each building holds. */
+export const HOME_ROOM = 8
+/** The most feed the silo holds. */
+export const SILO_ROOM = 200
+
+/** An animal on the ranch: its kind (its home is its kind's), its fondness, and today: fed, cared for, and whether its
+ * good waits to be collected (made at night when it was fed; one at a time). */
 export interface Animal {
   id: string
   kind: AnimalKind
-  building: 'coop' | 'barn'
-  affection: number
-  /** Days in a row with the same carer. */
-  streak: number
-  carer: OutfitId | null
-  /** Days to her next product. */
-  next: number
+  fondness: number
+  fed: boolean
+  cared: boolean
+  ready: boolean
 }
 
-/** A dig's progress: the deepest floor reached and the stairs-days found toward the next. */
+/** A dig at the Mine or the Quarry: the deepest floor reached (0 before its first face; floor 1 is open once it stands)
+ * and the faces worked on that floor toward its stairs. */
 export interface Dig {
   deepest: number
   stairs: number
 }
+/** The digs' floors: 30 each. */
 export const DEEPEST_FLOOR = 30
+/** The two digs. */
+export const DIGS = ['mine', 'quarry'] as const
+export type DigId = typeof DIGS[number]
 
 /** The buildings with levels: absent or 0 is not built (the Forge's 0 is its ring bench, its fire not lit), 1 or more
  * is built. Every place you build is one (`farm/builds.ts`); the Dorm's is the level bought. */
@@ -264,25 +282,29 @@ export interface Love {
 
 // --- The work board: a farmhand's tasks, and her aptitudes ---------------------------------------------------------
 
-/** The work board's tasks, as the farm has them today: the field's (a list of its tiles), a station's load, a forest
- * area's forage or chop, a fishing spot's catch. The ranch's care and the mine's faces come with them. */
-export const TASK_KINDS = ['harvest', 'water', 'plant', 'till', 'load', 'forage', 'chop', 'fish'] as const
+/** The work board's tasks: the field's (a list of its tiles), a station's load, a forest area's forage or chop, a fishing
+ * spot's catch, the Coop's or the Barn's care, and a face at the Mine or the Quarry. */
+export const TASK_KINDS = ['harvest', 'water', 'plant', 'till', 'load', 'forage', 'chop', 'fish', 'care', 'mine'] as const
 export type TaskKind = typeof TASK_KINDS[number]
 /** The field's tasks, each over a list of tiles. */
 export const TILE_TASKS = ['harvest', 'water', 'plant', 'till'] as const
 export type TileTaskKind = typeof TILE_TASKS[number]
 /** One task on a farmhand's board: the field's over its tiles (planting one crop, or any in season), a station's load,
- * an area's forage or chop, a spot's catch. It repeats each day until you change it. */
+ * an area's forage or chop, a spot's catch, a building's animals, a dig's deepest floor. It repeats each day until you
+ * change it. */
 export type FarmTask =
   | { kind: Exclude<TileTaskKind, 'plant'>; tiles: number[] }
   | { kind: 'plant'; tiles: number[]; crop?: CropId }
   | { kind: 'load'; station: StationId }
   | { kind: 'forage' | 'chop'; area: ForestAreaId }
   | { kind: 'fish'; spot: FishingSpotId }
+  | { kind: 'care'; home: RanchHome }
+  | { kind: 'mine'; dig: DigId }
 /** The most tasks one farmhand's board holds. */
 export const MAX_TASKS = 6
-/** Her aptitudes: one for each task, a station's load one for each station. */
-export const APTITUDE_IDS = ['harvest', 'water', 'plant', 'till', 'forage', 'chop', 'fish', 'mill', 'sawmill', 'smokehouse'] as const
+/** Her aptitudes: one for each task, a station's load one for each station; the Coop's and the Barn's care are one, and
+ * so are the faces at either dig. */
+export const APTITUDE_IDS = ['harvest', 'water', 'plant', 'till', 'forage', 'chop', 'fish', 'mill', 'sawmill', 'smokehouse', 'care', 'mine', 'smelter', 'cutter'] as const
 export type AptitudeId = typeof APTITUDE_IDS[number]
 
 /** An Uma on the roster. Talents aren't saved: they're read from master data each boot. */
@@ -492,8 +514,11 @@ export interface SaveV5 {
   /** Each station's load started today, ready the next morning. */
   loads: Partial<Record<StationId, StationLoad>>
   crops: Partial<Record<CropId, number>>
-  ranch: { animals: Animal[] }
-  places: { mine: Dig; quarry: Dig }
+  /** The Coop's and the Barn's animals, in the order bought, and the feed in the silo. A save from before the ranch has no
+   * silo: none. */
+  ranch: { animals: Animal[]; silo: number }
+  /** The Mine's and the Quarry's digs. */
+  places: Record<DigId, Dig>
   buildings: Partial<Record<BuildingId, number>>
   tools: Record<ToolId, ToolTier>
   workshops: { played: Record<WorkshopId, number>; current: PlayInProgress | null; recipes: string[]; best: Record<string, number> }
@@ -556,7 +581,7 @@ export function newSave(uid: string, now: string): SaveV5 {
     fields: { tiles: startField(uid) },
     loads: {},
     crops: {},
-    ranch: { animals: [] },
+    ranch: { animals: [], silo: 0 },
     places: { mine: { deepest: 0, stairs: 0 }, quarry: { deepest: 0, stairs: 0 } },
     buildings: { dorm: 1 },
     tools: Object.fromEntries(TOOL_IDS.map((t) => [t, 1])) as Record<ToolId, ToolTier>,

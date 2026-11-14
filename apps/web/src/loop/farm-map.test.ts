@@ -38,8 +38,11 @@ describe('the farm map', () => {
   it('says what opens a locked place, and "Soon" for one whose screens haven\'t landed', () => {
     const lock = (id: string, save = day1) => lockOf(save, farmPlace(id)!)
     expect([lock('mine'), lock('sawmill'), lock('mill'), lock('coop'), lock('board'), lock('kitchen'), lock('dock'), lock('fields')]).toEqual([
-      'Not built yet', 'Farm Rank 3', 'Not built', 'Not built yet', '5 Umas met', 'Not built yet', 'Farm Rank 6', null,
+      'Farm Rank 4', 'Farm Rank 3', 'Not built', 'Farm Rank 2', '5 Umas met', 'Not built yet', 'Farm Rank 6', null,
     ])
+    // Built, the Coop, the Barn, the Mine and the Quarry open their panels, as the Smelter and the Cutter do.
+    const built = { ...day1, buildings: { ...day1.buildings, coop: 1, barn: 1, mine: 1, quarry: 1, smelter: 1, cutter: 1 } }
+    expect(['coop', 'barn', 'mine', 'quarry', 'smelter', 'cutter'].map((id) => lock(id, built))).toEqual([null, null, null, null, null, null])
     // Paid today, it builds tonight; built, the Dock opens its quick look (the Boat's Build).
     expect(lock('mill', { ...day1, farm: { ...day1.farm, builds: ['mill'] } })).toBe('Builds tonight')
     expect(lock('dock', { ...day1, buildings: { ...day1.buildings, dock: 1 } })).toBeNull()

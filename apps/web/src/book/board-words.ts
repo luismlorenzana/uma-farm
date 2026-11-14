@@ -1,8 +1,9 @@
-// The work board's words: a task as the board lists it ("Water · rows 1 and 2", "Fish · the Pond", "Load the Mill"), a
+// The work board's words: a task as the board lists it ("Water · rows 1 and 2", "Fish · the Pond", "Load the Mill",
+// "Care for animals · the Coop", "Work a face · the Mine"), a
 // farmhand's day ("3 actions", "+1 well fed", "half pace"), her part-time job, what she did tonight, and her aptitudes'
 // levels and tricks. The morning's farmhand lines read the same words. Pure, so the board, the card and the tests agree.
 import {
-  APTITUDE_NAMES, AREA_NAMES, farmPlace, FIELD_COLUMNS, FIELD_ROWS, FIELD_TILES, handJob, isTileTask, itemNameOf, SPOT_NAMES, TASK_NAMES, townLocation,
+  APTITUDE_NAMES, AREA_NAMES, DIG_NAMES, farmPlace, FIELD_COLUMNS, FIELD_ROWS, FIELD_TILES, handJob, HOME_NAMES, isTileTask, itemNameOf, SPOT_NAMES, TASK_NAMES, townLocation,
   type FarmhandLine, type FarmTask, type HandDay, type StoryPack, type TaskKind,
 } from '@farm/domain'
 import { plural, theName } from '../loop/words'
@@ -35,13 +36,16 @@ export function taskWords(task: FarmTask): string {
     case 'load': return `Load ${theName(farmPlace(task.station)?.name ?? task.station)}`
     case 'forage': case 'chop': return `${TASK_NAMES[task.kind]} · ${theName(AREA_NAMES[task.area])}`
     case 'fish': return `Fish · ${theName(SPOT_NAMES[task.spot])}`
+    case 'care': return `${TASK_NAMES.care} · the ${HOME_NAMES[task.home]}`
+    case 'mine': return `${TASK_NAMES.mine} · the ${DIG_NAMES[task.dig]}`
     case 'plant': return `Plant${task.crop ? ` ${itemNameOf(task.crop)}` : ''} · ${tilesWords(task.tiles)}`
     default: return `${TASK_NAMES[task.kind]} · ${tilesWords(task.tiles)}`
   }
 }
 
-/** Whether a task stops when it's done for the day (the field's and a load) or runs on (her gathering). */
-export const runsOn = (task: FarmTask): boolean => !isTileTask(task) && task.kind !== 'load'
+/** Whether a task stops when it's done for the day (the field's, a load, the animals' care) or runs on (her gathering
+ * and digging). */
+export const runsOn = (task: FarmTask): boolean => !isTileTask(task) && task.kind !== 'load' && task.kind !== 'care'
 
 /** Her day in words beside her actions: settled in, married, well fed this morning, half pace. */
 export function dayChips(day: HandDay): string[] {
@@ -62,7 +66,7 @@ export function jobWords(pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack,
 }
 
 /** What she did, by task, in the board's order. */
-const DONE_ORDER: readonly TaskKind[] = ['harvest', 'water', 'plant', 'till', 'load', 'forage', 'chop', 'fish']
+const DONE_ORDER: readonly TaskKind[] = ['harvest', 'water', 'plant', 'till', 'load', 'care', 'forage', 'chop', 'fish', 'mine']
 export function doneWords(done: Partial<Record<TaskKind, number>>): string[] {
   const times = (n: number) => (n === 1 ? 'once' : n === 2 ? 'twice' : `${n} times`)
   return DONE_ORDER.flatMap((kind) => {
@@ -77,6 +81,8 @@ export function doneWords(done: Partial<Record<TaskKind, number>>): string[] {
       case 'forage': return [`foraged ${times(n)}`]
       case 'chop': return [`chopped ${times(n)}`]
       case 'fish': return [`caught ${plural(n, 'fish', 'fish')}`]
+      case 'care': return [`tended animals ${times(n)}`]
+      case 'mine': return [`worked ${plural(n, 'face')}`]
     }
   })
 }

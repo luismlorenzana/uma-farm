@@ -16,13 +16,14 @@ export const SPOT_NAMES: Readonly<Record<FishingSpotId, string>> = {
   pond: 'the Pond', river: 'the River', lake: 'the Lake', falls: 'the Falls', 'moon-pool': 'the Moon Pool', 'sea-pier': 'the Sea Pier', 'deep-sea': 'the Deep Sea',
 }
 
-/** The three stations, each at its gathering place's row. */
-export const STATIONS = ['mill', 'sawmill', 'smokehouse'] as const
+/** The five stations, each at its gathering place's row: the Mill, the Sawmill and the Smokehouse, then the mine's
+ * Smelter and the quarry's Cutter. */
+export const STATIONS = ['mill', 'sawmill', 'smokehouse', 'smelter', 'cutter'] as const
 export type StationId = typeof STATIONS[number]
 export const isStation = (id: string): id is StationId => (STATIONS as readonly string[]).includes(id)
 
 /** A station's job: where it runs and the families whose raw goods it refines one for one. Its days and name are
- * `STATION_JOB_RULES` (`tables.ts`). The Mill's Cloth waits for the ranch's wool. */
+ * `STATION_JOB_RULES` (`tables.ts`). The Mill weaves the Barn's wool and fleeces into cloth. */
 export interface StationJob {
   readonly station: StationId
   readonly families: readonly GoodFamily[]
@@ -31,9 +32,13 @@ export const STATION_JOBS = {
   flour: { station: 'mill', families: ['grains'] },
   'sugars-oils': { station: 'mill', families: ['sweets', 'nuts-seeds'] },
   preserves: { station: 'mill', families: ['fruits'] },
+  weaving: { station: 'mill', families: ['fibers'] },
   planks: { station: 'sawmill', families: ['woods'] },
   drying: { station: 'sawmill', families: ['mushrooms', 'herbs-spices'] },
   smoking: { station: 'smokehouse', families: ['fish'] },
+  smelting: { station: 'smelter', families: ['ores'] },
+  cutting: { station: 'cutter', families: ['crystals'] },
+  blocks: { station: 'cutter', families: ['stones'] },
 } as const satisfies Readonly<Record<string, StationJob>>
 export type StationJobId = keyof typeof STATION_JOBS
 export const STATION_JOB_IDS = Object.keys(STATION_JOBS) as StationJobId[]

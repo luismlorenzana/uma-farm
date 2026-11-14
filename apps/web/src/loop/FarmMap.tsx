@@ -1,8 +1,10 @@
 // The farm: `/`. A landscape tile map you look across, wider than the screen, so it scrolls sideways: the woods' edge,
 // the field's tiles over the pond's edge, a path, the farm's places on their lots (the yard, the homestead, the stations
 // and the rest) and the road to town. Tap a tile for its actions (`/?tile=<n>`): clear, till, plant, water, harvest,
-// one action each. Tap the woods' edge to forage or chop, the pond's to fish, a station to start a load (their menus in
-// the side panel, `/?peek=forest|fishery|<station>`), the bin to ship. A place's quick look opens in the side panel
+// one action each. Tap the woods' edge to forage or chop, the pond's to fish, a station to start a load, the Coop or the
+// Barn to feed, care for and collect, the Mine or the Quarry to work a face and take the stairs (their menus in the side
+// panel, `/?peek=forest|fishery|<station>|coop|barn|mine|quarry`, the ranch's and the digs' loaded on demand), the bin
+// to ship. A place's quick look opens in the side panel
 // too: what it is, and what opens it while it's locked; a place to build with its Build card (`BuildCard.tsx`; the
 // Dock's with the Boat's once it stands); the Gate's says the town is where you meet everyone. After a night the morning summary opens over the map until the player starts the
 // day; its Hearts section lists who's Ready, read live; its bond hearts carry Read while a conversation waits, which
@@ -10,8 +12,8 @@
 // is the ring bench's once it stands. A place's name and its quick look's line are the pack's `world.json` where it
 // gives them, else the game's own (`placeWordsOf`). Loaded on demand.
 import {
-  chapterTitle, farmPlace, herChapters, homesteadShown, isBuildPlace, placeBuilt, placeOpen, placeWordsOf, stationBuilt, STATIONS,
-  type BuildPlace, type FarmPlace, type FarmSave, type StationId,
+  ANIMAL_HOME, chapterTitle, farmPlace, herChapters, homesteadShown, isBuildPlace, placeBuilt, placeOpen, placeWordsOf, stationBuilt, STATIONS,
+  type BuildPlace, type DigId, type FarmPlace, type FarmPlaceId, type FarmSave, type RanchHome, type StationId,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { PeekPanel, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -38,8 +40,21 @@ const InviteAnswer = lazy(() => import('./InviteAnswer'))
 const BenchPeek = lazy(() => import('./BenchSheet').then((m) => ({ default: m.BenchPeek })))
 const HouseAnswer = lazy(() => import('./HouseAnswer'))
 const BuildCard = lazy(() => import('./BuildCard').then((m) => ({ default: m.BuildCard })))
+const RanchPanel = lazy(() => import('./RanchPanels').then((m) => ({ default: m.RanchPanel })))
+const DigPanel = lazy(() => import('./RanchPanels').then((m) => ({ default: m.DigPanel })))
 
 const isStation = (id: string): id is StationId => (STATIONS as readonly string[]).includes(id)
+const isHome = (id: string): id is RanchHome => id === 'coop' || id === 'barn'
+const isDig = (id: string): id is DigId => id === 'mine' || id === 'quarry'
+/** A place's tag on the map: a load ready tomorrow, the goods waiting in the Coop or the Barn, the floor a dig is on. */
+function placeTag(save: FarmSave, id: FarmPlaceId): string | null {
+  if (isStation(id) && stationBuilt(save, id) && save.loads[id]) return 'Ready tomorrow'
+  if (isHome(id) && placeBuilt(save, id)) {
+    const ready = save.ranch.animals.filter((a) => a.ready && ANIMAL_HOME[a.kind] === id).length
+    return ready > 0 ? `${ready} to collect` : null
+  }
+  return isDig(id) && placeBuilt(save, id) ? `Floor ${Math.max(1, save.places[id].deepest)}` : null
+}
 
 /** `/`, with an optional `?tile=<n>` (a tile's actions) or `?peek=<place>` (a quick look). An unknown one drops the
  * panel. */
@@ -87,8 +102,9 @@ function FarmHelp() {
     <div className="absolute bottom-3 left-3 z-20">
       <div className="rounded-full border border-hairline-strong bg-panel/95 shadow-3" data-farm-help>
         <HelpButton title="The farm" label="How the farm works">
-          <p>A day holds 10 actions. Each task costs one: clear, till, plant, water or harvest a tile; forage, chop or fish; start a load; ship a crate; go into town.</p>
-          <p>Looking is free, and so is building; the shop is free once you’re in town.</p>
+          <p>A day holds 10 actions. Each task costs one: clear, till, plant, water or harvest a tile; forage, chop or fish; feed or care for an animal, or collect its building’s goods; work a face at the Mine or the Quarry; start a load; ship a crate; go into town.</p>
+          <p>Looking is free, and so is building, and so are the mine’s stairs once found; the shops are free once you’re in town.</p>
+          <p>A fed animal leaves its good by morning; one left hungry loses fondness. Cut grass on a weeds tile for the silo, or buy fodder at the rancher’s.</p>
           <p>A watered tile grows a stage at night; a dry one doesn’t. A season’s end withers what still grows.</p>
           <p>When the actions run out, end the day: the night pays the bin and the morning shows what grew.</p>
           <p>Tap the date for the calendar and the year’s festivals.</p>
@@ -200,8 +216,7 @@ function FarmScreen({ save, peek, tile }: { save: FarmSave; peek: FarmPlace | un
             const place = farmPlace(lot.id)!
             const { name } = placeWordsOf(story, place.id)
             const lock = lockOf(save, place)
-            const load = isStation(place.id) && stationBuilt(save, place.id) ? save.loads[place.id] : undefined
-            const tag = load ? 'Ready tomorrow' : null
+            const tag = placeTag(save, place.id)
             return (
               <Link key={place.id} to={placeLink(save, place)} {...hop} className="absolute flex flex-col items-center justify-end gap-0.5 pb-1" style={at(lot.area, cell)}
                 aria-label={lock ? `${name}, locked: ${lock}` : tag ? `${name}, ${tag.toLowerCase()}` : name}
@@ -237,7 +252,9 @@ function FarmScreen({ save, peek, tile }: { save: FarmSave; peek: FarmPlace | un
             : peek.id === 'forest' || peek.id === 'fishery' ? <GatherPanel save={save} place={peek.id} />
               : peek.id === 'gate' && lockOf(save, peek) === null ? <GatePeek save={save} />
                 : isStation(peek.id) && placeOpen(save, peek) && stationBuilt(save, peek.id) ? <StationPanel save={save} station={peek.id} />
-                  : <PlacePeek save={save} place={peek} />}
+                  : isHome(peek.id) && placeBuilt(save, peek.id) ? <Suspense fallback={null}><RanchPanel save={save} home={peek.id} /></Suspense>
+                    : isDig(peek.id) && placeBuilt(save, peek.id) ? <Suspense fallback={null}><DigPanel save={save} dig={peek.id} /></Suspense>
+                      : <PlacePeek save={save} place={peek} />}
         </PeekPanel>
       )}
       <Morning save={save} open={!covered} />

@@ -68,15 +68,23 @@ describe('the Farm Rank', () => {
   it('opens what the rules gate on it: the places to build, the farmer\'s reach, beds and seeds', () => {
     expect(farmRankOpens(1)).toEqual(['The Mill to build (1,000g · 20 logs)', 'Dorm level 2 (5 beds)']) // tier-1 seeds, the Woods and the Pond are the start's
     expect(farmRankOpens(2)).toEqual([
-      'The Coop to build (not built yet)', 'The Hills', 'The River', 'The Sea Pier (with the Dock)', 'Dorm level 3 (7 beds)', 'New seeds at the shop',
+      'The Coop to build (2,000g · 30 logs · 20 vegetables)', 'The Hills', 'The River', 'The Sea Pier (with the Dock)', 'Chickens at the rancher’s', 'Dorm level 3 (7 beds)',
+      'New seeds at the shop',
     ])
     expect(farmRankOpens(3)).toEqual([
-      'The Sawmill to build (1,500g · 40 logs)', 'The Barn to build (not built yet)', 'The Smokehouse to build (2,000g · 30 logs · 20 fish)', 'Dorm level 4 (9 beds)',
+      'The Sawmill to build (1,500g · 40 logs)', 'The Barn to build (3,500g · 30 logs · 20 vegetables)', 'The Smokehouse to build (2,000g · 30 logs · 20 fish)',
+      'Ducks, Cows and Sheep at the rancher’s', 'Dorm level 4 (9 beds)',
     ])
-    expect(farmRankOpens(4)).toEqual(['The Mine to build (not built yet)', 'The Smelter to build (not built yet)', 'The Old Forest', 'The Lake', 'Dorm level 5 (11 beds)', 'New seeds at the shop'])
-    expect(farmRankOpens(6)).toEqual(['The Dock to build (20,000g · 80 planks)', 'The Boat to build (30,000g · 60 planks · 30 fillets)', 'The Mountain', 'The Falls', 'Dorm level 7 (17 beds)'])
+    expect(farmRankOpens(4)).toEqual([
+      'The Mine to build (10,000g · 60 planks)', 'The Smelter to build (8,000g · 40 planks · 40 logs)', 'The Old Forest', 'The Lake', 'Goats at the rancher’s',
+      'The Mine’s and the Quarry’s floors to 15', 'Dorm level 5 (11 beds)', 'New seeds at the shop',
+    ])
+    expect(farmRankOpens(6)).toEqual([
+      'The Dock to build (20,000g · 80 planks)', 'The Boat to build (30,000g · 60 planks · 30 fillets)', 'The Mountain', 'The Falls', 'Cashmere Goats at the rancher’s',
+      'The Mine’s and the Quarry’s floors to 20', 'Dorm level 7 (17 beds)',
+    ])
     expect(farmRankOpens(8).some((o) => o.startsWith('Dorm'))).toBe(false) // the Dorm for 20 tops out at level 8, Farm Rank 7
-    expect(farmRankOpens(10)).toEqual(['The World Tree', 'The Moon Pool', 'The farm’s gold crest'])
+    expect(farmRankOpens(10)).toEqual(['The World Tree', 'The Moon Pool', 'The Mine’s and the Quarry’s floors to 30', 'The farm’s gold crest'])
   })
 
   it('is recomputed at night step 8 from the save, and a rank reached is news in the morning', () => {
@@ -140,7 +148,7 @@ describe('the Diary', () => {
   it("pays a family's ten raw goods, and its ten refined ones, 500g once each", () => {
     const woods = DIARY_ROWS.find((r) => r.id === 'row:woods')!
     expect(woods.goods).toHaveLength(10)
-    expect(DIARY_ROWS).toHaveLength(27)
+    expect(DIARY_ROWS).toHaveLength(30)
     const nine = { ...farm(), diary: { ...farm().diary, shipped: Object.fromEntries(woods.goods.slice(0, 9).map((id) => [id, 1])) } }
     expect(payDiary(nine).paid).toEqual([])
     const ten = { ...nine, diary: { ...nine.diary, shipped: { ...nine.diary.shipped, [woods.goods[9]!]: 3 } } }

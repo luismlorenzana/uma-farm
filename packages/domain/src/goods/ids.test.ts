@@ -5,12 +5,16 @@ import { CROP_IDS, GOODS, GOOD_IDS, goodName, goodOf, isCropId, refinedOf, isGoo
 const of = (families: string[]) => GOODS.filter((g) => families.includes(g.family))
 
 describe('the goods', () => {
-  it('holds 260 goods, each once', () => {
-    expect(GOOD_IDS).toHaveLength(260)
-    expect(new Set(GOOD_IDS).size).toBe(260)
+  it('holds 284 goods, each once', () => {
+    expect(GOOD_IDS).toHaveLength(284)
+    expect(new Set(GOOD_IDS).size).toBe(284)
   })
 
-  it('counts 27 crops and 10 flours, the forest 113, mining 60, fishing 20, expeditions 30', () => {
+  it('counts 27 crops and 10 flours, the forest 113, mining 60, fishing 20, expeditions 30, the ranch 24', () => {
+    expect(of(['fibers'])).toHaveLength(20)
+    expect(of(['eggs-milk']).map((g) => [g.id, g.grade, g.price])).toEqual([['egg', 1, 60], ['milk', 2, 80], ['duck-egg', 3, 100], ['goat-milk', 4, 130]])
+    expect(['wool', 'alpaca-fleece', 'cashmere-fleece', 'wool-cloth'].map((id) => goodOf(id)!.price)).toEqual([100, 130, 170, 150])
+    expect(refinedOf('egg')).toBeNull()
     expect(CROP_IDS).toHaveLength(27)
     expect(GOODS.filter((g) => g.crop).map((g) => g.id).sort()).toEqual([...CROP_IDS].sort())
     expect(of(['grains']).filter((g) => g.refined)).toHaveLength(10)

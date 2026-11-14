@@ -20,12 +20,12 @@ describe('the push routes', () => {
     expect(parseSchedule({ entries: [{ at, place: 'mine', badge: 1, outfitId: '101' }] })).toEqual([{ at, place: 'mine', badge: 1 }])
     const refused = [
       null, [], { entries: {} }, { save: {} },
-      { entries: Array.from({ length: 37 }, () => ({ at, place: 'mine', badge: 1 })) },
+      { entries: Array.from({ length: 45 }, () => ({ at, place: 'mine', badge: 1 })) },
       { entries: [{ at, place: 'forge', badge: 1 }] },
       { entries: [{ at: 'soon', place: 'mine', badge: 1 }] },
       { entries: [{ at: 1.5, place: 'mine', badge: 1 }] },
       { entries: [{ at, place: 'mine', badge: -1 }] },
-      { entries: [{ at, place: 'mine', badge: 37 }] },
+      { entries: [{ at, place: 'mine', badge: 45 }] },
       { entries: [{ at, place: 'fields', badge: 1 }] },
       { entries: [null] },
     ]

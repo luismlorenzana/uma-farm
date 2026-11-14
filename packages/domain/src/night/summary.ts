@@ -6,7 +6,7 @@ import type { FarmPlaceId } from '../farm/places'
 import type { Activity, Rank } from '../farm/ranks'
 import type { StationId } from '../gathering/ids'
 import type { CropId } from '../goods/ids'
-import type { AptitudeId, OutfitId, TaskKind } from '../save/v4'
+import type { AptitudeId, OutfitId, RanchHome, TaskKind } from '../save/v4'
 import type { InviteKind } from '../save/v4'
 
 /** §1 The bin: a good at one star that sold tonight, how many, the gold they made, and whether the
@@ -70,9 +70,19 @@ export interface FarmhandLine {
   items: number
 }
 
-/** §2's lines: the farmhands' days, the stations' loads, then the field's growth, then what withered (in section
- * order). */
-export type WorkLine = FarmhandLine | LoadLine | FieldGrew | CropsWithered
+/** §2 Work done: the Coop's or the Barn's night: its animals fed today (each made its good), those that went hungry (and
+ * lost fondness), and the goods waiting to be collected this morning. */
+export interface RanchLine {
+  kind: 'ranch'
+  home: RanchHome
+  fed: number
+  hungry: number
+  ready: number
+}
+
+/** §2's lines: the farmhands' days, the stations' loads, the ranch's nights, then the field's growth, then what withered
+ * (in section order). */
+export type WorkLine = FarmhandLine | LoadLine | RanchLine | FieldGrew | CropsWithered
 
 /** §3 Ranks: she reached a rank in an activity tonight. */
 export interface RankUp {

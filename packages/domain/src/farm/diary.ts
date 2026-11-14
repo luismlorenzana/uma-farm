@@ -7,6 +7,9 @@ import { cropLevelOf } from '../fields/fields'
 import { CROPS, SHOP_SEEDS } from '../fields/crops'
 import { AREA_NAMES, FISHING_SPOTS, FOREST_AREAS, SPOT_NAMES } from '../gathering/ids'
 import { FARMER_REACH } from '../gathering/hauls'
+import { RANK_FLOORS } from '../gathering/digs'
+import { ANIMALS } from '../ranch/ranch'
+import { ANIMAL_KINDS, type AnimalKind } from '../save/v4'
 import { FISHERY, FOREST } from '../gathering/tables'
 import { isGoodOrRingId } from '../goods/ids'
 import { GOLD_SHIPPED } from '../save/bin'
@@ -62,8 +65,19 @@ export function farmRankOpens(rank: number): string[] {
   const dorm = DORM_LEVELS.filter((l) => l.level > 1 && l.farmRank === rank).map((l) => `Dorm level ${l.level} (${l.beds} beds)`)
   const seeds = rank > 1 && Object.values(SHOP_SEEDS).some((crops) => crops.some((crop) => CROPS[crop].tier === rank)) ? ['New seeds at the shop'] : []
   const builds = offeredAt(rank).map((p) => `The ${p.name} to build (${p.opens.game ? buildCostWords(p) : 'not built yet'})`)
-  return [...builds, ...areas, ...spots, ...dorm, ...seeds, ...(rank === FARM_RANK_POINTS.length ? ['The farm’s gold crest'] : [])]
+  const animals = ANIMAL_KINDS.filter((kind) => ANIMALS[kind].rank === rank).map((kind) => ANIMAL_PLURALS[kind])
+  const ranch = animals.length > 0 ? [`${listWords(animals)} at the rancher’s`] : []
+  const floor = RANK_FLOORS[FARMER_REACH.indexOf(rank)]
+  const digs = floor !== undefined && rank >= MINE_RANK ? [`The Mine’s and the Quarry’s floors to ${floor}`] : []
+  return [...builds, ...areas, ...spots, ...ranch, ...digs, ...dorm, ...seeds, ...(rank === FARM_RANK_POINTS.length ? ['The farm’s gold crest'] : [])]
 }
+/** The animals by name, more than one. */
+const ANIMAL_PLURALS: Readonly<Record<AnimalKind, string>> = {
+  chicken: 'Chickens', duck: 'Ducks', cow: 'Cows', goat: 'Goats', sheep: 'Sheep', alpaca: 'Alpacas', 'cashmere-goat': 'Cashmere Goats',
+}
+/** The Mine's Farm Rank: the digs' floors are news from it. */
+const MINE_RANK = 4
+const listWords = (items: readonly string[]): string => (items.length <= 1 ? items[0] ?? '' : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`)
 const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
 
 /** The forest areas and fishing spots worked today (`today.gathered`): depth milestones. */

@@ -282,6 +282,12 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
             const [id, stars] = line.item.split('@')
             return { key: `load:${line.station}`, to: peek(line.station), text: `${farmPlace(line.station)?.name ?? line.station} · ${goodName(id!)} ★${stars} × ${line.count}` }
           }
+          // The Coop's or the Barn's night: the goods waiting, and any that went hungry (a warning).
+          case 'ranch': return {
+            key: `ranch:${line.home}`, to: peek(line.home),
+            text: `The ${line.home === 'coop' ? 'Coop' : 'Barn'} · ${line.ready > 0 ? `${plural(line.ready, 'good')} to collect` : 'nothing to collect'}${line.hungry > 0 ? ` · ${line.hungry} went hungry` : ''}`,
+            ...(line.hungry > 0 ? { tag: 'Feed them', warn: true } : {}),
+          }
           case 'grew': return { key: 'grew', to: FIELDS, text: `The field · ${plural(line.tiles, 'crop')} grew${line.ripe > 0 ? ` · ${line.ripe} ripe` : ''}` }
           case 'withered': return { key: `withered:${line.crop}`, to: FIELDS, text: `The field · ${line.tiles} ${itemNameOf(line.crop)} withered` }
         }

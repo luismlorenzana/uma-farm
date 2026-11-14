@@ -1,25 +1,25 @@
-// The farm map's side panels, one action a tap: a tile's (clear, till, plant, water, harvest), the woods' edge (forage
-// or chop at an area), the pond's edge (fish a spot) and a built station's (start a load). Each says what the action
+// The farm map's side panels, one action a tap: a tile's (clear, till, plant, water, harvest; cut grass on weeds for the
+// silo), the woods' edge (forage or chop at an area), the pond's edge (fish a spot) and a built station's (start a load). Each says what the action
 // brought, and the day's actions left. Part of the farm map's chunk.
 import {
-  actionsLeft, dayActions, goodName, itemNameOf, receiptItems, type FarmSave, type GatherPlace, type HarvestReceipt, type StationId,
+  actionsLeft, dayActions, goodName, grassLock, hasGrass, itemNameOf, receiptItems, SILO_ROOM, siloStands, type FarmSave, type GatherPlace, type HarvestReceipt, type StationId,
 } from '@farm/domain'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
-import { chopAt, clearAt, fishAt, forageAt, harvestAt, loadAt, plantAt, tillAt, waterAt } from './actions'
+import { chopAt, clearAt, fishAt, forageAt, grassAt, harvestAt, loadAt, plantAt, tillAt, waterAt } from './actions'
 import { reachRows, stationView, tileView, type TileAction } from './farm-view'
 import { actionWords, plural } from './words'
 
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
 /** Stock keys in words: "Pine Log, Shiitake". */
-const goodsWords = (keys: readonly string[]): string => keys.map((key) => goodName(key.slice(0, key.lastIndexOf('@')))).join(', ')
+export const goodsWords = (keys: readonly string[]): string => keys.map((key) => goodName(key.slice(0, key.lastIndexOf('@')))).join(', ')
 /** A harvest in words: "+2 Potato · 1 seed back". */
 const harvestWords = (r: HarvestReceipt): string => `+${receiptItems(r)} ${itemNameOf(r.crop)}${r.seeds > 0 ? ' · 1 seed back' : ''}`
 
 /** One action at a time: what it brought, or why it was refused. */
-function useAct(key: string | number) {
+export function useAct(key: string | number) {
   const [note, setNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -39,12 +39,12 @@ function useAct(key: string | number) {
 }
 
 /** The day's actions left, at a panel's foot. */
-function ActionsLeft({ save }: { save: FarmSave }) {
+export function ActionsLeft({ save }: { save: FarmSave }) {
   const left = actionsLeft(save)
   return <p className="text-[12px] text-ink-faint" data-left={left}>{left === 0 ? 'No actions left today.' : `${actionWords(left)} left of ${dayActions(save)}`}</p>
 }
 
-function Notes({ note, error }: { note: string | null; error: string | null }) {
+export function Notes({ note, error }: { note: string | null; error: string | null }) {
   return (
     <>
       {note && <p role="status" className="text-[13px] font-semibold text-success" data-note>{note}</p>}
@@ -81,6 +81,12 @@ export function TilePanel({ save, index }: { save: FarmSave; index: number }) {
       {single && (
         <Button className="w-full" disabled={busy || out} onClick={() => doIt(single)} data-action={single.kind}>
           {ACTION_WORDS[single.kind]} · 1 action
+        </Button>
+      )}
+      {hasGrass(save, index) && siloStands(save) && (
+        <Button variant="secondary" className="w-full" disabled={busy || out || grassLock(save) !== null} data-action="grass"
+          onClick={() => run(grassAt(index).then((feed) => `Cut grass · +${feed} feed in the silo (${save.ranch.silo + feed} of ${SILO_ROOM})`))}>
+          {grassLock(save) ?? 'Cut grass for the silo · 1 action'}
         </Button>
       )}
       {plants.length > 0 && (

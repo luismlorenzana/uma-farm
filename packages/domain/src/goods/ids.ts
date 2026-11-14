@@ -1,34 +1,39 @@
 // The Warehouse's ids: the goods priced by the ladder or as crops, plus seeds.
 // Written from uma-art 2.21.0's `items/atlas.json`: every good's id, family and grade are uma-art's own, so names and
-// icons come from ids as today (a web test checks each id is on the atlas). 260 goods: 27 crops and 10 flours, the
-// forest's 113, mining's 60, fishing's 20 and expeditions' 30. The ranch's, the dishes' and the Forge's goods join with
-// their screens. Each gets its price ★1 by the one rule (`rule.ts`) and a refined good its
-// input.
+// icons come from ids as today (a web test checks each id is on the atlas). 284 goods: 27 crops and 10 flours, the
+// forest's 113, mining's 60, fishing's 20, expeditions' 30, and the ranch's: uma-art's fibers (20, the Barn's wool and
+// fleeces and their cloth) and the Coop's and the Barn's eggs and milk (4). The eggs and milk are the farm's own ids, drawn
+// in code until uma-art draws them (`EGGS_MILK`); every other id is uma-art's. The dishes' and the Forge's goods join
+// with their screens. Each gets its price ★1 by the one rule (`rule.ts`) and a refined good its input.
 //
 // **The rings** are the catalogue's own family: the ten, `ring-g1` …
 // `ring-g10`, at its ★1 prices, made at the ring bench (`romance/bench.ts`) and drawn on uma-art's `accessory-setting`
-// frames. They're apart from `GOODS` (the 260): `goodOf` prices and names a ring, `isGoodId` is the 260's, and
+// frames. They're apart from `GOODS` (the 284): `goodOf` prices and names a ring, `isGoodId` is the 284's, and
 // `isGoodOrRingId` takes the rings too (the bin, the Diary).
 import { itemNameOf } from '../items/lines'
 import { CROP_PRICES, ladderPrice, refinedPrice, type LadderFamily } from './rule'
 
-/** uma-art's families the 260 goods come from. */
+/** The families the 284 goods come from: uma-art's fifteen, then the ranch's eggs and milk (the farm's own until uma-art
+ * draws them). */
 export const GOOD_FAMILIES = [
   'grains', 'vegetables', 'herbs-spices', 'nuts-seeds', 'sweets', 'fruits', 'mushrooms', 'woods',
-  'ores', 'stones', 'crystals', 'fish', 'hides-scales', 'bones-horns', 'essences',
+  'ores', 'stones', 'crystals', 'fish', 'fibers', 'hides-scales', 'bones-horns', 'essences', 'eggs-milk',
 ] as const
 /** The rings' family, never in `GOOD_FAMILIES`. */
 export const RING_FAMILY = 'rings'
-/** A family of the 260 goods. */
+/** A family of the 284 goods. */
 export type GoodsFamily = typeof GOOD_FAMILIES[number]
 /** A good's family: the fifteen, and the rings. */
 export type GoodFamily = GoodsFamily | typeof RING_FAMILY
 /** Each family in the player's words. */
 export const FAMILY_NAMES: Readonly<Record<GoodFamily, string>> = {
   grains: 'Grains', vegetables: 'Vegetables', 'herbs-spices': 'Herbs and spices', 'nuts-seeds': 'Nuts and seeds', sweets: 'Sweets', fruits: 'Fruits',
-  mushrooms: 'Mushrooms', woods: 'Woods', ores: 'Ores', stones: 'Stones', crystals: 'Crystals', fish: 'Fish', 'hides-scales': 'Hides and scales',
-  'bones-horns': 'Bones and horns', essences: 'Essences', rings: 'Rings',
+  mushrooms: 'Mushrooms', woods: 'Woods', ores: 'Ores', stones: 'Stones', crystals: 'Crystals', fish: 'Fish', fibers: 'Fibers', 'hides-scales': 'Hides and scales',
+  'bones-horns': 'Bones and horns', essences: 'Essences', 'eggs-milk': 'Eggs and milk', rings: 'Rings',
 }
+
+/** The ranch's eggs and milk: the farm's own ids, G1 → G4, drawn in code until uma-art's items atlas has them. */
+export const EGGS_MILK = ['egg', 'milk', 'duck-egg', 'goat-milk'] as const
 
 /** Each family's ten raw ids, G1 → G10, and their refined forms where the farm keeps them (the vegetables' refined forms
  * leave the game; the expeditions' loot is raw only). */
@@ -86,6 +91,11 @@ const FAMILY_IDS: Readonly<Record<GoodsFamily, { raw: readonly string[]; refined
     refined: ['cut-quartz', 'cut-amethyst', 'cut-citrine', 'cut-garnet', 'cut-emerald', 'cut-sapphire', 'cut-ruby', 'cut-diamond', 'cut-starstone',
       'cut-philosophers-stone'],
   },
+  fibers: {
+    raw: ['flax', 'jute', 'hemp', 'cotton', 'wool', 'alpaca-fleece', 'cashmere-fleece', 'silk-cocoon', 'moonsilk-cocoon', 'cloudfleece'],
+    refined: ['linen', 'burlap', 'hemp-cloth', 'cotton-cloth', 'wool-cloth', 'alpaca-cloth', 'cashmere-cloth', 'silk', 'moonsilk', 'cloudweave'],
+  },
+  'eggs-milk': { raw: EGGS_MILK, refined: null },
   fish: {
     raw: ['carp', 'trout', 'sardine', 'mackerel', 'salmon', 'sea-bream', 'eel', 'tuna', 'silverfin', 'rainbow-koi'],
     refined: ['carp-fillet', 'trout-fillet', 'sardine-fillet', 'mackerel-fillet', 'salmon-fillet', 'sea-bream-fillet', 'eel-fillet', 'tuna-fillet',
@@ -141,7 +151,7 @@ function rawPrice(id: string, family: GoodsFamily, grade: number): number {
   return ladderPrice(family as LadderFamily, grade)
 }
 
-/** The 260 goods, family by family, raw G1–G10 then refined G1–G10. */
+/** The 284 goods, family by family, raw G1–G10 then refined G1–G10 (the eggs and milk G1–G4). */
 export const GOODS: readonly Good[] = GOOD_FAMILIES.flatMap((family) => {
   const { raw, refined } = FAMILY_IDS[family]
   const raws = raw.map((id, i): Good => ({ id, family, grade: i + 1, refined: false, crop: CROPS.has(id), price: rawPrice(id, family, i + 1), input: null }))
@@ -179,7 +189,7 @@ export const goodOf = (id: string): Good | undefined => GOOD_BY_ID.get(id) ?? RI
 const REFINED_OF = new Map(GOODS.flatMap((g) => (g.input ? [[g.input, g.id] as const] : [])))
 /** What a raw good refines into at a station, or null (the vegetables' and the expeditions' have none). */
 export const refinedOf = (id: string): string | null => REFINED_OF.get(id) ?? null
-/** One of the 260 goods (the rings apart). */
+/** One of the 284 goods (the rings apart). */
 export const isGoodId = (id: string): boolean => GOOD_BY_ID.has(id)
 /** A good or a ring: what the bin ships and the Diary counts. */
 export const isGoodOrRingId = (id: string): boolean => GOOD_BY_ID.has(id) || RING_BY_ID.has(id)

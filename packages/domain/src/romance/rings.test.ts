@@ -82,9 +82,9 @@ describe('the rings', () => {
     expect(parseSaveV5(json(paid.save))).toEqual(paid.save)
   })
 
-  it('form the Diary\'s 27th row, ten rings shipped once each paying the row\'s gold', () => {
+  it('form the Diary\'s 30th row, ten rings shipped once each paying the row\'s gold', () => {
     expect(RING_ROW).toEqual({ id: 'row:rings', family: 'rings', refined: false, goods: RING_IDS })
-    expect(DIARY_ROWS).toHaveLength(27)
+    expect(DIARY_ROWS).toHaveLength(30)
     expect(DIARY_ROWS.at(-1)).toEqual(RING_ROW)
     const all = { ...farm(), diary: { ...farm().diary, shipped: Object.fromEntries(RING_IDS.map((id) => [id, 1])) } }
     const { save, paid } = payDiary(all)
@@ -357,8 +357,8 @@ describe('save v4 grows in place', () => {
     refuse((s) => { s.items['dish-fish-11'] = [1, 0, 0, 0, 0] }, 'unknown item')
   })
 
-  it('keeps the rings apart from the 260 goods and their fifteen families', () => {
-    expect([GOODS.length, GOOD_FAMILIES.length, DIARY_ROWS.length]).toEqual([260, 15, 27])
+  it('keeps the rings apart from the 284 goods and their seventeen families', () => {
+    expect([GOODS.length, GOOD_FAMILIES.length, DIARY_ROWS.length]).toEqual([284, 17, 30])
     expect(GOODS.some((g) => g.family === 'rings')).toBe(false)
   })
 })

@@ -5,7 +5,8 @@
 //   with how many are there now and their first faces; you're at one (`?at=<id>`, the Plaza to start), and a tap on
 //   another goes there. Beside the map, **where you are:** its name and line, who's here now (faces and names, as many as
 //   there are, in a grid that scrolls), and its keeper at her post with her post's menu (the general store's seeds; the
-//   mayor's office's build orders and loans, its sheet at `?sheet=mayor` (`MayorSheet.tsx`); animals coming later);
+//   mayor's office's build orders and loans, its sheet at `?sheet=mayor` (`MayorSheet.tsx`); the rancher's animals and
+//   fodder, her sheet at `?sheet=rancher` (`RancherSheet.tsx`));
 // - **People:** everyone who lives in town and the town's people, met or not, with where she is today, a search by
 //   name, and a sort, met first or by name; a tap goes to her.
 // Tap anyone (`?uma=<id>`) for her menu on the dialogue engine (`HerMenu.tsx`). Faces load as they scroll into view.
@@ -26,6 +27,7 @@ import { IntoTown } from '../loop/GoodsSheets'
 import { HerMenu } from './HerMenu'
 
 const MayorSheet = lazy(() => import('./MayorSheet'))
+const RancherSheet = lazy(() => import('./RancherSheet'))
 import { findPeople, locationViews, mapGroups, peopleRows, PEOPLE_SORTS, postMenu, sortPeople, type LocationView, type PeopleSort } from './town-view'
 
 type View = 'map' | 'people'
@@ -82,7 +84,7 @@ function About() {
     <>
       <p>Everyone lives in town: tap a place to walk there, free, and see who’s there now. The story puts each Uma where her life takes her (her home, her work, the places she likes); the rest are out at the town’s spots, a different few each day.</p>
       <p>Tap an Uma for what you can do with her, each an action: introduce yourself (that’s how you meet her), talk, give a gift, and her event when it’s ready.</p>
-      <p>The town’s people are at their posts: the general store sells seeds, and the mayor’s office takes build orders and lends toward them.</p>
+      <p>The town’s people are at their posts: the general store sells seeds, the rancher’s animals and fodder, and the mayor’s office takes build orders and lends toward them.</p>
     </>
   )
 }
@@ -121,6 +123,11 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
       {params.get('sheet') === 'mayor' && (
         <Suspense fallback={null}>
           <MayorSheet title={views.find((v) => v.loc.id === 'mayor')?.loc.name ?? 'The Mayor’s Office'} onClose={() => leave(paramsTo(location, { sheet: null }))} />
+        </Suspense>
+      )}
+      {params.get('sheet') === 'rancher' && (
+        <Suspense fallback={null}>
+          <RancherSheet title={views.find((v) => v.loc.id === 'rancher')?.loc.name ?? 'The Rancher’s'} onClose={() => leave(paramsTo(location, { sheet: null }))} />
         </Suspense>
       )}
     </>

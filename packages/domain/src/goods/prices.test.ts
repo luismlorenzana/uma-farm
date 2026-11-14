@@ -27,7 +27,7 @@ describe('the ladder and the factors', () => {
   it('gives every family that isn\'t all crops a factor', () => {
     expect(FAMILY_FACTOR).toEqual({
       ores: 1.0, stones: 0.8, crystals: 1.6, woods: 0.8, mushrooms: 1.0, 'herbs-spices': 0.9, fruits: 1.1, 'nuts-seeds': 1.0, sweets: 1.1, fish: 1.3,
-      'hides-scales': 1.5, 'bones-horns': 1.6, essences: 1.8,
+      fibers: 1.2, 'hides-scales': 1.5, 'bones-horns': 1.6, essences: 1.8, 'eggs-milk': 2.0,
     })
     for (const good of GOODS.filter((g) => g.family === 'grains' || g.family === 'vegetables')) expect(good.crop || good.refined, good.id).toBe(true)
   })
@@ -87,7 +87,7 @@ describe('crops have their own prices', () => {
     expect(goodOf('dried-mint')).toMatchObject({ price: 70, input: 'mint' })
   })
 
-  it('prices every one of the 260, each a whole 5g', () => {
+  it('prices every one of the 284, each a whole 5g', () => {
     for (const good of GOODS) expect(good.price % 5, good.id).toBe(0)
     expect(GOODS.every((g) => g.price >= 25)).toBe(true)
   })
@@ -117,13 +117,13 @@ describe('demand', () => {
     expect(priceOf('carrot', 1, SUMMER_3)).toBe(60)
   })
 
-  it('names each season\'s families, raw and refined; Winter\'s preserves only', () => {
+  it('names each season\'s families, raw and refined; Winter\'s preserves and cloth only', () => {
     const lifted = (day: number) => GOODS.filter((g) => inDemand(g.id, day)).map((g) => `${g.family}${g.refined ? '/refined' : ''}`)
     const rows = (day: number) => [...new Set(lifted(day))]
     expect(rows(SPRING_1)).toEqual(['vegetables', 'sweets', 'sweets/refined'])
     expect(rows(SUMMER_3)).toEqual(['fruits', 'fruits/refined', 'fish', 'fish/refined'])
     expect(rows(AUTUMN_5)).toEqual(['grains', 'grains/refined', 'nuts-seeds', 'nuts-seeds/refined', 'mushrooms', 'mushrooms/refined'])
-    expect(rows(WINTER_7)).toEqual(['fruits/refined'])
+    expect(rows(WINTER_7)).toEqual(['fruits/refined', 'fibers/refined'])
     expect(DEMAND.winter.map((r) => r.name)).toEqual(['Dishes', 'Cloth', 'Preserves'])
   })
 

@@ -120,7 +120,7 @@ describe('aptitude', () => {
     expect(aptitudeOf(uma, 'water', (a) => fromS(A, a))).toMatchObject({ start: 0, level: 1, next: 10 })
     const ranked = { ...uma, ranks: { ...uma.ranks, farming: { points: 45, rank: 1 as const, challenge: 0 } }, practice: { water: 12 } }
     expect(aptitudeOf(ranked, 'water', (a) => D(A, a))).toMatchObject({ start: 10, ranked: 2, practice: 12, points: 24, level: 2 })
-    expect(aptitudesOf(uma, (a) => D(A, a)).map((x) => x.id)).toEqual(['harvest', 'water', 'plant', 'till', 'forage', 'chop', 'fish', 'mill', 'sawmill', 'smokehouse'])
+    expect(aptitudesOf(uma, (a) => D(A, a)).map((x) => x.id)).toEqual(['harvest', 'water', 'plant', 'till', 'forage', 'chop', 'fish', 'mill', 'sawmill', 'smokehouse', 'care', 'mine', 'smelter', 'cutter'])
   })
 
   it('opens tricks with her level: two tiles an action, a row watered in one, and the next to come', () => {
@@ -281,5 +281,60 @@ describe('her night', () => {
     save = tasks(save, B, [{ kind: 'chop', area: 'woods' }, { kind: 'fish', spot: 'pond' }])
     expect(night(json(save))).toEqual(night(save))
     expect(parseSaveV5(json(night(save)))).toEqual(night(save))
+  })
+})
+
+describe('the ranch and the mine on the board', () => {
+  /** The Coop with two chickens (one good waiting) and feed in the silo, the Mine built, at Farm Rank 4. */
+  function ranch(): SaveV4 {
+    const save = farm()
+    const hen = (n: number) => ({ id: `chicken-${n}`, kind: 'chicken' as const, fondness: 0, fed: false, cared: false, ready: n === 1 })
+    return { ...save, buildings: { ...save.buildings, coop: 1, mine: 1 }, farm: { ...save.farm, points: 950 }, ranch: { animals: [hen(1), hen(2)], silo: 20 } }
+  }
+
+  it('takes the Coop\'s or the Barn\'s care and a dig\'s face once each is built', () => {
+    expect(taskLock(farm(), { kind: 'care', home: 'coop' })).toBe('Build it first.')
+    expect(taskLock(farm(), { kind: 'mine', dig: 'quarry' })).toBe('Build it first.')
+    expect(taskLock(ranch(), { kind: 'care', home: 'coop' })).toBeNull()
+    expect(taskLock(ranch(), { kind: 'mine', dig: 'mine' })).toBeNull()
+  })
+
+  it('feeds the hungry, collects the goods and cares for the animals, in that order, until the building\'s done', () => {
+    let save = { ...ranch(), calendar: { day: 1 + SETTLED_AFTER } }
+    save = tasks(save, A, [{ kind: 'care', home: 'coop' }])
+    const after = handsTonight(save, save, talentsD, null)
+    // Settled in: four actions: two feeds, the collection, one care.
+    expect(after.lines[0]).toMatchObject({ actions: 4, spent: 4, done: { care: 3 }, items: 1 })
+    expect(after.save.ranch.silo).toBe(18)
+    expect(after.save.ranch.animals.map((a) => [a.fed, a.cared, a.ready])).toEqual([[true, true, false], [true, false, false]])
+    expect(after.save.items.egg?.[0]).toBe(1)
+    expect(after.worked).toEqual([{ outfitId: A, place: 'coop' }])
+    expect(after.save.roster[A]!.practice).toEqual({ care: 4 })
+    expect(after.save.roster[A]!.ranks.ranch.challenge).toBe(1)
+    // Her Animal care from 3 feeds two an action; from 5 cares for two.
+    expect(tricksAt('care', TRICK_AT.careTwo).open.map((t) => t.what)).toEqual(['Two animals fed an action', 'Two animals cared for an action'])
+    const skilled = practice(save, A, 'care', 300)
+    expect(handsTonight(skilled, skilled, talentsD, null).lines[0]).toMatchObject({ spent: 3, done: { care: 4 } })
+  })
+
+  it('cuts grass for a hungry animal when the silo is empty', () => {
+    let save = { ...ranch(), ranch: { ...ranch().ranch, silo: 0 } }
+    save = tasks(save, A, [{ kind: 'care', home: 'coop' }])
+    const after = handsTonight(save, save, talentsD, null)
+    expect(after.save.ranch.animals.every((a) => a.fed)).toBe(true)
+    expect(after.save.ranch.silo).toBe(3)
+  })
+
+  it('works a face on the deepest floor, a turn with her gathering, and the morning reports it', () => {
+    let save = tasks(ranch(), B, [{ kind: 'mine', dig: 'mine' }])
+    save = tasks(save, A, [{ kind: 'care', home: 'coop' }])
+    const morning = night(save)
+    expect(morning.summary!.work[1]).toMatchObject({ kind: 'farmhand', id: B, spent: 3, done: { mine: 3 } })
+    expect(morning.places.mine).toEqual({ deepest: 1, stairs: 2 })
+    expect(morning.roster[B]!.practice).toEqual({ mine: 3 })
+    expect(morning.roster[B]!.ranks.mining.points).toBe(10)
+    expect(morning.roster[B]!.ranks.mining.challenge).toBeGreaterThanOrEqual(6)
+    expect(morning.summary!.work).toContainEqual({ kind: 'ranch', home: 'coop', fed: 2, hungry: 0, ready: 2 })
+    expect(parseSaveV5(json(morning))).toEqual(morning)
   })
 })

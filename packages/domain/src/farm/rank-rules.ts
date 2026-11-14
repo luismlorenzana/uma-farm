@@ -67,10 +67,11 @@ export const FAVOURITE_ACTIVITIES: readonly Activity[] = ACTIVITIES.filter((a) =
 // --- Who worked today ---------------------------------------------------------------------------------
 
 /** The activity a day at each work place pays: the forest and the Sawmill foraging, the Fishery and the Smokehouse
- * fishing, the Mill farming; the Mine, the Quarry, the Smelter and the Cutter mining. The Fields' tenders are farming. */
+ * fishing, the Mill farming; the Mine, the Quarry, the Smelter and the Cutter mining; the Coop and the Barn the ranch. The
+ * Fields' tenders are farming. */
 export const PLACE_ACTIVITY: Readonly<Record<LoopPlaceId, Activity>> = {
   forest: 'foraging', sawmill: 'foraging', fishery: 'fishing', smokehouse: 'fishing', mill: 'farming',
-  mine: 'mining', quarry: 'mining', smelter: 'mining', cutter: 'mining',
+  mine: 'mining', quarry: 'mining', smelter: 'mining', cutter: 'mining', coop: 'ranch', barn: 'ranch',
 }
 
 // --- What a rank gives --------------------------------------------------------------------------------------
@@ -172,18 +173,18 @@ export const CHALLENGES: Readonly<Record<Activity, readonly Challenge[]>> = {
     row(5, 1, '1st at a Flower Show with a crop she tended', 'a festival win (festivals aren’t built yet)', won('flower-show')),
   ],
   ranch: [
-    row(1, 10, 'Care for animals 10 days', 'the ranch (not built yet)', on('care', () => 1)),
-    row(2, 1, 'An animal in her care reaches 4 hearts', 'the ranch (not built yet)', on('hearts', (e) => yes(e.hearts >= 4))),
-    row(3, 1, 'An animal in her care reaches 7 hearts', 'the ranch (not built yet)', on('hearts', (e) => yes(e.hearts >= 7))),
-    row(4, 1, 'An animal in her care reaches 10 hearts', 'the ranch (not built yet)', on('hearts', (e) => yes(e.hearts >= 10))),
+    row(1, 10, 'Care for animals 10 days', 'a farmhand’s night at the Coop or the Barn', on('care', () => 1)),
+    row(2, 1, 'An animal in her care reaches 4 hearts', 'a farmhand’s care for an animal', on('hearts', (e) => yes(e.hearts >= 4))),
+    row(3, 1, 'An animal in her care reaches 7 hearts', 'a farmhand’s care for an animal', on('hearts', (e) => yes(e.hearts >= 7))),
+    row(4, 1, 'An animal in her care reaches 10 hearts', 'a farmhand’s care for an animal', on('hearts', (e) => yes(e.hearts >= 10))),
     row(5, 1, '1st at an Animal Show with an animal in her care', 'a festival win (festivals aren’t built yet)', won('animal-show')),
   ],
   mining: [
-    row(1, 40, 'Dig 40 ores or stones', 'the Mine and the Quarry (not built yet)', on('dig', (e) => e.items)),
-    row(2, 1, 'Dig at floor 10', 'the Mine and the Quarry (not built yet)', on('dig', (e) => yes(e.floor >= 10))),
-    row(3, 1, 'Dig at floor 15', 'the Mine and the Quarry (not built yet)', on('dig', (e) => yes(e.floor >= 15))),
-    row(4, 1, 'Dig at floor 20', 'the Mine and the Quarry (not built yet)', on('dig', (e) => yes(e.floor >= 20))),
-    row(5, 1, 'Dig at floor 25', 'the Mine and the Quarry (not built yet)', on('dig', (e) => yes(e.floor >= 25))),
+    row(1, 40, 'Dig 40 ores or stones', 'a farmhand’s faces at the Mine or the Quarry', on('dig', (e) => e.items)),
+    row(2, 1, 'Dig at floor 10', 'a farmhand’s faces at the Mine or the Quarry', on('dig', (e) => yes(e.floor >= 10))),
+    row(3, 1, 'Dig at floor 15', 'a farmhand’s faces at the Mine or the Quarry', on('dig', (e) => yes(e.floor >= 15))),
+    row(4, 1, 'Dig at floor 20', 'a farmhand’s faces at the Mine or the Quarry', on('dig', (e) => yes(e.floor >= 20))),
+    row(5, 1, 'Dig at floor 25', 'a farmhand’s faces at the Mine or the Quarry', on('dig', (e) => yes(e.floor >= 25))),
   ],
   fishing: [
     row(1, 30, 'Catch 30 fish', 'the night’s catches (night step 4)', on('catch', (e) => e.fish)),
