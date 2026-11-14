@@ -110,10 +110,20 @@ town, each with her own story.
 | 1.12 **The HD-2D farm becomes Home** | After your phone look: the switch and the 2D Hub go | Claude |
 | 1.13 **The cast's busts** | The town cast's portraits | ChatGPT ([F25](handoff/tasks/F25-art-m4.md)) |
 
+**Track C, her look** ([design](design/her-look.md)): a wardrobe for each Uma (her own outfit, four seasons, a kimono, a
+dinner dress, a wedding dress, pajamas), and busts composed in layers so any expression fits any outfit.
+
+| Step | What | Who |
+|---|---|---|
+| 1.14 **The bust art** | Layers, 18 expressions, 9 outfits; the pilot first: the two Umas with the new full art | ChatGPT ([F69](handoff/tasks/F69-bust-art-spec.md)); the delivery is a uma-platform request |
+| 1.15 **Busts that change expression** | The game composes the layers; the story's `emote` picks the face | Claude ([F70](handoff/tasks/F70-expressive-busts.md)) |
+| 1.16 **Her wardrobe** | The occasion picks the outfit; Dinner in town and A night in join the evenings | Claude ([F71](handoff/tasks/F71-her-wardrobe.md)) |
+
 **Your steps:**
 - write the story, freely;
-- a phone check now (the farm starts over on v4), and after the town and meeting land;
-- the HD-2D farm on your phone.
+- a phone check after the town and meeting land;
+- the HD-2D farm on your phone;
+- the bust art: hand [F69](handoff/tasks/F69-bust-art-spec.md) to the character art session, and approve the pilot.
 
 ### Phase 2: The whole farm
 
