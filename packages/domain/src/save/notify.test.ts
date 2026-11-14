@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { isPushPlace, PUSH_SCHEDULE_MAX, scheduleNotice, type PushEntry } from './notify'
 
 describe('the push schedule', () => {
-  it('holds one entry a work slot: nine places of four', () => {
-    expect(PUSH_SCHEDULE_MAX).toBe(36)
+  it('holds one entry a work slot: eleven places of four', () => {
+    expect(PUSH_SCHEDULE_MAX).toBe(44)
+    expect(isPushPlace('coop')).toBe(true)
     expect(isPushPlace('forest')).toBe(true)
     expect(isPushPlace('smelter')).toBe(true)
     expect(isPushPlace('fields')).toBe(false)

@@ -25,7 +25,7 @@ import {
 import {
   type BuildingId, EVENING_KINDS, eveningsOn, FARMHOUSE, FESTIVAL_NIGHT, FIELD_TILES, FINALE_MARRIED, FURNITURE_PIECES, invitesFor, LOVE_STAGES, marriedCount, MAX_HOUSES, residentsOf, roomsOf,
   isDishId, MEALS, pairKey, TOWN_ID, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUma, type SaveV5, type TodayV4, type TownTalks,
-  APTITUDE_IDS, MAX_TASKS, TASK_KINDS, type FarmTask,
+  APTITUDE_IDS, DIGS, MAX_TASKS, RANCH_HOMES, TASK_KINDS, type FarmTask,
 } from './v4'
 
 export { isRosterId, LOOP_SLOTS, LOOP_WORK_PLACES } from './parse-loop'
@@ -72,7 +72,7 @@ function parseRoster(value: unknown, path: string, today: number): Record<string
 }
 
 /** One task on her board: the field's over its tiles (each once, on the field; planting one crop or any), a station's
- * load, a forest area's forage or chop, a fishing spot's catch. */
+ * load, a forest area's forage or chop, a fishing spot's catch, the Coop's or the Barn's care, a dig's face. */
 function parseTask(value: unknown, path: string): FarmTask {
   const kind = oneOf(record(value, path).kind, `${path}.kind`, TASK_KINDS)
   switch (kind) {
@@ -85,6 +85,8 @@ function parseTask(value: unknown, path: string): FarmTask {
     case 'load': return { kind, station: oneOf(object(value, path, ['kind', 'station']).station, `${path}.station`, STATIONS) }
     case 'forage': case 'chop': return { kind, area: oneOf(object(value, path, ['kind', 'area']).area, `${path}.area`, FOREST_AREAS) }
     case 'fish': return { kind, spot: oneOf(object(value, path, ['kind', 'spot']).spot, `${path}.spot`, FISHING_SPOTS) }
+    case 'care': return { kind, home: oneOf(object(value, path, ['kind', 'home']).home, `${path}.home`, RANCH_HOMES) }
+    case 'mine': return { kind, dig: oneOf(object(value, path, ['kind', 'dig']).dig, `${path}.dig`, DIGS) }
   }
 }
 
@@ -461,7 +463,9 @@ function parseTown(value: unknown, path: string, today: number): Record<string, 
 
 /** Parses a save v5. A `farm.chapter` and `farm.goals` (the global chapters') are ignored, what the chapter opened kept
  * standing (`chapterOpened`); a missing `farm.builds` is none, a missing `town` or `gallery` none, missing accounts (`farm.loans`,
- * `owed`, `short`, `income`) none, and a morning without its upkeep section (`summary.money`) has none. */
+ * `owed`, `short`, `income`) none, and a morning without its upkeep section (`summary.money`) has none. The ranch and the
+ * digs from before their game read leniently: no silo is an empty one, an animal's older shape its fondness, and a dig's
+ * fractional stairs whole (`parseRanch`, `parseDig`). */
 export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
   const o = object(value, path, SAVE_V5_KEYS)
   if (o.version !== 5) fail(`${path}.version`, 'expected 5')
@@ -488,7 +492,7 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
     fields: parseFields(o.fields, `${path}.fields`),
     loads: parseLoads(o.loads, `${path}.loads`),
     crops: counts(o.crops, `${path}.crops`, isCropId, 'unknown crop') as Partial<Record<CropId, number>>,
-    ranch: parseRanch(o.ranch, `${path}.ranch`, ids),
+    ranch: parseRanch(o.ranch, `${path}.ranch`),
     places: (() => {
       const p = object(o.places, `${path}.places`, ['mine', 'quarry'])
       return { mine: parseDig(p.mine, `${path}.places.mine`), quarry: parseDig(p.quarry, `${path}.places.quarry`) }

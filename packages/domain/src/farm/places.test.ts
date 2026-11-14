@@ -28,8 +28,8 @@ describe('the farm map', () => {
 
   it('offers every working place past the start at a Farm Rank, built with gold and the farm\'s goods', () => {
     expect(BUILD_PLACES.map((p) => [p.id, p.opens.rank, p.opens.game])).toEqual([
-      ['mill', 1, true], ['coop', 2, false], ['sawmill', 3, true], ['barn', 3, false], ['smokehouse', 3, true], ['kitchen', 5, false], ['mine', 4, false],
-      ['smelter', 4, false], ['restaurant', 7, false], ['quarry', 5, false], ['cutter', 5, false], ['forge', 8, false], ['dock', 6, true],
+      ['mill', 1, true], ['coop', 2, true], ['sawmill', 3, true], ['barn', 3, true], ['smokehouse', 3, true], ['kitchen', 5, false], ['mine', 4, true],
+      ['smelter', 4, true], ['restaurant', 7, false], ['quarry', 5, true], ['cutter', 5, true], ['forge', 8, false], ['dock', 6, true],
       ['expeditions', 7, false], ['boat', 6, true],
     ])
     for (const p of BUILD_PLACES) expect(p.opens.cost.gold, p.id).toBeGreaterThan(0)

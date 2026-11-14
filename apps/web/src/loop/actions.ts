@@ -1,6 +1,7 @@
 // The loop's actions on the day: End the day and dismiss the morning; the day's actions: a tile cleared, tilled,
 // planted, watered and harvested, a forage, a log chopped, a catch, a station's load, a crate shipped and going into
-// town; the goods: take back and buy; paying for a place to build, and the mayor's office's loans; the roster: the Dorm's levels and swaps; the scenes,
+// town; the ranch's feeding, care, collecting and grass, the rancher's animals and fodder; a dig's face and its stairs;
+// the goods: take back and buy; paying for a place to build, and the mayor's office's loans; the roster: the Dorm's levels and swaps; the scenes,
 // read once; the farmer's name, the opening, Invite to the farm, and meeting scenes; her illustrations seen; the chat and
 // the gift (an action each) and praise; the pair conversations read; and a farmhand's tasks on the work board (free).
 // Each reads the save right before its rule runs (as
@@ -13,6 +14,8 @@ import {
   type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair,
   chop, clearTile, fish, forage, goToTown, harvestTile, plantTile, shipCrate, startLoad, tillTile, waterTile,
   type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId, seeIllustration, setTasks, type FarmTask,
+  buyAnimal, buyFodder, careFor, collect, cutGrass, feedAnimal, takeStairs, workFace, type Animal, type AnimalKind, type Collected, type DigId, type Face,
+  type RanchHome,
 } from '@farm/domain'
 import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'
@@ -112,6 +115,37 @@ export const fishAt = (spot: string): Promise<Measured> => act((s) => {
 })
 /** Starts a load at a station, ready the next morning. */
 export const loadAt = (station: StationId, item: string, count: number) => change((s) => startLoad(s, station, item, count))
+
+// --- The ranch and the digs ---------------------------------------------------------------------------------------
+
+/** Feeds an animal: an action and a feed from the silo. */
+export const feedOne = (id: string) => change((s) => feedAnimal(s, id))
+/** Cares for an animal: an action, +8 fondness. */
+export const careForOne = (id: string) => change((s) => careFor(s, id))
+/** Collects a building's goods: an action. */
+export const collectAt = (home: RanchHome): Promise<Collected> => act((s) => {
+  const done = collect(s, home)
+  return { save: done.save, result: done.collected }
+})
+/** Cuts grass on a weeds tile for the silo: an action; the feed it brought. */
+export const grassAt = (tile: number): Promise<number> => act((s) => {
+  const done = cutGrass(s, tile)
+  return { save: done.save, result: done.feed }
+})
+/** Buys an animal at the rancher's: free in town. */
+export const buyAnimalOf = (kind: AnimalKind): Promise<Animal> => act((s) => {
+  const done = buyAnimal(s, kind)
+  return { save: done.save, result: done.animal }
+})
+/** Buys fodder for the silo at the rancher's: free in town. */
+export const buyFodderOf = (count: number) => change((s) => buyFodder(s, count))
+/** Works a face at a dig: an action; what it brought. */
+export const faceAt = (dig: DigId): Promise<Face> => act((s) => {
+  const done = workFace(s, dig)
+  return { save: done.save, result: done.face }
+})
+/** Takes a dig's stairs: free. */
+export const stairsAt = (dig: DigId) => change((s) => takeStairs(s, dig))
 /** Ships what's picked: one action for the crate. */
 export const shipPicked = (lines: readonly CrateLine[]) => change((s) => shipCrate(s, lines))
 /** Goes into town: one action, the town and its shop open for the rest of the day. */

@@ -8,8 +8,8 @@ import { iconFrame, SHEET_SIZE } from './frames'
 const itemFrame = (id: string) => items.frames[id as keyof typeof items.frames] as { x: number; y: number } | undefined
 
 describe('icon frames', () => {
-  it('finds the 260 goods at their own frames, and a seed at its crop\'s', () => {
-    for (const good of GOODS) {
+  it('finds the goods at their own frames (the eggs and milk drawn in code), and a seed at its crop\'s', () => {
+    for (const good of GOODS.filter((g) => g.family !== 'eggs-milk')) {
       const frame = itemFrame(good.id)
       expect(iconFrame(good.id), good.id).toEqual({ sheet: 'items', x: frame!.x, y: frame!.y })
     }
@@ -18,5 +18,6 @@ describe('icon frames', () => {
     expect(items.width).toBe(SHEET_SIZE.items.w)
     expect(items.height).toBe(SHEET_SIZE.items.h)
     expect(iconFrame('nothing-here')).toBeNull()
+    expect(iconFrame('egg')).toBeNull()
   })
 })

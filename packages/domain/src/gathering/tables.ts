@@ -153,7 +153,11 @@ export const STATION_JOB_RULES: Readonly<Record<StationJobId, { readonly days: n
   flour: { days: 1, name: 'Flour' },
   'sugars-oils': { days: 1, name: 'Sugars and oils' },
   preserves: { days: 2, name: 'Preserves' },
+  weaving: { days: 1, name: 'Cloth' },
   planks: { days: 1, name: 'Planks' },
   drying: { days: 1, name: 'Drying' },
   smoking: { days: 1, name: 'Smoking' },
+  smelting: { days: 1, name: 'Ingots' },
+  cutting: { days: 1, name: 'Cut gems' },
+  blocks: { days: 1, name: 'Stone blocks' },
 }

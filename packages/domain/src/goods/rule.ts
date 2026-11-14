@@ -15,7 +15,7 @@ export type LadderFamily = Exclude<GoodsFamily, 'grains' | 'vegetables'>
 /** Each family's factor on the ladder. */
 export const FAMILY_FACTOR: Readonly<Record<LadderFamily, number>> = {
   ores: 1.0, stones: 0.8, crystals: 1.6, woods: 0.8, mushrooms: 1.0, 'herbs-spices': 0.9, fruits: 1.1, 'nuts-seeds': 1.0,
-  sweets: 1.1, fish: 1.3, 'hides-scales': 1.5, 'bones-horns': 1.6, essences: 1.8,
+  sweets: 1.1, fish: 1.3, fibers: 1.2, 'hides-scales': 1.5, 'bones-horns': 1.6, essences: 1.8, 'eggs-milk': 2.0,
 }
 
 /** A station's 1 → 1 output sells at ×1.5 its input. */
@@ -48,8 +48,8 @@ export const refinedPrice = (inputPrice: number): number => round5(inputPrice * 
 
 /** A season's demand rule: an uma-art family, all of it or only its refined row. */
 export interface DemandRule {
-  /** uma-art's family: a good's family, or `fibers` (the ranch's) and `dishes`. */
-  family: GoodFamily | 'fibers' | 'dishes'
+  /** A good's family, or `dishes`. */
+  family: GoodFamily | 'dishes'
   /** Only the refined row: Winter's preserves (fruits) and cloth (fibers). */
   refined?: true
   /** The rule in the player's words. */

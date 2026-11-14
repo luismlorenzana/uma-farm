@@ -6,14 +6,15 @@
 //                +1 when she's well fed this morning (a household meal the day before, a reception, a spouse's
 //                breakfast); all at the farm's pace (`atPace`: half, from the second short night of upkeep, never below 1)
 //   the board    her tasks, in your order: the field's over a list of tiles (harvest, water, plant, clear and till), a
-//                station's load, a forest area's forage or chop, a fishing spot's catch. Any Uma does any task, and each
-//                repeats daily until you change it. A task on the board is hers: the farmer's own ten stay free
-//   her night    the field's tasks and the loads first, in your order, each until it's done or her actions run out; then
-//                her gathering shares what's left, a turn each
+//                station's load, a forest area's forage or chop, a fishing spot's catch, the Coop's or the Barn's care,
+//                a face at the Mine or the Quarry. Any Uma does any task, and each repeats daily until you change it. A
+//                task on the board is hers: the farmer's own ten stay free
+//   her night    the field's tasks, the loads and the animals' care first, in your order, each until it's done or her
+//                actions run out; then her gathering and her digging share what's left, a turn each
 //   aptitude     a level 1–10 for each task: her talent's head start, a point for every 20 rank points in its activity,
 //                and a point for each action she spends on it. A level above 1 lifts her stars (+0.1) and her yield
 //                (+5%), and tricks open: two tiles an action, a row watered in one, a bigger haul, two casts, a bigger
-//                load
+//                load, two animals fed or cared for an action, three finds a face
 //
 // Her work counts as an Uma's work does: rank points in the day's activity (where she spent the most actions), the
 // challenges, bonds at the same place, her line, side by side's and the perks' extras, praise. Her reach is the farm's
@@ -28,8 +29,10 @@ import { talentYield, type TalentOf, type TalentStep } from './talents'
 import { cropLevelOf, drawnCount, reapTile, seedsBackChance, seedsInSeason, sowTile, stagesOf, tillGround, clearGround, wetTile, type Reaper } from '../fields/fields'
 import { growsIn } from '../fields/crops'
 import { chopAt, CHOP_LOGS, fishAt, FORAGE_HAUL, forageAt, reachLock } from '../gathering/hauls'
+import { DIG_TOOL, digBuilt, dugCount, FACE_FINDS, faceAt } from '../gathering/digs'
 import type { FishingSpotId, ForestAreaId } from '../gathering/ids'
 import { gatherQuality, GATHER_TOOL, HOME_COUNT, keepsakeAt, sizeSkill, stationBuilt, type GatherPlace, type MadeTonight, type WorkPlace } from '../gathering/kinds'
+import { animalsIn, careAt, collectAt, feedAt, grassAt, grassLock, heartsOf, homeBuilt, readyIn } from '../ranch/ranch'
 import { LOAD_SIZE, loadAt, stationOptions } from '../gathering/stations'
 import { TOOL_YIELD, WELL_FED_YIELD } from '../gathering/tables'
 import { isCropId, type CropId } from '../goods/ids'
@@ -38,7 +41,7 @@ import type { PerkPack } from '../romance/perk-terms'
 import { SaveRuleError } from '../save/rules'
 import {
   APTITUDE_IDS, FIELD_COLUMNS, FIELD_TILES, isOvergrown, MAX_TASKS, TILE_TASKS,
-  type AptitudeId, type FarmSave, type FarmTask, type RosterUma, type TaskKind, type TileTaskKind,
+  type AptitudeId, type DigId, type FarmSave, type FarmTask, type RosterUma, type TaskKind, type TileTaskKind,
 } from '../save/v4'
 import type { StoryPack } from '../story/pack'
 import { favouriteSpotOf, herJobOf } from '../story/placeholders'
@@ -103,16 +106,31 @@ export function handJob(pack: Pick<StoryPack, 'cast'>, id: string): HandJob {
 /** Each task's name on the board. */
 export const TASK_NAMES: Readonly<Record<TaskKind, string>> = {
   harvest: 'Harvest', water: 'Water', plant: 'Plant', till: 'Clear and till', load: 'Load', forage: 'Forage', chop: 'Chop', fish: 'Fish',
+  care: 'Care for animals', mine: 'Work a face',
 }
-/** The tasks that run until her actions do: her gathering, a turn each once the field's and the loads are done. */
-export const OPEN_TASKS: readonly TaskKind[] = ['forage', 'chop', 'fish']
+/** The tasks that run until her actions do: her gathering and her digging, a turn each once the field's, the loads and
+ * the animals' care are done. */
+export const OPEN_TASKS: readonly TaskKind[] = ['forage', 'chop', 'fish', 'mine']
 export const isTileTask = (task: FarmTask): task is Extract<FarmTask, { tiles: number[] }> => (TILE_TASKS as readonly string[]).includes(task.kind)
 
 /** The aptitude a task practises: its own, a load its station's. */
 export const taskAptitude = (task: FarmTask): AptitudeId => (task.kind === 'load' ? task.station : task.kind)
 
-/** Why a task can't go on her board, or null: the field's tiles are on the field, a load's station is built, an area or a
- * spot is within the farm's reach. */
+/** Where a task is worked: the Fields, a station, the forest, the Fishery, the Coop or the Barn, the Mine or the
+ * Quarry. */
+export function taskPlace(task: FarmTask): WorkPlace {
+  switch (task.kind) {
+    case 'load': return task.station
+    case 'forage': case 'chop': return 'forest'
+    case 'fish': return 'fishery'
+    case 'care': return task.home
+    case 'mine': return task.dig
+    default: return 'fields'
+  }
+}
+
+/** Why a task can't go on her board, or null: the field's tiles are on the field, a load's station, the animals' building
+ * and the dig are built, an area or a spot is within the farm's reach. */
 export function taskLock(save: Pick<FarmSave, 'buildings' | 'farm'>, task: FarmTask): string | null {
   if (isTileTask(task)) {
     if (task.tiles.length === 0) return 'Choose its tiles.'
@@ -120,8 +138,13 @@ export function taskLock(save: Pick<FarmSave, 'buildings' | 'farm'>, task: FarmT
     if (task.kind === 'plant' && task.crop !== undefined && !isCropId(task.crop)) return 'That isn’t a crop.'
     return null
   }
-  if (task.kind === 'load') return stationBuilt(save, task.station) ? null : 'Build it first.'
-  return task.kind === 'fish' ? reachLock(save, 'fishery', task.spot) : reachLock(save, 'forest', task.area)
+  switch (task.kind) {
+    case 'load': return stationBuilt(save, task.station) ? null : 'Build it first.'
+    case 'care': return homeBuilt(save, task.home) ? null : 'Build it first.'
+    case 'mine': return digBuilt(save, task.dig) ? null : 'Build it first.'
+    case 'fish': return reachLock(save, 'fishery', task.spot)
+    case 'forage': case 'chop': return reachLock(save, 'forest', task.area)
+  }
 }
 
 /** Sets a farmhand's tasks on the work board, in your order: free, a player's change. Refused for one who isn't a
@@ -143,15 +166,11 @@ export function setTasks<S extends FarmSave>(save: S, id: string, tasks: readonl
 /** Each aptitude's name, the activity it reads her talent and rank points in, and where she works it. */
 export const APTITUDE_NAMES: Readonly<Record<AptitudeId, string>> = {
   harvest: 'Harvesting', water: 'Watering', plant: 'Planting', till: 'Clearing', forage: 'Foraging', chop: 'Chopping', fish: 'Fishing',
-  mill: 'Milling', sawmill: 'Sawing', smokehouse: 'Smoking',
+  mill: 'Milling', sawmill: 'Sawing', smokehouse: 'Smoking', care: 'Animal care', mine: 'Mining', smelter: 'Smelting', cutter: 'Cutting',
 }
 export const APTITUDE_ACTIVITY: Readonly<Record<AptitudeId, Activity>> = {
   harvest: 'farming', water: 'farming', plant: 'farming', till: 'farming', forage: 'foraging', chop: 'foraging', fish: 'fishing',
-  mill: 'farming', sawmill: 'foraging', smokehouse: 'fishing',
-}
-export const APTITUDE_PLACE: Readonly<Record<AptitudeId, WorkPlace>> = {
-  harvest: 'fields', water: 'fields', plant: 'fields', till: 'fields', forage: 'forest', chop: 'forest', fish: 'fishery',
-  mill: 'mill', sawmill: 'sawmill', smokehouse: 'smokehouse',
+  mill: 'farming', sawmill: 'foraging', smokehouse: 'fishing', care: 'ranch', mine: 'mining', smelter: 'mining', cutter: 'mining',
 }
 
 /** The top level. */
@@ -198,14 +217,16 @@ export function aptitudeOf(uma: Pick<RosterUma, 'ranks' | 'practice'>, id: Aptit
   const level = aptitudeLevelOf(points)
   return { id, start, ranked, practice, points, level, next: level < MAX_APTITUDE ? APTITUDE_POINTS[level]! : null }
 }
-/** Her ten aptitudes, in the board's order. */
+/** Her fourteen aptitudes, in the board's order. */
 export const aptitudesOf = (uma: Pick<RosterUma, 'ranks' | 'practice'>, talentIn: TalentIn): Aptitude[] => APTITUDE_IDS.map((id) => aptitudeOf(uma, id, talentIn))
 const levelIn = (uma: Pick<RosterUma, 'ranks' | 'practice'>, id: AptitudeId, talentIn: TalentIn): number => aptitudeOf(uma, id, talentIn).level
 
 // --- Tricks ------------------------------------------------------------------------------------------------------
 
 /** The tricks and the level each opens at. */
-export const TRICK_AT = { harvestTwo: 5, waterTwo: 3, waterRow: 6, plantTwo: 4, tillInOne: 4, forageThree: 5, chopThree: 5, castTwo: 6, bigLoad: 5 } as const
+export const TRICK_AT = {
+  harvestTwo: 5, waterTwo: 3, waterRow: 6, plantTwo: 4, tillInOne: 4, forageThree: 5, chopThree: 5, castTwo: 6, bigLoad: 5, feedTwo: 3, careTwo: 5, digThree: 5,
+} as const
 /** A load's size with the bigger load. */
 export const BIG_LOAD = 12
 
@@ -220,7 +241,10 @@ export const TRICKS: readonly Trick[] = [
   { aptitude: 'forage', level: TRICK_AT.forageThree, what: `A haul of ${FORAGE_HAUL + 1} finds` },
   { aptitude: 'chop', level: TRICK_AT.chopThree, what: `${CHOP_LOGS + 1} logs a chop` },
   { aptitude: 'fish', level: TRICK_AT.castTwo, what: 'Two casts an action' },
-  ...(['mill', 'sawmill', 'smokehouse'] as const).map((aptitude) => ({ aptitude, level: TRICK_AT.bigLoad, what: `A load of up to ${BIG_LOAD}` })),
+  ...(['mill', 'sawmill', 'smokehouse', 'smelter', 'cutter'] as const).map((aptitude) => ({ aptitude, level: TRICK_AT.bigLoad, what: `A load of up to ${BIG_LOAD}` })),
+  { aptitude: 'care', level: TRICK_AT.feedTwo, what: 'Two animals fed an action' },
+  { aptitude: 'care', level: TRICK_AT.careTwo, what: 'Two animals cared for an action' },
+  { aptitude: 'mine', level: TRICK_AT.digThree, what: `${FACE_FINDS + 1} finds a face` },
 ]
 /** Her tricks in an aptitude: those open at `level`, and the next. */
 export function tricksAt(id: AptitudeId, level: number): { open: Trick[]; next: Trick | null } {
@@ -283,6 +307,45 @@ function gatherer(save: FarmSave, id: string, place: GatherPlace, kind: 'forage'
     count: drawnCount(many, draw(save.account.uid, save.calendar.day, `hand-${kind}:${id}`, before)),
     skill: sizeSkill(terms),
   }
+}
+
+/** Her terms at a dig tonight: her rank and talent in mining, the farm's Pick or Hammer, well fed, her keepsake; her
+ * finds (two, three from Mining 5) by her yield, a seeded draw for a fraction. */
+function digger(save: FarmSave, id: string, dig: DigId, level: number, fed: boolean, talentOf: TalentOf, story: PerkPack | null) {
+  const rank = save.roster[id]!.ranks.mining.rank
+  const talent = talentOf(id, 'mining')
+  const tool = save.tools[DIG_TOOL[dig]]
+  const keepsake = keepsakeAt(save, story, id, dig)
+  const terms = { rank, talent, tool, wellFed: fed ? 1 : 0, ...(keepsake ? { keepsake } : {}) }
+  const finds = FACE_FINDS + (level >= TRICK_AT.digThree ? 1 : 0)
+  const many = finds * rankBenefits(rank).yield * talentYield(talent) * TOOL_YIELD[tool - 1]! * (fed ? WELL_FED_YIELD : 1) * aptitudeYield(level)
+  return {
+    q: round6(gatherQuality(terms, fed) + aptitudeQuality(level)),
+    count: drawnCount(many, draw(save.account.uid, save.calendar.day, `hand-dig:${id}`, save.farm.counts[dugCount(dig)] ?? 0)),
+  }
+}
+
+/** The animals' care, one action: a hungry animal fed (two from Animal care 3) while the silo holds feed, else grass cut
+ * on a weeds tile for it; then the building's goods collected, at her aptitude's quality; then an animal cared for (two
+ * from Animal care 5), +1 fondness a level above 1. Null once all are fed, collected and cared for. */
+function careStep(save: FarmSave, home: Extract<FarmTask, { kind: 'care' }>['home'], level: number): Step | null {
+  if (!homeBuilt(save, home)) return null
+  const animals = animalsIn(save, home)
+  const hungry = animals.filter((a) => !a.fed)
+  if (hungry.length > 0 && save.ranch.silo > 0) {
+    const some = hungry.slice(0, Math.min(save.ranch.silo, level >= TRICK_AT.feedTwo ? 2 : 1))
+    return { save: some.reduce((s, a) => feedAt(s, a.id), save), n: some.length, items: [], events: [] }
+  }
+  if (hungry.length > 0 && grassLock(save) === null && save.fields.tiles.some((t) => t.ground === 'weeds')) return { save: grassAt(save).save, n: 0, items: [], events: [] }
+  if (readyIn(save, home) > 0) {
+    const done = collectAt(save, home, aptitudeQuality(level))
+    return { save: done.save, n: 0, items: done.collected.items, events: [] }
+  }
+  const lonely = animals.filter((a) => !a.cared).slice(0, level >= TRICK_AT.careTwo ? 2 : 1)
+  if (lonely.length === 0) return null
+  const next = lonely.reduce((s, a) => careAt(s, a.id, level - 1), save)
+  const events = lonely.map((a) => ({ activity: 'ranch' as const, event: { kind: 'hearts' as const, hearts: heartsOf(next.ranch.animals.find((x) => x.id === a.id)!.fondness) } }))
+  return { save: next, n: lonely.length, items: [], events }
 }
 
 /** One action of a task, or null when it has nothing to do (or can't be worked tonight). */
@@ -366,6 +429,12 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       const done = fishAt(save, task.spot, by)
       return { save: done.save, n: done.caught.length, items: done.haul.items, events: [{ activity: 'fishing', event: { kind: 'catch', spot: task.spot as FishingSpotId, fish: done.caught.length } }] }
     }
+    case 'care': return careStep(save, task.home, level)
+    case 'mine': {
+      if (!digBuilt(save, task.dig)) return null
+      const done = faceAt(save, task.dig, digger(save, id, task.dig, level, fed, talentOf, story))
+      return { save: done.save, n: 1, items: done.face.items, events: [{ activity: 'mining', event: { kind: 'dig', floor: done.face.floor, items: done.face.items.length } }] }
+    }
   }
 }
 
@@ -401,7 +470,7 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
       for (const { activity, event } of step.events) next = countChallenge(next, id, activity, event)
       left -= 1
       done[task.kind] = (done[task.kind] ?? 0) + step.n
-      const place = APTITUDE_PLACE[aptitude]
+      const place = taskPlace(task)
       spentAt.set(place, (spentAt.get(place) ?? 0) + 1)
       if (step.items.length > 0) madeAt.set(place, [...(madeAt.get(place) ?? []), ...step.items])
       items += step.items.length
@@ -415,6 +484,8 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
     }
     let open = tasks.filter((t) => OPEN_TASKS.includes(t.kind))
     while (left > 0 && open.length > 0) open = open.filter((task) => left > 0 && work(task))
+    // A day caring for animals: once a night toward her Ranch challenge.
+    if ((spentAt.get('coop') ?? 0) + (spentAt.get('barn') ?? 0) > 0) next = countChallenge(next, id, 'ranch', { kind: 'care' })
     out.lines.push({ kind: 'farmhand', id, actions: hand.actions, spent: hand.actions - left, half: hand.half, fed: hand.fed > 0, tasks: tasks.length, done, items })
     // Her place today: where she spent the most actions, the first she worked on a tie.
     const top = [...spentAt].reduce<[WorkPlace, number] | null>((best, at) => (best === null || at[1] > best[1] ? at : best), null)

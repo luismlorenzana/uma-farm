@@ -58,10 +58,23 @@ goods, better stars and tricks (two tiles an action, a row watered in one, a big
 profile's Work side shows them. Her work pays her rank points, bonds, her line and the perks' extras as an Uma's work
 does, and she costs 10g of upkeep a night wherever she lives. A simulated year with two farmhands pays its way many
 times over: 3.4 times the farmer alone's shipments, Farm Rank 3 by Summer's end ([farmhands](../game-mechanics.md#farmhands)).
+**The ranch and the mine (F83) are in,** and with them every step of the rework: the Coop (Farm Rank 2) and the Barn
+(Farm Rank 3) hold up to eight animals each, bought at the rancher's in town (free there): chickens and ducks for eggs,
+cows and goats for milk, sheep, alpacas and cashmere goats for wool and fleece. Each day an animal wants feeding (an
+action and a feed from the silo) and care (an action, +8 fondness); a fed one leaves its good by morning, one left hungry
+loses fondness and never dies; Collect takes a building's goods for an action, starred by each animal's hearts (ten is
+always ★5). The silo stands with the Coop or the Barn: grass cut on a weeds tile (an action for 5, the weeds grow back) or
+fodder at 10g. The Mine (Farm Rank 4) and the Quarry (Farm Rank 5) go thirty floors deep: a face is an action for two
+finds (ores; stones and gems), a grade every three floors, and its faces find the floor's stairs, taken free, as deep as
+the Farm Rank reaches; the deepest floor is kept. The Smelter and the Cutter take loads like the other stations, and the
+Mill weaves wool into cloth. On the work board, a farmhand cares for the Coop or the Barn (feed, collect, care) or works
+a dig's face, with the Animal care and Mining aptitudes and their tricks. The catalogue grows to 284 goods: uma-art's
+fibers, and the eggs and milk, drawn in code until uma-art's atlas has them. A simulated two years with the Coop and the
+Mine never runs short, and each pays more than its nights cost ([the ranch](../game-mechanics.md#the-ranch),
+[the Mine and the Quarry](../game-mechanics.md#the-mine-and-the-quarry)).
 
 | Piece | Who | State |
 |---|---|---|
-| [F83](tasks/F83-ranch-and-mine.md) **The ranch and the mine** | Claude | Next: the coop's care and the mine's faces join the work board |
 | [F69](tasks/F69-bust-art-spec.md) **The bust art**, the next Umas | ChatGPT | The pilot is done; the rest in the Ranker's order |
 | [F40](tasks/F40-story-authoring.md) **The story**, and its ship routine | The story session | Release 1 shipped; Release 2 brings `world.json` |
 
@@ -81,6 +94,7 @@ The table above is the queue. A packet is deleted when it ships, and git keeps t
 | **Borrow toward the Mill:** with 20 logs held, go into town, open the mayor's office, tap **Borrow · Build**; end the day and see the Mill stand, then watch the Book's money and the morning's loan line until it clears | [uma-farm.web.app](https://uma-farm.web.app), and [upkeep and loans](../game-mechanics.md#upkeep-and-loans) |
 | **Go into town and meet three Umas you choose:** walk between the places, introduce yourself, talk and give a gift, each an action | [uma-farm.web.app](https://uma-farm.web.app), and [the town](../game-mechanics.md#the-town) |
 | **Hire two Umas, set their tasks, and spend a day only in town:** invite two friends to work, give one the field's watering and the other a spot to fish on the Book's work board, then go into town and spend the day there; the next morning, see what they did, and over the days watch their aptitudes rise on their profiles | [uma-farm.web.app](https://uma-farm.web.app), and [farmhands](../game-mechanics.md#farmhands) |
+| **The ranch and the mine:** at Farm Rank 2, build the Coop; go into town and buy a chicken and some fodder at the rancher's; feed it and care for it, end the day, and collect its egg in the morning. At Farm Rank 4, build the Mine, work three floors (two faces a floor find the stairs; take them, free). Then set one farmhand to the Coop's care and another to the Mine's face on the Book's work board, end the day, and see the morning report their work | [uma-farm.web.app](https://uma-farm.web.app), and [the ranch](../game-mechanics.md#the-ranch) and [the Mine and the Quarry](../game-mechanics.md#the-mine-and-the-quarry) |
 | **Take one Uma to married life:** meet her, befriend her, invite her to work, a hangout and a date (two actions each), Dinner in town; after the wedding, watch the wedding night and moving in, cook a meal, choose tonight's companion and see her greet you in the morning | [uma-farm.web.app](https://uma-farm.web.app), and [the Uma loop](../game-mechanics.md#the-uma-loop) |
 | **Her illustrations' phone check:** meet the first Uma and see her greeting full screen; play her confession, both moods; open her profile's Gallery and see it fill as you go | [uma-farm.web.app](https://uma-farm.web.app), and [her illustrations](../game-mechanics.md#her-illustrations) |
 | **Write the story and ship it.** F40 lists what the rework changes for it: the protagonist is a man, there's no welcome week, and her life in town (`home`, `job`, `routine`, and `town.json`'s `locations`) | [F40](tasks/F40-story-authoring.md) |

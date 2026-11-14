@@ -37,7 +37,7 @@ farm's progress](game-mechanics.md#the-farms-progress). How it's built is in
 | **Landscape** | **Deployed** | The game is played sideways: a thin bar on top (the date, the actions left's placeholder, the gold, End the day, the Menu), a rail down the left (Farm · Town · People · Book · Diary), sheets as side panels, scenes laid out sideways, and a "Turn your phone sideways" card held upright. Home is still the 2D Hub map; the tile farm replaces it |
 | **The HD-2D farm** | **Retired** | The portrait preview and its stage are gone with landscape. The HD-2D look comes back when uma-platform's look path is ready |
 | **Art** | **Mixed** | The map's buildings, the items and the marks are uma-art's; the Umas' faces and busts are master data's. The HD-2D farm kit retired with the portrait preview. The town's people are Umas, with master data's busts |
-| **The workshops** | **Not built** | The ranch, the Mine and the Quarry, the Kitchen and its cooking game, expeditions, the Restaurant and the Forge's games |
+| **The workshops** | **Partial** | **Built:** the ranch (the Coop, the Barn, the silo and seven animals) and the Mine and the Quarry with the Smelter and the Cutter, in the farm loop's style. **Not built:** the Kitchen and its cooking game, expeditions, the Restaurant and the Forge's games |
 | **Sound** | **None** | No music and no sound effects |
 | **Safety nets** | **Partial** | The save syncs with rescues and backups; there's no error reporting and no end-to-end test |
 | **Parcels to the other games** | **Parked** | The farm sending items to uma-quest, uma-rpg and uma-racer comes after the farm's own game |
@@ -91,11 +91,7 @@ The owner's rework turns the game landscape, gives the day a budget of actions, 
 heart, with Umas who take the farm over and get better at it, a navigable town, a dialogue engine, upkeep and loans, a
 visible calendar, and a default Uma so every character plays fully. **The design is
 [design/game-design.md](design/game-design.md)** ([page](pages/game-design.html)), with its keep, build-on and replace
-table. Its steps, in order:
-
-| Step | What | Packet |
-|---|---|---|
-| 10 | **The ranch and the mine,** in the farm loop's style | [F83](handoff/tasks/F83-ranch-and-mine.md) |
+table. **All ten of its steps are built:**
 
 Step 1, landscape, is done: the app sideways, the bar and the rail, side panels, and the portrait HD-2D preview
 retired. Step 2, the dialogue engine, is done: every scene on one engine, the pilot's portraits from master data with
@@ -122,7 +118,13 @@ Step 7, farmhands, is built: a friend invited to work does her part-time job, th
 married and well fed; half at half pace) on the tasks you set on the Book's work board, overnight before the crops grow;
 an aptitude for each task, from her talent and raised by practice, brings more goods, better stars and tricks; and a
 simulated year with two farmhands pays their 10g a night many times over ([farmhands](game-mechanics.md#farmhands)).
-Phone checks follow steps 1, 2, 4, 5 and 7.
+Step 10, the ranch and the mine, is built: the Coop and the Barn with seven animals bought at the rancher's in town, fed
+from the silo (grass cut from the field's weeds, or fodder) and cared for, an action each, their eggs, milk, wool and
+fleeces collected by the building and starred by their hearts; the Mine and the Quarry worked a face at a time, thirty
+floors each, their stairs found by the faces and taken free; the Smelter and the Cutter; and the Coop's care and a
+dig's face on the work board. A simulated two years with the Coop and the Mine pays their way
+([the ranch](game-mechanics.md#the-ranch), [the Mine and the Quarry](game-mechanics.md#the-mine-and-the-quarry)).
+Phone checks follow steps 1, 2, 4, 5, 7 and 10.
 
 **What it changes below:**
 - Phase 1's HD-2D track pauses: the portrait preview is retired, and the farm map becomes a landscape tile map until
@@ -166,10 +168,10 @@ at the end of every session ([F40](handoff/tasks/F40-story-authoring.md)).
 
 **Goal:** every place you can build has its full game.
 
+2.1, the ranch, and 2.2, the Mine and the Quarry, came with the rework's step 10.
+
 | Step | What |
 |---|---|
-| 2.1 **The ranch** | The Coop and the Barn: animals and their feed, carers and affection, eggs, milk and wool, cloth at the Mill |
-| 2.2 **The Mine and the Quarry** | Floors and stairs, ore and stone, the Smelter and the Cutter |
 | 2.3 **The Kitchen** | The cooking game on the stage, recipes, the staff meal and well fed; the Cooking Contest as a festival |
 | 2.4 **The sea and expeditions** | The dock and the boat's spots; regions, parties and their power, results and loot, the log |
 | 2.5 **The Restaurant's and the Forge's games** | The serving game and the merge game, on the stage |

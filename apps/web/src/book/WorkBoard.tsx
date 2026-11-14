@@ -1,13 +1,13 @@
 // The work board, in the Book: each farmhand's card with her part-time job and her actions today (3, more settled in,
 // married and well fed; half pace when the upkeep's short), what she'll do tonight as the farm stands, and her tasks in
 // your order, each with her aptitude's level. **Add a task** opens a side panel (`?task=<id>`): what (harvest, water,
-// plant, clear and till over the field's rows; a station's load; a forest area's forage or chop; a fishing spot's catch)
-// and where. Tasks repeat each day until you change them; any Uma does any task. Setting them is free. Loaded with the
+// plant, clear and till over the field's rows; a station's load; a forest area's forage or chop; a fishing spot's catch;
+// the Coop's or the Barn's animals; a face at the Mine or the Quarry) and where. Tasks repeat each day until you change them; any Uma does any task. Setting them is free. Loaded with the
 // Book.
 import {
   aptitudeOf, APTITUDE_NAMES, CROPS, farmPlace, FIELD_COLUMNS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handTonight, isOvergrown, itemNameOf,
-  MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, growsIn, dateOf,
-  type CropId, type FarmSave, type FarmTask, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
+  MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, growsIn, dateOf, DIGS, placeBuilt, RANCH_HOMES,
+  type CropId, type DigId, type FarmPlaceId, type FarmSave, type FarmTask, type RanchHome, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -40,7 +40,7 @@ export function WorkBoard({ save }: { save: FarmSave }) {
         <h2 className="font-display text-[18px] font-bold text-ink">Work board</h2>
         <HelpButton title="The work board" label="About the work board">
           <p>A friend you invite to work is a farmhand. After her part-time job in town, she gives the farm 3 actions a day: one more once she’s settled in (a season on), two more once she’s your spouse, one more the day after a household meal.</p>
-          <p>She works your tasks overnight, before the crops grow: the field’s and the stations’ first, in your order, then her gathering, a turn each. The morning says what she did.</p>
+          <p>She works your tasks overnight, before the crops grow: the field’s, the stations’ and the animals’ first, in your order, then her gathering and digging, a turn each. The morning says what she did.</p>
           <p>Every task has an aptitude. She starts from her talents and gets better with each action: more goods, better stars, and tricks, like a row watered in one action.</p>
           <p>Short of upkeep two nights running, the farmhands work at half pace until it’s paid. Each farmhand costs 10g a night.</p>
         </HelpButton>
@@ -150,7 +150,9 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
     ? (tiles.length === 0 ? null : kind === 'plant' ? { kind, tiles, ...(crop ? { crop } : {}) } : { kind: kind as Exclude<TileTaskKind, 'plant'>, tiles })
     : where === null ? null
       : kind === 'load' ? { kind, station: where as StationId }
-        : kind === 'fish' ? { kind, spot: where as 'pond' } : { kind: kind as 'forage' | 'chop', area: where as 'woods' }
+        : kind === 'care' ? { kind, home: where as RanchHome }
+          : kind === 'mine' ? { kind, dig: where as DigId }
+            : kind === 'fish' ? { kind, spot: where as 'pond' } : { kind: kind as 'forage' | 'chop', area: where as 'woods' }
   const pick = (next: TaskKind) => { setKind(next); setWhere(null); setError(null) }
   const add = () => {
     if (!task) return
@@ -159,9 +161,10 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
   }
   const season = dateOf(save.calendar.day).season
   const crops = (Object.keys(CROPS) as CropId[]).filter((c) => growsIn(c, season) && seedsInSeason(save).some((s) => s.crop === c))
-  const places = kind === 'load'
-    ? STATIONS.map((s) => ({ id: s, name: farmPlace(s)?.name ?? s, lock: stationBuilt(save, s) ? null : 'Build it first.' }))
-    : kind === 'fish' ? reachList(save, 'fishery') : reachList(save, 'forest')
+  const built = (id: FarmPlaceId) => ({ id, name: farmPlace(id)?.name ?? id, lock: placeBuilt(save, id) ? null : 'Build it first.' })
+  const places = kind === 'load' ? STATIONS.map((s) => ({ ...built(s), lock: stationBuilt(save, s) ? null : 'Build it first.' }))
+    : kind === 'care' ? RANCH_HOMES.map(built) : kind === 'mine' ? DIGS.map(built)
+      : kind === 'fish' ? reachList(save, 'fishery') : reachList(save, 'forest')
   return (
     <Sheet open onClose={onClose} title={`A task for ${name}`} label="Add a task"
       footer={(
@@ -209,7 +212,7 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
           </fieldset>
         ) : (
           <fieldset>
-            <legend className="text-micro pb-1">{kind === 'load' ? 'Which station' : kind === 'fish' ? 'Which spot' : 'Which area'}</legend>
+            <legend className="text-micro pb-1">{kind === 'load' ? 'Which station' : kind === 'care' ? 'Which building' : kind === 'mine' ? 'Which dig' : kind === 'fish' ? 'Which spot' : 'Which area'}</legend>
             <ul className="grid grid-cols-2 gap-1.5">
               {places.map((p) => (
                 <li key={p.id}>

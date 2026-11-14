@@ -1,5 +1,5 @@
 // End the day: the night is one pure function, nine steps in a fixed order, one save write. A step whose part of the
-// game isn't built yet (the ranch, the workshops) does nothing:
+// game isn't built yet (the workshops) does nothing:
 //
 //   1 the bin pays, then the loans' shares and the upkeep · 2 the farmhands work, then watered crops grow · 3 animals ·
 //   4 the stations' loads are done ·
@@ -55,9 +55,10 @@ import { raiseBuilds } from '../farm/builds'
 import { settleAccounts } from '../farm/economy'
 import { aptitudeUps, fedThisMorning, handsTonight } from '../farm/farmhands'
 import type { FarmPlaceId } from '../farm/places'
+import { tendNight } from '../ranch/ranch'
 import type {
-  BinSale, FarmhandLine, HeartLine, HouseholdNews, HouseLine, HouseMissesLine, InviteLine, ItemLine, LevelLine, MoneyLine, MorningSummary, MovedLine, NewsLine, Nudge, RankLine, StoryNews,
-  VowsLine, WorkLine,
+  BinSale, FarmhandLine, HeartLine, HouseholdNews, HouseLine, HouseMissesLine, InviteLine, ItemLine, LevelLine, MoneyLine, MorningSummary, MovedLine, NewsLine, Nudge, RanchLine, RankLine,
+  StoryNews, VowsLine, WorkLine,
 } from './summary'
 
 /** What the night reads beyond the save: the talents the app reads from master data, the story pack and the
@@ -98,6 +99,8 @@ export interface NightNotes {
   /** Step 2: the tiles that grew a stage tonight, and how many turned ripe. */
   readonly grew: number
   readonly ripened: number
+  /** Step 3: the Coop's and the Barn's nights. */
+  readonly ranch: readonly RanchLine[]
   /** Step 4: the stations' loads done tonight. */
   readonly loads: readonly LoadDone[]
   /** Step 7: crops that withered on a season's last night, by crop. */
@@ -147,7 +150,7 @@ export interface NightNotes {
 
 /** A night's notes before its first step. */
 export const emptyNotes = (): NightNotes => ({
-  sold: [], money: [], worked: [], tended: [], made: [], hands: [], handsGathered: [], grew: 0, ripened: 0, loads: [], withered: [], ranks: [], dorm: null, home: [],
+  sold: [], money: [], worked: [], tended: [], made: [], hands: [], handsGathered: [], grew: 0, ripened: 0, ranch: [], loads: [], withered: [], ranks: [], dorm: null, home: [],
   built: [], goals: { paid: [], ranks: [] }, townNotes: [], lines: [], days: [], extras: [], bonds: [], invites: [], chores: [], perks: [], items: [], house: null, levels: [],
   household: [], houseLine: null, houseItems: [], moved: [], misses: null, vows: null,
 })
@@ -203,8 +206,13 @@ export const growCrops: NightStep = (night) => {
   const { save, grew, ripened } = growTiles(night.save, tiles)
   return { ...night, save, notes: { ...night.notes, grew, ripened, chores: [...night.notes.chores, ...chores] } }
 }
-/** Step 3: animals fed, affection, products. The ranch isn't built, so it does nothing. */
-export const tendAnimals: NightStep = same
+/** Step 3: **the animals.** Each animal fed today makes its good, waiting in its building to be collected (one at a time),
+ * and grows a little fonder; one left unfed goes hungry, makes nothing and loses fondness, and never dies. Then each is
+ * unfed and uncared for the next day (`ranch/ranch.ts`). */
+export const tendAnimals: NightStep = (night) => {
+  const { save, lines } = tendNight(night.save)
+  return { ...night, save, notes: { ...night.notes, ranch: lines } }
+}
 
 /** Step 4: every load started at a station today is done: its goods into the Warehouse at their stars, the station free
  * for the morning. */
@@ -499,14 +507,14 @@ const storyNews = (context: NightContext): StoryNews[] => (context.release ? [{ 
 /** Step 9: the morning summary, built from what changed. It replaces last night's. */
 export const buildSummary: NightStep = (night) => {
   const { save, notes } = night
-  // The farmhands' days, the stations' loads, then the field's growth, then what withered.
+  // The farmhands' days, the stations' loads, the ranch's nights, then the field's growth, then what withered.
   const loads = notes.loads.map((l): WorkLine => ({ kind: 'load', station: l.station, item: l.item, count: l.count }))
   const grew: WorkLine[] = notes.grew > 0 ? [{ kind: 'grew', tiles: notes.grew, ripe: notes.ripened }] : []
   const withered = notes.withered.map((w): WorkLine => ({ kind: 'withered', crop: w.crop, tiles: w.tiles }))
   const water = dryTiles(save)
   const plant = tilesToPlant(save)
   const nudges: Nudge[] = [...(water > 0 ? [{ kind: 'water' as const, tiles: water }] : []), ...(plant > 0 ? [{ kind: 'seeds' as const, tiles: plant }] : [])]
-  const work = [...notes.hands, ...loads, ...grew, ...withered]
+  const work = [...notes.hands, ...loads, ...notes.ranch, ...grew, ...withered]
   const ranks = [...notes.ranks, ...aptitudeUps(night.before, save, talentsOf(night))]
   const summary: MorningSummary = {
     day: save.calendar.day, bin: [...notes.sold], ...(notes.money.length > 0 ? { money: [...notes.money] } : {}), work, ranks, hearts: heartLines(night),
@@ -533,9 +541,9 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 1, name: 'noteTonight', run: noteTonight, what: 'Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning' },
   { step: 1, name: 'payTheBin', run: payTheBin, what: 'The bin pays: everything shipped today, at price × stars × demand' },
   { step: 1, name: 'settleTheAccounts', run: settleTheAccounts, what: 'The accounts: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the upkeep, with anything owed: what gold there is pays, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid' },
-  { step: 2, name: 'farmhandsWork', run: farmhandsWork, what: 'The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s and the loads first, in your order, then her gathering, a turn each; a point of practice an action, her goods into the Warehouse, her place today where she spent the most' },
+  { step: 2, name: 'farmhandsWork', run: farmhandsWork, what: 'The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads and the animals’ care first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse, her place today where she spent the most' },
   { step: 2, name: 'growCrops', run: growCrops, what: 'Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day' },
-  { step: 3, name: 'tendAnimals', run: tendAnimals, what: 'Animals: nothing happens until the ranch is built' },
+  { step: 3, name: 'tendAnimals', run: tendAnimals, what: 'Animals: each animal fed today makes its good, waiting in its building to be collected (one at a time), and grows 2 fonder; one left unfed goes hungry, makes nothing and loses 10 fondness, and never dies; then each is unfed and uncared for the next day' },
   { step: 4, name: 'finishTheLoads', run: finishTheLoads, what: 'Stations: every load started today is done, its goods into the Warehouse at their stars, the station free for the morning' },
   { step: 4, name: 'nightExtras', run: nightExtras, what: 'Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again (20% in her element), seeded copies straight into the Warehouse; then the perks’ extras: the bond term × the romance term of the same items (her line’s +10% and +20%, her ring, a dream, the household; held to 40%), their own seeded copies' },
   { step: 4, name: 'nightChores', run: nightChores, what: 'Night chores: a forager’s bring one item each from her rank’s deepest forest area this season, a fisher’s one fish each from her deepest spot, at a day’s haul’s stars, into the Warehouse; 1 from F6, 2 from R7, 3 from S4, on the farm only' },
@@ -562,7 +570,7 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 9, name: 'morningItems', run: morningItems, what: 'Morning items: each Uma on the farm leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+)' },
   { step: 9, name: 'drawInvitations', run: drawInvitations, what: 'Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, \'invite\', n)` among those home at Friendship 3+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14)' },
   { step: 9, name: 'noteTheFed', run: noteTheFed, what: 'The farmhands well fed this morning are noted (`today.fed`): each works one more action today' },
-  { step: 9, name: 'buildSummary', run: buildSummary, what: 'The morning summary, from what changed; §2 Work done opens with each farmhand’s day, §3 Ranks closes with the aptitudes that reached a level; §4 Hearts lists the invitations, the Festival of Vows, the night’s levels, the house’s morning, rooms taken and a house that misses you, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning; §5 the household milestones' },
+  { step: 9, name: 'buildSummary', run: buildSummary, what: 'The morning summary, from what changed; §2 Work done opens with each farmhand’s day, then the loads and the Coop’s and the Barn’s nights, §3 Ranks closes with the aptitudes that reached a level; §4 Hearts lists the invitations, the Festival of Vows, the night’s levels, the house’s morning, rooms taken and a house that misses you, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning; §5 the household milestones' },
 ]
 
 /** The night's steps over a save, unstamped: `endDay` without its stamp. Tests swap a step to stand in for a later one. */

@@ -52,6 +52,10 @@ export * from './gathering/tables'
 export * from './gathering/kinds'
 export * from './gathering/hauls'
 export * from './gathering/stations'
+// The Mine and the Quarry: their floors and finds, a face worked, the stairs; and the ranch: the Coop and the Barn, their
+// animals, feed and care, the silo, the rancher's, and the night's step 3.
+export * from './gathering/digs'
+export * from './ranch/ranch'
 
 // The roster: the Dorm's levels, beds and swaps.
 export * from './farm/dorm'

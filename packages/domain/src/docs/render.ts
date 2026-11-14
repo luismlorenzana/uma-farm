@@ -35,7 +35,11 @@ import { gatherQuality, sizeSkill, type WorkTerms } from '../gathering/kinds'
 import { FISH_SIZES, FISHERY, FOREST, STATION_JOB_RULES } from '../gathering/tables'
 import { farmPlace } from '../farm/places'
 import { starShares } from '../goods/stars'
-import { FIELD_COLUMNS, FIELD_ROWS, FIELD_TILES, OVERGROWTH_SHARES, pairKey, START_CLEAR } from '../save/v4'
+import { ANIMAL_KINDS, DEEPEST_FLOOR, FIELD_COLUMNS, FIELD_ROWS, FIELD_TILES, HOME_ROOM, MAX_FONDNESS, OVERGROWTH_SHARES, pairKey, SILO_ROOM, START_CLEAR, type DigId } from '../save/v4'
+import {
+  ANIMALS, CARE_FONDNESS, FED_FONDNESS, FODDER_PRICE, FONDNESS_A_HEART, GRASS_CUT, HOME_NAMES, HUNGRY_FONDNESS, MAX_FODDER,
+} from '../ranch/ranch'
+import { FACE_FINDS, floorFinds, floorRank, FLOORS_A_GRADE, gradeAt, stairsAfter } from '../gathering/digs'
 import { DORM_LEVELS } from '../farm/dorm'
 import { farmRankOpens } from '../farm/diary'
 import { DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, ROW_GOLD, type Milestone } from '../farm/milestones'
@@ -173,8 +177,8 @@ function umaMilestonesBlock(): string {
 const FAMILY_FROM: Readonly<Record<GoodFamily, string>> = {
   grains: 'The Fields', vegetables: 'The Fields', 'herbs-spices': 'The forest, some crops', 'nuts-seeds': 'The forest (Autumn), two crops',
   sweets: 'The forest (Spring), Sugar Beet', fruits: 'The forest (Summer)', mushrooms: 'The forest', woods: 'The forest', ores: 'The Mine',
-  stones: 'The Quarry', crystals: 'The Quarry', fish: 'The Fishery', 'hides-scales': 'Expeditions', 'bones-horns': 'Expeditions', essences: 'Expeditions',
-  rings: 'The ring bench',
+  stones: 'The Quarry', crystals: 'The Quarry', fish: 'The Fishery', fibers: 'The Barn: Wool, Alpaca Fleece, Cashmere Fleece', 'hides-scales': 'Expeditions',
+  'bones-horns': 'Expeditions', essences: 'Expeditions', 'eggs-milk': 'The Coop and the Barn', rings: 'The ring bench',
 }
 const g = (gold: number): string => `${gold.toLocaleString('en-US')}g`
 /** A day of each season, year 1, for the demand columns. */
@@ -406,6 +410,49 @@ function stations(): string {
   }))
 }
 
+// --- The ranch and the digs ----------------------------------------------------------------------------------------
+
+/** The seven animals: where each lives, its price at the rancher's and its Farm Rank, its good and that good's prices. */
+function animalsBlock(): string {
+  return table(['Animal', 'Lives in', 'At the rancher’s', 'Opens at', 'Gives, each night it’s fed', '★1', '★5 (10 hearts)', 'At the Mill'], ANIMAL_KINDS.map((kind) => {
+    const a = ANIMALS[kind]
+    const into = refinedOf(a.good)
+    return [a.name, `The ${HOME_NAMES[a.home]}`, g(a.price), `Farm Rank ${a.rank}`, `${itemNameOf(a.good)} (\`${a.good}\`)`, g(starPrice(a.good, 1)), g(starPrice(a.good, 5)),
+      into ? `${itemNameOf(into)}, ${g(starPrice(into, 1))}` : '—']
+  }))
+}
+/** The ranch's numbers: room, the silo, feed, fondness and the stars. */
+function ranchRules(): string {
+  return table(['', 'The rule'], [
+    ['Room', `${HOME_ROOM} animals in the Coop, ${HOME_ROOM} in the Barn`],
+    ['The silo', `Stands with the first of the Coop and the Barn; holds ${SILO_ROOM} feed`],
+    ['Feed', `Grass: cut a weeds tile (1 action) for ${GRASS_CUT}, the weeds growing back. Fodder: ${g(FODDER_PRICE)} a feed at the rancher’s, 1 to ${MAX_FODDER} at a time`],
+    ['Feed one', '1 action, one feed from the silo, once a day'],
+    ['Care for one', `1 action, once a day: +${CARE_FONDNESS} fondness at once (a farmhand’s +1 more a level of Animal care above 1)`],
+    ['Collect', '1 action: every good waiting in the building, into the Warehouse'],
+    ['A fed night', `It makes its good, waiting until collected (one at a time); +${FED_FONDNESS} fondness`],
+    ['A hungry night', `No good; −${HUNGRY_FONDNESS} fondness, never below 0. It never dies`],
+    ['Hearts', `A heart every ${FONDNESS_A_HEART} fondness, ten at ${MAX_FONDNESS}`],
+    ['Stars', `Its hearts ÷ 2.5 in quality (★1 at 0 hearts, always ★5 at 10), and a farmhand’s +${per(aptitudeQuality(2))} a level of Animal care above 1`],
+  ])
+}
+/** The digs' floors: each three floors' grade, the Mine's and the Quarry's finds, the faces to the stairs and the Farm
+ * Rank that reaches them. */
+function digFloors(): string {
+  const rows = Array.from({ length: DEEPEST_FLOOR / FLOORS_A_GRADE }, (_, i) => {
+    const first = i * FLOORS_A_GRADE + 1
+    const last = first + FLOORS_A_GRADE - 1
+    const finds = (dig: DigId) => floorFinds(dig, first).filter((id) => goodOf(id)!.grade === gradeAt(first)).map((id) => itemNameOf(id)).join(' or ')
+    const floors = Array.from({ length: FLOORS_A_GRADE }, (_, k) => first + k)
+    const faces = [...new Set(floors.filter((f) => f < DEEPEST_FLOOR).map(stairsAfter))]
+    // The Farm Rank that reaches the first of these floors, and the floor where a later rank takes over, if any.
+    const later = floors.find((f) => floorRank(f) !== floorRank(first))
+    const reach = `Farm Rank ${floorRank(first)}${later ? `; floor ${later} at ${floorRank(later)}` : ''}`
+    return [`${first}–${last}`, `G${gradeAt(first)}`, finds('mine'), finds('quarry'), faces.length > 0 ? faces.join(' or ') : '—', reach]
+  })
+  return table(['Floors', 'Grade', 'The Mine (ore)', 'The Quarry (stone 70%, gem 30%)', 'Faces to the stairs', 'The farmer reaches it at'], rows)
+}
+
 /** Every station job's input → output, with both prices ★1. */
 function stationRecipes(): string {
   return STATION_JOB_IDS.map((job) => {
@@ -421,7 +468,7 @@ function stationRecipes(): string {
 /** Upkeep: what it counts and its gold a night, and a short night's rule. */
 function upkeepBlock(): string {
   return table(['Counts', 'A night', 'Not counted'], [
-    ['Each place built (the Mill, the Sawmill, the Smokehouse, the Dock, the Boat, and each later one)', g(UPKEEP_BUILDING), 'The start’s own places'],
+    ['Each place built (the stations, the Coop and the Barn, the Mine and the Quarry, the Dock, the Boat, and each later one)', g(UPKEEP_BUILDING), 'The start’s own places; the animals, whose cost is their feed'],
     ['Each house built on the homestead', g(UPKEEP_BUILDING), 'The Farmhouse'],
     [`Each Dorm bed past the first ${FREE_BEDS}, at the level in effect`, g(UPKEEP_BED), `Level 1’s ${FREE_BEDS} beds`],
     ['Each Uma living on the farm or working it: home in the Dorm, a spouse in her house, or a farmhand wherever she lives; once each', g(UPKEEP_RESIDENT), 'Those who live in town and don’t work the farm'],
@@ -443,7 +490,8 @@ function farmhandDay(): string {
 function workBoard(): string {
   const rows: Cell[][] = TASK_KINDS.map((kind) => {
     const aptitude = kind === 'load' ? 'mill' : kind
-    const over = (TILE_TASKS as readonly string[]).includes(kind) ? 'Tiles you choose (the board offers the field’s rows)' : kind === 'load' ? 'A built station' : kind === 'fish' ? 'A spot the farm reaches' : 'An area the farm reaches'
+    const over = (TILE_TASKS as readonly string[]).includes(kind) ? 'Tiles you choose (the board offers the field’s rows)' : kind === 'load' ? 'A built station'
+      : kind === 'fish' ? 'A spot the farm reaches' : kind === 'care' ? 'The Coop’s or the Barn’s animals' : kind === 'mine' ? 'The Mine’s or the Quarry’s deepest floor' : 'An area the farm reaches'
     const each: Record<TaskKind, string> = {
       harvest: `A ripe tile, its crops by her stars; ${tilesAt('harvest', TRICK_AT.harvestTwo)}`,
       water: `A dry growing tile; ${tilesAt('water', TRICK_AT.waterTwo)}; every dry tile of hers in one row from Watering ${TRICK_AT.waterRow}`,
@@ -453,13 +501,15 @@ function workBoard(): string {
       forage: `A haul of ${FORAGE_HAUL} finds (${FORAGE_HAUL + 1} from Foraging ${TRICK_AT.forageThree})`,
       chop: `${CHOP_LOGS} logs (${CHOP_LOGS + 1} from Chopping ${TRICK_AT.chopThree})`,
       fish: `A cast: one fish (two casts from Fishing ${TRICK_AT.castTwo})`,
+      care: `A hungry animal fed from the silo (two from Animal care ${TRICK_AT.feedTwo}), else grass cut on a weeds tile for it; then the building’s goods collected, +${per(aptitudeQuality(2))} quality a level above 1; then an animal cared for (two from Animal care ${TRICK_AT.careTwo}), +1 fondness a level above 1`,
+      mine: `A face on the deepest floor: ${FACE_FINDS} finds by her yield (${FACE_FINDS + 1} from Mining ${TRICK_AT.digThree}), a face more toward its stairs; the farmer takes them`,
     }
-    const stops = OPEN_TASKS.includes(kind) ? 'Never: her gathering shares what’s left, a turn each' : kind === 'load' ? 'Once the station holds today’s load' : 'When none of its tiles needs it'
-    return [TASK_NAMES[kind], over, each[kind], stops, kind === 'load' ? 'Milling, Sawing or Smoking, by station' : APTITUDE_NAMES[aptitude as AptitudeId], ACTIVITY_NAMES[APTITUDE_ACTIVITY[aptitude as AptitudeId]] + (kind === 'load' ? ', foraging or fishing' : '')]
+    const stops = OPEN_TASKS.includes(kind) ? `Never: her ${kind === 'mine' ? 'digging' : 'gathering'} shares what’s left, a turn each` : kind === 'load' ? 'Once the station holds today’s load'
+      : kind === 'care' ? 'When every animal there is fed, collected and cared for' : 'When none of its tiles needs it'
+    return [TASK_NAMES[kind], over, each[kind], stops, kind === 'load' ? 'Milling, Sawing, Smoking, Smelting or Cutting, by station' : APTITUDE_NAMES[aptitude as AptitudeId],
+      ACTIVITY_NAMES[APTITUDE_ACTIVITY[aptitude as AptitudeId]] + (kind === 'load' ? ', foraging, fishing or mining' : '')]
   })
-  return table(['Task', 'Over', 'An action', 'It stops', 'Aptitude', 'Reads'], [...rows,
-    ['Care for the coop or the barn', 'Its animals', 'Comes with the ranch', '—', '—', 'Ranch'],
-    ['Work a face', 'The mine’s or the quarry’s floor', 'Comes with the mine', '—', '—', 'Mining']])
+  return table(['Task', 'Over', 'An action', 'It stops', 'Aptitude', 'Reads'], rows)
 }
 const tilesAt = (kind: TileTaskKind, level: number): string => `${tilesAnAction(kind, level)} tiles an action from ${APTITUDE_NAMES[kind]} ${level}`
 /** Aptitude's levels: the points each starts at, and what it gives. */
@@ -789,8 +839,10 @@ const LINE_CHORE: Readonly<Record<PerkLine, string>> = {
 function perkLines(): string {
   return table(['Her line', '+10% at her line (F3, R5)', 'A night chore (F6, R7, S4)', 'A morning item (R2, S2)', 'Acts'], PERK_LINES.map((line) => {
     const opens = linePlace(line)
-    const now = CHORE_LINES.includes(line) ? 'Yes' : `Not yet: once the ${FARM_PLACES.find((p) => p.id === opens)!.name}’s game is built`
-    return [PERK_LINE_NAME[line], LINE_TEN[line], LINE_CHORE[line], `A ★2+ ${MORNING_GOOD[line]}${CHORE_LINES.includes(line) ? '' : ' (a crop of the season until its place opens)'}`, now]
+    const place = FARM_PLACES.find((p) => p.id === opens)
+    const built = place?.opens.by === 'build' && place.opens.game
+    const now = CHORE_LINES.includes(line) ? 'Yes' : built ? `Not yet: the ${place.name} stands; its line’s perks come later` : `Not yet: once the ${place?.name ?? opens}’s game is built`
+    return [PERK_LINE_NAME[line], LINE_TEN[line], LINE_CHORE[line], `A ★2+ ${MORNING_GOOD[line]}${CHORE_LINES.includes(line) ? '' : ' (a crop of the season meanwhile)'}`, now]
   }))
 }
 /** The caps, and a worked forager. */
@@ -815,7 +867,7 @@ function signatureDishes(): string {
     farming: 'The top grade of the shop’s vegetables at its open seed tiers (Farm Rank 1: G6; 2: G7; 4: G10)',
     foraging: 'The top grade of the deepest forest area anyone has worked (the Woods G2 … the World Tree G10)',
     fishing: 'The top grade of the deepest spot anyone has worked, its fish at 10% or more (the Pond G2)',
-    mining: 'G1 until the Mine’s game is built', quarry: 'G1 until the Quarry’s game is built', ranch: 'G1 until the ranch’s game is built',
+    mining: 'G1 until the Mine’s line perks come', quarry: 'G1 until the Quarry’s line perks come', ranch: 'G1 until the ranch’s line perks come',
     cooking: 'G1 until the Kitchen’s game is built', serving: 'G1 until the Restaurant’s game is built', forging: 'G1 until the Forge’s game is built',
   }
   return table(['Her line', 'Her dish kind', 'Its grade', 'At G1'], PERK_LINES.map((line) => [PERK_LINE_NAME[line], DISH_WORDS[LINE_DISH[line]], grade[line], dishName(dishId(LINE_DISH[line], 1))]))
@@ -1149,7 +1201,7 @@ export function renderBlock(key: string): string | null {
     actions: actionsBlock, 'day-budget': dayBudgetBlock,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,
     'place-activity': placeActivity, 'forest-areas': forestAreas, 'fishing-spots': fishingSpots, 'fish-sizes': fishSizes, 'farmer-hauls': farmerHauls,
-    stations, 'station-recipes': stationRecipes,
+    stations, 'station-recipes': stationRecipes, animals: animalsBlock, 'ranch-rules': ranchRules, 'dig-floors': digFloors,
     'dorm-levels': dormLevels, upkeep: upkeepBlock, loans: loansBlock,
     'farmhand-day': farmhandDay, 'work-board': workBoard, 'aptitude-levels': aptitudeLevels, 'aptitude-start': aptitudeStart, tricks: tricksBlock,
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,

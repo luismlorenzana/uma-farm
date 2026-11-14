@@ -5,8 +5,9 @@ the same commit, and where it and the code ever differ, the code wins and this d
 [game-mechanics.html](pages/game-mechanics.html); where the game is going is in [the roadmap](roadmap.md).
 
 **What's live and what isn't.** The deployed game is one game on **save v5**: a day of ten actions on a tile farm the
-farmer works by hand, and the **farmhands** who work it with him overnight on the tasks he sets (see
-[Farmhands](#farmhands)), its places, the farm growing by building, upkeep and the mayor's office's loans, the calendar
+farmer works by hand, the ranch's animals and the Mine's and the Quarry's floors (see [the ranch](#the-ranch) and
+[the Mine and the Quarry](#the-mine-and-the-quarry)), and the **farmhands** who work it with him overnight on the tasks he
+sets (see [Farmhands](#farmhands)), its places, the farm growing by building, upkeep and the mayor's office's loans, the calendar
 with its special days and occasion scenes, and the **romance** (Part 3), played from the story
 pack, and played whole without one: wherever the pack is silent, the default story plays, and every Uma without
 portraits plays on the blank bust (see [What plays without the story](#what-plays-without-the-story)). The game is
@@ -24,6 +25,8 @@ prose here; change a table by changing the rule.
   - [The farm map and the bars](#the-farm-map-and-the-bars)
   - [The field](#the-field)
   - [Gathering](#gathering)
+  - [The ranch](#the-ranch)
+  - [The Mine and the Quarry](#the-mine-and-the-quarry)
   - [The stations](#the-stations)
   - [Goods and gold](#goods-and-gold)
   - [Upkeep and loans](#upkeep-and-loans)
@@ -51,27 +54,29 @@ prose here; change a table by changing the rule.
 ## Part 1 — The farm's days and work
 
 A farm day is a turn of **ten actions**. The farmer works the farm by hand: each tile cleared, tilled, planted,
-watered or harvested, each forage, chop or catch, each load started at a station, each crate shipped and going into
-town takes one, and so does each of the Umas' events. The farmhands, friends he's invited to work, add their own
+watered or harvested, each forage, chop or catch, each animal fed or cared for and each building's goods collected,
+each face worked at the Mine or the Quarry, each load started at a station, each crate shipped and going into town takes
+one, and so does each of the Umas' events. The farmhands, friends he's invited to work, add their own
 actions overnight on the tasks he sets on the work board, so as they take the farm's work over his own day turns to the
 people. Special days (New Year's, a festival, her birthday) add actions
 for events only, and the calendar shows the year: its festivals, birthdays and the faces of the Umas with an event each
 day. Nothing on the farm moves until you end the day, whether the app is open, closed or left alone for a week. Ending
 the day runs the night: the bin pays, the loans take their share and the upkeep is charged, the farmhands work, watered
-crops grow a stage, the stations' loads finish and the date turns. The morning opens on a card of what the night brought, and ten actions
-again.
+crops grow a stage, fed animals leave their goods, the stations' loads finish and the date turns. The morning opens on a
+card of what the night brought, and ten actions again.
 
 ```
  the day: 10 actions, one a tap                    End the day ──► the night, in order
    clear · till · plant · water · harvest   a tile               1 the bin pays; loans, then upkeep
-   forage · chop                    the woods' edge              2 the farmhands work; watered crops grow
-   fish                             the pond's edge              3 animals (none on the farm)
-   start a load                     a station                    4 the stations' loads finish
-   ship a crate                     the bin                      5 workshops (none open)
-   go into town                     the road (the shop, the town, 6 ranks and bonds (the farmhands')
-                                    the mayor's office)
-   free: building, the Dorm, talks, the evening                  7 crops wither; the date turns
-                                                                 8 the Dorm, the goals, meeting her
+   cut grass for the silo           a weeds tile                 2 the farmhands work; watered crops grow
+   forage · chop                    the woods' edge              3 animals: the fed leave their goods
+   fish                             the pond's edge              4 the stations' loads finish
+   feed · care · collect            the Coop, the Barn           5 workshops (none open)
+   work a face (the stairs free)    the Mine, the Quarry         6 ranks and bonds (the farmhands')
+   start a load                     a station                    7 crops wither; the date turns
+   ship a crate                     the bin                      8 the Dorm, the goals, meeting her
+   go into town                     the road (the shops, the town)
+   free: building, the Dorm, the stairs, talks, the evening
  the morning: the summary card ◄──────────────────────────────── 9 the morning summary
    the bin · work done · hearts · new today · today
    [Start the day] ──► the next day, ten actions again
@@ -269,13 +274,14 @@ belong to, and until then cost nothing or aren't there yet:
 | The fields | Water a tile | 1 | Now |
 | The fields | Harvest a tile | 1 | Now |
 | The fields | Water a row: a farmhand’s trick, from Watering 6 | 1 | Now |
-| Animals | Feed, brush or care for one; collect eggs, milk or wool; let them out or bring them in | 1 | With the ranch |
-| Animals | Buy an animal, at the rancher’s in town | Free | With the ranch |
+| The fields | Cut grass on a weeds tile, for the silo | 1 | Now |
+| Animals | Feed one, or care for one; collect a building’s eggs, milk or wool | 1 | Now |
+| Animals | Buy an animal or fodder, at the rancher’s in town | Free | Now |
 | The woods and the water | Forage once | 1 | Now |
 | The woods and the water | Chop a log | 1 | Now |
 | The woods and the water | Fish once | 1 | Now |
-| The mine | Work a face once | 1 | With the mine |
-| The mine | Take the stairs | Free | With the mine |
+| The mine and the quarry | Work a face once | 1 | Now |
+| The mine and the quarry | Take the stairs, once found | Free | Now |
 | Stations | Start a load | 1 | Now |
 | The bin | Ship what you choose | 1 | Now |
 | The town | Go into town | 1 | Now |
@@ -337,7 +343,9 @@ The night is one fixed run of steps over the save:
    tonight, her harvests and hauls go into the Warehouse at once, and a load she starts finishes at step 4. Then each
    growing tile watered today grows one stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn't
    grow. A farmer Uma's night chores each water a dry growing tile first. Then every tile dries for the next day.
-3. **Animals.** Nothing changes: no animals live on the farm.
+3. **Animals.** Each animal fed today leaves its good in its building, waiting to be collected (one at a time), and
+   grows 2 fonder; one left unfed goes hungry: no good, −10 fondness, and it never dies. Then every animal is unfed and
+   uncared for the next day (see [the ranch](#the-ranch)).
 4. **The stations' loads finish.** Every load started today is done: its goods go into the Warehouse at their stars and
    the station is free for the morning. Side by side's and the perks' extras and foragers' and fishers' night chores go
    straight into the Warehouse too.
@@ -366,9 +374,9 @@ The steps as the game lists them:
 | 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning |
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand |
 | 1 | `settleTheAccounts` | The accounts: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the upkeep, with anything owed: what gold there is pays, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid |
-| 2 | `farmhandsWork` | The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s and the loads first, in your order, then her gathering, a turn each; a point of practice an action, her goods into the Warehouse, her place today where she spent the most |
+| 2 | `farmhandsWork` | The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads and the animals’ care first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse, her place today where she spent the most |
 | 2 | `growCrops` | Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day |
-| 3 | `tendAnimals` | Animals: nothing happens until the ranch is built |
+| 3 | `tendAnimals` | Animals: each animal fed today makes its good, waiting in its building to be collected (one at a time), and grows 2 fonder; one left unfed goes hungry, makes nothing and loses 10 fondness, and never dies; then each is unfed and uncared for the next day |
 | 4 | `finishTheLoads` | Stations: every load started today is done, its goods into the Warehouse at their stars, the station free for the morning |
 | 4 | `nightExtras` | Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again (20% in her element), seeded copies straight into the Warehouse; then the perks’ extras: the bond term × the romance term of the same items (her line’s +10% and +20%, her ring, a dream, the household; held to 40%), their own seeded copies |
 | 4 | `nightChores` | Night chores: a forager’s bring one item each from her rank’s deepest forest area this season, a fisher’s one fish each from her deepest spot, at a day’s haul’s stars, into the Warehouse; 1 from F6, 2 from R7, 3 from S4, on the farm only |
@@ -395,7 +403,7 @@ The steps as the game lists them:
 | 9 | `morningItems` | Morning items: each Uma on the farm leaves a good of her line in the Warehouse every 4th morning from Romance 2 (★2+), every 2nd from Spouse 2 (★3+) |
 | 9 | `drawInvitations` | Invitations: one Uma asks you for her favourite kind tonight (two from 10 married), drawn by `draw(uid, day, 'invite', n)` among those home at Friendship 3+ whose favourite kind is open to them, weighted 1 + days since her last evening (up to 14) |
 | 9 | `noteTheFed` | The farmhands well fed this morning are noted (`today.fed`): each works one more action today |
-| 9 | `buildSummary` | The morning summary, from what changed; §2 Work done opens with each farmhand’s day, §3 Ranks closes with the aptitudes that reached a level; §4 Hearts lists the invitations, the Festival of Vows, the night’s levels, the house’s morning, rooms taken and a house that misses you, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning; §5 the household milestones |
+| 9 | `buildSummary` | The morning summary, from what changed; §2 Work done opens with each farmhand’s day, then the loads and the Coop’s and the Barn’s nights, §3 Ranks closes with the aptitudes that reached a level; §4 Hearts lists the invitations, the Festival of Vows, the night’s levels, the house’s morning, rooms taken and a house that misses you, the morning items and night chores, the perks’ and side by side’s extras and each pair’s bond hearts reached since the last morning; §5 the household milestones |
 <!-- /live -->
 
 - **Every draw is seeded** by the account, the day and what's drawn, so ending the same save on two devices gives the
@@ -478,18 +486,18 @@ Each place's building and what opens it (the Boat is moored at the Dock and draw
 |---|---|---|
 | Fields | `vegetable-garden` | Day 1 |
 | Mill | `fields-workbench` | Farm Rank 1, then built |
-| Coop | `meadow` (borrowed) | Farm Rank 2, then built (not built yet) |
+| Coop | `meadow` (borrowed) | Farm Rank 2, then built |
 | Forest | `forest` | Day 1 |
 | Sawmill | `forest-workbench` | Farm Rank 3, then built |
-| Barn | `stable` | Farm Rank 3, then built (not built yet) |
+| Barn | `stable` | Farm Rank 3, then built |
 | Fishery | `fishery` | Day 1 |
 | Smokehouse | `fishery-workbench` | Farm Rank 3, then built |
 | Kitchen | `kitchen` | Farm Rank 5, then built (not built yet) |
-| Mine | `mine` | Farm Rank 4, then built (not built yet) |
-| Smelter | `mine-workbench` | Farm Rank 4, then built (not built yet) |
+| Mine | `mine` | Farm Rank 4, then built |
+| Smelter | `mine-workbench` | Farm Rank 4, then built |
 | Restaurant | `party-hall` | Farm Rank 7, then built (not built yet) |
-| Quarry | `quarry` | Farm Rank 5, then built (not built yet) |
-| Cutter | `den-workbench` | Farm Rank 5, then built (not built yet) |
+| Quarry | `quarry` | Farm Rank 5, then built |
+| Cutter | `den-workbench` | Farm Rank 5, then built |
 | Forge | `forge` | Farm Rank 8, then built (not built yet) |
 | Shipping bin | `shipping-bin` | Day 1 |
 | Warehouse | `warehouse` | Day 1 |
@@ -511,7 +519,10 @@ What a tap does:
 | A field tile | Its panel, at the right: what's on it, how far it's grown, and its one action (`/?tile=<n>`). Another tile's tap moves the panel to it |
 | The woods' edge | Its panel: each area in reach, with its season's finds, **Forage · 1** and **Chop · 1** |
 | The pond's edge | Its panel: each spot in reach, with its season's fish and **Fish · 1** |
-| The Mill, the Sawmill, the Smokehouse, built | Its panel: today's load, or what it can make, each with **Load 8** (or all that's held, if fewer) |
+| A field tile with weeds, once the silo stands | Its panel also offers **Cut grass for the silo · 1 action** |
+| A station, built (the Mill, the Sawmill, the Smokehouse, the Smelter, the Cutter) | Its panel: today's load, or what it can make, each with **Load 8** (or all that's held, if fewer) |
+| The Coop or the Barn, built | Its panel: the silo's feed, **Collect** for the goods waiting, and each animal with its hearts, **Feed · 1** and **Care · 1** (see [the ranch](#the-ranch)); the map tags it "3 to collect" |
+| The Mine or the Quarry, built | Its panel: the floor you're on with its finds, **Work a face · 1 action**, and the stairs: their progress, then **Take the stairs · free** (see [the Mine and the Quarry](#the-mine-and-the-quarry)); the map tags it "Floor 3" |
 | The Shipping bin | The bin's sheet |
 | The Warehouse | The Warehouse |
 | The Dorm | The Dorm's page |
@@ -523,8 +534,8 @@ What a tap does:
 **Locks.** A locked place shows a lock, and its quick look says why:
 - **A place to build** (see [Building](#building)): "Farm Rank 3" before its rank offers it; "Not built" once it does,
   its quick look showing its Build card; "Builds tonight" once paid; and **"Not built yet"** for a place whose game isn't
-  built (the ranch, the Mine and the Quarry and their stations, the Kitchen, the Restaurant, the expedition post, the
-  Forge's merge game), whose Build card shows its cost and can't be bought.
+  built (the Kitchen, the Restaurant, the expedition post, the Forge's merge game), whose Build card shows its cost and
+  can't be bought.
 - **The Requests board:** "Opens with 5 Umas met"; then "Opens soon", its game not built.
 - **"Opens soon":** its rule is met but it has nothing to do yet: the Festival ground, and a place that stands with no
   game.
@@ -1021,11 +1032,140 @@ the farmhands. One reaches the Warehouse every night:
   deepest open spot, at a day's haul's stars, straight into the Warehouse (1 chore from Friendship 6, 2 from Romance 7, 3
   from Spouse 4). The morning's Hearts section says "Night chores · 3 items". The perks are the romance's.
 
+### The ranch
+
+The Coop and the Barn hold the farm's animals. Each day an animal wants feeding and care, an action each, and gives its
+good (an egg, milk, wool or fleece) each night it was fed, waiting in its building until you collect it. Care makes it
+fonder, and the fonder it is the better its goods' stars. Its feed comes from the silo: grass cut from the field's weeds,
+or fodder bought at the rancher's in town.
+
+```
+ the rancher's, in town ──Buy (free there)──► an animal, into its home at once (the Coop or the Barn, 8 each)
+                        ──Fodder (free there)─► feed into the silo, 10g a feed
+ a weeds tile ──Cut grass · 1──► 5 feed into the silo; the weeds grow back
+ each animal, each day ──Feed · 1──► a feed from the silo   ──the night──► its good waits in its building; +2 fondness
+                       ──Care · 1──► +8 fondness at once      unfed      ──► no good; −10 fondness; it never dies
+ a building ──Collect · 1──► every good waiting, into the Warehouse, its stars by the animal's hearts
+```
+
+#### Building the Coop and the Barn
+
+The Coop is offered at Farm Rank 2 (2,000g, 30 logs, 20 vegetables) and the Barn at Farm Rank 3 (3,500g, 30 logs, 20
+vegetables), built like every place (see [Building](#building)), each 15g of upkeep a night once it stands. The **silo**
+stands with the first of them and holds 200 feed for both.
+
+#### The animals
+
+Seven animals, at the rancher's from their Farm Rank once their home stands. Every one gives its good each night it's
+fed; the wool and the two fleeces are uma-art's fibers, and the Mill weaves them into cloth. The eggs and milk are the
+farm's own goods, drawn in code until uma-art's items atlas has them.
+
+<!-- live:animals -->
+| Animal | Lives in | At the rancher’s | Opens at | Gives, each night it’s fed | ★1 | ★5 (10 hearts) | At the Mill |
+|---|---|---|---|---|---|---|---|
+| Chicken | The Coop | 500g | Farm Rank 2 | Egg (`egg`) | 60g | 120g | — |
+| Duck | The Coop | 1,200g | Farm Rank 3 | Duck Egg (`duck-egg`) | 100g | 200g | — |
+| Cow | The Barn | 1,500g | Farm Rank 3 | Milk (`milk`) | 80g | 160g | — |
+| Goat | The Barn | 2,500g | Farm Rank 4 | Goat Milk (`goat-milk`) | 130g | 260g | — |
+| Sheep | The Barn | 2,000g | Farm Rank 3 | Wool (`wool`) | 100g | 200g | Wool Cloth, 150g |
+| Alpaca | The Barn | 3,500g | Farm Rank 5 | Alpaca Fleece (`alpaca-fleece`) | 130g | 260g | Alpaca Cloth, 195g |
+| Cashmere Goat | The Barn | 5,000g | Farm Rank 6 | Cashmere Fleece (`cashmere-fleece`) | 170g | 340g | Cashmere Cloth, 255g |
+<!-- /live -->
+
+#### Feed, care and fondness
+
+<!-- live:ranch-rules -->
+|  | The rule |
+|---|---|
+| Room | 8 animals in the Coop, 8 in the Barn |
+| The silo | Stands with the first of the Coop and the Barn; holds 200 feed |
+| Feed | Grass: cut a weeds tile (1 action) for 5, the weeds growing back. Fodder: 10g a feed at the rancher’s, 1 to 99 at a time |
+| Feed one | 1 action, one feed from the silo, once a day |
+| Care for one | 1 action, once a day: +8 fondness at once (a farmhand’s +1 more a level of Animal care above 1) |
+| Collect | 1 action: every good waiting in the building, into the Warehouse |
+| A fed night | It makes its good, waiting until collected (one at a time); +2 fondness |
+| A hungry night | No good; −10 fondness, never below 0. It never dies |
+| Hearts | A heart every 20 fondness, ten at 200 |
+| Stars | Its hearts ÷ 2.5 in quality (★1 at 0 hearts, always ★5 at 10), and a farmhand’s +0.1 a level of Animal care above 1 |
+<!-- /live -->
+
+- **Buying** needs you in town (going in is its action), the animal's home built, its Farm Rank and room in its home;
+  each moves in at once, named by its kind and number ("Chicken 2"), fondness 0. Refusals: "Build the Barn first.",
+  "Opens at Farm Rank 3.", "The Coop is full.", "Not enough gold".
+- **Feeding** is once a day an animal ("Fed already today."), and needs a feed in the silo ("The silo is empty: cut
+  grass or buy fodder."). **Care** is once a day ("Cared for already today."). **Collect** needs a good waiting ("Nothing
+  to collect yet.").
+- **Grass** needs the silo standing ("Build the Coop or the Barn first: its silo holds the grass.") and room in it ("The
+  silo is full."); a cut fills what room is left, up to 5. Only weeds give grass ("Only weeds give grass.").
+- **The night** (step 3) makes each fed animal's good and counts its fondness; the morning's Work done says each
+  building's night: "The Coop · 3 goods to collect", with "2 went hungry" and a **Feed them** warning when any did.
+- **Stars:** each good draws its stars when collected, from its animal's hearts (hearts ÷ 2.5 in quality, so 10 hearts is
+  always ★5), seeded by the farm's count of the ranch's goods (`draw(uid, day, 'ranch:<kind>', n)`).
+
+#### The Coop's and the Barn's panels
+
+- **Built:** the silo's feed, with a bar and a nudge when it runs low; **Collect 3 · 1 action** (or "Nothing to collect
+  yet"); and each animal: its good's icon, its name, its hearts (ten marks), today's chips (Fed or Hungry, Cared for, its
+  good waiting), **Feed · 1** and **Care · 1**. With no animals: "No animals yet. Buy them at the rancher's, in town."
+- **The rancher's** (in town, her post's **Buy an animal** or **Buy fodder**): a wide panel with the seven animals, each
+  with its home, its good and that good's price, and **Buy · 500g** or why not; and the silo's fodder, 10 or 40 at a
+  tap, or **Fill it**, up to its room.
+
+### The Mine and the Quarry
+
+The Mine and the Quarry are worked floor by floor. A face is one action on the deepest floor reached and brings two
+finds: ores at the Mine, stones and gems at the Quarry, each three floors a grade deeper, so the finds grow rarer as you
+go down. The faces you work there find the floor's stairs; taking them is free, and the deepest floor reached is kept.
+
+```
+ a dig, built ──Work a face · 1──► 2 finds of the floor's grade (or the next) ──► the Warehouse, at their stars, now
+                                   and a face more toward the floor's stairs
+ the stairs found (after 1 + ⌈floor ÷ 5⌉ faces) ──Take the stairs · free──► the next floor down, as deep as the Farm Rank reaches
+ the deepest floor reached is kept: the next face is there
+```
+
+#### Building the Mine and the Quarry
+
+The Mine is offered at Farm Rank 4 (10,000g, 60 planks), with its Smelter; the Quarry at Farm Rank 5 (12,000g, 50
+planks), with its Cutter. Each is 15g of upkeep a night once it stands.
+
+#### Floors and finds
+
+Thirty floors each. A find's grade is the floor's 70% of the time, the grade below 20% (the floor's own on floors 1–3)
+and the grade above 10% (held to G10); at the Quarry it's a stone 70% or a gem 30% of that grade. Each find draws its
+stars from the farmer's quality: a Novice D with the farm's Pick (the Mine) or Hammer (the Quarry), so ★1 until the tools
+improve. Every pick is seeded by the farm's count of finds at the dig (`draw(uid, day, 'dig:<dig>', n)`, its kind
+`'dig-kind:<dig>'` and its stars `'dig-stars:<dig>'`).
+
+<!-- live:dig-floors -->
+| Floors | Grade | The Mine (ore) | The Quarry (stone 70%, gem 30%) | Faces to the stairs | The farmer reaches it at |
+|---|---|---|---|---|---|
+| 1–3 | G1 | Copper Ore | Limestone or Quartz | 2 | Farm Rank 1 |
+| 4–6 | G2 | Tin Ore | Sandstone or Amethyst | 2 or 3 | Farm Rank 1; floor 6 at 2 |
+| 7–9 | G3 | Iron Ore | Slate or Citrine | 3 | Farm Rank 2 |
+| 10–12 | G4 | Silver Ore | Granite or Garnet | 3 or 4 | Farm Rank 2; floor 11 at 4 |
+| 13–15 | G5 | Cobalt Ore | Basalt or Emerald | 4 | Farm Rank 4 |
+| 16–18 | G6 | Gold Ore | Marble or Sapphire | 5 | Farm Rank 6 |
+| 19–21 | G7 | Platinum Ore | Obsidian or Ruby | 5 or 6 | Farm Rank 6; floor 21 at 8 |
+| 22–24 | G8 | Titanium Ore | Jade or Diamond | 6 | Farm Rank 8 |
+| 25–27 | G9 | Mythril Ore | Runestone or Starstone | 6 or 7 | Farm Rank 8; floor 26 at 10 |
+| 28–30 | G10 | Orichalcum Ore | Meteorite or Philosopher's Stone | 7 | Farm Rank 10 |
+<!-- /live -->
+
+- **The stairs:** each face on the deepest floor counts toward its stairs, 2 faces on floors 1–5 up to 7 on floors 26–29;
+  floor 30 has none. A farmhand's faces count too; the farmer takes them. Refusals: "Find the stairs first: 1 more
+  face.", "Floor 16 opens at Farm Rank 6.", "This is the deepest floor."
+- **The farmer's reach** is the Farm Rank's, as the forest's: floor 15 when the Mine opens at Farm Rank 4, 20 at 6, 25 at
+  8, 30 at 10.
+- **Its panel:** the floor and its grade, the floor's finds as icons, **Work a face · 1 action** (its note says the
+  floor, the finds and "the stairs!" when a face finds them), then the stairs' progress ("2 faces to find them") and
+  **Take the stairs · free** once found, or why not.
+
 ### The stations
 
 A station turns one raw good into its refined form, one for one, keeping its stars; the refined good sells for ×1.5.
-Three stations work: the Mill, the Sawmill and the Smokehouse, on the farm map's stations column. The Smelter and the
-Cutter wait for mining's game: "Not built yet".
+Five stations work, on the farm map's stations column and beside the digs: the Mill, the Sawmill and the Smokehouse,
+the Mine's Smelter and the Quarry's Cutter.
 
 ```
  a built station ──Load · 1──► up to 8 of one good at one star leave the Warehouse
@@ -1036,17 +1176,19 @@ Cutter wait for mining's game: "Not built yet".
 #### Building a station
 
 A station is built like every place (see [Building](#building)): the Farm Rank offers it (the Mill at 1, the Sawmill and
-the Smokehouse at 3), you pay its gold and goods at its quick look, and it stands the next morning. Building takes no
-action.
+the Smokehouse at 3, the Smelter at 4, the Cutter at 5), you pay its gold and goods at its quick look, and it stands the
+next morning. Building takes no action.
 
 Each station, what builds it, what opens it, its jobs and a load:
 
 <!-- live:stations -->
 | Station | Builds for | Opens | Jobs | A load |
 |---|---|---|---|---|
-| Mill | 1,000g · 20 logs | Farm Rank 1 | Flour: grains · Sugars and oils: sweets, nuts and seeds · Preserves: fruits | 1 to 8, ready the next morning |
+| Mill | 1,000g · 20 logs | Farm Rank 1 | Flour: grains · Sugars and oils: sweets, nuts and seeds · Preserves: fruits · Cloth: fibers | 1 to 8, ready the next morning |
 | Sawmill | 1,500g · 40 logs | Farm Rank 3 | Planks: woods · Drying: mushrooms, herbs and spices | 1 to 8, ready the next morning |
 | Smokehouse | 2,000g · 30 logs · 20 fish | Farm Rank 3 | Smoking: fish | 1 to 8, ready the next morning |
+| Smelter | 8,000g · 40 planks · 40 logs | Farm Rank 4 | Ingots: ores | 1 to 8, ready the next morning |
+| Cutter | 10,000g · 40 planks · 40 logs | Farm Rank 5 | Cut gems: crystals · Stone blocks: stones | 1 to 8, ready the next morning |
 <!-- /live -->
 
 #### A load
@@ -1071,7 +1213,9 @@ Each station, what builds it, what opens it, its jobs and a load:
 
 #### Recipes
 
-The vegetables have no station. Each job's recipes, by grade, with their ★1 prices in and out:
+The vegetables and the eggs and milk have no station. The Mill weaves the Barn's wool and fleeces into cloth; the
+Smelter smelts ore into ingots; the Cutter cuts gems and squares stone into blocks. Each job's recipes, by grade, with
+their ★1 prices in and out:
 
 <!-- live:station-recipes -->
 ##### Flour (Mill)
@@ -1129,6 +1273,21 @@ The vegetables have no station. Each job's recipes, by grade, with their ★1 pr
 | G9 | Starpeach | 255g | Starpeach Nectar | 385g |
 | G10 | Golden Apple | 330g | Golden Apple Preserve | 495g |
 
+##### Cloth (Mill)
+
+| Grade | In | ★1 | Out | ★1 |
+|---|---|---|---|---|
+| G1 | Flax | 35g | Linen | 55g |
+| G2 | Jute | 50g | Burlap | 75g |
+| G3 | Hemp | 60g | Hemp Cloth | 90g |
+| G4 | Cotton | 80g | Cotton Cloth | 120g |
+| G5 | Wool | 100g | Wool Cloth | 150g |
+| G6 | Alpaca Fleece | 130g | Alpaca Cloth | 195g |
+| G7 | Cashmere Fleece | 170g | Cashmere Cloth | 255g |
+| G8 | Silk Cocoon | 215g | Silk | 325g |
+| G9 | Moonsilk Cocoon | 275g | Moonsilk | 415g |
+| G10 | Cloudfleece | 360g | Cloudweave | 540g |
+
 ##### Planks (Sawmill)
 
 | Grade | In | ★1 | Out | ★1 |
@@ -1183,6 +1342,51 @@ The vegetables have no station. Each job's recipes, by grade, with their ★1 pr
 | G8 | Tuna | 235g | Tuna Fillet | 355g |
 | G9 | Silverfin | 300g | Silverfin Fillet | 450g |
 | G10 | Rainbow Koi | 390g | Rainbow Koi Fillet | 585g |
+
+##### Ingots (Smelter)
+
+| Grade | In | ★1 | Out | ★1 |
+|---|---|---|---|---|
+| G1 | Copper Ore | 30g | Copper Ingot | 45g |
+| G2 | Tin Ore | 40g | Tin Ingot | 60g |
+| G3 | Iron Ore | 50g | Iron Ingot | 75g |
+| G4 | Silver Ore | 65g | Silver Ingot | 100g |
+| G5 | Cobalt Ore | 85g | Cobalt Ingot | 130g |
+| G6 | Gold Ore | 110g | Gold Ingot | 165g |
+| G7 | Platinum Ore | 140g | Platinum Ingot | 210g |
+| G8 | Titanium Ore | 180g | Titanium Ingot | 270g |
+| G9 | Mythril Ore | 230g | Mythril Ingot | 345g |
+| G10 | Orichalcum Ore | 300g | Orichalcum Ingot | 450g |
+
+##### Cut gems (Cutter)
+
+| Grade | In | ★1 | Out | ★1 |
+|---|---|---|---|---|
+| G1 | Quartz | 50g | Cut Quartz | 75g |
+| G2 | Amethyst | 65g | Cut Amethyst | 100g |
+| G3 | Citrine | 80g | Cut Citrine | 120g |
+| G4 | Garnet | 105g | Cut Garnet | 160g |
+| G5 | Emerald | 135g | Cut Emerald | 205g |
+| G6 | Sapphire | 175g | Cut Sapphire | 265g |
+| G7 | Ruby | 225g | Cut Ruby | 340g |
+| G8 | Diamond | 290g | Cut Diamond | 435g |
+| G9 | Starstone | 370g | Cut Starstone | 555g |
+| G10 | Philosopher's Stone | 480g | Cut Philosopher's Stone | 720g |
+
+##### Stone blocks (Cutter)
+
+| Grade | In | ★1 | Out | ★1 |
+|---|---|---|---|---|
+| G1 | Limestone | 25g | Limestone Block | 40g |
+| G2 | Sandstone | 30g | Sandstone Block | 45g |
+| G3 | Slate | 40g | Slate Block | 60g |
+| G4 | Granite | 50g | Granite Block | 75g |
+| G5 | Basalt | 70g | Basalt Block | 105g |
+| G6 | Marble | 90g | Marble Block | 135g |
+| G7 | Obsidian | 110g | Obsidian Block | 165g |
+| G8 | Jade | 145g | Jade Block | 220g |
+| G9 | Runestone | 185g | Runestone Block | 280g |
+| G10 | Meteorite | 240g | Meteorite Block | 360g |
 <!-- /live -->
 
 ### Goods and gold
@@ -1232,9 +1436,11 @@ The ladder, and each family's factor, origin and prices:
 | Stones | ×0.8 | The Quarry | 25 · 30 · 40 · 50 · 70 · 90 · 110 · 145 · 185 · 240 | ×1.5 |
 | Crystals | ×1.6 | The Quarry | 50 · 65 · 80 · 105 · 135 · 175 · 225 · 290 · 370 · 480 | ×1.5 |
 | Fish | ×1.3 | The Fishery | 40 · 50 · 65 · 85 · 110 · 145 · 180 · 235 · 300 · 390 | ×1.5 |
+| Fibers | ×1.2 | The Barn: Wool, Alpaca Fleece, Cashmere Fleece | 35 · 50 · 60 · 80 · 100 · 130 · 170 · 215 · 275 · 360 | ×1.5 |
 | Hides and scales | ×1.5 | Expeditions | 45 · 60 · 75 · 100 · 130 · 165 · 210 · 270 · 345 · 450 | — |
 | Bones and horns | ×1.6 | Expeditions | 50 · 65 · 80 · 105 · 135 · 175 · 225 · 290 · 370 · 480 | — |
 | Essences | ×1.8 | Expeditions | 55 · 70 · 90 · 115 · 155 · 200 · 250 · 325 · 415 · 540 | — |
+| Eggs and milk | ×2.0 | The Coop and the Barn | 60 · 80 · 100 · 130 | — |
 <!-- /live -->
 
 | Worked | Price |
@@ -1287,9 +1493,9 @@ and Q of 4 or more is always ★5. Every good of a haul or a harvest draws its o
 Each season lifts some families by +20%, their raw and refined goods alike. A crop follows its family: Sugar Beet is a
 sweet (Spring), Peanut and Sunflower Seed are nuts and seeds (Autumn), Corn and the other grains are Autumn's, every
 vegetable is Spring's whatever season it grows in, and the herb crops (Basil, Mint, Ginger, Mandrake) are never in
-demand. Winter lifts dishes, cloth and the preserves (the fruits' refined row only); no dish or cloth sells at the bin,
-so in Winter just the ten preserves are lifted. Woods, herbs and spices, ores, stones, crystals, the expeditions' goods
-and the rings are never in demand. A good is in demand once, however many rules name it. "In demand" shows on the good
+demand. Winter lifts dishes, cloth (the fibers' refined row) and the preserves (the fruits' refined row only); no dish
+sells at the bin, so in Winter the ten cloths and the ten preserves are lifted. Woods, herbs and spices, ores, stones,
+crystals, the raw fibers, the eggs and milk, the expeditions' goods and the rings are never in demand. A good is in demand once, however many rules name it. "In demand" shows on the good
 in the Warehouse, on its bin line and in the morning.
 
 Each season's families, and how many goods they lift:
@@ -1297,19 +1503,22 @@ Each season's families, and how many goods they lift:
 <!-- live:demand -->
 | Season | In demand (+20%) | Goods lifted |
 |---|---|---|
-| Spring | Vegetables, Sweets | 30 of 260 |
-| Summer | Fruits, Fish | 40 of 260 |
-| Autumn | Grains, Mushrooms, Nuts and seeds | 60 of 260 |
-| Winter | Dishes, Cloth (the refined row), Preserves (the refined row) | 10 of 260 |
+| Spring | Vegetables, Sweets | 30 of 284 |
+| Summer | Fruits, Fish | 40 of 284 |
+| Autumn | Grains, Mushrooms, Nuts and seeds | 60 of 284 |
+| Winter | Dishes, Cloth (the refined row), Preserves (the refined row) | 20 of 284 |
 <!-- /live -->
 
 #### The catalogue
 
-The catalogue holds 260 goods in 15 families, each with ten raw grades (G1–G10) and their refined forms where a station
-makes them: 27 crops and 10 flours, the forest's 113, mining's 60, fishing's 20 and the expeditions' 30. The farm brings
-in the shop's crops, the forest's goods (Mandrake among them), the freshwater fish and the three stations' forms of
-them; the rest are priced, but nothing on the farm brings them in. Seeds aren't goods: they have no price and the bin
-won't take them.
+The catalogue holds 284 goods in 17 families, each with ten raw grades (G1–G10) and their refined forms where a station
+makes them: 27 crops and 10 flours, the forest's 113, mining's 60, fishing's 20, the expeditions' 30, and the ranch's
+24: uma-art's fibers (ten raw, from Flax to Cloudfleece, and their ten cloths) and the eggs and milk (Egg, Milk, Duck
+Egg and Goat Milk, G1–G4, with no refined form). Every id is uma-art's but the eggs and milk, the farm's own, drawn in
+code (an egg, a bottle) until uma-art's items atlas has them. The farm brings in the shop's crops, the forest's goods
+(Mandrake among them), the freshwater fish, the Mine's ores and the Quarry's stones and gems, the Barn's wool and fleeces,
+the eggs and milk, and the five stations' forms of them; the rest are priced, but nothing on the farm brings them in.
+Seeds aren't goods: they have no price and the bin won't take them.
 
 The crops' own prices, their refined forms and their season of demand:
 
@@ -1604,6 +1813,21 @@ Each family's goods, raw and refined, at ★1 and ★5, out of demand; in demand
 | G9 | Silverfin | 300g | 600g | Silverfin Fillet | 450g | 900g |
 | G10 | Rainbow Koi | 390g | 780g | Rainbow Koi Fillet | 585g | 1,170g |
 
+##### Fibers
+
+| Grade | Raw | ★1 | ★5 | Refined | ★1 | ★5 |
+|---|---|---|---|---|---|---|
+| G1 | Flax | 35g | 70g | Linen | 55g | 110g |
+| G2 | Jute | 50g | 100g | Burlap | 75g | 150g |
+| G3 | Hemp | 60g | 120g | Hemp Cloth | 90g | 180g |
+| G4 | Cotton | 80g | 160g | Cotton Cloth | 120g | 240g |
+| G5 | Wool | 100g | 200g | Wool Cloth | 150g | 300g |
+| G6 | Alpaca Fleece | 130g | 260g | Alpaca Cloth | 195g | 390g |
+| G7 | Cashmere Fleece | 170g | 340g | Cashmere Cloth | 255g | 510g |
+| G8 | Silk Cocoon | 215g | 430g | Silk | 325g | 650g |
+| G9 | Moonsilk Cocoon | 275g | 550g | Moonsilk | 415g | 830g |
+| G10 | Cloudfleece | 360g | 720g | Cloudweave | 540g | 1,080g |
+
 ##### Hides and scales
 
 | Grade | Raw | ★1 | ★5 |
@@ -1648,6 +1872,15 @@ Each family's goods, raw and refined, at ★1 and ★5, out of demand; in demand
 | G8 | Shadow Essence | 325g | 650g |
 | G9 | Aether | 415g | 830g |
 | G10 | Prismatic Essence | 540g | 1,080g |
+
+##### Eggs and milk
+
+| Grade | Raw | ★1 | ★5 |
+|---|---|---|---|
+| G1 | Egg | 60g | 120g |
+| G2 | Milk | 80g | 160g |
+| G3 | Duck Egg | 100g | 200g |
+| G4 | Goat Milk | 130g | 260g |
 <!-- /live -->
 
 ### Upkeep and loans
@@ -1672,7 +1905,7 @@ Every night, after the bin pays and the loans take their share, the farm pays it
 <!-- live:upkeep -->
 | Counts | A night | Not counted |
 |---|---|---|
-| Each place built (the Mill, the Sawmill, the Smokehouse, the Dock, the Boat, and each later one) | 15g | The start’s own places |
+| Each place built (the stations, the Coop and the Barn, the Mine and the Quarry, the Dock, the Boat, and each later one) | 15g | The start’s own places; the animals, whose cost is their feed |
 | Each house built on the homestead | 15g | The Farmhouse |
 | Each Dorm bed past the first 3, at the level in effect | 5g | Level 1’s 3 beds |
 | Each Uma living on the farm or working it: home in the Dorm, a spouse in her house, or a farmhand wherever she lives; once each | 10g | Those who live in town and don’t work the farm |
@@ -2053,11 +2286,12 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
    invite her to work · 1 (a friend)     her part-time job (the story's, else a job in town)
    the Book: the work board (free)       then her actions today: 3, +1 settled in, +2 a spouse, +1 well fed this morning,
      her tasks, in your order              all at the farm's pace (half, from the second short night of upkeep)
-     harvest · water · plant ·           the field's tasks and the loads first, in your order, each until it's done
-     clear and till   (the field's rows)  then her gathering shares what's left, a turn each
+     harvest · water · plant ·           the field's tasks, the loads and the animals' care first, in your order, each
+     clear and till   (the field's rows)   until it's done; then her gathering and digging share what's left, a turn each
      load (a station)                    every action: a point of practice in its aptitude; her goods into the Warehouse
      forage · chop (an area)             her place today (where she spent the most) pays rank points, bonds, her line
      fish (a spot)                     then the crops grow: her watering counts tonight
+     care for animals (the Coop or the Barn) · work a face (the Mine or the Quarry)
  the morning: Work done · "Name · 4 of 4 actions · watered 6 tiles · caught 1 fish · +1 good"; Ranks · "Name · Watering 3"
 ```
 
@@ -2095,8 +2329,9 @@ profile's Work side), her job and the day she started, her actions today with wh
 well fed", "half pace" in red), **Tonight**, what she'll do as the farm stands now ("3 of 3 actions · watered 3 tiles"),
 and her tasks in your order, each with her aptitude's level ("Water · rows 1 and 2 · Watering 2"), **↑** to move it up
 and **✕** to remove it. **Add a task** (up to six) opens a side panel: what, then where (the field's rows, each with what
-it holds for that task now, or the whole field; the seed to plant, or any in season; a built station; an area or a spot
-the farm reaches, the rest greyed with why), and **Add · Water · rows 1 and 2**. Setting tasks is free and takes effect
+it holds for that task now, or the whole field; the seed to plant, or any in season; a built station; the Coop or the
+Barn, built; the Mine or the Quarry, built; an area or a spot the farm reaches, the rest greyed with why), and **Add ·
+Water · rows 1 and 2**. Setting tasks is free and takes effect
 tonight; they repeat each day until you change them. With no farmhands: "No farmhands yet. Once she's a friend
 (Friendship 3), invite her to work: her menu in town."
 
@@ -2107,20 +2342,29 @@ tonight; they repeat each day until you change them. With no farmhands: "No farm
 | Water | Tiles you choose (the board offers the field’s rows) | A dry growing tile; 2 tiles an action from Watering 3; every dry tile of hers in one row from Watering 6 | When none of its tiles needs it | Watering | Farming |
 | Plant | Tiles you choose (the board offers the field’s rows) | An empty tilled tile, the seed named or any held for the season, own seeds first, that ripens in time; 2 tiles an action from Planting 4 | When none of its tiles needs it | Planting | Farming |
 | Clear and till | Tiles you choose (the board offers the field’s rows) | A step on a tile: clears an overgrown one, tills a cleared one; both in one from Clearing 4 | When none of its tiles needs it | Clearing | Farming |
-| Load | A built station | A load of the good the station holds most of, up to 8 (12 from level 5) | Once the station holds today’s load | Milling, Sawing or Smoking, by station | Farming, foraging or fishing |
+| Load | A built station | A load of the good the station holds most of, up to 8 (12 from level 5) | Once the station holds today’s load | Milling, Sawing, Smoking, Smelting or Cutting, by station | Farming, foraging, fishing or mining |
 | Forage | An area the farm reaches | A haul of 2 finds (3 from Foraging 5) | Never: her gathering shares what’s left, a turn each | Foraging | Foraging |
 | Chop | An area the farm reaches | 2 logs (3 from Chopping 5) | Never: her gathering shares what’s left, a turn each | Chopping | Foraging |
 | Fish | A spot the farm reaches | A cast: one fish (two casts from Fishing 6) | Never: her gathering shares what’s left, a turn each | Fishing | Fishing |
-| Care for the coop or the barn | Its animals | Comes with the ranch | — | — | Ranch |
-| Work a face | The mine’s or the quarry’s floor | Comes with the mine | — | — | Mining |
+| Care for animals | The Coop’s or the Barn’s animals | A hungry animal fed from the silo (two from Animal care 3), else grass cut on a weeds tile for it; then the building’s goods collected, +0.1 quality a level above 1; then an animal cared for (two from Animal care 5), +1 fondness a level above 1 | When every animal there is fed, collected and cared for | Animal care | Ranch |
+| Work a face | The Mine’s or the Quarry’s deepest floor | A face on the deepest floor: 2 finds by her yield (3 from Mining 5), a face more toward its stairs; the farmer takes them | Never: her digging shares what’s left, a turn each | Mining | Mining |
 <!-- /live -->
 
-- **Her night, in order:** the field's tasks and the loads first, in your order, each until it's done for the day or her
-  actions run out; then her gathering tasks share what's left, a turn each. With nothing left to do she idles, and the
+- **Her night, in order:** the field's tasks, the loads and the animals' care first, in your order, each until it's done
+  for the day or her actions run out; then her gathering and digging tasks share what's left, a turn each. With nothing left to do she idles, and the
   morning says "Nothing to do tonight" (or "No tasks: set her tasks", tagged **No tasks**, with an empty board).
 - **Two farmhands on the same tiles** don't double up: the second finds them watered.
 - **Her reach is the farm's:** the areas and spots the Farm Rank opens for the farmer (the sea's once their place
-  stands), whatever her rank.
+  stands), whatever her rank; at a dig, the deepest floor the farm has reached (her faces find its stairs; the farmer
+  takes them).
+- **The animals' care:** in one task she feeds the building's hungry animals from the silo (cutting grass on a weeds
+  tile when it's empty), collects its goods at her aptitude's quality, then cares for each, +8 fondness and +1 a level of
+  Animal care above 1; a night of it counts toward her Ranch challenge, and an animal's hearts after her care toward its
+  hearts challenges. The morning says "tended animals 4 times · +2 goods".
+- **A face:** her finds are the face's two × her mining rank's yield × her talent's × the Pick's or Hammer's × well fed's ×
+  her aptitude's, the fraction drawn, at her stars (her rank, talent, the tool, well fed, her keepsake, her aptitude);
+  each face counts toward her Mining challenges by its finds and its floor. The morning says "worked 3 faces · +7
+  goods".
 - **Her work's terms:** a harvest draws its stars from the crop's level and the Hoe, her farming rank and talent, her
   care (+0.25), well fed (+0.25), her keepsake at her line's place and her aptitude; a haul's from her rank, talent, the
   tool, well fed, her keepsake and her aptitude. A haul's count is the task's × her rank's yield × her talent's × the
@@ -2175,6 +2419,11 @@ The tricks, and the level each opens at:
 | Milling | 5 | A load of up to 12 |
 | Sawing | 5 | A load of up to 12 |
 | Smoking | 5 | A load of up to 12 |
+| Smelting | 5 | A load of up to 12 |
+| Cutting | 5 | A load of up to 12 |
+| Animal care | 3 | Two animals fed an action |
+| Animal care | 5 | Two animals cared for an action |
+| Mining | 5 | 3 finds a face |
 <!-- /live -->
 
 - **A row an action** is the design's "Water a row": at Watering 6 one action waters every dry tile of hers in the first
@@ -2182,7 +2431,7 @@ The tricks, and the level each opens at:
 - **Rising over days:** three actions a day on one task take a D talent's Watering from 2 to 3 in about a week, and to 6
   (the row) in about a year (the simulated year's field hand reaches it in Winter); the morning says each level reached ("*Name* · Watering 3 · Two tiles an
   action", tagged **Aptitude**).
-- **Her profile's Work side** lists her ten aptitudes with their level, a bar to the next and the trick it opened (or the
+- **Her profile's Work side** lists her fourteen aptitudes with their level, a bar to the next and the trick it opened (or the
   next to come); before she's a farmhand it says "Aptitudes · where she'd start".
 
 #### The save
@@ -2264,7 +2513,8 @@ Each grade is a step, G 0 to S 7, and each step lifts her work:
 - **Rank points** multiply every pay of rank points.
 - **Tended growth** was a block's growth a night under her care (B and up only); the field's tiles grow a stage a
   watered night, so nothing reads it now.
-- Affection a day (the ranch) and expedition power are defined, but the ranch and expeditions aren't open in play.
+- Affection a day (the ranch) and expedition power are defined, but neither is read in play: a farmhand's care reads her
+  Animal care aptitude (which her talent starts), and expeditions aren't open.
 
 #### Rank points
 
@@ -2325,12 +2575,14 @@ tie):
 | Quarry | Mining |
 | Smelter | Mining |
 | Cutter | Mining |
+| Coop | Ranch |
+| Barn | Ranch |
 <!-- /live -->
 
 - **One day pays one activity.**
 - An Uma living in town earns nothing.
-- The Mine, the Quarry, the Smelter and the Cutter wait for mining's game, so in play only farming, foraging and
-  fishing earn rank points.
+- A farmhand's day at the Mine, the Quarry, the Smelter or the Cutter pays mining, and at the Coop or the Barn the ranch;
+  cooking, serving, forging and expeditions wait for their places.
 
 #### The challenges
 
@@ -2341,8 +2593,8 @@ your rank allows", so ranking up is how the farm goes deeper. The challenge towa
 | Activity | Hand | Skilled | Expert | Master | Legend | Counted by |
 |---|---|---|---|---|---|---|
 | Farming | Harvest 30 crops she tended | 40 crops of ★3+ she tended | Tend a crop of level 4+ to harvest | 30 crops of ★5 | 1st at a Flower Show with a crop she tended | At harvest, for the tender; a festival win (festivals aren’t built yet) |
-| Ranch | Care for animals 10 days | An animal in her care reaches 4 hearts | An animal in her care reaches 7 hearts | An animal in her care reaches 10 hearts | 1st at an Animal Show with an animal in her care | The ranch (not built yet); a festival win (festivals aren’t built yet) |
-| Mining | Dig 40 ores or stones | Dig at floor 10 | Dig at floor 15 | Dig at floor 20 | Dig at floor 25 | The Mine and the Quarry (not built yet) |
+| Ranch | Care for animals 10 days | An animal in her care reaches 4 hearts | An animal in her care reaches 7 hearts | An animal in her care reaches 10 hearts | 1st at an Animal Show with an animal in her care | A farmhand’s night at the Coop or the Barn; a farmhand’s care for an animal; a festival win (festivals aren’t built yet) |
+| Mining | Dig 40 ores or stones | Dig at floor 10 | Dig at floor 15 | Dig at floor 20 | Dig at floor 25 | A farmhand’s faces at the Mine or the Quarry |
 | Fishing | Catch 30 fish | Catch 10 fish at the River | Catch 10 fish at the Lake | Catch 10 fish at the Falls | 1st at a Fishing Derby, on the team | The night’s catches (night step 4); a festival win (festivals aren’t built yet) |
 | Foraging | Gather 50 items | Gather 20 items in the Hills | Gather 20 items in the Old Forest | Gather 20 items on the Mountain | Gather 20 items in the Misty Vale | The night’s hauls (night step 4) |
 | Cooking | Assist 5 Kitchen plays | Assist a Fine play | Make 10 dishes of ★4+ | Assist a Masterwork | 1st at a Cooking Contest as the cook | The Kitchen (not built yet); a festival win (festivals aren’t built yet) |
@@ -2355,9 +2607,10 @@ your rank allows", so ranking up is how the farm goes deeper. The challenge towa
   in that activity. It stops at the target and resets to 0 at the rank-up.
 - **What counts it:** her own work, once the farmhands work. The farmer's harvests, hauls and catches count toward no
   Uma's challenge. Each challenge reads only its own kind of event; an Uma off the roster or at Legend counts nothing.
-- **In play:** only farming's, foraging's and fishing's challenges are counted. The others wait for places that aren't
-  open. Farming's and fishing's Legend challenges are festival wins, and no festival is held, so those two climbs stop
-  at Master; foraging can reach Legend.
+- **In play:** farming's, foraging's, fishing's, the ranch's and mining's challenges are counted: the ranch's by a
+  farmhand's night at the Coop or the Barn and the hearts of an animal she cares for, mining's by her faces' finds and
+  floors. The others wait for places that aren't open. Farming's, fishing's and the ranch's Legend challenges are
+  festival wins, and no festival is held, so those climbs stop at Master; foraging and mining can reach Legend.
 
 #### Rank-ups at night
 
@@ -2399,7 +2652,8 @@ The morning's **Ranks** section lists the night's lines, each opening her sheet:
 - **Quality** adds to the star draw of what she grows or makes.
 - **Deepest** is the last area, spot and floor her rank lets her work.
 - **Seeds back** is her harvest's chance of a seed, before the Hoe.
-- Expedition power, affection a day and workshop yield are defined for places that aren't open in play.
+- Expedition power and workshop yield are defined for places that aren't open in play; affection a day isn't read (a
+  farmhand's care reads her Animal care aptitude).
 
 #### Her favourite line
 
@@ -2433,7 +2687,7 @@ Umas.
                    3. the Farm Rank's points are recomputed; a new rank offers more
                    4. the ring bench, the night after the first Romance 8
                    ▼
- the morning: "Built overnight · the Mill", "Farm Rank 2 · The Coop to build (not built yet), …", "First Uma at Hand · +300g"
+ the morning: "Built overnight · the Mill", "Farm Rank 2 · The Coop to build (2,000g · 30 logs · 20 vegetables), …", "First Uma at Hand · +300g"
 
  your life with the Umas: the n-th wedding ──► House n · 3 married ──► the homestead's second row · 5 met ──► the board
 ```
@@ -2473,19 +2727,20 @@ Dorm's levels, the shop's seed tiers), so the sheet and the morning can't drift 
 | Farm Rank | Points | Opens |
 |---|---|---|
 | 1 | 0 | Block A and tier-1 seeds (the start), The Mill to build (1,000g · 20 logs), Dorm level 2 (5 beds) |
-| 2 | 150 | The Coop to build (not built yet), The Hills, The River, The Sea Pier (with the Dock), Dorm level 3 (7 beds), New seeds at the shop |
-| 3 | 250 | The Sawmill to build (1,500g · 40 logs), The Barn to build (not built yet), The Smokehouse to build (2,000g · 30 logs · 20 fish), Dorm level 4 (9 beds) |
-| 4 | 950 | The Mine to build (not built yet), The Smelter to build (not built yet), The Old Forest, The Lake, Dorm level 5 (11 beds), New seeds at the shop |
-| 5 | 2,150 | The Kitchen to build (not built yet), The Quarry to build (not built yet), The Cutter to build (not built yet), Dorm level 6 (14 beds) |
-| 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), The Mountain, The Falls, Dorm level 7 (17 beds) |
+| 2 | 150 | The Coop to build (2,000g · 30 logs · 20 vegetables), The Hills, The River, The Sea Pier (with the Dock), Chickens at the rancher’s, Dorm level 3 (7 beds), New seeds at the shop |
+| 3 | 250 | The Sawmill to build (1,500g · 40 logs), The Barn to build (3,500g · 30 logs · 20 vegetables), The Smokehouse to build (2,000g · 30 logs · 20 fish), Ducks, Cows and Sheep at the rancher’s, Dorm level 4 (9 beds) |
+| 4 | 950 | The Mine to build (10,000g · 60 planks), The Smelter to build (8,000g · 40 planks · 40 logs), The Old Forest, The Lake, Goats at the rancher’s, The Mine’s and the Quarry’s floors to 15, Dorm level 5 (11 beds), New seeds at the shop |
+| 5 | 2,150 | The Kitchen to build (not built yet), The Quarry to build (12,000g · 50 planks), The Cutter to build (10,000g · 40 planks · 40 logs), Alpacas at the rancher’s, Dorm level 6 (14 beds) |
+| 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), The Mountain, The Falls, Cashmere Goats at the rancher’s, The Mine’s and the Quarry’s floors to 20, Dorm level 7 (17 beds) |
 | 7 | 6,250 | The Restaurant to build (not built yet), The Expedition post to build (not built yet), Dorm level 8 (20 beds) |
-| 8 | 9,750 | The Forge to build (not built yet), The Misty Vale, The Deep Sea (with the Boat) |
+| 8 | 9,750 | The Forge to build (not built yet), The Misty Vale, The Deep Sea (with the Boat), The Mine’s and the Quarry’s floors to 25 |
 | 9 | 14,750 |  |
-| 10 | 21,750 | The World Tree, The Moon Pool, The farm’s gold crest |
+| 10 | 21,750 | The World Tree, The Moon Pool, The Mine’s and the Quarry’s floors to 30, The farm’s gold crest |
 <!-- /live -->
 
-- **A rank-up is news:** the morning's New today says "Farm Rank 2 · The Coop to build (not built yet), Block B (800g),
-  Dorm level 3 (7 beds), New seeds at the shop", tagged Farm Rank, opening the rank's sheet. Two ranks in one night are
+- **A rank-up is news:** the morning's New today says "Farm Rank 2 · The Coop to build (2,000g · 30 logs · 20
+  vegetables), The Hills, The River, The Sea Pier (with the Dock), Chickens at the rancher’s, Dorm level 3 (7 beds), New
+  seeds at the shop", tagged Farm Rank, opening the rank's sheet. Two ranks in one night are
   two lines, lowest first.
 
 #### The Diary
@@ -2560,9 +2815,11 @@ The collection rows:
 | Stones | `row:stones` | Limestone, Sandstone, Slate, Granite, Basalt, Marble, Obsidian, Jade, Runestone, Meteorite | 500g |
 | Crystals | `row:crystals` | Quartz, Amethyst, Citrine, Garnet, Emerald, Sapphire, Ruby, Diamond, Starstone, Philosopher's Stone | 500g |
 | Fish | `row:fish` | Carp, Trout, Sardine, Mackerel, Salmon, Sea Bream, Eel, Tuna, Silverfin, Rainbow Koi | 500g |
+| Fibers | `row:fibers` | Flax, Jute, Hemp, Cotton, Wool, Alpaca Fleece, Cashmere Fleece, Silk Cocoon, Moonsilk Cocoon, Cloudfleece | 500g |
 | Hides and scales | `row:hides-scales` | Puffbun Pelt, Boarling Hide, Wolfkin Pelt, Rock Lizard Scale, Ironback Hide, Basilisk Scale, Manticore Hide, Behemoth Hide, Wyvern Scale, Dragon Scale | 500g |
 | Bones and horns | `row:bones-horns` | Seashell, Ammonite, Trilobite, Fossil Bone, Mammoth Tusk, Saber Fang, Raptor Claw, Tyrant Tooth, Titan Bone, Unicorn Horn | 500g |
 | Essences | `row:essences` | Mist Essence, Dew Essence, Breeze Essence, Ember Essence, Tide Essence, Spark Essence, Glimmer Essence, Shadow Essence, Aether, Prismatic Essence | 500g |
+| Eggs and milk | `row:eggs-milk` | Egg, Milk, Duck Egg, Goat Milk | 500g |
 | Grains, refined | `row:grains:refined` | Wheat Flour, Rolled Oats, Pearl Barley, Polished Rice, Cornmeal, Rye Flour, Buckwheat Flour, Hulled Wild Rice, Moonrice Flour, Sunwheat Flour | 500g |
 | Herbs and spices, refined | `row:herbs-spices:refined` | Dried Basil, Dried Mint, Dried Rosemary, Dried Thyme, Ground Ginger, Ground Pepper, Ground Cinnamon, Saffron Threads, Mandrake Powder, Phoenix Spice | 500g |
 | Nuts and seeds, refined | `row:nuts-seeds:refined` | Peanut Butter, Sunflower Oil, Sesame Paste, Walnut Paste, Chestnut Paste, Almond Paste, Pistachio Paste, Macadamia Butter, Thundernut Oil, Worldseed Oil | 500g |
@@ -2574,6 +2831,7 @@ The collection rows:
 | Stones, refined | `row:stones:refined` | Limestone Block, Sandstone Block, Slate Block, Granite Block, Basalt Block, Marble Block, Obsidian Block, Jade Block, Runestone Block, Meteorite Block | 500g |
 | Crystals, refined | `row:crystals:refined` | Cut Quartz, Cut Amethyst, Cut Citrine, Cut Garnet, Cut Emerald, Cut Sapphire, Cut Ruby, Cut Diamond, Cut Starstone, Cut Philosopher's Stone | 500g |
 | Fish, refined | `row:fish:refined` | Carp Fillet, Trout Fillet, Sardine Fillet, Mackerel Fillet, Salmon Fillet, Sea Bream Fillet, Eel Fillet, Tuna Fillet, Silverfin Fillet, Rainbow Koi Fillet | 500g |
+| Fibers, refined | `row:fibers:refined` | Linen, Burlap, Hemp Cloth, Cotton Cloth, Wool Cloth, Alpaca Cloth, Cashmere Cloth, Silk, Moonsilk, Cloudweave | 500g |
 | Rings | `row:rings` | Ring G1, Ring G2, Ring G3, Ring G4, Ring G5, Ring G6, Ring G7, Ring G8, Ring G9, Ring G10 | 500g |
 <!-- /live -->
 
@@ -2596,15 +2854,15 @@ A place whose game isn't built yet shows what it'll be: its Build card has its c
 | Place | Farm Rank | Gold | Goods | Can be bought |
 |---|---|---|---|---|
 | Mill | 1 | 1,000g | 20 logs | Yes |
-| Coop | 2 | 2,000g | 30 logs, 20 vegetables | Not built yet |
+| Coop | 2 | 2,000g | 30 logs, 20 vegetables | Yes |
 | Sawmill | 3 | 1,500g | 40 logs | Yes |
-| Barn | 3 | 3,500g | 30 logs, 20 vegetables | Not built yet |
+| Barn | 3 | 3,500g | 30 logs, 20 vegetables | Yes |
 | Smokehouse | 3 | 2,000g | 30 logs, 20 fish | Yes |
-| Mine | 4 | 10,000g | 60 planks | Not built yet |
-| Smelter | 4 | 8,000g | 40 planks, 40 logs | Not built yet |
+| Mine | 4 | 10,000g | 60 planks | Yes |
+| Smelter | 4 | 8,000g | 40 planks, 40 logs | Yes |
 | Kitchen | 5 | 15,000g | 50 planks, 30 vegetables | Not built yet |
-| Quarry | 5 | 12,000g | 50 planks | Not built yet |
-| Cutter | 5 | 10,000g | 40 planks, 40 logs | Not built yet |
+| Quarry | 5 | 12,000g | 50 planks | Yes |
+| Cutter | 5 | 10,000g | 40 planks, 40 logs | Yes |
 | Dock | 6 | 20,000g | 80 planks | Yes |
 | Boat | 6 | 30,000g | 60 planks, 30 fillets | Yes, after the Dock |
 | Restaurant | 7 | 40,000g | 80 planks, 40 fillets, 30 vegetables | Not built yet |
@@ -2654,8 +2912,8 @@ The Diary's **Projects** card gathers what's next:
   logs"), and what it still lacks ("Need 400g and 12 logs more"), "Builds tonight" once paid, or **Build ›**. A tap
   opens its quick look and Build card. With none: "Nothing to build at this rank." When a place lacks only gold,
   "Short of gold? The mayor's office lends toward a build. ›" opens the office in town.
-- **Not built yet:** the places offered at your rank whose games aren't built, in one line ("Not built yet: the Coop,
-  the Barn").
+- **Not built yet:** the places offered at your rank whose games aren't built, in one line ("Not built yet: the
+  Kitchen").
 - **At Farm Rank 3 · 250 points:** what the next rank offers, each with its cost or "Not built yet".
 - **With the Umas:** each milestone, a check when it's done, what it waits for and how far along you are: "The ring
   bench · The first Romance 8 · Not yet", "House 1 · Your first wedding · 0 / 1 married", "The homestead's second row ·
@@ -2748,6 +3006,48 @@ and spends the rest of his day with the people in town. It checks:
 - **No retune:** a farmhand's 10g a night stays the resident's. They pay their way by a wide margin, so neither the
   upkeep nor the yields changed with them. Balance (Phase 3) is where a farmhand's wage or her three actions would move,
   if your play finds the farm grows too fast.
+
+##### The whole farm: the Coop and the Mine
+
+The same test plays a third run, **two years** of the farm with its two farmhands that also builds the ranch and the
+Mine: the Coop as soon as the Farm Rank offers it and its logs and vegetables are held (from Summer, growing vegetables
+for it), four chickens there with fodder bought in town when the silo runs low (keeping 600g back), and a third friend
+invited to care for them the day it stands (feed, collect, care); then, in its second year, the Mine (its 60 planks sawn
+from his logs at the Sawmill, a load a day), a fourth friend at its face, and the stairs taken whenever she finds them.
+The Coop and the Mine add their 15g a night each and their farmhands' 10g each; the chickens cost their 500g and their
+feed. It checks:
+- **two years without a short night,** never half pace;
+- **every season earns more than its upkeep and loans take,** and the two years end richer than one year with two
+  farmhands;
+- **the Coop stands in the first year and the Mine in the second,** both counted in the upkeep, with their farmhands;
+- **the eggs pay more than the Coop's nights cost** (its upkeep, its farmhand's, the hens and their feed), **and the ores
+  more than the Mine's** (its upkeep and its farmhand's);
+- **each morning reports the farmhands at the Coop and the Mine** and the Coop's night, nobody hungry, and the Mine's
+  deepest floor reaches floor 10 or deeper;
+- **every morning's save parses** as v5.
+
+| Season | The bin paid | Upkeep | The loan's shares | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
+|---|---|---|---|---|---|---|---|---|
+| Spring 1 | 4,055g | 325g | 175g | 3,555g | 0 | 3,075g | 35g | 1 |
+| Summer 1 | 4,930g | 660g | 45g | 4,225g | 0 | 8,660g | 55g | 3 |
+| Autumn 1 | 7,100g | 1,320g | — | 5,780g | 0 | 5,200g | 130g (the Coop and its farmhand, the Dorm's level 2, the Sawmill, the Smokehouse) | 3 |
+| Winter 1 | 14,825g | 1,680g | — | 13,145g | 0 | 17,405g | 140g | 3 |
+| Spring 2 | 17,795g | 1,680g | — | 16,115g | 0 | 32,940g | 140g | 3 |
+| Summer 2 | 25,950g | 1,805g | — | 24,145g | 0 | 49,225g | 165g (the Mine and its farmhand) | 4 |
+| Autumn 2 | 40,765g | 1,980g | — | 38,785g | 0 | 89,070g | 165g | 4 |
+| Winter 2 | 53,090g | 1,980g | — | 51,110g | 0 | 138,840g | 165g | 5 |
+
+- **The Coop pays its way three times over:** it stands on Autumn 1 of the first year (the vegetables it takes come
+  with Summer's crops), and over its 71 nights its eggs sell for 24,435g against 6,975g of upkeep, its farmhand, the
+  four hens and their fodder. Its farmhand reaches Animal care 8 and the ranch's Expert rank.
+- **The Mine pays at once:** it stands on Summer 7 of the second year, the farm at Farm Rank 4; its farmhand's faces and
+  the farmer's free stairs reach floor 15 (the Farm Rank's reach) within a few weeks, and over its 29 nights its ores
+  sell for 28,125g against 725g of its nights' costs. A face there is worth about a forage in the Old Forest: G5 ore at
+  85g against the forest's G4–G5 finds, two a face as a forage brings two.
+- **The farm in all:** the two years ship 168,510g and end on 138,840g, Farm Rank 5 (2,190 points); the Mine's
+  10,000g and the Coop's 2,000g are paid from its own gold.
+- **No retune:** the ranch's and the Mine's numbers stand as built: the Coop pays its way, and the Mine's pace is the
+  Farm Rank's reach, as the forest's is.
 
 #### The night's goals check
 
@@ -4082,7 +4382,7 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
   is, `/town?at=<place>&uma=<id>`, where going into town comes first), or "At home today. Talk with her in town another
   day.". **Play · 1 action ›** (her Ready event) works from anywhere.
 - **Hearts | Work:** the Work side is her work sheet: her favourite line, the day she joined, where she is, "Farmhand
-  since Spring 3 · her tasks" (a tap to the work board) once she works the farm, her ten aptitudes (each level, a bar to
+  since Spring 3 · her tasks" (a tap to the work board) once she works the farm, her fourteen aptitudes (each level, a bar to
   the next and the trick it opened; "where she'd start" before she's a farmhand: see [aptitude](#aptitude)), and her
   nine activities with talent, rank, points and the next challenge.
 
@@ -4249,7 +4549,8 @@ Each perk, what it does, and where in the day it acts:
 #### At her line
 
 Each place-bound template means one thing at each line's place. **Farming, foraging and fishing act now;** the other lines'
-places aren't built yet, so their perks wait, and a morning item of theirs is a crop of the season meanwhile.
+perks wait (the Mine, the Quarry and the ranch stand, and their lines' perks come later; the workshops aren't built yet),
+and a morning item of theirs is a crop of the season meanwhile.
 
 <!-- live:perk-lines -->
 | Her line | +10% at her line (F3, R5) | A night chore (F6, R7, S4) | A morning item (R2, S2) | Acts |
@@ -4257,12 +4558,12 @@ places aren't built yet, so their perks wait, and a morning item of theirs is a 
 | Farming | Each plot she tends: +10% chance of an extra crop at harvest, at the plot’s stars | Waters one dry growing tile (step 2) | A ★2+ crop of the season | Yes |
 | Foraging | Her haul ×1.1, and her Sawmill batch ×1.1 | One item from her rank’s deepest area this season, at a day’s haul’s stars (step 4) | A ★2+ good from the forest | Yes |
 | Fishing | Her catch ×1.1, and her Smokehouse batch ×1.1 | One fish from her deepest spot this season, at a day’s haul’s stars (step 4) | A ★2+ fish | Yes |
-| Mining (the Mine) | Her haul ×1.1, and her Smelter batch ×1.1 | One ore from her deepest floor | A ★2+ ore (a crop of the season until its place opens) | Not yet: once the Mine’s game is built |
-| Mining (the Quarry) | Her haul ×1.1, and her Cutter batch ×1.1 | One stone or gem from her deepest floor | A ★2+ stone or gem (a crop of the season until its place opens) | Not yet: once the Quarry’s game is built |
-| Ranch | Her pen: +10% chance of an extra product | +5 affection to her pen (step 3) | A ★2+ egg, milk or fleece (a crop of the season until its place opens) | Not yet: once the Coop’s game is built |
-| Cooking | +10% dishes as the Kitchen’s assistant | +1 dish on the Kitchen’s next play | A ★2+ dish (a crop of the season until its place opens) | Not yet: once the Kitchen’s game is built |
-| Serving | +10% tips as the Restaurant’s server | +1 cover on the Restaurant’s next shift | A ★2+ dish (a crop of the season until its place opens) | Not yet: once the Restaurant’s game is built |
-| Forging | +10% goods as the Forge’s assistant | +5% refund on the Forge’s next tool | A ★2+ Fitting (a crop of the season until its place opens) | Not yet: once the Forge’s game is built |
+| Mining (the Mine) | Her haul ×1.1, and her Smelter batch ×1.1 | One ore from her deepest floor | A ★2+ ore (a crop of the season meanwhile) | Not yet: the Mine stands; its line’s perks come later |
+| Mining (the Quarry) | Her haul ×1.1, and her Cutter batch ×1.1 | One stone or gem from her deepest floor | A ★2+ stone or gem (a crop of the season meanwhile) | Not yet: the Quarry stands; its line’s perks come later |
+| Ranch | Her pen: +10% chance of an extra product | +5 affection to her pen (step 3) | A ★2+ egg, milk or fleece (a crop of the season meanwhile) | Not yet: the Coop stands; its line’s perks come later |
+| Cooking | +10% dishes as the Kitchen’s assistant | +1 dish on the Kitchen’s next play | A ★2+ dish (a crop of the season meanwhile) | Not yet: once the Kitchen’s game is built |
+| Serving | +10% tips as the Restaurant’s server | +1 cover on the Restaurant’s next shift | A ★2+ dish (a crop of the season meanwhile) | Not yet: once the Restaurant’s game is built |
+| Forging | +10% goods as the Forge’s assistant | +5% refund on the Forge’s next tool | A ★2+ Fitting (a crop of the season meanwhile) | Not yet: once the Forge’s game is built |
 <!-- /live -->
 
 - **Seeded:** a fraction becomes a whole item by a seeded draw on the account, the day and her id, so a night replays the
@@ -4350,9 +4651,9 @@ line's best place now:
 | Farming | Salad | The top grade of the shop’s vegetables at its open seed tiers (Farm Rank 1: G6; 2: G7; 4: G10) | Carrot Salad |
 | Foraging | Soup | The top grade of the deepest forest area anyone has worked (the Woods G2 … the World Tree G10) | Button Mushroom Soup |
 | Fishing | Grill | The top grade of the deepest spot anyone has worked, its fish at 10% or more (the Pond G2) | Carp Grill |
-| Mining (the Mine) | Curry | G1 until the Mine’s game is built | Basil Curry |
-| Mining (the Quarry) | Curry | G1 until the Quarry’s game is built | Basil Curry |
-| Ranch | Cake | G1 until the ranch’s game is built | Honeycomb Cake |
+| Mining (the Mine) | Curry | G1 until the Mine’s line perks come | Basil Curry |
+| Mining (the Quarry) | Curry | G1 until the Quarry’s line perks come | Basil Curry |
+| Ranch | Cake | G1 until the ranch’s line perks come | Honeycomb Cake |
 | Cooking | Tart | G1 until the Kitchen’s game is built | Apple Tart |
 | Serving | Cookies | G1 until the Restaurant’s game is built | Peanut Cookies |
 | Forging | Bread | G1 until the Forge’s game is built | Wheat Bread |

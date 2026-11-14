@@ -11,16 +11,17 @@ import { GOOD_IDS, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, 
 import type { BinSale, MoneyLine, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
 import { amount, bool, count, int, list, object, oneOf, record, SaveParseError, type Obj } from './parse'
 import {
-  ANIMAL_HOME, ANIMAL_KINDS, APTITUDE_IDS, MAX_TASKS, TASK_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOUSE_LOAN, INCOME_NIGHTS, isDishId, MAX_LOANS, pairKey,
+  ANIMAL_HOME, ANIMAL_KINDS, APTITUDE_IDS, MAX_TASKS, TASK_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOME_ROOM, HOUSE_LOAN, INCOME_NIGHTS,
+  isDishId, MAX_FONDNESS, MAX_LOANS, pairKey, RANCH_HOMES, SILO_ROOM,
   REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig, type DormSwap,
   type Expedition, type Extra, type FestivalResult, type Loan, type RankState, type SaveV5, type StarCounts, type StationLoad, type Tile,
   type ToolId, type ToolTier, type Warehouse, type WorkshopId,
 } from './v4'
 import { MAX_STARS, parseStockKey } from './warehouse'
 
-/** The places an Uma works: the forest, the Fishery and their stations; the Mine, the Quarry and theirs once
- * they're built. What the night's `worked` and `made` name, kept for the farmhands; four slots each. */
-export const LOOP_WORK_PLACES = ['forest', 'fishery', 'mill', 'sawmill', 'smokehouse', 'mine', 'quarry', 'smelter', 'cutter'] as const
+/** The places an Uma works: the forest, the Fishery and their stations; the Mine, the Quarry and theirs; the Coop and
+ * the Barn. What the night's `worked` and `made` name, kept for the farmhands; four slots each. */
+export const LOOP_WORK_PLACES = ['forest', 'fishery', 'mill', 'sawmill', 'smokehouse', 'mine', 'quarry', 'smelter', 'cutter', 'coop', 'barn'] as const
 export type LoopPlaceId = typeof LOOP_WORK_PLACES[number]
 export const LOOP_SLOTS = 4
 
@@ -169,23 +170,41 @@ export function parseLoads(value: unknown, path: string): Partial<Record<Station
  * farmer's are 1–8. */
 const MAX_LOAD = 20
 
-export function parseRanch(value: unknown, path: string, roster: ReadonlySet<string>): SaveV5['ranch'] {
-  const o = object(value, path, ['animals'])
-  const animals = list(o.animals, `${path}.animals`, 0, 28).map((v, i): Animal => {
+/** An animal's keys, and those of the ranch's shape before its game (`building`, `affection`, `streak`, `carer`, `next`),
+ * which reads leniently: its affection as fondness (whole, held to the top), nothing fed, cared for or waiting. */
+const ANIMAL_KEYS = ['id', 'kind', 'fondness', 'fed', 'cared', 'ready'] as const
+const OLDER_ANIMAL_KEYS = ['id', 'kind', 'building', 'affection', 'streak', 'carer', 'next'] as const
+
+/** The ranch: each animal once, at most a building's room in each, and the silo's feed (a save from before the ranch's
+ * game has none: 0). Grows in place: no migration, and `updatedAt` never moves. */
+export function parseRanch(value: unknown, path: string): SaveV5['ranch'] {
+  const o = object(value, path, ['animals', 'silo'])
+  const animals = list(o.animals, `${path}.animals`, 0, RANCH_HOMES.length * HOME_ROOM).map((v, i): Animal => {
     const at = `${path}.animals.${i}`
-    const a = object(v, at, ['id', 'kind', 'building', 'affection', 'streak', 'carer', 'next'])
-    const kind = oneOf(a.kind, `${at}.kind`, ANIMAL_KINDS)
-    const building = oneOf(a.building, `${at}.building`, ['coop', 'barn'] as const)
-    if (building !== ANIMAL_HOME[kind]) fail(`${at}.building`, `a ${kind} lives in the ${ANIMAL_HOME[kind]}`)
-    return { id: key(a.id, `${at}.id`), kind, building, affection: amount(a.affection, `${at}.affection`), streak: count(a.streak, `${at}.streak`),
-      carer: a.carer === null ? null : member(a.carer, `${at}.carer`, roster), next: count(a.next, `${at}.next`) }
+    const raw = record(v, at)
+    if ('affection' in raw || 'building' in raw) {
+      const a = object(v, at, OLDER_ANIMAL_KEYS)
+      const fondness = Math.min(MAX_FONDNESS, Math.floor(amount(a.affection, `${at}.affection`)))
+      return { id: key(a.id, `${at}.id`), kind: oneOf(a.kind, `${at}.kind`, ANIMAL_KINDS), fondness, fed: false, cared: false, ready: false }
+    }
+    const a = object(v, at, ANIMAL_KEYS)
+    return {
+      id: key(a.id, `${at}.id`), kind: oneOf(a.kind, `${at}.kind`, ANIMAL_KINDS), fondness: int(a.fondness, `${at}.fondness`, 0, MAX_FONDNESS),
+      fed: bool(a.fed, `${at}.fed`), cared: bool(a.cared, `${at}.cared`), ready: bool(a.ready, `${at}.ready`),
+    }
   })
-  return { animals: unique(animals, `${path}.animals`, (a) => a.id) }
+  unique(animals, `${path}.animals`, (a) => a.id)
+  for (const home of RANCH_HOMES) {
+    if (animals.filter((a) => ANIMAL_HOME[a.kind] === home).length > HOME_ROOM) fail(`${path}.animals`, `the ${home} holds ${HOME_ROOM}`)
+  }
+  return { animals, silo: o.silo === undefined ? 0 : int(o.silo, `${path}.silo`, 0, SILO_ROOM) }
 }
 
+/** A dig: its deepest floor (0 before its first face) and the faces worked toward that floor's stairs, whole (an older
+ * save's fractional stairs-days read down to whole). */
 export function parseDig(value: unknown, path: string): Dig {
   const o = object(value, path, ['deepest', 'stairs'])
-  return { deepest: int(o.deepest, `${path}.deepest`, 0, DEEPEST_FLOOR), stairs: amount(o.stairs, `${path}.stairs`) }
+  return { deepest: int(o.deepest, `${path}.deepest`, 0, DEEPEST_FLOOR), stairs: Math.floor(amount(o.stairs, `${path}.stairs`)) }
 }
 
 export function parseBuildings(value: unknown, path: string): Partial<Record<BuildingId, number>> {
@@ -380,13 +399,20 @@ export function parseMoneyLines(value: unknown, path: string): MoneyLine[] {
 
 /** §2 Work done: each farmhand's day once (an Uma on the roster: her actions and those spent, half pace and well fed,
  * what she did by task and the goods it brought); each station's load once (an output it makes at its stars, 1 up to a
- * farmhand's biggest); the field's growth once (tiles that grew, 1 or more, and how many of them turned ripe); a crop
+ * farmhand's biggest); the Coop's and the Barn's night once each (animals fed, hungry and with a good waiting, each up to
+ * a building's room); the field's growth once (tiles that grew, 1 or more, and how many of them turned ripe); a crop
  * that withered once, on 1 or more tiles. */
 export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet<string>): WorkLine[] {
   const tiles = (value: unknown, at: string, min = 1) => int(value, at, min, FIELD_TILES)
-  return unique(list(value, path, 0, roster.size + STATIONS.length + 1 + FIELD_TILES).map((v, i): WorkLine => {
+  return unique(list(value, path, 0, roster.size + STATIONS.length + RANCH_HOMES.length + 1 + FIELD_TILES).map((v, i): WorkLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['farmhand', 'load', 'grew', 'withered'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['farmhand', 'load', 'ranch', 'grew', 'withered'] as const)
+    if (kind === 'ranch') {
+      // A building's night: its animals fed today, those that went hungry, and the goods waiting this morning.
+      const r = object(v, at, ['kind', 'home', 'fed', 'hungry', 'ready'])
+      const animals = (n: unknown, p: string) => int(n, p, 0, HOME_ROOM)
+      return { kind, home: oneOf(r.home, `${at}.home`, RANCH_HOMES), fed: animals(r.fed, `${at}.fed`), hungry: animals(r.hungry, `${at}.hungry`), ready: animals(r.ready, `${at}.ready`) }
+    }
     if (kind === 'farmhand') {
       const f = object(v, at, ['kind', 'id', 'actions', 'spent', 'half', 'fed', 'tasks', 'done', 'items'])
       const actions = int(f.actions, `${at}.actions`, 0, MAX_HAND_ACTIONS)
@@ -414,7 +440,8 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
     const c = object(v, at, ['kind', 'crop', 'tiles'])
     const crop = typeof c.crop === 'string' && isCropId(c.crop) ? c.crop : fail(`${at}.crop`, 'unknown crop')
     return { kind, crop, tiles: tiles(c.tiles, `${at}.tiles`) }
-  }), path, (w) => (w.kind === 'farmhand' ? `farmhand:${w.id}` : w.kind === 'load' ? `load:${w.station}` : w.kind === 'grew' ? 'grew' : `withered:${w.crop}`))
+  }), path, (w) => (w.kind === 'farmhand' ? `farmhand:${w.id}` : w.kind === 'load' ? `load:${w.station}` : w.kind === 'ranch' ? `ranch:${w.home}` : w.kind === 'grew' ? 'grew'
+    : `withered:${w.crop}`))
 }
 /** The most actions a farmhand's day can hold: well past any she grows to. */
 const MAX_HAND_ACTIONS = 30
