@@ -95,7 +95,6 @@ table. Its steps, in order:
 
 | Step | What | Packet |
 |---|---|---|
-| 2 | **The dialogue engine:** busts, faces and outfits by context, on the pilot's published kits | [F75](handoff/tasks/F75-dialogue-engine.md) |
 | 3 | **The default Uma:** a blank bust and profile, and a complete default story, for every Uma without her own | [F76](handoff/tasks/F76-default-uma.md) |
 | 4 | **A day of actions, and the farm loop:** 10 actions; the tile farm with daily watering; one-action gathering; stations; shipping | [F77](handoff/tasks/F77-actions-and-farm-loop.md) |
 | 5 | **The town map:** locations, who's there now, introductions, her menu | [F78](handoff/tasks/F78-town-map.md) |
@@ -106,12 +105,14 @@ table. Its steps, in order:
 | 10 | **The ranch and the mine,** in the farm loop's style | [F83](handoff/tasks/F83-ranch-and-mine.md) |
 
 Step 1, landscape, is done: the app sideways, the bar and the rail, side panels, and the portrait HD-2D preview
-retired. After step 5 a day can be played end to end. Phone checks follow steps 1, 2, 4, 5 and 7.
+retired. Step 2, the dialogue engine, is done: every scene on one engine, the pilot's portraits from master data with
+her face changing line by line and her outfit by context ([the dialogue engine](game-mechanics.md#the-dialogue-engine)).
+After step 5 a day can be played end to end. Phone checks follow steps 1, 2, 4, 5 and 7.
 
 **What it changes below:**
 - Phase 1's HD-2D track pauses: the portrait preview is retired, and the farm map becomes a landscape tile map until
   uma-platform's look path is ready.
-- Her look (Track C) folds into step 2: the pilot's art is published, F70 becomes the dialogue engine, and F71 becomes
+- Her look (Track C) folded into step 2: the pilot's art is in master data, and the dialogue engine plays its faces and
   its outfits by context.
 
 The owner settled the design's open points on 2026-11-14, so the packets are written.
@@ -138,7 +139,7 @@ at the end of every session ([F40](handoff/tasks/F40-story-authoring.md)).
 
 **Tracks B and C,** the HD-2D farm and her look, are folded into the rework above:
 - the portrait HD-2D preview retired with landscape (step 1);
-- the busts and outfits become the dialogue engine ([F75](handoff/tasks/F75-dialogue-engine.md)), on the pilot's art
+- the busts and outfits are the dialogue engine ([its rules](game-mechanics.md#the-dialogue-engine)), on the pilot's art
   ([F69](handoff/tasks/F69-bust-art-spec.md), done for two Umas).
 
 **Your steps:**

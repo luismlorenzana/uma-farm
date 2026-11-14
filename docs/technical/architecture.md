@@ -36,7 +36,7 @@ uma-platform, never in a copy here.
 | `@farm/domain` | workspace | web, api | The rules and the save (below) |
 | `@luismlorenzana/uma-kit` | 0.19.0 | web | Theme and appearance, the landscape stage (`KitStage`), the app frame, its side panels and the quick look's panel, boot gates, Google sign-in, the content client, the update prompt, the Hub map, the album, the work screens |
 | `@luismlorenzana/uma-art` | 2.27.0 | web | The bar's, map's, item and emote art |
-| `@luismlorenzana/uma-data` | 1.4.0 | web, domain | Master data's types and readers; test fixtures from `/testing` |
+| `@luismlorenzana/uma-data` | 1.7.0 | web, domain | Master data's types and readers (the `dialogue-portraits` family from 1.7.0); test fixtures from `/testing` |
 | `@luismlorenzana/uma-work` | 0.1.0 | web, domain | The work engine: slots, queues and entries |
 | `@luismlorenzana/uma-server` | 0.2.0 | api | The owner guard, the master data proxy, the private pack route |
 
@@ -102,6 +102,7 @@ Sheets and scenes are query parameters on the page under them:
 | `src/book/` | The farm's book |
 | `src/town/` | The Town |
 | `src/loop/` | The farm: its pages, sheets, scenes, actions and views |
+| `src/dialogue/` | The dialogue engine every scene plays on: the stage, the line, the bust and its portraits |
 | `src/save/` | Dexie, the store and its sync |
 | `src/master/` | Master data |
 | `src/story/` | The story pack's loader |
@@ -134,6 +135,12 @@ Sheets and scenes are query parameters on the page under them:
 - **Master data** (`src/master/master.ts`): a small external store read with `useSyncExternalStore`: the release's
   manifest, the album's rows of every outfit with a stable id, stats, birthdays, each outfit's character and variant, and
   the art index, through the content client from `/api/master`, seen through the story pack's cast once it loads.
+- **Her portraits** (`src/dialogue/portraits.ts`, loaded with the players): master data's `dialogue-portraits` family,
+  read per character id the first time she's on a stage (`client.dialoguePortraits`, checked against the release; an Uma
+  the art index's `dialoguePortraits` map doesn't list costs no fetch), each picture then by its path through the content
+  client, verified and cached by hash. `Bust.tsx` composes them: the outfit by context and the face by the expressions'
+  fallbacks (the domain's `story/look.ts`), the face drawn over the base at that base's position by the browser; without
+  her portraits, her master-data bust. Tests set a synthetic source (`setPortraitSource`).
 - **The story pack** (`src/story/story.ts`): loaded once, by boot, with master data's placeholders (the domain's
   `storyOf`: each character's default outfit, and each outfit's line from its stats); the boot waits for both.
   `outfitFor` resolves a roster key (a character id) to her outfit: the cast's, else her default. As a save comes in, an
@@ -196,9 +203,10 @@ The game is laid out sideways, designed at 844 × 390 and checked at 667 × 375.
   round (the account and chips down the left, the actions down the right); the farm asked uma-platform for its layout.
 - **Two columns where they fit** come from container queries (`@container` on the page, `@lg:` / `@xl:` on its lists);
   Account's two columns from `index.css`, over the kit's `AccountPage`.
-- **Scenes** stay full-screen fixed layers, laid out as rows: `ScenePlayer.tsx`'s `SCENE_ROW` and `SCENE_BUST` (her bust
-  left, the lines right) for the opening, meeting her, the pair and household players and the bench scene; the event
-  player's place card left and bubble right; the level-up and stage-up cards and the plays in two columns.
+- **Scenes** stay full-screen fixed layers, laid out as rows on the dialogue engine's `Stage` (`dialogue/Stage.tsx`: her
+  bust left on an optional backdrop, the line or the choices right) for the opening, meeting her, the bench scene, heart
+  events (the place card as the backdrop), and the pair and household players; the level-up and stage-up cards and the
+  plays in two columns.
 - **The upright card** (`app/Upright.tsx`) shows by CSS alone (Tailwind's `portrait:`), at z 1000 outside the stage.
 
 ### The build and its flags

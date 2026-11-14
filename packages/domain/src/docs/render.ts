@@ -58,6 +58,7 @@ import { PICK_CELLS, PICK_POPS, PICK_ROUNDS, PICK_STARS, PICK_TIMES, PICK_WRONG 
 import { RHYTHM_BEATS, RHYTHM_EXTRA, RHYTHM_LEAD, RHYTHM_MARK_WORDS, RHYTHM_PERIOD, RHYTHM_ROUNDS } from '../romance/plays/rhythm'
 import { WALK_FORK_MS, WALK_FORKS } from '../romance/plays/walk'
 import { PLAY_MAP, playOf, togetherPlay, type PlayAs } from '../romance/plays/which'
+import { ART_NAMES, EXPRESSIONS, fallbackChain, MOMENT_OUTFITS, PERSONAL_OUTFITS, SHORE_PLACES, STORY_OUTFITS, type StoryOutfit } from '../story/look'
 import { EVENT_POINTS } from '../romance/events'
 import { DATE_FROM, EVENING_FACTOR, eveningPoints, EVENINGS, favouriteKind, HANGOUT_FROM, INVITE_POINTS, INVITE_WEIGHT_DAYS, ROLE_WORDS, type EveningWait } from '../romance/evening'
 import { invitesFor, SECOND_EVENING_EVERY, TWO_EVENINGS_MARRIED } from '../save/v4'
@@ -914,6 +915,27 @@ function benchRecipe(): string {
   ])
 }
 /** The smith's scene at the bench, beat by beat. */
+// --- The dialogue engine -----------------------------------------------------------------------------------------
+/** Outfits by context: the rules in their order, each with the story's id and the art's base. */
+function outfitRules(): string {
+  const art = (o: StoryOutfit) => (o === 'season' ? 'The season’s' : `\`${ART_NAMES[o]}\``)
+  return table(['#', 'The moment', 'Her outfit', 'The base'], [
+    ['—', 'The scene’s own `outfit`, when the story names one', 'Its own', 'Its art name, below'],
+    ...MOMENT_OUTFITS.map((r, i) => [i + 1, `${r.words} (${r.moments.map((m) => `\`${m}\``).join(', ')})`, `\`${r.outfit}\``, art(r.outfit)]),
+    [MOMENT_OUTFITS.length + 1, 'Else', '`season`', 'The day’s season’s'],
+  ]) + `\n\nA wedding’s guests wear the moment’s other outfit (${PERSONAL_OUTFITS.map((o) => `\`${o}\``).join(' and ')} are the scene’s own Umas’ only). The heart events’ moments: the wedding rung, a beat whose \`together\` is work, a picnic date, and ${SHORE_PLACES.map((p) => `\`${p}\``).join(', ')} in summer. A household scene is a dinner and the finale a festival night; the other moments are the evenings’ and the calendar’s scenes’ to hand in.`
+}
+/** The story's outfit ids and the art's names for them. */
+function outfitIds(): string {
+  return table(['The story’s `outfit`', 'The art’s base'], STORY_OUTFITS.map((o) => [`\`${o}\``, o === 'season' ? SEASONS.map((s) => `\`${ART_NAMES[s]}\``).join(', ') + ' by the day' : `\`${ART_NAMES[o]}\``]))
+}
+/** The 22 expressions, their sets and their fallbacks. */
+function expressionsBlock(): string {
+  return table(['Expression', 'Set', 'Falls back to', 'Shown while not drawn'], EXPRESSIONS.map((e) => [
+    `\`${e.id}\``, e.set.charAt(0).toUpperCase() + e.set.slice(1), e.fallback ? `\`${e.fallback}\`` : '—', fallbackChain(e.id).slice(1).map((x) => `\`${x}\``).join(' → ') || 'The base’s own face',
+  ]))
+}
+
 function benchScene(): string {
   return `**${BENCH_SCENE_LINES.title}** (\`${BENCH_SCENE_LINES.id}\`)\n\n${table(['#', 'Who', 'Line'], BENCH_SCENE_LINES.beats.map((b, i) => [i + 1, speakerWords(b), b.line]))}`
 }
@@ -988,6 +1010,7 @@ export function renderBlock(key: string): string | null {
     plays: playsBlock, 'play-map': playMap, 'play-grades': playGrades, 'play-windows': playWindows, 'event-pay': eventPay, 'stand-in-route': standInRoute,
     'evening-kinds': eveningKinds, 'evening-points': eveningPointsBlock, 'evening-slots': eveningSlotsBlock,
     rings: ringsBlock, 'bench-recipe': benchRecipe, reception: receptionBlock, 'bench-scene': benchScene,
+    'outfit-rules': outfitRules, 'outfit-ids': outfitIds, expressions: expressionsBlock,
     houses: housesBlock, 'homestead-map': homesteadMap, 'household-milestones': householdMilestonesBlock, 'house-morning': houseMorningBlock, 'house-lines': houseLines,
     furniture: furnitureBlock,
     calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,

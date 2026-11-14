@@ -290,11 +290,28 @@ another id is kept for the story (a note).
 Each event is a rung's, by its `id`, with its `steps`. Any number of events, in any order. An event with an error is
 skipped, and the rest of her route plays.
 
+### The scene's outfit
+
+An event may name what she wears in it, `"outfit": "work"` beside its `id`; so may a pair level, a household scene and
+the finale. Without one the game dresses her for the moment (her wedding, a dinner, a festival night, a picnic or a tea,
+a night in, her work, the summer shore), else the day's season: [outfits by context](game-mechanics.md#outfits-by-context).
+
+| `outfit` | Her portrait |
+|---|---|
+| `season` | The day's season: `spring`, `summer`, `fall`, `winter` |
+| `spring`, `summer`, `autumn`, `winter` | That season's (`autumn` is the art's `fall`) |
+| `work` | `farm-work` |
+| `garden-party`, `kimono`, `dinner`, `wedding`, `wedding-night`, `swimsuit` | The same name |
+| `pajamas` | `pajamas-playful` |
+
+An id off the menu is a note, and the moment's plays; a value that isn't an id is an error that skips the field only. An
+outfit not drawn for her yet shows her spring portrait, so the story can name one before its art exists.
+
 ### Steps
 
 | Step | What it plays |
 |---|---|
-| `{ "say": "<who>", "line": "…", "emote": "happy" }` | A line, with the speaker's bust. Who speaks: anyone in the cast, or one of the town's people by her character id or her role's (`ida-stone`): her master-data name and bust show (an id outside them shows as "An Uma", a note). The emote shows as its word: `happy`, `shy`, `sad`, `angry`, `surprised`, `thinking`, `laughing`, `tender` |
+| `{ "say": "<who>", "line": "…", "emote": "happy" }` | A line, with the speaker's bust. Who speaks: anyone in the cast, or one of the town's people by her character id or her role's (`ida-stone`): her master-data name and bust show (an id outside them shows as "An Uma", a note). The emote is her face in the line, one of the 22 expressions: `neutral`, `happy`, `laughing`, `surprised`, `thinking`, `sad`, `angry`, `worried`, `determined`, `pouting`, `shy`, `tender`, `flustered`, `loving`, `tearful-joy`, `sleepy`, `crying`, `teasing`, `smug`, `embarrassed`, `startled`, `dreamy`. One not drawn for her yet shows its nearest ([the fallbacks](game-mechanics.md#her-faces)); none, or one off the menu (a note), shows neutral |
 | `{ "narrate": "…" }` | Narration, in italics |
 | `{ "thought": "…" }` | The farmer's thought, in italics |
 | `{ "wait": 600 }` | A pause, in ms, 0–5000 |
@@ -339,6 +356,7 @@ Named by the two ids in numeric order, `<a>-<b>`: the game finds it by that name
 |---|---|---|
 | `levels[].hearts` | The bond level 1–5 it plays at, once each | — |
 | `levels[].place` | Its title line's place | No place shown |
+| `levels[].outfit` | What both wear in it ([the scene's outfit](#the-scenes-outfit)) | The day's season |
 | `levels[].steps` | The conversation: the two speak (anyone else is a note) | — |
 
 Any levels, in any order. A level not written plays the game's two short lines. A pair the ties don't hold never plays (a
@@ -350,6 +368,7 @@ note).
 |---|---|---|
 | `scenes` | The household scenes at 5, 10 and 15 married, each `{ "at": 5, "open": […], "each": { "<id>": […] }, "close": […] }`. `open` and `close` speak through narration and the town's people; `each` is one spouse's beat | The game's short card at each: a line, each spouse's line, a line |
 | `scenes[].each` | Each spouse's beat, in wedding order | Her one line |
+| `scenes[].outfit`, `finale.outfit` | What every spouse wears in it ([the scene's outfit](#the-scenes-outfit)) | The dinner dress; the finale the kimono |
 | `houseLines` | `{ "<id>": ["…"] }`: a spouse's morning lines in her house, any number | Her temperament's lines |
 | `finale` | The Great Harvest: `open`, `play`, `each`, `close` | The game's short card, with a dance |
 
@@ -527,6 +546,7 @@ writing session, on the machine where the story is written (macOS or Windows). I
 | Item | Read now | Acts in play |
 |---|---|---|
 | Her outfit, calling, birthday, bible, route, ties, pairs, household, the opening | Yes | Yes, today |
+| A scene's `outfit`, a line's `emote` | Yes | Yes, today: [the dialogue engine](game-mechanics.md#the-dialogue-engine) dresses her and changes her face, for the Umas whose portraits are published |
 | The town's people and spots, her favourite spot, her town lines, a sister's name | Yes | Yes, today: [the town](game-mechanics.md#the-town) |
 | The welcome list, her trigger to meet | Yes | Yes, today: [meeting her](game-mechanics.md#meeting-her) |
 | The world: names, history, festivals, places, seasons, Town notes | Yes | Yes, today: [the world](game-mechanics.md#the-world-in-the-pack) |

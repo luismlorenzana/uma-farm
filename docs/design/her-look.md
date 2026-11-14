@@ -37,7 +37,7 @@ same style, as busts and faces.
 | Where | Art | Expressions |
 |---|---|---|
 | Cards, the HD-2D farm's standees, lists | Her face (`outfit-faces`) | — |
-| Scenes, heart events, pair talks | Her bust (`outfit-busts`), one picture per outfit | None: the story's eight emotes (happy, shy, sad, angry, surprised, thinking, laughing, tender) show as words |
+| Every scene (the dialogue engine, F75) | Her portrait in the scene's outfit (master data's `dialogue-portraits`, the pilot's two Umas); else her bust (`outfit-busts`) | Her face changes with each line's emote, by the 22 expressions' fallbacks; without portraits, the emote's bubble |
 | The HD-2D farm | Her chibi sprite set | The sprite's own actions |
 
 ## Her wardrobe
@@ -132,7 +132,7 @@ Folded into the owner's rework ([the game's design](game-design.md), 2026-11-14)
 | Packet | What | Who |
 |---|---|---|
 | [F69](../handoff/tasks/F69-bust-art-spec.md) | **The bust art:** her outfits and faces. The pilot is done (12 outfit portraits and 15 faces for each of two Umas); the rest follow | ChatGPT (character art) |
-| [F75](../handoff/tasks/F75-dialogue-engine.md) | **The dialogue engine:** the face over the outfit's portrait, the story's `emote` picks the face, outfits by context, every fallback; the art's private family asked of uma-platform | Claude |
+| F75, done | **The dialogue engine:** the face over the outfit's portrait, the story's `emote` picks the face, outfits by context, every fallback, on master data's `dialogue-portraits` family ([the rules](../game-mechanics.md#the-dialogue-engine)) | Claude |
 | [F76](../handoff/tasks/F76-default-uma.md) | **The default Uma:** a blank bust with 22 faces for every Uma without art | Claude |
 | [F79](../handoff/tasks/F79-uma-loop.md) | **The evenings:** Dinner in town and A night in, the wedding night, the night's companion | Claude |
 

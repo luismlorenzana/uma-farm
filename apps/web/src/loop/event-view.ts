@@ -1,11 +1,11 @@
 // Heart events as the screens say them: the place
-// card's backdrop and tint, the emote bubble beside her bust, the event's title, each choice's gain on its button, the
+// card's backdrop and tint, the event's title, each choice's gain on its button, the
 // plays' words, the level-up card's lines, the stage-up screen's list, a setup's advice and her Memories' album. Pure, so
 // the player and the tests read the same. Loaded on demand with the player.
 import {
   CAKE_DAYS, captionOf, dateOf, EVENING_GRADE_POINTS, EVENT_GRADE_POINTS, farmPlace, GRADE_NAMES, gradeOf, goodName, nextHousehold, nextRung, PERK_PLACE, perkWords, ROUTE_RUNGS,
   ringName, ringPercent, rungName, NIGHT_RUNGS, SEASON_NAMES,
-  type Emote, type EventCard, type Grade, type OptionView, type PerkId, type PerkLine, type PlayKind, type PlayLength, type SaveV4, type Season, type StageUp,
+  type EventCard, type Grade, type OptionView, type PerkId, type PerkLine, type PlayKind, type PlayLength, type SaveV4, type Season, type StageUp,
   type StoryPack, type Wait, type WeddingCard,
 } from '@farm/domain'
 import { placeWords } from './hearts-view'
@@ -14,12 +14,6 @@ import { WORK_PLACE } from './love-words'
 const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
 
 // --- The place card --------------------------------------------------------------------------------
-
-/** Her emote as uma-art's bubble beside her bust, until expression art exists. */
-export const EMOTE_BUBBLE: Readonly<Record<Emote, string>> = {
-  happy: 'emote/music', laughing: 'emote/music', shy: 'emote/sweat', sad: 'emote/ellipsis', angry: 'emote/anger', surprised: 'emote/exclaim',
-  thinking: 'emote/question', tender: 'emote/heart',
-}
 
 /** The nine romance backdrops (W5), each on a borrowed building frame with its own tint (the worker's). */
 export const BACKDROPS: Readonly<Record<string, { frame: string; tint: string; night?: true }>> = {

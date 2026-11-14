@@ -15,6 +15,7 @@
     {
       "hearts": 2,
       "place": "forest",
+      "outfit": "work",
       "steps": [
         { "place": "forest" },
         { "say": "9000001", "line": "Show me the mushroom patch you keep bragging about." },

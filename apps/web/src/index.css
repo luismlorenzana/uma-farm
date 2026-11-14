@@ -45,6 +45,17 @@
   .level-sparkle { animation: none; }
 }
 
+/* A scene's bust: her new face fades in over the last, or the last fades out to her base's own (neutral). The player
+   drops the fade under reduced motion (the app's setting or the device's). */
+@keyframes portrait-face-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes portrait-face-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 /* Landscape: uma-kit's Account is one column of panels; on a wide page they sit in two, until the kit's landscape
    variant ships (the page is a size container: AccountView.tsx). */
 @container (min-width: 36rem) {

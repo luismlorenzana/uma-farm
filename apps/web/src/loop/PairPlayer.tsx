@@ -1,15 +1,18 @@
 // A pair's conversations: `?read=<a>-<b>:<levels>` over any page, played in the
-// scene player's frame and steps: a tie's, the pack's at each level it writes and the game's two-line card at the rest
-// (`pairConversationsOf`). Each level in order, titled "Stand-in 1 & Stand-in 2 · Bond 2 · Forest"; a line
-// with its speaker's bust, a narration, a pause; a choice's options are wording only, with no gain. Skip, or the last
+// scene player's frame and steps on the dialogue engine: a tie's, the pack's at each level it writes and the game's
+// two-line card at the rest (`pairConversationsOf`). Each level in order, titled "Stand-in 1 & Stand-in 2 · Bond 2 ·
+// Forest"; a line with its speaker's bust (both in the level's own `outfit` when the story names one, else the day's
+// season; her face the line's emote), a narration, a pause; a choice's options are wording only, with no gain. Skip, or the last
 // line, marks every level read (`diary.read`, once each) and closes; a replay from the Diary marks nothing new. It pays
 // nothing. The morning's Read, her profile's Read and the Diary's replays open it, so it's portaled to the body above their
 // sheets (the kit's sheets portal there at z-50; the frame is z-60). Loaded on demand.
-import { bondHearts, bondOf, pairConversationsOf, sceneSteps, withFarmer, type ChoiceOption, type PairConversations, type SaveV4, type Step } from '@farm/domain'
+import { bondHearts, bondOf, pairConversationsOf, sceneSteps, type PairConversations, type SaveV4, type Step } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router'
+import { SceneLookProvider } from '../dialogue/Bust'
+import { lastSay } from '../dialogue/Line'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
 import { useLoopSave } from '../save/game'
@@ -17,7 +20,7 @@ import { namer } from '../story/people'
 import { useStory } from '../story/story'
 import { readPairOnce } from './actions'
 import { parseReadParam } from './hearts-view'
-import { Frame, placeName, SCENE_BUST, SCENE_ROW, silent, StepView } from './ScenePlayer'
+import { Frame, placeName, silent, StepView, WordingChoice } from './ScenePlayer'
 
 export default function PairPlayer({ read }: { read: string }) {
   const save = useLoopSave()
@@ -63,9 +66,12 @@ function Conversations({ save, pair, levels, master, leaving, onDone }: {
   const level = levels[index]
   if (!level) return null
   const next = () => (index + 1 < levels.length ? setIndex(index + 1) : onDone())
+  // Both wear the level's own outfit when the story names one, else the day's season.
   return (
-    <Conversation key={level.hearts} save={save} pair={pair} hearts={level.hearts} steps={level.steps} place={level.place ?? null} nameOf={nameOf}
-      of={levels.length > 1 ? `${index + 1}/${levels.length}` : null} leaving={leaving} onSkip={onDone} onDone={next} />
+    <SceneLookProvider value={{ own: level.outfit, day: save.calendar.day, leads: [pair.a, pair.b] }}>
+      <Conversation key={level.hearts} save={save} pair={pair} hearts={level.hearts} steps={level.steps} place={level.place ?? null} nameOf={nameOf}
+        of={levels.length > 1 ? `${index + 1}/${levels.length}` : null} leaving={leaving} onSkip={onDone} onDone={next} />
+    </SceneLookProvider>
   )
 }
 
@@ -87,33 +93,16 @@ function Conversation({ save, pair, hearts, steps, place, nameOf, of, leaving, o
   }, [done]) // eslint-disable-line react-hooks/exhaustive-deps
   const names = `${nameOf(pair.a)} & ${nameOf(pair.b)}`
   const title = `${names} · Bond ${hearts}${of ? ` (${of})` : ''}${here ? ` · ${placeName(here)}` : ''}`
-  const visible = shown.filter((s) => !silent(s))
-  const count = shown.slice(0, cursor).filter((s) => !silent(s)).length
+  // A choice is wording only: the last one to speak stays on the stage.
+  const last = lastSay(shown.slice(0, cursor))
   return (
     <Frame title={title} label={`${names}: bond ${hearts}`} scene={`pair:${pair.a}-${pair.b}:${hearts}`} onSkip={onSkip} skipping={leaving}>
       {step && 'choice' in step ? (
-        <PairChoice options={step.choice} farmer={save.farmer.name} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />
+        <WordingChoice options={step.choice} farmer={save.farmer.name} bust={last ? { ...last, name: nameOf(last.who) } : null}
+          onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />
       ) : step ? (
-        <StepView key={cursor} step={step} at={cursor} count={count} total={visible.length} nameOf={nameOf} farmer={save.farmer.name} onNext={() => setAt(cursor + 1)} />
+        <StepView key={cursor} steps={shown} at={cursor} nameOf={nameOf} farmer={save.farmer.name} onNext={() => setAt(cursor + 1)} />
       ) : <div className="flex-1" />}
     </Frame>
-  )
-}
-
-/** A choice in a pair's conversation: wording only, so the options carry no gain. */
-function PairChoice({ options, farmer, onPick }: { options: readonly ChoiceOption[]; farmer: string; onPick: (i: number) => void }) {
-  return (
-    <div className={SCENE_ROW} data-choice>
-      <div className={SCENE_BUST} />
-      <div className="flex max-h-full min-w-0 flex-1 flex-col justify-end gap-3 overflow-y-auto">
-        <p className="text-[13px] text-ink-soft">You</p>
-        {options.map((option, i) => (
-          <button key={i} type="button" onClick={() => onPick(i)} data-option={i}
-            className="flex min-h-12 w-full shrink-0 items-center rounded-md border border-hairline bg-panel px-4 py-2 text-left text-[15px] shadow-1">
-            {withFarmer(option.text, farmer)}
-          </button>
-        ))}
-      </div>
-    </div>
   )
 }

@@ -132,6 +132,9 @@ export * from './story/placeholders'
 // and pairs read on demand.
 export * from './story/release'
 export * from './story/stand-in'
+// Her look in a scene (the dialogue engine's rules): outfits by context, the story's outfit ids and the art's names, the
+// 22 expressions and their fallbacks, a portrait kit's pick for a line, and the portraits' manifest.
+export * from './story/look'
 // The story's one reader: errors only for what the game can't read, each skipping its part; notes for the rest. The
 // menu's defaults (the welcome list, her trigger to meet, her chapters) are `placeholders.ts`'s.
 export {

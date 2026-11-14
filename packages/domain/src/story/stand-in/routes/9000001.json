@@ -114,6 +114,7 @@
     },
     {
       "id": "f2",
+      "outfit": "work",
       "steps": [
         {
           "place": "fields"
@@ -124,7 +125,7 @@
         {
           "say": "9000001",
           "line": "Keep time with me. Hoe, step, hoe, step.",
-          "emote": "thinking"
+          "emote": "determined"
         },
         {
           "play": {
@@ -509,6 +510,7 @@
     },
     {
       "id": "confession",
+      "outfit": "autumn",
       "steps": [
         {
           "place": "overlook"

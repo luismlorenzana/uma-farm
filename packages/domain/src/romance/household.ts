@@ -19,6 +19,7 @@ import type { HouseholdNews, HouseLine, ItemLine, LevelLine, VowsLine } from '..
 import { FINALE_MARRIED, FURNITURE_PIECES, HOUSEHOLD_MILESTONES, marriedCount, residentsOf, vowsOn, type SaveV4 } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
 import type { Finale, Household, HouseholdAt, Step } from '../story/authored'
+import type { Moment, StoryOutfit } from '../story/look'
 import type { StoryPack } from '../story/pack'
 import { beatOf, placeholderHouseholdBeat } from '../story/placeholders'
 import { lineGood } from './days'
@@ -273,6 +274,10 @@ export interface HouseholdPlay {
   /** The finale's play, after its `open`. */
   play: Finale['play'] | null
   spouses: string[]
+  /** Its look: the story's own outfit for it, if any, and its moment (a household scene is a supper, the finale a
+   * festival night). */
+  outfit?: StoryOutfit
+  moments: Moment[]
 }
 export function householdPlay(save: Pick<SaveV4, 'love' | 'roster'>, household: Household, id: HouseholdId): HouseholdPlay | null {
   const scene = id === 'finale' ? household.finale : household.scenes?.find((s) => `household:${s.at}` === id)
@@ -284,6 +289,7 @@ export function householdPlay(save: Pick<SaveV4, 'love' | 'roster'>, household: 
   return {
     id, title: householdTitle(id), spouses, play: id === 'finale' ? household.finale?.play ?? null : null,
     parts: [{ who: null, steps: scene.open ?? [] }, ...beats, { who: null, steps: scene.close ?? [] }],
+    ...(scene.outfit ? { outfit: scene.outfit } : {}), moments: [id === 'finale' ? 'festival-night' : 'dinner'],
   }
 }
 

@@ -29,6 +29,7 @@ prose here; change a table by changing the rule.
   - [Talents and ranks](#talents-and-ranks)
   - [The farm's progress](#the-farms-progress)
 - **[Part 3 — Hearts: the cast and the romance](#part-3--hearts-the-cast-and-the-romance)**
+  - [The dialogue engine](#the-dialogue-engine)
   - [The cast and the story pack](#the-cast-and-the-story-pack)
   - [What plays without the story](#what-plays-without-the-story)
   - [The opening, the farmer's name, and meeting her](#the-opening-the-farmers-name-and-meeting-her)
@@ -2450,11 +2451,12 @@ The Diary tab (`/diary`) holds the world's pages, the farm's projects, the Farm 
 
 #### The scene player
 
-- **A full-screen sheet** over the farm and its bars: the scene's title and **Skip** at the top; on the left a bust (a
-  cast member's disc, an Uma's bust from master data, none for narration); on the right the speaker's name in the accent
-  colour and the line (narration in italics), and "Tap to go on · 3/12". A tap anywhere goes on.
-- **It loads master data itself** (names and busts), since a new farm's boot doesn't wait for it. **Skip** works
-  without it, and skipping marks the scene read.
+- **A full-screen sheet** over the farm and its bars, on [the dialogue engine](#the-dialogue-engine): the scene's title
+  and **Skip** at the top; on the left the speaker's bust (her portrait in the day's season with the line's face, else
+  her bust from master data; a role's disc; none for narration); on the right the speaker's name in the accent colour and
+  the line (narration in italics), and "Tap to go on · 3/12". A tap on the line or the bust goes on.
+- **It loads master data itself** (names, busts and portraits), since a new farm's boot doesn't wait for it. **Skip**
+  works without it, and skipping marks the scene read.
 - **The opening** plays its lines with the title line "Day 1" (the world's farm and town after it when it names them,
   "Day 1 · Thistle Farm, Fernwick"; a place once a `place` step names one: "Day 1 · Gate"), "Tap to go on · 1/3". Its last tap, or **Skip** on any line from the first, reads it and opens **Home**:
   three taps after the name for the game's own three.
@@ -2468,6 +2470,135 @@ The Diary tab (`/diary`) holds the world's pages, the farm's projects, the Farm 
 > in the first days, and **People** is the rail's third page (Farm · Town · People · Book · Diary), with the
 > roster's album as its Work view. A save from before v4 starts over as a new farm (see
 > [Save versions](#save-versions)).
+
+### The dialogue engine
+
+One engine plays every scene: the opening, meeting her, the ring bench's scene, heart events (and Ask her, and a Memory
+replayed), pair conversations, and the household's scenes and the finale. The evenings and the plays have no lines; the
+evenings' and the calendar's own scenes (dinners, nights in, the wedding night, the festival nights) will play on it as
+they're written, handing it their moment. The story's steps are the same in every scene (`say`, `narrate`, `thought`,
+`choice`, `play`, …).
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ The Fields · Friendship 2                             Auto  Skip  Log │
+│ ╭──────────────────────────╮                                         │
+│ │ (the place's    ┌──────┐ │                                         │  her portrait in the scene's
+│ │  backdrop,      │ her  │ │                                         │  outfit, her face the line's
+│ │  heart events   │portr-│ │  ┌──────────────────────────────────┐   │  emote
+│ │  only)          │ ait  │ │  │ Her name                         │   │
+│ │                 │      │ │  │ Her line, typed out in an event. │   │
+│ │                 └──────┘ │  └──────────────────────────────────┘   │  the line, or the choices
+│ ╰──────────────────────────╯                                         │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+- **Landscape:** her bust on the left, the line or the choices on the right, both resting on the foot. A heart event
+  puts the place card behind her bust (the backdrop); the other scenes stay plain until place art exists. A tap on the
+  line (or on her bust) goes on; a heart event's line is typed out, three lines at most, as before.
+- **Who's on the stage:** the speaker; narration and thoughts show no one, except in a heart event, where she stays on
+  the stage with the face of her last line. At a choice the last one to speak stays; meeting her ends on her smiling
+  ("Welcome, ‹her name›").
+- **Her bust** is her portrait in the outfit the scene calls for, with the line's face over it:
+  - **a line's face** is its `emote`; a line without one shows **neutral**, the portrait's own face;
+  - **only the face changes** from line to line: the portrait stays put while the new face fades in over the last (140
+    ms; at once with reduced motion), and neutral fades the last face away; until a new face has loaded, the last one
+    stays;
+  - **the next line's** portrait and face load while this line shows.
+- **Without her portraits** she shows her master-data bust, without faces, the emote as uma-art's bubble beside it (its
+  own, else its nearest's: happy and laughing a music note, shy a sweat drop, sad an ellipsis, angry an anger mark,
+  surprised an exclamation, thinking a question mark, tender a heart, sleepy a zzz). A role no one plays shows its
+  lettered disc. The default Uma's blank bust comes next ([F76](handoff/tasks/F76-default-uma.md)).
+
+#### Her portraits
+
+Master data's private `dialogue-portraits` family holds them, keyed by her character id: **a portrait per outfit** (525 ×
+700, her face neutral), with where the face sits on it, and **a face per expression** (224 × 224, with alpha), drawn to
+sit over any of her portraits. The game draws the face over the portrait at that portrait's face position, unscaled,
+in straight alpha. Her portraits load the first time she's on a stage, then each picture by its path: checked against
+the release and cached on the device by its hash, so a scene plays offline once seen. The pilot is two Umas with 12
+outfits and 15 faces each; the next follow in the Uma Ranker's order. An outfit or a face not drawn for her yet falls
+back (below), so a story can name one before its art exists.
+
+#### Outfits by context
+
+**What she wears** is the scene's own `outfit` when the story names one (an event's, a pair level's, a household scene's
+or the finale's); else the moment's, by the first rule that holds; else the day's season. An outfit not drawn for her
+shows her first in the art's order: spring.
+
+<!-- live:outfit-rules -->
+| # | The moment | Her outfit | The base |
+|---|---|---|---|
+| — | The scene’s own `outfit`, when the story names one | Its own | Its art name, below |
+| 1 | A wedding (`wedding`) | `wedding` | `wedding` |
+| 2 | Its night (`wedding-night`) | `wedding-night` | `wedding-night` |
+| 3 | A dinner (`dinner`) | `dinner` | `dinner` |
+| 4 | A festival night (`festival-night`) | `kimono` | `kimono` |
+| 5 | A picnic, a tea or the spring festival (`picnic`, `tea`, `spring-festival`) | `garden-party` | `garden-party` |
+| 6 | A night in, or a night she can’t sleep (`night-in`, `sleepless`) | `pajamas` | `pajamas-playful` |
+| 7 | Her work (`work`) | `work` | `farm-work` |
+| 8 | The summer shore (`shore`) | `swimsuit` | `swimsuit` |
+| 9 | Else | `season` | The day’s season’s |
+
+A wedding’s guests wear the moment’s other outfit (`wedding` and `wedding-night` are the scene’s own Umas’ only). The heart events’ moments: the wedding rung, a beat whose `together` is work, a picnic date, and `sea-pier` in summer. A household scene is a dinner and the finale a festival night; the other moments are the evenings’ and the calendar’s scenes’ to hand in.
+<!-- /live -->
+
+**The story's outfit ids** and the art's names for them:
+
+<!-- live:outfit-ids -->
+| The story’s `outfit` | The art’s base |
+|---|---|
+| `season` | `spring`, `summer`, `fall`, `winter` by the day |
+| `spring` | `spring` |
+| `summer` | `summer` |
+| `autumn` | `fall` |
+| `winter` | `winter` |
+| `work` | `farm-work` |
+| `garden-party` | `garden-party` |
+| `kimono` | `kimono` |
+| `dinner` | `dinner` |
+| `wedding` | `wedding` |
+| `wedding-night` | `wedding-night` |
+| `pajamas` | `pajamas-playful` |
+| `swimsuit` | `swimsuit` |
+<!-- /live -->
+
+- **Who wears it:** the scene's own Umas (the event's, the pair, her in her meeting scene, every spouse in a household
+  scene); anyone else in the scene wears the same, unless it's a wedding's.
+- **The sprites don't change:** her chibi set on the farm map is master data's, whatever she wears in a scene.
+
+#### Her faces
+
+The story's `emote` names one of **22 expressions** in three sets: core for every Uma who speaks, romance for every Uma
+with a route, extra when there's time. A face not drawn for her yet shows its nearest, ending at neutral; an emote off
+the menu shows neutral (the story's check notes it).
+
+<!-- live:expressions -->
+| Expression | Set | Falls back to | Shown while not drawn |
+|---|---|---|---|
+| `neutral` | Core | — | The base’s own face |
+| `happy` | Core | `neutral` | `neutral` |
+| `laughing` | Core | `happy` | `happy` → `neutral` |
+| `surprised` | Core | `neutral` | `neutral` |
+| `thinking` | Core | `neutral` | `neutral` |
+| `sad` | Core | `neutral` | `neutral` |
+| `angry` | Core | `neutral` | `neutral` |
+| `worried` | Core | `sad` | `sad` → `neutral` |
+| `determined` | Core | `happy` | `happy` → `neutral` |
+| `pouting` | Core | `angry` | `angry` → `neutral` |
+| `shy` | Romance | `happy` | `happy` → `neutral` |
+| `tender` | Romance | `happy` | `happy` → `neutral` |
+| `flustered` | Romance | `shy` | `shy` → `happy` → `neutral` |
+| `loving` | Romance | `tender` | `tender` → `happy` → `neutral` |
+| `tearful-joy` | Romance | `loving` | `loving` → `tender` → `happy` → `neutral` |
+| `sleepy` | Romance | `tender` | `tender` → `happy` → `neutral` |
+| `crying` | Extra | `sad` | `sad` → `neutral` |
+| `teasing` | Extra | `happy` | `happy` → `neutral` |
+| `smug` | Extra | `determined` | `determined` → `happy` → `neutral` |
+| `embarrassed` | Extra | `flustered` | `flustered` → `shy` → `happy` → `neutral` |
+| `startled` | Extra | `surprised` | `surprised` → `neutral` |
+| `dreamy` | Extra | `tender` | `tender` → `happy` → `neutral` |
+<!-- /live -->
 
 ### The cast and the story pack
 
@@ -2513,9 +2644,10 @@ at. A beat says, each optional:
 - **its caption** (the Memory's line), **its hint** (what her profile says while it's next), its place, and **an
   unlock:** an item, a place or a perk in words.
 
-**A scripted event** is a list of steps: a line said by a cast Uma or one of the town's people, by her id or her role's (with an optional emote: happy, shy,
-sad, angry, surprised, thinking, laughing or tender), narration, a thought, a pause, a change of place, a flag, a branch
-on a flag, a choice, or a play.
+**A scripted event** is a list of steps: a line said by a cast Uma or one of the town's people, by her id or her role's
+(with an optional emote, one of [the 22 expressions](#her-faces)), narration, a thought, a pause, a change of place, a
+flag, a branch on a flag, a choice, or a play. The event may name its own `outfit` ([outfits by
+context](#outfits-by-context)).
 
 - **A choice** has any number of options, each with its text, an optional tone (warm, playful or honest) and an authored
   gain that ranks the options. An option may cost a count of a good, reveal one of her gift tastes, or carry steps that
@@ -2613,7 +2745,8 @@ they're needed.
 - **Her outfit** is the cast file's: the game never chooses one over it. Her face, bust, talents and temperament come
   from that outfit; her name is her character's. Talents aren't saved, so a changed outfit shows on the next boot.
   Without one, she plays **her default outfit from master data**: her first original outfit (no variant, the lowest id),
-  else her lowest.
+  else her lowest. (What she wears in a scene is her portraits' outfit, by [context](#outfits-by-context): a different
+  thing.)
 - **One resolver** turns a roster id into the outfit it plays: the cast's outfit, else master data's default for her,
   else the id itself for someone master data doesn't hold. The app sees
   master data through it, so faces, busts, names, talents, temperaments and pickers all follow the cast with nothing else
@@ -2892,13 +3025,14 @@ chapters](#her-chapters); she shows on the People page. There's no cap on how ma
 
 Her meeting scene is her route's arrival scene, and plays as soon as she's met (above), after the opening and the ring
 bench's scene, in the order you met them (by day, then the cast's order). The scene player shows her lines with her bust
-(or her disc) and `{farmer}` filled, her emote as a word, narration, thoughts in italics, a title line ("Meeting
+(her portrait in the scene's own outfit, else the day's season, her face the line's emote; else her master-data bust, or
+her disc) and `{farmer}` filled, narration, thoughts in italics, a title line ("Meeting
 Stand-in 1 · Gate"), pauses, flags (wording only) and **her choice**: usually one; written with none she pays +50 alone,
 and with more the first pays.
 
 - **Each option shows its gain on the button** before the tap.
 - **Skip** jumps to the choice, never past it; after the choice, to the end. So every meeting pays.
-- It ends on her bust, "♥ +80" (or +60), where she lives ("She moves into the Dorm." or "No bed free: she lives in town
+- It ends on her bust, smiling, "♥ +80" (or +60), where she lives ("She moves into the Dorm." or "No bed free: she lives in town
   for now.") and **Welcome, ‹her name›**, and the farm stays where it was.
 
 What it pays into her Friendship 1 bar:
@@ -3561,20 +3695,24 @@ A level is its event. Once her next event is Ready it waits for you, for good: *
 ┌──────────────────────────────────────────────────────────────────────┐
 │ The Fields · Friendship 1                             Auto  Skip  Log │  the controls away from the taps
 │ ╭────────────────────────────╮                                       │
-│ │                  ♪         │  ┌─────────────────────────────────┐  │  her bubble: three lines at
-│ │ (the Fields'       (bust)  │  │ Stand-in 1                      │  │  most, typed out
-│ │  frame)                    │  │ Hello, Robin. Some of these are │  │
-│ │ on spring's ground         │  │ ready. Help me pick?            │  │
-│ │                            │  └─────────────────────────────────┘  │
-│ │                            │  [ Show me which ones.         +30 ]  │  48 pt choices, each with its
-│ ╰────────────────────────────╯  [ Race you to the end of the row. +10 ] gain
+│ │               ┌────────┐   │  ┌─────────────────────────────────┐  │  her bubble: three lines at
+│ │ (the Fields'  │  her   │   │  │ Stand-in 1                      │  │  most, typed out
+│ │  frame)       │portrait│   │  │ Hello, Robin. Some of these are │  │
+│ │ on spring's   │ (face) │   │  │ ready. Help me pick?            │  │
+│ │ ground        │        │   │  └─────────────────────────────────┘  │
+│ │               │        │   │  [ Show me which ones.         +30 ]  │  48 pt choices, each with its
+│ ╰───────────────┴────────┴───╯  [ Race you to the end of the row. +10 ] gain
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-- **The place card** fills the left: a farm place's building frame on the season's ground (spring `#dcefc7`, summer
-  `#f6e7b0`, autumn `#f2d3b0`, winter `#e3ebf3`), or a romance backdrop's borrowed frame and tint. A place step changes it
-  mid-scene, and the title follows: "The Fields · Friendship 1", "The Pond at night · Romance 5". The speaker's bust is
-  master data's (one of the town's people's too; a lettered disc for a stand-in, or for a role no one plays).
+- **The place card** fills the left, behind her bust ([the dialogue engine](#the-dialogue-engine)'s backdrop): a farm
+  place's building frame on the season's ground (spring `#dcefc7`, summer `#f6e7b0`, autumn `#f2d3b0`, winter
+  `#e3ebf3`), or a romance backdrop's borrowed frame and tint. A place step changes it mid-scene, and the title follows:
+  "The Fields · Friendship 1", "The Pond at night · Romance 5". The speaker's bust is her portrait in the event's outfit
+  (its own `outfit`, else its moment's: her wedding, her work, a picnic, the summer shore; else the day's season), her
+  face the line's emote; during narration she keeps her last line's face. Without portraits, her master-data bust (one of
+  the town's people's too; a lettered disc for a stand-in, or for a role no one plays). A wedding's guests wear the day's
+  season.
 
   | Backdrop | Borrowed frame | Tint |
   |---|---|---|
@@ -3588,8 +3726,8 @@ A level is its event. Once her next event is Ready it waits for you, for good: *
   | The hilltop track | The racecourse's | `#d2e7b7` |
   | The sea pier | The fishery workbench's | `#9fc6de` |
 
-- **The emote** is a bubble beside her bust: happy and laughing a music note, shy a sweat drop, sad an ellipsis, angry an
-  anger mark, surprised an exclamation, thinking a question mark, tender a heart.
+- **The emote** is her face; on a master-data bust without faces, a bubble beside it ([the dialogue
+  engine](#the-dialogue-engine)).
 - **Her bubble** holds three lines at most, at 16 pt, typed out: **a tap finishes the line, the next tap goes on, a hold
   skips.** Narration and thoughts are italic. A pause goes on by itself (5 s at most).
 - **Skip** (or a hold on the bubble) jumps to the next choice or play, **never past one.** **Auto** goes on after a
@@ -4226,8 +4364,9 @@ decorations draw them:
 - **Household scenes** (at 5, 10 and 15 married) and **the finale** (20) are **Ready offers,** never auto-played. From the
   morning after the wedding that reaches them, the morning's Hearts lines ("⌂ Household scene 1 · Ready", with **Play**)
   and the Hearts header show them, and they play over any page: the opening, each spouse's beat in **wedding order**,
-  then the close, the pack's where written and the game's short card where not (a line, her one line, a line). A choice
-  in them is wording only. They **pay nothing,** are read once, and the Diary's Memories shelf replays them. Every scene
+  then the close, the pack's where written and the game's short card where not (a line, her one line, a line). Every
+  spouse wears the scene's own `outfit`, else the dinner dress (the finale: the kimono). A choice in them is wording
+  only. They **pay nothing,** are read once, and the Diary's Memories shelf replays them. Every scene
   is offered, written or not.
 - **The finale, the Great Harvest,** is Ready the morning after the wedding that makes **20 married,** once: its opening
   at the festival ground, its dance (a play whose grade pays nothing; without the pack's, "Dance with everyone under the
@@ -4342,7 +4481,8 @@ At 3 bond hearts two Umas work **side by side:**
   and fisher, and her forager and fisher, play the cards.
 - **A pair with no tie** has no conversation: the heart's line is "‹a› and ‹b› are closer now", with no scene.
 - **Read** plays the pair's opened and unread levels in turn in the scene player ("Stand-in 1 & Stand-in 2 · Bond 1
-  (1/2) · Fields"), each line a tap, the speaker's bust. A choice is wording only. The end, or **Skip**, marks every level
+  (1/2) · Fields"), each line a tap, the speaker's bust (both in the level's own `outfit`, else the day's season; her face
+  the line's emote). A choice is wording only. The end, or **Skip**, marks every level
   read, once. **It pays nothing.** A replay from the Diary marks nothing new.
 - **The morning** lists the bond hearts reached since the last morning, one line a pair at its highest heart, in the
   cast's order: "♥♥ Stand-in 1 & Stand-in 2 · bond 2" with **Read** while a conversation up to that heart waits (a seed
