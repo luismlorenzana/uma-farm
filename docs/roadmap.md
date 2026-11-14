@@ -99,6 +99,7 @@ table. Its steps, in order:
 | 7 | **Farmhands:** her part-time job, then her farm actions; the work board; aptitudes that grow with practice | [F80](handoff/tasks/F80-farmhands.md) |
 | 8 | **Upkeep and loans** | [F81](handoff/tasks/F81-economy.md) |
 | 10 | **The ranch and the mine,** in the farm loop's style | [F83](handoff/tasks/F83-ranch-and-mine.md) |
+| 11 | **Illustrations:** her big moments full screen (the first Uma's nine are published), and a gallery on her profile | [F84](handoff/tasks/F84-illustrations.md) |
 
 Step 1, landscape, is done: the app sideways, the bar and the rail, side panels, and the portrait HD-2D preview
 retired. Step 2, the dialogue engine, is done: every scene on one engine, the pilot's portraits from master data with

@@ -37,6 +37,7 @@ evening as built, her event when it's Ready; no welcome week ([the town](../game
 | [F81](tasks/F81-economy.md) **Upkeep and loans** | Claude | After F77 |
 | F82 **The calendar** | Claude | Built, in review: the pull request `feat/f82-calendar` |
 | [F83](tasks/F83-ranch-and-mine.md) **The ranch and the mine** | Claude | After F77 and F80 |
+| [F84](tasks/F84-illustrations.md) **Illustrations** | Claude | After F79; the art's family asked of uma-platform |
 | [F69](tasks/F69-bust-art-spec.md) **The bust art**, the next Umas | ChatGPT | The pilot is done; the rest in the Ranker's order |
 | [F40](tasks/F40-story-authoring.md) **The story**, and its ship routine | The story session | Release 1 shipped; Release 2 brings `world.json` |
 
