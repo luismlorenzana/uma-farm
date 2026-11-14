@@ -8,9 +8,8 @@ import { DIARY_ROWS, RING_ROW } from '../farm/milestones'
 import { GOOD_FAMILIES, GOODS, goodName, goodOf, isGoodId, isGoodOrRingId, RING_GOODS, RING_IDS, ringGrade, ringName } from '../goods/ids'
 import { priceOf } from '../goods/prices'
 import { runNight, type NightContext } from '../night/end-day'
-import { TEST_KINDS } from '../night/kinds.fixture'
 import { payBin, ship } from '../save/bin'
-import { parseSaveV4 } from '../save/parse-v4'
+import { parseSaveV5 } from '../save/parse-v4'
 import { newSave, newTodayV4, type Love, type SaveV4 } from '../save/v4'
 import { addGoods, goodCount } from '../save/warehouse'
 import { checkBible, gendersFarmer, type Step } from '../story/authored'
@@ -38,7 +37,7 @@ const LATER = '2026-11-11T21:30:00.000Z'
 const PACK = storyPackFrom(STAND_IN_FILES)
 const [ONE, TWO, THREE]: readonly string[] = STAND_INS
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
-const context = (): NightContext => ({ kinds: TEST_KINDS, story: PACK })
+const context = (): NightContext => ({ story: PACK })
 
 /** A named farm on `day`, the opening read and the stand-ins home (`joinCast`) at Friendship 0. */
 function farm(day = 3): SaveV4 {
@@ -80,7 +79,7 @@ describe('the rings', () => {
     expect(paid.gold).toBe(340)
     expect(paid.save.diary.shipped['ring-g3']).toBe(1)
     expect(diaryEntries(paid.save)).toBe(1)
-    expect(parseSaveV4(json(paid.save))).toEqual(paid.save)
+    expect(parseSaveV5(json(paid.save))).toEqual(paid.save)
   })
 
   it('form the Diary\'s 27th row, ten rings shipped once each paying the row\'s gold', () => {
@@ -115,7 +114,7 @@ describe('the bench opens', () => {
     expect(sceneDue(read)).toBeNull()
     const again = runNight({ ...read, memories: { ...read.memories, [TWO]: ['r8'] } }, context())
     expect(again.buildings.forge).toBe(0)
-    expect(parseSaveV4(json(again))).toEqual(again)
+    expect(parseSaveV5(json(again))).toEqual(again)
   })
 })
 
@@ -130,7 +129,7 @@ describe('making a ring', () => {
     expect(goodCount(made.items, 'cedar-plank')).toBe(1)
     expect(made.gold).toBe(save.gold)
     expect(made.today.ring).toBe(3)
-    expect(parseSaveV4(json(made))).toEqual(made)
+    expect(parseSaveV5(json(made))).toEqual(made)
     const more = give(made, 'cedar-plank', 1, 3)
     expect(() => makeRing(more, three('cedar-plank', 'cedar-plank', 'cedar-plank'))).toThrow(BENCH_WORDS.today)
     const tomorrow = runNight(more, context())
@@ -196,7 +195,7 @@ describe('the proposal', () => {
     // A Fine and the lesser options still succeed.
     const fine = playEvent(save, PACK, ONE, { ...proposal('ring-g5'), picks: [1, 1], plays: [{ kind: 'walk', score: 0 }] })
     expect(fine.save.love[ONE]).toMatchObject({ stage: 'wedding', ring: 5 })
-    expect(parseSaveV4(json(after))).toEqual(after)
+    expect(parseSaveV5(json(after))).toEqual(after)
   })
 
   it('refuses without a ring chosen, or one not in the Warehouse', () => {
@@ -259,7 +258,7 @@ describe('the wedding', () => {
     expect(anniversaryOf(21)).toBe(21 + DAYS_PER_YEAR)
     expect([isAnniversary(save.love[ONE]!, 21 + DAYS_PER_YEAR), isAnniversary(save.love[ONE]!, 22)]).toEqual([true, false])
     expect([nextHousehold(1), nextHousehold(5), nextHousehold(20)]).toEqual([5, 10, null])
-    expect(parseSaveV4(json(save))).toEqual(save)
+    expect(parseSaveV5(json(save))).toEqual(save)
   })
 
   it('serves a ★3 dish for two days, used; no dish: the bakery\'s cake, one day; never shortens a meal', () => {
@@ -272,7 +271,7 @@ describe('the wedding', () => {
     expect(served.card.wedding).toMatchObject({ dish: 'dish-fish-3', stars: 3, days: 2 })
     expect(goodCount(served.save.items, 'dish-fish-3')).toBe(0)
     expect(served.save.today.reception).toBe(2)
-    expect(parseSaveV4(json(served.save))).toEqual(served.save)
+    expect(parseSaveV5(json(served.save))).toEqual(served.save)
     // A meal running: 9000002 had 4 days (3 after tonight's count), 9000003 1 (none after it).
     const fed = { ...served.save, roster: { ...served.save.roster, [TWO]: { ...served.save.roster[TWO]!, wellFed: 4 }, [THREE]: { ...served.save.roster[THREE]!, wellFed: 1 } } }
     const morning = runNight(fed, context())
@@ -344,11 +343,11 @@ describe('save v4 grows in place', () => {
   it('parses `today.ring` and `today.reception`, her ring\'s grade from the proposal on, and rings and dishes in the Warehouse', () => {
     const save = give(give(engaged(), 'ring-g10', 1, 2), 'dish-grains-5', 5)
     const stored = json({ ...save, today: { ...save.today, ring: 10, reception: 3 }, bin: { 'ring-g2': [1, 0, 0, 0, 0] } })
-    expect(parseSaveV4(stored)).toEqual(stored)
+    expect(parseSaveV5(stored)).toEqual(stored)
     const refuse = (change: (s: Record<string, any>) => void, message: string) => {
       const bad = json(save) as Record<string, any>
       change(bad)
-      expect(() => parseSaveV4(bad)).toThrow(message)
+      expect(() => parseSaveV5(bad)).toThrow(message)
     }
     refuse((s) => { s.today.ring = 11 }, 'save.today.ring')
     refuse((s) => { s.today.reception = 4 }, 'save.today.reception')
@@ -379,6 +378,6 @@ describe('a whole wedding day on the stand-in', () => {
     expect(Object.values(married.save.love).filter((l) => l.stage === 'spouse')).toHaveLength(1)
     const morning = runNight(married.save, context())
     expect(morning.roster[TWO]!.wellFed).toBe(1)
-    expect(parseSaveV4(json(morning))).toEqual(morning)
+    expect(parseSaveV5(json(morning))).toEqual(morning)
   })
 })

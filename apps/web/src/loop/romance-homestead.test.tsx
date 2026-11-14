@@ -5,7 +5,7 @@
 // pack (9000001–9000003) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
 import {
-  FARM_PLACES, meet, moveSpouse, newLove, newRosterUma, newSave, readScene, type HouseLine, type Love, type SaveV4, type StoryPack,
+  homesteadShown, meet, moveSpouse, newLove, newRosterUma, newSave, readScene, type HouseLine, type Love, type SaveV4, type StoryPack,
 } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -33,8 +33,8 @@ const { storyReady } = await import('../story/story')
 const { castLens } = await import('../story/load')
 const { Shell } = await import('../shell/Shell')
 const { default: HeartsPage } = await import('./HeartsPage')
-const { FARM_MAP_TILES, placeAt } = await import('./farm-map')
-const { homesteadLayout, homesteadPlaces, placeOnV4 } = await import('./homestead-map')
+const { mapLots } = await import('./farm-map')
+const { houseLot } = await import('./homestead-map')
 const { homeWords, sleepViews } = await import('./homestead-view')
 const { summaryParts } = await import('./summary-words')
 const { setAskBeforeEnd } = await import('./ask')
@@ -119,30 +119,21 @@ afterEach(async () => {
 })
 
 describe('the homestead on the map', () => {
-  it('adds the Farmhouse and the first row\'s lots after the yard, the town edge last; a built house\'s pips are its residents', () => {
+  it('stands the Farmhouse and the first lots beside the yard, a built house with its residents; more lots from three married', () => {
     const one = wedOne()
-    const layout = homesteadLayout(one)
-    expect(layout).toEqual({ tiles: FARM_MAP_TILES + 4, townRow: 9 })
-    const places = homesteadPlaces(one, layout, new Set([ONE]))
+    const shown = homesteadShown(one)
+    const places = shown.map((place) => houseLot(one, place, (id) => (id === ONE ? 'Stand-in 1' : 'An Uma')))
     expect(places.map((p) => [p.id, p.name, p.locked])).toEqual([['farmhouse', 'Farmhouse', false], ['house-1', 'Build · 8,000g', true], ['house-2', 'House 2', true]])
     expect(places[2]!.label).toBe('House 2, locked: Opens with your second wedding')
-    expect(places[0]!.pips?.map((p) => [p.state, p.badge])).toEqual([['busy', '♥'], ['free', undefined]])
-    expect(places[0]!.to).toBe('/?sheet=homestead&house=0')
-    const shop = FARM_PLACES.find((p) => p.id === 'shop')!
-    expect(placeOnV4(shop, layout)).toEqual({ row: 9, col: 0 })
-    expect(placeOnV4(FARM_PLACES.find((p) => p.id === 'town')!, layout)).toEqual({ row: 10, col: 1 })
-    expect(placeOnV4(FARM_PLACES.find((p) => p.id === 'dorm')!, layout)).toMatchObject({ row: 6, col: 2 })
-    // Before the first wedding the lot waits; with two houses built and one married the map holds one homestead row: the
-    // second's lots show from three married.
-    expect(homesteadPlaces(farm(), homesteadLayout(farm()), new Set())[1]).toMatchObject({ name: 'House 1', locked: true, label: 'House 1, locked: Opens with your first wedding' })
+    expect(places[0]).toMatchObject({ residents: [ONE], rooms: '1/2', to: '/?sheet=homestead&house=0', label: 'Farmhouse, 1 of 2 rooms: Stand-in 1' })
+    // Its column stands after the yard's.
+    const { lots } = mapLots(shown)
+    expect(lots.slice(3, 6).map((l) => (l.kind === 'house' ? l.place.id : l.id))).toEqual(['farmhouse', 'house-1', 'house-2'])
+    // Before the first wedding the lot waits; with two houses built and one married the map holds one homestead column:
+    // the second's lots show from three married.
+    expect(houseLot(farm(), homesteadShown(farm())[1]!)).toMatchObject({ name: 'House 1', locked: true, label: 'House 1, locked: Opens with your first wedding' })
     const three = { ...one, homestead: { ...one.homestead, houses: [...one.homestead.houses, { name: 'Rose Cottage', extended: false }, { name: 'Willow House', extended: true }], slept: [0, 0, 0] } }
-    expect(homesteadLayout(three).townRow).toBe(9)
-    expect(homesteadPlaces(three, homesteadLayout(three), new Set()).map((p) => p.id)).toEqual(['farmhouse', 'house-1', 'house-2'])
-  })
-
-  it('places the nine rows on 40 tiles before the homestead grows them', () => {
-    expect(FARM_MAP_TILES).toBe(40)
-    expect(FARM_PLACES.map((p) => placeAt(p))).toEqual(FARM_PLACES.map((p) => ({ x: [0.2, 0.5, 0.8][p.col], y: (3 + (p.row - 1) * 4 + 0.5) / 40 })))
+    expect(homesteadShown(three).map((p) => p.id)).toEqual(['farmhouse', 'house-1', 'house-2'])
   })
 })
 

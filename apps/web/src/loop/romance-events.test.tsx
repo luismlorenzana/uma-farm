@@ -169,7 +169,7 @@ describe('her event from her row', () => {
     expect($('[data-card-unlock]')?.textContent).toBe('UnlockedNew place · the orchard bench')
     expect($('[data-card-next]')?.textContent).toContain('Next: Friendship 6 · 400 points')
     expect($('[data-card-next]')?.textContent).toContain('150 / 400')
-    expect($('[data-card-next]')?.textContent).toContain('Opens: +0.25 growth on a block each night')
+    expect($('[data-card-next]')?.textContent).toContain('Opens: Waters a dry tile each night')
     expect(save().love[ONE]).toMatchObject({ stage: 'friendship', level: 5, points: 150 })
     expect(save().memories[ONE]).toEqual(['f5'])
     expect(save().today.events).toEqual([ONE])

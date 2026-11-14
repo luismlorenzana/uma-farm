@@ -1,5 +1,5 @@
-// uma-farm's rules: pure, no I/O. Save v4 (the one save) and its parse, the farm's units, goods, places, work, night and
-// goals, and the romance with its story pack.
+// uma-farm's rules: pure, no I/O. Save v5 (the one save) and its parse, the farm's units, goods, places, the day's
+// actions, the night and goals, and the romance with its story pack.
 export const GAME = 'uma-farm' as const
 
 // The material lines and items' names.
@@ -20,12 +20,10 @@ export * from './goods/ids'
 export * from './save/warehouse'
 export * from './save/gold'
 
-// The day: the farm map's places, uma-work on the day clock, End the day's nine steps, the nudge
-// and the morning summary.
+// The day: the farm map's places, the day's actions and what each costs, End the day's nine steps, the nudge and the
+// morning summary.
 export * from './farm/places'
-export * from './work/loop-env'
-export * from './save/loop-work'
-export * from './save/work-readings'
+export * from './farm/actions'
 export * from './night/summary'
 export * from './night/nudge'
 export * from './night/end-day'
@@ -37,8 +35,8 @@ export * from './goods/stars'
 export * from './save/bin'
 export * from './save/shop'
 
-// The Fields: the crops, the blocks, planting, tending, harvesting, crop levels, growth and
-// withering at night, and the shop's seeds.
+// The field: the crops, the tiles (clearing, tilling, planting, watering, harvesting), crop levels, growth and withering
+// at night, and the shop's seeds.
 export * from './fields/crops'
 export * from './fields/fields'
 
@@ -47,12 +45,12 @@ export * from './fields/fields'
 export * from './farm/talents'
 export * from './farm/rank-rules'
 
-// The forest, the Fishery and three stations: the areas, the spots and the stations' jobs by
-// id (with the save's parse), their tables, the work kinds with master data's talents, what a station takes, the catch's
-// sizes and the night's hauls.
+// The forest, the Fishery and three stations: the areas, the spots and the stations' jobs by id, their tables, an Uma's
+// terms there, the farmer's hauls (forage, chop, fish) and the catch's sizes, and the stations' loads.
 export * from './gathering/ids'
 export * from './gathering/tables'
 export * from './gathering/kinds'
+export * from './gathering/hauls'
 export * from './gathering/stations'
 
 // The roster: the Dorm's levels, beds and swaps.
@@ -71,7 +69,7 @@ export * from './town/town'
 // Town notes: the world's short pieces, unlocked once by their trigger at a talk, a visit or the night, and kept.
 export * from './town/notes'
 
-// The romance: save v4 (the new farm over an older save, the keys, the romance's slots) and its strict parse, the
+// The romance: save v5 (the new farm over an older save, the keys, the romance's slots) and its strict parse, the
 // farmer's name, the story pack at runtime with the invented stand-in, the one `outfitOf` resolver, her favourite line
 // and tastes, the chats' fallback lines, meeting her (her trigger, the welcome list at the Gate, the night's meetings,
 // the invite to the farm), her meeting scene's pay. The

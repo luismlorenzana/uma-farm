@@ -1,19 +1,16 @@
-// The crops: the table row for row, and its Novice and Expert columns derived by the growth rule.
+// The crops: the table row for row, and a crop's stages (its watered nights to ripe) from its growth days.
 import { describe, expect, it } from 'vitest'
 import { SEASONS } from '../farm/calendar'
 import { CROP_PRICES } from '../goods/rule'
 import { CROP_IDS, refinedOf } from '../goods/ids'
 import { CROPS, growsIn, nightsToReady, readyAt, SHOP_SEEDS } from './crops'
-import { TALENT_D } from '../farm/talents'
-import { tendedGrowth, UNTENDED_GROWTH } from './fields'
+import { stagesOf } from './fields'
 
-/** The "Days: untended · Novice · Expert" column, as the table prints it. */
-const CS11_DAYS: Readonly<Record<string, [number, number, number]>> = {
-  carrot: [4, 3, 3], potato: [6, 5, 4], mint: [4, 3, 3], onion: [5, 4, 3], cabbage: [8, 6, 5], asparagus: [10, 8, 7],
-  tomato: [7, 6, 5], basil: [4, 3, 3], 'bell-pepper': [6, 5, 4], eggplant: [6, 5, 4], 'sunflower-seed': [8, 6, 5], corn: [9, 7, 6],
-  wheat: [5, 4, 3], peanut: [4, 3, 3], rice: [6, 5, 4], 'sugar-beet': [6, 5, 4], 'emperor-pumpkin': [10, 8, 7],
-  buckwheat: [4, 3, 3], oats: [5, 4, 3], barley: [5, 4, 3], rye: [6, 5, 4], ginger: [9, 7, 6],
-  'golden-carrot': [6, 5, 4], sunwheat: [7, 6, 5], moonrice: [7, 6, 5], 'wild-rice': [6, 5, 4], mandrake: [8, 6, 5],
+/** The days column: a crop's growth days, its stages. */
+const DAYS: Readonly<Record<string, number>> = {
+  carrot: 4, potato: 6, mint: 4, onion: 5, cabbage: 8, asparagus: 10, tomato: 7, basil: 4, 'bell-pepper': 6, eggplant: 6, 'sunflower-seed': 8, corn: 9,
+  wheat: 5, peanut: 4, rice: 6, 'sugar-beet': 6, 'emperor-pumpkin': 10, buckwheat: 4, oats: 5, barley: 5, rye: 6, ginger: 9,
+  'golden-carrot': 6, sunwheat: 7, moonrice: 7, 'wild-rice': 6, mandrake: 8,
 }
 
 describe('the crops', () => {
@@ -28,26 +25,21 @@ describe('the crops', () => {
     }
   })
 
-  it.each(CROP_IDS.map((id) => [id]))('%s: its Novice and Expert days follow from its untended days', (id) => {
-    const [untended, novice, expert] = CS11_DAYS[id]!
-    expect(CROPS[id].days).toBe(untended)
-    expect(nightsToReady(id, UNTENDED_GROWTH)).toBe(untended)
-    expect(nightsToReady(id, tendedGrowth(0, TALENT_D))).toBe(novice)
-    expect(nightsToReady(id, tendedGrowth(3, TALENT_D))).toBe(expert)
+  it.each(CROP_IDS.map((id) => [id]))('%s: its stages are its growth days, a stage a watered night', (id) => {
+    expect(CROPS[id].days).toBe(DAYS[id])
+    expect(stagesOf(id, false)).toBe(DAYS[id])
+    expect(nightsToReady(id, 1)).toBe(DAYS[id])
   })
 
-  it('names the worked rows: Carrot 4 · 3 · 3, Potato 6 · 5 · 4, Asparagus 10 · 8 · 7', () => {
-    const days = (id: 'carrot' | 'potato' | 'asparagus') => [1, 1.25, 1.55].map((g) => nightsToReady(id, g))
-    expect(days('carrot')).toEqual([4, 3, 3])
-    expect(days('potato')).toEqual([6, 5, 4])
-    expect(days('asparagus')).toEqual([10, 8, 7])
+  it('names the worked rows: Carrot 4, Potato 6, Asparagus 10', () => {
+    expect(['carrot', 'potato', 'asparagus'].map((id) => stagesOf(id as 'carrot', false))).toEqual([4, 6, 10])
     expect(readyAt('carrot', false)).toBe(3.5)
   })
 
   it('regrows on its own count: Tomato every 3 days, Eggplant and Corn every 4', () => {
     expect(readyAt('tomato', true)).toBe(2.5)
     expect(nightsToReady('tomato', 1, true)).toBe(3)
-    expect(nightsToReady('tomato', 1.25, true)).toBe(2)
+    expect(stagesOf('tomato', true)).toBe(3)
     expect(readyAt('eggplant', true)).toBe(3.5)
     expect(readyAt('corn', true)).toBe(3.5)
     expect(readyAt('carrot', true)).toBe(3.5)

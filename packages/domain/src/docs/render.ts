@@ -9,11 +9,14 @@ import { itemNameOf } from '../items/lines'
 import { inDemand, priceOf, STARS, starFactor, starPrice } from '../goods/prices'
 import { DEMAND, FAMILY_FACTOR, LADDER, REFINED_FACTOR, type LadderFamily } from '../goods/rule'
 import { DAYS_PER_SEASON, farmDay, FESTIVALS, SEASON_NAMES, SEASONS } from '../farm/calendar'
-import { BUILD_PLACES, FARM_MAP_ROWS, FARM_PLACES, MAP_PLACES, TOWN_FIRST_ROW, type FarmPlace, type PlaceOpens } from '../farm/places'
+import { BUILD_PLACES, FARM_PLACES, MAP_PLACES, TOWN_FIRST_ROW, type FarmPlace, type PlaceOpens } from '../farm/places'
 import { BOARD_MET, buildCostWords, buildGoodsWords } from '../farm/builds'
 import { NIGHT_STEPS } from '../night/end-day'
-import { CROPS, nightsToReady, SHOP_SEEDS } from '../fields/crops'
-import { BLOCK_RULES, cropLevelStart, harvestQuality, MAX_CROP_LEVEL, seedsBackChance, tendedGrowth, UNTENDED_GROWTH } from '../fields/fields'
+import { CROPS, SHOP_SEEDS } from '../fields/crops'
+import { CLEAR_FINDS, cropLevelStart, GROUND_NAMES, harvestQuality, MAX_CROP_LEVEL, seedsBackChance, stagesOf } from '../fields/fields'
+import { ACTIONS, BIRTHDAY_ACTIONS, DAY_ACTIONS, FESTIVAL_ACTIONS, NEW_YEAR_ACTIONS } from '../farm/actions'
+import { CHOP_LOGS, FORAGE_HAUL, reachOf } from '../gathering/hauls'
+import { LOAD_SIZE } from '../gathering/stations'
 import {
   ACTIVITY_STAT, EXPEDITION_CUTOFFS, STAT_CUTOFFS, STAT_TEMPERAMENT, TALENT_D, TALENT_GRADES, TEMPERAMENTS, TALENT_RANK_POINTS, TALENT_STATS, TALENT_YIELD, talentAffection,
   talentGrowth, talentPower, talentQuality, type TalentStep,
@@ -22,11 +25,11 @@ import {
   CHALLENGES, daysToRank, PLACE_ACTIVITY, RANK_BENEFITS, rankPointsForDay,
 } from '../farm/rank-rules'
 import { AREA_NAMES, FISHING_SPOTS, FOREST_AREAS, SPOT_NAMES, STATION_JOB_IDS, STATION_JOBS, stationJobOf, STATIONS, type FishingSpotId, type ForestAreaId, type StationId } from '../gathering/ids'
-import { gatherQuality, haulCount, sizeSkill, stationRate, type GatherPlace, type WorkTerms } from '../gathering/kinds'
-import { FISH_SIZES, FISHERY, FOREST, HAUL_BASE, STATION_JOB_RULES, TOOL_YIELD, WELL_FED_YIELD } from '../gathering/tables'
+import { gatherQuality, sizeSkill, type WorkTerms } from '../gathering/kinds'
+import { FISH_SIZES, FISHERY, FOREST, STATION_JOB_RULES } from '../gathering/tables'
 import { farmPlace } from '../farm/places'
 import { starShares } from '../goods/stars'
-import { BLOCK_IDS, pairKey } from '../save/v4'
+import { FIELD_COLUMNS, FIELD_ROWS, FIELD_TILES, OVERGROWTH_SHARES, pairKey, START_CLEAR } from '../save/v4'
 import { DORM_LEVELS } from '../farm/dorm'
 import { farmRankOpens } from '../farm/diary'
 import { DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, ROW_GOLD, type Milestone } from '../farm/milestones'
@@ -41,7 +44,7 @@ import { linePlace, MORNING_GOOD, NIGHT_CHORE, PERK_LINES, PERK_PLACE, PERKS, pe
 import {
   CREW_CAP, DREAM_BONUS, HOUSEHOLD, householdBonus, IN_ELEMENT, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, LINE_BONUS, MAX_CHORES, MORNING_ITEMS, OWN_CAP, ROMANCE_CAP,
 } from '../romance/perk-terms'
-import { BREAKFAST_DAYS, CHORE_GROWTH, CHORE_LINES, dishId, LINE_DISH, MENTOR_POINTS } from '../romance/perk-effects'
+import { BREAKFAST_DAYS, CHORE_LINES, dishId, LINE_DISH, MENTOR_POINTS } from '../romance/perk-effects'
 import { loveRankFactor } from '../farm/rank-rules'
 import { dateOf } from '../farm/calendar'
 import { FARMER_NAME_MAX } from '../romance/farmer'
@@ -108,16 +111,25 @@ const opensWords = (opens: PlaceOpens): string => {
     case 'later': return 'Not built yet'
   }
 }
-/** The map's nine rows, and each place's building and what opens it. */
+/** Each place's building and what opens it. */
 function farmMap(): string {
-  const rows = Array.from({ length: FARM_MAP_ROWS }, (_, r) => {
-    const row = MAP_PLACES.filter((p) => p.row === r + 1)
-    return [r + 1, ...[0, 1, 2].map((c) => row.find((p) => p.col === c)?.name ?? '—')]
-  })
   const at = (p: FarmPlace) => (p.on ? `At the ${FARM_PLACES.find((q) => q.id === p.on)!.name}` : `\`${p.frame}\`${p.borrowed ? ' (borrowed)' : ''}`)
-  return `${table(['Row', 'Left', 'Centre', 'Right'], rows)}
+  return table(['Place', 'Building (uma-art)', 'Opens'], FARM_PLACES.map((p) => [p.name, at(p), opensWords(p.opens)]))
+}
 
-${table(['Place', 'Building (uma-art)', 'Opens'], FARM_PLACES.map((p) => [p.name, at(p), opensWords(p.opens)]))}`
+/** The design's actions: where, what, the cost, and whether it's charged yet. */
+function actionsBlock(): string {
+  return table(['Where', 'Action', 'Cost', 'Charged'], ACTIONS.map((a) => [a.where, a.what, a.cost === 0 ? 'Free' : a.cost, a.from === null ? 'Now' : `With ${a.from}`]))
+}
+
+/** The day's budget and the special days' event actions. */
+function dayBudgetBlock(): string {
+  return table(['', 'Actions'], [
+    ['Every day', `${DAY_ACTIONS}`],
+    ['New Year’s (each year’s Spring 1)', `+${NEW_YEAR_ACTIONS} for events`],
+    ['A festival day', `+${FESTIVAL_ACTIONS} for events`],
+    ['Each birthday of an Uma you’ve met', `+${BIRTHDAY_ACTIONS} for events`],
+  ])
 }
 /** Every place you build: the Farm Rank that offers it, its gold and goods, and whether its game is built. */
 function buildsBlock(): string {
@@ -214,15 +226,14 @@ const tierWords = (tier: number | 'rare') => (tier === 'rare' ? 'Rare' : `Farm R
 const per = (n: number) => Number(n.toFixed(4)).toString()
 const pct = (n: number) => `${Math.round(n * 100)}%`
 
-/** Every crop, its seasons, its shop tier and seed price, its days untended · Novice · Expert (derived from the
- * growth rule), its yield, regrowth, price ★1 and its station. */
+/** Every crop, its seasons, its shop tier and seed price, its stages (the watered nights to ripe), its yield, regrowth,
+ * price ★1 and its station. */
 function crops(): string {
-  return table(['Crop', 'Id', 'Seasons', 'Shop', 'Seed', 'Days: untended · Novice · Expert', 'Yield', 'Regrows', 'Price ★1', 'Refined at'],
+  return table(['Crop', 'Id', 'Seasons', 'Shop', 'Seed', 'Stages', 'Yield', 'Regrows', 'Price ★1', 'Refined at'],
     Object.values(CROPS).map((c) => {
-      const days = [UNTENDED_GROWTH, tendedGrowth(0, TALENT_D), tendedGrowth(3, TALENT_D)].map((g) => nightsToReady(c.id, g)).join(' · ')
       const into = refinedOf(c.id)
-      return [itemNameOf(c.id), `\`${c.id}\``, seasonsOf(c.seasons), tierWords(c.tier), c.seed === null ? '—' : g(c.seed), days, c.yield,
-        c.regrows === null ? '—' : `every ${c.regrows}`, g(goodOf(c.id)!.price), into && c.station ? `${itemNameOf(into)} (${STATION_NAME[c.station]})` : '—']
+      return [itemNameOf(c.id), `\`${c.id}\``, seasonsOf(c.seasons), tierWords(c.tier), c.seed === null ? '—' : g(c.seed), stagesOf(c.id, false), c.yield,
+        c.regrows === null ? '—' : `every ${stagesOf(c.id, true)}`, g(goodOf(c.id)!.price), into && c.station ? `${itemNameOf(into)} (${STATION_NAME[c.station]})` : '—']
     }))
 }
 
@@ -233,25 +244,19 @@ function shopSeeds(): string {
     ...tiers.map((t) => SHOP_SEEDS[season].filter((id) => CROPS[id].tier === t).map((id) => `${itemNameOf(id)} ${g(CROPS[id].seed!)}`).join(', '))]))
 }
 
-/** The four blocks. */
-function blocks(): string {
-  return table(['Block', 'Plots', 'Opens at', 'Costs'], BLOCK_IDS.map((id) => {
-    const rule = BLOCK_RULES[id]
-    return [id, 9, rule.opens.by === 'farm-rank' ? `Farm Rank ${rule.opens.rank}` : 'Day 1', rule.cost === 0 ? '—' : g(rule.cost)]
-  }))
+/** The field on day 1: its grid, the cleared patch, what the rest is overgrown with, and what clearing leaves. */
+function fieldBlock(): string {
+  return table(['', 'The field'], [
+    ['Tiles', `${FIELD_TILES}: ${FIELD_COLUMNS} across, ${FIELD_ROWS} down`],
+    ['Cleared on day 1', `${START_CLEAR.length}, three by three at the top left`],
+    ...OVERGROWTH_SHARES.map(([ground, share]) => [`${GROUND_NAMES[ground]}`, `${share}% of the rest${CLEAR_FINDS[ground] ? `; clearing leaves a ${itemNameOf(CLEAR_FINDS[ground])} ★1` : '; clearing leaves nothing'}`]),
+  ])
 }
 
-/** A block's growth a night, its harvest's quality and stars, and seeds back, untended and by
- * the tender's rank and talent (Basic tools, not well fed, crop level 1). */
-function tending(): string {
-  const talents: readonly [string, TalentStep][] = [['G', 0], ['D', 3], ['C', 4], ['B', 5], ['A', 6], ['S', 7]]
+/** A harvest's stars by the crop's level, and the chance of an own seed back (a Basic Hoe). */
+function harvestStars(): string {
   const stars = (q: number) => starShares(q).flatMap((share, i) => (share > 0 ? [`★${i + 1} ${pct(share)}`] : [])).join(', ')
-  const rows = [
-    ['Untended', ...talents.map(() => per(UNTENDED_GROWTH)), stars(harvestQuality(null, 1)), pct(seedsBackChance(null))],
-    ...RANKS.map((name, r) => [name, ...talents.map(([, step]) => per(tendedGrowth(r as Rank, step))),
-      stars(harvestQuality({ rank: r as Rank, talent: TALENT_D, wellFed: false }, 1)), pct(seedsBackChance(r as Rank))]),
-  ]
-  return table(['Tender', ...talents.map(([grade]) => `Growth, ${grade}`), 'Stars, a D tender', 'Seeds back'], rows)
+  return table(['Crop level', 'Quality', 'Stars', 'Seed back'], [1, 2, 4, 6, 8, 10].map((level) => [level, `+${per(harvestQuality(null, level))}`, stars(harvestQuality(null, level)), pct(seedsBackChance(null))]))
 }
 
 /** Crop levels, the points each starts at, and what it adds. */
@@ -333,24 +338,35 @@ function placeActivity(): string {
 
 const SEASON_COLS = SEASONS.map((s) => SEASON_NAMES[s])
 const shareCell = (shares: readonly (readonly [string, number])[]) => shares.map(([id, p]) => `${itemNameOf(id)} ${p}%`).join(', ')
-const TALENT_COLS: readonly TalentStep[] = [3, 4, 7]
-const basic = (rank: number, talent: TalentStep, wellFed = 0): WorkTerms => ({ rank: rank as Rank, talent, tool: 1, wellFed })
 
-/** The six areas, what opens each, its grades, and each season's goods with their shares. */
+/** The six areas, the Farm Rank that opens each for the farmer (and the rank an Uma needs), its grades, and each
+ * season's goods with their shares. */
 function forestAreas(): string {
-  return table(['Area', 'Id', 'Opens at', 'Grades', ...SEASON_COLS], FOREST_AREAS.map((id) => {
+  return table(['Area', 'Id', 'Opens at', 'An Uma at', 'Grades', ...SEASON_COLS], FOREST_AREAS.map((id) => {
     const area = FOREST[id]
-    return [cap(AREA_NAMES[id]), `\`${id}\``, RANKS[area.opens]!, `G${area.grades.join('–G')}`, ...SEASONS.map((s) => shareCell(area.seasons[s]))]
+    return [cap(AREA_NAMES[id]), `\`${id}\``, `Farm Rank ${reachOf('forest', id)}`, RANKS[area.opens]!, `G${area.grades.join('–G')}`, ...SEASONS.map((s) => shareCell(area.seasons[s]))]
   }))
 }
 
-/** The seven spots, what opens each, and each season's fish with their shares. */
+/** The seven spots, the Farm Rank that opens each for the farmer (the sea's with its place built), and each season's
+ * fish with their shares. */
 function fishingSpots(): string {
-  return table(['Spot', 'Id', 'Opens at', ...SEASON_COLS], FISHING_SPOTS.map((id) => {
+  return table(['Spot', 'Id', 'Opens at', 'An Uma at', ...SEASON_COLS], FISHING_SPOTS.map((id) => {
     const spot = FISHERY[id]
-    const opens = [RANKS[spot.opens]!, ...(spot.needs ? [`the ${spot.needs === 'dock' ? 'Dock' : 'Boat'} built`] : [])].join(' + ')
-    return [cap(SPOT_NAMES[id]), `\`${id}\``, opens, ...SEASONS.map((s) => shareCell(spot.seasons[s]))]
+    const needs = spot.needs ? [`the ${spot.needs === 'dock' ? 'Dock' : 'Boat'} built`] : []
+    return [cap(SPOT_NAMES[id]), `\`${id}\``, [`Farm Rank ${reachOf('fishery', id)}`, ...needs].join(' + '), RANKS[spot.opens]!, ...SEASONS.map((s) => shareCell(spot.seasons[s]))]
   }))
+}
+
+/** What one of the farmer's actions at the woods' edge or the water brings. */
+function farmerHauls(): string {
+  const terms: WorkTerms = { rank: 0, talent: TALENT_D, tool: 1, wellFed: 0 }
+  const stars = starShares(gatherQuality(terms, false)).flatMap((s, i) => (s > 0 ? [`★${i + 1} ${pct(s)}`] : [])).join(', ')
+  return table(['Action', 'Brings', 'Stars, with the Basic Axe or Rod', 'Counted'], [
+    ['Forage an area', `${FORAGE_HAUL} of its season’s finds, each by its share`, stars, '`home:forest`'],
+    ['Chop at an area', `${CHOP_LOGS} logs of its season’s woods, each by its share`, stars, '`logs-chopped` and `home:forest`'],
+    ['Fish a spot', `One fish of its season’s, by its share, measured as it lands (k = ${per(sizeSkill(terms))})`, stars, '`home:fishery`'],
+  ])
 }
 
 /** Each fish's size range, its price and its fillet. */
@@ -361,58 +377,14 @@ function fishSizes(): string {
   }))
 }
 
-/** How her skill leans the catch big: k by rank at talents D, C and S with the Basic Rod, and the average share of
- * the range `1 / (8/k + 1)`. */
-function sizeSkills(): string {
-  return table(['Rank', ...TALENT_COLS.map((t) => `k at ${TALENT_GRADES[t]}`), 'Average at C', 'A Carp at C, on average'], RANKS.map((name, r) => {
-    const k = (t: TalentStep) => sizeSkill(basic(r, t))
-    const mean = 1 / (8 / k(4) + 1)
-    return [name, ...TALENT_COLS.map((t) => per(k(t))), pct(mean), `${(20 + 40 * mean).toFixed(1)} cm`]
-  }))
-}
-
-/** Items a day, Basic tool, by rank at talents D, C and S; well fed ×1.25. */
-function haulDay(): string {
-  const cells = (place: GatherPlace, r: number) => TALENT_COLS.map((t) => haulCount(place, basic(r, t)))
-  return table(['Rank', 'Yield', ...TALENT_COLS.map((t) => `Forest ${TALENT_GRADES[t]}`), ...TALENT_COLS.map((t) => `Fishery ${TALENT_GRADES[t]}`), 'Forest C, well fed'],
-    RANKS.map((name, r) => [name, `×${per(RANK_BENEFITS[r]!.yield)}`, ...cells('forest', r), ...cells('fishery', r), haulCount('forest', basic(r, 4, 1))]))
-}
-
-/** A day's haul's factors. */
-function haulFactors(): string {
-  return table(['Factor', 'Values'], [
-    ['Base, at Novice', `The forest ${HAUL_BASE.forest}, the Fishery ${HAUL_BASE.fishery}`],
-    ['Rank', RANK_BENEFITS.map((b) => `×${per(b.yield)}`).join(' · ')],
-    ['Talent, G → S', TALENT_YIELD.map((y) => `×${per(y)}`).join(' · ')],
-    ['Tool (the Axe, the Rod), Basic → Mythril', TOOL_YIELD.map((y) => `×${per(y)}`).join(' · ')],
-    ['Well fed', `×${per(WELL_FED_YIELD)}`],
-  ])
-}
-
-/** A gathered good's quality points by rank at talents D, C and S, Basic tool, and its stars at C. */
-function gatherQualities(): string {
-  const shares = (q: number) => starShares(q).flatMap((s, i) => (s > 0 ? [`★${i + 1} ${pct(s)}`] : [])).join(', ')
-  return table(['Rank', ...TALENT_COLS.map((t) => `Q at ${TALENT_GRADES[t]}`), 'Stars at C', 'Stars at C, well fed'], RANKS.map((name, r) => [
-    name, ...TALENT_COLS.map((t) => per(gatherQuality(basic(r, t), false))), shares(gatherQuality(basic(r, 4), false)), shares(gatherQuality(basic(r, 4), true)),
-  ]))
-}
-
-/** The three stations. */
+/** The three stations: what builds each, what opens it, its jobs, and a load. */
 function stations(): string {
   const build = (s: StationId) => BUILD_PLACES.find((p) => p.id === s)!
-  return table(['Station', 'At', 'Rank used', 'Builds for', 'Opens', 'Jobs'], STATIONS.map((s) => {
+  return table(['Station', 'Builds for', 'Opens', 'Jobs', 'A load'], STATIONS.map((s) => {
     const jobs = STATION_JOB_IDS.filter((j) => STATION_JOBS[j].station === s)
-      .map((j) => `${STATION_JOB_RULES[j].name} (${STATION_JOB_RULES[j].days === 1 ? '1 day' : `${STATION_JOB_RULES[j].days} days`}): ${STATION_JOBS[j].families.map((f) => FAMILY_NAMES[f].toLowerCase()).join(', ')}`)
-    const place = Object.entries(PLACE_ACTIVITY).find(([p]) => p === s)!
-    return [farmPlace(s)!.name, farmPlace({ mill: 'fields', sawmill: 'forest', smokehouse: 'fishery' }[s])!.name, ACTIVITY_NAMES[place[1]], buildCostWords(build(s)), `Farm Rank ${build(s).opens.rank}`, jobs.join(' · ')]
+      .map((j) => `${STATION_JOB_RULES[j].name}: ${STATION_JOBS[j].families.map((f) => FAMILY_NAMES[f].toLowerCase()).join(', ')}`)
+    return [farmPlace(s)!.name, buildCostWords(build(s)), `Farm Rank ${build(s).opens.rank}`, jobs.join(' · '), `1 to ${LOAD_SIZE}, ready the next morning`]
   }))
-}
-
-/** Items a station turns a day, by rank at talents D, C and S; well fed ×1.25 on a 1-day job. */
-function stationDay(): string {
-  return table(['Rank', ...TALENT_COLS.map((t) => `${TALENT_GRADES[t]}`), 'C, well fed'], RANKS.map((name, r) => [
-    name, ...TALENT_COLS.map((t) => stationRate(basic(r, t), 0, false)), stationRate(basic(r, 4, 1), 0, false),
-  ]))
 }
 
 /** Every station job's input → output, with both prices ★1. */
@@ -674,7 +646,7 @@ const LINE_TEN: Readonly<Record<PerkLine, string>> = {
   forging: '+10% goods as the Forge’s assistant',
 }
 const LINE_CHORE: Readonly<Record<PerkLine, string>> = {
-  farming: `+${CHORE_GROWTH} growth on the untended block with the most growing plots, else hers (step 2)`,
+  farming: 'Waters one dry growing tile (step 2)',
   foraging: 'One item from her rank’s deepest area this season, at a day’s haul’s stars (step 4)',
   fishing: 'One fish from her deepest spot this season, at a day’s haul’s stars (step 4)',
   mining: 'One ore from her deepest floor', quarry: 'One stone or gem from her deepest floor', ranch: '+5 affection to her pen (step 3)',
@@ -773,8 +745,7 @@ function tieSeeds(): string {
 function sideBySide(): string {
   const share = Math.round((SIDE_BY_SIDE - 1) * 100)
   return table(['Where', `Beside a ${SIDE_BY_SIDE_HEARTS}-heart partner`, 'How'], [
-    ['A work place (gathering, a station)', `+${share}% of her night’s items`, 'Night step 4 (`nightExtras`), after the hauls: copies of the items her work finished tonight, the same goods and stars, `share × n` whole and one more by `draw(uid, day, \'bond:<id>\', 0)`, each picked by `draw(…, k)`; into the Warehouse. Her partner worked the same place today'],
-    ['The Fields', `Tended growth ×${SIDE_BY_SIDE}`, 'Night step 2 (`blockGrowth`): her partner tends another block with a growing plot'],
+    ['A work place (gathering, a station)', `+${share}% of her night’s items`, 'Night step 4 (`nightExtras`): copies of the items her work finished tonight, the same goods and stars, `share × n` whole and one more by `draw(uid, day, \'bond:<id>\', 0)`, each picked by `draw(…, k)`; into the Warehouse. Her partner worked the same place today. None until the farmhands work'],
   ])
 }
 
@@ -1014,10 +985,11 @@ export function renderBlock(key: string): string | null {
     houses: housesBlock, 'homestead-map': homesteadMap, 'household-milestones': householdMilestonesBlock, 'house-morning': houseMorningBlock, 'house-lines': houseLines,
     furniture: furnitureBlock,
     calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
-    crops, 'shop-seeds': shopSeeds, blocks, tending, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
+    crops, 'shop-seeds': shopSeeds, field: fieldBlock, 'harvest-stars': harvestStars, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
+    actions: actionsBlock, 'day-budget': dayBudgetBlock,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,
-    'place-activity': placeActivity, 'forest-areas': forestAreas, 'fishing-spots': fishingSpots, 'fish-sizes': fishSizes, 'size-skill': sizeSkills,
-    'haul-day': haulDay, 'haul-factors': haulFactors, 'gather-quality': gatherQualities, stations, 'station-day': stationDay, 'station-recipes': stationRecipes,
+    'place-activity': placeActivity, 'forest-areas': forestAreas, 'fishing-spots': fishingSpots, 'fish-sizes': fishSizes, 'farmer-hauls': farmerHauls,
+    stations, 'station-recipes': stationRecipes,
     'dorm-levels': dormLevels,
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,
     'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-draw': townDraw }

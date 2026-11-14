@@ -8,7 +8,7 @@ import { runNight } from '../night/end-day'
 import { eveningSlots } from '../romance/evening'
 import { meet, triggerHolds } from '../romance/meeting'
 import { gateHolds, gateWords } from '../romance/chapters'
-import { parseSaveV4 } from '../save/parse-v4'
+import { parseSaveV5 } from '../save/parse-v4'
 import { newSave, type SaveV4 } from '../save/v4'
 import { knownNotes, noteHolds, unlockNotes } from '../town/notes'
 import { checkCast, checkWorld, LINE_LIMITS, type World } from './authored'
@@ -213,7 +213,7 @@ describe('the year’s festivals from the story', () => {
     expect(morning.summary!.news).toContainEqual({ kind: 'festival', festival: 'lantern-walk', when: 'today' })
     const eve = runNight(farm(day('winter', 9)), { story: PACK })
     expect(eve.summary!.news).toContainEqual({ kind: 'festival', festival: 'harvest-cup', when: 'tomorrow' })
-    expect(parseSaveV4(json(eve))).toEqual(eve)
+    expect(parseSaveV5(json(eve))).toEqual(eve)
   })
 })
 
@@ -254,7 +254,7 @@ describe('Town notes', () => {
     const morning = runNight(welcomed, { story: PACK })
     expect(morning.diary.notes).toEqual(['first-friend'])
     expect(morning.summary!.news).toContainEqual({ kind: 'notes', ids: ['first-friend'] })
-    expect(parseSaveV4(json(morning))).toEqual(morning)
+    expect(parseSaveV5(json(morning))).toEqual(morning)
     // The next night names nothing new.
     const next: SaveV4 = { ...morning, summary: null }
     expect(runNight(next, { story: PACK }).summary!.news.some((n) => n.kind === 'notes')).toBe(false)
@@ -270,10 +270,10 @@ describe('Town notes', () => {
   it('loads an older v4 with no notes in its Diary, never moving its updatedAt', () => {
     const older = json(farm()) as unknown as { diary: Record<string, unknown>; account: { updatedAt: string } }
     delete older.diary.notes
-    const read = parseSaveV4(older)
+    const read = parseSaveV5(older)
     expect(read.diary.notes).toEqual([])
     expect(read.account.updatedAt).toBe(older.account.updatedAt)
-    expect(() => parseSaveV4({ ...json(farm()), diary: { ...farm().diary, notes: ['Not An Id'] } })).toThrow()
+    expect(() => parseSaveV5({ ...json(farm()), diary: { ...farm().diary, notes: ['Not An Id'] } })).toThrow()
   })
 })
 

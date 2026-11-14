@@ -4,8 +4,8 @@
 //   1 her bar is full for the rung, or for a waiting rung it's the day after the rung before (the proposal: and a ring)
 //   2 she's home (in town shows "Invite her to the farm")
 //   3 she hasn't played an event today
-//   4 its one setup is met, if it has one: she works a named place today, a named good is in the Warehouse, her bond with
-//     a named Uma has reached a level
+//   4 its one setup is met, if it has one: she works a named place today (met every day until the farmhands come), a
+//     named good is in the Warehouse, her bond with a named Uma has reached a level
 //   5 her chapter is open: when her next event is her chapter's first, the chapter's gate holds, if it has one
 //
 // A setup is never an hour, the weather, a season or a festival, and nothing waits on the story: an event the pack
@@ -14,14 +14,10 @@
 // `waits` names the first thing in the way, in this order: the route done; S2 and S4, which come at night; a "Not yet"
 // at her confession; her chapter's gate; a working setup at a place not built yet; the bar or the day; the ring; in town
 // (`away`); today; the setup. Read live: Ready changes by day, so the morning never stores it.
-import { statusOf } from '@luismlorenzana/uma-work'
-import { workNow } from '../farm/calendar'
 import { bondHearts } from '../farm/bonds'
-import { PLACE_ACTIVITY } from '../farm/rank-rules'
 import { RING_IDS } from '../goods/ids'
 import type { Activity } from '../farm/ranks'
 import { SaveRuleError } from '../save/rules'
-import type { LoopPlaceId } from '../save/parse-v4'
 import { atHome, pairKey } from '../save/v4'
 import type { SaveV4 } from '../save/v4'
 import { goodCount } from '../save/warehouse'
@@ -93,13 +89,10 @@ export interface Readiness {
   waits: Wait | null
 }
 
-/** Whether she works an activity today: a running job at a place of it (`PLACE_ACTIVITY`), or for farming
- * a tended block with a growing plot. */
-export function worksToday(save: SaveV4, id: string, activity: Activity): boolean {
-  const row = save.work[id]
-  const place = row?.slot?.building as LoopPlaceId | undefined
-  if (row && place && PLACE_ACTIVITY[place] === activity && statusOf(row, workNow(save)) === 'working') return true
-  return activity === 'farming' && save.fields.blocks.some((b) => b.tender === id && b.plots.some((p) => p.crop !== null && !p.ready))
+/** Whether her day's work setup is met. The farmer works the farm alone until the farmhands come, so no Uma works a
+ * place yet: a working setup holds every day, and her event never waits on work she can't do. */
+export function worksToday(_save: SaveV4, _id: string, _activity: Activity): boolean {
+  return true
 }
 
 /** Whether a day setup is met. */

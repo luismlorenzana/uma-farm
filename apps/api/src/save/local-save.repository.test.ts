@@ -1,9 +1,9 @@
-// The local store: revisions, a v4 over an older save, and the older save read as its version and account. Invented
+// The local store: revisions, a v5 over an older save, and the older save read as its version and account. Invented
 // data only.
 import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { freshV4, newSave, touched } from '@farm/domain'
+import { freshV5, newSave, touched } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { LocalSaveRepository } from './local-save.repository'
 import { RevisionConflict } from './save.repository'
@@ -29,14 +29,16 @@ describe('the local save store', () => {
     expect((await repo.load('other-user')).revision).toBe(0)
   })
 
-  it('reads a stored v3 as its version and account, then stores the new farm over it', async () => {
-    const path = await file()
-    await writeFile(path, JSON.stringify({ u: { revision: 7, save: { version: 3, account: ACCOUNT, gold: 812, roster: { 1001: {} } } } }))
-    const repo = new LocalSaveRepository(path)
-    expect(await repo.load('u')).toEqual({ revision: 7, save: { version: 3, account: ACCOUNT } })
-    const fresh = freshV4({ account: ACCOUNT })
-    await expect(repo.put('u', 7, fresh)).resolves.toEqual({ revision: 8, save: fresh })
-    expect(await repo.load('u')).toEqual({ revision: 8, save: fresh })
+  it('reads a stored v3 or v4 as its version and account, then stores the new farm over it', async () => {
+    for (const version of [3, 4] as const) {
+      const path = await file()
+      await writeFile(path, JSON.stringify({ u: { revision: 7, save: { version, account: ACCOUNT, gold: 812, roster: { 1001: {} } } } }))
+      const repo = new LocalSaveRepository(path)
+      expect(await repo.load('u')).toEqual({ revision: 7, save: { version, account: ACCOUNT } })
+      const fresh = freshV5({ account: ACCOUNT })
+      await expect(repo.put('u', 7, fresh)).resolves.toEqual({ revision: 8, save: fresh })
+      expect(await repo.load('u')).toEqual({ revision: 8, save: fresh })
+    }
   })
 
   it('refuses a save older than the stored version, even at the right revision', async () => {
@@ -44,7 +46,7 @@ describe('the local save store', () => {
     await writeFile(path, JSON.stringify({ u: { revision: 1, save: newSave('u', NOW) } }))
     const repo = new LocalSaveRepository(path)
     // The parse refuses an older upload before it gets here; the store's own check refuses it too.
-    await expect(repo.put('u', 1, { ...newSave('u', NOW), version: 3 as unknown as 4 })).rejects.toBeInstanceOf(RevisionConflict)
+    await expect(repo.put('u', 1, { ...newSave('u', NOW), version: 3 as unknown as 5 })).rejects.toBeInstanceOf(RevisionConflict)
     expect((await repo.load('u')).save).toEqual(newSave('u', NOW))
   })
 

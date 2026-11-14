@@ -1,0 +1,141 @@
+// The farmer's hauls: one action at the woods' edge or the water, straight into the Warehouse.
+//
+//   forage an area   one haul: 2 of its season's finds, by their shares
+//   chop at an area  2 logs of its woods
+//   fish a spot      one catch, measured as it lands (a record when it's the biggest of its kind)
+//
+// The areas, the spots, their seasons and finds are the forest's and the Fishery's tables (`tables.ts`). The farmer
+// works them as a Novice with a D talent and the farm's Axe or Rod, so his goods are ★1 until the tools improve; his
+// reach is the Farm Rank's: each depth an Uma's rank opened (Novice … Legend) opens for him at Farm Rank 1, 2, 4, 6, 8
+// and 10, the sea's spots once their place stands too. Every pick is a seeded draw, numbered by the farm's lifetime
+// count of what came home, so each haul draws anew and every device draws alike. Pure; never stamps.
+import { spend } from '../farm/actions'
+import { farmRankOf } from '../farm/farm'
+import { placeBuilt } from '../farm/places'
+import { TALENT_D } from '../farm/talents'
+import { goodOf } from '../goods/ids'
+import { SaveRuleError } from '../save/rules'
+import type { FarmSave } from '../save/v4'
+import { addGoods, stockKey } from '../save/warehouse'
+import { AREA_NAMES, FISHING_SPOTS, FOREST_AREAS, SPOT_NAMES, type FishingSpotId, type ForestAreaId } from './ids'
+import {
+  fishSize, GATHER_TOOL, gatherQuality, HOME_COUNT, pickOn, pickShare, sharesOn, sizeRecord, sizeSkill, starsOn, type GatherPlace, type Measured,
+  type WorkTerms,
+} from './kinds'
+import { FISHERY, FOREST } from './tables'
+import { draw } from '../farm/draw'
+
+/** A forage's haul: two of the area's season's finds. */
+export const FORAGE_HAUL = 2
+/** Chopping at an area: two logs of its woods. */
+export const CHOP_LOGS = 2
+/** The Farm Rank that opens each depth for the farmer, by the rank an Uma needed there (Novice … Legend). */
+export const FARMER_REACH: readonly number[] = [1, 2, 4, 6, 8, 10]
+/** The lifetime count of logs chopped. */
+export const LOGS_CHOPPED = 'logs-chopped'
+
+/** The farmer's terms at a gathering place: Novice, a D talent, the farm's Axe or Rod. */
+export const farmerTerms = (save: Pick<FarmSave, 'tools'>, place: GatherPlace): WorkTerms => ({ rank: 0, talent: TALENT_D, tool: save.tools[GATHER_TOOL[place]], wellFed: 0 })
+
+/** The Farm Rank an area or a spot opens at for the farmer. */
+export const reachOf = (place: GatherPlace, where: string): number =>
+  FARMER_REACH[(place === 'forest' ? FOREST[where as ForestAreaId] : FISHERY[where as FishingSpotId]).opens]!
+
+/** Why the farmer can't work an area or a spot yet, in words, or null when he can: the Farm Rank ("Opens at Farm Rank
+ * 2."), and the sea's place built ("Needs the Dock."). */
+export function reachLock(save: Pick<FarmSave, 'farm' | 'buildings'>, place: GatherPlace, where: string): string | null {
+  const known: readonly string[] = place === 'forest' ? FOREST_AREAS : FISHING_SPOTS
+  if (!known.includes(where)) return 'Not here.'
+  const needs = place === 'fishery' ? FISHERY[where as FishingSpotId].needs : null
+  if (needs !== null && !placeBuilt(save, needs)) return `Needs the ${needs === 'dock' ? 'Dock' : 'Boat'}.`
+  const rank = reachOf(place, where)
+  return farmRankOf(save.farm.points) < rank ? `Opens at Farm Rank ${rank}.` : null
+}
+
+function open(save: Pick<FarmSave, 'farm' | 'buildings'>, place: GatherPlace, where: string): void {
+  const lock = reachLock(save, place, where)
+  if (lock) throw new SaveRuleError('locked', lock)
+}
+
+/** Today's areas and spots with this one added, once. */
+const gathered = (save: Pick<FarmSave, 'today'>, where: string): string[] => (save.today.gathered.includes(where) ? save.today.gathered : [...save.today.gathered, where])
+const bump = (counts: Record<string, number>, key: string, n: number): Record<string, number> => ({ ...counts, [key]: (counts[key] ?? 0) + n })
+
+/** What a haul brought: its goods as stock keys (`<id>@<stars>`). */
+export interface Haul {
+  where: string
+  items: string[]
+}
+
+/** Forages an area: one action, one haul of its season's finds (`draw(uid, day, 'forage:<area>', n)` for each good and
+ * `'forage-stars:<area>'` for its stars, numbered from the farm's count home from the forest). Refused where his reach
+ * doesn't go yet (`locked`). */
+export function forage<S extends FarmSave>(save: S, area: string): { save: S; haul: Haul } {
+  open(save, 'forest', area)
+  const spent = spend(save, 'forage')
+  const before = spent.farm.counts[HOME_COUNT.forest] ?? 0
+  const q = gatherQuality(farmerTerms(spent, 'forest'), false)
+  let items = spent.items
+  const got: string[] = []
+  for (let k = 0; k < FORAGE_HAUL; k++) {
+    const good = pickOn(spent, 'forest', area, `forage:${area}`, before + k)
+    const stars = starsOn(spent, q, `forage-stars:${area}`, before + k)
+    items = addGoods(items, good, stars, 1)
+    got.push(stockKey(good, stars))
+  }
+  return {
+    save: { ...spent, items, today: { ...spent.today, gathered: gathered(spent, area) }, farm: { ...spent.farm, counts: bump(spent.farm.counts, HOME_COUNT.forest, got.length) } },
+    haul: { where: area, items: got },
+  }
+}
+
+/** Chops at an area: one action, two logs of its woods (`draw(uid, day, 'chop:<area>', n)`, numbered from the logs chopped
+ * so far). Refused where his reach doesn't go yet. */
+export function chop<S extends FarmSave>(save: S, area: string): { save: S; haul: Haul } {
+  open(save, 'forest', area)
+  const spent = spend(save, 'chop')
+  const before = spent.farm.counts[LOGS_CHOPPED] ?? 0
+  const woods = sharesOn('forest', area, spent.calendar.day).filter(([id]) => goodOf(id)?.family === 'woods')
+  const q = gatherQuality(farmerTerms(spent, 'forest'), false)
+  let items = spent.items
+  const got: string[] = []
+  for (let k = 0; k < CHOP_LOGS; k++) {
+    const log = pickShare(woods, draw(spent.account.uid, spent.calendar.day, `chop:${area}`, before + k))
+    const stars = starsOn(spent, q, `chop-stars:${area}`, before + k)
+    items = addGoods(items, log, stars, 1)
+    got.push(stockKey(log, stars))
+  }
+  const counts = bump(bump(spent.farm.counts, LOGS_CHOPPED, got.length), HOME_COUNT.forest, got.length)
+  return { save: { ...spent, items, today: { ...spent.today, gathered: gathered(spent, area) }, farm: { ...spent.farm, counts } }, haul: { where: area, items: got } }
+}
+
+/** Fishes a spot: one action, one catch of its season's fish (`draw(uid, day, 'fish:<spot>', n)`, its stars
+ * `'fish-stars:<spot>'`, numbered from the farm's count home from the Fishery), measured as it lands (`'size:farmer'`):
+ * the biggest of each kind is kept in `diary.records`. Refused where his reach doesn't go yet. */
+export function fish<S extends FarmSave>(save: S, spot: string): { save: S; haul: Haul; caught: Measured } {
+  open(save, 'fishery', spot)
+  const spent = spend(save, 'fish')
+  const before = spent.farm.counts[HOME_COUNT.fishery] ?? 0
+  const terms = farmerTerms(spent, 'fishery')
+  const good = pickOn(spent, 'fishery', spot, `fish:${spot}`, before)
+  const stars = starsOn(spent, gatherQuality(terms, false), `fish-stars:${spot}`, before)
+  const cm = fishSize(good, sizeSkill(terms), draw(spent.account.uid, spent.calendar.day, 'size:farmer', before))
+  const best = spent.diary.records[sizeRecord(good)] ?? 0
+  const records = cm > best ? { ...spent.diary.records, [sizeRecord(good)]: cm } : spent.diary.records
+  return {
+    save: {
+      ...spent, items: addGoods(spent.items, good, stars, 1), today: { ...spent.today, gathered: gathered(spent, spot) },
+      farm: { ...spent.farm, counts: bump(spent.farm.counts, HOME_COUNT.fishery, 1) }, diary: { ...spent.diary, records },
+    },
+    haul: { where: spot, items: [stockKey(good, stars)] },
+    caught: { fish: good, stars, cm, record: cm > best },
+  }
+}
+
+/** The areas or spots in their order, each with its name, the Farm Rank it opens at and what holds it back now. */
+export function reachList(save: Pick<FarmSave, 'farm' | 'buildings'>, place: GatherPlace): { id: string; name: string; rank: number; lock: string | null }[] {
+  const ids: readonly string[] = place === 'forest' ? FOREST_AREAS : FISHING_SPOTS
+  return ids.map((id) => ({
+    id, name: place === 'forest' ? AREA_NAMES[id as ForestAreaId] : SPOT_NAMES[id as FishingSpotId], rank: reachOf(place, id), lock: reachLock(save, place, id),
+  }))
+}

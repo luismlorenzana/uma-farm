@@ -2,7 +2,7 @@
 // gold, `farm.counts['gold-shipped']` and `diary.shipped` exactly; the bin refuses a seed.
 import { describe, expect, it } from 'vitest'
 import { farmDay } from '../farm/calendar'
-import { binSales, binTotal, GOLD_SHIPPED, payBin, ship, shipAll, takeBack } from './bin'
+import { binSales, binTotal, GOLD_SHIPPED, payBin, ship, shipAll, shipCrate, takeBack } from './bin'
 import { SaveRuleError } from './rules'
 import { newSave, type SaveV4 } from './v4'
 
@@ -25,6 +25,20 @@ const refusal = (run: () => unknown): string | null => {
 }
 
 describe('shipping', () => {
+  it('ships a crate for one action: everything picked, into the bin', () => {
+    const save = shipCrate(stocked(), [{ id: 'carrot', stars: 1, count: 4 }, { id: 'salmon', stars: 2, count: 2 }, { id: 'pine-log', stars: 1, count: 0 }])
+    expect(save.bin).toEqual({ carrot: [4, 0, 0, 0, 0], salmon: [0, 2, 0, 0, 0] })
+    expect(save.items.carrot).toEqual([0, 2, 0, 0, 0])
+    expect(save.today.actions).toBe(1)
+    // Taking back is free.
+    expect(takeBack(save, 'salmon', 2, 1).today.actions).toBe(1)
+    expect(refusal(() => shipCrate(stocked(), []))).toBe('bad-count')
+    expect(refusal(() => shipCrate(stocked(), [{ id: 'seed-carrot', stars: 1, count: 1 }]))).toBe('no-price')
+    expect(refusal(() => shipCrate(stocked(), [{ id: 'carrot', stars: 3, count: 1 }]))).toBe('no-items')
+    const spent = { ...stocked(), today: { ...stocked().today, actions: 10 } }
+    expect(refusal(() => shipCrate(spent, [{ id: 'carrot', stars: 1, count: 1 }]))).toBe('no-actions')
+  })
+
   it('moves a good at its stars from the Warehouse into the bin, exactly', () => {
     const save = ship(ship(stocked(), 'carrot', 1, 3), 'carrot', 2, 1)
     expect(save.items.carrot).toEqual([1, 1, 0, 0, 0])

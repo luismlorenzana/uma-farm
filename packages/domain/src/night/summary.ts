@@ -4,9 +4,9 @@
 import type { Season } from '../farm/calendar'
 import type { FarmPlaceId } from '../farm/places'
 import type { Activity, Rank } from '../farm/ranks'
+import type { StationId } from '../gathering/ids'
 import type { CropId } from '../goods/ids'
-import type { LoopPlaceId } from '../save/parse-v4'
-import type { BlockId, OutfitId } from '../save/v4'
+import type { OutfitId } from '../save/v4'
 import type { InviteKind } from '../save/v4'
 
 /** §1 The bin: a good at one star that sold tonight, how many, the gold they made, and whether the
@@ -21,40 +21,30 @@ export interface BinSale {
   demand: boolean
 }
 
-/** §2 Work done: jobs that finished overnight at a place, and the items they made. */
-export interface JobsDone {
-  kind: 'jobs'
-  place: LoopPlaceId
-  jobs: number
-  items: number
+/** §2 Work done: the field overnight: the tiles that grew a stage, and how many of them turned ripe. */
+export interface FieldGrew {
+  kind: 'grew'
+  tiles: number
+  ripe: number
 }
 
-/** §2 Work done: plots on a block that turned Ready overnight. */
-export interface CropsReady {
-  kind: 'crops'
-  block: BlockId
-  plots: number
-}
-
-/** §2 Work done: plots on a block whose crop withered on a season's last night, by crop. */
+/** §2 Work done: a crop that withered on a season's last night, and on how many tiles. */
 export interface CropsWithered {
   kind: 'withered'
-  block: BlockId
   crop: CropId
-  plots: number
+  tiles: number
 }
 
-/** §2 Work done: the night's best catch, the most valuable fish caught tonight at its stars. Its size is measured
- * when it's collected. */
-export interface BestCatchLine {
-  kind: 'catch'
-  id: string
-  stars: number
+/** §2 Work done: a station's load, done overnight and in the Warehouse: its output at its stars, and how many. */
+export interface LoadLine {
+  kind: 'load'
+  station: StationId
+  item: string
+  count: number
 }
 
-/** §2's lines: jobs by place, the night's best catch, then crops ready by block, then what withered (in section
- * order). */
-export type WorkLine = JobsDone | BestCatchLine | CropsReady | CropsWithered
+/** §2's lines: the stations' loads, then the field's growth, then what withered (in section order). */
+export type WorkLine = LoadLine | FieldGrew | CropsWithered
 
 /** §3 Ranks: she reached a rank in an activity tonight. */
 export interface RankUp {
@@ -110,19 +100,19 @@ export type NewsLine =
   | { kind: 'home'; umas: OutfitId[] }
   | HouseholdNews
 
-/** §6 Today's nudges: the Umas on the farm with no work this morning. */
-export interface IdleNudge {
-  kind: 'idle'
-  umas: OutfitId[]
+/** §6 Today's nudges: growing tiles to water this morning. */
+export interface WaterNudge {
+  kind: 'water'
+  tiles: number
 }
 
-/** §6 Today's nudges: empty plots that the seeds in the Warehouse could fill today. */
+/** §6 Today's nudges: empty tilled tiles that the seeds in the Warehouse could fill today. */
 export interface SeedsNudge {
   kind: 'seeds'
-  plots: number
+  tiles: number
 }
 
-export type Nudge = IdleNudge | SeedsNudge
+export type Nudge = WaterNudge | SeedsNudge
 
 // --- §4 Hearts ------------------------------------------------------------------------
 
@@ -187,11 +177,11 @@ export interface ItemLine {
   items: string[]
 }
 /** §4 Hearts: the night's chores in all, once a night: the items they left in
- * the Warehouse (a forager's and a fisher's) and the growth they gave the Fields (a farmer's, +0.25 each). */
+ * the Warehouse (a forager's and a fisher's) and the dry tiles they watered (a farmer's, one each). */
 export interface ChoresLine {
   kind: 'chores'
   items: number
-  growth: number
+  watered: number
 }
 /** §4 Hearts (before side by side): the perks' extras tonight in all, copies of
  * a night's items by the romance term (her line's +10% and +20%, her ring, dreams and the household), into the Warehouse. */
@@ -251,7 +241,7 @@ export interface MorningSummary {
   /** §1 The bin: yesterday's sales by good and star, in the catalogue's order, with the season's demand marked.
    * The total is their gold added up. */
   bin: BinSale[]
-  /** §2 Work done: jobs by place, the night's best catch, crops ready by block and what withered. */
+  /** §2 Work done: the stations' loads, the field's growth and what withered. */
   work: WorkLine[]
   /** §3 Ranks: rank-ups, then Umas whose points filled tonight with their challenge to meet. */
   ranks: RankLine[]
@@ -259,7 +249,7 @@ export interface MorningSummary {
   hearts: HeartLine[]
   /** §5 New today: a new story release, the season and festivals, the goals' news, the household's, then the Dorm's. */
   news: NewsLine[]
-  /** §6 Today's nudges: idle Umas, plots to plant. */
+  /** §6 Today's nudges: tiles to water, tiles to plant. */
   nudges: Nudge[]
 }
 

@@ -27,7 +27,7 @@ describe('the perks', () => {
 
   it('templates each line’s place, chore and morning item', () => {
     expect(words('farming')).toMatchObject({
-      f3: '+10% at the Fields', f6: '+0.25 growth on a block each night', r2: 'A ★2+ crop of the season every 4th morning', r5: '+10% more at the Fields (+20%)',
+      f3: '+10% at the Fields', f6: 'Waters a dry tile each night', r2: 'A ★2+ crop of the season every 4th morning', r5: '+10% more at the Fields (+20%)',
       s3: 'Her dream; +5% for anyone at the Fields',
     })
     expect(words('foraging')).toMatchObject({ f3: '+10% at the forest', f6: 'One item from the forest each night', f9: 'Mentor: +10% rank points for Umas at the forest' })

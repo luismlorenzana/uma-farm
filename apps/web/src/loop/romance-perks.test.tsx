@@ -4,7 +4,7 @@
 // stand-in pack (9000001–9000003) and a 9000004 built here; master data and the server are stubs.
 import 'fake-indexeddb/auto'
 import {
-  meet, newSave, pairKey, readScene, STAND_IN_FILES, storyPackFrom, type Cast, type HarvestReceipt, type Love, type SaveV4, type StoryPack, type Ties,
+  meet, newSave, pairKey, readScene, STAND_IN_FILES, storyPackFrom, type Cast, type Love, type SaveV4, type StoryPack, type Ties,
 } from '@farm/domain'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -30,7 +30,6 @@ const { castLens } = await import('../story/load')
 const { default: HeartsPage } = await import('./HeartsPage')
 const { friendLoved, fromHer, perkList } = await import('./hearts-view')
 const { heartsLines } = await import('./summary-words')
-const { receiptWords } = await import('./FieldsPage')
 
 /** The stand-in's three home, ties seeded, as if met: the opening brings nobody, and day 1's visitor waits at the Gate. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
@@ -134,22 +133,17 @@ describe('the morning and the screens\' words', () => {
     // The night's order (`heartLines`): invitations, birthdays, arrivals, morning items, chores, perks, side by side, bonds.
     const lines = heartsLines([
       { kind: 'invite', id: ONE, evening: 'walk' }, { kind: 'arrived', id: THREE, home: true }, { kind: 'item', id: TWO, items: ['shiitake@3'] },
-      { kind: 'chores', items: 3, growth: 0.25 }, { kind: 'perks', items: 2 }, { kind: 'side', items: 1 },
+      { kind: 'chores', items: 3, watered: 1 }, { kind: 'perks', items: 2 }, { kind: 'side', items: 1 },
     ], [], nameOf)
     expect(lines.map((l) => [l.text, l.to])).toEqual([
       ['✉ Stand-in 1: “Walk at dusk tonight?”', `/hearts?uma=${ONE}`],
       ['♥ Stand-in 2 left you ★3 Shiitake', `/hearts?uma=${TWO}`],
-      ['Night chores · 3 items · +0.25 growth', '/warehouse'],
+      ['Night chores · 3 items · 1 tile watered', '/warehouse'],
       ['Met Stand-in 3 · moved in', `/hearts?uma=${THREE}`],
       ['Perks · +2 items', '/warehouse'],
       ['Side by side · +1 item', '/warehouse'],
     ])
-    expect(heartsLines([{ kind: 'chores', items: 0, growth: 0.5 }], [], nameOf)[0]).toMatchObject({ text: 'Night chores · +0.5 growth', to: '/fields' })
+    expect(heartsLines([{ kind: 'chores', items: 0, watered: 2 }], [], nameOf)[0]).toMatchObject({ text: 'Night chores · 2 tiles watered', to: '/' })
   })
 
-  it('says a harvest\'s extra crops from perks', () => {
-    const receipt: HarvestReceipt = { stars: [2, 1, 0, 0, 0], seeds: 1, plots: 2, perks: 1 }
-    expect(receiptWords(receipt, 'Carrot')).toBe('+3 Carrot (★1 × 2, ★2 × 1) · 1 from perks · 1 seed back')
-    expect(receiptWords({ ...receipt, perks: 0 }, 'Carrot')).toBe('+3 Carrot (★1 × 2, ★2 × 1) · 1 seed back')
-  })
 })

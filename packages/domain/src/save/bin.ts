@@ -1,8 +1,9 @@
-// The shipping bin (night step 1): anything with a price goes in at any time in the
-// day, comes back out until the night if the player changes their mind, and pays at night at price × stars × demand.
-// There's no selling cap and nothing is ever bought back. The bin is `save.bin`, star counts like the Warehouse's.
-// None of these stamp `updatedAt`: shipping and taking back are the player's operations, which stamp around them, and
-// the night stamps once after its nine steps.
+// The shipping bin (night step 1): you pick what to ship and one action ships it all (`shipCrate`); it comes back out
+// for free until the night if you change your mind, and pays at night at price × stars × demand. There's no selling cap
+// and nothing is ever bought back. The bin is `save.bin`, star counts like the Warehouse's. None of these stamp
+// `updatedAt`: shipping and taking back are the player's operations, which stamp around them, and the night stamps once
+// after its nine steps.
+import { spend } from '../farm/actions'
 import { GOOD_IDS } from '../goods/ids'
 import { hasPrice, inDemand, priceOf } from '../goods/prices'
 import type { BinSale } from '../night/summary'
@@ -35,6 +36,23 @@ export function shipAll<S extends BinSave>(save: S, id: string): S {
   const row = save.items[id]
   if (!row || row.every((n) => n === 0)) throw new SaveRuleError('no-items', 'Not enough in the Warehouse')
   return row.reduce((next, n, i) => (n > 0 ? ship(next, id, i + 1, n) : next), save)
+}
+
+/** One line of a crate for the bin: a good at its stars, and how many. */
+export interface CrateLine {
+  id: string
+  stars: number
+  count: number
+}
+
+/** Ships a crate: one of the day's actions for everything you picked, each line from the Warehouse into today's bin, paid
+ * tonight. Refused with nothing picked (`bad-count`), for anything without a price (`no-price`), when the Warehouse is
+ * short (`no-items`), and with no action left (`no-actions`). */
+export function shipCrate<S extends BinSave & Pick<FarmSave, 'calendar' | 'today'>>(save: S, lines: readonly CrateLine[]): S {
+  const picked = lines.filter((line) => line.count > 0)
+  if (picked.length === 0) throw new SaveRuleError('bad-count', 'Pick something to ship.')
+  const shipped = picked.reduce((next, line) => ship(next, line.id, line.stars, line.count), save)
+  return spend(shipped, 'ship')
 }
 
 /** `count` of a good at `stars` from today's bin back to the Warehouse. Refused when the bin holds fewer

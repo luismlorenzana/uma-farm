@@ -1,4 +1,4 @@
-// The landscape frame: the thin bar on top (the date and season, the actions left's placeholder, the gold, End the day
+// The landscape frame: the thin bar on top (the date and season, the day's actions left, the gold, End the day
 // and the Menu), the rail down the left (Farm · Town · People · Book · Diary, the farm's places keeping Farm lit), the
 // whole shell on uma-kit's landscape stage (its sheets come in from the right), the Book's cards, and the card that
 // asks for the phone sideways. Invented ids; master data and the server are stubs.
@@ -63,8 +63,8 @@ describe('the bar', () => {
     expect(date.textContent).toBe('Spring 3')
     expect(date.getAttribute('href')).toBe('/fields?sheet=calendar')
     expect(date.getAttribute('aria-label')).toMatch(/^Calendar: Spring 3, year 1/)
-    // A placeholder until the day has its budget of actions: nothing to tap.
-    expect($('[data-actions="placeholder"]')?.getAttribute('aria-label')).toBe('Actions left: not counted yet')
+    // The day's actions left, of its ten: nothing to tap.
+    expect($('[data-bar-chip="actions"]')?.getAttribute('aria-label')).toBe('Actions left: 10 of 10')
     expect($('[data-bar-chip="actions"]')?.tagName).toBe('SPAN')
     expect($('[data-bar-chip="gold"]')?.getAttribute('aria-label')).toBe('Gold: 1,240g. The bin')
     expect($('[data-bar-chip="gold"]')?.getAttribute('href')).toBe('/fields?sheet=bin')

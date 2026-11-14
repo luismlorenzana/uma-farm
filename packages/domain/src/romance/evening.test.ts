@@ -5,8 +5,7 @@
 import { describe, expect, it } from 'vitest'
 import { DAYS_PER_YEAR, festivalOn } from '../farm/calendar'
 import { runNight, type NightContext } from '../night/end-day'
-import { TEST_KINDS } from '../night/kinds.fixture'
-import { parseSaveV4 } from '../save/parse-v4'
+import { parseSaveV5 } from '../save/parse-v4'
 import { eveningsOn, invitesFor, marriedCount, newLove, newRosterUma, newSave, type Love, type SaveV4 } from '../save/v4'
 import type { UmaBible } from '../story/authored'
 import { readScene } from '../story/scenes'
@@ -23,7 +22,7 @@ const AT = '2026-11-11T10:00:00.000Z'
 const PACK = storyPackFrom(STAND_IN_FILES)
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
-const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ kinds: TEST_KINDS, story })
+const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ story })
 
 /** A named farm on `day`, the opening read: the stand-ins home (`joinCast`) at Friendship 0. */
 function farm(day = 3): SaveV4 {
@@ -188,7 +187,7 @@ describe('the slots', () => {
     expect(eveningMarks(three).map((m) => m.spent)).toEqual([{ with: ONE, kind: 'walk' }, { with: TWO, kind: 'fishing' }, { with: THREE, kind: 'festival' }])
     // With anyone married, Tonight opens for Sleep at even with every evening spent.
     expect(tonightOpens(three, PACK)).toBe(true)
-    expect(parseSaveV4(json(three)).today.evenings).toHaveLength(3)
+    expect(parseSaveV5(json(three)).today.evenings).toHaveLength(3)
   })
 
   it('an Uma may spend the day\'s second slot too; the +20 comes with her first evening only', () => {
@@ -294,27 +293,27 @@ describe('the night and the save', () => {
     expect(morning).toEqual(runNight(spent, context()))
     // Without the pack, none.
     expect(runNight(spent, { ...context(), story: undefined }).today.invites).toEqual([])
-    expect(parseSaveV4(json(morning))).toEqual(morning)
+    expect(parseSaveV5(json(morning))).toEqual(morning)
   })
 
   it('parses evenings within the day\'s slots and invitations for a date game, and refuses the rest', () => {
     const save = withLove(farm(10), { level: 2 }, TWO)
     const ok = spendEvening(spendEvening(save, PACK, TWO, 'walk', 50).save, PACK, TWO, 'festival', 50).save
-    expect(parseSaveV4(json(ok))).toEqual(ok)
-    const bad = (today: Partial<SaveV4['today']>, day = 10) => () => parseSaveV4(json({ ...save, calendar: { day }, today: { ...save.today, ...today } }))
+    expect(parseSaveV5(json(ok))).toEqual(ok)
+    const bad = (today: Partial<SaveV4['today']>, day = 10) => () => parseSaveV5(json({ ...save, calendar: { day }, today: { ...save.today, ...today } }))
     expect(bad({ evenings: [{ with: TWO, kind: 'walk' }, { with: ONE, kind: 'fishing' }] })).toThrow('at most 1 evening')
     // Festival night once a day at most: the story may move or add festivals, so the save reads it on any day.
-    expect(parseSaveV4(json({ ...save, calendar: { day: 11 }, today: { ...save.today, evenings: [{ with: TWO, kind: 'festival' }] } })).today.evenings).toHaveLength(1)
+    expect(parseSaveV5(json({ ...save, calendar: { day: 11 }, today: { ...save.today, evenings: [{ with: TWO, kind: 'festival' }] } })).today.evenings).toHaveLength(1)
     expect(bad({ evenings: [{ with: TWO, kind: 'festival' }, { with: ONE, kind: 'festival' }] })).toThrow('festival night once a day at most')
     expect(bad({ evenings: [{ with: TWO, kind: 'tea' as never }] })).toThrow()
     expect(bad({ invites: [{ id: TWO, kind: 'festival' as never, answer: null }] })).toThrow('expected a date game')
     expect(bad({ invites: [{ id: TWO, kind: 'walk', answer: null }, { id: ONE, kind: 'walk', answer: null }] })).toThrow()
     expect(bad({ invites: [{ id: TWO, kind: 'walk', answer: 'maybe' as never }] })).toThrow()
     const two = married(farm(12), 10)
-    expect(parseSaveV4(json({ ...two, today: { ...two.today, evenings: [{ with: ONE, kind: 'walk' }, { with: TWO, kind: 'walk' }], invites: [{ id: ONE, kind: 'walk', answer: 'yes' }, { id: TWO, kind: 'walk', answer: null }] } })).today.invites).toHaveLength(2)
+    expect(parseSaveV5(json({ ...two, today: { ...two.today, evenings: [{ with: ONE, kind: 'walk' }, { with: TWO, kind: 'walk' }], invites: [{ id: ONE, kind: 'walk', answer: 'yes' }, { id: TWO, kind: 'walk', answer: null }] } })).today.invites).toHaveLength(2)
     const summary = { day: 10, bin: [], work: [], ranks: [], hearts: [{ kind: 'invite', id: TWO, evening: 'festival' }], news: [], nudges: [] }
-    expect(() => parseSaveV4(json({ ...save, summary }))).toThrow('expected a date game')
-    expect(parseSaveV4(json({ ...save, summary: { ...summary, hearts: [{ kind: 'invite', id: TWO, evening: 'walk' }] } })).summary?.hearts).toEqual([{ kind: 'invite', id: TWO, evening: 'walk' }])
+    expect(() => parseSaveV5(json({ ...save, summary }))).toThrow('expected a date game')
+    expect(parseSaveV5(json({ ...save, summary: { ...summary, hearts: [{ kind: 'invite', id: TWO, evening: 'walk' }] } })).summary?.hearts).toEqual([{ kind: 'invite', id: TWO, evening: 'walk' }])
   })
 
   it('seeds each evening\'s play by the day, her and the kind', () => {

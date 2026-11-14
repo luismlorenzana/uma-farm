@@ -13,11 +13,14 @@ calendar, and a default Uma. The design is [game-design.md](../design/game-desig
 preview is retired. **The dialogue engine (F75) is in:** every scene plays on one engine, the pilot's two Umas show
 their portraits from master data, their faces change with each line's emote and their outfits follow the scene
 ([the dialogue engine](../game-mechanics.md#the-dialogue-engine)); every other Uma shows her master-data bust until F76.
+**A day of actions (F77) is built,** in review: ten actions a day, the tile farm worked by hand with daily watering,
+one-action foraging, chopping and fishing, a station's one load, a crate shipped for one action, and going into town for
+the shop; save v5, so a farm from before it starts over.
 
 | Piece | Who | State |
 |---|---|---|
 | [F76](tasks/F76-default-uma.md) **The default Uma** | Claude | Next |
-| [F77](tasks/F77-actions-and-farm-loop.md) **A day of actions, and the farm loop** | Claude | Ready |
+| F77 **A day of actions, and the farm loop** | Claude | Built, in review: the pull request `feat/f77-actions-and-farm-loop` |
 | [F78](tasks/F78-town-map.md) **The town map** | Claude | After F77 |
 | [F79](tasks/F79-uma-loop.md) **The Uma loop** | Claude | After F76 and F78 |
 | [F80](tasks/F80-farmhands.md) **Farmhands** | Claude | After F77 and F79 |
@@ -37,6 +40,7 @@ The table above is the queue. A packet is deleted when it ships, and git keeps t
 |---|---|
 | **The landscape phone check:** open the app sideways and visit every screen; held upright, it asks you to turn it | [uma-farm.web.app](https://uma-farm.web.app) |
 | **The dialogue engine's phone check:** meet the pilot's Umas and watch their faces and outfits change | [uma-farm.web.app](https://uma-farm.web.app) |
+| **Once F77 is deployed, play three days:** start the new farm on the card, clear, till, plant and water, forage and fish, start a load and ship, run out of actions and end the day | [uma-farm.web.app](https://uma-farm.web.app), and [the day's rules](../game-mechanics.md#a-day-ten-actions) |
 | **Write the story and ship it.** F40 lists what the rework changes for it: the protagonist is a man, there's no welcome week, and her life in town | [F40](tasks/F40-story-authoring.md) |
 | **The next Umas' art:** hand [F69](tasks/F69-bust-art-spec.md) to the character art session | Uma Character Art |
 

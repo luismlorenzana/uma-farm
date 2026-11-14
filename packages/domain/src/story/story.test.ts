@@ -6,11 +6,9 @@ import { checkGoalsNight, depthsTonight, farmPointsOf, farmRankOpens, nextFarmRa
 import { FARM_RANK_POINTS, farmRankOf } from '../farm/farm'
 import { DIARY_ROWS, MILESTONES, ROW_GOLD } from '../farm/milestones'
 import type { Activity, Rank } from '../farm/ranks'
-import type { MadeTonight } from '../gathering/kinds'
 import { endDay, type NightContext } from '../night/end-day'
-import { TEST_KINDS } from '../night/kinds.fixture'
 import { GOLD_SHIPPED } from '../save/bin'
-import { parseSaveV4 } from '../save/parse-v4'
+import { parseSaveV5 } from '../save/parse-v4'
 import { newLove, newRosterUma, newSave, type SaveV4 } from '../save/v4'
 import type { Calling, CastEntry } from './authored'
 import { STAND_IN_CAST } from './authored.fixture'
@@ -27,7 +25,7 @@ const STORY: NonNullable<NightContext['story']> = {
   cast: { ...STAND_IN_CAST, umas: [entry('1001', 'farming'), entry('1002', 'foraging'), entry('1003', 'fishing')] },
   bibles: new Map(), ties: { version: 1, ties: [] },
 }
-const CONTEXT: NightContext = { kinds: TEST_KINDS, story: STORY }
+const CONTEXT: NightContext = { story: STORY }
 const night = (save: SaveV4) => endDay(save, CONTEXT, LATER)
 
 /** The farmer named and the three home on `day`, their arrivals and the opening scene read, with `counts`. */
@@ -44,9 +42,7 @@ const ranked = (save: SaveV4, id: string, activity: Activity, rank: Rank): SaveV
   ...save, roster: { ...save.roster, [id]: { ...save.roster[id]!, ranks: { ...save.roster[id]!.ranks, [activity]: { points: [0, 40, 160, 400, 900, 2000][rank]!, rank, challenge: 0 } } } },
 })
 /** A farm one night from Farm Rank 2: 10,000g shipped and a Hand, their milestones not paid yet. */
-const ready = (): SaveV4 => ranked({ ...farm(7, { [GOLD_SHIPPED]: 10_000, 'plots-harvested': 9 }), crops: { carrot: 20, potato: 2 } }, '1001', 'farming', 1)
-const made = (kind: 'forage' | 'fish', item: string, items = 3): MadeTonight =>
-  ({ outfitId: '1001', place: kind === 'forage' ? 'forest' : 'fishery', request: { kind, item, count: 1 }, items: Array.from({ length: items }, () => 'pine-log@1') })
+const ready = (): SaveV4 => ranked({ ...farm(7, { [GOLD_SHIPPED]: 10_000, 'tiles-harvested': 9 }), crops: { carrot: 20, potato: 2 } }, '1001', 'farming', 1)
 
 describe('the Farm Rank', () => {
   it('reaches each rank at its threshold, never a point before', () => {
@@ -69,16 +65,18 @@ describe('the Farm Rank', () => {
     expect(farmPointsOf(newSave('u1', AT)).total).toBe(0)
   })
 
-  it('opens what the rules gate on it: the places to build, land, beds and seeds', () => {
-    expect(farmRankOpens(1)).toEqual(['The Mill to build (1,000g · 20 logs)', 'Dorm level 2 (5 beds)']) // tier-1 seeds and Block A are the start's
-    expect(farmRankOpens(2)).toEqual(['The Coop to build (not built yet)', 'Block B (800g)', 'Dorm level 3 (7 beds)', 'New seeds at the shop'])
+  it('opens what the rules gate on it: the places to build, the farmer\'s reach, beds and seeds', () => {
+    expect(farmRankOpens(1)).toEqual(['The Mill to build (1,000g · 20 logs)', 'Dorm level 2 (5 beds)']) // tier-1 seeds, the Woods and the Pond are the start's
+    expect(farmRankOpens(2)).toEqual([
+      'The Coop to build (not built yet)', 'The Hills', 'The River', 'The Sea Pier (with the Dock)', 'Dorm level 3 (7 beds)', 'New seeds at the shop',
+    ])
     expect(farmRankOpens(3)).toEqual([
       'The Sawmill to build (1,500g · 40 logs)', 'The Barn to build (not built yet)', 'The Smokehouse to build (2,000g · 30 logs · 20 fish)', 'Dorm level 4 (9 beds)',
     ])
-    expect(farmRankOpens(4)).toEqual(['The Mine to build (not built yet)', 'The Smelter to build (not built yet)', 'Block C (3,000g)', 'Dorm level 5 (11 beds)', 'New seeds at the shop'])
-    expect(farmRankOpens(6)).toEqual(['The Dock to build (20,000g · 80 planks)', 'The Boat to build (30,000g · 60 planks · 30 fillets)', 'Block D (8,000g)', 'Dorm level 7 (17 beds)'])
+    expect(farmRankOpens(4)).toEqual(['The Mine to build (not built yet)', 'The Smelter to build (not built yet)', 'The Old Forest', 'The Lake', 'Dorm level 5 (11 beds)', 'New seeds at the shop'])
+    expect(farmRankOpens(6)).toEqual(['The Dock to build (20,000g · 80 planks)', 'The Boat to build (30,000g · 60 planks · 30 fillets)', 'The Mountain', 'The Falls', 'Dorm level 7 (17 beds)'])
     expect(farmRankOpens(8).some((o) => o.startsWith('Dorm'))).toBe(false) // the Dorm for 20 tops out at level 8, Farm Rank 7
-    expect(farmRankOpens(10)).toEqual(['The farm’s gold crest'])
+    expect(farmRankOpens(10)).toEqual(['The World Tree', 'The Moon Pool', 'The farm’s gold crest'])
   })
 
   it('is recomputed at night step 8 from the save, and a rank reached is news in the morning', () => {
@@ -117,7 +115,7 @@ describe('the Diary', () => {
   })
 
   it('pays a depth milestone for the Hills and none for the Woods or the Pond', () => {
-    const depths = depthsTonight([made('forage', 'woods'), made('forage', 'hills'), made('fish', 'pond'), made('fish', 'river', 0)])
+    const depths = depthsTonight(['woods', 'hills', 'pond', 'moon'])
     expect([...depths].sort()).toEqual(['hills', 'pond', 'woods'])
     const { save, paid } = payDiary(farm(5), depths)
     expect(paid).toEqual(['depth:hills'])
@@ -164,13 +162,13 @@ describe('the night\'s goals', () => {
     expect(morning.buildings.mill).toBeUndefined()
     expect(Object.keys(morning.roster)).toEqual(['1001', '1002', '1003'])
     expect(morning.summary!.news).toEqual([{ kind: 'farm-rank', rank: 2 }, { kind: 'milestone', id: 'shipped:10000' }, { kind: 'milestone', id: 'rank:hand' }])
-    expect(parseSaveV4(json(morning), 'save', TEST_KINDS)).toEqual(morning)
+    expect(parseSaveV5(json(morning))).toEqual(morning)
     expect(checkGoalsNight(morning, []).tonight).toEqual({ paid: [], ranks: [] })
   })
 
   it('reads an older v4\'s "chapter done" line and drops it, and refuses a goal line it does not know', () => {
     const morning = night(ready())
-    const parse = (news: unknown[]) => parseSaveV4(json({ ...morning, summary: { ...morning.summary!, news } }), 'save', TEST_KINDS)
+    const parse = (news: unknown[]) => parseSaveV5(json({ ...morning, summary: { ...morning.summary!, news } }))
     expect(parse([{ kind: 'chapter', chapter: 1 }, { kind: 'farm-rank', rank: 2 }]).summary!.news).toEqual([{ kind: 'farm-rank', rank: 2 }])
     expect(() => parse([{ kind: 'milestone', id: 'shipped:5' }])).toThrow('unknown milestone')
     expect(() => parse([{ kind: 'farm-rank', rank: 1 }])).toThrow('expected 2–10')

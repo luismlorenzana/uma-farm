@@ -6,7 +6,7 @@ import { EMPTY_ENVELOPE, RevisionConflict, type SaveRepository } from './save.re
 type FileShape = Record<string, { revision: number; save: unknown }>
 
 // Local dev persistence (copied from uma-rpg at 30a322a): one JSON file written atomically (tmp + rename), with calls
-// serialized in-process. It keeps no backups: a v4 over an older save replaces it.
+// serialized in-process. It keeps no backups: a v5 over an older save replaces it.
 export class LocalSaveRepository implements SaveRepository {
   private queue: Promise<unknown> = Promise.resolve()
 

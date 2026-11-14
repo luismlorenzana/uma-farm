@@ -7,7 +7,10 @@
 //   Romance 4: her bond with her closest friend ×1.5, once, never ×2.25
 //   Hearts at 50, 150, 300, 500 and 750; never a fall
 //   The ties' seeds when both are on the farm: strength 3 → 150, 2 → 50, 1 → 0
-//   Side by side at 3 hearts: +10% of a night's items as extras (step 4), a tended block ×1.1 (step 2)
+//   Side by side at 3 hearts: +10% of a night's items as extras (step 4)
+//
+// The farmer works the farm alone until the farmhands come, so the night's work pays (the same place, side by side)
+// find nobody for now.
 //
 // Each new heart opens a tie's pair's conversation: the pack's (`pairs`), else the game's short card, read once into
 // `diary.read` as `pair:<a>-<b>:<hearts>`. Bond points are whole: each pay rounds once, half up. Loaded with the
@@ -20,7 +23,7 @@ import { roundPoints } from '../romance/love'
 import { IN_ELEMENT, inElement, romanceBonus, type PerkPack } from '../romance/perk-terms'
 import type { LoopPlaceId } from '../save/parse-v4'
 import { SaveRuleError } from '../save/rules'
-import { pairKey, type BlockId } from '../save/v4'
+import { pairKey } from '../save/v4'
 import type { FarmSave, Love, SaveV4 } from '../save/v4'
 import { addGoods, parseStockKey } from '../save/warehouse'
 import { type Tie } from '../story/authored'
@@ -137,8 +140,8 @@ export function seedTies(save: SaveV4, pack: Pick<StoryPack, 'ties'>, id: string
 
 // --- The night: the same place the same day ---------------------------------------------------------------
 
-/** Who worked where today: step 4's running jobs by place, and the Fields' tenders with a growing block (step 2) as the
- * Fields. An Uma works one place a day. */
+/** Who worked where today: the Umas' work by place, and those who worked the field (`tended`) as the Fields. An Uma
+ * works one place a day. */
 export function placesToday(worked: readonly { outfitId: string; place: string }[], tended: readonly { outfitId: string }[]): Map<string, string[]> {
   const at = new Map<string, string[]>()
   const add = (place: string, id: string) => {
@@ -187,21 +190,12 @@ export function bondsTonight(
 
 /** Side by side: a partner she has 3 hearts or more with. */
 export const SIDE_BY_SIDE_HEARTS = 3
-/** The bond factor: her items, and a tended block's growth, ×1.1. */
+/** The bond factor: her items ×1.1. */
 export const SIDE_BY_SIDE = 1.1
 
 /** Whether she has a 3+-heart partner among `others` (not herself). */
 const besideAny = (save: Pick<FarmSave, 'bonds'>, id: string, others: readonly string[]): boolean =>
   others.some((other) => other !== id && bondHearts(bondOf(save, id, other)) >= SIDE_BY_SIDE_HEARTS)
-
-/** Whether a tended block grows side by side: its tender has a 3+-heart partner tending another block with a
- * growing plot. */
-export function tendsSideBySide(save: Pick<FarmSave, 'bonds' | 'fields'>, block: BlockId): boolean {
-  const growing = (b: FarmSave['fields']['blocks'][number]) => b.tender !== null && b.plots.some((p) => p.crop !== null && !p.ready)
-  const own = save.fields.blocks.find((b) => b.id === block)
-  if (!own || !growing(own)) return false
-  return besideAny(save, own.tender!, save.fields.blocks.filter((b) => b.id !== block && growing(b)).map((b) => b.tender!))
-}
 
 /** Her share of side by side's extras at a place tonight: 10% beside a 3+-heart partner who also worked there
  * today, else none; **20% in her element** (Friendship 8, at her line's place, with the pack). */

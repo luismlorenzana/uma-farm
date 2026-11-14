@@ -1,55 +1,29 @@
 // The save's parse helpers for the farm's parts: strict keys, explicit paths, every id checked. Roster ids are checked
 // by form: the API has no master data or story pack, and an id a later release drops still parses. Internal to `save/`:
-// `parse-v4.ts` composes these and re-exports the public names (the work places, their slots and the kinds' types).
-import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkKindRules, WorkOutput, WorkRow } from '@luismlorenzana/uma-work'
+// `parse-v4.ts` composes these and re-exports the public names (the work places and their slots).
 import { SEASONS } from '../farm/calendar'
 import { bedsAt, DORM_MAX_LEVEL, FARM_RANK_POINTS } from '../farm/farm'
 import { DIARY_ROWS, isDiaryPaidId, MILESTONES } from '../farm/milestones'
 import { BUILD_PLACES, farmPlace, isBuildPlace, type FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
-import { GOOD_IDS, goodOf, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, RING_IDS } from '../goods/ids'
+import { STATION_JOBS, stationJobOf, STATIONS, type StationId } from '../gathering/ids'
+import { GOOD_IDS, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, RING_IDS } from '../goods/ids'
 import type { BinSale, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
-import type { LoopWorld } from '../work/loop-env'
-import { amount, bool, count, int, list, object, oneOf, positive, record, SaveParseError, type Obj } from './parse'
+import { amount, bool, count, int, list, object, oneOf, record, SaveParseError, type Obj } from './parse'
 import {
-  ANIMAL_HOME, ANIMAL_KINDS, BLOCK_IDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, EXTRA_KINDS, isDishId, pairKey, PLOTS_PER_BLOCK,
-  REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type Block, type BoardRequest, type BuildingId, type Dig, type DormSwap,
-  type Expedition, type Extra, type FestivalResult, type LoopWorkRequest, type Plot, type RankState, type SaveV4, type StarCounts,
+  ANIMAL_HOME, ANIMAL_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, EXTRA_KINDS, FIELD_TILES, GROUNDS, isDishId, pairKey,
+  REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig, type DormSwap,
+  type Expedition, type Extra, type FestivalResult, type RankState, type SaveV5, type StarCounts, type StationLoad, type Tile,
   type ToolId, type ToolTier, type Warehouse, type WorkshopId,
 } from './v4'
 import { MAX_STARS, parseStockKey } from './warehouse'
 
-/** The places work rows sit at: the forest, the Fishery and their stations; the Mine, the Quarry and
- * theirs once the workshops are built. Four slots each. */
+/** The places an Uma works: the forest, the Fishery and their stations; the Mine, the Quarry and theirs once
+ * they're built. What the night's `worked` and `made` name, kept for the farmhands; four slots each. */
 export const LOOP_WORK_PLACES = ['forest', 'fishery', 'mill', 'sawmill', 'smokehouse', 'mine', 'quarry', 'smelter', 'cutter'] as const
 export type LoopPlaceId = typeof LOOP_WORK_PLACES[number]
 export const LOOP_SLOTS = 4
 
-/** A work kind's request: the places it works at and its request's parse (strict keys, its own ids;
- * a `SaveParseError` with the path when wrong). The save's parse reads only this, so it stays in the initial JS. */
-export interface LoopRequestKind {
-  readonly places: readonly LoopPlaceId[]
-  parseRequest(value: Obj, path: string): LoopWorkRequest
-}
-export type LoopRequestKinds = Readonly<Record<string, LoopRequestKind>>
-
-/** A work kind: its request, its rules on uma-work's day clock (`farmEnv`), and whether
- * it runs for days at a time. The farm's are `LOOP_KINDS` (`gathering/kinds.ts`, loaded with the screens and the
- * night); the save's parse reads their requests from `LOOP_REQUESTS` (`gathering/ids.ts`). */
-export interface LoopKind extends LoopRequestKind {
-  /** How it plans and pays (uma-work's kind rules), over the loop's world. */
-  readonly rules: WorkKindRules<LoopWorld>
-  /** A multi-day kind (making; the Mill's preserves; later expeditions): a well-fed Uma's running entry gains a
-   * quarter day a night. A 1-day kind's plan takes ×1.25 items instead. */
-  readonly multiDay: boolean
-}
-export type LoopKinds = Readonly<Record<string, LoopKind>>
-
-/** Up to three requests wait behind the running one (the engine's MAX_QUEUE); four started entries at most. */
-export const MAX_QUEUED = 3
-export const MAX_ENTRIES = MAX_QUEUED + 1
-/** The most items one entry makes: well past a Legend's day at the forest. */
-export const MAX_ENTRY_ITEMS = 200
 /** The most goal lines one morning can hold: every Farm Rank, every milestone and row, every place built overnight. */
 export const MAX_GOAL_NEWS = FARM_RANK_POINTS.length + MILESTONES.length + DIARY_ROWS.length + BUILD_PLACES.length
 /** Ids the save names itself (requests, milestones, animals, records): short kebab words, colons allowed. */
@@ -115,7 +89,7 @@ export function parseRanks(value: unknown, path: string): Record<Activity, RankS
 }
 
 /** The Dorm on its eight levels; home at most its beds. */
-export function parseDorm(value: unknown, path: string, roster: ReadonlySet<string>, bought: number | undefined): SaveV4['dorm'] {
+export function parseDorm(value: unknown, path: string, roster: ReadonlySet<string>, bought: number | undefined): SaveV5['dorm'] {
   const o = object(value, path, ['level', 'home', 'swaps'])
   const level = int(o.level, `${path}.level`, 1, DORM_MAX_LEVEL)
   if (bought === undefined || level > bought) fail(`${path}.level`, 'above the level bought (buildings.dorm)')
@@ -150,136 +124,51 @@ export function parseWarehouse(value: unknown, path: string, check: (id: string)
   return out
 }
 
-// --- Work: uma-work's rows at the places, their stock keys, and each kind's own requests -----------------
+// --- The field, the stations' loads, the ranch, the places, buildings and tools --------------------------------------
 
-export function stock(value: unknown, path: string): string {
-  if (typeof value !== 'string' || !parseStockKey(value)) fail(path, 'expected a stock key <id>@<stars>')
-  return value as string
-}
+/** The most nights a crop grows to ripe: the longest's days (10). */
+const MAX_GROWTH = 10
 
-export function parseSlot(value: unknown, path: string): SlotRef {
-  const o = object(value, path, ['building', 'slot'])
-  const building = oneOf(o.building, `${path}.building`, LOOP_WORK_PLACES)
-  return { building, slot: int(o.slot, `${path}.slot`, 0, LOOP_SLOTS - 1) }
-}
-
-export function parseRequest(value: unknown, path: string, slot: SlotRef, kinds: LoopRequestKinds): LoopWorkRequest {
-  const o = record(value, path)
-  const kind = typeof o.kind === 'string' && Object.hasOwn(kinds, o.kind) ? kinds[o.kind]! : fail(`${path}.kind`, 'unknown kind')
-  if (!(kind.places as readonly string[]).includes(slot.building)) fail(`${path}.kind`, 'not worked at this place')
-  return kind.parseRequest(o, path)
-}
-
-export function parseQty(value: unknown, path: string): ItemQty {
-  const o = object(value, path, ['item', 'qty'])
-  const qty = count(o.qty, `${path}.qty`)
-  if (qty < 1) fail(`${path}.qty`, 'expected at least 1')
-  return { item: stock(o.item, `${path}.item`), qty }
-}
-
-export const ENTRY_KEYS = ['request', 'seconds', 'inputs', 'outputs', 'exp', 'startedAt', 'acceleratedMs', 'collected', 'speed', 'fromQueue'] as const
-
-export function parseEntry(value: unknown, path: string, slot: SlotRef, kinds: LoopRequestKinds): Entry<LoopWorkRequest> {
-  const e = object(value, path, ENTRY_KEYS)
-  const request = parseRequest(e.request, `${path}.request`, slot, kinds)
-  const seconds = list(e.seconds, `${path}.seconds`, 1, MAX_ENTRY_ITEMS).map((v, i) => positive(v, `${path}.seconds.${i}`))
-  const n = seconds.length
-  const each = <T>(raw: unknown, k: string, parse: (v: unknown, at: string) => T): T[] => list(raw, `${path}.${k}`, n, n).map((v, i) => parse(v, `${path}.${k}.${i}`))
-  const inputs = each(e.inputs, 'inputs', (v, at) => list(v, at, 0, 8).map((q, j) => parseQty(q, `${at}.${j}`)))
-  const outputs = each(e.outputs, 'outputs', (v, at): WorkOutput => ({ item: stock(object(v, at, ['item']).item, `${at}.item`) }))
-  const exp = each(e.exp, 'exp', count)
-  const collected = count(e.collected, `${path}.collected`)
-  if (collected > n) fail(`${path}.collected`, 'more than the entry makes')
-  return { request, seconds, inputs, outputs, exp, startedAt: count(e.startedAt, `${path}.startedAt`), acceleratedMs: count(e.acceleratedMs, `${path}.acceleratedMs`),
-    collected, speed: positive(e.speed, `${path}.speed`), fromQueue: bool(e.fromQueue, `${path}.fromQueue`) }
-}
-
-export function parseRefusal(value: unknown, path: string): Refusal | null {
-  if (value === null) return null
-  const o = object(value, path, ['refused', 'code', 'message', 'data'])
-  if (o.refused !== true || typeof o.code !== 'string' || typeof o.message !== 'string') fail(path, 'expected a refusal')
-  const base = { refused: true as const, code: o.code as string, message: o.message as string }
-  if (o.data === undefined) return base
-  const data = record(o.data, `${path}.data`)
-  if (Object.values(data).some((v) => typeof v !== 'string' && typeof v !== 'number')) fail(`${path}.data`, 'expected strings and numbers')
-  return { ...base, data: data as Record<string, string | number> }
-}
-
-export function parseDropped(value: unknown, path: string, kinds: LoopRequestKinds): DroppedQueue<LoopWorkRequest> | null {
-  if (value === null) return null
-  const d = object(value, path, ['at', 'slot', 'requests', 'short', 'refused'])
-  const slot = parseSlot(d.slot, `${path}.slot`)
-  return {
-    at: count(d.at, `${path}.at`), slot,
-    requests: list(d.requests, `${path}.requests`, 1, MAX_QUEUED + 1).map((r, i) => parseRequest(r, `${path}.requests.${i}`, slot, kinds)),
-    short: list(d.short, `${path}.short`, 0, 8).map((q, i) => parseQty(q, `${path}.short.${i}`)),
-    refused: parseRefusal(d.refused, `${path}.refused`),
+/** A tile: its ground; a crop only on tilled soil, its growth whole nights below its ripeness unless ripe; an empty
+ * tile holds nothing else. */
+export function parseTile(value: unknown, path: string): Tile {
+  const o = object(value, path, ['ground', 'crop', 'growth', 'ready', 'regrowing', 'own', 'watered'])
+  const ground = oneOf(o.ground, `${path}.ground`, GROUNDS)
+  const crop = o.crop === null ? null : typeof o.crop === 'string' && isCropId(o.crop) ? o.crop : fail(`${path}.crop`, 'unknown crop')
+  const tile: Tile = {
+    ground, crop, growth: int(o.growth, `${path}.growth`, 0, MAX_GROWTH), ready: bool(o.ready, `${path}.ready`), regrowing: bool(o.regrowing, `${path}.regrowing`),
+    own: bool(o.own, `${path}.own`), watered: bool(o.watered, `${path}.watered`),
   }
+  if (crop && ground !== 'tilled') fail(`${path}.ground`, 'a crop grows on tilled soil')
+  if (!crop && (tile.growth > 0 || tile.ready || tile.regrowing || tile.own || tile.watered)) fail(path, 'an empty tile holds nothing')
+  if (tile.ready && tile.watered) fail(`${path}.watered`, 'a ripe crop isn’t watered')
+  return tile
 }
 
-export function parseLast(value: unknown, path: string, kinds: LoopRequestKinds): LastWork<LoopWorkRequest> | null {
-  if (value === null) return null
-  const l = object(value, path, ['slot', 'request'])
-  const slot = parseSlot(l.slot, `${path}.slot`)
-  return { slot, request: parseRequest(l.request, `${path}.request`, slot, kinds) }
+/** The field: exactly its tiles, row by row. */
+export function parseFields(value: unknown, path: string): SaveV5['fields'] {
+  const o = object(value, path, ['tiles'])
+  return { tiles: list(o.tiles, `${path}.tiles`, FIELD_TILES, FIELD_TILES).map((t, i) => parseTile(t, `${path}.tiles.${i}`)) }
 }
 
-export function parseWork(value: unknown, path: string, roster: ReadonlySet<string>, kinds: LoopRequestKinds): Record<string, WorkRow<LoopWorkRequest>> {
-  const out: Record<string, WorkRow<LoopWorkRequest>> = {}
-  const held = new Set<string>()
+/** The stations' loads: a station's one load, an output it makes at its stars, 1–8 of them. */
+export function parseLoads(value: unknown, path: string): Partial<Record<StationId, StationLoad>> {
+  const out: Partial<Record<StationId, StationLoad>> = {}
   for (const [id, raw] of Object.entries(record(value, path))) {
     const at = `${path}.${id}`
-    member(id, at, roster)
-    const r = object(raw, at, ['outfitId', 'slot', 'entries', 'queue', 'last', 'dropped'])
-    if (r.outfitId !== id) fail(`${at}.outfitId`, 'expected its own key')
-    const slot = r.slot === null ? null : parseSlot(r.slot, `${at}.slot`)
-    const entries = list(r.entries, `${at}.entries`, 0, MAX_ENTRIES)
-    const queue = list(r.queue, `${at}.queue`, 0, MAX_QUEUED)
-    if (!slot && (entries.length > 0 || queue.length > 0)) fail(`${at}.slot`, 'work needs a slot')
-    if (slot && entries.length > 0) {
-      const k = `${slot.building}:${slot.slot}`
-      if (held.has(k)) fail(`${at}.slot`, 'already held')
-      held.add(k)
-    }
-    out[id] = {
-      outfitId: id, slot,
-      entries: entries.map((e, i) => parseEntry(e, `${at}.entries.${i}`, slot!, kinds)),
-      queue: queue.map((q, i) => parseRequest(q, `${at}.queue.${i}`, slot!, kinds)),
-      last: parseLast(r.last, `${at}.last`, kinds), dropped: parseDropped(r.dropped, `${at}.dropped`, kinds),
-    }
+    const station = oneOf(id, at, STATIONS)
+    const o = object(raw, at, ['item', 'count'])
+    const key = typeof o.item === 'string' ? parseStockKey(o.item) : null
+    const job = key ? stationJobOf(key.id) : null
+    if (!key || !job || STATION_JOBS[job].station !== station) fail(`${at}.item`, 'expected a good this station makes, at its stars')
+    out[station] = { item: o.item as string, count: int(o.count, `${at}.count`, 1, MAX_LOAD) }
   }
   return out
 }
+/** The most a load takes (the stations' `LOAD_SIZE`, a Novice's day). */
+const MAX_LOAD = 8
 
-// --- The fields, the ranch, the places, buildings and tools ----------------------------------------------------------
-
-export function parsePlot(value: unknown, path: string): Plot {
-  const o = object(value, path, ['crop', 'growth', 'ready', 'regrowing', 'own'])
-  const crop = o.crop === null ? null : typeof o.crop === 'string' && isCropId(o.crop) ? o.crop : fail(`${path}.crop`, 'unknown crop')
-  const plot: Plot = { crop, growth: amount(o.growth, `${path}.growth`), ready: bool(o.ready, `${path}.ready`), regrowing: bool(o.regrowing, `${path}.regrowing`),
-    own: bool(o.own, `${path}.own`) }
-  if (!crop && (plot.growth > 0 || plot.ready || plot.regrowing || plot.own)) fail(path, 'an empty plot holds nothing')
-  return plot
-}
-
-export function parseFields(value: unknown, path: string, roster: ReadonlySet<string>): SaveV4['fields'] {
-  const o = object(value, path, ['blocks'])
-  const blocks = list(o.blocks, `${path}.blocks`, 1, BLOCK_IDS.length).map((v, i): Block => {
-    const at = `${path}.blocks.${i}`
-    const b = object(v, at, ['id', 'tender', 'plots'])
-    return {
-      id: oneOf(b.id, `${at}.id`, BLOCK_IDS), tender: b.tender === null ? null : member(b.tender, `${at}.tender`, roster),
-      plots: list(b.plots, `${at}.plots`, PLOTS_PER_BLOCK, PLOTS_PER_BLOCK).map((p, j) => parsePlot(p, `${at}.plots.${j}`)),
-    }
-  })
-  blocks.forEach((b, i) => {
-    if (i > 0 && BLOCK_IDS.indexOf(b.id) <= BLOCK_IDS.indexOf(blocks[i - 1]!.id)) fail(`${path}.blocks.${i}.id`, 'blocks run A, B, C, D, each once')
-  })
-  unique(blocks.filter((b) => b.tender !== null), `${path}.blocks`, (b) => b.tender!)
-  return { blocks }
-}
-
-export function parseRanch(value: unknown, path: string, roster: ReadonlySet<string>): SaveV4['ranch'] {
+export function parseRanch(value: unknown, path: string, roster: ReadonlySet<string>): SaveV5['ranch'] {
   const o = object(value, path, ['animals'])
   const animals = list(o.animals, `${path}.animals`, 0, 28).map((v, i): Animal => {
     const at = `${path}.animals.${i}`
@@ -314,11 +203,11 @@ export function parseTools(value: unknown, path: string): Record<ToolId, ToolTie
   return Object.fromEntries(TOOL_IDS.map((t) => [t, int(o[t], `${path}.${t}`, 1, 5) as ToolTier])) as Record<ToolId, ToolTier>
 }
 
-export function parseWorkshops(value: unknown, path: string, roster: ReadonlySet<string>): SaveV4['workshops'] {
+export function parseWorkshops(value: unknown, path: string, roster: ReadonlySet<string>): SaveV5['workshops'] {
   const o = object(value, path, ['played', 'current', 'recipes', 'best'])
   const p = object(o.played, `${path}.played`, WORKSHOP_IDS)
   const played = Object.fromEntries(WORKSHOP_IDS.map((w) => [w, count(p[w], `${path}.played.${w}`)])) as Record<WorkshopId, number>
-  let current: SaveV4['workshops']['current'] = null
+  let current: SaveV5['workshops']['current'] = null
   if (o.current !== null) {
     const c = object(o.current, `${path}.current`, ['workshop', 'assistant', 'day'])
     current = { workshop: oneOf(c.workshop, `${path}.current.workshop`, WORKSHOP_IDS), assistant: member(c.assistant, `${path}.current.assistant`, roster),
@@ -376,7 +265,7 @@ export function keys(value: unknown, path: string): string[] {
 }
 
 /** The Diary: what's shipped is the catalogue's goods and the rings. */
-export function parseDiary(value: unknown, path: string): SaveV4['diary'] {
+export function parseDiary(value: unknown, path: string): SaveV5['diary'] {
   const o = object(value, path, ['shipped', 'milestones', 'records', 'read', 'notes'])
   return {
     shipped: counts(o.shipped, `${path}.shipped`, isGoodOrRingId, 'unknown good'),
@@ -392,7 +281,7 @@ export function parseDiary(value: unknown, path: string): SaveV4['diary'] {
  * keeps what a chapter had opened); `builds` is missing on one, and defaults to none. */
 const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'chapter', 'goals'] as const
 
-export function parseFarm(value: unknown, path: string): SaveV4['farm'] {
+export function parseFarm(value: unknown, path: string): SaveV5['farm'] {
   const o = object(value, path, FARM_KEYS)
   const festivals = list(o.festivals, `${path}.festivals`, 0, 1000).map((v, i): FestivalResult => {
     const at = `${path}.festivals.${i}`
@@ -433,31 +322,32 @@ export function parseBinLines(value: unknown, path: string): BinSale[] {
   }), path, (b) => `${b.id}@${b.stars}`)
 }
 
-/** §2 Work done. */
+/** §2 Work done: each station's load once (an output it makes at its stars, 1–8); the field's growth once (tiles that
+ * grew, 1 or more, and how many of them turned ripe); a crop that withered once, on 1 or more tiles. */
 export function parseWorkLines(value: unknown, path: string): WorkLine[] {
-  // Work done: jobs by place; crops ready by block and what withered, by block and crop. A plot count is 1–9.
-  const plots = (value: unknown, at: string) => int(value, at, 1, PLOTS_PER_BLOCK)
-  return unique(list(value, path, 0, LOOP_WORK_PLACES.length + 1 + BLOCK_IDS.length * (1 + PLOTS_PER_BLOCK)).map((v, i): WorkLine => {
+  const tiles = (value: unknown, at: string, min = 1) => int(value, at, min, FIELD_TILES)
+  return unique(list(value, path, 0, STATIONS.length + 1 + FIELD_TILES).map((v, i): WorkLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['jobs', 'catch', 'crops', 'withered'] as const)
-    if (kind === 'catch') {
-      // The night's best catch, a fish at its stars.
-      const c = object(v, at, ['kind', 'id', 'stars'])
-      const id = typeof c.id === 'string' && goodOf(c.id)?.family === 'fish' && !goodOf(c.id)!.refined ? c.id : fail(`${at}.id`, 'expected a fish')
-      return { kind, id, stars: int(c.stars, `${at}.stars`, 1, MAX_STARS) }
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['load', 'grew', 'withered'] as const)
+    if (kind === 'load') {
+      const l = object(v, at, ['kind', 'station', 'item', 'count'])
+      const station = oneOf(l.station, `${at}.station`, STATIONS)
+      const key = typeof l.item === 'string' ? parseStockKey(l.item) : null
+      const job = key ? stationJobOf(key.id) : null
+      if (!key || !job || STATION_JOBS[job].station !== station) fail(`${at}.item`, 'expected a good this station makes, at its stars')
+      return { kind, station, item: l.item as string, count: int(l.count, `${at}.count`, 1, MAX_LOAD) }
     }
-    if (kind === 'crops') {
-      const c = object(v, at, ['kind', 'block', 'plots'])
-      return { kind, block: oneOf(c.block, `${at}.block`, BLOCK_IDS), plots: plots(c.plots, `${at}.plots`) }
+    if (kind === 'grew') {
+      const g = object(v, at, ['kind', 'tiles', 'ripe'])
+      const grew = tiles(g.tiles, `${at}.tiles`)
+      const ripe = tiles(g.ripe, `${at}.ripe`, 0)
+      if (ripe > grew) fail(`${at}.ripe`, 'more than grew')
+      return { kind, tiles: grew, ripe }
     }
-    if (kind === 'withered') {
-      const c = object(v, at, ['kind', 'block', 'crop', 'plots'])
-      const crop = typeof c.crop === 'string' && isCropId(c.crop) ? c.crop : fail(`${at}.crop`, 'unknown crop')
-      return { kind, block: oneOf(c.block, `${at}.block`, BLOCK_IDS), crop, plots: plots(c.plots, `${at}.plots`) }
-    }
-    const w = object(v, at, ['kind', 'place', 'jobs', 'items'])
-    return { kind, place: oneOf(w.place, `${at}.place`, LOOP_WORK_PLACES), jobs: int(w.jobs, `${at}.jobs`, 1, 4 * 60), items: count(w.items, `${at}.items`) }
-  }), path, (w) => (w.kind === 'jobs' ? `jobs:${w.place}` : w.kind === 'catch' ? 'catch' : w.kind === 'crops' ? `crops:${w.block}` : `withered:${w.block}:${w.crop}`))
+    const c = object(v, at, ['kind', 'crop', 'tiles'])
+    const crop = typeof c.crop === 'string' && isCropId(c.crop) ? c.crop : fail(`${at}.crop`, 'unknown crop')
+    return { kind, crop, tiles: tiles(c.tiles, `${at}.tiles`) }
+  }), path, (w) => (w.kind === 'load' ? `load:${w.station}` : w.kind === 'grew' ? 'grew' : `withered:${w.crop}`))
 }
 
 /** §3 Ranks: rank-ups, then points full, each an Uma on the roster in an activity, a rank Hand–Legend; once each. */
@@ -528,13 +418,11 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
       : n.kind === 'milestone' ? `milestone:${n.id}` : `household:${n.married}`))
 }
 
-/** §6 Today's nudges. */
-export function parseNudges(value: unknown, path: string, roster: ReadonlySet<string>): Nudge[] {
-  return unique(list(value, path, 0, 4).map((v, i): Nudge => {
+/** §6 Today's nudges: tiles to water and tiles to plant, each once, 1 or more. */
+export function parseNudges(value: unknown, path: string): Nudge[] {
+  return unique(list(value, path, 0, 2).map((v, i): Nudge => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['idle', 'seeds'] as const)
-    if (kind === 'seeds') return { kind, plots: int(object(v, at, ['kind', 'plots']).plots, `${at}.plots`, 1, BLOCK_IDS.length * PLOTS_PER_BLOCK) }
-    const n = object(v, at, ['kind', 'umas'])
-    return { kind, umas: unique(list(n.umas, `${at}.umas`, 1, roster.size).map((id, j) => member(id, `${at}.umas.${j}`, roster)), `${at}.umas`) }
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['water', 'seeds'] as const)
+    return { kind, tiles: int(object(v, at, ['kind', 'tiles']).tiles, `${at}.tiles`, 1, FIELD_TILES) }
   }), path, (n) => n.kind)
 }

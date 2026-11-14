@@ -11,7 +11,6 @@ import { ContentProvider } from '@luismlorenzana/uma-kit/content'
 import { watchAppUpdates } from '@luismlorenzana/uma-kit/places'
 import { configureKit, initAppearance, KitArtProvider, MotionRoot, type KitArt } from '@luismlorenzana/uma-kit/ui'
 import { AlbumArtProvider } from '@luismlorenzana/uma-kit/album'
-import { WorkArtProvider } from '@luismlorenzana/uma-kit/work'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router'
@@ -20,7 +19,6 @@ import { setTokenProvider } from './api/client'
 import { FIREBASE } from './app/firebase-config'
 import { router } from './app/router'
 import { CONTENT } from './content/client'
-import { ItemIcon } from './items/ItemIcon'
 import { ALBUM_ART } from './master/album-art'
 
 // uma-kit, as uma-rpg wires it: this app's device keys, the phone's appearance, uma-art for the bars and the map,
@@ -47,9 +45,7 @@ createRoot(root).render(
         <AuthProvider config={FIREBASE}>
           <ContentProvider client={CONTENT}>
             <AlbumArtProvider art={ALBUM_ART}>
-              <WorkArtProvider art={{ Item: ItemIcon }}>
-                <RouterProvider router={router} />
-              </WorkArtProvider>
+              <RouterProvider router={router} />
             </AlbumArtProvider>
           </ContentProvider>
         </AuthProvider>

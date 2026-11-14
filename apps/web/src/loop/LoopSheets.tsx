@@ -7,7 +7,7 @@ import {
   DAYS_PER_SEASON, DAYS_PER_YEAR, daySetState, dateOf, ENTRY_POINTS, FARM_RANK_POINTS, farmPointsOf, farmRankOf, farmRankOpens, festivalsOf,
   GOLD_PER_POINT, MILESTONE_POINTS, nextFarmRank, nextFestival, SEASON_NAMES, SEASONS, tonightOpens,
 } from '@farm/domain'
-import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
+import { useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet, TrophyIcon, useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
@@ -35,7 +35,12 @@ export default function LoopSheets({ sheet }: { sheet: 'end' | 'calendar' | 'bin
 function useClose(): () => void {
   const location = useLocation()
   const leave = useLeave()
-  return () => leave(withParam(location, 'sheet', null))
+  return () => {
+    const params = new URLSearchParams(location.search)
+    params.delete('sheet')
+    const rest = params.toString()
+    leave(`${location.pathname}${rest ? `?${rest}` : ''}`)
+  }
 }
 
 /**
@@ -94,12 +99,13 @@ function EndDay() {
       label="End the day"
       footer={
         <div className="grid grid-cols-2 gap-2">
-          <Button variant="secondary" onClick={close}>Back</Button>
-          <Button onClick={() => void end()} disabled={pending} data-action="end-anyway">{error ? 'Try again' : 'End anyway'}</Button>
+          <Button variant="secondary" onClick={close} >Back</Button>
+          <Button onClick={() => void end()} disabled={pending} data-action="end-anyway">{error ? 'Try again' : set.allSet ? 'End the day' : 'End anyway'}</Button>
         </div>
       }
     >
-      <p className="py-1 font-display text-[18px] font-semibold" data-end-line>{nudgeWords(set)}</p>
+      <p className="py-1 font-display text-[18px] font-semibold" data-end-line>{set.allSet ? 'Out of actions' : nudgeWords(set)}</p>
+      {set.allSet && <p className="text-[13px] text-ink-soft">Building, the evening and a shop you’re already in take no actions.</p>}
       {error && <p className="text-[13px] text-danger">{error}</p>}
     </Sheet>
   )

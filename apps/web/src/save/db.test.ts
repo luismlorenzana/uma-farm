@@ -20,7 +20,7 @@ describe('the device save', () => {
     expect((await safetyCopies('u1'))[0]).toMatchObject({ reason: 'unreadable', revision: 4, save: { nonsense: true } })
   })
 
-  it('reads a row from before v4 as its version and account, the stored save kept as it was', async () => {
+  it('reads a row from before v5 as its version and account, the stored save kept as it was', async () => {
     const older = { version: 3, account: { uid: 'u1', createdAt: NOW, updatedAt: NOW }, gold: 812 }
     await db.save.put({ ...row(), save: older as never })
     await expect(readSaveRow('u1')).resolves.toMatchObject({ revision: 4, save: { version: 3, account: older.account } })
@@ -31,9 +31,9 @@ describe('the device save', () => {
 
   it('keeps a row from a newer app as an unreadable safety copy', async () => {
     await db.safety.clear()
-    await db.save.put({ ...row(), save: { ...newSave('u1', NOW), version: 5 } as never })
+    await db.save.put({ ...row(), save: { ...newSave('u1', NOW), version: 6 } as never })
     await expect(readSaveRow('u1')).resolves.toBeNull()
-    expect((await safetyCopies('u1'))[0]).toMatchObject({ reason: 'unreadable', save: { version: 5 } })
+    expect((await safetyCopies('u1'))[0]).toMatchObject({ reason: 'unreadable', save: { version: 6 } })
   })
 
   it('keeps the newest five safety copies of an account', async () => {

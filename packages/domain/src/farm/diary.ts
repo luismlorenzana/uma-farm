@@ -3,14 +3,15 @@
 // All of it is checked at night step 8 (`checkGoals`) and paid that night, and the Farm Rank's points are recomputed
 // from the save there, from income and resources only: ⌊gold shipped ÷ 100⌋ + 5 × entries + 25 × milestones. Loaded
 // with the night and the screens.
-import { BLOCK_RULES, cropLevelOf } from '../fields/fields'
+import { cropLevelOf } from '../fields/fields'
 import { CROPS, SHOP_SEEDS } from '../fields/crops'
-import { FISHING_SPOTS, FOREST_AREAS } from '../gathering/ids'
-import type { MadeTonight } from '../gathering/kinds'
+import { AREA_NAMES, FISHING_SPOTS, FOREST_AREAS, SPOT_NAMES } from '../gathering/ids'
+import { FARMER_REACH } from '../gathering/hauls'
+import { FISHERY, FOREST } from '../gathering/tables'
 import { isGoodOrRingId } from '../goods/ids'
 import { GOLD_SHIPPED } from '../save/bin'
 import { earnGold } from '../save/gold'
-import { BLOCK_IDS, type FarmSave } from '../save/v4'
+import type { FarmSave } from '../save/v4'
 import { DORM_LEVELS } from './dorm'
 import { buildCostWords, offeredAt } from './builds'
 import { FARM_RANK_POINTS, farmRankOf } from './farm'
@@ -51,19 +52,21 @@ export function nextFarmRank(points: number): { rank: number; points: number } |
   return at === undefined ? null : { rank: rank + 1, points: at }
 }
 
-/** What a Farm Rank opens in the game as built, read from the rules that gate on it: the Fields' blocks, the Dorm's
- * levels (the Dorm for 20), the shop's seeds (tier 1 is the start's) and the places it offers to build, a place whose
- * game isn't built yet as "not built yet". Rank 10 is the farm's gold crest. */
+/** What a Farm Rank opens in the game as built, read from the rules that gate on it: the places it offers to build, a
+ * place whose game isn't built yet as "not built yet", the forest's areas and the Fishery's spots in the farmer's reach,
+ * the Dorm's levels (the Dorm for 20) and the shop's seeds (tier 1 is the start's). Rank 10 is the farm's gold crest. */
 export function farmRankOpens(rank: number): string[] {
-  const blocks = BLOCK_IDS.filter((id) => { const o = BLOCK_RULES[id].opens; return o.by === 'farm-rank' && o.rank === rank })
-    .map((id) => `Block ${id} (${BLOCK_RULES[id].cost.toLocaleString('en-US')}g)`)
+  const areas = FOREST_AREAS.filter((id) => rank > 1 && FARMER_REACH[FOREST[id].opens] === rank).map((id) => cap(AREA_NAMES[id]))
+  const spots = FISHING_SPOTS.filter((id) => rank > 1 && FARMER_REACH[FISHERY[id].opens] === rank)
+    .map((id) => `${cap(SPOT_NAMES[id])}${FISHERY[id].needs ? ` (with the ${FISHERY[id].needs === 'dock' ? 'Dock' : 'Boat'})` : ''}`)
   const dorm = DORM_LEVELS.filter((l) => l.level > 1 && l.farmRank === rank).map((l) => `Dorm level ${l.level} (${l.beds} beds)`)
   const seeds = rank > 1 && Object.values(SHOP_SEEDS).some((crops) => crops.some((crop) => CROPS[crop].tier === rank)) ? ['New seeds at the shop'] : []
   const builds = offeredAt(rank).map((p) => `The ${p.name} to build (${p.opens.game ? buildCostWords(p) : 'not built yet'})`)
-  return [...builds, ...blocks, ...dorm, ...seeds, ...(rank === FARM_RANK_POINTS.length ? ['The farm’s gold crest'] : [])]
+  return [...builds, ...areas, ...spots, ...dorm, ...seeds, ...(rank === FARM_RANK_POINTS.length ? ['The farm’s gold crest'] : [])]
 }
+const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
 
-/** The forest areas and fishing spots a haul came home from tonight (night step 4's `notes.made`): depth milestones. */
+/** The forest areas and fishing spots worked today (`today.gathered`): depth milestones. */
 export type DepthsTonight = ReadonlySet<string>
 
 /** Whether a milestone is reached on this save. */
@@ -96,10 +99,10 @@ export function payDiary<S extends FarmSave>(save: S, depths: DepthsTonight = ne
 /** The gold a paid id brought: a milestone's, or a row's 500g. */
 export const paidGold = (id: string): number => milestoneOf(id)?.gold ?? ROW_GOLD
 
-/** The forest areas and fishing spots a haul came home from tonight. */
-export function depthsTonight(made: readonly MadeTonight[]): DepthsTonight {
+/** The forest areas and fishing spots worked today. */
+export function depthsTonight(gathered: readonly string[]): DepthsTonight {
   const places: readonly string[] = [...FOREST_AREAS, ...FISHING_SPOTS]
-  return new Set(made.filter((m) => m.items.length > 0 && (m.request.kind === 'forage' || m.request.kind === 'fish') && places.includes(m.request.item)).map((m) => m.request.item))
+  return new Set(gathered.filter((id) => places.includes(id)))
 }
 
 /** What step 8's goals did tonight, for the morning. */
@@ -110,10 +113,11 @@ export interface GoalsTonight {
   ranks: number[]
 }
 
-/** Night step 8's `checkGoals`: the Diary pays what's reached, and the Farm Rank is recomputed. */
-export function checkGoalsNight<S extends FarmSave>(save: S, made: readonly MadeTonight[]): { save: S; tonight: GoalsTonight } {
+/** Night step 8's `checkGoals`: the Diary pays what's reached (a depth by the areas and spots worked today), and the
+ * Farm Rank is recomputed. */
+export function checkGoalsNight<S extends FarmSave>(save: S, gathered: readonly string[]): { save: S; tonight: GoalsTonight } {
   const before = farmRankOf(save.farm.points)
-  const { save: paid, paid: ids } = payDiary(save, depthsTonight(made))
+  const { save: paid, paid: ids } = payDiary(save, depthsTonight(gathered))
   const next = withFarmPoints(paid)
   const after = farmRankOf(next.farm.points)
   const ranks = Array.from({ length: Math.max(0, after - before) }, (_, i) => before + 1 + i)

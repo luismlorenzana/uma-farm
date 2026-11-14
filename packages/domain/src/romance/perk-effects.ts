@@ -3,7 +3,7 @@
 // element, her keepsake) are `perk-terms.ts`'s.
 //
 //   Night chores (R7 2, S4 3; on the farm; her line's place open)
-//     farming   +0.25 growth on the untended block with the most growing plots, else hers         night step 2
+//     farming   waters one dry growing tile                                                        night step 2
 //     foraging  one item from her rank's deepest forest area this season, at a day's haul's stars   night step 4
 //     fishing   one fish from her deepest spot this season, the same way                           night step 4
 //     mining, the ranch, cooking, serving, forging: with their places
@@ -28,7 +28,7 @@ import { FISHERY, FOREST } from '../gathering/tables'
 import { goodOf } from '../goods/ids'
 import { drawStars, quality } from '../goods/stars'
 import type { ItemLine } from '../night/summary'
-import { DISH_FAMILIES, isDishId, type BlockId } from '../save/v4'
+import { DISH_FAMILIES, isDishId } from '../save/v4'
 import type { SaveV4 } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
 import { castOrder, type StoryPack } from '../story/pack'
@@ -50,8 +50,6 @@ function inCastOrder(pack: Pick<StoryPack, 'cast'>, ids: readonly string[]): str
  * cooking, serving and forging bring theirs with their places; until then their profile says "Opens when the Mine is
  * built" (or her place). */
 export const CHORE_LINES: readonly PerkLine[] = ['farming', 'foraging', 'fishing']
-/** A farming chore's growth on one block. */
-export const CHORE_GROWTH = 0.25
 
 /** Her chores tonight: the F6, R7 and S4 perks' (`choresOf`, at most 3) while she's on the farm, her line's chores
  * act and its place is open; else none. */
@@ -63,40 +61,36 @@ export function choresTonight(save: SaveV4, pack: PerkPack, id: string): number 
 
 /** A chore's draws: `draw(uid, day, 'perk:<id>:chore', n)`. */
 const choreDraw = (save: SaveV4, id: string, n: number): number => draw(save.account.uid, save.calendar.day, `perk:${id}:chore`, n)
-const growingPlots = (block: SaveV4['fields']['blocks'][number]): number => block.plots.filter((p) => p.crop !== null && !p.ready).length
 
-/** One Uma's chores done tonight: the items they left, and the growth they gave. */
+/** One Uma's chores done tonight: the items they left, and the dry tiles they watered. */
 export interface ChoresDone {
   id: string
   items: string[]
-  growth: number
+  watered: number
 }
 
 /**
- * Night step 2's farming chores: each farmer's chores, in the cast's order, each +0.25 growth to the untended
- * block with the most growing plots (a tie by `draw(uid, day, 'perk:<id>:chore', k)`), else to the block she tends while
- * it has a growing plot; a chore with neither does nothing. The growth joins the block's rate tonight (`growFields`).
+ * Night step 2's farming chores: each farmer's chores, in the cast's order, each water one dry growing tile, picked by
+ * `draw(uid, day, 'perk:<id>:chore', k)` among those still dry; a chore with none left does nothing. The tiles grow
+ * tonight as if watered (`growTiles`).
  */
-export function fieldChores(save: SaveV4, pack: PerkPack): { growth: Map<BlockId, number>; chores: ChoresDone[] } {
-  const growth = new Map<BlockId, number>()
+export function fieldChores(save: SaveV4, pack: PerkPack): { tiles: Set<number>; chores: ChoresDone[] } {
+  const tiles = new Set<number>()
   const chores: ChoresDone[] = []
-  const untended = save.fields.blocks.filter((b) => b.tender === null && growingPlots(b) > 0)
-  const most = Math.max(0, ...untended.map(growingPlots))
-  const tops = untended.filter((b) => growingPlots(b) === most)
+  const dry = save.fields.tiles.flatMap((t, i) => (t.crop !== null && !t.ready && !t.watered ? [i] : []))
   for (const id of inCastOrder(pack, Object.keys(save.roster))) {
     if (perkLineOf(pack, id) !== 'farming') continue
     const n = choresTonight(save, pack, id)
-    const own = save.fields.blocks.find((b) => b.tender === id && growingPlots(b) > 0)
     let done = 0
     for (let k = 0; k < n; k++) {
-      const block = tops.length > 0 ? tops[Math.floor(choreDraw(save, id, k) * tops.length)]! : own
-      if (!block) continue
-      growth.set(block.id, Math.round(((growth.get(block.id) ?? 0) + CHORE_GROWTH) * 1e6) / 1e6)
+      const left = dry.filter((i) => !tiles.has(i))
+      if (left.length === 0) break
+      tiles.add(left[Math.floor(choreDraw(save, id, k) * left.length)]!)
       done++
     }
-    if (done > 0) chores.push({ id, items: [], growth: done * CHORE_GROWTH })
+    if (done > 0) chores.push({ id, items: [], watered: done })
   }
-  return { growth, chores }
+  return { tiles, chores }
 }
 
 /** Where a gathering line's chores bring their goods from. */
@@ -128,7 +122,7 @@ export function gatherChores(save: SaveV4, pack: PerkPack, talentOf: TalentOf = 
       items = addGoods(items, good, stars, 1)
       left.push(stockKey(good, stars))
     }
-    chores.push({ id, items: left, growth: 0 })
+    chores.push({ id, items: left, watered: 0 })
   }
   return { save: items === save.items ? save : { ...save, items }, chores }
 }

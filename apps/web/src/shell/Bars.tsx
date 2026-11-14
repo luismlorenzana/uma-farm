@@ -2,19 +2,19 @@
 // (the account and chips down the left, the actions down the right), so until the kit has the farm's layout (a thin bar
 // on top, the pages down the left) the farm draws its own from the kit's pieces: its chip, its marks, its numbers and
 // its icons.
-// - **The bar,** on top: the date and season (the calendar), the actions left (a placeholder until the day has a budget
-//   of actions), the gold (the bin) and the sync chip when something isn't synced; at its right end, End the day and the
-//   Menu.
-// - **The rail,** down the left: Farm · Town · People · Book · Diary. A farm place's page (the Fields, the Warehouse …)
+// - **The bar,** on top: the date and season (the calendar), the day's actions left, the gold (the bin) and the sync
+//   chip when something isn't synced; at its right end, End the day and the Menu. When the day's last action is spent,
+//   End the day opens by itself ("Out of actions").
+// - **The rail,** down the left: Farm · Town · People · Book · Diary. A farm place's page (the Warehouse, the Dorm …)
 //   keeps Farm lit.
-import { dateOf, daySetState, type DaySet, type Festival, type Season } from '@farm/domain'
+import { actionsLeft, dateOf, dayActions, daySetState, type DaySet, type FarmSave, type Festival, type Season } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import {
-  AnimatedNumber, BookIcon, CarrotIcon, CoinIcon, HeartIcon, MenuIcon, MoonIcon, OfflineIcon, StopwatchIcon, UiMark, useReducedMotionSetting, VenueIcon,
+  AnimatedNumber, BookIcon, Button, CarrotIcon, CoinIcon, HeartIcon, MenuIcon, MoonIcon, OfflineIcon, Sheet, StopwatchIcon, UiMark, useReducedMotionSetting, VenueIcon,
   type IconComponent,
 } from '@luismlorenzana/uma-kit/ui'
-import type { ReactNode } from 'react'
-import { Link, useLocation } from 'react-router'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { dateLabel, nudgeWords, SEASON_COLOR, shortDate } from '../loop/words'
 import { useGame, useLoopSave } from '../save/game'
 import { useStoryYear } from '../story/story'
@@ -50,15 +50,53 @@ function DateChip({ day, year }: { day: number | null; year: readonly Festival[]
   )
 }
 
-/** The actions left today: a placeholder until the day has its budget of actions. */
-function ActionsChip() {
+/** The day's actions left, of the day's budget; faint once they're spent. */
+function ActionsChip({ save }: { save: FarmSave | null }) {
+  const left = save ? actionsLeft(save) : null
+  const total = save ? dayActions(save) : null
   return (
-    <span role="img" aria-label="Actions left: not counted yet" className="flex min-h-11 shrink-0 items-center justify-center" data-bar-chip="actions" data-actions="placeholder">
-      <span aria-hidden className="flex h-8 items-center gap-1 rounded-full border border-dashed border-hairline-strong px-2 text-[13px] text-ink-faint">
+    <span role="img" aria-label={left === null ? 'Actions left' : `Actions left: ${left} of ${total}`} className="flex min-h-11 shrink-0 items-center justify-center"
+      data-bar-chip="actions" data-actions={left ?? undefined}>
+      <span aria-hidden className={`flex h-8 items-center gap-1 rounded-full border border-hairline bg-panel/90 px-2 text-[13px] shadow-1 ${left === 0 ? 'text-ink-faint' : 'text-ink'}`}>
         <StopwatchIcon size={16} />
-        <span className="font-display font-semibold">—</span>
+        <span className="font-display font-semibold tabular-nums">{left === null ? blank : left}</span>
+        {total !== null && <span className="text-[11px] text-ink-faint">/{total}</span>}
       </span>
     </span>
+  )
+}
+
+/** When the day's last action is spent, the day's work is done: a card says so over whatever page it was spent on, once,
+ * with End the day and Not yet (for what's still free: the shop, a build, the evening). */
+export function OutOfActions() {
+  const save = useLoopSave()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [open, setOpen] = useState(false)
+  const seen = useRef<{ day: number; left: number } | null>(null)
+  const day = save?.calendar.day ?? null
+  const left = save ? actionsLeft(save) : null
+  useEffect(() => {
+    if (day === null || left === null) return
+    const before = seen.current
+    seen.current = { day, left }
+    if (before && before.day === day && before.left > 0 && left === 0) setOpen(true)
+    if (before && before.day !== day) setOpen(false)
+  }, [day, left])
+  if (!open) return null
+  return (
+    <Sheet open onClose={() => setOpen(false)} label="Out of actions" title="Out of actions"
+      footer={
+        <div className="grid grid-cols-2 gap-2">
+          <Button variant="secondary" onClick={() => setOpen(false)} data-action="not-yet">Not yet</Button>
+          <Button onClick={() => {
+            setOpen(false)
+            navigate(withParam(location, 'sheet', 'end'), { state: { back: true } })
+          }} data-action="end-the-day">End the day</Button>
+        </div>
+      }>
+      <p className="py-1 text-[15px]" data-out-of-actions>The day’s work is done. Building, the evening and a shop you’re already in take no actions.</p>
+    </Sheet>
   )
 }
 
@@ -83,25 +121,20 @@ function SyncChip() {
 }
 
 /**
- * End the day, at the bar's right end: "All set", with a soft halo (still under reduced motion), when nothing waits;
- * else "End day" with the count of idle Umas and things to collect. It reads the save at its day, never the clock. Its
- * name carries the count for VoiceOver.
+ * End the day, at the bar's right end: "All set", with a soft halo (still under reduced motion), once the day's actions
+ * are spent; else "End day". It reads the save at its day, never the clock. Its name says what's left for VoiceOver.
  */
 function EndDay({ set }: { set: DaySet | null }) {
   const location = useLocation()
   const reduced = useReducedMotionSetting()
-  const badge = set?.badge ?? 0
   const allSet = set?.allSet ?? false
   return (
-    <Link to={withParam(location, 'sheet', 'end')} aria-label={badge > 0 && set ? `End the day: ${nudgeWords(set)}` : allSet ? 'All set' : 'End day'}
+    <Link to={withParam(location, 'sheet', 'end')} aria-label={set && !allSet ? `End the day: ${nudgeWords(set)}` : allSet ? 'All set' : 'End day'}
       className="flex min-h-11 shrink-0 items-center justify-center px-0.5" data-bar-end>
       <span aria-hidden className="font-display relative flex h-8 items-center gap-1 rounded-full bg-accent pr-3 pl-2 text-[13px] font-bold text-accent-ink shadow-2">
         {allSet && <span data-glow={reduced ? 'still' : 'pulse'} className={`pointer-events-none absolute -inset-0.5 rounded-full shadow-[0_0_10px_3px_var(--color-accent)] ${reduced ? 'opacity-80' : 'animate-pulse'}`} />}
         <MoonIcon size={16} variant="duotone" accent="var(--color-panel)" />
         {allSet ? 'All set' : 'End day'}
-        {badge > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 min-w-4 rounded-full bg-success px-1 text-center text-[10px] leading-4 font-bold text-ink-on-dark ring-2 ring-panel">{badge}</span>
-        )}
       </span>
     </Link>
   )
@@ -129,7 +162,7 @@ export function FarmBar() {
   return (
     <header className="pr-safe relative z-20 flex shrink-0 items-center gap-0.5 border-b border-hairline bg-panel/95 pl-1 backdrop-blur" data-farm-bar>
       <DateChip day={day} year={year} />
-      <ActionsChip />
+      <ActionsChip save={save} />
       <GoldChip gold={gold} />
       <SyncChip />
       <span className="min-w-0 flex-1" />

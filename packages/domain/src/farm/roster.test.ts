@@ -1,24 +1,18 @@
 // The roster: the Dorm for 20's levels and beds, the off-season and swaps, joining home or away, and the morning's
-// Dorm news. Invented ids; the night runs with test kinds and no story pack.
+// Dorm news. Invented ids; the night runs with no story pack.
 import { describe, expect, it } from 'vitest'
 import { buildSummary, emptyNotes, endDay, runNight, type Night, type NightContext } from '../night/end-day'
-import { TEST_KINDS } from '../night/kinds.fixture'
-import { daySetState } from '../night/nudge'
-import { setTender } from '../fields/fields'
-import { loopKinds } from '../gathering/kinds'
 import { meet } from '../romance/meeting'
-import { startLoopJob } from '../save/loop-work'
-import { parseSaveV4 } from '../save/parse-v4'
+import { parseSaveV5 } from '../save/parse-v4'
 import { SaveRuleError } from '../save/rules'
 import { newLove, newRosterUma, newSave, onFarm, type SaveV4 } from '../save/v4'
-import { farmEnv, loopWorld } from '../work/loop-env'
-import { buyDorm, cancelSwap, DORM_LEVELS, freeBeds, joinRoster, nextDorm, settleDormNight, swapBlock, swapDorm } from './dorm'
+import { buyDorm, cancelSwap, DORM_LEVELS, freeBeds, joinRoster, nextDorm, swapBlock, swapDorm } from './dorm'
 import { bedsAt } from './farm'
 
 const AT = '2026-11-09T10:00:00.000Z'
 const LATER = '2026-11-09T21:30:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
-const CONTEXT: NightContext = { kinds: TEST_KINDS }
+const CONTEXT: NightContext = {}
 const fail = (fn: () => unknown, message: string) => expect(fn).toThrow(new SaveRuleError('bad-job', message).message)
 
 /** `ids` on the roster with their routes begun, the first `home` of them home, on `day`. */
@@ -72,49 +66,35 @@ describe('the off-season and swaps', () => {
   /** Three home, two away. */
   const full = () => farm(['1001', '1002', '1003', '1004', '1005'], 2, 3)
 
-  it('brings one away home for one idle at home, the next morning, free', () => {
+  it('brings one away home for one at home, the next morning, free', () => {
     const save = swapDorm(full(), '1002', '1004')
     expect(save.dorm.swaps).toEqual([{ out: '1002', in: '1004' }])
     expect(save.dorm.home).toEqual(['1001', '1002', '1003'])
     expect(save.gold).toBe(full().gold)
     expect(onFarm(save, '1002')).toBe(false)
-    expect(daySetState(save).idle).toEqual(['1001', '1003'])
-    expect(parseSaveV4(json(save))).toEqual(save)
+    expect(parseSaveV5(json(save))).toEqual(save)
     const morning = night(save)
     expect(morning.dorm).toEqual({ level: 1, home: ['1001', '1004', '1003'], swaps: [] })
     expect(morning.summary!.news).toContainEqual({ kind: 'home', umas: ['1004'] })
     expect(morning.roster['1002']).toEqual(save.roster['1002'])
   })
 
-  it('refuses a working Uma, a tender and one leaving, and anyone not on the right side', () => {
-    const kinds = loopKinds(() => 4)
-    const working = startLoopJob(full(), { outfitId: '1001', place: 'forest', slot: 0, request: { kind: 'forage', item: 'woods', count: 1 } }, AT, kinds)
-    expect(swapBlock(working, '1001', kinds)).toBe('Working')
-    expect(() => swapDorm(working, '1001', '1004', kinds)).toThrow('She’s working.')
-    const tending = setTender(full(), 'A', '1002')
-    expect(() => swapDorm(tending, '1002', '1004')).toThrow('She tends Block A.')
+  it('refuses one leaving, and anyone not on the right side', () => {
+    expect(swapBlock(full(), '1001')).toBeNull()
     const once = swapDorm(full(), '1003', '1004')
+    expect(swapBlock(once, '1003')).toBe('Leaves tomorrow')
     expect(() => swapDorm(once, '1003', '1005')).toThrow('She leaves tomorrow.')
     expect(() => swapDorm(once, '1001', '1004')).toThrow('She arrives tomorrow.')
     expect(() => swapDorm(full(), '1004', '1005')).toThrow('She isn’t on the farm.')
     expect(() => swapDorm(full(), '1001', '1002')).toThrow('She’s on the farm already.')
     expect(() => swapDorm(full(), '1001', '9999')).toThrow('She isn’t on the roster.')
-    // Leaving tomorrow, she can't take a job or tend.
-    const env = farmEnv(kinds)
-    expect(env.isWorker!(loopWorld(once), '1003')).toBe(false)
-    expect(() => setTender(once, 'A', '1003')).toThrow('She leaves tomorrow.')
-    expect(() => startLoopJob(once, { outfitId: '1003', place: 'forest', slot: 0, request: { kind: 'forage', item: 'woods', count: 1 } }, AT, kinds))
-      .toThrow('She isn’t on the farm.')
-    // Called off, she stays and may work again.
+    // Leaving tomorrow, she isn't on the farm.
+    expect(onFarm(once, '1003')).toBe(false)
+    // Called off, she stays.
     const off = cancelSwap(once, '1003')
     expect(off.dorm.swaps).toEqual([])
     expect(onFarm(off, '1003')).toBe(true)
     expect(night(off).dorm.home).toEqual(['1001', '1002', '1003'])
-  })
-
-  it('clears a tender who isn\'t home after the swaps (defensive)', () => {
-    const save = { ...full(), fields: { blocks: [{ ...full().fields.blocks[0]!, tender: '1004' }] } }
-    expect(settleDormNight(save).save.fields.blocks[0]!.tender).toBeNull()
   })
 })
 
@@ -138,7 +118,7 @@ describe('joining the roster', () => {
     const morning = runNight(save, CONTEXT, [arrivals, { run: buildSummary }])
     expect(morning.summary!.hearts).toEqual([{ kind: 'arrived', id: '1030', home: true }, { kind: 'arrived', id: '1031', home: false }])
     expect(morning.dorm.home).toHaveLength(bedsAt(1))
-    expect(parseSaveV4(json(morning))).toEqual(morning)
+    expect(parseSaveV5(json(morning))).toEqual(morning)
     expect(emptyNotes()).toMatchObject({ dorm: null, home: [] })
   })
 })
@@ -146,7 +126,7 @@ describe('joining the roster', () => {
 describe('the morning\'s Dorm news parses strictly', () => {
   it('refuses a Dorm level below 2, Umas home off the roster, a line twice and the old roster kinds', () => {
     const morning = night(buyDorm(withGold(farm(['1001']), 1000)))
-    const news = (...lines: unknown[]) => () => parseSaveV4(json({ ...morning, summary: { ...morning.summary!, news: lines } }))
+    const news = (...lines: unknown[]) => () => parseSaveV5(json({ ...morning, summary: { ...morning.summary!, news: lines } }))
     expect(news({ kind: 'dorm', level: 1 })).toThrow('save.summary.news.0.level')
     expect(news({ kind: 'dorm', level: 9 })).toThrow('save.summary.news.0.level')
     expect(news({ kind: 'home', umas: ['1002'] })).toThrow('save.summary.news.0.umas.0')

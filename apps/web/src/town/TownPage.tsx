@@ -1,4 +1,5 @@
-// The Town: `/town`, the farm map's Town place. Two views, the second `?view=people`:
+// The Town: `/town`, down the farm map's road. Going into town takes one of the day's actions (Go into town), and the town
+// and its shop then stay open for the rest of the day. Two views, the second `?view=people`, and the Shop:
 // - **Today:** the six spots, each with its line, its keeper (one of the town's people) and the few out there today: a
 //   draw seeded by the player and the day, so the town is the same all day and a different few tomorrow;
 // - **People:** everyone who lives in town and the town's people, met or not, with where she is today, a search by name,
@@ -21,6 +22,7 @@ import { useLoopSave } from '../save/game'
 import { namer } from '../story/people'
 import { storyReady, useStory } from '../story/story'
 import { GiftPicker } from '../loop/Love'
+import { IntoTown } from '../loop/GoodsSheets'
 import { NoteFound } from './NoteFound'
 import { giftInTownOnce, talkInTownOnce } from './town-actions'
 import { findPeople, keeperTies, peopleRows, PEOPLE_SORTS, sortPeople, spotViews, talkWords, type PeopleSort, type SpotView } from './town-view'
@@ -45,8 +47,17 @@ export default function TownPage() {
       <PlaceHeader title={placeNameOf(pack, 'town')} onBack={() => leave('/')} about={<About />} words={{ back: 'Back to the farm', about: 'About the town' }} />
       <main className="@container min-h-0 flex-1 overflow-y-auto overscroll-contain" data-town-scroll>
         <div className="space-y-3 px-4 pt-3 pb-6">
-          <Tabs label="Views" value={view} onChange={setView} options={[{ value: 'today', label: 'Today' }, { value: 'people', label: 'People' }]} />
-          <MasterGate>{(master) => (pack ? <Town save={save} pack={pack} master={master} view={view} /> : <p className="text-ink-soft">Loading…</p>)}</MasterGate>
+          {save.today.town ? (
+            <>
+              <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1"><Tabs label="Views" value={view} onChange={setView} options={[{ value: 'today', label: 'Today' }, { value: 'people', label: 'People' }]} /></div>
+                <Link to={withParam(location, 'sheet', 'shop')} state={{ back: true }} className="flex min-h-11 shrink-0 items-center rounded-md border border-hairline-strong px-3 text-[14px] font-semibold" data-action="shop">Shop</Link>
+              </div>
+              <MasterGate>{(master) => (pack ? <Town save={save} pack={pack} master={master} view={view} /> : <p className="text-ink-soft">Loading…</p>)}</MasterGate>
+            </>
+          ) : (
+            <div className="mx-auto max-w-sm"><IntoTown save={save} line="Going into town takes an action. The town and its shop stay open for the rest of the day." /></div>
+          )}
         </div>
       </main>
     </div>

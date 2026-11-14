@@ -8,14 +8,13 @@ import { extrasShare, extrasTonight, bondOf } from '../farm/bonds'
 import { draw } from '../farm/draw'
 import { rankPoints } from '../farm/rank-rules'
 import { TALENT_D, talentsD } from '../farm/talents'
-import { blockGrowth, growFields, harvest, harvestQuality, tenderTerms } from '../fields/fields'
+import { harvestQuality } from '../fields/fields'
 import { FOREST } from '../gathering/tables'
-import { gatherQuality, loopKinds, planHaul, sharesOn, termsOf } from '../gathering/kinds'
-import { runNight, type NightContext } from '../night/end-day'
-import { TEST_KINDS } from '../night/kinds.fixture'
-import { startLoopJob } from '../save/loop-work'
-import { parseSaveV4 } from '../save/parse-v4'
-import { newBlock, newSave, pairKey, type Block, type Love, type Plot, type SaveV4 } from '../save/v4'
+import { gatherQuality, sharesOn, termsOf, type MadeTonight } from '../gathering/kinds'
+import { NIGHT_STEPS, runNight, type NightContext, type NightStep } from '../night/end-day'
+import type { LoopPlaceId } from '../save/parse-v4'
+import { parseSaveV5 } from '../save/parse-v4'
+import { bareTile, newSave, pairKey, type Love, type SaveV4, type Tile } from '../save/v4'
 import { goodCount, parseStockKey } from '../save/warehouse'
 import { checkBible, type Cast, type Ties, type UmaBible } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_IN_CAST, STAND_IN_TIES, STAND_INS } from '../story/authored.fixture'
@@ -39,7 +38,7 @@ const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 const PACK = storyPackFrom(STAND_IN_FILES)
 const [ONE, TWO, THREE] = STAND_INS as [string, string, string]
 const FOUR = '9000004'
-const context = (story: NightContext['story'] = PACK): NightContext => ({ kinds: TEST_KINDS, story, talentOf: () => TALENT_D })
+const context = (story: NightContext['story'] = PACK): NightContext => ({ story, talentOf: () => TALENT_D })
 
 /** A named farm on `day`, the opening read: 9000001 (a farmer), 9000002 (a forager) and 9000003 (a fisher) home. */
 function farm(day = 3, pack: Pick<StoryPack, 'cast' | 'ties'> = PACK): SaveV4 {
@@ -62,12 +61,15 @@ const married = (save: SaveV4, n: number): SaveV4 => ({
   ...save, love: { ...save.love, ...Object.fromEntries(Array.from({ length: n }, (_, i) => [String(9100001 + i), { ...save.love[ONE]!, stage: 'spouse' as const, level: 0, wed: 1 }])) },
 })
 const made = (id: string, n: number, place = 'forest', key = 'pine-log@2') => ({ outfitId: id, place, items: Array.from({ length: n }, () => key) })
-const ripe = (crop: Plot['crop'] = 'carrot'): Plot => ({ crop, growth: 4, ready: true, regrowing: false, own: false })
-const growing = (crop: Plot['crop'] = 'carrot'): Plot => ({ crop, growth: 0, ready: false, regrowing: false, own: false })
-const block = (id: Block['id'], tender: string | null, plots: Plot[]): Block => ({ id, tender, plots: newBlock(id).plots.map((p, i) => plots[i] ?? p) })
-/** Starts a 4-day gather job (TEST_KINDS: one Pine Log a day) for her at a place. */
-const startJob = (save: SaveV4, id: string, place: 'forest', slot = 0): SaveV4 =>
-  startLoopJob(save, { outfitId: id, place, slot, request: { kind: 'gather', item: 'pine-log', count: 4 } }, AT, TEST_KINDS)
+const ripe = (crop: Tile['crop'] = 'carrot'): Tile => ({ ...bareTile('tilled'), crop, growth: 4, ready: true })
+const growing = (crop: Tile['crop'] = 'carrot'): Tile => ({ ...bareTile('tilled'), crop })
+/** The save with its tiles set, the rest of the field as it was. */
+const withTiles = (save: SaveV4, tiles: Record<number, Tile>): SaveV4 => ({ ...save, fields: { tiles: save.fields.tiles.map((t, i) => tiles[i] ?? t) } })
+/** The night, with who worked today and what their work made set before its steps, as the farmhands' will be. */
+function nightWorking(save: SaveV4, worked: { outfitId: string; place: LoopPlaceId }[], madeTonight: MadeTonight[], story: NightContext['story'] = PACK): SaveV4 {
+  const working: NightStep = (n) => ({ ...n, notes: { ...n.notes, worked, made: madeTonight } })
+  return runNight(save, context(story), [{ run: working }, ...NIGHT_STEPS])
+}
 
 describe('reached perks', () => {
   it('reads each perk from her level, never stored: a rung is hers once its event has played', () => {
@@ -171,45 +173,16 @@ describe('the line effects', () => {
     expect(extrasTonight(save, [made(TWO, 10)], [{ outfitId: TWO, place: 'forest' }]).perks).toEqual([])
   })
 
-  it('pays as the night\'s perks\' extras at step 4, with the morning\'s line', () => {
+  it('pays as the night\'s perks\' extras from what her work made, at step 4, with the morning\'s line', () => {
     const base = withLove(farm(), TWO, at('friendship', 3))
-    // TEST_KINDS' gather: one Pine Log a day; 0.1 expected a night, so an account whose draw is under 0.1 gets one.
+    // One Pine Log made: 0.1 expected, so an account whose draw is under 0.1 gets one.
     const uid = Array.from({ length: 300 }, (_, i) => `u${i}`).find((u) => draw(u, 3, `perk:${TWO}`, 0) < 0.1)!
-    let save: SaveV4 = { ...base, account: { ...base.account, uid } }
-    save = startJob(save, TWO, 'forest')
-    const after = runNight(save, context())
+    const save: SaveV4 = { ...base, account: { ...base.account, uid } }
+    const after = nightWorking(save, [{ outfitId: TWO, place: 'forest' }], [{ ...made(TWO, 1), place: 'forest', request: { kind: 'forage', item: 'woods', count: 1 } }])
     expect(after.summary!.hearts).toContainEqual({ kind: 'perks', items: 1 })
     expect(goodCount(after.items, 'pine-log') - goodCount(save.items, 'pine-log')).toBe(1)
-  })
-
-  it('gives a tended plot a chance of one extra crop at harvest, at the plot\'s stars; nothing for an untended block', () => {
-    let extra = 0
-    let expected = 0
-    for (let day = 1; day <= 300; day++) {
-      const base: SaveV4 = { ...withLove(farm(), ONE, at('friendship', 3)), calendar: { day } }
-      const tended: SaveV4 = { ...base, fields: { blocks: [block('A', ONE, [ripe()])] } }
-      const { save, receipt } = harvest(tended, 'A', 0, () => TALENT_D, PACK)
-      extra += receipt.perks
-      expected += draw('u1', day, 'perk:harvest:A:0', 0) < 0.1 ? 1 : 0
-      expect(goodCount(save.items, 'carrot')).toBe(1 + receipt.perks)
-      // Untended, or without the pack: never.
-      const untended: SaveV4 = { ...base, fields: { blocks: [block('A', null, [ripe()])] } }
-      expect(harvest(untended, 'A', 0, () => TALENT_D, PACK).receipt.perks).toBe(0)
-      expect(harvest(tended, 'A', 0, () => TALENT_D).receipt.perks).toBe(0)
-    }
-    expect(extra).toBe(expected)
-    expect(extra).toBeGreaterThan(15)
-    expect(extra).toBeLessThan(45)
-  })
-
-  it('grows a farmer\'s block ×1.2 in her element, ×1.1 side by side before it', () => {
-    const pack = packWithFour('farming')
-    const base = withBond(withFour(pack), ONE, FOUR, 300)
-    const fields: SaveV4 = { ...base, fields: { blocks: [block('A', ONE, [growing()]), block('B', FOUR, [growing()])] } }
-    const plain = blockGrowth({ ...fields, bonds: {} }, 'A')
-    expect(blockGrowth(fields, 'A', undefined, pack)).toBeCloseTo(plain * 1.1, 6)
-    expect(blockGrowth(withLove(fields, ONE, at('friendship', 8)), 'A', undefined, pack)).toBeCloseTo(plain * 1.2, 6)
-    expect(blockGrowth(withLove(fields, ONE, at('friendship', 8)), 'A')).toBeCloseTo(plain * 1.1, 6)
+    // Nobody but the farmer works the farm yet: a night pays none.
+    expect(runNight(save, context()).summary!.hearts.some((h) => h.kind === 'perks')).toBe(false)
   })
 
   it('leaves a miner\'s +10% waiting: "Opens when the Mine is built" on her profile, and inert', () => {
@@ -247,26 +220,25 @@ describe('night chores', () => {
     expect(held(after) - held(save)).toBe(added)
   })
 
-  it('a farmer\'s add +0.25 growth each to the untended block with the most growing plots, else hers, at step 2', () => {
+  it('a farmer\'s each water a dry growing tile at step 2, and it grows tonight', () => {
     const base = withLove(farm(), ONE, at('romance', 7))
-    const fields: SaveV4 = { ...base, fields: { blocks: [block('A', ONE, [growing()]), block('B', null, [growing(), growing()]), block('C', null, [growing()])] } }
-    expect(fieldChores(fields, PACK)).toEqual({ growth: new Map([['B', 0.5]]), chores: [{ id: ONE, items: [], growth: 0.5 }] })
-    const own: SaveV4 = { ...fields, fields: { blocks: [fields.fields.blocks[0]!, block('B', null, [])] } }
-    expect(fieldChores(own, PACK).growth).toEqual(new Map([['A', 0.5]]))
-    const none: SaveV4 = { ...fields, fields: { blocks: [block('A', ONE, []), block('B', null, [ripe()])] } }
-    expect(fieldChores(none, PACK)).toEqual({ growth: new Map(), chores: [] })
-    // The night: Block B grows 1 + 0.5 tonight, and the morning says so.
+    const fields = withTiles(base, { 0: growing(), 1: growing(), 2: { ...growing(), watered: true }, 3: ripe() })
+    const { tiles, chores } = fieldChores(fields, PACK)
+    expect(chores).toEqual([{ id: ONE, items: [], watered: 2 }])
+    expect([...tiles].sort()).toEqual([0, 1])
+    // With one dry tile, one chore waters it and the other has none left.
+    expect(fieldChores(withTiles(base, { 0: growing() }), PACK)).toEqual({ tiles: new Set([0]), chores: [{ id: ONE, items: [], watered: 1 }] })
+    expect(fieldChores(withTiles(base, { 3: ripe() }), PACK)).toEqual({ tiles: new Set(), chores: [] })
+    // The night: both dry tiles grow, and the morning says so.
     const night = runNight(fields, context())
-    expect(night.fields.blocks[1]!.plots[0]!.growth).toBeCloseTo(1.5, 9)
-    expect(night.summary!.hearts).toContainEqual({ kind: 'chores', items: 0, growth: 0.5 })
-    expect(growFields(fields, () => TALENT_D, PACK, new Map([['B', 0.25]])).save.fields.blocks[1]!.plots[0]!.growth).toBeCloseTo(1.25, 9)
+    expect(night.fields.tiles.slice(0, 3).map((t) => t.growth)).toEqual([1, 1, 1])
+    expect(night.summary!.hearts).toContainEqual({ kind: 'chores', items: 0, watered: 2 })
   })
 
   it('says the night\'s chores in one line', () => {
     const save = withLove(withLove(farm(), TWO, spouse(4)), ONE, at('friendship', 6))
-    const fields: SaveV4 = { ...save, fields: { blocks: [block('A', null, [growing()])] } }
-    const night = runNight(fields, context())
-    expect(night.summary!.hearts).toContainEqual({ kind: 'chores', items: 3, growth: 0.25 })
+    const night = runNight(withTiles(save, { 0: growing() }), context())
+    expect(night.summary!.hearts).toContainEqual({ kind: 'chores', items: 3, watered: 1 })
   })
 })
 
@@ -310,7 +282,7 @@ describe('morning items', () => {
     const night = runNight(save, context())
     const line = night.summary!.hearts.find((h) => h.kind === 'item')
     expect(line).toMatchObject({ kind: 'item', id: TWO })
-    expect(parseSaveV4(json(night))).toEqual(night)
+    expect(parseSaveV5(json(night))).toEqual(night)
   })
 })
 
@@ -333,7 +305,7 @@ describe('the mentor', () => {
     const pack = packWithFour('foraging')
     const four = withFour(pack)
     const base: SaveV4 = { ...four, dorm: { ...four.dorm, level: 2, home: [...four.dorm.home, FOUR] }, buildings: { ...four.buildings, dorm: 2 } }
-    const night = (save: SaveV4) => runNight(startJob(startJob(save, TWO, 'forest', 0), FOUR, 'forest', 1), context(pack))
+    const night = (save: SaveV4) => nightWorking(save, [{ outfitId: TWO, place: 'forest' }, { outfitId: FOUR, place: 'forest' }], [], pack)
     // At Friendship 8 she isn't a mentor yet (her own ×1.05 from F5 either way).
     const before = night(withLove(base, TWO, at('friendship', 8)))
     const after = night(withLove(base, TWO, at('friendship', 9)))
@@ -351,20 +323,15 @@ describe('her keepsake', () => {
     expect(keepsakeQuality(withLove(farm(), TWO, spouse(5)), PACK, TWO, 'forest')).toBe(KEEPSAKE_GROWN)
   })
 
-  it('lifts a haul as it\'s planned and a tended harvest', () => {
+  it('lifts the quality of her work at her line: a haul and a harvest', () => {
     const save = withLove(farm(), TWO, at('confession', 10))
-    const request = { kind: 'forage', item: 'woods', count: 1 }
-    const plain = planHaul(save, TWO, 'forest', request, 0, 0, talentsD)
-    const lifted = planHaul(save, TWO, 'forest', request, 0, 0, talentsD, PACK)
-    if (!Array.isArray(plain) || !Array.isArray(lifted)) throw new Error('refused')
-    const stars = (items: typeof plain) => items.reduce((n, i) => n + parseStockKey((i.output as { item: string }).item)!.stars, 0)
-    expect(stars(lifted)).toBeGreaterThanOrEqual(stars(plain))
-    expect(loopKinds(talentsD, PACK)).toBe(loopKinds(talentsD, PACK))
-    expect(loopKinds(talentsD, PACK)).not.toBe(loopKinds(talentsD))
-    const farmer: SaveV4 = { ...withLove(farm(), ONE, spouse(5)), fields: { blocks: [block('A', ONE, [ripe()])] } }
-    const tender = tenderTerms(farmer, 'A', () => TALENT_D, PACK)!
-    expect(tender.keepsake).toBe(KEEPSAKE_GROWN)
-    expect(harvestQuality(tender, 1)).toBeCloseTo(harvestQuality({ ...tender, keepsake: 0 }, 1) + 0.5, 9)
+    const terms = termsOf(save, TWO, 'foraging', talentsD, 'axe')!
+    expect(gatherQuality({ ...terms, keepsake: keepsakeQuality(save, PACK, TWO, 'forest') }, false)).toBeCloseTo(gatherQuality(terms, false) + KEEPSAKE_QUALITY, 9)
+    const farmer = withLove(farm(), ONE, spouse(5))
+    const keepsake = keepsakeQuality(farmer, PACK, ONE, 'fields')
+    expect(keepsake).toBe(KEEPSAKE_GROWN)
+    const worker = { rank: 0 as const, talent: TALENT_D, wellFed: false }
+    expect(harvestQuality({ ...worker, keepsake }, 1)).toBeCloseTo(harvestQuality(worker, 1) + 0.5, 9)
   })
 })
 
@@ -395,7 +362,7 @@ describe('her signature dish', () => {
     expect(card.recipe).toBe('dish-vegetables-6')
     expect(save.workshops.recipes).toEqual(['dish-vegetables-6'])
     expect(save.love[ONE]!.dish).toBe('dish-vegetables-6')
-    expect(parseSaveV4(json(save))).toEqual(save)
+    expect(parseSaveV5(json(save))).toEqual(save)
   })
 })
 
@@ -438,11 +405,11 @@ describe('the format\'s keepsake and pet name', () => {
   })
 })
 
-describe('save v4\'s new fields and lines', () => {
+describe('the save\'s perk fields and lines', () => {
   it('parses love.morning from R2 on and love.dish from F4 on, strictly', () => {
     const save = withLove(withLove(farm(14), TWO, at('romance', 2, { morning: 10 })), ONE, at('friendship', 4, { dish: 'dish-vegetables-6' }))
-    expect(parseSaveV4(json(save))).toEqual(save)
-    const refuse = (id: string, love: Partial<Love>, message: string) => expect(() => parseSaveV4(json(withLove(farm(14), id, love)))).toThrow(message)
+    expect(parseSaveV5(json(save))).toEqual(save)
+    const refuse = (id: string, love: Partial<Love>, message: string) => expect(() => parseSaveV5(json(withLove(farm(14), id, love)))).toThrow(message)
     refuse(TWO, at('romance', 1, { morning: 10 }), `save.love.${TWO}.morning: only from Romance 2 on`)
     refuse(TWO, at('romance', 2, { morning: 15 }), `save.love.${TWO}.morning: after today`)
     refuse(ONE, at('friendship', 3, { dish: 'dish-vegetables-6' }), `save.love.${ONE}.dish: only from Friendship 4 on`)
@@ -452,14 +419,15 @@ describe('save v4\'s new fields and lines', () => {
   it('parses the morning\'s item, chores and perks lines', () => {
     const save = farm(3)
     save.summary = { day: 3, bin: [], work: [], ranks: [], news: [], nudges: [], hearts: [
-      { kind: 'item', id: TWO, items: ['shiitake@3'] }, { kind: 'chores', items: 2, growth: 0.25 }, { kind: 'perks', items: 4 }, { kind: 'side', items: 1 },
+      { kind: 'item', id: TWO, items: ['shiitake@3'] }, { kind: 'chores', items: 2, watered: 1 }, { kind: 'perks', items: 4 }, { kind: 'side', items: 1 },
     ] }
-    expect(parseSaveV4(json(save)).summary).toEqual(save.summary)
-    const refuse = (hearts: unknown[], message: string) => expect(() => parseSaveV4({ ...json(save), summary: { ...json(save.summary), hearts } })).toThrow(message)
+    expect(parseSaveV5(json(save)).summary).toEqual(save.summary)
+    const refuse = (hearts: unknown[], message: string) => expect(() => parseSaveV5({ ...json(save), summary: { ...json(save.summary), hearts } })).toThrow(message)
     refuse([{ kind: 'item', id: TWO, items: [] }], 'save.summary.hearts.0.items')
     refuse([{ kind: 'item', id: TWO, items: ['nope@3'] }], 'save.summary.hearts.0.items.0: expected <good>@<stars>')
-    refuse([{ kind: 'chores', items: 0, growth: 0 }], 'save.summary.hearts.0: expected items or growth')
-    refuse([{ kind: 'chores', items: 1, growth: 0.3 }], 'save.summary.hearts.0.growth: expected quarters')
+    refuse([{ kind: 'chores', items: 0, watered: 0 }], 'save.summary.hearts.0: expected items or tiles watered')
+    refuse([{ kind: 'chores', items: 1, watered: 0.5 }], 'save.summary.hearts.0.watered: expected 0–40')
+    refuse([{ kind: 'chores', items: 1, growth: 0.25 }], 'save.summary.hearts.0: unknown keys growth')
     refuse([{ kind: 'perks', items: 0 }], 'save.summary.hearts.0.items')
     refuse([{ kind: 'perks', items: 1 }, { kind: 'perks', items: 2 }], 'save.summary.hearts.1: repeated')
   })

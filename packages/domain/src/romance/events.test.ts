@@ -3,8 +3,7 @@
 // event her trigger names, and Memories' replays. Invented ids only: the stand-ins 9000001–9000003 and 9000004 built here.
 import { describe, expect, it } from 'vitest'
 import { DAYS_PER_YEAR } from '../farm/calendar'
-import { setTender, plant } from '../fields/fields'
-import { parseSaveV4 } from '../save/parse-v4'
+import { parseSaveV5 } from '../save/parse-v4'
 import { addGoods, goodCount } from '../save/warehouse'
 import { newSave, type Love, type SaveV4 } from '../save/v4'
 import { pairKey } from '../save/v4'
@@ -13,8 +12,7 @@ import type { Cast, ChoiceOption, Step } from '../story/authored'
 import { readScene } from '../story/scenes'
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { STAND_IN_FILES } from '../story/stand-in'
-import { startLoopJob } from '../save/loop-work'
-import { TEST_KINDS } from '../night/kinds.fixture'
+import { beatOf } from '../story/placeholders'
 import { meetTonight } from './meeting'
 import { joinCast } from './meeting.fixture'
 import {
@@ -84,17 +82,11 @@ describe('playEvent', () => {
     expect(save.love[ONE]!.level).toBe(0)
   })
 
-  it('a working setup: Friendship 3 waits for her at the Fishery, then plays Cast', () => {
+  it('a working setup holds every day while the farmer works the farm alone: Friendship 3 at the Fishery plays Cast', () => {
     const save = readyFor(farm(), 'friendship', 2, 'f3')
-    expect(readiness(save, PACK, ONE).waits).toEqual({ kind: 'setup', setup: { kind: 'working', activity: 'fishing' } })
-    // The test's work kinds gather at the forest, so her setup there stands in for the Fishery's.
-    const bible = json(PACK.bibles.get(ONE)!)
-    bible.route = bible.route!.map((b) => (b.id === 'f3' ? { ...b, trigger: { kind: 'working', activity: 'foraging' } } : b))
-    const pack: StoryPack = { ...PACK, bibles: new Map([[ONE, bible]]) }
-    expect(readiness(save, pack, ONE).waits?.kind).toBe('setup')
-    const working = startLoopJob(save, { outfitId: ONE, place: 'forest', slot: 0, request: { kind: 'gather', item: 'pine-log', count: 1 } }, AT, TEST_KINDS) as SaveV4
-    expect(readiness(working, pack, ONE).ready).toBe(true)
-    const played = playEvent(working, pack, ONE, outcome('f3', [1], [{ kind: 'cast', score: 90 }]))
+    expect(beatOf(PACK, ONE, 'f3')?.trigger).toEqual({ kind: 'working', activity: 'fishing' })
+    expect(readiness(save, PACK, ONE).ready).toBe(true)
+    const played = playEvent(save, PACK, ONE, outcome('f3', [1], [{ kind: 'cast', score: 90 }]))
     expect(played.save.love[ONE]!.level).toBe(3)
     expect(played.card.sum).toBe(50 + 30 + 30)
   })
@@ -279,15 +271,14 @@ describe('save v4 grows in place', () => {
     const save = playEvent(withLove(farm(5), { stage: 'confession', level: 10, points: 0, last: 4 }), PACK, ONE,
       outcome('confession', [0, 1], [{ kind: 'walk', score: 100 }, { kind: 'pick', score: 90 }])).save
     const asked = askHer(save, ONE, 'not-yet')
-    expect(parseSaveV4(json(asked))).toEqual(asked)
-    expect(() => parseSaveV4(json({ ...asked, today: { ...asked.today, asked: ['9000009'] } }))).toThrow()
+    expect(parseSaveV5(json(asked))).toEqual(asked)
+    expect(() => parseSaveV5(json({ ...asked, today: { ...asked.today, asked: ['9000009'] } }))).toThrow()
     const { asked: _gone, ...today } = asked.today
-    expect(() => parseSaveV4(json({ ...asked, today }))).toThrow()
+    expect(() => parseSaveV5(json({ ...asked, today }))).toThrow()
     expect(asked.today.asked).toEqual([ONE])
   })
-  it('a tended block\'s farmer works the Fields (the stand-in\'s F9 perk needs no setup)', () => {
-    const save = setTender(plant(farm(), 'A', 0, 'seed-carrot'), 'A', ONE)
-    expect(readiness(readyFor(save as SaveV4, 'friendship', 8, 'f9'), PACK, ONE).ready).toBe(true)
+  it('plays her F9 with no setup to meet', () => {
+    expect(readiness(readyFor(farm(), 'friendship', 8, 'f9'), PACK, ONE).ready).toBe(true)
     expect(pairKey(ONE, '9000002')).toBe('9000001:9000002')
   })
 })

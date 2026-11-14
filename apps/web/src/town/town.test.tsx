@@ -1,9 +1,10 @@
-// The town as rendered: the Town on the farm map's last row opening `/town`; its six spots with their keepers and the
-// day's few; a talk that counts once a day; the People list finding anyone by name, with where she is today; a sister
-// by the pack's name and her own outfit's face; one of the town's people with her role and her tie's line; and a scene's
-// line by the town's smith in her master-data name; a talk that meets her trigger playing her meeting scene, one met who
-// lives in town marked Met, and a gift for one not met. Invented outfits (the album fixture: 90001–90006, named Aster to
-// Fable) and an invented pack with a town.json; master data and the server are stubs.
+// The town as rendered: the Town on the farm map's last row opening `/town`; going in for one of the day's actions; its
+// six spots with their keepers and the day's few; a talk that counts once a day; the People list finding anyone by
+// name, with where she is today; a sister by the pack's name and her own outfit's face; one of the town's people with
+// her role and her tie's line; and a scene's line by the town's smith in her master-data name; a talk that meets her
+// trigger playing her meeting scene, one met who lives in town marked Met, and a gift for one not met. Invented outfits
+// (the album fixture: 90001–90006, named Aster to Fable) and an invented pack with a town.json; master data and the
+// server are stubs.
 import 'fake-indexeddb/auto'
 import { newRosterUma, newSave, readScene, readStoryPack, storyOf, townDay, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
@@ -51,7 +52,11 @@ const FILES = {
   town: { people: [{ characterId: '90006', game: 'ida-stone', does: 'Invented smith.' }], spots: [{ id: 'cafe', name: 'Invented Café', keeper: '90006' }] },
 }
 const save = (): SaveV4 => useGame.getState().save as SaveV4
-const farm = (day = 4): SaveV4 => ({ ...readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open'), calendar: { day } })
+/** A farm already in town today (going in takes one of the day's actions). */
+const farm = (day = 4): SaveV4 => {
+  const base = readScene({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, 'scene:1:open')
+  return { ...base, calendar: { day }, today: { ...base.today, town: true } }
+}
 
 let host: HTMLDivElement
 let root: Root
@@ -120,6 +125,18 @@ describe('the town', () => {
     expect(town.places.map((p) => [p.key, p.to, p.locked])).toEqual([
       ['shop', '/?sheet=shop', false], ['festival', '/?peek=festival', true], ['expeditions', '/?peek=expeditions', true], ['town', '/town', false],
     ])
+  })
+
+  it('takes one of the day\'s actions to go in, then stays open all day', async () => {
+    const home = farm()
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...home, today: { ...home.today, town: false } } })
+    await render(<TownPage />, '/town')
+    expect($('[data-town-today]')).toBeNull()
+    await click(await find('[data-action="into-town"]'))
+    await until(() => save().today.town === true)
+    expect(save().today.actions).toBe(1)
+    await find('[data-town-today]')
+    expect($('[data-action="shop"]')).not.toBeNull()
   })
 
   it('shows the day\'s six spots with their keepers and the few out; a talk counts once a day', async () => {

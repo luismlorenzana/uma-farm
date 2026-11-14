@@ -1,8 +1,9 @@
-// End the day as rendered: the bar's words and count, the one-line sheet with End
-// anyway and Back, ending at once when all is set or the Menu's switch is off, the night's fade and the morning summary
-// after, and a second tap ending nothing more. Invented ids and the stand-in pack; master data and the server are stubs.
+// End the day as rendered: the bar's actions left and its words, the one-line sheet with End anyway and Back, ending at
+// once when all is set or the Menu's switch is off, the out-of-actions card when the last action is spent, the night's
+// fade and the morning summary after, and a second tap ending nothing more. Invented ids and the stand-in pack; master
+// data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { newBlock, newLove, newRosterUma, newSave, type SaveV4 } from '@farm/domain'
+import { bareTile, newLove, newRosterUma, newSave, type SaveV4 } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -15,7 +16,7 @@ vi.mock('../api/client', async () => {
 })
 
 const { useGame, resetGame } = await import('../save/game')
-const { FarmBar } = await import('../shell/Bars')
+const { FarmBar, OutOfActions } = await import('../shell/Bars')
 const { default: LoopSheets } = await import('./LoopSheets')
 const { endTheDay, dismissSummary } = await import('./actions')
 const { setAskBeforeEnd } = await import('./ask')
@@ -25,17 +26,14 @@ const { storyReady } = await import('../story/story')
 await storyReady()
 
 const AT = '2026-11-09T10:00:00.000Z'
-/** Three Umas home on day 1; `tending` puts each on a block with a growing carrot. */
-function farm(tending = false): SaveV4 {
+/** Three Umas home on day 1, a tile tilled and one growing a dry carrot; `spent` actions of the day's ten spent. */
+function farm(spent = 0): SaveV4 {
   const save = newSave('u1', AT)
-  const blocks = tending ? (['A', 'B', 'C'] as const).map((id, i) => {
-    const block = newBlock(id)
-    block.tender = ['101', '202', '303'][i]!
-    block.plots[0] = { crop: 'carrot', growth: 1, ready: false, regrowing: false, own: false }
-    return block
-  }) : save.fields.blocks
+  const tiles = save.fields.tiles.map((t, i) => (i === 0 ? bareTile('tilled') : i === 1 ? { ...bareTile('tilled'), crop: 'carrot' as const, growth: 1 } : t))
   return {
-    ...save, roster: { 101: newRosterUma(1), 202: newRosterUma(1), 303: newRosterUma(1) }, love: { 101: newLove(), 202: newLove(), 303: newLove() }, dorm: { level: 1, home: ['101', '202', '303'], swaps: [] }, fields: { blocks } }
+    ...save, roster: { 101: newRosterUma(1), 202: newRosterUma(1), 303: newRosterUma(1) }, love: { 101: newLove(), 202: newLove(), 303: newLove() },
+    dorm: { level: 1, home: ['101', '202', '303'], swaps: [] }, fields: { tiles }, today: { ...save.today, actions: spent },
+  }
 }
 const save = () => useGame.getState().save as SaveV4
 
@@ -86,26 +84,48 @@ afterEach(async () => {
 })
 
 describe('End the day', () => {
-  it('counts idle Umas on End the day in the bar, asks in one line, and ends the day on End anyway', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
+  it('shows the actions left in the bar, asks in one line what\'s left, and ends the day on End anyway', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm(3) })
     await render(<FarmBar />)
-    const end = host.querySelector('a[aria-label="End the day: 3 Umas idle"]')
+    expect(host.querySelector('[data-bar-chip="actions"]')?.getAttribute('aria-label')).toBe('Actions left: 7 of 10')
+    expect(host.querySelector('[data-bar-chip="actions"]')?.textContent).toBe('7/10')
+    const end = host.querySelector('a[aria-label="End the day: 7 actions left · 1 dry"]')
     expect(end?.getAttribute('href')).toBe('/?sheet=end')
-    expect(end?.textContent).toContain('3') // the count on its badge
     expect(end?.querySelector('[data-glow]')).toBeNull()
     expect(host.textContent).toContain('End day')
     await render(<LoopSheets sheet="end" />, '/?sheet=end')
     await settle()
-    expect(document.body.querySelector('[data-end-line]')?.textContent).toBe('3 Umas idle')
+    expect(document.body.querySelector('[data-end-line]')?.textContent).toBe('7 actions left · 1 dry')
     expect(save().calendar.day).toBe(1)
     await act(async () => (document.body.querySelector('[data-action="end-anyway"]') as HTMLButtonElement).click())
     await night(2)
-    expect(save()).toMatchObject({ calendar: { day: 2 }, account: { updatedAt: '2026-11-09T20:00:00.000Z' }, summary: { day: 2, nudges: [{ kind: 'idle' }, { kind: 'seeds', plots: 9 }] } })
+    // A dry carrot didn't grow; the morning says to water it, and to plant the tilled tile.
+    expect(save()).toMatchObject({
+      calendar: { day: 2 }, today: { actions: 0 }, account: { updatedAt: '2026-11-09T20:00:00.000Z' },
+      summary: { day: 2, nudges: [{ kind: 'water', tiles: 1 }, { kind: 'seeds', tiles: 1 }] },
+    })
+    expect(save().fields.tiles[1]!.growth).toBe(1)
     expect(path).toBe('/')
   })
 
-  it('reads "All set" when every Uma works, and ends at once', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: farm(true) })
+  it('opens the out-of-actions card when the day\'s last action is spent, once, with Not yet', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm(9) })
+    await render(<OutOfActions />)
+    expect(document.body.querySelector('[data-out-of-actions]')).toBeNull()
+    await act(async () => useGame.setState({ save: farm(10) }))
+    expect(document.body.querySelector('[data-out-of-actions]')).not.toBeNull()
+    await act(async () => (document.body.querySelector('[data-action="not-yet"]') as HTMLButtonElement).click())
+    await settle()
+    expect(document.body.querySelector('[data-out-of-actions]')).toBeNull()
+    // End the day from it opens End the day's sheet.
+    await act(async () => useGame.setState({ save: farm(9) }))
+    await act(async () => useGame.setState({ save: farm(10) }))
+    await act(async () => (document.body.querySelector('[data-action="end-the-day"]') as HTMLButtonElement).click())
+    expect(path).toBe('/?sheet=end')
+  })
+
+  it('reads "All set" once the day\'s actions are spent, and ends at once', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm(10) })
     await render(<FarmBar />)
     const end = host.querySelector('a[aria-label="All set"]')
     expect(end).not.toBeNull()
