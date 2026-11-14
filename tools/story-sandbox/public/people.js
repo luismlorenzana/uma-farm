@@ -19,6 +19,8 @@ export function indexStory(story) {
   D.castOf = new Map((story?.cast?.data?.umas ?? []).map((u, i) => [u.characterId, { ...u, order: i + 1 }]))
   D.bibleOf = new Map((story?.bibles ?? []).map((b) => [b.data.characterId, b]))
   D.routeOf = new Map((story?.routes ?? []).map((r) => [r.data.characterId, r]))
+  D.pairsOf = new Map()
+  for (const p of story?.pairs ?? []) for (const id of [p.data.a, p.data.b]) D.pairsOf.set(id, [...(D.pairsOf.get(id) ?? []), p])
   D.tiesOf = new Map()
   for (const t of story?.ties?.data?.ties ?? []) for (const id of [t.a, t.b]) D.tiesOf.set(id, [...(D.tiesOf.get(id) ?? []), t])
   D.tagOf = new Map((story?.tags?.data?.tags ?? []).filter((t) => t && typeof t === 'object').map((t) => [t.characterId, t]))
@@ -139,6 +141,8 @@ export function characterView(id, onReview) {
         placeholderPanel(id),
         menuPanel(entry),
         h('div', { class: 'panel' }, h('div', { class: 'row' }, h('h3', { text: 'Her route' }), h('span', { class: 'muted small', text: bible ? `umas/${id}.json` : 'Her bible can name any of these rungs; none is required' }), routeProgress(id)), ladder(id, bible)),
+        scenesPanel(id),
+        pairsPanel(id),
         bible ? biblePanel(bible) : null,
         h('div', { class: 'panel' }, h('h3', { text: `Her ties · ${ties.length}` }),
           ties.length ? h('div', { class: 'stack' }, ties.map((t) => {
@@ -152,6 +156,53 @@ export function characterView(id, onReview) {
     h('div', { class: 'section-head' }, h('h2', { text: 'Review' })),
     reviewPanel(`cast/${id}`, st.own?.[id] ?? { errors: [], notes: [] }, bible ? bible.file : 'content/story/cast.json', onReview, 'Nothing to note: what’s written of her reads whole.'),
   )
+}
+
+// ── Her scenes and her pair talks, to read ─────────────────────────────────────
+const RUNG_ORDER = ['arrival', ...Array.from({ length: 10 }, (_, i) => `f${i + 1}`), 'confession', ...Array.from({ length: 10 }, (_, i) => `r${i + 1}`), 'proposal', 'wedding', 's1', 's3', 's5']
+const EVENT_LABEL = { arrival: 'Arrival', confession: 'Confession', proposal: 'Proposal', wedding: 'Wedding', 'dinner-in-town': 'Dinner in town', 'a-night-in': 'A night in', 'new-year': 'The year’s first day', 'derby-night': 'The Fishing Derby’s night' }
+const eventLabel = (id) => EVENT_LABEL[id] ?? (/^f\d+$/.test(id) ? `♥ ${id.slice(1)}` : /^r\d+$/.test(id) ? `❤ ${id.slice(1)}` : /^s\d+$/.test(id) ? `✦ ${id.slice(1)}` : id)
+const OUTFIT_LABEL = { season: 'the day’s season', dinner: 'dinner dress', wedding: 'wedding dress' }
+
+/** A scene's steps as text: narration, the farmer's thoughts, lines with their speaker and emote, choices and plays. */
+function stepsText(steps) {
+  return h('div', { class: 'stack small' }, (steps ?? []).map((st) => {
+    if (st.place) return h('p', { class: 'muted', text: `· ${st.place}` })
+    if (st.narrate) return h('p', {}, h('i', { text: st.narrate }))
+    if (st.thought) return h('p', { class: 'muted' }, h('i', { text: `You think: ${st.thought}` }))
+    if (st.say) return h('p', {}, h('b', { text: `${umaName(st.say)}: ` }), st.line, st.emote ? h('span', { class: 'muted', text: ` (${st.emote})` }) : null)
+    if (st.choice) return h('ul', { class: 'list' }, st.choice.map((o) => h('li', {}, h('b', { text: `▸ ${o.text}` }),
+      h('span', { class: 'muted', text: ` ${[o.tone, o.friendship ? `friendship +${o.friendship}` : '', o.romance ? `romance +${o.romance}` : '', o.answer].filter(Boolean).join(' · ')}` }), o.then ? stepsText(o.then) : null)))
+    if (st.play) return h('div', {}, h('p', {}, h('b', { text: `Play: ${st.play.game}` }), st.play.prompt ? ` · ${st.play.prompt}` : ''),
+      h('p', { class: 'muted', text: 'If it goes well:' }), stepsText(st.play.good), h('p', { class: 'muted', text: 'If not:' }), stepsText(st.play.miss))
+    if (st.when) return h('div', {}, h('p', { class: 'muted', text: `If ${st.when}:` }), stepsText(st.then), st.else ? h('p', { class: 'muted', text: 'Otherwise:' }) : null, st.else ? stepsText(st.else) : null)
+    if (st.flag) return h('p', { class: 'muted', text: `(remembers: ${st.flag})` })
+    return null
+  }))
+}
+
+/** Every scene in her route, in rung order then the story's own, each with its outfit and its text. */
+function scenesPanel(id) {
+  const events = [...(D.routeOf.get(id)?.data.events ?? [])]
+  if (!events.length) return null
+  const rank = (e) => (RUNG_ORDER.includes(e.id) ? RUNG_ORDER.indexOf(e.id) : RUNG_ORDER.length)
+  events.sort((a, b) => rank(a) - rank(b))
+  return h('div', { class: 'panel' }, h('div', { class: 'row' }, h('h3', { text: `Her scenes · ${events.length}` }), h('span', { class: 'muted small', text: `routes/${id}.json` })),
+    events.map((e) => h('details', {}, h('summary', {}, h('b', { text: eventLabel(e.id) }), ' ', e.outfit ? h('span', { class: 'chip', text: OUTFIT_LABEL[e.outfit] ?? e.outfit }) : null),
+      stepsText(e.steps))))
+}
+
+/** Her pair conversations: each tie's levels, with the place and the talk. */
+function pairsPanel(id) {
+  const pairs = D.pairsOf.get(id) ?? []
+  if (!pairs.length) return null
+  return h('div', { class: 'panel' }, h('h3', { text: `Her pair talks · ${pairs.length}` }),
+    pairs.map((p) => {
+      const other = p.data.a === id ? p.data.b : p.data.a
+      const levels = [...(p.data.levels ?? [])].sort((a, b) => a.hearts - b.hearts)
+      return h('details', {}, h('summary', {}, h('b', { text: umaName(other) }), h('span', { class: 'muted small', text: ` · ${levels.length} levels · ${p.file.split('/').pop()}` })),
+        levels.map((lv) => h('div', { class: 'stack' }, h('h4', { text: `Bond ♥ ${lv.hearts}${lv.place ? ` · ${lv.place}` : ''}` }), stepsText(lv.steps))))
+    }))
 }
 
 /** Her parts as the game plays them: each written by the pack, or a placeholder (what plays instead), marked. */
