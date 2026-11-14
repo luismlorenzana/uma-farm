@@ -4,7 +4,7 @@
 // +20 after a rank-up overnight, and the morning's birthday line. The invented stand-in pack (9000001's birthday is Spring
 // 4 in its cast) and invented outfits; the server is a stub.
 import 'fake-indexeddb/auto'
-import { arrive, newSave, readScene, type SaveV4, type StoryPack } from '@farm/domain'
+import { meet, newSave, readScene, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes } from 'react-router'
@@ -30,9 +30,9 @@ const { default: HeartsPage } = await import('./HeartsPage')
 const { endTheDay } = await import('./actions')
 const { summaryParts } = await import('./summary-words')
 
-/** The stand-in's three home, ties seeded, as the old opening brought them: the opening now brings only day 1's helper. */
+/** The stand-in's three home, ties seeded, as if met: the opening brings nobody, and day 1's visitor waits at the Gate. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
-  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : arrive(s, id, pack).save), save)
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : meet(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const ONE = '9000001'
 const THREE = '9000003'
@@ -178,7 +178,7 @@ describe('what her next event waits for, in words', () => {
       at({ kind: 'setup', setup: { kind: 'bond', with: '9000002', level: 3 } }), at({ kind: 'opens', place: 'mine' }),
       at({ kind: 'night' }, 's2'), at({ kind: 'friend' }, 'confession'), at({ kind: 'done' }, null),
     ]).toEqual([
-      'Romance 5 · 60 to go', 'Her confession · Ready tomorrow', 'The proposal · Needs a ring', 'Romance 5 · Swap her home', 'Romance 5 · tomorrow: one event a day',
+      'Romance 5 · 60 to go', 'Her confession · Ready tomorrow', 'The proposal · Needs a ring', 'Romance 5 · Invite her to the farm', 'Romance 5 · tomorrow: one event a day',
       'Romance 5 · the Fishery, when she works there', 'Romance 5 · with Carrot in the Warehouse', 'Romance 5 · bond 3 with Stand-in 2', 'Romance 5 · Opens when the Mine is built',
       'Spouse 2 · comes tonight', 'Her confession · she said “Not yet”', 'Her route is complete',
     ])

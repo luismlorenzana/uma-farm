@@ -3,22 +3,22 @@
 // it), the speaker's name and one line; a tap goes on, and **Skip** ends
 // it. It plays **the opening's lines** on day 1, after the farmer's name: the pack's `opening.json`, else the game's three
 // (`openingOf`), one to a tap, `{farmer}` filled. Played through or skipped from its first line, it's read once
-// (`diary.read`), day 1's helper joins and waits at the Gate, and the farm opens on Home: three taps for the game's own.
+// (`diary.read`), and the farm opens on Home, day 1's visitor waiting at the Gate: three taps for the game's own.
 // It loads master data itself, for the Umas' names and busts; Skip works without it.
 //
-// It also plays each Uma's **arrival scene** from the story pack, the format's steps: `say` (her
+// It also plays the scene of **meeting her** (her arrival scene) from the story pack, the format's steps: `say` (her
 // bust, the line with `{farmer}` filled, the emote as a word), `narrate`, `thought` (italic), `place` (the title line),
 // `wait`, `flag` and `choice`, whose options show their gain before the tap (+30 for the best, +10 for the rest). Skip
-// jumps to the choice, never past it, so every arrival pays +50 and its choice (an arrival the pack writes without one
-// pays +50 alone). Day 1's helper's plays from the Gate (`?hello=<id>`, dropped as it ends). Its frame and steps
-// also play the pair conversations (`PairPlayer.tsx`). Loaded on demand. The ring bench's scene (`scene:bench`) plays
+// jumps to the choice, never past it, so every meeting pays +50 and its choice (one the pack writes without one pays +50
+// alone). It plays as soon as she's met: after Say hello at the Gate, a talk or a gift in town that met her, or the
+// morning after the night met her. It ends on where she lives: the Dorm, or town while no bed is free. Its frame and
+// steps also play the pair conversations (`PairPlayer.tsx`). Loaded on demand. The ring bench's scene (`scene:bench`) plays
 // here too, its player loaded on demand (`BenchScene.tsx`).
 import {
-  ARRIVAL_POINTS, arrivalOf, BENCH_SCENE, CAST, choicePoints, eventOf, farmPlace, isCastId, openingOf, pathFlags, placeholderEvent, sceneSteps,
+  ARRIVAL_POINTS, arrivalOf, atHome, BENCH_SCENE, CAST, choicePoints, eventOf, farmPlace, isCastId, onWelcomeList, openingOf, pathFlags, placeholderEvent, sceneSteps,
   withFarmer, type CastId, type ChoiceOption, type OpeningSceneId, type SaveV4, type SceneId, type Step,
 } from '@farm/domain'
 import { UmaBust } from '@luismlorenzana/uma-kit/album'
-import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
@@ -86,7 +86,7 @@ function OpeningPlayer({ scene }: { scene: OpeningSceneId }) {
   }, [lines, story])
   const [at, setAt] = useState(0)
   if (!save) return null
-  /** Played through or skipped: the opening is read, once, day 1's helper joins, and the farm opens on Home. */
+  /** Played through or skipped: the opening is read, once, and the farm opens on Home. */
   const finish = () => {
     if (leaving) return
     setLeaving(true)
@@ -117,7 +117,7 @@ function Done({ onDone }: { onDone: () => void }) {
   return <div className="flex-1" />
 }
 
-// --- Her arrival scene ----------------------------------------------------------------------------------
+// --- Meeting her: her arrival scene ----------------------------------------------------------------------
 
 /** A story place as the title line says it: a farm place's name, else its words ("pond-night" → "Pond night"). */
 export const placeName = (place: string): string => farmPlace(place)?.name ?? `${place.charAt(0).toUpperCase()}${place.slice(1).replaceAll('-', ' ')}`
@@ -130,8 +130,9 @@ function ArrivalPlayer({ save, id }: { save: SaveV4; id: string }) {
   useEffect(() => {
     if (!story) return
     let live = true
-    // Her route's arrival scene, else the game's two lines and a hello; offline with her route not cached yet, the hello.
-    void eventOf(story, id, 'arrival').then((event) => live && setSteps(event.steps), () => live && setSteps(placeholderEvent(id, 'arrival')))
+    // Her route's arrival scene, else the game's two lines and a hello (the Gate's, or the town's); offline with her route
+    // not cached yet, the same.
+    void eventOf(story, id, 'arrival').then((event) => live && setSteps(event.steps), () => live && setSteps(placeholderEvent(id, 'arrival', !onWelcomeList(story, id))))
     return () => { live = false }
   }, [story, id])
   if (!steps) return null
@@ -141,8 +142,6 @@ function ArrivalPlayer({ save, id }: { save: SaveV4; id: string }) {
 }
 
 function Arrival({ save, id, steps, master }: { save: SaveV4; id: string; steps: readonly Step[]; master: MasterView }) {
-  const navigate = useNavigate()
-  const location = useLocation()
   const [picks, setPicks] = useState<number[]>([])
   const [at, setAt] = useState(0)
   const [leaving, setLeaving] = useState(false)
@@ -168,8 +167,6 @@ function Arrival({ save, id, steps, master }: { save: SaveV4; id: string; steps:
     // Her arrival always holds a choice (a written one without gets the hello): its first choice pays with the +50.
     if (choice && pick === undefined) return
     setLeaving(true)
-    // Played from the Gate: the farm stays where it is, without the Gate's ask.
-    if (new URLSearchParams(location.search).has('hello')) navigate(withParam(location, 'hello', null), { replace: true })
     void finishArrivalScene(id, { choice: choice && pick !== undefined ? choicePoints(choice.choice)[pick]! : 0, flags: pathFlags(shown) }).catch(() => setLeaving(false))
   }
   // Skip: to her choice, never past it; once chosen, to the end.
@@ -179,10 +176,10 @@ function Arrival({ save, id, steps, master }: { save: SaveV4; id: string; steps:
   }
   const chosen = shown.find((s): s is { choice: ChoiceOption[] } => 'choice' in s)
   const earned = ARRIVAL_POINTS + (chosen && picks[0] !== undefined ? choicePoints(chosen.choice)[picks[0]]! : 0)
-  const title = place ? `${name} arrives · ${placeName(place)}` : `${name} arrives`
+  const title = place ? `Meeting ${name} · ${placeName(place)}` : `Meeting ${name}`
   return (
-    <Frame title={title} label={`${name} arrives`} scene={`arrival:${id}`} onSkip={skip} skipping={leaving}>
-      {done ? <Welcome onDone={finish} id={id} name={name} points={earned} />
+    <Frame title={title} label={`Meeting ${name}`} scene={`arrival:${id}`} onSkip={skip} skipping={leaving}>
+      {done ? <Welcome onDone={finish} id={id} name={name} points={earned} home={atHome(save, id)} />
         : step && 'choice' in step && choiceAt === cursor ? (
           <Choice id={id} name={name} options={step.choice} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} />
         ) : step ? (
@@ -193,12 +190,13 @@ function Arrival({ save, id, steps, master }: { save: SaveV4; id: string; steps:
   )
 }
 
-/** Her arrival's end: she's on the farm, and her points are in. */
-function Welcome({ id, name, points, onDone }: { id: string; name: string; points: number; onDone: () => void }) {
+/** Meeting her ends: her points are in, and where she lives says so: the Dorm, or town while no bed is free. */
+function Welcome({ id, name, points, home, onDone }: { id: string; name: string; points: number; home: boolean; onDone: () => void }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 px-4 pb-4" data-arrival-done data-points={points}>
+    <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 px-4 pb-4" data-arrival-done data-points={points} data-home={home}>
       <div className="flex min-h-0 flex-1 items-end justify-center"><UmaBust outfitId={id} label={name} size={200} /></div>
       <p className="text-center text-[15px] font-semibold text-[#c2385e]">♥ +{points}</p>
+      <p className="text-center text-[14px] text-ink-soft" data-lives>{home ? 'She moves into the Dorm.' : 'No bed free: she lives in town for now.'}</p>
       <Button className="w-full" onClick={onDone} data-action="welcome">Welcome, {name}</Button>
     </div>
   )
@@ -236,13 +234,13 @@ export function StepView({ step, at, count, total, nameOf, farmer, onNext }: {
   )
 }
 
-/** Her arrival's one choice: each option with its gain on the button before the tap (+30 for the best, +10 the rest). */
+/** Meeting her: her one choice, each option with its gain on the button before the tap (+30 for the best, +10 the rest). */
 function Choice({ id, name, options, onPick }: { id: string; name: string; options: readonly ChoiceOption[]; onPick: (i: number) => void }) {
   const points = choicePoints(options)
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-end gap-3 px-4 pb-4" data-choice>
       <div className="flex min-h-0 flex-1 items-end justify-center"><UmaBust outfitId={id} label={name} size={200} /></div>
-      <p className="w-full text-[13px] text-ink-soft">Your answer · +50 for her arrival, and</p>
+      <p className="w-full text-[13px] text-ink-soft">Your answer · +50 for meeting her, and</p>
       {options.map((option, i) => (
         <button key={i} type="button" onClick={() => onPick(i)} data-option={i} data-gain={points[i]}
           className="flex min-h-12 w-full items-center gap-3 rounded-md border border-hairline bg-panel px-4 py-2 text-left shadow-1">

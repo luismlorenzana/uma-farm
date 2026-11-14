@@ -12,7 +12,7 @@ import type { UmaBible } from '../story/authored'
 import { readScene } from '../story/scenes'
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { STAND_IN_FILES } from '../story/stand-in'
-import { joinCast } from './arrivals.fixture'
+import { joinCast } from './meeting.fixture'
 import {
   answerInvite, drawInvites, EVENING_GAMES, eveningMarks, eveningPoints, eveningPreview, eveningRole, EVENINGS, eveningSeed, eveningSlots, eveningUmas, favouriteKind,
   homeTonight, inviteCandidates, invitedNow, inviteDue, invitePoints, inviteWeight, kindBuilt, kindOpens, kindsNow, slotsLeft, spendEvening, tonightOpens,

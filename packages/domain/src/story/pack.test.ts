@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 import { LINE_LIMITS, RUNGS, type Cast, type Route } from './authored'
 import { readStoryPack, storyPackFrom, type PackFiles } from './pack'
-import { chaptersOf, DEFAULT_CHAPTERS, DEFAULT_MEET, firstHelperOf, meetOf, openingOf, PLACEHOLDER_OPENING, welcomeOf } from './placeholders'
+import { chaptersOf, DEFAULT_CHAPTERS, DEFAULT_MEET, firstVisitorOf, meetOf, openingOf, PLACEHOLDER_OPENING, welcomeOf } from './placeholders'
 import { STAND_IN_FILES } from './stand-in'
 
 const clone = <T>(v: T): T => structuredClone(v)
@@ -18,15 +18,15 @@ const castOf = (n: number, entry: (i: number) => Record<string, unknown> = () =>
 const read = (files: Partial<PackFiles>) => readStoryPack({ umas: {}, routes: {}, ...files })
 
 describe('the packs an open story releases', () => {
-  it('five characters with any callings; an old opening list and opening arrivals are noted and dropped', () => {
+  it('five characters with any callings; an old opening list and arrivals are noted and dropped', () => {
     const cast = { ...castOf(5, (i) => ({ outfitId: `${id(i + 1)}01`, calling: CALLINGS[(i * 2) % 5], arrives: { kind: 'opening' } })), opening: [id(4), id(2), id(5), id(1), id(3)] } as Cast
     const { pack, errors, notes } = read({ ...clone(STAND_IN_FILES), cast })
     expect(errors).toEqual([])
     expect(pack.cast).not.toHaveProperty('opening')
     expect(pack.cast.umas.some((u) => 'arrives' in u)).toBe(false)
-    expect(notes).toContain('cast.json: opening: the opening brings nobody now (the welcome list’s first joins as it ends), so the list is dropped')
-    expect(notes).toContain(`cast.json: Uma 4 (${id(4)}): the opening brings nobody now (the welcome list’s first joins as it ends), so an opening arrival is dropped`)
-    expect(firstHelperOf(pack)).toBe(id(1))
+    expect(notes).toContain('cast.json: opening: the opening brings nobody: the welcome list visits the Gate, one a morning, so the list is dropped')
+    expect(notes).toContain(`cast.json: Uma 4 (${id(4)}): arrives is retired: her meet says how you meet her, so it’s dropped`)
+    expect(firstVisitorOf(pack)).toBe(id(1))
     expect(notes).toContain(`umas/${id(4)}.json: no bible yet, so her calling or her stats give her line, every gift is neutral, and her chats are the game’s for each stage`)
     expect(notes).toContain(`routes/${id(5)}.json: no route yet, so her meeting scene and her events play the game’s own short cards, which pay as written ones do`)
     expect(pack.cast.umas).toHaveLength(5)
@@ -40,11 +40,9 @@ describe('the packs an open story releases', () => {
     expect(meetOf(pack, id(40))).toEqual(DEFAULT_MEET)
     expect(meetOf(pack, id(40))).toEqual({ kind: 'talks', days: 3 })
     expect(chaptersOf(pack, id(17))).toBe(DEFAULT_CHAPTERS)
-    // No arrivals: the welcome list's first joins as the opening ends; the other 39 wait for meeting her in town.
-    expect(firstHelperOf(pack)).toBe(id(1))
-    expect(notes).toContain(`cast.json: ${id(1)}, the welcome list’s first, joins as the opening ends: day 1’s helper until meeting her in town lands`)
-    expect(notes.find((n) => n.includes('have no arrival'))).toContain(`${id(2)}, `)
-    expect(notes.find((n) => n.includes('have no arrival'))).toContain(id(40))
+    // The welcome list's first is day 1's visitor at the Gate; the other 35 are met in town.
+    expect(firstVisitorOf(pack)).toBe(id(1))
+    expect(notes).toContain(`cast.json: ${id(1)}, the welcome list’s first, is day 1’s visitor at the Gate, and the farm’s first helper`)
   })
 
   it('a single character with no routes, no ties and no bible', () => {
@@ -58,7 +56,7 @@ describe('the packs an open story releases', () => {
       `umas/${id(1)}.json: no bible yet, so her calling or her stats give her line, every gift is neutral, and her chats are the game’s for each stage`,
       `routes/${id(1)}.json: no route yet, so her meeting scene and her events play the game’s own short cards, which pay as written ones do`,
       `cast.json: ${id(1)} has no calling and no bible’s favouriteLine, so her line is the work her stats in master data suit best`,
-      `cast.json: ${id(1)}, the welcome list’s first, joins as the opening ends: day 1’s helper until meeting her in town lands`,
+      `cast.json: ${id(1)}, the welcome list’s first, is day 1’s visitor at the Gate, and the farm’s first helper`,
     ])
   })
 
@@ -67,7 +65,7 @@ describe('the packs an open story releases', () => {
     expect(errors).toEqual([])
     expect(pack.cast).toEqual({ umas: [] })
     expect(welcomeOf(pack)).toEqual([])
-    expect(firstHelperOf(pack)).toBeNull()
+    expect(firstVisitorOf(pack)).toBeNull()
     expect(pack.opening).toBeNull()
     // Nobody is coming, so the game's opening leaves out its Gate line.
     expect(openingOf(pack)).toEqual(PLACEHOLDER_OPENING.slice(0, 2))
@@ -107,10 +105,10 @@ describe('the packs an open story releases', () => {
     expect(again.files).toEqual(first.files)
   })
 
-  it('the stand-in reads as before: its opening\'s four lines, its first as day 1\'s helper, its bibles and routes', () => {
+  it('the stand-in reads as before: its opening\'s four lines, its first as day 1\'s visitor, its bibles and routes', () => {
     const pack = storyPackFrom(STAND_IN_FILES)
     expect(openingOf(pack).map((step) => Object.keys(step)[0])).toEqual(['narrate', 'narrate', 'narrate', 'thought'])
-    expect(firstHelperOf(pack)).toBe(id(1))
+    expect(firstVisitorOf(pack)).toBe(id(1))
     expect([...pack.bibles.keys()]).toEqual([id(1)])
     expect([...pack.scripted.get(id(1))!]).toEqual(RUNGS)
   })
@@ -129,7 +127,7 @@ describe('the menu\'s welcome list, her trigger and her chapters', () => {
     expect(meetOf(pack, id(4))).toEqual({ kind: 'talks', days: 3 })
     expect(chaptersOf(pack, id(3))).toEqual([{ title: 'Before', events: ['arrival', 'f1'] }, { title: 'After', events: ['f2'], gate: { kind: 'farm-rank', rank: 3 } }])
     expect(chaptersOf(pack, id(4)).map((c) => c.title)).toEqual(['Getting to know her', 'Together', 'The wedding', 'Married life'])
-    expect(firstHelperOf(pack)).toBe(id(7))
+    expect(firstVisitorOf(pack)).toBe(id(7))
   })
 
   it('the four default chapters hold every rung once, from meeting her to married life', () => {

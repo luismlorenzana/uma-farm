@@ -13,7 +13,7 @@ import type { LoopWorld } from '../work/loop-env'
 import { amount, bool, count, int, list, object, oneOf, positive, record, SaveParseError, type Obj } from './parse'
 import {
   ANIMAL_HOME, ANIMAL_KINDS, BLOCK_IDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, EXTRA_KINDS, isDishId, pairKey, PLOTS_PER_BLOCK,
-  REGION_IDS, TOOL_IDS, WORKSHOP_IDS, type Animal, type Block, type BoardRequest, type BuildingId, type Dig, type DormSwap,
+  REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type Block, type BoardRequest, type BuildingId, type Dig, type DormSwap,
   type Expedition, type Extra, type FestivalResult, type LoopWorkRequest, type Plot, type RankState, type SaveV4, type StarCounts,
   type ToolId, type ToolTier, type Warehouse, type WorkshopId,
 } from './v4'
@@ -66,9 +66,9 @@ export function key(value: unknown, path: string): string {
 /** A character id (or a master outfit id), as master data's stable key: a positive integer of up to twelve digits. */
 export const ROSTER_ID = /^[1-9]\d{0,11}$/
 export const isRosterId = (id: string): boolean => ROSTER_ID.test(id)
-/** A roster id by form. */
+/** A roster id by form: a character id, or a sister's (`s<outfitId>`): anyone in town can be met. */
 export function outfit(value: unknown, path: string): string {
-  if (typeof value !== 'string' || !isRosterId(value)) fail(path, 'ids are positive integers')
+  if (typeof value !== 'string' || !TOWN_ID.test(value)) fail(path, 'ids are positive integers, or a sister’s s<outfitId>')
   return value as string
 }
 /** An Uma on the roster (or among `word`'s set). */

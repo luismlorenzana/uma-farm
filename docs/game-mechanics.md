@@ -30,7 +30,7 @@ prose here; change a table by changing the rule.
 - **[Part 3 — Hearts: the cast and the romance](#part-3--hearts-the-cast-and-the-romance)**
   - [The cast and the story pack](#the-cast-and-the-story-pack)
   - [What plays without the story](#what-plays-without-the-story)
-  - [The opening, the farmer's name, and arrivals](#the-opening-the-farmers-name-and-arrivals)
+  - [The opening, the farmer's name, and meeting her](#the-opening-the-farmers-name-and-meeting-her)
   - [Her favourite line and tastes](#her-favourite-line-and-tastes)
   - [Her route](#her-route)
   - [Perks](#perks)
@@ -57,7 +57,7 @@ Umas rank up and the date turns. The morning opens on a card of what the night b
                                                                  5 workshops (none open)
  the morning: the summary card ◄──────────────────────────────── 6 rank points and rank-ups
    the bin · work done · ranks · hearts · new today · today      7 crops wither; the date turns
-   [Start the day] ──► the next day                              8 the Dorm, arrivals, the goals
+   [Start the day] ──► the next day                              8 the Dorm, the goals, meeting her
                                                                  9 the morning summary
 ```
 
@@ -142,7 +142,7 @@ The nudge reads the save as the day started, so every device shows the same coun
 
 Either way the morning opens on the farm map. The tap holds the day it was meant for: a second tap, or a save that
 another device has already moved on, ends nothing more. The night reads the game's master data (each Uma's talents and
-birthday) and the story pack (her favourite line, the arrivals, the ties), which the farm loads as it opens; if either
+birthday) and the story pack (her favourite line, her trigger to meet, the ties), which the farm loads as it opens; if either
 can't load, the sheet says so with **Try again**. The game never ends a day by itself.
 
 **"Ask before ending the day"** is a switch in the Menu: on by default, kept on the device and never in the save.
@@ -176,13 +176,13 @@ The night is one fixed run of steps over the save:
    queued job whose inputs the Warehouse can't cover stops its queue. The whole of today's record clears: chats, gifts,
    praise, events, evenings and invitations.
 8. **The farm's news.** The places paid for yesterday stand; a Dorm level you bought takes effect and swaps arrive; the
-   cast's Umas whose arrival holds join; the Diary pays its milestones and rows and the Farm Rank is recomputed; the ring
-   bench opens the night after the first Romance 8, and the household's milestones are noted.
+   Diary pays its milestones and rows and the Farm Rank is recomputed; anyone in town whose trigger the farm now holds
+   is met; the ring bench opens the night after the first Romance 8, and the household's milestones are noted.
 9. **The morning.** A wedding's reception is served, the house's morning given, spouses move into rooms, the Festival
    of Vows is held, praise, birthdays and anniversaries are noted, morning items are left and the morning's invitations
    drawn; then the morning summary is built from what changed.
 
-A night without the story pack runs the farm's steps and skips the romance's: no arrivals, no favourites, no bonds and
+A night without the story pack runs the farm's steps and skips the romance's: no meetings, no favourites, no bonds and
 no line pay. The farm waits for the pack before it ends a day, so in play every night has it.
 
 The steps as the game lists them:
@@ -208,9 +208,9 @@ The steps as the game lists them:
 | 7 | `witherCrops` | On a season’s last night, crops still growing that don’t grow in the next season wither; Ready crops wait |
 | 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception |
 | 8 | `raiseBuildings` | Places built: every place paid for yesterday stands this morning (`buildings[id] = 1`), each one news |
-| 8 | `settleDorm` | The Dorm’s level bought takes effect; swaps arrive, each Uma away coming home in the place of one leaving |
-| 8 | `arriveUmas` | Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50) |
+| 8 | `settleDorm` | The Dorm’s level bought takes effect; swaps arrive, each Uma in town coming home in the place of one leaving |
 | 8 | `checkGoals` | The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources |
+| 8 | `meetUmas` | Meeting her: everyone in town not met yet whose trigger the farm now holds (a Farm Rank, a place built, a good shipped, another’s event; never the welcome list’s) is met, the cast’s order first: home while a bed is free, else she lives in town; each of her ties with someone met starts at its seed (strength 3 → 150, 2 → 50) |
 | 8 | `openRingBench` | The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and the smith’s scene is due in the morning |
 | 8 | `householdMilestones` | Household milestones: as the married count passes 1, 5, 10, 15 and 20, each is news once; 5 brings the furniture set, 20 the finale’s morning; household scenes are Ready from this morning |
 | 9 | `serveTheReception` | A wedding’s reception: everyone on the farm well fed from tomorrow for its days (a dish ★1–2 one, ★3–4 two, ★5 three; the bakery’s cake one), never shortening a meal already running |
@@ -229,7 +229,7 @@ The steps as the game lists them:
   at tonight's boundary, since the date turns after the ranks.
 - **The night is one change.** Its steps write nothing on their own; the save is stamped once, with the real time, after
   step 9.
-- Ranks, the Dorm, arrivals and the goals are described with the Umas and the farm's progress, and the romance's steps
+- Ranks, the Dorm, the goals and meeting her are described with the Umas and the farm's progress, and the romance's steps
   in Part 3.
 
 #### The morning summary
@@ -248,7 +248,7 @@ line is a tap to its place.
 | The bin | Each good and star sold, "Salmon ★2 × 3 · 495g", tagged **In demand** when the season lifted it; then "Total · 545g" | The bin |
 | Work done | Jobs that ended tonight, by place, "Forest · 2 jobs done · 9 items" (each job's whole haul); the night's best catch, "Best catch · Rainbow Koi ★2"; plots that turned Ready, by block, "Block A · 9 crops ready"; what withered, "Block A · 3 Onion withered" | The place's quick look; the Fishery's quick look; the Fields |
 | Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full** | Her profile's Work side |
-| Hearts | Who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and arrivals ("*Name* arrived · away", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
+| Hearts | Who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
 | New today | "Summer begins"; "Flower Show tomorrow" or "today"; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The calendar; the Festival ground; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
 | Today | "2 Umas idle"; "9 plots to plant" (empty plots that the season's seeds you hold could fill today) | The Hearts tab's Work view; the Fields |
 
@@ -323,7 +323,7 @@ What a tap on a place does:
 | The Shop | The shop's sheet |
 | The Warehouse | The Warehouse |
 | The Dorm | The Dorm's page |
-| The Gate | Its quick look: what brings the next arrivals |
+| The Gate | Its quick look: the welcome list's visitor of the day, and Say hello |
 | The Dock | Its quick look: its Build card, then the Boat's |
 | The Town | The town's screen: who's out today, and the People list (see [the town](#the-town)) |
 | Every other place | Its quick look: what it is, and what opens it; a place to build, its Build card |
@@ -358,7 +358,7 @@ calendar.
 **The morning card** covers the map after each night until you put it away.
 
 **The homestead's rows** sit after the yard (the Farmhouse and two lots from day 1, the second row from three married,
-the third from six; three to a row) with the town's two rows moved below them, so the map grows a row at a time. The Gate is where the cast's Umas arrive. Both are the
+the third from six; three to a row) with the town's two rows moved below them, so the map grows a row at a time. The Gate is where the welcome list visits, one a morning, and wears **Visiting** while one waits. Both are the
 romance's.
 
 The HD-2D farm, an opt-in preview set in Account on each device, draws this same farm on an HD-2D stage; it has its own
@@ -377,8 +377,9 @@ A quick look is a side panel over the map: the place's name, its one-line descri
 - **The Forest, the Fishery and a built station:** its line ("Foraging · 4 slots"), its four slot rows, any stopped
   queues, and **Open the Forest** (see Gathering).
 - **A station not built:** what it does, and its Build card (see The stations).
-- **The Gate:** "Umas arrive here." and what brings the next arrivals ("Next: the Dorm's level 4 · the Fishing Derby"),
-  never who, or "Everyone is here."
+- **The Gate:** today's visitor ("‹name› is at the Gate." and **Say hello**); once met, "‹name› came by today.";
+  then "Someone new comes tomorrow." while the welcome list has more, else "Meet everyone else in town." (see
+  [meeting her](#meeting-her)).
 - **The Forge,** once the ring bench stands: the bench's quick look (see the romance).
 
 #### The top bar
@@ -394,7 +395,7 @@ From the left:
 
 **Farm · Hearts · End the day · Diary · Menu.**
 - **Farm:** the farm map.
-- **Hearts:** everyone on the roster, home or away, by their route; its Work view is the roster's album, with their
+- **Hearts:** everyone you've met, on the farm or in town, by their route; its Work view is the roster's album, with their
   talents and ranks. `/roster` lands on the Work view.
 - **End the day:** the raised moon disc.
 - **Diary:** the farm's projects, the Farm Rank, the milestones, each Uma's Memories and the pairs' Conversations.
@@ -1551,54 +1552,52 @@ Each family's goods, raw and refined, at ★1 and ★5, out of demand; in demand
 
 ## Part 2 — The Umas and the farm's progress
 
-Umas join the farm when the story says: day 1's helper, the welcome list's first, as the opening ends, and the rest with
-a festival, a Dorm level or another Uma's event. The Dorm's beds cap who lives and works on the farm at once. Every Uma has a talent, G to S, in each
-of nine activities, read from her stats, and climbs six ranks in each by working and meeting a challenge. The farm
-climbs a ladder of its own, the Farm Rank, from what it earns and grows, and grows by building: the rank offers each
-place, and you build it with gold and the farm's goods. Every character lives in the town, where a different few are
-out each day for a talk. There are no global chapters and no farm-wide story.
+Every character lives in the town, where a different few are out each day for a talk, and you meet her there when her
+trigger is met; the welcome list comes to the Gate, one a morning, from day 1. Once met, she moves into the Dorm while a
+bed is free, else she lives in town until you invite her. The Dorm's beds cap who lives and works on the farm at once.
+Every Uma has a talent, G to S, in each of nine activities, read from her stats, and climbs six ranks in each by working
+and meeting a challenge. The farm climbs a ladder of its own, the Farm Rank, from what it earns and grows, and grows by
+building: the rank offers each place, and you build it with gold and the farm's goods. There are no global chapters and
+no farm-wide story.
 
 ```
- day 1: your name ──► the opening's lines ──► Home: day 1's helper home (3 beds), waiting at the Gate ──► the projects
-                                                                          │
- the Dorm: Upgrade · 1,000g ── night ──► 5 beds ──────────────────────────┤ Dorm levels 4–8 each bring an arrival
-                                                                          │
- roster > beds ──► the rest are away                                      │
- swap: one idle Uma home ⇄ one away ── night ──► she's home               │
- a festival, another Uma's event ──► the cast's arrival joins that night
+ day 1: your name ──► the opening's lines ──► Home: day 1's visitor at the Gate ──► Say hello: met, home (3 beds)
+ the town: talk with her on 3 days (or her trigger) ──► met ──► a bed free? ──► the Dorm, working
+                                                                    └── no ──► she lives in town ── a bed frees ──► Invite to the farm
+ the Dorm: Upgrade · 1,000g ── night ──► 5 beds (beds only)
+ swap: one idle Uma home ⇄ one in town ── night ──► she's home
 ```
 
 ### The roster
 
-The roster is every Uma who has joined the farm. Who is **home** (on the farm) is capped by the Dorm's beds; everyone
-else on the roster is **away** on her off-season. A spouse in her house is on the farm too, without a Dorm bed. Only
-Umas on the farm can work or tend; chats and gifts reach everyone on the roster, home or away.
+The roster is everyone you've met, and her `joined` the day you met her. Who is **home** (on the farm) is capped by the
+Dorm's beds; everyone else on the roster **lives in town** as a friend. A spouse in her house is on the farm too,
+without a Dorm bed. Only Umas on the farm can work or tend, and play their events and evenings; chats and gifts reach
+everyone you've met, on the farm or in town.
 
 #### How Umas join
 
-Every Uma on the farm is one of the story pack's cast, and each walks in when the story says: day 1's helper, the welcome
-list's first, as the opening ends; then the rest with a festival, a Dorm level or another Uma's event. She joins home
-while a bed is free, else away, at Friendship 0. Nothing is drawn. Until meeting her in town lands, the rest of the
-welcome list waits off the farm. The arrivals and their scenes are the romance's: see
-[the opening, the farmer's name, and arrivals](#the-opening-the-farmers-name-and-arrivals).
+You meet her in town, when her trigger is met, or at the Gate, the welcome list's, one a morning: see
+[meeting her](#meeting-her). Met, she joins the roster at Friendship 0: home while a bed is free, else she lives in town,
+and **Invite to the farm** on her profile brings her into a free bed at once. There's no cap on how many you meet.
+Nothing is drawn.
 
 #### The Dorm's levels and beds
 
 Beds cap who lives and works on the farm at once. Level 1 comes with the farm; each later level is bought at the Dorm.
-The Dorm for 20: its eight levels, their beds, what each costs, the Farm Rank it needs, and the levels whose arrival
-comes the morning they take effect:
+The Dorm for 20: its eight levels, their beds, what each costs, and the Farm Rank it needs. The levels bring beds only:
 
 <!-- live:dorm-levels -->
-| Level | Beds | Costs | Farm Rank | Cumulative | Brings |
-|---|---|---|---|---|---|
-| 1 | 3 | — | — | 0g | — |
-| 2 | 5 | 1,000g | 1 | 1,000g | — |
-| 3 | 7 | 3,000g | 2 | 4,000g | — |
-| 4 | 9 | 8,000g | 3 | 12,000g | An arrival |
-| 5 | 11 | 15,000g | 4 | 27,000g | An arrival |
-| 6 | 14 | 28,000g | 5 | 55,000g | An arrival |
-| 7 | 17 | 50,000g | 6 | 105,000g | An arrival |
-| 8 | 20 | 85,000g | 7 | 190,000g | An arrival |
+| Level | Beds | Costs | Farm Rank | Cumulative |
+|---|---|---|---|---|
+| 1 | 3 | — | — | 0g |
+| 2 | 5 | 1,000g | 1 | 1,000g |
+| 3 | 7 | 3,000g | 2 | 4,000g |
+| 4 | 9 | 8,000g | 3 | 12,000g |
+| 5 | 11 | 15,000g | 4 | 27,000g |
+| 6 | 14 | 28,000g | 5 | 55,000g |
+| 7 | 17 | 50,000g | 6 | 105,000g |
+| 8 | 20 | 85,000g | 7 | 190,000g |
 <!-- /live -->
 
 - **Buying:** the gold goes now; the beds come the next morning. A purchase is refused at the top level ("The Dorm is
@@ -1606,22 +1605,24 @@ comes the morning they take effect:
   be followed by the next one the same day; both arrive the next morning.
 - **Beds free** are the level in effect's beds less the Umas home. A level bought today doesn't count until it takes
   effect.
-- **What waits for a free bed:** anyone who joins comes home only while one is free; otherwise she joins away, and a
-  swap brings her home.
-- **A level's arrival:** levels 4 to 8 each bring an authored arrival the morning they take effect. The Dorm's page says
-  "· someone new arrives" on a level whose arrival hasn't come, never who.
+- **What waits for a free bed:** anyone met comes home only while one is free; otherwise she lives in town, and
+  **Invite to the farm** on her profile brings her once a bed is free (at once), or a swap the next morning.
+- **Invite to the farm:** one you've met who lives in town moves into a free Dorm bed now and can work today. Refused
+  with no bed free ("No bed is free: upgrade the Dorm, or swap."), for one arriving by a swap tomorrow, and for one on the
+  farm already.
 
-#### The off-season and swaps
+#### Living in town, and swaps
 
-Everyone on the roster past the beds is **away on her off-season**. She keeps her ranks and her route, and earns
-nothing: no work, no tending, no rank points. Chats and gifts still reach her.
+Everyone on the roster past the beds **lives in town**. She keeps her ranks and her route, and earns nothing: no work, no
+tending, no rank points, no events or evenings. Chats and gifts still reach her, and she's out in town on her days like
+anyone (see [the town](#the-town)).
 
-- **A swap** sends one Uma home away and brings one away home in her place. It is free and unlimited, and it happens the
-  next morning: the one leaving goes away and the one arriving takes her bed.
-- **Who can go away:** an Uma home with no running job who tends no block. Refused: a working Uma ("She's working."), a
+- **A swap** sends one Uma home to town and brings one from town home in her place. It is free and unlimited, and it
+  happens the next morning: the one leaving goes to town and the one arriving takes her bed.
+- **Who can go to town:** an Uma home with no running job who tends no block. Refused: a working Uma ("She's working."), a
   tender ("She tends Block A."), one already leaving ("She leaves tomorrow."), anyone not home ("She isn't on the
   farm.").
-- **Who can come home:** anyone on the roster who is away and not already arriving ("She arrives tomorrow."). One home
+- **Who can come home:** anyone on the roster who lives in town and isn't already arriving ("She arrives tomorrow."). One home
   already is refused ("She's on the farm already."), and so is a spouse in her house ("She lives in her house.").
 - **Leaving tomorrow:** until the night, an Uma a swap takes out can't take a job, a queue or a block ("She leaves
   tomorrow."). The pickers show her greyed out with "Leaves tomorrow", and she doesn't count as idle. Work she has
@@ -1634,10 +1635,11 @@ nothing: no work, no tending, no rank points. Chats and gifts still reach her.
 
 Night step 8 runs, in order, after the calendar has turned:
 
-1. **The Dorm settles:** a level bought takes effect, then each swap: the Uma leaving goes away and the one arriving
+1. **The Dorm settles:** a level bought takes effect, then each swap: the Uma leaving goes to town and the one arriving
    comes home in her place.
-2. **Arrivals:** every cast Uma not on the roster whose authored arrival holds joins, in the cast's order.
-3. **The goals** (see [the night's goals check](#the-nights-goals-check)).
+2. **The goals** (see [the night's goals check](#the-nights-goals-check)).
+3. **Meeting her:** everyone in town not met yet whose trigger the farm now holds is met (see
+   [meeting her](#meeting-her)).
 
 The places paid for yesterday stand first, before the Dorm settles. The morning's **New today** lists, after the
 season, festival, built, Farm Rank, milestone and household lines:
@@ -1647,43 +1649,44 @@ season, festival, built, Farm Rank, milestone and household lines:
 | "Dorm level 2 · 5 beds" | A level bought took effect | The Dorm |
 | "{name} is home", or "3 Umas are home" | Swaps brought Umas home | The Dorm |
 
-Arrivals are listed under **Hearts** ("{name} arrived", "· away" with no bed). `{name}` is her name, from master data.
+Those the night met are listed under **Hearts** ("Met {name} · moved in", or "· in town" with no bed). `{name}` is her
+name, from master data.
 The morning's **Today** section counts idle Umas ("2 Umas idle", opening the Hearts tab's Work view): an Uma on the farm
 with no running job, tending no growing block, and not leaving tomorrow.
 
 #### The roster's screens
 
 - **The Dorm** (the Dorm on the map):
-  - its level and "3 of 5 beds"; after buying, "Level 3 tomorrow · 7 beds", with "· someone new arrives" when the level
-    brings one;
+  - its level and "3 of 5 beds"; with a bed free and someone in town, "A bed is free: invite someone from town on her
+    profile."; after buying, "Level 3 tomorrow · 7 beds";
   - the next level, "Level 3 · 7 beds", with "· Farm Rank 2" while it's locked, and **Upgrade · 3,000g** (disabled
     until the Farm Rank is reached and the gold is there; "Need 500g more" when only gold is short); at the top, "The
     Dorm is at its top level.";
-  - **Levels:** the eight, each "Built", "Tomorrow", or its cost and Farm Rank, and "· someone new arrives" on a level
-    whose arrival hasn't come;
+  - **Levels:** the eight, each "Built", "Tomorrow", or its cost and Farm Rank;
   - **Tomorrow:** each swap as two faces with "… arrives tomorrow" and **Call off**;
   - **On the farm · n:** each Uma with her best rank and what she's doing (Idle, Working, Tends Block A, Leaves
     tomorrow);
-  - **Swap** (or "Swap · nobody away"), enabled when someone home can go and someone away can come: a picker over the
-    Umas home ("Who goes away?", busy ones greyed out with why), then over those away ("Who comes home for {name}?");
-  - **Away · n:** each Uma with "Away" or "Arrives tomorrow", or "Nobody away." Every row opens her profile.
-- **The Gate** (its quick look on the map): "Umas arrive here." and what brings the next arrivals ("Next: the Dorm's
-  level 4 · the Fishing Derby"), never who, or "Everyone is here."
+  - **Swap** (or "Swap · nobody in town"), enabled when someone home can go and someone in town can come: a picker over
+    the Umas home ("Who goes to town?", busy ones greyed out with why), then over those in town ("Who comes home for
+    {name}?");
+  - **In town · n:** each Uma with "In town" or "Arrives tomorrow", or "Nobody you’ve met lives in town." Every row opens
+    her profile.
+- **The Gate** (its quick look on the map): the welcome list's visitor of the day (see [meeting her](#meeting-her)).
 - **The roster** is the Hearts tab's **Work** view (`/hearts?view=work`; `/roster` lands there): everyone on the roster,
-  home or away, as an album of cards in three columns, under the line "3 on the farm · 2 away · by joined".
+  on the farm or in town, as an album of cards in three columns, under the line "3 on the farm · 2 in town · by joined".
   - **Her face** carries her favourite line's mark top left (a Carrot farming, a Pine Log foraging, a Carp fishing,
     Copper Ore mining, on a light disc), her best talent's grade bottom right on a coloured chip (S gold, A coral, B
     blue, C green, D and below grey), and her level in words top right ("F7", "R4", "S2").
   - **Her card** says her best rank ("Hand · Farming", or "Novice" before her first points) and her best talent
     ("Fishing A"). Sorted by an activity, it says her rank and talent in it ("Hand · C") and the activity, with her
-    points when sorted by them ("Fishing · 52 pts"). An Uma away is dimmed, and her second line says "Away".
+    points when sorted by them ("Fishing · 52 pts"). An Uma in town is dimmed, and her second line says "In town".
   - **Search** by name.
-  - **Filters:** Where (On the farm, Away); Favourite line (Farming, Mining, Fishing, Foraging); her talent in each
+  - **Filters:** Where (On the farm, In town); Favourite line (Farming, Mining, Fishing, Foraging); her talent in each
     activity (C+, B+, A+, S); her rank in each activity (Novice … Legend).
   - **Sorts:** Joined (the default, oldest first), Talent and Rank points (each in a chosen activity, the sort sheet's
     "In" chips, Farming until one is chosen; highest first), and Name.
   - **A tap on her card** opens her profile on its Work side: "Favourite · Fishing (×1.2 rank points)", "Joined Spring
-    1", and "On the farm" or "Away · swap at the Dorm"; then her nine activities, each with its talent chip, her
+    1", and "On the farm" or "In town · the Dorm"; then her nine activities, each with its talent chip, her
     favourite mark on her favourite, "Hand · 52 / 160" (her points alone at Legend), and a line below: "Next: Catch 10
     fish at the River · 3/10", "Points full · …", or "Ranks up tonight · …". A challenge whose target is 1 shows without
     a count.
@@ -1701,19 +1704,22 @@ The Hearts view, her profile's Hearts side, Chat and Gift are the romance's: see
 
 Every character lives in town from day 1: everyone in master data, once each, in her default outfit or the pack's
 outfit for her, and the pack's sisters. The town's people, fourteen Umas in the town's roles, keep its spots. Each day a
-different few are out at the six spots, and you choose who to talk to. Talking on enough days is how her story begins
-(meeting her, next, acts on the talks).
+different few are out at the six spots, and you choose who to talk to. Talking with her on three days, or her own
+trigger, is how her story begins: see [meeting her](#meeting-her).
 
 ```
  the farm map ──► the Town ──► Today: six spots, each with its keeper and up to four out
                                  tap one ──► her face, her name and her line ──► one talk a day counts
+                                                                             └── her trigger met ──► her meeting scene
                           └──► People: everyone, met or not, where she is today · find by name · met first or by name
 ```
 
 #### Who's out today
 
-- **Everyone in town:** master data's characters and the pack's sisters, less the town's people (they keep their spots)
-  and the Umas living on the farm (they're at the farm).
+- **Everyone in town:** master data's characters and the pack's sisters, less the town's people (they keep their spots),
+  the welcome list not met yet (she comes to the Gate on her morning; the day's visitor stays out of town that day), and
+  the Umas living on the farm (they're at the farm; each keeps her place in the draw,
+  unseen, so the day's town never shifts when someone moves in). One you've met who lives in town is out like anyone.
 - **A draw seeded by the player and the day,** so the same day always shows the same town, and tomorrow a different few.
   The rest are at home.
 - **A favourite spot:** a cast entry's `spot`. She's there more often than anywhere else.
@@ -1722,9 +1728,9 @@ different few are out at the six spots, and you choose who to talk to. Talking o
 |  | The rule |
 |---|---|
 | At each spot | Up to 4 a day: 24 in all, the rest at home |
-| Who’s out | Everyone in town but the Umas on the farm and the town’s people, in the order of `draw(uid, day, 'town:<id>', 0)`, lowest first, until every spot is full |
+| Who’s out | Everyone in town but the town’s people and the welcome list not met yet (they come to the Gate; the day’s visitor stays out of town that day), in the order of `draw(uid, day, 'town:<id>', 0)`, lowest first, until every spot is full; an Uma living on the farm keeps her place, unseen, so the day never shifts when someone moves in |
 | Where she stands | Her favourite spot (her cast entry’s `spot`) while it has room, 60% of the time (`draw(…, 1)`); else a spot with room (`draw(…, 2)`) |
-| A talk | Once a day each: her talks so far and the last day, in the save’s `town`. It costs nothing and takes no time |
+| A talk | Once a day each: her talks so far and the last day, in the save’s `town`. It costs nothing and takes no time, and it meets her when it meets her trigger |
 | Her line | One a day (`draw(uid, day, 'town-line:<id>', 0)`) of her bible’s `townLines`, else the game’s 6: “Oh, hello! Out for a walk too?” “Lovely day for it, isn’t it?” “You’re from the farm up the road, aren’t you?” “I come here when I need to think.” “Good to see you, {farmer}.” “Busy day? Mine’s only just starting.” |
 <!-- /live -->
 
@@ -1753,19 +1759,27 @@ whatever it leaves, the game's own plays:
 - **Tap one to talk** (`?talk=<id>`): a sheet with her bust, her name, the spot, her line for the day (`{farmer}` your
   name), and "Your first talk", then "Talked 3 days · today ✓". The tap is the talk: it counts once a day, costs nothing
   and takes no time. When she's tied to the spot's keeper, the tie's line shows with the keeper's face.
+- **A talk that meets her trigger** plays her meeting scene at once, over the town (see [meeting her](#meeting-her)).
+- **Give a gift**, under the talk, for one you haven't met: one good from the Warehouse at its stars (its points show
+  "?"). It meets her when her trigger is a gift she likes or the good it names; else she says "She likes it.", "She
+  thanks you." and the like, and the good is spent all the same.
+- **One you've met who lives in town:** her line and the talk as anyone's, with **Met** and **Her profile ›** (where
+  Invite to the farm is).
 - **A keeper's sheet:** her role, what she does and the spot she keeps, and her ties with the cast, each with its line.
   Talking with her counts nothing: the town's people have no story to begin.
 - **People:** everyone in town and the town's people, each with her face and name and where she is today ("At the
-  Café today", "At home", "On the farm", "At the Café, most days" for a keeper, "In town"), the days talked, and **Met**
-  for an Uma on the farm. **Find by name** (any case, accents aside) and a sort: **Met first** (on the farm, then talked
-  most, then by name) or **Name**. One at home says "At home today. Look for her another day."; one on the farm links her
-  profile.
+  Café today", "At home", "On the farm", "At the Gate today" for the day's visitor, "At the Café, most days" for a
+  keeper, "In town"), the days talked, and **Met**
+  for anyone you've met, on the farm or in town. **Find by name** (any case, accents aside) and a sort: **Met first**
+  (met, then talked most, then by name) or **Name**. One at home says "At home today. Look for her another day."; the
+  day's visitor "She’s at the Gate today." with **The Gate ›**; one on the farm links her profile.
 - **Lean:** faces load as they scroll into view.
 
 #### The save
 
 The save's `town` holds, per character (a character id, or a sister's `s<outfitId>`), her talks so far and the last day
-talked: nothing else. A v4 from before the town loads as it was, with no talks.
+talked: nothing else. Say hello at the Gate counts there as a talk. A v4 from before the town loads as it was, with no
+talks. Who you've met is the roster (`roster[id].joined` the day you met her).
 
 ### Talents and ranks
 
@@ -1896,7 +1910,7 @@ empty or all-Ready block earns nothing). Where she worked sets the activity it p
 
 - **One day pays one activity:** her job's if she has one, else her tending's. An Uma can't hold both anyway: a tender
   can't take a job, and a working Uma can't tend.
-- An Uma away earns nothing.
+- An Uma living in town earns nothing.
 - The Mine, the Quarry, the Smelter and the Cutter wait for mining's game, so in play only farming, foraging and
   fishing earn rank points.
 
@@ -2071,7 +2085,8 @@ The Diary counts what the farm has shipped and pays for it.
 - **When they pay:** milestones and rows are checked at night step 8 and paid that night, their gold with the bin's,
   milestones first in their list order, then rows. Each is listed in the morning's New today ("10,000g shipped · +300g",
   "Woods: every grade shipped · +500g"), tagged Milestone, opening the Diary.
-- **Umas on the roster** counts the whole roster, day 1's helper included, so a fifth Uma pays 300g.
+- **Umas on the roster** counts everyone you've met, on the farm or in town, day 1's visitor included, so a fifth Uma
+  pays 300g.
 - **Depth** counts each forest area and fishing spot past the first. It pays the first night a haul comes home from
   there; the Woods and the Pond are open on day 1 and pay none.
 - **Ranks** pay for the first Uma to reach each rank in any activity.
@@ -2209,7 +2224,7 @@ Your life with the Umas opens the homestead and the town:
 | 5 Umas met | The Requests board’s place (its game comes later) | Umas on the roster |
 <!-- /live -->
 
-- **"Met"** is every Uma on the roster today, home or away; meeting her in town comes later.
+- **"Met"** is everyone on the roster today, on the farm or in town (see [meeting her](#meeting-her)).
 - **The ring bench** is the romance's: see [the ring bench](#the-ring-bench).
 - **The houses and the rows** are the homestead's: see [the homestead](#the-homestead).
 
@@ -2265,10 +2280,11 @@ day.
 Night step 8 runs, in order:
 
 1. **The places paid for yesterday stand** (`raiseBuildings`), each a line of news.
-2. **The Dorm settles and arrivals join** (see [the roster](#the-roster)).
+2. **The Dorm settles** (see [the roster](#the-roster)).
 3. **The Diary pays** every milestone and row reached and not yet paid.
 4. **The Farm Rank's points** are recomputed; **the ranks reached tonight** are noted, lowest first.
-5. **The ring bench** opens the night after the first Romance 8.
+5. **Meeting her:** everyone in town whose trigger the farm now holds is met (see [meeting her](#meeting-her)).
+6. **The ring bench** opens the night after the first Romance 8.
 
 The morning's New today then lists, in order: the season and festivals, each place built, each Farm Rank reached, each
 milestone and row paid, then the household's milestones and the Dorm's news.
@@ -2312,16 +2328,16 @@ Each scene plays once: played through or skipped, it's marked read and never pla
 
 - **Nothing plays until the farmer is named.**
 - **The opening's lines,** on day 1, once you're named: the pack's `opening.json`, any length, else the game's three
-  (below). Reading them or skipping them brings day 1's helper, and the farm opens on Home: no card, no tutorial.
+  (below). Reading them or skipping them opens the farm on Home, day 1's visitor at the Gate: no card, no tutorial.
 - **The ring bench's scene,** the morning after the first Romance 8 event, once the summary is put away: after the
-  opening, before arrivals.
-- **Arrival scenes,** after those, in the order the Umas joined. Day 1's helper's is the exception: she waits at the
-  Gate, and hers plays from the Gate's quick look, never on its own.
+  opening, before the meeting scenes.
+- **Meeting scenes,** after those, in the order you met them: at once after Say hello at the Gate or a talk or gift in
+  town that met her; the morning after the night met her, once the summary is put away.
 
 #### The opening's lines
 
 The pack's `opening.json` is the opening, at any length (see [the opening](#the-opening)). Without one, the game's own
-three play, one to a tap; the last only when someone is coming (day 1's helper):
+three play, one to a tap; the last only when someone is coming (day 1's visitor):
 
 <!-- live:scenes -->
 | # | Kind | Line |
@@ -2376,24 +2392,24 @@ The Diary tab (`/diary`) holds the farm's projects, the Farm Rank and the milest
 - **It loads master data itself** (names and busts), since a new farm's boot doesn't wait for it. **Skip** works
   without it, and skipping marks the scene read.
 - **The opening** plays its lines with the title line "Day 1" (with a place once a `place` step names one: "Day 1 ·
-  Gate"), "Tap to go on · 1/3". Its last tap, or **Skip** on any line from the first, reads it, brings day 1's helper
-  and opens **Home**: three taps after the name for the game's own three.
-- The same player plays the arrival scenes and the ring bench's scene; heart events play in their own player. The
+  Gate"), "Tap to go on · 1/3". Its last tap, or **Skip** on any line from the first, reads it and opens **Home**:
+  three taps after the name for the game's own three.
+- The same player plays the meeting scenes and the ring bench's scene; heart events play in their own player. The
   romance part covers them.
 
 ## Part 3 — Hearts: the cast and the romance
 
 > **The romance is the game's.** It plays on save v4 from the story pack, and with placeholders wherever the pack is
-> silent: the farm's Umas are only the cast (the pack's, or with no pack master data's first five), who walk in when the
-> story says, and **Hearts** is the bottom bar's second tab (Farm · Hearts · End the day · Diary ·
+> silent: anyone in town can be met, the welcome list (the pack's, or with no pack master data's first five) at the Gate
+> in the first days, and **Hearts** is the bottom bar's second tab (Farm · Hearts · End the day · Diary ·
 > Menu), with the roster's album as its Work view. A save from before v4 starts over as a new farm (see
 > [Save versions](#save-versions)).
 
 ### The cast and the story pack
 
-Every Uma on the farm is one of **the cast**: one character each, keyed by her character id everywhere the
-save names an Uma (the roster, her route, the Dorm, work, bonds, Memories and arrivals). She plays one outfit, walks in
-when the story says, and has a route of her own.
+Everyone you've met is one of **the cast**: one character each, keyed by her character id everywhere the save names an
+Uma (the roster, her route, the Dorm, work, bonds, Memories and meeting scenes). She plays one outfit, is met when her
+trigger holds, and has a route of her own. One you meet whom the pack doesn't hold joins the cast bare, on placeholders.
 
 #### What the pack holds
 
@@ -2455,12 +2471,12 @@ an error otherwise.
 
 #### The menu's welcome list, her trigger and her chapters
 
-The cast file also gives, all optional, three things the game reads now and acts on as meeting her and her chapters
-land:
+The cast file also gives, all optional, three things: the welcome list and her trigger act now ([meeting
+her](#meeting-her)); her chapters act when their screens land:
 
 | Item | What it is | Without it |
 |---|---|---|
-| **The welcome list** (`welcome`) | Who comes to the farm in the first days, in order, any number | The first five of the cast, in its order |
+| **The welcome list** (`welcome`) | Who visits the Gate in the first days, one a morning, in order, any number; each meets you on her first talk | The first five of the cast, in its order |
 | **Her trigger to meet** (`meet`) | From the trigger menu: talks on *n* days, a gift, a town spot, a season, a festival, a Farm Rank, a place built, a good shipped, or after another character's event | Talk with her on three different days |
 | **Her chapters** (`chapters`) | Their titles, which of her rungs each holds, and an optional gate from the same menu | Four: "Getting to know her" (her arrival, F1–F10, the confession), "Together" (R1–R10, the proposal), "The wedding", "Married life" (S1, S3, S5) |
 
@@ -2492,7 +2508,7 @@ they're needed.
   to change.
 - **A sister** (`s<outfitId>`, the Ranker's) is an outfit of an Uma, presented as a character of her own: she plays that
   outfit (its face, bust, talents and temperament), and her name is the pack's cast entry's `name`, never in git (without
-  one, her elder's name as her sister). She lives in town; she can't join the farm until meeting her lands.
+  one, her elder's name as her sister). She lives in town and is met like anyone; the roster takes her id.
 - **Anyone in town** meets master data through the same resolver: one of the town's people, or any other character,
   plays her default outfit; a role, the Uma who plays it. A character with no outfit shows master data's character face,
   else her name's letters on a disc.
@@ -2510,13 +2526,13 @@ character, name or line. It's the tests' only: no production build holds it, and
 release is there (`pnpm story:release --stand-in` writes one). Its first Uma, a farmer, has her whole route and every
 optional field; the forager and the fisher have only their arrival scenes and no bible, so the placeholders and the
 calling's line are exercised. Its opening is four invented lines, three narrated and then the farmer's thought, ending
-on someone at the Gate; it names no welcome list, so its first is day 1's helper. None of the three outfits is in master data, so all three show lettered discs. The three
+on someone at the Gate; it names no welcome list, so its three are the welcome list and its first is day 1's visitor. None of the three outfits is in master data, so all three show lettered discs. The three
 stand-ins:
 
 <!-- live:stand-in -->
 | Character | Outfit | Calling | Favourite line | Welcome list | Bible | Scripted |
 |---|---|---|---|---|---|---|
-| 9000001 | 900000101 | farming | farming | 1st: joins as the opening ends | Yes | 27 of 27 |
+| 9000001 | 900000101 | farming | farming | 1st: day 1’s visitor | Yes | 27 of 27 |
 | 9000002 | 900000201 | foraging | foraging | 2nd | No (her calling stands in) | 1 of 27 |
 | 9000003 | 900000301 | fishing | fishing | 3rd | No (her calling stands in) | 1 of 27 |
 <!-- /live -->
@@ -2559,7 +2575,7 @@ every ladder, event, perk, evening, proposal, wedding and household runs end to 
 | The opening | Three short lines: the farm, its nine Carrot seeds, and someone waiting at the Gate (that line only when someone is coming) |
 | Her name and outfit | Her master-data name and default outfit (her first original one) |
 | Her chat lines, by stage | 5 short lines a stage, written for the game (before Friendship 1, her temperament’s) |
-| Her meeting scene | Two short lines and a hello; it pays as a written one does. A written one with no choice gets the hello |
+| Her meeting scene | Two short lines and a hello, at the Gate for the welcome list, in town for anyone else; it pays as a written one does. A written one with no choice gets the hello |
 | A heart event | A short card: her moment, her line and your reply; its points and rewards pay as written |
 | A play’s prompt | Its game’s: “Cast the line together.” |
 | Her chapters | “Getting to know her”, “Together”, “The wedding”, “Married life” |
@@ -2575,7 +2591,7 @@ every ladder, event, perk, evening, proposal, wedding and household runs end to 
 | A pair’s conversation | Two short lines, one each, at every bond level of a tie; it pays nothing, as written |
 | A household scene or the finale | A short card: a line, each spouse’s line, a line; the finale’s dance. It pays nothing, as written |
 | Her house lines | Her temperament’s |
-| Her arrival | None: the welcome list’s first joins as the opening ends; meeting her in town brings the rest when it lands |
+| The welcome list | The cast’s first 5, in its order: one a morning at the Gate from day 1, each met on her first talk |
 | The town’s people | Master data’s characters fill the 14 roles, from the last in its order, never one of the cast |
 | The town’s spots | The game’s 6: The Plaza, The Market, The Café, The Harbour, The Library, The Hilltop Track |
 | Her favourite spot | None: she’s out at any spot alike |
@@ -2585,7 +2601,8 @@ every ladder, event, perk, evening, proposal, wedding and household runs end to 
 
 - **No pack at all** (none published, or a pack whose cast names nobody): the cast is master data's first five
   characters by id, the welcome list's size, each in her default outfit with her master-data name. The game's three
-  lines open the farm, and master data's first is day 1's helper. Everyone else waits for meeting her in town.
+  lines open the farm, and the five visit the Gate one a morning, master data's first on day 1. Everyone else is met in
+  town, on three days' talks.
 - **Her line from master data** is the work her stats suit best, by the talents' one rule: each activity reads one stat
   (Stamina farming, Guts the ranch, Power mining, Wit fishing, Speed foraging), and a tie goes to the first in that
   order. A line whose places aren't built yet waits as a written one does ("Opens when the Mine is built").
@@ -2593,8 +2610,9 @@ every ladder, event, perk, evening, proposal, wedding and household runs end to 
   no play the best reply is a Perfect, so a card pays +50, +30 and +30 at best, as a written heart event does. Her beat's
   setup, place, play and unlock still apply when her bible has them. The big rungs keep their shape: her confession's
   reply holds Yes and Not yet, the proposal follows the ring you chose, and the wedding's last choice is the vows.
-- **Her meeting scene** is two lines and a hello, at the Gate: +50 and the hello's +30 or +10. A written one with no
-  choice gets the same hello, so every arrival pays as one with a choice does.
+- **Her meeting scene** is two lines and a hello at the Gate for the welcome list, or two lines and a reply in town for
+  anyone else: +50 and the reply's +30 or +10. A written one with no choice gets the Gate's hello, so every meeting pays
+  as one with a choice does.
 - **A tie's pair** has a conversation at every bond level: the pack's where it writes one, else two short lines, one
   each. A pair the ties don't hold has none ("‹a› and ‹b› are closer now").
 - **The household** plays its scenes at 5, 10 and 15 married and the finale at 20 whatever the pack holds: the pack's
@@ -2634,7 +2652,7 @@ Each card's first line, which is also its Memory's caption when her beat gives n
 | Spouse 5 | You renew your vows on a quiet evening. |
 <!-- /live -->
 
-### The opening, the farmer's name, and arrivals
+### The opening, the farmer's name, and meeting her
 
 #### The farmer's name
 
@@ -2662,8 +2680,8 @@ A new farm takes under a minute: your name, a few lines, and you're on the farm.
 
 ```
  the name sheet ──► the opening's lines, one to a tap ──► Home, day 1
-                     the pack's opening.json, any length;      day 1's helper home, waiting at the Gate:
-                     else the game's three                     the Gate's quick look → Say hello → her arrival scene
+                     the pack's opening.json, any length;      day 1's visitor at the Gate:
+                     else the game's three                     the Gate's quick look → Say hello → met → her meeting scene
                      Skip from the first line ─────────────────┘
 ```
 
@@ -2672,66 +2690,87 @@ A new farm takes under a minute: your name, a few lines, and you're on the farm.
    title line's place), else [the game's three](#the-openings-lines). `{farmer}` is filled as each shows.
 3. **Its last tap, or Skip on any line from the first,** reads it once and opens **Home** on day 1: three taps after
    the name for the game's own three. No picks, no card, no tutorial.
-4. **Day 1's helper joins** as it's read: the welcome list's first in the cast (with no pack, master data's first),
-   home in the Dorm at Friendship 0, so the farm has someone to work. Nobody else comes then: the rest of the welcome
-   list waits off the farm until meeting her in town brings them one a morning. A cast with nobody brings nobody, and
-   the game's opening drops its Gate line.
-5. **She waits at the Gate.** The Gate on the map wears a **Waiting** badge, and its quick look says "‹name› is
-   waiting at the Gate." with **Say hello**, which plays her arrival scene. It never plays on its own, any day; she
-   works the farm meanwhile.
+4. **Day 1's visitor waits at the Gate:** the welcome list's first in the cast (with no pack, master data's first).
+   The Gate on the map wears a **Visiting** badge, and its quick look says "‹name› is at the Gate." with **Say hello**,
+   her first talk: it meets her, she moves into the Dorm (three beds) at Friendship 0 so the farm has someone to work,
+   and her meeting scene plays. The rest of the welcome list comes one a morning (see [meeting her](#meeting-her)). A
+   cast with nobody brings nobody, and the game's opening drops its Gate line.
 
 Nothing is picked or drawn. The farm has no global chapters, so the opening is the farm's first morning, never a plot.
 A farm whose opening was already read never plays it again, and keeps everyone it has.
 
-#### Arrivals
+#### Meeting her
 
-Each Uma's arrival is her cast entry's, and it's optional. The three kinds, and when each one is checked (a cast entry
-that still names a chapter arrival, or an opening arrival, is noted and dropped: the farm has no chapters, and the
-opening brings only day 1's helper, so she waits to be met; a cast file's old `opening` list is dropped the same way):
+Every character lives in town, and her story begins when her trigger is met. From then on she has the whole romance:
+her ladders, heart events, perks, evenings, the proposal, the wedding and married life; she shows on the Hearts tab;
+her chapters come next. There's no cap on how many you meet: the Dorm's beds cap only who lives on the farm.
 
-<!-- live:arrivals -->
-| Arrival | When she arrives | Checked |
+```
+ the welcome list ──► the Gate, one a morning from day 1 ──► Say hello: her first talk ──┐
+ anyone else in town ──► her trigger: talks on 3 days (or the pack's `meet`) ──────────────┼──► met: her meeting scene
+ the farm holds her trigger (a Farm Rank, a place built, a good shipped, another's event) ─┘          │
+                                                                                a bed free? ──► the Dorm, working
+                                                                                    └── no ──► she lives in town
+                                                                                      a bed frees ──► Invite to the farm
+```
+
+- **Her trigger** is her cast entry's `meet`, from [the trigger menu](story-pack.md#the-trigger-menu); with none, **talk
+  with her on three different days**. Her progress is the town's talks (`town[id].talks`), a talk counting once a day.
+- **The welcome list** (the pack's `welcome`, else the cast's first five) meets you on her first talk, whatever her
+  trigger. From day 1, **one a morning** visits the Gate, in the list's order: today's visitor is the list's first not
+  met before today, so the next comes the morning after the one before her is met, and one you don't greet waits there
+  the next day too. Her meeting scene is her Gate visit, so she isn't out in town until she's met. The Gate wears
+  **Visiting**; its quick look says "‹name› is at the Gate." with **Say hello**, her first talk (it counts in `town`),
+  which meets her. Day 1's visitor is the farm's first helper: with three beds, she moves in and works the farm that
+  day.
+- **When it's checked**, by kind:
+
+<!-- live:meet-kinds -->
+| Trigger (`meet`) | What meets her | Checked |
 |---|---|---|
-| `festival` | The morning of that festival’s day in its year (year 1 unless the cast names one), built or not | Night step 8, `arriveUmas` |
-| `beds` | The morning the Dorm’s level *n* takes effect (levels 4–8) | Night step 8, `arriveUmas` |
-| `event` | The morning after another Uma’s named event plays (`<characterId>:<eventId>`, or an event id: anyone’s) | Night step 8, `arriveUmas` |
+| `talks` | Talk with her on this many different days (3 without a trigger) | A talk in town |
+| `gift` | Give her a gift she likes or loves in town, or the good it names | A gift in town |
+| `spot` | Talk with her at this town spot | A talk in town |
+| `season` | Talk with her in this season | A talk in town |
+| `festival` | Talk with her on this festival’s day, any year | A talk in town |
+| `farm-rank` | The Farm Rank reaches this rank | A talk or a gift in town, and every night |
+| `built` | This place of the farm is built | A talk or a gift in town, and every night |
+| `shipped` | This many of a good shipped, in all | A talk or a gift in town, and every night |
+| `event` | Another character’s event has played (`<characterId>:<event>`; `arrival` is her meeting scene), or an event id: anyone’s | A talk or a gift in town, and every night |
 <!-- /live -->
 
-- **No arrival:** a cast Uma with none, other than day 1's helper, stays off the farm until meeting her in town brings
-  her. Her arrival has no placeholder: the opening brings day 1's helper, and meeting her brings the rest.
-- **A state, checked each night** at step 8, after the Dorm settles: every cast Uma not on the roster whose arrival holds
-  joins. A trigger already passed holds too, so she arrives that night.
-- **She joins** home while a bed is free, else away on her off-season (the Dorm's swap brings her home), at Friendship 0
-  with 0 points. Each of her ties whose other Uma is on the farm starts at its seed. Her chats and gifts work from that
-  day; her events and evenings need her home.
-- **In the cast's order** when several arrive the same night, and **once each.**
-- **A Dorm-level arrival** may name any level 2–8; the design gives levels 4–8 one each. The Dorm's page marks a level
-  that will bring someone ("Level 4 · 9 beds · someone new arrives"), never who.
-- **The Gate** is where she walks in. Its quick look first lists day 1's helper while she waits there ("‹name› is
-  waiting at the Gate." and **Say hello**), then says "Umas arrive here." and what brings the next arrivals, never
-  who, up to three: the next Dorm level and the next festival by date first, then a story event, then the rest ("Next:
-  the Dorm's level 4 · the Fishing Derby · a story event"). Once
-  the whole cast is here it says "Everyone is here."
-- **The morning** names her in the Hearts section, "‹name› arrived · away" with **New**, a tap opening her profile.
+- **Met:** she joins the roster that day (`roster[id].joined`) at Friendship 0 with 0 points: **home in the Dorm** while a
+  bed is free, so she can work at once; **else she lives in town** as a friend, out on her days like anyone, with her
+  chats and gifts, and **Invite to the farm** on her profile moves her in at once while a bed is free. Each of her
+  ties with someone met starts at its seed. Her events and evenings need her on the farm.
+- **Her meeting scene** plays at once after the talk, the gift or Say hello that met her; one the night met plays the
+  morning after, once the summary is put away. Several the same night meet in the cast's order, then the town's.
+- **Never met:** the town's people (they keep their roles), or anyone met already. A sister (`s<outfitId>`) is met like
+  anyone: the roster takes her id.
+- **The morning** names one the night met in the Hearts section, "Met ‹name› · moved in" (or "· in town") with **New**,
+  a tap opening her profile.
+- **An older v4** loads as it was: everyone on its roster counts as met, the day she joined the day you met her. A day-1
+  helper of the lean start who was never greeted has her meeting scene play the next time the farm opens. The retired
+  `arrives` of a cast entry (a festival, the Dorm's beds, after an event) is noted and dropped: her `meet` says when you
+  meet her, and the Dorm's levels bring beds only.
 
-#### Her arrival scene
+#### Her meeting scene
 
-Her arrival scene plays the next time the farm opens with the morning summary put away: after the opening and the ring
-bench's scene, in the order the Umas joined (by day, then the cast's order). **Day 1's helper's** plays from the Gate
-instead: its quick look's **Say hello** (`?hello=‹id›`), whenever you go, and never on its own; an Uma who joined on
-day 1 on an older farm and hasn't been welcomed waits there too. The scene player shows
-her lines with her bust (or her disc) and `{farmer}` filled, her emote as a word, narration, thoughts in italics, a title
-line ("Stand-in 1 arrives · Gate"), pauses, flags (wording only) and **her choice**: usually one; written with none she
-pays +50 alone, and with more the first pays.
+Her meeting scene is her route's arrival scene, and plays as soon as she's met (above), after the opening and the ring
+bench's scene, in the order you met them (by day, then the cast's order). The scene player shows her lines with her bust
+(or her disc) and `{farmer}` filled, her emote as a word, narration, thoughts in italics, a title line ("Meeting
+Stand-in 1 · Gate"), pauses, flags (wording only) and **her choice**: usually one; written with none she pays +50 alone,
+and with more the first pays.
 
 - **Each option shows its gain on the button** before the tap.
-- **Skip** jumps to the choice, never past it; after the choice, to the end. So every arrival pays.
-- It ends on her bust, "♥ +80" (or +60) and **Welcome, ‹her name›**, and the farm stays where it was.
+- **Skip** jumps to the choice, never past it; after the choice, to the end. So every meeting pays.
+- It ends on her bust, "♥ +80" (or +60), where she lives ("She moves into the Dorm." or "No bed free: she lives in town
+  for now.") and **Welcome, ‹her name›**, and the farm stays where it was.
 
 What it pays into her Friendship 1 bar:
 
 <!-- live:arrival-pay -->
-| Her arrival scene | Points into her bar |
+| Her meeting scene | Points into her bar |
 |---|---|
 | Played or skipped to its end | +50 |
 | Its choice: the option with the highest authored gain (each one tied at the top) | +30 |
@@ -2740,9 +2779,10 @@ What it pays into her Friendship 1 bar:
 | Written with more than one choice | The first pays; the rest are words only |
 <!-- /live -->
 
-It pays once and is stamped once. A route without her arrival scene plays the game's own: two lines and a hello at the
-Gate, worth +30 and +10. A written one with no choice ends on the same hello. Any pack can leave one unwritten: the
-release notes it, and the placeholder plays.
+It pays once and is stamped once (`arrivals`). A route without her arrival scene plays the game's own, worth +30 and
++10: for the welcome list, two lines and a hello at the Gate; for anyone else, two lines and a reply in town ("You get
+talking, and the time slips by."). A written one with no choice ends on the Gate's hello. Any pack can leave one
+unwritten: the release notes it, and the placeholder plays.
 
 ### Her favourite line and tastes
 
@@ -2826,7 +2866,7 @@ applies the day's factors and says what it paid. The acts, what each pays and ho
 <!-- live:love-points -->
 | Act | Points | Limit | Paid by |
 |---|---|---|---|
-| Chat (tap her) | +15 | Once a day each, home or away | `chatV4` |
+| Chat (tap her) | +15 | Once a day each, on the farm or in town | `chatV4` |
 | Gift (one good, its stars your choice) | Loved +60, Liked +30, Neutral +10, Disliked 0; × (1 + 0.1 a star above ★1) | One a day each; ×3 on her birthday | `giftV4` |
 | Praise (a ★3+ day’s work, a rank-up, a Fine play) | +20 | Once a day, when earned | `praiseV4` |
 | Her line (she worked it today) | +10 | Paid at night, step 6 | `payLines` |
@@ -2841,11 +2881,11 @@ applies the day's factors and says what it paid. The acts, what each pays and ho
 
 - **The day's factors multiply once each:** a gift ×3 on her birthday; on her anniversary every act ×2 except the
   evening, which takes its own ×1.5 instead.
-- **Chat** (tap her): +15, once a day each, home or away ("You've talked today."). Her line for the day is drawn by the
+- **Chat** (tap her): +15, once a day each, on the farm or in town ("You've talked today."). Her line for the day is drawn by the
   account, the day and her id, so it's the same all day. Before Friendship 1 she speaks her temperament's lines; from
   Friendship 1, her chat set for her stage: friend through her confession (Romance 0 included), partner from Romance 1
   to the wedding, spouse after it. A stage her bible doesn't write plays the game's five short lines for it.
-- **Gift:** one good from the Warehouse at the stars you choose, once a day each, home or away ("One gift a day."; a seed
+- **Gift:** one good from the Warehouse at the stars you choose, once a day each, on the farm or in town ("One gift a day."; a seed
   is "That isn't a gift."). The good is used, and its taste is learnt. Stars multiply by 1 + 0.1 a star above ★1:
 
 <!-- live:gift-stars -->
@@ -2900,7 +2940,7 @@ season, 0–2) + ⌈min(day, 31) ÷ 8⌉, held to 1–4.
   may share a birthday; a birthday on a festival day is both.
 - **Her anniversary** is her wedding's day of the year, from a year after the wedding on (every 48 days after it). That
   day every act pays ×2 (the evening ×1.5 instead), and that morning **she leaves a ★5 item of her line** in the
-  Warehouse, home or away: a crop of the season for a farmer, a good of her foraging rank's deepest open area this season
+  Warehouse, on the farm or in town: a crop of the season for a farmer, a good of her foraging rank's deepest open area this season
   for a forager, a fish of her deepest open spot for a fisher, and a crop of the season for any line whose place isn't
   built yet, so an anniversary is never empty. The morning says so the day before and on the day.
 
@@ -2912,7 +2952,7 @@ Her next event is **Ready** when all four of these hold:
 | # | Ready needs | Not met |
 |---|---|---|
 | 1 | Her bar is full for the rung; a waiting rung (the confession, the proposal, the wedding) is Ready the day after the rung before, and the proposal needs a ring in the Warehouse | `bar`, `day`, `ring` |
-| 2 | She’s home (on the Dorm’s list, or a spouse in her house) | `away`: “Swap her home” |
+| 2 | She’s home (on the Dorm’s list, or a spouse in her house) | `away`: “Invite her to the farm” |
 | 3 | She hasn’t played one of her events today | `today` |
 | 4 | Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level | `setup`; `opens` for the ranch, mining, cooking, expeditions, serving or forging before their place is built (the Coop, the Mine, the Kitchen, the expedition post, the Restaurant, the Forge) |
 <!-- /live -->
@@ -2929,7 +2969,7 @@ Never an hour, the weather, a season or a festival. When she isn't Ready, the fi
 | 5 | `bar` | Her bar isn’t full for the rung |
 | 6 | `day` | A waiting rung, on the day the rung before played |
 | 7 | `ring` | The proposal, with no ring in the Warehouse |
-| 8 | `away` | She’s away on her off-season |
+| 8 | `away` | She lives in town |
 | 9 | `today` | She played one of her events today |
 | 10 | `setup` | Its day setup isn’t met today |
 <!-- /live -->
@@ -2944,7 +2984,7 @@ Never an hour, the weather, a season or a festival. When she isn't Ready, the fi
 
 #### The Hearts tab
 
-**Hearts** is the Umas' tab: one row an Uma on the roster, home or away, a filter row, and her profile on a tap. It
+**Hearts** is the Umas' tab: one row an Uma you've met, on the farm or in town, a filter row, and her profile on a tap. It
 has no badge. Its two views ride in the URL: Hearts (the default) and **Work**, the roster's album with **her level in
 words** ("F7", "R4", "S2") in each face's corner. `/roster` lands on the Work view.
 
@@ -2952,7 +2992,7 @@ words** ("F7", "R4", "S2") in each face's corner. `/roster` lands on the Work vi
 ┌──────────────────────────────────────────┐
 │ Hearts  Married 0/3  ☾ Evening ○     (i) │  ○ free, ● spent: a mark a slot today
 │ [ Hearts ]  Work                         │
-│ [Ready 1] [Friends 3] [Partners] [Married] [Away]
+│ [Ready 1] [Friends 3] [Partners] [Married] [In town]
 ├──────────────────────────────────────────┤
 │ (face) Stand-in 1                ● Ready │
 │        New friend ♥ ▣□□□□□□□□□  200/200  │  the ladder's hearts, the next filling
@@ -2965,19 +3005,20 @@ words** ("F7", "R4", "S2") in each face's corner. `/roster` lands on the Work vi
 ```
 
 - **A row:** her face, her name and chips (**✉** while her invitation stands, unanswered or said yes and not yet spent;
-  **Away**), and at its end **● Ready** in her stage's colour, which plays her event; a tap elsewhere opens her profile.
+  **In town**), and at its end **● Ready** in her stage's colour, which plays her event; a tap elsewhere opens her profile.
   Under it, her level in words, a filling heart, **her ladder's hearts as a bar** (ten for friendship and romance, five
   as a spouse: the levels played full, the next filling by points over its cost, the rest empty) and "points/cost". A
   waiting rung shows every heart full with its mark, **◆** her confession or **◇** the proposal and the wedding, and
   "Tomorrow" or "Ready".
-- **The row's line:** Ready, her rung and where it plays ("Ready · Romance 5 · the Pond at night"); away, "Swap her home
-  to play her events"; a short bar, nothing more (the bar says it); otherwise what her next event waits for ("Friendship 3
+- **The row's line:** Ready, her rung and where it plays ("Ready · Romance 5 · the Pond at night"); in town, "Invite her
+  to the farm to play her events"; a short bar, nothing more (the bar says it); otherwise what her next event waits for ("Friendship 3
   · the Fields, when she works there"); with none of these, a spouse's house ("Rose Cottage") or "Needs a room". Then "+N banked" (cut first on a narrow row), and today's **✓chat** and **✓gift**.
 - **The sort:** Ready first, then the least progress (her next rung's place on the route, then her points), then the
   cast's order.
 - **The filters,** one at a time, each with its count: **Ready**; **Friends** (friendship, and her confession's wait);
-  **Partners** (romance, and the proposal's and the wedding's waits); **Married**; **Away**.
-- **The header:** "Married n/N", N the cast's size (3 on the stand-in); a household scene or the finale's chip while one
+  **Partners** (romance, and the proposal's and the wedding's waits); **Married**; **In town**.
+- **With no one met yet:** "No one yet. Say hello at the Gate, or meet someone in town."
+- **The header:** "Married n/N", N everyone you've met (3 with the stand-ins); a household scene or the finale's chip while one
   is Ready ("⌂ Scene 1 ›", "⌂ Harvest ›"); and **☾ Evening** with a mark a slot today, **○** free or **●** spent, the
   evenings first and then festival night's.
 - **The (i)** has five lines: how her bar fills and banks; Ready and setups; one event a day; gifts and tastes; and the
@@ -2986,8 +3027,9 @@ words** ("F7", "R4", "S2") in each face's corner. `/roster` lands on the Work vi
 
 #### Her profile
 
-Her profile is a sheet over the tab, opened from her row, a Work card, the morning's lines and the Dorm's list. Each part
-shows only what exists; nothing says "Soon".
+Her profile is a sheet over the tab, opened from her row, a Work card, the morning's lines, the Dorm's list and the town.
+Each part shows only what exists; nothing says "Soon". One who lives in town has, under her face, **Lives in town** and
+**Invite to the farm** while a bed is free (she moves in at once), else "No bed free." and **The Dorm ›**.
 
 ```
 ┌──────────────────────────────────────────┐
@@ -3024,7 +3066,7 @@ shows only what exists; nothing says "Soon".
   narrow phone.
 - **The Next card:** "Next: Romance 5"; its perk in her line's words (with "Opens when the Mine is built" where her
   line's place waits); her beat's hint for the rung (where and how it opens); the bar with "points / cost" and "+N banked"; and what it
-  waits for: "Ready", "123 to go", "Tomorrow", "Needs a ring", "Swap her home" (a link to the Dorm), "Tomorrow: one event
+  waits for: "Ready", "123 to go", "Tomorrow", "Needs a ring", "Invite her to the farm" (a link to the Dorm), "Tomorrow: one event
   a day", "The Fields, when she works there", "With Carrot in the Warehouse", "Bond 3 with Stand-in 2", "Opens when the
   Mine is built", "She said “Not yet”", "Comes tonight", and once her route is done "Her route is complete". It never waits
   on the story: an event the pack doesn't script plays the game's card.
@@ -3051,7 +3093,7 @@ shows only what exists; nothing says "Soon".
   reads: ‘…’", and **Give her the ‹ring› ›** for each better ring in the Warehouse.
 - **The actions,** 48 pt in the sheet's foot: **Chat +15** (then her line for the day; "Chat ✓" once done), **Gift** (the
   picker; "Gift ✓"), **☾ Evening ›** while she can spend one (otherwise greyed with why: "Evening ✓" spent with her,
-  "Evening · F2" below Friendship 2, "Away tonight", "Evening spent" with someone else), and **Praise +20** on the row
+  "Evening · F2" below Friendship 2, "In town", "Evening spent" with someone else), and **Praise +20** on the row
   under them while she's earned it. What an act pays floats up from her face, and a note says it ("She likes it. +36").
 - **Hearts | Work:** the Work side is her work sheet: her favourite line, the day she joined, where she is, and her nine
   activities with talent, rank, points and the next challenge.
@@ -3204,7 +3246,7 @@ Worked: a married forager with F3, R5 and a grade-8 ring has +28% of her own (28
 #### Night chores
 
 - **1 from Friendship 6, 2 from Romance 7, 3 from Spouse 4,** never more, for an Uma on the farm (home in the Dorm, or a
-  spouse in her house) whose line's place is open. **Away does none.** Each chore is its own seeded pick.
+  spouse in her house) whose line's place is open. **One in town does none.** Each chore is its own seeded pick.
 - **Farming** (at night, as crops grow): **+0.25 growth** on the untended block with the most growing plots (a tie by a
   seeded pick), else on the block she tends while it has a growing plot; it joins that block's rate tonight.
 - **Foraging and fishing** (at night, after the hauls): one item from her rank's **deepest open forest area** this
@@ -3273,7 +3315,7 @@ Her loved good, when it’s a dish, is her signature dish as it is. The recipe j
 Her profile's Perks shows what each reached perk does now, a later perk taking the earlier one's line (Romance 5's
 replaces Friendship 3's): "R5 · +28% at the forest · +8% ring" (with "+5% crew" and "held to its cap" when they apply;
 a farmer's "+20% chance of an extra crop"), "R7 · 2 items each night" (a farmer's "+0.5 growth each night"; "None while
-she's away"), "R2 · Next tomorrow" or "Next in 3 mornings", "F4 · ‹dish› · in the Kitchen's list", "F8 · Beside
+she lives in town"), "R2 · Next tomorrow" or "Next in 3 mornings", "F4 · ‹dish› · in the Kitchen's list", "F8 · Beside
 Stand-in 1" ("No 3-heart friend yet"), "F10 · Bent Trowel · +0.25 quality at the Fields", "R1 · She calls you
 “Sprout”", "R4 · With Stand-in 1", "R8 · “‹engraving›”". A perk whose place isn't built says "Opens when the Mine is
 built" (her place) and nothing now.
@@ -3735,7 +3777,7 @@ The bench's rule, in full:
 
 - **On the map:** until the bench stands the Forge's lock says "Opens with your first Romance 8". Then its quick look
   reads **Ring bench · one ring a day** with **Make a ring ›** ("See the bench ›" once today's is made).
-- **The smith's scene:** the morning after, once the summary is put away (after the opening, before arrivals), seven
+- **The smith's scene:** the morning after, once the summary is put away (after the opening, before the meeting scenes), seven
   short lines and a card with **See the bench** or **Later**; read once.
 - **The bench's sheet:** the smith's face and name (the Uma who plays the role) and the rule; one row a grade you can make now, lowest first, each with **the
   three goods it would take** (the lowest-value refined goods of that grade, fewer stars first, any family, any mix),
@@ -3881,8 +3923,8 @@ The homestead's rows on the map:
   offers the other houses with a free room.
 - **With no room free** she keeps her Dorm bed, and her profile and Hearts row say **"Needs a room"**. Each night, once a
   room is free (a house built or extended, or a room moved out of), every spouse home in the Dorm who waits takes one,
-  **in wedding order,** by the same default, and the morning says so ("⌂ Stand-in 2 moved into Rose Cottage"). One who's
-  away waits until she's swapped home. You can also move her into a free room by hand at once.
+  **in wedding order,** by the same default, and the morning says so ("⌂ Stand-in 2 moved into Rose Cottage"). One who
+  lives in town waits until she's home. You can also move her into a free room by hand at once.
 - **Moves are at once and free,** any time: on the homestead's sheet tap a face, then a free room in another house (a
   move) or another house's face (a swap). A spouse leaving or arriving by a Dorm swap waits for the morning.
 - **A spouse in her house has no Dorm bed,** so her bed is free for the next arrival, and **she's on the farm:** she
@@ -4030,7 +4072,7 @@ The hearts, and how long two Umas at one place every day take to reach them:
 Points go on past 750. A bond setup on her route ("Bond 3 with Stand-in 2") reads these hearts.
 
 **The ties' seeds.** When she joins, each of her ties whose other Uma is on the farm starts at its seed (a seed never
-lowers a bond). An Uma whose tie hasn't arrived has no bond with her yet.
+lowers a bond). An Uma whose tie you haven't met has no bond with her yet.
 
 <!-- live:tie-seeds -->
 | Tie strength | Bond starts at | Hearts |
@@ -4103,7 +4145,7 @@ authored arrival joins with her ties seeded, and the night clears the whole of t
 | 2 | This morning's invitations, with **Yes, tonight** and **Another day** |
 | 3 | The house's morning ("⌂ Farmhouse · Stand-in 1 · ♥ +30 · ☕ 3 fed · +1 item") with its house line under it; a spouse who moved into a room; "‹house› misses you" with **Tonight ›** and **Another night**; morning items ("♥ Stand-in 2 left you ★3 Shiitake"); the night's chores |
 | 4 | Birthdays and anniversaries, today's before tomorrow's, birthdays first ("★ Stand-in 1's birthday today", "♥ Stand-in 1's anniversary · ★5 Carrot left for you"); the Festival of Vows |
-| 5 | Levels reached overnight ("♥ Stand-in 1 · Spouse 2, reached overnight", **New**, opening her card); arrivals ("‹name› arrived · away", **New**) |
+| 5 | Levels reached overnight ("♥ Stand-in 1 · Spouse 2, reached overnight", **New**, opening her card); those the night met ("Met ‹name› · in town", **New**) |
 | 6 | The perks' extras ("Perks · +2 items"), then side by side ("Side by side · +3 items"), then each pair's bond hearts |
 
 Within a place the night's order holds, each Uma in the cast's order. The section shows whenever a stored line or a Ready
@@ -4312,7 +4354,7 @@ shows where the save puts everyone now.
   pit, is never a spot. With more Umas than spots, they share spots from the first. An idle Uma keeps her spot while it's still
   free, so putting one Uma to work never shuffles the others.
 - **A spouse in her house** stands on her house's apron, then on the path in front of it.
-- **Nobody who's away.**
+- **Nobody who lives in town.**
 
 **How they move.**
 - **At the app's start, on a new morning, and when a sync brings a save this phone didn't make, everyone stands where

@@ -1,5 +1,6 @@
-// A run with no story pack at all: days 1 to 60 on placeholders alone. The opening plays the game's three lines and
-// brings master data's first; the other four of the first five join as meeting her in town will bring them. Each
+// A run with no story pack at all: days 1 to 60 on placeholders alone. The opening plays the game's three lines, and
+// master data's first waits at the Gate: Say hello meets her; the other four of the first five are met here, as the
+// Gate brings them one a morning. Each
 // meets you with the game's two lines and a hello, and every rung after plays the game's own card: friendship, a
 // confession (one "Not yet", then Ask her), romance, the proposal with a ring, the wedding with its vows, married life at
 // night and in its events, and the household's first scene at five married. Nothing waits on the story, and every save
@@ -8,8 +9,9 @@
 import { describe, expect, it } from 'vitest'
 import { runNight, type NightContext } from '../night/end-day'
 import { TEST_KINDS } from '../night/kinds.fixture'
-import { joinFirstHelper } from '../romance/arrivals'
-import { joinCast } from '../romance/arrivals.fixture'
+import { sayHello } from '../romance/meeting'
+import { gateVisitor } from '../town/town'
+import { joinCast } from '../romance/meeting.fixture'
 import { chatLineV4, chatV4, giftV4 } from '../romance/acts'
 import { CHAT_LINES } from '../romance/chats'
 import { birthdaysOf } from '../romance/days'
@@ -50,10 +52,12 @@ function picksFor(steps: readonly Step[], id: string, rung: string): number[] {
 describe('a farm with no story pack', () => {
   it('plays days 1 to 60 on placeholders: arrivals, events, a confession, a wedding and the household\'s first scene', async () => {
     // Day 1: the farmer's name, the Dorm's second level bought (five beds), the opening read: the game's three lines, and
-    // master data's first joins; the other four join here, as meeting her in town will bring them.
+    // master data's first at the Gate, met by Say hello; the other four are met here, as the Gate brings them.
     let save: SaveV4 = nameFarmer({ ...newSave('u1', AT), buildings: { ...newSave('u1', AT).buildings, dorm: 2 }, dorm: { level: 2, home: [], swaps: [] } }, 'Robin')
     expect(openingOf(STORY)).toEqual(PLACEHOLDER_OPENING)
-    save = joinFirstHelper(readScene(save, 'scene:1:open'), STORY)
+    save = readScene(save, 'scene:1:open')
+    expect(gateVisitor(save, STORY)).toBe('9100001')
+    save = sayHello(save, STORY, '9100001')
     expect(Object.keys(save.roster)).toEqual(['9100001'])
     save = joinCast(save, STORY)
     expect(Object.keys(save.roster).sort()).toEqual(FIVE)

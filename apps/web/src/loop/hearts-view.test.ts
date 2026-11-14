@@ -61,7 +61,7 @@ describe('the rows', () => {
     const waits = heartRows(farm({ [ONE]: { stage: 'confession', level: 10 }, [TWO]: { stage: 'wedding', level: 10 } }), ALL, nameOf)
     expect(waits.find((r) => r.id === ONE)!.filters).toContain('friends')
     expect(waits.find((r) => r.id === TWO)!.filters).toContain('partners')
-    expect(marriedOf(save, PACK)).toEqual({ married: 1, cast: 3 })
+    expect(marriedOf(save)).toEqual({ married: 1, met: 3 })
   })
 
   it('draws the ladder’s hearts: F7 with 300 of 480, R4 with 40 banked, S2', () => {
@@ -95,10 +95,10 @@ describe('the rows', () => {
     const note = (id: string) => rows.find((r) => r.id === id)!.note
     expect(note(ONE)).toBe('Ready · Friendship 2 · the Fields')
     // 9000002 is away; 9000003's short bar says it all, her unscripted route playing the game's cards.
-    expect(note(TWO)).toBe('Swap her home to play her events')
+    expect(note(TWO)).toBe('Invite her to the farm to play her events')
     expect(note(THREE)).toBeNull()
     const scripted = heartRows(away, ALL, nameOf)
-    expect(scripted.find((r) => r.id === TWO)!.note).toBe('Swap her home to play her events')
+    expect(scripted.find((r) => r.id === TWO)!.note).toBe('Invite her to the farm to play her events')
     expect(scripted.find((r) => r.id === THREE)!.note).toBeNull()
     expect(rowNote({ rung: 'f3', ready: false, waits: { kind: 'today' } }, { points: 280, cost: 280 }, true, null, nameOf)).toBe('Friendship 3 · tomorrow: one event a day')
     expect([placeWords('fields'), placeWords('forest'), placeWords('pond-night'), placeWords('festival')]).toEqual(['the Fields', 'the forest', 'the Pond at night', 'the festival ground'])
@@ -139,7 +139,7 @@ describe('her profile', () => {
       at({ kind: 'setup', setup: { kind: 'bond', with: TWO, level: 3 } }), at({ kind: 'opens', place: 'mine' }),
       at({ kind: 'night' }, 's2'), at({ kind: 'friend' }, 'confession'), at({ kind: 'done' }, null),
     ]).toEqual([
-      'Ready', '60 to go', 'Tomorrow', 'Needs a ring', 'Swap her home', 'Tomorrow: one event a day', 'The Fishery, when she works there', 'With Carrot in the Warehouse',
+      'Ready', '60 to go', 'Tomorrow', 'Needs a ring', 'Invite her to the farm', 'Tomorrow: one event a day', 'The Fishery, when she works there', 'With Carrot in the Warehouse',
       'Bond 3 with Stand-in 2', 'Opens when the Mine is built', 'Comes tonight', 'She said “Not yet”', 'Her route is complete',
     ])
   })
@@ -191,7 +191,7 @@ describe('her profile', () => {
 describe('the morning’s Hearts section', () => {
   const summary = (hearts: MorningSummary['hearts']): MorningSummary => ({ day: 5, bin: [], work: [], ranks: [], hearts, news: [], nudges: [] })
 
-  it('orders Ready (playing her event), then birthdays and anniversaries, then arrivals, each opening her profile', () => {
+  it('orders Ready (playing her event), then birthdays and anniversaries, then those the night met, each opening her profile', () => {
     const lines = summaryParts(summary([
       { kind: 'arrived', id: THREE, home: false }, { kind: 'birthday', id: ONE, when: 'today' }, { kind: 'anniversary', id: TWO, when: 'today', item: 'carrot' },
       { kind: 'birthday', id: TWO, when: 'tomorrow' },
@@ -201,7 +201,7 @@ describe('the morning’s Hearts section', () => {
       ['★ Stand-in 1’s birthday today', `/hearts?uma=${ONE}`],
       ['♥ Stand-in 2’s anniversary · ★5 Carrot left for you', `/hearts?uma=${TWO}`],
       ['★ Tomorrow: Stand-in 2’s birthday', `/hearts?uma=${TWO}`],
-      ['Stand-in 3 arrived · away', `/hearts?uma=${THREE}`],
+      ['Met Stand-in 3 · in town', `/hearts?uma=${THREE}`],
     ])
   })
 

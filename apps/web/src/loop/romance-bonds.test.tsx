@@ -5,7 +5,7 @@
 // invented stand-in pack (9000001–9000003, the stand-in pair's five invented
 // conversations) and invented outfits; master data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { arrive, newBlock, newSave, pairKey, readScene, type Block, type MorningSummary, type SaveV4, type StoryPack } from '@farm/domain'
+import { meet, newBlock, newSave, pairKey, readScene, type Block, type MorningSummary, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -37,9 +37,9 @@ const { default: FieldsPage } = await import('./FieldsPage')
 const { conversationRows, pairWords, parseReadParam, readParam, tieRows } = await import('./hearts-view')
 const { heartsLines } = await import('./summary-words')
 
-/** The stand-in's three home, ties seeded, as the old opening brought them: the opening now brings only day 1's helper. */
+/** The stand-in's three home, ties seeded, as if met: the opening brings nobody, and day 1's visitor waits at the Gate. */
 const joinStandIns = (save: SaveV4, pack: Pick<StoryPack, 'cast' | 'ties'>): SaveV4 =>
-  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : arrive(s, id, pack).save), save)
+  ['9000001', '9000002', '9000003'].reduce((s, id) => (s.roster[id] ? s : meet(s, id, pack).save), save)
 const AT = '2026-11-11T10:00:00.000Z'
 const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 const save = (): SaveV4 => useGame.getState().save as SaveV4
@@ -124,7 +124,7 @@ describe('the view model', () => {
       { kind: 'bond', a: TWO, b: '9000009', hearts: 1 },
     ]
     expect(heartsLines(hearts, [], nameOf, pairs).map((l) => [l.text, l.to, l.tag ?? null])).toEqual([
-      ['Stand-in 3 arrived', `/hearts?uma=${THREE}`, 'New'],
+      ['Met Stand-in 3 · moved in', `/hearts?uma=${THREE}`, 'New'],
       ['♥♥ Stand-in 1 & Stand-in 2 · bond 2', '/?read=9000001-9000002:1,2', 'Read'],
       ['Side by side · +3 items', '/warehouse', null],
       ['♥♥ Stand-in 1 & Stand-in 3 · bond 1', '/?read=9000001-9000003:1', 'Read'],

@@ -4,7 +4,7 @@
 //
 // Who stands: every Uma whose job holds a slot (uma-kit's `workView` cards, the pips' own source) at that
 // slot's marker, every tender at her block's marker on the Fields, and the rest of the farm's home (`farmHome`) idle: a
-// housed spouse on her house's apron, everyone else in the yard. Nobody who's away. The idle spots ("left to
+// housed spouse on her house's apron, everyone else in the yard. Nobody who lives in town. The idle spots ("left to
 // the worker"): the Dorm's apron, middle first, then the path in front of it, then the path row on to the bin, then the
 // free tiles of the open ground beside the Gate; more Umas than spots share them from the first. An Uma idle before keeps
 // her spot while it's still a spot, so putting one to work never shuffles the others (only who moved walks).

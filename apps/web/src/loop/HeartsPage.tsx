@@ -1,9 +1,11 @@
 // `/hearts`: the Umas' tab.
 // Two views: **Hearts** (the default) and **Work** (`?view=work`, the roster's album moved whole, each card's corner her
-// level words). The Hearts view is one 72 pt row an Uma: her face, name and chips (● Ready, ✉ an invitation, Away), her
+// level words). The Hearts view is one 72 pt row an Uma you've met: her face, name and chips (● Ready, ✉ an invitation,
+// In town), her
 // level and her ladder's hearts as a bar in the stage's colour with the filling heart and "points/cost", then the most
 // useful line, what's banked and today's chat and gift ticks. Ready rows first, then the least progress, then the
-// cast's order; filter chips with their counts (`?filter=`); the header's "Married n/N", the evening's marks (○ free,
+// cast's order; filter chips with their counts (`?filter=`); the header's "Married n/N" (N everyone you've met), the
+// evening's marks (○ free,
 // ● spent, festival night's in its season's colour) and the (i). Her profile opens
 // from either view at `?uma=<characterId>`, on the side the view names. Loaded on demand.
 import { festivalOn, householdReady, householdTitle, ladderOf, type LadderName, type SaveV4 } from '@farm/domain'
@@ -33,12 +35,12 @@ export default function HeartsPage() {
   if (!save) return null
   // The view rides in the URL, so the profile's Hearts | Work and the tab's switch are one; replacing keeps Back's way.
   const setView = (next: ProfileSide) => navigate(withParam(location, 'view', next === 'work' ? 'work' : null), { replace: true, state: location.state })
-  const married = pack ? marriedOf(save, pack) : null
+  const married = marriedOf(save)
   return (
     <main className="absolute inset-0 overflow-y-auto overscroll-contain px-4 pt-4 pb-28" data-page="hearts" data-view={view}>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pb-2">
         <h1 className="font-display text-[22px] font-bold text-ink">Hearts</h1>
-        {married && <span className="text-[13px] font-semibold text-ink-soft tabular-nums" data-married={`${married.married}/${married.cast}`}>Married {married.married}/{married.cast}</span>}
+        <span className="text-[13px] font-semibold text-ink-soft tabular-nums" data-married={`${married.married}/${married.met}`}>Married {married.married}/{married.met}</span>
         {pack && householdReady(save).slice(0, 1).map((id) => (
           <Link key={id} to={`/hearts?household=${id}`} state={{ back: true }} aria-label={`${householdTitle(id)}: Ready`}
             className="grid min-h-11 shrink-0 place-items-center rounded-full bg-[#d9a227]/15 px-2.5 text-[12px] font-bold whitespace-nowrap text-[#8a6a14]" data-household-ready={id}>
@@ -50,7 +52,8 @@ export default function HeartsPage() {
           {view === 'hearts' ? (
             <HelpButton title="Hearts" label="About hearts">
               <p>Her bar fills as you chat (+15), praise her work (+20) and give gifts, and from a day at her favourite line (+10). Points past a full bar are banked, never lost.</p>
-              <p>A full bar makes her next event Ready (● Ready). Some also need a setup, such as working a place that day. She must be home.</p>
+              <p>Everyone you’ve met is here. You meet her in town: by talking with her on a few days, or as her story says. The welcome list comes to the Gate in the first days.</p>
+              <p>A full bar makes her next event Ready (● Ready). Some also need a setup, such as working a place that day. She must live on the farm: invite her from town when a bed is free.</p>
               <p>Each Uma plays one of her events a day, and each level comes when its event plays.</p>
               <p>Gifts: loved +60, liked +30, others +10, disliked 0, and more for more stars. Her loved gift shows from Friendship 1; the rest as you learn them, and all from Friendship 7.</p>
               <p>{EVENING_HELP}</p>
@@ -60,7 +63,7 @@ export default function HeartsPage() {
               <p>Each Uma has a talent, G to S, in each activity, from her stats. Talent lifts her yield, her stars and how fast she ranks up.</p>
               <p>She climbs six ranks in each: Novice, Hand, Skilled, Expert, Master, Legend. A day of work earns rank points; a rank comes when its points are reached and its challenge is met, at night.</p>
               <p>Her favourite line (the mark on her face) earns ×1.2 rank points; from Friendship 5 she earns 5% more, from Friendship 10, 10%.</p>
-              <p>Umas beyond the Dorm’s beds are away on their off-season. Swap them in at the Dorm.</p>
+              <p>Umas beyond the Dorm’s beds live in town. Invite one to the farm on her profile when a bed is free, or swap at the Dorm.</p>
             </HelpButton>
           )}
         </span>
@@ -144,7 +147,11 @@ function HeartsList({ rows, onOpen }: { rows: readonly HeartRow[]; onOpen: (id: 
           </Chip>
         ))}
       </div>
-      {shown.length === 0 && <p className="py-4 text-[14px] text-ink-soft" data-hearts-empty>No one here yet.</p>}
+      {shown.length === 0 && (
+        <p className="py-4 text-[14px] text-ink-soft" data-hearts-empty>
+          {rows.length === 0 ? <>No one yet. Say hello at the Gate, or meet someone in <Link to="/town" className="font-semibold text-accent-strong underline">town</Link>.</> : 'No one here yet.'}
+        </p>
+      )}
       <ul className="divide-y divide-hairline" data-heart-rows>
         {shown.map((row) => <li key={row.id}><HeartRowView row={row} onOpen={() => onOpen(row.id)} /></li>)}
       </ul>
@@ -163,7 +170,7 @@ function HeartRowView({ row, onOpen }: { row: HeartRow; onOpen: () => void }) {
   return (
     <div className="flex min-h-[72px] w-full items-center gap-2" data-heart-row={row.id} data-row-ready={row.state.ready || undefined}>
     <button type="button" onClick={onOpen} className="flex min-h-[72px] min-w-0 flex-1 items-center gap-3 py-2 text-left" data-open-row
-      aria-label={`${row.name}, ${row.level}${row.state.ready ? ', Ready' : ''}${row.home ? '' : ', away'}`}>
+      aria-label={`${row.name}, ${row.level}${row.state.ready ? ', Ready' : ''}${row.home ? '' : ', in town'}`}>
       <FaceTile outfitId={row.id} size={56} label={row.name} className={row.home ? '' : 'opacity-60'} />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="flex items-center gap-1.5">

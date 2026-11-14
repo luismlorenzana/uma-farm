@@ -11,8 +11,11 @@
 // her closest friend's loved gift in Gifts from Friendship 7, and **From her**: her pet name for you from Romance 1 and her
 // keepsake from Friendship 10. **Ring**: from Romance 8 the engraving her ring will carry (her R8 beat's line), from
 // the proposal her ring and its bonus at her line, and **Give her the Cobalt Ring** for any better one in the Warehouse (the
-// old one comes back); "Needs a ring" links to the Forge's bench. Loaded on demand.
-import { birthdaysOf, canAsk, LADDER_COLOURS, ladderOf, levelWords, readiness, type SaveV4, type StoryPack, type Temperament } from '@farm/domain'
+// old one comes back); "Needs a ring" links to the Forge's bench. One you've met who lives in town has **Invite to the
+// farm** under her face: she moves into a free Dorm bed at once; with none free, "No bed free" and the Dorm. Loaded on
+// demand.
+import { atHome, birthdaysOf, canAsk, inviteBlock, LADDER_COLOURS, ladderOf, levelWords, readiness, type SaveV4, type StoryPack, type Temperament } from '@farm/domain'
+import { inviteHer } from './actions'
 import { giveBetterRing } from './bench-actions'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -89,10 +92,41 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
           {side === 'hearts' ? <p className="text-[13px] text-ink-soft" data-profile-line>{profileLine(save, pack, id, birthdays).join(' · ')}</p> : row && <WorkFacts row={row} />}
         </div>
       </div>
+      {!atHome(save, id) && <InviteCard save={save} id={id} />}
       {side === 'work'
         ? row && <WorkSide row={row} />
         : <HeartsSide save={save} pack={pack} id={id} card={card} nameOf={nameOf} />}
     </Sheet>
+  )
+}
+
+/** She lives in town: **Invite to the farm** while a bed is free (she moves in at once), else why not and the Dorm. */
+function InviteCard({ save, id }: { save: SaveV4; id: string }) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const block = inviteBlock(save, id)
+  const invite = () => {
+    if (busy) return
+    setBusy(true)
+    setError(null)
+    inviteHer(id).catch((err: unknown) => setError(err instanceof Error ? err.message : 'That didn’t work. Try again.')).finally(() => setBusy(false))
+  }
+  return (
+    <section className="mb-3 space-y-2 rounded-md border border-hairline bg-sunken/50 p-3" aria-label="Where she lives" data-invite={block ?? 'open'}>
+      <p className="text-[14px] font-semibold" data-lives-in-town>Lives in town</p>
+      {block === null ? (
+        <button type="button" onClick={invite} disabled={busy} data-action="invite"
+          className="font-display grid min-h-12 w-full place-items-center rounded-md bg-accent text-[16px] font-bold text-accent-ink disabled:opacity-60">
+          Invite to the farm
+        </button>
+      ) : (
+        <p className="flex min-h-11 items-center justify-between gap-2 text-[13px] text-ink-soft" data-invite-block>
+          <span>{block}</span>
+          <Link to="/dorm" state={{ back: true }} className="shrink-0 font-semibold text-accent-strong underline">The Dorm ›</Link>
+        </p>
+      )}
+      {error && <p role="status" className="text-[13px] font-semibold text-danger">{error}</p>}
+    </section>
   )
 }
 

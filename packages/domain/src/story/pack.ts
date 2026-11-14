@@ -11,10 +11,10 @@
 import { isGoodId } from '../goods/ids'
 import { pairKey } from '../save/v4'
 import {
-  ARRIVAL, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies, checkTown, isSister, STORY_ID, type Cast, type CastEntry, type Findings,
+  ARRIVAL, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies, checkTown, STORY_ID, type Cast, type CastEntry, type Findings,
   type Household, type Opening, type PairConversations, type Read, type Route, type StoryContext, type Ties, type Town, type UmaBible,
 } from './authored'
-import { favouriteOf, firstHelperOf, type MasterCast } from './placeholders'
+import { favouriteOf, firstVisitorOf, type MasterCast } from './placeholders'
 
 /** A pack's files as a release holds them (`cast.json`, `ties.json`, `umas/<id>.json`, `routes/<id>.json`,
  * `pairs/<a>-<b>.json`, its name the two in `pairKey` order, `household.json`, `opening.json` and `town.json`), unchecked.
@@ -176,11 +176,8 @@ function castNotes(pack: StoryPack): string[] {
     else if (!scripted.has(ARRIVAL)) notes.push(`routes/${id}.json: no arrival scene, so the game’s own short one plays`)
     if (favouriteOf(pack, id) === null) notes.push(`cast.json: ${id} has no calling and no bible’s favouriteLine, so her line is the work her stats in master data suit best`)
   }
-  const first = firstHelperOf(pack)
-  if (first !== null) notes.push(`cast.json: ${first}, the welcome list’s first, joins as the opening ends: day 1’s helper until meeting her in town lands`)
-  const never = pack.cast.umas.filter((u) => u.characterId !== first && u.arrives === undefined && !isSister(u.characterId)).map((u) => u.characterId)
-  if (never.length === 1) notes.push(`cast.json: ${never[0]} has no arrival and isn’t the welcome list’s first, so she doesn’t come to the farm until meeting her in town lands`)
-  if (never.length > 1) notes.push(`cast.json: ${never.join(', ')} have no arrival and aren’t the welcome list’s first, so they don’t come to the farm until meeting her in town lands`)
+  const first = firstVisitorOf(pack)
+  if (first !== null) notes.push(`cast.json: ${first}, the welcome list’s first, is day 1’s visitor at the Gate, and the farm’s first helper`)
   return notes
 }
 

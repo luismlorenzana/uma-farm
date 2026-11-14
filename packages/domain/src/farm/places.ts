@@ -49,7 +49,7 @@ export type PlaceOpens =
   /** Offered at Farm Rank `rank`, paid in gold and goods, standing the next morning. `game`: its game is built, so it can
    * be bought; else it shows "Not built yet". `after`: another place stands first (the boat after the dock). */
   | { by: 'build'; rank: number; cost: BuildCost; game: boolean; after?: FarmPlaceId }
-  /** So many Umas met: on the farm's roster today (meeting her in town comes later). */
+  /** So many Umas met: on the roster today, on the farm or in town. */
   | { by: 'met'; umas: number }
   | { by: 'later' }
   /** A house on the homestead: house *n* with the *n*-th wedding. The homestead's own rule reads it (`nextLot`);
@@ -111,7 +111,7 @@ export const FARM_PLACES: readonly FarmPlace[] = [
   place('warehouse', 'Warehouse', 'yard', 6, 1, 'warehouse', 'Everything the farm holds, by stars.', START),
   place('dorm', 'Dorm', 'yard', 6, 2, 'dorm', 'Beds for the Umas on the farm.', START),
   place('board', 'Requests board', 'yard', 7, 0, 'card-library', 'The town’s requests.', { by: 'met', umas: 5 }, true),
-  place('gate', 'Gate', 'yard', 7, 1, 'scenario-gate', 'Umas arrive here.', START),
+  place('gate', 'Gate', 'yard', 7, 1, 'scenario-gate', 'The welcome list visits here, one a morning.', START),
   place('dock', 'Dock', 'yard', 7, 2, 'ley-spring', 'A pier on the sea: the Sea Pier’s fish.', build(6, 20000, [planks(80)], true), true),
   place('shop', 'Shop', 'town', 8, 0, 'exchange', 'Seeds for the season.', START),
   place('festival', 'Festival ground', 'town', 8, 1, 'racecourse', 'A festival on each season’s 10th day.', { by: 'later' }),
@@ -151,7 +151,7 @@ export function placeBuilt(save: Pick<FarmSave, 'buildings'>, id: FarmPlaceId): 
 export const placeOpen = (save: Pick<FarmSave, 'farm' | 'buildings' | 'roster'>, place: FarmPlace): boolean =>
   place.opens.by === 'build' ? placeBuilt(save, place.id) : opened(save, place.opens)
 
-/** Umas met: everyone on the roster today, home or away. Meeting her in town comes later. */
+/** Umas met: everyone on the roster today, on the farm or in town. */
 export const umasMet = (save: Pick<FarmSave, 'roster'>): number => Object.keys(save.roster).length
 
 /** Whether what opens something has happened on this save: a block, a line in the shop, the board. A build needs its

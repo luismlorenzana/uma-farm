@@ -114,7 +114,7 @@ export type Nudge = IdleNudge | SeedsNudge
 
 // --- §4 Hearts ------------------------------------------------------------------------
 
-/** §4 Hearts: an Uma who arrived overnight, home or away on her off-season; her arrival scene waits for the farm to
+/** §4 Hearts: someone the night met, home in the Dorm or living in town; her meeting scene waits for the farm to
  * open. The app orders and draws the section. */
 export interface ArrivedLine {
   kind: 'arrived'

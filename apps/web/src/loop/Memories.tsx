@@ -47,7 +47,7 @@ export default function Memories() {
           <span className="text-[14px] font-semibold tabular-nums" data-album-count>{memoryCount(save, id)}</span>
           {save.arrivals.includes(id) && (
             <Link to={replay('arrival')} state={{ back: true }} className="ml-auto grid min-h-11 place-items-center rounded-full px-3 text-[14px] font-semibold text-accent-strong" data-action="replay-arrival">
-              Her arrival ›
+              Meeting her ›
             </Link>
           )}
         </div>

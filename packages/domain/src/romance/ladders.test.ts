@@ -23,7 +23,7 @@ import { readScene } from '../story/scenes'
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { STAND_IN_FILES } from '../story/stand-in'
 import { canPraise, chatLineV4, chatSet, chatV4, DISLIKED_LINE, festivalTogether, giftPreview, giftV4, payLines, praiseV4, tasteKnown } from './acts'
-import { joinCast } from './arrivals.fixture'
+import { joinCast } from './meeting.fixture'
 import { BOND_HEARTS, bondHearts } from '../farm/bonds'
 import { ANNIVERSARY_STARS, birthdaysOf, dayOfYear, farmBirthday, heartDays, isBirthday, lineGood, NO_BIRTHDAYS } from './days'
 import {

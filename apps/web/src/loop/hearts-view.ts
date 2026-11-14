@@ -108,7 +108,7 @@ export function levelShort(love: Pick<Love, 'stage' | 'level'>): string | null {
 export type HeartFilter = 'ready' | 'friends' | 'partners' | 'married' | 'away'
 /** The filter chips, in order. */
 export const HEART_FILTERS: readonly { key: HeartFilter; label: string }[] = [
-  { key: 'ready', label: 'Ready' }, { key: 'friends', label: 'Friends' }, { key: 'partners', label: 'Partners' }, { key: 'married', label: 'Married' }, { key: 'away', label: 'Away' },
+  { key: 'ready', label: 'Ready' }, { key: 'friends', label: 'Friends' }, { key: 'partners', label: 'Partners' }, { key: 'married', label: 'Married' }, { key: 'away', label: 'In town' },
 ]
 export const isHeartFilter = (value: string | null): value is HeartFilter => HEART_FILTERS.some((f) => f.key === value)
 /** Friends: friendship and her confession's wait; Partners: romance, the proposal's and the wedding's; Married: spouse. */
@@ -130,8 +130,8 @@ export interface HeartRow {
   invited: boolean
   chatted: boolean
   gifted: boolean
-  /** The most useful line under the bar: her Ready rung and its place, what her setup needs, "Swap her home to play her
-   * events"; null when her bar says it all. */
+  /** The most useful line under the bar: her Ready rung and its place, what her setup needs, "Invite her to the farm to
+   * play her events"; null when her bar says it all. */
   note: string | null
   filters: readonly HeartFilter[]
   /** Her next rung's place on the route (28 once complete): the sort's least progress. */
@@ -145,7 +145,7 @@ export interface HeartRow {
 export function rowNote(state: Readiness, now: Pick<Bar, 'points' | 'cost'>, home: boolean, place: string | null, nameOf: NameOf): string | null {
   if (state.ready) return `Ready · ${rungName(state.rung!)}${place ? ` · ${place}` : ''}`
   const kind = state.waits!.kind
-  if (kind === 'away' || (!home && kind === 'bar')) return 'Swap her home to play her events'
+  if (kind === 'away' || (!home && kind === 'bar')) return 'Invite her to the farm to play her events'
   if (kind === 'bar') return null
   return readyWords(state, now, nameOf)
 }
@@ -158,7 +158,7 @@ export { routeIndex }
 export const heartOrder = (a: Pick<HeartRow, 'id' | 'state' | 'progress' | 'points' | 'order'>, b: Pick<HeartRow, 'id' | 'state' | 'progress' | 'points' | 'order'>): number =>
   Number(b.state.ready) - Number(a.state.ready) || a.progress - b.progress || a.points - b.points || a.order - b.order || a.id.localeCompare(b.id)
 
-/** Everyone on the farm's roster, home or away, as the tab's rows, sorted. */
+/** Everyone you've met (the roster), on the farm or in town, as the tab's rows, sorted. */
 export function heartRows(save: SaveV4, pack: HeartsPack, nameOf: NameOf): HeartRow[] {
   const cast = castOrder(pack)
   return Object.keys(save.roster).flatMap((id): HeartRow[] => {
@@ -185,9 +185,9 @@ export function filterCounts(rows: readonly Pick<HeartRow, 'filters'>[]): Record
   return counts
 }
 
-/** The header: "Married n/N", N the cast's size (20 on the real pack, 3 on the stand-in). */
-export function marriedOf(save: Pick<SaveV4, 'love'>, pack: Pick<StoryPack, 'cast'>): { married: number; cast: number } {
-  return { married: Object.values(save.love).filter((l) => l.stage === 'spouse').length, cast: pack.cast.umas.length }
+/** The header: "Married n/N", N everyone you've met (the roster: on the farm or in town). */
+export function marriedOf(save: Pick<SaveV4, 'love' | 'roster'>): { married: number; met: number } {
+  return { married: Object.values(save.love).filter((l) => l.stage === 'spouse').length, met: Object.keys(save.roster).length }
 }
 
 // --- Ready, live ---------------------------------------------------------------------------------
@@ -251,7 +251,7 @@ export interface NextCard {
   perk: Perk | null
   hint: string | null
   bar: Bar
-  /** Her waits in words: "Ready", "Tomorrow", "Needs a ring", "Swap her home", "Opens when the Mine is built". */
+  /** Her waits in words: "Ready", "Tomorrow", "Needs a ring", "Invite her to the farm", "Opens when the Mine is built". */
   words: string
   ready: boolean
   waits: Wait['kind'] | null
@@ -284,7 +284,7 @@ const SUPERSEDED: Partial<Record<PerkId, PerkId>> = { 'line-10': 'line-20', 'nig
 /**
  * What a reached perk does now, or null when its words say it all: her line's term ("+28% at the forest ·
  * +8% ring", a farmer's "+20% chance of an extra crop", with the crew's and a cap held), her night chores ("2 items each
- * night", "+0.5 growth each night", "None while she's away"), her morning items ("Next in 3 mornings"), her signature dish
+ * night", "+0.5 growth each night", "None while she lives in town"), her morning items ("Next in 3 mornings"), her signature dish
  * ("Bell Pepper Salad · in the Kitchen's list"), in her element ("Beside Stand-in 2"), her keepsake ("Bent Trowel · +0.25
  * quality at the Fields"), her pet name and her closest friend.
  */
@@ -304,13 +304,13 @@ export function perkNow(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' | 
     }
     case 'night-chore': case 'night-chore-2': case 'night-chore-3': {
       const n = choresTonight(save, pack, id)
-      if (n === 0) return homeOrHoused(save, id) ? null : 'None while she’s away'
+      if (n === 0) return homeOrHoused(save, id) ? null : 'None while she lives in town'
       return line === 'farming' ? `+${n * 0.25} growth each night` : `${n} item${n === 1 ? '' : 's'} each night`
     }
     case 'morning-item': case 'morning-item-2': {
       const rule = morningRule(love)
       if (!rule) return null
-      if (!homeOrHoused(save, id)) return 'None while she’s away'
+      if (!homeOrHoused(save, id)) return 'None while she lives in town'
       // This morning's is already in (or not, had she been away): the next is a whole count away.
       const left = morningsToItem(rule, save.calendar.day) || rule.every
       return left === 1 ? 'Next tomorrow' : `Next in ${left} mornings`

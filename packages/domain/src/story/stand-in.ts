@@ -6,7 +6,8 @@
 // conversations; 9000001 and 9000003 (strength 2) have none, so a tie's line stands in. The household
 // holds the three scenes and the finale with a beat for each of the three, and house lines for 9000001
 // and 9000002 (9000003's come from the templates); 9000001 wishes for her own house and her birthday alone. The opening is
-// four invented lines ending on someone at the Gate; with no welcome list, 9000001 is day 1's helper. None of the three outfits (900000101, 900000201, 900000301) is in master data: they show lettered
+// four invented lines ending on someone at the Gate; with no welcome list, its three are the welcome list and 9000001 is
+// day 1's visitor. None of the three outfits (900000101, 900000201, 900000301) is in master data: they show lettered
 // discs and read D talents. The dev server (with no release) and the tests load it through `loadStoryPack()`; every
 // build plays the private pack. Never shipped content.
 import cast from './stand-in/cast.json'

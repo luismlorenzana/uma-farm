@@ -2,7 +2,7 @@
 // her line at night and a festival together. Each pays through `addLove`, so the day's factors apply once (a gift ×3 on
 // her birthday, every act ×2 on her anniversary) and each says what it paid, for the "+N" that floats from her face.
 //
-//   Chat      +15                                   once a day each, home or away
+//   Chat      +15                                   once a day each, on the farm or in town
 //   Gift      loved 60 · liked 30 · neutral 10 · disliked 0, × (1 + 0.1 a star above ★1)   one a day each
 //   Praise    +20                                   once a day, when she's earned it (`praise.ts`)
 //   Her line  +10                                   night step 6, a day at one of her line's places
@@ -40,7 +40,7 @@ function loveOf(save: SaveV4, id: string): Love {
 
 // --- Chats ------------------------------------------------------------------------------------------
 
-/** A chat (tap her): +15, once a day each, home or away. */
+/** A chat (tap her): +15, once a day each, on the farm or in town. */
 export function chatV4(save: SaveV4, id: string): LovePaid {
   loveOf(save, id)
   if (save.today.chats.includes(id)) throw new SaveRuleError('busy', 'You’ve talked today.')
@@ -97,7 +97,7 @@ export function giftPreview(save: Pick<SaveV4, 'calendar' | 'love'>, pack: Pick<
   return giftPoints(save, id, tasteOf(pack, id, good), stars, isBirthday(birthdays, id, save.calendar.day))
 }
 
-/** A gift: one good from the Warehouse at the stars you choose, once a day each, home or away. Seeds aren't
+/** A gift: one good from the Warehouse at the stars you choose, once a day each, on the farm or in town. Seeds aren't
  * gifts. Her taste (`tasteOf`) sets the points; the good's taste is learnt. Disliked pays 0, never a loss. */
 export function giftV4(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string, item: string, stars: number, birthdays: Birthdays = NO_BIRTHDAYS): LovePaid & { taste: Taste } {
   const love = loveOf(save, id)

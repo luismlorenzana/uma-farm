@@ -1,6 +1,7 @@
 // Save v4's parse: strict keys, explicit paths, every id checked, the farm's parts from `parse-loop.ts`. Unknown
-// keys (an older save's `start`, `visitors`, a roster Uma's `affinity` among them) are refused; roster keys are character ids by form
-// (the API has no story pack or master data); `love` holds exactly the roster's keys, each in range; `memories` and
+// keys (an older save's `start`, `visitors`, a roster Uma's `affinity` among them) are refused; roster keys are character ids by form,
+// or a sister's `s<outfitId>` (the API has no story pack or master data): the roster is everyone you've met, her `joined`
+// the day you met her; `love` holds exactly the roster's keys, each in range; `memories` and
 // `arrivals` name roster Umas; the farmer's name is empty or within its rule; the Dorm is on its eight levels. Each
 // part of the romance adds the checks for what it fills. Today's evenings fill the
 // day's slots (one, two on days divisible by 4 from 10 married, festival night's on a festival day) with the evening

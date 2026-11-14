@@ -2,7 +2,7 @@
 // loop's rows, on uma-art's buildings; taller than a phone's screen, it scrolls, with the help button and the Collect all
 // pill fixed. A place's quick look opens in the side panel (`/?peek=<place>`): what it is, and what opens it while it's
 // locked, a place to build with its Build card (`BuildCard.tsx`; the Dock's with the Boat's once it stands); the Gate's
-// says what brings the next arrivals. After a night the morning summary opens over the map until the
+// holds the welcome list's visitor of the day, with Say hello, and wears **Visiting** while she waits. After a night the morning summary opens over the map until the
 // player starts the day. A Ready Uma's pip carries ♥ wherever the map draws her and the morning's Hearts section lists
 // who's Ready, both read live; its bond hearts carry Read while a conversation waits, which plays over the morning
 // (`?read=`); an invitation's line carries Yes, tonight and Another day; the Forge's quick look is the ring bench's once
@@ -11,7 +11,7 @@
 // stage instead (`FarmStage.tsx`, its own chunk with three.js), with the Umas on it from the same work view and Ready
 // hearts as the pips; off, the Hub is as it was. Loaded on demand.
 import {
-  atTheGate, farmEnv, farmPlace, isBuildPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, MAP_PLACES, placeBuilt, placeOpen, readyPlots, workNow, type BuildPlace,
+  farmEnv, farmPlace, gateVisitor, isBuildPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, MAP_PLACES, placeBuilt, placeOpen, readyPlots, workNow, type BuildPlace,
   type FarmPlace, type LoopPlaceId, type FarmSave,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
@@ -146,8 +146,9 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   const layout = homestead ? homestead.homesteadLayout(save) : null
   // The map waits for the homestead's rows, so the town edge never jumps.
   const waiting = layout === null
-  // Day 1's helper, waiting at the Gate for her hello.
-  const atGate = atTheGate(save).length > 0
+  // The welcome list's visitor of the day, waiting at the Gate for her hello.
+  const visiting = story ? gateVisitor(save, story) : null
+  const atGate = visiting !== null && !save.roster[visiting]
   const places: HubMapPlace[] = [...MAP_PLACES.map((place): HubMapPlace => {
     const lock = lockOf(save, place)
     const visitor = place.id === 'gate' && atGate && lock === null
@@ -157,8 +158,8 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
     return {
       id: place.id, name: place.name, frame: place.frame, at: layout && homestead ? placeAt(homestead.placeOnV4(place, layout), layout.tiles) : placeAt(place),
       to: placeLink(save, place),
-      label: lock ? `${place.name}, locked: ${lock}` : visitor ? `${place.name}, someone is waiting` : slots > 0 ? `${place.name}, ready to collect` : place.name,
-      locked: lock !== null, ready: visitor ? 'Waiting' : slots > 0 ? 'Ready' : undefined,
+      label: lock ? `${place.name}, locked: ${lock}` : visitor ? `${place.name}, someone is visiting` : slots > 0 ? `${place.name}, ready to collect` : place.name,
+      locked: lock !== null, ready: visitor ? 'Visiting' : slots > 0 ? 'Ready' : undefined,
       ...(pips && (lock === null || busy) ? { pips, pipsAt: 'arch' as const } : {}),
     }
   }), ...(layout && homestead

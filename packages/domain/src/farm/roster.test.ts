@@ -6,7 +6,7 @@ import { TEST_KINDS } from '../night/kinds.fixture'
 import { daySetState } from '../night/nudge'
 import { setTender } from '../fields/fields'
 import { loopKinds } from '../gathering/kinds'
-import { arrive } from '../romance/arrivals'
+import { meet } from '../romance/meeting'
 import { startLoopJob } from '../save/loop-work'
 import { parseSaveV4 } from '../save/parse-v4'
 import { SaveRuleError } from '../save/rules'
@@ -134,7 +134,7 @@ describe('joining the roster', () => {
   it('names who joined in the night in the morning\'s Hearts, home or away', () => {
     const save = farm(['1001', '1002'], 2)
     // A stand-in for the night's arrivals: two join, the second with no bed free.
-    const arrivals = { run: (n: Night) => ({ ...n, save: arrive(arrive(n.save, '1030').save, '1031').save }) }
+    const arrivals = { run: (n: Night) => ({ ...n, save: meet(meet(n.save, '1030').save, '1031').save }) }
     const morning = runNight(save, CONTEXT, [arrivals, { run: buildSummary }])
     expect(morning.summary!.hearts).toEqual([{ kind: 'arrived', id: '1030', home: true }, { kind: 'arrived', id: '1031', home: false }])
     expect(morning.dorm.home).toHaveLength(bedsAt(1))

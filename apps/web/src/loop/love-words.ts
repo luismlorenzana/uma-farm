@@ -27,7 +27,7 @@ export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, 
     case 'bar': return at(`${(bar.cost - bar.points).toLocaleString('en-US')} to go`)
     case 'day': return at('Ready tomorrow')
     case 'ring': return at('Needs a ring')
-    case 'away': return at('Swap her home')
+    case 'away': return at('Invite her to the farm')
     case 'today': return at('tomorrow: one event a day')
     case 'setup': {
       const s = waits.setup
@@ -39,7 +39,7 @@ export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, 
 }
 
 /** Her Next card's words: the wait without the rung, which the card's title already names. "Ready",
- * "123 to go", "Tomorrow", "Needs a ring", "Swap her home", "Opens when the Mine is built". */
+ * "123 to go", "Tomorrow", "Needs a ring", "Invite her to the farm", "Opens when the Mine is built". */
 export function nextWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, nameOf: (id: string) => string): string {
   if (state.ready) return 'Ready'
   const waits = state.waits!
@@ -51,7 +51,7 @@ export function nextWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, n
     case 'bar': return `${(bar.cost - bar.points).toLocaleString('en-US')} to go`
     case 'day': return 'Tomorrow'
     case 'ring': return 'Needs a ring'
-    case 'away': return 'Swap her home'
+    case 'away': return 'Invite her to the farm'
     case 'today': return 'Tomorrow: one event a day'
     case 'setup': {
       const s = waits.setup

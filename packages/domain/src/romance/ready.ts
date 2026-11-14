@@ -2,7 +2,7 @@
 // Ready chips, sort and filter read it before the events play. All four:
 //
 //   1 her bar is full for the rung, or for a waiting rung it's the day after the rung before (the proposal: and a ring)
-//   2 she's home (away shows "Swap her home")
+//   2 she's home (in town shows "Invite her to the farm")
 //   3 she hasn't played an event today
 //   4 its one setup is met, if it has one: she works a named place today, a named good is in the Warehouse, her bond with
 //     a named Uma has reached a level
@@ -10,7 +10,7 @@
 // Never an hour, the weather, a season or a festival, and never the story: an event the pack doesn't script plays the
 // game's own short card (`placeholders.ts`). What isn't met is said: `waits` names the first thing in the way, in this
 // order: the route done; S2 and S4, which come at night; a "Not yet" at her confession; a working setup at a place not
-// built yet; the bar or the day; the ring; away; today; the setup. Read live: Ready
+// built yet; the bar or the day; the ring; in town (`away`); today; the setup. Read live: Ready
 // changes by day, so the morning never stores it.
 import { statusOf } from '@luismlorenzana/uma-work'
 import { workNow } from '../farm/calendar'
@@ -42,7 +42,7 @@ export type Wait =
   | { kind: 'day' }
   /** The proposal: a ring in the Warehouse. */
   | { kind: 'ring' }
-  /** She's away on her off-season: "Swap her home". */
+  /** She lives in town (met, no bed of hers): "Invite her to the farm". */
   | { kind: 'away' }
   /** She played one of her events today. */
   | { kind: 'today' }
@@ -60,7 +60,7 @@ export type Wait =
 /** The four conditions, as the manual lists them. */
 export const READY_CONDITIONS: readonly { condition: string; unmet: string }[] = [
   { condition: 'Her bar is full for the rung; a waiting rung (the confession, the proposal, the wedding) is Ready the day after the rung before, and the proposal needs a ring in the Warehouse', unmet: '`bar`, `day`, `ring`' },
-  { condition: 'She’s home (on the Dorm’s list, or a spouse in her house)', unmet: '`away`: “Swap her home”' },
+  { condition: 'She’s home (on the Dorm’s list, or a spouse in her house)', unmet: '`away`: “Invite her to the farm”' },
   { condition: 'She hasn’t played one of her events today', unmet: '`today`' },
   { condition: 'Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level', unmet: '`setup`; `opens` for the ranch, mining, cooking, expeditions, serving or forging before their place is built (the Coop, the Mine, the Kitchen, the expedition post, the Restaurant, the Forge)' },
 ]
@@ -73,7 +73,7 @@ export const WAIT_ORDER: readonly { kind: Wait['kind']; when: string }[] = [
   { kind: 'bar', when: 'Her bar isn’t full for the rung' },
   { kind: 'day', when: 'A waiting rung, on the day the rung before played' },
   { kind: 'ring', when: 'The proposal, with no ring in the Warehouse' },
-  { kind: 'away', when: 'She’s away on her off-season' },
+  { kind: 'away', when: 'She lives in town' },
   { kind: 'today', when: 'She played one of her events today' },
   { kind: 'setup', when: 'Its day setup isn’t met today' },
 ]

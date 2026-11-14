@@ -6,8 +6,8 @@ import { describe, expect, it } from 'vitest'
 import { blockGrowth, plant, setTender } from '../fields/fields'
 import { runNight, type NightContext } from '../night/end-day'
 import { TEST_KINDS } from '../night/kinds.fixture'
-import { arrive } from '../romance/arrivals'
-import { joinCast } from '../romance/arrivals.fixture'
+import { meet } from '../romance/meeting'
+import { joinCast } from '../romance/meeting.fixture'
 import { startLoopJob } from '../save/loop-work'
 import { parseSaveV4 } from '../save/parse-v4'
 import { SaveParseError } from '../save/parse'
@@ -46,13 +46,13 @@ const withBond = (save: SaveV4, a: string, b: string, points: number): SaveV4 =>
 const withLove = (save: SaveV4, id: string, love: Partial<Love>): SaveV4 => ({ ...save, love: { ...save.love, [id]: { ...save.love[id]!, ...love } } })
 /** The stand-in pack with a fourth Uma (no bible: her calling stands in), tied to two others. */
 function packWithFour(calling: CastEntry['calling'] = 'foraging', ties: Ties = STAND_IN_TIES): StoryPack {
-  const cast: Cast = { ...json(STAND_IN_CAST), umas: [...json(STAND_IN_CAST).umas, { characterId: FOUR, outfitId: '900000401', arrives: { kind: 'beds', dormLevel: 4 }, calling, paragraph: 'Invented.' }] }
+  const cast: Cast = { ...json(STAND_IN_CAST), umas: [...json(STAND_IN_CAST).umas, { characterId: FOUR, outfitId: '900000401', calling, paragraph: 'Invented.' }] }
   const more: Ties = { version: 1, ties: [...json(ties).ties, { a: TWO, b: FOUR, kind: 'friends', strength: 1, line: 'They met here.', history: 'Invented.' }, { a: THREE, b: FOUR, kind: 'other', strength: 1, line: 'Neighbours.', history: 'Invented.' }] }
   return storyPackFrom({ ...STAND_IN_FILES, cast, ties: more })
 }
 /** A farm with the fourth Uma on the roster too. */
 const withFour = (pack: StoryPack, day = 3): SaveV4 => {
-  const save = arrive(farm(day, pack), FOUR, pack).save
+  const save = meet(farm(day, pack), FOUR, pack).save
   return { ...save, today: { ...save.today, bonds: {} } }
 }
 
@@ -128,7 +128,7 @@ describe('the closest friend and Romance 4', () => {
     // A stronger tie wins over more points.
     expect(closestFriend(PACK, withBond(farm(), ONE, THREE, 700), ONE)).toBe(TWO)
     // Before her friend arrives, she's still the closest.
-    const alone = arrive({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, ONE, PACK).save
+    const alone = meet({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, ONE, PACK).save
     expect(closestFriend(PACK, alone, ONE)).toBe(TWO)
   })
 
@@ -155,21 +155,21 @@ describe('the ties\' seeds', () => {
   it('seeds 3 → 150, 2 → 50 and 1 → 0 when the second Uma arrives, not before', () => {
     expect(TIE_SEEDS).toEqual({ 1: 0, 2: 50, 3: 150 })
     let save: SaveV4 = { ...newSave('u1', AT), farmer: { name: 'Robin' } }
-    save = arrive(save, ONE, PACK).save
+    save = meet(save, ONE, PACK).save
     expect(save.bonds).toEqual({})
-    save = arrive(save, TWO, PACK).save
+    save = meet(save, TWO, PACK).save
     expect(save.bonds).toEqual({ [pairKey(ONE, TWO)]: 150 })
-    save = arrive(save, THREE, PACK).save
+    save = meet(save, THREE, PACK).save
     expect(save.bonds).toEqual({ [pairKey(ONE, TWO)]: 150, [pairKey(ONE, THREE)]: 50 })
     expect(bondHearts(bondOf(save, ONE, TWO))).toBe(2)
     expect(bondHearts(bondOf(save, ONE, THREE))).toBe(1)
     // The opening seeds the three on day 1; without the pack's ties, an arrival seeds nothing.
     expect(opened(1).bonds).toEqual(save.bonds)
-    expect(arrive(arrive({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, ONE).save, TWO).save.bonds).toEqual({})
+    expect(meet(meet({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, ONE).save, TWO).save.bonds).toEqual({})
   })
 
   it('never lowers a bond, and a seeded heart is a new heart: its conversation opens and the morning lists it', () => {
-    const both = arrive(arrive({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, ONE).save, TWO).save
+    const both = meet(meet({ ...newSave('u1', AT), farmer: { name: 'Robin' } }, ONE).save, TWO).save
     expect(seedTies(withBond(both, ONE, TWO, 400), PACK, TWO).bonds[pairKey(ONE, TWO)]).toBe(400)
     const seeded = seedTies(both, PACK, TWO)
     expect(seeded.today.bonds).toEqual({ [pairKey(ONE, TWO)]: 0 })
@@ -182,10 +182,13 @@ describe('the ties\' seeds', () => {
     expect(parseSaveV4(json(morning), 'save', TEST_KINDS)).toEqual(morning)
   })
 
-  it('seeds an Uma arriving at night, listed that morning only', () => {
+  it('seeds an Uma met at night, listed that morning only', () => {
     const pack = packWithFour('fishing', { version: 1, ties: [...STAND_IN_TIES.ties] })
-    const strong: StoryPack = { ...pack, ties: { version: 1, ties: pack.ties.ties.map((t) => (t.b === FOUR && t.a === TWO ? { ...t, strength: 3 } : t)) } }
-    const bought: SaveV4 = { ...farm(5, strong), buildings: { dorm: 4 } }
+    // The welcome list is the stand-ins', so the fourth is met by her trigger.
+    const cast: Cast = { ...pack.cast, welcome: [ONE, TWO, THREE], umas: pack.cast.umas.map((u) => (u.characterId === FOUR ? { ...u, meet: { kind: 'built', place: 'mill' } } : u)) }
+    const strong: StoryPack = { ...pack, cast, ties: { version: 1, ties: pack.ties.ties.map((t) => (t.b === FOUR && t.a === TWO ? { ...t, strength: 3 } : t)) } }
+    const bought: SaveV4 = { ...farm(5, strong), buildings: { dorm: 4, mill: 1 } }
+    expect(runNight({ ...bought, buildings: { dorm: 4 } }, context(strong)).roster[FOUR]).toBeUndefined()
     const night = runNight(bought, context(strong))
     expect(night.roster[FOUR]).toBeDefined()
     expect(bondOf(night, TWO, FOUR)).toBe(150)
