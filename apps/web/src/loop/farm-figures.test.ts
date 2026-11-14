@@ -6,10 +6,11 @@ import {
 } from '@farm/domain'
 import { workView } from '@luismlorenzana/uma-kit/work'
 import { standInFarmAtlas } from '@luismlorenzana/uma-stage/formats'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fieldsPips } from './FieldsPeek'
 import {
-  assignSpots, farmFigures, figureMoves, idleTiles, moveMode, slotFacing, standable, yardSpots, type FarmFigure,
+  assignSpots, farmFigures, figureMoves, idleTiles, moveMode, NOD_GAP_MS, NodClock, nodders, nodGaps, slotFacing, standable, yardSpots, type FarmFigure,
+  type NodStanding,
 } from './farm-figures'
 
 const AT = '2026-11-12T10:00:00.000Z'
@@ -198,5 +199,102 @@ describe('what moves', () => {
     expect(figureMoves(before, arrived, 'walk')).toEqual([{ id: '707', kind: 'arrive', to: byId(arrived).get('707')!.tile, facing: 'front' }])
     expect(figureMoves(arrived, before, 'walk')).toEqual([{ id: '707', kind: 'leave' }])
     expect(figureMoves(arrived, before, 'place')).toEqual([{ id: '707', kind: 'remove' }])
+  })
+})
+
+describe('the working nod', () => {
+  const figures = farmFigures(input(working()))
+  /** Everyone standing on her tile, still, with a sprite set, but for the changes given. */
+  const standing = (changes: Record<string, Partial<NodStanding> | null> = {}) => (id: string): NodStanding | undefined => {
+    const f = byId(figures).get(id)
+    if (!f || changes[id] === null) return undefined
+    return { target: f.tile, walking: false, set: true, ...changes[id] }
+  }
+  const take = (gaps: () => number, n: number) => Array.from({ length: n }, gaps)
+
+  afterEach(() => { vi.useRealTimers() })
+
+  it('comes every 4–7 s, seeded by her id: the same rhythm every time, a different one for each Uma', () => {
+    const one = take(nodGaps('101'), 200)
+    expect(Math.min(...one)).toBeGreaterThanOrEqual(NOD_GAP_MS.min)
+    expect(Math.max(...one)).toBeLessThan(NOD_GAP_MS.max)
+    // Spread over the whole range, not stuck at one gap.
+    expect(Math.max(...one) - Math.min(...one)).toBeGreaterThan(2500)
+    expect(take(nodGaps('101'), 200)).toEqual(one)
+    for (const other of ['102', '202', '505']) expect(take(nodGaps(other), 5)).not.toEqual(take(nodGaps('101'), 5))
+  })
+
+  it('is only for an Uma at work: on her slot or her block, standing still, with a sprite set', () => {
+    // 101, 202 and 303 work, 505 tends block A; 404 and 606 are idle in the yard.
+    expect(nodders(figures, standing(), false).sort()).toEqual(['101', '202', '303', '505'])
+    // Walking, a standee for good (no set), still on her way to her slot, or not on the stage: no nod.
+    const tile = byId(figures).get('202')!.tile
+    expect(nodders(figures, standing({ 101: { walking: true }, 202: { set: false }, 303: { target: tile }, 505: null }), false)).toEqual([])
+  })
+
+  it('never comes with reduced motion', () => {
+    expect(nodders(figures, standing(), true)).toEqual([])
+    vi.useFakeTimers()
+    const nodded: string[] = []
+    const clock = new NodClock((id) => nodded.push(id))
+    clock.set(nodders(figures, standing(), true), true)
+    expect(vi.getTimerCount()).toBe(0)
+    vi.advanceTimersByTime(60_000)
+    expect(nodded).toEqual([])
+  })
+
+  it('nods each Uma after her own gaps, over and over, never in step', () => {
+    vi.useFakeTimers()
+    const nodded: { id: string; at: number }[] = []
+    const start = Date.now()
+    const clock = new NodClock((id) => nodded.push({ id, at: Date.now() - start }))
+    clock.set(['101', '202'], true)
+    vi.advanceTimersByTime(60_000)
+    for (const id of ['101', '202']) {
+      const times = nodded.filter((n) => n.id === id).map((n) => n.at)
+      expect(times.length).toBeGreaterThanOrEqual(8)
+      // Each nod lands on her own seeded gap after the last.
+      const gaps = nodGaps(id)
+      let at = 0
+      expect(times).toEqual(times.map(() => (at += gaps())))
+    }
+    expect(nodded.filter((n) => n.id === '101').map((n) => n.at)).not.toEqual(nodded.filter((n) => n.id === '202').map((n) => n.at))
+  })
+
+  it('runs no timer while held (the app or Home hidden, the stage paused), and starts again when shown', () => {
+    vi.useFakeTimers()
+    const nodded: string[] = []
+    const clock = new NodClock((id) => nodded.push(id))
+    clock.set(['101', '202'], true)
+    expect(clock.armed.sort()).toEqual(['101', '202'])
+    expect(vi.getTimerCount()).toBe(2)
+    clock.set(['101', '202'], false)
+    expect(clock.armed).toEqual([])
+    expect(vi.getTimerCount()).toBe(0)
+    vi.advanceTimersByTime(60_000)
+    expect(nodded).toEqual([])
+    clock.set(['101', '202'], true)
+    vi.advanceTimersByTime(NOD_GAP_MS.max)
+    expect(nodded.sort()).toEqual(['101', '202'])
+    clock.stop()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('keeps a staying nodder\'s timer through a new reading, and drops one who stops', () => {
+    vi.useFakeTimers()
+    const nodded: { id: string; at: number }[] = []
+    const start = Date.now()
+    const clock = new NodClock((id) => nodded.push({ id, at: Date.now() - start }))
+    clock.set(['101'], true)
+    const first = nodGaps('101')()
+    vi.advanceTimersByTime(1000)
+    clock.set(['101', '202'], true)
+    vi.advanceTimersByTime(first)
+    expect(nodded.find((n) => n.id === '101')?.at).toBe(first)
+    clock.set(['202'], true)
+    const count = nodded.filter((n) => n.id === '101').length
+    vi.advanceTimersByTime(60_000)
+    expect(nodded.filter((n) => n.id === '101')).toHaveLength(count)
+    expect(clock.armed).toEqual(['202'])
   })
 })

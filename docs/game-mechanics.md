@@ -4479,19 +4479,28 @@ shows where the save puts everyone now.
   gliding with a small bob. A plain card shows until her face arrives, or when master data has none.
 - An Uma's look comes from her outfit in the story pack's cast.
 
+**The working nod.** An Uma at work nods now and then: her sprite set's nod, played once, then back to her stance.
+- **Who:** only an Uma at work (a worker on her slot, a tender on her block's slot) standing there as a live sprite. A
+  standee, an Uma walking or running, and an idle Uma don't nod.
+- **When:** every 4 to 7 seconds, a gap drawn afresh each time from a seed of her id, so the Umas at work never nod in
+  step and each keeps her own rhythm every visit. Her first nod comes one gap after she stands at her slot (or Home
+  opens).
+- **With reduced motion,** nobody nods.
+- A walk, a placing, her set changing or the farm being rebuilt around her cuts a nod short.
+
 #### Battery
 
 - The stage runs at 30 frames a second.
 - **The loop stops at rest.** It runs only while something moves (a finger, the camera, a walk, a fade, a set loading,
-  the light easing) and stops once the stage reports it's still, no finger is down and nobody walks; the still frame is
-  drawn once.
+  the light easing, a nod) and stops once the stage reports it's still, no finger is down and nobody walks; the still
+  frame is drawn once.
+- **Between nods the stage rests.** A timer wakes the loop for each nod, only when the stage takes it (a live sprite
+  standing still), and the loop stops again once she's back to her stance.
 - It also stops while the app is in the background, and while a full-screen scene or sheet covers Home (an event, a
-  conversation, the evening, a level-up, the household and the like).
+  conversation, the evening, a level-up, the household and the like). No nod timer runs then, or once Home is left.
 
 #### Not there yet
 
-- **The working nod.** A working Uma stands still at her slot. A small nod while she works waits on a stage feature that
-  can play an action on a figure.
 - **The farm-work animations** (Umas digging, fishing, hammering) aren't built.
 - **The workshops' games** (the Kitchen, the Restaurant and the Forge) aren't built, on the stage or off it.
 

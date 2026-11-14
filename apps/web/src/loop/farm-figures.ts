@@ -1,6 +1,7 @@
 // The farm's Umas on the HD-2D stage: who stands where, read from
-// the save as the Hub's pips read it, what her bubble shows, and what moved between two readings. Figures only show the
-// save: nothing here changes it. Pure, and part of the stage's lazy chunk (`FarmStage.tsx`).
+// the save as the Hub's pips read it, what her bubble shows, what moved between two readings, and who nods while she
+// works. Figures only show the save: nothing here changes it. Pure but for the nods' timers (`NodClock`), and part of the
+// stage's lazy chunk (`FarmStage.tsx`).
 //
 // Who stands: every Uma whose job holds a slot (uma-kit's `workView` cards, the pips' own source) at that
 // slot's marker, every tender at her block's marker on the Fields, and the rest of the farm's home (`farmHome`) idle: a
@@ -228,4 +229,64 @@ export function figureMoves(before: readonly FarmFigure[], after: readonly FarmF
   }
   for (const f of before) if (!now.has(f.id)) moves.push({ id: f.id, kind: mode === 'place' ? 'remove' : 'leave' })
   return moves
+}
+
+// --- The working nod -----------------------------------------------------------------------------
+
+/** The gap before an Uma at work nods again, in ms. */
+export const NOD_GAP_MS = { min: 4000, max: 7000 } as const
+
+/** Her gaps between nods, each 4–7 s in whole ms, from a seed of her id (FNV-1a, then a linear congruential step): the
+ * Umas at work never nod in step, and each nods to the same rhythm every visit. */
+export function nodGaps(id: string): () => number {
+  let seed = [...id].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16_777_619), 2_166_136_261) >>> 0
+  return () => {
+    seed = (Math.imul(seed, 1_664_525) + 1_013_904_223) >>> 0
+    return NOD_GAP_MS.min + Math.floor((seed / 2 ** 32) * (NOD_GAP_MS.max - NOD_GAP_MS.min))
+  }
+}
+
+/** An Uma on the stage as the nod reads her: the tile she stands on (or walks to), whether she's walking, and whether her
+ * outfit has a sprite set (without one she's a standee for good). */
+export interface NodStanding { target: Tile; walking: boolean; set: boolean }
+
+/** Who nods now and then: an Uma at work (a worker on her slot, a tender on her block) standing on it, not walking, with a
+ * sprite set; nobody with reduced motion. Whether her set is live is the stage's, asked at each nod: a standee doesn't nod. */
+export function nodders(figures: readonly FarmFigure[], standing: (id: string) => NodStanding | undefined, reducedMotion: boolean): string[] {
+  if (reducedMotion) return []
+  return figures.filter((f) => {
+    const s = f.where === 'slot' ? standing(f.id) : undefined
+    return s !== undefined && s.set && !s.walking && sameTile(s.target, f.tile)
+  }).map((f) => f.id)
+}
+
+/**
+ * The nods' timers: one for each Uma who nods, firing after her next gap (`nodGaps`) and arming the one after. `set` says
+ * who nods and whether the clock runs; held (the app or Home hidden, the stage paused), no timer runs. A nodder who stays
+ * keeps her timer, so a new reading never makes the Umas nod together.
+ */
+export class NodClock {
+  private readonly timers = new Map<string, ReturnType<typeof setTimeout>>()
+  private readonly gaps = new Map<string, () => number>()
+
+  constructor(private readonly nod: (id: string) => void) {}
+
+  /** Who nods now (`nodders`), and whether the clock runs: a new nodder's timer starts, a gone one's stops. */
+  set(ids: readonly string[], running: boolean): void {
+    const keep = new Set(running ? ids : [])
+    for (const [id, timer] of this.timers) if (!keep.has(id)) { clearTimeout(timer); this.timers.delete(id) }
+    for (const id of keep) if (!this.timers.has(id)) this.arm(id)
+  }
+
+  /** Every timer stopped (the stage goes). */
+  stop(): void { this.set([], false) }
+
+  /** Whose timers run. */
+  get armed(): string[] { return [...this.timers.keys()] }
+
+  private arm(id: string): void {
+    let gaps = this.gaps.get(id)
+    if (!gaps) { gaps = nodGaps(id); this.gaps.set(id, gaps) }
+    this.timers.set(id, setTimeout(() => { this.timers.delete(id); this.arm(id); this.nod(id) }, gaps()))
+  }
 }

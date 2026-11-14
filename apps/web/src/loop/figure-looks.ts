@@ -3,7 +3,7 @@
 // cap lets it go live, through uma-stage's loader and the release client, so its hash-named files are cached on the device
 // (the service worker's cache-first rule for `/api/master/files/`) and download once. With no set (most outfits today), or
 // while hers loads, she's a standee: her face from `outfit-faces` on a card, or a plain card when the release has none.
-// Part of the stage's lazy chunk.
+// At work, a live sprite nods now and then: her set's `nod` action. Part of the stage's lazy chunk.
 import type { ArtIndex, ReleaseManifest } from '@luismlorenzana/uma-data'
 import { decodeImage, loadSpriteSet, type ActorSource } from '@luismlorenzana/uma-stage'
 import { CONTENT } from '../content/client'
@@ -11,6 +11,9 @@ import { albumImagePath } from '../master/album-art'
 
 /** Her set's key on this release (its hash-named file), or null when her outfit has none: always a standee. */
 export const setKey = (art: ArtIndex | null, outfit: string): string | null => art?.sprites?.[outfit] ?? null
+
+/** The action a sprite set plays for the working nod, once, through uma-stage's `emote` (a set without it never nods). */
+export const NOD = 'nod'
 
 /** Her set's loader for the stage's cap. `live` is told when it has loaded, so a resting stage draws her. */
 export function setLoader(manifest: ReleaseManifest, art: ArtIndex, outfit: string, live: () => void): () => Promise<ActorSource | null> {

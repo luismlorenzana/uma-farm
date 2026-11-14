@@ -85,8 +85,8 @@ importers:
         specifier: 0.19.0
         version: 0.19.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-work@0.1.0)(firebase@12.19.0)(motion@12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(phaser@4.2.1)(react-dom@19.3.1(react@19.3.1))(react-router@7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)
       '@luismlorenzana/uma-stage':
-        specifier: 0.4.0
-        version: 0.4.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-kit@0.19.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-work@0.1.0)(firebase@12.19.0)(motion@12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(phaser@4.2.1)(react-dom@19.3.1(react@19.3.1))(react-router@7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1))(react@19.3.1)(three@0.187.0)
+        specifier: 0.6.0
+        version: 0.6.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-kit@0.19.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-work@0.1.0)(firebase@12.19.0)(motion@12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(phaser@4.2.1)(react-dom@19.3.1(react@19.3.1))(react-router@7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1))(react@19.3.1)(three@0.187.0)
       '@luismlorenzana/uma-work':
         specifier: 0.1.0
         version: 0.1.0
@@ -177,8 +177,8 @@ importers:
         version: 0.1.0
     devDependencies:
       '@luismlorenzana/uma-stage':
-        specifier: 0.4.0
-        version: 0.4.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-kit@0.19.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-work@0.1.0)(firebase@12.19.0)(motion@12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(phaser@4.2.1)(react-dom@19.3.1(react@19.3.1))(react-router@7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1))(react@19.3.1)(three@0.187.0)
+        specifier: 0.6.0
+        version: 0.6.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-kit@0.19.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-work@0.1.0)(firebase@12.19.0)(motion@12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(phaser@4.2.1)(react-dom@19.3.1(react@19.3.1))(react-router@7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1))(react@19.3.1)(three@0.187.0)
       typescript:
         specifier: ~5.9.3
         version: 5.9.3
@@ -1420,8 +1420,8 @@ packages:
       '@google-cloud/storage':
         optional: true
 
-  '@luismlorenzana/uma-stage@0.4.0':
-    resolution: {integrity: sha512-nL6+/bADBRvLrf2D4KIzmkh5sIwnV+cbibv5ln284q/gVtOOEd0vgokgbEsWRfDoeM68XJxRLqxW2dwTMhrEXw==, tarball: https://npm.pkg.github.com/download/@luismlorenzana/uma-stage/0.4.0/4e04f601869450897f0b5ed6db0640fa225a5b9b}
+  '@luismlorenzana/uma-stage@0.6.0':
+    resolution: {integrity: sha512-ihYqYaa+ut9AHfI+0884UzPjfRIJJojHjIbWJWpJIDxFxnZhW44Qgz4bDZy9jTsP0f+ixklzHCFmyT2Tb03lNw==, tarball: https://npm.pkg.github.com/download/@luismlorenzana/uma-stage/0.6.0/84f363101bd022c04b4900870069c509e6af19c1}
     engines: {node: '>=20'}
     peerDependencies:
       '@luismlorenzana/uma-data': ^1.4.0
@@ -5986,7 +5986,7 @@ snapshots:
     optionalDependencies:
       '@google-cloud/storage': 7.22.0
 
-  '@luismlorenzana/uma-stage@0.4.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-kit@0.19.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-work@0.1.0)(firebase@12.19.0)(motion@12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(phaser@4.2.1)(react-dom@19.3.1(react@19.3.1))(react-router@7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1))(react@19.3.1)(three@0.187.0)':
+  '@luismlorenzana/uma-stage@0.6.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-kit@0.19.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-work@0.1.0)(firebase@12.19.0)(motion@12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(phaser@4.2.1)(react-dom@19.3.1(react@19.3.1))(react-router@7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1))(react@19.3.1)(three@0.187.0)':
     dependencies:
       '@luismlorenzana/uma-data': 1.4.0
       '@luismlorenzana/uma-kit': 0.19.0(@luismlorenzana/uma-data@1.4.0)(@luismlorenzana/uma-work@0.1.0)(firebase@12.19.0)(motion@12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(phaser@4.2.1)(react-dom@19.3.1(react@19.3.1))(react-router@7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)
