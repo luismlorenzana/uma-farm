@@ -111,14 +111,14 @@ export function sortPeople(rows: readonly PersonRow[], by: PeopleSort): PersonRo
 }
 
 /** A post's menu: what its keeper offers. The general store sells seeds (the shop); the mayor's office takes build
- * orders and loans, and the rancher sells animals, both coming later. */
+ * orders and lends toward them (its sheet, `mayor`); the rancher sells animals, coming with the ranch. */
 export interface PostItem { key: string; label: string; to: string | null; why: string | null }
 export function postMenu(shop: ShopId): PostItem[] {
   switch (shop) {
     case 'store': return [{ key: 'seeds', label: 'Buy seeds', to: 'shop', why: null }]
     case 'mayor': return [
-      { key: 'build', label: 'Order a build', to: null, why: 'Coming with upkeep and loans' },
-      { key: 'loan', label: 'Borrow or repay', to: null, why: 'Coming with upkeep and loans' },
+      { key: 'build', label: 'Order a build', to: 'mayor', why: null },
+      { key: 'loan', label: 'Borrow or repay', to: 'mayor', why: null },
     ]
     case 'rancher': return [{ key: 'animal', label: 'Buy an animal', to: null, why: 'Coming with the ranch' }]
     case 'smith': return []

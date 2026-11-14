@@ -27,6 +27,15 @@ second year, the Flower Show, the Fishing Derby's night) ([the calendar](../game
 around in landscape, who's at each place now (the story's `home`, `job` and `routine`, else the day's draw), the town's
 people at their posts, and her menu at the design's costs: introduce yourself, talk and give a gift, an action each, her
 evening as built, her event when it's Ready; no welcome week ([the town](../game-mechanics.md#the-town)).
+**Upkeep and loans (F81) is built,** in review: each night, after the bin pays, the loans take their share of the
+night's income and the upkeep is charged (15g a place or house built, 5g a Dorm bed past the first three, 10g an Uma
+living on the farm; a new farm owes nothing); short of it, the rest is owed, the morning warns, and from the second
+short night the farmhands work at half pace (a flag F80 reads) until it's paid. The mayor's office in town lends what a
+build, a Dorm level or a house is short of gold, ordered in the same tap (a 10% fee, a tenth a night from income, up to
+1,000g at Farm Rank 1, two loans from Farm Rank 4). Ordering a build with your own gold stays on its card, free. The
+Book shows the upkeep beside the last seven nights' income; the projects list shows each loan and when it clears
+([upkeep and loans](../game-mechanics.md#upkeep-and-loans)). A simulated first year pays its way: the Mill early on a
+loan, never a short night, a fifth of the income to upkeep.
 
 | Piece | Who | State |
 |---|---|---|
@@ -34,7 +43,7 @@ evening as built, her event when it's Ready; no welcome week ([the town](../game
 | F78 **The town map** | Claude | Built, in review: the pull request `feat/f78-town-map` |
 | [F79](tasks/F79-uma-loop.md) **The Uma loop** | Claude | After F78 |
 | [F80](tasks/F80-farmhands.md) **Farmhands** | Claude | After F77 and F79 |
-| [F81](tasks/F81-economy.md) **Upkeep and loans** | Claude | After F77 |
+| F81 **Upkeep and loans** | Claude | Built, in review: the pull request `feat/f81-economy` |
 | F82 **The calendar** | Claude | Built, in review: the pull request `feat/f82-calendar` |
 | [F83](tasks/F83-ranch-and-mine.md) **The ranch and the mine** | Claude | After F77 and F80 |
 | [F84](tasks/F84-illustrations.md) **Illustrations** | Claude | After F79; the art's family asked of uma-platform |
@@ -54,6 +63,7 @@ The table above is the queue. A packet is deleted when it ships, and git keeps t
 | **Once F82 is deployed, open the calendar:** tap the date, look across a season and its faces, and on the Flower Show play two Umas' scenes with the festival's event actions | [uma-farm.web.app](https://uma-farm.web.app), and [the calendar](../game-mechanics.md#the-calendar-screen) |
 | **Once F77 is deployed, play three days:** start the new farm on the card, clear, till, plant and water, forage and fish, start a load and ship, run out of actions and end the day | [uma-farm.web.app](https://uma-farm.web.app), and [the day's rules](../game-mechanics.md#a-day-ten-actions) |
 | **The default Uma's look:** meet an Uma without art and play a talk and an event: the blank bust's faces and the default story | [uma-farm.web.app](https://uma-farm.web.app) |
+| **Once F81 is deployed, borrow toward the Mill:** with 20 logs held, go into town, open the mayor's office, tap **Borrow · Build**; end the day and see the Mill stand, then watch the Book's money and the morning's loan line until it clears | [uma-farm.web.app](https://uma-farm.web.app), and [upkeep and loans](../game-mechanics.md#upkeep-and-loans) |
 | **Once F78 is deployed, go into town and meet three Umas you choose:** walk between the places, introduce yourself, talk and give a gift, each an action | [uma-farm.web.app](https://uma-farm.web.app), and [the town](../game-mechanics.md#the-town) |
 | **Write the story and ship it.** F40 lists what the rework changes for it: the protagonist is a man, there's no welcome week, and her life in town (`home`, `job`, `routine`, and `town.json`'s `locations`) | [F40](tasks/F40-story-authoring.md) |
 | **The next Umas' art:** hand [F69](tasks/F69-bust-art-spec.md) to the character art session | Uma Character Art |

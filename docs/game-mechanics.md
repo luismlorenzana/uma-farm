@@ -5,8 +5,8 @@ the same commit, and where it and the code ever differ, the code wins and this d
 [game-mechanics.html](pages/game-mechanics.html); where the game is going is in [the roadmap](roadmap.md).
 
 **What's live and what isn't.** The deployed game is one game on **save v5**: a day of ten actions on a tile farm the
-farmer works by hand, its places, the farm growing by building, the calendar with its special days and occasion scenes,
-and the **romance** (Part 3), played from the story
+farmer works by hand, its places, the farm growing by building, upkeep and the mayor's office's loans, the calendar with
+its special days and occasion scenes, and the **romance** (Part 3), played from the story
 pack, and played whole without one: wherever the pack is silent, the default story plays, and every Uma without
 portraits plays on the blank bust (see [What plays without the story](#what-plays-without-the-story)). The game is
 laid out **sideways**, for a phone held in landscape (see [the frame](#the-frame-landscape)). A save from before v5
@@ -25,6 +25,7 @@ prose here; change a table by changing the rule.
   - [Gathering](#gathering)
   - [The stations](#the-stations)
   - [Goods and gold](#goods-and-gold)
+  - [Upkeep and loans](#upkeep-and-loans)
 - **[Part 2 — The Umas and the farm's progress](#part-2--the-umas-and-the-farms-progress)**
   - [The roster](#the-roster)
   - [The town](#the-town)
@@ -51,17 +52,19 @@ watered or harvested, each forage, chop or catch, each load started at a station
 town takes one, and so does each of the Umas' events. Special days (New Year's, a festival, her birthday) add actions
 for events only, and the calendar shows the year: its festivals, birthdays and the faces of the Umas with an event each
 day. Nothing on the farm moves until you end the day, whether the app is open, closed or left alone for a week. Ending
-the day runs the night: the bin pays, watered crops grow a stage, the stations' loads finish and the date turns. The
-morning opens on a card of what the night brought, and ten actions again.
+the day runs the night: the bin pays, the loans take their share and the upkeep is charged, watered crops grow a stage,
+the stations' loads finish and the date turns. The morning opens on a card of what the night brought, and ten actions
+again.
 
 ```
  the day: 10 actions, one a tap                    End the day ──► the night, in order
-   clear · till · plant · water · harvest   a tile               1 the bin pays
+   clear · till · plant · water · harvest   a tile               1 the bin pays; loans, then upkeep
    forage · chop                    the woods' edge              2 watered crops grow a stage
    fish                             the pond's edge              3 animals (none on the farm)
    start a load                     a station                    4 the stations' loads finish
    ship a crate                     the bin                      5 workshops (none open)
-   go into town                     the road (the shop, the town) 6 ranks and bonds (nobody works yet)
+   go into town                     the road (the shop, the town, 6 ranks and bonds (nobody works yet)
+                                    the mayor's office)
    free: building, the Dorm, talks, the evening                  7 crops wither; the date turns
                                                                  8 the Dorm, the goals, meeting her
  the morning: the summary card ◄──────────────────────────────── 9 the morning summary
@@ -319,7 +322,8 @@ The night is one fixed run of steps over the save:
 
 1. **The bin pays.** Everything shipped today pays at its price × stars × demand on the day it was shipped, so a
    season's last night still pays that season's demand. Gold rises and the bin empties. Before it, once anyone is
-   married, tonight's house is noted.
+   married, tonight's house is noted. **Then the accounts:** the bin's pay joins the last seven nights' income, each
+   loan takes its share of it, and the upkeep is charged (see [upkeep and loans](#upkeep-and-loans)).
 2. **Crops grow.** Each growing tile watered today grows one stage, and one whose stages reach its days − 0.5 turns
    ripe; a dry tile doesn't grow. A farmer Uma's night chores each water a dry growing tile first. Then every tile dries
    for the next day.
@@ -351,6 +355,7 @@ The steps as the game lists them:
 |---|---|---|
 | 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house is noted (its last night slept is today), your pick from Sleep at or else the house slept in least lately; the pick clears for tomorrow |
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand |
+| 1 | `settleTheAccounts` | The accounts: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the upkeep, with anything owed: what gold there is pays, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid |
 | 2 | `growCrops` | Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day |
 | 3 | `tendAnimals` | Animals: nothing happens until the ranch is built |
 | 4 | `finishTheLoads` | Stations: every load started today is done, its goods into the Warehouse at their stars, the station free for the morning |
@@ -403,6 +408,7 @@ line is a tap to its place.
 | Section | Lines | A tap opens |
 |---|---|---|
 | The bin | Each good and star sold, "Salmon ★2 × 3 · 495g", tagged **In demand** when the season lifted it; then "Total · 545g" | The bin |
+| Upkeep and loans | Each loan's share, "Loan for the Mill · 55g repaid · 440g left" ("· no sales, nothing repaid" on a night with no sales; "· cleared", tagged **Cleared**); "Upkeep · 45g" (or "5g of 45g" when short); a short night, "Short of upkeep · 40g owed", tagged **Warning** in red, and from the second in a row "· farmhands at half pace", tagged **Half pace**; "Upkeep paid up · 85g owed", tagged **Paid**. Hidden on a night with nothing charged | The Book |
 | Work done | Each station's load done, "Sawmill · Pine Plank ★1 × 8"; the field's growth, "The field · 5 crops grew · 2 ripe"; what withered, "The field · 3 Onion withered" | The station's panel; the farm map |
 | Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full** | Her profile's Work side |
 | Hearts | Who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", or in the town the world names, tagged **New**), a chapter that opened ("A new chapter with *Name* · Together", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
@@ -605,7 +611,35 @@ and its two-tone icon. A farm place's page (the Warehouse, the Dorm …) keeps F
 
 #### The Book
 
-The farm's accounts at a glance, six cards, each a tap to its place:
+The farm's accounts at a glance. First **the money** (see [upkeep and loans](#upkeep-and-loans)):
+
+```
+┌ the money ─────────────────────────────────────────────────────────────────┐
+│ Upkeep a night        Income a night               Left each night         │
+│ 45g                   230g                         +140g                   │
+│ After the bin pays    Average of the last 7 nights Less upkeep and loans   │
+│                                                                            │
+│ ▂ █ ▅ ▁ █ ▆ ▃  - - upkeep           1 place built                    15g   │
+│ 7 nights ago   Last night           3 Umas on the farm               30g   │
+│ [Short of upkeep · 40g owed · farmhands at half pace until it’s paid]      │
+│ Loans · 440g owed                                                          │
+│ Mill · 440g owed · 45g a night · clears in about 10 nights (Spring 14)     │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Upkeep a night:** what tonight's upkeep would be, as the farm stands.
+- **Income a night:** the average of the bin's pay over the nights the book keeps, the last seven (fewer on a new farm;
+  "No nights yet" before the first).
+- **Left each night:** the income less the upkeep and the loans' shares, green when it's positive and red when not.
+- **The nights:** each of the last seven nights' income as a bar, oldest first, against the upkeep's dashed line; a
+  night below the line is red.
+- **What the upkeep counts:** each part with its gold, the parts that count only.
+- **Short of upkeep:** a red line with what's owed, and "farmhands at half pace until it's paid" from the second short
+  night.
+- **Loans:** each with what's owed, its share a night and when it clears; "None. The mayor's office in town lends toward
+  a build." with none.
+
+Then six cards, each a tap to its place:
 
 | Card | Shows | A tap opens |
 |---|---|---|
@@ -615,6 +649,8 @@ The farm's accounts at a glance, six cards, each a tap to its place:
 | Umas on the farm | Who lives on the farm, and how many you've met | People's Work view |
 | Dorm | Beds used of beds | The Dorm |
 | To build | The places offered at this Farm Rank | The Diary's projects |
+
+Its help says how the upkeep, a short night and the loans work, in four lines.
 
 #### The Menu
 
@@ -1327,8 +1363,9 @@ is the night's own and is never priced again.
 
 Gold is whole and never goes below 0; a purchase short of gold is refused ("Need 30g more"). A new farm starts with 500g
 and 9 Carrot seeds.
-- **Earned:** the bin, and the Diary's milestones and collection rows.
-- **Spent:** seeds at the shop, places to build at their quick looks, Dorm levels at the Dorm, and houses on the
+- **Earned:** the bin, and the Diary's milestones and collection rows; a loan lends toward a build.
+- **Spent:** the night's upkeep and loans' shares, seeds at the shop, places to build at their quick looks or the
+  mayor's office, Dorm levels at the Dorm, and houses on the
   homestead.
 
 The gold chip in the bar shows the coin and your gold, and opens the bin.
@@ -1593,6 +1630,98 @@ Each family's goods, raw and refined, at ★1 and ★5, out of demand; in demand
 | G10 | Prismatic Essence | 540g | 1,080g |
 <!-- /live -->
 
+### Upkeep and loans
+
+The farm has to pay its way. What you add to it costs a little each night, and the mayor's office lends toward a build
+so it can stand ahead of the gold; each night's income pays it back. The rules are `farm/economy.ts`.
+
+```
+ the night, step 1:  the bin pays ──► each loan takes its share of the night's income ──► the upkeep is charged
+                                       (a tenth of the loan, from income only)              with anything owed
+                                                                                            │
+                     enough gold ───────────────────────────────────────────────────────────┤ all paid
+                     short ── what gold there is pays, the rest is owed ──► the morning warns (night 1)
+                                                                        ──► half pace (night 2 on), until it's paid
+ the day:  Go into town · 1 ──► the mayor's office (free): Borrow 400g · Build ──► the build is ordered at once
+```
+
+#### Upkeep
+
+Every night, after the bin pays and the loans take their share, the farm pays its upkeep:
+
+<!-- live:upkeep -->
+| Counts | A night | Not counted |
+|---|---|---|
+| Each place built (the Mill, the Sawmill, the Smokehouse, the Dock, the Boat, and each later one) | 15g | The start’s own places |
+| Each house built on the homestead | 15g | The Farmhouse |
+| Each Dorm bed past the first 3, at the level in effect | 5g | Level 1’s 3 beds |
+| Each Uma living on the farm: home in the Dorm, or a spouse in her house | 10g | Those who live in town |
+| Short of it | What gold there is pays; the rest is owed with tomorrow’s | The first short night warns; from night 2 in a row, half pace until it’s paid |
+<!-- /live -->
+
+- **What it counts** is read at night step 1, before the night's builds stand: a place or a Dorm level paid for today
+  costs from tomorrow night, its first night standing, and a house (which stands at once) from tonight. A new farm owes
+  nothing: upkeep grows with what you build and who you bring.
+- **What pays:** the farm's gold after the bin and the loans' shares. Gold never goes below 0.
+- **Short of upkeep:** what gold there is pays and the rest is **owed** (`farm.owed`), added to the next night's
+  upkeep. The short nights in a row are counted (`farm.short`):
+  - **the first** warns in the morning ("Short of upkeep · 40g owed", tagged Warning);
+  - **from the second**, the farmhands work at **half pace** until it's paid ("· farmhands at half pace"): half their
+    actions, rounded down, never below one (`atPace`). The farmer's own ten are never touched. The farmhands come later,
+    so for now half pace is a flag the farmhands' day reads (`halfPace`), tested on the rules;
+  - **paid:** a night whose gold covers all that's owed and its own upkeep pays it, says "Upkeep paid up", and the count
+    goes back to 0.
+  - Nobody leaves, and nothing is lost: no one moves out, no building stops, no good is taken.
+- **The book** keeps the bin's pay on each of the last seven nights (`farm.income`), so the Book can set an average
+  night's income beside the upkeep.
+
+#### Loans
+
+The mayor's office, in town, lends toward a build. Going into town takes its action; at the office, ordering and
+borrowing are free.
+
+<!-- live:loans -->
+| Farm Rank | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Lends up to | 1,000g | 2,000g | 4,000g | 8,000g | 15,000g | 30,000g | 50,000g | 80,000g | 120,000g | 160,000g |
+| Loans at once | 1 | 1 | 1 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
+
+| Term | The rule |
+|---|---|
+| What it lends | What the build is short of gold, rounded up to 100g, never past its cost; you bring the goods |
+| Toward | A place offered at your Farm Rank (its game built), the Dorm’s next level at its Farm Rank, or the next house once its wedding has come |
+| The fee | 10% of the loan, rounded up to 10g, owed with it |
+| Each night | A tenth of what’s owed when it’s taken (rounded up to 5g), from the night’s income only, before the upkeep |
+| Repay | At the office, in full, any time you’re in town; the fee isn’t returned |
+<!-- /live -->
+
+- **The office's orders** (`buildOrders`): every place offered at your Farm Rank whose game is built and that doesn't
+  stand (one paid today says "Builds tonight"), the Dorm's next level once its Farm Rank comes, and the next house once
+  its wedding has come. Each says what it costs, and:
+  - **Build · 1,000g** when the gold and goods are there: the build as its own card orders it, with your gold;
+  - **Borrow 400g · Build** when only gold is short and the office lends: what it's short, rounded up to 100g, with the
+    terms under it ("Need 360g more · 440g owed, a tenth a night from income"). The loan and the build are one tap: a
+    place stands the next morning, a Dorm level's beds come the next morning, and a house stands at once, named in its
+    row's field as on the homestead;
+  - otherwise why not: its goods ("Need 20 logs more."), the loans held ("One loan at a time: this one first.",
+    "Two loans at a time: one of these first."), or the limit ("The office lends up to 1,000g at Farm Rank 1.").
+- **Each night,** after the bin pays and before the upkeep, each loan in the order taken takes its share (`nightly`, a
+  tenth of what was owed when it was taken, rounded up to 5g) from what's left of the night's income; a night with no
+  sales repays nothing, and the loan runs a night longer. A loan with nothing owed goes, and the morning says "cleared".
+- **Repay:** at the office, the whole of what's owed, from your gold, any time you're in town; the fee isn't returned.
+- **When it clears:** the nights at its share (what's owed ÷ its share, rounded up) from today: "clears in about 10
+  nights (Spring 14)", as the Book, the projects list and the office say it. "About", since a night with fewer sales
+  repays less.
+- **Ordering a build stays where it is.** A place's Build card on the farm, the Dorm's page and the homestead still
+  order with your own gold and goods, free and with no trip to town; the office orders the same builds, and only it
+  lends. Paying your own way needs nobody's leave, and builds are rare, so a trip to town would add a step and no
+  choice: the trip is the price of credit.
+
+**The save:** `farm.loans` (each loan's project, the day taken, what was lent, the fee, what's owed and its share a
+night; at most two), `farm.owed` and `farm.short` (together: both 0, or both above), and `farm.income` (up to seven
+nights). They grow v5 in place: a save from before them reads as no loans, nothing owed and no nights, and nothing moves
+`updatedAt` for it.
+
 ## Part 2 — The Umas and the farm's progress
 
 Every character lives in the town from day 1, and you meet her there by introducing yourself, one of the day's actions.
@@ -1854,8 +1983,9 @@ with why. **Back** returns to the map.
   "She lives on the farm. Her profile ›".
 - **One of the town's people** (her face at her post, or on the People list) shows her role, what she does and her
   ties with the cast, each with its line, and her post's menu: the general store's **Buy seeds ›** opens the shop;
-  the mayor's office's **Order a build** and **Borrow or repay** wait for upkeep and loans; the rancher's **Buy an
-  animal** waits for the ranch. Talking with her counts nothing and costs nothing.
+  the mayor's office's **Order a build ›** and **Borrow or repay ›** both open the office's sheet, its orders and its
+  loans side by side ([loans](#loans)); the rancher's **Buy an animal** waits for the ranch. Talking with her counts
+  nothing and costs nothing.
 - **A Town note** an introduction, a talk or a gift unlocks says "Town note · *title* ›" there, a tap to it in the
   Diary: an introduction or a talk at a spot visits it ([Town notes](#town-notes)).
 
@@ -2265,7 +2395,8 @@ The collection rows:
 Every place past the start is offered at its Farm Rank and built with gold and the farm's own goods:
 
 1. **Offered:** the Farm Rank reaches its rank (the Boat once the Dock stands too).
-2. **Paid:** its Build card (the place's quick look, or a station's page) takes its gold and goods now. Each goods line
+2. **Paid:** its Build card (the place's quick look, or a station's page), or the mayor's office in town, with your gold
+   or a loan for what's short ([loans](#loans)), takes its gold and goods now. Each goods line
    takes any grade and any stars of its family, the cheapest first (★1 price × the star's factor, then fewer stars, then
    the catalogue's order). The place waits in `farm.builds`.
 3. **Built:** the next morning, night step 8 sets `buildings[id]` to 1 before anything else, and New today says "Built
@@ -2330,9 +2461,12 @@ Your life with the Umas opens the homestead and the town:
 #### The farm's projects
 
 The Diary's **Projects** card gathers what's next:
+- **Loans,** first while there are any, each a goal: what it built, "440g owed · 45g a night · clears in about 10 nights
+  (Spring 14)"; a tap opens the Book (see [loans](#loans)).
 - **Build now:** every place offered at your rank and not standing, whose game is built: its name, its cost ("1,000g · 20
   logs"), and what it still lacks ("Need 400g and 12 logs more"), "Builds tonight" once paid, or **Build ›**. A tap
-  opens its quick look and Build card. With none: "Nothing to build at this rank."
+  opens its quick look and Build card. With none: "Nothing to build at this rank." When a place lacks only gold,
+  "Short of gold? The mayor's office lends toward a build. ›" opens the office in town.
 - **Not built yet:** the places offered at your rank whose games aren't built, in one line ("Not built yet: the Coop,
   the Barn").
 - **At Farm Rank 3 · 250 points:** what the next rank offers, each with its cost or "Not built yet".
@@ -2342,28 +2476,54 @@ The Diary's **Projects** card gathers what's next:
 
 #### The pacing
 
-A test (`packages/domain/src/farm/season.test.ts`) plays the first season on the game's own rules, the farmer alone, by a
-plain bot, ten actions a day. Each morning it harvests what's ripe, waters what grows, plants the tilled soil it has
-seeds for, tills and clears a little more while fewer than five tiles grow, ships once there's a crate's worth, goes
-into town for seeds when they run out, and spends what's left fishing and foraging. It checks:
+A test (`packages/domain/src/farm/season.test.ts`) plays the first year on the game's own rules, the farmer working
+alone, by a plain bot, ten actions a day. Each morning it harvests what's ripe, waters what grows, plants the tilled soil
+it has seeds for, tills and clears a little more while fewer than five tiles grow, ships once there's a crate's worth
+(less the logs and fish its next build takes), goes into town for the season's quickest seeds when they run out, and
+spends what's left fishing, foraging and chopping (chopping first while the next build waits for logs). It builds as it
+goes: **the Mill on a loan** from the mayor's office as soon as it holds the logs, then **the Dorm's second level** from
+Autumn, then the Farm Rank 3 stations. Two Umas live on the farm from Summer, three from Autumn and four from Winter,
+though nobody works it but the farmer yet. Every night charges the upkeep and the loan's share. It checks:
 - **every day spends exactly its ten actions,** and every morning has ten again;
 - **watered crops grow and dry ones don't,** and something is harvested;
 - **the season's last night withers what's left** (only Corn and Cabbage carry over);
-- **the bin pays:** over 1,000g shipped, gold above the 500g start, and Farm Rank points earned;
+- **the bin pays:** over 1,000g shipped in Spring, gold above the 500g start, and Farm Rank points earned;
+- **the Mill stands early on a loan,** and Spring runs a surplus;
+- **the upkeep is always paid:** never a short night, never half pace;
+- **every season earns more than its upkeep and loans take,** and the year ends richer than it started;
+- **the loan clears,** the Dorm's level comes in Autumn, and the farmer alone reaches Farm Rank 2;
 - **every morning's save parses** as v5.
 
-The run as it stands (`SEASON=1` prints it):
+The run as it stands (`SEASON=1` prints it). Spring, day by day:
 
 | Spring | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Planted and watered | 0 | 5 | 0 | 0 | 0 | 2 | 2 | 1 | 0 | 0 | 0 | 0 |
 | Watered, besides the day's plantings | 0 | 0 | 5 | 5 | 5 | 0 | 2 | 4 | 5 | 3 | 1 | 0 |
 | Harvested | 0 | 0 | 0 | 0 | 0 | 5 | 0 | 0 | 0 | 2 | 2 | 1 |
-| Gold, morning | 500 | 500 | 500 | 780 | 965 | 1,200 | 1,760 | 1,760 | 1,785 | 1,785 | 2,330 | 2,675 |
+| Gold, morning | 500 | 500 | 500 | 500 | 0 | 155 | 645 | 630 | 570 | 555 | 1,040 | 1,315 |
+| Built | | | | The Mill, on a 500g loan | | | | | | | | |
 
-Summer 1 opens on 3,060g, 2,740g shipped, 10 tiles harvested and 82 Farm Rank points. Fishing and foraging carry the
-season: an action at the water or the woods pays about what a Carrot's whole run of six actions does, so the farm's
-balance waits on the farmhands and the tools.
+The year, season by season (the morning after each season's last night):
+
+| Season | The bin paid | Upkeep | The loan's shares | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
+|---|---|---|---|---|---|---|---|---|
+| Spring | 2,270g | 120g | 330g | 1,820g | 0 | 1,640g | 15g (the Mill) | 1 |
+| Summer | 2,710g | 420g | 220g | 2,070g | 0 | 3,350g | 35g (and two Umas home) | 1 |
+| Autumn | 1,455g | 650g | — | 805g | 0 | 2,615g | 55g (the Dorm's level 2, three home) | 1 |
+| Winter | 2,955g | 780g | — | 2,175g | 0 | 4,250g | 65g (four home) | 2 |
+
+- **The loan builds the Mill early:** 20 logs held on Spring 4 with 500g, the office lends the other 500g (550g owed, 55g
+  a night). The Mill stands on Spring 5, three days sooner than on the farmer's own gold (paid on Spring 7 without the
+  loan, standing on Spring 8), for a 50g fee; the nights' income clears the loan on Summer 5's night, its tenth night
+  with sales.
+- **A small surplus:** the year's upkeep is 1,970g against 9,390g shipped, a fifth. Autumn is the leanest season, with
+  three Umas home and nobody working but the farmer: its upkeep takes 45% of its income and it still clears 805g.
+- **Year 2 opens** on 4,250g, 9,390g shipped, 47 tiles harvested and 168 Farm Rank points (Farm Rank 2). The farmer
+  alone doesn't reach Farm Rank 3 (250) in a year, so the Sawmill and the Smokehouse wait for the farmhands' pace.
+- **Fishing and foraging still carry the farm:** an action at the water or the woods pays about what a Carrot's whole
+  run of six actions does. The upkeep doesn't make that bite (the farm never runs short), so the prices stand until
+  the farmhands and the tools.
 
 #### The night's goals check
 
@@ -4756,6 +4916,9 @@ sits outside the opening screens, so it shows even when the app stopped while op
   arrived" line is only on a morning after a new release, her chapter is read from her route, and the save takes
   festival night on any day (once at most) and a festival's news by any festival's id, since the story says which days
   hold one.
+- **v5 grows in place with upkeep and loans:** `farm.loans`, `farm.owed`, `farm.short` and `farm.income` are new; a
+  save without them reads as no loans, nothing owed and no nights, and the morning's upkeep section (`summary.money`)
+  is absent on a morning from before them. Nothing migrates, and `updatedAt` never moves for it.
 - **v5 grows in place with the calendar:** `today.occasions` (who played today's occasion scene) is written only once
   one plays, and a save without it has played none; the morning's New Year's and story days' lines are two more kinds of
   news. Nothing migrates, and `updatedAt` never moves for it.

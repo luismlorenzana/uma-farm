@@ -1,7 +1,7 @@
 // End the day: the night is one pure function, nine steps in a fixed order, one save write. A step whose part of the
 // game isn't built yet (the ranch, the workshops) does nothing:
 //
-//   1 the bin pays · 2 watered crops grow · 3 animals · 4 the stations' loads are done ·
+//   1 the bin pays, then the loans' shares and the upkeep · 2 watered crops grow · 3 animals · 4 the stations' loads are done ·
 //   5 workshops reset · 6 ranks, bonds and well fed · 7 crops wither and the calendar turns
 //   · 8 places built, the Dorm, the Diary and the Farm Rank, meeting her · 9 the morning summary
 //
@@ -51,10 +51,11 @@ import { favouriteOf, festivalsOf, storyDaysOn } from '../story/placeholders'
 import { unlockNotes } from '../town/notes'
 import { checkGoalsNight, type GoalsTonight } from '../farm/diary'
 import { raiseBuilds } from '../farm/builds'
+import { settleAccounts } from '../farm/economy'
 import type { FarmPlaceId } from '../farm/places'
 import type {
-  BinSale, HeartLine, HouseholdNews, HouseLine, HouseMissesLine, InviteLine, ItemLine, LevelLine, MorningSummary, MovedLine, NewsLine, Nudge, RankLine, StoryNews, VowsLine,
-  WorkLine,
+  BinSale, HeartLine, HouseholdNews, HouseLine, HouseMissesLine, InviteLine, ItemLine, LevelLine, MoneyLine, MorningSummary, MovedLine, NewsLine, Nudge, RankLine, StoryNews,
+  VowsLine, WorkLine,
 } from './summary'
 
 /** What the night reads beyond the save: the talents the app reads from master data, the story pack and the
@@ -79,6 +80,8 @@ export interface NightContext {
 export interface NightNotes {
   /** Step 1: what the bin sold tonight, by good and star. The summary's bin section. */
   readonly sold: readonly BinSale[]
+  /** Step 1, after the bin: the loans' shares, the upkeep, a short night or the owed paid. The summary's upkeep section. */
+  readonly money: readonly MoneyLine[]
   /** Who worked today, and where: the Umas' work, which step 6 pays rank points from. None until the farmhands come. */
   readonly worked: readonly { outfitId: OutfitId; place: LoopPlaceId }[]
   /** The items the Umas' work finished tonight, with its request: none until the farmhands come. */
@@ -135,7 +138,7 @@ export interface NightNotes {
 
 /** A night's notes before its first step. */
 export const emptyNotes = (): NightNotes => ({
-  sold: [], worked: [], made: [], grew: 0, ripened: 0, loads: [], withered: [], ranks: [], dorm: null, home: [],
+  sold: [], money: [], worked: [], made: [], grew: 0, ripened: 0, loads: [], withered: [], ranks: [], dorm: null, home: [],
   built: [], goals: { paid: [], ranks: [] }, townNotes: [], lines: [], days: [], extras: [], bonds: [], invites: [], chores: [], perks: [], items: [], house: null, levels: [],
   household: [], houseLine: null, houseItems: [], moved: [], misses: null, vows: null,
 })
@@ -160,6 +163,14 @@ const same: NightStep = (night) => night
 export const payTheBin: NightStep = (night) => {
   const { save, sales } = payBin(night.save, night.save.calendar.day)
   return { ...night, save, notes: { ...night.notes, sold: sales } }
+}
+/** Step 1, after the bin: the farm's accounts. The night's income (the bin's pay) joins the book's last seven nights;
+ * each loan takes its share of that income, then the upkeep is charged with anything owed: what gold there is pays, the
+ * rest is owed, and the short nights in a row count on until it's paid (`farm/economy.ts`). */
+export const settleTheAccounts: NightStep = (night) => {
+  const income = night.notes.sold.reduce((n, sale) => n + sale.gold, 0)
+  const { save, lines } = settleAccounts(night.save, income)
+  return { ...night, save, notes: { ...night.notes, money: lines } }
 }
 /** Step 2: every growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry
  * one doesn't grow. With the pack, each farmer's night chore waters a dry growing tile first. Then every tile dries for
@@ -460,7 +471,7 @@ export const buildSummary: NightStep = (night) => {
   const nudges: Nudge[] = [...(water > 0 ? [{ kind: 'water' as const, tiles: water }] : []), ...(plant > 0 ? [{ kind: 'seeds' as const, tiles: plant }] : [])]
   const work = [...loads, ...grew, ...withered]
   const summary: MorningSummary = {
-    day: save.calendar.day, bin: [...notes.sold], work, ranks: [...notes.ranks], hearts: heartLines(night),
+    day: save.calendar.day, bin: [...notes.sold], ...(notes.money.length > 0 ? { money: [...notes.money] } : {}), work, ranks: [...notes.ranks], hearts: heartLines(night),
     news: [
       ...storyNews(night.context), ...newsOf(save.calendar.day, festivalsOf(night.context.story), night.context.story ?? null),
       ...(notes.townNotes.length > 0 ? [{ kind: 'notes' as const, ids: [...notes.townNotes] }] : []), ...goalNews(notes), ...notes.household, ...dormNews(night),
@@ -483,6 +494,7 @@ export interface NightStepDef {
 export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 1, name: 'noteTonight', run: noteTonight, what: 'Before the bin, once anyone is married: tonight’s house is noted (its last night slept is today), your pick from Sleep at or else the house slept in least lately; the pick clears for tomorrow' },
   { step: 1, name: 'payTheBin', run: payTheBin, what: 'The bin pays: everything shipped today, at price × stars × demand' },
+  { step: 1, name: 'settleTheAccounts', run: settleTheAccounts, what: 'The accounts: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the upkeep, with anything owed: what gold there is pays, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid' },
   { step: 2, name: 'growCrops', run: growCrops, what: 'Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day' },
   { step: 3, name: 'tendAnimals', run: tendAnimals, what: 'Animals: nothing happens until the ranch is built' },
   { step: 4, name: 'finishTheLoads', run: finishTheLoads, what: 'Stations: every load started today is done, its goods into the Warehouse at their stars, the station free for the morning' },

@@ -30,7 +30,12 @@ actions".
    - her stats and today's talents set where each starts. This builds on talents and rank points.
 4. **You're freed:** a task on the board is the farmhand's, so the protagonist's own actions stay free for the valley.
 5. **Well fed:** a household meal (F79) gives every farmhand one more action the next day.
-6. **The save:** each farmhand's tasks and aptitude levels. v4 grows in place.
+6. **Half pace (from F81):** from the second short night of upkeep in a row, until it's paid, each farmhand's actions
+   go through `atPace(actions, save)` (half, rounded down, never below one); `halfPace(save)` says when. Both are in
+   `farm/economy.ts`, tested there, and the morning already says "farmhands at half pace". Apply it to her daily
+   actions; the farmer's own ten stay whole. Each Uma on the farm already costs 10g of upkeep a night: retune the
+   upkeep's numbers with the farmhands' simulation.
+7. **The save:** each farmhand's tasks and aptitude levels. v4 grows in place.
 
 ## Do
 

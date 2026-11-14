@@ -335,7 +335,7 @@ A rescue that fails to write is logged and never hides why the upload was refuse
 |---|---|---|
 | 1–3 | Older formats, from before the farm started over | Nothing: read as `{ version, account }` (`OlderSave`) |
 | 4 | The farm of blocks, the work board's and the stations' jobs | Nothing: read as `{ version, account }`, and started over |
-| 5 | The farm: the farmer's name, the field's tiles, the stations' loads, the day's actions (`today.actions`, `today.eventActions`, `today.town`), love, the homestead, memories, arrivals, rosters keyed by character id | The app (`SAVE_VERSION`) |
+| 5 | The farm: the farmer's name, the field's tiles, the stations' loads, the day's actions (`today.actions`, `today.eventActions`, `today.town`), the farm's accounts (`farm.loans`, `owed`, `short`, `income`), love, the homestead, memories, arrivals, rosters keyed by character id | The app (`SAVE_VERSION`) |
 
 - **`parseSave`** (`packages/domain/src/save/save.ts`) parses a v5 strictly (`parseSaveV5` in `parse-v4.ts`, with
   `parse-loop.ts`'s parts): unknown keys and bad ids are refused, each error with its path (`SaveParseError`). It

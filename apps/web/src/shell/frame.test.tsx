@@ -159,6 +159,34 @@ describe('the Book', () => {
       ['work', '/hearts?view=work', '2'], ['dorm', '/dorm', '2/3'], ['projects', '/diary', '1'],
     ])
   })
+
+  it('sets the daily upkeep beside the last seven nights\' income, with what the upkeep counts, a short night and the loans', async () => {
+    // Two Umas home and the Mill: 35g a night. Five nights of income; a loan for the Mill; 40g owed after two short nights.
+    const save = farm()
+    useGame.setState({ save: {
+      ...save, buildings: { ...save.buildings, mill: 1 },
+      farm: { ...save.farm, income: [0, 300, 200, 0, 100], owed: 40, short: 2, loans: [{ for: 'mill', day: 1, lent: 400, fee: 40, owed: 220, nightly: 45 }] },
+    } })
+    await render(<BookPage />, '/book')
+    const figures = $$('[data-money]').map((f) => [f.getAttribute('data-money'), f.querySelector('[data-figure]')?.textContent, f.querySelector('[data-line]')?.textContent])
+    expect(figures).toEqual([
+      ['upkeep', '35g', 'After the bin pays'], ['income', '120g', 'Average of the last 5 nights'], ['left', '+40g', 'Less upkeep and loans'],
+    ])
+    expect($$('[data-part]').map((p) => p.textContent)).toEqual(['1 place built15g', '2 Umas on the farm20g'])
+    expect($$('[data-night]').map((b) => b.getAttribute('data-night'))).toEqual(['0', '300', '200', '0', '100'])
+    expect($('[data-upkeep-line]')).not.toBeNull()
+    expect($('[data-short]')?.textContent).toBe('Short of upkeep · 40g owed · farmhands at half pace until it’s paid')
+    expect($('[data-loan="mill"]')?.textContent).toBe('Mill220g owed · 45g a night · clears in about 5 nights (Spring 8)')
+  })
+
+  it('shows a new farm\'s money: nothing to keep up and no nights yet', async () => {
+    useGame.setState({ save: { ...farm(), roster: {}, love: {}, dorm: { level: 1, home: [], swaps: [] } } })
+    await render(<BookPage />, '/book')
+    expect($$('[data-money] [data-figure]').map((f) => f.textContent)).toEqual(['0g', '0g', '+0g'])
+    expect($('[data-nights]')?.textContent).toBe('Each night’s income shows here after the bin pays.')
+    expect($('[data-no-loans]')?.textContent).toBe('None. The mayor’s office in town lends toward a build.')
+    expect($('[data-short]')).toBeNull()
+  })
 })
 
 describe('held upright', () => {

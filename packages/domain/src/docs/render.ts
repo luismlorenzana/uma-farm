@@ -11,6 +11,7 @@ import { DEMAND, FAMILY_FACTOR, LADDER, REFINED_FACTOR, type LadderFamily } from
 import { DAYS_PER_SEASON, farmDay, FESTIVALS, SEASON_NAMES, SEASONS } from '../farm/calendar'
 import { BUILD_PLACES, FARM_PLACES, MAP_PLACES, TOWN_FIRST_ROW, type FarmPlace, type PlaceOpens } from '../farm/places'
 import { BOARD_MET, buildCostWords, buildGoodsWords } from '../farm/builds'
+import { FREE_BEDS, HALF_PACE_FROM, LOAN_FEE, LOAN_LIMITS, LOAN_NIGHTS, LOAN_STEP, TWO_LOANS_FROM, UPKEEP_BED, UPKEEP_BUILDING, UPKEEP_RESIDENT } from '../farm/economy'
 import { NIGHT_STEPS } from '../night/end-day'
 import { CROPS, SHOP_SEEDS } from '../fields/crops'
 import { CLEAR_FINDS, cropLevelStart, GROUND_NAMES, harvestQuality, MAX_CROP_LEVEL, seedsBackChance, stagesOf } from '../fields/fields'
@@ -409,6 +410,30 @@ function stationRecipes(): string {
 // --- The roster -----------------------------------------------------------------------------------------------
 
 /** The Dorm for 20: its eight levels, their beds, costs and Farm Ranks. */
+/** Upkeep: what it counts and its gold a night, and a short night's rule. */
+function upkeepBlock(): string {
+  return table(['Counts', 'A night', 'Not counted'], [
+    ['Each place built (the Mill, the Sawmill, the Smokehouse, the Dock, the Boat, and each later one)', g(UPKEEP_BUILDING), 'The start’s own places'],
+    ['Each house built on the homestead', g(UPKEEP_BUILDING), 'The Farmhouse'],
+    [`Each Dorm bed past the first ${FREE_BEDS}, at the level in effect`, g(UPKEEP_BED), `Level 1’s ${FREE_BEDS} beds`],
+    ['Each Uma living on the farm: home in the Dorm, or a spouse in her house', g(UPKEEP_RESIDENT), 'Those who live in town'],
+    ['Short of it', 'What gold there is pays; the rest is owed with tomorrow’s', `The first short night warns; from night ${HALF_PACE_FROM} in a row, half pace until it’s paid`],
+  ])
+}
+/** The mayor's office's loans: the limit and the loans at once by Farm Rank, and the terms. */
+function loansBlock(): string {
+  const ranks = LOAN_LIMITS.map((_, i) => String(i + 1))
+  return table(['Farm Rank', ...ranks], [
+    ['Lends up to', ...LOAN_LIMITS.map(g)],
+    ['Loans at once', ...ranks.map((r) => (Number(r) >= TWO_LOANS_FROM ? '2' : '1'))],
+  ]) + `\n\n${table(['Term', 'The rule'], [
+    ['What it lends', `What the build is short of gold, rounded up to ${g(LOAN_STEP)}, never past its cost; you bring the goods`],
+    ['Toward', 'A place offered at your Farm Rank (its game built), the Dorm’s next level at its Farm Rank, or the next house once its wedding has come'],
+    ['The fee', `${Math.round(LOAN_FEE * 100)}% of the loan, rounded up to 10g, owed with it`],
+    ['Each night', `A ${LOAN_NIGHTS === 10 ? 'tenth' : `1/${LOAN_NIGHTS}`} of what’s owed when it’s taken (rounded up to 5g), from the night’s income only, before the upkeep`],
+    ['Repay', 'At the office, in full, any time you’re in town; the fee isn’t returned'],
+  ])}`
+}
 function dormLevels(): string {
   let total = 0
   return table(['Level', 'Beds', 'Costs', 'Farm Rank', 'Cumulative'], DORM_LEVELS.map((l) => {
@@ -1033,7 +1058,7 @@ export function renderBlock(key: string): string | null {
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,
     'place-activity': placeActivity, 'forest-areas': forestAreas, 'fishing-spots': fishingSpots, 'fish-sizes': fishSizes, 'farmer-hauls': farmerHauls,
     stations, 'station-recipes': stationRecipes,
-    'dorm-levels': dormLevels,
+    'dorm-levels': dormLevels, upkeep: upkeepBlock, loans: loansBlock,
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,
     'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-draw': townDraw, 'town-shops': townShops, 'her-menu': herMenuBlock }
   return blocks_[key]?.() ?? null

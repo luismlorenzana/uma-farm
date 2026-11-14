@@ -4,8 +4,8 @@
 // - **The map:** its locations in groups (the six spots, the shops and offices, the story's workplaces and homes), each
 //   with how many are there now and their first faces; you're at one (`?at=<id>`, the Plaza to start), and a tap on
 //   another goes there. Beside the map, **where you are:** its name and line, who's here now (faces and names, as many as
-//   there are, in a grid that scrolls), and its keeper at her post with her post's menu (the general store's seeds;
-//   build orders, loans and animals coming later);
+//   there are, in a grid that scrolls), and its keeper at her post with her post's menu (the general store's seeds; the
+//   mayor's office's build orders and loans, its sheet at `?sheet=mayor` (`MayorSheet.tsx`); animals coming later);
 // - **People:** everyone who lives in town and the town's people, met or not, with where she is today, a search by
 //   name, and a sort, met first or by name; a tap goes to her.
 // Tap anyone (`?uma=<id>`) for her menu on the dialogue engine (`HerMenu.tsx`). Faces load as they scroll into view.
@@ -15,7 +15,7 @@ import { CAST, placeNameOf, townDay, type SaveV4, type StoryPack, type TownDay }
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Tabs } from '@luismlorenzana/uma-kit/ui'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { MasterGate } from '../master/MasterGate'
 import type { MasterView } from '../master/master'
@@ -24,6 +24,8 @@ import { namer } from '../story/people'
 import { storyReady, useStory } from '../story/story'
 import { IntoTown } from '../loop/GoodsSheets'
 import { HerMenu } from './HerMenu'
+
+const MayorSheet = lazy(() => import('./MayorSheet'))
 import { findPeople, locationViews, mapGroups, peopleRows, PEOPLE_SORTS, postMenu, sortPeople, type LocationView, type PeopleSort } from './town-view'
 
 type View = 'map' | 'people'
@@ -80,7 +82,7 @@ function About() {
     <>
       <p>Everyone lives in town: tap a place to walk there, free, and see who’s there now. The story puts each Uma where her life takes her (her home, her work, the places she likes); the rest are out at the town’s spots, a different few each day.</p>
       <p>Tap an Uma for what you can do with her, each an action: introduce yourself (that’s how you meet her), talk, give a gift, and her event when it’s ready.</p>
-      <p>The town’s people are at their posts: the general store sells seeds.</p>
+      <p>The town’s people are at their posts: the general store sells seeds, and the mayor’s office takes build orders and lends toward them.</p>
     </>
   )
 }
@@ -115,6 +117,11 @@ function Town({ save, pack, master, view }: { save: SaveV4; pack: StoryPack; mas
       {uma && (
         <HerMenu key={uma} id={uma} save={save} pack={pack} master={master} day={day} nameOf={nameOf}
           onClose={() => leave(paramsTo(location, { uma: null, talk: null }))} />
+      )}
+      {params.get('sheet') === 'mayor' && (
+        <Suspense fallback={null}>
+          <MayorSheet title={views.find((v) => v.loc.id === 'mayor')?.loc.name ?? 'The Mayor’s Office'} onClose={() => leave(paramsTo(location, { sheet: null }))} />
+        </Suspense>
       )}
     </>
   )

@@ -61,6 +61,31 @@ describe('the morning\'s bin', () => {
 })
 
 
+describe('the morning\'s upkeep and loans', () => {
+  it('says each loan\'s share, the upkeep, a short night as a warning, then half pace, and the owed paid, each a tap to the Book', () => {
+    const summary: MorningSummary = {
+      day: 16, bin: [], ranks: [], hearts: [], work: [], news: [], nudges: [],
+      money: [
+        { kind: 'loan', for: 'mill', paid: 55, left: 440 }, { kind: 'loan', for: 'dorm:2', paid: 0, left: 770 }, { kind: 'loan', for: 'house:1', paid: 80, left: 0 },
+        { kind: 'upkeep', paid: 5, due: 45 }, { kind: 'short', owed: 40, nights: 1 },
+      ],
+    }
+    expect(summaryParts(summary)).toEqual([{ section: 'money', title: 'Upkeep and loans', lines: [
+      { key: 'loan:mill', text: 'Loan for the Mill · 55g repaid · 440g left', to: '/book' },
+      { key: 'loan:dorm:2', text: 'Loan for Dorm level 2 · no sales, nothing repaid · 770g left', to: '/book' },
+      { key: 'loan:house:1', text: 'Loan for House 1 · cleared', to: '/book', tag: 'Cleared' },
+      { key: 'upkeep', text: 'Upkeep · 5g of 45g', to: '/book' },
+      { key: 'short', text: 'Short of upkeep · 40g owed', to: '/book', tag: 'Warning', warn: true },
+    ] }])
+    const half = summaryParts({ ...summary, money: [{ kind: 'upkeep', paid: 0, due: 85 }, { kind: 'short', owed: 85, nights: 2 }] })[0]!.lines
+    expect(half.map((l) => [l.text, l.tag])).toEqual([['Upkeep · 0g of 85g', undefined], ['Short of upkeep · 85g owed · farmhands at half pace', 'Half pace']])
+    const paid = summaryParts({ ...summary, money: [{ kind: 'upkeep', paid: 130, due: 130 }, { kind: 'paid-up', owed: 85 }] })[0]!.lines
+    expect(paid.map((l) => [l.text, l.tag])).toEqual([['Upkeep · 130g', undefined], ['Upkeep paid up · 85g owed', 'Paid']])
+    // A morning from before upkeep has no such section.
+    expect(summaryParts({ ...summary, money: undefined })).toEqual([])
+  })
+})
+
 describe('the morning\'s field', () => {
   it('says what grew and ripened, what withered, and tiles to plant, each opening the farm', () => {
     const summary: MorningSummary = {

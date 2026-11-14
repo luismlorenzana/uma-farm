@@ -18,7 +18,7 @@ import type { HeartLine, MorningSummary } from '../night/summary'
 import { bool, count, int, list, object, oneOf, parseAccount, record, text } from './parse'
 import {
   counts, day, fail, KEY, member, outfit, parseBinLines, parseBonds, parseBoard, parseBuildings, parseDiary, parseDig, parseDorm, parseExpeditions,
-  legacyChapter, parseFarm, parseFields, parseLoads, parseNewsLines, parseNudges, parseRanch, parseRankLines, parseRanks, parseTools, parseWarehouse, parseWorkLines,
+  legacyChapter, parseFarm, parseFields, parseLoads, parseMoneyLines, parseNewsLines, parseNudges, parseRanch, parseRankLines, parseRanks, parseTools, parseWarehouse, parseWorkLines,
   parseWorkshops, unique,
 } from './parse-loop'
 import {
@@ -351,10 +351,11 @@ function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>, 
 }
 
 function parseSummary(value: unknown, path: string, today: number, roster: ReadonlySet<string>, houses: number): MorningSummary {
-  const o = object(value, path, ['day', 'bin', 'work', 'ranks', 'hearts', 'news', 'nudges'])
+  const o = object(value, path, ['day', 'bin', 'money', 'work', 'ranks', 'hearts', 'news', 'nudges'])
   if (o.day !== today) fail(`${path}.day`, 'expected today: a summary is the morning it opens on')
   return {
-    day: today, bin: parseBinLines(o.bin, `${path}.bin`), work: parseWorkLines(o.work, `${path}.work`), ranks: parseRankLines(o.ranks, `${path}.ranks`, roster),
+    day: today, bin: parseBinLines(o.bin, `${path}.bin`), ...(o.money === undefined ? {} : { money: parseMoneyLines(o.money, `${path}.money`) }),
+    work: parseWorkLines(o.work, `${path}.work`), ranks: parseRankLines(o.ranks, `${path}.ranks`, roster),
     hearts: parseHearts(o.hearts, `${path}.hearts`, roster, houses), news: parseNewsLines(o.news, `${path}.news`, roster),
     nudges: parseNudges(o.nudges, `${path}.nudges`),
   }
@@ -400,7 +401,8 @@ function parseTown(value: unknown, path: string, today: number): Record<string, 
 }
 
 /** Parses a save v5. A `farm.chapter` and `farm.goals` (the global chapters') are ignored, what the chapter opened kept
- * standing (`chapterOpened`); a missing `farm.builds` is none, and a missing `town` none. */
+ * standing (`chapterOpened`); a missing `farm.builds` is none, a missing `town` none, missing accounts (`farm.loans`,
+ * `owed`, `short`, `income`) none, and a morning without its upkeep section (`summary.money`) has none. */
 export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
   const o = object(value, path, SAVE_V5_KEYS)
   if (o.version !== 5) fail(`${path}.version`, 'expected 5')
@@ -439,7 +441,7 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
     bonds: parseBonds(o.bonds, `${path}.bonds`, ids),
     board: parseBoard(o.board, `${path}.board`),
     diary: parseDiary(o.diary, `${path}.diary`),
-    farm: parseFarm(o.farm, `${path}.farm`),
+    farm: parseFarm(o.farm, `${path}.farm`, today),
     homestead,
     memories: parseMemories(o.memories, `${path}.memories`, ids),
     arrivals,
