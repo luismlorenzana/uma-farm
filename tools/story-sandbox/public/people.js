@@ -145,6 +145,7 @@ export function characterView(id, onReview) {
         scenesPanel(id),
         pairsPanel(id),
         bible ? biblePanel(bible) : null,
+        bible ? talkPanel(bible) : null,
         h('div', { class: 'panel' }, h('h3', { text: `Her ties · ${ties.length}` }),
           ties.length ? h('div', { class: 'stack' }, ties.map((t) => {
             const other = t.a === id ? t.b : t.a
@@ -161,7 +162,11 @@ export function characterView(id, onReview) {
 
 // ── Her scenes and her pair talks, to read ─────────────────────────────────────
 const RUNG_ORDER = ['arrival', ...Array.from({ length: 10 }, (_, i) => `f${i + 1}`), 'confession', ...Array.from({ length: 10 }, (_, i) => `r${i + 1}`), 'proposal', 'wedding', 'wedding-night', 's1', 's3', 's5']
-const EVENT_LABEL = { arrival: 'Arrival', confession: 'Confession', proposal: 'Proposal', wedding: 'Wedding', 'wedding-night': 'The wedding night', 'dinner-in-town': 'Dinner in town', 'a-night-in': 'A night in', 'new-year': 'The year’s first day', 'flower-show': 'The Flower Show', 'derby-night': 'The Fishing Derby’s night' }
+const EVENT_LABEL = { arrival: 'Arrival', confession: 'Confession', proposal: 'Proposal', wedding: 'Wedding', 'wedding-night': 'The wedding night', 'dinner-in-town': 'Dinner in town', 'a-night-in': 'A night in', 'new-year': 'The year’s first day', 'flower-show': 'The Flower Show', 'derby-night': 'The Fishing Derby’s night',
+  'fishing-derby': 'The Fishing Derby', 'cooking-contest': 'The Cooking Contest', 'harvest-moon': 'The harvest moon', 'animal-show': 'The Animal Show',
+  'harvest-cup': 'The Harvest Cup', 'harvest-cup-night': 'The Harvest Cup’s night', 'blossom-viewing': 'Blossom viewing', 'wishing-night': 'The wishing night',
+  'first-cold-evening': 'The first cold evening', 'first-snow': 'The first snow', 'longest-night': 'The longest night', 'sweets-day': 'The sweets day',
+  birthday: 'Her birthday', anniversary: 'Your anniversary' }
 const eventLabel = (id) => EVENT_LABEL[id] ?? (/^f\d+$/.test(id) ? `♥ ${id.slice(1)}` : /^r\d+$/.test(id) ? `❤ ${id.slice(1)}` : /^s\d+$/.test(id) ? `✦ ${id.slice(1)}` : id)
 const OUTFIT_LABEL = { season: 'the day’s season', dinner: 'dinner dress', wedding: 'wedding dress', work: 'work clothes', 'garden-party': 'garden party dress', 'wedding-night': 'wedding night' }
 
@@ -277,6 +282,27 @@ function ladder(id, bible) {
     h('h4', { class: 'spouse-head', text: 'Spouse ✦ after the wedding' }),
     h('div', { class: 'ladder-spouse' }, ['s1', 's3', 's5'].map((rid) => rung(rid, `✦ ${rid.slice(1)}`, 'spouse'))),
   )
+}
+
+/** Her everyday talk, to read: her voice, town lines, greetings by time, season, place and weather, small talk and gift
+ * lines (the story's own fields, beside the chats the game reads). */
+function talkPanel(bible) {
+  const b = bible.data
+  if (!b.voice && !b.townLines && !b.greetings && !b.smallTalk && !b.giftLines) return null
+  const list = (lines) => h('ul', { class: 'list small' }, (lines ?? []).map((l) => h('li', { text: l })))
+  const group = (title, obj) => (obj ? h('details', {}, h('summary', { class: 'small', text: `${title} · ${Object.values(obj).flat().length}` }),
+    Object.entries(obj).map(([k, lines]) => h('div', {}, h('h4', { text: k }), list(lines)))) : null)
+  const g = b.greetings ?? {}
+  return h('div', { class: 'panel' }, h('h3', { text: 'Her everyday talk' }),
+    b.voice ? h('dl', { class: 'kv' }, ...Object.entries(b.voice).flatMap(([k, v]) => [h('dt', { text: k }),
+      h('dd', { text: Array.isArray(v) ? v.join(' · ') : typeof v === 'object' ? Object.entries(v).map(([s, t]) => `${s}: ${t}`).join(' · ') : v })])) : null,
+    b.townLines ? h('details', {}, h('summary', { class: 'small', text: `Town lines · ${b.townLines.length}` }), list(b.townLines)) : null,
+    group('Greetings by time', g.times), group('Greetings by season', g.seasons), group('Greetings by place', g.places), group('Weather', g.weather),
+    g.birthday ? h('details', {}, h('summary', { class: 'small', text: `Her birthday · ${g.birthday.length}` }), list(g.birthday)) : null,
+    b.smallTalk ? h('details', {}, h('summary', { class: 'small', text: `Small talk · ${b.smallTalk.length}` }),
+      b.smallTalk.map((t) => h('div', { class: 'stack small' }, h('h4', { text: [t.at, t.season, t.stage].filter(Boolean).join(' · ') || 'any time' }),
+        t.lines.map(([who, line]) => h('p', {}, h('b', { text: who === 'you' ? 'You: ' : `${umaName(who)}: ` }), line))))) : null,
+    group('Gift lines', b.giftLines))
 }
 
 function biblePanel(bible) {
