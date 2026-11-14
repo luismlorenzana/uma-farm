@@ -10,7 +10,8 @@
 // by side the Warehouse; the Dorm's beds are the Dorm for 20's. It also has the house's morning (with its house line,
 // read live), a move-in, a house that misses you (Tonight › and Another night under it), a night level (her level-up
 // card at `?level=`), the Festival of Vows, the household's Ready offers (live, after the Ready lines) and §5's
-// household milestones.
+// household milestones. §5 opens with "New story arrived" once a release, its note the release's (read live by its
+// number), a tap to the Hearts tab.
 import {
   ACTIVITY_NAMES, bedsAt, EVENINGS, farmPlace, FESTIVALS, goodName, itemNameOf, RANKS, rungName, SEASON_NAMES, SUMMARY_SECTIONS, type FarmPlaceId, type FestivalId, type HeartLine, type MorningSummary, type SummarySection,
 } from '@farm/domain'
@@ -67,10 +68,15 @@ export interface ReadyNow {
 /** The morning summary as the card shows it: its sections in order, empty ones hidden, each line a tap.
  * §4 Hearts also shows while someone is `ready`. */
 export function summaryParts(summary: MorningSummary, nameOf: NameOf = someone, ready: readonly ReadyNow[] = [], pairs: PairWords | null = null,
-  home: HomeWords = NO_HOME, chapterOf: ChapterOf = noChapter): SummaryPart[] {
+  home: HomeWords = NO_HOME, chapterOf: ChapterOf = noChapter, noteOf: NoteOf = noNote): SummaryPart[] {
   const sections = SUMMARY_SECTIONS.filter((section) => (section === 'hearts' ? summary.hearts.length + ready.length + home.household.length > 0 : summary[section].length > 0))
-  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs, home, chapterOf) }))
+  return sections.map((section) => ({ section, title: SECTION_TITLE[section], lines: sectionLines(summary, section, nameOf, ready, pairs, home, chapterOf, noteOf) }))
 }
+
+/** A story release's note by its ship's number, from the release the game plays as the card shows; null for another
+ * release, one with no note, or before the pack loads. */
+export type NoteOf = (number: number) => string | null
+const noNote: NoteOf = () => null
 
 /** Her chapter's title by its number, from the pack as the card shows; null before the pack loads. */
 export type ChapterOf = (id: string, n: number) => string | null
@@ -84,6 +90,9 @@ export interface HomeWords {
   household: readonly { id: string; text: string; to: string }[]
 }
 export const NO_HOME: HomeWords = { houseName: (n) => (n === 0 ? 'Farmhouse' : `House ${n}`), houseLine: () => null, household: [] }
+
+/** §5's new story release in words: "New story arrived · ‹its note›", or the words alone with no note. */
+export const storyNewsWords = (note: string | null): string => (note ? `New story arrived · ${note}` : 'New story arrived')
 
 /** §5's household milestones in words. */
 export function householdNews(married: number): { text: string; to: string } {
@@ -193,7 +202,7 @@ function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, hom
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
 
 function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: NameOf, ready: readonly ReadyNow[], pairs: PairWords | null,
-  home: HomeWords, chapterOf: ChapterOf): SummaryLine[] {
+  home: HomeWords, chapterOf: ChapterOf, noteOf: NoteOf): SummaryLine[] {
   switch (section) {
     case 'bin': {
       // Each good and star with its count and gold, the demand marked, then the total.
@@ -217,10 +226,11 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
         }
       })
     case 'news':
-      // The season and festivals; a place built overnight, a Farm Rank and what it opens, the Diary's milestones; the
-      // household's milestones; the Dorm's beds and swaps home.
+      // A story release new to the device, with its note; the season and festivals; a place built overnight, a Farm Rank
+      // and what it opens, the Diary's milestones; the household's milestones; the Dorm's beds and swaps home.
       return summary.news.map((line): SummaryLine => {
         switch (line.kind) {
+          case 'story': return { key: 'story', text: storyNewsWords(noteOf(line.number)), to: '/hearts', tag: 'New' }
           case 'season': return { key: 'season', text: `${SEASON_NAMES[line.season]} begins`, to: '/?sheet=calendar' }
           case 'festival': return { key: `festival:${line.when}`, text: `${festivalName(line.festival)} ${line.when}`, to: peek('festival') }
           case 'built': return { key: `built:${line.place}`, text: builtWords(line.place), to: peek(farmPlace(line.place)?.on ?? line.place), tag: 'Built' }

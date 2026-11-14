@@ -16,6 +16,7 @@ import {
 import type { QueueInput } from '@luismlorenzana/uma-work'
 import { masterReady } from '../master/master'
 import { commit, useGame } from '../save/game'
+import { arrivedRelease, forgetArrived } from '../story/news'
 import { storyReady } from '../story/story'
 import { farmingTalents, talentsFor } from './talents'
 
@@ -25,7 +26,7 @@ const nowIso = () => new Date().toISOString()
 /**
  * Ends `day`: the night's nine steps over the save as it is now, stamped once. It waits for master data (the talents and
  * birthdays) and the story pack (favourites and her trigger to meet), which the night reads; a second tap, or a save that
- * already moved past `day`, changes nothing.
+ * already moved past `day`, changes nothing. A story release new to this device goes in the morning's New today, once.
  */
 export async function endTheDay(day: number): Promise<boolean> {
   const [view, story] = await Promise.all([masterReady(), storyReady()])
@@ -33,7 +34,9 @@ export async function endTheDay(day: number): Promise<boolean> {
   if (!save || save.calendar.day !== day) return false
   // The cast's birthdays (master data's, the cast's own winning) for the morning's lines.
   const birthdays = birthdaysOf(story, view.birthdays)
-  await commit(endDay(save, { talentOf: talentsFor(view), story, birthdays }, nowIso()))
+  const release = arrivedRelease()
+  await commit(endDay(save, { talentOf: talentsFor(view), story, birthdays, release }, nowIso()))
+  if (release) forgetArrived(release.number)
   return true
 }
 

@@ -54,7 +54,8 @@ import { raiseBuilds } from '../farm/builds'
 import type { FarmPlaceId } from '../farm/places'
 import { daySetState } from './nudge'
 import type {
-  BinSale, HeartLine, HouseholdNews, HouseLine, HouseMissesLine, InviteLine, ItemLine, LevelLine, MorningSummary, MovedLine, NewsLine, Nudge, RankLine, VowsLine, WorkLine,
+  BinSale, HeartLine, HouseholdNews, HouseLine, HouseMissesLine, InviteLine, ItemLine, LevelLine, MorningSummary, MovedLine, NewsLine, Nudge, RankLine, StoryNews, VowsLine,
+  WorkLine,
 } from './summary'
 
 /** What the night reads beyond the save: the talents the app reads from master data, the story pack and the
@@ -72,6 +73,9 @@ export interface NightContext {
   /** Each cast Uma's birthday as a day of the farm's year: master data's character set through the cast
    * (`birthdaysOf`). None when left out. */
   readonly birthdays?: Birthdays
+  /** A story release that reached the device since the last morning, which the device tells from one it has seen:
+   * the morning's New today says "New story arrived", first. None when left out. */
+  readonly release?: Omit<StoryNews, 'kind'> | null
 }
 
 /** What the steps saw that a later one needs and the save alone can't show. */
@@ -497,6 +501,9 @@ export const drawInvitations: NightStep = (night) => {
   return { ...night, save, notes: { ...night.notes, invites } }
 }
 
+/** The release that reached the device, as §5's first line. */
+const storyNews = (context: NightContext): StoryNews[] => (context.release ? [{ kind: 'story', number: context.release.number }] : [])
+
 /** Step 9: the morning summary, built from what changed. It replaces last night's. */
 export const buildSummary: NightStep = (night) => {
   const { save, notes } = night
@@ -516,7 +523,7 @@ export const buildSummary: NightStep = (night) => {
   const work = [...jobs, ...best, ...crops, ...withered]
   const summary: MorningSummary = {
     day: save.calendar.day, bin: [...notes.sold], work, ranks: [...notes.ranks], hearts: heartLines(night),
-    news: [...newsOf(save.calendar.day), ...goalNews(notes), ...notes.household, ...dormNews(night)], nudges,
+    news: [...storyNews(night.context), ...newsOf(save.calendar.day), ...goalNews(notes), ...notes.household, ...dormNews(night)], nudges,
   }
   // The bond hearts are listed: the day ahead notes its own.
   return { ...night, save: { ...save, today: { ...save.today, bonds: {} }, summary } }

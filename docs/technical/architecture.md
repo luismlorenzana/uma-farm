@@ -363,7 +363,7 @@ An old client never half-reads or overwrites a newer save:
 
 The game's story is a private pack: never in git, never in the bundle.
 
-- **The source** is the ignored `content/story/` on the author's Mac.
+- **The source** is the ignored `content/story/` on the machine where the story is written.
 - **`pnpm story:release`** (`scripts/story/release.mjs`; Node 22.18 or later, for type stripping) reads the pack with
   the game's own reader (`readStoryPack`, read in place). Any pack releases: an error (only what the game can't read)
   skips the one part it's in, notes block nothing, and both are printed; it refuses only a missing pack folder. The
@@ -371,10 +371,28 @@ The game's story is a private pack: never in git, never in the bundle.
   `content/story-release/`, laid out as the bucket is: the index `story.json` (each file's path, bytes and SHA-256) and
   each file minified as `story/<name>.<hash8>.json`. The same inputs give the same files, and only the pack's own files
   are read. `--stand-in` releases the invented stand-in in git, for the dev server; `--from <dir> --out <dir>` moves
-  both ends. Tests: `scripts/story/release.test.mjs`.
-- **`pnpm story:publish`** (`scripts/story/publish.sh`) runs the release, then uploads the hash-named files first
-  (`gcloud storage rsync`, `private, max-age=31536000, immutable`) and `story.json` last (`private, no-cache`), so a
-  reader never sees an index pointing at missing files. Old files stay, so a phone holding an older index still reads
+  both ends; `--number <n> [--note "…"]` numbers the local index for the dev server. Tests:
+  `scripts/story/release.test.mjs`.
+- **`pnpm story:ship`** (`scripts/story/ship.mjs`, Node only, so it runs on macOS and Windows) is the routine, in
+  order: check (the reader's errors and notes, printed; nothing blocks), release (as above), publish, back up
+  (`pnpm story:push farm` in the sibling `../uma-platform` checkout, or `STORY_PLATFORM_DIR`; skipped with a note
+  without one), then the number and the note.
+  - **Numbering:** the publish reads the bucket's `story.json` (`gcloud storage cat`) and stamps the new index
+    (`shippedIndex`) with `number` (one more, or 1; over an unnumbered index, one more than the highest of its kept
+    versions), `shippedAt` and `note` (`--note`, else `ship.md`'s first line, else none; one line, at most
+    `STORY_NOTE_MAX`, 160). The three are optional to `parseStoryIndex`.
+  - **Order:** `gcloud storage rsync` of the hash-named files, then `gcloud storage cp` of `story.json`, with
+    `story:publish`'s headers. An index whose release id the bucket already plays isn't published again, so a rerun is
+    safe. `--dry-run` reads (`cat`, `ls`) and uploads nothing.
+  - **Rollback:** `--release <n>` finds release *n* among `story.json`'s kept versions (`ls --all-versions`, then `cat`
+    each), checks its files are all in the bucket, and uploads it alone, numbered anew, its note "Rolled back to *n*".
+  - **gcloud** runs with the environment only: `CLOUDSDK_ACTIVE_CONFIG_NAME` from `STORY_GCLOUD_CONFIG` (default
+    `default`), `CLOUDSDK_CORE_PROJECT` from `STORY_GCLOUD_PROJECT` (default `uma-rpg`), the bucket `STORY_BUCKET`
+    (default `uma-farm-content`); on Windows `gcloud.cmd` and `pnpm.cmd` through the shell. It never runs
+    `config set`. Tests: `scripts/story/ship.test.mjs`, on a fake bucket in memory and a stand-in `gcloud` on `PATH`.
+- **`pnpm story:publish`** (`scripts/story/publish.sh`, the Mac's publish step alone, unnumbered) runs the release,
+  then uploads the hash-named files first (`gcloud storage rsync`, `private, max-age=31536000, immutable`) and
+  `story.json` last (`private, no-cache`), so a reader never sees an index pointing at missing files. Old files stay, so a phone holding an older index still reads
   it, and the bucket's versioning keeps older indexes. It scopes every gcloud call by the environment and never changes
   the account. `--dry-run` lists what it would upload. The bucket is `gs://uma-farm-content`, or `$STORY_BUCKET`.
 - **The route** (`apps/api/src/story/story-pack.ts`): uma-server's `PrivatePackModule` at `/api/content/`, behind the
@@ -390,6 +408,12 @@ The game's story is a private pack: never in git, never in the bundle.
   - each file read with the same reader, a part with an error skipped; only a hash that doesn't match, or a route or
     pair that isn't what the index lists, fails the load;
   - the index is kept on the device only once the pack it names has loaded;
+  - **a new release:** a fresh index with a `number` the last kept index doesn't have is told to `arrived` before it's
+    kept (`isNewRelease`); `load.ts` keeps its number under `farm.story-news` (`story/news.ts`). The night
+    (`endTheDay`) passes it as `NightContext.release`, the summary opens §5 with `{ kind: 'story', number }`, and the
+    number is forgotten once committed. A new farm (`boot`'s fresh save, `startOver`) forgets it first. The morning card
+    reads the note live from the pack's `release` (`StoryPack.release`, from the index) by its number; Account's Story
+    row reads the same;
   - a 404 for `story.json` (nothing published yet, or no release on the dev server) plays no pack: master data's first
     five on placeholders, so a farm always opens and plays whole;
   - the invented stand-in is the tests' only (`VITE_FARM_STORY=stand-in`, dev only); `DEV_ONLY_MODULES` keeps it out of

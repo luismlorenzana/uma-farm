@@ -15,6 +15,7 @@ import {
   type Household, type Opening, type PairConversations, type Read, type Route, type StoryContext, type Ties, type Town, type UmaBible,
 } from './authored'
 import { favouriteOf, firstVisitorOf, type MasterCast } from './placeholders'
+import type { StoryRelease } from './release'
 
 /** A pack's files as a release holds them (`cast.json`, `ties.json`, `umas/<id>.json`, `routes/<id>.json`,
  * `pairs/<a>-<b>.json`, its name the two in `pairKey` order, `household.json`, `opening.json` and `town.json`), unchecked.
@@ -59,6 +60,8 @@ export interface StoryPack {
   /** What master data gives the placeholders (her default outfit, her line from her stats), once the app has read it;
    * none in the tests that leave it out. */
   readonly master?: MasterCast
+  /** The release it came from (its number, date and note); none with no pack, or the stand-in. */
+  readonly release?: StoryRelease
 }
 
 /** A release the game can't read: an index that isn't one, or a file that isn't what the index says. Never a pack's

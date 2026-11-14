@@ -28,6 +28,13 @@ vi.mock('../api/client', async () => {
 
 const { boot, commit, madeHere, resetGame, restoreSafetyCopy, syncNow, useGame } = await import('./game')
 const { db, safetyCopies } = await import('./db')
+const { arrivedRelease, keepArrived } = await import('../story/news')
+
+/** A device's storage (this Node's own `localStorage` global has no methods). */
+function memoryStorage(): Pick<Storage, 'getItem' | 'setItem' | 'removeItem'> {
+  const items = new Map<string, string>()
+  return { getItem: (k) => items.get(k) ?? null, setItem: (k, v) => void items.set(k, v), removeItem: (k) => void items.delete(k) }
+}
 
 const T0 = '2026-11-08T12:00:00.000Z'
 const T1 = '2026-11-08T13:00:00.000Z'
@@ -51,9 +58,24 @@ describe('the store', () => {
     expect(server.envelope.save?.account.uid).toBe('u1')
   })
 
-  it("adopts the server's save on a fresh device, and keeps it on the device", async () => {
+  it('starts a new farm with no "New story arrived" waiting: its opening plays the story', async () => {
+    vi.stubGlobal('localStorage', memoryStorage())
+    try {
+      keepArrived({ number: 2 })
+      await boot('u1')
+      expect(arrivedRelease()).toBeNull()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it("adopts the server's save on a fresh device, keeps it on the device, and keeps a new release's news for its morning", async () => {
+    vi.stubGlobal('localStorage', memoryStorage())
+    keepArrived({ number: 2 })
     server.envelope = { revision: 4, save: newSave('u1', T0) }
     await boot('u1')
+    expect(arrivedRelease()).toEqual({ number: 2 })
+    vi.unstubAllGlobals()
     expect(useGame.getState()).toMatchObject({ status: 'ready', revision: 4, dirty: false })
     resetGame()
     server.down = true

@@ -2,7 +2,8 @@
 // sign-out, and master data's release. The Notifications card says they're off: with days as turns,
 // nothing finishes while the app is closed; the server's push is untouched. It also holds **Your name**, the farmer's,
 // under the name sheet's rule; a safety copy from before v4 lists as Kept, without a Restore, since restoring it would
-// only start over again. It also holds **HD-2D farm (preview)**, this device's switch for Home on the shared stage.
+// only start over again. It also holds **HD-2D farm (preview)**, this device's switch for Home on the shared stage, and
+// the **Story** row: the story release the game plays, by its ship's number and date, or "No story yet".
 import { cleanFarmerName, FARMER_PLACEHOLDER, farmerNameIssue, SAVE_VERSION, versionOf } from '@farm/domain'
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { AccountPage } from '@luismlorenzana/uma-kit/places'
@@ -12,9 +13,10 @@ import { APP_BUILD_ID } from '../app/build'
 import { useMaster } from '../master/master'
 import { safetyCopies, type SafetyCopy } from '../save/db'
 import { setStageOn, useStageOn } from '../app/stage-switch'
+import { useStory } from '../story/story'
 import { restoreSafetyCopy, seeReplaced, useGame } from '../save/game'
 import { dateWords } from '../shell/SyncWarning'
-import { syncWords } from './sync-words'
+import { storyWords, syncWords } from './sync-words'
 
 const REASON: Readonly<Record<SafetyCopy['reason'], string>> = {
   replaced: 'Replaced by a newer save', restore: 'Before a restore', unreadable: 'Couldn’t be read', wiped: 'Before the new farm',
@@ -102,20 +104,25 @@ export function AccountView() {
   const auth = useAuth()
   const state = useGame()
   const master = useMaster()
+  const story = useStory()
   const release = master.status === 'ready' ? master.view.manifest.version : master.status === 'error' ? (master.offline ? 'Offline' : 'Unavailable') : 'Loading…'
   useEffect(() => seeReplaced(), [])
+  // The frame clips its page, so Account scrolls itself: its last rows and Sign out clear the bottom bar.
   return (
-    <AccountPage
-      info={[
-        { label: 'Signed in', value: auth.user?.email ?? auth.user?.name ?? 'Local' },
-        { label: 'Save', value: syncWords(state) },
-        { label: 'Last synced', value: state.lastSyncedAt ? dateWords(state.lastSyncedAt) : '—' },
-        { label: 'Build', value: APP_BUILD_ID },
-        { label: 'Master data', value: release },
-      ]}
-      notifications={<NotificationsOff />}
-      sections={<><YourName /><StagePreview /><SafetyCopies /></>}
-      onSignOut={auth.authRequired ? () => auth.signOut() : undefined}
-    />
+    <div className="absolute inset-0 overflow-y-auto overscroll-contain" data-page="account">
+      <AccountPage
+        info={[
+          { label: 'Signed in', value: auth.user?.email ?? auth.user?.name ?? 'Local' },
+          { label: 'Save', value: syncWords(state) },
+          { label: 'Last synced', value: state.lastSyncedAt ? dateWords(state.lastSyncedAt) : '—' },
+          { label: 'Build', value: APP_BUILD_ID },
+          { label: 'Master data', value: release },
+          { label: 'Story', value: storyWords(story) },
+        ]}
+        notifications={<NotificationsOff />}
+        sections={<><YourName /><StagePreview /><SafetyCopies /></>}
+        onSignOut={auth.authRequired ? () => auth.signOut() : undefined}
+      />
+    </div>
   )
 }

@@ -46,17 +46,39 @@
 
 The owner wants the story to reach the game regularly. So:
 
-- **At the end of every writing session, ship:** `pnpm story:ship --note "what's new, in one line"`, run where the story
-  is written.
-  - It checks the pack (notes only), builds the release, publishes it to the farm's private bucket, and backs the
-    drafts up to uma-platform (`story:push farm`).
-  - The phone picks it up on its next open, and the morning says "New story arrived" with your note.
-  - Until [F72](F72-story-ship.md) lands, `pnpm story:release` then `pnpm story:publish` do the same, minus the number,
-    the note and the backup.
-- **The machine:** gcloud signed in with the owner's account. `STORY_GCLOUD_CONFIG` names its configuration if it isn't
-  `default`.
-- **Ship partial work freely.** A pack only ever adds to what the game already plays, and a rollback is
-  `pnpm story:ship --release <n>`.
+- **At the end of every writing session, ship:** `pnpm story:ship --note "what's new, in one line"`, run in this repo's
+  checkout where the story is written (macOS or Windows; Node 22.18 or later).
+  - It does, in order:
+    1. **check:** reads the pack with the game's own reader and prints what it skips and its notes (nothing blocks);
+    2. **release:** builds it into the ignored `content/story-release/`;
+    3. **publish:** numbers it (one more than the bucket's current release, or 1), dates it, and uploads the
+       hash-named files first and `story.json` last to the farm's private bucket;
+    4. **back up:** runs `pnpm story:push farm` in the sibling `../uma-platform` checkout, or skips it with a note when
+       there's none;
+    5. prints the release's number and the note.
+  - **The note:** `--note "…"`, else the first line of `content/story/ship.md`, else none. One line, at most 160
+    characters (the morning's line). A longer one stops the ship before anything is uploaded.
+  - **A pack the game already plays isn't published again:** shipping twice with no change keeps the number, and still
+    backs up. So a ship that stopped halfway (say, at the backup) is safe to run again.
+  - **The phone** picks it up on its next open. The next morning on an existing farm says **"New story arrived"** with
+    your note, once; a new farm meets it in its opening. Account shows **Story: Release *n*, *date***.
+  - `pnpm story:ship --dry-run` reads the bucket for the number and lists what it would upload, uploading nothing.
+- **The machine:** gcloud signed in with the owner's account. The ship never changes the account or its configuration:
+  every gcloud call is scoped by the environment.
+
+  | Variable | Default | What |
+  |---|---|---|
+  | `STORY_GCLOUD_CONFIG` | `default` | The gcloud configuration signed in as the owner (`CLOUDSDK_ACTIVE_CONFIG_NAME`) |
+  | `STORY_GCLOUD_PROJECT` | `uma-rpg` | The project (`CLOUDSDK_CORE_PROJECT`) |
+  | `STORY_BUCKET` | `uma-farm-content` | The farm's private bucket |
+  | `STORY_PLATFORM_DIR` | `../uma-platform` | The uma-platform checkout for the backup |
+
+  uma-platform's `story:push` uses the `default` configuration whatever `STORY_GCLOUD_CONFIG` says.
+- **Ship partial work freely.** A pack only ever adds to what the game already plays.
+- **Rolling back:** `pnpm story:ship --release <n>` publishes release *n*'s index again, with a new number and the note
+  "Rolled back to *n*". The bucket keeps every file and the last ten indexes, so any of those can come back.
+- **`pnpm story:publish`** stays as the publish step alone, for the Mac's own use: unnumbered, so the morning doesn't
+  announce it.
 - **The owner can ask for a ship at any time** ("ship it").
 
 ## The World Book (from 2026-11-14)

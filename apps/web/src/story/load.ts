@@ -12,16 +12,19 @@ import type { OutfitRowBase } from '@luismlorenzana/uma-kit/roster'
 import { CONTENT } from '../content/client'
 import { masterReady, setMasterLens, type MasterView } from '../master/master'
 import { deviceIndexStore, loadReleasedPack } from './delivery'
+import { keepArrived } from './news'
 import { unknownName } from './story'
 
 /** Keeps a roster's Umas on the cast (`story.ts`'s `keepOnCast`), loaded with the seam. */
 export { withCast } from '@farm/domain'
 
 /** The story the game plays: the release farm-api serves, or no pack when it serves none, with master data's
- * placeholders. Both wait for master data, as the boot does. In the tests, the invented stand-in alone. */
+ * placeholders. Both wait for master data, as the boot does. A shipped release new to this device waits for the
+ * morning's "New story arrived" (`news.ts`). In the tests, the invented stand-in alone. */
 export async function loadStoryPack(): Promise<StoryPack> {
   if (import.meta.env.DEV && import.meta.env.VITE_FARM_STORY === 'stand-in') return storyPackFrom(STAND_IN_FILES)
-  const [pack, view] = await Promise.all([loadReleasedPack(CONTENT, deviceIndexStore(), { missing: async () => null }), masterReady()])
+  const arrived = (index: { number?: number }) => { if (index.number) keepArrived({ number: index.number }) }
+  const [pack, view] = await Promise.all([loadReleasedPack(CONTENT, deviceIndexStore(), { missing: async () => null, arrived }), masterReady()])
   return storyOf(pack, masterCast(view))
 }
 

@@ -85,10 +85,19 @@ export interface HouseholdNews {
   married: number
 }
 
-/** §5 New today: the season's first day, or a festival today or tomorrow; the goals' news: a place built
- * overnight, a Farm Rank reached, a Diary milestone or row paid; the household's milestones; and the Dorm's
+/** §5 New today, first: a story release that reached the device since the last morning, once a release: "New story
+ * arrived". The save keeps its ship's number only; its note is the release's, read as the card shows. The device tells a
+ * new release from one it has seen. */
+export interface StoryNews {
+  kind: 'story'
+  number: number
+}
+
+/** §5 New today: a new story release; the season's first day, or a festival today or tomorrow; the goals' news: a place
+ * built overnight, a Farm Rank reached, a Diary milestone or row paid; the household's milestones; and the Dorm's
  * news: its new level in effect and Umas a swap brought home. Arrivals are §4's. */
 export type NewsLine =
+  | StoryNews
   | { kind: 'season'; season: Season }
   | { kind: 'festival'; festival: FestivalId; when: 'today' | 'tomorrow' }
   | { kind: 'built'; place: FarmPlaceId }
@@ -245,7 +254,7 @@ export interface MorningSummary {
   ranks: RankLine[]
   /** §4 Hearts: invitations, birthdays and anniversaries, then arrivals, then side by side and bond hearts. */
   hearts: HeartLine[]
-  /** §5 New today: the season and festivals, the goals' news, the household's, then the Dorm's. */
+  /** §5 New today: a new story release, the season and festivals, the goals' news, the household's, then the Dorm's. */
   news: NewsLine[]
   /** §6 Today's nudges: idle Umas, plots to plant. */
   nudges: Nudge[]
