@@ -475,6 +475,13 @@ function worldInGame(st) {
           h('td', { text: `${SEASON_WORDS[f.season]} ${f.day}` }), h('td', {}, h('b', { text: f.name }), h('span', { class: 'muted small', text: ` · ${f.id}` })),
           h('td', { class: 'small', text: f.rule ? `${RULE_WORDS[f.rule]} game rule` : 'The story’s own: a festival day' }),
           h('td', { class: 'small', text: f.happens ?? '—' })))))),
+    h('div', { class: 'panel' }, h('h3', { text: `The story’s days · ${(w.days ?? []).length}` }),
+      h('p', { class: 'muted small', text: 'Holidays and minor days, as the calendar marks them and the morning names them.' }),
+      (w.days ?? []).length ? h('table', { class: 'table' }, h('thead', {}, h('tr', {}, ['When', 'Name', 'Kind', 'Line'].map((t) => h('th', { text: t })))),
+        h('tbody', {}, w.days.map((d) => h('tr', { 'data-day': d.id },
+          h('td', { class: 'small', text: `${d.season ? SEASON_WORDS[d.season] : 'Every season'} ${d.days.join(', ')}` }), h('td', {}, h('b', { text: d.name }), h('span', { class: 'muted small', text: ` · ${d.id}` })),
+          h('td', { class: 'small', text: d.kind === 'holiday' ? 'Holiday' : 'Minor day' }), h('td', { class: 'small', text: d.line ?? '—' })))))
+        : h('p', { class: 'muted small', text: 'None: the calendar shows the festivals, New Year’s and birthdays.' })),
     h('div', { class: 'panel' }, h('h3', { text: 'Places' }),
       h('p', { class: 'muted small', text: 'Each place’s name on the map and its quick look’s line.' }),
       h('table', { class: 'table' }, h('thead', {}, h('tr', {}, ['Place', 'Name', 'Line'].map((t) => h('th', { text: t })))),

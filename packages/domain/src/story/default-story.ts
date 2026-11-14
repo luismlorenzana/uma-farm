@@ -9,7 +9,7 @@
 //   gift reactions  loved, liked, neutral, disliked (`{gift}` the good given)
 //   her events      meeting her (at the Gate, or in town), Friendship 1–10, the confession, Romance 1–10, the proposal,
 //                   the wedding, the wedding night, moving in, married life 1–5
-//   occasions       her birthday, the five festivals, New Year's
+//   occasions       her birthday, the five festivals and the Fishing Derby's night, New Year's
 //   evenings        a scene for each hangout and date kind, Dinner in town and A night in
 //   married life    the night's companion's morning greetings, by temperament; lines for meals
 import type { Temperament } from '../farm/talents'
@@ -512,7 +512,13 @@ export const DEFAULT_EVENTS: Readonly<Record<string, DefaultScene>> = {
     choose(null, ['It suits you.', say('The flower, or the meadow?', 'teasing')],
       ['Let’s see every stall, then.', say('Every single one. Come on!', 'laughing')]),
   ], { outfit: 'garden-party' }),
-  'fishing-derby': scene('Lanterns hang over the water for the derby night.', [
+  'fishing-derby': scene('Rods and buckets line the water for the derby.', [
+    say('First fish of the morning wins a ribbon. I want that ribbon.', 'determined'),
+    say('Shh. Don’t scare them. Fish can hear you thinking.', 'teasing'),
+    choose(null, ['You’ll catch it. I can tell.', say('Then hold the bucket and watch.', 'happy')],
+      ['I’m thinking very quietly.', say('Not quietly enough.', 'laughing')]),
+  ]),
+  'derby-night': scene('Lanterns hang over the water for the derby night.', [
     say('Did you catch anything? I caught a boot. Twice.', 'pouting'),
     say('Stay for the lanterns? They light them all at once.', 'tender'),
     choose(null, ['I wouldn’t miss it.', say('Look, there they go.', 'dreamy')],
@@ -538,7 +544,8 @@ export const DEFAULT_EVENTS: Readonly<Record<string, DefaultScene>> = {
   ], { outfit: 'kimono' }),
 }
 
-/** Her occasions: they play on their day (the calendar's). */
+/** Her occasions: the calendar plays New Year's, the Flower Show and the Fishing Derby's night on their day
+ * (`romance/occasions.ts`); the rest wait for theirs. */
 export const DEFAULT_OCCASIONS = OCCASIONS
 /** Her life's events past the route's rungs: the wedding night, moving in, and married life 2 and 4. */
 export const DEFAULT_LIFE_EVENTS = LIFE_EVENTS

@@ -15,28 +15,41 @@
 // season's line under "Spring begins", the Town notes the night unlocked (a tap opens them in the Diary), and the town's
 // name where she's met in town.
 import {
-  ACTIVITY_NAMES, bedsAt, EVENINGS, farmPlace, FESTIVALS, festivalNameOf, festivalsOf, goodName, itemNameOf, RANKS, rungName, SEASON_NAMES, seasonLineOf, SUMMARY_SECTIONS, townNoteOf,
-  worldNamesOf, type FarmPlaceId, type HeartLine, type MorningSummary, type Season, type StoryPack, type SummarySection,
+  ACTIVITY_NAMES, bedsAt, EVENINGS, farmPlace, FESTIVAL_ACTIONS, FESTIVALS, festivalNameOf, festivalsOf, goodName, itemNameOf, NEW_YEAR_ACTIONS, NEW_YEAR_NAME, RANKS, rungName, SEASON_NAMES,
+  seasonLineOf, storyDayNameOf, SUMMARY_SECTIONS, townNoteOf, worldNamesOf, type FarmPlaceId, type HeartLine, type MorningSummary, type Season, type StoryPack, type SummarySection,
 } from '@farm/domain'
 import { builtWords, farmRankWords, milestoneWords } from './goal-words'
 import { readParam, type PairWords } from './hearts-view'
 import { challengeWords } from './roster-view'
 import { plural } from './words'
 
-/** What the world's lines read from the pack as the card shows: a festival's name, a season's line, a Town note's title
- * and the town's name. The game's own words before the pack loads, and without `world.json`. */
+/** What the world's lines read from the pack as the card shows: a festival's name, a season's line, a Town note's title,
+ * one of the story's days' names and the town's name. The game's own words before the pack loads, and without
+ * `world.json`. */
 export interface WorldWords {
   festival: (id: string) => string
   seasonLine: (season: Season) => string | null
   noteTitle: (id: string) => string | null
+  day: (id: string) => string | null
   town: string | null
 }
-export const NO_WORLD: WorldWords = { festival: (id) => festivalNameOf(FESTIVALS, id), seasonLine: () => null, noteTitle: () => null, town: null }
+export const NO_WORLD: WorldWords = { festival: (id) => festivalNameOf(FESTIVALS, id), seasonLine: () => null, noteTitle: () => null, day: () => null, town: null }
 /** The world's words from the pack. */
 export function worldWords(pack: Partial<Pick<StoryPack, 'world'>> | null): WorldWords {
   const year = festivalsOf(pack)
-  return { festival: (id) => festivalNameOf(year, id), seasonLine: (s) => seasonLineOf(pack, s), noteTitle: (id) => townNoteOf(pack, id)?.title ?? null, town: worldNamesOf(pack).town }
+  return {
+    festival: (id) => festivalNameOf(year, id), seasonLine: (s) => seasonLineOf(pack, s), noteTitle: (id) => townNoteOf(pack, id)?.title ?? null,
+    day: (id) => storyDayNameOf(pack, id), town: worldNamesOf(pack).town,
+  }
 }
+
+/** §5's line for the story's holidays and minor days: the first's name, "+1 more" after it, today or tomorrow. */
+export function daysNews(ids: readonly string[], when: 'today' | 'tomorrow', world: WorldWords): SummaryLine {
+  const names = ids.flatMap((id) => world.day(id) ?? [])
+  const first = names[0] ?? 'A holiday'
+  return { key: `days:${when}`, to: CALENDAR, text: `${names.length > 1 ? `${first} +${names.length - 1} more` : first} ${when}` }
+}
+const CALENDAR = '/?sheet=calendar'
 
 /** §5's Town notes in words: the first's title, "+2 more" after it, each a tap to the Diary's Town notes. */
 export function notesNews(ids: readonly string[], world: WorldWords): SummaryLine {
@@ -258,7 +271,12 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
             const quote = world.seasonLine(line.season)
             return { key: 'season', text: `${SEASON_NAMES[line.season]} begins`, to: '/?sheet=calendar', ...(quote ? { quote } : {}) }
           }
-          case 'festival': return { key: `festival:${line.when}`, text: `${world.festival(line.festival)} ${line.when}`, to: peek('festival') }
+          // New Year's and a festival: today's with its event actions; each a tap to the calendar, where its scenes are.
+          case 'new-year': return { key: `new-year:${line.when}`, text: `${NEW_YEAR_NAME} ${line.when}${line.when === 'today' ? ` · +${NEW_YEAR_ACTIONS} for events` : ''}`, to: CALENDAR }
+          case 'festival': return {
+            key: `festival:${line.when}`, text: `${world.festival(line.festival)} ${line.when}${line.when === 'today' ? ` · +${FESTIVAL_ACTIONS} for events` : ''}`, to: CALENDAR,
+          }
+          case 'days': return daysNews(line.ids, line.when, world)
           case 'notes': return notesNews(line.ids, world)
           case 'built': return { key: `built:${line.place}`, text: builtWords(line.place), to: peek(farmPlace(line.place)?.on ?? line.place), tag: 'Built' }
           case 'farm-rank': return { key: `farm-rank:${line.rank}`, text: farmRankWords(line.rank), to: '/?sheet=rank', tag: 'Farm Rank' }

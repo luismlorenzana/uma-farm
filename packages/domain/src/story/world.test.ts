@@ -14,7 +14,8 @@ import { knownNotes, noteHolds, unlockNotes } from '../town/notes'
 import { checkCast, checkWorld, LINE_LIMITS, type World } from './authored'
 import { readStoryPack, storyPackFrom, type StoryPack } from './pack'
 import {
-  festivalNameOf, festivalsOf, historyOf, noPack, placeNameOf, placeWordsOf, PLACEHOLDER_NAMES, seasonLineOf, townNotesOf, worldNamesOf, worldWrittenOf,
+  festivalNameOf, festivalsOf, historyOf, noPack, placeNameOf, placeWordsOf, PLACEHOLDER_NAMES, seasonLineOf, storyDayNameOf, storyDaysOf, storyDaysOn, townNotesOf,
+  worldNamesOf, worldWrittenOf,
 } from './placeholders'
 import { releasedStoryPack, storyFileName, type StoryIndex } from './release'
 import { STAND_IN_FILES } from './stand-in'
@@ -161,9 +162,60 @@ describe('the world’s lookups: the pack’s, or the game’s own words', () =>
   it('marks what the world writes and what plays instead, for the sandbox', () => {
     expect(worldWrittenOf(PACK).map((p) => [p.part, p.written])).toEqual([
       ['The town’s name', true], ['The farm’s name', true], ['The region’s name', true], ['The farm’s history', true], ['The festivals', true],
-      ['The places’ words', true], ['The seasons’ lines', true], ['Town notes', true],
+      ['The story’s days', true], ['The places’ words', true], ['The seasons’ lines', true], ['Town notes', true],
     ])
     expect(worldWrittenOf(null).every((p) => !p.written)).toBe(true)
+  })
+})
+
+describe('the story’s days', () => {
+  it('reads its holidays and minor days: one day or a list, a season or every season, a kind and a line', () => {
+    expect(storyDaysOf(PACK)).toEqual([
+      { id: 'first-bell', name: 'The first bell', kind: 'holiday', season: 'spring', days: [1], line: 'The bell rings twelve times at midnight.' },
+      { id: 'market-day', name: 'Market day', kind: 'minor', season: null, days: [4, 8, 12], line: 'Stalls fill the square.' },
+      { id: 'kite-day', name: 'Kite day', kind: 'minor', season: 'spring', days: [10], line: null },
+    ])
+    expect(storyDaysOf(null)).toEqual([])
+    expect(storyDaysOf(withWorld({ names: { town: 'Fernwick' } }))).toEqual([])
+  })
+
+  it('finds a day’s, holidays first, and every season’s on each of its days', () => {
+    expect(storyDaysOn(PACK, day('spring', 1)).map((d) => d.id)).toEqual(['first-bell'])
+    expect(storyDaysOn(PACK, day('spring', 1, 2)).map((d) => d.id)).toEqual(['first-bell'])
+    expect(storyDaysOn(PACK, day('summer', 1))).toEqual([])
+    expect(storyDaysOn(PACK, day('autumn', 8)).map((d) => d.id)).toEqual(['market-day'])
+    // A minor day may share a festival's day: it's the story's own custom.
+    expect(storyDaysOn(PACK, day('spring', 10)).map((d) => d.id)).toEqual(['kite-day'])
+    expect(storyDayNameOf(PACK, 'market-day')).toBe('Market day')
+    expect(storyDayNameOf(PACK, 'gone')).toBeNull()
+  })
+
+  it('skips a day with an error in its id, name or day, and drops a kind, season or line with one', () => {
+    const long = 'x'.repeat(LINE_LIMITS.worldLine + 1)
+    const read = checkWorld({
+      days: [
+        { id: 'Bad Id', name: 'Nope', day: 2 },
+        { id: 'no-name', day: 2 },
+        { id: 'no-day', name: 'No day' },
+        { id: 'zero', name: 'Zero', day: 0 },
+        { id: 'twice-listed', name: 'Twice', day: [3, 3] },
+        { id: 'loose', name: 'Loose', kind: 'party', season: 'monsoon', day: [2, 5], line: long },
+        { id: 'loose', name: 'Again', day: 6 },
+      ],
+    })
+    expect(read.value?.days).toEqual([{ id: 'loose', name: 'Loose', day: [2, 5] }])
+    expect(read.errors).toEqual([
+      'Day 1: no id (lowercase words joined by -, at most 40 characters); skipped',
+      'Day no-name: no name; the day is skipped',
+      'Day no-day: day is a day of the season, 1–12, or a list of different ones; the day is skipped',
+      'Day zero: day is a day of the season, 1–12, or a list of different ones; the day is skipped',
+      'Day twice-listed: day is a day of the season, 1–12, or a list of different ones; the day is skipped',
+      'Day loose: kind is one of holiday, minor; skipped',
+      'Day loose: season is one of spring, summer, autumn, winter; skipped',
+      `Day loose line: its line is ${long.length} characters; the screen shows ${LINE_LIMITS.worldLine}; skipped`,
+      'Day loose: listed twice; the later one is skipped',
+    ])
+    expect(checkWorld({ days: 'every day' }).errors).toEqual(['days is a list; skipped'])
   })
 })
 

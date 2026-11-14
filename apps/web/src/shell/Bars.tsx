@@ -7,7 +7,7 @@
 //   the day's last action is spent, End the day opens by itself ("Out of actions").
 // - **The rail,** down the left: Farm · Town · People · Book · Diary. A farm place's page (the Warehouse, the Dorm …)
 //   keeps Farm lit.
-import { actionsLeft, dateOf, dayActions, daySetState, SEASON_NAMES, type DaySet, type FarmSave, type Season } from '@farm/domain'
+import { actionsLeft, dateOf, dayActions, daySetState, eventActionsLeft, SEASON_NAMES, type DaySet, type FarmSave, type Season } from '@farm/domain'
 import { AccountBar, BottomBar, withParam, type AccountBarProps, type BarTab, type CurrencyChip } from '@luismlorenzana/uma-kit/shell'
 import {
   BookIcon, Button, CarrotIcon, CoinIcon, HeartIcon, MoonIcon, Sheet, StopwatchIcon, useReducedMotionSetting, VenueIcon,
@@ -17,7 +17,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { dateLabel, nudgeWords, SEASON_COLOR } from '../loop/words'
 import { useGame, useLoopSave, type SyncStatus } from '../save/game'
-import { useStoryYear } from '../story/story'
+import { useSpecialDays, useStoryYear } from '../story/story'
 import { GoldCoin } from './Gold'
 
 /** A season's dot: the date's mark where the pinned uma-art has no season mark. */
@@ -27,17 +27,21 @@ function SeasonDot({ season }: { season: Season }) {
 
 const blank = <span className="inline-block h-3 w-5 rounded-full bg-sunken" />
 
-/** The day's actions left, of the day's budget; faint once they're spent. */
+/** The day's actions left, of the day's budget; faint once they're spent. On a special day, the event actions left
+ * after them ("+3", a heart): only her events spend them. */
 function ActionsChip({ save }: { save: FarmSave | null }) {
+  const days = useSpecialDays()
   const left = save ? actionsLeft(save) : null
   const total = save ? dayActions(save) : null
+  const events = save && days ? eventActionsLeft(save, days) : 0
   return (
-    <span role="img" aria-label={left === null ? 'Actions left' : `Actions left: ${left} of ${total}`} className="flex min-h-11 shrink-0 items-center justify-center"
-      data-bar-chip="actions" data-actions={left ?? undefined}>
-      <span aria-hidden className={`flex h-8 items-center gap-1 rounded-full border border-hairline bg-panel/90 px-2 text-[13px] shadow-1 ${left === 0 ? 'text-ink-faint' : 'text-ink'}`}>
+    <span role="img" aria-label={left === null ? 'Actions left' : `Actions left: ${left} of ${total}${events > 0 ? `, and ${events} for events` : ''}`}
+      className="flex min-h-11 shrink-0 items-center justify-center" data-bar-chip="actions" data-actions={left ?? undefined} data-event-actions={events > 0 ? events : undefined}>
+      <span aria-hidden className={`flex h-8 items-center gap-1 rounded-full border border-hairline bg-panel/90 px-2 text-[13px] shadow-1 ${left === 0 && events === 0 ? 'text-ink-faint' : 'text-ink'}`}>
         <StopwatchIcon size={16} />
-        <span className="font-display font-semibold tabular-nums">{left === null ? blank : left}</span>
+        <span className={`font-display font-semibold tabular-nums ${left === 0 ? 'text-ink-faint' : ''}`}>{left === null ? blank : left}</span>
         {total !== null && <span className="text-[11px] text-ink-faint">/{total}</span>}
+        {events > 0 && <span className="flex items-center gap-0.5 pl-0.5 font-display font-semibold text-[#c2385e] tabular-nums"><HeartIcon size={14} />+{events}</span>}
       </span>
     </span>
   )
@@ -47,6 +51,7 @@ function ActionsChip({ save }: { save: FarmSave | null }) {
  * with End the day and Not yet (for what's still free: the shop, a build, the evening). */
 export function OutOfActions() {
   const save = useLoopSave()
+  const days = useSpecialDays()
   const navigate = useNavigate()
   const location = useLocation()
   const [open, setOpen] = useState(false)
@@ -73,6 +78,9 @@ export function OutOfActions() {
         </div>
       }>
       <p className="py-1 text-[15px]" data-out-of-actions>The day’s work is done. Building, the evening and a shop you’re already in take no actions.</p>
+      {save && days && eventActionsLeft(save, days) > 0 && (
+        <p className="text-[14px] text-ink-soft" data-event-actions-left>{eventActionsLeft(save, days)} left for events: the calendar has today’s.</p>
+      )}
     </Sheet>
   )
 }

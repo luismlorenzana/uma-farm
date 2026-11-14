@@ -25,7 +25,7 @@
 // S2 and S4 (`levelAtNight`); step 8 notes the household milestones (`householdMilestones`); step 9 gives the house's
 // morning (`houseMorningStep`), moves waiting spouses into rooms (`moveInRooms`) and holds the Festival of Vows
 // (`vowsMorning`). A night without the story pack runs the farm's steps and skips the romance's.
-import { festivalOn, isSeasonStart, dateOf, type Festival } from '../farm/calendar'
+import { festivalOn, isNewYear, isSeasonStart, dateOf, type Festival } from '../farm/calendar'
 import { bondsTonight, extrasTonight, newBondHearts, type BondPay, type Extras } from '../farm/bonds'
 import { settleDormNight } from '../farm/dorm'
 import { PLACE_ACTIVITY, tickRankRules, type WorkedDay } from '../farm/rank-rules'
@@ -49,7 +49,7 @@ import { moveInWaiting } from '../romance/homestead'
 import { festivalOfVows, householdNight, houseMorning, levelsTonight, missesLine, noteTheNight, shareHouses, type NightHouse } from '../romance/household'
 import { dryTiles, newTodayV4, type FarmSave, type OutfitId } from '../save/v4'
 import { castOrder, type StoryPack } from '../story/pack'
-import { favouriteOf, festivalsOf } from '../story/placeholders'
+import { favouriteOf, festivalsOf, storyDaysOn } from '../story/placeholders'
 import { unlockNotes } from '../town/notes'
 import { checkGoalsNight, type GoalsTonight } from '../farm/diary'
 import { raiseBuilds } from '../farm/builds'
@@ -364,15 +364,18 @@ export const vowsMorning: NightStep = (night) => {
   return { ...night, save, notes: { ...night.notes, vows: line } }
 }
 
-/** The morning's news (the summary's §5): the season's first day, a festival today or tomorrow (the year's: the game's
- * five, or the story's). */
-function newsOf(day: number, year: readonly Festival[]): NewsLine[] {
+/** The morning's news (the summary's §5): the season's first day; today's, then tomorrow's: New Year's, a festival (the
+ * year's: the game's five, or the story's) and the story's holidays and minor days (world.json's `days`, by id). */
+function newsOf(day: number, year: readonly Festival[], pack: Partial<Pick<StoryPack, 'world'>> | null): NewsLine[] {
   const news: NewsLine[] = []
   if (isSeasonStart(day)) news.push({ kind: 'season', season: dateOf(day).season })
-  const today = festivalOn(day, year)
-  if (today) news.push({ kind: 'festival', festival: today.id, when: 'today' })
-  const tomorrow = festivalOn(day + 1, year)
-  if (tomorrow) news.push({ kind: 'festival', festival: tomorrow.id, when: 'tomorrow' })
+  for (const [on, when] of [[day, 'today'], [day + 1, 'tomorrow']] as const) {
+    if (isNewYear(on)) news.push({ kind: 'new-year', when })
+    const festival = festivalOn(on, year)
+    if (festival) news.push({ kind: 'festival', festival: festival.id, when })
+    const own = storyDaysOn(pack, on)
+    if (own.length > 0) news.push({ kind: 'days', ids: own.map((d) => d.id), when })
+  }
   return news
 }
 
@@ -472,7 +475,7 @@ export const buildSummary: NightStep = (night) => {
   const summary: MorningSummary = {
     day: save.calendar.day, bin: [...notes.sold], work, ranks: [...notes.ranks], hearts: heartLines(night),
     news: [
-      ...storyNews(night.context), ...newsOf(save.calendar.day, festivalsOf(night.context.story)),
+      ...storyNews(night.context), ...newsOf(save.calendar.day, festivalsOf(night.context.story), night.context.story ?? null),
       ...(notes.townNotes.length > 0 ? [{ kind: 'notes' as const, ids: [...notes.townNotes] }] : []), ...goalNews(notes), ...notes.household, ...dormNews(night),
     ],
     nudges,

@@ -14,7 +14,10 @@
 // event or changes the route. The event's perk, its Memory (the place card, her bust and the beat's caption) and any
 // unlock come with it; the level-up card lists all of it. **Her confession** ends on Yes (romance opens, the stage-up
 // screen) or Not yet (`love.friend`: she stays a close friend, her points bank, and **Ask her** on her profile plays its
-// last choice again, once a day, paying nothing). Memories replay any event from any choice, paying nothing. Pure.
+// last choice again, once a day, paying nothing). Memories replay any event from any choice, paying nothing. Her event
+// costs one action, the special day's event actions first (`spendForEvent`): with none left of either kind it's refused
+// before it pays. Pure.
+import { actionCost, canSpendForEvent, GAME_DAYS, spendForEvent, type SpecialDays } from '../farm/actions'
 import { goodName, isRingId, isWarehouseId, ringGrade } from '../goods/ids'
 import { SaveRuleError } from '../save/rules'
 import type { SaveV4 } from '../save/v4'
@@ -184,13 +187,15 @@ export interface EventCard {
  * Her Ready event, played to its end: +50, each choice and each play's grade (or, with no
  * play, the best choice's) into her next bar through `addLove`; any option's goods taken, any revealed or chosen taste
  * learnt, the path's flags set, the beat's item unlock into the Warehouse; then `advance` (her confession's Not yet sets
- * `friend` instead), her id into `today.events` and the rung into `memories`. Refused unless she's Ready, the script is her
- * next rung's, every choice and play is in, and each play is the one its step plays. Pure; never stamps: the app commits
- * it once.
+ * `friend` instead), her id into `today.events` and the rung into `memories`; and its action spent, the day's event
+ * actions first (`days`: the year's festivals and the met Umas' birthdays). Refused unless she's Ready, an action is
+ * left, the script is her next rung's, every choice and play is in, and each play is the one its step plays. Pure; never
+ * stamps: the app commits it once.
  */
-export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: EventOutcome): { save: SaveV4; card: EventCard } {
+export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: EventOutcome, days: SpecialDays = GAME_DAYS): { save: SaveV4; card: EventCard } {
   const state = readiness(save, pack, id)
   if (!state.ready || state.rung === null) throw new SaveRuleError('not-ready', 'Her event isn’t Ready.')
+  if (!canSpendForEvent(save, actionCost('event'), days)) throw new SaveRuleError('no-actions', 'No actions left today.')
   const rung = state.rung
   if (outcome.event.id !== rung) throw new SaveRuleError('not-ready', 'That isn’t her next event.')
   const love = save.love[id]!
@@ -278,7 +283,7 @@ export function playEvent(save: SaveV4, pack: EventPack, id: string, outcome: Ev
   // The wedding gives her a room at once (her default), or she keeps her Dorm bed with none free.
   const roomed = wedding ? takeRoom(dish?.save ?? played, pack, id) : null
   if (wedding && roomed) wedding = { ...wedding, house: roomed.house }
-  const next = roomed?.save ?? dish?.save ?? played
+  const next = spendForEvent(roomed?.save ?? dish?.save ?? played, actionCost('event'), days)
   const after = bar(next.love[id]!)
   const say = [...path.steps].reverse().find((s): s is { say: string; line: string } => 'say' in s && s.say === id)
   return {

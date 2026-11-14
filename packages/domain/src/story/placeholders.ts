@@ -25,19 +25,20 @@
 //   the world's names        the town is "Town" on the map, the farm "The farm"; no region
 //   the farm's history       none: the Diary's "The farm" page shows only what's named
 //   the festivals            the game's five, on their days: each season's 10th, and the Harvest Cup on Winter 12
+//   the story's days         none: the calendar shows the festivals, New Year's, birthdays and anniversaries
 //   a place's name and line  the map's own name and its quick look's line
 //   a season's line          none: the morning says "Spring begins" alone
 //   Town notes               none
 //
 // Every read of the pack goes through a function here. Pure; loaded with the story pack.
-import { FESTIVALS, festivalDayOfYear, isFestivalId, type Festival, type Season } from '../farm/calendar'
+import { dateOf, FESTIVALS, festivalDayOfYear, isFestivalId, type Festival, type Season } from '../farm/calendar'
 import type { Activity } from '../farm/ranks'
 import { activityScore, talentScores, type TalentOutfit, type Temperament } from '../farm/talents'
 import { goodName, isGoodId } from '../goods/ids'
 import type { Taste } from '../romance/chats'
 import { pairKey, type Love } from '../save/v4'
 import {
-  ARRIVAL, EVENING_SCENES, FAVOURITE_LINES, HOUSEHOLD_SCENES, isSister, RUNGS, sisterOutfit, SPOT_IDS, type Beat, type Calling, type Cast, type ChoiceOption, type DateGame, type Finale, type Gifts,
+  ARRIVAL, EVENING_SCENES, FAVOURITE_LINES, HOUSEHOLD_SCENES, isSister, RUNGS, sisterOutfit, SPOT_IDS, type Beat, type Calling, type Cast, type ChoiceOption, type DateGame, type DayKind, type Finale, type Gifts,
   type HerChapter, type Household, type HouseholdAt, type HouseholdScene, type Keepsake, type PairConversations, type Play, type SpotId, type Step, type StoryPlace, type StoryTrigger,
   type Tie, type TieKind, type TownNote, type UmaBible, type Wish,
 } from './authored'
@@ -709,6 +710,39 @@ export function festivalsOf(pack: WorldPack): readonly Festival[] {
 export const festivalNameOf = (year: readonly Festival[], id: string): string =>
   year.find((f) => f.id === id)?.name ?? FESTIVALS.find((f) => f.id === id)?.name ?? 'A festival'
 
+/** One of the story's days as the calendar plays it: its id, its name, a holiday or a minor day, its season (null: every
+ * season), its days of the season and its line (null without one). */
+export interface StoryDay {
+  readonly id: string
+  readonly name: string
+  readonly kind: DayKind
+  readonly season: Season | null
+  readonly days: readonly number[]
+  readonly line: string | null
+}
+const storyDays = new WeakMap<object, readonly StoryDay[]>()
+/** The story's holidays and minor days, in world.json's order (a holiday a minor day without its kind, every season
+ * without its season); none without it. Read once a pack. */
+export function storyDaysOf(pack: WorldPack): readonly StoryDay[] {
+  const world = pack?.world
+  if (!world?.days || world.days.length === 0) return []
+  const known = storyDays.get(world)
+  if (known) return known
+  const out = world.days.map((d): StoryDay => ({
+    id: d.id, name: d.name, kind: d.kind ?? 'minor', season: d.season ?? null, days: Array.isArray(d.day) ? d.day : [d.day], line: d.line ?? null,
+  }))
+  storyDays.set(world, out)
+  return out
+}
+/** The story's days on a farm day: holidays first, then minor days, each in world.json's order. */
+export function storyDaysOn(pack: WorldPack, day: number): StoryDay[] {
+  const date = dateOf(day)
+  const on = storyDaysOf(pack).filter((d) => (d.season === null || d.season === date.season) && d.days.includes(date.day))
+  return [...on.filter((d) => d.kind === 'holiday'), ...on.filter((d) => d.kind !== 'holiday')]
+}
+/** One of the story's days' names by its id; null for one the pack no longer holds. */
+export const storyDayNameOf = (pack: WorldPack, id: string): string | null => storyDaysOf(pack).find((d) => d.id === id)?.name ?? null
+
 /** A place's words: world.json's name and its one line, each else the game's own (the map's name, the quick look's
  * line). The Town is named by the world's town where its place gives no name. */
 export function placeWordsOf(pack: WorldPack, id: FarmPlaceId): { name: string; line: string } {
@@ -733,6 +767,7 @@ export function worldWrittenOf(pack: WorldPack): StoryPart[] {
   const world = pack?.world
   const names = worldNamesOf(pack)
   const festivals = world?.festivals ?? []
+  const days = storyDaysOf(pack)
   const places = Object.keys(world?.places ?? {})
   const seasons = Object.keys(world?.seasons ?? {})
   const notes = townNotesOf(pack)
@@ -743,6 +778,7 @@ export function worldWrittenOf(pack: WorldPack): StoryPart[] {
     part('The region’s name', names.region !== null, names.region ?? '', 'None'),
     part('The farm’s history', historyOf(pack).length > 0, `${historyOf(pack).length} line${historyOf(pack).length === 1 ? '' : 's'}`, 'None: the Diary’s “The farm” page shows only the names'),
     part('The festivals', festivals.length > 0, `${festivals.filter((e) => isFestivalId(e.id)).length} of the game’s renamed or moved, ${festivals.filter((e) => !isFestivalId(e.id)).length} of the story’s own`, `The game’s ${FESTIVALS.length}: ${FESTIVALS.map((f) => f.name).join(', ')}`),
+    part('The story’s days', days.length > 0, `${days.filter((d) => d.kind === 'holiday').length} holidays, ${days.filter((d) => d.kind !== 'holiday').length} minor days`, 'None: the calendar shows the festivals, New Year’s and birthdays'),
     part('The places’ words', places.length > 0, `${places.length} place${places.length === 1 ? '' : 's'}; the rest the game’s own`, 'The game’s own names and lines'),
     part('The seasons’ lines', seasons.length > 0, `${seasons.length} of 4; the rest “… begins” alone`, '“Spring begins” alone'),
     part('Town notes', notes.length > 0, `${notes.length}, ${notes.filter((n) => !n.unlock).length} known from the start`, 'None'),
@@ -812,7 +848,7 @@ export const PLACEHOLDER_TABLE: readonly { gives: string; without: string }[] = 
   { gives: 'Her meeting scene', without: 'The default story’s: at the Gate for the welcome list, in town (you introduce yourself) for anyone else; it pays as a written one does. A written one with no choice gets the hello' },
   { gives: 'A heart event', without: 'The default story’s: her moment, her lines with their faces and your reply; its points and rewards pay as written' },
   { gives: 'The wedding night, moving in, married life 2 and 4', without: 'The default story’s: the wedding night in its outfit, tender and fading to morning; they pay nothing' },
-  { gives: 'Her occasions', without: `The default story’s ${DEFAULT_OCCASIONS.length}: her birthday, the five festivals and New Year’s` },
+  { gives: 'Her occasions', without: `The default story’s ${DEFAULT_OCCASIONS.length}: her birthday, the five festivals, the Fishing Derby’s night and New Year’s` },
   { gives: 'Her evenings’ scenes', without: `The default story’s ${EVENING_SCENES.length}: a hangout’s and a date’s for each kind, Dinner in town and A night in` },
   { gives: 'Her morning greetings and meal lines', without: `The default story’s: ${DEFAULT_MORNINGS.steady.length} greetings for each temperament, and ${DEFAULT_MEALS.breakfast.length} lines for each meal` },
   { gives: 'A play’s prompt', without: 'Its game’s: “Cast the line together.”' },
@@ -838,6 +874,7 @@ export const PLACEHOLDER_TABLE: readonly { gives: string; without: string }[] = 
   { gives: 'The town’s, the farm’s and the region’s names', without: `“${PLACEHOLDER_NAMES.town}” on the map, “${PLACEHOLDER_NAMES.farm}” in the Diary, no region; the opening names none` },
   { gives: 'The farm’s history', without: 'None' },
   { gives: 'The festivals', without: `The game’s ${FESTIVALS.length}: ${FESTIVALS.map((f) => f.name).join(', ')}, on each season’s 10th day and Winter 12` },
+  { gives: 'The story’s holidays and minor days', without: 'None: the calendar shows the festivals, New Year’s, birthdays and anniversaries' },
   { gives: 'A place’s name and line', without: 'The map’s own name, and its quick look’s line' },
   { gives: 'A season’s line', without: 'None: the morning says “Spring begins” alone' },
   { gives: 'Town notes', without: 'None' },

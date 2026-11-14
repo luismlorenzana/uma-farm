@@ -63,6 +63,8 @@ import { WALK_FORK_MS, WALK_FORKS } from '../romance/plays/walk'
 import { PLAY_MAP, playOf, togetherPlay, type PlayAs } from '../romance/plays/which'
 import { ART_NAMES, EXPRESSIONS, fallbackChain, MOMENT_OUTFITS, PERSONAL_OUTFITS, SHORE_PLACES, STORY_OUTFITS, type StoryOutfit } from '../story/look'
 import { EVENT_POINTS } from '../romance/events'
+import { OCCASION_RULES, occasionName } from '../romance/occasions'
+import { momentOutfit } from '../story/look'
 import { DATE_FROM, EVENING_FACTOR, eveningPoints, EVENINGS, favouriteKind, HANGOUT_FROM, INVITE_POINTS, INVITE_WEIGHT_DAYS, ROLE_WORDS, type EveningWait } from '../romance/evening'
 import { invitesFor, SECOND_EVENING_EVERY, TWO_EVENINGS_MARRIED } from '../save/v4'
 import { BENCH_WORDS, benchTakes, forgeRecipe, MAKE_BONUS, RING_INPUTS, ringPercent } from '../romance/bench'
@@ -98,6 +100,12 @@ function calendar(): string {
     FESTIVALS.filter((f) => f.season === season).map((f) => `${f.name}, ${SEASON_NAMES[season]} ${f.day} (day ${farmDay({ year: 1, season, day: f.day })})`).join('; '),
   ]))
 }
+/** The occasion scenes the calendar plays: each one's name, the story's event id, its day and what she wears. */
+function occasionsBlock(): string {
+  return table(['Occasion', 'The story’s event', 'Its day', 'She wears, unless the scene names an outfit'], OCCASION_RULES.map((r) => [
+    occasionName(r.id, FESTIVALS), `\`${r.id}\``, r.when, `\`${momentOutfit(r.moments)}\` (${r.moments.map((m) => `\`${m}\``).join(', ')})`,
+  ]))
+}
 /** The night's steps, their functions and what each does. */
 function night(): string {
   return table(['Step', 'Function', 'What happens'], NIGHT_STEPS.map((s) => [s.step, `\`${s.name}\``, s.what]))
@@ -128,7 +136,7 @@ function actionsBlock(): string {
 function dayBudgetBlock(): string {
   return table(['', 'Actions'], [
     ['Every day', `${DAY_ACTIONS}`],
-    ['New Year’s (each year’s Spring 1)', `+${NEW_YEAR_ACTIONS} for events`],
+    ['New Year’s (each year’s Spring 1, from the second year)', `+${NEW_YEAR_ACTIONS} for events`],
     ['A festival day', `+${FESTIVAL_ACTIONS} for events`],
     ['Each birthday of an Uma you’ve met', `+${BIRTHDAY_ACTIONS} for events`],
   ])
@@ -920,7 +928,7 @@ function outfitRules(): string {
     ['—', 'The scene’s own `outfit`, when the story names one', 'Its own', 'Its art name, below'],
     ...MOMENT_OUTFITS.map((r, i) => [i + 1, `${r.words} (${r.moments.map((m) => `\`${m}\``).join(', ')})`, `\`${r.outfit}\``, art(r.outfit)]),
     [MOMENT_OUTFITS.length + 1, 'Else', '`season`', 'The day’s season’s'],
-  ]) + `\n\nA wedding’s guests wear the moment’s other outfit (${PERSONAL_OUTFITS.map((o) => `\`${o}\``).join(' and ')} are the scene’s own Umas’ only). The heart events’ moments: the wedding rung, a beat whose \`together\` is work, a picnic date, and ${SHORE_PLACES.map((p) => `\`${p}\``).join(', ')} in summer. A household scene is a dinner and the finale a festival night; the other moments are the evenings’ and the calendar’s scenes’ to hand in.`
+  ]) + `\n\nA wedding’s guests wear the moment’s other outfit (${PERSONAL_OUTFITS.map((o) => `\`${o}\``).join(' and ')} are the scene’s own Umas’ only). The heart events’ moments: the wedding rung, a beat whose \`together\` is work, a picnic date, and ${SHORE_PLACES.map((p) => `\`${p}\``).join(', ')} in summer. A household scene is a dinner and the finale a festival night; the calendar’s occasion scenes hand in New Year’s, the spring festival and festival night; the other moments are the evenings’ to hand in.`
 }
 /** The story's outfit ids and the art's names for them. */
 function outfitIds(): string {
@@ -1011,7 +1019,7 @@ export function renderBlock(key: string): string | null {
     'outfit-rules': outfitRules, 'outfit-ids': outfitIds, expressions: expressionsBlock,
     houses: housesBlock, 'homestead-map': homesteadMap, 'household-milestones': householdMilestonesBlock, 'house-morning': houseMorningBlock, 'house-lines': houseLines,
     furniture: furnitureBlock,
-    calendar, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
+    calendar, occasions: occasionsBlock, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
     crops, 'shop-seeds': shopSeeds, field: fieldBlock, 'harvest-stars': harvestStars, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
     actions: actionsBlock, 'day-budget': dayBudgetBlock,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,

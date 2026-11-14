@@ -5,7 +5,7 @@
 // as learnt (others +10), Ties (her bonds' hearts), Memories' count and her ring once given; on its Work side the sheet
 // (her nine activities). Chat +15, Gift and Praise +20 sit at the panel's foot; Hearts | Work under her face, held at
 // the panel's top as it scrolls. Each section shows only
-// what exists: **Play ›** on the Next card when her event is Ready (what a setup needs said when it isn't, and **Ask
+// what exists: **Play · 1 ›** (her event costs an action) on the Next card when her event is Ready (what a setup needs said when it isn't, and **Ask
 // her** after her confession's "Not yet"), and Memories' album (`?album=`); Evening ›, the perks' effects,
 // the ring and her house. Ties: her closest friend first and marked, each bond's hearts and the points to
 // the next, and **Read** for a pair's conversation opened and unread. Perks: each reached perk with what it does now,
@@ -259,7 +259,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-/** The Next card: the rung, its perk, its place and setup, the bar with what's banked, and what it waits for; **Play ›**
+/** The Next card: the rung, its perk, its place and setup, the bar with what's banked, and what it waits for; **Play · 1 ›**
  * when her event is Ready, what to do when its setup isn't met, and **Ask her** after a "Not yet" (once a
  * day; `ask` is 'asked' once asked today). */
 function NextSection({ card, advice = null, play = null, ask = null, bench = false }: { card: NextCard; advice?: string | null; play?: string | null; ask?: string | null; bench?: boolean }) {
@@ -292,8 +292,8 @@ function NextSection({ card, advice = null, play = null, ask = null, bench = fal
       {advice && <p className="text-[13px] text-ink-soft" data-setup-advice>{advice}</p>}
       {bench && <Link to="/?sheet=bench" state={{ back: true }} className="block min-h-11 py-2 text-[14px] font-semibold text-accent-strong" data-action="to-bench">Make one at the Forge’s bench ›</Link>}
       {play && (
-        <Link to={play} state={{ back: true }} className="font-display grid min-h-12 place-items-center rounded-md text-[16px] font-bold text-white" style={{ background: colour }} data-action="play-event">
-          Play ›
+        <Link to={play} state={{ back: true }} aria-label="Play her event · 1 action" className="font-display grid min-h-12 place-items-center rounded-md text-[16px] font-bold text-white" style={{ background: colour }} data-action="play-event">
+          Play · 1 ›
         </Link>
       )}
       {ask === 'asked' && <p className="text-[13px] text-ink-soft" data-asked>You asked her today. Ask again tomorrow.</p>}

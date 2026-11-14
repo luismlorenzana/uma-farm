@@ -99,7 +99,6 @@ table. Its steps, in order:
 | 6 | **The Uma loop:** acquaintance, friend, farmhand, sweetheart, the wedding night, moving in, married life with meals and the night's companion | [F79](handoff/tasks/F79-uma-loop.md) |
 | 7 | **Farmhands:** her part-time job, then her farm actions; the work board; aptitudes that grow with practice | [F80](handoff/tasks/F80-farmhands.md) |
 | 8 | **Upkeep and loans** | [F81](handoff/tasks/F81-economy.md) |
-| 9 | **The calendar:** faces on event days, special days, the story's holidays and occasion scenes | [F82](handoff/tasks/F82-calendar.md) |
 | 10 | **The ranch and the mine,** in the farm loop's style | [F83](handoff/tasks/F83-ranch-and-mine.md) |
 
 Step 1, landscape, is done: the app sideways, the bar and the rail, side panels, and the portrait HD-2D preview
@@ -107,7 +106,9 @@ retired. Step 2, the dialogue engine, is done: every scene on one engine, the pi
 her face changing line by line and her outfit by context ([the dialogue engine](game-mechanics.md#the-dialogue-engine)).
 Step 3, the default Uma, is done: the blank bust and profile for every Uma without art, and a complete default story
 for every Uma without hers, replaced piece by piece ([what plays without the
-story](game-mechanics.md#what-plays-without-the-story)).
+story](game-mechanics.md#what-plays-without-the-story)). Step 9, the calendar, is built: the year on one screen with
+the faces of the Umas who have an event each day, special days' event actions spent on her events, and the occasion
+scenes on their days ([the calendar](game-mechanics.md#the-calendar-screen)).
 After step 5 a day can be played end to end. Phone checks follow steps 1, 2, 4, 5 and 7.
 
 **What it changes below:**

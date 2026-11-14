@@ -3,11 +3,12 @@
 // out, or when you end it. `today.actions` counts what's spent, and the night clears it with the rest of `today`.
 //
 // Special days add actions that only events can spend: New Year's, a festival day, and the birthday of each Uma you've
-// met. They're granted here (`eventActionsOn`) and kept apart (`today.eventActions`); the calendar shows them.
+// met. They're granted here (`eventActionsOn`) and kept apart (`today.eventActions`); the bar and the calendar show them,
+// and her events (a heart event, an occasion scene) spend them before the day's own (`spendForEvent`).
 //
 // The table prices every action the design lists, the town's and the Umas' among them; `from` says which part of the
 // game charges one that isn't played yet. Pure; never stamps.
-import { dateOf, DAYS_PER_YEAR, festivalOn, type Festival } from './calendar'
+import { DAYS_PER_YEAR, FESTIVALS, festivalOn, isNewYear, type Festival } from './calendar'
 import { SaveRuleError } from '../save/rules'
 import type { FarmSave } from '../save/v4'
 
@@ -63,8 +64,8 @@ export const ACTIONS: readonly ActionRule[] = [
   rule('gift', 'The Umas', 'Give a gift', 1, 'the town map'),
   rule('invite', 'The Umas', 'Invite her to work', 1, 'the Uma loop'),
   rule('hangout', 'The Umas', 'A hangout or a date', 2, 'the Uma loop'),
-  rule('event', 'The Umas', 'Her event, when it’s ready', 1, 'the town map'),
-  rule('festival', 'A festival', 'Join it; it opens its own events', 3, 'the calendar'),
+  rule('event', 'The Umas', 'Her event, when it’s ready, or an occasion scene with her', 1),
+  rule('festival', 'A festival', 'Join it; it opens its own events', 3, 'the festivals’ contests'),
   rule('cook', 'The household', 'Cook a meal for the household', 1, 'the Uma loop'),
   rule('companion', 'The household', 'Choose tonight’s companion, at the day’s end', 0, 'the Uma loop'),
 ]
@@ -89,7 +90,8 @@ export const spend = <S extends Pick<FarmSave, 'calendar' | 'today'>>(save: S, i
 
 // --- Special days: event actions ---------------------------------------------------------------------------------
 
-/** Event actions on New Year's (each year's Spring 1), on a festival day, and for each birthday of an Uma you've met. */
+/** Event actions on New Year's (each year's Spring 1 from the second: year 1's is the farm's first morning), on a
+ * festival day, and for each birthday of an Uma you've met. */
 export const NEW_YEAR_ACTIONS = 3
 export const FESTIVAL_ACTIONS = 3
 export const BIRTHDAY_ACTIONS = 1
@@ -109,26 +111,31 @@ export interface EventGrant {
   actions: number
 }
 
-/** A day's event actions, by why: New Year's first, then its festival, then the birthdays of the Umas on the roster (by
- * id). Only events spend them. */
-export function eventGrants(save: Pick<FarmSave, 'calendar' | 'roster'>, days: SpecialDays): EventGrant[] {
-  const day = save.calendar.day
-  const date = dateOf(day)
+/** A day's event actions, by why: New Year's (from the second year) first, then its festival, then the birthdays of
+ * the Umas on the roster (by id). Only events spend them. */
+export function eventGrants(save: Pick<FarmSave, 'calendar' | 'roster'>, days: SpecialDays, day = save.calendar.day): EventGrant[] {
   const ofYear = ((day - 1) % DAYS_PER_YEAR) + 1
   const festival = festivalOn(day, days.festivals)
   return [
-    ...(date.season === 'spring' && date.day === 1 ? [{ kind: 'new-year' as const, id: null, actions: NEW_YEAR_ACTIONS }] : []),
+    ...(isNewYear(day) && day > DAYS_PER_YEAR ? [{ kind: 'new-year' as const, id: null, actions: NEW_YEAR_ACTIONS }] : []),
     ...(festival ? [{ kind: 'festival' as const, id: festival.id, actions: FESTIVAL_ACTIONS }] : []),
     ...Object.keys(save.roster).filter((id) => days.birthdays.get(id) === ofYear).sort((a, b) => Number(a) - Number(b))
       .map((id) => ({ kind: 'birthday' as const, id, actions: BIRTHDAY_ACTIONS })),
   ]
 }
-/** A day's event actions in all. */
-export const eventActionsOn = (save: Pick<FarmSave, 'calendar' | 'roster'>, days: SpecialDays): number =>
-  eventGrants(save, days).reduce((n, g) => n + g.actions, 0)
+/** The special days with the game's festivals and no birthdays: what a rule reads when it isn't told the story's year. */
+export const GAME_DAYS: SpecialDays = { festivals: FESTIVALS, birthdays: new Map() }
+
+/** A day's event actions in all (today's, or another `day`'s with today's roster). */
+export const eventActionsOn = (save: Pick<FarmSave, 'calendar' | 'roster'>, days: SpecialDays, day = save.calendar.day): number =>
+  eventGrants(save, days, day).reduce((n, g) => n + g.actions, 0)
 /** The day's event actions left. */
 export const eventActionsLeft = (save: Pick<FarmSave, 'calendar' | 'roster' | 'today'>, days: SpecialDays): number =>
   Math.max(0, eventActionsOn(save, days) - save.today.eventActions)
+
+/** Whether an event's `n` actions can be paid today: the event actions left and the day's together. */
+export const canSpendForEvent = (save: Pick<FarmSave, 'calendar' | 'roster' | 'today'>, n: number, days: SpecialDays): boolean =>
+  actionsLeft(save) + eventActionsLeft(save, days) >= n
 
 /** Spends an event's actions: the day's event actions first, then its own. Refused (`no-actions`) when both together
  * are short. */

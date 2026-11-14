@@ -13,6 +13,14 @@ export const WORLD_FIXTURE: World = {
     // One of the story's own.
     { id: 'lantern-walk', name: 'Lantern Walk', season: 'summer', day: 4, happens: 'Paper lanterns float down the river.' },
   ],
+  days: [
+    // A holiday on one day of one season.
+    { id: 'first-bell', name: 'The first bell', kind: 'holiday', season: 'spring', day: 1, line: 'The bell rings twelve times at midnight.' },
+    // A minor day on three days of every season.
+    { id: 'market-day', name: 'Market day', day: [4, 8, 12], line: 'Stalls fill the square.' },
+    // A minor day sharing a festival's day.
+    { id: 'kite-day', name: 'Kite day', kind: 'minor', season: 'spring', day: 10 },
+  ],
   places: { gate: { line: 'The old gate, latched at last.' }, fields: { name: 'Low Fields' } },
   seasons: { spring: 'The thaw runs off the hills.', winter: 'Frost on the fence rails.' },
   notes: [

@@ -10,6 +10,7 @@ import { dateLabel, theName } from './words'
 const WORLD = {
   names: { town: 'Fernwick', farm: 'Thistle Farm' },
   festivals: [{ id: 'flower-show', name: 'Bloom Fair' }, { id: 'lantern-walk', name: 'Lantern Walk', season: 'spring', day: 4 }],
+  days: [{ id: 'market-day', name: 'Market day', day: [4, 8, 12] }, { id: 'kite-day', name: 'Kite day', kind: 'holiday', season: 'spring', day: 4 }],
   seasons: { summer: 'The river runs warm.' },
   notes: [{ id: 'first-friend', title: 'A first friend', lines: ['She knew the farm first.'], unlock: { kind: 'event', after: '9000001:arrival' } }],
 }
@@ -45,7 +46,7 @@ describe('the morning’s world', () => {
     expect(lines(worldWords(PACK)).map((l) => [l.key, l.text, l.quote ?? null, l.tag ?? null, l.to])).toEqual([
       ['arrived:9000002', 'Met Stand-in 2 · in Fernwick', null, 'New', '/hearts?uma=9000002'],
       ['season', 'Summer begins', 'The river runs warm.', null, '/?sheet=calendar'],
-      ['festival:tomorrow', 'Lantern Walk tomorrow', null, null, '/?peek=festival'],
+      ['festival:tomorrow', 'Lantern Walk tomorrow', null, null, '/?sheet=calendar'],
       ['notes', 'A first friend', null, 'Town note', '/diary?note=first-friend'],
     ])
   })
@@ -56,5 +57,22 @@ describe('the morning’s world', () => {
     ])
     const two = summaryParts({ ...summary, hearts: [], news: [{ kind: 'notes', ids: ['first-friend', 'old-well'] }] }, undefined, [], null, undefined, undefined, undefined, worldWords(PACK))
     expect(two[0]!.lines[0]).toMatchObject({ text: 'A first friend +1 more', tag: 'Town notes' })
+  })
+
+  it('names New Year’s, the festival and the story’s days today and tomorrow, today’s with its event actions, each a tap to the calendar', () => {
+    const news: MorningSummary['news'] = [
+      { kind: 'new-year', when: 'today' }, { kind: 'festival', festival: 'flower-show', when: 'today' }, { kind: 'days', ids: ['kite-day', 'market-day'], when: 'today' },
+      { kind: 'new-year', when: 'tomorrow' }, { kind: 'days', ids: ['market-day'], when: 'tomorrow' },
+    ]
+    const shown = summaryParts({ ...summary, hearts: [], news }, undefined, [], null, undefined, undefined, undefined, worldWords(PACK))[0]!.lines
+    expect(shown.map((l) => [l.key, l.text, l.to])).toEqual([
+      ['new-year:today', 'New Year’s today · +3 for events', '/?sheet=calendar'],
+      ['festival:today', 'Bloom Fair today · +3 for events', '/?sheet=calendar'],
+      ['days:today', 'Kite day +1 more today', '/?sheet=calendar'],
+      ['new-year:tomorrow', 'New Year’s tomorrow', '/?sheet=calendar'],
+      ['days:tomorrow', 'Market day tomorrow', '/?sheet=calendar'],
+    ])
+    // A day the pack no longer holds, in plain words.
+    expect(summaryParts({ ...summary, hearts: [], news: [{ kind: 'days', ids: ['gone'], when: 'today' }] })[0]!.lines[0]!.text).toBe('A holiday today')
   })
 })
