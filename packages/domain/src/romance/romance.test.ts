@@ -13,10 +13,11 @@ const { parseSaveV4 } = await import('../save/parse-v4')
 const { checkCast, checkBible, checkRoute, RUNGS } = await import('../story/authored')
 const { STAND_IN_BIBLE, STAND_IN_CAST, STAND_INS } = await import('../story/authored.fixture')
 const { readScene, sceneDue } = await import('../story/scenes')
-const { favouriteOf, linePlaces, openingOf, outfitOf, readStoryPack, storyPackFrom, tasteOf } = await import('../story/pack')
+const { readStoryPack, storyPackFrom } = await import('../story/pack')
+const { favouriteOf, linePlaces, openingOf, outfitOf, placeholderEvent, tasteOf } = await import('../story/placeholders')
 const { STAND_IN_FILES } = await import('../story/stand-in')
 const { arrive, arrivalsTonight, festivalArrivalDay, joinOpening, nextArrivals } = await import('./arrivals')
-const { choicePoints, FALLBACK_ARRIVAL, finishArrival, pathFlags, sceneSteps } = await import('./love')
+const { choicePoints, finishArrival, pathFlags, sceneSteps } = await import('./love')
 const { cleanFarmerName, farmerNameIssue, nameFarmer, withFarmer } = await import('./farmer')
 
 type SaveV4 = import('../save/v4').SaveV4
@@ -61,7 +62,7 @@ describe('the stand-in pack', () => {
     cast.umas[1]!.outfitId = null
     const readCast = checkCast(cast)
     expect(readCast.errors).toEqual([])
-    expect(readCast.notes).toEqual(['Uma 2 (9000002): no outfit, so she shows as a lettered disc'])
+    expect(readCast.notes).toEqual(['Uma 2 (9000002): no outfit, so she plays her default outfit from master data'])
     expect(outfitOf({ cast: readCast.value }, '9000002')).toBe('9000002')
     const bible = json(STAND_IN_BIBLE)
     bible.route = bible.route!.filter((b) => b.id !== 'arrival')
@@ -239,7 +240,7 @@ describe('her arrival scene', () => {
     expect(sceneSteps(steps, [1]).at(-1)).toEqual({ say: '9000002', line: 'Deal. I know where the mushrooms hide.', emote: 'happy' })
     const one = (STAND_IN_FILES.routes['9000001'] as { events: { id: string; steps: import('../story/authored').Step[] }[] }).events[0]!
     expect(pathFlags(sceneSteps(one.steps, [0]))).toEqual(['first-row'])
-    expect(sceneSteps(FALLBACK_ARRIVAL, []).at(-1)).toHaveProperty('choice')
+    expect(sceneSteps(placeholderEvent('9000004', 'arrival'), []).at(-1)).toHaveProperty('choice')
   })
 
   it('pays +50 and its choice into her bar, once, with its flags, and stamps nothing', () => {

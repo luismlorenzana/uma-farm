@@ -107,12 +107,13 @@ afterEach(async () => {
 describe('the view model', () => {
   it('lists her ties in the closest friend\'s order, with the next heart and the conversations to Read', () => {
     const rows = tieRows(farm(), fixture.pack!, ONE)
-    expect(rows.map((t) => [t.with, t.hearts, t.points, t.next, t.closest, t.unread])).toEqual([[TWO, 2, 150, 300, true, [1, 2]], [THREE, 1, 50, 150, false, []]])
+    // 9000001 and 9000003's pair has no file: the game's card waits at their bond 1.
+    expect(rows.map((t) => [t.with, t.hearts, t.points, t.next, t.closest, t.unread])).toEqual([[TWO, 2, 150, 300, true, [1, 2]], [THREE, 1, 50, 150, false, [1]]])
     const read: SaveV4 = { ...farm(), diary: { ...farm().diary, read: [...farm().diary.read, 'pair:9000001-9000002:1'] } }
     expect(tieRows(read, fixture.pack!, TWO)[0]).toMatchObject({ with: ONE, closest: true, unread: [2] })
   })
 
-  it('says the morning\'s side by side and bond hearts: Read while one waits, else the tie\'s line or the generic words', () => {
+  it('says the morning\'s side by side and bond hearts: Read while a tie\'s conversation waits (the pack\'s or the game\'s card), else the generic words', () => {
     const s = farm()
     const pairs = pairWords(s, fixture.pack!)
     const hearts: MorningSummary['hearts'] = [
@@ -123,7 +124,7 @@ describe('the view model', () => {
       ['Stand-in 3 arrived', `/hearts?uma=${THREE}`, 'New'],
       ['♥♥ Stand-in 1 & Stand-in 2 · bond 2', '/?read=9000001-9000002:1,2', 'Read'],
       ['Side by side · +3 items', '/warehouse', null],
-      ['♥♥ Stand-in 1 & Stand-in 3 · bond 1 · Old rivals.', `/hearts?uma=${ONE}`, null],
+      ['♥♥ Stand-in 1 & Stand-in 3 · bond 1', '/?read=9000001-9000003:1', 'Read'],
       ['♥♥ Stand-in 2 and An Uma are closer now · bond 1', `/hearts?uma=${TWO}`, null],
     ])
     // Read once: the line says the heart alone.
@@ -139,7 +140,7 @@ describe('the view model', () => {
     const read = { ...s, diary: { ...s.diary, read: [...s.diary.read, 'pair:9000001-9000002:1'] }, bonds: { ...s.bonds, [pairKey(TWO, THREE)]: 20 } }
     expect(conversationRows(read, fixture.pack!)).toEqual([
       { a: ONE, b: TWO, hearts: 2, points: 150, read: [1], unread: [2], line: null },
-      { a: ONE, b: THREE, hearts: 1, points: 50, read: [], unread: [], line: 'Old rivals.' },
+      { a: ONE, b: THREE, hearts: 1, points: 50, read: [], unread: [1], line: null },
     ])
     expect(readParam(TWO, ONE, [1, 2])).toBe('9000001-9000002:1,2')
     expect(parseReadParam('9000001-9000002:1,2')).toEqual({ a: ONE, b: TWO, levels: [1, 2] })
@@ -154,7 +155,7 @@ describe('as rendered', () => {
     expect($$('[data-tie]').map((t) => [t.dataset.tie, t.dataset.hearts, t.dataset.closest ?? null])).toEqual([[TWO, '2', 'true'], [THREE, '1', null]])
     expect($(`[data-tie="${TWO}"] [data-closest-chip]`)?.textContent).toBe('Closest')
     expect($(`[data-tie="${TWO}"]`)?.textContent).toContain('Friends · 150/300')
-    expect($(`[data-tie="${THREE}"] [data-action="read"]`)).toBeNull()
+    expect($(`[data-tie="${THREE}"] [data-action="read"]`)).not.toBeNull()
     await click($(`[data-tie="${TWO}"] [data-action="read"]`))
     expect(path).toBe(`/hearts?uma=${ONE}&read=9000001-9000002%3A1%2C2`)
     // Bond 1, then bond 2, each line a tap; the title names the pair, the level and the place.
@@ -195,7 +196,8 @@ describe('as rendered', () => {
     await render(<DiaryPage />, '/diary', true)
     await find('[data-conversations]')
     expect($$('[data-pair]').map((p) => [p.dataset.pair, p.dataset.hearts])).toEqual([['9000001-9000002', '2'], ['9000001-9000003', '1']])
-    expect($('[data-pair="9000001-9000003"] [data-pair-line]')?.textContent).toBe('Old rivals.')
+    // Their pair has no file: the game's card waits to be read.
+    expect($('[data-pair="9000001-9000003"] [data-action="read"]')?.dataset.read).toBe('1')
     expect($('[data-pair="9000001-9000002"] [data-action="read"]')?.dataset.read).toBe('2')
     const before = save()
     await click($('[data-pair="9000001-9000002"] [data-replay="1"]'))

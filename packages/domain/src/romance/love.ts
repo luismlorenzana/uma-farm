@@ -257,11 +257,3 @@ export function finishArrival(save: SaveV4, id: string, played: ArrivalPlayed): 
   const love = paid.love[id]!
   return { ...paid, love: { ...paid.love, [id]: { ...love, flags: [...new Set([...love.flags, ...played.flags])] } }, arrivals: [...save.arrivals, id] }
 }
-
-/** Her arrival when the pack scripts none ("still being written"): a line and a choice, so every arrival still
- * pays. Original, and it never names her. */
-export const FALLBACK_ARRIVAL: readonly Step[] = [
-  { place: 'gate' },
-  { narrate: 'A new face walks in at the Gate, a bag over one shoulder.' },
-  { choice: [{ text: 'Welcome to the farm.', tone: 'warm', friendship: 20 }, { text: 'Make yourself at home.', tone: 'playful', friendship: 10 }] },
-]

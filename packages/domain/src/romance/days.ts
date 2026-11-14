@@ -20,7 +20,8 @@ import { FISHERY, FOREST } from '../gathering/tables'
 import type { AnniversaryLine, BirthdayLine } from '../night/summary'
 import type { SaveV4 } from '../save/v4'
 import { addGoods } from '../save/warehouse'
-import { castOrder, favouriteOf, type StoryPack } from '../story/pack'
+import { castOrder, type StoryPack } from '../story/pack'
+import { birthdayOf, favouriteOf } from '../story/placeholders'
 import { isAnniversary } from './love'
 
 /** A day's place in the farm's year, 1–48. */
@@ -48,7 +49,7 @@ export const NO_BIRTHDAYS: Birthdays = new Map()
 export function birthdaysOf(pack: Pick<StoryPack, 'cast'>, master: ReadonlyMap<string, MonthDay>): Birthdays {
   const out = new Map<string, number>()
   for (const u of pack.cast.umas) {
-    const date = u.birthday ?? master.get(u.characterId)
+    const date = birthdayOf(pack, u.characterId, master)
     if (date) out.set(u.characterId, farmBirthday(date.month, date.day))
   }
   return out

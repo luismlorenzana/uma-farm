@@ -93,7 +93,6 @@ town, each with her own story.
 
 | Step | What | Packet |
 |---|---|---|
-| 1.3 **Placeholders everywhere** | Every story read has a plain fallback, including four default chapters, so the game plays whole with no story | [F63](handoff/tasks/F63-story-placeholders.md) |
 | 1.4 **The farm grows by building** | No global chapters. Farm Rank comes from income and goods; places are built with gold and goods; weddings open houses; the farm's projects | [F64](handoff/tasks/F64-farm-by-building.md) |
 | 1.5 **The lean start** | Name your farmer, a few lines, then the farm | [F65](handoff/tasks/F65-lean-start.md) |
 | 1.6 **The town** | Every character in town, a different few out each day, talk, the People list | [F66](handoff/tasks/F66-the-town.md) |
@@ -185,6 +184,6 @@ The farm sends items to uma-quest, uma-rpg and uma-racer, one way. It's parked u
 
 - **The farm starts over on your phone:** open uma-farm.web.app, see the start-over card, start the new farm, and play a
   day.
-- **Say go on the rest of Phase 1,** from F63 (placeholders everywhere).
+- **Say go on the rest of Phase 1,** from F64 (the farm grows by building).
 - **Keep writing the story** however you like.
 - **The HD-2D farm on your phone,** when you have a minute.

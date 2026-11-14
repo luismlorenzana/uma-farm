@@ -3,7 +3,7 @@
 // off-season, and **Swap**: pick one home with nothing to do, then one away; she arrives tomorrow, and a swap can be
 // called off until then. The pickers are uma-kit's, over the roster's rows. It's the Dorm for 20: eight levels, and a
 // level that brings an arrival says so ("Level 4 · 9 beds · someone new arrives"), never who. Loaded on demand.
-import { atHome, arriving, bedsAt, dormBought, DORM_LEVELS, leaving, nextDorm, swapBlock, type FarmSave } from '@farm/domain'
+import { arrivesOf, atHome, arriving, bedsAt, dormBought, DORM_LEVELS, leaving, nextDorm, swapBlock, type FarmSave } from '@farm/domain'
 import { FaceTile, UmaPicker } from '@luismlorenzana/uma-kit/album'
 import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -77,7 +77,10 @@ function Dorm({ save }: { save: FarmSave }) {
   const next = nextDorm(save)
   const beds = bedsAt(save.dorm.level)
   /** A level whose arrival hasn't come yet brings someone new (never who). */
-  const bringsSomeone = (level: number): boolean => !!story?.cast.umas.some((u) => u.arrives?.kind === 'beds' && u.arrives.dormLevel === level && !save.roster[u.characterId])
+  const bringsSomeone = (level: number): boolean => !!story?.cast.umas.some((u) => {
+    const arrival = arrivesOf(story, u.characterId)
+    return arrival?.kind === 'beds' && arrival.dormLevel === level && !save.roster[u.characterId]
+  })
   const arrivalWords = (level: number): string => (bringsSomeone(level) ? ' · someone new arrives' : '')
   const nameOf = (id: string) => view?.album.get(id)?.name ?? 'Uma'
   const canSwap = save.dorm.home.some((id) => swapBlock(save, id) === null) && away.some((id) => !arriving(save, id))

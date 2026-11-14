@@ -1,7 +1,8 @@
 // Master data: the release's manifest, characters, outfits and art through the API's proxy, cached by hash on the
 // device. The farm's view of it is the album's neutral rows of every outfit with a stable id (names and art keys, from
 // the release at runtime only), each outfit's stats for the loop's talents (read on demand, once a release:
-// `loop/talents.ts`) and the characters' birthdays, seen through the story pack's cast once it loads (`setMasterLens`).
+// `loop/talents.ts`), the characters' birthdays, and each outfit's character and variant (the story's placeholders read
+// her default outfit from them, on demand), seen through the story pack's cast once it loads (`setMasterLens`).
 // Copied in shape from uma-rpg's `master/master.ts` (30a322a), cut to the sets the farm reads.
 import { isRosterId, type TalentOutfit } from '@farm/domain'
 import type { ArtIndex, Character, Outfit, ReleaseManifest } from '@luismlorenzana/uma-data'
@@ -17,6 +18,9 @@ export interface MasterView {
   stats: ReadonlyMap<string, TalentOutfit>
   /** Each character's birthday, by character id: the romance's, read at runtime, never in git. */
   birthdays: ReadonlyMap<string, { month: number; day: number }>
+  /** Each outfit's character and variant (null for an original outfit), by outfit id: the story's placeholders read her
+   * default outfit and her line from them (`story/load.ts`). */
+  outfits: ReadonlyMap<string, { characterId: string; variant: string | null }>
   art: ArtIndex | null
 }
 
@@ -53,7 +57,8 @@ export function masterView(manifest: ReleaseManifest, characters: readonly Chara
   const ours = outfits.filter((o) => isRosterId(String(o.id)))
   const album = new Map(ours.map((o) => [String(o.id), outfitRowBase(o, byCharacter.get(o.characterId))]))
   const birthdays = new Map(characters.map((c) => [String(c.id), { month: c.birthday.month, day: c.birthday.day }]))
-  return { manifest, album, stats: new Map(ours.map((o) => [String(o.id), o])), birthdays, art }
+  const kinds = new Map(ours.filter((o) => byCharacter.has(o.characterId)).map((o) => [String(o.id), { characterId: String(o.characterId), variant: o.variant }]))
+  return { manifest, album, stats: new Map(ours.map((o) => [String(o.id), o])), birthdays, outfits: kinds, art }
 }
 
 function loadMaster(): void {

@@ -3,7 +3,7 @@
 // plays' words, the level-up card's lines, the stage-up screen's list, a setup's advice and her Memories' album. Pure, so
 // the player and the tests read the same. Loaded on demand with the player.
 import {
-  CAKE_DAYS, dateOf, EVENING_GRADE_POINTS, EVENT_GRADE_POINTS, farmPlace, GRADE_NAMES, gradeOf, goodName, nextHousehold, nextRung, PERK_PLACE, perkWords, ROUTE_RUNGS,
+  CAKE_DAYS, captionOf, dateOf, EVENING_GRADE_POINTS, EVENT_GRADE_POINTS, farmPlace, GRADE_NAMES, gradeOf, goodName, nextHousehold, nextRung, PERK_PLACE, perkWords, ROUTE_RUNGS,
   ringName, ringPercent, rungName, NIGHT_RUNGS, SEASON_NAMES,
   type Emote, type EventCard, type Grade, type OptionView, type PerkId, type PerkLine, type PlayKind, type PlayLength, type SaveV4, type Season, type StageUp,
   type StoryPack, type Wait, type WeddingCard,
@@ -252,7 +252,7 @@ export interface AlbumTile {
   /** "F1", "◆", "R3", "◇", "S5". */
   label: string
   state: 'played' | 'next' | 'locked'
-  /** Her beat's line, once played. */
+  /** Her beat's line (else the card's moment), once played. */
   caption: string | null
   filter: AlbumFilter
 }
@@ -268,7 +268,7 @@ export function albumTiles(save: Pick<SaveV4, 'love' | 'memories'>, pack: Pick<S
   return MEMORY_TILES.map((rung) => ({
     rung, label: tileLabel(rung), filter: albumFilterOf(rung),
     state: played.has(rung) ? 'played' : rung === next ? 'next' : 'locked',
-    caption: played.has(rung) ? pack.bibles.get(id)?.route?.find((b) => b.id === rung)?.beat ?? rungName(rung) : null,
+    caption: played.has(rung) ? captionOf(pack, id, rung) : null,
   }))
 }
 

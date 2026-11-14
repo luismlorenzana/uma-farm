@@ -29,9 +29,9 @@ import { costOf, isAnniversary } from './love'
 import { ringBonus, romanceTerms } from './perk-terms'
 import { readiness } from './ready'
 import {
-  anniversaryOf, CAKE_DAYS, nextHousehold, receptionDays, receptionDishes, vowFlag, weddingGuests, weddingPlaceFlag, weddingPlaceOf, weddingPlaces,
-  WEDDING_DEFAULTS,
+  anniversaryOf, CAKE_DAYS, nextHousehold, receptionDays, receptionDishes, vowFlag, weddingGuests, weddingPlaceFlag, weddingPlaceOf,
 } from './wedding'
+import { WEDDING_DEFAULTS, weddingPlaces } from '../story/placeholders'
 
 const AT = '2026-11-11T10:00:00.000Z'
 const LATER = '2026-11-11T21:30:00.000Z'

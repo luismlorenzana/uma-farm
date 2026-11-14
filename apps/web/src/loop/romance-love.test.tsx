@@ -96,14 +96,14 @@ describe('her profile on v4', () => {
     expect($('[data-next] h3')?.textContent).toBe('Next: Friendship 2')
     expect($('[data-next-words]')?.textContent).toBe('Ready')
     expect($('[data-profile] [data-ready-chip]')).not.toBeNull()
-    // Short of the bar: what's left; 9000002's F1 isn't scripted in the stand-in pack.
+    // Short of the bar: what's left; 9000002's F1 isn't scripted in the stand-in pack, so only her bar waits.
     await act(async () => useGame.setState({ save: withLove(farm(), ONE, { level: 1, points: 117 }) }))
     await settle()
     expect($('[data-next-words]')?.textContent).toBe('123 to go')
     expect($('[data-bar-fill]')?.dataset.barFill).toBe('49')
     await render(<HeartsPage />, '/hearts?uma=9000002')
     await find('[data-love="9000002"]')
-    expect($('[data-next-words]')?.textContent).toBe('Her story is still being written')
+    expect($('[data-next-words]')?.textContent).toBe('200 to go')
   })
 
   it('chats once a day for +15, with her line and the "+N" over her face', async () => {
@@ -172,12 +172,12 @@ describe('what her next event waits for, in words', () => {
     expect([
       at({ kind: 'bar' }), at({ kind: 'day' }, 'confession'), at({ kind: 'ring' }, 'proposal'), at({ kind: 'away' }), at({ kind: 'today' }),
       at({ kind: 'setup', setup: { kind: 'working', activity: 'fishing' } }), at({ kind: 'setup', setup: { kind: 'item', good: 'carrot' } }),
-      at({ kind: 'setup', setup: { kind: 'bond', with: '9000002', level: 3 } }), at({ kind: 'opens', chapter: 3 }), at({ kind: 'unwritten' }),
+      at({ kind: 'setup', setup: { kind: 'bond', with: '9000002', level: 3 } }), at({ kind: 'opens', chapter: 3 }),
       at({ kind: 'night' }, 's2'), at({ kind: 'friend' }, 'confession'), at({ kind: 'done' }, null),
     ]).toEqual([
       'Romance 5 · 60 to go', 'Her confession · Ready tomorrow', 'The proposal · Needs a ring', 'Romance 5 · Swap her home', 'Romance 5 · tomorrow: one event a day',
       'Romance 5 · the Fishery, when she works there', 'Romance 5 · with Carrot in the Warehouse', 'Romance 5 · bond 3 with Stand-in 2', 'Romance 5 · Opens with chapter 3',
-      'Her story is still being written', 'Spouse 2 · comes tonight', 'Her confession · she said “Not yet”', 'Her route is complete',
+      'Spouse 2 · comes tonight', 'Her confession · she said “Not yet”', 'Her route is complete',
     ])
   })
 })

@@ -5,7 +5,8 @@
 // 50 s) give 50–100 in eighths. Pure.
 import { FARM_PLACES, placeOpen, type FarmPlaceId } from '../../farm/places'
 import type { FarmSave } from '../../save/v4'
-import { linePlaces, type StoryPack } from '../../story/pack'
+import { type StoryPack } from '../../story/pack'
+import { linePlaces, routeBeats } from '../../story/placeholders'
 import { clampScore, pickIndex, type PlayLength, type Seed } from './grade'
 
 export const WALK_FORKS: Readonly<Record<PlayLength, number>> = { event: 2, evening: 4 }
@@ -31,7 +32,7 @@ export function walkFavourite(save: Pick<FarmSave, 'farm'>, pack: Pick<StoryPack
   const open = new Set(walkPlacesOpen(save))
   const line = linePlaces(pack, id).find((p) => open.has(p))
   if (line) return line
-  const beats = [...new Set((pack.bibles.get(id)?.route ?? []).map((b) => b.place).filter((p): p is FarmPlaceId => open.has(p as FarmPlaceId)))]
+  const beats = [...new Set(routeBeats(pack, id).map((b) => b.place).filter((p): p is FarmPlaceId => open.has(p as FarmPlaceId)))]
   return beats.length > 0 ? beats[pickIndex(seed, 90, beats.length)]! : 'fields'
 }
 

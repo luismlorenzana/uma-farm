@@ -19,8 +19,9 @@ import { readScene } from '../story/scenes'
 import { STAND_IN_FILES } from '../story/stand-in'
 import {
   addBond, atRomance4, BOND_HEARTS, BOND_POINTS, bondFactor, bondHearts, bondOf, bondsTonight, closestFriend, extrasShare, extrasTonight, newBondHearts, nextBondHeart,
-  pairLevels, pairReadId, readLevels, readPair, seedTies, tendsSideBySide, tiesOf, TIE_SEEDS, unreadLevels,
+  pairReadId, readLevels, readPair, seedTies, tendsSideBySide, tiesOf, TIE_SEEDS, unreadLevels,
 } from './bonds'
+import { pairConversationsOf, pairLevels } from '../story/placeholders'
 import { draw } from './draw'
 import { TALENT_D } from './talents'
 
@@ -279,14 +280,21 @@ describe('side by side', () => {
 })
 
 describe('pair conversations', () => {
-  it('reads the stand-in pair\'s five levels from the pack; none for another pair', async () => {
+  it('gives every tie\'s pair five levels, the pack\'s or the game\'s short card; none for two the ties don\'t hold', async () => {
     expect([...pairLevels(PACK, TWO, ONE)]).toEqual([1, 2, 3, 4, 5])
-    expect(pairLevels(PACK, ONE, THREE).size).toBe(0)
+    expect([...pairLevels(PACK, ONE, THREE)]).toEqual([1, 2, 3, 4, 5])
+    const untied = { ...PACK, ties: { ties: PACK.ties.ties.slice(0, 2) } }
+    expect(pairLevels(untied, TWO, THREE).size).toBe(0)
     expect(await PACK.pair(TWO, ONE)).toEqual(STAND_IN_PAIR)
     expect(await PACK.pair(ONE, THREE)).toBeNull()
+    expect((await pairConversationsOf(PACK, TWO, ONE))!.levels).toEqual(STAND_IN_PAIR.levels)
+    const card = (await pairConversationsOf(PACK, THREE, ONE))!
+    expect([card.a, card.b, card.levels.map((l) => l.hearts)]).toEqual([ONE, THREE, [1, 2, 3, 4, 5]])
+    expect(card.levels.every((l) => l.steps.length === 2 && 'say' in l.steps[0]! && l.steps[0].say === ONE && 'say' in l.steps[1]! && l.steps[1].say === THREE)).toBe(true)
+    expect(await pairConversationsOf(untied, TWO, THREE)).toBeNull()
   })
 
-  it('opens a level per heart; Read puts it in diary.read once, pays nothing, and refuses a level not reached or not written', () => {
+  it('opens a level per heart; Read puts it in diary.read once, pays nothing, and refuses a level not reached or an untied pair', () => {
     const save = withBond(farm(), ONE, TWO, 300)
     expect(unreadLevels(save, PACK, ONE, TWO)).toEqual([1, 2, 3])
     expect(unreadLevels(save, PACK, ONE, TWO, 2)).toEqual([1, 2])
@@ -299,7 +307,9 @@ describe('pair conversations', () => {
     expect(read.love).toEqual(save.love)
     expect(read.bonds).toEqual(save.bonds)
     expect(() => readPair(save, PACK, ONE, TWO, [4])).toThrow('Their bond isn’t there yet.')
-    expect(() => readPair(withBond(save, ONE, THREE, 300), PACK, ONE, THREE, [1])).toThrow('That conversation isn’t written yet.')
+    expect(readPair(withBond(save, ONE, THREE, 300), PACK, ONE, THREE, [1]).diary.read).toContain(pairReadId(ONE, THREE, 1))
+    const untied = { ...PACK, ties: { ties: PACK.ties.ties.slice(0, 2) } }
+    expect(() => readPair(withBond(save, TWO, THREE, 300), untied, TWO, THREE, [1])).toThrow('They have no conversation there.')
     expect(parseSaveV4(json(read))).toEqual(read)
   })
 

@@ -1,11 +1,15 @@
-// The loader seam on the dev server: the pack farm-api serves, else the invented
-// stand-in when it serves none, and the stand-in alone with `VITE_FARM_STORY=stand-in` (Vitest's). A production build
-// holds no stand-in at all (`scripts/check-size.mjs`'s DEV_ONLY_MODULES). farm-api is a stub; no network.
-import { STAND_IN_FILES, storyFileName, storyFilePath, type StoryIndex } from '@farm/domain'
+// The loader seam: the pack farm-api serves, else no pack when it serves none, each with master data's placeholders; and
+// the stand-in alone with `VITE_FARM_STORY=stand-in` (Vitest's). A production build holds no stand-in at all
+// (`scripts/check-size.mjs`'s DEV_ONLY_MODULES). farm-api is a stub, master data the invented album fixture; no network.
+import { eventOf, favouriteOf, outfitOf, placeholderEvent, STAND_IN_FILES, storyFileName, storyFilePath, type StoryIndex } from '@farm/domain'
 import { createHash, webcrypto } from 'node:crypto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const api = vi.hoisted(() => ({ files: new Map<string, string>(), asked: [] as string[] }))
+const master = vi.hoisted(() => ({ view: null as import('../master/master').MasterView | null }))
+vi.mock('../master/master', async (importOriginal) => ({
+  ...await importOriginal<typeof import('../master/master')>(), masterReady: vi.fn(async () => master.view), setMasterLens: () => undefined,
+}))
 vi.mock('../content/client', async () => {
   const { createContentClient } = await import('@luismlorenzana/uma-kit/content')
   const fetch = async (url: string) => {
@@ -18,6 +22,8 @@ vi.mock('../content/client', async () => {
 })
 
 const { loadStoryPack } = await import('./load')
+const { albumFixture } = await import('../album/testing')
+master.view = (await albumFixture()).view
 
 /** The stand-in with her paragraph changed, released, so the test knows which pack came back. */
 function serveRelease(): void {
@@ -53,18 +59,24 @@ describe('the loader seam', () => {
     expect(api.asked).toEqual([])
   })
 
-  it('plays the release farm-api serves', async () => {
+  it('plays the release farm-api serves, with master data\'s placeholders', async () => {
     vi.stubEnv('VITE_FARM_STORY', '')
     serveRelease()
     const pack = await loadStoryPack()
     expect(pack.cast.umas[0]!.paragraph).toBe('Served by farm-api.')
+    expect([...pack.master!.outfits.keys()]).toEqual(['90001', '90002', '90003', '90004', '90005', '90006'])
     expect(api.asked[0]).toBe('story.json')
   })
 
-  it('plays the stand-in when farm-api serves no pack (nothing published yet), in production as on the dev server', async () => {
+  it('plays no pack when farm-api serves none (nothing published yet): master data\'s first five, on placeholders', async () => {
     vi.stubEnv('VITE_FARM_STORY', '')
     const pack = await loadStoryPack()
-    expect(pack.cast.umas[0]!.paragraph).toBe('Stand-in one came to grow things.')
     expect(api.asked).toEqual(['story.json'])
+    // The album fixture's six invented characters, 90001–90006, one outfit each (81001–81006): the first five.
+    expect(pack.cast.umas.map((u) => u.characterId)).toEqual(['90001', '90002', '90003', '90004', '90005'])
+    expect(outfitOf(pack, '90001')).toBe('81001')
+    expect(favouriteOf(pack, '90001')).not.toBeNull()
+    expect(pack.bibles.size + pack.scripted.size + pack.ties.ties.length).toBe(0)
+    expect((await eventOf(pack, '90001', 'f1')).steps).toEqual(placeholderEvent('90001', 'f1'))
   })
 })

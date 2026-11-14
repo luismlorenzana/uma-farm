@@ -10,7 +10,7 @@ export const WORK_PLACE: Readonly<Record<Activity, string>> = {
 }
 
 /** Her next event's state in a line: "Friendship 2 · Ready", "Friendship 2 · 123 to go", "Friendship 3 · the Fields, when
- * she works there", "Opens with chapter 3", "Her story is still being written". `nameOf` names a bond's other Uma. */
+ * she works there", "Opens with chapter 3". `nameOf` names a bond's other Uma. */
 export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, nameOf: (id: string) => string): string {
   const rung = state.rung ? rungName(state.rung) : ''
   const at = (words: string) => `${rung} · ${words}`
@@ -18,7 +18,6 @@ export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, 
   const waits = state.waits!
   switch (waits.kind) {
     case 'done': return 'Her route is complete'
-    case 'unwritten': return 'Her story is still being written'
     case 'friend': return at('she said “Not yet”')
     case 'night': return at('comes tonight')
     case 'opens': return at(`Opens with chapter ${waits.chapter}`)
@@ -37,13 +36,12 @@ export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, 
 }
 
 /** Her Next card's words: the wait without the rung, which the card's title already names. "Ready",
- * "123 to go", "Tomorrow", "Needs a ring", "Swap her home", "Opens with chapter 3", "Her story is still being written". */
+ * "123 to go", "Tomorrow", "Needs a ring", "Swap her home", "Opens with chapter 3". */
 export function nextWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, nameOf: (id: string) => string): string {
   if (state.ready) return 'Ready'
   const waits = state.waits!
   switch (waits.kind) {
     case 'done': return 'Her route is complete'
-    case 'unwritten': return 'Her story is still being written'
     case 'friend': return 'She said “Not yet”'
     case 'night': return 'Comes tonight'
     case 'opens': return `Opens with chapter ${waits.chapter}`

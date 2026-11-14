@@ -13,7 +13,7 @@ import {
 } from '@farm/domain'
 import { create } from 'zustand'
 import { conflictEnvelope, saveApi } from '../api/client'
-import { storyReady } from '../story/story'
+import { keepOnCast, storyReady } from '../story/story'
 import { addSafetyCopy, readSafetyCopy, readSaveRow, readStoredRow, removeSafetyCopy, writeSaveRow } from './db'
 import { reconcile } from './reconcile'
 
@@ -37,6 +37,10 @@ export interface GameState {
 const INITIAL: GameState = { uid: null, status: 'idle', save: null, revision: 0, dirty: false, sync: 'idle', lastSyncedAt: null, replacedAt: null }
 
 export const useGame = create<GameState>(() => INITIAL)
+// Everyone on the farm stays in the story's cast as a save comes in (an Uma a release dropped plays on placeholders).
+useGame.subscribe((state, before) => {
+  if (state.save && state.save !== before.save) keepOnCast(Object.keys(state.save.roster))
+})
 
 /** The save once booted, or null. */
 export const useLoopSave = (): FarmSave | null => useGame((s) => s.save)

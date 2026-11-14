@@ -11,7 +11,8 @@ import { parseSaveV4 } from '../save/parse-v4'
 import { FINALE_MARRIED, marriedCount, newLove, newRosterUma, newSave, onFarm, residentsOf, roomsOf, vowsOn, type Love, type SaveV4 } from '../save/v4'
 import { checkBible, checkHousehold, type Household, type UmaBible } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_INS } from '../story/authored.fixture'
-import { storyPackFrom, wishesOf, type StoryPack } from '../story/pack'
+import { storyPackFrom, type StoryPack } from '../story/pack'
+import { householdOf, placeholderHouseholdBeat, wishesOf } from '../story/placeholders'
 import { readScene } from '../story/scenes'
 import { STAND_IN_FILES } from '../story/stand-in'
 import { joinOpening } from './arrivals'
@@ -23,7 +24,8 @@ import {
   roomFor, roomsInAll, sleepAt, sleepRows, swapRooms, takeRoom, waitingForRooms,
 } from './homestead'
 import {
-  anotherNight, HOUSE_POINTS, HOUSE_TEMPLATES, householdNight, householdPlay, householdReady, houseLineOf, levelsTonight, missesLine, noteTheNight, readHousehold, VOWS_POINTS,
+  anotherNight, HOUSE_POINTS, HOUSE_TEMPLATES, householdNight, householdPlay, householdReady, houseLineOf, levelsTonight, missesLine, noteTheNight, readHousehold, spousesInOrder,
+  VOWS_POINTS,
 } from './household'
 import { readiness } from './ready'
 
@@ -338,23 +340,24 @@ describe('the household', () => {
 
   it('makes household scenes Ready from the morning after 5, 10 and 15, once each, never auto-played', () => {
     const four = runNight(marriedFarm(4), context())
-    expect(householdReady(four, PACK.household)).toEqual([])
+    expect(householdReady(four)).toEqual([])
     const five = runNight(more(four, 1, 9000020, false), context())
-    expect(householdReady(five, PACK.household)).toEqual(['household:5'])
-    const play = householdPlay(five, PACK.household!, 'household:5')!
-    // Invented spouses without a beat are skipped (partial): open and close only.
-    expect(play.parts.map((p) => p.who)).toEqual([null, null])
+    expect(householdReady(five)).toEqual(['household:5'])
+    const play = householdPlay(five, householdOf(PACK), 'household:5')!
+    // Invented spouses without a beat say the game's one line, between the pack's open and close.
+    expect(play.parts.map((p) => p.who)).toEqual([null, ...spousesInOrder(five), null])
+    expect(play.parts[1]!.steps).toEqual(placeholderHouseholdBeat(5, spousesInOrder(five)[0]!))
     const read = readHousehold(five, 'household:5')
-    expect(householdReady(read, PACK.household)).toEqual([])
+    expect(householdReady(read)).toEqual([])
     expect(readHousehold(read, 'household:5')).toBe(read)
     const fifteen = runNight(more(read, 10, 9000030, false), context())
-    expect(householdReady(fifteen, PACK.household)).toEqual(['household:10', 'household:15'])
+    expect(householdReady(fifteen)).toEqual(['household:10', 'household:15'])
     expect(parseSaveV4(json(fifteen))).toEqual(fifteen)
   })
 
   it('plays each spouse\'s beat in wedding order', () => {
     const save = moveSpouse(spouse(spouse(farm(), TWO, 5), ONE, 7), TWO, 0)
-    const play = householdPlay(save, PACK.household!, 'household:10')!
+    const play = householdPlay(save, householdOf(PACK), 'household:10')!
     expect(play.parts.map((p) => p.who)).toEqual([null, TWO, ONE, null])
     expect(play.title).toBe('Household scene 2')
   })
@@ -363,17 +366,17 @@ describe('the household', () => {
     const nineteen = runNight(marriedFarm(19, 50), context())
     expect(nineteen.homestead.finale).toBe(0)
     const wed = more(nineteen, 1, 9000100, false)
-    expect(householdReady(wed, PACK.household)).not.toContain('finale')
+    expect(householdReady(wed)).not.toContain('finale')
     const morning = runNight(wed, context())
     expect(marriedCount(morning)).toBe(FINALE_MARRIED)
     expect(morning.homestead.finale).toBe(52)
     expect(morning.summary!.news).toContainEqual({ kind: 'household', married: 20 })
-    expect(householdReady(morning, PACK.household)).toContain('finale')
-    const finale = householdPlay(morning, PACK.household!, 'finale')!
+    expect(householdReady(morning)).toContain('finale')
+    const finale = householdPlay(morning, householdOf(PACK), 'finale')!
     expect(finale.play).toEqual({ game: 'dance', prompt: 'Lead the harvest dance.' })
     expect(finale.title).toBe('The Great Harvest')
     const done = readHousehold(morning, 'finale')
-    expect(householdReady(done, PACK.household)).not.toContain('finale')
+    expect(householdReady(done)).not.toContain('finale')
     // A year on: every spouse +50 and a festival night.
     const eve: SaveV4 = { ...done, calendar: { day: 52 + DAYS_PER_YEAR - 1 }, summary: null }
     const vows = runNight(eve, context())

@@ -123,7 +123,8 @@ describe('the Hearts view', () => {
     expect(first.querySelector('[data-segments]')?.getAttribute('data-segments')).toBe('▣□□□□□□□□□')
     expect(first.querySelector('[data-points]')?.textContent).toBe('200/200')
     expect(first.querySelector('[data-note]')?.textContent).toBe('Ready · Friendship 1 · the Fields · +2 banked')
-    expect($(`[data-heart-row="${TWO}"] [data-note]`)?.textContent).toBe('Her story is still being written')
+    // 9000002's route isn't scripted: her short bar says it all.
+    expect($(`[data-heart-row="${TWO}"] [data-note]`)?.textContent).toBe('')
     expect($('[data-married]')?.textContent).toBe('Married 0/3')
     expect(Object.fromEntries($$('[data-filter]').map((c) => [c.dataset.filter, c.textContent]))).toEqual({
       ready: 'Ready1', friends: 'Friends3', partners: 'Partners', married: 'Married', away: 'Away',

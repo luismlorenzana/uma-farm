@@ -118,7 +118,7 @@ There's no global ending. Instead:
 |---|---|
 | F61, the open pack (shipped: [the menu](../story-pack.md)) | Her chapters, her trigger and the welcome list in the pack's menu, all optional |
 | F62, one game (shipped) | One build on save v4: the live farm's chapter 1 and v3 go |
-| [F63](../handoff/tasks/F63-story-placeholders.md), placeholders | The four default chapters |
+| F63, placeholders (shipped: [what plays without the story](../game-mechanics.md#what-plays-without-the-story)) | The four default chapters |
 | [F64](../handoff/tasks/F64-farm-by-building.md), the farm by building | Global chapters removed, Farm Rank from income alone, every place by rank and build, the milestones with the Umas, the farm's projects |
 | [F67](../handoff/tasks/F67-meeting-her.md), meeting her | Triggers include "a place built" and "a Farm Rank" |
 | [F68](../handoff/tasks/F68-her-chapters.md), her chapters | Her chapters on her profile and the Hearts tab, their gates, and the morning's line |

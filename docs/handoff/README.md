@@ -10,7 +10,7 @@ deployed site is the work in progress: saves can start over whenever the game ne
 
 | Track | Piece | Who | State |
 |---|---|---|---|
-| **Game's frame** | Placeholders, the farm by building, the lean start, the town, meeting her, her chapters | Claude | [F63](tasks/F63-story-placeholders.md) to [F68](tasks/F68-her-chapters.md), in order |
+| **Game's frame** | The farm by building, the lean start, the town, meeting her, her chapters. Placeholders everywhere shipped: the game plays whole with no story | Claude | [F64](tasks/F64-farm-by-building.md) to [F68](tasks/F68-her-chapters.md), in order |
 | **HD-2D farm** | **The working nod:** an Uma at work nods every 4–7 seconds, seeded by her id, none with reduced motion, on uma-stage 0.5.0's `emote` | Claude | Next on this track: small, no packet |
 | **HD-2D farm** | **The kit's second wave:** the 30 frames the stand-in still draws, painted in code | Claude, in a uma-platform session | [F9](tasks/F9-kit-farm.md): waits for your go |
 | **Story** | **Free authoring:** the world, the backgrounds, the characters, however the story wants. The pack is open: every part optional, notes instead of blocks | You and the story session | [F40](tasks/F40-story-authoring.md): how it reaches the game; [the pack's menu](../story-pack.md) |
@@ -24,7 +24,6 @@ A packet is written when a piece is next and deleted when it ships. Git keeps th
 
 | Packet | What | Who |
 |---|---|---|
-| [F63](tasks/F63-story-placeholders.md) | Placeholders everywhere: the game plays whole with no story, with four default chapters | Claude |
 | [F64](tasks/F64-farm-by-building.md) | The farm grows by building: no global chapters; Farm Rank from income; places built with gold and goods; weddings open houses | Claude |
 | [F65](tasks/F65-lean-start.md) | The lean start: name, a few lines, the farm | Claude |
 | [F66](tasks/F66-the-town.md) | The town: every character there, a different few out each day, talk, the People list | Claude |
@@ -43,7 +42,8 @@ A packet is written when a piece is next and deleted when it ships. Git keeps th
 |---|---|
 | **Her look:** read [her-look.md](../design/her-look.md), and hand [F69](tasks/F69-bust-art-spec.md) to the character art session. The bust family's request is sent to uma-platform (2026-11-13) | [her-look.md](../design/her-look.md) |
 | **The farm starts over on your phone:** open the site, see the start-over card, start the new farm, and play a day | [uma-farm.web.app](https://uma-farm.web.app) |
-| **Say go on the rest of Phase 1,** from F63 | [roadmap.md](../roadmap.md#phase-1-one-game-built-around-the-umas) |
+| **The farm with no story on your phone:** a new farm opens with master data's first five Umas, and every event, chat and scene plays the game's own short words until the story fills them | [uma-farm.web.app](https://uma-farm.web.app) |
+| **Say go on the rest of Phase 1,** from F64 | [roadmap.md](../roadmap.md#phase-1-one-game-built-around-the-umas) |
 | **The HD-2D farm on your phone:** turn on Account → HD-2D farm, put an Uma to work and watch her walk, end the day, tap her bubble in the morning. Then say how the walk and the bubble feel, and whether the pips can go | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story** however you like | The Farm Story Sandbox on this Mac (`pnpm stories`) |
 | **The kit's second wave:** your go, when you want it | [F9](tasks/F9-kit-farm.md) |

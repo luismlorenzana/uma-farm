@@ -94,9 +94,9 @@ describe('the rows', () => {
     const rows = heartRows(away, PACK, nameOf)
     const note = (id: string) => rows.find((r) => r.id === id)!.note
     expect(note(ONE)).toBe('Ready · Friendship 2 · the Fields')
-    // 9000002 is away; 9000003's route isn't scripted in the stand-in pack.
-    expect(note(TWO)).toBe('Her story is still being written')
-    expect(note(THREE)).toBe('Her story is still being written')
+    // 9000002 is away; 9000003's short bar says it all, her unscripted route playing the game's cards.
+    expect(note(TWO)).toBe('Swap her home to play her events')
+    expect(note(THREE)).toBeNull()
     const scripted = heartRows(away, ALL, nameOf)
     expect(scripted.find((r) => r.id === TWO)!.note).toBe('Swap her home to play her events')
     expect(scripted.find((r) => r.id === THREE)!.note).toBeNull()
@@ -136,11 +136,11 @@ describe('her profile', () => {
     expect([
       at(null), at({ kind: 'bar' }), at({ kind: 'day' }, 'confession'), at({ kind: 'ring' }, 'proposal'), at({ kind: 'away' }), at({ kind: 'today' }),
       at({ kind: 'setup', setup: { kind: 'working', activity: 'fishing' } }), at({ kind: 'setup', setup: { kind: 'item', good: 'carrot' } }),
-      at({ kind: 'setup', setup: { kind: 'bond', with: TWO, level: 3 } }), at({ kind: 'opens', chapter: 3 }), at({ kind: 'unwritten' }),
+      at({ kind: 'setup', setup: { kind: 'bond', with: TWO, level: 3 } }), at({ kind: 'opens', chapter: 3 }),
       at({ kind: 'night' }, 's2'), at({ kind: 'friend' }, 'confession'), at({ kind: 'done' }, null),
     ]).toEqual([
       'Ready', '60 to go', 'Tomorrow', 'Needs a ring', 'Swap her home', 'Tomorrow: one event a day', 'The Fishery, when she works there', 'With Carrot in the Warehouse',
-      'Bond 3 with Stand-in 2', 'Opens with chapter 3', 'Her story is still being written', 'Comes tonight', 'She said “Not yet”', 'Her route is complete',
+      'Bond 3 with Stand-in 2', 'Opens with chapter 3', 'Comes tonight', 'She said “Not yet”', 'Her route is complete',
     ])
   })
 
@@ -151,8 +151,8 @@ describe('her profile', () => {
       bar: { points: 240, cost: 240, banked: 60 }, words: 'Ready', ready: true,
     })
     expect(nextCard(farm({ [ONE]: { level: 2, points: 30 } }), PACK, ONE, nameOf)).toMatchObject({ perk: { words: '+10% at the Fields' }, words: '250 to go', waits: 'bar' })
-    // 9000002's route isn't scripted: no hint, her calling's perks.
-    expect(nextCard(farm(), PACK, TWO, nameOf)).toMatchObject({ title: 'Next: Friendship 1', hint: null, perk: { words: 'Her loved gift shown; her own chats' }, words: 'Her story is still being written' })
+    // 9000002 has no bible: no hint, her calling's perks; her unscripted Friendship 1 waits only on her bar.
+    expect(nextCard(farm(), PACK, TWO, nameOf)).toMatchObject({ title: 'Next: Friendship 1', hint: null, perk: { words: 'Her loved gift shown; her own chats' }, waits: 'bar' })
     expect(nextCard(farm({ [ONE]: { stage: 'spouse', level: 5 } }), PACK, ONE, nameOf)).toMatchObject({ rung: null, title: 'Her route is complete', perk: null, words: 'Her route is complete' })
   })
 
@@ -219,7 +219,8 @@ describe('the morning’s Hearts section', () => {
     const save = farm({ [ONE]: { level: 1, points: 300 }, [THREE]: { level: 0, points: 250 } })
     expect(readyLines(save, ALL)).toEqual([{ id: THREE, rung: 'f1', place: null }, { id: ONE, rung: 'f2', place: 'the Fields' }])
     expect(readyLines({ ...save, today: { ...save.today, events: [ONE] } }, ALL).map((l) => l.id)).toEqual([THREE])
-    expect(readyLines(save, PACK).map((l) => l.id)).toEqual([ONE])
+    // Unscripted, 9000003 is Ready all the same: her event plays the game's card.
+    expect(readyLines(save, PACK).map((l) => l.id)).toEqual([THREE, ONE])
   })
 
   it('sends her links to her profile on the Hearts tab, on its Work side for her ranks', () => {

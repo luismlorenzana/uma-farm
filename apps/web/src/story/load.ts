@@ -1,22 +1,35 @@
 // The story pack's one loader seam: the private pack from farm-api's
-// `/api/content/story…` (`delivery.ts`: the index fresh, each file verified by hash and cached, the last index offline).
-// The invented stand-in from `@farm/domain` plays whenever farm-api serves no pack at all (a 404 for `story.json`: nothing
-// published yet, or no `content/story-release/` on the dev server), so a farm always opens; and in Vitest with
-// `VITE_FARM_STORY=stand-in`. Loaded on demand, with the pack, so neither reaches the initial JS.
-import { castEntry, outfitOf, STAND_IN_FILES, storyPackFrom, type StoryPack } from '@farm/domain'
+// `/api/content/story…` (`delivery.ts`: the index fresh, each file verified by hash and cached, the last index offline),
+// with master data's placeholders (`storyOf`): each character's default outfit and her line from her stats. When farm-api
+// serves no pack at all (a 404 for `story.json`: nothing published yet, or no `content/story-release/` on the dev server),
+// the game plays with no pack: master data's first five on placeholders, so a farm always opens and plays whole. The
+// invented stand-in is the tests' only (`VITE_FARM_STORY=stand-in`, Vitest's): no production build holds it
+// (`scripts/check-size.mjs`'s `DEV_ONLY_MODULES`). Loaded on demand, with the pack, so none of it reaches the initial JS.
+import { castEntry, masterCastFrom, outfitOf, STAND_IN_FILES, storyOf, storyPackFrom, type MasterCast, type MasterOutfit, type StoryPack } from '@farm/domain'
 import type { OutfitRowBase } from '@luismlorenzana/uma-kit/roster'
 import { CONTENT } from '../content/client'
-import { setMasterLens, type MasterView } from '../master/master'
+import { masterReady, setMasterLens, type MasterView } from '../master/master'
 import { deviceIndexStore, loadReleasedPack } from './delivery'
 import { unknownName } from './story'
 
-/** The invented stand-in, read by the game's reader as any pack is: what plays while no pack is published. */
-const standIn = async (): Promise<StoryPack> => storyPackFrom(STAND_IN_FILES)
+/** Keeps a roster's Umas on the cast (`story.ts`'s `keepOnCast`), loaded with the seam. */
+export { withCast } from '@farm/domain'
 
-/** The pack the game plays: the release farm-api serves, or the stand-in when it serves none. */
+/** The story the game plays: the release farm-api serves, or no pack when it serves none, with master data's
+ * placeholders. Both wait for master data, as the boot does. In the tests, the invented stand-in alone. */
 export async function loadStoryPack(): Promise<StoryPack> {
-  if (import.meta.env.DEV && import.meta.env.VITE_FARM_STORY === 'stand-in') return standIn()
-  return loadReleasedPack(CONTENT, deviceIndexStore(), { missing: standIn })
+  if (import.meta.env.DEV && import.meta.env.VITE_FARM_STORY === 'stand-in') return storyPackFrom(STAND_IN_FILES)
+  const [pack, view] = await Promise.all([loadReleasedPack(CONTENT, deviceIndexStore(), { missing: async () => null }), masterReady()])
+  return storyOf(pack, masterCast(view))
+}
+
+/** What master data gives the placeholders: each character's default outfit and each outfit's line from its stats. */
+export function masterCast(view: Pick<MasterView, 'outfits' | 'stats'>): MasterCast {
+  const outfits = [...view.outfits].flatMap(([id, o]): MasterOutfit[] => {
+    const stats = view.stats.get(id)
+    return stats ? [{ id, characterId: o.characterId, variant: o.variant, stats: stats.stats, growthRatePercents: stats.growthRatePercents }] : []
+  })
+  return masterCastFrom(outfits)
 }
 
 /** An album row for a character master data doesn't hold (the stand-ins): her lettered disc's name, nothing else. */
@@ -29,9 +42,10 @@ function unknownRow(id: string): OutfitRowBase {
   }
 }
 
-/** Master data seen through the resolver: each cast Uma's character id gets her outfit's album row (her
- * name is her character's) and stats, so the screens, the talents and the pickers read the roster's character ids as
- * outfits. A character master data lacks gets a lettered disc's row and no stats (D talents). */
+/** Master data seen through the resolver: each cast Uma's character id gets her outfit's album row (the cast's outfit,
+ * else her default from master data; her name is her character's) and stats, so the screens, the talents and the
+ * pickers read the roster's character ids as outfits. A character master data lacks gets a lettered disc's row and no
+ * stats (D talents). */
 export function castLens(pack: StoryPack): (view: MasterView) => MasterView {
   return (view) => {
     const album = new Map(view.album)

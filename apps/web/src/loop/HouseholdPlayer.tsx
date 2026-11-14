@@ -1,12 +1,13 @@
 // Household scenes and the finale: `?household=<household:5 |
 // household:10 | household:15 | finale>` over any page, from the morning's "⌂ Household scene 1 · Ready", the Hearts
-// header or the Diary's Memories shelf (`&replay=1`). It plays the pack's `open`, then each spouse's beat in wedding order
-// (one without hers written is skipped), then `close`, in the scene player's frame and steps; a choice is wording only.
+// header or the Diary's Memories shelf (`&replay=1`). It plays `open`, then each spouse's beat in wedding order, then
+// `close`, the pack's where it has them and the game's short card where it doesn't (`householdOf`: a line, each spouse's
+// line, a line, the finale's dance), in the scene player's frame and steps; a choice is wording only.
 // The finale plays its dance after `open` (the play sheet, its grade shown without points: it pays nothing) and ends
 // on the game's last stage-up card, "The Great Harvest", with every spouse's face. The end or Skip reads it once
 // (`diary.read`); a replay marks nothing. Portaled above the kit's sheets (z-60). Loaded on demand.
 import {
-  CAST, CAST_IDS, householdPlay, householdReady, playOf, playSeed, sceneSteps, withFarmer, type CastId, type ChoiceOption, type HouseholdId, type HouseholdPlay, type SaveV4,
+  CAST, CAST_IDS, householdOf, householdPlay, householdReady, playOf, promptOf, playSeed, sceneSteps, withFarmer, type CastId, type ChoiceOption, type HouseholdId, type HouseholdPlay, type SaveV4,
   type Step, type StoryPack,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
@@ -38,8 +39,8 @@ export default function HouseholdPlayer({ value, replay }: { value: string; repl
     at.searchParams.delete('replay')
     leave(`${at.pathname}${at.search}`)
   }
-  const play = useMemo(() => (id && save && pack?.household ? householdPlay(save, pack.household, id) : null), [id, save, pack])
-  const open = !!id && save && !!pack && (replay ? save.diary.read.includes(id) : householdReady(save, pack.household).includes(id))
+  const play = useMemo(() => (id && save && pack ? householdPlay(save, householdOf(pack), id) : null), [id, save, pack])
+  const open = !!id && save && !!pack && (replay ? save.diary.read.includes(id) : householdReady(save).includes(id))
   const gone = !id || (!!pack && (!open || play === null))
   useEffect(() => {
     if (gone) close()
@@ -80,7 +81,7 @@ function Scene({ save, pack, id, play, master, replay, leaving, onDone }: {
     const spec = playSpec(save, pack, first, playOf(play.play), 'event', playSeed(save.account.uid, save.calendar.day, first, 'finale'))
     return (
       <div className="pt-safe pb-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={play.title} data-household-play>
-        <PlaySheet spec={spec} title={play.play.prompt ? `${play.title} · ${play.play.prompt}` : play.title} name={nameOf(first)} replay={replay} unpaid="For the joy of it: the Great Harvest pays nothing." onDone={next} />
+        <PlaySheet spec={spec} title={`${play.title} · ${promptOf(play.play)}`} name={nameOf(first)} replay={replay} unpaid="For the joy of it: the Great Harvest pays nothing." onDone={next} />
       </div>
     )
   }

@@ -8,8 +8,12 @@ and what plays when it's missing. It's a menu, not a checklist:
 - **nothing is counted:** no fixed opening, list sizes, rungs or places;
 - **a partial pack is the normal case,** and any pack can be released.
 
-Write only what you want the game to show. Everything else in `content/story/` is yours: the game never reads it. How
-your work reaches the game is in [F40](handoff/tasks/F40-story-authoring.md); how the game plays is in
+Write only what you want the game to show. Everything else in `content/story/` is yours: the game never reads it.
+**Whatever you leave out, the game plays a placeholder for:** plain, short words of its own that play whole and pay as
+written ones do, so nothing waits on the story (the full list is in
+[what plays without the story](game-mechanics.md#what-plays-without-the-story)). The Farm Story Sandbox marks, for each
+character, what's written and what's still a placeholder. How your work reaches the game is in
+[F40](handoff/tasks/F40-story-authoring.md); how the game plays is in
 [the game mechanics](game-mechanics.md#the-cast-and-the-story-pack). The page view is
 [story-pack.html](pages/story-pack.html).
 
@@ -21,12 +25,12 @@ The pack is a folder of JSON files in `content/story/`. Every file is optional.
 
 | File | What it holds | Without it |
 |---|---|---|
-| `cast.json` | Who the pack holds, in its order, and what's given of each | No characters |
+| `cast.json` | Who the pack holds, in its order, and what's given of each | Master data's first five characters, on placeholders |
 | `ties.json` | The ties between characters | No ties |
-| `umas/<characterId>.json` | Her bible: her favourite line, gifts, route beats, chats and more | Her calling gives her line, every gift is neutral, she chats in her temperament's lines |
-| `routes/<characterId>.json` | Her scripted events, by rung | Her arrival is the game's own short scene; her other events wait ("Her story is still being written") |
-| `pairs/<a>-<b>.json` | A tie's conversations, by bond level | The tie's line stands in |
-| `household.json` | The household scenes, house lines and the finale | No household scenes; house lines come from her temperament |
+| `umas/<characterId>.json` | Her bible: her favourite line, gifts, route beats, chats and more | Her calling gives her line (else her stats in master data), every gift is neutral, she chats in the game's lines for each stage |
+| `routes/<characterId>.json` | Her scripted events, by rung | Her meeting scene and every event play the game's own short cards, which pay as written ones do |
+| `pairs/<a>-<b>.json` | A tie's conversations, by bond level | Two short lines, one each, at every level |
+| `household.json` | The household scenes, house lines and the finale | The game's short cards; house lines come from her temperament |
 
 Any other file (`world.md`, `tags.json`, `reviews.json`, notes, drafts) is the story's own. The sandbox shows some of
 them; the game never reads them, and a release never includes them.
@@ -96,7 +100,7 @@ These are notes, and the owner's standing direction for anything on screen:
 
 | Field | What it does in play | Without it |
 |---|---|---|
-| `umas` | The cast, in its order: every character the pack holds. The order breaks ties wherever the game needs one | No characters |
+| `umas` | The cast, in its order: every character the pack holds. The order breaks ties wherever the game needs one | Master data's first five characters, by id |
 | `welcome` | **The welcome list:** who comes to the farm in the first days, in order, any number. Read now; meeting her in town (F67) brings them | The first five of the cast, in its order |
 | `opening` | Who comes up the road at the opening, in order, any number. Read now; it retires with the lean start (F65) | Those whose `arrives` is the opening; else the welcome list. With nobody, the opening ends on chapter 1's card |
 | `version`, `export`, `ranker` | The story's own (the sandbox's) | Nothing |
@@ -111,8 +115,8 @@ field the game doesn't read is kept for the story.
 | Field | What it does in play | Without it |
 |---|---|---|
 | `characterId` | Who she is | The character is skipped (an error) |
-| `outfitId` | The one outfit she plays as: her face, bust, talents and temperament | A lettered disc named "An Uma", with D talents (placeholders give her master data's default outfit, F63) |
-| `calling` | Her line when her bible gives none: `farming`, `foraging`, `fishing`, `mining`, or `quarry` (mining at the Quarry) | Her bible's `favouriteLine`; with neither, she has no line: no ×1.2 and no perk at her line |
+| `outfitId` | The one outfit she plays as: her face, bust, talents and temperament | Her default outfit from master data: her first original one |
+| `calling` | Her line when her bible gives none: `farming`, `foraging`, `fishing`, `mining`, or `quarry` (mining at the Quarry) | Her bible's `favouriteLine`; with neither, the work her stats in master data suit best |
 | `birthday` | `{ "month": 1–12, "day": … }` on a real date, when master data has none | Master data's birthday, or none |
 | `meet` | **Her trigger to meet,** from the trigger menu below. Read now; meeting her (F67) acts on it | Talk with her on three different days |
 | `chapters` | **Her chapters,** below. Read now; her chapters' screens (F68) act on them | The four default chapters |
@@ -180,7 +184,7 @@ A tie needs only its two characters, `a` and `b`. A pair tied twice keeps the fi
 | `a`, `b` | The two characters. A tie to someone outside the cast never starts (a note) | The tie is skipped (an error) |
 | `kind` | Its word on her profile: `friends`, `rivals`, `mentor`, `teammates`, `sisters`, or `other` ("Close") | "Close" |
 | `strength` | 1–3: the bond it starts at when both are on the farm (0, 50 or 150 points), and her closest friends | 1: known, starting at 0 |
-| `line` | Its line on her profile and where a pair conversation isn't written | "Closer now" |
+| `line` | Its line on her profile | "Closer now" |
 | `history`, `source`, `from` | The story's own | Nothing |
 
 No character needs a number of ties.
@@ -195,9 +199,9 @@ The file's name says whose bible it is. A `characterId` inside that disagrees is
 | `gifts.loved`, `gifts.liked`, `gifts.disliked` | Her tastes, any number of each: a goods id each. A good not in the game yet is neutral until it is | Every gift neutral |
 | `gifts.proposed` | The story's list of goods it would like added: a request to the game | Nothing |
 | `route` | Her beats, by rung (below) | Each event plays with the game's defaults |
-| `chats.friend`, `chats.partner`, `chats.spouse` | Her chat lines by stage, any number, one a day: friend from Friendship 1 to the confession, partner from Romance 1 to the wedding, spouse after it | Her temperament's lines |
-| `keepsake.name`, `keepsake.line` | The keepsake she gives at Friendship 10, on her profile | "Her keepsake", with no line |
-| `petName` | What she calls you from Romance 1, on her profile. Never gendered, no placeholder | None |
+| `chats.friend`, `chats.partner`, `chats.spouse` | Her chat lines by stage, any number, one a day: friend from Friendship 1 to the confession, partner from Romance 1 to the wedding, spouse after it | The game's five short lines for that stage |
+| `keepsake.name`, `keepsake.line` | The keepsake she gives at Friendship 10, on her profile | "Her keepsake", with a plain line |
+| `petName` | What she calls you from Romance 1, on her profile. Never gendered, no placeholder | Your name |
 | `wedding.places` | Where your wedding may be held, any number, the first first: the game's places | Her wedding beat's place and the farm's: the chapel bell, the Fields, the overlook |
 | `wishes` | `own-house` (she's happiest alone in her house) and `birthday-alone` (her birthday morning is hers) | Neither |
 | `now`, `whyTheFarm`, `dream`, `blurb`, `laughs`, `hurts`, `season`, `festival`, `outfitId` | The story's own: the sandbox shows them | Nothing |
@@ -218,7 +222,7 @@ another id is kept for the story (a note).
 | `trigger` | Its setup besides her full bar: `hearts`, she's `working` an activity, an `item` is in the Warehouse, a `bond` with someone reaches a level, a `chapter`. Never a clock, the weather, a season or a festival | Her full bar only |
 | `place` | Where it plays, on her Next card and the Memory | No place shown |
 | `together` | What you do together: `talk`, `work` an activity, a `date` game (fishing, cooking, stargazing, footrace, dance, picnic, market, boat, walk, crafting), a `gift` of a good, or `help` someone. A work, a date or a gift adds a play when the event scripts none | No play added: the best choice taken is the grade |
-| `beat` | Its Memory's caption | The rung's name |
+| `beat` | Its Memory's caption | The game's card's first line ("A quiet afternoon with her.") |
 | `hint` | What her profile says while it's next | None |
 | `unlock` | An `item` (a good, into the Warehouse), a `place` or a `perk` in words, on the level-up card | None |
 | `ladder`, `hearts` | The story's own | Nothing |
@@ -267,7 +271,7 @@ The game plays any event. Outside these sizes is a note:
 | A heart event | 1–2 choice points on every path, at most one play |
 | The confession, the proposal, the wedding | 1–3 choice points, at most three plays |
 | The confession | Its last choice point holds one `yes` and one `not-yet` |
-| Her arrival | One choice point and no play. With none it pays +50 alone; with more, the first pays |
+| Her arrival | One choice point and no play. With none, the game's hello ends it; with more, the first pays |
 
 ## A pair's conversations: `pairs/<a>-<b>.json`
 
@@ -283,16 +287,17 @@ Named by the two ids in numeric order, `<a>-<b>`: the game finds it by that name
 | `levels[].place` | Its title line's place | No place shown |
 | `levels[].steps` | The conversation: the two speak (anyone else is a note) | — |
 
-Any levels, in any order. A level not written plays the tie's line. A pair the ties don't hold never plays (a note).
+Any levels, in any order. A level not written plays the game's two short lines. A pair the ties don't hold never plays (a
+note).
 
 ## The household: `household.json`
 
 | Field | What it does | Without it |
 |---|---|---|
-| `scenes` | The household scenes at 5, 10 and 15 married, each `{ "at": 5, "open": […], "each": { "<id>": […] }, "close": […] }`. `open` and `close` speak through narration and the town's people; `each` is one spouse's beat | No household scene plays |
-| `scenes[].each` | Each spouse's beat, in wedding order | Her beat is skipped |
+| `scenes` | The household scenes at 5, 10 and 15 married, each `{ "at": 5, "open": […], "each": { "<id>": […] }, "close": […] }`. `open` and `close` speak through narration and the town's people; `each` is one spouse's beat | The game's short card at each: a line, each spouse's line, a line |
+| `scenes[].each` | Each spouse's beat, in wedding order | Her one line |
 | `houseLines` | `{ "<id>": ["…"] }`: a spouse's morning lines in her house, any number | Her temperament's lines |
-| `finale` | The Great Harvest: `open`, `play`, `each`, `close` | No finale plays |
+| `finale` | The Great Harvest: `open`, `play`, `each`, `close` | The game's short card, with a dance |
 
 ## Releasing a pack
 
@@ -309,4 +314,4 @@ Any levels, in any order. A level not written plays the tie's line. A pair the t
 | Her outfit, calling, birthday, bible, route, ties, pairs, household | Yes | Yes, today |
 | The welcome list, her trigger to meet | Yes | When meeting her lands (F67) |
 | Her chapters and their gates | Yes | When her chapters land (F68) |
-| What plays when a part is missing | Today's fallbacks | Placeholders for every read (F63) |
+| What plays when a part is missing | Placeholders for every read | Yes, today: [what plays without the story](game-mechanics.md#what-plays-without-the-story) |

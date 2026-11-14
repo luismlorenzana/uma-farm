@@ -7,6 +7,7 @@ import { dateOf, DAYS_PER_YEAR } from '../farm/calendar'
 import { loveRankFactor, rankPointsForDay, tickRankRules } from '../farm/rank-rules'
 import { TALENT_D } from '../farm/talents'
 import { CHAT_LINES } from './chats'
+import { PLACEHOLDER_CHATS } from '../story/placeholders'
 import { harvest, plant, setTender } from '../fields/fields'
 import { SHOP_SEEDS } from '../fields/crops'
 import { FOREST } from '../gathering/tables'
@@ -157,7 +158,7 @@ describe('points and banking', () => {
 })
 
 describe('chats', () => {
-  it('pays +15 once a day, home or away, with her temperament\'s lines before F1 and her own set by stage from F1, the same all day', () => {
+  it('pays +15 once a day, home or away, with her temperament\'s lines before F1 and her set by stage from F1 (else the stage\'s placeholders), the same all day', () => {
     let save = farm(3)
     save = { ...save, dorm: { ...save.dorm, home: [ONE, TWO] } } // 9000003 away
     const talked = chatV4(save, THREE)
@@ -172,8 +173,11 @@ describe('chats', () => {
     expect(chats.partner).toContain(chatLineV4(withLove(save, ONE, { stage: 'romance', level: 1 }), PACK, ONE, 'steady'))
     expect(chats.spouse).toContain(chatLineV4(withLove(save, ONE, { stage: 'spouse', level: 0, wed: 1 }), PACK, ONE, 'steady'))
     expect([chatSet(newLove()), chatSet({ stage: 'romance', level: 0 }), chatSet({ stage: 'wedding', level: 10 })]).toEqual([null, 'friend', 'partner'])
-    // A bible without chats (9000002 has none at all) keeps the temperament's lines.
-    expect(CHAT_LINES.bold).toContain(chatLineV4(withLove(save, TWO, { level: 3 }), PACK, TWO, 'bold'))
+    // Without her own chats (9000002 has no bible) she says the stage's placeholder lines from F1; her temperament's before it.
+    expect(PLACEHOLDER_CHATS.friend).toContain(chatLineV4(withLove(save, TWO, { level: 3 }), PACK, TWO, 'bold'))
+    expect(PLACEHOLDER_CHATS.partner).toContain(chatLineV4(withLove(save, TWO, { stage: 'romance', level: 2 }), PACK, TWO, 'bold'))
+    expect(PLACEHOLDER_CHATS.spouse).toContain(chatLineV4(withLove(save, TWO, { stage: 'spouse', level: 1, wed: 1 }), PACK, TWO, 'bold'))
+    expect(CHAT_LINES.bold).toContain(chatLineV4(save, PACK, TWO, 'bold'))
   })
 })
 
@@ -441,13 +445,13 @@ describe('Ready', () => {
     expect(readiness(withLove(s2, ONE, { level: 5 }), PACK, ONE)).toEqual({ rung: null, ready: false, waits: { kind: 'done' } })
   })
 
-  it('says an unscripted event is still being written: 9000002\'s Friendship 1', () => {
+  it('never waits on the story: 9000002\'s unscripted Friendship 1 is Ready, and plays the game\'s card', () => {
     const save = full(farm(3), TWO)
-    expect(readiness(save, PACK, TWO)).toEqual({ rung: 'f1', ready: false, waits: { kind: 'unwritten' } })
+    expect(readiness(save, PACK, TWO)).toEqual({ rung: 'f1', ready: true, waits: null })
   })
 
   it('documents every wait, in the order it\'s said', () => {
-    expect(WAIT_ORDER.map((w) => w.kind).sort()).toEqual(['away', 'bar', 'day', 'done', 'friend', 'night', 'opens', 'ring', 'setup', 'today', 'unwritten'])
+    expect(WAIT_ORDER.map((w) => w.kind).sort()).toEqual(['away', 'bar', 'day', 'done', 'friend', 'night', 'opens', 'ring', 'setup', 'today'])
   })
 })
 

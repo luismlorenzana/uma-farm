@@ -52,7 +52,8 @@ Node 22+ and pnpm 10. The `@luismlorenzana/*` packages come from GitHub Packages
 
 The preview pane starts both from `.claude/launch.json` (`farm-api`, `farm-web`). To try the guard locally, run the
 built API with `ALLOWED_EMAIL` set and no `AUTH_MODE`. farm-api serves the story pack's release from
-`content/story-release/` (`STORY_DIR`); with none there, the dev server plays the invented stand-in.
+`content/story-release/` (`STORY_DIR`); with none there, the dev server plays no pack: master data's first five on
+the game's placeholders, as a fresh phone does.
 
 ## Conventions
 

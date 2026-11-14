@@ -9,7 +9,7 @@
 //   The ties' seeds when both are on the farm: strength 3 → 150, 2 → 50, 1 → 0
 //   Side by side at 3 hearts: +10% of a night's items as extras (step 4), a tended block ×1.1 (step 2)
 //
-// Each new heart opens the pair's conversation: an authored one for a tie's pair, from the pack (`pairs`), read once into
+// Each new heart opens a tie's pair's conversation: the pack's (`pairs`), else the game's short card, read once into
 // `diary.read` as `pair:<a>-<b>:<hearts>`. Bond points are whole: each pay rounds once, half up. Loaded with the
 // romance's rules and the night.
 import { draw } from './draw'
@@ -23,8 +23,9 @@ import { SaveRuleError } from '../save/rules'
 import { pairKey, type BlockId } from '../save/v4'
 import type { FarmSave, Love, SaveV4 } from '../save/v4'
 import { addGoods, parseStockKey } from '../save/warehouse'
-import { tieStrength, type Tie } from '../story/authored'
-import { favouriteOf, type StoryPack } from '../story/pack'
+import { type Tie } from '../story/authored'
+import { type StoryPack } from '../story/pack'
+import { favouriteOf, pairLevels, tieStrength } from '../story/placeholders'
 
 // --- Hearts ------------------------------------------------------------------------------------------------------
 
@@ -273,30 +274,27 @@ export const pairName = (a: string, b: string): string => pairKey(a, b).replace(
 /** A read conversation in `diary.read`: `pair:<a>-<b>:<hearts>`. */
 export const pairReadId = (a: string, b: string, hearts: number): string => `pair:${pairName(a, b)}:${hearts}`
 
-const NONE: ReadonlySet<number> = new Set()
-/** The bond levels whose conversation the pack holds for a pair (its `pairs/<a>-<b>`), none without one. */
-export const pairLevels = (pack: Pick<StoryPack, 'pairs'>, a: string, b: string): ReadonlySet<number> => pack.pairs.get(pairKey(a, b)) ?? NONE
-
 /** The levels of a pair's conversations read so far, lowest first. */
 export function readLevels(save: Pick<SaveV4, 'diary'>, a: string, b: string): number[] {
   return [1, 2, 3, 4, 5].filter((h) => save.diary.read.includes(pairReadId(a, b, h)))
 }
 
-/** Its conversations opened and unread: authored, at or under its hearts (or `upTo`), not read, lowest first. */
-export function unreadLevels(save: Pick<SaveV4, 'bonds' | 'diary'>, pack: Pick<StoryPack, 'pairs'>, a: string, b: string, upTo = bondHearts(bondOf(save, a, b))): number[] {
+/** Its conversations opened and unread: a tie's (written, or the game's card), at or under its hearts (or `upTo`), not
+ * read, lowest first. */
+export function unreadLevels(save: Pick<SaveV4, 'bonds' | 'diary'>, pack: Pick<StoryPack, 'ties'>, a: string, b: string, upTo = bondHearts(bondOf(save, a, b))): number[] {
   const levels = pairLevels(pack, a, b)
   const hearts = Math.min(upTo, bondHearts(bondOf(save, a, b)))
   return [1, 2, 3, 4, 5].filter((h) => h <= hearts && levels.has(h) && !save.diary.read.includes(pairReadId(a, b, h)))
 }
 
-/** Conversations read: each level authored and opened, once into `diary.read`. Pays nothing; a choice in it is
+/** Conversations read: each level of a tie's pair opened, once into `diary.read`. Pays nothing; a choice in it is
  * wording only. Read already: unchanged. Never stamps: the app's action does, once. */
-export function readPair(save: SaveV4, pack: Pick<StoryPack, 'pairs'>, a: string, b: string, levels: readonly number[]): SaveV4 {
+export function readPair(save: SaveV4, pack: Pick<StoryPack, 'ties'>, a: string, b: string, levels: readonly number[]): SaveV4 {
   if (!save.roster[a] || !save.roster[b] || a === b) throw new SaveRuleError('not-owned', 'She isn’t on the farm.')
   const hearts = bondHearts(bondOf(save, a, b))
   const ids: string[] = []
   for (const h of levels) {
-    if (!pairLevels(pack, a, b).has(h)) throw new SaveRuleError('locked', 'That conversation isn’t written yet.')
+    if (!pairLevels(pack, a, b).has(h)) throw new SaveRuleError('locked', 'They have no conversation there.')
     if (h > hearts) throw new SaveRuleError('locked', 'Their bond isn’t there yet.')
     const id = pairReadId(a, b, h)
     if (!save.diary.read.includes(id) && !ids.includes(id)) ids.push(id)

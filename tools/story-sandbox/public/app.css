@@ -319,3 +319,9 @@ a.chip.off { opacity: 0.5; }
   .cards, .summary { grid-template-columns: 1fr; }
   .crew-row { grid-template-columns: 40px 1fr 1fr; }
 }
+/* In the game: what's written and what's a placeholder, per character. */
+table.written { width: 100%; border-collapse: collapse; }
+table.written th { text-align: left; font-weight: 600; padding: 4px 8px 4px 0; white-space: nowrap; vertical-align: top; }
+table.written td { padding: 4px 8px 4px 0; vertical-align: top; }
+table.written tr.is-placeholder th { color: var(--muted); }
+.chip.placeholder { border-style: dashed; }

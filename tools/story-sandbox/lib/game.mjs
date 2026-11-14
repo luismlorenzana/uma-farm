@@ -14,7 +14,10 @@ const SCENE_ID = /^scene:(\d+):(open|close)$/
 const isScene = (v) => v && typeof v === 'object' && typeof v.id === 'string' && SCENE_ID.test(v.id) && typeof v.title === 'string' && Array.isArray(v.beats)
 
 /** The files the sandbox reads, relative to the domain's `src/`. */
-const FIXED = { cast: 'story/cast.ts', places: 'farm/places.ts', talents: 'farm/talents.ts', ranks: 'farm/ranks.ts', lines: 'items/lines.ts', authored: 'story/authored.ts', pack: 'story/pack.ts' }
+const FIXED = {
+  cast: 'story/cast.ts', places: 'farm/places.ts', talents: 'farm/talents.ts', ranks: 'farm/ranks.ts', lines: 'items/lines.ts', authored: 'story/authored.ts', pack: 'story/pack.ts',
+  placeholders: 'story/placeholders.ts',
+}
 
 async function version(src, files) {
   const times = await Promise.all(files.map((f) => stat(join(src, f)).then((s) => s.mtimeMs, () => 0)))
@@ -31,7 +34,7 @@ export async function loadGame(src) {
     const files = [...Object.values(FIXED), ...chapters.map((n) => `story/${n}`)]
     const v = await version(src, files)
     const load = (file) => import(`${pathToFileURL(join(src, file)).href}?v=${v}`)
-    const [cast, places, talents, ranks, lines, authored, pack] = await Promise.all(Object.values(FIXED).map(load))
+    const [cast, places, talents, ranks, lines, authored, pack, placeholders] = await Promise.all(Object.values(FIXED).map(load))
     const scenes = {}
     let hello = null
     const fileOf = {}
@@ -59,9 +62,14 @@ export async function loadGame(src) {
       authored: {
         rungs: [...authored.RUNGS], places: [...authored.STORY_PLACES], festivals: [...authored.FESTIVALS], tieKinds: [...authored.TIE_KINDS],
         dateGames: [...authored.DATE_GAMES], tones: [...authored.TONES], emotes: [...authored.EMOTES], callings: [...authored.CALLINGS], triggers: [...authored.TRIGGER_KINDS],
-        defaults: { meet: { ...authored.DEFAULT_MEET }, chapters: authored.DEFAULT_CHAPTERS.map((c) => ({ title: c.title, events: [...c.events] })), welcome: authored.DEFAULT_WELCOME },
+        defaults: {
+          meet: { ...placeholders.DEFAULT_MEET }, chapters: placeholders.DEFAULT_CHAPTERS.map((c) => ({ title: c.title, events: [...c.events] })), welcome: placeholders.DEFAULT_WELCOME,
+        },
       },
-      validator: { readStoryPack: pack.readStoryPack, tagNotes: authored.tagNotes, bibleTagNotes: authored.bibleTagNotes, unscriptedBeats: authored.unscriptedBeats },
+      validator: {
+        readStoryPack: pack.readStoryPack, tagNotes: authored.tagNotes, bibleTagNotes: authored.bibleTagNotes, unscriptedBeats: authored.unscriptedBeats,
+        writtenOf: placeholders.writtenOf,
+      },
     }
   } catch (error) {
     return { ok: false, error: `The game's story didn't load: ${error.message.split('\n')[0]}` }

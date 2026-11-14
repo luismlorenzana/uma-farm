@@ -1,10 +1,11 @@
 // A pair's conversations: `?read=<a>-<b>:<levels>` over any page, played in the
-// scene player's frame and steps. Each level in order, titled "Stand-in 1 & Stand-in 2 · Bond 2 · Forest"; a line
+// scene player's frame and steps: a tie's, the pack's at each level it writes and the game's two-line card at the rest
+// (`pairConversationsOf`). Each level in order, titled "Stand-in 1 & Stand-in 2 · Bond 2 · Forest"; a line
 // with its speaker's bust, a narration, a pause; a choice's options are wording only, with no gain. Skip, or the last
 // line, marks every level read (`diary.read`, once each) and closes; a replay from the Diary marks nothing new. It pays
 // nothing. The morning's Read, her profile's Read and the Diary's replays open it, so it's portaled to the body above their
 // sheets (the kit's sheets portal there at z-50; the frame is z-60). Loaded on demand.
-import { bondHearts, bondOf, sceneSteps, withFarmer, type ChoiceOption, type PairConversations, type SaveV4, type Step } from '@farm/domain'
+import { bondHearts, bondOf, pairConversationsOf, sceneSteps, withFarmer, type ChoiceOption, type PairConversations, type SaveV4, type Step } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -29,10 +30,10 @@ export default function PairPlayer({ read }: { read: string }) {
   useEffect(() => {
     let live = true
     if (!wanted || !story) return
-    void story.pair(wanted.a, wanted.b).then((found) => live && setPair(found), () => live && setPair(null))
+    void pairConversationsOf(story, wanted.a, wanted.b).then((found) => live && setPair(found), () => live && setPair(null))
     return () => { live = false }
   }, [story, wanted])
-  // The levels to play: those asked for that the pack holds and the bond has reached.
+  // The levels to play: those asked for that the bond has reached.
   const reached = save && wanted ? bondHearts(bondOf(save, wanted.a, wanted.b)) : 0
   const levels = useMemo(() => (pair && wanted ? wanted.levels.flatMap((h) => (h <= reached ? pair.levels.filter((l) => l.hearts === h) : [])) : []), [pair, wanted, reached])
   const nothing = !wanted || !save || pair === null || (pair !== undefined && levels.length === 0)

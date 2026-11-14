@@ -19,7 +19,8 @@
 // A perk that works at her line's place says "Opens with chapter n" while that place waits for its chapter: a
 // miner's +10% before chapter 3, a cook's before the Kitchen. Loaded with the romance's screens.
 import type { Activity } from '../farm/ranks'
-import { castEntry, favouriteOf, type StoryPack } from '../story/pack'
+import { castEntry, type StoryPack } from '../story/pack'
+import { favouriteOf } from '../story/placeholders'
 
 /** The activities whose places open with a chapter: a working setup there waits for it, and so does a perk at her
  * line's place. Here so the perks' terms never import `ready.ts` (and `ready.ts` reads it from here). */
