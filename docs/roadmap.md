@@ -31,11 +31,11 @@ farm's progress](game-mechanics.md#the-farms-progress). How it's built is in
 
 | Part | State | What changes |
 |---|---|---|
-| **The farm's loop** | **Deployed** (save v4, one build) | The days, the Fields, the forest and the Fishery, the Mill, the Sawmill and the Smokehouse, goods and the bin, talents and ranks, the roster, the Farm Rank. **The farm grows by building:** no global chapters; the Farm Rank from income and goods offers each place, built with gold and goods; the Dock and the Boat open the sea; weddings open houses; the Diary's projects |
-| **The romance** | **Deployed, part of the one game** | Hearts, heart events and plays, evenings, perks, the ring and the wedding, married life, the homestead, bonds. Its cast arrives as the story pack says. **Being reworked:** the town and meeting replace arrivals (F66, F67), and her chapters frame her route (F68) |
+| **The farm's loop** | **Deployed** (save v4, one build) | The days, the Fields, the forest and the Fishery, the Mill, the Sawmill and the Smokehouse, goods and the bin, talents and ranks, the roster, the Farm Rank. **The farm grows by building:** no global chapters; the Farm Rank from income and goods offers each place, built with gold and goods; the Dock and the Boat open the sea; weddings open houses; the Diary's projects. **The town:** every character lives there, a different few out at its six spots each day; talk once a day; the People list |
+| **The romance** | **Deployed, part of the one game** | Hearts, heart events and plays, evenings, perks, the ring and the wedding, married life, the homestead, bonds. Its cast arrives as the story pack says. **Being reworked:** meeting her in town replaces arrivals (F67), and her chapters frame her route (F68) |
 | **The story** | **Being written** | In the Farm Story Sandbox on this Mac. The pack is open: every part optional, any number of characters, notes instead of blocks, and any pack releases. [The story pack's menu](story-pack.md) lists what the game reads, with the welcome list, her trigger to meet and her chapters |
 | **The HD-2D farm** | **Opt-in preview** | The farm and its Umas on the shared HD-2D stage (Account → HD-2D farm). The 2D Hub is still Home. A working Uma doesn't nod yet: uma-stage 0.5.0 can now play it |
-| **Art** | **Mixed** | The farm kit's first wave is painted; its second wave is still the stand-in's frames. Umas whose outfits have no sprite set show as cards with their faces. The town cast's busts aren't drawn |
+| **Art** | **Mixed** | The farm kit's first wave is painted; its second wave is still the stand-in's frames. Umas whose outfits have no sprite set show as cards with their faces. The town's people are Umas, with master data's busts |
 | **The workshops** | **Not built** | The ranch, the Mine and the Quarry, the Kitchen and its cooking game, expeditions, the Restaurant and the Forge's games |
 | **Sound** | **None** | No music and no sound effects |
 | **Safety nets** | **Partial** | The save syncs with rescues and backups; there's no error reporting and no end-to-end test |
@@ -93,7 +93,6 @@ town, each with her own story.
 
 | Step | What | Packet |
 |---|---|---|
-| 1.6 **The town** | Every character in town, a different few out each day, talk, the People list | [F66](handoff/tasks/F66-the-town.md) |
 | 1.7 **Meeting her** | Her trigger starts her story; the welcome list comes in the first days; the beds cap who lives on the farm | [F67](handoff/tasks/F67-meeting-her.md) |
 | 1.8 **Her chapters** | Her own chapters, from the story or four defaults, with optional farm gates, on her profile and the Hearts tab | [F68](handoff/tasks/F68-her-chapters.md) |
 
@@ -105,7 +104,6 @@ town, each with her own story.
 | 1.10 **The kit's second wave** | The 30 frames still drawn by the stand-in, painted in code | Claude, in a uma-platform session ([F9](handoff/tasks/F9-kit-farm.md)) |
 | 1.11 **The HD-2D farm reaches the Hub** | Everything the Hub does, on the stage: every place, the build sheets, the homestead's rows, the town | Claude |
 | 1.12 **The HD-2D farm becomes Home** | After your phone look: the switch and the 2D Hub go | Claude |
-| 1.13 **The cast's busts** | The town cast's portraits | ChatGPT ([F25](handoff/tasks/F25-art-m4.md)) |
 
 **Track C, her look** ([design](design/her-look.md)): a wardrobe for each Uma (four seasons, spring her default, a kimono, a
 dinner dress, a wedding dress, pajamas), and busts that change expression: a face for each expression over a bust for
@@ -182,6 +180,7 @@ The farm sends items to uma-quest, uma-rpg and uma-racer, one way. It's parked u
 
 - **The farm starts over on your phone:** open uma-farm.web.app, see the start-over card, start the new farm, and play a
   day.
-- **Say go on the rest of Phase 1,** from F66 (the town).
+- **Say go on the rest of Phase 1,** from F67 (meeting her).
+- **The town on your phone:** open the Town at the foot of the farm map, talk to a few, find someone in People.
 - **Keep writing the story** however you like.
 - **The HD-2D farm on your phone,** when you have a minute.

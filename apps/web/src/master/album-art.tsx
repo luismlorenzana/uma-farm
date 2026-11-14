@@ -1,7 +1,9 @@
 // Copied from uma-rpg apps/web/src/master/album-art.tsx at 30a322a: the album's kinds mapped to uma-data's art
 // families; uma-kit/content owns the authenticated, cached loading. The art comes from the release at runtime only.
 // Every id goes through the one resolver (`outfitFor`), so a roster key, her character id, shows her cast
-// outfit's art; a cast Uma whose outfit master data doesn't hold (the stand-ins) shows a lettered disc.
+// outfit's art, and so does anyone in town (a sister her own outfit's, one of the town's people hers); a character with
+// no outfit shows master data's character face; a cast Uma whose outfit master data doesn't hold (the stand-ins) shows a
+// lettered disc.
 import type { AlbumArt, UmaArtKind } from '@luismlorenzana/uma-kit/album'
 import { AtlasSprite, imagePath, useArtUrl } from '@luismlorenzana/uma-kit/content'
 import type { ArtIndex, ImageFamily } from '@luismlorenzana/uma-data'
@@ -15,7 +17,11 @@ export function albumImagePath(art: ArtIndex | null, kind: UmaArtKind, id: strin
 }
 function useUrl(kind: UmaArtKind, id: string) {
   const master = useMaster()
-  return useArtUrl(albumImagePath(master.status === 'ready' ? master.view.art : null, kind, outfitFor(id)))
+  const view = master.status === 'ready' ? master.view : null
+  const target = outfitFor(id)
+  // A character with no outfit of her own (one of the town's people, say): her face from master data's characters.
+  const face = view && kind !== 'chibi' && !view.outfits.has(target) && view.names?.has(target)
+  return useArtUrl(face ? imagePath(view.art, 'character-faces', target) : albumImagePath(view?.art ?? null, kind, target))
 }
 
 /** A disc's colour from her id: the same every time, never from her name. */

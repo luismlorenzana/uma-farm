@@ -5,7 +5,9 @@
 // the game plays with no pack: master data's first five on placeholders, so a farm always opens and plays whole. The
 // invented stand-in is the tests' only (`VITE_FARM_STORY=stand-in`, Vitest's): no production build holds it
 // (`scripts/check-size.mjs`'s `DEV_ONLY_MODULES`). Loaded on demand, with the pack, so none of it reaches the initial JS.
-import { castEntry, masterCastFrom, outfitOf, STAND_IN_FILES, storyOf, storyPackFrom, type MasterCast, type MasterOutfit, type StoryPack } from '@farm/domain'
+import {
+  castEntry, isCastId, isSister, masterCastFrom, outfitOf, sisterNameOf, speakerId, STAND_IN_FILES, storyOf, storyPackFrom, type MasterCast, type MasterOutfit, type StoryPack,
+} from '@farm/domain'
 import type { OutfitRowBase } from '@luismlorenzana/uma-kit/roster'
 import { CONTENT } from '../content/client'
 import { masterReady, setMasterLens, type MasterView } from '../master/master'
@@ -33,19 +35,19 @@ export function masterCast(view: Pick<MasterView, 'outfits' | 'stats'>): MasterC
 }
 
 /** An album row for a character master data doesn't hold (the stand-ins): her lettered disc's name, nothing else. */
-function unknownRow(id: string): OutfitRowBase {
+function unknownRow(id: string, name: string | null = null): OutfitRowBase {
   const grades = <K extends string>(keys: readonly K[]) => Object.fromEntries(keys.map((k) => [k, 'G'])) as Record<K, 'G'>
   return {
-    id, name: unknownName(id), title: null, rarity: 3, releasedAt: '',
+    id, name: name ?? unknownName(id), title: null, rarity: 3, releasedAt: '',
     aptitudes: { surface: grades(['turf', 'dirt']), distance: grades(['sprint', 'mile', 'medium', 'long']), strategy: grades(['front', 'pace', 'late', 'end']) },
     art: { icon: id, bust: id, face: id, chibi: `${id}-a` },
   }
 }
 
 /** Master data seen through the resolver: each cast Uma's character id gets her outfit's album row (the cast's outfit,
- * else her default from master data; her name is her character's) and stats, so the screens, the talents and the
- * pickers read the roster's character ids as outfits. A character master data lacks gets a lettered disc's row and no
- * stats (D talents). */
+ * else her default from master data; her name is her character's, a sister's the pack's) and stats, so the screens, the
+ * talents and the pickers read the roster's character ids as outfits. A character master data lacks gets a lettered
+ * disc's row and no stats (D talents). */
 export function castLens(pack: StoryPack): (view: MasterView) => MasterView {
   return (view) => {
     const album = new Map(view.album)
@@ -53,7 +55,9 @@ export function castLens(pack: StoryPack): (view: MasterView) => MasterView {
     for (const { characterId } of pack.cast.umas) {
       const outfit = outfitOf(pack, characterId)
       const row = view.album.get(outfit)
-      album.set(characterId, row ? { ...row, id: characterId } : unknownRow(characterId))
+      // A sister's name is the pack's (else her elder's, as her sister): her outfit's row names her elder.
+      const name = isSister(characterId) ? sisterNameOf(pack, characterId, row?.name || null) : null
+      album.set(characterId, row ? { ...row, id: characterId, ...(name ? { name } : {}) } : unknownRow(characterId, name))
       const stat = view.stats.get(outfit)
       if (stat) stats.set(characterId, stat)
     }
@@ -61,8 +65,19 @@ export function castLens(pack: StoryPack): (view: MasterView) => MasterView {
   }
 }
 
+/** The outfit anyone's art shows: a cast Uma's (her cast entry's, else master data's default); a sister's own outfit;
+ * one of the town's roles, the Uma who plays it; any other character of master data's, her default outfit; anything
+ * else (an outfit id itself), as it is. Outfit ids and character ids never meet, so a character id maps safely. */
+export function artResolver(pack: StoryPack): (id: string) => string {
+  return (id) => {
+    if (castEntry(pack, id) || isSister(id)) return outfitOf(pack, id)
+    const who = isCastId(id) ? speakerId(pack, id) : id
+    return pack.master?.outfits.get(who) ?? who
+  }
+}
+
 /** Turns the pack on: master data's view through the cast, and the resolver the album's art reads. */
 export function installStory(pack: StoryPack): (id: string) => string {
   setMasterLens(castLens(pack))
-  return (id) => (castEntry(pack, id) ? outfitOf(pack, id) : id)
+  return artResolver(pack)
 }

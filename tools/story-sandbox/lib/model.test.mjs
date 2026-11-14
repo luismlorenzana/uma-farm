@@ -136,7 +136,7 @@ test('the conversations’ choosing rule: the place, then temperaments, then lin
   assert.equal(seedOf('abc'), seedOf('abc'))
 })
 
-test('across the files: every chapter once, each closing scene names who opens the next, and the coverage', () => {
+test('across the files: every chapter once, and the coverage; the town\'s people are named at run time, never checked by name', () => {
   const one = parseChapter({ ...chapter({ chapter: 1, layer: 'scripted', brings: ['mayor'] }), scenes: [
     { id: 'scene:1:open', title: 'O', outline, beats: [say('mayor', '“Welcome.”')] },
     { id: 'scene:1:close', title: 'C', outline, beats: [newest(), say('mayor', '“Someone will come.”')] },
@@ -145,17 +145,12 @@ test('across the files: every chapter once, each closing scene names who opens t
   const cross = crossCheck([one, two], [{ temperament: 'quick', hearts: 2, layer: 'outline' }, { temperament: 'quick', hearts: 2, layer: 'scripted' }],
     [template('conv.any.1.any.a', 'any', 1), template('conv.field.1.x', 'field', 1), template('conv.field.1.x', 'field', 1), template('conv.gate.1.x2', 'gate', 1)], game)
   assert.ok(cross.issues.includes('No draft for chapter 3'))
-  assert.ok(cross.issues.includes('Chapter 1’s closing scene doesn’t name Bo Kent, who opens chapter 2'))
+  assert.ok(!cross.issues.some((i) => /doesn’t name/.test(i)))
   assert.ok(cross.issues.includes('Two story beats for quick at 2 hearts'))
   assert.ok(cross.issues.includes('Two conversations with the id conv.field.1.x'))
   const [h1] = cross.conversations
   assert.deepEqual({ any: h1.any, places: h1.places, other: h1.other, catchAll: h1.catchAll, counted: h1.counted, target: h1.target },
     { any: 1, places: { field: 2, pen: 0 }, other: 1, catchAll: true, counted: 3, target: 24 })
-  const named = parseChapter({ ...chapter({ chapter: 1, layer: 'scripted', brings: ['mayor'] }), scenes: [
-    { id: 'scene:1:open', title: 'O', outline, beats: [say('mayor', '“Welcome.”')] },
-    { id: 'scene:1:close', title: 'C', outline, beats: [newest(), say('mayor', '“Bo Kent will come.”')] },
-  ] }, game).chapter
-  assert.ok(!crossCheck([named, two], [], [], game).issues.some((i) => /doesn’t name/.test(i)))
 })
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')

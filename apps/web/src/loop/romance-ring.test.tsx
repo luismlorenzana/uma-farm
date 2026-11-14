@@ -1,4 +1,4 @@
-// The ring bench, the proposal and the wedding on screen: Ida Stone's
+// The ring bench, the proposal and the wedding on screen: the smith's
 // scene over the farm, the Forge's quick look and the bench's sheet making a ring (a slot swapped), the proposal's ring
 // picker and its Engaged stage-up, the wedding's place, guests, reception and Married stage-up, her profile's engraving,
 // ring and better ring, and the Forge before the bench. The invented stand-in pack
@@ -46,7 +46,7 @@ const [ONE, TWO, THREE] = ['9000001', '9000002', '9000003']
 const save = (): SaveV4 => useGame.getState().save as SaveV4
 
 /** A named farm on day 21, the stand-in's three home (`joinStandIns`) and their arrivals played; 9000001 at `love`. With the bench standing,
- * Ida Stone's scene is read unless `more` brings its own Diary. */
+ * the smith's scene is read unless `more` brings its own Diary. */
 function farm(love: Partial<Love> = {}, more: Partial<SaveV4> = {}): SaveV4 {
   const fresh = { ...newSave('u1', AT), farmer: { name: 'Robin' }, calendar: { day: DAY } }
   const joined = joinStandIns(readScene(fresh, 'scene:1:open'), fixture.pack!)
@@ -127,14 +127,15 @@ afterEach(async () => {
 })
 
 describe('the ring bench', () => {
-  it('opens with Ida Stone\'s scene once the summary is away; See the bench opens its sheet', async () => {
+  it('opens with the smith\'s scene once the summary is away; See the bench opens its sheet', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm({}, { ...bench, summary: null, diary: farm().diary }) })
     await render(<div />, '/')
     await find('[data-scene="scene:bench"]')
     expect($('[data-scene-title]')?.textContent).toBe('The Ring Bench')
     expect($('[data-speaker]')).toBeNull()
     await click($('[data-beat]'))
-    expect($('[data-speaker]')?.textContent).toBe('Ida Stone')
+    // The smith is the Uma who plays the role; with no master data for the town's people, the role's words.
+    expect($('[data-speaker]')?.textContent).toBe('The smith')
     await click($('[data-action="skip"]'))
     await find('[data-bench-card]')
     await click($('[data-action="see-bench"]'))
@@ -229,7 +230,7 @@ describe('the proposal', () => {
 })
 
 describe('the wedding', () => {
-  it('asks the place, plays on its card with the guests, then the reception (Marta\'s cake), and closes on Married', async () => {
+  it('asks the place, plays on its card with the guests, then the reception (the bakery\'s cake), and closes on Married', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm({ stage: 'wedding', level: 10, points: 0, last: DAY - 1, ring: 3 }, bench) })
     await render(<HeartsPage />, `/hearts?event=${ONE}`)
     await find('[data-place-picker]')
@@ -254,11 +255,11 @@ describe('the wedding', () => {
     // Nothing saved before the reception.
     expect(save().love[ONE]!.stage).toBe('wedding')
     await tapUntil('[data-reception]')
-    expect($('[data-action="cake"]')?.textContent).toBe('Serve Marta’s cake · 1 day')
-    expect($('[data-no-dish]')?.textContent).toContain('Marta’s bakery sends a cake')
+    expect($('[data-action="cake"]')?.textContent).toBe('Serve the bakery’s cake · 1 day')
+    expect($('[data-no-dish]')?.textContent).toContain('the town’s bakery sends a cake')
     await click($('[data-action="cake"]'))
     await find('[data-level-up]')
-    expect($('[data-card-wedding]')?.textContent).toBe('WeddingThe Fields · Marta’s bakery sends a cake · everyone well fed 1 day')
+    expect($('[data-card-wedding]')?.textContent).toBe('WeddingThe Fields · the town’s bakery sends a cake · everyone well fed 1 day')
     expect(save().love[ONE]).toMatchObject({ stage: 'spouse', level: 0, wed: DAY, ring: 3 })
     expect(save().love[ONE]!.flags).toEqual(expect.arrayContaining(['wedding:fields', 'vow:3']))
     expect(save().today.reception).toBe(1)

@@ -25,7 +25,7 @@ import type { FarmSave, Love, SaveV4 } from '../save/v4'
 import { addGoods, parseStockKey } from '../save/warehouse'
 import { type Tie } from '../story/authored'
 import { type StoryPack } from '../story/pack'
-import { favouriteOf, pairLevels, tieStrength } from '../story/placeholders'
+import { favouriteOf, isTownPerson, pairLevels, tieStrength } from '../story/placeholders'
 
 // --- Hearts ------------------------------------------------------------------------------------------------------
 
@@ -77,9 +77,10 @@ export function tiesOf(pack: Pick<StoryPack, 'ties'>, save: Pick<FarmSave, 'bond
   }).sort((x, y) => tieStrength(y.tie) - tieStrength(x.tie) || y.points - x.points || x.order - y.order)
 }
 
-/** Her closest friend: her first tie by `tiesOf`, or null for an Uma the ties don't hold. Every cast
- * Uma has two ties, so she always has one. */
-export const closestFriend = (pack: Pick<StoryPack, 'ties'>, save: Pick<FarmSave, 'bonds'>, id: string): string | null => tiesOf(pack, save, id)[0]?.with ?? null
+/** Her closest friend: her first tie by `tiesOf` with someone who can share the farm, or null for an Uma the ties don't
+ * hold. A tie with one of the town's people builds no bond, so she's never the closest. */
+export const closestFriend = (pack: Pick<StoryPack, 'ties'> & Partial<Pick<StoryPack, 'town'>>, save: Pick<FarmSave, 'bonds'>, id: string): string | null =>
+  tiesOf(pack, save, id).find((t) => !isTownPerson(pack, t.with))?.with ?? null
 
 /** The factor on what a pair earns: ×1.5 when either is at Romance 4 or later and the other is her closest
  * friend; once, never ×2.25 when both are. */

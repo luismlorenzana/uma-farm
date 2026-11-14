@@ -12,9 +12,9 @@ outfit and a face for each expression; the game puts the face over the bust. The
 | Asked | Where | When |
 |---|---|---|
 | The welcome list's five arrival scenes are written as Gate visits on mornings one to five; eleven Umas have their own trigger to meet | [F67](../handoff/tasks/F67-meeting-her.md) | With F67 |
-| The town's people are all Umas from the Uma Ranker's NPC board, mapped role for role (14 roles); the town's six spots and each Uma's favourite spot come from the pack | [F66](../handoff/tasks/F66-the-town.md) | With F66 |
-| The Ranker's 24 sisters (an outfit presented as her own character, id `s<outfitId>`) in the town, the cast and the ties | [F66](../handoff/tasks/F66-the-town.md) | With F66 |
-| Ties may name one of the town's people (no bond, a line on both profiles) | [F66](../handoff/tasks/F66-the-town.md) | With F66 |
+| The town's people are all Umas from the Uma Ranker's NPC board, mapped role for role (14 roles); the town's six spots and each Uma's favourite spot come from the pack | [The town](../game-mechanics.md#the-town); the menu's [`town.json`](../story-pack.md#the-town-townjson) | Shipped (F66) |
+| The Ranker's 24 sisters (an outfit presented as her own character, id `s<outfitId>`) in the town, the cast and the ties | The menu's [sisters](../story-pack.md#sisters): her name in her cast entry, her art her outfit's | Shipped (F66) |
+| Ties may name one of the town's people (no bond, a line on both profiles) | The menu's [ties](../story-pack.md#the-ties-tiesjson) | Shipped (F66) |
 | Chapters gated on builds (the Mine, the Quarry, the Cutter, the Kitchen, the Restaurant, the Forge), and ids for the dock and the boat | [Building](../game-mechanics.md#building): `dock` and `boat` are place ids a `built` gate can name | Shipped (F64) |
 | Group scenes for 10 families and 17 crews | [F40](../handoff/tasks/F40-story-authoring.md) | Later, with Phase 2's long game |
 

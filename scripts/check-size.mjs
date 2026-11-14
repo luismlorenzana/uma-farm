@@ -22,7 +22,8 @@ export const MAIN_JS_BUDGET = 180_000
  * the morning's invitation answers and the night's fade; and the perks' terms and effects; and the ring
  * bench's rules, sheet, view, actions and scene, and the wedding's rules; and the homestead's and the household's
  * rules, the homestead's sheet, view, actions and map rows, the morning's house answer, the night level's card and the
- * household player; and the story pack's delivery, its index and released pack; and the HD-2D farm's stage:
+ * household player; and the story pack's delivery, its index and released pack; and the names of anyone in town, the
+ * town's rules, its screen, its view and its talk; and the HD-2D farm's stage:
  *three.js, uma-stage's band stage and its stand-in kit, the stage Home, its helpers and the farm's design, and
  * kit-farm's loader with its atlas; and the Umas on the stage, their figures and looks.
  * Paths
@@ -128,6 +129,11 @@ export const LAZY_MODULES = [
   'src/loop/HouseholdPlayer.tsx',
   'src/story/delivery.ts',
   'domain/src/story/release.ts',
+  'src/story/people.ts',
+  'domain/src/town/town.ts',
+  'src/town/TownPage.tsx',
+  'src/town/town-view.ts',
+  'src/town/town-actions.ts',
   'three/build/three.module.js',
   'three/build/three.core.js',
   '@luismlorenzana/uma-stage/dist/esm/stage/bandStage.js',

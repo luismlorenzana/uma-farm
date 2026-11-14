@@ -130,6 +130,7 @@ describe('the homestead on the map', () => {
     expect(places[0]!.to).toBe('/?sheet=homestead&house=0')
     const shop = FARM_PLACES.find((p) => p.id === 'shop')!
     expect(placeOnV4(shop, layout)).toEqual({ row: 9, col: 0 })
+    expect(placeOnV4(FARM_PLACES.find((p) => p.id === 'town')!, layout)).toEqual({ row: 10, col: 1 })
     expect(placeOnV4(FARM_PLACES.find((p) => p.id === 'dorm')!, layout)).toMatchObject({ row: 6, col: 2 })
     // Before the first wedding the lot waits; with two houses built and one married the map holds one homestead row: the
     // second's lots show from three married.
@@ -139,9 +140,9 @@ describe('the homestead on the map', () => {
     expect(homesteadPlaces(three, homesteadLayout(three), new Set()).map((p) => p.id)).toEqual(['farmhouse', 'house-1', 'house-2'])
   })
 
-  it('places the eight rows on 36 tiles before the homestead grows them', () => {
-    expect(FARM_MAP_TILES).toBe(36)
-    expect(FARM_PLACES.map((p) => placeAt(p))).toEqual(FARM_PLACES.map((p) => ({ x: [0.2, 0.5, 0.8][p.col], y: (3 + (p.row - 1) * 4 + 0.5) / 36 })))
+  it('places the nine rows on 40 tiles before the homestead grows them', () => {
+    expect(FARM_MAP_TILES).toBe(40)
+    expect(FARM_PLACES.map((p) => placeAt(p))).toEqual(FARM_PLACES.map((p) => ({ x: [0.2, 0.5, 0.8][p.col], y: (3 + (p.row - 1) * 4 + 0.5) / 40 })))
   })
 })
 

@@ -262,7 +262,7 @@ describe('the wedding', () => {
     expect(parseSaveV4(json(save))).toEqual(save)
   })
 
-  it('serves a ★3 dish for two days, used; no dish: Marta\'s cake, one day; never shortens a meal', () => {
+  it('serves a ★3 dish for two days, used; no dish: the bakery\'s cake, one day; never shortens a meal', () => {
     expect([1, 2, 3, 4, 5].map(receptionDays)).toEqual([1, 1, 2, 2, 3])
     const dish = give(engaged(), 'dish-fish-3', 3)
     expect(receptionDishes(dish)).toEqual([{ dish: 'dish-fish-3', stars: 3, count: 1, days: 2 }])
@@ -366,7 +366,7 @@ describe('save v4 grows in place', () => {
 })
 
 describe('a whole wedding day on the stand-in', () => {
-  it('Romance 8 → the bench → a ring from planks → the proposal → the wedding with Marta\'s cake → married 1/3', () => {
+  it('Romance 8 → the bench → a ring from planks → the proposal → the wedding with the bakery\'s cake → married 1/3', () => {
     let save = withLove({ ...farm(30), memories: { [ONE]: ['r8'] }, arrivals: [...STAND_INS] }, { stage: 'proposal', level: 10, points: 0, last: 29 })
     save = runNight(save, context())
     expect(benchOpen(save)).toBe(true)

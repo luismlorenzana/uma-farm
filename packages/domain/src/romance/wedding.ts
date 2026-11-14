@@ -32,9 +32,9 @@ export const vowFlag = (n: number): string => `vow:${n}`
 /** A dish's well-fed days at the reception, by its stars (read from the dish's stars since the Warehouse holds
  * no play tier): ★1–2 one, ★3–4 two, ★5 three. */
 export const receptionDays = (stars: number): number => (stars >= 5 ? 3 : stars >= 3 ? 2 : 1)
-/** Marta's bakery's cake, with no dish in the Warehouse (no Kitchen before the Kitchen): a Rough meal, one day. */
+/** The town bakery's cake, with no dish in the Warehouse (no Kitchen before the Kitchen): a Rough meal, one day. */
 export const CAKE_DAYS = 1
-/** The reception: a dish at its stars, or null for Marta's cake. */
+/** The reception: a dish at its stars, or null for the bakery's cake. */
 export type Reception = { dish: string; stars: number } | null
 
 /** A dish the reception could serve. */

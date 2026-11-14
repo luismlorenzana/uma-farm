@@ -1,7 +1,8 @@
 // The pages, inside the shell: `/` the farm map (`?peek=<place>` a quick look), the Hearts tab `/hearts` (`?view=work`
 // the roster's album, `?uma=` her profile), `/diary` and `/account`; the Warehouse by stars, `/warehouse` (`?pick=bin`
 // to ship from it); the Fields, `/fields`; the forest, Fishery and stations, `/forest`, `/fishery`, `/mill`, `/sawmill`,
-// `/smokehouse`; and the Dorm, `/dorm`. `/roster` lands on the Hearts tab's Work view. Every page but Account loads on
+// `/smokehouse`; the Dorm, `/dorm`; and the Town, `/town` (`?view=people` the People list). `/roster` lands on the Hearts
+// tab's Work view. Every page but Account loads on
 // demand; anything else goes to the farm.
 import { lazy, Suspense, type ReactNode } from 'react'
 import { createBrowserRouter, Navigate, useLocation, type RouteObject } from 'react-router'
@@ -16,6 +17,7 @@ const WarehousePage = lazy(() => import('../loop/WarehousePage'))
 const FieldsPage = lazy(() => import('../loop/FieldsPage'))
 const WorkPlace = lazy(() => import('../loop/WorkPlace'))
 const DormPage = lazy(() => import('../loop/DormPage'))
+const TownPage = lazy(() => import('../town/TownPage'))
 
 const loading = (page: ReactNode) => <Suspense fallback={<p className="p-4 text-ink-soft">Loading…</p>}>{page}</Suspense>
 const work = (place: 'forest' | 'fishery' | 'mill' | 'sawmill' | 'smokehouse'): RouteObject => ({ path: place, element: loading(<WorkPlace key={place} place={place} />) })
@@ -37,6 +39,7 @@ export const ROUTES: RouteObject[] = [
   { path: 'warehouse', element: loading(<WarehousePage />) },
   { path: 'fields', element: loading(<FieldsPage />) },
   { path: 'dorm', element: loading(<DormPage />) },
+  { path: 'town', element: loading(<TownPage />) },
   { path: 'account', element: <AccountView /> },
   { path: '*', element: <Navigate to="/" replace /> },
 ]

@@ -12,7 +12,7 @@
 // keepsake from Friendship 10. **Ring**: from Romance 8 the engraving her ring will carry (her R8 beat's line), from
 // the proposal her ring and its bonus at her line, and **Give her the Cobalt Ring** for any better one in the Warehouse (the
 // old one comes back); "Needs a ring" links to the Forge's bench. Loaded on demand.
-import { birthdaysOf, canAsk, LADDER_COLOURS, ladderOf, levelWords, readiness, type SaveV4, type Temperament } from '@farm/domain'
+import { birthdaysOf, canAsk, LADDER_COLOURS, ladderOf, levelWords, readiness, type SaveV4, type StoryPack, type Temperament } from '@farm/domain'
 import { giveBetterRing } from './bench-actions'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -21,6 +21,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import type { MasterView } from '../master/master'
+import { nameOfAnyone } from '../story/people'
 import { memoryCount, setupAdvice } from './event-view'
 import { ReadyChip, RouteTrack } from './HeartMarks'
 import {
@@ -56,7 +57,8 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
   }, [side])
   const love = save.love[id]
   if (!love) return null
-  const nameOf = (other: string) => master.album.get(other)?.name ?? 'An Uma'
+  // Her ties may name a sister or one of the town's people: master data's and the pack's names for anyone.
+  const nameOf = (other: string) => nameOfAnyone(master, pack as StoryPack, other)
   const name = nameOf(id)
   const card = nextCard(save, pack, id, nameOf)
   const colour = LADDER_COLOURS[ladderOf(love.stage)]
@@ -188,7 +190,7 @@ function TieItem({ id, tie, nameOf }: { id: string; tie: TieRow; nameOf: (id: st
           {tie.closest && <span className="shrink-0 rounded-full bg-[#e0567a]/12 px-1.5 text-[11px] font-semibold text-[#c2385e]" data-closest-chip>Closest</span>}
         </span>
         <span className="block text-[12px] text-ink-soft tabular-nums">
-          {tie.words}{tie.here && tie.next !== null ? ` · ${tie.points}/${tie.next}` : ''}
+          {tie.town ? `${tie.words} · ${tie.line}` : `${tie.words}${tie.here && tie.next !== null ? ` · ${tie.points}/${tie.next}` : ''}`}
         </span>
       </span>
       {tie.unread.length > 0 && (
@@ -197,9 +199,11 @@ function TieItem({ id, tie, nameOf }: { id: string; tie: TieRow; nameOf: (id: st
           Read
         </Link>
       )}
-      {tie.here
-        ? <span className="shrink-0 text-[14px] tracking-[-1px]" aria-label={`Bond ${tie.hearts} of 5`}><span className="text-[#e0567a]">{'♥'.repeat(tie.hearts)}</span><span className="text-ink-faint/40">{'♥'.repeat(5 - tie.hearts)}</span></span>
-        : <span className="shrink-0 text-[12px] font-semibold text-ink-faint" data-not-here>Not here yet</span>}
+      {tie.town
+        ? <Link to={`/town?talk=${tie.with}`} state={{ back: true }} className="grid min-h-11 shrink-0 place-items-center text-[12px] font-semibold text-accent-strong" data-in-town>In town ›</Link>
+        : tie.here
+          ? <span className="shrink-0 text-[14px] tracking-[-1px]" aria-label={`Bond ${tie.hearts} of 5`}><span className="text-[#e0567a]">{'♥'.repeat(tie.hearts)}</span><span className="text-ink-faint/40">{'♥'.repeat(5 - tie.hearts)}</span></span>
+          : <span className="shrink-0 text-[12px] font-semibold text-ink-faint" data-not-here>Not here yet</span>}
     </li>
   )
 }

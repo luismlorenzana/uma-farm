@@ -15,10 +15,13 @@ describe('the farm map', () => {
   })
 
   it('stands the rows four tiles apart on the tile grid, taller than a phone\'s screen', () => {
-    expect(FARM_MAP_TILES).toBe(36)
+    expect(FARM_MAP_TILES).toBe(40)
     expect(FARM_MAP_TILES * 24).toBeGreaterThan(844 - 44 - 56 - 47 - 34)
     const cells = FARM_PLACES.map((p) => placeCell(placeAt(p), 17, FARM_MAP_TILES))
-    expect([...new Set(cells.map((c) => c.row))]).toEqual([3, 7, 11, 15, 19, 23, 27, 31])
+    expect([...new Set(cells.map((c) => c.row))]).toEqual([3, 7, 11, 15, 19, 23, 27, 31, 35])
+    // The Town stands alone in the middle of the last row, its screen at /town.
+    expect(placeAt(farmPlace('town')!).x).toBe(0.5)
+    expect(placeLink(day1, farmPlace('town')!)).toBe('/town')
     expect(FARM_PLACES.filter((p) => p.row === 1).map((p) => placeAt(p).x)).toEqual([0.2, 0.5, 0.8])
   })
 

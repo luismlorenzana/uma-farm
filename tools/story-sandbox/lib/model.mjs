@@ -1,7 +1,7 @@
 // The Farm Story Sandbox's model (tools/story-sandbox/README.md): chapter drafts, story beats and conversation
-// templates from docs/story/, checked against the game's story as built (lib/game.mjs). The farm's story is original:
-// the town's cast speaks by name, and Umas speak only in roles the game fills at run time, so no Uma's name is in this
-// code or in the drafts. The sample crew below is invented, one Uma a temperament.
+// templates from docs/story/, checked against the game's story as built (lib/game.mjs). The town's people are Umas in the
+// town's roles, named from master data at run time, and the farm's Umas speak only in roles the game fills at run time,
+// so no Uma's name is in this code. The sample crew below is invented, one Uma a temperament.
 
 const object = (v) => typeof v === 'object' && v !== null && !Array.isArray(v)
 const text = (v, max = 4000) => typeof v === 'string' && v.trim().length > 0 && v.length <= max
@@ -24,7 +24,7 @@ const PLACEHOLDERS = { scene: ['name'], beat: ['name', 'farm'], conversation: ['
 
 /** Who may speak a scene's beat. `game` marks the kinds uma-farm's scene players fill today (the ring bench's, `story/bench.ts`). */
 export const SPEAKERS = {
-  cast: { game: true, uma: false, about: 'One of the town’s cast, by id: their disc and their name' },
+  cast: { game: true, uma: false, about: 'One of the town’s roles, by id: the Uma who plays it (her master-data name and bust in the game)' },
   narrator: { game: true, uma: false, about: 'Narration: no speaker, in italics' },
   'first-hand': { game: true, uma: true, about: 'Your first hands (index 0–2), the start’s three. The line is left empty: she says her temperament’s hello' },
   'newest-hand': { game: false, uma: true, about: 'Your newest hand: the last to join (the game plays no chapter scenes now)' },
@@ -251,17 +251,7 @@ export function crossCheck(chapters, beats, templates, game) {
     const n = Number(id.split(':')[1])
     if (!byNumber.has(n)) issues.push(`The game plays ${id}, but chapter ${n} has no draft`)
   }
-  // Each closing scene names who opens the next chapter, as chapter 1's names Dale Hart.
-  const castById = new Map((game?.cast ?? []).map((c) => [c.id, c]))
-  for (const c of chapters) {
-    const next = byNumber.get(c.chapter + 1), close = c.scenes.find((s) => s.kind === 'close')
-    if (!next || !close?.beats.length || !game?.ok) continue
-    const said = close.beats.map((b) => b.line).join(' ')
-    const names = next.brings.map((id) => castById.get(id)).filter(Boolean)
-    if (names.length && !names.some((m) => said.includes(m.name.split(' ').at(-1)))) {
-      issues.push(`Chapter ${c.chapter}’s closing scene doesn’t name ${names.map((m) => m.name).join(' or ')}, who opens chapter ${c.chapter + 1}`)
-    }
-  }
+  // The town's people are named from master data at run time, so a draft's lines aren't checked for their names.
   const seen = new Map()
   for (const b of beats) {
     const k = `${b.temperament}.${b.hearts}`

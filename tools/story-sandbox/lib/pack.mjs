@@ -20,9 +20,17 @@ export function parseCastPack(value) {
   return value
 }
 
+/** A character as the page shows her: her id, name and pictures (their paths as the server serves them). */
+const shown = (pack) => ({ sources, profile, ...c }) => ({
+  ...c, images: Object.fromEntries(Object.entries(c.images ?? {}).map(([k, p]) => [k, `/img/${pack.id}/${p.slice(7)}`])),
+})
+
 /** The pack's Umas only (boss boards aren't in the farm's story), with their image paths as the server serves them. */
 export function packUmas(pack) {
-  return pack.characters.filter((c) => c.role === 'hero').map(({ sources, profile, ...c }) => ({
-    ...c, images: Object.fromEntries(Object.entries(c.images ?? {}).map(([k, p]) => [k, `/img/${pack.id}/${p.slice(7)}`])),
-  }))
+  return pack.characters.filter((c) => c.role === 'hero').map(shown(pack))
+}
+
+/** Every character of the pack, any board's: the town's people are found among them by id. */
+export function packPeople(pack) {
+  return pack.characters.map(shown(pack))
 }

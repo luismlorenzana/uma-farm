@@ -111,14 +111,14 @@ export interface EventOutcome {
   ring?: string
   /** The wedding's place: one of her places. */
   place?: string
-  /** The wedding's reception: a dish at its stars, used, or null for Marta's cake (with no dish held). */
+  /** The wedding's reception: a dish at its stars, used, or null for the bakery's cake (with no dish held). */
   reception?: Reception
 }
 
 /** What a wedding gave, for its cards. */
 export interface WeddingCard {
   place: string
-  /** The dish served, or null for Marta's cake. */
+  /** The dish served, or null for the bakery's cake. */
   dish: string | null
   stars: number | null
   /** Well-fed days for everyone on the farm tomorrow. */

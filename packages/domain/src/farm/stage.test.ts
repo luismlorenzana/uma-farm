@@ -99,9 +99,9 @@ describe('the farm design', () => {
     expect(farmProblems({ ...SAMPLE_FARM, props: [{ name: 'not-a-frame', x: 0, z: 0 }] }, standInFarmAtlas())).toEqual(['no prop frame not-a-frame'])
   })
 
-  it('lays the map\'s rows and the Farmhouse\'s, 36 tiles deep, the Gate in the middle of the seventh, the town edge last', () => {
+  it('lays the map\'s rows and the Farmhouse\'s, 40 tiles deep, the Gate in the middle of the seventh, the town edge and the Town last', () => {
     const design = farmDesign(fresh())
-    expect(design.cells).toHaveLength(9 * FARM_BAND)
+    expect(design.cells).toHaveLength(10 * FARM_BAND)
     expect(design.markers.find((m) => m.kind === 'gate')).toEqual({ kind: 'gate', id: 'gate', x: 4, z: 26 })
     const ids = (group: (g: string) => boolean) => MAP_PLACES.filter((p) => group(p.group)).map((p) => p.id)
     expect(design.markers.filter((m) => m.kind === 'place').map((m) => m.id)).toEqual([...ids((g) => g !== 'town'), 'farmhouse', ...ids((g) => g === 'town')])
@@ -110,11 +110,14 @@ describe('the farm design', () => {
     expect(design.markers.filter((m) => m.kind === 'lot').map((m) => m.id)).toEqual(['house-1', 'house-2'])
     for (const place of MAP_PLACES) {
       const m = design.markers.find((k) => k.kind === 'place' && k.id === place.id)!
-      // The town edge sits below the homestead's one row.
+      // The town edge and the Town sit below the homestead's one row.
       expect([m.x, m.z], place.id).toEqual([place.col * 3 + 1, (place.row - (place.group === 'town' ? 0 : 1)) * FARM_BAND + 2])
     }
     // Path rows under every band; the pond and the pit at level 0.
-    for (let band = 0; band < 9; band++) expect(design.cells[band * FARM_BAND + 3]).toBe('ppppppppp')
+    for (let band = 0; band < 10; band++) expect(design.cells[band * FARM_BAND + 3]).toBe('ppppppppp')
+    // The Town, a plain place for now: the spine's path on into town, in the middle.
+    expect(design.markers.find((m) => m.kind === 'place' && m.id === 'town')).toEqual({ kind: 'place', id: 'town', x: 4, z: 38 })
+    expect(design.cells.slice(36, 39).map((row) => row.slice(3, 6))).toEqual(['ppp', 'ppp', 'ppp'])
   })
 
   it('stands open places by their recipe and the rest as overgrown lots', () => {
@@ -150,14 +153,15 @@ describe('the farm design', () => {
 
   it('grows the homestead\'s rows after the yard: the Farmhouse, the houses, a row\'s lots with its married', () => {
     const three = farmDesign(withHouses(3))
-    expect(three.cells).toHaveLength(10 * FARM_BAND)
+    expect(three.cells).toHaveLength(11 * FARM_BAND)
     expect(three.markers.filter((m) => m.kind === 'lot')).toEqual([])
     expect(farmDesign(withHouses(3, false, 3)).markers.filter((m) => m.kind === 'lot')).toEqual([{ kind: 'lot', id: 'house-4', x: 4, z: 34 }, { kind: 'lot', id: 'house-5', x: 7, z: 34 }])
     expect(three.buildings.filter((b) => b.id === 'farmhouse' || b.id.startsWith('house-')).map((b) => b.id)).toEqual(['farmhouse', 'house-1', 'house-2', 'house-3'])
     expect(three.markers.find((m) => m.kind === 'place' && m.id === 'shop')!.z).toBe(9 * FARM_BAND + 2)
-    expect(farmDesign(withHouses(6, true)).cells).toHaveLength(11 * FARM_BAND)
+    expect(three.markers.find((m) => m.kind === 'place' && m.id === 'town')!.z).toBe(10 * FARM_BAND + 2)
+    expect(farmDesign(withHouses(6, true)).cells).toHaveLength(12 * FARM_BAND)
     // A fresh farm: the Farmhouse's row.
-    expect(farmDesign(fresh()).cells).toHaveLength(9 * FARM_BAND)
+    expect(farmDesign(fresh()).cells).toHaveLength(10 * FARM_BAND)
   })
 
   it('hangs every window box just under a ground-floor window\'s sill, at 1¼ levels', () => {

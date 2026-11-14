@@ -426,7 +426,7 @@ describe('the format: household.json and wishes', () => {
       'Household scene at 5: written twice; the later one is skipped',
       'houseLines 9000001 1: its line is 121 characters; the screen shows 120; skipped',
     ])
-    expect(read.notes).toContain('Household scene at 5 open, step 4: 9000001 isn’t one who speaks here (one outside the cast shows as “An Uma”)')
+    expect(read.notes).toContain('Household scene at 5 open, step 4: 9000001 isn’t one who speaks here (one outside the cast and the town’s people shows as “An Uma”)')
     expect(read.notes).toContain('houseLines 9000001 2: “sir” genders the farmer')
     expect(read.notes).toContain('houseLines 9000099: not in the cast')
     expect(read.value!.scenes!.map((s) => s.at)).toEqual([5, 15])

@@ -176,9 +176,11 @@ export function farmHome(save: Pick<SaveV4, 'dorm' | 'love'>): CharacterId[] {
 /** Whether she's on the farm today: home in the Dorm (leaving tomorrow or not), or in her house. */
 export const atHome = (save: Pick<SaveV4, 'dorm' | 'love'>, id: CharacterId): boolean => save.dorm.home.includes(id) || housed(save, id)
 
-/** A bond's key: the two outfit ids in numeric order, joined by a colon. */
+/** A bond's key: the two ids in numeric order, joined by a colon. A sister's id (`s<outfitId>`) sorts by its number, and
+ * after a plain id of the same number. */
 export function pairKey(a: OutfitId, b: OutfitId): string {
-  return Number(a) <= Number(b) ? `${a}:${b}` : `${b}:${a}`
+  const n = (id: string) => Number(id.startsWith('s') ? id.slice(1) : id)
+  return n(a) < n(b) || (n(a) === n(b) && a <= b) ? `${a}:${b}` : `${b}:${a}`
 }
 
 /** Master data's character id: the roster's key. */
@@ -342,6 +344,16 @@ export function residentsOf(save: Pick<SaveV4, 'love'>, house: number): Characte
 export const vowsOn = (homestead: Pick<Homestead, 'finale'>, day: number): boolean =>
   homestead.finale > 0 && day > homestead.finale && (day - homestead.finale) % DAYS_PER_YEAR === 0
 
+/** Her talks in town: how many days you've talked with her, and the last. One a day counts. */
+export interface TownTalks {
+  /** Days you've talked with her, in all. */
+  talks: number
+  /** The last day you talked with her: a talk on it counts no more. */
+  last: number
+}
+/** Whom the town holds talks for: a character id, or a sister's (`s<outfitId>`). */
+export const TOWN_ID = /^s?[1-9]\d{0,11}$/
+
 /** Save v4: the farm's one save. */
 export interface SaveV4 {
   version: 4
@@ -382,6 +394,8 @@ export interface SaveV4 {
   /** Arrival scenes played or skipped, in the order they played. */
   arrivals: CharacterId[]
   summary: MorningSummary | null
+  /** Your talks in town, by character: her talks so far and the last day. An older v4 has none. */
+  town: Record<string, TownTalks>
 }
 
 /** The save the game plays: v4. */
@@ -429,6 +443,7 @@ export function newSave(uid: string, now: string): SaveV4 {
     memories: {},
     arrivals: [],
     summary: null,
+    town: {},
   }
 }
 

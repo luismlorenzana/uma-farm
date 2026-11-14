@@ -1,5 +1,6 @@
-// The farm map's places: uma-kit's Hub map in eight rows of three, gathering and its station and the ranch or a
-// workshop on the first five, then the yard and the town edge. One source for the map, its quick looks and the menu.
+// The farm map's places: uma-kit's Hub map in rows of three, gathering and its station and the ranch or a workshop on
+// the first five, then the yard, the town edge and, below it in the middle, the Town. One source for the map, its quick
+// looks and the menu.
 // Where each stands on the screen is the app's; what opens each is its rule's, read from the save. Until a place's
 // screen lands, the app shows it locked.
 //
@@ -20,6 +21,7 @@ export const FARM_PLACE_IDS = [
   'bin', 'warehouse', 'dorm',
   'board', 'gate', 'dock',
   'shop', 'festival', 'expeditions',
+  'town',
   'boat',
 ] as const
 export type FarmPlaceId = typeof FARM_PLACE_IDS[number]
@@ -86,7 +88,7 @@ const build = (rank: number, gold: number, list: readonly BuildGoods[], game: bo
 const place = (id: FarmPlaceId, name: string, group: FarmPlaceGroup, row: number, col: number, frame: string, blurb: string, opens: PlaceOpens,
   borrowed = false, on?: FarmPlaceId): FarmPlace => ({ id, name, group, row, col, frame, borrowed, blurb, opens, ...(on ? { on } : {}) })
 
-/** The 25 places in map order: rows top to bottom, columns left to right, then the boat, drawn at the dock. The builds'
+/** The 26 places in map order: rows top to bottom, columns left to right, then the boat, drawn at the dock. The builds'
  * costs are tuned by the pacing's simulation (`pacing.test.ts`): the farm's own goods (logs, planks, fish, fillets,
  * vegetables) and gold, each affordable within about a season of its offer. */
 export const FARM_PLACES: readonly FarmPlace[] = [
@@ -114,11 +116,14 @@ export const FARM_PLACES: readonly FarmPlace[] = [
   place('shop', 'Shop', 'town', 8, 0, 'exchange', 'Seeds for the season.', START),
   place('festival', 'Festival ground', 'town', 8, 1, 'racecourse', 'A festival on each season’s 10th day.', { by: 'later' }),
   place('expeditions', 'Expedition post', 'town', 8, 2, 'rangers-lodge', 'Parties out for days.', build(7, 25000, [planks(60), fillets(40)], false), true),
+  place('town', 'Town', 'town', 9, 1, 'trophy-hall', 'Who’s out at the town’s spots today, and everyone who lives there.', START, true),
   place('boat', 'Boat', 'yard', 7, 2, 'ley-spring', 'Out past the pier: the Deep Sea’s fish.', build(6, 30000, [planks(60), fillets(30)], true, 'dock'), true, 'dock'),
 ]
 
-/** The map's rows. */
-export const FARM_MAP_ROWS = 8
+/** The map's rows: the farm's seven, the town edge, and the Town below it, alone in the middle. */
+export const FARM_MAP_ROWS = 9
+/** The town's first row, the town edge; the homestead's rows come before it, and the town's rows move down with them. */
+export const TOWN_FIRST_ROW = 8
 /** The places drawn on the map and the stage, each on its own lot: all but the boat, drawn at the dock. */
 export const MAP_PLACES: readonly FarmPlace[] = FARM_PLACES.filter((p) => !p.on)
 

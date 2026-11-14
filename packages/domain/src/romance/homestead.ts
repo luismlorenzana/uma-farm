@@ -18,7 +18,7 @@
 // swapped. A spouse in her house has no Dorm bed but is on the farm (`onFarm`). Never a gate: a wedding never waits for a
 // room. Pure; never stamps. Loaded with the night and the romance's screens.
 import { closestFriend } from '../farm/bonds'
-import { FARM_MAP_ROWS, type PlaceOpens } from '../farm/places'
+import { TOWN_FIRST_ROW, type PlaceOpens } from '../farm/places'
 import { spendGold } from '../save/gold'
 import { SaveRuleError } from '../save/rules'
 import { marriedCount, residentsOf, roomsOf, type SaveV4 } from '../save/v4'
@@ -112,7 +112,7 @@ export interface HomesteadPlace {
   opens: PlaceOpens
 }
 /** The homestead's rows start after the yard (rows 6 and 7), so the town edge stays the map's last row. */
-export const HOMESTEAD_FIRST_ROW = FARM_MAP_ROWS
+export const HOMESTEAD_FIRST_ROW = TOWN_FIRST_ROW
 export const HOMESTEAD_PLACES: readonly HomesteadPlace[] = Array.from({ length: HOUSES + 1 }, (_, n): HomesteadPlace => ({
   id: n === 0 ? 'farmhouse' : `house-${n}`, n, name: n === 0 ? 'Farmhouse' : `House ${n}`,
   row: HOMESTEAD_FIRST_ROW + Math.floor(n / 3), col: n % 3, frame: n === 0 ? 'farmhouse' : 'homestead-house',

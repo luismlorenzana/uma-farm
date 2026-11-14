@@ -1,7 +1,7 @@
 // The story as the game has it: @farm/domain's TypeScript read in place with Node's type stripping. The farm has no
 // global chapters and plays no town scene of its own: the opening's lines are the pack's `opening.json` (else the
-// game's three, `placeholders.ts`), so no chapter scene loads here. It reads the town's cast, the farm's places, the
-// temperaments and the activities. Nothing is copied: edit a story file and the next request reads it again. Needs Node's type stripping
+// game's three, `placeholders.ts`), so no chapter scene loads here. It reads the town's roles (each played by an Uma:
+// `town.json`'s, else master data's), the farm's places, the temperaments and the activities. Nothing is copied: edit a story file and the next request reads it again. Needs Node's type stripping
 // (`--experimental-strip-types` before Node 22.18; `pnpm stories` passes it).
 import { register } from 'node:module'
 import { readdir, stat } from 'node:fs/promises'
@@ -49,7 +49,8 @@ export async function loadGame(src) {
     return {
       ok: true,
       version: v,
-      cast: Object.values(cast.CAST).map((c) => ({ ...c })),
+      // The town's roles; a role's name here is its words ("The smith"): the Uma who plays it is the pack's.
+      cast: Object.values(cast.CAST).map((c) => ({ ...c, name: c.role })),
       hello: hello ? { ...hello } : {},
       scenes,
       sceneFiles: fileOf,
@@ -62,13 +63,14 @@ export async function loadGame(src) {
       authored: {
         rungs: [...authored.RUNGS], places: [...authored.STORY_PLACES], festivals: [...authored.FESTIVALS], tieKinds: [...authored.TIE_KINDS],
         dateGames: [...authored.DATE_GAMES], tones: [...authored.TONES], emotes: [...authored.EMOTES], callings: [...authored.CALLINGS], triggers: [...authored.TRIGGER_KINDS],
+        spots: [...authored.SPOT_IDS],
         defaults: {
           meet: { ...placeholders.DEFAULT_MEET }, chapters: placeholders.DEFAULT_CHAPTERS.map((c) => ({ title: c.title, events: [...c.events] })), welcome: placeholders.DEFAULT_WELCOME,
         },
       },
       validator: {
         readStoryPack: pack.readStoryPack, tagNotes: authored.tagNotes, bibleTagNotes: authored.bibleTagNotes, unscriptedBeats: authored.unscriptedBeats,
-        writtenOf: placeholders.writtenOf,
+        writtenOf: placeholders.writtenOf, townOf: placeholders.townOf,
       },
     }
   } catch (error) {
