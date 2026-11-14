@@ -25,12 +25,24 @@ in the game.
 
 ## Decided
 
-1. **Getting the art to the farm:**
-   - ask uma-platform to carry the illustrations in master data's private release, as it did the portraits;
-   - a family, for example `illustrations`, keyed by character id;
-   - each with its id, title, outfit and **moment** (`meeting`, `beach`, `confession`, `confession-yes`, `wedding`,
-     `wedding-night`, `wedding-night-end`, `night-in`, `companion`, open for more);
-   - never in git; farm-api already reads master data.
+1. **Getting the art to the farm (shipped, uma-platform P176):** master data's private release carries an
+   `illustrations` family keyed by character id, read by **uma-data 1.8.0** (master data latest `e7cdecde7c15`). Never
+   in git.
+   - `client.illustrations(manifest, art, characterId)` returns `{ characterId, universe, scenes }`, or null for an Uma
+     without any, each scene checked against the release's bytes and SHA-256. `scenes` is in the art pipeline's order,
+     so the gallery uses it as is.
+   - Each scene is `{ id, title, outfit, moment, approvedOn, path, width, height, bytes, sha256 }` (1672×941, lossy WebP,
+     300–410 KB). The picture is fetched with `client.file(manifest, path)` and cached by hash, as the portraits are
+     (`apps/web/src/dialogue/portraits.ts`).
+   - `illustrationFor(ills, moment)` returns her first scene for a moment, `illustrationById(ills, id)` returns one by id,
+     and `ILLUSTRATION_MOMENTS` lists the nine moments in story order (`meeting`, `beach`, `confession`,
+     `confession-yes`, `wedding`, `wedding-night`, `wedding-night-end`, `night-in`, `companion`). Moment and outfit names
+     are open.
+   - The tests use `syntheticIllustrations(characterId, moments)` and `buildMemoryRelease(undefined, { illustrations })`
+     from `@luismlorenzana/uma-data/testing`.
+   - The first Uma (character 1068) has one scene per moment. Its ids (for example `confession-flustered` and
+     `confession-loving`) are in uma-platform's `docs/sprites/illustrations.md`.
+   - **More Umas:** when the art pipeline publishes their splash art, send uma-platform each scene's moment.
 2. **A scene shows an illustration** in either case:
    - **the story names one:** a step `illustration: <id>` (a new pack field on the menu);
    - **by default:** the scene's moment matches one of hers. The default mapping:
@@ -54,7 +66,7 @@ in the game.
 
 ## Do
 
-1. The uma-platform request (decision 1).
+1. Pin uma-data 1.8.0 (decision 1).
 2. The domain: the moments, the default mapping, the pack's `illustration` step, and the gallery's unlocks, with tests.
 3. The web: the full-screen illustration in F75's engine, and the gallery on her profile.
 4. Update [the game mechanics](../../game-mechanics.md) and `docs/story-pack.md`.
