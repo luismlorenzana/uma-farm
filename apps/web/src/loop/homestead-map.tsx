@@ -1,9 +1,10 @@
 // The homestead on the farm map (the farm map's rows, grown): its rows sit after the yard and
-// before the town edge, which stays the map's last row: the Farmhouse, House 1 and House 2; Houses 3–5; House 6. Built
-// houses and the next lot show, so the map grows a row at a time. A house's pips are its residents' faces (a Ready one
-// badged ♥) and its free rooms' dots; a tap opens the homestead's sheet at that house; the next lot shows the house's
-// frame locked with "Build · 8,000g" (or what it waits for). Loaded on demand.
-import { homesteadRows, homesteadShown, HOMESTEAD_FIRST_ROW, nextLot, residentsOf, roomsOf, type FarmPlace, type SaveV4 } from '@farm/domain'
+// before the town edge, which stays the map's last row: the Farmhouse, House 1 and House 2; Houses 3–5 with three
+// married; House 6 with six. Built houses and every lot of an open row show, so the map grows a row at a time. A house's
+// pips are its residents' faces (a Ready one badged ♥) and its free rooms' dots; a tap opens the homestead's sheet at
+// that house; the next lot shows the house's frame locked with "Build · 8,000g" once its wedding has come, a lot shows
+// the wedding it waits for. Loaded on demand.
+import { homesteadRows, homesteadShown, HOMESTEAD_FIRST_ROW, houseOpensWords, nextLot, residentsOf, roomsOf, type FarmPlace, type SaveV4 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import type { HubMapPlace, PipModel } from '@luismlorenzana/uma-kit/hub'
 import { mapTilesFor, placeAt } from './farm-map'
@@ -14,7 +15,7 @@ export interface MapLayout {
   tiles: number
   townRow: number
 }
-export function homesteadLayout(save: Pick<SaveV4, 'homestead'>): MapLayout {
+export function homesteadLayout(save: Pick<SaveV4, 'homestead' | 'love'>): MapLayout {
   const townRow = HOMESTEAD_FIRST_ROW + homesteadRows(save)
   return { tiles: mapTilesFor(townRow), townRow }
 }
@@ -30,8 +31,9 @@ export function homesteadPlaces(save: SaveV4, layout: MapLayout, hearts: Readonl
     const at = placeAt({ row: place.row, col: place.col }, layout.tiles)
     const to = `/?sheet=homestead&house=${place.n}`
     if (!built) {
-      const words = lot?.open ? priceWords('Build', lot.cost, 0) : 'Your first wedding'
-      return { id: place.id, name: lot?.open ? words : place.name, frame: place.frame, at, to, locked: true, label: `${place.name}, locked: ${lot?.open ? words : 'Opens with your first wedding'}` }
+      const open = lot?.n === place.n && lot.open
+      const words = open ? priceWords('Build', lot.cost, 0) : houseOpensWords(place.n).replace(/\.$/, '')
+      return { id: place.id, name: open ? words : place.name, frame: place.frame, at, to, locked: true, label: `${place.name}, locked: ${words}` }
     }
     const residents = residentsOf(save, place.n)
     const pips: PipModel[] = [

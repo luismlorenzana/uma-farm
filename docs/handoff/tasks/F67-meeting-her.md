@@ -37,7 +37,7 @@ welcoming you to town.
    - talking to her there meets her trigger;
    - day 1's visitor is the farm's first helper, and replaces F65's stopgap.
 5. **The old arrivals retire:**
-   - the fixed arrival kinds (the opening, chapters, festivals, Dorm beds, after an event) go;
+   - the fixed arrival kinds (the opening, festivals, Dorm beds, after an event) go; chapter arrivals went with F64;
    - the ones that still make sense become trigger kinds in decision 1's menu;
    - the Dorm's levels bring beds only.
 6. **Many met at once:** there's no cap on how many characters you've met. The Dorm's beds cap only who lives on the
@@ -47,8 +47,8 @@ welcoming you to town.
 
 ## Do
 
-1. The domain: triggers, meeting, the welcome list's visits and the bed rule, replacing `arrivalsTonight`,
-   `nextArrivals` and `chapterArrival`'s jobs, with tests.
+1. The domain: triggers, meeting, the welcome list's visits and the bed rule, replacing `arrivalsTonight`'s
+   and `nextArrivals`' jobs, with tests.
 2. The web: the meeting scene from the town, the Gate's welcome visitor, "Invite to the farm" on her profile, and the
    met characters on Hearts.
 3. The mechanics document's arrivals section becomes "meeting her".

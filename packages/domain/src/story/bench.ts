@@ -1,9 +1,8 @@
 // The ring bench's scene: the morning after your first Romance 8
-// event, Ida Stone, the town's smith, comes up from town and opens the old Forge as a ring bench. The cast's "first
-// seen: chapter 7" becomes "the first Romance 8"; chapter 7 still lights the Forge's fire. The lines are
-// original and short, one to a tap, and stay in git; they say "you" and never gender the farmer. It plays once,
-// as `scene:bench` in `diary.read`. Loaded on demand with its player.
-import type { Beat } from './chapter-1'
+// event, Ida Stone, the town's smith, comes up from town and opens the old Forge as a ring bench; the Forge's
+// merge game, built later, lights its fire. The lines are original and short, one to a tap, and stay in git; they
+// say "you" and never gender the farmer. It plays once, as `scene:bench` in `diary.read`. Loaded on demand with its player.
+import type { Beat } from './opening'
 import type { CastId } from './cast'
 import { BENCH_SCENE } from './scenes'
 

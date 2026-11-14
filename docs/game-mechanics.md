@@ -4,8 +4,8 @@ How uma-farm works today, as the code runs it. This is the one description of th
 the same commit, and where it and the code ever differ, the code wins and this document is fixed. The page view is
 [game-mechanics.html](pages/game-mechanics.html); where the game is going is in [the roadmap](roadmap.md).
 
-**What's live and what isn't.** The deployed game is one game on **save v4**: the farm's loop, its places, chapter 1
-and the **romance** (Part 3), played from the story pack, and played whole without one: wherever the pack is silent, a
+**What's live and what isn't.** The deployed game is one game on **save v4**: the farm's loop, its places, the farm
+growing by building, and the **romance** (Part 3), played from the story pack, and played whole without one: wherever the pack is silent, a
 placeholder plays (see [What plays without the story](#what-plays-without-the-story)). The **HD-2D farm** (Part 4) is
 an opt-in preview. A save from before v4 starts over (see [Save versions](#save-versions)).
 
@@ -25,7 +25,7 @@ prose here; change a table by changing the rule.
 - **[Part 2 — The Umas and the farm's progress](#part-2--the-umas-and-the-farms-progress)**
   - [The roster](#the-roster)
   - [Talents and ranks](#talents-and-ranks)
-  - [Goals](#goals)
+  - [The farm's progress](#the-farms-progress)
 - **[Part 3 — Hearts: the cast and the romance](#part-3--hearts-the-cast-and-the-romance)**
   - [The cast and the story pack](#the-cast-and-the-story-pack)
   - [What plays without the story](#what-plays-without-the-story)
@@ -174,9 +174,9 @@ The night is one fixed run of steps over the save:
    moves on and the work clock with it: finished jobs turn Ready, and queued jobs start, planned with tonight's ranks. A
    queued job whose inputs the Warehouse can't cover stops its queue. The whole of today's record clears: chats, gifts,
    praise, events, evenings and invitations.
-8. **The farm's news.** A Dorm level you bought takes effect and swaps arrive; the cast's Umas whose arrival holds join;
-   the Diary pays its milestones and rows, the Farm Rank is recomputed, and a chapter whose goals are all met completes;
-   the ring bench opens the night after the first Romance 8, and the household's milestones are noted.
+8. **The farm's news.** The places paid for yesterday stand; a Dorm level you bought takes effect and swaps arrive; the
+   cast's Umas whose arrival holds join; the Diary pays its milestones and rows and the Farm Rank is recomputed; the ring
+   bench opens the night after the first Romance 8, and the household's milestones are noted.
 9. **The morning.** A wedding's reception is served, the house's morning given, spouses move into rooms, the Festival
    of Vows is held, praise, birthdays and anniversaries are noted, morning items are left and the morning's invitations
    drawn; then the morning summary is built from what changed.
@@ -206,9 +206,10 @@ The steps as the game lists them:
 | 6 | `countWellFed` | The well-fed days count down |
 | 7 | `witherCrops` | On a season’s last night, crops still growing that don’t grow in the next season wither; Ready crops wait |
 | 7 | `turnCalendar` | The date moves, and the work clock with it: finished jobs turn Ready, queues start their next job; the whole of `today` clears: chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception |
+| 8 | `raiseBuildings` | Places built: every place paid for yesterday stands this morning (`buildings[id] = 1`), each one news |
 | 8 | `settleDorm` | The Dorm’s level bought takes effect; swaps arrive, each Uma away coming home in the place of one leaving |
 | 8 | `arriveUmas` | Every cast Uma whose authored arrival holds joins, in the cast’s order: home while a bed is free, else away; each of her ties whose other Uma is on the farm starts at its seed (strength 3 → 150, 2 → 50) |
-| 8 | `checkGoals` | The Diary pays its milestones and rows, the Farm Rank is recomputed, and a chapter whose goals are met completes: its gold, plans and authored arrival |
+| 8 | `checkGoals` | The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources |
 | 8 | `openRingBench` | The ring bench: the night after the first Romance 8 event anyone played, the Forge stands as the bench (`buildings.forge = 0`), and Ida Stone’s scene is due in the morning |
 | 8 | `householdMilestones` | Household milestones: as the married count passes 1, 5, 10, 15 and 20, each is news once; 5 brings the furniture set, 20 the finale’s morning; household scenes are Ready from this morning |
 | 9 | `serveTheReception` | A wedding’s reception: everyone on the farm well fed from tomorrow for its days (a dish ★1–2 one, ★3–4 two, ★5 three; Marta’s cake one), never shortening a meal already running |
@@ -247,7 +248,7 @@ line is a tap to its place.
 | Work done | Jobs that ended tonight, by place, "Forest · 2 jobs done · 9 items" (each job's whole haul); the night's best catch, "Best catch · Rainbow Koi ★2"; plots that turned Ready, by block, "Block A · 9 crops ready"; what withered, "Block A · 3 Onion withered" | The place's quick look; the Fishery's quick look; the Fields |
 | Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full** | Her profile's Work side |
 | Hearts | Who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and arrivals ("*Name* arrived · away", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
-| New today | "Summer begins"; "Flower Show tomorrow" or "today"; a chapter done, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The calendar; the Festival ground; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
+| New today | "Summer begins"; "Flower Show tomorrow" or "today"; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The calendar; the Festival ground; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
 | Today | "2 Umas idle"; "9 plots to plant" (empty plots that the season's seeds you hold could fill today) | The Hearts tab's Work view; the Fields |
 
 Hearts shows whenever it has a line or someone is Ready. The romance describes its lines.
@@ -261,11 +262,11 @@ card reads "Off: days are turns".
 
 #### Home: the farm map
 
-The farm map is Home: 23 places on eight rows of up to three, on farmland, taller than a phone's screen, so it scrolls
+The farm map is Home: 24 places on eight rows of three, on farmland, taller than a phone's screen, so it scrolls
 up and down. Rows 1 to 5 each run a gathering place, its station, then the ranch or a workshop; rows 6 and 7 are the
 yard; row 8 is the town. The help button (bottom left) and the Collect all pill stay put as it scrolls.
 
-The rows, and each place's building and what opens it:
+The rows, and each place's building and what opens it (the Boat is moored at the Dock and drawn there):
 
 <!-- live:farm-map -->
 | Row | Left | Centre | Right |
@@ -276,34 +277,36 @@ The rows, and each place's building and what opens it:
 | 4 | Mine | Smelter | Restaurant |
 | 5 | Quarry | Cutter | Forge |
 | 6 | Shipping bin | Warehouse | Dorm |
-| 7 | Requests board | Gate | — |
+| 7 | Requests board | Gate | Dock |
 | 8 | Shop | Festival ground | Expedition post |
 
 | Place | Building (uma-art) | Opens |
 |---|---|---|
 | Fields | `vegetable-garden` | Day 1 |
-| Mill | `fields-workbench` | Chapter 1's reward |
-| Coop | `meadow` (borrowed) | Chapter 2 |
+| Mill | `fields-workbench` | Farm Rank 1, then built |
+| Coop | `meadow` (borrowed) | Farm Rank 2, then built (not built yet) |
 | Forest | `forest` | Day 1 |
-| Sawmill | `forest-workbench` | Farm Rank 3 |
-| Barn | `stable` | Chapter 2 |
+| Sawmill | `forest-workbench` | Farm Rank 3, then built |
+| Barn | `stable` | Farm Rank 3, then built (not built yet) |
 | Fishery | `fishery` | Day 1 |
-| Smokehouse | `fishery-workbench` | Farm Rank 3 |
-| Kitchen | `kitchen` | Chapter 4 |
-| Mine | `mine` | Chapter 3 |
-| Smelter | `mine-workbench` | Chapter 3 |
-| Restaurant | `party-hall` | Chapter 6 |
-| Quarry | `quarry` | Chapter 3 |
-| Cutter | `den-workbench` | Chapter 3 |
-| Forge | `forge` | Chapter 7 |
+| Smokehouse | `fishery-workbench` | Farm Rank 3, then built |
+| Kitchen | `kitchen` | Farm Rank 5, then built (not built yet) |
+| Mine | `mine` | Farm Rank 4, then built (not built yet) |
+| Smelter | `mine-workbench` | Farm Rank 4, then built (not built yet) |
+| Restaurant | `party-hall` | Farm Rank 7, then built (not built yet) |
+| Quarry | `quarry` | Farm Rank 5, then built (not built yet) |
+| Cutter | `den-workbench` | Farm Rank 5, then built (not built yet) |
+| Forge | `forge` | Farm Rank 8, then built (not built yet) |
 | Shipping bin | `shipping-bin` | Day 1 |
 | Warehouse | `warehouse` | Day 1 |
 | Dorm | `dorm` | Day 1 |
-| Requests board | `card-library` (borrowed) | Not built yet |
+| Requests board | `card-library` (borrowed) | 5 Umas met |
 | Gate | `scenario-gate` | Day 1 |
+| Dock | `ley-spring` (borrowed) | Farm Rank 6, then built |
 | Shop | `exchange` | Day 1 |
 | Festival ground | `racecourse` | Not built yet |
-| Expedition post | `rangers-lodge` (borrowed) | Chapter 5 |
+| Expedition post | `rangers-lodge` (borrowed) | Farm Rank 7, then built (not built yet) |
+| Boat | At the Dock | Farm Rank 6, then built after the Dock |
 <!-- /live -->
 
 What a tap on a place does:
@@ -317,19 +320,19 @@ What a tap on a place does:
 | The Warehouse | The Warehouse |
 | The Dorm | The Dorm's page |
 | The Gate | Its quick look: what brings the next arrivals |
-| Every other place | Its quick look: what it is, and what opens it |
+| The Dock | Its quick look: its Build card, then the Boat's |
+| Every other place | Its quick look: what it is, and what opens it; a place to build, its Build card |
 
 **Locks.** A locked place shows a lock, and its quick look says why:
-- **Before its rule:** "Opens with Chapter 3", "Opens with Farm Rank 3", "Opens with Chapter 1's reward". A chapter's
-  places open once it starts, the Mill once chapter 1 is done, and a Farm Rank's once it's reached. The Forge opens as
-  the ring bench the night after the first Romance 8 event ("Opens with your first Romance 8" before that), not with
-  chapter 7.
-- **"Opens soon":** its rule is met (or it has none) but it has nothing to do: the Coop and the Barn from chapter 2, the
-  Requests board and the Festival ground.
-- **A station not built** shows locked on the map once its rule is met, and its quick look offers **Build**.
-
-The chapters reach chapter 2, so the places that open with chapter 3 or later (the Mine, the Smelter, the Quarry, the
-Cutter, the Kitchen, the Expedition post and the Restaurant) stay locked; the Forge opens early as the ring bench.
+- **A place to build** (see [Building](#building)): "Farm Rank 3" before its rank offers it; "Not built" once it does,
+  its quick look showing its Build card; "Builds tonight" once paid; and **"Not built yet"** for a place whose game isn't
+  built (the ranch, the Mine and the Quarry and their stations, the Kitchen, the Restaurant, the expedition post, the
+  Forge's merge game), whose Build card shows its cost and can't be bought.
+- **The Requests board:** "Opens with 5 Umas met"; then "Opens soon", its game not built.
+- **"Opens soon":** its rule is met but it has nothing to do yet: the Festival ground, and a place that stands with no
+  game.
+- **The Forge** opens as the ring bench the night after the first Romance 8 event ("Opens with your first Romance 8"
+  before that); its merge game is a build at Farm Rank 8, not built yet.
 
 **Pips.** A half arch of pips hangs over each work place, one a slot: a working Uma's face ringed by her job's progress
 (with her queued jobs counted), a Ready Uma's face, or a free dot. The Fields have one pip a block bought: its tender's
@@ -344,12 +347,13 @@ each Ready plot). One tap collects every finished job on the farm into the Wareh
 every block, then says "+23 collected" for a moment.
 
 **The help button** says how the farm works in five short lines: a day is a turn; plant, put Umas to work and end the
-day; the night settles everything; places open with chapters and the Farm Rank; tap the date for the calendar.
+day; the night settles everything; the farm grows by building, the Farm Rank offering each place; tap the date for the
+calendar.
 
 **The morning card** covers the map after each night until you put it away.
 
-**The homestead's rows** sit after the yard (the Farmhouse, each house built and the next lot, three to a row) with the
-town row moved below them, so the map grows a row at a time. The Gate is where the cast's Umas arrive. Both are the
+**The homestead's rows** sit after the yard (the Farmhouse and two lots from day 1, the second row from three married,
+the third from six; three to a row) with the town row moved below them, so the map grows a row at a time. The Gate is where the cast's Umas arrive. Both are the
 romance's.
 
 The HD-2D farm, an opt-in preview set in Account on each device, draws this same farm on an HD-2D stage; it has its own
@@ -358,12 +362,17 @@ part.
 #### Quick looks
 
 A quick look is a side panel over the map: the place's name, its one-line description, and what you can do there.
-- **A locked place:** "Opens with Chapter 3" (or "Opens soon"), and its description.
+- **A locked place:** "Opens with 5 Umas met" (or "Opens soon"), and its description.
+- **A place to build, not standing:** its Build card: its cost in gold and goods, each with what the farm holds ("20
+  logs · 25 held", a check when there's enough), what stands in the way ("Opens at Farm Rank 3", "Need 400g and 12 logs
+  more", "Not built yet", "Builds tonight") and **Build · 1,000g · 20 logs**; after paying, "The Mill stands tomorrow."
+- **The Dock, built:** "The Sea Pier is open at the Fishery. The Boat takes you to the Deep Sea." and the Boat's Build
+  card; with both built, "The Sea Pier and the Deep Sea are open at the Fishery."
 - **The Fields:** a row a block, **Harvest all** and **Open the Fields** (see The Fields).
 - **The Forest, the Fishery and a built station:** its line ("Foraging · 4 slots"), its four slot rows, any stopped
   queues, and **Open the Forest** (see Gathering).
-- **A station not built:** what it does, what stands in the way, and **Build** (see The stations).
-- **The Gate:** "Umas arrive here." and what brings the next arrivals ("Next: chapter 2's end · the Dorm's level 4"),
+- **A station not built:** what it does, and its Build card (see The stations).
+- **The Gate:** "Umas arrive here." and what brings the next arrivals ("Next: the Dorm's level 4 · the Fishing Derby"),
   never who, or "Everyone is here."
 - **The Forge,** once the ring bench stands: the bench's quick look (see the romance).
 
@@ -383,12 +392,12 @@ From the left:
 - **Hearts:** everyone on the roster, home or away, by their route; its Work view is the roster's album, with their
   talents and ranks. `/roster` lands on the Work view.
 - **End the day:** the raised moon disc.
-- **Diary:** the chapter, its goals, the Farm Rank, the milestones, each Uma's Memories and the pairs' Conversations.
+- **Diary:** the farm's projects, the Farm Rank, the milestones, each Uma's Memories and the pairs' Conversations.
 - **Menu:** every place.
 
 #### The Menu
 
-"Every place" lists the 23 places in six groups (Gathering, Stations, The ranch, Workshops, The yard, The town), each
+"Every place" lists the 24 places on the map in six groups (Gathering, Stations, The ranch, Workshops, The yard, The town), each
 with its Ready count (the Fields count Ready plots) and locked ones marked; a tap goes where a tap on the map goes. Then
 Account, the "Ask before ending the day" switch, and the build's number.
 
@@ -557,7 +566,7 @@ with Collect all.
 - **The challenge:** the crops harvested count toward the tender's next farming rank's challenge (below).
 - **The note** says what came home: "+9 Carrot (★1 × 7, ★2 × 2) · 1 seed back".
 - **Every draw is seeded** by the account, the day and the plot, so a harvest replays the same on every device.
-- The farm counts plots planted and harvested for the chapters' goals.
+- The farm counts plots planted and harvested (`farm.counts`).
 
 #### Regrowing
 
@@ -681,8 +690,8 @@ morning, and an Uma's rank opens deeper places, whose goods are worth more.
   that night's ranks.
 - **Each day's haul is ready the next morning**, and can be collected while the job runs on.
 - **Her rank opens deeper places:** an area or spot her rank hasn't opened is refused ("Opens at Hand."). The sea's two
-  spots also wait for chapter 7 ("Opens with Chapter 7.") and the Deep Sea for the boat ("Needs the boat."), so the five
-  freshwater spots are the ones in play.
+  spots also wait for their place built: the Sea Pier for the Dock ("Needs the Dock."), the Deep Sea for the Boat
+  ("Needs the Boat."), both offered at Farm Rank 6.
 - **Who may go:** an Uma on the farm who isn't tending a block ("She tends Block A."), isn't leaving tomorrow, and isn't
   busy ("She is busy for another 2 days.").
 - **Starting a job** for an Uma with finished work collects it first.
@@ -726,8 +735,8 @@ Seven spots, each with its fish by season and their shares:
 | The Lake | `lake` | Skilled | Salmon 50%, Trout 20%, Eel 30% | Eel 50%, Salmon 47%, Rainbow Koi 3% | Salmon 50%, Eel 30%, Silverfin 20% | Silverfin 20%, Trout 30%, Salmon 50% |
 | The Falls | `falls` | Expert | Eel 50%, Salmon 25%, Silverfin 20%, Rainbow Koi 5% | Eel 60%, Silverfin 30%, Rainbow Koi 10% | Silverfin 30%, Salmon 40%, Eel 25%, Rainbow Koi 5% | Silverfin 40%, Trout 50%, Rainbow Koi 10% |
 | The Moon Pool | `moon-pool` | Legend | Rainbow Koi 60%, Silverfin 40% | Rainbow Koi 60%, Silverfin 40% | Rainbow Koi 60%, Silverfin 40% | Rainbow Koi 60%, Silverfin 40% |
-| The Sea Pier | `sea-pier` | Hand + chapter 7 | Sardine 60%, Sea Bream 40% | Sardine 50%, Mackerel 20%, Sea Bream 30% | Mackerel 60%, Sea Bream 40% | Mackerel 70%, Sardine 30% |
-| The Deep Sea | `deep-sea` | Master + chapter 7 + the boat | Tuna 50%, Silverfin 40%, Rainbow Koi 10% | Tuna 60%, Silverfin 30%, Sea Bream 10% | Tuna 50%, Silverfin 40%, Rainbow Koi 10% | Tuna 60%, Silverfin 40% |
+| The Sea Pier | `sea-pier` | Hand + the Dock built | Sardine 60%, Sea Bream 40% | Sardine 50%, Mackerel 20%, Sea Bream 30% | Mackerel 60%, Sea Bream 40% | Mackerel 70%, Sardine 30% |
+| The Deep Sea | `deep-sea` | Master + the Boat built | Tuna 50%, Silverfin 40%, Rainbow Koi 10% | Tuna 60%, Silverfin 30%, Sea Bream 10% | Tuna 50%, Silverfin 40%, Rainbow Koi 10% | Tuna 60%, Silverfin 40% |
 <!-- /live -->
 
 #### What a day brings home
@@ -803,7 +812,7 @@ A wedding's reception and a spouse's breakfast feed the Umas (the romance's); no
 - **Collect** (a slot's button, **Collect here** on the page, or **Collect all** on the map) puts her finished goods in
   the Warehouse at their stars and says what came home: "+5 · ★1 × 4, ★2 × 1". Finished goods wait as long as you like.
 - **Her slot frees** once her job is over and collected.
-- **The farm counts** what comes home from the forest and the Fishery, for the chapters' goals.
+- **The farm counts** what comes home from the forest and the Fishery (`farm.counts`).
 - **The Diary** pays 500g the first time a haul comes from each area past the Woods and each spot past the Pond, on the
   night the haul is done.
 
@@ -870,8 +879,8 @@ catch it gives:
   - **Who:** the Umas on the farm, each with her rank and talent in the activity ("Hand · B"), free ones first, then by
     rank. A tender shows "Tends Block A" and an Uma leaving tomorrow "Leaves tomorrow", and neither can be picked. With
     nobody free: "No Uma is free."
-  - **Where:** every area or spot with this season's goods, those her rank hasn't opened greyed ("From Hand", "Chapter
-    7"), each with "About 5 a day" for her and, in the forest, its grades ("G1–G2"). It opens on the deepest place she
+  - **Where:** every area or spot with this season's goods, those her rank hasn't opened greyed ("From Hand"), the sea's
+    before its place stands ("Needs the Dock"), each with "About 5 a day" for her and, in the forest, its grades ("G1–G2"). It opens on the deepest place she
     can go.
   - **How many:** in days, as her haul after 1, 2, 3 or 4 days ("×5 · 1 day", "×10 · 2 days"), with "10 to bring home".
 - **Days, never hours:** what's left ("Tomorrow", "In 2 days"), a job's length ("1 day"), a stopped queue's age ("Forest
@@ -897,22 +906,22 @@ catch it gives:
 
 A station turns one raw good into its refined form, one for one, keeping its stars; the refined good sells for ×1.5.
 Three stations work: the Mill beside the Fields, the Sawmill beside the Forest and the Smokehouse beside the Fishery.
-The Smelter and the Cutter stand beside the Mine and the Quarry, but open with chapter 3 and have no jobs.
+The Smelter and the Cutter stand beside the Mine and the Quarry, and wait for mining's game: "Not built yet".
 
 #### Building a station
 
-A station is locked until built. The Mill needs its plans, chapter 1's reward; the Sawmill and the Smokehouse need Farm
-Rank 3. Once that's met, its quick look and its page offer **Build** for its gold ("Need 300g more" when short). A
-station is built once: it has four slots and no upgrades.
+A station is built like every place (see [Building](#building)): the Farm Rank offers it (the Mill at 1, the Sawmill and
+the Smokehouse at 3), you pay its gold and goods at its quick look or its page, and it stands the next morning. A station
+is built once: it has four slots and no upgrades.
 
 Each station's place, the rank it uses, its cost, what opens it and its jobs:
 
 <!-- live:stations -->
 | Station | At | Rank used | Builds for | Opens | Jobs |
 |---|---|---|---|---|---|
-| Mill | Fields | Farming | 1,200g | Its plans: chapter 1’s reward | Flour (1 day): grains · Sugars and oils (1 day): sweets, nuts and seeds · Preserves (2 days): fruits |
-| Sawmill | Forest | Foraging | 1,500g | Farm Rank 3 | Planks (1 day): woods · Drying (1 day): mushrooms, herbs and spices |
-| Smokehouse | Fishery | Fishing | 2,000g | Farm Rank 3 | Smoking (1 day): fish |
+| Mill | Fields | Farming | 1,000g · 20 logs | Farm Rank 1 | Flour (1 day): grains · Sugars and oils (1 day): sweets, nuts and seeds · Preserves (2 days): fruits |
+| Sawmill | Forest | Foraging | 1,500g · 40 logs | Farm Rank 3 | Planks (1 day): woods · Drying (1 day): mushrooms, herbs and spices |
+| Smokehouse | Fishery | Fishing | 2,000g · 30 logs · 20 fish | Farm Rank 3 | Smoking (1 day): fish |
 <!-- /live -->
 
 #### Station jobs and rates
@@ -949,8 +958,8 @@ Worked: a Hand C forager saws round(8 × 1.15 × 1.05) = **10** logs a day, and 
 #### The stations' screens
 
 - **Not built:** the quick look and the page say what it does ("Turns logs, mushrooms or herbs into goods worth half
-  again as much, keeping their stars."), what stands in the way ("Needs its plans: chapter 1's reward.", "Opens at Farm
-  Rank 3.", "Need 300g more.") and **Build · 1,500g**.
+  again as much, keeping their stars.") and show its Build card: what stands in the way ("Opens at Farm Rank 3", "Need
+  300g and 12 logs more", "Builds tonight") and **Build · 1,500g · 40 logs**.
 - **Built:** it works like the forest, with its line ("Foraging · 4 slots"), the slot rows, **Collect here**, stopped
   queues and the job sheet.
 - **What:** its jobs ("Planks", "Drying"), each with what the Warehouse holds for it at each star ("Pine Plank ★3 · 12
@@ -1273,9 +1282,9 @@ is the night's own and is never priced again.
 
 Gold is whole and never goes below 0; a purchase short of gold is refused ("Need 30g more"). A new farm starts with 500g
 and 9 Carrot seeds.
-- **Earned:** the bin, chapter rewards (500g for chapter 1), and the Diary's milestones and collection rows.
-- **Spent:** seeds at the shop, blocks on the Fields' page, stations at their places, Dorm levels at the Dorm, and
-  houses on the homestead.
+- **Earned:** the bin, and the Diary's milestones and collection rows.
+- **Spent:** seeds at the shop, blocks on the Fields' page, places to build at their quick looks, Dorm levels at the
+  Dorm, and houses on the homestead.
 
 The gold chip in the top bar shows the coin and your gold, and opens the bin.
 
@@ -1537,19 +1546,20 @@ Each family's goods, raw and refined, at ★1 and ★5, out of demand; in demand
 
 ## Part 2 — The Umas and the farm's progress
 
-Umas join the farm when the story says: the opening brings three, and the rest arrive with a chapter's end, a festival,
-a Dorm level or another Uma's event. The Dorm's beds cap who lives and works on the farm at once. Every Uma has a talent,
-G to S, in each of nine activities, read from her stats, and climbs six ranks in each by working and meeting a
-challenge. The farm climbs a ladder of its own, the Farm Rank, fed by shipping, the Diary and the story's chapters.
+Umas join the farm when the story says: the opening brings three, and the rest arrive with a festival, a Dorm level or
+another Uma's event. The Dorm's beds cap who lives and works on the farm at once. Every Uma has a talent, G to S, in each
+of nine activities, read from her stats, and climbs six ranks in each by working and meeting a challenge. The farm
+climbs a ladder of its own, the Farm Rank, from what it earns and grows, and grows by building: the rank offers each
+place, and you build it with gold and the farm's goods. There are no global chapters and no farm-wide story.
 
 ```
- day 1: your name ──► the opening scene ──► the opening three arrive ──► home (3 beds) ──► chapter 1's goals
+ day 1: your name ──► the opening scene ──► the opening three arrive ──► home (3 beds) ──► the farm's projects
                                                                           │
  the Dorm: Upgrade · 1,000g ── night ──► 5 beds ──────────────────────────┤ Dorm levels 4–8 each bring an arrival
                                                                           │
  roster > beds ──► the rest are away                                      │
  swap: one idle Uma home ⇄ one away ── night ──► she's home               │
- a chapter's end, a festival, another Uma's event ──► the cast's arrival joins that night
+ a festival, another Uma's event ──► the cast's arrival joins that night
 ```
 
 ### The roster
@@ -1561,8 +1571,7 @@ Umas on the farm can work or tend; chats and gifts reach everyone on the roster,
 #### How Umas join
 
 Every Uma on the farm is one of the story pack's cast, and each walks in when her authored arrival says: the opening
-three when the opening scene is read, then the rest with a chapter's end, a festival, a Dorm level or another Uma's
-event. She joins home while a bed is free, else away, at Friendship 0. Nothing is drawn. The arrivals and their scenes
+three when the opening scene is read, then the rest with a festival, a Dorm level or another Uma's event. She joins home while a bed is free, else away, at Friendship 0. Nothing is drawn. The arrivals and their scenes
 are the romance's: see [the opening, the farmer's name, and arrivals](#the-opening-the-farmers-name-and-arrivals).
 
 #### The Dorm's levels and beds
@@ -1613,12 +1622,6 @@ nothing: no work, no tending, no rank points. Chats and gifts still reach her.
 - At night, a tender who isn't home after the swaps loses her block (none can be: a tender can't swap out). A spouse in
   her house tends on.
 
-#### Chapter arrivals
-
-Each chapter's end brings the cast's authored arrival for that chapter, if the cast has one, the night its last goal is
-met: home while a bed is free, else away, her ties seeded. Nothing is drawn. The chapter's reward names "a new hand"
-only when there is one, and never who. The morning lists her under Hearts ("… arrived", "· away" with no bed).
-
 #### The night's roster step and the morning's news
 
 Night step 8 runs, in order, after the calendar has turned:
@@ -1626,9 +1629,10 @@ Night step 8 runs, in order, after the calendar has turned:
 1. **The Dorm settles:** a level bought takes effect, then each swap: the Uma leaving goes away and the one arriving
    comes home in her place.
 2. **Arrivals:** every cast Uma not on the roster whose authored arrival holds joins, in the cast's order.
-3. **The goals** (see *The night's goals check* under Goals), which may bring a chapter's arrival.
+3. **The goals** (see [the night's goals check](#the-nights-goals-check)).
 
-The morning's **New today** lists, after the season, festival, chapter, Farm Rank, milestone and household lines:
+The places paid for yesterday stand first, before the Dorm settles. The morning's **New today** lists, after the
+season, festival, built, Farm Rank, milestone and household lines:
 
 | Line | When | Opens |
 |---|---|---|
@@ -1655,8 +1659,8 @@ with no running job, tending no growing block, and not leaving tomorrow.
   - **Swap** (or "Swap · nobody away"), enabled when someone home can go and someone away can come: a picker over the
     Umas home ("Who goes away?", busy ones greyed out with why), then over those away ("Who comes home for {name}?");
   - **Away · n:** each Uma with "Away" or "Arrives tomorrow", or "Nobody away." Every row opens her profile.
-- **The Gate** (its quick look on the map): "Umas arrive here." and what brings the next arrivals ("Next: chapter 2's
-  end · the Dorm's level 4"), never who, or "Everyone is here."
+- **The Gate** (its quick look on the map): "Umas arrive here." and what brings the next arrivals ("Next: the Dorm's
+  level 4 · the Fishing Derby"), never who, or "Everyone is here."
 - **The roster** is the Hearts tab's **Work** view (`/hearts?view=work`; `/roster` lands there): everyone on the roster,
   home or away, as an album of cards in three columns, under the line "3 on the farm · 2 away · by joined".
   - **Her face** carries her favourite line's mark top left (a Carrot farming, a Pine Log foraging, a Carp fishing,
@@ -1815,8 +1819,8 @@ empty or all-Ready block earns nothing). Where she worked sets the activity it p
 - **One day pays one activity:** her job's if she has one, else her tending's. An Uma can't hold both anyway: a tender
   can't take a job, and a working Uma can't tend.
 - An Uma away earns nothing.
-- The Mine, the Quarry, the Smelter and the Cutter open with chapter 3, so in play only farming, foraging and fishing
-  earn rank points.
+- The Mine, the Quarry, the Smelter and the Cutter wait for mining's game, so in play only farming, foraging and
+  fishing earn rank points.
 
 #### The challenges
 
@@ -1900,28 +1904,38 @@ her favourite line's.
 - What else her line does (her perks, her tastes in gifts) is the romance's: see
   [her favourite line and tastes](#her-favourite-line-and-tastes).
 
-### Goals
+### The farm's progress
 
-The farm's progress has three parts: the **Farm Rank**, its own ladder from 1 to 10; the **Diary**, which counts what
-you ship and pays milestones; and the story's **chapters**, which set goals and pay rewards. All three are checked at
-night.
+The farm grows by what you earn and grow, and by your life with the Umas. There are no global chapters and no
+farm-wide story: the story lives in each Uma, in her own chapters. Four parts, all checked at night:
+- **the Farm Rank,** the farm's own ladder from 1 to 10, from income and resources only;
+- **the Diary,** which counts what you ship and pays milestones;
+- **building:** the Farm Rank offers each place past the start, and you build it with gold and the farm's goods;
+- **the milestones with the Umas,** which open the homestead and the town.
+
+The Diary's **projects** gather them: what you can build now, what the next rank offers, and the milestones with the
+Umas.
 
 ```
- the day: plant, tend, ship, gather ──► End the day ──► night step 8, the goals check:
-                                                          1. the Diary pays what's reached (milestones, rows)
-                                                          2. the Farm Rank's points are recomputed
-                                                          3. every goal met? the chapter completes: 500g, the Mill's
-                                                             plans, its arrival; the next chapter opens
-                                                          4. the Diary and the rank again (her arrival, +250 points)
-                                                          ▼
- the morning: "Chapter 1 done", "Farm Rank 2 · …", "First Uma at Hand · +300g" ──► the closing scene
+ the day: plant, tend, gather, ship ──► the Farm Rank offers a place ──► its Build card: gold + goods ──► Build
+                                                                                                         │
+ End the day ──► night step 8: ─────────────────────────────────────────────────────────────────────────┘
+                   1. the places paid for stand ("Built overnight · the Mill")
+                   2. the Diary pays what's reached (milestones, rows)
+                   3. the Farm Rank's points are recomputed; a new rank offers more
+                   4. the ring bench, the night after the first Romance 8
+                   ▼
+ the morning: "Built overnight · the Mill", "Farm Rank 2 · The Coop to build (not built yet), …", "First Uma at Hand · +300g"
+
+ your life with the Umas: the n-th wedding ──► House n · 3 married ──► the homestead's second row · 5 met ──► the board
 ```
 
 #### The Farm Rank
 
-The farm's own rank, 1 to 10. Its points are recomputed from the save each night at step 8:
+The farm's own rank, 1 to 10. Its points are recomputed from the save each night at step 8, from income and resources
+only:
 
-> **⌊gold shipped ÷ 100⌋ + 5 × Diary entries + 25 × milestones + 250 × chapters done**
+> **⌊gold shipped ÷ 100⌋ + 5 × Diary entries + 25 × milestones**
 
 Every term only grows, so the rank never falls. During the day the rank stays as last night left it: what you ship
 today counts tonight. Where the points come from:
@@ -1932,38 +1946,39 @@ today counts tonight. Where the points come from:
 | Gold shipped at the bin | 1 per 100g | `farm.counts['gold-shipped']` |
 | A Diary entry: a good shipped once | 5 | `diary.shipped` |
 | A milestone | 25 | `diary.milestones` |
-| A chapter done | 250 | `farm.chapter` − 1 |
 <!-- /live -->
 
-Festivals and decorations add nothing in play: neither exists. The points each rank needs:
+Festivals and decorations add nothing in play: neither exists. The points each rank needs, tuned by
+[the pacing's simulation](#the-pacing) so the ranks come at the pace they came at when each global chapter added 250
+points:
 
 <!-- live:farm-ranks -->
 | Farm Rank | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Points | 0 | 150 | 500 | 1,200 | 2,400 | 4,000 | 6,500 | 10,000 | 15,000 | 22,000 |
+| Points | 0 | 150 | 250 | 950 | 2,150 | 3,750 | 6,250 | 9,750 | 14,750 | 21,750 |
 <!-- /live -->
 
-What each rank opens is read from the rules that gate on it (the Fields' blocks, the Dorm's levels, the shop's seed
-tiers, the stations), so the sheet and the morning can't drift from the game. A new rank opens more of what's already
-open, not new places:
+What each rank opens is read from the rules that gate on it (the places it offers to build, the Fields' blocks, the
+Dorm's levels, the shop's seed tiers), so the sheet and the morning can't drift from the game:
 
 <!-- live:farm-rank-opens -->
 | Farm Rank | Points | Opens |
 |---|---|---|
-| 1 | 0 | Block A, tier-1 seeds (the start); Dorm level 2 |
-| 2 | 150 | Block B (800g), Dorm level 3 (7 beds), New seeds at the shop |
-| 3 | 500 | Dorm level 4 (9 beds), The Sawmill (1,500g), The Smokehouse (2,000g) |
-| 4 | 1,200 | Block C (3,000g), Dorm level 5 (11 beds), New seeds at the shop |
-| 5 | 2,400 | Dorm level 6 (14 beds) |
-| 6 | 4,000 | Block D (8,000g), Dorm level 7 (17 beds) |
-| 7 | 6,500 | Dorm level 8 (20 beds) |
-| 8 | 10,000 |  |
-| 9 | 15,000 |  |
-| 10 | 22,000 | The farm’s gold crest |
+| 1 | 0 | Block A and tier-1 seeds (the start), The Mill to build (1,000g · 20 logs), Dorm level 2 (5 beds) |
+| 2 | 150 | The Coop to build (not built yet), Block B (800g), Dorm level 3 (7 beds), New seeds at the shop |
+| 3 | 250 | The Sawmill to build (1,500g · 40 logs), The Barn to build (not built yet), The Smokehouse to build (2,000g · 30 logs · 20 fish), Dorm level 4 (9 beds) |
+| 4 | 950 | The Mine to build (not built yet), The Smelter to build (not built yet), Block C (3,000g), Dorm level 5 (11 beds), New seeds at the shop |
+| 5 | 2,150 | The Kitchen to build (not built yet), The Quarry to build (not built yet), The Cutter to build (not built yet), Dorm level 6 (14 beds) |
+| 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), Block D (8,000g), Dorm level 7 (17 beds) |
+| 7 | 6,250 | The Restaurant to build (not built yet), The Expedition post to build (not built yet), Dorm level 8 (20 beds) |
+| 8 | 9,750 | The Forge to build (not built yet) |
+| 9 | 14,750 |  |
+| 10 | 21,750 | The farm’s gold crest |
 <!-- /live -->
 
-- **A rank-up is news:** the morning's New today says "Farm Rank 2 · Block B (800g), Dorm level 3 (8 beds), New seeds at
-  the shop", tagged Farm Rank, opening the rank's sheet. Two ranks in one night are two lines, lowest first.
+- **A rank-up is news:** the morning's New today says "Farm Rank 2 · The Coop to build (not built yet), Block B (800g),
+  Dorm level 3 (7 beds), New seeds at the shop", tagged Farm Rank, opening the rank's sheet. Two ranks in one night are
+  two lines, lowest first.
 
 #### The Diary
 
@@ -2053,89 +2068,156 @@ The collection rows:
 | Rings | `row:rings` | Ring G1, Ring G2, Ring G3, Ring G4, Ring G5, Ring G6, Ring G7, Ring G8, Ring G9, Ring G10 | 500g |
 <!-- /live -->
 
-#### The chapters
+#### Building
 
-The story runs in chapters. Chapter 1 opens on day 1. Each goal reads a lifetime counter or the save; a counter counts
-**from the chapter's start**, so a later chapter's goals start from zero.
+Every place past the start is offered at its Farm Rank and built with gold and the farm's own goods:
 
-**Chapter 1, "A Field Again":**
+1. **Offered:** the Farm Rank reaches its rank (the Boat once the Dock stands too).
+2. **Paid:** its Build card (the place's quick look, or a station's page) takes its gold and goods now. Each goods line
+   takes any grade and any stars of its family, the cheapest first (★1 price × the star's factor, then fewer stars, then
+   the catalogue's order). The place waits in `farm.builds`.
+3. **Built:** the next morning, night step 8 sets `buildings[id]` to 1 before anything else, and New today says "Built
+   overnight · the Mill", tagged Built, opening its quick look (the Boat's opens the Dock's).
 
-<!-- live:chapter-1 -->
-| # | Goal | Done at | Read from | Teaches |
+A place whose game isn't built yet shows what it'll be: its Build card has its cost, "Not built yet", and a disabled
+**Not built yet** button. It can't be bought. The places, their ranks and their costs:
+
+<!-- live:builds -->
+| Place | Farm Rank | Gold | Goods | Can be bought |
 |---|---|---|---|---|
-| 1 | Plant and harvest 9 crops | 9 | `farm.counts['plots-harvested']` since the chapter opened | Planting, tending, Ready plots |
-| 2 | Ship 1,000g at the bin | 1,000g | `farm.counts['gold-shipped']` since the chapter opened | The bin, the overnight payout |
-| 3 | Bring home 10 things from the Woods or the Pond | 10 | `farm.counts['home:forest']` + `['home:fishery']` since the chapter opened | Assigning, the job sheet, collecting |
-| 4 | Grow a second kind of crop | 2 | Kinds planted: entries in `crops` | The shop |
-| 5 | Rank an Uma up to Hand | 1 | Any Uma at Hand or above, in any activity | Ranks and challenges |
-| 6 | Reach Farm Rank 2 | 2 | The Farm Rank from `farm.points` | The Farm’s Rank, Block B |
+| Mill | 1 | 1,000g | 20 logs | Yes |
+| Coop | 2 | 2,000g | 30 logs, 20 vegetables | Not built yet |
+| Sawmill | 3 | 1,500g | 40 logs | Yes |
+| Barn | 3 | 3,500g | 30 logs, 20 vegetables | Not built yet |
+| Smokehouse | 3 | 2,000g | 30 logs, 20 fish | Yes |
+| Mine | 4 | 10,000g | 60 planks | Not built yet |
+| Smelter | 4 | 8,000g | 40 planks, 40 logs | Not built yet |
+| Kitchen | 5 | 15,000g | 50 planks, 30 vegetables | Not built yet |
+| Quarry | 5 | 12,000g | 50 planks | Not built yet |
+| Cutter | 5 | 10,000g | 40 planks, 40 logs | Not built yet |
+| Dock | 6 | 20,000g | 80 planks | Yes |
+| Boat | 6 | 30,000g | 60 planks, 30 fillets | Yes, after the Dock |
+| Restaurant | 7 | 40,000g | 80 planks, 40 fillets, 30 vegetables | Not built yet |
+| Expedition post | 7 | 25,000g | 60 planks, 40 fillets | Not built yet |
+| Forge | 8 | 60,000g | 120 planks, 60 logs | Not built yet |
 <!-- /live -->
 
-- **Goal 4 is planting:** a second kind planted counts, ready or not.
-- **Goal 3** counts everything collected from the forest or the Fishery since the chapter opened.
-- **Goal 5** counts any Uma at Hand or above in any activity, whenever she got there.
-- **The chapter completes at night step 8** the night its last goal is met, whether the goal was met during the day (a
-  ninth harvest) or by the night itself (the bin's payout, a rank-up at step 6, Farm Rank 2 from tonight's milestones).
-- **Its reward is paid at once:** **500g**, **the Mill's plans** (the Mill's quick look then offers Build · 1,200g;
-  plans already held are left alone), **the chapter's arrival** (see *Chapter arrivals*), and the chapter's **250 Farm
-  Rank points**. Then chapter 2 opens.
-- **The morning** says "Chapter 1 done · +500g, the Mill's plans, a new hand, 250 Farm Rank points", tagged Chapter,
-  opening the Diary, and her arrival is listed under Hearts. "A new hand" shows only when the cast has an Uma who
-  arrives with chapter 1, on chapter 1's card, the Diary's card and the morning's line alike; with none the reward reads
-  "+500g, the Mill's plans, 250 Farm Rank points".
+- **Refusals:** built already or paid today ("Builds tonight."); not built yet ("Not built yet."); its Farm Rank ("Opens
+  at Farm Rank 3."); the place before it ("After the Dock."); short ("Need 400g and 12 logs more.").
+- **The Dock and the Boat** open the sea: the Sea Pier needs the Dock, the Deep Sea the Boat (see
+  [the Fishery's spots](#the-fisherys-spots)). The Dock stands beside the Gate; the Boat moors there, built from the
+  Dock's quick look. Both have place ids, so a story's `built` gate can name them.
+- **What used a chapter now uses the place it meant:** the ring bench takes ingots and cut gems once the Smelter and the
+  Cutter stand; a perk or a working setup at her line's place says "Opens when the Kitchen is built" (or her place); the
+  sea's spots need the Dock and the Boat.
+- **Never stamped by the rule:** paying is the player's change, stamped once by the app.
 
-The chapters as built:
+#### The milestones with the Umas
 
-<!-- live:chapters -->
-| Chapter | Title | Opens with | Goals | Reward |
-|---|---|---|---|---|
-| 1 | A Field Again | The Fields, the Woods and the Pond | 6 | 500g, the Mill's plans (`buildings.mill = 0`), the chapter’s authored arrival, 250 Farm Rank points |
-| 2 | Feathers and Fences | The Coop and two chickens (Dale Hart) | Not built yet | — |
+Your life with the Umas opens the homestead and the town:
+
+<!-- live:uma-milestones -->
+| Milestone | Opens | Read from |
+|---|---|---|
+| The first Romance 8 anyone plays | The ring bench at the Forge (the night after) | `memories`, then `buildings.forge = 0` |
+| The first wedding | House 1 to build (8,000g), the house before it standing | Spouses in `love` |
+| The second wedding | House 2 to build (20,000g), the house before it standing | Spouses in `love` |
+| The third wedding | House 3 to build (40,000g), the house before it standing | Spouses in `love` |
+| The fourth wedding | House 4 to build (70,000g), the house before it standing | Spouses in `love` |
+| The fifth wedding | House 5 to build (110,000g), the house before it standing | Spouses in `love` |
+| The sixth wedding | House 6 to build (160,000g), the house before it standing | Spouses in `love` |
+| 3 married | The homestead's second row on the map | Spouses in `love` |
+| 6 married | The homestead's third row on the map | Spouses in `love` |
+| 5 Umas met | The Requests board’s place (its game comes later) | Umas on the roster |
 <!-- /live -->
 
-- **Chapter 2** has a title and an opening line but no goals: its card says **Soon**, and no chapter completes again.
-- Reaching chapter 2 opens the Coop and the Barn on the map, which say Soon. Later chapters would open the rest (the
-  Mine and the Quarry with 3, the Kitchen 4, the expedition post 5, the Restaurant 6, the Forge 7).
+- **"Met"** is every Uma on the roster today, home or away; meeting her in town comes later.
+- **The ring bench** is the romance's: see [the ring bench](#the-ring-bench).
+- **The houses and the rows** are the homestead's: see [the homestead](#the-homestead).
+
+#### The farm's projects
+
+The Diary's **Projects** card gathers what's next:
+- **Build now:** every place offered at your rank and not standing, whose game is built: its name, its cost ("1,000g · 20
+  logs"), and what it still lacks ("Need 400g and 12 logs more"), "Builds tonight" once paid, or **Build ›**. A tap
+  opens its quick look and Build card. With none: "Nothing to build at this rank."
+- **Not built yet:** the places offered at your rank whose games aren't built, in one line ("Not built yet: the Coop,
+  the Barn").
+- **At Farm Rank 3 · 250 points:** what the next rank offers, each with its cost or "Not built yet".
+- **With the Umas:** each milestone, a check when it's done, what it waits for and how far along you are: "The ring
+  bench · The first Romance 8 · Not yet", "House 1 · Your first wedding · 0 / 1 married", "The homestead's second row ·
+  3 married · 1 / 3 married", "The Requests board · 5 Umas met · 3 / 5 met". The house shown is the next to open.
+
+#### The pacing
+
+A test (`packages/domain/src/farm/pacing.test.ts`) plays a run to Farm Rank 8 on the game's own rules: a plain bot,
+everyone talent D, master data's first five on the farm from day 1 and one more with each Dorm level from 4. Each morning
+it collects and harvests, buys the Dorm's level 2 and the Fields' blocks, pays for every place it can (those whose games
+aren't built yet too, as when they will be), tends Block A, plants the season's best seeds, saws planks and smokes
+fillets while a build waits for them, sends everyone else to the forest and the Fishery at her deepest, and ships the
+rest. It checks:
+- **each Farm Rank comes at the pace it came at with the chapters' 250 points** (counting chapter 1's, done the night
+  its six goals were met, against the thresholds of then), within 15% (at least 4 days);
+- **each place is offered at its Farm Rank** (the Boat after the Dock);
+- **each place is affordable within about a season of its offer:** paid within 16 days (a season and four days) and
+  standing the next morning.
+
+The run as tuned (a season is 12 days):
+
+| Farm Rank | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|
+| Reached on day | 12 | 16 | 44 | 74 | 108 | 140 | 180 |
+
+| Place | Offered | Built | Place | Offered | Built |
+|---|---|---|---|---|---|
+| Mill | 1 | 8 | Quarry | 74 | 81 |
+| Coop | 12 | 23 | Cutter | 74 | 75 |
+| Sawmill | 16 | 18 | Kitchen | 74 | 88 |
+| Barn | 16 | 30 | Dock | 108 | 109 |
+| Smokehouse | 16 | 26 | Boat | 109 | 117 |
+| Mine | 44 | 52 | Expedition post | 140 | 141 |
+| Smelter | 44 | 45 | Restaurant | 140 | 151 |
+| | | | Forge | 180 | 181 |
+
+`PACING=1` prints the run. Goods are the early bind and gold the late one: by Farm Rank 7 the farm ships about 7,000g a
+day.
 
 #### The night's goals check
 
-Night step 8's goals check runs after the Dorm and the arrivals:
+Night step 8 runs, in order:
 
-1. **The Diary pays** every milestone and row reached and not yet paid.
-2. **The Farm Rank's points** are recomputed.
-3. **The chapter:** if every goal of the current chapter is met, it completes (its gold, plans, arrival and the next
-   chapter), then the Diary pays and the points are recomputed again, so her arrival counts toward "Umas on the roster"
-   and the chapter's 250 points toward the rank.
-4. **The ranks reached tonight** are noted, lowest first, from the rank before the night.
+1. **The places paid for yesterday stand** (`raiseBuildings`), each a line of news.
+2. **The Dorm settles and arrivals join** (see [the roster](#the-roster)).
+3. **The Diary pays** every milestone and row reached and not yet paid.
+4. **The Farm Rank's points** are recomputed; **the ranks reached tonight** are noted, lowest first.
+5. **The ring bench** opens the night after the first Romance 8.
 
-The morning's New today then lists, in order: the season and festivals, the chapter done, each Farm Rank reached, each
+The morning's New today then lists, in order: the season and festivals, each place built, each Farm Rank reached, each
 milestone and row paid, then the household's milestones and the Dorm's news.
 
 #### The town's cast
 
-The town's people are original to the game, and their names and lines are part of it. In a chapter scene an Uma speaks
-only in a **role** the app fills at runtime; her own lines are her arrival scene and her events, from the story pack.
+The town's people are original to the game, and their names and lines are part of it. They're the town's people, with
+no plot. An Uma's own lines are her arrival scene and her events, from the story pack.
 
 <!-- live:cast -->
-| Who | Is | From chapter | Bust |
-|---|---|---|---|
-| Mayor Hollis Pryor | Runs the town; opens each chapter | 1 | `cast/hollis-pryor` |
-| Marta Quill | Keeps the general store (the shop) | 1 | `cast/marta-quill` |
-| Old Ben Carver | Kept the farm before you; gives the first seeds | 1 | `cast/ben-carver` |
-| Dale Hart | Rancher; sells animals and feed | 2 | `cast/dale-hart` |
-| Gus Talbot | Retired miner; reopens the Mine and the Quarry | 3 | `cast/gus-talbot` |
-| Rosa Bell | Cook; judges the Cooking Contest, first guest at the Restaurant | 4 | `cast/rosa-bell` |
-| Juno Park | Runs the expedition post | 5 | `cast/juno-park` |
-| Ida Stone | Smith; lights the Forge | 7 | `cast/ida-stone` |
-| Captain Nils Berg | Sails the boat to the deep sea | 7 | `cast/nils-berg` |
-| Wren Ashby | Rival: Ashby Orchards, crops and cooking | 1 | `cast/wren-ashby` |
-| Cole Varga | Rival: Varga Ranch, animals and fishing | 1 | `cast/cole-varga` |
+| Who | Is | Bust |
+|---|---|---|
+| Mayor Hollis Pryor | Runs the town; welcomes you at the start | `cast/hollis-pryor` |
+| Marta Quill | Keeps the general store (the shop) | `cast/marta-quill` |
+| Old Ben Carver | Kept the farm before you; gives the first seeds | `cast/ben-carver` |
+| Dale Hart | Rancher; sells animals and feed | `cast/dale-hart` |
+| Gus Talbot | Retired miner; knows the Mine and the Quarry | `cast/gus-talbot` |
+| Rosa Bell | Cook; judges the Cooking Contest | `cast/rosa-bell` |
+| Juno Park | Knows the roads past the town | `cast/juno-park` |
+| Ida Stone | Smith; sets up the ring bench | `cast/ida-stone` |
+| Captain Nils Berg | Sails the boat to the deep sea | `cast/nils-berg` |
+| Wren Ashby | Rival: Ashby Orchards, crops and cooking | `cast/wren-ashby` |
+| Cole Varga | Rival: Varga Ranch, animals and fishing | `cast/cole-varga` |
 <!-- /live -->
 
-- **Your newest hand** is the role in the closing scene: chapter 1's authored arrival. With none, her line is left out.
-- Chapter 1's scenes speak three of the cast (the Mayor, Marta Quill and Old Ben Carver) and name a fourth (Dale Hart);
-  Ida Stone speaks at the ring bench. The others are defined, with the chapter that first brings them, but have no
-  scenes.
+- The opening speaks three of the cast (the Mayor, Marta Quill and Old Ben Carver); Ida Stone speaks at the ring bench.
+  The others have no lines yet.
 - Each cast member shows as a coloured disc with the first letter of their given name.
 
 #### The scenes
@@ -2143,16 +2225,16 @@ only in a **role** the app fills at runtime; her own lines are her arrival scene
 Each scene plays once: played through or skipped, it's marked read and never plays again. Which scene plays now:
 
 - **Nothing plays until the farmer is named.**
-- **The opening scene, "The Overgrown Farm",** on day 1, once you're named. The Mayor greets you by name, Old Ben gives
-  the nine Carrot seeds, Marta shows the shop and the bin, and the opening's Umas come up the road: its last line counts
+- **The opening, "The Overgrown Farm",** on day 1, once you're named. The Mayor greets you by name, Old Ben gives the
+  nine Carrot seeds, Marta shows the shop and the bin, and the opening's Umas come up the road: its last line counts
   them ("Three Umas come up the road." for the stand-in's three; "An Uma comes up the road." for one). Reading it or
-  skipping it brings them, and each then plays her own arrival scene, the last ending on chapter 1's card. An opening
-  that brings nobody drops that line and ends on chapter 1's card.
-- **The closing scene, "First Shipment",** the morning after chapter 1 completes, once the morning summary is put away.
-  Its newest hand is chapter 1's authored arrival.
-- **The ring bench's scene,** the morning after the first Romance 8 event, once the summary is put away: after any
-  chapter scene, before arrivals.
+  skipping it brings them, and each then plays her own arrival scene, the last ending on the first day's card. An
+  opening that brings nobody drops that line and ends on the first day's card.
+- **The ring bench's scene,** the morning after the first Romance 8 event, once the summary is put away: after the
+  opening, before arrivals.
 - **Arrival scenes,** after those, in the order the Umas joined.
+
+#### The opening's lines
 
 The lines, one to a tap:
 
@@ -2170,20 +2252,6 @@ The lines, one to a tap:
 | 7 | Marta Quill | “And that’s the shipping bin. Anything you put in pays tonight.” |
 | 8 | Mayor Hollis Pryor | “You’ll want help with all this. I hear some is on its way.” |
 | 9 | (narration) | Three Umas come up the road. |
-
-**First Shipment** (`scene:1:close`)
-
-| # | Who | Line |
-|---|---|---|
-| 1 | (narration) | Word of the farm’s shipments has reached the town. |
-| 2 | Mayor Hollis Pryor | “Marta and I couldn’t stay away. The whole town heard about that bin!” |
-| 3 | Marta Quill | “Keep it full, and my shelves will follow.” |
-| 4 | (narration) | Old Ben unrolls a set of plans. |
-| 5 | Old Ben Carver | “A mill. Build it beside the Fields, and your grain comes back as flour.” |
-| 6 | (narration) | A visitor walks in at the Gate. |
-| 7 | Your newest hand | “I’m {name}. I heard this farm is coming back to life. May I stay?” |
-| 8 | (narration) | A wagon rattles up the road. |
-| 9 | Mayor Hollis Pryor | “That’ll be Dale Hart, the rancher. He’ll bring you two chickens once there’s a coop to keep them in.” |
 <!-- /live -->
 
 Ida Stone first appears at the ring bench. The romance part covers the bench; its scene's lines are:
@@ -2204,38 +2272,35 @@ Ida Stone first appears at the ring bench. The romance part covers the bench; it
 
 #### The Diary tab
 
-The Diary tab (`/diary`) holds the current chapter, the Farm Rank and the milestones.
+The Diary tab (`/diary`) holds the farm's projects, the Farm Rank and the milestones.
 
-- **The chapter's card:** "Chapter 1", its title and "4 of 6"; each goal with a check when met and its count in its own
-  unit: "4 / 9" (harvests and things brought home), "620g / 1,000g", "1 / 2 kinds", "Not yet" or "Done" (the Hand goal),
-  "Farm Rank 1 / 2". Counts stop at the goal. Then "Reward: +500g, the Mill's plans, a new hand, 250 Farm Rank points".
-- **Once chapter 1 is done:** "Chapter 1 done · …" with its reward, chapter 2's title and **Soon**.
+- **Projects:** what to build now, what's not built yet, the next rank's offers and the milestones with the Umas (see
+  [the farm's projects](#the-farms-projects)).
 - **Farm Rank · 400 points ›** opens the rank's sheet.
 - **Milestones:** each milestone and row paid, in the order paid, with its gold ("10,000g shipped · +300g"), or "None
   yet."; then "12 goods shipped so far".
 - **Memories** (each Uma's) and **Conversations** (the pairs'): the romance part covers them.
-- Its help says how chapters, goals, milestones, Memories and Conversations work.
+- Its help says how building, the milestones with the Umas, the Diary's milestones, Memories and Conversations work.
 
 #### The Farm Rank's chip and sheet
 
 - **The chip** is the account bar's third, after the date and the gold: the Farm Rank's crest (a green "FR" shield
   when the art can't load) and the rank. It reads "Farm Rank 2: 400 points" to a screen reader, and a tap opens the
   sheet.
-- **The sheet** opens over any page: "Farm Rank 2", the points, a bar to the next rank with "100 more for Farm Rank 3
-  (500)" (or "The top rank"), what the next rank opens, and the points so far by source: Shipping (1 per 100g), Diary
-  entries (5 each), Milestones (25 each), Chapters (250 each). Its help explains where points come from.
+- **The sheet** opens over any page: "Farm Rank 2", the points, a bar to the next rank with "50 more for Farm Rank 3
+  (250)" (or "The top rank"), what the next rank opens (the places to build first), and the points so far by source:
+  Shipping (1 per 100g), Diary entries (5 each), Milestones (25 each). Its help explains where points come from.
 
 #### The scene player
 
 - **A full-screen sheet** over the farm and its bars: the scene's title and **Skip** at the top; a bust (a cast
   member's disc, an Uma's bust from master data, none for narration); the speaker's name in the accent colour and the
   line (narration in italics); and "Tap to go on · 3/12". A tap anywhere goes on.
-- **Roles are filled once,** when the scene starts.
 - **It loads master data itself** (names and busts), since a new farm's boot doesn't wait for it. **Skip** works
   without it, and skipping marks the scene read.
 - **The opening ends** as the three come up the road: reading it brings them, and their arrival scenes play next. The
-  third ends on **chapter 1's card:** its six goals, its reward and **Plant the carrots**, which opens the Fields.
-- **The closing scene ends on** "Chapter 1 done", its reward, chapter 2's title with **Soon**, and **Start the day**.
+  third ends on **the first day's card:** "Day 1 · Nine Carrot seeds wait in the Fields." and **Plant the carrots**,
+  which opens the Fields.
 - The same player plays the arrival scenes and the ring bench's scene; heart events play in their own player. The
   romance part covers them.
 
@@ -2281,7 +2346,7 @@ her confession, Romance 1–10, the proposal, the wedding and Spouse 1, 3 and 5 
 at. A beat says, each optional:
 
 - **its setup:** her full bar only, or one thing the player controls: she works an activity, a named good is in the
-  Warehouse, her bond with a named Uma reaches a level 1–5, or a chapter 1–8 is reached. Never an hour, the weather, a
+  Warehouse, or her bond with a named Uma reaches a level 1–5. Never an hour, the weather, a
   season or a festival;
 - **what you do together:** talk, work an activity, one of the ten date games (fishing, cooking, stargazing, footrace,
   dance, picnic, market, boat, walk, crafting), give a named good, or help another cast Uma;
@@ -2431,7 +2496,7 @@ every ladder, event, perk, evening, proposal, wedding and household runs end to 
   road at the opening. Everyone else waits for meeting her in town.
 - **Her line from master data** is the work her stats suit best, by the talents' one rule: each activity reads one stat
   (Stamina farming, Guts the ranch, Power mining, Wit fishing, Speed foraging), and a tie goes to the first in that
-  order. A line whose places aren't built yet waits as a written one does ("Opens with chapter n").
+  order. A line whose places aren't built yet waits as a written one does ("Opens when the Mine is built").
 - **A heart event's card** is her moment, her line and your reply: the warmer reply pays +30, the other +10, and with
   no play the best reply is a Perfect, so a card pays +50, +30 and +30 at best, as a written heart event does. Her beat's
   setup, place, play and unlock still apply when her bible has them. The big rungs keep their shape: her confession's
@@ -2510,25 +2575,22 @@ Day 1 runs in this order:
    whose arrival is the opening, else the welcome list (with no pack, master data's first five). They're home in the Dorm at Friendship 0 while a bed is free
    (day 1 has three), the rest away, their ties seeded. Its last line counts them ("An Uma comes up the road.", "Five
    Umas come up the road.").
-4. **Each one's arrival scene,** in the cast's order. The last ends on chapter 1's card and **Plant the carrots**, which
-   opens the Fields. An opening that brings nobody ends on chapter 1's card itself.
+4. **Each one's arrival scene,** in the cast's order. The last ends on the first day's card, "Day 1 · Nine Carrot seeds
+   wait in the Fields.", and **Plant the carrots**, which opens the Fields. An opening that brings nobody ends on that
+   card itself.
 
-Nothing is picked or drawn. Chapter 1's reward names **a new hand** only when the cast has an Uma who arrives
-with chapter 1, and never says who; with none it reads "+500g, the Mill's plans, 250 Farm Rank points", and the Diary and
-the morning's "Chapter 1 done" line say the same. The closing scene, "First Shipment", names chapter 1's arrival as your
-newest hand; with none, her line is left out.
-
-The opening's lines are in [the scenes](#the-scenes).
+Nothing is picked or drawn. The farm has no global chapters, so the opening is the town's welcome, never a plot; its
+lines are in [the opening's lines](#the-openings-lines).
 
 #### Arrivals
 
-Each Uma's arrival is her cast entry's, and it's optional. The five kinds, and when each one is checked:
+Each Uma's arrival is her cast entry's, and it's optional. The four kinds, and when each one is checked (a cast entry
+that still names a chapter arrival is noted and dropped: the farm has no chapters, so she waits to be met):
 
 <!-- live:arrivals -->
 | Arrival | When she arrives | Checked |
 |---|---|---|
 | `opening` | The opening scene, day 1: read or skipped, it brings the opening’s Umas: the cast file’s `opening` list, else those whose arrival is the opening, else the welcome list | The opening scene |
-| `chapter` | The night chapter *n* completes, in place of a drawn recruit (chapter 1 today; chapters 2–7 once they’re built) | Night step 8, `checkGoals` |
 | `festival` | The morning of that festival’s day in its year (year 1 unless the cast names one), built or not | Night step 8, `arriveUmas` |
 | `beds` | The morning the Dorm’s level *n* takes effect (levels 4–8) | Night step 8, `arriveUmas` |
 | `event` | The morning after another Uma’s named event plays (`<characterId>:<eventId>`, or an event id: anyone’s) | Night step 8, `arriveUmas` |
@@ -2542,29 +2604,26 @@ Each Uma's arrival is her cast entry's, and it's optional. The five kinds, and w
   with 0 points. Each of her ties whose other Uma is on the farm starts at its seed. Her chats and gifts work from that
   day; her events and evenings need her home.
 - **In the cast's order** when several arrive the same night, and **once each.**
-- **A chapter's arrival** joins inside the chapter's completion, the night its last goal is met, so the Diary's "Umas
-  on the roster" counts her that night. It's the first cast Uma named for that chapter; any other named for it joins the next
-  night with the step 8 check.
 - **A Dorm-level arrival** may name any level 2–8; the design gives levels 4–8 one each. The Dorm's page marks a level
   that will bring someone ("Level 4 · 9 beds · someone new arrives"), never who.
 - **The Gate** is where she walks in. Its quick look says "Umas arrive here." and what brings the next arrivals, never
-  who, up to three: the next chapter, the next Dorm level and the next festival by date first, then a story event, then
-  the rest ("Next: chapter 2's end · the Dorm's level 4 · the Fishing Derby"; a story event reads "a story event"). Once
+  who, up to three: the next Dorm level and the next festival by date first, then a story event, then the rest ("Next:
+  the Dorm's level 4 · the Fishing Derby · a story event"). Once
   the whole cast is here it says "Everyone is here."
 - **The morning** names her in the Hearts section, "‹name› arrived · away" with **New**, a tap opening her profile.
 
 #### Her arrival scene
 
-Her arrival scene plays the next time the farm opens with the morning summary put away: after the opening, any chapter
-scene due and the ring bench's scene, in the order the Umas joined (by day, then the cast's order). The scene player shows
+Her arrival scene plays the next time the farm opens with the morning summary put away: after the opening and the ring
+bench's scene, in the order the Umas joined (by day, then the cast's order). The scene player shows
 her lines with her bust (or her disc) and `{farmer}` filled, her emote as a word, narration, thoughts in italics, a title
 line ("Stand-in 1 arrives · Gate"), pauses, flags (wording only) and **her choice**: usually one; written with none she
 pays +50 alone, and with more the first pays.
 
 - **Each option shows its gain on the button** before the tap.
 - **Skip** jumps to the choice, never past it; after the choice, to the end. So every arrival pays.
-- It ends on her bust, "♥ +80" (or +60) and **Welcome, ‹her name›**; the last of the opening's Umas ends on chapter 1's
-  card instead.
+- It ends on her bust, "♥ +80" (or +60) and **Welcome, ‹her name›**; the last of the opening's Umas ends on the first
+  day's card instead.
 
 What it pays into her Friendship 1 bar:
 
@@ -2752,7 +2811,7 @@ Her next event is **Ready** when all four of these hold:
 | 1 | Her bar is full for the rung; a waiting rung (the confession, the proposal, the wedding) is Ready the day after the rung before, and the proposal needs a ring in the Warehouse | `bar`, `day`, `ring` |
 | 2 | She’s home (on the Dorm’s list, or a spouse in her house) | `away`: “Swap her home” |
 | 3 | She hasn’t played one of her events today | `today` |
-| 4 | Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level, a chapter has been reached | `setup`; `opens` for a chapter, or for the ranch, mining, cooking, expeditions, serving or forging before their chapters (2, 3, 4, 5, 6, 7) |
+| 4 | Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level | `setup`; `opens` for the ranch, mining, cooking, expeditions, serving or forging before their place is built (the Coop, the Mine, the Kitchen, the expedition post, the Restaurant, the Forge) |
 <!-- /live -->
 
 Never an hour, the weather, a season or a festival. When she isn't Ready, the first of these in the way is the one shown:
@@ -2763,7 +2822,7 @@ Never an hour, the weather, a season or a festival. When she isn't Ready, the fi
 | 1 | `done` | Her route is complete (S5 has played) |
 | 2 | `night` | S2 or S4, bar full: no event, the level comes at night; short of it, `bar` |
 | 3 | `friend` | She said “Not yet” at her confession: you ask her again from her profile |
-| 4 | `opens` | A chapter setup not reached, or a working setup at a place before its chapter |
+| 4 | `opens` | A working setup at a place not built yet |
 | 5 | `bar` | Her bar isn’t full for the rung |
 | 6 | `day` | A waiting rung, on the day the rung before played |
 | 7 | `ring` | The proposal, with no ring in the Warehouse |
@@ -2772,8 +2831,9 @@ Never an hour, the weather, a season or a festival. When she isn't Ready, the fi
 | 10 | `setup` | Its day setup isn’t met today |
 <!-- /live -->
 
-- **A setup** is her bible's beat's setup for the rung; an Uma without a bible has none. A chapter setup, or a working
-  setup at a place whose chapter hasn't come, shows "Opens with chapter n" ahead of a short bar.
+- **A setup** is her bible's beat's setup for the rung; an Uma without a bible has none. A working setup at a place not
+  built yet shows "Opens when the Mine is built" (her place) ahead of a short bar. A pack's beat that still names a
+  chapter setup is noted and read as her bar alone: the farm has no chapters.
 - **Her bond setup** reads bond hearts (50, 150, 300, 500 and 750 points). **The proposal's ring** is any ring in the
   Warehouse.
 - **Ready is read live,** never stored, since it changes by the day: her Hearts row, her profile, the morning's Ready lines
@@ -2859,11 +2919,11 @@ shows only what exists; nothing says "Soon".
 - **The route as one track:** F1–F10, ◆, R1–R10, ◇, ◇, S1–S5 (28 steps), the played ones filled in their ladder's
   colour, the next filling by her bar, the rest empty, a waiting rung drawn as a diamond. It wraps to two rows of 14 on a
   narrow phone.
-- **The Next card:** "Next: Romance 5"; its perk in her line's words (with "Opens with chapter n" where her line's place
-  waits); her beat's hint for the rung (where and how it opens); the bar with "points / cost" and "+N banked"; and what it
+- **The Next card:** "Next: Romance 5"; its perk in her line's words (with "Opens when the Mine is built" where her
+  line's place waits); her beat's hint for the rung (where and how it opens); the bar with "points / cost" and "+N banked"; and what it
   waits for: "Ready", "123 to go", "Tomorrow", "Needs a ring", "Swap her home" (a link to the Dorm), "Tomorrow: one event
-  a day", "The Fields, when she works there", "With Carrot in the Warehouse", "Bond 3 with Stand-in 2", "Opens with
-  chapter 3", "She said “Not yet”", "Comes tonight", and once her route is done "Her route is complete". It never waits
+  a day", "The Fields, when she works there", "With Carrot in the Warehouse", "Bond 3 with Stand-in 2", "Opens when the
+  Mine is built", "She said “Not yet”", "Comes tonight", and once her route is done "Her route is complete". It never waits
   on the story: an event the pack doesn't script plays the game's card.
   - **Play ›** (48 pt, in her ladder's colour) plays her Ready event.
   - **A setup not met** says what to do: "Assign her to the Fishery, then come back.", "Have her tend a block on the
@@ -2901,8 +2961,8 @@ the save.
 
 #### The perks' words
 
-The words are templates by her favourite line. A perk that works at her line's place says **"Opens with chapter n"** while
-that place waits for its chapter, and does nothing until then. The first table words each perk for a forager; the second
+The words are templates by her favourite line. A perk that works at her line's place says **"Opens when the Kitchen is
+built"** (her place) while that place isn't built, and does nothing until then. The first table words each perk for a forager; the second
 shows what the place-bound ones say for every line.
 
 <!-- live:perk-words -->
@@ -2910,28 +2970,28 @@ shows what the place-bound ones say for every line.
 |---|---|---|---|
 | F1 | `tastes-loved` | Her loved gift shown; her own chats |  |
 | F2 | `hangouts` | Hangouts in the evening |  |
-| F3 | `line-10` | +10% at the forest | Yes: “Opens with chapter n” until it opens |
+| F3 | `line-10` | +10% at the forest | Yes: “Opens when the Kitchen is built” (her place) until it’s built |
 | F4 | `signature-dish` | Her signature dish’s recipe |  |
 | F5 | `rank-105` | ×1.05 rank points |  |
-| F6 | `night-chore` | One item from the forest each night | Yes: “Opens with chapter n” until it opens |
+| F6 | `night-chore` | One item from the forest each night | Yes: “Opens when the Kitchen is built” (her place) until it’s built |
 | F7 | `tastes-all` | All her tastes shown, and her closest friend’s loved gift |  |
-| F8 | `in-element` | In her element: ×1.2 at the forest beside a 3-heart friend | Yes: “Opens with chapter n” until it opens |
-| F9 | `mentor` | Mentor: +10% rank points for Umas at the forest | Yes: “Opens with chapter n” until it opens |
+| F8 | `in-element` | In her element: ×1.2 at the forest beside a 3-heart friend | Yes: “Opens when the Kitchen is built” (her place) until it’s built |
+| F9 | `mentor` | Mentor: +10% rank points for Umas at the forest | Yes: “Opens when the Kitchen is built” (her place) until it’s built |
 | F10 | `keepsake` | Her keepsake; ×1.10 rank points |  |
 | R1 | `dates` | Dates; her pet name for you |  |
 | R2 | `morning-item` | A ★2+ good from the forest every 4th morning |  |
 | R3 | `date-stargazing` | Date: stargazing |  |
 | R4 | `closest-bond` | ×1.5 bond with her closest friend |  |
-| R5 | `line-20` | +10% more at the forest (+20%) | Yes: “Opens with chapter n” until it opens |
+| R5 | `line-20` | +10% more at the forest (+20%) | Yes: “Opens when the Kitchen is built” (her place) until it’s built |
 | R6 | `date-dance-boat` | Dates: dance and boat |  |
-| R7 | `night-chore-2` | A second night chore | Yes: “Opens with chapter n” until it opens |
+| R7 | `night-chore-2` | A second night chore | Yes: “Opens when the Kitchen is built” (her place) until it’s built |
 | R8 | `engraving` | Her ring’s engraving |  |
 | R9 | `date-footrace` | Date: footrace |  |
 | R10 | `proposal` | The proposal |  |
 | S1 | `breakfast` | Breakfast: the crew starts well fed on a morning in her house |  |
 | S2 | `morning-item-2` | A ★3+ good from the forest every 2nd morning, and each morning in her house |  |
-| S3 | `dream` | Her dream; +5% for anyone at the forest | Yes: “Opens with chapter n” until it opens |
-| S4 | `night-chore-3` | A third night chore | Yes: “Opens with chapter n” until it opens |
+| S3 | `dream` | Her dream; +5% for anyone at the forest | Yes: “Opens when the Kitchen is built” (her place) until it’s built |
+| S4 | `night-chore-3` | A third night chore | Yes: “Opens when the Kitchen is built” (her place) until it’s built |
 | S5 | `vow-renewal` | Vow renewal; her keepsake grows |  |
 
 | Her line | Her place | +10% (F3) | A night chore (F6) | A morning item (R2) | Opens with |
@@ -2939,12 +2999,12 @@ shows what the place-bound ones say for every line.
 | Farming | the Fields | +10% at the Fields | +0.25 growth on a block each night | A ★2+ crop of the season | Day 1 |
 | Foraging | the forest | +10% at the forest | One item from the forest each night | A ★2+ good from the forest | Day 1 |
 | Fishing | the Fishery | +10% at the Fishery | One fish from the Fishery each night | A ★2+ fish | Day 1 |
-| Mining (the Mine) | the Mine | +10% at the Mine | One ore from the Mine each night | A ★2+ ore | Chapter 3 |
-| Mining (the Quarry) | the Quarry | +10% at the Quarry | One stone or gem from the Quarry each night | A ★2+ stone or gem | Chapter 3 |
-| Ranch | the ranch | +10% at the ranch | +5 affection to her pen each night | A ★2+ egg, milk or fleece | Chapter 2 |
-| Cooking | the Kitchen | +10% at the Kitchen | One more dish on the Kitchen’s next play | A ★2+ dish | Chapter 4 |
-| Serving | the Restaurant | +10% at the Restaurant | One more cover on the Restaurant’s next shift | A ★2+ dish | Chapter 6 |
-| Forging | the Forge | +10% at the Forge | 5% back on the Forge’s next tool | A ★2+ Fitting | Chapter 7 |
+| Mining (the Mine) | the Mine | +10% at the Mine | One ore from the Mine each night | A ★2+ ore | When the Mine is built |
+| Mining (the Quarry) | the Quarry | +10% at the Quarry | One stone or gem from the Quarry each night | A ★2+ stone or gem | When the Quarry is built |
+| Ranch | the ranch | +10% at the ranch | +5 affection to her pen each night | A ★2+ egg, milk or fleece | When the Coop is built |
+| Cooking | the Kitchen | +10% at the Kitchen | One more dish on the Kitchen’s next play | A ★2+ dish | When the Kitchen is built |
+| Serving | the Restaurant | +10% at the Restaurant | One more cover on the Restaurant’s next shift | A ★2+ dish | When the Restaurant is built |
+| Forging | the Forge | +10% at the Forge | 5% back on the Forge’s next tool | A ★2+ Fitting | When the Forge is built |
 <!-- /live -->
 
 #### What each perk does
@@ -2992,12 +3052,12 @@ places aren't built yet, so their perks wait, and a morning item of theirs is a 
 | Farming | Each plot she tends: +10% chance of an extra crop at harvest, at the plot’s stars | +0.25 growth on the untended block with the most growing plots, else hers (step 2) | A ★2+ crop of the season | Yes |
 | Foraging | Her haul ×1.1, and her Sawmill batch ×1.1 | One item from her rank’s deepest area this season, at a day’s haul’s stars (step 4) | A ★2+ good from the forest | Yes |
 | Fishing | Her catch ×1.1, and her Smokehouse batch ×1.1 | One fish from her deepest spot this season, at a day’s haul’s stars (step 4) | A ★2+ fish | Yes |
-| Mining (the Mine) | Her haul ×1.1, and her Smelter batch ×1.1 | One ore from her deepest floor | A ★2+ ore (a crop of the season until its place opens) | Not yet: from chapter 3, once its place is built |
-| Mining (the Quarry) | Her haul ×1.1, and her Cutter batch ×1.1 | One stone or gem from her deepest floor | A ★2+ stone or gem (a crop of the season until its place opens) | Not yet: from chapter 3, once its place is built |
-| Ranch | Her pen: +10% chance of an extra product | +5 affection to her pen (step 3) | A ★2+ egg, milk or fleece (a crop of the season until its place opens) | Not yet: from chapter 2, once its place is built |
-| Cooking | +10% dishes as the Kitchen’s assistant | +1 dish on the Kitchen’s next play | A ★2+ dish (a crop of the season until its place opens) | Not yet: from chapter 4, once its place is built |
-| Serving | +10% tips as the Restaurant’s server | +1 cover on the Restaurant’s next shift | A ★2+ dish (a crop of the season until its place opens) | Not yet: from chapter 6, once its place is built |
-| Forging | +10% goods as the Forge’s assistant | +5% refund on the Forge’s next tool | A ★2+ Fitting (a crop of the season until its place opens) | Not yet: from chapter 7, once its place is built |
+| Mining (the Mine) | Her haul ×1.1, and her Smelter batch ×1.1 | One ore from her deepest floor | A ★2+ ore (a crop of the season until its place opens) | Not yet: once the Mine’s game is built |
+| Mining (the Quarry) | Her haul ×1.1, and her Cutter batch ×1.1 | One stone or gem from her deepest floor | A ★2+ stone or gem (a crop of the season until its place opens) | Not yet: once the Quarry’s game is built |
+| Ranch | Her pen: +10% chance of an extra product | +5 affection to her pen (step 3) | A ★2+ egg, milk or fleece (a crop of the season until its place opens) | Not yet: once the Coop’s game is built |
+| Cooking | +10% dishes as the Kitchen’s assistant | +1 dish on the Kitchen’s next play | A ★2+ dish (a crop of the season until its place opens) | Not yet: once the Kitchen’s game is built |
+| Serving | +10% tips as the Restaurant’s server | +1 cover on the Restaurant’s next shift | A ★2+ dish (a crop of the season until its place opens) | Not yet: once the Restaurant’s game is built |
+| Forging | +10% goods as the Forge’s assistant | +5% refund on the Forge’s next tool | A ★2+ Fitting (a crop of the season until its place opens) | Not yet: once the Forge’s game is built |
 <!-- /live -->
 
 - **Seeded:** a fraction becomes a whole item by a seeded draw on the account, the day and her id, so a night replays the
@@ -3086,12 +3146,12 @@ line's best place now:
 | Farming | Salad | The top grade of the shop’s vegetables at its open seed tiers (Farm Rank 1: G6; 2: G7; 4: G10) | Carrot Salad |
 | Foraging | Soup | The top grade of the deepest forest area anyone has worked (the Woods G2 … the World Tree G10) | Button Mushroom Soup |
 | Fishing | Grill | The top grade of the deepest spot anyone has worked, its fish at 10% or more (the Pond G2) | Carp Grill |
-| Mining (the Mine) | Curry | G1 until the Mine is built (chapter 3) | Basil Curry |
-| Mining (the Quarry) | Curry | G1 until the Quarry is built (chapter 3) | Basil Curry |
-| Ranch | Cake | G1 until the ranch is built (chapter 2) | Honeycomb Cake |
-| Cooking | Tart | G1 until the Kitchen is built (chapter 4) | Apple Tart |
-| Serving | Cookies | G1 until the Restaurant is built (chapter 6) | Peanut Cookies |
-| Forging | Bread | G1 until the Forge is built (chapter 7) | Wheat Bread |
+| Mining (the Mine) | Curry | G1 until the Mine’s game is built | Basil Curry |
+| Mining (the Quarry) | Curry | G1 until the Quarry’s game is built | Basil Curry |
+| Ranch | Cake | G1 until the ranch’s game is built | Honeycomb Cake |
+| Cooking | Tart | G1 until the Kitchen’s game is built | Apple Tart |
+| Serving | Cookies | G1 until the Restaurant’s game is built | Peanut Cookies |
+| Forging | Bread | G1 until the Forge’s game is built | Wheat Bread |
 
 Her loved good, when it’s a dish, is her signature dish as it is. The recipe joins `workshops.recipes` once (a recipe the farm knows stays once) and her route keeps its id (`love.dish`).
 <!-- /live -->
@@ -3102,7 +3162,7 @@ Her loved good, when it’s a dish, is her signature dish as it is. The recipe j
   crew's term. Two dreams at one place count once.
 - **Breakfast** is a spouse's Spouse 1 perk, served on a morning in her house: every Uma on the farm with no well-fed days
   left starts the day **well fed for one day** (a Rough meal, so that day's work speeds up and earns more rank points). A
-  meal already running is never shortened or extended, and a breakfast isn't a staff meal (no chapter count moves). Each
+  meal already running is never shortened or extended, and a breakfast isn't a staff meal (no staff-meal count moves). Each
   pair it feeds earns +5 bond.
 
 #### On her profile
@@ -3112,8 +3172,8 @@ replaces Friendship 3's): "R5 · +28% at the forest · +8% ring" (with "+5% crew
 a farmer's "+20% chance of an extra crop"), "R7 · 2 items each night" (a farmer's "+0.5 growth each night"; "None while
 she's away"), "R2 · Next tomorrow" or "Next in 3 mornings", "F4 · ‹dish› · in the Kitchen's list", "F8 · Beside
 Stand-in 1" ("No 3-heart friend yet"), "F10 · Bent Trowel · +0.25 quality at the Fields", "R1 · She calls you
-“Sprout”", "R4 · With Stand-in 1", "R8 · “‹engraving›”". A perk whose place isn't open says "Opens with chapter n" and
-nothing now.
+“Sprout”", "R4 · With Stand-in 1", "R8 · “‹engraving›”". A perk whose place isn't built says "Opens when the Mine is
+built" (her place) and nothing now.
 
 ### Heart events and plays
 
@@ -3562,22 +3622,22 @@ The bench's rule, in full:
 |  | The ring bench |
 |---|---|
 | Opens | The night after the first Romance 8 event anyone plays: `buildings.forge = 0`, and Ida Stone’s scene the next morning |
-| A ring of grade g | 3 refined goods of grade g, any family, any mix; the mining families’ (ingots, blocks, cut gems) from chapter 3 |
+| A ring of grade g | 3 refined goods of grade g, any family, any mix; the mining families’ (ingots, blocks, cut gems) once the Smelter and the Cutter stand |
 | Cost | The goods only: no gold, no game, no assistant, no score |
 | Out | The ring, ★1 (a Rough make), into the Warehouse |
 | How often | One ring a day (`today.ring`) |
 | Her bonus once married | +1% at her line a grade, inside her own +35%; the Forge’s merge game (not built yet) adds +1, +3 or +5 for a Fine, Great or Masterwork make |
-| Refusals | “The ring bench opens with your first Romance 8.” · “Three refined goods of one grade.” · “Ingots, blocks and cut gems open with chapter 3.” · “One ring a day.” · “Not enough in the Warehouse.” |
+| Refusals | “The ring bench opens with your first Romance 8.” · “Three refined goods of one grade.” · “Ingots, blocks and cut gems open when the Smelter and the Cutter are built.” · “One ring a day.” · “Not enough in the Warehouse.” |
 <!-- /live -->
 
 - **On the map:** until the bench stands the Forge's lock says "Opens with your first Romance 8". Then its quick look
   reads **Ring bench · one ring a day** with **Make a ring ›** ("See the bench ›" once today's is made).
-- **Ida Stone's scene:** the morning after, once the summary is put away (after any chapter scene, before arrivals), seven
+- **Ida Stone's scene:** the morning after, once the summary is put away (after the opening, before arrivals), seven
   short lines and a card with **See the bench** or **Later**; read once.
 - **The bench's sheet:** Ida Stone's disc and the rule; one row a grade you can make now, lowest first, each with **the
   three goods it would take** (the lowest-value refined goods of that grade, fewer stars first, any family, any mix),
   "→ Iron Ring" and "+3% once married". A tap on one of the three lists the grade's other goods held and swaps it in; a
-  tap on a row chooses it. The Forge's own recipe shows greyed, "From chapter 3: 2 ingots + 1 cut gem"; then "Her bonus
+  tap on a row chooses it. The Forge's own recipe shows greyed, "2 ingots + 1 cut gem · Opens when the Smelter and the Cutter are built"; then "Her bonus
   once married: +1% a grade", and **Make an Iron Ring · 1 a day**. Made, the ring is "in the Warehouse, ★1", and the foot
   says "One ring a day. Iron Ring made today ✓" until tomorrow. With nothing to make: "Nothing to make yet. Three refined
   goods of one grade make a ring: planks from the Sawmill, fillets from the Smokehouse, flour from the Mill."
@@ -3587,7 +3647,7 @@ The bench's rule, in full:
 The ten rings, one a grade:
 
 <!-- live:rings -->
-| Grade | Ring | Id | ★1 | ★5 | Her bonus once married | Cheapest at the bench (chapter 1) | Its own recipe (from chapter 3) |
+| Grade | Ring | Id | ★1 | ★5 | Her bonus once married | Cheapest at the bench | Its own recipe (once the Smelter and the Cutter stand) |
 |---|---|---|---|---|---|---|---|
 | G1 | Copper Ring | `ring-g1` | 205g | 410g | +1% | 3 Pine Plank (40g each) | 2 Copper Ingot + 1 Cut Quartz |
 | G2 | Tin Ring | `ring-g2` | 275g | 550g | +2% | 3 Birch Plank (45g each) | 2 Tin Ingot + 1 Cut Amethyst |
@@ -3660,33 +3720,35 @@ houses** you build, name and extend.
 |---|---|---|---|---|
 | The Farmhouse | 2 (your own home) | — | — | Day 1 |
 | House 1 | 2, or 4 extended | 8,000g | 4,000g | The first wedding |
-| House 2 | 2, or 4 extended | 20,000g | 10,000g | House 1 built |
-| House 3 | 2, or 4 extended | 40,000g | 20,000g | House 2 built |
-| House 4 | 2, or 4 extended | 70,000g | 35,000g | House 3 built |
-| House 5 | 2, or 4 extended | 110,000g | 55,000g | House 4 built |
-| House 6 | 2, or 4 extended | 160,000g | 80,000g | House 5 built |
+| House 2 | 2, or 4 extended | 20,000g | 10,000g | The second wedding, House 1 built |
+| House 3 | 2, or 4 extended | 40,000g | 20,000g | The third wedding, House 2 built |
+| House 4 | 2, or 4 extended | 70,000g | 35,000g | The fourth wedding, House 3 built |
+| House 5 | 2, or 4 extended | 110,000g | 55,000g | The fifth wedding, House 4 built |
+| House 6 | 2, or 4 extended | 160,000g | 80,000g | The sixth wedding, House 5 built |
 | **All** | **26 rooms** | **408,000g** | **612,000g extended** |  |
 <!-- /live -->
 
-- **House 1 opens to build at the first wedding,** each later house once the one before stands. A house **stands at
+- **House *n* opens to build with the *n*-th wedding,** the one before it standing (they're built in turn). A house **stands at
   once** when bought, named there: 1–20 characters under the farmer's letters rule, a grey "Rose Cottage" placeholder, no
   two alike. **An extension** adds two rooms at once for half the house's price. The Farmhouse is never renamed or
   extended.
 - **Never a gate:** a wedding never waits for a room.
-- **On the map:** the homestead's rows sit after the yard and before the town edge, which stays the map's last row. Built
-  houses and the next lot show; later lots don't, so the map grows a row at a time. A house's pips are its residents'
-  faces (♥ on a Ready one) and its free rooms' dots; a tap opens the homestead's sheet at that house. The next lot shows
-  the cottage dimmed and locked, "Build · 8,000g" (before the first wedding, "Opens with your first wedding").
+- **On the map:** the homestead's rows sit after the yard and before the town edge, which stays the map's last row. A
+  row shows once it's open, its lots with it: the first (the Farmhouse, Houses 1 and 2) from day 1, the second (Houses
+  3–5) with three married, the third (House 6) with six; a house built shows whatever its row. A house's pips are its
+  residents' faces (♥ on a Ready one) and its free rooms' dots; a tap opens the homestead's sheet at that house. The
+  next lot shows the cottage dimmed and locked, "Build · 8,000g" once its wedding has come; a lot before its wedding
+  says so ("Opens with your second wedding").
 
 The homestead's rows on the map:
 
 <!-- live:homestead-map -->
-| Row | Places |
-|---|---|
-| 8 | Farmhouse (`farmhouse`) · House 1 (`homestead-house`) · House 2 (`homestead-house`) |
-| 9 | House 3 (`homestead-house`) · House 4 (`homestead-house`) · House 5 (`homestead-house`) |
-| 10 | House 6 (`homestead-house`) |
-| After the last shown | The town edge: Shop · Festival ground · Expedition post |
+| Row | Places | Shows from |
+|---|---|---|
+| 8 | Farmhouse (`farmhouse`) · House 1 (`homestead-house`) · House 2 (`homestead-house`) | Day 1 |
+| 9 | House 3 (`homestead-house`) · House 4 (`homestead-house`) · House 5 (`homestead-house`) | 3 married |
+| 10 | House 6 (`homestead-house`) | 6 married |
+| After the last shown | The town edge: Shop · Festival ground · Expedition post | Day 1 |
 <!-- /live -->
 
 ```
@@ -3698,7 +3760,7 @@ The homestead's rows on the map:
 │ ⌂ Rose Cottage     [S3][ ▢ ]  1/2        │
 │                         [ Extend · 4,000g ]
 │ ⌂ Lot 2  ▢▢  [ Willow House ] [Build · 20,000g]
-│ ⌂ Lots 3–6 · built in turn               │
+│ ⌂ Lots 3–6 · one a wedding, in turn      │
 ├──────────────────────────────────────────┤
 │ Needs a room: none                       │
 │ Shared houses: +10 bond a night a pair.  │
@@ -3925,9 +3987,8 @@ At 3 bond hearts two Umas work **side by side:**
 
 #### The romance at night
 
-Every step of the night, the romance's among them, is in [the calendar and the day](#the-night-step-by-step). A
-completed chapter brings its authored arrival, her ties seeded like any arrival's, and the night clears the whole of the
-day's romance record.
+Every step of the night, the romance's among them, is in [the calendar and the day](#the-night-step-by-step). An
+authored arrival joins with her ties seeded, and the night clears the whole of the day's romance record.
 
 **The morning's Hearts section** comes after Ranks. Each line is a tap to her profile (or where it says), in this order:
 
@@ -4044,9 +4105,9 @@ differently from its neighbours. No signs and no words are painted on the farm.
 
 A place's work slots face the work: an Uma at a slot beside a building faces it, and one in front of it faces into it.
 
-**When a place stands.** A place's recipe stands once the place is open (by its chapter, Farm Rank or reward, as its
-lock says) and, for the three stations (the Mill, the Sawmill and the Smokehouse), once it's built. The Forge stands
-once its ring bench does. Until then the plot is an **overgrown lot:** two clumps of weeds, brambles and a broken
+**When a place stands.** A place's recipe stands from day 1, or once it's built (the morning after it's paid), or for
+the Requests board once five Umas are met. The Forge stands once its ring bench does. The Dock stands beside the Gate,
+a pier over the water; the Boat moors there and isn't drawn on its own. Until then the plot is an **overgrown lot:** two clumps of weeds, brambles and a broken
 fence on grass, its lane left clear, with the place's name and lock over it. A place can stand and still be locked: one
 that's open but has no screen yet keeps its lock, which says "Soon".
 
@@ -4298,7 +4359,11 @@ sits outside the opening screens, so it shows even when the app stopped while op
   one card: **"Your farm starts over"**, "This version of the game begins a new farm on day 1.", and **Start the new
   farm**. Nothing changes until the button is tapped.
 - **The new farm** is day 1 on v4: 500g, 9 Carrot seeds, Block A, the Dorm at level 1, the Farmhouse, nobody on the
-  roster and the farmer's name empty. Only the account carries over, its "last changed" time with it, so the farmer's
+  roster and the farmer's name empty.
+- **v4 grows in place.** A v4 from before the farm grew by building still loads: its `farm.chapter` and `farm.goals` are
+  read and ignored, its missing `farm.builds` is none, a morning's "chapter done" line is dropped, and every place its
+  chapter had opened stays open, built (chapter 2's Coop and Barn). Chapter 1's Mill plans (`buildings.mill` 0) are an
+  unbuilt Mill, offered at Farm Rank 1. Only the account carries over, its "last changed" time with it, so the farmer's
   name is the new farm's first change. Then the opening runs as on any new farm.
 - **Nothing goes silently:** a phone save with unsynced play is kept first as a "Before the new farm" safety copy (if it
   can't be kept, nothing changes and the card says so, with the button to try again). The new farm syncs up as it is,

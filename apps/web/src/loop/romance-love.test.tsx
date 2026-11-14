@@ -172,11 +172,11 @@ describe('what her next event waits for, in words', () => {
     expect([
       at({ kind: 'bar' }), at({ kind: 'day' }, 'confession'), at({ kind: 'ring' }, 'proposal'), at({ kind: 'away' }), at({ kind: 'today' }),
       at({ kind: 'setup', setup: { kind: 'working', activity: 'fishing' } }), at({ kind: 'setup', setup: { kind: 'item', good: 'carrot' } }),
-      at({ kind: 'setup', setup: { kind: 'bond', with: '9000002', level: 3 } }), at({ kind: 'opens', chapter: 3 }),
+      at({ kind: 'setup', setup: { kind: 'bond', with: '9000002', level: 3 } }), at({ kind: 'opens', place: 'mine' }),
       at({ kind: 'night' }, 's2'), at({ kind: 'friend' }, 'confession'), at({ kind: 'done' }, null),
     ]).toEqual([
       'Romance 5 · 60 to go', 'Her confession · Ready tomorrow', 'The proposal · Needs a ring', 'Romance 5 · Swap her home', 'Romance 5 · tomorrow: one event a day',
-      'Romance 5 · the Fishery, when she works there', 'Romance 5 · with Carrot in the Warehouse', 'Romance 5 · bond 3 with Stand-in 2', 'Romance 5 · Opens with chapter 3',
+      'Romance 5 · the Fishery, when she works there', 'Romance 5 · with Carrot in the Warehouse', 'Romance 5 · bond 3 with Stand-in 2', 'Romance 5 · Opens when the Mine is built',
       'Spouse 2 · comes tonight', 'Her confession · she said “Not yet”', 'Her route is complete',
     ])
   })

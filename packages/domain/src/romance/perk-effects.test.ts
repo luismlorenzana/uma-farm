@@ -211,10 +211,10 @@ describe('the line effects', () => {
     expect(blockGrowth(withLove(fields, ONE, at('friendship', 8)), 'A')).toBeCloseTo(plain * 1.1, 6)
   })
 
-  it('leaves a miner\'s +10% waiting: "Opens with chapter 3" on her profile, and inert', () => {
+  it('leaves a miner\'s +10% waiting: "Opens when the Mine is built" on her profile, and inert', () => {
     const pack = packWithFour('mining')
     const save = withLove(withFour(pack), FOUR, at('romance', 7))
-    expect(perksFor('mining', save.farm.chapter).find((p) => p.id === 'line-10')!.opens).toBe(3)
+    expect(perksFor('mining', save).find((p) => p.id === 'line-10')!.opens).toBe('mine')
     expect(romanceBonus(save, pack, FOUR, 'mine')).toBe(0)
     expect(choresTonight(save, pack, FOUR)).toBe(0)
     expect(keepsakeQuality(withLove(save, FOUR, at('romance', 7)), pack, FOUR, 'mine')).toBe(0)

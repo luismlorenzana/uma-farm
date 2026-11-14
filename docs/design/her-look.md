@@ -15,7 +15,7 @@ outfit and a face for each expression; the game puts the face over the bust. The
 | The town's people are all Umas from the Uma Ranker's NPC board, mapped role for role (14 roles); the town's six spots and each Uma's favourite spot come from the pack | [F66](../handoff/tasks/F66-the-town.md) | With F66 |
 | The Ranker's 24 sisters (an outfit presented as her own character, id `s<outfitId>`) in the town, the cast and the ties | [F66](../handoff/tasks/F66-the-town.md) | With F66 |
 | Ties may name one of the town's people (no bond, a line on both profiles) | [F66](../handoff/tasks/F66-the-town.md) | With F66 |
-| Chapters gated on builds (the Mine, the Quarry, the Cutter, the Kitchen, the Restaurant, the Forge), and ids for the dock and the boat | [F64](../handoff/tasks/F64-farm-by-building.md) | With F64 |
+| Chapters gated on builds (the Mine, the Quarry, the Cutter, the Kitchen, the Restaurant, the Forge), and ids for the dock and the boat | [Building](../game-mechanics.md#building): `dock` and `boat` are place ids a `built` gate can name | Shipped (F64) |
 | Group scenes for 10 families and 17 crews | [F40](../handoff/tasks/F40-story-authoring.md) | Later, with Phase 2's long game |
 
 The story has a baseline for all 100 of the Ranker's characters: tags, a web of 257 ties, and 76 in the pack's cast with

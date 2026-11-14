@@ -3,10 +3,9 @@
 import { FESTIVALS, nextArrivals, type Arrival, type FarmSave } from '@farm/domain'
 import { useStory } from '../story/story'
 
-/** What brings an arrival, in the Gate's words: "chapter 2's end", "the Dorm's level 4", "the Fishing Derby". */
+/** What brings an arrival, in the Gate's words: "the Dorm's level 4", "the Fishing Derby". */
 export function arrivalWords(arrival: Arrival): string {
   switch (arrival.kind) {
-    case 'chapter': return `chapter ${arrival.chapter}’s end`
     case 'beds': return `the Dorm’s level ${arrival.dormLevel}`
     case 'festival': return `the ${FESTIVALS.find((f) => f.id === arrival.festival)?.name ?? arrival.festival}${arrival.year && arrival.year > 1 ? `, year ${arrival.year}` : ''}`
     case 'event': return 'a story event'

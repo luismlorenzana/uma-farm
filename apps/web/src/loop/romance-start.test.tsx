@@ -1,6 +1,6 @@
 // The romance core's start as rendered, the switch on: a fresh account's name
 // sheet, the re-cut opening with `{farmer}` filled, the opening three's arrival scenes in turn (Skip landing on the choice,
-// the gains on the buttons, +50 and the choice paid once), chapter 1's card and planting; the Gate's words and the Dorm
+// the gains on the buttons, +50 and the choice paid once), the first day's card and planting; the Gate's words and the Dorm
 // for 20. The stand-ins aren't in master data: their faces are lettered discs. Invented outfits (the album fixture) and
 // the invented stand-in pack; the server is a stub.
 import 'fake-indexeddb/auto'
@@ -97,7 +97,7 @@ afterEach(async () => {
 })
 
 describe('a fresh farm on v4', () => {
-  it('names the farmer, plays the opening, then the three arrivals, and ends on chapter 1\'s card and planting', async () => {
+  it('names the farmer, plays the opening, then the three arrivals, and ends on the first day\'s card and planting', async () => {
     await renderShell()
     const field = await find('[data-name-field]') as HTMLInputElement
     const go = $('[data-action="name"]') as HTMLButtonElement
@@ -152,14 +152,12 @@ describe('a fresh farm on v4', () => {
     await until(() => save().arrivals.includes('9000002'))
     expect(save().love['9000002']!.points).toBe(60)
 
-    // The third ends on chapter 1's card; its first tap is planting.
+    // The third ends on the first day's card; its first tap is planting.
     await find('[data-scene="arrival:9000003"] [data-beat]')
     await click($('[data-action="skip"]'))
     await click($('[data-option="0"]'))
     await click($('[data-action="skip"]'))
-    expect($('[data-chapter-card="1"]')?.textContent).toContain('A Field Again')
-    // The stand-in's three all come with the opening, so chapter 1 brings no one: no new hand on its card.
-    expect($('[data-chapter-card="1"] [data-reward]')?.textContent).toBe('Reward: +500g, the Mill’s plans, 250 Farm Rank points.')
+    expect($('[data-first-day]')?.textContent).toContain('Nine Carrot seeds wait in the Fields.')
     await click($('[data-action="plant"]'))
     await until(() => save().arrivals.includes('9000003'))
     expect(save().love['9000003']!.points).toBe(80)
@@ -171,7 +169,7 @@ describe('a fresh farm on v4', () => {
 })
 
 describe('an open pack\'s placeholders', () => {
-  it('an opening that brings nobody leaves out its last line and ends on chapter 1\'s card', async () => {
+  it('an opening that brings nobody leaves out its last line and ends on the first day\'s card', async () => {
     const pack = await storyReady() as { cast: Cast }
     const cast = pack.cast
     pack.cast = { ...cast, opening: [] }
@@ -236,15 +234,15 @@ describe('the Gate and the Dorm on v4', () => {
     const everyone: SaveV4 = { ...named, roster: Object.fromEntries(pack.cast.umas.map((u) => [u.characterId, { joined: 1, ranks: newSave('u', AT).roster as never, wellFed: 0 }])) }
     await render(<GatePeek save={everyone} />)
     expect($('[data-everyone]')?.textContent).toBe('Everyone is here.')
-    // A larger invented cast: chapter 2's end, the Dorm's level 4, the Fishing Derby.
+    // A larger invented cast: the Dorm's level 4, the Fishing Derby, another's event.
     const bigger = { ...pack, cast: { ...pack.cast, umas: [...pack.cast.umas,
       { characterId: '9000004', outfitId: '900000401', arrives: { kind: 'festival' as const, festival: 'fishing-derby' as const }, calling: 'fishing' as const, paragraph: 'Invented.' },
       { characterId: '9000005', outfitId: '900000501', arrives: { kind: 'beds' as const, dormLevel: 4 }, calling: 'mining' as const, paragraph: 'Invented.' },
-      { characterId: '9000006', outfitId: '900000601', arrives: { kind: 'chapter' as const, chapter: 2 }, calling: 'foraging' as const, paragraph: 'Invented.' },
+      { characterId: '9000006', outfitId: '900000601', arrives: { kind: 'event' as const, after: 'r1' }, calling: 'foraging' as const, paragraph: 'Invented.' },
     ] } }
     const { nextArrivals } = await import('@farm/domain')
     const { arrivalWords } = await import('./GatePeek')
-    expect(nextArrivals(named, bigger).map(arrivalWords).join(' · ')).toBe('chapter 2’s end · the Dorm’s level 4 · the Fishing Derby')
+    expect(nextArrivals(named, bigger).map(arrivalWords).join(' · ')).toBe('the Dorm’s level 4 · the Fishing Derby · a story event')
   })
 
   it('shows the Dorm for 20\'s eight levels', async () => {

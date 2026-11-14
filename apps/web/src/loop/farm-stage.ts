@@ -35,7 +35,7 @@ export function plotOfHit(hit: PickHit, plots: readonly FarmPlot[]): string | nu
     case 'prop': id = plotAt(plots, ref.tile.x, ref.tile.z)?.id ?? null; break
     case 'figure': id = null; break
   }
-  return id !== null && plots.some((p) => p.id === id && p.kind !== 'open') ? id : null
+  return id !== null && plots.some((p) => p.id === id) ? id : null
 }
 function markerPlot(m: FarmMarker): string | null {
   switch (m.kind) {
@@ -62,7 +62,7 @@ export function tapTarget(hits: readonly PickHit[], ground: { x: number; z: numb
   for (const hit of hits) if ((id = plotOfHit(hit, plots)) !== null) break
   if (id === null && ground) {
     const plot = plotAt(plots, ground.x, ground.z)
-    id = plot && plot.kind !== 'open' ? plot.id : null
+    id = plot ? plot.id : null
   }
   const place = id === null ? undefined : places.find((p) => p.id === id)
   return place ? { id: place.id, to: place.to } : null

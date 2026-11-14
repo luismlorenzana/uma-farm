@@ -1,7 +1,8 @@
 // The farm: `/`. uma-kit's Hub map in eight rows of three, the core
 // loop's rows, on uma-art's buildings; taller than a phone's screen, it scrolls, with the help button and the Collect all
 // pill fixed. A place's quick look opens in the side panel (`/?peek=<place>`): what it is, and what opens it while it's
-// locked; the Gate's says what brings the next arrivals. After a night the morning summary opens over the map until the
+// locked, a place to build with its Build card (`BuildCard.tsx`; the Dock's with the Boat's once it stands); the Gate's
+// says what brings the next arrivals. After a night the morning summary opens over the map until the
 // player starts the day. A Ready Uma's pip carries ♥ wherever the map draws her and the morning's Hearts section lists
 // who's Ready, both read live; its bond hearts carry Read while a conversation waits, which plays over the morning
 // (`?read=`); an invitation's line carries Yes, tonight and Another day; the Forge's quick look is the ring bench's once
@@ -10,8 +11,8 @@
 // stage instead (`FarmStage.tsx`, its own chunk with three.js), with the Umas on it from the same work view and Ready
 // hearts as the pips; off, the Hub is as it was. Loaded on demand.
 import {
-  farmEnv, FARM_PLACES, farmPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, placeOpen, readyPlots, workNow, type FarmPlace, type LoopPlaceId,
-  type FarmSave,
+  farmEnv, farmPlace, isBuildPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, MAP_PLACES, placeBuilt, placeOpen, readyPlots, workNow, type BuildPlace,
+  type FarmPlace, type LoopPlaceId, type FarmSave,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { ART_TILE, artScale, HubMap, hubDpr, PALETTES, type HubMapPlace, type PageGround, type PipModel } from '@luismlorenzana/uma-kit/hub'
@@ -28,7 +29,6 @@ import { collectFarm, dismissSummary } from './actions'
 import { FARM_MAP_TILES, lockOf, placeAt, placeLink } from './farm-map'
 import { FieldsPeek, fieldsPips } from './FieldsPeek'
 import { GatePeek } from './GatePeek'
-import { chapterHand } from './goal-words'
 import { pairWords, readyLines } from './hearts-view'
 import { homeWords } from './homestead-view'
 import { NO_HOME, summaryParts } from './summary-words'
@@ -41,6 +41,7 @@ const GROUND: PageGround = { id: 'farm', tiles: 'farmlands', palette: PALETTES.f
 const InviteAnswer = lazy(() => import('./InviteAnswer'))
 const BenchPeek = lazy(() => import('./BenchSheet').then((m) => ({ default: m.BenchPeek })))
 const HouseAnswer = lazy(() => import('./HouseAnswer'))
+const BuildCard = lazy(() => import('./BuildCard').then((m) => ({ default: m.BuildCard })))
 type HomesteadMap = typeof import('./homestead-map')
 // Home on the shared HD-2D stage, with three.js, loaded only when the preview switch is on.
 const FarmStage = lazy(() => import('./FarmStage'))
@@ -114,7 +115,7 @@ function FarmHelp() {
           <p>A day is a turn: nothing moves until you end it, even with the app closed.</p>
           <p>Plant the Fields, put your Umas to work, then tap End the day. Jobs and crops take whole days.</p>
           <p>The night settles everything at once, and the morning shows what it brought.</p>
-          <p>Places open with chapters and the Farm Rank. The rows run gathering, its station, then the ranch or a workshop; the yard and the town are below.</p>
+          <p>The farm grows by building: the Farm Rank offers a place, and you build it with gold and the farm’s goods. It stands the next morning. The rows run gathering, its station, then the ranch or a workshop; the yard and the town are below.</p>
           <p>Tap the date for the calendar: a festival on each season’s 10th day.</p>
         </HelpButton>
       </div>
@@ -145,7 +146,7 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   const layout = homestead ? homestead.homesteadLayout(save) : null
   // The map waits for the homestead's rows, so the town edge never jumps.
   const waiting = layout === null
-  const places: HubMapPlace[] = [...FARM_PLACES.map((place): HubMapPlace => {
+  const places: HubMapPlace[] = [...MAP_PLACES.map((place): HubMapPlace => {
     const lock = lockOf(save, place)
     const slots = place.id === 'fields' ? plots : ready.get(place.id as LoopPlaceId) ?? 0
     const pips = place.id === 'fields' ? fieldsPips(save, farming, hearts) : pipsOf(place, work, hearts)
@@ -208,13 +209,20 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   )
 }
 
-/** A place's quick look while its page isn't wired up: what it is, and what opens it. */
+/** A place's quick look while its page isn't wired up: what it is, and what opens it; a place to build, its Build card
+ * until it stands. The Dock, once built, offers the Boat. */
 function PlacePeek({ save, place }: { save: FarmSave; place: FarmPlace }) {
+  const [note, setNote] = useState<string | null>(null)
   const lock = lockOf(save, place)
+  const boat = farmPlace('boat') as BuildPlace
+  const build = isBuildPlace(place) && !placeBuilt(save, place.id) ? place : place.id === 'dock' && !placeBuilt(save, 'boat') ? boat : null
   return (
     <div className="space-y-2 p-4" data-peek={place.id} data-lock={lock ?? undefined}>
-      {lock && <p className="text-[15px] font-semibold">{lock === 'Soon' ? 'Opens soon' : `Opens with ${lock}`}</p>}
-      <p className="text-[14px] text-ink-soft">{place.blurb}</p>
+      {note && <p role="status" className="text-[13px] font-semibold text-success" data-build-note>{note}</p>}
+      {lock && !build && <p className="text-[15px] font-semibold">{lock === 'Soon' ? 'Opens soon' : `Opens with ${lock}`}</p>}
+      {build === boat && <p className="text-[14px]" data-dock-open>The Sea Pier is open at the Fishery. The Boat takes you to the Deep Sea.</p>}
+      {place.id === 'dock' && placeBuilt(save, 'boat') && <p className="text-[14px]" data-dock-open>The Sea Pier and the Deep Sea are open at the Fishery.</p>}
+      {build ? <Suspense fallback={null}><BuildCard save={save} place={build} say={setNote} /></Suspense> : <p className="text-[14px] text-ink-soft">{place.blurb}</p>}
     </div>
   )
 }
@@ -234,9 +242,7 @@ function Morning({ save, open }: { save: FarmSave; open: boolean }) {
   // The homestead's lines.
   const home = useMemo(() => (pack ? homeWords(save, pack, nameOf, (id) => talents.table?.get(id)?.temperament ?? 'steady') : NO_HOME),
     [save, pack, nameOf, talents.table])
-  // A chapter's new hand is the cast's arrival for it.
-  const hand = useMemo(() => (chapter: number) => chapterHand(pack, chapter), [pack])
-  const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home, hand) : []), [summary, nameOf, ready, pairs, home, hand])
+  const parts = useMemo(() => (summary ? summaryParts(summary, nameOf, ready, pairs, home) : []), [summary, nameOf, ready, pairs, home])
   if (!summary) return null
   return (
     <Sheet

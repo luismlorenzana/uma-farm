@@ -365,8 +365,8 @@ describe('anniversaries', () => {
     const hills = { ...forager, roster: { ...forager.roster, [TWO]: { ...forager.roster[TWO]!, ranks: { ...forager.roster[TWO]!.ranks, foraging: { points: 0, rank: 1 as const, challenge: 0 } } } } }
     const deeper = Array.from({ length: 6 }, (_, n) => lineGood(hills, PACK, TWO, 5, n).id)
     expect(deeper.every((id) => FOREST.hills.seasons.spring.some(([g]) => g === id))).toBe(true)
-    // A miner before chapter 3: a crop of the season.
-    const pack = packWith({ characterId: '9000004', arrives: { kind: 'chapter', chapter: 1 }, calling: 'mining' })
+    // A miner before the Mine is built: a crop of the season.
+    const pack = packWith({ characterId: '9000004', calling: 'mining' })
     const miner = withLove(married(wed + DAYS_PER_YEAR, ONE, pack), ONE, {})
     const joined = { ...miner, roster: { ...miner.roster, '9000004': miner.roster[ONE]! }, love: { ...miner.love, '9000004': { ...newLove(), stage: 'spouse' as const, level: 1, wed } } }
     const { save, lines } = heartDays(joined, pack, NO_BIRTHDAYS)
@@ -419,12 +419,9 @@ describe('Ready', () => {
     expect(readiness({ ...save, bonds: { [pairKey(ONE, TWO)]: 149 } }, bond, ONE).waits).toMatchObject({ kind: 'setup' })
     expect(readiness({ ...save, bonds: { [pairKey(ONE, TWO)]: 150 } }, bond, ONE).ready).toBe(true)
     expect(BOND_HEARTS.map(bondHearts)).toEqual([1, 2, 3, 4, 5])
-    const chapter = packWithTrigger({ kind: 'chapter', chapter: 2 })
-    expect(readiness(save, chapter, ONE).waits).toEqual({ kind: 'opens', chapter: 2 })
-    expect(readiness({ ...save, farm: { ...save.farm, chapter: 2 } }, chapter, ONE).ready).toBe(true)
     const mine = packWithTrigger({ kind: 'working', activity: 'mining' })
-    expect(readiness(withLove(save, ONE, { points: 0 }), mine, ONE).waits).toEqual({ kind: 'opens', chapter: 3 })
-    expect(readiness({ ...save, farm: { ...save.farm, chapter: 3 } }, mine, ONE).waits).toMatchObject({ kind: 'setup' })
+    expect(readiness(withLove(save, ONE, { points: 0 }), mine, ONE).waits).toEqual({ kind: 'opens', place: 'mine' })
+    expect(readiness({ ...save, buildings: { ...save.buildings, mine: 1 } }, mine, ONE).waits).toMatchObject({ kind: 'setup' })
   })
 
   it('makes a waiting rung Ready the day after the rung before, the proposal only with a ring', () => {

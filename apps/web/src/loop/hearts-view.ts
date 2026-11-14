@@ -251,7 +251,7 @@ export interface NextCard {
   perk: Perk | null
   hint: string | null
   bar: Bar
-  /** Her waits in words: "Ready", "Tomorrow", "Needs a ring", "Swap her home", "Opens with chapter 3". */
+  /** Her waits in words: "Ready", "Tomorrow", "Needs a ring", "Swap her home", "Opens when the Mine is built". */
   words: string
   ready: boolean
   waits: Wait['kind'] | null
@@ -262,7 +262,7 @@ export function nextCard(save: SaveV4, pack: HeartsPack, id: string, nameOf: Nam
   const state = readiness(save, pack, id)
   const now = bar(love)
   const line = perkLineOf(pack, id)
-  const perk = now.rung && line ? perksFor(line, save.farm.chapter).find((p) => p.rung === now.rung) ?? null : null
+  const perk = now.rung && line ? perksFor(line, save).find((p) => p.rung === now.rung) ?? null : null
   const hint = now.rung ? beatOf(pack, id, now.rung)?.hint ?? null : null
   return {
     rung: now.rung, title: now.rung ? `Next: ${rungName(now.rung)}` : 'Her route is complete', perk, hint, bar: now, words: nextWords(state, now, nameOf),
@@ -293,7 +293,7 @@ export function perkNow(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' | 
   const line = perkLineOf(pack, id)
   if (!love || !line || perk.opens !== null) return null
   const superseded = SUPERSEDED[perk.id]
-  if (superseded && perksFor(line, save.farm.chapter).some((p) => p.id === superseded && hasPerk(love, p.rung))) return null
+  if (superseded && perksFor(line, save).some((p) => p.id === superseded && hasPerk(love, p.rung))) return null
   const place = linePlaces(pack, id)[0]
   switch (perk.id) {
     case 'line-10': case 'line-20': {
@@ -373,7 +373,7 @@ export function perkList(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' |
   if (!love || !line) return []
   const next = routeIndex(love)
   let named = false
-  return perksFor(line, save.farm.chapter).map((perk): PerkView => {
+  return perksFor(line, save).map((perk): PerkView => {
     if (ROUTE_RUNGS.indexOf(perk.rung) < next) return { ...perk, state: 'reached', now: nameOf ? perkNow(save, pack, id, perk, nameOf) : null }
     if (named) return { ...perk, state: 'ahead', now: null }
     named = true

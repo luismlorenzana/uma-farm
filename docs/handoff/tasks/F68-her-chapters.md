@@ -1,7 +1,7 @@
 # F68 — Her chapters
 
 **uma-farm · Claude · M · Needs: F63, F67 · Unblocks: the workshops · [Roadmap](../../roadmap.md#phase-1-one-game-built-around-the-umas):
-Phase 1, step 1.8 · Design: [progression.md](../../design/progression.md#her-chapters)**
+Phase 1, step 1.8 · The farm's side: [the farm's progress](../../game-mechanics.md#the-farms-progress)**
 
 > Each Uma's story is hers, in her own chapters, from the day you meet her to married life. There's no farm-wide story.
 

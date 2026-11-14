@@ -45,6 +45,14 @@ describe('the cast', () => {
     cast.opening = ['9000002', '9000001']
     expect(checkCast(cast)).toMatchObject({ ...clean, value: { opening: ['9000002', '9000001'] } })
   })
+  it('notes a chapter arrival, which the farm no longer has, and drops it', () => {
+    const cast = clone(STAND_IN_CAST) as unknown as { umas: Record<string, unknown>[] }
+    cast.umas[2]!.arrives = { kind: 'chapter', chapter: 1 }
+    const read = checkCast(cast)
+    expect(read.errors).toEqual([])
+    expect(read.notes).toContain('Uma 3 (9000003): the farm has no chapters, so a chapter arrival never comes; she waits to be met')
+    expect(read.value.umas[2]).not.toHaveProperty('arrives')
+  })
   it('skips only the character it can\'t read; a broken field skips that field', () => {
     const cast = clone(STAND_IN_CAST) as unknown as { umas: Record<string, unknown>[] }
     cast.umas.push({ characterId: 'Nine' }, { characterId: '9000001', calling: 'farming' })
@@ -53,7 +61,7 @@ describe('the cast', () => {
     const read = checkCast(cast)
     expect(read.errors).toEqual([
       'Uma 2 (9000002): calling is one of farming, foraging, fishing, mining, quarry; skipped',
-      'Uma 3 (9000003): arrives is the opening, a chapter, a festival (and a year), the Dorm’s beds, or after an event; skipped',
+      'Uma 3 (9000003): arrives is the opening, a festival (and a year), the Dorm’s beds, or after an event; skipped',
       'Uma 4: no characterId (master data’s id, a positive integer); skipped',
       'Uma 5 (9000001): listed twice; the later one is skipped',
     ])
@@ -169,7 +177,7 @@ describe('her bible', () => {
     expect(read.errors).toEqual([
       'Beat f3: together is talk, work, date, gift or help; skipped',
       'Beat f3 hint: no hint; skipped',
-      'Beat f2: trigger is hearts, working, item, bond or chapter (never a clock, the weather, a season or a festival); skipped',
+      'Beat f2: trigger is hearts, working, item or bond (never a clock, the weather, a season or a festival); skipped',
       'Beat 5: no id; skipped',
     ])
     expect(read.notes).toEqual([`Beat f11: not a rung the game plays (${RUNGS.join(', ')}); kept for the story`])

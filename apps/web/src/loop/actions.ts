@@ -1,16 +1,16 @@
 // The loop's actions on the day: End the day, dismiss the morning, Collect all; the goods: ship, Ship all, take
 // back and buy; the Fields: plant, Plant all, harvest, Harvest all, a tender and a block; the work: a job, a
-// queue, Collect, Recall, Repeat, a stopped queue and building a station; the roster: the Dorm's levels and swaps; the
+// queue, Collect, Recall, Repeat and a stopped queue; paying for a place to build; the roster: the Dorm's levels and swaps; the
 // scenes, read once; the farmer's name, the opening (which brings the opening's Umas) and arrival scenes; the chat,
 // gift and praise; and the pair conversations read. Each reads the save right
 // before its rule runs (as `edit`), commits it to the store and the device, and syncs; a refused rule throws its words.
 // The night and the harvests read the talents from master data, so they wait for it. Loaded on demand with the loop's
 // screens, so the night's code stays out of the initial JS.
 import {
-  BLOCK_IDS, buildStation, buyDorm, cancelSwap, swapDorm, buy, buyBlock, collectLoopAll, collectLoopWorker, dismissLoopStopped, editLoopQueue, endDay, harvest, harvestAll, loopKinds, plant,
+  BLOCK_IDS, payBuild, buyDorm, cancelSwap, swapDorm, buy, buyBlock, collectLoopAll, collectLoopWorker, dismissLoopStopped, editLoopQueue, endDay, harvest, harvestAll, loopKinds, plant,
   plantAll, readScene, recallLoopWorker, receiptItems, repeatLoopJob, restartLoopStopped, SaveRuleError, setTender, ship, shipAll, shopLines, startLoopJob, takeBack,
   touched, type BlockId, type CropId, type FarmingTalentOf, type HarvestReceipt, type LoopCollected, type LoopJobInput, type LoopKinds, type LoopPlaceId,
-  type LoopWorkRequest, type FarmSave, type ChapterSceneId, type ShopLine, type StationId, finishArrival, joinOpening, nameFarmer,
+  type LoopWorkRequest, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, joinOpening, nameFarmer,
   type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair, type StoryPack,
 } from '@farm/domain'
 import type { QueueInput } from '@luismlorenzana/uma-work'
@@ -185,8 +185,8 @@ export async function collectAt(place: LoopPlaceId): Promise<LoopCollected> {
   return got
 }
 
-/** Builds a station for its gold. */
-export const buildPlace = (station: StationId) => change((s) => buildStation(s, station))
+/** Pays for a place to build: its gold and goods now, standing tomorrow morning. */
+export const buildPlace = (place: FarmPlaceId) => change((s) => payBuild(s, place))
 
 // --- The roster ----------------------------------------------------------------------------------------------
 
@@ -204,7 +204,7 @@ export const cancelDormSwap = (out: string) => change((s) => cancelSwap(s, out))
 
 /** A scene played through or skipped: it goes in `diary.read`, once, a player's change. The opening also brings the
  * opening's Umas onto the farm (`openingOf`). */
-export async function readSceneOnce(id: ChapterSceneId): Promise<void> {
+export async function readSceneOnce(id: OpeningSceneId): Promise<void> {
   const save = loopSave()
   if (!save || save.diary.read.includes(id)) return
   const story = id === 'scene:1:open' ? await storyReady() : null

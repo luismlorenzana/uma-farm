@@ -182,25 +182,6 @@ describe('the opening and arrivals', () => {
     expect(() => arrive(again, '9000004')).toThrow('She’s on the roster already.')
   })
 
-  it('chapter 1 completing joins its authored arrival with no draw, the same night, counted by the Diary', () => {
-    const pack = packWith({ characterId: '9000004', arrives: { kind: 'chapter', chapter: 1 }, calling: 'mining' })
-    const base = farm(7)
-    const ready: SaveV4 = {
-      ...base, crops: { carrot: 20, potato: 2 }, farm: { ...base.farm, counts: { [GOLD_SHIPPED]: 10_000, 'plots-harvested': 9, 'home:forest': 6, 'home:fishery': 4 } },
-      roster: { ...base.roster, 9000001: { ...base.roster['9000001']!, ranks: { ...base.roster['9000001']!.ranks, farming: { points: 40, rank: 1, challenge: 0 } } } },
-    }
-    const morning = endDay(ready, context(pack), LATER)
-    expect(morning.farm.chapter).toBe(2)
-    expect(morning.roster['9000004']).toBeDefined()
-    expect(morning.love['9000004']).toBeDefined()
-    expect(morning.summary!.hearts).toEqual([{ kind: 'arrived', id: '9000004', home: false }])
-    expect(morning.summary!.news).toContainEqual({ kind: 'chapter', chapter: 1 })
-    // The closing scene, then her arrival scene, once the summary is put away.
-    const away = { ...morning, summary: null, arrivals: [...STAND_INS] }
-    expect(sceneDue(away, pack.cast.umas.map((u) => u.characterId))).toBe('scene:1:close')
-    expect(sceneDue(readScene(away, 'scene:1:close'), pack.cast.umas.map((u) => u.characterId))).toBe('arrival:9000004')
-  })
-
   it('runs arriveUmas after the Dorm settles, and twelve nights bring nobody the cast doesn\'t name', () => {
     let save = farm(1)
     for (let i = 0; i < 12; i++) save = endDay(save, context(), LATER)
@@ -216,10 +197,10 @@ describe('the opening and arrivals', () => {
       { characterId: '9000004', arrives: { kind: 'festival', festival: 'fishing-derby' }, calling: 'fishing' },
       { characterId: '9000005', arrives: { kind: 'beds', dormLevel: 5 }, calling: 'mining' },
       { characterId: '9000006', arrives: { kind: 'beds', dormLevel: 4 }, calling: 'farming' },
-      { characterId: '9000007', arrives: { kind: 'chapter', chapter: 2 }, calling: 'foraging' },
+      { characterId: '9000007', arrives: { kind: 'event', after: 'r1' }, calling: 'foraging' },
       { characterId: '9000008', arrives: { kind: 'festival', festival: 'flower-show' }, calling: 'fishing' },
     )
-    expect(nextArrivals(farm(), pack)).toEqual([{ kind: 'chapter', chapter: 2 }, { kind: 'beds', dormLevel: 4 }, { kind: 'festival', festival: 'flower-show' }])
+    expect(nextArrivals(farm(), pack)).toEqual([{ kind: 'beds', dormLevel: 4 }, { kind: 'festival', festival: 'flower-show' }, { kind: 'event', after: 'r1' }])
     expect(nextArrivals(farm(), PACK)).toEqual([])
   })
 })

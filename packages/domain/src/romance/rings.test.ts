@@ -156,15 +156,16 @@ describe('making a ring', () => {
     expect(() => makeRing(closed, three('cedar-plank', 'cedar-plank', 'cedar-plank'))).toThrow(BENCH_WORDS.closed)
   })
 
-  it('takes the recipe, 2 ingots and a cut gem, from chapter 3 only', () => {
+  it('takes the recipe, 2 ingots and a cut gem, once the Smelter and the Cutter stand', () => {
     expect(forgeRecipe(3)).toEqual({ ingot: 'iron-ingot', gem: 'cut-citrine' })
     const save = give(give(bench(farm()), 'iron-ingot', 1, 2), 'cut-citrine')
     const recipe = three('iron-ingot', 'iron-ingot', 'cut-citrine')
     expect(() => makeRing(save, recipe)).toThrow(BENCH_WORDS.mining)
     expect(benchPick(save, 3)).toBeNull()
-    const chapter3 = { ...save, farm: { ...save.farm, chapter: 3 } }
-    expect(benchPick(chapter3, 3)).toEqual(recipe)
-    expect(makeRing(chapter3, recipe).ring).toBe('ring-g3')
+    expect(benchPick({ ...save, buildings: { ...save.buildings, smelter: 1 } }, 3)).toBeNull()
+    const built = { ...save, buildings: { ...save.buildings, smelter: 1, cutter: 1 } }
+    expect(benchPick(built, 3)).toEqual(recipe)
+    expect(makeRing(built, recipe).ring).toBe('ring-g3')
   })
 
   it('picks the lowest-value goods of the grade first, fewer stars first, any family', () => {

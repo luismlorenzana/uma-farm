@@ -95,9 +95,9 @@ describe('the preview switch', () => {
     expect(props.work.cards('forest')).toHaveLength(4)
     expect(props.hearts.size).toBe(0)
     expect(props.paused).toBe(false)
-    // The 23 places, then the homestead's Farmhouse and its next lot.
-    expect(props.places.map((p) => p.id)).toHaveLength(25)
-    expect(props.places.slice(23).map((p) => p.id)).toEqual(['farmhouse', 'house-1'])
+    // The 24 places, then the homestead's first row: the Farmhouse and its two lots.
+    expect(props.places.map((p) => p.id)).toHaveLength(27)
+    expect(props.places.slice(24).map((p) => p.id)).toEqual(['farmhouse', 'house-1', 'house-2'])
     expect(props.places.find((p) => p.id === 'warehouse')?.to).toBe('/warehouse')
     expect(props.places.find((p) => p.id === 'mill')?.locked).toBe(true)
     // The frame's pieces stay: the help button and the quick look over the stage.

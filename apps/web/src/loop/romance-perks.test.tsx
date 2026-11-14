@@ -1,5 +1,5 @@
 // The perks on screen: what each reached perk does now on her profile, a miner's
-// "Opens with chapter 3", her closest friend's loved gift from Friendship 7, her pet name and keepsake under **From her**,
+// "Opens when the Mine is built", her closest friend's loved gift from Friendship 7, her pet name and keepsake under **From her**,
 // the morning's item, chores and perks lines, the harvest's "from perks" and the level-up card's recipe. The invented
 // stand-in pack (9000001–9000003) and a 9000004 built here; master data and the server are stubs.
 import 'fake-indexeddb/auto'
@@ -112,7 +112,7 @@ describe('her profile\'s perks', () => {
     expect(fromHer(early, fixture.pack!, ONE)).toEqual({ petName: null, keepsake: null })
   })
 
-  it('leaves a miner\'s line perks "Opens with chapter 3", with nothing now', () => {
+  it('leaves a miner\'s line perks "Opens when the Mine is built", with nothing now', () => {
     const cast: Cast = { ...json(STAND_IN_FILES.cast as Cast) }
     cast.umas = [...cast.umas, { characterId: FOUR, outfitId: '900000401', arrives: { kind: 'beds', dormLevel: 4 }, calling: 'mining', paragraph: 'Invented.' }]
     const ties: Ties = { version: 1, ties: [...json(STAND_IN_FILES.ties as Ties).ties, { a: TWO, b: FOUR, kind: 'friends', strength: 1, line: 'They met here.', history: 'Invented.' }, { a: THREE, b: FOUR, kind: 'other', strength: 1, line: 'Neighbours.', history: 'Invented.' }] }
@@ -121,8 +121,8 @@ describe('her profile\'s perks', () => {
     const save: SaveV4 = { ...base, roster: { ...base.roster, [FOUR]: base.roster[TWO]! }, love: { ...base.love, [FOUR]: { ...base.love[TWO]!, stage: 'romance', level: 7 } } }
     const list = perkList(save, pack, FOUR, nameOf)
     const line10 = list.find((p) => p.id === 'line-10')!
-    expect(line10).toMatchObject({ words: '+10% at the Mine', opens: 3, state: 'reached', now: null })
-    expect(list.find((p) => p.id === 'night-chore')).toMatchObject({ opens: 3, now: null })
+    expect(line10).toMatchObject({ words: '+10% at the Mine', opens: 'mine', state: 'reached', now: null })
+    expect(list.find((p) => p.id === 'night-chore')).toMatchObject({ opens: 'mine', now: null })
   })
 })
 

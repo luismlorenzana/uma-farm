@@ -93,7 +93,7 @@ describe('the farm', () => {
   })
 
   it("reads the Farm Rank from its points", () => {
-    expect(FARM_RANK_POINTS).toEqual([0, 150, 500, 1200, 2400, 4000, 6500, 10000, 15000, 22000])
-    expect([0, 149, 150, 499, 500, 21999, 22000, 99999].map(farmRankOf)).toEqual([1, 1, 2, 2, 3, 9, 10, 10])
+    expect(FARM_RANK_POINTS).toEqual([0, 150, 250, 950, 2150, 3750, 6250, 9750, 14750, 21750])
+    expect([0, 149, 150, 249, 250, 21749, 21750, 99999].map(farmRankOf)).toEqual([1, 1, 2, 2, 3, 9, 10, 10])
   })
 })

@@ -5,6 +5,7 @@ import type { DroppedQueue, Entry, ItemQty, LastWork, Refusal, SlotRef, WorkKind
 import { FESTIVAL_IDS, SEASONS } from '../farm/calendar'
 import { bedsAt, DORM_MAX_LEVEL, FARM_RANK_POINTS } from '../farm/farm'
 import { DIARY_ROWS, isDiaryPaidId, MILESTONES } from '../farm/milestones'
+import { BUILD_PLACES, farmPlace, isBuildPlace, type FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
 import { GOOD_IDS, goodOf, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, RING_IDS } from '../goods/ids'
 import type { BinSale, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
@@ -49,10 +50,8 @@ export const MAX_QUEUED = 3
 export const MAX_ENTRIES = MAX_QUEUED + 1
 /** The most items one entry makes: well past a Legend's day at the forest. */
 export const MAX_ENTRY_ITEMS = 200
-/** The most goal lines one morning can hold: a chapter, every Farm Rank, every milestone and row. */
-export const MAX_GOAL_NEWS = 1 + FARM_RANK_POINTS.length + MILESTONES.length + DIARY_ROWS.length
-/** The chapter a save may be in: 1–9 (eight chapters, then the story's end). */
-export const MAX_CHAPTER = 9
+/** The most goal lines one morning can hold: every Farm Rank, every milestone and row, every place built overnight. */
+export const MAX_GOAL_NEWS = FARM_RANK_POINTS.length + MILESTONES.length + DIARY_ROWS.length + BUILD_PLACES.length
 /** Ids the save names itself (requests, milestones, animals, records): short kebab words, colons allowed. */
 export const KEY = /^[a-z0-9][a-z0-9:._-]{0,63}$/
 
@@ -387,18 +386,30 @@ export function parseDiary(value: unknown, path: string): SaveV4['diary'] {
   }
 }
 
+/** A farm's keys: `chapter` and `goals` are an older v4's, from the global chapters, read and ignored (`legacyChapter`
+ * keeps what a chapter had opened); `builds` is missing on one, and defaults to none. */
+const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'chapter', 'goals'] as const
+
 export function parseFarm(value: unknown, path: string): SaveV4['farm'] {
-  const o = object(value, path, ['points', 'chapter', 'goals', 'festivals', 'counts'])
+  const o = object(value, path, FARM_KEYS)
   const festivals = list(o.festivals, `${path}.festivals`, 0, 1000).map((v, i): FestivalResult => {
     const at = `${path}.festivals.${i}`
     const f = object(v, at, ['id', 'day', 'score', 'place'])
     return { id: key(f.id, `${at}.id`), day: day(f.day, `${at}.day`), score: amount(f.score, `${at}.score`), place: int(f.place, `${at}.place`, 1, 3) as 1 | 2 | 3 }
   })
+  const builds = o.builds === undefined ? [] : unique(list(o.builds, `${path}.builds`, 0, BUILD_PLACES.length)
+    .map((v, i) => (typeof v === 'string' && isBuildPlace(farmPlace(v)) ? v as FarmPlaceId : fail(`${path}.builds.${i}`, 'expected a place you build'))), `${path}.builds`)
   return {
-    points: count(o.points, `${path}.points`), chapter: int(o.chapter, `${path}.chapter`, 1, MAX_CHAPTER),
-    goals: counts(o.goals, `${path}.goals`, (k) => KEY.test(k), 'expected an id'), festivals,
-    counts: counts(o.counts, `${path}.counts`, (k) => KEY.test(k), 'expected an id'),
+    points: count(o.points, `${path}.points`), festivals,
+    counts: counts(o.counts, `${path}.counts`, (k) => KEY.test(k), 'expected an id'), builds,
   }
+}
+
+/** An older v4's chapter (`farm.chapter`, 1 before the global chapters went), read leniently: 1 when it isn't there or
+ * isn't a chapter. */
+export function legacyChapter(value: unknown): number {
+  const chapter = typeof value === 'object' && value !== null ? (value as Obj).chapter : undefined
+  return typeof chapter === 'number' && Number.isSafeInteger(chapter) && chapter >= 1 && chapter <= 9 ? chapter : 1
 }
 
 // --- The morning summary: ids and counts only, the morning it was built for ---------------------
@@ -459,20 +470,23 @@ export function parseRankLines(value: unknown, path: string, roster: ReadonlySet
 }
 
 /** §5's kinds: the roster's arrivals are §4's hearts. */
-const NEWS_KINDS = ['season', 'festival', 'chapter', 'farm-rank', 'milestone', 'dorm', 'home', 'household'] as const
+const NEWS_KINDS = ['season', 'festival', 'chapter', 'built', 'farm-rank', 'milestone', 'dorm', 'home', 'household'] as const
 /** The household milestones a morning may announce. */
 const HOUSEHOLD_NEWS = [1, 5, 10, 15, 20] as const
 
-/** §5 New today. */
+/** §5 New today. An older v4's "chapter done" line (the global chapters') is read and dropped. */
 export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet<string>): NewsLine[] {
   // The season and festivals, the goals' news, the Dorm's new level and Umas home from a swap, and the household's.
-  return unique(list(value, path, 0, 8 + MAX_GOAL_NEWS + 1 + HOUSEHOLD_NEWS.length).map((v, i): NewsLine => {
+  const read = list(value, path, 0, 8 + MAX_GOAL_NEWS + 2 + HOUSEHOLD_NEWS.length).map((v, i): NewsLine | null => {
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, NEWS_KINDS)
     switch (kind) {
-      // The chapter completed tonight (one of the story's), a Farm Rank reached (2–10), a Diary milestone or row
-      // paid.
-      case 'chapter': return { kind, chapter: int(object(v, at, ['kind', 'chapter']).chapter, `${at}.chapter`, 1, MAX_CHAPTER - 1) }
+      case 'chapter': int(object(v, at, ['kind', 'chapter']).chapter, `${at}.chapter`, 1, 8); return null
+      // A place built overnight, a Farm Rank reached (2–10), a Diary milestone or row paid.
+      case 'built': {
+        const id = object(v, at, ['kind', 'place']).place
+        return { kind, place: typeof id === 'string' && isBuildPlace(farmPlace(id)) ? id as FarmPlaceId : fail(`${at}.place`, 'expected a place you build') }
+      }
       case 'farm-rank': return { kind, rank: int(object(v, at, ['kind', 'rank']).rank, `${at}.rank`, 2, FARM_RANK_POINTS.length) }
       case 'milestone': {
         const id = object(v, at, ['kind', 'id']).id
@@ -494,8 +508,10 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
         return { kind, married: (HOUSEHOLD_NEWS as readonly unknown[]).includes(married) ? married as number : fail(`${at}.married`, 'expected 1, 5, 10, 15 or 20') }
       }
     }
-  }), path, (n) => (n.kind === 'season' || n.kind === 'dorm' || n.kind === 'home' || n.kind === 'chapter' ? n.kind : n.kind === 'festival' ? `festival:${n.when}`
-    : n.kind === 'farm-rank' ? `farm-rank:${n.rank}` : n.kind === 'milestone' ? `milestone:${n.id}` : `household:${n.married}`))
+  })
+  return unique(read.filter((n): n is NewsLine => n !== null), path, (n) => (n.kind === 'season' || n.kind === 'dorm' || n.kind === 'home' ? n.kind
+    : n.kind === 'festival' ? `festival:${n.when}` : n.kind === 'built' ? `built:${n.place}` : n.kind === 'farm-rank' ? `farm-rank:${n.rank}`
+      : n.kind === 'milestone' ? `milestone:${n.id}` : `household:${n.married}`))
 }
 
 /** §6 Today's nudges. */

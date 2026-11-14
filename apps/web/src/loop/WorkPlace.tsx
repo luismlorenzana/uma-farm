@@ -2,11 +2,12 @@
 // and `/smokehouse`, and their quick looks on the farm map. uma-kit/work owns the slot rows, the job
 // sheet, queues, Recall, Repeat and stopped queues; the farm supplies the save at its day, the env with master data's
 // talents, the What step (areas and spots, or what the Warehouse holds for a station), the sizes in days, its words and
-// its actions. A station is locked until built: its quick look and page show Build · 1,500g. Loaded on demand.
+// its actions. A station is locked until built: its quick look and page show its Build card (`BuildCard.tsx`). Loaded on
+// demand.
 import {
   farmHome,
-  ACTIVITY_NAMES, farmEnv, farmPlace, goodName, isStation, leaving, loopKinds, loopRefusalText, loopWorld, PLACE_ACTIVITY, parseStockKey, STATION_RULES, stationBuilt,
-  stationLock, tendedBlock, workNow, type GatherPlace, type LoopPlaceId, type LoopWorkRequest, type FarmSave, type StationId, type TalentOf,
+  ACTIVITY_NAMES, farmEnv, farmPlace, goodName, isStation, leaving, loopKinds, loopRefusalText, loopWorld, PLACE_ACTIVITY, parseStockKey, stationBuilt,
+  tendedBlock, workNow, type BuildPlace, type GatherPlace, type LoopPlaceId, type LoopWorkRequest, type FarmSave, type StationId, type TalentOf,
 } from '@farm/domain'
 import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -20,7 +21,8 @@ import { ItemIcon } from '../items/ItemIcon'
 import { useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
-import { buildPlace, collectAt, collectJob, dismissJob, editQueue, recallJob, repeatJob, restartJob, startJob } from './actions'
+import { BuildCard } from './BuildCard'
+import { collectAt, collectJob, dismissJob, editQueue, recallJob, repeatJob, restartJob, startJob } from './actions'
 import { goldWords } from './goods-view'
 import { activityOrder, pickerSorts, rankTalent, UMA_FACETS, umaRows, type LoopUmaRow } from './roster-view'
 import { useTalents } from './talents'
@@ -116,7 +118,7 @@ function WorkPlacePage({ save, place }: { save: FarmSave; place: WorkPlaceId }) 
                 <PlaceBody save={save} place={place} say={setNote} />
               </LoopWorkProvider>
             )
-            : <BuildCard save={save} station={place as StationId} say={setNote} />}
+            : <BuildCard save={save} place={farmPlace(place) as BuildPlace} say={setNote} />}
         </div>
       </main>
     </div>
@@ -282,27 +284,6 @@ function StationStep({ save, station, selection, onUma }: {
   )
 }
 
-/** A station not built: what it does, what opens it, and Build · 1,500g. */
-function BuildCard({ save, station, say }: { save: FarmSave; station: StationId; say: Say }) {
-  const lock = stationLock(save, station)
-  const cost = STATION_RULES[station].cost
-  const [busy, setBusy] = useState(false)
-  const why = lock?.by === 'plans' ? 'Needs its plans: chapter 1’s reward.' : lock?.by === 'farm-rank' ? `Opens at Farm Rank ${lock.rank}.` : lock?.by === 'gold' ? `Need ${goldWords(lock.short)} more.` : null
-  return (
-    <section className="space-y-2 rounded-md border border-dashed border-hairline-strong p-3" data-build={station}>
-      <p className="text-[14px]">Turns {STATION_TAKES[station]} into goods worth half again as much, keeping their stars.</p>
-      {why && <p className="text-[13px] text-ink-soft" data-build-lock>{why}</p>}
-      <Button className="w-full" disabled={lock !== null || busy} data-action="build"
-        onClick={() => {
-          setBusy(true)
-          buildPlace(station).then(() => say(`The ${farmPlace(station)!.name} is built.`), (err: unknown) => say(errorWords(err))).finally(() => setBusy(false))
-        }}>
-        Build · {goldWords(cost)}
-      </Button>
-    </section>
-  )
-}
-
 /** A work place's quick look on the farm map: its line, its four slots' rows (each opens the page's job sheet), its
  * stopped queues, and Open; an unbuilt station's Build card. */
 export function WorkPlacePeek({ save, place }: { save: FarmSave; place: WorkPlaceId }) {
@@ -312,7 +293,8 @@ export function WorkPlacePeek({ save, place }: { save: FarmSave; place: WorkPlac
     return (
       <div className="space-y-2 p-4" data-peek={place}>
         {note && <p role="status" className="text-[13px] font-semibold text-success">{note}</p>}
-        <BuildCard save={save} station={place} say={setNote} />
+        <p className="text-[14px]">Turns {STATION_TAKES[place]} into goods worth half again as much, keeping their stars.</p>
+        <BuildCard save={save} place={farmPlace(place) as BuildPlace} say={setNote} />
       </div>
     )
   }

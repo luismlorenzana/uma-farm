@@ -7,6 +7,7 @@
 // the night.
 import { payItems, refuse, workRefusal, type PayContext, type PlannedItem, type Refusal, type WorkKindRules, type WorkOutput } from '@luismlorenzana/uma-work'
 import { DAY_MS, dateOf } from '../farm/calendar'
+import { placeBuilt } from '../farm/places'
 import { draw } from '../farm/draw'
 import { PLACE_ACTIVITY, rankBenefits, rankQuality, countChallenge } from '../farm/rank-rules'
 import { RANKS, type Activity, type Rank } from '../farm/ranks'
@@ -96,9 +97,9 @@ export function gatherQuality(terms: WorkTerms, fed: boolean): number {
 export const keepsakeAt = (save: FarmSave, story: PerkPack | null, outfitId: OutfitId, place: string): number =>
   story ? keepsakeQuality(save, story, outfitId, place) : 0
 
-/** Why she can't work an area or a spot yet, or null when she can: her rank ("From Hand"), and the sea's
- * chapter 7 and boat. */
-export function placeLock(save: Pick<FarmSave, 'farm' | 'buildings'>, place: GatherPlace, where: string, rank: Rank): Refusal | null {
+/** Why she can't work an area or a spot yet, or null when she can: her rank ("From Hand"), and the sea's place built
+ * (the Dock for the Sea Pier, the Boat for the Deep Sea). */
+export function placeLock(save: Pick<FarmSave, 'buildings'>, place: GatherPlace, where: string, rank: Rank): Refusal | null {
   if (place === 'forest') {
     const area = FOREST[where as ForestAreaId]
     if (!area) return workRefusal('not-here')
@@ -106,8 +107,7 @@ export function placeLock(save: Pick<FarmSave, 'farm' | 'buildings'>, place: Gat
   }
   const spot = FISHERY[where as FishingSpotId]
   if (!spot) return workRefusal('not-here')
-  if (spot.chapter !== null && save.farm.chapter < spot.chapter) return refuse('locked', 'Opens with Chapter {chapter}.', { chapter: spot.chapter })
-  if (spot.boat && (save.buildings.boat ?? 0) < 1) return refuse('locked', 'Needs the boat.')
+  if (spot.needs !== null && !placeBuilt(save, spot.needs)) return refuse('locked', 'Needs the {place}.', { place: spot.needs === 'dock' ? 'Dock' : 'Boat' })
   return rank < spot.opens ? refuse('locked', 'Opens at {rank}.', { rank: RANKS[spot.opens] }) : null
 }
 

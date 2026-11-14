@@ -98,7 +98,7 @@ export interface TenderTerms {
  * the pack loads: the Fields then work without the perks. */
 type FieldsStory = PerkPack | null
 /** What the perks read of the save beside the Fields' own parts. */
-type PerkParts = { love?: SaveV4['love']; memories?: SaveV4['memories']; farm?: FarmSave['farm'] }
+type PerkParts = { love?: SaveV4['love']; memories?: SaveV4['memories']; buildings?: FarmSave['buildings'] }
 
 /** The block's tender now, with her terms, or null when it's untended. */
 export function tenderTerms(save: Pick<FarmSave, 'fields' | 'roster'> & PerkParts, id: BlockId, talentOf: FarmingTalentOf = talentD, story: FieldsStory = null): TenderTerms | null {
@@ -106,7 +106,7 @@ export function tenderTerms(save: Pick<FarmSave, 'fields' | 'roster'> & PerkPart
   const uma = outfitId === null ? undefined : save.roster[outfitId]
   if (outfitId === null || !uma) return null
   const terms: TenderTerms = { outfitId, rank: uma.ranks.farming.rank, talent: talentOf(outfitId), wellFed: uma.wellFed > 0 }
-  const keepsake = story && save.love && save.farm ? keepsakeQuality({ love: save.love, farm: save.farm }, story, outfitId, 'fields') : 0
+  const keepsake = story && save.love && save.buildings ? keepsakeQuality({ love: save.love, buildings: save.buildings }, story, outfitId, 'fields') : 0
   return keepsake > 0 ? { ...terms, keepsake } : terms
 }
 
@@ -118,7 +118,7 @@ export function blockGrowth(save: Pick<FarmSave, 'fields' | 'roster' | 'tools' |
   if (!tender) return UNTENDED_GROWTH
   const rate = tendedGrowth(tender.rank, tender.talent, save.tools['watering-can'], tender.wellFed)
   if (!tendsSideBySide(save, id)) return rate
-  const element = story && save.love && save.farm && inElement({ love: save.love, farm: save.farm }, story, tender.outfitId, 'fields')
+  const element = story && save.love && save.buildings && inElement({ love: save.love, buildings: save.buildings }, story, tender.outfitId, 'fields')
   return round6(rate * (element ? IN_ELEMENT : SIDE_BY_SIDE))
 }
 
@@ -175,7 +175,7 @@ export const cropLevel = (save: Pick<FarmSave, 'crops'>, crop: CropId): number =
 
 // --- Planting and harvesting ---------------------------------------------------------
 
-/** The counters the chapter goals read. */
+/** The Fields' lifetime counters. */
 export const PLOTS_PLANTED = 'plots-planted'
 export const PLOTS_HARVESTED = 'plots-harvested'
 

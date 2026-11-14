@@ -6,9 +6,9 @@ import {
 } from '@luismlorenzana/uma-stage/formats'
 import { describe, expect, it } from 'vitest'
 import { CROP_IDS } from '../goods/ids'
-import { FARMHOUSE, newBlock, newSave, type Plot, type SaveV4 } from '../save/v4'
+import { FARMHOUSE, newBlock, newLove, newRosterUma, newSave, type Plot, type SaveV4 } from '../save/v4'
 import { CROPS } from '../fields/crops'
-import { FARM_PLACES } from './places'
+import { BUILD_PLACES, FARM_PLACES, MAP_PLACES } from './places'
 import {
   CROP_FAMILIES, CROP_FAMILY, cropFrame, FARM_BAND, FARM_STAGE_TILES, farmDesign, farmPlots, FIELDS_CROP_TILES, fieldsFrames, placeStands, plotAt, slotId,
   WINDOW_BOX_LEVEL,
@@ -18,33 +18,37 @@ const AT = '2026-11-12T10:00:00.000Z'
 const fresh = (): SaveV4 => newSave('u1', AT)
 const plot = (crop: Plot['crop'], growth = 0, ready = false): Plot => ({ crop, growth, ready, regrowing: false, own: false })
 
-/** A played farm: chapter 2 at Farm Rank 3, the Mill and Sawmill built, blocks A and B planted, a night's withering. */
+/** A played farm at Farm Rank 4, the Mill and Sawmill built, the Smokehouse paid for, blocks A and B planted, a night's
+ * withering. */
 function played(): SaveV4 {
   const save = fresh()
   const a = { ...newBlock('A'), plots: [plot('carrot', 0.5), plot('carrot', 3), plot('carrot', 4, true), plot('potato', 1), ...Array.from({ length: 5 }, () => plot(null))] }
   const b = { ...newBlock('B'), plots: [plot('cabbage', 7.5, true), ...Array.from({ length: 8 }, () => plot(null))] }
   return {
-    ...save, farm: { ...save.farm, chapter: 2, points: 1300 }, buildings: { ...save.buildings, mill: 1, sawmill: 1, smokehouse: 0 },
+    ...save, farm: { ...save.farm, points: 1300, builds: ['smokehouse'] }, buildings: { ...save.buildings, mill: 1, sawmill: 1 },
     fields: { blocks: [a, b] },
     summary: { day: 1, bin: [], work: [{ kind: 'withered', block: 'A', crop: 'onion', plots: 2 }], ranks: [], hearts: [], news: [], nudges: [] },
   }
 }
-/** Every place the rules can open: chapter 9, Farm Rank 10, the stations built, the ring bench standing. */
+/** Every place built: Farm Rank 10, every build standing but the Forge's merge game, the ring bench standing. */
+const ALL_BUILT = Object.fromEntries(BUILD_PLACES.map((p) => [p.id, 1]))
 function everyOpen(): SaveV4 {
   const save = fresh()
   return {
-    ...save, farm: { ...save.farm, chapter: 9, points: 30_000 }, buildings: { ...save.buildings, mill: 1, sawmill: 1, smokehouse: 1, forge: 0 },
+    ...save, farm: { ...save.farm, points: 30_000 }, buildings: { ...save.buildings, ...ALL_BUILT, forge: 0 },
     fields: { blocks: (['A', 'B', 'C', 'D'] as const).map(newBlock) },
   }
 }
-/** A farm with the Farmhouse and `houses` more built. */
-function withHouses(houses: number, open = false): SaveV4 {
+/** A farm with the Farmhouse and `houses` more built, and `married` spouses. */
+function withHouses(houses: number, open = false, married = 0): SaveV4 {
   const save = newSave('u1', AT)
   const built = Array.from({ length: houses }, (_, i) => ({ name: `Home ${i + 1}`, extended: false }))
+  const ids = Array.from({ length: married }, (_, i) => String(9000 + i))
   return {
     ...save, farmer: { name: 'Robin' },
-    farm: open ? { ...save.farm, chapter: 9, points: 30_000 } : save.farm,
-    buildings: open ? { ...save.buildings, mill: 1, sawmill: 1, smokehouse: 1, forge: 1 } : save.buildings,
+    farm: open ? { ...save.farm, points: 30_000 } : save.farm,
+    buildings: open ? { ...save.buildings, ...ALL_BUILT } : save.buildings,
+    roster: Object.fromEntries(ids.map((id) => [id, newRosterUma(1)])), love: Object.fromEntries(ids.map((id) => [id, { ...newLove(), stage: 'spouse' as const, level: 0 }])),
     homestead: { ...save.homestead, houses: [FARMHOUSE, ...built], slept: [0, ...built.map(() => 0)] },
   }
 }
@@ -99,9 +103,12 @@ describe('the farm design', () => {
     const design = farmDesign(fresh())
     expect(design.cells).toHaveLength(9 * FARM_BAND)
     expect(design.markers.find((m) => m.kind === 'gate')).toEqual({ kind: 'gate', id: 'gate', x: 4, z: 26 })
-    const ids = (group: (g: string) => boolean) => FARM_PLACES.filter((p) => group(p.group)).map((p) => p.id)
+    const ids = (group: (g: string) => boolean) => MAP_PLACES.filter((p) => group(p.group)).map((p) => p.id)
     expect(design.markers.filter((m) => m.kind === 'place').map((m) => m.id)).toEqual([...ids((g) => g !== 'town'), 'farmhouse', ...ids((g) => g === 'town')])
-    for (const place of FARM_PLACES) {
+    // The boat is drawn at the dock, never on its own lot.
+    expect(design.markers.some((m) => m.id === 'boat')).toBe(false)
+    expect(design.markers.filter((m) => m.kind === 'lot').map((m) => m.id)).toEqual(['house-1', 'house-2'])
+    for (const place of MAP_PLACES) {
       const m = design.markers.find((k) => k.kind === 'place' && k.id === place.id)!
       // The town edge sits below the homestead's one row.
       expect([m.x, m.z], place.id).toEqual([place.col * 3 + 1, (place.row - (place.group === 'town' ? 0 : 1)) * FARM_BAND + 2])
@@ -114,7 +121,7 @@ describe('the farm design', () => {
     const design = farmDesign(fresh())
     expect(design.buildings.map((b) => b.id)).toEqual(['warehouse', 'dorm', 'farmhouse', 'shop'])
     const props = (x: number, z: number) => (design.props ?? []).filter((p) => p.x >= x && p.x < x + 3 && p.z >= z && p.z < z + 3).map((p) => p.name)
-    expect(props(3, 0)).toEqual(['weeds-1', 'brambles', 'weeds-2', 'fence-broken']) // the Mill, before chapter 1's reward
+    expect(props(3, 0)).toEqual(['weeds-1', 'brambles', 'weeds-2', 'fence-broken']) // the Mill, before it's built
     expect(props(0, 4)).toContain('tree-1')
     expect(design.heights![8]).toBe('001111111') // the pond
     expect(design.cells[8]).toBe('wwppggpgg') // the lanes: the Smokehouse's and the Kitchen's lots keep theirs
@@ -122,8 +129,12 @@ describe('the farm design', () => {
     expect(open.buildings.map((b) => b.id)).toEqual(['mill', 'coop', 'sawmill', 'barn', 'smokehouse', 'kitchen', 'smelter', 'restaurant', 'cutter', 'forge', 'warehouse', 'dorm', 'farmhouse', 'shop', 'expeditions'])
     expect(open.cells[12]).toBe('###pggvvv') // the Mine's cliff; the Restaurant's paving
     expect(open.heights![16]).toBe('001111111') // the quarry's pit
-    // The board and the festival ground wait for the festivals: still overgrown.
+    const dock = (open.props ?? []).filter((p) => p.x >= 6 && p.z >= 24 && p.z < 27).map((p) => p.name)
+    expect(dock).toEqual(expect.arrayContaining(['dock', 'reeds'])) // the Dock beside the Gate, built
+    expect(props(6, 24)).toContain('brambles') // and a lot before
+    // The board waits for five Umas met, the festival ground for the festivals: still overgrown.
     expect(placeStands(everyOpen(), FARM_PLACES.find((p) => p.id === 'board')!)).toBe(false)
+    expect(placeStands(withHouses(0, true, 5), FARM_PLACES.find((p) => p.id === 'board')!)).toBe(true)
   })
 
   it('puts a work place\'s four slots and the Fields\' one an owned block', () => {
@@ -133,14 +144,15 @@ describe('the farm design', () => {
     for (const id of ['mill', 'sawmill', 'smokehouse', 'mine', 'smelter', 'quarry', 'cutter']) expect(open.filter((s) => s.startsWith(`${id}-`)), id).toHaveLength(4)
     expect(open.filter((s) => s.startsWith('fields-'))).toEqual(['fields-a', 'fields-b', 'fields-c', 'fields-d'])
     expect(slotId('mill', 0)).toBe('mill-1')
-    // A station open by the rule but not built yet is still a lot: no slots.
+    // A station paid for today stands tomorrow: no slots yet.
     expect(slots(farmDesign(played())).filter((s) => s.startsWith('smokehouse'))).toEqual([])
   })
 
-  it('grows the homestead\'s rows after the yard: the Farmhouse, the houses, the next lot', () => {
+  it('grows the homestead\'s rows after the yard: the Farmhouse, the houses, a row\'s lots with its married', () => {
     const three = farmDesign(withHouses(3))
     expect(three.cells).toHaveLength(10 * FARM_BAND)
-    expect(three.markers.filter((m) => m.kind === 'lot')).toEqual([{ kind: 'lot', id: 'house-4', x: 4, z: 34 }])
+    expect(three.markers.filter((m) => m.kind === 'lot')).toEqual([])
+    expect(farmDesign(withHouses(3, false, 3)).markers.filter((m) => m.kind === 'lot')).toEqual([{ kind: 'lot', id: 'house-4', x: 4, z: 34 }, { kind: 'lot', id: 'house-5', x: 7, z: 34 }])
     expect(three.buildings.filter((b) => b.id === 'farmhouse' || b.id.startsWith('house-')).map((b) => b.id)).toEqual(['farmhouse', 'house-1', 'house-2', 'house-3'])
     expect(three.markers.find((m) => m.kind === 'place' && m.id === 'shop')!.z).toBe(9 * FARM_BAND + 2)
     expect(farmDesign(withHouses(6, true)).cells).toHaveLength(11 * FARM_BAND)
@@ -160,7 +172,7 @@ describe('the farm design', () => {
   it('finds the plot under a tile, its path row with it', () => {
     const plots = farmPlots(fresh())
     expect(plotAt(plots, 4, 3)?.id).toBe('mill')
-    expect(plotAt(plots, 7, 26)?.id).toBe('open-ground')
+    expect(plotAt(plots, 7, 26)?.id).toBe('dock')
     expect(plotAt(plots, 1, 30)?.id).toBe('farmhouse')
     expect(plotAt(plots, 1, 34)?.id).toBe('shop')
     expect(plotAt(plots, 9, 0)).toBeUndefined()

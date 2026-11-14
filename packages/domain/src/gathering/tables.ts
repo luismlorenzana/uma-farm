@@ -3,7 +3,7 @@
 // save's parse reads only `ids.ts`).
 import type { Season } from '../farm/calendar'
 import type { Rank } from '../farm/ranks'
-import type { FishingSpotId, ForestAreaId, StationId, StationJobId } from './ids'
+import type { FishingSpotId, ForestAreaId, StationJobId } from './ids'
 
 /** One good in a place's season, and its share of the draws in percent. */
 export type Share = readonly [good: string, percent: number]
@@ -74,13 +74,11 @@ export const FOREST: Readonly<Record<ForestAreaId, ForestArea>> = {
   },
 }
 
-/** A fishing spot: the rank that opens it, the chapter (and the boat) the sea also needs, and each season's fish. */
+/** A fishing spot: the rank that opens it, the place the sea also needs built, and each season's fish. */
 export interface FishingSpot {
   readonly opens: Rank
-  /** The sea's spots wait for chapter 7; null for freshwater. */
-  readonly chapter: number | null
-  /** The Deep Sea also needs the boat (40, 000g). */
-  readonly boat: boolean
+  /** The sea's spots need a place built: the Sea Pier the Dock, the Deep Sea the Boat; null for freshwater. */
+  readonly needs: 'dock' | 'boat' | null
   readonly seasons: Readonly<Record<Season, readonly Share[]>>
 }
 
@@ -89,40 +87,40 @@ const all = (shares: readonly Share[]): Readonly<Record<Season, readonly Share[]
 /** Fishing, row for row. The Sea Pier and the Deep Sea come later. */
 export const FISHERY: Readonly<Record<FishingSpotId, FishingSpot>> = {
   pond: {
-    opens: 0, chapter: null, boat: false,
+    opens: 0, needs: null,
     seasons: { spring: [['carp', 60], ['trout', 40]], summer: [['carp', 98], ['rainbow-koi', 2]], autumn: [['carp', 60], ['trout', 40]], winter: [['carp', 70], ['trout', 30]] },
   },
   river: {
-    opens: 1, chapter: null, boat: false,
+    opens: 1, needs: null,
     seasons: {
       spring: [['trout', 40], ['carp', 20], ['salmon', 40]], summer: [['eel', 40], ['trout', 40], ['carp', 20]], autumn: [['salmon', 50], ['trout', 50]],
       winter: [['trout', 60], ['salmon', 20], ['carp', 20]],
     },
   },
   lake: {
-    opens: 2, chapter: null, boat: false,
+    opens: 2, needs: null,
     seasons: {
       spring: [['salmon', 50], ['trout', 20], ['eel', 30]], summer: [['eel', 50], ['salmon', 47], ['rainbow-koi', 3]], autumn: [['salmon', 50], ['eel', 30], ['silverfin', 20]],
       winter: [['silverfin', 20], ['trout', 30], ['salmon', 50]],
     },
   },
   falls: {
-    opens: 3, chapter: null, boat: false,
+    opens: 3, needs: null,
     seasons: {
       spring: [['eel', 50], ['salmon', 25], ['silverfin', 20], ['rainbow-koi', 5]], summer: [['eel', 60], ['silverfin', 30], ['rainbow-koi', 10]],
       autumn: [['silverfin', 30], ['salmon', 40], ['eel', 25], ['rainbow-koi', 5]], winter: [['silverfin', 40], ['trout', 50], ['rainbow-koi', 10]],
     },
   },
-  'moon-pool': { opens: 5, chapter: null, boat: false, seasons: all([['rainbow-koi', 60], ['silverfin', 40]]) },
+  'moon-pool': { opens: 5, needs: null, seasons: all([['rainbow-koi', 60], ['silverfin', 40]]) },
   'sea-pier': {
-    opens: 1, chapter: 7, boat: false,
+    opens: 1, needs: 'dock',
     seasons: {
       spring: [['sardine', 60], ['sea-bream', 40]], summer: [['sardine', 50], ['mackerel', 20], ['sea-bream', 30]], autumn: [['mackerel', 60], ['sea-bream', 40]],
       winter: [['mackerel', 70], ['sardine', 30]],
     },
   },
   'deep-sea': {
-    opens: 4, chapter: 7, boat: true,
+    opens: 4, needs: 'boat',
     seasons: {
       spring: [['tuna', 50], ['silverfin', 40], ['rainbow-koi', 10]], summer: [['tuna', 60], ['silverfin', 30], ['sea-bream', 10]],
       autumn: [['tuna', 50], ['silverfin', 40], ['rainbow-koi', 10]], winter: [['tuna', 60], ['silverfin', 40]],
@@ -149,18 +147,6 @@ export const WELL_FED_YIELD = 1.25
 
 /** Items a station turns a day at Novice D, before her rank, talent and well fed. */
 export const STATION_RATE = 8
-
-/** A station: the place whose activity's rank it uses, what it costs to build, and what opens it. */
-export interface Station {
-  readonly cost: number
-  /** The Mill needs its plans (chapter 1's reward); the Sawmill and the Smokehouse Farm Rank 3. */
-  readonly opens: { readonly by: 'plans' } | { readonly by: 'farm-rank'; readonly rank: number }
-}
-export const STATION_RULES: Readonly<Record<StationId, Station>> = {
-  mill: { cost: 1200, opens: { by: 'plans' } },
-  sawmill: { cost: 1500, opens: { by: 'farm-rank', rank: 3 } },
-  smokehouse: { cost: 2000, opens: { by: 'farm-rank', rank: 3 } },
-}
 
 /** Each station job's least days and its name: a job lasts at least its days, 1 or the preserves' 2. */
 export const STATION_JOB_RULES: Readonly<Record<StationJobId, { readonly days: number; readonly name: string }>> = {

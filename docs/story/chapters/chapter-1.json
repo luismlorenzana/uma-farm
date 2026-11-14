@@ -3,7 +3,7 @@
   "kind": "farm-chapter",
   "chapter": 1,
   "title": "A Field Again",
-  "layer": "built",
+  "layer": "outline",
   "opens": "The Fields, the Woods and the Pond",
   "brings": ["hollis-pryor", "ben-carver", "marta-quill"],
   "place": "fields",
@@ -25,7 +25,7 @@
   ],
   "reward": "500g, the Mill’s plans, a recruit and 250 Farm Rank points",
   "item": null,
-  "source": "CS42; built in F24 (D38), packages/domain/src/story/chapter-1.ts",
+  "source": "The farm has no global chapters: the game plays this chapter's opening only, as the start (packages/domain/src/story/opening.ts)",
   "scenes": [
     {
       "id": "scene:1:open",

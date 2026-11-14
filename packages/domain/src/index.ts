@@ -50,7 +50,7 @@ export * from './farm/talents'
 export * from './farm/rank-rules'
 
 // The forest, the Fishery and three stations: the areas, the spots and the stations' jobs by
-// id (with the save's parse), their tables, the work kinds with master data's talents, building a station, the catch's
+// id (with the save's parse), their tables, the work kinds with master data's talents, what a station takes, the catch's
 // sizes and the night's hauls.
 export * from './gathering/ids'
 export * from './gathering/tables'
@@ -60,15 +60,15 @@ export * from './gathering/stations'
 // The roster: the Dorm's levels, beds and swaps.
 export * from './farm/dorm'
 
-// Farm Rank and chapter 1: the Diary's milestones and rows, the Farm Rank's
-// points and what each rank opens, the town's cast, chapter 1's goals and reward, the night's step 8, and the two scenes
-// with the roles Umas fill at runtime.
+// The farm's progress: the Diary's milestones and rows, the Farm Rank's points and what each rank opens, the night's
+// goals check; building (each place's cost, paying, standing the next morning), the milestones with the Umas and the
+// farm's projects; the town's cast, which scene plays now, and the opening.
 export * from './farm/milestones'
 export * from './farm/diary'
+export * from './farm/builds'
 export * from './story/cast'
-export * from './story/chapters'
 export * from './story/scenes'
-export * from './story/chapter-1'
+export * from './story/opening'
 
 // The romance: save v4 (the new farm over an older save, the keys, the romance's slots) and its strict parse, the
 // farmer's name, the story pack at runtime with the invented stand-in, the one `outfitOf` resolver, her favourite line

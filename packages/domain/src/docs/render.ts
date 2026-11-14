@@ -9,7 +9,8 @@ import { itemNameOf } from '../items/lines'
 import { inDemand, priceOf, STARS, starFactor, starPrice } from '../goods/prices'
 import { DEMAND, FAMILY_FACTOR, LADDER, REFINED_FACTOR, type LadderFamily } from '../goods/rule'
 import { DAYS_PER_SEASON, farmDay, FESTIVALS, SEASON_NAMES, SEASONS } from '../farm/calendar'
-import { FARM_MAP_ROWS, FARM_PLACES, type PlaceOpens } from '../farm/places'
+import { BUILD_PLACES, FARM_MAP_ROWS, FARM_PLACES, MAP_PLACES, type FarmPlace, type PlaceOpens } from '../farm/places'
+import { BOARD_MET, buildCostWords, buildGoodsWords } from '../farm/builds'
 import { NIGHT_STEPS } from '../night/end-day'
 import { CROPS, nightsToReady, SHOP_SEEDS } from '../fields/crops'
 import { BLOCK_RULES, cropLevelStart, harvestQuality, MAX_CROP_LEVEL, seedsBackChance, tendedGrowth, UNTENDED_GROWTH } from '../fields/fields'
@@ -22,22 +23,21 @@ import {
 } from '../farm/rank-rules'
 import { AREA_NAMES, FISHING_SPOTS, FOREST_AREAS, SPOT_NAMES, STATION_JOB_IDS, STATION_JOBS, stationJobOf, STATIONS, type FishingSpotId, type ForestAreaId, type StationId } from '../gathering/ids'
 import { gatherQuality, haulCount, sizeSkill, stationRate, type GatherPlace, type WorkTerms } from '../gathering/kinds'
-import { FISH_SIZES, FISHERY, FOREST, HAUL_BASE, STATION_JOB_RULES, STATION_RULES, TOOL_YIELD, WELL_FED_YIELD } from '../gathering/tables'
+import { FISH_SIZES, FISHERY, FOREST, HAUL_BASE, STATION_JOB_RULES, TOOL_YIELD, WELL_FED_YIELD } from '../gathering/tables'
 import { farmPlace } from '../farm/places'
 import { starShares } from '../goods/stars'
 import { BLOCK_IDS, pairKey } from '../save/v4'
 import { ARRIVAL_DORM_LEVELS, DORM_LEVELS } from '../farm/dorm'
 import { farmRankOpens } from '../farm/diary'
-import { CHAPTER_POINTS, DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, ROW_GOLD, type Milestone } from '../farm/milestones'
+import { DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, ROW_GOLD, type Milestone } from '../farm/milestones'
 import { CAST, CAST_IDS } from '../story/cast'
-import { CHAPTER_1_GOALS, CHAPTERS } from '../story/chapters'
-import { CLOSING_SCENE, OPENING_SCENE, type Beat } from '../story/chapter-1'
+import { OPENING_SCENE, type Beat } from '../story/opening'
 import { ARRIVAL_KINDS } from '../romance/arrivals'
 import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER, costOf, LADDER_COLOURS, ROUTE_POINTS, rungName, SPOUSE_COST } from '../romance/love'
 import { DISLIKED_LINE, GIFT_POINTS_V4, giftStars, LOVE_POINTS } from '../romance/acts'
 import { farmBirthday } from '../romance/days'
 import { READY_CONDITIONS, WAIT_ORDER } from '../romance/ready'
-import { lineChapter, MORNING_GOOD, NIGHT_CHORE, PERK_LINES, PERK_PLACE, PERKS, perkWords, type PerkId, type PerkLine } from '../romance/perks'
+import { linePlace, MORNING_GOOD, NIGHT_CHORE, PERK_LINES, PERK_PLACE, PERKS, perkWords, type PerkId, type PerkLine } from '../romance/perks'
 import {
   CREW_CAP, DREAM_BONUS, HOUSEHOLD, householdBonus, IN_ELEMENT, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, LINE_BONUS, MAX_CHORES, MORNING_ITEMS, OWN_CAP, ROMANCE_CAP,
 } from '../romance/perk-terms'
@@ -59,9 +59,9 @@ import { PLAY_MAP, playOf, togetherPlay, type PlayAs } from '../romance/plays/wh
 import { EVENT_POINTS } from '../romance/events'
 import { DATE_FROM, EVENING_FACTOR, eveningPoints, EVENINGS, favouriteKind, HANGOUT_FROM, INVITE_POINTS, INVITE_WEIGHT_DAYS, ROLE_WORDS, type EveningWait } from '../romance/evening'
 import { invitesFor, SECOND_EVENING_EVERY, TWO_EVENINGS_MARRIED } from '../save/v4'
-import { BENCH_WORDS, benchTakes, forgeRecipe, MAKE_BONUS, MINING_CHAPTER, RING_INPUTS, ringPercent } from '../romance/bench'
+import { BENCH_WORDS, benchTakes, forgeRecipe, MAKE_BONUS, RING_INPUTS, ringPercent } from '../romance/bench'
 import { CAKE_DAYS, HOUSEHOLD_AT, receptionDays, WEDDING_FRIENDS } from '../romance/wedding'
-import { EXTENSION_COSTS, FURNITURE, HOMESTEAD_PLACES, HOUSE_COSTS, MISSES_NIGHTS } from '../romance/homestead'
+import { EXTENSION_COSTS, FURNITURE, HOMESTEAD_PLACES, HOMESTEAD_ROW_MARRIED, HOUSE_COSTS, MISSES_NIGHTS } from '../romance/homestead'
 import { HOUSE_ITEM_N, HOUSE_POINTS, HOUSE_TEMPLATES, VOWS_POINTS } from '../romance/household'
 import { EXTENDED_ROOMS, FINALE_MARRIED, HOUSE_ROOMS } from '../save/v4'
 import { BENCH_SCENE_LINES } from '../story/bench'
@@ -94,18 +94,43 @@ function calendar(): string {
 function night(): string {
   return table(['Step', 'Function', 'What happens'], NIGHT_STEPS.map((s) => [s.step, `\`${s.name}\``, s.what]))
 }
-const opensWords = (opens: PlaceOpens): string =>
-  opens.by === 'start' ? 'Day 1' : opens.by === 'chapter' ? `Chapter ${opens.chapter}` : opens.by === 'reward' ? `Chapter ${opens.chapter}'s reward`
-    : opens.by === 'farm-rank' ? `Farm Rank ${opens.rank}` : opens.by === 'house' ? (opens.n === 1 ? 'The first wedding' : `House ${opens.n - 1} built`) : 'Not built yet'
+const ORDINAL = ['', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth']
+const opensWords = (opens: PlaceOpens): string => {
+  switch (opens.by) {
+    case 'start': return 'Day 1'
+    case 'farm-rank': return `Farm Rank ${opens.rank}`
+    case 'build': return `Farm Rank ${opens.rank}, then built${opens.after ? ` after the ${FARM_PLACES.find((p) => p.id === opens.after)!.name}` : ''}${opens.game ? '' : ' (not built yet)'}`
+    case 'met': return `${opens.umas} Umas met`
+    case 'house': return `The ${ORDINAL[opens.n] ?? `${opens.n}th`} wedding`
+    case 'later': return 'Not built yet'
+  }
+}
 /** The map's eight rows, and each place's building and what opens it. */
 function farmMap(): string {
   const rows = Array.from({ length: FARM_MAP_ROWS }, (_, r) => {
-    const row = FARM_PLACES.filter((p) => p.row === r + 1)
+    const row = MAP_PLACES.filter((p) => p.row === r + 1)
     return [r + 1, ...[0, 1, 2].map((c) => row.find((p) => p.col === c)?.name ?? '—')]
   })
+  const at = (p: FarmPlace) => (p.on ? `At the ${FARM_PLACES.find((q) => q.id === p.on)!.name}` : `\`${p.frame}\`${p.borrowed ? ' (borrowed)' : ''}`)
   return `${table(['Row', 'Left', 'Centre', 'Right'], rows)}
 
-${table(['Place', 'Building (uma-art)', 'Opens'], FARM_PLACES.map((p) => [p.name, `\`${p.frame}\`${p.borrowed ? ' (borrowed)' : ''}`, opensWords(p.opens)]))}`
+${table(['Place', 'Building (uma-art)', 'Opens'], FARM_PLACES.map((p) => [p.name, at(p), opensWords(p.opens)]))}`
+}
+/** Every place you build: the Farm Rank that offers it, its gold and goods, and whether its game is built. */
+function buildsBlock(): string {
+  return table(['Place', 'Farm Rank', 'Gold', 'Goods', 'Can be bought'], [...BUILD_PLACES].sort((x, y) => x.opens.rank - y.opens.rank).map((p) => [
+    p.name, p.opens.rank, g(p.opens.cost.gold), p.opens.cost.goods.map((x) => buildGoodsWords(x)).join(', '),
+    p.opens.game ? (p.opens.after ? `Yes, after the ${FARM_PLACES.find((q) => q.id === p.opens.after)!.name}` : 'Yes') : 'Not built yet',
+  ]))
+}
+/** The milestones with the Umas, and what each opens. */
+function umaMilestonesBlock(): string {
+  return table(['Milestone', 'Opens', 'Read from'], [
+    ['The first Romance 8 anyone plays', 'The ring bench at the Forge (the night after)', '`memories`, then `buildings.forge = 0`'],
+    ...HOUSE_COSTS.map((cost, i) => [`The ${ORDINAL[i + 1]} wedding`, `House ${i + 1} to build (${g(cost)}), the house before it standing`, 'Spouses in `love`']),
+    ...HOMESTEAD_ROW_MARRIED.slice(1).map((n, i) => [`${n} married`, `The homestead's ${ORDINAL[i + 2]} row on the map`, 'Spouses in `love`']),
+    [`${BOARD_MET} Umas met`, 'The Requests board’s place (its game comes later)', 'Umas on the roster'],
+  ])
 }
 
 // --- Goods and prices -----------------------------------------------------------------------------------------
@@ -320,7 +345,7 @@ function forestAreas(): string {
 function fishingSpots(): string {
   return table(['Spot', 'Id', 'Opens at', ...SEASON_COLS], FISHING_SPOTS.map((id) => {
     const spot = FISHERY[id]
-    const opens = [RANKS[spot.opens]!, ...(spot.chapter ? [`chapter ${spot.chapter}`] : []), ...(spot.boat ? ['the boat'] : [])].join(' + ')
+    const opens = [RANKS[spot.opens]!, ...(spot.needs ? [`the ${spot.needs === 'dock' ? 'Dock' : 'Boat'} built`] : [])].join(' + ')
     return [cap(SPOT_NAMES[id]), `\`${id}\``, opens, ...SEASONS.map((s) => shareCell(spot.seasons[s]))]
   }))
 }
@@ -371,15 +396,12 @@ function gatherQualities(): string {
 
 /** The three stations. */
 function stations(): string {
-  const opens = (s: StationId) => {
-    const rule = STATION_RULES[s].opens
-    return rule.by === 'plans' ? 'Its plans: chapter 1’s reward' : `Farm Rank ${rule.rank}`
-  }
+  const build = (s: StationId) => BUILD_PLACES.find((p) => p.id === s)!
   return table(['Station', 'At', 'Rank used', 'Builds for', 'Opens', 'Jobs'], STATIONS.map((s) => {
     const jobs = STATION_JOB_IDS.filter((j) => STATION_JOBS[j].station === s)
       .map((j) => `${STATION_JOB_RULES[j].name} (${STATION_JOB_RULES[j].days === 1 ? '1 day' : `${STATION_JOB_RULES[j].days} days`}): ${STATION_JOBS[j].families.map((f) => FAMILY_NAMES[f].toLowerCase()).join(', ')}`)
     const place = Object.entries(PLACE_ACTIVITY).find(([p]) => p === s)!
-    return [farmPlace(s)!.name, farmPlace({ mill: 'fields', sawmill: 'forest', smokehouse: 'fishery' }[s])!.name, ACTIVITY_NAMES[place[1]], g(STATION_RULES[s].cost), opens(s), jobs.join(' · ')]
+    return [farmPlace(s)!.name, farmPlace({ mill: 'fields', sawmill: 'forest', smokehouse: 'fishery' }[s])!.name, ACTIVITY_NAMES[place[1]], buildCostWords(build(s)), `Farm Rank ${build(s).opens.rank}`, jobs.join(' · ')]
   }))
 }
 
@@ -409,7 +431,7 @@ function dormLevels(): string {
     return [l.level, l.beds, l.cost ? g(l.cost) : '—', l.farmRank || '—', g(total), ARRIVAL_DORM_LEVELS.includes(l.level) ? 'An arrival' : '—']
   }))
 }
-// --- Farm Rank and chapter 1 ----------------------------------------------------------------------------------
+// --- The Farm Rank, the Diary and the cast ---------------------------------------------------------------------
 
 /** The Farm Rank's points, and the save fields they're read from. */
 function farmRankPoints(): string {
@@ -417,12 +439,11 @@ function farmRankPoints(): string {
     ['Gold shipped at the bin', `1 per ${GOLD_PER_POINT}g`, '`farm.counts[\'gold-shipped\']`'],
     ['A Diary entry: a good shipped once', ENTRY_POINTS, '`diary.shipped`'],
     ['A milestone', MILESTONE_POINTS, '`diary.milestones`'],
-    ['A chapter done', CHAPTER_POINTS, '`farm.chapter` − 1'],
   ])
 }
 /** Each Farm Rank's threshold and what it opens in the game as built, from the rules that gate on it. */
 function farmRankOpensBlock(): string {
-  return table(['Farm Rank', 'Points', 'Opens'], FARM_RANK_POINTS.map((points, i) => [i + 1, points.toLocaleString('en-US'), i === 0 ? 'Block A, tier-1 seeds (the start); Dorm level 2' : farmRankOpens(i + 1).join(', ')]))
+  return table(['Farm Rank', 'Points', 'Opens'], FARM_RANK_POINTS.map((points, i) => [i + 1, points.toLocaleString('en-US'), (i === 0 ? ['Block A and tier-1 seeds (the start)', ...farmRankOpens(1)] : farmRankOpens(i + 1)).join(', ')]))
 }
 const milestoneWhat = (m: Milestone): string => {
   switch (m.kind) {
@@ -441,40 +462,23 @@ function milestonesBlock(): string {
 function diaryRows(): string {
   return table(['Row', 'Id', 'Its ten goods', 'Gold'], DIARY_ROWS.map((r) => [`${FAMILY_NAMES[r.family]}${r.refined ? ', refined' : ''}`, `\`${r.id}\``, r.goods.map((id) => itemNameOf(id)).join(', '), g(ROW_GOLD)]))
 }
-/** Chapter 1's six goals. */
-function chapterOne(): string {
-  const reads: Readonly<Record<string, string>> = {
-    harvest: '`farm.counts[\'plots-harvested\']` since the chapter opened', ship: '`farm.counts[\'gold-shipped\']` since the chapter opened',
-    'bring-home': '`farm.counts[\'home:forest\']` + `[\'home:fishery\']` since the chapter opened', 'second-crop': 'Kinds planted: entries in `crops`',
-    'rank-hand': 'Any Uma at Hand or above, in any activity', 'farm-rank': 'The Farm Rank from `farm.points`',
-  }
-  return table(['#', 'Goal', 'Done at', 'Read from', 'Teaches'], CHAPTER_1_GOALS.map((goal, i) => [i + 1, goal.text, goal.id === 'ship' ? g(goal.need) : goal.need, reads[goal.id] ?? '', goal.teaches]))
-}
-/** The chapters as built. */
-function chaptersBlock(): string {
-  return table(['Chapter', 'Title', 'Opens with', 'Goals', 'Reward'], CHAPTERS.map((c) => [
-    c.chapter, c.title, c.opens, c.goals ? c.goals.length : 'Not built yet',
-    c.reward ? [`${g(c.reward.gold)}`, ...c.reward.plans.map((b) => `the ${cap(b)}'s plans (\`buildings.${b} = 0\`)`), ...(c.reward.recruit ? ['the chapter’s authored arrival'] : []), `${CHAPTER_POINTS} Farm Rank points`].join(', ') : '—',
-  ]))
-}
 /** The town's cast. */
 function castBlock(): string {
-  return table(['Who', 'Is', 'From chapter', 'Bust'], CAST_IDS.map((id) => [CAST[id].name, CAST[id].is, CAST[id].from, `\`${CAST[id].art}\``]))
+  return table(['Who', 'Is', 'Bust'], CAST_IDS.map((id) => [CAST[id].name, CAST[id].is, `\`${CAST[id].art}\``]))
 }
 const speakerWords = (beat: Beat): string => {
   switch (beat.speaker.kind) {
     case 'cast': return CAST[beat.speaker.id].name
-    case 'newest-hand': return 'Your newest hand'
     case 'narrator': return '(narration)'
   }
 }
-/** The two scenes, beat by beat. */
+/** The opening, beat by beat. */
 function scenesBlock(): string {
-  return [OPENING_SCENE, CLOSING_SCENE].map((scene) => `**${scene.title}** (\`${scene.id}\`)\n\n${table(['#', 'Who', 'Line'], scene.beats.map((b, i) => [i + 1, speakerWords(b), b.line || '—']))}`).join('\n\n')
+  return [OPENING_SCENE].map((scene) => `**${scene.title}** (\`${scene.id}\`)\n\n${table(['#', 'Who', 'Line'], scene.beats.map((b, i) => [i + 1, speakerWords(b), b.line || '—']))}`).join('\n\n')
 }
 // --- Arrivals ---------------------------------------------------------------------------------
 
-/** The five kinds of arrival. */
+/** The four kinds of arrival. */
 function arrivals(): string {
   return table(['Arrival', 'When she arrives', 'Checked'], ARRIVAL_KINDS.map((a) => [`\`${a.kind}\``, a.when, a.where]))
 }
@@ -575,10 +579,10 @@ const PERK_LINE_NAME: Readonly<Record<PerkLine, string>> = {
 /** Every level's perk, with a forager's words for the ones her line templates; then each line's words. */
 function perkWordsBlock(): string {
   const levels = table(['Level', 'Perk id', 'Words (a forager’s)', 'At her line’s place'], PERKS.map((p) => [
-    p.rung.toUpperCase(), `\`${p.id}\``, perkWords(p.id, 'foraging'), p.place ? 'Yes: “Opens with chapter n” until it opens' : '',
+    p.rung.toUpperCase(), `\`${p.id}\``, perkWords(p.id, 'foraging'), p.place ? 'Yes: “Opens when the Kitchen is built” (her place) until it’s built' : '',
   ]))
   const lines = table(['Her line', 'Her place', '+10% (F3)', 'A night chore (F6)', 'A morning item (R2)', 'Opens with'], PERK_LINES.map((line) => [
-    PERK_LINE_NAME[line], PERK_PLACE[line], perkWords('line-10', line), NIGHT_CHORE[line], `A ★2+ ${MORNING_GOOD[line]}`, lineChapter(line) === null ? 'Day 1' : `Chapter ${lineChapter(line)}`,
+    PERK_LINE_NAME[line], PERK_PLACE[line], perkWords('line-10', line), NIGHT_CHORE[line], `A ★2+ ${MORNING_GOOD[line]}`, linePlace(line) === null ? 'Day 1' : `When the ${FARM_PLACES.find((p) => p.id === linePlace(line))!.name} is built`,
   ]))
   return `${levels}\n\n${lines}`
 }
@@ -634,8 +638,8 @@ const LINE_CHORE: Readonly<Record<PerkLine, string>> = {
 /** What "her line" means for each template, and whether it acts yet. */
 function perkLines(): string {
   return table(['Her line', '+10% at her line (F3, R5)', 'A night chore (F6, R7, S4)', 'A morning item (R2, S2)', 'Acts'], PERK_LINES.map((line) => {
-    const opens = lineChapter(line)
-    const now = CHORE_LINES.includes(line) ? 'Yes' : `Not yet: from chapter ${opens}, once its place is built`
+    const opens = linePlace(line)
+    const now = CHORE_LINES.includes(line) ? 'Yes' : `Not yet: once the ${FARM_PLACES.find((p) => p.id === opens)!.name}’s game is built`
     return [PERK_LINE_NAME[line], LINE_TEN[line], LINE_CHORE[line], `A ★2+ ${MORNING_GOOD[line]}${CHORE_LINES.includes(line) ? '' : ' (a crop of the season until its place opens)'}`, now]
   }))
 }
@@ -661,8 +665,8 @@ function signatureDishes(): string {
     farming: 'The top grade of the shop’s vegetables at its open seed tiers (Farm Rank 1: G6; 2: G7; 4: G10)',
     foraging: 'The top grade of the deepest forest area anyone has worked (the Woods G2 … the World Tree G10)',
     fishing: 'The top grade of the deepest spot anyone has worked, its fish at 10% or more (the Pond G2)',
-    mining: 'G1 until the Mine is built (chapter 3)', quarry: 'G1 until the Quarry is built (chapter 3)', ranch: 'G1 until the ranch is built (chapter 2)',
-    cooking: 'G1 until the Kitchen is built (chapter 4)', serving: 'G1 until the Restaurant is built (chapter 6)', forging: 'G1 until the Forge is built (chapter 7)',
+    mining: 'G1 until the Mine’s game is built', quarry: 'G1 until the Quarry’s game is built', ranch: 'G1 until the ranch’s game is built',
+    cooking: 'G1 until the Kitchen’s game is built', serving: 'G1 until the Restaurant’s game is built', forging: 'G1 until the Forge’s game is built',
   }
   return table(['Her line', 'Her dish kind', 'Its grade', 'At G1'], PERK_LINES.map((line) => [PERK_LINE_NAME[line], DISH_WORDS[LINE_DISH[line]], grade[line], dishName(dishId(LINE_DISH[line], 1))]))
     + '\n\nHer loved good, when it’s a dish, is her signature dish as it is. The recipe joins `workshops.recipes` once (a recipe the farm knows stays once) and her route keeps its id (`love.dish`).'
@@ -796,7 +800,7 @@ function standInRoute(): string {
     const also = [steps.includes('"gives"') ? 'a cost' : '', steps.includes('"reveals"') ? 'a taste' : '', steps.includes('"flag"') ? 'a flag' : '', steps.includes('"when"') ? 'a `when`' : '',
       steps.includes('"answer"') ? 'Yes / Not yet' : '', b.unlock ? `unlocks ${b.unlock.kind}` : ''].filter(Boolean).join(', ')
     const t = b.trigger ?? { kind: 'hearts' }
-    const setup = t.kind === 'hearts' ? '' : t.kind === 'working' ? `works ${t.activity}` : t.kind === 'item' ? `${t.good} held` : t.kind === 'bond' ? `bond ${t.level} with ${t.with}` : `chapter ${t.chapter}`
+    const setup = t.kind === 'hearts' ? '' : t.kind === 'working' ? `works ${t.activity}` : t.kind === 'item' ? `${t.good} held` : `bond ${t.level} with ${t.with}`
     const together = b.together ?? { kind: 'talk' }
     return [b.id.length <= 3 ? b.id.toUpperCase() : cap(b.id), b.place ?? '—', togetherWords(together), plays.length > 0 ? plays.join('; ') : `${playWords(togetherPlay(together))}${togetherPlay(together) ? ', from its together' : ''}`, setup, also]
   }))
@@ -842,10 +846,10 @@ function eveningSlotsBlock(): string {
 /** The ten rings, their prices, the bench's cheapest three and the ring's own recipe. */
 function ringsBlock(): string {
   const cheapest = (grade: number): string => {
-    const good = GOODS.filter((x) => x.grade === grade && benchTakes(1, x.id)).sort((a, b) => a.price - b.price)[0]!
+    const good = GOODS.filter((x) => x.grade === grade && benchTakes(false, x.id)).sort((a, b) => a.price - b.price)[0]!
     return `${RING_INPUTS} ${itemNameOf(good.id)} (${g(good.price)} each)`
   }
-  return table(['Grade', 'Ring', 'Id', '★1', '★5', 'Her bonus once married', 'Cheapest at the bench (chapter 1)', 'Its own recipe (from chapter 3)'], RING_GOODS.map((r) => {
+  return table(['Grade', 'Ring', 'Id', '★1', '★5', 'Her bonus once married', 'Cheapest at the bench', 'Its own recipe (once the Smelter and the Cutter stand)'], RING_GOODS.map((r) => {
     const recipe = forgeRecipe(r.grade)
     return [`G${r.grade}`, goodName(r.id), `\`${r.id}\``, g(starPrice(r.id, 1)), g(starPrice(r.id, 5)), `+${ringPercent(r.grade)}%`, cheapest(r.grade),
       `2 ${itemNameOf(recipe.ingot)} + 1 ${itemNameOf(recipe.gem)}`]
@@ -855,7 +859,7 @@ function ringsBlock(): string {
 function benchRecipe(): string {
   return table(['', 'The ring bench'], [
     ['Opens', 'The night after the first Romance 8 event anyone plays: `buildings.forge = 0`, and Ida Stone’s scene the next morning'],
-    ['A ring of grade g', `${RING_INPUTS} refined goods of grade g, any family, any mix; the mining families’ (ingots, blocks, cut gems) from chapter ${MINING_CHAPTER}`],
+    ['A ring of grade g', `${RING_INPUTS} refined goods of grade g, any family, any mix; the mining families’ (ingots, blocks, cut gems) once the Smelter and the Cutter stand`],
     ['Cost', 'The goods only: no gold, no game, no assistant, no score'],
     ['Out', 'The ring, ★1 (a Rough make), into the Warehouse'],
     ['How often', 'One ring a day (`today.ring`)'],
@@ -880,7 +884,7 @@ function receptionBlock(): string {
 function housesBlock(): string {
   const rows = HOMESTEAD_PLACES.map((p) => p.n === 0
     ? ['The Farmhouse', `${HOUSE_ROOMS} (your own home)`, '—', '—', 'Day 1']
-    : [`House ${p.n}`, `${HOUSE_ROOMS}, or ${EXTENDED_ROOMS} extended`, g(HOUSE_COSTS[p.n - 1]!), g(EXTENSION_COSTS[p.n - 1]!), p.n === 1 ? 'The first wedding' : `House ${p.n - 1} built`])
+    : [`House ${p.n}`, `${HOUSE_ROOMS}, or ${EXTENDED_ROOMS} extended`, g(HOUSE_COSTS[p.n - 1]!), g(EXTENSION_COSTS[p.n - 1]!), `The ${ORDINAL[p.n]} wedding${p.n > 1 ? `, House ${p.n - 1} built` : ''}`])
   const sum = (list: readonly number[]) => list.reduce((a, b) => a + b, 0)
   return table(['', 'Rooms', 'Build', 'Extend', 'Opens'], [...rows,
     ['**All**', `**${HOUSE_ROOMS + HOUSE_COSTS.length * EXTENDED_ROOMS} rooms**`, `**${g(sum(HOUSE_COSTS))}**`, `**${g(sum(HOUSE_COSTS) + sum(EXTENSION_COSTS))} extended**`, '']])
@@ -889,9 +893,10 @@ function housesBlock(): string {
 function homesteadMap(): string {
   const rows = [...new Set(HOMESTEAD_PLACES.map((p) => p.row))].map((row) => {
     const here = HOMESTEAD_PLACES.filter((p) => p.row === row)
-    return [`${row}`, here.map((p) => `${p.name} (\`${p.frame}\`)`).join(' · ')]
+    const married = HOMESTEAD_ROW_MARRIED[row - HOMESTEAD_PLACES[0]!.row] ?? 0
+    return [`${row}`, here.map((p) => `${p.name} (\`${p.frame}\`)`).join(' · '), married === 0 ? 'Day 1' : `${married} married`]
   })
-  return table(['Row', 'Places'], [...rows, ['After the last shown', 'The town edge: Shop · Festival ground · Expedition post']])
+  return table(['Row', 'Places', 'Shows from'], [...rows, ['After the last shown', 'The town edge: Shop · Festival ground · Expedition post', 'Day 1']])
 }
 /** The household milestones. */
 function householdMilestonesBlock(): string {
@@ -943,7 +948,7 @@ export function renderBlock(key: string): string | null {
     'place-activity': placeActivity, 'forest-areas': forestAreas, 'fishing-spots': fishingSpots, 'fish-sizes': fishSizes, 'size-skill': sizeSkills,
     'haul-day': haulDay, 'haul-factors': haulFactors, 'gather-quality': gatherQualities, stations, 'station-day': stationDay, 'station-recipes': stationRecipes,
     'dorm-levels': dormLevels,
-    'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, 'chapter-1': chapterOne,
-    chapters: chaptersBlock, cast: castBlock, scenes: scenesBlock }
+    'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,
+    'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock }
   return blocks_[key]?.() ?? null
 }

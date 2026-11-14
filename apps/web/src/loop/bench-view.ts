@@ -1,10 +1,10 @@
 // The ring bench as its sheet shows it: one row a grade you can make now, each with the three goods it would take
 // (the lowest-value refined goods of that grade, any family, any mix) and the ring it makes; a tap on one of the three
-// offers the grade's other goods held; the ring's own recipe (2 ingots + 1 cut gem) greyed until chapter 3; her bonus
+// offers the grade's other goods held; the ring's own recipe (2 ingots + 1 cut gem) greyed until the Smelter and the Cutter stand; her bonus
 // once married; and the one button, "Make an Iron Ring · 1 a day". Pure, so the sheet and the tests read the same.
 // Every word says "you". Loaded on demand with the sheet.
 import {
-  benchGrades, benchPick, benchStock, forgeRecipe, goodName, MAKE_BONUS, MINING_CHAPTER, ringId, ringName, ringPercent, type BenchInput, type BenchStock, type SaveV4,
+  benchGrades, benchPick, benchStock, forgeRecipe, goodName, MAKE_BONUS, miningOpen, ringId, ringName, ringPercent, type BenchInput, type BenchStock, type SaveV4,
 } from '@farm/domain'
 
 /** The sheet's fixed words. */
@@ -26,11 +26,11 @@ export const BENCH_TEXT = {
 export const withArticle = (name: string): string => `${/^[AEIOU]/.test(name) ? 'an' : 'a'} ${name}`
 /** The button: "Make an Iron Ring · 1 a day". */
 export const makeWords = (grade: number): string => `Make ${withArticle(ringName(grade))} · 1 a day`
-/** The ring's own recipe line: greyed "Opens with chapter 3" before it, the grade's own pair after. */
-export function forgeRecipeWords(chapter: number): { text: string; open: boolean } {
-  return chapter >= MINING_CHAPTER
+/** The ring's own recipe line: greyed until the Smelter and the Cutter stand, the grade's own pair after. */
+export function forgeRecipeWords(save: Pick<SaveV4, 'buildings'>): { text: string; open: boolean } {
+  return miningOpen(save)
     ? { text: 'Or use the ring’s own recipe: 2 ingots + 1 cut gem of its grade', open: true }
-    : { text: `From chapter ${MINING_CHAPTER}: 2 ingots + 1 cut gem · Opens with chapter ${MINING_CHAPTER}`, open: false }
+    : { text: '2 ingots + 1 cut gem · Opens when the Smelter and the Cutter are built', open: false }
 }
 /** A grade's own recipe in words: "2 Iron Ingot + 1 Cut Citrine". */
 export const forgePairWords = (grade: number): string => {

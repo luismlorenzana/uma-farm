@@ -150,7 +150,7 @@ describe('the ring bench', () => {
     expect($('[data-bench-row="3"]')?.textContent).toContain('→ Iron Ring')
     expect($('[data-bench-row="5"]')?.textContent).toContain('→ Cobalt Ring')
     expect($('[data-forge-recipe]')?.dataset.forgeRecipe).toBe('greyed')
-    expect($('[data-forge-recipe]')?.textContent).toBe('From chapter 3: 2 ingots + 1 cut gem · Opens with chapter 3')
+    expect($('[data-forge-recipe]')?.textContent).toBe('2 ingots + 1 cut gem · Opens when the Smelter and the Cutter are built')
     expect($('[data-bench-bonus]')?.textContent).toContain('Her bonus once married: +1% a grade')
     expect($('[data-action="make-ring"]')?.textContent).toBe('Make an Iron Ring · 1 a day')
     // A tap on a slot offers the grade's other goods; one swapped in.

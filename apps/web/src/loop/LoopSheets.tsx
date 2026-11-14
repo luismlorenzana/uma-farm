@@ -4,7 +4,7 @@
 // so Back closes it. Loaded on demand when one opens. End the day opens **Tonight** while an evening slot is free and
 // someone can spend it, and the night is a fade to dusk and back up on the morning (`night-fade.ts`).
 import {
-  CHAPTER_POINTS, DAYS_PER_SEASON, DAYS_PER_YEAR, daySetState, dateOf, ENTRY_POINTS, FARM_RANK_POINTS, farmPointsOf, farmRankOf, farmRankOpens, FESTIVALS,
+  DAYS_PER_SEASON, DAYS_PER_YEAR, daySetState, dateOf, ENTRY_POINTS, FARM_RANK_POINTS, farmPointsOf, farmRankOf, farmRankOpens, FESTIVALS,
   GOLD_PER_POINT, MILESTONE_POINTS, nextFarmRank, nextFestival, SEASON_NAMES, SEASONS, tonightOpens,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -175,7 +175,6 @@ function RankSheet() {
     ['Shipping', `1 per ${GOLD_PER_POINT}g`, parts.shipped],
     ['Diary entries', `${ENTRY_POINTS} each`, parts.entries],
     ['Milestones', `${MILESTONE_POINTS} each`, parts.milestones],
-    ['Chapters', `${CHAPTER_POINTS} each`, parts.chapters],
   ]
   return (
     <Sheet open onClose={close} title={`Farm Rank ${rank}`} label="Farm Rank">
@@ -184,8 +183,8 @@ function RankSheet() {
           <div className="flex items-baseline justify-between gap-2">
             <p className="font-display text-[20px] font-bold" data-points>{save.farm.points.toLocaleString('en-US')} points</p>
             <HelpButton title="The Farm Rank" label="About the Farm Rank">
-              <p>The farm’s own rank. Points come from shipping, the Diary (each good shipped once, and milestones) and chapters done; festivals and decorations add more later.</p>
-              <p>Points are counted each night. A new rank opens more of what’s open: land, beds, seeds and stations.</p>
+              <p>The farm’s own rank, from what you earn and grow. Points come from shipping and the Diary (each good shipped once, and milestones); festivals and decorations add more later.</p>
+              <p>Points are counted each night. A new rank offers places to build, with gold and the farm’s goods, and more land, beds and seeds.</p>
             </HelpButton>
           </div>
           <div className="mt-1 h-2 overflow-hidden rounded-full bg-sunken" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(share * 100)}

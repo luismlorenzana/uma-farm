@@ -9,14 +9,14 @@ import { COPY_EXTRUDE, COPY_GAP, extrudes, farmAtlas, withStandIns } from './far
 const AT = '2026-11-12T10:00:00.000Z'
 function everyOpen(): SaveV4 {
   const save = newSave('u1', AT)
-  return { ...save, farm: { ...save.farm, chapter: 9, points: 30_000 }, buildings: { ...save.buildings, mill: 1, sawmill: 1, smokehouse: 1 }, fields: { blocks: (['A', 'B', 'C', 'D'] as const).map(newBlock) } }
+  return { ...save, farm: { ...save.farm, points: 30_000 }, buildings: { ...save.buildings, mill: 1, sawmill: 1, smokehouse: 1 }, fields: { blocks: (['A', 'B', 'C', 'D'] as const).map(newBlock) } }
 }
 function v4(houses: number, open = false): SaveV4 {
   const save = newSave('u1', AT)
   const built = Array.from({ length: houses }, (_, i) => ({ name: `Home ${i + 1}`, extended: false }))
   return {
     ...save, farmer: { name: 'Robin' },
-    farm: open ? { ...save.farm, chapter: 9, points: 30_000 } : save.farm,
+    farm: open ? { ...save.farm, points: 30_000 } : save.farm,
     buildings: open ? { ...save.buildings, mill: 1, sawmill: 1, smokehouse: 1, forge: 1 } : save.buildings,
     homestead: { ...save.homestead, houses: [FARMHOUSE, ...built], slept: [0, ...built.map(() => 0)] },
   }

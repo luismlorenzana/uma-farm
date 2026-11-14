@@ -2,7 +2,7 @@
 // menu sheet (`?sheet=menu`). End the day (`?sheet=end`) and calendar (`?sheet=calendar`); the bin
 // (`?sheet=bin`) and shop (`?sheet=shop`); the Farm Rank (`?sheet=rank`). Each is loaded when one opens. While the
 // farmer is unnamed, the name sheet covers everything, the game's first screen; then a scene due plays over everything
-// (the opening, the closing scene the morning after chapter 1, the ring bench's, then the arrival scenes). Over any page,
+// (the opening, the ring bench's, then the arrival scenes). Over any page,
 // once no scene is due: `?read=<a>-<b>:<levels>` plays a pair's conversations; the event player at `?event=`, `?ask=` or
 // `?memory=`, and her Memories' album at `?album=`; the evening at `?evening=` (Tonight's picker, or her kinds sheet, the
 // play and its card); the ring bench at `?sheet=bench` from the Forge's quick look; the homestead at

@@ -387,7 +387,7 @@ export function formatView() {
     first ? h('p', {}, h('a', { class: 'btn primary', href: `#/play/ch/${first.chapter.chapter}/${playable(first)[0].kind}`, text: `Play a scene from chapter ${first.chapter.chapter}` })) : null,
     h('div', { class: 'two' },
       h('div', { class: 'stack' },
-        h('div', { class: 'panel' }, h('h3', { text: 'Who speaks a scene’s beat' }), h('p', { class: 'small muted', text: 'A beat is the game’s Beat: { speaker, line }, one line to a tap (story/chapter-1.ts).' }),
+        h('div', { class: 'panel' }, h('h3', { text: 'Who speaks a scene’s beat' }), h('p', { class: 'small muted', text: 'A beat is the game’s Beat: { speaker, line }, one line to a tap (story/opening.ts).' }),
           h('table', { class: 'table' }, h('tr', {}, ['Speaker', 'Plays as', 'In the game', 'Used'].map((x) => h('th', { text: x }))),
             Object.entries(D.data.speakers).map(([k, v]) => h('tr', {}, h('td', {}, h('code', { text: k })), h('td', { text: v.about }), h('td', {}, h('span', { class: `badge ${v.game ? 'game' : 'new'}`, text: v.game ? 'plays today' : 'sandbox first' })), h('td', { text: used.get(k) ?? 0 }))))),
         h('div', { class: 'panel' }, h('h3', { text: 'Lines' }), h('ul', { class: 'list' },

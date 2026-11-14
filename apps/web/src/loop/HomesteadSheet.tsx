@@ -4,7 +4,7 @@
 // "Need 300g more", or "Opens with your first wedding"; the lots after it in one line; "Needs a room: …"; moves (tap a face,
 // then a free room or another face to swap); "Shared houses: +10 bond a night a pair."; and the furniture set from 5
 // married, a piece a row and the house it stands in. "Married n/N" in the header. Loaded on demand.
-import { houseNameIssue, HOUSE_NAME_MAX, type SaveV4 } from '@farm/domain'
+import { houseNameIssue, HOUSE_NAME_MAX, houseOpensWords, type SaveV4 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
@@ -164,7 +164,7 @@ function LotLine({ lot, busy, onBuild }: { lot: { n: number; cost: number; open:
           </div>
           <p className={`min-h-4 text-[12px] ${shown ? 'text-danger' : 'text-ink-faint'}`} data-house-why>{shown ?? `Up to ${HOUSE_NAME_MAX} letters. It stands at once.`}</p>
         </>
-      ) : <p className="text-[13px] text-ink-faint" data-lot-locked>{HOMESTEAD_TEXT.firstWedding} · {priceWords('Build', lot.cost, 0)}</p>}
+      ) : <p className="text-[13px] text-ink-faint" data-lot-locked>{houseOpensWords(lot.n)} · {priceWords('Build', lot.cost, 0)}</p>}
     </form>
   )
 }

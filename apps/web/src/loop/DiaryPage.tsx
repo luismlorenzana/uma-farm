@@ -1,14 +1,14 @@
-// `/diary`: the Diary tab holds the chapter until its own screen comes. The chapter's card: its number,
-// title and six goals, each with its count and a check when met, and its reward; once chapter 1 is done, chapter 2's
-// line and "Soon" until the workshops open. Below, the Farm Rank (opening its sheet) and the milestones paid so far;
-// each Uma's **Memories** (her album at `?album=`) and the pairs' **Conversations** (loaded apart). Loaded on demand.
-import { chapterOf, diaryEntries, goalStates, type FarmSave } from '@farm/domain'
+// `/diary`: the Diary tab holds the farm's projects until its own screen comes. The projects: what you can build now,
+// each with its cost and what you still lack (a tap opens its quick look and Build card); what the next Farm Rank
+// offers; and the milestones with the Umas, each with how far along you are. Below, the Farm Rank (opening its sheet)
+// and the milestones paid so far; each Uma's **Memories** (her album at `?album=`) and the pairs' **Conversations**
+// (loaded apart). Loaded on demand.
+import { buildCostWords, buildLockWords, diaryEntries, farmProjects, type BuildPlace, type FarmSave, type Project } from '@farm/domain'
 import { HelpButton, Panel } from '@luismlorenzana/uma-kit/ui'
 import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
 import { useLoopSave } from '../save/game'
-import { useStory } from '../story/story'
-import { chapterHand, goalCount, milestoneWords, rewardWords } from './goal-words'
+import { milestoneWords, umaMilestoneWords } from './goal-words'
 
 const Conversations = lazy(() => import('./Conversations'))
 const MemoriesShelf = lazy(() => import('./MemoriesShelf'))
@@ -21,14 +21,14 @@ export default function DiaryPage() {
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-display text-[22px] font-bold text-ink">Diary</h1>
         <HelpButton title="The Diary" label="About the Diary">
-          <p>Each chapter sets a few goals. Meet them all and the chapter completes that night, with its reward and a new hand.</p>
-          <p>Goals that count things count from the chapter’s start. Everything is checked when you end the day.</p>
-          <p>Milestones pay gold once, and each adds to the Farm Rank. The Diary’s own pages come later.</p>
+          <p>The farm grows by building. The Farm Rank offers places, and you build each with gold and the farm’s goods. It stands the next morning.</p>
+          <p>Your life with the Umas opens the rest: the ring bench, a house with each wedding, more of the homestead and the town.</p>
+          <p>Milestones pay gold once, and each adds to the Farm Rank. Everything is checked when you end the day.</p>
           <p>Memories keeps each Uma’s events. Replay any from any choice; replays give no points.</p>
           <p>Conversations keeps what each pair has said as their bond grew. Replay any you’ve read.</p>
         </HelpButton>
       </div>
-      <ChapterCard save={save} />
+      <Projects save={save} />
       <Link to="/diary?sheet=rank" className="flex min-h-11 items-center justify-between rounded-md border border-hairline bg-panel px-3 text-[15px]" data-rank-link>
         <span className="font-semibold">Farm Rank</span>
         <span className="text-ink-soft">{save.farm.points.toLocaleString('en-US')} points ›</span>
@@ -40,42 +40,78 @@ export default function DiaryPage() {
   )
 }
 
-function ChapterCard({ save }: { save: FarmSave }) {
-  const chapter = chapterOf(save.farm.chapter)
-  const goals = goalStates(save)
-  // A chapter's hand is the cast's arrival for it.
-  const story = useStory()
-  const reward = (n: number) => rewardWords(n, chapterHand(story, n))
-  if (!chapter || !goals) {
-    return (
-      <Panel label={`Chapter ${save.farm.chapter}`} data-chapter={save.farm.chapter}>
-        <div className="py-1">
-          {save.farm.chapter > 1 && <p className="text-[13px] text-ink-soft" data-done-chapter>Chapter {save.farm.chapter - 1} done · {reward(save.farm.chapter - 1)}</p>}
-          <h2 className="font-display pt-1 text-[20px] font-bold">{chapter?.title ?? 'Next chapter'}</h2>
-          <p className="text-ink-soft" data-soon>Soon</p>
-        </div>
-      </Panel>
-    )
-  }
-  const met = goals.filter((g) => g.done).length
+/** Where a project's tap goes: its quick look on the farm (the Boat's is the Dock's). */
+const peekOf = (place: BuildPlace): string => `/?peek=${place.on ?? place.id}`
+
+/** A check mark, filled when done. */
+const Check = ({ done }: { done: boolean }) => (
+  <span aria-hidden className={`grid size-5 shrink-0 place-items-center rounded-full text-[12px] font-bold ${done ? 'bg-success text-white' : 'border border-hairline-strong'}`}>
+    {done ? '✓' : ''}
+  </span>
+)
+
+/** One place to build now: its name and cost, and what it lacks, "Builds tonight", or Build. */
+function NowRow({ project }: { project: Project }) {
+  const { place, lock } = project
+  const state = lock === null ? 'Build ›' : buildLockWords(lock)
   return (
-    <Panel label={`Chapter ${chapter.chapter}`} data-chapter={chapter.chapter}>
-      <div className="flex items-baseline justify-between gap-2 pt-1">
-        <h2 className="font-display text-[20px] font-bold">{chapter.title}</h2>
-        <span className="text-[13px] text-ink-soft" data-met>{met} of {goals.length}</span>
-      </div>
-      <ol className="mt-1 divide-y divide-hairline">
-        {goals.map((state) => (
-          <li key={state.goal.id} className="flex min-h-11 items-center gap-2 py-1.5" data-goal={state.goal.id} data-done={state.done || undefined}>
-            <span aria-hidden className={`grid size-5 shrink-0 place-items-center rounded-full text-[12px] font-bold ${state.done ? 'bg-success text-white' : 'border border-hairline-strong'}`}>
-              {state.done ? '✓' : ''}
-            </span>
-            <span className={`min-w-0 flex-1 text-[15px] ${state.done ? 'text-ink-soft' : ''}`}>{state.goal.text}</span>
-            <span className="shrink-0 text-[13px] text-ink-soft" data-count>{goalCount(state)}</span>
-          </li>
-        ))}
-      </ol>
-      <p className="pt-2 pb-1 text-[13px] text-ink-soft" data-reward>Reward: {reward(chapter.chapter)}</p>
+    <li>
+      <Link to={peekOf(place)} state={{ back: true }} className="flex min-h-11 items-center gap-2 py-1.5" data-project={place.id} data-lock={lock?.by ?? undefined}>
+        <Check done={lock?.by === 'tonight'} />
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-semibold">{place.name}</span>
+          <span className="block text-[12px] text-ink-soft">{buildCostWords(place)}</span>
+        </span>
+        <span className={`shrink-0 text-right text-[13px] ${lock === null ? 'font-semibold text-accent' : 'text-ink-soft'}`} data-state>{state}</span>
+      </Link>
+    </li>
+  )
+}
+
+/** The farm's projects: what to build now, what the next rank offers, and the milestones with the Umas. */
+function Projects({ save }: { save: FarmSave }) {
+  const { now, waiting, next, milestones } = farmProjects(save)
+  return (
+    <Panel label="Projects" data-projects>
+      <h3 className="text-micro pt-1">Build now</h3>
+      {now.length === 0
+        ? <p className="py-2 text-[15px] text-ink-soft" data-nothing-now>Nothing to build at this rank.</p>
+        : <ul className="divide-y divide-hairline" data-build-now>{now.map((p) => <NowRow key={p.place.id} project={p} />)}</ul>}
+      {waiting.length > 0 && (
+        <p className="pb-1 text-[13px] text-ink-soft" data-waiting>Not built yet: {waiting.map((p) => `the ${p.name}`).join(', ')}</p>
+      )}
+      {next && (
+        <section aria-label={`At Farm Rank ${next.rank}`} data-next-offers={next.rank}>
+          <h3 className="text-micro pt-2">At Farm Rank {next.rank} · {next.points.toLocaleString('en-US')} points</h3>
+          <ul className="divide-y divide-hairline">
+            {next.places.map((p) => (
+              <li key={p.id} className="flex min-h-11 items-center gap-2 py-1.5" data-offer={p.id}>
+                <span className="min-w-0 flex-1 text-[15px]">{p.name}</span>
+                <span className="shrink-0 text-right text-[12px] text-ink-soft">{p.opens.game ? buildCostWords(p) : 'Not built yet'}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      <section aria-label="With the Umas" data-uma-milestones>
+        <h3 className="text-micro pt-2">With the Umas</h3>
+        <ul className="divide-y divide-hairline">
+          {milestones.map((m) => {
+            const words = umaMilestoneWords(m)
+            return (
+              <li key={`${m.kind}:${m.kind === 'house' ? m.n : m.kind === 'row' ? m.row : ''}`} className="flex min-h-11 items-center gap-2 py-1.5"
+                data-milestone={m.kind} data-done={m.done || undefined}>
+                <Check done={m.done} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px]">{words.what}</span>
+                  <span className="block text-[12px] text-ink-soft">{words.need}</span>
+                </span>
+                <span className="shrink-0 text-[13px] text-ink-soft" data-count>{words.count}</span>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
     </Panel>
   )
 }

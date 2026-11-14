@@ -72,14 +72,14 @@ describe('the houses', () => {
     expect(HOUSE_COSTS.reduce((a, b) => a + b)).toBe(408_000)
     expect(HOUSE_COSTS.reduce((a, b) => a + b) + EXTENSION_COSTS.reduce((a, b) => a + b)).toBe(612_000)
     expect([roomsOf({ extended: false }), roomsOf({ extended: true })]).toEqual([2, 4])
-    let save = spouse(farm(), ONE)
+    let save = more(spouse(farm(), ONE), 5)
     for (let n = 1; n <= 6; n++) save = extendHouse(buildHouse(save, `House ${'abcdef'[n - 1]}`), n)
     expect(roomsInAll(save)).toEqual({ rooms: 26, taken: 0 })
     expect(save.gold).toBe(1_000_000 - 612_000)
     expect(nextLot(save)).toBeNull()
   })
 
-  it('has the Farmhouse\'s two rooms from day 1, and nothing to build before the first wedding', () => {
+  it('has the Farmhouse\'s two rooms from day 1, and house n to build from the n-th wedding', () => {
     const save = farm()
     expect(save.homestead.houses).toEqual([{ name: 'Farmhouse', extended: false }])
     expect(roomsOf(save.homestead.houses[0]!)).toBe(2)
@@ -92,7 +92,9 @@ describe('the houses', () => {
     expect(built.homestead.houses[1]).toEqual({ name: 'Rose Cottage', extended: false })
     expect(built.homestead.slept).toEqual([0, 0])
     expect(built.gold).toBe(1_000_000 - 8000)
-    expect(nextLot(built)).toEqual({ n: 2, cost: 20000, open: true })
+    expect(nextLot(built)).toEqual({ n: 2, cost: 20000, open: false })
+    expect(() => buildHouse(built, 'Wren Hollow')).toThrow('Opens with your second wedding.')
+    expect(nextLot(spouse(built, TWO, 3))).toEqual({ n: 2, cost: 20000, open: true })
     expect(parseSaveV4(json(built))).toEqual(built)
   })
 

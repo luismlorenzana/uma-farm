@@ -1,7 +1,7 @@
 // The story as the game has it: @farm/domain's TypeScript read in place with Node's type stripping, so the sandbox
-// shows chapter 1 (and every chapter built after it) exactly as it plays. It reads the town's cast, the
-// hello lines, every `scene:<n>:<open|close>` the story files export, the farm's places, the temperaments and the
-// activities. Nothing is copied: edit a story file and the next request reads it again. Needs Node's type stripping
+// shows the opening exactly as it plays. The farm has no global chapters: the opening (`story/opening.ts`) is the only
+// town scene the game plays. It reads the town's cast, the opening's `scene:1:open`, the farm's places, the
+// temperaments and the activities. Nothing is copied: edit a story file and the next request reads it again. Needs Node's type stripping
 // (`--experimental-strip-types` before Node 22.18; `pnpm stories` passes it).
 import { register } from 'node:module'
 import { readdir, stat } from 'node:fs/promises'
@@ -30,7 +30,7 @@ export async function loadGame(src) {
     return { ok: false, error: 'This Node reads no TypeScript: start the sandbox with `pnpm stories` (it passes --experimental-strip-types).' }
   }
   try {
-    const chapters = (await readdir(join(src, 'story'))).filter((n) => /^chapter-\d+\.ts$/.test(n)).sort((a, b) => parseInt(a.slice(8)) - parseInt(b.slice(8)))
+    const chapters = (await readdir(join(src, 'story'))).filter((n) => n === 'opening.ts')
     const files = [...Object.values(FIXED), ...chapters.map((n) => `story/${n}`)]
     const v = await version(src, files)
     const load = (file) => import(`${pathToFileURL(join(src, file)).href}?v=${v}`)

@@ -40,7 +40,7 @@ describe('the night', () => {
     expect(NIGHT_STEPS.map((s) => `${s.step} ${s.name}`)).toEqual([
       '1 noteTonight', '1 payTheBin', '2 growCrops', '3 tendAnimals', '4 moveJobs', '4 countHauls', '4 nightExtras', '4 nightChores', '5 resetWorkshops',
       '6 tickRanks', '6 tickBonds', '6 payLine', '6 shareTheHouses', '6 levelAtNight', '6 countWellFed', '7 witherCrops', '7 turnCalendar',
-      '8 settleDorm', '8 arriveUmas', '8 checkGoals', '8 openRingBench', '8 householdMilestones',
+      '8 raiseBuildings', '8 settleDorm', '8 arriveUmas', '8 checkGoals', '8 openRingBench', '8 householdMilestones',
       '9 serveTheReception', '9 houseMorningStep', '9 moveInRooms', '9 vowsMorning', '9 heartsMorning', '9 morningItems', '9 drawInvitations', '9 buildSummary',
     ])
   })

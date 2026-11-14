@@ -22,12 +22,12 @@ export const DISTANCES = ['sprint', 'mile', 'medium', 'long']
 export const CONVERSATION_TARGET = { any: 20, place: 2 }
 const PLACEHOLDERS = { scene: ['name'], beat: ['name', 'farm'], conversation: ['a', 'b', 'place', 'item', 'farm'] }
 
-/** Who may speak a scene's beat. `game` marks the kinds uma-farm's scene player fills today (`story/chapter-1.ts`). */
+/** Who may speak a scene's beat. `game` marks the kinds uma-farm's scene player fills today (`story/opening.ts`). */
 export const SPEAKERS = {
   cast: { game: true, uma: false, about: 'One of the town’s cast, by id: their disc and their name' },
   narrator: { game: true, uma: false, about: 'Narration: no speaker, in italics' },
   'first-hand': { game: true, uma: true, about: 'Your first hands (index 0–2), the start’s three. The line is left empty: she says her temperament’s hello' },
-  'newest-hand': { game: true, uma: true, about: 'Your newest hand: the last to join, the chapter’s recruit on a closing morning' },
+  'newest-hand': { game: false, uma: true, about: 'Your newest hand: the last to join (the game plays no chapter scenes now)' },
   best: { game: false, uma: true, about: 'Your best at an activity: the highest rank in it, then talent' },
   closest: { game: false, uma: true, about: 'The Uma you’re closest to: the highest affinity' },
   team: { game: false, uma: true, about: 'Your team (index 0–2): a festival’s three' },

@@ -165,7 +165,6 @@ export default function FarmStage({ save, places, work, hearts, open, paused, re
     const next: Record<string, Box> = {}
     anchors.current.clear()
     for (const plot of all) {
-      if (plot.kind === 'open') continue
       const a = overlayBox(plot, d.buildings.find((b) => b.id === plot.id))
       anchors.current.set(plot.id, a)
       const l = s.project(a.left), r = s.project(a.right), t = s.project(a.top), front = s.project({ ...a.left, z: a.left.z + 1 })

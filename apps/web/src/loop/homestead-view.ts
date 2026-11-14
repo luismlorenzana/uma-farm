@@ -25,7 +25,7 @@ export interface HouseRow {
   /** Extend · 4,000g, and how much gold is short; null once extended, and for the Farmhouse. */
   extend: { cost: number; short: number } | null
 }
-/** The next lot: Build · 8,000g (with what's short), or locked until the first wedding. */
+/** The next lot: Build · 8,000g (with what's short), or locked until its wedding. */
 export interface LotRow {
   n: number
   cost: number
@@ -57,7 +57,7 @@ export function homesteadView(save: SaveV4, nameOf: NameOf): HomesteadView {
   const first = (lot?.n ?? HOUSES + 1) + 1
   const waiting = waitingForRooms(save)
   return {
-    houses, lot, later: first <= HOUSES ? (first === HOUSES ? `Lot ${HOUSES} · after this one` : `Lots ${first}–${HOUSES} · built in turn`) : null,
+    houses, lot, later: first <= HOUSES ? (first === HOUSES ? `Lot ${HOUSES} · after this one` : `Lots ${first}–${HOUSES} · one a wedding, in turn`) : null,
     needs: `Needs a room: ${waiting.length === 0 ? 'none' : waiting.map(nameOf).join(', ')}`,
     rooms: roomsInAll(save), married: marriedCount(save),
   }
@@ -72,10 +72,9 @@ export const HOMESTEAD_TEXT = {
   move: 'Move: tap a face, then a free room.',
   shared: 'Shared houses: +10 bond a night a pair.',
   placeholder: 'Rose Cottage',
-  firstWedding: 'Opens with your first wedding.',
   help: [
     'The Farmhouse is your own home, with two rooms. Each wedding gives her a room: you pick the house; she can move any time, free.',
-    'Build the next house when it opens, and name it. A house has two rooms, four once extended. House 1 opens with your first wedding.',
+    'Each wedding opens a house: House 1 with your first, House 2 with your second, and so on. Build it and name it. A house has two rooms, four once extended. Three married open the homestead’s second row.',
     'Each night you sleep in one house; its morning gives each resident +30, her breakfast and her morning items.',
     'Spouses sharing a house grow closer: +10 bond a night for each pair.',
   ],

@@ -24,9 +24,12 @@ describe('the farm map', () => {
 
   it('says what opens a locked place, and "Soon" for one whose screens haven\'t landed', () => {
     const lock = (id: string, save = day1) => lockOf(save, farmPlace(id)!)
-    expect([lock('mine'), lock('sawmill'), lock('mill'), lock('coop'), lock('board'), lock('kitchen'), lock('fields')]).toEqual([
-      'Chapter 3', 'Farm Rank 3', 'Chapter 1’s reward', 'Chapter 2', 'Soon', 'Chapter 4', null,
+    expect([lock('mine'), lock('sawmill'), lock('mill'), lock('coop'), lock('board'), lock('kitchen'), lock('dock'), lock('fields')]).toEqual([
+      'Not built yet', 'Farm Rank 3', 'Not built', 'Not built yet', '5 Umas met', 'Not built yet', 'Farm Rank 6', null,
     ])
+    // Paid today, it builds tonight; built, the Dock opens its quick look (the Boat's Build).
+    expect(lock('mill', { ...day1, farm: { ...day1.farm, builds: ['mill'] } })).toBe('Builds tonight')
+    expect(lock('dock', { ...day1, buildings: { ...day1.buildings, dock: 1 } })).toBeNull()
     expect(lockOf(day1, farmPlace('festival')!, new Set(['festival']))).toBe('Soon')
     // The Dorm opens its page, the Gate its quick look.
     expect([lock('dorm'), lock('gate')]).toEqual([null, null])
@@ -37,7 +40,7 @@ describe('the farm map', () => {
     expect([lock('forest'), lock('fishery')]).toEqual([null, null])
     expect(placeLink(day1, farmPlace('forest')!)).toBe('/?peek=forest')
     // A station is locked until built; once Farm Rank 3 opens it, its quick look offers Build.
-    const fr3 = { ...day1, farm: { ...day1.farm, points: 500 } }
+    const fr3 = { ...day1, farm: { ...day1.farm, points: 250 } }
     expect(lock('sawmill', fr3)).toBe('Not built')
     expect(placeLink(fr3, farmPlace('sawmill')!)).toBe('/?peek=sawmill')
     expect(lock('sawmill', { ...fr3, buildings: { ...fr3.buildings, sawmill: 1 } })).toBeNull()
