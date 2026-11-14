@@ -328,7 +328,8 @@ const MAX_CHAPTERS = 27
  * invitations, arrivals, birthdays, anniversaries, morning items and chapters opened, each an Uma on the roster, once a
  * kind each (a chapter numbered 1–27); an
  * invitation asks for a date game; an anniversary's item is a good on the day and null the day before; a morning item 1–3
- * goods at their stars; the night's chores once, items and growth (quarters), one of them more than 0; the perks' extras
+ * goods at their stars; the night's chores once, items, growth (quarters) and fondness (absent at 0), one of them more
+ * than 0; the perks' extras
  * once, 1+ items; side by side once, 1+ items; bond hearts 1–5 once a pair, two roster Umas in `pairKey` order. */
 function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>, houses: number): HeartLine[] {
   const when = (v: unknown, at: string) => oneOf(v, at, ['today', 'tomorrow'] as const)
@@ -369,11 +370,12 @@ function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>, 
       return { kind, id: member(o.id, `${at}.id`, roster), items: list(o.items, `${at}.items`, 1, 3).map((k, n) => itemKey(k, `${at}.items.${n}`)) }
     }
     if (kind === 'chores') {
-      const o = object(v, at, ['kind', 'items', 'watered'])
+      const o = object(v, at, ['kind', 'items', 'watered', 'fondness'])
       const items = int(o.items, `${at}.items`, 0, 100_000)
       const watered = int(o.watered, `${at}.watered`, 0, FIELD_TILES)
-      if (items === 0 && watered === 0) fail(at, 'expected items or tiles watered')
-      return { kind, items, watered }
+      const fondness = o.fondness === undefined ? 0 : int(o.fondness, `${at}.fondness`, 1, 100_000)
+      if (items === 0 && watered === 0 && fondness === 0) fail(at, 'expected items, tiles watered or fondness')
+      return { kind, items, watered, ...(fondness > 0 ? { fondness } : {}) }
     }
     if (kind === 'perks') {
       const o = object(v, at, ['kind', 'items'])

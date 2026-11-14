@@ -79,6 +79,8 @@ export const homeBuilt = (save: Pick<FarmSave, 'buildings'>, home: RanchHome): b
 export const siloStands = (save: Pick<FarmSave, 'buildings'>): boolean => RANCH_HOMES.some((home) => homeBuilt(save, home))
 /** A building's animals, in the order bought. */
 export const animalsIn = (save: Pick<FarmSave, 'ranch'>, home: RanchHome): Animal[] => save.ranch.animals.filter((a) => ANIMAL_HOME[a.kind] === home)
+/** The kinds of animal the farm keeps, in the rancher's order. */
+export const keptKinds = (save: Pick<FarmSave, 'ranch'>): AnimalKind[] => ANIMAL_KINDS.filter((k) => save.ranch.animals.some((a) => a.kind === k))
 /** The goods waiting in a building. */
 export const readyIn = (save: Pick<FarmSave, 'ranch'>, home: RanchHome): number => animalsIn(save, home).filter((a) => a.ready).length
 /** The silo's room left. */

@@ -7,7 +7,7 @@ import 'fake-indexeddb/auto'
 import { inviteToFarm, meet, newSave, readScene, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { MemoryRouter, Route, Routes } from 'react-router'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MasterView } from '../master/master'
 
@@ -118,6 +118,21 @@ describe('her profile on v4', () => {
     expect((await find('[data-love-float]')).textContent).toBe('+15')
     expect($('[data-chat-line]')?.textContent).not.toContain('{name}')
     expect(($('[data-action="chat"]') as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('invites a friend to work from her profile, an action, and opens her scene', async () => {
+    let at = ''
+    function Where() {
+      const location = useLocation()
+      at = `${location.pathname}${location.search}`
+      return null
+    }
+    useGame.setState({ save: withLove(farm(), ONE, { level: 3 }) })
+    await render(<><HeartsPage /><Where /></>, `/hearts?uma=${ONE}`)
+    await click(await find('[data-action="invite-work"]'))
+    await until(() => save().roster[ONE]!.farmhand === 2)
+    expect(save().today.actions).toBe(1)
+    await until(() => decodeURIComponent(at) === `/hearts?uma=${ONE}&life=invited-to-work:${ONE}`)
   })
 
   it('lists each good\'s points for her in the gift picker, "?" until her taste is known, and learns a given one', async () => {

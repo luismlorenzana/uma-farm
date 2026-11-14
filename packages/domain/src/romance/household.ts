@@ -87,7 +87,8 @@ export function shareHouses(save: SaveV4, pack: Pick<StoryPack, 'ties'>): { save
 const NIGHT_LEVEL_FROM: Readonly<Record<number, 's2' | 's4'>> = { 1: 's2', 3: 's4' }
 
 /** Step 6: a spouse at S1 or S3 whose 600 is full reaches S2 or S4 through `advance` (which starts
- * S2's every-2nd-morning count), no event; never S3 or S5, which are events. In the roster's id order. */
+ * S2's every-2nd-morning count), with no Ready event (the morning's card plays her scene); never S3 or S5, which are
+ * Ready events. In the roster's id order. */
 export function levelsTonight(save: SaveV4): { save: SaveV4; levels: LevelLine[] } {
   let love = save.love
   const levels: LevelLine[] = []
@@ -101,15 +102,18 @@ export function levelsTonight(save: SaveV4): { save: SaveV4; levels: LevelLine[]
   return { save: levels.length === 0 ? save : { ...save, love }, levels }
 }
 
-/** A night level's card: the level-up card with no event, her perk and her next rung, read from her
- * route now. Null unless she has reached that rung. */
-export function nightLevelCard(save: Pick<SaveV4, 'love'>, pack: Pick<StoryPack, 'bibles'>, id: string, rung: 's2' | 's4'): EventCard | null {
+/** A night level's card: the level-up card, her perk and her next rung, read from her route now. With `scene`, the
+ * steps of her level's event as they played before it (her route's `s2` or `s4`, else the default story's; a choice's
+ * answer in, when the player knows it), the card is that scene's: her last line of it, and no "no event". Null unless
+ * she has reached that rung. */
+export function nightLevelCard(save: Pick<SaveV4, 'love'>, pack: Pick<StoryPack, 'bibles'>, id: string, rung: 's2' | 's4', scene: readonly Step[] | null = null): EventCard | null {
   const love = save.love[id]
   if (!love || love.stage !== 'spouse' || love.level < Number(rung.slice(1))) return null
   const after = bar(love)
+  const said = scene?.filter((s): s is Extract<Step, { say: string }> => 'say' in s && s.say === id).at(-1)?.line ?? null
   return {
     id, rung, event: 0, choices: [], plays: [], chosen: null, sum: 0, paid: 0, carried: 0, learnt: [], taken: [], perk: perkOf(rung)?.id ?? null, recipe: null, memory: null,
-    unlock: null, answer: null, stage: null, ring: null, wedding: null, line: null, night: true,
+    unlock: null, answer: null, stage: null, ring: null, wedding: null, line: said, night: true, ...(scene ? { scene: true as const } : {}),
     next: after.rung === null ? null : {
       rung: after.rung, cost: after.cost, points: after.points, banked: after.banked, hint: beatOf(pack, id, after.rung)?.hint ?? null,
       perk: perkOf(after.rung)?.id ?? null,

@@ -124,9 +124,9 @@ fleeces collected by the building and starred by their hearts; the Mine and the 
 floors each, their stairs found by the faces and taken free; the Smelter and the Cutter; and the Coop's care and a
 dig's face on the work board. A simulated two years with the Coop and the Mine pays their way
 ([the ranch](game-mechanics.md#the-ranch), [the Mine and the Quarry](game-mechanics.md#the-mine-and-the-quarry)).
-Phone checks follow steps 1, 2, 4, 5, 7 and 10. What the pieces left half done is
-[F85, the rework's loose ends](handoff/tasks/F85-rework-loose-ends.md): the ranch's and mining's perks, the invitation's
-scene, married life's second and fourth levels, and the eggs' and milk's icons.
+Phone checks follow steps 1, 2, 4, 5, 7 and 10. What the pieces left half done is done: a ranch Uma's and a miner's
+perks act once their places stand, inviting her to work plays her scene, married life's second and fourth levels play
+theirs from the morning, and the eggs and milk show uma-art's icons ([perks](game-mechanics.md#perks)).
 
 **What it changes below:**
 - Phase 1's HD-2D track pauses: the portrait preview is retired, and the farm map becomes a landscape tile map until

@@ -301,11 +301,17 @@ describe('the morning', () => {
     expect($('[data-misses-answer]')?.dataset.missesAnswer).toBe('tonight')
   })
 
-  it('shows a night level\'s card at ?level=, and closes a stale one', async () => {
+  it('plays a night level\'s scene at ?level=, then its card, and closes a stale one', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: wedOne({ level: 2, morning: DAY }) })
     await render(<p />, `/?level=${ONE}:s2`)
+    // Her S2: the default story's (the stand-in route writes none), first.
+    await find('[data-night-scene="s2"]')
+    expect($('[data-scene-title]')?.textContent).toBe('Spouse 2 · Stand-in 1')
+    expect($('[data-step] [data-line]')?.dataset.line).toBe('She brings lunch out to you at noon.')
+    await click($('[data-action="skip"]'))
     await find('[data-night-level="s2"] [data-level-up="s2"]')
-    expect($('[data-sum]')?.textContent).toBe('Her bar filled overnight: no event, the level comes by itself · now toward Spouse 3')
+    expect($('[data-sum]')?.textContent).toBe('Her bar filled overnight · now toward Spouse 3')
+    expect($('[data-card-line]')?.textContent).toBe('“Sit with me a minute. The work will wait.”')
     expect($('[data-card-perk]')?.textContent).toContain('Perk')
     await click($('[data-action="continue"]'))
     await until(() => !$('[data-night-level]'))

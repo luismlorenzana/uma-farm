@@ -8,10 +8,11 @@ import { DAYS_PER_YEAR } from '../farm/calendar'
 import { runNight, type NightContext } from '../night/end-day'
 import { parseSaveV5 } from '../save/parse-v4'
 import { FINALE_MARRIED, marriedCount, newLove, newRosterUma, newSave, onFarm, residentsOf, roomsOf, vowsOn, type Love, type SaveV4 } from '../save/v4'
-import { checkBible, checkHousehold, type Household, type UmaBible } from '../story/authored'
+import { checkBible, checkHousehold, type Household, type Step, type UmaBible } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_INS } from '../story/authored.fixture'
 import { storyPackFrom, type StoryPack } from '../story/pack'
-import { householdOf, placeholderHouseholdBeat, wishesOf } from '../story/placeholders'
+import { DEFAULT_EVENTS } from '../story/default-story'
+import { eventOf, householdOf, placeholderHouseholdBeat, wishesOf } from '../story/placeholders'
 import { readScene } from '../story/scenes'
 import { STAND_IN_FILES } from '../story/stand-in'
 import { joinCast } from './meeting.fixture'
@@ -23,15 +24,18 @@ import {
   roomFor, roomsInAll, sleepAt, sleepRows, swapRooms, takeRoom, waitingForRooms,
 } from './homestead'
 import {
-  anotherNight, HOUSE_POINTS, HOUSE_TEMPLATES, householdNight, householdPlay, householdReady, houseLineOf, levelsTonight, missesLine, noteTheNight, readHousehold, spousesInOrder,
-  VOWS_POINTS,
+  anotherNight, HOUSE_POINTS, HOUSE_TEMPLATES, householdNight, householdPlay, householdReady, houseLineOf, levelsTonight, missesLine, nightLevelCard, noteTheNight, readHousehold,
+  spousesInOrder, VOWS_POINTS,
 } from './household'
+import { sceneSteps } from './love'
 import { readiness } from './ready'
 
 const AT = '2026-11-11T10:00:00.000Z'
 const PACK = storyPackFrom(STAND_IN_FILES)
 const [ONE, TWO, THREE] = STAND_INS
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
+/** Her lines said in a scene, its own (not a choice's). */
+const says = (steps: readonly Step[]): string[] => steps.flatMap((s) => ('say' in s ? [s.line] : []))
 const BIRTHDAYS = birthdaysOf(PACK, new Map())
 const context = (story: Pick<StoryPack, 'cast' | 'bibles' | 'ties'> = PACK): NightContext => ({ story, birthdays: BIRTHDAYS })
 
@@ -239,6 +243,30 @@ describe('the night', () => {
     const morning = runNight(save, context())
     expect(morning.summary!.hearts.filter((h) => h.kind === 'level')).toEqual(levels)
     expect(parseSaveV5(json(morning))).toEqual(morning)
+  })
+
+  it('plays S2\'s and S4\'s scene from the morning: her route\'s, else the default story\'s, then the card', async () => {
+    const save = spouse(spouse(farm(30), ONE, 2, { level: 1, points: 600 }), TWO, 3, { level: 3, points: 650 })
+    const { save: leveled } = levelsTonight(save)
+    // The default story writes both: her name filled in, tender, paying nothing.
+    const s2 = await eventOf(PACK, TWO, 's2', 'Robin')
+    expect(s2).toMatchObject({ id: 's2', written: false })
+    expect(s2.steps[0]).toEqual({ narrate: DEFAULT_EVENTS.s2!.moment })
+    for (const s of s2.steps) if ('choice' in s) expect(s.choice.every((o) => !o.friendship && !o.romance)).toBe(true)
+    expect((await eventOf(PACK, ONE, 's4')).steps[0]).toEqual({ narrate: DEFAULT_EVENTS.s4!.moment })
+    // Her route's own replaces it.
+    const own = { ...PACK, route: async () => ({ events: [{ id: 's2', steps: [{ narrate: 'Her own noon.' }, { say: TWO, line: 'Lunch!', emote: 'happy' as const }] }] }) }
+    expect(await eventOf(own, TWO, 's2')).toEqual({ id: 's2', steps: [{ narrate: 'Her own noon.' }, { say: TWO, line: 'Lunch!', emote: 'happy' }], written: true })
+    // The card after it: her last line, no "no event"; without a scene, as built.
+    const card = nightLevelCard(leveled, PACK, TWO, 's4', s2.steps)!
+    expect(card).toMatchObject({ rung: 's4', night: true, scene: true, perk: 'night-chore-3' })
+    expect(card.line).toBe(says(s2.steps).at(-1))
+    // As played, a choice's answer in: her last line is the answer's.
+    const played = sceneSteps(s2.steps, [0])
+    expect(nightLevelCard(leveled, PACK, TWO, 's4', played)!.line).toBe(says(played).at(-1))
+    expect(says(played).at(-1)).not.toBe(says(s2.steps).at(-1))
+    expect(nightLevelCard(leveled, PACK, ONE, 's2')).toMatchObject({ rung: 's2', night: true, line: null })
+    expect(nightLevelCard(leveled, PACK, ONE, 's2')!.scene).toBeUndefined()
   })
 })
 

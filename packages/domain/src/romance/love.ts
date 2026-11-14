@@ -5,7 +5,7 @@
 //   160 + 40n a heart (200 … 560)   0      160 + 40n          0             0       600 a level
 //
 // A level is its event: her bar fills, the event becomes Ready (`ready.ts`), and the level comes when it plays (`advance`,
-// which the events call). The three waiting rungs cost nothing; S2 and S4 have no event and come at night. Points never
+// which the events call). The three waiting rungs cost nothing; S2 and S4 have no Ready event and come at night. Points never
 // fall: past a full bar they're banked and carry into the next bar when the event plays; while a waiting rung waits they
 // bank into the next ladder. `addLove` is the one way points move: the day's factors, rounded once, nothing once S5 has
 // played. Her arrival scene, "event zero", pays +50 and its one choice: the option with the highest authored gain +30,
@@ -23,7 +23,7 @@ const rungs = (letter: string, n: number): string[] => Array.from({ length: n },
 export const ROUTE_RUNGS: readonly string[] = [...rungs('f', 10), 'confession', ...rungs('r', 10), 'proposal', 'wedding', ...rungs('s', 5)]
 /** The rungs that cost nothing: each is Ready the day after the rung before (the proposal also needs a ring). */
 export const WAITING_RUNGS: readonly string[] = ['confession', 'proposal', 'wedding']
-/** The spouse levels with no event: they come at night when their bar fills. */
+/** The spouse levels with no Ready event: they come at night when their bar fills (the morning plays their scene). */
 export const NIGHT_RUNGS: readonly string[] = ['s2', 's4']
 
 /** Heart n on friendship and romance costs 160 + 40n. */

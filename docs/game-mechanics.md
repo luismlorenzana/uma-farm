@@ -377,15 +377,16 @@ The steps as the game lists them:
 | 2 | `farmhandsWork` | The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads and the animals’ care first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse, her place today where she spent the most |
 | 2 | `growCrops` | Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day |
 | 3 | `tendAnimals` | Animals: each animal fed today makes its good, waiting in its building to be collected (one at a time), and grows 2 fonder; one left unfed goes hungry, makes nothing and loses 10 fondness, and never dies; then each is unfed and uncared for the next day |
+| 3 | `ranchNightChores` | Ranch chores: a rancher’s night chores each give every animal in her building (the Coop or the Barn she cares for on the work board, else the first that stands) +5 fondness, held to 200; 1 from F6, 2 from R7, 3 from S4, on the farm only |
 | 4 | `finishTheLoads` | Stations: every load started today is done, its goods into the Warehouse at their stars, the station free for the morning |
 | 4 | `nightExtras` | Side by side: an Uma whose work finished items tonight where a 3-heart partner also worked today gets 10% of them again (20% in her element), seeded copies straight into the Warehouse; then the perks’ extras: the bond term × the romance term of the same items (her line’s +10% and +20%, her ring, a dream, the household; held to 40%), their own seeded copies |
-| 4 | `nightChores` | Night chores: a forager’s bring one item each from her rank’s deepest forest area this season, a fisher’s one fish each from her deepest spot, at a day’s haul’s stars, into the Warehouse; 1 from F6, 2 from R7, 3 from S4, on the farm only |
+| 4 | `nightChores` | Night chores: a forager’s bring one item each from her rank’s deepest forest area this season, a fisher’s one fish each from her deepest spot, at a day’s haul’s stars, a miner’s one find each from the Mine’s or the Quarry’s deepest floor, at a face’s, into the Warehouse; 1 from F6, 2 from R7, 3 from S4, on the farm only |
 | 5 | `resetWorkshops` | Each workshop may be played again tomorrow |
 | 6 | `tickRanks` | Rank points for every farmhand who worked, one activity each (her place today’s), ×1.05 from her Friendship 5 and ×1.10 from Friendship 10, ×1.10 more beside a mentor (an Uma at Friendship 9 at her line’s place; one a place, never herself); rank-ups where points and the challenge are met |
 | 6 | `tickBonds` | Bonds: +10 to each pair of farmhands who worked one place today, once a night; ×1.5 sharing a favourite line of that place’s; ×1.5 more when one is at Romance 4 and the other her closest friend |
 | 6 | `payLine` | Her line: +10 to each farmhand who worked today at one of her line’s places, once a night |
 | 6 | `shareTheHouses` | Shared houses: +10 bond a night to each pair of spouses with rooms in the same house |
-| 6 | `levelAtNight` | Spouse levels: a spouse at S1 or S3 whose 600 is full reaches S2 or S4, no event (S2 starts her every-2nd-morning item); never S3 or S5 |
+| 6 | `levelAtNight` | Spouse levels: a spouse at S1 or S3 whose 600 is full reaches S2 or S4, with no Ready event (S2 starts her every-2nd-morning item); the morning’s line plays its scene and card; never S3 or S5 |
 | 6 | `countWellFed` | The well-fed days count down |
 | 7 | `witherCrops` | On a season’s last night, crops still growing that don’t grow in the next season wither, their soil left tilled; ripe crops wait |
 | 7 | `turnCalendar` | The date moves; the whole of `today` clears: the day’s actions and event actions, going into town, the areas worked, chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception |
@@ -1058,7 +1059,7 @@ stands with the first of them and holds 200 feed for both.
 
 Seven animals, at the rancher's from their Farm Rank once their home stands. Every one gives its good each night it's
 fed; the wool and the two fleeces are uma-art's fibers, and the Mill weaves them into cloth. The eggs and milk are the
-farm's own goods, drawn in code until uma-art's items atlas has them.
+farm's own goods, on uma-art's items atlas from 2.30.0.
 
 <!-- live:animals -->
 | Animal | Lives in | At the rancher’s | Opens at | Gives, each night it’s fed | ★1 | ★5 (10 hearts) | At the Mill |
@@ -1111,6 +1112,14 @@ farm's own goods, drawn in code until uma-art's items atlas has them.
   with its home, its good and that good's price, and **Buy · 500g** or why not; and the silo's fodder, 10 or 40 at a
   tap, or **Fill it**, up to its room.
 
+#### The romance at the ranch
+
+A ranch Uma's perks act once the Coop or the Barn stands ([at her line](#at-her-line)): the goods she collects on her
+care task come home with her romance term's chance of an extra (+10% at Friendship 2, +20% at Romance 5), and her night
+chores give each animal in her building +5 fondness (1 chore from Friendship 6, 2 from Romance 7, 3 from Spouse 4). Her
+morning items are eggs, milk and fleece of the animals the farm keeps, and her signature dish's grade is their best
+good's. The morning's Hearts section says "Night chores · +10 fondness" and "Perks · +1 item".
+
 ### The Mine and the Quarry
 
 The Mine and the Quarry are worked floor by floor. A face is one action on the deepest floor reached and brings two
@@ -1160,6 +1169,13 @@ improve. Every pick is seeded by the farm's count of finds at the dig (`draw(uid
 - **Its panel:** the floor and its grade, the floor's finds as icons, **Work a face · 1 action** (its note says the
   floor, the finds and "the stairs!" when a face finds them), then the stairs' progress ("2 faces to find them") and
   **Take the stairs · free** once found, or why not.
+
+#### The romance in the Mine
+
+A miner's perks act once her dig stands, the Mine (or a quarrier's Quarry) ([at her line](#at-her-line)): her faces'
+finds and her Smelter (Cutter) batch come to ×1.1 at Friendship 2 and ×1.2 at Romance 5, as the perks' extras; her
+night chores bring one find each from the deepest floor reached, at a face's stars (1 from Friendship 6, 2 from Romance
+7, 3 from Spouse 4); her morning items are finds of that floor; and her signature dish's grade is its top grade.
 
 ### The stations
 
@@ -1514,8 +1530,8 @@ Each season's families, and how many goods they lift:
 The catalogue holds 284 goods in 17 families, each with ten raw grades (G1–G10) and their refined forms where a station
 makes them: 27 crops and 10 flours, the forest's 113, mining's 60, fishing's 20, the expeditions' 30, and the ranch's
 24: uma-art's fibers (ten raw, from Flax to Cloudfleece, and their ten cloths) and the eggs and milk (Egg, Milk, Duck
-Egg and Goat Milk, G1–G4, with no refined form). Every id is uma-art's but the eggs and milk, the farm's own, drawn in
-code (an egg, a bottle) until uma-art's items atlas has them. The farm brings in the shop's crops, the forest's goods
+Egg and Goat Milk, G1–G4, with no refined form). Every icon is on uma-art's items atlas, the eggs and milk from 2.30.0
+(the `ranch` kind's `eggs-milk` line, row 38). The farm brings in the shop's crops, the forest's goods
 (Mandrake among them), the freshwater fish, the Mine's ores and the Quarry's stones and gems, the Barn's wool and fleeces,
 the eggs and milk, and the five stations' forms of them; the rest are priced, but nothing on the farm brings them in.
 Seeds aren't goods: they have no price and the bin won't take them.
@@ -2231,8 +2247,9 @@ open is greyed with why. **Back** returns to the map.
   it's open to her and the day has its two actions ([the evening](#the-evening)); otherwise it says why: "From
   Friendship 3", "She lives in town: invite her to the farm", "Spent this evening ✓", "That takes 2 actions.".
 - **Invite her to work · 1**, once she's a friend (Friendship 3): she's a **farmhand** from today, and keeps her life in
-  town. It says "Farmhand ✓" and her line ("The farm? I'd love to. Count me in."); then "Works the farm ✓". Set her
-  tasks on the work board in the Book ([farmhands](#farmhands)).
+  town. Her scene plays over the town as soon as the action is spent ([the invitation to
+  work](#the-invitation-to-work)); then her menu says "Farmhand ✓" and her line ("The farm? I'd love to. Count me
+  in."), and "Works the farm ✓". Set her tasks on the work board in the Book ([farmhands](#farmhands)).
 - **Her event** shows once it's Ready, wherever she lives, and opens the event player over the town; it takes an
   action (a special day's event actions first), and with none left it doesn't start.
 - **Not out now:** "At home today. Look for her another day." (with her profile once met); one who lives on the farm:
@@ -3697,7 +3714,7 @@ Every ladder, event, perk, evening, proposal, wedding and household runs end to 
 | Her talks | 120: 4 for each stage (acquaintance, friend, farmhand, sweetheart, engaged, married) and temperament (breezy, steady, bold, gritty, clever) | Her bible’s `chats` set for the stage |
 | Her gift reactions | 3 for each taste (loved, liked, neutral, disliked) | — |
 | Her meeting | In town, where you introduce yourself | Her route’s `arrival` |
-| Her events | Every rung (27), and her life’s: `wedding-night`, `moving-in`, `s2`, `s4` | Her route’s event of that id |
+| Her events | Every rung (27), and her life’s: `invited-to-work`, `wedding-night`, `moving-in`, `s2`, `s4` | Her route’s event of that id |
 | Her occasions | `birthday`, `new-year`, `flower-show`, `fishing-derby`, `derby-night`, `cooking-contest`, `animal-show`, `harvest-cup` | Her route’s event of that id |
 | The evenings’ scenes | `hangout-walk`, `hangout-fishing`, `hangout-picnic`, `hangout-market`, `hangout-cooking`, `hangout-festival`, `date-walk`, `date-fishing`, `date-picnic`, `date-market`, `date-cooking`, `date-crafting`, `date-stargazing`, `date-dance`, `date-boat`, `date-footrace`, `date-festival`, `dinner-in-town`, `a-night-in` | Her route’s event of that id |
 | The night’s companion | 3 morning greetings for each temperament | Her bible’s `mornings` |
@@ -3729,6 +3746,8 @@ The default scenes that name their outfit (the rest wear the moment's, by [outfi
 - **Her stage, as her talks follow it,** is [the Uma loop](#the-uma-loop)'s: acquaintance to Friendship 2; friend from
   Friendship 3 through the confession's wait (farmhand once you've invited her to work); sweetheart from the confession
   through the proposal's wait; engaged until the wedding; married after it.
+- **The invitation to work** plays as you invite her, after the action is spent: her route's `invited-to-work`, else the
+  default's, at the farm gate in the day's outfit ([the invitation to work](#the-invitation-to-work)).
 - **The wedding night** plays right after the wedding's card, before the Married stage-up: her route's `wedding-night`,
   else the default's, in the wedding night outfit on a night backdrop, tender and fading to morning. Then **moving in**,
   her route's `moving-in`, else the default's, as she moves into the room she took; one who waited for a room plays it
@@ -3739,9 +3758,12 @@ The default scenes that name their outfit (the rest wear the moment's, by [outfi
   default story's (`morningGreetingsOf`, `mealLinesOf`), drawn by the day ([married life](#the-households-meals)).
 - **The occasions the calendar plays:** New Year's from the second year, the Flower Show and the Fishing Derby's night
   (`derby-night`), each on its day with everyone you've met ([occasion scenes](#occasion-scenes)).
-- **What waits for its moment:** married life 2 and 4 (they come at night, with no event), the other occasions (her
-  birthday, the Fishing Derby's day, the Cooking Contest, the Animal Show, the Harvest Cup): written and read through the
-  same lookup (`eventOf`); they play when the festivals give them their moment.
+- **Married life 2 and 4** come at night when her bar fills, with no Ready event: the morning's "reached overnight" line
+  plays her route's `s2` or `s4`, else the default's (short and tender), then her level-up card
+  ([the level-up cards](#the-level-up-and-stage-up-cards)).
+- **What waits for its moment:** the other occasions (her birthday, the Fishing Derby's day, the Cooking Contest, the
+  Animal Show, the Harvest Cup): written and read through the same lookup (`eventOf`); they play when the festivals give
+  them their moment.
 
 Every other part of the story, and what plays without it:
 
@@ -4016,6 +4038,9 @@ invitation to work, the evenings at two actions, moving in, the household's meal
 - She's a **farmhand** from today and keeps her life in town (the Dorm is only where she sleeps if you invite her to the
   farm). From tonight she works the tasks you set her on the work board, after her part-time job, and her aptitudes
   grow ([farmhands](#farmhands)). The flag is also her stage and her talks.
+- **Her scene** plays as soon as the action is spent, over her menu or her profile (`?life=invited-to-work:<id>`): her
+  route's `invited-to-work`, else the default story's, a short scene at the farm gate in the day's outfit (her everyday
+  one) unless hers names another. It pays nothing and saves nothing; Skip, or its end, closes it.
 
 #### The household's meals
 
@@ -4057,8 +4082,8 @@ invitation to work, the evenings at two actions, moving in, the household's meal
 
 #### Stages and costs
 
-One track per Uma, 26 rungs with an event, plus the spouse levels S2 and S4, which have no event and come at night when
-their bar fills:
+One track per Uma, 26 rungs with an event, plus the spouse levels S2 and S4, which have no Ready event and come at night
+when their bar fills (the morning's line plays their scene):
 
 ```
  F1 F2 F3 F4 F5 F6 F7 F8 F9 F10   ◆    R1 R2 … R8 R9 R10   ◇      ◇       S1  S2  S3  S4  S5
@@ -4214,7 +4239,7 @@ A setup is never an hour, the weather, a season or a festival; her chapter's gat
 | Order | `waits` | When |
 |---|---|---|
 | 1 | `done` | Her route is complete (S5 has played) |
-| 2 | `night` | S2 or S4, bar full: no event, the level comes at night; short of it, `bar` |
+| 2 | `night` | S2 or S4, bar full: no Ready event; the level comes at night, and the morning plays its scene; short of it, `bar` |
 | 3 | `friend` | She said “Not yet” at her confession: you ask her again from her profile |
 | 4 | `gate` | Her next event opens her chapter, and its gate doesn’t hold yet |
 | 5 | `opens` | A working setup at a place not built yet |
@@ -4420,7 +4445,7 @@ R1–R10, the proposal and the wedding, married life S1–S5), and so do the poi
 - **Along her route:** a chapter's events are its rungs in the route's order, and her chapters run in the order of their
   first events. A rung the pack leaves out counts in the chapter before it along the route (else the first), a rung in
   two counts in the first, and a chapter holding no rung the game plays is left out. A chapter without a title shows
-  as "Chapter 2". S2 and S4, which have no event, count with S1 and S3.
+  as "Chapter 2". S2 and S4, which come at night, count with S1 and S3.
 - **The one she's in** is the chapter holding her next rung. **A chapter opens when its first event can play:** the
   rung before it has played and its gate holds.
 - **A chapter's gate** asks the farm for something, from [the trigger menu](story-pack.md#the-trigger-menu): a place
@@ -4499,14 +4524,14 @@ shows what the place-bound ones say for every line.
 | S4 | `night-chore-3` | A third night chore | Yes: “Opens when the Kitchen is built” (her place) until it’s built |
 | S5 | `vow-renewal` | Vow renewal; her keepsake grows |  |
 
-| Her line | Her place | +10% (F3) | A night chore (F6) | A morning item (R2) | Opens with |
+| Her line | Her place | +10% (F2) | A night chore (F6) | A morning item (R2) | Opens with |
 |---|---|---|---|---|---|
 | Farming | the Fields | +10% at the Fields | Waters a dry tile each night | A ★2+ crop of the season | Day 1 |
 | Foraging | the forest | +10% at the forest | One item from the forest each night | A ★2+ good from the forest | Day 1 |
 | Fishing | the Fishery | +10% at the Fishery | One fish from the Fishery each night | A ★2+ fish | Day 1 |
 | Mining (the Mine) | the Mine | +10% at the Mine | One ore from the Mine each night | A ★2+ ore | When the Mine is built |
 | Mining (the Quarry) | the Quarry | +10% at the Quarry | One stone or gem from the Quarry each night | A ★2+ stone or gem | When the Quarry is built |
-| Ranch | the ranch | +10% at the ranch | +5 affection to her pen each night | A ★2+ egg, milk or fleece | When the Coop is built |
+| Ranch | the ranch | +10% at the ranch | +5 fondness to her animals each night | A ★2+ egg, milk or fleece | When the Coop or the Barn is built |
 | Cooking | the Kitchen | +10% at the Kitchen | One more dish on the Kitchen’s next play | A ★2+ dish | When the Kitchen is built |
 | Serving | the Restaurant | +10% at the Restaurant | One more cover on the Restaurant’s next shift | A ★2+ dish | When the Restaurant is built |
 | Forging | the Forge | +10% at the Forge | 5% back on the Forge’s next tool | A ★2+ Fitting | When the Forge is built |
@@ -4548,19 +4573,22 @@ Each perk, what it does, and where in the day it acts:
 
 #### At her line
 
-Each place-bound template means one thing at each line's place. **Farming, foraging and fishing act now;** the other lines'
-perks wait (the Mine, the Quarry and the ranch stand, and their lines' perks come later; the workshops aren't built yet),
-and a morning item of theirs is a crop of the season meanwhile.
+Each place-bound template means one thing at each line's place. **Every line whose place stands acts:** farming,
+foraging and fishing from day 1, mining once the Mine (or a quarrier's Quarry) stands, the ranch once the Coop or the Barn
+does. The workshops' lines wait for their games, and a morning item of theirs is a crop of the season meanwhile. **Her
+line** is her favourite (her bible's, else her calling's, else master data's), as for every line; her +10% acts where
+her work is that line's place (the board's task she's set, at night), and her chores and morning items wherever she
+lives on the farm.
 
 <!-- live:perk-lines -->
-| Her line | +10% at her line (F3, R5) | A night chore (F6, R7, S4) | A morning item (R2, S2) | Acts |
+| Her line | +10% at her line (F2, R5) | A night chore (F6, R7, S4) | A morning item (R2, S2) | Acts |
 |---|---|---|---|---|
 | Farming | Each plot she tends: +10% chance of an extra crop at harvest, at the plot’s stars | Waters one dry growing tile (step 2) | A ★2+ crop of the season | Yes |
-| Foraging | Her haul ×1.1, and her Sawmill batch ×1.1 | One item from her rank’s deepest area this season, at a day’s haul’s stars (step 4) | A ★2+ good from the forest | Yes |
-| Fishing | Her catch ×1.1, and her Smokehouse batch ×1.1 | One fish from her deepest spot this season, at a day’s haul’s stars (step 4) | A ★2+ fish | Yes |
-| Mining (the Mine) | Her haul ×1.1, and her Smelter batch ×1.1 | One ore from her deepest floor | A ★2+ ore (a crop of the season meanwhile) | Not yet: the Mine stands; its line’s perks come later |
-| Mining (the Quarry) | Her haul ×1.1, and her Cutter batch ×1.1 | One stone or gem from her deepest floor | A ★2+ stone or gem (a crop of the season meanwhile) | Not yet: the Quarry stands; its line’s perks come later |
-| Ranch | Her pen: +10% chance of an extra product | +5 affection to her pen (step 3) | A ★2+ egg, milk or fleece (a crop of the season meanwhile) | Not yet: the Coop stands; its line’s perks come later |
+| Foraging | Her haul ×1.1, and her Sawmill batch ×1.1 | One item from her rank’s deepest area this season, at a day’s haul’s stars (step 4) | A ★2+ good of her rank’s deepest forest area this season | Yes |
+| Fishing | Her catch ×1.1, and her Smokehouse batch ×1.1 | One fish from her deepest spot this season, at a day’s haul’s stars (step 4) | A ★2+ fish of her deepest spot this season | Yes |
+| Mining (the Mine) | Her haul ×1.1, and her Smelter batch ×1.1 | One ore from the Mine’s deepest floor reached, at a face’s stars (step 4) | A ★2+ ore of the Mine’s deepest floor reached | Yes, once the Mine stands |
+| Mining (the Quarry) | Her haul ×1.1, and her Cutter batch ×1.1 | One stone or gem from the Quarry’s deepest floor reached, at a face’s stars (step 4) | A ★2+ stone or gem of the Quarry’s deepest floor reached | Yes, once the Quarry stands |
+| Ranch | The goods she collects at the Coop or the Barn ×1.1: a +10% chance of an extra each, at its stars | +5 fondness to each animal in her building: the Coop or the Barn she cares for on the work board, else the first that stands (step 3) | A ★2+ egg, milk or fleece of an animal the farm keeps (a crop of the season with none) | Yes, once the Coop or the Barn stands |
 | Cooking | +10% dishes as the Kitchen’s assistant | +1 dish on the Kitchen’s next play | A ★2+ dish (a crop of the season meanwhile) | Not yet: once the Kitchen’s game is built |
 | Serving | +10% tips as the Restaurant’s server | +1 cover on the Restaurant’s next shift | A ★2+ dish (a crop of the season meanwhile) | Not yet: once the Restaurant’s game is built |
 | Forging | +10% goods as the Forge’s assistant | +5% refund on the Forge’s next tool | A ★2+ Fitting (a crop of the season meanwhile) | Not yet: once the Forge’s game is built |
@@ -4571,8 +4599,13 @@ and a morning item of theirs is a crop of the season meanwhile.
 - **Gathering and stations pay at night:** the items an Uma's work finished tonight come to × (bond × (1 + romance)) in
   all. Side by side's pot pays first (×1.1, or ×1.2 in her element), then **the perks' pot**: the bond term × the romance
   term of the same items (her own bonuses only at her line's place, the crew's anywhere), as seeded copies (the same goods
-  and stars) straight into the Warehouse. A forager's Sawmill batch and a fisher's Smokehouse batch count as her line.
-  The job's own plan never changes.
+  and stars) straight into the Warehouse. A forager's Sawmill batch, a fisher's Smokehouse batch, a miner's Smelter batch
+  and a quarrier's Cutter batch count as her line. The job's own plan never changes.
+- **Mining pays on a farmhand's faces** the same way: the finds of her faces at the Mine (a quarrier's at the Quarry)
+  are her night's items there, so her haul comes to ×1.1 at F2 and ×1.2 at R5, held to the caps.
+- **The ranch pays on what she collects:** the goods her care task collects at the Coop or the Barn are her night's items
+  there, so each has her romance term's chance (+10% at F2) of an extra at its stars. They show with every line's in
+  Hearts' "Perks · +1 item", not in the building's line. Her keepsake lifts the stars of what she collects there too.
 - **Farming pays on a farmhand's harvests** the same way: her harvested crops are her night's items at the Fields, so
   the perks' extras copy them by her romance term at night. The farmer's own harvests get none.
 
@@ -4609,18 +4642,28 @@ Worked: a married forager with F3, R5 and a grade-8 ring has +28% of her own (28
   spouse in her house) whose line's place is open. **One in town does none.** Each chore is its own seeded pick.
 - **Farming** (at night, as crops grow): each chore waters one dry growing tile, a seeded pick, so it grows a stage
   tonight; with none dry, the chore does nothing. The morning says "Night chores · 2 tiles watered".
+- **The ranch** (at night, after the animals' night, step 3): each chore gives **every animal in her building +5
+  fondness** (held to 200). Her building is the first Coop or Barn she cares for on the work board, else the first of
+  them that stands; one with no animals gets nothing.
 - **Foraging and fishing** (at night, after the hauls): one item from her rank's **deepest open forest area** this
   season, or one fish from her **deepest open spot**, by the season's shares, at the stars a day's haul there would have
   (her rank, talent, tool, well fed and keepsake), straight into the Warehouse.
-- **The morning** says them in one line: "Night chores · 3 items", "Night chores · 2 items · +0.5 growth".
+- **Mining** (at night, after the hauls): one find from the **deepest floor reached** at the Mine (an ore) or, for a
+  quarrier, the Quarry (a stone or a gem), by a face's grade shares, at the stars a face there would have (her rank and
+  talent in mining, the Pick or the Hammer, well fed and keepsake), straight into the Warehouse. The dig's count and its
+  stairs don't move.
+- **The morning** says them in one line: "Night chores · 3 items", "Night chores · 2 items · +0.5 growth", "Night chores
+  · +10 fondness".
 
 #### Morning items
 
 - **From Romance 2** she leaves **a ★2+ good of her line every 4th morning,** counted from the day she reached Romance 2.
   **From Spouse 2** it's **every 2nd morning at ★3+,** counted from the day she reached Spouse 2.
 - **One a day by her count, on the farm only.** A morning in her house brings one more (see the house's morning, below).
-- **The good** is her line's (as her anniversary item, with its own draw). **Its stars** are a seeded draw of a day's work
-  at her line, keepsake included, held at the minimum (★2, or ★3 from Spouse 2).
+- **The good** is her line's (as her anniversary item, with its own draw): a miner's a find of the dig's deepest floor
+  reached, a rancher's the good of an animal the farm keeps (its kinds alike). **Its stars** are a seeded draw of a day's
+  work at her line, keepsake included (a miner's a face's, a rancher's her building's animals' hearts on average), held at
+  the minimum (★2, or ★3 from Spouse 2).
 - **The morning** says "♥ Stand-in 2 left you ★3 Shiitake", opening her profile.
 
 #### The mentor
@@ -4651,9 +4694,9 @@ line's best place now:
 | Farming | Salad | The top grade of the shop’s vegetables at its open seed tiers (Farm Rank 1: G6; 2: G7; 4: G10) | Carrot Salad |
 | Foraging | Soup | The top grade of the deepest forest area anyone has worked (the Woods G2 … the World Tree G10) | Button Mushroom Soup |
 | Fishing | Grill | The top grade of the deepest spot anyone has worked, its fish at 10% or more (the Pond G2) | Carp Grill |
-| Mining (the Mine) | Curry | G1 until the Mine’s line perks come | Basil Curry |
-| Mining (the Quarry) | Curry | G1 until the Quarry’s line perks come | Basil Curry |
-| Ranch | Cake | G1 until the ranch’s line perks come | Honeycomb Cake |
+| Mining (the Mine) | Curry | The top grade of the Mine’s deepest floor reached (floors 1–3: G2 … floor 27 on: G10); G1 before it stands | Basil Curry |
+| Mining (the Quarry) | Curry | The top grade of the Quarry’s deepest floor reached (floors 1–3: G2 … floor 27 on: G10); G1 before it stands | Basil Curry |
+| Ranch | Cake | The top grade of the goods the farm’s animals give (an Egg G1 … Cashmere Fleece G7); G1 with none | Honeycomb Cake |
 | Cooking | Tart | G1 until the Kitchen’s game is built | Apple Tart |
 | Serving | Cookies | G1 until the Restaurant’s game is built | Peanut Cookies |
 | Forging | Bread | G1 until the Forge’s game is built | Wheat Bread |
@@ -4674,11 +4717,12 @@ Her loved good, when it’s a dish, is her signature dish as it is. The recipe j
 
 Her profile's Perks shows what each reached perk does now, a later perk taking the earlier one's line (Romance 5's
 replaces Friendship 3's): "R5 · +28% at the forest · +8% ring" (with "+5% crew" and "held to its cap" when they apply;
-a farmer's "+20% chance of an extra crop"), "R7 · 2 items each night" (a farmer's "+0.5 growth each night"; "None while
-she lives in town"), "R2 · Next tomorrow" or "Next in 3 mornings", "F4 · ‹dish› · in the Kitchen's list", "F8 · Beside
-Stand-in 1" ("No 3-heart friend yet"), "F10 · Bent Trowel · +0.25 quality at the Fields", "R1 · She calls you
-“Sprout”", "R4 · With Stand-in 1", "R8 · “‹engraving›”". A perk whose place isn't built says "Opens when the Mine is
-built" (her place) and nothing now.
+a farmer's "+20% chance of an extra crop", a rancher's "of an extra good"), "R7 · 2 items each night" (a farmer's
+"+0.5 growth each night", a rancher's "+10 fondness each night"; "None while she lives in town"), "R2 · Next
+tomorrow" or "Next in 3 mornings", "F4 · ‹dish› · in the Kitchen's list", "F8 · Beside Stand-in 1" ("No 3-heart friend
+yet"), "F10 · Bent Trowel · +0.25 quality at the Fields", "R1 · She calls you “Sprout”", "R4 · With Stand-in 1", "R8 ·
+“‹engraving›”". A perk whose place isn't built says "Opens when the Mine is built" (her place; the ranch's, "Opens when
+the Coop is built", opens with the Coop or the Barn) and nothing now.
 
 ### Heart events and plays
 
@@ -4899,8 +4943,11 @@ The event also gives:
     ("Her room: Farmhouse", or none free yet, so she keeps her Dorm bed) with buttons to move her to another house with a
     free room; "House mornings: +30 for her each morning you sleep there"; and "Married 1/20 · next household scene at 5"
     ("household scene 1 tomorrow" on a milestone's own wedding, "the Great Harvest tomorrow" on the 20th).
-- **A night level** (Spouse 2 or 4) opens the same card from the morning: "Her bar filled overnight: no event, the level
-  comes by itself", its perk and her next rung.
+- **A night level** (Spouse 2 or 4) plays from the morning's line (`?level=<id>:<s2|s4>`): first her level's scene, her
+  route's `s2` or `s4`, else the default story's, on the dialogue engine (Skip goes on); then the same card, with her last
+  line of the scene, "Her bar filled overnight · now toward Spouse 3", its perk and her next rung. A level with no scene
+  to play would show the card alone ("Her bar filled overnight: no event, the level comes by itself"); the default
+  story writes both, so it doesn't happen.
 
 #### The confession
 
@@ -5345,7 +5392,8 @@ The homestead's rows on the map:
 - **That night**, before the bin, the house and the companion are noted (the house's night slept, her `night`) and the
   picks clear for tomorrow. In the morning she greets you. Later in the night each
   pair sharing a house earns **+10 bond**, and a spouse at Spouse 1 or 3 whose 600 is full reaches **Spouse 2 or 4,** with
-  no event (Spouse 2 starts her every-2nd-morning count). Spouse 3 and 5 are always events.
+  no Ready event (Spouse 2 starts her every-2nd-morning count); the morning's line plays its scene, then its card.
+  Spouse 3 and 5 are always events.
 - **The morning is that house's:**
 
 <!-- live:house-morning -->
@@ -5550,7 +5598,7 @@ authored arrival joins with her ties seeded, and the night clears the whole of t
 | 2 | This morning's invitations, with **Yes, tonight** and **Another day** |
 | 3 | The house's morning ("⌂ Farmhouse · Stand-in 1 · ♥ +30 · ☕ 3 fed · +1 item") with its house line under it; a spouse who moved into a room ("⌂ Stand-in 2 moved into Rose Cottage", with **Play**: her moving in); "‹house› misses you" with **Tonight ›** and **Another night**; morning items ("♥ Stand-in 2 left you ★3 Shiitake"); the night's chores |
 | 4 | Birthdays and anniversaries, today's before tomorrow's, birthdays first ("★ Stand-in 1's birthday today", "♥ Stand-in 1's anniversary · ★5 Carrot left for you"); the Festival of Vows |
-| 5 | Levels reached overnight ("♥ Stand-in 1 · Spouse 2, reached overnight", **New**, opening her card) |
+| 5 | Levels reached overnight ("♥ Stand-in 1 · Spouse 2, reached overnight", **New**, playing her scene, then her card) |
 | 6 | The perks' extras ("Perks · +2 items"), then side by side ("Side by side · +3 items"), then each pair's bond hearts |
 
 Within a place the night's order holds, each Uma in the cast's order. The section shows whenever a stored line or a Ready

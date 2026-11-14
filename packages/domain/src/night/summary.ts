@@ -228,11 +228,13 @@ export interface ItemLine {
   items: string[]
 }
 /** §4 Hearts: the night's chores in all, once a night: the items they left in
- * the Warehouse (a forager's and a fisher's) and the dry tiles they watered (a farmer's, one each). */
+ * the Warehouse (a forager's, a fisher's and a miner's), the dry tiles they watered (a farmer's, one each) and the
+ * fondness they gave (a rancher's, +5 a chore to each animal in her building; absent at 0). */
 export interface ChoresLine {
   kind: 'chores'
   items: number
   watered: number
+  fondness?: number
 }
 /** §4 Hearts (before side by side): the perks' extras tonight in all, copies of
  * a night's items by the romance term (her line's +10% and +20%, her ring, dreams and the household), into the Warehouse. */

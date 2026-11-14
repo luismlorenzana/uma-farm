@@ -14,15 +14,18 @@ import { dateOf, DAYS_PER_SEASON, DAYS_PER_YEAR } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import type { Rank } from '../farm/ranks'
 import { SHOP_SEEDS } from '../fields/crops'
+import { digBuilt, digFloor, findOn } from '../gathering/digs'
 import { FISHING_SPOTS, FOREST_AREAS, type FishingSpotId, type ForestAreaId } from '../gathering/ids'
 import { pickShare, placeLock, sharesOn } from '../gathering/kinds'
 import { FISHERY, FOREST } from '../gathering/tables'
 import type { AnniversaryLine, BirthdayLine } from '../night/summary'
+import { ANIMALS, keptKinds } from '../ranch/ranch'
 import type { SaveV4 } from '../save/v4'
 import { addGoods } from '../save/warehouse'
 import { castOrder, type StoryPack } from '../story/pack'
-import { birthdayOf, favouriteOf } from '../story/placeholders'
+import { birthdayOf } from '../story/placeholders'
 import { isAnniversary } from './love'
+import { perkLineOf } from './perks'
 
 /** A day's place in the farm's year, 1–48. */
 export const dayOfYear = (day: number): number => ((day - 1) % DAYS_PER_YEAR) + 1
@@ -77,21 +80,31 @@ export function deepestOpen(save: SaveV4, place: 'forest' | 'fishery', rank: Ran
 
 /**
  * A good of her line at `stars`: a crop of the season for a farmer, a good of her foraging rank's
- * deepest area this season for a forager, a fish of her deepest spot this season for a fisher; each pick a seeded draw
+ * deepest area this season for a forager, a fish of her deepest spot this season for a fisher, a find of the dig's
+ * deepest floor for a miner (the Mine's ore, the Quarry's stone or gem, its kind `draw(uid, day, 'line-kind:<id>', n)`),
+ * a good of an animal the farm keeps for a rancher (its kinds evenly); each pick a seeded draw
  * (`draw(uid, day, 'line:<id>', n)`), the forest's and the Fishery's by their seasons' shares, the season's six shop crops
- * evenly. Mining, the ranch, cooking, serving and forging bring theirs with their places; until then, and
- * whenever her line's place isn't open, it's a crop of the season, so an anniversary is never empty. The morning items
- * reuse it with their own `n`.
+ * evenly. Cooking, serving and forging bring theirs with their places' games; until then, and whenever her line's place
+ * isn't open (a dig not built, a farm with no animals), it's a crop of the season, so an anniversary is never empty. The
+ * morning items reuse it with their own `n`.
  */
 export function lineGood(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles'>, id: string, stars: number, n = 0): LineGood {
   const day = save.calendar.day
   const u = draw(save.account.uid, day, `line:${id}`, n)
   const ranks = save.roster[id]?.ranks
-  const line = favouriteOf(pack, id)
+  const line = perkLineOf(pack, id)
   if (ranks && (line === 'foraging' || line === 'fishing')) {
     const place = line === 'foraging' ? 'forest' : 'fishery'
     const where = deepestOpen(save, place, ranks[line].rank)
     if (where) return { id: pickShare(sharesOn(place, where, day), u), stars }
+  }
+  if (line === 'mining' || line === 'quarry') {
+    const dig = line === 'quarry' ? 'quarry' : 'mine'
+    if (digBuilt(save, dig)) return { id: findOn(dig, digFloor(save.places[dig]), u, draw(save.account.uid, day, `line-kind:${id}`, n)), stars }
+  }
+  if (line === 'ranch') {
+    const kinds = keptKinds(save)
+    if (kinds.length > 0) return { id: ANIMALS[kinds[Math.floor(u * kinds.length)]!].good, stars }
   }
   const crops = SHOP_SEEDS[dateOf(day).season]
   return { id: crops[Math.floor(u * crops.length)]!, stars }

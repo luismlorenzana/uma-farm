@@ -4,13 +4,16 @@
 //
 //   Night chores (R7 2, S4 3; on the farm; her line's place open)
 //     farming   waters one dry growing tile                                                        night step 2
+//     the ranch +5 fondness to each animal in her building (the one she cares for, else the first) night step 3
 //     foraging  one item from her rank's deepest forest area this season, at a day's haul's stars   night step 4
 //     fishing   one fish from her deepest spot this season, the same way                           night step 4
-//     mining, the ranch, cooking, serving, forging: with their places
+//     mining    one ore (the Quarry's: a stone or a gem) from the dig's deepest floor, at a face's  night step 4
+//     cooking, serving, forging: with their places' games
 //   Morning items (R2 every 4th morning ★2+, S2 every 2nd ★3+; on the farm)                        night step 9
 //   Mentor: the others at her place today ×1.10 rank points, one mentor a place               night step 6
 //   Her signature dish: her loved good when it's a dish, else her line's dish kind at the grade of her line's best
-//     place, once, into `workshops.recipes`                                                        `playEvent`
+//     place (the deepest area, spot or floor; the shop's vegetables; the farm's animals' goods), once, into
+//     `workshops.recipes`                                                                          `playEvent`
 //   Breakfast (S1): the crew well fed for the day when no meal runs (the house morning calls it)
 //
 // Counts are expected values: a fraction becomes a whole item by a seeded draw, `draw(uid, day, 'perk:<id>…', n)`, so a
@@ -22,13 +25,15 @@ import { rankQuality } from '../farm/rank-rules'
 import { talentQuality, talentsD, type TalentOf } from '../farm/talents'
 import { CROPS, SHOP_SEEDS } from '../fields/crops'
 import { harvestQuality } from '../fields/fields'
+import { DIG_TOOL, digBuilt, digFloor, findOn, floorTopGrade } from '../gathering/digs'
 import { GATHER_TOOL, gatherQuality, pickShare, sharesOn, termsOf } from '../gathering/kinds'
 import { FISHING_SPOTS, FOREST_AREAS, type FishingSpotId, type ForestAreaId } from '../gathering/ids'
 import { FISHERY, FOREST } from '../gathering/tables'
 import { goodOf } from '../goods/ids'
-import { drawStars, quality } from '../goods/stars'
+import { drawStars, heartsQuality, quality } from '../goods/stars'
 import type { ItemLine } from '../night/summary'
-import { DISH_FAMILIES, isDishId } from '../save/v4'
+import { ANIMALS, animalsIn, heartsOf, homeBuilt, keptKinds } from '../ranch/ranch'
+import { ANIMAL_HOME, DISH_FAMILIES, isDishId, MAX_FONDNESS, RANCH_HOMES, type DigId, type RanchHome } from '../save/v4'
 import type { SaveV4 } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
 import { castOrder, type StoryPack } from '../story/pack'
@@ -46,10 +51,11 @@ function inCastOrder(pack: Pick<StoryPack, 'cast'>, ids: readonly string[]): str
 
 // --- Night chores -----------------------------------------------------------------------------------------
 
-/** The lines whose night chores act now: farming (step 2), foraging and fishing (step 4). Mining, the ranch,
- * cooking, serving and forging bring theirs with their places; until then their profile says "Opens when the Mine is
- * built" (or her place). */
-export const CHORE_LINES: readonly PerkLine[] = ['farming', 'foraging', 'fishing']
+/** The lines whose perks act now, night chores and morning items with them: farming (chores at step 2), the ranch (step
+ * 3), foraging, fishing and mining at the Mine or the Quarry (step 4), each once her line's place is open (before it,
+ * her profile says "Opens when the Mine is built", or her place). Cooking, serving and forging bring theirs with their
+ * places' games. */
+export const CHORE_LINES: readonly PerkLine[] = ['farming', 'foraging', 'fishing', 'mining', 'quarry', 'ranch']
 
 /** Her chores tonight: the F6, R7 and S4 perks' (`choresOf`, at most 3) while she's on the farm, her line's chores
  * act and its place is open; else none. */
@@ -62,11 +68,13 @@ export function choresTonight(save: SaveV4, pack: PerkPack, id: string): number 
 /** A chore's draws: `draw(uid, day, 'perk:<id>:chore', n)`. */
 const choreDraw = (save: SaveV4, id: string, n: number): number => draw(save.account.uid, save.calendar.day, `perk:${id}:chore`, n)
 
-/** One Uma's chores done tonight: the items they left, and the dry tiles they watered. */
+/** One Uma's chores done tonight: the items they left, the dry tiles they watered, and a rancher's fondness (+5 a chore
+ * to each animal in her building). */
 export interface ChoresDone {
   id: string
   items: string[]
   watered: number
+  fondness?: number
 }
 
 /**
@@ -93,14 +101,56 @@ export function fieldChores(save: SaveV4, pack: PerkPack): { tiles: Set<number>;
   return { tiles, chores }
 }
 
-/** Where a gathering line's chores bring their goods from. */
-const CHORE_PLACE: Partial<Record<PerkLine, 'forest' | 'fishery'>> = { foraging: 'forest', fishing: 'fishery' }
+// --- The ranch's chores ------------------------------------------------------------------------------------
+
+/** A rancher's chore: +5 fondness to each animal in her building. */
+export const CHORE_FONDNESS = 5
+
+/** Her building: the first Coop or Barn she cares for on the work board, built; else the first of them that stands; null
+ * with neither. A rancher's chores, her morning item's stars and her keepsake read it. */
+export function herBuilding(save: Pick<SaveV4, 'roster' | 'buildings'>, id: string): RanchHome | null {
+  const cared = (save.roster[id]?.tasks ?? []).flatMap((t) => (t.kind === 'care' && homeBuilt(save, t.home) ? [t.home] : []))[0]
+  return cared ?? RANCH_HOMES.find((home) => homeBuilt(save, home)) ?? null
+}
+
+/**
+ * Night step 3's ranch chores, after the animals' night: each rancher's chores (1 from F6, 2 from R7, 3 from S4) give
+ * each animal in her building +5 fondness, held to 200; a building with no animals gets none. In the cast's order.
+ */
+export function ranchChores(save: SaveV4, pack: PerkPack): { save: SaveV4; chores: ChoresDone[] } {
+  let animals = save.ranch.animals
+  const chores: ChoresDone[] = []
+  for (const id of inCastOrder(pack, Object.keys(save.roster))) {
+    if (perkLineOf(pack, id) !== 'ranch') continue
+    const n = choresTonight(save, pack, id)
+    const home = herBuilding(save, id)
+    if (n === 0 || home === null || animalsIn(save, home).length === 0) continue
+    const fondness = CHORE_FONDNESS * n
+    animals = animals.map((a) => (ANIMAL_HOME[a.kind] === home ? { ...a, fondness: Math.min(MAX_FONDNESS, a.fondness + fondness) } : a))
+    chores.push({ id, items: [], watered: 0, fondness })
+  }
+  return { save: animals === save.ranch.animals ? save : { ...save, ranch: { ...save.ranch, animals } }, chores }
+}
+
+// --- The gathering's and the digs' chores ---------------------------------------------------------------
+
+/** Where a gathering or a digging line's chores bring their goods from. */
+const CHORE_PLACE: Partial<Record<PerkLine, 'forest' | 'fishery' | DigId>> = { foraging: 'forest', fishing: 'fishery', mining: 'mine', quarry: 'quarry' }
+
+/** Her quality at a dig: a day's face's, her rank and talent in mining, the farm's Pick or Hammer, well fed and her
+ * keepsake there. */
+export function digQuality(save: SaveV4, pack: PerkPack, id: string, dig: DigId, talentOf: TalentOf = talentsD): number {
+  const terms = termsOf(save, id, 'mining', talentOf, DIG_TOOL[dig])!
+  return gatherQuality({ ...terms, keepsake: keepsakeQuality(save, pack, id, dig) }, terms.wellFed > 0)
+}
 
 /**
  * Night step 4's gathering chores: a forager's bring one item each from her rank's deepest forest area this
  * season, a fisher's one fish each from her deepest spot (`deepestOpen`); the good by the season's shares
  * (`draw(uid, day, 'perk:<id>:chore', 2k)`), its stars a day's haul's for her there (her rank, talent, tool, well fed and
- * keepsake; `draw(…, 2k + 1)`). Straight into the Warehouse, in the cast's order.
+ * keepsake; `draw(…, 2k + 1)`). A miner's bring one find each from the dig's deepest floor (the Mine's ore, the Quarry's
+ * stone or gem: its grade `draw(…, 3k)`, its kind `draw(…, 3k + 1)`), at a face's stars there (`draw(…, 3k + 2)`); the
+ * dig's count and stairs don't move. Straight into the Warehouse, in the cast's order.
  */
 export function gatherChores(save: SaveV4, pack: PerkPack, talentOf: TalentOf = talentsD): { save: SaveV4; chores: ChoresDone[] } {
   let items = save.items
@@ -110,6 +160,19 @@ export function gatherChores(save: SaveV4, pack: PerkPack, talentOf: TalentOf = 
     const place = line ? CHORE_PLACE[line] : undefined
     const n = place ? choresTonight(save, pack, id) : 0
     if (!place || n === 0) continue
+    if (place === 'mine' || place === 'quarry') {
+      const q = digQuality(save, pack, id, place, talentOf)
+      const floor = digFloor(save.places[place])
+      const left: string[] = []
+      for (let k = 0; k < n; k++) {
+        const good = findOn(place, floor, choreDraw(save, id, 3 * k), choreDraw(save, id, 3 * k + 1))
+        const stars = drawStars(q, choreDraw(save, id, 3 * k + 2))
+        items = addGoods(items, good, stars, 1)
+        left.push(stockKey(good, stars))
+      }
+      chores.push({ id, items: left, watered: 0 })
+      continue
+    }
     const activity = place === 'forest' ? 'foraging' : 'fishing'
     const terms = termsOf(save, id, activity, talentOf, GATHER_TOOL[place])!
     const where = deepestOpen(save, place, terms.rank)
@@ -132,13 +195,26 @@ export function gatherChores(save: SaveV4, pack: PerkPack, talentOf: TalentOf = 
 /** `lineGood`'s `n` for her morning item (her anniversary's is 0; the house item takes 2). */
 export const MORNING_ITEM_N = 1
 
+/** The animals' hearts in her building, on average (0 with none): a rancher's day's work. */
+function meanHearts(save: SaveV4, id: string): number {
+  const home = herBuilding(save, id)
+  const animals = home ? animalsIn(save, home) : []
+  return animals.length === 0 ? 0 : animals.reduce((sum, a) => sum + heartsOf(a.fondness), 0) / animals.length
+}
+
 /** Her line's quality: what a day's work at her line gives her items: a forager's and a fisher's day's haul
  * (rank, talent, the Axe or the Rod, well fed, keepsake), a farmer's tended harvest at crop level 1 (with the Hoe and her
- * keepsake), any other line her rank and talent in it. */
+ * keepsake), a miner's face (rank, talent, the Pick or the Hammer, well fed, keepsake), a rancher's goods (her building's
+ * animals' hearts on average, and her keepsake there), any other line her rank and talent in it. */
 export function lineQuality(save: SaveV4, pack: PerkPack, id: string, talentOf: TalentOf = talentsD): number {
   const uma = save.roster[id]
   const line = favouriteOf(pack, id)
   if (!uma || !line || line === 'expeditions') return 0
+  if (line === 'mining') return digQuality(save, pack, id, perkLineOf(pack, id) === 'quarry' ? 'quarry' : 'mine', talentOf)
+  if (line === 'ranch') {
+    const home = herBuilding(save, id)
+    return quality({ care: heartsQuality(meanHearts(save, id)), keepsake: home ? keepsakeQuality(save, pack, id, home) : 0 })
+  }
   if (line === 'foraging' || line === 'fishing') {
     const place = line === 'foraging' ? 'forest' : 'fishery'
     const terms = termsOf(save, id, line, talentOf, GATHER_TOOL[place])!
@@ -225,11 +301,20 @@ function spotGrade(spot: FishingSpotId): number {
  * depth milestones, the first always). */
 const worked = (save: SaveV4, ids: readonly string[]): string[] => ids.filter((where, i) => i === 0 || save.diary.milestones.includes(`depth:${where}`))
 
+
 /** The grade of her line's best place: the top grade of the deepest forest area anyone has worked (a
- * forager's), of the deepest fishing spot (a fisher's), of the shop's vegetables at its highest open seed tier (a
- * farmer's); 1 for mining, the ranch and the workshops until their games are built. */
+ * forager's), of the deepest fishing spot (a fisher's), of the deepest floor reached at the Mine or the Quarry (a
+ * miner's, once it stands), of the goods the farm's animals give (a rancher's), of the shop's vegetables at its highest
+ * open seed tier (a farmer's); 1 for the workshops until their games are built, and for a dig not built or a farm with
+ * no animals. */
 export function lineGrade(save: SaveV4, pack: PerkPack, id: string): number {
-  switch (perkLineOf(pack, id)) {
+  const line = perkLineOf(pack, id)
+  switch (line) {
+    case 'mining': case 'quarry': {
+      const dig = line === 'quarry' ? 'quarry' : 'mine'
+      return digBuilt(save, dig) ? floorTopGrade(digFloor(save.places[dig])) : 1
+    }
+    case 'ranch': return Math.max(1, ...keptKinds(save).map((k) => goodOf(ANIMALS[k].good)?.grade ?? 1))
     case 'foraging': return Math.max(...worked(save, FOREST_AREAS).map((a) => FOREST[a as ForestAreaId].grades[1]))
     case 'fishing': return Math.max(...worked(save, FISHING_SPOTS).map((s) => spotGrade(s as FishingSpotId)))
     case 'farming': {

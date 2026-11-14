@@ -201,9 +201,10 @@ function bondLine(line: Extract<HeartLine, { kind: 'bond' }>, nameOf: NameOf, pa
     : { key, to, text: `${PAIR_MARK} ${a} and ${b} are closer now · bond ${line.hearts}` }
 }
 
-/** The night's chores in words: "Night chores · 3 items", "Night chores · 2 items · 1 tile watered". */
-export function choresWords(items: number, watered: number): string {
-  return ['Night chores', ...(items > 0 ? [plural(items, 'item')] : []), ...(watered > 0 ? [`${plural(watered, 'tile')} watered`] : [])].join(' · ')
+/** The night's chores in words: "Night chores · 3 items", "Night chores · 2 items · 1 tile watered", "Night chores · +10
+ * fondness" (a rancher's, to each animal in her building). */
+export function choresWords(items: number, watered: number, fondness = 0): string {
+  return ['Night chores', ...(items > 0 ? [plural(items, 'item')] : []), ...(watered > 0 ? [`${plural(watered, 'tile')} watered`] : []), ...(fondness > 0 ? [`+${fondness} fondness`] : [])].join(' · ')
 }
 /** Goods at their stars in words: "★2 Shiitake", "★2 Shiitake and ★3 Carp". */
 const starredGoods = (keys: readonly string[]): string => keys.map((key) => {
@@ -229,7 +230,7 @@ function heartLine(line: HeartLine, nameOf: NameOf, pairs: PairWords | null, hom
   if (line.kind === 'misses') return { key: 'misses', to: `/?sheet=homestead&house=${line.house}`, text: `⌂ ${home.houseName(line.house)} misses you`, misses: line.house }
   if (line.kind === 'vows') return { key: 'vows', to: '/hearts?filter=married', text: `♥ The Festival of Vows · ${plural(line.spouses, 'spouse')} · ♥ +${line.paid} · festival night tonight` }
   if (line.kind === 'perks') return { key: 'perks', to: '/warehouse', text: `Perks · +${plural(line.items, 'item')}` }
-  if (line.kind === 'chores') return { key: 'chores', to: line.items > 0 ? '/warehouse' : FIELDS, text: choresWords(line.items, line.watered) }
+  if (line.kind === 'chores') return { key: 'chores', to: line.items > 0 ? '/warehouse' : FIELDS, text: choresWords(line.items, line.watered, line.fondness) }
   if (line.kind === 'bond') return bondLine(line, nameOf, pairs)
   const name = nameOf(line.id)
   const to = umaSheet(line.id)

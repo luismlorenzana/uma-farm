@@ -48,7 +48,7 @@ export type Wait =
   | { kind: 'setup'; setup: Setup }
   /** A working setup at a place not built yet: "Opens when the Kitchen is built". */
   | { kind: 'opens'; place: FarmPlaceId }
-  /** S2 and S4 have no event: they come at night once their bar fills. */
+  /** S2 and S4 have no Ready event: they come at night once their bar fills, and the morning plays their scene. */
   | { kind: 'night' }
   /** She said "Not yet" at her confession: you ask her again from her profile. */
   | { kind: 'friend' }
@@ -67,7 +67,7 @@ export const READY_CONDITIONS: readonly { condition: string; unmet: string }[] =
 /** The waits in the order `readiness` says them: the first one met is the one shown. */
 export const WAIT_ORDER: readonly { kind: Wait['kind']; when: string }[] = [
   { kind: 'done', when: 'Her route is complete (S5 has played)' },
-  { kind: 'night', when: 'S2 or S4, bar full: no event, the level comes at night; short of it, `bar`' },
+  { kind: 'night', when: 'S2 or S4, bar full: no Ready event; the level comes at night, and the morning plays its scene; short of it, `bar`' },
   { kind: 'friend', when: 'She said “Not yet” at her confession: you ask her again from her profile' },
   { kind: 'gate', when: 'Her next event opens her chapter, and its gate doesn’t hold yet' },
   { kind: 'opens', when: 'A working setup at a place not built yet' },

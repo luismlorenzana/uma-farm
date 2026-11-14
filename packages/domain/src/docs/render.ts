@@ -39,7 +39,7 @@ import { ANIMAL_KINDS, DEEPEST_FLOOR, FIELD_COLUMNS, FIELD_ROWS, FIELD_TILES, HO
 import {
   ANIMALS, CARE_FONDNESS, FED_FONDNESS, FODDER_PRICE, FONDNESS_A_HEART, GRASS_CUT, HOME_NAMES, HUNGRY_FONDNESS, MAX_FODDER,
 } from '../ranch/ranch'
-import { FACE_FINDS, floorFinds, floorRank, FLOORS_A_GRADE, gradeAt, stairsAfter } from '../gathering/digs'
+import { FACE_FINDS, floorFinds, floorRank, floorTopGrade, FLOORS_A_GRADE, gradeAt, stairsAfter } from '../gathering/digs'
 import { DORM_LEVELS } from '../farm/dorm'
 import { farmRankOpens } from '../farm/diary'
 import { DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, ROW_GOLD, type Milestone } from '../farm/milestones'
@@ -781,8 +781,8 @@ function perkWordsBlock(): string {
   const levels = table(['Level', 'Perk id', 'Words (a forager’s)', 'At her line’s place'], PERKS.map((p) => [
     p.rung.toUpperCase(), `\`${p.id}\``, perkWords(p.id, 'foraging'), p.place ? 'Yes: “Opens when the Kitchen is built” (her place) until it’s built' : '',
   ]))
-  const lines = table(['Her line', 'Her place', '+10% (F3)', 'A night chore (F6)', 'A morning item (R2)', 'Opens with'], PERK_LINES.map((line) => [
-    PERK_LINE_NAME[line], PERK_PLACE[line], perkWords('line-10', line), NIGHT_CHORE[line], `A ★2+ ${MORNING_GOOD[line]}`, linePlace(line) === null ? 'Day 1' : `When the ${FARM_PLACES.find((p) => p.id === linePlace(line))!.name} is built`,
+  const lines = table(['Her line', 'Her place', '+10% (F2)', 'A night chore (F6)', 'A morning item (R2)', 'Opens with'], PERK_LINES.map((line) => [
+    PERK_LINE_NAME[line], PERK_PLACE[line], perkWords('line-10', line), NIGHT_CHORE[line], `A ★2+ ${MORNING_GOOD[line]}`, linePlace(line) === null ? 'Day 1' : line === 'ranch' ? 'When the Coop or the Barn is built' : `When the ${FARM_PLACES.find((p) => p.id === linePlace(line))!.name} is built`,
   ]))
   return `${levels}\n\n${lines}`
 }
@@ -825,24 +825,33 @@ const LINE_TEN: Readonly<Record<PerkLine, string>> = {
   farming: 'Each plot she tends: +10% chance of an extra crop at harvest, at the plot’s stars',
   foraging: 'Her haul ×1.1, and her Sawmill batch ×1.1', fishing: 'Her catch ×1.1, and her Smokehouse batch ×1.1',
   mining: 'Her haul ×1.1, and her Smelter batch ×1.1', quarry: 'Her haul ×1.1, and her Cutter batch ×1.1',
-  ranch: 'Her pen: +10% chance of an extra product', cooking: '+10% dishes as the Kitchen’s assistant', serving: '+10% tips as the Restaurant’s server',
+  ranch: 'The goods she collects at the Coop or the Barn ×1.1: a +10% chance of an extra each, at its stars', cooking: '+10% dishes as the Kitchen’s assistant', serving: '+10% tips as the Restaurant’s server',
   forging: '+10% goods as the Forge’s assistant',
+}
+/** A morning item by her line, in full. */
+const LINE_ITEM: Readonly<Record<PerkLine, string>> = {
+  farming: 'A ★2+ crop of the season', foraging: 'A ★2+ good of her rank’s deepest forest area this season', fishing: 'A ★2+ fish of her deepest spot this season',
+  mining: 'A ★2+ ore of the Mine’s deepest floor reached', quarry: 'A ★2+ stone or gem of the Quarry’s deepest floor reached',
+  ranch: 'A ★2+ egg, milk or fleece of an animal the farm keeps (a crop of the season with none)', cooking: 'A ★2+ dish (a crop of the season meanwhile)',
+  serving: 'A ★2+ dish (a crop of the season meanwhile)', forging: 'A ★2+ Fitting (a crop of the season meanwhile)',
 }
 const LINE_CHORE: Readonly<Record<PerkLine, string>> = {
   farming: 'Waters one dry growing tile (step 2)',
   foraging: 'One item from her rank’s deepest area this season, at a day’s haul’s stars (step 4)',
   fishing: 'One fish from her deepest spot this season, at a day’s haul’s stars (step 4)',
-  mining: 'One ore from her deepest floor', quarry: 'One stone or gem from her deepest floor', ranch: '+5 affection to her pen (step 3)',
+  mining: 'One ore from the Mine’s deepest floor reached, at a face’s stars (step 4)', quarry: 'One stone or gem from the Quarry’s deepest floor reached, at a face’s stars (step 4)',
+  ranch: '+5 fondness to each animal in her building: the Coop or the Barn she cares for on the work board, else the first that stands (step 3)',
   cooking: '+1 dish on the Kitchen’s next play', serving: '+1 cover on the Restaurant’s next shift', forging: '+5% refund on the Forge’s next tool',
 }
 /** What "her line" means for each template, and whether it acts yet. */
 function perkLines(): string {
-  return table(['Her line', '+10% at her line (F3, R5)', 'A night chore (F6, R7, S4)', 'A morning item (R2, S2)', 'Acts'], PERK_LINES.map((line) => {
+  return table(['Her line', '+10% at her line (F2, R5)', 'A night chore (F6, R7, S4)', 'A morning item (R2, S2)', 'Acts'], PERK_LINES.map((line) => {
     const opens = linePlace(line)
     const place = FARM_PLACES.find((p) => p.id === opens)
     const built = place?.opens.by === 'build' && place.opens.game
-    const now = CHORE_LINES.includes(line) ? 'Yes' : built ? `Not yet: the ${place.name} stands; its line’s perks come later` : `Not yet: once the ${place?.name ?? opens}’s game is built`
-    return [PERK_LINE_NAME[line], LINE_TEN[line], LINE_CHORE[line], `A ★2+ ${MORNING_GOOD[line]}${CHORE_LINES.includes(line) ? '' : ' (a crop of the season meanwhile)'}`, now]
+    const now = CHORE_LINES.includes(line) ? (opens === null ? 'Yes' : `Yes, once ${line === 'ranch' ? 'the Coop or the Barn' : `the ${place?.name ?? opens}`} stands`)
+      : built ? `Not yet: the ${place.name} stands; its line’s perks come later` : `Not yet: once the ${place?.name ?? opens}’s game is built`
+    return [PERK_LINE_NAME[line], LINE_TEN[line], LINE_CHORE[line], LINE_ITEM[line], now]
   }))
 }
 /** The caps, and a worked forager. */
@@ -867,7 +876,9 @@ function signatureDishes(): string {
     farming: 'The top grade of the shop’s vegetables at its open seed tiers (Farm Rank 1: G6; 2: G7; 4: G10)',
     foraging: 'The top grade of the deepest forest area anyone has worked (the Woods G2 … the World Tree G10)',
     fishing: 'The top grade of the deepest spot anyone has worked, its fish at 10% or more (the Pond G2)',
-    mining: 'G1 until the Mine’s line perks come', quarry: 'G1 until the Quarry’s line perks come', ranch: 'G1 until the ranch’s line perks come',
+    mining: `The top grade of the Mine’s deepest floor reached (floors 1–3: G${floorTopGrade(1)} … floor 27 on: G${floorTopGrade(27)}); G1 before it stands`,
+    quarry: `The top grade of the Quarry’s deepest floor reached (floors 1–3: G${floorTopGrade(1)} … floor 27 on: G${floorTopGrade(27)}); G1 before it stands`,
+    ranch: `The top grade of the goods the farm’s animals give (an Egg G${goodOf('egg')!.grade} … Cashmere Fleece G${goodOf('cashmere-fleece')!.grade}); G1 with none`,
     cooking: 'G1 until the Kitchen’s game is built', serving: 'G1 until the Restaurant’s game is built', forging: 'G1 until the Forge’s game is built',
   }
   return table(['Her line', 'Her dish kind', 'Its grade', 'At G1'], PERK_LINES.map((line) => [PERK_LINE_NAME[line], DISH_WORDS[LINE_DISH[line]], grade[line], dishName(dishId(LINE_DISH[line], 1))]))

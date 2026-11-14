@@ -76,8 +76,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/domain
       '@luismlorenzana/uma-art':
-        specifier: 2.27.0
-        version: 2.27.0
+        specifier: 2.30.0
+        version: 2.30.0
       '@luismlorenzana/uma-data':
         specifier: 1.8.0
         version: 1.8.0
@@ -1364,8 +1364,8 @@ packages:
   '@js-sdsl/ordered-map@4.4.2':
     resolution: {integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==}
 
-  '@luismlorenzana/uma-art@2.27.0':
-    resolution: {integrity: sha512-sJoHdp0++wO+rlStSwHstv7bZvnt+BxlTcCosILFboYOY2AflItdrpHryZX6inlI+V1KAKV7tk+fraipK2hFkQ==, tarball: https://npm.pkg.github.com/download/@luismlorenzana/uma-art/2.27.0/abdf3e4b295811b1f25197d0816889155dc13822}
+  '@luismlorenzana/uma-art@2.30.0':
+    resolution: {integrity: sha512-XeRAAkLbsmta86tym9h5gGu+ZutZrJKRPRJNo9d3iGqGeJHIdEID3cY3pIPPEUJ07zqKmsN4eiYAbjrUhfxfoA==, tarball: https://npm.pkg.github.com/download/@luismlorenzana/uma-art/2.30.0/6b722638017bf8500b397801dc77cbe9a152a842}
 
   '@luismlorenzana/uma-data@1.8.0':
     resolution: {integrity: sha512-7rgZvU2gBReEzvXgT0yI7oVFT4EDH52e3JMzZMuDeYCvNTO7vdxlsE3tS6+WgahXKqOEm0XOoc8/wXCobTtfwA==, tarball: https://npm.pkg.github.com/download/@luismlorenzana/uma-data/1.8.0/ae3cd7ea6c7a59d5c728f877269fbd10e5ca47cd}
@@ -5914,7 +5914,7 @@ snapshots:
   '@js-sdsl/ordered-map@4.4.2':
     optional: true
 
-  '@luismlorenzana/uma-art@2.27.0': {}
+  '@luismlorenzana/uma-art@2.30.0': {}
 
   '@luismlorenzana/uma-data@1.8.0': {}
 

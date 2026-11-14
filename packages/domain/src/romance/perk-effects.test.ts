@@ -3,7 +3,8 @@
 // keepsake, her signature dish, breakfast, the format's keepsake and pet name, and the save's new fields and lines.
 // Invented ids only: the stand-ins 9000001–9000003 and a 9000004 built here.
 import { describe, expect, it } from 'vitest'
-import { dishName } from '../goods/ids'
+import { dishName, goodOf } from '../goods/ids'
+import { floorFinds, floorTopGrade } from '../gathering/digs'
 import { extrasShare, extrasTonight, bondOf } from '../farm/bonds'
 import { draw } from '../farm/draw'
 import { rankPoints } from '../farm/rank-rules'
@@ -14,7 +15,7 @@ import { gatherQuality, sharesOn, termsOf, type MadeTonight } from '../gathering
 import { NIGHT_STEPS, runNight, type NightContext, type NightStep } from '../night/end-day'
 import type { LoopPlaceId } from '../save/parse-v4'
 import { parseSaveV5 } from '../save/parse-v4'
-import { bareTile, newSave, pairKey, type Love, type SaveV4, type Tile } from '../save/v4'
+import { bareTile, newSave, pairKey, type Animal, type Love, type SaveV4, type Tile } from '../save/v4'
 import { goodCount, parseStockKey } from '../save/warehouse'
 import { checkBible, type Cast, type Ties, type UmaBible } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_IN_CAST, STAND_IN_TIES, STAND_INS } from '../story/authored.fixture'
@@ -25,9 +26,11 @@ import { meet } from './meeting'
 import { joinCast } from './meeting.fixture'
 import { playEvent } from './events'
 import { advance } from './love'
-import { perksFor } from './perks'
+import { perkLineOf, perksFor } from './perks'
+import { lineGood } from './days'
 import {
-  breakfast, choresTonight, fieldChores, gatherChores, leaveMorningItems, lineGrade, MENTOR_POINTS, mentorsTonight, signatureDish,
+  breakfast, choresTonight, digQuality, fieldChores, gatherChores, herBuilding, leaveMorningItems, lineGrade, lineQuality, MENTOR_POINTS, mentorsTonight, ranchChores,
+  signatureDish,
 } from './perk-effects'
 import {
   choresOf, hasPerk, inElement, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, keepsakeQuality, morningDue, morningRule, morningsToItem, romanceBonus, romanceTerms, routeIndex,
@@ -49,11 +52,12 @@ const withLove = (save: SaveV4, id: string, love: Partial<Love>): SaveV4 => ({ .
 const at = (stage: Love['stage'], level: number, more: Partial<Love> = {}): Partial<Love> => ({ stage, level, ...more })
 const spouse = (level: number, more: Partial<Love> = {}): Partial<Love> => ({ stage: 'spouse', level, wed: 1, ...more })
 const withBond = (save: SaveV4, a: string, b: string, points: number): SaveV4 => ({ ...save, bonds: { ...save.bonds, [pairKey(a, b)]: points } })
-/** The stand-in pack with a fourth Uma (no bible: her calling stands in), tied to two others. */
-function packWithFour(calling: 'farming' | 'foraging' | 'fishing' | 'mining' | 'quarry'): StoryPack {
+/** The stand-in pack with a fourth Uma (no bible: her calling stands in; or a bible's favourite line, a rancher's), tied
+ * to two others. */
+function packWithFour(calling: 'farming' | 'foraging' | 'fishing' | 'mining' | 'quarry', favouriteLine?: UmaBible['favouriteLine']): StoryPack {
   const cast: Cast = { ...json(STAND_IN_CAST), umas: [...json(STAND_IN_CAST).umas, { characterId: FOUR, outfitId: '900000401', calling, paragraph: 'Invented.' }] }
   const ties: Ties = { version: 1, ties: [...json(STAND_IN_TIES).ties, { a: TWO, b: FOUR, kind: 'friends', strength: 1, line: 'They met here.', history: 'Invented.' }, { a: THREE, b: FOUR, kind: 'other', strength: 1, line: 'Neighbours.', history: 'Invented.' }] }
-  return storyPackFrom({ ...STAND_IN_FILES, cast, ties })
+  return storyPackFrom({ ...STAND_IN_FILES, cast, ties, ...(favouriteLine ? { umas: { ...STAND_IN_FILES.umas, [FOUR]: { favouriteLine } } } : {}) })
 }
 const withFour = (pack: StoryPack, day = 3): SaveV4 => meet(farm(day, pack), FOUR, pack).save
 /** `n` married on the farm's love (the household's count), invented ids that aren't on the roster. */
@@ -385,6 +389,176 @@ describe('breakfast', () => {
   })
 })
 
+describe('the ranch\'s and mining\'s perks', () => {
+  const miner = packWithFour('mining')
+  const quarrier = packWithFour('quarry')
+  const rancher = packWithFour('farming', 'ranch')
+  /** 9000004 at home in the Dorm, at `love`, on a farm with these places standing. */
+  const four = (pack: StoryPack, love: Partial<Love>, ...places: string[]): SaveV4 => {
+    const met = withFour(pack)
+    const save: SaveV4 = {
+      ...met, dorm: { ...met.dorm, level: 2, home: [...met.dorm.home, FOUR] },
+      buildings: { ...met.buildings, dorm: 2, ...Object.fromEntries(places.map((id) => [id, 1])) },
+    }
+    return withLove(save, FOUR, love)
+  }
+  const chicken = (n: number, more: Partial<Animal> = {}): Animal => ({ id: `chicken-${n}`, kind: 'chicken', fondness: 0, fed: false, cared: false, ready: false, ...more })
+  const withAnimals = (save: SaveV4, animals: Animal[], silo = 0): SaveV4 => ({ ...save, ranch: { ...save.ranch, animals, silo } })
+  const atFloor = (save: SaveV4, dig: 'mine' | 'quarry', deepest: number): SaveV4 => ({ ...save, places: { ...save.places, [dig]: { deepest, stairs: 0 } } })
+
+  it('reads her line from the pack: a miner\'s the Mine and the Smelter, a quarrier\'s the Quarry and the Cutter, a rancher\'s the Coop and the Barn', () => {
+    expect([perkLineOf(miner, FOUR), perkLineOf(quarrier, FOUR), perkLineOf(rancher, FOUR)]).toEqual(['mining', 'quarry', 'ranch'])
+    const r5 = at('romance', 5)
+    expect(['mine', 'smelter', 'quarry'].map((p) => romanceBonus(four(miner, r5, 'mine'), miner, FOUR, p))).toEqual([0.2, 0.2, 0])
+    expect(['quarry', 'cutter', 'mine'].map((p) => romanceBonus(four(quarrier, r5, 'quarry'), quarrier, FOUR, p))).toEqual([0.2, 0.2, 0])
+    // The ranch opens with either building: the Barn alone will do.
+    expect(['coop', 'barn', 'fields'].map((p) => romanceBonus(four(rancher, r5, 'barn'), rancher, FOUR, p))).toEqual([0.2, 0.2, 0])
+    expect(romanceBonus(four(rancher, r5), rancher, FOUR, 'coop')).toBe(0)
+  })
+
+  it('lifts a miner\'s haul ×1.1 at F2 and ×1.2 at R5: an exact count over a seeded sample, the same goods and stars', () => {
+    for (const [love, share] of [[at('friendship', 3), 0.1], [at('romance', 5), 0.2]] as const) {
+      let total = 0
+      let expected = 0
+      for (let day = 1; day <= 200; day++) {
+        const save: SaveV4 = { ...four(miner, love, 'mine'), calendar: { day } }
+        const night = extrasTonight(save, [made(FOUR, 5, 'mine', 'iron-ore@2')], [{ outfitId: FOUR, place: 'mine' }], miner)
+        for (const p of night.perks) expect(p.items.every((k) => k === 'iron-ore@2')).toBe(true)
+        total += night.perks.reduce((n, p) => n + p.items.length, 0)
+        const want = 5 * share
+        expected += Math.floor(want + 1e-9) + (draw('u1', day, `perk:${FOUR}`, 0) < want - Math.floor(want + 1e-9) ? 1 : 0)
+      }
+      expect(total).toBe(expected)
+      expect(total).toBeGreaterThan(200 * 5 * share * 0.8)
+      expect(total).toBeLessThan(200 * 5 * share * 1.2)
+    }
+  })
+
+  it('lifts her Smelter batch the same, a quarrier\'s face and Cutter batch, and nobody\'s off her line', () => {
+    const save = four(miner, at('romance', 5), 'mine', 'quarry')
+    expect(extrasTonight(save, [made(FOUR, 10, 'smelter', 'iron-ingot@2')], [{ outfitId: FOUR, place: 'smelter' }], miner).perks).toEqual([{ id: FOUR, items: ['iron-ingot@2', 'iron-ingot@2'] }])
+    expect(extrasTonight(save, [made(FOUR, 10, 'quarry', 'granite@2')], [{ outfitId: FOUR, place: 'quarry' }], miner).perks).toEqual([])
+    const q = four(quarrier, at('romance', 5), 'quarry')
+    expect(extrasTonight(q, [made(FOUR, 10, 'quarry', 'granite@2')], [{ outfitId: FOUR, place: 'quarry' }], quarrier).perks).toEqual([{ id: FOUR, items: ['granite@2', 'granite@2'] }])
+    expect(extrasTonight(q, [made(FOUR, 10, 'cutter', 'granite-block@2')], [{ outfitId: FOUR, place: 'cutter' }], quarrier).perks).toEqual([{ id: FOUR, items: ['granite-block@2', 'granite-block@2'] }])
+  })
+
+  it('a mining farmhand\'s night: her faces at the Mine come home larger, as the perks\' extras', () => {
+    // She works the Mine's face on the board; at Romance 5 her finds come to ×1.2: 0.2 a find, so one more by the draw.
+    const base = four(miner, at('romance', 5), 'mine')
+    const hired: SaveV4 = { ...base, roster: { ...base.roster, [FOUR]: { ...base.roster[FOUR]!, farmhand: 1, tasks: [{ kind: 'mine', dig: 'mine' }] } } }
+    const run = (uid: string) => runNight({ ...hired, account: { ...hired.account, uid } }, context(miner))
+    const plain = run('u1')
+    const dug = plain.summary!.work.find((l) => l.kind === 'farmhand' && l.id === FOUR)
+    expect(dug).toMatchObject({ spent: 3 })
+    const finds = (s: SaveV4) => ['copper-ore', 'tin-ore'].reduce((n, ore) => n + goodCount(s.items, ore), 0)
+    // Over a seeded sample of farms, the perks' extras lift her finds by about a fifth, exactly as drawn.
+    let base6 = 0
+    let lifted = 0
+    for (let i = 0; i < 60; i++) {
+      const night = run(`u${i}`)
+      const perks = night.summary!.hearts.find((h) => h.kind === 'perks')
+      const all = finds(night) - finds(hired)
+      lifted += all
+      base6 += all - (perks && perks.kind === 'perks' ? perks.items : 0)
+    }
+    expect(lifted).toBeGreaterThan(base6 * 1.1)
+    expect(lifted).toBeLessThan(base6 * 1.3)
+  })
+
+  it('a miner\'s chores bring one find each from the dig\'s deepest floor, at a face\'s stars; the dig doesn\'t move', () => {
+    const save = atFloor(four(miner, at('romance', 7), 'mine'), 'mine', 10)
+    expect(choresTonight(save, miner, FOUR)).toBe(2)
+    const { save: after, chores } = gatherChores(save, miner, talentsD)
+    const mine = chores.find((c) => c.id === FOUR)!
+    expect(mine.items).toHaveLength(2)
+    for (const key of mine.items) expect(floorFinds('mine', 10)).toContain(parseStockKey(key)!.id)
+    // A Novice D with the Basic Pick and her keepsake (+0.25, from F10): ★1 or ★2.
+    expect(digQuality(save, miner, FOUR, 'mine')).toBe(gatherQuality(termsOf(save, FOUR, 'mining', talentsD, 'pick')!, save.roster[FOUR]!.wellFed > 0) + KEEPSAKE_QUALITY)
+    for (const key of mine.items) expect([1, 2]).toContain(parseStockKey(key)!.stars)
+    expect(after.places).toEqual(save.places)
+    expect(after.farm.counts).toEqual(save.farm.counts)
+    // A quarrier's: a stone or a gem of the Quarry's floor.
+    const q = atFloor(four(quarrier, at('friendship', 6), 'quarry'), 'quarry', 1)
+    const stone = gatherChores(q, quarrier, talentsD).chores.find((c) => c.id === FOUR)!
+    expect(stone.items).toHaveLength(1)
+    expect(floorFinds('quarry', 1)).toContain(parseStockKey(stone.items[0]!)!.id)
+    // Before the Mine stands, none.
+    expect(choresTonight(four(miner, at('romance', 7)), miner, FOUR)).toBe(0)
+  })
+
+  it('a rancher\'s chores give each animal in her building +5 fondness a chore at step 3, with the morning\'s line', () => {
+    const coop = withAnimals(four(rancher, at('romance', 7), 'coop', 'barn'), [chicken(1, { fondness: 30 }), chicken(2, { fondness: 198 }), { ...chicken(3), id: 'cow-3', kind: 'cow' }])
+    expect(herBuilding(coop, FOUR)).toBe('coop')
+    const { save: after, chores } = ranchChores(coop, rancher)
+    expect(chores).toEqual([{ id: FOUR, items: [], watered: 0, fondness: 10 }])
+    expect(after.ranch.animals.map((a) => a.fondness)).toEqual([40, 200, 0])
+    // Her building is the one she cares for on the work board.
+    const barn: SaveV4 = { ...coop, roster: { ...coop.roster, [FOUR]: { ...coop.roster[FOUR]!, farmhand: 1, tasks: [{ kind: 'care', home: 'barn' }] } } }
+    expect(herBuilding(barn, FOUR)).toBe('barn')
+    expect(ranchChores(barn, rancher).save.ranch.animals.map((a) => a.fondness)).toEqual([30, 198, 10])
+    // The night: the animals' night first (an unfed one −10), then her chores; the morning says the fondness.
+    const night = runNight(coop, context(rancher))
+    expect(night.ranch.animals.map((a) => a.fondness)).toEqual([30, 198, 0])
+    expect(night.summary!.hearts).toContainEqual({ kind: 'chores', items: 0, watered: 0, fondness: 10 })
+    expect(parseSaveV5(json(night))).toEqual(night)
+    // No animals in her building, or away from the farm: none.
+    expect(ranchChores(withAnimals(coop, []), rancher).chores).toEqual([])
+    expect(ranchChores({ ...coop, dorm: { ...coop.dorm, home: coop.dorm.home.filter((id) => id !== FOUR) } }, rancher).chores).toEqual([])
+  })
+
+  it('a ranch Uma working the Coop gives an extra good at times: the perks\' extras on what she collects', () => {
+    // She cares for the Coop on the board: one egg waits, she collects it overnight, and at F3 it's a 10% chance of one more.
+    const base = withAnimals(four(rancher, at('friendship', 3), 'coop'), [chicken(1, { fed: true, ready: true })], 20)
+    const hired: SaveV4 = { ...base, roster: { ...base.roster, [FOUR]: { ...base.roster[FOUR]!, farmhand: 1, tasks: [{ kind: 'care', home: 'coop' }] } } }
+    const uid = Array.from({ length: 300 }, (_, i) => `u${i}`).find((u) => draw(u, 3, `perk:${FOUR}`, 0) < 0.1)!
+    const lucky = runNight({ ...hired, account: { ...hired.account, uid } }, context(rancher))
+    expect(goodCount(lucky.items, 'egg')).toBe(2)
+    expect(lucky.summary!.hearts).toContainEqual({ kind: 'perks', items: 1 })
+    // Most nights, none: the egg alone.
+    const plain = Array.from({ length: 300 }, (_, i) => `u${i}`).find((u) => draw(u, 3, `perk:${FOUR}`, 0) >= 0.1)!
+    expect(goodCount(runNight({ ...hired, account: { ...hired.account, uid: plain } }, context(rancher)).items, 'egg')).toBe(1)
+  })
+
+  it('leaves a ★2+ ore, stone or gem, or egg, milk or fleece in the morning: her line\'s good', () => {
+    const save = atFloor(four(miner, at('romance', 2, { morning: 1 }), 'mine'), 'mine', 10)
+    expect(floorFinds('mine', 10)).toContain(lineGood(save, miner, FOUR, 2, 1).id)
+    const q = atFloor(four(quarrier, at('romance', 2, { morning: 1 }), 'quarry'), 'quarry', 4)
+    expect(floorFinds('quarry', 4)).toContain(lineGood(q, quarrier, FOUR, 2, 1).id)
+    const ranch = withAnimals(four(rancher, at('romance', 2, { morning: 1 }), 'coop', 'barn'), [chicken(1), { ...chicken(2), id: 'sheep-2', kind: 'sheep' }])
+    for (let day = 5; day <= 40; day++) expect(['egg', 'wool']).toContain(lineGood({ ...ranch, calendar: { day } }, rancher, FOUR, 2, 1).id)
+    // With its place not open (a dig not built, no animals), a crop of the season, as before.
+    expect(goodOf(lineGood(four(miner, at('romance', 2)), miner, FOUR, 2, 1).id)!.family).toBe('vegetables')
+    expect(goodOf(lineGood(four(rancher, at('romance', 2), 'coop'), rancher, FOUR, 2, 1).id)!.family).toBe('vegetables')
+    // At night step 9, every 4th morning, at ★2 or more.
+    const morning = leaveMorningItems({ ...save, calendar: { day: 5 } }, miner, talentsD)
+    const item = morning.lines.find((l) => l.id === FOUR)!
+    expect(floorFinds('mine', 10)).toContain(parseStockKey(item.items[0]!)!.id)
+    expect(parseStockKey(item.items[0]!)!.stars).toBeGreaterThanOrEqual(2)
+    // A rancher's stars follow her building's animals' hearts (ten hearts is ★5), and her keepsake there.
+    const fond = withAnimals(four(rancher, spouse(2, { morning: 1 }), 'coop'), [chicken(1, { fondness: 200 })])
+    expect(lineQuality(fond, rancher, FOUR)).toBe(4 + KEEPSAKE_QUALITY)
+  })
+
+  it('sets her signature dish\'s grade by her line\'s best place: the deepest floor\'s top grade, the animals\' best good', () => {
+    expect(lineGrade(four(miner, at('friendship', 4)), miner, FOUR)).toBe(1)
+    expect(lineGrade(four(miner, at('friendship', 4), 'mine'), miner, FOUR)).toBe(floorTopGrade(1))
+    expect(lineGrade(atFloor(four(miner, at('friendship', 4), 'mine'), 'mine', 10), miner, FOUR)).toBe(5)
+    expect(lineGrade(atFloor(four(quarrier, at('friendship', 4), 'quarry'), 'quarry', 30), quarrier, FOUR)).toBe(10)
+    expect(signatureDish(atFloor(four(miner, at('friendship', 4), 'mine'), 'mine', 10), miner, FOUR)).toBe('dish-herbs-spices-5')
+    expect(lineGrade(four(rancher, at('friendship', 4), 'coop'), rancher, FOUR)).toBe(1)
+    const kept = withAnimals(four(rancher, at('friendship', 4), 'coop', 'barn'), [chicken(1), { ...chicken(2), id: 'cow-2', kind: 'cow' }, { ...chicken(3), id: 'sheep-3', kind: 'sheep' }])
+    expect(lineGrade(kept, rancher, FOUR)).toBe(goodOf('wool')!.grade)
+    expect(signatureDish(kept, rancher, FOUR)).toBe(`dish-sweets-${goodOf('wool')!.grade}`)
+  })
+
+  it('her keepsake lifts a rancher\'s collection at her building', () => {
+    const save = four(rancher, spouse(5), 'coop')
+    expect(keepsakeQuality(save, rancher, FOUR, 'coop')).toBe(KEEPSAKE_GROWN)
+    expect(keepsakeQuality(save, rancher, FOUR, 'mine')).toBe(0)
+  })
+})
+
 describe('the format\'s keepsake and pet name', () => {
   it('validates both; the stand-in bible has them', () => {
     const ctx = { umas: new Set(STAND_INS) }
@@ -422,10 +596,14 @@ describe('the save\'s perk fields and lines', () => {
       { kind: 'item', id: TWO, items: ['shiitake@3'] }, { kind: 'chores', items: 2, watered: 1 }, { kind: 'perks', items: 4 }, { kind: 'side', items: 1 },
     ] }
     expect(parseSaveV5(json(save)).summary).toEqual(save.summary)
+    // A rancher's chores add their fondness; a line from before has none.
+    const ranch = { ...save, summary: { ...save.summary, hearts: [{ kind: 'chores' as const, items: 0, watered: 0, fondness: 10 }] } }
+    expect(parseSaveV5(json(ranch)).summary).toEqual(ranch.summary)
     const refuse = (hearts: unknown[], message: string) => expect(() => parseSaveV5({ ...json(save), summary: { ...json(save.summary), hearts } })).toThrow(message)
+    refuse([{ kind: 'chores', items: 1, watered: 0, fondness: 0 }], 'save.summary.hearts.0.fondness')
     refuse([{ kind: 'item', id: TWO, items: [] }], 'save.summary.hearts.0.items')
     refuse([{ kind: 'item', id: TWO, items: ['nope@3'] }], 'save.summary.hearts.0.items.0: expected <good>@<stars>')
-    refuse([{ kind: 'chores', items: 0, watered: 0 }], 'save.summary.hearts.0: expected items or tiles watered')
+    refuse([{ kind: 'chores', items: 0, watered: 0 }], 'save.summary.hearts.0: expected items, tiles watered or fondness')
     refuse([{ kind: 'chores', items: 1, watered: 0.5 }], 'save.summary.hearts.0.watered: expected 0–40')
     refuse([{ kind: 'chores', items: 1, growth: 0.25 }], 'save.summary.hearts.0: unknown keys growth')
     refuse([{ kind: 'perks', items: 0 }], 'save.summary.hearts.0.items')

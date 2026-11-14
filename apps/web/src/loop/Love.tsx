@@ -6,7 +6,8 @@
 // by side and Praise +20 takes the row under them. **Where you meet her:** Chat, Gift and **Invite her to work · 1** (a
 // friend, once) need her in front of you: on the farm when she lives there, else in town where she is today, once you've
 // gone into town (`whereYouMeet`); otherwise a line says where she is, a tap to her in town ("At the Café today ›"), or
-// "At home today". Her Ready event (Play · 1 on the Next card) plays from anywhere. Loaded on demand with the Hearts tab.
+// "At home today". The invitation's scene plays as soon as it's spent (`?life=invited-to-work:<id>`). Her Ready event
+// (Play · 1 on the Next card) plays from anywhere. Loaded on demand with the Hearts tab.
 import {
   actionsLeft, birthdaysOf, canPraise, chatLineV4, FAMILY_NAMES, festivalsOf, FRIEND_FROM, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, isFarmhand, LOVE_POINTS, townLocation,
   whereYouMeet, workBlock, type SaveV4, type StoryPack, type Temperament,
@@ -14,7 +15,7 @@ import {
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
-import { Link, useLocation } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import type { MasterView } from '../master/master'
 import { workOnce } from '../town/town-actions'
@@ -41,6 +42,7 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
   const [error, setError] = useState<string | null>(null)
   const [giving, setGiving] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
   const birthdays = useMemo(() => birthdaysOf(pack, master.birthdays), [pack, master])
   // Where you'd find her now: talks, gifts and the invitation to work need her in front of you.
   const meet = useMemo(() => whereYouMeet(save, pack, id), [save, pack, id])
@@ -82,7 +84,12 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
       </div>
       {invite && (
         <Button variant="secondary" size="md" className="w-full" disabled={work !== null || !meet.here} data-action="invite-work"
-          onClick={() => void workOnce(id).then(() => { setError(null); setNote('Farmhand ✓ She works the farm from today.') }, fail)}>
+          onClick={() => void workOnce(id).then(() => {
+            setError(null)
+            setNote('Farmhand ✓ She works the farm from today.')
+            // Her scene plays over the profile, the action spent.
+            navigate(withParam(location, 'life', `invited-to-work:${id}`), { state: { back: true } })
+          }, fail)}>
           Invite her to work · 1
         </Button>
       )}

@@ -21,7 +21,7 @@
 import {
   homeOf, NEEDS_ROOM, OWN_HOUSE_WISH,
   atHome,
-  ACTIVITY_NAMES, bar, beatOf, benchOpen, betterRings, bondHearts, bondOf, castOrder, choresTonight, closestFriend, dateOf, dishName, engravingOf, favouriteOf, farmPlace, giftsOf, isTownPerson,
+  ACTIVITY_NAMES, bar, beatOf, benchOpen, betterRings, bondHearts, bondOf, castOrder, CHORE_FONDNESS, choresTonight, closestFriend, dateOf, dishName, engravingOf, favouriteOf, farmPlace, giftsOf, isTownPerson,
   GIFT_POINTS_V4, goodName, hasPerk, homeOrHoused, invitedNow, isGoodId, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, keepsakeOf, keepsakeQuality, LADDER_COLOURS, ladderOf, levelWords,
   linePlaces, morningRule, morningsToItem, nextBondHeart, pairLevels, pairName, pairOf, PERK_PLACE, perkLineOf, perksFor, petNameOf, readiness, readLevels, ringGrade, ringName,
   ringPercent, romanceTerms, ROUTE_RUNGS, routeIndex, rungName, SEASON_NAMES, SIDE_BY_SIDE_HEARTS, tasteKnown, tieKind, tieLineOf, tiesOf, tieStrength, unreadLevels, WAITING_RUNGS,
@@ -350,8 +350,9 @@ const SUPERSEDED: Partial<Record<PerkId, PerkId>> = { 'line-10': 'line-20', 'nig
 
 /**
  * What a reached perk does now, or null when its words say it all: her line's term ("+28% at the forest ·
- * +8% ring", a farmer's "+20% chance of an extra crop", with the crew's and a cap held), her night chores ("2 items each
- * night", "+0.5 growth each night", "None while she lives in town"), her morning items ("Next in 3 mornings"), her signature dish
+ * +8% ring", a farmer's "+20% chance of an extra crop", a rancher's "of an extra good", with the crew's and a cap held),
+ * her night chores ("2 items each night", "+0.5 growth each night", "+10 fondness each night", "None while she lives in
+ * town"), her morning items ("Next in 3 mornings"), her signature dish
  * ("Bell Pepper Salad · in the Kitchen's list"), in her element ("Beside Stand-in 2"), her keepsake ("Bent Trowel · +0.25
  * quality at the Fields"), her pet name and her closest friend.
  */
@@ -366,13 +367,14 @@ export function perkNow(save: SaveV4, pack: Pick<StoryPack, 'cast' | 'bibles' | 
     case 'line-10': case 'line-20': {
       if (!place) return null
       const t = romanceTerms(save, pack, id, place)
-      const own = line === 'farming' ? `+${percent(t.total)} chance of an extra crop` : `+${percent(t.total)} at ${PERK_PLACE[line]}`
+      const own = line === 'farming' ? `+${percent(t.total)} chance of an extra crop` : line === 'ranch' ? `+${percent(t.total)} chance of an extra good`
+        : `+${percent(t.total)} at ${PERK_PLACE[line]}`
       return [own, ...(t.ring > 0 ? [`+${percent(t.ring)} ring`] : []), ...(t.crew > 0 ? [`+${percent(t.crew)} crew`] : []), ...(t.held ? ['held to its cap'] : [])].join(' · ')
     }
     case 'night-chore': case 'night-chore-2': case 'night-chore-3': {
       const n = choresTonight(save, pack, id)
       if (n === 0) return homeOrHoused(save, id) ? null : 'None while she lives in town'
-      return line === 'farming' ? `+${n * 0.25} growth each night` : `${n} item${n === 1 ? '' : 's'} each night`
+      return line === 'farming' ? `+${n * 0.25} growth each night` : line === 'ranch' ? `+${n * CHORE_FONDNESS} fondness each night` : `${n} item${n === 1 ? '' : 's'} each night`
     }
     case 'morning-item': case 'morning-item-2': {
       const rule = morningRule(love)
