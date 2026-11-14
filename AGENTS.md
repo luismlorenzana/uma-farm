@@ -59,7 +59,9 @@ the game's placeholders, as a fresh phone does.
 ## Conventions
 
 - TypeScript strict with `noUncheckedIndexedAccess`; Vitest next to the code; no network in tests.
-- **Mobile first at 390×844 portrait** (check 375×667): 44 pt targets, safe areas, `h-dvh`.
-- **Main JS ≤ 180 KB gzip.** The Hub map and the HD-2D stage load on demand, and the stage stays out of the precache.
+- **Landscape first at 844×390** (check 667×375): the phone held sideways, 44 pt targets, safe areas on every side.
+  Sheets are side panels from the right, lists go two columns where they fit, and held upright the app shows the
+  "Turn your phone sideways" card.
+- **Main JS ≤ 180 KB gzip.** The Hub map and every page but Account load on demand.
 - **Player-facing text is short:** labels, counts, buttons and plain empty states. Explanations go behind a help button.
 - Conventional Commits; the body explains why.

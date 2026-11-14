@@ -44,3 +44,15 @@
 @media (prefers-reduced-motion: reduce) {
   .level-sparkle { animation: none; }
 }
+
+/* Landscape: uma-kit's Account is one column of panels; on a wide page they sit in two, until the kit's landscape
+   variant ships (the page is a size container: AccountView.tsx). */
+@container (min-width: 36rem) {
+  [data-page='account'] [data-kit='account'] {
+    columns: 2;
+    column-gap: 0.75rem;
+  }
+  [data-page='account'] [data-kit='account'] > * {
+    break-inside: avoid;
+  }
+}

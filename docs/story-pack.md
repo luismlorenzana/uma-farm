@@ -141,7 +141,7 @@ else is optional, and any field the game doesn't read is kept for the story.
 | `name` | **A sister's name** (read for a sister only): master data has none for her | Her elder's name, as her sister |
 | `birthday` | `{ "month": 1–12, "day": … }` on a real date, when master data has none | Master data's birthday, or none |
 | `meet` | **Her trigger to meet,** from the trigger menu below: when it's met, her story begins ([meeting her](game-mechanics.md#meeting-her)). Not read for the welcome list's, who meet you on their first talk | Talk with her on three different days |
-| `chapters` | **Her chapters,** below: they frame her route on her profile, the Hearts tab and the morning ([her chapters](game-mechanics.md#her-chapters)) | The four default chapters |
+| `chapters` | **Her chapters,** below: they frame her route on her profile, the People page and the morning ([her chapters](game-mechanics.md#her-chapters)) | The four default chapters |
 | `arrives` | **Retired:** meeting her replaced it. Any `arrives` is noted and dropped; her `meet` says when you meet her (a festival, another's event and a Farm Rank are on the menu), and the Dorm's levels bring beds only | — |
 | `paragraph` | The story's own: the sandbox shows it | Nothing |
 
@@ -189,7 +189,7 @@ a gift, and every night, so she's met the morning after it holds. Her meeting sc
 
 Her story is hers, in her own chapters, from meeting her to married life. A chapter groups her events along the game's
 backbone: friendship F1–F10 and the confession, romance R1–R10, the proposal and the wedding, then married life. Her
-profile lists them with the one she's in, the Hearts tab shows her chapter on her row, and the morning a chapter opens
+profile lists them with the one she's in, the People page shows her chapter on her row, and the morning a chapter opens
 says "A new chapter with ‹name›" ([her chapters](game-mechanics.md#her-chapters)).
 
 ```json
@@ -201,7 +201,7 @@ says "A new chapter with ‹name›" ([her chapters](game-mechanics.md#her-chapt
 
 | Field | What it does in play | Without it |
 |---|---|---|
-| `title` | Its title on her profile, the Hearts tab and the morning | "Chapter 2" (a note) |
+| `title` | Its title on her profile, the People page and the morning | "Chapter 2" (a note) |
 | `events` | Her rungs it holds: they play in the route's order, whatever order you list them in | It holds none, and is left out (a note) |
 | `gate` | What the farm must have first, from the trigger menu (the farm's kinds, a season or a festival). Until it holds, the chapter's first event waits, and her profile says what's needed: "Opens when the Kitchen is built". Once that event has played, the rest follow | It opens when its first event can play: the rung before it has played |
 

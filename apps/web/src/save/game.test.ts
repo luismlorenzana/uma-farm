@@ -26,7 +26,7 @@ vi.mock('../api/client', async () => {
   }
 })
 
-const { boot, commit, madeHere, resetGame, restoreSafetyCopy, syncNow, useGame } = await import('./game')
+const { boot, commit, resetGame, restoreSafetyCopy, syncNow, useGame } = await import('./game')
 const { db, safetyCopies } = await import('./db')
 const { arrivedRelease, keepArrived } = await import('../story/news')
 
@@ -115,22 +115,6 @@ describe('the store', () => {
     await syncNow()
     expect(server.envelope.save?.account.createdAt).toBe(T0)
     expect((await safetyCopies('u1'))[0]).toMatchObject({ reason: 'restore' })
-  })
-
-  it('knows a save this device\'s last change made: a push keeps it, a save from the server or the boot isn\'t', async () => {
-    server.envelope = { revision: 1, save: newSave('u1', T0) }
-    await boot('u1')
-    expect(madeHere(useGame.getState().save!)).toBe(false)
-    const mine = touched(useGame.getState().save!, T1)
-    await commit(mine)
-    expect(madeHere(useGame.getState().save!)).toBe(true)
-    await syncNow()
-    expect(useGame.getState()).toMatchObject({ revision: 2, dirty: false })
-    expect(madeHere(useGame.getState().save!)).toBe(true)
-    server.envelope = { revision: 3, save: touched(newSave('u1', T0), T2) }
-    await syncNow()
-    expect(useGame.getState().revision).toBe(3)
-    expect(madeHere(useGame.getState().save!)).toBe(false)
   })
 
   it('pushes over a server that moved on when this device changed last', async () => {

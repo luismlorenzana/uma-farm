@@ -9,9 +9,7 @@
 // it stands. The map grows the homestead's rows after the yard, the town edge moving below them (`homestead-map.tsx`).
 // Each place's name and quick look's line are the pack's `world.json` where it gives them, else the game's own
 // (`placeWordsOf`); the Town takes the town's name.
-// With the preview switch on (Account → HD-2D farm), the same places draw on the shared HD-2D
-// stage instead (`FarmStage.tsx`, its own chunk with three.js), with the Umas on it from the same work view and Ready
-// hearts as the pips; off, the Hub is as it was. Loaded on demand.
+// Loaded on demand.
 import {
   chapterTitle, farmEnv, farmPlace, gateVisitor, herChapters, isBuildPlace, LOOP_WORK_PLACES, loopKinds, loopReadyWork, loopWorld, MAP_PLACES, placeBuilt, placeOpen, placeWordsOf, readyPlots, workNow, type BuildPlace,
   type FarmPlace, type LoopPlaceId, type FarmSave,
@@ -23,7 +21,6 @@ import { Button, HelpButton, Sheet, useReducedMotionSetting } from '@luismlorenz
 import { workView, type WorkView } from '@luismlorenzana/uma-kit/work'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useLocation, useSearchParams } from 'react-router'
-import { useStageOn } from '../app/stage-switch'
 import { masterReady, useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
@@ -45,10 +42,6 @@ const BenchPeek = lazy(() => import('./BenchSheet').then((m) => ({ default: m.Be
 const HouseAnswer = lazy(() => import('./HouseAnswer'))
 const BuildCard = lazy(() => import('./BuildCard').then((m) => ({ default: m.BuildCard })))
 type HomesteadMap = typeof import('./homestead-map')
-// Home on the shared HD-2D stage, with three.js, loaded only when the preview switch is on.
-const FarmStage = lazy(() => import('./FarmStage'))
-/** Sheets and scenes that cover all of Home: the stage rests under them. */
-const FULL_SCREEN = ['event', 'ask', 'memory', 'album', 'read', 'evening', 'level', 'household'] as const
 
 /** The homestead's map module, loaded on demand; null until it's in. */
 function useHomesteadMap(): HomesteadMap | null {
@@ -170,15 +163,9 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
   const covered = peek !== undefined || params.get('sheet') !== null
   const peekWords = peek ? placeWordsOf(story, peek.id) : null
   const total = [...ready.values()].reduce((a, b) => a + b, plots)
-  const stage = useStageOn()
   return (
     <>
-      {stage ? (
-        <Suspense fallback={null}>
-          {!waiting && <FarmStage save={save} places={places} work={work} hearts={hearts} open={peek?.id ?? null} reducedMotion={reducedMotion}
-            paused={FULL_SCREEN.some((key) => params.has(key))} />}
-        </Suspense>
-      ) : <div className="absolute inset-0 overflow-y-auto overscroll-contain" data-farm-scroll>
+      <div className="absolute inset-0 overflow-y-auto overscroll-contain" data-farm-scroll>
         <div className="relative h-full" style={{ minHeight: (layout?.tiles ?? FARM_MAP_TILES) * tile }}>
           {!waiting && <HubMap
             label="Farm map"
@@ -193,7 +180,7 @@ function FarmScreen({ save, peek }: { save: FarmSave; peek: FarmPlace | undefine
             debug={import.meta.env.DEV}
           />}
         </div>
-      </div>}
+      </div>
       <FarmHelp />
       <CollectAll ready={total} />
       {peek && peekWords && (

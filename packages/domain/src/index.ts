@@ -23,8 +23,6 @@ export * from './save/gold'
 // The day: the farm map's places, uma-work on the day clock, End the day's nine steps, the nudge
 // and the morning summary.
 export * from './farm/places'
-// The farm on the HD-2D stage: the save as uma-stage's farm design, the plots, the recipes and the crops' families.
-export * from './farm/stage'
 export * from './work/loop-env'
 export * from './save/loop-work'
 export * from './save/work-readings'

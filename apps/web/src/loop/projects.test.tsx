@@ -31,7 +31,7 @@ vi.mock('../api/client', async () => {
 
 const { albumFixture } = await import('../album/testing')
 const { useGame, resetGame } = await import('../save/game')
-const { FarmAccountBar } = await import('../shell/Bars')
+const { default: BookPage } = await import('../book/BookPage')
 const { Shell } = await import('../shell/Shell')
 const { default: DiaryPage } = await import('./DiaryPage')
 const { default: FarmRoute } = await import('./FarmMap')
@@ -184,12 +184,13 @@ describe('building a place', () => {
 })
 
 describe('the Farm Rank', () => {
-  it('is a chip in the account bar that opens its sheet: points, the way to the next, what it opens, where points come from', async () => {
+  it('is a card in the Book that opens its sheet: points, the way to the next, what it opens, where points come from', async () => {
     useGame.setState({ save: { ...farm({ [GOLD_SHIPPED]: 4_250 }), farm: { ...farm().farm, points: 47, counts: { [GOLD_SHIPPED]: 4_250 } }, diary: { ...farm().diary, shipped: { carrot: 50 } } } })
-    await render(<FarmAccountBar />)
-    const chip = host.querySelector('a[aria-label="Farm Rank 1: 47 points"]')
-    expect(chip?.getAttribute('href')).toBe('/?sheet=rank')
-    expect(chip?.textContent).toContain('FR')
+    await render(<BookPage />, '/book')
+    const card = host.querySelector('a[data-book="rank"]')
+    expect(card?.getAttribute('href')).toBe('/book?sheet=rank')
+    expect(card?.querySelector('[data-figure]')?.textContent).toBe('1')
+    expect(card?.querySelector('[data-line]')?.textContent).toBe('47 points')
     await render(<LoopSheets sheet="rank" />, '/?sheet=rank')
     expect($('[data-rank-sheet="1"]')).not.toBeNull()
     expect($('[data-points]')?.textContent).toBe('47 points')

@@ -21,7 +21,7 @@ export function StartOverCard({ onDone }: { onDone: () => void }) {
     })
   }
   return (
-    <div className="pt-safe pb-safe fixed inset-0 flex flex-col items-center justify-center gap-6 bg-page px-8 text-center" data-start-over>
+    <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 flex flex-col items-center justify-center gap-6 bg-page px-8 text-center" data-start-over>
       <div>
         <p className="font-display text-3xl font-bold text-accent">{START_OVER_WORDS.title}</p>
         <p className="mt-2 text-ink-soft">{START_OVER_WORDS.line}</p>

@@ -9,13 +9,14 @@ it works today is in [the game mechanics](../game-mechanics.md). The page view i
 farm-life spirit, farmhands who take the work over, a navigable town, the dialogue engine, upkeep and loans, a visible
 calendar, and a default Uma. The design is [game-design.md](../design/game-design.md), and the steps are in
 [the roadmap](../roadmap.md#the-rework-2026-11-14). Built one at a time, each merged and deployed before the next.
+**Landscape (F74) is in:** the app plays sideways, with the bar, the rail and side panels, and the portrait HD-2D
+preview is retired.
 
 | Piece | Who | State |
 |---|---|---|
-| [F74](tasks/F74-landscape.md) **Landscape** | Claude | Next, on your go |
-| [F75](tasks/F75-dialogue-engine.md) **The dialogue engine** | Claude | After F74 |
+| [F75](tasks/F75-dialogue-engine.md) **The dialogue engine** | Claude | Next, on your go |
 | [F76](tasks/F76-default-uma.md) **The default Uma** | Claude | After F75 |
-| [F77](tasks/F77-actions-and-farm-loop.md) **A day of actions, and the farm loop** | Claude | After F74 |
+| [F77](tasks/F77-actions-and-farm-loop.md) **A day of actions, and the farm loop** | Claude | Ready |
 | [F78](tasks/F78-town-map.md) **The town map** | Claude | After F77 |
 | [F79](tasks/F79-uma-loop.md) **The Uma loop** | Claude | After F76 and F78 |
 | [F80](tasks/F80-farmhands.md) **Farmhands** | Claude | After F77 and F79 |
@@ -33,20 +34,23 @@ The table above is the queue. A packet is deleted when it ships, and git keeps t
 
 | What | Where |
 |---|---|
-| **Say go on F74,** landscape | [roadmap.md](../roadmap.md#the-rework-2026-11-14) |
+| **The landscape phone check:** open the app sideways and visit every screen; held upright, it asks you to turn it | [uma-farm.web.app](https://uma-farm.web.app) |
+| **Say go on F75,** the dialogue engine | [roadmap.md](../roadmap.md#the-rework-2026-11-14) |
 | **Write the story and ship it.** F40 lists what the rework changes for it: the protagonist is a man, there's no welcome week, and her life in town | [F40](tasks/F40-story-authoring.md) |
 | **The next Umas' art:** hand [F69](tasks/F69-bust-art-spec.md) to the character art session | Uma Character Art |
 
 ## Across the repos
 
 - **uma-platform** holds the shared pieces: master data, uma-kit, uma-work, uma-server, uma-art, and the HD-2D stage
-  `@luismlorenzana/uma-stage`. The farm pins 0.6.0: 0.5.0's `emote` plays the nod, and 0.6.0's opt-in `/look` isn't
-  used yet. Shared changes go there as requests
+  `@luismlorenzana/uma-stage`, which the farm no longer uses (its portrait preview retired with landscape). Shared
+  changes go there as requests
   ([change protocol](https://github.com/luismlorenzana/uma-platform/blob/main/docs/change-protocol.md)).
+  - **uma-kit's landscape pieces:** the farm asked for its layout on a landscape stage (a thin top bar, a left rail, the
+    Account page and the place map). Until they ship, the farm draws its own bar and rail from the kit's pieces.
 - **The art split:** ChatGPT draws character art (Uma sprites, poses, busts, portraits). Claude draws everything else in
   code (items, UI marks, buildings, the HD-2D kits) in a uma-platform session.
 - **uma-quest** shares the story's way of working (the Uma Ranker's cast, tags and ties), read as local files on the
-  owner's PC, and the HD-2D stage.
+  owner's PC.
 - **uma-rpg** is frozen. The farm's v2 save engine was copied from it, never imported.
 - **Parcels** to uma-quest, uma-rpg and uma-racer are parked until the farm's own game is done. uma-quest's accept list
   is in [its spec at `a88838b`](https://github.com/luismlorenzana/uma-quest/blob/a88838b/docs/design/spec/05-accept-list.md)

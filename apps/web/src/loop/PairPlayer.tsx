@@ -17,7 +17,7 @@ import { namer } from '../story/people'
 import { useStory } from '../story/story'
 import { readPairOnce } from './actions'
 import { parseReadParam } from './hearts-view'
-import { Frame, placeName, silent, StepView } from './ScenePlayer'
+import { Frame, placeName, SCENE_BUST, SCENE_ROW, silent, StepView } from './ScenePlayer'
 
 export default function PairPlayer({ read }: { read: string }) {
   const save = useLoopSave()
@@ -103,14 +103,17 @@ function Conversation({ save, pair, hearts, steps, place, nameOf, of, leaving, o
 /** A choice in a pair's conversation: wording only, so the options carry no gain. */
 function PairChoice({ options, farmer, onPick }: { options: readonly ChoiceOption[]; farmer: string; onPick: (i: number) => void }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 px-4 pb-4" data-choice>
-      <p className="text-[13px] text-ink-soft">You</p>
-      {options.map((option, i) => (
-        <button key={i} type="button" onClick={() => onPick(i)} data-option={i}
-          className="flex min-h-12 w-full items-center rounded-md border border-hairline bg-panel px-4 py-2 text-left text-[15px] shadow-1">
-          {withFarmer(option.text, farmer)}
-        </button>
-      ))}
+    <div className={SCENE_ROW} data-choice>
+      <div className={SCENE_BUST} />
+      <div className="flex max-h-full min-w-0 flex-1 flex-col justify-end gap-3 overflow-y-auto">
+        <p className="text-[13px] text-ink-soft">You</p>
+        {options.map((option, i) => (
+          <button key={i} type="button" onClick={() => onPick(i)} data-option={i}
+            className="flex min-h-12 w-full shrink-0 items-center rounded-md border border-hairline bg-panel px-4 py-2 text-left text-[15px] shadow-1">
+            {withFarmer(option.text, farmer)}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

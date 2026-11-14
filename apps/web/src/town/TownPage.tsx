@@ -43,8 +43,8 @@ export default function TownPage() {
   return (
     <div className="absolute inset-0 flex flex-col" data-page="town" data-view={view}>
       <PlaceHeader title={placeNameOf(pack, 'town')} onBack={() => leave('/')} about={<About />} words={{ back: 'Back to the farm', about: 'About the town' }} />
-      <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain" data-town-scroll>
-        <div className="space-y-3 px-4 pt-3 pb-24">
+      <main className="@container min-h-0 flex-1 overflow-y-auto overscroll-contain" data-town-scroll>
+        <div className="space-y-3 px-4 pt-3 pb-6">
           <Tabs label="Views" value={view} onChange={setView} options={[{ value: 'today', label: 'Today' }, { value: 'people', label: 'People' }]} />
           <MasterGate>{(master) => (pack ? <Town save={save} pack={pack} master={master} view={view} /> : <p className="text-ink-soft">Loading…</p>)}</MasterGate>
         </div>
@@ -112,7 +112,9 @@ function Today({ day, pack, save, nameOf, onOpen }: { day: TownDay; pack: StoryP
   return (
     <div className="space-y-3" data-town-today={out}>
       <p className="text-[13px] text-ink-soft" data-out={out}>{out === 0 ? 'No one’s out today.' : `${out} out today · a different few tomorrow`}</p>
-      {spots.map((view) => <SpotCard key={view.spot.id} view={view} save={save} nameOf={nameOf} onOpen={onOpen} />)}
+      <div className="grid gap-3 @lg:grid-cols-2">
+        {spots.map((view) => <SpotCard key={view.spot.id} view={view} save={save} nameOf={nameOf} onOpen={onOpen} />)}
+      </div>
     </div>
   )
 }
@@ -170,9 +172,9 @@ function People({ save, pack, day, nameOf, onOpen }: { save: SaveV4; pack: Story
       <Tabs label="Sort" value={sort} onChange={setSort} options={PEOPLE_SORTS} />
       <p className="text-[12px] text-ink-soft tabular-nums" data-found={rows.length}>{query.trim() ? `${rows.length} of ${all.length}` : `${all.length} people`}</p>
       {rows.length === 0 ? <p className="text-[14px] text-ink-soft" data-none>No one by that name.</p> : (
-        <ul className="divide-y divide-hairline rounded-md border border-hairline">
+        <ul className="grid gap-x-4 border-t border-hairline @xl:grid-cols-2">
           {rows.map((r) => (
-            <li key={r.id}>
+            <li key={r.id} className="border-b border-hairline">
               <button type="button" onClick={() => onOpen(r.id)} className="flex min-h-14 w-full items-center gap-3 px-3 py-1.5 text-left"
                 data-person-row={r.id} data-where={r.farm ? 'farm' : r.spot ?? 'home'}>
                 <Face id={r.id} size={40} name={r.name} />
@@ -212,7 +214,8 @@ function TalkSheet({ id, save, pack, day, nameOf, onClose }: { id: string; save:
   return (
     <Sheet open onClose={onClose} title={name} label={`${name} in town`}>
       <div className="space-y-3 pb-2" data-talk={id} data-at={spot ?? (save.roster[id] && atHome(save, id) ? 'farm' : person ? 'keeper' : 'home')} data-met={save.roster[id] ? true : undefined}>
-        <div className="flex justify-center"><UmaBust outfitId={id} label={name} size={168} /></div>
+        {/* Small in the side panel, so her line shows under it. */}
+        <div className="mx-auto w-32"><UmaBust outfitId={id} label={name} size={128} /></div>
         {error && <p role="status" className="rounded-md bg-danger/10 px-3 py-2 text-[14px] font-semibold text-danger">{error}</p>}
         <NoteFound ids={notes} pack={pack} />
         {person ? <KeeperWords id={id} pack={pack} nameOf={nameOf} />

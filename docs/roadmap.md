@@ -34,8 +34,9 @@ farm's progress](game-mechanics.md#the-farms-progress). How it's built is in
 | **The farm's loop** | **Deployed** (save v4, one build) | The days, the Fields, the forest and the Fishery, the Mill, the Sawmill and the Smokehouse, goods and the bin, talents and ranks, the roster, the Farm Rank. **The farm grows by building:** no global chapters; the Farm Rank from income and goods offers each place, built with gold and goods; the Dock and the Boat open the sea; weddings open houses; the Diary's projects. **The town:** every character lives there, a different few out at its six spots each day; talk once a day; the People list. **Meeting her:** her trigger (three days' talks by default) starts her story; the welcome list visits the Gate one a morning; the beds cap who lives on the farm, the rest live in town until invited |
 | **The romance** | **Deployed, part of the one game** | Hearts, heart events and plays, evenings, perks, the ring and the wedding, married life, the homestead, bonds. Everyone you meet has the whole romance from the day you meet her, in **her own chapters**: the story's or four defaults, a chapter's gate asking the farm for a place, a rank, a good, an event, a season or a festival |
 | **The story** | **Being written** | In the Farm Story Sandbox on this Mac. The pack is open: every part optional, any number of characters, notes instead of blocks, and any pack releases. [The story pack's menu](story-pack.md) lists what the game reads, with the welcome list, her trigger to meet and her chapters |
-| **The HD-2D farm** | **Opt-in preview** | The farm and its Umas on the shared HD-2D stage (Account → HD-2D farm). The 2D Hub is still Home. An Uma at work nods every 4–7 seconds |
-| **Art** | **Mixed** | The farm kit's first wave is painted; its second wave is still the stand-in's frames. Umas whose outfits have no sprite set show as cards with their faces. The town's people are Umas, with master data's busts |
+| **Landscape** | **Deployed** | The game is played sideways: a thin bar on top (the date, the actions left's placeholder, the gold, End the day, the Menu), a rail down the left (Farm · Town · People · Book · Diary), sheets as side panels, scenes laid out sideways, and a "Turn your phone sideways" card held upright. Home is still the 2D Hub map; the tile farm replaces it |
+| **The HD-2D farm** | **Retired** | The portrait preview and its stage are gone with landscape. The HD-2D look comes back when uma-platform's look path is ready |
+| **Art** | **Mixed** | The map's buildings, the items and the marks are uma-art's; the Umas' faces and busts are master data's. The HD-2D farm kit retired with the portrait preview. The town's people are Umas, with master data's busts |
 | **The workshops** | **Not built** | The ranch, the Mine and the Quarry, the Kitchen and its cooking game, expeditions, the Restaurant and the Forge's games |
 | **Sound** | **None** | No music and no sound effects |
 | **Safety nets** | **Partial** | The save syncs with rescues and backups; there's no error reporting and no end-to-end test |
@@ -94,7 +95,6 @@ table. Its steps, in order:
 
 | Step | What | Packet |
 |---|---|---|
-| 1 | **Landscape:** the app sideways; the bar, the rail, side panels; the HD-2D portrait preview retires | [F74](handoff/tasks/F74-landscape.md) |
 | 2 | **The dialogue engine:** busts, faces and outfits by context, on the pilot's published kits | [F75](handoff/tasks/F75-dialogue-engine.md) |
 | 3 | **The default Uma:** a blank bust and profile, and a complete default story, for every Uma without her own | [F76](handoff/tasks/F76-default-uma.md) |
 | 4 | **A day of actions, and the farm loop:** 10 actions; the tile farm with daily watering; one-action gathering; stations; shipping | [F77](handoff/tasks/F77-actions-and-farm-loop.md) |
@@ -105,10 +105,11 @@ table. Its steps, in order:
 | 9 | **The calendar:** faces on event days, special days, the story's holidays and occasion scenes | [F82](handoff/tasks/F82-calendar.md) |
 | 10 | **The ranch and the mine,** in the farm loop's style | [F83](handoff/tasks/F83-ranch-and-mine.md) |
 
-After step 5 a day can be played end to end. Phone checks follow steps 1, 2, 4, 5 and 7.
+Step 1, landscape, is done: the app sideways, the bar and the rail, side panels, and the portrait HD-2D preview
+retired. After step 5 a day can be played end to end. Phone checks follow steps 1, 2, 4, 5 and 7.
 
 **What it changes below:**
-- Phase 1's HD-2D track pauses: the portrait preview retires, and the farm map is a landscape tile map until
+- Phase 1's HD-2D track pauses: the portrait preview is retired, and the farm map becomes a landscape tile map until
   uma-platform's look path is ready.
 - Her look (Track C) folds into step 2: the pilot's art is published, F70 becomes the dialogue engine, and F71 becomes
   its outfits by context.
@@ -136,7 +137,7 @@ at the end of every session ([F40](handoff/tasks/F40-story-authoring.md)).
 | 1.20 **The game's design** | A first pass is written: [design/game-design.md](design/game-design.md), the fantasy, pillars, a sitting, the rhythm, the two halves, the arc, the first real season, and six questions to settle. Next: the owner's rework | Claude, with the owner |
 
 **Tracks B and C,** the HD-2D farm and her look, are folded into the rework above:
-- the portrait HD-2D preview retires with landscape ([F74](handoff/tasks/F74-landscape.md));
+- the portrait HD-2D preview retired with landscape (step 1);
 - the busts and outfits become the dialogue engine ([F75](handoff/tasks/F75-dialogue-engine.md)), on the pilot's art
   ([F69](handoff/tasks/F69-bust-art-spec.md), done for two Umas).
 
@@ -210,4 +211,4 @@ The farm sends items to uma-quest, uma-rpg and uma-racer, one way. It's parked u
 - **Meeting her on your phone:** say hello at the Gate each morning, and meet someone in town on her third day.
 - **The town on your phone:** open the Town at the foot of the farm map, talk to a few, find someone in People.
 - **Keep writing the story** however you like.
-- **The HD-2D farm on your phone,** when you have a minute.
+- **Landscape on your phone:** open the app sideways and visit every screen; held upright it asks you to turn it.

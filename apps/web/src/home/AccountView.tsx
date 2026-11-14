@@ -2,8 +2,8 @@
 // sign-out, and master data's release. The Notifications card says they're off: with days as turns,
 // nothing finishes while the app is closed; the server's push is untouched. It also holds **Your name**, the farmer's,
 // under the name sheet's rule; a safety copy from before v4 lists as Kept, without a Restore, since restoring it would
-// only start over again. It also holds **HD-2D farm (preview)**, this device's switch for Home on the shared stage, and
-// the **Story** row: the story release the game plays, by its ship's number and date, or "No story yet".
+// only start over again. It also holds the **Story** row: the story release the game plays, by its ship's number and
+// date, or "No story yet". On a wide screen its panels sit in two columns (index.css).
 import { cleanFarmerName, FARMER_PLACEHOLDER, farmerNameIssue, SAVE_VERSION, versionOf } from '@farm/domain'
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { AccountPage } from '@luismlorenzana/uma-kit/places'
@@ -12,7 +12,6 @@ import { useEffect, useState } from 'react'
 import { APP_BUILD_ID } from '../app/build'
 import { useMaster } from '../master/master'
 import { safetyCopies, type SafetyCopy } from '../save/db'
-import { setStageOn, useStageOn } from '../app/stage-switch'
 import { useStory } from '../story/story'
 import { restoreSafetyCopy, seeReplaced, useGame } from '../save/game'
 import { dateWords } from '../shell/SyncWarning'
@@ -81,25 +80,6 @@ function YourName() {
   )
 }
 
-/** **HD-2D farm (preview)**: Home on the shared stage, on this device only; off is uma-kit's Hub. */
-function StagePreview() {
-  const on = useStageOn()
-  return (
-    <Panel className="p-3" aria-label="HD-2D farm">
-      <button type="button" role="switch" aria-checked={on} onClick={() => setStageOn(!on)} data-stage-switch={on ? 'on' : 'off'}
-        className="flex min-h-11 w-full items-center justify-between gap-3 text-left">
-        <span>
-          <span className="block text-[14px] font-semibold">HD-2D farm (preview)</span>
-          <span className="block text-[12px] text-ink-soft">This device only</span>
-        </span>
-        <span aria-hidden className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${on ? 'bg-accent' : 'bg-sunken ring-1 ring-hairline-strong'}`}>
-          <span className={`absolute top-1 size-5 rounded-full bg-panel shadow-1 transition-[left] ${on ? 'left-6' : 'left-1'}`} />
-        </span>
-      </button>
-    </Panel>
-  )
-}
-
 export function AccountView() {
   const auth = useAuth()
   const state = useGame()
@@ -107,9 +87,9 @@ export function AccountView() {
   const story = useStory()
   const release = master.status === 'ready' ? master.view.manifest.version : master.status === 'error' ? (master.offline ? 'Offline' : 'Unavailable') : 'Loading…'
   useEffect(() => seeReplaced(), [])
-  // The frame clips its page, so Account scrolls itself: its last rows and Sign out clear the bottom bar.
+  // The frame clips its page, so Account scrolls itself.
   return (
-    <div className="absolute inset-0 overflow-y-auto overscroll-contain" data-page="account">
+    <div className="@container absolute inset-0 overflow-y-auto overscroll-contain" data-page="account">
       <AccountPage
         info={[
           { label: 'Signed in', value: auth.user?.email ?? auth.user?.name ?? 'Local' },
@@ -120,7 +100,7 @@ export function AccountView() {
           { label: 'Story', value: storyWords(story) },
         ]}
         notifications={<NotificationsOff />}
-        sections={<><YourName /><StagePreview /><SafetyCopies /></>}
+        sections={<><YourName /><SafetyCopies /></>}
         onSignOut={auth.authRequired ? () => auth.signOut() : undefined}
       />
     </div>

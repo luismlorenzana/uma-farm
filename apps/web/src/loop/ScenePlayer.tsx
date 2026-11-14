@@ -60,11 +60,15 @@ export default function ScenePlayer({ scene }: { scene: SceneId }) {
   return <OpeningPlayer scene={scene as OpeningSceneId} />
 }
 
+/** Landscape: her bust on the left, the lines or the choices on the right, both resting on the foot. */
+export const SCENE_ROW = 'flex min-h-0 flex-1 flex-row items-end gap-4 px-4 pb-4'
+export const SCENE_BUST = 'flex h-full w-[38%] max-w-[300px] shrink-0 items-end justify-center overflow-hidden'
+
 /** The sheet's frame: the title line, Skip, and what plays. The pair conversations play in it too. */
 export function Frame({ title, label, scene, onSkip, skipping, children }: { title: string; label: string; scene: string; onSkip: () => void; skipping: boolean; children: React.ReactNode }) {
   return (
-    <div className="pt-safe pb-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={label} data-scene={scene}>
-      <header className="flex min-h-14 items-center justify-between gap-2 px-4">
+    <div className="pt-safe pb-safe pl-safe pr-safe fixed inset-0 z-[60] flex flex-col bg-page" role="dialog" aria-modal="true" aria-label={label} data-scene={scene}>
+      <header className="flex min-h-12 items-center justify-between gap-2 px-4">
         <p className="text-micro text-ink-soft" data-scene-title>{title}</p>
         <button type="button" onClick={onSkip} disabled={skipping} className="min-h-11 rounded-full px-4 text-[15px] font-semibold text-ink-soft" data-action="skip">
           Skip
@@ -203,11 +207,13 @@ function Arrival({ save, id, steps, master }: { save: SaveV4; id: string; steps:
 /** Meeting her ends: her points are in, and where she lives says so: the Dorm, or town while no bed is free. */
 function Welcome({ id, name, points, home, onDone }: { id: string; name: string; points: number; home: boolean; onDone: () => void }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 px-4 pb-4" data-arrival-done data-points={points} data-home={home}>
-      <div className="flex min-h-0 flex-1 items-end justify-center"><UmaBust outfitId={id} label={name} size={200} /></div>
-      <p className="text-center text-[15px] font-semibold text-[#c2385e]">♥ +{points}</p>
-      <p className="text-center text-[14px] text-ink-soft" data-lives>{home ? 'She moves into the Dorm.' : 'No bed free: she lives in town for now.'}</p>
-      <Button className="w-full" onClick={onDone} data-action="welcome">Welcome, {name}</Button>
+    <div className={SCENE_ROW} data-arrival-done data-points={points} data-home={home}>
+      <div className={SCENE_BUST}><UmaBust outfitId={id} label={name} size={200} /></div>
+      <div className="flex min-w-0 flex-1 flex-col justify-end gap-3">
+        <p className="text-center text-[15px] font-semibold text-[#c2385e]">♥ +{points}</p>
+        <p className="text-center text-[14px] text-ink-soft" data-lives>{home ? 'She moves into the Dorm.' : 'No bed free: she lives in town for now.'}</p>
+        <Button className="w-full" onClick={onDone} data-action="welcome">Welcome, {name}</Button>
+      </div>
     </div>
   )
 }
@@ -226,11 +232,11 @@ export function StepView({ step, at, count, total, nameOf, farmer, onNext }: {
   const text = 'say' in step ? step.line : 'narrate' in step ? step.narrate : 'thought' in step ? step.thought : '…'
   const kind = 'say' in step ? 'say' : 'thought' in step ? 'thought' : 'narrate'
   return (
-    <button type="button" onClick={onNext} className="flex min-h-0 flex-1 flex-col items-center justify-end gap-4 px-4 pb-4 text-left" aria-label="Next" data-beat={at} data-step={kind}>
-      <div className="flex min-h-0 flex-1 items-end justify-center" data-bust={speaker ? (isCastId(speaker) ? 'cast' : 'uma') : 'narrator'} data-who={speaker ?? undefined}>
+    <button type="button" onClick={onNext} className={`${SCENE_ROW} text-left`} aria-label="Next" data-beat={at} data-step={kind}>
+      <div className={SCENE_BUST} data-bust={speaker ? (isCastId(speaker) ? 'cast' : 'uma') : 'narrator'} data-who={speaker ?? undefined}>
         {speaker && <PersonBust who={speaker} name={nameOf(speaker)} size={240} />}
       </div>
-      <div className="w-full rounded-md border border-hairline bg-panel p-4 shadow-2" aria-live="polite">
+      <div className="min-w-0 flex-1 rounded-md border border-hairline bg-panel p-4 shadow-2" aria-live="polite">
         {speaker && (
           <p className="flex items-center gap-2" data-speaker>
             <span className="font-display text-[15px] font-bold text-accent">{nameOf(speaker)}</span>
@@ -248,16 +254,18 @@ export function StepView({ step, at, count, total, nameOf, farmer, onNext }: {
 function Choice({ id, name, options, onPick }: { id: string; name: string; options: readonly ChoiceOption[]; onPick: (i: number) => void }) {
   const points = choicePoints(options)
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center justify-end gap-3 px-4 pb-4" data-choice>
-      <div className="flex min-h-0 flex-1 items-end justify-center"><UmaBust outfitId={id} label={name} size={200} /></div>
-      <p className="w-full text-[13px] text-ink-soft">Your answer · +50 for meeting her, and</p>
-      {options.map((option, i) => (
-        <button key={i} type="button" onClick={() => onPick(i)} data-option={i} data-gain={points[i]}
-          className="flex min-h-12 w-full items-center gap-3 rounded-md border border-hairline bg-panel px-4 py-2 text-left shadow-1">
-          <span className="min-w-0 flex-1 text-[15px]">{option.text}</span>
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[13px] font-bold ${points[i] === 30 ? 'bg-[#c2385e]/15 text-[#c2385e]' : 'bg-sunken text-ink-soft'}`}>♥ +{points[i]}</span>
-        </button>
-      ))}
+    <div className={SCENE_ROW} data-choice>
+      <div className={SCENE_BUST}><UmaBust outfitId={id} label={name} size={200} /></div>
+      <div className="flex max-h-full min-w-0 flex-1 flex-col justify-end gap-3 overflow-y-auto">
+        <p className="w-full text-[13px] text-ink-soft">Your answer · +50 for meeting her, and</p>
+        {options.map((option, i) => (
+          <button key={i} type="button" onClick={() => onPick(i)} data-option={i} data-gain={points[i]}
+            className="flex min-h-12 w-full shrink-0 items-center gap-3 rounded-md border border-hairline bg-panel px-4 py-2 text-left shadow-1">
+            <span className="min-w-0 flex-1 text-[15px]">{option.text}</span>
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[13px] font-bold ${points[i] === 30 ? 'bg-[#c2385e]/15 text-[#c2385e]' : 'bg-sunken text-ink-soft'}`}>♥ +{points[i]}</span>
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

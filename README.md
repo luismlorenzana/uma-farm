@@ -4,7 +4,8 @@ A personal farm game inspired by *Umamusume: Pretty Derby*, played on the owner'
 https://uma-farm.web.app. It's never public: only the owner's Google account can sign in. Days are turns: you plant,
 gather, process and ship with a roster of Umas, end the day, and read the morning. Next, per the roadmap: every
 character lives in town, you choose who to meet, and her story, written by the owner over time, unlocks as story packs
-arrive. The farm is moving onto an HD-2D stage (an opt-in preview today).
+arrive. It's played with the phone held sideways, and the rework in [the roadmap](docs/roadmap.md) is turning it into a
+day of actions on a tile farm.
 
 ## Where things are
 
@@ -24,7 +25,7 @@ arrive. The farm is moving onto an HD-2D stage (an opt-in preview today).
 
 | Path | What |
 |---|---|
-| `apps/web` | `@farm/web`: React 19, Vite, Zustand, Dexie and uma-kit, an installable web app; the HD-2D stage loads on demand |
+| `apps/web` | `@farm/web`: React 19, Vite, Zustand, Dexie and uma-kit, an installable web app, laid out in landscape |
 | `apps/api` | `@farm/api`: NestJS on Cloud Run behind uma-server's owner guard: the save, the story pack, push and the parcel ping |
 | `packages/domain` | `@farm/domain`: the game's rules, pure, no I/O |
 | `scripts/` | The size budget, the private-content guard, the hosting-site check, the story pack's release and publish, the docs' pages |
@@ -34,7 +35,7 @@ arrive. The farm is moving onto an HD-2D stage (an opt-in preview today).
 
 ## The other Uma repos
 
-- **uma-platform:** the shared master data and packages (uma-data, uma-kit, uma-work, uma-server, uma-art, uma-stage).
-- **uma-quest:** the HD-2D travelers RPG; it shares the stage and the story's way of working.
+- **uma-platform:** the shared master data and packages (uma-data, uma-kit, uma-work, uma-server, uma-art).
+- **uma-quest:** the HD-2D travelers RPG; it shares the story's way of working.
 - **uma-rpg:** the party RPG, frozen. Its GCP project hosts the farm's cloud.
 - **uma-racer:** the racing game.

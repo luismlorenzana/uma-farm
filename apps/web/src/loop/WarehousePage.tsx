@@ -45,8 +45,8 @@ function Warehouse({ save, picking }: { save: FarmSave; picking: boolean }) {
         about={<><p>Everything the farm holds, by stars. A good sells for its price × its stars: ★1 ×1 up to ★5 ×2.</p><p>The season’s demand adds 20%. Tap a good to ship it to the bin, which pays tonight.</p></>}
         words={{ back: picking ? 'Back to the bin' : 'Back to the farm', about: 'About the Warehouse' }}
       />
-      <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="space-y-3 px-4 pt-3 pb-24">
+      <main className="@container min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="space-y-3 px-4 pt-3 pb-6">
           <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none]" role="group" aria-label="Families">
             {tabs.map((t) => (
               <Chip key={t.shelf} selected={t.shelf === tab.shelf} className="min-h-11" onClick={() => setShelf(t.shelf)} data-shelf={t.shelf}>
@@ -56,7 +56,7 @@ function Warehouse({ save, picking }: { save: FarmSave; picking: boolean }) {
             ))}
           </div>
           {tab.rows.length === 0 && <p className="rounded-md border border-hairline bg-panel p-4 text-center text-[14px] text-ink-soft">Nothing here yet.</p>}
-          <ul className="space-y-1.5" data-shelf-rows={tab.shelf}>
+          <ul className="grid gap-1.5 @xl:grid-cols-2" data-shelf-rows={tab.shelf}>
             {tab.rows.map((row) => (
               <li key={row.id}>
                 <GoodLine row={row} picking={picking} onOpen={() => setOpen(row.id)} onShip={ship} onShipAll={shipAll} />
@@ -67,8 +67,7 @@ function Warehouse({ save, picking }: { save: FarmSave; picking: boolean }) {
         </div>
       </main>
       {picking && (
-        // The bottom bar's raised End the day disc stands above the bar, so the pick bar keeps clear of it.
-        <div className="border-t border-hairline bg-panel/95 px-4 pt-2 pb-7" data-pick-bar>
+        <div className="border-t border-hairline bg-panel/95 px-4 py-2" data-pick-bar>
           <div className="flex items-center gap-3">
             <p className="min-w-0 flex-1 text-[14px]" data-estimate={tonight}>
               {tonight > 0 ? <>In the bin: <b>about {goldWords(tonight)}</b> tonight</> : 'Tap a star to ship one.'}
