@@ -156,10 +156,10 @@ export function characterView(id, onReview) {
 }
 
 // ── Her scenes and her pair talks, to read ─────────────────────────────────────
-const RUNG_ORDER = ['arrival', ...Array.from({ length: 10 }, (_, i) => `f${i + 1}`), 'confession', ...Array.from({ length: 10 }, (_, i) => `r${i + 1}`), 'proposal', 'wedding', 's1', 's3', 's5']
-const EVENT_LABEL = { arrival: 'Arrival', confession: 'Confession', proposal: 'Proposal', wedding: 'Wedding', 'dinner-in-town': 'Dinner in town', 'a-night-in': 'A night in', 'new-year': 'The year’s first day', 'derby-night': 'The Fishing Derby’s night' }
+const RUNG_ORDER = ['arrival', ...Array.from({ length: 10 }, (_, i) => `f${i + 1}`), 'confession', ...Array.from({ length: 10 }, (_, i) => `r${i + 1}`), 'proposal', 'wedding', 'wedding-night', 's1', 's3', 's5']
+const EVENT_LABEL = { arrival: 'Arrival', confession: 'Confession', proposal: 'Proposal', wedding: 'Wedding', 'wedding-night': 'The wedding night', 'dinner-in-town': 'Dinner in town', 'a-night-in': 'A night in', 'new-year': 'The year’s first day', 'flower-show': 'The Flower Show', 'derby-night': 'The Fishing Derby’s night' }
 const eventLabel = (id) => EVENT_LABEL[id] ?? (/^f\d+$/.test(id) ? `♥ ${id.slice(1)}` : /^r\d+$/.test(id) ? `❤ ${id.slice(1)}` : /^s\d+$/.test(id) ? `✦ ${id.slice(1)}` : id)
-const OUTFIT_LABEL = { season: 'the day’s season', dinner: 'dinner dress', wedding: 'wedding dress' }
+const OUTFIT_LABEL = { season: 'the day’s season', dinner: 'dinner dress', wedding: 'wedding dress', work: 'work clothes', 'garden-party': 'garden party dress', 'wedding-night': 'wedding night' }
 
 /** A scene's steps as text: narration, the farmer's thoughts, lines with their speaker and emote, choices and plays. */
 function stepsText(steps) {
@@ -198,7 +198,7 @@ function pairsPanel(id) {
       const other = p.data.a === id ? p.data.b : p.data.a
       const levels = [...(p.data.levels ?? [])].sort((a, b) => a.hearts - b.hearts)
       return h('details', {}, h('summary', {}, h('b', { text: umaName(other) }), h('span', { class: 'muted small', text: ` · ${levels.length} levels · ${p.file.split('/').pop()}` })),
-        levels.map((lv) => h('div', { class: 'stack' }, h('h4', { text: `Bond ♥ ${lv.hearts}${lv.place ? ` · ${lv.place}` : ''}` }), stepsText(lv.steps))))
+        levels.map((lv) => h('div', { class: 'stack' }, h('h4', { text: `Bond ♥ ${lv.hearts}${lv.place ? ` · ${lv.place}` : ''}` }, lv.outfit ? h('span', { class: 'chip', text: OUTFIT_LABEL[lv.outfit] ?? lv.outfit }) : null), stepsText(lv.steps))))
     }))
 }
 
