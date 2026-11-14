@@ -2980,7 +2980,8 @@ A setup is never an hour, the weather, a season or a festival; her chapter's gat
 
 - **A setup** is her bible's beat's setup for the rung; an Uma without a bible has none. A working setup at a place not
   built yet shows "Opens when the Mine is built" (her place) ahead of a short bar. A pack's beat that still names a
-  chapter setup is noted and read as her bar alone: the farm has no chapters.
+  chapter setup is noted and read as her bar alone: the farm has no global chapters, and a gate goes on one of [her
+  chapters](#her-chapters).
 - **Her bond setup** reads bond hearts (50, 150, 300, 500 and 750 points). **The proposal's ring** is any ring in the
   Warehouse.
 - **Ready is read live,** never stored, since it changes by the day: her Hearts row, her profile, the morning's Ready lines

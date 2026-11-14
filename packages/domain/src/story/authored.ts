@@ -876,7 +876,7 @@ function readBeatTrigger(v: unknown, ctx: StoryContext, isGood: (id: string) => 
       if (v.level > 5) f.notes.push(`${at}: bonds reach level 5, so level ${v.level} never holds`)
       return { kind: 'bond', with: v.with, level: v.level }
     // The farm's global chapters are gone: her bar alone readies the rung.
-    case 'chapter': f.notes.push(`${at}: the farm has no chapters, so her bar alone readies it`); return { kind: 'hearts' }
+    case 'chapter': f.notes.push(`${at}: the farm has no global chapters (a gate goes on one of hers), so her bar alone readies it`); return { kind: 'hearts' }
     default: return undefined
   }
 }
