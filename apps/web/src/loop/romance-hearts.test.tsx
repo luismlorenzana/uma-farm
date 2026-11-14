@@ -76,7 +76,7 @@ const click = async (el: HTMLElement | null | undefined) => {
   await act(async () => el!.click())
   await settle()
 }
-const tabs = () => $$('nav[data-farm-rail] a').map((a) => [a.textContent, a.getAttribute('href')])
+const tabs = () => $$('nav[aria-label="Pages"] a').map((a) => [a.textContent, a.getAttribute('href')])
 
 beforeEach(async () => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
@@ -100,7 +100,7 @@ describe('the bar and the routes', () => {
   it('reads Farm · Town · People · Book · Diary down the rail, People lit on the Hearts page', async () => {
     await render(<FarmRail page="people" />, '/hearts')
     expect(tabs()).toEqual([['Farm', '/'], ['Town', '/town'], ['People', '/hearts'], ['Book', '/book'], ['Diary', '/diary']])
-    const people = $('nav[data-farm-rail] a[href="/hearts"]')!
+    const people = $('nav[aria-label="Pages"] a[href="/hearts"]')!
     expect(people.getAttribute('aria-current')).toBe('page')
     expect(people.getAttribute('aria-label')).toBe('People')
   })

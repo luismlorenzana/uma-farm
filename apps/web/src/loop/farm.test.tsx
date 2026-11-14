@@ -4,6 +4,7 @@
 // stand-in, master data the album fixture; the server is a stub. Invented data only.
 import 'fake-indexeddb/auto'
 import { bareTile, isOvergrown, newSave, STAND_IN_FILES, storyPackFrom, type SaveV4, type StoryPack, type Tile } from '@farm/domain'
+import { KitStage } from '@luismlorenzana/uma-kit/ui'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -106,7 +107,7 @@ describe('a tile', () => {
     const start = farm()
     const rough = start.fields.tiles.findIndex((t) => isOvergrown(t.ground))
     useGame.setState({ uid: 'u1', status: 'ready', save: start })
-    await render(<><FarmBar /><FarmRoute /></>, `/?tile=${rough}`)
+    await render(<><KitStage layout="landscape"><FarmBar /></KitStage><FarmRoute /></>, `/?tile=${rough}`)
     expect($(`[data-tile-sheet="${rough}"]`)).not.toBeNull()
     expect($('[data-left]')?.textContent).toBe('10 actions left of 10')
     await click('[data-action="clear"]')

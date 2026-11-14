@@ -101,6 +101,8 @@ describe('the update prompt', () => {
     newBuildWaiting(vi.fn(async () => undefined))
     expect(text()).toContain('Update ready')
     expect(restart()).toBeDefined()
+    // Clear of the side safe areas too, where a phone held sideways has its notch and home bar.
+    expect(document.querySelector('[data-clear-sides]')).not.toBeNull()
   })
 
   it('says the save is newer when the boot stops at one, offers the new build, and Restart takes it', async () => {

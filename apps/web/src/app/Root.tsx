@@ -3,7 +3,8 @@
 // button starts the new farm. Nothing waits on the network once a device save exists.
 //
 // The whole app sits on uma-kit's landscape stage (`KitStage`, not turned): the frame is a row, and every sheet is a
-// panel from the right edge. Held upright, the "Turn your phone sideways" card covers it (`Upright.tsx`).
+// panel from the right edge. The update prompt keeps clear of the side safe areas too (`clearSides`), where the notch
+// and the home bar sit. Held upright, the "Turn your phone sideways" card covers it (`Upright.tsx`).
 import { useAuth } from '@luismlorenzana/uma-kit/auth'
 import { BootGates, UpdateNotice } from '@luismlorenzana/uma-kit/places'
 import { KitStage } from '@luismlorenzana/uma-kit/ui'
@@ -49,7 +50,7 @@ export function Root() {
     <>
       <div className="fixed inset-0" data-landscape>
         <KitStage layout="landscape">
-          <UpdateNotice />
+          <UpdateNotice clearSides />
           <BootGates auth={auth} boot={bootFor} firstLaunch={(done) => <StartOverCard onDone={done} />}
             words={{ name: 'Uma Farm', tagline: 'Gather, process, make.', ...(newer ? { bootFailed: NEWER_SAVE_WORDS } : {}) }}>
             <Outlet />

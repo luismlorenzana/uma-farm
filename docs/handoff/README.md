@@ -53,8 +53,9 @@ The table above is the queue. A packet is deleted when it ships, and git keeps t
   `@luismlorenzana/uma-stage`, which the farm no longer uses (its portrait preview retired with landscape). Shared
   changes go there as requests
   ([change protocol](https://github.com/luismlorenzana/uma-platform/blob/main/docs/change-protocol.md)).
-  - **uma-kit's landscape pieces:** the farm asked for its layout on a landscape stage (a thin top bar, a left rail, the
-    Account page and the place map). Until they ship, the farm draws its own bar and rail from the kit's pieces.
+  - **uma-kit's landscape pieces** shipped in uma-kit 0.20.0, and the farm draws its frame with them: the left rail, the
+    thin top bar, the wide side panels, Account's two columns and the update prompt clear of the sides. The place map
+    that runs across (`HubMap flow="across"`) is there for a map that needs it; the farm's own tile map doesn't.
 - **The art split:** ChatGPT draws character art (Uma sprites, poses, busts, portraits). Claude draws everything else in
   code (items, UI marks, buildings, the HD-2D kits) in a uma-platform session.
 - **uma-quest** shares the story's way of working (the Uma Ranker's cast, tags and ties), read as local files on the

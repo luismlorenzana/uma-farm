@@ -3,6 +3,7 @@
 // and the shop, in town, buying with gold. Master data and the server are stubs; the story pack is the stand-in.
 import 'fake-indexeddb/auto'
 import { farmDay, newSave, shopLines, type SaveV4, type ShopLine } from '@farm/domain'
+import { KitStage } from '@luismlorenzana/uma-kit/ui'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
@@ -75,7 +76,7 @@ afterEach(async () => {
 describe('gold in the bar', () => {
   it('shows the farm\'s gold beside the date, and opens the bin', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: stocked() })
-    await render(<FarmBar />)
+    await render(<KitStage layout="landscape"><FarmBar /></KitStage>)
     const chip = host.querySelector('a[aria-label="Gold: 500g. The bin"]')
     expect(chip?.getAttribute('href')).toBe('/?sheet=bin')
     const labels = [...host.querySelectorAll('header a')].map((a) => a.getAttribute('aria-label') ?? '')
@@ -125,7 +126,7 @@ describe('shipping', () => {
     expect(await endTheDay(SUMMER_3)).toBe(true)
     expect(save()).toMatchObject({ gold: 665, bin: {}, diary: { shipped: { salmon: 1 } }, farm: { counts: { 'gold-shipped': 165 } } })
     expect(save().summary!.bin).toEqual([{ kind: 'sold', id: 'salmon', stars: 2, count: 1, gold: 165, demand: true }])
-    await render(<FarmBar />)
+    await render(<KitStage layout="landscape"><FarmBar /></KitStage>)
     expect(host.querySelector('a[aria-label="Gold: 665g. The bin"]')).not.toBeNull()
   })
 

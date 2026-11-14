@@ -1,6 +1,6 @@
-// The shell (uma-kit's AppFrame on the landscape stage, a row): the rail down the left, then the page under the thin bar,
-// and the menu's panel (`?sheet=menu`). The page keeps clear of the right and bottom safe areas (the notch's side and the
-// home indicator). End the day (`?sheet=end`) and calendar (`?sheet=calendar`); the bin
+// The shell (uma-kit's AppFrame on the landscape stage, `landscape="rail-and-bar"`): the rail down the left, then the page
+// under the thin bar, and the menu's panel (`?sheet=menu`). The rail clears the left safe area; the page keeps clear of
+// the right and bottom ones (the notch's side and the home indicator). End the day (`?sheet=end`) and calendar (`?sheet=calendar`); the bin
 // (`?sheet=bin`) and shop (`?sheet=shop`); the Farm Rank (`?sheet=rank`). Each is loaded when one opens. While the
 // farmer is unnamed, the name sheet covers everything, the game's first screen; then a scene due plays over everything
 // (the opening, the ring bench's, then the meeting scenes: right after a talk met her, in town or at the Gate). Over any
@@ -54,7 +54,9 @@ export function Shell() {
   const free = farm && !naming && !scene
   return (
     <AppFrame
-      top={<FarmRail page={railPageOf(location.pathname)} />}
+      landscape="rail-and-bar"
+      top={<FarmBar />}
+      bottom={<FarmRail page={railPageOf(location.pathname)} />}
       overlays={
         <>
           <MenuSheet open={sheet === 'menu'} onClose={() => leave(withParam(location, 'sheet', null))} />
@@ -74,7 +76,6 @@ export function Shell() {
       }
     >
       <div className="flex h-full flex-col" data-farm-frame>
-        <FarmBar />
         <SyncWarning />
         <div className="pr-safe pb-safe relative min-h-0 flex-1">
           <div className="relative h-full" data-farm-page>

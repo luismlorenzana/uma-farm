@@ -473,7 +473,8 @@ app asks for landscape.
   moves or reloads, and turning the phone back shows the game as it was.
 - **Sheets are side panels** that slide in from the right edge, over the page, the page dimmed behind: the Menu, the
   morning, the calendar, the bin and the shop, the Farm Rank, her profile, her Memories, the pickers, a talk in town and
-  every other sheet. A swipe right, a tap on the dimmed page or the close button closes one.
+  every other sheet. A swipe right, a tap on the dimmed page or the close button closes one. Her profile, the morning
+  and the homestead are wider panels, for all they hold.
 - **Scenes are full screen:** the opening, meeting her, the event, pair and household players, the evening's plays and
   cards, a level reached overnight. Each is laid out sideways: her bust on the left, the lines and the choices on the
   right; a play's name and legend on its left, the play on its right.
@@ -482,16 +483,20 @@ app asks for landscape.
   five or six across.
 - **The farm map's panels** (a tile's, the woods', the pond's, a station's) sit at the right without dimming the map, so
   the next tile is one tap away.
-- **Safe areas:** the rail keeps clear of the notch's side, and the page of the other side and the home indicator.
+- **Safe areas:** the rail keeps clear of the notch's side, and the page of the other side and the home indicator; the
+  update prompt keeps clear of both sides.
 
 #### The bar
 
 A thin bar along the top of the page, always there. From the left:
-- **The date chip**, the season's mark and the date ("Spring 3"), opens the calendar.
-- **Actions left**, a stopwatch and "7/10" ("Actions left: 7 of 10"), greyed at 0. It opens nothing.
+- **The date chip**, the season's mark, the day and the season ("3 Spring"; its spoken name "Calendar: Spring 3, year
+  1 …"), opens the calendar.
 - **The gold chip**, the gold coin and your gold ("Gold: 1,240g. The bin"), opens the shipping bin.
 - **The sync chip** shows only while offline ("Offline") or paused ("Sync paused"), and opens Account.
-- **End the day**, at the right end: see [End the day](#end-the-day).
+
+At its right end:
+- **Actions left**, a stopwatch and "7/10" ("Actions left: 7 of 10"), greyed at 0. It opens nothing.
+- **End the day:** see [End the day](#end-the-day).
 - **Menu:** every place.
 
 #### The rail
