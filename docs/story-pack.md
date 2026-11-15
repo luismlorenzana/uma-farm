@@ -46,7 +46,9 @@ only the pack's files ([the files](#the-files)), and anything else there is your
 The Farm Story Sandbox is the story's reading tool, served on the machine where the story is written (`pnpm stories`,
 http://127.0.0.1:4321). It reads the pack with the game's own reader:
 
-- **each character:** what's written and what still plays the default story, her chapters, her route and her bible;
+- **each character:** her story piece by piece, hers, the default and missing, as `pnpm story:status` shows it
+  ([a complete Uma](#a-complete-uma)); what's written and what still plays the default story, her chapters, her route
+  and her bible;
 - **the World page:** what the game will use of `world.json`, beside the world bible;
 - **the pack's errors and notes** ([errors and notes](#errors-and-notes));
 - **Review panels:** the owner reads there, and each panel writes the owner's verdict to `content/story/reviews.json`.
@@ -59,7 +61,7 @@ ever adds to what the game already plays. The owner can ask for a ship at any ti
 
 | Step | What happens |
 |---|---|
-| 1. Check | Reads `content/story/` with the game's own reader and prints what it skips (the errors) and the notes. Nothing blocks |
+| 1. Check | Reads `content/story/` with the game's own reader and prints what it skips (the errors) and the notes, then each Uma with a route as `pnpm story:status` shows her ([a complete Uma](#a-complete-uma)). Nothing blocks |
 | 2. Release | Builds the release into the ignored `content/story-release/`: the pack as the game reads it, every broken part already skipped, every other field kept |
 | 3. Publish | Numbers the release (one more than the bucket's current one, or 1), dates it and gives it its note, then uploads the new hash-named files first and `story.json` last to the farm's private bucket |
 | 4. Back up | `pnpm story:push farm` in the sibling `../uma-platform` checkout, when it's there; skipped with a note when it isn't |
@@ -90,6 +92,77 @@ every gcloud call is scoped by the environment.
 | `STORY_PLATFORM_DIR` | `../uma-platform` | The uma-platform checkout for the backup |
 
 uma-platform's `story:push` uses the `default` configuration whatever `STORY_GCLOUD_CONFIG` says.
+
+### A complete Uma
+
+The menu stays a menu: a partial Uma plays whole, and nothing waits on the story. But the story can also lay an Uma out
+**whole**, every piece the game reads for her, so it sees all of her at once, rewrites what it wants and ships her
+complete. `pnpm story:scaffold` writes the pieces she's missing from the default story, marked as the default's;
+`pnpm story:status` says, for each Uma, which pieces are hers, which are still the default and which are missing.
+
+**The checklist:** 96 pieces, in the pack's own shapes (the rest of this page):
+
+| Part | Its pieces |
+|---|---|
+| Her cast entry, `cast.json` | `home`, `job`, `routine`, `chapters` ([her life in town](#her-life-in-town), [her chapters](#her-chapters)) |
+| Her bible, `umas/<id>.json` | `favouriteLine`, `gifts`, `chats`, `townLines`, `mornings`, `meals`, `keepsake`, `petName`, `wedding`, `wishes`, and a beat for each of the 27 rungs in her `route` |
+| Her route, `routes/<id>.json` | 55 events: her meeting (`arrival`), `f1`–`f10`, `confession`, `r1`–`r10`, `proposal`, `wedding`; `invited-to-work`, `wedding-night`, `moving-in`, `s1`–`s5`; each evening's scene (the six `hangout-<kind>`, the eleven `date-<kind>`, `dinner-in-town`, `a-night-in`); and four occasions, `new-year`, `flower-show`, `derby-night`, `birthday` |
+
+Her gift reactions are the default story's for every Uma (the menu has no field for them): her `gifts` are her tastes.
+
+**The marker, `"draft": "default"`:** a piece that still holds the default story's words.
+
+- **Where it sits:** on the piece itself when it's an object: an event, a beat, a chapter, her `job`, each `routine`
+  stop, her `chats`, `gifts`, `meals`, `keepsake` and `wedding`. A piece that's a plain value or a list of lines (her
+  `home`; her bible's `favouriteLine`, `townLines`, `mornings`, `petName`, `wishes`) can't hold a key, so its marker
+  sits on its file's own object: `"draft": { "mornings": "default" }` on her bible, `"draft": { "home": "default" }` on
+  her cast entry. Her routine and her chapters are the default while every stop or chapter is marked.
+- **It changes nothing in play.** The game reads a marked piece as written, and a marked pack plays exactly as the same
+  pack unmarked; a release carries the marker as it is.
+- **The check counts it:** a marked piece is "default, not hers yet". **Rewrite a piece, then remove its marker:** a
+  marked piece whose words aren't the default's is a note, "rewritten? remove the marker". A `draft` with any other
+  value is a note too, and the piece counts as hers.
+
+```json
+{ "id": "f3", "draft": "default", "steps": [{ "narrate": "You share a snack on the fence rail." }] }
+```
+
+```json
+{ "characterId": "9000001", "mornings": ["“I’ll put the kettle on. Don’t move.”"], "draft": { "mornings": "default" } }
+```
+
+**The routine,** on the machine where the story is written:
+
+| Step | Command | What it does |
+|---|---|---|
+| 1. Scaffold | `pnpm story:scaffold --tier 1 --dry-run`, then without `--dry-run` | Lists, then writes, every missing piece for the Ranker's Tier 1 (or `--ids <id,…>`), marked. Only what's missing: a piece that's there, hers or marked, is never touched, and a second run writes nothing. Every file it changes is copied first to the ignored `content/story-backups/<time>/` |
+| 2. Rewrite | Your editor | Write her in her own words, piece by piece, removing each marker as you go. Any order, any pace |
+| 3. Status | `pnpm story:status --tier 1` (or `--ids`, `--all`; with none, every Uma with a route) | Per Uma, a table of hers · default · missing by part, what's left of her, and the marker's notes. The sandbox shows the same on each character |
+| 4. Ship | `pnpm story:ship --note "…"` | As always ([shipping it](#shipping-it)): its check prints the same status for each Uma with a route |
+
+**What the scaffold writes,** from the default story rendered for her:
+
+- **Her words:** her name from master data (a sister's from her cast entry), her favourite good and her line's work as
+  the game fills them; `{farmer}` stays the placeholder. Her temperament (her talks' and her mornings' lines) is her
+  bible's own `temperament` when it gives one, else her outfit's from master data, else steady, as the game plays.
+- **Her chats:** the default story's friend, sweetheart and married talks for her temperament, as her `friend`,
+  `partner` and `spouse` sets. The sets are coarser than the default's six stages, so from Friendship 1 to 2, as a
+  farmhand and while engaged she says her friend and partner lines, where the default had lines of their own.
+- **Her starter life in town,** at her favourite spot (her `spot`; else one of the six by her order): her `home` and
+  her part-time `job` there, and her `routine` there on four days of each season (every third day, the first on day 1,
+  2 or 3 by her order on the board, so Tier 1 isn't all off on the same days). A home holds every day nothing else does,
+  so she's in town every day: at work at her spot, and on her four days simply there. Give her a home, a job and days
+  of her own as the story finds them.
+- **Everything else** is the default as the game already plays it: her events and their pays, her chapters, her tastes,
+  her mornings and meals, her town lines, her keepsake, her pet name (your name, `{farmer}`), her wedding's places, no
+  wishes, and a beat with only its id for each rung.
+
+| Variable | Default | What |
+|---|---|---|
+| `STORY_DIR` | `content/story` | The pack the scaffold writes and the status reads (`--from <dir>` too) |
+| `STORY_RANKER_PLAN` | `../uma-platform/content/authoring/ranker/plan.json` | The Ranker's plan: `--tier n` is its `umas` board's Tn row, in its order. Without it, name the Umas with `--ids` |
+| `STORY_MASTER_DIR` | `../uma-platform/content/release` | Master data's local release: her name and her outfit's stats |
+| `STORY_PLATFORM_DIR` | `../uma-platform` | The uma-platform checkout the two above default into |
 
 ### The World Book, and `world.json`
 
@@ -762,3 +835,4 @@ title in the Diary's list, its lines (`{farmer}` filled), and what unlocks it, f
 | The invitation to work (`invited-to-work`) | Yes | Yes, today: as you invite her to work |
 | Married life 2 and 4 (`s2`, `s4`) | Yes | Yes, today: from the morning's line, the morning after the level comes at night |
 | Her other occasions | Yes | When the festivals land. The default story writes each until then |
+| The marker, `"draft": "default"` ([a complete Uma](#a-complete-uma)) | Yes, and kept | Never: a marked pack plays exactly as the same pack unmarked |

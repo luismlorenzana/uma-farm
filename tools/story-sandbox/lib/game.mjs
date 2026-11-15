@@ -16,7 +16,7 @@ const isScene = (v) => v && typeof v === 'object' && typeof v.id === 'string' &&
 /** The files the sandbox reads, relative to the domain's `src/`. */
 const FIXED = {
   cast: 'story/cast.ts', places: 'farm/places.ts', talents: 'farm/talents.ts', ranks: 'farm/ranks.ts', lines: 'items/lines.ts', authored: 'story/authored.ts', pack: 'story/pack.ts',
-  placeholders: 'story/placeholders.ts',
+  placeholders: 'story/placeholders.ts', complete: 'story/complete.ts',
 }
 
 async function version(src, files) {
@@ -34,7 +34,7 @@ export async function loadGame(src) {
     const files = [...Object.values(FIXED), ...chapters.map((n) => `story/${n}`)]
     const v = await version(src, files)
     const load = (file) => import(`${pathToFileURL(join(src, file)).href}?v=${v}`)
-    const [cast, places, talents, ranks, lines, authored, pack, placeholders] = await Promise.all(Object.values(FIXED).map(load))
+    const [cast, places, talents, ranks, lines, authored, pack, placeholders, complete] = await Promise.all(Object.values(FIXED).map(load))
     const scenes = {}
     let hello = null
     const fileOf = {}
@@ -74,6 +74,8 @@ export async function loadGame(src) {
         // The world as the game plays it: the pack's world.json, else the game's own words.
         worldWrittenOf: placeholders.worldWrittenOf, worldNamesOf: placeholders.worldNamesOf, historyOf: placeholders.historyOf, festivalsOf: placeholders.festivalsOf,
         placeWordsOf: placeholders.placeWordsOf, seasonLineOf: placeholders.seasonLineOf, townNotesOf: placeholders.townNotesOf, storyDaysOf: placeholders.storyDaysOf,
+        // A complete Uma: each piece hers, the default ("draft": "default") or missing, and the marker's notes.
+        umaStatus: complete.umaStatus, leftWords: complete.leftWords, draftNotes: complete.draftNotes,
       },
     }
   } catch (error) {

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // `pnpm story:ship`: the story's routine, one command on the machine where it's written (macOS or Windows; Node, never
 // bash). In order:
-//   1. check: reads the pack with the game's own reader and prints what it skips and its notes (nothing blocks);
+//   1. check: reads the pack with the game's own reader and prints what it skips and its notes (nothing blocks), then
+//      each Uma with a route as `story:status` shows her (hers, the default and missing, by part);
 //   2. release: builds it as `story:release` does, into the ignored content/story-release/;
 //   3. publish: numbers the index (one more than the bucket's `story.json`, or 1), dates it and gives it its note, then
 //      uploads the hash-named files first and `story.json` last (`story:publish`'s rule), so a phone never reads an index
@@ -30,6 +31,8 @@ import { fileURLToPath } from 'node:url'
 import {
   buildRelease, groupNotes, OUT, parseStoryIndex, readPack, releaseCheck, ReleaseRefused, shippedIndex, SOURCE, stampRelease, STORY_INDEX, STORY_NOTE_MAX,
 } from './release.mjs'
+import { statusLines, withRoute } from './status.mjs'
+import { herName, masterDir, readMaster } from './umas.mjs'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 /** The sibling uma-platform checkout, where `story:push farm` backs the drafts up. */
@@ -189,6 +192,13 @@ async function shipPack({ from, out, given, dryRun, store, platform, now, gcloud
   const skipped = [...read.errors, ...check.errors]
   log(skipped.length === 0 ? '  Nothing skipped: the game reads every part' : `  Skipped, since the game can't read them (${skipped.length}); the rest is in:\n${skipped.map((e) => `    - ${e}`).join('\n')}`)
   log(check.notes.length === 0 ? '  No notes' : `  Notes (${check.notes.length}), which block nothing:\n${groupNotes(check.notes).map((n) => `    - ${n}`).join('\n')}`)
+  // Each Uma it ships with a route, as `story:status` shows her: hers, the default and missing, by part.
+  const umas = withRoute(check.files)
+  if (umas.length > 0) {
+    const master = await readMaster(masterDir({ ...process.env, STORY_PLATFORM_DIR: platform })).catch(() => null)
+    const names = new Map(master ? umas.flatMap((id) => { const n = herName(master, check.files.cast, id); return n ? [[id, n]] : [] }) : [])
+    log(`  Her story, each Uma with a route (${umas.length}):\n${statusLines(check.files, umas, names).map((l) => (l ? `    ${l}` : '')).join('\n')}`)
+  }
 
   log('\n2. Release')
   const built = await buildRelease({ from, out, builtAt: now().toISOString() })

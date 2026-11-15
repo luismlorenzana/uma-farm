@@ -112,6 +112,7 @@ export function charactersView() {
         h('div', { class: 'cast-text' },
           h('div', { class: 'row' }, h('b', { text: umaName(u.characterId) }), calling(u.calling), D.welcome.has(u.characterId) ? h('span', { class: 'chip', text: 'welcome list' }) : null,
             u.arrives ? h('span', { class: 'muted small', text: arrivalWords(u.arrives) }) : null, reviewDot(`cast/${u.characterId}`),
+            storyChip(u.characterId),
             own?.errors?.length ? h('span', { class: 'warn-text', text: `${own.errors.length} skipped` }) : null,
             own?.notes?.length ? h('span', { class: 'muted small', text: `${own.notes.length} notes` }) : null),
           u.paragraph ? h('p', { class: 'small', text: u.paragraph }) : null,
@@ -139,6 +140,7 @@ export function characterView(id, onReview) {
         entry.paragraph ? h('p', { class: 'logline', text: entry.paragraph }) : null,
         h('div', { class: 'row small' }, prev ? h('a', { href: `#/c/${prev.characterId}`, text: `← ${umaName(prev.characterId)}` }) : null, next ? h('a', { href: `#/c/${next.characterId}`, text: `${umaName(next.characterId)} →` }) : null),
         tagPanel(id),
+        storyPanel(id),
         placeholderPanel(id),
         menuPanel(entry),
         h('div', { class: 'panel' }, h('div', { class: 'row' }, h('h3', { text: 'Her route' }), h('span', { class: 'muted small', text: bible ? `umas/${id}.json` : 'Her bible can name any of these rungs; none is required' }), routeProgress(id)), ladder(id, bible)),
@@ -209,6 +211,36 @@ function pairsPanel(id) {
       return h('details', {}, h('summary', {}, h('b', { text: umaName(other) }), h('span', { class: 'muted small', text: ` · ${levels.length} levels · ${p.file.split('/').pop()}` })),
         levels.map((lv) => h('div', { class: 'stack' }, h('h4', { text: `Bond ♥ ${lv.hearts}${lv.place ? ` · ${lv.place}` : ''}` }, lv.outfit ? h('span', { class: 'chip', text: OUTFIT_LABEL[lv.outfit] ?? lv.outfit }) : null), stepsText(lv.steps))))
     }))
+}
+
+// ── Her story, piece by piece: a complete Uma (`story/complete.ts`) ──────────────
+const PART_LABEL = { cast: 'Her cast entry', bible: 'Her bible', route: 'Her route' }
+const PART_FILE = { cast: () => 'cast.json', bible: (id) => `umas/${id}.json`, route: (id) => `routes/${id}.json` }
+const STATE_LABEL = { hers: 'Hers', default: 'Default', missing: 'Missing' }
+
+/** Her story in one chip: all hers, complete (nothing missing), or how many pieces are the default and missing. */
+function storyChip(id) {
+  const st = D.story?.status?.[id]
+  if (!st) return null
+  if (st.allHers) return h('span', { class: 'chip dot', text: 'All hers' })
+  const sum = (key) => Object.values(st.parts).reduce((n, p) => n + p[key], 0)
+  return h('span', { class: `chip ${st.complete ? '' : 'placeholder'}`, title: 'Her pieces: hers · default · missing', text: st.complete ? `Complete · ${sum('default')} default` : `${sum('missing')} missing · ${sum('default')} default` })
+}
+
+/** Her story, piece by piece, as `pnpm story:status` shows it: each part's pieces hers, the default ("draft": "default")
+ * or missing (the default story plays it), and what's left. */
+function storyPanel(id) {
+  const st = D.story?.status?.[id]
+  if (!st) return null
+  const parts = Object.entries(st.parts)
+  return h('div', { class: 'panel', 'data-status': id },
+    h('div', { class: 'row' }, h('h3', { text: 'Her story' }), storyChip(id)),
+    h('p', { class: 'muted small', text: 'Every piece the game reads of her: hers, the default (marked "draft": "default": rewrite it, then remove the marker), or missing (the default story plays it; pnpm story:scaffold lays it out). The same as pnpm story:status.' }),
+    h('table', { class: 'written' }, h('thead', {}, h('tr', {}, h('th', { text: '' }), ...['hers', 'default', 'missing'].map((k) => h('th', { text: STATE_LABEL[k] })), h('th', { text: 'File' }))),
+      h('tbody', {}, parts.map(([part, c]) => h('tr', { class: c.missing ? 'is-placeholder' : 'is-written' },
+        h('th', { text: PART_LABEL[part] ?? part }), h('td', { text: `${c.hers}` }), h('td', { text: `${c.default}` }), h('td', { text: `${c.missing}` }),
+        h('td', { class: 'small muted', text: PART_FILE[part]?.(id) ?? '' }))))),
+    st.left.length ? h('div', { class: 'stack small' }, h('b', { text: 'What’s left' }), st.left.map((line) => h('p', { text: line }))) : h('p', { class: 'small', text: 'Every piece is hers.' }))
 }
 
 /** Her parts as the game plays them: each written by the pack, or a placeholder (what plays instead), marked. */
