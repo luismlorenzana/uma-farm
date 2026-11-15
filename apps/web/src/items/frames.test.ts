@@ -1,7 +1,8 @@
 // Every farm item's icon sits where uma-art's published index puts it (copied from uma-rpg's frames.test.ts at 30a322a,
 // cut to the goods and seeds).
+import dishes from '@luismlorenzana/uma-art/dishes/atlas.json'
 import items from '@luismlorenzana/uma-art/items/atlas.json'
-import { GOODS } from '@farm/domain'
+import { GOODS, RECIPES } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { iconFrame, SHEET_SIZE } from './frames'
 
@@ -20,5 +21,15 @@ describe('icon frames', () => {
     expect(iconFrame('nothing-here')).toBeNull()
     expect(['egg', 'milk', 'duck-egg', 'goat-milk'].map((id) => iconFrame(id))).toEqual([0, 32, 64, 96].map((x) => ({ sheet: 'items', x, y: 1216 })))
     expect(Object.keys(items.frames)).toHaveLength(366)
+  })
+
+  it('finds the 80 dishes on the dishes atlas', () => {
+    for (const { dish } of RECIPES) {
+      const frame = dishes.frames[dish as keyof typeof dishes.frames] as { x: number; y: number } | undefined
+      expect(iconFrame(dish), dish).toEqual({ sheet: 'dishes', x: frame!.x, y: frame!.y })
+    }
+    expect(dishes.width).toBe(SHEET_SIZE.dishes.w)
+    expect(dishes.height).toBe(SHEET_SIZE.dishes.h)
+    expect(iconFrame('dish-wood-1')).toBeNull()
   })
 })

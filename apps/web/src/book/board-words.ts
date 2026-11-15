@@ -55,11 +55,12 @@ export const runsOn = (task: FarmTask): boolean => !isTileTask(task) && task.kin
 /** Where the farm cooks until the Kitchen stands. */
 export const KITCHEN = 'the farmhouse kitchen'
 
-/** Her day in words beside her actions: settled in, married, well fed this morning, half pace. */
+/** Her day in words beside her actions: settled in, married, well fed this morning, half pace, and one of them the
+ * Kitchen's play's when she assists it today. */
 export function dayChips(day: HandDay): string[] {
   return [
     ...(day.settled > 0 ? [`+${day.settled} settled in`] : []), ...(day.spouse > 0 ? [`+${day.spouse} married`] : []),
-    ...(day.fed > 0 ? [`+${day.fed} well fed`] : []), ...(day.half ? ['half pace'] : []),
+    ...(day.fed > 0 ? [`+${day.fed} well fed`] : []), ...(day.half ? ['half pace'] : []), ...(day.kitchen > 0 ? [`${day.kitchen} at the Kitchen`] : []),
   ]
 }
 
@@ -96,11 +97,12 @@ export function doneWords(done: Partial<Record<TaskKind, number>>): string[] {
   })
 }
 
-/** A farmhand's night in words, as the morning and the board's "Tonight" say it: her actions spent, what she did and the
- * goods it brought; with none spent, "No tasks: set her tasks" or "Nothing to do tonight". */
+/** A farmhand's night in words, as the morning and the board's "Tonight" say it: her actions spent, the Kitchen's play
+ * she assisted, what she did and the goods it brought; with none spent, "No tasks: set her tasks" or "Nothing to do
+ * tonight". */
 export function nightWords(line: FarmhandLine): string {
   if (line.spent === 0) return line.tasks === 0 ? 'No tasks: set her tasks' : 'Nothing to do tonight'
-  const did = doneWords(line.done)
+  const did = [...(line.kitchen ? ['assisted at the Kitchen'] : []), ...doneWords(line.done)]
   return [`${line.spent} of ${plural(line.actions, 'action')}`, ...did, ...(line.items > 0 ? [`+${plural(line.items, 'good')}`] : [])].join(' · ')
 }
 

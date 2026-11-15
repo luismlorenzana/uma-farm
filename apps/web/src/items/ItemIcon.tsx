@@ -1,11 +1,13 @@
 // Copied from uma-rpg apps/web/src/items/ItemIcon.tsx at 30a322a, cut to the items sheet: a good's or
-// seed's icon from uma-art's atlas, drawn pixel-crisp at any size. Gear and its kind badges stay behind.
+// seed's icon from uma-art's atlas, drawn pixel-crisp at any size, and a dish's from its dishes atlas. Gear and its kind
+// badges stay behind.
+import dishesUrl from '@luismlorenzana/uma-art/dishes/atlas.png?url'
 import itemsUrl from '@luismlorenzana/uma-art/items/atlas.png?url'
 import { seedOf } from '@farm/domain'
 import { UiMark } from '@luismlorenzana/uma-kit/ui'
 import { ATLAS_CELL, iconFrame, SHEET_SIZE, type Sheet } from './frames'
 
-const URL: Readonly<Record<Sheet, string>> = { items: itemsUrl }
+const URL: Readonly<Record<Sheet, string>> = { items: itemsUrl, dishes: dishesUrl }
 
 /** A seed's icon is its crop's with uma-art's seed-packet badge in its corner (`farm/seed-packet`),
  * an own seed's with a green dot beside it; without the mark, the corner tag: brown from the shop, green

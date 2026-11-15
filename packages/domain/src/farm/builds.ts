@@ -141,16 +141,16 @@ export function payBuild<S extends FarmSave>(save: S, id: FarmPlaceId, options: 
   return { ...paid, items, farm: { ...paid.farm, builds: [...paid.farm.builds, id] } }
 }
 
-/** Night step 8, first: every place paid for yesterday stands (`buildings[id]` 1), and a station's level bought
- * yesterday comes (a station already standing goes up a level, `gathering/stations.ts`), in the order paid; `farm.builds`
- * empties. */
+/** Night step 8, first: every place paid for yesterday stands (`buildings[id]` 1), and a station's or the Kitchen's level
+ * bought yesterday comes (one already standing goes up a level, `gathering/stations.ts`, `kitchen/kitchen.ts`), in the
+ * order paid; `farm.builds` empties. Both top out at level 5. */
 export function raiseBuilds<S extends FarmSave>(save: S): { save: S; built: FarmPlaceId[] } {
   const built = save.farm.builds
   if (built.length === 0) return { save, built: [] }
   const buildings = { ...save.buildings }
   for (const id of built) {
     const was = buildings[id as BuildingId] ?? 0
-    buildings[id as BuildingId] = isStation(id) && was >= 1 ? Math.min(STATION_MAX_LEVEL, was + 1) : Math.max(1, was)
+    buildings[id as BuildingId] = (isStation(id) || id === 'kitchen') && was >= 1 ? Math.min(STATION_MAX_LEVEL, was + 1) : Math.max(1, was)
   }
   return { save: { ...save, buildings, farm: { ...save.farm, builds: [] } }, built: [...built] }
 }

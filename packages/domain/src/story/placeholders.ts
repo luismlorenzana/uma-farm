@@ -37,7 +37,7 @@ import type { Activity } from '../farm/ranks'
 import { activityScore, talentScores, type TalentOutfit, type Temperament } from '../farm/talents'
 import { goodName, isGoodId } from '../goods/ids'
 import type { Taste } from '../romance/chats'
-import { pairKey, type Love } from '../save/v4'
+import { isDishId, pairKey, type Love } from '../save/v4'
 import {
   ARRIVAL, EVENING_SCENES, FAVOURITE_LINES, HOUSEHOLD_SCENES, isSister, RUNGS, sisterOutfit, SPOT_IDS, type Beat, type Calling, type Cast, type ChoiceOption, type DateGame, type DayKind, type Finale, type Gifts,
   type HerChapter, type HerJob, type Household, type HouseholdAt, type HouseholdScene, type Keepsake, type PairConversations, type Play, type RoutineStop, type SpotId, type Step,
@@ -188,6 +188,9 @@ export function favouriteGoodOf(pack: HerPack, id: string): string {
   return line ? DEFAULT_GOODS[line] : DEFAULT_GOOD
 }
 
+/** A gift: a good, or a dish (the Kitchen's). */
+const isGift = (id: string): boolean => isGoodId(id) || isDishId(id)
+
 /** Her tastes: her bible's when it names any (loved, liked or disliked), else the default story's: her favourite good
  * loved, everything else neutral. */
 export function giftsOf(pack: HerPack, id: string): Gifts {
@@ -196,9 +199,10 @@ export function giftsOf(pack: HerPack, id: string): Gifts {
   return { ...own, loved: favouriteGoodOf(pack, id) }
 }
 
-/** What she thinks of a good as a gift: her tastes (`giftsOf`), loved, liked and disliked, any number of each; everything
- * else neutral. A proposed good counts once it exists in `goods/ids.ts`; until then that slot is neutral. */
-export function tasteOf(pack: HerPack, id: string, good: string, isGood: (id: string) => boolean = isGoodId): Taste {
+/** What she thinks of a good (or a dish) as a gift: her tastes (`giftsOf`), loved, liked and disliked, any number of each;
+ * everything else neutral. A proposed good counts once it exists in `goods/ids.ts` (a dish, once the Kitchen makes
+ * them); until then that slot is neutral. */
+export function tasteOf(pack: HerPack, id: string, good: string, isGood: (id: string) => boolean = isGift): Taste {
   const gifts = giftsOf(pack, id)
   if (!isGood(good)) return 'neutral'
   if (gifts.loved === good) return 'loved'

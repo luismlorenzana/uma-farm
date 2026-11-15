@@ -10,7 +10,7 @@
 // (`?life=invited-to-work:<id>`). Her Ready event (Play · 1 on the Next card) plays from anywhere. Loaded on demand with
 // the Hearts tab.
 import {
-  actionsLeft, birthdaysOf, canPraise, chatLineV4, FAMILY_NAMES, FRIEND_FROM, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, isFarmhand, LOVE_POINTS, townLocation,
+  actionsLeft, birthdaysOf, canPraise, chatLineV4, FAMILY_NAMES, FRIEND_FROM, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, isDishId, isFarmhand, LOVE_POINTS, townLocation,
   whereYouMeet, workBlock, type SaveV4, type StoryPack, type Temperament,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -126,7 +126,7 @@ function MeetLine({ pack, id, at }: { pack: Pick<StoryPack, 'cast'> & Partial<Pi
   )
 }
 
-/** The gift picker: every good in the Warehouse at each star held, by family, seeds left out, each with its points
+/** The gift picker: every good in the Warehouse at each star held, by family, then the Kitchen's dishes, seeds left out, each with its points
  * for her today at those stars, or "?" where her taste for it isn't known yet. A tap gives one. */
 export function GiftPicker({ save, id, name, points, onGive, onClose }: {
   save: SaveV4
@@ -136,20 +136,24 @@ export function GiftPicker({ save, id, name, points, onGive, onClose }: {
   onGive: (item: string, stars: number) => void
   onClose: () => void
 }) {
-  const groups = GOOD_FAMILIES.map((family) => ({
-    family,
-    rows: Object.entries(save.items).flatMap(([good, row]) => {
-      const g = goodOf(good)
-      return g?.family === family ? row.flatMap((n, i) => (n > 0 ? [{ good, stars: i + 1, count: n, grade: g.grade, refined: g.refined }] : [])) : []
-    }).sort((a, b) => Number(a.refined) - Number(b.refined) || a.grade - b.grade || a.good.localeCompare(b.good) || a.stars - b.stars),
-  })).filter((g) => g.rows.length > 0)
+  const groups = [
+    ...GOOD_FAMILIES.map((family) => ({
+      family: FAMILY_NAMES[family],
+      rows: Object.entries(save.items).flatMap(([good, row]) => {
+        const g = goodOf(good)
+        return g?.family === family ? row.flatMap((n, i) => (n > 0 ? [{ good, stars: i + 1, count: n, grade: g.grade, refined: g.refined }] : [])) : []
+      }).sort((a, b) => Number(a.refined) - Number(b.refined) || a.grade - b.grade || a.good.localeCompare(b.good) || a.stars - b.stars),
+    })),
+    // The Kitchen's dishes are gifts too.
+    { family: 'Dishes', rows: Object.entries(save.items).flatMap(([good, row]) => (isDishId(good) ? row.flatMap((n, i) => (n > 0 ? [{ good, stars: i + 1, count: n, grade: 0, refined: false }] : [])) : [])) },
+  ].filter((g) => g.rows.length > 0)
   return (
     <Sheet open onClose={onClose} title={`A gift for ${name}`} label="Choose a gift">
       {groups.length === 0 && <p className="py-2 text-ink-soft">Nothing to give yet: bring something home first.</p>}
       <div className="space-y-3 pb-2" data-gift-sheet={id}>
         {groups.map((g) => (
-          <section key={g.family} aria-label={FAMILY_NAMES[g.family]}>
-            <h3 className="text-micro pb-1">{FAMILY_NAMES[g.family]}</h3>
+          <section key={g.family} aria-label={g.family}>
+            <h3 className="text-micro pb-1">{g.family}</h3>
             <ul className="divide-y divide-hairline rounded-md border border-hairline">
               {g.rows.map((r) => {
                 const pay = points(r.good, r.stars)

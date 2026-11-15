@@ -24,7 +24,7 @@ import {
 } from './parse-loop'
 import {
   type BuildingId, EVENING_KINDS, eveningsOn, FARMHOUSE, FESTIVAL_NIGHT, FIELD_TILES, FINALE_MARRIED, MAX_FIELD_TILES, MAX_PLOTS, FURNITURE_PIECES, invitesFor, LOVE_STAGES, marriedCount, MAX_HOUSES, residentsOf, roomsOf,
-  isDishId, MEALS, pairKey, TOWN_ID, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUma, type SaveV5, type TodayV4, type TownTalks,
+  isDishId, MEALS, pairKey, TOWN_ID, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUma, type SaveV5, type StaffMeal, type TodayV4, type TownTalks,
   APTITUDE_IDS, DIGS, MAX_TASKS, RANCH_HOMES, TASK_KINDS, type FarmTask,
 } from './v4'
 
@@ -129,7 +129,7 @@ function parseLove(value: unknown, path: string, today: number, houses: number):
   const love: Love = {
     stage, level: int(o.level, `${path}.level`, low, high), points: count(o.points, `${path}.points`),
     last: pastDay(o.last, `${path}.last`, today),
-    known: unique(list(o.known, `${path}.known`, 0, 2000).map((g, i) => (typeof g === 'string' && isGoodId(g) ? g : fail(`${path}.known.${i}`, 'unknown good'))), `${path}.known`),
+    known: unique(list(o.known, `${path}.known`, 0, 2000).map((g, i) => (typeof g === 'string' && (isGoodId(g) || isDishId(g)) ? g : fail(`${path}.known.${i}`, 'unknown good'))), `${path}.known`),
     flags: unique(list(o.flags, `${path}.flags`, 0, 200).map((f, i) => (typeof f === 'string' && KEY.test(f) ? f : fail(`${path}.flags.${i}`, 'expected a flag id'))), `${path}.flags`),
     evening: pastDay(o.evening, `${path}.evening`, today),
     festivals: unique(list(o.festivals, `${path}.festivals`, 0, 1000).map((f, i) => festivalKey(f, `${path}.festivals.${i}`, dateOf(today).year)), `${path}.festivals`),
@@ -210,7 +210,7 @@ const inviteKind = (v: unknown, at: string): InviteKind => (v === FESTIVAL_NIGHT
 /** `today`: the evenings within the day's slots (`evenings` regular ones, and festival
  * night once at most), and `invites` invitations, each a different Uma. */
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
-  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls'])
+  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls', 'staff', 'assistant'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const slots = eveningsOn(day, married)
   const evenings = list(o.evenings, `${path}.evenings`, 0, slots + 1).map((v, i) => {
@@ -249,8 +249,20 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
     // The hauls today at each area and spot, the farmer's and the farmhands' (a place thins past four): absent until the
     // first (the save grows it in place). Each counted place is one worked today.
     ...(o.hauls === undefined ? {} : { hauls: parseHauls(o.hauls, `${path}.hauls`) }),
+    // Tonight's staff meal (its mouths from 1, its well-fed days 1–3) and the Kitchen's assistant today: absent until
+    // there's one (the save grows them in place).
+    ...(o.staff === undefined ? {} : { staff: parseStaff(o.staff, `${path}.staff`) }),
+    ...(o.assistant === undefined ? {} : { assistant: member(o.assistant, `${path}.assistant`, roster) }),
   }
 }
+
+/** `today.staff`: the mouths it was served for, from 1, and its well-fed days, 1–3. */
+function parseStaff(value: unknown, path: string): StaffMeal {
+  const o = object(value, path, ['mouths', 'days'])
+  return { mouths: int(o.mouths, `${path}.mouths`, 1, MAX_MOUTHS), days: int(o.days, `${path}.days`, 1, 3) }
+}
+/** The most mouths a table holds: the farmer and every Uma, with room to spare. */
+const MAX_MOUTHS = 10_000
 
 /** `today.hauls`: an area or a spot, its hauls today (1 or more). */
 function parseHauls(value: unknown, path: string): Record<string, number> {

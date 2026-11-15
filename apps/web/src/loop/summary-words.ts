@@ -268,9 +268,9 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
       return [...sold, { key: 'sold:total', to: '/?sheet=bin', text: `Total · ${gold(summary.bin.reduce((sum, sale) => sum + sale.gold, 0))}` }]
     }
     case 'money':
-      // The loans' shares, the pantry and the takeout, the upkeep, a short night (a warning) or the owed paid: each a tap
-      // to the Book.
-      return moneyLines(summary.money ?? [], { place: world.place, house: home.houseName }).map((line): SummaryLine => ({ ...line, to: BOOK }))
+      // The loans' shares, the staff meal, the pantry and the takeout, the upkeep, a short night (a warning) or the owed
+      // paid: each a tap to the Book; the staff meal's, to the Kitchen.
+      return moneyLines(summary.money ?? [], { place: world.place, house: home.houseName }).map((line): SummaryLine => ({ ...line, to: line.key === 'staff' ? '/?sheet=kitchen' : BOOK }))
     case 'work':
       // The farmhands' days, which open the work board; the stations' loads, which open the station; the field's growth
       // and what withered, which open the farm.

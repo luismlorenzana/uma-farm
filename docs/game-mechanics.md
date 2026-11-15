@@ -8,7 +8,8 @@ the same commit, and where it and the code ever differ, the code wins and this d
 farmer works by hand, the ranch's animals and the Mine's and the Quarry's floors (see [the ranch](#the-ranch) and
 [the Mine and the Quarry](#the-mine-and-the-quarry)), and the **farmhands** who work it with him overnight on the tasks he
 sets (see [Farmhands](#farmhands)), its places, the farm growing by building, food (everyone eats, from the first
-night: see [Food](#food)), upkeep and the mayor's office's loans, the calendar
+night: see [Food](#food)), cooking at the stove and the Kitchen (see [The Kitchen](#the-kitchen)), upkeep and the mayor's
+office's loans, the calendar
 with its special days and occasion scenes, and the **romance** (Part 3), played from the story
 pack, and played whole without one: wherever the pack is silent, the default story plays, and every Uma without
 portraits plays on the blank bust (see [What plays without the story](#what-plays-without-the-story)). The game is
@@ -33,6 +34,7 @@ prose here; change a table by changing the rule.
   - [Goods and gold](#goods-and-gold)
   - [Upkeep and loans](#upkeep-and-loans)
   - [Food](#food)
+  - [The Kitchen](#the-kitchen)
 - **[Part 2 — The Umas and the farm's progress](#part-2--the-umas-and-the-farms-progress)**
   - [The roster](#the-roster)
   - [The town](#the-town)
@@ -304,7 +306,8 @@ belong to, and until then cost nothing or aren't there yet:
 | The Umas | A hangout or a date | 2 | Now |
 | The Umas | Her event, when it’s ready, or an occasion scene with her | 1 | Now |
 | A festival | Join it; it opens its own events | 3 | With the festivals’ contests |
-| The kitchen | Cook a batch: six meals for the pantry from two goods of food, in the farmhouse kitchen | 1 | Now |
+| The kitchen | Cook a batch: six meals for the pantry from two goods of food, in the farmhouse kitchen, plain or at the stove | 1 | Now |
+| The Kitchen | Play the Kitchen: its dishes from a menu of recipes, at the stove, once a day | 1 | Now |
 | The household | Cook a meal for the household: breakfast or dinner (it cooks a batch too) | 1 | Now |
 | The household | Choose tonight’s companion, at the day’s end | Free | Now |
 <!-- /live -->
@@ -386,6 +389,7 @@ The steps as the game lists them:
 <!-- live:night -->
 | Step | Function | What happens |
 |---|---|---|
+| 1 | `settleThePlay` | Before the bin, first: a play at the stove left unfinished (✕, or the app left mid-play) settles as Rough: a batch’s meals into the pantry, the Kitchen’s dishes into the Warehouse, its assistant’s practice and challenges |
 | 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning |
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand and the market’s ease (past a crate of 50 of one good, each crate more a step lower: −10% a step, to half); then the market moves: a good shipped past a crate stays eased by the steps it reached, and every other eased good recovers a step |
 | 2 | `farmhandsWork` | The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads, the animals’ care and the cooking first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse and her meals into the pantry, her place today where she spent the most |
@@ -405,7 +409,7 @@ The steps as the game lists them:
 | 6 | `levelAtNight` | Spouse levels: a spouse at S1 or S3 whose 600 is full reaches S2 or S4, with no Ready event (S2 starts her every-2nd-morning item); the morning’s line plays its scene and card; never S3 or S5 |
 | 6 | `countWellFed` | The well-fed days count down |
 | 7 | `witherCrops` | On a season’s last night, crops still growing that don’t grow in the next season wither, their soil left tilled; ripe crops wait |
-| 7 | `turnCalendar` | The date moves; the whole of `today` clears: the day’s actions and event actions, going into town, the areas worked, chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception |
+| 7 | `turnCalendar` | The date moves; the whole of `today` clears: the day’s actions and event actions, going into town, the areas worked, chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception, the staff meal and the Kitchen’s assistant |
 | 8 | `raiseBuildings` | Places built: every place paid for yesterday stands this morning (`buildings[id] = 1`), and a station’s level bought yesterday comes (its level one more), each one news |
 | 8 | `settleDorm` | The Dorm’s level bought takes effect; swaps arrive, each Uma in town coming home in the place of one leaving |
 | 8 | `checkGoals` | The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources |
@@ -513,7 +517,7 @@ Each place's building and what opens it (the Boat is moored at the Dock and draw
 | Barn | `stable` | Farm Rank 3, then built |
 | Fishery | `fishery` | Day 1 |
 | Smokehouse | `fishery-workbench` | Farm Rank 3, then built |
-| Kitchen | `kitchen` | Farm Rank 5, then built (not built yet) |
+| Kitchen | `kitchen` | Farm Rank 3, then built |
 | Mine | `mine` | Farm Rank 4, then built |
 | Smelter | `mine-workbench` | Farm Rank 4, then built |
 | Restaurant | `party-hall` | Farm Rank 7, then built (not built yet) |
@@ -1150,7 +1154,9 @@ Each fish's size range, its price and its fillet's:
 Well fed is a number of days on an Uma. It counts down by one each night, and a new meal only raises it to the meal's
 own length; it never stacks. A wedding's reception, a spouse's breakfast, the household's meals (once married,
 [cooked by you](#the-households-meals): everyone on the farm and every farmhand, for today and tomorrow) and **a ★2+
-meal from the pantry** (eaten at night: through tomorrow, [food](#food)) feed the Umas. A household meal and a good
+meal from the pantry** (eaten at night: through tomorrow, [food](#food)) and **the staff meal** (by its lowest stars, on
+the reception's table: ★1–2 through tomorrow, ★3–4 two days, ★5 three, [the staff meal](#the-staff-meal)) feed the
+Umas. A household meal and a good
 meal the same night are still two days, counted down once. **A farmhand well fed this morning works one more action today** (once a meal, the day after
 it's cooked: [her day](#her-day)), and while she's well fed (the meal's day and the next) her work is too: +0.25
 quality and ×1.25 rank points. Her hauls and faces aren't bigger for it: the one more action is the meal's reward (F91 took
@@ -2214,8 +2220,9 @@ feeds many. The rules are `farm/food.ts`.
 ```
  your day                                      the night, step 2
    the homestead's sheet (the Farmhouse):        the farmhands work: a cook's batches into the pantry
-     Kitchen · Cook a batch · 1                  the farm eats: two meals a mouth, from the pantry first,
-       two goods of food → six meals               the Umas first, the farmer last, the oldest meals first
+     Kitchen · Cook a batch · 1                  the farm eats: a staff meal's mouths first (the Kitchen's),
+       two goods of food → six meals               then two meals a mouth, from the pantry first,
+       or At the stove · 1: 6, 8, 9 or 12          the Umas first, the farmer last, the oldest meals first
      once married: Breakfast · 1, Dinner · 1     ★2+ meal → that Uma is well fed tomorrow (+1 action)
        (each a batch too)                        what's short: takeout, 15g a meal ──► the bill, with the upkeep
    the Book: a farmhand on Cook                  a meal keeps three days, then it spoils
@@ -2231,10 +2238,12 @@ feeds many. The rules are `farm/food.ts`.
 | Takeout | 15g a meal the pantry is short, charged with the upkeep (takeout first); a new farm’s farmer eats 2: 30g a night |
 | Short of it | Takeout never goes unpaid: what gold there is pays, the rest is owed with the upkeep, and the short nights count as the upkeep’s |
 | Cook a batch | The farmer, in the farmhouse kitchen (the homestead’s sheet): 1 action, 6 meals from 2 goods of food you choose |
+| At the stove | The same batch played at the stove (30 s): 6, 8, 9, 12 meals by its tier, its stars +0, +0, +1, +2; never worse than the plain batch |
+| The staff meal | Served at the Kitchen, free, once a day: one dish for every 3 mouths tonight; those mouths eat it in place of their 2 meals, the farmer first, then the Umas in the table’s order |
 | A household meal | Breakfast or dinner once married: the farmer cooking for the household, so it cooks a batch too (6 meals from 2 goods by the plain rule, when the Warehouse holds them) |
 | Cook (a farmhand’s task) | A batch an action from 2 goods by the plain rule, its meals by her Cooking (below), until the pantry holds tonight’s meals for everyone |
 | A meal’s stars | Its 2 goods’ stars, averaged and rounded down |
-| Well fed | An Uma who eats a ★2+ meal is well fed through tomorrow: one more action tomorrow, and her work’s quality, hauls and rank points; never stacked, never shortening a meal running longer |
+| Well fed | An Uma who eats a ★2+ meal is well fed through tomorrow: one more action tomorrow, and her work’s quality and rank points; never stacked, never shortening a meal running longer. A staff meal feeds by its lowest stars: ★1–2 through tomorrow, ★3–4 two days, ★5 three |
 | The plain rule | The two cheapest goods of ★2 or more (their meals feed well); with fewer than two held, the two cheapest. Cheapest is the price at its stars, out of demand |
 | Food | Grains, Vegetables, Herbs and spices, Nuts and seeds, Sweets, Fruits, Mushrooms, Fish, Eggs and milk, raw or refined |
 <!-- /live -->
@@ -2286,8 +2295,12 @@ A farmhand's batch by her Cooking (her aptitude, [aptitude](#aptitude)):
 - **A meal's stars** are its two goods' average, rounded down: two ★2 goods make ★2 meals, a ★2 and a ★1 make ★1. An
   Uma who eats a ★2+ meal is **well fed** through tomorrow ([well fed](#well-fed)): one more action tomorrow, and her
   work's quality, hauls and rank points while it lasts. The farmer gets nothing from it, so for him a ★1 meal is as good.
-- **The Kitchen** (Phase 2.3) adds the cooking minigame: a batch the farmer cooks there plays it, and its grade lifts
-  the meals' stars (`cookBatch`'s lift, 0 until then). Until then, cooking is the action.
+- **At the stove · 1**, beside **Cook a batch · 1**: the same batch played at the stove, a 30-second cooking game
+  ([the stove](#the-stove-the-cooking-game)). Its tier makes 6, 8, 9 or 12 meals, their stars the goods' +0, +0, +1 or
+  +2, so it's never worse than the plain batch. A household meal and a farmhand's Cook stay plain.
+- **The staff meal** (once the Kitchen stands, [the staff meal](#the-staff-meal)): the mouths it was served for eat it
+  tonight in place of their two meals, the farmer first, then the Umas in the table's order; the rest eat from the
+  pantry. A cook stops once the pantry holds the meals of the mouths it doesn't feed.
 - **The save:** `farm.pantry` (each lot: the day cooked, today or yesterday; its stars; its meals; one lot a day and
   star, the oldest first). It grows v5 in place: a save from before food loads with an empty pantry, and nothing moves
   `updatedAt` for it.
@@ -2318,6 +2331,309 @@ takeout alone:
   it ★2, and buys no takeout in its second year: that year ships 190,885g against 137,600g before food. F90's well fed
   gave every well-fed haul a quarter more on top of the extra action, and the second year shipped 266,525g; F91 took that
   quarter off ([well fed](#well-fed), [the farm at scale](#the-farm-at-scale-10-20-and-50-umas)).
+
+### The Kitchen
+
+Cooking gets its game. Every batch the farmer cooks can be played at **the stove**, from day one, and a good play makes
+more and better meals. **The Kitchen**, a building from Farm Rank 3, cooks **dishes** from **recipes** once a day, and
+serves them as **the staff meal**: the whole farm fed and well fed from one play. The rules are `kitchen/stove.ts`,
+`kitchen/recipes.ts` and `kitchen/kitchen.ts`.
+
+```
+ the farmhouse kitchen (day 1)               the Kitchen (Farm Rank 3, 3,000g · 40 logs · 20 vegetables)
+   Cook a batch · 1   six meals, plain         Play · 1, once a day: a menu of up to three recipes ── the stove, 60 s
+   At the stove · 1   the stove, 30 s            Rough 6 · Good 8 · Fine 9 ★+1 · Masterwork 12 ★+2 dishes (level 1)
+     Rough 6 · Good 8 · Fine 9 ★+1 ·           an assistant (a farmhand): her Cooking × her rank, one of her actions
+     Masterwork 12 ★+2 meals                   Serve the staff meal, free: a dish for every 3 mouths tonight
+                                                 ──► they eat it in place of their meals, well fed by its stars
+ the stove: tap an empty burner to cook the first ticket's next part; tap it again in the green: Perfect +4, Good +2
+```
+
+#### The stove: the cooking game
+
+An original time-management cooking game: three burners, a ticket rail and the pass. Its rules and numbers are the old
+sketch's (a careful player 92 over 8 seeds, a casual 73, a first try 34), and the screen draws it from the rules' own
+functions:
+
+<!-- live:stove-rules -->
+| Rule |  |
+|---|---|
+| The board | 3 burners, a ticket rail, the pass |
+| Tickets | On the play’s seed, every 2.4 s–3.8 s from 0.8 s, none in the last 12 s. Half are three-part (they wait 18 s), half two-part (13 s) |
+| Cooking a part | Tap an empty burner: it starts the next part of the first ticket (tap a ticket to put it first). The ring fills (a three-part ticket’s parts 3.2 s, 2.6 s, 2 s; a two-part’s 2.4 s and 1.8 s), then a 1 s green window |
+| Pulling it | Tap the burner in the green: its middle (0.35 s–0.65 s in) **Perfect +4**, the rest **Good +2**. Too early: **raw -1**, cook it again. Past the green: **burnt -3**, and the pan smokes 0.7 s |
+| Served | A ticket whose parts are all on the pass: **+3 a part**. A ticket whose wait runs out leaves: **late -4**. A part pulled for a ticket that left goes to the oldest open ticket of its shape still needing it |
+| The score | Points ÷ the seed’s most (7 a part) × 100, rounded, held to 0–100 |
+| The seed | Four digits, `draw(uid, day, 'stove', plays)`: the account, the day and the farm’s count of plays (`farm.counts.plays`), so every play differs and a replay is the same |
+| Its length | A batch 30 s; the Kitchen’s play 60 s |
+<!-- /live -->
+
+<!-- live:play-tiers -->
+| Tier | Score | Count | Stars | A batch at the stove | The Kitchen at level 1 (6) | At level 5 (15) |
+|---|---|---|---|---|---|---|
+| **Rough** | 0–49 | ×1 | +0 | 6 meals | 6 dishes | 15 dishes |
+| **Good** | 50–74 | ×1.25 | +0 | 8 meals | 8 dishes | 19 dishes |
+| **Fine** | 75–89 | ×1.5 | +1 | 9 meals | 9 dishes | 23 dishes |
+| **Masterwork** | 90–100 | ×2 | +2 | 12 meals | 12 dishes | 30 dishes |
+
+Rounded half up and never below the base. A play left unfinished (✕, or the app left mid-play) settles as **Rough**: its base, its inputs never lost.
+<!-- /live -->
+
+- **The dressing:** each ticket names what's cooking, and its parts their ingredients. A batch's tickets are "Meal": its
+  first good, the first again and the second (three parts), or the first and the second (two). The Kitchen's tickets are
+  the menu's recipes in turn: the main, the main and the side, or the main and the side. Names never change the timings.
+- **The score is the rules':** the screen plays on the domain's functions, and the play's end replays its taps against
+  its seed, so it can only show what the rules award. A tap out of order, or past the end, is ignored.
+- **Start is the commitment:** it spends the action, takes the inputs and keeps the play in `workshops.current`. The end
+  settles it from the taps. ✕ asks once ("Stop? It counts as Rough.") and settles it Rough. Leaving mid-play (the app
+  closed, or its screen left) leaves it under way: it settles as Rough the next time the app finds it, unstamped (the
+  night's own rule run early, so a phone that fell behind never outranks a newer save with it), or at the night's start
+  (step 1, `settleThePlay`). A play is never resumed or replayed: no retries, and no practice mode.
+- **Bots for the tests:** a careful bot (pulls in the green's middle, keeps three burners busy) and a casual bot (pulls
+  late in the green, two burners). Over 8 seeds of a batch's 30 s, the careful bot scores **100** and the casual **70**.
+  The Kitchen's 60 s brings tickets faster than two burners clear them, so there the casual bot lets some go late and
+  scores about **57**, still Good. The bots are the tests' and the simulations' only: no build of the game holds them.
+
+#### At the stove
+
+In the farmhouse kitchen (the homestead's sheet), **At the stove · 1** sits beside **Cook a batch · 1**, on the same two
+goods you choose (the plain rule's two picked to start): one action, the two goods taken at Start, and 30 s at the
+stove. Its tier makes **6, 8, 9 or 12 meals**, their stars the goods' average **+0, +0, +1, +2** (held to ★5), into the
+pantry, cooked today. It's never worse than the plain batch. A household meal and a farmhand's Cook stay plain. While a
+play is under way, nothing else cooks.
+
+#### The Kitchen: its build and levels
+
+**Offered at Farm Rank 3** for **3,000g · 40 logs · 20 vegetables**, its game built; its upkeep is any building's
+(15g a night). It opens from the farm map (a tap on it, once it stands) and from the Book's food row. Its levels are
+bought at the Kitchen as a station's are: gold only, from their Farm Rank, the level the next morning (night step 8),
+one a day:
+
+<!-- live:kitchen-levels -->
+| Level | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| Dishes a play (the base) | 6 | 8 | 10 | 12 | 15 |
+| Opens at, costs | Farm Rank 3: the build (3,000g · 40 logs · 20 vegetables) | Farm Rank 4, 5,000g | Farm Rank 5, 10,000g | Farm Rank 6, 20,000g | Farm Rank 7, 40,000g |
+<!-- /live -->
+
+#### Recipes
+
+The 80 dishes are `dish-<family>-<grade>` (uma-art's dishes atlas), named by their kind and their main's raw good
+("Carrot Salad", "Button Mushroom Soup"). A recipe is **two of its main** (its family's good of its grade, raw or
+refined) **and one side** (any grade, raw or refined, any stars):
+
+<!-- live:recipe-kinds -->
+| Dish | Main (two a dish) | Side (one a dish) |
+|---|---|---|
+| Salad | vegetables of its grade, raw or refined | any herb or spice |
+| Grill | fish of its grade, raw or refined | any herb or spice |
+| Soup | mushrooms of its grade, raw or refined | any vegetable |
+| Curry | herbs and spices of its grade, raw or refined | any vegetable |
+| Bread | grains of its grade, raw or refined | any egg or milk |
+| Cake | sweets of its grade, raw or refined | any egg or milk |
+| Tart | fruits of its grade, raw or refined | any grain |
+| Cookies | nuts and seeds of its grade, raw or refined | any grain |
+<!-- /live -->
+
+- **Known when it stands:** Carrot Salad, Carp Grill and Button Mushroom Soup, all from Farm Rank 1's goods.
+- **More:** the shop's **Recipes** shelf once the Kitchen stands (in town, free of actions), each **10 × its main's ★1
+  price, to 50g** (Carrot Salad 600g); her Friendship 4 (her signature dish, [her signature
+  dish](#her-signature-dish)); a request's recipe extra. A recipe is known for good (`workshops.recipes`; the first
+  three are known while the Kitchen stands, never written). The shelf is the workshops' first gold sink.
+- **Dishes don't ship.** They feed the staff meal, make gifts (a dish is a gift like a good: her taste in it is her
+  bible's, so a loved dish plays), serve a wedding's reception, and enter the Cooking Contest (F93); later the
+  Restaurant and expeditions.
+
+<!-- live:recipes -->
+| Dish | Id | Takes | At the shop |
+|---|---|---|---|
+| **Carrot Salad** | `dish-vegetables-1` | 2 Carrot + any herb or spice | Known once the Kitchen stands |
+| Potato Salad | `dish-vegetables-2` | 2 Potato + any herb or spice | 550g |
+| Cabbage Salad | `dish-vegetables-3` | 2 Cabbage + any herb or spice | 2,600g |
+| Onion Salad | `dish-vegetables-4` | 2 Onion + any herb or spice | 1,000g |
+| Tomato Salad | `dish-vegetables-5` | 2 Tomato + any herb or spice | 700g |
+| Bell Pepper Salad | `dish-vegetables-6` | 2 Bell Pepper + any herb or spice | 600g |
+| Eggplant Salad | `dish-vegetables-7` | 2 Eggplant + any herb or spice | 950g |
+| Asparagus Salad | `dish-vegetables-8` | 2 Asparagus + any herb or spice | 4,800g |
+| Golden Carrot Salad | `dish-vegetables-9` | 2 Golden Carrot + any herb or spice | 6,000g |
+| Emperor Pumpkin Salad | `dish-vegetables-10` | 2 Emperor Pumpkin + any herb or spice | 6,000g |
+| **Carp Grill** | `dish-fish-1` | 2 Carp or Carp Fillet + any herb or spice | Known once the Kitchen stands |
+| Trout Grill | `dish-fish-2` | 2 Trout or Trout Fillet + any herb or spice | 500g |
+| Sardine Grill | `dish-fish-3` | 2 Sardine or Sardine Fillet + any herb or spice | 650g |
+| Mackerel Grill | `dish-fish-4` | 2 Mackerel or Mackerel Fillet + any herb or spice | 850g |
+| Salmon Grill | `dish-fish-5` | 2 Salmon or Salmon Fillet + any herb or spice | 1,100g |
+| Sea Bream Grill | `dish-fish-6` | 2 Sea Bream or Sea Bream Fillet + any herb or spice | 1,450g |
+| Eel Grill | `dish-fish-7` | 2 Eel or Eel Fillet + any herb or spice | 1,800g |
+| Tuna Grill | `dish-fish-8` | 2 Tuna or Tuna Fillet + any herb or spice | 2,350g |
+| Silverfin Grill | `dish-fish-9` | 2 Silverfin or Silverfin Fillet + any herb or spice | 3,000g |
+| Rainbow Koi Grill | `dish-fish-10` | 2 Rainbow Koi or Rainbow Koi Fillet + any herb or spice | 3,900g |
+| **Button Mushroom Soup** | `dish-mushrooms-1` | 2 Button Mushroom or Dried Button Mushroom + any vegetable | Known once the Kitchen stands |
+| Shiitake Soup | `dish-mushrooms-2` | 2 Shiitake or Dried Shiitake + any vegetable | 400g |
+| Oyster Mushroom Soup | `dish-mushrooms-3` | 2 Oyster Mushroom or Dried Oyster Mushroom + any vegetable | 500g |
+| Enoki Soup | `dish-mushrooms-4` | 2 Enoki or Dried Enoki + any vegetable | 650g |
+| Chanterelle Soup | `dish-mushrooms-5` | 2 Chanterelle or Dried Chanterelle + any vegetable | 850g |
+| Porcini Soup | `dish-mushrooms-6` | 2 Porcini or Dried Porcini + any vegetable | 1,100g |
+| Morel Soup | `dish-mushrooms-7` | 2 Morel or Dried Morel + any vegetable | 1,400g |
+| Truffle Soup | `dish-mushrooms-8` | 2 Truffle or Shaved Truffle + any vegetable | 1,800g |
+| Glowcap Soup | `dish-mushrooms-9` | 2 Glowcap or Glowcap Powder + any vegetable | 2,300g |
+| King Reishi Soup | `dish-mushrooms-10` | 2 King Reishi or Reishi Powder + any vegetable | 3,000g |
+| Basil Curry | `dish-herbs-spices-1` | 2 Basil or Dried Basil + any vegetable | 450g |
+| Mint Curry | `dish-herbs-spices-2` | 2 Mint or Dried Mint + any vegetable | 450g |
+| Rosemary Curry | `dish-herbs-spices-3` | 2 Rosemary or Dried Rosemary + any vegetable | 450g |
+| Thyme Curry | `dish-herbs-spices-4` | 2 Thyme or Dried Thyme + any vegetable | 600g |
+| Ginger Curry | `dish-herbs-spices-5` | 2 Ginger or Ground Ginger + any vegetable | 2,000g |
+| Peppercorn Curry | `dish-herbs-spices-6` | 2 Peppercorn or Ground Pepper + any vegetable | 1,000g |
+| Cinnamon Curry | `dish-herbs-spices-7` | 2 Cinnamon or Ground Cinnamon + any vegetable | 1,250g |
+| Saffron Curry | `dish-herbs-spices-8` | 2 Saffron or Saffron Threads + any vegetable | 1,600g |
+| Mandrake Curry | `dish-herbs-spices-9` | 2 Mandrake or Mandrake Powder + any vegetable | 5,200g |
+| Phoenix Pepper Curry | `dish-herbs-spices-10` | 2 Phoenix Pepper or Phoenix Spice + any vegetable | 2,700g |
+| Wheat Bread | `dish-grains-1` | 2 Wheat or Wheat Flour + any egg or milk | 400g |
+| Oats Bread | `dish-grains-2` | 2 Oats or Rolled Oats + any egg or milk | 400g |
+| Barley Bread | `dish-grains-3` | 2 Barley or Pearl Barley + any egg or milk | 450g |
+| Rice Bread | `dish-grains-4` | 2 Rice or Polished Rice + any egg or milk | 500g |
+| Corn Bread | `dish-grains-5` | 2 Corn or Cornmeal + any egg or milk | 1,400g |
+| Rye Bread | `dish-grains-6` | 2 Rye or Rye Flour + any egg or milk | 600g |
+| Buckwheat Bread | `dish-grains-7` | 2 Buckwheat or Buckwheat Flour + any egg or milk | 750g |
+| Wild Rice Bread | `dish-grains-8` | 2 Wild Rice or Hulled Wild Rice + any egg or milk | 1,600g |
+| Moonrice Bread | `dish-grains-9` | 2 Moonrice or Moonrice Flour + any egg or milk | 2,400g |
+| Sunwheat Bread | `dish-grains-10` | 2 Sunwheat or Sunwheat Flour + any egg or milk | 2,600g |
+| Honeycomb Cake | `dish-sweets-1` | 2 Honeycomb or Honey + any egg or milk | 350g |
+| Sugarcane Cake | `dish-sweets-2` | 2 Sugarcane or Cane Sugar + any egg or milk | 450g |
+| Sugar Beet Cake | `dish-sweets-3` | 2 Sugar Beet or Beet Sugar + any egg or milk | 1,200g |
+| Maple Sap Cake | `dish-sweets-4` | 2 Maple Sap or Maple Syrup + any egg or milk | 700g |
+| Cacao Pod Cake | `dish-sweets-5` | 2 Cacao Pod or Chocolate + any egg or milk | 950g |
+| Vanilla Pod Cake | `dish-sweets-6` | 2 Vanilla Pod or Vanilla Extract + any egg or milk | 1,200g |
+| Agave Heart Cake | `dish-sweets-7` | 2 Agave Heart or Agave Syrup + any egg or milk | 1,550g |
+| Palm Sap Cake | `dish-sweets-8` | 2 Palm Sap or Palm Sugar + any egg or milk | 2,000g |
+| Fairy Honeycomb Cake | `dish-sweets-9` | 2 Fairy Honeycomb or Fairy Honey + any egg or milk | 2,550g |
+| Ambrosia Blossom Cake | `dish-sweets-10` | 2 Ambrosia Blossom or Ambrosia + any egg or milk | 3,300g |
+| Apple Tart | `dish-fruits-1` | 2 Apple or Apple Preserve + any grain | 350g |
+| Pear Tart | `dish-fruits-2` | 2 Pear or Pear Preserve + any grain | 450g |
+| Peach Tart | `dish-fruits-3` | 2 Peach or Peach Preserve + any grain | 550g |
+| Plum Tart | `dish-fruits-4` | 2 Plum or Plum Preserve + any grain | 700g |
+| Orange Tart | `dish-fruits-5` | 2 Orange or Orange Marmalade + any grain | 950g |
+| Grape Tart | `dish-fruits-6` | 2 Grape or Grape Jelly + any grain | 1,200g |
+| Mango Tart | `dish-fruits-7` | 2 Mango or Mango Pulp + any grain | 1,550g |
+| Pomegranate Tart | `dish-fruits-8` | 2 Pomegranate or Pomegranate Molasses + any grain | 2,000g |
+| Starpeach Tart | `dish-fruits-9` | 2 Starpeach or Starpeach Nectar + any grain | 2,550g |
+| Golden Apple Tart | `dish-fruits-10` | 2 Golden Apple or Golden Apple Preserve + any grain | 3,300g |
+| Peanut Cookies | `dish-nuts-seeds-1` | 2 Peanut or Peanut Butter + any grain | 350g |
+| Sunflower Seed Cookies | `dish-nuts-seeds-2` | 2 Sunflower Seed or Sunflower Oil + any grain | 750g |
+| Sesame Cookies | `dish-nuts-seeds-3` | 2 Sesame or Sesame Paste + any grain | 500g |
+| Walnut Cookies | `dish-nuts-seeds-4` | 2 Walnut or Walnut Paste + any grain | 650g |
+| Chestnut Cookies | `dish-nuts-seeds-5` | 2 Chestnut or Chestnut Paste + any grain | 850g |
+| Almond Cookies | `dish-nuts-seeds-6` | 2 Almond or Almond Paste + any grain | 1,100g |
+| Pistachio Cookies | `dish-nuts-seeds-7` | 2 Pistachio or Pistachio Paste + any grain | 1,400g |
+| Macadamia Cookies | `dish-nuts-seeds-8` | 2 Macadamia or Macadamia Butter + any grain | 1,800g |
+| Thundernut Cookies | `dish-nuts-seeds-9` | 2 Thundernut or Thundernut Oil + any grain | 2,300g |
+| Worldseed Cookies | `dish-nuts-seeds-10` | 2 Worldseed or Worldseed Oil + any grain | 3,000g |
+
+All 80 come to 119,450g at the shop (the three known free).
+<!-- /live -->
+
+#### Its play
+
+- **Once a day, 1 action, 60 s** at the stove (`workshops.played.kitchen` keeps its day). **The menu:** up to three
+  known recipes, sharing the level's base (evenly to start, the remainder to the first; a stepper each), each ingredient
+  at one good and one star from the Warehouse (the star held most to start, ties the lower, passing over one the lines
+  above already use up; a tap moves it to the next held). To start, the menu is the recipes the Warehouse can make the
+  most of. Start takes two of each main and one of each side a dish.
+- **Refusals,** in the loop's words: "Short 2 Carp.", "The menu shares 6 dishes.", "You don't know that recipe.",
+  "Choose a recipe.", "The Kitchen plays once a day.", "A play is under way.", "No actions left today.".
+- **What it makes:** round(base × the tier's count × the assistant's term) dishes, plus a cook's chores (below); the
+  extra over the base is shared by largest remainder (ties to the menu's order). Each dish's stars: its two mains' and
+  its side's stars averaged, rounded down, + the tier's lift, held to ★5. They go into the Warehouse;
+  `farm.counts['cooked:<dish>']` counts them, and `workshops.best.kitchen` keeps the best score.
+- **The worked play:** level 1, no assistant, 3 Carrot Salads and 3 Carp Grills from ★1 goods, Fine: 6 × 1.5 = **9
+  dishes**, 5 Carrot Salads and 4 Carp Grills, **★2**.
+- **The assistant** (optional): a farmhand with an action tonight. One of her actions tonight is the play's (the work
+  board says "1 at the Kitchen", her night counts it at the Kitchen, and the morning's line says "assisted at the
+  Kitchen"). Her term is her Cooking aptitude's yield × her
+  cooking rank's workshop yield ([what a rank gives](#what-a-rank-gives)) × her line's +10% (+20% from R5, a cook's).
+  She gets a point of Cooking practice and counts toward cooking's challenges: `play` by the tier (assist 5 plays, a Fine
+  play, a Masterwork) and `dishes` by the stars made (10 dishes of ★4+).
+- **A cook's chores:** each cook (her line cooking) living on the farm adds a dish to every play for each of her night
+  chores (1 from F6, 2 from R7, 3 from S4). They don't bank: a day without a play makes none.
+
+#### The staff meal
+
+- **At the Kitchen, once a day, free:** it serves tonight's table from the Warehouse's dishes, **one dish for every
+  three mouths** (the farmer and every Uma who eats tonight, as the board stands: [food](#food)), picked the most stars
+  first, then the most held, or chosen (a tap on a dish).
+- **Those mouths eat it tonight in place of their two meals:** no pantry meals and no takeout for them. It feeds the
+  farmer first, then the Umas in the table's order; a mouth past those counted when it was served eats from the pantry.
+- **Every Uma who eats it is well fed** for the meal's days, by the lowest stars served, on [the reception's
+  table](#the-wedding-and-the-reception): one rule for both. Never stacking, never shortening one running.
+
+<!-- live:staff-meal -->
+| The lowest stars served | ★1 | ★2 | ★3 | ★4 | ★5 |
+|---|---|---|---|---|---|
+| Well fed | Through tomorrow | Through tomorrow | 2 days | 2 days | 3 days |
+<!-- /live -->
+
+- **The morning says it:** "Staff meal · 12 at the table · well fed 2 days" (tagged Well fed; a tap opens the Kitchen).
+  `farm.counts.meals` counts the staff meals served.
+
+#### On screen
+
+- **The stove** (`?stove=1`), full screen, landscape, one thumb: ✕, the seed (four digits) and a time bar in the header,
+  the score and its tier on the right; the ticket rail across the top (each ticket its name, its parts as chips, grey to
+  cook, orange on a burner, green on the pass, and its wait as a bar; a tap puts it first, outlined); three burners in
+  the middle, each a ring that fills orange while its part cooks, then green, its Perfect middle shaded ("Now!"); the
+  pass on the right. "Ready…" comes before the clock, which doesn't pause after. The end's card says the tier, the score
+  and what it made ("12 meals ★3 into the pantry", "5 Carrot Salad ★2 · 4 Carp Grill ★2"), and **Done**.
+- **The Kitchen's sheet** (`?sheet=kitchen`), two columns: **Today's play** (the menu; the assistant, None or each
+  farmhand with an action tonight with her Cooking and her term; **Play · 1 · 6 dishes**, with the seed and the actions
+  left below it, or the refusal), and **The staff meal** (tonight's table, the dishes held, **Serve the staff meal**, or
+  "Served · 12 at the table · well fed 2 days"), **its level** (the next, with Upgrade or what it waits for) and **the
+  recipes known**, each with what it takes, the shop's shelf a tap away.
+- **The shop's Recipes shelf,** in town, below the seeds once the Kitchen stands: each recipe not known, what it takes
+  and its price.
+- **The Book's food row** says a staff meal served ("staff meal for 12") and opens the Kitchen once it stands (the
+  farmhouse kitchen before).
+- **Dishes** sit on the Warehouse's Dishes shelf and in the gift picker's Dishes.
+
+#### Its save
+
+v5 grows in place, and nothing moves `updatedAt`:
+- `workshops.current` is the play at the stove under way: its workshop, what it is (`play`: `batch` or `kitchen`), its
+  day, its seed and its length in seconds, the Kitchen's assistant, and the inputs taken (a batch's two `goods`, or the
+  Kitchen's `menu`: each recipe's dish, share, main and side). The shape from before the stove (a workshop, an
+  assistant and a day, which no build ever wrote) reads as no play.
+- `workshops.played.kitchen` is the day of its last play, `workshops.best.kitchen` its best score and
+  `workshops.recipes` the recipes learnt.
+- `today.staff` is tonight's staff meal (its mouths and well-fed days) and `today.assistant` the Kitchen's assistant
+  today; both clear with the day.
+- The Kitchen's level is `buildings.kitchen` (1–5), a level bought today waiting in `farm.builds`.
+- `farm.counts.plays` (the stove's plays: the seed's count), `farm.counts['cooked:<dish>']` and `farm.counts.meals`.
+- The morning's `staff` line is a new kind in `summary.money`, a built line may carry the Kitchen's new level, and a
+  farmhand's work line her action as its assistant (`summary.work[].kitchen`).
+
+A save from before reads as no play and no staff meal.
+
+#### What the simulations say
+
+The season and scale simulations build the Kitchen once the Farm Rank offers it (after the Farm Rank 3 stations on the
+two-year whole farm; first of the Farm Rank 3 builds at scale), and from then on the farmer plays it every day he can as
+the casual bot and serves the staff meal; he buys a recipe on the shop's shelf for what the farm ships most of
+([the farm at scale](#the-farm-at-scale-10-20-and-50-umas), [the pacing](#the-pacing)).
+
+| Run | The Kitchen | Plays (score) · dishes | Staff meals | Takeout | Well fed, a night | Gold at the end |
+|---|---|---|---|---|---|---|
+| The whole farm (two farmhands and the Coop's and the Mine's), its second year | Stands Spring 10 | 5 (Good) · 40 | 13 | 165g | 8 of 8, as with the cook alone | 159,140g (191,300g without it) |
+| 10 Umas, year 4 | Since year 3 | 20 (59) · 154 | 32 | 1,125g | 9 of 10 | 612,190g |
+| 20 Umas, year 4 | Since year 3 | 32 (59) · 308 | 38 | 3,150g | 18 of 20 | 665,715g |
+| 50 Umas, year 4 | Since year 3 | 35 (60) · 637 | 38 | 1,890g | 47 of 50 | 1,188,820g |
+
+- **At scale it feeds the farm:** takeout falls to a few thousand gold a year, and nearly every Uma is well fed every
+  night (from 6 of 10, 14 of 20 and 37 of 50 before it). **10 and 20 stay fully in real jobs** in year 4; 50 runs
+  further past the farm's jobs (35 in real jobs, from 38), since the staff meal takes the cooks' work.
+- **It plays when the Warehouse holds its whole base,** one good and one star an ingredient: a quarter to three quarters
+  of the days. Its dishes come out ★1–2 (its inputs' ★1, Good adds no star), so a staff meal feeds through tomorrow.
+- **On a small farm it doesn't pay:** two farmhands' goods can't fill an 18-good menu most days, and their cook already
+  feeds them; the farm ends its second year about a sixth poorer with it.
+- **The stove's bots:** over 8 seeds a batch's 30 s, the careful bot scores 100 and the casual 70; the Kitchen's 60 s,
+  100 and 57.
 
 ## Part 2 — The Umas and the farm's progress
 
@@ -2976,7 +3292,7 @@ your rank allows", so ranking up is how the farm goes deeper. The challenge towa
 | Mining | Dig 40 ores or stones | Dig at floor 10 | Dig at floor 15 | Dig at floor 20 | Dig at floor 25 | A farmhand’s faces at the Mine or the Quarry |
 | Fishing | Catch 30 fish | Catch 10 fish at the River | Catch 10 fish at the Lake | Catch 10 fish at the Falls | 1st at a Fishing Derby, on the team | The night’s catches (night step 4); a festival win (festivals aren’t built yet) |
 | Foraging | Gather 50 items | Gather 20 items in the Hills | Gather 20 items in the Old Forest | Gather 20 items on the Mountain | Gather 20 items in the Misty Vale | The night’s hauls (night step 4) |
-| Cooking | Assist 5 Kitchen plays | Assist a Fine play | Make 10 dishes of ★4+ | Assist a Masterwork | 1st at a Cooking Contest as the cook | The Kitchen (not built yet); a festival win (festivals aren’t built yet) |
+| Cooking | Assist 5 Kitchen plays | Assist a Fine play | Make 10 dishes of ★4+ | Assist a Masterwork | 1st at a Cooking Contest as the cook | The Kitchen’s play, its assistant; a festival win (festivals aren’t built yet) |
 | Serving | Assist 5 shifts | Assist a Fine shift | Serve 100 guests | Assist a Masterwork shift | Serve 1,000 guests | The Restaurant (not built yet) |
 | Forging | Assist 5 Forge plays | Assist a Fine merge | Forge a tool upgrade | Assist a Masterwork | Forge a Mythril tool | The Forge’s workshop (not built yet) |
 | Expeditions | Return from 2 expeditions | A Success at level 10+ | A Success at level 20+ | A Great at level 20+ | A Success at the Sky Ruins | Expeditions (not built yet) |
@@ -2986,9 +3302,10 @@ your rank allows", so ranking up is how the farm goes deeper. The challenge towa
   in that activity. It stops at the target and resets to 0 at the rank-up.
 - **What counts it:** her own work, once the farmhands work. The farmer's harvests, hauls and catches count toward no
   Uma's challenge. Each challenge reads only its own kind of event; an Uma off the roster or at Legend counts nothing.
-- **In play:** farming's, foraging's, fishing's, the ranch's and mining's challenges are counted: the ranch's by a
-  farmhand's night at the Coop or the Barn and the hearts of an animal she cares for, mining's by her faces' finds and
-  floors. The others wait for places that aren't open. Farming's, fishing's and the ranch's Legend challenges are
+- **In play:** farming's, foraging's, fishing's, the ranch's, mining's and cooking's challenges are counted: the ranch's
+  by a farmhand's night at the Coop or the Barn and the hearts of an animal she cares for, mining's by her faces' finds
+  and floors, cooking's by the Kitchen's play she assists ([its play](#its-play)). The others wait for places that
+  aren't open. Farming's, fishing's and the ranch's Legend challenges are
   festival wins, and no festival is held, so those climbs stop at Master; foraging and mining can reach Legend.
 
 #### Rank-ups at night
@@ -3107,11 +3424,11 @@ Dorm's levels, the shop's seed tiers), so the sheet and the morning can't drift 
 |---|---|---|
 | 1 | 0 | Block A and tier-1 seeds (the start), The Mill to build (1,000g · 20 logs), Dorm level 2 (5 beds) |
 | 2 | 150 | The Coop to build (2,000g · 30 logs · 20 vegetables), The Hills, The River, The Sea Pier (with the Dock), Chickens at the rancher’s, Dorm level 3 (7 beds), New seeds at the shop |
-| 3 | 250 | The Sawmill to build (1,500g · 40 logs), The Barn to build (3,500g · 30 logs · 20 vegetables), The Smokehouse to build (2,000g · 30 logs · 20 fish), Plot 2 to clear (2,500g), Station level 2 (2 loads a day), Ducks, Cows and Sheep at the rancher’s, Dorm level 4 (9 beds) |
-| 4 | 950 | The Mine to build (10,000g · 60 planks), The Smelter to build (8,000g · 40 planks · 40 logs), Plot 3 to clear (5,000g), Station level 3 (3 loads a day), The Old Forest, The Lake, Goats at the rancher’s, The Mine’s and the Quarry’s floors to 15, Dorm level 5 (11 beds), New seeds at the shop |
-| 5 | 2,150 | The Kitchen to build (not built yet), The Quarry to build (12,000g · 50 planks), The Cutter to build (10,000g · 40 planks · 40 logs), Plot 4 to clear (10,000g), Station level 4 (4 loads a day), Alpacas at the rancher’s, Dorm level 6 (14 beds) |
-| 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), Plot 5 to clear (15,000g), Station level 5 (5 loads a day), The Mountain, The Falls, Cashmere Goats at the rancher’s, The Mine’s and the Quarry’s floors to 20, Dorm level 7 (17 beds) |
-| 7 | 6,250 | The Restaurant to build (not built yet), The Expedition post to build (not built yet), Plot 6 to clear (25,000g), Dorm level 8 (20 beds) |
+| 3 | 250 | The Sawmill to build (1,500g · 40 logs), The Barn to build (3,500g · 30 logs · 20 vegetables), The Smokehouse to build (2,000g · 30 logs · 20 fish), The Kitchen to build (3,000g · 40 logs · 20 vegetables), Plot 2 to clear (2,500g), Station level 2 (2 loads a day), Ducks, Cows and Sheep at the rancher’s, Dorm level 4 (9 beds) |
+| 4 | 950 | The Mine to build (10,000g · 60 planks), The Smelter to build (8,000g · 40 planks · 40 logs), Plot 3 to clear (5,000g), Station level 3 (3 loads a day), Kitchen level 2 (8 dishes a play), The Old Forest, The Lake, Goats at the rancher’s, The Mine’s and the Quarry’s floors to 15, Dorm level 5 (11 beds), New seeds at the shop |
+| 5 | 2,150 | The Quarry to build (12,000g · 50 planks), The Cutter to build (10,000g · 40 planks · 40 logs), Plot 4 to clear (10,000g), Station level 4 (4 loads a day), Kitchen level 3 (10 dishes a play), Alpacas at the rancher’s, Dorm level 6 (14 beds) |
+| 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), Plot 5 to clear (15,000g), Station level 5 (5 loads a day), Kitchen level 4 (12 dishes a play), The Mountain, The Falls, Cashmere Goats at the rancher’s, The Mine’s and the Quarry’s floors to 20, Dorm level 7 (17 beds) |
+| 7 | 6,250 | The Restaurant to build (not built yet), The Expedition post to build (not built yet), Plot 6 to clear (25,000g), Kitchen level 5 (15 dishes a play), Dorm level 8 (20 beds) |
 | 8 | 9,750 | The Forge to build (not built yet), Plot 7 to clear (35,000g), The Misty Vale, The Deep Sea (with the Boat), The Mine’s and the Quarry’s floors to 25 |
 | 9 | 14,750 | Plot 8 to clear (50,000g) |
 | 10 | 21,750 | The World Tree, The Moon Pool, The Mine’s and the Quarry’s floors to 30, The farm’s gold crest |
@@ -3237,9 +3554,9 @@ A place whose game isn't built yet shows what it'll be: its Build card has its c
 | Sawmill | 3 | 1,500g | 40 logs | Yes |
 | Barn | 3 | 3,500g | 30 logs, 20 vegetables | Yes |
 | Smokehouse | 3 | 2,000g | 30 logs, 20 fish | Yes |
+| Kitchen | 3 | 3,000g | 40 logs, 20 vegetables | Yes |
 | Mine | 4 | 10,000g | 60 planks | Yes |
 | Smelter | 4 | 8,000g | 40 planks, 40 logs | Yes |
-| Kitchen | 5 | 15,000g | 50 planks, 30 vegetables | Not built yet |
 | Quarry | 5 | 12,000g | 50 planks | Yes |
 | Cutter | 5 | 10,000g | 40 planks, 40 logs | Yes |
 | Dock | 6 | 20,000g | 80 planks | Yes |
@@ -3416,16 +3733,20 @@ The same farm on takeout alone pays 990g, 1,800g, 2,160g and 2,520g of takeout a
 ##### The whole farm: the Coop and the Mine
 
 The same test plays a third run, **two years** of the farm with its two farmhands (the field hand on Cook) that also
-builds the ranch and the Mine: the Coop as soon as the Farm Rank offers it and its logs and vegetables are held (from
-Summer, growing vegetables for it), four chickens there with fodder bought in town when the silo runs low (keeping 600g
-back), and a third friend invited to care for them the day it stands (feed, collect, care); then, in its second year,
-the Mine (its 60 planks sawn from his logs at the Sawmill, a load a day), a fourth friend at its face, and the stairs
-taken whenever she finds them. The Coop and the Mine add their 15g a night each and their farmhands' 10g each; the
+builds the ranch, the Kitchen and the Mine: the Coop as soon as the Farm Rank offers it and its logs and vegetables are
+held (from Summer, growing vegetables for it), four chickens there with fodder bought in town when the silo runs low
+(keeping 600g back), and a third friend invited to care for them the day it stands (feed, collect, care); the Kitchen
+once the Farm Rank 3 stations stand, played every day he can as the casual bot and its staff meal served when the dishes
+are there, a recipe bought in town on a day it couldn't cook (one a season at most) for what the farm ships most of; then,
+in its second year, the Mine (its 60 planks sawn from his logs at the Sawmill, a load a day), a fourth friend at its
+face, and the stairs taken whenever she finds them. (The year with two farmhands ends before its Farm Rank 3 stations
+are all up: it builds no Kitchen.) The Coop and the Mine add their 15g a night each and their farmhands' 10g each; the
 chickens cost their 500g and their feed; the cook feeds them all. It checks:
 - **two years without a short night,** never half pace;
 - **every season earns more than its takeout, upkeep and loans take,** and the two years end richer than one year with
   two farmhands;
-- **the Coop stands in the first year and the Mine in the second,** both counted in the upkeep, with their farmhands;
+- **the Coop stands in the first year, the Kitchen and then the Mine in the second,** all counted in the upkeep, with
+  their farmhands;
 - **the eggs pay more than the Coop's nights cost** (its upkeep, its farmhand's, the hens and their feed), **and the ores
   more than the Mine's** (its upkeep and its farmhand's);
 - **each morning reports the farmhands at the Coop and the Mine** and the Coop's night, nobody hungry, and the Mine's
@@ -3437,24 +3758,30 @@ chickens cost their 500g and their feed; the cook feeds them all. It checks:
 | Spring 1 | 4,040g | 825g | 295g | 2,920g | 0 | 2,240g | 35g | 1 |
 | Summer 1 | 4,845g | 1,785g | 660g | 2,400g | 0 | 6,000g | 55g | 3 |
 | Autumn 1 | 7,535g | 705g | 1,290g | 5,540g | 0 | 2,300g | 130g (the Coop and its farmhand, the Dorm's level 2, the Sawmill, the Smokehouse) | 3 |
-| Winter 1 | 17,460g | 375g | 1,680g | 15,405g | 0 | 16,765g | 140g | 3 |
-| Spring 2 | 24,220g | — | 1,680g | 22,540g | 0 | 40,625g | 140g | 3 |
-| Summer 2 | 35,285g | 60g | 1,930g | 33,295g | 0 | 64,160g | 165g (the Mine and its farmhand) | 4 |
-| Autumn 2 | 60,060g | — | 1,980g | 58,080g | 0 | 123,300g | 165g | 4 |
-| Winter 2 | 71,320g | — | 1,980g | 69,340g | 0 | 191,300g | 165g | 5 |
+| Winter 1 | 13,660g | 555g | 1,680g | 11,425g | 0 | 12,515g | 140g | 3 |
+| Spring 2 | 19,765g | — | 1,710g | 18,055g | 0 | 27,390g | 155g (the Kitchen) | 3 |
+| Summer 2 | 31,855g | 60g | 2,010g | 29,785g | 0 | 47,765g | 180g (the Mine and its farmhand) | 4 |
+| Autumn 2 | 51,495g | 105g | 2,160g | 49,230g | 0 | 97,555g | 180g | 4 |
+| Winter 2 | 66,185g | — | 2,160g | 64,025g | 0 | 159,140g | 180g | 5 |
 
 - **The Coop pays its way three times over:** it is built on Autumn 1 of the first year (the vegetables it takes come
-  with Summer's crops), and over its 71 nights its eggs sell for 26,865g against 6,975g of upkeep, its farmhand, the
+  with Summer's crops), and over its 71 nights its eggs sell for 27,180g against 6,975g of upkeep, its farmhand, the
   four hens and their fodder. Its farmhand reaches Animal care 9 and the ranch's Expert rank.
+- **The Kitchen doesn't pay its way on a farm this small:** it stands on Spring 10 of the second year (the farmer keeps
+  back its logs and vegetables from Winter), but a play takes 18 goods of one good and one star an ingredient, more than
+  two farmhands' hauls and the field bring in, while the cook eats the same goods at night. It plays 5 days in its year
+  (40 dishes, Good) and serves 13 staff meals; it buys 4 recipes (Oyster and Enoki Mushroom Soup, Trout and Salmon
+  Grill). The cook already fed the farm, so the two years end on 159,140g against 191,300g without it: its build, its
+  recipes, the goods its dishes take and the Mine a season later.
 - **The Mine pays at once:** it is built in the second year's Summer, once Farm Rank 4 comes; its farmhand's faces and
-  the farmer's free stairs reach floor 15 (the Farm Rank's reach), and over its 34 nights its ores sell for 55,285g
-  against 850g of its nights' costs. One miner works four full faces a day and a thin one or two
+  the farmer's free stairs reach floor 15 (the Farm Rank's reach), and over its 30 nights its ores sell for 42,455g
+  against 750g of its nights' costs. One miner works four full faces a day and a thin one or two
   ([thin](#thin-four-full-hauls-a-place-a-day)).
 - **The cook feeds the farm:** from the first Winter the pantry covers nearly every meal (60g of takeout in the whole
   second year), the cook reaches Cooking 6, and her ★2 batches keep the four farmhands well fed nearly every night: a
   well-fed farmhand works one more action, with +0.25 quality. The second year ships 190,885g against the 137,600g it
   shipped before food (266,525g while well fed also gave every haul a quarter more: [well fed](#well-fed)).
-- **The farm in all:** the two years ship 224,765g and end on 191,300g, Farm Rank 5 (2,752 points); every build is
+- **The farm in all:** the two years ship 199,380g and end on 159,140g, Farm Rank 5 (2,493 points); every build is
   paid from its own gold.
 - **Food's numbers:** takeout at 15g a meal, the farmer's batch of six from two goods (so cooking saves gold against
   takeout), the cook's 6 to 12, and three days a meal keeps. The ranch's and the Mine's stand as built.
@@ -3468,16 +3795,21 @@ or **50**: two in its first Spring, then ten by year 2's Spring, twenty by year 
 `SCALE=1` prints the tables below.
 
 - **The farmer** is a plain bot. Each morning he builds what the Farm Rank offers (the stations, the Coop and the Barn,
-  the Mine and the Quarry, the Dock and the Boat), clears **a plot for every five Umas** as the Farm Rank opens them,
-  buys each station's next level and the Dorm's, keeps the Coop and the Barn full and the silo fed, buys each plot's
-  seeds in town (a different crop a plot), tends the field by hand with what his day leaves, ships a crate of everything
-  the farm can spare (keeping the next builds' goods, tonight's loads and the cook's batches back), and spends the rest
-  of his day with the people. Every purchase keeps five nights' bill in hand.
+  the Kitchen, the Mine and the Quarry, the Dock and the Boat), clears **a plot for every five Umas** as the Farm Rank
+  opens them, buys each station's next level and the Dorm's (and the Kitchen's while the staff meal takes more dishes
+  than a play makes), keeps the Coop and the Barn full and the silo fed, buys each plot's seeds in town (a different crop
+  a plot), **plays the Kitchen** once it stands (every day he can, as the casual bot: the menu its known recipes can make)
+  and **serves the staff meal** when the dishes are there, chops logs for the next build while it's short of them (up to
+  four a day), tends the field by hand with what his day leaves, ships a crate of everything the farm can spare (keeping
+  the next builds' goods, tonight's loads, the cook's batches and tomorrow's menu back), buys a recipe in town for what the
+  farm ships most of, and spends the rest of his day with the people. Every purchase keeps six nights' bill in hand.
 - **The plain rule** sets the farmhands' boards every morning, in the order they came: **the field's plots** (harvest,
   plant, water), **the animals**, **the stations' loads**, **the kitchen** (Cook), then **gathering and mining**: an
   area's, a spot's or a dig's four full hauls a day each, the deepest first, one place each; then the field's **new
-  ground** (a row of each plot a day, cleared and tilled). Each farmhand takes what her actions fill of the first jobs
-  with work left, by her aptitudes, and the next takes what's left. Past every job, she gathers where it's thin.
+  ground** (a row of each plot a day, cleared and tilled). While the next build is short of logs, the nearest area's
+  full hauls are chops, and the Sawmill's logs wait for it. Each farmhand takes what her actions fill of the first jobs
+  with work left, by her aptitudes (a station's loads as its goods allow; an area's full hauls less what the farmer took),
+  and the next takes what's left. Past every job, she gathers where it's thin.
 - **How it counts an Uma's night:** her **real work** is the field, the animals, a load, the kitchen, a full haul and a
   full face; **thin** is a haul or a face past its place's four (half a haul: idle-ish); **idle** is an action with
   nothing to do. She's **in a real job** when real work is at least half her actions; else she's **idle-ish**. **Real work
@@ -3488,31 +3820,34 @@ or **50**: two in its first Spring, then ten by year 2's Spring, twenty by year 
 It checks: never a short night at any stage; 10 Umas by year 2, 20 by year 3, 50 by year 4; **10 and 20 fully in real
 jobs** in year 4 with real work still waiting and under a tenth of their actions thin or idle; **50 past the farm's real
 jobs**, some idle-ish and over a tenth of their actions thin; two plots at 10, four at 20 and eight at 50, the five
-stations at level 5 and the Dorm's 20 beds; and every season's save parses as v5.
+stations at level 5 and the Dorm's 20 beds; **the Kitchen built at every stage, played over a quarter of year 4's days
+and its staff meal served over half of them**, Good on average; and every season's save parses as v5.
 
 Each stage in its last year (year 4), a day's actions on average:
 
 |  | 10 Umas | 20 Umas | 50 Umas |
 |---|---|---|---|
 | Umas working the farm, at the year’s end | 10 | 20 | 50 |
-| Their actions a day | 46 | 94 | 228 |
-| Real work on offer a day (taken, and waiting) | 101 (45, 56) | 151 (91, 60) | 237 (191, 46) |
-| The field: tending and new ground | 18 | 44 | 106 |
-| The animals | 15 | 15 | 20 |
-| The stations’ loads | 5 | 10 | 17 |
-| The kitchen | 2 | 4 | 11 |
-| Full hauls (an area’s or a spot’s first four) | 2 | 13 | 27 |
-| Faces (a dig’s first four) | 1 | 4 | 5 |
-| **Thin** hauls and faces (past the four) | 0 | 3 | 38 |
-| **Idle** actions (nothing to do) | 3 | 2 | 5 |
-| **Umas in real jobs** · idle-ish | **10** · 0 | **20** · 0 | **38** · 11 |
-| The bin, the year | 495,710g | 874,685g | 1,533,260g |
-| Upkeep, the year | 11,205g | 19,710g | 34,890g |
-| Takeout, the year | 7,110g | 9,210g | 16,185g |
-| Meals from the pantry, the year | 582 | 1,402 | 3,657 |
-| Well fed, a night | 6 of 10 | 14 of 20 | 37 of 50 |
-| Gold at the year’s end | 765,430g | 829,640g | 1,316,275g |
-| Farm Rank · plots · station levels | 8 · 2 · 15 | 9 · 4 · 20 | 10 · 8 · 25 |
+| Their actions a day | 49 | 98 | 237 |
+| Real work on offer a day (taken, and waiting) | 104 (48, 56) | 154 (95, 59) | 229 (191, 38) |
+| The field: tending and new ground | 18 | 48 | 107 |
+| The animals | 15 | 16 | 20 |
+| The stations’ loads | 8 | 13 | 18 |
+| The kitchen | 1 | 1 | 3 |
+| Full hauls (an area’s or a spot’s first four) | 1 | 11 | 31 |
+| Faces (a dig’s first four) | 3 | 4 | 6 |
+| **Thin** hauls and faces (past the four) | 1 | 3 | 48 |
+| **Idle** actions (nothing to do) | 2 | 3 | 5 |
+| **Umas in real jobs** · idle-ish | **10** · 0 | **20** · 0 | **35** · 14 |
+| The bin, the year | 580,230g | 815,920g | 1,529,210g |
+| Upkeep, the year | 14,175g | 22,140g | 35,805g |
+| Takeout, the year | 1,125g | 3,150g | 1,890g |
+| Meals from the pantry, the year | 277 | 210 | 844 |
+| Well fed, a night | 9 of 10 | 18 of 20 | 47 of 50 |
+| The Kitchen: plays (their average score) · dishes made, the year | 20 (59) · 154 | 32 (59) · 308 | 35 (60) · 637 |
+| Staff meals served, the year | 32 | 38 | 38 |
+| Gold at the year’s end | 612,190g | 665,715g | 1,188,820g |
+| Farm Rank · plots · station levels | 8 · 2 · 25 | 9 · 4 · 25 | 10 · 8 · 25 |
 | Housing: Dorm beds · home · in town | 11 · 10 · 0 | 20 · 20 · 0 | 20 · 20 · 30 |
 | Goods eased by a flood, a day | 0 | 0 | 0 |
 
@@ -3523,26 +3858,28 @@ The three farms year by year:
 |  | Year 1 | Year 2 | Year 3 | Year 4 |
 |---|---|---|---|---|
 | Umas working the farm, at the year’s end | 8 | 10 | 10 | 10 |
-| Their actions a day | 21 | 45 | 48 | 46 |
-| Real work on offer a day (taken, and waiting) | 42 (20, 22) | 85 (43, 42) | 84 (46, 38) | 101 (45, 56) |
-| The field: tending and new ground | 12 | 26 | 19 | 18 |
-| The animals | 0 | 4 | 8 | 15 |
-| The stations’ loads | 1 | 3 | 5 | 5 |
-| The kitchen | 1 | 2 | 2 | 2 |
-| Full hauls (an area’s or a spot’s first four) | 6 | 8 | 9 | 2 |
-| Faces (a dig’s first four) | 0 | 0 | 0 | 1 |
-| **Thin** hauls and faces (past the four) | 0 | 1 | 2 | 0 |
-| **Idle** actions (nothing to do) | 0 | 1 | 2 | 3 |
-| **Umas in real jobs** · idle-ish | **5** · 0 | **10** · 0 | **10** · 0 | **10** · 0 |
-| The bin, the year | 26,840g | 169,665g | 399,025g | 495,710g |
-| Upkeep, the year | 3,730g | 8,400g | 8,940g | 11,205g |
-| Takeout, the year | 1,920g | 6,630g | 3,915g | 7,110g |
-| Meals from the pantry, the year | 446 | 612 | 795 | 582 |
-| Well fed, a night | 3 of 8 | 5 of 10 | 8 of 10 | 6 of 10 |
+| Their actions a day | 20 | 46 | 47 | 49 |
+| Real work on offer a day (taken, and waiting) | 36 (19, 17) | 75 (43, 32) | 108 (46, 62) | 104 (48, 56) |
+| The field: tending and new ground | 11 | 20 | 22 | 18 |
+| The animals | 0 | 13 | 13 | 15 |
+| The stations’ loads | 1 | 2 | 4 | 8 |
+| The kitchen | 1 | 2 | 1 | 1 |
+| Full hauls (an area’s or a spot’s first four) | 5 | 5 | 2 | 1 |
+| Faces (a dig’s first four) | 0 | 0 | 3 | 3 |
+| **Thin** hauls and faces (past the four) | 2 | 3 | 1 | 1 |
+| **Idle** actions (nothing to do) | 0 | 1 | 2 | 2 |
+| **Umas in real jobs** · idle-ish | **5** · 0 | **9** · 1 | **10** · 0 | **10** · 0 |
+| The bin, the year | 29,345g | 131,485g | 317,380g | 580,230g |
+| Upkeep, the year | 3,655g | 8,930g | 13,175g | 14,175g |
+| Takeout, the year | 3,120g | 5,625g | 4,650g | 1,125g |
+| Meals from the pantry, the year | 364 | 679 | 350 | 277 |
+| Well fed, a night | 2 of 8 | 6 of 10 | 7 of 10 | 9 of 10 |
+| The Kitchen: plays (their average score) · dishes made, the year | 0 (0) · 0 | 0 (0) · 0 | 10 (60) · 76 | 20 (59) · 154 |
+| Staff meals served, the year | 0 | 0 | 18 | 32 |
 | Short nights | 0 | 0 | 0 | 0 |
-| Gold at the year’s end | 3,110g | 67,725g | 364,845g | 765,430g |
-| Farm Rank · plots · station levels | 3 · 2 · 4 | 5 · 2 · 8 | 7 · 2 · 15 | 8 · 2 · 15 |
-| Housing: Dorm beds · home · in town | 7 · 7 · 1 | 11 · 10 · 0 | 11 · 10 · 0 | 11 · 10 · 0 |
+| Gold at the year’s end | 4,090g | 19,715g | 77,330g | 612,190g |
+| Farm Rank · plots · station levels | 3 · 2 · 4 | 5 · 2 · 10 | 6 · 2 · 25 | 8 · 2 · 25 |
+| Housing: Dorm beds · home · in town | 7 · 7 · 1 | 9 · 9 · 1 | 11 · 10 · 0 | 11 · 10 · 0 |
 | Goods eased by a flood, a day | 0 | 0 | 0 | 0 |
 
 **The farm of 20:**
@@ -3550,26 +3887,28 @@ The three farms year by year:
 |  | Year 1 | Year 2 | Year 3 | Year 4 |
 |---|---|---|---|---|
 | Umas working the farm, at the year’s end | 8 | 17 | 20 | 20 |
-| Their actions a day | 20 | 57 | 89 | 94 |
-| Real work on offer a day (taken, and waiting) | 39 (20, 19) | 106 (54, 52) | 154 (87, 67) | 151 (91, 60) |
-| The field: tending and new ground | 10 | 39 | 50 | 44 |
-| The animals | 0 | 1 | 17 | 15 |
-| The stations’ loads | 1 | 2 | 6 | 10 |
-| The kitchen | 1 | 2 | 3 | 4 |
-| Full hauls (an area’s or a spot’s first four) | 7 | 8 | 7 | 13 |
-| Faces (a dig’s first four) | 0 | 0 | 1 | 4 |
-| **Thin** hauls and faces (past the four) | 1 | 4 | 2 | 3 |
-| **Idle** actions (nothing to do) | 0 | 1 | 2 | 2 |
-| **Umas in real jobs** · idle-ish | **5** · 0 | **12** · 1 | **19** · 1 | **20** · 0 |
-| The bin, the year | 26,640g | 147,350g | 449,535g | 874,685g |
-| Upkeep, the year | 3,530g | 9,510g | 17,160g | 19,710g |
-| Takeout, the year | 1,335g | 8,580g | 15,045g | 9,210g |
-| Meals from the pantry, the year | 483 | 784 | 1,001 | 1,402 |
-| Well fed, a night | 2 of 8 | 7 of 17 | 10 of 20 | 14 of 20 |
+| Their actions a day | 20 | 59 | 94 | 98 |
+| Real work on offer a day (taken, and waiting) | 38 (20, 18) | 83 (55, 28) | 153 (92, 61) | 154 (95, 59) |
+| The field: tending and new ground | 11 | 29 | 51 | 48 |
+| The animals | 0 | 10 | 17 | 16 |
+| The stations’ loads | 1 | 2 | 8 | 13 |
+| The kitchen | 1 | 3 | 2 | 1 |
+| Full hauls (an area’s or a spot’s first four) | 6 | 9 | 10 | 11 |
+| Faces (a dig’s first four) | 0 | 0 | 3 | 4 |
+| **Thin** hauls and faces (past the four) | 0 | 4 | 2 | 3 |
+| **Idle** actions (nothing to do) | 1 | 1 | 1 | 3 |
+| **Umas in real jobs** · idle-ish | **5** · 0 | **12** · 1 | **20** · 0 | **20** · 0 |
+| The bin, the year | 26,985g | 143,685g | 418,730g | 815,920g |
+| Upkeep, the year | 3,675g | 10,745g | 18,530g | 22,140g |
+| Takeout, the year | 1,560g | 6,795g | 6,975g | 3,150g |
+| Meals from the pantry, the year | 462 | 903 | 623 | 210 |
+| Well fed, a night | 2 of 8 | 8 of 17 | 15 of 20 | 18 of 20 |
+| The Kitchen: plays (their average score) · dishes made, the year | 0 (0) · 0 | 0 (0) · 0 | 18 (59) · 176 | 32 (59) · 308 |
+| Staff meals served, the year | 0 | 0 | 22 | 38 |
 | Short nights | 0 | 0 | 0 | 0 |
-| Gold at the year’s end | 2,455g | 12,325g | 117,625g | 829,640g |
-| Farm Rank · plots · station levels | 3 · 2 · 4 | 5 · 3 · 9 | 7 · 4 · 15 | 9 · 4 · 20 |
-| Housing: Dorm beds · home · in town | 7 · 7 · 1 | 14 · 11 · 6 | 20 · 20 · 0 | 20 · 20 · 0 |
+| Gold at the year’s end | 2,810g | 16,140g | 34,355g | 665,715g |
+| Farm Rank · plots · station levels | 3 · 2 · 4 | 5 · 3 · 12 | 7 · 4 · 25 | 9 · 4 · 25 |
+| Housing: Dorm beds · home · in town | 7 · 7 · 1 | 9 · 9 · 8 | 17 · 14 · 6 | 20 · 20 · 0 |
 | Goods eased by a flood, a day | 0 | 0 | 0 | 0 |
 
 **The farm of 50:**
@@ -3577,38 +3916,46 @@ The three farms year by year:
 |  | Year 1 | Year 2 | Year 3 | Year 4 |
 |---|---|---|---|---|
 | Umas working the farm, at the year’s end | 8 | 17 | 38 | 50 |
-| Their actions a day | 22 | 57 | 128 | 228 |
-| Real work on offer a day (taken, and waiting) | 33 (20, 13) | 118 (57, 61) | 167 (116, 51) | 237 (191, 46) |
-| The field: tending and new ground | 6 | 40 | 73 | 106 |
-| The animals | 3 | 8 | 10 | 20 |
-| The stations’ loads | 1 | 2 | 8 | 17 |
-| The kitchen | 2 | 2 | 6 | 11 |
-| Full hauls (an area’s or a spot’s first four) | 8 | 4 | 15 | 27 |
-| Faces (a dig’s first four) | 0 | 0 | 2 | 5 |
-| **Thin** hauls and faces (past the four) | 2 | 0 | 12 | 38 |
-| **Idle** actions (nothing to do) | 0 | 1 | 3 | 5 |
-| **Umas in real jobs** · idle-ish | **5** · 0 | **13** · 0 | **26** · 3 | **38** · 11 |
-| The bin, the year | 39,240g | 162,115g | 502,830g | 1,533,260g |
-| Upkeep, the year | 3,865g | 10,115g | 20,670g | 34,890g |
-| Takeout, the year | 885g | 11,370g | 14,670g | 16,185g |
-| Meals from the pantry, the year | 517 | 596 | 1,870 | 3,657 |
-| Well fed, a night | 4 of 8 | 6 of 17 | 18 of 38 | 37 of 50 |
+| Their actions a day | 20 | 57 | 131 | 237 |
+| Real work on offer a day (taken, and waiting) | 38 (20, 18) | 101 (56, 45) | 171 (122, 49) | 229 (191, 38) |
+| The field: tending and new ground | 11 | 36 | 74 | 107 |
+| The animals | 0 | 10 | 17 | 20 |
+| The stations’ loads | 1 | 2 | 8 | 18 |
+| The kitchen | 1 | 2 | 2 | 3 |
+| Full hauls (an area’s or a spot’s first four) | 6 | 5 | 15 | 31 |
+| Faces (a dig’s first four) | 0 | 0 | 2 | 6 |
+| **Thin** hauls and faces (past the four) | 0 | 1 | 10 | 48 |
+| **Idle** actions (nothing to do) | 0 | 1 | 2 | 5 |
+| **Umas in real jobs** · idle-ish | **5** · 0 | **13** · 0 | **26** · 3 | **35** · 14 |
+| The bin, the year | 30,405g | 141,520g | 529,915g | 1,529,210g |
+| Upkeep, the year | 3,520g | 10,590g | 23,110g | 35,805g |
+| Takeout, the year | 1,545g | 10,005g | 12,675g | 1,890g |
+| Meals from the pantry, the year | 467 | 695 | 829 | 844 |
+| Well fed, a night | 2 of 8 | 7 of 17 | 20 of 38 | 47 of 50 |
+| The Kitchen: plays (their average score) · dishes made, the year | 0 (0) · 0 | 0 (0) · 0 | 16 (61) · 200 | 35 (60) · 637 |
+| Staff meals served, the year | 0 | 0 | 18 | 38 |
 | Short nights | 0 | 0 | 0 | 0 |
-| Gold at the year’s end | 8,270g | 23,785g | 77,640g | 1,316,275g |
-| Farm Rank · plots · station levels | 3 · 2 · 4 | 5 · 4 · 7 | 7 · 6 · 25 | 10 · 8 · 25 |
-| Housing: Dorm beds · home · in town | 7 · 7 · 1 | 14 · 14 · 3 | 20 · 20 · 18 | 20 · 20 · 30 |
+| Gold at the year’s end | 9,675g | 14,295g | 58,180g | 1,188,820g |
+| Farm Rank · plots · station levels | 3 · 2 · 4 | 5 · 4 · 9 | 7 · 6 · 25 | 10 · 8 · 25 |
+| Housing: Dorm beds · home · in town | 7 · 7 · 1 | 9 · 9 · 8 | 14 · 14 · 24 | 20 · 20 · 30 |
 | Goods eased by a flood, a day | 0 | 0 | 0 | 0 |
-
 - **10 and 20 Umas hold, with work to spare.** In year 4 every Uma at 10 and 20 is in a real job, and real work still
-  waits (56 and 60 actions a day): the shallow areas and spots, the field's new ground, more of the field. Ten Umas keep
+  waits (56 and 59 actions a day): the shallow areas and spots, the field's new ground, more of the field. Ten Umas keep
   two plots, the ranch, the stations and the kitchen going; twenty keep four.
 - **50 Umas run past the farm's real jobs.** In year 4, with all eight plots, both buildings full, the five stations at
-  level 5, every area and spot open and both digs, 38 are in real jobs and 11 are idle-ish: about 43 actions a day go to
-  thin hauls and faces (38) or nothing (5). **What 50 still needs from Phase 2:** work for about ten Umas, some 45
-  actions a day, which is what its employers bring: expeditions (parties of four away for days), the Restaurant's
-  service and the Forge's crew.
+  level 5, every area and spot open and both digs, 35 are in real jobs and 14 are idle-ish: about 53 actions a day go to
+  thin hauls and faces (48) or nothing (5). The staff meal takes most of the cooks' batches off them (F92: 38 were in
+  real jobs before it). **What 50 still needs from Phase 2:** work for about fifteen Umas, some 55 actions a day, which
+  is what its employers bring: expeditions (parties of four away for days), the Restaurant's service and the Forge's
+  crew.
+- **The Kitchen feeds the farm at scale.** Each farm builds it in year 3 (its 40 logs and 20 vegetables kept back from
+  the bin), and in year 4 plays it 20, 32 and 35 days of 48 (about 60, Good: two burners can't keep the 60 s rail) and
+  serves the staff meal 32, 38 and 38 nights. Takeout falls to 1,125g, 3,150g and 1,890g a year, and nearly everyone is
+  well fed every night (9 of 10, 18 of 20, 47 of 50, from 6, 14 and 37). It plays only when the Warehouse holds the
+  whole base of one good and one star an ingredient: on the other days the cooks feed the farm as before.
 - **Gold grows with the farm's places, not its people.** Upkeep and takeout are a few percent of the bin at every stage,
-  and every farm ends year 4 rich (765K, 830K and 1.3M) with little left to buy. Thin hauls make each Uma past the jobs
+  and every farm ends year 4 rich (612K, 666K and 1.2M) with little left to buy; the Kitchen's recipes, levels and the
+  goods its dishes take are its first new spending. Thin hauls make each Uma past the jobs
   worth half a haul, and the market eases any good shipped by the crate, so a fifty-first Uma adds little. Phase 2's
   workshops are what's left to buy and to staff.
 - **Housing:** the Dorm tops out at 20 beds (level 8, Farm Rank 7); the 50-Uma farm's other 30 live in town and work the
@@ -4734,6 +5081,8 @@ plays.
   story](#what-plays-without-the-story)), every other good neutral. Her favourite good is what the default story's
   lines call `{good}`. **Every default can be had in Spring of year 1**, with nothing built: the woods' Spring goods,
   the pond's Spring fish, or a crop of the shop's first Spring seeds (a test checks it against the tables).
+- **A dish is a gift** like a good, from the gift picker's Dishes: her taste in it is her bible's (a loved dish pays
+  loved), any other dish neutral.
 - **Her tastes show** in steps: her loved good from Friendship 1; any good once you've given it, or once an event's option
   or a Choose play has revealed it; every taste from Friendship 7.
 
@@ -5332,7 +5681,9 @@ Each perk, what it does, and where in the day it acts:
 
 Each place-bound template means one thing at each line's place. **Every line whose place stands acts:** farming,
 foraging and fishing from day 1, mining once the Mine (or a quarrier's Quarry) stands, the ranch once the Coop or the Barn
-does. The workshops' lines wait for their games, and a morning item of theirs is a crop of the season meanwhile. **Her
+does, cooking once the Kitchen stands (its +10% as the Kitchen's assistant, and its chores as dishes on every play). The
+Restaurant's and the Forge's lines wait for their games, and a workshop line's morning item is a crop of the season
+meanwhile (a cook's dish comes later). **Her
 line** is her favourite (her bible's, else her calling's, else master data's), as for every line; her +10% acts where
 her work is that line's place (the board's task she's set, at night), and her chores and morning items wherever she
 lives on the farm.
@@ -5346,7 +5697,7 @@ lives on the farm.
 | Mining (the Mine) | Her haul ×1.1, and her Smelter batch ×1.1 | One ore from the Mine’s deepest floor reached, at a face’s stars (step 4) | A ★2+ ore of the Mine’s deepest floor reached | Yes, once the Mine stands |
 | Mining (the Quarry) | Her haul ×1.1, and her Cutter batch ×1.1 | One stone or gem from the Quarry’s deepest floor reached, at a face’s stars (step 4) | A ★2+ stone or gem of the Quarry’s deepest floor reached | Yes, once the Quarry stands |
 | Ranch | The goods she collects at the Coop or the Barn ×1.1: a +10% chance of an extra each, at its stars | +5 fondness to each animal in her building: the Coop or the Barn she cares for on the work board, else the first that stands (step 3) | A ★2+ egg, milk or fleece of an animal the farm keeps (a crop of the season with none) | Yes, once the Coop or the Barn stands |
-| Cooking | +10% dishes as the Kitchen’s assistant | +1 dish on the Kitchen’s next play | A ★2+ dish (a crop of the season meanwhile) | Not yet: once the Kitchen’s game is built |
+| Cooking | As the Kitchen’s assistant, her term ×1.1 (×1.2 from R5): its play makes a tenth more dishes | +1 dish on every Kitchen play while she lives on the farm (the chores don’t bank: a day without a play makes none) | A ★2+ dish (a crop of the season for now: the dishes come to the morning items later) | Yes, once the Kitchen stands: its +10% and its chores (the morning item later) |
 | Serving | +10% tips as the Restaurant’s server | +1 cover on the Restaurant’s next shift | A ★2+ dish (a crop of the season meanwhile) | Not yet: once the Restaurant’s game is built |
 | Forging | +10% goods as the Forge’s assistant | +5% refund on the Forge’s next tool | A ★2+ Fitting (a crop of the season meanwhile) | Not yet: once the Forge’s game is built |
 <!-- /live -->
@@ -5454,7 +5805,7 @@ line's best place now:
 | Mining (the Mine) | Curry | The top grade of the Mine’s deepest floor reached (floors 1–3: G2 … floor 27 on: G10); G1 before it stands | Basil Curry |
 | Mining (the Quarry) | Curry | The top grade of the Quarry’s deepest floor reached (floors 1–3: G2 … floor 27 on: G10); G1 before it stands | Basil Curry |
 | Ranch | Cake | The top grade of the goods the farm’s animals give (an Egg G1 … Cashmere Fleece G7); G1 with none | Honeycomb Cake |
-| Cooking | Tart | G1 until the Kitchen’s game is built | Apple Tart |
+| Cooking | Tart | The top grade of the dishes the Kitchen has cooked (`farm.counts['cooked:<dish>']`); G1 before its first play | Apple Tart |
 | Serving | Cookies | G1 until the Restaurant’s game is built | Peanut Cookies |
 | Forging | Bread | G1 until the Forge’s game is built | Wheat Bread |
 
@@ -6547,6 +6898,12 @@ sits outside the opening screens, so it shows even when the app stopped while op
   `farm.market` (each good a flood eased, by its steps) reads as nothing eased when it's missing; a morning's sale may
   say how far it was eased (`summary.bin[].eased`) and a morning's built line a station's new level
   (`summary.news[].level`). Nothing migrates, and `updatedAt` never moves for it.
+- **v5 grows in place with the Kitchen:** `workshops.current` (a play at the stove under way), `today.staff` and
+  `today.assistant` are written only once used, and a save without them has none; the Kitchen's level is
+  `buildings.kitchen`; a morning's `staff` line is a new kind in `summary.money`, and a farmhand's work line may say
+  her action as the Kitchen's assistant (`summary.work[].kitchen`); `love[id].known` may name a dish. A
+  play from before the stove (never written) reads as none ([the Kitchen](#the-kitchen)). Nothing migrates, and
+  `updatedAt` never moves for it.
 - **Nothing goes silently:** a phone save with unsynced play is kept first as a "Before the new farm" safety copy (if it
   can't be kept, nothing changes and the card says so, with the button to try again). The new farm syncs up as it is,
   and the first time the server stores a v5 over the older save it copies the older one, whole, to a backup

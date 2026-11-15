@@ -3,7 +3,8 @@
 // **Extend · 4,000g** on a built house; the next lot with a name field (grey "Rose Cottage") and **Build · 8,000g**, or
 // "Need 300g more", or "Opens with your first wedding"; the lots after it in one line; "Needs a room: …"; moves (tap a face,
 // then a free room or another face to swap); "Shared houses: +10 bond a night a pair."; the farmhouse **Kitchen** (the
-// pantry, tonight's table and its takeout, **Cook a batch · 1** from two goods of food: `Kitchen.tsx`); the household's
+// pantry, tonight's table and its takeout, **Cook a batch · 1** from two goods of food, or **At the stove · 1**, the same
+// batch played at the stove, `?stove=1`: `Kitchen.tsx`); the household's
 // **Meals** once anyone is married (**Breakfast · 1** and **Dinner · 1**, each once a day: everyone on the farm and every
 // farmhand well fed through tomorrow and +10 each, and a batch for the pantry, then one spouse's line as you sit down,
 // `?life=<meal>:<id>`); and the furniture set from 5 married, a piece a row and the house it stands in. "Married n/N" in
@@ -21,6 +22,7 @@ import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { buildHouseNamed, cookABatch, cookTheMeal, extendHouseOnce, moveSpouseTo, placePiece, swapSpouseRooms } from './homestead-actions'
 import { Kitchen } from './Kitchen'
+import { startBatchAtStove } from './kitchen-actions'
 import { furnitureRows, HOMESTEAD_TEXT, homesteadView, priceWords, type HouseRow } from './homestead-view'
 
 const ROSE = '#c2385e'
@@ -113,7 +115,11 @@ function Homestead({ save, focus, onClose }: { save: SaveV4; focus: number | nul
               </ul>
               <p className="text-[14px]" data-needs>{view.needs}</p>
               <p className="text-[13px] text-ink-soft">{HOMESTEAD_TEXT.shared}</p>
-              <Kitchen save={save} busy={busy} onCook={(picks) => void act(() => cookABatch(picks), `Cooked: ${BATCH_MEALS} meals in the pantry.`)} />
+              <Kitchen save={save} busy={busy} onCook={(picks) => void act(() => cookABatch(picks), `Cooked: ${BATCH_MEALS} meals in the pantry.`)}
+                onStove={(picks) => void act(async () => {
+                  await startBatchAtStove(picks)
+                  navigate(withParam(location, 'stove', '1'), { state: { back: true } })
+                })} />
               {marriedCount(save) > 0 && <Meals save={save} busy={busy} onCook={(meal) => void act(() => cook(meal))} />}
               {save.homestead.furniture.length > 0 && <Furniture save={save} busy={busy} onPlace={(piece, house) => void act(() => placePiece(piece, house))} />}
             </div>

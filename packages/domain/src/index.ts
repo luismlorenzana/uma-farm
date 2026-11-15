@@ -73,6 +73,13 @@ export * from './farm/builds'
 export * from './farm/economy'
 // Food: who eats, the pantry, the night's meals and takeout, the farmer's batch and the plain rule's goods.
 export * from './farm/food'
+// The stove and the Kitchen: the cooking game's rules (a play's tickets, burners, taps and score, replayed against its
+// seed), the recipes and the shop's Recipes shelf, a batch at the stove, the Kitchen's levels, its menu, play and
+// assistant, and the staff meal.
+export * from './kitchen/stove'
+export * from './kitchen/recipes'
+export * from './kitchen/levels'
+export * from './kitchen/kitchen'
 // Farmhands: her day's actions after her part-time job, the work board's tasks, her aptitudes and their tricks, and the
 // night's run of their work.
 export * from './farm/farmhands'

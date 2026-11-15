@@ -201,10 +201,10 @@ export const CHALLENGES: Readonly<Record<Activity, readonly Challenge[]>> = {
     row(5, 20, 'Gather 20 items in the Misty Vale', 'the night’s hauls (night step 4)', on('gather', (e) => (e.area === 'misty-vale' ? e.items : 0))),
   ],
   cooking: [
-    row(1, 5, 'Assist 5 Kitchen plays', 'the Kitchen (not built yet)', on('play', () => 1)),
-    row(2, 1, 'Assist a Fine play', 'the Kitchen (not built yet)', on('play', (e) => yes(atLeast(e.grade, 'fine')))),
-    row(3, 10, 'Make 10 dishes of ★4+', 'the Kitchen (not built yet)', on('dishes', (e) => e.stars.filter((s) => s >= 4).length)),
-    row(4, 1, 'Assist a Masterwork', 'the Kitchen (not built yet)', on('play', (e) => yes(e.grade === 'masterwork'))),
+    row(1, 5, 'Assist 5 Kitchen plays', 'the Kitchen’s play, its assistant', on('play', () => 1)),
+    row(2, 1, 'Assist a Fine play', 'the Kitchen’s play, its assistant', on('play', (e) => yes(atLeast(e.grade, 'fine')))),
+    row(3, 10, 'Make 10 dishes of ★4+', 'the Kitchen’s play, its assistant', on('dishes', (e) => e.stars.filter((s) => s >= 4).length)),
+    row(4, 1, 'Assist a Masterwork', 'the Kitchen’s play, its assistant', on('play', (e) => yes(e.grade === 'masterwork'))),
     row(5, 1, '1st at a Cooking Contest as the cook', 'a festival win (festivals aren’t built yet)', won('cooking-contest')),
   ],
   serving: [

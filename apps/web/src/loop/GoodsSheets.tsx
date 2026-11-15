@@ -1,8 +1,9 @@
 // The bin's and the shop's sheets, drawn within the kit's `Sheet`. The bin (`?sheet=bin`,
 // from the shipping bin on the map and the gold chip): today's lines with Take back (free), the night's estimate, and
 // Ship, which opens the Warehouse to pick a crate from: one action ships it. The shop (`?sheet=shop`), in town: its
-// lines on the kit's ExchangeRows, bought with gold once you've gone into town today; before that, Go into town.
-import { actionsLeft, shopLines, type FarmSave, type ShopLine } from '@farm/domain'
+// lines on the kit's ExchangeRows, bought with gold once you've gone into town today, and its Recipes shelf once the Kitchen
+// stands (a recipe for the Kitchen, known for good); before that, Go into town.
+import { actionsLeft, dishName, kitchenBuilt, recipeLock, recipeShelf, recipeWords, shopLines, type FarmSave, type ShopLine } from '@farm/domain'
 import { ExchangeRows } from '@luismlorenzana/uma-kit/places'
 import { Button, HelpButton, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
@@ -11,6 +12,7 @@ import { ItemIcon } from '../items/ItemIcon'
 import { useLoopSave } from '../save/game'
 import { GoldMark } from '../shell/Gold'
 import { buyLine, intoTown, takeBackLine } from './actions'
+import { buyTheRecipe } from './kitchen-actions'
 import { binView, easedWords, goldWords, saleWords, shopRows } from './goods-view'
 
 /** The Warehouse to pick a crate from: one action ships it. */
@@ -96,16 +98,61 @@ export function ShopList({ save, lines }: { save: FarmSave; lines: readonly Shop
   )
 }
 
-/** The shop, in town: it lists the season's seeds once you've gone into town today; before that, Go into town. */
+/** The shop, in town: it lists the season's seeds once you've gone into town today, and its Recipes shelf once the
+ * Kitchen stands; before that, Go into town. */
 export function ShopSheet({ onClose }: { onClose: () => void }) {
   const save = useLoopSave()
   if (!save) return null
   return (
     <Sheet open onClose={onClose} title="Shop" label="The shop">
-      <div className="pb-1" data-shop>
-        {save.today.town ? <ShopList save={save} lines={shopLines(save)} /> : <IntoTown save={save} />}
+      <div className="space-y-3 pb-1" data-shop>
+        {save.today.town ? (
+          <>
+            <ShopList save={save} lines={shopLines(save)} />
+            <RecipeShelf save={save} />
+          </>
+        ) : <IntoTown save={save} />}
       </div>
     </Sheet>
+  )
+}
+
+/** The Recipes shelf, once the Kitchen stands: every recipe not known yet, kind by kind, each with what it takes, its
+ * price and Buy (free once in town); a recipe is known for good. */
+export function RecipeShelf({ save }: { save: FarmSave }) {
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const shelf = recipeShelf(save)
+  if (!kitchenBuilt(save)) return null
+  const buy = (dish: string) => {
+    setBusy(true)
+    setError(null)
+    buyTheRecipe(dish).catch((err: unknown) => setError(errorWords(err))).finally(() => setBusy(false))
+  }
+  return (
+    <section className="space-y-1" aria-label="Recipes" data-recipe-shelf={shelf.length}>
+      <h3 className="text-micro">Recipes · for the Kitchen</h3>
+      {error && <p role="status" className="text-[13px] text-danger">{error}</p>}
+      {shelf.length === 0 ? <p className="text-[14px] text-ink-soft">You know every recipe.</p> : (
+        <ul className="divide-y divide-hairline rounded-md border border-hairline">
+          {shelf.map((r) => {
+            const lock = recipeLock(save, r.dish)
+            return (
+              <li key={r.dish} className="flex min-h-12 items-center gap-2 px-2 py-1" data-shelf-recipe={r.dish}>
+                <ItemIcon id={r.dish} size={32} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[14px] font-semibold">{dishName(r.dish)}</span>
+                  <span className="block truncate text-[12px] text-ink-soft">{recipeWords(r.dish)}</span>
+                </span>
+                <Button size="sm" disabled={busy || lock !== null} onClick={() => buy(r.dish)} data-action="buy-recipe" data-why={lock ?? undefined}>
+                  {r.price.toLocaleString('en-US')}g
+                </Button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </section>
   )
 }
 

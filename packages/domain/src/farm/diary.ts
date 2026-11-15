@@ -18,6 +18,7 @@ import type { FarmSave } from '../save/v4'
 import { DORM_LEVELS } from './dorm'
 import { FIELD_PLOTS, plotName } from '../fields/plots'
 import { STATION_LEVELS } from '../gathering/stations'
+import { KITCHEN_LEVELS } from '../kitchen/levels'
 import { buildCostWords, offeredAt } from './builds'
 import { FARM_RANK_POINTS, farmRankOf } from './farm'
 import {
@@ -67,7 +68,10 @@ export function farmRankOpens(rank: number): string[] {
     .map((id) => `${cap(SPOT_NAMES[id])}${FISHERY[id].needs ? ` (with the ${FISHERY[id].needs === 'dock' ? 'Dock' : 'Boat'})` : ''}`)
   const dorm = DORM_LEVELS.filter((l) => l.level > 1 && l.farmRank === rank).map((l) => `Dorm level ${l.level} (${l.beds} beds)`)
   const plots = FIELD_PLOTS.flatMap((p, i) => (p.by === 'clear' && p.rank === rank ? [`${plotName(i)} to clear (${p.gold.toLocaleString('en-US')}g)`] : []))
-  const levels = STATION_LEVELS.filter((l) => l.level > 1 && l.farmRank === rank).map((l) => `Station level ${l.level} (${l.loads} loads a day)`)
+  const levels = [
+    ...STATION_LEVELS.filter((l) => l.level > 1 && l.farmRank === rank).map((l) => `Station level ${l.level} (${l.loads} loads a day)`),
+    ...KITCHEN_LEVELS.filter((l) => l.level > 1 && l.farmRank === rank).map((l) => `Kitchen level ${l.level} (${l.dishes} dishes a play)`),
+  ]
   const seeds = rank > 1 && Object.values(SHOP_SEEDS).some((crops) => crops.some((crop) => CROPS[crop].tier === rank)) ? ['New seeds at the shop'] : []
   const builds = offeredAt(rank).map((p) => `The ${p.name} to build (${p.opens.game ? buildCostWords(p) : 'not built yet'})`)
   const animals = ANIMAL_KINDS.filter((kind) => ANIMALS[kind].rank === rank).map((kind) => ANIMAL_PLURALS[kind])

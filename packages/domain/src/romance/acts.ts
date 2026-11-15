@@ -16,7 +16,7 @@ import type { FestivalId } from '../farm/calendar'
 import type { Temperament } from '../farm/talents'
 import { goodOf, isSeedId } from '../goods/ids'
 import { SaveRuleError } from '../save/rules'
-import type { Love, SaveV4 } from '../save/v4'
+import { isDishId, type Love, type SaveV4 } from '../save/v4'
 import { takeGoods } from '../save/warehouse'
 import { type StoryPack } from '../story/pack'
 import { chatLinesOf, defaultTalksOf, giftReactionsOf, giftsOf, linePlaces, talkStageOf, tasteOf } from '../story/placeholders'
@@ -117,12 +117,12 @@ export function giftPreview(save: Pick<SaveV4, 'calendar' | 'love'>, pack: Pick<
   return giftPoints(save, id, tasteOf(pack, id, good), stars, isBirthday(birthdays, id, save.calendar.day))
 }
 
-/** A gift: one action, and one good from the Warehouse at the stars you choose, once a day each, on the farm or in town.
+/** A gift: one action, and one good (or a dish) from the Warehouse at the stars you choose, once a day each, on the farm or in town.
  * Her town record keeps the day. Seeds aren't gifts. Her taste (`tasteOf`) sets the points; the good's taste is learnt. Disliked pays 0, never a loss. */
 export function giftV4(save: SaveV4, pack: Pick<StoryPack, 'bibles'>, id: string, item: string, stars: number, birthdays: Birthdays = NO_BIRTHDAYS): LovePaid & { taste: Taste } {
   const love = loveOf(save, id)
   if (save.today.gifts.includes(id)) throw new SaveRuleError('busy', 'One gift a day.')
-  if (isSeedId(item) || !goodOf(item)) throw new SaveRuleError('bad-job', 'That isn’t a gift.')
+  if (isSeedId(item) || (!goodOf(item) && !isDishId(item))) throw new SaveRuleError('bad-job', 'That isn’t a gift.')
   const items = takeGoods(save.items, item, stars, 1)
   const taste = tasteOf(pack, id, item)
   const learnt: Love = love.known.includes(item) ? love : { ...love, known: [...love.known, item] }

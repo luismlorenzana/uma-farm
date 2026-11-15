@@ -79,7 +79,9 @@ describe('the board\'s words', () => {
   })
 
   it('says her day, her job, and her night', () => {
-    expect(dayChips({ base: 3, settled: 1, spouse: 2, fed: 1, half: true, actions: 3 })).toEqual(['+1 settled in', '+2 married', '+1 well fed', 'half pace'])
+    expect(dayChips({ base: 3, settled: 1, spouse: 2, fed: 1, half: true, actions: 3, kitchen: 0 })).toEqual(['+1 settled in', '+2 married', '+1 well fed', 'half pace'])
+    // The Kitchen's assistant: one of her actions tonight is its play's.
+    expect(dayChips({ base: 3, settled: 0, spouse: 0, fed: 0, half: false, actions: 3, kitchen: 1 })).toEqual(['1 at the Kitchen'])
     // The story's job in its words, else where it is; else the game's default at her favourite spot (her cast `spot`, else
     // the six in turn by her place in the cast).
     const pack = storyPackFrom(STAND_IN_FILES)
@@ -91,6 +93,7 @@ describe('the board\'s words', () => {
     expect(doneWords({ water: 3, fish: 2, forage: 1, load: 1 })).toEqual(['watered 3 tiles', 'started 1 load', 'foraged once', 'caught 2 fish'])
     const line: FarmhandLine = { kind: 'farmhand', id: A, actions: 4, spent: 4, half: false, fed: true, tasks: 2, done: { water: 6, fish: 1 }, items: 1 }
     expect(nightWords(line)).toBe('4 of 4 actions · watered 6 tiles · caught 1 fish · +1 good')
+    expect(nightWords({ ...line, kitchen: 1 })).toBe('4 of 4 actions · assisted at the Kitchen · watered 6 tiles · caught 1 fish · +1 good')
     expect(nightWords({ ...line, spent: 0, done: {}, items: 0 })).toBe('Nothing to do tonight')
     expect(nightWords({ ...line, spent: 0, tasks: 0, done: {}, items: 0 })).toBe('No tasks: set her tasks')
   })

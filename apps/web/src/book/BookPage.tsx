@@ -1,14 +1,15 @@
 // `/book`: the farm's book, the rail's ledger. First **the money**: the daily upkeep and tonight's food (the takeout the
 // pantry and the cooks won't cover) beside an average night's income over the last seven nights (the nights as bars
-// against the upkeep and food's line), what's left each night, what the upkeep counts, tonight's table (who eats, from
-// the pantry, takeout, and the kitchen a tap away), a short night's warning or half pace, and the loans with what's owed
+// against the upkeep and food's line), what's left each night, what the upkeep counts, tonight's table (who eats, a staff
+// meal served, from the pantry, takeout, and the kitchen a tap away: the Kitchen's sheet once it stands, else the
+// farmhouse's), a short night's warning or half pace, and the loans with what's owed
 // and when each clears. Then the cards,
 // each a tap to its place: the gold (the bin), the Farm Rank (its sheet), the goods held (the Warehouse), who lives and
 // works on the farm (the People page's Work view, and the Dorm's beds) and what can be built now (the Diary's projects).
 // Between them, the work board (`WorkBoard`): each farmhand's day and tasks. Its cards sit two to a row where they fit.
 // Loaded on demand.
 import {
-  averageIncome, bedsAt, farmProjects, farmRankOf, halfPace, INCOME_NIGHTS, loansOwed, MEALS_A_DAY, stockTotal, tableTonight, TAKEOUT_PRICE, upkeepOf, type FarmSave,
+  averageIncome, bedsAt, farmProjects, farmRankOf, halfPace, INCOME_NIGHTS, loansOwed, placeBuilt, stockTotal, tableTonight, TAKEOUT_PRICE, upkeepOf, type FarmSave,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { HelpButton } from '@luismlorenzana/uma-kit/ui'
@@ -127,9 +128,10 @@ function Money({ save }: { save: FarmSave }) {
               ))}
             </ul>
           )}
-          <Link to={withParam(location, 'sheet', 'homestead')} state={{ back: true }} className="flex min-h-11 items-center justify-between gap-2 text-[13px]" data-table={table.mouths}>
+          <Link to={withParam(location, 'sheet', placeBuilt(save, 'kitchen') ? 'kitchen' : 'homestead')} state={{ back: true }} className="flex min-h-11 items-center justify-between gap-2 text-[13px]"
+            data-table={table.mouths}>
             <span className="min-w-0 text-ink-soft">
-              {table.mouths} at the table · {plural(table.mouths * MEALS_A_DAY, 'meal')} · {table.pantry} from the pantry{table.cooked > 0 ? ` (${table.cooked} cooked tonight)` : ''}
+              {table.mouths} at the table · {save.today.staff ? `staff meal for ${Math.min(save.today.staff.mouths, table.mouths)} · ` : ''}{plural(table.pantry + table.takeout, 'meal')} · {table.pantry} from the pantry{table.cooked > 0 ? ` (${table.cooked} cooked tonight)` : ''}
             </span>
             <span className="shrink-0 font-semibold">Kitchen ›</span>
           </Link>

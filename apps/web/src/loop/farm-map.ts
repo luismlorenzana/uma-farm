@@ -65,7 +65,7 @@ export function mapLots(shown: readonly HomesteadPlace[]): { lots: Lot[]; road: 
 }
 
 /** The places whose screens have landed, each with where a tap on it goes: the field (its own screen) and the bin and
- * shop (their sheets over the farm) and the Warehouse; the woods' edge, the pond's edge, the five stations, the Coop and
+ * shop (their sheets over the farm) and the Warehouse; the Kitchen (its sheet); the woods' edge, the pond's edge, the five stations, the Coop and
  * the Barn, the Mine and the Quarry (their menus, in the side panel); the Dorm (its page), the Gate (its quick look, the
  * visitor waiting), the Dock (its quick look, with the Boat to build) and the Town (its screen). Until then a place shows
  * "Soon". */
@@ -82,6 +82,7 @@ export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlace
   ['barn', '/?peek=barn'],
   ['mine', '/?peek=mine'],
   ['quarry', '/?peek=quarry'],
+  ['kitchen', '/?sheet=kitchen'],
   ['bin', '/?sheet=bin'],
   ['shop', '/?sheet=shop'],
   ['warehouse', '/warehouse'],

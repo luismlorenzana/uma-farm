@@ -152,7 +152,7 @@ describe("the Diary's projects", () => {
     await render(<DiaryPage />, '/diary')
     expect($$('[data-project]').map((p) => [p.dataset.project, p.querySelector('[data-state]')?.textContent])).toEqual([
       ['coop', 'Need 1,500g, 30 logs and 20 vegetables more'], ['sawmill', 'Builds tonight'], ['barn', 'Need 3,000g, 30 logs and 20 vegetables more'],
-      ['smokehouse', 'Need 1,500g, 30 logs and 20 fish more'],
+      ['smokehouse', 'Need 1,500g, 30 logs and 20 fish more'], ['kitchen', 'Need 2,500g, 40 logs and 20 vegetables more'],
     ])
     expect($('[data-waiting]')).toBeNull()
     expect($$('[data-offer]').map((o) => o.dataset.offer)).toEqual(['mine', 'smelter'])
@@ -184,9 +184,9 @@ describe('building a place', () => {
   })
 
   it('shows a place whose game isn\'t built yet as "Not built yet", which can\'t be bought', async () => {
-    useGame.setState({ save: { ...farm(), gold: 99_999, farm: { ...farm().farm, points: 2200 } } })
-    await render(<FarmRoute />, '/?peek=kitchen')
-    const card = await find('[data-build="kitchen"]')
+    useGame.setState({ save: { ...farm(), gold: 99_999, farm: { ...farm().farm, points: 7000 } } })
+    await render(<FarmRoute />, '/?peek=restaurant')
+    const card = await find('[data-build="restaurant"]')
     expect(card.dataset.lock).toBe('game')
     expect(card.querySelector('[data-build-lock]')).toBeNull()
     const button = card.querySelector('[data-action="build"]') as HTMLButtonElement
