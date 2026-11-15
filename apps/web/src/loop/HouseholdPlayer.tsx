@@ -11,12 +11,12 @@
 import {
   householdOf, householdPlay, mayPlayHousehold, playOf, promptOf, playSeed, sceneSteps, type HouseholdId, type HouseholdPlay, type SaveV4, type Step, type StoryPack,
 } from '@farm/domain'
-import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { SceneLookProvider } from '../dialogue/Bust'
 import { lastSay } from '../dialogue/Line'
 import { MasterGate } from '../master/MasterGate'
@@ -141,7 +141,7 @@ function GreatHarvest({ spouses, nameOf, replay, onDone }: { spouses: readonly s
         <p className="font-display text-center text-[26px] font-bold text-[#d9a227]">The Great Harvest</p>
         <p className="text-center text-[14px] text-ink-soft">Every spouse, every row, one long table. The farm goes on.</p>
         <ul className="flex flex-wrap justify-center gap-2 py-2" aria-label="Your household" data-household-faces={spouses.length}>
-          {spouses.map((id) => <li key={id}><FaceTile outfitId={id} size={44} label={nameOf(id)} round /></li>)}
+          {spouses.map((id) => <li key={id}><Avatar id={id} size={44} label={nameOf(id)} /></li>)}
         </ul>
         <section className="space-y-1 rounded-md border border-hairline p-3 text-[14px]">
           <h3 className="text-micro">From now on</h3>

@@ -109,10 +109,10 @@ test('a dry run lists every missing piece and writes nothing', async (t) => {
   assert.equal(existsSync(join(root, 'content/story-backups')), false)
   const said = lines.join('\n')
   assert.match(said, /Scaffolding Tier 1 \(3 Umas\) in .* \(a dry run: nothing is written\)/)
-  assert.match(said, new RegExp(`${id(1)} Invented Aster: would write 93 pieces \\(cast 4, bible 35, route 54\\)`))
-  assert.match(said, new RegExp(`${id(3)} Invented Corra: would write 96 pieces \\(cast 4, bible 37, route 55\\)`))
+  assert.match(said, new RegExp(`${id(1)} Invented Aster: would write 91 pieces \\(cast 2, bible 35, route 54\\)`))
+  assert.match(said, new RegExp(`${id(3)} Invented Corra: would write 94 pieces \\(cast 2, bible 37, route 55\\)`))
   assert.match(said, /route: arrival, f1–f10, confession, r1–r10, proposal, wedding, invited-to-work, wedding-night, moving-in, s1–s5, hangouts \(walk/)
-  assert.match(said, /285 pieces in 7 files would be written/)
+  assert.match(said, /279 pieces in 7 files would be written/)
   assert.deepEqual(result.files.sort(), ['cast.json', `routes/${id(1)}.json`, `routes/${id(2)}.json`, `routes/${id(3)}.json`, `umas/${id(1)}.json`, `umas/${id(2)}.json`, `umas/${id(3)}.json`])
 })
 
@@ -133,9 +133,11 @@ test('writes what’s missing, backs up every file it changes first, and a secon
   assert.deepEqual(bible.draft, { favouriteLine: 'default', townLines: 'default', mornings: 'default', petName: 'default', wishes: 'default' })
   assert.deepEqual(first.refused, {})
   const cast = await readJson(join(pack, 'cast.json'))
-  assert.deepEqual(cast.umas[0], { characterId: id(1), spot: 'harbour', calling: 'fishing', home: 'harbour', draft: { home: 'default' }, job: { at: 'harbour', draft: 'default' },
-    routine: [{ at: 'harbour', days: [1, 4, 7, 10], draft: 'default' }], chapters: cast.umas[0].chapters })
-  assert.deepEqual(cast.umas[2].routine, [{ at: 'market', days: [2, 5, 8, 11], draft: 'default' }], 'staggered by her order in the list named')
+  // Her schedule: the game's default as her routine, marked; no home and no job.
+  assert.deepEqual(cast.umas[0], { characterId: id(1), spot: 'harbour', calling: 'fishing', routine: [{ at: 'harbour', days: [1, 4, 7, 10], draft: 'default' }], chapters: cast.umas[0].chapters })
+  assert.deepEqual(cast.umas[2].routine, [{ at: 'plaza', days: [3, 6, 9, 12], draft: 'default' }], 'by her place in the cast: the third, no spot of her own')
+  assert.equal(cast.umas[2].home, undefined)
+  assert.equal(cast.umas[2].job, undefined)
   assert.equal(JSON.stringify(cast.umas[1]), JSON.stringify({ characterId: id(2), calling: 'farming' }), 'an Uma not named is untouched')
   // The game reads it whole.
   const check = releaseCheck((await readPack(pack)).files)

@@ -1,31 +1,27 @@
-// The town map: the six spots, the shops and offices, and the homes and workplaces the story adds. Every character of
-// master data's lives in town, once each, with the pack's sisters, less the town's people, who are at their posts. Going
-// into town takes an action (`farm/actions.ts`); moving between its locations is free. A location lists who's there now.
-// Pure.
+// The town map: the six spots, the shops and offices, and the homes and workplaces the story adds. Only the cast lives in
+// town (the owner's Umas, sisters included), less the town's people, who are at their posts. Going into town takes an
+// action (`farm/actions.ts`); moving between its locations is free. A location lists who's there now. Nobody is placed at
+// random: every Uma keeps a fixed schedule (`scheduleOf`), and the town, her profile and the calendar all read it. Pure.
 //
 //   her story       her routine's first stop that holds today (its days of the season and its seasons), else her
-//                   part-time job on its days, else her home: she's there, whatever the draw says
-//   the draw        everyone else in town: in the order of draw(uid, day, 'town:<id>', 0), lowest first, up to four at each
-//                   of the six spots, the rest at home; her favourite spot while it has room when draw(…, 1) < 0.6, else
-//                   one with room by draw(…, 2)
-//   on the farm     an Uma living on the farm is at the farm, never in town; in the draw she keeps her place, unseen, so
-//                   the day's town never shifts when someone moves in. One you've met who lives in town is out like anyone
+//                   part-time job on its days, else her home: she's there
+//   the default     an Uma the story hasn't scheduled: at her favourite spot (her cast `spot`, else the six in turn by
+//                   her place in the cast, three Umas each) on every third day of each season, starting on day 1, 2 or 3
+//                   by her place in the cast; at home, off the map, the other days
+//   a spot          holds everyone the schedules put there: the map shows how many and their first faces
+//   on the farm     an Uma living on the farm (the Dorm, a spouse's house) is at the farm, never in town; so is a
+//                   farmhand by day, after her part-time job
 //   the posts       each of the town's people is at her post: the spot town.json has her keep, else the shop or office of
 //                   her role, else the spot the game has her keep
 //
-// The same day always shows the same town, and tomorrow a different few.
-import { dateOf } from '../farm/calendar'
+// The same day always shows the same town, and the same season the same days.
+import { dateOf, DAYS_PER_SEASON, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
 import { atHome, type SaveV4, type TownTalks } from '../save/v4'
 import { GAME_LOCATIONS, SHOP_IDS, SPOT_IDS, type LifeWhen, type LocationKind, type ShopId, type SpotId } from '../story/authored'
 import type { CastId } from '../story/cast'
-import type { StoryPack } from '../story/pack'
+import { castOrder, type StoryPack } from '../story/pack'
 import { favouriteSpotOf, herHomeOf, herJobOf, herRoutineOf, storyLocationsOf, townLinesOf, townOf } from '../story/placeholders'
-
-/** How many the draw puts at a spot at once. Those the story places there stand besides them. */
-export const SPOT_ROOM = 4
-/** How often she's at her favourite spot when the draw puts her out (while it has room); else at any with room. */
-export const FAVOURITE_SPOT = 0.6
 
 /** The town's shops and offices: each one's name, line, the role that keeps it, and what it offers. */
 export interface TownShop {
@@ -87,13 +83,12 @@ export const townLocation = (pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryP
 /** Whether an id is one of the game's own locations: the six spots and the four shops. */
 export const isGameLocation = (id: string): boolean => GAME_LOCATIONS.includes(id)
 
-/** Everyone who lives in town, in a fixed order: master data's characters by id, then the cast's others (its sisters, and
- * anyone master data doesn't hold), less the town's people. The Umas on the farm are among them; they're at the farm. */
+/** Everyone who lives in town: the cast, in its order (the owner's Umas, sisters included), less the town's people, who
+ * are at their posts. Nobody else from master data is in the game. The Umas on the farm are among them; they're at the
+ * farm. */
 export function townsfolk(pack: TownPack): string[] {
   const people = townOf(pack).byId
-  const master = [...(pack.master?.outfits.keys() ?? [])]
-  const known = new Set(master)
-  return [...master, ...pack.cast.umas.map((u) => u.characterId).filter((id) => !known.has(id))].filter((id) => !people.has(id))
+  return [...new Set(pack.cast.umas.map((u) => u.characterId))].filter((id) => !people.has(id))
 }
 
 /** Whether a place in her life holds on a day: its days of the season and its seasons, each every one when left out. */
@@ -102,68 +97,165 @@ export function lifeHolds(when: LifeWhen, day: number): boolean {
   return (when.days === undefined || when.days.includes(date.day)) && (when.seasons === undefined || when.seasons.includes(date.season))
 }
 
-/** Why she's where she is today: her routine, her job, her home (the story's), or the draw. */
-export type HereBy = 'routine' | 'job' | 'home' | 'draw'
+/** Why she's where she is: her routine, her job, her home (the story's), or the default schedule (her favourite spot on
+ * her days). */
+export type HereBy = 'routine' | 'job' | 'home' | 'default'
 
-/** Where her story puts her today, and why: her routine's first stop that holds, else her job on its days, else her home;
- * null when the story says nothing for today (the draw places her). A location the map doesn't hold is passed over. */
-export function storyPlaceOf(pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town'>>, id: string, day: number, known: ReadonlySet<string>): { at: string; by: Exclude<HereBy, 'draw'> } | null {
-  const stop = herRoutineOf(pack, id).find((s) => known.has(s.at) && lifeHolds(s, day))
-  if (stop) return { at: stop.at, by: 'routine' }
-  const job = herJobOf(pack, id)
-  if (job && known.has(job.at) && lifeHolds(job, day)) return { at: job.at, by: 'job' }
-  const home = herHomeOf(pack, id)
-  return home && known.has(home) ? { at: home, by: 'home' } : null
+/** One stop of her schedule: where (a location of the town map), when (its days of the season and its seasons, each every
+ * one when left out), and whose it is. */
+export interface ScheduleStop extends LifeWhen {
+  readonly at: string
+  readonly by: HereBy
 }
+/** Her schedule: the story's stops in the order they're tried (`own`), else the game's default, one stop. */
+export interface Schedule {
+  readonly own: boolean
+  readonly stops: readonly ScheduleStop[]
+}
+
+/** The default schedule: every third day of each season. */
+export const DEFAULT_EVERY = 3
+
+/** Her place in the cast (0 first); one the cast doesn't hold comes after it, where she'd join. */
+export function castPlace(pack: Pick<StoryPack, 'cast'>, id: string): number {
+  const order = castOrder(pack)
+  const at = order.indexOf(id)
+  return at < 0 ? order.length : at
+}
+/** The default schedule's days for her place in the cast: every third day of the season, starting on day 1, 2 or 3. */
+export function defaultDays(place: number): number[] {
+  const days: number[] = []
+  for (let d = 1 + (place % DEFAULT_EVERY); d <= DAYS_PER_SEASON; d += DEFAULT_EVERY) days.push(d)
+  return days
+}
+/** The default schedule's spot: her favourite (her cast `spot`), else the six in turn by her place in the cast, three
+ * Umas each, so a spot's three start on days 1, 2 and 3. */
+export function defaultSpot(pack: Pick<StoryPack, 'cast'>, id: string, place = castPlace(pack, id)): SpotId {
+  return favouriteSpotOf(pack, id) ?? SPOT_IDS[Math.floor(place / DEFAULT_EVERY) % SPOT_IDS.length]!
+}
+
+type SchedulePack = Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town' | 'master'>>
+const schedules = new WeakMap<object, Map<string, Schedule>>()
+
+/** Her schedule: the story's when it's written (her routine's stops, then her job, then her home; a location the map
+ * doesn't hold is passed over, and with none left the story hasn't scheduled her), else the default: her favourite spot
+ * on every third day of each season, from day 1, 2 or 3 by her place in the cast, and at home off the map the other days.
+ * The one source for the town, her profile and the calendar, and what the story's scaffold writes as her routine. Read
+ * once a pack. */
+export function scheduleOf(pack: SchedulePack, id: string): Schedule {
+  let known = schedules.get(pack)
+  if (!known) schedules.set(pack, (known = new Map()))
+  const hit = known.get(id)
+  if (hit) return hit
+  const map = new Set(townLocations(pack).map((l) => l.id))
+  const when = (w: LifeWhen): LifeWhen => ({ ...(w.days ? { days: w.days } : {}), ...(w.seasons ? { seasons: w.seasons } : {}) })
+  const job = herJobOf(pack, id)
+  const home = herHomeOf(pack, id)
+  const stops: ScheduleStop[] = [
+    ...herRoutineOf(pack, id).filter((s) => map.has(s.at)).map((s): ScheduleStop => ({ at: s.at, ...when(s), by: 'routine' })),
+    ...(job && map.has(job.at) ? [{ at: job.at, ...when(job), by: 'job' as const }] : []),
+    ...(home && map.has(home) ? [{ at: home, by: 'home' as const }] : []),
+  ]
+  const place = castPlace(pack, id)
+  const schedule: Schedule = stops.length > 0 ? { own: true, stops }
+    : { own: false, stops: [{ at: defaultSpot(pack, id, place), days: defaultDays(place), by: 'default' }] }
+  known.set(id, schedule)
+  return schedule
+}
+
+/** Whether a stop holds on a day of a season. */
+const holdsIn = (when: LifeWhen, season: Season, day: number): boolean =>
+  (when.days === undefined || when.days.includes(day)) && (when.seasons === undefined || when.seasons.includes(season))
+
+/** Where her schedule puts her on a farm day, and why: its first stop that holds; at null (at home, off the map) when none
+ * does. Whether she's on the farm instead is the save's (`onFarmToday`). */
+export function whereOn(pack: SchedulePack, id: string, day: number): { at: string | null; by: HereBy | null } {
+  const stop = scheduleOf(pack, id).stops.find((s) => lifeHolds(s, day))
+  return stop ? { at: stop.at, by: stop.by } : { at: null, by: null }
+}
+
+/** The next day after `day` that her schedule puts her out in town, and where; null when none does within a year. */
+export function nextOut(pack: SchedulePack, id: string, day: number): { day: number; at: string } | null {
+  for (let d = day + 1; d <= day + DAYS_PER_SEASON * 4; d++) {
+    const at = whereOn(pack, id, d).at
+    if (at !== null) return { day: d, at }
+  }
+  return null
+}
+
+/** One place of her season: where her schedule puts her (null: at home, off the map), why, and on which days. */
+export interface SeasonPlace {
+  readonly at: string | null
+  readonly by: HereBy | null
+  readonly days: readonly number[]
+}
+/** Her season by place: each place her schedule puts her and its days, in the order of the first. */
+export function seasonSchedule(pack: SchedulePack, id: string, season: Season): SeasonPlace[] {
+  const out: { at: string | null; by: HereBy | null; days: number[] }[] = []
+  const { stops } = scheduleOf(pack, id)
+  for (let day = 1; day <= DAYS_PER_SEASON; day++) {
+    const stop = stops.find((s) => holdsIn(s, season, day))
+    const at = stop?.at ?? null
+    const by = stop?.by ?? null
+    const group = out.find((g) => g.at === at && g.by === by)
+    if (group) group.days.push(day)
+    else out.push({ at, by, days: [day] })
+  }
+  return out
+}
+
+/** Whether she's on the farm today: she lives there (the Dorm, or a spouse's house), or she's a farmhand, there by day
+ * after her part-time job. Either way she's in front of you, and not in town. */
+export const onFarmToday = (save: Pick<SaveV4, 'roster' | 'dorm' | 'love'>, id: string): boolean =>
+  !!save.roster[id] && (atHome(save, id) || save.roster[id]!.farmhand !== undefined)
 
 /** One day in town: who's at each location, and where each one out is. */
 export interface TownDay {
   readonly day: number
-  /** Each location's few, by id: the story's first (in the town's order), then the draw's, in the order they came. */
+  /** Each location's Umas, by id, in the cast's order. */
   readonly at: ReadonlyMap<string, readonly string[]>
-  /** Where she is today, for everyone in town. */
+  /** Where she is that day, for everyone out in town. */
   readonly where: ReadonlyMap<string, string>
   /** Why she's there. */
   readonly by: ReadonlyMap<string, HereBy>
 }
 
-/** The town on the save's day: the story places those it says something of for today; the seeded draw places everyone
- * else at the six spots, up to four at each, the rest at home. An Uma living on the farm is at the farm, keeping her place
- * in the draw unseen, so the same day always shows the same town, whoever moves in. */
-export function townDay(save: Pick<SaveV4, 'account' | 'calendar' | 'roster' | 'dorm' | 'love'>, pack: TownPack): TownDay {
-  const uid = save.account.uid
-  const day = save.calendar.day
+/** The town on a day (the save's, unless another is given): everyone who lives in town where her schedule puts her (the
+ * story's, else the default), the rest at home off the map. An Uma on the farm today (living there, or a farmhand by day)
+ * isn't in town. A spot holds everyone the schedules put there. A day ahead reads the save as it stands. */
+export function townDay(save: Pick<SaveV4, 'calendar' | 'roster' | 'dorm' | 'love'>, pack: TownPack, day = save.calendar.day): TownDay {
   const locations = townLocations(pack)
-  const known = new Set(locations.map((l) => l.id))
   const at = new Map<string, string[]>(locations.map((l) => [l.id, []]))
   const where = new Map<string, string>()
   const by = new Map<string, HereBy>()
-  const farm = (id: string) => !!save.roster[id] && atHome(save, id)
-  const drawn: string[] = []
   for (const id of townsfolk(pack)) {
-    const placed = storyPlaceOf(pack, id, day, known)
-    if (!placed) { drawn.push(id); continue }
-    if (farm(id)) continue
-    at.get(placed.at)!.push(id)
+    if (onFarmToday(save, id)) continue
+    const placed = whereOn(pack, id, day)
+    if (placed.at === null || placed.by === null) continue
+    at.get(placed.at)?.push(id)
     where.set(id, placed.at)
     by.set(id, placed.by)
   }
-  const order = drawn.map((id) => [id, draw(uid, day, `town:${id}`, 0)] as const).sort(([a, x], [b, y]) => x - y || a.localeCompare(b))
-  const room = new Map<SpotId, number>(SPOT_IDS.map((s) => [s, 0]))
-  for (const [id] of order) {
-    const open = SPOT_IDS.filter((s) => room.get(s)! < SPOT_ROOM)
-    if (open.length === 0) break
-    const favourite = favouriteSpotOf(pack, id)
-    const spot = favourite && open.includes(favourite) && draw(uid, day, `town:${id}`, 1) < FAVOURITE_SPOT
-      ? favourite : open[Math.min(open.length - 1, Math.floor(draw(uid, day, `town:${id}`, 2) * open.length))]!
-    room.set(spot, room.get(spot)! + 1)
-    // Who lives on the farm keeps her place, unseen.
-    if (farm(id)) continue
-    at.get(spot)!.push(id)
-    where.set(id, spot)
-    by.set(id, 'draw')
-  }
   return { day, at, where, by }
+}
+
+/** Where you'd find her now: on the farm (she lives there, or she's a farmhand there by day), or at `at` in town today
+ * (null: at home, not out); `here` once she's in front of you: on the farm, or out in town with you there today. */
+export interface MeetWhere {
+  readonly here: boolean
+  readonly farm: boolean
+  /** Her place in town today; null on the farm or at home. */
+  readonly at: string | null
+}
+/** Whether she lives in town: one of the cast, and not one of the town's people (they're at their posts). */
+export const livesInTown = (pack: SchedulePack, id: string): boolean => castOrder(pack).includes(id) && !townOf(pack).byId.has(id)
+
+/** Where you meet her now (the talk-and-gift rule, and the evening's): on the farm when she lives there or works it by
+ * day, else where her schedule puts her in town today; she's in front of you there once you've gone into town. */
+export function whereYouMeet(save: Pick<SaveV4, 'calendar' | 'roster' | 'dorm' | 'love' | 'today'>, pack: SchedulePack, id: string): MeetWhere {
+  if (onFarmToday(save, id)) return { here: true, farm: true, at: null }
+  const at = livesInTown(pack, id) ? whereOn(pack, id, save.calendar.day).at : null
+  return { here: at !== null && save.today.town, farm: false, at }
 }
 
 /** How many are out in town today. */

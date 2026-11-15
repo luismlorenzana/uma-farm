@@ -79,11 +79,11 @@ importers:
         specifier: 2.30.0
         version: 2.30.0
       '@luismlorenzana/uma-data':
-        specifier: 1.8.0
-        version: 1.8.0
+        specifier: 1.9.0
+        version: 1.9.0
       '@luismlorenzana/uma-kit':
         specifier: 0.20.0
-        version: 0.20.0(@luismlorenzana/uma-data@1.8.0)(@luismlorenzana/uma-work@0.1.0)(firebase@12.19.0)(motion@12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(phaser@4.2.1)(react-dom@19.3.1(react@19.3.1))(react-router@7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)
+        version: 0.20.0(@luismlorenzana/uma-data@1.9.0)(@luismlorenzana/uma-work@0.1.0)(firebase@12.19.0)(motion@12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(phaser@4.2.1)(react-dom@19.3.1(react@19.3.1))(react-router@7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)
       '@luismlorenzana/uma-work':
         specifier: 0.1.0
         version: 0.1.0
@@ -161,8 +161,8 @@ importers:
   packages/domain:
     dependencies:
       '@luismlorenzana/uma-data':
-        specifier: 1.8.0
-        version: 1.8.0
+        specifier: 1.9.0
+        version: 1.9.0
       '@luismlorenzana/uma-work':
         specifier: 0.1.0
         version: 0.1.0
@@ -1367,8 +1367,8 @@ packages:
   '@luismlorenzana/uma-art@2.30.0':
     resolution: {integrity: sha512-XeRAAkLbsmta86tym9h5gGu+ZutZrJKRPRJNo9d3iGqGeJHIdEID3cY3pIPPEUJ07zqKmsN4eiYAbjrUhfxfoA==, tarball: https://npm.pkg.github.com/download/@luismlorenzana/uma-art/2.30.0/6b722638017bf8500b397801dc77cbe9a152a842}
 
-  '@luismlorenzana/uma-data@1.8.0':
-    resolution: {integrity: sha512-7rgZvU2gBReEzvXgT0yI7oVFT4EDH52e3JMzZMuDeYCvNTO7vdxlsE3tS6+WgahXKqOEm0XOoc8/wXCobTtfwA==, tarball: https://npm.pkg.github.com/download/@luismlorenzana/uma-data/1.8.0/ae3cd7ea6c7a59d5c728f877269fbd10e5ca47cd}
+  '@luismlorenzana/uma-data@1.9.0':
+    resolution: {integrity: sha512-ql/MyeJd67Hq4QqPSX0L51ptPIPKysj5teO11HK2VH9hVZtyvgUmI2eXLwi/rGJWBmt1koXyl30N+HFlcvZmug==, tarball: https://npm.pkg.github.com/download/@luismlorenzana/uma-data/1.9.0/4a29921b263f272b541c40abae4370189e2ebdd7}
     engines: {node: '>=20'}
 
   '@luismlorenzana/uma-kit@0.20.0':
@@ -5916,16 +5916,16 @@ snapshots:
 
   '@luismlorenzana/uma-art@2.30.0': {}
 
-  '@luismlorenzana/uma-data@1.8.0': {}
+  '@luismlorenzana/uma-data@1.9.0': {}
 
-  '@luismlorenzana/uma-kit@0.20.0(@luismlorenzana/uma-data@1.8.0)(@luismlorenzana/uma-work@0.1.0)(firebase@12.19.0)(motion@12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(phaser@4.2.1)(react-dom@19.3.1(react@19.3.1))(react-router@7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)':
+  '@luismlorenzana/uma-kit@0.20.0(@luismlorenzana/uma-data@1.9.0)(@luismlorenzana/uma-work@0.1.0)(firebase@12.19.0)(motion@12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(phaser@4.2.1)(react-dom@19.3.1(react@19.3.1))(react-router@7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)':
     dependencies:
       motion: 12.43.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
       react-router: 7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
     optionalDependencies:
-      '@luismlorenzana/uma-data': 1.8.0
+      '@luismlorenzana/uma-data': 1.9.0
       '@luismlorenzana/uma-work': 0.1.0
       firebase: 12.19.0
       phaser: 4.2.1

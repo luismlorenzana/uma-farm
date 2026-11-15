@@ -1,6 +1,7 @@
 // Farmhands and aptitudes. A friend you invite to work (`roster[id].farmhand`) is a farmhand: after her part-time job in
-// town (the story's `job`, else the game's default), she gives the farm a few actions a day on the tasks you set on the
-// work board. She works them overnight, before the crops grow, so the morning reports her work.
+// town (the story's `job`, else the game's default), she's on the farm by day, in front of you for talks, gifts and her
+// evening, and gives the farm a few actions a day on the tasks you set on the work board. She works them overnight,
+// before the crops grow, so the morning reports her work.
 //
 //   her day      3 actions; +1 once she's settled in (a season after you invited her); +2 once she's your spouse;
 //                +1 when she's well fed this morning (a household meal the day before, a reception, a spouse's
@@ -44,7 +45,8 @@ import {
   type AptitudeId, type DigId, type FarmSave, type FarmTask, type RosterUma, type TaskKind, type TileTaskKind,
 } from '../save/v4'
 import type { StoryPack } from '../story/pack'
-import { favouriteSpotOf, herJobOf } from '../story/placeholders'
+import { herJobOf } from '../story/placeholders'
+import { defaultSpot } from '../town/town'
 import type { LoopPlaceId } from '../save/parse-v4'
 
 const round6 = (n: number): number => Math.round(n * 1e6) / 1e6
@@ -89,8 +91,9 @@ export function handsInOrder(save: Pick<FarmSave, 'roster'>): string[] {
   return farmhands(save).sort((a, b) => save.roster[a]!.farmhand! - save.roster[b]!.farmhand! || Number(a) - Number(b))
 }
 
-/** Her part-time job: the story's (`what` its words, `at` its location), else the game's default, a job in town near her
- * favourite spot (`at` that spot, or null). The words are the app's: "Works at the Bakery", "A job in town". */
+/** Her part-time job: the story's (`what` its words, `at` its location), else the game's default, a job in town at her
+ * favourite spot (her default schedule's, `defaultSpot`). The words are the app's: "Works at the Bakery", "Helps out at
+ * the Café". She does it first, then she's on the farm by day (`town/town.ts`'s `onFarmToday`). */
 export interface HandJob {
   own: boolean
   what: string | null
@@ -98,7 +101,7 @@ export interface HandJob {
 }
 export function handJob(pack: Pick<StoryPack, 'cast'>, id: string): HandJob {
   const job = herJobOf(pack, id)
-  return job ? { own: true, what: job.what ?? null, at: job.at } : { own: false, what: null, at: favouriteSpotOf(pack, id) }
+  return job ? { own: true, what: job.what ?? null, at: job.at } : { own: false, what: null, at: defaultSpot(pack, id) }
 }
 
 // --- The board -----------------------------------------------------------------------------------------------

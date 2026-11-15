@@ -11,10 +11,12 @@ import type { UmaBible } from '../story/authored'
 import { readScene } from '../story/scenes'
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { STAND_IN_FILES } from '../story/stand-in'
+import { goToTown } from '../farm/actions'
+import { seasonSchedule, whereOn } from '../town/town'
 import { joinCast } from './meeting.fixture'
 import {
-  answerInvite, drawInvites, EVENING_GAMES, eveningAffordable, eveningCost, eveningMarks, eveningMoments, eveningPoints, eveningScene, eveningPreview, eveningRole, EVENINGS, eveningSeed, eveningSlots, eveningUmas, favouriteKind,
-  homeTonight, inviteCandidates, invitedNow, inviteDue, invitePoints, inviteWeight, kindBuilt, kindOpens, kindsNow, slotsLeft, spendEvening, tonightOpens,
+  answerInvite, drawInvites, EVENING_GAMES, eveningAffordable, eveningCost, eveningHere, eveningMarks, eveningMoments, eveningPoints, eveningScene, eveningPreview, eveningRole, EVENINGS, eveningSeed, eveningSlots, eveningUmas,
+  favouriteKind, homeTonight, inviteCandidates, invitedNow, inviteDue, invitePoints, inviteWeight, kindBuilt, kindOpens, kindsNow, slotsLeft, spendEvening, tonightOpens,
 } from './evening'
 import { bar } from './love'
 
@@ -66,15 +68,25 @@ describe('who', () => {
     expect(eveningRole(at('spouse', 0))).toBe('spouse')
   })
 
-  it('she must be home: away, nothing is open to her; a spouse in her house is home', () => {
+  it('she must be in front of you: home, a farmhand on the farm by day, or out in town today with you there; a spouse in her house is home', () => {
     const save = withLove(farm(), { level: 3 })
-    expect(kindsNow(save, ONE)).toEqual(['walk', 'fishing', 'picnic', 'market'])
+    expect(kindsNow(save, PACK, ONE)).toEqual(['walk', 'fishing', 'picnic', 'market'])
     const away = { ...save, dorm: { ...save.dorm, home: [TWO, THREE] } }
     expect(homeTonight(away, ONE)).toBe(false)
-    expect(kindsNow(away, ONE)).toEqual([])
-    expect(() => spendEvening(away, PACK, ONE, 'walk', 90)).toThrow('She’s away tonight.')
+    // In town: out where her schedule puts her, but not in front of you until you've gone into town.
+    const outDay = seasonSchedule(PACK, ONE, 'spring').find((g) => g.at !== null)!.days[0]!
+    const townDay = { ...away, calendar: { day: outDay } }
+    expect(whereOn(PACK, ONE, outDay).at).not.toBeNull()
+    expect(kindsNow(townDay, PACK, ONE)).toEqual([])
+    expect(() => spendEvening(townDay, PACK, ONE, 'walk', 90)).toThrow('She isn’t here today.')
+    expect(eveningHere(goToTown(townDay), PACK, ONE)).toBe(true)
+    expect(kindsNow(goToTown(townDay), PACK, ONE)).toEqual(['walk', 'fishing', 'picnic', 'market'])
+    expect(spendEvening(goToTown(townDay), PACK, ONE, 'walk', 90).save.today.evenings).toEqual([{ with: ONE, kind: 'walk' }])
+    // A farmhand, on the farm by day.
+    const hand = { ...away, roster: { ...away.roster, [ONE]: { ...away.roster[ONE]!, farmhand: away.calendar.day } } }
+    expect(kindsNow(hand, PACK, ONE)).toEqual(['walk', 'fishing', 'picnic', 'market'])
     expect(homeTonight(withLove(away, { stage: 'spouse', level: 0, wed: 1, house: 0 }), ONE)).toBe(true)
-    expect(kindsNow(withLove(save, { level: 2 }), ONE)).toEqual([])
+    expect(kindsNow(withLove(save, { level: 2 }), PACK, ONE)).toEqual([])
     expect(() => spendEvening(withLove(save, { level: 2 }), PACK, ONE, 'walk', 90)).toThrow('Evenings open at Friendship 3.')
   })
 })
@@ -91,12 +103,12 @@ describe('the kinds', () => {
     expect(kindOpens(at('friendship', 3), 'cooking')).toBe(true)
     expect(kindOpens(at('romance', 9), 'footrace')).toBe(true)
     expect([kindBuilt('cooking'), kindBuilt('footrace')]).toEqual([false, false])
-    expect(kindsNow(withLove(farm(), { stage: 'spouse', level: 3, wed: 1 }), ONE)).not.toContain('footrace')
+    expect(kindsNow(withLove(farm(), { stage: 'spouse', level: 3, wed: 1 }), PACK, ONE)).not.toContain('footrace')
     // The two evenings of their own: dates only, Dinner in town from R3 and A night in from R6; a spouse's every evening.
     expect(EVENING_GAMES).not.toContain('dinner')
     expect([kindOpens(at('romance', 2), 'dinner'), kindOpens(at('romance', 3), 'dinner'), kindOpens(at('confession', 10), 'dinner')]).toEqual([false, true, false])
     expect([kindOpens(at('romance', 5), 'night-in'), kindOpens(at('romance', 6), 'night-in'), kindOpens(at('spouse', 0), 'night-in')]).toEqual([false, true, true])
-    expect(kindsNow(withLove(farm(), { stage: 'romance', level: 6 }), ONE)).toEqual(['walk', 'fishing', 'picnic', 'market', 'crafting', 'stargazing', 'dinner', 'dance', 'boat', 'night-in'])
+    expect(kindsNow(withLove(farm(), { stage: 'romance', level: 6 }), PACK, ONE)).toEqual(['walk', 'fishing', 'picnic', 'market', 'crafting', 'stargazing', 'dinner', 'dance', 'boat', 'night-in'])
   })
 
   it('names each evening\'s scene and its moment: a hangout\'s, a date\'s, and the two of their own', () => {
@@ -132,14 +144,14 @@ describe('the kinds', () => {
   it('offers festival night only on a festival day, from Friendship 3, in its own slot', () => {
     expect(festivalOn(10)?.id).toBe('flower-show')
     const festival = withLove(farm(10), { level: 3 })
-    expect(kindsNow(festival, ONE)).toEqual(['walk', 'fishing', 'picnic', 'market', 'festival'])
-    expect(kindsNow(withLove(farm(11), { level: 3 }), ONE)).not.toContain('festival')
-    expect(kindsNow(withLove(farm(10), { level: 2 }), ONE)).toEqual([])
+    expect(kindsNow(festival, PACK, ONE)).toEqual(['walk', 'fishing', 'picnic', 'market', 'festival'])
+    expect(kindsNow(withLove(farm(11), { level: 3 }), PACK, ONE)).not.toContain('festival')
+    expect(kindsNow(withLove(farm(10), { level: 2 }), PACK, ONE)).toEqual([])
     // The evening spent, festival night is still free; festival night spent, the evening still is.
     const evening = spendEvening(festival, PACK, ONE, 'walk', 70).save
-    expect(kindsNow(evening, ONE)).toEqual(['festival'])
+    expect(kindsNow(evening, PACK, ONE)).toEqual(['festival'])
     const night = spendEvening(festival, PACK, ONE, 'festival', 70).save
-    expect(kindsNow(night, ONE)).toEqual(['walk', 'fishing', 'picnic', 'market'])
+    expect(kindsNow(night, PACK, ONE)).toEqual(['walk', 'fishing', 'picnic', 'market'])
     expect(() => spendEvening(night, PACK, ONE, 'festival', 70)).toThrow('Festival night is spent.')
   })
 

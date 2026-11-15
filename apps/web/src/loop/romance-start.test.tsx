@@ -2,7 +2,7 @@
 // four, or the game's two in two taps), Skip from the first line, then Home on day 1 with nobody met; introducing yourself
 // in town meets her, and her meeting scene plays (Skip landing on the choice, the gains on the buttons, +50 and the
 // choice paid once); the Gate's words (everyone lives in town), and the Dorm for 20. The stand-ins aren't in master data: their
-// faces are lettered discs. Invented outfits (the album fixture) and the invented stand-in pack; the server is a stub.
+// faces are blank profiles. Invented outfits (the album fixture) and the invented stand-in pack; the server is a stub.
 import 'fake-indexeddb/auto'
 import { meet, newSave, readScene, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
@@ -232,11 +232,12 @@ describe('an open pack\'s placeholders', () => {
 })
 
 describe('a face master data lacks', () => {
-  it('is a lettered disc named for the stand-in, through the resolver', async () => {
-    const { LetterDisc } = await import('../master/album-art')
+  it('is her blank profile, lettered for the stand-in through the resolver, in the season’s colours', async () => {
+    const { BlankPicture } = await import('../master/album-art')
     const { outfitFor } = await import('../story/story')
-    await render(<div style={{ width: 40, height: 40 }}><LetterDisc id="9000002" size={40} /></div>)
+    await render(<div style={{ width: 40, height: 40 }}><BlankPicture id="9000002" season="winter" /></div>)
     expect($('[data-disc="9000002"]')?.textContent).toBe('S2')
+    expect($('[data-disc="9000002"]')?.dataset.season).toBe('winter')
     expect(fixture.view!.album.get('9000002')?.name).toBe('Stand-in 2')
     expect(outfitFor('9000002')).toBe('900000201')
     expect(outfitFor('81001')).toBe('81001')

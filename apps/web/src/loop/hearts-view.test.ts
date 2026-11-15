@@ -174,9 +174,9 @@ describe('her profile', () => {
     expect(slots({ level: 1 })).toEqual(['loved:golden-carrot:60', 'liked:?:30', 'liked:?:30', 'liked:?:30', 'disliked:?:0', 'disliked:?:0'])
     expect(slots({ level: 1, known: ['carrot', 'limestone'] })).toEqual(['loved:golden-carrot:60', 'liked:carrot:30', 'liked:?:30', 'liked:?:30', 'disliked:limestone:0', 'disliked:?:0'])
     expect(slots({ level: 7 })).toEqual(['loved:golden-carrot:60', 'liked:carrot:30', 'liked:potato:30', 'liked:cabbage:30', 'disliked:limestone:0', 'disliked:iron-ore:0'])
-    // No bible: the default story's tastes, her favourite good (a forager's Chestnut) loved, every other gift +10.
+    // No bible: the default story's tastes, her favourite good (a forager's Shiitake) loved, every other gift +10.
     expect(giftSlots(PACK, newLove(), TWO)).toEqual({ slots: [{ taste: 'loved', good: null, points: 60 }], others: 10 })
-    expect(giftSlots(PACK, { ...newLove(), level: 1 }, TWO).slots[0]!.good).toBe('chestnut')
+    expect(giftSlots(PACK, { ...newLove(), level: 1 }, TWO).slots[0]!.good).toBe('shiitake')
   })
 
   it('lists her ties, strongest first, with bond hearts from today’s bonds', () => {

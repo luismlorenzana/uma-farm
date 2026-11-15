@@ -120,8 +120,8 @@ describe('Pick', () => {
     expect(goods.favourites).toEqual(['golden-carrot', 'carrot', 'potato', 'cabbage'])
     expect(goods.others).toEqual(expect.arrayContaining(['onion', 'tomato']))
     expect(goods.others).not.toContain('carrot')
-    // Without a bible, the default story's: her favourite good by her line (a forager's Chestnut).
-    expect(pickGoods(PACK, '9000002').favourites).toEqual(['chestnut'])
+    // Without a bible, the default story's: her favourite good by her line (a forager's Shiitake).
+    expect(pickGoods(PACK, '9000002').favourites).toEqual(['shiitake'])
   })
   it('ten pops a round on a 3 × 3 field, four starred, never two in one cell at once', () => {
     const plan = pickPlan(seed, 'event', goods)

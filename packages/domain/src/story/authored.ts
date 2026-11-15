@@ -150,7 +150,7 @@ export interface CastEntry {
   meet?: StoryTrigger
   /** Her chapters. */
   chapters?: HerChapter[]
-  /** Her favourite of the town's spots: she's out there more often than elsewhere. */
+  /** Her favourite of the town's spots: the default schedule's place for her, while the story gives her no schedule. */
   spot?: SpotId
   /** Her home: a location of the town map (`town.json`'s, usually), where she is when nothing else holds. */
   home?: string
@@ -837,7 +837,7 @@ function readLocation(v: unknown, at: string, f: Findings, ctx: Pick<StoryContex
 }
 
 /** Her life in town, read: her `home`, her `job` and her `routine`. An error skips the field (or the routine's stop)
- * it's in; she's placed by today's draw wherever the story says nothing. */
+ * it's in; with none of them, she keeps the game's default schedule (`town/town.ts`'s `scheduleOf`). */
 function readLife(u: Record<string, unknown>, it: string, f: Findings, ctx: Pick<StoryContext, 'locations'>): Pick<CastEntry, 'home' | 'job' | 'routine'> {
   const home = u.home === undefined ? undefined : readLocation(u.home, `${it} home`, f, ctx)
   let job: HerJob | undefined

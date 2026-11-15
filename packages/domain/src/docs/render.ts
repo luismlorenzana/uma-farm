@@ -61,7 +61,7 @@ import { FARMER_NAME_MAX } from '../romance/farmer'
 import { storyPackFrom } from '../story/pack'
 import { favouriteOf, PLACEHOLDER_SPOTS, PLACEHOLDER_TOWN_LINES } from '../story/placeholders'
 import { MENU_RULES } from '../town/menu'
-import { FAVOURITE_SPOT, SHOPS, SPOT_ROOM } from '../town/town'
+import { DEFAULT_EVERY, defaultDays, SHOPS } from '../town/town'
 import { SPOT_IDS } from '../story/authored'
 import { BOND_HEARTS, BOND_POINTS, bondHearts, CLOSEST_BOND, SHARED_LINE, SIDE_BY_SIDE, SIDE_BY_SIDE_HEARTS, TIE_SEEDS } from '../farm/bonds'
 import { STAND_IN_FILES } from '../story/stand-in'
@@ -480,7 +480,7 @@ function upkeepBlock(): string {
 /** A farmhand's actions a day, by why, and half pace. */
 function farmhandDay(): string {
   return table(['', 'Her actions'], [
-    ['A farmhand’s day, after her part-time job', String(HAND_ACTIONS)],
+    ['A farmhand’s day, after her part-time job (she’s on the farm by day; she works her actions overnight)', String(HAND_ACTIONS)],
     [`Settled in: from ${SETTLED_AFTER} days after you invited her (a season)`, `+${SETTLED_ACTIONS}`],
     ['Once she’s your spouse', `+${SPOUSE_ACTIONS}`],
     ['Well fed this morning: a household meal the day before, a wedding’s reception, a spouse’s breakfast', `+${FED_ACTIONS}`],
@@ -591,13 +591,16 @@ function townSpots(): string {
   return table(['Spot (`spot`)', 'The game’s name', 'Its line', 'Kept by'], SPOT_IDS.map((id) => [`\`${id}\``, PLACEHOLDER_SPOTS[id].name, PLACEHOLDER_SPOTS[id].blurb,
     CAST[PLACEHOLDER_SPOTS[id].keeper].role]))
 }
-/** Who's where today: the story's places first, then the day's draw; and the game's own town lines. */
-function townDraw(): string {
+/** Who's where on a day: her schedule (the story's, else the default), the farm, the posts; and the game's own town
+ * lines. */
+function townSchedule(): string {
+  const days = [0, 1, 2].map((place) => defaultDays(place).join(', '))
   return table(['', 'The rule'], [
-    ['Her story', 'Her routine’s first stop that holds today (its `days` of the season and its `seasons`), else her `job` on its days, else her `home`: she’s there'],
-    ['The draw', `Everyone else in town, in the order of \`draw(uid, day, 'town:<id>', 0)\`, lowest first: up to ${SPOT_ROOM} at each of the ${SPOT_IDS.length} spots (${SPOT_ROOM * SPOT_IDS.length} in all; those the story places there stand besides them), the rest at home`],
-    ['Where she stands', `Her favourite spot (her cast entry’s \`spot\`) while it has room, ${Math.round(FAVOURITE_SPOT * 100)}% of the time (\`draw(…, 1)\`); else a spot with room (\`draw(…, 2)\`)`],
-    ['On the farm', 'An Uma living on the farm is at the farm, never in town; in the draw she keeps her place, unseen, so the day never shifts when someone moves in'],
+    ['Her story', 'Her routine’s first stop that holds that day (its `days` of the season and its `seasons`), else her `job` on its days, else her `home`: she’s there. On a day none holds, she’s at home, off the map'],
+    ['The default schedule', `An Uma the story hasn’t scheduled (no \`routine\`, \`job\` or \`home\` on the map): at her favourite spot on every ${DEFAULT_EVERY === 3 ? 'third' : `${DEFAULT_EVERY}th`} day of each season, by her place in the cast (the 1st, 4th, 7th… on ${days[0]}; the 2nd, 5th, 8th… on ${days[1]}; the 3rd, 6th, 9th… on ${days[2]}); at home, off the map, the other days`],
+    ['Her favourite spot', `Her cast entry’s \`spot\`; else the ${SPOT_IDS.length} in turn by her place in the cast, ${DEFAULT_EVERY} Umas each (the 1st to 3rd at \`${SPOT_IDS[0]}\`, the 4th to 6th at \`${SPOT_IDS[1]}\`…, the 19th starting again)`],
+    ['A spot', 'Holds everyone the schedules put there, with no cap; nobody is placed at random'],
+    ['On the farm', 'An Uma living on the farm (the Dorm, a spouse’s house) is at the farm, never in town; so is a farmhand by day, after her part-time job'],
     ['The town’s people', 'Each at her post: her role’s shop or office, else the spot she keeps'],
     ['Her line', `One a day (\`draw(uid, day, 'town-line:<id>', 0)\`) of her bible’s \`townLines\`, else the game’s ${PLACEHOLDER_TOWN_LINES.length}: ${PLACEHOLDER_TOWN_LINES.join(' ')}`],
   ])
@@ -1041,7 +1044,7 @@ function eveningKinds(): string {
     own(d.kind) ? '— (no one’s favourite)' : d.question ? `“${d.question}”` : '— (never asked for)',
   ])) + `
 
-Who: ${ROLE_WORDS.hangout.toLowerCase()} from Friendship ${HANGOUT_FROM} (her confession’s wait and Romance 0 included), ${ROLE_WORDS.date.toLowerCase()} from Romance ${DATE_FROM} (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse (“${ROLE_WORDS.spouse}”); she must be home. Each takes ${eveningCost()} of the day’s actions. The stand-in’s favourite kinds: ${['9000001', '9000002', '9000003'].map((id) => `${id} ${favouriteKind(pack, id)}`).join(', ')}.`
+Who: ${ROLE_WORDS.hangout.toLowerCase()} from Friendship ${HANGOUT_FROM} (her confession’s wait and Romance 0 included), ${ROLE_WORDS.date.toLowerCase()} from Romance ${DATE_FROM} (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse (“${ROLE_WORDS.spouse}”); she must be in front of you: home on the farm, a farmhand there by day, or out in town today with you there. Each takes ${eveningCost()} of the day’s actions. The stand-in’s favourite kinds: ${['9000001', '9000002', '9000003'].map((id) => `${id} ${favouriteKind(pack, id)}`).join(', ')}.`
 }
 
 /** The Uma loop's stages: how you reach each and what it opens. */
@@ -1221,6 +1224,6 @@ export function renderBlock(key: string): string | null {
     'dorm-levels': dormLevels, upkeep: upkeepBlock, loans: loansBlock,
     'farmhand-day': farmhandDay, 'work-board': workBoard, 'aptitude-levels': aptitudeLevels, 'aptitude-start': aptitudeStart, tricks: tricksBlock,
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,
-    'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-draw': townDraw, 'town-shops': townShops, 'her-menu': herMenuBlock }
+    'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-schedule': townSchedule, 'town-shops': townShops, 'her-menu': herMenuBlock }
   return blocks_[key]?.() ?? null
 }

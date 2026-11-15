@@ -3,12 +3,12 @@
 // data (else one of a few hair tones, by her id), and a simple face for each of the 22 expressions. It composes as her
 // portraits do (`Bust.tsx`'s `Portrait`): a base per outfit the size of a portrait (525 × 700), and a face per
 // expression (224 × 224) laid over it at the base's face position, swapped line by line with the same fade. The blank
-// profile (a list's or a card's small face) is the same head and shoulders on her colour, with her letters. No art,
-// name or colour of anyone's is in git. Loaded with the players and the album's fallback.
+// profile (her picture while she has no portraits, `blank-profile.tsx`) is the same head and shoulders in the season's
+// outfit. No art, name or colour of anyone's is in git. Loaded with the players.
 import type { ArtOutfit, Expression } from '@farm/domain'
 import { useReducedMotionSetting } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { mix, SKIN, type BlankTint } from './blank-profile'
+import { mix, SEASON_CLOTH, SKIN, type BlankTint } from './blank-profile'
 
 export { blankTint, mix, type BlankTint } from './blank-profile'
 
@@ -25,10 +25,10 @@ const INK = '#3a2c2a'
 
 /** Each outfit's colours: its main cloth and its trim. */
 const OUTFIT_COLOURS: Readonly<Record<ArtOutfit, { main: string; trim: string }>> = {
-  spring: { main: '#a7d39a', trim: '#f6b8c6' },
-  summer: { main: '#94cbe9', trim: '#ffffff' },
-  fall: { main: '#d48f50', trim: '#9c4a2e' },
-  winter: { main: '#4d6191', trim: '#f4f4f4' },
+  spring: SEASON_CLOTH.spring,
+  summer: SEASON_CLOTH.summer,
+  fall: SEASON_CLOTH.autumn,
+  winter: SEASON_CLOTH.winter,
   swimsuit: { main: '#3bb7b1', trim: '#ffffff' },
   kimono: { main: '#c94a3e', trim: '#f4dfae' },
   dinner: { main: '#7a2d50', trim: '#f2e6d8' },

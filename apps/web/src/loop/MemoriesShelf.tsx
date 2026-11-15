@@ -2,11 +2,11 @@
 // Memories' count, "4 of 26", opening her album (`?album=`). The household scenes and the finale once played, each a
 // replay (`?household=<id>&replay=1`). Loaded on demand with the Diary.
 import { HOUSEHOLD_IDS, householdTitle, type SaveV4 } from '@farm/domain'
-import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Panel } from '@luismlorenzana/uma-kit/ui'
 import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router'
+import { Avatar } from '../dialogue/Avatar'
 import { useMaster } from '../master/master'
 import { storyReady, useStory } from '../story/story'
 import { memoryCount } from './event-view'
@@ -35,7 +35,7 @@ export default function MemoriesShelf({ save }: { save: SaveV4 }) {
         {ids.map((id) => (
           <li key={id}>
             <Link to={withParam(location, 'album', id)} state={{ back: true }} className="flex min-h-12 items-center gap-2.5 py-1" data-shelf={id}>
-              <FaceTile outfitId={id} size={32} label={nameOf(id)} round />
+              <Avatar id={id} size={32} label={nameOf(id)} />
               <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">{nameOf(id)}</span>
               <span className="shrink-0 text-[13px] text-ink-soft tabular-nums">{memoryCount(save, id)} ›</span>
             </Link>

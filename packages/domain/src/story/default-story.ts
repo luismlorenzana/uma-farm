@@ -594,13 +594,15 @@ export const DEFAULT_MEALS: Readonly<Record<'breakfast' | 'dinner', readonly str
 
 // --- Her words: her favourite good and her line's work ------------------------------------------------------------------
 
-/** Her favourite good while her story names none, by her line: what `{good}` says, and the gift she loves. */
+/** Her favourite good while her story names none, by her line: what `{good}` says, and the gift she loves. Each can be had
+ * from the first season, with nothing built: the woods' Spring goods, the pond's Spring fish, or a crop of the shop's
+ * first Spring seeds (`default-story.test.ts` checks it against the tables). */
 export const DEFAULT_GOODS: Readonly<Record<Activity, string>> = {
-  farming: 'peach', ranch: 'honey', mining: 'amethyst', fishing: 'seashell', foraging: 'chestnut', cooking: 'cinnamon', serving: 'chocolate', forging: 'garnet',
-  expeditions: 'honey',
+  farming: 'carrot', ranch: 'honeycomb', mining: 'button-mushroom', fishing: 'trout', foraging: 'shiitake', cooking: 'basil', serving: 'mint', forging: 'potato',
+  expeditions: 'honeycomb',
 }
 /** Her favourite good with no line at all (someone master data doesn't hold, and no story). */
-export const DEFAULT_GOOD = 'honey'
+export const DEFAULT_GOOD = 'honeycomb'
 /** What `{work}` says, by her line. */
 export const WORK_WORDS: Readonly<Record<Activity, string>> = {
   farming: 'farming', ranch: 'tending the animals', mining: 'mining', fishing: 'fishing', foraging: 'foraging', cooking: 'cooking', serving: 'serving', forging: 'forging',

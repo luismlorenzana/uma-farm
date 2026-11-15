@@ -157,7 +157,10 @@ it. The days are read live from the save as it stands and the story's year, neve
 │ │7   │8  •│9   │10🏆│11  │12 •│  │ With an event, as things stand                  │ │
 │ │    │Mkt │    │Flwr│    │Mkt │  │ (face) Name · Flower Show                       │ │
 │ │    │    │    │●●+3│    │    │  │ (face) Name · Flower Show · Likely ready        │ │
-│ └────┴────┴────┴────┴────┴────┘  │ Next festival: … · Day 3 of 48                  │ │
+│ └────┴────┴────┴────┴────┴────┘  │ In town · 34                                    │ │
+│                                  │ The Plaza      (●)(●)(●)(●)(●) +1               │ │
+│                                  │ The Café       (●)(●)(●)                        │ │
+│                                  │ Next festival: … · Day 3 of 48                  │ │
 │                                  └─────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -172,8 +175,11 @@ it. The days are read live from the save as it stands and the story's year, neve
 - **The chosen day's panel** (today when the calendar opens): its heading ("Spring 10 · in 7 days"); a special day's
   event actions ("+3 actions for events", today "2 of 3 actions left for events"); New Year's; its festival, with what
   happens at it when the story says; the story's holidays and minor days, each with its line; then everyone with an
-  event that day, her face, her name and why. On a day ahead the list is "With an event, as things stand". At its foot,
-  the next festival with its countdown, and the day of the year ("Day 3 of 48. Days move only when you end them.").
+  event that day, her face, her name and why. On a day ahead the list is "With an event, as things stand". Then **In
+  town · n**: who's in town that day and where, a row a place in the map's order, its name, its first five faces (met
+  first) and "+n", read from every Uma's fixed schedule ([who's where](#whos-where)), so a day ahead shows who'll be
+  there (the save as it stands: one living on the farm, or a farmhand, isn't in town). At its foot, the next festival
+  with its countdown, and the day of the year ("Day 3 of 48. Days move only when you end them.").
 - **Today's rows play:** **Play · 1** for her occasion scene (or "No actions" with none left of either kind), and
   **Event ›** for her Ready event. Those who've played today's occasion are listed under it ("Played today: …").
 
@@ -2056,8 +2062,9 @@ The Dorm for 20: its eight levels, their beds, what each costs, and the Farm Ran
 #### Living in town, and swaps
 
 Everyone you've met who isn't on the farm **lives in town**. She keeps her ranks and her route, and earns no rank
-points. Talks, gifts and her events reach her (you find her in town, where the story or the day's draw puts her: see
-[the town](#the-town)); her evenings wait until she's on the farm.
+points. Talks, gifts, her evening and her events reach her: you find her in town on her days, where her fixed schedule
+puts her ([who's where](#whos-where)), and ask her out there. Once she's a farmhand she's on the farm by day, in front of
+you every day ([farmhands](#farmhands)).
 
 - **A swap** sends one Uma home to town and brings one from town home in her place. It is free and unlimited, and it
   happens the next morning: the one leaving goes to town and the one arriving takes her bed.
@@ -2130,18 +2137,19 @@ The Hearts view, her profile's Hearts side, Chat and Gift are the romance's: see
 
 ### The town
 
-Every character lives in town from day 1: everyone in master data, once each, in her default outfit or the pack's
-outfit for her, and the pack's sisters. The town is a map you walk around: going in takes one of the day's actions, and
-walking between its places is free. Each place lists who's there **now**. The story puts each Uma where her life takes
-her (her home, her part-time job, the places she likes, and when); anyone it says nothing of for today is placed by
-today's draw. The town's people, fourteen Umas in the town's roles, are at their posts. Tap an Uma for her menu: you
-meet her by introducing yourself (see [meeting her](#meeting-her)).
+**The cast lives in town from day 1:** the owner's Umas, the story's cast (sisters included), in her default outfit or
+the pack's outfit for her. Nobody else from master data is in the game. The town is a map you walk around: going in takes one of the day's actions, and
+walking between its places is free. Each place lists who's there **now**. **Nobody is placed at random:** every Uma
+keeps a fixed schedule, the story's (her home, her part-time job, the places she likes, and when), else the game's
+default (her favourite spot every third day of each season), and her profile and the calendar show it. The town's
+people, fourteen Umas in the town's roles, are at their posts. Tap an Uma for her menu: you meet her by introducing
+yourself (see [meeting her](#meeting-her)).
 
 ```
  the farm map ──► the Town: Go into town · 1 action (the town and its shop open for the day)
                     the map: its places (the six spots, the shops and offices, the story's workplaces and homes)
                       tap a place (free) ──► who's here now, with faces · its keeper at her post, and her post's menu
-                        tap an Uma ──► her menu: Introduce yourself · 1 │ Talk · 1 │ Give a gift · 1 │ Hangout or Date · 2
+                        tap an Uma ──► her menu: Introduce yourself · 1 │ Talk · 1 │ Give a gift · 1 │ Ask her out · 2
                                                  │ Invite her to work · 1 │ Her event · 1, when it's Ready
                     People: everyone, met or not, where she is today · find by name · met first or by name
 ```
@@ -2152,14 +2160,17 @@ The town's places, in four groups on the map:
 
 | Group | Its places | Who's there |
 |---|---|---|
-| **Around town** | The six spots: the plaza, the market, the café, the harbour, the library and the hilltop track (their names and lines `town.json`'s, else the game's) | The draw's few, and anyone the story places there |
+| **Around town** | The six spots: the plaza, the market, the café, the harbour, the library and the hilltop track (their names and lines `town.json`'s, else the game's) | Everyone whose schedule puts her there that day: the default schedule's, and anyone the story places there |
 | **Shops and offices** | The general store, the rancher's, the mayor's office and the smithy | Their keepers at their posts, and anyone the story places there |
 | **Workplaces** and **Homes** | The story's own (`town.json`'s `locations`, by `kind`) | Who the story places there |
 | **Elsewhere** | The story's other spots | Who the story places there |
 
 - **You arrive at the plaza** (`/town?at=plaza`), marked **You're here**. A tap on another place goes there (`?at=<id>`):
   free, and Back still returns to the farm.
-- **Each place on the map** shows its name, how many are there now, and their first faces.
+- **Each place on the map** shows its name, how many are there now on its badge, and their first four faces.
+- **A crowded spot:** a spot holds everyone the schedules put there, with no cap (with a cast of a hundred on the default
+  schedule, about a third are out each day, five or six a spot, more where many share a favourite). Its tile keeps its
+  count on the badge and its first four faces, then "+n"; where you are lists everyone.
 - **Where you are**, beside the map: its name and line, **Here now · n** with each Uma's face and name in a grid that
   scrolls (a ♥ on one you've met, a ✓ on one you've talked with today), or "No one's here now."; then its keeper at her
   post and her post's menu.
@@ -2192,28 +2203,35 @@ The shops and offices are the game's own, each kept by one of the town's people:
 
 #### Who's where
 
-<!-- live:town-draw -->
+**Every Uma keeps a fixed schedule, and nothing is drawn.** One pure function, `scheduleOf(pack, id)`
+(`town/town.ts`), gives her days and places; `whereOn(pack, id, day)` reads a day of it. The town, her profile ("Where
+to find her") and the calendar's days ("In town") all read it, so what her profile says is where you'll find her.
+
+<!-- live:town-schedule -->
 |  | The rule |
 |---|---|
-| Her story | Her routine’s first stop that holds today (its `days` of the season and its `seasons`), else her `job` on its days, else her `home`: she’s there |
-| The draw | Everyone else in town, in the order of `draw(uid, day, 'town:<id>', 0)`, lowest first: up to 4 at each of the 6 spots (24 in all; those the story places there stand besides them), the rest at home |
-| Where she stands | Her favourite spot (her cast entry’s `spot`) while it has room, 60% of the time (`draw(…, 1)`); else a spot with room (`draw(…, 2)`) |
-| On the farm | An Uma living on the farm is at the farm, never in town; in the draw she keeps her place, unseen, so the day never shifts when someone moves in |
+| Her story | Her routine’s first stop that holds that day (its `days` of the season and its `seasons`), else her `job` on its days, else her `home`: she’s there. On a day none holds, she’s at home, off the map |
+| The default schedule | An Uma the story hasn’t scheduled (no `routine`, `job` or `home` on the map): at her favourite spot on every third day of each season, by her place in the cast (the 1st, 4th, 7th… on 1, 4, 7, 10; the 2nd, 5th, 8th… on 2, 5, 8, 11; the 3rd, 6th, 9th… on 3, 6, 9, 12); at home, off the map, the other days |
+| Her favourite spot | Her cast entry’s `spot`; else the 6 in turn by her place in the cast, 3 Umas each (the 1st to 3rd at `plaza`, the 4th to 6th at `market`…, the 19th starting again) |
+| A spot | Holds everyone the schedules put there, with no cap; nobody is placed at random |
+| On the farm | An Uma living on the farm (the Dorm, a spouse’s house) is at the farm, never in town; so is a farmhand by day, after her part-time job |
 | The town’s people | Each at her post: her role’s shop or office, else the spot she keeps |
 | Her line | One a day (`draw(uid, day, 'town-line:<id>', 0)`) of her bible’s `townLines`, else the game’s 6: “Oh, hello! Out for a walk too?” “Lovely day for it, isn’t it?” “You’re from the farm up the road, aren’t you?” “I come here when I need to think.” “Good to see you, {farmer}.” “Busy day? Mine’s only just starting.” |
 <!-- /live -->
 
-- **The story first:** an Uma with a `routine`, a `job` or a `home` ([her life in town](#her-life-in-town)) is where
-  the first of them that holds today puts her, whatever the draw: her routine's first stop whose days of the season and
-  seasons hold, else her job on its days, else her home. A location the map doesn't hold is passed over.
-- **The draw** places everyone else, seeded by the player and the day, so the same day always shows the same town and
-  tomorrow a different few; the rest are at home, not on the map today. A cast entry's `spot` is her favourite: she's
-  there more often than anywhere else.
+- **Her story's schedule** is hers when it's written ([her life in town](#her-life-in-town)): her routine's first stop
+  whose days of the season and seasons hold, else her job on its days, else her home. A location the map doesn't hold is
+  passed over; with none left, the story hasn't scheduled her. On a day none of it holds, she's at home, off the map.
+- **The default schedule** plays until hers is written: her favourite spot (her cast `spot`, else the six in turn by her
+  place in the cast) on every third day of each season, starting on day 1, 2 or 3 by her place in the cast, so a third
+  of the cast is out each day and the next Uma in the cast is out the day after. The same four days every season.
+- **A spot** holds everyone the schedules put there; the map shows a crowded one by its count and "+n" ([the
+  map](#the-map)).
 - **The posts:** each of the town's people is at one post: the spot `town.json` has her keep, else her role's shop or
   office, else the spot the game has her keep. A place whose keeper is posted elsewhere shows none (with no `town.json`,
   the mayor is at her office and the shopkeeper at the store, so the plaza and the market show no keeper).
-- **On the farm:** an Uma who lives on the farm (the Dorm, or a spouse's house) isn't in town; in the draw she keeps her
-  place, unseen, so the day never shifts when someone moves in. One you've met who lives in town is out like anyone.
+- **On the farm:** an Uma who lives on the farm (the Dorm, or a spouse's house) isn't in town; neither is a farmhand by
+  day ([farmhands](#farmhands)). Nobody else moves when one moves in. One you've met who lives in town keeps her days.
 
 #### Her menu
 
@@ -2230,9 +2248,8 @@ open is greyed with why. **Back** returns to the map.
 | Introduce yourself | 1 action | You haven’t met her: in town today, where she is now. She’s met, and her meeting scene plays |
 | Talk | 1 action | Met: once a day each, +15. Her line for the day plays on the dialogue engine |
 | Give a gift | 1 action | Met: once a day each, one good from the Warehouse at the stars you choose; her reaction plays on the dialogue engine |
-| Hangout | 2 actions | A friend (Friendship 3 and up) who lives on the farm: her evening, its play and her scene |
-| Date | 2 actions | A sweetheart (Romance 1 and up) or a spouse, on the farm: her evening, Dinner in town and A night in among its kinds |
-| Invite her to work | 1 action | A friend (Friendship 3 and up), once: she’s a farmhand from today |
+| Ask her out | 2 actions | Her evening, its play and her scene: a hangout with a friend (Friendship 3 and up), a date with a sweetheart (Romance 1 and up) or a spouse. One evening a day across everyone |
+| Invite her to work | 1 action | A friend (Friendship 3 and up), once: she’s a farmhand from today, on the farm by day |
 | Her event | 1 action | Met, when her next event is Ready; a special day’s event actions pay first |
 <!-- /live -->
 
@@ -2245,17 +2262,19 @@ open is greyed with why. **Back** returns to the map.
 - **Talk** and **Give a gift** are the romance's acts: +15, and her taste's points (see [her route](#her-route)),
   floating as "+15 ♥" by her name. They're the same acts as Chat and Gift on her profile, each an action there too,
   once a day each wherever you do them, and only **where you meet her** (below).
-- **Her evening** (**Hangout · 2** for a friend, **Date · 2** for a sweetheart or a spouse) opens her evening while
-  it's open to her and the day has its two actions ([the evening](#the-evening)); otherwise it says why: "From
-  Friendship 3", "She lives in town: invite her to the farm", "Spent this evening ✓", "That takes 2 actions.".
-- **Invite her to work · 1**, once she's a friend (Friendship 3): she's a **farmhand** from today, and keeps her life in
-  town. Her scene plays over the town as soon as the action is spent ([the invitation to
-  work](#the-invitation-to-work)); then her menu says "Farmhand ✓" and her line ("The farm? I'd love to. Count me
-  in."), and "Works the farm ✓". Set her tasks on the work board in the Book ([farmhands](#farmhands)).
+- **Ask her out · 2** opens her evening (`?evening=<id>`) while she's in front of you, it's open to her (a hangout with
+  a friend from Friendship 3, a date with a sweetheart from Romance 1 or a spouse) and the day has its two actions:
+  one evening a day across everyone, the same kinds and scenes as on the farm ([the evening](#the-evening)). Otherwise
+  it says why: "From Friendship 3", "Spent this evening ✓", "Tonight's evening is spent", "That takes 2 actions.".
+- **Invite her to work · 1**, once she's a friend (Friendship 3): she's a **farmhand** from today, keeps her life in
+  town, and is on the farm by day from now on. Her scene plays over the town as soon as the action is spent ([the
+  invitation to work](#the-invitation-to-work)); then her menu says "Farmhand ✓" and her line ("The farm? I'd love to.
+  Count me in."), and "Works the farm ✓". Set her tasks on the work board in the Book ([farmhands](#farmhands)).
 - **Her event** shows once it's Ready, wherever she lives, and opens the event player over the town; it takes an
   action (a special day's event actions first), and with none left it doesn't start.
-- **Not out now:** "At home today. Look for her another day." (with her profile once met); one who lives on the farm:
-  "She lives on the farm. Her profile ›".
+- **Not out now:** "At home today. Out on Spring 7, at the Library." (her next day out, from her schedule; with her profile once met); one on the farm: "She lives
+  on the farm. Her profile ›", or for a farmhand "On the farm by day, after her job. Her profile ›" (her menu still
+  works there: she's in front of you).
 - **One of the town's people** (her face at her post, or on the People list) shows her role, what she does and her
   ties with the cast, each with its line, and her post's menu: the general store's **Buy seeds ›** opens the shop;
   the mayor's office's **Order a build ›** and **Borrow or repay ›** both open the office's sheet, its orders and its
@@ -2264,13 +2283,14 @@ open is greyed with why. **Back** returns to the map.
 - **A Town note** an introduction, a talk or a gift unlocks says "Town note · *title* ›" there, a tap to it in the
   Diary: an introduction or a talk at a spot visits it ([Town notes](#town-notes)).
 
-**Where you meet her** (the talk-and-gift rule): you talk with her, give her a gift and invite her to work only where
-she's in front of you: **on the farm** when she lives there (the Dorm, or a spouse's house), else **in town where she is
-today**, once you've gone into town. Her menu in town is always where she is; her profile follows the same rule
-([her profile](#her-profile)). **Her Ready event plays from anywhere** (her menu, her profile, the morning's Ready line,
-the calendar). Why: going into town takes one of the day's actions and the map shows who's where, so the town is where
-the day's talks happen, and an Uma on the farm is always in front of you; an event is her route's milestone, offered by
-the morning, the calendar and the People page, so a day she's at home never strands it.
+**Where you meet her** (the talk-and-gift rule, and the evening's): you talk with her, give her a gift, ask her out and
+invite her to work only where she's in front of you: **on the farm** when she lives there (the Dorm, or a spouse's
+house) or works it by day (a farmhand), else **in town where she is today**, once you've gone into town (`whereYouMeet`).
+Her menu in town is always where she is; her profile follows the same rule ([her profile](#her-profile)). **Her Ready
+event plays from anywhere** (her menu, her profile, the morning's Ready line, the calendar). Why: going into town takes
+one of the day's actions and the map shows who's where, so the town is where the day's talks happen, her schedule says
+which days, and an Uma on the farm is always in front of you; an event is her route's milestone, offered by the
+morning, the calendar and the People page, so a day she's at home never strands it.
 
 #### The town's screen
 
@@ -2278,8 +2298,9 @@ the morning, the calendar and the People page, so a day she's at home never stra
   **Shop**. Its title is the town's name when the world gives one, else "Town". Before you go in today, **Go into town
   · 1 action**.
 - **People:** everyone in town and the town's people, each with her face and name and where she is today ("At the
-  Café today", "At the Bakery, at work today", "At home", "On the farm", "At the Café, most days" for a keeper, "In
-  town"), and **Met** for anyone you've met. **Find by name** (any case, accents aside) and a sort: **Met first** (met,
+  Café today", "At the Bakery, at work today", "At home · out Spring 7" with her next day out, "On the farm", "On the
+  farm by day" for a farmhand who lives in town, "At the Café, most days" for a keeper, "In town"), and **Met** for
+  anyone you've met. **Find by name** (any case, accents aside) and a sort: **Met first** (met,
   then talked most, then by name) or **Name**. A tap goes to her: to her place and her menu when she's out, else her
   menu ("At home today").
 - **Lean:** faces load as they scroll into view.
@@ -2294,15 +2315,17 @@ record reads it as 0, and nothing moves `updatedAt`.
 ### Farmhands
 
 A friend you invite to work is a **farmhand** ([the invitation to work](#the-invitation-to-work)). She keeps her life in
-town: her part-time job comes first, then she gives the farm a few actions a day on the tasks you set her on the **work
-board**, in the Book. She works them overnight, before the crops grow, so the morning says what she did. Any Uma can do
+town, but **she's on the farm by day**: her part-time job comes first, then she's at the farm, in front of you every day
+from the invitation on, for talks, gifts and her evening (she isn't on the town's map, and her schedule's days in town
+stop mattering). She gives the farm a few actions a day on the tasks you set her on the **work board**, in the Book. She
+works them overnight, before the crops grow, so the morning says what she did. Any Uma can do
 any task, and each task has an **aptitude**: a level for her that starts from her talents and rises with every action she
 spends on it, bringing more goods, better stars and new tricks. As the farmhands take the farm's work over, your own ten
 actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
 
 ```
  your day (10 actions)                 the night, step 2, first: each farmhand in the order you invited her
-   invite her to work · 1 (a friend)     her part-time job (the story's, else a job in town)
+   invite her to work · 1 (a friend)     her part-time job (the story's, else a job at her favourite spot)
    the Book: the work board (free)       then her actions today: 3, +1 settled in, +2 a spouse, +1 well fed this morning,
      her tasks, in your order              all at the farm's pace (half, from the second short night of upkeep)
      harvest · water · plant ·           the field's tasks, the loads and the animals' care first, in your order, each
@@ -2319,7 +2342,7 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
 <!-- live:farmhand-day -->
 |  | Her actions |
 |---|---|
-| A farmhand’s day, after her part-time job | 3 |
+| A farmhand’s day, after her part-time job (she’s on the farm by day; she works her actions overnight) | 3 |
 | Settled in: from 12 days after you invited her (a season) | +1 |
 | Once she’s your spouse | +2 |
 | Well fed this morning: a household meal the day before, a wedding’s reception, a spouse’s breakfast | +1 |
@@ -2327,8 +2350,14 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
 <!-- /live -->
 
 - **Her part-time job first:** the story's `job` for her ([her life in town](#her-life-in-town)), its words or where it
-  is ("Waits tables", "Works at the Bakery"); else the game's default, a job near her favourite spot ("Helps out at the
-  Café"), else "A job in town". It costs the farm nothing: it's why she's in town by day, and the board says it.
+  is ("Waits tables", "Works at the Bakery"); else the game's default, a job at her favourite spot ("Helps out at the
+  Café": her cast `spot`, else her default schedule's). It costs the farm nothing, and the board says it.
+- **Then the farm, by day:** after her job she's at the farm, so she's in front of you every day ([where you meet
+  her](#her-menu)): Chat, Gift and her evening are on her profile and her menu without going into town. The town's map
+  and People list say "On the farm by day"; her profile's **Where to find her** says "Today · On the farm" and "Every day
+  · On the farm by day, after her job: Helps out at the Café". Her work is the night's, as before: the overnight work
+  below is unchanged. At night she goes home to town (she takes no Dorm bed, and the morning's invitations stay those of
+  the Umas home).
 - **Settled in** is a season after you invited her (`roster[id].farmhand`, the day you did). **Married:** once she's
   your spouse.
 - **Well fed this morning:** a household meal you cook today keeps everyone well fed today and tomorrow
@@ -3074,98 +3103,105 @@ How long marriage takes, answered the same way: a test (`packages/domain/src/rom
 game's own rules with a plain bot, ten actions a day, courting **one default-story Uma** from meeting her to the wedding
 night and farming with what's left. `MARRIAGE=1` prints the tables below.
 
-- **The town is honest.** Master data there is 159 invented characters, so the daily draw puts about 24 out at the six
-  spots and the rest at home, as on the phone. She has no `home` or `job` in the story, so the draw places her: about one
-  day in six. A second way gives her cast entry a **routine** at the Café on four days a season (3, 6, 9 and 12), the
-  draw placing her the other days.
-- **She's met only by meeting her:** introducing yourself in town, the day she's out. Talks, gifts, Praise and the
-  invitation to work need her **in front of you**: on the farm when she lives there, else in town where she is today.
-  The bot never forces her into town: a day she's at home it farms instead, and those days are counted. Her events play
-  from anywhere; her evenings only once she lives on the farm.
+- **The town is honest, and nothing is drawn.** The cast there is a hundred invented characters, as the owner's is,
+  each on the default schedule, so about a third are out at the six spots each day and the rest at home, as on the
+  phone. She has no `home`, `job` or `routine`, so she keeps **the default schedule**: her favourite spot on four days a
+  season (the first in the cast: days 1, 4, 7 and 10). A second way gives her cast entry **a home in town** (a
+  `town.json` home on the map), so she's out every day.
+- **She's met only by meeting her:** introducing yourself in town, on a day she's out. Talks, gifts, Praise, her evening
+  and the invitation to work need her **in front of you**: on the farm when she lives there or works it by day (a
+  farmhand), else in town where she is today, where the bot asks her out. The bot never forces her into town: a day
+  she's at home it farms instead, and those days are counted. Her events play from anywhere.
 - **Each day,** while she's in front of you (going into town for her when she's out there): a talk, a gift, Praise when
-  she's earned it, and from Friendship 3 **the invitation to work** (a farmhand from then, watering the field and
-  foraging the woods); her morning invitation said yes; **her evening** when it's open (2 actions); **her event** when
-  Ready (the warmest reply, Yes at her confession); from Romance 8 **a ring** at the bench from three refined goods
-  the Mill made (the bot keeps the Mill's goods from Romance 5); then the proposal and the wedding. Then the farm, as
-  the first year's bot plays it: harvest, water what she won't, the Mill on a loan once its logs are held, the season's
-  quickest seeds, a crate shipped, and the rest at the woods and the water.
-- **Two profiles.** **Devoted:** her loved gift whenever it's held (foraging the Hills for it in Summer, once open), else
-  a liked one; **Great** evenings in her favourite kind. **Casual:** a liked gift; **Fine** evenings, the first kind
-  offered. A default-story Uma loves her line's good and likes nothing in particular, so her tastes for the run are a
-  synthetic bible's: loved her line's default (a farming Uma: Peach), liked four goods of the woods. Her favourite kind
-  is the walk, which both profiles take.
+  she's earned it, and from Friendship 3 **the invitation to work** (a farmhand from then, on the farm by day, watering
+  the field and foraging the woods overnight); her morning invitation said yes; **her evening** when it's open (2
+  actions); **her event** when Ready (the warmest reply, Yes at her confession); from Romance 8 **a ring** at the bench
+  from three refined goods the Mill made (the bot keeps the Mill's goods from Romance 5); then the proposal and the
+  wedding. Then the farm, as the first year's bot plays it: harvest, water what she won't, the Mill on a loan once its
+  logs are held, the season's quickest seeds, a crate shipped, and the rest at the woods and the water.
+- **Two profiles.** **Devoted:** her loved gift whenever it's held, else a liked one; **Great** evenings in her favourite
+  kind. **Casual:** a liked gift; **Fine** evenings, the first kind offered. A default-story Uma loves her line's good
+  and likes nothing in particular, so her tastes for the run are a synthetic bible's: loved her line's default (a
+  farming Uma: Carrot, the season's quickest seed in Spring), liked four goods of the woods. Her favourite kind is the
+  walk, which both profiles take.
 - **Two homes.** She **stays in town** (a farmhand from Friendship 3, still living there), or the bot **invites her to
   the farm** (a free Dorm bed) the day she's met.
-- **Seven farms each:** the account seeds the town's draw and every other draw, so each farm meets her on its own days.
-  Each cell is the median of the seven, with their range. A day is the farm's (48 to a year).
+- **Seven farms each:** the account seeds every draw (stars, hauls, her lines, her invitations), never where she is, so
+  every farm meets her on day 1. Each cell is the median of the seven, with their range. A day is the farm's (48 to a
+  year).
 
 It checks that **every run reaches the wedding night**, that **nothing dead-ends** (her event only ever waits on her
-bar, the day after, a ring or one a day), that the farm is faster than town and devoted no slower than casual, that a
-farmhand living in town is in front of you no more often than before, and that a routine brings her out more often.
+bar, the day after, a ring or one a day), that the farm is no slower than town and devoted no slower than casual, that
+a farmhand and an Uma on the farm are in front of you every day, that every farm meets her the same day, that a home in
+town brings her out every day and weds no later, and that living in town she weds inside the second year.
 
 **She stays in town:**
 
-|  | Devoted, the draw | Devoted, a routine | Casual, the draw | Casual, a routine |
+|  | Devoted, the default schedule | Devoted, a home in town | Casual, the default schedule | Casual, a home in town |
 |---|---|---|---|---|
-| Met her, day | 9 (4–26) | 3 | 9 (4–26) | 3 |
-| Out of her reach, days | 241 (231–283) | 94 (89–100) | 305 (285–337) | 107 (99–117) |
-| In front of you, before she's a farmhand | 18% of days | 49% of days | 18% of days | 49% of days |
-| In front of you, once she's a farmhand | 18% of days | 44% of days | 17% of days | 44% of days |
-| Friendship 3, day | 58 (52–92) | 24 (21–27) | 58 (52–94) | 24 (21–27) |
-| A farmhand, day | 67 (53–93) | 26 (23–28) | 69 (53–104) | 26 (23–28) |
-| The confession, day | 186 (168–208) | 102 (94–106) | 218 (195–236) | 115 (108–118) |
-| The proposal, day | 294 (283–331) | 169 (165–173) | 370 (350–398) | 192 (186–203) |
-| **The wedding**, day | **295 (284–332): Spring 7, year 7** | **170 (166–174): Autumn 2, year 4** | **371 (351–399): Autumn 11, year 8** | **193 (187–204): Spring 1, year 5** |
-| Meeting her to the wedding, days | 280 (262–324) | 167 (163–171) | 363 (340–395) | 190 (184–201) |
-| Actions spent on her | 181 (172–187) | 247 (243–256) | 223 (205–223) | 283 (274–289) |
-| Evenings | 0 | 0 | 0 | 0 |
-| Gifts: loved, liked | 42, 10 | 30, 42 | 0, 66 | 0, 84 |
-| Gold at the wedding | 208,945g (201,325–262,180) | 107,830g (104,465–112,525) | 278,110g (250,685–304,510) | 120,300g (116,125–133,680) |
-| Days her event waited on her bar | 258 (239–299) | 142 (139–149) | 339 (316–373) | 166 (160–175) |
-| Days it waited on a ring | 2 (0–3) | 1 (0–4) | 2 (0–3) | 2 (0–4) |
-| Short nights | 0 (0–1) | 1 (0–1) | 0 (0–1) | 1 (0–1) |
-| Real time, at 3–5 minutes a day | 15 h–25 h | 9 h–14 h | 19 h–31 h | 10 h–16 h |
+| Met her, day | 1 | 1 | 1 | 1 |
+| Out of her reach, days | 16 | 0 | 22 (22–24) | 0 |
+| In front of you, before she's a farmhand | 36% of days | 100% of days | 35% of days | 100% of days |
+| In front of you, once she's a farmhand | 100% of days | 100% of days | 100% of days | 100% of days |
+| Friendship 3, day | 22 | 10 | 31 (31–34) | 14 (14–16) |
+| A farmhand, day | 25 | 11 | 34 (34–37) | 15 (15–17) |
+| The confession, day | 36 | 22 | 51 (51–54) | 32 (31–34) |
+| The proposal, day | 49 (49–53) | 35 (35–36) | 71 (69–78) | 58 (52–60) |
+| **The wedding**, day | **50 (50–54): Spring 2, year 2** | **36 (36–37): Autumn 12, year 1** | **72 (70–79): Summer 12, year 2** | **59 (53–61): Spring 11, year 2** |
+| Meeting her to the wedding, days | 49 (49–53) | 35 (35–36) | 71 (69–78) | 58 (52–60) |
+| Actions spent on her | 153 (153–169) | 159 (159–163) | 214 (206–232) | 245 (220–254) |
+| Evenings | 26 (26–30) | 26 (26–27) | 39 (37–43) | 44 (37–47) |
+| Gifts: loved, liked | 10, 22 | 8, 22 | 0, 48 | 0, 48 |
+| Gold at the wedding | 8,615g (7,460–11,620) | 5,070g (4,675–6,615) | 12,280g (11,650–14,310) | 12,615g (10,420–13,430) |
+| Days her event waited on her bar | 27 | 13 | 47 (47–50) | 28 (27–30) |
+| Days it waited on a ring | 0 (0–4) | 0 (0–1) | 2 (0–6) | 7 (0–10) |
+| Short nights | 2 (0–2) | 1 | 2 (0–2) | 0 (0–2) |
+| Real time, at 3–5 minutes a day | 3 h–4 h | 108 min–3 h | 4 h–6 h | 3 h–5 h |
 
 **Invited to the farm the day she's met:**
 
-|  | Devoted, the draw | Devoted, a routine | Casual, the draw | Casual, a routine |
+|  | Devoted, the default schedule | Devoted, a home in town | Casual, the default schedule | Casual, a home in town |
 |---|---|---|---|---|
-| Met her, day | 9 (4–26) | 3 | 9 (4–26) | 3 |
-| Out of her reach, days | 8 (3–25) | 2 | 8 (3–25) | 2 |
+| Met her, day | 1 | 1 | 1 | 1 |
+| Out of her reach, days | 0 | 0 | 0 | 0 |
 | In front of you, before she's a farmhand | 100% of days | 100% of days | 100% of days | 100% of days |
 | In front of you, once she's a farmhand | 100% of days | 100% of days | 100% of days | 100% of days |
-| Friendship 3, day | 18 (15–36) | 16 (14–16) | 18 (15–36) | 16 (14–16) |
-| A farmhand, day | 19 (16–37) | 17 (15–17) | 19 (16–37) | 17 (15–17) |
-| The confession, day | 30 (27–48) | 28 (26–28) | 34 (31–52) | 31 (30–32) |
-| The proposal, day | 43 (38–61) | 43 (38–43) | 55 (47–73) | 48 (47–53) |
-| **The wedding**, day | **44 (39–62): Winter 8, year 1** | **44 (39–44): Winter 8, year 1** | **56 (48–74): Spring 8, year 2** | **49 (48–54): Spring 1, year 2** |
-| Meeting her to the wedding, days | 35 (34–40) | 41 (36–41) | 44 (43–51) | 46 (45–51) |
-| Actions spent on her | 150 (145–162) | 166 (150–170) | 182 (178–213) | 190 (182–205) |
-| Evenings | 26 (24–28) | 28 (25–30) | 34 (32–42) | 35 (32–38) |
-| Gifts: loved, liked | 0, 34 | 0, 32 | 0, 44 | 0, 40 |
-| Gold at the wedding | 6,405g (5,060–11,465) | 5,935g (5,220–6,510) | 12,315g (7,060–14,935) | 9,740g (7,110–10,685) |
-| Days her event waited on her bar | 12 (11–15) | 15 (13–16) | 20 (19–22) | 23 (22–24) |
-| Days it waited on a ring | 1 (0–3) | 4 (1–5) | 1 (0–9) | 2 (0–5) |
-| Short nights | 0 (0–1) | 0 (0–1) | 0 (0–1) | 0 (0–1) |
-| Real time, at 3–5 minutes a day | 2 h–4 h | 2 h–4 h | 3 h–5 h | 2 h–4 h |
+| Friendship 3, day | 10 | 10 | 15 (14–16) | 15 (14–16) |
+| A farmhand, day | 11 | 11 | 16 (15–17) | 16 (15–17) |
+| The confession, day | 21 | 21 | 31 (30–32) | 31 (30–32) |
+| The proposal, day | 35 (34–35) | 35 (34–35) | 47 (47–48) | 47 (47–48) |
+| **The wedding**, day | **36 (35–36): Autumn 12, year 1** | **36 (35–36): Autumn 12, year 1** | **48 (48–49): Winter 12, year 1** | **48 (48–49): Winter 12, year 1** |
+| Meeting her to the wedding, days | 35 (34–35) | 35 (34–35) | 47 (47–48) | 47 (47–48) |
+| Actions spent on her | 149 (145–149) | 149 (145–149) | 187 (184–193) | 187 (184–193) |
+| Evenings | 26 (25–26) | 26 (25–26) | 33 (32–35) | 33 (32–35) |
+| Gifts: loved, liked | 9, 21 | 9, 21 | 0, 37 | 0, 37 |
+| Gold at the wedding | 5,530g (3,885–7,805) | 5,530g (3,885–7,805) | 7,705g (6,800–10,275) | 7,705g (6,800–10,275) |
+| Days her event waited on her bar | 11 | 11 | 25 (24–25) | 25 (24–25) |
+| Days it waited on a ring | 2 (1–2) | 2 (1–2) | 1 (0–2) | 1 (0–2) |
+| Short nights | 2 (0–3) | 2 (0–3) | 1 (0–7) | 1 (0–7) |
+| Real time, at 3–5 minutes a day | 108 min–3 h | 108 min–3 h | 2 h–4 h | 2 h–4 h |
 
-- **Where she lives decides the pace.** Living in town, she's in front of you on about one day in six with the draw,
-  and in four on nine with the routine; on the others the day can't court her at all, and **she never has an evening**,
-  since evenings are only for an Uma on the farm. Invited to the farm (free, the day she's met, with a bed free), she's
-  in front of you every day and the wedding comes **in the first year: 35–41 days after meeting her, devoted, or 44–46
-  casual**, some 2–5 hours of play.
-- **A farmhand in town is no easier to reach:** the invitation to work makes her a farmhand, but she keeps her life in
-  town, so the draw still decides where she is (18% of days before and after, with the draw). What her becoming a
-  farmhand changes is her line's +10 a night and Praise, not the days you can talk with her.
-- **In town the route takes years:** devoted, about **280 days (six farm years, 15–25 hours)** with the draw and
-  **167 days (three and a half years)** with the routine; casual, 363 and 190. Nearly every day of it is her bar's wait.
-- **A routine is the story's lever:** four days a season at one place nearly halves the town route, and it's the only
-  thing that brings an Uma out more often while she lives in town.
+- **Living in town, the wedding comes in the first year or early in the second**, no longer in years 4–7: devoted on
+  the default schedule, **day 50 (Spring 2, year 2), 49 days after meeting her**, some 3–4 hours of play; casual, day 72
+  (Summer 12, year 2). With a home in town, devoted weds on day 36, the farm's own pace.
+- **The default schedule brings her out a third of the days** (36% before she's a farmhand: four days of each season's
+  twelve), the same days every season and on every farm, so you can plan for them: her profile and the calendar show
+  them. Those days are the whole of her wait before Friendship 3 (16 days out of reach, devoted).
+- **The farmhand is the turn.** Once she's invited to work (day 25, devoted), she's on the farm by day and in front of
+  you every day (100%), so from then the town route runs like the farm's: the confession 11 days later (on the farm,
+  10), the wedding 25 days after she's a farmhand (on the farm, 25).
+- **Her evening now plays in town.** She has 26 evenings before the wedding, devoted, living in town as on the farm,
+  where she used to have none: asked out where she is on her days, then every day once she's a farmhand.
+- **Invited to the farm** (free, the day she's met, with a bed free), she's in front of you every day and the wedding
+  comes on **day 36 (Autumn 12, year 1), 35 days after meeting her, devoted, or 47 casual**, some 2–4 hours of play. A
+  schedule changes nothing for an Uma on the farm (both columns alike).
+- **A home in town** (or any fuller schedule the story writes) is the story's lever for the first weeks: out every day,
+  she reaches Friendship 3 on day 10, as on the farm, and the town route matches the farm's (devoted 35 days, casual 58).
+- **Her loved gift is early now:** a farming Uma loves Carrot, the first season's quickest seed, so devoted gives it on
+  ten days before the wedding (in town; nine on the farm). Every default loved good can be had in Spring of year 1
+  ([her favourite line and tastes](#her-favourite-line-and-tastes)).
 - **The ring never holds her long:** the bench opens the night after Romance 8, and the Mill's goods kept from Romance
-  5 make a ring there; the proposal waited on it 1–4 days at the median, 9 at most.
-- **Her loved gift is out of reach early:** a farming Uma loves Peach, which grows only in the Hills in Summer, and the
-  farmer reaches the Hills at Farm Rank 2, so on the farm a devoted bot never holds one before the wedding. Devoted's lead
-  is its Great evenings. (A fishing default-story Uma loves Seashell, which nothing in the game gives yet.)
+  5 make a ring there; the proposal waited on it 0–2 days at the median, 10 at most.
 - **No retune:** the owner decides the pace after reading it.
 
 #### The night's goals check
@@ -3437,8 +3473,8 @@ so it needs no release and is replaced the moment her portraits are published.
 
 - **The fallback order on a stage:** her portraits, else the blank bust, else (a role no one plays) the role's lettered
   disc. The blank bust comes before her master-data bust because a scene's point is her face changing line by line,
-  and the master-data bust has no faces. Her master-data face and bust stay where they always were: cards, lists, the
-  town's sheets and her profile.
+  and the master-data bust has no faces. Her master-data bust stays where it always was, on cards and sheets; her small
+  face everywhere else is [her picture](#her-picture).
 - **The base:** a soft silhouette of an Uma (her ears, her long hair, her shoulders) at a portrait's size (525 × 700),
   in the scene's outfit by [outfits by context](#outfits-by-context): each of the 12 has its colours and its mark (the
   kimono's crossed collar and gold obi, the wedding dress's veil and gold flowers, the wedding night outfit's soft robe
@@ -3475,9 +3511,72 @@ so it needs no release and is replaced the moment her portraits are published.
   | `dreamy` | Half-lidded, looking up | A smile | Sparkles, a light blush |
 
 - **Her place holds while her portraits load,** so a pilot's bust never flashes blank before her portrait.
-- **The blank profile:** where master data has no face for her (a stand-in, or one it doesn't hold), lists and cards
-  show the same head and shoulders on her colour, with her letters ("S1"). Where master data has her face and name,
-  those show, as before.
+- **The blank profile** is the same head and shoulders, small: [her picture](#her-picture) while she has neither
+  portraits nor a face in master data.
+
+#### Her picture
+
+Wherever an Uma's face shows small, as an avatar, it's **her picture**, in a rounded square. One avatar shows it
+everywhere: the town's map, who's here and its keepers, People in town, the calendar's cells and its day, the Hearts
+list, her profile's heading and its ties, the roster's cards, the work board, the Dorm and its pickers, Tonight, the
+evenings, the household, the farm map's houses, a scene's guests, the pair talks and the memories. Her picture is the
+first she has of:
+
+1. **Her profile picture** in today's season's outfit: uma-platform's 192 px square cut from her portrait, drawn whole.
+   Three Umas have portraits so far, each with a profile picture per outfit.
+2. **A crop of her portrait base,** cut in place, for a release made before profile pictures (below).
+3. **Master data's face** for her: her outfit's face, or one of the town's people's character face. It shows as it
+   always did, in the square instead of the circle. These faces are square (192 px, a character's 128 px), so they fill
+   it exactly, neither cropped nor letterboxed.
+4. **The blank profile** in the season's colours (below), when master data has no face for her either (a stand-in).
+
+```
+╭──────────────────╮
+│◆    ╱╲    ╱╲     │  a badge in a corner sits over her hair, her ears,
+│    ╭────────╮    │  her shoulders or the backdrop, never her face
+│    │  her   │    │
+│    │  face  │    │  her face centred, out of the corners
+│    ╰────────╯    │
+│   ╱ shoulders ╲ B│
+╰──────────────────╯  a rounded square: its corners 18% of its side
+```
+
+- **The avatar:** a rounded square at the sizes the lists had (20 to 72 pt), its corners 18% of its side at any size,
+  never a circle, with a hairline edge. The badges and counts a list puts on her face (her favourite line's mark, her
+  best talent, her level, a ♥ or a ✓) keep their corners, 4 pt in, over the picture's edge and never clipped by it.
+- **Her profile picture:** her head and shoulders in her portrait's outfit for **today's season** (spring, summer,
+  autumn's `fall` or winter), her calm face, the base's own. Master data's `dialogue-portraits` carries one per base
+  (uma-data 1.9.0, uma-platform's P180): a 192 × 192 WebP of about 10 KB, cut from a square about 1.5 faces wide (331
+  to 336 px of a 525 × 700 base), her face centred and kept out of the corners at 28% of the side. An outfit without
+  one shows her first in Farm Life's order that has one, spring first. On the next season's first morning every
+  picture changes outfit.
+- **Light:** an avatar loads only her profile picture, never her 300 KB base. It's checked against the release and
+  cached on the device by its hash, as a scene's pictures are. A list loads nothing of her portraits for an Uma without
+  them (the art index says so before anything is fetched): she shows master data's face, as before.
+- **A release made before profile pictures:** the avatar cuts the same head and shoulders from her season's base in
+  place (spring when that one isn't drawn): the base her scenes load, placed and scaled so a square fills the avatar,
+  with no new file and no canvas. The square is 1.6 faces wide (358 px), centred across her face, her face's middle 46%
+  down it, kept inside the base.
+- **One seam:** a single function picks her picture's source (`pictureSource`, in `dialogue/picture.ts`): her profile
+  picture when the release has one, else her base, cut in place.
+- **While her portraits are read,** her square stays empty, so a pilot's picture never flashes another first; master
+  data's face, too, leaves it empty until it has loaded.
+- **Without portraits or a face** she shows **the blank profile**, drawn in code: the blank bust's head and shoulders
+  in the season's outfit, on the season's colour (the date chip's) washed light, her hair her theme colour's (else a
+  tone by her id), and her letters ("S1") over her shoulders in ink, or white on winter's navy. Her letters come from
+  her name.
+
+  | Season | Her picture's outfit | The blank profile's backdrop | Its outfit |
+  |---|---|---|---|
+  | Spring | `spring` | Pale green | Green, a pink collar |
+  | Summer | `summer`, else `spring` | Pale gold | Sky blue, a white collar |
+  | Autumn | `fall`, else `spring` | Pale orange | Orange, a russet collar |
+  | Winter | `winter`, else `spring` | Pale blue | Navy, a white collar |
+
+- **uma-kit's own pickers** (the Dorm's) show the same: master data's face as before for an Uma without portraits, and
+  her picture for one with them.
+- **Her bust stays master data's** on the cards and sheets that show a bust; a bust that hasn't loaded shows her
+  picture until it has.
 
 #### Her illustrations
 
@@ -3654,7 +3753,9 @@ and `meetOf` still read the retired two, for the Story Sandbox.
 The cast file's `home`, `job` and `routine` say where she is, when; `town.json`'s `locations` add the homes and
 workplaces they name. All optional; [the story pack's menu](story-pack.md#her-life-in-town) has the exact shape, and
 [the town](#whos-where) how they place her: her routine's first stop that holds today, else her job on its days, else
-her home; with none of them for today, today's draw.
+her home; on a day none holds, at home off the map. With none of them written, she keeps the game's default schedule (her
+favourite spot every third day of each season). They're what her profile's "Where to find her" and the calendar's
+"In town" show.
 
 #### The world in the pack
 
@@ -3719,23 +3820,24 @@ they're needed.
 
 #### One outfit each, and the resolver
 
-- **Her outfit** is the cast file's: the game never chooses one over it. Her face, bust, talents and temperament come
-  from that outfit; her name is her character's. Talents aren't saved, so a changed outfit shows on the next boot.
+- **Her outfit** is the cast file's: the game never chooses one over it. Her bust, talents and temperament come
+  from that outfit; her name is her character's; her small face is [her picture](#her-picture): her portraits' crop,
+  else that outfit's face. Talents aren't saved, so a changed outfit shows on the next boot.
   Without one, she plays **her default outfit from master data**: her first original outfit (no variant, the lowest id),
   else her lowest. (What she wears in a scene is her portraits' outfit, by [context](#outfits-by-context): a different
   thing.)
 - **One resolver** turns a roster id into the outfit it plays: the cast's outfit, else master data's default for her,
   else the id itself for someone master data doesn't hold. The app sees
-  master data through it, so faces, busts, names, talents, temperaments and pickers all follow the cast with nothing else
-  to change.
+  master data through it, so faces, busts, names, talents, temperaments and pickers all follow the cast with nothing
+  else to change.
 - **A sister** (`s<outfitId>`, the Ranker's) is an outfit of an Uma, presented as a character of her own: she plays that
   outfit (its face, bust, talents and temperament), and her name is the pack's cast entry's `name`, never in git (without
   one, her elder's name as her sister). She lives in town and is met like anyone; the roster takes her id.
 - **Anyone in town** meets master data through the same resolver: one of the town's people, or any other character,
   plays her default outfit; a role, the Uma who plays it. A character with no outfit shows master data's character face,
-  else her name's letters on a disc.
-- **A character master data doesn't hold** shows her blank profile (the silhouette of an Uma on her colour, with her
-  name's first letter and its number, "S1") and reads
+  else her blank profile.
+- **A character master data doesn't hold** shows her blank profile (the silhouette of an Uma in the season's colours,
+  with her name's first letter and its number, "S1") and reads
   D talents in every activity. The stand-ins are named "Stand-in 1" to "Stand-in 3"; any other unknown character is "An
   Uma".
 - **Everyone on the farm stays in the cast.** An Uma on the roster the pack doesn't hold (one a release dropped, or one
@@ -3821,7 +3923,7 @@ Every ladder, event, perk, evening, proposal, wedding and household runs end to 
 | The evenings’ scenes | `hangout-walk`, `hangout-fishing`, `hangout-picnic`, `hangout-market`, `hangout-cooking`, `hangout-festival`, `date-walk`, `date-fishing`, `date-picnic`, `date-market`, `date-cooking`, `date-crafting`, `date-stargazing`, `date-dance`, `date-boat`, `date-footrace`, `date-festival`, `dinner-in-town`, `a-night-in` | Her route’s event of that id |
 | The night’s companion | 3 morning greetings for each temperament | Her bible’s `mornings` |
 | Meals | 3 lines for breakfast and 3 for dinner | Her bible’s `meals` (`breakfast`, `dinner`) |
-| Her favourite good (`{good}`), the gift she loves | Farming Peach, Ranch Honey, Mining Amethyst, Fishing Seashell, Foraging Chestnut, Cooking Cinnamon, Serving Chocolate, Forging Garnet | Her bible’s loved gift |
+| Her favourite good (`{good}`), the gift she loves | Farming Carrot, Ranch Honeycomb, Mining Button Mushroom, Fishing Trout, Foraging Shiitake, Cooking Basil, Serving Mint, Forging Potato | Her bible’s loved gift |
 | Her line’s work (`{work}`) | Farming “farming”, Ranch “tending the animals”, Mining “mining”, Fishing “fishing”, Foraging “foraging”, Cooking “cooking”, Serving “serving”, Forging “forging” | Her line (her bible’s, her calling’s) |
 <!-- /live -->
 
@@ -3886,7 +3988,7 @@ Every other part of the story, and what plays without it:
 | A play’s prompt | Its game’s: “Cast the line together.” |
 | Her chapters | “Getting to know her”, “Together”, “The wedding”, “Married life” |
 | Her favourite line | Her line from master data: the work her stats suit best |
-| Her tastes | Her favourite good loved (by her line: a Peach for farming, a Seashell for fishing…), every other gift neutral |
+| Her tastes | Her favourite good loved (by her line: a Carrot for farming, a Trout for fishing…, each one the first season gives), every other gift neutral |
 | Her birthday | Master data’s, or none |
 | Her pet name for you | Your name |
 | Her keepsake | “Her keepsake”, with a plain line |
@@ -3898,8 +4000,8 @@ Every other part of the story, and what plays without it:
 | Her house lines | Her temperament’s |
 | The town’s people | Master data’s characters fill the 14 roles, from the last in its order, never one of the cast |
 | The town’s spots | The game’s 6: The Plaza, The Market, The Café, The Harbour, The Library, The Hilltop Track |
-| Her favourite spot | None: she’s out at any spot alike |
-| Her home, her job and her routine | None: today’s draw places her at one of the six spots, or at home |
+| Her favourite spot | One of the six by her place in the cast, three Umas each |
+| Her home, her job and her routine | The default schedule: her favourite spot on every third day of each season (from day 1, 2 or 3 by her place in the cast), at home the other days |
 | The town’s locations (homes, workplaces) | None: the six spots and the four shops and offices |
 | Her town line | 6 short lines, one a day |
 | A sister’s name | Her elder’s name, as her sister |
@@ -4028,9 +4130,9 @@ meet: the Dorm's beds cap only who lives on the farm.
   is left ("Go into town first.", "She isn't out in town now.", "No actions left today." otherwise). One of the town's
   people is never met: she keeps her role.
 - **Met:** she joins the roster that day (`roster[id].joined`) at Friendship 0 with 0 points and **lives in town**,
-  where you find her for a talk, a gift and her events; **Invite to the farm** on her profile moves her into a free Dorm
-  bed at once, for her evenings (the farm's work is the invitation to work's, wherever she lives). Each of her ties with someone met starts
-  at its seed.
+  where you find her on her days for a talk, a gift, her evening and her events; **Invite to the farm** on her profile
+  moves her into a free Dorm bed at once, in front of you every day (the farm's work is the invitation to work's,
+  wherever she lives). Each of her ties with someone met starts at its seed.
 - **Her meeting scene** plays at once, over the town, after the introduction.
 - **Retired with the welcome week:** the Gate's visitor one a morning, Say hello, her trigger to meet (talks on three
   days, a gift, a spot, a season, a festival, what the farm holds) and the night's meetings. The pack's `welcome` and
@@ -4092,9 +4194,10 @@ plays.
 
 - **Her tastes** are her bible's: loved, liked and disliked goods, any number of each. Everything else is neutral, and a good
   not in the game yet counts as neutral. An Uma whose bible names no taste has the default story's: **her favourite good
-  loved** (by her line: a Peach for farming, a Seashell for fishing, the full list in [what plays without the
+  loved** (by her line: a Carrot for farming, a Trout for fishing, the full list in [what plays without the
   story](#what-plays-without-the-story)), every other good neutral. Her favourite good is what the default story's
-  lines call `{good}`.
+  lines call `{good}`. **Every default can be had in Spring of year 1**, with nothing built: the woods' Spring goods,
+  the pond's Spring fish, or a crop of the shop's first Spring seeds (a test checks it against the tables).
 - **Her tastes show** in steps: her loved good from Friendship 1; any good once you've given it, or once an event's option
   or a Choose play has revealed it; every taste from Friendship 7.
 
@@ -4109,8 +4212,8 @@ invitation to work, the evenings at two actions, moving in, the household's meal
  meet ─► acquaintance ─► friend ─────► farmhand ─────► sweetheart ─► engaged ─► married
  (town)  talks, gifts    hangouts · 2   invited to      dates · 2     the        the wedding night, moving in;
          (1 each)        invite to      work · 1        Dinner in     wedding    meals · 1; the night's companion,
-                         work · 1       (she keeps her  town (R3),               who greets you in the morning
-                                        life in town)   A night in (R6)
+                         work · 1       (on the farm    town (R3),               who greets you in the morning
+                                        by day)         A night in (R6)
 ```
 
 #### The stages
@@ -4120,7 +4223,7 @@ invitation to work, the evenings at two actions, moving in, the household's meal
 |---|---|---|
 | Acquaintance | Met (you introduced yourself), Friendship 0–2 | Talks and gifts, an action each |
 | Friend | Friendship 3 and up | Hangouts (2 actions); the invitation to work (1 action) |
-| Farmhand | A friend you’ve invited to work | She works the farm part-time (the farmhands’ work); her farmhand talks |
+| Farmhand | A friend you’ve invited to work | She’s on the farm by day, in front of you every day, and works it part-time (the farmhands’ work); her farmhand talks |
 | Sweetheart | From her confession’s yes (Romance 0) | Dates (2 actions) from Romance 1; Dinner in town from Romance 3, A night in from Romance 6 |
 | Engaged | After the proposal | The wedding |
 | Married | After the wedding | The wedding night and moving in; the household’s meals; the night’s companion |
@@ -4138,8 +4241,9 @@ invitation to work, the evenings at two actions, moving in, the household's meal
 
 - **Invite her to work · 1**, on her menu in town or her profile, once she's a friend and where you meet her; once.
 - She's a **farmhand** from today and keeps her life in town (the Dorm is only where she sleeps if you invite her to the
-  farm). From tonight she works the tasks you set her on the work board, after her part-time job, and her aptitudes
-  grow ([farmhands](#farmhands)). The flag is also her stage and her talks.
+  farm), but she's **on the farm by day**, after her part-time job: in front of you every day for talks, gifts and her
+  evening. From tonight she works the tasks you set her on the work board, and her aptitudes grow
+  ([farmhands](#farmhands)). The flag is also her stage and her talks.
 - **Her scene** plays as soon as the action is spent, over her menu or her profile (`?life=invited-to-work:<id>`): her
   route's `invited-to-work`, else the default story's, a short scene at the farm gate in the day's outfit (her everyday
   one) unless hers names another. It pays nothing and saves nothing; Skip, or its end, closes it.
@@ -4415,8 +4519,9 @@ default) and **Work**, the roster's album with **her level in words** ("F7", "R4
 
 Her profile is a side panel over the page, opened from her row, a Work card, the morning's lines, the Dorm's list and
 the town.
-Each part shows only what exists; nothing says "Soon". One who lives in town has, under her face, **Lives in town** and
-**Invite to the farm** while a bed is free (she moves in at once), else "No bed free." and **The Dorm ›**.
+Each part shows only what exists; nothing says "Soon". One who lives in town has, under her face, **Where to find her**,
+then **Lives in town** and **Invite to the farm** while a bed is free (she moves in at once), else "No bed free." and
+**The Dorm ›**.
 
 ```
 ┌──────────────────────────────────────────┐
@@ -4424,6 +4529,11 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
 │ (face) [Acquaintance] New friend ● Ready │  her stage, then her level; the "+N" floats from her face
 │        Farming · ★ Spring 4              │  her line, birthday and house
 │ [ Hearts ]  Work                         │  held at the panel's top as it scrolls
+│ WHERE TO FIND HER                        │  one who lives in town: her fixed schedule
+│ Today · The Café              Find her › │  (or "At home · next out Spring 4")
+│ Spring · The Café · 1, 4, 7, 10          │  this season's days and places
+│ At home · the other days                 │
+│ Lives in town   [ Invite to the farm ]   │
 │ ▣□□□□□□□□□◇□□□□□□□□□□◇◇□□□□□             │  the route as one track
 │ ┌ Next: Friendship 1 ────────────────────┐│
 │ │ Perk · Her loved gift shown; her own chats
@@ -4500,15 +4610,21 @@ Each part shows only what exists; nothing says "Soon". One who lives in town has
 - **The actions,** 48 pt in the sheet's foot: **Chat · 1** (an action, +15; then her line for the day; "Chat ✓" once
   done), **Gift · 1** (an action: the picker; "Gift ✓"), both greyed with no actions left or when she isn't in front of
   you, **☾ Evening · 2 ›** while she can spend one and the day has its two actions (otherwise greyed with why: "Evening ✓"
-  spent with her, "Evening · F3" below Friendship 3, "In town", "Evening spent" with someone else, "Evening · 2" short of
-  the actions), **Invite her to work · 1** on the row under them while she's a friend not yet working the farm, and
-  **Praise +20** while she's earned it. What an act pays floats up from her face, and a note says it ("She likes it.
-  +36").
-- **Where you meet her:** Chat, Gift and Invite her to work need her in front of you ([where you meet
-  her](#her-menu)): she lives on the farm, or you've gone into town today and she's out there. Otherwise a line above them
-  says where she is, "In town today, at the Café. Talks and gifts are in person." with **Find her ›** (her menu where she
-  is, `/town?at=<place>&uma=<id>`, where going into town comes first), or "At home today. Talk with her in town another
-  day.". **Play · 1 action ›** (her Ready event) works from anywhere.
+  spent with her, "Evening · F3" below Friendship 3, "In town" while she's out there and you aren't, "At home" on a day
+  she's off the map, "Evening spent" with someone else, "Evening · 2" short of the actions), **Invite her to work · 1**
+  on the row under them while she's a friend not yet working the farm, and **Praise +20** while she's earned it. What an
+  act pays floats up from her face, and a note says it ("She likes it. +36").
+- **Where you meet her:** Chat, Gift, her evening and Invite her to work need her in front of you ([where you meet
+  her](#her-menu)): she lives on the farm or works it by day, or you've gone into town today and she's out there.
+  Otherwise a line above them says where she is, "In town today, at the Café. Talks and gifts are in person." with
+  **Find her ›** (her menu where she is, `/town?at=<place>&uma=<id>`, where going into town comes first), or "At home
+  today. Find her in town on her days.". **Play · 1 action ›** (her Ready event) works from anywhere.
+- **Where to find her** (one who lives in town), under her face, read from her fixed schedule ([who's
+  where](#whos-where)): **Today**, her place ("The Café", with **Find her ›**), or "At home · next out
+  Spring 4"; then this season's days and places in short words, one line a place in the order of its first day: "Spring
+  · The Café · 1, 4, 7, 10", her job's "The Bakery, at work · 1–6", and home "At home · the other days" (her story's
+  home on the map by its name). A farmhand reads "Today · On the farm" and "Every day · On the farm by day, after her
+  job: Helps out at the Café".
 - **Hearts | Work:** the Work side is her work sheet: her favourite line, the day she joined, where she is, "Farmhand
   since Spring 3 · her tasks" (a tap to the work board) once she works the farm, her fourteen aptitudes (each level, a bar to
   the next and the trick it opened; "where she'd start" before she's a farmhand: see [aptitude](#aptitude)), and her
@@ -5122,7 +5238,8 @@ and its branch, three setups, three kinds of unlock, and a confession with two p
 ### The evening
 
 The day has **one evening across all the Umas,** spent any time in the day from her profile (**☾ Evening · 2 ›**), her
-menu in town or Tonight's row; an evening left empty costs nothing. **It takes 2 of the day's actions** (never a special
+menu (**Ask her out · 2**, in town where she is or on the farm) or Tonight's row; an evening left empty costs nothing.
+**It takes 2 of the day's actions** (never a special
 day's event actions). It's a short play together at its evening length, graded **Fine, Great or Perfect** and never
 failed, that pays well, and more in her favourite kind; then **her scene for it** on the dialogue engine; then the card.
 
@@ -5130,7 +5247,9 @@ failed, that pays well, and more in her favourite kind; then **her scene for it*
 
 - **Who:** a **hangout** with a friend, an Uma at Friendship 3 or more (her confession's wait and Romance 0 included), a
   **date** with a sweetheart from Romance 1 (the proposal's and the wedding's waits included), and **every kind** with a
-  spouse ("An evening at home"). She must be **home** tonight: on the Dorm's list, or a spouse in her house.
+  spouse ("An evening at home"). She must be **in front of you** (`eveningHere`): home on the farm (on the Dorm's list,
+  or a spouse in her house), a farmhand on the farm by day, or out in town today with you there, where her menu asks her
+  out. The kinds, their scenes and their points are the same wherever you ask her.
 - **The kinds** are the ten date games and two evenings of their own, opened by her ladder and by their game:
   **Dinner in town** (a date from Romance 3, in the dinner dress) and **A night in** (a date from Romance 6, in pajamas;
   at home once married), each played as a Pick. **Cooking together** and **the footrace** wait for their games, so they
@@ -5162,7 +5281,7 @@ The kinds, the rung that opens each, and how each plays:
 | A footrace | — | R9 | Rhythm with the track (the fallback until its game ships) | `date-footrace` | Not yet: waits for the footrace | “Race me tonight?” |
 | Festival night | Festival days, F3 | Festival days, R1 | Walk, at the festival ground | `hangout-festival`, `date-festival` (`festival-night`) | Yes | — (never asked for) |
 
-Who: a hangout from Friendship 3 (her confession’s wait and Romance 0 included), a date from Romance 1 (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse (“An evening at home”); she must be home. Each takes 2 of the day’s actions. The stand-in’s favourite kinds: 9000001 stargazing, 9000002 walk, 9000003 walk.
+Who: a hangout from Friendship 3 (her confession’s wait and Romance 0 included), a date from Romance 1 (the proposal’s and the wedding’s waits included), and every kind her ladders opened with a spouse (“An evening at home”); she must be in front of you: home on the farm, a farmhand there by day, or out in town today with you there. Each takes 2 of the day’s actions. The stand-in’s favourite kinds: 9000001 stargazing, 9000002 walk, 9000003 walk.
 <!-- /live -->
 
 #### The points
@@ -5236,7 +5355,8 @@ An invitation’s draw: `draw(uid, day, 'invite', n)` among the Umas home at Fri
 - **The card:** the kind "with ‹her name›", the grade, the sum ("+150 Perfect × 1.5 her favourite = +225", "+20 for
   saying yes", "= +245 toward Friendship 4 (+40 banked)") and her bar in her ladder's colour, then **Continue**. The
   evening commits once, as the play ends: its two actions, the points, her last evening's day, and the slot spent.
-- **Tonight's picker:** the Umas who can spend an evening now, a yes first, then an unanswered invitation, then the cast's
+- **Tonight's picker:** the Umas who can spend an evening now (in front of you: on the farm, a farmhand, or one out in
+  town where you went today), a yes first, then an unanswered invitation, then the cast's
   order, each with her level, ★ her favourite kind and ✉.
 
 ```
@@ -5727,7 +5847,7 @@ flows are unchanged:
 | `?event=<id>` | Her heart event | Ready (`readiness`); with no action left it says so and plays nothing |
 | `?ask=<id>` | Ask her | She said “Not yet” at her confession, and you haven’t asked today |
 | `?memory=<id>:<rung>` | A Memory, paying nothing | A Memory already played: her meeting scene, or a rung of her route |
-| `?evening=<id>` | Her kinds sheet, then the evening | Her evening is open to her now (home, a hangout or a date her ladder opened, a slot free) |
+| `?evening=<id>` | Her kinds sheet, then the evening | Her evening is open to her now: in front of you (home on the farm, a farmhand there by day, or out in town today with you there), a hangout or a date her ladder opened, a slot free |
 | `?evening=pick` | Tonight’s picker | Someone can spend an evening now, and the day has its 2 actions |
 | `?occasion=<id>` | An occasion scene | Today’s occasion, with an Uma you’ve met, not yet played with her today |
 | `?household=<id>` | A household scene or the finale | Ready (the night saw its count) and not yet read; with `&replay=1`, once read |

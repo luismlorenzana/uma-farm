@@ -23,6 +23,11 @@
   font-display: swap;
 }
 
+/* An Uma's avatar (`dialogue/Avatar.tsx`): a rounded square, never a circle; its corners keep their share at any size. */
+@utility rounded-avatar {
+  border-radius: 18%;
+}
+
 /* The "+N" that floats up from her face when an act pays her bar; it stays still with reduced motion. */
 @keyframes love-float {
   0% { opacity: 0; transform: translateY(6px); }

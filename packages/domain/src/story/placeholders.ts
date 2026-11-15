@@ -20,7 +20,8 @@
 //   pairs and household      a short card that pays as written (nothing)
 //   the town's people        master data's characters fill the roles the pack leaves, from the last in its order
 //   the town's spots         the game's six: the Plaza, the Market, the Café, the Harbour, the Library, the Hilltop Track
-//   her town line            a few short lines, one a day; her favourite spot: none
+//   her town line            a few short lines, one a day; her favourite spot: one of the six by her place in the cast
+//   her life in town         the default schedule: her favourite spot every third day of each season (`town/town.ts`)
 //   a sister's name          her elder's name, as her sister
 //   the world's names        the town is "Town" on the map, the farm "The farm"; no region
 //   the farm's history       none: the Diary's "The farm" page shows only what's named
@@ -858,7 +859,7 @@ export const PLACEHOLDER_TABLE: readonly { gives: string; without: string }[] = 
   { gives: 'A play’s prompt', without: 'Its game’s: “Cast the line together.”' },
   { gives: 'Her chapters', without: DEFAULT_CHAPTERS.map((c) => `“${c.title}”`).join(', ') },
   { gives: 'Her favourite line', without: 'Her line from master data: the work her stats suit best' },
-  { gives: 'Her tastes', without: 'Her favourite good loved (by her line: a Peach for farming, a Seashell for fishing…), every other gift neutral' },
+  { gives: 'Her tastes', without: 'Her favourite good loved (by her line: a Carrot for farming, a Trout for fishing…, each one the first season gives), every other gift neutral' },
   { gives: 'Her birthday', without: 'Master data’s, or none' },
   { gives: 'Her pet name for you', without: 'Your name' },
   { gives: 'Her keepsake', without: `“${PLACEHOLDER_KEEPSAKE.name}”, with a plain line` },
@@ -870,8 +871,8 @@ export const PLACEHOLDER_TABLE: readonly { gives: string; without: string }[] = 
   { gives: 'Her house lines', without: 'Her temperament’s' },
   { gives: 'The town’s people', without: `Master data’s characters fill the ${CAST_IDS.length} roles, from the last in its order, never one of the cast` },
   { gives: 'The town’s spots', without: `The game’s ${SPOT_IDS.length}: ${SPOT_IDS.map((id) => PLACEHOLDER_SPOTS[id].name).join(', ')}` },
-  { gives: 'Her favourite spot', without: 'None: she’s out at any spot alike' },
-  { gives: 'Her home, her job and her routine', without: 'None: today’s draw places her at one of the six spots, or at home' },
+  { gives: 'Her favourite spot', without: 'One of the six by her place in the cast, three Umas each' },
+  { gives: 'Her home, her job and her routine', without: 'The default schedule: her favourite spot on every third day of each season (from day 1, 2 or 3 by her place in the cast), at home the other days' },
   { gives: 'The town’s locations (homes, workplaces)', without: 'None: the six spots and the four shops and offices' },
   { gives: 'Her town line', without: `${PLACEHOLDER_TOWN_LINES.length} short lines, one a day` },
   { gives: 'A sister’s name', without: 'Her elder’s name, as her sister' },
@@ -886,7 +887,8 @@ export const PLACEHOLDER_TABLE: readonly { gives: string; without: string }[] = 
 
 // === Her life in town ====================================================================================================
 
-/** Her home, her job and her routine: her cast entry's, each none without it (today's draw places her). */
+/** Her home, her job and her routine: her cast entry's, each none without it (the default schedule places her:
+ * `town/town.ts`'s `scheduleOf`). */
 export const herHomeOf = (pack: Pick<StoryPack, 'cast'>, id: string): string | null => castEntry(pack, id)?.home ?? null
 export const herJobOf = (pack: Pick<StoryPack, 'cast'>, id: string): HerJob | null => castEntry(pack, id)?.job ?? null
 export const herRoutineOf = (pack: Pick<StoryPack, 'cast'>, id: string): readonly RoutineStop[] => castEntry(pack, id)?.routine ?? []
