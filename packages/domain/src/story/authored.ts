@@ -70,9 +70,31 @@ export const RUNGS: readonly string[] = [
 /** Her life's events past the rungs: the invitation to work, the wedding night, moving in, and married life 2 and 4. They
  * pay nothing. */
 export const LIFE_EVENTS = ['invited-to-work', 'wedding-night', 'moving-in', 's2', 's4'] as const
-/** Her occasions, on their day: her birthday, New Year's, the game's five festivals and the Fishing Derby's night
- * (`derby-night`). They pay nothing. The calendar plays `new-year`, `flower-show` and `derby-night` (`romance/occasions.ts`). */
-export const OCCASIONS = ['birthday', 'new-year', 'flower-show', 'fishing-derby', 'derby-night', 'cooking-contest', 'animal-show', 'harvest-cup'] as const
+/** A festival's night, by the festival's game rule: `<festival>-night`, then the story's own names for it kept as
+ * aliases (`derby-night` the Fishing Derby's, `harvest-moon` the Cooking Contest's). The first written plays. */
+export const FESTIVAL_NIGHTS: Readonly<Record<Festival, readonly string[]>> = {
+  'flower-show': ['flower-show-night'],
+  'fishing-derby': ['fishing-derby-night', 'derby-night'],
+  'cooking-contest': ['cooking-contest-night', 'harvest-moon'],
+  'animal-show': ['animal-show-night'],
+  'harvest-cup': ['harvest-cup-night'],
+}
+/** The game's own small days: each a day of the year with a scene of its own (its id), on the calendar as a minor day.
+ * The story moves, renames or adds to them by id in `world.json`'s `days`. */
+export const GAME_DAYS_OF_STORY: readonly (Required<Pick<WorldDay, 'id' | 'name' | 'season'>> & { day: number })[] = [
+  { id: 'blossom-viewing', name: 'Blossom viewing', season: 'spring', day: 6 },
+  { id: 'wishing-night', name: 'The wishing night', season: 'summer', day: 6 },
+  { id: 'first-cold-evening', name: 'The first cold evening', season: 'autumn', day: 4 },
+  { id: 'first-snow', name: 'The first snow', season: 'winter', day: 2 },
+  { id: 'longest-night', name: 'The longest night', season: 'winter', day: 6 },
+  { id: 'sweets-day', name: 'The sweets day', season: 'winter', day: 8 },
+]
+/** Her occasions, on their day (`romance/occasions.ts`): her birthday, her anniversary, New Year's, the game's five
+ * festivals' days and their nights (every alias), and the game's own small days. A day of `world.json`'s plays its
+ * `scene` too. They pay nothing. */
+export const OCCASIONS: readonly string[] = [
+  'birthday', 'anniversary', 'new-year', ...FESTIVALS, ...FESTIVALS.flatMap((f) => FESTIVAL_NIGHTS[f]), ...GAME_DAYS_OF_STORY.map((d) => d.id),
+]
 /** The evenings' scenes: a hangout's for each kind a friend can spend (`hangout-<kind>`), a date's for each kind
  * (`date-<kind>`), and the two evenings of their own, Dinner in town and A night in. Lines only: the evening's play is
  * its game. */
@@ -269,7 +291,39 @@ export interface UmaBible {
   wedding?: WeddingPlan
   /** Her wishes for married life: `own-house` and `birthday-alone`. */
   wishes?: Wish[]
+  /** Her greetings: a chat and a talk in town open with one, from the most specific set that holds lines
+   * (`romance/talk.ts`). */
+  greetings?: Greetings
+  /** Her small talk: short exchanges a chat may draw, each fitting the moment its tags name. */
+  smallTalk?: SmallTalk[]
+  /** Her lines at a gift, by its taste, and on her birthday. Without them, the default story's. */
+  giftLines?: GiftLines
+  /** How she talks: the story's own notes, never shown. */
+  voice?: unknown
 }
+/** The hours a greeting knows: by day, at an evening, and at a night in or as the night's companion. */
+export const GREETING_TIMES = ['morning', 'evening', 'night'] as const
+export type GreetingTime = typeof GREETING_TIMES[number]
+/** The weather a greeting knows: read and kept, it plays once the game has weather. */
+export const WEATHERS = ['rain', 'snow'] as const
+export type Weather = typeof WEATHERS[number]
+/** Her greetings, each a list of lines: her birthday's, by place (a farm place, a town spot or location, a backdrop), by
+ * season, by hour, and by weather. */
+export interface Greetings {
+  birthday?: string[]
+  places?: Record<string, string[]>
+  seasons?: Partial<Record<Season, string[]>>
+  times?: Partial<Record<GreetingTime, string[]>>
+  weather?: Partial<Record<Weather, string[]>>
+}
+/** Who says a small talk's line: her (her character id) or `you`, the farmer. */
+export const YOU = 'you'
+/** One small talk: its lines, each `[speaker, line]` (hers, yours, hers), and the tags it fits: `at` a place, `season`, and
+ * `stage` her chat set. A tag left out fits every moment. */
+export interface SmallTalk { lines: [string, string][]; at?: string; season?: Season; stage?: typeof CHAT_SETS[number] }
+/** Her gift lines: one list for each taste, and one for her birthday. */
+export interface GiftLines { loved?: string[]; liked?: string[]; neutral?: string[]; disliked?: string[]; birthday?: string[] }
+export const GIFT_LINE_SETS = ['loved', 'liked', 'neutral', 'disliked', 'birthday'] as const
 /** Her lines at the household's meals: breakfast and dinner. */
 export interface Meals { breakfast?: string[]; dinner?: string[] }
 /** Her wishes. */
@@ -380,8 +434,9 @@ export interface TownNote { id: string; title: string; lines: string[]; unlock?:
 export const DAY_KINDS = ['holiday', 'minor'] as const
 export type DayKind = typeof DAY_KINDS[number]
 /** One of the story's days: its id, its name, a holiday or a minor day (minor without one), its season (every season
- * without one), its day of the season, 1–12, or a list of them (a weekly market: `[3, 6, 9, 12]`), and a line. */
-export interface WorldDay { id: string; name: string; kind?: DayKind; season?: Season; day: number | number[]; line?: string }
+ * without one), its day of the season, 1–12, or a list of them (a weekly market: `[3, 6, 9, 12]`), a line, and the
+ * scene it plays with each Uma who has it written (`scene`, its event id; its `id` without one). */
+export interface WorldDay { id: string; name: string; kind?: DayKind; season?: Season; day: number | number[]; line?: string; scene?: string }
 /** world.json: the world the story builds, every part optional. */
 export interface World {
   version?: 1
@@ -396,6 +451,8 @@ export interface World {
   seasons?: Partial<Record<Season, string>>
   notes?: TownNote[]
 }
+/** The scenes `world.json`'s days play, by event id: each day's `scene`, else its id. */
+export const dayScenesOf = (world: Pick<World, 'days'> | null | undefined): ReadonlySet<string> => new Set((world?.days ?? []).map((d) => d.scene ?? d.id))
 /** The trigger kinds a Town note's unlock takes: a spot visited (a talk there), a season, a festival, and what the farm
  * holds (a Farm Rank, a place built, a good shipped, another's event: `<characterId>:arrival` is meeting her). Talks
  * and a gift are meeting her own. */
@@ -515,6 +572,8 @@ export interface StoryContext {
   festivals?: ReadonlySet<string>
   /** The town map's locations, by id (the game's and `town.json`'s): her `home`, her job's and her routine's `at` name one. */
   locations?: ReadonlySet<string>
+  /** The scenes `world.json`'s days play, by event id: a route may write one. */
+  days?: ReadonlySet<string>
 }
 
 /** A line's words: `{farmer}` is the only placeholder, and nothing reads as school. Notes. */
@@ -1207,6 +1266,84 @@ function readWedding(v: unknown, f: Findings): WeddingPlan | undefined {
   return kept<WeddingPlan>(v, { places })
 }
 
+/** A talk's line list (a greeting set, a gift line set): each line at most a chat line's; one that isn't is skipped. A
+ * value that isn't a list is an error that skips the set. */
+function talkLines(v: unknown, at: string, f: Findings): string[] | undefined {
+  if (!Array.isArray(v)) { f.errors.push(`${at} is a list of lines; skipped`); return undefined }
+  return v.filter((line, i) => shown(line, LINE_LIMITS.chat, `${at} ${i + 1}`, f) || (f.errors[f.errors.length - 1] += '; skipped', false))
+}
+
+/** Whether a place id is one a talk can be at: the farm's places and the romance's backdrops, the town map's locations
+ * (the game's and `town.json`'s; any well-formed id when the reader isn't told them). */
+function talkPlace(id: string, ctx: Pick<StoryContext, 'locations'>): boolean {
+  return oneOf(STORY_PLACES, id) || GAME_LOCATIONS.includes(id) || (ctx.locations ? ctx.locations.has(id) : WORLD_ID.test(id))
+}
+
+/** A set of lists by key (her greetings' places, seasons, hours or weather): each list read on its own; a key off its
+ * menu is a note (kept, never plays). */
+function linesByKey(v: unknown, at: string, f: Findings, known: (key: string) => boolean, menu: string): Record<string, string[]> | undefined {
+  if (!isObject(v)) { f.errors.push(`${at} is an object of lists, by ${menu}; skipped`); return undefined }
+  const out: Record<string, string[]> = {}
+  for (const [key, lines] of Object.entries(v)) {
+    if (!known(key)) f.notes.push(`${at}.${key}: not ${menu} the game knows, so it never plays; kept`)
+    const read = talkLines(lines, `${at}.${key}`, f)
+    if (read !== undefined) out[key] = read
+  }
+  return out
+}
+
+/** Her greetings: `birthday`, `places`, `seasons`, `times` and `weather`, each set read on its own. The weather is
+ * read and kept, and plays once the game has weather (a note). */
+function readGreetings(v: unknown, f: Findings, ctx: Pick<StoryContext, 'locations'>): Greetings | undefined {
+  if (!isObject(v)) return undefined
+  for (const key of Object.keys(v)) if (!['birthday', 'places', 'seasons', 'times', 'weather', 'draft'].includes(key)) f.notes.push(`greetings.${key}: not a set the game reads (birthday, places, seasons, times, weather); kept`)
+  if (v.weather !== undefined) f.notes.push('greetings.weather: read and kept; it plays once the game has weather')
+  const sets = (key: 'places' | 'seasons' | 'times' | 'weather', known: (k: string) => boolean, menu: string) =>
+    v[key] === undefined ? undefined : linesByKey(v[key], `greetings.${key}`, f, known, menu)
+  return kept<Greetings>(v, {
+    birthday: v.birthday === undefined ? undefined : talkLines(v.birthday, 'greetings.birthday', f),
+    places: sets('places', (k) => talkPlace(k, ctx), 'a place'),
+    seasons: sets('seasons', (k) => oneOf(SEASONS, k), 'a season'),
+    times: sets('times', (k) => oneOf(GREETING_TIMES, k), 'an hour (morning, evening, night)'),
+    weather: sets('weather', (k) => oneOf(WEATHERS, k), 'a weather (rain, snow)'),
+  })
+}
+
+/** Her small talk: each one read on its own, an error skipping it. Its lines are `[speaker, line]`, the speaker her id or
+ * `you`; three (hers, yours, hers) is usual (a note otherwise). A tag the game can't read skips the small talk, since
+ * without it the talk would fit every moment; an `at` the game doesn't know is a note (it never fits). */
+function readSmallTalk(v: unknown, id: string, f: Findings, ctx: Pick<StoryContext, 'locations'>): SmallTalk[] | undefined {
+  if (!Array.isArray(v)) return undefined
+  return v.flatMap((raw, i): SmallTalk[] => {
+    const at = `smallTalk ${i + 1}`
+    if (!isObject(raw) || !Array.isArray(raw.lines) || raw.lines.length === 0) { f.errors.push(`${at}: { lines: [[speaker, line], …], at, season, stage }; skipped`); return [] }
+    const own = findings()
+    const lines = (raw.lines as unknown[]).map((pair, k) => {
+      if (!Array.isArray(pair) || pair.length !== 2 || (pair[0] !== id && pair[0] !== YOU)) {
+        own.errors.push(`${at}, line ${k + 1}: [speaker, line], the speaker ${id} or ${YOU}`)
+        return null
+      }
+      shown(pair[1], LINE_LIMITS.chat, `${at}, line ${k + 1}`, own)
+      return pair as [string, string]
+    })
+    if (raw.at !== undefined && typeof raw.at !== 'string') own.errors.push(`${at}: at names a place`)
+    if (raw.season !== undefined && !oneOf(SEASONS, raw.season)) own.errors.push(`${at}: season is one of ${SEASONS.join(', ')}`)
+    if (raw.stage !== undefined && !oneOf(CHAT_SETS, raw.stage)) own.errors.push(`${at}: stage is one of ${CHAT_SETS.join(', ')}`)
+    f.notes.push(...own.notes)
+    if (own.errors.length > 0) { f.errors.push(...own.errors.map((e, k) => (k === own.errors.length - 1 ? `${e}; the small talk is skipped` : e))); return [] }
+    if (typeof raw.at === 'string' && !talkPlace(raw.at, ctx)) f.notes.push(`${at}: ${raw.at} isn’t a place the game knows, so it never fits`)
+    if (lines.length !== 3) f.notes.push(`${at}: ${plural(lines.length, 'line')}; three (hers, yours, hers) is usual`)
+    return [kept<SmallTalk>(raw, { lines: lines as [string, string][] })]
+  })
+}
+
+/** Her gift lines: a list for each taste and her birthday, each read on its own. */
+function readGiftLines(v: unknown, f: Findings): GiftLines | undefined {
+  if (!isObject(v)) return undefined
+  for (const key of Object.keys(v)) if (!oneOf(GIFT_LINE_SETS, key) && key !== 'draft') f.notes.push(`giftLines.${key}: not a set the game reads (${GIFT_LINE_SETS.join(', ')}); kept`)
+  return kept<GiftLines>(v, Object.fromEntries(GIFT_LINE_SETS.map((set) => [set, v[set] === undefined ? undefined : talkLines(v[set], `giftLines.${set}`, f)])))
+}
+
 /** umas/<id>.json: her bible, each part the game reads checked on its own. */
 export function checkBible(raw: unknown, id: string, ctx: StoryContext): Read<UmaBible | null> {
   const f = findings()
@@ -1235,6 +1372,9 @@ export function checkBible(raw: unknown, id: string, ctx: StoryContext): Read<Um
     }, 'petName', f, `is 1–${LINE_LIMITS.petName} characters`),
     wedding: field(raw, 'wedding', (v) => readWedding(v, f), 'wedding', f, 'is { places: [places] }'),
     wishes: field(raw, 'wishes', (v) => idList(v, 'wishes', f, (w) => oneOf(WISHES, w), WISHES.join(' and ')) as Wish[] | undefined, 'wishes', f, `is a list of ${WISHES.join(' and ')}`),
+    greetings: field(raw, 'greetings', (v) => readGreetings(v, f, ctx), 'greetings', f, 'is { birthday, places, seasons, times, weather }'),
+    smallTalk: field(raw, 'smallTalk', (v) => readSmallTalk(v, id, f, ctx), 'smallTalk', f, 'is a list of { lines, at, season, stage }'),
+    giftLines: field(raw, 'giftLines', (v) => readGiftLines(v, f), 'giftLines', f, `is { ${GIFT_LINE_SETS.join(', ')} }`),
   })
   return { value, ...f }
 }
@@ -1301,7 +1441,7 @@ export function checkRoute(raw: unknown, id: string, bible: UmaBible | null, ctx
       f.errors.push(...own.errors.map((x, k) => (k === own.errors.length - 1 ? `${x} (the event is skipped)` : x)))
       return []
     }
-    if (!STORY_EVENTS.includes(e.id)) f.notes.push(`${where}: not one of the game’s events (its rungs, her life’s, her occasions, the evenings’ scenes); kept for the story`)
+    if (!STORY_EVENTS.includes(e.id) && !ctx.days?.has(e.id)) f.notes.push(`${where}: not one of the game’s events (its rungs, her life’s, her occasions, the evenings’ scenes); kept for the story`)
     f.notes.push(...eventNotes(e.id, e.steps, bible))
     return [kept<Route['events'][number]>(e, { outfit: readOutfit(e.outfit, where, f) })]
   })
@@ -1544,7 +1684,9 @@ function readDays(v: unknown, f: Findings): WorldDay[] | undefined {
     const kind = field(raw, 'kind', (k) => (oneOf(DAY_KINDS, k) ? k : undefined), it, f, `is one of ${DAY_KINDS.join(', ')}`)
     const season = field(raw, 'season', (s) => (oneOf(SEASONS, s) ? s : undefined), it, f, `is one of ${SEASONS.join(', ')}`)
     const line = raw.line === undefined ? undefined : worldText(raw.line, LINE_LIMITS.worldLine, `${it} line`, f)
-    return [kept<WorldDay>(raw, { name: raw.name, kind, season, day: Array.isArray(raw.day) ? [...days] as number[] : raw.day, line })]
+    const scene = field(raw, 'scene', (x) => (typeof x === 'string' && WORLD_ID.test(x) && x.length <= LINE_LIMITS.name ? x : undefined), it, f,
+      `is the event id it plays (lowercase words joined by -, at most ${LINE_LIMITS.name} characters), so its id plays`)
+    return [kept<WorldDay>(raw, { name: raw.name, kind, season, day: Array.isArray(raw.day) ? [...days] as number[] : raw.day, line, scene })]
   })
 }
 

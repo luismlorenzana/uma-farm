@@ -207,6 +207,21 @@ const eveningKind = (v: unknown, at: string): EveningKind => oneOf(v, at, EVENIN
 /** An invitation's kind: a date game, never festival night. */
 const inviteKind = (v: unknown, at: string): InviteKind => (v === FESTIVAL_NIGHT ? fail(at, 'expected a date game') : eveningKind(v, at) as InviteKind)
 
+/** An occasion's id in `today.occasions`: lowercase words joined by `-` (`romance/occasions.ts`). */
+const OCCASION_ID = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
+/** Today's occasions played: each `<her id>:<occasion id>`, or her id alone (the old form: the day's one occasion), once
+ * each; at most three a roster Uma (the old form, the day's and the night's). */
+function parseOccasions(value: unknown, path: string, roster: ReadonlySet<string>): string[] {
+  return unique(list(value, path, 0, roster.size * 3).map((v, i) => {
+    const at = `${path}.${i}`
+    if (typeof v !== 'string') return fail(at, 'expected an occasion')
+    const [id, occasion, ...rest] = v.split(':')
+    member(id, at, roster)
+    if (occasion !== undefined && (rest.length > 0 || !OCCASION_ID.test(occasion) || occasion.length > 64)) fail(at, 'expected <id>:<occasion>')
+    return v
+  }), path)
+}
+
 /** `today`: the evenings within the day's slots (`evenings` regular ones, and festival
  * night once at most), and `invites` invitations, each a different Uma. */
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
@@ -228,8 +243,9 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
     gathered: unique(list(o.gathered, `${path}.gathered`, 0, GATHER_IDS.length).map((v, i) => oneOf(v, `${path}.gathered.${i}`, GATHER_IDS)), `${path}.gathered`),
     chats: umas(o.chats, `${path}.chats`), gifts: umas(o.gifts, `${path}.gifts`), praise: umas(o.praise, `${path}.praise`),
     praised: umas(o.praised, `${path}.praised`), events: umas(o.events, `${path}.events`),
-    // Today's occasion scenes: absent until one plays (a save from before the calendar has none).
-    ...(o.occasions === undefined ? {} : { occasions: umas(o.occasions, `${path}.occasions`) }),
+    // Today's occasion scenes: absent until one plays (a save from before the calendar has none). Each is
+    // `<her id>:<occasion id>`, or her id alone (a save from before every occasion played: the day's one).
+    ...(o.occasions === undefined ? {} : { occasions: parseOccasions(o.occasions, `${path}.occasions`, roster) }),
     asked: umas(o.asked, `${path}.asked`),
     evenings,
     invites: unique(list(o.invites, `${path}.invites`, 0, invitesFor(married)).map((v, i) => {

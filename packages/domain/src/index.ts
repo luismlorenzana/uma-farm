@@ -135,9 +135,12 @@ export * from './romance/plays/walk'
 export * from './romance/plays/choose'
 export * from './romance/plays/which'
 export * from './romance/events'
-// The calendar: the occasion scenes on their days (New Year's, the Flower Show, the Fishing Derby's night), and each
-// day's entries with the faces of the Umas who have an event on it; read live, never stored.
+// The calendar: the occasion scenes on their days (New Year's, the festivals' days and nights, her birthday, her
+// anniversary, the story's days), and each day's entries with the faces of the Umas who have an event on it; read live,
+// never stored.
 export * from './romance/occasions'
+// Talk that knows the day: her greeting for the place, the season and the hour, and small talk drawn with her lines.
+export * from './romance/talk'
 export * from './romance/calendar-days'
 // The evening: the kinds by ladder and game, her favourite kind, the slots and festival night, the
 // evening's points and its card, the morning's invitations and their answers, and when Tonight opens.
@@ -182,13 +185,13 @@ export {
   ANSWERS, answerAt, ARRIVAL, BIG_EVENTS, bibleTagNotes, CALLINGS, CHARACTER_ID, CHAT_SETS, DATE_GAMES, EMOTES, EVENT_LIMITS,
   eventNotes, EVENING_SCENES, FARMING_PLAYS, GATE_KINDS, HOUSE_LINE_MAX, LIFE_EVENTS, OCCASIONS, STORY_EVENTS, HOUSEHOLD_SCENES, LADDERS, LINE_LIMITS, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies,
   checkTown, checkWorld, isSister, NOTE_KINDS, OPENING_STEPS, RUNGS, SISTER_ID, sisterOutfit, SPOT_IDS, STORY_ID, WORLD_ID,
-  stepFindings, STORY_PLACES, tagNotes, TONES, TRIGGER_KINDS, unscriptedBeats, WISHES,
+  stepFindings, STORY_PLACES, tagNotes, TONES, TRIGGER_KINDS, unscriptedBeats, WISHES, FESTIVAL_NIGHTS, GAME_DAYS_OF_STORY, GREETING_TIMES, WEATHERS, YOU, GIFT_LINE_SETS, dayScenesOf,
 } from './story/authored'
 export type {
   Answer, Beat as RouteBeat, Calling, Cast, CastBirthday, CastEntry, ChatSets, ChoiceOption, DateGame, Emote, Finale, Findings, Gifts, HerChapter, Household, HouseholdAt,
   HouseholdScene, Keepsake, Ladder, Opening, OptionGives, PairConversations, Play, Read, Route, SpotId, Step, StoryContext, StoryPlace, StoryTrigger, Tie, TieKind, Ties, Together, Tone, Town,
   TownNote, TownPerson, TownSpot, Trigger, UmaBible,
-  Unlock, WeddingPlan, Wish, World, WorldFestival, WorldNames, WorldPlace,
+  Unlock, WeddingPlan, Wish, World, WorldFestival, WorldNames, WorldPlace, WorldDay, Greetings, GreetingTime, SmallTalk, GiftLines, Weather,
 } from './story/authored'
 // Her life in town (the town map's locations, her home, her job and her routine), as the reader reads them.
 export { GAME_LOCATIONS, LOCATION_KINDS, SHOP_IDS } from './story/authored'

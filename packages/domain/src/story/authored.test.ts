@@ -348,3 +348,67 @@ describe('the tag sheet (the sandbox\'s): notes only', () => {
     ])
   })
 })
+
+describe('the occasions and talk the game reads (F94)', () => {
+  it('reads every occasion a route writes, and a world.json day’s scene, with no “kept for the story” note', () => {
+    const ids = ['birthday', 'anniversary', 'new-year', 'flower-show', 'fishing-derby', 'cooking-contest', 'animal-show', 'harvest-cup', 'flower-show-night', 'fishing-derby-night',
+      'derby-night', 'cooking-contest-night', 'harvest-moon', 'animal-show-night', 'harvest-cup-night', 'blossom-viewing', 'wishing-night', 'first-cold-evening', 'first-snow',
+      'longest-night', 'sweets-day']
+    const route = { events: [...STAND_IN_ROUTE.events, ...ids.map((id) => ({ id, steps: [{ narrate: `An invented ${id}.` }] }))] }
+    expect(checkRoute(route, STAND_IN, null, ctx).notes.filter((n) => n.includes('kept for the story'))).toEqual([])
+    // A world.json day's scene is the game's once the world names it; else it's kept for the story.
+    const lantern = { events: [...STAND_IN_ROUTE.events, { id: 'lantern-scene', steps: [{ narrate: 'Lanterns.' }] }] }
+    expect(checkRoute(lantern, STAND_IN, null, ctx).notes).toEqual(['Event lantern-scene: not one of the game’s events (its rungs, her life’s, her occasions, the evenings’ scenes); kept for the story'])
+    expect(checkRoute(lantern, STAND_IN, null, { ...ctx, days: new Set(['lantern-scene']) }).notes).toEqual([])
+  })
+
+  it('reads her greetings, small talk and gift lines; an error skips only its part; the weather is kept with a note', () => {
+    const long = 'x'.repeat(LINE_LIMITS.chat + 1)
+    const bible = {
+      ...clone(STAND_IN_BIBLE),
+      greetings: {
+        birthday: ['A birthday hello.', long], places: { fields: ['A Fields hello.'], 'no-such-place': ['Never plays.'], cafe: 'not a list' }, seasons: { spring: ['A spring hello.'], monsoon: ['?'] },
+        times: { morning: ['A morning hello.'] }, weather: { rain: ['A rainy hello.'] }, moods: { happy: ['?'] },
+      },
+      smallTalk: [
+        { lines: [[STAND_IN, 'One.'], ['you', 'Two.'], [STAND_IN, 'Three.']], at: 'fields', season: 'spring', stage: 'friend' },
+        { lines: [[STAND_IN, 'One.'], ['someone', 'Two.'], [STAND_IN, 'Three.']] },
+        { lines: [[STAND_IN, 'One.'], ['you', 'Two.'], [STAND_IN, 'Three.']], stage: 'stranger' },
+        { lines: [[STAND_IN, 'One.'], ['you', long]] },
+        { lines: [[STAND_IN, 'Just one.']], at: 'nowhere-at-all' },
+      ],
+      giftLines: { loved: ['A loved line.'], liked: 'not a list', birthday: ['A birthday line.', long], favourite: ['?'] },
+      voice: { notes: 'The story’s own.' },
+    }
+    const read = checkBible(bible, STAND_IN, { ...ctx, locations: new Set(['cafe', 'library']) })
+    expect(read.errors).toEqual([
+      `greetings.birthday 2: its line is ${long.length} characters; the screen shows ${LINE_LIMITS.chat}; skipped`,
+      'greetings.places.cafe is a list of lines; skipped',
+      'smallTalk 2, line 2: [speaker, line], the speaker 9000001 or you; the small talk is skipped',
+      'smallTalk 3: stage is one of friend, partner, spouse; the small talk is skipped',
+      `smallTalk 4, line 2: its line is ${long.length} characters; the screen shows ${LINE_LIMITS.chat}; the small talk is skipped`,
+      'giftLines.liked is a list of lines; skipped',
+      `giftLines.birthday 2: its line is ${long.length} characters; the screen shows ${LINE_LIMITS.chat}; skipped`,
+    ])
+    expect(read.notes).toEqual([
+      'greetings.moods: not a set the game reads (birthday, places, seasons, times, weather); kept',
+      'greetings.weather: read and kept; it plays once the game has weather',
+      'greetings.places.no-such-place: not a place the game knows, so it never plays; kept',
+      'greetings.seasons.monsoon: not a season the game knows, so it never plays; kept',
+      'smallTalk 5: nowhere-at-all isn’t a place the game knows, so it never fits',
+      'smallTalk 5: 1 line; three (hers, yours, hers) is usual',
+      'giftLines.favourite: not a set the game reads (loved, liked, neutral, disliked, birthday); kept',
+    ])
+    const v = read.value!
+    expect(v.greetings).toEqual({
+      birthday: ['A birthday hello.'], places: { fields: ['A Fields hello.'], 'no-such-place': ['Never plays.'] }, seasons: { spring: ['A spring hello.'], monsoon: ['?'] },
+      times: { morning: ['A morning hello.'] }, weather: { rain: ['A rainy hello.'] }, moods: { happy: ['?'] },
+    })
+    expect(v.smallTalk?.map((t) => t.lines.length)).toEqual([3, 1])
+    expect(v.giftLines).toEqual({ loved: ['A loved line.'], birthday: ['A birthday line.'], favourite: ['?'] })
+    expect(v.voice).toEqual({ notes: 'The story’s own.' })
+    // A clean set reads as written.
+    const tidy = { ...clone(STAND_IN_BIBLE), greetings: { seasons: { winter: ['A winter hello.'] } }, smallTalk: [bible.smallTalk[0]], giftLines: { neutral: ['Fine.'] } }
+    expect(checkBible(tidy, STAND_IN, ctx)).toMatchObject({ ...clean, value: tidy })
+  })
+})

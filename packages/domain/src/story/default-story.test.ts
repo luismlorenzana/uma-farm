@@ -41,11 +41,15 @@ const SCENES: [string, DefaultScene][] = [...Object.entries(DEFAULT_EVENTS), ['a
 
 describe('the default story: every piece has its default', () => {
   it('holds every event a route may write: the rungs, her life\'s, her occasions and the evenings\' scenes', () => {
-    expect(STORY_EVENTS.filter((id) => !DEFAULT_EVENTS[id] && !DEFAULT_EVENINGS[id])).toEqual([])
-    expect([...Object.keys(DEFAULT_EVENTS), ...Object.keys(DEFAULT_EVENINGS)].sort()).toEqual([...STORY_EVENTS].sort())
+    // Every event but the occasions that play only when written: her anniversary, the nights but the derby's, the small days.
+    expect(STORY_EVENTS.filter((id) => !DEFAULT_EVENTS[id] && !DEFAULT_EVENINGS[id])).toEqual([
+      'anniversary', 'flower-show-night', 'fishing-derby-night', 'cooking-contest-night', 'harvest-moon', 'animal-show-night', 'harvest-cup-night',
+      'blossom-viewing', 'wishing-night', 'first-cold-evening', 'first-snow', 'longest-night', 'sweets-day',
+    ])
+    expect([...Object.keys(DEFAULT_EVENTS), ...Object.keys(DEFAULT_EVENINGS)].every((id) => STORY_EVENTS.includes(id))).toBe(true)
     expect(RUNGS.every((r) => defaultSceneOf(r) === DEFAULT_EVENTS[r])).toBe(true)
     expect(defaultSceneOf(ARRIVAL, true)).toBe(DEFAULT_TOWN_MEETING)
-    expect([LIFE_EVENTS.length, OCCASIONS.length, EVENING_SCENES.length]).toEqual([5, 8, 19])
+    expect([LIFE_EVENTS.length, OCCASIONS.length, EVENING_SCENES.length]).toEqual([5, 21, 19])
   })
 
   it('writes a scene for each hangout kind and each date kind, and the two evenings of their own', () => {
@@ -151,7 +155,7 @@ describe('each scene plays as the dialogue engine wants it', () => {
       const choice = steps.find((s): s is Extract<Step, { choice: unknown }> => 'choice' in s)!
       expect(choicePoints(choice.choice)[0], rung).toBe(30)
     }
-    for (const id of [...LIFE_EVENTS, ...OCCASIONS, ...EVENING_SCENES]) {
+    for (const id of [...LIFE_EVENTS, ...OCCASIONS.filter((o) => DEFAULT_EVENTS[o]), ...EVENING_SCENES]) {
       for (const s of placeholderEvent(ONE, id)) if ('choice' in s) expect(s.choice.every((o) => !o.friendship && !o.romance), id).toBe(true)
     }
   })

@@ -3,7 +3,8 @@
 // engine's line box, and her menu, each item with its cost in actions. How she stands with you is her stage in the Uma
 // loop with her ladder's level ("Farmhand · F5", `stageWords`):
 // - **Introduce yourself · 1 action** while you haven't met: she's met, and her meeting scene plays over the town;
-// - **Talk · 1** (once a day, +15): her line for the day, her face happy;
+// - **Talk · 1** (once a day, +15): today's talk plays over the town (`?life=talk:<id>`: her greeting for where you are,
+//   then her line or a small talk), and her line stays on the stage, her face happy;
 // - **Give a gift · 1** (once a day): the gift picker, then her reaction, her face by her taste;
 // - **Ask her out · 2** (a friend for a hangout, a sweetheart or a spouse for a date): her evening (`?evening=<id>`), or
 //   why not; one evening a day across everyone;
@@ -14,8 +15,8 @@
 // says so; one on the farm (she lives there, or works it by day) links her profile. A talk, a gift or an introduction
 // that unlocks a Town note says so. Loaded with the town's screen.
 import {
-  atHome, CAST, chatLineV4, GAME_DAYS, giftLineV4, herMenu, nextOut, onFarmToday, stageWords, townLineOf, townLocation, townLocations, townOf, type Expression, type MenuItem, type SaveV4,
-  type ShopId, type StoryPack, type Taste, type TownDay,
+  atHome, birthdaysOf, CAST, GAME_DAYS, giftLineV4, herMenu, isBirthday, nextOut, onFarmToday, stageWords, todaysTalk, townLineOf, townLocation, townLocations, townOf, YOU, type Expression,
+  type MenuItem, type SaveV4, type ShopId, type Step, type StoryPack, type Taste, type TownDay,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { useState } from 'react'
@@ -43,6 +44,14 @@ function atHomeWords(pack: StoryPack, id: string, today: number): string {
 
 /** Her face at a gift, by her taste; her words are the default story's (`giftLineV4`). */
 const TASTE_FACE: Readonly<Record<Taste, Expression>> = { loved: 'laughing', liked: 'happy', neutral: 'neutral', disliked: 'worried' }
+/** Her last line in a talk's steps: what stays on the stage after it. */
+function lastOfHers(steps: readonly Step[]): string {
+  for (let i = steps.length - 1; i >= 0; i--) {
+    const s = steps[i]!
+    if ('say' in s && s.say !== YOU) return s.line
+  }
+  return ''
+}
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
 const actionWords = (n: number): string => `${n} action${n === 1 ? '' : 's'}`
 
@@ -87,7 +96,10 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
   const livesOnFarm = met && atHome(save, id)
   const temperament = talentTable(master).get(outfitFor(id))?.temperament ?? 'steady'
   const fillName = (line: string) => line.split('{name}').join(name)
-  const talkLine = () => fillName(chatLineV4(save, pack, id, temperament))
+  const birthdays = birthdaysOf(pack, master.birthdays)
+  const birthday = isBirthday(birthdays, id, save.calendar.day)
+  // Her last line of today's talk (her line, or a small talk's last of hers): it stays on the stage after the talk.
+  const talkLine = () => fillName(lastOfHers(todaysTalk(save, pack, id, temperament, birthdays).steps))
   // The line on the stage: the last act's; once you've talked today, her talk; else her line for the day in town.
   const shown = said ?? (save.today.chats.includes(id) && love ? { line: talkLine(), emote: 'happy' as const } : { line: fillName(townLineOf(save, pack, id)), emote: 'neutral' as const })
   const special = useSpecialDays()
@@ -110,6 +122,8 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
         setSaid({ line: talkLine(), emote: 'happy' })
         setNote(r.paid > 0 ? `+${r.paid} ♥` : null)
         setNotes(r.notes)
+        // Today's talk plays over the town: her greeting, then her line or a small talk.
+        navigate(withParam(location, 'life', `talk:${id}`), { state: { back: true } })
       })
       case 'gift': return setGiving(true)
       case 'work': return act(async () => {
@@ -126,7 +140,7 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
     setGiving(false)
     act(async () => {
       const r = await giftOnce(id, item, stars)
-      setSaid({ line: fillName(giftLineV4(save, pack, id, r.taste, item)), emote: TASTE_FACE[r.taste] })
+      setSaid({ line: fillName(giftLineV4(save, pack, id, r.taste, item, birthday)), emote: TASTE_FACE[r.taste] })
       setNote(r.paid > 0 ? `+${r.paid} ♥` : null)
       setNotes(r.notes)
     })

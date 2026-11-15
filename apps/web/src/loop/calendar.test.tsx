@@ -169,7 +169,7 @@ describe('the calendar', () => {
       await tapUntil(`[data-scene="occasion:${id}"]`, '[data-calendar]:not(:has(~ [data-scene]))')
       await until(() => !path.includes('occasion='))
       expect(save().today).toMatchObject({ actions: 10, eventActions: spent })
-      expect(save().today.occasions).toContain(id)
+      expect(save().today.occasions).toContain(`${id}:flower-show`)
     }
     // Played: its face leaves the day's to-do, and says so.
     expect($$('[data-day-panel] [data-face]').map((f) => f.dataset.face)).toEqual([THREE])

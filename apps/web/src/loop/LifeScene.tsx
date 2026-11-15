@@ -6,17 +6,20 @@
 //                                "moved into" line (a spouse who waited for a room);
 //   `?life=invited-to-work:<id>` the invitation to work: her route's `invited-to-work`, else the default story's (at the
 //                                farm gate, in the day's outfit), right after you invite her, the action spent;
-//   `?life=breakfast:<id>`,     a meal's scene: one spouse's line as you sit down, after you cook it.
+//   `?life=breakfast:<id>`,     a meal's scene: one spouse's line as you sit down, after you cook it;
 //   `?life=dinner:<id>`
+//   `?life=talk:<id>`           today's talk with her (`todaysTalk`): her greeting, then her line or a small talk, your
+//                                lines under your name with her staying on the stage; right after a talk, on the farm or
+//                                in town.
 // She stays on the stage through the narration with the face of her last line; a choice is wording only. Her
 // illustrations show full screen where the story names one, and by the default mapping: the wedding night's two, a night
 // in's, and the night's companion's before her morning greeting. They pay nothing and save nothing (an illustration seen
 // joins her gallery); Skip, or the end, closes. A `?life=` link plays only what the game has given you (`mayPlayLife`:
 // the morning after her night, her wedding day or the morning she moved in, the day you invited her, a meal cooked today
-// that she ate); any other closes quietly. Portaled above the sheets (z-60). Loaded on demand.
+// that she ate, a talk today); any other closes quietly. Portaled above the sheets (z-60). Loaded on demand.
 import {
-  greetingScene, illustrate, illustrationAt, mayPlayLife, mealScene, sceneSteps, type IllustratedScene, type Meal, type Moment, type SaveV4, type Step, type StoryOutfit,
-  type StoryPack,
+  birthdaysOf, greetingScene, illustrate, illustrationAt, mayPlayLife, mealScene, sceneSteps, todaysTalk, YOU, type IllustratedScene, type Meal, type Moment, type SaveV4, type Step,
+  type StoryOutfit, type StoryPack,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
@@ -65,16 +68,18 @@ export function LifeScene({ id, steps: written, nameOf, farmer, backdrop = null,
   const art = <ArtCue owner={id} ask={step ? illustrationAt(shown, cursor) : null} steps={steps} />
   if (!step) return <>{art}<div className="flex-1" /></>
   const before = shown.slice(0, cursor)
-  const speaker = 'say' in step ? step.say : null
+  // The farmer is never drawn: on your line (a small talk's `you`) she stays on the stage with her last face.
+  const speaker = 'say' in step && step.say !== YOU ? step.say : null
   const bust = speaker ?? id
-  const emote = 'say' in step ? step.emote ?? null : lastSay(before, id)?.emote ?? null
+  const emote = speaker !== null && 'say' in step ? step.emote ?? null : lastSay(before, id)?.emote ?? null
+  const next = nextSay(shown, cursor + 1)
   if ('choice' in step) {
     return <>{art}<WordingChoice options={step.choice} farmer={farmer} bust={{ who: bust, name: nameOf(bust), emote }} onPick={(i) => { setPicks([...picks, i]); setAt(cursor + 1) }} /></>
   }
   return (
     <>
       {art}
-      <Stage bust={{ who: bust, name: nameOf(bust), emote }} backdrop={backdrop} next={nextSay(shown, cursor + 1)} onTap={() => setAt(cursor + 1)} data={data}>
+      <Stage bust={{ who: bust, name: nameOf(bust), emote }} backdrop={backdrop} next={next?.who === YOU ? null : next} onTap={() => setAt(cursor + 1)} data={data}>
         <Line key={cursor} step={step} nameOf={nameOf} farmer={farmer} onNext={() => setAt(cursor + 1)} beat={cursor} typed />
       </Stage>
     </>
@@ -83,8 +88,8 @@ export function LifeScene({ id, steps: written, nameOf, farmer, backdrop = null,
 
 // --- `?life=` -------------------------------------------------------------------------------------------------------
 
-export type LifeKind = 'morning' | 'moving-in' | 'invited-to-work' | Meal
-const LIFE = /^(morning|moving-in|invited-to-work|breakfast|dinner):(s?\d{1,12})$/
+export type LifeKind = 'morning' | 'moving-in' | 'invited-to-work' | 'talk' | Meal
+const LIFE = /^(morning|moving-in|invited-to-work|talk|breakfast|dinner):(s?\d{1,12})$/
 /** What `?life=` asks for: its kind and her id. */
 export function parseLife(value: string | null): { kind: LifeKind; id: string } | null {
   const m = value ? LIFE.exec(value) : null
@@ -94,8 +99,8 @@ export function parseLife(value: string | null): { kind: LifeKind; id: string } 
 export const lifeParam = (kind: LifeKind, id: string): string => `${kind}:${id}`
 
 /** A scene's titles and look by its kind. */
-const TITLES: Readonly<Record<LifeKind, string>> = { morning: 'Morning', 'moving-in': 'Moving in', 'invited-to-work': 'Invited to work', breakfast: 'Breakfast', dinner: 'Dinner' }
-const MOMENTS: Readonly<Record<LifeKind, Moment[]>> = { morning: ['night-in'], 'moving-in': [], 'invited-to-work': [], breakfast: [], dinner: [] }
+const TITLES: Readonly<Record<LifeKind, string>> = { morning: 'Morning', 'moving-in': 'Moving in', 'invited-to-work': 'Invited to work', talk: 'Talk', breakfast: 'Breakfast', dinner: 'Dinner' }
+const MOMENTS: Readonly<Record<LifeKind, Moment[]>> = { morning: ['night-in'], 'moving-in': [], 'invited-to-work': [], talk: [], breakfast: [], dinner: [] }
 
 /** The scene `?life=` plays: its steps (her route's moving-in and invitation are read on demand), with her outfit when it
  * names one. */
@@ -107,6 +112,7 @@ async function stepsFor(kind: LifeKind, save: SaveV4, story: StoryPack, master: 
       const event = await herEventOf(story, id, kind)
       return { steps: event.steps, ...(event.outfit ? { outfit: event.outfit } : {}) }
     }
+    case 'talk': return { steps: todaysTalk(save, story, id, talentTable(master).get(outfitFor(id))?.temperament ?? 'steady', birthdaysOf(story, master.birthdays)).steps }
     default: return { steps: mealScene(save, story, id, kind, name) }
   }
 }
@@ -143,7 +149,9 @@ function Played({ kind, id, save, story, master, onClose }: { kind: LifeKind; id
     void stepsFor(kind, save, story, master, id).then((found) => live && setScene(found), () => live && onClose())
     return () => { live = false }
   }, [kind, id]) // eslint-disable-line react-hooks/exhaustive-deps
-  const nameOf = namer(master, story)
+  const names = namer(master, story)
+  // A small talk's `you` is the farmer, by name.
+  const nameOf = (who: string) => (who === YOU ? save.farmer.name || 'You' : names(who))
   const title = `${TITLES[kind]} · ${nameOf(id)}`
   return (
     <Frame title={title} label={title} scene={`life:${kind}:${id}`} onSkip={onClose} skipping={false}>

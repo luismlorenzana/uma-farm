@@ -134,7 +134,7 @@ export function defaultSpot(pack: Pick<StoryPack, 'cast'>, id: string, place = c
   return favouriteSpotOf(pack, id) ?? SPOT_IDS[Math.floor(place / DEFAULT_EVERY) % SPOT_IDS.length]!
 }
 
-type SchedulePack = Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town' | 'master'>>
+export type SchedulePack = Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town' | 'master'>>
 const schedules = new WeakMap<object, Map<string, Schedule>>()
 
 /** Her schedule: the story's when it's written (her routine's stops, then her job, then her home; a location the map

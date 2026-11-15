@@ -77,10 +77,16 @@ says "Cooking Contest tomorrow" and "Cooking Contest today · +3 for events", ea
 counts the festivals' places, and a 1st counts toward the cook's cooking Legend
 ([the Cooking Contest](../game-mechanics.md#the-cooking-contest)).
 
-**Now: the whole story plays** ([F94](tasks/F94-the-whole-story-plays.md), your go 2026-11-15): every scene the story writes for a
-moment the game has plays on it (her birthday, her anniversary, each festival's day and night, the story's small days),
-her chats open with a greeting for the place, the season and the hour, small talk plays, and a gift gets her own words;
-all read by id from the pack, so a later release plays without a change to the game.
+**The whole story plays** (F94): every scene the story writes for a day of the year plays on it, from the calendar, one
+action each: New Year's, each festival's day and then its night (the derby's and the contest's under the story's own
+names too), her birthday, her anniversary from the first, and the story's days, the game's own six small days among
+them (Blossom viewing on Spring 6 to the sweets day on Winter 8, moved or renamed by `world.json`). A day with several
+of hers plays one: her birthday, her anniversary, the festival's day, then a story day. A chat or a talk in town plays
+on the dialogue engine: her greeting for her birthday, the place, the season or the hour, then her line or a small
+talk, your line under your name; a gift gets her own line, her birthday's first. `pnpm story:status` counts it all, so
+"complete" means everything the game plays is hers. All read by id, so a later release plays on publish
+([occasion scenes](../game-mechanics.md#occasion-scenes), [talk that knows the
+day](../game-mechanics.md#talk-that-knows-the-day), [her occasions](../story-pack.md#her-occasions)).
 
 **Next: the sea and expeditions** (Phase 2.4): the Dock's and the Boat's spots; regions, parties and their power,
 results and loot, and the log ([the roadmap](../roadmap.md#phase-2-the-whole-farm)). Its packet is written when it starts,
@@ -88,9 +94,7 @@ numbered from F95.
 
 ## Open packets
 
-| Packet | What | Status |
-|---|---|---|
-| [F94 — The whole story plays](tasks/F94-the-whole-story-plays.md) | Every occasion, the story's days, and talk that knows the day | Building |
+None open: the next is written when Phase 2.4 starts.
 
 A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
 
@@ -113,6 +117,7 @@ Not packets: each has a standing guide that changes as the game does.
 | **Cook at the stove on your phone:** on the Farmhouse's sheet tap **At the stove · 1** and play the 30 seconds held sideways (tell me if the burners and the tickets are big enough for your thumb, and the timing feels fair); once the Farm Rank offers it, build the Kitchen, play its menu, serve the staff meal, and read the next morning's "Staff meal" line | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Enter the Cooking Contest on your phone,** on Autumn 10 with the Kitchen built: pick a dish and a cook, play the 60 seconds held sideways, read the cook's judging and the board, and the next morning see the Farm Rank's points; tell me if the rivals feel fair at your Farm Rank | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Play your farm.** Start the new farm once, on its card when the app opens: it's the last start-over, and the farm it starts is the one you keep. Then play days as they come, and tell me what feels off | [uma-farm.web.app](https://uma-farm.web.app) |
+| **Play the whole story on your phone:** on a festival day open the calendar and play an Uma's **Play · 1** twice, her day's scene then its night's; on Spring 6 play her Blossom viewing; Chat with her on her profile and read her greeting and, some days, a small talk with your line under your name; give her a gift and read her own line. Tell me if the greeting and the small talk read right where you are | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Meet Tier 1's story on your phone:** open the game and see Account's **Story: Release 8, Nov 15, 2026**; the next morning opens with **New story arrived**. Then play, and meet them as they come | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story and ship it** | [How the story reaches the game](../story-pack.md#how-the-story-reaches-the-game) |
 | **The next Umas' art:** hand the art brief to the character art session | [The art brief](../design/her-look.md#the-art-brief), in Uma Character Art |
@@ -130,7 +135,8 @@ Not packets: each has a standing guide that changes as the game does.
 - **Food:** the morning's "Takeout" and "From the pantry", the Farmhouse's kitchen, and Cook on the work board ([food](../game-mechanics.md#food)).
 - **The stove and the Kitchen:** At the stove in the Farmhouse's kitchen; the Kitchen from Farm Rank 3, its recipes at the shop, and the staff meal ([the Kitchen](../game-mechanics.md#the-kitchen)).
 - **The Cooking Contest:** Autumn 10's card at the Kitchen, one dish live, the cook's judging and the board; the Farm Rank's sheet lists Festivals ([the Cooking Contest](../game-mechanics.md#the-cooking-contest)).
-- **The calendar:** tap the date ([the calendar](../game-mechanics.md#the-calendar-screen)).
+- **The calendar:** tap the date ([the calendar](../game-mechanics.md#the-calendar-screen)); every occasion she has plays from its day ([occasion scenes](../game-mechanics.md#occasion-scenes)).
+- **Talk that knows the day:** her greeting, small talk and her own gift lines ([talk that knows the day](../game-mechanics.md#talk-that-knows-the-day)).
 - **The ranch and the mine,** once the Farm Rank offers them ([the ranch](../game-mechanics.md#the-ranch), [the Mine and the Quarry](../game-mechanics.md#the-mine-and-the-quarry)).
 - **Faces and outfits** that change line by line, and the blank bust for an Uma without art ([the dialogue engine](../game-mechanics.md#the-dialogue-engine)).
 - **Her illustrations** at her big moments, and her gallery on her profile ([her illustrations](../game-mechanics.md#her-illustrations)).

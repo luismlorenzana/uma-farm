@@ -88,9 +88,15 @@ describe('scene links: her life\'s short scenes', () => {
     expect(mayMealScene(runNight(cooked, context), ONE, 'breakfast')).toBe(false)
   })
 
+  it('?life=talk: today’s talk, once you’ve talked with her today', () => {
+    const save = farm()
+    expect(mayPlayLife(save, 'talk', ONE)).toBe(false)
+    expect(mayPlayLife({ ...save, today: { ...save.today, chats: [ONE] } }, 'talk', ONE)).toBe(true)
+  })
+
   it('refuses anyone not met, whatever the kind', () => {
     const save = farm()
-    for (const kind of ['morning', 'moving-in', 'invited-to-work', 'breakfast', 'dinner'] as const) expect(mayPlayLife(save, kind, '9000009'), kind).toBe(false)
+    for (const kind of ['morning', 'moving-in', 'invited-to-work', 'breakfast', 'dinner', 'talk'] as const) expect(mayPlayLife(save, kind, '9000009'), kind).toBe(false)
   })
 })
 
@@ -139,10 +145,12 @@ describe('scene links: her events, Memories and evenings', () => {
 describe('scene links: occasions, the household and night levels', () => {
   it('?occasion=: only on its day, with an Uma you\'ve met, once', () => {
     const show = farm(10)
-    expect(mayPlayOccasion(show, ONE)).toBe(true)
-    expect(mayPlayOccasion(farm(11), ONE)).toBe(false)
-    expect(mayPlayOccasion(show, '9000009')).toBe(false)
-    expect(mayPlayOccasion({ ...show, today: { ...show.today, occasions: [ONE] } }, ONE)).toBe(false)
+    expect(mayPlayOccasion(show, PACK, ONE)).toBe(true)
+    expect(mayPlayOccasion(farm(11), PACK, ONE)).toBe(false)
+    expect(mayPlayOccasion(show, PACK, '9000009')).toBe(false)
+    expect(mayPlayOccasion({ ...show, today: { ...show.today, occasions: [`${ONE}:flower-show`] } }, PACK, ONE)).toBe(false)
+    // A save from before: her id alone is the day's one occasion.
+    expect(mayPlayOccasion({ ...show, today: { ...show.today, occasions: [ONE] } }, PACK, ONE)).toBe(false)
   })
 
   it('?household=: Ready and unread; a replay only once read', () => {
@@ -166,7 +174,7 @@ describe('scene links: occasions, the household and night levels', () => {
 
   it('lists every link the manual names', () => {
     expect(SCENE_LINKS.map((l) => l.link.split(':')[0]!.replace(/`/g, ''))).toEqual([
-      '?life=morning', '?life=moving-in', '?life=invited-to-work', '?life=breakfast', '?event=<id>', '?ask=<id>', '?memory=<id>', '?evening=<id>', '?evening=pick',
+      '?life=morning', '?life=moving-in', '?life=invited-to-work', '?life=breakfast', '?life=talk', '?event=<id>', '?ask=<id>', '?memory=<id>', '?evening=<id>', '?evening=pick',
       '?occasion=<id>', '?household=<id>', '?level=<id>',
     ])
   })

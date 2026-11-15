@@ -21,7 +21,7 @@ import { birthdaysOf } from './days'
 import { playEvent, type EventOutcome } from './events'
 import { costOf } from './love'
 import { joinCast } from './meeting.fixture'
-import { occasionMoments, occasionName, occasionOn, occasionWith, playOccasion } from './occasions'
+import { occasionsOn, occasionWith, playOccasion } from './occasions'
 import { readiness } from './ready'
 
 const AT = '2026-11-14T10:00:00.000Z'
@@ -93,59 +93,64 @@ describe('special days: event actions spent on her events', () => {
 })
 
 describe('occasion scenes', () => {
-  it('plays New Year’s from the second year, the Flower Show and the Fishing Derby’s night on their days', () => {
-    expect(occasionOn(on('spring', 1), FESTIVALS)).toBeNull()
-    expect(occasionOn(on('spring', 1, 2), FESTIVALS)).toBe('new-year')
-    expect(occasionOn(on('spring', 10), FESTIVALS)).toBe('flower-show')
-    expect(occasionOn(on('summer', 10, 3), FESTIVALS)).toBe('derby-night')
-    expect([on('autumn', 10), on('winter', 10), on('winter', 12), on('spring', 9)].map((d) => occasionOn(d, FESTIVALS))).toEqual([null, null, null, null])
-    expect([occasionMoments('new-year'), occasionMoments('flower-show'), occasionMoments('derby-night')]).toEqual([['new-year'], ['spring-festival'], ['festival-night']])
+  /** Her occasions' ids on a day, in play order. */
+  const ids = (save: SaveV4, id: string, days: SpecialDays = DAYS) => occasionsOn(save, PACK, days, id).map((o) => `${o.id}>${o.event}`)
+
+  it('plays the default story’s New Year’s from the second year, Flower Show and Fishing Derby night with an Uma whose route writes none', () => {
+    expect(ids(farm(on('spring', 1)), TWO)).toEqual([])
+    expect(ids(farm(on('spring', 1, 2)), TWO)).toEqual(['new-year>new-year'])
+    expect(ids(farm(on('spring', 10)), TWO)).toEqual(['flower-show>flower-show'])
+    expect(ids(farm(on('summer', 10, 3)), TWO)).toEqual(['fishing-derby-night>derby-night'])
+    expect([on('autumn', 10), on('winter', 10), on('winter', 12), on('spring', 9)].map((d) => ids(farm(d), TWO))).toEqual([[], [], [], []])
+    expect(occasionsOn(farm(on('spring', 1, 2)), PACK, DAYS, TWO)[0]!.moments).toEqual(['new-year'])
+    expect(occasionsOn(farm(on('spring', 10)), PACK, DAYS, TWO)[0]!.moments).toEqual(['spring-festival'])
+    expect(occasionsOn(farm(on('summer', 10)), PACK, DAYS, TWO)[0]).toMatchObject({ slot: 'night', moments: ['festival-night'] })
   })
 
   it('follows the story’s year: its names, and a moved festival on its new day', () => {
-    const year = festivalsOf(WORLD)
-    expect(occasionName('flower-show', year)).toBe('Bloom Fair')
-    expect(occasionName('derby-night', year)).toBe('Fishing Derby night')
-    expect(occasionName('new-year', year)).toBe('New Year’s')
-    const moved = festivalsOf(storyPackFrom({ ...STAND_IN_FILES, world: { festivals: [{ id: 'fishing-derby', name: 'The Big Catch', season: 'summer', day: 6 }] } }))
-    expect(occasionOn(on('summer', 6), moved)).toBe('derby-night')
-    expect(occasionOn(on('summer', 10), moved)).toBeNull()
-    expect(occasionName('derby-night', moved)).toBe('The Big Catch night')
+    const named = { ...DAYS, festivals: festivalsOf(WORLD) }
+    expect(occasionsOn(farm(on('spring', 10)), WORLD, named, TWO)[0]!.name).toBe('Bloom Fair')
+    expect(occasionsOn(farm(on('summer', 10)), WORLD, named, TWO)[0]!.name).toBe('Fishing Derby night')
+    expect(occasionsOn(farm(on('spring', 1, 2)), WORLD, named, TWO)[0]!.name).toBe('New Year’s')
+    const moved = { ...DAYS, festivals: festivalsOf(storyPackFrom({ ...STAND_IN_FILES, world: { festivals: [{ id: 'fishing-derby', name: 'The Big Catch', season: 'summer', day: 6 }] } })) }
+    expect(ids(farm(on('summer', 6)), TWO, moved)).toEqual(['fishing-derby-night>derby-night'])
+    expect(ids(farm(on('summer', 10)), TWO, moved)).toEqual([])
+    expect(occasionsOn(farm(on('summer', 6)), PACK, moved, TWO)[0]!.name).toBe('The Big Catch night')
   })
 
   it('costs one action, the event actions first, once a day with each Uma, and pays nothing', () => {
     const show = farm(on('spring', 10))
-    expect(occasionWith(show, ONE, FESTIVALS)).toBe('flower-show')
-    const one = playOccasion(show, ONE, DAYS)
-    expect(one.today).toMatchObject({ actions: 0, eventActions: 1, occasions: [ONE], events: [] })
+    expect(occasionWith(show, PACK, DAYS, ONE)?.id).toBe('flower-show')
+    const one = playOccasion(show, PACK, ONE, DAYS)
+    expect(one.today).toMatchObject({ actions: 0, eventActions: 1, occasions: [`${ONE}:flower-show`], events: [] })
     expect(one.love).toEqual(show.love)
-    expect(occasionWith(one, ONE, FESTIVALS)).toBeNull()
-    expect(() => playOccasion(one, ONE, DAYS)).toThrow('You’ve spent today’s occasion with her.')
+    expect(occasionWith(one, PACK, DAYS, ONE)).toBeNull()
+    expect(() => playOccasion(one, PACK, ONE, DAYS)).toThrow('You’ve spent today’s occasion with her.')
     // It isn't her heart event: Ready stays Ready.
     const ready = withLove(one, ONE, { points: costOf('f1') })
     expect(readiness(ready, PACK, ONE).ready).toBe(true)
     // The festival's three, then the day's own.
-    const three = playOccasion(playOccasion(one, TWO, DAYS), THREE, DAYS)
-    expect(three.today).toMatchObject({ actions: 0, eventActions: 3, occasions: [ONE, TWO, THREE] })
+    const three = playOccasion(playOccasion(one, PACK, TWO, DAYS), PACK, THREE, DAYS)
+    expect(three.today).toMatchObject({ actions: 0, eventActions: 3, occasions: [`${ONE}:flower-show`, `${TWO}:flower-show`, `${THREE}:flower-show`] })
     expect(parseSaveV5(json(three))).toEqual(three)
   })
 
   it('is refused on a day without one, for someone not met, and with no action left', () => {
-    expect(() => playOccasion(farm(on('spring', 9)), ONE, DAYS)).toThrow('No occasion today.')
-    expect(() => playOccasion(farm(on('spring', 1)), ONE, DAYS)).toThrow('No occasion today.')
-    expect(() => playOccasion(farm(on('spring', 10)), '9000009', DAYS)).toThrow('You haven’t met her yet.')
+    expect(() => playOccasion(farm(on('spring', 9)), PACK, ONE, DAYS)).toThrow('No occasion today.')
+    expect(() => playOccasion(farm(on('spring', 1)), PACK, ONE, DAYS)).toThrow('No occasion today.')
+    expect(() => playOccasion(farm(on('spring', 10)), PACK, '9000009', DAYS)).toThrow('You haven’t met her yet.')
     const spent = spendActions(farm(on('spring', 10)), DAY_ACTIONS)
-    const used = [ONE, TWO, THREE].reduce((s, id) => playOccasion(s, id, DAYS), spent)
+    const used = [ONE, TWO, THREE].reduce((s, id) => playOccasion(s, PACK, id, DAYS), spent)
     expect(used.today.eventActions).toBe(FESTIVAL_ACTIONS)
-    const fresh = { ...used, today: { ...used.today, occasions: [ONE, TWO] } }
-    expect(() => playOccasion(fresh, THREE, DAYS)).toThrow('No actions left today.')
+    const fresh = { ...used, today: { ...used.today, occasions: [`${ONE}:flower-show`, `${TWO}:flower-show`] } }
+    expect(() => playOccasion(fresh, PACK, THREE, DAYS)).toThrow('No actions left today.')
   })
 
   it('reads a save from before the calendar, with no occasions, and the night clears them', () => {
     const show = farm(on('spring', 10))
     expect(show.today.occasions).toBeUndefined()
     expect(parseSaveV5(json(show))).toEqual(show)
-    const played = playOccasion(show, ONE, DAYS)
+    const played = playOccasion(show, PACK, ONE, DAYS)
     expect(runNight(played, { story: PACK }).today).toEqual(newTodayV4())
   })
 })
@@ -155,11 +160,14 @@ describe('the calendar’s days', () => {
     const save = farm(on('spring', 3))
     const days: SpecialDays = { festivals: festivalsOf(WORLD), birthdays: DAYS.birthdays }
     const first = calendarDay(save, WORLD, days, on('spring', 1))
-    expect(first).toMatchObject({ when: 'past', newYear: true, festival: null, occasion: null, eventActions: 0 })
-    expect(calendarDay(save, WORLD, days, on('spring', 1, 2))).toMatchObject({ when: 'ahead', newYear: true, occasion: 'new-year', eventActions: NEW_YEAR_ACTIONS })
+    expect(first).toMatchObject({ when: 'past', newYear: true, festival: null, eventActions: 0 })
+    const year2 = calendarDay(save, WORLD, days, on('spring', 1, 2))
+    expect(year2).toMatchObject({ when: 'ahead', newYear: true, eventActions: NEW_YEAR_ACTIONS })
+    expect(year2.faces.map((f) => f.occasions.map((o) => o.id))).toEqual([['new-year'], ['new-year'], ['new-year']])
     expect(first.storyDays.map((d) => d.id)).toEqual(['first-bell'])
     const show = calendarDay(save, WORLD, days, on('spring', 10))
-    expect(show).toMatchObject({ when: 'ahead', festival: { id: 'flower-show', name: 'Bloom Fair' }, occasion: 'flower-show', eventActions: FESTIVAL_ACTIONS })
+    expect(show).toMatchObject({ when: 'ahead', festival: { id: 'flower-show', name: 'Bloom Fair' }, eventActions: FESTIVAL_ACTIONS })
+    expect(show.faces[0]!.occasions.map((o) => o.name)).toEqual(['Bloom Fair'])
     expect(show.storyDays.map((d) => d.id)).toEqual(['kite-day'])
     const birthday = calendarDay(save, WORLD, days, on('spring', 4))
     expect(birthday).toMatchObject({ birthdays: [ONE], eventActions: 1 })
@@ -169,26 +177,27 @@ describe('the calendar’s days', () => {
 
   it('shows the faces of the Umas with an event that day: the date’s own first, then those only Ready', () => {
     const save = withLove(withLove(farm(on('spring', 3)), TWO, { points: costOf('f1') }), THREE, { stage: 'spouse', level: 1, points: 0, wed: on('spring', 5) - 48 })
+    const faces = (s: SaveV4, day: number) => calendarDay(s, PACK, DAYS, day).faces.map((f) => ({ id: f.id, reasons: f.reasons }))
     // Today: Two's event is Ready.
-    expect(calendarDay(save, PACK, DAYS, on('spring', 3)).faces).toEqual([{ id: TWO, reasons: ['ready'] }])
-    // One's birthday, Two still Ready if nothing changes.
-    expect(calendarDay(save, PACK, DAYS, on('spring', 4)).faces).toEqual([{ id: ONE, reasons: ['birthday'] }, { id: TWO, reasons: ['ready'] }])
+    expect(faces(save, on('spring', 3))).toEqual([{ id: TWO, reasons: ['ready'] }])
+    // One's birthday (her route writes no birthday scene), Two still Ready if nothing changes.
+    expect(faces(save, on('spring', 4))).toEqual([{ id: ONE, reasons: ['birthday'] }, { id: TWO, reasons: ['ready'] }])
     // Three's anniversary: the wedding's day of the year, from the second year.
     const wed = { ...save, calendar: { day: on('spring', 3, 2) } }
-    expect(calendarDay(wed, PACK, DAYS, on('spring', 5, 2)).faces).toContainEqual({ id: THREE, reasons: ['anniversary'] })
+    expect(faces(wed, on('spring', 5, 2))).toContainEqual({ id: THREE, reasons: ['anniversary'] })
     expect(calendarDay(wed, PACK, DAYS, on('spring', 5, 2)).anniversaries).toEqual([THREE])
     // The Flower Show: everyone's occasion, and Two's Ready too.
-    expect(calendarDay(save, PACK, DAYS, on('spring', 10)).faces).toEqual([
+    expect(faces(save, on('spring', 10))).toEqual([
       { id: ONE, reasons: ['occasion'] }, { id: TWO, reasons: ['occasion', 'ready'] }, { id: THREE, reasons: ['occasion'] },
     ])
     // A day gone by keeps its birthdays, and nothing to play.
     const later = { ...save, calendar: { day: on('spring', 11) } }
-    expect(calendarDay(later, PACK, DAYS, on('spring', 4)).faces).toEqual([{ id: ONE, reasons: ['birthday'] }])
-    expect(calendarDay(later, PACK, DAYS, on('spring', 10)).faces).toEqual([])
+    expect(faces(later, on('spring', 4))).toEqual([{ id: ONE, reasons: ['birthday'] }])
+    expect(faces(later, on('spring', 10))).toEqual([])
   })
 
   it('leaves out today’s occasion once she’s played it', () => {
-    const show = playOccasion(farm(on('spring', 10)), ONE, DAYS)
+    const show = playOccasion(farm(on('spring', 10)), PACK, ONE, DAYS)
     expect(calendarDay(show, PACK, DAYS, on('spring', 10)).faces.map((f) => f.id)).toEqual([TWO, THREE])
   })
 

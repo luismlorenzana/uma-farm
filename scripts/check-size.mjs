@@ -26,7 +26,7 @@ export const MAIN_JS_BUDGET = 180_000
  * household player; and the story pack's delivery, its index and released pack; and the names of anyone in town, the
  * town's rules, its screen, its view and its talk; and the Book, upkeep and loans' rules, their words and the mayor's
  * office; and the calendar screen, its words, the occasion player,
- * the occasions' rules and the calendar's days; and the stove's rules and screen, the Kitchen's rules, levels and recipes,
+ * the occasions' rules and the calendar's days, and the talk's greetings and small talk; and the stove's rules and screen, the Kitchen's rules, levels and recipes,
  * its sheet and actions; and the Cooking Contest's rules, its judge's lines, its card and entry, and its judging. Paths
  * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
@@ -151,6 +151,7 @@ export const LAZY_MODULES = [
   'src/loop/OccasionPlayer.tsx',
   'domain/src/romance/occasions.ts',
   'domain/src/romance/calendar-days.ts',
+  'domain/src/romance/talk.ts',
   'domain/src/kitchen/stove.ts',
   'domain/src/kitchen/kitchen.ts',
   'domain/src/kitchen/recipes.ts',

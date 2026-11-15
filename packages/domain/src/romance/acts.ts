@@ -84,10 +84,13 @@ export function chatLineV4(
   return lines[Math.floor(draw(save.account.uid, save.calendar.day, `chat:${id}`, 0) * lines.length)]!
 }
 
-/** What she says to a gift today: the default story's line for her taste, drawn by the account, the day and her id. The
- * gift's name, her favourite good and her line's work are in; the app fills `{farmer}` and `{name}`. */
-export function giftLineV4(save: Pick<SaveV4, 'account' | 'calendar'>, pack: Pick<StoryPack, 'bibles'> & Partial<Pick<StoryPack, 'cast' | 'master'>>, id: string, taste: Taste, gift: string): string {
-  const lines = giftReactionsOf(pack, id, taste, gift)
+/** What she says to a gift today: on her birthday her `giftLines.birthday`, else her `giftLines` for its taste, else the
+ * default story's line for her taste (`giftReactionsOf`), drawn by the account, the day and her id. The default's has the
+ * gift's name, her favourite good and her line's work in; the app fills `{farmer}` and `{name}`. */
+export function giftLineV4(
+  save: Pick<SaveV4, 'account' | 'calendar'>, pack: Pick<StoryPack, 'bibles'> & Partial<Pick<StoryPack, 'cast' | 'master'>>, id: string, taste: Taste, gift: string, birthday = false,
+): string {
+  const lines = giftReactionsOf(pack, id, taste, gift, birthday)
   return lines[Math.floor(draw(save.account.uid, save.calendar.day, `gift:${id}`, 0) * lines.length)]!
 }
 

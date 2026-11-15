@@ -27,12 +27,14 @@ export async function playHerEvent(id: string, outcome: EventOutcome): Promise<E
   return done.card
 }
 
-/** Her occasion scene played to its end: its action spent, once today, in one stamped change. It pays nothing. */
-export async function playOccasionOnce(id: string): Promise<void> {
+/** Her occasion scene played to its end (`occasion`, the one its player showed): its action spent, once today, in one
+ * stamped change. It pays nothing. */
+export async function playOccasionOnce(id: string, occasion: string): Promise<void> {
+  const pack = await storyReady()
   const special = await days()
   const save = useGame.getState().save
   if (!save) throw new Error('No farm yet.')
-  await commit(touched(playOccasion(save, id, special), new Date().toISOString()))
+  await commit(touched(playOccasion(save, pack, id, special, occasion), new Date().toISOString()))
 }
 
 /** Ask her: her answer, once a day, paying nothing; Yes moves her to romance. One stamped change. */

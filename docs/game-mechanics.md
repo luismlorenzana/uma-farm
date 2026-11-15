@@ -128,8 +128,8 @@ The year's seasons, with their days in year 1 and their festivals:
 
 Each season's 10th day holds its festival, and Winter 12, the year's last day, also holds the Harvest Cup. A festival
 is a special day: the calendar marks it, the morning says "Flower Show tomorrow" the day before and "Flower Show today ·
-+3 for events" on the day, it gives three actions for events, and the Flower Show and the Fishing Derby's night play
-their occasion scene with each Uma you've met ([occasion scenes](#occasion-scenes)).
++3 for events" on the day, it gives three actions for events, and its day and its night play their occasion scenes
+with each Uma you've met who has them ([occasion scenes](#occasion-scenes)).
 
 - **The Cooking Contest is played** (Autumn 10, or wherever the story puts it): at the Kitchen, **Enter the Cooking
   Contest · 3** spends the day's three event actions on one dish cooked live at the stove; the town's cook judges it
@@ -191,8 +191,9 @@ it. The days are read live from the save as it stands and the story's year, neve
   first) and "+n", read from every Uma's fixed schedule ([who's where](#whos-where)), so a day ahead shows who'll be
   there (the save as it stands: one living on the farm, or a farmhand, isn't in town). At its foot, the next festival
   with its countdown, and the day of the year ("Day 3 of 48. Days move only when you end them.").
-- **Today's rows play:** **Play · 1** for her occasion scene (or "No actions" with none left of either kind), and
-  **Event ›** for her Ready event. Those who've played today's occasion are listed under it ("Played today: …").
+- **Today's rows play:** **Play · 1** for her next occasion scene (the day's, then a festival's night; or "No actions"
+  with none left of either kind), and **Event ›** for her Ready event. Those who've played an occasion today are listed
+  under it ("Played today: …"). Her birthday or her anniversary said by its occasion isn't said twice.
 
 **A day holds:**
 
@@ -200,8 +201,8 @@ it. The days are read live from the save as it stands and the story's year, neve
 |---|---|---|
 | New Year's | Each year's Spring 1 | The game |
 | Its festival | The game's five on their days, or the story's year | The game's, or `world.json`'s `festivals` |
-| The story's holidays and minor days | The days the story names: in one season, or in every season | `world.json`'s `days` ([the story pack's menu](story-pack.md#the-storys-days)) |
-| An occasion scene | New Year's from the second year, the Flower Show, the Fishing Derby | The story's scene, else the default story's |
+| The story's holidays and minor days | The days the story names: in one season, or in every season; and the game's own six small days, wherever the story puts them | `world.json`'s `days` ([the story pack's menu](story-pack.md#the-storys-days)), and the game's ([the story's days](#the-storys-days)) |
+| Her occasion scenes | New Year's from the second year, each festival's day and its night, her birthday, her anniversary, the story's days | Her route's scene for it, else the default story's for three of them ([occasion scenes](#occasion-scenes)) |
 | Birthdays | Each met Uma's birthday | Her cast entry's, else master data's ([birthdays](#birthdays-and-anniversaries)) |
 | Anniversaries | Each spouse's wedding day of the year, from the second year | Her wedding's day |
 | Event actions | New Year's from the second year, a festival, each met Uma's birthday | [The day's budget](#a-day-ten-actions) |
@@ -210,7 +211,7 @@ it. The days are read live from the save as it stands and the story's year, neve
 
 | Reason | Today | A day ahead | A day gone by |
 |---|---|---|---|
-| **The occasion** | The day's occasion scene, until she's played it | The day's occasion scene | — |
+| **Her occasions** | Her occasions that day by name (the day's, then a festival's night), until she's played them | Her occasions that day | — |
 | **Her birthday** | Yes | Yes | Yes |
 | **Your anniversary** | Yes | Yes | Yes |
 | **Her event** | Ready now ("Ready") | Ready on that date as the save stands, the date moved and nothing played ("Likely ready"), her face faint in the day's cell | — |
@@ -223,26 +224,55 @@ it. The days are read live from the save as it stands and the story's year, neve
 
 #### Occasion scenes
 
-On three days of the year, each Uma you've met has a scene with you: the story's for her, else the default story's.
+Everything the story writes for a day of the year plays on that day, with each Uma who has it: read by id from the pack,
+so a release that adds Umas, scenes or days plays them on publish, with no deploy.
 
 <!-- live:occasions -->
-| Occasion | The story’s event | Its day | She wears, unless the scene names an outfit |
-|---|---|---|---|
-| New Year’s | `new-year` | New Year’s, each year’s Spring 1, from the second year | `kimono` (`new-year`) |
-| Flower Show | `flower-show` | The Flower Show’s day, wherever the story puts it | `garden-party` (`spring-festival`) |
-| Fishing Derby night | `derby-night` | The Fishing Derby’s day, wherever the story puts it: its night | `kimono` (`festival-night`) |
+| Occasion | Its event id | Its day | Who | Unwritten | She wears, unless the scene names an outfit |
+|---|---|---|---|---|---|
+| New Year’s | `new-year` | Spring 1, from the second year | Everyone met | The default story’s | `kimono` (`new-year`) |
+| A festival’s day | `flower-show`, `fishing-derby`, `cooking-contest`, `animal-show`, `harvest-cup` | The festival’s day, wherever the story puts it | Everyone met | The default story’s for the Flower Show; none for the others | `garden-party` (`spring-festival`) at the Flower Show; the season’s at the others |
+| A festival’s night | `flower-show-night`; `fishing-derby-night` or `derby-night`; `cooking-contest-night` or `harvest-moon`; `animal-show-night`; `harvest-cup-night` | The festival’s day, its night: a second slot, after the day’s | Everyone met | The default story’s for `derby-night`; none for the others | `kimono` (`festival-night`) |
+| Her birthday | `birthday` | Her birthday | Her, once you’ve met | None | `dinner` (`dinner`) |
+| Her anniversary | `anniversary` | Her wedding’s date, each year from the first anniversary | Her, once married | None | `dinner` (`dinner`) |
+| A story day | The day’s `scene`, else its `id` | world.json’s `days`, and the game’s own small days | Everyone met | None | The season’s |
 <!-- /live -->
 
-- **Who:** everyone you've met, home on the farm or living in town: the festival is in town, and everyone's there.
-- **Its cost:** one action, the day's event actions first. It pays nothing: its choices are wording only, as every
+- **Hers:** an occasion is hers on its day when her route writes its scene (a festival's night under `<festival>-night`,
+  else the story's alias for it), or the default story plays it: New Year's, the Flower Show and the derby night. Every
+  other occasion plays only when written. **Who:** everyone you've met, home on the farm or living in town; her birthday
+  once you've met her; her anniversary once married, from the first.
+- **One a day, and a festival's night:** a day with several of hers plays one, in this order: her birthday, her
+  anniversary, New Year's or the festival's day, then a story day (holidays first, then minor days, in the calendar's
+  order). A festival's night is a second slot, after its day's, so a festival day can play both of hers.
+- **Its cost:** one action each, the day's event actions first. It pays nothing: its choices are wording only, as every
   scene past the rungs.
-- **Once a day with each:** played, her face leaves the day's list. The day is once a year, so it's once a year.
+- **Once each:** played, it leaves her face's list for the day; with the night still to come, her face stays for it.
+  `today.occasions` keeps `<her id>:<occasion id>`; a save from before kept her id alone, which reads as the day's one
+  occasion then (New Year's, the Flower Show or the derby night), so it never plays twice.
 - **It isn't her heart event:** it doesn't need her Ready, and it doesn't stop her event today.
 - **Where it plays:** the calendar's day panel, **Play · 1**; on the dialogue engine, her face line by line, in the
-  scene's own outfit when the story names one, else the occasion's ([outfits by context](#outfits-by-context)). Its end
-  or Skip spends the action.
-- **The rest of her occasions** (her birthday, the Fishing Derby's day scene, the Cooking Contest, the Animal Show and
-  the Harvest Cup) are written and read, and wait for their own moments.
+  scene's own outfit when the story names one, else the occasion's moment's: the kimono at New Year's and a festival's
+  night, the garden party dress at the Flower Show, the dinner dress on her birthday and her anniversary, else the
+  season's ([outfits by context](#outfits-by-context)). Its end or Skip spends the action.
+- **The morning** names each day ahead of it: New Year's, a festival, the story's days (the game's six among them), her
+  birthday and her anniversary, each a tap to the calendar or her profile.
+
+##### The story's days
+
+The game's own six small days, each a minor day on the calendar, named in the morning, with a scene of its own (its id):
+
+| Day | Its `id` (its scene) | When |
+|---|---|---|
+| Blossom viewing | `blossom-viewing` | Spring 6 |
+| The wishing night | `wishing-night` | Summer 6 |
+| The first cold evening | `first-cold-evening` | Autumn 4 |
+| The first snow | `first-snow` | Winter 2 |
+| The longest night | `longest-night` | Winter 6 |
+| The sweets day | `sweets-day` | Winter 8 |
+
+`world.json`'s `days` move or rename one by its `id`, or add any other; each day plays its `scene` (else its `id`) with
+each Uma who has it written. A day with no scene written for anyone is a marked day and nothing more.
 
 #### A day: ten actions
 
@@ -3020,9 +3050,9 @@ open is greyed with why. **Back** returns to the map.
 <!-- /live -->
 
 - **Her line:** before you talk today, her line for the day in town (her bible's `townLines`, else the game's six);
-  after a talk, her talk for the day (her chats by stage, else her temperament's lines), her face happy; after a gift,
-  her reaction ("“I love it!”", "“Oh, I like this.”", "“Thank you.”", or the disliked line), her face by her taste.
-  `{farmer}` is your name.
+  a talk plays today's talk over the town ([talk that knows the day](#talk-that-knows-the-day): her greeting for where
+  she is, then her line or a small talk), and then her last line stays, her face happy; after a gift, her line for its
+  taste ([talk that knows the day](#talk-that-knows-the-day)), her face by her taste. `{farmer}` is your name.
 - **Introduce yourself** meets her: she joins the roster at Friendship 0 and keeps living in town, and her meeting
   scene plays over the town at once ([her meeting scene](#her-meeting-scene)).
 - **Talk** and **Give a gift** are the romance's acts: +15, and her taste's points (see [her route](#her-route)),
@@ -4791,7 +4821,7 @@ through the placeholders' lookups: `worldNamesOf`, `historyOf`, `festivalsOf`, `
 | The region's name | The Diary's "The farm", after the town | None |
 | The farm's history | The Diary's "The farm" page | None |
 | The festivals | Renamed, moved or added: the calendar, the date chip, the morning, festival night, `festival` triggers and gates ([festivals](#festivals)) | The game's five |
-| The story's days | Its holidays and minor days, on the calendar with their lines, and the morning's "*Market day* tomorrow" and "today" ([the calendar screen](#the-calendar-screen)) | None |
+| The story's days | Its holidays and minor days, on the calendar with their lines, and the morning's "*Market day* tomorrow" and "today" ([the calendar screen](#the-calendar-screen)); each plays its `scene` with each Uma who has it written, and one with a game's day's id moves or renames it ([the story's days](#the-storys-days)) | The game's own six small days |
 | A place's name and line | The map, its quick look, its Build card | The game's own |
 | A season's line | Under "*Spring* begins" on the season's first morning | "Spring begins" alone |
 | Town notes | The Diary's Town notes, filling as you play; the morning names the night's ([below](#town-notes)) | None |
@@ -4936,10 +4966,10 @@ Every ladder, event, perk, evening, proposal, wedding and household runs end to 
 | Piece | What the default holds | Replaced by the story’s |
 |---|---|---|
 | Her talks | 120: 4 for each stage (acquaintance, friend, farmhand, sweetheart, engaged, married) and temperament (breezy, steady, bold, gritty, clever) | Her bible’s `chats` set for the stage |
-| Her gift reactions | 3 for each taste (loved, liked, neutral, disliked) | — |
+| Her gift reactions | 3 for each taste (loved, liked, neutral, disliked) | Her bible’s `giftLines` for the taste; on her birthday its `birthday` first |
 | Her meeting | In town, where you introduce yourself | Her route’s `arrival` |
 | Her events | Every rung (27), and her life’s: `invited-to-work`, `wedding-night`, `moving-in`, `s2`, `s4` | Her route’s event of that id |
-| Her occasions | `birthday`, `new-year`, `flower-show`, `fishing-derby`, `derby-night`, `cooking-contest`, `animal-show`, `harvest-cup` | Her route’s event of that id |
+| Her occasions | `birthday`, `new-year`, `flower-show`, `fishing-derby`, `cooking-contest`, `animal-show`, `harvest-cup`, `derby-night`; it plays `new-year`, `flower-show` and `derby-night` where her route writes none (the rest play only when written: [occasion scenes](#occasion-scenes)) | Her route’s event of that id |
 | The evenings’ scenes | `hangout-walk`, `hangout-fishing`, `hangout-picnic`, `hangout-market`, `hangout-cooking`, `hangout-festival`, `date-walk`, `date-fishing`, `date-picnic`, `date-market`, `date-cooking`, `date-crafting`, `date-stargazing`, `date-dance`, `date-boat`, `date-footrace`, `date-festival`, `dinner-in-town`, `a-night-in` | Her route’s event of that id |
 | The night’s companion | 3 morning greetings for each temperament | Her bible’s `mornings` |
 | Meals | 3 lines for breakfast and 3 for dinner | Her bible’s `meals` (`breakfast`, `dinner`) |
@@ -4980,8 +5010,11 @@ The default scenes that name their outfit (the rest wear the moment's, by [outfi
   sweetheart's or a spouse's), `dinner-in-town` and `a-night-in`, else the default's ([the evening](#the-evening)).
 - **The night's companion's greeting and the meals' lines** are her bible's `mornings` and `meals` when written, else the
   default story's (`morningGreetingsOf`, `mealLinesOf`), drawn by the day ([married life](#the-households-meals)).
-- **The occasions the calendar plays:** New Year's from the second year, the Flower Show and the Fishing Derby's night
-  (`derby-night`), each on its day with everyone you've met ([occasion scenes](#occasion-scenes)).
+- **The occasions the calendar plays:** every occasion her route writes, on its day: New Year's from the second year,
+  each festival's day and night, her birthday, her anniversary and the story's days; the default story's New Year's,
+  Flower Show and derby night where her route writes none ([occasion scenes](#occasion-scenes)).
+- **Her talk** opens with her greeting and may be a small talk, and her gift line is her own, when her bible writes
+  them ([talk that knows the day](#talk-that-knows-the-day)).
 - **Married life 2 and 4** come at night when her bar fills, with no Ready event: the morning's "reached overnight" line
   plays her route's `s2` or `s4`, else the default's (short and tender), then her level-up card
   ([the level-up cards](#the-level-up-and-stage-up-cards)).
@@ -5002,7 +5035,10 @@ Every other part of the story, and what plays without it:
 | Her meeting scene | The default story’s, in town, where you introduced yourself; it pays as a written one does. A written one with no choice gets the hello |
 | A heart event | The default story’s: her moment, her lines with their faces and your reply; its points and rewards pay as written |
 | The wedding night, moving in, married life 2 and 4 | The default story’s: the wedding night in its outfit, tender and fading to morning; they pay nothing |
-| Her occasions | The default story’s 8: her birthday, the five festivals, the Fishing Derby’s night and New Year’s |
+| Her occasions | The default story’s New Year’s, Flower Show and Fishing Derby night; her birthday, her anniversary, the other festivals’ days and nights and the story’s days play only when written |
+| Her greetings | None: a chat or a talk in town opens on her line |
+| Her small talk | None: a chat is her line alone |
+| Her gift lines | The default story’s gift reactions, by her taste |
 | Her evenings’ scenes | The default story’s 19: a hangout’s and a date’s for each kind, Dinner in town and A night in |
 | Her morning greetings and meal lines | The default story’s: 3 greetings for each temperament, and 3 lines for each meal |
 | A play’s prompt | Its game’s: “Cast the line together.” |
@@ -5028,7 +5064,7 @@ Every other part of the story, and what plays without it:
 | The town’s, the farm’s and the region’s names | “Town” on the map, “The farm” in the Diary, no region; the opening names none |
 | The farm’s history | None |
 | The festivals | The game’s 5: Flower Show, Fishing Derby, Cooking Contest, Animal Show, Harvest Cup, on each season’s 10th day and Winter 12 |
-| The story’s holidays and minor days | None: the calendar shows the festivals, New Year’s, birthdays and anniversaries |
+| The story’s holidays and minor days | The game’s 6 small days: Blossom viewing (Spring 6), The wishing night (Summer 6), The first cold evening (Autumn 4), The first snow (Winter 2), The longest night (Winter 6), The sweets day (Winter 8) |
 | A place’s name and line | The map’s own name, and its quick look’s line |
 | A season’s line | None: the morning says “Spring begins” alone |
 | Town notes | None |
@@ -5382,11 +5418,28 @@ applies the day's factors and says what it paid. The acts, what each pays and ho
 
 - **The day's factors multiply once each:** a gift ×3 on her birthday; on her anniversary every act ×2 except the
   evening, which takes its own ×1.5 instead.
-- **Chat** (tap her): +15, once a day each, on the farm or in town ("You've talked today."). Her line for the day is drawn by the
-  account, the day and her id, so it's the same all day. From Friendship 1 her bible's chat set for her stage plays when
-  it holds any: friend through her confession (Romance 0 included), partner from Romance 1 to the wedding, spouse after
-  it. Anything else plays the default story's talks for her stage in the Uma loop and her temperament, her favourite
-  good and her line's work in.
+- **Chat** (tap her): +15, once a day each, on the farm or in town ("You've talked today."). It plays today's talk on the
+  dialogue engine ([talk that knows the day](#talk-that-knows-the-day)): her greeting, then her line or a small talk,
+  drawn by the account, the day and her id, so it's the same all day. Her line: from Friendship 1 her bible's chat set
+  for her stage when it holds any (friend through her confession, Romance 0 included; partner from Romance 1 to the
+  wedding; spouse after it); else the default story's talks for her stage in the Uma loop and her temperament (a
+  farmhand's once she works the farm), her favourite good and her line's work in.
+
+##### Talk that knows the day
+
+A chat on her profile, and a talk in town, play today's talk over the page (`?life=talk:<id>`, again from her profile
+while you've talked today, paying nothing): her greeting, then her line or a small talk. Her words are her bible's
+(`greetings`, `smallTalk`, `giftLines`: [the story pack](story-pack.md#her-bible-umascharacteridjson)).
+
+| Piece | What plays | Without hers |
+|---|---|---|
+| **Her greeting** | From the most specific set that applies and holds lines: 1. her birthday's; 2. the place where you're talking, `places.<id>` (in town her location today, else `places.town`; on the farm the place of her work board's first task, else the Dorm when she lives there); 3. the season's; 4. the hour's: `morning` by day, `evening` once you've spent an evening with her today, `night` after a night in with her or once she's tonight's companion | None: the talk opens on her line |
+| **Her line or a small talk** | One drawn from her stage's lines and her small talks that fit the moment together. A small talk fits when every tag it carries matches: `at` the place (or `town` anywhere in town), `season`, `stage` her chat set. It plays as its lines on the dialogue engine, hers and yours (`you`, under your name), she on the stage throughout | Her line alone |
+| **Her gift line** | On her birthday her `giftLines.birthday`; else her `giftLines` for the gift's taste | The default story's reactions for the taste |
+
+- **The same all day:** each is drawn by the account, the day and her id.
+- **The weather** (`greetings.weather`) is read and kept: it plays once the game has weather, which it doesn't yet.
+- **Her `voice`** is the story's own notes on how she talks, never shown.
 - **Gift:** one good from the Warehouse at the stars you choose, once a day each, on the farm or in town ("One gift a day."; a seed
   is "That isn't a gift."). The good is used, and its taste is learnt. Stars multiply by 1 + 0.1 a star above ★1:
 
@@ -5632,8 +5685,8 @@ then **Lives in town** and **Invite to the farm** while a bed is free (she moves
 - **Ring:** from Romance 8, "Her ring will read: ‘…’" (the engraving, her Romance 8 beat's caption); from the proposal,
   her ring with its bonus ("Iron Ring · +3% at the Fields once you're married", then "+3% at the Fields"), "Her ring
   reads: ‘…’", and **Give her the ‹ring› ›** for each better ring in the Warehouse.
-- **The actions,** 48 pt in the sheet's foot: **Chat · 1** (an action, +15; then her line for the day; "Chat ✓" once
-  done), **Gift · 1** (an action: the picker; "Gift ✓"), both greyed with no actions left or when she isn't in front of
+- **The actions,** 48 pt in the sheet's foot: **Chat · 1** (an action, +15; then today's talk plays on the dialogue
+  engine, and stays above the buttons, your lines under your name; "Chat ✓" once done), **Gift · 1** (an action: the picker; "Gift ✓"), both greyed with no actions left or when she isn't in front of
   you, **☾ Evening · 2 ›** while she can spend one and the day has its two actions (otherwise greyed with why: "Evening ✓"
   spent with her, "Evening · F3" below Friendship 3, "In town" while she's out there and you aren't, "At home" on a day
   she's off the map, "Evening spent" with someone else, "Evening · 2" short of the actions), **Invite her to work · 1**
@@ -6871,12 +6924,13 @@ flows are unchanged:
 | `?life=moving-in:<id>` | Moving in | A spouse with a room, on her wedding day or the morning she moved into a room she waited for |
 | `?life=invited-to-work:<id>` | The invitation to work | The day you invited her (`roster[id].farmhand` is today) |
 | `?life=breakfast:<id>`, `?life=dinner:<id>` | A meal’s line | That meal cooked today, and she’s a spouse who ate it (or the one whose line it plays) |
+| `?life=talk:<id>` | Today’s talk with her: her greeting, then her line or a small talk | You’ve talked with her today (it pays nothing) |
 | `?event=<id>` | Her heart event | Ready (`readiness`); with no action left it says so and plays nothing |
 | `?ask=<id>` | Ask her | She said “Not yet” at her confession, and you haven’t asked today |
 | `?memory=<id>:<rung>` | A Memory, paying nothing | A Memory already played: her meeting scene, or a rung of her route |
 | `?evening=<id>` | Her kinds sheet, then the evening | Her evening is open to her now: in front of you (home on the farm, a farmhand there by day, or out in town today with you there), a hangout or a date her ladder opened, a slot free |
 | `?evening=pick` | Tonight’s picker | Someone can spend an evening now, and the day has its 2 actions |
-| `?occasion=<id>` | An occasion scene | Today’s occasion, with an Uma you’ve met, not yet played with her today |
+| `?occasion=<id>` | An occasion scene | Her next occasion today (the day’s, then a festival’s night), with an Uma you’ve met, not yet played |
 | `?household=<id>` | A household scene or the finale | Ready (the night saw its count) and not yet read; with `&replay=1`, once read |
 | `?level=<id>:<s2\|s4>` | A spouse level’s scene and card | She’s reached it (it pays nothing) |
 <!-- /live -->

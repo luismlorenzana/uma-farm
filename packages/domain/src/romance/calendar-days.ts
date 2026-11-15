@@ -1,11 +1,11 @@
 // The calendar's days: what each day of the year holds, and the faces of the Umas with an event on it. Read live, never
 // stored: the save as it stands, and the story's year.
 //
-//   a day holds   New Year's (each Spring 1), its festival, the story's holidays and minor days (world.json's `days`),
-//                 an occasion scene (`occasions.ts`), the birthdays of the Umas you've met and their anniversaries, and
-//                 the special day's event actions (`eventGrants`)
-//   its faces     each met Uma with an event that day: the occasion's scene with her, her birthday, her anniversary, or
-//                 her next event Ready on that date
+//   a day holds   New Year's (each Spring 1), its festival, the story's holidays and minor days (world.json's `days`
+//                 and the game's own six), the birthdays of the Umas you've met and their anniversaries, and the special
+//                 day's event actions (`eventGrants`)
+//   its faces     each met Uma with an event that day: her occasions (`occasions.ts`: the day's one, and a festival's
+//                 night), her birthday, her anniversary, or her next event Ready on that date
 //
 // Today reads Ready as it is (`readiness`), and leaves out an occasion she's played. A day ahead is a best guess from the
 // save as it stands, the date moved and nothing played (`readyOn`): a bar already full, a waiting rung's next day, or a
@@ -19,7 +19,7 @@ import { castOrder, type StoryPack } from '../story/pack'
 import { storyDaysOn, type StoryDay } from '../story/placeholders'
 import { isBirthday } from './days'
 import { isAnniversary } from './love'
-import { occasionOn, occasionPlayed, type PlayedOccasion } from './occasions'
+import { occasionPlayed, occasionsOn, type Occasion } from './occasions'
 import { readiness } from './ready'
 
 /** Why her face is on a day: the occasion's scene with her, her birthday, her anniversary, or her event Ready. */
@@ -28,6 +28,8 @@ export const FACE_REASONS: readonly FaceReason[] = ['occasion', 'birthday', 'ann
 export interface DayFace {
   id: string
   reasons: FaceReason[]
+  /** Her occasions that day, in play order (today, the ones she hasn't played): with them, `occasion` is a reason. */
+  occasions: Occasion[]
 }
 
 /** A day gone by, today, or a day ahead. */
@@ -42,8 +44,6 @@ export interface CalendarDay {
   festival: Festival | null
   /** The story's holidays and minor days, holidays first. */
   storyDays: StoryDay[]
-  /** The occasion scene the day plays, or null. */
-  occasion: PlayedOccasion | null
   /** The met Umas' birthdays and anniversaries, in the cast's order. */
   birthdays: string[]
   anniversaries: string[]
@@ -53,7 +53,7 @@ export interface CalendarDay {
   eventActions: number
 }
 
-type DaysPack = Pick<StoryPack, 'bibles' | 'cast'> & Partial<Pick<StoryPack, 'world'>>
+type DaysPack = Pick<StoryPack, 'bibles' | 'cast' | 'scripted'> & Partial<Pick<StoryPack, 'world'>>
 
 /** Whether her next event is Ready on a day: today as it is; a day ahead from the save as it stands, the date moved and
  * nothing played yet; never on a day gone by. */
@@ -77,18 +77,18 @@ export function calendarDay(save: SaveV4, pack: DaysPack, days: SpecialDays, day
   const met = metInOrder(save, pack)
   const birthdays = met.filter((id) => isBirthday(days.birthdays, id, day))
   const anniversaries = met.filter((id) => save.love[id] !== undefined && isAnniversary(save.love[id]!, day))
-  const occasion = occasionOn(day, days.festivals)
   const faces = met.flatMap((id): DayFace[] => {
     const reasons: FaceReason[] = []
-    if (occasion && when !== 'past' && !(when === 'today' && occasionPlayed(save, id))) reasons.push('occasion')
+    const occasions = when === 'past' ? [] : occasionsOn(save, pack, days, id, day).filter((o) => !(when === 'today' && occasionPlayed(save, id, o.id)))
+    if (occasions.length > 0) reasons.push('occasion')
     if (birthdays.includes(id)) reasons.push('birthday')
     if (anniversaries.includes(id)) reasons.push('anniversary')
     if (when !== 'past' && readyOn(save, pack, id, day)) reasons.push('ready')
-    return reasons.length > 0 ? [{ id, reasons }] : []
+    return reasons.length > 0 ? [{ id, reasons, occasions }] : []
   })
   const own = (f: DayFace) => f.reasons.some((r) => r !== 'ready')
   return {
-    day, date: dateOf(day), when, newYear: isNewYear(day), festival: festivalOn(day, days.festivals), storyDays: storyDaysOn(pack, day), occasion,
+    day, date: dateOf(day), when, newYear: isNewYear(day), festival: festivalOn(day, days.festivals), storyDays: storyDaysOn(pack, day),
     birthdays, anniversaries, faces: [...faces.filter(own), ...faces.filter((f) => !own(f))], eventActions: eventActionsOn(save, days, day),
   }
 }

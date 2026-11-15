@@ -13,6 +13,7 @@ import {
 } from './placeholders'
 import { MASTER, MASTER_OUTFITS, NONE, stat } from './placeholders.fixture'
 import { STAND_IN_FILES } from './stand-in'
+import { withOccasions } from './occasions.fixture'
 import { answerAt } from './authored'
 import { choicePoints, walkScene } from '../romance/love'
 
@@ -171,7 +172,17 @@ describe('what\'s written and what\'s a placeholder (the sandbox\'s marks)', () 
     expect(part(two, 'Her events')).toEqual({ part: 'Her events', written: false, plays: '0 of 31 written; the rest play the default story’s, paying as written' })
     expect(part(two, 'Her meeting scene').written).toBe(true)
     expect(part(two, 'Her chats')).toMatchObject({ written: false, plays: 'The default story’s talks, by her stage and temperament' })
-    expect(part(two, 'Her occasions')).toMatchObject({ written: false, plays: '0 of 8 written; the rest the default story’s' })
+    expect(part(two, 'Her occasions')).toMatchObject({
+      written: false, plays: '0 of 19 written; New Year’s, the Flower Show and the Fishing Derby’s night play the default story’s, the rest play only when written',
+    })
+    expect([part(two, 'Her greetings'), part(two, 'Her small talk'), part(two, 'Her gift lines')].map((p) => p.written)).toEqual([false, false, false])
+    // With her occasions and talk written (the derby's and the contest's nights under their aliases), every part is hers.
+    const full = storyPackFrom(withOccasions())
+    expect([part(writtenOf(full, ONE), 'Her occasions'), part(writtenOf(full, ONE), 'Her greetings'), part(writtenOf(full, ONE), 'Her small talk'), part(writtenOf(full, ONE), 'Her gift lines')])
+      .toEqual([
+        { part: 'Her occasions', written: true, plays: 'All 19' }, { part: 'Her greetings', written: true, plays: 'Hers, by birthday, place, season and hour' },
+        { part: 'Her small talk', written: true, plays: '5, hers' }, { part: 'Her gift lines', written: true, plays: 'Every taste, hers' },
+      ])
     expect(part(two, 'Her chapters').plays).toContain('Getting to know her')
     expect(part(one, 'Her pet name for you')).toMatchObject({ written: true })
     expect(writtenOf(noPack(), '9100001').every((p) => !p.written)).toBe(true)

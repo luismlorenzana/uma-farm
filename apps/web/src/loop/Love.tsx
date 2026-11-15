@@ -1,5 +1,5 @@
-// Her acts on her profile (on the Hearts tab): Chat (one action, +15; then her
-// line for the day), Gift (one action: the picker with each good's points for her today, or "?") and Praise +20 while earned, 48 pt in
+// Her acts on her profile (on the Hearts tab): Chat (one action, +15; then today's talk plays on the dialogue engine,
+// `?life=talk:<id>`: her greeting, then her line or a small talk, and stays above the buttons), Gift (one action: the picker with each good's points for her today, or "?") and Praise +20 while earned, 48 pt in
 // the profile's thumb zone. What an act paid goes up to the profile (`onPaid`), which floats it from her face; a note
 // says it, a gift in her words by her taste (the default story's: "‹name› smiles. “Carrot? That’s lovely.” +36"). **Evening ›** is there too (her evening at `?evening=<id>`, or why not:
 // "Evening ✓", "Evening · F3", "In town", "At home", "Evening spent"; an evening takes 2 actions), so Chat, Gift and
@@ -10,8 +10,8 @@
 // (`?life=invited-to-work:<id>`). Her Ready event (Play · 1 on the Next card) plays from anywhere. Loaded on demand with
 // the Hearts tab.
 import {
-  actionsLeft, birthdaysOf, canPraise, chatLineV4, FAMILY_NAMES, FRIEND_FROM, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, isDishId, isFarmhand, LOVE_POINTS, townLocation,
-  whereYouMeet, workBlock, type SaveV4, type StoryPack, type Temperament,
+  actionsLeft, birthdaysOf, canPraise, FAMILY_NAMES, FRIEND_FROM, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, isBirthday, isDishId, isFarmhand, LOVE_POINTS, todaysTalk,
+  townLocation, whereYouMeet, workBlock, YOU, type SaveV4, type StoryPack, type Temperament,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
@@ -56,7 +56,8 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
   const work = workBlock(save, id)
   const invite = !isFarmhand(save, id) && work !== `From Friendship ${FRIEND_FROM}` && work !== 'Meet her first.'
   const evening = eveningButton(save, pack, id)
-  const line = talked ? fill(chatLineV4(save, pack, id, temperament ?? 'steady'), name, save.farmer.name) : null
+  // Today's talk, once you've had it: her greeting, then her line or a small talk (yours under your name).
+  const talk = talked ? todaysTalk(save, pack, id, temperament ?? 'steady', birthdays).steps.flatMap((s) => ('say' in s ? [s] : [])) : []
   const paid = (points: number, words: string) => {
     setError(null)
     setNote(words)
@@ -65,12 +66,24 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
   const fail = (err: unknown) => setError(errorWords(err))
   return (
     <div className="space-y-2" data-love={id}>
-      {line && <p className="rounded-md bg-sunken/70 px-3 py-2 text-[14px] italic" data-chat-line>{line}</p>}
+      {talk.length > 0 && (
+        <div className="space-y-0.5 rounded-md bg-sunken/70 px-3 py-2 text-[14px]" data-chat-line>
+          {talk.map((s, i) => (
+            <p key={i} className={s.say === YOU ? 'text-ink-soft' : 'italic'} data-talk-line={s.say === YOU ? 'you' : 'her'}>
+              {s.say === YOU && <span className="font-semibold not-italic">{save.farmer.name || 'You'}: </span>}{fill(s.line, name, save.farmer.name)}
+            </p>
+          ))}
+        </div>
+      )}
       {(note || error) && <p role="status" className={`text-[13px] font-semibold ${error ? 'text-danger' : 'text-success'}`} data-love-note>{error ?? note}</p>}
       {!meet.here && <MeetLine pack={pack} id={id} at={meet.at} />}
       <div className="grid grid-cols-3 gap-2">
         <Button variant="secondary" size="md" className="px-2!" disabled={talked || out} data-action="chat" aria-label={talked ? 'Chat done today' : `Chat, +${LOVE_POINTS.chat}, 1 action`}
-          onClick={() => void chatHer(id).then((r) => paid(r.paid, `${gain(r.paid)} ♥`), fail)}>
+          onClick={() => void chatHer(id).then((r) => {
+            paid(r.paid, `${gain(r.paid)} ♥`)
+            // Today's talk plays on the dialogue engine, over the profile.
+            navigate(withParam(location, 'life', `talk:${id}`), { state: { back: true } })
+          }, fail)}>
           {talked ? 'Chat ✓' : 'Chat · 1'}
         </Button>
         <Button variant="secondary" size="md" className="px-2!" disabled={gave || out} onClick={() => setGiving(true)} data-action="gift">{gave ? 'Gift ✓' : 'Gift · 1'}</Button>
@@ -104,7 +117,7 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
           onGive={(item, stars) => {
             setGiving(false)
             giftHer(id, item, stars).then((r) => {
-              const said = fill(giftLineV4(save, pack, id, r.taste, item), name, save.farmer.name)
+              const said = fill(giftLineV4(save, pack, id, r.taste, item, isBirthday(birthdays, id, save.calendar.day)), name, save.farmer.name)
               paid(r.paid, r.paid > 0 ? `${said} ${gain(r.paid)}` : said)
             }, fail)
           }} />
