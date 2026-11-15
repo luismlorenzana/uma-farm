@@ -28,11 +28,13 @@ keeps a fixed schedule, hers from the story or the default (her favourite spot e
 ask an Uma you meet in town out for an evening, and every default gift can be had in the first Spring. Faces are
 rounded squares cut from her portraits in the season's outfit ([her picture](../game-mechanics.md#her-picture)).
 
-**Next:** Phase 2's workshops, one at a time on your go, the Kitchen first.
+**Next:** the farm at scale (F89–F91, [the analysis](../design/game-design.md#the-farm-at-scale-2026-11-15)), then Phase 2's workshops, the Kitchen first.
 
 | Piece | Who | State |
 |---|---|---|
-| Nothing open: Phase 2's workshops wait on your go | — | — |
+| [F89](tasks/F89-field-view.md) **The field, on its own screen, in plots** | Claude | Next, on your go |
+| [F90](tasks/F90-food.md) **Food: everyone eats, from day one** | Claude | After F89 |
+| [F91](tasks/F91-work-at-scale.md) **Work at scale: 10, 20 and 50 Umas** | Claude | After F90 |
 
 ## Open packets
 

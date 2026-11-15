@@ -289,3 +289,59 @@ at steps 2, 4, 5 and 7.
 4. **The numbers:** 10 actions a day for the protagonist, 3 for a farmhand, more once married, and a little daily upkeep
    per building and resident, all tuned by playing.
 5. **The farm map's look:** a clean tile map now, the HD-2D look when uma-platform's look path is ready.
+
+## The farm at scale (2026-11-15)
+
+The owner asked: "when we have 10 Umas, then 20 Umas, then 50 Umas, do all those stages support all Umas fully working?"
+**Today, no: about 10 to 20 can hold real jobs, and every Uma past that can only gather.**
+
+**What the farm can employ today,** fully built (Farm Rank 5 and up), in a farmhand's actions a day:
+
+| Work | Actions a day, new hands | Actions a day, skilled hands | Its limit |
+|---|---|---|---|
+| The field: 40 tiles (8 × 5), watered daily, planted and harvested as they ripen | about 56 | about 13 (a row watered in one action, two tiles a harvest or a planting) | One field, fixed |
+| The animals: up to 16 (8 in the Coop, 8 in the Barn), fed and cared for | about 34 | about 18 | 8 a building, 2 buildings |
+| The stations: the Mill, Sawmill, Smokehouse, Smelter and Cutter | 5 | 5 | One load a day each |
+| Foraging, chopping, fishing, a mine face | Any number | Any number | **None:** every haul pays, and the bin pays the same however much you ship |
+
+A farmhand brings 3 to 7 actions a day (3, then 4 settled in, 6 married, 7 well fed), about 4 on average.
+
+| Umas | Their actions a day | What happens |
+|---|---|---|
+| **10** | about 40 | Every one has a real job: the field, the animals, the stations. As their aptitudes grow, the jobs shrink to about 36 actions, and one or two drift to gathering |
+| **20** | about 80 | The jobs fill at about 36–95 actions; 10 or more only gather or mine |
+| **50** | about 200 | About 40 only gather or mine; gold grows without limit; only 27 can live on the farm (20 Dorm beds, 7 houses), the rest in town |
+
+So the farm must **grow its work with its people**, and **give the people something to cost**. Five levers, each its own
+packet or Phase 2 step:
+
+1. **Fields that grow, shown as their own screen** ([F89](../handoff/tasks/F89-field-view.md)). The farm map shows a
+   small field sign; a tap opens the field full screen, one plot (8 × 5) a page. The farm starts with one plot and
+   clears more as the Farm Rank rises, up to eight: up to 320 tiles of real work.
+2. **Food for everyone: an upkeep felt from day one** ([F90](../handoff/tasks/F90-food.md)). Everyone who eats on the
+   farm eats twice a day. Takeout, bought in at night, costs gold for every meal not cooked. Cooking turns the
+   Warehouse's goods into meals in batches: the farmer cooks with an action, and an Uma on the Kitchen's task cooks a
+   batch that grows with her **Cooking** aptitude, so one cook feeds many. The more Umas live and work on the farm, the
+   more meals: the kitchen becomes real jobs.
+3. **Work that keeps scale** ([F91](../handoff/tasks/F91-work-at-scale.md)). Each station's level adds a load a day.
+   Each gathering area and fishing spot gives full hauls a few times a day, then thin ones. A good shipped by the crate
+   eases its own price for a few days. Gathering stops absorbing endless hands, and gold stops running away.
+4. **Expeditions, the Restaurant and the Forge** (Phase 2.4 and 2.5): parties of four away for days, service staff, a
+   smithy's crew. These are the big employers past 20.
+5. **The targets,** checked by a simulation at each stage: **10 Umas** in year 1–2, all in real jobs, with one plot or
+   two, the ranch and the first stations; **20** in year 2–3, with four plots, the Kitchen, station levels and the
+   Mine; **50** in year 4 and after, with eight plots, expeditions, the Restaurant and the Forge, and none idle.
+
+## The maps (2026-11-15)
+
+The owner asked for a real hand-drawn town map and farm map with clickable places. **Not planned until now:** the town
+is a list of places, and the farm is a clean tile map. The plan, as Phase 3's step 3.7:
+
+- **Two painted maps, landscape:** the town (Willowmere, its six spots, its shops and offices, the homes the story
+  names) and the farm (its buildings, fields, woods, pond and mine), each one large painting, panned when it's wider
+  than the screen, tinted by season and time of day.
+- **Clickable places** are data, not drawing: each place is a shape over the painting (a polygon in the map's pixels),
+  with its name, its badge for who's there, and its page. A new building appears as its own painted piece placed on
+  the farm map, so the farm still grows.
+- **Who paints:** under the art split, ChatGPT draws only characters and Claude draws in code, which can't paint. A
+  painted map needs the owner's call (below).

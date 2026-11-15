@@ -126,7 +126,12 @@ town, each with her own story.
 
 **Goal:** every place you can build has its full game.
 
-2.1, the ranch, and 2.2, the Mine and the Quarry, came with the rework.
+2.1, the ranch, and 2.2, the Mine and the Quarry, came with the rework. **First, the farm at scale** (the owner,
+2026-11-15; [the analysis](design/game-design.md#the-farm-at-scale-2026-11-15)): today about 10 to 20 Umas can hold real
+jobs and the rest only gather. Three packets come before the workshops:
+[F89](handoff/tasks/F89-field-view.md) the field on its own screen, in plots;
+[F90](handoff/tasks/F90-food.md) food, an upkeep from day one, with cooking in batches and a Cooking aptitude; and
+[F91](handoff/tasks/F91-work-at-scale.md) work at scale, checked by a simulation at 10, 20 and 50 Umas.
 
 | Step | What |
 |---|---|
@@ -153,6 +158,7 @@ How each workshop is built:
 | 3.4 **Settings and access** | Sound, motion and text size. Every control labelled for VoiceOver, every tap target 44 points |
 | 3.5 **Balance** | Simulations of a long run (Farm Rank 10 and a year after) that check the pacing; then your play notes |
 | 3.6 **Speed** | A frame budget on your iPhone, a memory cap, and the first load's size |
+| 3.7 **Painted maps** | A painted town map and farm map in landscape, with clickable places as data over the painting, seasons and time of day as tints ([the plan](design/game-design.md#the-maps-2026-11-15)); who paints is the owner's call |
 
 ### Phase 4: Steady
 
