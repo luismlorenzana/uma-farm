@@ -4,7 +4,7 @@
 // level-up card: her last line of the scene, her perk (S2: her morning item every second morning; S4: a third night chore)
 // and her next rung, one Continue. A level with no scene to play shows the card alone, as before ("no event"). A stale one
 // (she isn't there) closes. Portaled to the body above the kit's sheets (z-60), like the players. Loaded on demand.
-import { nightLevelCard, type PlayedEvent, type Step } from '@farm/domain'
+import { mayPlayNightLevel, nightLevelCard, type PlayedEvent, type Step } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -37,7 +37,8 @@ export default function NightLevel({ value }: { value: string }) {
   const [played, setPlayed] = useState(false)
   const [shown, setShown] = useState<readonly Step[] | null>(null)
   const card = asked && save && pack ? nightLevelCard(save, pack, asked.id, asked.rung, event && event.steps.length > 0 ? shown ?? event.steps : null) : null
-  const gone = !asked || (save && pack !== null && card === null)
+  // A link plays only a level she's reached (`mayPlayNightLevel`); any other closes quietly.
+  const gone = !asked || (save && (!mayPlayNightLevel(save, asked.id, asked.rung) || (pack !== null && card === null)))
   useEffect(() => {
     if (gone) close()
   }, [gone]) // eslint-disable-line react-hooks/exhaustive-deps

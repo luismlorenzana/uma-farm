@@ -238,7 +238,8 @@ describe('her big moments, full screen', () => {
   }, 20_000)
 
   it('the night’s companion: the morning opens on her picture, then her greeting on her bust', async () => {
-    const wed = moveSpouse(farm({ stage: 'spouse', level: 0, points: 0, wed: 2 }), ONE, 0)
+    // She was your companion last night: this morning she greets you.
+    const wed = moveSpouse(farm({ stage: 'spouse', level: 0, points: 0, wed: 2, night: DAY - 1 }), ONE, 0)
     useGame.setState({ uid: 'u1', status: 'ready', save: wed })
     await render(<p />, `/?life=morning:${ONE}`)
     await find('[data-life="morning"]')
@@ -247,6 +248,17 @@ describe('her big moments, full screen', () => {
     await tapUntil('[data-stage-bust]')
     expect($('[data-step]')?.dataset.step).toBe('say')
     expect(save().gallery[ONE]).toEqual(['companion'])
+  })
+
+  it('a morning link the night didn\'t give plays nothing, and her picture stays locked', async () => {
+    for (const night of [undefined, DAY - 2]) {
+      const wed = moveSpouse(farm({ stage: 'spouse', level: 0, points: 0, wed: 2, ...(night ? { night } : {}) }), ONE, 0)
+      useGame.setState({ uid: 'u1', status: 'ready', save: wed })
+      await render(<p />, `/?stale=${night ?? 0}&life=morning:${ONE}`)
+      await until(() => path === `/?stale=${night ?? 0}`)
+      expect($('[data-life]')).toBeNull()
+      expect(save().gallery[ONE]).toBeUndefined()
+    }
   })
 })
 

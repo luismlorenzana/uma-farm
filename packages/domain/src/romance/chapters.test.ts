@@ -6,7 +6,7 @@ import { DAYS_PER_SEASON } from '../farm/calendar'
 import { runNight, type NightContext } from '../night/end-day'
 import { parseSaveV5 } from '../save/parse-v4'
 import { newSave, type Love, type SaveV4 } from '../save/v4'
-import { checkCast, RUNGS, type Cast, type HerChapter, type StoryTrigger } from '../story/authored'
+import { checkCast, RUNGS, type Cast, type HerChapter, type StoryTrigger, type UmaBible } from '../story/authored'
 import { STAND_IN_CAST, STAND_INS } from '../story/authored.fixture'
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { DEFAULT_CHAPTERS } from '../story/placeholders'
@@ -124,8 +124,10 @@ describe('a chapter’s gate', () => {
   })
 
   it('still holds when its first event\'s setup names the place it waits for: the gate, not the setup, holds her', () => {
-    const bible = { ...(PACK.bibles.get(ONE) ?? {}), route: [{ id: 'f7', trigger: { kind: 'working' as const, activity: 'cooking' as const } }] }
-    const cooking = { ...pack, bibles: new Map([...PACK.bibles, [ONE, bible]]) }
+    const own: UmaBible = PACK.bibles.get(ONE)!
+    const f7 = { ...(own.route?.find((b) => b.id === 'f7') ?? { id: 'f7' }), trigger: { kind: 'working' as const, activity: 'cooking' as const } }
+    const bible: UmaBible = { ...own, route: [...(own.route ?? []).filter((b) => b.id !== 'f7'), f7] }
+    const cooking: StoryPack = { ...pack, bibles: new Map([...PACK.bibles, [ONE, bible]]) }
     const save = atSeven()
     expect(readiness(save, cooking, ONE)).toEqual({ rung: 'f7', ready: false, waits: { kind: 'gate', gate: KITCHEN } })
     expect(readiness(built(save, 'kitchen'), cooking, ONE)).toEqual({ rung: 'f7', ready: true, waits: null })

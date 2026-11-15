@@ -7,10 +7,11 @@
 // `dinner-in-town` or `a-night-in`, else the default's, in the moment's outfit: a picnic's, a dinner's, a night in's, a
 // festival night's; A night in's opens on her illustration for it), Skip to the end; then the card: the grade, the sum
 // and her bar, one **Continue**. An evening takes 2 of the day's actions. Nothing is saved until the play ends:
-// `spendEvening` commits once, stamped. Loaded on demand.
+// `spendEvening` commits once, stamped. A link opens only while her evening is open to her (`mayOpenEvening`), the picker
+// while anyone's is; any other closes quietly. Loaded on demand.
 import {
   birthdaysOf, eveningCost, eveningIllustration, eveningMoments, eveningRole, EVENINGS, eveningScene, eveningSeed, GRADE_NAMES, isAnniversary, isBirthday, LADDER_COLOURS,
-  ladderOf, levelWords,
+  ladderOf, levelWords, mayOpenEvening,
   type EveningCard, type EveningKind, type EveningRole, type PlayedEvent, type SaveV4, type StoryPack,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
@@ -49,7 +50,18 @@ export default function EveningPlayer() {
   const story = useStory()
   const asked = useMemo(() => parseEvening(params), [params])
   const close = () => leave(withParam(location, 'evening', null))
-  if (!asked || !save || !story) return null
+  // Settled once per link, as it opens (`mayOpenEvening`): her evening open to her now, or the picker while anyone's is;
+  // any other link closes quietly. Her evening's play, scene and card then go on whatever the save says.
+  const key = asked ? (asked.mode === 'pick' ? 'pick' : asked.id) : null
+  const [allowed, setAllowed] = useState<{ key: string; ok: boolean } | null>(null)
+  useEffect(() => {
+    if (key !== null && save && story && allowed?.key !== key) setAllowed({ key, ok: mayOpenEvening(save, story, key) })
+  }, [key, save, story, allowed?.key])
+  const ok = allowed !== null && allowed.key === key && allowed.ok
+  useEffect(() => {
+    if (!asked || (allowed !== null && allowed.key === key && !allowed.ok)) close()
+  }, [asked, allowed, key]) // eslint-disable-line react-hooks/exhaustive-deps
+  if (!asked || !save || !story || !ok) return null
   return (
     <MasterGate skeleton={null}>
       {(master) => asked.mode === 'pick'

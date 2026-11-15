@@ -141,6 +141,9 @@ export * from './romance/wedding'
 // shared houses' bonds, S2 and S4 at night, the household milestones, scenes, the finale and the Festival of Vows.
 export * from './romance/homestead'
 export * from './romance/household'
+// Scene links: whether a player opened from a query param may play now, one rule a kind; a link the game hasn't given
+// you closes quietly, with no scene, no pay and no unlock.
+export * from './romance/links'
 export * from './story/bench'
 export * from './story/pack'
 // The default story's home: what plays wherever the pack is silent, and the one lookup that reads "the pack's, or the

@@ -9,7 +9,7 @@
 // on the game's last stage-up card, "The Great Harvest", with every spouse's face. The end or Skip reads it once
 // (`diary.read`); a replay marks nothing. Portaled above the kit's sheets (z-60). Loaded on demand.
 import {
-  householdOf, householdPlay, householdReady, playOf, promptOf, playSeed, sceneSteps, type HouseholdId, type HouseholdPlay, type SaveV4, type Step, type StoryPack,
+  householdOf, householdPlay, mayPlayHousehold, playOf, promptOf, playSeed, sceneSteps, type HouseholdId, type HouseholdPlay, type SaveV4, type Step, type StoryPack,
 } from '@farm/domain'
 import { FaceTile } from '@luismlorenzana/uma-kit/album'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
@@ -42,7 +42,8 @@ export default function HouseholdPlayer({ value, replay }: { value: string; repl
     leave(`${at.pathname}${at.search}`)
   }
   const play = useMemo(() => (id && save && pack ? householdPlay(save, householdOf(pack), id) : null), [id, save, pack])
-  const open = !!id && save && !!pack && (replay ? save.diary.read.includes(id) : householdReady(save).includes(id))
+  // A link plays only what the game has given you (`mayPlayHousehold`): Ready and unread, or read for a replay.
+  const open = !!id && save && !!pack && mayPlayHousehold(save, id, replay)
   const gone = !id || (!!pack && (!open || play === null))
   useEffect(() => {
     if (gone) close()

@@ -48,6 +48,7 @@ prose here; change a table by changing the rule.
   - [Heart events and plays](#heart-events-and-plays)
   - [The evening](#the-evening)
   - [The ring, the wedding, and married life](#the-ring-the-wedding-and-married-life)
+  - [Scene links](#scene-links)
 - **[Part 4 — The save](#part-4--the-save)**
   - [The save, as a player meets it](#the-save-as-a-player-meets-it)
 
@@ -4228,7 +4229,7 @@ profile, an action each:
 |---|---|---|
 | 1 | Her bar is full for the rung; a waiting rung (the confession, the proposal, the wedding) is Ready the day after the rung before, and the proposal needs a ring in the Warehouse | `bar`, `day`, `ring` |
 | 2 | She hasn’t played one of her events today | `today` |
-| 3 | Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level | `setup`; `opens` for the ranch, mining, cooking, expeditions, serving or forging before their place is built (the Coop, the Mine, the Kitchen, the expedition post, the Restaurant, the Forge) |
+| 3 | Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level | `setup` (a working setup is met every day, its place built or not: the farm gates her only through her chapters) |
 | 4 | Her chapter is open: when her next event is the first of her chapter, the chapter’s gate holds, if it has one (a place built, a Farm Rank, a good shipped, another’s event, a season or a festival) | `gate`: “Opens when the Kitchen is built” |
 <!-- /live -->
 
@@ -4242,12 +4243,11 @@ A setup is never an hour, the weather, a season or a festival; her chapter's gat
 | 2 | `night` | S2 or S4, bar full: no Ready event; the level comes at night, and the morning plays its scene; short of it, `bar` |
 | 3 | `friend` | She said “Not yet” at her confession: you ask her again from her profile |
 | 4 | `gate` | Her next event opens her chapter, and its gate doesn’t hold yet |
-| 5 | `opens` | A working setup at a place not built yet |
-| 6 | `bar` | Her bar isn’t full for the rung |
-| 7 | `day` | A waiting rung, on the day the rung before played |
-| 8 | `ring` | The proposal, with no ring in the Warehouse |
-| 9 | `today` | She played one of her events today |
-| 10 | `setup` | Its day setup isn’t met today |
+| 5 | `bar` | Her bar isn’t full for the rung |
+| 6 | `day` | A waiting rung, on the day the rung before played |
+| 7 | `ring` | The proposal, with no ring in the Warehouse |
+| 8 | `today` | She played one of her events today |
+| 9 | `setup` | Its day setup isn’t met today |
 <!-- /live -->
 
 - **A setup** is her bible's beat's setup for the rung; an Uma without a bible has none. A working setup ("she works
@@ -5607,6 +5607,38 @@ Within a place the night's order holds, each Uma in the cast's order. The sectio
 Uma is there. **There's no pop-up per event:** the morning, her ● Ready chip and **♥ on her pip** wherever the map draws
 her are the romance's only signals, and pips stay their places' taps. The household milestones are news in the morning's
 section after it.
+
+### Scene links
+
+The players open over any page from a query param, so the game's buttons are links. **A link plays only what the game
+has given you:** a typed, bookmarked or stale one (yesterday's morning line, a meal from another day, someone you
+haven't met) closes quietly as it opens, with no scene, no pay and no picture in her gallery. Each kind has one pure rule
+in `romance/links.ts`, read once as its player opens; the game's own buttons only ever open what these allow, so their
+flows are unchanged:
+
+<!-- live:scene-links -->
+| Link | Plays | Only when |
+|---|---|---|
+| `?life=morning:<id>` | The night’s companion greets you | The morning after a night she was your companion (`love.night` is yesterday): that morning only |
+| `?life=moving-in:<id>` | Moving in | A spouse with a room, on her wedding day or the morning she moved into a room she waited for |
+| `?life=invited-to-work:<id>` | The invitation to work | The day you invited her (`roster[id].farmhand` is today) |
+| `?life=breakfast:<id>`, `?life=dinner:<id>` | A meal’s line | That meal cooked today, and she’s a spouse who ate it (or the one whose line it plays) |
+| `?event=<id>` | Her heart event | Ready (`readiness`); with no action left it says so and plays nothing |
+| `?ask=<id>` | Ask her | She said “Not yet” at her confession, and you haven’t asked today |
+| `?memory=<id>:<rung>` | A Memory, paying nothing | A Memory already played: her meeting scene, or a rung of her route |
+| `?evening=<id>` | Her kinds sheet, then the evening | Her evening is open to her now (home, a hangout or a date her ladder opened, a slot free) |
+| `?evening=pick` | Tonight’s picker | Someone can spend an evening now, and the day has its 2 actions |
+| `?occasion=<id>` | An occasion scene | Today’s occasion, with an Uma you’ve met, not yet played with her today |
+| `?household=<id>` | A household scene or the finale | Ready (the night saw its count) and not yet read; with `&replay=1`, once read |
+| `?level=<id>:<s2\|s4>` | A spouse level’s scene and card | She’s reached it (it pays nothing) |
+<!-- /live -->
+
+- **Read once, as it opens:** a scene that has started plays to its end (the evening's play, scene and card; a meal's
+  line) whatever the save says after.
+- **The morning's ☾ line** plays her greeting again that morning; the next morning it's gone with the night.
+- **Pays nothing either way:** the life scenes, Memories, a night level's and a household replay never pay; a heart
+  event, Ask her, an evening and an occasion pay only through their own rules (`playEvent`, `askHer`, `spendEvening`,
+  `playOccasion`), which refuse the same things.
 
 ## Part 4 — The save
 
