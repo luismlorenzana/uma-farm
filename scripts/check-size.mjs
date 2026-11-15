@@ -27,7 +27,8 @@ export const MAIN_JS_BUDGET = 180_000
  * town's rules, its screen, its view and its talk; and the Book, upkeep and loans' rules, their words and the mayor's
  * office; and the calendar screen, its words, the occasion player,
  * the occasions' rules and the calendar's days; and the stove's rules and screen, the Kitchen's rules, levels and recipes,
- * its sheet and actions. Paths match a module id exactly or as its suffix. */
+ * its sheet and actions; and the Cooking Contest's rules, its judge's lines, its card and entry, and its judging. Paths
+ * match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
   'phaser/dist/phaser.esm.js',
   '@luismlorenzana/uma-kit/dist/hub/scene/createHubGame.js',
@@ -157,6 +158,10 @@ export const LAZY_MODULES = [
   'src/loop/StovePlayer.tsx',
   'src/loop/KitchenSheet.tsx',
   'src/loop/kitchen-actions.ts',
+  'domain/src/kitchen/contest.ts',
+  'domain/src/story/contest.ts',
+  'src/loop/Contest.tsx',
+  'src/loop/ContestJudging.tsx',
 ]
 
 /** Modules no production build may hold at all: the invented stand-in pack and the stove's bots are the tests' only. A

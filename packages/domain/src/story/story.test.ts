@@ -61,7 +61,7 @@ describe('the Farm Rank', () => {
     const save: SaveV4 = {
       ...farm(1, { [GOLD_SHIPPED]: 12_399 }), diary: { shipped: { carrot: 9, carp: 1, tomato: 0 }, milestones: ['shipped:10000', 'row:vegetables'], records: {}, read: [], notes: [] },
     }
-    expect(farmPointsOf(save)).toEqual({ shipped: 123, entries: 10, milestones: 25, total: 158 })
+    expect(farmPointsOf(save)).toEqual({ shipped: 123, entries: 10, milestones: 25, festivals: 0, total: 158 })
     expect(farmPointsOf(newSave('u1', AT)).total).toBe(0)
   })
 

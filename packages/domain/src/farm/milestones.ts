@@ -5,11 +5,13 @@ import { FISHING_SPOTS, FOREST_AREAS } from '../gathering/ids'
 import { GOOD_FAMILIES, GOODS, RING_FAMILY, RING_IDS, type GoodFamily } from '../goods/ids'
 import { RANKS, type Rank } from './ranks'
 
-/** Farm Rank points: income and resources only: 1 per 100g shipped, 5 a Diary entry, 25 a milestone. Festivals (150 /
- * 75 / 25) and decorations (1 per 100g) come later. */
+/** Farm Rank points: 1 per 100g shipped, 5 a Diary entry, 25 a milestone, and a festival's place: 150 for 1st, 75 for
+ * 2nd, 25 for 3rd (each result in `farm.festivals`). Decorations (1 per 100g) come later. */
 export const GOLD_PER_POINT = 100
 export const ENTRY_POINTS = 5
 export const MILESTONE_POINTS = 25
+/** A festival's places, 1st to 3rd: its Farm Rank points. */
+export const FESTIVAL_PLACE_POINTS: Readonly<Record<1 | 2 | 3, number>> = { 1: 150, 2: 75, 3: 25 }
 
 /** A milestone: what reaches it, and the gold it pays once. Each is worth `MILESTONE_POINTS`. */
 export type Milestone =

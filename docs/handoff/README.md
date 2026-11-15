@@ -65,16 +65,23 @@ everyone well fed by its stars; dishes are gifts and a wedding's reception too. 
 ([the Kitchen](../game-mechanics.md#the-kitchen), [the stove](../game-mechanics.md#the-stove-the-cooking-game),
 [the staff meal](../game-mechanics.md#the-staff-meal)).
 
-**Now: the Cooking Contest** (Phase 2.3, your go 2026-11-15): on Autumn 10, the first festival you play (F93)
-([the roadmap](../roadmap.md#phase-2-the-whole-farm)).
+**The first festival you play** (F93): on Autumn 10 (or wherever the story puts it), the Kitchen's card says
+**Enter the Cooking Contest · 3**: the day's three event actions, a known recipe and its goods, and a farmhand to cook
+with you if you like. You cook one dish live at the stove for 60 seconds; the town's cook tastes it beside the
+orchard's and the ranch's, says her piece, and the board goes up: 1st pays 1,800g in year 1 (600g × the season's
+number × the year) and 150 Farm Rank points, 2nd half the gold and 75, 3rd a fifth and 25. The rivals grow with your
+Farm Rank (58 and 47 at Farm Rank 3, 96 and 96 at 10), so a ★5 dish and your best play are what win late. The morning
+says "Cooking Contest tomorrow" and "Cooking Contest today · +3 for events", each a tap to the Kitchen; the Farm Rank
+counts the festivals' places, and a 1st counts toward the cook's cooking Legend
+([the Cooking Contest](../game-mechanics.md#the-cooking-contest)).
 
-| Piece | Who | State |
-|---|---|---|
-| [F93 — The Cooking Contest: the first festival you play](tasks/F93-cooking-contest.md) | Claude | Next |
+**Next: the sea and expeditions** (Phase 2.4): the Dock's and the Boat's spots; regions, parties and their power,
+results and loot, and the log ([the roadmap](../roadmap.md#phase-2-the-whole-farm)). Its packet is written when it starts,
+numbered from F94.
 
 ## Open packets
 
-The table above is the queue. A packet is deleted when it ships, and git keeps the history.
+None. A packet is written from the roadmap when its step starts, is deleted when it ships, and git keeps the history.
 
 ## Standing work
 
@@ -93,6 +100,7 @@ Not packets: each has a standing guide that changes as the game does.
 | **Look at the farm at scale on your phone:** forage the Woods four times and see it go **Thin**; open the Mill and see its level and loads (its next level from Farm Rank 3); ship a crate of 60 of one good and see the bin say **Eased −10%** | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Eat on your phone:** read the morning's "Takeout" line, cook a batch on the Farmhouse's sheet, and set a farmhand to Cook on the Book's work board; tell me if takeout bites as it should | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Cook at the stove on your phone:** on the Farmhouse's sheet tap **At the stove · 1** and play the 30 seconds held sideways (tell me if the burners and the tickets are big enough for your thumb, and the timing feels fair); once the Farm Rank offers it, build the Kitchen, play its menu, serve the staff meal, and read the next morning's "Staff meal" line | [uma-farm.web.app](https://uma-farm.web.app) |
+| **Enter the Cooking Contest on your phone,** on Autumn 10 with the Kitchen built: pick a dish and a cook, play the 60 seconds held sideways, read the cook's judging and the board, and the next morning see the Farm Rank's points; tell me if the rivals feel fair at your Farm Rank | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Play your farm.** Start the new farm once, on its card when the app opens: it's the last start-over, and the farm it starts is the one you keep. Then play days as they come, and tell me what feels off | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story and ship it** | [How the story reaches the game](../story-pack.md#how-the-story-reaches-the-game) |
 | **The next Umas' art:** hand the art brief to the character art session | [The art brief](../design/her-look.md#the-art-brief), in Uma Character Art |
@@ -109,6 +117,7 @@ Not packets: each has a standing guide that changes as the game does.
 - **Upkeep and loans:** the Book's money, and the mayor's office in town ([upkeep and loans](../game-mechanics.md#upkeep-and-loans)).
 - **Food:** the morning's "Takeout" and "From the pantry", the Farmhouse's kitchen, and Cook on the work board ([food](../game-mechanics.md#food)).
 - **The stove and the Kitchen:** At the stove in the Farmhouse's kitchen; the Kitchen from Farm Rank 3, its recipes at the shop, and the staff meal ([the Kitchen](../game-mechanics.md#the-kitchen)).
+- **The Cooking Contest:** Autumn 10's card at the Kitchen, one dish live, the cook's judging and the board; the Farm Rank's sheet lists Festivals ([the Cooking Contest](../game-mechanics.md#the-cooking-contest)).
 - **The calendar:** tap the date ([the calendar](../game-mechanics.md#the-calendar-screen)).
 - **The ranch and the mine,** once the Farm Rank offers them ([the ranch](../game-mechanics.md#the-ranch), [the Mine and the Quarry](../game-mechanics.md#the-mine-and-the-quarry)).
 - **Faces and outfits** that change line by line, and the blank bust for an Uma without art ([the dialogue engine](../game-mechanics.md#the-dialogue-engine)).

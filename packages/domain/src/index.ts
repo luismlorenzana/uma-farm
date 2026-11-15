@@ -80,6 +80,7 @@ export * from './kitchen/stove'
 export * from './kitchen/recipes'
 export * from './kitchen/levels'
 export * from './kitchen/kitchen'
+export * from './kitchen/contest'
 // Farmhands: her day's actions after her part-time job, the work board's tasks, her aptitudes and their tricks, and the
 // night's run of their work.
 export * from './farm/farmhands'
@@ -156,6 +157,7 @@ export * from './romance/household'
 // you closes quietly, with no scene, no pay and no unlock.
 export * from './romance/links'
 export * from './story/bench'
+export * from './story/contest'
 export * from './story/pack'
 // The default story's home: what plays wherever the pack is silent, and the one lookup that reads "the pack's, or the
 // default" (her outfit, line, tastes, talks, events, chapters, keepsake, pairs, household and the rest).

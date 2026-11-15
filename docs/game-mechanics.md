@@ -129,16 +129,23 @@ The year's seasons, with their days in year 1 and their festivals:
 Each season's 10th day holds its festival, and Winter 12, the year's last day, also holds the Harvest Cup. A festival
 is a special day: the calendar marks it, the morning says "Flower Show tomorrow" the day before and "Flower Show today ·
 +3 for events" on the day, it gives three actions for events, and the Flower Show and the Fishing Derby's night play
-their occasion scene with each Uma you've met ([occasion scenes](#occasion-scenes)). The Festival ground on the map
-stays locked ("Opens soon"): no contest is played, no prize is given, and joining one (three actions, with its own
-events) comes with the contests.
+their occasion scene with each Uma you've met ([occasion scenes](#occasion-scenes)).
+
+- **The Cooking Contest is played** (Autumn 10, or wherever the story puts it): at the Kitchen, **Enter the Cooking
+  Contest · 3** spends the day's three event actions on one dish cooked live at the stove; the town's cook judges it
+  against the two rival farms, and the places pay gold and Farm Rank points ([the Cooking
+  Contest](#the-cooking-contest)). Its morning lines, "Cooking Contest tomorrow" and "Cooking Contest today · +3 for
+  events", open the Kitchen.
+- **The others' contests come later** (the Flower Show, the Fishing Derby, the Animal Show and the Harvest Cup, with
+  their places, in roadmap step 2.6): no contest is played and no prize is given on their days, and the Festival ground
+  on the map stays locked ("Opens soon").
 
 **The story's festivals.** The pack's `world.json` may rename, move or add festivals ([the world in the
 pack](#the-world-in-the-pack)); the year is then the story's everywhere: the calendar, the date chip, the morning,
 festival night, and `festival` triggers and gates.
 - **One of the game's five keeps its game rule under the story's name, wherever it falls:** its festival night, its news,
-  the triggers and gates naming it, and the contest its rank challenge counts once the festivals are built. A moved one
-  plays all of it on its new day every year, and none on its old day.
+  the triggers and gates naming it, and its contest (the Cooking Contest's today; the others' once they're built), which
+  its rank challenge counts. A moved one plays all of it on its new day every year, and none on its old day.
 - **One of the story's own** is a festival day and nothing more: marked, said, its night, and its triggers.
 - **One festival a day:** a move onto a day another holds is skipped, and that festival keeps the game's day.
 
@@ -245,15 +252,17 @@ On three days of the year, each Uma you've met has a scene with you: the story's
 - **One tap of work is one action:** a tile cleared, tilled, planted, watered or harvested; a forage, a chop or a catch;
   a station's load started; a crate shipped; going into town; with the Umas, introducing yourself, a talk, a gift, the
   invitation to work, her event, or an occasion scene with her; a batch cooked in the farmhouse kitchen; and once
-  married, a household meal. **A hangout or a date takes two.** Looking is free, and so are building a place, the Dorm, walking between the town's places and
+  married, a household meal. **A hangout or a date takes two,** and entering the Cooking Contest three (the festival's
+  event actions first). Looking is free, and so are building a place, the Dorm, walking between the town's places and
   choosing tonight's companion; the shop is free once you're in town.
 - **Going into town** takes one action and opens the town and its shop for the rest of the day.
 - **The last action** opens a card over whatever page it was spent on, once: "Out of actions · The day's work is done."
   with **End the day** and **Not yet** (to build or spend the evening first). The day never ends by itself.
 - **Special days** grant actions for events only, on top of the ten: New Year's from the second year, each festival, and
   the birthday of each Uma you've met. The bar shows them after the day's own (♥+3), and so does the calendar. Her
-  event and an occasion scene spend them **before the day's own**, so on a festival with the ten spent, three more of
-  the Umas' events still fit. The save counts them apart (`today.eventActions`).
+  event, an occasion scene and the Cooking Contest's entry spend them **before the day's own**, so on a festival with
+  the ten spent, three more of the Umas' events (or the Contest) still fit. The save counts them apart
+  (`today.eventActions`).
 - **Her event costs one action:** the special day's event actions first, then the day's. With none left of either, her
   Play says "No actions left today." before it plays, and she stays Ready for tomorrow. Ask her, a Memory, the
   wedding night, moving in and the night's companion's morning greeting take none. An evening never spends a special
@@ -305,7 +314,7 @@ belong to, and until then cost nothing or aren't there yet:
 | The Umas | Invite her to work | 1 | Now |
 | The Umas | A hangout or a date | 2 | Now |
 | The Umas | Her event, when it’s ready, or an occasion scene with her | 1 | Now |
-| A festival | Join it; it opens its own events | 3 | With the festivals’ contests |
+| A festival | Enter the Cooking Contest, at the Kitchen on its day: the day’s event actions first (the other festivals’ contests come later) | 3 | Now |
 | The kitchen | Cook a batch: six meals for the pantry from two goods of food, in the farmhouse kitchen, plain or at the stove | 1 | Now |
 | The Kitchen | Play the Kitchen: its dishes from a menu of recipes, at the stove, once a day | 1 | Now |
 | The household | Cook a meal for the household: breakfast or dinner (it cooks a batch too) | 1 | Now |
@@ -389,7 +398,7 @@ The steps as the game lists them:
 <!-- live:night -->
 | Step | Function | What happens |
 |---|---|---|
-| 1 | `settleThePlay` | Before the bin, first: a play at the stove left unfinished (✕, or the app left mid-play) settles as Rough: a batch’s meals into the pantry, the Kitchen’s dishes into the Warehouse, its assistant’s practice and challenges |
+| 1 | `settleThePlay` | Before the bin, first: a play at the stove left unfinished (✕, or the app left mid-play) settles as Rough: a batch’s meals into the pantry, the Kitchen’s dishes into the Warehouse, its assistant’s practice and challenges; the Cooking Contest’s dish judged (its play’s score 0), its prize paid |
 | 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning |
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand and the market’s ease (past a crate of 50 of one good, each crate more a step lower: −10% a step, to half); then the market moves: a good shipped past a crate stays eased by the steps it reached, and every other eased good recovers a step |
 | 2 | `farmhandsWork` | The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads, the animals’ care and the cooking first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse and her meals into the pantry, her place today where she spent the most |
@@ -409,7 +418,7 @@ The steps as the game lists them:
 | 6 | `levelAtNight` | Spouse levels: a spouse at S1 or S3 whose 600 is full reaches S2 or S4, with no Ready event (S2 starts her every-2nd-morning item); the morning’s line plays its scene and card; never S3 or S5 |
 | 6 | `countWellFed` | The well-fed days count down |
 | 7 | `witherCrops` | On a season’s last night, crops still growing that don’t grow in the next season wither, their soil left tilled; ripe crops wait |
-| 7 | `turnCalendar` | The date moves; the whole of `today` clears: the day’s actions and event actions, going into town, the areas worked, chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception, the staff meal and the Kitchen’s assistant |
+| 7 | `turnCalendar` | The date moves; the whole of `today` clears: the day’s actions and event actions, going into town, the areas worked, chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception, the staff meal, the Kitchen’s assistant and the Contest’s cook |
 | 8 | `raiseBuildings` | Places built: every place paid for yesterday stands this morning (`buildings[id] = 1`), and a station’s level bought yesterday comes (its level one more), each one news |
 | 8 | `settleDorm` | The Dorm’s level bought takes effect; swaps arrive, each Uma in town coming home in the place of one leaving |
 | 8 | `checkGoals` | The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources |
@@ -454,7 +463,7 @@ line is a tap to its place.
 | Work done | First each farmhand's night, "*Name* · 4 of 4 actions · watered 6 tiles · caught 1 fish · +1 good", tagged **Well fed** when she had her extra action, **Half pace** in red at half pace, or **No tasks** with "No tasks: set her tasks" ("Nothing to do tonight" when her tasks found nothing); then each station's load done, "Sawmill · Pine Plank ★1 × 8"; the field's growth, "The field · 5 crops grew · 2 ripe"; what withered, "The field · 3 Onion withered" | The work board in the Book; the station's panel; the farm map |
 | Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full**; an aptitude a farmhand reached, "*Name* · Watering 3 · Two tiles an action" (with the trick that level opens), tagged **Aptitude** | Her profile's Work side |
 | Hearts | First, once married, "☾ Morning with *Name*" (the night's companion, **Play** her greeting); who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", or in the town the world names, tagged **New**), a chapter that opened ("A new chapter with *Name* · Together", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
-| New today | First, "New story arrived · *its note*", tagged **New**, the morning after a new story release reaches the phone ([below](#how-the-app-gets-the-pack)); "Summer begins", the world's line for the season under it; today's, then tomorrow's: "New Year's today · +3 for events", "Flower Show tomorrow" or "today · +3 for events" (the story's name for it), and the story's holidays and minor days, "Market day tomorrow" (or "Market day +1 more"); the Town notes the night unlocked, "*title*" (or "*title* +2 more"), tagged **Town note**; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The People page; the calendar (the season, New Year's, the festival and the story's days); the note in the Diary; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
+| New today | First, "New story arrived · *its note*", tagged **New**, the morning after a new story release reaches the phone ([below](#how-the-app-gets-the-pack)); "Summer begins", the world's line for the season under it; today's, then tomorrow's: "New Year's today · +3 for events", "Flower Show tomorrow" or "today · +3 for events" (the story's name for it), and the story's holidays and minor days, "Market day tomorrow" (or "Market day +1 more"); the Town notes the night unlocked, "*title*" (or "*title* +2 more"), tagged **Town note**; a place built overnight, a Farm Rank reached and a Diary milestone, each tagged; the household's milestones, tagged; "Dorm level 2 · 5 beds"; "*Name* is home" | The People page; the calendar (the season, New Year's, the festival and the story's days), but the Kitchen for the Cooking Contest's; the note in the Diary; the Diary; the Farm Rank; the household's scene or the homestead; the Dorm |
 | Today | "3 tiles to water" (the growing tiles this morning); "9 tiles to plant" (empty tilled tiles that the season's seeds you hold could fill) | The farm map |
 
 Hearts shows whenever it has a line or someone is Ready. The romance describes its lines.
@@ -996,7 +1005,7 @@ The challenge toward each farming rank:
 | Skilled | 40 crops of ★3+ she tended | At harvest, for the tender |
 | Expert | Tend a crop of level 4+ to harvest | At harvest, for the tender |
 | Master | 30 crops of ★5 | At harvest, for the tender |
-| Legend | 1st at a Flower Show with a crop she tended | A festival win (festivals aren’t built yet) |
+| Legend | 1st at a Flower Show with a crop she tended | A festival win (its contest isn’t built yet) |
 <!-- /live -->
 
 #### The field at night
@@ -2365,7 +2374,7 @@ functions:
 | Served | A ticket whose parts are all on the pass: **+3 a part**. A ticket whose wait runs out leaves: **late -4**. A part pulled for a ticket that left goes to the oldest open ticket of its shape still needing it |
 | The score | Points ÷ the seed’s most (7 a part) × 100, rounded, held to 0–100 |
 | The seed | Four digits, `draw(uid, day, 'stove', plays)`: the account, the day and the farm’s count of plays (`farm.counts.plays`), so every play differs and a replay is the same |
-| Its length | A batch 30 s; the Kitchen’s play 60 s |
+| Its length | A batch 30 s; the Kitchen’s play 60 s; the Cooking Contest’s dish 60 s |
 <!-- /live -->
 
 <!-- live:play-tiers -->
@@ -2441,8 +2450,8 @@ refined) **and one side** (any grade, raw or refined, any stars):
   dish](#her-signature-dish)); a request's recipe extra. A recipe is known for good (`workshops.recipes`; the first
   three are known while the Kitchen stands, never written). The shelf is the workshops' first gold sink.
 - **Dishes don't ship.** They feed the staff meal, make gifts (a dish is a gift like a good: her taste in it is her
-  bible's, so a loved dish plays), serve a wedding's reception, and enter the Cooking Contest (F93); later the
-  Restaurant and expeditions.
+  bible's, so a loved dish plays) and serve a wedding's reception; later the Restaurant and expeditions. A recipe is
+  also what you cook at [the Cooking Contest](#the-cooking-contest).
 
 <!-- live:recipes -->
 | Dish | Id | Takes | At the shop |
@@ -2574,6 +2583,108 @@ All 80 come to 119,450g at the shop (the three known free).
 - **The morning says it:** "Staff meal · 12 at the table · well fed 2 days" (tagged Well fed; a tap opens the Kitchen).
   `farm.counts.meals` counts the staff meals served.
 
+#### The Cooking Contest
+
+The first festival you play (`kitchen/contest.ts`). On its day you cook **one dish live** at the Kitchen's stove, the
+town's cook (`rosa-bell`) judges it against the two rival farms (`wren-ashby`'s orchard and `cole-varga`'s ranch), and
+the places pay gold and Farm Rank points at once.
+
+```
+ the morning: "Cooking Contest tomorrow", then "Cooking Contest today · +3 for events" ──► the Kitchen
+ the Kitchen's card: Enter the Cooking Contest · 3 ──► the entry: a known recipe, its main and its side, a cook (optional)
+   ──► the stove, 60 s: one dish, its stars the Kitchen's ──► the judging: the town's cook tastes the three plates
+   ──► the board: 1st · You 78 · the orchard 70 · the ranch 61 · +1,800g · +150 Farm Rank points
+```
+
+<!-- live:contest-rules -->
+| Rule |  |
+|---|---|
+| Its day | The festival whose rule is the Cooking Contest: the game’s Autumn 10, or wherever the story moves it (under the story’s name) |
+| The entry | **Enter the Cooking Contest · 3**, at the Kitchen: 3 actions, the festival day’s event actions first, then the day’s own. The Kitchen built (“Build the Kitchen to enter.”); one entry a Contest; no play under way |
+| The dish | One known recipe, two of its main and one side at one good and one star each, out of the Warehouse at the entry; an optional cook, a farmhand with an action tonight (one of her actions tonight is the Contest’s) |
+| The play | 60 s at the stove on the play’s seed: one dish, its stars the Kitchen’s (its ingredients’ average, rounded down, + the tier’s lift, held to ★5), into the Warehouse after the judging |
+| The score | 10 × the dish’s ★ + 0.5 × the play’s score, rounded half up, 0–100. A ★2 dish and a play of 76: 58 |
+| The rivals | The orchard (`wren-ashby`, cooking its specialty): 40 + 6 × the Farm Rank. The ranch (`cole-varga`): 26 + 7 × the Farm Rank. Each held to 96; the Farm Rank as last night left it. **Ties go to you** |
+| 1st’s prize, paid at once | 600g × the season’s number (Spring 1, Summer 2, Autumn 3, Winter 4) × the year; 150 Farm Rank points |
+| 2nd’s prize, paid at once | Half of 1st’s; 75 Farm Rank points |
+| 3rd’s prize, paid at once | A fifth of 1st’s; 25 Farm Rank points |
+| The record | `farm.festivals` gets `{ id: 'cooking-contest', day, score, place }`; `diary.records['festival:cooking-contest']` keeps the best score |
+| The cook | A point of Cooking practice; a 1st counts `won` toward her cooking challenge (the Legend’s); a festival together’s +50, once a festival a year |
+| Left unfinished | Judged as Rough (its play’s score 0) at the next open or the night’s start, its prize paid |
+<!-- /live -->
+
+The rivals at each Farm Rank, and the score you need for 1st (a tie is yours):
+
+<!-- live:contest-rivals -->
+| Farm Rank | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| The orchard | 46 | 52 | 58 | 64 | 70 | 76 | 82 | 88 | 94 | 96 |
+| The ranch | 33 | 40 | 47 | 54 | 61 | 68 | 75 | 82 | 89 | 96 |
+| 1st from | 46 | 52 | 58 | 64 | 70 | 76 | 82 | 88 | 94 | 96 |
+<!-- /live -->
+
+<!-- live:contest-prizes -->
+| Place | Year 1 | Year 2 | Year 3 | Farm Rank points |
+|---|---|---|---|---|
+| **1st** | 1,800g | 3,600g | 5,400g | 150 |
+| **2nd** | 900g | 1,800g | 2,700g | 75 |
+| **3rd** | 360g | 720g | 1,080g | 25 |
+
+On Autumn 10, the game’s day. A Contest the story moves takes its new season’s number: Spring 1, Summer 2, Autumn 3, Winter 4.
+<!-- /live -->
+
+- **The worked Contest:** Farm Rank 3, Carrot ★1 and Basil ★1, a play of 76 (Fine: a ★2 Carrot Salad): 20 + 38 =
+  **58**, level with the orchard, so **1st**: 1,800g now and 150 Farm Rank points tonight.
+- **One entry a Contest:** "One entry a Contest." once its dish is on the stove or judged. Refusals, in the loop's
+  words: "No contest today.", "Build the Kitchen to enter.", "A play is under way.", "Entering takes 3 actions.",
+  "You don't know that recipe.", "That isn't a main for Carrot Salad.", "Short 1 Carrot.", "Only a farmhand cooks for
+  you.", "She has no action left tonight.".
+- **The cook** is chosen as the Kitchen's assistant is: a farmhand with an action tonight (`today.cook`; the work board
+  counts it "at the Kitchen", beside an assistant's). Her Cooking doesn't change the dish: one dish is made whoever
+  cooks. She gets a point of Cooking practice, a 1st counts `won` toward her cooking challenge (only the Legend's reads
+  it, [the challenges](#the-challenges)), and her bar gets a festival together's +50, once a festival a year
+  ([points from every source](#points-from-every-source)).
+- **The Farm Rank's points** come at night: each result in `farm.festivals` adds its place's points when the night
+  recomputes the rank ([the Farm Rank](#the-farm-rank)); the gold is paid at the judging.
+- **Left unfinished** (✕, or the app left mid-play), the dish is judged as Rough, its play's score 0, at the next open or
+  at the night's start (`settleThePlay`), on the Contest's day: a ★1 dish from ★1 goods scores 10, 3rd. The judging's
+  scene plays only when the play ends on the stove's screen.
+- **A moved Contest** plays on the story's day under the story's name, every year, and nothing on Autumn 10; its 1st
+  pays by its new season's number.
+- **The stove's bots** (8 seeds of the Contest's 60 s; the careful bot plays 100 on each, the casual 46–67):
+
+| Farm Rank | The goods | The careful bot (100: Masterwork, +2 ★) | The casual bot (46–67: Rough or Good, +0 ★) |
+|---|---|---|---|
+| 3 (58, 47) | ★1 | ★3 dish, 80: **1st** on every seed | ★1 dish, 33–44: **3rd** on every seed |
+| 3 | ★2 | ★4, 90: 1st | ★2, 43–54: 2nd on five seeds of eight, else 3rd |
+| 3 | ★3 | ★5, 100: 1st | ★3, 53–64: 1st on five seeds of eight, else 2nd |
+| 10 (96, 96) | ★1 | ★3, 80: **3rd** | ★1, 33–44: **3rd** |
+| 10 | ★2 | ★4, 90: 3rd | 3rd |
+| 10 | ★3 | ★5, 100: **1st** | ★3, 53–64: 3rd |
+
+  At Farm Rank 10 only a ★5 dish and a play of 92 or more win: the Contest asks for your best goods and your best play.
+
+**The judging,** a short scene at the play's end on the dialogue engine: the town's cook (the Uma who plays the role,
+her bust in the day's season; her role's disc with no master data) speaks by your place, one line a tap, **Skip** to the
+board. The lines are the game's own, original, in git beside the smith's, with no name in them:
+
+<!-- live:contest-scene -->
+**The judging** (at the play’s end)
+
+| When | Who | Line |
+|---|---|---|
+| Always | (narration) | Three covered plates wait on the long table under the lanterns: the orchard’s, the ranch’s and yours. |
+| Always | The cook | “Three farms, three plates. I taste them all the same way: slowly, and with a clean spoon each time.” |
+| Always | (narration) | She tries the orchard’s, then the ranch’s, then yours, and sets the spoon down. |
+| 1st | The cook | “This one. It tastes like it was cooked for the people at home, not for a judge.” |
+| 1st | The cook | “First place goes to your farm. Don’t let it go to your head: next year I’ll be hungry again.” |
+| 2nd | The cook | “Close. Very close. A little more care at the stove and this is the plate I’d remember.” |
+| 2nd | The cook | “Second place for your farm. Bring me another one next year.” |
+| 3rd | The cook | “Honest food. I’d be glad of it on any ordinary night.” |
+| 3rd | The cook | “But today the other two had more to say. Third place for your farm, and keep cooking.” |
+| Always | (narration) | The board goes up beside the table, the chalk still drying. |
+<!-- /live -->
+
 #### On screen
 
 - **The stove** (`?stove=1`), full screen, landscape, one thumb: ✕, the seed (four digits) and a time bar in the header,
@@ -2592,24 +2703,43 @@ All 80 come to 119,450g at the shop (the three known free).
 - **The Book's food row** says a staff meal served ("staff meal for 12") and opens the Kitchen once it stands (the
   farmhouse kitchen before).
 - **Dishes** sit on the Warehouse's Dishes shelf and in the gift picker's Dishes.
+- **The Cooking Contest's card** comes first on the Kitchen's sheet: the day before, "Cooking Contest tomorrow" (enter
+  here tomorrow with 3 actions); on its day, "Cooking Contest today" with **Enter the Cooking Contest · 3**, greyed with
+  its refusal below ("Build the Kitchen to enter.", with **The Kitchen ›** to its Build card); once judged, the board.
+  Before the Kitchen stands, the sheet shows only that card and "Build the Kitchen first: the Farm Rank offers it at
+  3.", so the morning's Contest lines always have somewhere to open.
+- **The entry** (`?sheet=contest`), a wide side panel in two columns: **Your dish** (the recipes known, a tap each, one
+  that can't be made marked Short; its main and its side, a tap for the next held; "Carrot Salad ★1 before the stove ·
+  Fine ★2 · Masterwork ★3") and **The judging** (the orchard's and the ranch's scores at today's Farm Rank, the score's
+  rule, the cook: None or each farmhand with an action tonight, with her Cooking), then **Enter · 3**, with the seed
+  and the actions left below it, or the refusal. Enter opens the stove. Its help says the score, the rivals and the
+  prizes. Once judged, it shows the board.
+- **The Contest's dish on the stove** plays under the festival's name (the story's, when it renames it), each ticket
+  the dish, its parts its main and its side. Its end, or ✕'s Rough, opens **the judging**: the cook's scene over the
+  stove, then **the board**: the place, each farm's score (the best first, you ahead on a tie), "+1,800g · +150 Farm
+  Rank points", the dish made ("Carrot Salad ★3 · into the Warehouse"), "The Farm Rank points count tonight." and
+  **Done**.
 
 #### Its save
 
 v5 grows in place, and nothing moves `updatedAt`:
-- `workshops.current` is the play at the stove under way: its workshop, what it is (`play`: `batch` or `kitchen`), its
-  day, its seed and its length in seconds, the Kitchen's assistant, and the inputs taken (a batch's two `goods`, or the
-  Kitchen's `menu`: each recipe's dish, share, main and side). The shape from before the stove (a workshop, an
-  assistant and a day, which no build ever wrote) reads as no play.
+- `workshops.current` is the play at the stove under way: its workshop, what it is (`play`: `batch`, `kitchen` or
+  `contest`), its day, its seed and its length in seconds, the Kitchen's assistant or the Contest's cook, and the inputs
+  taken (a batch's two `goods`, the Kitchen's `menu`: each recipe's dish, share, main and side, or the Contest's menu of
+  one line and one dish). The shape from before the stove (a workshop, an assistant and a day, which no build ever
+  wrote) reads as no play.
 - `workshops.played.kitchen` is the day of its last play, `workshops.best.kitchen` its best score and
   `workshops.recipes` the recipes learnt.
-- `today.staff` is tonight's staff meal (its mouths and well-fed days) and `today.assistant` the Kitchen's assistant
-  today; both clear with the day.
+- `today.staff` is tonight's staff meal (its mouths and well-fed days), `today.assistant` the Kitchen's assistant
+  today and `today.cook` the Cooking Contest's cook; all clear with the day.
+- **The Cooking Contest** adds nothing new at the top: its result is `farm.festivals` (`{ id: 'cooking-contest', day,
+  score, place }`, one a Contest) and its best score `diary.records['festival:cooking-contest']`; its gold is `gold`.
 - The Kitchen's level is `buildings.kitchen` (1–5), a level bought today waiting in `farm.builds`.
 - `farm.counts.plays` (the stove's plays: the seed's count), `farm.counts['cooked:<dish>']` and `farm.counts.meals`.
 - The morning's `staff` line is a new kind in `summary.money`, a built line may carry the Kitchen's new level, and a
   farmhand's work line her action as its assistant (`summary.work[].kitchen`).
 
-A save from before reads as no play and no staff meal.
+A save from before reads as no play, no staff meal and no cook.
 
 #### What the simulations say
 
@@ -3287,12 +3417,12 @@ your rank allows", so ranking up is how the farm goes deeper. The challenge towa
 <!-- live:challenges -->
 | Activity | Hand | Skilled | Expert | Master | Legend | Counted by |
 |---|---|---|---|---|---|---|
-| Farming | Harvest 30 crops she tended | 40 crops of ★3+ she tended | Tend a crop of level 4+ to harvest | 30 crops of ★5 | 1st at a Flower Show with a crop she tended | At harvest, for the tender; a festival win (festivals aren’t built yet) |
-| Ranch | Care for animals 10 days | An animal in her care reaches 4 hearts | An animal in her care reaches 7 hearts | An animal in her care reaches 10 hearts | 1st at an Animal Show with an animal in her care | A farmhand’s night at the Coop or the Barn; a farmhand’s care for an animal; a festival win (festivals aren’t built yet) |
+| Farming | Harvest 30 crops she tended | 40 crops of ★3+ she tended | Tend a crop of level 4+ to harvest | 30 crops of ★5 | 1st at a Flower Show with a crop she tended | At harvest, for the tender; a festival win (its contest isn’t built yet) |
+| Ranch | Care for animals 10 days | An animal in her care reaches 4 hearts | An animal in her care reaches 7 hearts | An animal in her care reaches 10 hearts | 1st at an Animal Show with an animal in her care | A farmhand’s night at the Coop or the Barn; a farmhand’s care for an animal; a festival win (its contest isn’t built yet) |
 | Mining | Dig 40 ores or stones | Dig at floor 10 | Dig at floor 15 | Dig at floor 20 | Dig at floor 25 | A farmhand’s faces at the Mine or the Quarry |
-| Fishing | Catch 30 fish | Catch 10 fish at the River | Catch 10 fish at the Lake | Catch 10 fish at the Falls | 1st at a Fishing Derby, on the team | The night’s catches (night step 4); a festival win (festivals aren’t built yet) |
+| Fishing | Catch 30 fish | Catch 10 fish at the River | Catch 10 fish at the Lake | Catch 10 fish at the Falls | 1st at a Fishing Derby, on the team | The night’s catches (night step 4); a festival win (its contest isn’t built yet) |
 | Foraging | Gather 50 items | Gather 20 items in the Hills | Gather 20 items in the Old Forest | Gather 20 items on the Mountain | Gather 20 items in the Misty Vale | The night’s hauls (night step 4) |
-| Cooking | Assist 5 Kitchen plays | Assist a Fine play | Make 10 dishes of ★4+ | Assist a Masterwork | 1st at a Cooking Contest as the cook | The Kitchen’s play, its assistant; a festival win (festivals aren’t built yet) |
+| Cooking | Assist 5 Kitchen plays | Assist a Fine play | Make 10 dishes of ★4+ | Assist a Masterwork | 1st at a Cooking Contest as the cook | The Kitchen’s play, its assistant; the Cooking Contest’s judging, its cook |
 | Serving | Assist 5 shifts | Assist a Fine shift | Serve 100 guests | Assist a Masterwork shift | Serve 1,000 guests | The Restaurant (not built yet) |
 | Forging | Assist 5 Forge plays | Assist a Fine merge | Forge a tool upgrade | Assist a Masterwork | Forge a Mythril tool | The Forge’s workshop (not built yet) |
 | Expeditions | Return from 2 expeditions | A Success at level 10+ | A Success at level 20+ | A Great at level 20+ | A Success at the Sky Ruins | Expeditions (not built yet) |
@@ -3304,9 +3434,11 @@ your rank allows", so ranking up is how the farm goes deeper. The challenge towa
   Uma's challenge. Each challenge reads only its own kind of event; an Uma off the roster or at Legend counts nothing.
 - **In play:** farming's, foraging's, fishing's, the ranch's, mining's and cooking's challenges are counted: the ranch's
   by a farmhand's night at the Coop or the Barn and the hearts of an animal she cares for, mining's by her faces' finds
-  and floors, cooking's by the Kitchen's play she assists ([its play](#its-play)). The others wait for places that
-  aren't open. Farming's, fishing's and the ranch's Legend challenges are
-  festival wins, and no festival is held, so those climbs stop at Master; foraging and mining can reach Legend.
+  and floors, cooking's by the Kitchen's play she assists ([its play](#its-play)) and its Legend by the Cooking
+  Contest: a 1st, judged at the play's end, counts `won` for its cook ([the Cooking Contest](#the-cooking-contest)).
+  The others wait for places that aren't open. Farming's, fishing's and the ranch's Legend challenges are wins at
+  festivals not played yet (the Flower Show, the Fishing Derby, the Animal Show), so those climbs stop at Master;
+  foraging, mining and cooking can reach Legend.
 
 #### Rank-ups at night
 
@@ -3390,13 +3522,14 @@ Umas.
 
 #### The Farm Rank
 
-The farm's own rank, 1 to 10. Its points are recomputed from the save each night at step 8, from income and resources
-only:
+The farm's own rank, 1 to 10. Its points are recomputed from the save each night at step 8, from income, resources and
+the festivals' places:
 
-> **⌊gold shipped ÷ 100⌋ + 5 × Diary entries + 25 × milestones**
+> **⌊gold shipped ÷ 100⌋ + 5 × Diary entries + 25 × milestones + each festival result's points (150 · 75 · 25)**
 
 Every term only grows, so the rank never falls. During the day the rank stays as last night left it: what you ship
-today counts tonight. Where the points come from:
+today counts tonight, and so does a place at the Cooking Contest (its gold is paid at once). Where the points come
+from:
 
 <!-- live:farm-rank-points -->
 | Source | Points | Read from |
@@ -3404,9 +3537,11 @@ today counts tonight. Where the points come from:
 | Gold shipped at the bin | 1 per 100g | `farm.counts['gold-shipped']` |
 | A Diary entry: a good shipped once | 5 | `diary.shipped` |
 | A milestone | 25 | `diary.milestones` |
+| A festival’s place: 1st, 2nd, 3rd | 150, 75, 25 | `farm.festivals` |
 <!-- /live -->
 
-Festivals and decorations add nothing in play: neither exists. The points each rank needs, tuned when Umas worked the
+A festival's points are each result in `farm.festivals` (only the Cooking Contest's are played yet); decorations add
+nothing in play, since none exist. The points each rank needs, tuned when Umas worked the
 farm so the ranks came at the pace they came at when each global chapter added 250 points (the farmer's pace alone is
 [the simulated first season](#the-pacing)'s, and two farmhands reach Farm Rank 3 by Summer's end: see the pacing):
 
@@ -4128,7 +4263,8 @@ so no name is in git. They live in town, never on the farm, and keep its spots (
 
 - **In a scene,** a `say` by one of them, by her character id or by her role's (`ida-stone`), shows her name and bust.
   With no one playing a role (no master data), the role speaks in words ("The smith") on a lettered disc.
-- **The smith** speaks at the ring bench. The others have no lines of the game's; the opening is the story's, and any of
+- **The smith** speaks at the ring bench, and **the cook** judges the Cooking Contest ([its lines](#the-cooking-contest)).
+  The others have no lines of the game's; the opening is the story's, and any of
   the town's people may speak in it.
 - **A tie** with one of them builds no bond: its line shows on the cast Uma's profile ("In town ›") and on the town
   person's sheet.
@@ -4194,7 +4330,8 @@ The Diary tab (`/diary`) holds the world's pages, the farm's projects, the Farm 
   The Diary's Farm Rank row opens it too.
 - **The sheet** opens over any page: "Farm Rank 2", the points, a bar to the next rank with "50 more for Farm Rank 3
   (250)" (or "The top rank"), what the next rank opens (the places to build first), and the points so far by source:
-  Shipping (1 per 100g), Diary entries (5 each), Milestones (25 each). Its help explains where points come from.
+  Shipping (1 per 100g), Diary entries (5 each), Milestones (25 each), Festivals (150 · 75 · 25 a place). Its help
+  explains where points come from.
 
 #### The scene player
 
@@ -5233,7 +5370,7 @@ applies the day's factors and says what it paid. The acts, what each pays and ho
 | Gift (one good, its stars your choice) | Loved +60, Liked +30, Neutral +10, Disliked 0; × (1 + 0.1 a star above ★1) | One action; one a day each, where you meet her; ×3 on her birthday | `giftV4` |
 | Praise (a ★3+ day’s work, a rank-up, a Fine play) | +20 | Once a day, when earned | `praiseV4` |
 | Her line (she worked it today) | +10 | Paid at night, step 6 | `payLines` |
-| A festival together (its team or entry) | +50 | Once a festival a year each | `festivalTogether` (festivals aren’t built yet) |
+| A festival together (its team or entry) | +50 | Once a festival a year each | `festivalTogether`: the Cooking Contest’s cook (the other festivals’ when they’re built) |
 | Her arrival scene | +50, and its choice (+10 or +30) | Once | `finishArrival` |
 | A heart event | +50, its choices and its play’s grade | One action (a special day’s event actions first); one of hers a day | `playEvent` |
 | The evening (a hangout from F3, a date from R1; 2 actions) | Fine +60, Great +100, Perfect +150; ×1.5 in her favourite kind, on her birthday and on her anniversary, each once | One evening a day across all the Umas; two on some days from 10 married | `spendEvening` |
@@ -5275,8 +5412,9 @@ A disliked gift pays 0 and never takes points away. She says one of the default 
   unpaid, pays once, and both lists clear at night.
 - **Her line:** at night, +10 to each Uma who worked today at one of her line's places. One a night each; a day
   elsewhere pays nothing. Only farmhands work, so only they earn it.
-- **A festival together:** +50 to each Uma on a festival's team or entry, once a festival a year each. The rule is
-  written, but no festival pays it yet.
+- **A festival together:** +50 to each Uma on a festival's team or entry, once a festival a year each: today the
+  Cooking Contest's cook, at its judging ([the Cooking Contest](#the-cooking-contest)); the other festivals pay it once
+  their contests are built.
 
 #### Birthdays and anniversaries
 
@@ -6898,6 +7036,10 @@ sits outside the opening screens, so it shows even when the app stopped while op
   `farm.market` (each good a flood eased, by its steps) reads as nothing eased when it's missing; a morning's sale may
   say how far it was eased (`summary.bin[].eased`) and a morning's built line a station's new level
   (`summary.news[].level`). Nothing migrates, and `updatedAt` never moves for it.
+- **v5 grows in place with the Cooking Contest:** a play at the stove may be the Contest's dish (`play: 'contest'`, a
+  menu of one line and one dish, its cook as the assistant), `today.cook` is written only once a cook is chosen, and
+  the result is `farm.festivals` and `diary.records['festival:cooking-contest']`, both there since v4. Nothing
+  migrates, and `updatedAt` moves only with the player's own entry and play.
 - **v5 grows in place with the Kitchen:** `workshops.current` (a play at the stove under way), `today.staff` and
   `today.assistant` are written only once used, and a save without them has none; the Kitchen's level is
   `buildings.kitchen`; a morning's `staff` line is a new kind in `summary.money`, and a farmhand's work line may say

@@ -14,6 +14,7 @@ import { placeBuilt } from '../farm/places'
 import { spendGold } from '../save/gold'
 import { SaveRuleError } from '../save/rules'
 import { DISH_FAMILIES, isDishId, type FarmSave } from '../save/v4'
+import { MAX_STARS, parseStockKey } from '../save/warehouse'
 
 /** A dish's family: the eight kinds. */
 export type DishKind = typeof DISH_FAMILIES[number]
@@ -61,6 +62,14 @@ export const recipeOf = (dish: string): Recipe | undefined => BY_DISH.get(dish)
 export function recipeWords(dish: string): string {
   const r = recipeOf(dish)
   return r ? `2 ${r.mains.map((m) => itemNameOf(m)).join(' or ')} + ${SIDE_WORDS[r.side] ?? r.side}` : ''
+}
+
+/** A dish's stars from its ingredients (stock keys): its two mains' and its side's stars averaged, rounded down, + the
+ * play's lift, held to ★5. The Kitchen's dishes and the Cooking Contest's. */
+export function dishStars(main: string, side: string, lift: number): number {
+  const m = parseStockKey(main)?.stars ?? 1
+  const s = parseStockKey(side)?.stars ?? 1
+  return Math.min(MAX_STARS, Math.floor((MAINS_A_DISH * m + SIDES_A_DISH * s) / (MAINS_A_DISH + SIDES_A_DISH)) + lift)
 }
 
 /** Whether a good is a recipe's main: its family's good of its grade, raw or refined. */

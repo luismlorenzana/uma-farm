@@ -218,7 +218,7 @@ describe('the Farm Rank', () => {
       'The Coop to build (2,000g · 30 logs · 20 vegetables)', 'The Hills', 'The River', 'The Sea Pier (with the Dock)', 'Chickens at the rancher’s', 'Dorm level 3 (7 beds)',
       'New seeds at the shop',
     ])
-    expect($$('[data-source]').map((li) => li.textContent)).toEqual(['Shipping · 1 per 100g42', 'Diary entries · 5 each5', 'Milestones · 25 each0'])
+    expect($$('[data-source]').map((li) => li.textContent)).toEqual(['Shipping · 1 per 100g42', 'Diary entries · 5 each5', 'Milestones · 25 each0', 'Festivals · 150 · 75 · 25 a place0'])
   })
 })
 

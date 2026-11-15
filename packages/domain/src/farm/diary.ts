@@ -1,8 +1,8 @@
 // The Diary's counts and the Farm Rank's points. Each good shipped once is an
 // entry; a family's ten raw or ten refined goods shipped once is a row, paying 500g once; milestones pay their gold once.
 // All of it is checked at night step 8 (`checkGoals`) and paid that night, and the Farm Rank's points are recomputed
-// from the save there, from income and resources only: ⌊gold shipped ÷ 100⌋ + 5 × entries + 25 × milestones. Loaded
-// with the night and the screens.
+// from the save there: ⌊gold shipped ÷ 100⌋ + 5 × entries + 25 × milestones + each festival result's points (150, 75,
+// 25 by its place). Loaded with the night and the screens.
 import { cropLevelOf } from '../fields/fields'
 import { CROPS, SHOP_SEEDS } from '../fields/crops'
 import { AREA_NAMES, FISHING_SPOTS, FOREST_AREAS, SPOT_NAMES } from '../gathering/ids'
@@ -22,7 +22,7 @@ import { KITCHEN_LEVELS } from '../kitchen/levels'
 import { buildCostWords, offeredAt } from './builds'
 import { FARM_RANK_POINTS, farmRankOf } from './farm'
 import {
-  DIARY_ROWS, ENTRY_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, milestoneOf, ROW_GOLD, type DiaryRow, type Milestone,
+  DIARY_ROWS, ENTRY_POINTS, FESTIVAL_PLACE_POINTS, GOLD_PER_POINT, MILESTONE_POINTS, MILESTONES, milestoneOf, ROW_GOLD, type DiaryRow, type Milestone,
 } from './milestones'
 
 /** The goods shipped at least once: the Diary's entries, a ring among them. */
@@ -36,13 +36,16 @@ export interface FarmPoints {
   shipped: number
   entries: number
   milestones: number
+  /** Each festival result's place: 150 for 1st, 75 for 2nd, 25 for 3rd. */
+  festivals: number
   total: number
 }
 export function farmPointsOf(save: Pick<FarmSave, 'farm' | 'diary'>): FarmPoints {
   const shipped = Math.floor((save.farm.counts[GOLD_SHIPPED] ?? 0) / GOLD_PER_POINT)
   const entries = ENTRY_POINTS * diaryEntries(save)
   const milestones = MILESTONE_POINTS * milestonesPaid(save)
-  return { shipped, entries, milestones, total: shipped + entries + milestones }
+  const festivals = save.farm.festivals.reduce((n, r) => n + FESTIVAL_PLACE_POINTS[r.place], 0)
+  return { shipped, entries, milestones, festivals, total: shipped + entries + milestones + festivals }
 }
 
 /** The save with its Farm Rank's points recomputed. */

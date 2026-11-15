@@ -41,8 +41,8 @@ export const TICKET_SHAPES: Readonly<Record<2 | 3, TicketShape>> = {
   2: { wait: 13_000, cook: [2400, 1800] },
 }
 
-/** A play's length, in seconds: a batch at the farmhouse stove, and the Kitchen's play. */
-export const STOVE_SECONDS = { batch: 30, kitchen: 60 } as const
+/** A play's length, in seconds: a batch at the farmhouse stove, the Kitchen's play, and the Cooking Contest's dish. */
+export const STOVE_SECONDS = { batch: 30, kitchen: 60, contest: 60 } as const
 
 // --- The tiers --------------------------------------------------------------------------------------------------------
 

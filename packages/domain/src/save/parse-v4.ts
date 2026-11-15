@@ -210,7 +210,7 @@ const inviteKind = (v: unknown, at: string): InviteKind => (v === FESTIVAL_NIGHT
 /** `today`: the evenings within the day's slots (`evenings` regular ones, and festival
  * night once at most), and `invites` invitations, each a different Uma. */
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
-  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls', 'staff', 'assistant'])
+  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls', 'staff', 'assistant', 'cook'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const slots = eveningsOn(day, married)
   const evenings = list(o.evenings, `${path}.evenings`, 0, slots + 1).map((v, i) => {
@@ -253,6 +253,8 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
     // there's one (the save grows them in place).
     ...(o.staff === undefined ? {} : { staff: parseStaff(o.staff, `${path}.staff`) }),
     ...(o.assistant === undefined ? {} : { assistant: member(o.assistant, `${path}.assistant`, roster) }),
+    // The Cooking Contest's cook today: absent with none (the save grows it in place).
+    ...(o.cook === undefined ? {} : { cook: member(o.cook, `${path}.cook`, roster) }),
   }
 }
 

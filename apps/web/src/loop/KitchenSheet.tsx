@@ -5,9 +5,11 @@
 // Carp."), which opens the stove (`?stove=1`); played today, it says so. **The staff meal**: tonight's table as the board
 // stands and the dishes it takes, the dishes held (the most stars first, a tap to choose), and **Serve** (free, once a
 // day); served, its mouths and well-fed days. **Its level** and the next (Upgrade, as a station's). **Recipes**: the ones
-// known, each with what it takes, and the shop's shelf in town. Loaded on demand.
+// known, each with what it takes, and the shop's shelf in town. On the Cooking Contest's day (and the day before), its
+// card comes first (`Contest.tsx`); before the Kitchen stands, the sheet shows only that card and "Build the Kitchen
+// first", the morning's Contest lines opening it either way. Loaded on demand.
 import {
-  actionCost, actionsLeft, aptitudeOf, APTITUDE_NAMES, assistantLock, assistantTerm, defaultMenu, dishesHeld, dishName, handDay, handsInOrder, ingredientName, kitchenBase,
+  actionCost, actionsLeft, aptitudeOf, APTITUDE_NAMES, assistantLock, assistantTerm, defaultMenu, dishesHeld, dishName, handDay, handsInOrder, ingredientName, kitchenBase, kitchenBuilt,
   kitchenLevel, kitchenLevelLock, kitchenPlayBlock, kitchenPlayedToday, knownRecipes, KITCHEN_LEVELS, levelLockWords, mainsHeld, MEALS_A_DAY, MENU_RECIPES, menuLine, MOUTHS_A_DISH,
   nextKitchenLevel, recipeWords, shareEvenly, sidesHeld, staffBlock, staffDays, staffPicks, staffTable, stoveSeed, type MenuLine, type SaveV4,
 } from '@farm/domain'
@@ -20,6 +22,7 @@ import { ItemIcon } from '../items/ItemIcon'
 import { useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
+import { ContestCard } from './Contest'
 import { serveTheStaffMeal, startKitchen, upgradeTheKitchen } from './kitchen-actions'
 import { useTalents } from './talents'
 import { plural } from './words'
@@ -57,11 +60,22 @@ function Kitchen({ save, onClose }: { save: SaveV4; onClose: () => void }) {
   }
   const level = kitchenLevel(save)
   const base = kitchenBase(save)
+  if (!kitchenBuilt(save)) {
+    return (
+      <Sheet open onClose={onClose} size="wide" title="Kitchen" label="The Kitchen">
+        <div className="mx-auto max-w-md space-y-3 pb-2" data-kitchen-sheet={0}>
+          <ContestCard save={save} />
+          <p className="text-[14px] text-ink-soft" data-kitchen-unbuilt>Build the Kitchen first: the Farm Rank offers it at 3.</p>
+        </div>
+      </Sheet>
+    )
+  }
   return (
     <Sheet open onClose={onClose} size="wide" title="Kitchen" label="The Kitchen"
       footer={<p className="min-h-5 text-center text-[13px] text-ink-soft" role={note ? 'status' : undefined} data-kitchen-note>{note ?? `Level ${level} · ${plural(base, 'dish', 'dishes')} a play`}</p>}>
       <div className="@container pb-2"><div className="grid grid-cols-1 gap-4 @3xl:grid-cols-2" data-kitchen-sheet={level}>
         <div className="space-y-3">
+          <ContestCard save={save} />
           <TodaysPlay save={save} busy={busy} onPlay={(menu, assistant) => void act(async () => {
             await startKitchen(menu, assistant)
             navigate(withParam(location, 'stove', '1'), { replace: true })

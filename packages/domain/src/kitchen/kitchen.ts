@@ -18,11 +18,15 @@
 //                    fed by the lowest stars served, on the reception's table (★1–2 through tomorrow, ★3–4 two days, ★5
 //                    three)
 //
+//   the Contest      on the Cooking Contest's day, **Enter the Cooking Contest · 3**: one dish cooked live, 60 s, then
+//                    judged (`kitchen/contest.ts`)
+//
 // **Start is the commitment:** it spends the action, takes the inputs and keeps the play in `workshops.current`; its end
 // settles it from its taps, replayed against its seed. A play left unfinished (✕, or leaving mid-play) settles as Rough
-// the next time the app opens, or at the night's start. The seed is the account's, the day's and the farm's count of
-// plays (`farm.counts.plays`), so every play differs and a replay is the same. Pure; never stamps.
-import { actionCost, actionsLeft, spend } from '../farm/actions'
+// the next time the app opens, or at the night's start: a Contest's dish is judged as Rough there too. The seed is the
+// account's, the day's and the farm's count of plays (`farm.counts.plays`), so every play differs and a replay is the
+// same. Pure; never stamps.
+import { actionCost, actionsLeft, spend, spendForEvent, type SpecialDays } from '../farm/actions'
 import { draw } from '../farm/draw'
 import { farmRankOf } from '../farm/farm'
 import { aptitudeOf, aptitudeYield, handDay } from '../farm/farmhands'
@@ -38,8 +42,9 @@ import { receptionDays } from '../romance/wedding'
 import { spendGold } from '../save/gold'
 import { SaveRuleError } from '../save/rules'
 import { isDishId, MENU_RECIPES, type FarmSave, type MenuLine, type PlayInProgress, type StaffMeal, type StovePlay } from '../save/v4'
-import { addGoods, MAX_STARS, parseStockKey, stockKey, takeGoods } from '../save/warehouse'
-import { isMainOf, isSideOf, kitchenBuilt, knownRecipes, knowsRecipe, MAINS_A_DISH, recipeOf, SIDES_A_DISH } from './recipes'
+import { addGoods, parseStockKey, stockKey, takeGoods } from '../save/warehouse'
+import { CONTEST_ACTIONS, contestBlock, judgeContest, type ContestBoard, type ContestEntry } from './contest'
+import { dishStars, isMainOf, isSideOf, kitchenBuilt, knownRecipes, knowsRecipe, MAINS_A_DISH, recipeOf, SIDES_A_DISH } from './recipes'
 import { KITCHEN_LEVELS, KITCHEN_MAX_LEVEL, type KitchenLevel } from './levels'
 import { playStove, PLAY_TIERS, seedFrom, STOVE_SECONDS, stoveScore, tierCount, tierOf, type PlayTier, type StoveTap } from './stove'
 
@@ -110,6 +115,27 @@ export function startStoveBatch<S extends FarmSave>(save: S, picks: readonly str
     items = takeGoods(items, at.id, at.stars, 1)
   }
   return begin({ ...spend(save, 'batch'), items }, { play: 'batch', length: STOVE_SECONDS.batch, goods })
+}
+
+/** **Enter the Cooking Contest · 3**, at the Kitchen on its day: three actions (the festival day's event actions first,
+ * then the day's own), two of the recipe's main and one side out of the Warehouse now, the cook's action tonight
+ * (`today.cook`), and its dish under way, 60 s on its seed. Refused with its block's words (`contestBlock`): not today
+ * (`not-ready`), no Kitchen (`locked`), entered or a play under way (`busy`), actions short (`no-actions`), an ingredient
+ * short (`no-items`), the recipe or the cook (`bad-job`). Never stamps. */
+export function enterContest<S extends FarmSave>(save: S, entry: ContestEntry, days: SpecialDays): S {
+  const block = contestBlock(save, days, entry)
+  if (block) {
+    const reason = block === 'No contest today.' ? 'not-ready' : block.startsWith('Build') ? 'locked' : block === 'One entry a Contest.' || block === 'A play is under way.' ? 'busy'
+      : block.startsWith('Entering') ? 'no-actions' : block.startsWith('Short') ? 'no-items' : 'bad-job'
+    throw new SaveRuleError(reason, block)
+  }
+  const spent = spendForEvent(save, CONTEST_ACTIONS, days)
+  const main = parseStockKey(entry.main)!
+  const side = parseStockKey(entry.side)!
+  const items = takeGoods(takeGoods(spent.items, main.id, main.stars, MAINS_A_DISH), side.id, side.stars, SIDES_A_DISH)
+  const today = entry.cook === null ? spent.today : { ...spent.today, cook: entry.cook }
+  const menu: MenuLine[] = [{ dish: entry.dish, count: 1, main: entry.main, side: entry.side }]
+  return begin({ ...spent, items, today }, { play: 'contest', length: STOVE_SECONDS.contest, menu, ...(entry.cook === null ? {} : { assistant: entry.cook }) })
 }
 
 // --- The menu ---------------------------------------------------------------------------------------------------------
@@ -285,17 +311,13 @@ export function kitchenMakes(menu: readonly MenuLine[], tier: Pick<PlayTier, 'fa
     counts[i]! += 1
     left--
   }
-  return menu.map((l, i) => {
-    const main = parseStockKey(l.main)?.stars ?? 1
-    const side = parseStockKey(l.side)?.stars ?? 1
-    const stars = Math.min(MAX_STARS, Math.floor((MAINS_A_DISH * main + SIDES_A_DISH * side) / (MAINS_A_DISH + SIDES_A_DISH)) + tier.lift)
-    return { dish: l.dish, stars, count: counts[i]! }
-  })
+  return menu.map((l, i) => ({ dish: l.dish, stars: dishStars(l.main, l.side, tier.lift), count: counts[i]! }))
 }
 
 // --- A play's end -----------------------------------------------------------------------------------------------------
 
-/** What a play made: its score (0 when it was left unfinished), its tier, and a batch's meals or the Kitchen's dishes. */
+/** What a play made: its score (0 when it was left unfinished), its tier, and a batch's meals, the Kitchen's dishes or the
+ * Contest's dish with its judging. */
 export interface PlayResult {
   play: StovePlay
   score: number
@@ -306,6 +328,8 @@ export interface PlayResult {
   /** A batch's meals' stars. */
   stars: number
   dishes: { dish: string; stars: number; count: number }[]
+  /** The Contest's board: its score, place, the rivals, the gold and the Farm Rank points. */
+  contest?: ContestBoard
 }
 /** What a play's end reads beyond the save: the talents (the assistant's Cooking) and the story pack (her line's +10%,
  * a cook's chores). */
@@ -334,6 +358,7 @@ export function finishPlay<S extends FarmSave>(save: S, taps: readonly StoveTap[
     const next = { ...save, workshops, farm: { ...save.farm, pantry: addMeals(save.farm.pantry, play.day, stars, meals) } }
     return { save: next, result: { play: 'batch', score, grade: tier.grade, stopped: !taps, meals, stars, dishes: [] } }
   }
+  if (play.play === 'contest') return finishContest(save, play, score, tier, !taps)
   const menu = play.menu ?? []
   const term = play.assistant ? assistantTerm(save, play.assistant, context.talentOf, context.story ?? null) : 1
   const dishes = kitchenMakes(menu, tier, term, cooksDishes(save, context.story ?? null))
@@ -354,6 +379,22 @@ export function finishPlay<S extends FarmSave>(save: S, taps: readonly StoveTap[
     next = countChallenge(next, id, 'cooking', { kind: 'dishes', stars: dishes.flatMap((d) => Array.from({ length: d.count }, () => d.stars)) })
   }
   return { save: next, result: { play: 'kitchen', score, grade: tier.grade, stopped: !taps, meals: 0, stars: 0, dishes } }
+}
+
+/** The Contest's end: its one dish at its stars (the ingredients' average + the tier's lift) into the Warehouse
+ * (`farm.counts['cooked:<dish>']` one more), its cook's point of Cooking practice, then the judging. */
+function finishContest<S extends FarmSave>(save: S, play: PlayInProgress, score: number, tier: PlayTier, stopped: boolean): { save: S; result: PlayResult } {
+  const line = play.menu![0]!
+  const stars = dishStars(line.main, line.side, tier.lift)
+  const counts = { ...save.farm.counts, [`cooked:${line.dish}`]: (save.farm.counts[`cooked:${line.dish}`] ?? 0) + 1 }
+  let next: S = { ...save, workshops: { ...save.workshops, current: null }, items: addGoods(save.items, line.dish, stars, 1), farm: { ...save.farm, counts } }
+  const cook = play.assistant && next.roster[play.assistant] ? play.assistant : null
+  if (cook) {
+    const uma = next.roster[cook]!
+    next = { ...next, roster: { ...next.roster, [cook]: { ...uma, practice: { ...uma.practice, cook: (uma.practice?.cook ?? 0) + 1 } } } }
+  }
+  const judged = judgeContest(next, play.day, stars, score, cook)
+  return { save: judged.save, result: { play: 'contest', score, grade: tier.grade, stopped, meals: 0, stars: 0, dishes: [{ dish: line.dish, stars, count: 1 }], contest: judged.board } }
 }
 
 /** A play left unfinished, settled as Rough: the next time the app opens, or at the night's start. Nothing under way:
