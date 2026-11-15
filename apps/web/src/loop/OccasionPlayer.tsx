@@ -1,14 +1,15 @@
-// An occasion scene: `?occasion=<id>` over any page (the calendar's day panel opens it), today's occasion with her on the
-// dialogue engine: New Year's (from the second year), the Flower Show or the Fishing Derby's night (`occasionOn`). It
-// plays her route's event of that id, else the default story's, in her name (`herEventOf`); she wears the scene's own
-// outfit when the story names one, else the occasion's moment's (the kimono at New Year's and the derby night, the garden
-// party dress at the Flower Show), and she stays on the stage through the narration; her illustration shows where the
-// story names one. A choice is wording only. Its end, or Skip, spends its action (the day's event actions
-// first) and marks her played today (`playOccasion`); it pays nothing. With no occasion with her today it closes; with
-// no action left it says so before it plays. Portaled above the kit's sheets (z-60). Loaded on demand.
+// An occasion scene: `?occasion=<id>` over any page (the calendar's day panel opens it), her next occasion today on the
+// dialogue engine (`occasionWith`: her birthday, her anniversary, New Year's, the festival's day or a story day, then a
+// festival's night). It plays her route's event for it, else the default story's for New Year's, the Flower Show and the
+// derby night, in her name (`herEventOf`); she wears the scene's own outfit when the story names one, else the occasion's
+// moment's (the kimono at New Year's and a festival's night, the garden party dress at the Flower Show, the dinner dress
+// on her birthday and her anniversary, else the season's), and she stays on the stage through the narration; her
+// illustration shows where the story names one. A choice is wording only. Its end, or Skip, spends its action (the day's
+// event actions first) and marks that occasion played today (`playOccasion`); it pays nothing. With no occasion with her
+// today it closes; with no action left it says so before it plays. Portaled above the kit's sheets (z-60). Loaded on
+// demand.
 import {
-  actionCost, canSpendForEvent, festivalsOf, GAME_DAYS, illustrationAt, occasionMoments, occasionName, occasionWith, sceneSteps, type PlayedEvent, type PlayedOccasion, type SaveV4,
-  type Step,
+  actionCost, canSpendForEvent, GAME_DAYS, illustrationAt, occasionWith, sceneSteps, type Occasion, type PlayedEvent, type SaveV4, type Step,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
@@ -34,14 +35,14 @@ export default function OccasionPlayer({ id }: { id: string }) {
   const leave = useLeave()
   const close = () => leave(withParam(location, 'occasion', null))
   // Settled once, as it starts: playing it ends today's occasion with her.
-  const [occasion, setOccasion] = useState<PlayedOccasion | null | 'none' | 'spent'>(null)
+  const [occasion, setOccasion] = useState<Occasion | null | 'none' | 'spent'>(null)
   const [event, setEvent] = useState<PlayedEvent | null>(null)
   const [leaving, setLeaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     if (occasion !== null || !save || !story) return
     const days = special ?? GAME_DAYS
-    const today = occasionWith(save, id, days.festivals)
+    const today = occasionWith(save, story, days, id)
     if (!today) return setOccasion('none')
     setOccasion(canSpendForEvent(save, actionCost('event'), days) ? today : 'spent')
   }, [occasion, save, story, special, id])
@@ -51,7 +52,7 @@ export default function OccasionPlayer({ id }: { id: string }) {
   useEffect(() => {
     if (!story || occasion === null || occasion === 'none' || occasion === 'spent') return
     let live = true
-    void herEventOf(story, id, occasion).then((found) => live && setEvent(found), () => live && close())
+    void herEventOf(story, id, occasion.event).then((found) => live && setEvent(found), () => live && close())
     return () => { live = false }
   }, [story, occasion, id]) // eslint-disable-line react-hooks/exhaustive-deps
   if (!save || !story || occasion === null || occasion === 'none') return null
@@ -59,19 +60,19 @@ export default function OccasionPlayer({ id }: { id: string }) {
   const finish = () => {
     if (leaving) return
     setLeaving(true)
-    void playOccasionOnce(id).then(close, (e: unknown) => {
+    void playOccasionOnce(id, occasion.id).then(close, (e: unknown) => {
       setLeaving(false)
       setError(e instanceof Error ? e.message : 'That didn’t work. Try again.')
     })
   }
-  const title = occasionName(occasion, festivalsOf(story))
+  const title = occasion.name
   return createPortal(
     <MasterGate skeleton={<div className="fixed inset-0 z-[60] bg-page" />}>
       {(master) => (error
         ? <Failed error={error} onRetry={finish} onClose={close} />
         : event
           ? (
-            <SceneLookProvider value={{ own: event.outfit, moments: occasionMoments(occasion), day: save.calendar.day, leads: [id] }}>
+            <SceneLookProvider value={{ own: event.outfit, moments: occasion.moments, day: save.calendar.day, leads: [id] }}>
               <Scene save={save} id={id} title={`${title} · ${namer(master, story)(id)}`} steps={event.steps} nameOf={namer(master, story)} leaving={leaving} onDone={finish} />
             </SceneLookProvider>
           )

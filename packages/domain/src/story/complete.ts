@@ -7,11 +7,16 @@
 // lives here: the words are the default story's, and her name comes from master data at run time.
 //
 //   her cast entry   her schedule (her home, job and routine: what her profile and the calendar show), her chapters
-//   her bible        favouriteLine, gifts, chats, townLines, mornings, meals, keepsake, petName, wedding, wishes, and a
-//                    beat for each of the 27 rungs
+//   her bible        favouriteLine, gifts, chats, townLines, mornings, meals, keepsake, petName, wedding, wishes,
+//                    greetings, smallTalk, giftLines, and a beat for each of the 27 rungs
 //   her route        her meeting, Friendship 1–10, the confession, Romance 1–10, the proposal, the wedding, the
-//                    invitation to work, the wedding night, moving in, Spouse 1–5, each evening's scene, and four
-//                    occasions (New Year's, the Flower Show, the Fishing Derby's night, her birthday)
+//                    invitation to work, the wedding night, moving in, Spouse 1–5, each evening's scene, and every
+//                    occasion a route can write (`occasionPieces`: New Year's, the five festivals' days, her birthday,
+//                    her anniversary, and each of the story's days' scenes, the game's six and world.json's); a
+//                    festival's night is optional: counted as hers (or the default) when written, never missing
+//
+// The scaffold writes a piece only from the default story's words in the pack's shape; the pieces it has none for (her
+// greetings, small talk and gift lines; her anniversary, the story's days) stay missing until the story writes them.
 //
 // **The marker** sits on the piece when it's an object (an event, a beat, a chapter, her job, a routine stop, her chats,
 // gifts, meals, keepsake, wedding): `"draft": "default"`. A piece that's a plain value or a list of lines (her home; her
@@ -20,11 +25,11 @@
 // marked, and her schedule while every part of it that's there is.
 import { TEMPERAMENTS, type Temperament } from '../farm/talents'
 import { defaultDays, DEFAULT_EVERY, scheduleOf } from '../town/town'
-import { RUNGS, EVENING_SCENES, LIFE_EVENTS, SPOT_IDS, ARRIVAL, type Step, type StoryPlace } from './authored'
-import { DEFAULT_GOOD, DEFAULT_GOODS, DEFAULT_MEALS, DEFAULT_MORNINGS, DEFAULT_TALKS, HER } from './default-story'
+import { RUNGS, EVENING_SCENES, SPOT_IDS, ARRIVAL, type Step, type StoryPlace, type World } from './authored'
+import { DEFAULT_EVENINGS, DEFAULT_EVENTS, DEFAULT_GOOD, DEFAULT_GOODS, DEFAULT_MEALS, DEFAULT_MORNINGS, DEFAULT_TALKS, HER, type DefaultScene } from './default-story'
 import { readStoryPack, type PackFiles, type StoryPack } from './pack'
 import {
-  CALLING_ACTIVITY, DEFAULT_CHAPTERS, defaultSceneOf, favouriteGoodOf, favouriteOf, fillHer, fillScene, herWordsOf, PLACEHOLDER_KEEPSAKE, PLACEHOLDER_PET_NAME,
+  CALLING_ACTIVITY, DEFAULT_CHAPTERS, defaultSceneOf, favouriteGoodOf, favouriteOf, fillHer, fillScene, herWordsOf, occasionPieces, PLACEHOLDER_KEEPSAKE, PLACEHOLDER_PET_NAME,
   PLACEHOLDER_TOWN_LINES, WEDDING_DEFAULTS, weddingPlaces, type HerWords, type MasterCast,
 } from './placeholders'
 
@@ -40,16 +45,30 @@ export const CAST_PIECES = ['schedule', 'chapters'] as const
 /** Her schedule's fields on her cast entry. */
 export const SCHEDULE_FIELDS = ['home', 'job', 'routine'] as const
 /** Her bible's pieces, besides a beat for each rung (`beat:<rung>`). */
-export const BIBLE_PIECES = ['favouriteLine', 'gifts', 'chats', 'townLines', 'mornings', 'meals', 'keepsake', 'petName', 'wedding', 'wishes'] as const
-/** The pieces that are a plain value or a list of lines: their marker sits on the file's `draft` object. */
-export const PLAIN_PIECES: readonly string[] = ['home', 'favouriteLine', 'townLines', 'mornings', 'petName', 'wishes']
-/** Her occasions a complete Uma holds: the three the calendar plays and her birthday. */
-export const COMPLETE_OCCASIONS = ['new-year', 'flower-show', 'derby-night', 'birthday'] as const
-/** Every event of a complete route, in the story's order: her meeting and the rungs to the wedding, her life's events and
- * the spouse ladder, each evening's scene, then her occasions. */
-export const COMPLETE_EVENTS: readonly string[] = [
-  ...RUNGS.slice(0, RUNGS.indexOf('wedding') + 1), 'invited-to-work', 'wedding-night', 'moving-in', 's1', 's2', 's3', 's4', 's5', ...EVENING_SCENES, ...COMPLETE_OCCASIONS,
-]
+export const BIBLE_PIECES = ['favouriteLine', 'gifts', 'chats', 'townLines', 'mornings', 'meals', 'keepsake', 'petName', 'wedding', 'wishes', 'greetings', 'smallTalk', 'giftLines'] as const
+/** The pieces that are a plain value or a list: their marker sits on the file's `draft` object. */
+export const PLAIN_PIECES: readonly string[] = ['home', 'favouriteLine', 'townLines', 'mornings', 'petName', 'wishes', 'smallTalk']
+/** Her route's events before her occasions, in the story's order: her meeting and the rungs to the wedding, her life's
+ * events and the spouse ladder, each evening's scene. */
+const ROUTE_EVENTS: readonly string[] = [...RUNGS.slice(0, RUNGS.indexOf('wedding') + 1), 'invited-to-work', 'wedding-night', 'moving-in', 's1', 's2', 's3', 's4', 's5', ...EVENING_SCENES]
+/** A route piece and the event ids that write it (a festival's night under any of its ids); an `optional` one (a
+ * festival's night) counts only when it's written. */
+export interface RoutePiece { piece: string; ids: readonly string[]; optional?: true }
+/** Every piece of a route: the events, then every occasion a route can write for the pack's world (`occasionPieces`),
+ * the festivals' nights optional. */
+export const routePieces = (world?: World | null): readonly RoutePiece[] => [...ROUTE_EVENTS.map((piece) => ({ piece, ids: [piece] })), ...occasionPieces({ world: world ?? null })]
+/** Every event a complete route holds with the game's own days, one id a piece: the festivals' nights aside. */
+export const COMPLETE_EVENTS: readonly string[] = routePieces().filter((p) => !p.optional).map((p) => p.piece)
+/** The festivals' nights: hers when written, never missing. */
+export const OPTIONAL_EVENTS: readonly string[] = routePieces().filter((p) => p.optional).map((p) => p.piece)
+/** The default story's scene for an event id, or none: the scaffold writes a piece only from one. */
+const defaultScene = (event: string): DefaultScene | undefined => (event === ARRIVAL ? defaultSceneOf(ARRIVAL, true) : DEFAULT_EVENTS[event] ?? DEFAULT_EVENINGS[event])
+/** Her bible's pieces the default story has no words for in the pack's shape: hers to write, never scaffolded. */
+export const UNSCAFFOLDED_BIBLE: readonly string[] = ['greetings', 'smallTalk', 'giftLines']
+/** Her route's pieces the default story has no scene for (her anniversary, the nights but the Fishing Derby's, the
+ * story's days): hers to write, never scaffolded. */
+export const unscaffoldedRoute = (world?: World | null): string[] =>
+  routePieces(world).filter((p) => !p.optional && !p.ids.some((e) => defaultScene(e) !== undefined)).map((p) => p.piece)
 /** A beat's piece name: `beat:<rung>`. */
 export const beatPiece = (rung: string): string => `beat:${rung}`
 
@@ -103,20 +122,35 @@ function biblePiece(bible: Obj | undefined, key: typeof BIBLE_PIECES[number]): P
       case 'meals': return isObject(v) && (nonEmpty(v.breakfast) || nonEmpty(v.dinner))
       case 'wedding': return isObject(v) && nonEmpty(v.places)
       case 'gifts': case 'keepsake': return isObject(v)
+      case 'smallTalk': return nonEmpty(v)
+      // A set of lists (her greetings' by place, season, hour; her gift lines by taste) with a line in one.
+      case 'greetings': case 'giftLines': return isObject(v) && Object.entries(v).some(([k, x]) => k !== 'draft' && (nonEmpty(x) || (isObject(x) && Object.values(x).some(nonEmpty))))
     }
   })()
   if (!there) return 'missing'
   return (PLAIN_PIECES.includes(key) ? plainDraft(bible, key) : isDraft(v)) ? 'default' : 'hers'
 }
 
+/** An item of a list by any of its ids, the first written (a beat, an event, a night under its alias). */
+const itemOf = (list: unknown, ids: readonly string[]): Obj | undefined => {
+  const items = Array.isArray(list) ? (list as unknown[]).filter(isObject) : []
+  for (const id of ids) {
+    const item = items.find((x) => x.id === id)
+    if (item) return item
+  }
+  return undefined
+}
 /** An item of a list by id (a beat, an event): there, and marked. */
-const itemPiece = (list: unknown, id: string): PieceState => {
-  const item = Array.isArray(list) ? (list as unknown[]).find((x) => isObject(x) && x.id === id) : undefined
+const itemPiece = (list: unknown, ids: string | readonly string[]): PieceState => {
+  const item = itemOf(list, typeof ids === 'string' ? [ids] : ids)
   return item === undefined ? 'missing' : isDraft(item) ? 'default' : 'hers'
 }
 
-/** The pack's files as the status reads them: the cast, her bible and her route, as written or as read. */
-export interface StatusFiles { cast?: unknown; umas: Readonly<Record<string, unknown>>; routes: Readonly<Record<string, unknown>> }
+/** The pack's files as the status reads them: the cast, her bible and her route, as written or as read, and the world
+ * (its days' scenes are pieces of a complete route). */
+export interface StatusFiles { cast?: unknown; umas: Readonly<Record<string, unknown>>; routes: Readonly<Record<string, unknown>>; world?: unknown }
+/** The world as the status reads it: its days, when it's an object. */
+const worldOf = (files: Pick<StatusFiles, 'world'>): World | null => (isObject(files.world) ? files.world as unknown as World : null)
 
 /** Her status: each piece of a complete Uma, hers, the default (marked) or missing, and the counts by part. Read it on the
  * pack as the game reads it (`readStoryPack`'s files), so a part with an error counts as missing: the default plays it. */
@@ -128,7 +162,11 @@ export function umaStatus(files: StatusFiles, id: string): UmaStatus {
     ...CAST_PIECES.map((piece): PieceStatus => ({ part: 'cast', piece, state: castPiece(entry, piece) })),
     ...BIBLE_PIECES.map((piece): PieceStatus => ({ part: 'bible', piece, state: biblePiece(bible, piece) })),
     ...RUNGS.map((rung): PieceStatus => ({ part: 'bible', piece: beatPiece(rung), state: itemPiece(bible?.route, rung) })),
-    ...COMPLETE_EVENTS.map((event): PieceStatus => ({ part: 'route', piece: event, state: itemPiece(route?.events, event) })),
+    // A festival's night counts only when it's written: none is never missing.
+    ...routePieces(worldOf(files)).flatMap((p): PieceStatus[] => {
+      const state = itemPiece(route?.events, p.ids)
+      return p.optional && state === 'missing' ? [] : [{ part: 'route', piece: p.piece, state }]
+    }),
   ]
   const parts = Object.fromEntries(PARTS.map((part) => {
     const of = pieces.filter((p) => p.part === part)
@@ -225,8 +263,9 @@ const DEFAULT_LOVED = new Set([...Object.values(DEFAULT_GOODS), DEFAULT_GOOD])
 /** Whether a marked piece holds the default's words: the check's note when it doesn't. */
 function defaultWords(part: Part, piece: string, value: unknown, ctx: { entry?: Obj; bible?: Obj }): boolean {
   if (part === 'route') {
-    const scene = defaultSceneOf(piece, piece === ARRIVAL)
-    return onlyKeys(value, ['id', 'outfit', 'steps']) && value.outfit === scene.outfit && sameAs(value.steps, scene.steps)
+    // The event as written (a night may be under its alias); one the default story has no scene for is never its words.
+    const scene = defaultScene(isObject(value) && typeof value.id === 'string' ? value.id : piece)
+    return scene !== undefined && onlyKeys(value, ['id', 'outfit', 'steps']) && value.outfit === scene.outfit && sameAs(value.steps, scene.steps)
   }
   if (piece.startsWith('beat:')) return onlyKeys(value, ['id'])
   switch (piece) {
@@ -257,15 +296,17 @@ function defaultWords(part: Part, piece: string, value: unknown, ctx: { entry?: 
       return onlyKeys(value, ['places']) && sameAs(value.places, [...new Set([...place, ...WEDDING_DEFAULTS])].slice(0, 3))
     }
     case 'wishes': return Array.isArray(value) && value.length === 0
+    // The default story has no greetings, small talk or gift lines in the pack's shape: a marked one is never its words.
+    case 'greetings': case 'smallTalk': case 'giftLines': return false
     default: return true
   }
 }
 
 /** The value of a piece, for the check. */
-function pieceValue(part: Part, piece: string, ctx: { entry?: Obj; bible?: Obj; route?: Obj }): unknown {
+function pieceValue(part: Part, piece: string, ctx: { entry?: Obj; bible?: Obj; route?: Obj }, world: World | null = null): unknown {
   if (part === 'cast' && piece === 'schedule') return Object.fromEntries(SCHEDULE_FIELDS.flatMap((f) => (ctx.entry?.[f] === undefined ? [] : [[f, ctx.entry[f]]])))
   if (part === 'cast') return ctx.entry?.[piece]
-  if (part === 'route') return (Array.isArray(ctx.route?.events) ? ctx.route.events as unknown[] : []).find((e) => isObject(e) && e.id === piece)
+  if (part === 'route') return itemOf(ctx.route?.events, routePieces(world).find((p) => p.piece === piece)?.ids ?? [piece])
   if (piece.startsWith('beat:')) return (Array.isArray(ctx.bible?.route) ? ctx.bible.route as unknown[] : []).find((b) => isObject(b) && b.id === piece.slice('beat:'.length))
   return ctx.bible?.[piece]
 }
@@ -302,7 +343,7 @@ export function draftNotes(files: StatusFiles, id: string): string[] {
   for (const beat of objects(bible?.route)) marker(file.bible, `beat ${String(beat.id)}`, beat)
   for (const event of objects(route?.events)) marker(file.route, String(event.id), event)
   for (const p of umaStatus(files, id).pieces) {
-    if (p.state !== 'default' || defaultWords(p.part, p.piece, pieceValue(p.part, p.piece, ctx), ctx)) continue
+    if (p.state !== 'default' || defaultWords(p.part, p.piece, pieceValue(p.part, p.piece, ctx, worldOf(files)), ctx)) continue
     notes.push(`${file[p.part]}: ${p.piece.replace('beat:', 'beat ')} is marked "draft": "default" but its words aren’t the default’s: rewritten? remove the marker`)
   }
   return notes
@@ -339,7 +380,7 @@ const herLines = (lines: readonly string[], words: HerWords): string[] => lines.
 
 /** Her missing pieces, filled from the default story and marked, added to her cast entry, her bible and her route (each
  * a copy). Never overwrites a piece that's there, read or not. */
-function scaffoldOne(her: ScaffoldHer, files: { cast: Obj; bible: Obj | undefined; route: Obj | undefined }, pack: StoryPack): { cast: Obj; bible?: Obj; route?: Obj; wrote: Wrote[]; refused: string[] } {
+function scaffoldOne(her: ScaffoldHer, files: { cast: Obj; bible: Obj | undefined; route: Obj | undefined; world: World | null }, pack: StoryPack): { cast: Obj; bible?: Obj; route?: Obj; wrote: Wrote[]; refused: string[] } {
   const { id } = her
   const wrote: Wrote[] = []
   const refused: string[] = []
@@ -402,18 +443,19 @@ function scaffoldOne(her: ScaffoldHer, files: { cast: Obj; bible: Obj | undefine
     }
   }
 
-  // Her route: every event the default story plays, hers.
+  // Her route: every piece the default story has a scene for, hers (a festival's night under the id the default writes).
   let route: Obj | undefined
   if (files.route !== undefined && !(isObject(files.route) && Array.isArray(files.route.events))) refused.push(`routes/${id}.json isn’t a route (an object with an events list), so none of its events is written`)
   else {
     route = files.route ? clone(files.route) : { characterId: id, events: [] }
     const there = new Set(ids(route.events))
-    const events = COMPLETE_EVENTS.filter((event) => !there.has(event))
-    route.events = [...(route.events as unknown[]), ...events.map((event) => {
-      const scene = defaultSceneOf(event, event === ARRIVAL)
-      return { id: event, draft: DRAFT, ...(scene.outfit ? { outfit: scene.outfit } : {}), steps: fillScene(scene.steps, id, words) as Step[] }
-    })]
-    wrote.push(...events.map((event): Wrote => ({ part: 'route', piece: event })))
+    const events = routePieces(files.world).flatMap((p): { piece: string; event: string; scene: DefaultScene }[] => {
+      if (p.ids.some((e) => there.has(e))) return []
+      const event = p.ids.find((e) => defaultScene(e) !== undefined)
+      return event === undefined ? [] : [{ piece: p.piece, event, scene: defaultScene(event)! }]
+    })
+    route.events = [...(route.events as unknown[]), ...events.map(({ event, scene }) => ({ id: event, draft: DRAFT, ...(scene.outfit ? { outfit: scene.outfit } : {}), steps: fillScene(scene.steps, id, words) as Step[] }))]
+    wrote.push(...events.map(({ piece }): Wrote => ({ part: 'route', piece })))
   }
   const changed = (part: Part) => wrote.some((w) => w.part === part)
   return { cast, ...(bible && changed('bible') ? { bible } : {}), ...(route && changed('route') ? { route } : {}), wrote, refused }
@@ -444,7 +486,7 @@ export function scaffoldPack(files: PackFiles, hers: readonly ScaffoldHer[], mas
     const before = current()
     const read = readStoryPack(before)
     const pack: StoryPack = { ...read.pack, ...(master ? { master } : {}) }
-    const one = scaffoldOne(her, { cast, bible: before.umas[her.id] as Obj | undefined, route: before.routes[her.id] as Obj | undefined }, pack)
+    const one = scaffoldOne(her, { cast, bible: before.umas[her.id] as Obj | undefined, route: before.routes[her.id] as Obj | undefined, world: read.files.world ?? null }, pack)
     if (one.wrote.length === 0) { out.wrote[her.id] = []; if (one.refused.length > 0) out.refused[her.id] = one.refused; continue }
     const after: PackFiles = { ...before, cast: one.cast, umas: { ...before.umas, ...(one.bible ? { [her.id]: one.bible } : {}) }, routes: { ...before.routes, ...(one.route ? { [her.id]: one.route } : {}) } }
     const was = new Set(errorsOf(before, her.id))

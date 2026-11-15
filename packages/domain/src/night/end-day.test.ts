@@ -83,7 +83,9 @@ describe('the calendar turns', () => {
   it('turns Spring into Summer after day 12, and the year after day 48', () => {
     expect(night(farm(12))).toMatchObject({ calendar: { day: 13 }, summary: { day: 13, news: [{ kind: 'season', season: 'summer' }] } })
     expect(night(farm(48))).toMatchObject({ calendar: { day: 49 }, summary: { day: 49, news: [{ kind: 'season', season: 'spring' }, { kind: 'new-year', when: 'today' }] } })
-    expect(night(farm(5)).summary!.news).toEqual([])
+    expect(night(farm(7)).summary!.news).toEqual([])
+    // The game's own small days are named in the morning, with or without the story.
+    expect(night(farm(5)).summary!.news).toEqual([{ kind: 'days', ids: ['blossom-viewing'], when: 'today' }])
   })
 
   it('names a festival tomorrow and today', () => {

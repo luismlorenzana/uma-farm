@@ -1,72 +1,165 @@
-// Occasion scenes: the story's scenes for a day of the year, played with each Uma you've met on that day. The calendar
-// plays three (the packet's): New Year's from the second year (year 1's Spring 1 is the farm's first morning), the Flower
-// Show, and the Fishing Derby's night, each on its day as the story puts it (`festivalsOf`: a moved Flower Show plays on
-// its new day). Each is her route's event of that id, else the default story's (`eventOf`), in its own outfit when the
-// scene names one, else its moment's: New Year's and the derby night the kimono, the Flower Show the garden party dress.
+// Occasion scenes: the story's scenes for a day of the year, played with each Uma who has one on that day. Every moment
+// the story writes for plays, read by id from the pack (`scripted`), so a release with more Umas, scenes or days plays
+// them on publish:
 //
-//   who        everyone you've met (the roster), home or in town: the festival is in town and everyone's there
-//   how often  once a day with each (`today.occasions`): the day is once a year
-//   its cost   one action, her event's: the day's event actions first (`spendForEvent`), then the day's own
+//   New Year's       `new-year`, each Spring 1 from the second year (year 1's is the farm's first morning)
+//   a festival's day its game rule's id (`flower-show`, `fishing-derby`, `cooking-contest`, `animal-show`,
+//                    `harvest-cup`), on the festival's day wherever the story puts it
+//   its night        `<festival>-night`, else the story's alias for it (`derby-night`, `harvest-moon`): a second slot
+//                    on the festival's day, played after the day's
+//   her birthday     `birthday`, on her birthday, once you've met
+//   her anniversary  `anniversary`, on her wedding's day of the year, from the first anniversary
+//   a story day      the day's `scene` (else its id): world.json's days and the game's own six small days
+//
+//   who        everyone met who has the scene: her route's, else the default story's for New Year's, the Flower Show
+//              and the Fishing Derby's night (as before); the others play only when written
+//   one a day  a day with several of hers plays one, in this order: her birthday, her anniversary, New Year's or the
+//              festival's day, a story day; the festival's night is a second slot, after it
+//   its cost   one action each, her event's: the day's event actions first (`spendForEvent`), then the day's own
 //   its pay    nothing: its choices are wording only, as every scene past the rungs
+//   the save   `today.occasions` keeps `<her id>:<occasion id>` for each played; an entry of her id alone (a save from
+//              before) is the old game's one occasion that day: New Year's, the Flower Show or the derby's night
 //
-// It isn't her heart event: it neither needs her Ready nor stops her event today. Her birthday's, the other festivals'
-// and the Fishing Derby's daytime scenes are written and read, and wait for their own moments. Pure.
+// It isn't her heart event: it neither needs her Ready nor stops her event today. Pure.
 import { actionCost, spendForEvent, type SpecialDays } from '../farm/actions'
-import { dateOf, festivalOn, isNewYear, NEW_YEAR_NAME, type Festival, type FestivalId } from '../farm/calendar'
+import { dateOf, festivalOn, FESTIVALS, isNewYear, NEW_YEAR_NAME, type FestivalId } from '../farm/calendar'
 import { SaveRuleError } from '../save/rules'
 import type { SaveV4 } from '../save/v4'
-import type { Moment } from '../story/look'
+import { FESTIVAL_NIGHTS } from '../story/authored'
+import { momentOutfit, type Moment } from '../story/look'
+import type { StoryPack } from '../story/pack'
+import { storyDaysOn } from '../story/placeholders'
+import { isBirthday } from './days'
+import { isAnniversary } from './love'
 
-/** The occasion scenes the calendar plays, by the story's event id. */
-export const PLAYED_OCCASIONS = ['new-year', 'flower-show', 'derby-night'] as const
-export type PlayedOccasion = typeof PLAYED_OCCASIONS[number]
-export const isPlayedOccasion = (id: string): id is PlayedOccasion => (PLAYED_OCCASIONS as readonly string[]).includes(id)
+/** The kinds of occasion, in the day's order (the night is its own slot). */
+export const OCCASION_KINDS = ['birthday', 'anniversary', 'new-year', 'festival', 'story-day', 'festival-night'] as const
+export type OccasionKind = typeof OCCASION_KINDS[number]
 
-/** Each occasion's day and moment, as the manual lists them. */
-export const OCCASION_RULES: readonly { id: PlayedOccasion; festival: FestivalId | null; when: string; moments: readonly Moment[] }[] = [
-  { id: 'new-year', festival: null, when: 'New Year’s, each year’s Spring 1, from the second year', moments: ['new-year'] },
-  { id: 'flower-show', festival: 'flower-show', when: 'The Flower Show’s day, wherever the story puts it', moments: ['spring-festival'] },
-  { id: 'derby-night', festival: 'fishing-derby', when: 'The Fishing Derby’s day, wherever the story puts it: its night', moments: ['festival-night'] },
+/** One of her occasions on a day. */
+export interface Occasion {
+  /** Its id, kept with hers in `today.occasions`: `birthday`, `anniversary`, `new-year`, the festival's game rule,
+   * `<festival>-night`, or the story day's id. */
+  readonly id: string
+  readonly kind: OccasionKind
+  /** The event it plays: her route's of this id, else the default story's. */
+  readonly event: string
+  /** The day's slot, or the festival's night after it. */
+  readonly slot: 'day' | 'night'
+  /** Its name: "New Year’s", the festival's (the story's), "… night", "Birthday", "Anniversary", the story day's. */
+  readonly name: string
+  /** What she wears when the scene names no outfit (`look.ts`). */
+  readonly moments: readonly Moment[]
+}
+
+/** The scenes the default story plays where her route writes none: New Year's, the Flower Show and the Fishing Derby's
+ * night, as the calendar played them before. Every other occasion plays only when her route writes it. */
+export const DEFAULT_OCCASION_SCENES: readonly string[] = ['new-year', 'flower-show', 'derby-night']
+
+/** Each kind's moments: New Year's and a festival's night the kimono, the Flower Show the garden party dress, her birthday
+ * and her anniversary the dinner dress; the other festivals' days and a story day the season's. */
+export function occasionMoments(kind: OccasionKind, festival: FestivalId | null = null): readonly Moment[] {
+  switch (kind) {
+    case 'new-year': return ['new-year']
+    case 'festival-night': return ['festival-night']
+    case 'festival': return festival === 'flower-show' ? ['spring-festival'] : []
+    case 'birthday': case 'anniversary': return ['dinner']
+    case 'story-day': return []
+  }
+}
+
+/** Each occasion as the manual lists them. */
+export const OCCASION_RULES: readonly { kind: OccasionKind; name: string; events: string; when: string; who: string; unwritten: string; moments: readonly Moment[] }[] = [
+  { kind: 'new-year', name: NEW_YEAR_NAME, events: '`new-year`', when: 'Spring 1, from the second year', who: 'Everyone met', unwritten: 'The default story’s', moments: occasionMoments('new-year') },
+  {
+    kind: 'festival', name: 'A festival’s day', events: FESTIVALS.map((f) => `\`${f.id}\``).join(', '), when: 'The festival’s day, wherever the story puts it', who: 'Everyone met',
+    unwritten: 'The default story’s for the Flower Show; none for the others', moments: occasionMoments('festival', 'flower-show'),
+  },
+  {
+    kind: 'festival-night', name: 'A festival’s night', events: FESTIVALS.map((f) => FESTIVAL_NIGHTS[f.id as FestivalId].map((e) => `\`${e}\``).join(' or ')).join('; '),
+    when: 'The festival’s day, its night: a second slot, after the day’s', who: 'Everyone met', unwritten: 'The default story’s for `derby-night`; none for the others',
+    moments: occasionMoments('festival-night'),
+  },
+  { kind: 'birthday', name: 'Her birthday', events: '`birthday`', when: 'Her birthday', who: 'Her, once you’ve met', unwritten: 'None', moments: occasionMoments('birthday') },
+  { kind: 'anniversary', name: 'Her anniversary', events: '`anniversary`', when: 'Her wedding’s date, each year from the first anniversary', who: 'Her, once married', unwritten: 'None', moments: occasionMoments('anniversary') },
+  { kind: 'story-day', name: 'A story day', events: 'The day’s `scene`, else its `id`', when: 'world.json’s `days`, and the game’s own small days', who: 'Everyone met', unwritten: 'None', moments: occasionMoments('story-day') },
 ]
-const RULE = new Map(OCCASION_RULES.map((r) => [r.id, r]))
+/** A kind's outfit word for the manual: the moment's outfit id. */
+export const occasionOutfit = (kind: OccasionKind, festival: FestivalId | null = null): string => momentOutfit(occasionMoments(kind, festival))
 
-/** The occasion a farm day holds, or null: New Year's from the second year, else the day's festival's when it's the
- * Flower Show or the Fishing Derby (by its game rule, so the story's name and day). */
-export function occasionOn(day: number, year: readonly Festival[]): PlayedOccasion | null {
-  if (isNewYear(day)) return dateOf(day).year >= 2 ? 'new-year' : null
-  const rule = festivalOn(day, year)?.rule ?? null
-  return OCCASION_RULES.find((r) => r.festival !== null && r.festival === rule)?.id ?? null
+type OccasionPack = Pick<StoryPack, 'scripted'> & Partial<Pick<StoryPack, 'world'>>
+type OccasionSave = Pick<SaveV4, 'calendar' | 'roster' | 'love' | 'today'>
+
+/** The event an occasion plays with her: the first of its ids her route writes, else the first the default story plays,
+ * else none (she has no scene for it, so it isn't hers). */
+function sceneFor(pack: OccasionPack, id: string, ids: readonly string[]): string | null {
+  const written = pack.scripted.get(id)
+  return ids.find((e) => written?.has(e)) ?? ids.find((e) => DEFAULT_OCCASION_SCENES.includes(e)) ?? null
 }
 
-/** An occasion's moments, for what she wears when her scene names no outfit. */
-export const occasionMoments = (id: PlayedOccasion): readonly Moment[] => RULE.get(id)!.moments
-
-/** An occasion's name: New Year's, the Flower Show under the story's name, the derby's night ("Fishing Derby night"). */
-export function occasionName(id: PlayedOccasion, year: readonly Festival[]): string {
-  if (id === 'new-year') return NEW_YEAR_NAME
-  const festival = RULE.get(id)!.festival
-  const name = year.find((f) => f.rule === festival)?.name ?? (festival === 'flower-show' ? 'Flower Show' : 'Fishing Derby')
-  return id === 'derby-night' ? `${name} night` : name
+/** Her occasions on a farm day, in play order: the day's slot (the first she has a scene for, of her birthday, her
+ * anniversary, New Year's or the festival's day, then the story's days in the calendar's order), then the festival's
+ * night. None for someone you haven't met. */
+export function occasionsOn(save: OccasionSave, pack: OccasionPack, days: SpecialDays, id: string, day = save.calendar.day): Occasion[] {
+  if (!save.roster[id]) return []
+  const love = save.love[id]
+  const festival = festivalOn(day, days.festivals)
+  const rule = festival?.rule ?? null
+  type Candidate = Omit<Occasion, 'event'> & { ids: readonly string[] }
+  const one = (kind: OccasionKind, occasion: string, ids: readonly string[], name: string, slot: 'day' | 'night' = 'day'): Candidate => ({
+    id: occasion, kind, ids, name, slot, moments: occasionMoments(kind, rule),
+  })
+  const candidates: Candidate[] = [
+    ...(isBirthday(days.birthdays, id, day) ? [one('birthday', 'birthday', ['birthday'], 'Birthday')] : []),
+    ...(love && isAnniversary(love, day) ? [one('anniversary', 'anniversary', ['anniversary'], 'Anniversary')] : []),
+    ...(isNewYear(day) && dateOf(day).year >= 2 ? [one('new-year', 'new-year', ['new-year'], NEW_YEAR_NAME)] : []),
+    ...(rule ? [one('festival', rule, [rule], festival!.name)] : []),
+    ...storyDaysOn(pack, day).map((d) => one('story-day', d.id, [d.scene], d.name)),
+  ]
+  const played = (c: Candidate | undefined): Occasion[] => {
+    if (!c) return []
+    const event = sceneFor(pack, id, c.ids)
+    return event === null ? [] : [{ id: c.id, kind: c.kind, event, slot: c.slot, name: c.name, moments: c.moments }]
+  }
+  const daySlot = candidates.map((c) => played(c)[0]).find((o) => o !== undefined)
+  const night = rule ? played(one('festival-night', FESTIVAL_NIGHTS[rule][0]!, FESTIVAL_NIGHTS[rule], `${festival!.name} night`, 'night')) : []
+  return [...(daySlot ? [daySlot] : []), ...night]
 }
 
-/** Whether she's played today's occasion scene. */
-export const occasionPlayed = (save: Pick<SaveV4, 'today'>, id: string): boolean => (save.today.occasions ?? []).includes(id)
+/** An occasion's entry in `today.occasions`: her id and the occasion's. */
+export const occasionKey = (id: string, occasion: string): string => `${id}:${occasion}`
+/** What an entry of her id alone means (a save from before): the old game's one occasion that day. */
+const OLD_OCCASIONS: readonly string[] = ['new-year', 'flower-show', FESTIVAL_NIGHTS['fishing-derby'][0]!]
 
-/** Today's occasion with her, or null: she's met, today holds one, and she hasn't played it today. */
-export function occasionWith(save: Pick<SaveV4, 'calendar' | 'roster' | 'today'>, id: string, year: readonly Festival[]): PlayedOccasion | null {
-  const occasion = occasionOn(save.calendar.day, year)
-  return occasion && save.roster[id] && !occasionPlayed(save, id) ? occasion : null
+/** Whether she's played this occasion today. */
+export function occasionPlayed(save: Pick<SaveV4, 'today'>, id: string, occasion: string): boolean {
+  const played = save.today.occasions ?? []
+  return played.includes(occasionKey(id, occasion)) || (played.includes(id) && OLD_OCCASIONS.includes(occasion))
 }
+
+/** Who's played an occasion with you today, each once, in the order played. */
+export const playedToday = (save: Pick<SaveV4, 'today'>): string[] => [...new Set((save.today.occasions ?? []).map((e) => e.split(':')[0]!))]
+
+/** Her occasions today she hasn't played yet, in play order: the day's slot, then the night. */
+export const occasionsLeft = (save: OccasionSave, pack: OccasionPack, days: SpecialDays, id: string): Occasion[] =>
+  occasionsOn(save, pack, days, id).filter((o) => !occasionPlayed(save, id, o.id))
+
+/** Today's next occasion with her, or null: she's met, today holds one of hers, and she hasn't played it yet. The night
+ * comes after the day's. */
+export const occasionWith = (save: OccasionSave, pack: OccasionPack, days: SpecialDays, id: string): Occasion | null =>
+  occasionsLeft(save, pack, days, id)[0] ?? null
 
 /**
- * Her occasion scene, played to its end: one action, the day's event actions first, and her id into `today.occasions`.
- * It pays nothing. Refused (`not-ready`) when today holds no occasion, she isn't met, or she's played it today; refused
+ * Her next occasion today, played to its end: one action, the day's event actions first, and `<her id>:<occasion>` into
+ * `today.occasions`. It pays nothing. Refused (`not-owned`) for someone you haven't met; (`not-ready`) when today holds
+ * none of hers; (`busy`) when she's played today's, or `expected` (the one its player showed) isn't next any more; and
  * (`no-actions`) with no action left of either kind. Pure; never stamps.
  */
-export function playOccasion(save: SaveV4, id: string, days: SpecialDays): SaveV4 {
+export function playOccasion(save: SaveV4, pack: OccasionPack, id: string, days: SpecialDays, expected?: string): SaveV4 {
   if (!save.roster[id]) throw new SaveRuleError('not-owned', 'You haven’t met her yet.')
-  if (occasionOn(save.calendar.day, days.festivals) === null) throw new SaveRuleError('not-ready', 'No occasion today.')
-  if (occasionPlayed(save, id)) throw new SaveRuleError('busy', 'You’ve spent today’s occasion with her.')
+  if (occasionsOn(save, pack, days, id).length === 0) throw new SaveRuleError('not-ready', 'No occasion today.')
+  const next = occasionWith(save, pack, days, id)
+  if (!next || (expected !== undefined && next.id !== expected)) throw new SaveRuleError('busy', 'You’ve spent today’s occasion with her.')
   const spent = spendForEvent(save, actionCost('event'), days)
-  return { ...spent, today: { ...spent.today, occasions: [...(spent.today.occasions ?? []), id] } }
+  return { ...spent, today: { ...spent.today, occasions: [...(spent.today.occasions ?? []), occasionKey(id, next.id)] } }
 }

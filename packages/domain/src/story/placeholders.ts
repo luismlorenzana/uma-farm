@@ -9,7 +9,8 @@
 //   the opening              two short lines: the farm, and its nine Carrot seeds (nobody comes to the Gate)
 //   her name and outfit      master data's name and her default outfit (`MasterCast`, read at boot)
 //   her talks, by stage      the default story's, by her stage and temperament (her bible's chat set where it has one)
-//   her gift reactions       the default story's, by her taste
+//   her gift reactions       the default story's, by her taste (her bible's `giftLines` where it has them)
+//   her greetings, small talk none: a talk opens on her line, and is her line alone
 //   her meeting scene        the default story's, in town, paying as a written one does
 //   her events               the default story's for every rung, the wedding night, moving in and married life 2 and 4,
 //                            each paying as written; her occasions and evenings' scenes the same
@@ -26,26 +27,27 @@
 //   the world's names        the town is "Town" on the map, the farm "The farm"; no region
 //   the farm's history       none: the Diary's "The farm" page shows only what's named
 //   the festivals            the game's five, on their days: each season's 10th, and the Harvest Cup on Winter 12
-//   the story's days         none: the calendar shows the festivals, New Year's, birthdays and anniversaries
+//   the story's days         the game's own six small days (blossom viewing, the wishing night, the first cold evening,
+//                            the first snow, the longest night, the sweets day), each a minor day with its own scene
 //   a place's name and line  the map's own name and its quick look's line
 //   a season's line          none: the morning says "Spring begins" alone
 //   Town notes               none
 //
 // Every read of the pack goes through a function here. Pure; loaded with the story pack.
-import { dateOf, FESTIVALS, festivalDayOfYear, isFestivalId, type Festival, type Season } from '../farm/calendar'
+import { dateOf, FESTIVAL_IDS, FESTIVALS, festivalDayOfYear, isFestivalId, type Festival, type Season } from '../farm/calendar'
 import type { Activity } from '../farm/ranks'
 import { activityScore, talentScores, type TalentOutfit, type Temperament } from '../farm/talents'
 import { goodName, isGoodId } from '../goods/ids'
 import type { Taste } from '../romance/chats'
 import { isDishId, pairKey, type Love } from '../save/v4'
 import {
-  ARRIVAL, EVENING_SCENES, FAVOURITE_LINES, HOUSEHOLD_SCENES, isSister, RUNGS, sisterOutfit, SPOT_IDS, type Beat, type Calling, type Cast, type ChoiceOption, type DateGame, type DayKind, type Finale, type Gifts,
+  ARRIVAL, EVENING_SCENES, FAVOURITE_LINES, FESTIVAL_NIGHTS, GAME_DAYS_OF_STORY, HOUSEHOLD_SCENES, isSister, RUNGS, sisterOutfit, SPOT_IDS, type Beat, type Calling, type Cast, type ChoiceOption, type DateGame, type DayKind, type Finale, type Gifts,
   type HerChapter, type HerJob, type Household, type HouseholdAt, type HouseholdScene, type Keepsake, type PairConversations, type Play, type RoutineStop, type SpotId, type Step,
-  type StoryPlace, type StoryTrigger, type Tie, type TieKind, type TownLocation, type TownNote, type UmaBible, type Wish,
+  type StoryPlace, type StoryTrigger, type Tie, type TieKind, type TownLocation, type TownNote, type UmaBible, type Wish, type Greetings, type SmallTalk,
 } from './authored'
 import { CAST, CAST_IDS, isCastId, type CastId } from './cast'
 import {
-  DEFAULT_EVENINGS, DEFAULT_EVENTS, DEFAULT_GIFT_REACTIONS, DEFAULT_GOOD, DEFAULT_GOODS, DEFAULT_LIFE_EVENTS, DEFAULT_MEALS, DEFAULT_MORNINGS, DEFAULT_OCCASIONS, DEFAULT_TALKS,
+  DEFAULT_EVENINGS, DEFAULT_EVENTS, DEFAULT_GIFT_REACTIONS, DEFAULT_GOOD, DEFAULT_GOODS, DEFAULT_LIFE_EVENTS, DEFAULT_MEALS, DEFAULT_MORNINGS, DEFAULT_TALKS,
   DEFAULT_TOWN_MEETING, DEFAULT_WORK, HER, WORK_WORDS, type DefaultScene, type TalkStage,
 } from './default-story'
 import type { StoryOutfit } from './look'
@@ -435,12 +437,21 @@ export function defaultTalksOf(pack: HerPack, id: string, stage: TalkStage, temp
   return DEFAULT_TALKS[stage][temperament].map((line) => fillHer(line, { good, work }))
 }
 
-/** What she says to a gift, by her taste: the default story's lines, with the gift's name, her favourite good and her
+/** What she says to a gift: on her birthday her bible's `giftLines.birthday` when it holds any; else her `giftLines` for
+ * its taste when they hold any; else the default story's for the taste, with the gift's name, her favourite good and her
  * line's work in (`{name}` and `{farmer}` fill as they show). */
-export function giftReactionsOf(pack: HerPack, id: string, taste: Taste, gift: string): readonly string[] {
+export function giftReactionsOf(pack: HerPack, id: string, taste: Taste, gift: string, birthday = false): readonly string[] {
+  const own = pack.bibles.get(id)?.giftLines
+  const hers = (birthday ? own?.birthday ?? [] : []).length > 0 ? own!.birthday! : own?.[taste] ?? []
+  if (hers.length > 0) return hers
   const { good, work } = herWordsOf(pack, id)
   return DEFAULT_GIFT_REACTIONS[taste].map((line) => fillHer(line, { good, work, gift: goodName(gift) }))
 }
+
+/** Her greetings: her bible's, else none (a talk opens on her line). */
+export const greetingsOf = (pack: Pick<StoryPack, 'bibles'>, id: string): Greetings => pack.bibles.get(id)?.greetings ?? {}
+/** Her small talk: her bible's, else none. */
+export const smallTalkOf = (pack: Pick<StoryPack, 'bibles'>, id: string): readonly SmallTalk[] => pack.bibles.get(id)?.smallTalk ?? []
 
 /** The night's companion's morning greetings: her bible's `mornings` when it holds any, else the default story's for her
  * temperament, with her words in but `{name}` and `{farmer}`, which fill as they show. */
@@ -719,7 +730,8 @@ export const festivalNameOf = (year: readonly Festival[], id: string): string =>
   year.find((f) => f.id === id)?.name ?? FESTIVALS.find((f) => f.id === id)?.name ?? 'A festival'
 
 /** One of the story's days as the calendar plays it: its id, its name, a holiday or a minor day, its season (null: every
- * season), its days of the season and its line (null without one). */
+ * season), its days of the season, its line (null without one), and the scene it plays with each Uma who has it written
+ * (`romance/occasions.ts`). */
 export interface StoryDay {
   readonly id: string
   readonly name: string
@@ -727,18 +739,23 @@ export interface StoryDay {
   readonly season: Season | null
   readonly days: readonly number[]
   readonly line: string | null
+  readonly scene: string
 }
+/** The game's own small days as the calendar plays them: minor days, each its own scene, with no line. */
+export const GAME_STORY_DAYS: readonly StoryDay[] = GAME_DAYS_OF_STORY.map((d) => ({ id: d.id, name: d.name, kind: 'minor', season: d.season, days: [d.day], line: null, scene: d.id }))
 const storyDays = new WeakMap<object, readonly StoryDay[]>()
-/** The story's holidays and minor days, in world.json's order (a holiday a minor day without its kind, every season
- * without its season); none without it. Read once a pack. */
+/** The story's holidays and minor days: world.json's, in its order (a holiday a minor day without its kind, every season
+ * without its season, its id the scene without one), then the game's own small days it doesn't name (one it names by id
+ * is moved or renamed by it). Read once a pack. */
 export function storyDaysOf(pack: WorldPack): readonly StoryDay[] {
   const world = pack?.world
-  if (!world?.days || world.days.length === 0) return []
+  if (!world?.days || world.days.length === 0) return GAME_STORY_DAYS
   const known = storyDays.get(world)
   if (known) return known
-  const out = world.days.map((d): StoryDay => ({
-    id: d.id, name: d.name, kind: d.kind ?? 'minor', season: d.season ?? null, days: Array.isArray(d.day) ? d.day : [d.day], line: d.line ?? null,
+  const own = world.days.map((d): StoryDay => ({
+    id: d.id, name: d.name, kind: d.kind ?? 'minor', season: d.season ?? null, days: Array.isArray(d.day) ? d.day : [d.day], line: d.line ?? null, scene: d.scene ?? d.id,
   }))
+  const out = [...own, ...GAME_STORY_DAYS.filter((g) => !own.some((d) => d.id === g.id))]
   storyDays.set(world, out)
   return out
 }
@@ -748,6 +765,22 @@ export function storyDaysOn(pack: WorldPack, day: number): StoryDay[] {
   const on = storyDaysOf(pack).filter((d) => (d.season === null || d.season === date.season) && d.days.includes(date.day))
   return [...on.filter((d) => d.kind === 'holiday'), ...on.filter((d) => d.kind !== 'holiday')]
 }
+/** Her occasions a route can write, one piece each, with the event ids that write it: New Year's, the five festivals'
+ * days, their nights (under any of their ids: `<festival>-night`, or the story's alias), her birthday, her anniversary,
+ * and each of the story's days' scenes (the game's own six and world.json's). A festival's night is `optional`: it plays
+ * when it's written, and a festival with none written has no night scene, which is never missing. */
+export function occasionPieces(pack: WorldPack): { piece: string; ids: readonly string[]; optional?: true }[] {
+  const scenes = [...new Set(storyDaysOf(pack).map((d) => d.scene))]
+  return [
+    { piece: 'new-year', ids: ['new-year'] },
+    ...FESTIVAL_IDS.map((f) => ({ piece: f as string, ids: [f] })),
+    ...FESTIVAL_IDS.map((f) => ({ piece: FESTIVAL_NIGHTS[f][0]!, ids: FESTIVAL_NIGHTS[f], optional: true as const })),
+    { piece: 'birthday', ids: ['birthday'] },
+    { piece: 'anniversary', ids: ['anniversary'] },
+    ...scenes.map((scene) => ({ piece: scene, ids: [scene] })),
+  ]
+}
+
 /** One of the story's days' names by its id; null for one the pack no longer holds. */
 export const storyDayNameOf = (pack: WorldPack, id: string): string | null => storyDaysOf(pack).find((d) => d.id === id)?.name ?? null
 
@@ -786,7 +819,7 @@ export function worldWrittenOf(pack: WorldPack): StoryPart[] {
     part('The region’s name', names.region !== null, names.region ?? '', 'None'),
     part('The farm’s history', historyOf(pack).length > 0, `${historyOf(pack).length} line${historyOf(pack).length === 1 ? '' : 's'}`, 'None: the Diary’s “The farm” page shows only the names'),
     part('The festivals', festivals.length > 0, `${festivals.filter((e) => isFestivalId(e.id)).length} of the game’s renamed or moved, ${festivals.filter((e) => !isFestivalId(e.id)).length} of the story’s own`, `The game’s ${FESTIVALS.length}: ${FESTIVALS.map((f) => f.name).join(', ')}`),
-    part('The story’s days', days.length > 0, `${days.filter((d) => d.kind === 'holiday').length} holidays, ${days.filter((d) => d.kind !== 'holiday').length} minor days`, 'None: the calendar shows the festivals, New Year’s and birthdays'),
+    part('The story’s days', (world?.days?.length ?? 0) > 0, `${days.filter((d) => d.kind === 'holiday').length} holidays, ${days.filter((d) => d.kind !== 'holiday').length} minor days`, `The game’s ${GAME_STORY_DAYS.length} small days`),
     part('The places’ words', places.length > 0, `${places.length} place${places.length === 1 ? '' : 's'}; the rest the game’s own`, 'The game’s own names and lines'),
     part('The seasons’ lines', seasons.length > 0, `${seasons.length} of 4; the rest “… begins” alone`, '“Spring begins” alone'),
     part('Town notes', notes.length > 0, `${notes.length}, ${notes.filter((n) => !n.unlock).length} known from the start`, 'None'),
@@ -800,13 +833,19 @@ export interface StoryPart { part: string; written: boolean; plays: string }
 
 /** Each part of her the game reads, and whether the pack writes it or a placeholder plays: the Farm Story Sandbox's
  * per-character marks. */
-export function writtenOf(pack: Pick<StoryPack, 'cast' | 'bibles' | 'scripted' | 'ties' | 'pairs' | 'household'>, id: string): StoryPart[] {
+export function writtenOf(pack: Pick<StoryPack, 'cast' | 'bibles' | 'scripted' | 'ties' | 'pairs' | 'household'> & Partial<Pick<StoryPack, 'world'>>, id: string): StoryPart[] {
   const entry = castEntry(pack, id)
   const bible: UmaBible | undefined = pack.bibles.get(id)
   const scripted = pack.scripted.get(id) ?? new Set<string>()
   const events = [...RUNGS.filter((r) => r !== ARRIVAL), ...DEFAULT_LIFE_EVENTS]
   const writtenEvents = events.filter((r) => scripted.has(r)).length
-  const occasions = DEFAULT_OCCASIONS.filter((o) => scripted.has(o)).length
+  const all = occasionPieces(pack)
+  const pieces = all.filter((p) => !p.optional)
+  const occasions = pieces.filter((p) => p.ids.some((o) => scripted.has(o))).length
+  const nights = all.filter((p) => p.optional && p.ids.some((o) => scripted.has(o))).length
+  const nightWords = `${nights} festival night${nights === 1 ? '' : 's'}`
+  const greetings = Object.values(bible?.greetings ?? {}).some((v) => Array.isArray(v) ? v.length > 0 : typeof v === 'object' && v !== null && Object.values(v).some((l) => Array.isArray(l) && l.length > 0))
+  const giftLines = (['loved', 'liked', 'neutral', 'disliked'] as const).filter((t) => (bible?.giftLines?.[t]?.length ?? 0) > 0)
   const evenings = EVENING_SCENES
   const writtenEvenings = evenings.filter((e) => scripted.has(e)).length
   const chats = (['friend', 'partner', 'spouse'] as const).filter((set) => (bible?.chats?.[set] ?? []).length > 0)
@@ -823,13 +862,17 @@ export function writtenOf(pack: Pick<StoryPack, 'cast' | 'bibles' | 'scripted' |
     part('Her chats', chats.length === 3, 'Friend, partner and spouse', chats.length > 0 ? `Her ${chats.join(' and ')} lines; the default story’s talks for the rest` : 'The default story’s talks, by her stage and temperament'),
     part('Her meeting scene', scripted.has(ARRIVAL), 'Her arrival scene', 'The default story’s meeting, in town'),
     part('Her events', writtenEvents === events.length, `All ${events.length}`, `${writtenEvents} of ${events.length} written; the rest play the default story’s, paying as written`),
-    part('Her occasions', occasions === DEFAULT_OCCASIONS.length, `All ${DEFAULT_OCCASIONS.length}`, `${occasions} of ${DEFAULT_OCCASIONS.length} written; the rest the default story’s`),
+    part('Her occasions', occasions === pieces.length, `All ${pieces.length}, and ${nightWords}`,
+      `${occasions} of ${pieces.length} written, and ${nightWords}; New Year’s, the Flower Show and the Fishing Derby’s night play the default story’s, the rest play only when written`),
     part('Her evenings', writtenEvenings === evenings.length, `All ${evenings.length}`, `${writtenEvenings} of ${evenings.length} written; the rest the default story’s`),
     part('Her chapters', (entry?.chapters?.length ?? 0) > 0, `${entry?.chapters?.length ?? 0}, the story’s`, `The four defaults: ${DEFAULT_CHAPTERS.map((c) => c.title).join(', ')}`),
     part('Her life in town', !!(entry?.home ?? entry?.job ?? entry?.routine?.length), [entry?.home ? 'A home' : '', entry?.job ? 'a job' : '', entry?.routine?.length ? 'a routine' : ''].filter(Boolean).join(', '),
       'None: today’s draw places her'),
     part('Her favourite spot', !!entry?.spot, `${entry?.spot ? PLACEHOLDER_SPOTS[entry.spot].name : ''}`, 'None: she’s out at any spot alike'),
     part('Her town lines', (bible?.townLines?.length ?? 0) > 0, `${bible?.townLines?.length ?? 0}, hers`, `The game’s ${PLACEHOLDER_TOWN_LINES.length} short lines`),
+    part('Her greetings', greetings, 'Hers, by birthday, place, season and hour', 'None: a talk opens on her line'),
+    part('Her small talk', (bible?.smallTalk?.length ?? 0) > 0, `${bible?.smallTalk?.length ?? 0}, hers`, 'None: a talk is her line alone'),
+    part('Her gift lines', giftLines.length === 4, 'Every taste, hers', giftLines.length > 0 ? `Her ${giftLines.join(', ')} lines; the default story’s for the rest` : 'The default story’s, by her taste'),
     part('Her morning greetings', (bible?.mornings?.length ?? 0) > 0, `${bible?.mornings?.length ?? 0}, hers`, 'The default story’s, by her temperament'),
     part('Her meal lines', (bible?.meals?.breakfast?.length ?? 0) > 0 && (bible?.meals?.dinner?.length ?? 0) > 0, 'Breakfast and dinner, hers',
       'The default story’s, where hers are missing'),
@@ -857,7 +900,10 @@ export const PLACEHOLDER_TABLE: readonly { gives: string; without: string }[] = 
   { gives: 'Her meeting scene', without: 'The default story’s, in town, where you introduced yourself; it pays as a written one does. A written one with no choice gets the hello' },
   { gives: 'A heart event', without: 'The default story’s: her moment, her lines with their faces and your reply; its points and rewards pay as written' },
   { gives: 'The wedding night, moving in, married life 2 and 4', without: 'The default story’s: the wedding night in its outfit, tender and fading to morning; they pay nothing' },
-  { gives: 'Her occasions', without: `The default story’s ${DEFAULT_OCCASIONS.length}: her birthday, the five festivals, the Fishing Derby’s night and New Year’s` },
+  { gives: 'Her occasions', without: 'The default story’s New Year’s, Flower Show and Fishing Derby night; her birthday, her anniversary, the other festivals’ days and nights and the story’s days play only when written' },
+  { gives: 'Her greetings', without: 'None: a chat or a talk in town opens on her line' },
+  { gives: 'Her small talk', without: 'None: a chat is her line alone' },
+  { gives: 'Her gift lines', without: `The default story’s gift reactions, by her taste` },
   { gives: 'Her evenings’ scenes', without: `The default story’s ${EVENING_SCENES.length}: a hangout’s and a date’s for each kind, Dinner in town and A night in` },
   { gives: 'Her morning greetings and meal lines', without: `The default story’s: ${DEFAULT_MORNINGS.steady.length} greetings for each temperament, and ${DEFAULT_MEALS.breakfast.length} lines for each meal` },
   { gives: 'A play’s prompt', without: 'Its game’s: “Cast the line together.”' },
@@ -883,7 +929,7 @@ export const PLACEHOLDER_TABLE: readonly { gives: string; without: string }[] = 
   { gives: 'The town’s, the farm’s and the region’s names', without: `“${PLACEHOLDER_NAMES.town}” on the map, “${PLACEHOLDER_NAMES.farm}” in the Diary, no region; the opening names none` },
   { gives: 'The farm’s history', without: 'None' },
   { gives: 'The festivals', without: `The game’s ${FESTIVALS.length}: ${FESTIVALS.map((f) => f.name).join(', ')}, on each season’s 10th day and Winter 12` },
-  { gives: 'The story’s holidays and minor days', without: 'None: the calendar shows the festivals, New Year’s, birthdays and anniversaries' },
+  { gives: 'The story’s holidays and minor days', without: `The game’s ${GAME_DAYS_OF_STORY.length} small days: ${GAME_DAYS_OF_STORY.map((d) => `${d.name} (${d.season[0]!.toUpperCase()}${d.season.slice(1)} ${d.day})`).join(', ')}` },
   { gives: 'A place’s name and line', without: 'The map’s own name, and its quick look’s line' },
   { gives: 'A season’s line', without: 'None: the morning says “Spring begins” alone' },
   { gives: 'Town notes', without: 'None' },

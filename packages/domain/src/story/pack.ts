@@ -11,7 +11,7 @@
 import { isGoodId } from '../goods/ids'
 import { pairKey } from '../save/v4'
 import {
-  ARRIVAL, checkBible, checkCast, checkHousehold, checkOpening, checkPair, checkRoute, checkTies, checkTown, checkWorld, GAME_LOCATIONS, STORY_ID, type Cast, type CastEntry, type Findings,
+  ARRIVAL, checkBible, checkCast, dayScenesOf, checkHousehold, checkOpening, checkPair, checkRoute, checkTies, checkTown, checkWorld, GAME_LOCATIONS, STORY_ID, type Cast, type CastEntry, type Findings,
   type Household, type Opening, type PairConversations, type Read, type Route, type StoryContext, type Ties, type Town, type UmaBible, type World,
 } from './authored'
 import { isFestivalId } from '../farm/calendar'
@@ -88,9 +88,10 @@ export const townPeopleOf = (pack: Partial<Pick<StoryPack, 'town'>>): ReadonlySe
 export const locationIdsOf = (pack: Partial<Pick<StoryPack, 'town'>>): ReadonlySet<string> =>
   new Set([...GAME_LOCATIONS, ...(pack.town?.locations ?? []).map((l) => l.id)])
 
-/** The reader's context a read cast gives: its character ids, the town's people, and which goods exist. */
-export const packContext = (pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town'>>, isGood: (id: string) => boolean = isGoodId): StoryContext =>
-  ({ umas: new Set(pack.cast.umas.map((u) => u.characterId)), isGood, town: townPeopleOf(pack) })
+/** The reader's context a read cast gives: its character ids, the town's people and the town map's locations, which
+ * goods exist, and the scenes `world.json`'s days play. */
+export const packContext = (pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town' | 'world'>>, isGood: (id: string) => boolean = isGoodId): StoryContext =>
+  ({ umas: new Set(pack.cast.umas.map((u) => u.characterId)), isGood, town: townPeopleOf(pack), locations: locationIdsOf(pack), days: dayScenesOf(pack.world) })
 
 /** The pairs the ties name, by `pairKey`: the only pairs whose conversations play. */
 export const tiedPairs = (ties: Pick<Ties, 'ties'>): ReadonlySet<string> => new Set(ties.ties.map((t) => pairKey(t.a, t.b)))
@@ -131,7 +132,7 @@ export function readStoryPack(files: PackFiles, isGood: (id: string) => boolean 
   const world = files.world === undefined ? null : take('world.json', checkWorld(files.world, { isGood }))
   const festivals = new Set((world?.festivals ?? []).map((e) => e.id).filter((id) => !isFestivalId(id)))
   const cast = take('cast.json', checkCast(files.cast, { isGood, town: townPeopleOf({ town }), festivals, locations: locationIdsOf({ town }), ...(exported ? { exported } : {}) }))
-  const ctx = packContext({ cast, town }, isGood)
+  const ctx = packContext({ cast, town, world }, isGood)
   const ties = take('ties.json', checkTies(files.ties, ctx))
   const bibles = new Map<string, UmaBible>()
   for (const [id, raw] of Object.entries(files.umas)) {

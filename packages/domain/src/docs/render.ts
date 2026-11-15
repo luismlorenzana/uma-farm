@@ -87,8 +87,8 @@ import { PLAY_MAP, playOf, togetherPlay, type PlayAs } from '../romance/plays/wh
 import { ART_NAMES, EXPRESSIONS, fallbackChain, MOMENT_OUTFITS, PERSONAL_OUTFITS, SHORE_PLACES, STORY_OUTFITS, type StoryOutfit } from '../story/look'
 import { ILLUSTRATED_MOMENTS, ILLUSTRATED_SCENES, ILLUSTRATION_RULES } from '../story/illustrations'
 import { EVENT_POINTS } from '../romance/events'
-import { OCCASION_RULES, occasionName } from '../romance/occasions'
-import { momentOutfit } from '../story/look'
+import { OCCASION_RULES } from '../romance/occasions'
+import { momentOutfit, type Moment } from '../story/look'
 import { DATE_FROM, EVENING_FACTOR, eveningCost, eveningMoments, eveningPoints, EVENINGS, eveningScene, favouriteKind, HANGOUT_FROM, INVITE_POINTS, INVITE_WEIGHT_DAYS, ROLE_WORDS, type EveningWait } from '../romance/evening'
 import { MEAL_DAYS, MEAL_NAMES, MEAL_POINTS, STAGE_NAMES, STAGE_RULES } from '../romance/loop'
 import { MEALS } from '../save/v4'
@@ -126,10 +126,12 @@ function calendar(): string {
     FESTIVALS.filter((f) => f.season === season).map((f) => `${f.name}, ${SEASON_NAMES[season]} ${f.day} (day ${farmDay({ year: 1, season, day: f.day })})`).join('; '),
   ]))
 }
-/** The occasion scenes the calendar plays: each one's name, the story's event id, its day and what she wears. */
+/** The occasion scenes the calendar plays: each kind's name, the story's event ids, its day, who has it, what plays
+ * unwritten and what she wears. */
 function occasionsBlock(): string {
-  return table(['Occasion', 'The story’s event', 'Its day', 'She wears, unless the scene names an outfit'], OCCASION_RULES.map((r) => [
-    occasionName(r.id, FESTIVALS), `\`${r.id}\``, r.when, `\`${momentOutfit(r.moments)}\` (${r.moments.map((m) => `\`${m}\``).join(', ')})`,
+  const wears = (moments: readonly string[]) => (moments.length === 0 ? 'The season’s' : `\`${momentOutfit(moments as Moment[])}\` (${moments.map((m) => `\`${m}\``).join(', ')})`)
+  return table(['Occasion', 'Its event id', 'Its day', 'Who', 'Unwritten', 'She wears, unless the scene names an outfit'], OCCASION_RULES.map((r) => [
+    r.name, r.events, r.when, r.who, r.unwritten, r.kind === 'festival' ? `${wears(r.moments)} at the Flower Show; the season’s at the others` : wears(r.moments),
   ]))
 }
 /** The night's steps, their functions and what each does. */
@@ -735,10 +737,10 @@ function defaultStoryBlock(): string {
   const scenes = (ids: readonly string[]) => ids.map((id) => `\`${id}\``).join(', ')
   return table(['Piece', 'What the default holds', 'Replaced by the story’s'], [
     ['Her talks', `${talks}: ${DEFAULT_TALKS.friend.steady.length} for each stage (${TALK_STAGES.join(', ')}) and temperament (${TEMPERAMENTS.join(', ')})`, 'Her bible’s `chats` set for the stage'],
-    ['Her gift reactions', `${DEFAULT_GIFT_REACTIONS.loved.length} for each taste (${TASTES.join(', ')})`, '—'],
+    ['Her gift reactions', `${DEFAULT_GIFT_REACTIONS.loved.length} for each taste (${TASTES.join(', ')})`, 'Her bible’s `giftLines` for the taste; on her birthday its `birthday` first'],
     ['Her meeting', 'In town, where you introduce yourself', 'Her route’s `arrival`'],
     ['Her events', `Every rung (${RUNGS.length}), and her life’s: ${scenes(LIFE_EVENTS)}`, 'Her route’s event of that id'],
-    ['Her occasions', scenes(OCCASIONS), 'Her route’s event of that id'],
+    ['Her occasions', `${scenes(OCCASIONS.filter((id) => DEFAULT_EVENTS[id]))}; it plays \`new-year\`, \`flower-show\` and \`derby-night\` where her route writes none (the rest play only when written: [occasion scenes](#occasion-scenes))`, 'Her route’s event of that id'],
     ['The evenings’ scenes', scenes(EVENING_SCENES), 'Her route’s event of that id'],
     ['The night’s companion', `${DEFAULT_MORNINGS.steady.length} morning greetings for each temperament`, 'Her bible’s `mornings`'],
     ['Meals', `${DEFAULT_MEALS.breakfast.length} lines for breakfast and ${DEFAULT_MEALS.dinner.length} for dinner`, 'Her bible’s `meals` (`breakfast`, `dinner`)'],

@@ -33,7 +33,7 @@ test('every Uma with a route, in the cast’s order: hers, the default and missi
   const lines = await status({ env, master: null })
   const said = lines.join('\n')
   assert.match(lines[0], /^Story status: .*story, every Uma with a route \(2 Umas\)$/)
-  assert.match(said, new RegExp(`^${id(2)}\\s+0 · 0 · 2\\s+0 · 0 · 37\\s+1 · 0 · 54\\s+missing pieces$`, 'm'))
+  assert.match(said, new RegExp(`^${id(2)}\\s+0 · 0 · 2\\s+0 · 0 · 40\\s+1 · 0 · 64\\s+missing pieces$`, 'm'))
   assert.match(said, /0 of 2 complete \(nothing missing\); 0 all hers/)
   assert.match(said, new RegExp(`  ${id(2)}\\n    cast: missing schedule, chapters\\n    bible: missing favouriteLine, gifts, chats`))
   assert.match(said, /route: missing arrival, f2–f10, confession/)
@@ -41,7 +41,7 @@ test('every Uma with a route, in the cast’s order: hers, the default and missi
   assert.deepEqual(withRoute({ cast: invented['cast.json'], routes: { [id(3)]: {}, [id(9)]: {}, [id(2)]: {} } }), [id(2), id(3), id(9)])
 })
 
-test('scaffolded, each named is complete with her new pieces the default; a rewritten piece still marked is noted', async (t) => {
+test('scaffolded, each named has her new pieces the default, missing only what the default story has no words for; a rewritten piece still marked is noted', async (t) => {
   const { dir, env } = await packOf(t, invented)
   // The scaffold names her from master data: an invented release.
   const master = join(dir, '..', 'release')
@@ -52,9 +52,12 @@ test('scaffolded, each named is complete with her new pieces the default; a rewr
   await scaffold({ ids: `${id(1)},${id(2)}`, env: { ...env, STORY_MASTER_DIR: master }, log: () => {} })
   const lines = await status({ ids: `${id(1)},${id(2)}`, env: { ...env, STORY_MASTER_DIR: master } })
   const said = lines.join('\n')
-  assert.match(said, new RegExp(`^${id(1)}\\s+Invented 1\\s+0 · 2 · 0\\s+0 · 37 · 0\\s+0 · 55 · 0\\s+complete$`, 'm'))
-  assert.match(said, new RegExp(`^${id(2)}\\s+Invented 2\\s+0 · 2 · 0\\s+0 · 37 · 0\\s+1 · 54 · 0\\s+complete$`, 'm'))
-  assert.match(said, /2 of 2 complete \(nothing missing\); 0 all hers/)
+  assert.match(said, new RegExp(`^${id(1)}\\s+Invented 1\\s+0 · 2 · 0\\s+0 · 37 · 3\\s+0 · 59 · 7\\s+missing pieces$`, 'm'))
+  assert.match(said, new RegExp(`^${id(2)}\\s+Invented 2\\s+0 · 2 · 0\\s+0 · 37 · 3\\s+1 · 58 · 7\\s+missing pieces$`, 'm'))
+  assert.match(said, /0 of 2 complete \(nothing missing\); 0 all hers/)
+  // What the default story has no words for: hers to write.
+  assert.match(said, /bible: missing greetings, smallTalk, giftLines; default/)
+  assert.match(said, /route: missing anniversary, blossom-viewing, wishing-night, first-cold-evening, first-snow, longest-night, sweets-day; default/)
   assert.ok(!said.includes('Notes on the marker'))
 
   // A piece rewritten in her words, its marker left: noted. One unmarked: hers.
@@ -64,7 +67,7 @@ test('scaffolded, each named is complete with her new pieces the default; a rewr
   delete route.events.find((e) => e.id === 'f5').draft
   await writeFile(routeFile, JSON.stringify(route))
   const again = (await status({ ids: id(1), env, master: null })).join('\n')
-  assert.match(again, new RegExp(`^${id(1)}\\s+0 · 2 · 0\\s+0 · 37 · 0\\s+1 · 54 · 0\\s+complete$`, 'm'))
+  assert.match(again, new RegExp(`^${id(1)}\\s+0 · 2 · 0\\s+0 · 37 · 3\\s+1 · 58 · 7\\s+missing pieces$`, 'm'))
   assert.match(again, new RegExp(`Notes on the marker \\(1\\), which block nothing:\\n  - routes/${id(1)}.json: f4 is marked "draft": "default" but its words aren’t the default’s: rewritten\\? remove the marker`))
 })
 

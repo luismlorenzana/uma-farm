@@ -11,7 +11,7 @@
 // there that day, a row a place with its first faces and "+n", from every Uma's fixed schedule (`townDay`). Then the next
 // festival and the day of the year. The days are read live (`seasonDays`); looking is free. Loaded on demand.
 import {
-  actionsLeft, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, festivalsOf, nextFestival, NO_BIRTHDAYS, noPack, SEASON_NAMES, SEASONS, seasonDays,
+  actionsLeft, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, festivalsOf, nextFestival, NO_BIRTHDAYS, noPack, playedToday, SEASON_NAMES, SEASONS, seasonDays,
   type CalendarDay, type DayFace, type FarmSave, type Season, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -24,7 +24,7 @@ import { useMaster } from '../master/master'
 import { useLoopSave } from '../save/game'
 import { namer } from '../story/people'
 import { useSpecialDays, useStory } from '../story/story'
-import { cellFaces, cellLabel, cellMarks, dayHeading, eventActionWords, faintFace, reasonWords } from './calendar-view'
+import { cellFaces, cellLabel, cellMarks, dayHeading, eventActionWords, faceWords, faintFace } from './calendar-view'
 import { townRows, type TownRow } from './schedule-words'
 import { SEASON_COLOR, shortDate, whenWords } from './words'
 
@@ -138,7 +138,7 @@ function DayPanel({ save, pack, days, day, nameOf }: { save: FarmSave; pack: Sto
   const today = save.calendar.day
   const next = nextFestival(today, days.festivals)
   const events = eventActionWords(day, eventActionsLeft(save, days))
-  const played = day.when === 'today' && day.occasion ? (save.today.occasions ?? []).filter((id) => save.roster[id]) : []
+  const played = day.when === 'today' ? playedToday(save).filter((id) => save.roster[id]) : []
   const town = useMemo(() => townRows(save, pack, day.day), [save, pack, day.day])
   const empty = !day.festival && !day.newYear && day.storyDays.length === 0 && day.faces.length === 0 && played.length === 0 && town.length === 0
   return (
@@ -214,7 +214,9 @@ function InTown({ rows, nameOf }: { rows: readonly TownRow[]; nameOf: (id: strin
 /** One Uma with an event that day: her face and name, why, and today what to play. */
 function FaceRow({ face, day, save, days, name }: { face: DayFace; day: CalendarDay; save: FarmSave; days: SpecialDays; name: string }) {
   const location = useLocation()
-  const why = face.reasons.map((r) => reasonWords(r, day, days.festivals)).join(' · ')
+  const why = faceWords(face, day)
+  // Today's next occasion with her: the day's, then a festival's night.
+  const next = face.occasions[0] ?? null
   const now = day.when === 'today'
   const can = actionsLeft(save) + eventActionsLeft(save, days) > 0
   return (
@@ -225,7 +227,7 @@ function FaceRow({ face, day, save, days, name }: { face: DayFace; day: Calendar
         <span className="block truncate text-[12px] text-ink-soft">{why}</span>
       </span>
       {now && face.reasons.includes('occasion') && (can
-        ? <Link to={withParam(location, 'occasion', face.id)} state={{ back: true }} aria-label={`Play the occasion with ${name} · 1 action`} data-action="play-occasion"
+        ? <Link to={withParam(location, 'occasion', face.id)} state={{ back: true }} aria-label={`Play ${next?.name ?? 'the occasion'} with ${name} · 1 action`} data-action="play-occasion" data-occasion={next?.id}
           className="grid min-h-11 shrink-0 place-items-center rounded-sm bg-[#c2385e] px-2.5 text-[13px] font-bold text-white">Play · 1</Link>
         : <span className="shrink-0 text-[12px] text-ink-faint" data-no-actions>No actions</span>)}
       {now && face.reasons.includes('ready') && (

@@ -119,15 +119,19 @@ The menu stays a menu: a partial Uma plays whole, and nothing waits on the story
 complete. `pnpm story:scaffold` writes the pieces she's missing from the default story, marked as the default's;
 `pnpm story:status` says, for each Uma, which pieces are hers, which are still the default and which are missing.
 
-**The checklist:** 94 pieces, in the pack's own shapes (the rest of this page):
+**The checklist:** 107 pieces, in the pack's own shapes (the rest of this page), and one more for each day `world.json`
+adds with a scene of its own; a festival's night counts too when she has one written. It's everything the game plays:
 
 | Part | Its pieces |
 |---|---|
 | Her cast entry, `cast.json` | her **schedule** (her `home`, `job` and `routine` together, one piece: what her profile and the calendar show, [her life in town](#her-life-in-town)), `chapters` ([her chapters](#her-chapters)) |
-| Her bible, `umas/<id>.json` | `favouriteLine`, `gifts`, `chats`, `townLines`, `mornings`, `meals`, `keepsake`, `petName`, `wedding`, `wishes`, and a beat for each of the 27 rungs in her `route` |
-| Her route, `routes/<id>.json` | 55 events: her meeting (`arrival`), `f1`–`f10`, `confession`, `r1`–`r10`, `proposal`, `wedding`; `invited-to-work`, `wedding-night`, `moving-in`, `s1`–`s5`; each evening's scene (the six `hangout-<kind>`, the eleven `date-<kind>`, `dinner-in-town`, `a-night-in`); and four occasions, `new-year`, `flower-show`, `derby-night`, `birthday` |
+| Her bible, `umas/<id>.json` | `favouriteLine`, `gifts`, `chats`, `townLines`, `mornings`, `meals`, `keepsake`, `petName`, `wedding`, `wishes`, `greetings`, `smallTalk`, `giftLines`, and a beat for each of the 27 rungs in her `route` |
+| Her route, `routes/<id>.json` | 65 events: her meeting (`arrival`), `f1`–`f10`, `confession`, `r1`–`r10`, `proposal`, `wedding`; `invited-to-work`, `wedding-night`, `moving-in`, `s1`–`s5`; each evening's scene (the six `hangout-<kind>`, the eleven `date-<kind>`, `dinner-in-town`, `a-night-in`); and every occasion a route can write ([her occasions](#her-occasions)): `new-year`; the five festivals' days (`flower-show`, `fishing-derby`, `cooking-contest`, `animal-show`, `harvest-cup`); `birthday`; `anniversary`; and each of the story's days' scenes (the game's six, [the story's days](#the-storys-days), and any `world.json` adds). Then each festival's night she has written, an optional piece |
 
-Her gift reactions are the default story's for every Uma (the menu has no field for them): her `gifts` are her tastes.
+**A festival's night is optional:** written (`<festival>-night`, or `derby-night` and `harvest-moon` for the Fishing
+Derby's and the Cooking Contest's), it plays and counts as hers, once under whichever of its ids is written; not
+written, the festival has no night scene, and that's never missing. The story's standard writes the Fishing Derby's,
+the Cooking Contest's and the Harvest Cup's.
 
 **The marker, `"draft": "default"`:** a piece that still holds the default story's words.
 
@@ -175,7 +179,12 @@ Her gift reactions are the default story's for every Uma (the menu has no field 
   plays exactly where she did. Give her a home, a job and days of her own as the story finds them, and remove the marker.
 - **Everything else** is the default as the game already plays it: her events and their pays, her chapters, her tastes,
   her mornings and meals, her town lines, her keepsake, her pet name (your name, `{farmer}`), her wedding's places, no
-  wishes, and a beat with only its id for each rung.
+  wishes, and a beat with only its id for each rung; her occasions the default story has a scene for (New Year's, the
+  five festivals' days, her birthday), and the one festival's night it has, the Fishing Derby's, as `derby-night`.
+- **What the default story has no words for stays missing,** hers to write: her `greetings`, `smallTalk` and
+  `giftLines`; her `anniversary`; and the story's days' scenes. So a scaffolded Uma is "missing pieces" until the story
+  writes them, and "complete" means everything the game plays is there. The other festivals' nights are optional, so
+  the scaffold writes none.
 
 | Variable | Default | What |
 |---|---|---|
@@ -274,7 +283,9 @@ What an error skips, by where it is:
 | A town location with no `id` (lowercase words joined by `-`), no `name`, an id twice or one of the game's own | That location (the later one) |
 | Her `home`, her job's `at` or a routine stop's `at` that isn't a location of the town map; a `days` or `seasons` that isn't a list of days of the season (1–12) or seasons | That field, or that stop: what plays without it plays |
 | A field the game can't use (a calling, place or trigger that isn't on the menu, a birthday that isn't a real date) | That field: what plays without it plays |
-| A chat line or a house line too long for its screen | That line |
+| A chat line, a greeting, a gift line or a house line too long for its screen | That line |
+| A small talk with an error (a speaker who isn't her or `you`, a line too long, a tag the game can't read) | That small talk |
+| A greetings or gift lines set that isn't a list | That set |
 | A step in an event the game can't play (a line too long, a choice with no options, a flag the save can't keep) | That event |
 | A step in a pair's conversation | That bond level |
 | A step in a household scene | That scene's part (its `open`, `close` or one spouse's beat) |
@@ -295,7 +306,7 @@ Each limit is what its screen shows. A longer line is an error.
 | A line in a scene or the opening: said, narrated or thought | 400 characters |
 | A choice's option | 160 |
 | A play's prompt | 120 |
-| A chat line | 160 |
+| A chat line, a greeting, a small talk's line, a gift line | 160 |
 | A house line | 120 |
 | A beat's hint (her profile's Next card) | 160 |
 | A beat's caption (the Memory) | 400 |
@@ -516,6 +527,10 @@ The file's name says whose bible it is. A `characterId` inside that disagrees is
 | `petName` | What she calls you from Romance 1, on her profile. No placeholder | Your name |
 | `wedding.places` | Where your wedding may be held, any number, the first first: the game's places | Her wedding beat's place and the farm's: the chapel bell, the Fields, the overlook |
 | `wishes` | `own-house` (she's happiest alone in her house) and `birthday-alone` (her birthday morning is hers) | Neither |
+| `greetings` | Her greeting, opening a chat and a talk in town. On her birthday, one of her `birthday` lines alone. Otherwise one drawn from every set that applies now, their lines together: `places.<id>` (where you're talking: her location in town, else `places.town`; on the farm her work's place or the Dorm), `seasons.<season>`, and `times.morning`, `times.evening` (after an evening with her) or `times.night` (after a night in with her, or as tonight's companion), so every set plays over time. Each a list of lines; one drawn a day. `weather.rain` and `weather.snow` are read and kept: they play once the game has weather ([talk that knows the day](game-mechanics.md#talk-that-knows-the-day)) | None: the talk opens on her line |
+| `smallTalk` | Short exchanges a chat may play instead of her line: a list of `{ "lines": [["<her id>", "…"], ["you", "…"], ["<her id>", "…"]], "at", "season", "stage" }`. A chat draws from her stage's lines and the small talks that fit together; one fits when every tag it carries matches: `at` the place (a farm place, a town spot or location, or `town` anywhere in town), `season`, `stage` her chat set (`friend`, `partner`, `spouse`). It plays on the dialogue engine, `you` under your name | Her line alone |
+| `giftLines` | Her line at a gift: `loved`, `liked`, `neutral`, `disliked` by its taste, and `birthday` first on her birthday, each a list of lines | The default story's reactions for the taste |
+| `voice` | The story's own notes on how she talks: never shown | Nothing |
 | `now`, `whyTheFarm`, `dream`, `blurb`, `laughs`, `hurts`, `season`, `festival`, `outfitId` | The story's own: the sandbox shows them | Nothing |
 
 ### Her route's beats
@@ -557,8 +572,7 @@ one you leave out plays the default.**
 | `wedding-night` | The wedding night: tender, fading to morning, in the wedding night outfit unless you name another | Right after the wedding, before the Married card |
 | `moving-in` | Moving in: she moves to the farm, into your home or a house built for her | Right after the wedding night, before the Married card, once she has a room; one who waits for a room plays it from the morning she moves in ("moved into", **Play**) |
 | `s2`, `s4` | Married life 2 and 4 | The morning after the level comes at night (her bar full): the morning's "reached overnight" line plays it, then her level-up card ([the level-up cards](game-mechanics.md#the-level-up-and-stage-up-cards)) |
-| `new-year`, `flower-show`, `derby-night` | Her occasion scenes: New Year's, the Flower Show and the Fishing Derby's night | On their day, from the calendar, with each Uma you've met: New Year's from the second year, the two festivals where the story puts them ([occasion scenes](game-mechanics.md#occasion-scenes)) |
-| `birthday`, `fishing-derby`, `cooking-contest`, `animal-show`, `harvest-cup` | Her other occasions: her birthday, the Fishing Derby's day and the other festivals | Read and kept; they play when their moments are built |
+| `new-year`, the festivals' ids, `<festival>-night` (and `derby-night`, `harvest-moon`), `birthday`, `anniversary`, the story's days' scenes | Her occasions ([her occasions](#her-occasions)) | On their day, from the calendar, one action each ([occasion scenes](game-mechanics.md#occasion-scenes)) |
 | `hangout-<kind>`, `date-<kind>`, `dinner-in-town`, `a-night-in` | An evening's scene: a hangout's for walk, fishing, picnic, market, cooking and festival; a date's for every kind; Dinner in town's and A night in's own | After each evening's play, before its card: a friend's `hangout-<kind>`, a sweetheart's or a spouse's `date-<kind>`, and the two evenings of their own (Dinner in town from Romance 3, A night in from Romance 6) ([the evening](game-mechanics.md#the-evening)) |
 
 The rungs pay as written (below). The rest pay nothing: their choices are wording only, and the usual sizes don't apply
@@ -575,9 +589,30 @@ farmhand, sweetheart, engaged and married. Her rungs run along all of them, and 
 | Sweetheart, and on | The dates' scenes (`date-<kind>`), `dinner-in-town` (from Romance 3) and `a-night-in` (from Romance 6) |
 | Married | `wedding-night` and `moving-in` after the wedding, then `s2` and `s4`; her bible's `mornings` (the night's companion) and `meals` |
 
-**An occasion scene** costs the player one action (a special day's event actions first) and pays nothing. It plays once
-a day with each Uma, whatever her stage, so write it for a friend and a wife alike. Without an `outfit` she wears the
-kimono at New Year's and on the derby night, and the garden party dress at the Flower Show.
+### Her occasions
+
+**An occasion scene** is a scene for a day of the year, played with each Uma who has it written on that day, from the
+calendar: one action (a special day's event actions first), paying nothing, whatever her stage, so write it for a friend
+and a wife alike.
+
+| Occasion | Its event id | Its day | Who | Unwritten |
+|---|---|---|---|---|
+| New Year's | `new-year` | Spring 1, from the second year | Everyone met | The default story's |
+| A festival's day | its game rule's id: `flower-show`, `fishing-derby`, `cooking-contest`, `animal-show`, `harvest-cup` | The festival's day, wherever the story puts it | Everyone met | The default story's for the Flower Show; none for the others |
+| A festival's night | `<festival>-night`; the story's names stay as aliases: `derby-night` (the Fishing Derby's), `harvest-moon` (the Cooking Contest's) | The festival's day, its night | Everyone met | The default story's for `derby-night`; none for the others |
+| Her birthday | `birthday` | Her birthday | Her, once you've met | None |
+| Her anniversary | `anniversary` | Her wedding's date, each year from the first anniversary | Her, once married | None |
+| A story day | the day's `scene`, else its `id` | `world.json`'s `days`, and the game's own six ([the story's days](#the-storys-days)) | Everyone met | None |
+
+- **A festival's night is optional:** it plays when written, and one not written is never missing
+  ([a complete Uma](#a-complete-uma)).
+- **A day with several of hers plays one,** in this order: her birthday, her anniversary, New Year's or the festival's
+  day, a story day. A festival's night is a second slot, after its day's, so a festival day can play both of hers.
+- **A festival of the story's own** plays no occasion: the day's scenes are the game's five's.
+- **Without an `outfit`** she wears the kimono at New Year's and a festival's night, the garden party dress at the Flower
+  Show, the dinner dress on her birthday and her anniversary, and the season's on another festival's day or a story
+  day.
+- **Every id is read by name,** so a release that adds Umas, scenes or days plays them on publish, with no deploy.
 
 ### The scene's outfit
 
@@ -775,7 +810,7 @@ block nothing. Any other field is kept for the story.
 | `names.region` | Under the farm's name on the Diary's "The farm" page, after the town | None |
 | `history` | A few lines of the farm's past: the Diary's first page, **"The farm"**. `{farmer}` is filled | None: the page shows the names alone, and with no names either there's no page |
 | `festivals` | The year's festivals: the calendar, the date chip, the morning's "*Festival* tomorrow" and "today", festival night, and `festival` triggers and gates | The game's five, on their days |
-| `days` | The story's holidays and minor days: the calendar marks each day and lists them with their lines, and the morning says "*Market day* tomorrow" and "today" | None |
+| `days` | The story's holidays and minor days: the calendar marks each day and lists them with their lines, the morning says "*Market day* tomorrow" and "today", and each plays its scene with each Uma who has it written | The game's own six small days |
 | `places` | By place id: each place's `name` (the map, its quick look's title, its Build card's "The *name* stands tomorrow.") and its one `line` (its quick look) | The game's own name and line |
 | `seasons` | By season: a line under "*Spring* begins" on the morning that opens it | "Spring begins" alone |
 | `notes` | **Town notes:** a list in the Diary that fills as you play, each unlocked once by its `unlock` and kept; the morning names the night's | None |
@@ -811,9 +846,24 @@ Each festival is `{ "id", "name", "season", "day", "happens" }`, its day a seaso
 | `season` | `spring`, `summer`, `autumn` or `winter` | Every season |
 | `day` | Its day of the season, 1–12, or a list of them (`[4, 8, 12]` for a weekly market) | The day is skipped |
 | `line` | What happens, under its name on the calendar, at most 160 characters | None |
+| `scene` | The event id it plays with each Uma whose route writes it (lowercase words joined by `-`, at most 40 characters) | Its `id` |
 
-- **A day is the story's own:** it may share a festival's day or another day's. It's marked and said, and plays nothing
-  of its own; the special days that give event actions are New Year's, the festivals and her birthday.
+- **A day is the story's own:** it may share a festival's day or another day's. It's marked and said, and plays its
+  scene with each Uma who has it written ([her occasions](#her-occasions)); a day with no scene written for anyone is
+  marked and said, and nothing more. The special days that give event actions are New Year's, the festivals and her
+  birthday.
+- **The game's own six small days** play without `world.json`: each a minor day with its own scene, its id. A day of
+  `world.json`'s with one of their ids moves or renames it (its season, day, name, kind, line and scene are the story's);
+  any other id adds a day.
+
+  | Day | `id` (its scene) | When |
+  |---|---|---|
+  | Blossom viewing | `blossom-viewing` | Spring 6 |
+  | The wishing night | `wishing-night` | Summer 6 |
+  | The first cold evening | `first-cold-evening` | Autumn 4 |
+  | The first snow | `first-snow` | Winter 2 |
+  | The longest night | `longest-night` | Winter 6 |
+  | The sweets day | `sweets-day` | Winter 8 |
 - **The morning** names the day's and the next day's: "*Market day* today", or "*Market day* +1 more tomorrow".
 
 ### The places
@@ -857,10 +907,12 @@ title in the Diary's list, its lines (`{farmer}` filled), and what unlocks it, f
 | Her chapters and their gates | Yes | Yes, today: [her chapters](game-mechanics.md#her-chapters) |
 | What plays when a part is missing | The default story for every read | Yes, today: [what plays without the story](game-mechanics.md#what-plays-without-the-story) |
 | The wedding night (`wedding-night`) | Yes | Yes, today: after the wedding |
-| Her occasion scenes: `new-year`, `flower-show`, `derby-night` | Yes | Yes, today: on their days, from the calendar ([occasion scenes](game-mechanics.md#occasion-scenes)) |
-| The world's `days` | Yes | Yes, today: [the calendar](game-mechanics.md#the-calendar-screen) and the morning |
+| Her occasion scenes: New Year's, the festivals' days and nights, her birthday, her anniversary, the story's days | Yes | Yes, today: on their days, from the calendar ([occasion scenes](game-mechanics.md#occasion-scenes)) |
+| The world's `days`, and a day's `scene` | Yes | Yes, today: [the calendar](game-mechanics.md#the-calendar-screen), the morning, and its scene |
+| Her `greetings`, `smallTalk` and `giftLines` | Yes | Yes, today: a chat and a talk in town, and a gift ([talk that knows the day](game-mechanics.md#talk-that-knows-the-day)) |
+| Her `greetings.weather` | Yes, and kept | When the game has weather |
+| Her `voice` | Kept | Never: the story's own |
 | Moving in (`moving-in`), the evenings' scenes, her `mornings` and `meals` | Yes | Yes, today: after the wedding night, after each evening's play, the morning after you choose her as the night's companion, and as you sit down to a meal ([the Uma loop](game-mechanics.md#the-uma-loop)) |
 | The invitation to work (`invited-to-work`) | Yes | Yes, today: as you invite her to work |
 | Married life 2 and 4 (`s2`, `s4`) | Yes | Yes, today: from the morning's line, the morning after the level comes at night |
-| Her other occasions | Yes | When the festivals land. The default story writes each until then |
 | The marker, `"draft": "default"` ([a complete Uma](#a-complete-uma)) | Yes, and kept | Never: a marked pack plays exactly as the same pack unmarked |

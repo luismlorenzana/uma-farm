@@ -1,6 +1,6 @@
 // The calendar's words: a day cell's label and marks, a face's reasons, the day panel's heading and its special day's
 // event actions. Pure, so the screen and the tests read the same. Loaded with the calendar.
-import { NEW_YEAR_NAME, occasionName, SEASON_NAMES, type CalendarDay, type FaceReason, type Festival } from '@farm/domain'
+import { NEW_YEAR_NAME, SEASON_NAMES, type CalendarDay, type DayFace, type FaceReason } from '@farm/domain'
 import { plural, whenWords } from './words'
 
 /** How many faces a day's cell shows before "+n". */
@@ -36,16 +36,20 @@ export function cellFaces<T>(faces: readonly T[], max = CELL_FACES): { shown: T[
   return { shown: faces.slice(0, room), more: faces.length - Math.min(room, faces.length) }
 }
 
-/** A face's reasons in words: the occasion by name, her birthday, your anniversary, her event Ready (today) or likely
- * Ready then (a day ahead). */
-export function reasonWords(reason: FaceReason, day: Pick<CalendarDay, 'occasion' | 'when'>, year: readonly Festival[]): string {
+/** A face's reasons in words: her occasions by name (the day's, then a festival's night), her birthday, your
+ * anniversary (each said once: by its occasion when she has its scene), her event Ready (today) or likely Ready then (a
+ * day ahead). */
+export function reasonWords(reason: FaceReason, face: Pick<DayFace, 'occasions'>, day: Pick<CalendarDay, 'when'>): string | null {
   switch (reason) {
-    case 'occasion': return day.occasion ? occasionName(day.occasion, year) : 'Occasion'
-    case 'birthday': return 'Birthday'
-    case 'anniversary': return 'Anniversary'
+    case 'occasion': return face.occasions.map((o) => o.name).join(' · ') || 'Occasion'
+    case 'birthday': return face.occasions.some((o) => o.kind === 'birthday') ? null : 'Birthday'
+    case 'anniversary': return face.occasions.some((o) => o.kind === 'anniversary') ? null : 'Anniversary'
     case 'ready': return day.when === 'today' ? 'Ready' : 'Likely ready'
   }
 }
+/** A face's reasons in one line. */
+export const faceWords = (face: Pick<DayFace, 'occasions' | 'reasons'>, day: Pick<CalendarDay, 'when'>): string =>
+  face.reasons.flatMap((r) => reasonWords(r, face, day) ?? []).join(' · ')
 
 /** The day panel's heading: "Spring 10 · today", "· tomorrow", "· in 7 days", or "· 3 days ago". */
 export function dayHeading(day: Pick<CalendarDay, 'date' | 'day'>, today: number): string {

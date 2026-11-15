@@ -254,6 +254,12 @@ describe('the town', () => {
     expect($('[data-item="work"]')?.dataset.why).toBe('From Friendship 3')
     await click($('[data-action="menu-talk"]'))
     await until(() => save().today.chats.includes(SISTER))
+    // Today's talk plays over the town (no greetings or small talk of hers: her line alone); Skip closes it.
+    await find('[data-life="talk"]')
+    expect(decodeURIComponent(path)).toBe(`/town?at=${at}&uma=${SISTER}&life=talk:${SISTER}`)
+    expect($('[data-life="talk"] [data-speaker]')?.textContent).toBe('Invented Sister')
+    await click($('[data-action="skip"]'))
+    await until(() => !path.includes('life='))
     expect(save().today.actions).toBe(2)
     expect(save().town[SISTER]).toEqual({ talks: 1, last: day, gift: 0 })
     await until(() => $('[data-paid]')?.textContent === '+15 ♥')

@@ -14,7 +14,7 @@ import { knownNotes, noteHolds, unlockNotes } from '../town/notes'
 import { checkCast, checkWorld, LINE_LIMITS, type World } from './authored'
 import { readStoryPack, storyPackFrom, type StoryPack } from './pack'
 import {
-  festivalNameOf, festivalsOf, historyOf, noPack, placeNameOf, placeWordsOf, PLACEHOLDER_NAMES, seasonLineOf, storyDayNameOf, storyDaysOf, storyDaysOn, townNotesOf,
+  festivalNameOf, festivalsOf, GAME_STORY_DAYS, historyOf, noPack, placeNameOf, placeWordsOf, PLACEHOLDER_NAMES, seasonLineOf, storyDayNameOf, storyDaysOf, storyDaysOn, townNotesOf,
   worldNamesOf, worldWrittenOf,
 } from './placeholders'
 import { releasedStoryPack, storyFileName, type StoryIndex } from './release'
@@ -171,12 +171,29 @@ describe('the world’s lookups: the pack’s, or the game’s own words', () =>
 describe('the story’s days', () => {
   it('reads its holidays and minor days: one day or a list, a season or every season, a kind and a line', () => {
     expect(storyDaysOf(PACK)).toEqual([
-      { id: 'first-bell', name: 'The first bell', kind: 'holiday', season: 'spring', days: [1], line: 'The bell rings twelve times at midnight.' },
-      { id: 'market-day', name: 'Market day', kind: 'minor', season: null, days: [4, 8, 12], line: 'Stalls fill the square.' },
-      { id: 'kite-day', name: 'Kite day', kind: 'minor', season: 'spring', days: [10], line: null },
+      { id: 'first-bell', name: 'The first bell', kind: 'holiday', season: 'spring', days: [1], line: 'The bell rings twelve times at midnight.', scene: 'first-bell' },
+      { id: 'market-day', name: 'Market day', kind: 'minor', season: null, days: [4, 8, 12], line: 'Stalls fill the square.', scene: 'market-day' },
+      { id: 'kite-day', name: 'Kite day', kind: 'minor', season: 'spring', days: [10], line: null, scene: 'kite-day' },
+      // Then the game's own small days.
+      ...GAME_STORY_DAYS,
     ])
-    expect(storyDaysOf(null)).toEqual([])
-    expect(storyDaysOf(withWorld({ names: { town: 'Fernwick' } }))).toEqual([])
+    // Without the story's days, the game's own six.
+    expect(storyDaysOf(null)).toEqual(GAME_STORY_DAYS)
+    expect(storyDaysOf(withWorld({ names: { town: 'Fernwick' } }))).toEqual(GAME_STORY_DAYS)
+    expect(GAME_STORY_DAYS.map((d) => [d.id, d.season, d.days[0], d.kind, d.scene === d.id])).toEqual([
+      ['blossom-viewing', 'spring', 6, 'minor', true], ['wishing-night', 'summer', 6, 'minor', true], ['first-cold-evening', 'autumn', 4, 'minor', true],
+      ['first-snow', 'winter', 2, 'minor', true], ['longest-night', 'winter', 6, 'minor', true], ['sweets-day', 'winter', 8, 'minor', true],
+    ])
+  })
+
+  it('reads a day’s scene, its id without one; one that isn’t an event id is an error that drops it; one of its days moves a game’s day', () => {
+    const read = checkWorld({ days: [{ id: 'lantern-day', name: 'Lantern day', day: 2, scene: 'sweets-day' }, { id: 'odd-day', name: 'Odd day', day: 3, scene: 'Not An Id' }] })
+    expect(read.value?.days).toEqual([{ id: 'lantern-day', name: 'Lantern day', day: 2, scene: 'sweets-day' }, { id: 'odd-day', name: 'Odd day', day: 3 }])
+    expect(read.errors).toEqual(['Day odd-day: scene is the event id it plays (lowercase words joined by -, at most 40 characters), so its id plays; skipped'])
+    const moved = withWorld({ days: [{ id: 'first-snow', name: 'Snowfall', season: 'winter', day: 5, line: 'The valley goes quiet.' }] })
+    expect(storyDaysOn(moved, day('winter', 2))).toEqual([])
+    expect(storyDaysOn(moved, day('winter', 5))).toEqual([{ id: 'first-snow', name: 'Snowfall', kind: 'minor', season: 'winter', days: [5], line: 'The valley goes quiet.', scene: 'first-snow' }])
+    expect(storyDaysOf(moved).filter((d) => d.id === 'first-snow')).toHaveLength(1)
   })
 
   it('finds a day’s, holidays first, and every season’s on each of its days', () => {

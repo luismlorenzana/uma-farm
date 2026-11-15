@@ -10,17 +10,18 @@
 //                                (this morning's "moved into" line)
 //   ?life=invited-to-work:<id>  the day you invited her to work (`roster[id].farmhand`, today)
 //   ?life=breakfast|dinner:<id> that meal cooked today, and she's a spouse who ate it (or the one whose line it plays)
+//   ?life=talk:<id>             you've talked with her today (`today.chats`): her greeting and her line or small talk
 //   ?event=<id>                 her next event is Ready (`readiness`)
 //   ?ask=<id>                   she said "Not yet" and you haven't asked today (`canAsk`)
 //   ?memory=<id>:<rung>         a Memory already played (her meeting scene, or a rung in `memories`)
 //   ?evening=<id>               her evening is open to her now (`kindsNow`: in front of you, on the farm or met in town
 //                                today); `?evening=pick` while anyone's is
-//   ?occasion=<id>              today's occasion, with an Uma you've met, not yet played today (`occasionWith`)
+//   ?occasion=<id>              her next occasion today, with an Uma you've met, not yet played (`occasionWith`)
 //   ?household=<id>             a household scene Ready (`householdReady`); with `&replay=1`, one already read
 //   ?level=<id>:<s2|s4>         a spouse level she's reached
 //
 // Pure; never stamps.
-import { FESTIVALS, type Festival } from '../farm/calendar'
+import { GAME_DAYS, type SpecialDays } from '../farm/actions'
 import type { Meal, SaveV4 } from '../save/v4'
 import type { StoryPack } from '../story/pack'
 import { festivalsOf } from '../story/placeholders'
@@ -31,8 +32,9 @@ import { mealEaters, mealsCooked, mealSpeaker } from './loop'
 import { occasionWith } from './occasions'
 import { readiness } from './ready'
 
-/** Her life's short scenes at `?life=`: the night's companion's morning, moving in, the invitation to work, a meal. */
-export type LifeLink = 'morning' | 'moving-in' | 'invited-to-work' | Meal
+/** Her life's short scenes at `?life=`: the night's companion's morning, moving in, the invitation to work, a meal, and
+ * today's talk with her. */
+export type LifeLink = 'morning' | 'moving-in' | 'invited-to-work' | 'talk' | Meal
 
 const met = (save: Pick<SaveV4, 'roster' | 'love'>, id: string): boolean => !!save.roster[id] && !!save.love[id]
 const spouse = (save: Pick<SaveV4, 'roster' | 'love'>, id: string): boolean => met(save, id) && save.love[id]!.stage === 'spouse'
@@ -63,12 +65,16 @@ export function mayMealScene(save: Pick<SaveV4, 'roster' | 'love' | 'dorm' | 'to
   return mealEaters(save).includes(id) || mealSpeaker(save, meal) === id
 }
 
+/** `?life=talk:<id>`: you've talked with her today, so today's talk plays again (it pays nothing). */
+export const mayReplayTalk = (save: Pick<SaveV4, 'roster' | 'love' | 'today'>, id: string): boolean => met(save, id) && save.today.chats.includes(id)
+
 /** `?life=<kind>:<id>`: each kind's rule. */
 export function mayPlayLife(save: SaveV4, kind: LifeLink, id: string): boolean {
   switch (kind) {
     case 'morning': return mayGreet(save, id)
     case 'moving-in': return mayMoveIn(save, id)
     case 'invited-to-work': return mayWelcomeToWork(save, id)
+    case 'talk': return mayReplayTalk(save, id)
     default: return mayMealScene(save, id, kind)
   }
 }
@@ -95,9 +101,9 @@ export function mayOpenEvening(save: SaveV4, pack: EveningPack, id: string | 'pi
   return met(save, id) && kindsNow(save, pack, id).length > 0
 }
 
-/** `?occasion=<id>`: today holds an occasion, she's met, and you haven't spent it with her today. */
-export const mayPlayOccasion = (save: Pick<SaveV4, 'calendar' | 'roster' | 'today'>, id: string, year: readonly Festival[] = FESTIVALS): boolean =>
-  occasionWith(save, id, year) !== null
+/** `?occasion=<id>`: today holds one of her occasions, she's met, and you haven't played it with her yet. */
+export const mayPlayOccasion = (save: Pick<SaveV4, 'calendar' | 'roster' | 'love' | 'today'>, pack: Pick<StoryPack, 'scripted'> & Partial<Pick<StoryPack, 'world'>>, id: string, days: SpecialDays = GAME_DAYS): boolean =>
+  occasionWith(save, pack, days, id) !== null
 
 /** `?household=<id>`: a household scene or the finale Ready; a replay (`&replay=1`, the Diary's) only once it's read. */
 export function mayPlayHousehold(save: Pick<SaveV4, 'homestead' | 'diary'>, id: string, replay: boolean): boolean {
@@ -116,12 +122,13 @@ export const SCENE_LINKS: readonly { link: string; plays: string; when: string }
   { link: '`?life=moving-in:<id>`', plays: 'Moving in', when: 'A spouse with a room, on her wedding day or the morning she moved into a room she waited for' },
   { link: '`?life=invited-to-work:<id>`', plays: 'The invitation to work', when: 'The day you invited her (`roster[id].farmhand` is today)' },
   { link: '`?life=breakfast:<id>`, `?life=dinner:<id>`', plays: 'A meal’s line', when: 'That meal cooked today, and she’s a spouse who ate it (or the one whose line it plays)' },
+  { link: '`?life=talk:<id>`', plays: 'Today’s talk with her: her greeting, then her line or a small talk', when: 'You’ve talked with her today (it pays nothing)' },
   { link: '`?event=<id>`', plays: 'Her heart event', when: 'Ready (`readiness`); with no action left it says so and plays nothing' },
   { link: '`?ask=<id>`', plays: 'Ask her', when: 'She said “Not yet” at her confession, and you haven’t asked today' },
   { link: '`?memory=<id>:<rung>`', plays: 'A Memory, paying nothing', when: 'A Memory already played: her meeting scene, or a rung of her route' },
   { link: '`?evening=<id>`', plays: 'Her kinds sheet, then the evening', when: 'Her evening is open to her now: in front of you (home on the farm, a farmhand there by day, or out in town today with you there), a hangout or a date her ladder opened, a slot free' },
   { link: '`?evening=pick`', plays: 'Tonight’s picker', when: 'Someone can spend an evening now, and the day has its 2 actions' },
-  { link: '`?occasion=<id>`', plays: 'An occasion scene', when: 'Today’s occasion, with an Uma you’ve met, not yet played with her today' },
+  { link: '`?occasion=<id>`', plays: 'An occasion scene', when: 'Her next occasion today (the day’s, then a festival’s night), with an Uma you’ve met, not yet played' },
   { link: '`?household=<id>`', plays: 'A household scene or the finale', when: 'Ready (the night saw its count) and not yet read; with `&replay=1`, once read' },
   { link: '`?level=<id>:<s2|s4>`', plays: 'A spouse level’s scene and card', when: 'She’s reached it (it pays nothing)' },
 ]
