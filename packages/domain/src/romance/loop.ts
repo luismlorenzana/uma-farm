@@ -11,8 +11,9 @@
 //   married        after the wedding                    the wedding night, moving in; meals; the night's companion
 //
 // **Meals** (married life): breakfast and dinner, one action each, once each a day. A meal feeds everyone on the farm and
-// every farmhand (well fed through tomorrow, a meal running longer never shortened) and pleases each who eats (+10). One
-// spouse's line plays as you sit down.
+// every farmhand (well fed through tomorrow, a meal running longer never shortened) and pleases each who eats (+10). It's
+// the farmer cooking for the household, so it cooks a batch for the pantry too: four meals from two goods of food by the
+// plain rule, when the Warehouse holds two (`farm/food.ts`). One spouse's line plays as you sit down.
 //
 // **The night's companion** (married life): at the day's end you choose one spouse with a room to spend the night with,
 // tender and never shown; her house is tonight's house, so its morning is as built. Without a pick, the night takes the
@@ -20,6 +21,7 @@
 // pajamas, her greeting the story's or the default's for her temperament. Pure; never stamps.
 import { actionCost, actionsLeft, spend } from '../farm/actions'
 import { draw } from '../farm/draw'
+import { addBatch, BATCH_MEALS, plainBatch } from '../farm/food'
 import type { Temperament } from '../farm/talents'
 import { SaveRuleError } from '../save/rules'
 import { marriedCount, residentsOf, type Meal, type SaveV4 } from '../save/v4'
@@ -133,13 +135,16 @@ export function mealBlock(save: Pick<SaveV4, 'love' | 'today' | 'calendar'>, mea
 }
 
 /** A meal cooked: one action; everyone who eats it (`mealEaters`) well fed through tomorrow (a meal running longer is
- * never shortened) and +10 each through `addLove` (an anniversary's ×2 applies); the meal marked for today. Who ate and
- * the points paid in all. Refused before the first wedding (`locked`), once that meal is made (`busy`), and with no action
- * left (`no-actions`). Never stamps. */
-export function cookMeal(save: SaveV4, meal: Meal): { save: SaveV4; fed: string[]; paid: number } {
+ * never shortened) and +10 each through `addLove` (an anniversary's ×2 applies); a batch for the pantry, four meals from
+ * two goods of food by the plain rule when the Warehouse holds two (`batch`, the meals added, else 0); the meal marked
+ * for today. Who ate and the points paid in all. Refused before the first wedding (`locked`), once that meal is made
+ * (`busy`), and with no action left (`no-actions`). Never stamps. */
+export function cookMeal(save: SaveV4, meal: Meal): { save: SaveV4; fed: string[]; paid: number; batch: number } {
   const block = mealBlock(save, meal)
   if (block !== null && block !== 'No actions left today.') throw new SaveRuleError(marriedCount(save) === 0 ? 'locked' : 'busy', block)
   let next = spend(save, 'cook')
+  const goods = plainBatch(next)
+  if (goods) next = addBatch(next, goods, BATCH_MEALS)
   const fed = mealEaters(next)
   next = { ...next, roster: { ...next.roster, ...Object.fromEntries(fed.map((id) => [id, { ...next.roster[id]!, wellFed: Math.max(next.roster[id]!.wellFed, MEAL_DAYS) }])) } }
   let paid = 0
@@ -148,7 +153,7 @@ export function cookMeal(save: SaveV4, meal: Meal): { save: SaveV4; fed: string[
     next = pay.save
     paid += pay.paid
   }
-  return { save: { ...next, today: { ...next.today, meals: [...mealsCooked(next), meal] } }, fed, paid }
+  return { save: { ...next, today: { ...next.today, meals: [...mealsCooked(next), meal] } }, fed, paid, batch: goods ? BATCH_MEALS : 0 }
 }
 
 /** The spouses in wedding order (her wedding's day, then her id): who sits at the household's table. */

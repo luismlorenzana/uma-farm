@@ -70,6 +70,8 @@ export * from './farm/builds'
 // Upkeep and loans: the night's upkeep and what it counts, an average night's income, a short night's half pace, and the
 // mayor's office's loans toward a build (`borrowFor`, `repayLoan`, the night's shares).
 export * from './farm/economy'
+// Food: who eats, the pantry, the night's meals and takeout, the farmer's batch and the plain rule's goods.
+export * from './farm/food'
 // Farmhands: her day's actions after her part-time job, the work board's tasks, her aptitudes and their tricks, and the
 // night's run of their work.
 export * from './farm/farmhands'

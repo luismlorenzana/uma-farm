@@ -88,7 +88,7 @@ export interface SummaryPart {
 }
 
 const SECTION_TITLE: Readonly<Record<SummarySection, string>> = {
-  bin: 'The bin', money: 'Upkeep and loans', work: 'Work done', ranks: 'Ranks', hearts: 'Hearts', news: 'New today', nudges: 'Today',
+  bin: 'The bin', money: 'Food, upkeep and loans', work: 'Work done', ranks: 'Ranks', hearts: 'Hearts', news: 'New today', nudges: 'Today',
 }
 const peek = (place: FarmPlaceId): string => `/?peek=${place}`
 /** The field: the farm map, where its tiles are. */
@@ -268,7 +268,8 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
       return [...sold, { key: 'sold:total', to: '/?sheet=bin', text: `Total · ${gold(summary.bin.reduce((sum, sale) => sum + sale.gold, 0))}` }]
     }
     case 'money':
-      // The loans' shares, the upkeep, a short night (a warning) or the owed paid: each a tap to the Book.
+      // The loans' shares, the pantry and the takeout, the upkeep, a short night (a warning) or the owed paid: each a tap
+      // to the Book.
       return moneyLines(summary.money ?? [], { place: world.place, house: home.houseName }).map((line): SummaryLine => ({ ...line, to: BOOK }))
     case 'work':
       // The farmhands' days, which open the work board; the stations' loads, which open the station; the field's growth

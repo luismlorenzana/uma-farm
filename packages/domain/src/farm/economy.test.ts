@@ -1,7 +1,8 @@
 // Upkeep and loans: the night's upkeep after the bin and what it counts; a short night's warning, then half pace, and
 // paying up; the book's last seven nights; the mayor's office's loans toward a build (in town, the gold short rounded
 // up, a fee, a tenth a night from income only, before upkeep, one at a time and two from Farm Rank 4, the rank's limit)
-// and repaying; a house built on a loan; a save from before upkeep loading as it was. Invented ids; no story pack.
+// and repaying; a house built on a loan; a save from before upkeep loading as it was. The upkeep's nights stock the
+// pantry with tonight's meals, so the takeout (`food.test.ts`) stays out of their sums. Invented ids; no story pack.
 import { describe, expect, it } from 'vitest'
 import { goToTown } from './actions'
 import { buildLock } from './builds'
@@ -29,8 +30,12 @@ function farm(gold = 500, items: SaveV4['items'] = {}, points = 0, home: string[
     dorm: { level: home.length > 3 ? 2 : 1, home, swaps: [] },
   }
 }
-/** The night as the game runs it, unstamped. */
-const night = (save: SaveV4): SaveV4 => runNight(save, {})
+/** Tonight's meals in the pantry, so the upkeep stands alone: two for the farmer and each Uma home. */
+const fed = (save: SaveV4): SaveV4 => ({ ...save, farm: { ...save.farm, pantry: [{ day: save.calendar.day, stars: 1, meals: 2 * (save.dorm.home.length + 1) }] } })
+/** The pantry's line for a night that ate it all. */
+const ate = (save: SaveV4) => ({ kind: 'pantry', meals: 2 * (save.dorm.home.length + 1), spoiled: 0, fed: 0 })
+/** The night as the game runs it, unstamped, with tonight's meals cooked. */
+const night = (save: SaveV4): SaveV4 => runNight(fed(save), {})
 
 describe('upkeep', () => {
   it('counts what you add: each place built and house, each Dorm bed past the first three, each Uma on the farm', () => {
@@ -55,7 +60,7 @@ describe('upkeep', () => {
     expect(sold).toBeGreaterThan(0)
     expect(morning.gold).toBe(100 + sold - 35)
     expect(morning.farm.income).toEqual([sold])
-    expect(morning.summary!.money).toEqual([{ kind: 'upkeep', paid: 35, due: 35 }])
+    expect(morning.summary!.money).toEqual([ate(save), { kind: 'upkeep', paid: 35, due: 35 }])
     expect(averageIncome(morning)).toBe(sold)
     let later = morning
     for (let n = 0; n < 8; n++) later = night(later)
@@ -63,11 +68,13 @@ describe('upkeep', () => {
     expect(averageIncome({ farm: { ...later.farm, income: [100, 200, 0] } })).toBe(100)
   })
 
-  it('charges nothing on a new farm, and the morning shows no upkeep', () => {
-    const morning = night(farm())
-    expect(morning.gold).toBe(500)
-    expect(morning.summary!.money).toBeUndefined()
+  it('charges a new farm no upkeep: only the farmer\'s takeout, 30g a night', () => {
+    const morning = runNight(farm(), {})
+    expect(morning.gold).toBe(470)
+    expect(morning.summary!.money).toEqual([{ kind: 'takeout', meals: 2, paid: 30, due: 30 }])
     expect(morning.farm).toMatchObject({ owed: 0, short: 0, income: [0] })
+    // With tonight's meals cooked, nothing at all.
+    expect(night(farm()).gold).toBe(500)
   })
 })
 
@@ -83,7 +90,7 @@ describe('short of upkeep', () => {
     // 45g due on 5g: 5g paid, 40g owed, a warning.
     expect(second.gold).toBe(0)
     expect(second.farm).toMatchObject({ owed: 40, short: 1 })
-    expect(second.summary!.money).toEqual([{ kind: 'upkeep', paid: 5, due: 45 }, { kind: 'short', owed: 40, nights: 1 }])
+    expect(second.summary!.money).toEqual([ate(first), { kind: 'upkeep', paid: 5, due: 45 }, { kind: 'short', owed: 40, nights: 1 }])
     expect(halfPace(second)).toBe(false)
     expect(atPace(3, second)).toBe(3)
     const third = night(second)
@@ -103,7 +110,7 @@ describe('short of upkeep', () => {
     expect(sold).toBeGreaterThanOrEqual(130)
     expect(paid.gold).toBe(sold - 130)
     expect(paid.farm).toMatchObject({ owed: 0, short: 0 })
-    expect(paid.summary!.money).toEqual([{ kind: 'upkeep', paid: 130, due: 130 }, { kind: 'paid-up', owed: 85 }])
+    expect(paid.summary!.money).toEqual([ate(third), { kind: 'upkeep', paid: 130, due: 130 }, { kind: 'paid-up', owed: 85 }])
     expect(halfPace(paid)).toBe(false)
   })
 
@@ -138,9 +145,11 @@ describe('loans at the mayor\'s office', () => {
     expect(placeBuilt(save, 'mill')).toBe(true)
     expect(save.farm.loans[0]).toMatchObject({ lent: 1000, fee: 100, owed: 1100, nightly: 110 })
     // No sales: nothing repaid, and the Mill's upkeep (15g) is short on 0g.
-    expect(save.summary!.money).toEqual([{ kind: 'loan', for: 'mill', paid: 0, left: 1100 }])
+    expect(save.summary!.money).toEqual([{ kind: 'loan', for: 'mill', paid: 0, left: 1100 }, { kind: 'takeout', meals: 2, paid: 0, due: 30 }, { kind: 'short', owed: 30, nights: 1 }])
     save = night(save)
-    expect(save.summary!.money).toEqual([{ kind: 'loan', for: 'mill', paid: 0, left: 1100 }, { kind: 'upkeep', paid: 0, due: 15 }, { kind: 'short', owed: 15, nights: 1 }])
+    expect(save.summary!.money).toEqual([
+      { kind: 'loan', for: 'mill', paid: 0, left: 1100 }, ate(save), { kind: 'upkeep', paid: 0, due: 45 }, { kind: 'short', owed: 45, nights: 2 },
+    ])
     // Shipping pays the share first, then the upkeep owed.
     let nights = 0
     while (save.farm.loans.length > 0 && nights < 40) {

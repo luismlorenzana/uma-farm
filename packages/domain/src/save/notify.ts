@@ -10,7 +10,7 @@ export interface Notice { title: string; body: string; tag: string; url: string 
  * collect, if nothing is collected before). */
 export interface PushEntry { at: number; place: string; badge: number }
 
-/** The most entries a schedule holds: one per work slot (nine places of four). */
+/** The most entries a schedule holds: one per work slot (each work place's four). */
 export const PUSH_SCHEDULE_MAX = LOOP_WORK_PLACES.length * LOOP_SLOTS
 
 /** Whether a schedule's place is one of the farm's work places. */

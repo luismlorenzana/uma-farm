@@ -124,10 +124,11 @@ describe('shipping', () => {
     expect(path).toBe('/warehouse?pick=bin')
 
     expect(await endTheDay(SUMMER_3)).toBe(true)
-    expect(save()).toMatchObject({ gold: 665, bin: {}, diary: { shipped: { salmon: 1 } }, farm: { counts: { 'gold-shipped': 165 } } })
+    // The bin's 165g, less the farmer's takeout (30g).
+    expect(save()).toMatchObject({ gold: 635, bin: {}, diary: { shipped: { salmon: 1 } }, farm: { counts: { 'gold-shipped': 165 } } })
     expect(save().summary!.bin).toEqual([{ kind: 'sold', id: 'salmon', stars: 2, count: 1, gold: 165, demand: true }])
     await render(<KitStage layout="landscape"><FarmBar /></KitStage>)
-    expect(host.querySelector('a[aria-label="Gold: 665g. The bin"]')).not.toBeNull()
+    expect(host.querySelector('a[aria-label="Gold: 635g. The bin"]')).not.toBeNull()
   })
 
   it('puts a good\'s every star in with All, and ships all of one from its sheet, one action each', async () => {

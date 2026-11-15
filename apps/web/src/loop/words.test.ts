@@ -61,7 +61,7 @@ describe('the morning\'s bin', () => {
 })
 
 
-describe('the morning\'s upkeep and loans', () => {
+describe('the morning\'s food, upkeep and loans', () => {
   it('says each loan\'s share, the upkeep, a short night as a warning, then half pace, and the owed paid, each a tap to the Book', () => {
     const summary: MorningSummary = {
       day: 16, bin: [], ranks: [], hearts: [], work: [], news: [], nudges: [],
@@ -70,7 +70,7 @@ describe('the morning\'s upkeep and loans', () => {
         { kind: 'upkeep', paid: 5, due: 45 }, { kind: 'short', owed: 40, nights: 1 },
       ],
     }
-    expect(summaryParts(summary)).toEqual([{ section: 'money', title: 'Upkeep and loans', lines: [
+    expect(summaryParts(summary)).toEqual([{ section: 'money', title: 'Food, upkeep and loans', lines: [
       { key: 'loan:mill', text: 'Loan for the Mill · 55g repaid · 440g left', to: '/book' },
       { key: 'loan:dorm:2', text: 'Loan for Dorm level 2 · no sales, nothing repaid · 770g left', to: '/book' },
       { key: 'loan:house:1', text: 'Loan for House 1 · cleared', to: '/book', tag: 'Cleared' },
@@ -83,6 +83,19 @@ describe('the morning\'s upkeep and loans', () => {
     expect(paid.map((l) => [l.text, l.tag])).toEqual([['Upkeep · 130g', undefined], ['Upkeep paid up · 85g owed', 'Paid']])
     // A morning from before upkeep has no such section.
     expect(summaryParts({ ...summary, money: undefined })).toEqual([])
+  })
+
+  it('says a new farm\'s takeout, the meals from the pantry, what spoiled and a good meal\'s well fed, before the upkeep', () => {
+    const summary: MorningSummary = { day: 2, bin: [], ranks: [], hearts: [], work: [], news: [], nudges: [], money: [{ kind: 'takeout', meals: 2, paid: 30, due: 30 }] }
+    expect(summaryParts(summary)).toEqual([{ section: 'money', title: 'Food, upkeep and loans', lines: [{ key: 'takeout', text: 'Takeout · 30g', to: '/book' }] }])
+    const fed = summaryParts({
+      ...summary,
+      money: [{ kind: 'pantry', meals: 6, spoiled: 2, fed: 2 }, { kind: 'takeout', meals: 2, paid: 10, due: 30 }, { kind: 'upkeep', paid: 0, due: 45 }, { kind: 'short', owed: 65, nights: 1 }],
+    })[0]!.lines
+    expect(fed.map((l) => [l.text, l.tag])).toEqual([
+      ['From the pantry · 6 meals · 2 spoiled', 'Well fed'], ['Takeout · 10g of 30g', undefined], ['Upkeep · 0g of 45g', undefined], ['Short of upkeep · 65g owed', 'Warning'],
+    ])
+    expect(summaryParts({ ...summary, money: [{ kind: 'pantry', meals: 2, spoiled: 0, fed: 0 }] })[0]!.lines).toEqual([{ key: 'pantry', text: 'From the pantry · 2 meals', to: '/book' }])
   })
 })
 

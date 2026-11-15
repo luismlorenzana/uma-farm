@@ -1,8 +1,8 @@
 // End the day: the night is one pure function, nine steps in a fixed order, one save write. A step whose part of the
 // game isn't built yet (the workshops) does nothing:
 //
-//   1 the bin pays, then the loans' shares and the upkeep · 2 the farmhands work, then watered crops grow · 3 animals ·
-//   4 the stations' loads are done ·
+//   1 the bin pays · 2 the farmhands work, the farm eats, then the bill (the loans' shares, the takeout and the upkeep),
+//   then watered crops grow · 3 animals · 4 the stations' loads are done ·
 //   5 workshops reset · 6 ranks, bonds and well fed · 7 crops wither and the calendar turns
 //   · 8 places built, the Dorm, the Diary and the Farm Rank, meeting her · 9 the morning summary
 //
@@ -53,7 +53,8 @@ import { favouriteOf, festivalsOf, storyDaysOn } from '../story/placeholders'
 import { unlockNotes } from '../town/notes'
 import { checkGoalsNight, type GoalsTonight } from '../farm/diary'
 import { raiseBuilds } from '../farm/builds'
-import { settleAccounts } from '../farm/economy'
+import { settleAccounts, type FoodBill } from '../farm/economy'
+import { eatTonight } from '../farm/food'
 import { aptitudeUps, fedThisMorning, handsTonight } from '../farm/farmhands'
 import type { FarmPlaceId } from '../farm/places'
 import { tendNight } from '../ranch/ranch'
@@ -84,8 +85,11 @@ export interface NightContext {
 export interface NightNotes {
   /** Step 1: what the bin sold tonight, by good and star. The summary's bin section. */
   readonly sold: readonly BinSale[]
-  /** Step 1, after the bin: the loans' shares, the upkeep, a short night or the owed paid. The summary's upkeep section. */
+  /** Step 2, after the farm eats: the loans' shares, the pantry and the takeout, the upkeep, a short night or the owed
+   * paid. The summary's food, upkeep and loans section. */
   readonly money: readonly MoneyLine[]
+  /** Step 2, after the farmhands: what the farm ate, for the bill. */
+  readonly food: FoodBill | null
   /** Who worked today, and where: the farmhands' gathering places and stations, one place each, which step 6 pays rank
    * points from. */
   readonly worked: readonly { outfitId: OutfitId; place: LoopPlaceId }[]
@@ -151,7 +155,7 @@ export interface NightNotes {
 
 /** A night's notes before its first step. */
 export const emptyNotes = (): NightNotes => ({
-  sold: [], money: [], worked: [], tended: [], made: [], hands: [], handsGathered: [], grew: 0, ripened: 0, ranch: [], loads: [], withered: [], ranks: [], dorm: null, home: [],
+  sold: [], money: [], food: null, worked: [], tended: [], made: [], hands: [], handsGathered: [], grew: 0, ripened: 0, ranch: [], loads: [], withered: [], ranks: [], dorm: null, home: [],
   built: [], goals: { paid: [], ranks: [] }, townNotes: [], lines: [], days: [], extras: [], bonds: [], invites: [], chores: [], perks: [], items: [], house: null, levels: [],
   household: [], houseLine: null, houseItems: [], moved: [], misses: null, vows: null,
 })
@@ -177,12 +181,22 @@ export const payTheBin: NightStep = (night) => {
   const { save, sales } = payBin(night.save, night.save.calendar.day)
   return { ...night, save, notes: { ...night.notes, sold: sales } }
 }
-/** Step 1, after the bin: the farm's accounts. The night's income (the bin's pay) joins the book's last seven nights;
- * each loan takes its share of that income, then the upkeep is charged with anything owed: what gold there is pays, the
- * rest is owed, and the short nights in a row count on until it's paid (`farm/economy.ts`). */
+/** Step 2, after the farmhands work: **the farm eats.** The farmer, everyone living on the farm and every farmhand who
+ * worked tonight eat two meals each from the pantry, the Umas first, the oldest meals first and the best of those; a
+ * ★2+ meal leaves an Uma well fed through tomorrow. What's short is takeout, for the bill. Meals cooked today keep for
+ * tomorrow; older ones left over spoil (`farm/food.ts`). */
+export const theFarmEats: NightStep = (night) => {
+  const working = night.notes.hands.filter((h) => h.spent > 0).map((h) => h.id)
+  const { save, pantry, takeout, spoiled, fed } = eatTonight(night.save, working)
+  return { ...night, save, notes: { ...night.notes, food: { pantry, takeout, spoiled, fed: fed.length } } }
+}
+/** Step 2, after the farm eats: **the bill.** The night's income (the bin's pay) joins the book's last seven nights;
+ * each loan takes its share of that income, then the takeout and the upkeep are charged with anything owed: what gold
+ * there is pays, takeout first; the rest is owed, and the short nights in a row count on until it's paid
+ * (`farm/economy.ts`). */
 export const settleTheAccounts: NightStep = (night) => {
   const income = night.notes.sold.reduce((n, sale) => n + sale.gold, 0)
-  const { save, lines } = settleAccounts(night.save, income)
+  const { save, lines } = settleAccounts(night.save, income, night.notes.food)
   return { ...night, save, notes: { ...night.notes, money: lines } }
 }
 /** Step 2, first: **the farmhands' night.** Each farmhand, in the order you invited them, after her part-time job,
@@ -552,8 +566,9 @@ export interface NightStepDef {
 export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 1, name: 'noteTonight', run: noteTonight, what: 'Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning' },
   { step: 1, name: 'payTheBin', run: payTheBin, what: 'The bin pays: everything shipped today, at price × stars × demand' },
-  { step: 1, name: 'settleTheAccounts', run: settleTheAccounts, what: 'The accounts: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the upkeep, with anything owed: what gold there is pays, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid' },
-  { step: 2, name: 'farmhandsWork', run: farmhandsWork, what: 'The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads and the animals’ care first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse, her place today where she spent the most' },
+  { step: 2, name: 'farmhandsWork', run: farmhandsWork, what: 'The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads, the animals’ care and the cooking first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse and her meals into the pantry, her place today where she spent the most' },
+  { step: 2, name: 'theFarmEats', run: theFarmEats, what: 'The farm eats: the farmer, everyone living on the farm and every farmhand who worked tonight, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; meals cooked today keep for tomorrow, older ones left over spoil' },
+  { step: 2, name: 'settleTheAccounts', run: settleTheAccounts, what: 'The bill: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the takeout (15g a meal) and the upkeep, with anything owed: what gold there is pays, takeout first, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid' },
   { step: 2, name: 'growCrops', run: growCrops, what: 'Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day' },
   { step: 3, name: 'tendAnimals', run: tendAnimals, what: 'Animals: each animal fed today makes its good, waiting in its building to be collected (one at a time), and grows 2 fonder; one left unfed goes hungry, makes nothing and loses 10 fondness, and never dies; then each is unfed and uncared for the next day' },
   { step: 3, name: 'ranchNightChores', run: ranchNightChores, what: 'Ranch chores: a rancher’s night chores each give every animal in her building (the Coop or the Barn she cares for on the work board, else the first that stands) +5 fondness, held to 200; 1 from F6, 2 from R7, 3 from S4, on the farm only' },

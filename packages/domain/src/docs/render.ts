@@ -13,6 +13,7 @@ import { BUILD_PLACES, FARM_PLACES, MAP_PLACES, TOWN_FIRST_ROW, type FarmPlace, 
 import { BOARD_MET, buildCostWords, buildGoodsWords } from '../farm/builds'
 import { FREE_BEDS, HALF_PACE_FROM, LOAN_FEE, LOAN_LIMITS, LOAN_NIGHTS, LOAN_STEP, TWO_LOANS_FROM, UPKEEP_BED, UPKEEP_BUILDING, UPKEEP_RESIDENT } from '../farm/economy'
 import { NIGHT_STEPS } from '../night/end-day'
+import { BATCH_GOODS, BATCH_MEALS, COOK_BATCH, FOOD_FAMILIES, MEAL_KEEPS, MEALS_A_DAY, TAKEOUT_PRICE, WELL_FED_STARS } from '../farm/food'
 import {
   APTITUDE_ACTIVITY, APTITUDE_NAMES, APTITUDE_POINTS, aptitudeLevelOf, aptitudeQuality, aptitudeYield, BIG_LOAD, FED_ACTIONS, HAND_ACTIONS, OPEN_TASKS, SETTLED_ACTIONS,
   SETTLED_AFTER, SPOUSE_ACTIONS, TALENT_START, TASK_NAMES, tilesAnAction, TRICK_AT, TRICKS,
@@ -485,6 +486,27 @@ function upkeepBlock(): string {
     ['Short of it', 'What gold there is pays; the rest is owed with tomorrow’s', `The first short night warns; from night ${HALF_PACE_FROM} in a row, half pace until it’s paid`],
   ])
 }
+/** Food: who eats, the pantry, takeout and cooking. */
+function foodBlock(): string {
+  return table(['', 'The rule'], [
+    ['Who eats', `The farmer, everyone living on the farm (home in the Dorm, a spouse in her house) and every farmhand who works that day (spends an action tonight): ${MEALS_A_DAY} meals each, at night`],
+    ['The pantry', `Cooked meals wait here, by the day cooked and their stars. A meal keeps ${MEAL_KEEPS} days: cooked today, it’s eaten tonight or tomorrow night, then it spoils`],
+    ['The night’s meals', 'Night step 2, after the farmhands work: the Umas eat first (the farmhands who worked, in their order, then the rest of the farm), the farmer last; the oldest meals first, the best of those'],
+    ['Takeout', `${g(TAKEOUT_PRICE)} a meal the pantry is short, charged with the upkeep (takeout first); a new farm’s farmer eats ${MEALS_A_DAY}: ${g(MEALS_A_DAY * TAKEOUT_PRICE)} a night`],
+    ['Short of it', 'Takeout never goes unpaid: what gold there is pays, the rest is owed with the upkeep, and the short nights count as the upkeep’s'],
+    ['Cook a batch', `The farmer, in the farmhouse kitchen (the homestead’s sheet): 1 action, ${BATCH_MEALS} meals from ${BATCH_GOODS} goods of food you choose`],
+    ['A household meal', `Breakfast or dinner once married: the farmer cooking for the household, so it cooks a batch too (${BATCH_MEALS} meals from ${BATCH_GOODS} goods by the plain rule, when the Warehouse holds them)`],
+    ['Cook (a farmhand’s task)', `A batch an action from ${BATCH_GOODS} goods by the plain rule, its meals by her Cooking (below), until the pantry holds tonight’s meals for everyone`],
+    ['A meal’s stars', `Its ${BATCH_GOODS} goods’ stars, averaged and rounded down`],
+    ['Well fed', `An Uma who eats a ★${WELL_FED_STARS}+ meal is well fed through tomorrow: one more action tomorrow, and her work’s quality, hauls and rank points; never stacked, never shortening a meal running longer`],
+    ['The plain rule', `The two cheapest goods of ★${WELL_FED_STARS} or more (their meals feed well); with fewer than two held, the two cheapest. Cheapest is the price at its stars, out of demand`],
+    ['Food', FOOD_FAMILIES.map((f) => FAMILY_NAMES[f]).join(', ') + ', raw or refined'],
+  ])
+}
+/** A farmhand's batch by her Cooking level. */
+function cookBatchBlock(): string {
+  return table(['Cooking', ...COOK_BATCH.map((_, i) => String(i + 1))], [['Meals a batch', ...COOK_BATCH.map(String)], ['Goods a batch', ...COOK_BATCH.map(() => String(BATCH_GOODS))]])
+}
 // --- Farmhands -------------------------------------------------------------------------------------------------
 /** A farmhand's actions a day, by why, and half pace. */
 function farmhandDay(): string {
@@ -492,7 +514,7 @@ function farmhandDay(): string {
     ['A farmhand’s day, after her part-time job (she’s on the farm by day; she works her actions overnight)', String(HAND_ACTIONS)],
     [`Settled in: from ${SETTLED_AFTER} days after you invited her (a season)`, `+${SETTLED_ACTIONS}`],
     ['Once she’s your spouse', `+${SPOUSE_ACTIONS}`],
-    ['Well fed this morning: a household meal the day before, a wedding’s reception, a spouse’s breakfast', `+${FED_ACTIONS}`],
+    [`Well fed this morning: a ★${WELL_FED_STARS}+ meal last night, a household meal the day before, a wedding’s reception, a spouse’s breakfast`, `+${FED_ACTIONS}`],
     [`Half pace: from the ${HALF_PACE_FROM === 2 ? 'second' : `${HALF_PACE_FROM}th`} short night of upkeep in a row, until it’s paid`, 'Half of them all, rounded down, never below 1'],
   ])
 }
@@ -501,7 +523,8 @@ function workBoard(): string {
   const rows: Cell[][] = TASK_KINDS.map((kind) => {
     const aptitude = kind === 'load' ? 'mill' : kind
     const over = (TILE_TASKS as readonly string[]).includes(kind) ? 'A plot’s tiles you choose (the board offers each plot’s rows)' : kind === 'load' ? 'A built station'
-      : kind === 'fish' ? 'A spot the farm reaches' : kind === 'care' ? 'The Coop’s or the Barn’s animals' : kind === 'mine' ? 'The Mine’s or the Quarry’s deepest floor' : 'An area the farm reaches'
+      : kind === 'fish' ? 'A spot the farm reaches' : kind === 'care' ? 'The Coop’s or the Barn’s animals' : kind === 'mine' ? 'The Mine’s or the Quarry’s deepest floor'
+        : kind === 'cook' ? 'The farmhouse kitchen (the Kitchen’s, once it stands)' : 'An area the farm reaches'
     const each: Record<TaskKind, string> = {
       harvest: `A ripe tile, its crops by her stars; ${tilesAt('harvest', TRICK_AT.harvestTwo)}`,
       water: `A dry growing tile; ${tilesAt('water', TRICK_AT.waterTwo)}; every dry tile of hers in one row from Watering ${TRICK_AT.waterRow}`,
@@ -513,9 +536,11 @@ function workBoard(): string {
       fish: `A cast: one fish (two casts from Fishing ${TRICK_AT.castTwo})`,
       care: `A hungry animal fed from the silo (two from Animal care ${TRICK_AT.feedTwo}), else grass cut on a weeds tile for it; then the building’s goods collected, +${per(aptitudeQuality(2))} quality a level above 1; then an animal cared for (two from Animal care ${TRICK_AT.careTwo}), +1 fondness a level above 1`,
       mine: `A face on the deepest floor: ${FACE_FINDS} finds by her yield (${FACE_FINDS + 1} from Mining ${TRICK_AT.digThree}), a face more toward its stairs; the farmer takes them`,
+      cook: `A batch from ${BATCH_GOODS} goods of food by the plain rule: ${COOK_BATCH[0]} meals at Cooking 1, up to ${COOK_BATCH.at(-1)} at Cooking ${COOK_BATCH.length}, into the pantry`,
     }
     const stops = OPEN_TASKS.includes(kind) ? `Never: her ${kind === 'mine' ? 'digging' : 'gathering'} shares what’s left, a turn each` : kind === 'load' ? 'Once the station holds today’s load'
-      : kind === 'care' ? 'When every animal there is fed, collected and cared for' : 'When none of its tiles needs it'
+      : kind === 'care' ? 'When every animal there is fed, collected and cared for' : kind === 'cook' ? 'Once the pantry holds tonight’s meals for everyone, or the food runs out'
+        : 'When none of its tiles needs it'
     return [TASK_NAMES[kind], over, each[kind], stops, kind === 'load' ? 'Milling, Sawing, Smoking, Smelting or Cutting, by station' : APTITUDE_NAMES[aptitude as AptitudeId],
       ACTIVITY_NAMES[APTITUDE_ACTIVITY[aptitude as AptitudeId]] + (kind === 'load' ? ', foraging, fishing or mining' : '')]
   })
@@ -1065,7 +1090,7 @@ function marriedLifeBlock(): string {
   return table(['', 'Married life'], [
     ['A meal', `${MEALS.map((m) => MEAL_NAMES[m]).join(' or ')}: ${actionWords('cook')}, each once a day, from your first wedding`],
     ['Who eats', 'Everyone on the farm (the Dorm and the houses) and every farmhand'],
-    ['What a meal does', `Everyone it feeds well fed for ${MEAL_DAYS} days (today and tomorrow; a meal running longer is never shortened), and +${MEAL_POINTS} to each (\`addLove\`, an anniversary’s ×2 applies)`],
+    ['What a meal does', `Everyone it feeds well fed for ${MEAL_DAYS} days (today and tomorrow; a meal running longer is never shortened), and +${MEAL_POINTS} to each (\`addLove\`, an anniversary’s ×2 applies); and a batch for the pantry, ${BATCH_MEALS} meals from ${BATCH_GOODS} goods of food by the plain rule, when the Warehouse holds them`],
     ['Its scene', 'One spouse’s meal line (`draw(uid, day, \'meal:<meal>\', 0)`): her bible’s `meals`, else the default story’s, on the dialogue engine'],
     ['The night’s companion', 'At Tonight, one spouse with a room: free. Her house is tonight’s house, so its morning is as built'],
     ['Without a pick', 'Tonight’s house (the morning’s “misses you” Tonight ›, else the house slept in least lately), and its resident who’s been your companion least lately'],
@@ -1230,7 +1255,7 @@ export function renderBlock(key: string): string | null {
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,
     'place-activity': placeActivity, 'forest-areas': forestAreas, 'fishing-spots': fishingSpots, 'fish-sizes': fishSizes, 'farmer-hauls': farmerHauls,
     stations, 'station-recipes': stationRecipes, animals: animalsBlock, 'ranch-rules': ranchRules, 'dig-floors': digFloors,
-    'dorm-levels': dormLevels, upkeep: upkeepBlock, loans: loansBlock,
+    'dorm-levels': dormLevels, upkeep: upkeepBlock, loans: loansBlock, food: foodBlock, 'cook-batch': cookBatchBlock,
     'farmhand-day': farmhandDay, 'work-board': workBoard, 'aptitude-levels': aptitudeLevels, 'aptitude-start': aptitudeStart, tricks: tricksBlock,
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,
     'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-schedule': townSchedule, 'town-shops': townShops, 'her-menu': herMenuBlock }

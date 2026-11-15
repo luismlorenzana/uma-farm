@@ -1,3 +1,4 @@
+import { PUSH_SCHEDULE_MAX } from '@farm/domain'
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 import { describe, expect, it } from 'vitest'
 import { parseSchedule, parseSubscription, PushController } from './push.controller'
@@ -20,12 +21,12 @@ describe('the push routes', () => {
     expect(parseSchedule({ entries: [{ at, place: 'mine', badge: 1, outfitId: '101' }] })).toEqual([{ at, place: 'mine', badge: 1 }])
     const refused = [
       null, [], { entries: {} }, { save: {} },
-      { entries: Array.from({ length: 45 }, () => ({ at, place: 'mine', badge: 1 })) },
+      { entries: Array.from({ length: PUSH_SCHEDULE_MAX + 1 }, () => ({ at, place: 'mine', badge: 1 })) },
       { entries: [{ at, place: 'forge', badge: 1 }] },
       { entries: [{ at: 'soon', place: 'mine', badge: 1 }] },
       { entries: [{ at: 1.5, place: 'mine', badge: 1 }] },
       { entries: [{ at, place: 'mine', badge: -1 }] },
-      { entries: [{ at, place: 'mine', badge: 45 }] },
+      { entries: [{ at, place: 'mine', badge: PUSH_SCHEDULE_MAX + 1 }] },
       { entries: [{ at, place: 'fields', badge: 1 }] },
       { entries: [null] },
     ]

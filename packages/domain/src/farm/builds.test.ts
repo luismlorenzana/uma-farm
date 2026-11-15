@@ -107,7 +107,7 @@ describe('an older v4, from the global chapters', () => {
     const save = farm()
     const older = json({ ...save, farm: { points: 400, chapter: 2, goals: { 'gold-shipped': 1200 }, festivals: [], counts: {} }, buildings: { dorm: 1, mill: 0 } }) as Record<string, unknown>
     const read = parseSaveV5(older)
-    expect(read.farm).toEqual({ points: 400, festivals: [], counts: {}, builds: [], loans: [], owed: 0, short: 0, income: [] })
+    expect(read.farm).toEqual({ points: 400, festivals: [], counts: {}, builds: [], loans: [], owed: 0, short: 0, income: [], pantry: [] })
     // Chapter 2 had opened the Coop and the Barn: they stay open, built. The Mill's plans are an unbuilt Mill.
     expect(read.buildings).toEqual({ dorm: 1, mill: 0, coop: 1, barn: 1 })
     expect(placeBuilt(read, 'mill')).toBe(false)
