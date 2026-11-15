@@ -1,6 +1,6 @@
 // The farmhouse kitchen, on the homestead's sheet (the farm map's Farmhouse opens it): the pantry, tonight's table as the
 // farm stands (who eats, what the pantry and the cooks cover, the takeout), and **Cook a batch · 1**: two goods of food
-// you choose, the plain rule's two picked to start, four meals into the pantry. The Kitchen (Phase 2.3) adds its
+// you choose, the plain rule's two picked to start, six meals into the pantry. The Kitchen (Phase 2.3) adds its
 // minigame. Part of the homestead's chunk.
 import {
   actionCost, actionsLeft, BATCH_GOODS, BATCH_MEALS, batchBlock, batchStars, foodHeld, itemNameOf, MEALS_A_DAY, pantryMeals, plainBatch, tableTonight, TAKEOUT_PRICE,
@@ -44,7 +44,7 @@ export function Kitchen({ save, busy, onCook }: { save: SaveV4; busy: boolean; o
         <HelpButton title="The kitchen" label="How food works">
           <p>Everyone who eats on the farm eats twice a day, at night: you, everyone living on the farm, and every farmhand who works that day.</p>
           <p>They eat from the pantry first. Whatever it’s short is takeout, {gold(TAKEOUT_PRICE)} a meal, paid with the upkeep.</p>
-          <p>Cook a batch here: one action, two goods of food, four meals. Meals keep two days. A meal of ★2 or more leaves an Uma who eats it well fed: one more action the next day.</p>
+          <p>Cook a batch here: one action, two goods of food, {BATCH_MEALS} meals: {gold(BATCH_MEALS * TAKEOUT_PRICE)} of takeout. Meals keep two days. A meal of ★2 or more leaves an Uma who eats it well fed: one more action the next day.</p>
           <p>A farmhand on Cook cooks for everyone: bigger batches as her Cooking grows.</p>
         </HelpButton>
       </div>

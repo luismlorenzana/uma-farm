@@ -8,9 +8,10 @@
 //   the night    step 2, after the farmhands work: each mouth eats two meals from the pantry, the Umas first (the
 //                farmhands in their order, then the rest of the farm), the farmer last; the oldest meals first, the best
 //                of those. What's short is **takeout**, 15g a meal, charged with the upkeep (`settleAccounts`)
-//   cooking      the farmer: **Cook a batch** in the farmhouse kitchen (the homestead's sheet), 1 action: four meals from
-//                two goods of food; a household meal cooks one too. A farmhand on **Cook**: a batch an action, 4 meals at
-//                Cooking 1 up to 12 at Cooking 10, from two goods, until the pantry holds tonight's meals
+//   cooking      the farmer: **Cook a batch** in the farmhouse kitchen (the homestead's sheet), 1 action: six meals from
+//                two goods of food (90g of takeout from two goods worth 60–80g: cooking saves gold); a household meal
+//                cooks one too. A farmhand on **Cook**: a batch an action, 6 meals at Cooking 1 up to 12 at Cooking 10,
+//                from two goods, until the pantry holds tonight's meals
 //   stars        a batch's meals have its two goods' stars, averaged and rounded down. An Uma who eats a ★2+ meal is
 //                well fed tomorrow (the household meal's well fed: it never stacks and never shortens one running)
 //   the goods    the food families, raw or refined: grains, vegetables, herbs and spices, nuts and seeds, sweets,
@@ -33,11 +34,12 @@ export const MEALS_A_DAY = 2
 export const TAKEOUT_PRICE = 15
 /** A meal keeps this many days: the day it's cooked and the next. */
 export const MEAL_KEEPS = 2
-/** The farmer's batch: four meals from two goods. */
-export const BATCH_MEALS = 4
+/** The farmer's batch: six meals from two goods, so a batch of the cheapest goods saves gold against takeout. */
+export const BATCH_MEALS = 6
 export const BATCH_GOODS = 2
-/** A farmhand's batch by her Cooking level, 1–10: 4 meals, up to 12, from the same two goods. */
-export const COOK_BATCH: readonly number[] = [4, 5, 6, 7, 8, 8, 9, 10, 11, 12]
+/** A farmhand's batch by her Cooking level, 1–10: 6 meals, up to 12, from the same two goods (6 + 6 × (level − 1) / 9,
+ * rounded). */
+export const COOK_BATCH: readonly number[] = [6, 7, 7, 8, 9, 9, 10, 11, 11, 12]
 /** A meal of this many stars or more leaves an Uma who eats it well fed. */
 export const WELL_FED_STARS = 2
 /** Well fed from a good meal: through tomorrow, as a household meal's (`MEAL_DAYS`). The night counts it down once, so
@@ -193,7 +195,7 @@ export function addBatch<S extends FarmSave>(save: S, keys: readonly string[], m
 }
 
 /** **Cook a batch**, in the farmhouse kitchen: one action; two goods of food (`picks`, stock keys; the plain rule's when
- * none) out of the Warehouse, four meals at their stars into the pantry, cooked today. `lift` is the Kitchen's play's
+ * none) out of the Warehouse, six meals at their stars into the pantry, cooked today. `lift` is the Kitchen's play's
  * grade (Phase 2.3), 0 until it stands. Refused with fewer than two goods of food held or a pick not held (`no-items`),
  * a pick that isn't food (`bad-job`), anything but two picks (`bad-count`), and with no action left. Never stamps. */
 export function cookBatch<S extends FarmSave>(save: S, picks: readonly string[] | null = null, lift = 0): S {

@@ -12,7 +12,7 @@
 //
 // **Meals** (married life): breakfast and dinner, one action each, once each a day. A meal feeds everyone on the farm and
 // every farmhand (well fed through tomorrow, a meal running longer never shortened) and pleases each who eats (+10). It's
-// the farmer cooking for the household, so it cooks a batch for the pantry too: four meals from two goods of food by the
+// the farmer cooking for the household, so it cooks a batch for the pantry too: six meals from two goods of food by the
 // plain rule, when the Warehouse holds two (`farm/food.ts`). One spouse's line plays as you sit down.
 //
 // **The night's companion** (married life): at the day's end you choose one spouse with a room to spend the night with,
@@ -135,7 +135,7 @@ export function mealBlock(save: Pick<SaveV4, 'love' | 'today' | 'calendar'>, mea
 }
 
 /** A meal cooked: one action; everyone who eats it (`mealEaters`) well fed through tomorrow (a meal running longer is
- * never shortened) and +10 each through `addLove` (an anniversary's ×2 applies); a batch for the pantry, four meals from
+ * never shortened) and +10 each through `addLove` (an anniversary's ×2 applies); a batch for the pantry, six meals from
  * two goods of food by the plain rule when the Warehouse holds two (`batch`, the meals added, else 0); the meal marked
  * for today. Who ate and the points paid in all. Refused before the first wedding (`locked`), once that meal is made
  * (`busy`), and with no action left (`no-actions`). Never stamps. */

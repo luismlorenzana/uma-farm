@@ -172,8 +172,8 @@ describe('the work board in the Book', () => {
     await click($('[data-action="add-task-confirm"]'))
     expect(useGame.getState().save!.roster[A]!.tasks).toEqual([{ kind: 'cook' }])
     await render(<BookPage />, '/book')
-    // The farmer and A, who works tonight: four meals, one batch of 5 at Cooking 2 (a D talent's start).
-    expect($(`[data-hand="${A}"] [data-tonight]`)?.textContent).toBe('Tonight · 1 of 3 actions · cooked 5 meals')
+    // The farmer and A, who works tonight: four meals, one batch of 7 at Cooking 2 (a D talent's start).
+    expect($(`[data-hand="${A}"] [data-tonight]`)?.textContent).toBe('Tonight · 1 of 3 actions · cooked 7 meals')
     expect($(`[data-hand="${A}"] [data-task-aptitude]`)?.textContent).toBe('Cooking 2')
     expect($('[data-money="food"] [data-figure]')?.textContent).toBe('0g')
     expect(doneWords({ cook: 5, water: 2 })).toEqual(['watered 2 tiles', 'cooked 5 meals'])

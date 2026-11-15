@@ -44,7 +44,7 @@ export function WorkBoard({ save }: { save: FarmSave }) {
           <p>A friend you invite to work is a farmhand. After her part-time job in town, she gives the farm 3 actions a day: one more once she’s settled in (a season on), two more once she’s your spouse, one more the day after a household meal.</p>
           <p>She works your tasks overnight, before the crops grow: the field’s, the stations’ and the animals’ first, in your order, then her gathering and digging, a turn each. The morning says what she did.</p>
           <p>Every task has an aptitude. She starts from her talents and gets better with each action: more goods, better stars, and tricks, like a row watered in one action.</p>
-          <p>Cook feeds the farm: each action cooks a batch from two goods of food in {KITCHEN}, 4 meals at Cooking 1 up to 12 at Cooking 10, until the pantry holds tonight’s meals for everyone.</p>
+          <p>Cook feeds the farm: each action cooks a batch from two goods of food in {KITCHEN}, 6 meals at Cooking 1 up to 12 at Cooking 10, until the pantry holds tonight’s meals for everyone.</p>
           <p>Short of upkeep two nights running, the farmhands work at half pace until it’s paid. Each farmhand costs 10g a night.</p>
         </HelpButton>
       </div>

@@ -1,5 +1,5 @@
 // The farm's accounts in words: a loan's project by its name, a loan's line ("440g owed · 45g a night · clears in about 10
-// nights"), the morning's food, upkeep and loans lines ("From the pantry · 4 meals", "Takeout · 30g"), and the upkeep's
+// nights"), the morning's food, upkeep and loans lines ("From the pantry · 6 meals", "Takeout · 30g"), and the upkeep's
 // breakdown. The save holds ids and gold; these say them, for the morning card, the Book, the Diary's projects and the
 // mayor's office. Loaded on demand with those screens. Pure, so the screens and the tests read the same.
 import {
@@ -57,7 +57,7 @@ export interface MoneyWords {
   warn?: boolean
 }
 /** The morning's food, upkeep and loans lines, in the night's order: each loan's share ("Loan for the Mill · 55g repaid ·
- * 440g left", "· no sales, nothing repaid", "· cleared"), the meals from the pantry ("From the pantry · 4 meals", "· 2
+ * 440g left", "· no sales, nothing repaid", "· cleared"), the meals from the pantry ("From the pantry · 6 meals", "· 2
  * spoiled", tagged Well fed when a good meal fed an Uma), the takeout ("Takeout · 30g", or "10g of 30g"), the upkeep
  * ("Upkeep · 45g", or "5g of 45g"), a short night ("Short of upkeep · 40g owed", tagged Warning; from the second, "·
  * farmhands at half pace", tagged Half pace) or the owed paid ("Upkeep paid up · 85g owed", tagged Paid). */

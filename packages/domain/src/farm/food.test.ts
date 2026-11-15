@@ -12,6 +12,7 @@ import {
 } from './food'
 import { talentsD } from './talents'
 import { GOOD_FAMILIES } from '../goods/ids'
+import { ship } from '../save/bin'
 import { runNight, endDay } from '../night/end-day'
 import { cookMeal } from '../romance/loop'
 import { parseSaveV5 } from '../save/parse-v4'
@@ -75,31 +76,44 @@ describe('who eats, and takeout', () => {
 })
 
 describe('the farmer\'s batch', () => {
-  it('cooks four meals from two goods of food for an action; the farm eats from the pantry, the oldest first, and they keep two days', () => {
+  it('cooks six meals from two goods of food for an action; the farm eats from the pantry, the oldest first, and they keep two days', () => {
+    expect(BATCH_MEALS).toBe(6)
     const save = cookBatch(farm(500, { carp: [2, 0, 0, 0, 0], 'pine-log': [5, 0, 0, 0, 0] }))
     expect(actionsLeft(save)).toBe(DAY_ACTIONS - 1)
     expect(save.items.carp).toBeUndefined()
     expect(save.items['pine-log']).toEqual([5, 0, 0, 0, 0])
     expect(save.farm.pantry).toEqual([{ day: 1, stars: 1, meals: BATCH_MEALS }])
-    // Tonight: he eats two of them, and pays no takeout; two keep for tomorrow night.
+    // Tonight: he eats two of them, and pays no takeout; four keep for tomorrow night.
     const day2 = night(save)
     expect(day2.gold).toBe(500)
     expect(money(day2)).toEqual([{ kind: 'pantry', meals: 2, spoiled: 0, fed: 0 }])
-    expect(day2.farm.pantry).toEqual([{ day: 1, stars: 1, meals: 2 }])
+    expect(day2.farm.pantry).toEqual([{ day: 1, stars: 1, meals: 4 }])
+    // Tomorrow night two more; alone, the last two are two days old and spoil.
     const day3 = night(day2)
-    expect(money(day3)).toEqual([{ kind: 'pantry', meals: 2, spoiled: 0, fed: 0 }])
+    expect(money(day3)).toEqual([{ kind: 'pantry', meals: 2, spoiled: 2, fed: 0 }])
     expect(day3.farm.pantry).toEqual([])
     expect(money(night(day3))).toEqual([{ kind: 'takeout', meals: 2, paid: 30, due: 30 }])
     expect(parseSaveV5(json(day2))).toEqual(day2)
   })
 
+  it('saves gold: a ★1 batch of two Button Mushrooms (60g at the bin) feeds three a night, 90g of takeout', () => {
+    const save = home(farm(500, { 'button-mushroom': [2, 0, 0, 0, 0] }), [A, B])
+    // Shipped and takeout bought: the bin pays 60g, three mouths eat 90g of takeout, two Umas' upkeep is 20g.
+    const bought = night(ship(save, 'button-mushroom', 1, 2))
+    expect(bought.gold).toBe(500 + 60 - 90 - 20)
+    // Cooked: the six meals are tonight's, and nothing is bought.
+    const cooked = night(cookBatch(save))
+    expect(money(cooked)).toEqual([{ kind: 'pantry', meals: 6, spoiled: 0, fed: 0 }, { kind: 'upkeep', paid: 20, due: 20 }])
+    expect(cooked.gold - bought.gold).toBe(30)
+  })
+
   it('spoils what\'s two days old: three batches on one day feed him two nights, the rest is gone', () => {
     let save = farm(500, { carp: [6, 0, 0, 0, 0] })
     for (let n = 0; n < 3; n++) save = cookBatch(save)
-    expect(pantryMeals(save)).toBe(12)
+    expect(pantryMeals(save)).toBe(18)
     const day2 = night(save)
     const day3 = night(day2)
-    expect(money(day3)).toEqual([{ kind: 'pantry', meals: 2, spoiled: 8, fed: 0 }])
+    expect(money(day3)).toEqual([{ kind: 'pantry', meals: 2, spoiled: 14, fed: 0 }])
     expect(day3.farm.pantry).toEqual([])
   })
 
@@ -116,12 +130,12 @@ describe('the farmer\'s batch', () => {
     const good = { ...mixed, items: { ...mixed.items, carrot: [0, 0, 1, 0, 0] as [number, number, number, number, number] } }
     expect(foodHeld(good).map((f) => f.key)).toEqual(['carp@1', 'wheat@1', 'carrot@3', 'salmon@2'])
     expect(plainBatch(good)).toEqual(['carrot@3', 'salmon@2'])
-    expect(cookBatch(good).farm.pantry).toEqual([{ day: 1, stars: 2, meals: 4 }])
+    expect(cookBatch(good).farm.pantry).toEqual([{ day: 1, stars: 2, meals: 6 }])
     expect(plainBatch(farm(500, { carp: [0, 2, 0, 0, 0], wheat: [0, 0, 0, 2, 0] }))).toEqual(['carp@2', 'carp@2'])
     // A meal's stars: its goods' average, rounded down; the Kitchen's lift, later, on top.
     expect([batchStars(['carp@1', 'salmon@3']), batchStars(['carp@1', 'salmon@2']), batchStars(['carp@4', 'salmon@5'], 1)]).toEqual([2, 1, 5])
     // Any two you choose.
-    expect(cookBatch(mixed, ['salmon@2', 'carp@1']).farm.pantry).toEqual([{ day: 1, stars: 1, meals: 4 }])
+    expect(cookBatch(mixed, ['salmon@2', 'carp@1']).farm.pantry).toEqual([{ day: 1, stars: 1, meals: 6 }])
   })
 
   it('refuses without two goods of food, a pick not held or not food, anything but two, and with no action left', () => {
@@ -165,28 +179,29 @@ describe('the Cook task', () => {
   }
 
   it('cooks a batch an action by her Cooking, until the pantry holds tonight\'s meals; then her other tasks', () => {
-    expect(COOK_BATCH).toEqual([4, 5, 6, 7, 8, 8, 9, 10, 11, 12])
-    expect([cookBatchAt(1), cookBatchAt(5), cookBatchAt(10)]).toEqual([4, 8, 12])
+    expect(COOK_BATCH).toEqual([6, 7, 7, 8, 9, 9, 10, 11, 11, 12])
+    expect([cookBatchAt(1), cookBatchAt(5), cookBatchAt(10)]).toEqual([6, 9, 12])
     const save = kitchen({ carp: [10, 0, 0, 0, 0] })
-    // Five mouths: the farmer, two home, two farmhands; ten meals. A D talent starts her at Cooking 2: two batches of 5,
+    // Five mouths: the farmer, two home, two farmhands; ten meals. A D talent starts her at Cooking 2: two batches of 7,
     // from four carp; her third action forages.
     expect(mealsNeeded(save)).toBe(10)
     expect(aptitudeOf(save.roster[A]!, 'cook', () => 3).level).toBe(2)
     const { lines, worked } = handsTonight(save, save, talentsD, null)
-    expect(lines[0]).toMatchObject({ id: A, spent: 3, done: { cook: 10, forage: 1 } })
+    expect(lines[0]).toMatchObject({ id: A, spent: 3, done: { cook: 14, forage: 1 } })
     expect(worked).toContainEqual({ outfitId: A, place: 'kitchen' })
     const morning = night(save)
     // No takeout: only the four Umas' upkeep.
     expect(money(morning)).toEqual([{ kind: 'pantry', meals: 10, spoiled: 0, fed: 0 }, { kind: 'upkeep', paid: 40, due: 40 }])
     expect(morning.gold).toBe(460)
     expect(morning.items.carp).toEqual([6, 0, 0, 0, 0])
-    expect(morning.farm.pantry).toEqual([])
+    // Four keep for tomorrow night.
+    expect(morning.farm.pantry).toEqual([{ day: 2, stars: 1, meals: 4 }])
     // Her practice and her rank points are cooking's.
     expect(morning.roster[A]!.practice).toEqual({ cook: 2, forage: 1 })
     expect(morning.roster[A]!.ranks.cooking.points).toBeGreaterThan(0)
     // With a meal kept from today, she cooks only what's short.
     const kept = { ...save, farm: { ...save.farm, pantry: [{ day: 2, stars: 1, meals: 6 }] } }
-    expect(handsTonight(kept, kept, talentsD, null).lines[0]).toMatchObject({ spent: 3, done: { cook: 5, forage: 2 } })
+    expect(handsTonight(kept, kept, talentsD, null).lines[0]).toMatchObject({ spent: 3, done: { cook: 7, forage: 2 } })
     expect(parseSaveV5(json(morning))).toEqual(morning)
   })
 
@@ -202,8 +217,8 @@ describe('the Cook task', () => {
   })
 
   it('shows tonight\'s table as the farm stands: the cook\'s meals, the pantry, the takeout', () => {
-    expect(tableTonight(kitchen({ carp: [10, 0, 0, 0, 0] }), talentsD, null)).toEqual({ mouths: 5, pantry: 10, cooked: 10, takeout: 0, gold: 0, fed: 0 })
-    expect(tableTonight(kitchen({ carp: [2, 0, 0, 0, 0] }), talentsD, null)).toEqual({ mouths: 5, pantry: 5, cooked: 5, takeout: 5, gold: 75, fed: 0 })
+    expect(tableTonight(kitchen({ carp: [10, 0, 0, 0, 0] }), talentsD, null)).toEqual({ mouths: 5, pantry: 10, cooked: 14, takeout: 0, gold: 0, fed: 0 })
+    expect(tableTonight(kitchen({ carp: [2, 0, 0, 0, 0] }), talentsD, null)).toEqual({ mouths: 5, pantry: 7, cooked: 7, takeout: 3, gold: 45, fed: 0 })
     expect(tableTonight(farm(), talentsD, null)).toEqual({ mouths: 1, pantry: 0, cooked: 0, takeout: 2, gold: 30, fed: 0 })
   })
 })
@@ -213,7 +228,7 @@ describe('a household meal', () => {
     const wed = { ...hands(farm(500, { carp: [2, 0, 0, 0, 0] }), [A]), love: { [A]: { ...newLove(), stage: 'spouse' as const, level: 0, wed: 1, house: 0 } } }
     const done = cookMeal(wed, 'breakfast')
     expect(done.batch).toBe(BATCH_MEALS)
-    expect(done.save.farm.pantry).toEqual([{ day: 1, stars: 1, meals: 4 }])
+    expect(done.save.farm.pantry).toEqual([{ day: 1, stars: 1, meals: 6 }])
     expect(done.save.items.carp).toBeUndefined()
     const bare = cookMeal(done.save, 'dinner')
     expect(bare.batch).toBe(0)

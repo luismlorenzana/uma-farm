@@ -12,7 +12,7 @@
 //                daily until you change it. A task on the board is hers: the farmer's own ten stay free
 //   her night    the field's tasks, the loads, the animals' care and the cooking first, in your order, each until it's
 //                done or her actions run out; then her gathering and her digging share what's left, a turn each
-//   cook         a batch an action, from two goods of food by the plain rule (`farm/food.ts`): 4 meals at Cooking 1 up
+//   cook         a batch an action, from two goods of food by the plain rule (`farm/food.ts`): 6 meals at Cooking 1 up
 //                to 12 at 10, into the pantry, until it holds tonight's meals for everyone
 //   aptitude     a level 1–10 for each task: her talent's head start, a point for every 20 rank points in its activity,
 //                and a point for each action she spends on it. A level above 1 lifts her stars (+0.1) and her yield

@@ -53,7 +53,7 @@ export async function cookTheMeal(meal: Meal): Promise<{ speaker: string | null;
   })
   return { speaker: mealSpeaker(current(), meal), paid }
 }
-/** A batch cooked in the farmhouse kitchen: one action, two goods of food (stock keys), four meals into the pantry. */
+/** A batch cooked in the farmhouse kitchen: one action, two goods of food (stock keys), six meals into the pantry. */
 export const cookABatch = (picks: readonly string[]): Promise<void> => change((s) => cookBatch(s, picks))
 /** A piece of the furniture set placed in a house, or taken out. */
 export const placePiece = (piece: number, house: number | null): Promise<void> => change((s) => placeFurniture(s, piece, house))
