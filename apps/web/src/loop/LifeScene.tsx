@@ -11,9 +11,12 @@
 // She stays on the stage through the narration with the face of her last line; a choice is wording only. Her
 // illustrations show full screen where the story names one, and by the default mapping: the wedding night's two, a night
 // in's, and the night's companion's before her morning greeting. They pay nothing and save nothing (an illustration seen
-// joins her gallery); Skip, or the end, closes. Portaled above the sheets (z-60). Loaded on demand.
+// joins her gallery); Skip, or the end, closes. A `?life=` link plays only what the game has given you (`mayPlayLife`:
+// the morning after her night, her wedding day or the morning she moved in, the day you invited her, a meal cooked today
+// that she ate); any other closes quietly. Portaled above the sheets (z-60). Loaded on demand.
 import {
-  greetingScene, illustrate, illustrationAt, mealScene, sceneSteps, type IllustratedScene, type Meal, type Moment, type SaveV4, type Step, type StoryOutfit, type StoryPack,
+  greetingScene, illustrate, illustrationAt, mayPlayLife, mealScene, sceneSteps, type IllustratedScene, type Meal, type Moment, type SaveV4, type Step, type StoryOutfit,
+  type StoryPack,
 } from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
@@ -115,10 +118,15 @@ export default function LifePlayer({ value }: { value: string }) {
   const leave = useLeave()
   const asked = parseLife(value)
   const close = () => leave(withParam(location, 'life', null))
+  // Settled once, as it opens (`mayPlayLife`): a link the game hasn't given you closes, with no scene and no picture.
+  const [allowed, setAllowed] = useState<boolean | null>(null)
   useEffect(() => {
-    if (save && (!asked || !save.roster[asked.id])) close()
-  }, [save, asked?.id]) // eslint-disable-line react-hooks/exhaustive-deps
-  if (!save || !story || !asked || !save.roster[asked.id]) return null
+    if (allowed === null && save) setAllowed(!!asked && mayPlayLife(save, asked.kind, asked.id))
+  }, [save, allowed, asked?.kind, asked?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (allowed === false) close()
+  }, [allowed]) // eslint-disable-line react-hooks/exhaustive-deps
+  if (!save || !story || !asked || allowed !== true) return null
   return createPortal(
     <MasterGate skeleton={<div className="fixed inset-0 z-[60] bg-page" />}>
       {(master) => <Played kind={asked.kind} id={asked.id} save={save} story={story} master={master} onClose={close} />}

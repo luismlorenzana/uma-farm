@@ -12,7 +12,8 @@
 // Three ways in, each a param over any page (portaled above the sheets, z-60): `?event=<id>` plays her Ready event (her
 // row's ● Ready, her profile's **Play · 1 ›**, the morning's Ready line); `?ask=<id>` her confession's last choice again
 // (**Ask her**, once a day, paying nothing); `?memory=<id>:<rung>[@<n>]` replays a Memory from the top or its nth choice
-// point, every option open, nothing paid or saved. The script loads on demand (`eventOf`: her route's, else the default
+// point, every option open, nothing paid or saved. A link plays only what the game has given you (`mayPlayEvent`,
+// `mayAsk`, `mayReplayMemory`): any other closes quietly, with no scene and no pay. The script loads on demand (`eventOf`: her route's, else the default
 // story's for the rung, in her name); Skip, Auto and Log work while it does. A play without a prompt shows its game's. Nothing is saved until the end: `playEvent` then commits once, stamped. Skip jumps to the next
 // choice or play, never past one. Loaded on demand.
 //
@@ -27,8 +28,8 @@
 // default mapping: her confession's question and her yes, the wedding, a summer date at the shore; and the wedding
 // night's two. Each one seen joins her gallery.
 import {
-  actionCost, askSteps, beatOf, canAsk, canSpendForEvent, choicePointsOf, eventIllustration, eventMoments, extraPlay, firstPlace, GAME_DAYS, goodName, heldRings, illustrate, illustrationAt,
-  optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
+  actionCost, askSteps, beatOf, canSpendForEvent, choicePointsOf, eventIllustration, eventMoments, extraPlay, firstPlace, GAME_DAYS, goodName, heldRings, illustrate, illustrationAt,
+  mayAsk, mayPlayEvent, mayReplayMemory, optionViews, pathPlays, PLAY_PROMPTS, playOf, playSeed, promptOf,
   readiness, receptionDishes, replaySteps, ringGrade, ringPercent, rungName, walkScene, weddingGuests, weddingPlaceOf, weddingPlaces, withFarmer,
   type Answer, type ChoiceOption, type EventCard, type Play, type PlayAs, type PlayScore, type Reception, type SaveV4, type Step, type StoryOutfit, type StoryPack,
 } from '@farm/domain'
@@ -106,16 +107,16 @@ export default function EventPlayer() {
     const love = save.love[asked.id]
     const fail = () => setGone(true)
     if (!love || !save.roster[asked.id]) return fail()
+    // A link plays only what the game has given you (`scene links`): Ready, Ask her today, a Memory played.
     if (asked.mode === 'event') {
       const state = readiness(save, story, asked.id)
-      if (!state.ready || !state.rung) return fail()
+      if (!mayPlayEvent(save, story, asked.id) || !state.rung) return fail()
       if (!canSpendForEvent(save, actionCost('event'), special ?? GAME_DAYS)) return setSpent(true)
       return setReq({ ...asked, rung: state.rung })
     }
-    if (asked.mode === 'ask') return canAsk(save, asked.id) ? setReq({ ...asked, rung: 'confession' }) : fail()
+    if (asked.mode === 'ask') return mayAsk(save, asked.id) ? setReq({ ...asked, rung: 'confession' }) : fail()
     const rung = asked.rung!
-    const played = rung === 'arrival' ? save.arrivals.includes(asked.id) : (save.memories[asked.id] ?? []).includes(rung)
-    return played ? setReq({ ...asked, rung }) : fail()
+    return mayReplayMemory(save, asked.id, rung) ? setReq({ ...asked, rung }) : fail()
   }, [asked, save, story, req])
   useEffect(() => {
     if (!req || !story) return

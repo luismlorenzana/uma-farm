@@ -430,7 +430,7 @@ another id is kept for the story (a note).
 
 | Field | What it does in play | Without it |
 |---|---|---|
-| `trigger` | Its setup besides her full bar: `hearts`, she's `working` an activity, an `item` is in the Warehouse, a `bond` with someone reaches a level. A `chapter` setup is noted and read as her full bar: the farm has no global chapters. Never a clock, the weather, a season or a festival | Her full bar only |
+| `trigger` | Its setup besides her full bar: `hearts`, she's `working` an activity, an `item` is in the Warehouse, a `bond` with someone reaches a level. A `working` setup is met every day, whether or not its place is built (the Restaurant, the Forge, the Kitchen, the Mine), so it never holds her event back: a route never dead-ends on a setup. To make her wait for a place or a Farm Rank, put a `gate` on [her chapter](#her-chapters). A `chapter` setup is noted and read as her full bar: the farm has no global chapters. Never a clock, the weather, a season or a festival | Her full bar only |
 | `place` | Where it plays, on her Next card and the Memory | No place shown |
 | `together` | What you do together: `talk`, `work` an activity, a `date` game (fishing, cooking, stargazing, footrace, dance, picnic, market, boat, walk, crafting), a `gift` of a good, or `help` someone. A work, a date or a gift adds a play when the event scripts none | No play added: the best choice taken is the grade |
 | `beat` | Its Memory's caption | The game's card's first line ("A quiet afternoon with her.") |

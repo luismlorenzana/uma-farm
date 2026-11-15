@@ -48,6 +48,7 @@ import { ARRIVAL_POINTS, CHOICE_BEST, CHOICE_OTHER, costOf, LADDER_COLOURS, ROUT
 import { GIFT_POINTS_V4, giftStars, LOVE_POINTS } from '../romance/acts'
 import { farmBirthday } from '../romance/days'
 import { READY_CONDITIONS, WAIT_ORDER } from '../romance/ready'
+import { SCENE_LINKS } from '../romance/links'
 import { chapterTitle, GATE_RULES, gateWords, herChapters } from '../romance/chapters'
 import { linePlace, MORNING_GOOD, NIGHT_CHORE, PERK_LINES, PERK_PLACE, PERKS, perkWords, type PerkId, type PerkLine } from '../romance/perks'
 import {
@@ -727,6 +728,10 @@ function birthdayMap(): string {
 function readyRules(): string {
   return table(['#', 'Ready needs', 'Not met'], READY_CONDITIONS.map((c, i) => [i + 1, c.condition, c.unmet]))
 }
+/** Each scene link and what it needs to play. */
+function sceneLinks(): string {
+  return table(['Link', 'Plays', 'Only when'], SCENE_LINKS.map((l) => [l.link, l.plays, l.when]))
+}
 /** Her chapters with no pack's: the four defaults and the events each holds. */
 function defaultChapters(): string {
   const words = (events: readonly string[]): string => {
@@ -1197,7 +1202,7 @@ export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'farm-ranks': farmRanks,
     'arrival-pay': arrivalPay, placeholders: placeholdersBlock, 'placeholder-moments': placeholderMoments,
     'default-story': defaultStoryBlock, 'default-outfits': defaultOutfits, 'stand-in': standIn, 'farmer-name': farmerName,
-    'route-costs': routeCosts, 'love-points': lovePoints, 'gift-stars': giftStarsBlock, 'birthday-map': birthdayMap, 'ready-rules': readyRules,
+    'route-costs': routeCosts, 'love-points': lovePoints, 'gift-stars': giftStarsBlock, 'birthday-map': birthdayMap, 'ready-rules': readyRules, 'scene-links': sceneLinks,
     'ready-waits': readyWaits, 'default-chapters': defaultChapters, 'chapter-gates': chapterGates, 'ladder-colours': ladderColours, 'hearts-factor': heartsFactor, 'perk-words': perkWordsBlock,
     'perk-effects': perkEffects, 'perk-lines': perkLines, 'perk-caps': perkCaps, 'signature-dish': signatureDishes,
     'bond-points': bondPoints, 'bond-hearts': bondHeartsBlock, 'tie-seeds': tieSeeds, 'side-by-side': sideBySide,

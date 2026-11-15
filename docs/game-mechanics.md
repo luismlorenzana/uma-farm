@@ -11,8 +11,9 @@ sets (see [Farmhands](#farmhands)), its places, the farm growing by building, up
 with its special days and occasion scenes, and the **romance** (Part 3), played from the story
 pack, and played whole without one: wherever the pack is silent, the default story plays, and every Uma without
 portraits plays on the blank bust (see [What plays without the story](#what-plays-without-the-story)). The game is
-laid out **sideways**, for a phone held in landscape (see [the frame](#the-frame-landscape)). A save from before v5
-starts over (see [Save versions](#save-versions)).
+laid out **sideways**, for a phone held in landscape (see [the frame](#the-frame-landscape)). **The farm on v5 is kept:**
+it's the owner's real game, so every later change grows v5 in place or migrates it, and never starts it over. Only a save
+from before v5 still meets the start-over card (see [Save versions](#save-versions)).
 
 **The tables are generated.** Every table between `<!-- live:… -->` markers is written from the rules by
 `packages/domain/src/docs/render.ts`. A test fails when one is stale, and `pnpm docs:update` rewrites them. Edit the
@@ -48,6 +49,7 @@ prose here; change a table by changing the rule.
   - [Heart events and plays](#heart-events-and-plays)
   - [The evening](#the-evening)
   - [The ring, the wedding, and married life](#the-ring-the-wedding-and-married-life)
+  - [Scene links](#scene-links)
 - **[Part 4 — The save](#part-4--the-save)**
   - [The save, as a player meets it](#the-save-as-a-player-meets-it)
 
@@ -3066,6 +3068,106 @@ feed. It checks:
 - **No retune:** the ranch's and the Mine's numbers stand as built: the Coop pays its way, and the Mine's pace is the
   Farm Rank's reach, as the forest's is.
 
+##### A route to marriage
+
+How long marriage takes, answered the same way: a test (`packages/domain/src/romance/marriage.test.ts`) plays the
+game's own rules with a plain bot, ten actions a day, courting **one default-story Uma** from meeting her to the wedding
+night and farming with what's left. `MARRIAGE=1` prints the tables below.
+
+- **The town is honest.** Master data there is 159 invented characters, so the daily draw puts about 24 out at the six
+  spots and the rest at home, as on the phone. She has no `home` or `job` in the story, so the draw places her: about one
+  day in six. A second way gives her cast entry a **routine** at the Café on four days a season (3, 6, 9 and 12), the
+  draw placing her the other days.
+- **She's met only by meeting her:** introducing yourself in town, the day she's out. Talks, gifts, Praise and the
+  invitation to work need her **in front of you**: on the farm when she lives there, else in town where she is today.
+  The bot never forces her into town: a day she's at home it farms instead, and those days are counted. Her events play
+  from anywhere; her evenings only once she lives on the farm.
+- **Each day,** while she's in front of you (going into town for her when she's out there): a talk, a gift, Praise when
+  she's earned it, and from Friendship 3 **the invitation to work** (a farmhand from then, watering the field and
+  foraging the woods); her morning invitation said yes; **her evening** when it's open (2 actions); **her event** when
+  Ready (the warmest reply, Yes at her confession); from Romance 8 **a ring** at the bench from three refined goods
+  the Mill made (the bot keeps the Mill's goods from Romance 5); then the proposal and the wedding. Then the farm, as
+  the first year's bot plays it: harvest, water what she won't, the Mill on a loan once its logs are held, the season's
+  quickest seeds, a crate shipped, and the rest at the woods and the water.
+- **Two profiles.** **Devoted:** her loved gift whenever it's held (foraging the Hills for it in Summer, once open), else
+  a liked one; **Great** evenings in her favourite kind. **Casual:** a liked gift; **Fine** evenings, the first kind
+  offered. A default-story Uma loves her line's good and likes nothing in particular, so her tastes for the run are a
+  synthetic bible's: loved her line's default (a farming Uma: Peach), liked four goods of the woods. Her favourite kind
+  is the walk, which both profiles take.
+- **Two homes.** She **stays in town** (a farmhand from Friendship 3, still living there), or the bot **invites her to
+  the farm** (a free Dorm bed) the day she's met.
+- **Seven farms each:** the account seeds the town's draw and every other draw, so each farm meets her on its own days.
+  Each cell is the median of the seven, with their range. A day is the farm's (48 to a year).
+
+It checks that **every run reaches the wedding night**, that **nothing dead-ends** (her event only ever waits on her
+bar, the day after, a ring or one a day), that the farm is faster than town and devoted no slower than casual, that a
+farmhand living in town is in front of you no more often than before, and that a routine brings her out more often.
+
+**She stays in town:**
+
+|  | Devoted, the draw | Devoted, a routine | Casual, the draw | Casual, a routine |
+|---|---|---|---|---|
+| Met her, day | 9 (4–26) | 3 | 9 (4–26) | 3 |
+| Out of her reach, days | 241 (231–283) | 94 (89–100) | 305 (285–337) | 107 (99–117) |
+| In front of you, before she's a farmhand | 18% of days | 49% of days | 18% of days | 49% of days |
+| In front of you, once she's a farmhand | 18% of days | 44% of days | 17% of days | 44% of days |
+| Friendship 3, day | 58 (52–92) | 24 (21–27) | 58 (52–94) | 24 (21–27) |
+| A farmhand, day | 67 (53–93) | 26 (23–28) | 69 (53–104) | 26 (23–28) |
+| The confession, day | 186 (168–208) | 102 (94–106) | 218 (195–236) | 115 (108–118) |
+| The proposal, day | 294 (283–331) | 169 (165–173) | 370 (350–398) | 192 (186–203) |
+| **The wedding**, day | **295 (284–332): Spring 7, year 7** | **170 (166–174): Autumn 2, year 4** | **371 (351–399): Autumn 11, year 8** | **193 (187–204): Spring 1, year 5** |
+| Meeting her to the wedding, days | 280 (262–324) | 167 (163–171) | 363 (340–395) | 190 (184–201) |
+| Actions spent on her | 181 (172–187) | 247 (243–256) | 223 (205–223) | 283 (274–289) |
+| Evenings | 0 | 0 | 0 | 0 |
+| Gifts: loved, liked | 42, 10 | 30, 42 | 0, 66 | 0, 84 |
+| Gold at the wedding | 208,945g (201,325–262,180) | 107,830g (104,465–112,525) | 278,110g (250,685–304,510) | 120,300g (116,125–133,680) |
+| Days her event waited on her bar | 258 (239–299) | 142 (139–149) | 339 (316–373) | 166 (160–175) |
+| Days it waited on a ring | 2 (0–3) | 1 (0–4) | 2 (0–3) | 2 (0–4) |
+| Short nights | 0 (0–1) | 1 (0–1) | 0 (0–1) | 1 (0–1) |
+| Real time, at 3–5 minutes a day | 15 h–25 h | 9 h–14 h | 19 h–31 h | 10 h–16 h |
+
+**Invited to the farm the day she's met:**
+
+|  | Devoted, the draw | Devoted, a routine | Casual, the draw | Casual, a routine |
+|---|---|---|---|---|
+| Met her, day | 9 (4–26) | 3 | 9 (4–26) | 3 |
+| Out of her reach, days | 8 (3–25) | 2 | 8 (3–25) | 2 |
+| In front of you, before she's a farmhand | 100% of days | 100% of days | 100% of days | 100% of days |
+| In front of you, once she's a farmhand | 100% of days | 100% of days | 100% of days | 100% of days |
+| Friendship 3, day | 18 (15–36) | 16 (14–16) | 18 (15–36) | 16 (14–16) |
+| A farmhand, day | 19 (16–37) | 17 (15–17) | 19 (16–37) | 17 (15–17) |
+| The confession, day | 30 (27–48) | 28 (26–28) | 34 (31–52) | 31 (30–32) |
+| The proposal, day | 43 (38–61) | 43 (38–43) | 55 (47–73) | 48 (47–53) |
+| **The wedding**, day | **44 (39–62): Winter 8, year 1** | **44 (39–44): Winter 8, year 1** | **56 (48–74): Spring 8, year 2** | **49 (48–54): Spring 1, year 2** |
+| Meeting her to the wedding, days | 35 (34–40) | 41 (36–41) | 44 (43–51) | 46 (45–51) |
+| Actions spent on her | 150 (145–162) | 166 (150–170) | 182 (178–213) | 190 (182–205) |
+| Evenings | 26 (24–28) | 28 (25–30) | 34 (32–42) | 35 (32–38) |
+| Gifts: loved, liked | 0, 34 | 0, 32 | 0, 44 | 0, 40 |
+| Gold at the wedding | 6,405g (5,060–11,465) | 5,935g (5,220–6,510) | 12,315g (7,060–14,935) | 9,740g (7,110–10,685) |
+| Days her event waited on her bar | 12 (11–15) | 15 (13–16) | 20 (19–22) | 23 (22–24) |
+| Days it waited on a ring | 1 (0–3) | 4 (1–5) | 1 (0–9) | 2 (0–5) |
+| Short nights | 0 (0–1) | 0 (0–1) | 0 (0–1) | 0 (0–1) |
+| Real time, at 3–5 minutes a day | 2 h–4 h | 2 h–4 h | 3 h–5 h | 2 h–4 h |
+
+- **Where she lives decides the pace.** Living in town, she's in front of you on about one day in six with the draw,
+  and in four on nine with the routine; on the others the day can't court her at all, and **she never has an evening**,
+  since evenings are only for an Uma on the farm. Invited to the farm (free, the day she's met, with a bed free), she's
+  in front of you every day and the wedding comes **in the first year: 35–41 days after meeting her, devoted, or 44–46
+  casual**, some 2–5 hours of play.
+- **A farmhand in town is no easier to reach:** the invitation to work makes her a farmhand, but she keeps her life in
+  town, so the draw still decides where she is (18% of days before and after, with the draw). What her becoming a
+  farmhand changes is her line's +10 a night and Praise, not the days you can talk with her.
+- **In town the route takes years:** devoted, about **280 days (six farm years, 15–25 hours)** with the draw and
+  **167 days (three and a half years)** with the routine; casual, 363 and 190. Nearly every day of it is her bar's wait.
+- **A routine is the story's lever:** four days a season at one place nearly halves the town route, and it's the only
+  thing that brings an Uma out more often while she lives in town.
+- **The ring never holds her long:** the bench opens the night after Romance 8, and the Mill's goods kept from Romance
+  5 make a ring there; the proposal waited on it 1–4 days at the median, 9 at most.
+- **Her loved gift is out of reach early:** a farming Uma loves Peach, which grows only in the Hills in Summer, and the
+  farmer reaches the Hills at Farm Rank 2, so on the farm a devoted bot never holds one before the wedding. Devoted's lead
+  is its Great evenings. (A fishing default-story Uma loves Seashell, which nothing in the game gives yet.)
+- **No retune:** the owner decides the pace after reading it.
+
 #### The night's goals check
 
 Night step 8 runs, in order:
@@ -3244,8 +3346,8 @@ Master data's private `dialogue-portraits` family holds them, keyed by her chara
 700, her face neutral), with where the face sits on it, and **a face per expression** (224 × 224, with alpha), drawn to
 sit over any of her portraits. The game draws the face over the portrait at that portrait's face position, unscaled,
 in straight alpha. Her portraits load the first time she's on a stage, then each picture by its path: checked against
-the release and cached on the device by its hash, so a scene plays offline once seen. The pilot is two Umas with 12
-outfits and 15 faces each; the next follow in the Uma Ranker's order. An outfit or a face not drawn for her yet falls
+the release and cached on the device by its hash, so a scene plays offline once seen. Three Umas have portraits so
+far, each with her outfits and her faces; the next follow in the Uma Ranker's order. An outfit or a face not drawn for her yet falls
 back (below), so a story can name one before its art exists.
 
 #### Outfits by context
@@ -4228,7 +4330,7 @@ profile, an action each:
 |---|---|---|
 | 1 | Her bar is full for the rung; a waiting rung (the confession, the proposal, the wedding) is Ready the day after the rung before, and the proposal needs a ring in the Warehouse | `bar`, `day`, `ring` |
 | 2 | She hasn’t played one of her events today | `today` |
-| 3 | Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level | `setup`; `opens` for the ranch, mining, cooking, expeditions, serving or forging before their place is built (the Coop, the Mine, the Kitchen, the expedition post, the Restaurant, the Forge) |
+| 3 | Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level | `setup` (a working setup is met every day, its place built or not: the farm gates her only through her chapters) |
 | 4 | Her chapter is open: when her next event is the first of her chapter, the chapter’s gate holds, if it has one (a place built, a Farm Rank, a good shipped, another’s event, a season or a festival) | `gate`: “Opens when the Kitchen is built” |
 <!-- /live -->
 
@@ -4242,17 +4344,18 @@ A setup is never an hour, the weather, a season or a festival; her chapter's gat
 | 2 | `night` | S2 or S4, bar full: no Ready event; the level comes at night, and the morning plays its scene; short of it, `bar` |
 | 3 | `friend` | She said “Not yet” at her confession: you ask her again from her profile |
 | 4 | `gate` | Her next event opens her chapter, and its gate doesn’t hold yet |
-| 5 | `opens` | A working setup at a place not built yet |
-| 6 | `bar` | Her bar isn’t full for the rung |
-| 7 | `day` | A waiting rung, on the day the rung before played |
-| 8 | `ring` | The proposal, with no ring in the Warehouse |
-| 9 | `today` | She played one of her events today |
-| 10 | `setup` | Its day setup isn’t met today |
+| 5 | `bar` | Her bar isn’t full for the rung |
+| 6 | `day` | A waiting rung, on the day the rung before played |
+| 7 | `ring` | The proposal, with no ring in the Warehouse |
+| 8 | `today` | She played one of her events today |
+| 9 | `setup` | Its day setup isn’t met today |
 <!-- /live -->
 
 - **A setup** is her bible's beat's setup for the rung; an Uma without a bible has none. A working setup ("she works
-  the Fishery today") is met every day, farmhand or not, so her event never waits on work she may not do; at
-  a place not built yet it shows "Opens when the Mine is built" (her place) ahead of a short bar. A pack's beat that still names a
+  the Fishery today") is met every day, farmhand or not, and whether or not its place is built (the Restaurant, the
+  Forge, the Kitchen, the Mine), so her event never waits on work she may not do and **a route never dead-ends on a
+  setup**. The farm gates her only through [her chapters](#her-chapters)' gates, which the story chooses: a place built
+  or a Farm Rank there holds her chapter's first event, by name. A pack's beat that still names a
   chapter setup is noted and read as her bar alone: the farm has no global chapters, and a gate goes on one of [her
   chapters](#her-chapters).
 - **Her bond setup** reads bond hearts (50, 150, 300, 500 and 750 points). **The proposal's ring** is any ring in the
@@ -5606,6 +5709,38 @@ Uma is there. **There's no pop-up per event:** the morning, her ● Ready chip a
 her are the romance's only signals, and pips stay their places' taps. The household milestones are news in the morning's
 section after it.
 
+### Scene links
+
+The players open over any page from a query param, so the game's buttons are links. **A link plays only what the game
+has given you:** a typed, bookmarked or stale one (yesterday's morning line, a meal from another day, someone you
+haven't met) closes quietly as it opens, with no scene, no pay and no picture in her gallery. Each kind has one pure rule
+in `romance/links.ts`, read once as its player opens; the game's own buttons only ever open what these allow, so their
+flows are unchanged:
+
+<!-- live:scene-links -->
+| Link | Plays | Only when |
+|---|---|---|
+| `?life=morning:<id>` | The night’s companion greets you | The morning after a night she was your companion (`love.night` is yesterday): that morning only |
+| `?life=moving-in:<id>` | Moving in | A spouse with a room, on her wedding day or the morning she moved into a room she waited for |
+| `?life=invited-to-work:<id>` | The invitation to work | The day you invited her (`roster[id].farmhand` is today) |
+| `?life=breakfast:<id>`, `?life=dinner:<id>` | A meal’s line | That meal cooked today, and she’s a spouse who ate it (or the one whose line it plays) |
+| `?event=<id>` | Her heart event | Ready (`readiness`); with no action left it says so and plays nothing |
+| `?ask=<id>` | Ask her | She said “Not yet” at her confession, and you haven’t asked today |
+| `?memory=<id>:<rung>` | A Memory, paying nothing | A Memory already played: her meeting scene, or a rung of her route |
+| `?evening=<id>` | Her kinds sheet, then the evening | Her evening is open to her now (home, a hangout or a date her ladder opened, a slot free) |
+| `?evening=pick` | Tonight’s picker | Someone can spend an evening now, and the day has its 2 actions |
+| `?occasion=<id>` | An occasion scene | Today’s occasion, with an Uma you’ve met, not yet played with her today |
+| `?household=<id>` | A household scene or the finale | Ready (the night saw its count) and not yet read; with `&replay=1`, once read |
+| `?level=<id>:<s2\|s4>` | A spouse level’s scene and card | She’s reached it (it pays nothing) |
+<!-- /live -->
+
+- **Read once, as it opens:** a scene that has started plays to its end (the evening's play, scene and card; a meal's
+  line) whatever the save says after.
+- **The morning's ☾ line** plays her greeting again that morning; the next morning it's gone with the night.
+- **Pays nothing either way:** the life scenes, Memories, a night level's and a household replay never pay; a heart
+  event, Ask her, an evening and an occasion pay only through their own rules (`playEvent`, `askHer`, `spendEvening`,
+  `playOccasion`), which refuse the same things.
+
 ## Part 4 — The save
 
 ### The save, as a player meets it
@@ -5698,7 +5833,7 @@ sits outside the opening screens, so it shows even when the app stopped while op
 
 | Version | What it is | What a player meets |
 |---|---|---|
-| v5 | The farm: the one save, its field a grid of tiles and its day a budget of actions | Every new farm starts on it, and the app plays and writes it |
+| v5 | The farm: the one save, its field a grid of tiles and its day a budget of actions | Every new farm starts on it, and the app plays and writes it. **It's kept:** later changes grow it in place or migrate it, never start it over |
 | v4 | The farm of blocks and Umas' jobs, before the day of actions | **The start-over card,** then a new farm on v5 |
 | v1, v2, v3 | Older formats, from before the farm started over the first time | **The start-over card,** then a new farm on v5 |
 | Newer than v5 | — | Refused: this build doesn't read it |
@@ -5707,6 +5842,9 @@ sits outside the opening screens, so it shows even when the app stopped while op
   multi-day jobs became the day's actions and a station's one load, and `today` counts the actions: a played v4 can't
   be read as a tile farm. A new version lets the rules that already guard an older save do the work: the start-over
   card, the safety copy, the server's backup, and an older build refusing a v5 rather than misreading it.
+- **v5 is kept from now on.** The owner plays the deployed farm as the real game, so no change starts it over: a new
+  field is grown in place (an older save reads it as its default, and `updatedAt` never moves for it), and a change a
+  default can't cover migrates the save as it loads. The start-over card stays only for a save from before v5.
 - **The start-over card.** When the phone's save, or on a new phone the server's, is older than v5, the opening stops at
   one card: **"Your farm starts over"**, "This version of the game begins a new farm on day 1.", and **Start the new
   farm**. Nothing changes until the button is tapped.

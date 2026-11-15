@@ -3,7 +3,7 @@
 // name). Pure, so the screens and the tests read the same. Loaded on demand with the Hearts tab.
 import { farmPlace, gateWords, goodName, rungName, type Activity, type Bar, type FarmPlaceId, type Festival, type Readiness } from '@farm/domain'
 
-/** "Opens when the Kitchen is built": a place she waits for. */
+/** "Opens when the Kitchen is built": a perk's place, not built yet. */
 export const opensWhenBuilt = (place: FarmPlaceId): string => `Opens when the ${farmPlace(place)?.name ?? place} is built`
 
 /** A working setup's place, as the route says it ("Romance 5 · the Pond, when she works it"). */
@@ -13,7 +13,7 @@ export const WORK_PLACE: Readonly<Record<Activity, string>> = {
 }
 
 /** Her next event's state in a line: "Friendship 2 · Ready", "Friendship 2 · 123 to go", "Friendship 3 · the Fields, when
- * she works there", "Opens when the Mine is built", her chapter's gate ("Friendship 7 · Opens when the Kitchen is built").
+ * she works there", her chapter's gate ("Friendship 7 · Opens when the Kitchen is built").
  * `nameOf` names a bond's other Uma, or a gate's. */
 export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, nameOf: (id: string) => string, year?: readonly Festival[]): string {
   const rung = state.rung ? rungName(state.rung) : ''
@@ -25,7 +25,6 @@ export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, 
     case 'friend': return at('she said “Not yet”')
     case 'night': return at('comes tonight')
     case 'gate': return at(gateWords(waits.gate, nameOf, year))
-    case 'opens': return at(opensWhenBuilt(waits.place))
     case 'bar': return at(`${(bar.cost - bar.points).toLocaleString('en-US')} to go`)
     case 'day': return at('Ready tomorrow')
     case 'ring': return at('Needs a ring')
@@ -40,7 +39,7 @@ export function readyWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, 
 }
 
 /** Her Next card's words: the wait without the rung, which the card's title already names. "Ready",
- * "123 to go", "Tomorrow", "Needs a ring", "Opens when the Mine is built". */
+ * "123 to go", "Tomorrow", "Needs a ring", her chapter's gate ("Opens when the Kitchen is built"). */
 export function nextWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, nameOf: (id: string) => string, year?: readonly Festival[]): string {
   if (state.ready) return 'Ready'
   const waits = state.waits!
@@ -49,7 +48,6 @@ export function nextWords(state: Readiness, bar: Pick<Bar, 'points' | 'cost'>, n
     case 'friend': return 'She said “Not yet”'
     case 'night': return 'Comes tonight'
     case 'gate': return gateWords(waits.gate, nameOf, year)
-    case 'opens': return opensWhenBuilt(waits.place)
     case 'bar': return `${(bar.cost - bar.points).toLocaleString('en-US')} to go`
     case 'day': return 'Tomorrow'
     case 'ring': return 'Needs a ring'

@@ -6,7 +6,7 @@ import { DAYS_PER_SEASON } from '../farm/calendar'
 import { runNight, type NightContext } from '../night/end-day'
 import { parseSaveV5 } from '../save/parse-v4'
 import { newSave, type Love, type SaveV4 } from '../save/v4'
-import { checkCast, RUNGS, type Cast, type HerChapter, type StoryTrigger } from '../story/authored'
+import { checkCast, RUNGS, type Cast, type HerChapter, type StoryTrigger, type UmaBible } from '../story/authored'
 import { STAND_IN_CAST, STAND_INS } from '../story/authored.fixture'
 import { storyPackFrom, type StoryPack } from '../story/pack'
 import { DEFAULT_CHAPTERS } from '../story/placeholders'
@@ -115,12 +115,24 @@ describe('a chapter’s gate', () => {
     const save = atSeven()
     expect(chapterNow(save, pack, ONE)).toMatchObject({ current: { title: 'Kitchen days' }, waits: KITCHEN })
     expect(readiness(save, pack, ONE)).toEqual({ rung: 'f7', ready: false, waits: { kind: 'gate', gate: KITCHEN } })
-    // Ahead of a short bar, as a place not built is.
+    // Ahead of a short bar.
     expect(readiness(withLove(save, ONE, { points: 0 }), pack, ONE).waits).toEqual({ kind: 'gate', gate: KITCHEN })
     expect(readiness(built(save, 'kitchen'), pack, ONE)).toEqual({ rung: 'f7', ready: true, waits: null })
     expect(chapterNow(built(save, 'kitchen'), pack, ONE).waits).toBeNull()
     // With the defaults, nothing waits.
     expect(readiness(save, PACK, ONE).ready).toBe(true)
+  })
+
+  it('still holds when its first event\'s setup names the place it waits for: the gate, not the setup, holds her', () => {
+    const own: UmaBible = PACK.bibles.get(ONE)!
+    const f7 = { ...(own.route?.find((b) => b.id === 'f7') ?? { id: 'f7' }), trigger: { kind: 'working' as const, activity: 'cooking' as const } }
+    const bible: UmaBible = { ...own, route: [...(own.route ?? []).filter((b) => b.id !== 'f7'), f7] }
+    const cooking: StoryPack = { ...pack, bibles: new Map([...PACK.bibles, [ONE, bible]]) }
+    const save = atSeven()
+    expect(readiness(save, cooking, ONE)).toEqual({ rung: 'f7', ready: false, waits: { kind: 'gate', gate: KITCHEN } })
+    expect(readiness(built(save, 'kitchen'), cooking, ONE)).toEqual({ rung: 'f7', ready: true, waits: null })
+    // Without the gate, the same setup holds nothing back.
+    expect(readiness(save, { ...PACK, bibles: cooking.bibles }, ONE).ready).toBe(true)
   })
 
   it('holds nothing back once its first event has played', () => {

@@ -270,7 +270,14 @@ describe('married life: the night\'s companion and the household\'s meals', () =
   })
 
   it('plays her moving in from the morning\'s line when she took a room overnight', async () => {
+    // A stale link (no wedding today, no "moved into" this morning) plays nothing.
     useGame.setState({ uid: 'u1', status: 'ready', save: wedOne() })
+    await render(<p />, `/?stale=1&life=moving-in:${ONE}`)
+    await until(() => path === '/?stale=1')
+    expect($('[data-life]')).toBeNull()
+    // The morning she took a room: its line plays her moving in.
+    const moved: SaveV4 = { ...wedOne(), summary: { day: DAY, bin: [], work: [], ranks: [], hearts: [{ kind: 'moved', id: ONE, house: 0 }], news: [], nudges: [] } }
+    useGame.setState({ uid: 'u1', status: 'ready', save: moved })
     await render(<p />, `/?life=moving-in:${ONE}`)
     await find('[data-life="moving-in"]')
     expect($('[data-scene-title]')?.textContent).toBe('Moving in · Stand-in 1')
@@ -368,5 +375,39 @@ describe('before anyone is married', () => {
     await render(<p />, '/?household=finale')
     await settle()
     expect($('[data-scene]')).toBeNull()
+  })
+})
+
+describe('scene links play only what the game has given you', () => {
+  it('closes each stale or typed link quietly: no scene, no pay, no picture, the save untouched', async () => {
+    // 9000001 married (day 2) and housed; 9000002 a new friend at F0; nothing cooked, no night together, no event Ready.
+    const start = wedOne({ points: 10 })
+    const links = [
+      `life=morning:${ONE}`, `life=moving-in:${ONE}`, `life=invited-to-work:${TWO}`, `life=breakfast:${ONE}`, `life=dinner:${ONE}`,
+      `event=${TWO}`, `ask=${TWO}`, `memory=${TWO}:f5`, `evening=${TWO}`, `occasion=${TWO}`, 'household=household:5', `level=${ONE}:s2`,
+      'life=morning:9000009', 'event=9000009',
+    ]
+    for (const [n, link] of links.entries()) {
+      useGame.setState({ uid: 'u1', status: 'ready', save: start })
+      await render(<p />, `/?stale=${n}&${link}`)
+      await until(() => path === `/?stale=${n}`)
+      await settle()
+      expect($('[data-life]'), link).toBeNull()
+      expect($('[data-event-player]'), link).toBeNull()
+      expect($('[data-evening-kinds]'), link).toBeNull()
+      expect($('[data-evening-picker]'), link).toBeNull()
+      expect($('[data-scene]'), link).toBeNull()
+      expect(save(), link).toBe(start)
+    }
+  }, 30_000)
+
+  it('plays the invitation to work and a meal\'s line the moment the game gives them', async () => {
+    const one = wedOne()
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...one, roster: { ...one.roster, [TWO]: { ...one.roster[TWO]!, farmhand: DAY } } } })
+    await render(<p />, `/?life=invited-to-work:${TWO}`)
+    await find('[data-life="invited-to-work"]')
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...one, today: { ...one.today, meals: ['dinner'] } } })
+    await render(<p />, `/?life=dinner:${ONE}`)
+    await find('[data-life="dinner"]')
   })
 })
