@@ -604,7 +604,7 @@ describe('the save\'s perk fields and lines', () => {
     refuse([{ kind: 'item', id: TWO, items: [] }], 'save.summary.hearts.0.items')
     refuse([{ kind: 'item', id: TWO, items: ['nope@3'] }], 'save.summary.hearts.0.items.0: expected <good>@<stars>')
     refuse([{ kind: 'chores', items: 0, watered: 0 }], 'save.summary.hearts.0: expected items, tiles watered or fondness')
-    refuse([{ kind: 'chores', items: 1, watered: 0.5 }], 'save.summary.hearts.0.watered: expected 0–80')
+    refuse([{ kind: 'chores', items: 1, watered: 0.5 }], 'save.summary.hearts.0.watered: expected 0–320')
     refuse([{ kind: 'chores', items: 1, growth: 0.25 }], 'save.summary.hearts.0: unknown keys growth')
     refuse([{ kind: 'perks', items: 0 }], 'save.summary.hearts.0.items')
     refuse([{ kind: 'perks', items: 1 }, { kind: 'perks', items: 2 }], 'save.summary.hearts.1: repeated')

@@ -2,7 +2,8 @@
 // and pays his way. Each morning he harvests what's ripe, waters what grows, plants the tilled soil he has seeds for,
 // tills and clears a little more while the field is small, ships once there's a crate's worth, goes into town for the
 // season's quickest seeds when they run out, and spends what's left fishing, foraging and chopping (chopping first while
-// his next build waits for logs). He keeps the logs and fish his next build takes, and builds as he goes, never into a
+// his next build waits for logs), each where it isn't thin yet today (four full hauls a place; a farmhand's places left to
+// her). He keeps the logs and fish his next build takes, and builds as he goes, never into a
 // night he can't pay: the Mill on a loan from the mayor's office as soon as he holds its logs (Spring), then the Farm
 // Rank 3 stations, with his own gold or a loan. Alone, nobody lives on the farm: an Uma there eats, and one with no work
 // costs her upkeep and her meals for nothing. Every night the farm eats, then pays its bill after the bin: the loans'
@@ -47,7 +48,7 @@ import { buyDorm, dormBought } from './dorm'
 import { placeBuilt, farmPlace, type FarmPlaceId } from './places'
 import { clearTile, harvestTile, plantTile, seedsInSeason, stagesOf, TILES_HARVESTED, tillTile, waterTile } from '../fields/fields'
 import { stairsLock, takeStairs } from '../gathering/digs'
-import { chop, fish, forage, reachList } from '../gathering/hauls'
+import { chop, fish, forage, reachList, thinToday } from '../gathering/hauls'
 import { HOME_COUNT } from '../gathering/kinds'
 import { LOAD_SIZE, startLoad, stationOptions } from '../gathering/stations'
 import { goodOf, type CropId } from '../goods/ids'
@@ -142,6 +143,23 @@ interface Day {
 
 const growing = (save: SaveV4): number[] => fieldTiles(save).flatMap((t, i) => (t.crop !== null && !t.ready ? [i] : []))
 const left = actionsLeft
+/** The places a farmhand gathers at tonight: he leaves them to her. */
+const hers = (save: SaveV4): string[] => Object.values(save.roster).flatMap((u) => (u.tasks ?? []).flatMap((t) => (t.kind === 'forage' ? [t.area] : t.kind === 'fish' ? [t.spot] : [])))
+/** Whether a place is thin for him today: its four full hauls taken, or it's a farmhand's tonight. */
+const thinFor = (save: SaveV4, where: string): boolean => thinToday(save, where) || hers(save).includes(where)
+/** Where he gathers: the nearest area or spot in his reach that isn't thin for him yet today (four full hauls a place,
+ * a farmhand's left to her), else the nearest. */
+const fresh = (save: SaveV4, place: 'forest' | 'fishery'): string => {
+  const open = reachList(save, place).filter((r) => r.lock === null)
+  return (open.find((r) => !thinFor(save, r.id)) ?? open[0]!).id
+}
+/** A haul, by turns: a catch, a forage, a chop, each where it isn't thin; the next by turn when its place is thin and
+ * another's isn't. */
+function haul(save: SaveV4, k: number): SaveV4 {
+  const kinds = [0, 1, 2].map((n) => (k + n) % 3)
+  const pick = kinds.find((n) => !thinFor(save, fresh(save, n === 0 ? 'fishery' : 'forest'))) ?? k % 3
+  return pick === 0 ? fish(save, fresh(save, 'fishery')).save : pick === 1 ? forage(save, fresh(save, 'forest')).save : chop(save, fresh(save, 'forest')).save
+}
 /** Whether a project is done: built, paid today, or the Dorm's level bought. */
 const done = (save: SaveV4, project: string): boolean => {
   const dorm = /^dorm:(\d)$/.exec(project)
@@ -356,8 +374,8 @@ function play(start: SaveV4, log: Day[], run: Run, food: Food): SaveV4 {
   const stove = !hands && (food === 'stove' || (food === 'cook' && save.gold < LOW_GOLD)) && pantryMeals(save) < MEALS_A_DAY ? 1 : 0
   const gather = hands ? Math.min(left(save), GATHER_ALONE) : Math.max(0, left(save) - stove)
   const until = left(save) - gather
-  while (wantsLogs(save, run) && left(save) > until + stove) save = chop(save, 'woods').save
-  for (let k = 0; left(save) > until; k++) save = k % 3 === 0 ? fish(save, 'pond').save : k % 3 === 1 ? forage(save, 'woods').save : chop(save, 'woods').save
+  while (wantsLogs(save, run) && left(save) > until + stove) save = chop(save, fresh(save, 'forest')).save
+  for (let k = 0; left(save) > until; k++) save = haul(save, k)
   if (stove > 0) save = cookAlone(save, day, food === 'stove')
   if (left(save) > 0) {
     day.people = left(save) - (save.today.town ? 0 : 1)
@@ -592,8 +610,9 @@ describe('food, the farmer alone: takeout bites from the first night, and never 
     expect(books.reduce((n, b) => n + b.spoiled, 0)).toBe(0)
     expect(books.reduce((n, b) => n + b.takeout, 0)).toBeLessThan(aloneTakeout.books.reduce((n, b) => n + b.takeout, 0) / 3)
     expect(aloneStove.log.filter((d) => d.short)).toEqual([])
-    // The stove's action is one fewer haul: the year ends within a tenth of the farm on takeout.
-    expect(Math.abs(aloneStove.end.gold - aloneTakeout.end.gold) / aloneTakeout.end.gold).toBeLessThan(0.1)
+    // The stove's action is one fewer haul: the year ends within an eighth of the farm on takeout (which reaches Farm Rank 2
+    // and its richer Hills and River by Winter, where the stove's doesn't quite).
+    expect(Math.abs(aloneStove.end.gold - aloneTakeout.end.gold) / aloneTakeout.end.gold).toBeLessThan(0.125)
   })
 })
 

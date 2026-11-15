@@ -3,7 +3,7 @@
 import { farmDay, farmPlace, FARM_RANK_POINTS, newSave, ship, type SaveV4 } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
 import { lockOf, placeLink } from './farm-map'
-import { binView, firstTab, goldWords, goodRow, saleWords, shelfOf, shopRows, warehouseTabs } from './goods-view'
+import { binView, easedWords, firstTab, goldWords, goodRow, saleWords, shelfOf, shopRows, warehouseTabs } from './goods-view'
 
 const AT = '2026-11-09T10:00:00.000Z'
 const SUMMER_3 = farmDay({ year: 1, season: 'summer', day: 3 })
@@ -69,6 +69,20 @@ describe('the bin\'s sheet', () => {
     })
     expect(saleWords({ id: 'salmon', stars: 2, count: 2 })).toBe('Salmon ★2 × 2')
     expect(goldWords(1240)).toBe('1,240g')
+  })
+
+  it('shows a flood\'s eased price: on the bin\'s lines past a crate, and in the Warehouse the days after', () => {
+    const base = newSave('u1', AT)
+    const flood = { ...base, calendar: { day: SUMMER_3 }, bin: { 'pine-log': [120, 0, 0, 0, 0] as [number, number, number, number, number] } }
+    expect(binView(flood)).toEqual({
+      lines: [{ kind: 'sold', id: 'pine-log', stars: 1, count: 120, gold: 2_900, demand: false, eased: 20, name: 'Pine Log' }],
+      total: 2_900,
+    })
+    // The morning after: eased two steps, 20g a log, and the Warehouse says so.
+    const after = { ...base, calendar: { day: SUMMER_3 + 1 }, items: { 'pine-log': [10, 0, 0, 0, 0] as [number, number, number, number, number] }, farm: { ...base.farm, market: { 'pine-log': 2 } } }
+    const row = warehouseTabs(after).flatMap((t) => t.rows).find((r) => r.id === 'pine-log')!
+    expect([row.eased, row.cells[0]!.price, row.worth]).toEqual([20, 20, 200])
+    expect(easedWords(20)).toBe('Eased −20%')
   })
 })
 

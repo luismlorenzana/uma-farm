@@ -2,7 +2,8 @@
 // silo), the woods' edge (forage or chop at an area), the pond's edge (fish a spot) and a built station's (start a load). Each says what the action
 // brought, and the day's actions left. Part of the farm map's chunk.
 import {
-  actionsLeft, dayActions, goodName, grassLock, hasGrass, itemNameOf, receiptItems, SILO_ROOM, siloStands, tileAt, type FarmSave, type GatherPlace, type HarvestReceipt,
+  actionsLeft, dayActions, FULL_HAULS, goodName, grassLock, hasGrass, itemNameOf, receiptItems, SILO_ROOM, siloStands, tileAt, type FarmSave, type GatherPlace,
+  type HarvestReceipt,
   type StationId,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -10,8 +11,8 @@ import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
-import { chopAt, clearAt, fishAt, forageAt, grassAt, harvestAt, loadAt, plantAt, tillAt, waterAt } from './actions'
-import { reachRows, stationView, tileView, tileWhere, type TileAction } from './farm-view'
+import { chopAt, clearAt, fishAt, forageAt, grassAt, harvestAt, loadAt, plantAt, tillAt, upgradeAt, waterAt } from './actions'
+import { reachRows, stationView, thinWords, tileView, tileWhere, type TileAction } from './farm-view'
 import { actionWords, plural } from './words'
 
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
@@ -132,6 +133,7 @@ export function GatherPanel({ save, place }: { save: FarmSave; place: GatherPlac
             <div className="flex items-center gap-2">
               <span className="min-w-0 flex-1 truncate text-[14px] font-semibold">{row.name}</span>
               {row.lock && <span className="shrink-0 text-[12px] text-ink-soft">{row.lock.replace(/\.$/, '')}</span>}
+              {!row.lock && <ThinMark hauls={row.hauls} />}
             </div>
             <div className="flex flex-wrap gap-1" aria-label={`Finds: ${row.finds.map((id) => itemNameOf(id)).join(', ')}`}>
               {row.finds.map((id) => <ItemIcon key={id} id={id} size={24} />)}
@@ -147,7 +149,7 @@ export function GatherPanel({ save, place }: { save: FarmSave; place: GatherPlac
                   </>
                 ) : (
                   <Button size="sm" className="flex-1" disabled={busy || out} data-action="fish"
-                    onClick={() => run(fishAt(row.id).then((c) => `${itemNameOf(c.fish)} ★${c.stars} · ${c.cm} cm${c.record ? ', a record' : ''}`))}>Fish · 1</Button>
+                    onClick={() => run(fishAt(row.id).then((c) => (c ? `${itemNameOf(c.fish)} ★${c.stars} · ${c.cm} cm${c.record ? ', a record' : ''}` : 'Nothing bit: it’s thin here today')))}>Fish · 1</Button>
                 )}
               </div>
             )}
@@ -159,8 +161,16 @@ export function GatherPanel({ save, place }: { save: FarmSave; place: GatherPlac
   )
 }
 
-/** A built station's panel: today's load, ready tomorrow; or what it can take now, each a load of up to eight for one
- * action. */
+/** An area's, a spot's or a dig's day: its full hauls left once one is taken, then "Thin · half hauls". */
+export function ThinMark({ hauls, noun }: { hauls: number; noun?: string }) {
+  const words = thinWords(hauls, noun)
+  if (!words) return null
+  const thin = hauls >= FULL_HAULS
+  return <span className={`shrink-0 text-[12px] ${thin ? 'rounded-full bg-warning/15 px-1.5 font-semibold text-warning' : 'text-ink-soft'}`} data-thin={thin ? 'thin' : hauls}>{words}</span>
+}
+
+/** A built station's panel: its level and loads a day, today's loads, ready tomorrow; what it can take now while it takes
+ * more, each a load of up to eight for one action; and its next level. */
 export function StationPanel({ save, station }: { save: FarmSave; station: StationId }) {
   const view = stationView(save, station)
   const { note, error, busy, run } = useAct(station)
@@ -169,16 +179,21 @@ export function StationPanel({ save, station }: { save: FarmSave; station: Stati
     const at = item.lastIndexOf('@')
     return `${goodName(item.slice(0, at))} ★${item.slice(at + 1)}`
   }
+  const full = view.loads.length >= view.perDay
   return (
-    <div className="space-y-2.5 p-4" data-station={station}>
+    <div className="space-y-2.5 p-4" data-station={station} data-level={view.level}>
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="font-display text-[18px] font-bold" data-station-level>Level {view.level}</p>
+        <p className="text-[13px] text-ink-soft" data-loads={`${view.loads.length}/${view.perDay}`}>{view.loads.length} of {plural(view.perDay, 'load')} today</p>
+      </div>
       <Notes note={note} error={error} />
-      {view.load && (
-        <div className="flex min-h-12 items-center gap-2.5 rounded-sm border border-hairline bg-panel px-2.5 py-1.5" data-load={view.load.item}>
-          <ItemIcon id={view.load.item.slice(0, view.load.item.lastIndexOf('@'))} size={32} />
-          <span className="min-w-0 flex-1 text-[14px]"><b>{words(view.load.item)} × {view.load.count}</b><span className="block text-[12px] text-ink-soft">Ready tomorrow morning</span></span>
+      {view.loads.map((load, i) => (
+        <div key={i} className="flex min-h-12 items-center gap-2.5 rounded-sm border border-hairline bg-panel px-2.5 py-1.5" data-load={load.item}>
+          <ItemIcon id={load.item.slice(0, load.item.lastIndexOf('@'))} size={32} />
+          <span className="min-w-0 flex-1 text-[14px]"><b>{words(load.item)} × {load.count}</b><span className="block text-[12px] text-ink-soft">Ready tomorrow morning</span></span>
         </div>
-      )}
-      {!view.load && view.options.length === 0 && <p className="text-[14px] text-ink-soft" data-station-empty>Nothing to process yet: bring its goods home first.</p>}
+      ))}
+      {!full && view.options.length === 0 && <p className="text-[14px] text-ink-soft" data-station-empty>Nothing to process yet: bring its goods home first.</p>}
       {view.options.length > 0 && (
         <ul className="space-y-1.5" aria-label="What it can make">
           {view.options.map((o) => (
@@ -193,6 +208,18 @@ export function StationPanel({ save, station }: { save: FarmSave; station: Stati
             </li>
           ))}
         </ul>
+      )}
+      {view.next && (
+        <div className="flex min-h-12 items-center gap-2.5 rounded-sm border border-hairline bg-panel px-2.5 py-1.5" data-next-level={view.next.level}>
+          <span className="min-w-0 flex-1 text-[14px]">
+            <b>Level {view.next.level} · {plural(view.next.loads, 'load')} a day</b>
+            <span className="block text-[12px] text-ink-soft">{view.next.lock ?? `${view.next.cost.toLocaleString('en-US')}g · ready tomorrow`}</span>
+          </span>
+          {view.next.cost > 0 && (
+            <Button size="sm" variant="secondary" disabled={busy || view.next.lock !== null} data-action="upgrade"
+              onClick={() => run(upgradeAt(station).then(() => `Level ${view.next!.level} tomorrow`))}>Upgrade · {view.next.cost.toLocaleString('en-US')}g</Button>
+          )}
+        </div>
       )}
       <ActionsLeft save={save} />
     </div>

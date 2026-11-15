@@ -31,6 +31,7 @@ export * from './night/end-day'
 // Goods: the price rule, stars, the bin and the shop.
 export * from './goods/rule'
 export * from './goods/prices'
+export * from './goods/market'
 export * from './goods/stars'
 export * from './save/bin'
 export * from './save/shop'

@@ -52,8 +52,8 @@ export interface DormSwap {
 export const FIELD_COLUMNS = 8
 export const FIELD_ROWS = 5
 export const FIELD_TILES = FIELD_COLUMNS * FIELD_ROWS
-/** The most plots the save holds: the plots the rules open (`fields/plots.ts`'s `FIELD_PLOTS`; F91 adds up to eight). */
-export const MAX_PLOTS = 2
+/** The most plots the save holds: the plots the rules open (`fields/plots.ts`'s `FIELD_PLOTS`): eight. */
+export const MAX_PLOTS = 8
 /** The most tiles the field holds, every plot's. */
 export const MAX_FIELD_TILES = MAX_PLOTS * FIELD_TILES
 /** What covers a tile: weeds, a stone or a stump to clear, cleared ground, or tilled soil. */
@@ -130,6 +130,9 @@ export interface StationLoad {
   item: string
   count: number
 }
+/** A station's top level: level n takes n loads a day (`gathering/stations.ts`), so a station holds up to five loads at
+ * once. Here so the save's parse reads it without the stations' rules. */
+export const STATION_MAX_LEVEL = 5
 
 // --- The ranch and the mine -----------------------------------------------------------------------------------------
 
@@ -428,6 +431,10 @@ export interface TodayV4 {
   /** The farmhands well fed this morning, by id: each works one more action today. The night notes them as the morning
    * comes (step 9); absent with none (the save grows it in place). */
   fed?: CharacterId[]
+  /** The hauls today at each forest area and fishing spot, the farmer's by day and the farmhands' at night together: a
+   * place gives full hauls the first four times a day, then thin ones (`gathering/hauls.ts`). Absent until the first
+   * (the save grows it in place); step 7 clears it with the day. */
+  hauls?: Record<string, number>
 }
 
 /** The household's meals: one of each a day, once anyone is married. */
@@ -523,6 +530,9 @@ export const INCOME_NIGHTS = 7
 /** A meal keeps this many days: the day it's cooked and the next two (`farm/food.ts`). Here so the save's parse reads it
  * without the food rules. */
 export const MEAL_KEEPS = 3
+/** The market's floor (`goods/market.ts`): a good eases at most five steps, to half its price. Here so the save's parse
+ * reads it without the market's rules. */
+export const MARKET_FLOOR = 5
 export interface PantryLot {
   /** The day it was cooked. */
   day: number
@@ -552,8 +562,9 @@ export interface SaveV5 {
   bin: Warehouse
   /** The field: its plots in the order cleared, plot 1 first, each 8 × 5 tiles. An older v5's one field of tiles is plot 1. */
   fields: { plots: Plot[] }
-  /** Each station's load started today, ready the next morning. */
-  loads: Partial<Record<StationId, StationLoad>>
+  /** Each station's loads started today, in the order started, ready the next morning: one a day a level. An older
+   * v5's one load (an object) reads as a list of one. */
+  loads: Partial<Record<StationId, StationLoad[]>>
   crops: Partial<Record<CropId, number>>
   /** The Coop's and the Barn's animals, in the order bought, and the feed in the silo. A save from before the ranch has no
    * silo: none. */
@@ -574,10 +585,11 @@ export interface SaveV5 {
    * (`builds`, in the order paid). Then the farm's accounts (`farm/economy.ts`): the mayor's office's loans, the upkeep
    * still owed and the short nights in a row, and the bin's pay on each of the last seven nights, oldest first. A save
    * from before upkeep has none of them: no loans, nothing owed, no nights. Then the pantry's meals, by the day cooked
-   * and their stars (`farm/food.ts`); a save from before food has none: an empty pantry. */
+   * and their stars (`farm/food.ts`); a save from before food has none: an empty pantry. Then the market: each good a
+   * flood eased, by its steps (`goods/market.ts`); a save from before the market has none: nothing eased. */
   farm: {
     points: number; festivals: FestivalResult[]; counts: Record<string, number>; builds: FarmPlaceId[]; loans: Loan[]; owed: number; short: number; income: number[]
-    pantry: PantryLot[]
+    pantry: PantryLot[]; market: Record<string, number>
   }
   homestead: Homestead
   /** Her route's event ids played, in order. */
@@ -635,7 +647,7 @@ export function newSave(uid: string, now: string): SaveV5 {
     bonds: {},
     board: [],
     diary: { shipped: {}, milestones: [], records: {}, read: [], notes: [] },
-    farm: { points: 0, festivals: [], counts: {}, builds: [], loans: [], owed: 0, short: 0, income: [], pantry: [] },
+    farm: { points: 0, festivals: [], counts: {}, builds: [], loans: [], owed: 0, short: 0, income: [], pantry: [], market: {} },
     homestead: { houses: [FARMHOUSE], tonight: null, alone: null, slept: [0], furniture: [], married: 0, finale: 0 },
     memories: {},
     arrivals: [],

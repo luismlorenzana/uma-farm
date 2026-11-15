@@ -16,7 +16,8 @@ import { starPrice } from '../goods/prices'
 import { spendGold } from '../save/gold'
 import { SaveRuleError } from '../save/rules'
 import { HOMESTEAD_ROW_MARRIED } from '../romance/homestead'
-import { marriedCount, type BuildingId, type FarmSave, type Warehouse } from '../save/v4'
+import { marriedCount, STATION_MAX_LEVEL, type BuildingId, type FarmSave, type Warehouse } from '../save/v4'
+import { isStation } from '../gathering/ids'
 import { takeGoods } from '../save/warehouse'
 
 // --- The goods a build takes -----------------------------------------------------------------------------------------
@@ -140,13 +141,17 @@ export function payBuild<S extends FarmSave>(save: S, id: FarmPlaceId, options: 
   return { ...paid, items, farm: { ...paid.farm, builds: [...paid.farm.builds, id] } }
 }
 
-/** Night step 8, first: every place paid for yesterday stands (`buildings[id]` 1, or kept if higher), in the order paid,
- * and `farm.builds` empties. */
+/** Night step 8, first: every place paid for yesterday stands (`buildings[id]` 1), and a station's level bought
+ * yesterday comes (a station already standing goes up a level, `gathering/stations.ts`), in the order paid; `farm.builds`
+ * empties. */
 export function raiseBuilds<S extends FarmSave>(save: S): { save: S; built: FarmPlaceId[] } {
   const built = save.farm.builds
   if (built.length === 0) return { save, built: [] }
   const buildings = { ...save.buildings }
-  for (const id of built) buildings[id as BuildingId] = Math.max(1, buildings[id as BuildingId] ?? 0)
+  for (const id of built) {
+    const was = buildings[id as BuildingId] ?? 0
+    buildings[id as BuildingId] = isStation(id) && was >= 1 ? Math.min(STATION_MAX_LEVEL, was + 1) : Math.max(1, was)
+  }
   return { save: { ...save, buildings, farm: { ...save.farm, builds: [] } }, built: [...built] }
 }
 

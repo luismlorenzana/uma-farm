@@ -11,10 +11,14 @@ import { parseSaveV5 } from '../save/parse-v4'
 import { SaveRuleError } from '../save/rules'
 import { newSave, type SaveV4 } from '../save/v4'
 import { parseStockKey } from '../save/warehouse'
-import { CHOP_LOGS, chop, FARMER_REACH, fish, forage, FORAGE_HAUL, LOGS_CHOPPED, reachList, reachLock } from './hauls'
+import {
+  CHOP_LOGS, chop, FARMER_REACH, fish, forage, FORAGE_HAUL, FULL_HAULS, haulAt, haulsToday, LOGS_CHOPPED, reachList, reachLock, THIN_SHARE, thinToday,
+} from './hauls'
 import { FISHING_SPOTS, FOREST_AREAS, STATION_JOB_IDS, stationJobOf } from './ids'
 import { fishSize, haulCount, HOME_COUNT, pickShare, placeLock, sizeRecord, sizeSkill, type WorkTerms } from './kinds'
-import { finishLoads, LOAD_SIZE, startLoad, stationOptions } from './stations'
+import {
+  finishLoads, levelLock, levelLockWords, LOAD_SIZE, loadsADay, loadsLeft, nextStationLevel, startLoad, STATION_LEVELS, stationLevel, stationOptions, upgradeStation,
+} from './stations'
 import { FISH_SIZES, FISHERY, FOREST } from './tables'
 
 const AT = '2026-11-09T10:00:00.000Z'
@@ -124,7 +128,8 @@ describe('the farmer\'s hauls', () => {
   })
 
   it('fishes one catch for one action, measured as it lands, and keeps the biggest of each kind', () => {
-    const { save, haul, caught } = fish(farm(), 'pond')
+    const { save, haul, caught: landed } = fish(farm(), 'pond')
+    const caught = landed!
     expect(count(haul.items)).toBe(1)
     expect(['carp', 'trout']).toContain(caught.fish)
     const [min, max] = FISH_SIZES[caught.fish]!
@@ -136,12 +141,51 @@ describe('the farmer\'s hauls', () => {
     expect(save.farm.counts[HOME_COUNT.fishery]).toBe(1)
     expect(save.today.gathered).toEqual(['pond'])
     expect(fish(json(farm()), 'pond')).toEqual(fish(farm(), 'pond'))
-    // A record only rises.
+    // A record only rises. The pond thins after four casts: the next land a fish about half the time.
     let next = save
     for (let k = 0; k < 9; k++) next = fish(next, 'pond').save
     for (const [key, cm] of Object.entries(save.diary.records)) expect(next.diary.records[key]).toBeGreaterThanOrEqual(cm)
-    expect(next.farm.counts[HOME_COUNT.fishery]).toBe(10)
+    expect(next.today.hauls).toEqual({ pond: 10 })
+    expect(next.farm.counts[HOME_COUNT.fishery]).toBeGreaterThanOrEqual(5)
+    expect(next.farm.counts[HOME_COUNT.fishery]).toBeLessThan(10)
     expect(reason(() => fish(next, 'pond'))).toBe('no-actions')
+  })
+
+  it('thins each area and spot after four hauls a day, the farmer\'s and the farmhands\' together: half hauls, the fraction drawn', () => {
+    expect([FULL_HAULS, THIN_SHARE]).toEqual([4, 0.5])
+    let save = farm()
+    const forages: number[] = []
+    for (let k = 0; k < 8; k++) {
+      expect(thinToday(save, 'woods')).toBe(k >= FULL_HAULS)
+      const done = k % 2 === 0 ? forage(save, 'woods') : chop(save, 'woods')
+      forages.push(done.haul.items.length)
+      save = done.save
+    }
+    // Forage and chop share the area's four: two each full, then one each.
+    expect(forages).toEqual([2, 2, 2, 2, 1, 1, 1, 1])
+    expect(haulsToday(save, 'woods')).toBe(8)
+    expect(haulsToday(save, 'pond')).toBe(0)
+    expect(save.today.gathered).toEqual(['woods'])
+    expect(parseSaveV5(json(save))).toEqual(save)
+    // A farmhand's three finds come home as one or two once it's thin, drawn by the place's hauls today.
+    const thin = { ...save, today: { ...save.today, hauls: { woods: 4 } } }
+    const draws = Array.from({ length: 40 }, (_, n) => haulAt({ ...thin, today: { ...thin.today, hauls: { woods: 4 + n } } }, 'woods', 3))
+    expect(new Set(draws)).toEqual(new Set([1, 2]))
+    expect(haulAt(farm(), 'woods', 3)).toBe(3)
+    // The night clears it with the day.
+    expect(endDay(save, {}, LATER).today.hauls).toBeUndefined()
+  })
+
+  it('lets a thin spot\'s cast land nothing, and says so', () => {
+    let save = farm()
+    const caught: (string | null)[] = []
+    for (let k = 0; k < 10; k++) {
+      const done = fish(save, 'pond')
+      caught.push(done.caught?.fish ?? null)
+      save = done.save
+    }
+    expect(caught.slice(0, FULL_HAULS).every((c) => c !== null)).toBe(true)
+    expect(caught.slice(FULL_HAULS)).toContain(null)
   })
 
   it('reaches deeper with the Farm Rank, the sea once its place stands', () => {
@@ -205,7 +249,7 @@ describe('the stations\' loads', () => {
     const save = built({ ...farm(), items: { 'pine-log': [10, 0, 3, 0, 0] } })
     const loaded = startLoad(save, 'sawmill', 'pine-plank@3', 3)
     expect(loaded.items['pine-log']).toEqual([10, 0, 0, 0, 0])
-    expect(loaded.loads).toEqual({ sawmill: { item: 'pine-plank@3', count: 3 } })
+    expect(loaded.loads).toEqual({ sawmill: [{ item: 'pine-plank@3', count: 3 }] })
     expect(actionsLeft(loaded)).toBe(9)
     expect(parseSaveV5(json(loaded))).toEqual(loaded)
     const morning = endDay(loaded, {}, LATER)
@@ -229,6 +273,55 @@ describe('the stations\' loads', () => {
     const both = startLoad(loaded, 'mill', 'wheat-flour@1', 8)
     expect(finishLoads(both).done.map((d) => d.station)).toEqual(['mill', 'sawmill'])
     expect(finishLoads(farm()).save).toEqual(farm())
+  })
+
+  it('takes a load a day a level: level 3 holds three, each its own good, all ready the next morning', () => {
+    const save = { ...farm(), buildings: { ...farm().buildings, mill: 3 }, items: { wheat: [24, 0, 0, 0, 0], apple: [4, 0, 0, 0, 0] } } as SaveV4
+    expect([stationLevel(save, 'mill'), loadsADay(save, 'mill'), loadsLeft(save, 'mill')]).toEqual([3, 3, 3])
+    let loaded = startLoad(save, 'mill', 'wheat-flour@1', 8)
+    loaded = startLoad(loaded, 'mill', 'apple-preserve@1', 4)
+    loaded = startLoad(loaded, 'mill', 'wheat-flour@1', 8)
+    expect(loadsLeft(loaded, 'mill')).toBe(0)
+    expect(reason(() => startLoad(loaded, 'mill', 'wheat-flour@1', 1))).toBe('busy')
+    expect(loaded.loads.mill).toHaveLength(3)
+    expect(parseSaveV5(json(loaded))).toEqual(loaded)
+    const morning = endDay(loaded, {}, LATER)
+    expect(morning.items['wheat-flour']).toEqual([16, 0, 0, 0, 0])
+    expect(morning.items['apple-preserve']).toEqual([4, 0, 0, 0, 0])
+    expect(morning.summary!.work.filter((w) => w.kind === 'load')).toHaveLength(3)
+  })
+
+  it('reads an older v5\'s one load as a list of one, and refuses more loads than a station\'s top level', () => {
+    const save = built(farm())
+    const older = { ...json(save), loads: { mill: { item: 'wheat-flour@1', count: 8 } } }
+    expect(parseSaveV5(older).loads).toEqual({ mill: [{ item: 'wheat-flour@1', count: 8 }] })
+    expect(parseSaveV5(older).account).toEqual(save.account)
+    const six = { ...json(save), loads: { mill: Array.from({ length: 6 }, () => ({ item: 'wheat-flour@1', count: 8 })) } }
+    expect(() => parseSaveV5(six)).toThrow('save.loads.mill: expected 1–5 entries')
+  })
+
+  it('buys a station\'s levels as the Dorm\'s: gold now, from its Farm Rank, one a day, the level the next morning', () => {
+    const save = atRank({ ...built(farm()), gold: 40_000 }, 3)
+    expect(STATION_LEVELS.map((l) => [l.level, l.loads, l.cost, l.farmRank])).toEqual([[1, 1, 0, 1], [2, 2, 2_000, 3], [3, 3, 5_000, 4], [4, 4, 10_000, 5], [5, 5, 20_000, 6]])
+    expect(levelLock(farm(), 'mill')).toEqual({ by: 'built' })
+    expect(levelLockWords(levelLock(atRank(built(farm()), 2), 'mill'))).toBe('Opens at Farm Rank 3')
+    expect(levelLockWords(levelLock({ ...save, gold: 1_500 }, 'mill'))).toBe('Need 500g more')
+    const bought = upgradeStation(save, 'mill')
+    expect(bought.gold).toBe(38_000)
+    expect(actionsLeft(bought)).toBe(actionsLeft(save))
+    expect(stationLevel(bought, 'mill')).toBe(1)
+    expect(levelLockWords(levelLock(bought, 'mill'))).toBe('Level 2 tomorrow')
+    expect(reason(() => upgradeStation(bought, 'mill'))).toBe('bad-job')
+    expect(parseSaveV5(json(bought))).toEqual(bought)
+    const morning = endDay(bought, {}, LATER)
+    expect([stationLevel(morning, 'mill'), loadsADay(morning, 'mill')]).toEqual([2, 2])
+    expect(morning.summary!.news).toContainEqual({ kind: 'built', place: 'mill', level: 2 })
+    expect(parseSaveV5(json(morning))).toEqual(morning)
+    // Level 3 waits for Farm Rank 4; at the top, nothing more.
+    expect(levelLockWords(levelLock(morning, 'mill'))).toBe('Opens at Farm Rank 4')
+    const top = atRank({ ...morning, buildings: { ...morning.buildings, mill: 5 } }, 10)
+    expect(levelLockWords(levelLock(top, 'mill'))).toBe('At its top level')
+    expect(nextStationLevel(top, 'mill')).toBeNull()
   })
 
   it('offers what the Warehouse holds, job by job, at each star', () => {

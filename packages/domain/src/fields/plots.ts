@@ -4,10 +4,11 @@
 //   plot 1   day 1: the field, its cleared patch of nine and the rest overgrown
 //   plot 2   Farm Rank 3: cleared like a building, for its gold and an action. It opens at once, wild (weeds, stones and
 //            stumps by the account's draw, no cleared patch), and its tiles are worked as plot 1's are
+//   plot 3–8 Farm Rank 4, 5, 6, 7, 8 and 9, each after the one before, for more gold: up to 320 tiles of work
 //
 // A plot is land, not a building: it adds no upkeep (`farm/economy.ts` counts buildings, houses, beds and Umas). Plots
 // open in order, each after the one before. Its tiles are worked by hand (`fields.ts`) and by the farmhands, whose field
-// tasks name their plot (`farm/farmhands.ts`). F91 adds plots 3–8. Pure; never stamps.
+// tasks name their plot (`farm/farmhands.ts`). Pure; never stamps.
 import { actionsLeft, spend } from '../farm/actions'
 import { farmRankOf } from '../farm/farm'
 import { spendGold } from '../save/gold'
@@ -18,10 +19,17 @@ import { FIELD_COLUMNS, FIELD_ROWS, fieldTiles, isOvergrown, wildPlot, type Farm
 export type PlotOpens = { by: 'start' } | { by: 'clear'; rank: number; gold: number }
 
 /** The plots, in order: plot 1 from the start, plot 2 cleared from Farm Rank 3 for 2,500g and an action (about a Farm
- * Rank 3 station's gold, with no goods: it's the field hands' work that it asks for). */
+ * Rank 3 station's gold, with no goods: it's the field hands' work that it asks for), then one a Farm Rank to plot 8 at
+ * 9, each about that rank's places' gold: up to eight plots, 320 tiles, the farm's biggest employer at scale. */
 export const FIELD_PLOTS: readonly PlotOpens[] = [
   { by: 'start' },
   { by: 'clear', rank: 3, gold: 2_500 },
+  { by: 'clear', rank: 4, gold: 5_000 },
+  { by: 'clear', rank: 5, gold: 10_000 },
+  { by: 'clear', rank: 6, gold: 15_000 },
+  { by: 'clear', rank: 7, gold: 25_000 },
+  { by: 'clear', rank: 8, gold: 35_000 },
+  { by: 'clear', rank: 9, gold: 50_000 },
 ]
 
 /** A plot's name: "Plot 2". `plot` is its index, 0 for plot 1. */
@@ -30,7 +38,7 @@ export const plotName = (plot: number): string => `Plot ${plot + 1}`
 /** The plots this save has cleared. */
 export const plotsCleared = (save: Pick<FarmSave, 'fields'>): number => save.fields.plots.length
 
-/** Why a plot can't be cleared now, in order: cleared already, the plot before it first, its Farm Rank, the gold it's
+/** Why a plot can't be cleared now, in order: cleared already, its Farm Rank, the plot before it first, the gold it's
  * short, no actions left. */
 export type PlotLock =
   | { by: 'cleared' }
@@ -44,8 +52,8 @@ export function plotLock(save: Pick<FarmSave, 'fields' | 'farm' | 'gold' | 'cale
   const opens = FIELD_PLOTS[plot]
   if (!Number.isInteger(plot) || !opens) throw new SaveRuleError('bad-slot', 'There’s no such plot.')
   if (plot < plotsCleared(save) || opens.by === 'start') return { by: 'cleared' }
-  if (plot > plotsCleared(save)) return { by: 'before', plot: plot - 1 }
   if (farmRankOf(save.farm.points) < opens.rank) return { by: 'farm-rank', rank: opens.rank }
+  if (plot > plotsCleared(save)) return { by: 'before', plot: plot - 1 }
   if (save.gold < opens.gold) return { by: 'gold', short: opens.gold - save.gold }
   return actionsLeft(save) < 1 ? { by: 'actions' } : null
 }

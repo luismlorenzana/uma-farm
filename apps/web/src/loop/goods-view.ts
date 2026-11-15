@@ -1,7 +1,8 @@
 // The goods as the loop's screens show them: the Warehouse by stars in its family tabs, the bin's
 // lines and its night estimate, the shop's lines, and gold in words. Pure, so the screens and the tests read the same.
 import {
-  binSales, binTotal, FAMILY_NAMES, GOOD_IDS, goodName, goodOf, inDemand, isDishId, lineOpen, priceOf, refinedOf, RING_IDS, SEED_IDS, STARS, type BinSale, type Good,
+  binSales, binTotal, easedPercent, easedPrice, easeOf, FAMILY_NAMES, GOOD_IDS, goodName, goodOf, inDemand, isDishId, lineOpen, refinedOf, RING_IDS, SEED_IDS, STARS,
+  type BinSale, type Good, type Market,
   type GoodFamily, type FarmSave, type ShopLine, type StarCounts,
 } from '@farm/domain'
 import { opensWords } from './farm-map'
@@ -60,6 +61,8 @@ export interface GoodRow {
   sells: boolean
   /** Everything held, at today's prices. */
   worth: number
+  /** A flood's ease on its price today, in percent (10–50); 0 when it isn't eased. */
+  eased: number
 }
 
 export interface WarehouseTab {
@@ -79,24 +82,26 @@ export function goodPair(good: Good): string | null {
   return into ? `Refines into ${goodName(into)}` : null
 }
 
-/** A held good's (or seed's) row on `day`. */
-export function goodRow(id: string, row: StarCounts, day: number): GoodRow {
+/** A held good's (or seed's) row on `day`, its prices at the market's ease (a flood's: `goods/market.ts`). Its worth is
+ * what shipping it all tonight would pay, past a crate's ease and all. */
+export function goodRow(id: string, row: StarCounts, day: number, market: Market = {}): GoodRow {
   const good = goodOf(id)
-  const cells = STARS.map((stars): StarCell => ({ stars, count: row[stars - 1] ?? 0, price: good ? priceOf(id, stars, day) : null }))
+  const steps = easeOf(market, id)
+  const cells = STARS.map((stars): StarCell => ({ stars, count: row[stars - 1] ?? 0, price: good ? easedPrice(id, stars, day, steps) : null }))
   const dish = !good && isDishId(id)
   return {
     id, name: goodName(id), shelf: good ? shelfOf(good) : dish ? 'dishes' : 'seeds', total: row.reduce((a, b) => a + b, 0), cells,
     demand: good ? inDemand(id, day) : false, facts: good ? goodFacts(good) : dish ? 'A dish: for a meal' : 'Seeds: they don’t sell', pair: good ? goodPair(good) : null,
-    sells: good !== undefined, worth: cells.reduce((sum, cell) => sum + (cell.price ?? 0) * cell.count, 0),
+    sells: good !== undefined, worth: good ? binTotal({ [id]: row }, day, market) : 0, eased: good ? easedPercent(steps) : 0,
   }
 }
 
 /** The Warehouse by stars: each tab's held goods in the catalogue's order; the loot tab only when held. */
-export function warehouseTabs(save: Pick<FarmSave, 'items' | 'calendar'>): WarehouseTab[] {
+export function warehouseTabs(save: Pick<FarmSave, 'items' | 'calendar'> & Partial<Pick<FarmSave, 'farm'>>): WarehouseTab[] {
   const rows = Object.entries(save.items)
     .filter(([, row]) => row.some((n) => n > 0))
     .sort(([a], [b]) => orderOf(a) - orderOf(b))
-    .map(([id, row]) => goodRow(id, row, save.calendar.day))
+    .map(([id, row]) => goodRow(id, row, save.calendar.day, save.farm?.market))
   return SHELVES.map((shelf) => {
     const on = rows.filter((row) => row.shelf === shelf)
     return { shelf, label: SHELF_NAMES[shelf], count: on.reduce((n, row) => n + row.total, 0), rows: on }
@@ -115,12 +120,18 @@ export interface BinView {
   total: number
 }
 
-export function binView(save: Pick<FarmSave, 'bin' | 'calendar'>): BinView {
+/** The bin's sheet, at the market's ease: a good eased by a flood sells at its ease, and past a crate of it each crate
+ * more a step lower (each line's `eased`). */
+export function binView(save: Pick<FarmSave, 'bin' | 'calendar'> & Partial<Pick<FarmSave, 'farm'>>): BinView {
+  const market = save.farm?.market ?? {}
   return {
-    lines: binSales(save.bin, save.calendar.day).map((sale) => ({ ...sale, name: goodName(sale.id) })),
-    total: binTotal(save.bin, save.calendar.day),
+    lines: binSales(save.bin, save.calendar.day, market).map((sale) => ({ ...sale, name: goodName(sale.id) })),
+    total: binTotal(save.bin, save.calendar.day, market),
   }
 }
+
+/** A flood's ease in words: "Eased −20%". */
+export const easedWords = (percent: number): string => `Eased −${percent}%`
 
 /** "Carrot ★2 × 3". */
 export const saleWords = (sale: Pick<BinSale, 'id' | 'stars' | 'count'>): string => `${goodName(sale.id)} ${starWords(sale.stars)} × ${sale.count}`

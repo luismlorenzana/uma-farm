@@ -223,11 +223,11 @@ describe('her night', () => {
       const save = tasks(practice(base, A, 'mill', n), A, [{ kind: 'load', station: 'mill' }])
       return handsTonight(save, save, G, null).save
     }
-    expect(load(0).loads.mill).toEqual({ item: 'wheat-flour@1', count: 8 })
+    expect(load(0).loads.mill).toEqual([{ item: 'wheat-flour@1', count: 8 }])
     expect(load(0).items.wheat).toEqual([12, 3, 0, 0, 0])
     const big = load(100)
     expect(big.items.wheat).toEqual([20 - BIG_LOAD, 3, 0, 0, 0])
-    expect(big.loads.mill!.count).toBeGreaterThanOrEqual(BIG_LOAD)
+    expect(big.loads.mill![0]!.count).toBeGreaterThanOrEqual(BIG_LOAD)
   })
 
   it('rises over days: her practice climbs, and the morning says when an aptitude reaches a level', () => {

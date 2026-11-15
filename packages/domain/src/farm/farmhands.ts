@@ -37,8 +37,8 @@ import { DIG_TOOL, digBuilt, dugCount, FACE_FINDS, faceAt } from '../gathering/d
 import type { FishingSpotId, ForestAreaId } from '../gathering/ids'
 import { gatherQuality, GATHER_TOOL, HOME_COUNT, keepsakeAt, sizeSkill, stationBuilt, type GatherPlace, type MadeTonight, type WorkPlace } from '../gathering/kinds'
 import { animalsIn, careAt, collectAt, feedAt, grassAt, grassLock, heartsOf, homeBuilt, readyIn } from '../ranch/ranch'
-import { LOAD_SIZE, loadAt, stationOptions } from '../gathering/stations'
-import { TOOL_YIELD, WELL_FED_YIELD } from '../gathering/tables'
+import { LOAD_SIZE, loadAt, loadsLeft, loadsToday, stationOptions } from '../gathering/stations'
+import { TOOL_YIELD } from '../gathering/tables'
 import { isCropId, type CropId } from '../goods/ids'
 import type { AptitudeUp, FarmhandLine } from '../night/summary'
 import type { PerkPack } from '../romance/perk-terms'
@@ -320,7 +320,7 @@ function gatherer(save: FarmSave, id: string, place: GatherPlace, kind: 'forage'
   const tool = save.tools[GATHER_TOOL[place]]
   const keepsake = keepsakeAt(save, story, id, place)
   const terms = { rank, talent, tool, wellFed: fed ? 1 : 0, ...(keepsake ? { keepsake } : {}) }
-  const many = count * rankBenefits(rank).yield * talentYield(talent) * TOOL_YIELD[tool - 1]! * (fed ? WELL_FED_YIELD : 1) * aptitudeYield(level)
+  const many = count * rankBenefits(rank).yield * talentYield(talent) * TOOL_YIELD[tool - 1]! * aptitudeYield(level)
   const before = save.farm.counts[HOME_COUNT[place]] ?? 0
   return {
     q: round6(gatherQuality(terms, fed) + aptitudeQuality(level)),
@@ -338,7 +338,7 @@ function digger(save: FarmSave, id: string, dig: DigId, level: number, fed: bool
   const keepsake = keepsakeAt(save, story, id, dig)
   const terms = { rank, talent, tool, wellFed: fed ? 1 : 0, ...(keepsake ? { keepsake } : {}) }
   const finds = FACE_FINDS + (level >= TRICK_AT.digThree ? 1 : 0)
-  const many = finds * rankBenefits(rank).yield * talentYield(talent) * TOOL_YIELD[tool - 1]! * (fed ? WELL_FED_YIELD : 1) * aptitudeYield(level)
+  const many = finds * rankBenefits(rank).yield * talentYield(talent) * TOOL_YIELD[tool - 1]! * aptitudeYield(level)
   return {
     q: round6(gatherQuality(terms, fed) + aptitudeQuality(level)),
     count: drawnCount(many, draw(save.account.uid, save.calendar.day, `hand-dig:${id}`, save.farm.counts[dugCount(dig)] ?? 0)),
@@ -433,11 +433,12 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       return { save: tillGround(next, i), n: 1, items, events: [] }
     }
     case 'load': {
-      if (!stationBuilt(save, task.station) || save.loads[task.station]) return null
+      // A load an action, until the station holds its loads for the day (one a level).
+      if (!stationBuilt(save, task.station) || loadsLeft(save, task.station) === 0) return null
       const option = [...stationOptions(save, task.station)].sort((a, b) => b.held - a.held)[0]
       if (!option) return null
       const inputs = Math.min(option.held, loadSizeAt(level))
-      const out = drawnCount(inputs * aptitudeYield(level), draw(save.account.uid, save.calendar.day, `hand-load:${task.station}`, 0))
+      const out = drawnCount(inputs * aptitudeYield(level), draw(save.account.uid, save.calendar.day, `hand-load:${task.station}`, loadsToday(save, task.station).length))
       return { save: loadAt(save, task.station, option.item, inputs, out), n: 1, items: Array.from({ length: out }, () => option.item), events: [] }
     }
     case 'forage': case 'chop': {

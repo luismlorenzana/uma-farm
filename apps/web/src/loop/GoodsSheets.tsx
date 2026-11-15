@@ -11,7 +11,7 @@ import { ItemIcon } from '../items/ItemIcon'
 import { useLoopSave } from '../save/game'
 import { GoldMark } from '../shell/Gold'
 import { buyLine, intoTown, takeBackLine } from './actions'
-import { binView, goldWords, saleWords, shopRows } from './goods-view'
+import { binView, easedWords, goldWords, saleWords, shopRows } from './goods-view'
 
 /** The Warehouse to pick a crate from: one action ships it. */
 export const PICK_PATH = '/warehouse?pick=bin'
@@ -47,6 +47,7 @@ export function BinSheet({ onClose }: { onClose: () => void }) {
           <HelpButton title="The shipping bin" label="How the bin works">
             <p>Pick what to ship from the Warehouse: one action ships the lot. It pays tonight, when you end the day.</p>
             <p>A good pays its price × its stars: ★1 ×1 up to ★5 ×2. The season’s demand adds 20%.</p>
+            <p>Past 50 of one good in a night, each 50 more sells 10% lower, down to half. It stays eased a few days, back a step a night.</p>
             <p>Take anything back until the night, free. Seeds don’t sell.</p>
           </HelpButton>
         </div>
@@ -61,6 +62,7 @@ export function BinSheet({ onClose }: { onClose: () => void }) {
                   <span className="flex items-center gap-1.5 text-[12px] text-ink-soft">
                     {goldWords(line.gold)}
                     {line.demand && <span className="rounded-full bg-success/15 px-1.5 font-semibold text-success" data-demand>In demand</span>}
+                    {line.eased !== undefined && <span className="rounded-full bg-warning/15 px-1.5 font-semibold text-warning" data-eased={line.eased}>{easedWords(line.eased)}</span>}
                   </span>
                 </span>
                 <Button variant="secondary" size="sm" disabled={busy} onClick={() => back(line.id, line.stars, line.count)} data-action="take-back">Take back</Button>

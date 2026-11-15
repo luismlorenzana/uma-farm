@@ -293,9 +293,11 @@ at steps 2, 4, 5 and 7.
 ## The farm at scale (2026-11-15)
 
 The owner asked: "when we have 10 Umas, then 20 Umas, then 50 Umas, do all those stages support all Umas fully working?"
-**Today, no: about 10 to 20 can hold real jobs, and every Uma past that can only gather.**
+**Before F91, no: about 10 to 20 could hold real jobs, and every Uma past that could only gather. Since F91, 10 and 20
+are fully in real jobs, and 50 run past the farm's jobs by about ten Umas, the work Phase 2's employers bring**
+([the results](#what-f91-found-2026-11-15)).
 
-**What the farm can employ today,** fully built (Farm Rank 5 and up), in a farmhand's actions a day:
+**What the farm could employ before F91,** fully built (Farm Rank 5 and up), in a farmhand's actions a day:
 
 | Work | Actions a day, new hands | Actions a day, skilled hands | Its limit |
 |---|---|---|---|
@@ -315,23 +317,48 @@ A farmhand brings 3 to 7 actions a day (3, then 4 settled in, 6 married, 7 well 
 So the farm must **grow its work with its people**, and **give the people something to cost**. Five levers, each its own
 packet or Phase 2 step:
 
-1. **Fields that grow, shown as their own screen** (F89, built: [the field's screen](../game-mechanics.md#the-fields-screen)).
-   The farm map shows a small field sign; a tap opens the field full screen, one plot (8 × 5) a page. The farm starts
-   with one plot and clears more as the Farm Rank rises (plot 2 at Farm Rank 3 today; F91 takes it up to eight): up to
-   320 tiles of real work.
+1. **Fields that grow, shown as their own screen** (F89 and F91, built: [the field's screen](../game-mechanics.md#the-fields-screen),
+   [the field's plots](../game-mechanics.md#the-fields-plots)). The farm map shows a small field sign; a tap opens the
+   field full screen, one plot (8 × 5) a page. The farm starts with one plot and clears more as the Farm Rank rises, up
+   to eight (one a rank from 3 to 9, 2,500g to 50,000g): 320 tiles of real work.
 2. **Food for everyone: an upkeep felt from day one** (F90, built: [food](../game-mechanics.md#food)). Everyone who eats on the
    farm eats twice a day. Takeout, bought in at night, costs gold for every meal not cooked. Cooking turns the
    Warehouse's goods into meals in batches: the farmer cooks with an action, and an Uma on the Kitchen's task cooks a
    batch that grows with her **Cooking** aptitude, so one cook feeds many. The more Umas live and work on the farm, the
    more meals: the kitchen becomes real jobs.
-3. **Work that keeps scale** ([F91](../handoff/tasks/F91-work-at-scale.md)). Each station's level adds a load a day.
-   Each gathering area and fishing spot gives full hauls a few times a day, then thin ones. A good shipped by the crate
-   eases its own price for a few days. Gathering stops absorbing endless hands, and gold stops running away.
+3. **Work that keeps scale** (F91, built). Each station's level adds a load a day ([its levels](../game-mechanics.md#its-levels)).
+   Each gathering area, fishing spot and dig gives four full hauls a day, then thin ones
+   ([thin](../game-mechanics.md#thin-four-full-hauls-a-place-a-day)). A good shipped past a crate eases its own price
+   for a few days ([the market](../game-mechanics.md#the-market-feels-a-flood)). Gathering stops absorbing endless hands,
+   and gold grows with the farm's places, not its people.
 4. **Expeditions, the Restaurant and the Forge** (Phase 2.4 and 2.5): parties of four away for days, service staff, a
    smithy's crew. These are the big employers past 20.
 5. **The targets,** checked by a simulation at each stage: **10 Umas** in year 1–2, all in real jobs, with one plot or
    two, the ranch and the first stations; **20** in year 2–3, with four plots, the Kitchen, station levels and the
    Mine; **50** in year 4 and after, with eight plots, expeditions, the Restaurant and the Forge, and none idle.
+
+### What F91 found (2026-11-15)
+
+A simulation plays three farms for four years on the game's rules, bringing in 10, 20 and 50 Umas over years 1–4, the
+farmhands set by a plain rule (the field, the animals, the stations, the kitchen, then gathering and mining, four full
+hauls a place). The full tables are in [the farm at scale](../game-mechanics.md#the-farm-at-scale-10-20-and-50-umas).
+In year 4:
+
+| Umas | Their actions a day | In real jobs · idle-ish | Thin or idle actions | Real work still waiting | The bin, the year | Upkeep and takeout | Plots · station levels | Housing (Dorm · in town) |
+|---|---|---|---|---|---|---|---|---|
+| **10** | 46 | **10 · 0** | 3 | 56 | 495,710g | 18,315g | 2 · 15 | 10 · 0 |
+| **20** | 94 | **20 · 0** | 5 | 60 | 874,685g | 28,920g | 4 · 20 | 20 · 0 |
+| **50** | 228 | **38 · 11** | 43 | 46 (days the rule can't fit it) | 1,533,260g | 51,075g | 8 · 25 | 20 · 30 |
+
+- **10 and 20 are fully in real jobs,** with work to spare: the farm at 10 keeps two plots, the ranch, the stations and
+  the kitchen; at 20, four plots.
+- **50 still needs Phase 2:** about ten Umas, some 45 actions a day, only gather where it's thin. Expeditions, the
+  Restaurant's service and the Forge's crew are the employers that take them.
+- **Two retunes the run showed:** well fed no longer lifts a haul's count (with it, a ★2 meal a night nearly doubled a
+  farm's income), and the digs thin as the areas and spots do (before, the surplus at 50 mined without limit: 1.32M of
+  a 2.8M year).
+- **Gold** grows with the farm's places: upkeep and takeout are a few percent of the bin at every stage, and each farm
+  ends year 4 with little left to buy. Phase 2's workshops are what's left to buy and to staff.
 
 ## The maps (2026-11-15)
 
