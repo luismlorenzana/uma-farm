@@ -18,6 +18,7 @@ in place or migrates it, never a start-over, and the game has no testing tools: 
 
 | Piece | Who | State |
 |---|---|---|
+| **F86 The real game's fixes:** no route dead-ends on a setup, scene links play only what's earned, [a route to marriage](../game-mechanics.md#a-route-to-marriage) simulated | Claude | In: its pull request, for review |
 | [F87](tasks/F87-tier1-story-packs.md) **Tier 1's complete story packs**, for the story session | Claude | Written; after F86 and this docs pass, which touch the same menu |
 
 ## Open packets
