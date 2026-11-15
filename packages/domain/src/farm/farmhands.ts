@@ -5,7 +5,8 @@
 //
 //   her day      3 actions; +1 once she's settled in (a season after you invited her); +2 once she's your spouse;
 //                +1 when she's well fed this morning (a household meal the day before, a reception, a spouse's
-//                breakfast); all at the farm's pace (`atPace`: half, from the second short night of upkeep, never below 1)
+//                breakfast); all at the farm's pace (`atPace`: half, from the second short night of upkeep, never below 1).
+//                The Kitchen's assistant gives one of them to its play (`kitchen/kitchen.ts`)
 //   the board    her tasks, in your order: the field's over a plot's tiles (harvest, water, plant, clear and till), a
 //                station's load, a forest area's forage or chop, a fishing spot's catch, the Coop's or the Barn's care,
 //                a face at the Mine or the Quarry, cooking in the farm's kitchen. Any Uma does any task, and each repeats
@@ -76,6 +77,8 @@ export interface HandDay {
   half: boolean
   /** All of them, at the farm's pace. */
   actions: number
+  /** Of them, the Kitchen's play's: 1 when she's its assistant today (`today.assistant`), else 0. */
+  kitchen: number
 }
 
 /** Her actions today, or null for one who isn't a farmhand. */
@@ -86,7 +89,8 @@ export function handDay(save: Pick<FarmSave, 'roster' | 'love' | 'calendar' | 't
   const spouse = save.love[id]?.stage === 'spouse' ? SPOUSE_ACTIONS : 0
   const fed = save.today.fed?.includes(id) ? FED_ACTIONS : 0
   const all = HAND_ACTIONS + settled + spouse + fed
-  return { base: HAND_ACTIONS, settled, spouse, fed, half: halfPace(save), actions: atPace(all, save) }
+  const actions = atPace(all, save)
+  return { base: HAND_ACTIONS, settled, spouse, fed, half: halfPace(save), actions, kitchen: save.today.assistant === id && actions > 0 ? 1 : 0 }
 }
 
 /** The farmhands in the order they work: by the day you invited them, then by id. */
@@ -488,9 +492,10 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
   const out: HandsTonight = { save, lines: [], worked: [], tended: [], made: [], gathered: [] }
   for (const id of handsInOrder(save)) {
     const hand = handDay(day, id) ?? handDay(save, id)!
-    let left = hand.actions
+    // The Kitchen's assistant: one of her actions tonight was the play's, at the Kitchen.
+    let left = hand.actions - hand.kitchen
     const done: Partial<Record<TaskKind, number>> = {}
-    const spentAt = new Map<WorkPlace, number>()
+    const spentAt = new Map<WorkPlace, number>(hand.kitchen > 0 ? [['kitchen', hand.kitchen]] : [])
     const madeAt = new Map<WorkPlace, string[]>()
     let items = 0
     const work = (task: FarmTask): boolean => {
@@ -518,7 +523,10 @@ export function handsTonight(save: FarmSave, day: Pick<FarmSave, 'roster' | 'lov
     while (left > 0 && open.length > 0) open = open.filter((task) => left > 0 && work(task))
     // A day caring for animals: once a night toward her Ranch challenge.
     if ((spentAt.get('coop') ?? 0) + (spentAt.get('barn') ?? 0) > 0) next = countChallenge(next, id, 'ranch', { kind: 'care' })
-    out.lines.push({ kind: 'farmhand', id, actions: hand.actions, spent: hand.actions - left, half: hand.half, fed: hand.fed > 0, tasks: tasks.length, done, items })
+    out.lines.push({
+      kind: 'farmhand', id, actions: hand.actions, spent: hand.actions - left, half: hand.half, fed: hand.fed > 0, tasks: tasks.length, done, items,
+      ...(hand.kitchen > 0 ? { kitchen: hand.kitchen } : {}),
+    })
     // Her place today: where she spent the most actions, the first she worked on a tie.
     const top = [...spentAt].reduce<[WorkPlace, number] | null>((best, at) => (best === null || at[1] > best[1] ? at : best), null)
     if (top) {

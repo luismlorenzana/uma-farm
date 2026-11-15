@@ -54,14 +54,23 @@ Phase 2's employers bring ([the farm at scale](../game-mechanics.md#the-farm-at-
 [thin](../game-mechanics.md#thin-four-full-hauls-a-place-a-day), [the market](../game-mechanics.md#the-market-feels-a-flood),
 [a station's levels](../game-mechanics.md#its-levels)).
 
-**Now: the Kitchen** (Phase 2.3, your go 2026-11-15): the stove, a cooking game played whenever you cook, from the
-farmhouse kitchen on day one; the Kitchen from Farm Rank 3, its recipes and dishes and the staff meal (F92); then the
-Cooking Contest on Autumn 10, the first festival you play (F93) ([the roadmap](../roadmap.md#phase-2-the-whole-farm)).
+**The Kitchen cooks** (F92): every batch you cook can be played **at the stove**, from day one: **At the stove · 1**
+beside **Cook a batch · 1** in the farmhouse kitchen, a 30-second cooking game of three burners, a ticket rail and the
+pass, whose tier makes 6, 8, 9 or 12 meals, a star or two more from Fine. **The Kitchen** stands from Farm Rank 3
+(3,000g · 40 logs · 20 vegetables), its levels 6 to 15 dishes a play bought there: once a day, an action and 60 s at the
+stove cook a menu of up to three known recipes, with a farmhand as its assistant if you like. Carrot Salad, Carp Grill
+and Button Mushroom Soup are known when it stands, the rest of the 80 at the shop's Recipes shelf in town. Dishes don't
+ship: **the staff meal** serves tonight's table, a dish for every three mouths, in place of their meals, and leaves
+everyone well fed by its stars; dishes are gifts and a wedding's reception too. A play left unfinished counts as Rough
+([the Kitchen](../game-mechanics.md#the-kitchen), [the stove](../game-mechanics.md#the-stove-the-cooking-game),
+[the staff meal](../game-mechanics.md#the-staff-meal)).
+
+**Now: the Cooking Contest** (Phase 2.3, your go 2026-11-15): on Autumn 10, the first festival you play (F93)
+([the roadmap](../roadmap.md#phase-2-the-whole-farm)).
 
 | Piece | Who | State |
 |---|---|---|
-| [F92 — The Kitchen: the stove, dishes and the staff meal](tasks/F92-the-kitchen.md) | Claude | Building |
-| [F93 — The Cooking Contest: the first festival you play](tasks/F93-cooking-contest.md) | Claude | After F92 |
+| [F93 — The Cooking Contest: the first festival you play](tasks/F93-cooking-contest.md) | Claude | Next |
 
 ## Open packets
 
@@ -83,6 +92,7 @@ Not packets: each has a standing guide that changes as the game does.
 | **Look at the field's screen on your phone:** tap the field's sign on the farm, page to plot 2 and back with a swipe, and tell me if the tiles feel big enough | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Look at the farm at scale on your phone:** forage the Woods four times and see it go **Thin**; open the Mill and see its level and loads (its next level from Farm Rank 3); ship a crate of 60 of one good and see the bin say **Eased −10%** | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Eat on your phone:** read the morning's "Takeout" line, cook a batch on the Farmhouse's sheet, and set a farmhand to Cook on the Book's work board; tell me if takeout bites as it should | [uma-farm.web.app](https://uma-farm.web.app) |
+| **Cook at the stove on your phone:** on the Farmhouse's sheet tap **At the stove · 1** and play the 30 seconds held sideways (tell me if the burners and the tickets are big enough for your thumb, and the timing feels fair); once the Farm Rank offers it, build the Kitchen, play its menu, serve the staff meal, and read the next morning's "Staff meal" line | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Play your farm.** Start the new farm once, on its card when the app opens: it's the last start-over, and the farm it starts is the one you keep. Then play days as they come, and tell me what feels off | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story and ship it** | [How the story reaches the game](../story-pack.md#how-the-story-reaches-the-game) |
 | **The next Umas' art:** hand the art brief to the character art session | [The art brief](../design/her-look.md#the-art-brief), in Uma Character Art |
@@ -98,6 +108,7 @@ Not packets: each has a standing guide that changes as the game does.
 - **Farmhands:** invite a friend to work, set her tasks on the Book's work board, and watch her aptitudes rise ([farmhands](../game-mechanics.md#farmhands)).
 - **Upkeep and loans:** the Book's money, and the mayor's office in town ([upkeep and loans](../game-mechanics.md#upkeep-and-loans)).
 - **Food:** the morning's "Takeout" and "From the pantry", the Farmhouse's kitchen, and Cook on the work board ([food](../game-mechanics.md#food)).
+- **The stove and the Kitchen:** At the stove in the Farmhouse's kitchen; the Kitchen from Farm Rank 3, its recipes at the shop, and the staff meal ([the Kitchen](../game-mechanics.md#the-kitchen)).
 - **The calendar:** tap the date ([the calendar](../game-mechanics.md#the-calendar-screen)).
 - **The ranch and the mine,** once the Farm Rank offers them ([the ranch](../game-mechanics.md#the-ranch), [the Mine and the Quarry](../game-mechanics.md#the-mine-and-the-quarry)).
 - **Faces and outfits** that change line by line, and the blank bust for an Uma without art ([the dialogue engine](../game-mechanics.md#the-dialogue-engine)).

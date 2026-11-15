@@ -41,7 +41,7 @@ const ROW1 = Array.from({ length: FIELD_COLUMNS }, (_, i) => i)
 
 describe('her day', () => {
   it('gives a farmhand 3 actions, +1 settled in a season on, +2 once she\'s your spouse, +1 well fed this morning', () => {
-    expect(handDay(farm(), A)).toEqual({ base: HAND_ACTIONS, settled: 0, spouse: 0, fed: 0, half: false, actions: 3 })
+    expect(handDay(farm(), A)).toEqual({ base: HAND_ACTIONS, settled: 0, spouse: 0, fed: 0, half: false, actions: 3, kitchen: 0 })
     expect(handDay(farm(1 + SETTLED_AFTER), A)!.actions).toBe(4)
     expect(handDay(farm(SETTLED_AFTER), A)!.actions).toBe(3)
     const wed = { ...farm(1 + SETTLED_AFTER), love: { ...farm().love, [A]: { ...newLove(), stage: 'spouse' as const, level: 0, wed: 2, house: 0 } } }

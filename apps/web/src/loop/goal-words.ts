@@ -2,7 +2,7 @@
 // with the Umas. The save holds ids and counts; these say them, for the morning, the Diary's projects and the rank's sheet.
 // Loaded on demand with those screens. Pure, so the screens and the tests read the same.
 import {
-  AREA_NAMES, diaryRowOf, FAMILY_NAMES, farmPlace, farmRankOpens, milestoneOf, paidGold, RANKS, SPOT_NAMES, type ForestAreaId, type FishingSpotId, type UmaMilestone,
+  AREA_NAMES, diaryRowOf, FAMILY_NAMES, farmPlace, farmRankOpens, KITCHEN_LEVELS, milestoneOf, paidGold, RANKS, SPOT_NAMES, type ForestAreaId, type FishingSpotId, type UmaMilestone,
 } from '@farm/domain'
 
 const gold = (n: number): string => `${n.toLocaleString('en-US')}g`
@@ -35,7 +35,8 @@ export const milestoneWords = (id: string): string => `${milestoneName(id)} · +
 
 /** A place built overnight: "Built overnight · the Mill"; a station's new level: "The Mill · level 2 · 2 loads a day". */
 export const builtWords = (place: string, level?: number): string =>
-  (level ? `The ${farmPlace(place)?.name ?? place} · level ${level} · ${level} loads a day` : `Built overnight · the ${farmPlace(place)?.name ?? place}`)
+  (level ? `The ${farmPlace(place)?.name ?? place} · level ${level} · ${place === 'kitchen' ? `${KITCHEN_LEVELS[level - 1]?.dishes ?? 0} dishes a play` : `${level} loads a day`}`
+    : `Built overnight · the ${farmPlace(place)?.name ?? place}`)
 
 /** A milestone with the Umas in words: what it opens, what it waits for, and how far along: "House 1 · Your first
  * wedding · 0 / 1". */

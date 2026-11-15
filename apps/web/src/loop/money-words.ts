@@ -57,7 +57,8 @@ export interface MoneyWords {
   warn?: boolean
 }
 /** The morning's food, upkeep and loans lines, in the night's order: each loan's share ("Loan for the Mill · 55g repaid ·
- * 440g left", "· no sales, nothing repaid", "· cleared"), the meals from the pantry ("From the pantry · 6 meals", "· 2
+ * 440g left", "· no sales, nothing repaid", "· cleared"), the staff meal ("Staff meal · 12 at the table · well fed 2
+ * days", tagged Well fed), the meals from the pantry ("From the pantry · 6 meals", "· 2
  * spoiled", tagged Well fed when a good meal fed an Uma), the takeout ("Takeout · 30g", or "10g of 30g"), the upkeep
  * ("Upkeep · 45g", or "5g of 45g"), a short night ("Short of upkeep · 40g owed", tagged Warning; from the second, "·
  * farmhands at half pace", tagged Half pace) or the owed paid ("Upkeep paid up · 85g owed", tagged Paid). */
@@ -69,6 +70,7 @@ export function moneyLines(lines: readonly MoneyLine[], names: ProjectNames): Mo
         if (line.left === 0) return { key: `loan:${line.for}`, text: `${what} · cleared`, tag: 'Cleared' }
         return { key: `loan:${line.for}`, text: `${what} · ${line.paid > 0 ? `${gold(line.paid)} repaid` : 'no sales, nothing repaid'} · ${gold(line.left)} left` }
       }
+      case 'staff': return { key: 'staff', text: `Staff meal · ${line.mouths} at the table · well fed ${line.days === 1 ? 'today' : `${line.days} days`}`, tag: 'Well fed' }
       case 'pantry': return {
         key: 'pantry', text: `From the pantry · ${plural(line.meals, 'meal')}${line.spoiled > 0 ? ` · ${line.spoiled} spoiled` : ''}`,
         ...(line.fed > 0 ? { tag: 'Well fed' } : {}),

@@ -20,8 +20,11 @@
 //                the meals feed well; with fewer than two held, the two cheapest. Cheapest is the price at its stars,
 //                out of demand. The farmer may choose any two
 //
-// **The Kitchen (Phase 2.3)** adds the cooking minigame: a batch the farmer cooks there plays it, and its grade lifts the
-// meals (`cookBatch`'s `lift`, 0 until then). Pure; never stamps. Loaded with the night, the Book and the homestead.
+//   the stove    **At the stove · 1**, beside the plain batch: the same batch played at the stove, its tier lifting its
+//                meals' count and stars (`kitchen/kitchen.ts`); never worse than the plain batch
+//   staff meal   served at the Kitchen, its mouths eat it tonight in place of their two meals (`today.staff`)
+//
+// Pure; never stamps. Loaded with the night, the Book and the homestead.
 import { spend } from './actions'
 import { goodOf, type GoodsFamily } from '../goods/ids'
 import { starPrice } from '../goods/prices'
@@ -80,8 +83,10 @@ export const mouthsTonight = (save: Pick<FarmSave, 'dorm' | 'love' | 'roster'>, 
 export const handsWithTasks = (save: Pick<FarmSave, 'roster'>): string[] =>
   Object.keys(save.roster).filter((id) => save.roster[id]!.farmhand !== undefined && (save.roster[id]!.tasks ?? []).length > 0)
 
-/** The meals tonight's table needs, as the board stands (a cook stops once the pantry holds them). */
-export const mealsNeeded = (save: Pick<FarmSave, 'dorm' | 'love' | 'roster'>): number => MEALS_A_DAY * mouthsTonight(save, handsWithTasks(save))
+/** The meals tonight's table needs, as the board stands (a cook stops once the pantry holds them): two a mouth, but for
+ * the mouths a staff meal feeds tonight. */
+export const mealsNeeded = (save: Pick<FarmSave, 'dorm' | 'love' | 'roster'> & Partial<Pick<FarmSave, 'today'>>): number =>
+  MEALS_A_DAY * Math.max(0, mouthsTonight(save, handsWithTasks(save)) - (save.today?.staff?.mouths ?? 0))
 
 /** What the farm ate tonight. */
 export interface Eaten<S extends FarmSave> {
@@ -96,6 +101,8 @@ export interface Eaten<S extends FarmSave> {
   spoiled: number
   /** The Umas a ★2+ meal left well fed, in the order they ate. */
   fed: string[]
+  /** Tonight's staff meal: the mouths who ate it in place of their meals, and its well-fed days; null with none. */
+  staff: { mouths: number; days: number } | null
 }
 
 /**
@@ -103,7 +110,10 @@ export interface Eaten<S extends FarmSave> {
  * (`working`, the farmhands who worked tonight in their order, then the rest of the farm), the farmer last; the oldest
  * meals first and the best of those. An Uma who eats a ★2+ meal is well fed through tomorrow (never shortened). What's
  * short is takeout, charged with the upkeep. Meals cooked today or yesterday keep for tomorrow night; older ones left over
- * spoil.
+ * spoil. **Tonight's staff meal** (`today.staff`, served at the Kitchen) feeds its mouths first, in place of their two
+ * meals: the farmer, then the Umas in the table's order; mouths past those it was served for eat from the pantry. Every Uma
+ * who eats it is well fed for its days from tomorrow (`days` + 1 tonight, as the night counts it down once), never
+ * shortened.
  */
 export function eatTonight<S extends FarmSave>(save: S, working: readonly string[]): Eaten<S> {
   const today = save.calendar.day
@@ -115,10 +125,14 @@ export function eatTonight<S extends FarmSave>(save: S, working: readonly string
     return lot.stars
   }
   const umas = umasAtTable(save, working)
+  const staff = save.today.staff ?? null
+  const served = staff ? Math.min(staff.mouths, umas.length + 1) : 0
+  const staffed = new Set(umas.slice(0, Math.max(0, served - 1)))
   let pantry = 0
   let takeout = 0
   const fed: string[] = []
   for (const mouth of [...umas, null]) {
+    if (mouth === null ? served > 0 : staffed.has(mouth)) continue
     let good = false
     for (let n = 0; n < MEALS_A_DAY; n++) {
       const stars = take()
@@ -134,9 +148,13 @@ export function eatTonight<S extends FarmSave>(save: S, working: readonly string
   const keeps = (l: PantryLot) => l.day > today - MEAL_KEEPS + 1
   const spoiled = lots.filter((l) => !keeps(l)).reduce((n, l) => n + l.meals, 0)
   const kept = lots.filter((l) => keeps(l) && l.meals > 0)
-  const roster = fed.length === 0 ? save.roster
+  let roster = fed.length === 0 ? save.roster
     : { ...save.roster, ...Object.fromEntries(fed.map((id) => [id, { ...save.roster[id]!, wellFed: Math.max(save.roster[id]!.wellFed, PANTRY_FED_DAYS) }])) }
-  return { save: { ...save, roster, farm: { ...save.farm, pantry: kept } }, mouths: umas.length + 1, pantry, takeout, spoiled, fed }
+  if (staff && staffed.size > 0) roster = { ...roster, ...Object.fromEntries([...staffed].map((id) => [id, { ...roster[id]!, wellFed: Math.max(roster[id]!.wellFed, staff.days + 1) }])) }
+  return {
+    save: { ...save, roster, farm: { ...save.farm, pantry: kept } }, mouths: umas.length + 1, pantry, takeout, spoiled, fed,
+    staff: staff && served > 0 ? { mouths: served, days: staff.days } : null,
+  }
 }
 
 // --- Cooking ---------------------------------------------------------------------------------------------------------
@@ -168,8 +186,8 @@ export function plainBatch(save: Pick<FarmSave, 'items'>): string[] | null {
   return (good.length >= BATCH_GOODS ? good : units).slice(0, BATCH_GOODS).map((u) => u.key)
 }
 
-/** A batch's meals' stars: its goods' stars, averaged and rounded down, plus a lift (the Kitchen's play, later), held to
- * ★5. */
+/** A batch's meals' stars: its goods' stars, averaged and rounded down, plus a lift (the stove's tier: +0, +0, +1, +2),
+ * held to ★5. */
 export const batchStars = (keys: readonly string[], lift = 0): number =>
   Math.min(MAX_STARS, Math.floor(keys.reduce((n, k) => n + (parseStockKey(k)?.stars ?? 1), 0) / Math.max(1, keys.length)) + lift)
 
@@ -197,8 +215,8 @@ export function addBatch<S extends FarmSave>(save: S, keys: readonly string[], m
 }
 
 /** **Cook a batch**, in the farmhouse kitchen: one action; two goods of food (`picks`, stock keys; the plain rule's when
- * none) out of the Warehouse, six meals at their stars into the pantry, cooked today. `lift` is the Kitchen's play's
- * grade (Phase 2.3), 0 until it stands. Refused with fewer than two goods of food held or a pick not held (`no-items`),
+ * none) out of the Warehouse, six meals at their stars into the pantry, cooked today. `lift` lifts their stars (the
+ * plain batch's is 0; the stove's play settles its own, `kitchen/kitchen.ts`). Refused with fewer than two goods of food held or a pick not held (`no-items`),
  * a pick that isn't food (`bad-job`), anything but two picks (`bad-count`), and with no action left. Never stamps. */
 export function cookBatch<S extends FarmSave>(save: S, picks: readonly string[] | null = null, lift = 0): S {
   const block = batchBlock(save, picks)

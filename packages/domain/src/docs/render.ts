@@ -9,10 +9,14 @@ import { itemNameOf } from '../items/lines'
 import { inDemand, priceOf, STARS, starFactor, starPrice } from '../goods/prices'
 import { DEMAND, FAMILY_FACTOR, LADDER, REFINED_FACTOR, type LadderFamily } from '../goods/rule'
 import { DAYS_PER_SEASON, farmDay, FESTIVALS, SEASON_NAMES, SEASONS } from '../farm/calendar'
-import { BUILD_PLACES, FARM_PLACES, MAP_PLACES, TOWN_FIRST_ROW, type FarmPlace, type PlaceOpens } from '../farm/places'
+import { BUILD_PLACES, FARM_PLACES, MAP_PLACES, TOWN_FIRST_ROW, type BuildPlace, type FarmPlace, type PlaceOpens } from '../farm/places'
 import { BOARD_MET, buildCostWords, buildGoodsWords } from '../farm/builds'
 import { FREE_BEDS, HALF_PACE_FROM, LOAN_FEE, LOAN_LIMITS, LOAN_NIGHTS, LOAN_STEP, TWO_LOANS_FROM, UPKEEP_BED, UPKEEP_BUILDING, UPKEEP_RESIDENT } from '../farm/economy'
 import { NIGHT_STEPS } from '../night/end-day'
+import { ARRIVALS, BURNERS, GREEN_MS, MOST_A_PART, PERFECT_FROM_MS, PERFECT_TO_MS, PLAY_TIERS, SMOKE_MS, STOVE_POINTS, STOVE_SECONDS, TICKET_SHAPES, tierCount } from '../kitchen/stove'
+import { KITCHEN_LEVELS } from '../kitchen/levels'
+import { MOUTHS_A_DISH } from '../kitchen/kitchen'
+import { RECIPE_KINDS, RECIPE_SIDE, RECIPES, RECIPES_GOLD, recipeWords, SIDE_WORDS, START_RECIPES } from '../kitchen/recipes'
 import { BATCH_GOODS, BATCH_MEALS, COOK_BATCH, FOOD_FAMILIES, MEALS_A_DAY, TAKEOUT_PRICE, WELL_FED_STARS } from '../farm/food'
 import { MEAL_KEEPS } from '../save/v4'
 import {
@@ -527,10 +531,12 @@ function foodBlock(): string {
     ['Takeout', `${g(TAKEOUT_PRICE)} a meal the pantry is short, charged with the upkeep (takeout first); a new farm’s farmer eats ${MEALS_A_DAY}: ${g(MEALS_A_DAY * TAKEOUT_PRICE)} a night`],
     ['Short of it', 'Takeout never goes unpaid: what gold there is pays, the rest is owed with the upkeep, and the short nights count as the upkeep’s'],
     ['Cook a batch', `The farmer, in the farmhouse kitchen (the homestead’s sheet): 1 action, ${BATCH_MEALS} meals from ${BATCH_GOODS} goods of food you choose`],
+    ['At the stove', `The same batch played at the stove (${STOVE_SECONDS.batch} s): ${PLAY_TIERS.map((t) => tierCount(BATCH_MEALS, t)).join(', ')} meals by its tier, its stars ${PLAY_TIERS.map((t) => `+${t.lift}`).join(', ')}; never worse than the plain batch`],
+    ['The staff meal', `Served at the Kitchen, free, once a day: one dish for every ${MOUTHS_A_DISH} mouths tonight; those mouths eat it in place of their ${MEALS_A_DAY} meals, the farmer first, then the Umas in the table’s order`],
     ['A household meal', `Breakfast or dinner once married: the farmer cooking for the household, so it cooks a batch too (${BATCH_MEALS} meals from ${BATCH_GOODS} goods by the plain rule, when the Warehouse holds them)`],
     ['Cook (a farmhand’s task)', `A batch an action from ${BATCH_GOODS} goods by the plain rule, its meals by her Cooking (below), until the pantry holds tonight’s meals for everyone`],
     ['A meal’s stars', `Its ${BATCH_GOODS} goods’ stars, averaged and rounded down`],
-    ['Well fed', `An Uma who eats a ★${WELL_FED_STARS}+ meal is well fed through tomorrow: one more action tomorrow, and her work’s quality, hauls and rank points; never stacked, never shortening a meal running longer`],
+    ['Well fed', `An Uma who eats a ★${WELL_FED_STARS}+ meal is well fed through tomorrow: one more action tomorrow, and her work’s quality and rank points; never stacked, never shortening a meal running longer. A staff meal feeds by its lowest stars: ★1–2 through tomorrow, ★3–4 two days, ★5 three`],
     ['The plain rule', `The two cheapest goods of ★${WELL_FED_STARS} or more (their meals feed well); with fewer than two held, the two cheapest. Cheapest is the price at its stars, out of demand`],
     ['Food', FOOD_FAMILIES.map((f) => FAMILY_NAMES[f]).join(', ') + ', raw or refined'],
   ])
@@ -899,14 +905,15 @@ const LINE_TEN: Readonly<Record<PerkLine, string>> = {
   farming: 'Each plot she tends: +10% chance of an extra crop at harvest, at the plot’s stars',
   foraging: 'Her haul ×1.1, and her Sawmill batch ×1.1', fishing: 'Her catch ×1.1, and her Smokehouse batch ×1.1',
   mining: 'Her haul ×1.1, and her Smelter batch ×1.1', quarry: 'Her haul ×1.1, and her Cutter batch ×1.1',
-  ranch: 'The goods she collects at the Coop or the Barn ×1.1: a +10% chance of an extra each, at its stars', cooking: '+10% dishes as the Kitchen’s assistant', serving: '+10% tips as the Restaurant’s server',
+  ranch: 'The goods she collects at the Coop or the Barn ×1.1: a +10% chance of an extra each, at its stars',
+  cooking: 'As the Kitchen’s assistant, her term ×1.1 (×1.2 from R5): its play makes a tenth more dishes', serving: '+10% tips as the Restaurant’s server',
   forging: '+10% goods as the Forge’s assistant',
 }
 /** A morning item by her line, in full. */
 const LINE_ITEM: Readonly<Record<PerkLine, string>> = {
   farming: 'A ★2+ crop of the season', foraging: 'A ★2+ good of her rank’s deepest forest area this season', fishing: 'A ★2+ fish of her deepest spot this season',
   mining: 'A ★2+ ore of the Mine’s deepest floor reached', quarry: 'A ★2+ stone or gem of the Quarry’s deepest floor reached',
-  ranch: 'A ★2+ egg, milk or fleece of an animal the farm keeps (a crop of the season with none)', cooking: 'A ★2+ dish (a crop of the season meanwhile)',
+  ranch: 'A ★2+ egg, milk or fleece of an animal the farm keeps (a crop of the season with none)', cooking: 'A ★2+ dish (a crop of the season for now: the dishes come to the morning items later)',
   serving: 'A ★2+ dish (a crop of the season meanwhile)', forging: 'A ★2+ Fitting (a crop of the season meanwhile)',
 }
 const LINE_CHORE: Readonly<Record<PerkLine, string>> = {
@@ -915,7 +922,7 @@ const LINE_CHORE: Readonly<Record<PerkLine, string>> = {
   fishing: 'One fish from her deepest spot this season, at a day’s haul’s stars (step 4)',
   mining: 'One ore from the Mine’s deepest floor reached, at a face’s stars (step 4)', quarry: 'One stone or gem from the Quarry’s deepest floor reached, at a face’s stars (step 4)',
   ranch: '+5 fondness to each animal in her building: the Coop or the Barn she cares for on the work board, else the first that stands (step 3)',
-  cooking: '+1 dish on the Kitchen’s next play', serving: '+1 cover on the Restaurant’s next shift', forging: '+5% refund on the Forge’s next tool',
+  cooking: '+1 dish on every Kitchen play while she lives on the farm (the chores don’t bank: a day without a play makes none)', serving: '+1 cover on the Restaurant’s next shift', forging: '+5% refund on the Forge’s next tool',
 }
 /** What "her line" means for each template, and whether it acts yet. */
 function perkLines(): string {
@@ -924,7 +931,8 @@ function perkLines(): string {
     const place = FARM_PLACES.find((p) => p.id === opens)
     const built = place?.opens.by === 'build' && place.opens.game
     const now = CHORE_LINES.includes(line) ? (opens === null ? 'Yes' : `Yes, once ${line === 'ranch' ? 'the Coop or the Barn' : `the ${place?.name ?? opens}`} stands`)
-      : built ? `Not yet: the ${place.name} stands; its line’s perks come later` : `Not yet: once the ${place?.name ?? opens}’s game is built`
+      : line === 'cooking' ? 'Yes, once the Kitchen stands: its +10% and its chores (the morning item later)'
+        : built ? `Not yet: the ${place.name} stands; its line’s perks come later` : `Not yet: once the ${place?.name ?? opens}’s game is built`
     return [PERK_LINE_NAME[line], LINE_TEN[line], LINE_CHORE[line], LINE_ITEM[line], now]
   }))
 }
@@ -953,7 +961,7 @@ function signatureDishes(): string {
     mining: `The top grade of the Mine’s deepest floor reached (floors 1–3: G${floorTopGrade(1)} … floor 27 on: G${floorTopGrade(27)}); G1 before it stands`,
     quarry: `The top grade of the Quarry’s deepest floor reached (floors 1–3: G${floorTopGrade(1)} … floor 27 on: G${floorTopGrade(27)}); G1 before it stands`,
     ranch: `The top grade of the goods the farm’s animals give (an Egg G${goodOf('egg')!.grade} … Cashmere Fleece G${goodOf('cashmere-fleece')!.grade}); G1 with none`,
-    cooking: 'G1 until the Kitchen’s game is built', serving: 'G1 until the Restaurant’s game is built', forging: 'G1 until the Forge’s game is built',
+    cooking: 'The top grade of the dishes the Kitchen has cooked (`farm.counts[\'cooked:<dish>\']`); G1 before its first play', serving: 'G1 until the Restaurant’s game is built', forging: 'G1 until the Forge’s game is built',
   }
   return table(['Her line', 'Her dish kind', 'Its grade', 'At G1'], PERK_LINES.map((line) => [PERK_LINE_NAME[line], DISH_WORDS[LINE_DISH[line]], grade[line], dishName(dishId(LINE_DISH[line], 1))]))
     + '\n\nHer loved good, when it’s a dish, is her signature dish as it is. The recipe joins `workshops.recipes` once (a recipe the farm knows stays once) and her route keeps its id (`love.dish`).'
@@ -1267,6 +1275,57 @@ function furnitureBlock(): string {
   return FURNITURE.map((f, i) => `${i + 1}. ${f}`).join('\n')
 }
 
+// --- The stove and the Kitchen -------------------------------------------------------------------------------------
+
+/** The stove's rules, the sketch's numbers. */
+function stoveRules(): string {
+  const s = (ms: number) => `${ms / 1000} s`
+  const [three, two] = [TICKET_SHAPES[3], TICKET_SHAPES[2]]
+  return table(['Rule', ''], [
+    ['The board', `${BURNERS} burners, a ticket rail, the pass`],
+    ['Tickets', `On the play’s seed, every ${s(ARRIVALS.gapMin)}–${s(ARRIVALS.gapMax)} from ${s(ARRIVALS.first)}, none in the last ${s(ARRIVALS.closeBefore)}. Half are three-part (they wait ${s(three.wait)}), half two-part (${s(two.wait)})`],
+    ['Cooking a part', `Tap an empty burner: it starts the next part of the first ticket (tap a ticket to put it first). The ring fills (a three-part ticket’s parts ${three.cook.map(s).join(', ')}; a two-part’s ${two.cook.map(s).join(' and ')}), then a ${s(GREEN_MS)} green window`],
+    ['Pulling it', `Tap the burner in the green: its middle (${s(PERFECT_FROM_MS)}–${s(PERFECT_TO_MS)} in) **Perfect +${STOVE_POINTS.perfect}**, the rest **Good +${STOVE_POINTS.good}**. Too early: **raw ${STOVE_POINTS.raw}**, cook it again. Past the green: **burnt ${STOVE_POINTS.burnt}**, and the pan smokes ${s(SMOKE_MS)}`],
+    ['Served', `A ticket whose parts are all on the pass: **+${STOVE_POINTS.served} a part**. A ticket whose wait runs out leaves: **late ${STOVE_POINTS.late}**. A part pulled for a ticket that left goes to the oldest open ticket of its shape still needing it`],
+    ['The score', `Points ÷ the seed’s most (${MOST_A_PART} a part) × 100, rounded, held to 0–100`],
+    ['The seed', 'Four digits, `draw(uid, day, \'stove\', plays)`: the account, the day and the farm’s count of plays (`farm.counts.plays`), so every play differs and a replay is the same'],
+    ['Its length', `A batch ${STOVE_SECONDS.batch} s; the Kitchen’s play ${STOVE_SECONDS.kitchen} s`],
+  ])
+}
+/** The tiers: their scores, what they give a batch and the Kitchen's base. */
+function playTiers(): string {
+  const next = (i: number) => (PLAY_TIERS[i + 1] ? PLAY_TIERS[i + 1]!.min - 1 : 100)
+  return table(['Tier', 'Score', 'Count', 'Stars', 'A batch at the stove', 'The Kitchen at level 1 (6)', 'At level 5 (15)'], PLAY_TIERS.map((t, i) => [
+    `**${t.name}**`, `${t.min}–${next(i)}`, `×${t.factor}`, `+${t.lift}`, `${tierCount(BATCH_MEALS, t)} meals`, `${tierCount(KITCHEN_LEVELS[0]!.dishes, t)} dishes`,
+    `${tierCount(KITCHEN_LEVELS[4]!.dishes, t)} dishes`,
+  ])) + '\n\nRounded half up and never below the base. A play left unfinished (✕, or the app left mid-play) settles as **Rough**: its base, its inputs never lost.'
+}
+/** The Kitchen's levels. */
+function kitchenLevels(): string {
+  return table(['Level', ...KITCHEN_LEVELS.map((l) => String(l.level))], [
+    ['Dishes a play (the base)', ...KITCHEN_LEVELS.map((l) => String(l.dishes))],
+    ['Opens at, costs', ...KITCHEN_LEVELS.map((l) => (l.level === 1 ? `Farm Rank ${l.farmRank}: the build (${buildCostWords(farmPlace('kitchen') as BuildPlace)})` : `Farm Rank ${l.farmRank}, ${g(l.cost)}`))],
+  ])
+}
+/** The eight kinds: each one's main and side. */
+function recipeKinds(): string {
+  return table(['Dish', 'Main (two a dish)', 'Side (one a dish)'], RECIPE_KINDS.map((k) => [
+    DISH_WORDS[k], `${FAMILY_NAMES[k].toLowerCase()} of its grade, raw or refined`, SIDE_WORDS[RECIPE_SIDE[k]] ?? RECIPE_SIDE[k],
+  ]))
+}
+/** The 80 recipes: each dish, its ingredients and its price at the shop's shelf. */
+function recipesBlock(): string {
+  return table(['Dish', 'Id', 'Takes', 'At the shop'], RECIPES.map((r) => [
+    START_RECIPES.includes(r.dish) ? `**${dishName(r.dish)}**` : dishName(r.dish), `\`${r.dish}\``, recipeWords(r.dish), START_RECIPES.includes(r.dish) ? 'Known once the Kitchen stands' : g(r.price),
+  ])) + `\n\nAll ${RECIPES.length} come to ${g(RECIPES_GOLD)} at the shop (the three known free).`
+}
+/** The staff meal's well-fed days, by its lowest stars: the reception's table. */
+function staffMealBlock(): string {
+  return table(['The lowest stars served', ...[1, 2, 3, 4, 5].map((n) => `★${n}`)], [
+    ['Well fed', ...[1, 2, 3, 4, 5].map((n) => (receptionDays(n) === 1 ? 'Through tomorrow' : `${receptionDays(n)} days`))],
+  ])
+}
+
 export function renderBlock(key: string): string | null {
   const blocks_: Record<string, () => string> = { 'farm-ranks': farmRanks,
     'arrival-pay': arrivalPay, placeholders: placeholdersBlock, 'placeholder-moments': placeholderMoments,
@@ -1290,6 +1349,7 @@ export function renderBlock(key: string): string | null {
     'dorm-levels': dormLevels, 'station-levels': stationLevels, thinning: thinningBlock, market: marketBlock, upkeep: upkeepBlock, loans: loansBlock, food: foodBlock, 'cook-batch': cookBatchBlock,
     'farmhand-day': farmhandDay, 'work-board': workBoard, 'aptitude-levels': aptitudeLevels, 'aptitude-start': aptitudeStart, tricks: tricksBlock,
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,
-    'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-schedule': townSchedule, 'town-shops': townShops, 'her-menu': herMenuBlock }
+    'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-schedule': townSchedule, 'town-shops': townShops, 'her-menu': herMenuBlock,
+    'stove-rules': stoveRules, 'play-tiers': playTiers, 'kitchen-levels': kitchenLevels, 'recipe-kinds': recipeKinds, recipes: recipesBlock, 'staff-meal': staffMealBlock }
   return blocks_[key]?.() ?? null
 }

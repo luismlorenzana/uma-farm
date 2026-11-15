@@ -100,7 +100,7 @@ export const FARM_PLACES: readonly FarmPlace[] = [
   place('barn', 'Barn', 'ranch', 2, 2, 'stable', 'Cows, goats, sheep and alpacas, for milk, wool and fleece.', build(3, 3500, [logs(30), vegetables(20)], true)),
   place('fishery', 'Fishery', 'gathering', 3, 0, 'fishery', 'Fish by the season.', START),
   place('smokehouse', 'Smokehouse', 'station', 3, 1, 'fishery-workbench', 'Fish into fillets.', build(3, 2000, [logs(30), fish(20)], true)),
-  place('kitchen', 'Kitchen', 'workshop', 3, 2, 'kitchen', 'Dishes, and the staff meal.', build(5, 15000, [planks(50), vegetables(30)], false)),
+  place('kitchen', 'Kitchen', 'workshop', 3, 2, 'kitchen', 'Dishes, and the staff meal.', build(3, 3000, [logs(40), vegetables(20)], true)),
   place('mine', 'Mine', 'gathering', 4, 0, 'mine', 'Ore, floor by floor.', build(4, 10000, [planks(60)], true)),
   place('smelter', 'Smelter', 'station', 4, 1, 'mine-workbench', 'Ore into ingots.', build(4, 8000, [planks(40), logs(40)], true)),
   place('restaurant', 'Restaurant', 'workshop', 4, 2, 'party-hall', 'Dishes served for gold and tips.', build(7, 40000, [planks(80), fillets(40), vegetables(30)], false)),

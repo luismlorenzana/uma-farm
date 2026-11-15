@@ -27,6 +27,8 @@ export interface BinSale {
 /** §1½ Food, upkeep and loans, after the farmhands work (`farm/economy.ts`, `farm/food.ts`): what the night ate, charged
  * and repaid, in the night's order.
  * - `loan`: a loan's share of the night's income, `paid` (0 on a night with no sales), and what's `left` (0: cleared);
+ * - `staff`: the staff meal served at the Kitchen: the `mouths` who ate it in place of their meals, and the well-fed `days`
+ *   it gave the Umas among them (`kitchen/kitchen.ts`);
  * - `pantry`: the `meals` the farm ate from the pantry tonight, the meals that `spoiled` (past their three days), and the Umas a
  *   ★2+ meal left well fed (`fed`);
  * - `takeout`: the meals the pantry was short, bought in (`meals`), their gold (`due`) and what was `paid`;
@@ -35,6 +37,7 @@ export interface BinSale {
  * - `paid-up`: the upkeep owed from before is paid, the half pace over. */
 export type MoneyLine =
   | { kind: 'loan'; for: string; paid: number; left: number }
+  | { kind: 'staff'; mouths: number; days: number }
   | { kind: 'pantry'; meals: number; spoiled: number; fed: number }
   | { kind: 'takeout'; meals: number; paid: number; due: number }
   | { kind: 'upkeep'; paid: number; due: number }
@@ -77,6 +80,8 @@ export interface FarmhandLine {
   tasks: number
   done: Partial<Record<TaskKind, number>>
   items: number
+  /** Her action at the Kitchen's play as its assistant, when she was (1). */
+  kitchen?: number
 }
 
 /** §2 Work done: the Coop's or the Barn's night: its animals fed today (each made its good), those that went hungry (and
@@ -153,7 +158,7 @@ export type NewsLine =
   | { kind: 'days'; ids: string[]; when: 'today' | 'tomorrow' }
   /** The Town notes the night unlocked, by id, in world.json's order: their titles are the pack's. */
   | { kind: 'notes'; ids: string[] }
-  /** A place built overnight; a station's `level` (2–5) when it went up a level instead. */
+  /** A place built overnight; a station's or the Kitchen's `level` (2–5) when it went up a level instead. */
   | { kind: 'built'; place: FarmPlaceId; level?: number }
   | { kind: 'farm-rank'; rank: number }
   | { kind: 'milestone'; id: string }

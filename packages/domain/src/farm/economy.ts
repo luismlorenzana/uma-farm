@@ -254,6 +254,8 @@ export interface FoodBill {
   spoiled: number
   fed: number
   takeout: number
+  /** Tonight's staff meal: the mouths who ate it and its well-fed days; absent with none. */
+  staff?: { mouths: number; days: number } | null
 }
 
 /**
@@ -275,6 +277,7 @@ export function settleAccounts<S extends FarmSave>(save: S, income: number, food
     lines.push({ kind: 'loan', for: loan.for, paid, left: loan.owed - paid })
     if (loan.owed - paid > 0) loans.push({ ...loan, owed: loan.owed - paid })
   }
+  if (food?.staff) lines.push({ kind: 'staff', mouths: food.staff.mouths, days: food.staff.days })
   if (food && (food.pantry > 0 || food.spoiled > 0)) lines.push({ kind: 'pantry', meals: food.pantry, spoiled: food.spoiled, fed: food.fed })
   const takeout = (food?.takeout ?? 0) * TAKEOUT_PRICE
   const bought = Math.min(gold, takeout)

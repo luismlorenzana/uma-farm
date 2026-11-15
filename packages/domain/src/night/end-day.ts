@@ -1,7 +1,8 @@
 // End the day: the night is one pure function, nine steps in a fixed order, one save write. A step whose part of the
 // game isn't built yet (the workshops) does nothing:
 //
-//   1 the bin pays · 2 the farmhands work, the farm eats, then the bill (the loans' shares, the takeout and the upkeep),
+//   1 a play left unfinished settles, the bin pays · 2 the farmhands work, the farm eats (a staff meal first), then the bill
+//   (the loans' shares, the takeout and the upkeep),
 //   then watered crops grow · 3 animals · 4 the stations' loads are done ·
 //   5 workshops reset · 6 ranks, bonds and well fed · 7 crops wither and the calendar turns
 //   · 8 places built, the Dorm, the Diary and the Farm Rank, meeting her · 9 the morning summary
@@ -57,6 +58,7 @@ import { checkGoalsNight, type GoalsTonight } from '../farm/diary'
 import { raiseBuilds } from '../farm/builds'
 import { settleAccounts, type FoodBill } from '../farm/economy'
 import { eatTonight } from '../farm/food'
+import { settleUnfinished } from '../kitchen/kitchen'
 import { aptitudeUps, fedThisMorning, handsTonight } from '../farm/farmhands'
 import type { FarmPlaceId } from '../farm/places'
 import { tendNight } from '../ranch/ranch'
@@ -192,8 +194,8 @@ export const payTheBin: NightStep = (night) => {
  * any left over spoil (`farm/food.ts`). */
 export const theFarmEats: NightStep = (night) => {
   const working = night.notes.hands.filter((h) => h.spent > 0).map((h) => h.id)
-  const { save, pantry, takeout, spoiled, fed } = eatTonight(night.save, working)
-  return { ...night, save, notes: { ...night.notes, food: { pantry, takeout, spoiled, fed: fed.length } } }
+  const { save, pantry, takeout, spoiled, fed, staff } = eatTonight(night.save, working)
+  return { ...night, save, notes: { ...night.notes, food: { pantry, takeout, spoiled, fed: fed.length, staff } } }
 }
 /** Step 2, after the farm eats: **the bill.** The night's income (the bin's pay) joins the book's last seven nights;
  * each loan takes its share of that income, then the takeout and the upkeep are charged with anything owed: what gold
@@ -273,7 +275,8 @@ export const nightChores: NightStep = (night) => {
   return { ...night, save, notes: { ...night.notes, chores: [...night.notes.chores, ...chores] } }
 }
 
-/** Step 5: each workshop may be played again tomorrow. `workshops.played` holds the day, so nothing moves. */
+/** Step 5: each workshop may be played again tomorrow. `workshops.played` holds the day, so nothing moves; the staff meal
+ * and the Kitchen's assistant clear with `today` at step 7. */
 export const resetWorkshops: NightStep = same
 /**
  * Step 6: rank points for every farmhand who worked today, one activity each: her place's (`notes.worked` by
@@ -375,6 +378,14 @@ export const serveTheReception: NightStep = (night) => {
   return { ...night, save: serveReception(night.save, night.before.today.reception).save }
 }
 
+/** Before step 1, first: **a play left unfinished** at the stove (✕, or the app left mid-play, and not opened since)
+ * settles as Rough, its inputs never lost (`kitchen/kitchen.ts`): a batch's meals into the pantry, the Kitchen's dishes
+ * into the Warehouse, its assistant's practice and challenges. */
+export const settleThePlay: NightStep = (night) => {
+  if (!night.save.workshops.current) return night
+  return { ...night, save: settleUnfinished(night.save, { talentOf: talentsOf(night), story: night.context.story ?? null }) }
+}
+
 /** Before step 1: once anyone is married, tonight's house and companion are noted, your pick of her from Tonight (her
  * house) or else the house slept in least lately and its resident who's been your companion least lately, and the picks
  * clear for tomorrow. */
@@ -450,7 +461,7 @@ function goalNews(notes: NightNotes, save: Pick<FarmSave, 'buildings'>): NewsLin
   return [
     ...notes.built.map((place): NewsLine => {
       const level = save.buildings[place as keyof FarmSave['buildings']] ?? 1
-      return { kind: 'built', place, ...(isStation(place) && level > 1 ? { level } : {}) }
+      return { kind: 'built', place, ...((isStation(place) || place === 'kitchen') && level > 1 ? { level } : {}) }
     }),
     ...ranks.map((rank): NewsLine => ({ kind: 'farm-rank', rank })),
     ...paid.map((id): NewsLine => ({ kind: 'milestone', id })),
@@ -573,6 +584,7 @@ export interface NightStepDef {
 
 /** The night's steps, in order. */
 export const NIGHT_STEPS: readonly NightStepDef[] = [
+  { step: 1, name: 'settleThePlay', run: settleThePlay, what: 'Before the bin, first: a play at the stove left unfinished (✕, or the app left mid-play) settles as Rough: a batch’s meals into the pantry, the Kitchen’s dishes into the Warehouse, its assistant’s practice and challenges' },
   { step: 1, name: 'noteTonight', run: noteTonight, what: 'Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning' },
   { step: 1, name: 'payTheBin', run: payTheBin, what: 'The bin pays: everything shipped today, at price × stars × demand and the market’s ease (past a crate of 50 of one good, each crate more a step lower: −10% a step, to half); then the market moves: a good shipped past a crate stays eased by the steps it reached, and every other eased good recovers a step' },
   { step: 2, name: 'farmhandsWork', run: farmhandsWork, what: 'The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads, the animals’ care and the cooking first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse and her meals into the pantry, her place today where she spent the most' },
@@ -592,7 +604,7 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 6, name: 'levelAtNight', run: levelAtNight, what: 'Spouse levels: a spouse at S1 or S3 whose 600 is full reaches S2 or S4, with no Ready event (S2 starts her every-2nd-morning item); the morning’s line plays its scene and card; never S3 or S5' },
   { step: 6, name: 'countWellFed', run: countWellFed, what: 'The well-fed days count down' },
   { step: 7, name: 'witherCrops', run: witherCrops, what: 'On a season’s last night, crops still growing that don’t grow in the next season wither, their soil left tilled; ripe crops wait' },
-  { step: 7, name: 'turnCalendar', run: turnCalendar, what: 'The date moves; the whole of `today` clears: the day’s actions and event actions, going into town, the areas worked, chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception' },
+  { step: 7, name: 'turnCalendar', run: turnCalendar, what: 'The date moves; the whole of `today` clears: the day’s actions and event actions, going into town, the areas worked, chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception, the staff meal and the Kitchen’s assistant' },
   { step: 8, name: 'raiseBuildings', run: raiseBuildings, what: 'Places built: every place paid for yesterday stands this morning (`buildings[id] = 1`), and a station’s level bought yesterday comes (its level one more), each one news' },
   { step: 8, name: 'settleDorm', run: settleDorm, what: 'The Dorm’s level bought takes effect; swaps arrive, each Uma in town coming home in the place of one leaving' },
   { step: 8, name: 'checkGoals', run: checkGoals, what: 'The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources' },

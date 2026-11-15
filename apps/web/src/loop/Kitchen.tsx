@@ -1,7 +1,8 @@
 // The farmhouse kitchen, on the homestead's sheet (the farm map's Farmhouse opens it): the pantry, tonight's table as the
-// farm stands (who eats, what the pantry and the cooks cover, the takeout), and **Cook a batch · 1**: two goods of food
-// you choose, the plain rule's two picked to start, six meals into the pantry. The Kitchen (Phase 2.3) adds its
-// minigame. Part of the homestead's chunk.
+// farm stands (who eats, what the pantry and the cooks cover, the takeout, a staff meal served), and two ways to cook the
+// same two goods of food you choose (the plain rule's two picked to start): **Cook a batch · 1**, six meals into the
+// pantry, or **At the stove · 1**, the same batch played at the stove (30 s): 6, 8, 9 or 12 meals by its tier, a star or
+// two more from Fine. Part of the homestead's chunk.
 import {
   actionCost, actionsLeft, BATCH_GOODS, BATCH_MEALS, batchBlock, batchStars, foodHeld, itemNameOf, MEALS_A_DAY, pantryMeals, plainBatch, tableTonight, TAKEOUT_PRICE,
   WELL_FED_STARS, type FoodHeld, type SaveV4,
@@ -27,7 +28,7 @@ export function pickFood(picks: readonly string[], row: Pick<FoodHeld, 'key' | '
 }
 
 /** The kitchen: the pantry, tonight's table and the batch. */
-export function Kitchen({ save, busy, onCook }: { save: SaveV4; busy: boolean; onCook: (picks: string[]) => void }) {
+export function Kitchen({ save, busy, onCook, onStove }: { save: SaveV4; busy: boolean; onCook: (picks: string[]) => void; onStove: (picks: string[]) => void }) {
   const pack = useStory()
   const talents = useTalents()
   const table = useMemo(() => tableTonight(save, talents.of, pack), [save, talents.of, pack])
@@ -37,6 +38,8 @@ export function Kitchen({ save, busy, onCook }: { save: SaveV4; busy: boolean; o
   const picks = chosen && batchBlock(save, chosen) === null ? chosen : plainBatch(save) ?? []
   const why = actionsLeft(save) < actionCost('batch') ? 'No actions left today.' : batchBlock(save, picks.length === BATCH_GOODS ? picks : null)
   const stored = pantryMeals(save)
+  // A play under way at the stove: nothing else cooks until it's settled.
+  const stoveBusy = save.workshops.current !== null
   return (
     <section className="space-y-1.5" aria-label="The kitchen" data-kitchen>
       <div className="flex items-center justify-between gap-2">
@@ -45,6 +48,7 @@ export function Kitchen({ save, busy, onCook }: { save: SaveV4; busy: boolean; o
           <p>Everyone who eats on the farm eats twice a day, at night: you, everyone living on the farm, and every farmhand who works that day.</p>
           <p>They eat from the pantry first. Whatever it’s short is takeout, {gold(TAKEOUT_PRICE)} a meal, paid with the upkeep.</p>
           <p>Cook a batch here: one action, two goods of food, {BATCH_MEALS} meals: {gold(BATCH_MEALS * TAKEOUT_PRICE)} of takeout. Meals keep three days. A meal of ★2 or more leaves an Uma who eats it well fed: one more action the next day.</p>
+          <p>At the stove, the same batch is a 30-second cooking game: Good makes 8 meals, Fine 9 and a star more, Masterwork 12 and two stars more. Never fewer than the plain batch’s {BATCH_MEALS}.</p>
           <p>A farmhand on Cook cooks for everyone: bigger batches as her Cooking grows.</p>
         </HelpButton>
       </div>
@@ -55,6 +59,7 @@ export function Kitchen({ save, busy, onCook }: { save: SaveV4; busy: boolean; o
       <p className={`rounded-md px-3 py-1.5 text-[13px] font-semibold ${table.takeout > 0 ? 'bg-danger/10 text-danger' : 'bg-success/15 text-success'}`} data-takeout={table.gold}>
         {table.takeout > 0 ? `Takeout tonight · ${plural(table.takeout, 'meal')} · ${gold(table.gold)}` : 'The pantry covers tonight'}
         {table.cooked > 0 ? <span className="font-normal"> · the cook adds {table.cooked}</span> : null}
+        {save.today.staff ? <span className="font-normal"> · staff meal for {save.today.staff.mouths}</span> : null}
       </p>
       {held.length === 0 ? (
         <p className="text-[13px] text-ink-soft" data-no-food>{batchBlock(save)}</p>
@@ -76,9 +81,14 @@ export function Kitchen({ save, busy, onCook }: { save: SaveV4; busy: boolean; o
           })}
         </ul>
       )}
-      <Button className="w-full" disabled={busy || why !== null} onClick={() => onCook(picks)} data-action="cook-batch" data-why={why ?? undefined}>
-        {`Cook a batch · ${actionCost('batch')}`}
-      </Button>
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="secondary" disabled={busy || why !== null || stoveBusy} onClick={() => onCook(picks)} data-action="cook-batch" data-why={why ?? undefined}>
+          {`Cook a batch · ${actionCost('batch')}`}
+        </Button>
+        <Button disabled={busy || why !== null || stoveBusy} onClick={() => onStove(picks)} data-action="stove-batch" data-why={why ?? undefined}>
+          {`At the stove · ${actionCost('batch')}`}
+        </Button>
+      </div>
       {held.length > 0 && (
         <p className="text-[12px] text-ink-faint" data-batch>
           {why ?? `${plural(BATCH_MEALS, 'meal')} ★${batchStars(picks)} from ${picks.map((k) => itemNameOf(k.slice(0, k.lastIndexOf('@')))).join(' and ')}${batchStars(picks) >= WELL_FED_STARS ? ': well fed' : ''}`}

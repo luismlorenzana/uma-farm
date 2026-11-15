@@ -26,7 +26,8 @@ export const MAIN_JS_BUDGET = 180_000
  * household player; and the story pack's delivery, its index and released pack; and the names of anyone in town, the
  * town's rules, its screen, its view and its talk; and the Book, upkeep and loans' rules, their words and the mayor's
  * office; and the calendar screen, its words, the occasion player,
- * the occasions' rules and the calendar's days. Paths match a module id exactly or as its suffix. */
+ * the occasions' rules and the calendar's days; and the stove's rules and screen, the Kitchen's rules, levels and recipes,
+ * its sheet and actions. Paths match a module id exactly or as its suffix. */
 export const LAZY_MODULES = [
   'phaser/dist/phaser.esm.js',
   '@luismlorenzana/uma-kit/dist/hub/scene/createHubGame.js',
@@ -149,11 +150,18 @@ export const LAZY_MODULES = [
   'src/loop/OccasionPlayer.tsx',
   'domain/src/romance/occasions.ts',
   'domain/src/romance/calendar-days.ts',
+  'domain/src/kitchen/stove.ts',
+  'domain/src/kitchen/kitchen.ts',
+  'domain/src/kitchen/recipes.ts',
+  'domain/src/kitchen/levels.ts',
+  'src/loop/StovePlayer.tsx',
+  'src/loop/KitchenSheet.tsx',
+  'src/loop/kitchen-actions.ts',
 ]
 
-/** Modules no production build may hold at all: the invented stand-in pack is the tests' only. A path ending in `/` is a
- * folder. */
-export const DEV_ONLY_MODULES = ['domain/src/story/stand-in.ts', 'domain/src/story/stand-in/']
+/** Modules no production build may hold at all: the invented stand-in pack and the stove's bots are the tests' only. A
+ * path ending in `/` is a folder. */
+export const DEV_ONLY_MODULES = ['domain/src/story/stand-in.ts', 'domain/src/story/stand-in/', 'domain/src/kitchen/stove-bots.ts']
 
 /** The dev-only modules any chunk renders. */
 export function devOnlyInBuild(chunks, devOnly = DEV_ONLY_MODULES) {
@@ -217,7 +225,7 @@ export async function checkSize(distDir, budget = MAIN_JS_BUDGET, lazy = LAZY_MO
   const leaked = lazyInInitial(chunks, files, lazy)
   if (leaked.length > 0) throw new Error(`Initial JS renders modules that load on demand: ${leaked.join(', ')}`)
   const devOnly = devOnlyInBuild(chunks)
-  if (devOnly.length > 0) throw new Error(`The build holds the tests' stand-in: ${devOnly.join(', ')}`)
+  if (devOnly.length > 0) throw new Error(`The build holds the tests' stand-in or bots: ${devOnly.join(', ')}`)
   return { entry, mainGzip, initialGzip, files: sizes, lazy: lazy.length }
 }
 

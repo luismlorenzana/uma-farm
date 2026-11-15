@@ -305,8 +305,8 @@ const worked = (save: SaveV4, ids: readonly string[]): string[] => ids.filter((w
 /** The grade of her line's best place: the top grade of the deepest forest area anyone has worked (a
  * forager's), of the deepest fishing spot (a fisher's), of the deepest floor reached at the Mine or the Quarry (a
  * miner's, once it stands), of the goods the farm's animals give (a rancher's), of the shop's vegetables at its highest
- * open seed tier (a farmer's); 1 for the workshops until their games are built, and for a dig not built or a farm with
- * no animals. */
+ * open seed tier (a farmer's), of the dishes the Kitchen has cooked (a cook's); 1 for the Restaurant and the Forge until
+ * their games are built, and for a dig not built, a farm with no animals or a Kitchen yet to cook. */
 export function lineGrade(save: SaveV4, pack: PerkPack, id: string): number {
   const line = perkLineOf(pack, id)
   switch (line) {
@@ -324,8 +324,19 @@ export function lineGrade(save: SaveV4, pack: PerkPack, id: string): number {
       })
       return Math.max(1, ...open.map((crop) => goodOf(crop)!).filter((g) => g.family === 'vegetables').map((g) => g.grade))
     }
+    case 'cooking': return cookedGrade(save)
     default: return 1
   }
+}
+
+/** The top grade of the dishes the Kitchen has cooked (`farm.counts['cooked:<dish>']`), 1 before its first play: a
+ * cook's best place. */
+export function cookedGrade(save: Pick<SaveV4, 'farm'>): number {
+  const grades = Object.keys(save.farm.counts).flatMap((k) => {
+    const m = /^cooked:dish-[a-z-]+-(\d+)$/.exec(k)
+    return m && (save.farm.counts[k] ?? 0) > 0 ? [Number(m[1])] : []
+  })
+  return Math.max(1, ...grades)
 }
 
 /** Her signature dish: her loved good when it's a dish, taken as is; else her line's dish kind at the grade

@@ -73,16 +73,18 @@ describe('the Farm Rank', () => {
     ])
     expect(farmRankOpens(3)).toEqual([
       'The Sawmill to build (1,500g · 40 logs)', 'The Barn to build (3,500g · 30 logs · 20 vegetables)', 'The Smokehouse to build (2,000g · 30 logs · 20 fish)',
-      'Plot 2 to clear (2,500g)', 'Station level 2 (2 loads a day)',
+      'The Kitchen to build (3,000g · 40 logs · 20 vegetables)', 'Plot 2 to clear (2,500g)', 'Station level 2 (2 loads a day)',
       'Ducks, Cows and Sheep at the rancher’s', 'Dorm level 4 (9 beds)',
     ])
     expect(farmRankOpens(4)).toEqual([
       'The Mine to build (10,000g · 60 planks)', 'The Smelter to build (8,000g · 40 planks · 40 logs)', 'Plot 3 to clear (5,000g)', 'Station level 3 (3 loads a day)',
+      'Kitchen level 2 (8 dishes a play)',
       'The Old Forest', 'The Lake', 'Goats at the rancher’s',
       'The Mine’s and the Quarry’s floors to 15', 'Dorm level 5 (11 beds)', 'New seeds at the shop',
     ])
     expect(farmRankOpens(6)).toEqual([
       'The Dock to build (20,000g · 80 planks)', 'The Boat to build (30,000g · 60 planks · 30 fillets)', 'Plot 5 to clear (15,000g)', 'Station level 5 (5 loads a day)',
+      'Kitchen level 4 (12 dishes a play)',
       'The Mountain', 'The Falls', 'Cashmere Goats at the rancher’s',
       'The Mine’s and the Quarry’s floors to 20', 'Dorm level 7 (17 beds)',
     ])

@@ -191,11 +191,40 @@ export type ToolTier = 1 | 2 | 3 | 4 | 5
 
 export const WORKSHOP_IDS = ['kitchen', 'restaurant', 'forge'] as const
 export type WorkshopId = typeof WORKSHOP_IDS[number]
-/** A workshop play under way: its workshop, its assistant and the day it started. */
+/** What's cooking at the stove: a batch at the farmhouse stove, or the Kitchen's play (`kitchen/kitchen.ts`). */
+export const STOVE_PLAYS = ['batch', 'kitchen'] as const
+export type StovePlay = typeof STOVE_PLAYS[number]
+/** One recipe on the Kitchen's menu: its dish, its share of the base, and its ingredients at one good and one star each
+ * (stock keys): two of its main a dish, one of its side. */
+export interface MenuLine {
+  dish: string
+  count: number
+  main: string
+  side: string
+}
+/** The most dishes a menu line or a play's base holds: the Kitchen's top level's. Here so the save's parse reads it
+ * without the Kitchen's rules. */
+export const MAX_KITCHEN_BASE = 15
+/** The most recipes on a menu. */
+export const MENU_RECIPES = 3
+/** A play at the stove under way, from its Start (the action spent and the inputs taken) to its end: what it is, the day
+ * it started, its seed (four digits) and length in seconds, the Kitchen's assistant (optional), and the inputs taken: a
+ * batch's two goods (stock keys) or the Kitchen's menu. Settled from its taps, or as Rough when it's left unfinished. */
 export interface PlayInProgress {
   workshop: WorkshopId
-  assistant: OutfitId
+  play: StovePlay
   day: number
+  seed: number
+  length: number
+  assistant?: OutfitId
+  goods?: string[]
+  menu?: MenuLine[]
+}
+/** Tonight's staff meal, served at the Kitchen: the mouths it was served for (the farmer and the Umas who eat tonight,
+ * as the board stood) and the well-fed days its lowest stars give, on the reception's table (1–3). */
+export interface StaffMeal {
+  mouths: number
+  days: number
 }
 
 /** The 80 dishes are `dish-<family>-<grade>` (uma-art's dishes atlas). */
@@ -435,6 +464,12 @@ export interface TodayV4 {
    * place gives full hauls the first four times a day, then thin ones (`gathering/hauls.ts`). Absent until the first
    * (the save grows it in place); step 7 clears it with the day. */
   hauls?: Record<string, number>
+  /** Tonight's staff meal, served at the Kitchen (once a day): its mouths eat it in place of their two meals. Absent
+   * until it's served (the save grows it in place); step 7 clears it with the day. */
+  staff?: StaffMeal
+  /** The Kitchen's assistant today: one of her actions tonight is the play's. Absent with none (the save grows it in
+   * place). */
+  assistant?: CharacterId
 }
 
 /** The household's meals: one of each a day, once anyone is married. */
@@ -573,6 +608,9 @@ export interface SaveV5 {
   places: Record<DigId, Dig>
   buildings: Partial<Record<BuildingId, number>>
   tools: Record<ToolId, ToolTier>
+  /** The workshops: the day of each one's last play (the Kitchen's, once a day), the play at the stove under way, the
+   * recipes learnt (her signature dishes and those bought; the Kitchen's first three are known once it stands) and each
+   * workshop's best score. A save from before the stove has no play under way. */
   workshops: { played: Record<WorkshopId, number>; current: PlayInProgress | null; recipes: string[]; best: Record<string, number> }
   expeditions: Expedition[]
   /** Bond points by pair: `pairKey` of character ids. */

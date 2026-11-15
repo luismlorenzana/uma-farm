@@ -60,6 +60,6 @@ test("no chunk of a production build holds the tests' stand-in pack, lazy or not
     standIn.map((id) => `${id} (assets/load.js)`))
   assert.deepEqual(devOnlyInBuild({ 'assets/load.js': ['src/story/load.ts', '../../packages/domain/src/story/release.ts', '../../packages/domain/src/story/placeholders.ts'] }), [])
   await fixture(async (root) => {
-    await assert.rejects(checkSize(root), /stand-in: \.\.\/\.\.\/packages\/domain\/src\/story\/stand-in\.ts \(assets\/lazy\.js\)/)
+    await assert.rejects(checkSize(root), /stand-in or bots: \.\.\/\.\.\/packages\/domain\/src\/story\/stand-in\.ts \(assets\/lazy\.js\)/)
   }, { chunks: { 'assets/main.js': ['src/main.tsx'], 'assets/lazy.js': [standIn[0]] } })
 })

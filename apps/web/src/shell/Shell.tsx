@@ -12,12 +12,15 @@
 // `?sheet=homestead`, a night level's scene and card at `?level=<id>:<s2|s4>` and a household scene or the finale at
 // `?household=<id>` (`&replay=1` from the Diary); an occasion scene at `?occasion=<id>`, from the calendar's day; her life's
 // short scenes at `?life=<kind>:<id>` (the night's companion's morning greeting, moving in, the invitation to work, a meal's line); her gallery of
-// illustrations at `?gallery=<id>`, from her profile.
+// illustrations at `?gallery=<id>`, from her profile; the Kitchen at `?sheet=kitchen`, and the stove at `?stove=1` while a play this
+// session started is under way. A play at the stove left behind (the app closed mid-play, or its screen left) settles as Rough
+// as the shell finds it (`kitchen-actions.ts`).
 import { sceneDue } from '@farm/domain'
 import { AppFrame, useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Outlet, useLocation, useSearchParams } from 'react-router'
 import { useGame } from '../save/game'
+import { playHeld } from '../loop/stove-session'
 import { castIds, useStory } from '../story/story'
 import { FarmBar, FarmRail, OutOfActions, railPageOf } from './Bars'
 
@@ -40,6 +43,8 @@ const HouseholdPlayer = lazy(() => import('../loop/HouseholdPlayer'))
 const OccasionPlayer = lazy(() => import('../loop/OccasionPlayer'))
 const LifePlayer = lazy(() => import('../loop/LifeScene'))
 const Gallery = lazy(() => import('../loop/Gallery'))
+const KitchenSheet = lazy(() => import('../loop/KitchenSheet'))
+const StovePlayer = lazy(() => import('../loop/StovePlayer'))
 
 const SHEETS = ['end', 'calendar', 'bin', 'shop', 'rank'] as const
 type LoopSheet = typeof SHEETS[number]
@@ -64,6 +69,13 @@ export function Shell() {
   const gallery = search.get('gallery')
   const farm = useGame((s) => s.save !== null)
   const free = farm && !naming && !scene
+  // A play at the stove left behind (the app closed mid-play, or its screen left) settles as Rough.
+  const stove = search.get('stove')
+  const underWay = useGame((s) => s.save?.workshops.current?.seed ?? null)
+  useEffect(() => {
+    if (underWay === null || playHeld(underWay)) return
+    void import('../loop/kitchen-actions').then((m) => m.settleLeftPlay()).catch(() => undefined)
+  }, [underWay, stove])
   return (
     <AppFrame
       landscape="rail-and-bar"
@@ -88,6 +100,8 @@ export function Shell() {
           {occasion && free && !read && !playing && <Suspense fallback={null}><OccasionPlayer key={occasion} id={occasion} /></Suspense>}
           {life && free && !read && !playing && <Suspense fallback={null}><LifePlayer key={life} value={life} /></Suspense>}
           {gallery && free && !read && !playing && <Suspense fallback={null}><Gallery key={gallery} id={gallery} /></Suspense>}
+          {sheet === 'kitchen' && free && <Suspense fallback={null}><KitchenSheet /></Suspense>}
+          {stove && free && <Suspense fallback={null}><StovePlayer key={stove} /></Suspense>}
         </>
       }
     >

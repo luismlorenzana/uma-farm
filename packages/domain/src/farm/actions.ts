@@ -24,7 +24,7 @@ export const ACTION_IDS = [
   'load', 'ship',
   'town', 'shop',
   'introduce', 'talk', 'gift', 'invite', 'hangout', 'event',
-  'festival', 'batch', 'cook', 'companion',
+  'festival', 'batch', 'kitchen', 'cook', 'companion',
 ] as const
 export type ActionId = typeof ACTION_IDS[number]
 
@@ -68,7 +68,8 @@ export const ACTIONS: readonly ActionRule[] = [
   rule('hangout', 'The Umas', 'A hangout or a date', 2),
   rule('event', 'The Umas', 'Her event, when it’s ready, or an occasion scene with her', 1),
   rule('festival', 'A festival', 'Join it; it opens its own events', 3, 'the festivals’ contests'),
-  rule('batch', 'The kitchen', 'Cook a batch: six meals for the pantry from two goods of food, in the farmhouse kitchen', 1),
+  rule('batch', 'The kitchen', 'Cook a batch: six meals for the pantry from two goods of food, in the farmhouse kitchen, plain or at the stove', 1),
+  rule('kitchen', 'The Kitchen', 'Play the Kitchen: its dishes from a menu of recipes, at the stove, once a day', 1),
   rule('cook', 'The household', 'Cook a meal for the household: breakfast or dinner (it cooks a batch too)', 1),
   rule('companion', 'The household', 'Choose tonight’s companion, at the day’s end', 0),
 ]
