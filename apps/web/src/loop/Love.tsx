@@ -1,15 +1,16 @@
 // Her acts on her profile (on the Hearts tab): Chat (one action, +15; then her
 // line for the day), Gift (one action: the picker with each good's points for her today, or "?") and Praise +20 while earned, 48 pt in
 // the profile's thumb zone. What an act paid goes up to the profile (`onPaid`), which floats it from her face; a note
-// says it, a gift in her words by her taste (the default story's: "‹name› smiles. “Peach? That’s lovely.” +36"). **Evening ›** is there too (her evening at `?evening=<id>`, or why not:
-// "Evening ✓", "Evening · F3", "In town", "Evening spent"; an evening takes 2 actions), so Chat, Gift and Evening sit side
-// by side and Praise +20 takes the row under them. **Where you meet her:** Chat, Gift and **Invite her to work · 1** (a
-// friend, once) need her in front of you: on the farm when she lives there, else in town where she is today, once you've
-// gone into town (`whereYouMeet`); otherwise a line says where she is, a tap to her in town ("At the Café today ›"), or
-// "At home today". The invitation's scene plays as soon as it's spent (`?life=invited-to-work:<id>`). Her Ready event
-// (Play · 1 on the Next card) plays from anywhere. Loaded on demand with the Hearts tab.
+// says it, a gift in her words by her taste (the default story's: "‹name› smiles. “Carrot? That’s lovely.” +36"). **Evening ›** is there too (her evening at `?evening=<id>`, or why not:
+// "Evening ✓", "Evening · F3", "In town", "At home", "Evening spent"; an evening takes 2 actions), so Chat, Gift and
+// Evening sit side by side and Praise +20 takes the row under them. **Where you meet her:** Chat, Gift, her evening and
+// **Invite her to work · 1** (a friend, once) need her in front of you: on the farm when she lives there or works it by
+// day, else in town where she is today, once you've gone into town (`whereYouMeet`); otherwise a line says where she is,
+// a tap to her in town ("At the Café today ›"), or "At home today". The invitation's scene plays as soon as it's spent
+// (`?life=invited-to-work:<id>`). Her Ready event (Play · 1 on the Next card) plays from anywhere. Loaded on demand with
+// the Hearts tab.
 import {
-  actionsLeft, birthdaysOf, canPraise, chatLineV4, FAMILY_NAMES, festivalsOf, FRIEND_FROM, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, isFarmhand, LOVE_POINTS, townLocation,
+  actionsLeft, birthdaysOf, canPraise, chatLineV4, FAMILY_NAMES, FRIEND_FROM, GOOD_FAMILIES, giftLineV4, giftPreview, goodName, goodOf, isFarmhand, LOVE_POINTS, townLocation,
   whereYouMeet, workBlock, type SaveV4, type StoryPack, type Temperament,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -54,7 +55,7 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
   const out = actionsLeft(save) === 0 || !meet.here
   const work = workBlock(save, id)
   const invite = !isFarmhand(save, id) && work !== `From Friendship ${FRIEND_FROM}` && work !== 'Meet her first.'
-  const evening = eveningButton(save, id, festivalsOf(pack))
+  const evening = eveningButton(save, pack, id)
   const line = talked ? fill(chatLineV4(save, pack, id, temperament ?? 'steady'), name, save.farmer.name) : null
   const paid = (points: number, words: string) => {
     setError(null)
@@ -116,7 +117,7 @@ export function LoveActs({ save, pack, id, name, temperament, master, onPaid }: 
  * if you haven't), or at home. */
 function MeetLine({ pack, id, at }: { pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'town' | 'master'>>; id: string; at: string | null }) {
   const place = at ? townLocation(pack, at)?.name ?? null : null
-  if (!at) return <p className="text-[13px] text-ink-soft" data-meet="home">At home today. Talk with her in town another day.</p>
+  if (!at) return <p className="text-[13px] text-ink-soft" data-meet="home">At home today. Find her in town on her days.</p>
   return (
     <p className="flex min-h-11 items-center justify-between gap-2 text-[13px] text-ink-soft" data-meet={at}>
       <span>In town today, at {place ?? 'her place'}. Talks and gifts are in person.</span>

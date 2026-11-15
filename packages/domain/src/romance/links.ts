@@ -13,7 +13,8 @@
 //   ?event=<id>                 her next event is Ready (`readiness`)
 //   ?ask=<id>                   she said "Not yet" and you haven't asked today (`canAsk`)
 //   ?memory=<id>:<rung>         a Memory already played (her meeting scene, or a rung in `memories`)
-//   ?evening=<id>               her evening is open to her now (`kindsNow`); `?evening=pick` while anyone's is
+//   ?evening=<id>               her evening is open to her now (`kindsNow`: in front of you, on the farm or met in town
+//                                today); `?evening=pick` while anyone's is
 //   ?occasion=<id>              today's occasion, with an Uma you've met, not yet played today (`occasionWith`)
 //   ?household=<id>             a household scene Ready (`householdReady`); with `&replay=1`, one already read
 //   ?level=<id>:<s2|s4>         a spouse level she's reached
@@ -23,7 +24,7 @@ import { FESTIVALS, type Festival } from '../farm/calendar'
 import type { Meal, SaveV4 } from '../save/v4'
 import type { StoryPack } from '../story/pack'
 import { festivalsOf } from '../story/placeholders'
-import { eveningUmas, kindsNow } from './evening'
+import { eveningUmas, kindsNow, type EveningPack } from './evening'
 import { canAsk } from './events'
 import { householdReady, isHouseholdId } from './household'
 import { mealEaters, mealsCooked, mealSpeaker } from './loop'
@@ -86,11 +87,12 @@ export function mayReplayMemory(save: Pick<SaveV4, 'roster' | 'love' | 'arrivals
   return rung === 'arrival' ? save.arrivals.includes(id) : (save.memories[id] ?? []).includes(rung)
 }
 
-/** `?evening=<id>`: her evening is open to her now (home, a hangout from Friendship 3 or a date from Romance 1, a slot
- * free); `?evening=pick`: while anyone's is and the day has the 2 actions (Tonight's picker). */
-export function mayOpenEvening(save: SaveV4, pack: Pick<StoryPack, 'cast'> & Partial<Pick<StoryPack, 'world'>>, id: string | 'pick'): boolean {
+/** `?evening=<id>`: her evening is open to her now (in front of you: home on the farm, a farmhand there by day, or out in
+ * town today with you there; a hangout from Friendship 3 or a date from Romance 1; a slot free); `?evening=pick`: while
+ * anyone's is and the day has the 2 actions (Tonight's picker). */
+export function mayOpenEvening(save: SaveV4, pack: EveningPack, id: string | 'pick'): boolean {
   if (id === 'pick') return eveningUmas(save, pack).length > 0
-  return met(save, id) && kindsNow(save, id, festivalsOf(pack)).length > 0
+  return met(save, id) && kindsNow(save, pack, id).length > 0
 }
 
 /** `?occasion=<id>`: today holds an occasion, she's met, and you haven't spent it with her today. */
@@ -117,7 +119,7 @@ export const SCENE_LINKS: readonly { link: string; plays: string; when: string }
   { link: '`?event=<id>`', plays: 'Her heart event', when: 'Ready (`readiness`); with no action left it says so and plays nothing' },
   { link: '`?ask=<id>`', plays: 'Ask her', when: 'She said “Not yet” at her confession, and you haven’t asked today' },
   { link: '`?memory=<id>:<rung>`', plays: 'A Memory, paying nothing', when: 'A Memory already played: her meeting scene, or a rung of her route' },
-  { link: '`?evening=<id>`', plays: 'Her kinds sheet, then the evening', when: 'Her evening is open to her now (home, a hangout or a date her ladder opened, a slot free)' },
+  { link: '`?evening=<id>`', plays: 'Her kinds sheet, then the evening', when: 'Her evening is open to her now: in front of you (home on the farm, a farmhand there by day, or out in town today with you there), a hangout or a date her ladder opened, a slot free' },
   { link: '`?evening=pick`', plays: 'Tonight’s picker', when: 'Someone can spend an evening now, and the day has its 2 actions' },
   { link: '`?occasion=<id>`', plays: 'An occasion scene', when: 'Today’s occasion, with an Uma you’ve met, not yet played with her today' },
   { link: '`?household=<id>`', plays: 'A household scene or the finale', when: 'Ready (the night saw its count) and not yet read; with `&replay=1`, once read' },

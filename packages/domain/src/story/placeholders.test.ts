@@ -47,10 +47,10 @@ describe('the story with no pack', () => {
     expect(DEFAULT_CHAPTERS.map((c) => c.title)).toEqual(['Getting to know her', 'Together', 'The wedding', 'Married life'])
     expect(meetOf(story, '9100002')).toEqual({ kind: 'talks', days: 3 })
     // Her tastes: the default story's, her favourite good (by her line) loved and the rest neutral.
-    expect(tasteOf(story, '9100001', 'carrot')).toBe('neutral')
-    expect(tasteOf(story, '9100001', 'peach')).toBe('loved')
-    expect(giftsOf(story, '9100001')).toEqual({ loved: 'peach' })
-    expect(ids(5).map((id) => giftsOf(story, id).loved)).toEqual(['peach', 'chestnut', 'seashell', 'amethyst', 'honey'])
+    expect(tasteOf(story, '9100001', 'peach')).toBe('neutral')
+    expect(tasteOf(story, '9100001', 'carrot')).toBe('loved')
+    expect(giftsOf(story, '9100001')).toEqual({ loved: 'carrot' })
+    expect(ids(5).map((id) => giftsOf(story, id).loved)).toEqual(['carrot', 'shiitake', 'trout', 'button-mushroom', 'honeycomb'])
     // Without master data (a test that leaves it out), nobody: the farm needs master data to open.
     expect(storyOf(null, null).cast.umas).toEqual([])
     expect(outfitOf(storyOf(null, null), '9100001')).toBe('9100001')

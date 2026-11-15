@@ -23,7 +23,7 @@ import { atHome, newLove, newRosterUma, type SaveV4 } from '../save/v4'
 import type { StoryTrigger } from '../story/authored'
 import type { StoryPack } from '../story/pack'
 import { townOf } from '../story/placeholders'
-import { townDay } from '../town/town'
+import { whereYouMeet } from '../town/town'
 import type { Taste } from './chats'
 
 /** The pack meeting reads: the cast and its ties, the bibles, the town (its people, master data's characters), and the
@@ -80,7 +80,7 @@ export function introduceBlock(save: SaveV4, pack: MeetPack, id: string): string
   if (save.roster[id]) return 'You’ve met her already.'
   if (townOf(pack).byId.has(id)) return 'She’s one of the town’s people.'
   if (!save.today.town) return 'Go into town first.'
-  if (!townDay(save, pack).where.has(id)) return 'She isn’t out in town now.'
+  if (whereYouMeet(save, pack, id).at === null) return 'She isn’t out in town now.'
   if (actionsLeft(save) < actionCost('introduce')) return 'No actions left today.'
   return null
 }

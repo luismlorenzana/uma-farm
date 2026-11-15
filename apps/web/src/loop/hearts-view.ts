@@ -20,7 +20,7 @@
 // (`chaptersView`): each with its events played and to come, the one she's in, a gate's words, and what opens the next.
 import {
   homeOf, NEEDS_ROOM, OWN_HOUSE_WISH,
-  atHome,
+  atHome, onFarmToday,
   ACTIVITY_NAMES, bar, beatOf, benchOpen, betterRings, bondHearts, bondOf, castOrder, CHORE_FONDNESS, choresTonight, closestFriend, dateOf, dishName, engravingOf, favouriteOf, farmPlace, giftsOf, isTownPerson,
   GIFT_POINTS_V4, goodName, hasPerk, homeOrHoused, invitedNow, isGoodId, KEEPSAKE_GROWN, KEEPSAKE_QUALITY, keepsakeOf, keepsakeQuality, LADDER_COLOURS, ladderOf, levelWords,
   linePlaces, morningRule, morningsToItem, nextBondHeart, pairLevels, pairName, pairOf, PERK_PLACE, perkLineOf, perksFor, petNameOf, readiness, readLevels, ringGrade, ringName,
@@ -31,7 +31,7 @@ import {
 import { nextWords, readyWords } from './love-words'
 
 /** The pack as the tab reads it. */
-export type HeartsPack = Pick<StoryPack, 'cast' | 'ties' | 'bibles' | 'scripted' | 'pairs'> & Partial<Pick<StoryPack, 'world'>>
+export type HeartsPack = Pick<StoryPack, 'cast' | 'ties' | 'bibles' | 'scripted' | 'pairs'> & Partial<Pick<StoryPack, 'world' | 'town' | 'master'>>
 /** An Uma's name from master data. */
 export type NameOf = (id: string) => string
 
@@ -175,7 +175,8 @@ export function heartRows(save: SaveV4, pack: HeartsPack, nameOf: NameOf): Heart
     return [{
       id, name: nameOf(id), level: levelWords(love), stage: love.stage, bar: now, heart: heartBar(love, state), state, home,
       invited: invitedNow(save, id), chatted: save.today.chats.includes(id), gifted: save.today.gifts.includes(id),
-      note: rowNote(state, now, home, state.ready ? beatPlace(pack, id, state.rung) : null, nameOf, festivalsOf(pack)) ?? roomNote(save, pack, id),
+      // A farmhand who lives in town is on the farm by day: nothing to find.
+      note: rowNote(state, now, onFarmToday(save, id), state.ready ? beatPlace(pack, id, state.rung) : null, nameOf, festivalsOf(pack)) ?? roomNote(save, pack, id),
       filters: [...(state.ready ? ['ready' as const] : []), STAGE_FILTER[love.stage], ...(home ? [] : ['away' as const])],
       progress: routeIndex(love), points: love.points, order: order < 0 ? cast.length : order, chapter: chapterGlance(save, pack, id),
     }]

@@ -2,7 +2,8 @@
 // actions (Go into town); the town and its shop then stay open for the rest of the day, and moving between its locations
 // is free. Two views, the second `?view=people`, and the Shop:
 // - **The map:** its locations in groups (the six spots, the shops and offices, the story's workplaces and homes), each
-//   with how many are there now and their first faces; you're at one (`?at=<id>`, the Plaza to start), and a tap on
+//   with how many are there now, their first four faces and "+n" for a crowded one (a spot holds everyone the schedules
+//   put there); you're at one (`?at=<id>`, the Plaza to start), and a tap on
 //   another goes there. Beside the map, **where you are:** its name and line, who's here now (faces and names, as many as
 //   there are, in a grid that scrolls), and its keeper at her post with her post's menu (the general store's seeds; the
 //   mayor's office's build orders and loans, its sheet at `?sheet=mayor` (`MayorSheet.tsx`); the rancher's animals and
@@ -82,8 +83,8 @@ export default function TownPage() {
 function About() {
   return (
     <>
-      <p>Everyone lives in town: tap a place to walk there, free, and see who’s there now. The story puts each Uma where her life takes her (her home, her work, the places she likes); the rest are out at the town’s spots, a different few each day.</p>
-      <p>Tap an Uma for what you can do with her, each an action: introduce yourself (that’s how you meet her), talk, give a gift, and her event when it’s ready.</p>
+      <p>Your cast lives in town: tap a place to walk there, free, and see who’s there now. Each Uma keeps her own days: the story’s home, work and favourite places, or her favourite spot every third day. Her profile and the calendar show them.</p>
+      <p>Tap an Uma for what you can do with her, each an action: introduce yourself (that’s how you meet her), talk, give a gift, ask her out (two actions, one evening a day), and her event when it’s ready.</p>
       <p>The town’s people are at their posts: the general store sells seeds, the rancher’s animals and fodder, and the mayor’s office takes build orders and lends toward them.</p>
     </>
   )
@@ -159,6 +160,9 @@ export function Face({ id, size, name }: { id: string; size: number; name: strin
 
 // --- The map ----------------------------------------------------------------------------------------------------------
 
+/** How many faces a place's tile shows; a crowded spot shows "+n" after them, and where you are lists everyone. */
+const MAP_FACES = 4
+
 /** The map: its groups of places, each a tile with how many are there now and their first faces. Yours is marked. */
 function TownMap({ groups, here, nameOf, onGo, out }: { groups: ReturnType<typeof mapGroups>; here: string; nameOf: NameOf; onGo: (id: string) => void; out: number }) {
   return (
@@ -183,7 +187,9 @@ function TownMap({ groups, here, nameOf, onGo, out }: { groups: ReturnType<typeo
                         {v.here.length > 0 && <span className="shrink-0 rounded-full bg-[#c2385e] px-1.5 text-[11px] font-bold text-white tabular-nums">{v.here.length}</span>}
                       </span>
                       <span className="flex h-6 items-center -space-x-1.5">
-                        {v.here.slice(0, 4).map((id) => <Face key={id} id={id} size={24} name={nameOf(id)} />)}
+                        {v.here.slice(0, MAP_FACES).map((id) => <Face key={id} id={id} size={24} name={nameOf(id)} />)}
+                        {/* A crowded spot: its count on the badge, its first faces, then how many more. */}
+                        {v.here.length > MAP_FACES && <span className="pl-2.5 text-[11px] font-semibold text-ink-soft tabular-nums" data-more-here={v.here.length - MAP_FACES}>+{v.here.length - MAP_FACES}</span>}
                         {at && <span className="ml-auto pl-2 text-[11px] font-semibold text-accent-strong">You’re here</span>}
                       </span>
                     </button>

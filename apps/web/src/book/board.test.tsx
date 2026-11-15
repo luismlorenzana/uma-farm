@@ -80,13 +80,14 @@ describe('the board\'s words', () => {
 
   it('says her day, her job, and her night', () => {
     expect(dayChips({ base: 3, settled: 1, spouse: 2, fed: 1, half: true, actions: 3 })).toEqual(['+1 settled in', '+2 married', '+1 well fed', 'half pace'])
-    // The story's job in its words, else where it is; the game's default near her favourite spot; else a job in town.
+    // The story's job in its words, else where it is; else the game's default at her favourite spot (her cast `spot`, else
+    // the six in turn by her place in the cast).
     const pack = storyPackFrom(STAND_IN_FILES)
     const cast = (umas: object[]) => ({ ...pack, cast: { ...pack.cast, umas: umas as typeof pack.cast.umas } })
     expect(jobWords(cast([{ characterId: '42', job: { what: 'Waits tables', at: 'cafe' } }]), '42')).toBe('Waits tables')
     expect(jobWords(cast([{ characterId: '42', job: { at: 'cafe' } }]), '42')).toBe('Works at the Café')
     expect(jobWords(cast([{ characterId: '42', spot: 'harbour' }]), '42')).toBe('Helps out at the Harbour')
-    expect(jobWords(pack, '9000001')).toBe('A job in town')
+    expect(jobWords(pack, '9000001')).toBe('Helps out at the Plaza')
     expect(doneWords({ water: 3, fish: 2, forage: 1, load: 1 })).toEqual(['watered 3 tiles', 'started 1 load', 'foraged once', 'caught 2 fish'])
     const line: FarmhandLine = { kind: 'farmhand', id: A, actions: 4, spent: 4, half: false, fed: true, tasks: 2, done: { water: 6, fish: 1 }, items: 1 }
     expect(nightWords(line)).toBe('4 of 4 actions · watered 6 tiles · caught 1 fish · +1 good')

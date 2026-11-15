@@ -3,14 +3,13 @@
 // the profile's Evening button. Festival night follows the year's festivals (the story's, `festivalsOf`). Pure, so the
 // screens and the tests read the same. Loaded on demand.
 import {
-  DATE_FROM, EVENING_KINDS, eveningAffordable, eveningCost, EVENINGS, eveningMarks, eveningPreview, eveningRole, eveningUmas, favouriteKind, festivalsOf, GRADE_NAMES, GRADES, HANGOUT_FROM,
-  homeTonight, invitedNow,
-  inviteDue, invitePoints, isFestivalNight, kindBuilt, kindOpens, kindsNow, levelWords, ROLE_WORDS, rungName, slotsLeft, type EveningCard, type EveningKind,
-  type Festival, type Grade, type PlayKind, type SaveV4, type StoryPack,
+  DATE_FROM, EVENING_KINDS, eveningAffordable, eveningCost, eveningHere, EVENINGS, eveningMarks, eveningPreview, eveningRole, eveningUmas, favouriteKind, festivalsOf, GRADE_NAMES, GRADES,
+  HANGOUT_FROM, invitedNow, inviteDue, invitePoints, isFestivalNight, kindBuilt, kindOpens, kindsNow, levelWords, ROLE_WORDS, rungName, slotsLeft, whereYouMeet, type EveningCard,
+  type EveningKind, type Festival, type Grade, type PlayKind, type SaveV4, type StoryPack,
 } from '@farm/domain'
 
 type NameOf = (id: string) => string
-type Pack = Pick<StoryPack, 'cast' | 'bibles'> & Partial<Pick<StoryPack, 'world'>>
+type Pack = Pick<StoryPack, 'cast' | 'bibles'> & Partial<Pick<StoryPack, 'world' | 'town' | 'master'>>
 
 /** A kind on her kinds sheet: open now (with its three numbers), or waiting for her ladder ("At Romance 3"). */
 export interface KindRow {
@@ -31,7 +30,7 @@ export function kindRows(save: SaveV4, pack: Pack, id: string, birthday: boolean
   const love = save.love[id]
   if (!love) return []
   const year = festivalsOf(pack)
-  const now = new Set(kindsNow(save, id, year))
+  const now = new Set(kindsNow(save, pack, id))
   const favourite = favouriteKind(pack, id)
   const left = slotsLeft(save, year)
   const affordable = eveningAffordable(save)
@@ -94,10 +93,10 @@ export function tonightRows(save: SaveV4, pack: Pack, nameOf: NameOf): TonightRo
       yesShown = true
       return { slot: mark.slot, state: 'invited', with: yes.id, text: `${nameOf(yes.id)} · ${EVENINGS[yes.kind].short}` }
     }
-    const can = someone.some((id) => kindsNow(save, id, year).some((k) => (mark.slot === 'festival' ? isFestivalNight(k) : !isFestivalNight(k))))
+    const can = someone.some((id) => kindsNow(save, pack, id).some((k) => (mark.slot === 'festival' ? isFestivalNight(k) : !isFestivalNight(k))))
     if (can) return { slot: mark.slot, state: 'free', text: 'Pick someone ›' }
     // Short of the 2 actions an evening takes, while someone could spend it.
-    const short = !eveningAffordable(save) && Object.keys(save.roster).some((id) => kindsNow(save, id, year).length > 0)
+    const short = !eveningAffordable(save) && Object.keys(save.roster).some((id) => kindsNow(save, pack, id).length > 0)
     return { slot: mark.slot, state: 'none', text: short ? `An evening takes ${eveningCost()} actions` : 'No one free tonight' }
   })
 }
@@ -130,16 +129,17 @@ export function cardSum(card: EveningCard): { play: string; invite: string | nul
 }
 
 /** The (i)'s evening line, in its fifth place. */
-export const EVENING_HELP = `One evening a day with someone home, ${eveningCost()} actions: a hangout from Friendship ${HANGOUT_FROM}, a date from Romance ${DATE_FROM}. Fine +60, Great +100, Perfect +150, ×1.5 in her favourite kind, and +20 when she asked you.`
+export const EVENING_HELP = `One evening a day with someone in front of you (on the farm, or asked out in town), ${eveningCost()} actions: a hangout from Friendship ${HANGOUT_FROM}, a date from Romance ${DATE_FROM}. Fine +60, Great +100, Perfect +150, ×1.5 in her favourite kind, and +20 when she asked you.`
 
-/** What her profile's Evening button says: "Evening ›" while she can spend one, else why not. */
-export function eveningButton(save: SaveV4, id: string, year?: readonly Festival[]): { open: boolean; text: string } {
+/** What her profile's Evening button says: "Evening ›" while she can spend one, else why not: "In town" while she's out
+ * there and you aren't, "At home" on a day she's off the map. */
+export function eveningButton(save: SaveV4, pack: Pack, id: string): { open: boolean; text: string } {
   const love = save.love[id]
   if (!love) return { open: false, text: 'Evening' }
-  if (kindsNow(save, id, year).length > 0) return eveningAffordable(save) ? { open: true, text: `Evening · ${eveningCost()} ›` } : { open: false, text: `Evening · ${eveningCost()}` }
+  if (kindsNow(save, pack, id).length > 0) return eveningAffordable(save) ? { open: true, text: `Evening · ${eveningCost()} ›` } : { open: false, text: `Evening · ${eveningCost()}` }
   if (save.today.evenings.some((e) => e.with === id)) return { open: false, text: 'Evening ✓' }
   if (eveningRole(love) === null) return { open: false, text: `Evening · F${HANGOUT_FROM}` }
-  if (!homeTonight(save, id)) return { open: false, text: 'In town' }
+  if (!eveningHere(save, pack, id)) return { open: false, text: whereYouMeet(save, pack, id).at ? 'In town' : 'At home' }
   return { open: false, text: 'Evening spent' }
 }
 

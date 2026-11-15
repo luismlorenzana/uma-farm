@@ -5,15 +5,16 @@
 // - **Introduce yourself · 1 action** while you haven't met: she's met, and her meeting scene plays over the town;
 // - **Talk · 1** (once a day, +15): her line for the day, her face happy;
 // - **Give a gift · 1** (once a day): the gift picker, then her reaction, her face by her taste;
-// - **Hangout · 2** (a friend) or **Date · 2** (a sweetheart, a spouse): her evening, or why not;
+// - **Ask her out · 2** (a friend for a hangout, a sweetheart or a spouse for a date): her evening (`?evening=<id>`), or
+//   why not; one evening a day across everyone;
 // - **Invite her to work · 1** (a friend, once): she's a farmhand from today, and her scene plays over the town
 //   (`?life=invited-to-work:<id>`: her route's, else the default story's at the farm gate);
 // - **Her event · 1** once it's Ready (the event player, over the town).
 // One of the town's people gets her post instead: her role, what she does, her ties, and her post's menu. One not out now
-// says so; one who lives on the farm links her profile. A talk, a gift or an introduction that unlocks a Town note says
-// so. Loaded with the town's screen.
+// says so; one on the farm (she lives there, or works it by day) links her profile. A talk, a gift or an introduction
+// that unlocks a Town note says so. Loaded with the town's screen.
 import {
-  atHome, CAST, chatLineV4, GAME_DAYS, giftLineV4, herMenu, stageWords, townLineOf, townLocation, townLocations, townOf, type Expression, type MenuItem, type SaveV4,
+  atHome, CAST, chatLineV4, GAME_DAYS, giftLineV4, herMenu, onFarmToday, stageWords, townLineOf, townLocation, townLocations, townOf, type Expression, type MenuItem, type SaveV4,
   type ShopId, type StoryPack, type Taste, type TownDay,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -73,7 +74,9 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
   const [giving, setGiving] = useState(false)
   const met = !!save.roster[id]
   const love = save.love[id]
-  const onFarm = met && atHome(save, id)
+  // On the farm today: she lives there, or she's a farmhand there by day.
+  const onFarm = met && onFarmToday(save, id)
+  const livesOnFarm = met && atHome(save, id)
   const temperament = talentTable(master).get(outfitFor(id))?.temperament ?? 'steady'
   const fillName = (line: string) => line.split('{name}').join(name)
   const talkLine = () => fillName(chatLineV4(save, pack, id, temperament))
@@ -134,7 +137,7 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
       {error && <p role="status" className="text-[13px] font-semibold text-danger" data-menu-error>{error}</p>}
       <NoteFound ids={notes} pack={pack} />
       {onFarm ? (
-        <p className="text-[14px]" data-on-farm>She lives on the farm. <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></p>
+        <p className="text-[14px]" data-on-farm>{livesOnFarm ? 'She lives on the farm.' : 'On the farm by day, after her job.'} <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></p>
       ) : !at ? (
         <p className="text-[14px] text-ink-soft" data-at-home>At home today. Look for her another day.{met && <> <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></>}</p>
       ) : null}
@@ -143,7 +146,7 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
           {items.map((item) => (
             <li key={item.id} className={item.id === 'introduce' || item.id === 'event' ? 'col-span-2' : ''}>
               <MenuButton item={item} busy={busy} onPress={() => press(item)}
-                to={item.id === 'event' ? withParam(location, 'event', id) : item.id === 'hangout' || item.id === 'date' ? withParam(location, 'evening', id) : null} />
+                to={item.id === 'event' ? withParam(location, 'event', id) : item.id === 'evening' ? withParam(location, 'evening', id) : null} />
             </li>
           ))}
         </ul>

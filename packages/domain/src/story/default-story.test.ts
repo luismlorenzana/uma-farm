@@ -12,8 +12,10 @@ import { choicePoints, walkScene } from '../romance/love'
 import { EVENING_KINDS, newLove, newSave, type Love } from '../save/v4'
 import { ARRIVAL, EMOTES, EVENING_SCENES, LIFE_EVENTS, LINE_LIMITS, OCCASIONS, RUNGS, STORY_EVENTS, type Step } from './authored'
 import { STAND_INS } from './authored.fixture'
+import { CROPS, SHOP_SEEDS } from '../fields/crops'
+import { FISHERY, FOREST } from '../gathering/tables'
 import {
-  DEFAULT_EVENINGS, DEFAULT_EVENTS, DEFAULT_GIFT_REACTIONS, DEFAULT_GOODS, DEFAULT_MEALS, DEFAULT_MORNINGS, DEFAULT_TALKS, DEFAULT_TOWN_MEETING, HER, TALK_STAGES,
+  DEFAULT_EVENINGS, DEFAULT_EVENTS, DEFAULT_GIFT_REACTIONS, DEFAULT_GOOD, DEFAULT_GOODS, DEFAULT_MEALS, DEFAULT_MORNINGS, DEFAULT_TALKS, DEFAULT_TOWN_MEETING, HER, TALK_STAGES,
   WORK_WORDS, type DefaultScene,
 } from './default-story'
 import { isStoryOutfit } from './look'
@@ -64,6 +66,16 @@ describe('the default story: every piece has its default', () => {
       expect(isGoodId(DEFAULT_GOODS[a])).toBe(true)
       expect(WORK_WORDS[a].length).toBeGreaterThan(0)
     }
+  })
+
+  it('every default loved good can be had in Spring of year 1, with nothing built', () => {
+    // The first season's reach: the woods' Spring goods, the pond's Spring fish, and the crops of the shop's day-one seeds.
+    const spring = new Set([
+      ...FOREST.woods.seasons.spring.map(([good]) => good), ...FISHERY.pond.seasons.spring.map(([good]) => good),
+      ...SHOP_SEEDS.spring.filter((crop) => CROPS[crop].tier === 1),
+    ])
+    expect([FOREST.woods.opens, FISHERY.pond.opens, FISHERY.pond.needs]).toEqual([0, 0, null])
+    for (const good of [...Object.values(DEFAULT_GOODS), DEFAULT_GOOD]) expect(spring.has(good), good).toBe(true)
   })
 })
 
@@ -149,10 +161,10 @@ describe('her words fill in, and her own story replaces each piece', () => {
   const story = storyOf(null, MASTER)
 
   it('fills her name, her favourite good and her line\'s work, by her line', () => {
-    expect(herWordsOf(story, '9100003', 'Robin')).toEqual({ name: 'Robin', good: 'Seashell', work: 'fishing' })
+    expect(herWordsOf(story, '9100003', 'Robin')).toEqual({ name: 'Robin', good: 'Trout', work: 'fishing' })
     expect(herWordsOf(story, '9100005').work).toBe('tending the animals')
-    expect(herWordsOf({ bibles: new Map() }, '9999999')).toEqual({ name: 'She', good: 'Honey', work: 'farm work' })
-    expect(giftReactionsOf(story, '9100001', 'loved', 'peach')[0]).toBe('{name} lights up. “Peach! You remembered. I love it.”')
+    expect(herWordsOf({ bibles: new Map() }, '9999999')).toEqual({ name: 'She', good: 'Honeycomb', work: 'farm work' })
+    expect(giftReactionsOf(story, '9100001', 'loved', 'carrot')[0]).toBe('{name} lights up. “Carrot! You remembered. I love it.”')
     expect(morningGreetingsOf(story, '9100001', 'steady')).toEqual(DEFAULT_MORNINGS.steady)
     expect(mealLinesOf(story, '9100004', 'dinner')).toContain('{name} raises her cup. “To a good day of mining.”')
   })
@@ -194,8 +206,8 @@ describe('her words fill in, and her own story replaces each piece', () => {
     expect(defaultTalksOf(pack, ONE, 'acquaintance', 'steady')).toContain(chatLineV4(withLove(ONE, {}), pack, ONE, 'steady'))
     expect(defaultTalksOf(pack, ONE, 'friend', 'steady')).not.toContain(chatLineV4(withLove(ONE, { level: 3 }), pack, ONE, 'steady'))
     // Her bible's gifts are hers; the forager (no bible) loves her line's good.
-    expect(giftsOf(pack, ONE).loved).not.toBe('peach')
-    expect(tasteOf(pack, TWO, 'chestnut')).toBe('loved')
+    expect(giftsOf(pack, ONE).loved).not.toBe('carrot')
+    expect(tasteOf(pack, TWO, 'shiitake')).toBe('loved')
     const parts = writtenOf(pack, TWO)
     expect(parts.find((p) => p.part === 'Her tastes')!.plays).toContain('favourite good')
   })

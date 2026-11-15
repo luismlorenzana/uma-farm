@@ -14,8 +14,10 @@
 // her closest friend's loved gift in Gifts from Friendship 7, and **From her**: her pet name for you from Romance 1 and her
 // keepsake from Friendship 10. **Ring**: from Romance 8 the engraving her ring will carry (her R8 beat's line), from
 // the proposal her ring and its bonus at her line, and **Give her the Cobalt Ring** for any better one in the Warehouse (the
-// old one comes back); "Needs a ring" links to the Forge's bench. One you've met who lives in town has **Invite to the
-// farm** under her face: she moves into a free Dorm bed at once; with none free, "No bed free" and the Dorm. **Chapters**,
+// old one comes back); "Needs a ring" links to the Forge's bench. One you've met who lives in town has, under her face,
+// **Where to find her** (today's place with Find her ›, and this season's days and places, her fixed schedule; a
+// farmhand on the farm by day, after her job), then **Invite to the farm**: she moves into a free Dorm bed at once; with
+// none free, "No bed free" and the Dorm. **Chapters**,
 // under the Next card: her chapters (the pack's or the four defaults), the one she's in with its events played and to
 // come, a gate's words ("Opens when the Kitchen is built"), and what opens the next. Loaded on demand.
 import {
@@ -40,6 +42,7 @@ import {
 } from './hearts-view'
 import { LoveActs } from './Love'
 import { opensWhenBuilt } from './love-words'
+import { findHer } from './schedule-words'
 import { WorkFacts, WorkSide } from './RosterAlbum'
 import type { LoopUmaRow } from './roster-view'
 import { umaBadges } from './UmaMarks'
@@ -105,7 +108,7 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
       <div className="sticky top-0 z-10 -mx-4 bg-panel px-4 pb-3" data-profile-sides>
         <Tabs label="Her profile" value={side} onChange={onSide} options={[{ value: 'hearts', label: 'Hearts' }, { value: 'work', label: 'Work' }]} />
       </div>
-      {!atHome(save, id) && <InviteCard save={save} id={id} />}
+      {!atHome(save, id) && <InviteCard save={save} pack={pack} id={id} />}
       {side === 'work'
         ? row && <WorkSide row={row} />
         : <HeartsSide save={save} pack={pack} id={id} card={card} nameOf={nameOf} />}
@@ -113,11 +116,14 @@ export function HeartProfile({ save, pack, master, id, row, temperament, side, o
   )
 }
 
-/** She lives in town: **Invite to the farm** while a bed is free (she moves in at once), else why not and the Dorm. */
-function InviteCard({ save, id }: { save: SaveV4; id: string }) {
+/** She lives in town: **Where to find her** (today, and this season's days and places, from her fixed schedule; a
+ * farmhand on the farm by day), then **Invite to the farm** while a bed is free (she moves in at once), else why not and
+ * the Dorm. */
+function InviteCard({ save, pack, id }: { save: SaveV4; pack: HeartsPack; id: string }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const block = inviteBlock(save, id)
+  const find = findHer(save, pack, id)
   const invite = () => {
     if (busy) return
     setBusy(true)
@@ -126,6 +132,16 @@ function InviteCard({ save, id }: { save: SaveV4; id: string }) {
   }
   return (
     <section className="mb-3 space-y-2 rounded-md border border-hairline bg-sunken/50 p-3" aria-label="Where she lives" data-invite={block ?? 'open'}>
+      <div className="space-y-0.5 text-[13px]" aria-label="Where to find her" data-find-her={find.at ?? (find.farm ? 'farm' : 'home')}>
+        <p className="text-micro">Where to find her</p>
+        <p className="flex min-h-8 items-center justify-between gap-2" data-find-today>
+          <span><span className="font-semibold">Today</span> · {find.today}</span>
+          {find.at && <Link to={`/town?at=${find.at}&uma=${id}`} state={{ back: true }} className="shrink-0 font-semibold text-accent-strong underline" data-action="find-her-today">Find her ›</Link>}
+        </p>
+        {find.lines.map((l, i) => (
+          <p key={i} className="text-ink-soft" data-find-line={l.at ?? 'home'}>{i === 0 && <span className="font-semibold text-ink">{find.season} · </span>}{l.text}</p>
+        ))}
+      </div>
       <p className="text-[14px] font-semibold" data-lives-in-town>Lives in town</p>
       {block === null ? (
         <button type="button" onClick={invite} disabled={busy} data-action="invite"

@@ -180,7 +180,7 @@ describe('chats', () => {
     expect(talks('sweetheart')).toContain(chatLineV4(withLove(save, TWO, { stage: 'romance', level: 2 }), PACK, TWO, 'bold'))
     expect(talks('engaged')).toContain(chatLineV4(withLove(save, TWO, { stage: 'wedding', level: 10 }), PACK, TWO, 'bold'))
     expect(talks('married')).toContain(chatLineV4(withLove(save, TWO, { stage: 'spouse', level: 1, wed: 1 }), PACK, TWO, 'bold'))
-    expect(defaultTalksOf(PACK, TWO, 'friend', 'steady').join(' ')).toContain('Chestnut')
+    expect(defaultTalksOf(PACK, TWO, 'friend', 'steady').join(' ')).toContain('Shiitake')
     expect(DEFAULT_TALKS.friend.bold).toHaveLength(talks('friend').length)
   })
 })

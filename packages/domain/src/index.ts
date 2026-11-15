@@ -74,8 +74,8 @@ export * from './farm/economy'
 export * from './farm/farmhands'
 export * from './story/cast'
 export * from './story/scenes'
-// The town map: its locations, who lives there and who's where today (the story's places, else the day's draw), and her
-// line.
+// The town map: its locations, who lives there, her fixed schedule (the story's, else the default) and who's where on a
+// day, where you meet her, and her line.
 export * from './town/town'
 // Her menu: what you can do with her, each item at its cost in actions, and why one isn't open.
 export * from './town/menu'

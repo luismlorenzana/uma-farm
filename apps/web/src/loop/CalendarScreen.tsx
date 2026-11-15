@@ -7,11 +7,12 @@
 // story's holidays and minor days with their lines, the special day's event actions, and everyone with an event that day
 // with why (the occasion, her birthday, your anniversary, her event Ready or likely Ready). A face that's only a guess
 // (likely Ready on a day ahead) is drawn faint in its cell, so the date's own stand out. Today's rows play: the occasion
-// scene (`?occasion=`, one action, the event actions first) and her Ready event (`?event=`). Then the next festival and
-// the day of the year. The days are read live (`seasonDays`); looking is free. Loaded on demand.
+// scene (`?occasion=`, one action, the event actions first) and her Ready event (`?event=`). Under them, **In town**: who's
+// there that day, a row a place with its first faces and "+n", from every Uma's fixed schedule (`townDay`). Then the next
+// festival and the day of the year. The days are read live (`seasonDays`); looking is free. Loaded on demand.
 import {
   actionsLeft, dateOf, dayActions, DAYS_PER_YEAR, eventActionsLeft, festivalsOf, nextFestival, NO_BIRTHDAYS, noPack, SEASON_NAMES, SEASONS, seasonDays,
-  type CalendarDay, type DayFace, type FarmSave, type Season, type SpecialDays,
+  type CalendarDay, type DayFace, type FarmSave, type Season, type SpecialDays, type StoryPack,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { CloseIcon, HeartIcon, RibbonIcon, SparkIcon, StopwatchIcon, TrophyIcon } from '@luismlorenzana/uma-kit/ui'
@@ -24,6 +25,7 @@ import { useLoopSave } from '../save/game'
 import { namer } from '../story/people'
 import { useSpecialDays, useStory } from '../story/story'
 import { cellFaces, cellLabel, cellMarks, dayHeading, eventActionWords, faintFace, reasonWords } from './calendar-view'
+import { townRows, type TownRow } from './schedule-words'
 import { SEASON_COLOR, shortDate, whenWords } from './words'
 
 export default function CalendarScreen({ onClose }: { onClose: () => void }) {
@@ -52,7 +54,7 @@ export default function CalendarScreen({ onClose }: { onClose: () => void }) {
         <ol className="grid min-w-0 flex-[3] grid-cols-6 grid-rows-2 gap-1" aria-label={`${SEASON_NAMES[season]}’s days`} data-calendar-grid={season}>
           {list.map((d) => <Cell key={d.day} day={d} chosen={d.day === chosen.day} nameOf={nameOf} onPick={() => setPicked(d.day)} />)}
         </ol>
-        <DayPanel save={save} days={days} day={chosen} nameOf={nameOf} />
+        <DayPanel save={save} pack={pack} days={days} day={chosen} nameOf={nameOf} />
       </div>
     </div>,
     document.body,
@@ -131,13 +133,14 @@ function Cell({ day, chosen, nameOf, onPick }: { day: CalendarDay; chosen: boole
   )
 }
 
-/** The chosen day: what it holds, its event actions, and everyone with an event on it, today's to play. */
-function DayPanel({ save, days, day, nameOf }: { save: FarmSave; days: SpecialDays; day: CalendarDay; nameOf: (id: string) => string }) {
+/** The chosen day: what it holds, its event actions, everyone with an event on it (today's to play), and who's in town. */
+function DayPanel({ save, pack, days, day, nameOf }: { save: FarmSave; pack: StoryPack; days: SpecialDays; day: CalendarDay; nameOf: (id: string) => string }) {
   const today = save.calendar.day
   const next = nextFestival(today, days.festivals)
   const events = eventActionWords(day, eventActionsLeft(save, days))
   const played = day.when === 'today' && day.occasion ? (save.today.occasions ?? []).filter((id) => save.roster[id]) : []
-  const empty = !day.festival && !day.newYear && day.storyDays.length === 0 && day.faces.length === 0 && played.length === 0
+  const town = useMemo(() => townRows(save, pack, day.day), [save, pack, day.day])
+  const empty = !day.festival && !day.newYear && day.storyDays.length === 0 && day.faces.length === 0 && played.length === 0 && town.length === 0
   return (
     <aside className="flex min-h-0 min-w-0 flex-[2] flex-col overflow-y-auto overscroll-contain rounded-md border border-hairline bg-panel p-3" aria-label={dayHeading(day, today)} data-day-panel={day.day}>
       <h3 className="font-display text-[17px] font-bold" data-day-heading>{dayHeading(day, today)}</h3>
@@ -166,12 +169,45 @@ function DayPanel({ save, days, day, nameOf }: { save: FarmSave; days: SpecialDa
         </section>
       )}
       {played.length > 0 && <p className="pt-2 text-[13px] text-ink-soft" data-played>Played today: {played.map(nameOf).join(', ')}</p>}
+      {town.length > 0 && <InTown rows={town} nameOf={nameOf} />}
       {empty && <p className="pt-2 text-[14px] text-ink-soft" data-day-empty>{day.when === 'past' ? 'A quiet day.' : 'Nothing marked yet.'}</p>}
       <div className="mt-auto space-y-0.5 pt-3 text-[12px] text-ink-faint">
         <p data-next-festival>Next festival: {next.festival.name} · {shortDate(next.day)} · {whenWords(next.inDays)}</p>
         <p>Day {((today - 1) % DAYS_PER_YEAR) + 1} of {DAYS_PER_YEAR}. Days move only when you end them.</p>
       </div>
     </aside>
+  )
+}
+
+/** How many faces a place's row shows before "+n". */
+const TOWN_FACES = 5
+
+/** Who's in town that day, and where: a row a place, its name, its first faces (met first) and how many more. Every Uma
+ * keeps a fixed schedule, so a day ahead shows who'll be there. */
+function InTown({ rows, nameOf }: { rows: readonly TownRow[]; nameOf: (id: string) => string }) {
+  const count = rows.reduce((n, r) => n + r.ids.length, 0)
+  return (
+    <section className="pt-3" aria-label="In town" data-in-town={count}>
+      <h4 className="text-micro pb-1">In town · {count}</h4>
+      <ul className="space-y-1">
+        {rows.map((r) => {
+          const { shown, more } = cellFaces(r.ids, TOWN_FACES)
+          return (
+            <li key={r.at} className="flex min-h-7 items-center gap-2" aria-label={`${r.name}: ${r.ids.map(nameOf).join(', ')}`} data-town-row={r.at} data-count={r.ids.length}>
+              <span className="w-[42%] shrink-0 truncate text-[12px] font-semibold">{r.name}</span>
+              <span className="flex min-w-0 flex-1 items-center -space-x-1.5">
+                {shown.map((id) => (
+                  <span key={id} className="block size-[22px] shrink-0 rounded-full ring-1 ring-panel" data-town-face={id}>
+                    <FaceTile outfitId={id} size={22} label={nameOf(id)} round />
+                  </span>
+                ))}
+                {more > 0 && <span className="grid size-[22px] shrink-0 place-items-center rounded-full bg-sunken text-[10px] font-bold text-ink ring-1 ring-panel">+{more}</span>}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
   )
 }
 

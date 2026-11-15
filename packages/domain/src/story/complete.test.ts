@@ -43,7 +43,7 @@ function packFiles(): PackFiles {
     },
   }
 }
-const HERS = [ONE, TWO, THREE].map((x, order) => ({ id: x, name: NAMES[x]!, temperament: 'steady' as const, order }))
+const HERS = [ONE, TWO, THREE].map((x) => ({ id: x, name: NAMES[x]!, temperament: 'steady' as const }))
 
 /** The pack's files with the scaffold's written in. */
 const applied = (files: PackFiles, s: Scaffold): PackFiles => ({ ...files, ...(s.cast ? { cast: s.cast } : {}), umas: { ...files.umas, ...s.umas }, routes: { ...files.routes, ...s.routes } })
@@ -100,8 +100,8 @@ describe('the scaffold: only what’s missing, from the default story, marked', 
     expect(JSON.stringify(route)).not.toMatch(/\{(name|good|work)\}|@her/)
     expect(JSON.stringify(route)).toContain('{farmer}')
     const bible = after.umas[TWO] as { chats: Record<string, string[]>; mornings: string[]; gifts: { loved: string } }
-    expect(bible.gifts.loved).toBe('peach')
-    expect(bible.chats.friend).toEqual(DEFAULT_TALKS.friend.steady.map((l) => fillHer(l, { name: NAMES[TWO]!, good: 'Peach', work: 'farming' })))
+    expect(bible.gifts.loved).toBe('carrot')
+    expect(bible.chats.friend).toEqual(DEFAULT_TALKS.friend.steady.map((l) => fillHer(l, { name: NAMES[TWO]!, good: 'Carrot', work: 'farming' })))
     expect(bible.mornings[0]).toContain(NAMES[TWO])
   })
 
@@ -110,40 +110,42 @@ describe('the scaffold: only what’s missing, from the default story, marked', 
     expect(scaffoldTemperament({ temperament: 'loud' }, 'clever')).toBe('clever')
     expect(scaffoldTemperament(undefined, null)).toBe('steady')
     const files = packFiles()
-    const s = scaffoldPack(files, [{ id: THREE, name: NAMES[THREE]!, temperament: 'clever', order: 0 }], MASTER)
-    expect((s.umas[THREE] as { mornings: string[] }).mornings).toEqual(DEFAULT_MORNINGS.clever.map((l) => fillHer(l, { name: NAMES[THREE]!, good: 'Chestnut', work: 'foraging' })))
+    const s = scaffoldPack(files, [{ id: THREE, name: NAMES[THREE]!, temperament: 'clever' }], MASTER)
+    expect((s.umas[THREE] as { mornings: string[] }).mornings).toEqual(DEFAULT_MORNINGS.clever.map((l) => fillHer(l, { name: NAMES[THREE]!, good: 'Shiitake', work: 'foraging' })))
   })
 
   it('her line from master data when the pack gives none; refused, and the rest written, without either', () => {
     const files: PackFiles = { cast: { umas: [{ characterId: '9100003' }, { characterId: '9100099' }] }, umas: {}, routes: {} }
-    const s = scaffoldPack(files, [{ id: '9100003', name: NAMES['9100003']!, order: 0 }, { id: '9100099', name: 'Nobody Known', order: 1 }], MASTER)
+    const s = scaffoldPack(files, [{ id: '9100003', name: NAMES['9100003']! }, { id: '9100099', name: 'Nobody Known' }], MASTER)
     expect((s.umas['9100003'] as { favouriteLine: string }).favouriteLine).toBe('fishing')
     expect(s.refused['9100099']).toEqual(['favouriteLine: she has no calling, and master data gives her no line'])
     expect(s.umas['9100099']).toBeDefined()
   })
 
-  it('a starter life at her favourite spot, staggered by her order on the board, valid by the reader', () => {
-    const { after } = scaffolded()
+  it('her schedule: the game’s own default as her routine, marked, and no home or job; she plays where she did', () => {
+    const { files, after } = scaffolded()
     const cast = after.cast as Cast
-    expect(cast.umas[0]).toMatchObject({ home: 'cafe', job: { at: 'cafe', draft: DRAFT }, routine: [{ at: 'cafe', days: [...ROUTINE_DAYS[0]!], draft: DRAFT }], draft: { home: DRAFT } })
+    // Her favourite spot on every third day, from day 1, 2 or 3 by her place in the cast: `scheduleOf`'s default.
+    expect(cast.umas[0]).toEqual({ ...(files.cast as Cast).umas[0], routine: [{ at: 'cafe', days: [...ROUTINE_DAYS[0]!], draft: DRAFT }], chapters: expect.any(Array) })
     expect(cast.umas[1]!.routine).toEqual([{ at: 'library', days: [...ROUTINE_DAYS[1]!], draft: DRAFT }])
-    // No spot of her own: one of the six by her order.
-    expect(cast.umas[2]).toMatchObject({ home: 'cafe', job: { at: 'cafe' }, routine: [{ at: 'cafe', days: [...ROUTINE_DAYS[2]!] }] })
+    // No spot of her own: the six in turn by her place in the cast.
+    expect(cast.umas[2]!.routine).toEqual([{ at: 'plaza', days: [...ROUTINE_DAYS[2]!], draft: DRAFT }])
+    for (const u of cast.umas) expect([u.home, u.job]).toEqual([undefined, undefined])
     expect(readStoryPack(after).errors).toEqual([])
-    // In town: at her spot on her four days by her routine, at work there on the rest.
-    const pack = playable(after)
+    // In town, every day of the year, each is where the default put her before: out on her four days, at home the rest.
+    const [before, now] = [playable(files), playable(after)]
     const save = newSave('robin', '2026-11-14T09:00:00.000Z')
-    for (const day of [1, 2, 3, 4]) {
-      const town = townDay({ ...save, calendar: { ...save.calendar, day } }, pack)
-      expect(town.where.get(ONE)).toBe('cafe')
-      expect(town.by.get(ONE)).toBe(day === 1 || day === 4 ? 'routine' : 'job')
-      expect(town.by.get(TWO)).toBe(day === 2 ? 'routine' : 'job')
+    for (let day = 1; day <= 48; day++) {
+      const today = { ...save, calendar: { ...save.calendar, day } }
+      expect([...townDay(today, now).where]).toEqual([...townDay(today, before).where])
     }
+    expect([1, 2, 3, 4].map((day) => townDay({ ...save, calendar: { day } }, now).where.get(ONE) ?? null)).toEqual(['cafe', null, null, 'cafe'])
+    expect(townDay({ ...save, calendar: { day: 2 } }, now).by.get(TWO)).toBe('routine')
   })
 
   it('never writes into a file it can’t read as its shape; an Uma not in the cast joins it', () => {
     const files: PackFiles = { cast: { umas: [{ characterId: ONE }] }, umas: { [ONE]: ['not', 'a', 'bible'] }, routes: { [ONE]: { events: 'none' } } }
-    const s = scaffoldPack(files, [{ id: ONE, name: NAMES[ONE]!, order: 0 }, { id: TWO, name: NAMES[TWO]!, order: 1 }])
+    const s = scaffoldPack(files, [{ id: ONE, name: NAMES[ONE]! }, { id: TWO, name: NAMES[TWO]! }])
     expect(s.refused[ONE]).toEqual([
       `umas/${ONE}.json isn’t a bible (an object), so none of its pieces is written`,
       `routes/${ONE}.json isn’t a route (an object with an events list), so none of its events is written`,
@@ -151,12 +153,12 @@ describe('the scaffold: only what’s missing, from the default story, marked', 
     expect(s.umas[ONE]).toBeUndefined()
     expect(s.routes[ONE]).toBeUndefined()
     expect((s.cast as unknown as Cast).umas.map((u) => u.characterId)).toEqual([ONE, TWO])
-    expect(scaffoldPack({ cast: [], umas: {}, routes: {} }, [{ id: ONE, name: 'x', order: 0 }]).refused[ONE]).toEqual(['cast.json isn’t a cast file (an object with an umas list), so nothing is written'])
+    expect(scaffoldPack({ cast: [], umas: {}, routes: {} }, [{ id: ONE, name: 'x' }]).refused[ONE]).toEqual(['cast.json isn’t a cast file (an object with an umas list), so nothing is written'])
   })
 
   it('leaves an Uma as she was when her pieces wouldn’t read', () => {
     const files = packFiles()
-    const s = scaffoldPack(files, [{ id: TWO, name: 'N'.repeat(200), order: 0 }], MASTER)
+    const s = scaffoldPack(files, [{ id: TWO, name: 'N'.repeat(200) }], MASTER)
     expect(s.wrote[TWO]).toEqual([])
     expect(s.refused[TWO]!.length).toBeGreaterThan(0)
     expect(s.refused[TWO]!.every((r) => r.startsWith('left as she was: '))).toBe(true)
@@ -235,12 +237,20 @@ describe('the status and the check', () => {
     const now = umaStatus(readStoryPack(after).files, ONE)
     expect(now.complete).toBe(true)
     expect(now.parts).toEqual({
-      cast: { hers: 0, default: 4, missing: 0, of: 4 },
+      cast: { hers: 0, default: 2, missing: 0, of: 2 },
       bible: { hers: 4, default: 7 + 26, missing: 0, of: BIBLE_PIECES.length + RUNGS.length },
       route: { hers: 2, default: COMPLETE_EVENTS.length - 2, missing: 0, of: COMPLETE_EVENTS.length },
     })
-    expect(umaStatus(readStoryPack(after).files, THREE).parts.cast).toEqual({ hers: 1, default: 3, missing: 0, of: 4 })
-    expect(leftWords(now)[0]).toBe('cast: default home, job, routine, chapters')
+    expect(umaStatus(readStoryPack(after).files, THREE).parts.cast).toEqual({ hers: 1, default: 1, missing: 0, of: 2 })
+    expect(leftWords(now)[0]).toBe('cast: default schedule, chapters')
+    // Her schedule is one piece: her home, her job and her routine together. Any of them unmarked makes it hers; an older
+    // scaffold's marked home and job at her spot are the default too.
+    const entry = (more: Record<string, unknown>) => umaStatus({ cast: { umas: [{ characterId: ONE, ...more }] }, umas: {}, routes: {} }, ONE).pieces.find((p) => p.piece === 'schedule')!.state
+    expect(was.pieces.find((p) => p.piece === 'schedule')!.state).toBe('missing')
+    expect(entry({ home: 'cafe', draft: { home: DRAFT }, job: { at: 'cafe', draft: DRAFT } })).toBe('default')
+    expect(entry({ home: 'cafe', draft: { home: DRAFT }, job: { at: 'cafe' } })).toBe('hers')
+    expect(entry({ job: { what: 'Waits tables', at: 'cafe' } })).toBe('hers')
+    expect(draftNotes({ cast: { umas: [{ characterId: ONE, home: 'cafe', draft: { home: DRAFT }, routine: [{ at: 'cafe', days: [1, 4, 7, 10], draft: DRAFT }] }] }, umas: {}, routes: {} }, ONE)).toEqual([])
     expect(leftWords(now)[2]).toMatch(/^route: default f2–f10, confession, r1–r10, proposal, wedding, invited-to-work, wedding-night, moving-in, s1–s5, hangouts \(walk, fishing, picnic, market, cooking, festival\), dates \(walk, /)
     expect(leftWords(was)[2]).toMatch(/^route: missing f2–f10, confession/)
   })
@@ -262,7 +272,7 @@ describe('the status and the check', () => {
     cast.umas[1]!.routine = [{ at: 'harbour', days: [1, 2], draft: DRAFT }]
     const files = readStoryPack(edited).files
     expect(draftNotes(files, TWO)).toEqual([
-      `cast.json: ${TWO}: routine is marked "draft": "default" but its words aren’t the default’s: rewritten? remove the marker`,
+      `cast.json: ${TWO}: schedule is marked "draft": "default" but its words aren’t the default’s: rewritten? remove the marker`,
       `umas/${TWO}.json: chats is marked "draft": "default" but its words aren’t the default’s: rewritten? remove the marker`,
       `umas/${TWO}.json: mornings is marked "draft": "default" but its words aren’t the default’s: rewritten? remove the marker`,
       `umas/${TWO}.json: beat f4 is marked "draft": "default" but its words aren’t the default’s: rewritten? remove the marker`,

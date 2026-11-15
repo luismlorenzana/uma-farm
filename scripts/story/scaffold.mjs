@@ -8,8 +8,9 @@
 // - **Rendered for her:** her name from master data (a sister's from her cast entry), her favourite good and her line's
 //   work as the game fills them, her temperament from her bible's own `temperament`, else her outfit's (master data's),
 //   else steady; `{farmer}` stays the placeholder.
-// - **A starter life in town:** her home and her part-time job at her favourite spot (`spot`; else one by her order), and
-//   her routine there on four days of each season, staggered by her order on the board.
+// - **Her schedule:** with none, the game's own default schedule (the town's `scheduleOf`) as her routine, marked: her
+//   favourite spot (`spot`; else the six in turn by her place in the cast) on every third day of each season, from day 1,
+//   2 or 3 by her place in the cast. No home and no job, so she plays exactly where she did.
 // - **Backed up first:** every file it changes is copied to the ignored content/story-backups/<time>/ before it writes.
 //
 //   pnpm story:scaffold --tier 1 [--dry-run]        the Ranker's Tier 1 (../uma-platform's plan), in the board's order
@@ -73,7 +74,7 @@ export async function scaffold({ from, tier, ids, dryRun = false, env = process.
     if (existsSync(join(dir, 'umas', `${id}.json`)) && files.umas[id] === undefined) files.umas[id] = UNREADABLE
     if (existsSync(join(dir, 'routes', `${id}.json`)) && files.routes[id] === undefined) files.routes[id] = UNREADABLE
   }
-  const hers = chosen.ids.map((id, order) => ({ id, name: herName(master, files.cast, id), temperament: herTemperament(master, files.cast, id), order }))
+  const hers = chosen.ids.map((id) => ({ id, name: herName(master, files.cast, id), temperament: herTemperament(master, files.cast, id) }))
   const unnamed = hers.filter((h) => h.name === null).map((h) => h.id)
   if (unnamed.length > 0 && !dryRun) throw new StoryToolRefused(`Master data at ${master.dir} has no name for ${unnamed.join(', ')}. Name only Umas master data holds (a sister needs her elder there)`)
   const result = scaffoldPack(files, hers, master?.cast)

@@ -6,7 +6,7 @@
 // pack plays exactly as the same pack unmarked (the reader keeps fields it doesn't read). No character, name or line
 // lives here: the words are the default story's, and her name comes from master data at run time.
 //
-//   her cast entry   home, job, routine, chapters
+//   her cast entry   her schedule (her home, job and routine: what her profile and the calendar show), her chapters
 //   her bible        favouriteLine, gifts, chats, townLines, mornings, meals, keepsake, petName, wedding, wishes, and a
 //                    beat for each of the 27 rungs
 //   her route        her meeting, Friendship 1–10, the confession, Romance 1–10, the proposal, the wedding, the
@@ -17,9 +17,10 @@
 // gifts, meals, keepsake, wedding): `"draft": "default"`. A piece that's a plain value or a list of lines (her home; her
 // bible's favouriteLine, townLines, mornings, petName, wishes) can't hold a key, so its marker sits on its file's own
 // object: `"draft": { "mornings": "default" }`. Her routine and her chapters are default while every stop or chapter is
-// marked.
+// marked, and her schedule while every part of it that's there is.
 import { TEMPERAMENTS, type Temperament } from '../farm/talents'
-import { RUNGS, EVENING_SCENES, LIFE_EVENTS, SPOT_IDS, ARRIVAL, type SpotId, type Step, type StoryPlace } from './authored'
+import { defaultDays, DEFAULT_EVERY, scheduleOf } from '../town/town'
+import { RUNGS, EVENING_SCENES, LIFE_EVENTS, SPOT_IDS, ARRIVAL, type Step, type StoryPlace } from './authored'
 import { DEFAULT_GOOD, DEFAULT_GOODS, DEFAULT_MEALS, DEFAULT_MORNINGS, DEFAULT_TALKS, HER } from './default-story'
 import { readStoryPack, type PackFiles, type StoryPack } from './pack'
 import {
@@ -34,8 +35,10 @@ export const DRAFT = 'default'
 export const PARTS = ['cast', 'bible', 'route'] as const
 export type Part = typeof PARTS[number]
 
-/** Her cast entry's pieces. */
-export const CAST_PIECES = ['home', 'job', 'routine', 'chapters'] as const
+/** Her cast entry's pieces: her schedule (her `home`, `job` and `routine` together: one piece) and her chapters. */
+export const CAST_PIECES = ['schedule', 'chapters'] as const
+/** Her schedule's fields on her cast entry. */
+export const SCHEDULE_FIELDS = ['home', 'job', 'routine'] as const
 /** Her bible's pieces, besides a beat for each rung (`beat:<rung>`). */
 export const BIBLE_PIECES = ['favouriteLine', 'gifts', 'chats', 'townLines', 'mornings', 'meals', 'keepsake', 'petName', 'wedding', 'wishes'] as const
 /** The pieces that are a plain value or a list of lines: their marker sits on the file's `draft` object. */
@@ -50,13 +53,8 @@ export const COMPLETE_EVENTS: readonly string[] = [
 /** A beat's piece name: `beat:<rung>`. */
 export const beatPiece = (rung: string): string => `beat:${rung}`
 
-/** The starter routine's days, by her order on the board: every third day of each season, the first on day 1, 2 or 3, so
- * the board's next Uma is out the day after. */
-export const ROUTINE_DAYS: readonly (readonly number[])[] = [[1, 4, 7, 10], [2, 5, 8, 11], [3, 6, 9, 12]]
-/** Her starter spot when her cast entry names none: one of the six, by her order on the board. */
-export const starterSpot = (spot: unknown, order: number): SpotId => (SPOT_IDS as readonly unknown[]).includes(spot) ? spot as SpotId : SPOT_IDS[order % SPOT_IDS.length]!
-/** Her starter routine's days, by her order on the board. */
-export const starterDays = (order: number): number[] => [...ROUTINE_DAYS[order % ROUTINE_DAYS.length]!]
+/** The default schedule's days, one list for each start (day 1, 2 or 3): what a marked routine holds. */
+export const ROUTINE_DAYS: readonly (readonly number[])[] = Array.from({ length: DEFAULT_EVERY }, (_, place) => defaultDays(place))
 
 // --- Reading what's there ---------------------------------------------------------------------------------------------
 
@@ -83,14 +81,14 @@ export interface PartCounts { hers: number; default: number; missing: number; of
 /** Her status: each piece's state, the counts by part, and whether nothing is missing. */
 export interface UmaStatus { id: string; pieces: PieceStatus[]; parts: Record<Part, PartCounts>; complete: boolean }
 
-/** A cast entry's piece: there, and marked. */
+/** A cast entry's piece: there, and marked. Her schedule is there with any of her home, job and routine, and the default
+ * while each of them that's there is marked. */
 function castPiece(entry: Obj | undefined, key: typeof CAST_PIECES[number]): PieceState {
-  const v = entry?.[key]
-  switch (key) {
-    case 'home': return typeof v !== 'string' ? 'missing' : plainDraft(entry, key) ? 'default' : 'hers'
-    case 'job': return !isObject(v) ? 'missing' : isDraft(v) ? 'default' : 'hers'
-    case 'routine': case 'chapters': return !nonEmpty(v) ? 'missing' : allDraft(v) ? 'default' : 'hers'
-  }
+  if (key === 'chapters') return !nonEmpty(entry?.chapters) ? 'missing' : allDraft(entry?.chapters) ? 'default' : 'hers'
+  const there = { home: typeof entry?.home === 'string', job: isObject(entry?.job), routine: nonEmpty(entry?.routine) }
+  if (!there.home && !there.job && !there.routine) return 'missing'
+  const marked = (!there.home || plainDraft(entry, 'home')) && (!there.job || isDraft(entry?.job)) && (!there.routine || allDraft(entry?.routine))
+  return marked ? 'default' : 'hers'
 }
 
 /** A bible's piece: there (a list of lines with a line in it; her chats and meals with one set), and marked. */
@@ -232,11 +230,14 @@ function defaultWords(part: Part, piece: string, value: unknown, ctx: { entry?: 
   }
   if (piece.startsWith('beat:')) return onlyKeys(value, ['id'])
   switch (piece) {
-    case 'home': return (SPOT_IDS as readonly unknown[]).includes(value)
-    case 'job': return onlyKeys(value, ['at']) && (SPOT_IDS as readonly unknown[]).includes(value.at)
-    case 'routine': {
-      const [stop] = Array.isArray(value) ? value : []
-      return Array.isArray(value) && value.length === 1 && onlyKeys(stop, ['at', 'days']) && (SPOT_IDS as readonly unknown[]).includes(stop.at) && ROUTINE_DAYS.some((d) => sameAs(stop.days, d))
+    case 'schedule': {
+      // The default schedule as the scaffold writes it (one stop at a spot on one start's days); an older scaffold's home
+      // and job at a spot read as the default too.
+      const v = isObject(value) ? value : {}
+      const spot = (x: unknown) => (SPOT_IDS as readonly unknown[]).includes(x)
+      const [stop] = Array.isArray(v.routine) ? v.routine as unknown[] : []
+      const routine = v.routine === undefined || (Array.isArray(v.routine) && v.routine.length === 1 && onlyKeys(stop, ['at', 'days']) && spot(stop.at) && ROUTINE_DAYS.some((d) => sameAs(stop.days, d)))
+      return routine && (v.home === undefined || spot(v.home)) && (v.job === undefined || (onlyKeys(v.job, ['at']) && spot(v.job.at)))
     }
     case 'chapters': return sameAs(value, DEFAULT_CHAPTERS)
     case 'favouriteLine': {
@@ -262,6 +263,7 @@ function defaultWords(part: Part, piece: string, value: unknown, ctx: { entry?: 
 
 /** The value of a piece, for the check. */
 function pieceValue(part: Part, piece: string, ctx: { entry?: Obj; bible?: Obj; route?: Obj }): unknown {
+  if (part === 'cast' && piece === 'schedule') return Object.fromEntries(SCHEDULE_FIELDS.flatMap((f) => (ctx.entry?.[f] === undefined ? [] : [[f, ctx.entry[f]]])))
   if (part === 'cast') return ctx.entry?.[piece]
   if (part === 'route') return (Array.isArray(ctx.route?.events) ? ctx.route.events as unknown[] : []).find((e) => isObject(e) && e.id === piece)
   if (piece.startsWith('beat:')) return (Array.isArray(ctx.bible?.route) ? ctx.bible.route as unknown[] : []).find((b) => isObject(b) && b.id === piece.slice('beat:'.length))
@@ -308,10 +310,9 @@ export function draftNotes(files: StatusFiles, id: string): string[] {
 
 // --- The scaffold --------------------------------------------------------------------------------------------------------
 
-/** One Uma to scaffold: her id, her name as the screen knows it (master data's, a sister's the pack's), her temperament
- * from master data (her bible's own `temperament` first; `steady` without either, as the game plays), and her order on
- * the board (0 first), which staggers her starter routine. */
-export interface ScaffoldHer { id: string; name: string | null; temperament?: Temperament | null; order: number }
+/** One Uma to scaffold: her id, her name as the screen knows it (master data's, a sister's the pack's), and her
+ * temperament from master data (her bible's own `temperament` first; `steady` without either, as the game plays). */
+export interface ScaffoldHer { id: string; name: string | null; temperament?: Temperament | null }
 /** One piece the scaffold wrote. */
 export interface Wrote { part: Part; piece: string }
 /** What the scaffold would write: the files it changes (the cast, her bible, her route), as written, and per Uma what it
@@ -348,7 +349,6 @@ function scaffoldOne(her: ScaffoldHer, files: { cast: Obj; bible: Obj | undefine
   if (!entry) { entry = { characterId: id }; (cast.umas as unknown[]).push(entry) }
   const name = her.name ?? id
   const words: HerWords = herWordsOf(pack, id, name)
-  const spot = starterSpot(entry.spot, her.order)
   /** A plain piece, written and marked on its file's own `draft`; refused when that `draft` isn't an object. */
   const plain = (holder: Obj, part: Part, key: string, value: unknown) => {
     if (holder[key] !== undefined) return
@@ -358,10 +358,13 @@ function scaffoldOne(her: ScaffoldHer, files: { cast: Obj; bible: Obj | undefine
     wrote.push({ part, piece: key })
   }
 
-  // Her cast entry: a starter life at her favourite spot, and the four default chapters.
-  plain(entry, 'cast', 'home', spot)
-  if (entry.job === undefined) { entry.job = { at: spot, draft: DRAFT }; wrote.push({ part: 'cast', piece: 'job' }) }
-  if (entry.routine === undefined) { entry.routine = [{ at: spot, days: starterDays(her.order), draft: DRAFT }]; wrote.push({ part: 'cast', piece: 'routine' }) }
+  // Her cast entry: her schedule, the game's own default (the town's `scheduleOf`: her favourite spot on every third day of
+  // each season), as her routine; no home and no job, so she's at home off the map on her other days, as the game plays
+  // her. Then the four default chapters.
+  if (castPiece(entry, 'schedule') === 'missing') {
+    entry.routine = scheduleOf(pack, id).stops.map(({ at, days, seasons }) => ({ at, ...(days ? { days: [...days] } : {}), ...(seasons ? { seasons: [...seasons] } : {}), draft: DRAFT }))
+    wrote.push({ part: 'cast', piece: 'schedule' })
+  }
   if (entry.chapters === undefined) { entry.chapters = DEFAULT_CHAPTERS.map((c) => ({ title: c.title, events: [...c.events], draft: DRAFT })); wrote.push({ part: 'cast', piece: 'chapters' }) }
 
   // Her bible.
@@ -422,10 +425,11 @@ const hersOnly = (id: string) => (line: string): boolean => line.includes(`(${id
 /**
  * The scaffold: for each Uma, every piece of a complete Uma that's missing (`umaStatus`'s), filled from the default story
  * rendered for her and marked `"draft": "default"`; a piece that's there, written or marked, read or not, is never
- * touched, so a second run writes nothing. Her cast entry gains a starter life at her favourite spot (`spot`; else one by
- * her order): her home and her part-time job there, and her routine there on four days of each season, staggered by her
- * order on the board. `files` are the pack's files as written (`PackFiles`, unchecked); `master` gives her line when the
- * pack gives none. An Uma whose pieces would read with an error the pack didn't have is left as she was, with the errors.
+ * touched, so a second run writes nothing. A cast entry with no schedule gains the game's default schedule as her
+ * routine (`scheduleOf`: her favourite spot on every third day of each season, from day 1, 2 or 3 by her place in the
+ * cast), so she plays exactly as before; no home and no job. `files` are the pack's files as written (`PackFiles`,
+ * unchecked); `master` gives her line when the pack gives none. An Uma whose pieces would read with an error the pack
+ * didn't have is left as she was, with the errors.
  */
 export function scaffoldPack(files: PackFiles, hers: readonly ScaffoldHer[], master?: MasterCast): Scaffold {
   const out: Scaffold = { umas: {}, routes: {}, wrote: {}, refused: {} }

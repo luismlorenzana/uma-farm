@@ -4,7 +4,8 @@
 //
 //   acquaintance   met, Friendship 0–2                  talks and gifts, an action each
 //   friend         Friendship 3 and up                  hangouts (2 actions), the invitation to work (1)
-//   farmhand       a friend you've invited to work      she works the farm part-time (the farmhands' work reads the flag)
+//   farmhand       a friend you've invited to work      on the farm by day, in front of you every day; she works the farm
+//                                                       part-time (the farmhands' work reads the flag)
 //   sweetheart     from her confession's yes            dates (2 actions) from Romance 1; Dinner in town at R3, A night in at R6
 //   engaged        after the proposal                   the wedding
 //   married        after the wedding                    the wedding night, moving in; meals; the night's companion
@@ -51,7 +52,7 @@ export const FRIEND_FROM = 3
 export const STAGE_RULES: readonly { stage: UmaStage; range: string; opens: string }[] = [
   { stage: 'acquaintance', range: 'Met (you introduced yourself), Friendship 0–2', opens: 'Talks and gifts, an action each' },
   { stage: 'friend', range: `Friendship ${FRIEND_FROM} and up`, opens: 'Hangouts (2 actions); the invitation to work (1 action)' },
-  { stage: 'farmhand', range: 'A friend you’ve invited to work', opens: 'She works the farm part-time (the farmhands’ work); her farmhand talks' },
+  { stage: 'farmhand', range: 'A friend you’ve invited to work', opens: 'She’s on the farm by day, in front of you every day, and works it part-time (the farmhands’ work); her farmhand talks' },
   { stage: 'sweetheart', range: 'From her confession’s yes (Romance 0)', opens: 'Dates (2 actions) from Romance 1; Dinner in town from Romance 3, A night in from Romance 6' },
   { stage: 'engaged', range: 'After the proposal', opens: 'The wedding' },
   { stage: 'married', range: 'After the wedding', opens: 'The wedding night and moving in; the household’s meals; the night’s companion' },

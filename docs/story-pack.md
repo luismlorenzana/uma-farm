@@ -100,11 +100,11 @@ The menu stays a menu: a partial Uma plays whole, and nothing waits on the story
 complete. `pnpm story:scaffold` writes the pieces she's missing from the default story, marked as the default's;
 `pnpm story:status` says, for each Uma, which pieces are hers, which are still the default and which are missing.
 
-**The checklist:** 96 pieces, in the pack's own shapes (the rest of this page):
+**The checklist:** 94 pieces, in the pack's own shapes (the rest of this page):
 
 | Part | Its pieces |
 |---|---|
-| Her cast entry, `cast.json` | `home`, `job`, `routine`, `chapters` ([her life in town](#her-life-in-town), [her chapters](#her-chapters)) |
+| Her cast entry, `cast.json` | her **schedule** (her `home`, `job` and `routine` together, one piece: what her profile and the calendar show, [her life in town](#her-life-in-town)), `chapters` ([her chapters](#her-chapters)) |
 | Her bible, `umas/<id>.json` | `favouriteLine`, `gifts`, `chats`, `townLines`, `mornings`, `meals`, `keepsake`, `petName`, `wedding`, `wishes`, and a beat for each of the 27 rungs in her `route` |
 | Her route, `routes/<id>.json` | 55 events: her meeting (`arrival`), `f1`–`f10`, `confession`, `r1`–`r10`, `proposal`, `wedding`; `invited-to-work`, `wedding-night`, `moving-in`, `s1`–`s5`; each evening's scene (the six `hangout-<kind>`, the eleven `date-<kind>`, `dinner-in-town`, `a-night-in`); and four occasions, `new-year`, `flower-show`, `derby-night`, `birthday` |
 
@@ -116,7 +116,8 @@ Her gift reactions are the default story's for every Uma (the menu has no field 
   stop, her `chats`, `gifts`, `meals`, `keepsake` and `wedding`. A piece that's a plain value or a list of lines (her
   `home`; her bible's `favouriteLine`, `townLines`, `mornings`, `petName`, `wishes`) can't hold a key, so its marker
   sits on its file's own object: `"draft": { "mornings": "default" }` on her bible, `"draft": { "home": "default" }` on
-  her cast entry. Her routine and her chapters are the default while every stop or chapter is marked.
+  her cast entry. Her routine and her chapters are the default while every stop or chapter is marked, and her schedule
+  while each of her home, job and routine that's there is marked (any one unmarked makes it hers).
 - **It changes nothing in play.** The game reads a marked piece as written, and a marked pack plays exactly as the same
   pack unmarked; a release carries the marker as it is.
 - **The check counts it:** a marked piece is "default, not hers yet". **Rewrite a piece, then remove its marker:** a
@@ -148,11 +149,11 @@ Her gift reactions are the default story's for every Uma (the menu has no field 
 - **Her chats:** the default story's friend, sweetheart and married talks for her temperament, as her `friend`,
   `partner` and `spouse` sets. The sets are coarser than the default's six stages, so from Friendship 1 to 2, as a
   farmhand and while engaged she says her friend and partner lines, where the default had lines of their own.
-- **Her starter life in town,** at her favourite spot (her `spot`; else one of the six by her order): her `home` and
-  her part-time `job` there, and her `routine` there on four days of each season (every third day, the first on day 1,
-  2 or 3 by her order on the board, so Tier 1 isn't all off on the same days). A home holds every day nothing else does,
-  so she's in town every day: at work at her spot, and on her four days simply there. Give her a home, a job and days
-  of her own as the story finds them.
+- **Her schedule,** when she has none: **the game's own default schedule**, the same function's output the game plays
+  (`scheduleOf`, [who's where](game-mechanics.md#whos-where)), written as her `routine`, one stop marked default: her
+  favourite spot (her `spot`; else the six in turn by her place in the cast) on every third day of each season, the first
+  on day 1, 2 or 3 by her place in the cast. **No `home` and no `job`:** she's at home off the map her other days, so she
+  plays exactly where she did. Give her a home, a job and days of her own as the story finds them, and remove the marker.
 - **Everything else** is the default as the game already plays it: her events and their pays, her chapters, her tastes,
   her mornings and meals, her town lines, her keepsake, her pet name (your name, `{farmer}`), her wedding's places, no
   wishes, and a beat with only its id for each rung.
@@ -219,7 +220,7 @@ The pack is a folder of JSON files in `content/story/`. Every file is optional.
 
 | File | What it holds | Without it |
 |---|---|---|
-| `cast.json` | Who the pack holds, in its order, and what's given of each: her outfit, her life in town (home, job, routine), her chapters | Master data's first five characters, on the default story |
+| `cast.json` | Who the pack holds, in its order, and what's given of each: her outfit, her life in town (home, job, routine: her schedule, what her profile and the calendar show), her chapters | Master data's first five characters, on the default story and the default schedule |
 | `ties.json` | The ties between characters | No ties |
 | `umas/<characterId>.json` | Her bible: her favourite line, gifts, route beats, chats, town lines and more | Her calling gives her line (else her stats in master data), she loves her line's favourite good and finds the rest neutral, she talks in the default story's lines and in town in the game's |
 | `routes/<characterId>.json` | Her scripted events, by id: the rungs, her life's events, her occasions and the evenings' scenes | Each plays the default story's, which pays as a written one does |
@@ -332,10 +333,10 @@ else is optional, and any field the game doesn't read is kept for the story.
 | `characterId` | Who she is | The character is skipped (an error) |
 | `outfitId` | The one outfit she plays as: her face, bust, talents and temperament | Her default outfit from master data: her first original one |
 | `calling` | Her line when her bible gives none: `farming`, `foraging`, `fishing`, `mining`, or `quarry` (mining at the Quarry) | Her bible's `favouriteLine`; with neither, the work her stats in master data suit best |
-| `spot` | **Her favourite of the town's spots** (`plaza`, `market`, `cafe`, `harbour`, `library`, `track`): when today's draw puts her out, she's there more often than anywhere else | None: she's out at any spot alike |
-| `home` | **Her home,** a location of the town map (below): where she is on a day nothing else in her life holds | None |
+| `spot` | **Her favourite of the town's spots** (`plaza`, `market`, `cafe`, `harbour`, `library`, `track`): the default schedule's place for her, and her default part-time job's | One of the six by her place in the cast, three Umas each |
+| `home` | **Her home,** a location of the town map (below): where she is on a day nothing else in her life holds | None: at home off the map |
 | `job` | **Her part-time job** and where it is: `{ "what": "Bakes the morning bread", "at": "bakery", "days": [1, 2, 3, 4, 5, 6] }`. She's there on its days | None |
-| `routine` | **Where she is, when:** a list of stops, each `{ "at": "library", "days": [3, 9], "seasons": ["spring"] }`. The first that holds today wins, before her job and her home | None: her job, then her home, then today's draw |
+| `routine` | **Where she is, when:** a list of stops, each `{ "at": "library", "days": [3, 9], "seasons": ["spring"] }`. The first that holds today wins, before her job and her home | With none of `home`, `job` and `routine`: the default schedule, her `spot` every third day |
 | `name` | **A sister's name** (read for a sister only): master data has none for her | Her elder's name, as her sister |
 | `birthday` | `{ "month": 1–12, "day": … }` on a real date, when master data has none | Master data's birthday, or none |
 | `meet` | **Retired** (no welcome week): you meet her by introducing yourself in town ([meeting her](game-mechanics.md#meeting-her)). A `meet` is still read (an error in it is still an error) and noted once, as retired; it acts on nothing | — |
@@ -359,9 +360,11 @@ retired welcome list, a tie's `a` or `b`, her bible `umas/s<outfitId>.json`, her
 ### Her life in town
 
 Every Uma is a retired racer with a life in town: a home, a part-time job, the places she likes. Three optional fields
-on her cast entry say where she is, when, and the town map lists who's at each place **now** ([who's
-where](game-mechanics.md#whos-where)). Days are turns and nothing reads a clock, so "when" is days of the season and
-seasons:
+on her cast entry say where she is, when: **her schedule**. **They are exactly what the player sees:** her profile's
+"Where to find her" (today, and this season's days and places), the calendar's "In town" on every day, and the town map's
+who's at each place **now** ([who's where](game-mechanics.md#whos-where)). Nothing is placed at random. **Until hers is
+written, the game's default schedule plays:** her favourite spot (`spot`) on every third day of each season, at home off
+the map the rest. Days are turns and nothing reads a clock, so "when" is days of the season and seasons:
 
 ```json
 {
@@ -382,8 +385,14 @@ seasons:
 | `routine` | A list of stops, each `{ "at", "days", "seasons" }` | Its first stop that holds today wins. A stop with neither `days` nor `seasons` holds every day, so the stops after it never do (a note) |
 
 - **The order each day:** her routine's first stop that holds, else her job on its days, else her home. With none of
-  them for today, today's draw places her at one of the six spots, or at home off the map, as it does anyone the story
-  says nothing of.
+  them for today, she's at home, off the map: once you write any of the three, the schedule is all yours (the default
+  no longer fills her other days). With none written (or none on the map), she keeps the default schedule.
+- **What the player reads:** her profile says "Today · The Bakery, at work" and "Spring · The Bakery, at work · 1–8 ·
+  The Library · 9, 10 · Blue Cottage · the other days"; the calendar lists her on each of those days under her place.
+- **A farmhand** (a friend invited to work) is on the farm by day after her job, whatever her schedule says; her job
+  still shows on her profile.
+- **`pnpm story:status`** counts her schedule as one piece of a complete Uma ([a complete Uma](#a-complete-uma)), and
+  `pnpm story:scaffold` writes the default schedule as her routine, marked, when she has none.
 - **A location** is one of the town map's: the six spots (`plaza`, `market`, `cafe`, `harbour`, `library`, `track`),
   the four shops and offices (`store`, `rancher`, `mayor`, `smith`), or one `town.json` adds ([below](#the-towns-locations)).
   One the map doesn't hold is an error that skips the field (or the stop).
@@ -477,7 +486,7 @@ The file's name says whose bible it is. A `characterId` inside that disagrees is
 | Field | What it does in play | Without it |
 |---|---|---|
 | `favouriteLine` | Her favourite work: `farming`, `ranch`, `mining`, `fishing`, `foraging`, `cooking`, `serving` or `forging`. ×1.2 rank points there, +10 a night, her perks at her line's places | Her calling's line |
-| `gifts.loved`, `gifts.liked`, `gifts.disliked` | Her tastes, any number of each: a goods id each. A good not in the game yet is neutral until it is. Her loved good is also what the default story's lines call her favourite | The default story's: her line's favourite good loved (a Peach for farming, a Seashell for fishing…), the rest neutral |
+| `gifts.loved`, `gifts.liked`, `gifts.disliked` | Her tastes, any number of each: a goods id each. A good not in the game yet is neutral until it is. Her loved good is also what the default story's lines call her favourite | The default story's: her line's favourite good loved (a Carrot for farming, a Trout for fishing…, each one the first season gives), the rest neutral |
 | `gifts.proposed` | The story's list of goods it would like added: a request to the game | Nothing |
 | `route` | Her beats, by rung (below) | Each event plays with the game's defaults |
 | `chats.friend`, `chats.partner`, `chats.spouse` | Her chat lines by stage, any number, one a day: friend from Friendship 1 to the confession, partner from Romance 1 to the wedding, spouse after it | The default story's talks for her stage (acquaintance, friend, farmhand, sweetheart, engaged, married) and her temperament |
