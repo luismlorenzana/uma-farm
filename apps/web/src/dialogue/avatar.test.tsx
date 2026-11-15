@@ -1,8 +1,9 @@
 // Her picture and the avatar on master data's synthetic `dialogue-portraits` family and an invented art index (invented
-// ids, fake pictures): the square cut from her season's base around its face (spring when that base isn't drawn), the
-// avatar's rounded square with its corners outside the picture's clip, then for an Uma without portraits master data's
-// face (no base fetched for her), and without that the blank profile in the season's colours; and uma-kit's face tiles
-// showing the same through the album's art.
+// ids, fake pictures): her season's profile picture drawn whole (no base fetched), else for a release before profiles
+// the square cut from her season's base around its face (spring when that base isn't drawn); the avatar's rounded
+// square with its corners outside the picture's clip; then for an Uma without portraits master data's face (no base
+// fetched for her), and without that the blank profile in the season's colours; and uma-kit's face tiles showing the
+// same through the album's art.
 import { syntheticDialoguePortraits } from '@luismlorenzana/uma-data/testing'
 import { AlbumArtProvider, FaceTile } from '@luismlorenzana/uma-kit/album'
 import { ContentProvider } from '@luismlorenzana/uma-kit/content'
@@ -29,7 +30,10 @@ const ID = '9000001'
 /** Her invented portraits: spring, summer and work bases (no autumn or winter), a face. */
 const PORTRAITS = syntheticDialoguePortraits(Number(ID), ['spring', 'summer', 'farm-work'], ['happy'])
 const art = { artUrl: vi.fn(async (path: string) => `blob:${path}`), hold: () => () => undefined }
-const portraitsOf = vi.fn(async (id: string) => (id === ID ? PORTRAITS : null))
+/** Another's, from a release with profile pictures: spring, summer and winter bases, each with its profile. */
+const PROFILED_ID = '9000005'
+const PROFILED = syntheticDialoguePortraits(Number(PROFILED_ID), ['spring', 'summer', 'winter'], ['happy'], { profiles: true })
+const portraitsOf = vi.fn(async (id: string) => (id === ID ? PORTRAITS : id === PROFILED_ID ? PROFILED : null))
 /** Master data, invented: her portraits listed; an Uma with an outfit face (9000002), one of the town's people with a
  * character face (9000004), and one with neither (9000003). */
 const OUTFIT_FACE = 'art/outfit-faces/9000002.webp'
@@ -41,12 +45,12 @@ fixture.view = {
   art: {
     atlases: {},
     images: { 'outfit-faces': { '9000002': { path: OUTFIT_FACE, width: 192, height: 192 } }, 'character-faces': { '9000004': { path: CHARACTER_FACE, width: 128, height: 128 } } },
-    dialoguePortraits: { [ID]: 'art/dialogue-portraits/9000001.json' },
+    dialoguePortraits: { [ID]: 'art/dialogue-portraits/9000001.json', [PROFILED_ID]: 'art/dialogue-portraits/9000005.json' },
   },
 }
 /** The content client the app provides: master data's faces load through it. */
 const content = (node: ReactNode) => <ContentProvider client={art as never}>{node}</ContentProvider>
-const basesLoaded = () => art.artUrl.mock.calls.filter(([path]) => path.startsWith('art/dialogue-portraits/')).length
+const basesLoaded = () => art.artUrl.mock.calls.filter(([path]) => /^art\/dialogue-portraits\/\d+-base-/.test(path)).length
 
 let host: HTMLDivElement
 let root: Root
@@ -96,7 +100,13 @@ describe('her picture’s frame', () => {
 })
 
 describe('her picture’s source', () => {
-  it('is her base for today’s season, cut in place: autumn’s is `fall`, and spring’s when that one isn’t drawn', () => {
+  it('is her season’s profile picture, shown whole; else her first with one in Farm Life’s order (spring first)', () => {
+    expect(pictureSource(PROFILED, 'summer')).toEqual({ kind: 'profile', outfit: 'summer', path: PROFILED.bases.summer!.profile!.path })
+    expect(pictureSource(PROFILED, 'winter')).toMatchObject({ kind: 'profile', outfit: 'winter' })
+    expect(pictureSource(PROFILED, 'autumn')).toEqual({ kind: 'profile', outfit: 'spring', path: PROFILED.bases.spring!.profile!.path })
+    expect(PROFILED.bases.summer!.profile).toMatchObject({ width: 192, height: 192 })
+  })
+  it('for a release made before profiles, is her base for today’s season, cut in place: autumn’s is `fall`, and spring’s when that one isn’t drawn', () => {
     expect(pictureSource(PORTRAITS, 'summer')).toMatchObject({ kind: 'base', outfit: 'summer', path: PORTRAITS.bases.summer!.path })
     expect(pictureSource(syntheticDialoguePortraits(1, ['spring', 'fall']), 'autumn')).toMatchObject({ outfit: 'fall' })
     expect(pictureSource(PORTRAITS, 'autumn')).toMatchObject({ outfit: 'spring', path: PORTRAITS.bases.spring!.path })
@@ -126,6 +136,21 @@ describe('the avatar', () => {
       expect(clip.contains(corner)).toBe(false)
     }
     expect($('[data-badge="tl"]')!.parentElement!.className).toContain('top-1 left-1')
+  })
+  it('with profiles, draws her season’s profile picture whole and never loads a base', async () => {
+    today(14)
+    await act(async () => root.render(<Avatar id={PROFILED_ID} size={56} label="Her" badges={{ topRight: <b data-badge="tr" /> }} />))
+    await settle()
+    expect($('[data-picture]')?.dataset.picture).toBe('summer')
+    const img = $('[data-picture-cut="profile"]') as HTMLImageElement
+    expect(img.getAttribute('src')).toBe(`blob:${PROFILED.bases.summer!.profile!.path}`)
+    expect(img.className).toContain('inset-0 size-full object-cover')
+    expect($('[data-picture-cut="base"]')).toBeNull()
+    expect(art.artUrl.mock.calls.map(([path]) => path)).toEqual([PROFILED.bases.summer!.profile!.path])
+    expect(basesLoaded()).toBe(0)
+    today(40)
+    await settle()
+    expect($('[data-picture-cut="profile"]')?.getAttribute('src')).toBe(`blob:${PROFILED.bases.winter!.profile!.path}`)
   })
   it('changes with the season: her spring base in winter, as she has no winter one', async () => {
     today(40)
@@ -169,7 +194,11 @@ describe('the avatar', () => {
 
 describe('uma-kit’s face tiles', () => {
   const tile = (id: string) => content(<AlbumArtProvider art={ALBUM_ART}><FaceTile outfitId={id} size={68} label="Her" /></AlbumArtProvider>)
-  it('get no URL for her face while she has portraits: the album’s fallback draws her picture’s crop', async () => {
+  it('get no URL for her face while she has portraits: the album’s fallback draws her picture', async () => {
+    await act(async () => root.render(tile(PROFILED_ID)))
+    await settle()
+    expect(host.querySelector('[role="img"] img[data-picture-cut="profile"]')?.getAttribute('src')).toBe(`blob:${PROFILED.bases.spring!.profile!.path}`)
+    expect(basesLoaded()).toBe(0)
     await act(async () => root.render(tile(ID)))
     await settle()
     expect(host.querySelector('[role="img"] img[data-picture-cut="base"]')?.getAttribute('src')).toBe(`blob:${PORTRAITS.bases.spring!.path}`)

@@ -3486,20 +3486,21 @@ list, her profile's heading and its ties, the roster's cards, the work board, th
 evenings, the household, the farm map's houses, a scene's guests, the pair talks and the memories. Her picture is the
 first she has of:
 
-1. **Her portrait's crop:** a square cut from her own portrait in today's season's outfit (below). Three Umas have
-   portraits so far.
-2. **Master data's face** for her: her outfit's face, or one of the town's people's character face. It shows as it
+1. **Her profile picture** in today's season's outfit: uma-platform's 192 px square cut from her portrait, drawn whole.
+   Three Umas have portraits so far, each with a profile picture per outfit.
+2. **A crop of her portrait base,** cut in place, for a release made before profile pictures (below).
+3. **Master data's face** for her: her outfit's face, or one of the town's people's character face. It shows as it
    always did, in the square instead of the circle. These faces are square (192 px, a character's 128 px), so they fill
    it exactly, neither cropped nor letterboxed.
-3. **The blank profile** in the season's colours (below), when master data has no face for her either (a stand-in).
+4. **The blank profile** in the season's colours (below), when master data has no face for her either (a stand-in).
 
 ```
 ╭──────────────────╮
 │◆    ╱╲    ╱╲     │  a badge in a corner sits over her hair, her ears,
 │    ╭────────╮    │  her shoulders or the backdrop, never her face
 │    │  her   │    │
-│    │  face  │    │  her face centred across, its middle 46% down,
-│    ╰────────╯    │  1.6 faces to the square's side
+│    │  face  │    │  her face centred, out of the corners
+│    ╰────────╯    │
 │   ╱ shoulders ╲ B│
 ╰──────────────────╯  a rounded square: its corners 18% of its side
 ```
@@ -3507,19 +3508,21 @@ first she has of:
 - **The avatar:** a rounded square at the sizes the lists had (20 to 72 pt), its corners 18% of its side at any size,
   never a circle, with a hairline edge. The badges and counts a list puts on her face (her favourite line's mark, her
   best talent, her level, a ♥ or a ✓) keep their corners, 4 pt in, over the picture's edge and never clipped by it.
-- **Her portrait's crop:** her head and shoulders cut from her portrait base for **today's season**: spring, summer,
-  autumn (`fall`) or winter, and spring when that one isn't drawn. Her face is her calm one, the base's own, with no face
-  laid over it. The square is 1.6 faces wide (358 px of a 525 × 700 base), centred across her face with her face's middle 46%
-  down it, kept inside the base: her face reads at 22 pt, and the corners hold her hair, her ears, her shoulders or the
-  backdrop. On the next season's first morning every picture changes outfit.
-- **Cut in place:** the game shows the base it already loads for her scenes, placed and scaled so its square fills the
-  avatar: no new file, no canvas. A base loads once, checked against the release and cached on the device by its hash,
-  as a scene's are. A list loads no base for an Uma without portraits (the art index says so before anything is
-  fetched): she shows master data's face, as before. Only the three with portraits have bases.
-- **uma-platform's crops, when they come:** uma-platform is asked for small square crops (about 192 px a base), made
-  from the bases. Master data's `dialogue-portraits` has none yet (uma-data 1.8.0). One function picks her picture's
-  source (`pictureSource`, in `dialogue/picture.ts`): today her season's base, cut in place; once the crops are
-  published, it returns her season's crop, shown whole, and every avatar reads those.
+- **Her profile picture:** her head and shoulders in her portrait's outfit for **today's season** (spring, summer,
+  autumn's `fall` or winter), her calm face, the base's own. Master data's `dialogue-portraits` carries one per base
+  (uma-data 1.9.0, uma-platform's P180): a 192 × 192 WebP of about 10 KB, cut from a square about 1.5 faces wide (331
+  to 336 px of a 525 × 700 base), her face centred and kept out of the corners at 28% of the side. An outfit without
+  one shows her first in Farm Life's order that has one, spring first. On the next season's first morning every
+  picture changes outfit.
+- **Light:** an avatar loads only her profile picture, never her 300 KB base. It's checked against the release and
+  cached on the device by its hash, as a scene's pictures are. A list loads nothing of her portraits for an Uma without
+  them (the art index says so before anything is fetched): she shows master data's face, as before.
+- **A release made before profile pictures:** the avatar cuts the same head and shoulders from her season's base in
+  place (spring when that one isn't drawn): the base her scenes load, placed and scaled so a square fills the avatar,
+  with no new file and no canvas. The square is 1.6 faces wide (358 px), centred across her face, her face's middle 46%
+  down it, kept inside the base.
+- **One seam:** a single function picks her picture's source (`pictureSource`, in `dialogue/picture.ts`): her profile
+  picture when the release has one, else her base, cut in place.
 - **While her portraits are read,** her square stays empty, so a pilot's picture never flashes another first; master
   data's face, too, leaves it empty until it has loaded.
 - **Without portraits or a face** she shows **the blank profile**, drawn in code: the blank bust's head and shoulders
@@ -3527,7 +3530,7 @@ first she has of:
   tone by her id), and her letters ("S1") over her shoulders in ink, or white on winter's navy. Her letters come from
   her name.
 
-  | Season | Her crop's base | The blank profile's backdrop | Its outfit |
+  | Season | Her picture's outfit | The blank profile's backdrop | Its outfit |
   |---|---|---|---|
   | Spring | `spring` | Pale green | Green, a pink collar |
   | Summer | `summer`, else `spring` | Pale gold | Sky blue, a white collar |
@@ -3535,7 +3538,7 @@ first she has of:
   | Winter | `winter`, else `spring` | Pale blue | Navy, a white collar |
 
 - **uma-kit's own pickers** (the Dorm's) show the same: master data's face as before for an Uma without portraits, and
-  her crop for one with them.
+  her picture for one with them.
 - **Her bust stays master data's** on the cards and sheets that show a bust; a bust that hasn't loaded shows her
   picture until it has.
 

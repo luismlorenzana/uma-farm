@@ -4,13 +4,16 @@
 // FaceTile's sizes:
 //   - a rounded square (`rounded-avatar`: its corners 18% of its side, at any size), never a circle;
 //   - her picture inside it (`HerPicture`), the first of:
-//     1. a head-and-shoulders square cut from her portrait in today's season's outfit, her calm face centred with a
-//        margin (`picture.ts`), so a badge or a count in a corner sits over her hair, her shoulders or the backdrop;
-//     2. without portraits, master data's face for her, filling the square as uma-kit's FaceTile filled it;
-//     3. without either, her blank profile in the season's colours;
+//     1. her profile picture in today's season's outfit (uma-platform's 192 px crop of her portrait), drawn whole: her
+//        calm face centred and out of the corners, so a badge or a count there sits over her hair, her shoulders or the
+//        backdrop;
+//     2. for a release made before profiles, the same head and shoulders cut in place from her season's base
+//        (`picture.ts`);
+//     3. without portraits, master data's face for her, filling the square as uma-kit's FaceTile filled it;
+//     4. without that, her blank profile in the season's colours;
 //   - four corners for the caller's badges, over the picture's edge and never clipped by it.
-// No base loads for an Uma without portraits (the art index says so first), and a base loads once, cached on the device
-// as a scene's are. uma-kit's own pickers show the same through the album's art (`master/album-art.tsx`). Loaded with the
+// With profiles an avatar loads only her 10 KB crop, never a base; nothing of her portraits loads for an Uma without
+// them (the art index says so first); whatever loads is cached on the device by its hash, as a scene's pictures are. uma-kit's own pickers show the same through the album's art (`master/album-art.tsx`). Loaded with the
 // lists and the players, as her portraits are.
 import type { FaceTileBadges } from '@luismlorenzana/uma-kit/album'
 import { useArtUrl } from '@luismlorenzana/uma-kit/content'
@@ -20,8 +23,8 @@ import { useMaster } from '../master/master'
 import { pictureSource, pictureStyle, type PictureSource } from './picture'
 import { portraitArt, usePortraitsState } from './portraits'
 
-/** Her picture, filling a square box: her season's crop once her portraits are read; without them, master data's face;
- * without that, her blank profile (lettered from `name`, else master data's). Nothing while her portraits are read, so a
+/** Her picture, filling a square box: her season's profile picture (or crop of her base) once her portraits are read;
+ * without them, master data's face; without that, her blank profile (lettered from `name`, else master data's). Nothing while her portraits are read, so a
  * pilot's picture never flashes another first. */
 export function HerPicture({ id, name }: { id: string; name?: string }) {
   const season = useSeasonToday()
@@ -44,12 +47,12 @@ function Face({ path }: { path: string }) {
   return url ? <img src={url} alt="" draggable={false} className="pointer-events-none absolute inset-0 size-full object-cover object-top select-none" data-picture-cut="face" /> : null
 }
 
-/** Her crop: a square picture shown whole, or her base placed so its frame fills the box. */
+/** Her crop: her profile picture shown whole, or her base placed so its frame fills the box. */
 function Cut({ source }: { source: PictureSource }) {
   const url = useArtUrl(source.path, portraitArt())
   if (!url) return null
-  return source.kind === 'square'
-    ? <img src={url} alt="" draggable={false} className="pointer-events-none absolute inset-0 size-full object-cover select-none" data-picture-cut="square" />
+  return source.kind === 'profile'
+    ? <img src={url} alt="" draggable={false} className="pointer-events-none absolute inset-0 size-full object-cover select-none" data-picture-cut="profile" />
     : <img src={url} alt="" draggable={false} className="pointer-events-none absolute max-w-none select-none" style={pictureStyle(source)} data-picture-cut="base" />
 }
 
