@@ -24,8 +24,10 @@ pnpm stories               # http://127.0.0.1:4321
     `Beat` shape), `beats.json` and `conversations.json` (the story-beat and conversation templates, the fallback for
     pairs without an authored conversation).
   - **The game's story as built:** `story/cast.ts` (the town's roles), the places, temperaments and activities.
-- **Pages:** Characters (the cast in its order, the pack's errors and notes, the welcome list marked) · each Uma (her
-  paragraph, her tags with their reasons, **In the game**: every part the game reads of her, marked written or
+- **Pages:** Characters (the cast in its order, the pack's errors and notes, the welcome list marked, and each one's
+  story in a chip: all hers, complete, or how many pieces are missing and the default) · each Uma (her
+  paragraph, her tags with their reasons, **Her story**: her pieces by part, hers, the default (`"draft": "default"`)
+  and missing, and what's left, as `pnpm story:status` shows it (the domain's `story/complete.ts`), **In the game**: every part the game reads of her, marked written or
   placeholder with what plays instead (the domain's `writtenOf`), her trigger to meet and her chapters, the pack's or the
   defaults, her route as a 27-rung ladder with how much is scripted, her bible, her ties and their sources, and her
   errors and notes) · Relationships (the ties as a ring

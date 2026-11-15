@@ -1164,7 +1164,8 @@ function readGifts(v: unknown, isGood: (id: string) => boolean, f: Findings): Gi
 function readChats(v: unknown, f: Findings): ChatSets | undefined {
   if (!isObject(v)) return undefined
   const out: Record<string, unknown> = {}
-  for (const key of Object.keys(v)) if (!oneOf(CHAT_SETS, key)) f.notes.push(`chats.${key}: not a chat set the game reads (friend, partner, spouse); kept`)
+  // `draft` is the story tools' marker (`complete.ts`): kept, never a set.
+  for (const key of Object.keys(v)) if (!oneOf(CHAT_SETS, key) && key !== 'draft') f.notes.push(`chats.${key}: not a chat set the game reads (friend, partner, spouse); kept`)
   for (const set of CHAT_SETS) {
     const lines = v[set]
     if (lines === undefined) continue
@@ -1227,7 +1228,9 @@ export function checkBible(raw: unknown, id: string, ctx: StoryContext): Read<Um
     keepsake: field(raw, 'keepsake', (v) => readKeepsake(v, f), 'keepsake', f, 'is { name, line }'),
     petName: field(raw, 'petName', (v) => {
       if (!shown(v, LINE_LIMITS.petName, 'petName', f, 'name')) { f.errors.pop(); return undefined }
-      if (/[{}]/.test(v)) f.notes.push('petName: no placeholder (it’s what she calls you)')
+      // `{farmer}` marked as the default's (`complete.ts`: your name, filled as it shows) is the scaffold's, not a slip.
+      const draft = isObject(raw.draft) && raw.draft.petName === 'default' && v === '{farmer}'
+      if (/[{}]/.test(v) && !draft) f.notes.push('petName: no placeholder (it’s what she calls you)')
       return v
     }, 'petName', f, `is 1–${LINE_LIMITS.petName} characters`),
     wedding: field(raw, 'wedding', (v) => readWedding(v, f), 'wedding', f, 'is { places: [places] }'),

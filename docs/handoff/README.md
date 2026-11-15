@@ -14,12 +14,16 @@ plays.
 **Your farm is kept from here** (the owner, 2026-11-14): save v5 is the farm you play and keep. A later change grows it
 in place or migrates it, never a start-over, and the game has no testing tools: it's the real game, and you only play.
 
+**Tier 1's complete story packs are in** (F87): `pnpm story:scaffold --tier 1` lays out every piece of story the game
+reads for each of the Ranker's Tier 1, filled from the default story and marked `"draft": "default"`, and
+`pnpm story:status` shows each Uma's pieces, hers, the default and missing; `story:ship`'s check and the Farm Story
+Sandbox show the same. [A complete Uma](../story-pack.md#a-complete-uma) is the story session's routine.
+
 **Next:** the queue below, then Phase 2's workshops, one at a time on your go, the Kitchen first.
 
 | Piece | Who | State |
 |---|---|---|
 | **F86 The real game's fixes:** no route dead-ends on a setup, scene links play only what's earned, [a route to marriage](../game-mechanics.md#a-route-to-marriage) simulated | Claude | In: its pull request, for review |
-| [F87](tasks/F87-tier1-story-packs.md) **Tier 1's complete story packs**, for the story session | Claude | Written; after F86 and this docs pass, which touch the same menu |
 
 ## Open packets
 

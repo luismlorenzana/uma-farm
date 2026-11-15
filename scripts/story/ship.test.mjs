@@ -97,6 +97,9 @@ test('ships in order: check, release, publish (the files, then story.json), back
   const at = steps.map((step) => said.indexOf(step))
   assert.ok(at.every((i, n) => i >= 0 && (n === 0 || i > at[n - 1])), said)
   assert.match(said, /Notes \(\d+\), which block nothing/)
+  // The check shows each Uma it ships with a route as story:status does: hers, the default and missing, by part.
+  assert.match(said, /Her story, each Uma with a route \(3\):\n    Each part: hers · default · missing/)
+  assert.match(said, /^    9000001\s+0 · 0 · 4\s+\d+ · 0 · \d+\s+\d+ · 0 · \d+\s+missing pieces$/m)
   assert.deepEqual(bucket.state.calls.map((c) => c.split(' ').slice(0, 2).join(' ')), ['storage cat', 'storage ls', 'storage rsync', 'storage cp'])
   assert.equal(bucket.state.calls[2], `storage rsync ${join(out, 'story')} gs://${BUCKET}/story --checksums-only --cache-control=private, max-age=31536000, immutable --content-type=application/json`)
   assert.equal(bucket.state.calls[3], `storage cp ${join(out, 'story.json')} gs://${BUCKET}/story.json --cache-control=private, no-cache --content-type=application/json`)

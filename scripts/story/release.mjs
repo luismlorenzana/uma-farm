@@ -38,6 +38,8 @@ if (!process.features?.typescript) throw new Error('This Node reads no TypeScrip
 register(pathToFileURL(join(ROOT, 'tools/story-sandbox/lib/resolve-ts.mjs')))
 const { readStoryPack } = await import(pathToFileURL(join(DOMAIN, 'story/pack.ts')).href)
 const { parseStoryIndex, releasedStoryPack, shippedIndex, STORY_INDEX, STORY_NAME, STORY_NOTE_MAX, storyFileName, storyFilePath } = await import(pathToFileURL(join(DOMAIN, 'story/release.ts')).href)
+// The marker's check (a piece marked "draft": "default" whose words changed): notes, beside the reader's.
+const { draftNotes } = await import(pathToFileURL(join(DOMAIN, 'story/complete.ts')).href)
 /** The game's own index reader and a ship's stamp, for the ship (`ship.mjs`). */
 export { parseStoryIndex, shippedIndex, STORY_INDEX, STORY_NOTE_MAX }
 
@@ -94,10 +96,12 @@ export async function readPack(from) {
   return { files, errors }
 }
 
-/** The pack as the game reads it: its files with every broken part skipped, what was skipped (`errors`) and the notes. */
+/** The pack as the game reads it: its files with every broken part skipped, what was skipped (`errors`) and the notes,
+ * the marker's among them (`story/complete.ts`: a piece marked "draft": "default" whose words aren't the default's). */
 export function releaseCheck(files) {
   const read = readStoryPack(files)
-  return { files: read.files, errors: read.errors, notes: read.notes }
+  const ids = [...new Set([...read.files.cast.umas.map((u) => u.characterId), ...Object.keys(read.files.umas), ...Object.keys(read.files.routes)])]
+  return { files: read.files, errors: read.errors, notes: [...read.notes, ...ids.flatMap((id) => draftNotes(read.files, id))] }
 }
 
 const byId = (a, b) => (Number(a) - Number(b)) || a.localeCompare(b)

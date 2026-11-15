@@ -107,8 +107,10 @@ async function storyState(game) {
     entry[kind].push(line.slice(at + 2))
     byFile.set(file, entry)
   }
+  // The marker's notes (a piece marked "draft": "default" whose words changed), beside the reader's.
+  const marked = read.files.cast.umas.flatMap((u) => v.draftNotes(read.files, u.characterId))
   ;[...unreadable, ...read.errors].forEach(add('errors'))
-  read.notes.forEach(add('notes'))
+  ;[...read.notes, ...marked].forEach(add('notes'))
   const found = (name) => byFile.get(name) ?? { errors: [], notes: [] }
   const entry = (name, data) => ({ file: `content/story/${name}`, data, ...found(name) })
   const ctx = { umas: new Set(read.files.cast.umas.map((u) => u.characterId)) }
@@ -126,16 +128,20 @@ async function storyState(game) {
   const own = {}
   // Each character as the game plays her: every part the pack writes, and every part a placeholder plays instead.
   const written = {}
+  // Each character's story, piece by piece: hers, the default (marked) or missing, by part, and what's left.
+  const status = {}
   for (const { characterId: id } of read.files.cast.umas) {
     const cast = found('cast.json')
-    const hers = (list) => list.filter((line) => line.includes(`(${id})`) || line.startsWith(`${id} `))
+    const hers = (list) => list.filter((line) => line.includes(`(${id})`) || line.startsWith(`${id} `) || line.startsWith(`${id}:`))
     own[id] = {
       errors: [...hers(cast.errors), ...found(`umas/${id}.json`).errors, ...found(`routes/${id}.json`).errors],
       notes: [...hers(cast.notes), ...found(`umas/${id}.json`).notes, ...found(`routes/${id}.json`).notes],
     }
     written[id] = v.writtenOf(read.pack, id)
+    const st = v.umaStatus(read.files, id)
+    status[id] = { parts: st.parts, complete: st.complete, allHers: st.pieces.every((p) => p.state === 'hers'), left: v.leftWords(st), pieces: st.pieces }
   }
-  const all = { errors: [...unreadable, ...read.errors], notes: [...read.notes, ...(tags?.notes ?? []).map((n) => `tags.json: ${n}`)] }
+  const all = { errors: [...unreadable, ...read.errors], notes: [...read.notes, ...marked, ...(tags?.notes ?? []).map((n) => `tags.json: ${n}`)] }
   return {
     ...story,
     cast: entry('cast.json', read.files.cast),
@@ -158,6 +164,7 @@ async function storyState(game) {
     worldPlayed: worldPlayed(v, read.pack, game),
     own,
     written,
+    status,
     // Every finding, and the files read whole that the game skipped (a file that isn't JSON or isn't the shape).
     check: all,
     // The menu's defaults, and the welcome list as the game reads it.
