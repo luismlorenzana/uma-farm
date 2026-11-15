@@ -36,8 +36,12 @@ function withTiles(save: SaveV4, tiles: Record<number, Tile>): SaveV4 {
 }
 
 describe('the plots', () => {
-  it('holds plot 1 from the start and plot 2 from Farm Rank 3 for 2,500g; the save holds as many as the rules', () => {
-    expect(FIELD_PLOTS).toEqual([{ by: 'start' }, { by: 'clear', rank: 3, gold: 2_500 }])
+  it('holds plot 1 from the start, plot 2 from Farm Rank 3 for 2,500g and one a rank to plot 8 at 9; the save holds as many as the rules', () => {
+    expect(FIELD_PLOTS.slice(0, 2)).toEqual([{ by: 'start' }, { by: 'clear', rank: 3, gold: 2_500 }])
+    expect(FIELD_PLOTS.slice(1).map((p) => (p.by === 'clear' ? [p.rank, p.gold] : null))).toEqual([
+      [3, 2_500], [4, 5_000], [5, 10_000], [6, 15_000], [7, 25_000], [8, 35_000], [9, 50_000],
+    ])
+    expect(FIELD_PLOTS).toHaveLength(8)
     expect(FIELD_PLOTS).toHaveLength(MAX_PLOTS)
     expect(newSave('plots', AT).fields.plots).toEqual([{ tiles: startField('plots') }])
     expect([plotName(0), plotName(1)]).toEqual(['Plot 1', 'Plot 2'])
@@ -88,8 +92,24 @@ describe('the plots', () => {
     const tired = { ...farm(), today: { ...farm().today, actions: 10 } }
     expect(plotLockWords(plotLock(tired, 1))).toBe('No actions left today')
     expect(reason(() => clearPlot(tired, 1))).toBe('no-actions')
-    expect(reason(() => clearPlot(farm(), 2))).toBe('bad-slot')
+    expect(plotLock(farm(), 2)).toEqual({ by: 'farm-rank', rank: 4 })
+    expect(plotLock(farm(4), 2)).toEqual({ by: 'before', plot: 1 })
+    expect(reason(() => clearPlot(farm(), 2))).toBe('locked')
+    expect(reason(() => clearPlot(farm(), MAX_PLOTS))).toBe('bad-slot')
     expect(plotLockWords({ by: 'before', plot: 1 })).toBe('Clear Plot 2 first')
+  })
+
+  it('clears plots 3 to 8 in order, each from its Farm Rank, up to 320 tiles; the parse takes all eight', () => {
+    let save = clearPlot(farm(9, 200_000), 1)
+    for (let plot = 2; plot < MAX_PLOTS; plot++) {
+      expect(plotLock({ ...save, farm: { ...save.farm, points: FARM_RANK_POINTS[plot]! } }, plot)).toEqual({ by: 'farm-rank', rank: plot + 2 })
+      save = clearPlot({ ...save, today: { ...save.today, actions: 0 } }, plot)
+    }
+    expect(save.fields.plots).toHaveLength(8)
+    expect(fieldTiles(save)).toHaveLength(320)
+    expect(save.gold).toBe(200_000 - 2_500 - 5_000 - 10_000 - 15_000 - 25_000 - 35_000 - 50_000)
+    expect(save.fields.plots[7]).toEqual(wildPlot('plots', 7))
+    expect(parseSaveV5(json(save)).fields.plots).toHaveLength(8)
   })
 
   it('adds no upkeep: a plot is land, not a building', () => {

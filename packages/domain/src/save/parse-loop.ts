@@ -6,13 +6,13 @@ import { bedsAt, DORM_MAX_LEVEL, FARM_RANK_POINTS } from '../farm/farm'
 import { DIARY_ROWS, isDiaryPaidId, MILESTONES } from '../farm/milestones'
 import { BUILD_PLACES, farmPlace, isBuildPlace, type FarmPlaceId } from '../farm/places'
 import { ACTIVITIES, type Activity, type Rank } from '../farm/ranks'
-import { STATION_JOBS, stationJobOf, STATIONS, type StationId } from '../gathering/ids'
+import { isStation, STATION_JOBS, stationJobOf, STATIONS, type StationId } from '../gathering/ids'
 import { GOOD_IDS, isCropId, isGoodId, isGoodOrRingId, isSeedId, isWarehouseId, RING_IDS } from '../goods/ids'
 import type { BinSale, MoneyLine, NewsLine, Nudge, RankLine, WorkLine } from '../night/summary'
 import { amount, bool, count, int, list, object, oneOf, record, SaveParseError, type Obj } from './parse'
 import {
   ANIMAL_HOME, ANIMAL_KINDS, APTITUDE_IDS, MAX_TASKS, TASK_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOME_ROOM, HOUSE_LOAN, INCOME_NIGHTS,
-  MAX_FIELD_TILES, MAX_PLOTS, MEAL_KEEPS,
+  MARKET_FLOOR, MAX_FIELD_TILES, MAX_PLOTS, MEAL_KEEPS, STATION_MAX_LEVEL,
   isDishId, MAX_FONDNESS, MAX_LOANS, pairKey, RANCH_HOMES, SILO_ROOM,
   REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig, type DormSwap,
   type Expedition, type Extra, type FestivalResult, type Loan, type PantryLot, type RankState, type SaveV5, type StarCounts, type StationLoad, type Tile,
@@ -163,17 +163,22 @@ export function parseFields(value: unknown, path: string): SaveV5['fields'] {
   return { plots: list(o.plots, `${path}.plots`, 1, MAX_PLOTS).map((p, i) => ({ tiles: parsePlotTiles(object(p, `${path}.plots.${i}`, ['tiles']).tiles, `${path}.plots.${i}.tiles`) })) }
 }
 
-/** The stations' loads: a station's one load, an output it makes at its stars, 1–8 of them. */
-export function parseLoads(value: unknown, path: string): Partial<Record<StationId, StationLoad>> {
-  const out: Partial<Record<StationId, StationLoad>> = {}
+/** The stations' loads: each station's loads today, 1 up to its top level's, in the order started; each an output it
+ * makes at its stars, 1–20 of them. An older v5's one load (an object, before the stations' levels) reads as a list of
+ * one: grown in place, no migration, and `updatedAt` never moves. */
+export function parseLoads(value: unknown, path: string): Partial<Record<StationId, StationLoad[]>> {
+  const out: Partial<Record<StationId, StationLoad[]>> = {}
   for (const [id, raw] of Object.entries(record(value, path))) {
     const at = `${path}.${id}`
     const station = oneOf(id, at, STATIONS)
-    const o = object(raw, at, ['item', 'count'])
-    const key = typeof o.item === 'string' ? parseStockKey(o.item) : null
-    const job = key ? stationJobOf(key.id) : null
-    if (!key || !job || STATION_JOBS[job].station !== station) fail(`${at}.item`, 'expected a good this station makes, at its stars')
-    out[station] = { item: o.item as string, count: int(o.count, `${at}.count`, 1, MAX_LOAD) }
+    const one = (v: unknown, where: string): StationLoad => {
+      const o = object(v, where, ['item', 'count'])
+      const key = typeof o.item === 'string' ? parseStockKey(o.item) : null
+      const job = key ? stationJobOf(key.id) : null
+      if (!key || !job || STATION_JOBS[job].station !== station) fail(`${where}.item`, 'expected a good this station makes, at its stars')
+      return { item: o.item as string, count: int(o.count, `${where}.count`, 1, MAX_LOAD) }
+    }
+    out[station] = Array.isArray(raw) ? list(raw, at, 1, STATION_MAX_LEVEL).map((v, i) => one(v, `${at}.${i}`)) : [one(raw, at)]
   }
   return out
 }
@@ -312,7 +317,7 @@ export function parseDiary(value: unknown, path: string): SaveV5['diary'] {
  * keeps what a chapter had opened); `builds` is missing on one, and defaults to none. The accounts (`loans`, `owed`,
  * `short`, `income`) grow v5 in place: a save from before upkeep has none, read as no loans, nothing owed and no nights,
  * and nothing moves `updatedAt` for it. So does the pantry (`pantry`): a save from before food reads as an empty one. */
-const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'pantry', 'chapter', 'goals'] as const
+const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'pantry', 'market', 'chapter', 'goals'] as const
 const LOAN_KEYS = ['for', 'day', 'lent', 'fee', 'owed', 'nightly'] as const
 
 /** A loan's project: a place you build, a Dorm level (`dorm:2` … `dorm:8`) or a house on the homestead (`house:1` …
@@ -372,6 +377,8 @@ export function parseFarm(value: unknown, path: string, today: number): SaveV5['
     loans: o.loans === undefined ? [] : parseLoans(o.loans, `${path}.loans`, today), owed, short,
     income: o.income === undefined ? [] : list(o.income, `${path}.income`, 0, INCOME_NIGHTS).map((v, i) => count(v, `${path}.income.${i}`)),
     pantry: o.pantry === undefined ? [] : parsePantry(o.pantry, `${path}.pantry`, today),
+    // The market: each good a flood eased, 1 to the floor's steps; a save from before the market has none.
+    market: o.market === undefined ? {} : counts(o.market, `${path}.market`, isGoodOrRingId, 'unknown good', (v, at) => int(v, at, 1, MARKET_FLOOR)),
   }
 }
 
@@ -391,12 +398,14 @@ export function parseBinLines(value: unknown, path: string): BinSale[] {
   // A good at one star once, a whole count and gold; the gold isn't re-priced (a later price can't break it).
   return unique(list(value, path, 0, (GOOD_IDS.length + RING_IDS.length) * MAX_STARS).map((v, i): BinSale => {
     const at = `${path}.${i}`
-    const b = object(v, at, ['kind', 'id', 'stars', 'count', 'gold', 'demand'])
+    const b = object(v, at, ['kind', 'id', 'stars', 'count', 'gold', 'demand', 'eased'])
     oneOf(b.kind, `${at}.kind`, ['sold'] as const)
     const id = typeof b.id === 'string' && isGoodOrRingId(b.id) ? b.id : fail(`${at}.id`, 'unknown good')
     return {
       kind: 'sold', id, stars: int(b.stars, `${at}.stars`, 1, MAX_STARS), count: int(b.count, `${at}.count`, 1, Number.MAX_SAFE_INTEGER), gold: count(b.gold, `${at}.gold`),
       demand: bool(b.demand, `${at}.demand`),
+      // A flood's ease, in percent: a morning from before the market has none.
+      ...(b.eased === undefined ? {} : { eased: int(b.eased, `${at}.eased`, 1, 100) }),
     }
   }), path, (b) => `${b.id}@${b.stars}`)
 }
@@ -439,13 +448,14 @@ export function parseMoneyLines(value: unknown, path: string): MoneyLine[] {
 }
 
 /** §2 Work done: each farmhand's day once (an Uma on the roster: her actions and those spent, half pace and well fed,
- * what she did by task and the goods it brought); each station's load once (an output it makes at its stars, 1 up to a
+ * what she did by task and the goods it brought); each station's loads, one a level (an output it makes at its stars, 1 up to a
  * farmhand's biggest); the Coop's and the Barn's night once each (animals fed, hungry and with a good waiting, each up to
  * a building's room); the field's growth once (tiles that grew, 1 or more, and how many of them turned ripe); a crop
  * that withered once, on 1 or more tiles. */
 export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet<string>): WorkLine[] {
   const tiles = (value: unknown, at: string, min = 1) => int(value, at, min, MAX_FIELD_TILES)
-  return unique(list(value, path, 0, roster.size + STATIONS.length + RANCH_HOMES.length + 1 + MAX_FIELD_TILES).map((v, i): WorkLine => {
+  const loads = new Map<string, number>()
+  return unique(list(value, path, 0, roster.size + STATIONS.length * STATION_MAX_LEVEL + RANCH_HOMES.length + 1 + MAX_FIELD_TILES).map((v, i): WorkLine => {
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, ['farmhand', 'load', 'ranch', 'grew', 'withered'] as const)
     if (kind === 'ranch') {
@@ -481,8 +491,15 @@ export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet
     const c = object(v, at, ['kind', 'crop', 'tiles'])
     const crop = typeof c.crop === 'string' && isCropId(c.crop) ? c.crop : fail(`${at}.crop`, 'unknown crop')
     return { kind, crop, tiles: tiles(c.tiles, `${at}.tiles`) }
-  }), path, (w) => (w.kind === 'farmhand' ? `farmhand:${w.id}` : w.kind === 'load' ? `load:${w.station}` : w.kind === 'ranch' ? `ranch:${w.home}` : w.kind === 'grew' ? 'grew'
+  }), path, (w) => (w.kind === 'farmhand' ? `farmhand:${w.id}` : w.kind === 'load' ? loadKey(w.station) : w.kind === 'ranch' ? `ranch:${w.home}` : w.kind === 'grew' ? 'grew'
     : `withered:${w.crop}`))
+  // A station's loads: one a level, so up to its top level's (each its own line, in the order started).
+  function loadKey(station: string): string {
+    const n = (loads.get(station) ?? 0) + 1
+    loads.set(station, n)
+    if (n > STATION_MAX_LEVEL) fail(path, `more than ${STATION_MAX_LEVEL} loads at the ${station}`)
+    return `load:${station}:${n}`
+  }
 }
 /** The most actions a farmhand's day can hold: well past any she grows to. */
 const MAX_HAND_ACTIONS = 30
@@ -524,8 +541,11 @@ export function parseNewsLines(value: unknown, path: string, roster: ReadonlySet
       case 'chapter': int(object(v, at, ['kind', 'chapter']).chapter, `${at}.chapter`, 1, 8); return null
       // A place built overnight, a Farm Rank reached (2–10), a Diary milestone or row paid.
       case 'built': {
-        const id = object(v, at, ['kind', 'place']).place
-        return { kind, place: typeof id === 'string' && isBuildPlace(farmPlace(id)) ? id as FarmPlaceId : fail(`${at}.place`, 'expected a place you build') }
+        // A station's new level (2–5) comes with it once a level goes up; a morning from before levels has none.
+        const b = object(v, at, ['kind', 'place', 'level'])
+        const place = typeof b.place === 'string' && isBuildPlace(farmPlace(b.place)) ? b.place as FarmPlaceId : fail(`${at}.place`, 'expected a place you build')
+        if (b.level !== undefined && !isStation(place)) fail(`${at}.level`, 'only a station goes up a level')
+        return { kind, place, ...(b.level === undefined ? {} : { level: int(b.level, `${at}.level`, 2, STATION_MAX_LEVEL) }) }
       }
       case 'farm-rank': return { kind, rank: int(object(v, at, ['kind', 'rank']).rank, `${at}.rank`, 2, FARM_RANK_POINTS.length) }
       case 'milestone': {

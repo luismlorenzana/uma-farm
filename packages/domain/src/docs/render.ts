@@ -24,8 +24,9 @@ import { CROPS, SHOP_SEEDS } from '../fields/crops'
 import { CLEAR_FINDS, cropLevelStart, GROUND_NAMES, harvestQuality, MAX_CROP_LEVEL, seedsBackChance, stagesOf } from '../fields/fields'
 import { FIELD_PLOTS, plotName } from '../fields/plots'
 import { ACTIONS, BIRTHDAY_ACTIONS, DAY_ACTIONS, FESTIVAL_ACTIONS, NEW_YEAR_ACTIONS, type ActionId } from '../farm/actions'
-import { CHOP_LOGS, FORAGE_HAUL, reachOf } from '../gathering/hauls'
-import { LOAD_SIZE } from '../gathering/stations'
+import { CHOP_LOGS, FORAGE_HAUL, FULL_HAULS, reachOf, THIN_SHARE } from '../gathering/hauls'
+import { LOAD_SIZE, STATION_LEVELS } from '../gathering/stations'
+import { CRATE, EASE_FLOOR, EASE_STEP } from '../goods/market'
 import {
   ACTIVITY_STAT, EXPEDITION_CUTOFFS, STAT_CUTOFFS, STAT_TEMPERAMENT, TALENT_D, TALENT_GRADES, TEMPERAMENTS, TALENT_RANK_POINTS, TALENT_STATS, TALENT_YIELD, talentAffection,
   talentGrowth, talentPower, talentQuality, type TalentStep,
@@ -418,8 +419,38 @@ function stations(): string {
   return table(['Station', 'Builds for', 'Opens', 'Jobs', 'A load'], STATIONS.map((s) => {
     const jobs = STATION_JOB_IDS.filter((j) => STATION_JOBS[j].station === s)
       .map((j) => `${STATION_JOB_RULES[j].name}: ${STATION_JOBS[j].families.map((f) => FAMILY_NAMES[f].toLowerCase()).join(', ')}`)
-    return [farmPlace(s)!.name, buildCostWords(build(s)), `Farm Rank ${build(s).opens.rank}`, jobs.join(' · '), `1 to ${LOAD_SIZE}, ready the next morning`]
+    return [farmPlace(s)!.name, buildCostWords(build(s)), `Farm Rank ${build(s).opens.rank}`, jobs.join(' · '), `1 to ${LOAD_SIZE}, ready the next morning; a load a day a level`]
   }))
+}
+
+/** A station's levels: the loads a day each takes, its gold and its Farm Rank. */
+function stationLevels(): string {
+  return table(['Level', 'Loads a day', 'Costs', 'Farm Rank', 'Cumulative'], STATION_LEVELS.map((l, i) => [
+    l.level, l.loads, l.level === 1 ? 'The station’s build' : `${g(l.cost)}, gold only`, l.level === 1 ? 'The station’s' : `${l.farmRank}`,
+    g(STATION_LEVELS.slice(0, i + 1).reduce((n, x) => n + x.cost, 0)),
+  ]))
+}
+
+/** Thinning: four full hauls a place a day, then half. */
+function thinningBlock(): string {
+  return table(['', 'The rule'], [
+    ['A place', `Each forest area (${FOREST_AREAS.length}), fishing spot (${FISHING_SPOTS.length}) and dig (the Mine, the Quarry): ${FOREST_AREAS.length + FISHING_SPOTS.length + 2} places`],
+    ['Full hauls', `The first ${FULL_HAULS} a day at each place: a forage, a chop, a catch or a face, the farmer’s by day and the farmhands’ at night together`],
+    ['Thin', `Past the ${FULL_HAULS}: half a haul (×${THIN_SHARE}), the fraction drawn (\`draw(uid, day, 'thin:<place>', n)\`): a forage of 2 brings 1, a cast lands a fish half the time`],
+    ['Its day', 'Counted in `today.hauls`, cleared with the day at night step 7: a new day starts every place full'],
+  ])
+}
+
+/** The market: a crate, the step, the floor and the days after. */
+function marketBlock(): string {
+  return table(['', 'The rule'], [
+    ['A crate', `${CRATE} of one good in a night’s bin, any stars, sell at its price today`],
+    ['A flood', `Past a crate, each ${CRATE} more sell a step lower than the ones before: −${Math.round(EASE_STEP * 100)}% a step, the best stars first`],
+    ['The floor', `${EASE_FLOOR} steps: half the price`],
+    ['The days after', 'The good stays eased by the steps its last crate reached; its first crate the next night sells at that ease'],
+    ['Recovering', 'A step back each night it isn’t shipped past a crate, until it’s full price again'],
+    ['Shown', 'On the bin’s line (“Eased −20%”), the Warehouse’s good and its prices, and the morning’s sale'],
+  ])
 }
 
 // --- The ranch and the digs ----------------------------------------------------------------------------------------
@@ -531,7 +562,7 @@ function workBoard(): string {
       water: `A dry growing tile; ${tilesAt('water', TRICK_AT.waterTwo)}; every dry tile of hers in one row from Watering ${TRICK_AT.waterRow}`,
       plant: `An empty tilled tile, the seed named or any held for the season, own seeds first, that ripens in time; ${tilesAt('plant', TRICK_AT.plantTwo)}`,
       till: `A step on a tile: clears an overgrown one, tills a cleared one; both in one from Clearing ${TRICK_AT.tillInOne}`,
-      load: `A load of the good the station holds most of, up to ${LOAD_SIZE} (${BIG_LOAD} from level ${TRICK_AT.bigLoad})`,
+      load: `A load of the good the station holds most of, up to ${LOAD_SIZE} (${BIG_LOAD} from her level ${TRICK_AT.bigLoad}), until the station holds its loads for the day: one a level`,
       forage: `A haul of ${FORAGE_HAUL} finds (${FORAGE_HAUL + 1} from Foraging ${TRICK_AT.forageThree})`,
       chop: `${CHOP_LOGS} logs (${CHOP_LOGS + 1} from Chopping ${TRICK_AT.chopThree})`,
       fish: `A cast: one fish (two casts from Fishing ${TRICK_AT.castTwo})`,
@@ -539,7 +570,7 @@ function workBoard(): string {
       mine: `A face on the deepest floor: ${FACE_FINDS} finds by her yield (${FACE_FINDS + 1} from Mining ${TRICK_AT.digThree}), a face more toward its stairs; the farmer takes them`,
       cook: `A batch from ${BATCH_GOODS} goods of food by the plain rule: ${COOK_BATCH[0]} meals at Cooking 1, up to ${COOK_BATCH.at(-1)} at Cooking ${COOK_BATCH.length}, into the pantry`,
     }
-    const stops = OPEN_TASKS.includes(kind) ? `Never: her ${kind === 'mine' ? 'digging' : 'gathering'} shares what’s left, a turn each` : kind === 'load' ? 'Once the station holds today’s load'
+    const stops = OPEN_TASKS.includes(kind) ? `Never: her ${kind === 'mine' ? 'digging' : 'gathering'} shares what’s left, a turn each` : kind === 'load' ? 'Once the station holds today’s loads, one a level'
       : kind === 'care' ? 'When every animal there is fed, collected and cared for' : kind === 'cook' ? 'Once the pantry holds tonight’s meals for everyone, or the food runs out'
         : 'When none of its tiles needs it'
     return [TASK_NAMES[kind], over, each[kind], stops, kind === 'load' ? 'Milling, Sawing, Smoking, Smelting or Cutting, by station' : APTITUDE_NAMES[aptitude as AptitudeId],
@@ -1256,7 +1287,7 @@ export function renderBlock(key: string): string | null {
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,
     'place-activity': placeActivity, 'forest-areas': forestAreas, 'fishing-spots': fishingSpots, 'fish-sizes': fishSizes, 'farmer-hauls': farmerHauls,
     stations, 'station-recipes': stationRecipes, animals: animalsBlock, 'ranch-rules': ranchRules, 'dig-floors': digFloors,
-    'dorm-levels': dormLevels, upkeep: upkeepBlock, loans: loansBlock, food: foodBlock, 'cook-batch': cookBatchBlock,
+    'dorm-levels': dormLevels, 'station-levels': stationLevels, thinning: thinningBlock, market: marketBlock, upkeep: upkeepBlock, loans: loansBlock, food: foodBlock, 'cook-batch': cookBatchBlock,
     'farmhand-day': farmhandDay, 'work-board': workBoard, 'aptitude-levels': aptitudeLevels, 'aptitude-start': aptitudeStart, tricks: tricksBlock,
     'farm-rank-points': farmRankPoints, 'farm-rank-opens': farmRankOpensBlock, milestones: milestonesBlock, 'diary-rows': diaryRows, builds: buildsBlock,
     'uma-milestones': umaMilestonesBlock, cast: castBlock, scenes: scenesBlock, 'town-spots': townSpots, 'town-schedule': townSchedule, 'town-shops': townShops, 'her-menu': herMenuBlock }

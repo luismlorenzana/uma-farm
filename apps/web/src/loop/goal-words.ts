@@ -33,8 +33,9 @@ export function milestoneName(id: string): string {
 /** A milestone or row paid tonight: "10,000g shipped · +300g". */
 export const milestoneWords = (id: string): string => `${milestoneName(id)} · +${gold(paidGold(id))}`
 
-/** A place built overnight: "Built overnight · the Mill". */
-export const builtWords = (place: string): string => `Built overnight · the ${farmPlace(place)?.name ?? place}`
+/** A place built overnight: "Built overnight · the Mill"; a station's new level: "The Mill · level 2 · 2 loads a day". */
+export const builtWords = (place: string, level?: number): string =>
+  (level ? `The ${farmPlace(place)?.name ?? place} · level ${level} · ${level} loads a day` : `Built overnight · the ${farmPlace(place)?.name ?? place}`)
 
 /** A milestone with the Umas in words: what it opens, what it waits for, and how far along: "House 1 · Your first
  * wedding · 0 / 1". */

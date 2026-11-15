@@ -73,27 +73,31 @@ describe('the Farm Rank', () => {
     ])
     expect(farmRankOpens(3)).toEqual([
       'The Sawmill to build (1,500g · 40 logs)', 'The Barn to build (3,500g · 30 logs · 20 vegetables)', 'The Smokehouse to build (2,000g · 30 logs · 20 fish)',
+      'Plot 2 to clear (2,500g)', 'Station level 2 (2 loads a day)',
       'Ducks, Cows and Sheep at the rancher’s', 'Dorm level 4 (9 beds)',
     ])
     expect(farmRankOpens(4)).toEqual([
-      'The Mine to build (10,000g · 60 planks)', 'The Smelter to build (8,000g · 40 planks · 40 logs)', 'The Old Forest', 'The Lake', 'Goats at the rancher’s',
+      'The Mine to build (10,000g · 60 planks)', 'The Smelter to build (8,000g · 40 planks · 40 logs)', 'Plot 3 to clear (5,000g)', 'Station level 3 (3 loads a day)',
+      'The Old Forest', 'The Lake', 'Goats at the rancher’s',
       'The Mine’s and the Quarry’s floors to 15', 'Dorm level 5 (11 beds)', 'New seeds at the shop',
     ])
     expect(farmRankOpens(6)).toEqual([
-      'The Dock to build (20,000g · 80 planks)', 'The Boat to build (30,000g · 60 planks · 30 fillets)', 'The Mountain', 'The Falls', 'Cashmere Goats at the rancher’s',
+      'The Dock to build (20,000g · 80 planks)', 'The Boat to build (30,000g · 60 planks · 30 fillets)', 'Plot 5 to clear (15,000g)', 'Station level 5 (5 loads a day)',
+      'The Mountain', 'The Falls', 'Cashmere Goats at the rancher’s',
       'The Mine’s and the Quarry’s floors to 20', 'Dorm level 7 (17 beds)',
     ])
     expect(farmRankOpens(8).some((o) => o.startsWith('Dorm'))).toBe(false) // the Dorm for 20 tops out at level 8, Farm Rank 7
+    expect(farmRankOpens(9)).toEqual(['Plot 8 to clear (50,000g)'])
     expect(farmRankOpens(10)).toEqual(['The World Tree', 'The Moon Pool', 'The Mine’s and the Quarry’s floors to 30', 'The farm’s gold crest'])
   })
 
   it('is recomputed at night step 8 from the save, and a rank reached is news in the morning', () => {
-    const save = { ...farm(3), bin: { carrot: [100, 0, 0, 0, 0] as [number, number, number, number, number] } }
+    const save = { ...farm(3), bin: { carrot: [50, 0, 0, 0, 0] as [number, number, number, number, number], potato: [50, 0, 0, 0, 0] as [number, number, number, number, number] } }
     const morning = night(save)
-    // 100 Carrots at 70g (Spring's demand) pay 7,000g: 70 points, and 5 for the entry.
-    expect(morning.farm.points).toBe(75)
+    // 50 Carrots at 70g and 50 Potatoes at 65g (Spring's demand), a crate each, pay 6,750g: 67 points, and 5 each for the entries.
+    expect(morning.farm.points).toBe(77)
     expect(morning.summary!.news.filter((n) => n.kind === 'farm-rank')).toEqual([])
-    const more = night({ ...morning, summary: null, bin: { 'emperor-pumpkin': [20, 0, 0, 0, 0] } })
+    const more = night({ ...morning, summary: null, bin: { 'emperor-pumpkin': [19, 0, 0, 0, 0] } })
     expect(farmRankOf(more.farm.points)).toBe(2)
     expect(more.summary!.news).toContainEqual({ kind: 'farm-rank', rank: 2 })
   })

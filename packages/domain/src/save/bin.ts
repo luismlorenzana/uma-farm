@@ -5,7 +5,8 @@
 // after its nine steps.
 import { spend } from '../farm/actions'
 import { GOOD_IDS } from '../goods/ids'
-import { hasPrice, inDemand, priceOf } from '../goods/prices'
+import { easedLines, easedPercent, easeOf, type Market } from '../goods/market'
+import { hasPrice, inDemand } from '../goods/prices'
 import type { BinSale } from '../night/summary'
 import { earnGold } from './gold'
 import { SaveRuleError } from './rules'
@@ -66,17 +67,28 @@ export function takeBack<S extends BinSave>(save: S, id: string, stars: number, 
 const ORDER = new Map(GOOD_IDS.map((id, i) => [id, i]))
 
 /** The bin's lines on `day`: each good at each star, its count, its gold and whether it's in demand, in the catalogue's
- * order, ★1 first. */
-export function binSales(bin: Warehouse, day: number): BinSale[] {
+ * order, ★1 first. With the farm's market, a good eased by a flood sells at its ease, and past a crate of it each crate
+ * more a step lower (`goods/market.ts`): its lines say how far (`eased`, in percent). */
+export function binSales(bin: Warehouse, day: number, market: Market = {}): BinSale[] {
   return Object.entries(bin)
     .sort(([a], [b]) => (ORDER.get(a) ?? Infinity) - (ORDER.get(b) ?? Infinity))
-    .flatMap(([id, row]) => row.flatMap((count, i): BinSale[] => (count > 0
-      ? [{ kind: 'sold', id, stars: i + 1, count, gold: priceOf(id, i + 1, day) * count, demand: inDemand(id, day) }]
-      : [])))
+    .flatMap(([id, row]) => {
+      const demand = inDemand(id, day)
+      return easedLines(id, row, day, easeOf(market, id)).map((line): BinSale => ({
+        kind: 'sold', id, stars: line.stars, count: line.count, gold: line.gold, demand, ...(line.steps > 0 ? { eased: easedPercent(line.steps) } : {}),
+      }))
+    })
 }
 
 /** What the bin pays tonight if nothing changes: the bin sheet's "About 1,240g tonight". */
-export const binTotal = (bin: Warehouse, day: number): number => binSales(bin, day).reduce((sum, sale) => sum + sale.gold, 0)
+export const binTotal = (bin: Warehouse, day: number, market: Market = {}): number => binSales(bin, day, market).reduce((sum, sale) => sum + sale.gold, 0)
+
+/** What a crate adds to tonight's bin, at the market as it stands: the Warehouse's pick bar's "about 425g". */
+export function crateWorth(save: Pick<FarmSave, 'bin' | 'calendar' | 'farm'>, lines: readonly CrateLine[]): number {
+  let bin = save.bin
+  for (const line of lines) if (line.count > 0 && hasPrice(line.id)) bin = addGoods(bin, line.id, line.stars, line.count)
+  return binTotal(bin, save.calendar.day, save.farm.market) - binTotal(save.bin, save.calendar.day, save.farm.market)
+}
 
 /** What one night's bin paid. */
 export interface BinPayout<S> {
@@ -86,12 +98,13 @@ export interface BinPayout<S> {
 }
 
 /**
- * Night step 1: everything in the bin pays at price × stars × demand on `day`, the day it was shipped.
- * The gold goes to `gold` and to `farm.counts['gold-shipped']` (the Farm Rank and milestones), each good's count to
- * `diary.shipped` (the Diary's collections), and the bin empties. An empty bin pays nothing and changes nothing.
+ * Night step 1: everything in the bin pays at price × stars × demand on `day`, the day it was shipped, at the market's
+ * ease (`goods/market.ts`). The gold goes to `gold` and to `farm.counts['gold-shipped']` (the Farm Rank and milestones),
+ * each good's count to `diary.shipped` (the Diary's collections), and the bin empties. An empty bin pays nothing and
+ * changes nothing. The market moves after it (`easeTheMarket`).
  */
 export function payBin<S extends Pick<FarmSave, 'bin' | 'gold' | 'farm' | 'diary'>>(save: S, day: number): BinPayout<S> {
-  const sales = binSales(save.bin, day)
+  const sales = binSales(save.bin, day, save.farm.market)
   if (sales.length === 0) return { save, sales, gold: 0 }
   const gold = sales.reduce((sum, sale) => sum + sale.gold, 0)
   const shipped = { ...save.diary.shipped }

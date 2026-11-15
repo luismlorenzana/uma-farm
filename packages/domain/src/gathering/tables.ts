@@ -140,7 +140,8 @@ export const FISH_SIZES: Readonly<Record<string, readonly [min: number, max: num
 export const HAUL_BASE = { forest: 5, fishery: 3 } as const
 /** The tool's factor by tier, Basic → Mythril: the Axe in the forest, the Rod at the Fishery. */
 export const TOOL_YIELD: readonly number[] = [1, 1.15, 1.3, 1.45, 1.6]
-/** Well fed: ×1.25 items a day for a 1-day kind. */
+/** Well fed: ×1.25 items a day for a 1-day kind, in the old day's haul (`haulCount`). A farmhand's haul and face take none: well
+ * fed gives her one more action, +0.25 quality and ×1.25 rank points instead (`farm/farmhands.ts`). */
 export const WELL_FED_YIELD = 1.25
 
 // --- The stations ---------------------------------------------------------------------------------------------

@@ -12,7 +12,7 @@ import {
   payBuild, borrowFor, repayLoan, buyDorm, cancelSwap, swapDorm, buy, endDay, readScene, SaveRuleError, shopLines, takeBack,
   touched, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, inviteToFarm, nameFarmer,
   type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair,
-  chop, clearPlot, clearTile, fish, forage, goToTown, harvestTile, plantTile, shipCrate, startLoad, tillTile, waterTile,
+  chop, clearPlot, clearTile, fish, forage, goToTown, harvestTile, plantTile, shipCrate, startLoad, tillTile, upgradeStation, waterTile,
   type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId, seeIllustration, setTasks, type FarmTask,
   buyAnimal, buyFodder, careFor, collect, cutGrass, feedAnimal, takeStairs, workFace, type Animal, type AnimalKind, type Collected, type DigId, type Face,
   type RanchHome,
@@ -110,13 +110,15 @@ export const chopAt = (area: string): Promise<Haul> => act((s) => {
   const done = chop(s, area)
   return { save: done.save, result: done.haul }
 })
-/** Fishes a spot: the catch, measured. */
-export const fishAt = (spot: string): Promise<Measured> => act((s) => {
+/** Fishes a spot: the catch, measured; null when nothing bit (a thin spot). */
+export const fishAt = (spot: string): Promise<Measured | null> => act((s) => {
   const done = fish(s, spot)
   return { save: done.save, result: done.caught }
 })
 /** Starts a load at a station, ready the next morning. */
 export const loadAt = (station: StationId, item: string, count: number) => change((s) => startLoad(s, station, item, count))
+/** Buys a station's next level: its gold now, the level the next morning. Free of actions. */
+export const upgradeAt = (station: StationId) => change((s) => upgradeStation(s, station))
 
 // --- The ranch and the digs ---------------------------------------------------------------------------------------
 

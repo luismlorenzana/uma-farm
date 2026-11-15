@@ -16,6 +16,8 @@ import { GOLD_SHIPPED } from '../save/bin'
 import { earnGold } from '../save/gold'
 import type { FarmSave } from '../save/v4'
 import { DORM_LEVELS } from './dorm'
+import { FIELD_PLOTS, plotName } from '../fields/plots'
+import { STATION_LEVELS } from '../gathering/stations'
 import { buildCostWords, offeredAt } from './builds'
 import { FARM_RANK_POINTS, farmRankOf } from './farm'
 import {
@@ -57,19 +59,22 @@ export function nextFarmRank(points: number): { rank: number; points: number } |
 
 /** What a Farm Rank opens in the game as built, read from the rules that gate on it: the places it offers to build, a
  * place whose game isn't built yet as "not built yet", the forest's areas and the Fishery's spots in the farmer's reach,
- * the Dorm's levels (the Dorm for 20) and the shop's seeds (tier 1 is the start's). Rank 10 is the farm's gold crest. */
+ * the field's plots to clear, the stations' levels, the Dorm's levels (the Dorm for 20) and the shop's seeds (tier 1 is the
+ * start's). Rank 10 is the farm's gold crest. */
 export function farmRankOpens(rank: number): string[] {
   const areas = FOREST_AREAS.filter((id) => rank > 1 && FARMER_REACH[FOREST[id].opens] === rank).map((id) => cap(AREA_NAMES[id]))
   const spots = FISHING_SPOTS.filter((id) => rank > 1 && FARMER_REACH[FISHERY[id].opens] === rank)
     .map((id) => `${cap(SPOT_NAMES[id])}${FISHERY[id].needs ? ` (with the ${FISHERY[id].needs === 'dock' ? 'Dock' : 'Boat'})` : ''}`)
   const dorm = DORM_LEVELS.filter((l) => l.level > 1 && l.farmRank === rank).map((l) => `Dorm level ${l.level} (${l.beds} beds)`)
+  const plots = FIELD_PLOTS.flatMap((p, i) => (p.by === 'clear' && p.rank === rank ? [`${plotName(i)} to clear (${p.gold.toLocaleString('en-US')}g)`] : []))
+  const levels = STATION_LEVELS.filter((l) => l.level > 1 && l.farmRank === rank).map((l) => `Station level ${l.level} (${l.loads} loads a day)`)
   const seeds = rank > 1 && Object.values(SHOP_SEEDS).some((crops) => crops.some((crop) => CROPS[crop].tier === rank)) ? ['New seeds at the shop'] : []
   const builds = offeredAt(rank).map((p) => `The ${p.name} to build (${p.opens.game ? buildCostWords(p) : 'not built yet'})`)
   const animals = ANIMAL_KINDS.filter((kind) => ANIMALS[kind].rank === rank).map((kind) => ANIMAL_PLURALS[kind])
   const ranch = animals.length > 0 ? [`${listWords(animals)} at the rancher’s`] : []
   const floor = RANK_FLOORS[FARMER_REACH.indexOf(rank)]
   const digs = floor !== undefined && rank >= MINE_RANK ? [`The Mine’s and the Quarry’s floors to ${floor}`] : []
-  return [...builds, ...areas, ...spots, ...ranch, ...digs, ...dorm, ...seeds, ...(rank === FARM_RANK_POINTS.length ? ['The farm’s gold crest'] : [])]
+  return [...builds, ...plots, ...levels, ...areas, ...spots, ...ranch, ...digs, ...dorm, ...seeds, ...(rank === FARM_RANK_POINTS.length ? ['The farm’s gold crest'] : [])]
 }
 /** The animals by name, more than one. */
 const ANIMAL_PLURALS: Readonly<Record<AnimalKind, string>> = {

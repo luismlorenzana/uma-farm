@@ -22,7 +22,7 @@ import { drawStars, quality, toolQuality } from '../goods/stars'
 import { SaveRuleError } from '../save/rules'
 import { DEEPEST_FLOOR, type Dig, type DigId, type FarmSave, type ToolId } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
-import { FARMER_REACH } from './hauls'
+import { FARMER_REACH, haulAt, haulsToday } from './hauls'
 
 /** The digs' names. */
 export const DIG_NAMES: Readonly<Record<DigId, string>> = { mine: 'Mine', quarry: 'Quarry' }
@@ -101,7 +101,8 @@ export function workFace<S extends FarmSave>(save: S, dig: DigId): { save: S; fa
 
 /** A face itself, spending nothing: `by.count` finds on the deepest floor (their grade `draw(uid, day, 'dig:<dig>', n)`,
  * at the Quarry their kind `'dig-kind:<dig>'`, their stars `'dig-stars:<dig>'`, n the farm's count of finds there), into
- * the Warehouse; the floor reached, and a face more toward its stairs. */
+ * the Warehouse; the floor reached, and a face more toward its stairs. A dig thins as an area does: full finds its
+ * first four faces a day, then half (`haulAt`). */
 export function faceAt<S extends FarmSave>(save: S, dig: DigId, by: Digger): { save: S; face: Face } {
   const at = save.places[dig]
   const floor = digFloor(at)
@@ -109,7 +110,8 @@ export function faceAt<S extends FarmSave>(save: S, dig: DigId, by: Digger): { s
   const u = (what: string, k: number) => draw(save.account.uid, save.calendar.day, `${what}:${dig}`, before + k)
   let items = save.items
   const got: string[] = []
-  for (let k = 0; k < by.count; k++) {
+  const finds = haulAt(save, dig, by.count)
+  for (let k = 0; k < finds; k++) {
     const good = findOn(dig, floor, u('dig', k), u('dig-kind', k))
     const stars = drawStars(by.q, u('dig-stars', k))
     items = addGoods(items, good, stars, 1)
@@ -120,7 +122,7 @@ export function faceAt<S extends FarmSave>(save: S, dig: DigId, by: Digger): { s
   const places = { ...save.places, [dig]: { deepest: Math.max(at.deepest, floor), stairs } }
   const counts = { ...save.farm.counts, [dugCount(dig)]: before + got.length }
   return {
-    save: { ...save, items, places, farm: { ...save.farm, counts } },
+    save: { ...save, items, places, farm: { ...save.farm, counts }, today: { ...save.today, hauls: { ...save.today.hauls, [dig]: haulsToday(save, dig) + 1 } } },
     face: { dig, floor, items: got, stairs: need > 0 && at.stairs < need && stairs >= need },
   }
 }

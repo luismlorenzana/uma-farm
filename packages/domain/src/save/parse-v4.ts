@@ -40,6 +40,8 @@ export const SAVE_V5_KEYS = [
 const MAX_DAY_ACTIONS = 100
 /** The areas and spots a day can work. */
 const GATHER_IDS: readonly string[] = [...FOREST_AREAS, ...FISHING_SPOTS]
+/** The places that thin: the areas, the spots and the two digs (`today.hauls`). */
+const HAUL_IDS: readonly string[] = [...GATHER_IDS, ...DIGS]
 
 /** Events a route can hold: her arrival and 26 rungs, with room for later waves' extras. */
 const MAX_MEMORIES = 64
@@ -208,7 +210,7 @@ const inviteKind = (v: unknown, at: string): InviteKind => (v === FESTIVAL_NIGHT
 /** `today`: the evenings within the day's slots (`evenings` regular ones, and festival
  * night once at most), and `invites` invitations, each a different Uma. */
 function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, day: number, married: number): TodayV4 {
-  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed'])
+  const o = object(value, path, ['actions', 'eventActions', 'town', 'gathered', 'chats', 'gifts', 'praise', 'praised', 'events', 'occasions', 'asked', 'evenings', 'invites', 'bonds', 'ring', 'reception', 'meals', 'fed', 'hauls'])
   const umas = (raw: unknown, at: string) => unique(list(raw, at, 0, roster.size).map((v, i) => member(v, `${at}.${i}`, roster)), at)
   const slots = eveningsOn(day, married)
   const evenings = list(o.evenings, `${path}.evenings`, 0, slots + 1).map((v, i) => {
@@ -244,8 +246,18 @@ function parseToday(value: unknown, path: string, roster: ReadonlySet<string>, d
     ...(o.meals === undefined ? {} : { meals: unique(list(o.meals, `${path}.meals`, 0, MEALS.length).map((v, i) => oneOf(v, `${path}.meals.${i}`, MEALS)), `${path}.meals`) }),
     // The farmhands well fed this morning: absent with none (the save grows it in place).
     ...(o.fed === undefined ? {} : { fed: umas(o.fed, `${path}.fed`) }),
+    // The hauls today at each area and spot, the farmer's and the farmhands' (a place thins past four): absent until the
+    // first (the save grows it in place). Each counted place is one worked today.
+    ...(o.hauls === undefined ? {} : { hauls: parseHauls(o.hauls, `${path}.hauls`) }),
   }
 }
+
+/** `today.hauls`: an area or a spot, its hauls today (1 or more). */
+function parseHauls(value: unknown, path: string): Record<string, number> {
+  return Object.fromEntries(Object.entries(record(value, path)).map(([where, n]) => [oneOf(where, `${path}.${where}`, HAUL_IDS), int(n, `${path}.${where}`, 1, MAX_HAULS)]))
+}
+/** The most hauls a place takes in a day: far past any farm's. */
+const MAX_HAULS = 10_000
 
 /** `today.bonds`: a pair of roster Umas by `pairKey` (numeric order), its hearts 0–5 before it first moved
  * since the last morning. */

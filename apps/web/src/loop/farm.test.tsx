@@ -1,7 +1,7 @@
 // The farm map as played: the field's sign with its counts, and the field's own screen (`/field`): a plot a page, a
 // tile's panel (`?tile=<n>`) clearing, tilling, planting and watering, one action each, and a ripe tile harvested; plot 2
-// locked until Farm Rank 3, then cleared; a swipe and the dots between pages; a row's farmhands; the woods' edge foraging and chopping, the pond's edge fishing, a built station starting its one
-// load; the actions chip counting down; and every button greyed once the day's ten are spent. The story pack is the
+// locked until Farm Rank 3, then cleared; a swipe and the dots between pages; a row's farmhands; the woods' edge foraging and chopping, the pond's edge fishing, an area thin after four hauls; a built station starting its
+// loads, a load a level, and buying its next level; the actions chip counting down; and every button greyed once the day's ten are spent. The story pack is the
 // stand-in, master data the album fixture; the server is a stub. Invented data only.
 import 'fake-indexeddb/auto'
 import { fieldTiles, bareTile, isOvergrown, newLove, newRosterUma, newSave, STAND_IN_FILES, storyPackFrom, wildPlot, type SaveV4, type StoryPack, type Tile } from '@farm/domain'
@@ -120,7 +120,7 @@ describe('the field\'s sign on the farm map', () => {
 })
 
 describe('the field\'s screen', () => {
-  it('draws a plot a page, 40 tiles, each a link to its panel, the page dots with plot 2 locked', async () => {
+  it('draws a plot a page, 40 tiles, each a link to its panel, the page dots with the plots past 1 locked by their Farm Rank', async () => {
     useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
     await render(<FieldRoute />, '/field')
     expect($('[data-field-screen]')?.dataset.plotPage).toBe('1')
@@ -128,7 +128,7 @@ describe('the field\'s screen', () => {
     expect($('[data-tile="0"]')?.getAttribute('href')).toBe('/field?tile=0')
     expect($('[data-tile="0"]')?.getAttribute('aria-label')).toBe('Row 1, tile 1: Cleared ground')
     expect($$('[data-row-tab]')).toHaveLength(5)
-    expect($$('[data-page-dot]').map((d) => d.getAttribute('aria-label'))).toEqual(['Plot 1', 'Plot 2, locked: Opens at Farm Rank 3'])
+    expect($$('[data-page-dot]').map((d) => d.getAttribute('aria-label'))).toEqual(['Plot 1', ...[3, 4, 5, 6, 7, 8, 9].map((rank, i) => `Plot ${i + 2}, locked: Opens at Farm Rank ${rank}`)])
     expect($('[data-plot-counts]')?.textContent).toBe('40 to clear or till')
     expect($('[data-action="prev-plot"]')).toBeNull()
     expect($('[data-action="next-plot"]')?.getAttribute('aria-label')).toBe('Plot 2, locked')
@@ -296,11 +296,54 @@ describe('a station', () => {
     expect($('[data-option="pine-plank@1"]')?.textContent).toContain('From Pine Log · 12 held')
     await click('[data-option="pine-plank@1"] [data-action="load"]')
     await until(() => save().loads.sawmill !== undefined)
-    expect(save().loads.sawmill).toEqual({ item: 'pine-plank@1', count: 8 })
+    expect(save().loads.sawmill).toEqual([{ item: 'pine-plank@1', count: 8 }])
     expect(save().items['pine-log']).toEqual([4, 0, 0, 0, 0])
     expect(save().today.actions).toBe(1)
     expect($('[data-load="pine-plank@1"]')?.textContent).toContain('Ready tomorrow morning')
     expect($('[data-action="load"]')).toBeNull()
     expect(path).toBe('/?peek=sawmill')
+  })
+
+  it('takes a load a day a level, and buys its next level from its Farm Rank: gold now, the level tomorrow', async () => {
+    const base = farm()
+    const built: SaveV4 = {
+      ...base, gold: 3_000, buildings: { ...base.buildings, mill: 2 }, items: { ...base.items, wheat: [20, 0, 0, 0, 0] }, farm: { ...base.farm, points: 250 },
+    }
+    useGame.setState({ uid: 'u1', status: 'ready', save: built })
+    await render(<FarmRoute />, '/?peek=mill')
+    expect($('[data-station-level]')?.textContent).toBe('Level 2')
+    expect($('[data-loads]')?.textContent).toBe('0 of 2 loads today')
+    await click('[data-option="wheat-flour@1"] [data-action="load"]')
+    await until(() => save().loads.mill?.length === 1)
+    expect($('[data-loads]')?.textContent).toBe('1 of 2 loads today')
+    await until(() => $('[data-option="wheat-flour@1"] [data-action="load"]')?.hasAttribute('disabled') === false)
+    await click('[data-option="wheat-flour@1"] [data-action="load"]')
+    await until(() => save().loads.mill?.length === 2)
+    expect($$('[data-load]')).toHaveLength(2)
+    expect($('[data-action="load"]')).toBeNull()
+    // Level 3 opens at Farm Rank 4: greyed with why.
+    expect($('[data-next-level="3"]')?.textContent).toContain('Opens at Farm Rank 4')
+    expect($('[data-action="upgrade"]')?.hasAttribute('disabled')).toBe(true)
+    useGame.setState({ save: { ...save(), farm: { ...save().farm, points: 950 }, gold: 6_000 } })
+    await settle()
+    await click('[data-action="upgrade"]')
+    await until(() => save().gold === 1_000)
+    expect(save().farm.builds).toEqual(['mill'])
+    expect(save().buildings.mill).toBe(2)
+    expect($('[data-next-level="3"]')?.textContent).toContain('Ready tomorrow')
+    expect($('[data-action="upgrade"]')).toBeNull()
+  })
+})
+
+describe('thin and eased', () => {
+  it('marks an area thin after its four full hauls today, and counts them down before', async () => {
+    const base = farm()
+    useGame.setState({ uid: 'u1', status: 'ready', save: { ...base, today: { ...base.today, hauls: { woods: 3 } } } })
+    await render(<FarmRoute />, '/?peek=forest')
+    expect($('[data-where="woods"] [data-thin]')?.textContent).toBe('1 full haul left')
+    await click('[data-where="woods"] [data-action="forage"]')
+    await until(() => save().today.hauls?.woods === 4)
+    expect($('[data-where="woods"] [data-thin]')?.textContent).toBe('Thin · half hauls')
+    expect($('[data-where="hills"] [data-thin]')).toBeNull()
   })
 })

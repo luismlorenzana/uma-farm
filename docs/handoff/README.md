@@ -43,11 +43,22 @@ a batch too, and a farmhand on **Cook** cooks for everyone, 6 to 12 meals a batc
 fed. The Book shows tonight's food beside the upkeep ([food](../game-mechanics.md#food), [what food costs, and what
 cooking saves](../game-mechanics.md#what-food-costs-and-what-cooking-saves)).
 
-**Next:** the farm at scale goes on (F91, [the analysis](../design/game-design.md#the-farm-at-scale-2026-11-15)), then Phase 2's workshops, the Kitchen first.
+**The farm holds 10 and 20 Umas at work** (F91): the field clears up to eight plots, one a Farm Rank from 3 to 9
+(2,500g to 50,000g); a station's level is a load a day, levels 2 to 5 bought at the station from Farm Rank 3 to 6
+(2,000g to 20,000g, the level the next morning); each forest area, fishing spot and dig gives four full hauls a day,
+then thin ones (half), and its panel says "3 full hauls left", then **Thin · half hauls**; and a good shipped past a
+crate of 50 in a night eases −10% a crate, down to half, recovering a step a night: the bin and the Warehouse say
+**Eased −20%**. Well fed keeps its extra action but no longer lifts a haul's count. A simulation plays 10, 20 and 50
+Umas over four years: 10 and 20 are fully in real jobs, and 50 run past the farm's jobs by about ten Umas, the work
+Phase 2's employers bring ([the farm at scale](../game-mechanics.md#the-farm-at-scale-10-20-and-50-umas),
+[thin](../game-mechanics.md#thin-four-full-hauls-a-place-a-day), [the market](../game-mechanics.md#the-market-feels-a-flood),
+[a station's levels](../game-mechanics.md#its-levels)).
+
+**Next:** Phase 2's workshops, the Kitchen first, on your go ([the roadmap](../roadmap.md#phase-2-the-whole-farm)).
 
 | Piece | Who | State |
 |---|---|---|
-| [F91](tasks/F91-work-at-scale.md) **Work at scale: 10, 20 and 50 Umas** | Claude | Next, on your go |
+| **Phase 2's workshops**, the Kitchen first | Claude | On your go: its packet is written when it starts |
 
 ## Open packets
 
@@ -67,6 +78,7 @@ Not packets: each has a standing guide that changes as the game does.
 | What | Where |
 |---|---|
 | **Look at the field's screen on your phone:** tap the field's sign on the farm, page to plot 2 and back with a swipe, and tell me if the tiles feel big enough | [uma-farm.web.app](https://uma-farm.web.app) |
+| **Look at the farm at scale on your phone:** forage the Woods four times and see it go **Thin**; open the Mill and see its level and loads (its next level from Farm Rank 3); ship a crate of 60 of one good and see the bin say **Eased −10%** | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Eat on your phone:** read the morning's "Takeout" line, cook a batch on the Farmhouse's sheet, and set a farmhand to Cook on the Book's work board; tell me if takeout bites as it should | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Play your farm.** Start the new farm once, on its card when the app opens: it's the last start-over, and the farm it starts is the one you keep. Then play days as they come, and tell me what feels off | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story and ship it** | [How the story reaches the game](../story-pack.md#how-the-story-reaches-the-game) |
@@ -76,7 +88,8 @@ Not packets: each has a standing guide that changes as the game does.
 
 - **Sideways:** the bar, the rail and side panels; held upright, it asks you to turn it ([the frame](../game-mechanics.md#the-frame-landscape)).
 - **Ten actions a day** on the tile farm: clear, till, plant, water every day, harvest ([a day](../game-mechanics.md#a-day-ten-actions)).
-- **The field's own screen:** the field's sign on the farm, then a plot a page, full screen; plot 2 from Farm Rank 3 ([the field's screen](../game-mechanics.md#the-fields-screen)).
+- **The field's own screen:** the field's sign on the farm, then a plot a page, full screen; plots 2 to 8 from Farm Rank 3 to 9 ([the field's screen](../game-mechanics.md#the-fields-screen)).
+- **Work at scale:** a station's level and loads, an area or a spot going thin after four hauls, and a good eased after a flood ([thin](../game-mechanics.md#thin-four-full-hauls-a-place-a-day), [the market](../game-mechanics.md#the-market-feels-a-flood)).
 - **The town map:** walk between places, see who's there now, and meet whoever you like by introducing yourself ([the town](../game-mechanics.md#the-town)).
 - **Her stages,** acquaintance to married: hangouts and dates at two actions, Dinner in town, A night in ([the Uma loop](../game-mechanics.md#the-uma-loop)).
 - **Farmhands:** invite a friend to work, set her tasks on the Book's work board, and watch her aptitudes rise ([farmhands](../game-mechanics.md#farmhands)).

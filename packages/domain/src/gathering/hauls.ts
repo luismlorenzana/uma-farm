@@ -61,6 +61,29 @@ function open(save: Pick<FarmSave, 'farm' | 'buildings'>, place: GatherPlace, wh
 const gathered = (save: Pick<FarmSave, 'today'>, where: string): string[] => (save.today.gathered.includes(where) ? save.today.gathered : [...save.today.gathered, where])
 const bump = (counts: Record<string, number>, key: string, n: number): Record<string, number> => ({ ...counts, [key]: (counts[key] ?? 0) + n })
 
+// --- Thinning: four full hauls a place a day ---------------------------------------------------------------------------
+
+/** Each area and spot gives full hauls the first four times a day, the farmer's by day and the farmhands' at night
+ * together; past that it's thin: half hauls, the fraction drawn. So gathering takes a few hands a place, not any number. */
+export const FULL_HAULS = 4
+export const THIN_SHARE = 0.5
+/** The hauls at an area or a spot today. */
+export const haulsToday = (save: Pick<FarmSave, 'today'>, where: string): number => save.today.hauls?.[where] ?? 0
+/** Whether a place is thin today: its four full hauls taken. */
+export const thinToday = (save: Pick<FarmSave, 'today'>, where: string): boolean => haulsToday(save, where) >= FULL_HAULS
+/** A haul's count at a place now: its full count for the first four today, then half, the fraction drawn
+ * (`draw(uid, day, 'thin:<where>', n)`, numbered by the place's hauls today); a thin cast may land nothing. */
+export function haulAt(save: Pick<FarmSave, 'today' | 'account' | 'calendar'>, where: string, count: number): number {
+  const n = haulsToday(save, where)
+  if (n < FULL_HAULS) return count
+  const half = count * THIN_SHARE
+  const whole = Math.floor(half + 1e-9)
+  return whole + (draw(save.account.uid, save.calendar.day, `thin:${where}`, n) < half - whole - 1e-9 ? 1 : 0)
+}
+/** Today with a haul at a place: worked today (`gathered`), and its hauls one more. */
+const hauled = (save: Pick<FarmSave, 'today'>, where: string): FarmSave['today'] =>
+  ({ ...save.today, gathered: gathered(save, where), hauls: { ...save.today.hauls, [where]: haulsToday(save, where) + 1 } })
+
 /** What a haul brought: its goods as stock keys (`<id>@<stars>`). */
 export interface Haul {
   where: string
@@ -87,19 +110,21 @@ export function forage<S extends FarmSave>(save: S, area: string): { save: S; ha
   open(save, 'forest', area)
   return forageAt(spend(save, 'forage'), area, farmerGatherer(save, 'forest', FORAGE_HAUL))
 }
-/** A forage itself, spending nothing: the farmer's action and a farmhand's work share it. */
+/** A forage itself, spending nothing: the farmer's action and a farmhand's work share it. A thin area's haul is half
+ * (`haulAt`). */
 export function forageAt<S extends FarmSave>(save: S, area: string, by: Gatherer): { save: S; haul: Haul } {
   const before = save.farm.counts[HOME_COUNT.forest] ?? 0
   let items = save.items
   const got: string[] = []
-  for (let k = 0; k < by.count; k++) {
+  const many = haulAt(save, area, by.count)
+  for (let k = 0; k < many; k++) {
     const good = pickOn(save, 'forest', area, `forage:${area}`, before + k)
     const stars = starsOn(save, by.q, `forage-stars:${area}`, before + k)
     items = addGoods(items, good, stars, 1)
     got.push(stockKey(good, stars))
   }
   return {
-    save: { ...save, items, today: { ...save.today, gathered: gathered(save, area) }, farm: { ...save.farm, counts: bump(save.farm.counts, HOME_COUNT.forest, got.length) } },
+    save: { ...save, items, today: hauled(save, area), farm: { ...save.farm, counts: bump(save.farm.counts, HOME_COUNT.forest, got.length) } },
     haul: { where: area, items: got },
   }
 }
@@ -110,35 +135,38 @@ export function chop<S extends FarmSave>(save: S, area: string): { save: S; haul
   open(save, 'forest', area)
   return chopAt(spend(save, 'chop'), area, farmerGatherer(save, 'forest', CHOP_LOGS))
 }
-/** A chop itself, spending nothing. */
+/** A chop itself, spending nothing. A thin area's chop is half (`haulAt`). */
 export function chopAt<S extends FarmSave>(save: S, area: string, by: Gatherer): { save: S; haul: Haul } {
   const before = save.farm.counts[LOGS_CHOPPED] ?? 0
   const woods = sharesOn('forest', area, save.calendar.day).filter(([id]) => goodOf(id)?.family === 'woods')
   let items = save.items
   const got: string[] = []
-  for (let k = 0; k < by.count; k++) {
+  const many = haulAt(save, area, by.count)
+  for (let k = 0; k < many; k++) {
     const log = pickShare(woods, draw(save.account.uid, save.calendar.day, `chop:${area}`, before + k))
     const stars = starsOn(save, by.q, `chop-stars:${area}`, before + k)
     items = addGoods(items, log, stars, 1)
     got.push(stockKey(log, stars))
   }
   const counts = bump(bump(save.farm.counts, LOGS_CHOPPED, got.length), HOME_COUNT.forest, got.length)
-  return { save: { ...save, items, today: { ...save.today, gathered: gathered(save, area) }, farm: { ...save.farm, counts } }, haul: { where: area, items: got } }
+  return { save: { ...save, items, today: hauled(save, area), farm: { ...save.farm, counts } }, haul: { where: area, items: got } }
 }
 
 /** Fishes a spot: one action, one catch of its season's fish (`draw(uid, day, 'fish:<spot>', n)`, its stars
  * `'fish-stars:<spot>'`, numbered from the farm's count home from the Fishery), measured as it lands (`'size:farmer'`):
- * the biggest of each kind is kept in `diary.records`. Refused where his reach doesn't go yet. */
-export function fish<S extends FarmSave>(save: S, spot: string): { save: S; haul: Haul; caught: Measured } {
+ * the biggest of each kind is kept in `diary.records`. A thin spot's cast lands a fish half the time: `caught` is null
+ * when nothing bit. Refused where his reach doesn't go yet. */
+export function fish<S extends FarmSave>(save: S, spot: string): { save: S; haul: Haul; caught: Measured | null } {
   open(save, 'fishery', spot)
   const done = fishAt(spend(save, 'fish'), spot, farmerGatherer(save, 'fishery', 1))
-  return { save: done.save, haul: done.haul, caught: done.caught[0]! }
+  return { save: done.save, haul: done.haul, caught: done.caught[0] ?? null }
 }
-/** A cast itself, spending nothing: `by.count` fish, each measured as it lands. */
+/** A cast itself, spending nothing: `by.count` fish (half at a thin spot, `haulAt`), each measured as it lands. */
 export function fishAt<S extends FarmSave>(save: S, spot: string, by: Gatherer): { save: S; haul: Haul; caught: Measured[] } {
-  let next = save
+  let next: S = { ...save, today: hauled(save, spot) }
   const caught: Measured[] = []
-  for (let k = 0; k < by.count; k++) {
+  const casts = haulAt(save, spot, by.count)
+  for (let k = 0; k < casts; k++) {
     const before = next.farm.counts[HOME_COUNT.fishery] ?? 0
     const good = pickOn(next, 'fishery', spot, `fish:${spot}`, before)
     const stars = starsOn(next, by.q, `fish-stars:${spot}`, before)
@@ -146,7 +174,7 @@ export function fishAt<S extends FarmSave>(save: S, spot: string, by: Gatherer):
     const best = next.diary.records[sizeRecord(good)] ?? 0
     const records = cm > best ? { ...next.diary.records, [sizeRecord(good)]: cm } : next.diary.records
     next = {
-      ...next, items: addGoods(next.items, good, stars, 1), today: { ...next.today, gathered: gathered(next, spot) },
+      ...next, items: addGoods(next.items, good, stars, 1),
       farm: { ...next.farm, counts: bump(next.farm.counts, HOME_COUNT.fishery, 1) }, diary: { ...next.diary, records },
     }
     caught.push({ fish: good, stars, cm, record: cm > best })

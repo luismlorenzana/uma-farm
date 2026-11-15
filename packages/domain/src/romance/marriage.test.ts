@@ -36,7 +36,7 @@ import { handsTonight, setTasks } from '../farm/farmhands'
 import { placeBuilt } from '../farm/places'
 import { talentsD } from '../farm/talents'
 import { clearTile, harvestTile, plantTile, seedsInSeason, stagesOf, tillTile, waterTile } from '../fields/fields'
-import { chop, fish, forage } from '../gathering/hauls'
+import { chop, fish, forage, FULL_HAULS, haulsToday, reachList } from '../gathering/hauls'
 import { LOAD_SIZE, startLoad, stationOptions } from '../gathering/stations'
 import { goodOf, type CropId } from '../goods/ids'
 import { runNight, type NightContext } from '../night/end-day'
@@ -145,6 +145,22 @@ interface Result {
 
 const left = actionsLeft
 const growing = (save: SaveV4): number[] => fieldTiles(save).flatMap((t, i) => (t.crop !== null && !t.ready ? [i] : []))
+/** Whether a place is thin for him today: its four full hauls taken, less the three she forages there tonight once
+ * she's a farmhand (he leaves them to her). */
+const thinFor = (save: SaveV4, where: string): boolean =>
+  haulsToday(save, where) + (where === 'woods' && save.roster[HER]?.farmhand !== undefined ? 3 : 0) >= FULL_HAULS
+/** Where he gathers: the nearest area or spot in his reach that isn't thin for him yet today, else the nearest. */
+const fresh = (save: SaveV4, place: 'forest' | 'fishery'): string => {
+  const open = reachList(save, place).filter((r) => r.lock === null)
+  return (open.find((r) => !thinFor(save, r.id)) ?? open[0]!).id
+}
+/** A haul, by turns: a catch, a forage, a chop, each where it isn't thin; the next by turn when its place is thin and
+ * another's isn't. */
+function haul(save: SaveV4, k: number): SaveV4 {
+  const kinds = [0, 1, 2].map((n) => (k + n) % 3)
+  const pick = kinds.find((n) => !thinFor(save, fresh(save, n === 0 ? 'fishery' : 'forest'))) ?? k % 3
+  return pick === 0 ? fish(save, fresh(save, 'fishery')).save : pick === 1 ? forage(save, fresh(save, 'forest')).save : chop(save, fresh(save, 'forest')).save
+}
 const romanceLevel = (save: SaveV4): number => {
   const love = save.love[HER]
   return !love ? -1 : love.stage === 'romance' ? love.level : love.stage === 'proposal' || love.stage === 'wedding' || love.stage === 'spouse' ? 10 : -1
@@ -249,8 +265,8 @@ function farm(start: SaveV4): SaveV4 {
   // seed in Spring, so the field grows it.)
   for (let k = 0; left(save) > 0; k++) {
     const logs = goodCount(save.items, 'pine-log') + goodCount(save.items, 'birch-log')
-    if (!placeBuilt(save, 'mill') && !save.farm.builds.includes('mill') && logs < MILL_LOGS) save = chop(save, 'woods').save
-    else save = k % 3 === 0 ? fish(save, 'pond').save : k % 3 === 1 ? forage(save, 'woods').save : chop(save, 'woods').save
+    if (!placeBuilt(save, 'mill') && !save.farm.builds.includes('mill') && logs < MILL_LOGS) save = chop(save, fresh(save, 'forest')).save
+    else save = haul(save, k)
   }
   return save
 }

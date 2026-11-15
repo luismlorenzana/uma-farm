@@ -387,7 +387,7 @@ The steps as the game lists them:
 | Step | Function | What happens |
 |---|---|---|
 | 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning |
-| 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand |
+| 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand and the market’s ease (past a crate of 50 of one good, each crate more a step lower: −10% a step, to half); then the market moves: a good shipped past a crate stays eased by the steps it reached, and every other eased good recovers a step |
 | 2 | `farmhandsWork` | The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads, the animals’ care and the cooking first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse and her meals into the pantry, her place today where she spent the most |
 | 2 | `theFarmEats` | The farm eats: the farmer, everyone living on the farm and every farmhand who worked tonight, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; a meal keeps three days, then any left over spoil |
 | 2 | `settleTheAccounts` | The bill: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the takeout (15g a meal) and the upkeep, with anything owed: what gold there is pays, takeout first, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid |
@@ -406,7 +406,7 @@ The steps as the game lists them:
 | 6 | `countWellFed` | The well-fed days count down |
 | 7 | `witherCrops` | On a season’s last night, crops still growing that don’t grow in the next season wither, their soil left tilled; ripe crops wait |
 | 7 | `turnCalendar` | The date moves; the whole of `today` clears: the day’s actions and event actions, going into town, the areas worked, chats, gifts, praise earned and paid, events, Ask her, evenings and invitations, the ring made and the reception |
-| 8 | `raiseBuildings` | Places built: every place paid for yesterday stands this morning (`buildings[id] = 1`), each one news |
+| 8 | `raiseBuildings` | Places built: every place paid for yesterday stands this morning (`buildings[id] = 1`), and a station’s level bought yesterday comes (its level one more), each one news |
 | 8 | `settleDorm` | The Dorm’s level bought takes effect; swaps arrive, each Uma in town coming home in the place of one leaving |
 | 8 | `checkGoals` | The Diary pays its milestones and rows, and the Farm Rank is recomputed from income and resources |
 | 8 | `unlockTownNotes` | Town notes: each of the world’s notes not yet unlocked whose unlock holds on the morning’s date (a season, a festival, a Farm Rank, a place built, a good shipped, another’s event) unlocks, once; the morning names them |
@@ -747,7 +747,7 @@ by a tile (a harvest's stars, a seed back) replays on plot 1 exactly as it alway
 |  | The field |
 |---|---|
 | A plot | 40 tiles: 8 across, 5 down |
-| Plots | 2: plot 1 from day 1, the rest cleared as the Farm Rank rises |
+| Plots | 8: plot 1 from day 1, the rest cleared as the Farm Rank rises |
 | Cleared on day 1 | 9, three by three at the top left |
 | Weeds | 55% of the rest; clearing leaves nothing |
 | A stone | 25% of the rest; clearing leaves a Limestone ★1 |
@@ -757,23 +757,30 @@ by a tile (a harvest's stars, a seed back) replays on plot 1 exactly as it alway
 #### The field's plots
 
 The field is a list of plots, each 8 × 5, a page each on the field's screen. The farm starts with plot 1 and clears more
-as the Farm Rank rises, each after the one before; plots 3 to 8 come with the farm at scale
-([the analysis](design/game-design.md#the-farm-at-scale-2026-11-15)).
+as the Farm Rank rises, each after the one before: up to eight, one a Farm Rank from 3 to 9, 320 tiles in all, the
+farm's biggest employer at scale ([the farm at scale](#the-farm-at-scale-10-20-and-50-umas)).
 
 <!-- live:plots -->
 | Plot | Opens | Costs | Starts |
 |---|---|---|---|
 | Plot 1 | Day 1 | — | 9 tiles cleared at its top left, the rest overgrown |
 | Plot 2 | Farm Rank 3, after Plot 1 | 2,500g and an action; no upkeep | Wild: every tile overgrown, the account’s own draw |
+| Plot 3 | Farm Rank 4, after Plot 2 | 5,000g and an action; no upkeep | Wild: every tile overgrown, the account’s own draw |
+| Plot 4 | Farm Rank 5, after Plot 3 | 10,000g and an action; no upkeep | Wild: every tile overgrown, the account’s own draw |
+| Plot 5 | Farm Rank 6, after Plot 4 | 15,000g and an action; no upkeep | Wild: every tile overgrown, the account’s own draw |
+| Plot 6 | Farm Rank 7, after Plot 5 | 25,000g and an action; no upkeep | Wild: every tile overgrown, the account’s own draw |
+| Plot 7 | Farm Rank 8, after Plot 6 | 35,000g and an action; no upkeep | Wild: every tile overgrown, the account’s own draw |
+| Plot 8 | Farm Rank 9, after Plot 7 | 50,000g and an action; no upkeep | Wild: every tile overgrown, the account’s own draw |
 <!-- /live -->
 
 - **Clearing a plot** is like building a place, with an action: from its Farm Rank, its page's **Clear Plot 2 · 2,500g ·
   1 action** pays its gold and spends one of the day's actions, and the plot is the farm's **at once**, the next page of
   the field. "Need 400g more" or "No actions left today" greys the button while either lacks; before its Farm Rank the
-  page says "Opens at Farm Rank 3" and shows no button.
+  page says "Opens at Farm Rank 3" and shows no button, and from its Farm Rank a plot past the next says "Clear Plot 2
+  first".
 - **A new plot is wild:** every tile overgrown, weeds, stones and stumps by the account's own draw (`draw(uid, 0,
-  'ground', 40 + i)` for plot 2), with no cleared patch. Clearing its tiles leaves their logs and limestone as plot 1's
-  do, and a farmhand's **Clear and till** works it a row at a time.
+  'ground', 40 × p + i)`, p its index: `40 + i` for plot 2), with no cleared patch. Clearing its tiles leaves their logs
+  and limestone as plot 1's do, and a farmhand's **Clear and till** works it a row at a time.
 - **A plot adds no upkeep:** it's land, not a building ([upkeep](#upkeep) counts places built, houses, beds and Umas).
   Its cost is its gold and the work its tiles take.
 - **Everything on the field reads every plot:** a tile's actions, the night's growth and withering, the night chores'
@@ -787,7 +794,7 @@ A tap on the field's sign (or the Menu's Fields, or a morning line about the fie
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
 │ ‹ Farm   Plot 1                ━ ◦   ⓘ   ⏱ 7/10  [☾ End day]                         │  the strip
-│          6 to water · 2 ripe   (page dots: plot 1 lit, plot 2 with a lock)            │
+│          6 to water · 2 ripe   (page dots: plot 1 lit, plots 2–8 with a lock)        │
 ├──────────────────────────────────────────────────────────────────┬───────────────────┤
 │ (‹)  1 ▢ ▢ ▢ ▢ ▢ ▢ ▢ ▢  (›)                                      │ a tile's panel or │
 │      2 ▢ ▢ ▢ ▢ ▢ ▢ ▢ ▢     big tiles, 36–88 points, as the space  │ a row's, at the   │
@@ -1017,13 +1024,15 @@ areas and spots, whose goods are worth more.
                  ──Chop · 1────► 2 logs of the area's woods       ├─► the Warehouse, at their stars, now
  the pond's edge ──Fish · 1────► 1 fish, measured as it lands    ─┘   (a record when it's the biggest of its kind)
  the Farm Rank opens each deeper area and spot (the sea's also wait for the Dock and the Boat)
+ each area and spot: 4 full hauls a day (yours and the farmhands' together), then thin: half hauls
 ```
 
 #### A forage, a chop, a catch
 
-- **One action, one haul,** at one area or one spot, as often as the day's actions allow. What it brings goes into the
-  Warehouse at once, and the panel says so: "Foraged · +Pine Log, Shiitake", "Chopped · +Pine Log, Birch Log", "Carp ★1
-  · 38.4 cm".
+- **One action, one haul,** at one area or one spot, as often as the day's actions allow: full the first four times a
+  day at each place, then thin ([thin](#thin-four-full-hauls-a-place-a-day)). What it brings goes into the Warehouse at
+  once, and the panel says so: "Foraged · +Pine Log, Shiitake", "Chopped · +Pine Log, Birch Log", "Carp ★1 · 38.4 cm"; a
+  thin spot's cast that lands nothing, "Nothing bit: it's thin here today".
 - **What comes:** each good drawn by its share in the area's or the spot's season (below), its stars from the farmer's
   quality, a Novice with a D talent and the farm's Axe or Rod: ★1 with the Basic tools every farm has.
 - **His reach is the Farm Rank's:** each depth an Uma's rank opened (Novice to Legend) opens for the farmer at Farm Rank
@@ -1045,6 +1054,30 @@ What each action brings:
 | Chop at an area | 2 logs of its season’s woods, each by its share | ★1 100% | `logs-chopped` and `home:forest` |
 | Fish a spot | One fish of its season’s, by its share, measured as it lands (k = 1.35) | ★1 100% | `home:fishery` |
 <!-- /live -->
+
+#### Thin: four full hauls a place a day
+
+A place gives so much a day. Each forest area, fishing spot and dig gives full hauls the first four times a day, yours by
+day and the farmhands' at night together; past them it's **thin**, half hauls. So gathering takes a few hands a place,
+not any number, and a farm of many Umas spreads them over its places and its other work
+([the farm at scale](#the-farm-at-scale-10-20-and-50-umas)).
+
+<!-- live:thinning -->
+|  | The rule |
+|---|---|
+| A place | Each forest area (6), fishing spot (7) and dig (the Mine, the Quarry): 15 places |
+| Full hauls | The first 4 a day at each place: a forage, a chop, a catch or a face, the farmer’s by day and the farmhands’ at night together |
+| Thin | Past the 4: half a haul (×0.5), the fraction drawn (`draw(uid, day, 'thin:<place>', n)`): a forage of 2 brings 1, a cast lands a fish half the time |
+| Its day | Counted in `today.hauls`, cleared with the day at night step 7: a new day starts every place full |
+<!-- /live -->
+
+- **Your hauls come first:** you work by day and the farmhands at night, so four forages of yours at the Woods leave it
+  thin for a farmhand foraging there tonight. The work board's **Tonight** shows what she'll bring as the farm stands.
+- **Each panel says it:** an area's or a spot's row on the woods' and the pond's panels, and a dig's panel, show "3 full
+  hauls left" once a haul is taken today, then **Thin · half hauls** ("half finds" at a dig).
+- **Thin isn't nothing:** a thin forage still brings one find, a thin chop one log, and a farmhand's three finds one or
+  two; a thin cast lands a fish half the time.
+- **The save:** `today.hauls` (each place's hauls today), written once the day's first haul is, and cleared with the day.
 
 #### The forest's areas
 
@@ -1120,12 +1153,15 @@ own length; it never stacks. A wedding's reception, a spouse's breakfast, the ho
 meal from the pantry** (eaten at night: through tomorrow, [food](#food)) feed the Umas. A household meal and a good
 meal the same night are still two days, counted down once. **A farmhand well fed this morning works one more action today** (once a meal, the day after
 it's cooked: [her day](#her-day)), and while she's well fed (the meal's day and the next) her work is too: +0.25
-quality, ×1.25 a haul's count and ×1.25 rank points.
+quality and ×1.25 rank points. Her hauls and faces aren't bigger for it: the one more action is the meal's reward (F91 took
+off the quarter more on every haul: with it, a ★2 meal a night nearly doubled a farm's income, [the farm at
+scale](#the-farm-at-scale-10-20-and-50-umas)).
 
 #### The woods' and the pond's panels
 
 - **A tap on the woods' edge** opens its panel at the right: each forest area with its name, its season's finds as
-  icons, and **Forage · 1** and **Chop · 1**, or why it's shut ("Opens at Farm Rank 2"); then the day's actions left.
+  icons, and **Forage · 1** and **Chop · 1**, or why it's shut ("Opens at Farm Rank 2"), and today's hauls there ("3 full
+  hauls left", then **Thin · half hauls**); then the day's actions left.
 - **A tap on the pond's edge** opens the same for its spots, with **Fish · 1**.
 - **The help (i)** of the map says how the day's actions work.
 
@@ -1229,10 +1265,12 @@ good's. The morning's Hearts section says "Night chores · +10 fondness" and "Pe
 The Mine and the Quarry are worked floor by floor. A face is one action on the deepest floor reached and brings two
 finds: ores at the Mine, stones and gems at the Quarry, each three floors a grade deeper, so the finds grow rarer as you
 go down. The faces you work there find the floor's stairs; taking them is free, and the deepest floor reached is kept.
+A dig thins as an area does: four full faces a day, yours and the farmhands', then half finds
+([thin](#thin-four-full-hauls-a-place-a-day)); a thin face still counts toward the stairs.
 
 ```
  a dig, built ──Work a face · 1──► 2 finds of the floor's grade (or the next) ──► the Warehouse, at their stars, now
-                                   and a face more toward the floor's stairs
+                                   and a face more toward the floor's stairs (half the finds past four faces a day)
  the stairs found (after 1 + ⌈floor ÷ 5⌉ faces) ──Take the stairs · free──► the next floor down, as deep as the Farm Rank reaches
  the deepest floor reached is kept: the next face is there
 ```
@@ -1290,7 +1328,8 @@ the Mine's Smelter and the Quarry's Cutter.
 ```
  a built station ──Load · 1──► up to 8 of one good at one star leave the Warehouse
                                ──the night──► the same count of its refined form, at those stars, into the Warehouse
- one load a station a day; it's free again in the morning
+ a load a day a level (level 1, one; level 5, five); it's free again in the morning
+ its next level: at its panel, gold only, from its Farm Rank ──the night──► one more load a day
 ```
 
 #### Building a station
@@ -1304,12 +1343,38 @@ Each station, what builds it, what opens it, its jobs and a load:
 <!-- live:stations -->
 | Station | Builds for | Opens | Jobs | A load |
 |---|---|---|---|---|
-| Mill | 1,000g · 20 logs | Farm Rank 1 | Flour: grains · Sugars and oils: sweets, nuts and seeds · Preserves: fruits · Cloth: fibers | 1 to 8, ready the next morning |
-| Sawmill | 1,500g · 40 logs | Farm Rank 3 | Planks: woods · Drying: mushrooms, herbs and spices | 1 to 8, ready the next morning |
-| Smokehouse | 2,000g · 30 logs · 20 fish | Farm Rank 3 | Smoking: fish | 1 to 8, ready the next morning |
-| Smelter | 8,000g · 40 planks · 40 logs | Farm Rank 4 | Ingots: ores | 1 to 8, ready the next morning |
-| Cutter | 10,000g · 40 planks · 40 logs | Farm Rank 5 | Cut gems: crystals · Stone blocks: stones | 1 to 8, ready the next morning |
+| Mill | 1,000g · 20 logs | Farm Rank 1 | Flour: grains · Sugars and oils: sweets, nuts and seeds · Preserves: fruits · Cloth: fibers | 1 to 8, ready the next morning; a load a day a level |
+| Sawmill | 1,500g · 40 logs | Farm Rank 3 | Planks: woods · Drying: mushrooms, herbs and spices | 1 to 8, ready the next morning; a load a day a level |
+| Smokehouse | 2,000g · 30 logs · 20 fish | Farm Rank 3 | Smoking: fish | 1 to 8, ready the next morning; a load a day a level |
+| Smelter | 8,000g · 40 planks · 40 logs | Farm Rank 4 | Ingots: ores | 1 to 8, ready the next morning; a load a day a level |
+| Cutter | 10,000g · 40 planks · 40 logs | Farm Rank 5 | Cut gems: crystals · Stone blocks: stones | 1 to 8, ready the next morning; a load a day a level |
 <!-- /live -->
+
+#### Its levels
+
+A station's level is the loads it takes a day: level 1 is the station built, one load a day, and each level after it
+one more, up to level 5's five. Its levels are bought as the Dorm's are: at the station, with gold only, from each
+level's Farm Rank, and the level comes the next morning.
+
+<!-- live:station-levels -->
+| Level | Loads a day | Costs | Farm Rank | Cumulative |
+|---|---|---|---|---|
+| 1 | 1 | The station’s build | The station’s | 0g |
+| 2 | 2 | 2,000g, gold only | 3 | 2,000g |
+| 3 | 3 | 5,000g, gold only | 4 | 7,000g |
+| 4 | 4 | 10,000g, gold only | 5 | 17,000g |
+| 5 | 5 | 20,000g, gold only | 6 | 37,000g |
+<!-- /live -->
+
+- **Buying:** its panel's **Level 2 · 2 loads a day** card says what it costs and **Upgrade · 2,000g**; the gold goes now,
+  no action, and the card says "Ready tomorrow" until the night raises it (night step 8, with the places built). One
+  level a day. Refused before its Farm Rank ("Opens at Farm Rank 4"), short of gold ("Need 400g more"), at its top
+  level, and with a level bought today ("Level 3 tomorrow").
+- **The morning says so:** "The Mill · level 2 · 2 loads a day", tagged Level, opening the station. A rank-up's news
+  names the level it opens ("Station level 3 (3 loads a day)").
+- **No upkeep for a level:** a station is one place built, whatever its level; its cost is its gold.
+- **The save:** a station's level is `buildings[id]` (1–5), raised by one at night for a level paid today, which waits in
+  `farm.builds` as a place paid for does. A save from before levels has every station at level 1.
 
 #### A load
 
@@ -1318,7 +1383,9 @@ Each station, what builds it, what opens it, its jobs and a load:
   doesn't make that.").
 - **It's ready the next morning:** night step 4 puts the same count of the refined good, at the same stars, into the
   Warehouse, and the station is free again.
-- **One load a station a day:** a second is refused ("It's busy until morning."). Each built station can take its own.
+- **A load a day a level:** each load is its own, of any good the station makes; one past its level's loads is refused
+  ("It's busy until morning."). Each built station takes its own, and a farmhand on its Load task loads it until it
+  holds today's loads ([the work board](#the-work-board)).
 - **Work done** in the morning lists each load done: "Sawmill · Pine Plank ★1 × 8", opening the station's panel.
 
 #### The stations' panels
@@ -1326,10 +1393,11 @@ Each station, what builds it, what opens it, its jobs and a load:
 - **Not built:** the quick look says what it does ("Turns logs, mushrooms or herbs into goods worth half again as much,
   keeping their stars.") and shows its Build card: what stands in the way ("Opens at Farm Rank 3", "Need 300g and 12
   logs more", "Builds tonight") and **Build · 1,500g · 40 logs**.
-- **Built:** its panel lists what it can make now, each output at its stars with its input and what's held ("Pine Plank
-  ★1 · From Pine Log · 12 held") and **Load 8** (or all that's held, if fewer); with nothing: "Nothing to process yet:
-  bring its goods home first." Once loaded: "Pine Plank ★1 × 8 · Ready tomorrow morning", and the map tags it **Ready
-  tomorrow**.
+- **Built:** its panel heads with its level and today's loads ("Level 2 · 1 of 2 loads today"), lists each load started
+  ("Pine Plank ★1 × 8 · Ready tomorrow morning"), then, while it takes more today, what it can make now, each output at
+  its stars with its input and what's held ("Pine Plank ★1 · From Pine Log · 12 held") and **Load 8** (or all that's
+  held, if fewer); with nothing: "Nothing to process yet: bring its goods home first." Then its next level's card. Once
+  loaded, the map tags it **Ready tomorrow**.
 
 #### Recipes
 
@@ -1531,6 +1599,7 @@ Every good's price at ★1 comes from one rule:
    crop's refined form is ×1.5.
 5. **Stars add +25% a star, never compounded:** ★1 ×1, ★2 ×1.25, ★3 ×1.5, ★4 ×1.75, ★5 ×2.
 6. **Demand adds +20%** to the season's families, on top of the stars.
+7. **A flood eases it** −10% a step, on top of both, down to half ([the market](#the-market-feels-a-flood)).
 
 **Rounding:** a unit's price after stars and demand rounds to 5g once (half up), then it's × the count. A ★2 Salmon in
 Summer is 110 × 1.25 × 1.2 = **165g**, and three are **495g**.
@@ -1684,7 +1753,8 @@ The ten rings, their grades, prices and bonuses are in [the ring, the wedding, a
 
 #### The shipping bin
 
-The bin takes anything with a price and pays at night. There's no cap on selling, and nothing is ever bought back.
+The bin takes anything with a price and pays at night. There's no cap on selling, but a flood of one good eases its
+price ([the market](#the-market-feels-a-flood)), and nothing is ever bought back.
 
 - **Ship a crate · 1 action:** pick what to ship in the Warehouse's pick mode, as many goods and stars as you like, and
   one action puts the whole crate in today's bin. Shipping again the same day is another crate and another action.
@@ -1692,21 +1762,53 @@ The bin takes anything with a price and pays at night. There's no cap on selling
 - **Ship all · 1 action:** a good's sheet in the Warehouse ships every star of it as one crate.
 - **Take back:** a whole line from the bin back to the Warehouse, free, any time until the night. After the night, a
   sale is final.
-- **The estimate:** "About 1,240g tonight", at today's prices.
+- **The estimate:** "About 1,240g tonight", at today's prices and the market's ease.
 - **The bin's sheet** (from the bin on the map, the gold chip or a morning line): "About 1,240g tonight", today's lines
-  (icon, "Carrot ★2 × 3", the line's gold, **In demand**), each with **Take back**, and **Ship · 1 action**, which opens
-  the Warehouse to pick a crate. Empty, it says "Empty" and "Tap Ship to pick goods. They pay tonight." Its help (i)
-  says the rule in three lines.
+  (icon, "Carrot ★2 × 3", the line's gold, **In demand**, **Eased −20%** past a crate or after a flood), each with **Take
+  back**, and **Ship · 1 action**, which opens the Warehouse to pick a crate. Empty, it says "Empty" and "Tap Ship to
+  pick goods. They pay tonight." Its help (i) says the rule in four lines.
 
 **At night (step 1):**
-- each good and star pays price × stars × demand on the day it was shipped, rounded to 5g a unit, × the count;
+- each good and star pays price × stars × demand × the market's ease on the day it was shipped, rounded to 5g a unit, ×
+  the count; past a crate of one good, each crate more a step lower;
 - gold rises by the total;
 - the farm's gold shipped rises by the same (the Farm Rank's points, 1 per 100g, and its shipping milestones);
 - each good's count joins the Diary's shipped goods;
-- the bin empties.
+- the bin empties, and the market moves: a good shipped past a crate stays eased; every other eased good recovers a step.
 
-The morning's bin section lists each good and star sold, with its gold and **In demand**, then the total. A line's gold
-is the night's own and is never priced again.
+The morning's bin section lists each good and star sold, with its gold, "eased −20%" and **In demand**, then the total.
+A line's gold is the night's own and is never priced again.
+
+#### The market feels a flood
+
+The valley eats only so much of one good. Past a **crate** of it in one night, each crate more sells a step lower, and
+the good stays eased for the days after, recovering a step a night. A farm that ships a field of one crop, or a mine's
+day of one ore, feels it; one that ships many goods, or spreads a stockpile over days, doesn't.
+
+<!-- live:market -->
+|  | The rule |
+|---|---|
+| A crate | 50 of one good in a night’s bin, any stars, sell at its price today |
+| A flood | Past a crate, each 50 more sell a step lower than the ones before: −10% a step, the best stars first |
+| The floor | 5 steps: half the price |
+| The days after | The good stays eased by the steps its last crate reached; its first crate the next night sells at that ease |
+| Recovering | A step back each night it isn’t shipped past a crate, until it’s full price again |
+| Shown | On the bin’s line (“Eased −20%”), the Warehouse’s good and its prices, and the morning’s sale |
+<!-- /live -->
+
+| Worked: Pine Logs (25g ★1) | Sells | The market after |
+|---|---|---|
+| 50 in one night | 50 at 25g = 1,250g | Not eased |
+| 120 in one night | 50 at 25g, 50 at 22.5 → 25g, 20 at 20g = 2,900g | Eased 2 steps (−20%) |
+| The next night, 10 | 10 at 20g = 200g | Eased 1 step |
+| 400 in one night | 50 each at 25g, 25g, 20g, 20g, then 15g (half price, 12.5 rounded up): 7,500g | Eased 5 steps, the floor |
+
+- **Where it shows:** a good eased shows **Eased −20%** on its Warehouse line and sheet ("A flood: back a step a night"),
+  its star prices eased; the bin's lines and estimate price each crate at its step; the Warehouse's pick bar prices a
+  crate at the market as it stands; and the morning's sale says "eased −20%".
+- **The best stars first:** a night's units of one good fill its crates ★5 first, so the best sell at the best step.
+- **The save:** `farm.market` (each good eased, by its steps, 1–5). A save from before the market has none: nothing
+  eased.
 
 #### Gold
 
@@ -1738,12 +1840,15 @@ The Warehouse holds everything the farm owns, by stars: each good has five count
   (ores, stones and crystals) and **Seeds**; and **Loot** (the expeditions' goods), **Rings** and **Dishes** only while
   something is on them. A crop's refined form sits on its family's tab (Dried Basil on Herbs and spices, Peanut Butter
   on Nuts and seeds).
-- **Each good:** its icon, name, **In demand**, its total, and its five stars, each with its count and today's price.
+- **Each good:** its icon, name, **In demand**, **Eased −20%** after a flood, its total, and its five stars, each with its
+  count and today's price (eased, after a flood).
 - **A good's sheet:** its family, grade and form ("Fish · G5 · raw"), what it refines into or from, "+20% this season"
-  when in demand, its five stars and **Ship all · 665g · 1 action**. Seeds say "Seeds: they don't sell"; a dish says "A
+  when in demand, "A flood: back a step a night" when eased, its five stars and **Ship all · 665g · 1 action** (what
+  shipping it all tonight pays, past a crate and all). Seeds say "Seeds: they don’t sell"; a dish says "A
   dish: for a meal"; a ring's form is "made at the ring bench".
 - **Pick mode** (from the bin's **Ship**): "Ship to the bin". A tap on a star puts one in the crate (marked "+2" on the
-  star, its count what's left), **All** puts every star of a good in, and a bar says "Crate: 3 · about 425g" with
+  star, its count what’s left), **All** puts every star of a good in, and a bar says "Crate: 3 · about 425g" (what the crate
+  adds to tonight's bin, at the market as it stands) with
   **Clear** and **Ship · 1 action**, which ships the crate and goes back to the bin. With nothing picked it says "Tap a
   star to put one in the crate." (or what's in the bin tonight). It opens on the first tab holding something that
   sells.
@@ -2194,24 +2299,25 @@ takeout alone:
 
 | A year | Takeout | Its share of the bin | Meals from the pantry | Short nights | Gold at the year's end |
 |---|---|---|---|---|---|
-| The farmer alone, on takeout | 1,440g (96 meals) | 16% | 0 | 0 | 4,655g |
-| The farmer alone, cooking for a tight night | 1,350g (90 meals) | 15% | 6 | 0 | 4,700g |
-| The farmer alone, cooking every night he can | 360g (24 meals) | 5% | 72 | 0 | 4,355g |
-| Two farmhands, on takeout (four Umas home by Winter) | 7,500g (500 meals) | 23% | 0 | 0 | 17,280g |
-| Two farmhands, the field hand on Cook | 2,250g (150 meals) | 5% | 350 | 0 | 36,325g |
+| The farmer alone, on takeout | 1,440g (96 meals) | 16% | 0 | 0 | 4,710g |
+| The farmer alone, cooking for a tight night | 1,260g (84 meals) | 14% | 12 | 0 | 4,685g |
+| The farmer alone, cooking every night he can | 360g (24 meals) | 5% | 72 | 0 | 4,235g |
+| Two farmhands, on takeout (four Umas home by Winter) | 7,470g (498 meals) | 23% | 0 | 0 | 17,405g |
+| Two farmhands, the field hand on Cook | 3,825g (255 meals) | 11% | 245 | 0 | 23,410g |
 
 - **Takeout bites and never sinks a farm:** alone it's a sixth of what the bin pays, and never a short night; with two
   farmhands and four idle Umas home it's nearly a quarter.
 - **Cooking saves gold:** a ★1 batch saves 10–30g of gold against takeout, alone or not: alone it's three nights of his
   meals. Cooking every night he can, the farmer alone buys a quarter of the takeout (360g), spoils nothing and never runs
-  short, and ends the year on 4,355g against 4,655g on takeout: the twelve batches' 1,080g of takeout saved is about
-  what their goods and the hauls their actions would have brought. With a cook, the farm feeds itself from the
-  pantry from Summer (takeout falls from 825g in Spring to 225g in Winter) and her ★2 meals keep the farmhands well fed
-  (68 well-fed nights in Winter), so it ends the year twice as rich as on takeout.
+  short, and ends the year on 4,235g against 4,710g on takeout: the twelve batches' 1,080g of takeout saved is about
+  what their goods and the hauls their actions would have brought (he reaches Farm Rank 2's richer places a little
+  later). With a cook, the farm feeds itself from the pantry once the field yields (takeout falls from 1,785g in Summer,
+  when the field takes all her actions, to 225g in Winter) and her ★2 meals keep the farmhands well fed (68 well-fed
+  nights in Winter), so it ends the year a third richer than on takeout.
 - **At scale,** the whole farm's cook (Cooking 6 by its second year) feeds eight a night from the pantry, nearly all of
-  it ★2, and buys no takeout in its second year's Spring, Autumn and Winter: that year ships 266,525g against 137,600g
-  before food, the well-fed farmhands' extra action and hauls doing it. F91 (work at scale) takes the farm's work and
-  prices on from here.
+  it ★2, and buys no takeout in its second year: that year ships 190,885g against 137,600g before food. F90's well fed
+  gave every well-fed haul a quarter more on top of the extra action, and the second year shipped 266,525g; F91 took that
+  quarter off ([well fed](#well-fed), [the farm at scale](#the-farm-at-scale-10-20-and-50-umas)).
 
 ## Part 2 — The Umas and the farm's progress
 
@@ -2591,7 +2697,7 @@ profile's Work side), her job and the day she started, her actions today with wh
 well fed", "half pace" in red), **Tonight**, what she'll do as the farm stands now ("3 of 3 actions · watered 3 tiles"),
 and her tasks in your order, each with her aptitude's level ("Water · rows 1 and 2 · Watering 2"), **↑** to move it up
 and **✕** to remove it. **Add a task** (up to six) opens a side panel: what, then where (for the field's tasks, the plot
-(Plot 1, Plot 2 greyed with "Opens at Farm Rank 3" until it's cleared), then that plot's rows, each with what it holds
+(each plot cleared, and the next greyed with why: "Opens at Farm Rank 3"), then that plot’s rows, each with what it holds
 for that task now, or the whole plot; the seed to plant, or any in season; a built station; the Coop or the Barn, built;
 the Mine or the Quarry, built; an area or a spot the farm reaches, the rest greyed with why; Cook has nowhere to choose:
 the farmhouse kitchen), and **Add · Water · rows 1 and 2**. **A field task names its plot** and works that plot's tiles only: once the farm has two plots, the board says
@@ -2607,7 +2713,7 @@ tonight; they repeat each day until you change them. With no farmhands: "No farm
 | Water | A plot’s tiles you choose (the board offers each plot’s rows) | A dry growing tile; 2 tiles an action from Watering 3; every dry tile of hers in one row from Watering 6 | When none of its tiles needs it | Watering | Farming |
 | Plant | A plot’s tiles you choose (the board offers each plot’s rows) | An empty tilled tile, the seed named or any held for the season, own seeds first, that ripens in time; 2 tiles an action from Planting 4 | When none of its tiles needs it | Planting | Farming |
 | Clear and till | A plot’s tiles you choose (the board offers each plot’s rows) | A step on a tile: clears an overgrown one, tills a cleared one; both in one from Clearing 4 | When none of its tiles needs it | Clearing | Farming |
-| Load | A built station | A load of the good the station holds most of, up to 8 (12 from level 5) | Once the station holds today’s load | Milling, Sawing, Smoking, Smelting or Cutting, by station | Farming, foraging, fishing or mining |
+| Load | A built station | A load of the good the station holds most of, up to 8 (12 from her level 5), until the station holds its loads for the day: one a level | Once the station holds today’s loads, one a level | Milling, Sawing, Smoking, Smelting or Cutting, by station | Farming, foraging, fishing or mining |
 | Forage | An area the farm reaches | A haul of 2 finds (3 from Foraging 5) | Never: her gathering shares what’s left, a turn each | Foraging | Foraging |
 | Chop | An area the farm reaches | 2 logs (3 from Chopping 5) | Never: her gathering shares what’s left, a turn each | Chopping | Foraging |
 | Fish | A spot the farm reaches | A cast: one fish (two casts from Fishing 6) | Never: her gathering shares what’s left, a turn each | Fishing | Fishing |
@@ -2630,14 +2736,15 @@ tonight; they repeat each day until you change them. With no farmhands: "No farm
   tile when it's empty), collects its goods at her aptitude's quality, then cares for each, +8 fondness and +1 a level of
   Animal care above 1; a night of it counts toward her Ranch challenge, and an animal's hearts after her care toward its
   hearts challenges. The morning says "tended animals 4 times · +2 goods".
-- **A face:** her finds are the face's two × her mining rank's yield × her talent's × the Pick's or Hammer's × well fed's ×
-  her aptitude's, the fraction drawn, at her stars (her rank, talent, the tool, well fed, her keepsake, her aptitude);
+- **A face:** her finds are the face's two × her mining rank's yield × her talent's × the Pick's or Hammer's ×
+  her aptitude's, the fraction drawn (halved past the dig's four faces a day), at her stars (her rank, talent, the tool,
+  well fed, her keepsake, her aptitude);
   each face counts toward her Mining challenges by its finds and its floor. The morning says "worked 3 faces · +7
   goods".
 - **Her work's terms:** a harvest draws its stars from the crop's level and the Hoe, her farming rank and talent, her
   care (+0.25), well fed (+0.25), her keepsake at her line's place and her aptitude; a haul's from her rank, talent, the
   tool, well fed, her keepsake and her aptitude. A haul's count is the task's × her rank's yield × her talent's × the
-  tool's × well fed's (×1.25) × her aptitude's, the fraction drawn. Her seeds back are her rank's
+  tool's × her aptitude's, the fraction drawn, then halved at a place past its four a day ([thin](#thin-four-full-hauls-a-place-a-day)). Her seeds back are her rank's
   ([what a rank gives](#what-a-rank-gives)). A load comes out at the input's stars, × her aptitude's yield.
 - **What it counts:** each action is a point of practice in its aptitude. Her harvests, hauls and catches count toward
   her challenges ([the challenges](#the-challenges)), and the farm's lifetime counts, records and the Diary's depth
@@ -3000,13 +3107,13 @@ Dorm's levels, the shop's seed tiers), so the sheet and the morning can't drift 
 |---|---|---|
 | 1 | 0 | Block A and tier-1 seeds (the start), The Mill to build (1,000g · 20 logs), Dorm level 2 (5 beds) |
 | 2 | 150 | The Coop to build (2,000g · 30 logs · 20 vegetables), The Hills, The River, The Sea Pier (with the Dock), Chickens at the rancher’s, Dorm level 3 (7 beds), New seeds at the shop |
-| 3 | 250 | The Sawmill to build (1,500g · 40 logs), The Barn to build (3,500g · 30 logs · 20 vegetables), The Smokehouse to build (2,000g · 30 logs · 20 fish), Ducks, Cows and Sheep at the rancher’s, Dorm level 4 (9 beds) |
-| 4 | 950 | The Mine to build (10,000g · 60 planks), The Smelter to build (8,000g · 40 planks · 40 logs), The Old Forest, The Lake, Goats at the rancher’s, The Mine’s and the Quarry’s floors to 15, Dorm level 5 (11 beds), New seeds at the shop |
-| 5 | 2,150 | The Kitchen to build (not built yet), The Quarry to build (12,000g · 50 planks), The Cutter to build (10,000g · 40 planks · 40 logs), Alpacas at the rancher’s, Dorm level 6 (14 beds) |
-| 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), The Mountain, The Falls, Cashmere Goats at the rancher’s, The Mine’s and the Quarry’s floors to 20, Dorm level 7 (17 beds) |
-| 7 | 6,250 | The Restaurant to build (not built yet), The Expedition post to build (not built yet), Dorm level 8 (20 beds) |
-| 8 | 9,750 | The Forge to build (not built yet), The Misty Vale, The Deep Sea (with the Boat), The Mine’s and the Quarry’s floors to 25 |
-| 9 | 14,750 |  |
+| 3 | 250 | The Sawmill to build (1,500g · 40 logs), The Barn to build (3,500g · 30 logs · 20 vegetables), The Smokehouse to build (2,000g · 30 logs · 20 fish), Plot 2 to clear (2,500g), Station level 2 (2 loads a day), Ducks, Cows and Sheep at the rancher’s, Dorm level 4 (9 beds) |
+| 4 | 950 | The Mine to build (10,000g · 60 planks), The Smelter to build (8,000g · 40 planks · 40 logs), Plot 3 to clear (5,000g), Station level 3 (3 loads a day), The Old Forest, The Lake, Goats at the rancher’s, The Mine’s and the Quarry’s floors to 15, Dorm level 5 (11 beds), New seeds at the shop |
+| 5 | 2,150 | The Kitchen to build (not built yet), The Quarry to build (12,000g · 50 planks), The Cutter to build (10,000g · 40 planks · 40 logs), Plot 4 to clear (10,000g), Station level 4 (4 loads a day), Alpacas at the rancher’s, Dorm level 6 (14 beds) |
+| 6 | 3,750 | The Dock to build (20,000g · 80 planks), The Boat to build (30,000g · 60 planks · 30 fillets), Plot 5 to clear (15,000g), Station level 5 (5 loads a day), The Mountain, The Falls, Cashmere Goats at the rancher’s, The Mine’s and the Quarry’s floors to 20, Dorm level 7 (17 beds) |
+| 7 | 6,250 | The Restaurant to build (not built yet), The Expedition post to build (not built yet), Plot 6 to clear (25,000g), Dorm level 8 (20 beds) |
+| 8 | 9,750 | The Forge to build (not built yet), Plot 7 to clear (35,000g), The Misty Vale, The Deep Sea (with the Boat), The Mine’s and the Quarry’s floors to 25 |
+| 9 | 14,750 | Plot 8 to clear (50,000g) |
 | 10 | 21,750 | The World Tree, The Moon Pool, The Mine’s and the Quarry’s floors to 30, The farm’s gold crest |
 <!-- /live -->
 
@@ -3198,7 +3305,8 @@ alone, by a plain bot, ten actions a day. Each morning it harvests what's ripe, 
 it has seeds for, tills and clears a little more while fewer than five tiles grow, ships once there's a crate's worth
 (less the logs and fish its next build takes), goes into town for the season's quickest seeds when they run out (keeping
 tonight's bill back), and spends what's left fishing, foraging and chopping (chopping first while the next build waits
-for logs). It builds as it goes, never into a night it can't pay: **the Mill on a loan** from the mayor's office as soon
+for logs), each where it isn't thin yet today: the Woods and the Pond first, a deeper area or spot once they're thin and
+his reach allows ([thin](#thin-four-full-hauls-a-place-a-day)). It builds as it goes, never into a night it can't pay: **the Mill on a loan** from the mayor's office as soon
 as it holds the logs and the gold left covers tonight's bill, then the Farm Rank 3 stations. Nobody lives on the farm:
 an Uma there eats, and one with no work costs her upkeep and her meals for nothing. Every night the farm eats, then pays
 its bill: the loan's share, the takeout and the upkeep. **The farmer eats takeout** while his gold holds, and cooks a
@@ -3225,29 +3333,33 @@ The run as it stands (`SEASON=1` prints it, and the same farms on takeout alone 
 | Planted and watered | 0 | 5 | 0 | 0 | 0 | 2 | 2 | 1 | 0 | 0 | 0 | 0 |
 | Watered, besides the day's plantings | 0 | 0 | 5 | 5 | 5 | 0 | 2 | 4 | 5 | 3 | 1 | 0 |
 | Harvested | 0 | 0 | 0 | 0 | 0 | 5 | 0 | 0 | 0 | 2 | 2 | 1 |
-| Gold, morning | 500 | 470 | 440 | 410 | 380 | 80 | 480 | 465 | 240 | 195 | 150 | 105 |
-| His meals | Takeout | Takeout | Takeout | Takeout | A batch | The batch | The batch | Takeout | Takeout | Takeout | Takeout | Takeout |
+| Gold, morning | 500 | 470 | 440 | 410 | 380 | 80 | 440 | 425 | 200 | 155 | 110 | 65 |
+| His meals | Takeout | Takeout | Takeout | Takeout | A batch | The batch | The batch | Takeout | Takeout | Takeout | Takeout | A batch |
 | Built | | | | | The Mill, on a 700g loan | | | | | | | |
 
 The year, season by season (the morning after each season's last night):
 
 | Season | The bin paid | Takeout | Upkeep | The loan's shares | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
 |---|---|---|---|---|---|---|---|---|---|
-| Spring | 1,140g | 270g | 105g | 160g | 605g | 0 | 625g | 15g (the Mill) | 1 |
-| Summer | 2,085g | 360g | 180g | 400g | 1,145g | 0 | 1,410g | 15g | 1 |
-| Autumn | 2,710g | 360g | 180g | 210g | 1,960g | 0 | 2,830g | 15g | 1 |
-| Winter | 2,950g | 360g | 180g | — | 2,410g | 0 | 4,700g | 15g | 2 |
+| Spring | 1,050g | 240g | 105g | 160g | 545g | 0 | 565g | 15g (the Mill) | 1 |
+| Summer | 2,165g | 300g | 180g | 400g | 1,285g | 0 | 1,490g | 15g | 1 |
+| Autumn | 2,720g | 360g | 180g | 210g | 1,970g | 0 | 2,920g | 15g | 1 |
+| Winter | 2,845g | 360g | 180g | — | 2,305g | 0 | 4,685g | 15g | 2 |
 
 - **The loan builds the Mill early:** 20 logs held by Spring 4, but the 10g a loan would leave him that day wouldn't pay
   the night's 30g of takeout, so he waits a day: on Spring 5, 380g of his own and a 700g loan (770g owed, 80g a night),
   and with his gold low he keeps an action for the stove and cooks a batch from the day's hauls: six meals, his next
-  three nights'. The Mill stands on Spring 6; the nights' income clears the loan in Autumn.
-- **Takeout bites, and never sinks him:** 1,350g of takeout in the year (90 meals) against 8,885g shipped, a sixth, with
-  never a short night. On takeout alone (no batch) the year ends on 4,655g; cooking for the tight nights, on 4,700g.
+  three nights'. The Mill stands on Spring 6; the nights' income clears the loan in Autumn. On Spring 12, low again, he
+  cooks a second batch.
+- **Takeout bites, and never sinks him:** 1,260g of takeout in the year (84 meals) against 8,780g shipped, a seventh,
+  with never a short night. On takeout alone (no batch) the year ends on 4,710g; cooking for the tight nights, on 4,685g.
   Cooking every night he can, he buys 360g of takeout (24 meals), eats all 72 meals of his twelve batches, never runs
-  short and ends on 4,355g: a batch saves him 90g of takeout for two goods worth 60–70g, and its action is a haul he
+  short and ends on 4,235g: a batch saves him 90g of takeout for two goods worth 60–70g, and its action is a haul he
   doesn't bring home ([food](#food)).
-- **Year 2 opens** on 4,700g, 8,885g shipped, 47 tiles harvested and 163 Farm Rank points (Farm Rank 2). The farmer
+- **Thin barely touches him:** two places at Farm Rank 1, the Woods and the Pond, give eight full hauls a day between
+  them, about what he gathers; the bot spreads his hauls over them, and goes deeper once they're thin and Farm Rank 2
+  opens the Hills and the River.
+- **Year 2 opens** on 4,685g, 8,780g shipped, 47 tiles harvested and 162 Farm Rank points (Farm Rank 2). The farmer
   alone doesn't reach Farm Rank 3 (250) in a year, so the Sawmill and the Smokehouse wait for the farmhands.
 - **Fishing and foraging still carry the farm:** an action at the water or the woods pays about what a Carrot's whole
   run of six actions does.
@@ -3260,7 +3372,7 @@ fishes at the deepest area and spot the farm reaches (the Hills and the River fr
 everywhere. Two Umas live on the farm from Summer, three from Autumn and four from Winter (the Dorm's second level for
 the fourth), though none of them works it. The farmer keeps a field twice the size (ten tiles growing), plants and
 harvests it himself, waters only what she won't reach tonight (as the board's Tonight shows), gathers no more than the
-four actions a day he did alone, and spends the rest of his day with the people in town. **The field hand is the Cook:**
+four actions a day he did alone (leaving her places to her), and spends the rest of his day with the people in town. **The field hand is the Cook:**
 her board is the whole field's watering, then Cook, so once the field's watered her actions left cook a batch each
 until the pantry holds tonight's meals; the farmer keeps back from the bin the goods her batches will take. The same
 farm on takeout alone runs beside it. It checks:
@@ -3282,22 +3394,22 @@ farm on takeout alone runs beside it. It checks:
 
 | Season | The bin paid | Takeout | Upkeep | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
 |---|---|---|---|---|---|---|---|---|
-| Spring | 4,025g | 825g | 295g | 2,905g | 0 | 2,225g | 35g (the Mill, two farmhands) | 1 |
-| Summer | 11,380g | 630g | 660g | 10,090g | 0 | 14,155g | 55g (and two Umas home) | 3 |
-| Autumn | 12,655g | 570g | 1,025g | 11,060g | 0 | 20,475g | 105g (the Dorm's level 2, the Sawmill, the Smokehouse) | 3 |
-| Winter | 17,995g | 225g | 1,380g | 16,390g | 0 | 36,325g | 115g (four home) | 3 |
+| Spring | 4,040g | 825g | 295g | 2,920g | 0 | 2,240g | 35g (the Mill, two farmhands) | 1 |
+| Summer | 8,690g | 1,785g | 660g | 6,245g | 0 | 10,325g | 55g (and two Umas home) | 3 |
+| Autumn | 7,420g | 990g | 1,010g | 5,420g | 0 | 11,005g | 105g (the Dorm's level 2, the Sawmill, the Smokehouse) | 3 |
+| Winter | 14,550g | 225g | 1,380g | 12,945g | 0 | 23,410g | 115g (four home) | 3 |
 
-The same farm on takeout alone pays 1,020g, 1,800g, 2,160g and 2,520g of takeout and ends the year on 17,280g.
+The same farm on takeout alone pays 990g, 1,800g, 2,160g and 2,520g of takeout and ends the year on 17,405g.
 
-- **They pay their way many times over:** their 20g a night is part of the year's 3,360g upkeep, against 46,055g
-  shipped (five times the farmer alone's 8,885g). The farmhands spent 405 actions in the year; the farmer watered 17
-  tiles (156 alone) and spent 102 actions with the people.
+- **They pay their way many times over:** their 20g a night is part of the year's 3,345g upkeep, against 34,700g
+  shipped (four times the farmer alone's 8,780g). The farmhands spent 373 actions in the year; the farmer watered 18
+  tiles (156 alone) and spent 105 actions with the people.
 - **The farm grows faster:** Farm Rank 3 by Summer's end, the Mill on Spring 7 and the Dorm's second level, the Sawmill
-  and the Smokehouse in Autumn, all on his own gold, and 745 Farm Rank points by Year 2.
-- **The cook pays once the field yields:** in Spring the field takes most of the field hand's actions, so the farm buys
-  most of its food; as her Watering rises (two tiles an action, then a row) her actions left cook, six or seven meals a
-  batch, the pantry feeds the farm (350 meals in the year, 153 in Winter alone), and her ★2 batches keep the farmhands
-  well fed. She reaches Cooking 4, and the year ends twice as rich as on takeout.
+  and the Smokehouse in Autumn, all on his own gold, and 637 Farm Rank points by Year 2.
+- **The cook pays once the field yields:** in Spring and Summer the field takes most of the field hand's actions, so the
+  farm buys most of its food; as her Watering rises (two tiles an action, then a row) her actions left cook, six or
+  seven meals a batch, the pantry feeds the farm (245 meals in the year, 153 in Winter alone), and her ★2 batches keep
+  the farmhands well fed. She reaches Cooking 3, and the year ends a third richer than on takeout.
 - **Where it comes from:** the gatherer works the Hills and the River once Farm Rank 2 opens them, where a haul is worth
   two or three of the Woods', and her foraging rank reaches Skilled (×1.3 yield, +1 quality) on her challenges.
 
@@ -3322,30 +3434,200 @@ chickens cost their 500g and their feed; the cook feeds them all. It checks:
 
 | Season | The bin paid | Takeout | Upkeep | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
 |---|---|---|---|---|---|---|---|---|
-| Spring 1 | 4,025g | 825g | 295g | 2,905g | 0 | 2,225g | 35g | 1 |
-| Summer 1 | 6,900g | 630g | 660g | 5,610g | 0 | 9,495g | 55g | 3 |
-| Autumn 1 | 11,795g | 705g | 1,365g | 9,725g | 0 | 9,680g | 130g (the Coop and its farmhand, the Dorm's level 2, the Sawmill, the Smokehouse) | 3 |
-| Winter 1 | 23,220g | 375g | 1,680g | 21,165g | 0 | 29,905g | 140g | 3 |
-| Spring 2 | 29,750g | — | 1,755g | 27,995g | 0 | 50,220g | 165g (the Mine and its farmhand) | 4 |
-| Summer 2 | 53,015g | 45g | 1,980g | 50,990g | 0 | 102,450g | 165g | 4 |
-| Autumn 2 | 85,695g | — | 1,980g | 83,715g | 0 | 184,825g | 165g | 5 |
-| Winter 2 | 98,065g | — | 1,980g | 96,085g | 0 | 283,970g | 165g | 5 |
+| Spring 1 | 4,040g | 825g | 295g | 2,920g | 0 | 2,240g | 35g | 1 |
+| Summer 1 | 4,845g | 1,785g | 660g | 2,400g | 0 | 6,000g | 55g | 3 |
+| Autumn 1 | 7,535g | 705g | 1,290g | 5,540g | 0 | 2,300g | 130g (the Coop and its farmhand, the Dorm's level 2, the Sawmill, the Smokehouse) | 3 |
+| Winter 1 | 17,460g | 375g | 1,680g | 15,405g | 0 | 16,765g | 140g | 3 |
+| Spring 2 | 24,220g | — | 1,680g | 22,540g | 0 | 40,625g | 140g | 3 |
+| Summer 2 | 35,285g | 60g | 1,930g | 33,295g | 0 | 64,160g | 165g (the Mine and its farmhand) | 4 |
+| Autumn 2 | 60,060g | — | 1,980g | 58,080g | 0 | 123,300g | 165g | 4 |
+| Winter 2 | 71,320g | — | 1,980g | 69,340g | 0 | 191,300g | 165g | 5 |
 
 - **The Coop pays its way three times over:** it is built on Autumn 1 of the first year (the vegetables it takes come
-  with Summer's crops), and over its 71 nights its eggs sell for 27,870g against 6,975g of upkeep, its farmhand, the
+  with Summer's crops), and over its 71 nights its eggs sell for 26,865g against 6,975g of upkeep, its farmhand, the
   four hens and their fodder. Its farmhand reaches Animal care 9 and the ranch's Expert rank.
-- **The Mine pays at once:** it is built on Spring 9 of the second year; its farmhand's faces and the farmer's free
-  stairs reach floor 15 (the Farm Rank's reach), and over its 39 nights its ores sell for 97,530g against 975g of its
-  nights' costs.
-- **The cook feeds the farm:** from the first Winter the pantry covers nearly every meal (45g of takeout in the whole
-  second year), the cook reaches Cooking 6, and her ★2 batches keep the four farmhands well fed nearly every night.
-  That's most of why the second year ships 266,525g, nearly twice the 137,600g it shipped before food: a well-fed
-  farmhand works one more action, with ×1.25 hauls and +0.25 quality.
-- **The farm in all:** the two years ship 312,465g and end on 283,970g, Farm Rank 5 (3,659 points); every build is
+- **The Mine pays at once:** it is built in the second year's Summer, once Farm Rank 4 comes; its farmhand's faces and
+  the farmer's free stairs reach floor 15 (the Farm Rank's reach), and over its 34 nights its ores sell for 55,285g
+  against 850g of its nights' costs. One miner works four full faces a day and a thin one or two
+  ([thin](#thin-four-full-hauls-a-place-a-day)).
+- **The cook feeds the farm:** from the first Winter the pantry covers nearly every meal (60g of takeout in the whole
+  second year), the cook reaches Cooking 6, and her ★2 batches keep the four farmhands well fed nearly every night: a
+  well-fed farmhand works one more action, with +0.25 quality. The second year ships 190,885g against the 137,600g it
+  shipped before food (266,525g while well fed also gave every haul a quarter more: [well fed](#well-fed)).
+- **The farm in all:** the two years ship 224,765g and end on 191,300g, Farm Rank 5 (2,752 points); every build is
   paid from its own gold.
 - **Food's numbers:** takeout at 15g a meal, the farmer's batch of six from two goods (so cooking saves gold against
-  takeout), the cook's 6 to 12, and three days a meal keeps. The ranch's and the Mine's stand as built. F91 (work at scale) takes the farm's work and
-  prices on from here.
+  takeout), the cook's 6 to 12, and three days a meal keeps. The ranch's and the Mine's stand as built.
+
+##### The farm at scale: 10, 20 and 50 Umas
+
+The owner asked: "when we have 10 Umas, then 20 Umas, then 50 Umas, do all those stages support all Umas fully
+working?" A test (`packages/domain/src/farm/scale.test.ts`) answers it on the game's own rules: three farms play four
+years, each bringing in its Umas as farmhands (friends from town, a D talent everywhere) until it works with **10**, **20**
+or **50**: two in its first Spring, then ten by year 2's Spring, twenty by year 3's and fifty by year 4's Summer.
+`SCALE=1` prints the tables below.
+
+- **The farmer** is a plain bot. Each morning he builds what the Farm Rank offers (the stations, the Coop and the Barn,
+  the Mine and the Quarry, the Dock and the Boat), clears **a plot for every five Umas** as the Farm Rank opens them,
+  buys each station's next level and the Dorm's, keeps the Coop and the Barn full and the silo fed, buys each plot's
+  seeds in town (a different crop a plot), tends the field by hand with what his day leaves, ships a crate of everything
+  the farm can spare (keeping the next builds' goods, tonight's loads and the cook's batches back), and spends the rest
+  of his day with the people. Every purchase keeps five nights' bill in hand.
+- **The plain rule** sets the farmhands' boards every morning, in the order they came: **the field's plots** (harvest,
+  plant, water), **the animals**, **the stations' loads**, **the kitchen** (Cook), then **gathering and mining**: an
+  area's, a spot's or a dig's four full hauls a day each, the deepest first, one place each; then the field's **new
+  ground** (a row of each plot a day, cleared and tilled). Each farmhand takes what her actions fill of the first jobs
+  with work left, by her aptitudes, and the next takes what's left. Past every job, she gathers where it's thin.
+- **How it counts an Uma's night:** her **real work** is the field, the animals, a load, the kitchen, a full haul and a
+  full face; **thin** is a haul or a face past its place's four (half a haul: idle-ish); **idle** is an action with
+  nothing to do. She's **in a real job** when real work is at least half her actions; else she's **idle-ish**. **Real work
+  on offer** is what the jobs needed that day at the farm's levels, taken and still waiting (some waits on days the plain
+  rule can't fit it: one place to gather or dig an Uma). Phase 2's employers (expeditions, the Restaurant, the Forge)
+  aren't built: they're the work to come.
+
+It checks: never a short night at any stage; 10 Umas by year 2, 20 by year 3, 50 by year 4; **10 and 20 fully in real
+jobs** in year 4 with real work still waiting and under a tenth of their actions thin or idle; **50 past the farm's real
+jobs**, some idle-ish and over a tenth of their actions thin; two plots at 10, four at 20 and eight at 50, the five
+stations at level 5 and the Dorm's 20 beds; and every season's save parses as v5.
+
+Each stage in its last year (year 4), a day's actions on average:
+
+|  | 10 Umas | 20 Umas | 50 Umas |
+|---|---|---|---|
+| Umas working the farm, at the year’s end | 10 | 20 | 50 |
+| Their actions a day | 46 | 94 | 228 |
+| Real work on offer a day (taken, and waiting) | 101 (45, 56) | 151 (91, 60) | 237 (191, 46) |
+| The field: tending and new ground | 18 | 44 | 106 |
+| The animals | 15 | 15 | 20 |
+| The stations’ loads | 5 | 10 | 17 |
+| The kitchen | 2 | 4 | 11 |
+| Full hauls (an area’s or a spot’s first four) | 2 | 13 | 27 |
+| Faces (a dig’s first four) | 1 | 4 | 5 |
+| **Thin** hauls and faces (past the four) | 0 | 3 | 38 |
+| **Idle** actions (nothing to do) | 3 | 2 | 5 |
+| **Umas in real jobs** · idle-ish | **10** · 0 | **20** · 0 | **38** · 11 |
+| The bin, the year | 495,710g | 874,685g | 1,533,260g |
+| Upkeep, the year | 11,205g | 19,710g | 34,890g |
+| Takeout, the year | 7,110g | 9,210g | 16,185g |
+| Meals from the pantry, the year | 582 | 1,402 | 3,657 |
+| Well fed, a night | 6 of 10 | 14 of 20 | 37 of 50 |
+| Gold at the year’s end | 765,430g | 829,640g | 1,316,275g |
+| Farm Rank · plots · station levels | 8 · 2 · 15 | 9 · 4 · 20 | 10 · 8 · 25 |
+| Housing: Dorm beds · home · in town | 11 · 10 · 0 | 20 · 20 · 0 | 20 · 20 · 30 |
+| Goods eased by a flood, a day | 0 | 0 | 0 |
+
+The three farms year by year:
+
+**The farm of 10:**
+
+|  | Year 1 | Year 2 | Year 3 | Year 4 |
+|---|---|---|---|---|
+| Umas working the farm, at the year’s end | 8 | 10 | 10 | 10 |
+| Their actions a day | 21 | 45 | 48 | 46 |
+| Real work on offer a day (taken, and waiting) | 42 (20, 22) | 85 (43, 42) | 84 (46, 38) | 101 (45, 56) |
+| The field: tending and new ground | 12 | 26 | 19 | 18 |
+| The animals | 0 | 4 | 8 | 15 |
+| The stations’ loads | 1 | 3 | 5 | 5 |
+| The kitchen | 1 | 2 | 2 | 2 |
+| Full hauls (an area’s or a spot’s first four) | 6 | 8 | 9 | 2 |
+| Faces (a dig’s first four) | 0 | 0 | 0 | 1 |
+| **Thin** hauls and faces (past the four) | 0 | 1 | 2 | 0 |
+| **Idle** actions (nothing to do) | 0 | 1 | 2 | 3 |
+| **Umas in real jobs** · idle-ish | **5** · 0 | **10** · 0 | **10** · 0 | **10** · 0 |
+| The bin, the year | 26,840g | 169,665g | 399,025g | 495,710g |
+| Upkeep, the year | 3,730g | 8,400g | 8,940g | 11,205g |
+| Takeout, the year | 1,920g | 6,630g | 3,915g | 7,110g |
+| Meals from the pantry, the year | 446 | 612 | 795 | 582 |
+| Well fed, a night | 3 of 8 | 5 of 10 | 8 of 10 | 6 of 10 |
+| Short nights | 0 | 0 | 0 | 0 |
+| Gold at the year’s end | 3,110g | 67,725g | 364,845g | 765,430g |
+| Farm Rank · plots · station levels | 3 · 2 · 4 | 5 · 2 · 8 | 7 · 2 · 15 | 8 · 2 · 15 |
+| Housing: Dorm beds · home · in town | 7 · 7 · 1 | 11 · 10 · 0 | 11 · 10 · 0 | 11 · 10 · 0 |
+| Goods eased by a flood, a day | 0 | 0 | 0 | 0 |
+
+**The farm of 20:**
+
+|  | Year 1 | Year 2 | Year 3 | Year 4 |
+|---|---|---|---|---|
+| Umas working the farm, at the year’s end | 8 | 17 | 20 | 20 |
+| Their actions a day | 20 | 57 | 89 | 94 |
+| Real work on offer a day (taken, and waiting) | 39 (20, 19) | 106 (54, 52) | 154 (87, 67) | 151 (91, 60) |
+| The field: tending and new ground | 10 | 39 | 50 | 44 |
+| The animals | 0 | 1 | 17 | 15 |
+| The stations’ loads | 1 | 2 | 6 | 10 |
+| The kitchen | 1 | 2 | 3 | 4 |
+| Full hauls (an area’s or a spot’s first four) | 7 | 8 | 7 | 13 |
+| Faces (a dig’s first four) | 0 | 0 | 1 | 4 |
+| **Thin** hauls and faces (past the four) | 1 | 4 | 2 | 3 |
+| **Idle** actions (nothing to do) | 0 | 1 | 2 | 2 |
+| **Umas in real jobs** · idle-ish | **5** · 0 | **12** · 1 | **19** · 1 | **20** · 0 |
+| The bin, the year | 26,640g | 147,350g | 449,535g | 874,685g |
+| Upkeep, the year | 3,530g | 9,510g | 17,160g | 19,710g |
+| Takeout, the year | 1,335g | 8,580g | 15,045g | 9,210g |
+| Meals from the pantry, the year | 483 | 784 | 1,001 | 1,402 |
+| Well fed, a night | 2 of 8 | 7 of 17 | 10 of 20 | 14 of 20 |
+| Short nights | 0 | 0 | 0 | 0 |
+| Gold at the year’s end | 2,455g | 12,325g | 117,625g | 829,640g |
+| Farm Rank · plots · station levels | 3 · 2 · 4 | 5 · 3 · 9 | 7 · 4 · 15 | 9 · 4 · 20 |
+| Housing: Dorm beds · home · in town | 7 · 7 · 1 | 14 · 11 · 6 | 20 · 20 · 0 | 20 · 20 · 0 |
+| Goods eased by a flood, a day | 0 | 0 | 0 | 0 |
+
+**The farm of 50:**
+
+|  | Year 1 | Year 2 | Year 3 | Year 4 |
+|---|---|---|---|---|
+| Umas working the farm, at the year’s end | 8 | 17 | 38 | 50 |
+| Their actions a day | 22 | 57 | 128 | 228 |
+| Real work on offer a day (taken, and waiting) | 33 (20, 13) | 118 (57, 61) | 167 (116, 51) | 237 (191, 46) |
+| The field: tending and new ground | 6 | 40 | 73 | 106 |
+| The animals | 3 | 8 | 10 | 20 |
+| The stations’ loads | 1 | 2 | 8 | 17 |
+| The kitchen | 2 | 2 | 6 | 11 |
+| Full hauls (an area’s or a spot’s first four) | 8 | 4 | 15 | 27 |
+| Faces (a dig’s first four) | 0 | 0 | 2 | 5 |
+| **Thin** hauls and faces (past the four) | 2 | 0 | 12 | 38 |
+| **Idle** actions (nothing to do) | 0 | 1 | 3 | 5 |
+| **Umas in real jobs** · idle-ish | **5** · 0 | **13** · 0 | **26** · 3 | **38** · 11 |
+| The bin, the year | 39,240g | 162,115g | 502,830g | 1,533,260g |
+| Upkeep, the year | 3,865g | 10,115g | 20,670g | 34,890g |
+| Takeout, the year | 885g | 11,370g | 14,670g | 16,185g |
+| Meals from the pantry, the year | 517 | 596 | 1,870 | 3,657 |
+| Well fed, a night | 4 of 8 | 6 of 17 | 18 of 38 | 37 of 50 |
+| Short nights | 0 | 0 | 0 | 0 |
+| Gold at the year’s end | 8,270g | 23,785g | 77,640g | 1,316,275g |
+| Farm Rank · plots · station levels | 3 · 2 · 4 | 5 · 4 · 7 | 7 · 6 · 25 | 10 · 8 · 25 |
+| Housing: Dorm beds · home · in town | 7 · 7 · 1 | 14 · 14 · 3 | 20 · 20 · 18 | 20 · 20 · 30 |
+| Goods eased by a flood, a day | 0 | 0 | 0 | 0 |
+
+- **10 and 20 Umas hold, with work to spare.** In year 4 every Uma at 10 and 20 is in a real job, and real work still
+  waits (56 and 60 actions a day): the shallow areas and spots, the field's new ground, more of the field. Ten Umas keep
+  two plots, the ranch, the stations and the kitchen going; twenty keep four.
+- **50 Umas run past the farm's real jobs.** In year 4, with all eight plots, both buildings full, the five stations at
+  level 5, every area and spot open and both digs, 38 are in real jobs and 11 are idle-ish: about 43 actions a day go to
+  thin hauls and faces (38) or nothing (5). **What 50 still needs from Phase 2:** work for about ten Umas, some 45
+  actions a day, which is what its employers bring: expeditions (parties of four away for days), the Restaurant's
+  service and the Forge's crew.
+- **Gold grows with the farm's places, not its people.** Upkeep and takeout are a few percent of the bin at every stage,
+  and every farm ends year 4 rich (765K, 830K and 1.3M) with little left to buy. Thin hauls make each Uma past the jobs
+  worth half a haul, and the market eases any good shipped by the crate, so a fifty-first Uma adds little. Phase 2's
+  workshops are what's left to buy and to staff.
+- **Housing:** the Dorm tops out at 20 beds (level 8, Farm Rank 7); the 50-Uma farm's other 30 live in town and work the
+  farm by day, as any farmhand may, at the same 10g a night. Spouses live in the homestead's houses (up to six, with the
+  weddings), which the test doesn't play.
+- **The market barely moves here:** the bot plants a different crop a plot and ships every day, so no good passes a crate
+  a night (0 eased a day). A farm that plants one crop across its plots, or dumps a season's stock at once, feels it
+  ([the market](#the-market-feels-a-flood)).
+
+**What the test changed (F91's retunes):**
+
+- **Well fed no longer lifts a haul's count** (×1.25 before). With the ★2 meals a cook makes, nearly every farmhand is
+  well fed every night, and the quarter more on every haul and face, on top of the one more action, nearly doubled a
+  farm: the whole farm's two years shipped 292,055g with it against 154,405g with no well fed at all; without the
+  quarter they ship 224,765g. At 50 Umas, year 3 shipped 534K with it, 503K without. Well fed keeps one more action,
+  +0.25 quality and ×1.25 rank points ([well fed](#well-fed)).
+- **The digs thin as the areas and spots do:** four full faces a day each, then half finds. Before, the 50-Uma farm's
+  surplus went to the Mine without limit: 44 faces a day, 1.32M of its 2.8M year-4 bin, its deep ores eased three steps
+  by the flood and still its best pay ([thin](#thin-four-full-hauls-a-place-a-day)).
 
 ##### A route to marriage
 
@@ -3390,22 +3672,22 @@ town brings her out every day and weds no later, and that living in town she wed
 |  | Devoted, the default schedule | Devoted, a home in town | Casual, the default schedule | Casual, a home in town |
 |---|---|---|---|---|
 | Met her, day | 1 | 1 | 1 | 1 |
-| Out of her reach, days | 16 | 0 | 22 (22–24) | 0 |
+| Out of her reach, days | 16 | 0 | 22 | 0 |
 | In front of you, before she's a farmhand | 36% of days | 100% of days | 35% of days | 100% of days |
 | In front of you, once she's a farmhand | 100% of days | 100% of days | 100% of days | 100% of days |
-| Friendship 3, day | 22 | 10 | 31 (31–34) | 14 (14–16) |
-| A farmhand, day | 25 | 11 | 34 (34–37) | 15 (15–17) |
-| The confession, day | 36 | 22 | 51 (51–54) | 32 (31–34) |
-| The proposal, day | 49 (49–53) | 35 (35–36) | 71 (69–78) | 58 (52–60) |
-| **The wedding**, day | **50 (50–54): Spring 2, year 2** | **36 (36–37): Autumn 12, year 1** | **72 (70–79): Summer 12, year 2** | **59 (53–61): Spring 11, year 2** |
-| Meeting her to the wedding, days | 49 (49–53) | 35 (35–36) | 71 (69–78) | 58 (52–60) |
-| Actions spent on her | 153 (153–169) | 159 (159–163) | 214 (206–232) | 245 (220–254) |
-| Evenings | 26 (26–30) | 26 (26–27) | 39 (37–43) | 44 (37–47) |
-| Gifts: loved, liked | 10, 22 | 8, 22 | 0, 48 | 0, 48 |
-| Gold at the wedding | 8,615g (7,460–11,620) | 5,070g (4,675–6,615) | 12,280g (11,650–14,310) | 12,615g (10,420–13,430) |
-| Days her event waited on her bar | 27 | 13 | 47 (47–50) | 28 (27–30) |
-| Days it waited on a ring | 0 (0–4) | 0 (0–1) | 2 (0–6) | 7 (0–10) |
-| Short nights | 2 (0–2) | 1 | 2 (0–2) | 0 (0–2) |
+| Friendship 3, day | 22 | 10 | 31 | 14 (14–16) |
+| A farmhand, day | 25 | 11 | 34 | 15 (15–17) |
+| The confession, day | 36 | 22 | 51 | 32 (32–34) |
+| The proposal, day | 49 (49–55) | 35 (35–36) | 70 (69–74) | 54 (51–58) |
+| **The wedding**, day | **50 (50–56): Spring 2, year 2** | **36 (36–37): Autumn 12, year 1** | **71 (70–75): Summer 11, year 2** | **55 (52–59): Spring 7, year 2** |
+| Meeting her to the wedding, days | 49 (49–55) | 35 (35–36) | 70 (69–74) | 54 (51–58) |
+| Actions spent on her | 153 (153–177) | 159 (159–163) | 210 (206–226) | 231 (219–245) |
+| Evenings | 26 (26–32) | 26 (26–27) | 38 (37–42) | 41 (37–44) |
+| Gifts: loved, liked | 9, 23 | 8, 22 | 0, 46 | 0, 45 |
+| Gold at the wedding | 6,965g (6,600–9,200) | 4,685g (3,450–5,825) | 9,795g (8,575–11,205) | 9,775g (7,785–11,215) |
+| Days her event waited on her bar | 27 | 13 | 47 | 28 (28–30) |
+| Days it waited on a ring | 0 (0–6) | 0 (0–1) | 1 (0–5) | 4 (0–7) |
+| Short nights | 1 (1–2) | 2 (2–6) | 1 (1–2) | 6 (2–16) |
 | Real time, at 3–5 minutes a day | 3 h–4 h | 108 min–3 h | 4 h–6 h | 3 h–5 h |
 
 **Invited to the farm the day she's met:**
@@ -3416,24 +3698,24 @@ town brings her out every day and weds no later, and that living in town she wed
 | Out of her reach, days | 0 | 0 | 0 | 0 |
 | In front of you, before she's a farmhand | 100% of days | 100% of days | 100% of days | 100% of days |
 | In front of you, once she's a farmhand | 100% of days | 100% of days | 100% of days | 100% of days |
-| Friendship 3, day | 10 | 10 | 15 (14–16) | 15 (14–16) |
-| A farmhand, day | 11 | 11 | 16 (15–17) | 16 (15–17) |
-| The confession, day | 21 | 21 | 31 (30–32) | 31 (30–32) |
-| The proposal, day | 35 (34–35) | 35 (34–35) | 47 (47–48) | 47 (47–48) |
-| **The wedding**, day | **36 (35–36): Autumn 12, year 1** | **36 (35–36): Autumn 12, year 1** | **48 (48–49): Winter 12, year 1** | **48 (48–49): Winter 12, year 1** |
-| Meeting her to the wedding, days | 35 (34–35) | 35 (34–35) | 47 (47–48) | 47 (47–48) |
-| Actions spent on her | 149 (145–149) | 149 (145–149) | 187 (184–193) | 187 (184–193) |
-| Evenings | 26 (25–26) | 26 (25–26) | 33 (32–35) | 33 (32–35) |
-| Gifts: loved, liked | 9, 21 | 9, 21 | 0, 37 | 0, 37 |
-| Gold at the wedding | 5,530g (3,885–7,805) | 5,530g (3,885–7,805) | 7,705g (6,800–10,275) | 7,705g (6,800–10,275) |
-| Days her event waited on her bar | 11 | 11 | 25 (24–25) | 25 (24–25) |
-| Days it waited on a ring | 2 (1–2) | 2 (1–2) | 1 (0–2) | 1 (0–2) |
-| Short nights | 2 (0–3) | 2 (0–3) | 1 (0–7) | 1 (0–7) |
+| Friendship 3, day | 10 | 10 | 15 (14–15) | 15 (14–15) |
+| A farmhand, day | 11 | 11 | 16 (15–16) | 16 (15–16) |
+| The confession, day | 21 | 21 | 31 (30–31) | 31 (30–31) |
+| The proposal, day | 35 (33–36) | 35 (33–36) | 48 (47–48) | 48 (47–48) |
+| **The wedding**, day | **36 (34–37): Autumn 12, year 1** | **36 (34–37): Autumn 12, year 1** | **49 (48–49): Spring 1, year 2** | **49 (48–49): Spring 1, year 2** |
+| Meeting her to the wedding, days | 35 (33–36) | 35 (33–36) | 48 (47–48) | 48 (47–48) |
+| Actions spent on her | 149 (141–153) | 149 (141–153) | 191 (187–193) | 191 (187–193) |
+| Evenings | 26 (24–27) | 26 (24–27) | 34 (33–35) | 34 (33–35) |
+| Gifts: loved, liked | 9, 20 | 9, 20 | 0, 37 | 0, 37 |
+| Gold at the wedding | 3,135g (2,240–5,915) | 3,135g (2,240–5,915) | 7,050g (6,125–8,610) | 7,050g (6,125–8,610) |
+| Days her event waited on her bar | 11 | 11 | 24 (24–25) | 24 (24–25) |
+| Days it waited on a ring | 2 (0–3) | 2 (0–3) | 1 (0–2) | 1 (0–2) |
+| Short nights | 12 (6–18) | 12 (6–18) | 12 (9–21) | 12 (9–21) |
 | Real time, at 3–5 minutes a day | 108 min–3 h | 108 min–3 h | 2 h–4 h | 2 h–4 h |
 
 - **Living in town, the wedding comes in the first year or early in the second**, no longer in years 4–7: devoted on
-  the default schedule, **day 50 (Spring 2, year 2), 49 days after meeting her**, some 3–4 hours of play; casual, day 72
-  (Summer 12, year 2). With a home in town, devoted weds on day 36, the farm's own pace.
+  the default schedule, **day 50 (Spring 2, year 2), 49 days after meeting her**, some 3–4 hours of play; casual, day 71
+  (Summer 11, year 2). With a home in town, devoted weds on day 36, the farm's own pace.
 - **The default schedule brings her out a third of the days** (36% before she's a farmhand: four days of each season's
   twelve), the same days every season and on every farm, so you can plan for them: her profile and the calendar show
   them. Those days are the whole of her wait before Friendship 3 (16 days out of reach, devoted).
@@ -3443,15 +3725,19 @@ town brings her out every day and weds no later, and that living in town she wed
 - **Her evening now plays in town.** She has 26 evenings before the wedding, devoted, living in town as on the farm,
   where she used to have none: asked out where she is on her days, then every day once she's a farmhand.
 - **Invited to the farm** (free, the day she's met, with a bed free), she's in front of you every day and the wedding
-  comes on **day 36 (Autumn 12, year 1), 35 days after meeting her, devoted, or 47 casual**, some 2–4 hours of play. A
+  comes on **day 36 (Autumn 12, year 1), 35 days after meeting her, devoted, or 48 casual**, some 2–4 hours of play. A
   schedule changes nothing for an Uma on the farm (both columns alike).
 - **A home in town** (or any fuller schedule the story writes) is the story's lever for the first weeks: out every day,
-  she reaches Friendship 3 on day 10, as on the farm, and the town route matches the farm's (devoted 35 days, casual 58).
+  she reaches Friendship 3 on day 10, as on the farm, and the town route matches the farm's (devoted 35 days, casual 54).
 - **Her loved gift is early now:** a farming Uma loves Carrot, the first season's quickest seed, so devoted gives it on
-  ten days before the wedding (in town; nine on the farm). Every default loved good can be had in Spring of year 1
+  nine days before the wedding (in town and on the farm). Every default loved good can be had in Spring of year 1
   ([her favourite line and tastes](#her-favourite-line-and-tastes)).
 - **The ring never holds her long:** the bench opens the night after Romance 8, and the Mill's goods kept from Romance
-  5 make a ring there; the proposal waited on it 0–2 days at the median, 10 at most.
+  5 make a ring there; the proposal waited on it 0–4 days at the median, 7 at most.
+- **Food bites while she lives on the farm:** invited to the farm on day 1, she eats from the first night, and the farm's
+  first weeks run short of the night's bill on about twelve nights (living in town, one to six). The bot cooks only for
+  its tight nights; a player who cooks or gathers a little more pays it ([food](#food)). Thin hauls change little: the
+  farmer leaves her the Woods' forages and fishes the Pond ([thin](#thin-four-full-hauls-a-place-a-day)).
 - **No retune:** the owner decides the pace after reading it.
 
 #### The night's goals check
@@ -6254,6 +6540,13 @@ sits outside the opening screens, so it shows even when the app stopped while op
   save from before plots holds one field's tiles (`fields.tiles`) and reads as plot 1, exactly as it was, tile for tile,
   crops, growth and watering untouched; a farmhand's field task with no `plot` is plot 1's. The save is written with
   `fields.plots` from the player's next change, and nothing moves `updatedAt` for it.
+- **v5 grows in place with the farm at scale:** the field holds up to eight plots (`fields.plots`, 1–8); a station's
+  loads today are a list, one a level (`loads[station]`, 1–5 loads; a save from before levels holds one load, an object,
+  and reads as a list of one), and its level is `buildings[station]` (1–5), a level bought today waiting in
+  `farm.builds`; `today.hauls` (each area's, spot's and dig's hauls today) is written once the day's first haul is;
+  `farm.market` (each good a flood eased, by its steps) reads as nothing eased when it's missing; a morning's sale may
+  say how far it was eased (`summary.bin[].eased`) and a morning's built line a station's new level
+  (`summary.news[].level`). Nothing migrates, and `updatedAt` never moves for it.
 - **Nothing goes silently:** a phone save with unsynced play is kept first as a "Before the new farm" safety copy (if it
   can't be kept, nothing changes and the card says so, with the button to try again). The new farm syncs up as it is,
   and the first time the server stores a v5 over the older save it copies the older one, whole, to a backup

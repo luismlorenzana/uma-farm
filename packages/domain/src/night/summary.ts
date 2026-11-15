@@ -19,6 +19,9 @@ export interface BinSale {
   count: number
   gold: number
   demand: boolean
+  /** A flood's ease on the line: the most its units were eased, in percent (10–50); absent when none was
+   * (`goods/market.ts`). */
+  eased?: number
 }
 
 /** §1½ Food, upkeep and loans, after the farmhands work (`farm/economy.ts`, `farm/food.ts`): what the night ate, charged
@@ -150,7 +153,8 @@ export type NewsLine =
   | { kind: 'days'; ids: string[]; when: 'today' | 'tomorrow' }
   /** The Town notes the night unlocked, by id, in world.json's order: their titles are the pack's. */
   | { kind: 'notes'; ids: string[] }
-  | { kind: 'built'; place: FarmPlaceId }
+  /** A place built overnight; a station's `level` (2–5) when it went up a level instead. */
+  | { kind: 'built'; place: FarmPlaceId; level?: number }
   | { kind: 'farm-rank'; rank: number }
   | { kind: 'milestone'; id: string }
   | { kind: 'dorm'; level: number }

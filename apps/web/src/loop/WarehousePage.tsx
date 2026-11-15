@@ -3,7 +3,7 @@
 // 1 action). With `?pick=bin` it's the bin's pick mode: a tap on a star puts one in the crate, All puts the good's every
 // star in, and Ship · 1 action ships the crate, then goes back to the bin. Drawn on the kit's Chip, Sheet and Button:
 // the kit's ShelfView holds one count and one price per item, and a good has five. Loaded on demand.
-import { actionsLeft, binTotal, priceOf, type CrateLine, type FarmSave } from '@farm/domain'
+import { actionsLeft, binTotal, crateWorth, type CrateLine, type FarmSave } from '@farm/domain'
 import { PlaceHeader, useLeave } from '@luismlorenzana/uma-kit/shell'
 import { Button, Chip, Sheet } from '@luismlorenzana/uma-kit/ui'
 import { useMemo, useState } from 'react'
@@ -11,7 +11,7 @@ import { useSearchParams } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import { useLoopSave } from '../save/game'
 import { shipPicked } from './actions'
-import { firstTab, goldWords, starWords, warehouseTabs, type GoodRow, type Shelf, type StarCell } from './goods-view'
+import { easedWords, firstTab, goldWords, starWords, warehouseTabs, type GoodRow, type Shelf, type StarCell } from './goods-view'
 
 export default function WarehousePage() {
   const save = useLoopSave()
@@ -50,21 +50,21 @@ function Warehouse({ save, picking }: { save: FarmSave; picking: boolean }) {
   const pickAll = (id: string) => setCrate((c) => ({ ...c, ...Object.fromEntries([1, 2, 3, 4, 5].map((s) => [crateKey(id, s), held(id, s)])) }))
   const lines = crateLines(crate)
   const picked = lines.reduce((n, l) => n + l.count, 0)
-  const worth = lines.reduce((n, l) => n + priceOf(l.id, l.stars, save.calendar.day) * l.count, 0)
+  const worth = crateWorth(save, lines)
   const ship = (toShip: readonly CrateLine[], after: () => void) => {
     setBusy(true)
     setError(null)
     shipPicked(toShip).then(after, (err: unknown) => setError(errorWords(err))).finally(() => setBusy(false))
   }
   const shipAll = (row: GoodRow) => ship(row.cells.flatMap((c) => (c.count > 0 ? [{ id: row.id, stars: c.stars, count: c.count }] : [])), () => setOpen(null))
-  const tonight = binTotal(save.bin, save.calendar.day)
+  const tonight = binTotal(save.bin, save.calendar.day, save.farm.market)
   const left = actionsLeft(save)
   return (
     <div className="absolute inset-0 flex flex-col" data-page="warehouse" data-pick={picking || undefined}>
       <PlaceHeader
         title={picking ? 'Ship to the bin' : 'Warehouse'}
         onBack={() => leave(picking ? '/?sheet=bin' : '/')}
-        about={<><p>Everything the farm holds, by stars. A good sells for its price × its stars: ★1 ×1 up to ★5 ×2.</p><p>The season’s demand adds 20%. Pick goods for a crate: one action ships it, and the bin pays tonight.</p></>}
+        about={<><p>Everything the farm holds, by stars. A good sells for its price × its stars: ★1 ×1 up to ★5 ×2.</p><p>The season’s demand adds 20%. Pick goods for a crate: one action ships it, and the bin pays tonight.</p><p>Past 50 of one good in a night, each 50 more sells 10% lower, down to half, and it stays eased a few days.</p></>}
         words={{ back: picking ? 'Back to the bin' : 'Back to the farm', about: 'About the Warehouse' }}
       />
       <main className="@container min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -146,6 +146,10 @@ function CellBody({ cell, picked = 0 }: { cell: StarCell; picked?: number }) {
 function DemandTag() {
   return <span className="shrink-0 rounded-full bg-success/15 px-1.5 text-[11px] font-semibold text-success" data-demand>In demand</span>
 }
+/** A flood's ease on a good's price: "Eased −20%". */
+export function EasedTag({ percent }: { percent: number }) {
+  return <span className="shrink-0 rounded-full bg-warning/15 px-1.5 text-[11px] font-semibold text-warning" data-eased={percent}>{easedWords(percent)}</span>
+}
 
 /** A good's row: its icon, name, total and demand over its five stars. */
 function GoodLine({ row, picking, crate, onOpen, onPick, onPickAll }: {
@@ -156,6 +160,7 @@ function GoodLine({ row, picking, crate, onOpen, onPick, onPickAll }: {
       <ItemIcon id={row.id} size={32} />
       <span className="min-w-0 flex-1 truncate text-[14px] font-semibold">{row.name}</span>
       {row.demand && <DemandTag />}
+      {row.eased > 0 && <EasedTag percent={row.eased} />}
       <span className="font-display shrink-0 text-lg font-semibold tabular-nums" aria-label={`${row.total} held`}>{row.total}</span>
     </span>
   )
@@ -199,6 +204,7 @@ function GoodSheet({ row, onClose, onShipAll, busy, error }: {
               <p>{row.facts}</p>
               {row.pair && <p className="text-ink-soft">{row.pair}</p>}
               {row.demand && <p><DemandTag /> <span className="text-[12px] text-ink-soft">+20% this season</span></p>}
+              {row.eased > 0 && <p><EasedTag percent={row.eased} /> <span className="text-[12px] text-ink-soft">A flood: back a step a night</span></p>}
             </div>
           </div>
           <StarCells row={row} />

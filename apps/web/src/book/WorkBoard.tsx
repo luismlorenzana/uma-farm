@@ -196,7 +196,7 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
           <fieldset>
             <legend className="text-micro pb-1">The plot</legend>
             <div className="flex flex-wrap gap-1.5 pb-2">
-              {FIELD_PLOTS.map((_, p) => {
+              {FIELD_PLOTS.slice(0, save.fields.plots.length + 1).map((_, p) => {
                 const cleared = p < save.fields.plots.length
                 const lock = cleared ? null : plotLockWords(plotLock(save, p))
                 return (

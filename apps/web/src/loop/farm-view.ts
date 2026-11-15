@@ -1,8 +1,10 @@
 // The farm's words: a tile as its panel shows it (what's on it, how far it's grown, and the one action it takes next), the
 // field's counts at a glance (the farm map's sign, a plot's page), the woods' and the pond's areas and spots with their
-// season's finds, and a station's loads. Pure, so the panels and the tests read the same.
+// season's finds and how thin each is today, and a station's level and loads. Pure, so the panels and the tests read the
+// same.
 import {
-  CLEAR_FINDS, cropLook, dateOf, DAYS_PER_SEASON, FIELD_COLUMNS, GROUND_NAMES, growsIn, isOvergrown, isSeasonEnd, itemNameOf, LOAD_SIZE, nightsLeft, plotName,
+  CLEAR_FINDS, cropLook, dateOf, DAYS_PER_SEASON, FIELD_COLUMNS, FULL_HAULS, GROUND_NAMES, growsIn, haulsToday, isOvergrown, isSeasonEnd, itemNameOf, levelLock, levelLockWords,
+  LOAD_SIZE, loadsADay, loadsLeft, loadsToday, nextStationLevel, nightsLeft, plotName, stationLevel, thinToday, type StationLoad,
   plotOf, reachList, SEASON_NAMES, seedsInSeason, sharesOn, stagesOf, stationOptions, tileAt, tileInPlot, type CropLook, type FarmSave, type FieldCounts,
   type GatherPlace, type StationId, type StationOption, type Tile,
 } from '@farm/domain'
@@ -94,31 +96,59 @@ export function countsWords(counts: FieldCounts): string[] {
   ]
 }
 
-/** An area or a spot as the woods' and the pond's panels show it: its name, the season's finds, and what holds it
- * back. */
+/** An area or a spot as the woods' and the pond's panels show it: its name, the season's finds, what holds it back, and
+ * how it stands today (its full hauls left, or thin). */
 export interface ReachRow {
   id: string
   name: string
   /** The season's finds, most likely first: "Pine Log, Button Mushroom, Birch Log …". */
   finds: string[]
   lock: string | null
+  /** Its hauls today, the farmer's and the farmhands' (the night's come after the day). */
+  hauls: number
+  /** Its four full hauls taken today: half hauls from here. */
+  thin: boolean
 }
 
-/** The woods' areas or the pond's spots, each with its season's finds and its lock. */
-export function reachRows(save: Pick<FarmSave, 'farm' | 'buildings' | 'calendar'>, place: GatherPlace): ReachRow[] {
+/** The woods' areas or the pond's spots, each with its season's finds, its lock and today's hauls. */
+export function reachRows(save: Pick<FarmSave, 'farm' | 'buildings' | 'calendar' | 'today'>, place: GatherPlace): ReachRow[] {
   return reachList(save, place).map((r) => ({
     id: r.id, name: r.name.charAt(0).toUpperCase() + r.name.slice(1), lock: r.lock,
-    finds: sharesOn(place, r.id, save.calendar.day).map(([id]) => id),
+    finds: sharesOn(place, r.id, save.calendar.day).map(([id]) => id), hauls: haulsToday(save, r.id), thin: thinToday(save, r.id),
   }))
 }
 
-/** A station's panel: its load today, or what it can take now, each at most a load. */
-export interface StationView {
-  load: { item: string; count: number } | null
-  options: (StationOption & { most: number })[]
+/** A place's day in words: "Thin · half hauls" (a dig's "half finds") once its four full hauls are taken; "3 full hauls
+ * left" once one is; null before any. */
+export function thinWords(hauls: number, noun = 'haul'): string | null {
+  if (hauls >= FULL_HAULS) return `Thin · half ${noun === 'face' ? 'finds' : 'hauls'}`
+  const left = FULL_HAULS - hauls
+  return hauls > 0 ? `${plural(left, `full ${noun}`)} left` : null
 }
 
-export function stationView(save: Pick<FarmSave, 'items' | 'loads'>, station: StationId): StationView {
-  const load = save.loads[station] ?? null
-  return { load, options: load ? [] : stationOptions(save, station).map((o) => ({ ...o, most: Math.min(o.held, LOAD_SIZE) })) }
+/** A station's panel: its level and the loads it takes a day, today's loads, what it can take now (while it takes
+ * more), each at most a load, and its next level. */
+export interface StationView {
+  level: number
+  /** The loads it takes a day, at its level. */
+  perDay: number
+  loads: StationLoad[]
+  options: (StationOption & { most: number })[]
+  /** Its next level, with what stands in the way in words ("Opens at Farm Rank 4", "Need 400g more", "Level 3 tomorrow"),
+   * or null at its top. */
+  next: { level: number; loads: number; cost: number; lock: string | null } | null
+}
+
+export function stationView(save: Pick<FarmSave, 'items' | 'loads' | 'buildings' | 'farm' | 'gold'>, station: StationId): StationView {
+  const loads = loadsToday(save, station)
+  const left = loadsLeft(save, station)
+  const next = nextStationLevel(save, station)
+  const lock = levelLock(save, station)
+  return {
+    level: stationLevel(save, station), perDay: loadsADay(save, station), loads,
+    options: left > 0 ? stationOptions(save, station).map((o) => ({ ...o, most: Math.min(o.held, LOAD_SIZE) })) : [],
+    // A level bought today is the one shown, coming tomorrow; else the next to buy.
+    next: lock?.by === 'tonight' ? { level: lock.level, loads: lock.level, cost: 0, lock: 'Ready tomorrow' }
+      : next ? { level: next.level, loads: next.loads, cost: next.cost, lock: levelLockWords(lock) } : null,
+  }
 }

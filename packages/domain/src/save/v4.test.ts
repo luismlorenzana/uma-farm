@@ -123,25 +123,25 @@ describe('the v5 parse', () => {
     two.roster['9000001'] = { ...two.roster['9000001']!, farmhand: 3, tasks: [{ kind: 'water', tiles: [0, 1], plot: 1 }] }
     expect(parseSaveV5(json(two))).toEqual(two)
     refuse((s) => { s.fields = {} }, 'save.fields.plots: expected the field’s plots')
-    refuse((s) => { s.fields = { plots: [] } }, 'save.fields.plots: expected 1–2 entries')
+    refuse((s) => { s.fields = { plots: [] } }, 'save.fields.plots: expected 1–8 entries')
     refuse((s) => { s.fields = { plots: s.fields.plots, tiles: s.fields.plots[0].tiles } }, 'save.fields.tiles: the field’s tiles are its plots’')
-    refuse((s) => { s.fields.plots = [0, 1, 2].map(() => s.fields.plots[0]) }, 'save.fields.plots: expected 1–2 entries')
+    refuse((s) => { s.fields.plots = Array.from({ length: 9 }, () => s.fields.plots[0]) }, 'save.fields.plots: expected 1–8 entries')
     refuse((s) => { s.fields.plots[0].extra = 1 }, 'save.fields.plots.0: unknown keys extra')
     refuse((s) => { s.roster['9000001'].farmhand = 3; s.roster['9000001'].tasks = [{ kind: 'water', tiles: [0], plot: 1 }] }, 'save.roster.9000001.tasks.0.plot: a plot the farm hasn’t cleared')
-    refuse((s) => { s.roster['9000001'].farmhand = 3; s.roster['9000001'].tasks = [{ kind: 'water', tiles: [0], plot: 0 }] }, 'save.roster.9000001.tasks.0.plot: expected 1–1')
+    refuse((s) => { s.roster['9000001'].farmhand = 3; s.roster['9000001'].tasks = [{ kind: 'water', tiles: [0], plot: 0 }] }, 'save.roster.9000001.tasks.0.plot: expected 1–7')
   })
 
   it('takes the day\'s actions and the stations\' loads, and refuses what they can\'t hold', () => {
     const save = farm()
     save.today = { ...save.today, actions: 7, eventActions: 1, town: true, gathered: ['woods', 'pond'] }
-    save.loads = { mill: { item: 'wheat-flour@2', count: 8 } }
+    save.loads = { mill: [{ item: 'wheat-flour@2', count: 8 }] }
     expect(parseSaveV5(json(save))).toEqual(save)
     refuse((s) => { s.today.actions = -1 }, 'save.today.actions: expected 0–100')
     refuse((s) => { s.today.gathered = ['woods', 'woods'] }, 'save.today.gathered.1: repeated')
     refuse((s) => { s.today.gathered = ['moon'] }, /save.today.gathered.0: expected one of/)
     refuse((s) => { s.loads = { mill: { item: 'pine-plank@1', count: 2 } } }, 'save.loads.mill.item: expected a good this station makes, at its stars')
     // A farmhand's load can be bigger: up to 12 in, more out at her yield.
-    save.loads = { mill: { item: 'wheat-flour@2', count: 14 } }
+    save.loads = { mill: [{ item: 'wheat-flour@2', count: 14 }] }
     expect(parseSaveV5(json(save)).loads).toEqual(save.loads)
     refuse((s) => { s.loads = { mill: { item: 'wheat-flour@1', count: 21 } } }, 'save.loads.mill.count: expected 1–20')
     refuse((s) => { s.loads = { forge: { item: 'wheat-flour@1', count: 1 } } }, /save.loads.forge: expected one of/)

@@ -262,7 +262,7 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
     case 'bin': {
       // Each good and star with its count and gold, the demand marked, then the total.
       const sold = summary.bin.map((sale): SummaryLine => ({
-        key: `sold:${sale.id}@${sale.stars}`, to: '/?sheet=bin', text: `${goodName(sale.id)} ★${sale.stars} × ${sale.count} · ${gold(sale.gold)}`,
+        key: `sold:${sale.id}@${sale.stars}`, to: '/?sheet=bin', text: `${goodName(sale.id)} ★${sale.stars} × ${sale.count} · ${gold(sale.gold)}${sale.eased ? ` · eased −${sale.eased}%` : ''}`,
         ...(sale.demand ? { tag: 'In demand' } : {}),
       }))
       return [...sold, { key: 'sold:total', to: '/?sheet=bin', text: `Total · ${gold(summary.bin.reduce((sum, sale) => sum + sale.gold, 0))}` }]
@@ -312,7 +312,7 @@ function sectionLines(summary: MorningSummary, section: SummarySection, nameOf: 
           }
           case 'days': return daysNews(line.ids, line.when, world)
           case 'notes': return notesNews(line.ids, world)
-          case 'built': return { key: `built:${line.place}`, text: builtWords(line.place), to: peek(farmPlace(line.place)?.on ?? line.place), tag: 'Built' }
+          case 'built': return { key: `built:${line.place}`, text: builtWords(line.place, line.level), to: peek(farmPlace(line.place)?.on ?? line.place), tag: line.level ? 'Level' : 'Built' }
           case 'farm-rank': return { key: `farm-rank:${line.rank}`, text: farmRankWords(line.rank), to: '/?sheet=rank', tag: 'Farm Rank' }
           case 'milestone': return { key: `milestone:${line.id}`, text: milestoneWords(line.id), to: '/diary', tag: 'Milestone' }
           case 'dorm': return { key: 'dorm', text: `Dorm level ${line.level} · ${bedsAt(line.level)} beds`, to: DORM }

@@ -5,14 +5,14 @@
 //   action, two finds), the stairs' progress and Take the stairs, free, once found and in the Farm Rank's reach.
 // Each says what the action brought, and the day's actions left.
 import {
-  actionsLeft, animalName, ANIMALS, animalsIn, DIG_NAMES, digFloor, floorFinds, gradeAt, heartsOf, HOME_NAMES, HOME_ROOM, itemNameOf, readyIn, SILO_ROOM,
+  actionsLeft, animalName, ANIMALS, animalsIn, DIG_NAMES, digFloor, floorFinds, gradeAt, haulsToday, heartsOf, HOME_NAMES, HOME_ROOM, itemNameOf, readyIn, SILO_ROOM,
   stairsAfter, stairsFound, stairsLock, type Animal, type DigId, type FarmSave, type RanchHome,
 } from '@farm/domain'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { Link } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import { careForOne, collectAt, faceAt, feedOne, stairsAt } from './actions'
-import { ActionsLeft, goodsWords, Notes, useAct } from './FarmPanels'
+import { ActionsLeft, goodsWords, Notes, ThinMark, useAct } from './FarmPanels'
 import { plural } from './words'
 
 /** The rancher's sheet, in town. */
@@ -108,6 +108,7 @@ export function DigPanel({ save, dig }: { save: FarmSave; dig: DigId }) {
       <div className="flex items-baseline justify-between gap-2">
         <p className="font-display text-[20px] font-bold" data-floor-name>Floor {floor}</p>
         <p className="text-[12px] text-ink-soft">G{gradeAt(floor)}{at.deepest === 0 ? ' · not dug yet' : ''}</p>
+        <ThinMark hauls={haulsToday(save, dig)} noun="face" />
       </div>
       <div className="flex flex-wrap gap-1" aria-label={`Finds: ${finds.map((id) => itemNameOf(id)).join(', ')}`}>
         {finds.map((id) => <ItemIcon key={id} id={id} size={24} label={itemNameOf(id)} />)}
