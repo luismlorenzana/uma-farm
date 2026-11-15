@@ -7,13 +7,14 @@ import { actionsLeft, DAY_ACTIONS } from './actions'
 import { upkeepOf, UPKEEP_RESIDENT } from './economy'
 import {
   aptitudeLevelOf, aptitudeOf, APTITUDE_POINTS, aptitudeQuality, aptitudeUps, aptitudesOf, aptitudeYield, BIG_LOAD, fedThisMorning, handDay, handsInOrder,
-  handsTonight, handTonight, HAND_ACTIONS, MAX_APTITUDE, setTasks, SETTLED_AFTER, TALENT_START, taskLock, tilesAnAction, TRICK_AT, tricksAt,
+  handsTonight, handTonight, HAND_ACTIONS, MAX_APTITUDE, setTasks, SETTLED_AFTER, TALENT_START, taskLock, taskTiles, tilesAnAction, TRICK_AT, tricksAt,
 } from './farmhands'
+import { clearPlot, rowOfPlot } from '../fields/plots'
 import { talentsD, type TalentOf } from './talents'
 import { cookMeal } from '../romance/loop'
 import { runNight, type NightContext } from '../night/end-day'
 import { parseSaveV5 } from '../save/parse-v4'
-import { bareTile, FIELD_COLUMNS, newLove, newRosterUma, newSave, START_CLEAR, type AptitudeId, type FarmTask, type SaveV4, type Tile } from '../save/v4'
+import { bareTile, FIELD_COLUMNS, fieldTiles, newLove, newRosterUma, newSave, START_CLEAR, type AptitudeId, type FarmTask, type SaveV4, type Tile } from '../save/v4'
 
 const AT = '2026-11-14T10:00:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
@@ -28,10 +29,10 @@ function farm(day = 2): SaveV4 {
 }
 /** The tiles growing a crop (stage 0, dry), each tilled. */
 const growing = (save: SaveV4, tiles: readonly number[], crop: Tile['crop'] = 'carrot'): SaveV4 =>
-  ({ ...save, fields: { tiles: save.fields.tiles.map((t, i) => (tiles.includes(i) ? { ...bareTile('tilled'), crop } : t)) } })
+  ({ ...save, fields: { plots: [{ tiles: fieldTiles(save).map((t, i) => (tiles.includes(i) ? { ...bareTile('tilled'), crop } : t)) }] } })
 /** The tiles ripe. */
 const ripe = (save: SaveV4, tiles: readonly number[]): SaveV4 =>
-  ({ ...save, fields: { tiles: save.fields.tiles.map((t, i) => (tiles.includes(i) ? { ...bareTile('tilled'), crop: 'carrot' as const, growth: 4, ready: true } : t)) } })
+  ({ ...save, fields: { plots: [{ tiles: fieldTiles(save).map((t, i) => (tiles.includes(i) ? { ...bareTile('tilled'), crop: 'carrot' as const, growth: 4, ready: true } : t)) }] } })
 const tasks = (save: SaveV4, id: string, list: FarmTask[]): SaveV4 => setTasks(save, id, list)
 const practice = (save: SaveV4, id: string, aptitude: AptitudeId, n: number): SaveV4 =>
   ({ ...save, roster: { ...save.roster, [id]: { ...save.roster[id]!, practice: { ...save.roster[id]!.practice, [aptitude]: n } } } })
@@ -81,7 +82,7 @@ describe('the work board', () => {
     expect(() => setTasks({ ...save, roster: { ...save.roster, [A]: newRosterUma(1) } }, A, [])).toThrow('Invite her to work first.')
     expect(() => setTasks(save, A, Array.from({ length: 7 }, () => ({ kind: 'fish' as const, spot: 'pond' as const })))).toThrow('6 tasks at most.')
     expect(() => setTasks(save, A, [{ kind: 'water', tiles: [] }])).toThrow('Choose its tiles.')
-    expect(() => setTasks(save, A, [{ kind: 'water', tiles: [40] }])).toThrow('Those aren’t the field’s tiles.')
+    expect(() => setTasks(save, A, [{ kind: 'water', tiles: [40] }])).toThrow('Those aren’t the plot’s tiles.')
     expect(() => setTasks(save, A, [{ kind: 'load', station: 'mill' }])).toThrow('Build it first.')
     expect(() => setTasks(save, A, [{ kind: 'fish', spot: 'river' }])).toThrow('Opens at Farm Rank 2.')
     expect(taskLock(save, { kind: 'forage', area: 'woods' })).toBeNull()
@@ -141,7 +142,7 @@ describe('her night', () => {
     save = tasks(save, B, [{ kind: 'fish', spot: 'pond' }])
     const morning = night(save)
     // Three actions each: A waters three tiles (Watering 2: a tile an action), B casts three times.
-    expect(morning.fields.tiles.filter((t) => t.growth === 1)).toHaveLength(3)
+    expect(fieldTiles(morning).filter((t) => t.growth === 1)).toHaveLength(3)
     expect(morning.summary!.work.slice(0, 2)).toEqual([
       { kind: 'farmhand', id: A, actions: 3, spent: 3, half: false, fed: false, tasks: 1, done: { water: 3 }, items: 0 },
       { kind: 'farmhand', id: B, actions: 3, spent: 3, half: false, fed: false, tasks: 1, done: { fish: 3 }, items: 3 },
@@ -180,13 +181,13 @@ describe('her night', () => {
 
   it('harvests, plants what will ripen in time, and clears and tills, each an action a tile to start', () => {
     let save = ripe(farm(), [0])
-    save = { ...save, fields: { tiles: save.fields.tiles.map((t, i) => (i === 1 ? bareTile('tilled') : i === 2 ? bareTile('weeds') : t)) } }
+    save = { ...save, fields: { plots: [{ tiles: fieldTiles(save).map((t, i) => (i === 1 ? bareTile('tilled') : i === 2 ? bareTile('weeds') : t)) }] } }
     save = tasks(save, A, [{ kind: 'harvest', tiles: [0] }, { kind: 'plant', tiles: [1] }, { kind: 'till', tiles: [2] }])
     const after = handsTonight(save, save, talentsD, null)
     expect(after.lines[0]).toMatchObject({ actions: 3, spent: 3, done: { harvest: 1, plant: 1, till: 1 } })
-    expect(after.save.fields.tiles[0]).toMatchObject({ crop: null, ground: 'tilled' })
-    expect(after.save.fields.tiles[1]).toMatchObject({ crop: 'carrot', growth: 0 })
-    expect(after.save.fields.tiles[2]!.ground).toBe('clear')
+    expect(fieldTiles(after.save)[0]).toMatchObject({ crop: null, ground: 'tilled' })
+    expect(fieldTiles(after.save)[1]).toMatchObject({ crop: 'carrot', growth: 0 })
+    expect(fieldTiles(after.save)[2]!.ground).toBe('clear')
     expect(after.save.items.carrot?.[0]).toBeGreaterThan(0)
     expect(after.save.roster[A]!.ranks.farming.challenge).toBe(1)
     expect(after.tended).toEqual([{ outfitId: A }])
@@ -205,10 +206,10 @@ describe('her night', () => {
     expect(water(0)).toMatchObject({ spent: 3, done: { water: 3 } })
     expect(water(20)).toMatchObject({ spent: 3, done: { water: 6 } })
     expect(water(140)).toMatchObject({ spent: 1, done: { water: 8 } })
-    const weeds = { ...farm(), fields: { tiles: farm().fields.tiles.map((t, i) => (i < 3 ? bareTile('weeds') : t)) } }
+    const weeds = { ...farm(), fields: { plots: [{ tiles: fieldTiles(farm()).map((t, i) => (i < 3 ? bareTile('weeds') : t)) }] } }
     const till = (n: number) => {
       const save = tasks(practice(weeds, A, 'till', n), A, [{ kind: 'till', tiles: [0, 1, 2] }])
-      return handsTonight(save, save, talentsD, null).save.fields.tiles.slice(0, 3).map((t) => t.ground)
+      return fieldTiles(handsTonight(save, save, talentsD, null).save).slice(0, 3).map((t) => t.ground)
     }
     expect(till(0)).toEqual(['tilled', 'clear', 'weeds'])
     expect(till(50)).toEqual(['tilled', 'tilled', 'tilled'])
@@ -336,5 +337,54 @@ describe('the ranch and the mine on the board', () => {
     expect(morning.roster[B]!.ranks.mining.challenge).toBeGreaterThanOrEqual(6)
     expect(morning.summary!.work).toContainEqual({ kind: 'ranch', home: 'coop', fed: 2, hungry: 0, ready: 2 })
     expect(parseSaveV5(json(morning))).toEqual(morning)
+  })
+})
+
+describe('the plots on the board', () => {
+  /** A farm at Farm Rank 3 with plot 2 cleared, its first row growing and dry, and plot 1's too. */
+  function plots(): SaveV4 {
+    const save = clearPlot({ ...farm(), gold: 5_000, farm: { ...farm().farm, points: 250 } }, 1)
+    const grow = (t: Tile): Tile => ({ ...bareTile('tilled'), crop: 'carrot', growth: t.growth })
+    return {
+      ...save, today: { ...save.today, actions: 0 },
+      fields: { plots: save.fields.plots.map((p) => ({ tiles: p.tiles.map((t, i) => (i < FIELD_COLUMNS ? grow(t) : t)) })) },
+    }
+  }
+
+  it('reads a task with no plot as plot 1\'s, and writes plot 1 without one', () => {
+    const save = tasks(plots(), A, [{ kind: 'water', tiles: ROW1, plot: 0 }, { kind: 'water', tiles: ROW1, plot: 1 }])
+    expect(save.roster[A]!.tasks).toEqual([{ kind: 'water', tiles: ROW1 }, { kind: 'water', tiles: ROW1, plot: 1 }])
+    expect(taskTiles({ kind: 'water', tiles: [0, 7] })).toEqual([0, 7])
+    expect(taskTiles({ kind: 'water', tiles: [0, 7], plot: 1 })).toEqual([40, 47])
+  })
+
+  it('refuses a field task on a plot the farm hasn\'t cleared', () => {
+    expect(taskLock(farm(), { kind: 'water', tiles: [0], plot: 1 })).toBe('Clear that plot first.')
+    expect(() => setTasks(farm(), A, [{ kind: 'water', tiles: [0], plot: 1 }])).toThrow('Clear that plot first.')
+    expect(taskLock(plots(), { kind: 'water', tiles: [0], plot: 1 })).toBeNull()
+  })
+
+  it('waters plot 2\'s row and leaves plot 1\'s, and her row trick stays on her plot', () => {
+    let save = tasks(plots(), A, [{ kind: 'water', tiles: ROW1, plot: 1 }])
+    const morning = night(save)
+    expect(morning.fields.plots[1]!.tiles.slice(0, 3).map((t) => t.growth)).toEqual([1, 1, 1])
+    expect(morning.fields.plots[1]!.tiles.slice(3, FIELD_COLUMNS).every((t) => t.growth === 0)).toBe(true)
+    expect(morning.fields.plots[0]!.tiles.slice(0, FIELD_COLUMNS).every((t) => t.growth === 0)).toBe(true)
+    expect(morning.summary!.work[0]).toMatchObject({ kind: 'farmhand', id: A, spent: 3, done: { water: 3 } })
+    // At Watering 6, one action waters every dry tile of hers in plot 2's first row, and none of plot 1's.
+    save = practice(save, A, 'water', APTITUDE_POINTS[TRICK_AT.waterRow - 1]!)
+    const after = handsTonight(save, save, talentsD, null).save
+    expect(after.fields.plots[1]!.tiles.slice(0, FIELD_COLUMNS).every((t) => t.watered)).toBe(true)
+    expect(after.fields.plots[0]!.tiles.every((t) => !t.watered)).toBe(true)
+    expect(parseSaveV5(json(morning))).toEqual(morning)
+  })
+
+  it('clears and tills plot 2\'s wild ground, and keeps plot 1\'s tasks on plot 1', () => {
+    let save = tasks(plots(), A, [{ kind: 'till', tiles: rowOfPlot(1), plot: 1 }])
+    save = tasks(save, B, [{ kind: 'water', tiles: ROW1 }])
+    const morning = night(save)
+    // Three actions, a step each: the row's first tile cleared and tilled, the second cleared.
+    expect(morning.fields.plots[1]!.tiles.slice(FIELD_COLUMNS, FIELD_COLUMNS + 2).map((t) => t.ground)).toEqual(['tilled', 'clear'])
+    expect(morning.fields.plots[0]!.tiles.slice(0, 3).map((t) => t.growth)).toEqual([1, 1, 1])
   })
 })

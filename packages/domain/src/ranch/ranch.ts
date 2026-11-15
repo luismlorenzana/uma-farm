@@ -16,13 +16,14 @@ import { inTown, spend } from '../farm/actions'
 import { draw } from '../farm/draw'
 import { farmRankOf } from '../farm/farm'
 import { placeBuilt } from '../farm/places'
+import { tileOf } from '../fields/fields'
 import { goodName } from '../goods/ids'
 import { drawStars, heartsQuality, quality } from '../goods/stars'
 import type { RanchLine } from '../night/summary'
 import { spendGold } from '../save/gold'
 import { SaveRuleError } from '../save/rules'
 import {
-  ANIMAL_HOME, ANIMAL_KINDS, FIELD_TILES, HOME_ROOM, MAX_FONDNESS, RANCH_HOMES, SILO_ROOM,
+  ANIMAL_HOME, ANIMAL_KINDS, HOME_ROOM, MAX_FONDNESS, RANCH_HOMES, SILO_ROOM,
   type Animal, type AnimalKind, type FarmSave, type RanchHome,
 } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
@@ -197,7 +198,7 @@ export function collectAt<S extends FarmSave>(save: S, home: RanchHome, extra: n
 // --- Grass for the silo ----------------------------------------------------------------------------------------------
 
 /** Whether a tile has weeds to cut for grass. */
-export const hasGrass = (save: Pick<FarmSave, 'fields'>, index: number): boolean => save.fields.tiles[index]?.ground === 'weeds'
+export const hasGrass = (save: Pick<FarmSave, 'fields'>, index: number): boolean => tileOf(save, index)?.ground === 'weeds'
 
 /** Why grass can't be cut now, or null: the silo stands and has room. */
 export function grassLock(save: Pick<FarmSave, 'buildings' | 'ranch'>): string | null {
@@ -208,7 +209,7 @@ export function grassLock(save: Pick<FarmSave, 'buildings' | 'ranch'>): string |
 /** Cuts grass on a weeds tile: one action, 5 feed into the silo (up to its room); the weeds grow back, so a patch of
  * weeds is a meadow. Refused on any other tile (`bad-slot`) and without a silo or its room (`locked`, `bad-job`). */
 export function cutGrass<S extends FarmSave>(save: S, index: number): { save: S; feed: number } {
-  if (!Number.isInteger(index) || index < 0 || index >= FIELD_TILES) throw new SaveRuleError('bad-slot', `No tile ${index + 1} in the field.`)
+  if (tileOf(save, index) === undefined) throw new SaveRuleError('bad-slot', `No tile ${index + 1} in the field.`)
   if (!hasGrass(save, index)) throw new SaveRuleError('bad-slot', 'Only weeds give grass.')
   const lock = grassLock(save)
   if (lock) throw new SaveRuleError(siloStands(save) ? 'bad-job' : 'locked', lock)

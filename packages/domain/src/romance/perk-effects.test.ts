@@ -15,7 +15,7 @@ import { gatherQuality, sharesOn, termsOf, type MadeTonight } from '../gathering
 import { NIGHT_STEPS, runNight, type NightContext, type NightStep } from '../night/end-day'
 import type { LoopPlaceId } from '../save/parse-v4'
 import { parseSaveV5 } from '../save/parse-v4'
-import { bareTile, newSave, pairKey, type Animal, type Love, type SaveV4, type Tile } from '../save/v4'
+import { fieldTiles, bareTile, newSave, pairKey, type Animal, type Love, type SaveV4, type Tile } from '../save/v4'
 import { goodCount, parseStockKey } from '../save/warehouse'
 import { checkBible, type Cast, type Ties, type UmaBible } from '../story/authored'
 import { STAND_IN_BIBLE, STAND_IN_CAST, STAND_IN_TIES, STAND_INS } from '../story/authored.fixture'
@@ -68,7 +68,7 @@ const made = (id: string, n: number, place = 'forest', key = 'pine-log@2') => ({
 const ripe = (crop: Tile['crop'] = 'carrot'): Tile => ({ ...bareTile('tilled'), crop, growth: 4, ready: true })
 const growing = (crop: Tile['crop'] = 'carrot'): Tile => ({ ...bareTile('tilled'), crop })
 /** The save with its tiles set, the rest of the field as it was. */
-const withTiles = (save: SaveV4, tiles: Record<number, Tile>): SaveV4 => ({ ...save, fields: { tiles: save.fields.tiles.map((t, i) => tiles[i] ?? t) } })
+const withTiles = (save: SaveV4, tiles: Record<number, Tile>): SaveV4 => ({ ...save, fields: { plots: [{ tiles: fieldTiles(save).map((t, i) => tiles[i] ?? t) }] } })
 /** The night, with who worked today and what their work made set before its steps, as the farmhands' will be. */
 function nightWorking(save: SaveV4, worked: { outfitId: string; place: LoopPlaceId }[], madeTonight: MadeTonight[], story: NightContext['story'] = PACK): SaveV4 {
   const working: NightStep = (n) => ({ ...n, notes: { ...n.notes, worked, made: madeTonight } })
@@ -235,7 +235,7 @@ describe('night chores', () => {
     expect(fieldChores(withTiles(base, { 3: ripe() }), PACK)).toEqual({ tiles: new Set(), chores: [] })
     // The night: both dry tiles grow, and the morning says so.
     const night = runNight(fields, context())
-    expect(night.fields.tiles.slice(0, 3).map((t) => t.growth)).toEqual([1, 1, 1])
+    expect(fieldTiles(night).slice(0, 3).map((t) => t.growth)).toEqual([1, 1, 1])
     expect(night.summary!.hearts).toContainEqual({ kind: 'chores', items: 0, watered: 2 })
   })
 
@@ -604,7 +604,7 @@ describe('the save\'s perk fields and lines', () => {
     refuse([{ kind: 'item', id: TWO, items: [] }], 'save.summary.hearts.0.items')
     refuse([{ kind: 'item', id: TWO, items: ['nope@3'] }], 'save.summary.hearts.0.items.0: expected <good>@<stars>')
     refuse([{ kind: 'chores', items: 0, watered: 0 }], 'save.summary.hearts.0: expected items, tiles watered or fondness')
-    refuse([{ kind: 'chores', items: 1, watered: 0.5 }], 'save.summary.hearts.0.watered: expected 0–40')
+    refuse([{ kind: 'chores', items: 1, watered: 0.5 }], 'save.summary.hearts.0.watered: expected 0–80')
     refuse([{ kind: 'chores', items: 1, growth: 0.25 }], 'save.summary.hearts.0: unknown keys growth')
     refuse([{ kind: 'perks', items: 0 }], 'save.summary.hearts.0.items')
     refuse([{ kind: 'perks', items: 1 }, { kind: 'perks', items: 2 }], 'save.summary.hearts.1: repeated')

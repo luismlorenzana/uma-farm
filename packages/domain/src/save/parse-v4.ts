@@ -23,7 +23,7 @@ import {
   parseWorkshops, unique,
 } from './parse-loop'
 import {
-  type BuildingId, EVENING_KINDS, eveningsOn, FARMHOUSE, FESTIVAL_NIGHT, FIELD_TILES, FINALE_MARRIED, FURNITURE_PIECES, invitesFor, LOVE_STAGES, marriedCount, MAX_HOUSES, residentsOf, roomsOf,
+  type BuildingId, EVENING_KINDS, eveningsOn, FARMHOUSE, FESTIVAL_NIGHT, FIELD_TILES, FINALE_MARRIED, MAX_FIELD_TILES, MAX_PLOTS, FURNITURE_PIECES, invitesFor, LOVE_STAGES, marriedCount, MAX_HOUSES, residentsOf, roomsOf,
   isDishId, MEALS, pairKey, TOWN_ID, type EveningKind, type Homestead, type InviteKind, type Love, type RosterUma, type SaveV5, type TodayV4, type TownTalks,
   APTITUDE_IDS, DIGS, MAX_TASKS, RANCH_HOMES, TASK_KINDS, type FarmTask,
 } from './v4'
@@ -71,16 +71,19 @@ function parseRoster(value: unknown, path: string, today: number): Record<string
   return out
 }
 
-/** One task on her board: the field's over its tiles (each once, on the field; planting one crop or any), a station's
- * load, a forest area's forage or chop, a fishing spot's catch, the Coop's or the Barn's care, a dig's face. */
+/** One task on her board: the field's over a plot's tiles (each once, 0–39; its plot from 2 on, absent for plot 1, so a
+ * task from before plots is plot 1's; planting one crop or any), a station's load, a forest area's forage or chop, a
+ * fishing spot's catch, the Coop's or the Barn's care, a dig's face. */
 function parseTask(value: unknown, path: string): FarmTask {
   const kind = oneOf(record(value, path).kind, `${path}.kind`, TASK_KINDS)
   switch (kind) {
     case 'harvest': case 'water': case 'till': case 'plant': {
-      const o = object(value, path, kind === 'plant' ? ['kind', 'tiles', 'crop'] : ['kind', 'tiles'])
+      const o = object(value, path, kind === 'plant' ? ['kind', 'tiles', 'plot', 'crop'] : ['kind', 'tiles', 'plot'])
       const tiles = unique(list(o.tiles, `${path}.tiles`, 1, FIELD_TILES).map((v, i) => int(v, `${path}.tiles.${i}`, 0, FIELD_TILES - 1)), `${path}.tiles`)
-      if (kind !== 'plant') return { kind, tiles }
-      return o.crop === undefined ? { kind, tiles } : { kind, tiles, crop: typeof o.crop === 'string' && isCropId(o.crop) ? o.crop : fail(`${path}.crop`, 'unknown crop') }
+      // Plot 1 is written without one: a plot from 2 on (its index, 1 up).
+      const plot = o.plot === undefined ? {} : { plot: int(o.plot, `${path}.plot`, 1, MAX_PLOTS - 1) }
+      if (kind !== 'plant') return { kind, tiles, ...plot }
+      return o.crop === undefined ? { kind, tiles, ...plot } : { kind, tiles, ...plot, crop: typeof o.crop === 'string' && isCropId(o.crop) ? o.crop : fail(`${path}.crop`, 'unknown crop') }
     }
     case 'load': return { kind, station: oneOf(object(value, path, ['kind', 'station']).station, `${path}.station`, STATIONS) }
     case 'forage': case 'chop': return { kind, area: oneOf(object(value, path, ['kind', 'area']).area, `${path}.area`, FOREST_AREAS) }
@@ -372,7 +375,7 @@ function parseHearts(value: unknown, path: string, roster: ReadonlySet<string>, 
     if (kind === 'chores') {
       const o = object(v, at, ['kind', 'items', 'watered', 'fondness'])
       const items = int(o.items, `${at}.items`, 0, 100_000)
-      const watered = int(o.watered, `${at}.watered`, 0, FIELD_TILES)
+      const watered = int(o.watered, `${at}.watered`, 0, MAX_FIELD_TILES)
       const fondness = o.fondness === undefined ? 0 : int(o.fondness, `${at}.fondness`, 1, 100_000)
       if (items === 0 && watered === 0 && fondness === 0) fail(at, 'expected items, tiles watered or fondness')
       return { kind, items, watered, ...(fondness > 0 ? { fondness } : {}) }
@@ -515,5 +518,15 @@ export function parseSaveV5(value: unknown, path = 'save'): SaveV5 {
     town: parseTown(o.town, `${path}.town`, today),
   }
   parseRooms(save, path)
+  parsePlotTasks(save, path)
   return save
+}
+
+/** A field task works a plot the farm has cleared. */
+function parsePlotTasks(save: SaveV5, path: string): void {
+  for (const [id, uma] of Object.entries(save.roster)) {
+    (uma.tasks ?? []).forEach((task, i) => {
+      if ('plot' in task && task.plot !== undefined && task.plot >= save.fields.plots.length) fail(`${path}.roster.${id}.tasks.${i}.plot`, 'a plot the farm hasn’t cleared')
+    })
+  }
 }

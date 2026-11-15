@@ -12,6 +12,7 @@ import type { BinSale, MoneyLine, NewsLine, Nudge, RankLine, WorkLine } from '..
 import { amount, bool, count, int, list, object, oneOf, record, SaveParseError, type Obj } from './parse'
 import {
   ANIMAL_HOME, ANIMAL_KINDS, APTITUDE_IDS, MAX_TASKS, TASK_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOME_ROOM, HOUSE_LOAN, INCOME_NIGHTS,
+  MAX_FIELD_TILES, MAX_PLOTS,
   isDishId, MAX_FONDNESS, MAX_LOANS, pairKey, RANCH_HOMES, SILO_ROOM,
   REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig, type DormSwap,
   type Expedition, type Extra, type FestivalResult, type Loan, type RankState, type SaveV5, type StarCounts, type StationLoad, type Tile,
@@ -146,10 +147,19 @@ export function parseTile(value: unknown, path: string): Tile {
   return tile
 }
 
-/** The field: exactly its tiles, row by row. */
+/** A plot: exactly its 40 tiles, row by row. */
+const parsePlotTiles = (value: unknown, path: string): Tile[] => list(value, path, FIELD_TILES, FIELD_TILES).map((t, i) => parseTile(t, `${path}.${i}`))
+
+/** The field: its plots, 1 up to the rules' most, each exactly its tiles. A save from before plots holds the one field's
+ * tiles (`tiles`) and reads as plot 1, unchanged: grown in place, no migration, and `updatedAt` never moves. */
 export function parseFields(value: unknown, path: string): SaveV5['fields'] {
-  const o = object(value, path, ['tiles'])
-  return { tiles: list(o.tiles, `${path}.tiles`, FIELD_TILES, FIELD_TILES).map((t, i) => parseTile(t, `${path}.tiles.${i}`)) }
+  const o = object(value, path, ['tiles', 'plots'])
+  if (o.plots === undefined) {
+    if (o.tiles === undefined) fail(`${path}.plots`, 'expected the field’s plots')
+    return { plots: [{ tiles: parsePlotTiles(o.tiles, `${path}.tiles`) }] }
+  }
+  if (o.tiles !== undefined) fail(`${path}.tiles`, 'the field’s tiles are its plots’')
+  return { plots: list(o.plots, `${path}.plots`, 1, MAX_PLOTS).map((p, i) => ({ tiles: parsePlotTiles(object(p, `${path}.plots.${i}`, ['tiles']).tiles, `${path}.plots.${i}.tiles`) })) }
 }
 
 /** The stations' loads: a station's one load, an output it makes at its stars, 1–8 of them. */
@@ -403,8 +413,8 @@ export function parseMoneyLines(value: unknown, path: string): MoneyLine[] {
  * a building's room); the field's growth once (tiles that grew, 1 or more, and how many of them turned ripe); a crop
  * that withered once, on 1 or more tiles. */
 export function parseWorkLines(value: unknown, path: string, roster: ReadonlySet<string>): WorkLine[] {
-  const tiles = (value: unknown, at: string, min = 1) => int(value, at, min, FIELD_TILES)
-  return unique(list(value, path, 0, roster.size + STATIONS.length + RANCH_HOMES.length + 1 + FIELD_TILES).map((v, i): WorkLine => {
+  const tiles = (value: unknown, at: string, min = 1) => int(value, at, min, MAX_FIELD_TILES)
+  return unique(list(value, path, 0, roster.size + STATIONS.length + RANCH_HOMES.length + 1 + MAX_FIELD_TILES).map((v, i): WorkLine => {
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, ['farmhand', 'load', 'ranch', 'grew', 'withered'] as const)
     if (kind === 'ranch') {
@@ -531,6 +541,6 @@ export function parseNudges(value: unknown, path: string): Nudge[] {
   return unique(list(value, path, 0, 2).map((v, i): Nudge => {
     const at = `${path}.${i}`
     const kind = oneOf(record(v, at).kind, `${at}.kind`, ['water', 'seeds'] as const)
-    return { kind, tiles: int(object(v, at, ['kind', 'tiles']).tiles, `${at}.tiles`, 1, FIELD_TILES) }
+    return { kind, tiles: int(object(v, at, ['kind', 'tiles']).tiles, `${at}.tiles`, 1, MAX_FIELD_TILES) }
   }), path, (n) => n.kind)
 }

@@ -315,9 +315,10 @@ A farmhand brings 3 to 7 actions a day (3, then 4 settled in, 6 married, 7 well 
 So the farm must **grow its work with its people**, and **give the people something to cost**. Five levers, each its own
 packet or Phase 2 step:
 
-1. **Fields that grow, shown as their own screen** ([F89](../handoff/tasks/F89-field-view.md)). The farm map shows a
-   small field sign; a tap opens the field full screen, one plot (8 × 5) a page. The farm starts with one plot and
-   clears more as the Farm Rank rises, up to eight: up to 320 tiles of real work.
+1. **Fields that grow, shown as their own screen** (F89, built: [the field's screen](../game-mechanics.md#the-fields-screen)).
+   The farm map shows a small field sign; a tap opens the field full screen, one plot (8 × 5) a page. The farm starts
+   with one plot and clears more as the Farm Rank rises (plot 2 at Farm Rank 3 today; F91 takes it up to eight): up to
+   320 tiles of real work.
 2. **Food for everyone: an upkeep felt from day one** ([F90](../handoff/tasks/F90-food.md)). Everyone who eats on the
    farm eats twice a day. Takeout, bought in at night, costs gold for every meal not cooked. Cooking turns the
    Warehouse's goods into meals in batches: the farmer cooks with an action, and an Uma on the Kitchen's task cooks a

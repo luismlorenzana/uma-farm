@@ -1,7 +1,7 @@
 // The nudge: the day's actions left, the dry and ripe tiles; "All set" once the actions are spent.
 import { describe, expect, it } from 'vitest'
 import { plantTile, tillTile } from '../fields/fields'
-import { bareTile, newSave, START_CLEAR, type SaveV4 } from '../save/v4'
+import { fieldTiles, bareTile, newSave, START_CLEAR, type SaveV4 } from '../save/v4'
 import { daySetState } from './nudge'
 
 const AT = '2026-11-09T10:00:00.000Z'
@@ -17,7 +17,7 @@ describe('the nudge', () => {
   it('counts the dry growing tiles and the ripe ones', () => {
     const [a, b] = START_CLEAR
     const planted = plantTile(tillTile(farm(), a!), a!, 'seed-carrot')
-    const ripe = { ...planted, fields: { tiles: planted.fields.tiles.map((t, i) => (i === b ? { ...bareTile('tilled'), crop: 'carrot' as const, growth: 4, ready: true } : t)) } }
+    const ripe = { ...planted, fields: { plots: [{ tiles: fieldTiles(planted).map((t, i) => (i === b ? { ...bareTile('tilled'), crop: 'carrot' as const, growth: 4, ready: true } : t)) }] } }
     expect(daySetState(ripe)).toEqual({ allSet: false, left: 8, dry: 1, ripe: 1 })
   })
 })

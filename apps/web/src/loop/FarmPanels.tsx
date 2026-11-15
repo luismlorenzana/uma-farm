@@ -2,14 +2,16 @@
 // silo), the woods' edge (forage or chop at an area), the pond's edge (fish a spot) and a built station's (start a load). Each says what the action
 // brought, and the day's actions left. Part of the farm map's chunk.
 import {
-  actionsLeft, dayActions, goodName, grassLock, hasGrass, itemNameOf, receiptItems, SILO_ROOM, siloStands, type FarmSave, type GatherPlace, type HarvestReceipt, type StationId,
+  actionsLeft, dayActions, goodName, grassLock, hasGrass, itemNameOf, receiptItems, SILO_ROOM, siloStands, tileAt, type FarmSave, type GatherPlace, type HarvestReceipt,
+  type StationId,
 } from '@farm/domain'
+import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button } from '@luismlorenzana/uma-kit/ui'
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { ItemIcon } from '../items/ItemIcon'
 import { chopAt, clearAt, fishAt, forageAt, grassAt, harvestAt, loadAt, plantAt, tillAt, waterAt } from './actions'
-import { reachRows, stationView, tileView, type TileAction } from './farm-view'
+import { reachRows, stationView, tileView, tileWhere, type TileAction } from './farm-view'
 import { actionWords, plural } from './words'
 
 const errorWords = (err: unknown): string => (err instanceof Error ? err.message : 'That didn’t work. Try again.')
@@ -55,8 +57,9 @@ export function Notes({ note, error }: { note: string | null; error: string | nu
 
 const ACTION_WORDS: Readonly<Record<Exclude<TileAction['kind'], 'plant'>, string>> = { clear: 'Clear', till: 'Till', water: 'Water', harvest: 'Harvest' }
 
-/** A tile's panel: where it is, what's on it, and the action it takes next. */
+/** A tile's panel: where it is, what's on it, and the action it takes next. `index` is its field index. */
 export function TilePanel({ save, index }: { save: FarmSave; index: number }) {
+  const location = useLocation()
   const view = tileView(save, index)
   const { note, error, busy, run } = useAct(index)
   const out = actionsLeft(save) === 0
@@ -71,10 +74,11 @@ export function TilePanel({ save, index }: { save: FarmSave; index: number }) {
   }
   const plants = view.actions.filter((a): a is Extract<TileAction, { kind: 'plant' }> => a.kind === 'plant')
   const single = view.actions.find((a) => a.kind !== 'plant')
-  const tilledEmpty = save.fields.tiles[index]!.ground === 'tilled' && save.fields.tiles[index]!.crop === null
+  const tile = tileAt(save, index)
+  const tilledEmpty = tile.ground === 'tilled' && tile.crop === null
   return (
     <div className="space-y-2.5 p-4" data-tile-panel={index}>
-      <p className="text-[12px] text-ink-faint">{view.where}</p>
+      <p className="text-[12px] text-ink-faint" data-tile-where>{tileWhere(save, view)}</p>
       <p className="text-[15px]" data-tile-line>{view.line}</p>
       {view.withers && <p className="text-[13px] font-semibold text-danger" data-withers>Withers tonight: it won’t ripen before the season ends.</p>}
       <Notes note={note} error={error} />
@@ -104,7 +108,7 @@ export function TilePanel({ save, index }: { save: FarmSave; index: number }) {
         </ul>
       )}
       {tilledEmpty && plants.length === 0 && (
-        <Link to="/?sheet=shop" state={{ back: true }} className="flex min-h-11 items-center justify-center rounded-md border border-hairline-strong text-[14px] font-semibold" data-action="shop">
+        <Link to={withParam(location, 'sheet', 'shop')} state={{ back: true }} className="flex min-h-11 items-center justify-center rounded-md border border-hairline-strong text-[14px] font-semibold" data-action="shop">
           Seeds at the shop, in town
         </Link>
       )}

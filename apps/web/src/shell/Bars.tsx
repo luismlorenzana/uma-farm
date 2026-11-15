@@ -105,6 +105,13 @@ function EndDay({ set }: { set: DaySet | null }) {
   )
 }
 
+/** The day's actions left and End the day, as the bar's right end has them: for a full-screen page's own strip (the
+ * field's screen). */
+export function DayActions() {
+  const save = useLoopSave()
+  return <><ActionsChip save={save} /><EndDay set={save ? daySetState(save) : null} /></>
+}
+
 /** The kit's sync chip, only while offline or paused; it opens Account. */
 function syncChip(sync: SyncStatus): AccountBarProps['sync'] {
   if (sync === 'offline') return { state: 'offline', text: 'Offline', label: 'Offline: changes sync when you’re back', to: '/account' }
@@ -154,6 +161,7 @@ const RAIL: readonly { key: RailPage; to: string; label: string; Icon: IconCompo
 
 /** The rail page a path belongs to: the farm's places keep Farm lit; Account none. */
 export function railPageOf(pathname: string): RailPage | null {
+  // The field's screen is full screen, a farm place's: Farm stays lit behind it.
   if (pathname === '/town') return 'town'
   if (pathname === '/hearts' || pathname === '/roster') return 'people'
   if (pathname === '/book') return 'book'

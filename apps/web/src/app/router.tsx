@@ -1,6 +1,6 @@
-// The pages, inside the shell: `/` the farm map (`?tile=<n>` a tile's actions, `?peek=<place>` a quick look: the woods'
-// edge, the pond's, a station), the Hearts tab `/hearts` (`?view=work` the roster's album, `?uma=` her profile),
-// `/diary` and `/account`; the Warehouse by stars, `/warehouse` (`?pick=bin` to pick a crate to ship); the Dorm,
+// The pages, inside the shell: `/` the farm map (`?peek=<place>` a quick look: the woods' edge, the pond's, a station);
+// `/field` the field's screen, full screen, a plot a page (`?plot=<n>`, `?tile=<i>` a tile's actions, `?row=<r>` a
+// row's); the Hearts tab `/hearts` (`?view=work` the roster's album, `?uma=` her profile), `/diary` and `/account`; the Warehouse by stars, `/warehouse` (`?pick=bin` to pick a crate to ship); the Dorm,
 // `/dorm`; the Town, `/town` (`?view=people` the People list); and the farm's book, `/book`. `/roster` lands on the
 // Hearts tab's Work view. Every page but Account loads on demand; anything else goes to the farm.
 import { lazy, Suspense, type ReactNode } from 'react'
@@ -10,6 +10,7 @@ import { Shell } from '../shell/Shell'
 import { Root } from './Root'
 
 const FarmMap = lazy(() => import('../loop/FarmMap'))
+const FieldScreen = lazy(() => import('../loop/FieldScreen'))
 const HeartsPage = lazy(() => import('../loop/HeartsPage'))
 const DiaryPage = lazy(() => import('../loop/DiaryPage'))
 const WarehousePage = lazy(() => import('../loop/WarehousePage'))
@@ -29,6 +30,7 @@ function RosterRoute() {
 }
 export const ROUTES: RouteObject[] = [
   { index: true, element: loading(<FarmMap />) },
+  { path: 'field', element: loading(<FieldScreen />) },
   { path: 'roster', element: <RosterRoute /> },
   { path: 'hearts', element: loading(<HeartsPage />) },
   { path: 'diary', element: loading(<DiaryPage />) },

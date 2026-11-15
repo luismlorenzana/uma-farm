@@ -6,7 +6,7 @@
 //   her day      3 actions; +1 once she's settled in (a season after you invited her); +2 once she's your spouse;
 //                +1 when she's well fed this morning (a household meal the day before, a reception, a spouse's
 //                breakfast); all at the farm's pace (`atPace`: half, from the second short night of upkeep, never below 1)
-//   the board    her tasks, in your order: the field's over a list of tiles (harvest, water, plant, clear and till), a
+//   the board    her tasks, in your order: the field's over a plot's tiles (harvest, water, plant, clear and till), a
 //                station's load, a forest area's forage or chop, a fishing spot's catch, the Coop's or the Barn's care,
 //                a face at the Mine or the Quarry. Any Uma does any task, and each repeats daily until you change it. A
 //                task on the board is hers: the farmer's own ten stay free
@@ -27,7 +27,7 @@ import { farmhands } from '../romance/loop'
 import { countChallenge, rankBenefits, type ChallengeEvent } from './rank-rules'
 import type { Activity } from './ranks'
 import { talentYield, type TalentOf, type TalentStep } from './talents'
-import { cropLevelOf, drawnCount, reapTile, seedsBackChance, seedsInSeason, sowTile, stagesOf, tillGround, clearGround, wetTile, type Reaper } from '../fields/fields'
+import { cropLevelOf, drawnCount, reapTile, seedsBackChance, seedsInSeason, sowTile, stagesOf, tileOf, tillGround, clearGround, wetTile, type Reaper } from '../fields/fields'
 import { growsIn } from '../fields/crops'
 import { chopAt, CHOP_LOGS, fishAt, FORAGE_HAUL, forageAt, reachLock } from '../gathering/hauls'
 import { DIG_TOOL, digBuilt, dugCount, FACE_FINDS, faceAt } from '../gathering/digs'
@@ -41,7 +41,7 @@ import type { AptitudeUp, FarmhandLine } from '../night/summary'
 import type { PerkPack } from '../romance/perk-terms'
 import { SaveRuleError } from '../save/rules'
 import {
-  APTITUDE_IDS, FIELD_COLUMNS, FIELD_TILES, isOvergrown, MAX_TASKS, TILE_TASKS,
+  APTITUDE_IDS, FIELD_COLUMNS, FIELD_TILES, fieldIndex, fieldTiles, isOvergrown, MAX_TASKS, TILE_TASKS,
   type AptitudeId, type DigId, type FarmSave, type FarmTask, type RosterUma, type TaskKind, type TileTaskKind,
 } from '../save/v4'
 import type { StoryPack } from '../story/pack'
@@ -115,6 +115,11 @@ export const TASK_NAMES: Readonly<Record<TaskKind, string>> = {
  * the animals' care are done. */
 export const OPEN_TASKS: readonly TaskKind[] = ['forage', 'chop', 'fish', 'mine']
 export const isTileTask = (task: FarmTask): task is Extract<FarmTask, { tiles: number[] }> => (TILE_TASKS as readonly string[]).includes(task.kind)
+/** A field task's plot: its index, 0 for plot 1 (a task with none). */
+export const taskPlot = (task: Extract<FarmTask, { tiles: number[] }>): number => task.plot ?? 0
+/** A field task's tiles as field indices: its plot's tiles, numbered on from plot 1's. */
+export const taskTiles = (task: Extract<FarmTask, { tiles: number[] }>): number[] =>
+  task.tiles.filter((i) => Number.isInteger(i) && i >= 0 && i < FIELD_TILES).map((i) => fieldIndex(taskPlot(task), i))
 
 /** The aptitude a task practises: its own, a load its station's. */
 export const taskAptitude = (task: FarmTask): AptitudeId => (task.kind === 'load' ? task.station : task.kind)
@@ -132,12 +137,14 @@ export function taskPlace(task: FarmTask): WorkPlace {
   }
 }
 
-/** Why a task can't go on her board, or null: the field's tiles are on the field, a load's station, the animals' building
- * and the dig are built, an area or a spot is within the farm's reach. */
-export function taskLock(save: Pick<FarmSave, 'buildings' | 'farm'>, task: FarmTask): string | null {
+/** Why a task can't go on her board, or null: the field's tiles are on a plot the farm has cleared, a load's station, the
+ * animals' building and the dig are built, an area or a spot is within the farm's reach. */
+export function taskLock(save: Pick<FarmSave, 'buildings' | 'farm' | 'fields'>, task: FarmTask): string | null {
   if (isTileTask(task)) {
     if (task.tiles.length === 0) return 'Choose its tiles.'
-    if (task.tiles.some((i) => !Number.isInteger(i) || i < 0 || i >= FIELD_TILES) || new Set(task.tiles).size !== task.tiles.length) return 'Those aren’t the field’s tiles.'
+    const plot = task.plot
+    if (plot !== undefined && (!Number.isInteger(plot) || plot < 0 || plot >= save.fields.plots.length)) return 'Clear that plot first.'
+    if (task.tiles.some((i) => !Number.isInteger(i) || i < 0 || i >= FIELD_TILES) || new Set(task.tiles).size !== task.tiles.length) return 'Those aren’t the plot’s tiles.'
     if (task.kind === 'plant' && task.crop !== undefined && !isCropId(task.crop)) return 'That isn’t a crop.'
     return null
   }
@@ -160,7 +167,12 @@ export function setTasks<S extends FarmSave>(save: S, id: string, tasks: readonl
     const lock = taskLock(save, task)
     if (lock) throw new SaveRuleError('locked', lock)
   }
-  const clean = tasks.map((t): FarmTask => (isTileTask(t) ? { ...t, tiles: [...t.tiles].sort((a, b) => a - b) } : { ...t }))
+  // Plot 1's tasks are written without a plot, as before plots.
+  const clean = tasks.map((t): FarmTask => {
+    if (!isTileTask(t)) return { ...t }
+    const { plot, ...rest } = t
+    return { ...rest, tiles: [...t.tiles].sort((a, b) => a - b), ...(plot ? { plot } : {}) }
+  })
   return { ...save, roster: { ...save.roster, [id]: { ...uma, tasks: clean } } }
 }
 
@@ -339,7 +351,7 @@ function careStep(save: FarmSave, id: string, home: Extract<FarmTask, { kind: 'c
     const some = hungry.slice(0, Math.min(save.ranch.silo, level >= TRICK_AT.feedTwo ? 2 : 1))
     return { save: some.reduce((s, a) => feedAt(s, a.id), save), n: some.length, items: [], events: [] }
   }
-  if (hungry.length > 0 && grassLock(save) === null && save.fields.tiles.some((t) => t.ground === 'weeds')) return { save: grassAt(save).save, n: 0, items: [], events: [] }
+  if (hungry.length > 0 && grassLock(save) === null && fieldTiles(save).some((t) => t.ground === 'weeds')) return { save: grassAt(save).save, n: 0, items: [], events: [] }
   if (readyIn(save, home) > 0) {
     const done = collectAt(save, home, round6(aptitudeQuality(level) + keepsakeAt(save, story, id, home)))
     return { save: done.save, n: 0, items: done.collected.items, events: [] }
@@ -353,11 +365,13 @@ function careStep(save: FarmSave, id: string, home: Extract<FarmTask, { kind: 'c
 
 /** One action of a task, or null when it has nothing to do (or can't be worked tonight). */
 function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: boolean, talentOf: TalentOf, story: PerkPack | null): Step | null {
-  const tiles = isTileTask(task) ? task.tiles.filter((i) => i >= 0 && i < FIELD_TILES) : []
+  // Her tiles as field indices, on a plot the farm has (a plot not cleared has none).
+  const tiles = isTileTask(task) ? taskTiles(task).filter((i) => tileOf(save, i) !== undefined) : []
+  const at = (i: number) => tileOf(save, i)!
   const uma = save.roster[id]!
   switch (task.kind) {
     case 'harvest': {
-      const ripe = tiles.filter((i) => save.fields.tiles[i]!.ready).slice(0, tilesAnAction('harvest', level))
+      const ripe = tiles.filter((i) => at(i).ready).slice(0, tilesAnAction('harvest', level))
       if (ripe.length === 0) return null
       const rank = uma.ranks.farming.rank
       const keepsake = keepsakeAt(save, story, id, 'fields')
@@ -369,7 +383,7 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       const items: string[] = []
       const events: Step['events'] = []
       for (const i of ripe) {
-        const level0 = cropLevelOf(next.crops[next.fields.tiles[i]!.crop!] ?? 0)
+        const level0 = cropLevelOf(next.crops[tileOf(next, i)!.crop!] ?? 0)
         const done = reapTile(next, i, reaper)
         next = done.save
         const stars = done.receipt.stars.flatMap((n, s) => Array.from({ length: n }, () => s + 1))
@@ -379,15 +393,16 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       return { save: next, n: ripe.length, items, events }
     }
     case 'water': {
-      const dry = tiles.filter((i) => { const t = save.fields.tiles[i]!; return t.crop !== null && !t.ready && !t.watered })
+      const dry = tiles.filter((i) => { const t = at(i); return t.crop !== null && !t.ready && !t.watered })
       if (dry.length === 0) return null
-      // A row an action from Watering 6: every dry tile of hers in the first row that has one.
+      // A row an action from Watering 6: every dry tile of hers in the first row that has one. A field index's row,
+      // ⌊i / 8⌋, is its plot's own row (a plot is whole rows), so the row stays on her plot.
       const row = Math.floor(dry[0]! / FIELD_COLUMNS)
       const some = level >= TRICK_AT.waterRow ? dry.filter((i) => Math.floor(i / FIELD_COLUMNS) === row) : dry.slice(0, tilesAnAction('water', level))
       return { save: some.reduce((s, i) => wetTile(s, i), save), n: some.length, items: [], events: [] }
     }
     case 'plant': {
-      const empty = tiles.filter((i) => { const t = save.fields.tiles[i]!; return t.ground === 'tilled' && t.crop === null })
+      const empty = tiles.filter((i) => { const t = at(i); return t.ground === 'tilled' && t.crop === null })
       let next = save
       let n = 0
       for (const i of empty) {
@@ -400,11 +415,11 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       return n === 0 ? null : { save: next, n, items: [], events: [] }
     }
     case 'till': {
-      const i = tiles.find((t) => { const g = save.fields.tiles[t]!.ground; return isOvergrown(g) || g === 'clear' })
+      const i = tiles.find((t) => { const g = at(t).ground; return isOvergrown(g) || g === 'clear' })
       if (i === undefined) return null
       let next = save
       const items: string[] = []
-      if (isOvergrown(next.fields.tiles[i]!.ground)) {
+      if (isOvergrown(tileOf(next, i)!.ground)) {
         const cleared = clearGround(next, i)
         next = cleared.save
         if (cleared.found) items.push(`${cleared.found}@1`)

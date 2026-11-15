@@ -7,7 +7,7 @@ import { farmRankOpens } from '../farm/diary'
 import { inviteToFarm, meet } from '../romance/meeting'
 import { parseSave, parseStored, type OlderSave } from './save'
 import { parseSaveV5 } from './parse-v4'
-import { FIELD_TILES, freshV5, newLove, newSave, START_CLEAR, startField, type SaveV4 } from './v4'
+import { FIELD_TILES, fieldTiles, freshV5, newLove, newSave, START_CLEAR, startField, type SaveV4 } from './v4'
 
 const CREATED = '2026-11-08T09:12:44.000Z'
 const UPDATED = '2026-11-10T21:40:03.512Z'
@@ -37,8 +37,8 @@ describe('the new farm over an older save', () => {
       items: { 'seed-carrot': [9, 0, 0, 0, 0] }, dorm: { level: 1, home: [], swaps: [] }, buildings: { dorm: 1 }, loads: {},
       today: { actions: 0, eventActions: 0, town: false, gathered: [] },
     })
-    expect(fresh.fields.tiles).toHaveLength(FIELD_TILES)
-    expect(fresh.fields.tiles.every((t) => t.crop === null)).toBe(true)
+    expect(fieldTiles(fresh)).toHaveLength(FIELD_TILES)
+    expect(fieldTiles(fresh).every((t) => t.crop === null)).toBe(true)
     expect(bedsAt(fresh.dorm.level)).toBe(3)
     expect(fresh).not.toHaveProperty('start')
     expect(fresh).not.toHaveProperty('visitors')
@@ -86,15 +86,49 @@ describe('the v5 parse', () => {
   })
 
   it('refuses a field off its grid, a crop off tilled soil, and an empty tile holding anything', () => {
-    refuse((s) => { s.fields.tiles.pop() }, 'save.fields.tiles: expected 40–40 entries')
-    refuse((s) => { s.fields.tiles[0] = { ...s.fields.tiles[0], ground: 'sand' } }, /save.fields.tiles.0.ground: expected one of/)
-    refuse((s) => { s.fields.tiles[0] = { ...s.fields.tiles[0], crop: 'carrot' } }, 'save.fields.tiles.0.ground: a crop grows on tilled soil')
-    refuse((s) => { s.fields.tiles[0] = { ...s.fields.tiles[0], watered: true } }, 'save.fields.tiles.0: an empty tile holds nothing')
-    refuse((s) => { s.fields.tiles[0] = { ...s.fields.tiles[0], ground: 'tilled', crop: 'carrot', growth: 1.5 } }, 'save.fields.tiles.0.growth: expected 0–10')
-    refuse((s) => { s.fields.tiles[0] = { ...s.fields.tiles[0], ground: 'tilled', crop: 'carrot', ready: true, watered: true } }, 'save.fields.tiles.0.watered: a ripe crop isn’t watered')
+    const plot = 'save.fields.plots.0.tiles'
+    refuse((s) => { s.fields.plots[0].tiles.pop() }, `${plot}: expected 40–40 entries`)
+    refuse((s) => { s.fields.plots[0].tiles[0] = { ...s.fields.plots[0].tiles[0], ground: 'sand' } }, `${plot}.0.ground: expected one of`)
+    refuse((s) => { s.fields.plots[0].tiles[0] = { ...s.fields.plots[0].tiles[0], crop: 'carrot' } }, `${plot}.0.ground: a crop grows on tilled soil`)
+    refuse((s) => { s.fields.plots[0].tiles[0] = { ...s.fields.plots[0].tiles[0], watered: true } }, `${plot}.0: an empty tile holds nothing`)
+    refuse((s) => { s.fields.plots[0].tiles[0] = { ...s.fields.plots[0].tiles[0], ground: 'tilled', crop: 'carrot', growth: 1.5 } }, `${plot}.0.growth: expected 0–10`)
+    refuse((s) => { s.fields.plots[0].tiles[0] = { ...s.fields.plots[0].tiles[0], ground: 'tilled', crop: 'carrot', ready: true, watered: true } }, `${plot}.0.watered: a ripe crop isn’t watered`)
     const save = farm()
-    save.fields.tiles[0] = { ground: 'tilled', crop: 'carrot', growth: 2, ready: false, regrowing: false, own: true, watered: true }
-    expect(parseSaveV5(json(save)).fields.tiles[0]).toEqual(save.fields.tiles[0])
+    save.fields.plots[0]!.tiles[0] = { ground: 'tilled', crop: 'carrot', growth: 2, ready: false, regrowing: false, own: true, watered: true }
+    expect(parseSaveV5(json(save)).fields.plots[0]!.tiles[0]).toEqual(fieldTiles(save)[0])
+  })
+
+  it('reads a live save\'s field, from before plots, as plot 1 exactly as it was, and never moves updatedAt', () => {
+    // The field as the live save stores it: one field of tiles, with a crop growing and watered, one ripe, one tilled,
+    // and a farmhand's water task from before plots.
+    const live = json(farm()) as Record<string, any>
+    const tiles = startField('u1').map((t, i) => (i === 0 ? { ...t, ground: 'tilled', crop: 'carrot', growth: 2, own: true, watered: true }
+      : i === 1 ? { ...t, ground: 'tilled', crop: 'potato', growth: 6, ready: true } : i === 2 ? { ...t, ground: 'tilled' } : t))
+    live.fields = { tiles }
+    live.account = { ...account }
+    live.roster['9000001'].farmhand = 3
+    live.roster['9000001'].tasks = [{ kind: 'water', tiles: [0, 1, 2, 3, 4, 5, 6, 7] }]
+    const read = parseSaveV5(json(live))
+    expect(read.fields).toEqual({ plots: [{ tiles }] })
+    expect(read.roster['9000001']!.tasks).toEqual([{ kind: 'water', tiles: [0, 1, 2, 3, 4, 5, 6, 7] }])
+    expect(read.account).toEqual(account)
+    expect(read.account.updatedAt).toBe(UPDATED)
+    // Written back, it's plot 1, and it reads the same.
+    expect(parseSaveV5(json(read))).toEqual(read)
+  })
+
+  it('takes a second plot and a task on it, and refuses a field with no plots, both shapes at once, more plots than the rules hold, or a task on a plot not cleared', () => {
+    const save = farm()
+    const two: SaveV4 = { ...save, fields: { plots: [save.fields.plots[0]!, { tiles: startField('u2') }] } }
+    two.roster['9000001'] = { ...two.roster['9000001']!, farmhand: 3, tasks: [{ kind: 'water', tiles: [0, 1], plot: 1 }] }
+    expect(parseSaveV5(json(two))).toEqual(two)
+    refuse((s) => { s.fields = {} }, 'save.fields.plots: expected the field’s plots')
+    refuse((s) => { s.fields = { plots: [] } }, 'save.fields.plots: expected 1–2 entries')
+    refuse((s) => { s.fields = { plots: s.fields.plots, tiles: s.fields.plots[0].tiles } }, 'save.fields.tiles: the field’s tiles are its plots’')
+    refuse((s) => { s.fields.plots = [0, 1, 2].map(() => s.fields.plots[0]) }, 'save.fields.plots: expected 1–2 entries')
+    refuse((s) => { s.fields.plots[0].extra = 1 }, 'save.fields.plots.0: unknown keys extra')
+    refuse((s) => { s.roster['9000001'].farmhand = 3; s.roster['9000001'].tasks = [{ kind: 'water', tiles: [0], plot: 1 }] }, 'save.roster.9000001.tasks.0.plot: a plot the farm hasn’t cleared')
+    refuse((s) => { s.roster['9000001'].farmhand = 3; s.roster['9000001'].tasks = [{ kind: 'water', tiles: [0], plot: 0 }] }, 'save.roster.9000001.tasks.0.plot: expected 1–1')
   })
 
   it('takes the day\'s actions and the stations\' loads, and refuses what they can\'t hold', () => {

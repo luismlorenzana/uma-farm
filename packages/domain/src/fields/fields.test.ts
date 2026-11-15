@@ -10,7 +10,7 @@ import { endDay, type NightContext } from '../night/end-day'
 import { parseSaveV5 } from '../save/parse-v4'
 import { SaveRuleError } from '../save/rules'
 import { buy, lineOpen, shopLines } from '../save/shop'
-import { bareTile, dryTiles, newSave, readyTiles, START_CLEAR, type SaveV4, type Tile } from '../save/v4'
+import { bareTile, dryTiles, fieldTiles, newSave, readyTiles, START_CLEAR, type SaveV4, type Tile } from '../save/v4'
 import {
   clearTile, cropLevelOf, cropLevelStart, cropLook, harvestQuality, harvestTile, nightsLeft, plantTile, receiptItems, seedsBackChance, seedsInSeason,
   stagesOf, tileAt, TILES_CLEARED, TILES_HARVESTED, TILES_PLANTED, tilesToPlant, tillTile, waterTile,
@@ -40,7 +40,7 @@ const reason = (run: () => unknown): string | null => {
 }
 /** The save with its tiles set, the rest of the field as it was. */
 function withTiles(save: SaveV4, tiles: Record<number, Tile>): SaveV4 {
-  return { ...save, fields: { tiles: save.fields.tiles.map((t, i) => tiles[i] ?? t) } }
+  return { ...save, fields: { plots: [{ tiles: fieldTiles(save).map((t, i) => tiles[i] ?? t) }] } }
 }
 /** A ripe crop on tilled soil. */
 const ripe = (crop: Tile['crop'] = 'carrot', own = false): Tile => ({ ...bareTile('tilled'), crop, growth: 4, ready: true, own })
@@ -48,13 +48,13 @@ const ripe = (crop: Tile['crop'] = 'carrot', own = false): Tile => ({ ...bareTil
 const rested = (save: SaveV4): SaveV4 => ({ ...save, today: { ...save.today, actions: 0 } })
 /** Waters every growing tile, a day's actions reset first. */
 function waterAll(save: SaveV4): SaveV4 {
-  return save.fields.tiles.reduce((s, t, i) => (t.crop !== null && !t.ready && !t.watered ? waterTile(s, i) : s), rested(save))
+  return fieldTiles(save).reduce((s, t, i) => (t.crop !== null && !t.ready && !t.watered ? waterTile(s, i) : s), rested(save))
 }
 
 describe('a tile, by hand', () => {
   it('clears an overgrown tile, tills cleared ground, plants it and waters it, one action each', () => {
     const save = farm()
-    const weeds = save.fields.tiles.findIndex((t) => t.ground === 'weeds')
+    const weeds = fieldTiles(save).findIndex((t) => t.ground === 'weeds')
     const cleared = clearTile(save, weeds)
     expect(cleared.found).toBeNull()
     expect(tileAt(cleared.save, weeds).ground).toBe('clear')
@@ -107,7 +107,7 @@ describe('a tile, by hand', () => {
   it('spends the day\'s actions: the eleventh is refused, and nothing changes', () => {
     let save = farm()
     for (const i of START_CLEAR) save = tillTile(save, i)
-    save = clearTile(save, save.fields.tiles.findIndex((t) => t.ground !== 'clear' && t.ground !== 'tilled')).save
+    save = clearTile(save, fieldTiles(save).findIndex((t) => t.ground !== 'clear' && t.ground !== 'tilled')).save
     expect(actionsLeft(save)).toBe(0)
     expect(reason(() => plantTile(save, START_CLEAR[0]!, 'seed-carrot'))).toBe('no-actions')
     expect(() => plantTile(save, START_CLEAR[0]!, 'seed-carrot')).toThrow('No actions left today.')

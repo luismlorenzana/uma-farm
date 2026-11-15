@@ -28,12 +28,18 @@ keeps a fixed schedule, hers from the story or the default (her favourite spot e
 ask an Uma you meet in town out for an evening, and every default gift can be had in the first Spring. Faces are
 rounded squares cut from her portraits in the season's outfit ([her picture](../game-mechanics.md#her-picture)).
 
-**Next:** the farm at scale (F89–F91, [the analysis](../design/game-design.md#the-farm-at-scale-2026-11-15)), then Phase 2's workshops, the Kitchen first.
+**The field has its own screen, in plots** (F89): the farm map shows the field as a small sign with its counts ("6 to
+water · 2 ripe"), and a tap opens the field full screen, one plot of 8 × 5 big tiles a page, with page dots, arrows and
+a swipe. Your field is plot 1, exactly as it was. Plot 2 opens at Farm Rank 3: clear it for 2,500g and an action, and
+it's yours at once, wild ground with no upkeep. A farmhand's field task names its plot and rows, and each row's tab
+shows who works it ([the field's plots](../game-mechanics.md#the-fields-plots),
+[the field's screen](../game-mechanics.md#the-fields-screen)).
+
+**Next:** the farm at scale goes on (F90–F91, [the analysis](../design/game-design.md#the-farm-at-scale-2026-11-15)), then Phase 2's workshops, the Kitchen first.
 
 | Piece | Who | State |
 |---|---|---|
-| [F89](tasks/F89-field-view.md) **The field, on its own screen, in plots** | Claude | Next, on your go |
-| [F90](tasks/F90-food.md) **Food: everyone eats, from day one** | Claude | After F89 |
+| [F90](tasks/F90-food.md) **Food: everyone eats, from day one** | Claude | Next, on your go |
 | [F91](tasks/F91-work-at-scale.md) **Work at scale: 10, 20 and 50 Umas** | Claude | After F90 |
 
 ## Open packets
@@ -53,6 +59,7 @@ Not packets: each has a standing guide that changes as the game does.
 
 | What | Where |
 |---|---|
+| **Look at the field's screen on your phone:** tap the field's sign on the farm, page to plot 2 and back with a swipe, and tell me if the tiles feel big enough | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Play your farm.** Start the new farm once, on its card when the app opens: it's the last start-over, and the farm it starts is the one you keep. Then play days as they come, and tell me what feels off | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story and ship it** | [How the story reaches the game](../story-pack.md#how-the-story-reaches-the-game) |
 | **The next Umas' art:** hand the art brief to the character art session | [The art brief](../design/her-look.md#the-art-brief), in Uma Character Art |
@@ -61,6 +68,7 @@ Not packets: each has a standing guide that changes as the game does.
 
 - **Sideways:** the bar, the rail and side panels; held upright, it asks you to turn it ([the frame](../game-mechanics.md#the-frame-landscape)).
 - **Ten actions a day** on the tile farm: clear, till, plant, water every day, harvest ([a day](../game-mechanics.md#a-day-ten-actions)).
+- **The field's own screen:** the field's sign on the farm, then a plot a page, full screen; plot 2 from Farm Rank 3 ([the field's screen](../game-mechanics.md#the-fields-screen)).
 - **The town map:** walk between places, see who's there now, and meet whoever you like by introducing yourself ([the town](../game-mechanics.md#the-town)).
 - **Her stages,** acquaintance to married: hangouts and dates at two actions, Dinner in town, A night in ([the Uma loop](../game-mechanics.md#the-uma-loop)).
 - **Farmhands:** invite a friend to work, set her tasks on the Book's work board, and watch her aptitudes rise ([farmhands](../game-mechanics.md#farmhands)).

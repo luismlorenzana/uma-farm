@@ -38,7 +38,8 @@ The owner's rework (2026-11-14, F74–F85) is all in. Each row links to how it p
 | Part | State | What it is |
 |---|---|---|
 | **Landscape** | **Deployed** | The game is played sideways: a thin bar on top (the date, the actions left, the gold, End the day, the Menu), a rail down the left (Farm · Town · People · Book · Diary), sheets as side panels, scenes laid out sideways, and a "Turn your phone sideways" card held upright ([the frame](game-mechanics.md#the-frame-landscape)) |
-| **A day of ten actions, and the tile farm** | **Deployed** (save v5) | Home is the tile farm: its field's 40 tiles cleared, tilled, planted, watered daily and harvested by hand; a forage, a chop or a catch at the woods' and the pond's edge; a station's one load; a crate shipped; going into town. Each takes an action, and the night settles the day ([a day](game-mechanics.md#a-day-ten-actions), [Home](game-mechanics.md#home-the-farm-map)) |
+| **A day of ten actions, and the tile farm** | **Deployed** (save v5) | Home is the tile farm: the field's sign opens the field's own screen, full screen, a plot of 40 tiles a page, cleared, tilled, planted, watered daily and harvested by hand; a forage, a chop or a catch at the woods' and the pond's edge; a station's one load; a crate shipped; going into town. Each takes an action, and the night settles the day ([a day](game-mechanics.md#a-day-ten-actions), [Home](game-mechanics.md#home-the-farm-map), [the field's screen](game-mechanics.md#the-fields-screen)) |
+| **The field's plots** | **Built** (F89) | The field is plots of 8 × 5, a page each: plot 1 is the field the farm always had, plot 2 is cleared from Farm Rank 3 for 2,500g and an action, wild, with no upkeep. Farmhands' field tasks name their plot and rows ([the field's plots](game-mechanics.md#the-fields-plots)) |
 | **The farm's places** | **Deployed** | The Fields, the forest and the Fishery, the Mill, the Sawmill and the Smokehouse, goods and the bin, talents and ranks, the Farm Rank. The farm grows by building: the Farm Rank offers each place, built with gold and goods; the Dock and the Boat open the sea; weddings open houses; the Diary's projects ([the farm's progress](game-mechanics.md#the-farms-progress)) |
 | **The ranch and the mine** | **Deployed** | The Coop and the Barn, with seven kinds of animal bought at the rancher's in town, fed from the silo and cared for, their goods starred by their hearts; the Mine and the Quarry, thirty floors each, a face at a time; the Smelter and the Cutter ([the ranch](game-mechanics.md#the-ranch), [the Mine and the Quarry](game-mechanics.md#the-mine-and-the-quarry)) |
 | **Upkeep and loans** | **Deployed** | Each night's upkeep for what's built, who lives on the farm and who works it; short of it, a warning, then half pace for the farmhands until it's paid. The mayor's office lends toward a build, repaid from each night's income ([upkeep and loans](game-mechanics.md#upkeep-and-loans)) |
@@ -128,8 +129,8 @@ town, each with her own story.
 
 2.1, the ranch, and 2.2, the Mine and the Quarry, came with the rework. **First, the farm at scale** (the owner,
 2026-11-15; [the analysis](design/game-design.md#the-farm-at-scale-2026-11-15)): today about 10 to 20 Umas can hold real
-jobs and the rest only gather. Three packets come before the workshops:
-[F89](handoff/tasks/F89-field-view.md) the field on its own screen, in plots;
+jobs and the rest only gather. The field's own screen, in plots, is in (F89,
+[the field's plots](game-mechanics.md#the-fields-plots)); two packets come before the workshops:
 [F90](handoff/tasks/F90-food.md) food, an upkeep from day one, with cooking in batches and a Cooking aptitude; and
 [F91](handoff/tasks/F91-work-at-scale.md) work at scale, checked by a simulation at 10, 20 and 50 Umas.
 
