@@ -26,8 +26,6 @@ import type { StoryTrigger, Trigger } from '../story/authored'
 import type { StoryPack } from '../story/pack'
 import { beatOf } from '../story/placeholders'
 import { bar, NIGHT_RUNGS, WAITING_RUNGS } from './love'
-import { placeBuilt, type FarmPlaceId } from '../farm/places'
-import { ACTIVITY_PLACE } from './perks'
 import { chapterNow } from './chapters'
 
 
@@ -46,8 +44,6 @@ export type Wait =
   | { kind: 'today' }
   /** Its setup, not met today. */
   | { kind: 'setup'; setup: Setup }
-  /** A working setup at a place not built yet: "Opens when the Kitchen is built". */
-  | { kind: 'opens'; place: FarmPlaceId }
   /** S2 and S4 have no Ready event: they come at night once their bar fills, and the morning plays their scene. */
   | { kind: 'night' }
   /** She said "Not yet" at her confession: you ask her again from her profile. */
@@ -61,7 +57,7 @@ export type Wait =
 export const READY_CONDITIONS: readonly { condition: string; unmet: string }[] = [
   { condition: 'Her bar is full for the rung; a waiting rung (the confession, the proposal, the wedding) is Ready the day after the rung before, and the proposal needs a ring in the Warehouse', unmet: '`bar`, `day`, `ring`' },
   { condition: 'She hasn’t played one of her events today', unmet: '`today`' },
-  { condition: 'Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level', unmet: '`setup`; `opens` for the ranch, mining, cooking, expeditions, serving or forging before their place is built (the Coop, the Mine, the Kitchen, the expedition post, the Restaurant, the Forge)' },
+  { condition: 'Its one setup is met, if it has one: she works a named activity today (a running job there, or a tended growing block for farming), a named good is in the Warehouse at any stars, her bond with a named Uma has reached a level', unmet: '`setup` (a working setup is met every day, its place built or not: the farm gates her only through her chapters)' },
   { condition: 'Her chapter is open: when her next event is the first of her chapter, the chapter’s gate holds, if it has one (a place built, a Farm Rank, a good shipped, another’s event, a season or a festival)', unmet: '`gate`: “Opens when the Kitchen is built”' },
 ]
 /** The waits in the order `readiness` says them: the first one met is the one shown. */
@@ -70,7 +66,6 @@ export const WAIT_ORDER: readonly { kind: Wait['kind']; when: string }[] = [
   { kind: 'night', when: 'S2 or S4, bar full: no Ready event; the level comes at night, and the morning plays its scene; short of it, `bar`' },
   { kind: 'friend', when: 'She said “Not yet” at her confession: you ask her again from her profile' },
   { kind: 'gate', when: 'Her next event opens her chapter, and its gate doesn’t hold yet' },
-  { kind: 'opens', when: 'A working setup at a place not built yet' },
   { kind: 'bar', when: 'Her bar isn’t full for the rung' },
   { kind: 'day', when: 'A waiting rung, on the day the rung before played' },
   { kind: 'ring', when: 'The proposal, with no ring in the Warehouse' },
@@ -87,7 +82,7 @@ export interface Readiness {
 }
 
 /** Whether her day's work setup is met. Only a farmhand works the farm, and only overnight: a working setup holds every
- * day, so her event never waits on work she may not do. */
+ * day, whether or not its place is built, so her event never waits on work she may not do. */
 export function worksToday(_save: SaveV4, _id: string, _activity: Activity): boolean {
   return true
 }
@@ -99,12 +94,6 @@ export function setupMet(save: SaveV4, id: string, setup: Setup): boolean {
     case 'item': return goodCount(save.items, setup.good) > 0
     case 'bond': return bondHearts(save.bonds[pairKey(id, setup.with)] ?? 0) >= setup.level
   }
-}
-
-/** The place a setup waits for, or null when it can be met now. */
-function opensWith(save: SaveV4, trigger: Trigger): FarmPlaceId | null {
-  const place = trigger.kind === 'working' ? ACTIVITY_PLACE[trigger.activity] ?? null : null
-  return place !== null && !placeBuilt(save, place) ? place : null
 }
 
 /** Her next event's state, wherever she lives. Refused for someone you haven't met. */
@@ -120,8 +109,6 @@ export function readiness(save: SaveV4, pack: Pick<StoryPack, 'bibles' | 'cast'>
   const gate = chapterNow(save, pack, id).waits
   if (gate) return wait({ kind: 'gate', gate })
   const trigger: Trigger = beatOf(pack, id, rung)?.trigger ?? { kind: 'hearts' }
-  const place = opensWith(save, trigger)
-  if (place !== null) return wait({ kind: 'opens', place })
   const day = save.calendar.day
   if (WAITING_RUNGS.includes(rung) ? day <= love.last : !now.full) return wait({ kind: WAITING_RUNGS.includes(rung) ? 'day' : 'bar' })
   if (rung === 'proposal' && !RING_IDS.some((ring) => goodCount(save.items, ring) > 0)) return wait({ kind: 'ring' })

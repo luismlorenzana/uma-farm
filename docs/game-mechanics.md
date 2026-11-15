@@ -4251,8 +4251,10 @@ A setup is never an hour, the weather, a season or a festival; her chapter's gat
 <!-- /live -->
 
 - **A setup** is her bible's beat's setup for the rung; an Uma without a bible has none. A working setup ("she works
-  the Fishery today") is met every day, farmhand or not, so her event never waits on work she may not do; at
-  a place not built yet it shows "Opens when the Mine is built" (her place) ahead of a short bar. A pack's beat that still names a
+  the Fishery today") is met every day, farmhand or not, and whether or not its place is built (the Restaurant, the
+  Forge, the Kitchen, the Mine), so her event never waits on work she may not do and **a route never dead-ends on a
+  setup**. The farm gates her only through [her chapters](#her-chapters)' gates, which the story chooses: a place built
+  or a Farm Rank there holds her chapter's first event, by name. A pack's beat that still names a
   chapter setup is noted and read as her bar alone: the farm has no global chapters, and a gate goes on one of [her
   chapters](#her-chapters).
 - **Her bond setup** reads bond hearts (50, 150, 300, 500 and 750 points). **The proposal's ring** is any ring in the

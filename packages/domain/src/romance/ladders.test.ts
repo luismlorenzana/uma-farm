@@ -412,8 +412,20 @@ describe('Ready', () => {
     expect(readiness({ ...save, bonds: { [pairKey(ONE, TWO)]: 150 } }, bond, ONE).ready).toBe(true)
     expect(BOND_HEARTS.map(bondHearts)).toEqual([1, 2, 3, 4, 5])
     const mine = packWithTrigger({ kind: 'working', activity: 'mining' })
-    expect(readiness(withLove(save, ONE, { points: 0 }), mine, ONE).waits).toEqual({ kind: 'opens', place: 'mine' })
+    expect(readiness(withLove(save, ONE, { points: 0 }), mine, ONE).waits).toEqual({ kind: 'bar' })
     expect(readiness({ ...save, buildings: { ...save.buildings, mine: 1 } }, mine, ONE).ready).toBe(true)
+  })
+
+  it('never holds her event on a working setup at a place not built: the Restaurant, the Forge, the Kitchen, the Mine', () => {
+    const save = full(farm(3))
+    for (const [activity, place] of [['serving', 'restaurant'], ['forging', 'forge'], ['cooking', 'kitchen'], ['mining', 'mine']] as const) {
+      expect(save.buildings[place], place).toBeUndefined()
+      // Her bar is all it waits on, at a friendship rung and at a romance rung alike.
+      expect(readiness(save, packWithTrigger({ kind: 'working', activity }), ONE), activity).toEqual({ rung: 'f1', ready: true, waits: null })
+      expect(readiness(withLove(save, ONE, { points: 199 }), packWithTrigger({ kind: 'working', activity }), ONE).waits, activity).toEqual({ kind: 'bar' })
+      const r3 = withLove(save, ONE, { stage: 'romance', level: 2, points: 280 })
+      expect(readiness(r3, packWithTrigger({ kind: 'working', activity }, 'r3'), ONE), activity).toEqual({ rung: 'r3', ready: true, waits: null })
+    }
   })
 
   it('makes a waiting rung Ready the day after the rung before, the proposal only with a ring', () => {
@@ -440,7 +452,7 @@ describe('Ready', () => {
   })
 
   it('documents every wait, in the order it\'s said', () => {
-    expect(WAIT_ORDER.map((w) => w.kind).sort()).toEqual(['bar', 'day', 'done', 'friend', 'gate', 'night', 'opens', 'ring', 'setup', 'today'])
+    expect(WAIT_ORDER.map((w) => w.kind).sort()).toEqual(['bar', 'day', 'done', 'friend', 'gate', 'night', 'ring', 'setup', 'today'])
   })
 })
 

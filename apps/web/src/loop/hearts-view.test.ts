@@ -136,11 +136,11 @@ describe('her profile', () => {
     expect([
       at(null), at({ kind: 'bar' }), at({ kind: 'day' }, 'confession'), at({ kind: 'ring' }, 'proposal'), at({ kind: 'today' }),
       at({ kind: 'setup', setup: { kind: 'working', activity: 'fishing' } }), at({ kind: 'setup', setup: { kind: 'item', good: 'carrot' } }),
-      at({ kind: 'setup', setup: { kind: 'bond', with: TWO, level: 3 } }), at({ kind: 'opens', place: 'mine' }),
+      at({ kind: 'setup', setup: { kind: 'bond', with: TWO, level: 3 } }),
       at({ kind: 'night' }, 's2'), at({ kind: 'friend' }, 'confession'), at({ kind: 'done' }, null),
     ]).toEqual([
       'Ready', '60 to go', 'Tomorrow', 'Needs a ring', 'Tomorrow: one event a day', 'The Fishery, when she works there', 'With Carrot in the Warehouse',
-      'Bond 3 with Stand-in 2', 'Opens when the Mine is built', 'Comes tonight', 'She said “Not yet”', 'Her route is complete',
+      'Bond 3 with Stand-in 2', 'Comes tonight', 'She said “Not yet”', 'Her route is complete',
     ])
   })
 
