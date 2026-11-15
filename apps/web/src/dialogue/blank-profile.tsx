@@ -1,5 +1,5 @@
-// The blank profile: an Uma's picture while she has no portraits (`Avatar.tsx`): her head and shoulders in the season's
-// outfit on the season's colour, with her letters, a square like every picture. And her tint, which the blank bust
+// The blank profile: an Uma's picture while she has neither portraits nor a face in master data (`Avatar.tsx`): her head
+// and shoulders in the season's outfit on the season's colour, with her letters, a square like every picture. And her tint, which the blank bust
 // (`blank.tsx`) wears too: her hair from her theme colour, else a tone by her id. Small on purpose: the album's fallback
 // reads it, so it loads at start. No art, name or colour of anyone's is in git.
 import type { Season } from '@farm/domain'

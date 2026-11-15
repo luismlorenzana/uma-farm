@@ -3,31 +3,45 @@
 // household; the farm map's houses; a scene's guests; the pair talks; the memories). One component, at uma-kit's
 // FaceTile's sizes:
 //   - a rounded square (`rounded-avatar`: its corners 18% of its side, at any size), never a circle;
-//   - her picture inside it (`HerPicture`): a head-and-shoulders square cut from her portrait in today's season's outfit,
-//     her calm face centred with a margin (`picture.ts`), so a badge or a count in a corner sits over her hair, her
-//     shoulders or the backdrop; while she has no portraits, her blank profile in the season's colours;
+//   - her picture inside it (`HerPicture`), the first of:
+//     1. a head-and-shoulders square cut from her portrait in today's season's outfit, her calm face centred with a
+//        margin (`picture.ts`), so a badge or a count in a corner sits over her hair, her shoulders or the backdrop;
+//     2. without portraits, master data's face for her, filling the square as uma-kit's FaceTile filled it;
+//     3. without either, her blank profile in the season's colours;
 //   - four corners for the caller's badges, over the picture's edge and never clipped by it.
-// Nothing loads for an Uma without portraits (the art index says so first), and a base loads once, cached on the device
-// as a scene's are. uma-kit's own pickers draw the same picture through the album's art (`master/album-art.tsx`).
-// Loaded with the lists and the players, as her portraits are.
+// No base loads for an Uma without portraits (the art index says so first), and a base loads once, cached on the device
+// as a scene's are. uma-kit's own pickers show the same through the album's art (`master/album-art.tsx`). Loaded with the
+// lists and the players, as her portraits are.
 import type { FaceTileBadges } from '@luismlorenzana/uma-kit/album'
 import { useArtUrl } from '@luismlorenzana/uma-kit/content'
 import type { ReactNode } from 'react'
-import { BlankPicture, useSeasonToday } from '../master/album-art'
+import { BlankPicture, facePath, useSeasonToday } from '../master/album-art'
+import { useMaster } from '../master/master'
 import { pictureSource, pictureStyle, type PictureSource } from './picture'
 import { portraitArt, usePortraitsState } from './portraits'
 
-/** Her picture, filling a square box: her season's crop once her portraits are read, else her blank profile (lettered
- * from `name`, else master data's); nothing while they're read, so a pilot's picture never flashes blank. */
+/** Her picture, filling a square box: her season's crop once her portraits are read; without them, master data's face;
+ * without that, her blank profile (lettered from `name`, else master data's). Nothing while her portraits are read, so a
+ * pilot's picture never flashes another first. */
 export function HerPicture({ id, name }: { id: string; name?: string }) {
   const season = useSeasonToday()
+  const master = useMaster()
   const portraits = usePortraitsState(id)
   const source = portraits && portraits !== 'loading' ? pictureSource(portraits, season) : null
+  const face = portraits === null ? facePath(master.status === 'ready' ? master.view : null, id) : null
   return (
-    <span className="relative block aspect-square w-full overflow-hidden" data-picture={source ? source.outfit : portraits === 'loading' ? 'loading' : 'blank'}>
-      {source ? <Cut source={source} /> : portraits === null && <BlankPicture id={id} season={season} name={name} />}
+    <span className="relative block aspect-square w-full overflow-hidden"
+      data-picture={source ? source.outfit : face ? 'face' : portraits === 'loading' ? 'loading' : 'blank'}>
+      {source ? <Cut source={source} /> : face ? <Face path={face} /> : portraits === null && <BlankPicture id={id} season={season} name={name} />}
     </span>
   )
+}
+
+/** Master data's face for her (square, as the release draws them), filling the box as uma-kit's FaceTile did; nothing
+ * while it loads. */
+function Face({ path }: { path: string }) {
+  const url = useArtUrl(path)
+  return url ? <img src={url} alt="" draggable={false} className="pointer-events-none absolute inset-0 size-full object-cover object-top select-none" data-picture-cut="face" /> : null
 }
 
 /** Her crop: a square picture shown whole, or her base placed so its frame fills the box. */

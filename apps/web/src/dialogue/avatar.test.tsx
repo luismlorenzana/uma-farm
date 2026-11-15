@@ -1,17 +1,24 @@
-// Her picture and the avatar on master data's synthetic `dialogue-portraits` family (invented ids, fake pictures): the
-// square cut from her season's base around its face (spring when that base isn't drawn), the avatar's rounded square
-// with its corners outside the picture's clip, the blank profile in the season's colours for an Uma without portraits
-// (nothing fetched for her), and uma-kit's face tiles drawing the same picture through the album's art.
+// Her picture and the avatar on master data's synthetic `dialogue-portraits` family and an invented art index (invented
+// ids, fake pictures): the square cut from her season's base around its face (spring when that base isn't drawn), the
+// avatar's rounded square with its corners outside the picture's clip, then for an Uma without portraits master data's
+// face (no base fetched for her), and without that the blank profile in the season's colours; and uma-kit's face tiles
+// showing the same through the album's art.
 import { syntheticDialoguePortraits } from '@luismlorenzana/uma-data/testing'
 import { AlbumArtProvider, FaceTile } from '@luismlorenzana/uma-kit/album'
-import { act } from 'react'
+import { ContentProvider } from '@luismlorenzana/uma-kit/content'
+import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../master/master', async (importOriginal) => ({ ...await importOriginal<typeof import('../master/master')>(), masterReady: vi.fn(async () => null) }))
+const fixture = vi.hoisted(() => ({ view: null as unknown }))
+vi.mock('../master/master', async (importOriginal) => ({
+  ...await importOriginal<typeof import('../master/master')>(),
+  masterReady: vi.fn(async () => fixture.view),
+  useMaster: () => ({ status: 'ready', view: fixture.view }),
+}))
 vi.mock('../content/client', () => ({ CONTENT: { release: vi.fn(), artUrl: async (p: string) => `blob:${p}`, hold: () => () => undefined } }))
 
-const { Avatar, HerPicture } = await import('./Avatar')
+const { Avatar } = await import('./Avatar')
 const { PICTURE_FACE_AT, PICTURE_SPAN, pictureFrame, pictureSource, pictureStyle } = await import('./picture')
 const { setPortraitSource } = await import('./portraits')
 const { SEASON_CLOTH, seasonBackdrop } = await import('./blank-profile')
@@ -23,6 +30,23 @@ const ID = '9000001'
 const PORTRAITS = syntheticDialoguePortraits(Number(ID), ['spring', 'summer', 'farm-work'], ['happy'])
 const art = { artUrl: vi.fn(async (path: string) => `blob:${path}`), hold: () => () => undefined }
 const portraitsOf = vi.fn(async (id: string) => (id === ID ? PORTRAITS : null))
+/** Master data, invented: her portraits listed; an Uma with an outfit face (9000002), one of the town's people with a
+ * character face (9000004), and one with neither (9000003). */
+const OUTFIT_FACE = 'art/outfit-faces/9000002.webp'
+const CHARACTER_FACE = 'art/character-faces/9000004.webp'
+fixture.view = {
+  album: new Map(), stats: new Map(), birthdays: new Map(), colors: new Map(),
+  names: new Map([['9000004', 'Town Person']]),
+  outfits: new Map([['9000002', { characterId: '9000002', variant: null }]]),
+  art: {
+    atlases: {},
+    images: { 'outfit-faces': { '9000002': { path: OUTFIT_FACE, width: 192, height: 192 } }, 'character-faces': { '9000004': { path: CHARACTER_FACE, width: 128, height: 128 } } },
+    dialoguePortraits: { [ID]: 'art/dialogue-portraits/9000001.json' },
+  },
+}
+/** The content client the app provides: master data's faces load through it. */
+const content = (node: ReactNode) => <ContentProvider client={art as never}>{node}</ContentProvider>
+const basesLoaded = () => art.artUrl.mock.calls.filter(([path]) => path.startsWith('art/dialogue-portraits/')).length
 
 let host: HTMLDivElement
 let root: Root
@@ -120,26 +144,44 @@ describe('the avatar', () => {
     await settle()
     expect($('[data-picture]')?.dataset.picture).toBe('spring')
   })
-  it('without portraits, is her blank profile in the season’s colours, and loads no picture', async () => {
+  it('without portraits, is master data’s face filling the square as uma-kit’s FaceTile did, and loads no base', async () => {
+    await act(async () => root.render(content(<><Avatar id="9000002" size={40} label="Another" /><Avatar id="9000004" size={40} label="Town Person" /></>)))
+    await settle()
+    const faces = [...host.querySelectorAll<HTMLImageElement>('[data-picture="face"] img[data-picture-cut="face"]')]
+    expect(faces.map((f) => f.getAttribute('src'))).toEqual([`blob:${OUTFIT_FACE}`, `blob:${CHARACTER_FACE}`])
+    expect(faces[0]!.className).toContain('object-cover')
+    expect($('[data-blank-profile]')).toBeNull()
+    expect(basesLoaded()).toBe(0)
+  })
+  it('without portraits or a face, is her blank profile in the season’s colours, and loads no picture', async () => {
     today(30)
-    await act(async () => root.render(<Avatar id="9000002" size={40} label="Another" />))
+    await act(async () => root.render(content(<Avatar id="9000003" size={40} label="Another" />)))
     await settle()
     expect($('[data-picture]')?.dataset.picture).toBe('blank')
-    const blank = $('[data-blank-profile="9000002"]')!
+    const blank = $('[data-blank-profile="9000003"]')!
     expect(blank.dataset.season).toBe('autumn')
     expect(blank.querySelector('rect')?.getAttribute('fill')).toBe(seasonBackdrop('autumn'))
     expect(blank.innerHTML).toContain(SEASON_CLOTH.autumn.main)
+    expect(blank.textContent).toBe('A')
     expect(art.artUrl).not.toHaveBeenCalled()
   })
 })
 
 describe('uma-kit’s face tiles', () => {
-  it('get no URL for her face: the album’s fallback draws her picture', async () => {
-    await act(async () => root.render(<AlbumArtProvider art={ALBUM_ART}><FaceTile outfitId={ID} size={68} label="Her" /></AlbumArtProvider>))
+  const tile = (id: string) => content(<AlbumArtProvider art={ALBUM_ART}><FaceTile outfitId={id} size={68} label="Her" /></AlbumArtProvider>)
+  it('get no URL for her face while she has portraits: the album’s fallback draws her picture’s crop', async () => {
+    await act(async () => root.render(tile(ID)))
     await settle()
     expect(host.querySelector('[role="img"] img[data-picture-cut="base"]')?.getAttribute('src')).toBe(`blob:${PORTRAITS.bases.spring!.path}`)
-    await act(async () => root.render(<AlbumArtProvider art={ALBUM_ART}><HerPicture id="9000003" /></AlbumArtProvider>))
+  })
+  it('get master data’s face as before when she has none, and her blank profile without a face', async () => {
+    await act(async () => root.render(tile('9000002')))
+    await settle()
+    expect(host.querySelector('[role="img"] > img')?.getAttribute('src')).toBe(`blob:${OUTFIT_FACE}`)
+    expect($('[data-picture]')).toBeNull()
+    await act(async () => root.render(tile('9000003')))
     await settle()
     expect($('[data-blank-profile="9000003"]')?.dataset.season).toBe('spring')
+    expect(basesLoaded()).toBe(0)
   })
 })
