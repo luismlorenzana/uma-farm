@@ -12,17 +12,18 @@ import type { BinSale, MoneyLine, NewsLine, Nudge, RankLine, WorkLine } from '..
 import { amount, bool, count, int, list, object, oneOf, record, SaveParseError, type Obj } from './parse'
 import {
   ANIMAL_HOME, ANIMAL_KINDS, APTITUDE_IDS, MAX_TASKS, TASK_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOME_ROOM, HOUSE_LOAN, INCOME_NIGHTS,
-  MAX_FIELD_TILES, MAX_PLOTS,
+  MAX_FIELD_TILES, MAX_PLOTS, MEAL_KEEPS,
   isDishId, MAX_FONDNESS, MAX_LOANS, pairKey, RANCH_HOMES, SILO_ROOM,
   REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig, type DormSwap,
-  type Expedition, type Extra, type FestivalResult, type Loan, type RankState, type SaveV5, type StarCounts, type StationLoad, type Tile,
+  type Expedition, type Extra, type FestivalResult, type Loan, type PantryLot, type RankState, type SaveV5, type StarCounts, type StationLoad, type Tile,
   type ToolId, type ToolTier, type Warehouse, type WorkshopId,
 } from './v4'
 import { MAX_STARS, parseStockKey } from './warehouse'
 
 /** The places an Uma works: the forest, the Fishery and their stations; the Mine, the Quarry and theirs; the Coop and
- * the Barn. What the night's `worked` and `made` name, kept for the farmhands; four slots each. */
-export const LOOP_WORK_PLACES = ['forest', 'fishery', 'mill', 'sawmill', 'smokehouse', 'mine', 'quarry', 'smelter', 'cutter', 'coop', 'barn'] as const
+ * the Barn; the kitchen (the farmhouse's, until the Kitchen stands). What the night's `worked` and `made` name, kept for
+ * the farmhands; four slots each. */
+export const LOOP_WORK_PLACES = ['forest', 'fishery', 'mill', 'sawmill', 'smokehouse', 'mine', 'quarry', 'smelter', 'cutter', 'coop', 'barn', 'kitchen'] as const
 export type LoopPlaceId = typeof LOOP_WORK_PLACES[number]
 export const LOOP_SLOTS = 4
 
@@ -310,8 +311,8 @@ export function parseDiary(value: unknown, path: string): SaveV5['diary'] {
 /** A farm's keys: `chapter` and `goals` are an older v4's, from the global chapters, read and ignored (`legacyChapter`
  * keeps what a chapter had opened); `builds` is missing on one, and defaults to none. The accounts (`loans`, `owed`,
  * `short`, `income`) grow v5 in place: a save from before upkeep has none, read as no loans, nothing owed and no nights,
- * and nothing moves `updatedAt` for it. */
-const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'chapter', 'goals'] as const
+ * and nothing moves `updatedAt` for it. So does the pantry (`pantry`): a save from before food reads as an empty one. */
+const FARM_KEYS = ['points', 'festivals', 'counts', 'builds', 'loans', 'owed', 'short', 'income', 'pantry', 'chapter', 'goals'] as const
 const LOAN_KEYS = ['for', 'day', 'lent', 'fee', 'owed', 'nightly'] as const
 
 /** A loan's project: a place you build, a Dorm level (`dorm:2` … `dorm:8`) or a house on the homestead (`house:1` …
@@ -334,6 +335,24 @@ function parseLoans(value: unknown, path: string, today: number): Loan[] {
   }), path, (l) => l.for)
 }
 
+/** The pantry's meals: each lot cooked today or on the two days before (a meal keeps three days), at ★1–★5, a meal or
+ * more; one lot a day
+ * and star, the oldest first and the best first within a day. */
+function parsePantry(value: unknown, path: string, today: number): PantryLot[] {
+  const lots = unique(list(value, path, 0, MEAL_KEEPS * MAX_STARS).map((v, i): PantryLot => {
+    const at = `${path}.${i}`
+    const l = object(v, at, ['day', 'stars', 'meals'])
+    return { day: int(l.day, `${at}.day`, Math.max(1, today - MEAL_KEEPS + 1), today), stars: int(l.stars, `${at}.stars`, 1, MAX_STARS), meals: int(l.meals, `${at}.meals`, 1, MAX_PANTRY_MEALS) }
+  }), path, (l) => `${l.day}@${l.stars}`)
+  lots.forEach((l, i) => {
+    const prev = lots[i - 1]
+    if (prev && (prev.day > l.day || (prev.day === l.day && prev.stars < l.stars))) fail(`${path}.${i}`, 'expected the oldest first, the best first within a day')
+  })
+  return lots
+}
+/** The most meals a lot holds: well past any day's cooking. */
+const MAX_PANTRY_MEALS = 100_000
+
 export function parseFarm(value: unknown, path: string, today: number): SaveV5['farm'] {
   const o = object(value, path, FARM_KEYS)
   const festivals = list(o.festivals, `${path}.festivals`, 0, 1000).map((v, i): FestivalResult => {
@@ -352,6 +371,7 @@ export function parseFarm(value: unknown, path: string, today: number): SaveV5['
     counts: counts(o.counts, `${path}.counts`, (k) => KEY.test(k), 'expected an id'), builds,
     loans: o.loans === undefined ? [] : parseLoans(o.loans, `${path}.loans`, today), owed, short,
     income: o.income === undefined ? [] : list(o.income, `${path}.income`, 0, INCOME_NIGHTS).map((v, i) => count(v, `${path}.income.${i}`)),
+    pantry: o.pantry === undefined ? [] : parsePantry(o.pantry, `${path}.pantry`, today),
   }
 }
 
@@ -381,17 +401,28 @@ export function parseBinLines(value: unknown, path: string): BinSale[] {
   }), path, (b) => `${b.id}@${b.stars}`)
 }
 
-/** §1½ Upkeep and loans: a loan's share once a loan (what's left, 0 once cleared), the upkeep once (paid no more than
- * due), a short night once (gold owed from 1, the nights in a row from 1), the owed paid once. */
+/** §1½ Food, upkeep and loans: a loan's share once a loan (what's left, 0 once cleared), the pantry once (meals eaten,
+ * spoiled and the Umas well fed), the takeout once (a meal or more, paid no more than due), the upkeep once (paid no more
+ * than due), a short night once (gold owed from 1, the nights in a row from 1), the owed paid once. An older morning has
+ * no food lines. */
 export function parseMoneyLines(value: unknown, path: string): MoneyLine[] {
   const gold = (v: unknown, at: string, min = 0) => int(v, at, min, Number.MAX_SAFE_INTEGER)
-  return unique(list(value, path, 0, MAX_LOANS + 3).map((v, i): MoneyLine => {
+  return unique(list(value, path, 0, MAX_LOANS + 5).map((v, i): MoneyLine => {
     const at = `${path}.${i}`
-    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['loan', 'upkeep', 'short', 'paid-up'] as const)
+    const kind = oneOf(record(v, at).kind, `${at}.kind`, ['loan', 'pantry', 'takeout', 'upkeep', 'short', 'paid-up'] as const)
     switch (kind) {
       case 'loan': {
         const l = object(v, at, ['kind', 'for', 'paid', 'left'])
         return { kind, for: isLoanFor(l.for) ? l.for : fail(`${at}.for`, LOAN_FOR_WORDS), paid: gold(l.paid, `${at}.paid`), left: gold(l.left, `${at}.left`) }
+      }
+      case 'pantry': {
+        const p = object(v, at, ['kind', 'meals', 'spoiled', 'fed'])
+        return { kind, meals: gold(p.meals, `${at}.meals`), spoiled: gold(p.spoiled, `${at}.spoiled`), fed: gold(p.fed, `${at}.fed`) }
+      }
+      case 'takeout': {
+        const t = object(v, at, ['kind', 'meals', 'paid', 'due'])
+        const due = gold(t.due, `${at}.due`, 1)
+        return { kind, meals: gold(t.meals, `${at}.meals`, 1), paid: int(t.paid, `${at}.paid`, 0, due), due }
       }
       case 'upkeep': {
         const u = object(v, at, ['kind', 'paid', 'due'])

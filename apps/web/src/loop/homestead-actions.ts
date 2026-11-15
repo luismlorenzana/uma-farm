@@ -1,10 +1,11 @@
 // The homestead's actions: a house built and named, a house extended, a spouse moved or two
-// swapped, tonight's house picked, tonight's companion chosen, a meal cooked, a piece of furniture placed, the morning's
+// swapped, tonight's house picked, tonight's companion chosen, a meal cooked, a batch cooked in the farmhouse kitchen, a
+// piece of furniture placed, the morning's
 // "misses you" put away, and a household scene read, each one player's change over the save as it is now, committed once
 // and stamped; a refused rule throws its words.
 // Apart from `actions.ts` so the homestead's rules load with its sheet. Loaded on demand.
 import {
-  anotherNight, birthdaysOf, buildHouse, chooseCompanion, cookMeal, extendHouse, mealSpeaker, moveSpouse, placeFurniture, readHousehold, sleepAt, swapRooms, touched, type HouseholdId,
+  anotherNight, birthdaysOf, buildHouse, chooseCompanion, cookBatch, cookMeal, extendHouse, mealSpeaker, moveSpouse, placeFurniture, readHousehold, sleepAt, swapRooms, touched, type HouseholdId,
   type Meal, type SaveV4,
 } from '@farm/domain'
 import { masterReady } from '../master/master'
@@ -52,6 +53,8 @@ export async function cookTheMeal(meal: Meal): Promise<{ speaker: string | null;
   })
   return { speaker: mealSpeaker(current(), meal), paid }
 }
+/** A batch cooked in the farmhouse kitchen: one action, two goods of food (stock keys), six meals into the pantry. */
+export const cookABatch = (picks: readonly string[]): Promise<void> => change((s) => cookBatch(s, picks))
 /** A piece of the furniture set placed in a house, or taken out. */
 export const placePiece = (piece: number, house: number | null): Promise<void> => change((s) => placeFurniture(s, piece, house))
 /** "Another night": the morning's "misses you" line put away for the day. */

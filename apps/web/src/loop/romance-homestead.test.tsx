@@ -192,6 +192,30 @@ describe('the homestead\'s sheet', () => {
     expect((await find('[data-lot-locked]')).textContent).toBe('Opens with your first wedding. · Build · 8,000g')
     expect($('[data-action="build"]')).toBeNull()
   })
+
+  it('cooks a batch in the farmhouse kitchen: the pantry, tonight\'s takeout, two goods picked, six meals for an action', async () => {
+    // The three home and the farmer: eight meals tonight, none in the pantry.
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm({}, { items: { carp: [3, 0, 0, 0, 0], salmon: [0, 2, 0, 0, 0], 'pine-log': [5, 0, 0, 0, 0] } }) })
+    await render(<p />, '/?sheet=homestead&house=0')
+    await find('[data-kitchen]')
+    expect($('[data-pantry]')?.textContent).toBe('Pantry · empty')
+    expect($('[data-table]')?.textContent).toBe('Tonight · 4 at the table · 8 meals')
+    expect($('[data-takeout]')?.textContent).toBe('Takeout tonight · 8 meals · 120g')
+    // Food only, the plain rule's two picked to start: two ★2 goods, whose meals leave everyone well fed.
+    expect($$('[data-food-key]').map((b) => b.dataset.foodKey)).toEqual(['carp@1', 'salmon@2'])
+    expect($('[data-batch]')?.textContent).toBe('6 meals ★2 from Salmon and Salmon: well fed')
+    // Your own two: a carp and a salmon.
+    await click($('[data-food-key="carp@1"]'))
+    expect($('[data-batch]')?.textContent).toBe('6 meals ★1 from Salmon and Carp')
+    expect($('[data-action="cook-batch"]')?.textContent).toBe('Cook a batch · 1')
+    await click($('[data-action="cook-batch"]'))
+    await until(() => save().farm.pantry.length > 0)
+    expect(save().farm.pantry).toEqual([{ day: DAY, stars: 1, meals: 6 }])
+    expect(save().items).toMatchObject({ carp: [2, 0, 0, 0, 0], salmon: [0, 1, 0, 0, 0] })
+    expect(save().today.actions).toBe(1)
+    await until(() => $('[data-pantry]')?.textContent === 'Pantry · 6 meals')
+    expect($('[data-takeout]')?.textContent).toBe('Takeout tonight · 2 meals · 30g')
+  })
 })
 
 describe('Tonight\'s companion', () => {

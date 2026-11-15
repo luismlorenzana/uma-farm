@@ -1,12 +1,14 @@
-// `/book`: the farm's book, the rail's ledger. First **the money**: the daily upkeep beside an average night's income
-// over the last seven nights (the nights as bars against the upkeep's line), what's left each night, what the upkeep
-// counts, a short night's warning or half pace, and the loans with what's owed and when each clears. Then the cards,
+// `/book`: the farm's book, the rail's ledger. First **the money**: the daily upkeep and tonight's food (the takeout the
+// pantry and the cooks won't cover) beside an average night's income over the last seven nights (the nights as bars
+// against the upkeep and food's line), what's left each night, what the upkeep counts, tonight's table (who eats, from
+// the pantry, takeout, and the kitchen a tap away), a short night's warning or half pace, and the loans with what's owed
+// and when each clears. Then the cards,
 // each a tap to its place: the gold (the bin), the Farm Rank (its sheet), the goods held (the Warehouse), who lives and
 // works on the farm (the People page's Work view, and the Dorm's beds) and what can be built now (the Diary's projects).
 // Between them, the work board (`WorkBoard`): each farmhand's day and tasks. Its cards sit two to a row where they fit.
 // Loaded on demand.
 import {
-  averageIncome, bedsAt, farmProjects, farmRankOf, halfPace, INCOME_NIGHTS, loansOwed, stockTotal, upkeepOf, type FarmSave,
+  averageIncome, bedsAt, farmProjects, farmRankOf, halfPace, INCOME_NIGHTS, loansOwed, MEALS_A_DAY, stockTotal, tableTonight, TAKEOUT_PRICE, upkeepOf, type FarmSave,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
 import { HelpButton } from '@luismlorenzana/uma-kit/ui'
@@ -15,6 +17,8 @@ import { Link, useLocation } from 'react-router'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
 import { gold, loanWords, projectName, projectNames, upkeepLines } from '../loop/money-words'
+import { useTalents } from '../loop/talents'
+import { plural } from '../loop/words'
 import { WorkBoard } from './WorkBoard'
 
 const n = (value: number): string => value.toLocaleString('en-US')
@@ -56,6 +60,7 @@ function Book({ save }: { save: FarmSave }) {
         <HelpButton title="The farm’s book" label="About the book">
           <p>The farm’s accounts at a glance: its money, the work board, its gold, its Farm Rank, what it holds, who lives on it and what you can build.</p>
           <p>Each night, after the bin pays, the farm pays its upkeep: a little for each place and house you’ve built, each Dorm bed past the first three, and each Uma living on the farm or working it.</p>
+          <p>Everyone who eats on the farm eats twice a night, from the pantry first. What it’s short is takeout, {gold(TAKEOUT_PRICE)} a meal, paid with the upkeep. Cook in the farmhouse kitchen, or set a farmhand to Cook.</p>
           <p>Short of it, the rest is owed. The first short night warns you; from the second, the farmhands work at half pace until it’s paid. Nobody leaves, and nothing is lost.</p>
           <p>The mayor’s office in town lends toward a build. Each night’s income repays a little, before the upkeep.</p>
           <p>Tap a card to open its place.</p>
@@ -89,33 +94,46 @@ function Figure({ title, figure, line, tone, data }: { title: string; figure: st
 /** The money: the daily upkeep beside an average night's income, what's left, the upkeep's parts, the last seven
  * nights against the upkeep, a short night's state and the loans. */
 function Money({ save }: { save: FarmSave }) {
-  const names = projectNames(useStory(), save)
+  const pack = useStory()
+  const talents = useTalents()
+  const location = useLocation()
+  const names = projectNames(pack, save)
   const upkeep = upkeepOf(save)
+  const table = tableTonight(save, talents.of, pack)
   const income = averageIncome(save)
   const nights = save.farm.income.length
   // The loans' shares come out of the night's income first, and only out of it.
   const shares = Math.min(income, save.farm.loans.reduce((sum, loan) => sum + Math.min(loan.nightly, loan.owed), 0))
-  const left = income - upkeep.gold - shares
+  const left = income - table.gold - upkeep.gold - shares
   const parts = upkeepLines(upkeep)
   const owed = loansOwed(save)
   return (
     <section aria-label="The money" className="space-y-2 rounded-md border border-hairline bg-panel px-3 py-2 shadow-1" data-book="money">
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 @lg:grid-cols-4">
         <Figure title="Upkeep a night" figure={gold(upkeep.gold)} line={upkeep.gold === 0 ? 'Nothing to keep up yet' : 'After the bin pays'} data="upkeep" />
+        <Figure title="Food tonight" figure={gold(table.gold)} line={table.takeout > 0 ? `Takeout · ${plural(table.takeout, 'meal')}` : 'From the pantry'} tone={table.takeout > 0 ? undefined : 'good'} data="food" />
         <Figure title="Income a night" figure={gold(income)} line={nights === 0 ? 'No nights yet' : `Average of the last ${nights === 1 ? 'night' : `${Math.min(nights, INCOME_NIGHTS)} nights`}`} data="income" />
-        <Figure title="Left each night" figure={`${left >= 0 ? '+' : '−'}${gold(Math.abs(left))}`} line={shares > 0 ? 'Less upkeep and loans' : 'Income less upkeep'} tone={left >= 0 ? 'good' : 'bad'} data="left" />
+        <Figure title="Left each night" figure={`${left >= 0 ? '+' : '−'}${gold(Math.abs(left))}`} line={shares > 0 ? 'Less food, upkeep and loans' : 'Income less food and upkeep'} tone={left >= 0 ? 'good' : 'bad'} data="left" />
       </div>
       <div className="grid gap-x-4 gap-y-2 @lg:grid-cols-2">
-        <Nights save={save} upkeep={upkeep.gold} />
-        {parts.length > 0 && (
-          <ul className="text-[13px]" aria-label="What the upkeep counts" data-upkeep-parts>
-            {parts.map((p) => (
-              <li key={p.key} className="flex min-h-6 items-center justify-between gap-2" data-part={p.key}>
-                <span className="truncate text-ink-soft">{p.text}</span><span className="font-semibold tabular-nums">{gold(p.gold)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+        <Nights save={save} upkeep={upkeep.gold + table.gold} />
+        <div className="space-y-1">
+          {parts.length > 0 && (
+            <ul className="text-[13px]" aria-label="What the upkeep counts" data-upkeep-parts>
+              {parts.map((p) => (
+                <li key={p.key} className="flex min-h-6 items-center justify-between gap-2" data-part={p.key}>
+                  <span className="truncate text-ink-soft">{p.text}</span><span className="font-semibold tabular-nums">{gold(p.gold)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Link to={withParam(location, 'sheet', 'homestead')} state={{ back: true }} className="flex min-h-11 items-center justify-between gap-2 text-[13px]" data-table={table.mouths}>
+            <span className="min-w-0 text-ink-soft">
+              {table.mouths} at the table · {plural(table.mouths * MEALS_A_DAY, 'meal')} · {table.pantry} from the pantry{table.cooked > 0 ? ` (${table.cooked} cooked tonight)` : ''}
+            </span>
+            <span className="shrink-0 font-semibold">Kitchen ›</span>
+          </Link>
+        </div>
       </div>
       {save.farm.owed > 0 && (
         <p role="status" className="rounded-md bg-danger/15 px-3 py-2 text-[13px] font-semibold text-danger" data-short={save.farm.short}>
@@ -141,12 +159,12 @@ function Money({ save }: { save: FarmSave }) {
   )
 }
 
-/** The last seven nights' income as bars, oldest first, with the upkeep's line across them. */
+/** The last seven nights' income as bars, oldest first, with tonight's upkeep and food as a line across them. */
 function Nights({ save, upkeep }: { save: FarmSave; upkeep: number }) {
   const nights = save.farm.income
   if (nights.length === 0) return <p className="text-[13px] text-ink-soft" data-nights={0}>Each night’s income shows here after the bin pays.</p>
   const top = Math.max(upkeep, ...nights, 1)
-  const label = `The last ${nights.length === 1 ? 'night' : `${nights.length} nights`}: ${nights.map(gold).join(', ')}, against ${gold(upkeep)} of upkeep`
+  const label = `The last ${nights.length === 1 ? 'night' : `${nights.length} nights`}: ${nights.map(gold).join(', ')}, against ${gold(upkeep)} of upkeep and food`
   return (
     <figure className="m-0" data-nights={nights.length}>
       <div className="relative flex h-14 items-end gap-1 border-b border-hairline" role="img" aria-label={label}>
@@ -158,7 +176,7 @@ function Nights({ save, upkeep }: { save: FarmSave; upkeep: number }) {
       </div>
       <figcaption className="flex justify-between pt-0.5 text-[11px] text-ink-faint">
         <span>{nights.length > 1 ? `${nights.length} nights ago` : ''}</span>
-        <span>{upkeep > 0 ? '- - upkeep' : ''}</span>
+        <span>{upkeep > 0 ? '- - upkeep and food' : ''}</span>
         <span>Last night</span>
       </figcaption>
     </figure>

@@ -1,14 +1,16 @@
 // Upkeep and loans: the farm has to pay its way. What you add to the farm costs a little each night, and the mayor's
 // office lends toward a build so it can stand ahead of the gold.
 //
-//   the night, step 1   the bin pays ──► each loan takes its share of the night's income ──► the upkeep is charged
-//                                                                                              │
+//   the night, step 1   the bin pays
+//   the night, step 2   the farmhands work ──► the farm eats (`farm/food.ts`) ──► the bill: each loan takes its share of
+//                       the night's income ──► the takeout, then the upkeep, with anything owed
 //   upkeep a night      15g each place built and each house · 5g each Dorm bed past the first three · 10g each Uma
 //                       living on the farm (the Dorm's and the spouses in their houses) or working it (the farmhands,
 //                       wherever they live), once each. The start's own places are free.
-//   short of upkeep     what gold there is pays, the rest is owed; the first short night warns in the morning, and from
-//                       the second the farmhands work at half pace (`halfPace`) until it's paid. Nobody leaves, and
-//                       nothing is lost: gold never goes below 0.
+//   takeout             15g a meal the pantry was short, from the first night: a new farm's farmer eats two (30g)
+//   short of it         what gold there is pays, takeout first; the rest is owed, takeout and upkeep alike; the first
+//                       short night warns in the morning, and from the second the farmhands work at half pace (`halfPace`)
+//                       until it's paid. Nobody leaves, nobody goes hungry, and nothing is lost: gold never goes below 0.
 //   loans               at the mayor's office, in town: borrow what a place, the Dorm's next level or a house is short
 //                       of gold (rounded up to 100g), up to the Farm Rank's limit; one loan at a time, two from Farm
 //                       Rank 4; a 10% fee; each night's income repays up to a tenth of it, before upkeep; repay the
@@ -26,6 +28,7 @@ import { SaveRuleError } from '../save/rules'
 import { DORM_LOAN, farmHome, HOUSE_LOAN, INCOME_NIGHTS, MAX_LOANS, type FarmSave, type Loan } from '../save/v4'
 import { buyDorm, nextDorm } from './dorm'
 import type { MoneyLine } from '../night/summary'
+import { TAKEOUT_PRICE } from './food'
 
 // --- Upkeep ----------------------------------------------------------------------------------------------------------
 
@@ -244,13 +247,23 @@ export const loansOwed = (save: Pick<FarmSave, 'farm'>): number => save.farm.loa
 
 // --- The night -------------------------------------------------------------------------------------------------------
 
+/** What the farm ate tonight, for the bill: meals from the pantry, meals spoiled, the Umas well fed, and the meals bought
+ * in. */
+export interface FoodBill {
+  pantry: number
+  spoiled: number
+  fed: number
+  takeout: number
+}
+
 /**
- * Night step 1, after the bin: the farm's accounts. The night's `income` (the bin's pay) joins the book's last seven
+ * Night step 2, after the farm eats: the farm's bill. The night's `income` (the bin's pay) joins the book's last seven
  * nights; each loan, in the order taken, takes its share from what's left of that income (none on a night with no
- * sales), and one that's paid off goes; then the upkeep is charged with anything owed from before. What gold there is
- * pays; the rest is owed, and the short nights in a row count on (0 once it's all paid). Gold never goes below 0.
+ * sales), and one that's paid off goes; then the takeout (15g a meal the pantry was short), then the upkeep with
+ * anything owed from before. What gold there is pays, takeout first; the rest is owed, and the short nights in a row
+ * count on (0 once it's all paid). Gold never goes below 0.
  */
-export function settleAccounts<S extends FarmSave>(save: S, income: number): { save: S; lines: MoneyLine[] } {
+export function settleAccounts<S extends FarmSave>(save: S, income: number, food: FoodBill | null = null): { save: S; lines: MoneyLine[] } {
   const lines: MoneyLine[] = []
   let gold = save.gold
   let share = income
@@ -262,10 +275,15 @@ export function settleAccounts<S extends FarmSave>(save: S, income: number): { s
     lines.push({ kind: 'loan', for: loan.for, paid, left: loan.owed - paid })
     if (loan.owed - paid > 0) loans.push({ ...loan, owed: loan.owed - paid })
   }
+  if (food && (food.pantry > 0 || food.spoiled > 0)) lines.push({ kind: 'pantry', meals: food.pantry, spoiled: food.spoiled, fed: food.fed })
+  const takeout = (food?.takeout ?? 0) * TAKEOUT_PRICE
+  const bought = Math.min(gold, takeout)
+  gold -= bought
+  if (takeout > 0) lines.push({ kind: 'takeout', meals: food!.takeout, paid: bought, due: takeout })
   const due = upkeepOf(save).gold + save.farm.owed
   const paid = Math.min(gold, due)
   gold -= paid
-  const owed = due - paid
+  const owed = due - paid + takeout - bought
   const short = owed > 0 ? save.farm.short + 1 : 0
   if (due > 0) lines.push({ kind: 'upkeep', paid, due })
   if (owed > 0) lines.push({ kind: 'short', owed, nights: short })

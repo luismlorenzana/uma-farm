@@ -161,7 +161,8 @@ describe('the Book', () => {
   })
 
   it('sets the daily upkeep beside the last seven nights\' income, with what the upkeep counts, a short night and the loans', async () => {
-    // Two Umas home and the Mill: 35g a night. Five nights of income; a loan for the Mill; 40g owed after two short nights.
+    // Two Umas home and the Mill: 35g a night; three mouths and an empty pantry: 90g of takeout tonight. Five nights of
+    // income; a loan for the Mill; 40g owed after two short nights.
     const save = farm()
     useGame.setState({ save: {
       ...save, buildings: { ...save.buildings, mill: 1 },
@@ -170,8 +171,9 @@ describe('the Book', () => {
     await render(<BookPage />, '/book')
     const figures = $$('[data-money]').map((f) => [f.getAttribute('data-money'), f.querySelector('[data-figure]')?.textContent, f.querySelector('[data-line]')?.textContent])
     expect(figures).toEqual([
-      ['upkeep', '35g', 'After the bin pays'], ['income', '120g', 'Average of the last 5 nights'], ['left', '+40g', 'Less upkeep and loans'],
+      ['upkeep', '35g', 'After the bin pays'], ['food', '90g', 'Takeout · 6 meals'], ['income', '120g', 'Average of the last 5 nights'], ['left', '−50g', 'Less food, upkeep and loans'],
     ])
+    expect($('[data-table]')?.textContent).toBe('3 at the table · 6 meals · 0 from the pantryKitchen ›')
     expect($$('[data-part]').map((p) => p.textContent)).toEqual(['1 place built15g', '2 Umas on or working the farm20g'])
     expect($$('[data-night]').map((b) => b.getAttribute('data-night'))).toEqual(['0', '300', '200', '0', '100'])
     expect($('[data-upkeep-line]')).not.toBeNull()
@@ -179,10 +181,14 @@ describe('the Book', () => {
     expect($('[data-loan="mill"]')?.textContent).toBe('Mill220g owed · 45g a night · clears in about 5 nights (Spring 8)')
   })
 
-  it('shows a new farm\'s money: nothing to keep up and no nights yet', async () => {
+  it('shows a new farm\'s money: nothing to keep up, the farmer\'s takeout and no nights yet', async () => {
     useGame.setState({ save: { ...farm(), roster: {}, love: {}, dorm: { level: 1, home: [], swaps: [] } } })
     await render(<BookPage />, '/book')
-    expect($$('[data-money] [data-figure]').map((f) => f.textContent)).toEqual(['0g', '0g', '+0g'])
+    expect($$('[data-money] [data-figure]').map((f) => f.textContent)).toEqual(['0g', '30g', '0g', '−30g'])
+    // With tonight's meals in the pantry, no takeout.
+    useGame.setState({ save: { ...farm(), roster: {}, love: {}, dorm: { level: 1, home: [], swaps: [] }, farm: { ...farm().farm, pantry: [{ day: farm().calendar.day, stars: 1, meals: 2 }] } } })
+    await render(<BookPage />, '/book')
+    expect($('[data-money="food"]')?.textContent).toBe('Food tonight0gFrom the pantry')
     expect($('[data-nights]')?.textContent).toBe('Each night’s income shows here after the bin pays.')
     expect($('[data-no-loans]')?.textContent).toBe('None. The mayor’s office in town lends toward a build.')
     expect($('[data-short]')).toBeNull()

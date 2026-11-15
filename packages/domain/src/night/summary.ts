@@ -21,13 +21,19 @@ export interface BinSale {
   demand: boolean
 }
 
-/** §1½ Upkeep and loans, after the bin (`farm/economy.ts`): what the night charged and repaid, in the night's order.
+/** §1½ Food, upkeep and loans, after the farmhands work (`farm/economy.ts`, `farm/food.ts`): what the night ate, charged
+ * and repaid, in the night's order.
  * - `loan`: a loan's share of the night's income, `paid` (0 on a night with no sales), and what's `left` (0: cleared);
+ * - `pantry`: the `meals` the farm ate from the pantry tonight, the meals that `spoiled` (past their three days), and the Umas a
+ *   ★2+ meal left well fed (`fed`);
+ * - `takeout`: the meals the pantry was short, bought in (`meals`), their gold (`due`) and what was `paid`;
  * - `upkeep`: the night's upkeep with any owed from before (`due`), and what was `paid`;
  * - `short`: gold `owed` after a short night, and the short nights in a row (`nights`: 1 warns, 2 and on is half pace);
  * - `paid-up`: the upkeep owed from before is paid, the half pace over. */
 export type MoneyLine =
   | { kind: 'loan'; for: string; paid: number; left: number }
+  | { kind: 'pantry'; meals: number; spoiled: number; fed: number }
+  | { kind: 'takeout'; meals: number; paid: number; due: number }
   | { kind: 'upkeep'; paid: number; due: number }
   | { kind: 'short'; owed: number; nights: number }
   | { kind: 'paid-up'; owed: number }

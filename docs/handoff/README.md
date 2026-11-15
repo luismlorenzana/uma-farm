@@ -35,12 +35,19 @@ it's yours at once, wild ground with no upkeep. A farmhand's field task names it
 shows who works it ([the field's plots](../game-mechanics.md#the-fields-plots),
 [the field's screen](../game-mechanics.md#the-fields-screen)).
 
-**Next:** the farm at scale goes on (F90–F91, [the analysis](../design/game-design.md#the-farm-at-scale-2026-11-15)), then Phase 2's workshops, the Kitchen first.
+**Everyone eats, from day one** (F90): the farmer, everyone living on the farm and every farmhand who works that day eat
+two meals a night, from the pantry first; what it's short is takeout, 15g a meal, charged with the upkeep, so a new
+farm's first morning says "Takeout · 30g". Cook a batch in the farmhouse kitchen (the homestead's sheet, or **Kitchen ›**
+in the Book): an action, two goods of food, six meals that keep three days, 90g of takeout saved. A household meal cooks
+a batch too, and a farmhand on **Cook** cooks for everyone, 6 to 12 meals a batch by her new **Cooking**. A ★2+ meal leaves an Uma well
+fed. The Book shows tonight's food beside the upkeep ([food](../game-mechanics.md#food), [what food costs, and what
+cooking saves](../game-mechanics.md#what-food-costs-and-what-cooking-saves)).
+
+**Next:** the farm at scale goes on (F91, [the analysis](../design/game-design.md#the-farm-at-scale-2026-11-15)), then Phase 2's workshops, the Kitchen first.
 
 | Piece | Who | State |
 |---|---|---|
-| [F90](tasks/F90-food.md) **Food: everyone eats, from day one** | Claude | Next, on your go |
-| [F91](tasks/F91-work-at-scale.md) **Work at scale: 10, 20 and 50 Umas** | Claude | After F90 |
+| [F91](tasks/F91-work-at-scale.md) **Work at scale: 10, 20 and 50 Umas** | Claude | Next, on your go |
 
 ## Open packets
 
@@ -60,6 +67,7 @@ Not packets: each has a standing guide that changes as the game does.
 | What | Where |
 |---|---|
 | **Look at the field's screen on your phone:** tap the field's sign on the farm, page to plot 2 and back with a swipe, and tell me if the tiles feel big enough | [uma-farm.web.app](https://uma-farm.web.app) |
+| **Eat on your phone:** read the morning's "Takeout" line, cook a batch on the Farmhouse's sheet, and set a farmhand to Cook on the Book's work board; tell me if takeout bites as it should | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Play your farm.** Start the new farm once, on its card when the app opens: it's the last start-over, and the farm it starts is the one you keep. Then play days as they come, and tell me what feels off | [uma-farm.web.app](https://uma-farm.web.app) |
 | **Write the story and ship it** | [How the story reaches the game](../story-pack.md#how-the-story-reaches-the-game) |
 | **The next Umas' art:** hand the art brief to the character art session | [The art brief](../design/her-look.md#the-art-brief), in Uma Character Art |
@@ -73,6 +81,7 @@ Not packets: each has a standing guide that changes as the game does.
 - **Her stages,** acquaintance to married: hangouts and dates at two actions, Dinner in town, A night in ([the Uma loop](../game-mechanics.md#the-uma-loop)).
 - **Farmhands:** invite a friend to work, set her tasks on the Book's work board, and watch her aptitudes rise ([farmhands](../game-mechanics.md#farmhands)).
 - **Upkeep and loans:** the Book's money, and the mayor's office in town ([upkeep and loans](../game-mechanics.md#upkeep-and-loans)).
+- **Food:** the morning's "Takeout" and "From the pantry", the Farmhouse's kitchen, and Cook on the work board ([food](../game-mechanics.md#food)).
 - **The calendar:** tap the date ([the calendar](../game-mechanics.md#the-calendar-screen)).
 - **The ranch and the mine,** once the Farm Rank offers them ([the ranch](../game-mechanics.md#the-ranch), [the Mine and the Quarry](../game-mechanics.md#the-mine-and-the-quarry)).
 - **Faces and outfits** that change line by line, and the blank bust for an Uma without art ([the dialogue engine](../game-mechanics.md#the-dialogue-engine)).

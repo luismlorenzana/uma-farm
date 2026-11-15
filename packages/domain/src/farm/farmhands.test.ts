@@ -121,7 +121,7 @@ describe('aptitude', () => {
     expect(aptitudeOf(uma, 'water', (a) => fromS(A, a))).toMatchObject({ start: 0, level: 1, next: 10 })
     const ranked = { ...uma, ranks: { ...uma.ranks, farming: { points: 45, rank: 1 as const, challenge: 0 } }, practice: { water: 12 } }
     expect(aptitudeOf(ranked, 'water', (a) => D(A, a))).toMatchObject({ start: 10, ranked: 2, practice: 12, points: 24, level: 2 })
-    expect(aptitudesOf(uma, (a) => D(A, a)).map((x) => x.id)).toEqual(['harvest', 'water', 'plant', 'till', 'forage', 'chop', 'fish', 'mill', 'sawmill', 'smokehouse', 'care', 'mine', 'smelter', 'cutter'])
+    expect(aptitudesOf(uma, (a) => D(A, a)).map((x) => x.id)).toEqual(['harvest', 'water', 'plant', 'till', 'forage', 'chop', 'fish', 'mill', 'sawmill', 'smokehouse', 'care', 'mine', 'smelter', 'cutter', 'cook'])
   })
 
   it('opens tricks with her level: two tiles an action, a row watered in one, and the next to come', () => {

@@ -1,7 +1,7 @@
 // The farm's accounts in words: a loan's project by its name, a loan's line ("440g owed · 45g a night · clears in about 10
-// nights"), the morning's upkeep and loans lines, and the upkeep's breakdown. The save holds ids and gold; these say them,
-// for the morning card, the Book, the Diary's projects and the mayor's office. Loaded on demand with those screens. Pure,
-// so the screens and the tests read the same.
+// nights"), the morning's food, upkeep and loans lines ("From the pantry · 6 meals", "Takeout · 30g"), and the upkeep's
+// breakdown. The save holds ids and gold; these say them, for the morning card, the Book, the Diary's projects and the
+// mayor's office. Loaded on demand with those screens. Pure, so the screens and the tests read the same.
 import {
   DORM_LOAN, HOUSE_LOAN, loanClears, placeNameOf, UPKEEP_BED, UPKEEP_BUILDING, UPKEEP_RESIDENT, type FarmPlaceId, type FarmSave, type Loan, type MoneyLine, type StoryPack,
   type Upkeep,
@@ -56,10 +56,11 @@ export interface MoneyWords {
   /** A short night's line, drawn as a warning. */
   warn?: boolean
 }
-/** The morning's upkeep and loans lines, in the night's order: each loan's share ("Loan for the Mill · 55g repaid · 440g
- * left", "· no sales, nothing repaid", "· cleared"), the upkeep ("Upkeep · 45g", or "5g of 45g"), a short night
- * ("Short of upkeep · 40g owed", tagged Warning; from the second, "· farmhands at half pace", tagged Half pace) or the
- * owed paid ("Upkeep paid up · 85g owed", tagged Paid). */
+/** The morning's food, upkeep and loans lines, in the night's order: each loan's share ("Loan for the Mill · 55g repaid ·
+ * 440g left", "· no sales, nothing repaid", "· cleared"), the meals from the pantry ("From the pantry · 6 meals", "· 2
+ * spoiled", tagged Well fed when a good meal fed an Uma), the takeout ("Takeout · 30g", or "10g of 30g"), the upkeep
+ * ("Upkeep · 45g", or "5g of 45g"), a short night ("Short of upkeep · 40g owed", tagged Warning; from the second, "·
+ * farmhands at half pace", tagged Half pace) or the owed paid ("Upkeep paid up · 85g owed", tagged Paid). */
 export function moneyLines(lines: readonly MoneyLine[], names: ProjectNames): MoneyWords[] {
   return lines.map((line): MoneyWords => {
     switch (line.kind) {
@@ -68,6 +69,11 @@ export function moneyLines(lines: readonly MoneyLine[], names: ProjectNames): Mo
         if (line.left === 0) return { key: `loan:${line.for}`, text: `${what} · cleared`, tag: 'Cleared' }
         return { key: `loan:${line.for}`, text: `${what} · ${line.paid > 0 ? `${gold(line.paid)} repaid` : 'no sales, nothing repaid'} · ${gold(line.left)} left` }
       }
+      case 'pantry': return {
+        key: 'pantry', text: `From the pantry · ${plural(line.meals, 'meal')}${line.spoiled > 0 ? ` · ${line.spoiled} spoiled` : ''}`,
+        ...(line.fed > 0 ? { tag: 'Well fed' } : {}),
+      }
+      case 'takeout': return { key: 'takeout', text: `Takeout · ${line.paid === line.due ? gold(line.due) : `${gold(line.paid)} of ${gold(line.due)}`}` }
       case 'upkeep': return { key: 'upkeep', text: `Upkeep · ${line.paid === line.due ? gold(line.due) : `${gold(line.paid)} of ${gold(line.due)}`}` }
       case 'short': return line.nights >= 2
         ? { key: 'short', text: `Short of upkeep · ${gold(line.owed)} owed · farmhands at half pace`, tag: 'Half pace', warn: true }

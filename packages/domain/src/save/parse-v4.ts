@@ -73,7 +73,7 @@ function parseRoster(value: unknown, path: string, today: number): Record<string
 
 /** One task on her board: the field's over a plot's tiles (each once, 0–39; its plot from 2 on, absent for plot 1, so a
  * task from before plots is plot 1's; planting one crop or any), a station's load, a forest area's forage or chop, a
- * fishing spot's catch, the Coop's or the Barn's care, a dig's face. */
+ * fishing spot's catch, the Coop's or the Barn's care, a dig's face, the kitchen's cooking. */
 function parseTask(value: unknown, path: string): FarmTask {
   const kind = oneOf(record(value, path).kind, `${path}.kind`, TASK_KINDS)
   switch (kind) {
@@ -90,6 +90,7 @@ function parseTask(value: unknown, path: string): FarmTask {
     case 'fish': return { kind, spot: oneOf(object(value, path, ['kind', 'spot']).spot, `${path}.spot`, FISHING_SPOTS) }
     case 'care': return { kind, home: oneOf(object(value, path, ['kind', 'home']).home, `${path}.home`, RANCH_HOMES) }
     case 'mine': return { kind, dig: oneOf(object(value, path, ['kind', 'dig']).dig, `${path}.dig`, DIGS) }
+    case 'cook': return (object(value, path, ['kind']), { kind })
   }
 }
 

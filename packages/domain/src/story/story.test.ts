@@ -164,8 +164,9 @@ describe('the Diary', () => {
 describe('the night\'s goals', () => {
   it('pays the Diary and recomputes the Farm Rank, with no chapter to complete', () => {
     const morning = night(ready())
-    // 10,000g's and Hand's milestones (300g each) reach Farm Rank 2 (100 + 25 + 25 = 150); three Umas home cost 30g.
-    expect(morning.gold).toBe(500 - 30 + 300 + 300)
+    // 10,000g's and Hand's milestones (300g each) reach Farm Rank 2 (100 + 25 + 25 = 150); three Umas home cost 30g, and
+    // four mouths with nothing cooked 120g of takeout.
+    expect(morning.gold).toBe(500 - 120 - 30 + 300 + 300)
     expect(morning.farm.points).toBe(150)
     expect(morning.buildings.mill).toBeUndefined()
     expect(Object.keys(morning.roster)).toEqual(['1001', '1002', '1003'])

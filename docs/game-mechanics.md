@@ -7,7 +7,8 @@ the same commit, and where it and the code ever differ, the code wins and this d
 **What's live and what isn't.** The deployed game is one game on **save v5**: a day of ten actions on a tile farm the
 farmer works by hand, the ranch's animals and the Mine's and the Quarry's floors (see [the ranch](#the-ranch) and
 [the Mine and the Quarry](#the-mine-and-the-quarry)), and the **farmhands** who work it with him overnight on the tasks he
-sets (see [Farmhands](#farmhands)), its places, the farm growing by building, upkeep and the mayor's office's loans, the calendar
+sets (see [Farmhands](#farmhands)), its places, the farm growing by building, food (everyone eats, from the first
+night: see [Food](#food)), upkeep and the mayor's office's loans, the calendar
 with its special days and occasion scenes, and the **romance** (Part 3), played from the story
 pack, and played whole without one: wherever the pack is silent, the default story plays, and every Uma without
 portraits plays on the blank bust (see [What plays without the story](#what-plays-without-the-story)). The game is
@@ -31,6 +32,7 @@ prose here; change a table by changing the rule.
   - [The stations](#the-stations)
   - [Goods and gold](#goods-and-gold)
   - [Upkeep and loans](#upkeep-and-loans)
+  - [Food](#food)
 - **[Part 2 — The Umas and the farm's progress](#part-2--the-umas-and-the-farms-progress)**
   - [The roster](#the-roster)
   - [The town](#the-town)
@@ -240,8 +242,8 @@ On three days of the year, each Uma you've met has a scene with you: the story's
   ("No actions left today.") and its buttons are greyed.
 - **One tap of work is one action:** a tile cleared, tilled, planted, watered or harvested; a forage, a chop or a catch;
   a station's load started; a crate shipped; going into town; with the Umas, introducing yourself, a talk, a gift, the
-  invitation to work, her event, or an occasion scene with her; and once married, a household meal. **A hangout or a
-  date takes two.** Looking is free, and so are building a place, the Dorm, walking between the town's places and
+  invitation to work, her event, or an occasion scene with her; a batch cooked in the farmhouse kitchen; and once
+  married, a household meal. **A hangout or a date takes two.** Looking is free, and so are building a place, the Dorm, walking between the town's places and
   choosing tonight's companion; the shop is free once you're in town.
 - **Going into town** takes one action and opens the town and its shop for the rest of the day.
 - **The last action** opens a card over whatever page it was spent on, once: "Out of actions · The day's work is done."
@@ -302,7 +304,8 @@ belong to, and until then cost nothing or aren't there yet:
 | The Umas | A hangout or a date | 2 | Now |
 | The Umas | Her event, when it’s ready, or an occasion scene with her | 1 | Now |
 | A festival | Join it; it opens its own events | 3 | With the festivals’ contests |
-| The household | Cook a meal for the household: breakfast or dinner | 1 | Now |
+| The kitchen | Cook a batch: six meals for the pantry from two goods of food, in the farmhouse kitchen | 1 | Now |
+| The household | Cook a meal for the household: breakfast or dinner (it cooks a batch too) | 1 | Now |
 | The household | Choose tonight’s companion, at the day’s end | Free | Now |
 <!-- /live -->
 
@@ -345,13 +348,16 @@ The night is one fixed run of steps over the save:
 
 1. **The bin pays.** Everything shipped today pays at its price × stars × demand on the day it was shipped, so a
    season's last night still pays that season's demand. Gold rises and the bin empties. Before it, once anyone is
-   married, tonight's house is noted. **Then the accounts:** the bin's pay joins the last seven nights' income, each
-   loan takes its share of it, and the upkeep is charged (see [upkeep and loans](#upkeep-and-loans)).
-2. **The farmhands work, then crops grow.** First each farmhand, in the order you invited her, after her part-time
-   job, spends her actions today on her tasks on the work board (see [Farmhands](#farmhands)): her watering grows
-   tonight, her harvests and hauls go into the Warehouse at once, and a load she starts finishes at step 4. Then each
-   growing tile watered today grows one stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn't
-   grow. A farmer Uma's night chores each water a dry growing tile first. Then every tile dries for the next day.
+   married, tonight's house is noted.
+2. **The farmhands work, the farm eats and pays its bill, then crops grow.** First each farmhand, in the order you
+   invited her, after her part-time job, spends her actions today on her tasks on the work board (see
+   [Farmhands](#farmhands)): her watering grows tonight, her harvests and hauls go into the Warehouse at once, a cook's
+   meals into the pantry, and a load she starts finishes at step 4. **Then the farm eats:** the farmer, everyone living
+   on the farm and every farmhand who worked tonight, two meals each, from the pantry first; what it's short is takeout
+   (see [food](#food)). **Then the bill:** the bin's pay joins the last seven nights' income, each loan takes its share
+   of it, and the takeout and the upkeep are charged (see [upkeep and loans](#upkeep-and-loans)). Then each growing
+   tile watered today grows one stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn't grow. A
+   farmer Uma's night chores each water a dry growing tile first. Then every tile dries for the next day.
 3. **Animals.** Each animal fed today leaves its good in its building, waiting to be collected (one at a time), and
    grows 2 fonder; one left unfed goes hungry: no good, −10 fondness, and it never dies. Then every animal is unfed and
    uncared for the next day (see [the ranch](#the-ranch)).
@@ -382,8 +388,9 @@ The steps as the game lists them:
 |---|---|---|
 | 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning |
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand |
-| 1 | `settleTheAccounts` | The accounts: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the upkeep, with anything owed: what gold there is pays, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid |
-| 2 | `farmhandsWork` | The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads and the animals’ care first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse, her place today where she spent the most |
+| 2 | `farmhandsWork` | The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads, the animals’ care and the cooking first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse and her meals into the pantry, her place today where she spent the most |
+| 2 | `theFarmEats` | The farm eats: the farmer, everyone living on the farm and every farmhand who worked tonight, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; a meal keeps three days, then any left over spoil |
+| 2 | `settleTheAccounts` | The bill: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the takeout (15g a meal) and the upkeep, with anything owed: what gold there is pays, takeout first, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid |
 | 2 | `growCrops` | Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day |
 | 3 | `tendAnimals` | Animals: each animal fed today makes its good, waiting in its building to be collected (one at a time), and grows 2 fonder; one left unfed goes hungry, makes nothing and loses 10 fondness, and never dies; then each is unfed and uncared for the next day |
 | 3 | `ranchNightChores` | Ranch chores: a rancher’s night chores each give every animal in her building (the Coop or the Barn she cares for on the work board, else the first that stands) +5 fondness, held to 200; 1 from F6, 2 from R7, 3 from S4, on the farm only |
@@ -439,7 +446,7 @@ line is a tap to its place.
 | Section | Lines | A tap opens |
 |---|---|---|
 | The bin | Each good and star sold, "Salmon ★2 × 3 · 495g", tagged **In demand** when the season lifted it; then "Total · 545g" | The bin |
-| Upkeep and loans | Each loan's share, "Loan for the Mill · 55g repaid · 440g left" ("· no sales, nothing repaid" on a night with no sales; "· cleared", tagged **Cleared**); "Upkeep · 45g" (or "5g of 45g" when short); a short night, "Short of upkeep · 40g owed", tagged **Warning** in red, and from the second in a row "· farmhands at half pace", tagged **Half pace**; "Upkeep paid up · 85g owed", tagged **Paid**. Hidden on a night with nothing charged | The Book |
+| Food, upkeep and loans | Each loan's share, "Loan for the Mill · 55g repaid · 440g left" ("· no sales, nothing repaid" on a night with no sales; "· cleared", tagged **Cleared**); the meals the farm ate from the pantry, "From the pantry · 4 meals" ("· 2 spoiled" for meals two days old left over), tagged **Well fed** when a ★2+ meal fed an Uma; the takeout, "Takeout · 30g" (or "10g of 30g" when short); "Upkeep · 45g" (or "5g of 45g" when short); a short night, "Short of upkeep · 40g owed", tagged **Warning** in red, and from the second in a row "· farmhands at half pace", tagged **Half pace**; "Upkeep paid up · 85g owed", tagged **Paid**. A new farm's first morning says "Takeout · 30g". Hidden on a night with nothing eaten or charged | The Book |
 | Work done | First each farmhand's night, "*Name* · 4 of 4 actions · watered 6 tiles · caught 1 fish · +1 good", tagged **Well fed** when she had her extra action, **Half pace** in red at half pace, or **No tasks** with "No tasks: set her tasks" ("Nothing to do tonight" when her tasks found nothing); then each station's load done, "Sawmill · Pine Plank ★1 × 8"; the field's growth, "The field · 5 crops grew · 2 ripe"; what withered, "The field · 3 Onion withered" | The work board in the Book; the station's panel; the farm map |
 | Ranks | Rank-ups, "*Name* · Farming Hand", tagged **Rank up**; points that filled tonight with the challenge still to meet, "*Name* · Fishing · Catch 30 fish · 12/30", tagged **Points full**; an aptitude a farmhand reached, "*Name* · Watering 3 · Two tiles an action" (with the trick that level opens), tagged **Aptitude** | Her profile's Work side |
 | Hearts | First, once married, "☾ Morning with *Name*" (the night's companion, **Play** her greeting); who's Ready for her event (read live, up to three, then "+N more"), the morning's invitation, the house's morning, morning items and night chores, birthdays and anniversaries, levels reached overnight and those the night met ("Met *Name* · in town", or in the town the world names, tagged **New**), a chapter that opened ("A new chapter with *Name* · Together", tagged **New**), the perks' and side by side's extras, and bond hearts | Her event, her profile, or where the line says |
@@ -650,29 +657,36 @@ and its two-tone icon. A farm place's page (the Warehouse, the Dorm …) keeps F
 
 #### The Book
 
-The farm's accounts at a glance. First **the money** (see [upkeep and loans](#upkeep-and-loans)):
+The farm's accounts at a glance. First **the money** (see [upkeep and loans](#upkeep-and-loans) and [food](#food)):
 
 ```
-┌ the money ─────────────────────────────────────────────────────────────────┐
-│ Upkeep a night        Income a night               Left each night         │
-│ 45g                   230g                         +140g                   │
-│ After the bin pays    Average of the last 7 nights Less upkeep and loans   │
-│                                                                            │
-│ ▂ █ ▅ ▁ █ ▆ ▃  - - upkeep           1 place built                    15g   │
-│ 7 nights ago   Last night           3 Umas on the farm               30g   │
-│ [Short of upkeep · 40g owed · farmhands at half pace until it’s paid]      │
-│ Loans · 440g owed                                                          │
-│ Mill · 440g owed · 45g a night · clears in about 10 nights (Spring 14)     │
-└────────────────────────────────────────────────────────────────────────────┘
+┌ the money ─────────────────────────────────────────────────────────────────────────────┐
+│ Upkeep a night      Food tonight        Income a night            Left each night       │
+│ 45g                 30g                 230g                      +110g                 │
+│ After the bin pays  Takeout · 2 meals   Average of the last 7     Less food, upkeep and │
+│                                                                   loans                 │
+│ ▂ █ ▅ ▁ █ ▆ ▃  - - upkeep and food      1 place built                             15g   │
+│ 7 nights ago   Last night               3 Umas on the farm                        30g   │
+│                                         4 at the table · 8 meals · 6 from the pantry    │
+│                                                                         Kitchen ›       │
+│ [Short of upkeep · 40g owed · farmhands at half pace until it’s paid]                   │
+│ Loans · 440g owed                                                                       │
+│ Mill · 440g owed · 45g a night · clears in about 10 nights (Spring 14)                  │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 - **Upkeep a night:** what tonight's upkeep would be, as the farm stands.
+- **Food tonight:** tonight's takeout as the farm stands: the farmhands' night run as the board shows it (a cook's
+  batches into the pantry), then the farm eating ("Takeout · 2 meals", or "From the pantry" in green at 0g).
 - **Income a night:** the average of the bin's pay over the nights the book keeps, the last seven (fewer on a new farm;
   "No nights yet" before the first).
-- **Left each night:** the income less the upkeep and the loans' shares, green when it's positive and red when not.
-- **The nights:** each of the last seven nights' income as a bar, oldest first, against the upkeep's dashed line; a
-  night below the line is red.
+- **Left each night:** the income less tonight's food, the upkeep and the loans' shares, green when it's positive and
+  red when not.
+- **The nights:** each of the last seven nights' income as a bar, oldest first, against a dashed line at the upkeep and
+  tonight's food; a night below the line is red.
 - **What the upkeep counts:** each part with its gold, the parts that count only.
+- **Tonight's table:** who eats ("4 at the table · 8 meals"), what the pantry covers and what the cooks add tonight;
+  **Kitchen ›** opens the farmhouse kitchen ([food](#food)).
 - **Short of upkeep:** a red line with what's owed, and "farmhands at half pace until it's paid" from the second short
   night.
 - **Loans:** each with what's owed, its share a night and when it clears; "None. The mayor's office in town lends toward
@@ -692,7 +706,8 @@ Then six cards, each a tap to its place:
 | Dorm | Beds used of beds | The Dorm |
 | To build | The places offered at this Farm Rank | The Diary's projects |
 
-Its help says how the upkeep, a short night and the loans work, in four lines; the board's says how the farmhands work.
+Its help says how the upkeep, food, a short night and the loans work, in five lines; the board's says how the
+farmhands work and cook.
 
 #### The Menu
 
@@ -1100,9 +1115,10 @@ Each fish's size range, its price and its fillet's:
 #### Well fed
 
 Well fed is a number of days on an Uma. It counts down by one each night, and a new meal only raises it to the meal's
-own length; it never stacks. A wedding's reception, a spouse's breakfast and the household's meals (once married,
-[cooked by you](#the-households-meals): everyone on the farm and every farmhand, for today and tomorrow) feed the Umas;
-nothing else does yet. **A farmhand well fed this morning works one more action today** (once a meal, the day after
+own length; it never stacks. A wedding's reception, a spouse's breakfast, the household's meals (once married,
+[cooked by you](#the-households-meals): everyone on the farm and every farmhand, for today and tomorrow) and **a ★2+
+meal from the pantry** (eaten at night: through tomorrow, [food](#food)) feed the Umas. A household meal and a good
+meal the same night are still two days, counted down once. **A farmhand well fed this morning works one more action today** (once a meal, the day after
 it's cooked: [her day](#her-day)), and while she's well fed (the meal's day and the next) her work is too: +0.25
 quality, ×1.25 a haul's count and ×1.25 rank points.
 
@@ -1993,8 +2009,10 @@ The farm has to pay its way. What you add to it costs a little each night, and t
 so it can stand ahead of the gold; each night's income pays it back. The rules are `farm/economy.ts`.
 
 ```
- the night, step 1:  the bin pays ──► each loan takes its share of the night's income ──► the upkeep is charged
-                                       (a tenth of the loan, from income only)              with anything owed
+ the night, step 1:  the bin pays
+ the night, step 2:  the farmhands work ──► the farm eats (food) ──► each loan takes its share of the night's income
+                                                                     (a tenth of the loan, from income only)
+                                                                 ──► the takeout, then the upkeep, with anything owed
                                                                                             │
                      enough gold ───────────────────────────────────────────────────────────┤ all paid
                      short ── what gold there is pays, the rest is owed ──► the morning warns (night 1)
@@ -2004,7 +2022,8 @@ so it can stand ahead of the gold; each night's income pays it back. The rules a
 
 #### Upkeep
 
-Every night, after the bin pays and the loans take their share, the farm pays its upkeep:
+Every night, after the farm eats and the loans take their share of the bin's pay, the farm pays its takeout and then
+its upkeep:
 
 <!-- live:upkeep -->
 | Counts | A night | Not counted |
@@ -2016,12 +2035,13 @@ Every night, after the bin pays and the loans take their share, the farm pays it
 | Short of it | What gold there is pays; the rest is owed with tomorrow’s | The first short night warns; from night 2 in a row, half pace until it’s paid |
 <!-- /live -->
 
-- **What it counts** is read at night step 1, before the night's builds stand: a place or a Dorm level paid for today
+- **What it counts** is read at night step 2, before the night's builds stand: a place or a Dorm level paid for today
   costs from tomorrow night, its first night standing, and a house (which stands at once) from tonight. A new farm owes
-  nothing: upkeep grows with what you build and who you bring.
-- **What pays:** the farm's gold after the bin and the loans' shares. Gold never goes below 0.
-- **Short of upkeep:** what gold there is pays and the rest is **owed** (`farm.owed`), added to the next night's
-  upkeep. The short nights in a row are counted (`farm.short`):
+  no upkeep: it grows with what you build and who you bring. (It pays its farmer's takeout from the first night:
+  [food](#food).)
+- **What pays:** the farm's gold after the bin, the loans' shares and the night's takeout. Gold never goes below 0.
+- **Short of upkeep:** what gold there is pays, takeout first, and the rest is **owed** (`farm.owed`), takeout and
+  upkeep alike, added to the next night's upkeep. The short nights in a row are counted (`farm.short`):
   - **the first** warns in the morning ("Short of upkeep · 40g owed", tagged Warning);
   - **from the second**, the farmhands work at **half pace** until it's paid ("· farmhands at half pace"): half their
     actions, rounded down, never below one (`atPace`), from the day after the second short night
@@ -2062,7 +2082,8 @@ borrowing are free.
     row's field as on the homestead;
   - otherwise why not: its goods ("Need 20 logs more."), the loans held ("One loan at a time: this one first.",
     "Two loans at a time: one of these first."), or the limit ("The office lends up to 1,000g at Farm Rank 1.").
-- **Each night,** after the bin pays and before the upkeep, each loan in the order taken takes its share (`nightly`, a
+- **Each night,** after the bin pays and the farm eats, and before the takeout and the upkeep, each loan in the order
+  taken takes its share (`nightly`, a
   tenth of what was owed when it was taken, rounded up to 5g) from what's left of the night's income; a night with no
   sales repays nothing, and the loan runs a night longer. A loan with nothing owed goes, and the morning says "cleared".
 - **Repay:** at the office, the whole of what's owed, from your gold, any time you're in town; the fee isn't returned.
@@ -2078,6 +2099,119 @@ borrowing are free.
 night; at most two), `farm.owed` and `farm.short` (together: both 0, or both above), and `farm.income` (up to seven
 nights). They grow v5 in place: a save from before them reads as no loans, nothing owed and no nights, and nothing moves
 `updatedAt` for it.
+
+### Food
+
+Everyone who eats on the farm eats twice a day, from the first night. What isn't cooked is bought in as **takeout**, at a
+price you feel from day one; **cooking** turns the Warehouse's goods into meals in batches, and a farmhand on **Cook**
+feeds many. The rules are `farm/food.ts`.
+
+```
+ your day                                      the night, step 2
+   the homestead's sheet (the Farmhouse):        the farmhands work: a cook's batches into the pantry
+     Kitchen · Cook a batch · 1                  the farm eats: two meals a mouth, from the pantry first,
+       two goods of food → six meals               the Umas first, the farmer last, the oldest meals first
+     once married: Breakfast · 1, Dinner · 1     ★2+ meal → that Uma is well fed tomorrow (+1 action)
+       (each a batch too)                        what's short: takeout, 15g a meal ──► the bill, with the upkeep
+   the Book: a farmhand on Cook                  a meal keeps three days, then it spoils
+ the morning:  From the pantry · 6 meals · Well fed      Takeout · 30g      Upkeep · 45g
+```
+
+<!-- live:food -->
+|  | The rule |
+|---|---|
+| Who eats | The farmer, everyone living on the farm (home in the Dorm, a spouse in her house) and every farmhand who works that day (spends an action tonight): 2 meals each, at night |
+| The pantry | Cooked meals wait here, by the day cooked and their stars. A meal keeps 3 days: cooked today, it’s eaten tonight, tomorrow night or the night after, then it spoils |
+| The night’s meals | Night step 2, after the farmhands work: the Umas eat first (the farmhands who worked, in their order, then the rest of the farm), the farmer last; the oldest meals first, the best of those |
+| Takeout | 15g a meal the pantry is short, charged with the upkeep (takeout first); a new farm’s farmer eats 2: 30g a night |
+| Short of it | Takeout never goes unpaid: what gold there is pays, the rest is owed with the upkeep, and the short nights count as the upkeep’s |
+| Cook a batch | The farmer, in the farmhouse kitchen (the homestead’s sheet): 1 action, 6 meals from 2 goods of food you choose |
+| A household meal | Breakfast or dinner once married: the farmer cooking for the household, so it cooks a batch too (6 meals from 2 goods by the plain rule, when the Warehouse holds them) |
+| Cook (a farmhand’s task) | A batch an action from 2 goods by the plain rule, its meals by her Cooking (below), until the pantry holds tonight’s meals for everyone |
+| A meal’s stars | Its 2 goods’ stars, averaged and rounded down |
+| Well fed | An Uma who eats a ★2+ meal is well fed through tomorrow: one more action tomorrow, and her work’s quality, hauls and rank points; never stacked, never shortening a meal running longer |
+| The plain rule | The two cheapest goods of ★2 or more (their meals feed well); with fewer than two held, the two cheapest. Cheapest is the price at its stars, out of demand |
+| Food | Grains, Vegetables, Herbs and spices, Nuts and seeds, Sweets, Fruits, Mushrooms, Fish, Eggs and milk, raw or refined |
+<!-- /live -->
+
+A farmhand's batch by her Cooking (her aptitude, [aptitude](#aptitude)):
+
+<!-- live:cook-batch -->
+| Cooking | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Meals a batch | 6 | 7 | 7 | 8 | 9 | 9 | 10 | 11 | 11 | 12 |
+| Goods a batch | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
+<!-- /live -->
+
+- **Who eats:** the farmer, everyone living on the farm (home in the Dorm, or a spouse in her house), and every
+  farmhand who works that day: one who spent an action tonight, wherever she lives. A farmhand from town with nothing to
+  do eats at home. An Uma who lives on the farm eats whether she works or not, so a resident with no work costs her
+  upkeep and her meals.
+- **A new farm** pays its farmer's two meals of takeout the first night: the first morning says "Takeout · 30g".
+- **The pantry** keeps meals by the day they were cooked and their stars (`farm.pantry`). The night eats the oldest
+  first and the best of those, so yesterday's meals go before today's. A meal keeps three days: cooked today, it's eaten
+  tonight, tomorrow night or the night after; any left after that spoil ("· 2 spoiled"). So a farmer alone eats all six
+  of a batch, two a night for three nights.
+- **Takeout never goes unpaid:** it's charged with the upkeep, takeout first; what gold can't cover is owed with the
+  upkeep's, and the short nights count as the upkeep's ([upkeep](#upkeep)). Nobody goes hungry.
+- **Cook a batch** is the farmer's, in the farmhouse kitchen: the **Kitchen** on the homestead's sheet (a tap on the
+  Farmhouse on the farm map, or **Kitchen ›** in the Book). It shows the pantry, tonight's table as the farm stands ("4
+  at the table · 8 meals"), tonight's takeout or "The pantry covers tonight", and the goods of food held, the plain
+  rule's two picked to start: tap to choose any two (a good held twice can be picked twice), and **Cook a batch · 1**
+  cooks six meals, "6 meals ★2 from Salmon and Salmon: well fed". Refused with fewer than two goods of food ("Two goods
+  of food make a batch: crops, fish, eggs and milk, mushrooms, fruits, nuts or sweets.") and with no action left.
+- **Cooking saves gold:** a batch's six meals are 90g of takeout, three nights of the farmer's alone, from two goods the
+  bin pays 60–80g for at ★1 (two Button Mushrooms 60g, a Mushroom and a Carp 70g, two Carp 80g): 10–30g a batch better
+  than shipping them and buying in. The action is the batch's other cost: for a farmer who'd otherwise spend it on a
+  haul (a forage or a catch, about 45–70g), cooking every night he can comes out about even with takeout over a year
+  ([what food costs](#what-food-costs-and-what-cooking-saves)).
+- **A household meal** (married life: [the household's meals](#the-households-meals)) is the farmer cooking for the
+  household, so it cooks a batch too: six meals for the pantry from two goods by the plain rule, when the Warehouse
+  holds them; without them it's served as before. Its scene, its +10 and its well fed stay.
+- **Cook** is a task on the work board ([the work board](#the-work-board)), with nowhere to choose: in the farmhouse
+  kitchen, each action cooks a batch from two goods by the plain rule, its meals by her Cooking (6 at Cooking 1, 12 at
+  Cooking 10), until the pantry holds tonight's meals for everyone (as the board stands: the farmer, everyone living on
+  the farm and every farmhand with a task), then her other tasks take her actions. Its aptitude is **Cooking**, from
+  her cooking talent; her day there pays cooking rank points (the kitchen's place), bonds with another cook, and a
+  cooking line's +10.
+- **The plain rule** takes the two cheapest goods of ★2 or more, so the meals feed well; with fewer than two held, the
+  two cheapest. Cheapest is the price at its stars, out of demand. **Food** is the food families' goods, raw or
+  refined: grains, vegetables, herbs and spices, nuts and seeds, sweets, fruits, mushrooms, fish, eggs and milk (never
+  woods, ores, stones, crystals, fibers, hides, bones or essences, a seed, a ring or a dish).
+- **A meal's stars** are its two goods' average, rounded down: two ★2 goods make ★2 meals, a ★2 and a ★1 make ★1. An
+  Uma who eats a ★2+ meal is **well fed** through tomorrow ([well fed](#well-fed)): one more action tomorrow, and her
+  work's quality, hauls and rank points while it lasts. The farmer gets nothing from it, so for him a ★1 meal is as good.
+- **The Kitchen** (Phase 2.3) adds the cooking minigame: a batch the farmer cooks there plays it, and its grade lifts
+  the meals' stars (`cookBatch`'s lift, 0 until then). Until then, cooking is the action.
+- **The save:** `farm.pantry` (each lot: the day cooked, today or yesterday; its stars; its meals; one lot a day and
+  star, the oldest first). It grows v5 in place: a save from before food loads with an empty pantry, and nothing moves
+  `updatedAt` for it.
+
+#### What food costs, and what cooking saves
+
+The season simulations ([the pacing](#the-pacing)) play the year alone and with two farmhands, once cooking and once on
+takeout alone:
+
+| A year | Takeout | Its share of the bin | Meals from the pantry | Short nights | Gold at the year's end |
+|---|---|---|---|---|---|
+| The farmer alone, on takeout | 1,440g (96 meals) | 16% | 0 | 0 | 4,655g |
+| The farmer alone, cooking for a tight night | 1,350g (90 meals) | 15% | 6 | 0 | 4,700g |
+| The farmer alone, cooking every night he can | 360g (24 meals) | 5% | 72 | 0 | 4,355g |
+| Two farmhands, on takeout (four Umas home by Winter) | 7,500g (500 meals) | 23% | 0 | 0 | 17,280g |
+| Two farmhands, the field hand on Cook | 2,250g (150 meals) | 5% | 350 | 0 | 36,325g |
+
+- **Takeout bites and never sinks a farm:** alone it's a sixth of what the bin pays, and never a short night; with two
+  farmhands and four idle Umas home it's nearly a quarter.
+- **Cooking saves gold:** a ★1 batch saves 10–30g of gold against takeout, alone or not: alone it's three nights of his
+  meals. Cooking every night he can, the farmer alone buys a quarter of the takeout (360g), spoils nothing and never runs
+  short, and ends the year on 4,355g against 4,655g on takeout: the twelve batches' 1,080g of takeout saved is about
+  what their goods and the hauls their actions would have brought. With a cook, the farm feeds itself from the
+  pantry from Summer (takeout falls from 825g in Spring to 225g in Winter) and her ★2 meals keep the farmhands well fed
+  (68 well-fed nights in Winter), so it ends the year twice as rich as on takeout.
+- **At scale,** the whole farm's cook (Cooking 6 by its second year) feeds eight a night from the pantry, nearly all of
+  it ★2, and buys no takeout in its second year's Spring, Autumn and Winter: that year ships 266,525g against 137,600g
+  before food, the well-fed farmhands' extra action and hauls doing it. F91 (work at scale) takes the farm's work and
+  prices on from here.
 
 ## Part 2 — The Umas and the farm's progress
 
@@ -2413,7 +2547,7 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
      load (a station)                    every action: a point of practice in its aptitude; her goods into the Warehouse
      forage · chop (an area)             her place today (where she spent the most) pays rank points, bonds, her line
      fish (a spot)                     then the crops grow: her watering counts tonight
-     care for animals (the Coop or the Barn) · work a face (the Mine or the Quarry)
+     care for animals (the Coop or the Barn) · work a face (the Mine or the Quarry) · cook (the farmhouse kitchen)
  the morning: Work done · "Name · 4 of 4 actions · watered 6 tiles · caught 1 fish · +1 good"; Ranks · "Name · Watering 3"
 ```
 
@@ -2425,7 +2559,7 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
 | A farmhand’s day, after her part-time job (she’s on the farm by day; she works her actions overnight) | 3 |
 | Settled in: from 12 days after you invited her (a season) | +1 |
 | Once she’s your spouse | +2 |
-| Well fed this morning: a household meal the day before, a wedding’s reception, a spouse’s breakfast | +1 |
+| Well fed this morning: a ★2+ meal last night, a household meal the day before, a wedding’s reception, a spouse’s breakfast | +1 |
 | Half pace: from the second short night of upkeep in a row, until it’s paid | Half of them all, rounded down, never below 1 |
 <!-- /live -->
 
@@ -2440,9 +2574,9 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
   the Umas home).
 - **Settled in** is a season after you invited her (`roster[id].farmhand`, the day you did). **Married:** once she's
   your spouse.
-- **Well fed this morning:** a household meal you cook today keeps everyone well fed today and tomorrow
-  ([well fed](#well-fed)); the night after the meal's day notes the farmhands still well fed as the morning comes
-  (`today.fed`), and each works one more action that day. So a meal gives one more action the next day, once: two meals
+- **Well fed this morning:** a household meal you cook today keeps everyone well fed today and tomorrow, and a ★2+
+  meal she eats from the pantry tonight through tomorrow ([well fed](#well-fed), [food](#food)); the night after notes
+  the farmhands still well fed as the morning comes (`today.fed`), and each works one more action that day. So a meal gives one more action the next day, once: two meals
   the same day still give one, and a meal every day gives one every day. A wedding's reception and a spouse's breakfast,
   which feed the farm from the morning, give it that day.
 - **Half pace** reads the day as it was left: the night that counts the second short night still works at full pace, and
@@ -2459,8 +2593,8 @@ and her tasks in your order, each with her aptitude's level ("Water · rows 1 an
 and **✕** to remove it. **Add a task** (up to six) opens a side panel: what, then where (for the field's tasks, the plot
 (Plot 1, Plot 2 greyed with "Opens at Farm Rank 3" until it's cleared), then that plot's rows, each with what it holds
 for that task now, or the whole plot; the seed to plant, or any in season; a built station; the Coop or the Barn, built;
-the Mine or the Quarry, built; an area or a spot the farm reaches, the rest greyed with why), and **Add · Water · rows 1
-and 2**. **A field task names its plot** and works that plot's tiles only: once the farm has two plots, the board says
+the Mine or the Quarry, built; an area or a spot the farm reaches, the rest greyed with why; Cook has nowhere to choose:
+the farmhouse kitchen), and **Add · Water · rows 1 and 2**. **A field task names its plot** and works that plot's tiles only: once the farm has two plots, the board says
 which ("Water · plot 2, rows 1 and 2", "Water · all of plot 1"). The field's screen shows the same on each row's tab
 ([the field's screen](#the-fields-screen)). Setting tasks is free and takes effect
 tonight; they repeat each day until you change them. With no farmhands: "No farmhands yet. Once she's a friend
@@ -2479,12 +2613,16 @@ tonight; they repeat each day until you change them. With no farmhands: "No farm
 | Fish | A spot the farm reaches | A cast: one fish (two casts from Fishing 6) | Never: her gathering shares what’s left, a turn each | Fishing | Fishing |
 | Care for animals | The Coop’s or the Barn’s animals | A hungry animal fed from the silo (two from Animal care 3), else grass cut on a weeds tile for it; then the building’s goods collected, +0.1 quality a level above 1; then an animal cared for (two from Animal care 5), +1 fondness a level above 1 | When every animal there is fed, collected and cared for | Animal care | Ranch |
 | Work a face | The Mine’s or the Quarry’s deepest floor | A face on the deepest floor: 2 finds by her yield (3 from Mining 5), a face more toward its stairs; the farmer takes them | Never: her digging shares what’s left, a turn each | Mining | Mining |
+| Cook | The farmhouse kitchen (the Kitchen’s, once it stands) | A batch from 2 goods of food by the plain rule: 6 meals at Cooking 1, up to 12 at Cooking 10, into the pantry | Once the pantry holds tonight’s meals for everyone, or the food runs out | Cooking | Cooking |
 <!-- /live -->
 
-- **Her night, in order:** the field's tasks, the loads and the animals' care first, in your order, each until it's done
-  for the day or her actions run out; then her gathering and digging tasks share what's left, a turn each. With nothing left to do she idles, and the
+- **Her night, in order:** the field's tasks, the loads, the animals' care and the cooking first, in your order, each
+  until it's done for the day or her actions run out; then her gathering and digging tasks share what's left, a turn each. With nothing left to do she idles, and the
   morning says "Nothing to do tonight" (or "No tasks: set her tasks", tagged **No tasks**, with an empty board).
 - **Two farmhands on the same tiles** don't double up: the second finds them watered.
+- **Cook:** a batch an action from two goods of food, until the pantry holds tonight's meals; then her other tasks
+  ([food](#food)). The morning says "cooked 10 meals". The farm eats right after the farmhands work, so her meals feed
+  everyone tonight.
 - **Her reach is the farm's:** the areas and spots the Farm Rank opens for the farmer (the sea's once their place
   stands), whatever her rank; at a dig, the deepest floor the farm has reached (her faces find its stairs; the farmer
   takes them).
@@ -2562,14 +2700,15 @@ The tricks, and the level each opens at:
 - **Rising over days:** three actions a day on one task take a D talent's Watering from 2 to 3 in about a week, and to 6
   (the row) in about a year (the simulated year's field hand reaches it in Winter); the morning says each level reached ("*Name* · Watering 3 · Two tiles an
   action", tagged **Aptitude**).
-- **Her profile's Work side** lists her fourteen aptitudes with their level, a bar to the next and the trick it opened (or the
+- **Her profile's Work side** lists her fifteen aptitudes with their level, a bar to the next and the trick it opened (or the
   next to come); before she's a farmhand it says "Aptitudes · where she'd start".
 
 #### The save
 
 Each farmhand's board is `roster[id].tasks` (in your order, at most six: the field's over a plot's tiles, 0–39, its plot
 `plot` (its index) written from plot 2 on, so a task from before plots, with none, is plot 1's; planting one crop or
-any; a station's load; an area's forage or chop; a spot's catch; a task on a plot the farm hasn't cleared is refused), and each Uma's practice is
+any; a station's load; an area's forage or chop; a spot's catch; the Coop's or the Barn's care; a dig's face; Cook; a
+task on a plot the farm hasn't cleared is refused), and each Uma's practice is
 `roster[id].practice` (actions spent, by aptitude). The farmhands well fed this morning are `today.fed`. They grow v5 in
 place: a save from before them reads as no tasks, no practice and nobody well fed, and nothing moves `updatedAt` for it.
 A farmhand's load may be bigger than the farmer's, so a station's load holds 1 to 20.
@@ -2709,6 +2848,7 @@ tie):
 | Cutter | Mining |
 | Coop | Ranch |
 | Barn | Ranch |
+| Kitchen | Cooking |
 <!-- /live -->
 
 - **One day pays one activity.**
@@ -3056,101 +3196,123 @@ The Diary's **Projects** card gathers what's next:
 A test (`packages/domain/src/farm/season.test.ts`) plays the first year on the game's own rules, the farmer working
 alone, by a plain bot, ten actions a day. Each morning it harvests what's ripe, waters what grows, plants the tilled soil
 it has seeds for, tills and clears a little more while fewer than five tiles grow, ships once there's a crate's worth
-(less the logs and fish its next build takes), goes into town for the season's quickest seeds when they run out, and
-spends what's left fishing, foraging and chopping (chopping first while the next build waits for logs). It builds as it
-goes: **the Mill on a loan** from the mayor's office as soon as it holds the logs, then **the Dorm's second level** from
-Autumn, then the Farm Rank 3 stations. Two Umas live on the farm from Summer, three from Autumn and four from Winter,
-though none of them works it. Every night charges the upkeep and the loan's share. It checks:
+(less the logs and fish its next build takes), goes into town for the season's quickest seeds when they run out (keeping
+tonight's bill back), and spends what's left fishing, foraging and chopping (chopping first while the next build waits
+for logs). It builds as it goes, never into a night it can't pay: **the Mill on a loan** from the mayor's office as soon
+as it holds the logs and the gold left covers tonight's bill, then the Farm Rank 3 stations. Nobody lives on the farm:
+an Uma there eats, and one with no work costs her upkeep and her meals for nothing. Every night the farm eats, then pays
+its bill: the loan's share, the takeout and the upkeep. **The farmer eats takeout** while his gold holds, and cooks a
+batch from his two cheapest goods of food when it won't cover a few nights' takeout. It checks:
 - **every day spends exactly its ten actions,** and every morning has ten again;
 - **watered crops grow and dry ones don't,** and something is harvested;
 - **the season's last night withers what's left** (only Corn and Cabbage carry over);
 - **the bin pays:** over 1,000g shipped in Spring, gold above the 500g start, and Farm Rank points earned;
-- **the Mill stands early on a loan,** and Spring runs a surplus;
-- **the upkeep is always paid:** never a short night, never half pace;
-- **every season earns more than its upkeep and loans take,** and the year ends richer than it started;
-- **the loan clears,** the Dorm's level comes in Autumn, and the farmer alone reaches Farm Rank 2;
+- **the Mill stands early on a loan,** and Spring runs a surplus over its takeout, upkeep and loan;
+- **the bill is always paid:** never a short night, never half pace;
+- **every season earns more than its takeout, upkeep and loans take,** and the year ends richer than it started;
+- **the loan clears,** and the farmer alone reaches Farm Rank 2;
+- **takeout bites from the first night** (the first morning says "Takeout · 30g") and comes to a sixth of what he ships;
+  **he cooks to bridge the Mill's tight night,** and the year ends within a tenth of the same farm on takeout alone;
+- **cooking every night he can alone:** a third run cooks whenever the pantry won't hold his two meals; he eats every
+  meal (nothing spoils), buys under a third of the takeout, never runs short, and ends the year within a tenth of the
+  farm on takeout;
 - **every morning's save parses** as v5.
 
-The run as it stands (`SEASON=1` prints it). Spring, day by day:
+The run as it stands (`SEASON=1` prints it, and the same farms on takeout alone beside them). Spring, day by day:
 
 | Spring | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Planted and watered | 0 | 5 | 0 | 0 | 0 | 2 | 2 | 1 | 0 | 0 | 0 | 0 |
 | Watered, besides the day's plantings | 0 | 0 | 5 | 5 | 5 | 0 | 2 | 4 | 5 | 3 | 1 | 0 |
 | Harvested | 0 | 0 | 0 | 0 | 0 | 5 | 0 | 0 | 0 | 2 | 2 | 1 |
-| Gold, morning | 500 | 500 | 500 | 500 | 0 | 155 | 645 | 630 | 570 | 555 | 1,040 | 1,315 |
-| Built | | | | The Mill, on a 500g loan | | | | | | | | |
+| Gold, morning | 500 | 470 | 440 | 410 | 380 | 80 | 480 | 465 | 240 | 195 | 150 | 105 |
+| His meals | Takeout | Takeout | Takeout | Takeout | A batch | The batch | The batch | Takeout | Takeout | Takeout | Takeout | Takeout |
+| Built | | | | | The Mill, on a 700g loan | | | | | | | |
 
 The year, season by season (the morning after each season's last night):
 
-| Season | The bin paid | Upkeep | The loan's shares | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
-|---|---|---|---|---|---|---|---|---|
-| Spring | 2,270g | 120g | 330g | 1,820g | 0 | 1,640g | 15g (the Mill) | 1 |
-| Summer | 2,710g | 420g | 220g | 2,070g | 0 | 3,350g | 35g (and two Umas home) | 1 |
-| Autumn | 1,455g | 650g | — | 805g | 0 | 2,615g | 55g (the Dorm's level 2, three home) | 1 |
-| Winter | 2,955g | 780g | — | 2,175g | 0 | 4,250g | 65g (four home) | 2 |
+| Season | The bin paid | Takeout | Upkeep | The loan's shares | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
+|---|---|---|---|---|---|---|---|---|---|
+| Spring | 1,140g | 270g | 105g | 160g | 605g | 0 | 625g | 15g (the Mill) | 1 |
+| Summer | 2,085g | 360g | 180g | 400g | 1,145g | 0 | 1,410g | 15g | 1 |
+| Autumn | 2,710g | 360g | 180g | 210g | 1,960g | 0 | 2,830g | 15g | 1 |
+| Winter | 2,950g | 360g | 180g | — | 2,410g | 0 | 4,700g | 15g | 2 |
 
-- **The loan builds the Mill early:** 20 logs held on Spring 4 with 500g, the office lends the other 500g (550g owed, 55g
-  a night). The Mill stands on Spring 5, three days sooner than on the farmer's own gold (paid on Spring 7 without the
-  loan, standing on Spring 8), for a 50g fee; the nights' income clears the loan on Summer 5's night, its tenth night
-  with sales.
-- **A small surplus:** the year's upkeep is 1,970g against 9,390g shipped, a fifth. Autumn is the leanest season, with
-  three Umas home and nobody working but the farmer: its upkeep takes 45% of its income and it still clears 805g.
-- **Year 2 opens** on 4,250g, 9,390g shipped, 47 tiles harvested and 168 Farm Rank points (Farm Rank 2). The farmer
+- **The loan builds the Mill early:** 20 logs held by Spring 4, but the 10g a loan would leave him that day wouldn't pay
+  the night's 30g of takeout, so he waits a day: on Spring 5, 380g of his own and a 700g loan (770g owed, 80g a night),
+  and with his gold low he keeps an action for the stove and cooks a batch from the day's hauls: six meals, his next
+  three nights'. The Mill stands on Spring 6; the nights' income clears the loan in Autumn.
+- **Takeout bites, and never sinks him:** 1,350g of takeout in the year (90 meals) against 8,885g shipped, a sixth, with
+  never a short night. On takeout alone (no batch) the year ends on 4,655g; cooking for the tight nights, on 4,700g.
+  Cooking every night he can, he buys 360g of takeout (24 meals), eats all 72 meals of his twelve batches, never runs
+  short and ends on 4,355g: a batch saves him 90g of takeout for two goods worth 60–70g, and its action is a haul he
+  doesn't bring home ([food](#food)).
+- **Year 2 opens** on 4,700g, 8,885g shipped, 47 tiles harvested and 163 Farm Rank points (Farm Rank 2). The farmer
   alone doesn't reach Farm Rank 3 (250) in a year, so the Sawmill and the Smokehouse wait for the farmhands.
 - **Fishing and foraging still carry the farm:** an action at the water or the woods pays about what a Carrot's whole
-  run of six actions does. The upkeep doesn't make that bite (the farm never runs short), so the prices stand until
-  the tools.
+  run of six actions does.
 
 ##### With two farmhands
 
 The same test plays the same year a second time with **two farmhands**, friends from town invited to work on Spring 2,
 who live in town and cost 10g of upkeep each a night from then on. One waters the whole field; the other forages and
 fishes at the deepest area and spot the farm reaches (the Hills and the River from Farm Rank 2). Both have a D talent
-everywhere. The farmer keeps a field twice the size (ten tiles growing), plants and harvests it himself, waters only
-what she won't reach tonight (as the board's Tonight shows), gathers no more than the four actions a day he did alone,
-and spends the rest of his day with the people in town. It checks:
-- **their upkeep is paid every night:** never a short night, never half pace, two more on the upkeep than alone;
+everywhere. Two Umas live on the farm from Summer, three from Autumn and four from Winter (the Dorm's second level for
+the fourth), though none of them works it. The farmer keeps a field twice the size (ten tiles growing), plants and
+harvests it himself, waters only what she won't reach tonight (as the board's Tonight shows), gathers no more than the
+four actions a day he did alone, and spends the rest of his day with the people in town. **The field hand is the Cook:**
+her board is the whole field's watering, then Cook, so once the field's watered her actions left cook a batch each
+until the pantry holds tonight's meals; the farmer keeps back from the bin the goods her batches will take. The same
+farm on takeout alone runs beside it. It checks:
+- **their upkeep and every night's bill are paid:** never a short night, never half pace, on takeout alone too; four
+  Umas home and the two farmhands on the upkeep;
 - **they work every night from Spring 2,** three actions or more between them, and each morning reports them;
-- **every season earns more than its upkeep and loans take, and more than the farmer alone's;** the year ships more and
-  ends richer, and the loan clears;
+- **every season earns more than its takeout, upkeep and loans take, and more than the farmer alone's;** the year ships
+  more and ends richer;
 - **his own day is freed:** his watering is less than half of what it was alone, more crops grow, and over two of his
   actions a day go to the people;
 - **their aptitudes rise:** the field hand reaches Watering 6 (a row an action) by the year's end, and the gatherer
   Foraging 4 and Fishing 4;
+- **takeout bites:** on takeout alone it's between a sixth and three tenths of what the farm ships, and never sinks it;
+- **cooking pays for itself once the field yields:** less takeout each season from Summer, under a third of the takeout
+  farm's by Winter, twice as many meals from the pantry as bought in, the cook at Cooking 3 or more, more than twelve
+  well-fed nights in Winter and nothing spoiled; the year ends richer than on takeout, and Autumn and Winter each earn more
+  after their takeout;
 - **every morning's save parses** as v5.
 
-| Season | The bin paid | Upkeep | The loan's shares | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
+| Season | The bin paid | Takeout | Upkeep | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
 |---|---|---|---|---|---|---|---|---|
-| Spring | 4,055g | 325g | 175g | 3,555g | 0 | 3,075g | 35g (the Mill, two farmhands) | 1 |
-| Summer | 8,865g | 660g | 45g | 8,160g | 0 | 13,075g | 55g (and two Umas home) | 3 |
-| Autumn | 7,235g | 1,010g | — | 6,225g | 0 | 14,560g | 105g (the Dorm's level 2, the Sawmill, the Smokehouse) | 3 |
-| Winter | 12,150g | 1,380g | — | 10,770g | 0 | 24,790g | 115g (four home) | 3 |
+| Spring | 4,025g | 825g | 295g | 2,905g | 0 | 2,225g | 35g (the Mill, two farmhands) | 1 |
+| Summer | 11,380g | 630g | 660g | 10,090g | 0 | 14,155g | 55g (and two Umas home) | 3 |
+| Autumn | 12,655g | 570g | 1,025g | 11,060g | 0 | 20,475g | 105g (the Dorm's level 2, the Sawmill, the Smokehouse) | 3 |
+| Winter | 17,995g | 225g | 1,380g | 16,390g | 0 | 36,325g | 115g (four home) | 3 |
 
-- **They pay their way many times over:** their 20g a night is 940g of the year's 3,375g upkeep, against 32,305g shipped
-  (3.4 times the farmer alone's 9,390g). The farmhands spent 318 actions in the year; the farmer watered 21 tiles (156
-  alone) and spent 103 actions with the people.
-- **The farm grows faster:** Farm Rank 3 by Summer's end, the Dorm's second level, the Sawmill and the Smokehouse in Autumn
-  on his own gold, and 613 Farm Rank points by Year 2.
+The same farm on takeout alone pays 1,020g, 1,800g, 2,160g and 2,520g of takeout and ends the year on 17,280g.
+
+- **They pay their way many times over:** their 20g a night is part of the year's 3,360g upkeep, against 46,055g
+  shipped (five times the farmer alone's 8,885g). The farmhands spent 405 actions in the year; the farmer watered 17
+  tiles (156 alone) and spent 102 actions with the people.
+- **The farm grows faster:** Farm Rank 3 by Summer's end, the Mill on Spring 7 and the Dorm's second level, the Sawmill
+  and the Smokehouse in Autumn, all on his own gold, and 745 Farm Rank points by Year 2.
+- **The cook pays once the field yields:** in Spring the field takes most of the field hand's actions, so the farm buys
+  most of its food; as her Watering rises (two tiles an action, then a row) her actions left cook, six or seven meals a
+  batch, the pantry feeds the farm (350 meals in the year, 153 in Winter alone), and her ★2 batches keep the farmhands
+  well fed. She reaches Cooking 4, and the year ends twice as rich as on takeout.
 - **Where it comes from:** the gatherer works the Hills and the River once Farm Rank 2 opens them, where a haul is worth
-  two or three of the Woods', and her foraging rank reaches Skilled (×1.3 yield, +1 quality) on her challenges. The field hand
-  waters what he plants; her farming rank stays Novice, since she never harvests.
-- **No retune:** a farmhand's 10g a night stays the resident's. They pay their way by a wide margin, so neither the
-  upkeep nor the yields changed with them. Balance (Phase 3) is where a farmhand's wage or her three actions would move,
-  if your play finds the farm grows too fast.
+  two or three of the Woods', and her foraging rank reaches Skilled (×1.3 yield, +1 quality) on her challenges.
 
 ##### The whole farm: the Coop and the Mine
 
-The same test plays a third run, **two years** of the farm with its two farmhands that also builds the ranch and the
-Mine: the Coop as soon as the Farm Rank offers it and its logs and vegetables are held (from Summer, growing vegetables
-for it), four chickens there with fodder bought in town when the silo runs low (keeping 600g back), and a third friend
-invited to care for them the day it stands (feed, collect, care); then, in its second year, the Mine (its 60 planks sawn
-from his logs at the Sawmill, a load a day), a fourth friend at its face, and the stairs taken whenever she finds them.
-The Coop and the Mine add their 15g a night each and their farmhands' 10g each; the chickens cost their 500g and their
-feed. It checks:
+The same test plays a third run, **two years** of the farm with its two farmhands (the field hand on Cook) that also
+builds the ranch and the Mine: the Coop as soon as the Farm Rank offers it and its logs and vegetables are held (from
+Summer, growing vegetables for it), four chickens there with fodder bought in town when the silo runs low (keeping 600g
+back), and a third friend invited to care for them the day it stands (feed, collect, care); then, in its second year,
+the Mine (its 60 planks sawn from his logs at the Sawmill, a load a day), a fourth friend at its face, and the stairs
+taken whenever she finds them. The Coop and the Mine add their 15g a night each and their farmhands' 10g each; the
+chickens cost their 500g and their feed; the cook feeds them all. It checks:
 - **two years without a short night,** never half pace;
-- **every season earns more than its upkeep and loans take,** and the two years end richer than one year with two
-  farmhands;
+- **every season earns more than its takeout, upkeep and loans take,** and the two years end richer than one year with
+  two farmhands;
 - **the Coop stands in the first year and the Mine in the second,** both counted in the upkeep, with their farmhands;
 - **the eggs pay more than the Coop's nights cost** (its upkeep, its farmhand's, the hens and their feed), **and the ores
   more than the Mine's** (its upkeep and its farmhand's);
@@ -3158,28 +3320,32 @@ feed. It checks:
   deepest floor reaches floor 10 or deeper;
 - **every morning's save parses** as v5.
 
-| Season | The bin paid | Upkeep | The loan's shares | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
+| Season | The bin paid | Takeout | Upkeep | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
 |---|---|---|---|---|---|---|---|---|
-| Spring 1 | 4,055g | 325g | 175g | 3,555g | 0 | 3,075g | 35g | 1 |
-| Summer 1 | 4,930g | 660g | 45g | 4,225g | 0 | 8,660g | 55g | 3 |
-| Autumn 1 | 7,100g | 1,320g | — | 5,780g | 0 | 5,200g | 130g (the Coop and its farmhand, the Dorm's level 2, the Sawmill, the Smokehouse) | 3 |
-| Winter 1 | 14,825g | 1,680g | — | 13,145g | 0 | 17,405g | 140g | 3 |
-| Spring 2 | 17,795g | 1,680g | — | 16,115g | 0 | 32,940g | 140g | 3 |
-| Summer 2 | 25,950g | 1,805g | — | 24,145g | 0 | 49,225g | 165g (the Mine and its farmhand) | 4 |
-| Autumn 2 | 40,765g | 1,980g | — | 38,785g | 0 | 89,070g | 165g | 4 |
-| Winter 2 | 53,090g | 1,980g | — | 51,110g | 0 | 138,840g | 165g | 5 |
+| Spring 1 | 4,025g | 825g | 295g | 2,905g | 0 | 2,225g | 35g | 1 |
+| Summer 1 | 6,900g | 630g | 660g | 5,610g | 0 | 9,495g | 55g | 3 |
+| Autumn 1 | 11,795g | 705g | 1,365g | 9,725g | 0 | 9,680g | 130g (the Coop and its farmhand, the Dorm's level 2, the Sawmill, the Smokehouse) | 3 |
+| Winter 1 | 23,220g | 375g | 1,680g | 21,165g | 0 | 29,905g | 140g | 3 |
+| Spring 2 | 29,750g | — | 1,755g | 27,995g | 0 | 50,220g | 165g (the Mine and its farmhand) | 4 |
+| Summer 2 | 53,015g | 45g | 1,980g | 50,990g | 0 | 102,450g | 165g | 4 |
+| Autumn 2 | 85,695g | — | 1,980g | 83,715g | 0 | 184,825g | 165g | 5 |
+| Winter 2 | 98,065g | — | 1,980g | 96,085g | 0 | 283,970g | 165g | 5 |
 
-- **The Coop pays its way three times over:** it stands on Autumn 1 of the first year (the vegetables it takes come
-  with Summer's crops), and over its 71 nights its eggs sell for 24,435g against 6,975g of upkeep, its farmhand, the
-  four hens and their fodder. Its farmhand reaches Animal care 8 and the ranch's Expert rank.
-- **The Mine pays at once:** it stands on Summer 7 of the second year, the farm at Farm Rank 4; its farmhand's faces and
-  the farmer's free stairs reach floor 15 (the Farm Rank's reach) within a few weeks, and over its 29 nights its ores
-  sell for 28,125g against 725g of its nights' costs. A face there is worth about a forage in the Old Forest: G5 ore at
-  85g against the forest's G4–G5 finds, two a face as a forage brings two.
-- **The farm in all:** the two years ship 168,510g and end on 138,840g, Farm Rank 5 (2,190 points); the Mine's
-  10,000g and the Coop's 2,000g are paid from its own gold.
-- **No retune:** the ranch's and the Mine's numbers stand as built: the Coop pays its way, and the Mine's pace is the
-  Farm Rank's reach, as the forest's is.
+- **The Coop pays its way three times over:** it is built on Autumn 1 of the first year (the vegetables it takes come
+  with Summer's crops), and over its 71 nights its eggs sell for 27,870g against 6,975g of upkeep, its farmhand, the
+  four hens and their fodder. Its farmhand reaches Animal care 9 and the ranch's Expert rank.
+- **The Mine pays at once:** it is built on Spring 9 of the second year; its farmhand's faces and the farmer's free
+  stairs reach floor 15 (the Farm Rank's reach), and over its 39 nights its ores sell for 97,530g against 975g of its
+  nights' costs.
+- **The cook feeds the farm:** from the first Winter the pantry covers nearly every meal (45g of takeout in the whole
+  second year), the cook reaches Cooking 6, and her ★2 batches keep the four farmhands well fed nearly every night.
+  That's most of why the second year ships 266,525g, nearly twice the 137,600g it shipped before food: a well-fed
+  farmhand works one more action, with ×1.25 hauls and +0.25 quality.
+- **The farm in all:** the two years ship 312,465g and end on 283,970g, Farm Rank 5 (3,659 points); every build is
+  paid from its own gold.
+- **Food's numbers:** takeout at 15g a meal, the farmer's batch of six from two goods (so cooking saves gold against
+  takeout), the cook's 6 to 12, and three days a meal keeps. The ranch's and the Mine's stand as built. F91 (work at scale) takes the farm's work and
+  prices on from here.
 
 ##### A route to marriage
 
@@ -4339,7 +4505,7 @@ invitation to work, the evenings at two actions, moving in, the household's meal
 |---|---|
 | A meal | Breakfast or Dinner: 1 action, each once a day, from your first wedding |
 | Who eats | Everyone on the farm (the Dorm and the houses) and every farmhand |
-| What a meal does | Everyone it feeds well fed for 2 days (today and tomorrow; a meal running longer is never shortened), and +10 to each (`addLove`, an anniversary’s ×2 applies) |
+| What a meal does | Everyone it feeds well fed for 2 days (today and tomorrow; a meal running longer is never shortened), and +10 to each (`addLove`, an anniversary’s ×2 applies); and a batch for the pantry, 6 meals from 2 goods of food by the plain rule, when the Warehouse holds them |
 | Its scene | One spouse’s meal line (`draw(uid, day, 'meal:<meal>', 0)`): her bible’s `meals`, else the default story’s, on the dialogue engine |
 | The night’s companion | At Tonight, one spouse with a room: free. Her house is tonight’s house, so its morning is as built |
 | Without a pick | Tonight’s house (the morning’s “misses you” Tonight ›, else the house slept in least lately), and its resident who’s been your companion least lately |
@@ -4349,6 +4515,8 @@ invitation to work, the evenings at two actions, moving in, the household's meal
 
 - **Where:** the homestead's sheet (a house's tap on the map), **Meals**: **Breakfast · 1** and **Dinner · 1**, once each
   a day ("Breakfast ✓"), and how many are at the table.
+- **A batch too:** a meal is the farmer cooking for the household, so it puts six meals in the pantry from two goods of
+  food by the plain rule, when the Warehouse holds them ([food](#food)).
 - **As you sit down,** one spouse's line plays on the dialogue engine, in the day's outfit (`?life=breakfast:<id>`).
 - **Well fed** counts down by one each night, so a meal today still feeds everyone tomorrow ([well fed](#well-fed)).
 
@@ -6063,6 +6231,10 @@ sits outside the opening screens, so it shows even when the app stopped while op
 - **v5 grows in place with upkeep and loans:** `farm.loans`, `farm.owed`, `farm.short` and `farm.income` are new; a
   save without them reads as no loans, nothing owed and no nights, and the morning's upkeep section (`summary.money`)
   is absent on a morning from before them. Nothing migrates, and `updatedAt` never moves for it.
+- **v5 grows in place with food:** `farm.pantry` (the pantry's meals, by the day cooked and their stars) is new; a save
+  without it loads with an empty pantry, so a live farm's first night with food buys its takeout. The morning's food
+  lines (`pantry`, `takeout`) are two more kinds in `summary.money`, a farmhand's board may hold Cook (`{ kind: 'cook' }`)
+  and her practice Cooking (`cook`). Nothing migrates, and `updatedAt` never moves for it.
 - **v5 grows in place with the calendar:** `today.occasions` (who played today's occasion scene) is written only once
   one plays, and a save without it has played none; the morning's New Year's and story days' lines are two more kinds of
   news. Nothing migrates, and `updatedAt` never moves for it.

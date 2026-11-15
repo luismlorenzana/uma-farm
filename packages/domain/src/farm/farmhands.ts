@@ -8,10 +8,12 @@
 //                breakfast); all at the farm's pace (`atPace`: half, from the second short night of upkeep, never below 1)
 //   the board    her tasks, in your order: the field's over a plot's tiles (harvest, water, plant, clear and till), a
 //                station's load, a forest area's forage or chop, a fishing spot's catch, the Coop's or the Barn's care,
-//                a face at the Mine or the Quarry. Any Uma does any task, and each repeats daily until you change it. A
-//                task on the board is hers: the farmer's own ten stay free
-//   her night    the field's tasks, the loads and the animals' care first, in your order, each until it's done or her
-//                actions run out; then her gathering and her digging share what's left, a turn each
+//                a face at the Mine or the Quarry, cooking in the farm's kitchen. Any Uma does any task, and each repeats
+//                daily until you change it. A task on the board is hers: the farmer's own ten stay free
+//   her night    the field's tasks, the loads, the animals' care and the cooking first, in your order, each until it's
+//                done or her actions run out; then her gathering and her digging share what's left, a turn each
+//   cook         a batch an action, from two goods of food by the plain rule (`farm/food.ts`): 6 meals at Cooking 1 up
+//                to 12 at 10, into the pantry, until it holds tonight's meals for everyone
 //   aptitude     a level 1–10 for each task: her talent's head start, a point for every 20 rank points in its activity,
 //                and a point for each action she spends on it. A level above 1 lifts her stars (+0.1) and her yield
 //                (+5%), and tricks open: two tiles an action, a row watered in one, a bigger haul, two casts, a bigger
@@ -23,6 +25,7 @@
 import { DAYS_PER_SEASON, dateOf } from './calendar'
 import { draw } from './draw'
 import { atPace, halfPace } from './economy'
+import { addBatch, cookBatchAt, eatTonight, mealsNeeded, pantryMeals, plainBatch, TAKEOUT_PRICE } from './food'
 import { farmhands } from '../romance/loop'
 import { countChallenge, rankBenefits, type ChallengeEvent } from './rank-rules'
 import type { Activity } from './ranks'
@@ -109,7 +112,7 @@ export function handJob(pack: Pick<StoryPack, 'cast'>, id: string): HandJob {
 /** Each task's name on the board. */
 export const TASK_NAMES: Readonly<Record<TaskKind, string>> = {
   harvest: 'Harvest', water: 'Water', plant: 'Plant', till: 'Clear and till', load: 'Load', forage: 'Forage', chop: 'Chop', fish: 'Fish',
-  care: 'Care for animals', mine: 'Work a face',
+  care: 'Care for animals', mine: 'Work a face', cook: 'Cook',
 }
 /** The tasks that run until her actions do: her gathering and her digging, a turn each once the field's, the loads and
  * the animals' care are done. */
@@ -125,10 +128,11 @@ export const taskTiles = (task: Extract<FarmTask, { tiles: number[] }>): number[
 export const taskAptitude = (task: FarmTask): AptitudeId => (task.kind === 'load' ? task.station : task.kind)
 
 /** Where a task is worked: the Fields, a station, the forest, the Fishery, the Coop or the Barn, the Mine or the
- * Quarry. */
+ * Quarry, the kitchen (the farmhouse's until the Kitchen stands). */
 export function taskPlace(task: FarmTask): WorkPlace {
   switch (task.kind) {
     case 'load': return task.station
+    case 'cook': return 'kitchen'
     case 'forage': case 'chop': return 'forest'
     case 'fish': return 'fishery'
     case 'care': return task.home
@@ -154,6 +158,7 @@ export function taskLock(save: Pick<FarmSave, 'buildings' | 'farm' | 'fields'>, 
     case 'mine': return digBuilt(save, task.dig) ? null : 'Build it first.'
     case 'fish': return reachLock(save, 'fishery', task.spot)
     case 'forage': case 'chop': return reachLock(save, 'forest', task.area)
+    case 'cook': return null
   }
 }
 
@@ -181,11 +186,11 @@ export function setTasks<S extends FarmSave>(save: S, id: string, tasks: readonl
 /** Each aptitude's name, the activity it reads her talent and rank points in, and where she works it. */
 export const APTITUDE_NAMES: Readonly<Record<AptitudeId, string>> = {
   harvest: 'Harvesting', water: 'Watering', plant: 'Planting', till: 'Clearing', forage: 'Foraging', chop: 'Chopping', fish: 'Fishing',
-  mill: 'Milling', sawmill: 'Sawing', smokehouse: 'Smoking', care: 'Animal care', mine: 'Mining', smelter: 'Smelting', cutter: 'Cutting',
+  mill: 'Milling', sawmill: 'Sawing', smokehouse: 'Smoking', care: 'Animal care', mine: 'Mining', smelter: 'Smelting', cutter: 'Cutting', cook: 'Cooking',
 }
 export const APTITUDE_ACTIVITY: Readonly<Record<AptitudeId, Activity>> = {
   harvest: 'farming', water: 'farming', plant: 'farming', till: 'farming', forage: 'foraging', chop: 'foraging', fish: 'fishing',
-  mill: 'farming', sawmill: 'foraging', smokehouse: 'fishing', care: 'ranch', mine: 'mining', smelter: 'mining', cutter: 'mining',
+  mill: 'farming', sawmill: 'foraging', smokehouse: 'fishing', care: 'ranch', mine: 'mining', smelter: 'mining', cutter: 'mining', cook: 'cooking',
 }
 
 /** The top level. */
@@ -232,7 +237,7 @@ export function aptitudeOf(uma: Pick<RosterUma, 'ranks' | 'practice'>, id: Aptit
   const level = aptitudeLevelOf(points)
   return { id, start, ranked, practice, points, level, next: level < MAX_APTITUDE ? APTITUDE_POINTS[level]! : null }
 }
-/** Her fourteen aptitudes, in the board's order. */
+/** Her fifteen aptitudes, in the board's order. */
 export const aptitudesOf = (uma: Pick<RosterUma, 'ranks' | 'practice'>, talentIn: TalentIn): Aptitude[] => APTITUDE_IDS.map((id) => aptitudeOf(uma, id, talentIn))
 const levelIn = (uma: Pick<RosterUma, 'ranks' | 'practice'>, id: AptitudeId, talentIn: TalentIn): number => aptitudeOf(uma, id, talentIn).level
 
@@ -448,6 +453,14 @@ function stepOf(save: FarmSave, id: string, task: FarmTask, level: number, fed: 
       return { save: done.save, n: done.caught.length, items: done.haul.items, events: [{ activity: 'fishing', event: { kind: 'catch', spot: task.spot as FishingSpotId, fish: done.caught.length } }] }
     }
     case 'care': return careStep(save, id, task.home, level, story)
+    case 'cook': {
+      // A batch from two goods of food, by her level, until the pantry holds tonight's meals for everyone.
+      if (pantryMeals(save) >= mealsNeeded(save)) return null
+      const goods = plainBatch(save)
+      if (!goods) return null
+      const meals = cookBatchAt(level)
+      return { save: addBatch(save, goods, meals), n: meals, items: [], events: [] }
+    }
     case 'mine': {
       if (!digBuilt(save, task.dig)) return null
       const done = faceAt(save, task.dig, digger(save, id, task.dig, level, fed, talentOf, story))
@@ -532,6 +545,24 @@ export function aptitudeUps(before: Pick<FarmSave, 'roster'>, after: Pick<FarmSa
 
 /** The farmhands well fed this morning: the night notes them, and each works one more action today. */
 export const fedThisMorning = (save: Pick<FarmSave, 'roster'>): string[] => handsInOrder(save).filter((id) => save.roster[id]!.wellFed > 0)
+
+/** Tonight's table as the farm stands now: the farmhands work (a cook cooks), then the farm eats. The mouths, the meals
+ * from the pantry (`pantry`, those there now and those the cooks add, `cooked`), the takeout and its gold, and the Umas a
+ * good meal leaves well fed. The Book and the kitchen show it. */
+export interface TableTonight {
+  mouths: number
+  pantry: number
+  cooked: number
+  takeout: number
+  gold: number
+  fed: number
+}
+export function tableTonight(save: FarmSave, talentOf: TalentOf, story: PerkPack | null): TableTonight {
+  const night = handsTonight(save, save, talentOf, story)
+  const cooked = night.lines.reduce((n, l) => n + (l.done.cook ?? 0), 0)
+  const eaten = eatTonight(night.save, night.lines.filter((l) => l.spent > 0).map((l) => l.id))
+  return { mouths: eaten.mouths, pantry: eaten.pantry, cooked, takeout: eaten.takeout, gold: eaten.takeout * TAKEOUT_PRICE, fed: eaten.fed.length }
+}
 
 /** What a farmhand will do tonight, as the farm stands now: the night's own run over today, her line. The board shows it. */
 export function handTonight(save: FarmSave, id: string, talentOf: TalentOf, story: PerkPack | null): FarmhandLine | null {

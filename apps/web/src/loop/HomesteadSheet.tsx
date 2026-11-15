@@ -2,11 +2,15 @@
 // map (`&house=<n>` marks its row): one row a house, its mark, its name, its rooms (a face ▣ or a free room ▢) and its count;
 // **Extend · 4,000g** on a built house; the next lot with a name field (grey "Rose Cottage") and **Build · 8,000g**, or
 // "Need 300g more", or "Opens with your first wedding"; the lots after it in one line; "Needs a room: …"; moves (tap a face,
-// then a free room or another face to swap); "Shared houses: +10 bond a night a pair."; the household's **Meals** once
-// anyone is married (**Breakfast · 1** and **Dinner · 1**, each once a day: everyone on the farm and every farmhand well fed
-// through tomorrow and +10 each, then one spouse's line as you sit down, `?life=<meal>:<id>`); and the furniture set from
-// 5 married, a piece a row and the house it stands in. "Married n/N" in the header. Loaded on demand.
-import { houseNameIssue, HOUSE_NAME_MAX, houseOpensWords, marriedCount, MEAL_DAYS, MEAL_NAMES, MEAL_POINTS, mealBlock, MEALS, mealEaters, type Meal, type SaveV4 } from '@farm/domain'
+// then a free room or another face to swap); "Shared houses: +10 bond a night a pair."; the farmhouse **Kitchen** (the
+// pantry, tonight's table and its takeout, **Cook a batch · 1** from two goods of food: `Kitchen.tsx`); the household's
+// **Meals** once anyone is married (**Breakfast · 1** and **Dinner · 1**, each once a day: everyone on the farm and every
+// farmhand well fed through tomorrow and +10 each, and a batch for the pantry, then one spouse's line as you sit down,
+// `?life=<meal>:<id>`); and the furniture set from 5 married, a piece a row and the house it stands in. "Married n/N" in
+// the header. Loaded on demand.
+import {
+  BATCH_MEALS, houseNameIssue, HOUSE_NAME_MAX, houseOpensWords, marriedCount, MEAL_DAYS, MEAL_NAMES, MEAL_POINTS, mealBlock, MEALS, mealEaters, type Meal, type SaveV4,
+} from '@farm/domain'
 import { useLeave, withParam } from '@luismlorenzana/uma-kit/shell'
 import { Button, HelpButton, Sheet, UiMark } from '@luismlorenzana/uma-kit/ui'
 import { useState } from 'react'
@@ -15,7 +19,8 @@ import { Avatar } from '../dialogue/Avatar'
 import { MasterGate } from '../master/MasterGate'
 import { useLoopSave } from '../save/game'
 import { useStory } from '../story/story'
-import { buildHouseNamed, cookTheMeal, extendHouseOnce, moveSpouseTo, placePiece, swapSpouseRooms } from './homestead-actions'
+import { buildHouseNamed, cookABatch, cookTheMeal, extendHouseOnce, moveSpouseTo, placePiece, swapSpouseRooms } from './homestead-actions'
+import { Kitchen } from './Kitchen'
 import { furnitureRows, HOMESTEAD_TEXT, homesteadView, priceWords, type HouseRow } from './homestead-view'
 
 const ROSE = '#c2385e'
@@ -108,6 +113,7 @@ function Homestead({ save, focus, onClose }: { save: SaveV4; focus: number | nul
               </ul>
               <p className="text-[14px]" data-needs>{view.needs}</p>
               <p className="text-[13px] text-ink-soft">{HOMESTEAD_TEXT.shared}</p>
+              <Kitchen save={save} busy={busy} onCook={(picks) => void act(() => cookABatch(picks), `Cooked: ${BATCH_MEALS} meals in the pantry.`)} />
               {marriedCount(save) > 0 && <Meals save={save} busy={busy} onCook={(meal) => void act(() => cook(meal))} />}
               {save.homestead.furniture.length > 0 && <Furniture save={save} busy={busy} onPlace={(piece, house) => void act(() => placePiece(piece, house))} />}
             </div>
@@ -197,7 +203,7 @@ function Meals({ save, busy, onCook }: { save: SaveV4; busy: boolean; onCook: (m
           )
         })}
       </div>
-      <p className="text-[12px] text-ink-faint">{eaters} at the table: everyone on the farm and every farmhand, well fed for {MEAL_DAYS} days and +{MEAL_POINTS} each.</p>
+      <p className="text-[12px] text-ink-faint">{eaters} at the table: everyone on the farm and every farmhand, well fed for {MEAL_DAYS} days and +{MEAL_POINTS} each; and {BATCH_MEALS} meals for the pantry from two goods of food.</p>
     </section>
   )
 }

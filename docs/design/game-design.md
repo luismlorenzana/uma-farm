@@ -319,7 +319,7 @@ packet or Phase 2 step:
    The farm map shows a small field sign; a tap opens the field full screen, one plot (8 × 5) a page. The farm starts
    with one plot and clears more as the Farm Rank rises (plot 2 at Farm Rank 3 today; F91 takes it up to eight): up to
    320 tiles of real work.
-2. **Food for everyone: an upkeep felt from day one** ([F90](../handoff/tasks/F90-food.md)). Everyone who eats on the
+2. **Food for everyone: an upkeep felt from day one** (F90, built: [food](../game-mechanics.md#food)). Everyone who eats on the
    farm eats twice a day. Takeout, bought in at night, costs gold for every meal not cooked. Cooking turns the
    Warehouse's goods into meals in batches: the farmer cooks with an action, and an Uma on the Kitchen's task cooks a
    batch that grows with her **Cooking** aptitude, so one cook feeds many. The more Umas live and work on the farm, the

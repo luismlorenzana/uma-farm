@@ -310,15 +310,16 @@ export interface Love {
 // --- The work board: a farmhand's tasks, and her aptitudes ---------------------------------------------------------
 
 /** The work board's tasks: the field's (a plot and a list of its tiles), a station's load, a forest area's forage or chop,
- * a fishing spot's catch, the Coop's or the Barn's care, and a face at the Mine or the Quarry. */
-export const TASK_KINDS = ['harvest', 'water', 'plant', 'till', 'load', 'forage', 'chop', 'fish', 'care', 'mine'] as const
+ * a fishing spot's catch, the Coop's or the Barn's care, a face at the Mine or the Quarry, and cooking in the farm's
+ * kitchen. */
+export const TASK_KINDS = ['harvest', 'water', 'plant', 'till', 'load', 'forage', 'chop', 'fish', 'care', 'mine', 'cook'] as const
 export type TaskKind = typeof TASK_KINDS[number]
 /** The field's tasks, each over a list of tiles. */
 export const TILE_TASKS = ['harvest', 'water', 'plant', 'till'] as const
 export type TileTaskKind = typeof TILE_TASKS[number]
 /** One task on a farmhand's board: the field's over a plot's tiles (planting one crop, or any in season), a station's
- * load, an area's forage or chop, a spot's catch, a building's animals, a dig's deepest floor. It repeats each day until
- * you change it. A field task's `plot` is its plot's index, absent for plot 1 (a task from before plots is plot 1's), and
+ * load, an area's forage or chop, a spot's catch, a building's animals, a dig's deepest floor, the kitchen's batches. It
+ * repeats each day until you change it. A field task's `plot` is its plot's index, absent for plot 1 (a task from before plots is plot 1's), and
  * its `tiles` are that plot's, 0–39. */
 export type FarmTask =
   | { kind: Exclude<TileTaskKind, 'plant'>; tiles: number[]; plot?: number }
@@ -328,11 +329,12 @@ export type FarmTask =
   | { kind: 'fish'; spot: FishingSpotId }
   | { kind: 'care'; home: RanchHome }
   | { kind: 'mine'; dig: DigId }
+  | { kind: 'cook' }
 /** The most tasks one farmhand's board holds. */
 export const MAX_TASKS = 6
 /** Her aptitudes: one for each task, a station's load one for each station; the Coop's and the Barn's care are one, and
- * so are the faces at either dig. */
-export const APTITUDE_IDS = ['harvest', 'water', 'plant', 'till', 'forage', 'chop', 'fish', 'mill', 'sawmill', 'smokehouse', 'care', 'mine', 'smelter', 'cutter'] as const
+ * so are the faces at either dig; cooking is the Cook task's. */
+export const APTITUDE_IDS = ['harvest', 'water', 'plant', 'till', 'forage', 'chop', 'fish', 'mill', 'sawmill', 'smokehouse', 'care', 'mine', 'smelter', 'cutter', 'cook'] as const
 export type AptitudeId = typeof APTITUDE_IDS[number]
 
 /** An Uma on the roster. Talents aren't saved: they're read from master data each boot. */
@@ -516,6 +518,17 @@ export interface Loan {
 export const MAX_LOANS = 2
 /** The nights of income the farm's book keeps: the last seven. */
 export const INCOME_NIGHTS = 7
+/** Meals waiting in the pantry (`farm/food.ts`): those cooked one day at one star. A meal keeps three days: cooked today,
+ * it's eaten tonight, tomorrow night or the night after, then it spoils. */
+/** A meal keeps this many days: the day it's cooked and the next two (`farm/food.ts`). Here so the save's parse reads it
+ * without the food rules. */
+export const MEAL_KEEPS = 3
+export interface PantryLot {
+  /** The day it was cooked. */
+  day: number
+  stars: number
+  meals: number
+}
 /** A loan's project as the save names it, besides a place's id: a house, `house:<n>`, or a Dorm level, `dorm:<level>`. */
 export const HOUSE_LOAN = /^house:([1-6])$/
 export const DORM_LOAN = /^dorm:([2-8])$/
@@ -560,8 +573,12 @@ export interface SaveV5 {
   /** The Farm Rank's points, festivals, lifetime counters, and the places paid for today, standing tomorrow morning
    * (`builds`, in the order paid). Then the farm's accounts (`farm/economy.ts`): the mayor's office's loans, the upkeep
    * still owed and the short nights in a row, and the bin's pay on each of the last seven nights, oldest first. A save
-   * from before upkeep has none of them: no loans, nothing owed, no nights. */
-  farm: { points: number; festivals: FestivalResult[]; counts: Record<string, number>; builds: FarmPlaceId[]; loans: Loan[]; owed: number; short: number; income: number[] }
+   * from before upkeep has none of them: no loans, nothing owed, no nights. Then the pantry's meals, by the day cooked
+   * and their stars (`farm/food.ts`); a save from before food has none: an empty pantry. */
+  farm: {
+    points: number; festivals: FestivalResult[]; counts: Record<string, number>; builds: FarmPlaceId[]; loans: Loan[]; owed: number; short: number; income: number[]
+    pantry: PantryLot[]
+  }
   homestead: Homestead
   /** Her route's event ids played, in order. */
   memories: Record<CharacterId, string[]>
@@ -618,7 +635,7 @@ export function newSave(uid: string, now: string): SaveV5 {
     bonds: {},
     board: [],
     diary: { shipped: {}, milestones: [], records: {}, read: [], notes: [] },
-    farm: { points: 0, festivals: [], counts: {}, builds: [], loans: [], owed: 0, short: 0, income: [] },
+    farm: { points: 0, festivals: [], counts: {}, builds: [], loans: [], owed: 0, short: 0, income: [], pantry: [] },
     homestead: { houses: [FARMHOUSE], tonight: null, alone: null, slept: [0], furniture: [], married: 0, finale: 0 },
     memories: {},
     arrivals: [],

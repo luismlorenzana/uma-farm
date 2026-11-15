@@ -67,11 +67,11 @@ export const FAVOURITE_ACTIVITIES: readonly Activity[] = ACTIVITIES.filter((a) =
 // --- Who worked today ---------------------------------------------------------------------------------
 
 /** The activity a day at each work place pays: the forest and the Sawmill foraging, the Fishery and the Smokehouse
- * fishing, the Mill farming; the Mine, the Quarry, the Smelter and the Cutter mining; the Coop and the Barn the ranch. The
- * Fields' tenders are farming. */
+ * fishing, the Mill farming; the Mine, the Quarry, the Smelter and the Cutter mining; the Coop and the Barn the ranch; the
+ * kitchen cooking. The Fields' tenders are farming. */
 export const PLACE_ACTIVITY: Readonly<Record<LoopPlaceId, Activity>> = {
   forest: 'foraging', sawmill: 'foraging', fishery: 'fishing', smokehouse: 'fishing', mill: 'farming',
-  mine: 'mining', quarry: 'mining', smelter: 'mining', cutter: 'mining', coop: 'ranch', barn: 'ranch',
+  mine: 'mining', quarry: 'mining', smelter: 'mining', cutter: 'mining', coop: 'ranch', barn: 'ranch', kitchen: 'cooking',
 }
 
 // --- What a rank gives --------------------------------------------------------------------------------------

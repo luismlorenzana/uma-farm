@@ -180,7 +180,7 @@ describe('her profile', () => {
     expect($$('[data-work-side] [data-activity]')).toHaveLength(9)
     // Her aptitudes, one a task: where she'd start (no farmhand yet), a D talent's level 2 everywhere.
     expect($$('[data-aptitudes] [data-aptitude]').map((a) => `${a.dataset.aptitude} ${a.dataset.level}`)).toEqual([
-      'harvest 2', 'water 2', 'plant 2', 'till 2', 'forage 2', 'chop 2', 'fish 2', 'mill 2', 'sawmill 2', 'smokehouse 2', 'care 2', 'mine 2', 'smelter 2', 'cutter 2',
+      'harvest 2', 'water 2', 'plant 2', 'till 2', 'forage 2', 'chop 2', 'fish 2', 'mill 2', 'sawmill 2', 'smokehouse 2', 'care 2', 'mine 2', 'smelter 2', 'cutter 2', 'cook 2',
     ])
     expect($('[data-aptitudes] h3')?.textContent).toBe('Aptitudes · where she’d start')
     expect($('[data-page="hearts"]')?.dataset.view).toBe('work')
