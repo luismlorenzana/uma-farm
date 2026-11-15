@@ -1,9 +1,10 @@
-# Her look: outfits and expressions
+# Her look: outfits, expressions and illustrations
 
-**A plan, for the owner's go (2026-11-13).** Each Uma gets a wardrobe (four seasonal outfits, spring her default, a
-kimono, a dinner dress, a wedding dress and pajamas) and busts that change expression in dialogue. ChatGPT draws a bust for each
-outfit and a face for each expression; the game puts the face over the bust. The page view is
-[her-look.html](../pages/her-look.html).
+**Built, and the art keeps coming.** Each Uma has a wardrobe of 12 outfits and 22 expressions: the dialogue engine shows
+her portrait in the outfit the moment calls for, with her face changing line by line, and her big moments open onto her
+illustrations, full screen. ChatGPT draws them (character art), and the game composes them. How the game plays them is
+[the dialogue engine](../game-mechanics.md#the-dialogue-engine); what's drawn next is [the art brief](#the-art-brief),
+below. The page view is [her-look.html](../pages/her-look.html).
 
 ## What came in
 
@@ -11,12 +12,12 @@ outfit and a face for each expression; the game puts the face over the bust. The
 
 | Asked | Where | When |
 |---|---|---|
-| The welcome list's five arrival scenes are written as Gate visits on mornings one to five; eleven Umas have their own trigger to meet | [Meeting her](../game-mechanics.md#meeting-her) | Shipped (F67) |
+| The welcome list's five arrival scenes as Gate visits, and her own trigger to meet | [Meeting her](../game-mechanics.md#meeting-her) | Shipped (F67), then retired with the welcome week (2026-11-14): you meet her by introducing yourself in town |
 | The town's people are all Umas from the Uma Ranker's NPC board, mapped role for role (14 roles); the town's six spots and each Uma's favourite spot come from the pack | [The town](../game-mechanics.md#the-town); the menu's [`town.json`](../story-pack.md#the-town-townjson) | Shipped (F66) |
 | The Ranker's 24 sisters (an outfit presented as her own character, id `s<outfitId>`) in the town, the cast and the ties | The menu's [sisters](../story-pack.md#sisters): her name in her cast entry, her art her outfit's | Shipped (F66) |
 | Ties may name one of the town's people (no bond, a line on both profiles) | The menu's [ties](../story-pack.md#the-ties-tiesjson) | Shipped (F66) |
 | Chapters gated on builds (the Mine, the Quarry, the Cutter, the Kitchen, the Restaurant, the Forge), and ids for the dock and the boat | [Building](../game-mechanics.md#building): `dock` and `boat` are place ids a `built` gate can name | Shipped (F64) |
-| Group scenes for 10 families and 17 crews | [F40](../handoff/tasks/F40-story-authoring.md) | Later, with Phase 2's long game |
+| Group scenes for 10 families and 17 crews | [The roadmap's long game](../roadmap.md#phase-2-the-whole-farm) | Later, with Phase 2's long game |
 
 The story has a baseline for all 100 of the Ranker's characters: tags, a web of 257 ties, and 76 in the pack's cast with
 thin bibles.
@@ -24,68 +25,65 @@ thin bibles.
 ### From the character art
 
 uma-platform's **Uma Character Art** (https://uma-platform.web.app/art) holds, for each Uma:
+
 - master data's face, bust and chibi sprite set;
 - the full-body 3D render (`outfit-renders`, 768×1024);
-- the **universe looks**: ChatGPT's owner-approved pictures of an Uma in another world, Farm Life among them (18 looks
-  published).
+- the **universe looks**: ChatGPT's owner-approved pictures of an Uma in another world, Farm Life among them.
 
-Two Umas have the new full character art, and bust-type art packets are on their way. This plan builds on that art: the
-same style, as busts and faces.
+Farm Life is where the farm's art comes from: **three Umas have their dialogue portraits** (12 outfits and 15 faces
+each), and **the first has all nine of her illustrations**. Master data carries them to the game, with no farm release.
 
 ### What the farm shows today
 
 | Where | Art | Expressions |
 |---|---|---|
-| Cards, the HD-2D farm's standees, lists | Her face (`outfit-faces`) | — |
-| Every scene (the dialogue engine, F75) | Her portrait in the scene's outfit (master data's `dialogue-portraits`, the pilot's two Umas); else the blank bust (F76): her silhouette in the outfit's colours | Her face changes with each line's emote: her portrait's by the 22 expressions' fallbacks, else the blank bust's own face for each of the 22 |
-| The HD-2D farm | Her chibi sprite set | The sprite's own actions |
+| Cards, lists, the town's sheets, her profile | Her face (`outfit-faces`) and her master-data bust | — |
+| Every scene (the dialogue engine) | Her portrait in the scene's outfit (master data's `dialogue-portraits`, three Umas so far); else the blank bust: her silhouette in the outfit's colours | Her face changes with each line's emote: her portrait's by the 22 expressions' fallbacks, else the blank bust's own face for each of the 22 |
+| Her big moments | Her illustration, full screen (master data's `illustrations`, the first Uma's nine so far); else her bust | — |
+| Her profile's Gallery | Each illustration she's shown, kept for good; the rest locked, with their titles | — |
 
 ## Her wardrobe
 
-| Outfit | Shows in | Default rule |
-|---|---|---|
-| **Spring** | Her default: daytime in spring, and whenever nothing else applies or the outfit asked for isn't drawn yet | The season of the day, and the fallback |
-| **Summer, autumn, winter** | Daytime scenes, talks and heart events in that season | The season of the day |
-| **Kimono** | Festival nights, and the year's first day | Festival night in summer and winter (the Fishing Derby's and the Harvest Cup's nights), and New Year's visit. The story may name other days |
-| **Dinner dress** | "Dinner in town", a new date kind; the proposal if the story sets it at dinner; anniversary dinners | Dinner in town opens with Romance 3 |
-| **Wedding dress** | The wedding, its replay in Memories, the first anniversary's scene | Always at the wedding |
-| **Pajamas** | "A night in", a new evening kind for night visits; the household's night scenes | A night in opens with Romance 6, and at home once married. Tender, never explicit |
+| Outfit | Shows in |
+|---|---|
+| **Spring** | Daytime in spring, and whenever the outfit asked for isn't drawn for her yet |
+| **Summer, autumn, winter** | Daytime scenes, talks and heart events in that season |
+| **Work clothes** | Her work, and a heart event about it |
+| **Garden party** | A picnic, a tea, and the spring festival (the Flower Show) |
+| **Kimono** | Festival nights and New Year's |
+| **Dinner dress** | Dinner in town (from Romance 3), and the household's scenes |
+| **Wedding dress** | The wedding |
+| **Wedding night** | The wedding night |
+| **Pajamas** | A night in (from Romance 6), and the night's companion in the morning |
+| **Swimsuit** | The summer shore |
 
 - **What a scene wears:** the scene's own choice if the story names one (`outfit` on an event or scene); else the
-  default rule above; else spring.
-- **Placeholders hold:** an outfit not yet drawn for her shows her spring bust, so a story can use an outfit before its art
-  exists.
-- **The sprites stay as they are:** her chibi set (master data's) is what she wears everywhere on the HD-2D farm. Seasonal sprite sets
-  would multiply the heaviest art for little gain; it's a later choice, if ever.
-- **Her profile:** a Wardrobe row shows the outfits drawn for her, and which one she's wearing today.
+  moment's ([outfits by context](../game-mechanics.md#outfits-by-context)); else the day's season.
+- **Placeholders hold:** an outfit not yet drawn for her shows her spring portrait, so a story can use an outfit before
+  its art exists.
 
 ## Busts that change expression
 
-### A bust per outfit, a face per expression
+### A portrait per outfit, a face per expression
 
-- **The bust:** her head and shoulders in one outfit, with her calm neutral face, on a transparent background. One for
-  each outfit.
-- **The face:** a square picture of just her face (brow to chin, cheek to cheek, with her bangs) in one expression,
-  drawn to sit exactly over the face of her bust. One for each expression.
-- **Why one set of faces fits every outfit:** her head is the same in every bust (same size, spot, angle and bangs).
+- **The portrait:** her head and shoulders in one outfit, with her calm neutral face. One for each outfit.
+- **The face:** just her face in one expression, drawn to sit exactly over the face of any of her portraits. One for
+  each expression.
+- **Why one set of faces fits every outfit:** her head is the same in every portrait (same size, spot, angle and bangs).
   Only what's below the neck, and what she wears on her head, changes with the outfit.
-- **The format is settled later:** sizes, and how a face sits on a bust, are worked out once the pilot's pictures are in
-  Uma Character Art. Until then the pictures go up as a universe-looks collection, `dialogue-busts`, with
-  `pnpm art:push` (uma-platform P163): nothing new is built there yet, and its earlier draft of a bust family is parked
-  until the format is settled.
-- **The game composes them:** the bust, with the face over it, swapped when the expression changes. Both are
-  cached on the device.
+- **The game composes them:** the portrait, with the face over it, swapped when the expression changes. Both are cached
+  on the device ([her portraits](../game-mechanics.md#her-portraits)).
 - **Fallbacks:**
-  - a face not drawn yet shows its fallback (the table below), ending at the bust's own neutral face;
-  - a bust not drawn yet for that outfit shows her spring bust;
-  - an Uma with none shows the blank bust in the outfit's colours, with its own 22 faces (F76); her master-data bust
-    stays on cards and lists.
+  - a face not drawn yet shows its fallback (the table below), ending at the portrait's own neutral face;
+  - an outfit not drawn yet shows her spring portrait;
+  - an Uma with none shows the blank bust in the outfit's colours, with its own 22 faces; her master-data bust stays on
+    cards and lists.
 
 ### The expressions
 
 Twenty-two, in three sets. **Core** is needed for every Uma who speaks; **romance** for every Uma with a route; **extra**
-comes when there's time. [F69](../handoff/tasks/F69-bust-art-spec.md) describes each one for the art. The story's
-`emote` names them, and an unknown or undrawn one shows its fallback.
+comes when there's time. [The art brief](#the-art-brief) describes each one for the art. The story's `emote` names them,
+and an unknown or undrawn one shows its fallback.
 
 | Expression | Set | Falls back to |
 |---|---|---|
@@ -116,33 +114,151 @@ comes when there's time. [F69](../handoff/tasks/F69-bust-art-spec.md) describes 
 
 | Piece | Count |
 |---|---|
-| Busts | Four seasons (spring the default), kimono, dinner dress, wedding dress, pajamas: 8 |
-| Faces | 10 core, 6 romance, 6 extra: 22 |
+| Portraits | One per outfit: 12 |
+| Faces | 10 core, 6 romance, 6 extra: 22 (neutral is each portrait's own) |
+| Illustrations | One per big moment: 9 |
 
-**Order:**
-1. the two Umas with the new full art, as the pilot that sets the spec;
-2. the welcome list's five;
-3. the rest in the Uma Ranker's order.
+## What's built
 
-Her spring bust and the core faces come first for each, then the seasons, then the special outfits.
+| Packet | What |
+|---|---|
+| F75 | **The dialogue engine:** the face over the outfit's portrait, the story's `emote` picks the face, outfits by context, every fallback, on master data's `dialogue-portraits` ([the rules](../game-mechanics.md#the-dialogue-engine)) |
+| F76 | **The default Uma:** a blank bust with 22 faces for every Uma without art, and the default story ([the blank bust](../game-mechanics.md#the-blank-bust)) |
+| F79 | **The evenings:** Dinner in town and A night in, the wedding night, the night's companion in pajamas ([the Uma loop](../game-mechanics.md#the-uma-loop)) |
+| F84 | **Her illustrations:** her big moments full screen, and her gallery ([her illustrations](../game-mechanics.md#her-illustrations)) |
 
-## The work
+**For the story:** the `emote` menu has the 22 expressions, a scene or event may name an `outfit` or an `illustration`,
+and the evenings and the night's companion are scenes the story can write ([the story pack's
+steps](../story-pack.md#steps)). The owner cross-references the outfits with the story, so each has scenes to show it.
 
-Folded into the owner's rework ([the game's design](game-design.md), 2026-11-14):
+## The art brief
 
-| Packet | What | Who |
+**For the character-art session (ChatGPT), standing:** what to draw for each Uma, so the farm can show her in every
+outfit, every feeling and every big moment. It changes as the game does. The technical format is worked out together.
+
+**Where it stands:** three Umas have their portraits (12 outfits and 15 faces each), and the first has all nine
+illustrations. Until an Uma has hers, the game plays her on the blank bust, so nothing waits on the art.
+
+### What to draw
+
+For each Uma:
+
+- **a bust in each outfit:** head and shoulders, in the style of her full character art, with a calm face;
+- **her face in each expression** (below), so the game can show her feelings on whatever she's wearing;
+- **her illustrations,** one for each big moment (below).
+
+Draw her the same way in every outfit, with the same pose and angle, so her faces can be reused across outfits. Every
+Uma is drawn as an adult, and every picture is tasteful: tender, never explicit.
+
+### The outfits
+
+| Outfit | Notes |
+|---|---|
+| **Spring** | Her default outfit, the one she wears unless another fits: light layers, a cardigan or a light jacket, her colours in pastel |
+| **Summer** | A sundress or light top, airy |
+| **Autumn** | A knit sweater, a scarf, warm tones |
+| **Winter** | A coat, a scarf, a winter accessory |
+| **Kimono** | A festival kimono with its obi, hair up, a kanzashi |
+| **Dinner** | An elegant evening dress, for a dinner date |
+| **Wedding** | A white wedding dress and veil |
+| **Pajamas** | Soft, modest pajamas or a nightgown, hair loose, for nights in and the morning after |
+| **Work clothes** | For farm work: practical, her colours |
+| **Garden party** | A light party dress, for the spring festival, picnics and teas |
+| **Wedding night** | Tender and modest, for the night after her wedding |
+| **Swimsuit** | For the summer shore, modest |
+
+She keeps her own look in every outfit: her colours, her accessories, her personality. The dresses and the pajamas are
+modest, never revealing.
+
+### The expressions to draw
+
+Each one is a feeling the story will ask for, so each should read at a glance, small on a phone, and stay in her
+character: a reserved Uma's joy is quieter than a bright one's.
+
+**Core: every Uma who speaks**
+
+| Expression | Eyes and brows | Mouth and marks | The story uses it for |
+|---|---|---|---|
+| **Neutral** | Open, relaxed | Closed, relaxed | Plain talk; the default |
+| **Happy** | Bright, slightly narrowed by the smile | A warm open smile | Greetings, good news, a gift she likes |
+| **Laughing** | Closed in curves | Wide open, laughing | A joke, festival fun, teasing that lands |
+| **Surprised** | Wide, brows high | A small round "oh" | News, a reveal, a gift she didn't expect |
+| **Thinking** | Looking aside or up, one brow raised | Small, pursed or to one side | Plans, puzzles, choosing |
+| **Sad** | Lowered, brows up and pinched in | Turned down | Bad news, missing someone, a loss |
+| **Angry** | Narrowed, brows down hard | A frown or clenched | A rival, a wrong done, a race lost |
+| **Worried** | Uneasy, brows tilted up | A wobbly line; a small sweat drop | Nerves, a hard day, before a race |
+| **Determined** | Focused, brows set | A firm small smile | Work, training, a promise kept |
+| **Pouting** | Looking away, brows down | Puffed cheek, lips pushed out | Playful annoyance, being teased |
+
+**Romance: every Uma with a route**
+
+| Expression | Eyes and brows | Mouth and marks | The story uses it for |
+|---|---|---|---|
+| **Shy** | Looking down or away | A small smile; light blush | A compliment, a first date, being noticed |
+| **Tender** | Soft, warm, a little lowered | A gentle smile; faint blush | Quiet moments, evenings together |
+| **Flustered** | Darting, wide or squeezed shut | A wavy mouth; deep blush, maybe steam or sweat | The confession, a near kiss, being caught staring |
+| **Loving** | Half-lidded, glowing | A soft smile; blush | Saying yes, married mornings, "I'm glad it's you" |
+| **Tearful joy** | Bright, wet, tears at the corners | Smiling through them | The proposal, the wedding, a promise come true |
+| **Sleepy** | Half-closed, heavy | A yawn or a drowsy smile | Nights in, early mornings, a nap on your shoulder |
+
+**Extra: when there's time**
+
+| Expression | Eyes and brows | Mouth and marks | The story uses it for |
+|---|---|---|---|
+| **Crying** | Brows up, eyes shut or welling | Trembling; tears running | Real sorrow, a farewell, relief after fear |
+| **Teasing** | One eye winking | A sly, lopsided smile | Flirting, a trick, a secret between you |
+| **Smug** | Half-lidded, confident | A smirk | Winning, showing off a harvest, a rivalry |
+| **Embarrassed** | Squeezed shut or looking away | A forced laugh; a big sweat drop | A blunder, being called out |
+| **Startled** | Tiny pupils, wide | Open in a gasp; maybe a jolt mark | A scare, a sudden noise, a ghost story |
+| **Dreamy** | Unfocused, looking up | A faint smile; sparkles | Daydreaming, a wish, the festival lights |
+
+**The range, at a glance**
+
+| Feeling | Light | Strong |
 |---|---|---|
-| [F69](../handoff/tasks/F69-bust-art-spec.md) | **The bust art:** her outfits and faces. The pilot is done (12 outfit portraits and 15 faces for each of two Umas); the rest follow | ChatGPT (character art) |
-| F75, done | **The dialogue engine:** the face over the outfit's portrait, the story's `emote` picks the face, outfits by context, every fallback, on master data's `dialogue-portraits` family ([the rules](../game-mechanics.md#the-dialogue-engine)) | Claude |
-| F76, done | **The default Uma:** a blank bust with 22 faces for every Uma without art, and the default story ([the blank bust](../game-mechanics.md#the-blank-bust)) | Claude |
-| F79, done | **The evenings:** Dinner in town and A night in, the wedding night, the night's companion in pajamas ([the Uma loop](../game-mechanics.md#the-uma-loop)) | Claude |
+| Joy | Happy | Laughing, Tearful joy |
+| Affection | Tender, Shy | Loving, Flustered |
+| Sadness | Sad | Crying |
+| Anger | Pouting | Angry |
+| Fear and nerves | Worried | Startled |
+| Surprise | Surprised | Startled |
+| Thought | Thinking | Dreamy |
+| Confidence | Determined | Smug |
+| Play | Teasing | Laughing |
+| Rest | Sleepy | — |
+| Awkwardness | Embarrassed | Flustered |
 
-The wardrobe now has 12 outfits, matching the art: the four seasons (spring the default), work clothes, the garden party
-dress, the kimono, the dinner dress, the wedding dress, the wedding night outfit, pajamas and the swimsuit.
+If the story asks for a face that isn't drawn yet, the game shows the nearest one, so the expressions can come in any
+order.
 
-**For the story:**
-- the `emote` menu grows to the 22 expressions;
-- a scene or event may name an `outfit`;
-- night visits and dinner dates become evening scenes the story can write.
+### The illustrations
 
-The owner cross-references the outfits with the story, so each has scenes to show it.
+A splash illustration for each of her big moments: a landscape picture that fills the phone's screen, with the scene's
+text over its lower edge. Each one she's shown joins her gallery for good
+([her illustrations](../game-mechanics.md#her-illustrations)).
+
+| Moment | What it is | She wears |
+|---|---|---|
+| `meeting` | Meeting her: you introduce yourself in town, and she greets you for the first time | The day's season |
+| `beach` | A summer date at the shore, once you're sweethearts | The swimsuit |
+| `confession` | Her confession, as she asks | The day's season |
+| `confession-yes` | Her yes | The day's season |
+| `wedding` | The wedding | The wedding dress |
+| `wedding-night` | The wedding night, as it begins | The wedding night outfit |
+| `wedding-night-end` | The wedding night, as it fades to morning | The wedding night outfit |
+| `night-in` | A night in: an evening at home together | Pajamas |
+| `companion` | The morning after she was the night's companion, before she greets you | Pajamas |
+
+The story may name other scenes of hers for its own moments; these nine are the ones the game shows by itself.
+
+### The order
+
+1. **Done:** three Umas' portraits, 12 outfits and 15 faces each, and the first Uma's nine illustrations. The six extra
+   faces can follow for all three, and the illustrations for the other two.
+2. **Next, in the Uma Ranker's order:** her spring outfit and the core faces first, then the romance faces, then the
+   other outfits, then her illustrations.
+
+### Delivery
+
+Published to Uma Character Art's Farm Life universe, approved by the owner. Master data carries them to the game from
+there: no farm release.
