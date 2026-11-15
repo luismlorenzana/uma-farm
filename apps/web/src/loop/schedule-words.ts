@@ -2,8 +2,8 @@
 // town show it, and who's in town on a calendar day. Every placement is the schedule's, never a draw. Names are the
 // town map's (the pack's, else the game's). Pure, so the screens and the tests read the same.
 import {
-  atHome, dateOf, isFarmhand, nextOut, onFarmToday, SEASON_NAMES, seasonSchedule, townLocation, townLocations, townDay, whereYouMeet, type SaveV4, type SeasonPlace,
-  type StoryPack,
+  atHome, dateOf, isFarmhand, nextOut, onFarmToday, SEASON_NAMES, seasonSchedule, townLocation, townLocations, townDay, whereOn, whereYouMeet, type SaveV4,
+  type SeasonPlace, type StoryPack,
 } from '@farm/domain'
 import { jobWords } from '../book/board-words'
 import { shortDate } from './words'
@@ -60,7 +60,8 @@ export function findHer(save: SaveV4, pack: Pack, id: string): FindHer {
   }
   const at = whereYouMeet(save, pack, id).at
   const next = at ? null : nextOut(pack, id, save.calendar.day)
-  const today = at ? `${placeName(pack, at)} today` : next ? `At home today · next out ${shortDate(next.day)}` : 'At home today'
+  const work = at !== null && whereOn(pack, id, save.calendar.day).by === 'job'
+  const today = at ? `${placeName(pack, at)}${work ? ', at work' : ''}` : next ? `At home · next out ${shortDate(next.day)}` : 'At home'
   return { today, at, season, lines: seasonLines(pack, id, date.season), farm: false }
 }
 

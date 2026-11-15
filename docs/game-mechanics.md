@@ -4530,7 +4530,7 @@ then **Lives in town** and **Invite to the farm** while a bed is free (she moves
 │        Farming · ★ Spring 4              │  her line, birthday and house
 │ [ Hearts ]  Work                         │  held at the panel's top as it scrolls
 │ WHERE TO FIND HER                        │  one who lives in town: her fixed schedule
-│ Today · The Café today        Find her › │  (or "At home today · next out Spring 4")
+│ Today · The Café              Find her › │  (or "At home · next out Spring 4")
 │ Spring · The Café · 1, 4, 7, 10          │  this season's days and places
 │ At home · the other days                 │
 │ Lives in town   [ Invite to the farm ]   │
@@ -4620,7 +4620,7 @@ then **Lives in town** and **Invite to the farm** while a bed is free (she moves
   **Find her ›** (her menu where she is, `/town?at=<place>&uma=<id>`, where going into town comes first), or "At home
   today. Find her in town on her days.". **Play · 1 action ›** (her Ready event) works from anywhere.
 - **Where to find her** (one who lives in town), under her face, read from her fixed schedule ([who's
-  where](#whos-where)): **Today**, her place ("The Café today", with **Find her ›**), or "At home today · next out
+  where](#whos-where)): **Today**, her place ("The Café", with **Find her ›**), or "At home · next out
   Spring 4"; then this season's days and places in short words, one line a place in the order of its first day: "Spring
   · The Café · 1, 4, 7, 10", her job's "The Bakery, at work · 1–6", and home "At home · the other days" (her story's
   home on the map by its name). A farmhand reads "Today · On the farm" and "Every day · On the farm by day, after her

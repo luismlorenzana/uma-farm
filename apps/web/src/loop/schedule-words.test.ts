@@ -33,8 +33,9 @@ describe('where to find her', () => {
   })
 
   it('today: where she is, or when she\'s next out; a farmhand on the farm by day, after her job', () => {
-    expect(findHer(save(1), PACK, '9300001')).toMatchObject({ today: 'The Café today', at: 'cafe', season: 'Spring', farm: false })
-    expect(findHer(save(2), PACK, '9300001')).toMatchObject({ today: 'At home today · next out Spring 4', at: null })
+    expect(findHer(save(1), PACK, '9300001')).toMatchObject({ today: 'The Café', at: 'cafe', season: 'Spring', farm: false })
+    expect(findHer(save(2), PACK, '9300001')).toMatchObject({ today: 'At home · next out Spring 4', at: null })
+    expect(findHer(save(2), PACK, '9300002')).toMatchObject({ today: 'The Bakery, at work', at: 'bakery' })
     const hand = save(2, { roster: { 9300001: { ...newRosterUma(1), farmhand: 1 } } })
     expect(findHer(hand, PACK, '9300001')).toMatchObject({ today: 'On the farm', farm: true, lines: [{ at: null, text: 'On the farm by day, after her job: Helps out at the Café' }] })
   })

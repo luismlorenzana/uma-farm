@@ -318,7 +318,7 @@ describe('the town', () => {
     expect($('[data-profile-actions] [data-action="evening"]')?.textContent).toBe('In town')
     // Where to find her: today's place, and this season's days and places.
     expect($('[data-find-her]')?.dataset.findHer).toBe(at)
-    expect($('[data-find-today]')?.textContent).toBe('Today · Invented Café todayFind her ›')
+    expect($('[data-find-today]')?.textContent).toBe('Today · Invented CaféFind her ›')
     expect($$('[data-find-line]').map((l) => l.textContent)).toEqual(['Spring · Invented Café · 1–3, 5–12', 'Invented Bakery · 4'])
     await click($('[data-action="find-her"]'))
     expect(path).toBe(`/town?at=${at}&uma=90001`)
