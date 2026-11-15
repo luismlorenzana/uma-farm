@@ -389,7 +389,7 @@ The steps as the game lists them:
 | 1 | `noteTonight` | Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning |
 | 1 | `payTheBin` | The bin pays: everything shipped today, at price × stars × demand |
 | 2 | `farmhandsWork` | The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads, the animals’ care and the cooking first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse and her meals into the pantry, her place today where she spent the most |
-| 2 | `theFarmEats` | The farm eats: the farmer, everyone living on the farm and every farmhand who worked tonight, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; meals cooked today keep for tomorrow, older ones left over spoil |
+| 2 | `theFarmEats` | The farm eats: the farmer, everyone living on the farm and every farmhand who worked tonight, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; a meal keeps three days, then any left over spoil |
 | 2 | `settleTheAccounts` | The bill: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the takeout (15g a meal) and the upkeep, with anything owed: what gold there is pays, takeout first, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid |
 | 2 | `growCrops` | Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day |
 | 3 | `tendAnimals` | Animals: each animal fed today makes its good, waiting in its building to be collected (one at a time), and grows 2 fonder; one left unfed goes hungry, makes nothing and loses 10 fondness, and never dies; then each is unfed and uncared for the next day |
@@ -2113,7 +2113,7 @@ feeds many. The rules are `farm/food.ts`.
        two goods of food → six meals               the Umas first, the farmer last, the oldest meals first
      once married: Breakfast · 1, Dinner · 1     ★2+ meal → that Uma is well fed tomorrow (+1 action)
        (each a batch too)                        what's short: takeout, 15g a meal ──► the bill, with the upkeep
-   the Book: a farmhand on Cook                  meals cooked today keep for tomorrow; older ones spoil
+   the Book: a farmhand on Cook                  a meal keeps three days, then it spoils
  the morning:  From the pantry · 6 meals · Well fed      Takeout · 30g      Upkeep · 45g
 ```
 
@@ -2121,7 +2121,7 @@ feeds many. The rules are `farm/food.ts`.
 |  | The rule |
 |---|---|
 | Who eats | The farmer, everyone living on the farm (home in the Dorm, a spouse in her house) and every farmhand who works that day (spends an action tonight): 2 meals each, at night |
-| The pantry | Cooked meals wait here, by the day cooked and their stars. A meal keeps 2 days: cooked today, it’s eaten tonight or tomorrow night, then it spoils |
+| The pantry | Cooked meals wait here, by the day cooked and their stars. A meal keeps 3 days: cooked today, it’s eaten tonight, tomorrow night or the night after, then it spoils |
 | The night’s meals | Night step 2, after the farmhands work: the Umas eat first (the farmhands who worked, in their order, then the rest of the farm), the farmer last; the oldest meals first, the best of those |
 | Takeout | 15g a meal the pantry is short, charged with the upkeep (takeout first); a new farm’s farmer eats 2: 30g a night |
 | Short of it | Takeout never goes unpaid: what gold there is pays, the rest is owed with the upkeep, and the short nights count as the upkeep’s |
@@ -2149,21 +2149,22 @@ A farmhand's batch by her Cooking (her aptitude, [aptitude](#aptitude)):
   upkeep and her meals.
 - **A new farm** pays its farmer's two meals of takeout the first night: the first morning says "Takeout · 30g".
 - **The pantry** keeps meals by the day they were cooked and their stars (`farm.pantry`). The night eats the oldest
-  first and the best of those, so yesterday's meals go before today's. A meal keeps two days: cooked today, it's eaten
-  tonight or tomorrow night; any left after that spoil ("· 2 spoiled").
+  first and the best of those, so yesterday's meals go before today's. A meal keeps three days: cooked today, it's eaten
+  tonight, tomorrow night or the night after; any left after that spoil ("· 2 spoiled"). So a farmer alone eats all six
+  of a batch, two a night for three nights.
 - **Takeout never goes unpaid:** it's charged with the upkeep, takeout first; what gold can't cover is owed with the
   upkeep's, and the short nights count as the upkeep's ([upkeep](#upkeep)). Nobody goes hungry.
 - **Cook a batch** is the farmer's, in the farmhouse kitchen: the **Kitchen** on the homestead's sheet (a tap on the
   Farmhouse on the farm map, or **Kitchen ›** in the Book). It shows the pantry, tonight's table as the farm stands ("4
   at the table · 8 meals"), tonight's takeout or "The pantry covers tonight", and the goods of food held, the plain
   rule's two picked to start: tap to choose any two (a good held twice can be picked twice), and **Cook a batch · 1**
-  cooks six meals, "6 meals ★2 from Salmon and Salmon: well fed".
-- **Cooking saves gold:** a batch's six meals are 90g of takeout, from two goods the bin pays 60–80g for at ★1 (two
-  Button Mushrooms 60g, a Mushroom and a Carp 70g, two Carp 80g): 10–30g a batch better than shipping them and buying
-  in, whenever all six are eaten. They are when the table has a second mouth over two nights, or three in one night.
-  Alone, the farmer eats four before the last two spoil (meals keep two days): 60g of takeout for the same goods and an
-  action, so alone he buys his food and cooks to bridge a tight night. Refused with fewer than two goods of food ("Two
-  goods of food make a batch: crops, fish, eggs and milk, mushrooms, fruits, nuts or sweets.") and with no action left.
+  cooks six meals, "6 meals ★2 from Salmon and Salmon: well fed". Refused with fewer than two goods of food ("Two goods
+  of food make a batch: crops, fish, eggs and milk, mushrooms, fruits, nuts or sweets.") and with no action left.
+- **Cooking saves gold:** a batch's six meals are 90g of takeout, three nights of the farmer's alone, from two goods the
+  bin pays 60–80g for at ★1 (two Button Mushrooms 60g, a Mushroom and a Carp 70g, two Carp 80g): 10–30g a batch better
+  than shipping them and buying in. The action is the batch's other cost: for a farmer who'd otherwise spend it on a
+  haul (a forage or a catch, about 45–70g), cooking every night he can comes out about even with takeout over a year
+  ([what food costs](#what-food-costs-and-what-cooking-saves)).
 - **A household meal** (married life: [the household's meals](#the-households-meals)) is the farmer cooking for the
   household, so it cooks a batch too: six meals for the pantry from two goods by the plain rule, when the Warehouse
   holds them; without them it's served as before. Its scene, its +10 and its well fed stay.
@@ -2194,16 +2195,17 @@ takeout alone:
 | A year | Takeout | Its share of the bin | Meals from the pantry | Short nights | Gold at the year's end |
 |---|---|---|---|---|---|
 | The farmer alone, on takeout | 1,440g (96 meals) | 16% | 0 | 0 | 4,655g |
-| The farmer alone, cooking for a tight night | 1,320g (88 meals) | 15% | 8 | 0 | 4,850g |
-| The farmer alone, cooking every night he can | 270g (18 meals) | 4% | 78 | 3 | 3,790g |
+| The farmer alone, cooking for a tight night | 1,350g (90 meals) | 15% | 6 | 0 | 4,700g |
+| The farmer alone, cooking every night he can | 360g (24 meals) | 5% | 72 | 0 | 4,355g |
 | Two farmhands, on takeout (four Umas home by Winter) | 7,500g (500 meals) | 23% | 0 | 0 | 17,280g |
 | Two farmhands, the field hand on Cook | 2,250g (150 meals) | 5% | 350 | 0 | 36,325g |
 
 - **Takeout bites and never sinks a farm:** alone it's a sixth of what the bin pays, and never a short night; with two
   farmhands and four idle Umas home it's nearly a quarter.
-- **Cooking saves gold once there's a second mouth:** alone, the farmer eats four of a batch's six before the rest spoil,
-  so he cooks to bridge a tight night (the Mill's, on a loan) and buys the rest; cooking every night he can, the year
-  ends poorer (3,790g, with the stove's actions taken from his hauls). With a cook, the farm feeds itself from the
+- **Cooking saves gold:** a ★1 batch saves 10–30g of gold against takeout, alone or not: alone it's three nights of his
+  meals. Cooking every night he can, the farmer alone buys a quarter of the takeout (360g), spoils nothing and never runs
+  short, and ends the year on 4,355g against 4,655g on takeout: the twelve batches' 1,080g of takeout saved is about
+  what their goods and the hauls their actions would have brought. With a cook, the farm feeds itself from the
   pantry from Summer (takeout falls from 825g in Spring to 225g in Winter) and her ★2 meals keep the farmhands well fed
   (68 well-fed nights in Winter), so it ends the year twice as rich as on takeout.
 - **At scale,** the whole farm's cook (Cooking 6 by its second year) feeds eight a night from the pantry, nearly all of
@@ -3211,8 +3213,9 @@ batch from his two cheapest goods of food when it won't cover a few nights' take
 - **the loan clears,** and the farmer alone reaches Farm Rank 2;
 - **takeout bites from the first night** (the first morning says "Takeout · 30g") and comes to a sixth of what he ships;
   **he cooks to bridge the Mill's tight night,** and the year ends within a tenth of the same farm on takeout alone;
-- **cooking every night alone gains nothing:** a third run cooks whenever the pantry won't hold his two meals; meals
-  spoil, and the year ends poorer than on takeout;
+- **cooking every night he can alone:** a third run cooks whenever the pantry won't hold his two meals; he eats every
+  meal (nothing spoils), buys under a third of the takeout, never runs short, and ends the year within a tenth of the
+  farm on takeout;
 - **every morning's save parses** as v5.
 
 The run as it stands (`SEASON=1` prints it, and the same farms on takeout alone beside them). Spring, day by day:
@@ -3222,8 +3225,8 @@ The run as it stands (`SEASON=1` prints it, and the same farms on takeout alone 
 | Planted and watered | 0 | 5 | 0 | 0 | 0 | 2 | 2 | 1 | 0 | 0 | 0 | 0 |
 | Watered, besides the day's plantings | 0 | 0 | 5 | 5 | 5 | 0 | 2 | 4 | 5 | 3 | 1 | 0 |
 | Harvested | 0 | 0 | 0 | 0 | 0 | 5 | 0 | 0 | 0 | 2 | 2 | 1 |
-| Gold, morning | 500 | 470 | 440 | 410 | 380 | 80 | 480 | 435 | 210 | 165 | 120 | 75 |
-| His meals | Takeout | Takeout | Takeout | Takeout | A batch | The batch | Takeout | Takeout | Takeout | Takeout | Takeout | A batch |
+| Gold, morning | 500 | 470 | 440 | 410 | 380 | 80 | 480 | 465 | 240 | 195 | 150 | 105 |
+| His meals | Takeout | Takeout | Takeout | Takeout | A batch | The batch | The batch | Takeout | Takeout | Takeout | Takeout | Takeout |
 | Built | | | | | The Mill, on a 700g loan | | | | | | | |
 
 The year, season by season (the morning after each season's last night):
@@ -3231,20 +3234,20 @@ The year, season by season (the morning after each season's last night):
 | Season | The bin paid | Takeout | Upkeep | The loan's shares | Left | Short nights | Gold after | Upkeep a night, at its end | Farm Rank |
 |---|---|---|---|---|---|---|---|---|---|
 | Spring | 1,140g | 270g | 105g | 160g | 605g | 0 | 625g | 15g (the Mill) | 1 |
-| Summer | 2,155g | 330g | 180g | 320g | 1,325g | 0 | 1,590g | 15g | 1 |
-| Autumn | 2,755g | 360g | 180g | 290g | 1,925g | 0 | 2,975g | 15g | 1 |
-| Winter | 2,955g | 360g | 180g | — | 2,415g | 0 | 4,850g | 15g | 2 |
+| Summer | 2,085g | 360g | 180g | 400g | 1,145g | 0 | 1,410g | 15g | 1 |
+| Autumn | 2,710g | 360g | 180g | 210g | 1,960g | 0 | 2,830g | 15g | 1 |
+| Winter | 2,950g | 360g | 180g | — | 2,410g | 0 | 4,700g | 15g | 2 |
 
 - **The loan builds the Mill early:** 20 logs held by Spring 4, but the 10g a loan would leave him that day wouldn't pay
   the night's 30g of takeout, so he waits a day: on Spring 5, 380g of his own and a 700g loan (770g owed, 80g a night),
-  and with his gold low he keeps an action for the stove and cooks a batch from the day's hauls: six meals, four of them
-  his next two nights' and two spoiled. The Mill stands on Spring 6; the nights' income clears the loan in Autumn.
-- **Takeout bites, and never sinks him:** 1,320g of takeout in the year (88 meals) against 9,005g shipped, a sixth, with
-  never a short night. On takeout alone (no batch) the year ends on 4,655g; cooking for the tight nights, on 4,850g.
-  Alone he eats four of a batch's six meals before the last two spoil, so a batch saves him 60g for two goods and an
-  action: he buys his food and cooks only to bridge a night ([food](#food)). Cooking every night he can, the year ends
-  on 3,790g, with three short nights in Spring.
-- **Year 2 opens** on 4,850g, 9,005g shipped, 47 tiles harvested and 165 Farm Rank points (Farm Rank 2). The farmer
+  and with his gold low he keeps an action for the stove and cooks a batch from the day's hauls: six meals, his next
+  three nights'. The Mill stands on Spring 6; the nights' income clears the loan in Autumn.
+- **Takeout bites, and never sinks him:** 1,350g of takeout in the year (90 meals) against 8,885g shipped, a sixth, with
+  never a short night. On takeout alone (no batch) the year ends on 4,655g; cooking for the tight nights, on 4,700g.
+  Cooking every night he can, he buys 360g of takeout (24 meals), eats all 72 meals of his twelve batches, never runs
+  short and ends on 4,355g: a batch saves him 90g of takeout for two goods worth 60–70g, and its action is a haul he
+  doesn't bring home ([food](#food)).
+- **Year 2 opens** on 4,700g, 8,885g shipped, 47 tiles harvested and 163 Farm Rank points (Farm Rank 2). The farmer
   alone doesn't reach Farm Rank 3 (250) in a year, so the Sawmill and the Smokehouse wait for the farmhands.
 - **Fishing and foraging still carry the farm:** an action at the water or the woods pays about what a Carrot's whole
   run of six actions does.
@@ -3287,7 +3290,7 @@ farm on takeout alone runs beside it. It checks:
 The same farm on takeout alone pays 1,020g, 1,800g, 2,160g and 2,520g of takeout and ends the year on 17,280g.
 
 - **They pay their way many times over:** their 20g a night is part of the year's 3,360g upkeep, against 46,055g
-  shipped (five times the farmer alone's 9,005g). The farmhands spent 405 actions in the year; the farmer watered 17
+  shipped (five times the farmer alone's 8,885g). The farmhands spent 405 actions in the year; the farmer watered 17
   tiles (156 alone) and spent 102 actions with the people.
 - **The farm grows faster:** Farm Rank 3 by Summer's end, the Mill on Spring 7 and the Dorm's second level, the Sawmill
   and the Smokehouse in Autumn, all on his own gold, and 745 Farm Rank points by Year 2.
@@ -3341,7 +3344,7 @@ chickens cost their 500g and their feed; the cook feeds them all. It checks:
 - **The farm in all:** the two years ship 312,465g and end on 283,970g, Farm Rank 5 (3,659 points); every build is
   paid from its own gold.
 - **Food's numbers:** takeout at 15g a meal, the farmer's batch of six from two goods (so cooking saves gold against
-  takeout), the cook's 6 to 12. The ranch's and the Mine's stand as built. F91 (work at scale) takes the farm's work and
+  takeout), the cook's 6 to 12, and three days a meal keeps. The ranch's and the Mine's stand as built. F91 (work at scale) takes the farm's work and
   prices on from here.
 
 ##### A route to marriage

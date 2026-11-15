@@ -3,8 +3,9 @@
 //
 //   who eats     the farmer, everyone living on the farm (home in the Dorm, a spouse in her house) and every farmhand who
 //                works that day (spends an action tonight); two meals each, at night
-//   the pantry   cooked meals wait here, by the day they were cooked and their stars (`farm.pantry`). A meal keeps two
-//                days: cooked today, it's eaten tonight or tomorrow night, then it spoils
+//   the pantry   cooked meals wait here, by the day they were cooked and their stars (`farm.pantry`). A meal keeps three
+//                days: cooked today, it's eaten tonight, tomorrow night or the night after, then it spoils; so a farmer
+//                alone eats all six of a batch
 //   the night    step 2, after the farmhands work: each mouth eats two meals from the pantry, the Umas first (the
 //                farmhands in their order, then the rest of the farm), the farmer last; the oldest meals first, the best
 //                of those. What's short is **takeout**, 15g a meal, charged with the upkeep (`settleAccounts`)
@@ -25,15 +26,13 @@ import { spend } from './actions'
 import { goodOf, type GoodsFamily } from '../goods/ids'
 import { starPrice } from '../goods/prices'
 import { SaveRuleError } from '../save/rules'
-import { farmHome, type FarmSave, type PantryLot } from '../save/v4'
+import { farmHome, MEAL_KEEPS, type FarmSave, type PantryLot } from '../save/v4'
 import { MAX_STARS, parseStockKey, stockKey, takeGoods } from '../save/warehouse'
 
 /** Each mouth eats two meals a night. */
 export const MEALS_A_DAY = 2
 /** A meal bought in, for each the pantry is short. */
 export const TAKEOUT_PRICE = 15
-/** A meal keeps this many days: the day it's cooked and the next. */
-export const MEAL_KEEPS = 2
 /** The farmer's batch: six meals from two goods, so a batch of the cheapest goods saves gold against takeout. */
 export const BATCH_MEALS = 6
 export const BATCH_GOODS = 2
@@ -93,7 +92,7 @@ export interface Eaten<S extends FarmSave> {
   pantry: number
   /** Meals the pantry was short: takeout. */
   takeout: number
-  /** Meals two days old, left uneaten: gone. */
+  /** Meals past their three days, left uneaten: gone. */
   spoiled: number
   /** The Umas a ★2+ meal left well fed, in the order they ate. */
   fed: string[]
@@ -103,7 +102,8 @@ export interface Eaten<S extends FarmSave> {
  * Night step 2, after the farmhands work: **the farm eats.** Each mouth eats two meals from the pantry: the Umas first
  * (`working`, the farmhands who worked tonight in their order, then the rest of the farm), the farmer last; the oldest
  * meals first and the best of those. An Uma who eats a ★2+ meal is well fed through tomorrow (never shortened). What's
- * short is takeout, charged with the upkeep. Meals cooked today keep for tomorrow night; older ones left over spoil.
+ * short is takeout, charged with the upkeep. Meals cooked today or yesterday keep for tomorrow night; older ones left over
+ * spoil.
  */
 export function eatTonight<S extends FarmSave>(save: S, working: readonly string[]): Eaten<S> {
   const today = save.calendar.day
@@ -130,8 +130,10 @@ export function eatTonight<S extends FarmSave>(save: S, working: readonly string
     }
     if (good && mouth !== null) fed.push(mouth)
   }
-  const spoiled = lots.filter((l) => l.day < today).reduce((n, l) => n + l.meals, 0)
-  const kept = lots.filter((l) => l.day >= today && l.meals > 0)
+  // A lot cooked on day D is eaten on nights D to D + MEAL_KEEPS − 1; after tonight, the lots past that spoil.
+  const keeps = (l: PantryLot) => l.day > today - MEAL_KEEPS + 1
+  const spoiled = lots.filter((l) => !keeps(l)).reduce((n, l) => n + l.meals, 0)
+  const kept = lots.filter((l) => keeps(l) && l.meals > 0)
   const roster = fed.length === 0 ? save.roster
     : { ...save.roster, ...Object.fromEntries(fed.map((id) => [id, { ...save.roster[id]!, wellFed: Math.max(save.roster[id]!.wellFed, PANTRY_FED_DAYS) }])) }
   return { save: { ...save, roster, farm: { ...save.farm, pantry: kept } }, mouths: umas.length + 1, pantry, takeout, spoiled, fed }

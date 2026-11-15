@@ -13,7 +13,8 @@ import { BUILD_PLACES, FARM_PLACES, MAP_PLACES, TOWN_FIRST_ROW, type FarmPlace, 
 import { BOARD_MET, buildCostWords, buildGoodsWords } from '../farm/builds'
 import { FREE_BEDS, HALF_PACE_FROM, LOAN_FEE, LOAN_LIMITS, LOAN_NIGHTS, LOAN_STEP, TWO_LOANS_FROM, UPKEEP_BED, UPKEEP_BUILDING, UPKEEP_RESIDENT } from '../farm/economy'
 import { NIGHT_STEPS } from '../night/end-day'
-import { BATCH_GOODS, BATCH_MEALS, COOK_BATCH, FOOD_FAMILIES, MEAL_KEEPS, MEALS_A_DAY, TAKEOUT_PRICE, WELL_FED_STARS } from '../farm/food'
+import { BATCH_GOODS, BATCH_MEALS, COOK_BATCH, FOOD_FAMILIES, MEALS_A_DAY, TAKEOUT_PRICE, WELL_FED_STARS } from '../farm/food'
+import { MEAL_KEEPS } from '../save/v4'
 import {
   APTITUDE_ACTIVITY, APTITUDE_NAMES, APTITUDE_POINTS, aptitudeLevelOf, aptitudeQuality, aptitudeYield, BIG_LOAD, FED_ACTIONS, HAND_ACTIONS, OPEN_TASKS, SETTLED_ACTIONS,
   SETTLED_AFTER, SPOUSE_ACTIONS, TALENT_START, TASK_NAMES, tilesAnAction, TRICK_AT, TRICKS,
@@ -490,7 +491,7 @@ function upkeepBlock(): string {
 function foodBlock(): string {
   return table(['', 'The rule'], [
     ['Who eats', `The farmer, everyone living on the farm (home in the Dorm, a spouse in her house) and every farmhand who works that day (spends an action tonight): ${MEALS_A_DAY} meals each, at night`],
-    ['The pantry', `Cooked meals wait here, by the day cooked and their stars. A meal keeps ${MEAL_KEEPS} days: cooked today, it’s eaten tonight or tomorrow night, then it spoils`],
+    ['The pantry', `Cooked meals wait here, by the day cooked and their stars. A meal keeps ${MEAL_KEEPS} days: cooked today, it’s eaten tonight, tomorrow night or the night after, then it spoils`],
     ['The night’s meals', 'Night step 2, after the farmhands work: the Umas eat first (the farmhands who worked, in their order, then the rest of the farm), the farmer last; the oldest meals first, the best of those'],
     ['Takeout', `${g(TAKEOUT_PRICE)} a meal the pantry is short, charged with the upkeep (takeout first); a new farm’s farmer eats ${MEALS_A_DAY}: ${g(MEALS_A_DAY * TAKEOUT_PRICE)} a night`],
     ['Short of it', 'Takeout never goes unpaid: what gold there is pays, the rest is owed with the upkeep, and the short nights count as the upkeep’s'],

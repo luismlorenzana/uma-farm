@@ -183,8 +183,8 @@ export const payTheBin: NightStep = (night) => {
 }
 /** Step 2, after the farmhands work: **the farm eats.** The farmer, everyone living on the farm and every farmhand who
  * worked tonight eat two meals each from the pantry, the Umas first, the oldest meals first and the best of those; a
- * ★2+ meal leaves an Uma well fed through tomorrow. What's short is takeout, for the bill. Meals cooked today keep for
- * tomorrow; older ones left over spoil (`farm/food.ts`). */
+ * ★2+ meal leaves an Uma well fed through tomorrow. What's short is takeout, for the bill. A meal keeps three days, then
+ * any left over spoil (`farm/food.ts`). */
 export const theFarmEats: NightStep = (night) => {
   const working = night.notes.hands.filter((h) => h.spent > 0).map((h) => h.id)
   const { save, pantry, takeout, spoiled, fed } = eatTonight(night.save, working)
@@ -567,7 +567,7 @@ export const NIGHT_STEPS: readonly NightStepDef[] = [
   { step: 1, name: 'noteTonight', run: noteTonight, what: 'Before the bin, once anyone is married: tonight’s house and companion are noted (her house’s last night slept, and hers, are today), your pick of her at Tonight or else the house slept in least lately and its resident who’s been your companion least lately; the picks clear for tomorrow, and she greets you in the morning' },
   { step: 1, name: 'payTheBin', run: payTheBin, what: 'The bin pays: everything shipped today, at price × stars × demand' },
   { step: 2, name: 'farmhandsWork', run: farmhandsWork, what: 'The farmhands: each, in the order you invited them, after her part-time job, spends her actions today (3; +1 settled in, +2 a spouse, +1 well fed this morning; at the farm’s pace) on her board’s tasks: the field’s, the loads, the animals’ care and the cooking first, in your order, then her gathering and her digging, a turn each; a point of practice an action, her goods into the Warehouse and her meals into the pantry, her place today where she spent the most' },
-  { step: 2, name: 'theFarmEats', run: theFarmEats, what: 'The farm eats: the farmer, everyone living on the farm and every farmhand who worked tonight, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; meals cooked today keep for tomorrow, older ones left over spoil' },
+  { step: 2, name: 'theFarmEats', run: theFarmEats, what: 'The farm eats: the farmer, everyone living on the farm and every farmhand who worked tonight, two meals each from the pantry, the Umas first, the farmer last, the oldest meals first and the best of those; a ★2+ meal leaves an Uma well fed through tomorrow; what’s short is takeout; a meal keeps three days, then any left over spoil' },
   { step: 2, name: 'settleTheAccounts', run: settleTheAccounts, what: 'The bill: the bin’s pay joins the last seven nights’ income; each loan takes its share of it (a tenth of the loan, from the night’s income only); then the takeout (15g a meal) and the upkeep, with anything owed: what gold there is pays, takeout first, the rest is owed, a short night counted (the second in a row on is half pace) until it’s paid' },
   { step: 2, name: 'growCrops', run: growCrops, what: 'Crops grow: each growing tile watered today grows a stage, and one whose stages reach its days − 0.5 turns ripe; a dry tile doesn’t grow; a farmer’s night chores each water a dry growing tile first; then every tile dries for the next day' },
   { step: 3, name: 'tendAnimals', run: tendAnimals, what: 'Animals: each animal fed today makes its good, waiting in its building to be collected (one at a time), and grows 2 fonder; one left unfed goes hungry, makes nothing and loses 10 fondness, and never dies; then each is unfed and uncared for the next day' },

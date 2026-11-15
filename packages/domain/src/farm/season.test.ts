@@ -7,7 +7,7 @@
 // Rank 3 stations, with his own gold or a loan. Alone, nobody lives on the farm: an Uma there eats, and one with no work
 // costs her upkeep and her meals for nothing. Every night the farm eats, then pays its bill after the bin: the loans'
 // shares, then the takeout and the upkeep. **He eats takeout** (30g a night) while his gold holds, and cooks a batch
-// from his cheapest goods to bridge a night it wouldn't: alone he eats four of its six meals before the last two spoil.
+// from his cheapest goods to bridge a night it wouldn't: six meals, his next three nights'.
 //
 // **Beside him, the same year with two farmhands**, two friends from town invited to work on Spring 2 (10g of upkeep
 // each a night from then on): one waters the whole field, the other forages and fishes at the deepest places the farm
@@ -29,8 +29,8 @@
 // end withers what's left, and the bin pays. The year's: the bill is always paid (never a short night), the loan
 // clears, every season earns more than its takeout, upkeep and loans take, and the year ends richer than it started;
 // with the farmhands, richer than the farmer alone, his own watering mostly theirs. Food's: takeout bites from the first
-// night and never sinks the farm alone, and cooking every night alone gains nothing (four of a batch's six are eaten
-// before the rest spoil); the Cook's farm eats from the pantry and ends the year richer than on takeout.
+// night and never sinks the farm alone, and cooking every night he can alone eats every meal and never runs short; the
+// Cook's farm eats from the pantry and ends the year richer than on takeout.
 // The whole farm's: never a short night in two years, every season ahead of its bill, and the eggs and the ores each
 // paying more than their place's nights cost (its upkeep, its farmhand's, the feed and the hens). No story pack (the
 // night runs the farm's steps). `SEASON=1` prints the six runs.
@@ -461,7 +461,7 @@ const withHands = simulate('hands')
 const whole = simulate('whole', 2)
 /** The same farms on takeout alone, for what cooking saves. */
 const aloneTakeout = simulate('alone', 1, 'takeout')
-/** Alone, a batch every night he can: he eats four of its six before the last two spoil. */
+/** Alone, a batch whenever the pantry won't hold tonight's two meals: six meals, three nights of his. */
 const aloneStove = simulate('alone', 1, 'stove')
 const handsTakeout = simulate('hands', 1, 'takeout')
 const spring = log.slice(0, DAYS_PER_SEASON)
@@ -587,11 +587,13 @@ describe('food, the farmer alone: takeout bites from the first night, and never 
     expect(Math.abs(end.gold - aloneTakeout.end.gold) / aloneTakeout.end.gold).toBeLessThan(0.1)
   })
 
-  it('gains nothing from cooking every night alone: he eats four of a batch\'s six before the last two spoil', () => {
+  it('cooks every night he can alone: he eats all six of each batch, buys a quarter of the takeout, never runs short', () => {
     const books = aloneStove.books
-    expect(books.reduce((n, b) => n + b.spoiled, 0)).toBeGreaterThan(0)
+    expect(books.reduce((n, b) => n + b.spoiled, 0)).toBe(0)
     expect(books.reduce((n, b) => n + b.takeout, 0)).toBeLessThan(aloneTakeout.books.reduce((n, b) => n + b.takeout, 0) / 3)
-    expect(aloneStove.end.gold).toBeLessThan(aloneTakeout.end.gold)
+    expect(aloneStove.log.filter((d) => d.short)).toEqual([])
+    // The stove's action is one fewer haul: the year ends within a tenth of the farm on takeout.
+    expect(Math.abs(aloneStove.end.gold - aloneTakeout.end.gold) / aloneTakeout.end.gold).toBeLessThan(0.1)
   })
 })
 

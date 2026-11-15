@@ -38,7 +38,7 @@ shows who works it ([the field's plots](../game-mechanics.md#the-fields-plots),
 **Everyone eats, from day one** (F90): the farmer, everyone living on the farm and every farmhand who works that day eat
 two meals a night, from the pantry first; what it's short is takeout, 15g a meal, charged with the upkeep, so a new
 farm's first morning says "Takeout · 30g". Cook a batch in the farmhouse kitchen (the homestead's sheet, or **Kitchen ›**
-in the Book): an action, two goods of food, six meals that keep two days, 90g of takeout saved. A household meal cooks
+in the Book): an action, two goods of food, six meals that keep three days, 90g of takeout saved. A household meal cooks
 a batch too, and a farmhand on **Cook** cooks for everyone, 6 to 12 meals a batch by her new **Cooking**. A ★2+ meal leaves an Uma well
 fed. The Book shows tonight's food beside the upkeep ([food](../game-mechanics.md#food), [what food costs, and what
 cooking saves](../game-mechanics.md#what-food-costs-and-what-cooking-saves)).

@@ -1,4 +1,4 @@
-// Food: who eats (the farmer, everyone on the farm, the farmhands who work), the pantry and its two days, takeout at
+// Food: who eats (the farmer, everyone on the farm, the farmhands who work), the pantry and its three days, takeout at
 // 15g a meal charged with the upkeep from the first night, a short night's takeout owed like upkeep, the farmer's batch
 // and its refusals, the plain rule's goods, a ★2+ meal's well fed without stacking, the Cook task's batches by her
 // Cooking, a household meal's batch, and the save's pantry, grown in place. Invented ids; no story pack.
@@ -76,27 +76,31 @@ describe('who eats, and takeout', () => {
 })
 
 describe('the farmer\'s batch', () => {
-  it('cooks six meals from two goods of food for an action; the farm eats from the pantry, the oldest first, and they keep two days', () => {
+  it('cooks six meals from two goods of food for an action; the farm eats from the pantry, the oldest first, and they keep three days', () => {
     expect(BATCH_MEALS).toBe(6)
     const save = cookBatch(farm(500, { carp: [2, 0, 0, 0, 0], 'pine-log': [5, 0, 0, 0, 0] }))
     expect(actionsLeft(save)).toBe(DAY_ACTIONS - 1)
     expect(save.items.carp).toBeUndefined()
     expect(save.items['pine-log']).toEqual([5, 0, 0, 0, 0])
     expect(save.farm.pantry).toEqual([{ day: 1, stars: 1, meals: BATCH_MEALS }])
-    // Tonight: he eats two of them, and pays no takeout; four keep for tomorrow night.
+    // Tonight: he eats two of them, and pays no takeout; four keep for the next two nights.
     const day2 = night(save)
     expect(day2.gold).toBe(500)
     expect(money(day2)).toEqual([{ kind: 'pantry', meals: 2, spoiled: 0, fed: 0 }])
     expect(day2.farm.pantry).toEqual([{ day: 1, stars: 1, meals: 4 }])
-    // Tomorrow night two more; alone, the last two are two days old and spoil.
+    // Tomorrow night two more, the night after the last two: alone, he eats all six, and pays no takeout for three nights.
     const day3 = night(day2)
-    expect(money(day3)).toEqual([{ kind: 'pantry', meals: 2, spoiled: 2, fed: 0 }])
-    expect(day3.farm.pantry).toEqual([])
-    expect(money(night(day3))).toEqual([{ kind: 'takeout', meals: 2, paid: 30, due: 30 }])
-    expect(parseSaveV5(json(day2))).toEqual(day2)
+    expect(money(day3)).toEqual([{ kind: 'pantry', meals: 2, spoiled: 0, fed: 0 }])
+    expect(day3.farm.pantry).toEqual([{ day: 1, stars: 1, meals: 2 }])
+    const day4 = night(day3)
+    expect(money(day4)).toEqual([{ kind: 'pantry', meals: 2, spoiled: 0, fed: 0 }])
+    expect(day4.farm.pantry).toEqual([])
+    expect(day4.gold).toBe(500)
+    expect(money(night(day4))).toEqual([{ kind: 'takeout', meals: 2, paid: 30, due: 30 }])
+    expect(parseSaveV5(json(day3))).toEqual(day3)
   })
 
-  it('saves gold: a ★1 batch of two Button Mushrooms (60g at the bin) feeds three a night, 90g of takeout', () => {
+  it('saves gold: a ★1 batch of two Button Mushrooms (60g at the bin) is 90g of takeout, three a night or one for three nights', () => {
     const save = home(farm(500, { 'button-mushroom': [2, 0, 0, 0, 0] }), [A, B])
     // Shipped and takeout bought: the bin pays 60g, three mouths eat 90g of takeout, two Umas' upkeep is 20g.
     const bought = night(ship(save, 'button-mushroom', 1, 2))
@@ -105,16 +109,19 @@ describe('the farmer\'s batch', () => {
     const cooked = night(cookBatch(save))
     expect(money(cooked)).toEqual([{ kind: 'pantry', meals: 6, spoiled: 0, fed: 0 }, { kind: 'upkeep', paid: 20, due: 20 }])
     expect(cooked.gold - bought.gold).toBe(30)
+    // Alone: three nights of his meals for the same two mushrooms.
+    const alone = farm(500, { 'button-mushroom': [2, 0, 0, 0, 0] })
+    const three = (s: SaveV4) => night(night(night(s)))
+    expect(three(cookBatch(alone)).gold - three(ship(alone, 'button-mushroom', 1, 2)).gold).toBe(30)
   })
 
-  it('spoils what\'s two days old: three batches on one day feed him two nights, the rest is gone', () => {
+  it('spoils what\'s past three days: three batches on one day feed him three nights, the rest is gone', () => {
     let save = farm(500, { carp: [6, 0, 0, 0, 0] })
     for (let n = 0; n < 3; n++) save = cookBatch(save)
     expect(pantryMeals(save)).toBe(18)
-    const day2 = night(save)
-    const day3 = night(day2)
-    expect(money(day3)).toEqual([{ kind: 'pantry', meals: 2, spoiled: 14, fed: 0 }])
-    expect(day3.farm.pantry).toEqual([])
+    const day4 = night(night(night(save)))
+    expect(money(day4)).toEqual([{ kind: 'pantry', meals: 2, spoiled: 12, fed: 0 }])
+    expect(day4.farm.pantry).toEqual([])
   })
 
   it('takes the plain rule\'s goods: the two cheapest of ★2 or more, so the meals feed well, else the two cheapest; only food', () => {
@@ -246,12 +253,12 @@ describe('the save', () => {
     expect(parseSaveV5(json(save))).toEqual(save)
   })
 
-  it('refuses a pantry lot older than yesterday, after today, out of order or empty', () => {
+  it('refuses a pantry lot older than the day before yesterday, after today, out of order or empty', () => {
     const save = farm(500, {}, 5)
     const bad = (pantry: unknown) => () => parseSaveV5(json({ ...save, farm: { ...save.farm, pantry } }))
-    expect(bad([{ day: 4, stars: 2, meals: 3 }, { day: 5, stars: 1, meals: 4 }])).not.toThrow()
-    expect(bad([{ day: 3, stars: 1, meals: 4 }])).toThrow('expected 4–5')
-    expect(bad([{ day: 6, stars: 1, meals: 4 }])).toThrow('expected 4–5')
+    expect(bad([{ day: 3, stars: 1, meals: 1 }, { day: 4, stars: 2, meals: 3 }, { day: 5, stars: 1, meals: 4 }])).not.toThrow()
+    expect(bad([{ day: 2, stars: 1, meals: 4 }])).toThrow('expected 3–5')
+    expect(bad([{ day: 6, stars: 1, meals: 4 }])).toThrow('expected 3–5')
     expect(bad([{ day: 5, stars: 1, meals: 4 }, { day: 4, stars: 1, meals: 4 }])).toThrow('expected the oldest first')
     expect(bad([{ day: 5, stars: 1, meals: 0 }])).toThrow('expected 1–')
     expect(bad([{ day: 5, stars: 1, meals: 1 }, { day: 5, stars: 1, meals: 2 }])).toThrow('repeated')

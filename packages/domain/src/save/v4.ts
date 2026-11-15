@@ -518,8 +518,11 @@ export interface Loan {
 export const MAX_LOANS = 2
 /** The nights of income the farm's book keeps: the last seven. */
 export const INCOME_NIGHTS = 7
-/** Meals waiting in the pantry (`farm/food.ts`): those cooked one day at one star. A meal keeps two days: cooked today,
- * it's eaten tonight or tomorrow night, then it spoils. */
+/** Meals waiting in the pantry (`farm/food.ts`): those cooked one day at one star. A meal keeps three days: cooked today,
+ * it's eaten tonight, tomorrow night or the night after, then it spoils. */
+/** A meal keeps this many days: the day it's cooked and the next two (`farm/food.ts`). Here so the save's parse reads it
+ * without the food rules. */
+export const MEAL_KEEPS = 3
 export interface PantryLot {
   /** The day it was cooked. */
   day: number

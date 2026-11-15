@@ -12,7 +12,7 @@ import type { BinSale, MoneyLine, NewsLine, Nudge, RankLine, WorkLine } from '..
 import { amount, bool, count, int, list, object, oneOf, record, SaveParseError, type Obj } from './parse'
 import {
   ANIMAL_HOME, ANIMAL_KINDS, APTITUDE_IDS, MAX_TASKS, TASK_KINDS, BUILDING_IDS, BUILDING_MAX_LEVEL, DEEPEST_FLOOR, DORM_LOAN, EXTRA_KINDS, FIELD_TILES, GROUNDS, HOME_ROOM, HOUSE_LOAN, INCOME_NIGHTS,
-  MAX_FIELD_TILES, MAX_PLOTS,
+  MAX_FIELD_TILES, MAX_PLOTS, MEAL_KEEPS,
   isDishId, MAX_FONDNESS, MAX_LOANS, pairKey, RANCH_HOMES, SILO_ROOM,
   REGION_IDS, TOOL_IDS, TOWN_ID, WORKSHOP_IDS, type Animal, type BoardRequest, type BuildingId, type Dig, type DormSwap,
   type Expedition, type Extra, type FestivalResult, type Loan, type PantryLot, type RankState, type SaveV5, type StarCounts, type StationLoad, type Tile,
@@ -335,13 +335,14 @@ function parseLoans(value: unknown, path: string, today: number): Loan[] {
   }), path, (l) => l.for)
 }
 
-/** The pantry's meals: each lot cooked today or yesterday (a meal keeps two days), at ★1–★5, a meal or more; one lot a day
+/** The pantry's meals: each lot cooked today or on the two days before (a meal keeps three days), at ★1–★5, a meal or
+ * more; one lot a day
  * and star, the oldest first and the best first within a day. */
 function parsePantry(value: unknown, path: string, today: number): PantryLot[] {
-  const lots = unique(list(value, path, 0, 2 * MAX_STARS).map((v, i): PantryLot => {
+  const lots = unique(list(value, path, 0, MEAL_KEEPS * MAX_STARS).map((v, i): PantryLot => {
     const at = `${path}.${i}`
     const l = object(v, at, ['day', 'stars', 'meals'])
-    return { day: int(l.day, `${at}.day`, Math.max(1, today - 1), today), stars: int(l.stars, `${at}.stars`, 1, MAX_STARS), meals: int(l.meals, `${at}.meals`, 1, MAX_PANTRY_MEALS) }
+    return { day: int(l.day, `${at}.day`, Math.max(1, today - MEAL_KEEPS + 1), today), stars: int(l.stars, `${at}.stars`, 1, MAX_STARS), meals: int(l.meals, `${at}.meals`, 1, MAX_PANTRY_MEALS) }
   }), path, (l) => `${l.day}@${l.stars}`)
   lots.forEach((l, i) => {
     const prev = lots[i - 1]

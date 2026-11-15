@@ -44,7 +44,7 @@ export function Kitchen({ save, busy, onCook }: { save: SaveV4; busy: boolean; o
         <HelpButton title="The kitchen" label="How food works">
           <p>Everyone who eats on the farm eats twice a day, at night: you, everyone living on the farm, and every farmhand who works that day.</p>
           <p>They eat from the pantry first. Whatever it’s short is takeout, {gold(TAKEOUT_PRICE)} a meal, paid with the upkeep.</p>
-          <p>Cook a batch here: one action, two goods of food, {BATCH_MEALS} meals: {gold(BATCH_MEALS * TAKEOUT_PRICE)} of takeout. Meals keep two days. A meal of ★2 or more leaves an Uma who eats it well fed: one more action the next day.</p>
+          <p>Cook a batch here: one action, two goods of food, {BATCH_MEALS} meals: {gold(BATCH_MEALS * TAKEOUT_PRICE)} of takeout. Meals keep three days. A meal of ★2 or more leaves an Uma who eats it well fed: one more action the next day.</p>
           <p>A farmhand on Cook cooks for everyone: bigger batches as her Cooking grows.</p>
         </HelpButton>
       </div>
