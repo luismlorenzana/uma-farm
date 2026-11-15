@@ -1,11 +1,12 @@
 // The work board, in the Book: each farmhand's card with her part-time job and her actions today (3, more settled in,
 // married and well fed; half pace when the upkeep's short), what she'll do tonight as the farm stands, and her tasks in
 // your order, each with her aptitude's level. **Add a task** opens a side panel (`?task=<id>`): what (harvest, water,
-// plant, clear and till over the field's rows; a station's load; a forest area's forage or chop; a fishing spot's catch;
+// plant, clear and till over a plot's rows, each plot listed with its rows and a plot not cleared greyed; a station's load; a forest area's forage or chop; a fishing spot's catch;
 // the Coop's or the Barn's animals; a face at the Mine or the Quarry) and where. Tasks repeat each day until you change them; any Uma does any task. Setting them is free. Loaded with the
 // Book.
 import {
-  aptitudeOf, APTITUDE_NAMES, CROPS, farmPlace, FIELD_COLUMNS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handTonight, isOvergrown, itemNameOf,
+  aptitudeOf, APTITUDE_NAMES, CROPS, farmPlace, FIELD_COLUMNS, FIELD_PLOTS, FIELD_ROWS, FIELD_TILES, handDay, handsInOrder, handTonight, isOvergrown, itemNameOf,
+  plotLock, plotLockWords, plotName,
   MAX_TASKS, reachList, seedsInSeason, STATIONS, stationBuilt, taskAptitude, TASK_KINDS, TASK_NAMES, TILE_TASKS, growsIn, dateOf, DIGS, placeBuilt, RANCH_HOMES,
   type CropId, type DigId, type FarmPlaceId, type FarmSave, type FarmTask, type RanchHome, type StationId, type StoryPack, type TaskKind, type TileTaskKind,
 } from '@farm/domain'
@@ -72,6 +73,7 @@ function HandCard({ save, id, name, pack, talentOf, onAdd }: {
   const tasks = uma.tasks ?? []
   const tonight = handTonight(save, id, talentOf, pack)
   const chips = dayChips(day)
+  const plots = save.fields.plots.length
   const edit = (next: FarmTask[]) => { setError(null); setHandTasks(id, next).catch((e: unknown) => setError(errorWords(e))) }
   const move = (i: number) => edit(tasks.map((t, k) => (k === i - 1 ? tasks[i]! : k === i ? tasks[i - 1]! : t)))
   return (
@@ -101,13 +103,13 @@ function HandCard({ save, id, name, pack, talentOf, onAdd }: {
             const aptitude = taskAptitude(task)
             const level = aptitudeOf(uma, aptitude, (a) => talentOf(id, a)).level
             return (
-              <li key={`${i}:${taskWords(task)}`} className="flex min-h-11 items-center gap-1 pl-2" data-task={task.kind}>
+              <li key={`${i}:${taskWords(task, plots)}`} className="flex min-h-11 items-center gap-1 pl-2" data-task={task.kind}>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] font-semibold" data-task-words>{taskWords(task)}</span>
+                  <span className="block truncate text-[14px] font-semibold" data-task-words>{taskWords(task, plots)}</span>
                   <span className="block truncate text-[11px] text-ink-soft" data-task-aptitude>{APTITUDE_NAMES[aptitude]} {level}{runsOn(task) ? ' · shares what’s left' : ''}</span>
                 </span>
-                {i > 0 && <IconButton aria-label={`Move ${taskWords(task)} up`} onClick={() => move(i)} data-action="task-up"><span aria-hidden>↑</span></IconButton>}
-                <IconButton aria-label={`Remove ${taskWords(task)}`} onClick={() => edit(tasks.filter((_, k) => k !== i))} data-action="task-remove"><span aria-hidden>✕</span></IconButton>
+                {i > 0 && <IconButton aria-label={`Move ${taskWords(task, plots)} up`} onClick={() => move(i)} data-action="task-up"><span aria-hidden>↑</span></IconButton>}
+                <IconButton aria-label={`Remove ${taskWords(task, plots)}`} onClick={() => edit(tasks.filter((_, k) => k !== i))} data-action="task-remove"><span aria-hidden>✕</span></IconButton>
               </li>
             )
           })}
@@ -121,11 +123,13 @@ function HandCard({ save, id, name, pack, talentOf, onAdd }: {
   )
 }
 
-/** How many of a row's tiles a field task would find work on now: growing and dry, ripe, empty tilled, or to clear and
- * till. */
-function rowCount(save: FarmSave, kind: TileTaskKind, row: number): number {
+/** How many of a plot's row's tiles a field task would find work on now: growing and dry, ripe, empty tilled, or to clear
+ * and till. */
+function rowCount(save: FarmSave, kind: TileTaskKind, plot: number, row: number): number {
+  const tiles = save.fields.plots[plot]?.tiles ?? []
   return rowTiles(row).filter((i) => {
-    const t = save.fields.tiles[i]!
+    const t = tiles[i]
+    if (!t) return false
     switch (kind) {
       case 'water': return t.crop !== null && !t.ready
       case 'harvest': return t.crop !== null
@@ -139,6 +143,7 @@ const ROW_WORDS: Readonly<Record<TileTaskKind, string>> = { water: 'growing', ha
 /** Add a task: what, then where; its words on the button. */
 function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name: string; onClose: () => void }) {
   const [kind, setKind] = useState<TaskKind>('water')
+  const [plot, setPlot] = useState(0)
   const [rows, setRows] = useState<number[]>([])
   const [crop, setCrop] = useState<CropId | null>(null)
   const [where, setWhere] = useState<string | null>(null)
@@ -146,8 +151,9 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
   const [busy, setBusy] = useState(false)
   const tile = (TILE_TASKS as readonly string[]).includes(kind)
   const tiles = rows.flatMap(rowTiles)
+  const on = plot > 0 ? { plot } : {}
   const task: FarmTask | null = tile
-    ? (tiles.length === 0 ? null : kind === 'plant' ? { kind, tiles, ...(crop ? { crop } : {}) } : { kind: kind as Exclude<TileTaskKind, 'plant'>, tiles })
+    ? (tiles.length === 0 ? null : kind === 'plant' ? { kind, tiles, ...on, ...(crop ? { crop } : {}) } : { kind: kind as Exclude<TileTaskKind, 'plant'>, tiles, ...on })
     : where === null ? null
       : kind === 'load' ? { kind, station: where as StationId }
         : kind === 'care' ? { kind, home: where as RanchHome }
@@ -170,7 +176,7 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
       footer={(
         <div className="space-y-1">
           {error && <p role="status" className="text-center text-[13px] font-semibold text-danger">{error}</p>}
-          <Button className="w-full" disabled={!task || busy} onClick={add} data-action="add-task-confirm">{task ? `Add · ${taskWords(task)}` : 'Choose where'}</Button>
+          <Button className="w-full" disabled={!task || busy} onClick={add} data-action="add-task-confirm">{task ? `Add · ${taskWords(task, save.fields.plots.length)}` : 'Choose where'}</Button>
         </div>
       )}>
       <div className="space-y-3 pb-1" data-add-task={id}>
@@ -182,10 +188,25 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
         </fieldset>
         {tile ? (
           <fieldset>
-            <legend className="text-micro pb-1">The field’s rows</legend>
+            <legend className="text-micro pb-1">The plot</legend>
+            <div className="flex flex-wrap gap-1.5 pb-2">
+              {FIELD_PLOTS.map((_, p) => {
+                const cleared = p < save.fields.plots.length
+                const lock = cleared ? null : plotLockWords(plotLock(save, p))
+                return (
+                  <Chip key={p} selected={plot === p} aria-pressed={plot === p} disabled={!cleared} onClick={() => { setPlot(p); setRows([]) }} data-plot={p + 1}>
+                    <span className="block text-left leading-tight">
+                      <span className="block">{plotName(p)}</span>
+                      {lock && <span className="block text-[11px] text-ink-faint">{lock}</span>}
+                    </span>
+                  </Chip>
+                )
+              })}
+            </div>
+            <p className="text-micro pb-1">{plotName(plot)}’s rows</p>
             <div className="grid grid-cols-3 gap-1.5 [&>button]:justify-start">
               <Chip selected={rows.length === FIELD_ROWS} aria-pressed={rows.length === FIELD_ROWS} onClick={() => setRows(rows.length === FIELD_ROWS ? [] : Array.from({ length: FIELD_ROWS }, (_, r) => r + 1))} data-row="all">
-                Whole field
+                Whole plot
               </Chip>
               {Array.from({ length: FIELD_ROWS }, (_, r) => r + 1).map((row) => {
                 const on = rows.includes(row)
@@ -193,13 +214,13 @@ function AddTask({ save, id, name, onClose }: { save: FarmSave; id: string; name
                   <Chip key={row} selected={on} aria-pressed={on} onClick={() => setRows(on ? rows.filter((x) => x !== row) : [...rows, row].sort())} data-row={row}>
                     <span className="block text-left leading-tight">
                       <span className="block">Row {row}</span>
-                      <span className="block text-[11px] text-ink-soft">{rowCount(save, kind as TileTaskKind, row)} {ROW_WORDS[kind as TileTaskKind]}</span>
+                      <span className="block text-[11px] text-ink-soft">{rowCount(save, kind as TileTaskKind, plot, row)} {ROW_WORDS[kind as TileTaskKind]}</span>
                     </span>
                   </Chip>
                 )
               })}
             </div>
-            <p className="pt-1 text-[12px] text-ink-faint">{plural(FIELD_COLUMNS, 'tile')} a row, {FIELD_TILES} in all.</p>
+            <p className="pt-1 text-[12px] text-ink-faint">{plural(FIELD_COLUMNS, 'tile')} a row, {FIELD_TILES} a plot.</p>
             {kind === 'plant' && (
               <div className="pt-2">
                 <p className="text-micro pb-1">Seed</p>

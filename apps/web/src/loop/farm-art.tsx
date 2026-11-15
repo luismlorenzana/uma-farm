@@ -108,6 +108,41 @@ export function TileArt({ tile, cell }: { tile: Tile; cell: number }) {
   )
 }
 
+/** A tile at a glance, for the field's sign: its ground's colour, and a dot for a crop (green growing, gold ripe, blue
+ * once watered). */
+function miniTile(tile: Tile): { ground: string; dot: string | null } {
+  const ground = tile.ground === 'tilled' ? (tile.watered ? WET : SOIL) : tile.ground === 'clear' ? EARTH : GRASS
+  return { ground, dot: tile.crop === null ? null : tile.ready ? '#f2c230' : tile.watered ? '#6ec3f0' : '#5fb043' }
+}
+
+/** The field's sign on the farm map: a wooden board with plot 1 drawn small, tile by tile, `size` points wide, and a
+ * page mark for each plot past the first. */
+export function FieldSignArt({ tiles, plots, size, columns }: { tiles: readonly Tile[]; plots: number; size: number; columns: number }) {
+  const rows = Math.ceil(tiles.length / columns)
+  const w = columns + 1
+  const h = rows + 1 + (plots > 1 ? 0.9 : 0)
+  return (
+    <svg aria-hidden viewBox={`-0.5 -0.5 ${w} ${h}`} width={size} height={(size * h) / w} className="shrink-0 drop-shadow-sm" data-field-sign-art>
+      <rect x={-0.5} y={-0.5} width={w} height={h} rx={0.45} fill="#8a5a32" />
+      <rect x={-0.2} y={-0.2} width={w - 0.6} height={rows + 0.4} rx={0.2} fill="#6b4424" />
+      {tiles.map((tile, i) => {
+        const { ground, dot } = miniTile(tile)
+        const x = (i % columns) + 0.04
+        const y = Math.floor(i / columns) + 0.04
+        return (
+          <g key={i}>
+            <rect x={x} y={y} width={0.92} height={0.92} rx={0.12} fill={ground} />
+            {dot && <circle cx={x + 0.46} cy={y + 0.46} r={0.27} fill={dot} />}
+          </g>
+        )
+      })}
+      {plots > 1 && Array.from({ length: plots }, (_, p) => (
+        <circle key={p} cx={w / 2 - 0.5 - ((plots - 1) * 0.7) / 2 + p * 0.7} cy={rows + 0.55} r={0.22} fill={p === 0 ? '#f3e3c3' : '#d9b98a'} />
+      ))}
+    </svg>
+  )
+}
+
 /** The woods' edge: trees in rows, darker toward the back. */
 export function Trees() {
   return (

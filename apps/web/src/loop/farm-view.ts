@@ -1,10 +1,10 @@
-// The farm map's words: a tile as its panel shows it (what's on it, how far it's grown, and the one action it takes
-// next), the woods' and the pond's areas and spots with their season's finds, and a station's loads. Pure, so the
-// panels and the tests read the same.
+// The farm's words: a tile as its panel shows it (what's on it, how far it's grown, and the one action it takes next), the
+// field's counts at a glance (the farm map's sign, a plot's page), the woods' and the pond's areas and spots with their
+// season's finds, and a station's loads. Pure, so the panels and the tests read the same.
 import {
-  CLEAR_FINDS, cropLook, dateOf, DAYS_PER_SEASON, FIELD_COLUMNS, GROUND_NAMES, growsIn, isOvergrown, isSeasonEnd, itemNameOf, LOAD_SIZE, nightsLeft, reachList,
-  SEASON_NAMES, seedsInSeason, sharesOn, stagesOf, stationOptions, type CropLook, type FarmSave, type GatherPlace, type StationId, type StationOption,
-  type Tile,
+  CLEAR_FINDS, cropLook, dateOf, DAYS_PER_SEASON, FIELD_COLUMNS, GROUND_NAMES, growsIn, isOvergrown, isSeasonEnd, itemNameOf, LOAD_SIZE, nightsLeft, plotName,
+  plotOf, reachList, SEASON_NAMES, seedsInSeason, sharesOn, stagesOf, stationOptions, tileAt, tileInPlot, type CropLook, type FarmSave, type FieldCounts,
+  type GatherPlace, type StationId, type StationOption, type Tile,
 } from '@farm/domain'
 import { plural } from './words'
 
@@ -18,10 +18,13 @@ export type TileAction =
 
 /** A tile as its panel shows it. */
 export interface TileView {
+  /** Its field index: every plot's tiles in order. */
   index: number
+  /** Its plot's index, 0 for plot 1. */
+  plot: number
   /** "Weeds", "Tilled soil", "Carrot". */
   title: string
-  /** "Row 2, tile 3". */
+  /** "Row 2, tile 3", in its plot. */
   where: string
   /** What it needs or how far it's grown: "2 of 4 nights · watered". */
   line: string
@@ -39,11 +42,12 @@ export function withersTonight(save: Pick<FarmSave, 'calendar'>, tile: Tile): bo
   return !(tile.watered && nightsLeft(tile) === 1)
 }
 
-/** A tile's panel: what's on it, and what it takes next. */
+/** A tile's panel: what's on it, and what it takes next. `index` is its field index. */
 export function tileView(save: Pick<FarmSave, 'fields' | 'items' | 'calendar'>, index: number): TileView {
-  const tile = save.fields.tiles[index]!
-  const where = `Row ${Math.floor(index / FIELD_COLUMNS) + 1}, tile ${(index % FIELD_COLUMNS) + 1}`
-  const base = { index, where, withers: false, look: cropLook(tile) }
+  const tile = tileAt(save, index)
+  const at = tileInPlot(index)
+  const where = `Row ${Math.floor(at / FIELD_COLUMNS) + 1}, tile ${(at % FIELD_COLUMNS) + 1}`
+  const base = { index, plot: plotOf(index), where, withers: false, look: cropLook(tile) }
   if (isOvergrown(tile.ground)) {
     const leaves = CLEAR_FINDS[tile.ground]
     return { ...base, title: GROUND_NAMES[tile.ground], line: leaves ? `Clear it to till it. It leaves a ${itemNameOf(leaves)}.` : 'Clear it to till it.', actions: [{ kind: 'clear', leaves }] }
@@ -71,12 +75,23 @@ export function tileView(save: Pick<FarmSave, 'fields' | 'items' | 'calendar'>, 
   }
 }
 
-/** The words for a tile on the map, for VoiceOver: "Row 1, tile 2: Carrot, ripe". */
+/** The words for a tile on its plot's page, for VoiceOver: "Row 1, tile 2: Carrot, ripe". */
 export function tileLabel(save: Pick<FarmSave, 'fields' | 'items' | 'calendar'>, index: number): string {
   const view = tileView(save, index)
-  const tile = save.fields.tiles[index]!
+  const tile = tileAt(save, index)
   const state = tile.crop === null ? '' : tile.ready ? ', ripe' : tile.watered ? ', watered' : ', dry'
   return `${view.where}: ${view.title}${state}`
+}
+/** A tile's place in words with its plot, once the farm has more than one: "Plot 2 · Row 1, tile 2". */
+export const tileWhere = (save: Pick<FarmSave, 'fields'>, view: Pick<TileView, 'plot' | 'where'>): string =>
+  save.fields.plots.length > 1 ? `${plotName(view.plot)} · ${view.where}` : view.where
+
+/** The field's counts at a glance, the ones that aren't 0: "6 to water", "2 ripe", "3 to plant". */
+export function countsWords(counts: FieldCounts): string[] {
+  return [
+    ...(counts.water > 0 ? [`${counts.water} to water`] : []), ...(counts.ripe > 0 ? [`${counts.ripe} ripe`] : []),
+    ...(counts.plant > 0 ? [`${counts.plant} to plant`] : []),
+  ]
 }
 
 /** An area or a spot as the woods' and the pond's panels show it: its name, the season's finds, and what holds it

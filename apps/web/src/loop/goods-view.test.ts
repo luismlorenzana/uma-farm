@@ -82,11 +82,11 @@ describe('the shop\'s rows', () => {
 })
 
 describe('the places that open their screens (PLACE_SCREENS)', () => {
-  it('opens the bin and the shop as sheets, the Warehouse as a page and the field as the map itself; the rest keep their quick look', () => {
+  it('opens the bin and the shop as sheets, the Warehouse as a page and the field as its own screen; the rest keep their quick look', () => {
     const save = newSave('u1', AT)
     const link = (id: string) => placeLink(save, farmPlace(id)!)
     expect([link('bin'), link('shop'), link('warehouse'), link('fields'), link('mine')]).toEqual([
-      '/?sheet=bin', '/?sheet=shop', '/warehouse', '/', '/?peek=mine',
+      '/?sheet=bin', '/?sheet=shop', '/warehouse', '/field', '/?peek=mine',
     ])
     expect(['bin', 'shop', 'warehouse'].map((id) => lockOf(save, farmPlace(id)!))).toEqual([null, null, null])
   })

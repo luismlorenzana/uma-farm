@@ -3,7 +3,7 @@
 // removing one, the morning's farmhand and aptitude lines, and her aptitudes on her profile's Work side. Invented ids;
 // master data, sign-in and the server are stubs.
 import 'fake-indexeddb/auto'
-import { bareTile, newLove, newRosterUma, newSave, START_CLEAR, storyPackFrom, STAND_IN_FILES, type FarmhandLine, type MorningSummary, type SaveV4 } from '@farm/domain'
+import { fieldTiles, bareTile, newLove, wildPlot, newRosterUma, newSave, START_CLEAR, storyPackFrom, STAND_IN_FILES, type FarmhandLine, type MorningSummary, type SaveV4 } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes } from 'react-router'
@@ -32,7 +32,7 @@ function farm(): SaveV4 {
   const hand = { ...newRosterUma(1), farmhand: 1 }
   return {
     ...save, farmer: { name: 'Robin' }, calendar: { day: 3 }, roster: { [A]: hand, [B]: hand, 303: newRosterUma(1) }, love: { [A]: newLove(), [B]: newLove(), 303: newLove() },
-    fields: { tiles: save.fields.tiles.map((t, i) => (START_CLEAR.includes(i) ? { ...bareTile('tilled'), crop: 'carrot' as const } : t)) },
+    fields: { plots: [{ tiles: fieldTiles(save).map((t, i) => (START_CLEAR.includes(i) ? { ...bareTile('tilled'), crop: 'carrot' as const } : t)) }] },
     diary: { ...save.diary, read: ['scene:1:open'] },
   }
 }
@@ -138,6 +138,28 @@ describe('the work board in the Book', () => {
     expect(useGame.getState().save!.roster[A]!.tasks!.map((t) => t.kind)).toEqual(['water', 'fish'])
     await click($(`[data-hand="${A}"] [data-task="fish"] [data-action="task-remove"]`))
     expect(useGame.getState().save!.roster[A]!.tasks).toEqual([{ kind: 'water', tiles: Array.from({ length: 16 }, (_, i) => i) }])
+  })
+
+  it('lists each plot\'s rows: plot 2 greyed until it\'s cleared, then a task on its rows, named by its plot', async () => {
+    await render(<BookPage />, `/book?task=${A}`)
+    await click($('[data-kind="water"]'))
+    expect($$('[data-plot]').map((p) => p.textContent)).toEqual(['Plot 1', 'Plot 2Opens at Farm Rank 3'])
+    expect($('[data-plot="2"]')?.hasAttribute('disabled')).toBe(true)
+    // Plot 2 cleared: its rows, each with what it holds for the task.
+    const save = farm()
+    await act(async () => useGame.setState({ save: { ...save, fields: { plots: [save.fields.plots[0]!, wildPlot('u1', 1)] } } }))
+    await render(<BookPage />, `/book?task=${A}&two=1`)
+    await click($('[data-kind="till"]'))
+    await click($('[data-plot="2"]'))
+    expect($('[data-row="1"]')?.textContent).toBe('Row 18 to clear or till')
+    await click($('[data-row="1"]'))
+    expect($('[data-action="add-task-confirm"]')?.textContent).toBe('Add · Clear and till · plot 2, row 1')
+    await click($('[data-action="add-task-confirm"]'))
+    expect(useGame.getState().save!.roster[A]!.tasks).toEqual([{ kind: 'till', tiles: Array.from({ length: 8 }, (_, i) => i), plot: 1 }])
+    await render(<BookPage />, '/book')
+    expect($(`[data-hand="${A}"] [data-task-words]`)?.textContent).toBe('Clear and till · plot 2, row 1')
+    expect(taskWords({ kind: 'water', tiles: Array.from({ length: 40 }, (_, i) => i) }, 2)).toBe('Water · all of plot 1')
+    expect(taskWords({ kind: 'water', tiles: [0, 9], plot: 1 })).toBe('Water · plot 2, 2 tiles')
   })
 })
 

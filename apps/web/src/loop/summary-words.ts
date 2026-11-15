@@ -92,7 +92,7 @@ const SECTION_TITLE: Readonly<Record<SummarySection, string>> = {
 }
 const peek = (place: FarmPlaceId): string => `/?peek=${place}`
 /** The field: the farm map, where its tiles are. */
-export const FIELDS = '/'
+export const FIELDS = '/field'
 
 /** The Dorm's page. */
 export const DORM = '/dorm'

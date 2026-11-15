@@ -5,7 +5,7 @@
 // API's revision and version rules (it hands an older save back as its version and account), and a fake IndexedDB.
 // Invented ids only.
 import 'fake-indexeddb/auto'
-import { newSave, touched, versionOf, type SaveEnvelope, type SaveV4, type StoredSave } from '@farm/domain'
+import { fieldTiles, newSave, touched, versionOf, type SaveEnvelope, type SaveV4, type StoredSave } from '@farm/domain'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../master/master', () => ({ masterReady: vi.fn(async () => ({})), setMasterLens: vi.fn() }))
@@ -112,7 +112,7 @@ describe('a save from before v5', () => {
     await expect(boot('u1')).resolves.toEqual({ startOver: true })
     await startOver()
     expect(farm()).toMatchObject({ version: 5, calendar: { day: 1 }, account: ACCOUNT, today: { actions: 0 } })
-    expect(farm().fields.tiles).toHaveLength(40)
+    expect(fieldTiles(farm())).toHaveLength(40)
     await syncNow()
     expect(server.envelope).toMatchObject({ revision: 13, save: { version: 5, account: ACCOUNT } })
   })

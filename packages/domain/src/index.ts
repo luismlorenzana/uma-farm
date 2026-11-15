@@ -36,9 +36,10 @@ export * from './save/bin'
 export * from './save/shop'
 
 // The field: the crops, the tiles (clearing, tilling, planting, watering, harvesting), crop levels, growth and withering
-// at night, and the shop's seeds.
+// at night, and the shop's seeds; its plots, each a page of 8 × 5, cleared as the Farm Rank rises.
 export * from './fields/crops'
 export * from './fields/fields'
+export * from './fields/plots'
 
 // Talents and ranks: talents from master data's stats, rank points, the challenges, what
 // a rank gives, the favourite line, temperament, and the night's step 6.

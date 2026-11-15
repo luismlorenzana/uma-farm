@@ -20,6 +20,7 @@ import {
 import { TASK_KINDS, TILE_TASKS, type AptitudeId, type TaskKind, type TileTaskKind } from '../save/v4'
 import { CROPS, SHOP_SEEDS } from '../fields/crops'
 import { CLEAR_FINDS, cropLevelStart, GROUND_NAMES, harvestQuality, MAX_CROP_LEVEL, seedsBackChance, stagesOf } from '../fields/fields'
+import { FIELD_PLOTS, plotName } from '../fields/plots'
 import { ACTIONS, BIRTHDAY_ACTIONS, DAY_ACTIONS, FESTIVAL_ACTIONS, NEW_YEAR_ACTIONS, type ActionId } from '../farm/actions'
 import { CHOP_LOGS, FORAGE_HAUL, reachOf } from '../gathering/hauls'
 import { LOAD_SIZE } from '../gathering/stations'
@@ -271,10 +272,18 @@ function shopSeeds(): string {
 /** The field on day 1: its grid, the cleared patch, what the rest is overgrown with, and what clearing leaves. */
 function fieldBlock(): string {
   return table(['', 'The field'], [
-    ['Tiles', `${FIELD_TILES}: ${FIELD_COLUMNS} across, ${FIELD_ROWS} down`],
+    ['A plot', `${FIELD_TILES} tiles: ${FIELD_COLUMNS} across, ${FIELD_ROWS} down`],
+    ['Plots', `${FIELD_PLOTS.length}: plot 1 from day 1, the rest cleared as the Farm Rank rises`],
     ['Cleared on day 1', `${START_CLEAR.length}, three by three at the top left`],
     ...OVERGROWTH_SHARES.map(([ground, share]) => [`${GROUND_NAMES[ground]}`, `${share}% of the rest${CLEAR_FINDS[ground] ? `; clearing leaves a ${itemNameOf(CLEAR_FINDS[ground])} ★1` : '; clearing leaves nothing'}`]),
   ])
+}
+
+/** The plots: what opens each, what it costs, and what it starts as. */
+function plotsBlock(): string {
+  return table(['Plot', 'Opens', 'Costs', 'Starts'], FIELD_PLOTS.map((opens, i) => opens.by === 'start'
+    ? [plotName(i), 'Day 1', '—', `${START_CLEAR.length} tiles cleared at its top left, the rest overgrown`]
+    : [plotName(i), `Farm Rank ${opens.rank}, after ${plotName(i - 1)}`, `${g(opens.gold)} and an action; no upkeep`, 'Wild: every tile overgrown, the account’s own draw']))
 }
 
 /** A harvest's stars by the crop's level, and the chance of an own seed back (a Basic Hoe). */
@@ -491,7 +500,7 @@ function farmhandDay(): string {
 function workBoard(): string {
   const rows: Cell[][] = TASK_KINDS.map((kind) => {
     const aptitude = kind === 'load' ? 'mill' : kind
-    const over = (TILE_TASKS as readonly string[]).includes(kind) ? 'Tiles you choose (the board offers the field’s rows)' : kind === 'load' ? 'A built station'
+    const over = (TILE_TASKS as readonly string[]).includes(kind) ? 'A plot’s tiles you choose (the board offers each plot’s rows)' : kind === 'load' ? 'A built station'
       : kind === 'fish' ? 'A spot the farm reaches' : kind === 'care' ? 'The Coop’s or the Barn’s animals' : kind === 'mine' ? 'The Mine’s or the Quarry’s deepest floor' : 'An area the farm reaches'
     const each: Record<TaskKind, string> = {
       harvest: `A ripe tile, its crops by her stars; ${tilesAt('harvest', TRICK_AT.harvestTwo)}`,
@@ -1216,7 +1225,7 @@ export function renderBlock(key: string): string | null {
     houses: housesBlock, 'homestead-map': homesteadMap, 'household-milestones': householdMilestonesBlock, 'house-morning': houseMorningBlock, 'house-lines': houseLines,
     furniture: furnitureBlock,
     calendar, occasions: occasionsBlock, night, 'farm-map': farmMap, 'price-ladder': priceLadder, 'goods-prices': goodsPrices, 'crop-prices': cropPrices, demand, 'star-prices': starPrices,
-    crops, 'shop-seeds': shopSeeds, field: fieldBlock, 'harvest-stars': harvestStars, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
+    crops, 'shop-seeds': shopSeeds, field: fieldBlock, plots: plotsBlock, 'harvest-stars': harvestStars, 'crop-levels': cropLevels, 'farming-challenges': farmingChallenges,
     actions: actionsBlock, 'day-budget': dayBudgetBlock,
     'talent-stats': talentStats, 'talent-cutoffs': talentCutoffs, 'talent-gives': talentGives, 'rank-points': rankPoints, challenges, 'rank-gives': rankGives,
     'place-activity': placeActivity, 'forest-areas': forestAreas, 'fishing-spots': fishingSpots, 'fish-sizes': fishSizes, 'farmer-hauls': farmerHauls,

@@ -1,5 +1,6 @@
 // The shell (uma-kit's AppFrame on the landscape stage, `landscape="rail-and-bar"`): the rail down the left, then the page
-// under the thin bar, and the menu's panel (`?sheet=menu`). The rail clears the left safe area; the page keeps clear of
+// under the thin bar, and the menu's panel (`?sheet=menu`). The field's screen (`/field`) is full screen: no rail and no
+// bar, its own strip at the top; every sheet and scene still opens over it. The rail clears the left safe area; the page keeps clear of
 // the right and bottom ones (the notch's side and the home indicator). End the day (`?sheet=end`) and calendar (`?sheet=calendar`); the bin
 // (`?sheet=bin`) and shop (`?sheet=shop`); the Farm Rank (`?sheet=rank`). Each is loaded when one opens. While the
 // farmer is unnamed, the name sheet covers everything, the game's first screen; then a scene due plays over everything
@@ -19,6 +20,9 @@ import { Outlet, useLocation, useSearchParams } from 'react-router'
 import { useGame } from '../save/game'
 import { castIds, useStory } from '../story/story'
 import { FarmBar, FarmRail, OutOfActions, railPageOf } from './Bars'
+
+/** The field's screen: full screen, its own strip at the top, no rail. */
+const FIELD_PATH = '/field'
 import { MenuSheet } from './MenuSheet'
 import { SyncWarning } from './SyncWarning'
 
@@ -63,6 +67,7 @@ export function Shell() {
   return (
     <AppFrame
       landscape="rail-and-bar"
+      fullScreen={location.pathname === FIELD_PATH}
       top={<FarmBar />}
       bottom={<FarmRail page={railPageOf(location.pathname)} />}
       overlays={

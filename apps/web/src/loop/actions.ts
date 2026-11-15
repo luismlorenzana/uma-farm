@@ -1,5 +1,5 @@
-// The loop's actions on the day: End the day and dismiss the morning; the day's actions: a tile cleared, tilled,
-// planted, watered and harvested, a forage, a log chopped, a catch, a station's load, a crate shipped and going into
+// The loop's actions on the day: End the day and dismiss the morning; the day's actions: a plot cleared, a tile cleared,
+// tilled, planted, watered and harvested, a forage, a log chopped, a catch, a station's load, a crate shipped and going into
 // town; the ranch's feeding, care, collecting and grass, the rancher's animals and fodder; a dig's face and its stairs;
 // the goods: take back and buy; paying for a place to build, and the mayor's office's loans; the roster: the Dorm's levels and swaps; the scenes,
 // read once; the farmer's name, the opening, Invite to the farm, and meeting scenes; her illustrations seen; the chat and
@@ -12,7 +12,7 @@ import {
   payBuild, borrowFor, repayLoan, buyDorm, cancelSwap, swapDorm, buy, endDay, readScene, SaveRuleError, shopLines, takeBack,
   touched, type FarmSave, type OpeningSceneId, type ShopLine, type FarmPlaceId, finishArrival, inviteToFarm, nameFarmer,
   type ArrivalPlayed, type SaveV4, birthdaysOf, chatV4, giftV4, praiseV4, type LovePaid, pairReadId, readPair,
-  chop, clearTile, fish, forage, goToTown, harvestTile, plantTile, shipCrate, startLoad, tillTile, waterTile,
+  chop, clearPlot, clearTile, fish, forage, goToTown, harvestTile, plantTile, shipCrate, startLoad, tillTile, waterTile,
   type CrateLine, type HarvestReceipt, type Haul, type Measured, type StationId, seeIllustration, setTasks, type FarmTask,
   buyAnimal, buyFodder, careFor, collect, cutGrass, feedAnimal, takeStairs, workFace, type Animal, type AnimalKind, type Collected, type DigId, type Face,
   type RanchHome,
@@ -82,7 +82,9 @@ export const buyLine = (line: ShopLine, count: number) => change((s) => {
 
 // --- The day's actions -------------------------------------------------------------------------------------------
 
-/** Clears an overgrown tile: what it left (a log, a stone), or null. */
+/** Clears a plot (its index, 1 for plot 2): its gold and an action, and it opens at once, wild. */
+export const clearPlotAt = (plot: number) => change((s) => clearPlot(s, plot))
+/** Clears an overgrown tile (its field index): what it left (a log, a stone), or null. */
 export const clearAt = (tile: number) => act((s) => {
   const done = clearTile(s, tile)
   return { save: done.save, result: done.found }

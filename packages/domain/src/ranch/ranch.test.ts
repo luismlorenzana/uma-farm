@@ -6,7 +6,7 @@ import { upkeepOf, UPKEEP_BUILDING } from '../farm/economy'
 import { goodOf } from '../goods/ids'
 import { runNight } from '../night/end-day'
 import { parseSaveV5 } from '../save/parse-v4'
-import { MAX_FONDNESS, newSave, SILO_ROOM, type SaveV4 } from '../save/v4'
+import { fieldTiles, MAX_FONDNESS, newSave, SILO_ROOM, type SaveV4 } from '../save/v4'
 import {
   animalLock, ANIMALS, animalsIn, buyAnimal, buyFodder, careFor, collect, cutGrass, feedAnimal, FODDER_PRICE, GRASS_CUT, heartsOf, readyIn, siloStands, tendNight,
 } from './ranch'
@@ -21,7 +21,7 @@ function farm(gold = 5000, points = 200): SaveV4 {
 const night = (save: SaveV4): SaveV4 => runNight(save, {})
 /** The next morning, in town again (an action) and the summary put away. */
 const morning = (save: SaveV4): SaveV4 => ({ ...night(save), summary: null })
-const WEEDS = (save: SaveV4): number => save.fields.tiles.findIndex((t) => t.ground === 'weeds')
+const WEEDS = (save: SaveV4): number => fieldTiles(save).findIndex((t) => t.ground === 'weeds')
 
 describe('the rancher\'s', () => {
   it('sells an animal in town, free of actions: its price in gold, into its home at once, fondness 0', () => {
@@ -78,7 +78,7 @@ describe('a day\'s care', () => {
     const save = farm()
     const at = WEEDS(save)
     const { save: cut, feed } = cutGrass(save, at)
-    expect([feed, cut.ranch.silo, cut.fields.tiles[at]!.ground, cut.today.actions]).toEqual([GRASS_CUT, GRASS_CUT, 'weeds', 2])
+    expect([feed, cut.ranch.silo, fieldTiles(cut)[at]!.ground, cut.today.actions]).toEqual([GRASS_CUT, GRASS_CUT, 'weeds', 2])
     expect(() => cutGrass(save, 0)).toThrow('Only weeds give grass.')
     expect(() => cutGrass({ ...save, buildings: { dorm: 1 } }, at)).toThrow('Build the Coop or the Barn first')
     expect(() => cutGrass({ ...save, ranch: { animals: [], silo: SILO_ROOM } }, at)).toThrow('The silo is full.')

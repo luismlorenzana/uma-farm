@@ -1,9 +1,10 @@
-// The work board's words: a task as the board lists it ("Water · rows 1 and 2", "Fish · the Pond", "Load the Mill",
+// The work board's words: a task as the board lists it ("Water · rows 1 and 2", "Water · plot 2, row 1" once the farm has
+// more than one plot, "Fish · the Pond", "Load the Mill",
 // "Care for animals · the Coop", "Work a face · the Mine"), a
 // farmhand's day ("3 actions", "+1 well fed", "half pace"), her part-time job, what she did tonight, and her aptitudes'
 // levels and tricks. The morning's farmhand lines read the same words. Pure, so the board, the card and the tests agree.
 import {
-  APTITUDE_NAMES, AREA_NAMES, DIG_NAMES, farmPlace, FIELD_COLUMNS, FIELD_ROWS, FIELD_TILES, handJob, HOME_NAMES, isTileTask, itemNameOf, SPOT_NAMES, TASK_NAMES, townLocation,
+  APTITUDE_NAMES, AREA_NAMES, DIG_NAMES, farmPlace, FIELD_COLUMNS, FIELD_ROWS, FIELD_TILES, handJob, HOME_NAMES, isTileTask, itemNameOf, SPOT_NAMES, TASK_NAMES, taskPlot, townLocation,
   type FarmhandLine, type FarmTask, type HandDay, type StoryPack, type TaskKind,
 } from '@farm/domain'
 import { plural, theName } from '../loop/words'
@@ -22,24 +23,27 @@ export const rowTiles = (row: number): number[] => Array.from({ length: FIELD_CO
 const listWords = (items: readonly (string | number)[]): string =>
   items.length <= 1 ? String(items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`
 
-/** A task's tiles in words: "the whole field", "row 2", "rows 1 and 2", or "5 tiles". */
-export function tilesWords(tiles: readonly number[]): string {
-  if (new Set(tiles).size === FIELD_TILES) return 'the whole field'
+/** A task's tiles in words: "the whole field", "row 2", "rows 1 and 2", or "5 tiles". On a farm of more than one plot
+ * (`plot`, its index, given), with its plot: "all of plot 2", "plot 2, rows 1 and 2", "plot 1, 5 tiles". */
+export function tilesWords(tiles: readonly number[], plot: number | null = null): string {
+  const of = plot === null ? '' : `plot ${plot + 1}, `
+  if (new Set(tiles).size === FIELD_TILES) return plot === null ? 'the whole field' : `all of plot ${plot + 1}`
   const rows = rowsOf(tiles)
-  if (rows) return rows.length === 1 ? `row ${rows[0]}` : `rows ${listWords(rows)}`
-  return plural(tiles.length, 'tile')
+  if (rows) return `${of}${rows.length === 1 ? `row ${rows[0]}` : `rows ${listWords(rows)}`}`
+  return `${of}${plural(tiles.length, 'tile')}`
 }
 
-/** A task as the board lists it. */
-export function taskWords(task: FarmTask): string {
+/** A task as the board lists it; a field task names its plot once the farm has more than one (`plots`). */
+export function taskWords(task: FarmTask, plots = 1): string {
+  const where = (t: Extract<FarmTask, { tiles: number[] }>) => tilesWords(t.tiles, plots > 1 || taskPlot(t) > 0 ? taskPlot(t) : null)
   switch (task.kind) {
     case 'load': return `Load ${theName(farmPlace(task.station)?.name ?? task.station)}`
     case 'forage': case 'chop': return `${TASK_NAMES[task.kind]} · ${theName(AREA_NAMES[task.area])}`
     case 'fish': return `Fish · ${theName(SPOT_NAMES[task.spot])}`
     case 'care': return `${TASK_NAMES.care} · the ${HOME_NAMES[task.home]}`
     case 'mine': return `${TASK_NAMES.mine} · the ${DIG_NAMES[task.dig]}`
-    case 'plant': return `Plant${task.crop ? ` ${itemNameOf(task.crop)}` : ''} · ${tilesWords(task.tiles)}`
-    default: return `${TASK_NAMES[task.kind]} · ${tilesWords(task.tiles)}`
+    case 'plant': return `Plant${task.crop ? ` ${itemNameOf(task.crop)}` : ''} · ${where(task)}`
+    default: return `${TASK_NAMES[task.kind]} · ${where(task)}`
   }
 }
 

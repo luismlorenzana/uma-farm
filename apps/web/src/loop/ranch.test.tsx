@@ -3,7 +3,7 @@
 // the work board takes the Coop's care and the Mine's face; the morning words the Coop's night and the farmhands' work.
 // Invented outfits (the album fixture) and a cast of them from the stand-in pack; the server is a stub.
 import 'fake-indexeddb/auto'
-import { goToTown, newLove, newRosterUma, newSave, STAND_IN_FILES, storyPackFrom, type MorningSummary, type SaveV4, type StoryPack } from '@farm/domain'
+import { fieldTiles, goToTown, newLove, newRosterUma, newSave, STAND_IN_FILES, storyPackFrom, type MorningSummary, type SaveV4, type StoryPack } from '@farm/domain'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter, Route, Routes } from 'react-router'
@@ -31,6 +31,7 @@ vi.mock('../api/client', async () => {
 const { albumFixture } = await import('../album/testing')
 const { useGame, resetGame } = await import('../save/game')
 const { default: FarmRoute } = await import('./FarmMap')
+const { default: FieldRoute } = await import('./FieldScreen')
 const { default: RancherSheet } = await import('../town/RancherSheet')
 const { WorkBoard } = await import('../book/WorkBoard')
 const { endTheDay } = await import('./actions')
@@ -122,8 +123,8 @@ describe('the rancher\'s and the Coop', () => {
   })
 
   it('cuts grass on a weeds tile for the silo', async () => {
-    const weeds = farm().fields.tiles.findIndex((t) => t.ground === 'weeds')
-    await render(<FarmRoute />, `/?tile=${weeds}`)
+    const weeds = fieldTiles(farm()).findIndex((t) => t.ground === 'weeds')
+    await render(<FieldRoute />, `/field?tile=${weeds}`)
     await click(await find('[data-action="grass"]'))
     expect(save().ranch.silo).toBe(5)
   })

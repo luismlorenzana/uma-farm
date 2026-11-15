@@ -11,6 +11,10 @@
 // prices, stars, seeds back and crop levels stay the crops' own (`crops.ts`, `goods/`). Growth is night step 2 and
 // withering step 7 (`growTiles`, `witherTiles`); every other rule is the farmer's, spending the day's actions. None of
 // these stamp `updatedAt`: the app stamps each tap and the night stamps once. Every star and seed back is a seeded draw.
+//
+// The field is plots of 8 × 5 (`fields/plots.ts`). A rule names a tile by its field index, every plot's tiles in order
+// (`fieldTiles`): plot 1's tiles are 0–39 as they always were, plot 2's 40–79, so a draw keyed by the index (`harvest:<i>`)
+// replays the same on plot 1.
 import { spend } from '../farm/actions'
 import { dateOf, isSeasonEnd, SEASON_NAMES, type Season } from '../farm/calendar'
 import { draw } from '../farm/draw'
@@ -22,7 +26,7 @@ import { cropLevelQuality, drawStars, quality, TENDED_QUALITY, toolQuality, WELL
 import { seedId, seedOf, type CropId } from '../goods/ids'
 import { itemNameOf } from '../items/lines'
 import { SaveRuleError } from '../save/rules'
-import { bareTile, FIELD_TILES, isOvergrown, type FarmSave, type Overgrowth, type Tile } from '../save/v4'
+import { bareTile, FIELD_TILES, fieldTiles, isOvergrown, plotOf, tileInPlot, type FarmSave, type Overgrowth, type Plot, type Tile } from '../save/v4'
 import { addGoods, goodCount, takeGoods } from '../save/warehouse'
 import { CROPS, GROWTH_SLACK, growsIn, readyAt, SHOP_SEEDS } from './crops'
 
@@ -91,14 +95,28 @@ export const GROUND_NAMES: Readonly<Record<Tile['ground'], string>> = { weeds: '
 const seasonOf = (save: Pick<FarmSave, 'calendar'>): Season => dateOf(save.calendar.day).season
 const bump = (counts: Record<string, number>, key: string, n = 1): Record<string, number> => ({ ...counts, [key]: (counts[key] ?? 0) + n })
 
+/** The field's tile at a field index, or undefined for one that isn't there (a plot not cleared). */
+export const tileOf = (save: Pick<FarmSave, 'fields'>, index: number): Tile | undefined =>
+  Number.isInteger(index) && index >= 0 ? save.fields.plots[plotOf(index)]?.tiles[tileInPlot(index)] : undefined
 /** The field's tile, or a refusal (`bad-slot`) for one that isn't there. */
 export function tileAt(save: Pick<FarmSave, 'fields'>, index: number): Tile {
-  const tile = Number.isInteger(index) ? save.fields.tiles[index] : undefined
+  const tile = tileOf(save, index)
   if (!tile) throw new SaveRuleError('bad-slot', `No tile ${index + 1} in the field.`)
   return tile
 }
 function withTile<S extends FarmSave>(save: S, index: number, tile: Tile): S['fields'] {
-  return { tiles: save.fields.tiles.map((t, i) => (i === index ? tile : t)) }
+  const plot = plotOf(index)
+  const at = tileInPlot(index)
+  return { plots: save.fields.plots.map((p, n) => (n === plot ? { tiles: p.tiles.map((t, i) => (i === at ? tile : t)) } : p)) }
+}
+/** Each tile through `f` with its field index, plot by plot: a plot nothing changed on stays the same object. */
+function mapTiles(save: Pick<FarmSave, 'fields'>, f: (tile: Tile, index: number) => Tile): { plots: Plot[] } {
+  return {
+    plots: save.fields.plots.map((p, n) => {
+      const tiles = p.tiles.map((t, i) => f(t, n * FIELD_TILES + i))
+      return tiles.every((t, i) => t === p.tiles[i]) ? p : { tiles }
+    }),
+  }
 }
 function inSeason(save: Pick<FarmSave, 'calendar'>, crop: CropId): void {
   if (!growsIn(crop, seasonOf(save))) {
@@ -272,7 +290,7 @@ export function seedsInSeason(save: Pick<FarmSave, 'items' | 'calendar'>): { id:
 
 /** Empty tilled tiles that seeds held could fill today: the morning's nudge. */
 export function tilesToPlant(save: Pick<FarmSave, 'items' | 'calendar' | 'fields'>): number {
-  const empty = save.fields.tiles.filter((t) => t.ground === 'tilled' && t.crop === null).length
+  const empty = fieldTiles(save).filter((t) => t.ground === 'tilled' && t.crop === null).length
   return Math.min(empty, seedsInSeason(save).reduce((n, s) => n + s.count, 0))
 }
 
@@ -318,7 +336,7 @@ export interface Withered {
 export function growTiles<S extends FarmSave>(save: S, chores: ReadonlySet<number> = new Set()): { save: S; grew: number; ripened: number } {
   let grew = 0
   let ripened = 0
-  const tiles = save.fields.tiles.map((tile, i): Tile => {
+  const fields = mapTiles(save, (tile, i): Tile => {
     if (tile.crop === null || tile.ready || !(tile.watered || chores.has(i))) return tile.watered ? { ...tile, watered: false } : tile
     const growth = tile.growth + 1
     const ready = growth + GROWTH_SLACK >= readyAt(tile.crop, tile.regrowing)
@@ -326,7 +344,7 @@ export function growTiles<S extends FarmSave>(save: S, chores: ReadonlySet<numbe
     if (ready) ripened++
     return { ...tile, growth, ready, watered: false }
   })
-  return { save: { ...save, fields: { tiles } }, grew, ripened }
+  return { save: { ...save, fields }, grew, ripened }
 }
 
 /**
@@ -340,7 +358,7 @@ export function witherTiles<S extends FarmSave>(save: S): { save: S; withered: W
   const next = dateOf(day + 1).season
   const withered: Withered[] = []
   let changed = false
-  const tiles = save.fields.tiles.map((tile): Tile => {
+  const fields = mapTiles(save, (tile): Tile => {
     if (tile.crop === null || tile.ready || growsIn(tile.crop, next)) return tile
     changed = true
     const line = withered.find((w) => w.crop === tile.crop)
@@ -348,8 +366,8 @@ export function witherTiles<S extends FarmSave>(save: S): { save: S; withered: W
     else withered.push({ crop: tile.crop, tiles: 1 })
     return bareTile('tilled')
   })
-  return { save: changed ? { ...save, fields: { tiles } } : save, withered }
+  return { save: changed ? { ...save, fields } : save, withered }
 }
 
-/** Whether a tile index is on the field. */
-export const isTile = (index: number): boolean => Number.isInteger(index) && index >= 0 && index < FIELD_TILES
+/** Whether a field index is a tile on this save's field: on a plot it has cleared. */
+export const isTile = (save: Pick<FarmSave, 'fields'>, index: number): boolean => tileOf(save, index) !== undefined

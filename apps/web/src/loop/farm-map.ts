@@ -1,13 +1,14 @@
 // The farm map as data: a landscape tile map you look across, seven cells tall and wider than the screen, so it scrolls
-// sideways. From the left: the woods' edge, the field's tiles over the pond's edge, a path, then the farm's places on lots
+// sideways. From the left: the woods' edge, the field's sign over the pond's edge, a path, then the farm's places on lots
 // of two by two, three to a column (the yard first, the homestead beside it, the stations, the rest), and the road to
-// town at the far end. Where a tap goes, and why a place is locked. Pure, so the map and the tests read the same.
+// town at the far end. The field itself is its own screen, a plot a page (`/field`); the map shows its sign, a lot's
+// size, with its counts. Where a tap goes, and why a place is locked. Pure, so the map and the tests read the same.
 import {
-  FIELD_COLUMNS, FIELD_ROWS, farmRankOf, placeBuilt, placeOpen, type FarmPlace, type FarmPlaceId, type HomesteadPlace, type PlaceOpens, type FarmSave,
+  farmRankOf, placeBuilt, placeOpen, type FarmPlace, type FarmPlaceId, type HomesteadPlace, type PlaceOpens, type FarmSave,
 } from '@farm/domain'
 
-/** The map's height in cells: the field's five rows, the pond's two. */
-export const MAP_ROWS = FIELD_ROWS + 2
+/** The map's height in cells: three lots of two, and a path's row. */
+export const MAP_ROWS = 7
 /** A cell, in points: a 44 pt target, a little smaller on a short screen. */
 export const CELL = 44
 export const MIN_CELL = 40
@@ -22,10 +23,10 @@ export interface Area {
 
 /** The woods' edge: two columns down the map's left side. */
 export const WOODS: Area = { col: 0, row: 0, cols: 2, rows: MAP_ROWS }
-/** The field: its grid of tiles beside the woods. */
-export const FIELD: Area = { col: 2, row: 0, cols: FIELD_COLUMNS, rows: FIELD_ROWS }
-/** The pond's edge: under the field. */
-export const POND: Area = { col: 2, row: FIELD_ROWS, cols: FIELD_COLUMNS, rows: 2 }
+/** The field's sign beside the woods, a lot's size: a tap opens the field's screen. */
+export const FIELD: Area = { col: 2, row: 0, cols: 2, rows: 2 }
+/** The pond's edge: under the field's sign, down to the map's foot. */
+export const POND: Area = { col: 2, row: FIELD.rows, cols: 2, rows: MAP_ROWS - FIELD.rows }
 /** The first lot column, past a path from the field. */
 const LOTS_FROM = FIELD.col + FIELD.cols + 1
 /** A lot: two by two. */
@@ -63,16 +64,13 @@ export function mapLots(shown: readonly HomesteadPlace[]): { lots: Lot[]; road: 
   return { lots, road: { col: roadCol, row: 0, cols: 1, rows: MAP_ROWS }, cols: roadCol + 1 }
 }
 
-/** A tile's place on the map. */
-export const tileArea = (index: number): Area => ({ col: FIELD.col + (index % FIELD_COLUMNS), row: FIELD.row + Math.floor(index / FIELD_COLUMNS), cols: 1, rows: 1 })
-
-/** The places whose screens have landed, each with where a tap on it goes: the bin and shop (their sheets over the farm)
- * and the Warehouse; the woods' edge, the pond's edge, the five stations, the Coop and the Barn, the Mine and the Quarry
- * (their menus, in the side panel); the Dorm (its page), the Gate (its quick look, the visitor waiting), the Dock (its
- * quick look, with the Boat to build) and the Town (its screen). The field is its tiles. Until then a place shows
+/** The places whose screens have landed, each with where a tap on it goes: the field (its own screen) and the bin and
+ * shop (their sheets over the farm) and the Warehouse; the woods' edge, the pond's edge, the five stations, the Coop and
+ * the Barn, the Mine and the Quarry (their menus, in the side panel); the Dorm (its page), the Gate (its quick look, the
+ * visitor waiting), the Dock (its quick look, with the Boat to build) and the Town (its screen). Until then a place shows
  * "Soon". */
 export const PLACE_SCREENS: ReadonlyMap<FarmPlaceId, string> = new Map<FarmPlaceId, string>([
-  ['fields', '/'],
+  ['fields', '/field'],
   ['forest', '/?peek=forest'],
   ['fishery', '/?peek=fishery'],
   ['mill', '/?peek=mill'],

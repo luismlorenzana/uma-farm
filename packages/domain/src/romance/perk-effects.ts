@@ -33,7 +33,7 @@ import { goodOf } from '../goods/ids'
 import { drawStars, heartsQuality, quality } from '../goods/stars'
 import type { ItemLine } from '../night/summary'
 import { ANIMALS, animalsIn, heartsOf, homeBuilt, keptKinds } from '../ranch/ranch'
-import { ANIMAL_HOME, DISH_FAMILIES, isDishId, MAX_FONDNESS, RANCH_HOMES, type DigId, type RanchHome } from '../save/v4'
+import { ANIMAL_HOME, DISH_FAMILIES, fieldTiles, isDishId, MAX_FONDNESS, RANCH_HOMES, type DigId, type RanchHome } from '../save/v4'
 import type { SaveV4 } from '../save/v4'
 import { addGoods, stockKey } from '../save/warehouse'
 import { castOrder, type StoryPack } from '../story/pack'
@@ -85,7 +85,7 @@ export interface ChoresDone {
 export function fieldChores(save: SaveV4, pack: PerkPack): { tiles: Set<number>; chores: ChoresDone[] } {
   const tiles = new Set<number>()
   const chores: ChoresDone[] = []
-  const dry = save.fields.tiles.flatMap((t, i) => (t.crop !== null && !t.ready && !t.watered ? [i] : []))
+  const dry = fieldTiles(save).flatMap((t, i) => (t.crop !== null && !t.ready && !t.watered ? [i] : []))
   for (const id of inCastOrder(pack, Object.keys(save.roster))) {
     if (perkLineOf(pack, id) !== 'farming') continue
     const n = choresTonight(save, pack, id)

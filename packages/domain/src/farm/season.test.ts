@@ -48,7 +48,7 @@ import { animalsIn, ANIMALS, buyAnimal, buyFodder, FODDER_PRICE, siloRoom } from
 import { GOLD_SHIPPED, shipCrate, type CrateLine } from '../save/bin'
 import { parseSaveV5 } from '../save/parse-v4'
 import { buy, lineOpen, shopLines } from '../save/shop'
-import { FIELD_TILES, isOvergrown, newLove, newRosterUma, newSave, type FarmTask, type SaveV4 } from '../save/v4'
+import { fieldTiles, FIELD_TILES, isOvergrown, newLove, newRosterUma, newSave, type FarmTask, type SaveV4 } from '../save/v4'
 
 const AT = '2026-11-14T10:00:00.000Z'
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
@@ -113,7 +113,7 @@ interface Day {
   ranchSpent: number
 }
 
-const growing = (save: SaveV4): number[] => save.fields.tiles.flatMap((t, i) => (t.crop !== null && !t.ready ? [i] : []))
+const growing = (save: SaveV4): number[] => fieldTiles(save).flatMap((t, i) => (t.crop !== null && !t.ready ? [i] : []))
 const left = actionsLeft
 /** Whether a project is done: built, paid today, or the Dorm's level bought. */
 const done = (save: SaveV4, project: string): boolean => {
@@ -232,8 +232,8 @@ function play(start: SaveV4, log: Day[], run: Run): SaveV4 {
   }
   const daysLeft = DAYS_PER_SEASON - dateOf(save.calendar.day).day + 1
   // Harvest what's ripe, then water what grows (with the farmhands, once the planting's done: below).
-  for (const [i, t] of save.fields.tiles.entries()) if (t.ready && left(save) > 0) { save = harvestTile(save, i).save; day.harvested++ }
-  if (!hands) for (const i of growing(save)) if (!save.fields.tiles[i]!.watered && left(save) > 0) { save = waterTile(save, i); day.watered++ }
+  for (const [i, t] of fieldTiles(save).entries()) if (t.ready && left(save) > 0) { save = harvestTile(save, i).save; day.harvested++ }
+  if (!hands) for (const i of growing(save)) if (!fieldTiles(save)[i]!.watered && left(save) > 0) { save = waterTile(save, i); day.watered++ }
   // Build what's next once its goods are held: his own gold, else a loan in town.
   const built = build(save, run)
   save = built.save
@@ -248,7 +248,7 @@ function play(start: SaveV4, log: Day[], run: Run): SaveV4 {
   // Plant the tilled soil (and water it the same day, or leave it to her) while the field is small and a crop can still
   // ripen.
   const seeds = () => seedsInSeason(save)[0]
-  for (const [i, t] of save.fields.tiles.entries()) {
+  for (const [i, t] of fieldTiles(save).entries()) {
     const held = seeds()
     if (!held || t.ground !== 'tilled' || t.crop !== null || growing(save).length >= keepGrowing || left(save) < (hands ? 1 : 2) || stagesOf(held.crop, false) > daysLeft) continue
     save = plantTile(save, i, held.id)
@@ -256,17 +256,17 @@ function play(start: SaveV4, log: Day[], run: Run): SaveV4 {
     day.planted++
   }
   // Till cleared ground for the seeds held; clear a tile when there's none to till.
-  const tilledEmpty = save.fields.tiles.filter((t) => t.ground === 'tilled' && t.crop === null).length
+  const tilledEmpty = fieldTiles(save).filter((t) => t.ground === 'tilled' && t.crop === null).length
   const wanted = Math.min(seedsInSeason(save).reduce((n, s) => n + s.count, 0), keepGrowing) - growing(save).length - tilledEmpty
   for (let n = 0; n < wanted && left(save) > 3; n++) {
-    const clear = save.fields.tiles.findIndex((t) => t.ground === 'clear')
+    const clear = fieldTiles(save).findIndex((t) => t.ground === 'clear')
     if (clear >= 0) save = tillTile(save, clear)
-    else save = clearTile(save, save.fields.tiles.findIndex((t) => isOvergrown(t.ground))).save
+    else save = clearTile(save, fieldTiles(save).findIndex((t) => isOvergrown(t.ground))).save
   }
   // With the farmhands: water what she won't reach tonight, as the farm stands now.
   if (hands) {
-    const tonight = handsTonight(save, save, talentsD, null).save.fields.tiles
-    for (const i of growing(save)) if (!save.fields.tiles[i]!.watered && !tonight[i]!.watered && left(save) > 0) { save = waterTile(save, i); day.watered++ }
+    const tonight = fieldTiles(handsTonight(save, save, talentsD, null).save)
+    for (const i of growing(save)) if (!fieldTiles(save)[i]!.watered && !tonight[i]!.watered && left(save) > 0) { save = waterTile(save, i); day.watered++ }
   }
   // Ship a crate once there's one worth the action: everything with a price, less what the next build takes.
   const crate: CrateLine[] = Object.entries(save.items).flatMap(([id, row]) => {
@@ -290,10 +290,10 @@ function play(start: SaveV4, log: Day[], run: Run): SaveV4 {
     save = spendActions(goToTown(save), left(goToTown(save)))
   }
   day.spent = save.today.actions
-  const before = save.fields.tiles.map((t) => t.growth)
+  const before = fieldTiles(save).map((t) => t.growth)
   const morning = runNight(save, {})
   day.hands = morning.summary!.work.reduce((n, w) => n + (w.kind === 'farmhand' ? w.spent : 0), 0)
-  day.grewTonight = morning.fields.tiles.filter((t, i) => t.crop !== null && t.growth > before[i]!).length
+  day.grewTonight = fieldTiles(morning).filter((t, i) => t.crop !== null && t.growth > before[i]!).length
   const money = morning.summary?.money ?? []
   day.income = morning.summary!.bin.reduce((n, s) => n + s.gold, 0)
   day.eggs = morning.summary!.bin.reduce((n, s) => n + (goodOf(s.id)?.family === 'eggs-milk' ? s.gold : 0), 0)
@@ -393,7 +393,7 @@ describe('a simulated first season, the farmer alone', () => {
 
   it('withers what still grows at the season\'s end, and wakes to Summer', () => {
     expect(summer1.calendar.day).toBe(DAYS_PER_SEASON + 1)
-    expect(summer1.fields.tiles.filter((t) => t.crop !== null && !t.ready).every((t) => t.crop === 'corn' || t.crop === 'cabbage')).toBe(true)
+    expect(fieldTiles(summer1).filter((t) => t.crop !== null && !t.ready).every((t) => t.crop === 'corn' || t.crop === 'cabbage')).toBe(true)
   })
 
   it('builds the Mill early on a loan, and runs a small surplus', () => {

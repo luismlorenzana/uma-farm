@@ -40,7 +40,7 @@ describe('the morning summary', () => {
         { key: 'season', text: 'Summer begins', to: '/?sheet=calendar' },
         { key: 'festival:tomorrow', text: 'Fishing Derby tomorrow', to: '/?sheet=calendar' },
       ] },
-      { section: 'nudges', title: 'Today', lines: [{ key: 'water', text: '3 tiles to water', to: '/' }] },
+      { section: 'nudges', title: 'Today', lines: [{ key: 'water', text: '3 tiles to water', to: '/field' }] },
     ])
     expect(summaryParts({ ...summary, work: [], news: [], nudges: [] })).toEqual([])
   })
@@ -87,7 +87,7 @@ describe('the morning\'s upkeep and loans', () => {
 })
 
 describe('the morning\'s field', () => {
-  it('says what grew and ripened, what withered, and tiles to plant, each opening the farm', () => {
+  it('says what grew and ripened, what withered, and tiles to plant, each opening the field', () => {
     const summary: MorningSummary = {
       day: 25, bin: [], ranks: [], hearts: [], news: [],
       work: [{ kind: 'grew', tiles: 9, ripe: 2 }, { kind: 'withered', crop: 'tomato', tiles: 3 }],
@@ -95,10 +95,10 @@ describe('the morning\'s field', () => {
     }
     expect(summaryParts(summary)).toEqual([
       { section: 'work', title: 'Work done', lines: [
-        { key: 'grew', text: 'The field · 9 crops grew · 2 ripe', to: '/' },
-        { key: 'withered:tomato', text: 'The field · 3 Tomato withered', to: '/' },
+        { key: 'grew', text: 'The field · 9 crops grew · 2 ripe', to: '/field' },
+        { key: 'withered:tomato', text: 'The field · 3 Tomato withered', to: '/field' },
       ] },
-      { section: 'nudges', title: 'Today', lines: [{ key: 'seeds', text: '4 tiles to plant', to: '/' }] },
+      { section: 'nudges', title: 'Today', lines: [{ key: 'seeds', text: '4 tiles to plant', to: '/field' }] },
     ])
     expect(summaryParts({ ...summary, work: [{ kind: 'grew', tiles: 1, ripe: 0 }] })[0]!.lines[0]!.text).toBe('The field · 1 crop grew')
   })

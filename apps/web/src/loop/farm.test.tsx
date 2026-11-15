@@ -1,9 +1,10 @@
-// The farm map as played: a tile's panel (`?tile=<n>`) clearing, tilling, planting and watering, one action each, and a
-// ripe tile harvested; the woods' edge foraging and chopping, the pond's edge fishing, a built station starting its one
+// The farm map as played: the field's sign with its counts, and the field's own screen (`/field`): a plot a page, a
+// tile's panel (`?tile=<n>`) clearing, tilling, planting and watering, one action each, and a ripe tile harvested; plot 2
+// locked until Farm Rank 3, then cleared; a swipe and the dots between pages; a row's farmhands; the woods' edge foraging and chopping, the pond's edge fishing, a built station starting its one
 // load; the actions chip counting down; and every button greyed once the day's ten are spent. The story pack is the
 // stand-in, master data the album fixture; the server is a stub. Invented data only.
 import 'fake-indexeddb/auto'
-import { bareTile, isOvergrown, newSave, STAND_IN_FILES, storyPackFrom, type SaveV4, type StoryPack, type Tile } from '@farm/domain'
+import { fieldTiles, bareTile, isOvergrown, newLove, newRosterUma, newSave, STAND_IN_FILES, storyPackFrom, wildPlot, type SaveV4, type StoryPack, type Tile } from '@farm/domain'
 import { KitStage } from '@luismlorenzana/uma-kit/ui'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -28,8 +29,8 @@ vi.mock('../api/client', async () => {
 
 const { albumFixture } = await import('../album/testing')
 const { useGame, resetGame } = await import('../save/game')
-const { FarmBar } = await import('../shell/Bars')
 const { default: FarmRoute } = await import('./FarmMap')
+const { default: FieldRoute } = await import('./FieldScreen')
 const { tileLabel, tileView } = await import('./farm-view')
 
 fixture.view = (await albumFixture()).view
@@ -43,7 +44,7 @@ function farm(): SaveV4 {
   return { ...base, farmer: { name: 'Robin' }, diary: { ...base.diary, read: ['scene:1:open'] } }
 }
 /** A save with one tile set by hand. */
-const withTile = (s: SaveV4, index: number, tile: Tile): SaveV4 => ({ ...s, fields: { tiles: s.fields.tiles.map((t, i) => (i === index ? tile : t)) } })
+const withTile = (s: SaveV4, index: number, tile: Tile): SaveV4 => ({ ...s, fields: { plots: [{ tiles: fieldTiles(s).map((t, i) => (i === index ? tile : t)) }] } })
 
 let host: HTMLDivElement
 let root: Root
@@ -91,53 +92,87 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-describe('a tile', () => {
-  it('draws the field, 40 tiles, each a link to its panel', async () => {
-    useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
+describe('the field\'s sign on the farm map', () => {
+  it('draws the field as a sign a lot\'s size, with its counts, a tap to the field\'s screen; no tiles on the map', async () => {
+    let s = withTile(farm(), 0, { ...bareTile('tilled'), crop: 'carrot', growth: 4, ready: true })
+    s = withTile(s, 1, { ...bareTile('tilled'), crop: 'carrot' })
+    s = withTile(s, 2, { ...bareTile('tilled'), crop: 'carrot' })
+    s = withTile(s, 3, bareTile('tilled'))
+    useGame.setState({ uid: 'u1', status: 'ready', save: s })
     await render(<FarmRoute />)
-    expect($$('[data-tile]')).toHaveLength(40)
-    expect($('[data-tile="0"]')?.getAttribute('href')).toBe('/?tile=0')
-    expect($('[data-tile="0"]')?.getAttribute('aria-label')).toBe('Row 1, tile 1: Cleared ground')
+    expect($$('[data-tile]')).toHaveLength(0)
+    const sign = $('[data-field-sign]')!
+    expect(sign.getAttribute('href')).toBe('/field')
+    expect(sign.getAttribute('aria-label')).toBe('Fields, 2 to water, 1 ripe, 1 to plant')
+    expect($$('[data-field-counts] span').map((e) => e.textContent)).toEqual(['2 to water', '1 ripe', '1 to plant'])
+    expect($('[data-field-sign-art]')).not.toBeNull()
     expect($('[data-place="forest"]')?.getAttribute('href')).toBe('/?peek=forest')
     expect($('[data-place="fishery"]')?.getAttribute('href')).toBe('/?peek=fishery')
     expect($('[data-place="road"]')?.getAttribute('href')).toBe('/town')
   })
 
-  it('is cleared, tilled, planted and watered, one action each, and the chip counts them down', async () => {
+  it('sends a tile\'s older link to the field\'s screen', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
+    await render(<Routes><Route path="/" element={<FarmRoute />} /><Route path="/field" element={<FieldRoute />} /></Routes>, '/?tile=4')
+    expect(path).toBe('/field?tile=4')
+    expect($('[data-tile-sheet="4"]')).not.toBeNull()
+  })
+})
+
+describe('the field\'s screen', () => {
+  it('draws a plot a page, 40 tiles, each a link to its panel, the page dots with plot 2 locked', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
+    await render(<FieldRoute />, '/field')
+    expect($('[data-field-screen]')?.dataset.plotPage).toBe('1')
+    expect($$('[data-tile]')).toHaveLength(40)
+    expect($('[data-tile="0"]')?.getAttribute('href')).toBe('/field?tile=0')
+    expect($('[data-tile="0"]')?.getAttribute('aria-label')).toBe('Row 1, tile 1: Cleared ground')
+    expect($$('[data-row-tab]')).toHaveLength(5)
+    expect($$('[data-page-dot]').map((d) => d.getAttribute('aria-label'))).toEqual(['Plot 1', 'Plot 2, locked: Opens at Farm Rank 3'])
+    expect($('[data-plot-counts]')?.textContent).toBe('40 to clear or till')
+    expect($('[data-action="prev-plot"]')).toBeNull()
+    expect($('[data-action="next-plot"]')?.getAttribute('aria-label')).toBe('Plot 2, locked')
+  })
+
+  it('clears, tills, plants and waters a tile, one action each, and its own strip counts them down', async () => {
     const start = farm()
-    const rough = start.fields.tiles.findIndex((t) => isOvergrown(t.ground))
+    const rough = fieldTiles(start).findIndex((t) => isOvergrown(t.ground))
     useGame.setState({ uid: 'u1', status: 'ready', save: start })
-    await render(<><KitStage layout="landscape"><FarmBar /></KitStage><FarmRoute /></>, `/?tile=${rough}`)
+    await render(<KitStage layout="landscape"><FieldRoute /></KitStage>, `/field?tile=${rough}`)
     expect($(`[data-tile-sheet="${rough}"]`)).not.toBeNull()
     expect($('[data-left]')?.textContent).toBe('10 actions left of 10')
     await click('[data-action="clear"]')
-    await until(() => save().fields.tiles[rough]!.ground === 'clear')
+    await until(() => fieldTiles(save())[rough]!.ground === 'clear')
     expect(await note()).toMatch(/^Cleared/)
     await click('[data-action="till"]')
-    await until(() => save().fields.tiles[rough]!.ground === 'tilled')
+    await until(() => fieldTiles(save())[rough]!.ground === 'tilled')
     expect($('[data-tile-line]')?.textContent).toBe('Plant a seed, then water it.')
     expect($('[data-seed="seed-carrot"]')?.textContent).toContain('4 watered nights to ripe')
     await click('[data-seed="seed-carrot"] [data-action="plant"]')
-    await until(() => save().fields.tiles[rough]!.crop === 'carrot')
+    await until(() => fieldTiles(save())[rough]!.crop === 'carrot')
     expect(save().items['seed-carrot']).toEqual([8, 0, 0, 0, 0])
     expect($('[data-tile-line]')?.textContent).toBe('0 of 4 nights · dry: water it to grow tonight')
     await click('[data-action="water"]')
-    await until(() => save().fields.tiles[rough]!.watered)
+    await until(() => fieldTiles(save())[rough]!.watered)
     expect($('[data-tile-line]')?.textContent).toBe('0 of 4 nights · watered: it grows tonight')
     expect($('[data-action="water"]')).toBeNull()
     expect(save().today.actions).toBe(4)
     expect($('[data-bar-chip="actions"]')?.getAttribute('aria-label')).toBe('Actions left: 6 of 10')
     expect($('[data-left]')?.textContent).toBe('6 actions left of 10')
+    // Closing the panel leaves the page as it was.
+    await click('[data-action="close-panel"]')
+    expect(path).toBe('/field')
   })
 
   it('harvests a ripe one into the Warehouse, leaving the soil tilled', async () => {
     const ripe = withTile(farm(), 0, { ...bareTile('tilled'), crop: 'carrot', growth: 4, ready: true })
     useGame.setState({ uid: 'u1', status: 'ready', save: ripe })
-    await render(<FarmRoute />, '/?tile=0')
+    await render(<FieldRoute />, '/field?tile=0')
+    expect($('[data-plot-counts]')?.textContent).toBe('1 ripe')
     expect($('[data-tile-line]')?.textContent).toBe('Ripe: harvest it.')
     await click('[data-action="harvest"]')
-    await until(() => save().fields.tiles[0]!.crop === null)
-    expect(save().fields.tiles[0]!.ground).toBe('tilled')
+    await until(() => fieldTiles(save())[0]!.crop === null)
+    expect(fieldTiles(save())[0]!.ground).toBe('tilled')
     expect(save().items.carrot?.[0]).toBe(1)
     expect(await note()).toMatch(/^\+1 Carrot/)
   })
@@ -145,11 +180,76 @@ describe('a tile', () => {
   it('greys every button once the day\'s ten are spent', async () => {
     const spent = farm()
     useGame.setState({ uid: 'u1', status: 'ready', save: { ...spent, today: { ...spent.today, actions: 10 } } })
-    await render(<FarmRoute />, '/?tile=0')
+    await render(<FieldRoute />, '/field?tile=0')
     expect(($('[data-action="till"]') as HTMLButtonElement).disabled).toBe(true)
     expect($('[data-left]')?.textContent).toBe('No actions left today.')
     await render(<FarmRoute />, '/?peek=forest')
     expect($$('[data-action="forage"]').every((b) => (b as HTMLButtonElement).disabled)).toBe(true)
+  })
+
+  it('pages to plot 2, locked until Farm Rank 3, then cleared for 2,500g and an action, at once', async () => {
+    useGame.setState({ uid: 'u1', status: 'ready', save: farm() })
+    await render(<FieldRoute />, '/field')
+    await click('[data-action="next-plot"]')
+    expect(path).toBe('/field?plot=2')
+    expect($('[data-plot-locked="2"]')).not.toBeNull()
+    expect($('[data-plot-lock]')?.textContent).toBe('Opens at Farm Rank 3')
+    expect($('[data-action="clear-plot"]')).toBeNull()
+    expect($$('[data-tile]')).toHaveLength(0)
+    // At Farm Rank 3, with its gold, it can be cleared.
+    const fr3 = farm()
+    await act(async () => useGame.setState({ save: { ...fr3, gold: 3_000, farm: { ...fr3.farm, points: 250 } } }))
+    await settle()
+    expect($('[data-plot-lock]')?.textContent).toBe('Ready to clear')
+    expect($('[data-action="clear-plot"]')?.textContent).toBe('Clear Plot 2 · 2,500g · 1 action')
+    await click('[data-action="clear-plot"]')
+    await until(() => save().fields.plots.length === 2)
+    expect(save().gold).toBe(500)
+    expect(save().today.actions).toBe(1)
+    await until(() => $$('[data-tile]').length === 40)
+    expect($('[data-tile="0"]')?.getAttribute('href')).toBe('/field?plot=2&tile=0')
+    expect($('[data-plot-note]')?.textContent).toBe('Plot 2 is yours: clear and till its tiles.')
+    // Its tiles are wild, and plot 1's are as they were.
+    expect(save().fields.plots[1]!.tiles.every((t) => isOvergrown(t.ground))).toBe(true)
+    expect(save().fields.plots[0]).toEqual(fr3.fields.plots[0])
+    await click('[data-tile="0"]')
+    expect($('[data-tile-where]')?.textContent).toBe('Plot 2 · Row 1, tile 1')
+    await click('[data-action="clear"]')
+    await until(() => save().fields.plots[1]!.tiles[0]!.ground === 'clear')
+  })
+
+  it('turns the page with a swipe across the plot, and with the dots', async () => {
+    const fr3 = farm()
+    const two = { ...fr3, fields: { plots: [fr3.fields.plots[0]!, wildPlot('u1', 1)] } }
+    useGame.setState({ uid: 'u1', status: 'ready', save: two })
+    await render(<FieldRoute />, '/field')
+    const area = $('[data-plot-area]')!
+    await act(async () => {
+      area.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 400, clientY: 200 }))
+      area.dispatchEvent(new MouseEvent('pointerup', { bubbles: true, clientX: 250, clientY: 210 }))
+    })
+    await settle()
+    expect(path).toBe('/field?plot=2')
+    expect($('[data-plot="2"]')).not.toBeNull()
+    await click('[data-page-dot="1"]')
+    expect(path).toBe('/field')
+  })
+
+  it('shows a row\'s farmhands on its tab, and the row\'s panel what each does there an action', async () => {
+    const base = farm()
+    const hand = { ...newRosterUma(1), farmhand: 1, tasks: [{ kind: 'water' as const, tiles: [0, 1, 2, 3, 4, 5, 6, 7] }], practice: { water: 150 } }
+    const s: SaveV4 = { ...base, roster: { 101: hand }, love: { 101: newLove() } }
+    useGame.setState({ uid: 'u1', status: 'ready', save: s })
+    await render(<FieldRoute />, '/field')
+    expect($('[data-row-tab="1"]')?.dataset.rowHands).toBe('1')
+    expect($('[data-row-tab="1"] [data-row-trick]')).not.toBeNull()
+    expect($('[data-row-tab="2"]')?.dataset.rowHands).toBeUndefined()
+    await click('[data-row-tab="1"]')
+    expect(path).toBe('/field?row=1')
+    expect($('[data-row-sheet="1"]')).not.toBeNull()
+    expect($('[data-row-hand="101"]')?.textContent).toContain('Watering 6 · the whole row in one action')
+    await click('[data-row-tab="2"]')
+    expect($('[data-row-none]')?.textContent).toBe('No farmhand works this row.')
   })
 
   it('reads in words: its place, what it is, and how far it has grown', () => {

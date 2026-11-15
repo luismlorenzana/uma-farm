@@ -142,7 +142,7 @@ describe('the morning and the screens\' words', () => {
       ['Perks · +2 items', '/warehouse'],
       ['Side by side · +1 item', '/warehouse'],
     ])
-    expect(heartsLines([{ kind: 'chores', items: 0, watered: 2 }], [], nameOf)[0]).toMatchObject({ text: 'Night chores · 2 tiles watered', to: '/' })
+    expect(heartsLines([{ kind: 'chores', items: 0, watered: 2 }], [], nameOf)[0]).toMatchObject({ text: 'Night chores · 2 tiles watered', to: '/field' })
   })
 
 })

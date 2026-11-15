@@ -8,7 +8,7 @@ import { forage } from '../gathering/hauls'
 import { startLoad } from '../gathering/stations'
 import { GOLD_SHIPPED, ship, takeBack } from '../save/bin'
 import { parseSaveV5, SAVE_V5_KEYS } from '../save/parse-v4'
-import { newLove, newRosterUma, newSave, newTodayV4, START_CLEAR, type SaveV4 } from '../save/v4'
+import { fieldTiles, newLove, newRosterUma, newSave, newTodayV4, START_CLEAR, type SaveV4 } from '../save/v4'
 import { emptyNotes, endDay, NIGHT_STEPS, runNight, type NightContext } from './end-day'
 import { summarySections } from './summary'
 
@@ -71,7 +71,7 @@ describe('the night', () => {
     const morning = night(save)
     expect(actionsLeft(morning)).toBe(10)
     expect(morning.today).toEqual(newTodayV4())
-    expect(morning.fields.tiles[START_CLEAR[0]!]).toMatchObject({ crop: 'carrot', growth: 1, watered: false })
+    expect(fieldTiles(morning)[START_CLEAR[0]!]).toMatchObject({ crop: 'carrot', growth: 1, watered: false })
     expect(morning.items['wheat-flour']).toEqual([5, 0, 0, 0, 0])
     expect(morning.loads).toEqual({})
     // Nobody but the farmer works the farm yet: no Uma earns rank points.

@@ -283,6 +283,7 @@ belong to, and until then cost nothing or aren't there yet:
 | The fields | Harvest a tile | 1 | Now |
 | The fields | Water a row: a farmhand’s trick, from Watering 6 | 1 | Now |
 | The fields | Cut grass on a weeds tile, for the silo | 1 | Now |
+| The fields | Clear a plot: a new page of the field, from its Farm Rank, for its gold | 1 | Now |
 | Animals | Feed one, or care for one; collect a building’s eggs, milk or wool | 1 | Now |
 | Animals | Buy an animal or fodder, at the rancher’s in town | Free | Now |
 | The woods and the water | Forage once | 1 | Now |
@@ -457,36 +458,40 @@ card reads "Off: days are turns".
 #### Home: the farm map
 
 The farm map is Home: a landscape tile map you look across, seven cells tall (a cell is 44 points, 40 on a short screen)
-and wider than the screen, so it scrolls sideways. From the left: the woods' edge, the field's 40 tiles over the pond's
-edge, a path, then the farm's places on lots of two by two, three to a column, and the road to town at the far end.
+and wider than the screen, so it scrolls sideways. From the left: the woods' edge, the field's sign over the pond's edge,
+a path, then the farm's places on lots of two by two, three to a column, and the road to town at the far end. The field
+itself has its own screen ([the field's screen](#the-fields-screen)): the map shows only its sign, a lot's size, so the
+farm's places start six columns sooner than when the map held the field's 40 tiles.
 
 ```
- ◄────────────────────────────── scrolls sideways ──────────────────────────────►
- ┌────────┬─────────────────┬─┬───────────┬───────────┬────────────┬─────────┬────┐
- │        │ ▣ ▣ ▣ ≈ ≈ ○ ≈ ▲ │ │ Shipping  │ Farmhouse │ Mill       │ Gate    │    │
- │ the    │ ▣ ▣ ▣ ≈ ○ ≈ ≈ ≈ │p│ bin       │           │            │         │ To │
- │ woods' │ ▣ ▣ ▣ ≈ ≈ ▲ ≈ ○ │a│ Warehouse │ a house   │ Sawmill    │ Board   │    │
- │ edge   │ ≈ ○ ≈ ≈ ≈ ≈ ▲ ≈ │t│           │           │            │         │town│
- │        │ ≈ ≈ ≈ ▲ ≈ ≈ ≈ ○ │h│ Dorm      │ a house   │ Smokehouse │ Dock    │    │
- │        │ the pond's edge │ │           │           │            │ …and 4  │    │
- │        │                 │ │           │           │            │ columns │    │
- └────────┴─────────────────┴─┴───────────┴───────────┴────────────┴─────────┴────┘
-   ▣ cleared on day 1 · ≈ weeds · ○ a stone · ▲ a stump: the rest of the field is the account's own draw
+ ◄──────────────────────── scrolls sideways ────────────────────────►
+ ┌────────┬──────────────┬─┬───────────┬───────────┬────────────┬─────────┬────┐
+ │        │ 6 to water   │ │ Shipping  │ Farmhouse │ Mill       │ Gate    │    │
+ │ the    │ ┌▣▣▣≈≈○≈▲┐   │p│ bin       │           │            │         │ To │
+ │ woods' │ └≈○≈≈▲≈≈≈┘   │a│ Warehouse │ a house   │ Sawmill    │ Board   │    │
+ │ edge   │   Fields     │t│           │           │            │         │town│
+ │        ├──────────────┤h│ Dorm      │ a house   │ Smokehouse │ Dock    │    │
+ │        │ the pond's   │ │           │           │            │ …and 4  │    │
+ │        │ edge         │ │           │           │            │ columns │    │
+ └────────┴──────────────┴─┴───────────┴───────────┴────────────┴─────────┴────┘
+   the field's sign: plot 1 drawn small, tile by tile, its counts above it, a dot a plot once there are two
 ```
 
 - **The woods' edge** (two columns down the left side) is where you forage and chop; **the pond's edge** (under the
-  field) is where you fish. Both are drawn with the forest's and the Fishery's art and take the world's names when it
-  gives them.
-- **The field** is eight tiles across and five down, each drawn as what's on it: weeds, a stone, a stump, cleared
-  ground, tilled soil (darker, with a droplet, once watered), then the crop: seeds, a sprout, its own icon growing, and
-  ringed once ripe (see [the field](#the-field)).
+  field's sign) is where you fish. Both are drawn with the forest's and the Fishery's art and take the world's names when
+  it gives them.
+- **The field's sign** stands beside the woods, a lot's size: a wooden board with plot 1 drawn small, a square a tile in
+  its ground's colour (grass, earth, soil, watered soil) and a dot for a crop (green growing, blue watered, gold ripe), a
+  dot under it for each plot once the farm has more than one, and the Fields' name. Above it, the whole field's counts at
+  a glance, each only when it isn't 0: **"6 to water"** (growing and dry), **"2 ripe"**, **"3 to plant"** (empty tilled
+  soil). Its spoken name says them all ("Fields, 2 plots, 6 to water, 2 ripe"). A tap opens the field's screen.
 - **The lots,** column by column: the yard (the Shipping bin, the Warehouse, the Dorm); the homestead's houses (the
   Farmhouse and two lots from day 1, more columns as the household grows); the stations (the Mill, the Sawmill, the
   Smokehouse); the Gate, the Requests board and the Dock; the ranch (the Coop, the Barn, the Kitchen); the Mine, the
   Smelter and the Restaurant; the Quarry, the Cutter and the Forge.
 - **The road to town** closes the map: a tap opens the town's screen. The town's places (the shop, the festival ground,
   the expedition post, the town itself) are in town, and the Menu lists them.
-- **Opening a tile or a place** scrolls the map so the tile stays in view beside its panel.
+- **Opening a place** opens its panel or quick look at the right, the map left as it was.
 
 Each place's building and what opens it (the Boat is moored at the Dock and drawn there):
 
@@ -525,10 +530,9 @@ What a tap does:
 
 | Where | A tap opens |
 |---|---|
-| A field tile | Its panel, at the right: what's on it, how far it's grown, and its one action (`/?tile=<n>`). Another tile's tap moves the panel to it |
+| The field's sign | The field's screen, full screen: plot 1's page (`/field`; see [the field's screen](#the-fields-screen)) |
 | The woods' edge | Its panel: each area in reach, with its season's finds, **Forage · 1** and **Chop · 1** |
 | The pond's edge | Its panel: each spot in reach, with its season's fish and **Fish · 1** |
-| A field tile with weeds, once the silo stands | Its panel also offers **Cut grass for the silo · 1 action** |
 | A station, built (the Mill, the Sawmill, the Smokehouse, the Smelter, the Cutter) | Its panel: today's load, or what it can make, each with **Load 8** (or all that's held, if fewer) |
 | The Coop or the Barn, built | Its panel: the silo's feed, **Collect** for the goods waiting, and each animal with its hearts, **Feed · 1** and **Care · 1** (see [the ranch](#the-ranch)); the map tags it "3 to collect" |
 | The Mine or the Quarry, built | Its panel: the floor you're on with its finds, **Work a face · 1 action**, and the stairs: their progress, then **Take the stairs · free** (see [the Mine and the Quarry](#the-mine-and-the-quarry)); the map tags it "Floor 3" |
@@ -612,8 +616,10 @@ app asks for landscape.
 - **Lists sit in two columns** where they fit: the Hearts rows and the Town's People, the Town's spots, the
   Warehouse's goods, the Dorm's and the Diary's panels, the Book's cards and Account's panels; the Work view's faces sit
   five or six across.
-- **The farm map's panels** (a tile's, the woods', the pond's, a station's) sit at the right without dimming the map, so
-  the next tile is one tap away.
+- **The farm map's panels** (the woods', the pond's, a station's) sit at the right without dimming the map, and so do the
+  field's screen's (a tile's, a row's), so the next tile is one tap away.
+- **The field's screen is full screen:** no rail and no bar, its own strip along the top with the day's actions and End
+  the day; every sheet and card still opens over it.
 - **Safe areas:** the rail keeps clear of the notch's side, and the page of the other side and the home indicator; the
   update prompt keeps clear of both sides.
 
@@ -691,15 +697,16 @@ Its help says how the upkeep, a short night and the loans work, in four lines; t
 #### The Menu
 
 "Every place" lists the 25 places on the map in six groups (Gathering, Stations, The ranch, Workshops, The yard, The town), each
-with its count (the Fields count their ripe tiles) and locked ones marked; a tap goes where a tap on the map goes (the
-Fields to the map itself). Then
+with its count (the Fields count their ripe tiles, every plot's) and locked ones marked; a tap goes where a tap on the
+map goes (the Fields to the field's screen). Then
 Account, the "Ask before ending the day" switch, and the build's number.
 
 ### The field
 
-Farming is by hand, one tile and one action at a time. The field starts overgrown, with a small patch cleared: you clear
-a tile, till it, plant a seed, water it each day it grows, and harvest it once it's ripe. A watered tile grows one stage
-a night; a dry one waits. Harvests sometimes give a seed back, and every harvest raises the crop's level on the farm.
+Farming is by hand, one tile and one action at a time. The field is plots of 8 × 5 tiles, each a page of the field's own
+screen: the farm starts with one, overgrown but for a small patch cleared, and clears more as it grows. You clear a tile,
+till it, plant a seed, water it each day it grows, and harvest it once it's ripe. A watered tile grows one stage a
+night; a dry one waits. Harvests sometimes give a seed back, and every harvest raises the crop's level on the farm.
 
 ```
  weeds · a stone · a stump ──clear · 1──► cleared ──till · 1──► tilled ──plant · 1 (in season)──► a crop, stage 0
@@ -714,20 +721,92 @@ a night; a dry one waits. Harvests sometimes give a seed back, and every harvest
 
 #### The field's tiles
 
-The field is a grid of 40 tiles, eight across and five down, beside the woods' edge and over the pond's. On day 1 a
-patch of nine at its top left is cleared; every other tile is overgrown, drawn once for the account (`draw(uid, 0,
-'ground', i)`), so a farm always starts on the same field. Each tile holds its ground (weeds, a stone, a stump, cleared
-or tilled), its crop, its stage, whether it's ripe, regrowing or from own seeds, and whether it's watered today.
+The field is plots, each a grid of 40 tiles, eight across and five down. Plot 1 is the field the farm always had: on
+day 1 a patch of nine at its top left is cleared, and every other tile is overgrown, drawn once for the account
+(`draw(uid, 0, 'ground', i)`), so a farm always starts on the same field. Each tile holds its ground (weeds, a stone, a
+stump, cleared or tilled), its crop, its stage, whether it's ripe, regrowing or from own seeds, and whether it's watered
+today. The rules number every plot's tiles on from plot 1's (plot 1's 0–39, plot 2's 40–79), so every seeded draw keyed
+by a tile (a harvest's stars, a seed back) replays on plot 1 exactly as it always did.
 
 <!-- live:field -->
 |  | The field |
 |---|---|
-| Tiles | 40: 8 across, 5 down |
+| A plot | 40 tiles: 8 across, 5 down |
+| Plots | 2: plot 1 from day 1, the rest cleared as the Farm Rank rises |
 | Cleared on day 1 | 9, three by three at the top left |
 | Weeds | 55% of the rest; clearing leaves nothing |
 | A stone | 25% of the rest; clearing leaves a Limestone ★1 |
 | A stump | 20% of the rest; clearing leaves a Pine Log ★1 |
 <!-- /live -->
+
+#### The field's plots
+
+The field is a list of plots, each 8 × 5, a page each on the field's screen. The farm starts with plot 1 and clears more
+as the Farm Rank rises, each after the one before; plots 3 to 8 come with the farm at scale
+([the analysis](design/game-design.md#the-farm-at-scale-2026-11-15)).
+
+<!-- live:plots -->
+| Plot | Opens | Costs | Starts |
+|---|---|---|---|
+| Plot 1 | Day 1 | — | 9 tiles cleared at its top left, the rest overgrown |
+| Plot 2 | Farm Rank 3, after Plot 1 | 2,500g and an action; no upkeep | Wild: every tile overgrown, the account’s own draw |
+<!-- /live -->
+
+- **Clearing a plot** is like building a place, with an action: from its Farm Rank, its page's **Clear Plot 2 · 2,500g ·
+  1 action** pays its gold and spends one of the day's actions, and the plot is the farm's **at once**, the next page of
+  the field. "Need 400g more" or "No actions left today" greys the button while either lacks; before its Farm Rank the
+  page says "Opens at Farm Rank 3" and shows no button.
+- **A new plot is wild:** every tile overgrown, weeds, stones and stumps by the account's own draw (`draw(uid, 0,
+  'ground', 40 + i)` for plot 2), with no cleared patch. Clearing its tiles leaves their logs and limestone as plot 1's
+  do, and a farmhand's **Clear and till** works it a row at a time.
+- **A plot adds no upkeep:** it's land, not a building ([upkeep](#upkeep) counts places built, houses, beds and Umas).
+  Its cost is its gold and the work its tiles take.
+- **Everything on the field reads every plot:** a tile's actions, the night's growth and withering, the night chores'
+  watering, the morning's counts and nudges, the nudge on End the day, the sign's counts and the Menu's ripe tiles.
+
+#### The field's screen
+
+A tap on the field's sign (or the Menu's Fields, or a morning line about the field) opens the field's own screen,
+`/field`, **full screen**: no rail and no bar, the plot as big as the phone allows.
+
+```
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│ ‹ Farm   Plot 1                ━ ◦   ⓘ   ⏱ 7/10  [☾ End day]                         │  the strip
+│          6 to water · 2 ripe   (page dots: plot 1 lit, plot 2 with a lock)            │
+├──────────────────────────────────────────────────────────────────┬───────────────────┤
+│ (‹)  1 ▢ ▢ ▢ ▢ ▢ ▢ ▢ ▢  (›)                                      │ a tile's panel or │
+│      2 ▢ ▢ ▢ ▢ ▢ ▢ ▢ ▢     big tiles, 36–88 points, as the space  │ a row's, at the   │
+│      3 ▢ ▢ ▢ ▢ ▢ ▢ ▢ ▢     allows; the plot narrows beside a panel│ right             │
+│      4 ▢ ▢ ▢ ▢ ▢ ▢ ▢ ▢                                           │                   │
+│      5 ▢ ▢ ▢ ▢ ▢ ▢ ▢ ▢     ◄ a swipe across the plot turns the page ►                 │
+└──────────────────────────────────────────────────────────────────┴───────────────────┘
+```
+
+- **The strip** along the top: **‹ Farm** back to the farm map; the plot's name and its counts ("6 to water · 2 ripe ·
+  3 to plant"; with none of those, what it still needs, "31 to clear or till", or "Nothing due"); the **page dots**, a dot a plot (the one shown lit, a lock on one not cleared yet,
+  each a tap to its page); the help button; the day's actions left and **End the day**, as the bar has them.
+- **A page is a plot:** its five rows of eight tiles, each drawn as on the farm before: weeds, a stone, a stump, cleared
+  ground, tilled soil (darker, with a droplet, once watered), then the crop: seeds, a sprout, its own icon growing, and
+  ringed once ripe. The tiles are as big as the screen allows, 36 to 88 points (about 62 on an 844 × 390 phone).
+- **Turning the page:** the dots, the arrows at the plot's left and right (‹ and ›, each naming the page it goes to;
+  they step aside while a panel is open, so the tiles keep their size), a swipe across the plot, or the arrow keys. The page is `?plot=<n>` (plot 1 has none).
+- **A tile's tap** opens its panel at the right (`?tile=<i>`, its tile on that plot, 0–39): what's on it, how far it's
+  grown, and its one action (see [a tile's actions](#a-tiles-actions)). Another tile's tap moves the panel to it; Close
+  or Escape puts it away. The plot narrows to keep every tile beside the panel in view.
+- **A plot not cleared yet** shows its wild ground dimmed under a card: its name, a lock, what opens it ("Opens at Farm
+  Rank 3", or "Ready to clear" once it can be), "Farm Rank 3 · 2,500g and an action. It opens at once, wild: clear and
+  till its tiles. No upkeep.", and, from its Farm Rank, its **Clear** button. Once cleared, its page shows its tiles and
+  "Plot 2 is yours: clear and till its tiles."
+- **A row's tab,** at the left of each row: its number; the face of the first farmhand whose field task reaches it; and
+  a droplet once one of them waters the whole row in one action (Watering 6). A tap opens the **row's panel**
+  (`?row=<r>`): what the row holds ("2 to water · 1 ripe"), each farmhand on it with her task, her aptitude and what she
+  does there an action ("Watering 6 · the whole row in one action", "Harvesting 2 · a tile an action"), "No farmhand
+  works this row." with none, a line that the farmer's own tools work a tile at a time (no tool of his works a row yet),
+  and **The work board** in the Book, where her tasks are set.
+- **Moving inside the screen** (a page, a tile, a row) replaces where you are rather than adding to it, so **‹ Farm**
+  and Back both go to the farm map.
+- **Its help** says how the field works in four short lines: plots and pages, a tile's action, a row's tab, and a new
+  plot's clearing.
 
 #### The crops
 
@@ -789,8 +868,9 @@ The season's seeds by the Farm Rank that opens them:
 
 #### A tile's actions
 
-A tap on a tile opens its panel: its ground or crop, where it is ("Row 2, tile 3"), a line on what it takes next, its
-one action, and the day's actions left. Each action is one of the day's ten, and says what it did:
+A tap on a tile, on the field's screen, opens its panel: its ground or crop, where it is ("Row 2, tile 3", with its plot
+once the farm has two: "Plot 2 · Row 2, tile 3"), a line on what it takes next, its one action, and the day's actions
+left. A weeds tile's panel also offers **Cut grass for the silo · 1 action** once the silo stands. Each action is one of the day's ten, and says what it did:
 
 | On the tile | Its line | The action | What it does |
 |---|---|---|---|
@@ -807,7 +887,7 @@ one action, and the day's actions left. Each action is one of the day's ten, and
   harvesting what isn't ripe ("Not ripe yet."), and anything with no actions left.
 - **Planting:** the panel lists each seed held that plants today, own seeds first, with its count and "4 watered nights
   to ripe", or "Won't ripen this season" when the season ends first. With none: "No seeds for Spring." and **Seeds at
-  the shop, in town**. The first planting of a crop adds it to the farm's crops at level 1.
+  the shop, in town** (over the field's screen). The first planting of a crop adds it to the farm's crops at level 1.
 - **Own seeds** come back from harvests and are kept apart from the shop's; a tile planted from them raises the crop's
   level twice as fast.
 - **On a season's last day** a growing tile that won't ripen by the morning says "Withers tonight: it won't ripen before
@@ -899,7 +979,7 @@ The challenge toward each farming rank:
   every tile dries.
 - **Step 7:** on a season's last night, crops that don't grow next season wither.
 - **The morning** says "The field · 5 crops grew · 2 ripe", then what withered ("The field · 3 Onion withered"), each
-  opening the farm map; and under Today, "5 tiles to water" while crops grow, and "9 tiles to plant" while seeds you
+  opening the field's screen; and under Today, "5 tiles to water" while crops grow, and "9 tiles to plant" while seeds you
   hold for the season could fill empty tilled tiles.
 
 #### The romance in the field
@@ -2329,7 +2409,7 @@ actions turn to the valley and its people. The rules are `farm/farmhands.ts`.
    the Book: the work board (free)       then her actions today: 3, +1 settled in, +2 a spouse, +1 well fed this morning,
      her tasks, in your order              all at the farm's pace (half, from the second short night of upkeep)
      harvest · water · plant ·           the field's tasks, the loads and the animals' care first, in your order, each
-     clear and till   (the field's rows)   until it's done; then her gathering and digging share what's left, a turn each
+     clear and till   (a plot's rows)      until it's done; then her gathering and digging share what's left, a turn each
      load (a station)                    every action: a point of practice in its aptitude; her goods into the Warehouse
      forage · chop (an area)             her place today (where she spent the most) pays rank points, bonds, her line
      fish (a spot)                     then the crops grow: her watering counts tonight
@@ -2376,20 +2456,23 @@ The Book's **Work board** has a card for each farmhand, in the order they work: 
 profile's Work side), her job and the day she started, her actions today with what adds to them ("+1 settled in", "+1
 well fed", "half pace" in red), **Tonight**, what she'll do as the farm stands now ("3 of 3 actions · watered 3 tiles"),
 and her tasks in your order, each with her aptitude's level ("Water · rows 1 and 2 · Watering 2"), **↑** to move it up
-and **✕** to remove it. **Add a task** (up to six) opens a side panel: what, then where (the field's rows, each with what
-it holds for that task now, or the whole field; the seed to plant, or any in season; a built station; the Coop or the
-Barn, built; the Mine or the Quarry, built; an area or a spot the farm reaches, the rest greyed with why), and **Add ·
-Water · rows 1 and 2**. Setting tasks is free and takes effect
+and **✕** to remove it. **Add a task** (up to six) opens a side panel: what, then where (for the field's tasks, the plot
+(Plot 1, Plot 2 greyed with "Opens at Farm Rank 3" until it's cleared), then that plot's rows, each with what it holds
+for that task now, or the whole plot; the seed to plant, or any in season; a built station; the Coop or the Barn, built;
+the Mine or the Quarry, built; an area or a spot the farm reaches, the rest greyed with why), and **Add · Water · rows 1
+and 2**. **A field task names its plot** and works that plot's tiles only: once the farm has two plots, the board says
+which ("Water · plot 2, rows 1 and 2", "Water · all of plot 1"). The field's screen shows the same on each row's tab
+([the field's screen](#the-fields-screen)). Setting tasks is free and takes effect
 tonight; they repeat each day until you change them. With no farmhands: "No farmhands yet. Once she's a friend
 (Friendship 3), invite her to work: her menu in town."
 
 <!-- live:work-board -->
 | Task | Over | An action | It stops | Aptitude | Reads |
 |---|---|---|---|---|---|
-| Harvest | Tiles you choose (the board offers the field’s rows) | A ripe tile, its crops by her stars; 2 tiles an action from Harvesting 5 | When none of its tiles needs it | Harvesting | Farming |
-| Water | Tiles you choose (the board offers the field’s rows) | A dry growing tile; 2 tiles an action from Watering 3; every dry tile of hers in one row from Watering 6 | When none of its tiles needs it | Watering | Farming |
-| Plant | Tiles you choose (the board offers the field’s rows) | An empty tilled tile, the seed named or any held for the season, own seeds first, that ripens in time; 2 tiles an action from Planting 4 | When none of its tiles needs it | Planting | Farming |
-| Clear and till | Tiles you choose (the board offers the field’s rows) | A step on a tile: clears an overgrown one, tills a cleared one; both in one from Clearing 4 | When none of its tiles needs it | Clearing | Farming |
+| Harvest | A plot’s tiles you choose (the board offers each plot’s rows) | A ripe tile, its crops by her stars; 2 tiles an action from Harvesting 5 | When none of its tiles needs it | Harvesting | Farming |
+| Water | A plot’s tiles you choose (the board offers each plot’s rows) | A dry growing tile; 2 tiles an action from Watering 3; every dry tile of hers in one row from Watering 6 | When none of its tiles needs it | Watering | Farming |
+| Plant | A plot’s tiles you choose (the board offers each plot’s rows) | An empty tilled tile, the seed named or any held for the season, own seeds first, that ripens in time; 2 tiles an action from Planting 4 | When none of its tiles needs it | Planting | Farming |
+| Clear and till | A plot’s tiles you choose (the board offers each plot’s rows) | A step on a tile: clears an overgrown one, tills a cleared one; both in one from Clearing 4 | When none of its tiles needs it | Clearing | Farming |
 | Load | A built station | A load of the good the station holds most of, up to 8 (12 from level 5) | Once the station holds today’s load | Milling, Sawing, Smoking, Smelting or Cutting, by station | Farming, foraging, fishing or mining |
 | Forage | An area the farm reaches | A haul of 2 finds (3 from Foraging 5) | Never: her gathering shares what’s left, a turn each | Foraging | Foraging |
 | Chop | An area the farm reaches | 2 logs (3 from Chopping 5) | Never: her gathering shares what’s left, a turn each | Chopping | Foraging |
@@ -2484,8 +2567,9 @@ The tricks, and the level each opens at:
 
 #### The save
 
-Each farmhand's board is `roster[id].tasks` (in your order, at most six: the field's over a list of its tiles, planting
-one crop or any; a station's load; an area's forage or chop; a spot's catch), and each Uma's practice is
+Each farmhand's board is `roster[id].tasks` (in your order, at most six: the field's over a plot's tiles, 0–39, its plot
+`plot` (its index) written from plot 2 on, so a task from before plots, with none, is plot 1's; planting one crop or
+any; a station's load; an area's forage or chop; a spot's catch; a task on a plot the farm hasn't cleared is refused), and each Uma's practice is
 `roster[id].practice` (actions spent, by aptitude). The farmhands well fed this morning are `today.fed`. They grow v5 in
 place: a save from before them reads as no tasks, no practice and nobody well fed, and nothing moves `updatedAt` for it.
 A farmhand's load may be bigger than the farmer's, so a station's load holds 1 to 20.
@@ -5994,6 +6078,10 @@ sits outside the opening screens, so it shows even when the app stopped while op
   actions by aptitude; none, none) and `today.fed` (the farmhands well fed this morning; none, nobody) are written only
   once used; the morning's farmhand (`farmhand`) and aptitude (`aptitude`) lines are new kinds; and a station's load may
   hold up to 20 (a farmhand's bigger load at her yield). Nothing migrates, and `updatedAt` never moves for it.
+- **v5 grows in place with the field's plots:** `fields.plots` (each plot's 40 tiles, plot 1 first) holds the field; a
+  save from before plots holds one field's tiles (`fields.tiles`) and reads as plot 1, exactly as it was, tile for tile,
+  crops, growth and watering untouched; a farmhand's field task with no `plot` is plot 1's. The save is written with
+  `fields.plots` from the player's next change, and nothing moves `updatedAt` for it.
 - **Nothing goes silently:** a phone save with unsynced play is kept first as a "Before the new farm" safety copy (if it
   can't be kept, nothing changes and the card says so, with the button to try again). The new farm syncs up as it is,
   and the first time the server stores a v5 over the older save it copies the older one, whole, to a backup

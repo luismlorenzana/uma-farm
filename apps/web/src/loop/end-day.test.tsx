@@ -3,7 +3,7 @@
 // fade and the morning summary after, and a second tap ending nothing more. Invented ids and the stand-in pack; master
 // data and the server are stubs.
 import 'fake-indexeddb/auto'
-import { bareTile, newLove, newRosterUma, newSave, type SaveV4 } from '@farm/domain'
+import { fieldTiles, bareTile, newLove, newRosterUma, newSave, type SaveV4 } from '@farm/domain'
 import { KitStage } from '@luismlorenzana/uma-kit/ui'
 import { act, type ReactNode } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -30,10 +30,10 @@ const AT = '2026-11-09T10:00:00.000Z'
 /** Three Umas home on day 1, a tile tilled and one growing a dry carrot; `spent` actions of the day's ten spent. */
 function farm(spent = 0): SaveV4 {
   const save = newSave('u1', AT)
-  const tiles = save.fields.tiles.map((t, i) => (i === 0 ? bareTile('tilled') : i === 1 ? { ...bareTile('tilled'), crop: 'carrot' as const, growth: 1 } : t))
+  const tiles = fieldTiles(save).map((t, i) => (i === 0 ? bareTile('tilled') : i === 1 ? { ...bareTile('tilled'), crop: 'carrot' as const, growth: 1 } : t))
   return {
     ...save, roster: { 101: newRosterUma(1), 202: newRosterUma(1), 303: newRosterUma(1) }, love: { 101: newLove(), 202: newLove(), 303: newLove() },
-    dorm: { level: 1, home: ['101', '202', '303'], swaps: [] }, fields: { tiles }, today: { ...save.today, actions: spent },
+    dorm: { level: 1, home: ['101', '202', '303'], swaps: [] }, fields: { plots: [{ tiles }] }, today: { ...save.today, actions: spent },
   }
 }
 const save = () => useGame.getState().save as SaveV4
@@ -105,7 +105,7 @@ describe('End the day', () => {
       calendar: { day: 2 }, today: { actions: 0 }, account: { updatedAt: '2026-11-09T20:00:00.000Z' },
       summary: { day: 2, nudges: [{ kind: 'water', tiles: 1 }, { kind: 'seeds', tiles: 1 }] },
     })
-    expect(save().fields.tiles[1]!.growth).toBe(1)
+    expect(fieldTiles(save())[1]!.growth).toBe(1)
     expect(path).toBe('/')
   })
 

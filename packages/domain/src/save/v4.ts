@@ -8,6 +8,10 @@
 // The module keeps its name, and the type its old name as an alias (`SaveV4`), so the code that reads the save didn't
 // move with the version.
 //
+// The field is a list of plots, each 8 × 5 tiles (`fields.plots`): the farm starts with one and clears more as it grows
+// (`fields/plots.ts`). A save from before plots holds one field's tiles (`fields.tiles`) and reads as plot 1, exactly as
+// it was (`parseFields`), so nothing moves and `updatedAt` stays where it was.
+//
 // The roster, the Dorm, work, bonds, `love`, `today`, `memories` and `arrivals` are keyed by character id. Her outfit is
 // a lookup in the story pack (`outfitOf`, `story/pack.ts`).
 import { DAYS_PER_YEAR } from '../farm/calendar'
@@ -42,12 +46,16 @@ export interface DormSwap {
   in: OutfitId
 }
 
-// --- The field: a grid of tiles ----------------------------------------------------------------------------------
+// --- The field: plots of tiles ------------------------------------------------------------------------------------
 
-/** The field's grid: 8 tiles across, 5 down, numbered row by row from the top left. */
+/** A plot's grid: 8 tiles across, 5 down, numbered row by row from the top left. Every plot is one. */
 export const FIELD_COLUMNS = 8
 export const FIELD_ROWS = 5
 export const FIELD_TILES = FIELD_COLUMNS * FIELD_ROWS
+/** The most plots the save holds: the plots the rules open (`fields/plots.ts`'s `FIELD_PLOTS`; F91 adds up to eight). */
+export const MAX_PLOTS = 2
+/** The most tiles the field holds, every plot's. */
+export const MAX_FIELD_TILES = MAX_PLOTS * FIELD_TILES
 /** What covers a tile: weeds, a stone or a stump to clear, cleared ground, or tilled soil. */
 export const GROUNDS = ['weeds', 'stone', 'stump', 'clear', 'tilled'] as const
 export type Ground = typeof GROUNDS[number]
@@ -77,24 +85,43 @@ export const OVERGROWTH_SHARES: readonly (readonly [Overgrowth, number])[] = [['
 /** A tile with nothing on it but its ground. */
 export const bareTile = (ground: Ground): Tile => ({ ground, crop: null, growth: 0, ready: false, regrowing: false, own: false, watered: false })
 
-/** Day 1's field: the cleared patch, and every other tile overgrown by the account's seeded draw
- * (`draw(uid, 0, 'ground', i)`), so a farm always starts on the same field. */
-export function startField(uid: string): Tile[] {
-  return Array.from({ length: FIELD_TILES }, (_, i) => {
-    if (START_CLEAR.includes(i)) return bareTile('clear')
-    let at = draw(uid, 0, 'ground', i) * 100
-    for (const [ground, share] of OVERGROWTH_SHARES) {
-      if (at < share) return bareTile(ground)
-      at -= share
-    }
-    return bareTile('weeds')
-  })
+/** An overgrown tile by the account's seeded draw: weeds the most, then stones, then stumps. */
+function overgrown(uid: string, n: number): Tile {
+  let at = draw(uid, 0, 'ground', n) * 100
+  for (const [ground, share] of OVERGROWTH_SHARES) {
+    if (at < share) return bareTile(ground)
+    at -= share
+  }
+  return bareTile('weeds')
 }
 
-/** Ready tiles in the field: the map's badge and the Menu's count. */
-export const readyTiles = (save: Pick<SaveV5, 'fields'>): number => save.fields.tiles.filter((t) => t.ready).length
-/** Tiles growing a crop that aren't watered today. */
-export const dryTiles = (save: Pick<SaveV5, 'fields'>): number => save.fields.tiles.filter((t) => t.crop !== null && !t.ready && !t.watered).length
+/** Day 1's field, plot 1: the cleared patch, and every other tile overgrown by the account's seeded draw
+ * (`draw(uid, 0, 'ground', i)`), so a farm always starts on the same field. */
+export function startField(uid: string): Tile[] {
+  return Array.from({ length: FIELD_TILES }, (_, i) => (START_CLEAR.includes(i) ? bareTile('clear') : overgrown(uid, i)))
+}
+/** A plot as it's cleared, past the first: wild, every tile overgrown by the account's own draw, numbered on from plot 1's
+ * (`draw(uid, 0, 'ground', plot × 40 + i)`), so a farm always clears the same plot. `plot` is its index: 1 for plot 2. */
+export const wildPlot = (uid: string, plot: number): Plot => ({ tiles: Array.from({ length: FIELD_TILES }, (_, i) => overgrown(uid, plot * FIELD_TILES + i)) })
+
+/** One plot of the field: its 40 tiles, row by row (`FIELD_COLUMNS` across). */
+export interface Plot {
+  tiles: Tile[]
+}
+
+/** The field's tiles, every plot's in order. A rule names a tile by its place in this list, its **field index**: plot
+ * `⌊i / 40⌋`'s tile `i mod 40`, so plot 1's tiles keep the numbers (and the seeded draws) they always had. */
+export const fieldTiles = (save: Pick<SaveV5, 'fields'>): Tile[] => save.fields.plots.flatMap((p) => p.tiles)
+/** A field index's plot (0 for plot 1) and its tile in that plot. */
+export const plotOf = (index: number): number => Math.floor(index / FIELD_TILES)
+export const tileInPlot = (index: number): number => index % FIELD_TILES
+/** The field index of a plot's tile. */
+export const fieldIndex = (plot: number, tile: number): number => plot * FIELD_TILES + tile
+
+/** Ready tiles in the field, every plot's: the sign's count and the Menu's. */
+export const readyTiles = (save: Pick<SaveV5, 'fields'>): number => fieldTiles(save).filter((t) => t.ready).length
+/** Tiles growing a crop that aren't watered today, every plot's. */
+export const dryTiles = (save: Pick<SaveV5, 'fields'>): number => fieldTiles(save).filter((t) => t.crop !== null && !t.ready && !t.watered).length
 
 // --- The stations' loads -----------------------------------------------------------------------------------------
 
@@ -282,19 +309,20 @@ export interface Love {
 
 // --- The work board: a farmhand's tasks, and her aptitudes ---------------------------------------------------------
 
-/** The work board's tasks: the field's (a list of its tiles), a station's load, a forest area's forage or chop, a fishing
- * spot's catch, the Coop's or the Barn's care, and a face at the Mine or the Quarry. */
+/** The work board's tasks: the field's (a plot and a list of its tiles), a station's load, a forest area's forage or chop,
+ * a fishing spot's catch, the Coop's or the Barn's care, and a face at the Mine or the Quarry. */
 export const TASK_KINDS = ['harvest', 'water', 'plant', 'till', 'load', 'forage', 'chop', 'fish', 'care', 'mine'] as const
 export type TaskKind = typeof TASK_KINDS[number]
 /** The field's tasks, each over a list of tiles. */
 export const TILE_TASKS = ['harvest', 'water', 'plant', 'till'] as const
 export type TileTaskKind = typeof TILE_TASKS[number]
-/** One task on a farmhand's board: the field's over its tiles (planting one crop, or any in season), a station's load,
- * an area's forage or chop, a spot's catch, a building's animals, a dig's deepest floor. It repeats each day until you
- * change it. */
+/** One task on a farmhand's board: the field's over a plot's tiles (planting one crop, or any in season), a station's
+ * load, an area's forage or chop, a spot's catch, a building's animals, a dig's deepest floor. It repeats each day until
+ * you change it. A field task's `plot` is its plot's index, absent for plot 1 (a task from before plots is plot 1's), and
+ * its `tiles` are that plot's, 0–39. */
 export type FarmTask =
-  | { kind: Exclude<TileTaskKind, 'plant'>; tiles: number[] }
-  | { kind: 'plant'; tiles: number[]; crop?: CropId }
+  | { kind: Exclude<TileTaskKind, 'plant'>; tiles: number[]; plot?: number }
+  | { kind: 'plant'; tiles: number[]; crop?: CropId; plot?: number }
   | { kind: 'load'; station: StationId }
   | { kind: 'forage' | 'chop'; area: ForestAreaId }
   | { kind: 'fish'; spot: FishingSpotId }
@@ -509,8 +537,8 @@ export interface SaveV5 {
   dorm: { level: number; home: CharacterId[]; swaps: DormSwap[] }
   items: Warehouse
   bin: Warehouse
-  /** The field's tiles, row by row (`FIELD_COLUMNS` across). */
-  fields: { tiles: Tile[] }
+  /** The field: its plots in the order cleared, plot 1 first, each 8 × 5 tiles. An older v5's one field of tiles is plot 1. */
+  fields: { plots: Plot[] }
   /** Each station's load started today, ready the next morning. */
   loads: Partial<Record<StationId, StationLoad>>
   crops: Partial<Record<CropId, number>>
@@ -578,7 +606,7 @@ export function newSave(uid: string, now: string): SaveV5 {
     dorm: { level: 1, home: [], swaps: [] },
     items: { [seedId('carrot')]: [START_SEEDS, 0, 0, 0, 0] },
     bin: {},
-    fields: { tiles: startField(uid) },
+    fields: { plots: [{ tiles: startField(uid) }] },
     loads: {},
     crops: {},
     ranch: { animals: [], silo: 0 },

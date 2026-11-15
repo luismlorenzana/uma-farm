@@ -1,9 +1,9 @@
-// The farm map: a landscape tile map, the woods' edge, the field over the pond's edge, the lots and the road to town;
+// The farm map: a landscape tile map, the woods' edge, the field's sign over the pond's edge, the lots and the road to town;
 // every building on the pinned uma-art sheet, and each place's lock in its quick look's words.
 import atlas from '@luismlorenzana/uma-art/buildings/atlas.json'
-import { FARM_PLACES, farmPlace, FIELD_TILES, HOMESTEAD_PLACES, homesteadShown, newSave } from '@farm/domain'
+import { FARM_PLACES, farmPlace, HOMESTEAD_PLACES, homesteadShown, newSave } from '@farm/domain'
 import { describe, expect, it } from 'vitest'
-import { FIELD, LOT_COLUMNS, lockOf, MAP_ROWS, mapLots, placeLink, POND, tileArea, WOODS } from './farm-map'
+import { FIELD, LOT_COLUMNS, lockOf, MAP_ROWS, mapLots, placeLink, POND, WOODS } from './farm-map'
 
 const frames: Readonly<Record<string, { w: number; h: number }>> = atlas.frames
 const day1 = newSave('u1', '2026-11-09T10:00:00.000Z')
@@ -16,19 +16,18 @@ describe('the farm map', () => {
     expect(frames.fishery).toBeDefined()
   })
 
-  it('lays the woods\' edge, the field over the pond\'s edge, the lots and the road side by side, seven cells tall', () => {
+  it('lays the woods\' edge, the field\'s sign over the pond\'s edge, the lots and the road side by side, seven cells tall', () => {
     expect(MAP_ROWS).toBe(7)
     expect(WOODS).toEqual({ col: 0, row: 0, cols: 2, rows: 7 })
-    expect(FIELD).toEqual({ col: 2, row: 0, cols: 8, rows: 5 })
-    expect(POND).toEqual({ col: 2, row: 5, cols: 8, rows: 2 })
-    expect(tileArea(0)).toEqual({ col: 2, row: 0, cols: 1, rows: 1 })
-    expect(tileArea(FIELD_TILES - 1)).toEqual({ col: 9, row: 4, cols: 1, rows: 1 })
+    // The field is a sign a lot's size; the forty tiles' room went back to the map, which is six columns narrower.
+    expect(FIELD).toEqual({ col: 2, row: 0, cols: 2, rows: 2 })
+    expect(POND).toEqual({ col: 2, row: 2, cols: 2, rows: 5 })
     // Day 1: the yard, the homestead's first column, the other five columns, then the road.
     const { lots, road, cols } = mapLots(homesteadShown(day1))
     expect(lots).toHaveLength(LOT_COLUMNS.flat().length + 3)
     expect(lots.slice(0, 6).map((l) => (l.kind === 'place' ? l.id : l.place.id))).toEqual(['bin', 'warehouse', 'dorm', 'farmhouse', 'house-1', 'house-2'])
-    expect(lots[0]!.area).toEqual({ col: 11, row: 0, cols: 2, rows: 2 })
-    expect(road).toEqual({ col: 11 + 7 * 2, row: 0, cols: 1, rows: 7 })
+    expect(lots[0]!.area).toEqual({ col: 5, row: 0, cols: 2, rows: 2 })
+    expect(road).toEqual({ col: 5 + 7 * 2, row: 0, cols: 1, rows: 7 })
     expect(cols).toBe(road.col + 1)
     // Every place you work or build stands on a lot once; the town's are down the road.
     const onLots = new Set(lots.flatMap((l) => (l.kind === 'place' ? [l.id] : [])))
@@ -52,10 +51,10 @@ describe('the farm map', () => {
     expect(placeLink(day1, farmPlace('dorm')!)).toBe('/dorm')
     expect(placeLink(day1, farmPlace('gate')!)).toBe('/?peek=gate')
     expect(placeLink(day1, farmPlace('town')!)).toBe('/town')
-    // The woods' edge and the pond's open their menus; the field is the map itself.
+    // The woods' edge and the pond's open their menus; the field's sign opens the field's own screen.
     expect([lock('forest'), lock('fishery')]).toEqual([null, null])
     expect(placeLink(day1, farmPlace('forest')!)).toBe('/?peek=forest')
-    expect(placeLink(day1, farmPlace('fields')!)).toBe('/')
+    expect(placeLink(day1, farmPlace('fields')!)).toBe('/field')
     // A station is locked until built; once Farm Rank 3 opens it, its quick look offers Build.
     const fr3 = { ...day1, farm: { ...day1.farm, points: 250 } }
     expect(lock('sawmill', fr3)).toBe('Not built')
