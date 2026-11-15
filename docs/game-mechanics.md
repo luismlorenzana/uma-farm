@@ -2272,7 +2272,7 @@ open is greyed with why. **Back** returns to the map.
   Count me in."), and "Works the farm ✓". Set her tasks on the work board in the Book ([farmhands](#farmhands)).
 - **Her event** shows once it's Ready, wherever she lives, and opens the event player over the town; it takes an
   action (a special day's event actions first), and with none left it doesn't start.
-- **Not out now:** "At home today. Look for her another day." (with her profile once met); one on the farm: "She lives
+- **Not out now:** "At home today. Out on Spring 7, at the Library." (her next day out, from her schedule; with her profile once met); one on the farm: "She lives
   on the farm. Her profile ›", or for a farmhand "On the farm by day, after her job. Her profile ›" (her menu still
   works there: she's in front of you).
 - **One of the town's people** (her face at her post, or on the People list) shows her role, what she does and her

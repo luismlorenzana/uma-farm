@@ -14,7 +14,7 @@
 // says so; one on the farm (she lives there, or works it by day) links her profile. A talk, a gift or an introduction
 // that unlocks a Town note says so. Loaded with the town's screen.
 import {
-  atHome, CAST, chatLineV4, GAME_DAYS, giftLineV4, herMenu, onFarmToday, stageWords, townLineOf, townLocation, townLocations, townOf, type Expression, type MenuItem, type SaveV4,
+  atHome, CAST, chatLineV4, GAME_DAYS, giftLineV4, herMenu, nextOut, onFarmToday, stageWords, townLineOf, townLocation, townLocations, townOf, type Expression, type MenuItem, type SaveV4,
   type ShopId, type StoryPack, type Taste, type TownDay,
 } from '@farm/domain'
 import { withParam } from '@luismlorenzana/uma-kit/shell'
@@ -26,12 +26,20 @@ import { Stage } from '../dialogue/Stage'
 import type { MasterView } from '../master/master'
 import { GiftPicker } from '../loop/Love'
 import { talentTable } from '../loop/talents'
+import { shortDate } from '../loop/words'
 import { outfitFor, useSpecialDays } from '../story/story'
 import { NoteFound } from './NoteFound'
 import { giftOnce, introduceOnce, talkOnce, workOnce } from './town-actions'
 import { hereWords, keeperTies, postMenu } from './town-view'
 
 type NameOf = (id: string) => string
+
+/** An Uma at home today, and when she's next out: "At home today. Out on Spring 7, at the Library." */
+function atHomeWords(pack: StoryPack, id: string, today: number): string {
+  const next = nextOut(pack, id, today)
+  const place = next ? townLocation(pack, next.at)?.name ?? null : null
+  return next ? `At home today. Out on ${shortDate(next.day)}${place ? `, at ${place.replace(/^The /, 'the ')}` : ''}.` : 'At home today.'
+}
 
 /** Her face at a gift, by her taste; her words are the default story's (`giftLineV4`). */
 const TASTE_FACE: Readonly<Record<Taste, Expression>> = { loved: 'laughing', liked: 'happy', neutral: 'neutral', disliked: 'worried' }
@@ -139,7 +147,7 @@ function Uma({ id, name, save, pack, master, at, nameOf }: { id: string; name: s
       {onFarm ? (
         <p className="text-[14px]" data-on-farm>{livesOnFarm ? 'She lives on the farm.' : 'On the farm by day, after her job.'} <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></p>
       ) : !at ? (
-        <p className="text-[14px] text-ink-soft" data-at-home>At home today. Look for her another day.{met && <> <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></>}</p>
+        <p className="text-[14px] text-ink-soft" data-at-home>{atHomeWords(pack, id, save.calendar.day)}{met && <> <Link to={`/hearts?uma=${id}`} state={{ back: true }} className="font-semibold text-accent-strong underline">Her profile ›</Link></>}</p>
       ) : null}
       {items.length > 0 && (
         <ul className="grid shrink-0 grid-cols-2 gap-1.5" data-menu={items.map((i) => i.id).join(' ')}>
