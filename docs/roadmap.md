@@ -95,7 +95,8 @@ Phase 3  Feel and polish                   ── sound, animation, settings, ba
 Phase 4  Steady                            ── error reports, save safety, a tested playthrough, releases
 ```
 
-Phase 2 is next, one workshop at a time, on your go: the Kitchen first. Phase 3 can start once the first workshop plays.
+Phase 2 is under way, one workshop at a time: the Kitchen first (your go, 2026-11-15; F92 and F93). Phase 3 can start
+once the first workshop plays.
 Phase 4's error reports and save safety are small and can come any time.
 
 ### Phase 0: Clean slate (done)
@@ -134,11 +135,12 @@ town, each with her own story.
 food from day one with cooking in batches (F90), and work at scale (F91): up to eight plots, the stations' levels, thin
 hauls past four a place a day, and a market that feels a flood. A simulation at 10, 20 and 50 Umas shows 10 and 20 fully
 in real jobs and 50 running past the farm's jobs by about ten Umas, the work the workshops below bring
-([the farm at scale](game-mechanics.md#the-farm-at-scale-10-20-and-50-umas)). Next are the workshops, on the owner's go.
+([the farm at scale](game-mechanics.md#the-farm-at-scale-10-20-and-50-umas)). The workshops are next, the Kitchen
+first (the owner's go, 2026-11-15).
 
 | Step | What |
 |---|---|
-| 2.3 **The Kitchen** | The cooking game, recipes, the staff meal and well fed; the Cooking Contest as a festival |
+| 2.3 **The Kitchen** (building: [F92](handoff/tasks/F92-the-kitchen.md), [F93](handoff/tasks/F93-cooking-contest.md)) | The stove, a cooking game played whenever you cook, from the farmhouse kitchen on day one; the Kitchen from Farm Rank 3 (moved from 5): recipes, dishes and the staff meal; the Cooking Contest on Autumn 10 as the first played festival |
 | 2.4 **The sea and expeditions** | The dock and the boat's spots; regions, parties and their power, results and loot, the log |
 | 2.5 **The Restaurant's and the Forge's games** | The serving game and the merge game |
 | 2.6 **The long game** | Years, festivals, the household's milestones, records, and what the town gives back as you meet more of it; and the story's ask for group scenes (a family's, a crew's reunion, a whole group at a festival, from its families and crews), when and what they pay left to the game |
@@ -196,4 +198,3 @@ The farm sends items to uma-quest, uma-rpg and uma-racer, one way. It's parked u
 - **Play your farm on your phone,** and tell me what feels off ([what's new to notice](handoff/README.md#your-steps)).
 - **Keep writing the story** however you like, and ship it ([how the story reaches the
   game](story-pack.md#how-the-story-reaches-the-game)).
-- **Say go on Phase 2's workshops** (the Kitchen first).

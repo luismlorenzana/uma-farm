@@ -54,11 +54,14 @@ Phase 2's employers bring ([the farm at scale](../game-mechanics.md#the-farm-at-
 [thin](../game-mechanics.md#thin-four-full-hauls-a-place-a-day), [the market](../game-mechanics.md#the-market-feels-a-flood),
 [a station's levels](../game-mechanics.md#its-levels)).
 
-**Next:** Phase 2's workshops, the Kitchen first, on your go ([the roadmap](../roadmap.md#phase-2-the-whole-farm)).
+**Now: the Kitchen** (Phase 2.3, your go 2026-11-15): the stove, a cooking game played whenever you cook, from the
+farmhouse kitchen on day one; the Kitchen from Farm Rank 3, its recipes and dishes and the staff meal (F92); then the
+Cooking Contest on Autumn 10, the first festival you play (F93) ([the roadmap](../roadmap.md#phase-2-the-whole-farm)).
 
 | Piece | Who | State |
 |---|---|---|
-| **Phase 2's workshops**, the Kitchen first | Claude | On your go: its packet is written when it starts |
+| [F92 — The Kitchen: the stove, dishes and the staff meal](tasks/F92-the-kitchen.md) | Claude | Building |
+| [F93 — The Cooking Contest: the first festival you play](tasks/F93-cooking-contest.md) | Claude | After F92 |
 
 ## Open packets
 
